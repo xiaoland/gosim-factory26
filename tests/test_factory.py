@@ -1,0 +1,204 @@
+"""验证实验边界，不测试生成应用的具体实现。"""
+from contextlib import nullcontext
+import importlib.util
+import json
+from pathlib import Path
+import platform
+import subprocess
+import sys
+import tempfile
+import unittest
+from unittest.mock import patch
+
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
+spec = importlib.util.spec_from_file_location("factory", Path(__file__).resolve().parents[1] / "scripts/factory.py")
+factory = importlib.util.module_from_spec(spec)
+spec.loader.exec_module(factory)
+
+
+class BaselineBoundaryTest(unittest.TestCase):
+    def test_svc_off_is_independent_of_braid_and_has_no_corpus_install(self):
+        for backend in ('pi', 'codex'):
+            with self.subTest(backend=backend), tempfile.TemporaryDirectory() as temp:
+                root=Path(temp)
+                with patch.object(factory, 'ROOT', root), patch.object(factory, 'api_key', return_value='test'):
+                    native, env=factory.runtime_environment(root, {'backend':backend,'workflow':'braid','svc':False})
+                self.assertFalse((native/'AGENTS.md').exists())
+                self.assertFalse((root/'runtime').exists())
+                self.assertEqual(env['HOME'],str(root/'home'))
+
+    def test_truncated_pi_response_is_not_success(self):
+        with tempfile.TemporaryDirectory() as temp:
+            session = Path(temp) / "session.jsonl"
+            session.write_text('{"message":{"role":"assistant","stopReason":"length"}}\n')
+            with self.assertRaisesRegex(RuntimeError, "Pi 未正常完成"):
+                factory.pi_usage(session)
+
+    def test_pi_usage_includes_compaction(self):
+        with tempfile.TemporaryDirectory() as temp:
+            session=Path(temp)/'session.jsonl'
+            usage={'input':1,'output':2,'cacheRead':3,'cacheWrite':0,'reasoning':1,'totalTokens':6}
+            entries=[{'message':{'role':'assistant','stopReason':'stop','usage':usage}},
+                     {'type':'compaction','usage':usage}]
+            session.write_text('\n'.join(json.dumps(e) for e in entries))
+            result=factory.pi_usage(session)
+            self.assertEqual(result['tokens']['totalTokens'],12)
+            self.assertEqual(result['tokens']['reasoning'],2)
+
+    def test_cleanup_reaches_detached_workspace_process(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work=Path(temp).resolve()
+            proc=subprocess.Popen(['sleep','60'],cwd=work,start_new_session=True)
+            try:
+                self.assertIn(proc.pid,factory.cleanup_workspace(work))
+                self.assertNotEqual(proc.wait(timeout=3),0)
+            finally:
+                factory.stop(proc)
+
+    def test_completed_generation_cleanup_error_requires_workspace_cleanup(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work=Path(temp)
+            errors=[]
+            with patch.object(factory,'stop',side_effect=PermissionError('group denied')):
+                self.assertEqual(factory.logged(['true'],work,None,work/'log',errors),0)
+                self.assertEqual(errors[0]['exit_code'],0)
+                with self.assertRaises(PermissionError):
+                    factory.logged(['true'],work,None,work/'log')
+            with patch.object(factory,'workspace_processes',return_value=[]):
+                self.assertEqual(factory.cleanup_workspace(work),[])
+            with patch.object(factory,'workspace_processes',return_value=[999999]), patch.object(factory.os,'kill'):
+                with self.assertRaisesRegex(RuntimeError,'remain after cleanup'):
+                    factory.cleanup_workspace(work)
+
+    def test_score_and_snapshot(self):
+        result = factory.score({"stats": {"expected": 2, "unexpected": 1, "flaky": 0, "skipped": 1, "duration": 1000}})
+        self.assertEqual((result["total"], result["pass_rate"]), (4, 0.5))
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            app = root / "application"
+            app.mkdir()
+            (app / "app.js").write_text("first")
+            factory.save(root / "application-hashes.json", factory.hashes(app))
+            factory.save(root / "config.json", {})
+            factory.save(root / "run.json", {"status": "generated"})
+            (app / "app.js").write_text("changed")
+            with self.assertRaisesRegex(RuntimeError, "快照已被修改"):
+                factory.evaluate(root)
+            with self.assertRaisesRegex(RuntimeError, "快照已被修改"):
+                factory.evaluate_remote(root,"unused-host")
+
+    def test_generation_failure_survives_archive_cleanup(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp); bench=root/'bench'
+            requirements=bench/'arc-bench/webapp/keep/requirements'
+            requirements.mkdir(parents=True); (requirements/'requirements.md').write_text('input')
+            for name in ['scripts','harness']:
+                (root/name).mkdir(parents=True)
+            def runtime(work,config):
+                native=work/'native'; native.mkdir()
+                return native,{}
+            with patch.object(factory,'ROOT',root), patch.object(factory,'BENCH',bench), \
+                 patch.object(factory,'capture',side_effect=['fixed','','pi-version','node-version']), \
+                 patch.object(factory,'responses_adapter',return_value=nullcontext(None)), \
+                 patch.object(factory,'runtime_environment',side_effect=runtime), \
+                 patch.object(factory,'isolation_prefix',return_value=[]), \
+                 patch.object(factory.subprocess,'run',side_effect=[subprocess.CompletedProcess([],1),subprocess.CompletedProcess([],0)]), \
+                 patch.object(factory,'logged',side_effect=RuntimeError('agent error')), \
+                 patch.object(factory,'cleanup_workspace',return_value=[]):
+                with self.assertRaisesRegex(RuntimeError,'agent error'):
+                    factory.generate({'benchmark_revision':'fixed','task':'keep',
+                                      'model':'test','thinking':'high','base_url':'http://unused'})
+            metadata=json.loads(next((root/'runs').glob('*/run.json')).read_text())
+            self.assertEqual((metadata['status'],metadata['phase'],metadata['failed_phase']),
+                             ('generation_failed','failed','agent'))
+            self.assertEqual(metadata['phase_log'],'pi-events.jsonl')
+            self.assertNotIn('runtime',metadata)
+
+    def test_failed_install_preserves_stage_and_log(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run=Path(temp)
+            (run/'application').mkdir()
+            (run/'application/package.json').write_text('{}')
+            with patch.object(factory,'validate_snapshot',return_value={'benchmark_revision':'fixed'}), \
+                 patch.object(factory,'capture',side_effect=['fixed','','v24']), \
+                 patch.object(factory,'logged',return_value=1):
+                with self.assertRaisesRegex(RuntimeError,'安装失败'):
+                    factory.evaluate(run)
+            summary=json.loads(next((run/'evaluation').glob('*/summary.json')).read_text())
+            self.assertEqual((summary['status'],summary['phase'],summary['failed_phase']),
+                             ('evaluation_error','failed','install'))
+            self.assertEqual(summary['phase_log'],'install.log')
+            self.assertGreaterEqual(summary['finished_at'],summary['started_at'])
+
+    def test_interrupt_retains_evaluation_stage(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run=Path(temp); (run/'application').mkdir()
+            (run/'application/package.json').write_text('{}')
+            with patch.object(factory,'validate_snapshot',return_value={'benchmark_revision':'fixed'}), \
+                 patch.object(factory,'capture',side_effect=['fixed','','v24']), \
+                 patch.object(factory,'logged',side_effect=KeyboardInterrupt):
+                with self.assertRaises(KeyboardInterrupt): factory.evaluate(run)
+            summary=json.loads(next((run/'evaluation').glob('*/summary.json')).read_text())
+            self.assertEqual(summary['status'],'interrupted')
+            self.assertEqual(summary['failed_phase'],'install')
+            self.assertEqual(summary['error'],'KeyboardInterrupt')
+
+    def test_analysis_source_change_reexports_without_overwriting(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp); run=root/'run'; source=root/'svc'
+            (run/'native').mkdir(parents=True); (source/'cli/src').mkdir(parents=True)
+            (run/'run.json').write_text('{"backend":"pi"}')
+            (run/'native/session.jsonl').write_text('{}')
+            code=source/'cli/src/exporter.py'; code.write_text('first')
+            exported=[]
+            def capture(*args,**kwargs):
+                if 'export' in args:
+                    output=Path(args[args.index('--output')+1]); output.write_bytes(b'evidence')
+                    exported.append(output)
+                    return '{}'
+                return 'version-or-revision'
+            response=subprocess.CompletedProcess([],0,stdout='{"status":"complete"}')
+            with patch.object(factory,'capture',side_effect=capture), patch.object(factory.subprocess,'run',return_value=response) as query:
+                factory.analyze(run,source); factory.analyze(run,source)
+                self.assertEqual(len(exported),1)
+                original=factory.hashes(run/'analysis')
+                code.write_text('second')
+                query.side_effect=subprocess.CalledProcessError(1,'query')
+                with self.assertRaises(subprocess.CalledProcessError): factory.analyze(run,source)
+                self.assertEqual(factory.hashes(run/'analysis'),original)
+                query.side_effect=None
+                factory.analyze(run,source)
+                self.assertEqual(len(exported),3)
+                self.assertEqual(len(list((run/'analysis').glob('*/provenance.json'))),2)
+
+    def test_remote_connection_failure_is_observable(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run=Path(temp)
+            with patch.object(factory,'validate_snapshot',return_value={}), \
+                 patch.object(factory,'capture',side_effect=OSError('host unavailable')):
+                with self.assertRaises(OSError): factory.evaluate_remote(run,'test-host')
+            status=json.loads((run/'remote-evaluation.json').read_text())
+            self.assertEqual((status['phase'],status['failed_phase']),('failed','connect'))
+            self.assertIn('host unavailable',status['error'])
+
+    @unittest.skipUnless(platform.system() == "Darwin", "macOS isolation boundary")
+    def test_agent_cannot_read_evaluator_or_modify_requirements(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp).resolve()
+            evaluator, inputs = root / "evaluator", root / "input"
+            evaluator.mkdir()
+            inputs.mkdir()
+            secret, requirement = evaluator / "test.js", inputs / "requirements.md"
+            secret.write_text("external assertion")
+            requirement.write_text("allowed requirement")
+            profile = root / "profile.sb"
+            profile.write_text(factory.sandbox_profile([evaluator], inputs))
+            prefix = ["sandbox-exec", "-f", str(profile)]
+            self.assertNotEqual(subprocess.run(prefix + ["cat", str(secret)], capture_output=True).returncode, 0)
+            allowed = subprocess.run(prefix + ["cat", str(requirement)], capture_output=True)
+            self.assertEqual(allowed.stdout, b"allowed requirement")
+            self.assertNotEqual(subprocess.run(prefix + ["touch", str(requirement)], capture_output=True).returncode, 0)
+
+
+if __name__ == "__main__":
+    unittest.main()
