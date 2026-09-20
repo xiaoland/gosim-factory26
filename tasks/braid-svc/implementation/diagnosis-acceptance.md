@@ -130,3 +130,37 @@ traceability 仍仅表示已有的显式链接，且输出明确标注 `explicit
 上文第 2、3 个“未决/阻塞”现在应归类为**历史证据限制**，不是当前入口的行为阻塞：旧 evaluation 缺 SHA 的事实仍保留，但新生产链已经生成、展示并核验 SHA；旧保存状态缺观察时间和 trace 的事实仍保留，但当前实现会为新采集记录时间，并诚实保留旧记录的 `unknown`/`empty`/`unavailable`。
 
 在本轮批准的验收标准下，建议改为 **accept**。不需要为了历史缺失信息补写旧 run，也不需要把非空因果 trace 设为新的通过门槛。
+
+## 补充独立检查：两条纯 SVC Keep 生成运行
+
+范围仅限仍在生成中的 Pi `20260920-225624-82074f1f` 与 Codex `20260920-225624-32e98b15`。这是对当前两次真实运行的原生证据检查，不替代完成后的 benchmark 或产品验收。未操作运行中的 Agent，未读取 assistant 文本、thinking 或完整事件流；只读取 run metadata、模型可见的 user/developer 输入和与 SVC 匹配的 tool calls/results。
+
+### 读取范围与证据位置
+
+先读取 `runs/20260920-225624-82074f1f/run.json` 与 `runs/20260920-225624-32e98b15/run.json` 的 `runtime` 字段，再对给出的文件做字段级 JSON 过滤。Pi 证据是 `/private/var/folders/rk/8_krr0y14p9g5plk8n77lgyr0000gn/T/factory26-_4achd1j/home/.pi/agent/AGENTS.md` 和同目录 `session.jsonl`；Codex 证据是 `/private/var/folders/rk/8_krr0y14p9g5plk8n77lgyr0000gn/T/factory26-68jgc786/home/.codex/AGENTS.md` 与 `sessions/2026/09/20/rollout-2026-09-20T22-56-29-01a0bf51-91d3-7360-b109-b4e244e2dc30.jsonl`。过滤只输出 session meta、user/developer 输入和匹配 `svc`/`AGENTS` 的 tool call/result。
+
+检查时两条 run 均为 `status: generating`、`workflow: single`，Pi backend 为 `pi`，Codex backend 为 `codex`。
+
+### 隔离指南
+
+Pi 的实际 agent guide 位于 runtime 的 `home/.pi/agent/AGENTS.md`，Codex 的位于 `home/.codex/AGENTS.md`；二者均为恰好两行，内容逐字相同：
+
+```text
+SVC 方法通过 svc lookup 查询；用 svc lookup --help 了解查询方式。
+先阅读 svc lookup --path index.md，再按任务需要逐步读取相关条目。
+```
+
+因此没有发现个人指南被额外内容污染。runtime `home/AGENTS.md` 本身不存在；实际平台使用的是上述 backend-specific agent 配置位置，不能把该顶层缺失误报为注入失败。
+
+### 可见输入与实际调用的证据强度
+
+| 运行 | 模型可见的导航输入 | 实际 SVC 调用 | 可作出的结论 |
+| --- | --- | --- | --- |
+| Pi | 原生 `session.jsonl` 的唯一 user 输入是任务包工作指令，未含 `svc` 或 `AGENTS` 导航行；该格式没有归档 system/developer 输入。 | `bash` call `call_01_StIILU1yxr0ZoRqEDk3R6049` 成功执行 `which svc; svc lookup --help`；随后 `call_00_SqY6Rg6A4KCunuLTsJ4a5529` 成功执行 `svc lookup --path index.md`。输出分别确认 runtime 的 `svc` 路径、lookup help 和 Corpus index。 | 文件存在和实际查询均已证明；精确两行是否由 Pi core 注入到不可见 system/developer context，**未知**。用户输入不含该指令且调用顺序吻合，支持其被采用，但不足以证明注入通道。 |
+| Codex | 原生 rollout 的 `response_item` 中有 role=`user` 的 `# AGENTS.md instructions` 段，含上述两条逐字相同的导航行。 | `exec_command` call `call_01_ET_aJcJXq6HMywtCDYQWrGS9738` 成功执行 `which svc && svc lookup --help`；`call_00_S2gf9LufFXat6ieXNhbM8481` 成功执行 `svc lookup --path index.md`。 | 除文件与执行外，还有模型可见输入的直接证据：当前 Codex 运行收到了精确的两行导航。 |
+
+Pi 和 Codex 的 tool result 都标记成功，并实际返回 `runtime/bin/svc`、lookup usage 和 index 内容；这比仅在 HOME 中存在文件更强，证明 lookup 已被核心会话实际调用。两次调用均限制为 `--help` 和 `--path index.md`，没有读取完整 SVC corpus。
+
+### 结论
+
+没有发现“两行以外的个人指南内容”或“没有实际执行 SVC lookup”的具体断言不符。Codex 的指南可见性有直接原生输入证据。Pi 的完整 system/developer prompt 未在所允许读取的原生格式中归档，因此不能把 Pi 的注入路径证明为已知，也不能由此反推失败；应保留为明确的 `unknown` 证据强度。两条 run 仍在生成，本检查不等待终态，也不对 bench 结果作出结论。

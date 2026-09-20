@@ -31,3 +31,14 @@ Braid 失败生成工作区现在保留 Git common repo 与各 worktree，并写
 两个真实上下文/交付探针的自动断言均通过：Pi `20260920-222837-pi-plain-fdb286`（6 会话），Codex `20260920-222837-codex-plain-5ea7e9`（5 会话）。Pi 6 会话已逐一通过 SVC export + overview。然而人工定向核对发现 Codex PR finalization 曾误用 `--external` 创建 comment6（随后改用 writer 创建 comment7、删除6）；自动断言没有覆盖 Agent 误用宿主入口。两组 Braid Keep 等待独立判断及必要的最小防误用修正；两组纯 SVC Keep 独立运行。
 
 独立判断确认本轮修正宿主入口误用：两个 provider 子进程带 BRAID_AGENT_RUNTIME 标记，CLI 在该环境拒绝 external；宿主环境不带标记。该措施是防误用控制，不声称对抗清环境或直接改数据库。真实探针的只读准备脚本现由 core 原生 shell 执行，检查 marker、external 拒绝且对象/事件不变、当前 writer 成功与旧 writer 拒绝；后半程保留原 host description 变更与完整交付验收。修正后重跑两个新 probe。
+
+防误用版本 Braid `bd0cfcc` 的两个新真实探针均已通过原生 shell 的 runtime marker、external 拒绝/无副作用和 writer 检查，继续完整上下文及交付收尾。新探针 ID 由 `.bootstrap/acceptance-batch.json` 记录；正式四组 run 的同一清单负责当前调度，原始旧 probe 保留不覆盖。
+
+最新收敛：Braid bd0cfcc 上两个新真实探针均完整通过（Pi 6 会话、969 秒；Codex 5 会话、1266 秒）。新增 Agent external 防误用检查、原有 host description 变更、实际 Context 替换、writer fencing、完整交付与原生归档全部通过。四组独立 Keep 已全部启动，运行映射如下；尚无本批评测成绩。
+
+| Variant | Run |
+| --- | --- |
+| pi-svc | `20260920-225624-82074f1f` |
+| codex-svc | `20260920-225624-32e98b15` |
+| pi-svc-braid | `20260920-233128-6aae4ce3` |
+| codex-svc-braid | `20260920-233128-1ba8fed8` |
