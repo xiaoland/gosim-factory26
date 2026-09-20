@@ -1,8 +1,10 @@
 """只读实验摘要与证据入口；不读取原生 rollout，也不推断工具调用因果。"""
 import hashlib
 import json
+import os
 from pathlib import Path
 import re
+import time
 
 
 ERROR_LIMIT = 4000
@@ -177,6 +179,40 @@ def _session_evidence(entry, run, warnings):
             if isinstance(turn, dict):
                 relocate(turn, "input_path")
     return entry
+
+
+def _live_braid(metadata, warnings):
+    runtime = metadata.get("runtime")
+    if metadata.get("status") != "generating" or metadata.get("workflow") != "braid" or not isinstance(runtime, dict) or not runtime:
+        return None
+    counts = ("active_turns", "pending_batches", "pending_resets", "blocked_groups")
+    result = {"status": "unknown", "source": None, "observed_at": time.time(),
+              "written_at": None, "items": None, "counts": dict.fromkeys(counts), "model_progress": "unknown"}
+    try:
+        if not all(isinstance(runtime.get(key), str) and Path(runtime[key]).is_absolute() for key in ("work", "braid_state")):
+            raise ValueError("runtime.work/braid_state 缺少有效绝对路径")
+        work = Path(runtime["work"]).resolve()
+        path = (Path(runtime["braid_state"]) / "status.json").resolve()
+        if not path.is_relative_to(work):
+            raise ValueError("Braid 状态路径不属于当前 runtime.work，拒绝读取")
+        result["source"] = str(path)
+        # 同一打开文件取得快照和 mtime；写入时间只描述状态采样，不是模型进展。
+        with path.open() as source:
+            value = json.load(source)
+            result["written_at"] = os.fstat(source.fileno()).st_mtime
+        if not isinstance(value, dict):
+            raise ValueError("Braid 状态顶层必须是 JSON 对象")
+        items = value.get("items")
+        if isinstance(items, list) and all(isinstance(item, dict) and isinstance(item.get("kind"), str)
+                                           and type(item.get("id")) in (str, int) and isinstance(item.get("state"), str) for item in items):
+            result["items"] = [{key: item[key] for key in ("kind", "id", "state")} for item in items]
+        result["counts"] = {key: value[key] if type(value.get(key)) is int and value[key] >= 0 else None for key in counts}
+        if result["items"] is None or any(value is None for value in result["counts"].values()):
+            raise ValueError("Braid 状态缺少有效工作项或调度计数，缺失字段为 unknown")
+        result["status"] = "available"
+    except (OSError, ValueError, RuntimeError) as exc:
+        warnings.append(f"Braid 实时状态 {result['source'] or '未知来源'}: {exc}")
+    return result
 
 
 def _sessions(run, analysis, warnings):
@@ -383,6 +419,7 @@ def show_run(run, evaluation=None, case=None) -> dict:
     detail, metadata, folders = _summary(run, evaluation)
     detail["evaluations"] = [{"id": folder.name, "path": str(folder)} for folder in folders]
     detail["runtime"] = metadata.get("runtime")
+    detail["live_braid"] = _live_braid(metadata, detail["warnings"])
     detail["evidence"] = {name: _existing(run / name) for name in
                           ("run.json", "config.json", "input", "input/requirements.md", "input/requirements.yaml",
                            "input/reference", "application", "application-hashes.json", "prompt.txt", "recovery.json",
@@ -435,6 +472,15 @@ def render_show(detail) -> str:
         context.append(f"阶段更新: {generation['updated_at']}")
     if context:
         lines.append("；".join(context))
+    live = detail.get("live_braid")
+    if live:
+        items = live["items"]
+        work_items = "未知" if items is None else "，".join(f"{item['kind']} #{item['id']} {item['state']}" for item in items[:3]) or "无"
+        if items and len(items) > 3:
+            work_items += f"（另 {len(items) - 3} 个见 --json）"
+        counts = "，".join(f"{label}={live['counts'][key] if live['counts'][key] is not None else '未知'}" for key, label in
+                          (("active_turns", "active turn"), ("pending_batches", "pending batch"), ("pending_resets", "reset"), ("blocked_groups", "blocked")))
+        lines.append(f"Braid 实时: {work_items}；{counts}；模型进展: 未知")
     for label, data in (("生成", generation), ("评测", evaluation), ("远程", detail["remote"] or {})):
         if data.get("failed_phase"):
             lines.append(f"{label}失败阶段: {data['failed_phase']}")

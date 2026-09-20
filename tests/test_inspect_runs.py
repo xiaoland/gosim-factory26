@@ -280,6 +280,71 @@ class RunNavigationTest(unittest.TestCase):
             self.assertIsNone(result["remote"])
             self.assertTrue(any("远程评测身份不符" in warning for warning in result["warnings"]))
 
+    def test_live_braid_uses_current_runtime_snapshot_without_claiming_progress(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp).resolve() / "runs/example"
+            work = Path(temp).resolve() / "runtime"
+            path = work / "braid-state/status.json"
+            runtime = {"work": str(work), "braid_state": str(path.parent)}
+            save(run / "config.json", {"backend": "pi", "workflow": "braid"})
+            save(run / "run.json", {"status": "generating", "workflow": "braid", "runtime": runtime})
+            snapshot = {"items": [{"kind": "issue", "id": 1, "state": "OPEN", "head_ref": "not-navigation"}],
+                        "active_turns": 1, "pending_batches": 2, "pending_resets": 0, "blocked_groups": 0,
+                        "physical_sessions": [{"native_session_path": "/do-not-read/native.jsonl"}]}
+            save(path, snapshot)
+            save(run / "braid-state/status.json", dict(snapshot, active_turns=99))
+            result = inspect.show_run(run)
+            live = result["live_braid"]
+            self.assertEqual(live["source"], str(path))
+            self.assertEqual(live["status"], "available")
+            self.assertEqual(live["items"], [{"kind": "issue", "id": 1, "state": "OPEN"}])
+            self.assertEqual(live["counts"]["active_turns"], 1)
+            self.assertEqual(live["written_at"], path.stat().st_mtime)
+            self.assertGreaterEqual(live["observed_at"], live["written_at"])
+            self.assertEqual(live["model_progress"], "unknown")
+            self.assertNotIn("physical_sessions", live)
+            rendered = inspect.render_show(result)
+            self.assertIn("issue #1 OPEN；active turn=1，pending batch=2，reset=0，blocked=0", rendered)
+            self.assertIn("模型进展: 未知", rendered)
+            # 已归档运行与纯核心运行不得继续追踪同一个临时状态路径。
+            for metadata in ({"status": "generated", "workflow": "braid", "runtime": runtime},
+                             {"status": "generating", "workflow": "single", "runtime": runtime}):
+                save(run / "run.json", metadata)
+                with patch.object(inspect.json, "load", side_effect=AssertionError("不应读取实时快照")):
+                    self.assertIsNone(inspect.show_run(run)["live_braid"])
+
+    def test_live_braid_missing_invalid_or_foreign_state_remains_unknown(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp).resolve() / "runs/example"
+            work = Path(temp).resolve() / "runtime"
+            state = work / "braid-state"
+            outside = Path(temp).resolve() / "another-run"
+            save(run / "config.json", {"backend": "pi", "workflow": "braid"})
+            snapshot = {"items": [{"kind": "issue", "id": 42, "state": "CLOSED"}],
+                        "active_turns": 42, "pending_batches": 0, "pending_resets": 0, "blocked_groups": 0}
+            save(outside / "status.json", snapshot)
+            save(run / "braid-state/status.json", snapshot)
+            state.mkdir(parents=True)
+            for scenario in ("missing", "invalid", "foreign", "symlink"):
+                with self.subTest(scenario=scenario):
+                    status_path = state / "status.json"
+                    if scenario == "invalid":
+                        status_path.write_text("{")
+                    if scenario == "symlink":
+                        status_path.unlink()
+                        status_path.symlink_to(outside / "status.json")
+                    runtime = {"work": str(work), "braid_state": str(outside if scenario == "foreign" else state)}
+                    save(run / "run.json", {"status": "generating", "workflow": "braid", "runtime": runtime})
+                    result = inspect.show_run(run)
+                    live = result["live_braid"]
+                    self.assertEqual(live["status"], "unknown")
+                    self.assertIsNone(live["items"])
+                    self.assertIsNone(live["counts"]["active_turns"])
+                    self.assertTrue(any("Braid 实时状态" in warning for warning in result["warnings"]))
+                    if scenario in ("foreign", "symlink"):
+                        self.assertIsNone(live["source"])
+                        self.assertTrue(any("拒绝读取" in warning for warning in result["warnings"]))
+
     def test_missing_or_corrupt_metadata_remains_visible_as_unknown(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)

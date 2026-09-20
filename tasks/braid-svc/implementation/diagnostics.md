@@ -45,3 +45,15 @@ python3 scripts/playground.py status 2041e4b58701 --saved
 - 两个真实历史入口已只读执行；`git diff --check` 通过。没有把行数或固定查询次数作为通过指标。
 - 新清单与评测字段已按主 Agent 给出的契约接入，目前无等待中的字段定义。实际新 Braid 导出的完整会话、真实核心受控场景和新 bench 链仍须集成验证；本模块测试不是它们的替代。
 - 等待未参与实现的 Agent 盲验诊断链；历史 traceability 为空且未记录生产者版本，保持缺失事实，不补造关联。
+
+## 运行中的 Braid 状态入口
+
+补充 `show` 的两行实时摘要，仅在 run.json 声明 `status=generating`、`workflow=braid` 且有 runtime 时读取当前 `runtime.braid_state/status.json`。解析后的路径必须位于同一 metadata 声明的 `runtime.work` 内，包含符号链接解析；缺失、解析错误或越界显示 unknown 与警告，不使用归档状态替代。Factory 也给纯核心运行预置 braid_state 路径，因此仅有该路径不能开启实时读取。
+
+JSON 的 `live_braid` 只保留状态来源、同一打开文件的 mtime、本次观测时间、工作项 kind/id/state，以及 active_turns/pending_batches/pending_resets/blocked_groups。默认最多展示三个工作项，其他工作项通过 JSON 查看；不返回 physical_sessions 或整份原始状态。Braid 调度器每约 250 ms 写状态快照，两个时间只描述快照写入与本次读取，`model_progress` 保持 unknown，不作为模型实质进展证据。
+
+本次在两个真实运行仍为 generating 时只读执行 `show 20260920-233128-6aae4ce3` 与 `show 20260920-233128-1ba8fed8`；2026-09-20 15:45:27 UTC 的两份摘要均为 `issue #1 OPEN；active turn=1，pending batch=0，reset=0，blocked=0；模型进展: 未知`，来源分别是各自 runtime.work 下的状态文件。未等待生成、执行模型或修改运行产物。
+
+新增两个回归测试覆盖当前来源、不混入归档、时间/进展分离、无 raw 会话展开、完成后停止读取、纯核心隔离，以及缺失/无效 JSON/外部路径/符号链接越界。inspect 共 12 项通过，`git diff --check` 通过。真实纯核心 `20260920-225624-82074f1f` 复验无 Braid 实时摘要；本次只改诊断脚本、对应测试和本报告。
+
+主流程集成时进一步收束默认输出：仅保留一行工作项/调度计数与“模型进展未知”；确切 source、written_at、observed_at 归 --json，避免每次 show 都重复长临时路径和时间戳。它们描述快照，不描述模型进展。12 项定向检查再次通过。
