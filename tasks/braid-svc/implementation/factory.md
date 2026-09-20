@@ -46,3 +46,5 @@ Braid 失败生成工作区现在保留 Git common repo 与各 worktree，并写
 2026-09-21：两组 Pi 生成失败，原生会话均有 JSON 解析错误；纯 Pi 重试耗尽后仍退出 0，原校验过晚导致 failed_phase 错写为 cleanup，并遗漏 usage。校验前移至 agent 阶段、清单在真实终态确认前保持 failed；错误正文保留原生原因，归档照常保留已报告用量。Pi+Braid 根 Issue 未交付，Braid 如实返回 incomplete，原始工作区已保留。原始 SSE 诊断位于 `runs/diagnostics/pi-stream-20260921`；现阶段不能断言是模型输出、网关还是客户端解析错误。两组失败均已执行 SVC analysis。两组 Codex 继续运行，不因 Pi 失败重新启动。
 
 终态顺序修复经独立 fake Pi 的 generate 边界检查通过：退出码 0 + 原生 error 保存 agent 失败阶段、failed 会话及 usage，原生 stop 仍能冻结。连同定向原生终止摘要，父仓库共 50 项检查通过。三个原始流诊断（通用请求、实际失败 history、带 Pi 原生 max_tokens=384000 的实际 history）均成功，最后两次为单请求 toolUse，不执行工具、不属于 bench；没有复现坏帧，不能宣称网关已修复。保留故障证据后为两组 Pi 开新独立 run，模型与参数不改。
+
+当前 Pi 重跑：pi-svc `20260921-001931-00ded6c4`、pi-svc-braid `20260921-001932-fbf5b027`，均来自 Factory `77572d7`；旧两次保留在 batch 的 failed_attempts。用户随后提示 ARC-bench 似乎正在重启服务器；这是上游故障线索，未证明因果。暂不追加重试，保留四个正在运行的请求并观察终态。
