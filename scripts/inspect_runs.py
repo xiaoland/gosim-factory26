@@ -1,4 +1,4 @@
-"""只读实验摘要与证据入口；不读取原生 rollout，也不推断工具调用因果。"""
+"""只读实验摘要与证据入口；失败时提取已核实原生终止信息，不推断工具调用因果。"""
 import hashlib
 import json
 import os
@@ -292,6 +292,46 @@ def _sessions(run, analysis, warnings):
             "unmatched_analysis": [entry["id"] for entry in analysis if entry["id"] not in linked]}
 
 
+def _pi_terminal(session):
+    result = {"status": "unknown", "path": session.get("native"), "line": None, "record_id": None,
+              "stop_reason": None, "error": None, "reason": "原生归档未通过哈希核实"}
+    if session["integrity"] != "verified":
+        return result
+    last = None
+    line_number = None
+    try:
+        # 逐行保留最后 assistant 的少量字段，长响应也不能造成静默漏报。
+        with Path(session["native"]).open() as source:
+            for line_number, line in enumerate(source, 1):
+                if not line.strip():
+                    continue
+                entry = json.loads(line)
+                if not isinstance(entry, dict):
+                    raise ValueError("原生记录必须是 JSON 对象")
+                message = entry.get("message")
+                if entry.get("type") == "message" and not isinstance(message, dict):
+                    raise ValueError("message 记录缺少有效内容")
+                if entry.get("type") == "message" and message.get("role") == "assistant":
+                    last = {"line": line_number, "record_id": entry.get("id"), "timestamp": entry.get("timestamp"),
+                            "stop_reason": message.get("stopReason"), "error": _error(message.get("errorMessage"))}
+    except (OSError, ValueError) as exc:
+        result.update(line=line_number, reason="原生记录无法完整解析: " + _error(exc)["text"])
+        return result
+    if last is None:
+        result["reason"] = "没有 assistant 终止记录"
+        return result
+    result.update(last)
+    if last["stop_reason"] == "stop":
+        result.update(status="stopped", error=None, reason=None)
+    elif last["stop_reason"] in ("error", "aborted"):
+        result.update(status=last["stop_reason"], reason=None)
+        if not result["error"]["text"]:
+            result["error"] = _error(f"stopReason={last['stop_reason']}，未提供错误消息")
+    else:
+        result.update(error=None, reason=f"最后 assistant 的 stopReason={last['stop_reason'] or 'unknown'}，终止信息未知")
+    return result
+
+
 def _attachment(attachment, folder):
     source = attachment.get("path")
     if not isinstance(source, str):
@@ -426,6 +466,10 @@ def show_run(run, evaluation=None, case=None) -> dict:
                            "braid-state", "analysis", "native", "sources", "remote-evaluation.json", "remote-evaluations")}
     detail["evidence"]["logs"] = sorted({str(path) for pattern in ("*.log", "*stderr*") for path in run.glob(pattern) if path.is_file()})
     detail["sessions"] = _sessions(run, detail["analysis"], detail["warnings"])
+    if detail["generation"]["status"] == "generation_failed":
+        for session in detail["sessions"]["native"]:
+            if session.get("provider") == "pi":
+                session["terminal"] = _pi_terminal(session)
     selected = Path(detail["evaluation"]["path"]) if detail["evaluation"]["path"] else None
     detail["evaluation"]["evidence"] = {name: _existing(selected / name) if selected else None for name in
                                            ("summary.json", "results.json", "html/index.html", "test.log", "install.log", "build.log", "application.log", "test-results")}
@@ -493,6 +537,28 @@ def render_show(detail) -> str:
             lines.append(f"{label}阶段日志: {path_text(log)}")
         if data.get("error"):
             lines.append(f"{label}错误: {error_text(data['error'])}")
+    current = [session for session in detail["sessions"]["native"]
+               if session.get("terminal") and session.get("status") not in ("replaced", "retired")]
+    problems = [session for session in current if session["terminal"]["status"] != "stopped"]
+    if problems:
+        # 多份未退役物理会话不能靠文件顺序决定哪份代表当前 group。
+        ambiguous = {session["group_id"] for session in current if session.get("group_id") and
+                     sum(other.get("group_id") == session["group_id"] for other in current) > 1}
+        candidates = [session for session in problems if session.get("group_id") not in ambiguous]
+        candidates.sort(key=lambda session: session["terminal"]["status"] == "unknown")
+        if candidates:
+            terminal = candidates[0]["terminal"]
+            message = terminal["error"]["text"] if terminal["error"] else "未知：" + terminal["reason"]
+            preview = " ".join(message.splitlines())[:500]
+            if len(message) > 500 or (terminal["error"] and terminal["error"]["truncated"]):
+                preview += "…"
+            evidence = path_text(terminal["path"]) if terminal["path"] else "归档缺失"
+            if terminal["line"] is not None:
+                evidence += f":{terminal['line']}"
+            record = f"；record {terminal['record_id']}" if terminal["record_id"] else ""
+            lines.append(f"Pi 原生末条 assistant: {preview}（{evidence}{record}）" + (f"；另 {len(problems) - 1} 份异常/未知见 --json" if len(problems) > 1 else ""))
+        else:
+            lines.append(f"Pi 原生终止信息: 当前 group 的物理会话关联不唯一；{len(problems)} 份异常/未知见 --json")
     remote = detail.get("remote") or {}
     if remote.get("summary"):
         lines.append(f"远端阶段: {remote['summary'].get('phase', '未知')}；观测时间: {remote.get('observed_at')}；尝试: {remote.get('attempt')}")

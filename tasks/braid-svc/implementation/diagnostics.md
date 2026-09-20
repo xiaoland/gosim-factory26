@@ -6,7 +6,7 @@
 
 `factory.py show RUN --eval EVALUATION --case REQ-ID` 保留原接口，在用例错误后追加页面片段。读取范围限定为该次评测附件中的 `error-context`，只解析官方 `Page snapshot` 区段；按失败 Call log 中的 role/字面名称选择节点及相关祖先，显示原文件行号。后附测试源码里的其他定位器不参与选择；无法匹配时明确缺少片段，不展示完整 DOM 或推断故障原因。读取及片段长度有界，原错误/附件字段仍保留。
 
-`show` 优先消费 `native/manifest.json` 的 schema_version=1 清单，保留 provider、group、工作项、context revision、turns、原始来源等字段。每份原生文件只做流式哈希校验，不解析全文；缺失、越界、重复路径保留身份与拒绝原因。历史阶段目录仍可导航，但缺少来源哈希的分析只能作为未核实候选。
+`show` 优先消费 `native/manifest.json` 的 schema_version=1 清单，保留 provider、group、工作项、context revision、turns、原始来源等字段。每份原生文件先做流式哈希校验，通常不解析正文；下述生成失败的 Pi 终止摘要是限定例外。缺失、越界、重复路径保留身份与拒绝原因。历史阶段目录仍可导航，但缺少来源哈希的分析只能作为未核实候选。
 
 清单的 `context_path`、`instructions_path` 与 `turns[].input_path` 在 `--json` 中转换为可直接打开的本地归档路径；只检查路径边界与文件存在，不读取正文。缺失或越界入口为 null 并产生警告，`source_*` 与生产者的 `evidence_error` 原样保留。这样输入归档缺失也不会丢失物理会话身份。
 
@@ -57,3 +57,13 @@ JSON 的 `live_braid` 只保留状态来源、同一打开文件的 mtime、本�
 新增两个回归测试覆盖当前来源、不混入归档、时间/进展分离、无 raw 会话展开、完成后停止读取、纯核心隔离，以及缺失/无效 JSON/外部路径/符号链接越界。inspect 共 12 项通过，`git diff --check` 通过。真实纯核心 `20260920-225624-82074f1f` 复验无 Braid 实时摘要；本次只改诊断脚本、对应测试和本报告。
 
 主流程集成时进一步收束默认输出：仅保留一行工作项/调度计数与“模型进展未知”；确切 source、written_at、observed_at 归 --json，避免每次 show 都重复长临时路径和时间戳。它们描述快照，不描述模型进展。12 项定向检查再次通过。
+
+## 失败归档中的 Pi 原生终止摘要
+
+仅 `generation_failed` 读取清单明确声明 provider=pi 且哈希已核实的原生归档。逐行扫描并只保留最后一条 assistant 的 stopReason、errorMessage、记录 ID、时间和原文件行号，不展开 content 或工具输出，不设尾部字节窗口。每份会话的结构化结果放在 `sessions.native[].terminal`。成功末条为 stopped，不回溯旧 error；记录损坏、缺少终止标记或哈希未核实均为 unknown，不把解析失败视为模型错误。
+
+默认至多追加一条原生错误/未知摘要及其证据位置，其余只显示数量并指向 JSON。显式 replaced/retired 会话的旧错误只保留在 JSON；同一 group 有多个未退役候选时不按时间或目录顺序挑选，默认报告关联不唯一。摘要只陈述原生记录，不覆盖历史 failed_phase、清单 turns 或执行终态，也不推断 JSON 解析错误归属哪个组件。SVC overview 的 terminal-state-unavailable 保留其原含义。
+
+2026-09-21 只读复验两份真实失败：`20260920-225624-82074f1f` 新增 `Unterminated string in JSON at position 180 (line 1 column 181)`，证据为 `native/000-session.jsonl:55`、record `8b38cb79`；`20260920-233128-6aae4ce3` 新增 `Expected ':' after property name in JSON at position 201 (line 1 column 202)`，证据为其 Pi 归档第 44 行、record `ef637b40`。两份旧元数据与运行产物未改。
+
+新增 4 项回归测试包含上述真实错误形状、超过 64 KiB 的末条响应、准确行号/记录 ID、仅失败运行扫描、核实哈希边界、成功末条及替代会话不回退、歧义 group、最多一条展示、损坏和未知终止。inspect 共 16 项通过，`git diff --check` 通过。此次只改 inspect_runs.py、test_inspect_runs.py 和本报告；Factory 的验证阶段与 usage 保存修正由主流程处理。

@@ -33,6 +33,12 @@ class BaselineBoundaryTest(unittest.TestCase):
             session.write_text('{"message":{"role":"assistant","stopReason":"length"}}\n')
             with self.assertRaisesRegex(RuntimeError, "Pi 未正常完成"):
                 factory.pi_usage(session)
+            session.write_text(json.dumps({'message':{'role':'assistant','stopReason':'error',
+                'errorMessage':'Unterminated string in JSON at position 180',
+                'usage':{'input':5,'output':2,'totalTokens':7}}}))
+            with self.assertRaisesRegex(RuntimeError, 'Pi 未正常完成：Unterminated string'):
+                factory.pi_usage(session)
+            self.assertEqual(factory.pi_usage(session,require_completed=False)['tokens']['totalTokens'],7)
 
     def test_pi_usage_includes_compaction(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -167,6 +173,66 @@ class BaselineBoundaryTest(unittest.TestCase):
                              ('generation_failed','failed','agent'))
             self.assertEqual(metadata['phase_log'],'pi-events.jsonl')
             self.assertNotIn('runtime',metadata)
+
+    def test_pi_exit_zero_requires_native_stop_before_freeze(self):
+        usage={'input':5,'output':2,'cacheRead':0,'cacheWrite':0,'reasoning':1,'totalTokens':7}
+
+        def generated(stop_reason):
+            with tempfile.TemporaryDirectory() as temp:
+                root=Path(temp); bench=root/'bench'
+                requirements=bench/'arc-bench/webapp/keep/requirements'
+                requirements.mkdir(parents=True); (requirements/'requirements.md').write_text('input')
+                (bench/'package.json').write_text('{}')
+                for name in ('scripts','harness'): (root/name).mkdir()
+
+                def runtime(work,config):
+                    native=work/'native'; native.mkdir()
+                    return native,{}
+
+                def pi(command, *_):
+                    session=Path(command[command.index('--session')+1])
+                    session.write_text(json.dumps({'id':'native-session','message':{
+                        'role':'assistant','stopReason':stop_reason,
+                        'errorMessage':'Unterminated string in JSON at position 180' if stop_reason == 'error' else None,
+                        'usage':usage}})+'\n')
+                    return 0
+
+                original_run=subprocess.run
+                def preflight(command, *args, **kwargs):
+                    if command[-1] == str(bench/'package.json'): return subprocess.CompletedProcess(command,1)
+                    if command[-1] == str(requirements/'requirements.md'): return subprocess.CompletedProcess(command,0)
+                    return original_run(command,*args,**kwargs)
+
+                config={'benchmark_revision':'fixed','task':'keep','model':'test','thinking':'high','base_url':'http://unused'}
+                with patch.object(factory,'ROOT',root), patch.object(factory,'BENCH',bench), \
+                     patch.object(factory,'capture',side_effect=['fixed','','pi-version','node-version']), \
+                     patch.object(factory,'responses_adapter',return_value=nullcontext(None)), \
+                     patch.object(factory,'runtime_environment',side_effect=runtime), \
+                     patch.object(factory,'isolation_prefix',return_value=[]), \
+                     patch.object(factory.subprocess,'run',side_effect=preflight), \
+                     patch.object(factory,'logged',side_effect=pi), \
+                     patch.object(factory,'cleanup_workspace',return_value=[]):
+                    try: run=factory.generate(config)
+                    except RuntimeError as exc: run=None; error=exc
+                    else: error=None
+                frozen=next((root/'runs').glob('*'))
+                return run,error,json.loads((frozen/'run.json').read_text()),json.loads((frozen/'native/manifest.json').read_text())
+
+        run,error,failed,manifest=generated('error')
+        self.assertIsNone(run)
+        self.assertIn('Unterminated string',str(error))
+        self.assertEqual((failed['status'],failed['phase'],failed['failed_phase']),('generation_failed','failed','agent'))
+        self.assertEqual(failed['process_exit_code'],0)
+        self.assertIn('Unterminated string',failed['error'])
+        self.assertEqual(failed['usage']['tokens']['totalTokens'],7)
+        self.assertEqual(manifest['sessions'][0]['turns'][0]['status'],'failed')
+
+        run,error,completed,manifest=generated('stop')
+        self.assertIsNotNone(run)
+        self.assertIsNone(error)
+        self.assertEqual((completed['status'],completed['phase']),('generated','frozen'))
+        self.assertEqual(completed['usage']['tokens']['totalTokens'],7)
+        self.assertEqual(manifest['sessions'][0]['turns'][0]['status'],'completed')
 
     def test_failed_install_preserves_stage_and_log(self):
         with tempfile.TemporaryDirectory() as temp:

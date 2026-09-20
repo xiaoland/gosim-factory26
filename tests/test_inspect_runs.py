@@ -18,6 +18,14 @@ def save(path, data):
     path.write_text(json.dumps(data))
 
 
+def pi_session(run, name, records, **identity):
+    path = run / "native" / name
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text("\n".join(json.dumps(record) for record in records) + "\n")
+    return dict(identity, provider="pi", native=f"native/{name}", session_id=name,
+                sha256=hashlib.sha256(path.read_bytes()).hexdigest())
+
+
 class RunNavigationTest(unittest.TestCase):
     def test_latest_failed_evaluation_does_not_reuse_old_score(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -312,6 +320,107 @@ class RunNavigationTest(unittest.TestCase):
                 save(run / "run.json", metadata)
                 with patch.object(inspect.json, "load", side_effect=AssertionError("不应读取实时快照")):
                     self.assertIsNone(inspect.show_run(run)["live_braid"])
+
+    def test_pi_terminal_reports_real_error_shapes_and_long_response_location(self):
+        samples = [(55, "8b38cb79", "Unterminated string in JSON at position 180 (line 1 column 181)"),
+                   (44, "ef637b40", "Expected ':' after property name in JSON at position 201 (line 1 column 202)")]
+        for expected_line, record_id, message in samples:
+            with self.subTest(record=record_id), tempfile.TemporaryDirectory() as temp:
+                run = Path(temp).resolve()
+                save(run / "run.json", {"status": "generation_failed", "failed_phase": "cleanup"})
+                save(run / "config.json", {"backend": "pi"})
+                records = [{"type": "session"}] + [{"type": "message", "message": {"role": "toolResult"}}] * (expected_line - 2)
+                records.append({"type": "message", "id": record_id, "timestamp": "2026-09-20T16:02:08.428Z",
+                                "message": {"role": "assistant", "content": [{"type": "text", "text": "x" * 100_000}],
+                                            "stopReason": "error", "errorMessage": message}})
+                entry = pi_session(run, "session.jsonl", records, turns=[{"status": "completed"}])
+                save(run / "native/manifest.json", {"schema_version": 1, "sessions": [entry]})
+                detail = inspect.show_run(run)
+                terminal = detail["sessions"]["native"][0]["terminal"]
+                self.assertEqual(terminal["status"], "error")
+                self.assertEqual(terminal["line"], expected_line)
+                self.assertEqual(terminal["record_id"], record_id)
+                self.assertEqual(terminal["error"]["text"], message)
+                rendered = inspect.render_show(detail)
+                self.assertIn(message, rendered)
+                self.assertIn(f"native/session.jsonl:{expected_line}；record {record_id}", rendered)
+                self.assertNotIn("xxx", rendered)
+                self.assertEqual(detail["generation"]["failed_phase"], "cleanup")
+                self.assertEqual(detail["sessions"]["native"][0]["turns"], [{"status": "completed"}])
+
+    def test_pi_terminal_requires_failed_generation_and_verified_archive(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp).resolve()
+            save(run / "config.json", {"backend": "pi"})
+            entry = pi_session(run, "session.jsonl", [{"type": "session"}])
+            save(run / "native/manifest.json", {"schema_version": 1, "sessions": [entry]})
+            for status in ("generated", "generating"):
+                save(run / "run.json", {"status": status})
+                with patch.object(inspect, "_pi_terminal", side_effect=AssertionError("仅失败运行解析原生终止信息")):
+                    self.assertNotIn("terminal", inspect.show_run(run)["sessions"]["native"][0])
+            save(run / "run.json", {"status": "generation_failed"})
+            (run / entry["native"]).write_text("corrupt and changed")
+            detail = inspect.show_run(run)
+            terminal = detail["sessions"]["native"][0]["terminal"]
+            self.assertEqual(terminal["status"], "unknown")
+            self.assertEqual(terminal["reason"], "原生归档未通过哈希核实")
+            self.assertIn("未知", inspect.render_show(detail))
+
+    def test_pi_terminal_does_not_revive_recovered_or_replaced_errors(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp).resolve()
+            save(run / "run.json", {"status": "generation_failed"})
+            save(run / "config.json", {"backend": "pi"})
+            error = {"type": "message", "message": {"role": "assistant", "stopReason": "error", "errorMessage": "old error"}}
+            stop = {"type": "message", "message": {"role": "assistant", "stopReason": "stop"}}
+            old = pi_session(run, "old.jsonl", [error], group_id="same-group", status="replaced")
+            recovered = pi_session(run, "recovered.jsonl", [error, stop], group_id="same-group", status="idle")
+            failed = pi_session(run, "failed.jsonl", [dict(error, message=dict(error["message"], errorMessage="current error"))], group_id="other", status="idle")
+            second = pi_session(run, "second.jsonl", [dict(error, message=dict(error["message"], errorMessage="second error"))], group_id="another", status="idle")
+            save(run / "native/manifest.json", {"schema_version": 1, "sessions": [old, recovered, failed, second]})
+            detail = inspect.show_run(run)
+            self.assertEqual(detail["sessions"]["native"][0]["terminal"]["status"], "error")
+            self.assertEqual(detail["sessions"]["native"][1]["terminal"]["status"], "stopped")
+            rendered = inspect.render_show(detail)
+            self.assertIn("current error", rendered)
+            self.assertNotIn("old error", rendered)
+            self.assertNotIn("second error", rendered)
+            self.assertIn("另 1 份异常/未知见 --json", rendered)
+            self.assertEqual(rendered.count("Pi 原生末条 assistant:"), 1)
+            # 无替代标记时不靠文件次序推断哪个物理会话代表当前 group。
+            save(run / "native/manifest.json", {"schema_version": 1, "sessions": [dict(old, status="idle"), recovered]})
+            rendered = inspect.render_show(inspect.show_run(run))
+            self.assertIn("关联不唯一", rendered)
+            self.assertNotIn("old error", rendered)
+
+    def test_pi_terminal_damaged_or_unknown_tail_does_not_fall_back_to_old_error(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp).resolve()
+            save(run / "run.json", {"status": "generation_failed"})
+            save(run / "config.json", {"backend": "pi"})
+            error = {"type": "message", "message": {"role": "assistant", "stopReason": "error", "errorMessage": "old error"}}
+            for tail in ("malformed", "toolUse", "no-assistant"):
+                with self.subTest(tail=tail):
+                    records = [error, {"type": "message", "message": {"role": "assistant", "stopReason": "toolUse"}}]
+                    if tail == "no-assistant":
+                        records = [{"type": "session"}]
+                    entry = pi_session(run, "session.jsonl", records)
+                    if tail == "malformed":
+                        path = run / entry["native"]
+                        with path.open("a") as source:
+                            source.write('{"type": "message"')
+                        entry["sha256"] = hashlib.sha256(path.read_bytes()).hexdigest()
+                    save(run / "native/manifest.json", {"schema_version": 1, "sessions": [entry]})
+                    detail = inspect.show_run(run)
+                    terminal = detail["sessions"]["native"][0]["terminal"]
+                    self.assertEqual(terminal["status"], "unknown")
+                    self.assertIsNone(terminal["error"])
+                    rendered = inspect.render_show(detail)
+                    self.assertIn("未知", rendered)
+                    self.assertNotIn("old error", rendered)
+                    if tail == "malformed":
+                        self.assertEqual(terminal["line"], 3)
+                        self.assertIn("无法完整解析", rendered)
 
     def test_live_braid_missing_invalid_or_foreign_state_remains_unknown(self):
         with tempfile.TemporaryDirectory() as temp:

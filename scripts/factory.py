@@ -151,7 +151,8 @@ def pi_usage(session, require_completed=True):
     summaries = [entry for entry in entries if entry.get("type") in ("compaction", "branch_summary")]
     usages += [entry["usage"] for entry in summaries if isinstance(entry.get("usage"), dict)]
     if require_completed and (not assistants or assistants[-1].get("stopReason") != "stop"):
-        raise RuntimeError("Pi 未正常完成；参阅原生 session 和 stderr")
+        last = assistants[-1] if assistants else {}
+        raise RuntimeError(f"Pi 未正常完成：{last.get('errorMessage') or last.get('stopReason') or '无 assistant 终态'}")
     totals = {key: sum(u[key] for u in usages) if usages and all(key in u for u in usages) else None
               for key in ("input", "output", "cacheRead", "cacheWrite", "reasoning", "totalTokens")}
     return {"assistant_responses": len(assistants), "tokens": totals, "estimated_cost": None,
@@ -385,7 +386,10 @@ def generate(config):
                     metadata['process_exit_code']=code
                     if code: raise RuntimeError('Pi 退出失败')
                     session_entries = [{'provider':'pi','session_id':str(session),'native_session_path':str(session),
-                                        'worktree':str(app),'turns':[{'status':'completed'}]}]
+                                        'worktree':str(app),'turns':[{'status':'failed'}]}]
+                    # Pi print mode can exit 0 after exhausting stream retries.
+                    pi_usage(session)
+                    session_entries[0]['turns'][0]['status']='completed'
                 else:
                     from core import codex_turn
                     phase(run/'run.json',metadata,'agent','codex-events.jsonl')
