@@ -37,6 +37,40 @@ def comment_text(context, identity):
     return match.group(1)
 
 
+def preparation_script(executable, state, ready, markers):
+    """Run the same control-boundary checks inside each core's native shell."""
+    data={'executable':str(executable),'state':str(state),'ready':str(ready),'markers':markers}
+    return 'data = '+repr(data)+'\n'+'''
+import json, os, sqlite3, subprocess, sys, time
+from pathlib import Path
+assert os.environ.get('BRAID_AGENT_RUNTIME') == '1', 'provider did not mark its child runtime'
+state=Path(data['state']); ready=Path(data['ready'])
+prefix=[data['executable'],'object','--state',str(state)]
+body=ready.with_suffix('.body'); body.write_text(data['markers']['HIDDEN'])
+def counts():
+    with sqlite3.connect(state/'braid.sqlite3') as db:
+        return [db.execute('SELECT count(*) FROM '+table).fetchone()[0]
+                for table in ('local_items','local_comments','events')]
+before=counts()
+external=subprocess.run(prefix+['--external','comment','create','issue','1','--body-file',str(body)],capture_output=True,text=True)
+assert external.returncode != 0, 'agent used the host external entry'
+assert counts()==before, 'rejected external operation changed objects or events'
+writer=prefix+['--writer-turn',sys.argv[1]]
+ids={}
+for name,marker in [('hide','HIDDEN'),('delete','DELETED')]:
+    body.write_text(data['markers'][marker])
+    result=subprocess.run(writer+['comment','create','issue','1','--body-file',str(body)],check=True,capture_output=True,text=True)
+    ids[name]=json.loads(result.stdout)['id']
+stale=subprocess.run(prefix+['--writer-turn','00000000-0000-0000-0000-000000000000','comment','edit',str(ids['hide']),'--body-file',str(body)],capture_output=True,text=True)
+assert stale.returncode != 0, 'unknown writer was accepted'
+ids['guard']={'runtime_marker':os.environ['BRAID_AGENT_RUNTIME'],'external_rejected':True,
+              'external_error':external.stderr.strip(),'objects_and_events_unchanged':True,
+              'current_writer_succeeded':True,'unknown_writer_rejected':True}
+temporary=ready.with_suffix('.tmp');temporary.write_text(json.dumps(ids));temporary.replace(ready)
+time.sleep(3600)
+'''
+
+
 def check(backend, svc=False):
     config=json.loads((factory.ROOT/f'variants/{backend}-svc-braid/config.json').read_text())
     config['svc']=svc
@@ -67,10 +101,13 @@ def check(backend, svc=False):
             env['PATH']=str(executable.parent)+factory.os.pathsep+env['PATH']
             # The host mutates the object through CLI; no human participates in the run.
             ready=work/'ready.json'
+            preparation=inputs/'prepare.py'
+            preparation.write_text(preparation_script(executable,state,ready,markers))
+            shutil.copy2(preparation,output/'prepare.py')
             prompt=f'''这是一个真实核心的受控接入探针。当前需求正文中的旧标记是 {markers['OLD']}。
-本 turn 只准备上下文检查，不建立 PR、不关闭 Issue。请按当前 turn 的 CLI 前缀，在根 Issue 1 创建两个 comment，正文分别严格为 {markers['HIDDEN']} 和 {markers['DELETED']}。
-把返回的两个 comment id 通过临时文件再 rename 原子写入 {ready}，JSON 格式为 {{"hide":第一个id,"delete":第二个id}}。
-然后执行 shell 命令 sleep 3600 保持当前 turn 运行。测试驱动会通过 Braid CLI 修改需求，系统随后自动重建上下文；不要等待人类，不要自行调用刷新或模拟下一阶段。不要把旧标记复制进其他对象。'''
+本 turn 只准备上下文检查，不建立 PR、不关闭 Issue。请在原生 shell 运行一次 `python3 {preparation} 当前turn的UUID`，将最后一个参数替换为本轮输入给出的 writer-turn 身份。
+这是宿主提供的只读检查脚本：验证 Agent 不能使用 external，验证合法/失效 writer，创建两个 comment 后写 ready.json 并保持当前 turn。脚本已经实现准备工作，不要自行重写；失败时报告错误并结束。
+测试驱动会通过宿主 CLI 修改需求，系统随后自动重建上下文；不要等待人类，不要自行刷新或模拟下一阶段。不要把旧标记复制进其他对象。'''
             request=factory.braid_request(config,work,app,native,prompt,state,output.name)
             factory.save(work/'request.json',request)
             prefix=factory.isolation_prefix(work,inputs)
@@ -92,6 +129,9 @@ def check(backend, svc=False):
                         if proc.poll() is not None: raise RuntimeError('探针准备前 Braid 已退出，参阅 braid.log')
                         time.sleep(.25)
                     comments=json.loads(ready.read_text())
+                    if not comments.get('guard',{}).get('external_rejected'):
+                        raise RuntimeError('缺少原生 shell 的宿主入口拒绝证据')
+                    record['agent_control_guard']=comments['guard']
                     while True:
                         sessions=json.loads((state/'sessions.json').read_text())
                         old=next((s for s in sessions if s.get('work_item_kind')=='issue' and s.get('work_item_id')=='1'

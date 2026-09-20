@@ -76,3 +76,57 @@ dialog "Create note"
 ## 建议
 
 建议 **revise**：诊断入口已经足以快速定位 REQ-2.2 的可访问性名称失配，且保存状态不会虚构时效或因果；补上 evaluation 源码哈希和 playground 保存快照的观察时间/非空 trace 链接后，才能让上述判断从“有条件的诊断”变为可审计的结论。
+
+## 补充判定：新生产链与已批准的历史边界
+
+本节追加于盲验记录之后，不改写上文的历史事实。这里采用本轮明确批准的验收边界：旧证据缺少观察时间或 traceability 时，入口只要显式输出 `unknown`、`empty` 或 `unavailable` 即为正确；不应补造旧证据，也不把非空因果 trace 或消除所有竞争解释设为通过前提。
+
+### 实际补充命令
+
+```sh
+cd /Users/lanzhijiang/Development/factory26
+python3 scripts/factory.py show evaluator-20260920-215843-6cc3c4 --eval 20260920-215843-6f2bc1b7 --json
+python3 scripts/factory.py --run runs/validation/evaluator-20260920-215843-6cc3c4 show --eval 20260920-215843-6f2bc1b7 --json
+jq '{status, scope, verified_cases, case_states_equal, reference_report, evaluation_id}' runs/validation/evaluator-20260920-215843-6cc3c4/validation.json
+jq '{attempt, host, observed_at, phase, updated_at, summary: {evaluation_id: .summary.evaluation_id, run_id: .summary.run_id, application_sha256: .summary.application_sha256, benchmark_revision: .summary.benchmark_revision, source_application_hashes: .summary.source_application_hashes, verified_cases: .summary.verified_cases}}' runs/validation/evaluator-20260920-215843-6cc3c4/remote-evaluation.json
+jq '{evaluation_id, run_id, benchmark_revision, application_sha256, source_application_hashes, status, phase, verified_cases, passed, failed, total}' runs/validation/evaluator-20260920-215843-6cc3c4/evaluation/20260920-215843-6f2bc1b7/summary.json
+jq -cS . runs/validation/evaluator-20260920-215843-6cc3c4/application-hashes.json | tr -d '\n' | shasum -a 256
+rg -n -C 4 'application_sha256|source_application_hashes' scripts tests
+sed -n '46,65p' scripts/factory.py
+sed -n '52,82p' scripts/inspect_runs.py
+sed -n '630,700p' scripts/factory.py
+sed -n '128,205p' scripts/playground.py
+sed -n '1,105p' tests/test_playground.py
+python3 -m unittest tests.test_playground.PlaygroundTest.test_events_separate_heartbeat_progress_terminal_and_observation_age tests.test_playground.PlaygroundTest.test_saved_status_is_read_only_and_preserves_explicit_link_provenance tests.test_playground.PlaygroundTest.test_status_rejects_wrong_run_and_records_local_observation_only_on_success
+python3 -m unittest tests.test_factory.BaselineBoundaryTest.test_evaluation_request_cannot_claim_another_attempt tests.test_inspect_runs.RunNavigationTest.test_evaluation_identity_mismatch_rejects_score_and_case
+```
+
+第一条 `show` 使用普通 run ID 解析，因 validation run 不在默认 `list` 集合中而返回“评测目录不属于此 run”。第二条使用已文档化的 `--run` 路径后成功；这是有效入口用法，不是评测失败。
+
+### 新评测的 SHA 可验证性
+
+成功的 `show` 返回 `completed`、14/32，并同时给出：
+
+- `evaluation_id: 20260920-215843-6f2bc1b7`；
+- `run_id: evaluator-20260920-215843-6cc3c4`；
+- `benchmark_revision: 1eb018367bedd618d3b9ced406ce07fb423d4956`；
+- `application_sha256: 2eb37e9fa9eb32fae8b394db9f0fd73f43835678ff50cee4c202f7bb087ebb10`；
+- WSL 远端摘要中的同一 SHA、`source_application_hashes: ../../application-hashes.json`，以及 `wsl.win-ws.localhost` 观察记录。
+
+对本地 `application-hashes.json` 使用生产代码同样的稳定 JSON 序列化规则重新计算，所得 SHA 正是 `2eb37e9fa9eb32fae8b394db9f0fd73f43835678ff50cee4c202f7bb087ebb10`。`inspect_runs._evaluation()` 也会自行重算这个值；若 summary 不匹配，它将返回 `identity_mismatch` 并拒绝显示分数和 case。相关单测已通过（2 项）。远端流程还在传输后比较完整文件哈希清单，并在下载结果后再次调用身份检查。因此这不是仅存在于 JSON 中、未被入口核验的字段。
+
+`validation.json` 的范围为 `evaluator-pipeline-only`，记录 `status: passed`、`verified_cases: 32`、`case_states_equal: true`，并指向原参考评测的 `results.json`。它是对 32 项逐项比较的紧凑结果记录，不扩大为对应用功能的额外声明。
+
+### 新采集的观察语义
+
+`record_observation()` 在成功保存状态或日志之后，以 `time.time()` 写入 `observation.json` 的 `observed_at` 和 API source；错误 run ID 会先被拒绝，因而不会留下伪观察。`summary()` 将事件按 `heartbeat is False` 与 `heartbeat is True` 分别输出为 `last_progress_event` 与 `last_heartbeat`，并独立计算 status/logs 的观察年龄：无时间戳或未来时间为 `unknown`，60 秒以内为 `fresh`，超过 60 秒为 `stale`。
+
+三项相关 playground 单测通过，覆盖上述 progress/heartbeat 分离、fresh/stale/unknown、`--saved` 不联网且不改写已保存产物、以及成功采集后记录观察时间。`--saved` 读取已有 `observation.json`，不会用文件 mtime 冒充平台观察时间。`PENDING` 或 `RUNNING` 不属于 `PASSED`、`FAILED`、`CANCELLED` 三种终态；它们与 `unknown` 都是明确状态，不是失败标记。
+
+traceability 仍仅表示已有的显式链接，且输出明确标注 `explicit_links_not_causal_trace`。历史 run 的 `empty` 或 `unavailable` 是已批准的证据边界，不能据此反推出缺陷，也不要求补出根因归因。
+
+### 补充结论
+
+上文第 2、3 个“未决/阻塞”现在应归类为**历史证据限制**，不是当前入口的行为阻塞：旧 evaluation 缺 SHA 的事实仍保留，但新生产链已经生成、展示并核验 SHA；旧保存状态缺观察时间和 trace 的事实仍保留，但当前实现会为新采集记录时间，并诚实保留旧记录的 `unknown`/`empty`/`unavailable`。
+
+在本轮批准的验收标准下，建议改为 **accept**。不需要为了历史缺失信息补写旧 run，也不需要把非空因果 trace 设为新的通过门槛。

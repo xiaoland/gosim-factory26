@@ -51,3 +51,5 @@
 源码接口由主 Agent 集成；真实模型与 bench 统一调度，worker 不私自运行。当前两个 worker 可以独立提交进度，不以局部通过替代整体验收。
 
 Factory 独立审查见 [审查报告](implementation/factory-review.md)；报告记录调查时状态，后续修正与通过证据归 [集成进度](implementation/factory.md)。诊断另安排未参与实现的 Agent 从命令入口盲验，不提前提供答案。
+
+执行调度调整：Pi 真实探针已完整通过；Codex 已交付并完成根 finalization，最后一个 PR finalization 模型请求仍在进行。两组无 Braid 的 Keep 与该收尾检查没有依赖，先并行启动它们以复用等待时间；两组 Braid Keep 仍以两个探针全部通过为门槛。验收范围和判据不变。
