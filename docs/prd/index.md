@@ -12,9 +12,11 @@ Codex 通过 app-server v2 接口驱动，使用固定版本 LiteLLM 将 Respons
 
 SVC 是可选的 Corpus 工作方法，通过核心的 user-scope AGENTS.md 注入。文档归属、任务包组织、verification 和工作姿势由 Agent 按实际需要采用；运行器不把 SVC 任务包作为调度协议，也不复制开发者个人指南。已有设计或实施事实的权威正文应被引用，避免任务包产生第二份权威副本。
 
-braid 的本地模式由 `sources/braid` 维护。它拥有 `.braid/design.md`、`.braid/implementation.md` 两个工作项的当前记忆，以及独立的 handoff、refresh、complete 控制动作；Factory26 只提供需求、workspace 和核心配置。设计与实现 Agent 可以修改当前正文、修正彼此发现的问题，并通过交接继续协作。每次明确交接或刷新都使用已有 SessionFactory / AgentSession 边界创建新物理会话，重新加载当前正文，不继承旧聊天。工作区保留，逻辑工作项不随物理会话更换而改变。
+braid 的本地模式由 `sources/braid` 维护。Issue、PR 和 comment 的完整当前对象存于本地数据库；Agent 用 braid CLI 修改 description、创建或 hide/unhide/delete comment、关联和交付 PR。对象写入与语义事件同事务完成，现有投影、队列、Agent Group 和会话链负责传播变化。description 变化和 comment 可见性依其来源与关联关系自动失效；自身写入不自打断或制造额外唤醒，但下一次正当执行前必须获得最新上下文。重建保留逻辑 group 与 worktree，替换物理会话并拒绝旧 turn 的控制写入。
 
-本地模式串行交接，不实现并发委派、GitHub 事件监听或中途人类交互。它复用 braid 的会话边界，但没有运行 GitHub GroupDriver / store 生命周期；不能把本地模式的验证解释成完整 GitHub 产品验收。braid 对 SVC 没有运行时依赖；SVC 也不调用 braid。
+根 Issue Agent 维护需求设计并判断交付，PR Agent 在各自 worktree 实现和自检。一个 Issue 可对应多个 PR，一个 PR 可关联多个 Issue；不固定角色往返次数。PR ready 不是自动合并或完成；根 Issue 接受 PR，将指定提交合入本次 delivery branch，并在交付自检与未完成事项处置后关闭为 completed。Braid 等待生命周期收尾和执行收敛后返回固定 commit，Factory 据此导出冻结应用。GitHub 平台接入被裁减，保留本地产品对象与 Git 工作树。
+
+Braid 对 SVC 没有运行时依赖，SVC 也不调用 Braid。user-scope 只注入两行 Corpus 导航；无人值守授权、允许本次临时仓库内 commit/merge 及比赛隔离规则归 Factory 任务契约。本地对象模式当前正进行真实核心与 bench 验收，不以确定性检查通过推导完整交付。
 
 每组先做接入检查，再根据需求生成应用，冻结后运行官方 Keep 全部 32 项测试。所有设计、实现、上下文重建会话都属于同一次生成，usage 共同计入。SVC 与 braid 在项目内独立 Git 仓库共同开发；变更后重建，以源码哈希和运行归档区分实验变量。首轮四组分数属于旧的 tasks/generation 补丁，不能用来证明当前 braid 本地模式正确。
 
@@ -29,3 +31,9 @@ braid 的本地模式由 `sources/braid` 维护。它拥有 `.braid/design.md`�
 固定并记录 benchmark 版本，不修改评测器来适配生成应用。完整评测中的失败用例是有效实验结果；安装、构建、启动或评测中断不能当作有效零分。上游需求或评测缺陷需要记录证据及影响。
 
 每次实验保留输入和应用哈希、模型参数、原始 rollout、usage、退出状态及评测结果。缺失指标按未知处理，客户端费用估算不等于比赛账单。原始产物保存在被 Git 忽略的 `runs/`，可长期分享的脱敏结论保存在 `reports/`。
+
+## 持续采用的验收基线
+
+默认每个四组 variant 各独立生成一次 Keep，冻结后执行官方全部 32 项测试；不要求应用零失败，但漏例、跳过、生成或评测基础设施失败不能作为完成验收。固定模型、需求、benchmark、核心和实际组件来源。这一批证明接入与开发闭环，不足以作统计排名或完整 ARC-bench 总分。
+
+两个真实核心另有关闭 SVC 的受控 Braid 场景，验证对象 CLI、上下文替换、旧 turn 拒绝及本地 PR 交付。诊断独立验收要求通过真实页面/源码和官方事件区分失败原因、心跳、有效进展与观测过期，并能核对会话、交付源码和评测身份；不以日志数量或输出行数代替可用性。用户已确认这套基线，范围和判据无实质变化时持续沿用。

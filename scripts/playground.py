@@ -21,6 +21,7 @@ API = 'https://arc-bench.com/api'
 CONFIG = Path.home()/'.config/factory26'
 COOKIE = CONFIG/'playground.cookies.txt'
 TERMINAL = {'PASSED', 'FAILED', 'CANCELLED'}
+OBSERVATION_MAX_AGE = 60
 PRIVATE = {'api_key', 'password', 'access_token', 'refresh_token', 'authorization', 'cookie', 'apikey', 'access_key', 'accesskey', 'token'}
 
 
@@ -117,12 +118,24 @@ def output_dir(run_id):
 
 def status(client, run_id):
     value = redact(client.request(run_path(run_id)))
+    if value.get('id') != run_id:
+        raise ValueError('平台状态的 run ID 与请求不符，未保存')
     save(output_dir(run_id)/'status.json', value)
+    record_observation(output_dir(run_id), 'status', run_path(run_id))
     return value
 
 
-def summary(value):
+def record_observation(folder, kind, endpoint):
+    path = folder/'observation.json'
+    value = json.loads(path.read_text()) if path.exists() else {}
+    value[kind] = {'observed_at': time.time(), 'source': API+endpoint}
+    save(path, value)
+
+
+def summary(value, *, events=(), observation=None, traceability=None, now=None):
+    """区分源事件、采集时间与终态；旧记录没有采集时间时保持未知。"""
     result={key:value.get(key) for key in ('id','status','passed_count','failed_count','failure_reason') if key in value}
+    result['terminal'] = value.get('status') in TERMINAL
     if value.get('finished_at') and value.get('started_at'):
         # The hosted API has returned duration=0 for real 34–43 second runs.
         try:
@@ -137,8 +150,58 @@ def summary(value):
         result['stage']=active.get('key')
         meaningful=[line for line in active.get('logs',[]) if not line.startswith('Still working:')]
         result['progress']=meaningful[-1] if meaningful else active.get('description')
+    unique = {}
+    for event in events:
+        identity = event.get('event_id')
+        if identity:
+            unique[identity] = event
+    ordered = sorted(unique.values(), key=lambda event: str(event.get('timestamp') or ''))
+    for heartbeat, key in ((False, 'last_progress_event'), (True, 'last_heartbeat')):
+        selected = [event for event in ordered if event.get('heartbeat') is heartbeat]
+        if selected:
+            result[key] = {name: selected[-1].get(name) for name in ('event_id', 'timestamp', 'stage', 'status', 'summary', 'artifact_reference')}
+    if result.get('last_progress_event'):
+        result.pop('progress', None)
+    if observation is not None:
+        current = time.time() if now is None else now
+        result['observation'] = {}
+        for kind in ('status', 'logs'):
+            stamp = observation.get(kind, {}).get('observed_at')
+            age = current - stamp if type(stamp) in (int, float) else None
+            result['observation'][kind] = {'observed_at': stamp, 'age_seconds': round(age, 1) if age is not None else None,
+                                           'freshness': 'unknown' if age is None or age < 0 else 'stale' if age > OBSERVATION_MAX_AGE else 'fresh'}
+        result['observation']['stale_after_seconds'] = OBSERVATION_MAX_AGE
+        known = isinstance(traceability, dict) and isinstance(traceability.get('interfaces'), list) and isinstance(traceability.get('tests'), list)
+        result['traceability'] = {'status': 'available' if known and (traceability['interfaces'] or traceability['tests']) else 'empty' if known else 'unavailable',
+                                  'source': observation.get('traceability', {}).get('source'),
+                                  'producer': traceability.get('producer') if known else None,
+                                  'version': traceability.get('version') if known else None,
+                                  'kind': 'explicit_links_not_causal_trace'}
+        if known:
+            result['traceability'].update(interfaces=len(traceability['interfaces']), tests=len(traceability['tests']))
     # Counts during RUNNING are partial, never a completed score.
     if value.get('status') == 'PASSED': result['test_pass_rate']=value.get('test_pass_rate')
+    return result
+
+
+def saved_summary(run_id, value=None, *, now=None):
+    """只读已采集产物；不联网，不以文件 mtime 冒充平台观测时间。"""
+    run_path(run_id)
+    folder = ROOT/'runs/playground'/run_id
+    if value is None:
+        value = json.loads((folder/'status.json').read_text())
+    if value.get('id') != run_id:
+        raise ValueError('已保存状态的 run ID 不符，拒绝关联')
+    chunks = [json.loads(path.read_text()) for path in (folder/'logs').glob('*.json')]
+    chunks.sort(key=lambda chunk: chunk.get('log_offset', 0))
+    events = [event for chunk in chunks for event in chunk.get('runner_events', [])]
+    path = folder/'observation.json'
+    observation = json.loads(path.read_text()) if path.exists() else {}
+    path = folder/'traceability.json'
+    traceability = json.loads(path.read_text()) if path.exists() else None
+    result = summary(value, events=events, observation=observation, traceability=traceability, now=now)
+    if traceability is not None:
+        result['traceability']['source'] = observation.get('traceability', {}).get('source') or str(path)
     return result
 
 
@@ -154,6 +217,7 @@ def logs(client, run_id):
     save(chunks/(chunk_id+'.json'), chunk)
     save(cursor_file, {'log_offset': chunk.get('log_offset', cursor.get('log_offset', 0)),
                        'after_event_id': chunk.get('last_event_id', cursor.get('after_event_id'))})
+    record_observation(folder, 'logs', run_path(run_id)+'/logs')
     return chunk
 
 
@@ -163,6 +227,7 @@ def collect(client, run_id):
     folder = output_dir(run_id)
     for endpoint, filename in [('traceability?node_id=__all__', 'traceability.json'), ('commit-history', 'commit-history.json')]:
         save(folder/filename, redact(client.request(run_path(run_id)+'/'+endpoint)))
+        record_observation(folder, filename.removesuffix('.json'), run_path(run_id)+'/'+endpoint)
     return value
 
 
@@ -219,9 +284,12 @@ def main():
     for action in ('status', 'logs', 'collect', 'watch', 'start', 'cancel'):
         command = commands.add_parser(action); command.add_argument('run_id')
         if action == 'watch': command.add_argument('--interval', type=int, default=15)
+        if action == 'status': command.add_argument('--saved', action='store_true', help='只读本地已采集证据，不联网')
     args = parser.parse_args()
     if args.command == 'login':
         login(args.credentials); return
+    if args.command == 'status' and args.saved:
+        print(json.dumps(saved_summary(args.run_id), ensure_ascii=False, indent=2)); return
     client = Client()
     if args.command == 'whoami':
         value = client.request('/auth/me')
@@ -244,10 +312,12 @@ def main():
         previous = None
         while True:
             value = status(client, args.run_id)
-            state = summary(value)
-            if state != previous:
-                print(json.dumps(state, ensure_ascii=False), flush=True); previous = state
             logs(client, args.run_id)
+            state = saved_summary(args.run_id, value)
+            changes = {key: item for key, item in state.items() if key not in ('observation', 'last_heartbeat')}
+            changes['freshness'] = [state['observation'][kind]['freshness'] for kind in ('status', 'logs')]
+            if changes != previous:
+                print(json.dumps(state, ensure_ascii=False), flush=True); previous = changes
             if value.get('status') in TERMINAL or value.get('status') == 'PAUSED':
                 value = collect(client, args.run_id); break
             time.sleep(args.interval)
@@ -259,7 +329,8 @@ def main():
         value = {k: value.get(k) for k in ('log_offset', 'last_event_id')}
     else:
         value = {'status': status, 'collect': collect}[args.command](client, args.run_id)
-    print(json.dumps(summary(value) if args.command in ('status', 'watch', 'collect', 'start', 'cancel') else value, ensure_ascii=False, indent=2))
+        if args.command == 'status': logs(client, args.run_id)
+    print(json.dumps(saved_summary(args.run_id, value) if args.command in ('status', 'watch', 'collect', 'start', 'cancel') else value, ensure_ascii=False, indent=2))
 
 
 if __name__ == '__main__':

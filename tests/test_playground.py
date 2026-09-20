@@ -1,4 +1,5 @@
 """Playground 的凭据、失败恢复信息与增量日志边界。"""
+import io
 import json
 from pathlib import Path
 import subprocess
@@ -13,6 +14,63 @@ import playground
 
 
 class PlaygroundTest(unittest.TestCase):
+    def test_events_separate_heartbeat_progress_terminal_and_observation_age(self):
+        progress = {'event_id': 'progress', 'timestamp': '2026-09-20 08:00:00', 'stage': 'Evaluating result', 'status': 'info', 'summary': 'Playwright started', 'heartbeat': False}
+        heartbeat = {'event_id': 'heartbeat', 'timestamp': '2026-09-20 08:05:00', 'stage': 'Evaluating result', 'status': 'info', 'summary': 'Test progress 0/135', 'heartbeat': True}
+        value = {'id': 'example', 'status': 'RUNNING', 'test_pass_rate': 0}
+        observation = {'status': {'observed_at': 990}, 'logs': {'observed_at': 800}}
+        result = playground.summary(value, events=[heartbeat, progress, heartbeat], observation=observation, traceability={'interfaces': [], 'tests': []}, now=1000)
+        self.assertFalse(result['terminal'])
+        self.assertEqual(result['last_progress_event']['event_id'], 'progress')
+        self.assertEqual(result['last_heartbeat']['event_id'], 'heartbeat')
+        self.assertEqual(result['last_progress_event']['timestamp'], progress['timestamp'])
+        self.assertEqual(result['observation']['status']['freshness'], 'fresh')
+        self.assertEqual(result['observation']['logs']['freshness'], 'stale')
+        self.assertEqual(result['traceability']['status'], 'empty')
+        self.assertNotIn('test_pass_rate', result)
+        value['status'] = 'FAILED'
+        result = playground.summary(value, events=[progress, heartbeat], observation={}, now=1000)
+        self.assertTrue(result['terminal'])
+        self.assertEqual(result['observation']['status']['freshness'], 'unknown')
+        self.assertEqual(result['traceability']['status'], 'unavailable')
+
+    def test_saved_status_is_read_only_and_preserves_explicit_link_provenance(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            folder = root/'runs/playground/example'
+            (folder/'logs').mkdir(parents=True)
+            (folder/'status.json').write_text(json.dumps({'id': 'example', 'status': 'FAILED'}))
+            (folder/'traceability.json').write_text(json.dumps({'interfaces': [{'req_ids': ['REQ-1'], 'file_path': 'app.py', 'first_line': '10'}], 'tests': [], 'producer': 'agent-sdk', 'version': '1'}))
+            (folder/'logs/one.json').write_text(json.dumps({'log_offset': 10, 'stdout': 'Do not display full stdout', 'runner_events': []}))
+            before = {str(path): path.read_bytes() for path in folder.rglob('*') if path.is_file()}
+            output = io.StringIO()
+            with patch.object(playground, 'ROOT', root), patch.object(sys, 'argv', ['playground.py', 'status', 'example', '--saved']), patch.object(sys, 'stdout', output), patch.object(playground.Client, 'request', side_effect=AssertionError('离线重放不能联网')):
+                playground.main()
+            result = json.loads(output.getvalue())
+            self.assertEqual(result['traceability']['status'], 'available')
+            self.assertEqual(result['traceability']['producer'], 'agent-sdk')
+            self.assertEqual(result['traceability']['version'], '1')
+            self.assertEqual(result['traceability']['source'], str(folder/'traceability.json'))
+            self.assertEqual(result['traceability']['kind'], 'explicit_links_not_causal_trace')
+            self.assertEqual(result['observation']['status']['freshness'], 'unknown')
+            self.assertNotIn('Do not display full stdout', output.getvalue())
+            self.assertEqual(before, {str(path): path.read_bytes() for path in folder.rglob('*') if path.is_file()})
+
+    def test_status_rejects_wrong_run_and_records_local_observation_only_on_success(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root = Path(temp)
+            client = playground.Client()
+            with patch.object(playground, 'ROOT', root), patch.object(client, 'request', return_value={'id': 'other', 'status': 'PASSED'}):
+                with self.assertRaisesRegex(ValueError, 'run ID'):
+                    playground.status(client, 'example')
+            self.assertFalse((root/'runs/playground/example/status.json').exists())
+            with patch.object(playground, 'ROOT', root), patch.object(client, 'request', return_value={'id': 'example', 'status': 'RUNNING'}), patch.object(playground.time, 'time', return_value=123):
+                playground.status(client, 'example')
+            observation = json.loads((root/'runs/playground/example/observation.json').read_text())
+            self.assertEqual(observation['status']['observed_at'], 123)
+            self.assertEqual(observation['status']['source'], playground.API+'/runs/example')
+            self.assertEqual(json.loads((root/'runs/playground/example/status.json').read_text()), {'id': 'example', 'status': 'RUNNING'})
+
     def test_watch_collects_and_exits_on_observed_passed_status(self):
         value={'id':'example','status':'PASSED','passed_count':1,'failed_count':0,'test_pass_rate':1}
         with patch.object(sys,'argv',['playground.py','watch','example']), \

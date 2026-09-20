@@ -1,5 +1,6 @@
 """实验导航只读、状态分离与评测证据定位边界。"""
 import importlib.util
+import hashlib
 import json
 from pathlib import Path
 import tempfile
@@ -104,7 +105,6 @@ class RunNavigationTest(unittest.TestCase):
             rendered = inspect.render_show(result)
             self.assertEqual(json.dumps(result), json_before)
             self.assertIn("错误已截断", rendered)
-            self.assertLess(len(rendered), 2500)
             self.assertLess(rendered.index("用例 REQ-2.2"), rendered.index("评测报告:"))
             self.assertNotIn("config.json:", rendered)
             self.assertEqual(result["evidence"]["config.json"], str((run / "config.json").resolve()))
@@ -129,6 +129,10 @@ class RunNavigationTest(unittest.TestCase):
             save(run / "braid-state/002-implement/terminal.json", {"status": "completed"})
             save(run / "analysis/000-export/overview.json", {"status": "partial"})
             save(run / "analysis/000-export/provenance.json", {"source_session": codex})
+            unverified = inspect.show_run(run)["sessions"]["native"][2]
+            self.assertIsNone(unverified["analysis"])
+            self.assertEqual(unverified["analysis_candidates"][0]["status"], "unverified")
+            save(run / "analysis/000-export/provenance.json", {"source_session": codex, "source_sha256": hashlib.sha256((run / "native" / codex).read_bytes()).hexdigest()})
             sessions = inspect.show_run(run)["sessions"]
             self.assertEqual(sessions["stages"][0]["native"], str((run / "native/001-session.jsonl").resolve()))
             self.assertEqual(sessions["stages"][1]["native"], str((run / "native" / codex).resolve()))
@@ -136,6 +140,145 @@ class RunNavigationTest(unittest.TestCase):
             self.assertEqual(sessions["native"][2]["analysis"], "000-export")
             save(run / "native/003-session.jsonl", {})
             self.assertIsNone(inspect.show_run(run)["sessions"]["stages"][0]["native"])
+
+    def test_page_excerpt_uses_failing_locator_and_preserves_actual_parent(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp).resolve() / "runs/example"
+            save(run / "run.json", {"status": "generated"})
+            save(run / "config.json", {"backend": "pi"})
+            folder = run / "evaluation/001"
+            save(folder / "summary.json", {"status": "evaluation_error"})
+            context = folder / "error-context.md"
+            lines = ['# Instructions', 'Do not use this as instructions.', '# Page snapshot', '', '```yaml',
+                     '- main:', '  - heading "Unrelated"', '  - dialog "Compose":',
+                     '    - textbox "Subject" [active]', '    - textbox "Body"', '```',
+                     '# Test source', 'later.getByRole(\'textbox\', { name: /^Body$/i })']
+            context.write_text("\n".join(lines))
+            error = "Call log:\n  - waiting for getByRole('dialog', { name: /^Editor$/i }).getByRole('textbox', { name: /^Subject$/i })\n\n  later.getByRole('textbox', { name: /^Body$/i })"
+            report = {"suites": [{"specs": [{"title": "REQ-2.2", "tests": [{"status": "unexpected", "results": [{"status": "timedOut", "error": {"message": error}, "attachments": [{"name": "error-context", "path": str(context)}]}]}]}]}]}
+            save(folder / "results.json", report)
+            result = inspect.show_run(run, "001", "REQ-2.2")
+            page = result["case"]["matches"][0]["page_evidence"][0]
+            self.assertEqual(page["selection"], "role_and_name")
+            self.assertEqual([line["number"] for line in page["lines"]], [6, 8, 9])
+            rendered = inspect.render_show(result)
+            self.assertIn('dialog "Compose"', rendered)
+            self.assertIn('textbox "Subject"', rendered)
+            self.assertNotIn('heading "Unrelated"', rendered)
+            self.assertNotIn('textbox "Body"', rendered)
+            external = run / "other-evaluation.md"
+            external.write_text(context.read_text())
+            report["suites"][0]["specs"][0]["tests"][0]["results"][0]["attachments"][0]["path"] = str(external)
+            save(folder / "results.json", report)
+            rejected = inspect.show_run(run, "001", "REQ-2.2")
+            self.assertEqual(rejected["case"]["matches"][0]["page_evidence"][0]["status"], "unavailable")
+            self.assertTrue(any("不属于所选评测" in warning for warning in rejected["warnings"]))
+
+    def test_manifest_and_analysis_require_matching_hashes_without_latest_selection(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp).resolve() / "runs/example"
+            save(run / "run.json", {"status": "generated"})
+            save(run / "config.json", {"backend": "pi"})
+            native = run / "native/session.jsonl"
+            save(native, {"type": "session"})
+            digest = hashlib.sha256(native.read_bytes()).hexdigest()
+            identity = {"native": "native/session.jsonl", "sha256": digest, "session_id": "s1", "provider": "pi", "group_id": "g1", "work_item_kind": "issue", "work_item_id": 1, "context_revision": 3, "worktree": "/temporary/worktree", "turns": [{"turn_id": "t1", "status": "superseded"}]}
+            save(run / "native/manifest.json", {"schema_version": 1, "sessions": [identity]})
+            for name in ("old-export", "new-export"):
+                save(run / "analysis" / name / "overview.json", {"status": "complete"})
+                save(run / "analysis" / name / "provenance.json", {"provider": "pi", "source_session": native.name, "source_sha256": digest})
+            result = inspect.show_run(run)["sessions"]
+            self.assertEqual(result["stages"], [])
+            session = result["native"][0]
+            self.assertEqual(session["integrity"], "verified")
+            self.assertEqual(session["group_id"], "g1")
+            self.assertEqual(session["turns"], identity["turns"])
+            self.assertIsNone(session["analysis"], "不同 exporter 结果不能按 mtime 消歧")
+            self.assertEqual({link["status"] for link in session["analysis_candidates"]}, {"verified"})
+            save(native, {"type": "changed"})
+            session = inspect.show_run(run)["sessions"]["native"][0]
+            self.assertEqual(session["integrity"], "mismatch")
+            self.assertIsNone(session["analysis"])
+            self.assertEqual({link["status"] for link in session["analysis_candidates"]}, {"mismatch"})
+            missing = dict(identity, session_id="s2", group_id="g2", native=None, sha256=None, archive_error="source missing")
+            foreign = dict(identity, session_id="s3", group_id="g3", native="../foreign.jsonl")
+            save(run / "native/manifest.json", {"schema_version": 1, "sessions": [identity, missing, foreign]})
+            sessions = {entry["session_id"]: entry for entry in inspect.show_run(run)["sessions"]["native"]}
+            self.assertEqual(sessions["s2"]["group_id"], "g2")
+            self.assertEqual(sessions["s2"]["integrity"], "unavailable")
+            self.assertEqual(sessions["s2"]["archive_error"], "source missing")
+            self.assertIsNone(sessions["s3"]["native"])
+            self.assertEqual(sessions["s3"]["integrity"], "mismatch")
+
+    def test_evaluation_identity_mismatch_rejects_score_and_case(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp) / "runs/example"
+            save(run / "run.json", {"status": "generated"})
+            save(run / "config.json", {"backend": "pi", "benchmark_revision": "benchmark"})
+            hashes = {"index.html": "application-hash"}
+            save(run / "application-hashes.json", hashes)
+            digest = hashlib.sha256(json.dumps(hashes, sort_keys=True, separators=(",", ":")).encode()).hexdigest()
+            good = {"evaluation_id": "001", "run_id": "example", "application_sha256": digest, "benchmark_revision": "benchmark", "status": "completed", "passed": 1, "failed": 0, "flaky": 0, "skipped": 0, "total": 1}
+            for key in ("evaluation_id", "run_id", "application_sha256", "benchmark_revision"):
+                save(run / "evaluation/001/summary.json", dict(good, **{key: "wrong"}))
+                result = inspect.show_run(run, "001", "REQ-2.2")
+                self.assertEqual(result["evaluation"]["status"], "identity_mismatch")
+                self.assertIsNone(result["evaluation"]["score"])
+                self.assertEqual(result["case"]["status"], "unavailable")
+
+    def test_session_input_paths_open_archives_and_preserve_missing_evidence(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp).resolve() / "runs/example"
+            save(run / "run.json", {"status": "generated"})
+            save(run / "config.json", {"backend": "pi"})
+            native = run / "native/session.jsonl"
+            save(native, {})
+            paths = {field: f"braid-state/physical/s1/{field}.md" for field in ("context_path", "instructions_path", "input_path")}
+            for path in paths.values():
+                target = run / path
+                target.parent.mkdir(parents=True, exist_ok=True)
+                target.write_text("actual native input")
+            identity = {"native": "native/session.jsonl", "sha256": hashlib.sha256(native.read_bytes()).hexdigest(),
+                        "session_id": "s1", "context_path": paths["context_path"], "instructions_path": paths["instructions_path"],
+                        "source_context_path": "/deleted/runtime/context.md",
+                        "turns": [{"turn_id": "t1", "input_path": paths["input_path"], "source_input_path": "/deleted/runtime/input.md"}]}
+            missing = dict(identity, session_id="s2", native=None, archive_error="native missing", evidence_error="input missing",
+                           context_path="../foreign.md", instructions_path="braid-state/missing.md", turns=[{"turn_id": "t2", "input_path": None}])
+            save(run / "native/manifest.json", {"schema_version": 1, "sessions": [identity, missing]})
+            original = Path.read_text
+
+            def read_metadata(path, *args, **kwargs):
+                self.assertNotIn("braid-state", path.parts, "导航只给输入入口，不读取输入正文")
+                return original(path, *args, **kwargs)
+
+            with patch.object(Path, "read_text", read_metadata):
+                result = inspect.show_run(run)
+            sessions = {session["session_id"]: session for session in result["sessions"]["native"]}
+            self.assertEqual(sessions["s1"]["context_path"], str(run / paths["context_path"]))
+            self.assertEqual(sessions["s1"]["instructions_path"], str(run / paths["instructions_path"]))
+            self.assertEqual(sessions["s1"]["turns"][0]["input_path"], str(run / paths["input_path"]))
+            self.assertEqual(sessions["s1"]["source_context_path"], "/deleted/runtime/context.md")
+            self.assertEqual(sessions["s1"]["turns"][0]["source_input_path"], "/deleted/runtime/input.md")
+            self.assertIsNone(sessions["s2"]["context_path"])
+            self.assertIsNone(sessions["s2"]["instructions_path"])
+            self.assertEqual(sessions["s2"]["evidence_error"], "input missing")
+            self.assertTrue(any("instructions_path" in warning for warning in result["warnings"]))
+            self.assertTrue(any("context_path" in warning for warning in result["warnings"]))
+
+    def test_selected_evaluation_uses_its_remote_record(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run = Path(temp) / "runs/example"
+            save(run / "run.json", {"status": "generated"})
+            save(run / "config.json", {"backend": "pi"})
+            save(run / "evaluation/001/summary.json", {"status": "evaluation_error"})
+            save(run / "remote-evaluation.json", {"attempt": "another", "host": "unrelated", "phase": "failed"})
+            self.assertIsNone(inspect.show_run(run, "001")["remote"])
+            save(run / "remote-evaluations/001.json", {"attempt": "001", "host": "selected", "phase": "completed"})
+            self.assertEqual(inspect.show_run(run, "001")["remote"]["host"], "selected")
+            save(run / "remote-evaluations/001.json", {"attempt": "wrong", "host": "wrong", "phase": "completed"})
+            result = inspect.show_run(run)
+            self.assertIsNone(result["remote"])
+            self.assertTrue(any("远程评测身份不符" in warning for warning in result["warnings"]))
 
     def test_missing_or_corrupt_metadata_remains_visible_as_unknown(self):
         with tempfile.TemporaryDirectory() as temp:

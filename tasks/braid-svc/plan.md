@@ -10,9 +10,9 @@
 | 2 | 提出解决方案，交用户复核和讨论。 | 用户已确认修订方案；旧阶段循环不再采用。 |
 | 3 | 设计验收方案，再交用户复核。 | 详细矩阵已确认，并作为后续默认基线；无实质变化不重复复核。 |
 | 4 | 规划实现顺序，由独立 Agent 预演、排障，提前消除可预见阻塞。 | 两份静态预演已完成，关键接点经主 Agent 源码复核并整合；只修改本 packet。 |
-| 5 | 实现开始前提交基线。 | 验收与预演门槛已满足；当前准备提交三个仓库的现有基线。 |
-| 6 | 按计划实现，过程中可以自主提交。 | 基线提交后开始；与方案相符的工程选择自主处理，产品行为变更需重新复核。 |
-| 7 | Agent 执行自己能完成的验收；只有必须用户亲自执行的部分才留给用户。 | 未开始；本任务真实 bench 由 Agent 执行。 |
+| 5 | 实现开始前提交基线。 | 已完成：Factory26 `93a9eb3`、braid `36a644d`、SVC `9592494`，均保存未验收草稿。 |
+| 6 | 按计划实现，过程中可以自主提交。 | 实施中；与方案相符的工程选择自主处理，产品行为变更需重新复核。 |
+| 7 | Agent 执行自己能完成的验收；只有必须用户亲自执行的部分才留给用户。 | 局部检查和历史样本的独立评测链验证已完成；真实核心探针与四组新 bench 由 Agent 执行。 |
 
 本任务前轮留下的修改不回滚。基线提交应清楚标识这些未验收草稿，不能把它们写成已完成成果。Factory26、sources/svc、sources/braid 分别记录可恢复的 Git 基线；父仓库忽略 sources 不代表子仓库没有改动。不得包含凭据、runs、构建产物或无关相邻工作树改动。用户已授权这些实施前和实施中提交，未授权 push/release。
 
@@ -39,3 +39,15 @@
 6. 将已验收事实整合进长期文档，保留脱敏报告和原始证据，检查残余事项后按项目规则删除 packet。
 
 第 4 步中的历史 case 定向证据、官方事件消费、analysis 缓存校验和明确评测 ID 可在第 1—3 步期间独立实现；Factory 的 freeze/usage/archive/show 新对象映射须等第 3 步的完成契约稳定。只有源码所有权无冲突时才分配并行工作，不让尚未确认的接口成为两个 Agent 的共同猜测。
+
+## 当前责任与集成返回
+
+| 责任 | 所有权与返回 |
+| --- | --- |
+| Braid 本地化 worker | 独占 sources/braid；局部进度见 [Braid 实施](implementation/braid.md)，稳定接口与测试结果返回主 Agent。 |
+| Factory 集成主 Agent | scripts/factory.py、core.py、braid_runtime.py、check_braid.py、harness 与对应检查；[集成进度](implementation/factory.md)。 |
+| 诊断 worker | inspect_runs.py、playground.py 与对应检查；局部进度见 [诊断实施](implementation/diagnostics.md)。 |
+
+源码接口由主 Agent 集成；真实模型与 bench 统一调度，worker 不私自运行。当前两个 worker 可以独立提交进度，不以局部通过替代整体验收。
+
+Factory 独立审查见 [审查报告](implementation/factory-review.md)；报告记录调查时状态，后续修正与通过证据归 [集成进度](implementation/factory.md)。诊断另安排未参与实现的 Agent 从命令入口盲验，不提前提供答案。

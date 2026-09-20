@@ -13,7 +13,7 @@ make test
 make run
 ```
 
-`bootstrap --variant <组合>` 从 `sources/svc` 构建项目 SVC，从 `sources/braid` 构建需要的 braid，并准备固定评测器及 Codex 所需的 LiteLLM 1.102.0。首次缺少 sources 仓库时 clone 上游 main；已有源码不会被 reset、checkout 或自动 pull。后续以 HEAD、实际源文件和安装产物哈希判断是否需要重建。ARC package-lock 缓存一致时复用依赖，Chromium 存在时复用浏览器；仍执行上游静态契约检查。
+`bootstrap --variant <组合>` 仅为启用的组件从 `sources/svc`、`sources/braid` 构建安装，并准备固定评测器及 Codex 所需的 LiteLLM 1.102.0。首次缺少 sources 仓库时 clone 上游 main；已有源码不会被 reset、checkout 或自动 pull。后续以 HEAD、实际源文件和安装产物哈希判断是否需要重建。ARC package-lock 缓存一致时复用依赖，Chromium 存在时复用浏览器；仍执行上游静态契约检查。
 
 本项目使用 `.venv/bin/svc`。机器全局 `svc` 可能仍是旧版；本文及 SVC 自动生成导航中的 `svc` 命令均应通过项目本地路径执行。CLI 版本、`svc.json` 配置 schema 和其中声明的 Corpus baseline 是不同维度；重装 CLI 不代表自动完成 Corpus 迁移。
 
@@ -33,18 +33,18 @@ FACTORY26_API_KEY=你的比赛密钥
 
 Codex 使用 app-server stdio，只有所请求线程和 turn 的 completed 通知表示结束。每次 Codex 生成启动一个仅监听 loopback 的 LiteLLM 适配器并在结束后停止；不回退到其他模型。Pi 单会话正常退出后检查最终 stopReason；braid 的 Pi provider 等待 agent_settled 后判断终态，允许原生重试和压缩收尾。
 
-braid 从 [sources/braid](../../sources/braid/) 构建，运行入口是 `braid local <request.json>`。Factory26 的 request 只提供 profile、模型核心配置、需求、workspace 和证据目录，不提供 SVC 任务包。`.braid/design.md` 与 `.braid/implementation.md` 是可编辑的当前工作记忆；独立的 `.braid/action.json` 使用 typed `handoff`（target 为 design 或 implement）、`refresh` 或 `complete`，每个动作都说明 reason。只有实现工作项且两份正文完整时可以 complete。每次明确动作后的新会话只注入当前正文，旧会话和已删除内容留在归档证据中，不回到当前上下文。动作与模型终态必须同时有效，失败或 Unknown 不能成为成功结果。
+braid 从 [sources/braid](../../sources/braid/) 构建，运行入口保持 `braid local <request.json>`。Factory 提供本次隔离 Git 仓库、profile、核心配置、需求、run ID、delivery ref 和状态目录，不提供 SVC 任务包。Braid 以本地 Issue/PR/comment 为权威，沿既有 Group/队列/会话链调度；Agent 使用每次 turn 提供的 CLI 身份修改对象，不手动请求 refresh。宿主调试写入必须显式指定 `--external`，Agent 写入必须携带当前 `--writer-turn`。
 
-接入检查直接使用同一 native 配置与 Braid 入口，要求设计→实现纠正设计→设计复核→实现完成的真实往返：
+`braid-state/result.json` 记录 completed/incomplete/failed 和交付 commit。只有根需求、必要 PR 和生命周期收尾收敛才可 completed。Factory 校验返回的 run/ref/仓库及 Git commit 身份，并导出指定 commit；不会按最新工作树或初始应用目录选择交付。
+
+两个真实核心的受控检查默认关闭 SVC：
 
 ```sh
 python3 scripts/check_braid.py --backend pi
 python3 scripts/check_braid.py --backend codex
-python3 scripts/check_braid.py --backend pi --svc
-python3 scripts/check_braid.py --backend codex --svc
 ```
 
-结果位于 `runs/integration/`，包含实际注入上下文、四次物理会话、源码快照、原生证据与独立执行的应用断言。这些小型协议检查不计入 ARC-bench 分数。
+探针通过真实 Agent 创建 comment，再验证 hide/unhide/delete、自身写入不自唤醒、外部 description 修改自动重建、失效 turn 拒绝以及新的本地 PR 交付。结果位于 `runs/integration/`，包含实际输入、全部物理会话、源码快照、原生证据和对冻结 calc.py 的独立断言；没有固定阶段数，也不计入 ARC-bench 成绩。`--svc` 仅用于额外排障，不替代默认的关闭 SVC 检查。
 
 生成结束后停止 Agent 进程组，清理工作目录仍位于本次临时工作区的独立工具进程并确认无残留，再保存应用快照并计算哈希。已退出生成进程的组清理若返回 EPERM，会保留退出码与清理异常，仍必须通过工作区清理检查；评测路径不忽略该异常。评测在另一个临时副本中安装、构建和启动应用，冻结快照保持原样。应用须提供 `package.json` 和 `npm start`，接受环境变量 `PORT`，在 `127.0.0.1` 提供服务，并让 `/api/health` 返回 200；存在 build script 时会先执行构建。
 
@@ -58,7 +58,7 @@ python3 scripts/factory.py eval --run runs/<run-id>
 python3 scripts/factory.py analyze --run runs/<run-id>
 ```
 
-`run.json` 描述生成状态，对应核心及所有 braid 阶段必须正常完成，才允许冻结为可评测结果。每次评测有独立目录和 `summary.json`；完整执行后即使存在失败用例也保留有效分数。生成失败时查阅原生会话与 stderr；评测失败时先查对应阶段日志，不把运行错误解释成模型零分。
+`run.json` 描述生成状态，对应核心或 Braid 工作项与执行状态必须完整收敛，才允许冻结为可评测结果。每次评测有独立目录和 `summary.json`；完整执行后即使存在失败用例也保留有效分数。生成失败时查阅原生会话与 stderr；评测失败时先查对应阶段日志，不把运行错误解释成模型零分。
 
 若旧运行器在成功终态后的清理环节失败，恢复前保留原始失败元数据，核验全部原生终态、最后交接动作、应用哈希及工作区无残留，另存恢复记录。未保存的退出码保持未知，不能补写成功；应用不能修改。
 
@@ -75,17 +75,17 @@ python3 scripts/factory.py show <run-id> --case REQ-2.2
 python3 scripts/factory.py show <run-id> --eval <evaluation-id> --json
 ```
 
-`list/show` 只读现有元数据，默认不读取原生 rollout。默认 show 先呈现状态、失败和相关入口；指定 --case 时优先展示该用例。全部元数据、路径、会话和 SVC evidence 映射保留在 --json，避免默认输出铺满文件列表。生成状态、所选评测和 SVC coverage 分别展示；最新本地评测失败时不回退到旧分数。用例入口展开有长度标记的错误，以及重定位后的本地截图、视频和 trace。历史数据缺少阶段或退出码时显示未知；旧 variant 根据配置推导并显式标记。
+`list/show` 只读现有元数据，默认不读取原生 rollout。默认 show 先呈现状态、失败和相关入口；指定 --case 时优先展示该用例。全部元数据、路径、会话和 SVC evidence 映射保留在 --json，避免默认输出铺满文件列表。生成状态、所选评测和 SVC coverage 分别展示；最新本地评测失败时不回退到旧分数。用例入口展开有长度标记的错误、从官方 error-context 定向提取的页面片段及行号，以及重定位后的本地截图、视频和 trace。页面事实不自动等于因果结论。历史数据缺少阶段或退出码时显示未知；旧 variant 根据配置推导并显式标记。
 
-新 run 在 setup、preflight、agent/braid、cleanup、frozen/failed 时原子更新 `run.json`；新评测记录 install、build、health、tests 等阶段及日志入口。失败保留 `failed_phase`，中断明确标记。运行时临时路径仅在生成尚未归档时保留。阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
+新 run 在 setup、preflight、agent/braid、cleanup、frozen/failed 时原子更新 `run.json`；新评测记录 install、build、health、tests 等阶段及日志入口。失败保留 `failed_phase`，中断明确标记。Braid 生成失败时另存 `recovery-workspace.json` 并保留原始隔离目录及 Git common repo，以免销毁工作树的恢复依据；成功后清理。此保留不表示失败应用已经冻结可评测，也不表示已有 Factory 一键恢复接口。阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
 
-远程评测另存 `remote-evaluation.json`，区分连接、传输、远端运行和下载，每 15 秒获取本次远端尝试的 summary。观测时间与观测失败单独保存，下载后用终态 summary 收口；断线不能被当成远程零分或停止成功。`show` 同时保留最新本地评测与远端状态，不把暂存远端状态当作已下载成绩。
+远程评测以 `remote-evaluations/<evaluation-id>.json` 保存每次请求的完整观测，`remote-evaluation.json` 仅作为最近观测的兼容入口。请求在启动前分配明确 ID，区分连接、传输、远端运行和下载，每 15 秒获取该 ID 的 summary；下载后核对 run、benchmark 和冻结应用哈希，不按目录差集猜测执行。观测时间与观测失败单独保存，下载后用终态 summary 收口；断线不能被当成远程零分或停止成功。`show` 同时保留最新本地评测与远端状态，不把暂存远端状态当作已下载成绩。
 
 ## 证据与分析
 
-`runs/<run-id>/` 保存配置、提示、输入与输出哈希、生成器源码快照、Pi 原生 session、stdout/stderr、usage，以及每次评测的源码快照、JSON、HTML、截图、视频和 trace。退出时清理 Agent 与应用进程组；报告中的相对产物链接依赖本机保留的 run，不会随源码自动分发。
+`runs/<run-id>/` 保存配置、提示、输入与输出哈希、生成器源码快照、原生 session、stdout/stderr、usage，以及每次评测的源码快照、JSON、HTML、截图、视频和 trace。`native/manifest.json` 将每个物理 session 与 provider、逻辑 group、工作项、turn、归档输入及内容哈希对应；被替换会话的用量仍计入。缺失证据保留身份及错误，不能用最新文件代替。退出时清理 Agent 与应用进程组；报告中的相对产物链接依赖本机保留的 run，不会随源码自动分发。
 
-`analyze` 为每个原生会话分别导出 `analysis/<序号>-<来源指纹>/evidence-v4.zip`，保存 overview、模型 usage 和 provenance。相同来源复用已完成分析；来源变化重新导出，全部查询成功后才发布目录，失败不覆盖已有分析。历史目录保持原样。run.json 汇总整个生成的用量，Pi 包含压缩和分支摘要用量；缺失摘要 usage 会单独标记，不能声称统计完整。进一步检查可使用 `query`、`read`；请求格式通过命令帮助与 `--schema` 查询：
+`analyze` 为每个原生会话分别导出 `analysis/<序号>-<来源指纹>/evidence-v4.zip`，保存 overview、模型 usage 和 provenance。来源指纹包含原生内容、实际 provider 和 exporter；缓存使用前核对原生清单与产物哈希。相同来源复用已完成分析；来源变化重新导出，全部查询成功后才发布目录，失败不覆盖已有分析。历史目录保持原样。run.json 汇总整个生成的用量，Pi 包含压缩和分支摘要用量；缺失摘要 usage 会单独标记，不能声称统计完整。进一步检查可使用 `query`、`read`；请求格式通过命令帮助与 `--schema` 查询：
 
 ```sh
 .venv/bin/svc analysis query --help
@@ -107,7 +107,7 @@ python3 scripts/factory.py run --variant pi-svc --eval-host wsl.win-ws.localhost
 
 wsl.win-ws.localhost 的 ~/Development/factory26 已安装固定 runner 和 Chromium，重复 bootstrap 会命中缓存。生成仍在本机完成，--eval-host 只传输冻结应用与必要元数据，在 WSL 评测后取回结果；不传比赛密钥，不在每次评测中重装 runner。应用自身依赖仍需在每次隔离评测目录中安装，以免跨实验共享可变状态。省略 --eval-host 则在本机评测。
 
-评测主机需要同步当前 scripts/、variants/、configs/ 和必要源码后运行 bootstrap。不能只复制本机 node_modules 或 Python venv 到不同平台。单独重新评测时使用 `eval --run runs/<id> --eval-host wsl.win-ws.localhost`；应用哈希必须保持不变。
+评测主机需要同步当前 scripts/、variants/、configs/ 和必要源码后运行 bootstrap。不能只复制本机 node_modules 或 Python venv 到不同平台。单独重新评测时使用 `eval --run runs/<id> --eval-host wsl.win-ws.localhost`；可用 `--evaluation-id <id>` 指定执行身份，已存在时拒绝覆盖。应用哈希必须保持不变；每次先获取官方用例发现清单，再核对实际测试身份及执行终态。
 
 ## SVC 与 braid 的共同开发
 
@@ -154,7 +154,7 @@ python3 scripts/playground.py collect <run-id>
 
 同一包重跑使用 `python3 scripts/playground.py run --submission <submission-id> --requirement <requirement-id>`，避免重复上传。已创建但尚未启动的 run 使用 `start <run-id>`；明确结束云端执行使用 `cancel <run-id>`。中断本地 `watch` 只停止等待，不改变云端 run。401 表示需要重新登录。
 
-`status` 输出阶段摘要，`watch` 每 15 秒读取状态和增量日志，在 PASSED、FAILED、CANCELLED 或 PAUSED 时收集证据并退出。重复心跳不作为进度输出；运行中的计数不作为完整成绩。平台曾将实际耗时返回为 0，因此终态摘要用 started_at/finished_at 计算 elapsed_seconds，并汇总测试状态；原始时长字段保留在 status.json。`collect` 将状态、日志游标与分块、traceability 和 commit history 保存到 `runs/playground/<run-id>/`。JSON 的凭据字段会脱敏，但原始日志仍可能包含 Agent 工具输出，继续由 Git 忽略。
+`status <run-id> --saved` 可只读重放已归档状态，不联网、不改旧产物。摘要分开列出最近有效事件、心跳和采集时刻，缺少观测时间时明确未知；不使用文件 mtime 猜测。traceability 没有显式记录时显示未建立关联，不能由 SDK 自报 passed 推导外部评测成功。`status` 输出阶段摘要，`watch` 每 15 秒读取状态和增量日志，在 PASSED、FAILED、CANCELLED 或 PAUSED 时收集证据并退出。重复心跳不作为进度输出；运行中的计数不作为完整成绩。平台曾将实际耗时返回为 0，因此终态摘要用 started_at/finished_at 计算 elapsed_seconds，并汇总测试状态；原始时长字段保留在 status.json。`collect` 将状态、日志游标与分块、traceability 和 commit history 保存到 `runs/playground/<run-id>/`。JSON 的凭据字段会脱敏，但原始日志仍可能包含 Agent 工具输出，继续由 Git 忽略。
 
 接口来自网站当前公开前端，可能随平台更新；本次实际完成网站登录、上传、启动、Demo 单项评测和证据下载。云端环境与脚本实测见[并发与 API 报告](../../reports/2026-09-20-playground-concurrency.md)，早期协议调查见[开发闭环调查](../../reports/2026-09-20-development-loop.md)。当前本地四组 harness 尚未适配平台的 Python 入口与 frontend/backend 部署布局，因此 hosted runner 还不能直接替换 `--eval-host`。
 

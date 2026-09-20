@@ -45,6 +45,60 @@ class BaselineBoundaryTest(unittest.TestCase):
             self.assertEqual(result['tokens']['totalTokens'],12)
             self.assertEqual(result['tokens']['reasoning'],2)
 
+    def test_invalidated_pi_session_keeps_consumed_usage(self):
+        with tempfile.TemporaryDirectory() as temp:
+            session=Path(temp)/'session.jsonl'
+            session.write_text(json.dumps({'message':{'role':'assistant','stopReason':'aborted',
+                                                     'usage':{'input':5,'output':2,'totalTokens':7}}}))
+            self.assertEqual(factory.pi_usage(session,require_completed=False)['tokens']['totalTokens'],7)
+            with self.assertRaises(RuntimeError): factory.pi_usage(session)
+
+    def test_failed_braid_workspace_retains_common_git_data(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run=Path(temp)
+            with self.assertRaisesRegex(RuntimeError,'disconnected'):
+                with factory.generation_workspace(run,retain_failure=True) as work:
+                    (work/'repo.git').write_text('recovery object source')
+                    raise RuntimeError('disconnected')
+            self.assertEqual(json.loads((run/'recovery-workspace.json').read_text())['path'],str(work))
+            self.assertTrue((work/'repo.git').exists())
+            factory.shutil.rmtree(work)
+            with factory.generation_workspace(run,retain_failure=True) as complete:
+                (complete/'done').touch()
+            self.assertFalse(complete.exists())
+
+    def test_freeze_cannot_follow_application_link_to_host_files(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp);app=root/'app';app.mkdir()
+            (root/'external').write_text('outside allowed application')
+            (app/'leak').symlink_to(root/'external')
+            with self.assertRaisesRegex(RuntimeError,'工作区外'):
+                factory.copy_application(app,root/'frozen')
+
+    def test_case_inventory_rejects_missing_and_skipped_execution(self):
+        listed={'suites':[{'specs':[{'id':'case-one','tests':[{'projectId':'chromium'}]}]}]}
+        report=json.loads(json.dumps(listed))
+        test=report['suites'][0]['specs'][0]['tests'][0]
+        test['results']=[{'status':'timedOut'}]
+        self.assertEqual(factory.verify_case_completion(listed,report),1)
+        test['results'][0]['status']='skipped'
+        with self.assertRaisesRegex(RuntimeError,'跳过'): factory.verify_case_completion(listed,report)
+        with self.assertRaisesRegex(RuntimeError,'不一致'): factory.verify_case_completion(listed,{'suites':[]})
+
+    def test_evaluation_request_cannot_claim_another_attempt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            run=Path(temp); app_hashes={'app.js':'abc'}
+            factory.save(run/'application-hashes.json',app_hashes)
+            config={'benchmark_revision':'pinned'}
+            summary={'evaluation_id':'wanted','run_id':run.name,'benchmark_revision':'pinned',
+                     'application_sha256':factory.digest(app_hashes)}
+            factory.check_evaluation_identity(summary,run,config,'wanted')
+            for key in summary:
+                wrong=dict(summary); wrong[key]='other'
+                with self.subTest(key=key), self.assertRaisesRegex(RuntimeError,'身份'):
+                    factory.check_evaluation_identity(wrong,run,config,'wanted')
+            with self.assertRaises(ValueError): factory.evaluation_id('../outside')
+
     def test_cleanup_reaches_detached_workspace_process(self):
         with tempfile.TemporaryDirectory() as temp:
             work=Path(temp).resolve()
@@ -170,6 +224,9 @@ class BaselineBoundaryTest(unittest.TestCase):
                 factory.analyze(run,source)
                 self.assertEqual(len(exported),3)
                 self.assertEqual(len(list((run/'analysis').glob('*/provenance.json'))),2)
+                (run/'native/session.jsonl').write_text('{"new":"bytes"}')
+                factory.analyze(run,source)
+                self.assertEqual(len(list((run/'analysis').glob('*/provenance.json'))),3)
 
     def test_remote_connection_failure_is_observable(self):
         with tempfile.TemporaryDirectory() as temp:

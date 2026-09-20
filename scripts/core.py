@@ -1,7 +1,54 @@
 """Native agent transports; provider homes are supplied by the isolated run."""
 import json
+import hashlib
+import re
+import shutil
 import subprocess
 from pathlib import Path
+
+
+def archive_sessions(output, home, work, entries):
+    """Archive every declared physical session, including invalidated sessions.
+
+    Missing evidence remains an explicit entry so failure diagnostics retain the
+    producer's identity instead of guessing from file order or modification time.
+    """
+    native = output/'native'
+    native.mkdir(exist_ok=True)
+    archived = []
+    for index, entry in enumerate(entries):
+        row = dict(entry, native=None, sha256=None)
+        try:
+            provider, session_id = row['provider'], row['session_id']
+            source = row.get('native_session_path')
+            if not source and provider == 'codex' and re.fullmatch(r'[a-fA-F0-9-]+', session_id):
+                matches = list(home.glob(f'sessions/**/rollout-*-{session_id}.jsonl'))
+                if len(matches) != 1:
+                    raise ValueError('Codex thread 没有唯一的原生 rollout')
+                source = matches[0]
+            if not source:
+                raise ValueError('会话没有明确的原生文件路径')
+            source = Path(source).resolve(strict=True)
+            if not source.is_relative_to(work.resolve()):
+                raise ValueError('原生会话路径不属于本次隔离目录')
+            with source.open() as stream:
+                header = json.loads(stream.readline())
+            actual_id = header.get('payload', {}).get('id') if provider == 'codex' else header.get('id')
+            # Pi's provider session ID is its native path; the header carries a UUID.
+            if provider == 'codex' and actual_id != session_id:
+                raise ValueError('原生会话身份与 Braid 清单不同')
+            if provider == 'pi' and session_id not in (actual_id, str(source)):
+                raise ValueError('Pi 原生会话身份与清单不同')
+            target = native/f'{index:03}-{source.name}'
+            shutil.copy2(source, target)
+            row.update(source_path=str(source), native=str(target.relative_to(output)),
+                       sha256=hashlib.sha256(target.read_bytes()).hexdigest(), native_id=actual_id)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            row['archive_error'] = str(exc)
+        archived.append(row)
+    manifest = {'schema_version': 1, 'sessions': archived}
+    (native/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
+    return archived
 
 
 def codex_turn(command, app, env, prompt, output, model, thinking):

@@ -7,6 +7,7 @@ import json
 import os
 from pathlib import Path
 import platform
+import re
 import shutil
 import shlex
 import signal
@@ -46,6 +47,29 @@ def hashes(folder):
     return {str(p.relative_to(folder)): hashlib.sha256(p.read_bytes()).hexdigest()
             for p in sorted(folder.rglob("*")) if p.is_file()
             and not {"node_modules", ".git", "__pycache__"}.intersection(p.relative_to(folder).parts)}
+
+
+def copy_application(source, output):
+    root=source.resolve()
+    omitted={'node_modules','.git','__pycache__','.braid'}
+    def ignore(folder, names):
+        for name in set(names)-omitted:
+            path=Path(folder)/name
+            if path.is_symlink() and not path.resolve().is_relative_to(root):
+                raise RuntimeError(f'应用链接指向工作区外: {path.relative_to(source)}')
+        return omitted.intersection(names)
+    shutil.copytree(source,output,ignore=ignore)
+
+
+def digest(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+
+
+def evaluation_id(value=None):
+    value = value or (time.strftime('%Y%m%d-%H%M%S') + '-' + uuid.uuid4().hex[:8])
+    if not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_-]{0,127}', value):
+        raise ValueError('evaluation ID 必须是单个目录名称')
+    return value
 
 
 def signal_group(proc, sig):
@@ -119,18 +143,19 @@ def api_key():
     raise RuntimeError(f"请先在 {path} 填写 FACTORY26_API_KEY")
 
 
-def pi_usage(session):
+def pi_usage(session, require_completed=True):
     entries = [json.loads(line) for line in session.read_text().splitlines()]
     messages = [entry.get("message", {}) for entry in entries]
     assistants = [m for m in messages if m.get("role") == "assistant"]
     usages = [m["usage"] for m in assistants if isinstance(m.get("usage"), dict)]
     summaries = [entry for entry in entries if entry.get("type") in ("compaction", "branch_summary")]
     usages += [entry["usage"] for entry in summaries if isinstance(entry.get("usage"), dict)]
-    if not assistants or assistants[-1].get("stopReason") != "stop":
+    if require_completed and (not assistants or assistants[-1].get("stopReason") != "stop"):
         raise RuntimeError("Pi 未正常完成；参阅原生 session 和 stderr")
     totals = {key: sum(u[key] for u in usages) if usages and all(key in u for u in usages) else None
               for key in ("input", "output", "cacheRead", "cacheWrite", "reasoning", "totalTokens")}
     return {"assistant_responses": len(assistants), "tokens": totals, "estimated_cost": None,
+            "last_stop_reason": assistants[-1].get('stopReason') if assistants else None,
             "summary_events_without_usage": sum(not isinstance(e.get("usage"), dict) for e in summaries)}
 
 
@@ -193,6 +218,24 @@ def runtime_environment(work, config):
 
 
 @contextmanager
+def generation_workspace(output, retain_failure=False):
+    work=Path(tempfile.mkdtemp(prefix='factory26-')).resolve()
+    try:
+        yield work
+    except BaseException:
+        if retain_failure:
+            # Linked worktrees require their common Git directory for recovery.
+            save(output/'recovery-workspace.json',{'path':str(work),
+                 'request':str(work/'braid-request.json'),
+                 'note':'生成失败的原始工作区已保留；未冻结交付，不可直接评测。'})
+        else:
+            shutil.rmtree(work)
+        raise
+    else:
+        shutil.rmtree(work)
+
+
+@contextmanager
 def responses_adapter(config, output):
     if config.get('backend','pi') != 'codex':
         yield config['base_url']
@@ -222,7 +265,7 @@ def responses_adapter(config, output):
         finally: stop(proc)
 
 
-def braid_request(config, work, app, native, prompt, state):
+def braid_request(config, work, app, native, prompt, state, run_id=None):
     backend=config['backend']
     wrapper=work/'pi-clean'
     if backend == 'pi':
@@ -233,9 +276,9 @@ def braid_request(config, work, app, native, prompt, state):
     profile={'id':backend, 'display_name':backend, 'tags':[], 'adapter_type':backend,
              'adapter_version':'local', 'provider':'factory26', 'model':config['model'],
              'reasoning':config['thinking'], 'user_instructions':'', 'workspace':str(app),
-             'github_actor_node_id':None,'status_surfaces':[],
-             'github_context_soft_ratio':0.8,'github_context_hard_bytes':1000000}
-    request={'profile':profile,'prompt':prompt,'state':str(state),'codex':None,'pi':None}
+             'context_soft_ratio':0.8,'context_hard_bytes':1000000}
+    request={'profile':profile,'prompt':prompt,'state':str(state),'codex':None,'pi':None,
+             'run_id':run_id or work.name, 'delivery_ref':'refs/heads/braid-delivery'}
     if backend == 'pi':
         request['pi']={'executable':str(wrapper),'provider':'deepseek','model':config['model'],
                        'thinking':config['thinking'],'home':str(native),'api_key_environment':'FACTORY26_API_KEY'}
@@ -278,22 +321,23 @@ def generate(config):
         record=sources.archive('braid',run/'sources')
         metadata['braid_revision']=record['source']['revision']
         metadata['braid_binary_sha256']=record['artifacts']['braid']
-        metadata['workflow_implementation']='braid-local-v1'
+        metadata['workflow_implementation']='braid-local-objects-v1'
     if backend=='codex': metadata['responses_adapter']='litellm==1.102.0'
     phase(run/'run.json',metadata,'setup')
     print(f'[生成] {run}', flush=True)
     begin = time.monotonic()
     try:
-        with tempfile.TemporaryDirectory(prefix='factory26-') as temp, responses_adapter(config, run) as responses_url:
-            work = Path(temp).resolve()
+        with generation_workspace(run,workflow=='braid') as work, responses_adapter(config, run) as responses_url:
             app, inputs = work/'application', work/'requirements'
             app.mkdir(); shutil.copytree(requirements, inputs)
             native, env = runtime_environment(work, config)
             prefix = isolation_prefix(work, inputs)
-            prompt = f'''请根据 {inputs} 中完整需求包独立实现 Web 应用，在当前目录 {app} 工作。
+            workspace_instruction = '使用 Braid 为当前工作项分配的当前 Git worktree。' if workflow=='braid' else f'在 {app} 工作。'
+            prompt = f'''请根据 {inputs} 中完整需求包独立实现 Web 应用。{workspace_instruction}
     阅读 requirements.md、requirements.yaml 和参考图片；格式错误或图片缺失时使用可读需求语义并记录问题。覆盖全部需求、场景和明确指定的初始数据，保留界面文字，使用可访问控件。
     交付 package.json：npm install 安装依赖；如需构建提供 npm run build；npm start 接受 PORT 并在 127.0.0.1 提供服务，GET /api/health 返回 200。
-    可以编写运行自己的检查，完成后停止服务。不得创建 Git 提交，不得读取、搜索或下载外部验收测试、benchmark 实现、参考应用或先前实验结果。只依据需求生成，自检后中文说明结果并结束。'''
+    本任务授权在本次隔离工作区内设计、实现、安装依赖、自检及本地 Git commit/merge。无人类中途介入；依据需求处理常规歧义，记录重要假设；遇到真实阻塞则报告，不等待用户。禁止 push、发布和修改外部系统或开发源码仓库。
+    可以编写运行自己的检查，完成后停止服务。不得读取、搜索或下载外部验收测试、benchmark 实现、参考应用或先前实验结果。只依据需求生成，自检后中文说明结果并结束。'''
             (run/'prompt.txt').write_text(prompt)
             if backend == 'pi':
                 save(native/'models.json', {'providers':{'deepseek':{'baseUrl':config['base_url'], 'apiKey':'$FACTORY26_API_KEY'}}})
@@ -302,6 +346,8 @@ def generate(config):
                 codex_config(native, responses_url, config['model'])
             if (native/'AGENTS.md').exists(): shutil.copy2(native/'AGENTS.md',run/'user-AGENTS.md')
             state = work/'braid-state'
+            session_entries = []
+            delivery = None
             phase(run/'run.json',metadata,'preflight',runtime={'work':str(work),'native':str(native),'braid_state':str(state)})
             try:
                 blocked = subprocess.run(prefix+['cat',str(BENCH/'package.json')],capture_output=True)
@@ -312,15 +358,22 @@ def generate(config):
                     if lookup.returncode: raise RuntimeError('沙箱内 svc 不可用: '+lookup.stderr)
                 save(run/'isolation-check.json', {'evaluator_read_denied':True,'requirements_readable':True,'network_airgap':False})
                 if workflow == 'braid':
-                    braid = work/'braid'
+                    from braid_runtime import initialize_repository, load_delivery
+                    initialize_repository(app)
+                    (work/'bin').mkdir()
+                    braid = work/'bin/braid'
                     shutil.copy2(sources.binary(),braid)
-                    request=braid_request(config,work,app,native,prompt,state)
+                    if hashlib.sha256(braid.read_bytes()).hexdigest() != metadata['braid_binary_sha256']:
+                        raise RuntimeError('Braid 运行制品与已归档构建不一致')
+                    env['PATH'] = str(braid.parent) + os.pathsep + env['PATH']
+                    request=braid_request(config,work,app,native,prompt,state,run.name)
                     save(work/'braid-request.json',request)
                     phase(run/'run.json',metadata,'braid','braid.log')
                     code = logged(prefix+[str(braid),'local',str(work/'braid-request.json')],app,env,run/'braid.log', metadata.setdefault('cleanup_errors',[]))
                     metadata['process_exit_code']=code
                     if code: raise RuntimeError('braid local 执行失败；参阅 braid.log')
-                    sessions = list((app/'.braid/pi-sessions').glob('*.jsonl')) if backend=='pi' else list(native.glob('sessions/**/*.jsonl'))
+                    delivery=load_delivery(state,app,work,request)
+                    metadata['delivery'] = delivery
                 elif backend == 'pi':
                     session = native/'session.jsonl'
                     command = prefix+['pi','--provider','deepseek','--model',config['model'],'--thinking',config['thinking'],
@@ -331,20 +384,14 @@ def generate(config):
                     code = logged(command+[prompt],app,env,run/'pi-events.jsonl', metadata.setdefault('cleanup_errors',[]))
                     metadata['process_exit_code']=code
                     if code: raise RuntimeError('Pi 退出失败')
-                    sessions = [session]
+                    session_entries = [{'provider':'pi','session_id':str(session),'native_session_path':str(session),
+                                        'worktree':str(app),'turns':[{'status':'completed'}]}]
                 else:
                     from core import codex_turn
                     phase(run/'run.json',metadata,'agent','codex-events.jsonl')
-                    metadata['usage'] = codex_turn(prefix+['codex'],app,env,prompt,run,config['model'],config['thinking'])
-                    sessions = list(native.glob('sessions/**/*.jsonl'))
-                if backend == 'pi':
-                    if not sessions: raise RuntimeError('没有 Pi 原生会话')
-                    usages = [pi_usage(s) for s in sessions]
-                    metadata['usage'] = {'sessions':len(usages), 'assistant_responses':sum(u['assistant_responses'] for u in usages),
-                        'summary_events_without_usage':sum(u['summary_events_without_usage'] for u in usages),
-                        'tokens':{key:sum(u['tokens'][key] for u in usages) if all(u['tokens'][key] is not None for u in usages) else None for key in usages[0]['tokens']},'estimated_cost':None}
-                else:
-                    metadata['usage']=codex_usage(sessions)
+                    terminal = codex_turn(prefix+['codex'],app,env,prompt,run,config['model'],config['thinking'])
+                    session_entries = [{'provider':'codex','session_id':terminal['thread_id'],
+                                        'worktree':str(app),'turns':[{'status':'completed'}]}]
                 metadata['status']='generated'
                 phase(run/'run.json',metadata,'cleanup')
             except BaseException as exc:
@@ -353,15 +400,41 @@ def generate(config):
             finally:
                 metadata['cleanup_pids']=cleanup_workspace(work)
                 metadata.update(generation_seconds=time.monotonic()-begin,generation_finished_at=time.time())
-                shutil.copytree(app,run/'application',ignore=shutil.ignore_patterns('node_modules','.git','__pycache__','.braid'))
+                if delivery is not None:
+                    from braid_runtime import export_delivery
+                    export_delivery(app,delivery['delivery_commit'],run/'application')
+                else:
+                    copy_application(app,run/'application')
                 shutil.copytree(inputs,run/'input')
-                native_output = run/'native';native_output.mkdir()
-                native_sessions = list(native.glob('sessions/**/*.jsonl')) if backend=='codex' else ([native/'session.jsonl'] if (native/'session.jsonl').exists() else []) + list((app/'.braid/pi-sessions').glob('*.jsonl'))
-                for i, session in enumerate(sorted(native_sessions)):
-                    shutil.copy2(session,native_output/f'{i:03}-{session.name}')
-                if state.exists(): shutil.copytree(state,run/'braid-state')
+                if workflow == 'braid' and state.exists():
+                    from braid_runtime import archive_state
+                    session_entries = archive_state(state,run)
+                elif not session_entries:
+                    # A failed native turn still has useful evidence, identified by its own header.
+                    paths = native.glob('sessions/**/*.jsonl') if backend=='codex' else native.glob('session.jsonl')
+                    for source in sorted(paths):
+                        with source.open() as stream: header=json.loads(stream.readline())
+                        identity=header.get('payload',{}).get('id') if backend=='codex' else str(source)
+                        session_entries.append({'provider':backend,'session_id':identity,
+                                                'native_session_path':str(source),'turns':[]})
+                from core import archive_sessions
+                archived = archive_sessions(run,native,work,session_entries)
                 save(run/'application-hashes.json',hashes(run/'application'))
+                metadata['application_sha256']=digest(hashes(run/'application'))
                 metadata.pop('runtime',None)
+                missing=[entry for entry in archived if entry.get('archive_error') or entry.get('evidence_error')]
+                if metadata['status']=='generated' and (not archived or missing):
+                    raise RuntimeError('原生会话证据缺失；参阅 native/manifest.json')
+                if archived and not missing:
+                    if backend == 'pi':
+                        usages = [pi_usage(run/entry['native'],require_completed=workflow!='braid'
+                                           and metadata['status']=='generated') for entry in archived]
+                        metadata['usage'] = {'sessions':len(usages),'assistant_responses':sum(u['assistant_responses'] for u in usages),
+                            'summary_events_without_usage':sum(u['summary_events_without_usage'] for u in usages),
+                            'tokens':{key:sum(u['tokens'][key] for u in usages) if all(u['tokens'][key] is not None for u in usages)
+                                      else None for key in usages[0]['tokens']},'estimated_cost':None}
+                    else:
+                        metadata['usage']=codex_usage([run/entry['native'] for entry in archived])
                 phase(run/'run.json',metadata,'frozen' if metadata['status']=='generated' else 'failed')
     except BaseException as exc:
         metadata.update(status='generation_failed',error=str(exc),generation_seconds=time.monotonic()-begin,
@@ -409,17 +482,47 @@ def validate_snapshot(run):
     return config
 
 
-def evaluate(run):
+def report_cases(report):
+    """Keep discovery and results on the same official test identities."""
+    cases = {}
+    def visit(suite):
+        for spec in suite.get('specs', []):
+            for test in spec.get('tests', []):
+                key = (spec['id'], test['projectId'])
+                if key in cases:
+                    raise RuntimeError('评测报告包含重复测试身份')
+                cases[key] = test
+        for child in suite.get('suites', []):
+            visit(child)
+    visit(report)
+    return cases
+
+
+def verify_case_completion(listed, report):
+    expected, actual = report_cases(listed), report_cases(report)
+    if not expected or expected.keys() != actual.keys():
+        raise RuntimeError('实际评测用例与官方发现清单不一致')
+    if any(not test.get('results') or test['results'][-1].get('status')
+           not in ('passed', 'failed', 'timedOut') for test in actual.values()):
+        raise RuntimeError('评测存在跳过或未完成用例')
+    return len(expected)
+
+
+def evaluate(run, attempt=None):
     config = validate_snapshot(run)
     if capture("git", "rev-parse", "HEAD", cwd=BENCH) != config["benchmark_revision"] or capture("git", "status", "--porcelain", cwd=BENCH):
         raise RuntimeError("评测器必须是固定且未经修改的版本")
-    output = run / "evaluation" / (time.strftime("%Y%m%d-%H%M%S") + "-" + uuid.uuid4().hex[:6])
+    attempt = evaluation_id(attempt)
+    output = run / 'evaluation' / attempt
     output.mkdir(parents=True)
     shutil.copy2(Path(__file__), output / "runner-evaluation.py")
     result = {"status": "starting", "started_at": time.time(), "retries": 0, "workers": 1,
               "platform": platform.platform(), "node_version": capture("node", "--version"),
               "test_timeout_ms": 60000, "expect_timeout_ms": 10000,
-              "ci": False, "source_application_hashes": "../../application-hashes.json"}
+              "ci": False, "source_application_hashes": "../../application-hashes.json",
+              "evaluation_id": attempt, "run_id": run.name,
+              "benchmark_revision": config['benchmark_revision'],
+              "application_sha256": digest(hashes(run/'application'))}
     begin = time.monotonic()
     phase(output/'summary.json',result,'setup')
     print(f"[评测] {output}", flush=True)
@@ -433,6 +536,9 @@ def evaluate(run):
         with tempfile.TemporaryDirectory(prefix="factory26-eval-") as temp:
             app = Path(temp) / "application"
             shutil.copytree(run / "application", app)
+            result['evaluated_source_sha256'] = digest(hashes(app))
+            if result['evaluated_source_sha256'] != result['application_sha256']:
+                raise RuntimeError('评测副本与冻结应用不一致')
             package = json.loads((app / "package.json").read_text())
             install = ["npm", "ci"] if (app / "package-lock.json").exists() else ["npm", "install"]
             phase(output/'summary.json',result,'install','install.log')
@@ -442,6 +548,9 @@ def evaluate(run):
                 phase(output/'summary.json',result,'build','build.log')
                 if logged(["npm", "run", "build"], app, env, output / "build.log") != 0:
                     raise RuntimeError("应用构建失败")
+            prepared_hashes=hashes(app)
+            save(output/'prepared-application-hashes.json',prepared_hashes)
+            result['prepared_application_sha256']=digest(prepared_hashes)
             with socket.socket() as listener:
                 listener.bind(("127.0.0.1", 0))
                 port = listener.getsockname()[1]
@@ -472,13 +581,24 @@ def evaluate(run):
                                "--target-url", url, "--timeout", "60000", "--expect-timeout", "10000",
                                "--retries=0", "--reporter=list,json,html"]
                     save(output / "command.json", command)
+                    phase(output/'summary.json',result,'discovery','discovery.log')
+                    discovery_env = dict(env, PLAYWRIGHT_JSON_OUTPUT_FILE=str(output/'listed.json'))
+                    discovery = ['npm', 'run', 'test', '--', '--app', config['task'],
+                                 '--', '--list', '--reporter=json']
+                    if logged(discovery, BENCH, discovery_env, output/'discovery.log') != 0:
+                        raise RuntimeError('官方用例发现失败')
+                    listed = json.loads((output/'listed.json').read_text())
+                    if listed.get('errors'):
+                        raise RuntimeError('官方用例发现报告包含错误')
                     phase(output/'summary.json',result,'tests','test.log')
                     result["exit_code"] = logged(command, BENCH, env, output / "test.log")
                     if not (output / "results.json").exists():
                         raise RuntimeError("评测未生成 JSON 报告；参阅 test.log")
-                    result.update(score(json.loads((output / "results.json").read_text())))
+                    report = json.loads((output / 'results.json').read_text())
+                    result.update(score(report))
                     if not result["total"] or result["errors"] or result["exit_code"] not in (0, 1):
                         raise RuntimeError("评测中断、没有测试结果或出现全局错误，不能作为完整分数")
+                    result['verified_cases'] = verify_case_completion(listed, report)
                     result["status"] = "completed"
                 finally:
                     stop(proc)
@@ -493,22 +613,43 @@ def evaluate(run):
     return output
 
 
-def remote_evaluation_snapshot(host, remote_run):
-    code = "from pathlib import Path; import json; p=Path("+repr(remote_run)+")/'evaluation'; print(json.dumps({x.parent.name:json.loads(x.read_text()) for x in p.glob('*/summary.json')}))"
+def remote_evaluation_snapshot(host, remote_run, attempt):
+    code = "from pathlib import Path; import json; p=Path("+repr(remote_run)+")/'evaluation'/"+repr(attempt)+"/'summary.json'; print(p.read_text() if p.exists() else 'null')"
     return json.loads(capture('ssh',host,'python3 -c '+shlex.quote(code)))
 
 
-def evaluate_remote(run, host):
+def check_evaluation_identity(summary, run, config, attempt):
+    expected = {'evaluation_id': attempt, 'run_id': run.name,
+                'benchmark_revision': config['benchmark_revision'],
+                'application_sha256': digest(json.loads((run/'application-hashes.json').read_text()))}
+    if any(summary.get(key) != value for key, value in expected.items()):
+        raise RuntimeError('评测身份与请求或冻结应用不一致')
+
+
+def evaluate_remote(run, host, attempt=None):
     """Transfer a frozen application; the host keeps its installed evaluator."""
     config=validate_snapshot(run)
-    remote={'host':host}
-    phase(run/'remote-evaluation.json',remote,'connect')
+    attempt = evaluation_id(attempt)
+    record = run/'remote-evaluations'/f'{attempt}.json'
+    record.parent.mkdir(exist_ok=True)
+    if record.exists():
+        raise FileExistsError(f'评测 ID 已使用: {attempt}')
+    remote={'host':host, 'attempt':attempt}
+    def publish(name=None, **fields):
+        if name:
+            phase(record, remote, name, **fields)
+        else:
+            remote.update(updated_at=time.time(), **fields)
+            save(record, remote)
+        # Convenience pointer for old readers; this attempt's record is authoritative.
+        save(run/'remote-evaluation.json', remote)
+    publish('connect')
     try:
         remote_home=capture('ssh',host,'pwd')
         remote_root=remote_home+'/Development/factory26'
         remote_run=remote_root+'/runs/'+run.name
         remote['remote_run']=remote_run
-        phase(run/'remote-evaluation.json',remote,'transfer')
+        publish('transfer')
         probe=subprocess.run(['ssh',host,'test -d '+shlex.quote(remote_run)],capture_output=True)
         if probe.returncode:
             command='mkdir -p '+shlex.quote(remote_run)+' && tar -xf - -C '+shlex.quote(remote_run)
@@ -524,9 +665,8 @@ def evaluate_remote(run, host):
             raise RuntimeError('remote run identity has different application hashes')
         remote_config=json.loads(capture('ssh',host,'cat '+shlex.quote(remote_run+'/config.json')))
         if remote_config!=config: raise RuntimeError('remote run configuration differs from frozen local run')
-        command='cd '+shlex.quote(remote_root)+' && python3 scripts/factory.py eval --run '+shlex.quote(remote_run)
-        previous=set(remote_evaluation_snapshot(host,remote_run))
-        phase(run/'remote-evaluation.json',remote,'running_remote')
+        command='cd '+shlex.quote(remote_root)+' && python3 scripts/factory.py eval --run '+shlex.quote(remote_run)+' --evaluation-id '+shlex.quote(attempt)
+        publish('running_remote')
         result=subprocess.Popen(['ssh',host,command])
         while True:
             try:
@@ -534,42 +674,41 @@ def evaluate_remote(run, host):
                 break
             except subprocess.TimeoutExpired:
                 try:
-                    observations=remote_evaluation_snapshot(host,remote_run)
-                    current=sorted(set(observations)-previous)
-                    if current:
-                        attempt=current[-1]
-                        remote.update(attempt=attempt,summary=observations[attempt],observation_error=None)
+                    summary=remote_evaluation_snapshot(host,remote_run,attempt)
+                    if summary is not None:
+                        check_evaluation_identity(summary,run,config,attempt)
+                        remote.update(summary=summary,observation_error=None)
                     remote['observed_at']=time.time()
                 except (OSError,subprocess.CalledProcessError,ValueError) as exc:
                     remote['observation_error']=str(exc)
-                remote['updated_at']=time.time()
-                save(run/'remote-evaluation.json',remote)
-        phase(run/'remote-evaluation.json',remote,'download',exit_code=result.returncode)
+                publish()
+        publish('download',exit_code=result.returncode)
         with tempfile.TemporaryDirectory(prefix='factory26-results-') as temp:
-            download=subprocess.Popen(['ssh',host,'tar -cf - -C '+shlex.quote(remote_run)+' evaluation'],stdout=subprocess.PIPE)
+            download=subprocess.Popen(['ssh',host,'tar -cf - -C '+shlex.quote(remote_run)+' '+shlex.quote('evaluation/'+attempt)],stdout=subprocess.PIPE)
             try:
                 with tarfile.open(fileobj=download.stdout,mode='r|') as archive:
                     archive.extractall(temp,filter='data')
             finally: download.stdout.close()
             if download.wait(): raise RuntimeError('remote evidence download failed')
-            output=run/'evaluation';output.mkdir(exist_ok=True)
-            for folder in (Path(temp)/'evaluation').iterdir():
-                if not (output/folder.name).exists(): shutil.copytree(folder,output/folder.name)
-        attempts=sorted(folder for folder in output.iterdir() if folder.is_dir() and folder.name not in previous)
-        if attempts:
-            latest=attempts[-1]
-            summary=json.loads((latest/'summary.json').read_text())
-            remote.update(attempt=latest.name,summary=summary,observed_at=time.time(),observation_error=None)
+            downloaded=Path(temp)/'evaluation'/attempt
+            summary=json.loads((downloaded/'summary.json').read_text())
+            check_evaluation_identity(summary,run,config,attempt)
+            output=run/'evaluation'/attempt
+            output.parent.mkdir(exist_ok=True)
+            shutil.copytree(downloaded,output)
+        remote.update(summary=summary,observed_at=time.time(),observation_error=None)
         if result.returncode:
             remote['failed_phase']='remote_'+(remote.get('summary',{}).get('failed_phase') or 'execution')
             raise RuntimeError('remote evaluation failed; downloaded evidence retained')
-        phase(run/'remote-evaluation.json',remote,'completed')
+        if summary.get('status') != 'completed':
+            raise RuntimeError('远程进程结束但评测没有完整终态')
+        publish('completed')
     except BaseException as exc:
         remote.update(error=str(exc) or type(exc).__name__)
         remote.setdefault('failed_phase',remote.get('phase'))
-        phase(run/'remote-evaluation.json',remote,'failed')
+        publish('failed')
         raise
-    return run/'evaluation'
+    return output
 
 
 def analyze(run, svc_source=None):
@@ -584,31 +723,55 @@ def analyze(run, svc_source=None):
         provenance['source_hashes']=hashes(package)
     requests=[{'version':3,'intent':'overview'},{'version':3,'intent':'profile','breakdown':'model'}]
     provenance['requests']=requests
-    fingerprint=hashlib.sha256(json.dumps(provenance,sort_keys=True).encode()).hexdigest()[:16]
     metadata=json.loads((run/'run.json').read_text())
-    sources=sorted((run/'native').glob('*.jsonl'))
-    if not sources: sources=[run/'pi-session.jsonl']
+    manifest = run/'native/manifest.json'
+    if manifest.exists():
+        entries = json.loads(manifest.read_text())['sessions']
+        if any(entry.get('archive_error') or not entry.get('native') for entry in entries):
+            raise RuntimeError('原生清单包含缺失证据；不能关联 analysis')
+    else:
+        paths=sorted((run/'native').glob('*.jsonl'))
+        if not paths and (run/'pi-session.jsonl').exists(): paths=[run/'pi-session.jsonl']
+        entries = [{'native':str(path.relative_to(run)), 'provider':metadata['backend']} for path in paths]
+    if not entries:
+        raise RuntimeError('没有可分析的原生会话')
     output=run/'analysis'; output.mkdir(exist_ok=True)
-    for index, source in enumerate(sources):
-        # Immutable analysis generations: changing an exporter must actually re-export.
+    for index, entry in enumerate(entries):
+        source = (run/entry['native']).resolve(strict=True)
+        if not source.is_relative_to(run.resolve()):
+            raise RuntimeError('原生清单指向 run 以外的路径')
+        source_hash = hashlib.sha256(source.read_bytes()).hexdigest()
+        if entry.get('sha256') is not None and source_hash != entry['sha256']:
+            raise RuntimeError('原生清单内容哈希不一致')
+        inputs = dict(provenance, source_session=source.name, source_sha256=source_hash,
+                      provider=entry['provider'])
+        fingerprint = digest(inputs)[:20]
+        # Both the exporter and exact native bytes determine a reusable analysis.
         folder=output/f'{index:03}-{fingerprint}'
         if folder.exists():
+            cached = json.loads((folder/'provenance.json').read_text())
+            if any(cached.get(key) != value for key, value in inputs.items()):
+                raise RuntimeError(f'analysis 缓存来源不匹配: {folder}')
+            if any(not (folder/name).is_file() or hashlib.sha256((folder/name).read_bytes()).hexdigest() != sha
+                   for name, sha in cached['artifacts'].items()):
+                raise RuntimeError(f'analysis 缓存内容已改变: {folder}')
             print(f'[缓存] {folder}',flush=True)
             continue
         with tempfile.TemporaryDirectory(prefix='.analysis-',dir=output) as temp:
             staging=Path(temp)
             evidence=staging/'evidence-v4.zip'
-            result=capture(*svc,'telemetry','agent-thread','export','--provider',metadata['backend'],
+            result=capture(*svc,'telemetry','agent-thread','export','--provider',entry['provider'],
                            '--source',str(source),'--output',str(evidence),'--json')
             (staging/'export.json').write_text(result+'\n')
             for request in requests:
                 response=subprocess.run([*svc,'analysis','query','--input',str(evidence),'--request','-'],
                                         input=json.dumps(request),capture_output=True,text=True,check=True)
                 save(staging/f"{request['intent']}.json",json.loads(response.stdout))
-            save(staging/'provenance.json',dict(provenance,created_at=time.time(),source_session=source.name,
-                  source_sha256=hashlib.sha256(source.read_bytes()).hexdigest()))
+            if hashlib.sha256(source.read_bytes()).hexdigest() != source_hash:
+                raise RuntimeError('原生会话在 analysis 导出期间改变')
+            save(staging/'provenance.json',dict(inputs,created_at=time.time(),artifacts=hashes(staging)))
             staging.rename(folder)
-    print(f'[svc] {output}，{len(sources)} 个原生会话，来源 {fingerprint}',flush=True)
+    print(f'[svc] {output}，{len(entries)} 个原生会话',flush=True)
 
 
 def bootstrap(config):
@@ -616,7 +779,8 @@ def bootstrap(config):
         if not (ROOT/'.adapter/bin/python').exists():
             subprocess.run(['uv','venv',str(ROOT/'.adapter')],check=True)
         subprocess.run(['uv','pip','install','--python',str(ROOT/'.adapter/bin/python'),'litellm[proxy]==1.102.0'],check=True)
-    sources.build('svc')
+    if config.get('svc'):
+        sources.build('svc')
     if config.get('workflow')=='braid':
         sources.build('braid')
     if not BENCH.exists():
@@ -652,6 +816,7 @@ def main():
     parser.add_argument("--task", help="list 按任务过滤")
     parser.add_argument("--json", action="store_true", help="输出可机器读取的摘要")
     parser.add_argument("--eval", dest="evaluation", help="show 指定评测尝试")
+    parser.add_argument("--evaluation-id", help="eval 的明确执行 ID；已存在时拒绝覆盖")
     parser.add_argument("--svc-source", type=Path, help="使用本地 SVC 工作树的 PDM 环境做 analysis；运行时 Corpus 不变")
     parser.add_argument("--case", help="show 指定失败用例，如 REQ-2.2")
     parser.add_argument("--eval-host", help="SSH host with bootstrapped ~/Development/factory26 evaluator")
@@ -671,9 +836,9 @@ def main():
         return
     if args.command in ('eval','analyze'):
         if args.run is None: parser.error('eval/analyze 需要 --run')
-        if args.command=='eval' and args.eval_host: evaluate_remote(args.run.resolve(),args.eval_host)
+        if args.command=='eval' and args.eval_host: evaluate_remote(args.run.resolve(),args.eval_host,args.evaluation_id)
         elif args.command=='analyze': analyze(args.run.resolve(),args.svc_source.resolve() if args.svc_source else None)
-        else: evaluate(args.run.resolve())
+        else: evaluate(args.run.resolve(),args.evaluation_id)
         return
     variant=args.variant or 'pi-baseline'
     if Path(variant).name!=variant or variant in ('.','..'): parser.error('variant 必须为目录名称')
