@@ -60,16 +60,18 @@ python3 scripts/factory.py analyze --run runs/<run-id>
 
 `run.json` 描述生成状态，对应核心或 Braid 工作项与执行状态必须完整收敛，才允许冻结为可评测结果。每次评测有独立目录和 `summary.json`；完整执行后即使存在失败用例也保留有效分数。生成失败时查阅原生会话与 stderr；评测失败时先查对应阶段日志，不把运行错误解释成模型零分。
 
+`factory.py run` 另存覆盖生成、评测和分析的 `outcome.json`，分析收尾后才发布 completed、failed 或 interrupted。生成失败后，只要存在原生会话清单，仍尝试 SVC analysis；分析异常独立记录，不覆盖原始错误或有效成绩。评测启动前分配 ID，即使失败也保留对应证据入口。单独的 `generate`、`eval`、`analyze` 仍各自保存阶段结果，不伪造一次完整实验的终态。
+
 若旧运行器在成功终态后的清理环节失败，恢复前保留原始失败元数据，核验全部原生终态、最后交接动作、应用哈希及工作区无残留，另存恢复记录。未保存的退出码保持未知，不能补写成功；应用不能修改。
 
 安装、构建或运行环境问题解决后，可对未改动的应用快照再次执行 `eval`，产生新的评测目录。新的生成或使用外部反馈的修改必须作为独立实验处理，不能覆盖旧快照。评测器版本或快照哈希不匹配时，先核对来源，不绕过检查。
 
 ## 诊断入口
 
-先使用摘要，再按问题打开证据：
+先使用全流程摘要，再按具体问题打开已有诊断入口：
 
 ```sh
-python3 scripts/factory.py list --task keep
+python3 scripts/run_feedback.py brief runs/<run-id>
 python3 scripts/factory.py show <run-id>
 python3 scripts/factory.py show <run-id> --case REQ-2.2
 python3 scripts/factory.py show <run-id> --eval <evaluation-id> --json
@@ -77,9 +79,24 @@ python3 scripts/factory.py show <run-id> --eval <evaluation-id> --json
 
 `list/show` 只读已有运行。生成失败时，show 从哈希核实的 Pi 归档提取末条 assistant 的终止原因与记录位置；不展示完整正文，不回溯已恢复或已替代会话的旧错误，损坏或关联不唯一时明确未知。默认 show 先呈现状态、失败和相关入口；指定 --case 时优先展示该用例。全部元数据、路径、会话和 SVC evidence 映射保留在 --json，避免默认输出铺满文件列表。生成状态、所选评测和 SVC coverage 分别展示；最新本地评测失败时不回退到旧分数。用例入口展开有长度标记的错误、从官方 error-context 定向提取的页面片段及行号，以及重定位后的本地截图、视频和 trace。页面事实不自动等于因果结论。历史数据缺少阶段或退出码时显示未知；旧 variant 根据配置推导并显式标记。
 
-新 run 在 setup、preflight、agent/braid、cleanup、frozen/failed 时原子更新 `run.json`；新评测记录 install、build、health、tests 等阶段及日志入口。失败保留 `failed_phase`，中断明确标记。Braid 生成失败时另存 `recovery-workspace.json` 并保留原始隔离目录及 Git common repo，以免销毁工作树的恢复依据；成功后清理。此保留不表示失败应用已经冻结可评测，也不表示已有 Factory 一键恢复接口。阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
+新 run 在 setup、preflight、agent/braid、cleanup、frozen/failed/interrupted 时原子更新 `run.json`；新评测记录 install、build、health、tests 等阶段及日志入口。失败保留 `failed_phase`，中断明确标记。Braid 生成失败时另存 `recovery-workspace.json` 并保留原始隔离目录及 Git common repo，以免销毁工作树的恢复依据；成功后清理。此保留不表示失败应用已经冻结可评测，也不表示已有 Factory 一键恢复接口。阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
 
-远程评测以 `remote-evaluations/<evaluation-id>.json` 保存每次请求的完整观测，`remote-evaluation.json` 仅作为最近观测的兼容入口。请求在启动前分配明确 ID，区分连接、传输、远端运行和下载，每 15 秒获取该 ID 的 summary；下载后核对 run、benchmark 和冻结应用哈希，不按目录差集猜测执行。观测时间与观测失败单独保存，下载后用终态 summary 收口；断线不能被当成远程零分或停止成功。`show` 同时保留最新本地评测与远端状态，不把暂存远端状态当作已下载成绩。
+远程评测以 `remote-evaluations/<evaluation-id>.json` 保存每次请求的完整观测，`remote-evaluation.json` 仅作为最近观测的兼容入口。请求在启动前分配明确 ID，区分连接、传输、远端运行和下载，每 180 秒获取该 ID 的 summary；SSH 进程退出立即返回，不额外等一个观察周期。下载后核对 run、benchmark 和冻结应用哈希，不按目录差集猜测执行。观测时间与观测失败单独保存，下载后用终态 summary 收口；断线不能被当成远程零分或停止成功。`show` 同时保留最新本地评测与远端状态，不把暂存远端状态当作已下载成绩。
+
+## 等待、反馈与交接
+
+一次已获授权的长实验交给较低成本子 Agent 持有运行命令和等待，主 Agent 处理其他工作或等待完成消息。交接只需本次目标、配置与证据路径、完成条件、允许操作和停止条件。子 Agent 根据程序摘要判断哪些证据值得展开，返回结果、依据、未知和需要决策的事项；不转发整段日志。每次实验结束先向用户汇报，由用户决定下一轮，不自动重跑。
+
+`run` 的后台观察器每 180 秒读取已有事件并保存 `feedback.json`，相同类别错误不重复输出，执行退出时立即刷新终态。错误类别与重试是观测事实，可能已经恢复；不输出不能指导判断的工具完成计数。整体状态以 `outcome.json` 为准，错误片段只用于定向取证。没有完整结果的旧 run 明确标记 `scope=generation`，不能据此声称 bench 已完成。
+
+主会话不定时读取原始流，也不通过每三分钟唤醒一次模型来模拟事件通知。当前使用子 Agent 的原生完成消息回传，验收范围限于主会话仍活跃的情况；尚未验证主会话结束或 App 关闭后的唤醒。中途恢复可读取持久结果，或由子 Agent 启动以下只读等待命令：
+
+```sh
+python3 scripts/run_feedback.py watch runs/<run-id>
+python3 scripts/run_feedback.py watch runs/<run-id> --after-event <已处理的event_id>
+```
+
+独立 `watch` 没有被观测进程的句柄，因此以至少 180 秒的间隔检查文件；发现终态后立即返回。已处理的终态身份保持静默，这用于去重，不保证跨进程消息恰好投递一次。停止等待不等于停止远端实验。
 
 ## 证据与分析
 
@@ -154,7 +171,7 @@ python3 scripts/playground.py collect <run-id>
 
 同一包重跑使用 `python3 scripts/playground.py run --submission <submission-id> --requirement <requirement-id>`，避免重复上传。已创建但尚未启动的 run 使用 `start <run-id>`；明确结束云端执行使用 `cancel <run-id>`。中断本地 `watch` 只停止等待，不改变云端 run。401 表示需要重新登录。
 
-`status <run-id> --saved` 可只读重放已归档状态，不联网、不改旧产物。摘要分开列出最近有效事件、心跳和采集时刻，缺少观测时间时明确未知；不使用文件 mtime 猜测。traceability 没有显式记录时显示未建立关联，不能由 SDK 自报 passed 推导外部评测成功。`status` 输出阶段摘要，`watch` 每 15 秒读取状态和增量日志，在 PASSED、FAILED、CANCELLED 或 PAUSED 时收集证据并退出。重复心跳不作为进度输出；运行中的计数不作为完整成绩。平台曾将实际耗时返回为 0，因此终态摘要用 started_at/finished_at 计算 elapsed_seconds，并汇总测试状态；原始时长字段保留在 status.json。`collect` 将状态、日志游标与分块、traceability 和 commit history 保存到 `runs/playground/<run-id>/`。JSON 的凭据字段会脱敏，但原始日志仍可能包含 Agent 工具输出，继续由 Git 忽略。
+`status <run-id> --saved` 可只读重放已归档状态，不联网、不改旧产物。摘要分开列出最近有效事件、心跳和采集时刻，缺少观测时间时明确未知；不使用文件 mtime 猜测。traceability 没有显式记录时显示未建立关联，不能由 SDK 自报 passed 推导外部评测成功。`status` 输出阶段摘要，`watch` 默认每 180 秒读取状态和增量日志，只在 PASSED、FAILED、CANCELLED 或 PAUSED 时收集证据、输出摘要并退出；可用 `--after-event` 跳过已处理的同一结果。运行中无变化保持静默，PAUSED 表示需介入而非完成；运行中的计数不作为完整成绩。观测超过 360 秒标为 stale，不据此推断远端已经停止。平台曾将实际耗时返回为 0，因此终态摘要用 started_at/finished_at 计算 elapsed_seconds，并汇总测试状态；原始时长字段保留在 status.json。`collect` 将状态、日志游标与分块、traceability 和 commit history 保存到 `runs/playground/<run-id>/`。JSON 的凭据字段会脱敏，但原始日志仍可能包含 Agent 工具输出，继续由 Git 忽略。
 
 接口来自网站当前公开前端，可能随平台更新；本次实际完成网站登录、上传、启动、Demo 单项评测和证据下载。云端环境与脚本实测见[并发与 API 报告](../../reports/2026-09-20-playground-concurrency.md)，早期协议调查见[开发闭环调查](../../reports/2026-09-20-development-loop.md)。当前本地四组 harness 尚未适配平台的 Python 入口与 frontend/backend 部署布局，因此 hosted runner 还不能直接替换 `--eval-host`。
 

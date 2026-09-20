@@ -21,7 +21,7 @@ API = 'https://arc-bench.com/api'
 CONFIG = Path.home()/'.config/factory26'
 COOKIE = CONFIG/'playground.cookies.txt'
 TERMINAL = {'PASSED', 'FAILED', 'CANCELLED'}
-OBSERVATION_MAX_AGE = 60
+OBSERVATION_MAX_AGE = 360
 PRIVATE = {'api_key', 'password', 'access_token', 'refresh_token', 'authorization', 'cookie', 'apikey', 'access_key', 'accesskey', 'token'}
 
 
@@ -283,7 +283,9 @@ def main():
     rerun.add_argument('--requirement',required=True)
     for action in ('status', 'logs', 'collect', 'watch', 'start', 'cancel'):
         command = commands.add_parser(action); command.add_argument('run_id')
-        if action == 'watch': command.add_argument('--interval', type=int, default=15)
+        if action == 'watch':
+            command.add_argument('--interval', type=int, default=180)
+            command.add_argument('--after-event', help='已处理的终态通知 ID；相同结果保持静默')
         if action == 'status': command.add_argument('--saved', action='store_true', help='只读本地已采集证据，不联网')
     args = parser.parse_args()
     if args.command == 'login':
@@ -308,18 +310,23 @@ def main():
         client.request(run_path(run_id)+'/start','POST')
         value['phase']='started';save(folder/'submission.json',value)
     elif args.command == 'watch':
-        if args.interval < 1: parser.error('interval 必须为正整数')
-        previous = None
+        if args.interval < 180: parser.error('interval 不得小于 180 秒')
         while True:
             value = status(client, args.run_id)
             logs(client, args.run_id)
-            state = saved_summary(args.run_id, value)
-            changes = {key: item for key, item in state.items() if key not in ('observation', 'last_heartbeat')}
-            changes['freshness'] = [state['observation'][kind]['freshness'] for kind in ('status', 'logs')]
-            if changes != previous:
-                print(json.dumps(state, ensure_ascii=False), flush=True); previous = changes
             if value.get('status') in TERMINAL or value.get('status') == 'PAUSED':
-                value = collect(client, args.run_id); break
+                event_id = f"{args.run_id}:{value['status']}:{value.get('finished_at') or ''}"
+                if event_id == args.after_event: return
+                value = collect(client, args.run_id)
+                if value.get('status') not in TERMINAL and value.get('status') != 'PAUSED':
+                    time.sleep(args.interval)
+                    continue
+                event_id = f"{args.run_id}:{value['status']}:{value.get('finished_at') or ''}"
+                if event_id == args.after_event: return
+                result = saved_summary(args.run_id,value)
+                result['event_id'] = event_id
+                print(json.dumps(result,ensure_ascii=False,indent=2))
+                return
             time.sleep(args.interval)
     elif args.command in ('start', 'cancel'):
         client.request(run_path(args.run_id)+'/'+args.command, 'POST')

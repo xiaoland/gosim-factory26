@@ -289,7 +289,13 @@ def braid_request(config, work, app, native, prompt, state, run_id=None):
     return request
 
 
-def generate(config):
+def new_run():
+    run = ROOT / 'runs' / (time.strftime('%Y%m%d-%H%M%S') + '-' + uuid.uuid4().hex[:8])
+    run.mkdir(parents=True)
+    return run
+
+
+def generate(config, run=None):
     backend = config.get('backend', 'pi')
     workflow = config.get('workflow', 'single')
     if backend not in ('pi', 'codex') or workflow not in ('single', 'braid'):
@@ -298,8 +304,7 @@ def generate(config):
         raise RuntimeError('benchmark 必须为固定干净版本')
     requirements = BENCH / 'arc-bench/webapp' / config['task'] / 'requirements'
     if not requirements.is_dir(): raise ValueError('任务需求包不存在')
-    run = ROOT / 'runs' / (time.strftime('%Y%m%d-%H%M%S') + '-' + uuid.uuid4().hex[:8])
-    run.mkdir(parents=True)
+    run = new_run() if run is None else run
     save(run/'config.json', config)
     save(run/'input-hashes.json', hashes(requirements))
     save(run/'runner-hashes.json', hashes(ROOT/'scripts'))
@@ -399,7 +404,8 @@ def generate(config):
                 metadata['status']='generated'
                 phase(run/'run.json',metadata,'cleanup')
             except BaseException as exc:
-                metadata.update(status='generation_failed', error=str(exc), failed_phase=metadata.get('phase'),
+                metadata.update(status='interrupted' if isinstance(exc,KeyboardInterrupt) else 'generation_failed',
+                                error=str(exc) or type(exc).__name__, failed_phase=metadata.get('phase'),
                                 failed_phase_log=metadata.get('phase_log')); raise
             finally:
                 metadata['cleanup_pids']=cleanup_workspace(work)
@@ -439,12 +445,15 @@ def generate(config):
                                       else None for key in usages[0]['tokens']},'estimated_cost':None}
                     else:
                         metadata['usage']=codex_usage([run/entry['native'] for entry in archived])
-                phase(run/'run.json',metadata,'frozen' if metadata['status']=='generated' else 'failed')
+                phase(run/'run.json',metadata,'frozen' if metadata['status']=='generated' else
+                      'interrupted' if metadata['status']=='interrupted' else 'failed')
     except BaseException as exc:
-        metadata.update(status='generation_failed',error=str(exc),generation_seconds=time.monotonic()-begin,
+        metadata.update(status='interrupted' if isinstance(exc,KeyboardInterrupt) else 'generation_failed',
+                        error=str(exc) or type(exc).__name__,generation_seconds=time.monotonic()-begin,
                         generation_finished_at=time.time())
         metadata.setdefault('failed_phase',metadata.get('phase'))
-        phase(run/'run.json',metadata,'failed',metadata.get('failed_phase_log') or metadata.get('phase_log'))
+        phase(run/'run.json',metadata,'interrupted' if metadata['status']=='interrupted' else 'failed',
+              metadata.get('failed_phase_log') or metadata.get('phase_log'))
         raise
     print(f'[已冻结] {run}',flush=True)
     return run
@@ -622,6 +631,15 @@ def remote_evaluation_snapshot(host, remote_run, attempt):
     return json.loads(capture('ssh',host,'python3 -c '+shlex.quote(code)))
 
 
+def wait_for_remote(process, observe):
+    """Process completion is immediate; remote status sampling is at most every 3 minutes."""
+    while True:
+        try:
+            return process.wait(timeout=180)
+        except subprocess.TimeoutExpired:
+            observe()
+
+
 def check_evaluation_identity(summary, run, config, attempt):
     expected = {'evaluation_id': attempt, 'run_id': run.name,
                 'benchmark_revision': config['benchmark_revision'],
@@ -672,20 +690,17 @@ def evaluate_remote(run, host, attempt=None):
         command='cd '+shlex.quote(remote_root)+' && python3 scripts/factory.py eval --run '+shlex.quote(remote_run)+' --evaluation-id '+shlex.quote(attempt)
         publish('running_remote')
         result=subprocess.Popen(['ssh',host,command])
-        while True:
+        def observe():
             try:
-                result.wait(timeout=15)
-                break
-            except subprocess.TimeoutExpired:
-                try:
-                    summary=remote_evaluation_snapshot(host,remote_run,attempt)
-                    if summary is not None:
-                        check_evaluation_identity(summary,run,config,attempt)
-                        remote.update(summary=summary,observation_error=None)
-                    remote['observed_at']=time.time()
-                except (OSError,subprocess.CalledProcessError,ValueError) as exc:
-                    remote['observation_error']=str(exc)
-                publish()
+                summary=remote_evaluation_snapshot(host,remote_run,attempt)
+                if summary is not None:
+                    check_evaluation_identity(summary,run,config,attempt)
+                    remote.update(summary=summary,observation_error=None)
+                remote['observed_at']=time.time()
+            except (OSError,subprocess.CalledProcessError,ValueError) as exc:
+                remote['observation_error']=str(exc)
+            publish()
+        wait_for_remote(result,observe)
         publish('download',exit_code=result.returncode)
         with tempfile.TemporaryDirectory(prefix='factory26-results-') as temp:
             download=subprocess.Popen(['ssh',host,'tar -cf - -C '+shlex.quote(remote_run)+' '+shlex.quote('evaluation/'+attempt)],stdout=subprocess.PIPE)
@@ -778,6 +793,60 @@ def analyze(run, svc_source=None):
     print(f'[svc] {output}，{len(entries)} 个原生会话',flush=True)
 
 
+def run_experiment(config, eval_host=None, svc_source=None):
+    """Run one experiment and publish its terminal result after evidence collection.
+
+    A generation error must not bypass analysis. Analysis errors are secondary:
+    they cannot replace a generation/evaluation error or invalidate a real score.
+    """
+    from run_feedback import monitor
+    run = new_run()
+    save(run/'config.json', config)
+    outcome = {'schema_version':1, 'run_id':run.name, 'variant':config.get('variant'),
+               'task':config['task'], 'status':'running', 'stage':'generation',
+               'started_at':time.time(), 'finished_at':None, 'error':None,
+               'analysis':{'status':'pending'}, 'evaluation_id':None}
+    save(run/'outcome.json', outcome)
+    print(f'[实验] {run}', flush=True)
+    original = None
+    terminal = 'completed'
+    with monitor(run):
+        try:
+            generate(config, run=run)
+            outcome['stage']='evaluation'
+            outcome['evaluation_id']=evaluation_id()
+            save(run/'outcome.json', outcome)
+            if eval_host:
+                evaluate_remote(run,eval_host,outcome['evaluation_id'])
+            else:
+                evaluate(run,outcome['evaluation_id'])
+        except BaseException as exc:
+            original = exc
+            terminal = 'interrupted' if isinstance(exc,KeyboardInterrupt) else 'failed'
+            outcome.update(failed_stage=outcome['stage'],
+                           error={'type':type(exc).__name__, 'message':str(exc) or type(exc).__name__})
+        finally:
+            outcome['stage']='analysis'
+            save(run/'outcome.json', outcome)
+            if (run/'native/manifest.json').is_file():
+                try:
+                    analyze(run,svc_source)
+                    outcome['analysis']={'status':'completed'}
+                except BaseException as exc:
+                    outcome['analysis']={'status':'interrupted' if isinstance(exc,KeyboardInterrupt) else 'failed',
+                        'error':{'type':type(exc).__name__, 'message':str(exc) or type(exc).__name__}}
+                    if isinstance(exc,KeyboardInterrupt) and original is None:
+                        original, terminal = exc, 'interrupted'
+                        outcome.update(failed_stage='analysis',error=outcome['analysis']['error'])
+            else:
+                outcome['analysis']={'status':'unavailable', 'reason':'没有可关联的原生会话清单'}
+            outcome.update(status=terminal,finished_at=time.time())
+            save(run/'outcome.json', outcome)
+    if original is not None:
+        raise original
+    return run
+
+
 def bootstrap(config):
     if config.get('backend')=='codex':
         if not (ROOT/'.adapter/bin/python').exists():
@@ -851,13 +920,10 @@ def main():
     if source.parent.parent==ROOT/'variants': config['variant']=source.parent.name
     if args.command=='bootstrap':
         bootstrap(config)
+    elif args.command=='run':
+        run_experiment(config,args.eval_host,args.svc_source.resolve() if args.svc_source else None)
     else:
-        run=generate(config)
-        if args.command=='run':
-            try:
-                if args.eval_host: evaluate_remote(run,args.eval_host)
-                else: evaluate(run)
-            finally: analyze(run,args.svc_source.resolve() if args.svc_source else None)
+        generate(config)
 
 
 if __name__ == "__main__":

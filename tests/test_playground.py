@@ -18,7 +18,7 @@ class PlaygroundTest(unittest.TestCase):
         progress = {'event_id': 'progress', 'timestamp': '2026-09-20 08:00:00', 'stage': 'Evaluating result', 'status': 'info', 'summary': 'Playwright started', 'heartbeat': False}
         heartbeat = {'event_id': 'heartbeat', 'timestamp': '2026-09-20 08:05:00', 'stage': 'Evaluating result', 'status': 'info', 'summary': 'Test progress 0/135', 'heartbeat': True}
         value = {'id': 'example', 'status': 'RUNNING', 'test_pass_rate': 0}
-        observation = {'status': {'observed_at': 990}, 'logs': {'observed_at': 800}}
+        observation = {'status': {'observed_at': 820}, 'logs': {'observed_at': 600}}
         result = playground.summary(value, events=[heartbeat, progress, heartbeat], observation=observation, traceability={'interfaces': [], 'tests': []}, now=1000)
         self.assertFalse(result['terminal'])
         self.assertEqual(result['last_progress_event']['event_id'], 'progress')
@@ -82,6 +82,30 @@ class PlaygroundTest(unittest.TestCase):
         status.assert_called_once()
         collect.assert_called_once()
         self.assertEqual(playground.summary(value)['test_pass_rate'],1)
+
+    def test_watch_is_quiet_between_three_minute_observations_and_deduplicates_terminal(self):
+        running={'id':'example','status':'RUNNING'}
+        terminal={'id':'example','status':'FAILED','finished_at':'2026-09-21T01:00:00'}
+        output=io.StringIO()
+        def wait(seconds):
+            self.assertEqual(seconds,180)
+            self.assertEqual(output.getvalue(),'')
+        with patch.object(sys,'argv',['playground.py','watch','example']), \
+             patch.object(playground,'status',side_effect=[running,running,terminal]), \
+             patch.object(playground,'logs'), patch.object(playground,'collect',return_value=terminal), \
+             patch.object(playground,'saved_summary',side_effect=lambda _,value:value), \
+             patch.object(playground.time,'sleep',side_effect=wait) as sleep, patch('sys.stdout',output):
+            playground.main()
+        self.assertEqual(sleep.call_count,2)
+        event=json.loads(output.getvalue())
+        self.assertEqual(event['status'],'FAILED')
+        output=io.StringIO()
+        with patch.object(sys,'argv',['playground.py','watch','example','--after-event',event['event_id']]), \
+             patch.object(playground,'status',return_value=terminal), patch.object(playground,'logs'), \
+             patch.object(playground,'collect') as collect, patch('sys.stdout',output):
+            playground.main()
+        self.assertEqual(output.getvalue(),'')
+        collect.assert_not_called()
 
     def test_terminal_summary_uses_timestamps_instead_of_broken_platform_duration(self):
         value={'status':'FAILED','run_duration_seconds':0,'started_at':'2026-09-20T08:20:00',

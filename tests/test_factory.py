@@ -147,32 +147,36 @@ class BaselineBoundaryTest(unittest.TestCase):
             with self.assertRaisesRegex(RuntimeError, "快照已被修改"):
                 factory.evaluate_remote(root,"unused-host")
 
-    def test_generation_failure_survives_archive_cleanup(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root=Path(temp); bench=root/'bench'
-            requirements=bench/'arc-bench/webapp/keep/requirements'
-            requirements.mkdir(parents=True); (requirements/'requirements.md').write_text('input')
-            for name in ['scripts','harness']:
-                (root/name).mkdir(parents=True)
-            def runtime(work,config):
-                native=work/'native'; native.mkdir()
-                return native,{}
-            with patch.object(factory,'ROOT',root), patch.object(factory,'BENCH',bench), \
-                 patch.object(factory,'capture',side_effect=['fixed','','pi-version','node-version']), \
-                 patch.object(factory,'responses_adapter',return_value=nullcontext(None)), \
-                 patch.object(factory,'runtime_environment',side_effect=runtime), \
-                 patch.object(factory,'isolation_prefix',return_value=[]), \
-                 patch.object(factory.subprocess,'run',side_effect=[subprocess.CompletedProcess([],1),subprocess.CompletedProcess([],0)]), \
-                 patch.object(factory,'logged',side_effect=RuntimeError('agent error')), \
-                 patch.object(factory,'cleanup_workspace',return_value=[]):
-                with self.assertRaisesRegex(RuntimeError,'agent error'):
-                    factory.generate({'benchmark_revision':'fixed','task':'keep',
-                                      'model':'test','thinking':'high','base_url':'http://unused'})
-            metadata=json.loads(next((root/'runs').glob('*/run.json')).read_text())
-            self.assertEqual((metadata['status'],metadata['phase'],metadata['failed_phase']),
-                             ('generation_failed','failed','agent'))
-            self.assertEqual(metadata['phase_log'],'pi-events.jsonl')
-            self.assertNotIn('runtime',metadata)
+    def test_generation_failure_and_cancel_survive_archive_cleanup(self):
+        for failure,expected in [(RuntimeError('agent error'),'generation_failed'),(KeyboardInterrupt(),'interrupted')]:
+            with tempfile.TemporaryDirectory() as temp:
+                root=Path(temp); bench=root/'bench'
+                requirements=bench/'arc-bench/webapp/keep/requirements'
+                requirements.mkdir(parents=True); (requirements/'requirements.md').write_text('input')
+                for name in ['scripts','harness']:
+                    (root/name).mkdir(parents=True)
+                def runtime(work,config):
+                    native=work/'native'; native.mkdir()
+                    return native,{}
+                with patch.object(factory,'ROOT',root), patch.object(factory,'BENCH',bench), \
+                     patch.object(factory.platform,'platform',return_value='test-platform'), \
+                     patch.object(factory,'capture',side_effect=['fixed','','pi-version','node-version']), \
+                     patch.object(factory,'responses_adapter',return_value=nullcontext(None)), \
+                     patch.object(factory,'runtime_environment',side_effect=runtime), \
+                     patch.object(factory,'isolation_prefix',return_value=[]), \
+                     patch.object(factory.subprocess,'run',side_effect=[subprocess.CompletedProcess([],1),subprocess.CompletedProcess([],0)]), \
+                     patch.object(factory,'logged',side_effect=failure), \
+                     patch.object(factory,'cleanup_workspace',return_value=[]):
+                    with self.assertRaises(type(failure)):
+                        factory.generate({'benchmark_revision':'fixed','task':'keep',
+                                          'model':'test','thinking':'high','base_url':'http://unused'})
+                metadata=json.loads(next((root/'runs').glob('*/run.json')).read_text())
+                self.assertEqual((metadata['status'],metadata['phase'],metadata['failed_phase']),
+                                 (expected,'interrupted' if expected=='interrupted' else 'failed','agent'))
+                self.assertEqual(metadata['phase_log'],'pi-events.jsonl')
+                self.assertNotIn('runtime',metadata)
+
+                self.assertEqual(metadata['error'],str(failure) or type(failure).__name__)
 
     def test_pi_exit_zero_requires_native_stop_before_freeze(self):
         usage={'input':5,'output':2,'cacheRead':0,'cacheWrite':0,'reasoning':1,'totalTokens':7}
