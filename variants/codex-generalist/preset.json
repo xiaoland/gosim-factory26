@@ -1,0 +1,9 @@
+{
+  "profiles": [
+    "codex-generalist"
+  ],
+  "defaults": {
+    "issue": "codex-generalist",
+    "pr": "codex-generalist"
+  }
+}

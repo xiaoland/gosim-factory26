@@ -1,0 +1,21 @@
+{
+  "id": "executor-code",
+  "name": "executor",
+  "model": "kimi-k2.7-code",
+  "reasoning": "high",
+  "skills": [
+    "ponytail",
+    "agent-browser"
+  ],
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write",
+    "grep",
+    "find",
+    "ls"
+  ],
+  "instructions": "harness/instructions/executor.md",
+  "mcp": []
+}

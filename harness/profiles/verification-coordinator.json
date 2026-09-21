@@ -1,0 +1,24 @@
+{
+  "id": "verification-coordinator",
+  "core": "pi",
+  "model": "kimi-k3",
+  "reasoning": "high",
+  "instructions": [
+    "harness/instructions/main.md"
+  ],
+  "skills": [
+    "diagnosing-bugs"
+  ],
+  "cli": [
+    "svc",
+    "braid",
+    "agent-browser"
+  ],
+  "native_subagents": [
+    "explorer",
+    "executor-verification",
+    "browser-operator",
+    "reviewer"
+  ],
+  "mcp": []
+}

@@ -1,6 +1,6 @@
 # Agent Profile 的配置边界与当前实现
 
-调查日期：2026-09-21。本页记录现状和下一步设计的概念边界，不是已实现 preset 的说明，也不替代后续技术与验收方案。
+调查日期：2026-09-21。本页的实现表保存实施前观察，不能用于判断接入完成；最新实现与真实证据见 [runtime](cells/runtime-ready.md) 和 [capabilities](cells/capabilities-ready.md)。本页保留概念边界与调查依据，不替代技术与验收方案。
 
 ## Profile、preset 和 variant
 

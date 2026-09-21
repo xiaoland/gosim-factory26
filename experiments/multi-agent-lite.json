@@ -1,0 +1,18 @@
+{
+  "benchmark_url": "https://github.com/code-philia/arc-bench.git",
+  "benchmark_revision": "1eb018367bedd618d3b9ced406ce07fb423d4956",
+  "host": "wsl.win-ws.localhost",
+  "variants": [
+    "pi-generalist",
+    "pi-team",
+    "codex-generalist",
+    "pi-verification"
+  ],
+  "tasks": [
+    "keep",
+    "bookstack"
+  ],
+  "generation_workers": 2,
+  "evaluation_workers": 4,
+  "deployment": "arcbench"
+}

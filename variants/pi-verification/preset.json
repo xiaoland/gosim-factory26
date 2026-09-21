@@ -1,0 +1,10 @@
+{
+  "profiles": [
+    "verification-coordinator",
+    "verification-app"
+  ],
+  "defaults": {
+    "issue": "verification-coordinator",
+    "pr": "verification-app"
+  }
+}

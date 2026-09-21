@@ -303,6 +303,38 @@ def _analysis(run):
     return {"status": "completed" if all(status == "completed" for status in statuses) else "available"}
 
 
+def native_summary(run, metadata):
+    """Compact, evidence-based identity summary; declarations are not executions."""
+    paths, issues = _declared_native(run, metadata)
+    manifest = _read(run/'native/manifest.json')
+    if not isinstance(manifest, dict):
+        return {'evidence':'pending' if metadata.get('runtime') else 'unavailable',
+                'models_observed':[], 'sessions':None, 'native_children':None}
+    entries = manifest.get('sessions', [])
+    models = set()
+    for path, provider in paths:
+        current = None
+        with path.open() as stream:
+            for line in stream:
+                try:
+                    event = json.loads(line)
+                except ValueError:
+                    continue
+                payload = event.get('payload') or {}
+                if provider=='codex' and event.get('type')=='turn_context':
+                    current = payload.get('model')
+                message = event.get('message') or {}
+                if provider=='pi' and message.get('role')=='assistant' and message.get('model'):
+                    models.add(message['model'])
+                if provider=='codex' and current and event.get('type')=='response_item' and payload.get('role')=='assistant':
+                    models.add(current)
+    return {'evidence':'incomplete' if issues or any(e.get('archive_error') or e.get('evidence_error') for e in entries) else 'archived',
+            'models_observed':sorted(models), 'sessions':len(paths),
+            'native_children':sum(bool(e.get('parent_native_session_id')) for e in entries),
+            'profiles_observed':sorted({e['profile_id'] for e in entries if e.get('native') and e.get('profile_id')}),
+            'manifest':'native/manifest.json'}
+
+
 def collect(run: Path) -> dict:
     run = Path(run).resolve()
     metadata_path = run / "run.json"
@@ -383,6 +415,7 @@ def collect(run: Path) -> dict:
                                             + [item["path"] for item in source_errors]))[:MAX_ERRORS]
     terminal_identity = {key: brief.get(key) for key in
                          ("run_id", "status", "scope", "stage", "failed_stage", "error", "analysis", "evaluation_id", "errors")}
+    brief['native'] = native_summary(run, metadata)
     brief["event_id"] = _event_id(run.name, terminal_identity if brief["terminal"] else {"run_id": run.name, "errors": [e["category"] for e in errors]})
     return brief
 

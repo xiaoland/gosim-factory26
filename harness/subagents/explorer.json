@@ -1,0 +1,16 @@
+{
+  "id": "explorer",
+  "name": "explorer",
+  "model": "kimi-k3",
+  "reasoning": "high",
+  "skills": [],
+  "tools": [
+    "read",
+    "grep",
+    "find",
+    "ls",
+    "bash"
+  ],
+  "instructions": "harness/instructions/explorer.md",
+  "mcp": []
+}

@@ -1,0 +1,22 @@
+{
+  "id": "executor-verification",
+  "name": "executor",
+  "model": "kimi-k2.7-code",
+  "reasoning": "high",
+  "skills": [
+    "frontend-design",
+    "diagnosing-bugs",
+    "agent-browser"
+  ],
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write",
+    "grep",
+    "find",
+    "ls"
+  ],
+  "instructions": "harness/instructions/executor.md",
+  "mcp": []
+}

@@ -25,8 +25,15 @@ ROOT = Path(__file__).resolve().parents[1]
 BENCH = ROOT / "third_party/arc-bench"
 
 
-def load_config(path=None, backend=None):
-    """加载唯一活动配置或显式自定义配置；历史 run 的读取不经过此入口。"""
+def load_config(path=None, backend=None, variant=None, task=None):
+    """新运行解析选定配方；历史归档和显式单核心检查保留原入口。"""
+    if path is None:
+        from profiles import configuration, DEFAULT_VARIANT
+        selected = variant or ("codex-generalist" if backend == "codex" else DEFAULT_VARIANT)
+        result = configuration(selected, task or "keep", ROOT)
+        if backend is not None and backend != result["backend"]:
+            raise ValueError("backend 与 preset 核心不一致；请显式选择 variant")
+        return result
     active = (ROOT / 'variants/factory/config.json').resolve()
     source = Path(path).resolve() if path is not None else active
     config = json.loads(source.read_text())
@@ -239,7 +246,7 @@ def runtime_environment(work, config):
 
 @contextmanager
 def generation_workspace(output, retain_failure=False):
-    work=Path(tempfile.mkdtemp(prefix='factory26-')).resolve()
+    work=Path(tempfile.mkdtemp(prefix='factory26-', dir='/tmp')).resolve()
     try:
         yield work
     except BaseException:
@@ -267,7 +274,8 @@ def responses_adapter(config, output):
     save(adapter_config, {'model_list':[{'model_name':config['model'], 'litellm_params':{
         'model':'openai/'+config['model'], 'api_base':config['base_url'],
         'api_key':'os.environ/FACTORY26_API_KEY', 'use_chat_completions_api':True},
-        'model_info':{'mode':'chat'}}], 'litellm_settings':{'telemetry':False}})
+        'model_info':{'mode':'chat'}}], 'litellm_settings':{'telemetry':False,
+            'callbacks':['responses_compat.proxy_handler_instance']}})
     packaged = config.get('runtime') == 'submission'
     executable=ROOT/('runtime/bin/litellm' if packaged else '.adapter/bin/litellm')
     if packaged:
@@ -275,6 +283,7 @@ def responses_adapter(config, output):
         adapter_env = adapter_environment(config, output)
     else:
         adapter_env = dict(os.environ, FACTORY26_API_KEY=api_key())
+    adapter_env['PYTHONPATH'] = os.pathsep.join(filter(None,[str(ROOT/'scripts'),adapter_env.get('PYTHONPATH')]))
     if not executable.exists(): raise RuntimeError('请先为 Codex 配置运行 bootstrap 安装适配器')
     with (output/'adapter.log').open('w') as log:
         proc=subprocess.Popen([str(executable),'--config',str(adapter_config),'--host','127.0.0.1','--port',str(port)],
@@ -291,8 +300,20 @@ def responses_adapter(config, output):
         finally: stop(proc)
 
 
-def braid_request(config, work, app, native, prompt, state, run_id=None):
+def braid_request(config, work, app, native, prompt, state, run_id=None, responses_url=None):
     backend=config['backend']
+    if 'effective' in config:
+        from native_profiles import materialize, executable as native_executable
+        profiles, bindings = materialize(config['effective'], work, responses_url or config['base_url'], run_id or work.name)
+        request = dict(profiles=profiles, defaults=config['effective']['defaults'], bindings=bindings,
+                       prompt=prompt, state=str(state), run_id=run_id or work.name,
+                       delivery_ref='refs/heads/braid-delivery', codex=None, pi=None)
+        if backend == 'pi':
+            request['pi'] = dict(executable=native_executable('pi'), home=str(native), api_key_environment='FACTORY26_API_KEY')
+        else:
+            command=native_executable('codex')
+            request['codex'] = dict(executable=command, home=str(native), version=capture(command,'--version'), stable_schema_sha256='', experimental_schema_sha256='')
+        return request
     executable = str(ROOT/'runtime/bin'/backend) if config.get('runtime') == 'submission' else shutil.which(backend)
     wrapper=work/'pi-clean'
     if backend == 'pi':
@@ -301,14 +322,16 @@ def braid_request(config, work, app, native, prompt, state, run_id=None):
                            ' --no-extensions --no-skills --no-prompt-templates --no-themes'+context_flag+' "$@"\n')
         wrapper.chmod(0o755)
     profile={'id':backend, 'display_name':backend, 'tags':[], 'adapter_type':backend,
-             'adapter_version':'local', 'provider':'factory26', 'model':config['model'],
+             'adapter_version':'local', 'provider':'deepseek' if backend=='pi' else 'factory26', 'model':config['model'],
              'reasoning':config['thinking'], 'user_instructions':'', 'workspace':str(app),
              'context_soft_ratio':0.8,'context_hard_bytes':1000000}
-    request={'profile':profile,'prompt':prompt,'state':str(state),'codex':None,'pi':None,
+    request={'profiles':[profile], 'defaults':{'issue':backend,'pr':backend},
+             'bindings':{backend:{'adapter_type':backend,'executable':str(wrapper) if backend=='pi' else executable,
+                                  'api_key_environment':'FACTORY26_API_KEY','native_template':str(native)}},
+             'prompt':prompt,'state':str(state),'codex':None,'pi':None,
              'run_id':run_id or work.name, 'delivery_ref':'refs/heads/braid-delivery'}
     if backend == 'pi':
-        request['pi']={'executable':str(wrapper),'provider':'deepseek','model':config['model'],
-                       'thinking':config['thinking'],'home':str(native),'api_key_environment':'FACTORY26_API_KEY'}
+        request['pi']={'executable':str(wrapper),'home':str(native),'api_key_environment':'FACTORY26_API_KEY'}
     else:
         request['codex']={'executable':executable,'home':str(native),
                          'version':capture(executable,'--version'),'stable_schema_sha256':'','experimental_schema_sha256':''}
@@ -349,6 +372,7 @@ def generate(config, run=None, requirements=None):
     if not requirements.is_dir(): raise ValueError('任务需求包不存在')
     run = new_run() if run is None else run
     save(run/'config.json', config)
+    if 'effective' in config: save(run/'effective-config.json', config['effective'])
     save(run/'input-hashes.json', hashes(requirements))
     save(run/'runner-hashes.json', hashes(ROOT/'scripts'))
     save(run/'harness-hashes.json', hashes(ROOT/'harness'))
@@ -361,7 +385,7 @@ def generate(config, run=None, requirements=None):
                 'backend':backend, 'workflow':workflow, 'mode':'platform-package' if packaged else 'competition-gateway-local',
                 'deployment':config.get('deployment','legacy'),
                 'submission_eligible':False, 'benchmark_revision':config['benchmark_revision'],
-                'versions':{backend:capture(str(ROOT/'runtime/bin'/backend) if packaged else backend,'--version'),
+                'versions':{backend:capture(str(ROOT/'runtime/bin'/backend) if packaged else __import__('native_profiles').executable(backend) if 'effective' in config else backend,'--version'),
                             'node':capture(str(ROOT/'runtime/bin/node') if packaged else 'node','--version'),
                             'platform':platform.platform()}, 'estimated_cost':None}
     if packaged:
@@ -431,13 +455,13 @@ def generate(config, run=None, requirements=None):
                 if workflow == 'braid':
                     from braid_runtime import initialize_repository, load_delivery
                     initialize_repository(app)
-                    (work/'bin').mkdir()
+                    (work/'bin').mkdir(exist_ok=True)
                     braid = work/'bin/braid'
                     shutil.copy2(ROOT/'runtime/bin/braid' if packaged else sources.binary(),braid)
                     if hashlib.sha256(braid.read_bytes()).hexdigest() != metadata['braid_binary_sha256']:
                         raise RuntimeError('Braid 运行制品与已归档构建不一致')
                     env['PATH'] = str(braid.parent) + os.pathsep + env['PATH']
-                    request=braid_request(config,work,app,native,prompt,state,run.name)
+                    request=braid_request(config,work,app,native,prompt,state,run.name,responses_url)
                     save(work/'braid-request.json',request)
                     phase(run/'run.json',metadata,'braid','braid.log')
                     code = logged(prefix+[str(braid),'local',str(work/'braid-request.json')],app,env,run/'braid.log', metadata.setdefault('cleanup_errors',[]))
@@ -513,7 +537,10 @@ def generate(config, run=None, requirements=None):
                             'tokens':{key:sum(u['tokens'][key] for u in usages) if all(u['tokens'][key] is not None for u in usages)
                                       else None for key in usages[0]['tokens']},'estimated_cost':None}
                     else:
-                        metadata['usage']=codex_usage([run/entry['native'] for entry in archived])
+                        metadata['usage']={'aggregation':'separate-root-and-children; inclusive-parent-accounting-unverified',
+                            'braid_sessions':codex_usage([run/e['native'] for e in archived if not e.get('parent_native_session_id')]),
+                            'native_children':codex_usage([run/e['native'] for e in archived if e.get('parent_native_session_id')]),
+                            'estimated_cost':None}
                 phase(run/'run.json',metadata,'frozen' if metadata['status']=='generated' else
                       'interrupted' if metadata['status']=='interrupted' else 'failed')
     except BaseException as exc:
@@ -849,7 +876,8 @@ def analyze(run, svc_source=None):
         if entry.get('sha256') is not None and source_hash != entry['sha256']:
             raise RuntimeError('原生清单内容哈希不一致')
         inputs = dict(provenance, source_session=source.name, source_sha256=source_hash,
-                      provider=entry['provider'])
+                      provider=entry['provider'],
+                      session_identity={k:entry.get(k) for k in ('native_id','profile_id','effective_profile_digest','parent_native_session_id','native_role','work_item_kind','work_item_id','assignment_generation')})
         fingerprint = digest(inputs)[:20]
         # Both the exporter and exact native bytes determine a reusable analysis.
         folder=output/f'{index:03}-{fingerprint}'
@@ -935,6 +963,9 @@ def run_experiment(config, eval_host=None, svc_source=None):
 
 
 def bootstrap(config):
+    if 'effective' in config:
+        from native_profiles import bootstrap as bootstrap_native
+        bootstrap_native()
     if config.get('backend')=='codex':
         if not (ROOT/'.adapter/bin/python').exists():
             subprocess.run(['uv','venv',str(ROOT/'.adapter')],check=True)
@@ -968,21 +999,32 @@ def bootstrap(config):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("command", choices=["bootstrap", "generate", "eval", "analyze", "run", "list", "show"])
+    parser.add_argument("command", choices=["bootstrap", "generate", "eval", "analyze", "run", "list", "show", "batch"])
     parser.add_argument("run_id", nargs="?", help="show 的 run ID")
     selection=parser.add_mutually_exclusive_group()
-    selection.add_argument("--config", type=Path, help="显式自定义配置；默认 variants/factory/config.json")
-    selection.add_argument("--variant", help="list 的历史 variant 过滤器；新运行只接受 factory")
+    selection.add_argument("--config", type=Path, help="显式自定义单核心配置；默认 pi-generalist preset")
+    selection.add_argument("--variant", help="生成的 preset，或 list 的历史 variant 过滤器")
     parser.add_argument("--backend", choices=('pi', 'codex'), help="生成核心；默认取配置（pi）；list 时过滤 backend")
-    parser.add_argument("--task", help="list 按任务过滤")
+    parser.add_argument("--task", help="选择 ARC-Bench-Lite 任务，或 list 按任务过滤")
     parser.add_argument("--json", action="store_true", help="输出可机器读取的摘要")
     parser.add_argument("--eval", dest="evaluation", help="show 指定评测尝试")
     parser.add_argument("--evaluation-id", help="eval 的明确执行 ID；已存在时拒绝覆盖")
     parser.add_argument("--svc-source", type=Path, help="使用本地 SVC 工作树的 PDM 环境做 analysis；运行时 Corpus 不变")
+    parser.add_argument("--profile", help="show 按 Braid profile 选择原生证据")
+    parser.add_argument("--session", help="show 按原生 session ID 选择证据")
     parser.add_argument("--case", help="show 指定失败用例，如 REQ-2.2")
     parser.add_argument("--eval-host", help="SSH host with bootstrapped ~/Development/factory26 evaluator")
     parser.add_argument("--run", type=Path, help="eval/analyze/show 的已有 run 目录")
+    parser.add_argument("--batch-manifest", type=Path, default=ROOT/"experiments/multi-agent-lite.json")
     args = parser.parse_args()
+    if args.command == "batch":
+        if args.config or args.variant or args.backend or args.task or args.eval_host:
+            parser.error("batch 从固定 manifest 读取配置，不接受单项覆盖")
+        from batch import execute
+        directory = args.run or ROOT/"runs"/("batch-"+evaluation_id())
+        result = execute(args.batch_manifest, directory)
+        print(json.dumps({"batch":str(directory), "status":result["status"]}, ensure_ascii=False))
+        return
     if args.command in ('show','eval','analyze') and (args.config or args.variant or args.backend):
         parser.error('已有 run 使用归档配置，不接受 --config、--variant 或 --backend 覆盖')
     if args.command in ('list','show'):
@@ -994,7 +1036,7 @@ def main():
         else:
             selected=args.run or (ROOT/'runs'/args.run_id if args.run_id else None)
             if selected is None: parser.error('show 需要 run ID 或 --run')
-            result=show_run(selected.resolve(),evaluation=args.evaluation,case=args.case)
+            result=show_run(selected.resolve(),evaluation=args.evaluation,case=args.case,profile=args.profile,session=args.session)
             output=render_show(result)
         print(json.dumps(result,ensure_ascii=False,indent=2) if args.json else output)
         return
@@ -1004,10 +1046,8 @@ def main():
         elif args.command=='analyze': analyze(args.run.resolve(),args.svc_source.resolve() if args.svc_source else None)
         else: evaluate(args.run.resolve(),args.evaluation_id)
         return
-    if args.variant not in (None, 'factory'):
-        parser.error('活动 variant 已收敛为 factory；使用 --backend pi|codex，消融可用 --config')
     try:
-        config=load_config(args.config,args.backend)
+        config=load_config(args.config,args.backend,args.variant,args.task)
     except (OSError, ValueError) as exc:
         parser.error(str(exc))
     if args.command=='bootstrap':

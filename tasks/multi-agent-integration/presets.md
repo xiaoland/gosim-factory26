@@ -1,6 +1,6 @@
 # Agent-profile preset：先粗筛，再细化
 
-本页维护 multi-agent 接入任务中的四种装配组合，任务状态与实施责任归 [主入口](packet.md)和各 Cell。用户已选择 ARC-Bench-Lite，并认可下面四种大差异方向，先粗筛再逐步缩小范围。上一版六份 JSON 降为后续细化素材，不能作为当前待执行批次。四种方向尚未接入或运行，技术主体已认可；当前配置归属、浏览器委派和 V&V 范围按用户纠正更新，详见 technical.md。
+本页维护 multi-agent 接入任务中的四种装配组合，任务状态与实施责任归 [主入口](packet.md)和各 Cell。用户已选择 ARC-Bench-Lite，并认可下面四种大差异方向，先粗筛再逐步缩小范围。上一版六份 JSON 降为后续细化素材，不能作为当前待执行批次。技术主体已认可，配置及材料已装配；真实验证与剩余工作统一查看各 Cell，详见 technical.md。
 
 ## 当前首轮方向
 
@@ -37,8 +37,6 @@ agent-browser 的 dogfood 不是默认工作流程：其原文要求行为问题
 
 frontend-design 来自 [Anthropic 官方 skills 仓库](https://github.com/anthropics/skills/tree/main/skills/frontend-design)，原始介绍为[官方技术文章](https://claude.com/blog/improving-frontend-design-through-skills)。它偏向视觉表达、排版、构图及自我审视，不能代替完整产品设计或功能验收。实际文件要求已有 brief 的视觉约束优先；对于复刻类任务必须尊重原要求，不能为了“独特”擅自重新设计。文件有 [2026-06-09 更新](https://github.com/anthropics/skills/commit/2235be7c60b551f5de82ade908fd3816455afcda)与 [2026-09-03 更新](https://github.com/anthropics/skills/commit/41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f)，但维护和官方身份不证明对本项目模型有效。
 
-ponytail 使用本机已有版本的固定快照，针对技术实现和复杂度审查。接入前需检查其实际激活、输出约束与 Issue/PR、SVC 方法的优先关系，不能只靠表中的用途标签声称已经隔离其影响。完整候选调查、作者实践和是否接入的判断见 [skill-candidates.md](skill-candidates.md)。当前 Impeccable 归 pi-team，适配后的 diagnosing-bugs 归 pi-verification；它们尚未完成消费侧适配或安装。
+ponytail 使用本机已有版本的固定快照，针对技术实现和复杂度审查。接入前需检查其实际激活、输出约束与 Issue/PR、SVC 方法的优先关系，不能只靠表中的用途标签声称已经隔离其影响。完整候选调查、作者实践和是否接入的判断见 [skill-candidates.md](skill-candidates.md)。当前 Impeccable 归 pi-team，适配后的 diagnosing-bugs 归 pi-verification；实际内容和适配边界见 harness/skills/README.md，消费证据归 capabilities Cell。
 
-## 接入缺口
-
-本地 Braid Request 仍只接收一个 profile，PiConfig 和 Profile 参数分离，Factory wrapper 仍禁用 skills/extensions。需要接通 catalog、直接 assignment、模型参数消费者、隔离的技能/扩展/浏览器装配，并验证切换/恢复、子会话边界与 run 可追溯性。当前实施责任与依赖见 [task-map.md](task-map.md)。本轮没有安装扩展、修改活动配置或启动 bench。
+实施状态及跨主线依赖由 [task-map.md](task-map.md)维护，本页只维护组合设计。

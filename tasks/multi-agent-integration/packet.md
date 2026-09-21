@@ -2,7 +2,9 @@
 
 本轮目标是让 Braid 级 Agent 协作、Codex/Pi 内部子代理、SVC 方法和开发反馈在同一 harness 中实际接通，再以四种组合完成 ARC-Bench-Lite 实验。agent-profile presets 是能力装配的一项交付，不是任务中心；配置数量和子代理数量不能证明 multi-agent 已成立。
 
-技术主体及用户后续纠正已获认可，整理提交为 `e229e6b`。三个接入 Cell 的 01 已完成正式预演与集成：主要修复点是 profile 消费链及 Pi 原生子树停止证明，详见 [runtime](rehearsal/runtime.md)、[capabilities](rehearsal/capabilities.md)、[feedback](rehearsal/feedback.md) 和 [V&V](rehearsal/verification-method.md)。用户明确要求继续实施；当前提交预演起点后进入 02。Braid 离线基线 20/20 通过，不代表新增接入已完成；八项 bench 尚未启动。当前没有新的用户决策项。
+2026-09-22 用户完成本轮 impact handshake，明确表示已有工作继续、下个迭代不再漏过该门槛。当前恢复已列明的接入实现和受影响范围验收；这项同意覆盖现有三个 ready Cell、受控 Pi/Codex/Braid 场景与既定八项 Lite 批次，不扩展到新 variant、SVC 非 V&V Corpus 或新的实验方向。已有改动和失败证据保留，不覆盖。
+
+技术主体及用户后续纠正已获认可，整理提交为 `e229e6b`，实施起点为 `f8228df`。三个接入 Cell 的 01 已完成预演与集成，见 [runtime](rehearsal/runtime.md)、[capabilities](rehearsal/capabilities.md)、[feedback](rehearsal/feedback.md) 和 [V&V](rehearsal/verification-method.md)。随后已发生的源码修改不等于门槛获批：Braid 提交 `e9b3471`、SVC 提交 `393b935`，Factory 实现仍有未提交改动。真实场景存在未解决接入问题，八项 bench 尚未启动。恢复前先向用户提交当前影响边界、预演/验证结果、未完成切片与拟执行计划，取得明确开工同意。
 
 ## 本轮怎样组织
 
@@ -10,9 +12,9 @@
 
 | 工作主线 × 接入就绪阶段 | 当前状态 | 必须交付 |
 | --- | --- | --- |
-| [协作运行时](cells/runtime-ready.md) | active，01 已完成 | 普通 profile 直接指派、异步协作、上下文/原生子树生命周期，以及真实证据边界。 |
-| [能力与方法装配](cells/capabilities-ready.md) | active，01 已完成 | 真正消费的模型、原生子代理、浏览器、技能与共同 V&V；四份可复现 preset。 |
-| [诊断与实验反馈](cells/feedback-ready.md) | active，01 已完成 | 低噪诊断、身份与证据关联、可恢复批次和终态回传。 |
+| [协作运行时](cells/runtime-ready.md) | active，已完成开工确认 | 普通 profile 直接指派、异步协作、上下文/原生子树生命周期，以及真实证据边界。 |
+| [能力与方法装配](cells/capabilities-ready.md) | active，已完成开工确认 | 真正消费的模型、原生子代理、浏览器、技能与共同 V&V；四份可复现 preset。 |
+| [诊断与实验反馈](cells/feedback-ready.md) | active，已完成开工确认 | 低噪诊断、身份与证据关联、可恢复批次和终态回传。 |
 
 三个出口在同一候选版本共同成立，才能进入 [固定批次的局部计划](experiment-plan.md)。后者由 feedback 主线承接，目前 TBC；它不需要独立共享阶段，因此不伪造第四个 Cell。
 
@@ -38,4 +40,6 @@
 
 已有 evidence 证明 Braid 对象能力和 Pi 自编辑路径的一部分，不证明本轮多 profile/原生子代理接入。当前重要未知是三个比赛模型的实际参数/工具/图像兼容、原生子树在 reset/取消时收尾，以及多 Braid Agent 的真实协作；静态 schema 和配置声明不能替代这些证据。已有调查产物保留在 `runs/agent-profile-presets/`，历史路径不改写。
 
-推进次序沿用根 AGENTS.md：方案复核、验收复核、实施计划与独立预演、实现前提交、实现验收、结果汇报。按已有授权继续，不因 Cell 重组重复请求批准；改变实质产品语义或验收范围才返回用户。主 Agent 持有整体判断、共享源码集成与门槛，低成本子 Agent 承担有界调查/预演，不使用 Advisor。competition-p0 等独立任务不混入本次变更或提交。
+最新用户纠正优先于根 AGENTS.md 第 28 行遗漏门槛的旧摘要：方案复核、验收复核、实施计划与独立预演、向用户呈现实施影响与预演结果、用户明确同意开工、实现前提交、实现验收、结果汇报。调查、隔离实验和 task packet 整理仍可按既有授权进行；不能将“计划/预演完成”自行判作“已获实现授权”。开工确认针对可复核的当前计划及影响，不重复询问已明确授权范围内的每个局部实现选择。主 Agent 持有整体判断与授权门槛；子 Agent 无权越过，独立预演默认只读或隔离实验。competition-p0 等独立任务不混入本次变更或提交。
+
+本轮开发委派按用户最新偏好使用 gpt-5.6-luna medium/high，避免 xhigh/max；这不改变已批准的比赛模型配置。

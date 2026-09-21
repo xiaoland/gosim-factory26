@@ -1,0 +1,11 @@
+{
+  "profiles": [
+    "team-coordinator",
+    "team-ui",
+    "team-app"
+  ],
+  "defaults": {
+    "issue": "team-coordinator",
+    "pr": "team-app"
+  }
+}

@@ -19,3 +19,11 @@ Track：runtime。Phase：ready。状态：active。01 独立预演完成，见 
 01 后若原生接口不能满足既定语义，计划停在该未知处并返回方案影响；普通实现分支本地修复。当前调查不算正式预演，也不授予跳过实现前提交的权限。
 
 返回给 capabilities：普通 profiles/运行绑定合同与隔离会话入口。返回给 feedback：可关联的实际身份和生命周期证据。源码所有权主要为 sources/braid；共享 store 由一个 writer 整合，Factory 消费接缝由主 Agent 协调。
+
+## 02 集成记录（2026-09-21）
+
+普通 profile 注册、直接指派、按 profile claim、独立 native home 与身份归档已实现。独立集成沿实际路径发现并修正了：Pi teardown 被误作可执行文件、Codex cold resume 定位错误、父子停止失败被吞、create/edit 指派跨事务留下半写、重指派事件被提前消费，以及新 generation 未复用原有工作树。受控子进程检查证明 Codex adapter 可停止其拥有的进程组；真实核心另组 PG 的工具进程仍须联合场景验明。
+
+当前 Braid 主体提交为 `e9b3471`，后续原生 Pi 身份与 profile 指派竞争修复提交为 `9770e65`；24 项单元检查与 1 项 CLI 集成通过。新增 Issue/PR 重指派检查证明旧 writer 失效、停止前 assignment 保持 pending、停止后使用原路径且保留未提交文件。resume 已新增对 profiles/defaults/bindings 的一致性校验。停止失败通过明确的 fatal 通道返回 incomplete，再收尾其他会话；独立 execute 集成检查覆盖了此前因活动 turn 不归零而永久等待的风险。Pi start/resume 直接采用 RPC `sessionId`，不再从尚未写 header 的 JSONL 反推 UUID；多个 profile 读取同一 pending event 后，事务竞争失败为预期 no-op。以上是代码边界证据，真实 Braid 多 profile 协作、活动原生子树收尾仍未满足 03。
+
+真实联合验收的 Braid 阶段已准备为 `../scripts/braid-scene.py`，并由独立 Agent 对照原生接口预演。受控 child 写入后由宿主触发 description 重建，以真实停止收据、写入静止、writer 拒绝和同工作树复用作为证据，再完成两个不同 profile 的 Issue/PR 小交付。Pi 覆盖 foreground/background，Codex 覆盖原生线程。尚未执行该阶段，不能由脚本存在推定通过。

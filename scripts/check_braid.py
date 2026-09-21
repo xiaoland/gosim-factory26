@@ -99,7 +99,7 @@ subprocess.run(writer+action,check=True,capture_output=True,text=True)
 
 
 def check(backend, svc=False):
-    config=factory.load_config(backend=backend)
+    config=factory.load_config(factory.ROOT/'variants/factory/config.json',backend=backend)
     config['variant']='braid-integration-probe'
     config['svc']=svc
     output=factory.ROOT/'runs/integration'/f"{time.strftime('%Y%m%d-%H%M%S')}-{backend}-{'svc' if svc else 'plain'}-{uuid.uuid4().hex[:6]}"

@@ -1,0 +1,9 @@
+{
+  "profiles": [
+    "pi-generalist"
+  ],
+  "defaults": {
+    "issue": "pi-generalist",
+    "pr": "pi-generalist"
+  }
+}

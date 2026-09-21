@@ -1,0 +1,21 @@
+{
+  "id": "team-coordinator",
+  "core": "pi",
+  "model": "kimi-k3",
+  "reasoning": "high",
+  "instructions": [
+    "harness/instructions/main.md"
+  ],
+  "skills": [],
+  "cli": [
+    "svc",
+    "braid",
+    "agent-browser"
+  ],
+  "native_subagents": [
+    "explorer",
+    "executor-code",
+    "browser-operator"
+  ],
+  "mcp": []
+}

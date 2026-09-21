@@ -1,6 +1,6 @@
 # Factory26
 
-GOSIM Agentic Factory 2026 的 Agent Harness 实验仓库。当前开发一个 Braid + SVC harness，以 Codex app-server 或 Pi 为 backend，保留独立生成、冻结、官方 ARC-bench Keep 评测和 svc analysis 证据。
+GOSIM Agentic Factory 2026 的 Agent Harness 实验仓库。当前开发 Braid + SVC + Codex app-server/Pi 的 multi-agent harness，保留独立生成、冻结、官方 ARC-Bench-Lite 评测和 SVC analysis 证据。
 
 ```sh
 cd ~/Development/factory26
@@ -13,9 +13,11 @@ python3 scripts/factory.py run --backend pi --eval-host wsl.win-ws.localhost
 
 运行前按[本地运行文档](docs/deployment/index.md)准备环境和仓库外的比赛密钥。当前范围和实验规则见[产品说明](docs/prd/index.md)，完整文档导航见[文档索引](docs/index.md)。
 
-唯一活动配置是 [variants/factory/config.json](variants/factory/config.json)，默认 Pi，使用 `--backend codex` 切换核心。`list --backend pi` 或 `show <run-id> --case <REQ-ID>` 导航实验，历史身份仍可用 `list --variant pi-svc` 查询。显式 `--config` 用于自定义实验，记录为 custom；旧配置和兼容链接已退出活动入口，历史 run 与报告不改写。
+新运行用 `--variant pi-generalist|codex-generalist|pi-team|pi-verification` 选择组合，默认 pi-generalist；`--task keep|bookstack` 选择 Lite 任务。每份 `variants/<variant>/preset.json` 只选择普通 profiles，模型、技能和原生子角色分别归 `harness/` 中对应文件；Braid 不感知 preset。固定八项批次由 [实验清单](experiments/multi-agent-lite.json)管理，联合验收状态见 [task packet](tasks/multi-agent-integration/packet.md)。显式 `--config` 保留自定义单核心及参赛包入口；历史 run 和报告不改写。
 
-`sources/svc`、`sources/braid` 是独立的共同开发 Git 仓库。SVC 通过简短导航提供 Corpus 方法，Braid 通过本地 Issue/PR/comment、CLI 与事件驱动上下文管理协作，二者没有直接依赖。Codex 使用固定 LiteLLM 协议适配。父子 Issue、有界并行及共享任务材料仍在设计中，当前配置收敛不表示完整多 Agent 协作链已经接通。
+`list --backend pi`、`show <run-id> --case <REQ-ID>` 导航结果；`show --run <目录> --profile <ID>` 或 `--session <原生ID>` 定向查询主子会话证据。
+
+`sources/svc`、`sources/braid` 是独立的共同开发 Git 仓库。SVC 通过简短导航提供 Corpus 方法；Braid 围绕本地 Issue/PR 管理会话上下文、围绕 comment 进行异步协作，二者没有直接依赖。Codex 使用固定 LiteLLM 协议适配。Braid 工作项 Agent 与 Codex/Pi 原生子代理是不同层级；能力声明与真实验证结果分开记录。
 
 首轮四组 Keep 结果：Pi + SVC **7/32**、Codex + SVC **9/32**、Pi + SVC + braid **14/32**、Codex + SVC + braid **8/32**。其中 braid 两组使用旧适配器，不能代表当前本地模式。条件、耗时、清理故障恢复和限制见[四组实验报告](reports/2026-09-20-harness-matrix.md)。
 

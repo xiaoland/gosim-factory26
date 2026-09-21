@@ -18,26 +18,25 @@ spec.loader.exec_module(factory)
 
 
 class BaselineBoundaryTest(unittest.TestCase):
-    def test_single_factory_config_and_explicit_backend_do_not_rewrite_inputs(self):
-        active = factory.ROOT/'variants/factory/config.json'
-        before = active.read_bytes()
+    def test_default_selects_real_preset_and_backend_selects_matching_generalist(self):
         default = factory.load_config()
         self.assertEqual((default['variant'],default['backend'],default['workflow'],default['svc']),
-                         ('factory','pi','braid',True))
-        with patch.object(sys,'argv',['factory.py','generate','--backend','codex']), \
+                         ('pi-generalist','pi','braid',True))
+        with patch.object(sys,'argv',['factory.py','generate','--variant','codex-generalist']), \
              patch.object(factory,'generate') as generate:
             factory.main()
-        self.assertEqual(generate.call_args.args[0],dict(default,backend='codex'))
-        self.assertEqual(active.read_bytes(),before)
+        selected=generate.call_args.args[0]
+        self.assertEqual((selected['variant'],selected['backend']),('codex-generalist','codex'))
+        self.assertEqual(selected['effective']['defaults']['issue'],'codex-generalist')
+        with self.assertRaisesRegex(ValueError,'backend'):
+            factory.load_config(variant='pi-team',backend='codex')
         with tempfile.TemporaryDirectory() as temp:
             archived=Path(temp)/'config.json'
-            archived.write_text(json.dumps(dict(default,variant='pi-svc',workflow='single')))
+            archived.write_text(json.dumps(dict(model='old',backend='pi',workflow='single')))
             old=archived.read_bytes()
             custom=factory.load_config(archived,backend='codex')
             self.assertEqual((custom['variant'],custom['backend'],custom['workflow']),('custom','codex','single'))
             self.assertEqual(archived.read_bytes(),old)
-            with self.assertRaisesRegex(ValueError,'backend'):
-                factory.load_config(archived,backend='unknown')
 
     def test_cli_rejects_retired_variants_and_frozen_run_overrides_before_execution(self):
         for args in (['generate','--variant','pi-svc'],['eval','--run','missing','--backend','pi']):
@@ -227,7 +226,7 @@ class BaselineBoundaryTest(unittest.TestCase):
 
                 def pi(command, *_):
                     session=Path(command[command.index('--session')+1])
-                    session.write_text(json.dumps({'id':'native-session','message':{
+                    session.write_text(json.dumps({'type':'session','id':'native-session'})+'\n'+json.dumps({'message':{
                         'role':'assistant','stopReason':stop_reason,
                         'errorMessage':'Unterminated string in JSON at position 180' if stop_reason == 'error' else None,
                         'usage':usage}})+'\n')

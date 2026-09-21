@@ -45,7 +45,7 @@ def verify_package(root):
 
 
 def platform_config(root, manifest):
-    config = factory.load_config()
+    config = factory.load_config(root/'variants/factory/config.json')
     config.update(backend=manifest['backend'], runtime='submission', deployment='arcbench',
                   task='platform', benchmark_revision=None)
     visual = bool(os.environ.get('VISUAL_API_KEY') or os.environ.get('VISUAL_BASE_URL'))

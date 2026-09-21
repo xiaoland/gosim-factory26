@@ -14,7 +14,7 @@ import sources
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ('factory.py', 'core.py', 'braid_runtime.py', 'sources.py',
-           'submission.py', 'linux_sandbox.py')
+           'submission.py', 'linux_sandbox.py', 'responses_compat.py')
 
 
 def source_input(name, relative):

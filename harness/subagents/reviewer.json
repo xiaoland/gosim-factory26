@@ -1,0 +1,16 @@
+{
+  "id": "reviewer",
+  "name": "reviewer",
+  "model": "kimi-k3",
+  "reasoning": "high",
+  "skills": [],
+  "tools": [
+    "read",
+    "grep",
+    "find",
+    "ls",
+    "bash"
+  ],
+  "instructions": "harness/instructions/reviewer.md",
+  "mcp": []
+}

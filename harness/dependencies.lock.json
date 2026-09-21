@@ -1,0 +1,31 @@
+{
+  "npm_lock": "harness/npm/package-lock.json",
+  "codex": "0.155.0",
+  "responses_adapter": "litellm==1.102.0",
+  "skills": {
+    "frontend-design": {
+      "repository": "https://github.com/anthropics/skills",
+      "revision": "41bbe19d1a1a7eaab5e7bb9050a417e5c6cffc8f",
+      "adaptation": "See harness/skills/README.md"
+    },
+    "impeccable": {
+      "repository": "https://github.com/pbakaus/impeccable",
+      "revision": "1c043ea7c934fe584c2fa42a72d3e26d242f224b",
+      "adaptation": "See harness/skills/README.md"
+    },
+    "diagnosing-bugs": {
+      "repository": "https://github.com/mattpocock/skills",
+      "revision": "c55ee46073ed923f86ce59a5eb3b6d895095d1b7",
+      "adaptation": "See harness/skills/README.md"
+    },
+    "ponytail": {
+      "repository": "https://github.com/DietrichGebert/ponytail",
+      "version": "4.10.0",
+      "adaptation": "See harness/skills/README.md"
+    },
+    "agent-browser": {
+      "source": "npm:agent-browser@0.38.1 bundled core skill",
+      "adaptation": "Factory navigation only; native CLI owns full reference"
+    }
+  }
+}

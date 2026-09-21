@@ -455,7 +455,7 @@ def _case(folder, case, warnings):
     return result
 
 
-def show_run(run, evaluation=None, case=None) -> dict:
+def show_run(run, evaluation=None, case=None, profile=None, session=None) -> dict:
     """返回摘要和证据路径；指定 case 时只展开该用例的有界错误与附件。"""
     run = Path(run).resolve()
     detail, metadata, folders = _summary(run, evaluation)
@@ -472,6 +472,11 @@ def show_run(run, evaluation=None, case=None) -> dict:
         for session in detail["sessions"]["native"]:
             if session.get("provider") == "pi":
                 session["terminal"] = _pi_terminal(session)
+    if profile is not None or session is not None:
+        manifest = _read(run/'native/manifest.json', detail['warnings'])
+        detail['selected_sessions'] = [entry for entry in manifest.get('sessions', [])
+            if (profile is None or entry.get('profile_id')==profile)
+            and (session is None or session in (entry.get('native_id'),entry.get('session_id')))]
     selected = Path(detail["evaluation"]["path"]) if detail["evaluation"]["path"] else None
     detail["evaluation"]["evidence"] = {name: _existing(selected / name) if selected else None for name in
                                            ("summary.json", "results.json", "html/index.html", "test.log", "install.log", "build.log", "application.log", "test-results")}
@@ -511,13 +516,16 @@ def render_show(detail) -> str:
 
     generation, evaluation = detail["generation"], detail["evaluation"]
     lines = [render_list([detail]).replace("最新评测", "所选评测", 1), f"目录: {detail['path']}"]
-    context = [f"模型: {detail['model']}"] if detail["model"] else []
+    context = [f"根配置模型: {detail['model']}"] if detail["model"] else []
     if generation["exit_code"] is not None:
         context.append(f"生成退出码: {generation['exit_code']}")
     if generation["updated_at"] is not None:
         context.append(f"阶段更新: {generation['updated_at']}")
     if context:
         lines.append("；".join(context))
+    if 'selected_sessions' in detail:
+        for entry in detail['selected_sessions']:
+            lines.append(f"会话 {entry.get('native_id') or entry.get('session_id')}: profile={entry.get('profile_id')}，role={entry.get('native_role')}，evidence={entry.get('native') or entry.get('archive_error')}")
     live = detail.get("live_braid")
     if live:
         items = live["items"]

@@ -1,0 +1,20 @@
+{
+  "id": "executor-generalist",
+  "name": "executor",
+  "model": "kimi-k3",
+  "reasoning": "high",
+  "skills": [
+    "agent-browser"
+  ],
+  "tools": [
+    "read",
+    "bash",
+    "edit",
+    "write",
+    "grep",
+    "find",
+    "ls"
+  ],
+  "instructions": "harness/instructions/executor.md",
+  "mcp": []
+}

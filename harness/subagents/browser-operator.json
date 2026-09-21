@@ -1,0 +1,15 @@
+{
+  "id": "browser-operator",
+  "name": "browser-operator",
+  "model": "kimi-k3",
+  "reasoning": "high",
+  "skills": [
+    "agent-browser"
+  ],
+  "tools": [
+    "read",
+    "bash"
+  ],
+  "instructions": "harness/instructions/browser-operator.md",
+  "mcp": []
+}
