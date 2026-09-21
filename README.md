@@ -9,6 +9,8 @@ make test
 python3 scripts/factory.py run --backend pi --eval-host wsl.win-ws.localhost
 ```
 
+参赛 ZIP 的构建、平台模型注入与运行限制见[参赛包说明](docs/deployment/index.md#参赛包与平台边界)。
+
 运行前按[本地运行文档](docs/deployment/index.md)准备环境和仓库外的比赛密钥。当前范围和实验规则见[产品说明](docs/prd/index.md)，完整文档导航见[文档索引](docs/index.md)。
 
 唯一活动配置是 [variants/factory/config.json](variants/factory/config.json)，默认 Pi，使用 `--backend codex` 切换核心。`list --backend pi` 或 `show <run-id> --case <REQ-ID>` 导航实验，历史身份仍可用 `list --variant pi-svc` 查询。显式 `--config` 用于自定义实验，记录为 custom；旧配置和兼容链接已退出活动入口，历史 run 与报告不改写。

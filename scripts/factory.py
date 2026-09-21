@@ -16,6 +16,7 @@ import subprocess
 import tempfile
 import tarfile
 import time
+import urllib.error
 import urllib.request
 import uuid
 import sources
@@ -209,6 +210,9 @@ def isolation_prefix(work, inputs):
 
 
 def runtime_environment(work, config):
+    if config.get('runtime') == 'submission':
+        from submission import environment
+        return environment(work, config)
     home = work / 'home'
     home.mkdir()
     native = home / ('.pi/agent' if config.get('backend', 'pi') == 'pi' else '.codex')
@@ -264,11 +268,17 @@ def responses_adapter(config, output):
         'model':'openai/'+config['model'], 'api_base':config['base_url'],
         'api_key':'os.environ/FACTORY26_API_KEY', 'use_chat_completions_api':True},
         'model_info':{'mode':'chat'}}], 'litellm_settings':{'telemetry':False}})
-    executable=ROOT/'.adapter/bin/litellm'
+    packaged = config.get('runtime') == 'submission'
+    executable=ROOT/('runtime/bin/litellm' if packaged else '.adapter/bin/litellm')
+    if packaged:
+        from submission import adapter_environment
+        adapter_env = adapter_environment(config, output)
+    else:
+        adapter_env = dict(os.environ, FACTORY26_API_KEY=api_key())
     if not executable.exists(): raise RuntimeError('请先为 Codex 配置运行 bootstrap 安装适配器')
     with (output/'adapter.log').open('w') as log:
         proc=subprocess.Popen([str(executable),'--config',str(adapter_config),'--host','127.0.0.1','--port',str(port)],
-             env=dict(os.environ,FACTORY26_API_KEY=api_key()),stdout=log,stderr=log,start_new_session=True)
+             env=adapter_env,stdout=log,stderr=log,start_new_session=True)
         try:
             while True:
                 if proc.poll() is not None: raise RuntimeError('Responses adapter exited; see adapter.log')
@@ -283,10 +293,11 @@ def responses_adapter(config, output):
 
 def braid_request(config, work, app, native, prompt, state, run_id=None):
     backend=config['backend']
+    executable = str(ROOT/'runtime/bin'/backend) if config.get('runtime') == 'submission' else shutil.which(backend)
     wrapper=work/'pi-clean'
     if backend == 'pi':
         context_flag='' if config.get('svc') else ' --no-context-files'
-        wrapper.write_text('#!/bin/sh\nexec '+shlex.quote(shutil.which('pi'))+
+        wrapper.write_text('#!/bin/sh\nexec '+shlex.quote(executable)+
                            ' --no-extensions --no-skills --no-prompt-templates --no-themes'+context_flag+' "$@"\n')
         wrapper.chmod(0o755)
     profile={'id':backend, 'display_name':backend, 'tags':[], 'adapter_type':backend,
@@ -299,8 +310,8 @@ def braid_request(config, work, app, native, prompt, state, run_id=None):
         request['pi']={'executable':str(wrapper),'provider':'deepseek','model':config['model'],
                        'thinking':config['thinking'],'home':str(native),'api_key_environment':'FACTORY26_API_KEY'}
     else:
-        request['codex']={'executable':shutil.which('codex'),'home':str(native),
-                         'version':capture('codex','--version'),'stable_schema_sha256':'','experimental_schema_sha256':''}
+        request['codex']={'executable':executable,'home':str(native),
+                         'version':capture(executable,'--version'),'stable_schema_sha256':'','experimental_schema_sha256':''}
     return request
 
 
@@ -310,14 +321,31 @@ def new_run():
     return run
 
 
-def generate(config, run=None):
+def application_contract(config):
+    if config.get('deployment') == 'arcbench':
+        return ('交付 frontend/package.json 和 backend/package.json。平台先在 frontend 执行 npm install、npm run build，'
+                '再在 backend 执行 npm install、HOST=0.0.0.0 PORT=3000 npm run start。'
+                '目标应用兼容 Node.js 20.19.3；后端必须通过 HOST/PORT 提供构建后的前端与 API，首页可访问；启动须在 120 秒内完成。'
+                '禁止依赖根 npm start 或 deploy.sh；不要交付 requirements、.arc、.git、.factory26 等平台保留目录。')
+    return '交付 package.json：npm install 安装依赖；如需构建提供 npm run build；npm start 接受 PORT 并在 127.0.0.1 提供服务，GET /api/health 返回 200。'
+
+
+def generate(config, run=None, requirements=None):
     backend = config.get('backend', 'pi')
     workflow = config.get('workflow', 'single')
     if backend not in ('pi', 'codex') or workflow not in ('single', 'braid'):
         raise ValueError('unknown backend/workflow')
-    if capture('git', 'rev-parse', 'HEAD', cwd=BENCH) != config['benchmark_revision'] or capture('git', 'status', '--porcelain', cwd=BENCH):
-        raise RuntimeError('benchmark 必须为固定干净版本')
-    requirements = BENCH / 'arc-bench/webapp' / config['task'] / 'requirements'
+    packaged = config.get('runtime') == 'submission'
+    if packaged:
+        if requirements is None or run is None:
+            raise ValueError('参赛模式必须显式提供需求与证据目录')
+        package = json.loads((ROOT/'package-manifest.json').read_text())
+    else:
+        if requirements is not None:
+            raise ValueError('外部需求入口仅用于参赛包')
+        if capture('git', 'rev-parse', 'HEAD', cwd=BENCH) != config['benchmark_revision'] or capture('git', 'status', '--porcelain', cwd=BENCH):
+            raise RuntimeError('benchmark 必须为固定干净版本')
+        requirements = BENCH / 'arc-bench/webapp' / config['task'] / 'requirements'
     if not requirements.is_dir(): raise ValueError('任务需求包不存在')
     run = new_run() if run is None else run
     save(run/'config.json', config)
@@ -330,15 +358,23 @@ def generate(config, run=None):
     if config.get('variant') and variant.is_dir():
         shutil.copytree(variant,run/'variant-source')
     metadata = {'variant':config.get('variant'), 'status':'generating', 'started_at':time.time(), 'task':config['task'],
-                'backend':backend, 'workflow':workflow, 'mode':'competition-gateway-local',
+                'backend':backend, 'workflow':workflow, 'mode':'platform-package' if packaged else 'competition-gateway-local',
+                'deployment':config.get('deployment','legacy'),
                 'submission_eligible':False, 'benchmark_revision':config['benchmark_revision'],
-                'versions':{backend:capture(backend,'--version'), 'node':capture('node','--version'),
+                'versions':{backend:capture(str(ROOT/'runtime/bin'/backend) if packaged else backend,'--version'),
+                            'node':capture(str(ROOT/'runtime/bin/node') if packaged else 'node','--version'),
                             'platform':platform.platform()}, 'estimated_cost':None}
-    if config.get('svc'):
+    if packaged:
+        save(run/'runtime-provenance.json', package)
+        metadata.update(svc_revision=package['sources']['svc']['revision'],
+                        braid_revision=package['sources']['braid']['revision'],
+                        braid_binary_sha256=package['files']['runtime/bin/braid']['sha256'],
+                        workflow_implementation='braid-local-objects-v1')
+    if config.get('svc') and not packaged:
         record=sources.archive('svc',run/'sources')
         metadata['svc_revision']=record['source']['revision']
         save(run/'corpus-hashes.json', hashes(sources.checkout('svc')/'corpus'))
-    if workflow=='braid':
+    if workflow=='braid' and not packaged:
         record=sources.archive('braid',run/'sources')
         metadata['braid_revision']=record['source']['revision']
         metadata['braid_binary_sha256']=record['artifacts']['braid']
@@ -349,19 +385,28 @@ def generate(config, run=None):
     begin = time.monotonic()
     try:
         with generation_workspace(run,workflow=='braid') as work, responses_adapter(config, run) as responses_url:
-            app, inputs = work/'application', work/'requirements'
+            app = work/'application'
+            inputs = run/'input' if packaged else work/'requirements'
             app.mkdir(); shutil.copytree(requirements, inputs)
             native, env = runtime_environment(work, config)
-            prefix = isolation_prefix(work, inputs)
+            if packaged:
+                from submission import isolation_prefix as package_prefix
+                prefix = package_prefix(work, inputs)
+            else:
+                prefix = isolation_prefix(work, inputs)
             workspace_instruction = '使用 Braid 为当前工作项分配的当前 Git worktree。' if workflow=='braid' else f'在 {app} 工作。'
             prompt = f'''请根据 {inputs} 中完整需求包独立实现 Web 应用。{workspace_instruction}
     阅读 requirements.md、requirements.yaml 和参考图片；格式错误或图片缺失时使用可读需求语义并记录问题。覆盖全部需求、场景和明确指定的初始数据，保留界面文字，使用可访问控件。
-    交付 package.json：npm install 安装依赖；如需构建提供 npm run build；npm start 接受 PORT 并在 127.0.0.1 提供服务，GET /api/health 返回 200。
+    {application_contract(config)}
     本任务授权在本次隔离工作区内设计、实现、安装依赖、自检及本地 Git commit/merge。无人类中途介入；依据需求处理常规歧义，记录重要假设；遇到真实阻塞则报告，不等待用户。禁止 push、发布和修改外部系统或开发源码仓库。
     可以编写运行自己的检查，完成后停止服务。不得读取、搜索或下载外部验收测试、benchmark 实现、参考应用或先前实验结果。只依据需求生成，自检后中文说明结果并结束。'''
             (run/'prompt.txt').write_text(prompt)
             if backend == 'pi':
-                save(native/'models.json', {'providers':{'deepseek':{'baseUrl':config['base_url'], 'apiKey':'$FACTORY26_API_KEY'}}})
+                provider = {'baseUrl':config['base_url'], 'apiKey':'$FACTORY26_API_KEY'}
+                if packaged:
+                    provider.update(api='openai-completions', models=[{'id':config['model'], 'reasoning':True,
+                                    'input':['text','image'] if config['image_input'] else ['text']}])
+                save(native/'models.json', {'providers':{'deepseek':provider}})
             else:
                 from core import codex_config
                 codex_config(native, responses_url, config['model'])
@@ -371,19 +416,24 @@ def generate(config, run=None):
             delivery = None
             phase(run/'run.json',metadata,'preflight',runtime={'work':str(work),'native':str(native),'braid_state':str(state)})
             try:
-                blocked = subprocess.run(prefix+['cat',str(BENCH/'package.json')],capture_output=True)
-                readable = subprocess.run(prefix+['cat',str(inputs/'requirements.md')],capture_output=True)
-                if blocked.returncode == 0 or readable.returncode != 0: raise RuntimeError('文件隔离检查失败')
+                if packaged:
+                    from submission import preflight
+                    preflight(prefix, work, inputs, run, env)
+                else:
+                    blocked = subprocess.run(prefix+['cat',str(BENCH/'package.json')],capture_output=True)
+                    readable = subprocess.run(prefix+['cat',str(inputs/'requirements.md')],capture_output=True)
+                    if blocked.returncode == 0 or readable.returncode != 0: raise RuntimeError('文件隔离检查失败')
                 if config.get('svc'):
                     lookup = subprocess.run(prefix+['svc','lookup','--path','index.md'],cwd=app,env=env,capture_output=True,text=True)
                     if lookup.returncode: raise RuntimeError('沙箱内 svc 不可用: '+lookup.stderr)
-                save(run/'isolation-check.json', {'evaluator_read_denied':True,'requirements_readable':True,'network_airgap':False})
+                if not packaged:
+                    save(run/'isolation-check.json', {'evaluator_read_denied':True,'requirements_readable':True,'network_airgap':False})
                 if workflow == 'braid':
                     from braid_runtime import initialize_repository, load_delivery
                     initialize_repository(app)
                     (work/'bin').mkdir()
                     braid = work/'bin/braid'
-                    shutil.copy2(sources.binary(),braid)
+                    shutil.copy2(ROOT/'runtime/bin/braid' if packaged else sources.binary(),braid)
                     if hashlib.sha256(braid.read_bytes()).hexdigest() != metadata['braid_binary_sha256']:
                         raise RuntimeError('Braid 运行制品与已归档构建不一致')
                     env['PATH'] = str(braid.parent) + os.pathsep + env['PATH']
@@ -430,7 +480,8 @@ def generate(config, run=None):
                     export_delivery(app,delivery['delivery_commit'],run/'application')
                 else:
                     copy_application(app,run/'application')
-                shutil.copytree(inputs,run/'input')
+                if inputs != run/'input':
+                    shutil.copytree(inputs,run/'input')
                 if workflow == 'braid' and state.exists():
                     from braid_runtime import archive_state
                     session_entries = archive_state(state,run)
@@ -444,6 +495,9 @@ def generate(config, run=None):
                                                 'native_session_path':str(source),'turns':[]})
                 from core import archive_sessions
                 archived = archive_sessions(run,native,work,session_entries)
+                if metadata['status']=='generated' and config.get('deployment') == 'arcbench':
+                    from submission import validate_application
+                    validate_application(run/'application')
                 save(run/'application-hashes.json',hashes(run/'application'))
                 metadata['application_sha256']=digest(hashes(run/'application'))
                 metadata.pop('runtime',None)
@@ -544,9 +598,11 @@ def evaluate(run, attempt=None):
     output = run / 'evaluation' / attempt
     output.mkdir(parents=True)
     shutil.copy2(Path(__file__), output / "runner-evaluation.py")
+    arcbench = config.get("deployment") == "arcbench"
     result = {"status": "starting", "started_at": time.time(), "retries": 0, "workers": 1,
+              "deployment": "arcbench" if arcbench else "legacy",
               "platform": platform.platform(), "node_version": capture("node", "--version"),
-              "test_timeout_ms": 60000, "expect_timeout_ms": 10000,
+              "test_timeout_ms": 10000 if arcbench else 60000, "expect_timeout_ms": 10000,
               "ci": False, "source_application_hashes": "../../application-hashes.json",
               "evaluation_id": attempt, "run_id": run.name,
               "benchmark_revision": config['benchmark_revision'],
@@ -567,15 +623,22 @@ def evaluate(run, attempt=None):
             result['evaluated_source_sha256'] = digest(hashes(app))
             if result['evaluated_source_sha256'] != result['application_sha256']:
                 raise RuntimeError('评测副本与冻结应用不一致')
-            package = json.loads((app / "package.json").read_text())
-            install = ["npm", "ci"] if (app / "package-lock.json").exists() else ["npm", "install"]
-            phase(output/'summary.json',result,'install','install.log')
-            if logged(install, app, env, output / "install.log") != 0:
-                raise RuntimeError("应用依赖安装失败")
-            if "build" in package.get("scripts", {}):
-                phase(output/'summary.json',result,'build','build.log')
-                if logged(["npm", "run", "build"], app, env, output / "build.log") != 0:
-                    raise RuntimeError("应用构建失败")
+            if arcbench:
+                from submission import validate_application
+                validate_application(app)
+            for directory in (('frontend', 'backend') if arcbench else ('',)):
+                target = app/directory
+                package = json.loads((target/'package.json').read_text())
+                install = (['npm','install','--include=optional','--no-audit','--no-fund'] if arcbench else
+                           ['npm','ci'] if (target/'package-lock.json').exists() else ['npm','install'])
+                label = directory+'-' if directory else ''
+                phase(output/'summary.json',result,'install',label+'install.log')
+                if logged(install, target, env, output/(label+'install.log')) != 0:
+                    raise RuntimeError('应用依赖安装失败')
+                if (arcbench and directory == 'frontend') or (not arcbench and 'build' in package.get('scripts', {})):
+                    phase(output/'summary.json',result,'build',label+'build.log')
+                    if logged(['npm','run','build'], target, env, output/(label+'build.log')) != 0:
+                        raise RuntimeError('应用构建失败')
             prepared_hashes=hashes(app)
             save(output/'prepared-application-hashes.json',prepared_hashes)
             result['prepared_application_sha256']=digest(prepared_hashes)
@@ -585,18 +648,26 @@ def evaluate(run, attempt=None):
             url = f"http://127.0.0.1:{port}"
             result["target_url"] = url
             env["PORT"] = str(port)
+            if arcbench: env["HOST"] = "0.0.0.0"
             phase(output/'summary.json',result,'health','application.log')
             with (output / "application.log").open("w") as log:
-                proc = subprocess.Popen(["npm", "start"], cwd=app, env=env, stdout=log,
+                proc = subprocess.Popen(["npm", "run", "start"], cwd=app/"backend" if arcbench else app, env=env, stdout=log,
                                         stderr=subprocess.STDOUT, start_new_session=True)
                 try:
+                    deadline = time.monotonic() + 120 if arcbench else None
                     while True:
+                        if deadline is not None and time.monotonic() >= deadline:
+                            raise RuntimeError("应用启动超过 120 秒")
                         if proc.poll() is not None:
                             raise RuntimeError("应用在健康检查前退出")
                         try:
-                            with urllib.request.urlopen(url + "/api/health", timeout=2) as response:
-                                if response.status == 200:
+                            with urllib.request.urlopen(url + ("/" if arcbench else "/api/health"), timeout=2) as response:
+                                healthy = response.status < 500 if arcbench else response.status == 200
+                                if healthy:
                                     break
+                        except urllib.error.HTTPError as exc:
+                            if arcbench and exc.code < 500:
+                                break
                         except OSError:
                             pass
                         time.sleep(0.5)
@@ -606,7 +677,7 @@ def evaluate(run, attempt=None):
                                PLAYWRIGHT_HTML_OUTPUT_DIR=str(output / "html"), PLAYWRIGHT_HTML_OPEN="never",
                                PLAYWRIGHT_OUTPUT_DIR=str(output / "test-results"))
                     command = ["npm", "run", "test", "--", "--app", config["task"],
-                               "--target-url", url, "--timeout", "60000", "--expect-timeout", "10000",
+                               "--target-url", url, "--timeout", str(result["test_timeout_ms"]), "--expect-timeout", "10000",
                                "--retries=0", "--reporter=list,json,html"]
                     save(output / "command.json", command)
                     phase(output/'summary.json',result,'discovery','discovery.log')

@@ -12,6 +12,7 @@
 | 本地对象接入实验 | [Braid / SVC 检查点](../reports/2026-09-21-braid-svc-checkpoint.md) | 真实接入验证、Keep 失败与主动中断；没有新四组分数 |
 | 实验反馈设施 | [无模型验收](../reports/2026-09-21-experiment-feedback.md) | 全流程终态、低噪诊断与分层协作的验证范围 |
 | 恢复后真实实验 | [Pi + SVC / Keep](../reports/2026-09-21-pi-svc-keep.md) | 当前接入首次完整 32 项成绩与失败分布 |
+| 参赛 P0 验收 | [制品与无模型验收](../reports/2026-09-21-competition-p0.md) | 两种 backend 的 ZIP、隔离与交付检查，以及尚未验证的生产边界 |
 | 实验结论 | [首次 Pi / Keep 基线](../reports/2026-09-20-pi-keep-baseline.md) | 固定运行条件下的结果，不是当前产品承诺 |
 | 开发闭环调查 | [诊断、协议桥与 Playground](../reports/2026-09-20-development-loop.md) | 改进证据、候选源码检查与云端探针范围 |
 | API 与并发实测 | [Playground / WSL](../reports/2026-09-20-playground-concurrency.md) | API 实际执行、云端环境与独立任务并发结果 |

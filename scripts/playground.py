@@ -231,7 +231,9 @@ def collect(client, run_id):
     return value
 
 
-def submit(client, package, requirement, name, offline=False, catalog='benchmark', config_path=None):
+def submit(client, package, requirement, name, offline=False, catalog='benchmark', config_path=None, *, practice=False):
+    if not (practice or offline):
+        raise ValueError('此接口仅用于练习；请显式选择 --practice。正式评测使用队长的平台入口和平台内置 key。')
     package = Path(package).resolve()
     with ZipFile(package) as archive:
         if not {'main.py', 'requirements.txt'}.issubset(archive.namelist()):
@@ -243,6 +245,7 @@ def submit(client, package, requirement, name, offline=False, catalog='benchmark
                 'requirement': requirement, 'catalog': catalog, 'model': config['model'], 'offline': offline,
                 'model_config': {'model':config['model'],'base_url':config['base_url']},
                 'configuration_scope': 'model-settings-only',
+                'submission_kind': 'probe' if offline else 'practice', 'ranking_eligible': False,
                 'phase': 'upload', 'created_at': time.time()}
     path = folder/'submission.json'; save(path, manifest)
     print(f'提交状态：{path}', flush=True)
@@ -264,6 +267,15 @@ def submit(client, package, requirement, name, offline=False, catalog='benchmark
         raise
 
 
+def practice_record(*, submission_id=None, run_id=None):
+    key, value = ('submission_id', submission_id) if submission_id else ('run_id', run_id)
+    for path in (ROOT/'runs/playground').glob('*/submission.json'):
+        record = json.loads(path.read_text())
+        if record.get(key) == value and record.get('submission_kind') in ('practice', 'probe'):
+            return record
+    raise ValueError('此写操作仅接受本工具已记录的练习/探针 ID；未知或正式 ID 请通过平台管理')
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='command', required=True)
@@ -277,6 +289,7 @@ def main():
     upload.add_argument('--name', required=True)
     upload.add_argument('--catalog',choices=['benchmark','playground'],default='benchmark')
     upload.add_argument('--config', type=Path, help='网关/模型配置；默认 factory 配置；不改变 ZIP 中的 harness')
+    upload.add_argument('--practice', action='store_true', help='自带 key 的练习提交，不计正式成绩')
     upload.add_argument('--offline', action='store_true', help='仅用于不会调用模型的探针；使用非凭据占位符')
     rerun=commands.add_parser('run')
     rerun.add_argument('--submission',required=True)
@@ -300,12 +313,14 @@ def main():
         items=client.request('/requirements?'+urlencode({'catalog':args.catalog}))
         print(json.dumps([{k:v.get(k) for k in ('id','title','total_tests')} for v in items],ensure_ascii=False,indent=2));return
     if args.command == 'submit':
-        value = submit(client, args.package, args.requirement, args.name, args.offline, args.catalog, args.config)
+        value = submit(client, args.package, args.requirement, args.name, args.offline, args.catalog, args.config, practice=args.practice)
     elif args.command == 'run':
+        previous=practice_record(submission_id=args.submission)
         created=client.request('/runs','POST',fields={'submission_id':args.submission,'requirement_id':args.requirement})
         run_id=created['run']['id']
         folder=output_dir(run_id)
-        value={'submission_id':args.submission,'requirement':args.requirement,'run_id':run_id,'phase':'start'}
+        value={'submission_id':args.submission,'requirement':args.requirement,'run_id':run_id,'phase':'start',
+               'submission_kind':previous['submission_kind'],'ranking_eligible':False}
         save(folder/'submission.json',value)
         client.request(run_path(run_id)+'/start','POST')
         value['phase']='started';save(folder/'submission.json',value)
@@ -329,6 +344,7 @@ def main():
                 return
             time.sleep(args.interval)
     elif args.command in ('start', 'cancel'):
+        practice_record(run_id=args.run_id)
         client.request(run_path(args.run_id)+'/'+args.command, 'POST')
         value = status(client, args.run_id)
     elif args.command == 'logs':

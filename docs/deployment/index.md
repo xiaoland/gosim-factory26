@@ -2,6 +2,29 @@
 
 本文维护开发者运行、恢复和检查本地 harness 所需的操作说明。[产品说明](../prd/index.md)维护实验规则和范围；可执行参数以[Factory 配置](../../variants/factory/config.json)、[运行器](../../scripts/factory.py)和 [Makefile](../../Makefile)为准。
 
+## 参赛包与平台边界
+
+参赛包复用本项目的 Braid + SVC 生成、Git 交付冻结和原生证据归档。每个 ZIP 固定一个 backend；根目录 `main.py` 接受平台传入的需求，不读取本地 benchmark，也不执行评测：
+
+```sh
+python3 scripts/package_agent.py --backend pi --output runs/packages/factory-pi.zip --docker-context arcbox-win
+# Codex 使用 --backend codex，输出到另一份 ZIP。
+# 以下命令在解压后的 ZIP 根目录执行，并由调用环境提供模型变量。
+python3 main.py /path/to/requirements --output-dir /path/to/output
+```
+
+构建需要可用的 Linux x86_64 Docker daemon；`--docker-context` 可省略以使用当前 context。脚本只发送指定构建输入，不上传整个开发目录。Braid 从当前 `sources/braid` 构建；SVC 从当前 `sources/svc` 构建包含 Corpus 的 wheel，Python 依赖用 Linux CPython 3.12 安装到包内目录。Node 和所选核心也在构建时安装并随包提供；Pi 需要 Node >=22.19，不能直接使用平台原有 Node 20。精确工具版本由 [Dockerfile](../../submission/Dockerfile) 固定，实际文件哈希、源码身份和执行权限写入 `package-manifest.json`。npm lock 和 Python 依赖清单随 runtime 保留。重复构建不覆盖已有 ZIP；构建时无需模型 key，比赛运行时无需 clone 源码、Cargo 或开发者 venv。
+
+入口要求 Linux x86_64、CPython 3.12 和 Landlock ABI >=3。它先校验所有载荷并恢复 ZIP 解压丢失的执行权限，再启动独立 Landlock launcher。规则只授权系统运行路径、只读包与需求、可写临时工作区，不开放整个 `/workspace`、`/tmp` 或 `/proc`。运行前检查子孙进程不能读取宿主标记，不能写入、删除或替换需求。内核或 seccomp 不支持时明确失败，不会无隔离回退。网络白名单仍由平台负责；该文件隔离不声称实施了网络隔离。生产 Runner 是否支持此内核能力需要在正式环境核实。
+
+入口优先采用完整的 `VISUAL_API_KEY`、`VISUAL_BASE_URL`、`VISUAL_MODEL`；没有视觉 key 和地址时使用完整的 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`MODEL`（仅有默认 VISUAL_MODEL 不视为配置了视觉凭据）。视觉 key 或地址只提供一部分时立即失败，避免静默丢弃图像能力；选定配置不完整也立即失败，不回退到本机密钥或自选模型。只把 key 传给运行进程，配置与制品清单保存环境变量名称，不保存密钥值。原生工具输出仍可能含敏感信息，运行证据不能未经检查公开。
+
+应用交付遵循官方标准布局：`frontend/package.json` 提供 build，`backend/package.json` 提供 start；后端在 `HOST=0.0.0.0 PORT=3000` 下提供前端产物与 API，目标应用兼容 Node 20.19.3。包内 Node 22 用于 Harness，不能推定部署环境也有 Node 22。禁止依赖本地模拟器专用的 `deploy.sh`。入口只在生成成功并冻结后复制应用，保留平台预置的 `.arc`、`.git` 和 `requirements`，拒绝覆盖同名应用文件。输入可为独立需求快照，或输出目录原有的 `requirements/`。证据保存在输出的 `.factory26/<run-id>/`；`run.json` 描述生成，`delivery.json` 单独描述交付成功或失败。
+
+正式提交由队长使用平台的正式评测入口，并使用平台内置 key。本项目 Playground 上传仅用于自带 key 的练习，必须显式选择 `--practice`，不计正式成绩；`--offline` 仅供无模型设施探针。这里没有实现未经核实的正式提交 API。
+
+官方契约来源是 [本地模拟环境](https://github.com/code-philia/hackathon-local-simulation/tree/cfbbc287ee1bbffcf1e936545e4803145693a8d8)。该仓库未包含生产 Runner 源码或可直接拉取的生产镜像地址。无模型验收可以证明打包、文件隔离、工具启动和入口交付，不能证明真实模型生成质量、正式评分或生产容器兼容性。当前实施与验收状态见 [task packet](../../tasks/competition-p0/packet.md)。
+
 ## 环境和启动
 
 生成主机需要 Python 3.12+、Git、uv、Node/npm，以及对应 Pi 或 Codex 可执行文件。macOS 使用 sandbox-exec，Linux 使用 bwrap；模型接入目前在本机 macOS 验证。braid 组合另外需要 Rust 1.93+ 构建本地源码。评测可独立运行在 Linux，不需要模型密钥或 Agent 核心。
@@ -48,9 +71,9 @@ python3 scripts/check_braid.py --backend codex
 
 探针通过真实 Agent 创建 comment，再验证 hide/unhide/delete、自身写入不自唤醒、外部 description 修改自动重建、失效 turn 拒绝以及新的本地 PR 交付。结果位于 `runs/integration/`，包含实际输入、全部物理会话、源码快照、原生证据和对冻结 calc.py 的独立断言；没有固定阶段数，也不计入 ARC-bench 成绩。`--svc` 仅用于额外排障，不替代默认的关闭 SVC 检查。
 
-生成结束后停止 Agent 进程组，清理工作目录仍位于本次临时工作区的独立工具进程并确认无残留，再保存应用快照并计算哈希。已退出生成进程的组清理若返回 EPERM，会保留退出码与清理异常，仍必须通过工作区清理检查；评测路径不忽略该异常。评测在另一个临时副本中安装、构建和启动应用，冻结快照保持原样。应用须提供 `package.json` 和 `npm start`，接受环境变量 `PORT`，在 `127.0.0.1` 提供服务，并让 `/api/health` 返回 200；存在 build script 时会先执行构建。
+生成结束后停止 Agent 进程组，清理工作目录仍位于本次临时工作区的独立工具进程并确认无残留，再保存应用快照并计算哈希。已退出生成进程的组清理若返回 EPERM，会保留退出码与清理异常，仍必须通过工作区清理检查；评测路径不忽略该异常。评测在另一个临时副本中安装、构建和启动应用，冻结快照保持原样。活动配置的 `deployment=arcbench` 要求上述 frontend/backend 布局；本地评测先安装并构建 frontend，再安装并启动 backend，以首页响应检查就绪。历史 run 缺少 deployment 字段时保留根 `package.json`、`npm start`、`PORT` 和 `/api/health` 返回 200 的原契约。
 
-运行器使用官方单项测试和断言超时、单 worker、零重试；不额外设置模型输出 token 上限或流程总时限。具体值由运行器和每次评测的 `command.json`、`summary.json` 记录。健康检查会在服务退出时失败；服务持续运行但不健康时会继续等待，应查看 `application.log` 判断原因。
+运行器使用官方单项测试和断言超时、单 worker、零重试；不额外设置模型输出 token 上限或流程总时限。具体值由运行器和每次评测的 `command.json`、`summary.json` 记录。服务退出时健康检查失败；arcbench 部署最多等待 120 秒，单条测试超时 10 秒。历史部署仍使用原 60 秒单测和无总上限的健康等待；查看 `application.log` 判断原因。
 
 也可分别执行各阶段：
 
@@ -165,18 +188,20 @@ trace 提供关联的标准化调用上下文；只有需要精确内容恢复�
 ```sh
 python3 scripts/playground.py whoami
 python3 scripts/playground.py requirements --catalog benchmark
-python3 scripts/playground.py submit --package /path/to/agent.zip --requirement keep --name factory-keep
+python3 scripts/playground.py submit --practice --package /path/to/agent.zip --requirement keep --name factory-keep
 python3 scripts/playground.py watch <run-id>
 python3 scripts/playground.py collect <run-id>
 ```
 
 上传前必须准备符合平台契约的 Python Agent ZIP，根目录包含 main.py 与 requirements.txt。`submit` 默认读取 Factory 配置中的网关和模型，也可用 `--config` 指定，并使用仓库外比赛密钥；配置不会改变 ZIP 已打包的核心或工作流。清单明确标记 configuration_scope=model-settings-only，包身份以 SHA256 为准。只有无模型探针使用 `--offline`，该选项传非凭据占位符。包哈希、已确认的 submission/run ID 与执行阶段记录在 `runs/playground/upload-*/submission.json`，便于写请求失败后查明已经完成哪一步；传输结果不明时不自动重复 POST。
 
+续跑、启动和取消只接受本工具清单中明确记录为 practice/probe 的 ID；未知、正式和缺少分类的历史 ID 请通过平台管理。
+
 同一包重跑使用 `python3 scripts/playground.py run --submission <submission-id> --requirement <requirement-id>`，避免重复上传。已创建但尚未启动的 run 使用 `start <run-id>`；明确结束云端执行使用 `cancel <run-id>`。中断本地 `watch` 只停止等待，不改变云端 run。401 表示需要重新登录。
 
 `status <run-id> --saved` 可只读重放已归档状态，不联网、不改旧产物。摘要分开列出最近有效事件、心跳和采集时刻，缺少观测时间时明确未知；不使用文件 mtime 猜测。traceability 没有显式记录时显示未建立关联，不能由 SDK 自报 passed 推导外部评测成功。`status` 输出阶段摘要，`watch` 默认每 180 秒读取状态和增量日志，只在 PASSED、FAILED、CANCELLED 或 PAUSED 时收集证据、输出摘要并退出；可用 `--after-event` 跳过已处理的同一结果。运行中无变化保持静默，PAUSED 表示需介入而非完成；运行中的计数不作为完整成绩。观测超过 360 秒标为 stale，不据此推断远端已经停止。平台曾将实际耗时返回为 0，因此终态摘要用 started_at/finished_at 计算 elapsed_seconds，并汇总测试状态；原始时长字段保留在 status.json。`collect` 将状态、日志游标与分块、traceability 和 commit history 保存到 `runs/playground/<run-id>/`。JSON 的凭据字段会脱敏，但原始日志仍可能包含 Agent 工具输出，继续由 Git 忽略。
 
-接口来自网站当前公开前端，可能随平台更新；此前实际完成网站登录、上传、启动、Demo 单项评测和证据下载。云端环境与脚本实测见[并发与 API 报告](../../reports/2026-09-20-playground-concurrency.md)，早期协议调查见[开发闭环调查](../../reports/2026-09-20-development-loop.md)。当前本地 harness 尚未适配平台的 Python 入口与 frontend/backend 部署布局，因此 hosted runner 还不能直接替换 `--eval-host`。
+接口来自网站当前公开前端，可能随平台更新；此前实际完成网站登录、上传、启动、Demo 单项评测和证据下载。云端环境与脚本实测见[并发与 API 报告](../../reports/2026-09-20-playground-concurrency.md)，早期协议调查见[开发闭环调查](../../reports/2026-09-20-development-loop.md)。当前新增参赛包入口与标准 frontend/backend 交付；hosted runner 仍不能直接替换 `--eval-host`，也尚无新包的正式平台模型成绩。
 
 ## 并发实验
 
