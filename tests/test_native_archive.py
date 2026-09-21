@@ -14,6 +14,27 @@ def write_jsonl(path, value):
 
 
 class NativeArchiveTest(unittest.TestCase):
+    def test_pi_manifest_parent_file_overrides_launch_alias(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp).resolve()
+            native_home = work / 'pi-home'
+            alias = native_home / 'parent.jsonl'
+            canonical = native_home / 'sessions' / 'parent.jsonl'
+            write_jsonl(alias, {'type': 'message', 'id': 'alias'})
+            write_jsonl(canonical, {'type': 'session', 'id': 'pi-root'})
+            (native_home / '.factory').mkdir(parents=True)
+            (native_home / '.factory' / 'session-tree.json').write_text(json.dumps({
+                'schema_version': 1, 'parent_native_session_id': 'pi-root',
+                'parent_session_file': str(canonical), 'children': [],
+            }))
+            rows = archive_sessions(work / 'run', work / 'home', work, [{
+                'provider': 'pi', 'session_id': 'pi-root', 'native_home': str(native_home),
+                'native_session_path': str(alias),
+            }])
+            self.assertEqual(rows[0]['native_id'], 'pi-root')
+            self.assertEqual(rows[0]['source_path'], str(canonical))
+            self.assertNotIn('archive_error', rows[0])
+
     def test_pi_tree_archives_two_connected_levels_and_manifest(self):
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp).resolve()

@@ -113,6 +113,13 @@ def archive_sessions(output, home, work, entries):
     def root_source(row, provider):
         source = row.get('native_session_path')
         session_id = row.get('session_id')
+        if provider == 'pi' and row.get('native_home'):
+            tree_path = _archive_path(row['native_home'], work)/'.factory'/'session-tree.json'
+            if tree_path.exists():
+                tree = json.loads(tree_path.read_text())
+                if str(tree.get('parent_native_session_id')) != str(session_id):
+                    raise ValueError('Pi session-tree parent identity 与 Braid 根会话不一致')
+                source = tree.get('parent_session_file') or source
         if not source and provider == 'codex' and isinstance(session_id, str) and re.fullmatch(r'[a-fA-F0-9-]+', session_id):
             native_home = _archive_path(row['native_home'], work) if row.get('native_home') else home
             matches = list(native_home.glob(f'sessions/**/rollout-*-{session_id}.jsonl'))
