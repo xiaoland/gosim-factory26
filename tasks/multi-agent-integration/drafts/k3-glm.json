@@ -1,0 +1,151 @@
+{
+  "preset_id": "k3-glm",
+  "variant_id": "factory-k3-glm",
+  "status": "deferred-fine-search-draft-not-in-initial-batch",
+  "objective": "优先提高固定完整任务集的通过率；公开练习与正式初赛分别标记；成本优化留待后续",
+  "core": {
+    "type": "pi-rpc",
+    "extensions": [
+      {
+        "id": "pi-subagents",
+        "source": "https://github.com/nicobailon/pi-subagents",
+        "revision": null
+      }
+    ]
+  },
+  "braid": {
+    "root_profile": "coordinator",
+    "assignment": "work-item 直接指定 profile ID；不通过 label 选择；不强制拆分或启动所有 profile"
+  },
+  "svc": {
+    "source": "sources/svc",
+    "injection": "user-scope AGENTS.md 两行查询导航"
+  },
+  "llm": {
+    "base_url": "https://api.arc-bench.com/v1",
+    "credential_env": "FACTORY26_API_KEY"
+  },
+  "skills": {
+    "frontend-design": {
+      "source": "https://github.com/anthropics/skills/tree/main/skills/frontend-design",
+      "revision": null,
+      "use": "按需求与已批准视觉约束设计和检查界面"
+    },
+    "ponytail": {
+      "source": "已安装 ponytail:ponytail 的获准快照",
+      "revision": null,
+      "use": "仅用于技术实现与复杂度审查，不替代产品设计"
+    },
+    "agent-browser": {
+      "source": "https://github.com/vercel-labs/agent-browser/tree/main/skills/agent-browser",
+      "revision": null,
+      "use": "薄导航入口，按需从已固定版本 CLI 读取 core 指引；不会默认加载 dogfood 等专项流程"
+    }
+  },
+  "mcp_servers": {},
+  "cli_tools": [
+    "git",
+    "svc",
+    "braid",
+    "项目原生构建/测试命令",
+    "临时 API 与应用验收脚本",
+    "agent-browser"
+  ],
+  "runtime_bindings": "版本、密钥、HOME、workspace、端口与浏览器目录由 Factory 装配，快照进入 run；本草案不含凭据值",
+  "profiles": {
+    "coordinator": {
+      "model": "kimi-k3",
+      "instructions": "维护需求、当前产品/系统理解和最终验收目标；推导已接受决定的后果；按问题直接指派 work-item 并整合交付。既可自行完成小任务，也可创建适当 sub-issue；不强制拆分。无人中途参与时记录必要假设，在需求授权范围内作决定。",
+      "skills": [
+        "frontend-design",
+        "agent-browser"
+      ],
+      "mcp_servers": [],
+      "native_subagents": {
+        "explorer": {
+          "model": "kimi-k3",
+          "purpose": "有边界的代码/材料调查，返回当前问题需要的结论与证据",
+          "reasoning": "high",
+          "mcp_servers": [],
+          "skills": []
+        },
+        "executor": {
+          "model": "glm-5.3",
+          "purpose": "在父 Agent 授权和文件责任范围内完成局部实现",
+          "reasoning": "high",
+          "mcp_servers": [],
+          "skills": [
+            "frontend-design",
+            "ponytail",
+            "agent-browser"
+          ]
+        },
+        "reviewer": {
+          "model": "kimi-k3",
+          "purpose": "独立检查需求、实现或验收证据；结论交回父 Agent",
+          "reasoning": "high",
+          "mcp_servers": [],
+          "skills": [
+            "frontend-design",
+            "agent-browser"
+          ]
+        },
+        "context": "Pi 物理子会话，不是 Braid 可指派 profile。SVC 导航、子任务目标、范围和证据入口由父会话提供；不复制完整父会话。技能按各子角色明确装配，浏览器会话独立；不自动递归开放 subagent 扩展。"
+      },
+      "reasoning": "high"
+    },
+    "app-engineer": {
+      "model": "glm-5.3",
+      "instructions": "擅长完整 Web 应用与跨前后端功能；依所属 Issue/PR 职责形成方案或预演、实现、自检。按需求实现真实持久化和交互，不以假数据或静态壳替代产品行为。",
+      "skills": [
+        "frontend-design",
+        "ponytail",
+        "agent-browser"
+      ],
+      "mcp_servers": [],
+      "native_subagents": {
+        "explorer": {
+          "model": "kimi-k3",
+          "purpose": "有边界的代码/材料调查，返回当前问题需要的结论与证据",
+          "reasoning": "high",
+          "mcp_servers": [],
+          "skills": []
+        },
+        "executor": {
+          "model": "glm-5.3",
+          "purpose": "在父 Agent 授权和文件责任范围内完成局部实现",
+          "reasoning": "high",
+          "mcp_servers": [],
+          "skills": [
+            "frontend-design",
+            "ponytail",
+            "agent-browser"
+          ]
+        },
+        "reviewer": {
+          "model": "kimi-k3",
+          "purpose": "独立检查需求、实现或验收证据；结论交回父 Agent",
+          "reasoning": "high",
+          "mcp_servers": [],
+          "skills": [
+            "frontend-design",
+            "agent-browser"
+          ]
+        },
+        "context": "Pi 物理子会话，不是 Braid 可指派 profile。SVC 导航、子任务目标、范围和证据入口由父会话提供；不复制完整父会话。技能按各子角色明确装配，浏览器会话独立；不自动递归开放 subagent 扩展。"
+      },
+      "reasoning": "high"
+    }
+  },
+  "reasoning_status": "high 是目标配置；逐模型 wire mapping 和服务端支持仍待核验，不能静默降级后标为 high",
+  "browser": {
+    "tool": "agent-browser",
+    "source": "https://github.com/vercel-labs/agent-browser",
+    "revision": null,
+    "interface": "CLI",
+    "session_scope": "每个物理会话及其子会话独立命名，包含 run 与 session 身份，不仅按 worktree 命名",
+    "binary_cache": "复用已安装且兼容的浏览器二进制；浏览器状态目录不共享",
+    "purpose": "查看生成应用、交互和布局自检；不读取官方评测器"
+  },
+  "requirement_priority": "功能复刻以题目需求、参考素材与可观察行为为准；领域规则和状态一致性优先，视觉 skill 不得扩大需求或擅自重设计。正式初赛需求尚未在本项目核实，不把 Keep 当作正式题目。"
+}

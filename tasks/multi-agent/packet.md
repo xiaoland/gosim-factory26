@@ -1,5 +1,7 @@
 # 单一 Harness 的多 Agent 协作
 
+本包现为上一轮 Braid 能力实现及其残余验收的入口。以下“本轮”“新增 profile 另做”均指当时边界；当前迭代已转入 [multi-agent 接入任务包](../multi-agent-integration/packet.md)，由其 cells 维护实施与实验计划。本包的产品/方法输入、历史证据和未完成事项保留，不与新包竞争当前控制状态。
+
 目标：把后续开发收敛为一个 Braid + SVC harness，Codex app-server / Pi 是可选 backend；围绕上下文管理、多 Agent 协作、设计与实现分离，提供 Agent 可按问题自主组合的能力。
 
 用户已确定上述方向，并接受根 Issue description 保存 Factory prompt、引用完整 requirements 包，子 Issue 按需要内联局部需求。Braid 与 SVC 继续独立：前者管理对象、关系、执行和上下文，后者提供协作方法，Factory harness 负责装配。CLI/config 收敛已完成。用户于 2026-09-21 同意第 1 项 Braid 能力的具体技术、验收及实施方案；完成独立预演及基线提交后实施。新增 agent-profile 是另一个项目，归第 3 项 Factory 装配，本轮不做。
