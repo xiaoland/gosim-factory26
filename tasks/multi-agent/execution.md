@@ -16,4 +16,6 @@
 
 Oracle：同一 group/worktree 出现替代物理会话；原生实际模型输入包含新标记且不包含旧/隐藏/删除正文；没有宿主消息驱动；最终 delivery commit 的导出文件通过独立断言。原始材料归 `runs/integration/<id>/`。本探针不产生 ARC-bench 分数。无论成功失败，终态后先向用户汇报，不自动重跑或启动另一个 backend/完整 Keep；未执行的验收继续显式保留。
 
-状态：尚未启动。真实 Codex、自身多会话的真实 provider 行为，以及完整 Keep 32 项均未由本轮新增实现证明；确定性测试不能代替这些证据。
+状态：2026-09-21 单次 Pi 探针通过，run `20260921-185322-pi-plain-2887cf`，耗时 122.76 秒；源码提交为 Braid `63459fc`、Factory `dda8ab1`。主 Agent 独立复核归档原生输入及逻辑身份。2 个逻辑 Agent 使用了 9 个物理会话，7 次重建均 applied；最终冻结交付通过独立断言。完整结果与证据归 [验收报告](../../reports/2026-09-21-braid-collaboration-pi-probe.md)。本次终态后停止，无自动重跑或 Keep 追加。
+
+真实 Codex、多个同类 Agent 的真实 provider 协作，以及完整 Keep 32 项均未由本轮新增实现证明；确定性测试和本次小型探针不能代替这些证据。
