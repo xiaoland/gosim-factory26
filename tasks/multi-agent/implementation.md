@@ -12,4 +12,4 @@ Braid 提交为 `e0c3ca2`。13 项单元测试和 1 项真实 CLI 集成测试�
 
 提交后已运行 sources.build('braid') 并通过 require_build：当前二进制、完整源码和 e0c3ca2 HEAD 的 build stamp 一致。修改后的 12 份入口/维护文档链接有效。Factory 与 Braid 分别提交，SVC 源码及安装未更改。
 
-完整协作链仍未实施：父子 Issue、父 turn 让出执行位置、子结果唤醒、同类并行容量、共享材料版本和所有权继续在 design/plan 中讨论。单一 variant 不表示这些能力已存在。
+本记录对应的 CLI/config 实施结束时，完整协作链尚未实施。其后的产品讨论已撤回父 turn 让出位置、固定子结果唤醒等提案，当前依据见 design/technical/plan。单一 variant 不表示这些能力已存在，本历史核验不证明后续方案已完成。

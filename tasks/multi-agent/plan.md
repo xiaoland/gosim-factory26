@@ -1,35 +1,49 @@
 # 验收与实施顺序
 
-## 本轮已授权范围
+## 当前阶段与复核门槛
 
-用户已批准 CLI 对齐、直接 PR 创建的产品调整及单一 variant/config；明确不用实验验收。本轮仅运行 Rust/Python 无模型测试、构建及文档检查。先提交方案和实施基线，再修改源码；完成后提交并汇报，不自动开始下一轮实验。
+用户要求推进第 1 项 Braid 产品与执行能力，随后明确这只是初步产品设计，技术方案、验收方案和实施计划必须先复核。新增 agent-profile 属于另一个项目，归第 3 项 Factory 装配；本轮保持现有 profile，不开始 Corpus 清理或新的 provider 扩展装配。
 
-独立 advisor 已预演直接创建 PR：移除强制请求 comment；可选 request-id 提供明确重试身份，不按正文猜测去重。Git 分支不随 SQLite 回滚，因此创建分支前验证所有关联 Issue，保留残留分支与基准一致性检查；新 PR、关联与激活事件原子提交，现有 writer fencing、ready commit 与 merge journal 不变。使用新增迁移保存 nullable 唯一 request-id，不修改旧迁移。
+| 门槛 | 当前事实 |
+| --- | --- |
+| 产品方向与本轮范围 | 用户于 2026-09-21 同意；本轮仅第 1 项。 |
+| 技术方案 | [technical.md](technical.md) 已获用户同意。 |
+| 新增验收方案 | [verification.md](verification.md) 已获同意；既有 bench 基线沿用。 |
+| 实施计划与独立预演 | 计划已获同意；正式独立预演正在收敛，结果见下文。 |
+| 实现前提交、源码实现、验收执行 | 均未开始。方案和计划通过复核、预演收敛后才提交实施基线。 |
 
-低成本 Agent 已核对配置消费者：factory、check_braid、playground、concurrency 及文档和测试。活动配置统一到 variants/factory/config.json，backend 默认 pi，可选 codex；显式 --config 保留，旧 runs 不迁移。core probe 仍可独立关闭 SVC，不因此把 Braid 与 SVC 写成源码依赖。
+## 实施计划
 
-实施分工：Braid worker 独占 sources/braid；主 Agent 修改 Factory 配置、脚本、文档及测试。同步 CLI 的所有生产者和消费者，检查正文/stdin、title edit、结构化输出、过期 writer 拒绝、PR 重试与失败分支、历史 run 读取。最终复核差异，运行本地测试并刷新 Braid build stamp。
+1. **收敛接口和风险。** 复核技术与验收方案，明确 thread 回复/折叠及投递范围、自编辑替换的可见行为。独立 Agent 随后按真实调用路径预演迁移、CLI 消费者、并发收尾/恢复和 provider 输入，给出具体修订。准备各检查入口与所需样例；不能把当前阅读源码等同完成这一门槛。
+2. **提交实施基线。** 仅提交本任务的已复核 packet 和实施起点，Factory 与 Braid 各自仓库分开处理，不带入参赛 P0 等并行任务改动。
+3. **实现对象与消息的完整使用路径。** 新迁移、对象关系、CLI、Context 投影和持久投递一起完成。按实际使用验证 thread、hide 理由、resolve 后新回复、reaction 和可选父子 Issue，不只交付数据库字段。
+4. **实现上下文替换与独立执行。** 分离自身普通消息回声和真正失效，修正 continuation/terminal 竞态；再将 role driver 改为活动会话集合，同时修正 finalization 与 resume retain 的隐含串行假设。每步运行相关判别检查，保持 writer fencing、worktree 和 merge journal 边界。共享 store 代码由单一实施 owner 整合，不让并行 worker 猜接口。
+5. **整合协议、文档与验收。** 更新 Issue/PR 指导和现有 owner 文档，核对 Factory CLI 消费者，构建并刷新来源记录；按验收方案完成本地检查，再进入已复核的真实 adapter 场景与单次完整生成/bench。每次实验结束即汇报，不自行补跑。
 
-以上实施顺序已完成，核验结果与既有 Clippy 限制见 [实施核验](implementation.md)。Braid 已提交并刷新构建；本轮不延伸为真实模型或 bench 验收。
+各步输出分别是可复核方案、干净实施起点、可用对象/通信、正确并发/上下文和实际验收证据。具体 worker 文件所有权在正式预演后确定；保持新 profile、SVC 清理和第 3 项装配的独立范围。
 
-## 后续多 Agent 协作（待复核，未实施）
+## 实施预演与所有权
 
-既有完整 Keep 32 项、冻结后评测、官方 runner 不改、原生会话和应用哈希关联、每次实验后先汇报的标准继续沿用。新增验收要证明委派、上下文和实际并发，而不能只检查对象数量或 CLI 退出码。
+2026-09-21 独立 runtime 预演确认方案可沿现有接口实施，并补出两项必须处理的细节：runtime 在 reset 已持久化为 interrupting、终态尚未收据时重启，必须在独占启动阶段接管并沿 reset-specific unknown 收据推进；现有 ProductSession 测试在同一 writer 上连续 edit/hide/delete 的脚本必须改为基于 canonical state 的可恢复步骤，不能放宽 writer fencing。先修复 store 的两种 terminal 顺序与重启恢复，再启用自身 Invalidate 并解除 worker 的全局 idle 门。
 
-## 新增判别场景
+runtime 实施 owner 负责 `sources/braid/src/store/mod.rs`（含迁移注册）、`src/group/worker.rs`、`dispatch.rs`、两个 role resume 路径、SessionManager 及 `src/local.rs` 的 runtime 判别检查；主 Agent 负责 objects/context/CLI、新 SQL 迁移、CLI 集成测试、角色协议与文档整合。共享 store 不并行编辑。基线为 Braid `e0c3ca2`；Factory 基线提交仅包含本 packet 与其用户方法输入，排除 `tasks/competition-p0/packet.md`。
 
-1. 用确定性 provider 验证熟悉的 view/edit/comment、正文/stdin 和错误用法；写入成功后读回对象和实际 Context，失效 writer 不得修改任何对象。Braid 特有动作明确显示目标和语义。
-2. 根 Issue 派发两个有明确范围的实施子任务及一个研究子任务；研究仅返回材料，实施通过 PR 交付。分别证明两个 Issue group 和两个 PR group 有实际活动时间重叠，整体不超过指定容量。父 turn 结束后不会占住子任务容量，子结果能唤醒父任务；不能把“创建两个对象”当作并行验收。
-3. 两个 worktree 访问同一公共 packet 材料及各自模块。验证写入所有权、发布版本和公共契约修订后的消费；重建后保留正确材料引用，历史正文不会继续充当当前任务。
-4. 故意让一个子任务失败、一个会话重建，并尝试提前关闭根 Issue；核对另一任务仍可推进、错误归属正确、未满足总体交付不能成功封存。合并仍针对明确 ready commit，不复制任意 worktree。
-5. Codex/Pi 适配器均做无模型会话隔离检查；首轮真实试验建议选择 Pi backend、并发 2，避免同时变更多个接入条件。接入场景通过后，下一次获授权的完整 Keep 生成和 bench 只执行一次，按结果汇报，不自动扩为两后端或并发消融矩阵。
+判别入口为 `cargo test session_recovery_tests`、`cargo test local::tests::`、`cargo test --test cli_writer_boundary`。检查须证明真实重叠、单 session reset 不影响同伴、运行中 close 恰一次收尾，以及 v4 升级保留旧对象；不能用执行时长猜测并行。
 
-该方案尚待用户复核，未启动模型或 bench。“实际重叠”和“材料版本生效”须由事件/输入/文件事实独立确认，不能只由负责实现的 Agent 自报。
+## 已完成的范围
 
-## 实施门槛与责任
+CLI 对齐、直接 PR 创建和单一 variant/config 已按“预演→实现前提交→实现→本地核验”的顺序完成，该轮明确不跑模型或 bench。实现细节、检查与既有 Clippy 限制归 [实施核验](implementation.md)，不再在本计划重复。参赛包与部署适配另由 [P0 packet](../competition-p0/packet.md) 维护，其进展和授权不扩展本轮多 Agent 范围。
+
+## 沿用的实验边界
+
+既有完整 Keep 32 项、冻结后评测、官方 runner 不改、原生会话和应用哈希关联、每次实验后先汇报的标准继续沿用。用户已纠正上一版把协作固化为流程的问题；先复核修订后的产品边界，再制定实现计划。以下只作为后续判别场景，不代表已批准实施或实验。
+
+新增行为、场景、Oracle 与执行证据统一维护在 [验收方案](verification.md)，本计划不复制第二份清单。原先强制研究子 Issue、父 turn 结束让位及围绕这条流程的容量 1 验收已撤回；provider sub-agent 当前只核查能力边界，不以未接通的扩展作为本轮完成条件。
+
+## 后续项目与责任边界
 
 顺序：方案与新增验收边界复核 → 具体实施计划和独立 Agent 预演 → 实现前提交 → 实现及必要检查 → 单次获授权实验 → 结果汇报。
 
-CLI 和单一配置先在本轮完成；父子生命周期、执行容量和公共材料装配留待协作方案复核。SVC 只针对发现的范式缺口调整 Corpus，并独立验证仍可用于不含 Braid 的项目。调度、材料可见性相互有依赖，不分给多个 worker 猜同一接口。
+SVC 的现有结构和内容不预设保留，后续以实际消费问题审查删除、合并、重写；新增 profile、provider 扩展和 Factory 方法/材料装配在第 3 项处理。这些工作不在本轮偷偷纳入，也不作为本轮 Braid 实现的先决条件。相互依赖的运行边界不分给多个 worker 猜同一接口。
 
-当前预研责任已分离：低成本 Agent 对照 gh CLI、另一个低成本 Agent 查询 SVC 协作范式，advisor 审视执行权威与材料边界，主 Agent 核对实际调度/对象/配置并整合方案。后续实施预演必须覆盖 worker、store claim、parent 事件、Context 投影和 provider 并发，当前方案审阅不冒充已完成的实现预演。
+当前产品复核已由独立 advisor 审视“能力与编排”的边界，主 Agent 核对 worker、会话契约和 SVC 范式。后续预演围绕原生 sub-agent 能力、当前同类 worker 串行化、上下文替换及会话树生命周期开展；本轮讨论不冒充已完成的实现预演。
