@@ -69,7 +69,7 @@ python3 scripts/check_braid.py --backend pi
 python3 scripts/check_braid.py --backend codex
 ```
 
-探针通过真实 Agent 创建 comment，再验证 hide/unhide/delete、自身写入不自唤醒、外部 description 修改自动重建、失效 turn 拒绝以及新的本地 PR 交付。结果位于 `runs/integration/`，包含实际输入、全部物理会话、源码快照、原生证据和对冻结 calc.py 的独立断言；没有固定阶段数，也不计入 ARC-bench 成绩。`--svc` 仅用于额外排障，不替代默认的关闭 SVC 检查。
+探针让真实 Agent 在原生 shell 创建 comment/reaction，再自行 hide、delete 和修改 description；每次重建后从持久对象继续，没有宿主消息推动。它核对普通自身消息不自唤醒、旧 writer 在运行中被拒绝、替代原生会话的实际输入不含旧正文，以及最终冻结 calc.py 的独立断言。结果位于 `runs/integration/`，包含实际输入、全部物理会话、源码快照及原生证据；这是受控 adapter 验收，不计入 ARC-bench 成绩。`--svc` 仅用于额外排障，不替代默认的关闭 SVC 检查。
 
 生成结束后停止 Agent 进程组，清理工作目录仍位于本次临时工作区的独立工具进程并确认无残留，再保存应用快照并计算哈希。已退出生成进程的组清理若返回 EPERM，会保留退出码与清理异常，仍必须通过工作区清理检查；评测路径不忽略该异常。评测在另一个临时副本中安装、构建和启动应用，冻结快照保持原样。活动配置的 `deployment=arcbench` 要求上述 frontend/backend 布局；本地评测先安装并构建 frontend，再安装并启动 backend，以首页响应检查就绪。历史 run 缺少 deployment 字段时保留根 `package.json`、`npm start`、`PORT` 和 `/api/health` 返回 200 的原契约。
 

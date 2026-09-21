@@ -37,11 +37,12 @@ def comment_text(context, identity):
     return match.group(1)
 
 
-def preparation_script(executable, state, ready, markers):
-    """Run the same control-boundary checks inside each core's native shell."""
-    data={'executable':str(executable),'state':str(state),'ready':str(ready),'markers':markers}
+def preparation_script(executable, state, ready, markers, final_prompt):
+    """Each replacement resumes from canonical objects; every edit runs in the native shell."""
+    data={'executable':str(executable),'state':str(state),'ready':str(ready),'markers':markers,
+          'final_prompt':final_prompt}
     return 'data = '+repr(data)+'\n'+'''
-import json, os, sqlite3, subprocess, sys, time
+import json, os, sqlite3, subprocess, sys
 from pathlib import Path
 assert os.environ.get('BRAID_AGENT_RUNTIME') == '1', 'provider did not mark its child runtime'
 state=Path(data['state']); ready=Path(data['ready'])
@@ -56,18 +57,44 @@ external=subprocess.run(prefix+['--external','issue','comment','1','--body-file'
 assert external.returncode != 0, 'agent used the host external entry'
 assert counts()==before, 'rejected external operation changed objects or events'
 writer=prefix+['--writer-turn',sys.argv[1]]
-ids={}
-for name,marker in [('hide','HIDDEN'),('delete','DELETED')]:
-    body.write_text(data['markers'][marker])
-    result=subprocess.run(writer+['issue','comment','1','--body-file',str(body),'--json'],check=True,capture_output=True,text=True)
-    ids[name]=json.loads(result.stdout)['id']
+if ready.exists():
+    ids=json.loads(ready.read_text())
+else:
+    ids={'first_turn':sys.argv[1]}
+    for name,marker in [('hide','HIDDEN'),('delete','DELETED')]:
+        body.write_text(data['markers'][marker])
+        result=subprocess.run(writer+['issue','comment','1','--body-file',str(body),'--json'],check=True,capture_output=True,text=True)
+        ids[name]=json.loads(result.stdout)['id']
+    subprocess.run(writer+['comment','reaction','add',str(ids['hide']),'eyes'],check=True,capture_output=True,text=True)
+    with sqlite3.connect(state/'braid.sqlite3') as db:
+        pending=db.execute("SELECT count(*) FROM events WHERE work_item_node_id='issue:1' AND lifecycle='pending' AND kind IN ('wake','invalidate')").fetchone()[0]
+    assert pending==0, 'ordinary self messages created a wake or reset'
 stale=subprocess.run(prefix+['--writer-turn','00000000-0000-0000-0000-000000000000','comment','edit',str(ids['hide']),'--body-file',str(body)],capture_output=True,text=True)
 assert stale.returncode != 0, 'unknown writer was accepted'
 ids['guard']={'runtime_marker':os.environ['BRAID_AGENT_RUNTIME'],'external_rejected':True,
               'external_error':external.stderr.strip(),'objects_and_events_unchanged':True,
-              'current_writer_succeeded':True,'unknown_writer_rejected':True}
+              'current_writer_succeeded':True,'unknown_writer_rejected':True,
+              'ordinary_self_messages_no_wake':True}
+if ids['first_turn']!=sys.argv[1]:
+    before=counts()
+    old=subprocess.run(prefix+['--writer-turn',ids['first_turn'],'comment','edit',str(ids['hide']),'--body','must not apply'],capture_output=True,text=True)
+    assert old.returncode!=0 and 'stale, fenced, or no longer running' in old.stderr, 'old session writer was not fenced'
+    assert counts()==before, 'old writer changed durable objects'
+    ids['stale_write_rejected']=True
 temporary=ready.with_suffix('.tmp');temporary.write_text(json.dumps(ids));temporary.replace(ready)
-time.sleep(3600)
+with sqlite3.connect(state/'braid.sqlite3') as db:
+    hidden=db.execute('SELECT lifecycle FROM local_comments WHERE comment_id=?',(ids['hide'],)).fetchone()[0]
+    deleted=db.execute('SELECT lifecycle FROM local_comments WHERE comment_id=?',(ids['delete'],)).fetchone()[0]
+if hidden!='hidden':
+    action=['comment','hide',str(ids['hide']),'--reason','context replacement probe']
+elif deleted!='deleted':
+    action=['comment','delete',str(ids['delete'])]
+else:
+    body.write_text(data['final_prompt'])
+    action=['issue','edit','1','--body-file',str(body)]
+# The committed mutation may interrupt this shell before it receives stdout.
+# All continuation facts are already durable; the next native session repeats the script.
+subprocess.run(writer+action,check=True,capture_output=True,text=True)
 '''
 
 
@@ -100,79 +127,47 @@ def check(backend, svc=False):
             if factory.hashlib.sha256(executable.read_bytes()).hexdigest() != braid_source['artifacts']['braid']:
                 raise RuntimeError('Braid 运行制品与已归档构建不一致')
             env['PATH']=str(executable.parent)+factory.os.pathsep+env['PATH']
-            # The host mutates the object through CLI; no human participates in the run.
             ready=work/'ready.json'
             preparation=inputs/'prepare.py'
-            preparation.write_text(preparation_script(executable,state,ready,markers))
+            final_prompt=f'''当前有效需求标记是 {markers['NEW']}。请通过本地 Issue/PR 流程实现 calc.py 的 add(a,b)，返回两个数的和。
+无中途人类交互；根 Issue 维护设计并请求 PR，PR 实现、验收并提交，根 Issue 接受合并后完成。允许本次临时仓库内 commit/merge，禁止 push。
+交付前运行 Python 断言：add(2,3)==5、add(-4,1)==-3、add(0,0)==0。不要创建 Web 应用或安装依赖。'''
+            preparation.write_text(preparation_script(executable,state,ready,markers,final_prompt))
             shutil.copy2(preparation,output/'prepare.py')
             prompt=f'''这是一个真实核心的受控接入探针。当前需求正文中的旧标记是 {markers['OLD']}。
-本 turn 只准备上下文检查，不建立 PR、不关闭 Issue。请在原生 shell 运行一次 `python3 {preparation} 当前turn的UUID`，将最后一个参数替换为本轮输入给出的 writer-turn 身份。
-这是宿主提供的只读检查脚本：验证 Agent 不能使用 external，验证合法/失效 writer，创建两个 comment 后写 ready.json 并保持当前 turn。脚本已经实现准备工作，不要自行重写；失败时报告错误并结束。
-测试驱动会通过宿主 CLI 修改需求，系统随后自动重建上下文；不要等待人类，不要自行刷新或模拟下一阶段。不要把旧标记复制进其他对象。'''
+当前只准备上下文检查，不建立 PR、不关闭 Issue。请在原生 shell 运行 `python3 {preparation} 当前turn的UUID`，将最后一个参数替换为本轮输入给出的 writer-turn 身份。
+这是宿主提供的有写入操作的检查脚本：验证 Agent 不能使用 external、验证 writer，创建 comment 后分别 hide、delete，再修改本 Issue description 为真正的交付要求。每次自编辑会替换当前物理会话；只要新会话的当前 description 仍是这段准备要求，就用新 writer 再执行同一脚本。脚本从持久对象判断进度，不要自行重写或一次执行其它修改。
+不等待宿主或人类提供下一条消息，不自行 refresh。不要把旧标记复制进其他对象。'''
             request=factory.braid_request(config,work,app,native,prompt,state,output.name)
             factory.save(work/'request.json',request)
             prefix=factory.isolation_prefix(work,inputs)
-            def cli(*args, turn=None, external=False, succeeds=True):
-                command=[str(executable),'--state',str(state)]
-                if turn: command+=['--writer-turn',turn]
-                if external: command+=['--external']
-                result=subprocess.run(command+list(args),cwd=app,env=env,capture_output=True,text=True)
-                if succeeds and result.returncode:
-                    raise RuntimeError('Braid CLI failed: '+result.stderr)
-                if not succeeds and result.returncode==0:
-                    raise RuntimeError('失效 turn 的写操作未被拒绝')
-                return result.stdout
+            def cli(*args):
+                return subprocess.check_output([str(executable),'--state',str(state),*args],
+                                               cwd=app,env=env,text=True)
             with (output/'braid.log').open('w') as log:
                 proc=subprocess.Popen(prefix+[str(executable),'local',str(work/'request.json')],cwd=app,
                                       env=env,stdout=log,stderr=log,start_new_session=True)
                 try:
-                    while not ready.exists():
-                        if proc.poll() is not None: raise RuntimeError('探针准备前 Braid 已退出，参阅 braid.log')
-                        time.sleep(.25)
+                    proc.wait()
+                    if not ready.exists():
+                        raise RuntimeError('探针未留下原生 CLI 准备证据，参阅 braid.log')
                     comments=json.loads(ready.read_text())
-                    if not comments.get('guard',{}).get('external_rejected'):
-                        raise RuntimeError('缺少原生 shell 的宿主入口拒绝证据')
+                    shutil.copy2(ready,output/'preparation.json')
                     record['agent_control_guard']=comments['guard']
-                    while True:
-                        sessions=json.loads((state/'sessions.json').read_text())
-                        old=next((s for s in sessions if s.get('work_item_kind')=='issue' and s.get('work_item_id')=='1'
-                                  and any(t.get('status') in ('starting','running') for t in s.get('turns',[]))),None)
-                        if old: break
-                        if proc.poll() is not None: raise RuntimeError('Braid 在建立活动会话前退出')
-                        time.sleep(.25)
-                    old_turn=next(t['braid_turn_id'] for t in old['turns'] if t['status'] in ('starting','running'))
-                    # Same-writer mutations must not interrupt or manufacture a wake.
-                    before=json.loads(cli('status','--json'))
-                    cli('comment','hide',str(comments['hide']),turn=old_turn)
-                    hidden=comment_text(cli('context','issue','1'),comments['hide'])
-                    if markers['HIDDEN'] in hidden: raise RuntimeError('hide 后当前投影仍包含正文')
-                    cli('comment','unhide',str(comments['hide']),turn=old_turn)
-                    if markers['HIDDEN'] not in comment_text(cli('context','issue','1'),comments['hide']):
-                        raise RuntimeError('unhide 未恢复正文')
-                    cli('comment','hide',str(comments['hide']),turn=old_turn)
-                    cli('comment','delete',str(comments['delete']),turn=old_turn)
+                    sessions=json.loads((state/'sessions.json').read_text())
+                    old=next(s for s in sessions if any(t['braid_turn_id']==comments['first_turn'] for t in s.get('turns',[])))
+                    if not comments.get('stale_write_rejected'):
+                        raise RuntimeError('缺少运行中旧 writer 被拒绝的原生 CLI 证据')
                     current=cli('context','issue','1')
                     if markers['HIDDEN'] in comment_text(current,comments['hide']) or markers['DELETED'] in comment_text(current,comments['delete']):
                         raise RuntimeError('hide/delete 后当前投影仍包含已移除正文')
                     if 'State: deleted' not in comment_text(current,comments['delete']):
                         raise RuntimeError('delete 没有保留墓碑')
-                    after=json.loads(cli('status','--json'))
-                    if any(after.get(key) != 0 for key in ('pending_batches','pending_resets','pending_events')):
-                        raise RuntimeError('自身写入产生了额外唤醒或失效')
-                    if after.get('active_turns') != 1 or {s.get('session_id') for s in before['physical_sessions']} != {
-                            s.get('session_id') for s in after['physical_sessions']}:
-                        raise RuntimeError('自身写入打断或替换了当前物理会话')
-                    final_prompt=f'''当前有效需求标记是 {markers['NEW']}。请通过本地 Issue/PR 流程实现 calc.py 的 add(a,b)，返回两个数的和。
-无中途人类交互；根 Issue 维护设计并请求 PR，PR 实现、自检并提交，根 Issue 接受合并后完成。允许本次临时仓库内 commit/merge，禁止 push。
-交付前运行 Python 断言：add(2,3)==5、add(-4,1)==-3、add(0,0)==0。不要创建 Web 应用或安装依赖。'''
-                    body=work/'replacement.md';body.write_text(final_prompt)
-                    cli('issue','edit','1','--body-file',str(body),external=True)
-                    cli('issue','edit','1','--body-file',str(body),turn=old_turn,succeeds=False)
                     record.update(old_session_id=old['session_id'],old_group_id=old['group_id'],
                                   old_worktree=old['worktree'],stale_write_rejected=True,
-                                  comment_hide_unhide_delete_verified=True,self_write_no_wake_verified=True)
+                                  self_edit_from_native_shell=True,comment_hide_delete_verified=True,
+                                  ordinary_self_messages_no_wake_verified=True)
                     factory.save(output/'check.json',record)
-                    proc.wait()
                     record['process_exit_code']=proc.returncode
                     if proc.returncode: raise RuntimeError('Braid 未完成受控探针，参阅 braid.log')
                     delivery=load_delivery(state,app,work,request)
