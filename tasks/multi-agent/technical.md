@@ -2,7 +2,7 @@
 
 本方案仅对应用户要求落地的第 1 项。新增或选择更多 agent-profile 属于后续 Factory 装配项目，本轮保持请求中的单一 profile 及现有 Issue/PR 派生配置。SVC Corpus 清理和全面诊断设施改造也不在本轮；已有输入、会话和交付证据随行为改动保持可用。
 
-产品依据见 [design.md](design.md)，验收依据见 [verification.md](verification.md)。用户于 2026-09-21 明确同意技术、验收和实施方案；实施前进行独立预演并提交基线。
+产品依据见 [design.md](design.md)，验收依据见 [verification.md](verification.md)。用户于 2026-09-21 明确同意技术、验收和实施方案；实施前进行了独立预演并提交基线。下文诊断事实对应源码起点 `e0c3ca2`，方案实施与验证结果单独见 [execution.md](execution.md)；当前操作契约归 Braid 本地协议。
 
 ## 对象、CLI 和上下文
 

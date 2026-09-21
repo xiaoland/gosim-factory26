@@ -1,6 +1,6 @@
 # 方案与证据
 
-CLI 与单一配置已经实施。下述方案依据 2026-09-21 用户对拆分、会话树和自主协作的纠正重新整理，尚未授权实施；此前的调查子 Issue、派发后强制结束父 turn、按任务结果事件推进协作均已撤回。
+CLI 与单一配置已经实施。下述方案依据 2026-09-21 用户对拆分、会话树和自主协作的纠正重新整理，已获用户批准并完成本地实现，真实验收进展见 [execution.md](execution.md)；此前的调查子 Issue、派发后强制结束父 turn、按任务结果事件推进协作均已撤回。
 
 ## CLI 的熟悉度与实际语义
 
@@ -29,7 +29,7 @@ Issue 表达需要独立维护的问题、需求及其讨论；sub-agent 是某�
 
 LLM 的推理调用本身不保存应用会话状态；harness 管理 messages/context、执行 tool calls，并将新输入和工具结果提供给后续采样。Turn 不再作为 Braid 的产品语义或协作单位。现有 provider 的 turn/start、turn/completed 及运行中的请求标识是执行协议事实，需要适配、记录和保护旧输入的写入边界，但不能决定任务阶段、交接或完成。新输入可以在适配器可接受的边界进入下一次推理；合并或暂存输入是执行机制，不能据此要求 LLM 先宣告任务阶段结束。
 
-上游术语见 [glossary.md](../../sources/braid/docs/10-prd/glossary.md)，其中 GitHub 操作部分是历史材料；当前本地实现以 [local.md](../../sources/braid/docs/20-product-tdd/local.md) 为准。源码核实：[local.rs](../../sources/braid/src/local.rs) 为 Issue/PR 各启动一个 worker；[group/worker.rs](../../sources/braid/src/group/worker.rs) 每 worker 仅保存一个活动 turn，活动期间不会物化或启动另一个同类 group。这是当前执行串行化的限制，不能转化为“父 Agent 派发后必须结束 turn”的产品要求。
+上游术语见 [glossary.md](../../sources/braid/docs/10-prd/glossary.md)，其中 GitHub 操作部分是历史材料；当前本地实现以 [local.md](../../sources/braid/docs/20-product-tdd/local.md) 为准。设计调查时（Braid 基线 `e0c3ca2`）核实：[local.rs](../../sources/braid/src/local.rs) 为 Issue/PR 各启动一个 worker；[group/worker.rs](../../sources/braid/src/group/worker.rs) 每 worker 仅保存一个活动 turn，活动期间不会物化或启动另一个同类 group。这是当时执行串行化的限制，不能转化为“父 Agent 派发后必须结束 turn”的产品要求。
 
 同一个 Braid Agent 可以使用 provider sub-agent、继续工作或等待新的信息；其它 Braid Agent 应能独立运行。资源管理需要支持这种行为，不能要求 Agent 通过人为结束 provider 执行来绕开 worker 瓶颈。工作项关系与 provider sub-agent 树不建立一棵统一的调度或审批树。
 
@@ -49,13 +49,13 @@ LLM 的推理调用本身不保存应用会话状态；harness 管理 messages/c
 
 用户要求 Issue 和 PR 的普通 comment 都支持回复形成 thread，以及 resolve/hide；不沿用 GitHub 仅给 PR review 提供 thread 的限制。这些能力让 LLM 能围绕一个问题持续讨论，并把暂时无须继续占据上下文的讨论收起。
 
-源码现状：[local_comments](../../sources/braid/migrations/0003_local_objects.sql) 只有 visible/hidden/deleted，没有回复关系；[CLI](../../sources/braid/src/cli/mod.rs) 只有 comment edit/hide/unhide/delete。[context.rs](../../sources/braid/src/context.rs) 仍有旧 PR review thread 的 resolved/collapsed 投影，但 [objects.rs](../../sources/braid/src/objects.rs) 本地读取只填充扁平 conversation，review_threads 保持默认空。因此目前尚未支持本地 reply/thread/resolve，不能以旧 renderer 的存在宣称能力已接通。
+设计调查时的源码现状：[local_comments](../../sources/braid/migrations/0003_local_objects.sql) 只有 visible/hidden/deleted，没有回复关系；[CLI](../../sources/braid/src/cli/mod.rs) 只有 comment edit/hide/unhide/delete。[context.rs](../../sources/braid/src/context.rs) 仍有旧 PR review thread 的 resolved/collapsed 投影，但 [objects.rs](../../sources/braid/src/objects.rs) 本地读取只填充扁平 conversation，review_threads 保持默认空。因此当时尚未支持本地 reply/thread/resolve，不能以旧 renderer 的存在宣称能力已接通。
 
 建议的产品行为是：comment 可针对稳定 ID 回复并保留讨论关系；resolve 表达 LLM 对该段讨论暂告结束的判断，并可在默认上下文中折叠已解决讨论；hide 控制单条内容是否参与默认上下文，不等于解决问题。折叠保留可定位的身份和状态，允许显式回看和恢复。LLM 按需要把仍有效的结论、约束或证据引用整理到 description 或共享材料；harness 不自动总结和采纳意见。
 
-hide 应允许附加理由，并在正文隐藏后的简短元数据中保留该理由。例如“结论已并入 description”或“已被后续实验推翻”能帮助新会话理解为何不再携带原文，判断是否需要回看。理由由 LLM 提供，harness 不猜测，也不强制每次填写。目前本地 objects.rs 把 minimized_reason 固定为 hidden，CLI 没有理由输入，虽然 renderer 可以呈现理由，仍不能算完整支持。
+hide 应允许附加理由，并在正文隐藏后的简短元数据中保留该理由。例如“结论已并入 description”或“已被后续实验推翻”能帮助新会话理解为何不再携带原文，判断是否需要回看。理由由 LLM 提供，harness 不猜测，也不强制每次填写。当时本地 objects.rs 把 minimized_reason 固定为 hidden，CLI 没有理由输入，虽然 renderer 可以呈现理由，仍不能算完整支持。
 
-resolve、hide 不构成产品验收，也不自动令 Issue completed、PR ready 或 merge。已 resolved 的讨论收到新回复时，建议仍正常投递新内容并提供原讨论入口，是否重新打开由 LLM 判断，避免沿用“resolved 全文省略”而吞掉新信息。这里是待复核的产品建议，尚未固定 CLI 拼写和数据模型。
+resolve、hide 不构成产品验收，也不自动令 Issue completed、PR ready 或 merge。已 resolved 的讨论收到新回复时，建议仍正常投递新内容并提供原讨论入口，是否重新打开由 LLM 判断，避免沿用“resolved 全文省略”而吞掉新信息。该行为已通过复核并实现；CLI 与数据模型以 Braid 本地协议为准。
 
 用户另提出 reaction 可用于轻消息/轻通知。将其作为候选协作能力：Agent 可针对 comment 添加或撤回 reaction，相关会话能知道谁对哪条消息表达了什么，无需把简短回应都写成新 comment。具体含义由 LLM 结合语境解释，不预设 emoji 对应审批或任务阶段，也不把 reaction 数量作为验收证据。现有源码仍有历史 turn 状态 reaction 出站逻辑，但本地 emit 的 reaction_target 为空，comment 投影和 CLI 均无 Agent 可用的 reaction 能力；不能照搬该旧机制来代替新的产品行为。
 
