@@ -1,6 +1,6 @@
 # 协作运行时 × 接入就绪
 
-Track：runtime。Phase：ready。状态：active，局部计划当前由主 Agent 持有；尚未分派实施 writer、执行正式预演或修改本轮源码。
+Track：runtime。Phase：ready。状态：active。01 独立预演完成，见 [runtime.md](../rehearsal/runtime.md)；实现由 braid_profiles_impl 持有 Braid 源码，主 Agent 集成。实施起点提交后进入 02。
 
 本 Cell 使 Braid Agent 能按问题使用多个 work-item 和异步讨论，并在明确 profile 下启动、重建、重新指派和恢复。profiles 是能力选择，不是 multi-agent 协作本身；不增加 preset 概念、强制拆 Issue、角色链或父 Agent 让位规则。
 

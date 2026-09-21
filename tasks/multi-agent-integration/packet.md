@@ -2,7 +2,7 @@
 
 本轮目标是让 Braid 级 Agent 协作、Codex/Pi 内部子代理、SVC 方法和开发反馈在同一 harness 中实际接通，再以四种组合完成 ARC-Bench-Lite 实验。agent-profile presets 是能力装配的一项交付，不是任务中心；配置数量和子代理数量不能证明 multi-agent 已成立。
 
-当前已完成方案调查，技术主体及用户后续纠正已记录；尚未完成正式实施预演、实现前提交、本轮源码接入或八项 bench。下一步由三个接入 Cell 收敛局部实施计划及独立预演，再依约提交起点并实施。任务包拓扑调查不算实现预演。当前没有新的用户决策项。
+技术主体及用户后续纠正已获认可，整理提交为 `e229e6b`。三个接入 Cell 的 01 已完成正式预演与集成：主要修复点是 profile 消费链及 Pi 原生子树停止证明，详见 [runtime](rehearsal/runtime.md)、[capabilities](rehearsal/capabilities.md)、[feedback](rehearsal/feedback.md) 和 [V&V](rehearsal/verification-method.md)。用户明确要求继续实施；当前提交预演起点后进入 02。Braid 离线基线 20/20 通过，不代表新增接入已完成；八项 bench 尚未启动。当前没有新的用户决策项。
 
 ## 本轮怎样组织
 
@@ -10,9 +10,9 @@
 
 | 工作主线 × 接入就绪阶段 | 当前状态 | 必须交付 |
 | --- | --- | --- |
-| [协作运行时](cells/runtime-ready.md) | active，预演待执行 | 普通 profile 直接指派、异步协作、上下文/原生子树生命周期，以及真实证据边界。 |
-| [能力与方法装配](cells/capabilities-ready.md) | active，装配待实施 | 真正消费的模型、原生子代理、浏览器、技能与共同 V&V；四份可复现 preset。 |
-| [诊断与实验反馈](cells/feedback-ready.md) | active，接缝待接通 | 低噪诊断、身份与证据关联、可恢复批次和终态回传。 |
+| [协作运行时](cells/runtime-ready.md) | active，01 已完成 | 普通 profile 直接指派、异步协作、上下文/原生子树生命周期，以及真实证据边界。 |
+| [能力与方法装配](cells/capabilities-ready.md) | active，01 已完成 | 真正消费的模型、原生子代理、浏览器、技能与共同 V&V；四份可复现 preset。 |
+| [诊断与实验反馈](cells/feedback-ready.md) | active，01 已完成 | 低噪诊断、身份与证据关联、可恢复批次和终态回传。 |
 
 三个出口在同一候选版本共同成立，才能进入 [固定批次的局部计划](experiment-plan.md)。后者由 feedback 主线承接，目前 TBC；它不需要独立共享阶段，因此不伪造第四个 Cell。
 

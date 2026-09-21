@@ -1,6 +1,6 @@
 # 能力与方法装配 × 接入就绪
 
-Track：capabilities。Phase：ready。状态：active，局部计划当前由主 Agent 持有；具体材料适配、安装和真实兼容性仍未实施。
+Track：capabilities。Phase：ready。状态：active。01 独立预演及 V&V 方案复核完成，见 [capabilities.md](../rehearsal/capabilities.md)；主 Agent 持有装配/V&V，pi_lifecycle_impl 持有薄生命周期扩展。实施起点提交后进入 02，真实兼容性仍待验明。
 
 本 Cell 让 Braid 的每个 Agent 实际获得所选 Codex/Pi 核心、原生子代理、技能、浏览器和 SVC 指引。四份 preset 是这一责任的装配产物，不能替代整体 multi-agent 能力交付。普通 profile、原生子角色和 Factory preset 分层，LLM 保留工作组织与决策。
 

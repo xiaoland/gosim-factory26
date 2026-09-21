@@ -18,17 +18,17 @@ ready 之后的固定批次由 feedback 主线的一条[局部 Plan](experiment-
 
 | Cell / 局部计划 owner | 状态 | 当前前沿与必须返回的结果 |
 | --- | --- | --- |
-| [runtime-ready](cells/runtime-ready.md) | active | 将已认可方案收敛成独立预演可执行的运行链；返回指派、协作与原生子树收尾的实现/证据。 |
-| [capabilities-ready](cells/capabilities-ready.md) | active | 明确材料消费者与模型/工具兼容性，准备 V&V 实际改动；返回可复现装配及消费证据。 |
-| [feedback-ready](cells/feedback-ready.md) | active | 明确身份和终态接缝、查询与批次恢复检查；返回可诊断、可冻结、可运行的实验入口。 |
+| [runtime-ready](cells/runtime-ready.md) | active | 01 已完成；进入注册/直接指派及生命周期切片，返回联合执行证据。 |
+| [capabilities-ready](cells/capabilities-ready.md) | active | 01 已完成；接通原生模板/生命周期扩展和 V&V，返回消费证据。 |
+| [feedback-ready](cells/feedback-ready.md) | active | 01 已完成；随运行时装配接入身份/归档/查询，再完成固定批次入口。 |
 
-当前所有局部计划由主 Agent 维护，尚未分派源码实施 writer。独立 Agent 调查任务包拓扑不等于运行时独立预演已经完成。任何执行委派只带该 Cell 的任务增量、必要上下文、权限/文件所有权、反馈和返回合同；子 Agent 的临时状态不取代 Cell 状态。
+局部计划由主 Agent 集成维护，三个 01 已完成独立预演。实施分工：braid_profiles_impl 独占 Braid 子仓库，pi_lifecycle_impl 只写 Factory Pi lifecycle extension 及其局部检查；主 Agent 持有 Factory 配置/归档/批次、共同 V&V 和跨仓库集成。两名 writer 在实施起点提交后才开始。任何执行委派只带该 Cell 的任务增量、必要上下文、权限/文件所有权、反馈和返回合同；子 Agent 的临时状态不取代 Cell 状态。
 
 ## 实施前门槛与集成顺序
 
 沿用已约定流程：诊断与方案复核 → 验收方案复核 → 实施计划与独立 Agent 预演 → 实现前提交 → 实现与验收 → 结果汇报。主体方案及用户后续纠正已接受；已有验收原则不重复申请批准，实质语义或验收变化才返回用户复核。
 
-当前下一返回是三个 ready Cell 的首个 Slice：明确源码消费者、接口与检查，分别收敛局部实施路线，再由主 Agent 集成独立预演发现。通过后按既有明确约定提交本任务起点，Factory/Braid/SVC 各自处理且不带入 competition-p0 等无关改动。该门槛未过，不把文档重组记作实施开始。
+当前三个 01 返回已集成，具体接口见 [runtime 预演](rehearsal/runtime.md)，材料与停止协议见 [capabilities 预演](rehearsal/capabilities.md)，诊断与 V&V 各有独立复核记录。提交这些实施输入后进入 02；Factory 整理起点为 e229e6b，Braid 干净起点 63459fc，SVC 干净起点 9592494。competition-p0 等无关改动不混入提交。
 
 实施沿以下真实依赖推进，而不是让所有人并行修改同一接口：
 

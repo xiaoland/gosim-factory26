@@ -1,6 +1,6 @@
 # 诊断与实验反馈 × 接入就绪
 
-Track：feedback。Phase：ready。状态：active，局部计划当前由主 Agent 持有；本轮诊断扩展及八项批次入口尚未实现。
+Track：feedback。Phase：ready。状态：active。01 消费链调查和独立预演复核完成，见 [feedback.md](../rehearsal/feedback.md)；主 Agent 持有诊断与批次集成，实施起点提交后进入 02。
 
 本 Cell 让开发者从短结果回答“哪个 Braid Agent/原生子会话做了什么、哪里失败、依据在哪”，并用既有 runner 执行可恢复的固定实验。信噪比按真实调查所需判断，不以日志量、字段数或摘要字数衡量。
 
