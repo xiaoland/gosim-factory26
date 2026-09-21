@@ -177,41 +177,26 @@ async function missingProofIsUnknown() {
   assert.equal(receipt.error.code, "control_deadline");
 }
 
-async function hiddenForegroundIsInterruptedAndObserved() {
-  const local = fs.mkdtempSync(path.join(os.tmpdir(), "factory-pi-hidden-foreground-"));
+async function directForegroundCompletionIsObserved() {
+  const local = fs.mkdtempSync(path.join(os.tmpdir(), "factory-pi-direct-completion-"));
   fs.mkdirSync(path.join(local, ".factory"), { recursive: true });
-  fs.writeFileSync(path.join(local, REQUEST_RELATIVE_PATH), JSON.stringify({ schema_version: 1, fence_id: "hidden-fence", parent_native_session_id: parentSession, started_at: 9 }));
-  const childFile = path.join(local, "hidden-child.jsonl");
-  fs.writeFileSync(childFile, JSON.stringify({ type: "session", id: "hidden-child-session" }) + "\n");
-  let tick = 0;
-  let active = true;
-  let adapter;
-  const calls = [];
-  adapter = createLifecycleAdapter({
+  fs.writeFileSync(path.join(local, REQUEST_RELATIVE_PATH), JSON.stringify({ schema_version: 1, fence_id: "direct-fence", parent_native_session_id: parentSession, started_at: 9 }));
+  const childFile = path.join(local, "direct-child.jsonl");
+  fs.writeFileSync(childFile, JSON.stringify({ type: "session", id: "direct-child-session" }) + "\n");
+  const adapter = createLifecycleAdapter({
     nativeHome: local,
     getParentSessionId: () => parentSession,
     rpc: async (method, params = {}) => {
-      calls.push([method, params]);
-      if (method === "status" && !params.id) return { fleet: { totalActive: active ? 1 : 0 }, asyncSnapshot: { runs: [] } };
-      if (method === "interrupt" && !params.runId) {
-        active = false;
-        adapter.observe({ runId: "hidden-run", source: "foreground", state: "interrupted", taskIndex: 0, agent: "executor", sessionFile: childFile });
-        return { text: "Interrupt requested for foreground run hidden-run." };
-      }
-      if (params.id === "hidden-run") return { text: `Run: hidden-run\nState: remembered foreground\nSession: ${childFile}` };
+      if (params.id === "direct-run") return { text: `Run: direct-run\nState: remembered foreground\nSession: ${childFile}` };
       return {};
     },
-    now: () => tick * 1000,
-    sleep: async () => { tick += 1; },
-    pollMs: 1,
-    deadlineMs: 10_000,
   });
+  adapter.observe({ runId: "direct-run", source: "foreground", state: "interrupted", taskIndex: 0, agent: "executor", sessionFile: childFile });
   const receipt = await adapter.stop();
   assert.equal(receipt.state, "stopped");
   assert.equal(receipt.children.length, 1);
-  assert.equal(receipt.children[0].child_session_id, "hidden-child-session");
+  assert.equal(receipt.children[0].child_session_id, "direct-child-session");
   assert.deepEqual(receipt.children[0].proof, { control_inactive: true });
-  assert.ok(calls.some(([method, params]) => method === "interrupt" && params.runId === undefined));
 }
 
 async function invalidChildHeaderIsNotIdentity() {
@@ -245,7 +230,7 @@ await canonicalParentFileIsRefreshed();
 await canonicalParentSiblingWinsOverAlias();
 await workflowResultsAreRetained();
 await missingProofIsUnknown();
-await hiddenForegroundIsInterruptedAndObserved();
+await directForegroundCompletionIsObserved();
 await invalidChildHeaderIsNotIdentity();
 await identityAndReplacementAreUnknown();
 console.log("pi lifecycle checks passed");

@@ -410,13 +410,6 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 		if (child.mode === "foreground") child.controlInactive = child.status !== "running";
 	};
 	const statusParams = (child: KnownChild): Record<string, unknown> => ({ id: child.runId });
-	const hiddenForeground = (value: unknown): boolean => {
-		const root = statusPayload(value);
-		const fleet = record(root.fleet);
-		const snapshot = record(root.asyncSnapshot);
-		return typeof fleet?.totalActive === "number" && fleet.totalActive > 0
-			&& !array(snapshot?.runs).some((item) => isActive(record(item)?.state ?? record(item)?.status));
-	};
 
 	const stop = async (): Promise<StopReceipt> => {
 		const started = now();
@@ -439,30 +432,18 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 				? options.rpcWithDeadline(method, params, remainingMs)
 				: rpc!(method, params);
 		};
-		let globalStatus: unknown;
-		try { globalStatus = await callRpc("status"); observe(globalStatus); } catch (error) {
+		try { observe(await callRpc("status")); } catch (error) {
 			if (now() >= deadlineAt) return finish(request, "unknown", [...known.values()].map(childReceipt), { code: "control_deadline", message: `Lifecycle control exceeded ${deadlineMs}ms.` });
 			return finish(request, "unknown", [...known.values()].map(childReceipt), { code: "status_failed", message: error instanceof Error ? error.message : String(error) });
 		}
 		const targets: KnownChild[] = [];
 		const controlled = new WeakSet<KnownChild>();
 		const controlledRuns = new Set<string>();
-		let anonymousForegroundPending = false;
-		let foregroundProofsBeforeAnonymous = 0;
 		const controlKey = (child: KnownChild): string => `${child.mode}:${child.runId}`;
 		const refreshTargets = (): void => {
 			for (const child of known.values()) if (!targets.includes(child)) targets.push(child);
 		};
 		refreshTargets();
-		if (!targets.some((child) => child.mode === "foreground" && isActive(child.status)) && hiddenForeground(globalStatus)) {
-			foregroundProofsBeforeAnonymous = targets.filter((child) => child.mode === "foreground" && proofComplete(child)).length;
-			try {
-				await callRpc("interrupt");
-				anonymousForegroundPending = true;
-			} catch (error) {
-				return finish(request, "unknown", targets.map(childReceipt), { code: "foreground_control_failed", message: error instanceof Error ? error.message : String(error) });
-			}
-		}
 		for (const child of targets) {
 			try { updateChild(child, await callRpc("status", statusParams(child))); } catch (error) {
 				if (now() >= deadlineAt) return finish(request, "unknown", targets.map(childReceipt), { code: "control_deadline", message: `Lifecycle control exceeded ${deadlineMs}ms.` });
@@ -485,20 +466,10 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 		}
 		while (now() < deadlineAt) {
 			if (!sameRequest(request)) return finish(request, "unknown", targets.map(childReceipt), { code: "request_replaced", message: "Teardown request changed while lifecycle control was in progress." });
-			try { globalStatus = await callRpc("status"); observe(globalStatus); } catch {
+			try { observe(await callRpc("status")); } catch {
 				if (now() >= deadlineAt) break;
 			}
 			refreshTargets();
-			if (anonymousForegroundPending && targets.filter((child) => child.mode === "foreground" && proofComplete(child)).length > foregroundProofsBeforeAnonymous) anonymousForegroundPending = false;
-			if (!anonymousForegroundPending && !targets.some((child) => child.mode === "foreground" && isActive(child.status)) && hiddenForeground(globalStatus)) {
-				foregroundProofsBeforeAnonymous = targets.filter((child) => child.mode === "foreground" && proofComplete(child)).length;
-				try {
-					await callRpc("interrupt");
-					anonymousForegroundPending = true;
-				} catch (error) {
-					return finish(request, "unknown", targets.map(childReceipt), { code: "foreground_control_failed", message: error instanceof Error ? error.message : String(error) });
-				}
-			}
 			for (const child of targets) {
 				try { updateChild(child, await callRpc("status", statusParams(child))); } catch {
 					if (now() >= deadlineAt) break;
@@ -519,7 +490,7 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 				}
 			}
 			if (now() >= deadlineAt) break;
-			if (!anonymousForegroundPending && targets.every(proofComplete)) return finish(request, "stopped", targets.map(childReceipt));
+			if (targets.every(proofComplete)) return finish(request, "stopped", targets.map(childReceipt));
 			await sleep(Math.min(pollMs, Math.max(1, deadlineAt - now())));
 		}
 		return finish(request, "unknown", targets.map(childReceipt), { code: "control_deadline", message: `Lifecycle control exceeded ${deadlineMs}ms.` });

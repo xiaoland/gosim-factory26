@@ -21,7 +21,7 @@
 2. Pi template：写该 profile 的网关 `models.json`，显式加载固定 pi-subagents 扩展及选中 agents/skills；以 Markdown frontmatter 固定 native role 的 `model`、`thinking`、`tools`、`skills`、`skillPath`、`inheritProjectContext:false`、`inheritSkills:false`。角色为 explorer/executor/browser-operator；只在 pi-verification 写 reviewer，绝不写 contract-reviewer。`--no-extensions --no-skills` 必须改成明确 allowlist，而不是放开个人发现。
 3. Codex template：写隔离 `CODEX_HOME/config.toml` 与原生 agent TOML，采用固定 0.155.0 schema 的 `agents.<name>.config_file`；Braid/profile 指引送 `developerInstructions`，不替换核心 prompt。角色同上，前三 variant 不注册 reviewer。继续走 Responses→Chat adapter。
 4. browser launcher 用 `run-id + PI_SESSION_ID` 或 `run-id + CODEX_THREAD_ID` 创建状态目录；绝不能以 role/worktree/CODEX_SESSION_ID 命名。二进制缓存可共享，cookie/localStorage 不可共享。
-5. Pi 父调用样例是 `subagent({agent:"executor", task:"…"})`；管理面有 `status`、`interrupt`、`stop`，但它们不是 Pi RPC 方法。Factory 随会话加载一个薄 extension，以 Pi RPC `prompt` 的即时 slash command 转入 pi-subagents 已有 event bridge；先封住新的 `subagent` tool call，再按 runId stop。Factory/Braid 记录 provider session → Pi runId/asyncDir → child session/artifact；取消/重置只有在 status terminal、`process-terminal.json.state=observed` 且 active-run lease 已释放后才可收尾，否则 `unknown/blocked`。
+5. Pi 父调用样例是 `subagent({agent:"executor", task:"…"})`；`status`、`interrupt`、`stop` 是 pi-subagents extension bridge 的 RPC method，不是 Pi 进程 RPC method。Factory 随会话加载一个薄 extension，以 Pi RPC `prompt` 的即时 slash command 进入该 bridge；先封住新的 `subagent` tool call，再控制原生 run。Factory/Braid 记录 provider session → Pi runId/asyncDir → child session/artifact；取消/重置只有在相应 foreground completion 或 background terminal proof 完整时才可收尾，否则 `unknown/blocked`。
 
 ## 本机固定边界与证据
 
@@ -39,6 +39,20 @@ background run 使用 `stop`：pi-subagents `stopAsyncRun` 最终调用导出的
 foreground run 没有 detached runner、`process-terminal.json` 或 active lease。其已有 `interrupt` 管理分支取 `foregroundControls[runId].interrupt()`，该函数 aborts `interruptController`，并把该 signal 传给 `runSync`（`runs/foreground/subagent-executor.ts:3596-3641,5519-5558`）。Pi RPC `abort` 只承诺当前父操作 idle（`docs/rpc.md:124-135`），不能静态推出所有 foreground child 都已结束。因此 lifecycle command 需先设 closing fence（用 Pi `tool_call` 可阻止 `subagent`，`docs/extensions.md:778-793`）、对每一 foreground run 调 bridge `interrupt`，并等待 bridge `status` 证明对应 foreground control 已移除后写 receipt；实际场景再验明 Pi abort 与此 receipt的先后和 child 不再写入。没有 receipt 时保持 unknown/blocked。
 
 主 Agent 独立核对：foreground 仍有可持久化的 child sessionFile/artifactPaths，见 subagent-executor.ts 的 rememberForegroundRun、updateRememberedForegroundChild；缺少 background process-terminal 不等于没有 child evidence。通过真实 tool result/status/session-tree 关系归档，不能按文件时间猜父子。
+
+### 失败后补齐的协议 spike
+
+第一次 Pi+Braid 联合场景暴露了预演缺口：实现先 abort 父 turn，随后才调用 native teardown，导致 live foreground control 在查询前消失。0.56.0 在 control 仍存活时会由无目标 status 正文给出 run ID；`fleet` 只是有界匿名观测，不应成为生命周期控制依据。修正前先固定以下接口合同，并以 `tests/pi_lifecycle.test.mjs` 的协议级替身逐项执行：
+
+| 场景 | 0.56.0 可见证据 | Factory 行为与出口 |
+| --- | --- | --- |
+| 无 child | status 无 live run，manifest 没有已观测 child | 不调用 interrupt，允许空树 stopped。 |
+| 仅 foreground | live foreground control 由 status 正文给出 run ID | 按 run ID interrupt，等待直接 `subagent:foreground-complete` 的 `runId/taskIndex/sessionFile/agent/state`，缺事件则 unknown。 |
+| 仅 background | async snapshot 有活动 run ID | 只按 ID stop；等待 terminal status、process-terminal observed 和 lease released，不调用无目标 interrupt。 |
+| foreground + background | status 正文给 foreground run ID，async snapshot 给 background run ID | 两者均定向控制；background 仍需完整 process-terminal/lease proof，互不靠匿名数量推断。 |
+| completion payload | event payload 本身含 `source:"foreground"`，不是必然嵌在 `event` 字段内 | 两种形状都解析；session 文件 header 提供 child identity，不能从 message ID 或时间推断。 |
+
+`interrupt` 成功只表示 abort 已发出，不是 child 已停止。若已知 foreground 的完成事件未到达，或 parent session-tree 的 canonical 文件没有可验证 header，联合场景必须失败并保留证据。Braid 必须保持 `native teardown → parent close` 的上层顺序，extension 不用 fleet 猜测被上层提前销毁的控制状态。
 
 ## 最小修改面与局部验证
 
