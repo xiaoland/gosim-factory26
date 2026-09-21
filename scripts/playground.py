@@ -15,7 +15,7 @@ from urllib.parse import quote, urlencode
 import uuid
 from zipfile import ZipFile
 
-from factory import ROOT, api_key, save
+from factory import ROOT, api_key, load_config, save
 
 API = 'https://arc-bench.com/api'
 CONFIG = Path.home()/'.config/factory26'
@@ -231,18 +231,18 @@ def collect(client, run_id):
     return value
 
 
-def submit(client, package, requirement, name, variant, offline=False, catalog='benchmark'):
+def submit(client, package, requirement, name, offline=False, catalog='benchmark', config_path=None):
     package = Path(package).resolve()
     with ZipFile(package) as archive:
         if not {'main.py', 'requirements.txt'}.issubset(archive.namelist()):
             raise ValueError('Python ZIP 根目录必须有 main.py 和 requirements.txt')
-    if Path(variant).name != variant or variant in ('.', '..'):
-        raise ValueError('无效的 variant')
-    config = json.loads((ROOT/'variants'/variant/'config.json').read_text())
+    config = load_config(config_path or ROOT/'variants/factory/config.json')
     folder = ROOT/'runs/playground'/('upload-'+time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:6])
     folder.mkdir(parents=True)
     manifest = {'package': str(package), 'package_sha256': hashlib.sha256(package.read_bytes()).hexdigest(),
-                'requirement': requirement, 'catalog': catalog, 'variant': variant, 'model': config['model'], 'offline': offline,
+                'requirement': requirement, 'catalog': catalog, 'model': config['model'], 'offline': offline,
+                'model_config': {'model':config['model'],'base_url':config['base_url']},
+                'configuration_scope': 'model-settings-only',
                 'phase': 'upload', 'created_at': time.time()}
     path = folder/'submission.json'; save(path, manifest)
     print(f'提交状态：{path}', flush=True)
@@ -276,7 +276,7 @@ def main():
     upload.add_argument('--requirement', required=True)
     upload.add_argument('--name', required=True)
     upload.add_argument('--catalog',choices=['benchmark','playground'],default='benchmark')
-    upload.add_argument('--variant', default='pi-svc')
+    upload.add_argument('--config', type=Path, help='网关/模型配置；默认 factory 配置；不改变 ZIP 中的 harness')
     upload.add_argument('--offline', action='store_true', help='仅用于不会调用模型的探针；使用非凭据占位符')
     rerun=commands.add_parser('run')
     rerun.add_argument('--submission',required=True)
@@ -300,7 +300,7 @@ def main():
         items=client.request('/requirements?'+urlencode({'catalog':args.catalog}))
         print(json.dumps([{k:v.get(k) for k in ('id','title','total_tests')} for v in items],ensure_ascii=False,indent=2));return
     if args.command == 'submit':
-        value = submit(client, args.package, args.requirement, args.name, args.variant, args.offline, args.catalog)
+        value = submit(client, args.package, args.requirement, args.name, args.offline, args.catalog, args.config)
     elif args.command == 'run':
         created=client.request('/runs','POST',fields={'submission_id':args.submission,'requirement_id':args.requirement})
         run_id=created['run']['id']

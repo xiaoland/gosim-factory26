@@ -45,21 +45,21 @@ import json, os, sqlite3, subprocess, sys, time
 from pathlib import Path
 assert os.environ.get('BRAID_AGENT_RUNTIME') == '1', 'provider did not mark its child runtime'
 state=Path(data['state']); ready=Path(data['ready'])
-prefix=[data['executable'],'object','--state',str(state)]
+prefix=[data['executable'],'--state',str(state)]
 body=ready.with_suffix('.body'); body.write_text(data['markers']['HIDDEN'])
 def counts():
     with sqlite3.connect(state/'braid.sqlite3') as db:
         return [db.execute('SELECT count(*) FROM '+table).fetchone()[0]
                 for table in ('local_items','local_comments','events')]
 before=counts()
-external=subprocess.run(prefix+['--external','comment','create','issue','1','--body-file',str(body)],capture_output=True,text=True)
+external=subprocess.run(prefix+['--external','issue','comment','1','--body-file',str(body),'--json'],capture_output=True,text=True)
 assert external.returncode != 0, 'agent used the host external entry'
 assert counts()==before, 'rejected external operation changed objects or events'
 writer=prefix+['--writer-turn',sys.argv[1]]
 ids={}
 for name,marker in [('hide','HIDDEN'),('delete','DELETED')]:
     body.write_text(data['markers'][marker])
-    result=subprocess.run(writer+['comment','create','issue','1','--body-file',str(body)],check=True,capture_output=True,text=True)
+    result=subprocess.run(writer+['issue','comment','1','--body-file',str(body),'--json'],check=True,capture_output=True,text=True)
     ids[name]=json.loads(result.stdout)['id']
 stale=subprocess.run(prefix+['--writer-turn','00000000-0000-0000-0000-000000000000','comment','edit',str(ids['hide']),'--body-file',str(body)],capture_output=True,text=True)
 assert stale.returncode != 0, 'unknown writer was accepted'
@@ -72,7 +72,8 @@ time.sleep(3600)
 
 
 def check(backend, svc=False):
-    config=json.loads((factory.ROOT/f'variants/{backend}-svc-braid/config.json').read_text())
+    config=factory.load_config(backend=backend)
+    config['variant']='braid-integration-probe'
     config['svc']=svc
     output=factory.ROOT/'runs/integration'/f"{time.strftime('%Y%m%d-%H%M%S')}-{backend}-{'svc' if svc else 'plain'}-{uuid.uuid4().hex[:6]}"
     output.mkdir(parents=True)
@@ -112,7 +113,7 @@ def check(backend, svc=False):
             factory.save(work/'request.json',request)
             prefix=factory.isolation_prefix(work,inputs)
             def cli(*args, turn=None, external=False, succeeds=True):
-                command=[str(executable),'object','--state',str(state)]
+                command=[str(executable),'--state',str(state)]
                 if turn: command+=['--writer-turn',turn]
                 if external: command+=['--external']
                 result=subprocess.run(command+list(args),cwd=app,env=env,capture_output=True,text=True)
@@ -141,7 +142,7 @@ def check(backend, svc=False):
                         time.sleep(.25)
                     old_turn=next(t['braid_turn_id'] for t in old['turns'] if t['status'] in ('starting','running'))
                     # Same-writer mutations must not interrupt or manufacture a wake.
-                    before=json.loads(cli('status'))
+                    before=json.loads(cli('status','--json'))
                     cli('comment','hide',str(comments['hide']),turn=old_turn)
                     hidden=comment_text(cli('context','issue','1'),comments['hide'])
                     if markers['HIDDEN'] in hidden: raise RuntimeError('hide 后当前投影仍包含正文')
@@ -155,7 +156,7 @@ def check(backend, svc=False):
                         raise RuntimeError('hide/delete 后当前投影仍包含已移除正文')
                     if 'State: deleted' not in comment_text(current,comments['delete']):
                         raise RuntimeError('delete 没有保留墓碑')
-                    after=json.loads(cli('status'))
+                    after=json.loads(cli('status','--json'))
                     if any(after.get(key) != 0 for key in ('pending_batches','pending_resets','pending_events')):
                         raise RuntimeError('自身写入产生了额外唤醒或失效')
                     if after.get('active_turns') != 1 or {s.get('session_id') for s in before['physical_sessions']} != {

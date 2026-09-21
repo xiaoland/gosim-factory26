@@ -139,6 +139,7 @@ def _summary(run, evaluation=None):
         remote["error"] = _error(data["error"]) if data.get("error") else None
         remote["path"] = str(remote_path)
     detail = {"id": run.name, "path": str(run), "variant": variant, "variant_inferred": inferred,
+              "backend": metadata.get("backend") or config.get("backend"),
               "workflow_implementation": metadata.get("workflow_implementation"),
               "task": metadata.get("task") or config.get("task"), "model": config.get("model"),
               "generation": generation, "evaluation": _evaluation(selected, warnings, config.get("benchmark_revision")),
@@ -146,12 +147,13 @@ def _summary(run, evaluation=None):
     return detail, metadata, folders
 
 
-def list_runs(root, variant=None, task=None) -> list[dict]:
+def list_runs(root, variant=None, task=None, backend=None) -> list[dict]:
     """按目录名逆序列出有 run.json 的实验；缺失指标使用 null/unknown。"""
     result = []
     for path in sorted((Path(root).resolve() / "runs").glob("*/run.json"), reverse=True):
         row, _, _ = _summary(path.parent)
-        if (variant is None or row["variant"] == variant) and (task is None or row["task"] == task):
+        if ((variant is None or row["variant"] == variant) and (task is None or row["task"] == task)
+                and (backend is None or row["backend"] == backend)):
             result.append(row)
     return result
 
@@ -485,11 +487,11 @@ def _score_text(evaluation):
 def render_list(rows) -> str:
     if not rows:
         return "没有匹配的实验。"
-    lines = ["运行 | 组合 | 任务 | 生成状态/阶段 | 最新评测 | 分数"]
+    lines = ["运行 | 组合 | Backend | 任务 | 生成状态/阶段 | 最新评测 | 分数"]
     for row in rows:
         variant = (row["variant"] or "未知") + ("（推导）" if row["variant_inferred"] else "")
         generation, evaluation = row["generation"], row["evaluation"]
-        lines.append(f"{row['id']} | {variant} | {row['task'] or '未知'} | {generation['status']}/{generation['phase'] or '未知'} | {evaluation['id'] or '无本地评测'}:{evaluation['status']} | {_score_text(evaluation)}")
+        lines.append(f"{row['id']} | {variant} | {row['backend'] or '未知'} | {row['task'] or '未知'} | {generation['status']}/{generation['phase'] or '未知'} | {evaluation['id'] or '无本地评测'}:{evaluation['status']} | {_score_text(evaluation)}")
         if row["remote"]:
             lines.append(f"  远程: {row['remote']['host']} / {row['remote']['phase'] or '未知'}；评测 {row['remote']['attempt'] or '未知'}")
         lines.extend("  警告: " + warning for warning in row["warnings"])

@@ -140,7 +140,7 @@ class PlaygroundTest(unittest.TestCase):
 
     def test_uncertain_create_run_does_not_reupload_or_discard_submission_id(self):
         with tempfile.TemporaryDirectory() as temp:
-            root=Path(temp); variant=root/'variants/pi-svc';variant.mkdir(parents=True)
+            root=Path(temp); variant=root/'variants/factory';variant.mkdir(parents=True)
             (variant/'config.json').write_text('{"model":"test","base_url":"https://example.invalid"}')
             package=root/'probe.zip'
             with ZipFile(package,'w') as z:
@@ -148,11 +148,13 @@ class PlaygroundTest(unittest.TestCase):
             client=playground.Client()
             with patch.object(playground,'ROOT',root), patch.object(client,'request',side_effect=[{'submission':{'id':'uploaded'}},RuntimeError('uncertain')]) as request:
                 with self.assertRaisesRegex(RuntimeError,'uncertain'):
-                    playground.submit(client,package,'keep','test','pi-svc',offline=True)
+                    playground.submit(client,package,'keep','test',offline=True)
                 self.assertEqual(request.call_count,2)
             manifest=json.loads(next(root.glob('runs/playground/upload-*/submission.json')).read_text())
             self.assertEqual(manifest['submission_id'],'uploaded')
             self.assertEqual(manifest['phase'],'create_run')
+            self.assertEqual(manifest['configuration_scope'],'model-settings-only')
+            self.assertEqual(manifest['model_config']['model'],'test')
             self.assertNotIn('api_key',manifest)
 
     def test_cursor_advances_after_chunk_is_saved_and_heartbeat_is_not_progress(self):

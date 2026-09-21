@@ -1,6 +1,7 @@
 """验证实验边界，不测试生成应用的具体实现。"""
 from contextlib import nullcontext
 import importlib.util
+import io
 import json
 from pathlib import Path
 import platform
@@ -17,6 +18,37 @@ spec.loader.exec_module(factory)
 
 
 class BaselineBoundaryTest(unittest.TestCase):
+    def test_single_factory_config_and_explicit_backend_do_not_rewrite_inputs(self):
+        active = factory.ROOT/'variants/factory/config.json'
+        before = active.read_bytes()
+        default = factory.load_config()
+        self.assertEqual((default['variant'],default['backend'],default['workflow'],default['svc']),
+                         ('factory','pi','braid',True))
+        with patch.object(sys,'argv',['factory.py','generate','--backend','codex']), \
+             patch.object(factory,'generate') as generate:
+            factory.main()
+        self.assertEqual(generate.call_args.args[0],dict(default,backend='codex'))
+        self.assertEqual(active.read_bytes(),before)
+        with tempfile.TemporaryDirectory() as temp:
+            archived=Path(temp)/'config.json'
+            archived.write_text(json.dumps(dict(default,variant='pi-svc',workflow='single')))
+            old=archived.read_bytes()
+            custom=factory.load_config(archived,backend='codex')
+            self.assertEqual((custom['variant'],custom['backend'],custom['workflow']),('custom','codex','single'))
+            self.assertEqual(archived.read_bytes(),old)
+            with self.assertRaisesRegex(ValueError,'backend'):
+                factory.load_config(archived,backend='unknown')
+
+    def test_cli_rejects_retired_variants_and_frozen_run_overrides_before_execution(self):
+        for args in (['generate','--variant','pi-svc'],['eval','--run','missing','--backend','pi']):
+            with self.subTest(args=args), patch.object(sys,'argv',['factory.py']+args), \
+                 patch('sys.stderr',io.StringIO()), patch.object(factory,'generate') as generate, \
+                 patch.object(factory,'evaluate') as evaluate:
+                with self.assertRaises(SystemExit) as error: factory.main()
+                self.assertEqual(error.exception.code,2)
+                generate.assert_not_called()
+                evaluate.assert_not_called()
+
     def test_svc_off_is_independent_of_braid_and_has_no_corpus_install(self):
         for backend in ('pi', 'codex'):
             with self.subTest(backend=backend), tempfile.TemporaryDirectory() as temp:

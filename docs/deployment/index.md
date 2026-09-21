@@ -1,6 +1,6 @@
 # 本地运行与证据
 
-本文维护开发者运行、恢复和检查本地基线所需的操作说明。[产品说明](../prd/index.md)维护实验规则和范围；可执行参数以[基线配置](../../variants/pi-baseline/config.json)、[运行器](../../scripts/factory.py)和 [Makefile](../../Makefile)为准。
+本文维护开发者运行、恢复和检查本地 harness 所需的操作说明。[产品说明](../prd/index.md)维护实验规则和范围；可执行参数以[Factory 配置](../../variants/factory/config.json)、[运行器](../../scripts/factory.py)和 [Makefile](../../Makefile)为准。
 
 ## 环境和启动
 
@@ -13,7 +13,7 @@ make test
 make run
 ```
 
-`bootstrap --variant <组合>` 仅为启用的组件从 `sources/svc`、`sources/braid` 构建安装，并准备固定评测器及 Codex 所需的 LiteLLM 1.102.0。首次缺少 sources 仓库时 clone 上游 main；已有源码不会被 reset、checkout 或自动 pull。后续以 HEAD、实际源文件和安装产物哈希判断是否需要重建。ARC package-lock 缓存一致时复用依赖，Chromium 存在时复用浏览器；仍执行上游静态契约检查。
+`bootstrap --backend pi|codex` 从 `sources/svc`、`sources/braid` 构建安装，并准备固定评测器及 Codex 所需的 LiteLLM 1.102.0。省略 backend 使用共同配置中的 pi。首次缺少 sources 仓库时 clone 上游 main；已有源码不会被 reset、checkout 或自动 pull。后续以 HEAD、实际源文件和安装产物哈希判断是否需要重建。ARC package-lock 缓存一致时复用依赖，Chromium 存在时复用浏览器；仍执行上游静态契约检查。
 
 本项目使用 `.venv/bin/svc`。机器全局 `svc` 可能仍是旧版；本文及 SVC 自动生成导航中的 `svc` 命令均应通过项目本地路径执行。CLI 版本、`svc.json` 配置 schema 和其中声明的 Corpus baseline 是不同维度；重装 CLI 不代表自动完成 Corpus 迁移。
 
@@ -27,13 +27,15 @@ FACTORY26_API_KEY=你的比赛密钥
 
 ## 生成和评测
 
-生成在独立临时目录运行。两个核心均使用临时 HOME、原生配置目录和筛选后的环境变量。Pi 禁用自动发现个人扩展、技能、提示模板和主题；四组 SVC 配置保留上下文文件加载，将 [harness/AGENTS.md](../../harness/AGENTS.md) 复制到运行时 user scope。若组合目录有 `AGENTS.md`，则使用该组合的完整覆盖文件。组合目录、实际注入文件和公共 harness 都保存到新 run，历史 run 不补写 variant 标签。原始 pi-baseline 关闭上下文文件；codex-baseline 的临时 user scope 为空。只有 svc=true 才复制 SVC 安装和指导；svc=false 的 braid 也不需要它们。安装在 bootstrap 时完成，生成沙箱内无需联网重装 Corpus。
+生成在独立临时目录运行。两个核心均使用临时 HOME、原生配置目录和筛选后的环境变量。Pi 禁用自动发现个人扩展、技能、提示模板和主题。当前 factory 启用 Braid 和 SVC，将 [harness/AGENTS.md](../../harness/AGENTS.md) 的两行导航复制到运行时 user scope。活动配置目录、实际注入文件和公共 harness 都保存到新 run。内部只有 svc=true 才复制 SVC 安装和指导；关闭 SVC 的受控 Braid 探针不需要它们。安装在 bootstrap 时完成，生成沙箱内无需联网重装 Corpus。
 
 文件隔离拒绝读取开发仓库、个人 Codex/Pi 配置和比赛密钥文件，需求副本只读；运行前检查评测器不可读、需求可读以及 SVC 可查询。网络用于模型调用与依赖安装，因此这不是网络隔离沙箱，也不是整个用户目录的访问隔离。主机网络及硬编码 /tmp 路径仍共享；同机并行生成可能争用端口或临时文件，受控比较应串行生成，或为每组提供独立机器/容器。远程冻结后评测使用独立应用目录和分配端口。
 
 Codex 使用 app-server stdio，只有所请求线程和 turn 的 completed 通知表示结束。每次 Codex 生成启动一个仅监听 loopback 的 LiteLLM 适配器并在结束后停止；不回退到其他模型。Pi 单会话即使退出码为 0，也须在 Agent 阶段检查最终 stopReason；原生错误保留其正文和已报告用量，不能进入成功冻结。braid 的 Pi provider 等待 agent_settled 后判断终态，允许原生重试和压缩收尾。
 
 braid 从 [sources/braid](../../sources/braid/) 构建，运行入口保持 `braid local <request.json>`。Factory 提供本次隔离 Git 仓库、profile、核心配置、需求、run ID、delivery ref 和状态目录，不提供 SVC 任务包。Braid 以本地 Issue/PR/comment 为权威，沿既有 Group/队列/会话链调度；Agent 使用每次 turn 提供的 CLI 身份修改对象，不手动请求 refresh。宿主调试写入必须显式指定 `--external`，Agent 写入必须携带当前 `--writer-turn`。
+
+对象 CLI 直接使用 `braid --state STATE issue/pr view|edit|comment`，不再包含 object 层。正文使用 `--body/-b` 或 `--body-file/-F`，后者接受 stdin 的 `-`；结构化输出显式加 `--json`。`pr create --issue ID --title TITLE --body-file FILE` 直接建立本地实施工作项并激活 Agent，不再先创建请求 comment 或调用 pr ensure；可选 `--request-id` 用于不确定响应后的幂等重试。ready 与根 Issue 接受 merge 的交付边界保持不变。精确命令与上下文行为由 [Braid 本地协议](../../sources/braid/docs/20-product-tdd/local.md)维护。
 
 `braid-state/result.json` 记录 completed/incomplete/failed 和交付 commit。只有根需求、必要 PR 和生命周期收尾收敛才可 completed。Factory 校验返回的 run/ref/仓库及 Git commit 身份，并导出指定 commit；不会按最新工作树或初始应用目录选择交付。
 
@@ -113,18 +115,19 @@ python3 scripts/run_feedback.py watch runs/<run-id> --after-event <已处理的e
 
 svc 负责证据导航，不自动判定应用质量。标准 Pi session 缺少执行终态，可能使 overview 显示 `partial`；应结合覆盖声明、运行器退出码与最终模型停止原因判断，不能把 `partial` 一概解释成内容丢失。实际费用未知时保持 null，不用客户端估算替代比赛账单。
 
-## 四组执行与 WSL 评测
+## 单一 Harness 与 WSL 评测
 
-组合归属于 `variants/<id>/`，目录内 `config.json` 是唯一配置来源；`configs/<id>.json` 仅保留兼容旧命令的符号链接。四组 ID 为 codex-svc、pi-svc、codex-svc-braid 和 pi-svc-braid，pi-baseline 与 codex-baseline 保留原始核心对照。以 Pi + SVC 为例：
+唯一活动配置为 `variants/factory/config.json`，共同使用 Braid + SVC，`--backend pi|codex` 选择核心。配置文件不因覆盖参数而改写；每次 run 保存最终生效的 config，并独立记录 variant 与 backend。旧六份配置及 configs/ 符号链接已删除，可从 Git 历史恢复；旧 runs 继续按各自归档配置和原身份读取。显式 `--config <file>` 保留为 custom 实验入口，供后续消融使用。以 Pi backend 为例：
 
 ```sh
-python3 scripts/factory.py bootstrap --variant pi-svc
-python3 scripts/factory.py run --variant pi-svc --eval-host wsl.win-ws.localhost
+python3 scripts/factory.py bootstrap --backend pi
+python3 scripts/factory.py run --backend pi --eval-host wsl.win-ws.localhost
+python3 scripts/factory.py list --variant factory --backend pi
 ```
 
 wsl.win-ws.localhost 的 ~/Development/factory26 已安装固定 runner 和 Chromium，重复 bootstrap 会命中缓存。生成仍在本机完成，--eval-host 只传输冻结应用与必要元数据，在 WSL 评测后取回结果；不传比赛密钥，不在每次评测中重装 runner。应用自身依赖仍需在每次隔离评测目录中安装，以免跨实验共享可变状态。省略 --eval-host 则在本机评测。
 
-评测主机需要同步当前 scripts/、variants/、configs/ 和必要源码后运行 bootstrap。不能只复制本机 node_modules 或 Python venv 到不同平台。单独重新评测时使用 `eval --run runs/<id> --eval-host wsl.win-ws.localhost`；可用 `--evaluation-id <id>` 指定执行身份，已存在时拒绝覆盖。应用哈希必须保持不变；每次先获取官方用例发现清单，再核对实际测试身份及执行终态。
+评测主机需要同步当前 scripts/、variants/ 和必要源码后运行 bootstrap。不能只复制本机 node_modules 或 Python venv 到不同平台。单独重新评测时使用 `eval --run runs/<id> --eval-host wsl.win-ws.localhost`；已有 run 的 eval/analyze/show 使用归档配置，拒绝 backend 或配置覆盖。可用 `--evaluation-id <id>` 指定执行身份，已存在时拒绝覆盖。应用哈希必须保持不变；每次先获取官方用例发现清单，再核对实际测试身份及执行终态。
 
 ## SVC 与 braid 的共同开发
 
@@ -133,7 +136,7 @@ wsl.win-ws.localhost 的 ~/Development/factory26 已安装固定 runner 和 Chro
 ```sh
 git -C sources/svc status --short
 git -C sources/braid status --short
-python3 scripts/factory.py bootstrap --variant pi-svc-braid
+python3 scripts/factory.py bootstrap --backend pi
 make test
 python3 scripts/check_braid.py --backend pi --svc
 ```
@@ -162,18 +165,18 @@ trace 提供关联的标准化调用上下文；只有需要精确内容恢复�
 ```sh
 python3 scripts/playground.py whoami
 python3 scripts/playground.py requirements --catalog benchmark
-python3 scripts/playground.py submit --package /path/to/agent.zip --requirement keep --name pi-svc-keep --variant pi-svc
+python3 scripts/playground.py submit --package /path/to/agent.zip --requirement keep --name factory-keep
 python3 scripts/playground.py watch <run-id>
 python3 scripts/playground.py collect <run-id>
 ```
 
-上传前必须准备符合平台契约的 Python Agent ZIP，根目录包含 main.py 与 requirements.txt。`submit` 读取指定 variant 的网关和模型，以及仓库外比赛密钥。只有无模型探针使用 `--offline`，该选项传非凭据占位符。包哈希、已确认的 submission/run ID 与执行阶段记录在 `runs/playground/upload-*/submission.json`，便于写请求失败后查明已经完成哪一步；传输结果不明时不自动重复 POST。
+上传前必须准备符合平台契约的 Python Agent ZIP，根目录包含 main.py 与 requirements.txt。`submit` 默认读取 Factory 配置中的网关和模型，也可用 `--config` 指定，并使用仓库外比赛密钥；配置不会改变 ZIP 已打包的核心或工作流。清单明确标记 configuration_scope=model-settings-only，包身份以 SHA256 为准。只有无模型探针使用 `--offline`，该选项传非凭据占位符。包哈希、已确认的 submission/run ID 与执行阶段记录在 `runs/playground/upload-*/submission.json`，便于写请求失败后查明已经完成哪一步；传输结果不明时不自动重复 POST。
 
 同一包重跑使用 `python3 scripts/playground.py run --submission <submission-id> --requirement <requirement-id>`，避免重复上传。已创建但尚未启动的 run 使用 `start <run-id>`；明确结束云端执行使用 `cancel <run-id>`。中断本地 `watch` 只停止等待，不改变云端 run。401 表示需要重新登录。
 
 `status <run-id> --saved` 可只读重放已归档状态，不联网、不改旧产物。摘要分开列出最近有效事件、心跳和采集时刻，缺少观测时间时明确未知；不使用文件 mtime 猜测。traceability 没有显式记录时显示未建立关联，不能由 SDK 自报 passed 推导外部评测成功。`status` 输出阶段摘要，`watch` 默认每 180 秒读取状态和增量日志，只在 PASSED、FAILED、CANCELLED 或 PAUSED 时收集证据、输出摘要并退出；可用 `--after-event` 跳过已处理的同一结果。运行中无变化保持静默，PAUSED 表示需介入而非完成；运行中的计数不作为完整成绩。观测超过 360 秒标为 stale，不据此推断远端已经停止。平台曾将实际耗时返回为 0，因此终态摘要用 started_at/finished_at 计算 elapsed_seconds，并汇总测试状态；原始时长字段保留在 status.json。`collect` 将状态、日志游标与分块、traceability 和 commit history 保存到 `runs/playground/<run-id>/`。JSON 的凭据字段会脱敏，但原始日志仍可能包含 Agent 工具输出，继续由 Git 忽略。
 
-接口来自网站当前公开前端，可能随平台更新；本次实际完成网站登录、上传、启动、Demo 单项评测和证据下载。云端环境与脚本实测见[并发与 API 报告](../../reports/2026-09-20-playground-concurrency.md)，早期协议调查见[开发闭环调查](../../reports/2026-09-20-development-loop.md)。当前本地四组 harness 尚未适配平台的 Python 入口与 frontend/backend 部署布局，因此 hosted runner 还不能直接替换 `--eval-host`。
+接口来自网站当前公开前端，可能随平台更新；此前实际完成网站登录、上传、启动、Demo 单项评测和证据下载。云端环境与脚本实测见[并发与 API 报告](../../reports/2026-09-20-playground-concurrency.md)，早期协议调查见[开发闭环调查](../../reports/2026-09-20-development-loop.md)。当前本地 harness 尚未适配平台的 Python 入口与 frontend/backend 部署布局，因此 hosted runner 还不能直接替换 `--eval-host`。
 
 ## 并发实验
 

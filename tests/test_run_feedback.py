@@ -159,13 +159,14 @@ class FeedbackTest(unittest.TestCase):
         self.run = tempfile.TemporaryDirectory()
         self.addCleanup(self.run.cleanup)
         run = Path(self.run.name)
-        (run / "run.json").write_text(json.dumps({"status": "generated", "variant": "pi", "task": "keep"}))
+        (run / "run.json").write_text(json.dumps({"status": "generated", "variant": "factory", "backend": "pi", "task": "keep"}))
         watcher = run_feedback._Monitor(run, 180)
         with patch("builtins.print"):
             watcher.sample()
         saved = json.loads((run / "feedback.json").read_text())
         self.assertEqual(saved["status"], "completed")
         self.assertEqual(saved["run_id"], run.name)
+        self.assertEqual((saved['variant'],saved['backend']),('factory','pi'))
 
     def test_observer_failure_does_not_replace_experiment_error(self):
         with tempfile.TemporaryDirectory() as temp:

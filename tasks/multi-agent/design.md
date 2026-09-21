@@ -4,7 +4,7 @@ CLI 与单一配置部分已获实施授权；多 Agent 协作及共享材料部
 
 ## CLI 的熟悉度与实际语义
 
-现状以 [cli/mod.rs](../../sources/braid/src/cli/mod.rs) 为准：入口为 `braid object --state … --writer-turn …`，读取使用 read，comment 创建使用 `comment create issue|pr ID`，正文只支持 `--body-file`，其 `-` 目前会被当作文件名。Issue/PR edit 只修改正文，没有 gh edit 的 title 等可选项。
+实施前 [cli/mod.rs](../../sources/braid/src/cli/mod.rs) 的入口为 `braid object --state … --writer-turn …`，读取使用 read，comment 创建使用 `comment create issue|pr ID`，正文只支持 `--body-file`，其 `-` 会被当作文件名。Issue/PR edit 只修改正文，没有 gh edit 的 title 等可选项。这些差异是本轮 CLI 调整的原因。
 
 建议去掉日常入口中的 object 层，对齐常用的 `issue/pr view`、`issue/pr edit`、`issue/pr comment ID`，提供 `--body/-b`、`--body-file/-F`（包括 stdin）和适用的 `--title/-t`。已明确传参时不启动编辑器、浏览器或交互确认。view 默认给精简文本，结构化输出通过显式 JSON 选项取得；未知字段或参数明确报错并给最短正确用法。writer turn 仍由每轮提供并核验，不以多个 session 共享的可变环境变量替代当前身份。
 
@@ -36,6 +36,6 @@ SVC `svc lookup --path task-packet/index.md` 明确 packet 保存任务局部信
 
 ## 单一 Variant 与后端
 
-建议活动配置收敛到 `variants/factory/config.json`，固定 Braid + SVC，backend 用 pi/codex 参数选择；共同 prompt 与入口继续放在 harness/，原生接入沿已有 adapter 维护。不为 backend 复制整套 variant。第一版一个 run 选一种 backend，仍使用比赛给定模型；同时混用两种 backend 不是实现多 Agent 的前提。
+已采用的配置方案：活动配置收敛到 `variants/factory/config.json`，固定 Braid + SVC，backend 用 pi/codex 参数选择；共同 prompt 与入口继续放在 harness/，原生接入沿已有 adapter 维护。不为 backend 复制整套 variant。第一版一个 run 选一种 backend，仍使用比赛给定模型；同时混用两种 backend 不是实现多 Agent 的前提。
 
 历史 run 和报告保留原 variant 名称及实际来源。旧配置退出活动 variant 入口，但迁移前核对旧命令和分析读取的使用者，不删除历史证据。后续消融作为新的显式实验配置加入；成绩比较仍要区分 backend、并发和实际源码，不能因 variant 名相同就混为同条件。

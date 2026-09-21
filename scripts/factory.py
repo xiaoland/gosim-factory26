@@ -24,6 +24,22 @@ ROOT = Path(__file__).resolve().parents[1]
 BENCH = ROOT / "third_party/arc-bench"
 
 
+def load_config(path=None, backend=None):
+    """加载唯一活动配置或显式自定义配置；历史 run 的读取不经过此入口。"""
+    active = (ROOT / 'variants/factory/config.json').resolve()
+    source = Path(path).resolve() if path is not None else active
+    config = json.loads(source.read_text())
+    if not isinstance(config, dict):
+        raise ValueError('配置必须是 JSON 对象')
+    config['variant'] = 'factory' if source == active else 'custom'
+    config['backend'] = backend if backend is not None else config.get('backend', 'pi')
+    if config['backend'] not in ('pi', 'codex'):
+        raise ValueError('backend 必须是 pi 或 codex')
+    if source == active and (config.get('workflow') != 'braid' or config.get('svc') is not True):
+        raise ValueError('factory 配置必须启用 Braid 与 SVC；消融使用显式 --config')
+    return config
+
+
 def save(path, value):
     temporary = path.with_name(path.name + '.' + uuid.uuid4().hex + '.tmp')
     try:
@@ -205,8 +221,7 @@ def runtime_environment(work, config):
         interpreter = (ROOT / '.venv/bin/python').resolve()
         svc.write_text('#!' + str(interpreter) + '\nimport sys\nsys.path.insert(0, ' + repr(str(next((runtime/'lib').glob('python*/site-packages')))) + ')\nfrom svc_cli.cli import main\nsys.exit(main())\n')
         svc.chmod(0o755)
-        guidance=ROOT/'variants'/config.get('variant','')/'AGENTS.md'
-        shutil.copy2(guidance if guidance.is_file() else ROOT/'harness/AGENTS.md', native/'AGENTS.md')
+        shutil.copy2(ROOT/'harness/AGENTS.md', native/'AGENTS.md')
     env = {key: value for key, value in os.environ.items()
            if key in ('PATH','LANG','LC_ALL','SSL_CERT_FILE','SSL_CERT_DIR','HTTPS_PROXY','HTTP_PROXY','ALL_PROXY','NO_PROXY')}
     (work/'tmp').mkdir()
@@ -803,6 +818,7 @@ def run_experiment(config, eval_host=None, svc_source=None):
     run = new_run()
     save(run/'config.json', config)
     outcome = {'schema_version':1, 'run_id':run.name, 'variant':config.get('variant'),
+               'backend':config.get('backend','pi'),
                'task':config['task'], 'status':'running', 'stage':'generation',
                'started_at':time.time(), 'finished_at':None, 'error':None,
                'analysis':{'status':'pending'}, 'evaluation_id':None}
@@ -884,8 +900,9 @@ def main():
     parser.add_argument("command", choices=["bootstrap", "generate", "eval", "analyze", "run", "list", "show"])
     parser.add_argument("run_id", nargs="?", help="show 的 run ID")
     selection=parser.add_mutually_exclusive_group()
-    selection.add_argument("--config", type=Path, help="显式配置文件，兼容历史入口")
-    selection.add_argument("--variant", help="variants/<id>/config.json；list 时作为过滤器")
+    selection.add_argument("--config", type=Path, help="显式自定义配置；默认 variants/factory/config.json")
+    selection.add_argument("--variant", help="list 的历史 variant 过滤器；新运行只接受 factory")
+    parser.add_argument("--backend", choices=('pi', 'codex'), help="生成核心；默认取配置（pi）；list 时过滤 backend")
     parser.add_argument("--task", help="list 按任务过滤")
     parser.add_argument("--json", action="store_true", help="输出可机器读取的摘要")
     parser.add_argument("--eval", dest="evaluation", help="show 指定评测尝试")
@@ -895,10 +912,13 @@ def main():
     parser.add_argument("--eval-host", help="SSH host with bootstrapped ~/Development/factory26 evaluator")
     parser.add_argument("--run", type=Path, help="eval/analyze/show 的已有 run 目录")
     args = parser.parse_args()
+    if args.command in ('show','eval','analyze') and (args.config or args.variant or args.backend):
+        parser.error('已有 run 使用归档配置，不接受 --config、--variant 或 --backend 覆盖')
     if args.command in ('list','show'):
         from inspect_runs import list_runs, show_run, render_list, render_show
         if args.command=='list':
-            result=list_runs(ROOT,variant=args.variant,task=args.task)
+            if args.config: parser.error('list 不接受 --config')
+            result=list_runs(ROOT,variant=args.variant,task=args.task,backend=args.backend)
             output=render_list(result)
         else:
             selected=args.run or (ROOT/'runs'/args.run_id if args.run_id else None)
@@ -913,11 +933,12 @@ def main():
         elif args.command=='analyze': analyze(args.run.resolve(),args.svc_source.resolve() if args.svc_source else None)
         else: evaluate(args.run.resolve(),args.evaluation_id)
         return
-    variant=args.variant or 'pi-baseline'
-    if Path(variant).name!=variant or variant in ('.','..'): parser.error('variant 必须为目录名称')
-    source=(args.config or ROOT/'variants'/variant/'config.json').resolve()
-    config=json.loads(source.read_text())
-    if source.parent.parent==ROOT/'variants': config['variant']=source.parent.name
+    if args.variant not in (None, 'factory'):
+        parser.error('活动 variant 已收敛为 factory；使用 --backend pi|codex，消融可用 --config')
+    try:
+        config=load_config(args.config,args.backend)
+    except (OSError, ValueError) as exc:
+        parser.error(str(exc))
     if args.command=='bootstrap':
         bootstrap(config)
     elif args.command=='run':

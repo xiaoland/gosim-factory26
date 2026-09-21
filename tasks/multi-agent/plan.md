@@ -10,6 +10,8 @@
 
 实施分工：Braid worker 独占 sources/braid；主 Agent 修改 Factory 配置、脚本、文档及测试。同步 CLI 的所有生产者和消费者，检查正文/stdin、title edit、结构化输出、过期 writer 拒绝、PR 重试与失败分支、历史 run 读取。最终复核差异，运行本地测试并刷新 Braid build stamp。
 
+以上实施顺序已完成，核验结果与既有 Clippy 限制见 [实施核验](implementation.md)。Braid 已提交并刷新构建；本轮不延伸为真实模型或 bench 验收。
+
 ## 后续多 Agent 协作（待复核，未实施）
 
 既有完整 Keep 32 项、冻结后评测、官方 runner 不改、原生会话和应用哈希关联、每次实验后先汇报的标准继续沿用。新增验收要证明委派、上下文和实际并发，而不能只检查对象数量或 CLI 退出码。

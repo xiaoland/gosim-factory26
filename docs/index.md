@@ -7,7 +7,7 @@
 | 产品说明 | [PRD](prd/index.md) | 目的、角色、能力范围和实验规则 |
 | 本地运行 | [Deployment](deployment/index.md) | 环境、密钥、执行、恢复和证据查询 |
 | 开发流程 | [AGENTS.md](../AGENTS.md) | 开发入口、更新约定和任务包保留规则 |
-| 可执行事实 | [Pi + SVC](../variants/pi-svc/config.json)、[Codex + SVC](../variants/codex-svc/config.json)、[Pi + SVC + braid](../variants/pi-svc-braid/config.json)、[Codex + SVC + braid](../variants/codex-svc-braid/config.json)、[运行器](../scripts/factory.py)、[检查](../tests/test_factory.py) | 参数、行为和可机械验证的边界 |
+| 可执行事实 | [Factory 共同配置](../variants/factory/config.json)、[运行器](../scripts/factory.py)、[检查](../tests/test_factory.py) | Braid + SVC、可选 Pi/Codex backend，以及可机械验证的边界 |
 | 四组实验 | [SVC / braid 比较](../reports/2026-09-20-harness-matrix.md) | 首轮四组的状态、条件、结果和限制 |
 | 本地对象接入实验 | [Braid / SVC 检查点](../reports/2026-09-21-braid-svc-checkpoint.md) | 真实接入验证、Keep 失败与主动中断；没有新四组分数 |
 | 实验反馈设施 | [无模型验收](../reports/2026-09-21-experiment-feedback.md) | 全流程终态、低噪诊断与分层协作的验证范围 |

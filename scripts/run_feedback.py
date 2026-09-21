@@ -59,6 +59,7 @@ def _outcome(run, metadata):
                 "scope": "full", "error": outcome.get("error"),
                 "analysis": outcome.get("analysis"), "evaluation_id": outcome.get("evaluation_id"),
                 "failed_stage": outcome.get("failed_stage"), "variant": outcome.get("variant"),
+                "backend": outcome.get("backend"),
                 "task": outcome.get("task"), "source": "outcome.json"}
     if isinstance(interruption, dict) and interruption.get("stopped") is True:
         return {"status": "interrupted", "stage": "generation", "scope": "generation",
@@ -357,6 +358,7 @@ def collect(run: Path) -> dict:
         "schema_version": 1,
         "run_id": run.name,
         "variant": lifecycle.get("variant") or metadata.get("variant"),
+        "backend": lifecycle.get("backend") or metadata.get("backend"),
         "task": lifecycle.get("task") or metadata.get("task"),
         "status": lifecycle["status"],
         "stage": lifecycle["stage"],

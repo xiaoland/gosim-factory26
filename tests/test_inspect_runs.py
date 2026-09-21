@@ -27,6 +27,25 @@ def pi_session(run, name, records, **identity):
 
 
 class RunNavigationTest(unittest.TestCase):
+    def test_one_variant_keeps_backend_visible_and_historical_identity_read_only(self):
+        with tempfile.TemporaryDirectory() as temp:
+            root=Path(temp)
+            for backend in ('pi','codex'):
+                run=root/'runs'/backend
+                save(run/'run.json',{'status':'generated','variant':'factory','backend':backend})
+                save(run/'config.json',{'backend':backend,'svc':True,'workflow':'braid'})
+            old=root/'runs/legacy'
+            save(old/'run.json',{'status':'generated'})
+            save(old/'config.json',{'backend':'pi','svc':True,'workflow':'single'})
+            before={str(p):p.read_bytes() for p in root.rglob('*.json')}
+            row=inspect.list_runs(root,variant='factory',backend='codex')[0]
+            self.assertEqual(row['id'],'codex')
+            self.assertIn('factory | codex',inspect.render_list([row]))
+            legacy=inspect.list_runs(root,variant='pi-svc')[0]
+            self.assertTrue(legacy['variant_inferred'])
+            self.assertEqual(legacy['id'],'legacy')
+            self.assertEqual(before,{str(p):p.read_bytes() for p in root.rglob('*.json')})
+
     def test_latest_failed_evaluation_does_not_reuse_old_score(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp)
