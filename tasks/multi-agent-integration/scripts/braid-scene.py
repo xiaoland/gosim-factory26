@@ -133,7 +133,7 @@ description 重建后，严格按新的完整 description 工作。使用明确�
             pr_entries = [row for row in entries if row.get('work_item_kind') == 'pr']
             assert pr_entries, '没有可核验的 PR session'
             prs = json.loads(cli('pr', 'list', '--json').stdout)
-            assert any(pr.get('state') == 'merged' for pr in prs), '没有已合入的 PR'
+            assert any(pr.get('state') == 'MERGED' for pr in prs), '没有已合入的 PR'
             export_delivery(app, delivery['delivery_commit'], output / 'application')
             subprocess.run([sys.executable, '-c',
                             'from calc import add; assert add(2,3)==5; assert add(-4,1)==-3'],

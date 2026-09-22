@@ -44,4 +44,6 @@ Pi 0.85.1已安装实现可见：rpc-mode.js的stdin end调用shutdown，shutdow
 
 ## 当前验证
 
-Braid实现已提交`fdb5c19`，删除580行、增加41行；29个单元检查与1个CLI检查通过。Factory删除自建沙箱与主动生命周期扩展，改用被动observer；`make test`的124个Python检查和Node observer检查通过，原始输出`/tmp/f26-boundary-full-tests.log`。Debian构建二进制已装入既有Linux容器的`/tmp/factory26-live/boundary-dev/runtime/bin/braid`，正在装配短真实运行；其结果尚未确认。正式评分仍为未开始。
+Braid实现已提交`fdb5c19`，删除580行、增加41行；29个单元检查与1个CLI检查通过。Factory删除自建沙箱与主动生命周期扩展，改用被动observer；`make test`的124个Python检查和Node observer检查通过，原始输出`/tmp/f26-boundary-full-tests.log`。Debian构建二进制已装入既有Linux容器的`/tmp/factory26-live/boundary-dev/runtime/bin/braid`，短真实运行已启动，终态owner为factory_boundary_cleanup，持久记录为容器`evidence/braid-boundary-process.json`，本机归档目标`runs/qualification/pi-boundary/live/`。正式候选`runs/packages/iteration-throughput/pi-team-mixed-boundary.zip`已通过载荷身份检查，SHA256为`c64ab94b7607aa8008a92dfac1794e5a602365ad3c5bd3b5a2ebe96e0617e0a7`；官网状态目录`runs/competition/iteration-throughput-boundary-20260923/hosted/pi-team-mixed`仅完成本地prepare，尚未上传或评分。
+
+真实旅程于2026-09-23完成：Braid result为completed、根Issue已关闭、PR已MERGED，交付commit为`5c76438d864950a261d41663c714fc0f9491966d`。原资格脚本错把CLI状态和小写merged比较，导致退出1；已按真实接口修正，并对同一交付运行文件断言复验通过，没有重新采样。原始失败记录保留，纠正证据为`runs/qualification/pi-boundary/live/braid-boundary/recheck.json`。原生诊断partial（一个替换会话首行不是session header），不阻断有效交付。四包清单已冻结，官网controller已启动，先mixed两题，再deepseek、glm、vv；官网状态归属`runs/competition/iteration-throughput-boundary-20260923/`，尚无评分结果。

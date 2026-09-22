@@ -4,7 +4,7 @@
 - **Guardrails**：评分仍以完整官方 benchmark 为准；设施失败不能冒充实验结果；不能为了提速把失败详情回灌同一次生成。基础设施修复与正式 score 使用不同阶段，score 开始后冻结 revision。
 - **Verification**：批次自动记录 qualification、排队、生成、artifact-ready、冻结、评测与恢复时间；下一轮可从终态数据计算墙钟、worker 利用率、重复采样次数和主 Agent 介入次数。
 - **Current Truth**：按用户批准的新方向，Braid 已删除 Pi 内部子代理控制与自造 teardown 协议，改为关闭所持有的 Pi RPC stdin 并等待主进程退出（`sources/braid`：`fdb5c19`，29 单元与 1 CLI 检查通过）。Factory 已删除全部自建沙箱，扩展仅被动收集会话关联，诊断缺失不阻断有效交付；124 Python 检查与 Node observer 检查通过。SVC 接线和四个快速模型 variant 保持本轮范围。尚未取得本轮完整 benchmark 分数，也尚未上传官方 Competition。旧资格与失败证据保留在 [integration cell](cells/integration.md)，当前批准边界见 [pi-boundary cell](cells/pi-boundary.md)。
-- **Next Step**：复用现有 Linux runtime 与新 Braid 二进制，运行一次短真实模型旅程，检查根 Issue description 重建、原生局部执行与 PR 交付。通过后构建冻结候选，在官方 Competition 跑完 Keep/BookStack，再展开其余 variant；不再把三层模拟、内部子代理停止证明或沙箱检查作为前置。官方本地基础镜像缺失仍是本地评分限制，不能拿自建环境冒充官方 runner。
+- **Next Step**：短真实模型旅程完成，已有交付复验通过；四个参赛包已冻结，官方 Competition 控制器正在运行，先 mixed 的 Keep/BookStack，再其余既定组合。状态与证据目录为 `runs/competition/iteration-throughput-boundary-20260923/`。官网尚无评分结果；官方本地基础镜像仍缺失，不能拿自建环境冒充官方 runner。
 
 ## Proposed loop
 
