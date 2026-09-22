@@ -25,7 +25,7 @@
 - 浏览器通常由原生 operator/executor 操作，executor 保有局部反馈；agent-browser 为首选，MCP 当前为空。仅 pi-verification 配置可选 reviewer，无 contract-reviewer。
 - V&V 纳入本轮，四组固定同一版本；其余 SVC Corpus 冻结，后续清理由[独立任务](../svc-corpus-review/packet.md)维护。user-scope 保留薄导航。
 - pi-generalist、pi-team、codex-generalist、pi-verification 各跑 Keep/BookStack，共八项。WSL 固定 runner，先两路生成、最多四路独立单-worker评测，不称线上排名或正式初赛成绩。
-- 生成冻结后才外部评测，失败详情不回灌同次生成，终态失败不自动重跑。结果按项短报，批次汇总后停止；系统性错误暂停扩散。主会话不频繁 polling。
+- 生成冻结后才外部评测，失败详情不回灌同次生成。完成 benchmark 后的低分或用例失败是实验结果，不自动重跑；provider、Braid、runner 等可由本项目修复的设施失败继续诊断、修复并以保留证据的新尝试取得评分。结果按项短报，批次汇总后停止；系统性错误暂停扩散。主会话不频繁 polling。
 
 ## 从哪里恢复理解
 

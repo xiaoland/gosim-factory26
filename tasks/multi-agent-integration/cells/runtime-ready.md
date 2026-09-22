@@ -33,3 +33,5 @@ Track：runtime。Phase：ready。状态：active。01 独立预演完成，见 
 Braid `0c68c75` 将 teardown 提升为完整后代进程树的终态边界：在 lifecycle hook 前锁定 Pi 后代，hook 只确认精确控制请求，Braid 关闭并验证树后写入 stopped receipt。受控 Pi 场景实际通过 foreground/background 两种 replacement，旧 writer 被 fenced、heartbeat 静止、原工作树和未提交文件保留；随后两个不同 profile 的子 Issue/PR 完成交付。归档器使用终态 `subagent-stop.json` 并按 Pi UUID 唯一定位规范 session 文件，对该真实场景保留输入重放得到 21 个原生会话、0 个证据错误。
 
 Codex 场景 `20260922-103554-codex-braid-533f50` 完整通过：原生 executor 在 description replacement 后终止，两个子 Issue、两个 PR 和根 Issue 均收敛，delivery commit 为 `df831aad3a6e7a6fa196bbfa74b08de7b4d91bb4`。前一轮曾因子 Issue 只关闭自身、未向根 Issue comment 而正确停在 incomplete；共同 profile 指令现明确 comment/reply 是跨 work-item 唯一推进通道，关闭或等待前必须向父/消费者报告并确认成功。Braid 没有增加隐式完成事件。
+
+固定批次暴露了 provider 失败合同缺口：Pi 在内部重试耗尽后返回明确 `Failed`，Braid 将 batch 消费并让仍开放的 Issue 静默进入“无后续工作”；重新启动批次又从空会话开始，无法利用仍存在的 work-item 状态。Braid `690522e` 在 store 调度边界对开放 work-item 的同一输入精确重放一次，第二次 `Failed` 后返回 incomplete；`Unknown` 的既有 at-least-once 路径不变。该边界不识别模型错误文案、不增加 provider 分支或可变重试配置。store 回归检查覆盖首次重放、第二次停止及相同正文的独立新输入；全部 Braid 测试通过。旧批次的五个评分继续保留旧 revision，未评分项使用明确的新 recovery run 和新 revision，不能伪装成单一冻结源码。
