@@ -35,3 +35,5 @@ Braid `0c68c75` 将 teardown 提升为完整后代进程树的终态边界：在
 Codex 场景 `20260922-103554-codex-braid-533f50` 完整通过：原生 executor 在 description replacement 后终止，两个子 Issue、两个 PR 和根 Issue 均收敛，delivery commit 为 `df831aad3a6e7a6fa196bbfa74b08de7b4d91bb4`。前一轮曾因子 Issue 只关闭自身、未向根 Issue comment 而正确停在 incomplete；共同 profile 指令现明确 comment/reply 是跨 work-item 唯一推进通道，关闭或等待前必须向父/消费者报告并确认成功。Braid 没有增加隐式完成事件。
 
 固定批次暴露了 provider 失败合同缺口：Pi 在内部重试耗尽后返回明确 `Failed`，Braid 将 batch 消费并让仍开放的 Issue 静默进入“无后续工作”；重新启动批次又从空会话开始，无法利用仍存在的 work-item 状态。Braid `690522e` 在 store 调度边界对开放 work-item 的同一输入精确重放一次，第二次 `Failed` 后返回 incomplete；`Unknown` 的既有 at-least-once 路径不变。该边界不识别模型错误文案、不增加 provider 分支或可变重试配置。store 回归检查覆盖首次重放、第二次停止及相同正文的独立新输入；全部 Braid 测试通过。旧批次的五个评分继续保留旧 revision，未评分项使用明确的新 recovery run 和新 revision，不能伪装成单一冻结源码。
+
+恢复同一 work-item 又暴露 blocked assignment 的工作树所有权缺口：新 generation 只继承 retired assignment，因而尝试重复创建已被 blocked assignment 占用的分支。Braid `673c119` 让最新 retired 或 blocked assignment 都能把原路径、head ref、脏内容和 owner 转给新 generation；stopping assignment 仍必须先证明原生 teardown。Issue/PR 回归测试和全部 29 项 Braid 检查通过。
