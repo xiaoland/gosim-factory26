@@ -14,11 +14,15 @@
 
 WSL 根磁盘共 251 GB、可用 209 GB（13% 使用）；`/tmp` 为 tmpfs，可用 6.6 GB（17% 使用）。大包和长期 workspace 应放仓库或磁盘目录，不把 `/tmp` 的容量当根磁盘容量。Windows 磁盘探测因 SSH 命令解释失败未得到容量；Docker `system df` 在 25 秒内未返回，未重试或清理。因此不能用 WSL 剩余空间证明 Docker Desktop 存储空间充足。
 
-## 官方模拟器阻塞与最小解法
+## 官方模拟器的本地限制与最小解法
 
 WSL 默认 `unix:///var/run/docker.sock` 不可连接，`docker` 和 `docker.socket` 服务 inactive；但 Windows 的 `arcbox-win` context 可用，因此“所有远端 Docker 都不可用”不成立。可用 daemon 的镜像清单没有 `arcbench-local-submit:latest` 或 `arcbench-runner:local-base`。
 
-固定模拟器 `build-image.sh` 要求独立 ARC-Bench website 仓库的 `backend/runner/Dockerfile`，或已有主办方基础镜像；`third_party/arc-bench` 的评测 Dockerfile 不能替代。最小外部前提仍是取得这个源码 checkout 或可拉取的准确镜像引用；本轮未取得，不自行拼装近似镜像。
+2026-09-23 定向复核时，[官方 local-simulation 仓库](https://github.com/code-philia/hackathon-local-simulation)的公开 `main` 仍为 `cfbbc287ee1bbffcf1e936545e4803145693a8d8`。其 `build-image.sh` 要求独立 ARC-Bench website 仓库的 `backend/runner/Dockerfile`，或已有主办方基础镜像；仓库自身不包含该 Dockerfile，[Releases](https://github.com/code-philia/hackathon-local-simulation/releases) 没有发布项，[组织 Packages 公开页](https://github.com/orgs/code-philia/packages)也未列出可拉取容器。README 中的 `registry.example.com/arcbench/...` 是示例占位符，不是可执行镜像引用。组织公开仓库列表没有 `arc-bench-website`；`arc-bench`、`hackathon-local-simulation` 和 `agentic-requirement-compiler` 的公开 `main` 均不存在 `backend/runner/Dockerfile`。
+
+`third_party/arc-bench` 的 Dockerfile 是 ARC benchmark reproduction 环境，基于 Playwright `v1.54.0`、使用端口 3301；固定模拟器要求网站生产 Runner 的 `run_submission.py` 环境，文档列出的基础镜像为 `mcr.microsoft.com/playwright/python:v1.57.0-noble`、Node.js `20.19.3` 和端口 3000，因此不能互换。`arcbox-win` 现有 `factory26-p0-runtime:pi`（4932ed6039df）、`factory26-p0-runtime:codex`（88ce5d5a8161）、`factory26-p0-acceptance:local`（9afc5a7a18c3）及临时 Factory 构建镜像均来自本项目的 Bookworm/Python 或 Rust 构建链；单独的 `node:20.19.3-bookworm-slim` 也没有 production Runner 和 Playwright。它们没有官方 Runner 的来源与内容身份，不能改 tag 冒充。
+
+最小外部前提是取得以下任一不可变制品：主办方发布的 Linux amd64 完整 local-submit/基础 Runner 镜像真实 registry 引用与 digest，或与正式 Runner 对齐且含 `backend/runner/Dockerfile` 的 `arc-bench-website` 精确 revision。完整 local-submit 镜像可经 `--image` 直接使用；只有基础 Runner 时，才用冻结仓库的 Dockerfile 加入 `local_runner.py` 这一层。未取得前不自行拼装近似镜像。该限制只影响官方 local-simulation 的本地并行矩阵，不阻断官网 Competition 路径和已有 ARC 应用评测。
 
 获得镜像后，可优先沿已有 Windows Docker daemon 路径部署。`local_submit.py:run_container` 使用 workspace bind mount，源路径必须被 daemon 所在主机访问；仅在 Mac 设置 `DOCKER_CONTEXT=arcbox-win` 不能让 Windows 自动看见 Mac 的 `/tmp` workspace。应把 wrapper 与 workspace 放到可被 Docker Desktop 挂载的执行主机目录，或验证既有 WSL 集成后在 WSL 执行。这是运行前提，本轮未传输文件或更改集成设置。
 
