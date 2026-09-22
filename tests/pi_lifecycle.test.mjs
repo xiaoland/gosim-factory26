@@ -177,6 +177,27 @@ async function missingProofIsUnknown() {
   assert.equal(receipt.error.code, "control_deadline");
 }
 
+async function foregroundCanHandOffBeforeSessionIdentityIsPublished() {
+  const local = fs.mkdtempSync(path.join(os.tmpdir(), "factory-pi-live-foreground-"));
+  fs.mkdirSync(path.join(local, ".factory"), { recursive: true });
+  fs.writeFileSync(path.join(local, REQUEST_RELATIVE_PATH), JSON.stringify({ schema_version: 1, fence_id: "live-foreground", parent_native_session_id: parentSession, started_at: 3 }));
+  const adapter = createLifecycleAdapter({
+    nativeHome: local,
+    getParentSessionId: () => parentSession,
+    rpc: async (method, params = {}) => {
+      if (method === "status") return { text: "Run: live-fg\nState: running" };
+      if (method === "interrupt" && params.runId === "live-fg") return { text: "Interrupt requested" };
+      return {};
+    },
+    deadlineMs: 1_000,
+  });
+  const receipt = await adapter.stop();
+  assert.equal(receipt.state, "ready");
+  assert.equal(receipt.children[0].run_id, "live-fg");
+  assert.equal(receipt.children[0].proof.control_requested, true);
+  assert.equal(receipt.children[0].child_session_id, undefined);
+}
+
 async function directForegroundCompletionIsObserved() {
   const local = fs.mkdtempSync(path.join(os.tmpdir(), "factory-pi-direct-completion-"));
   fs.mkdirSync(path.join(local, ".factory"), { recursive: true });
@@ -230,6 +251,7 @@ await canonicalParentFileIsRefreshed();
 await canonicalParentSiblingWinsOverAlias();
 await workflowResultsAreRetained();
 await missingProofIsUnknown();
+await foregroundCanHandOffBeforeSessionIdentityIsPublished();
 await directForegroundCompletionIsObserved();
 await invalidChildHeaderIsNotIdentity();
 await identityAndReplacementAreUnknown();

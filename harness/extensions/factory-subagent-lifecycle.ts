@@ -333,8 +333,8 @@ function childReceipt(child: KnownChild): ChildEvidence {
 }
 
 function proofComplete(child: KnownChild): boolean {
-	if (!child.childSessionId) return false;
 	if (child.mode === "foreground") return child.controlRequested === true || child.controlInactive === true;
+	if (!child.childSessionId) return false;
 	const proof = processProof(child.processTerminal);
 	return isTerminal(child.status) && proof.process_terminal_observed === true && proof.active_lease_released === true;
 }
