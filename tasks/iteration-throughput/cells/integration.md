@@ -102,3 +102,5 @@ NSS动态模块是第二个同一打包边界缺陷：普通ldd不会列出softo
 Braid首次foreground replacement失败（约166秒）：`capture_native_descendants`调用外部ps，而最小运行镜像不存在ps/kill，导致ENOENT，尚未执行extension stop。修复归打包边界：显式procps依赖、包装两个binary及其动态库。真实同隔离域无模型probe证明ps可枚举自身、kill可探测并停止probe自建group；证据runtime-tools-overlay。此前浏览器四包均未上传，重新构建一个候选后再冻结。另保留会话JSONL的实际source与记录path不同，独立核对，暂不据此改provider。
 
 会话路径专项无模型probe在实际Linux包与真实pi-subagents/lifecycle两扩展下通过：get_state→new_session→get_state的路径等于extension读取路径，synthetic assistant落盘于自定义session-dir。可重跑入口为 `node tasks/iteration-throughput/scripts/pi-session-path-spike.mjs <runtime> <lifecycle.ts>`，证据session-path-spike/linux-actual-extensions.json。此前真实场景的路径差异仍未解释，不能据此推定Pi协议故障或修改provider；后续场景继续保留身份/归档证据。
+
+5bee93dd实际Braid复验在首次foreground reset失败，writer PID10718已Z态、PPID1、PGID10718，错误为native descendant remained alive after SIGKILL。原始证据braid-procps/writer-terminal.json与foreground.jsonl绑定同PID。共享kill-0检查将已退出但未reap当活进程，修复应区分执行终止与PID槽位释放，不加subreaper、延长timeout或重采模型；Codex/Pi共享检查均需覆盖，未知检查结果保持fail closed。process_terminal_fix拥有源码与真实zombie回归，主Agent集成。

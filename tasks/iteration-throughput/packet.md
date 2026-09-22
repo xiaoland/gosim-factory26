@@ -3,8 +3,8 @@
 - **Objective**：交付符合官方打包与运行契约的 Pi + Braid + SVC harness，结合官方 Competition 与本地官方 runner 自动完成既定实验，比较快速模型配方及 SVC V&V 的效果，并同时取得通过率、成本、得分和阶段耗时。
 - **Guardrails**：评分仍以完整官方 benchmark 为准；设施失败不能冒充实验结果；不能为了提速把失败详情回灌同一次生成。基础设施修复与正式 score 使用不同阶段，score 开始后冻结 revision。
 - **Verification**：批次自动记录 qualification、排队、生成、artifact-ready、冻结、评测与恢复时间；下一轮可从终态数据计算墙钟、worker 利用率、重复采样次数和主 Agent 介入次数。
-- **Current Truth**：实现阶段已完成主要接线，三模型接口、真实vision/executor与修复后的实际包双浏览器/隔离边界通过。proc与NSS缺陷已修复。真实Braid首次context replacement暴露包缺少ps/kill；同隔离域无模型工具probe已通过，正重建单候选包。官方本地镜像仍缺失。进度与责任见 [task-map](task-map.md)，资格证据见 [integration cell](cells/integration.md)。此前一轮 08:54–17:13 共 8h19m。健康的两路前四项只用了约 80 分钟；官方评测每项约 3–5 分钟。主要损耗来自资格验证过晚、application artifact 与 finalization 失败耦合、失败后重复模型采样，以及主 Agent 同时承担 scheduler、日志压缩和恢复。详见 [profile](profile-2026-09-22.md)。产品边界已收敛为一个Factory task对应一个根Issue；运行时Agent只使用GitHub式assignee，内部agent-profile与variant均由Harness隐藏。粗筛组合见[能力装配设计](recipes.md)。
-- **Next Step**：capabilities_impl拥有procps打包与无overlay工具/浏览器边界资格；主Agent核对Pi会话身份接缝，随后启动一次Braid协作资格，由observer独立等待终态。通过后重新冻结四包并启动官方矩阵。final-a102aa2与browser-boundary/manifest未发生远端写入，因缺少进程工具退役；不重采已通过native视觉/加法，无新增开工握手。
+- **Current Truth**：实现阶段已完成主要接线，三模型接口、真实vision/executor与修复后的实际包双浏览器/隔离边界通过。proc与NSS缺陷已修复。真实Braid首次context replacement暴露包缺少ps/kill；新候选5bee93dd已通过无overlay工具、双浏览器与Linux边界；实际Braid复验在首次reset发现共享进程终态判定错误：已退出Z态writer被kill-0误判为存活，该Braid兜底修复已撤回，转为删除越界生命周期接线。官方本地镜像仍缺失。进度与责任见 [task-map](task-map.md)，资格证据见 [integration cell](cells/integration.md)。此前一轮 08:54–17:13 共 8h19m。健康的两路前四项只用了约 80 分钟；官方评测每项约 3–5 分钟。主要损耗来自资格验证过晚、application artifact 与 finalization 失败耦合、失败后重复模型采样，以及主 Agent 同时承担 scheduler、日志压缩和恢复。详见 [profile](profile-2026-09-22.md)。产品边界已收敛为一个Factory task对应一个根Issue；运行时Agent只使用GitHub式assignee，内部agent-profile与variant均由Harness隐藏。粗筛组合见[能力装配设计](recipes.md)。
+- **Next Step**：新方向获准推进到具体方案与预演；[Pi边界修正cell](cells/pi-boundary.md)记录删除面、正常Pi关闭、最快真实验证与实施分工。用户进一步明确删除全部自建沙箱（含开发机），已纳入同一cell；用户已确认调整后的范围并授权实施；先提交任务基线，然后删除越界接线和所有自建沙箱，直接真实验证。三层无模型spike不再作为必经关卡，模型额度不是主要约束。
 
 ## Proposed loop
 
