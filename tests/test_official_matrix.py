@@ -48,7 +48,9 @@ class MatrixTest(unittest.TestCase):
             def __init__(self,*a,**kw): pass
             def __enter__(self): return self
             def __exit__(self,*a): pass
-            def run_all(self,**kw): pass
+            def run_all(self,**kw):
+                current=json.loads((root/'run/matrix.json').read_text())
+                assert current['status']=='running' and 'finished_at' not in current
             def summary(self): return {'status':'blocked'}
         with tempfile.TemporaryDirectory() as temp:
             root=Path(temp); manifest=self.fixture(root)
@@ -57,6 +59,8 @@ class MatrixTest(unittest.TestCase):
                 result=official_matrix.execute(manifest,root/'run',secret='test')
                 self.assertEqual(result['status'],'blocked')
                 self.assertEqual(calls,['a'])
+                official_matrix.execute(manifest,root/'run',secret='test')
+                self.assertEqual(calls,['a','a'])
 
     def test_local_slots_overlap_and_use_separate_workspace_identities(self):
         barrier = threading.Barrier(2)

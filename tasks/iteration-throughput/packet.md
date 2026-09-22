@@ -3,8 +3,8 @@
 - **Objective**：交付符合官方打包与运行契约的 Pi + Braid + SVC harness，结合官方 Competition 与本地官方 runner 自动完成既定实验，比较快速模型配方及 SVC V&V 的效果，并同时取得通过率、成本、得分和阶段耗时。
 - **Guardrails**：评分仍以完整官方 benchmark 为准；设施失败不能冒充实验结果；不能为了提速把失败详情回灌同一次生成。基础设施修复与正式 score 使用不同阶段，score 开始后冻结 revision。
 - **Verification**：批次自动记录 qualification、排队、生成、artifact-ready、冻结、评测与恢复时间；下一轮可从终态数据计算墙钟、worker 利用率、重复采样次数和主 Agent 介入次数。
-- **Current Truth**：按用户批准的新方向，Braid 已删除 Pi 内部子代理控制与自造 teardown 协议，改为关闭所持有的 Pi RPC stdin 并等待主进程退出（`sources/braid`：`fdb5c19`，29 单元与 1 CLI 检查通过）。Factory 已删除全部自建沙箱，扩展仅被动收集会话关联，诊断缺失不阻断有效交付；124 Python 检查与 Node observer 检查通过。SVC 接线和四个快速模型 variant 保持本轮范围。尚未取得本轮完整 benchmark 分数，也尚未上传官方 Competition。旧资格与失败证据保留在 [integration cell](cells/integration.md)，当前批准边界见 [pi-boundary cell](cells/pi-boundary.md)。
-- **Next Step**：短真实模型旅程完成，已有交付复验通过；四个参赛包已冻结，官方 Competition 控制器正在运行，先 mixed 的 Keep/BookStack，再其余既定组合。状态与证据目录为 `runs/competition/iteration-throughput-boundary-20260923/`。官网尚无评分结果；官方本地基础镜像仍缺失，不能拿自建环境冒充官方 runner。
+- **Current Truth**：按用户批准的新方向，Braid 已删除 Pi 内部子代理控制与自造 teardown 协议，改为关闭所持有的 Pi RPC stdin 并等待主进程退出（`sources/braid`：`fdb5c19`，29 单元与 1 CLI 检查通过）。Factory 已删除全部自建沙箱，扩展仅被动收集会话关联，诊断缺失不阻断有效交付；124 Python 检查与 Node observer 检查通过。SVC 接线和四个快速模型 variant 保持本轮范围。尚未取得本轮完整 benchmark 分数。官方 Competition 已接收 mixed 包（submission `f9d8960d81a5`），Keep run `007b8fc9d38b`已进入平台 Agent 运行阶段。旧资格与失败证据保留在 [integration cell](cells/integration.md)，当前批准边界见 [pi-boundary cell](cells/pi-boundary.md)。
+- **Next Step**：短真实模型旅程完成，已有交付复验通过；四个参赛包已冻结，官方 Competition 控制器正在运行，先 mixed 的 Keep/BookStack，再其余既定组合。状态与证据目录为 `runs/competition/iteration-throughput-boundary-20260923/`。官网尚无评分结果。本地 production 镜像仍缺失，但正核查能否用现有官方ARC评测器、相同冻结ZIP与明确环境标签完成并行本地评分，不再默认要求复制整个生产环境。
 
 ## Proposed loop
 

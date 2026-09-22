@@ -75,6 +75,8 @@ def execute(manifest, directory, secret=None):
             state = json.loads(state_file.read_text())
             if state['status'] == 'completed':
                 return state
+        state['status'] = 'running'
+        state.pop('finished_at', None)
         save(state_file, state)
 
         def scored(summary):
@@ -171,6 +173,7 @@ def main():
         parser.error('--directory is required for execution')
     state = execute(args.manifest, args.directory, secret=api_key())
     print(json.dumps({'status':state['status'], 'evidence':str(args.directory.resolve()),
+        'errors':{venue: state[venue]['error'] for venue in ('hosted', 'local') if 'error' in state[venue]},
         'hosted':{name: {'status':row.get('status'), 'score_status':row.get('score_status')}
                   for name,row in state['hosted'].items() if isinstance(row,dict)},
         'local':{name: {'phase':row.get('phase'), 'passed':row.get('result',{}).get('passed'),

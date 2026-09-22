@@ -245,8 +245,11 @@ class Controller:
             if isinstance(exc, ApiError):
                 pending['http_status'] = exc.status
                 pending['error_detail'] = self.safe(exc.detail)
+            else:
+                pending['error_detail'] = self.safe(str(exc))
             self.save()
-            raise Blocked(operation+' 写入结果未确认，已保留 journal；先只读核查') from None
+            reason = f'HTTP {exc.status}: {pending["error_detail"]}' if isinstance(exc, ApiError) else pending['error_detail']
+            raise Blocked(f'{operation} 失败：{reason}；现场已保存') from None
         pending['response'] = self.safe(response)
         self.save()
         self._apply_receipt()
