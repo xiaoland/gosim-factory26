@@ -42,9 +42,28 @@ class SubmissionTest(unittest.TestCase):
                 submission.platform_config(Path('/unused'), {'backend':'pi'})
             os.environ['VISUAL_BASE_URL'] = 'https://example.invalid/vision'
             actual = submission.platform_config(Path('/unused'), {'backend':'codex'})
-            self.assertEqual((actual['backend'],actual['model'],actual['image_input']), ('codex','vision',True))
-            self.assertEqual(submission.model_key(actual), 'secret-vision')
+            self.assertEqual((actual['backend'],actual['model'],actual['image_input']), ('codex','main',False))
+            self.assertEqual(submission.model_key(actual), 'secret-main')
+            self.assertEqual(submission.model_key(actual, visual=True), 'secret-vision')
+            self.assertEqual(actual['visual_base_url'], 'https://example.invalid/vision')
             self.assertNotIn('secret-vision', json.dumps(actual))
+
+    def test_frozen_variant_rejects_platform_model_substitution(self):
+        config = {'backend':'pi', 'workflow':'braid', 'svc':True, 'model':'text',
+                  'effective': {'profiles': {'p': {'roles': {'vision': {'provider':'visual','model':'vision'}}}}}}
+        env = {'OPENAI_API_KEY':'main-key','OPENAI_BASE_URL':'https://example.invalid/v1','MODEL':'other'}
+        with patch.object(factory, 'load_config', side_effect=lambda *args: dict(config)), patch.dict(os.environ, env, clear=True):
+            with self.assertRaisesRegex(ValueError, '主模型与冻结'):
+                submission.platform_config(Path('/unused'), {'backend':'pi'})
+            os.environ.update(MODEL='text', VISUAL_API_KEY='vision-key', VISUAL_BASE_URL='https://vision.invalid/v1', VISUAL_MODEL='wrong')
+            with self.assertRaisesRegex(ValueError, '视觉模型与冻结'):
+                submission.platform_config(Path('/unused'), {'backend':'pi'})
+            os.environ['VISUAL_MODEL']='vision'
+            actual = submission.platform_config(Path('/unused'), {'backend':'pi'})
+            with tempfile.TemporaryDirectory() as temp:
+                runtime = submission.adapter_environment(actual, Path(temp))
+                self.assertEqual(runtime['FACTORY26_API_KEY'], 'main-key')
+                self.assertEqual(runtime['FACTORY26_VISUAL_API_KEY'], 'vision-key')
 
     def test_upload_cannot_be_mistaken_for_official_evaluation(self):
         with patch.object(playground.Client, 'request', side_effect=AssertionError('不能发请求')):

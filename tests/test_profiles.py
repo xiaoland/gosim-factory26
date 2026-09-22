@@ -1,79 +1,152 @@
-"""Selection and material edits must affect only the consumers that use them."""
+"""Capability assembly preserves public identity and exact runtime consumers."""
+import copy
 import json
 from pathlib import Path
+import re
 import shutil
 import sys
 import tempfile
-import tomllib
 import unittest
 from unittest.mock import patch
 
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-import profiles
+sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'scripts'))
 import native_profiles
+import profiles
+
+
+VARIANTS = {
+    'pi-team-deepseek': (['pi-deepseek-fast'], 'pi-deepseek-fast', 'pi-deepseek-fast'),
+    'pi-team-glm': (['pi-glm-fast'], 'pi-glm-fast', 'pi-glm-fast'),
+    'pi-team-mixed': (['pi-glm-fast', 'pi-deepseek-fast'], 'pi-glm-fast', 'pi-deepseek-fast'),
+    'pi-team-vv': (['pi-glm-fast', 'pi-deepseek-fast'], 'pi-glm-fast', 'pi-deepseek-fast'),
+}
 
 
 class ProfileBoundaryTest(unittest.TestCase):
-    def test_codex_materializes_model_window_for_root_and_native_roles(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            work=Path(tmp)
-            with patch.object(native_profiles,'browser_wrapper'), patch.object(native_profiles,'executable',return_value='/bin/false'):
-                # Only installation presence is needed; no core is executed.
-                cache=work/'cache'; (cache/'node_modules/.bin').mkdir(parents=True)
-                (cache/'node_modules/.bin/pi').touch()
-                with patch.object(native_profiles,'runtime_cache',return_value=cache):
-                    effective=profiles.resolve('codex-generalist')
-                    _,bindings=native_profiles.materialize(effective,work,'http://127.0.0.1:1/v1','fixture')
-            item=effective['profiles']['codex-generalist']
-            folder=Path(bindings['codex-generalist']['native_template'])
-            configs=[(tomllib.loads((folder/'config.toml').read_text()),item['profile'])]
-            configs += [(tomllib.loads((folder.parent/(name+'.toml')).read_text()),role) for name,role in item['roles'].items()]
-            for config,source in configs:
-                self.assertEqual(config['model'],source['model'])
-                self.assertEqual(config['model_context_window'],item['models'][source['model']]['descriptor']['contextWindow'])
+    def copied_root(self, temporary):
+        root = Path(temporary)
+        for name in ('harness', 'variants', 'sources/svc'):
+            shutil.copytree(profiles.ROOT / name, root / name)
+        return root
 
-    def test_presets_and_native_roles_are_distinct_and_explicit(self):
-        expected = {'pi-generalist':1,'codex-generalist':1,'pi-team':3,'pi-verification':2}
-        for variant,count in expected.items():
-            effective=profiles.resolve(variant)
-            self.assertEqual(len(effective['profiles']),count)
+    def test_four_variants_have_two_public_assignees_and_five_explicit_roles(self):
+        for variant, (ids, issue, pull_request) in VARIANTS.items():
+            effective = profiles.resolve(variant)
+            self.assertEqual(list(effective['profiles']), ids)
+            self.assertEqual(effective['defaults'], {'issue': issue, 'pr': pull_request})
+            self.assertFalse(any((profiles.ROOT / 'variants').glob('*/preset.json')))
             for item in effective['profiles'].values():
-                self.assertEqual('reviewer' in item['roles'],variant=='pi-verification')
-                self.assertNotIn('contract-reviewer',item['roles'])
-                self.assertEqual(item['profile']['mcp'],[])
-                self.assertNotIn('agent-browser',item['profile']['skills'])
-                self.assertIn('agent-browser',item['roles']['executor']['skills'])
+                profile = item['profile']
+                self.assertIn(profile['assignee_login'], ('glm', 'deepseek'))
+                self.assertLessEqual(len(profile['assignee_description'].encode()), 240)
+                self.assertEqual(profile['mcp'], [])
+                self.assertEqual(set(item['roles']),
+                                 {'explorer', 'executor', 'browser-operator', 'vision', 'specialist'})
+                for role in item['roles'].values():
+                    self.assertEqual(role['mcp'], [])
+                    self.assertEqual(role['context'], {'mode': 'fresh'})
+                    self.assertIn(role['reasoning'], item['models'][role['model']]['reasoning_levels'])
+                    self.assertFalse(item['models'][role['model']]['gateway_verified'])
 
-    def test_changed_role_invalidates_its_consumers_and_unknown_assignment_fails(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root=Path(tmp)
-            for name in ('harness','variants','experiments'):
-                shutil.copytree(profiles.ROOT/name,root/name)
-            original=profiles.resolve('pi-team',root)
-            role=root/'harness/subagents/executor-ui.json'
-            value=json.loads(role.read_text());value['model']='kimi-k3';role.write_text(json.dumps(value))
-            changed=profiles.resolve('pi-team',root)
-            self.assertNotEqual(original['profiles']['team-ui']['effective_profile_digest'],changed['profiles']['team-ui']['effective_profile_digest'])
-            for name in ('team-coordinator','team-app'):
-                self.assertEqual(original['profiles'][name],changed['profiles'][name])
-            preset=root/'variants/pi-team/preset.json'
-            value=json.loads(preset.read_text());value['defaults']['issue']='absent';preset.write_text(json.dumps(value))
-            with self.assertRaisesRegex(ValueError,'default assignment'):
-                profiles.resolve('pi-team',root)
+    def test_effective_defaults_match_braid_request_schema(self):
+        source = (profiles.ROOT / 'sources/braid/src/config.rs').read_text()
+        body = re.search(r'pub struct ProfileDefaults\s*\{([^}]*)\}', source, re.DOTALL).group(1)
+        rust_fields = set(re.findall(r'pub\s+(\w+)\s*:', body))
+        self.assertEqual(rust_fields, {'issue', 'pr'})
+        self.assertEqual(set(profiles.resolve('pi-team-mixed')['defaults']), rust_fields)
 
-    def test_unknown_material_and_path_escape_fail_before_launch(self):
-        with tempfile.TemporaryDirectory() as tmp:
-            root=Path(tmp)
-            for name in ('harness','variants'):
-                shutil.copytree(profiles.ROOT/name,root/name)
-            file=root/'harness/profiles/pi-generalist.json'
-            value=json.loads(file.read_text());value['skills']=['missing'];file.write_text(json.dumps(value))
-            with self.assertRaisesRegex(ValueError,'missing skill'):
-                profiles.resolve('pi-generalist',root)
-            value['skills']=[];value['unknown_option']=True;file.write_text(json.dumps(value))
-            with self.assertRaisesRegex(ValueError,'unknown or missing profile fields'):
-                profiles.resolve('pi-generalist',root)
-            del value['unknown_option']
-            value['skills']=[];value['instructions']=['variants/pi-generalist/preset.json'];file.write_text(json.dumps(value))
-            with self.assertRaisesRegex(ValueError,'outside harness'):
-                profiles.resolve('pi-generalist',root)
+    def test_vv_diff_is_only_canonical_svc_preload_and_resulting_digests(self):
+        mixed = profiles.resolve('pi-team-mixed')
+        vv = profiles.resolve('pi-team-vv')
+        self.assertEqual([item['path'] for item in vv['svc']['preload']],
+                         ['methods/design/test.md', 'verification/index.md'])
+        self.assertEqual(mixed['svc']['preload'], [])
+        self.assertEqual(vv['svc']['source_revision'],
+                         '393b9352fae1e8b22d86b28a65ff2f7ded267a38')
+        self.assertEqual([item['sha256'] for item in vv['svc']['preload']], [
+            'bf80281aad0dae8b4c020f1f2e9d214b6511b339f3821e80b879f5d7c3fadbbd',
+            '2ffeb3b9e67f946cafc475ea2abd667caad0493a8102b862dfdd887537223381'])
+        for profile_id in mixed['profiles']:
+            left = copy.deepcopy(mixed['profiles'][profile_id])
+            right = copy.deepcopy(vv['profiles'][profile_id])
+            for item in (left, right):
+                item.pop('effective_profile_digest')
+                item.pop('svc_preload')
+            self.assertEqual(left, right)
+
+    def test_materializer_projects_assignee_and_routes_visual_credentials(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            work = Path(temporary)
+            cache = work / 'cache'
+            (cache / 'node_modules/.bin').mkdir(parents=True)
+            (cache / 'node_modules/.bin/pi').touch()
+            (cache / 'bin').mkdir()
+            (cache / 'bin/pi').touch()
+            (cache / 'node_modules/pi-subagents').mkdir(parents=True)
+            (cache / 'node_modules/pi-subagents/index.ts').touch()
+            effective = profiles.resolve('pi-team-vv')
+            with patch.object(native_profiles, 'browser_wrapper'), \
+                    patch.object(native_profiles, 'runtime_cache', return_value=cache), \
+                    patch.object(native_profiles, 'executable', return_value=str(cache / 'bin/pi')):
+                projected, bindings = native_profiles.materialize(
+                    effective, work, 'https://text.example/v1', 'fixture', 'https://visual.example/v1')
+            self.assertEqual({item['assignee_login'] for item in projected}, {'glm', 'deepseek'})
+            self.assertTrue(all(item['display_name'] == item['id'] for item in projected))
+            self.assertTrue(all('methods/design/test.md' in item['user_instructions'] for item in projected))
+            template = Path(bindings['pi-glm-fast']['native_template'])
+            catalog = json.loads((template / 'models.json').read_text())['providers']
+            self.assertEqual(catalog['factory26']['apiKey'], '$FACTORY26_API_KEY')
+            self.assertEqual(catalog['factory26-visual']['apiKey'], '$FACTORY26_VISUAL_API_KEY')
+            self.assertEqual(catalog['factory26-visual']['baseUrl'], 'https://visual.example/v1')
+            browser = (template / 'agents/browser-operator.md').read_text()
+            self.assertIn('model: "factory26-visual/deepseek-v4-flash-vision-exp"', browser)
+            self.assertIn('defaultContext: "fresh"', browser)
+            self.assertNotIn('reviewer', {path.stem for path in (template / 'agents').glob('*.md')})
+
+    def test_digest_tracks_consumed_role_and_invalid_public_identity_fails(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.copied_root(temporary)
+            original = profiles.resolve('pi-team-mixed', root)
+            shutil.copytree(root / 'variants/pi-team-mixed', root / 'variants/pi-team-alias')
+            self.assertEqual(original['effective_digest'],
+                             profiles.resolve('pi-team-alias', root)['effective_digest'])
+            instruction = root / 'harness/instructions/executor.md'
+            instruction.write_text(instruction.read_text() + '\n额外可观察约束。\n')
+            changed = profiles.resolve('pi-team-mixed', root)
+            self.assertNotEqual(original['effective_digest'], changed['effective_digest'])
+            for profile_id in original['profiles']:
+                self.assertNotEqual(original['profiles'][profile_id]['effective_profile_digest'],
+                                    changed['profiles'][profile_id]['effective_profile_digest'])
+            profile = root / 'harness/profiles/pi-deepseek-fast.json'
+            value = json.loads(profile.read_text())
+            value['assignee_login'] = 'glm'
+            profile.write_text(json.dumps(value))
+            with self.assertRaisesRegex(ValueError, 'duplicate assignee'):
+                profiles.resolve('pi-team-mixed', root)
+
+    def test_unknown_material_and_svc_escape_fail_before_launch(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = self.copied_root(temporary)
+            profile = root / 'harness/profiles/pi-glm-fast.json'
+            value = json.loads(profile.read_text())
+            value['skills'] = ['missing']
+            profile.write_text(json.dumps(value))
+            with self.assertRaisesRegex(ValueError, 'missing skill'):
+                profiles.resolve('pi-team-glm', root)
+            value['skills'] = []
+            value['unknown'] = True
+            profile.write_text(json.dumps(value))
+            with self.assertRaisesRegex(ValueError, 'unknown or missing profile fields'):
+                profiles.resolve('pi-team-glm', root)
+            value.pop('unknown')
+            profile.write_text(json.dumps(value))
+            variant = root / 'variants/pi-team-glm/variant.json'
+            selection = json.loads(variant.read_text())
+            selection['svc']['index'] = '../README.md'
+            variant.write_text(json.dumps(selection))
+            with self.assertRaisesRegex(ValueError, 'invalid SVC path'):
+                profiles.resolve('pi-team-glm', root)
+
+
+if __name__ == '__main__':
+    unittest.main()

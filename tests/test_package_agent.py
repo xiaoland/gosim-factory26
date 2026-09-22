@@ -19,10 +19,16 @@ class PackageTest(unittest.TestCase):
             root = Path(temporary); bundle = root / 'bundle'; bundle.mkdir()
             (bundle / 'tool').write_bytes(b'hello'); (bundle / 'tool').chmod(0o755)
             (bundle / 'alias').symlink_to('tool')
+            bin_dir = bundle / 'runtime/node_modules/.bin'; bin_dir.mkdir(parents=True)
+            (bin_dir / 'tool').symlink_to('../../../tool')
             output = root / 'agent.zip'
-            package_agent.write_zip(bundle, output, 'pi', {})
+            capabilities = {'variant': 'pi-team-mixed', 'effective_digest': 'digest',
+                            'materials': {'harness/models.json': 'hash'}}
+            package_agent.write_zip(bundle, output, 'pi', {}, capabilities)
             with zipfile.ZipFile(output) as archive:
                 manifest = json.loads(archive.read('package-manifest.json'))
+                self.assertEqual(manifest['capabilities'], capabilities)
+                self.assertNotIn('runtime/node_modules/.bin/tool', archive.namelist())
                 self.assertNotIn('package-manifest.json', manifest['files'])
                 for name in ('tool', 'alias'):
                     self.assertEqual(archive.read(name), b'hello')
@@ -51,6 +57,9 @@ class PackageTest(unittest.TestCase):
             (root / 'submission').mkdir()
             for name in ('Dockerfile', 'build.py'):
                 (root / 'submission' / name).write_text('build input')
+            (root / 'harness/npm').mkdir(parents=True)
+            for name in ('package.json', 'package-lock.json'):
+                (root / 'harness/npm' / name).write_text('{}')
             source = root / 'sources/braid'; (source / 'src').mkdir(parents=True)
             code = source / 'src/main.rs'; code.write_bytes(b'current local edit')
             (source / '.env').write_text('never copied')
@@ -62,6 +71,7 @@ class PackageTest(unittest.TestCase):
                 package_agent.prepare_context(context, records)
                 self.assertEqual((context / 'sources/braid/src/main.rs').read_bytes(), b'current local edit')
                 self.assertFalse((context / 'sources/braid/.env').exists())
+                self.assertEqual((context / 'harness/npm/package-lock.json').read_text(), '{}')
                 code.write_text('changed after snapshot')
                 with self.assertRaisesRegex(RuntimeError, '源码发生变化'):
                     package_agent.prepare_context(context, records)
@@ -74,6 +84,17 @@ class PackageTest(unittest.TestCase):
         for name, path in [('braid', '.git/config'), ('braid', 'target/debug/braid'),
                            ('svc', 'cli/tests/test_cli.py'), ('svc', '.env')]:
             self.assertFalse(package_agent.source_input(name, path))
+
+    def test_capability_manifest_requires_the_packaged_svc_revision(self):
+        effective = {'variant': 'pi-team-mixed', 'effective_digest': 'digest',
+                     'materials': {'harness/models.json': 'hash'},
+                     'svc': {'source_revision': 'expected'}}
+        records = {'svc': {'revision': 'expected'}}
+        self.assertEqual(package_agent.capability_manifest(effective, records)['variant'],
+                         'pi-team-mixed')
+        records['svc']['revision'] = 'changed'
+        with self.assertRaisesRegex(RuntimeError, 'SVC revision'):
+            package_agent.capability_manifest(effective, records)
 
 
 if __name__ == '__main__':

@@ -1,6 +1,20 @@
 # 能力装配预演
 
-状态：implementation 前；本 Cell 未修改 Factory、Braid、SVC Corpus 或活动配置。静态证据来自当前仓库；模型 spike 只使用现有比赛 key，未生成应用。
+状态：Stage 3 能力装配已实现并通过静态与物化检查；真实模型资格仍受比赛网关 429 阻断，Linux ZIP 由集成阶段构建确认。
+
+## Implementation result（2026-09-22）
+
+- 活动配置已收敛为 `pi-team-deepseek`、`pi-team-glm`、`pi-team-mixed`、`pi-team-vv` 四个 `variant.json`；旧 preset、generalist、verification 与 reviewer 配置已退出源码活动面，历史 runs 未改写。variant 的默认值使用公开 login，resolver 将其唯一映射为 Braid request 所需的内部 profile ID。
+- 两份 profile 显式拥有 `assignee_login`、`assignee_description`、core、text provider、model、reasoning、instructions、skills、CLI、五个 native role、空 MCP 与 Braid context 字节策略。公开 description 由 resolver 校验 GitHub 式 login、单行与 240-byte 上限，并拒绝内部配置词。
+- 五个 role 都显式声明 provider、model、reasoning、tools、skills、MCP、instructions 和 fresh context。`explorer`/`executor` 使用 `deepseek-v4-flash`，`browser-operator`/`vision` 使用独立视觉 provider 的 `deepseek-v4-flash-vision-exp`，`specialist` 使用 `kimi-k3`；没有 reviewer 或隐式继承能力。
+- `scripts/profiles.py` 是唯一 resolver。它验证实际 consumer、读取 canonical SVC bytes，并记录每份消费材料的 SHA-256。`pi-team-vv` 只额外携带 `methods/design/test.md` 与 `verification/index.md` 的原文和冻结 hash；`native_profiles.py` 只物化 effective contract，并把 V&V 原文追加到 Braid Agent user instructions。
+- 文本与视觉 endpoint/key 已分离：Pi 模板生成 `factory26`/`FACTORY26_API_KEY` 和 `factory26-visual`/`FACTORY26_VISUAL_API_KEY`；没有视觉 endpoint 时后者明确回退到同一文本 endpoint/key。公开 assignee 字段直接进入 Braid profile，`display_name` 仅保留内部诊断 ID。
+- `package_agent.py --variant ...` 把完整 harness、所选 variant、effective config、material hashes 和 source snapshot 写入同一 ZIP；manifest 新增 `capabilities.{variant,effective_digest,materials}`。Docker runtime 改为按 frozen npm lock 安装 Pi、Codex、pi-subagents、agent-browser，并预装 Chromium 与 Linux 依赖；四个 variant 复用同一 Docker layer cache。
+- 运行时 `harness/AGENTS.md` 现在只提供 SVC semantic index、Task Packet 与 Verification 触发；主 instructions 只描述 Issue、PR、comment/reply、公开 assignee 和原生角色，不再暴露 profile/preset/variant/model/provider/digest/session。
+
+验证：`make test` 共 124 项 Python 检查通过、1 项按既有 Linux 条件跳过，Pi lifecycle 检查通过；四 variant 均可解析，mixed/V&V delta、canonical hash、公开身份、五 role、text/visual 路由、Braid `issue/pr` request schema 和 material manifest 均有直接断言。未执行付费模型调用或外部写入。
+
+剩余 gate：当前 catalog 对目标模型保留 `gateway_verified: false`，不能把 429 后的静态描述报告为 tool-call/reasoning/image 资格；Linux amd64 ZIP 仍需由集成阶段在 `arcbox-win` 实际构建并运行无模型资格，特别确认 Chromium 动态库与包内 runtime 路径。
 
 ## Observed
 

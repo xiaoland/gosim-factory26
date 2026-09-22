@@ -1,0 +1,12 @@
+{
+  "id": "executor",
+  "name": "executor",
+  "provider": "text",
+  "model": "deepseek-v4-flash",
+  "reasoning": "high",
+  "skills": ["ponytail", "impeccable", "agent-browser"],
+  "tools": ["read", "bash", "edit", "write", "grep", "find", "ls"],
+  "instructions": "harness/instructions/executor.md",
+  "mcp": [],
+  "context": {"mode": "fresh"}
+}

@@ -17,6 +17,9 @@ def write_json(path, value):
 
 
 def runtime_cache(root=ROOT):
+    packaged = root/'runtime'
+    if (packaged/'bin/pi').is_file():
+        return packaged
     fingerprint = hashlib.sha256((root/'harness/npm/package-lock.json').read_bytes()).hexdigest()[:16]
     return Path.home()/'.cache/factory26'/('runtime-'+fingerprint)
 
@@ -35,7 +38,8 @@ def bootstrap(root=ROOT):
 
 
 def executable(core):
-    path = runtime_cache()/'node_modules/.bin'/core
+    cache = runtime_cache()
+    path = cache/'bin'/core if (cache/'bin'/core).is_file() else cache/'node_modules/.bin'/core
     if not path.is_file():
         raise RuntimeError(f'{core} runtime unavailable; run bootstrap')
     return str(path)
@@ -48,6 +52,7 @@ def browser_wrapper(work, run_id, cache):
     binaries = list(browsers.glob(pattern))
     if len(binaries) != 1:
         raise RuntimeError('locked browser executable is missing or ambiguous; run bootstrap')
+    binary = cache/'bin/agent-browser' if (cache/'bin/agent-browser').is_file() else cache/'node_modules/.bin/agent-browser'
     target = work/'bin/agent-browser'
     target.parent.mkdir(parents=True, exist_ok=True)
     target.write_text('''#!/usr/bin/env python3
@@ -65,13 +70,13 @@ state.mkdir(parents=True, exist_ok=True)
 (state/'identity.json').write_text(json.dumps({'run_id':RUN_ID,'native_session_id':identity}))
 env = dict(os.environ, AGENT_BROWSER_SESSION=name, HOME=str(state), AGENT_BROWSER_EXECUTABLE_PATH=CHROME, AGENT_BROWSER_SOCKET_DIR=SOCKETS)
 os.execve(BINARY, [BINARY, '--session', name, *args], env)
-'''.replace('RUN_ID', repr(run_id)).replace('STATE', repr(str(work/'browser'))).replace('BINARY', repr(str(cache/'node_modules/.bin/agent-browser'))).replace('CHROME', repr(str(binaries[0]))).replace('SOCKETS', repr(str(work/'b'))))
+'''.replace('RUN_ID', repr(run_id)).replace('STATE', repr(str(work/'browser'))).replace('BINARY', repr(str(binary))).replace('CHROME', repr(str(binaries[0]))).replace('SOCKETS', repr(str(work/'b'))))
     target.chmod(0o755)
 
 
-def materialize(effective, work, responses_url, run_id):
+def materialize(effective, work, responses_url, run_id, visual_base_url=None):
     cache = runtime_cache()
-    if not (cache/'node_modules/.bin/pi').is_file():
+    if not Path(executable('pi')).is_file():
         raise RuntimeError('frozen native dependencies unavailable; run bootstrap')
     browser_wrapper(work, run_id, cache)
     materials = work/'capabilities'
@@ -91,25 +96,43 @@ def materialize(effective, work, responses_url, run_id):
                 path = skill_root/name/relative
                 path.parent.mkdir(parents=True, exist_ok=True)
                 path.write_text(body)
-        versions = {'pi':'0.85.1', 'codex':expanded['core_version']}
-        profiles.append(dict(id=profile_id, display_name=profile_id, tags=[], adapter_type=core,
+        versions = {'pi':expanded['core_version'], 'codex':expanded['core_version']}
+        preload = ''.join(f'\n\nSVC 方法 `{item["path"]}`：\n\n{item["content"]}'
+                          for item in expanded['svc_preload'])
+        profiles.append(dict(id=profile_id, display_name=profile_id,
+                             assignee_login=profile['assignee_login'],
+                             assignee_description=profile['assignee_description'],
+                             tags=[], adapter_type=core,
                              adapter_version=versions[core], provider='factory26', model=profile['model'],
-                             reasoning=profile['reasoning'], user_instructions=expanded['instructions'],
-                             workspace=str(work/'application'), context_soft_ratio=.8, context_hard_bytes=1000000))
+                             reasoning=profile['reasoning'], user_instructions=expanded['instructions']+preload,
+                             workspace=str(work/'application'),
+                             context_soft_ratio=profile['context']['soft_ratio'],
+                             context_hard_bytes=profile['context']['hard_bytes']))
         launcher = folder/core
         if core=='pi':
-            provider = dict(baseUrl=effective['provider']['base_url'], api='openai-completions',
-                            apiKey='$FACTORY26_API_KEY', models=[m['descriptor'] for m in expanded['models'].values()])
-            write_json(template/'models.json', {'providers':{'factory26':provider}})
+            consumers = [profile, *expanded['roles'].values()]
+            providers = {}
+            for kind, name, url, key in (
+                    ('text', 'factory26', responses_url, '$FACTORY26_API_KEY'),
+                    ('visual', 'factory26-visual', visual_base_url or responses_url,
+                     '$FACTORY26_VISUAL_API_KEY' if visual_base_url else '$FACTORY26_API_KEY')):
+                models = {consumer['model'] for consumer in consumers if consumer['provider'] == kind}
+                if models:
+                    providers[name] = dict(baseUrl=url, api='openai-completions', apiKey=key,
+                                           models=[expanded['models'][model]['descriptor']
+                                                   for model in sorted(models)])
+            write_json(template/'models.json', {'providers':providers})
             write_json(template/'settings.json', {'packages':[], 'subagents':{'disableBuiltins':True}})
             lifecycle = folder/'factory-subagent-lifecycle.ts'
             lifecycle.write_text(expanded['lifecycle_extension'])
             extension = cache/'node_modules/pi-subagents/index.ts'
             for name, role in expanded['roles'].items():
                 fields = dict(name=name, description=role['instructions'].split('。',1)[0],
-                              model='factory26/'+role['model'], thinking=role['reasoning'],
+                              model=('factory26-visual/' if role['provider']=='visual' else 'factory26/')+role['model'],
+                              thinking=role['reasoning'],
                               tools=', '.join(role['tools']), systemPromptMode='append',
                               inheritProjectContext=False, inheritSkills=False,
+                              defaultContext=role['context']['mode'],
                               skills=', '.join(role['skills']), skillPath=str(skill_root), extensions='')
                 # JSON scalar values are valid YAML; no runtime YAML writer dependency.
                 front = '\n'.join(f'{k}: {json.dumps(v, ensure_ascii=False)}' for k,v in fields.items())

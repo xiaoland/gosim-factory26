@@ -190,6 +190,8 @@ def archive_sessions(output, home, work, entries):
                     'mode': child.get('mode'), 'run_id': child.get('run_id'),
                     'child_id': child.get('child_id'),
                 })
+                if child.get('proof') is not None:
+                    row['lifecycle_proof'] = child['proof']
                 if child.get('artifact_paths') is not None:
                     row['artifact_paths'] = child['artifact_paths']
                 row = {key: value for key, value in row.items() if value is not None}

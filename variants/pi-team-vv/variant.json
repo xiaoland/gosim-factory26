@@ -1,0 +1,13 @@
+{
+  "schema_version": 1,
+  "profiles": ["pi-glm-fast", "pi-deepseek-fast"],
+  "defaults": {
+    "issue": "glm",
+    "pull_request": "deepseek"
+  },
+  "svc": {
+    "source_revision": "393b9352fae1e8b22d86b28a65ff2f7ded267a38",
+    "index": "index.md",
+    "preload": ["methods/design/test.md", "verification/index.md"]
+  }
+}

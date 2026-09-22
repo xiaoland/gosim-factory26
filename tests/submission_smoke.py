@@ -21,8 +21,10 @@ import json, pathlib, subprocess, sys
 if sys.argv[1:] == ['--version']:
     print('braid-test-double'); raise SystemExit(0)
 request=json.loads(pathlib.Path(sys.argv[2]).read_text())
-if request['profile']['model'] == 'fixture-failure': raise SystemExit(9)
-app=pathlib.Path(request['profile']['workspace']); state=pathlib.Path(request['state']); state.mkdir()
+profile=next(p for p in request['profiles'] if p['id']==request['defaults']['issue']) if 'profiles' in request else request['profile']
+inputs=pathlib.Path(request['prompt'].split('请根据 ',1)[1].split(' 中',1)[0])
+if 'fixture-failure' in (inputs/'requirements.md').read_text(): raise SystemExit(9)
+app=pathlib.Path(profile['workspace']); state=pathlib.Path(request['state']); state.mkdir()
 for directory, scripts in [('frontend',{'build':'node build.js'}),('backend',{'start':'node server.js'})]:
     (app/directory).mkdir()
     (app/directory/'package.json').write_text(json.dumps({'name':directory,'version':'1.0.0','scripts':scripts}))
@@ -32,7 +34,7 @@ subprocess.run(['git','add','.'],cwd=app,check=True)
 subprocess.run(['git','commit','-qm','test fixture'],cwd=app,check=True)
 commit=subprocess.check_output(['git','rev-parse','HEAD'],cwd=app,text=True).strip()
 subprocess.run(['git','update-ref',request['delivery_ref'],commit],cwd=app,check=True)
-provider=request['profile']['adapter_type']
+provider=profile['adapter_type']
 session=pathlib.Path(request[provider]['home'])/'session.jsonl'
 identity='11111111-1111-1111-1111-111111111111'
 entries=([{'id':identity},{'message':{'role':'assistant','stopReason':'stop','usage':{'input':0,'output':0,'totalTokens':0}}}] if provider=='pi' else
@@ -56,7 +58,8 @@ def main():
         (inputs/'requirements.yaml').write_text('title: contract fixture\n')
         (inputs/'requirements.md').write_text('仅用于无模型契约验收，不是参赛答案。')
         work=root/'work';work.mkdir(); evidence=root/'evidence';evidence.mkdir()
-        env=dict(os.environ,OPENAI_API_KEY='test-placeholder',OPENAI_BASE_URL='http://127.0.0.1:9/v1',MODEL='fixture')
+        frozen=json.loads((package/'variants/factory/config.json').read_text())
+        env=dict(os.environ,OPENAI_API_KEY='test-placeholder',OPENAI_BASE_URL='http://127.0.0.1:9/v1',MODEL=frozen['model'])
         os.environ.update(OPENAI_API_KEY=env['OPENAI_API_KEY'],OPENAI_BASE_URL=env['OPENAI_BASE_URL'],MODEL=env['MODEL'])
         config=submission.platform_config(package,manifest)
         native, agent_env=submission.environment(work,config)
@@ -115,7 +118,8 @@ def main():
             delivery_states=[json.loads(p.read_text())['status'] for p in (output/'.factory26').glob('*/delivery.json')]
             assert sorted(delivery_states)==['delivered','failed'],delivery_states
             failed=root/'failed'
-            result=subprocess.run(command[:-1]+[str(failed)],env=dict(env,MODEL='fixture-failure'),capture_output=True,text=True,timeout=120)
+            (inputs/'requirements.md').write_text('fixture-failure')
+            result=subprocess.run(command[:-1]+[str(failed)],env=env,capture_output=True,text=True,timeout=120)
             assert result.returncode!=0
             assert not (failed/'frontend').exists()
             failure=json.loads(next((failed/'.factory26').glob('*/run.json')).read_text())

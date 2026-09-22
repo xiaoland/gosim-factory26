@@ -11,10 +11,11 @@ import uuid
 import zipfile
 
 import sources
+import profiles
 
 ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ('factory.py', 'core.py', 'braid_runtime.py', 'sources.py',
-           'submission.py', 'linux_sandbox.py', 'responses_compat.py')
+SCRIPTS = ('factory.py', 'core.py', 'braid_runtime.py', 'sources.py', 'profiles.py',
+           'native_profiles.py', 'submission.py', 'linux_sandbox.py', 'responses_compat.py')
 
 
 def source_input(name, relative):
@@ -42,6 +43,7 @@ def prepare_context(context, records):
             target.write_bytes(data)
     for name in ('Dockerfile', 'build.py'):
         shutil.copyfile(ROOT / 'submission' / name, context / name)
+    shutil.copytree(ROOT / 'harness/npm', context / 'harness/npm')
 
 
 def bundle_files(root):
@@ -68,11 +70,15 @@ def bundle_files(root):
     yield from walk(root, set())
 
 
-def write_zip(bundle, output, backend, records):
+def write_zip(bundle, output, backend, records, capabilities=None):
     bundle = bundle.resolve()
-    files = [path for path in bundle_files(bundle) if path != bundle / 'package-manifest.json']
+    files = [path for path in bundle_files(bundle)
+             if path != bundle / 'package-manifest.json'
+             and 'node_modules/.bin' not in path.relative_to(bundle).as_posix()]
     manifest = {'schema_version': 1, 'backend': backend, 'platform': 'linux-x86_64',
                 'python': '3.12', 'sources': records, 'files': {}}
+    if capabilities is not None:
+        manifest['capabilities'] = capabilities
     for path in files:
         relative = path.relative_to(bundle).as_posix()
         manifest['files'][relative] = {'sha256': hashlib.sha256(path.read_bytes()).hexdigest(),
@@ -95,11 +101,21 @@ def write_zip(bundle, output, backend, records):
             raise
 
 
-def package(backend, output, docker_context):
+def capability_manifest(effective, records):
+    if effective['svc']['source_revision'] != records['svc']['revision']:
+        raise RuntimeError('variant SVC revision differs from packaged source snapshot')
+    return {'variant': effective['variant'], 'effective_digest': effective['effective_digest'],
+            'materials': effective['materials']}
+
+
+def package(variant, output, docker_context):
     output = output.resolve()
     if output.exists():
         raise FileExistsError(f'输出文件已存在：{output}')
+    config = profiles.configuration(variant, root=ROOT)
+    backend = config['backend']
     records = {name: sources.snapshot(name) for name in ('svc', 'braid')}
+    capabilities = capability_manifest(config['effective'], records)
     identifier = 'factory26-package-' + uuid.uuid4().hex
     docker = ['docker'] + (['--context', docker_context] if docker_context else [])
     image = identifier + ':build'
@@ -125,13 +141,12 @@ def package(backend, output, docker_context):
             (bundle / 'scripts').mkdir()
             for name in SCRIPTS:
                 shutil.copyfile(ROOT / 'scripts' / name, bundle / 'scripts' / name)
-            (bundle / 'harness').mkdir()
-            shutil.copyfile(ROOT / 'harness/AGENTS.md', bundle / 'harness/AGENTS.md')
-            config = json.loads((ROOT / 'variants/factory/config.json').read_text())
-            config.update(backend=backend, deployment='arcbench')
+            shutil.copytree(ROOT / 'harness', bundle / 'harness')
+            shutil.copytree(ROOT / 'variants' / variant, bundle / 'variants' / variant)
+            config.update(deployment='arcbench')
             (bundle / 'variants/factory').mkdir(parents=True)
             (bundle / 'variants/factory/config.json').write_text(json.dumps(config, indent=2) + '\n')
-            write_zip(bundle, output, backend, records)
+            write_zip(bundle, output, backend, records, capabilities)
         finally:
             if container_created:
                 subprocess.run(docker + ['rm', identifier], check=False)
@@ -142,11 +157,11 @@ def package(backend, output, docker_context):
 def main():
     parser = argparse.ArgumentParser(description=__doc__, add_help=False)
     parser.add_argument('-h', '--help', action='help', help='显示帮助并退出')
-    parser.add_argument('--backend', required=True, choices=('pi', 'codex'), help='选择 Agent 后端')
+    parser.add_argument('--variant', required=True, help='选择要冻结的 capability variant')
     parser.add_argument('--output', required=True, type=Path, help='输出 ZIP 路径；拒绝覆盖现有文件')
     parser.add_argument('--docker-context', help='构建使用的 Docker context 名称')
     args = parser.parse_args()
-    package(args.backend, args.output, args.docker_context)
+    package(args.variant, args.output, args.docker_context)
 
 
 if __name__ == '__main__':

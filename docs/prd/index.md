@@ -6,21 +6,19 @@ Factory26 用于开发和比较参加 GOSIM Agentic Factory / ARC-bench 的 Agen
 
 ## 当前能力与范围
 
-当前开发一个 Braid + SVC harness；Pi 和 Codex app-server 是同一配置下的 backend，每次 run 选一种核心，默认 Pi。旧六份组合配置退出活动入口，后续消融另用显式自定义配置。内部 backend、workflow 与 svc 保持独立，受控检查仍可关闭 SVC；配置收敛不建立 Braid 与 SVC 的直接依赖。比赛模型、需求和外部评测版本由配置声明，实际使用的组件源码随每次运行归档。
+活动实验统一使用 Pi + Braid + SVC。四个 variant 分别比较 DeepSeek 同构团队、GLM 同构团队、两者混合团队，以及混合团队加 canonical SVC V&V。Variant 直接引用内部 profiles、默认 assignee 和方法装配；具体模型、技能、工具及原生角色由对应配置持有，Braid 不接收 variant 或 preset。Codex app-server 适配与历史 generalist 结果保留为基线和排障材料，不进入当前活动矩阵。
 
-Codex 通过 app-server v2 接口驱动，使用固定版本 LiteLLM 将 Responses 请求转换为比赛网关的 Chat Completions 请求。适配器是实验条件的一部分。Pi 直接使用比赛网关。运行时保留核心默认系统提示和原生工具；尚未添加额外技能或 MCP server。
+一个 Factory task invocation 建立一个根 Issue，description 保存任务 prompt 与冻结 requirement bundle 的读取入口。单条 requirement 不自动成为 Issue；Agent 根据目标与协作需要决定是否拆分子 Issue。同一内部 profile 可承载多个独立工作项，现有 Braid driver 可以让它们重叠运行。
 
-SVC 是当前 harness 启用的 Corpus 工作方法，通过核心的 user-scope AGENTS.md 注入。文档归属、任务包组织、verification 和工作姿势由 Agent 按实际需要采用；运行器不把 SVC 任务包作为调度协议，也不复制开发者个人指南。已有设计或实施事实的权威正文应被引用，避免任务包产生第二份权威副本。
+运行时 Agent 使用 GitHub 式 Issue、PR、comment、reply、hide/resolve、reaction 和 assignee。成员目录说明协作者能力；Harness 将公开 assignee 映射到内部 profile，运行时无需理解 Braid、模型路由或会话调度。每个工作项同时最多一个活动 owner。重指派复用既有 writer fence、native teardown 和工作树恢复；取得旧 writer 的停止证明后才允许目标 Agent 开始。
 
-braid 的本地模式由 `sources/braid` 维护。Issue、PR 和 comment 的完整当前对象存于本地数据库；Agent 用 braid CLI 修改 description、创建或 hide/unhide/delete comment、关联和交付 PR。对象写入与语义事件同事务完成，现有投影、队列、Agent Group 和会话链负责传播变化。description 变化和 comment 可见性依其来源与关联关系自动失效；自身写入不自打断或制造额外唤醒，但下一次正当执行前必须获得最新上下文。重建保留逻辑 group 与 worktree，替换物理会话并拒绝旧 turn 的控制写入。
+Issue 对应需求理解、技术方案与最终验收设计，PR 对应实施计划、执行与最终验收。它们是 Agent 可组合使用的能力，不强制固定轮次或自动拆分。跨工作项通过 comment/reply 传递需要的事实、问题和交付证据；PR ready 后由消费者决定接受与合入。根 Issue 完成及生命周期收敛共同确定最终交付 commit。
 
-根 Issue Agent 维护需求设计并判断交付，PR Agent 在各自 worktree 实现和自检。一个 Issue 可对应多个 PR，一个 PR 可关联多个 Issue；不固定角色往返次数。PR ready 不是自动合并或完成；根 Issue 接受 PR，将指定提交合入本次 delivery branch，并在交付自检与未完成事项处置后关闭为 completed。Braid 等待生命周期收尾和执行收敛后返回固定 commit，Factory 据此导出冻结应用。GitHub 平台接入被裁减，保留本地产品对象与 Git 工作树。
+原生 sub-agent 服务所属工作项内的局部委派。explorer/executor 使用快速文本模型，vision/browser-operator 使用视觉模型，specialist 为按需的昂贵能力；模型、reasoning、skills 与 tools 都显式装配。原生角色不出现在可指派成员目录。浏览器按 run 和 native session 隔离，任务分解与工具选择由 LLM 决定。
 
-Braid 对 SVC 没有运行时依赖，SVC 也不调用 Braid。user-scope 只注入两行 Corpus 导航；无人值守授权、允许本次临时仓库内 commit/merge 及比赛隔离规则归 Factory 任务契约。CLI/config 收敛只经过本地无模型检查，不以此推导真实核心和 bench 通过。父子 Issue、同类 Agent 并行及共享 packet 的完整协作链仍在设计中；当前每种角色只运行一个活动 turn。
+SVC 提供 Task Packet、探索与实施方法、有界委派和 V&V。user-scope AGENTS.md 是简短语义索引，说明何时读取、如何保存可恢复状态；正文保持在冻结的 SVC Corpus。基础团队按需读取，V&V variant 额外装配 canonical test design 与 verification 两条入口。Braid 不读取 SVC packet，也不拥有其文件组织。
 
-获授权的实验先确定 backend 和实际源码，再根据需求生成应用，冻结后运行官方 Keep 全部 32 项测试。所有设计、实现、上下文重建会话都属于同一次生成，usage 共同计入。SVC 与 braid 在项目内独立 Git 仓库共同开发；变更后重建，以源码哈希和运行归档区分实验变量。首轮四组分数属于旧的 tasks/generation 补丁，不能用来证明当前 braid 本地模式正确。
-
-当前增加可打包的 Linux 参赛入口，接受平台需求和模型配置，交付 frontend/backend 应用；它复用现有生成与冻结链，具体边界见运行文档。活动配置采用平台部署契约，历史 run 按归档配置保留原契约。当前质量验证仍为本地单任务流程；已有 Playground 无模型探针不能代替新包的真实平台兼容性和完整评分验证。Keep 单任务分数不能表述为完整 ARC-bench 或线上 Lite 总分。各次结论记录在 reports/，未完成的实验不能计为零分或成功结果。
+参赛 ZIP 固定运行依赖、有效能力配置和源码哈希。文本与视觉凭据分别由平台注入，视觉配置不能覆盖主模型或冻结角色。生成产物遵循官方 frontend/backend 布局；冻结应用后才进入官方评测。Competition 与官方 local simulation 使用相同 ZIP bytes，报告明确区分 venue。具体运行和恢复方法见[运行文档](../deployment/index.md)；当前真实资格与实验结果见[迭代 packet](../../tasks/iteration-throughput/packet.md)，上述配置与本地检查不能替代正式成绩。
 
 ## 实验规则
 
@@ -36,6 +34,6 @@ Braid 对 SVC 没有运行时依赖，SVC 也不调用 Braid。user-scope 只注
 
 ## 持续采用的验收基线
 
-一次获授权实验选择一个 backend，独立生成一次 Keep，冻结后执行官方全部 32 项测试；不要求应用零失败，但漏例、跳过、生成或评测基础设施失败不能作为完成验收。固定模型、需求、benchmark、核心和实际组件来源。不再默认展开旧四组矩阵，也不因 variant 名相同而混合不同 backend 的实验条件；单次结果不足以作统计排名或完整 ARC-bench 总分。
+本轮采用已批准的[验收方案](../../tasks/iteration-throughput/verification.md)：先验证实际改动涉及的模型接口、Pi 生命周期、assignee 协作和官方包入口，随后冻结四 variants × Keep/BookStack。生成或评测设施中断不得计为低分；完整评分的低分是有效结果，完成矩阵后先报告，再由用户决定下一轮。
 
-两个真实核心另有关闭 SVC 的受控 Braid 场景，验证对象 CLI、上下文替换、旧 turn 拒绝及本地 PR 交付。诊断独立验收要求通过真实页面/源码和官方事件区分失败原因、心跳、有效进展与观测过期，并能核对会话、交付源码和评测身份；不以日志数量或输出行数代替可用性。用户已确认这套基线，范围和判据无实质变化时持续沿用。
+历史 Keep 单任务和 Playground 探针只支持其记录的主张，不等于完整 ARC-Bench-Lite、Web 或正式初赛成绩。多个并发 run 共享 Meter key 时，不能把账户费用差值伪装为逐项准确成本；保留不可归因标记。只有具备明确输入、版本、冻结应用与评分身份的结果才能横向比较。

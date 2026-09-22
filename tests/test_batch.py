@@ -15,7 +15,7 @@ class BatchTest(unittest.TestCase):
     def manifest(self, root, **changes):
         value = {
             'benchmark_url': 'unused', 'benchmark_revision': 'rev',
-            'variants': ['pi-generalist', 'pi-team', 'codex-generalist', 'pi-verification'],
+            'variants': ['pi-team-deepseek', 'pi-team-glm', 'pi-team-mixed', 'pi-team-vv'],
             'tasks': ['keep', 'bookstack'], 'generation_workers': 2,
             'evaluation_workers': 4, 'deployment': 'arcbench',
         }
@@ -84,7 +84,7 @@ class BatchTest(unittest.TestCase):
 
             def generate(job, _directory):
                 first_two.wait(timeout=2)
-                return {'status': 'failed', 'pause_queue': True} if job['run_id'] == 'pi-generalist-keep' else {'status': 'generated'}
+                return {'status': 'failed', 'pause_queue': True} if job['run_id'] == 'pi-team-deepseek-keep' else {'status': 'generated'}
 
             state = self.run_execute(manifest, root / 'batch', generate,
                                      lambda job, _directory: {'status': 'completed'})
@@ -111,13 +111,13 @@ class BatchTest(unittest.TestCase):
             self.assertEqual(calls, [])
             state_path = directory / 'batch.json'
             saved = json.loads(state_path.read_text())
-            saved['jobs']['pi-team-keep']['status'] = 'generating'
+            saved['jobs']['pi-team-glm-keep']['status'] = 'generating'
             state_path.write_text(json.dumps(saved))
             blocked = self.run_execute(manifest, directory,
                                        lambda job, _directory: calls.append(job['run_id']) or {'status': 'generated'},
                                        lambda job, _directory: calls.append(job['run_id']) or {'status': 'completed'})
             self.assertEqual(blocked['status'], 'blocked')
-            self.assertEqual(blocked['jobs']['pi-team-keep']['status'], 'unknown')
+            self.assertEqual(blocked['jobs']['pi-team-glm-keep']['status'], 'unknown')
             self.assertEqual(calls, [])
 
     def test_frozen_inputs_and_capacity_drift_are_rejected(self):
@@ -143,7 +143,7 @@ class BatchTest(unittest.TestCase):
     def test_generation_error_runs_analysis_before_terminal_status(self):
         with tempfile.TemporaryDirectory() as temp:
             root = Path(temp).resolve()
-            job = {'run_id': 'example', 'variant': 'pi-generalist', 'task': 'keep',
+            job = {'run_id': 'example', 'variant': 'pi-team-deepseek', 'task': 'keep',
                    'config': {'backend': 'pi'}}
             calls = []
 

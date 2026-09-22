@@ -1,14 +1,13 @@
 # 本地运行与证据
 
-本文维护开发者运行、恢复和检查本地 harness 所需的操作说明。[产品说明](../prd/index.md)维护实验规则和范围；可执行参数以 [presets](../../variants/)、[批次清单](../../experiments/multi-agent-lite.json)、[运行器](../../scripts/factory.py)和 [Makefile](../../Makefile)为准。
+本文维护开发者运行、恢复和检查本地 harness 所需的操作说明。[产品说明](../prd/index.md)维护实验规则和范围；可执行参数以 [variants](../../variants/)、[批次清单](../../experiments/multi-agent-lite.json)、[运行器](../../scripts/factory.py)和 [Makefile](../../Makefile)为准。
 
 ## 参赛包与平台边界
 
-参赛包复用本项目的 Braid + SVC 生成、Git 交付冻结和原生证据归档。每个 ZIP 固定一个 backend；根目录 `main.py` 接受平台传入的需求，不读取本地 benchmark，也不执行评测：
+参赛包复用本项目的 Braid + SVC 生成、Git 交付冻结和原生证据归档。每个 ZIP 固定一个 variant 及其全部能力材料；根目录 `main.py` 接受平台传入的需求，不读取本地 benchmark，也不执行评测：
 
 ```sh
-python3 scripts/package_agent.py --backend pi --output runs/packages/factory-pi.zip --docker-context arcbox-win
-# Codex 使用 --backend codex，输出到另一份 ZIP。
+python3 scripts/package_agent.py --variant pi-team-mixed --output runs/packages/pi-team-mixed.zip --docker-context arcbox-win
 # 以下命令在解压后的 ZIP 根目录执行，并由调用环境提供模型变量。
 python3 main.py /path/to/requirements --output-dir /path/to/output
 ```
@@ -17,13 +16,17 @@ python3 main.py /path/to/requirements --output-dir /path/to/output
 
 入口要求 Linux x86_64、CPython 3.12 和 Landlock ABI >=3。它先校验所有载荷并恢复 ZIP 解压丢失的执行权限，再启动独立 Landlock launcher。规则只授权系统运行路径、只读包与需求、可写临时工作区，不开放整个 `/workspace`、`/tmp` 或 `/proc`。运行前检查子孙进程不能读取宿主标记，不能写入、删除或替换需求。内核或 seccomp 不支持时明确失败，不会无隔离回退。网络白名单仍由平台负责；该文件隔离不声称实施了网络隔离。生产 Runner 是否支持此内核能力需要在正式环境核实。
 
-入口优先采用完整的 `VISUAL_API_KEY`、`VISUAL_BASE_URL`、`VISUAL_MODEL`；没有视觉 key 和地址时使用完整的 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`MODEL`（仅有默认 VISUAL_MODEL 不视为配置了视觉凭据）。视觉 key 或地址只提供一部分时立即失败，避免静默丢弃图像能力；选定配置不完整也立即失败，不回退到本机密钥或自选模型。只把 key 传给运行进程，配置与制品清单保存环境变量名称，不保存密钥值。原生工具输出仍可能含敏感信息，运行证据不能未经检查公开。
+文本 provider 必须使用完整的 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`MODEL`。可选完整 `VISUAL_API_KEY`、`VISUAL_BASE_URL`、`VISUAL_MODEL` 只供视觉角色使用，不覆盖主模型；仅有默认 VISUAL_MODEL 不视为提供了视觉凭据。视觉 key 或地址部分提供时立即失败。冻结 variant 的主模型和视觉角色与平台模型不一致时拒绝运行，避免改变实验条件。配置与清单保存环境变量名，不保存 key；运行时只传递实际需要的凭据。
 
 应用交付遵循官方标准布局：`frontend/package.json` 提供 build，`backend/package.json` 提供 start；后端在 `HOST=0.0.0.0 PORT=3000` 下提供前端产物与 API，目标应用兼容 Node 20.19.3。包内 Node 22 用于 Harness，不能推定部署环境也有 Node 22。禁止依赖本地模拟器专用的 `deploy.sh`。入口只在生成成功并冻结后复制应用，保留平台预置的 `.arc`、`.git` 和 `requirements`，拒绝覆盖同名应用文件。输入可为独立需求快照，或输出目录原有的 `requirements/`。证据保存在输出的 `.factory26/<run-id>/`；`run.json` 描述生成，`delivery.json` 单独描述交付成功或失败。
 
-正式提交由队长使用平台的正式评测入口，并使用平台内置 key。本项目 Playground 上传仅用于自带 key 的练习，必须显式选择 `--practice`，不计正式成绩；`--offline` 仅供无模型设施探针。这里没有实现未经核实的正式提交 API。
+官方 Competition 的自动化入口为 [competition.py](../../scripts/competition.py)，统一记录 ZIP identity、submission snapshot、task run、日志游标与终态收集。`prepare` 不写平台；其余写入按批准的实验范围执行，任何 POST 结果不确定都先保留 journal，再只读核查，不盲重试。Playground 仍只用于显式 practice，不混入 Competition 结果。
 
-官方契约来源是 [本地模拟环境](https://github.com/code-philia/hackathon-local-simulation/tree/cfbbc287ee1bbffcf1e936545e4803145693a8d8)。该仓库未包含生产 Runner 源码或可直接拉取的生产镜像地址。无模型验收可以证明打包、文件隔离、工具启动和入口交付，不能证明真实模型生成质量、正式评分或生产容器兼容性。当前实施与验收状态见 [task packet](../../tasks/competition-p0/packet.md)。
+同一比赛只允许最新 snapshot 承接新任务，因此必须完成某个 variant 的两题后再上传下一个。混合矩阵由 [official_matrix.py](../../scripts/official_matrix.py) 运行，hosted 顺序执行、local 使用独立 workspace 并行。两处读取同一份冻结 ZIP，输入 manifest 绑定 package SHA256；终态和评分证据分别核验，设施失败不计为完成评分。远端没有可用推送接口时，后台脚本从 180 秒间隔采集，主 Agent 只消费完成或故障通知。
+
+[local_runner.py](../../scripts/local_runner.py) 直接调用固定主办方 [local simulation](https://github.com/code-philia/hackathon-local-simulation/tree/cfbbc287ee1bbffcf1e936545e4803145693a8d8)，不复制评分实现。`--prepare-only` 仅证明 ZIP/需求/workspace 装配；实际部署还需要准确的官方基础 image。远程 Docker context 可用于 build/cp，但 bind mount 指向 daemon 所在主机，运行 workspace 必须在该主机可访问。共享 key 并发时账户用量差值不可归因，汇总中的 token/cost/成本加权 score 保持 null，原始上游证据另存。
+
+当前接口、环境与资格证据见 [本轮 task packet](../../tasks/iteration-throughput/packet.md)。只有真实官方 run 完成后才可宣称平台兼容或评分通过。
 
 ## 环境和启动
 
@@ -36,7 +39,7 @@ make test
 make run
 ```
 
-`bootstrap --variant pi-generalist|codex-generalist|pi-team|pi-verification` 从 `sources/svc`、`sources/braid` 构建安装，并准备固定评测器及 Codex 所需的 LiteLLM 1.102.0。省略 variant 使用 pi-generalist。原生核心、pi-subagents 与 agent-browser 由 `harness/npm/package-lock.json` 固定，安装在 `~/.cache/factory26/runtime-<lock摘要>/`，浏览器二进制复用同一缓存。agent-browser 0.38.1 需要 Node 24+；WSL 使用缓存的 Node 26.3.0。首次缺少 sources 仓库时 clone 上游 main；已有源码不会被 reset、checkout 或自动 pull。后续以 HEAD、实际源文件和安装产物哈希判断是否需要重建。ARC package-lock 缓存一致时复用依赖，Chromium 存在时复用浏览器；仍执行上游静态契约检查。
+`bootstrap --variant pi-team-deepseek|pi-team-glm|pi-team-mixed|pi-team-vv` 从 `sources/svc`、`sources/braid` 构建安装，并准备固定评测器及 Codex 所需的 LiteLLM 1.102.0。省略 variant 使用 resolver 声明的默认 variant。原生核心、pi-subagents 与 agent-browser 由 `harness/npm/package-lock.json` 固定，安装在 `~/.cache/factory26/runtime-<lock摘要>/`，浏览器二进制复用同一缓存。agent-browser 0.38.1 需要 Node 24+；WSL 使用缓存的 Node 26.3.0。首次缺少 sources 仓库时 clone 上游 main；已有源码不会被 reset、checkout 或自动 pull。后续以 HEAD、实际源文件和安装产物哈希判断是否需要重建。ARC package-lock 缓存一致时复用依赖，Chromium 存在时复用浏览器；仍执行上游静态契约检查。
 
 本项目使用 `.venv/bin/svc`。机器全局 `svc` 可能仍是旧版；本文及 SVC 自动生成导航中的 `svc` 命令均应通过项目本地路径执行。CLI 版本、`svc.json` 配置 schema 和其中声明的 Corpus baseline 是不同维度；重装 CLI 不代表自动完成 Corpus 迁移。
 
@@ -50,7 +53,7 @@ FACTORY26_API_KEY=你的比赛密钥
 
 ## 生成和评测
 
-生成在独立临时目录运行。两个核心均使用临时 HOME、原生配置目录和筛选后的环境变量。Pi 禁用自动发现个人扩展、技能、提示模板和主题。当前 factory 启用 Braid 和 SVC，将 [harness/AGENTS.md](../../harness/AGENTS.md) 的两行导航复制到运行时 user scope。活动配置目录、实际注入文件和公共 harness 都保存到新 run。内部只有 svc=true 才复制 SVC 安装和指导；关闭 SVC 的受控 Braid 探针不需要它们。安装在 bootstrap 时完成，生成沙箱内无需联网重装 Corpus。
+生成在独立临时目录运行。两个核心均使用临时 HOME、原生配置目录和筛选后的环境变量。Pi 禁用自动发现个人扩展、技能、提示模板和主题。当前 factory 启用 Braid 和 SVC，将 [harness/AGENTS.md](../../harness/AGENTS.md) 的语义索引复制到运行时 user scope，并按 variant 装配冻结 canonical V&V 路径。活动配置目录、实际注入文件和公共 harness 都保存到新 run。内部只有 svc=true 才复制 SVC 安装和指导；关闭 SVC 的受控 Braid 探针不需要它们。安装在 bootstrap 时完成，生成沙箱内无需联网重装 Corpus。
 
 文件隔离拒绝读取开发仓库、个人 Codex/Pi 配置和比赛密钥文件，需求副本只读；运行前检查评测器不可读、需求可读以及 SVC 可查询。网络用于模型调用与依赖安装，因此这不是网络隔离沙箱，也不是整个用户目录的访问隔离。每次生成有独立工作区和 TMPDIR；浏览器按 run 与原生 session ID 隔离 Cookie、storage 和 socket。主机网络及 Agent 自行硬编码的 /tmp 路径仍共享，出现冲突须作为设施问题保留证据。固定批次先使用两路生成，最多四路冻结后评测，后者使用独立应用目录和分配端口。
 

@@ -1,6 +1,6 @@
 # Runner Cell：Competition 与 local simulation 实施前预演
 
-状态：只读/隔离预演完成；没有调用 Competition 写接口，没有上传 submission、create/start/cancel run，没有修改 Factory、Braid、SVC 或 variants。仓库唯一写入本文件；fixture 与 schema 证据在 `/tmp/factory26-runner-fixture`。
+记录性质：下列 Observed/Inferred/Unknown 与实施顺序为实施前的只读/隔离预演，彼时未改源码或调用 Competition 写接口。实施后的 adapter 和检查结果记录在文末；fixture 与 schema 证据在 `/tmp/factory26-runner-fixture`。
 
 ## Observed
 
@@ -112,3 +112,51 @@ planned
 本次已证明登录只读 schema、固定 local runner checkout、prepare-only workspace、标准入口检查和现有脚本边界；未证明 Competition 写接口幂等、hosted run 终态/产物权限、Docker deploy、Meter、真实并发或正式成绩。不能以源码审阅、schema GET、prepare-only 或 fake adapter 宣称 hosted/local runner 通过。
 
 检查摘要：`python3 -m unittest tests.test_submission -v` → 9 passed、1 skipped（需 Linux Landlock）；fixed runner `test_local_submit.py` → 13 passed；脚本 `py_compile`/help → 通过；`local_submit.py --prepare-only` → `arc-bench-lite--keep` workspace 成功；Docker → daemon unavailable。
+
+## 已实施的 Competition adapter（2026-09-22）
+
+[`scripts/competition.py`](../../../scripts/competition.py) 现在提供独立 CLI 与 Python API，复用 `playground.Client` 的 Cookie HTTP 与 redaction，不调用 Playground practice 写入口。本轮没有真实 POST、上传、模型请求或 Competition run；非空 history 和真实终态字段仍需主会话的获授权 smoke 核验。环境最新事实见 [environment.md](environment.md)，不能沿用前述“所有 Docker 不可用”的推断。
+
+准备参数为一个 variant、冻结 ZIP、Competition ID、完整 task IDs 与公开模型设置。ZIP 必须含根 `main.py`、`requirements.txt` 和 `package-manifest.json`；adapter 验证无重复/越界路径或 symlink、载荷集合与哈希，然后保存自己的只读 ZIP 副本、SHA256 和原 package manifest（包括 capabilities/material/source 身份）。这只证明包结构与身份，不证明入口部署或模型资格。相同参数再次 prepare 只读复用；不同包、task、variant 或模型设置拒绝覆盖。
+
+```sh
+python3 scripts/competition.py prepare \
+  --state runs/competition/pi-team-mixed \
+  --package runs/packages/pi-team-mixed.zip \
+  --competition arc-bench-lite --variant pi-team-mixed \
+  --task arc-bench-lite--keep --task arc-bench-lite--bookstack \
+  --model-config /path/to/public-model-settings.json
+
+# 写入口；key 由既有仓库外配置读取，只在 snapshot multipart 中传递。
+python3 scripts/competition.py run-all --state runs/competition/pi-team-mixed
+
+# 下面只请求 GET 并更新本地证据；不会创建、启动或取消远端 run。
+python3 scripts/competition.py status --state runs/competition/pi-team-mixed --task arc-bench-lite--keep
+python3 scripts/competition.py collect --state runs/competition/pi-team-mixed --task arc-bench-lite--keep
+python3 scripts/competition.py recover --state runs/competition/pi-team-mixed
+```
+
+`public-model-settings.json` 只需 `base_url`、`model` 与可选 `visual_model`；base URL 必须为不含凭据的 HTTPS URL。`--offline` 只在 `snapshot`/`run-all` 中为无模型 fixture 传非凭据占位符，不会改写包。单步接口还包括 `snapshot`、`create --task`、`start --task`、`logs --task`、`watch --task`。
+
+CLI 默认仅显示状态、阶段、submission/run IDs、score_status、包哈希和证据目录，不输出平台结果或日志正文。显式 `--json` 才输出完整 summary；Python API 保留完整结构供矩阵消费。
+
+Python 调用供外层矩阵复用：
+
+```python
+import competition
+
+competition.prepare(state_dir, zip_path, competition_id="arc-bench-lite",
+                    variant=variant, tasks=task_ids, model_config=model_settings)
+with competition.Controller(state_dir, secret=key) as controller:
+    result = controller.run_all(interval=180)
+```
+
+一个 controller 持有 state 目录锁和按 Competition 的 hosted 锁；local 评测队列不使用这些锁。`run_all` 先上传一次 snapshot，再串行完成其各 task，已有终态只补收证据。上传下一 variant 前检查上一 snapshot 的完整标志或全部 task run 的明确终态；创建 task 前检查当前 snapshot 仍是最新。history 必须提供单条记录、明确 `is_latest`，或无歧义 `created_at`；无法识别则停止写入。独立浏览器/其它主机不受本地锁约束，因此真实 smoke 仍须核验服务端 latest 规则。
+
+`state.json` 在每次 POST 前原子保存 pending action，响应到达后先持久化 receipt，再保存确认的 identity。中断或未知响应不会自动重发。snapshot 恢复只接受 history 中此前不存在且唯一匹配 package SHA256 的记录；若服务端不提供 hash，则保持 blocked。create 恢复只接受该 snapshot 的唯一 task-score run，或 `recover --run-id` 指定后由 GET 验证 submission/task 归属的 run。start 恢复需要已启动时间、运行态或明确终态；仅 PENDING 不视为已启动证明。缺 identity 的成功响应同样保留，不默认成功。
+
+每题在 `tasks/<task-id>/` 保存带 source/observed_at 的 status、日志分块、traceability 和 commit history。分块落盘后才推进游标，相同游标重放覆盖同一文件。artifact endpoint 失败保留 `collection_errors`，不能宣称 collected；archive 仅保存可下载 handle，明确 `archive_downloaded=false`。默认轮询间隔 180 秒，拒绝更短间隔；PAUSED 或未知状态停止本地等待，远端任务保持原状。
+
+`summary()` 返回 `status=completed|blocked|running` 和独立 `score_status=complete|unavailable`。前者只表示声明的任务均明确终态且观测资料已收集；FAILED/CANCELLED 不推导零分。后者目前只在每题真实返回非负整数 passed/failed/total、total>0、passed+failed=total，以及有限数值 score 时为 complete。缺这些明确字段就 unavailable，待真实 schema 证据修正消费范围；不靠模型声明或退出码推算成绩。平台原始结果保留于 status 证据，不将逐题 score 合成为官方总榜。
+
+验收：`python3 -m unittest tests.test_competition -q`，16 项通过；覆盖冻结副本与原样恢复、同一 snapshot 两题顺序、unknown snapshot/create/start、错误 identity、成功响应后本地中断、malformed response 恢复、unknown status、游标发布失败重放、旧 snapshot 拒绝、上一 variant 未完成拒绝、锁冲突、缺产物不完成，以及成绩字段不足不计实验完成。与既有 `tests.test_playground` 的联合检查也通过；所有 transport 都是 fake，没有真实网络写入。

@@ -1,14 +1,15 @@
-# 实施前 Spike 与预演
+# 实施分工与集成状态
 
-设计与验收已获Human批准。当前共同出口是可线性执行的实施计划和impact handshake；各Cell只做接口核验、无模型或最小模型spike、代码路径预演与计划材料，不修改产品源码或活动配置。
+开工握手已批准，基线为 `7d3b1e6`。各 owner 在已有预演的接缝上实施；只有主 Agent 执行跨组件集成和真实实验。源码更改的依赖按 [plan.md](plan.md) 验证，不将并行编码当作并行放行资格。
 
-| Cell | owner与局部路线 | 返回及消费关系 |
+| Cell | 实施 owner / 写入边界 | 当前出口 |
 | --- | --- | --- |
-| Assignee与Braid公开面 | 完成 | `cells/assignee.md`；已返回精确文件顺序、兼容风险和最小行为检查。 |
-| Variant、能力与SVC装配 | 完成 | `cells/capabilities.md`；已返回 effective schema、四 variant 差异和网关 429 证据。 |
-| 官方包与混合Controller | 完成 | `cells/runner.md`；已返回 adapter 状态、恢复点、缓存与并发计划。 |
-| Pi lifecycle与整合顺序 | 完成 | `cells/integration.md`与[plan.md](plan.md)；unknown terminal false-ready 已复现，impact handshake 已形成。 |
+| Assignee | assignee_impl；Braid source/migrations/tests/docs，排除 provider/factory.rs 的 lifecycle 逻辑 | 配置/store/CLI/投影/恰一次 wake 的行为测试，`cells/assignee.md` |
+| 能力装配 | capabilities_impl；profiles/native_profiles/factory/package、harness 配置与 submission Docker 构建 | effective 字段合同、同一 ZIP 材料和消费者测试，`cells/capabilities.md` |
+| Competition | multiagent_boundary_advice；名字沿用旧会话，本次角色是实现者；competition.py 与测试 | 16 项 fake transport 检查、紧凑 summary 与只读恢复，`cells/runner.md` |
+| Lifecycle / 集成 | 主 Agent；extension、Braid provider、core archive、submission 凭据、local runner、official matrix、联合资格脚本 | Node/真实无模型 Pi RPC、7 项 Rust provider 检查、归档与恢复行为验证，`cells/integration.md` |
+| 环境 | 已完成独立只读取证 | Windows Docker 可用于打包；官方 local runner 基础 image 缺失；Meter 非零余额与 key 免费额度拒绝未能对应，`cells/environment.md` |
 
-子Agent仅拥有各自报告文件和隔离调查材料；无源码、活动配置、Corpus、模型实验、平台提交或Git提交权限。恢复局部取证失败由各owner自行处理，只有改变方案的问题进入主上下文。源码审阅不作为独立验收；可读接口查合同，但不凭角色身份或同一实现自洽宣称正确。
+CLI/对象的公开协作者字段固定为 `assignee_login`/`assignee_description`；variant defaults 使用公开 login，resolver 转为 Braid 内部 defaults（issue/pr profile ID）。文本与视觉 endpoint/key 分开，平台变量不能覆盖冻结模型。跨 owner 接缝通过这些具体合同协调，不复制各自实现。
 
-每个Cell只返回消费者需要的事实、拟修改面、次序、检查与残余，不以阅读代码后的同意充当验收。主Agent按实际接口和可运行spike核验返回；预演分工不是未来实施拓扑的自动承诺。
+原始 RPC、构建和运行日志留在 `runs/qualification/`；本页不累积逐条日志。只在接口假设失效、需要改变设计或外部事实需要用户输入时升级。默认输出阶段、状态、证据路径；完整日志按需读取。

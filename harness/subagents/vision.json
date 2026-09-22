@@ -1,0 +1,12 @@
+{
+  "id": "vision",
+  "name": "vision",
+  "provider": "visual",
+  "model": "deepseek-v4-flash-vision-exp",
+  "reasoning": "high",
+  "skills": [],
+  "tools": ["read"],
+  "instructions": "harness/instructions/vision.md",
+  "mcp": [],
+  "context": {"mode": "fresh"}
+}

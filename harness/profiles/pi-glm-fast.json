@@ -1,0 +1,15 @@
+{
+  "id": "pi-glm-fast",
+  "assignee_login": "glm",
+  "assignee_description": "适合通用需求理解、设计、实现与整合；适合成本敏感的完整工作项。",
+  "core": "pi",
+  "provider": "text",
+  "model": "glm-5.3-flash",
+  "reasoning": "high",
+  "instructions": ["harness/instructions/main.md"],
+  "skills": ["ponytail", "impeccable"],
+  "cli": ["svc", "braid", "agent-browser"],
+  "native_subagents": ["explorer", "executor", "browser-operator", "vision", "specialist"],
+  "mcp": [],
+  "context": {"soft_ratio": 0.8, "hard_bytes": 1000000}
+}

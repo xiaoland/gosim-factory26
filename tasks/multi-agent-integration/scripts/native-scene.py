@@ -65,7 +65,7 @@ def codex_entry_from_events(output, native, profile):
 
 
 def run(backend):
-    variant = 'pi-team' if backend == 'pi' else 'codex-generalist'
+    variant = 'pi-team-mixed' if backend == 'pi' else 'codex-generalist'
     config = profiles.configuration(variant)
     output = ROOT/'runs/integration'/f'{time.strftime("%Y%m%d-%H%M%S")}-{backend}-native-{uuid.uuid4().hex[:6]}'
     output.mkdir(parents=True)
@@ -89,7 +89,7 @@ def run(backend):
     entries = []
     try:
         with factory.responses_adapter(config,output) as responses_url:
-            _,bindings = native_profiles.materialize(config['effective'],work,responses_url,output.name)
+            _,bindings = native_profiles.materialize(config['effective'],work,responses_url or config['base_url'],output.name)
             binding = bindings[parent]
             native = work/'native'; shutil.copytree(binding['native_template'],native)
             env.update(PI_CODING_AGENT_DIR=str(native),CODEX_HOME=str(native))
@@ -102,8 +102,8 @@ def run(backend):
 仅操作这份受控页面和自己的证据文件。''')
             delegation = ('Pi 子代理调用使用 subagent 的 workflowScript；用 runs.all 派发两个 browser-operator，async:false、context:fresh。'
                           if backend=='pi' else '用原生 spawn_agent 启动两个 browser-operator，等待并收取各自结果。')
-            prompt = f'''这是 multi-agent 联合验收的原生能力阶段，不是产品开发。不要使用 Braid、不要创建 Git repo、不要调用外部服务。
-1. 用原生图像读取工具观察 {inputs}/image.png，把从上到下三条色带的英文名称写为 {app}/image.json 的 JSON 数组。不可通过解码像素替代图像输入。
+            prompt = f'''这是 multi-agent 联合验收的原生能力阶段，不是产品开发。不要创建 Issue/PR、不要创建 Git repo、不要调用外部服务。
+1. 委派 vision 子代理，用其原生图像读取工具观察 {inputs}/image.png，把从上到下三条色带的英文名称写为 {app}/image.json 的 JSON 数组。不可通过解码像素替代图像输入。
 2. 委派 executor 实现 {app}/calc.py 的 add(a,b)，自行运行 add(2,3)==5 和 add(-4,1)==-3 的断言。executor 阅读自己配置的技能，独立完成局部反馈并返回证据。
 3. {delegation} 两个任务分别为：{json.dumps(browser_tasks,ensure_ascii=False)}
 不要让主会话执行浏览器步骤。收齐产物后检查并结束；遇到协议/能力错误请直接报告，不安装或更换核心、扩展或模型。'''

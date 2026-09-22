@@ -1,6 +1,6 @@
 import * as fs from "node:fs";
 import * as path from "node:path";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 
 export const COMMAND_NAME = "factory-subagent-stop";
 export const REQUEST_RELATIVE_PATH = path.join(".factory", "teardown-request.json");
@@ -26,6 +26,7 @@ export interface ChildProof {
 	status_terminal?: boolean;
 	process_terminal_observed?: boolean;
 	active_lease_released?: boolean;
+	process_terminal?: Record<string, unknown>;
 }
 
 export interface ChildEvidence {
@@ -307,6 +308,28 @@ function collectChildren(statusValue: unknown, parentSessionId: string, known: M
 	}
 }
 
+function backgroundProofComplete(child: KnownChild): boolean {
+	const terminal = child.processTerminal;
+	const canonical = record(terminal?.canonicalSession);
+	if (!child.sessionFile || !child.childSessionId || terminal?.version !== 1
+		|| terminal.state !== "observed" || terminal.runId !== child.runId
+		|| !string(terminal.runnerProcessInstanceId) || typeof terminal.observedAt !== "number"
+		|| !array(terminal.instances).some((value) => {
+			const instance = record(value);
+			return instance?.kind === "runner" && instance.processInstanceId === terminal.runnerProcessInstanceId;
+		})
+		|| canonical?.freeAtObservation !== true
+		|| !["released", "not-held"].includes(String(canonical.leaseDisposition))) return false;
+	try {
+		// pi-subagents identifies a canonical lease by the real session path,
+		// not by the UUID in the session header.
+		const real = fs.realpathSync.native(path.resolve(child.sessionFile));
+		const key = process.platform === "win32" ? real.toLowerCase() : real;
+		return canonical.canonicalSessionId === createHash("sha256").update(key).digest("hex")
+			&& sessionIdFromFile(child.sessionFile) === child.childSessionId;
+	} catch { return false; }
+}
+
 function childReceipt(child: KnownChild): ChildEvidence {
 	const proof = child.mode === "foreground"
 		? {
@@ -315,6 +338,8 @@ function childReceipt(child: KnownChild): ChildEvidence {
 		}
 		: {
 			...(child.controlRequested === true ? { control_requested: true } : {}),
+			...(child.processTerminal ? { process_terminal: child.processTerminal } : {}),
+			...(backgroundProofComplete(child) ? { process_terminal_observed: true, active_lease_released: true } : {}),
 		};
 	return {
 		mode: child.mode,
@@ -327,13 +352,13 @@ function childReceipt(child: KnownChild): ChildEvidence {
 		...(child.nativeRole ? { native_role: child.nativeRole } : {}),
 		status: child.status ?? "unknown",
 		proof,
-		evidence_source: child.mode === "foreground" ? "pi-subagents:interrupt/parent-process-tree" : "pi-subagents:stop/parent-process-tree",
+		evidence_source: child.mode === "foreground" ? "pi-subagents:interrupt/parent-process-tree" : "pi-subagents:status/processTerminal",
 	};
 }
 
 function proofComplete(child: KnownChild): boolean {
 	if (child.mode === "foreground") return child.controlRequested === true || child.controlInactive === true;
-	return Boolean(child.childSessionId && child.controlRequested === true);
+	return backgroundProofComplete(child);
 }
 
 export function createLifecycleAdapter(options: LifecycleOptions = {}) {

@@ -18,18 +18,18 @@ spec.loader.exec_module(factory)
 
 
 class BaselineBoundaryTest(unittest.TestCase):
-    def test_default_selects_real_preset_and_backend_selects_matching_generalist(self):
+    def test_default_selects_mixed_variant_and_backend_cannot_replace_it(self):
         default = factory.load_config()
         self.assertEqual((default['variant'],default['backend'],default['workflow'],default['svc']),
-                         ('pi-generalist','pi','braid',True))
-        with patch.object(sys,'argv',['factory.py','generate','--variant','codex-generalist']), \
+                         ('pi-team-mixed','pi','braid',True))
+        with patch.object(sys,'argv',['factory.py','generate','--variant','pi-team-deepseek']), \
              patch.object(factory,'generate') as generate:
             factory.main()
         selected=generate.call_args.args[0]
-        self.assertEqual((selected['variant'],selected['backend']),('codex-generalist','codex'))
-        self.assertEqual(selected['effective']['defaults']['issue'],'codex-generalist')
+        self.assertEqual((selected['variant'],selected['backend']),('pi-team-deepseek','pi'))
+        self.assertEqual(selected['effective']['defaults']['issue'],'pi-deepseek-fast')
         with self.assertRaisesRegex(ValueError,'backend'):
-            factory.load_config(variant='pi-team',backend='codex')
+            factory.load_config(variant='pi-team-mixed',backend='codex')
         with tempfile.TemporaryDirectory() as temp:
             archived=Path(temp)/'config.json'
             archived.write_text(json.dumps(dict(model='old',backend='pi',workflow='single')))

@@ -1,6 +1,6 @@
 # Cell：Pi lifecycle 与整合顺序
 
-状态：实施前判别与整合已完成；结论已进入 `plan.md` 和 `implementation-impact.md`。未修改产品源码。
+状态：已获批实施。无模型代码与协议检查通过，Linux ZIP 入口资格进行中；真实模型/协作与评分尚未通过。下方 Observed 保留实施前反例，最新结果见末尾。
 
 ## Observed
 
@@ -56,3 +56,17 @@ Braid `sources/braid/src/provider/factory.rs::teardown`当前只校验extension 
 - extension正例通过而Braid拒绝，归Braid receipt validator/close顺序。
 - 两层通过但archive丢身份，归Factory证据消费，不重跑模型。
 - 仍需在实现预演中确认workflow background的每个nested child是否各有独立processTerminal，不能只用父run proof覆盖所有child。
+
+## 实施进展（2026-09-22）
+
+开工基线 `7d3b1e6` 已提交。Factory extension 的 unknown-terminal 反例首先失败（ready != unknown），修复后 Node lifecycle 检查通过；独立 `/tmp/factory26-pi-proof-probe.mjs` 现在返回 unknown/control_deadline，保留原始 processTerminal。Braid 按 mode 校验 ready receipt，只给 foreground 附加 parent-process-tree 终态；7 项 provider::factory 测试通过。Native archive 保留 lifecycle_proof，7 项 archive 测试通过。
+
+上游 canonicalSessionId 实际是 canonical realpath 的 SHA256，不是 native session UUID；extension 按该协议绑定 lease 证据，并独立核对 session header identity。Background workflow 没有逐 child canonical proof 时维持 unknown，不能把父 run 证据冒充 child 证明。该边界在真实分层资格中继续验证。
+
+本轮分工：assignee_impl 拥有 Braid 配置、store、objects、CLI、context、scheduler 接线（不含 provider/factory.rs）；capabilities_impl 拥有 Factory profiles/native materialization/package/活动配置；主 Agent 拥有 lifecycle provider/extension、archive、local runner 与集成；环境 cell 完成后转 Competition adapter。相邻接缝通过明确字段和命令合同协作，不由多个 Agent 同时改同一文件。
+
+实际 Pi 0.85.1 RPC（get_state、abort）与安装的 pi-subagents 0.56.0 + `/factory-subagent-stop` 已通过无模型进程检查。该证据只覆盖真实协议装载与空子树控制，不能替代有 writer 的真实协作资格。可重跑脚本在 `scripts/pi-rpc-smoke.py`，输出 `runs/qualification/pi-rpc-smoke/`。
+
+另外修复包内 platform_config 视觉配置覆盖主模型的问题，文本与视觉 key 各自仅传给消费 provider。新检查覆盖冻结模型不匹配拒绝；submission 10 项检查通过（macOS 跳过 Linux Landlock 1 项）。local 官方 wrapper prepare-only 实际通过；官方矩阵用 barrier 验证独立本地 workspace 并行、hosted snapshot 严格顺序和已完成不重复运行。上述仍不是模型/评分验收。
+
+主线最终无模型检查：`make test` 共 125 项 Python 检查通过（macOS 跳过 1 项 Linux 检查），Pi lifecycle 通过；Braid 32 unit + 1 CLI integration 通过，fmt/diff 检查通过。22 份本轮文档的相对链接无缺失，SVC status 为 healthy。原始日志：`runs/qualification/implementation-tests.log`。首个混合 variant ZIP 为资格候选；真实入口/浏览器检查后提交源码，再用缓存构建四份最终 ZIP。

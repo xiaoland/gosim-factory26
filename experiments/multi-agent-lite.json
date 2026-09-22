@@ -3,10 +3,10 @@
   "benchmark_revision": "1eb018367bedd618d3b9ced406ce07fb423d4956",
   "host": "wsl.win-ws.localhost",
   "variants": [
-    "pi-generalist",
-    "pi-team",
-    "codex-generalist",
-    "pi-verification"
+    "pi-team-deepseek",
+    "pi-team-glm",
+    "pi-team-mixed",
+    "pi-team-vv"
   ],
   "tasks": [
     "keep",

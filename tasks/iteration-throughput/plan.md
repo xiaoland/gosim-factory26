@@ -39,7 +39,7 @@
 
 在 Braid 增加 forward-only `0007_assignee_projection.sql`，直接扩展现有 profile record，不建第二张 assignment/projection 表。依次接通 config/request identity、Store 的 login 映射、canonical Issue/PR、Context/system instructions、CLI create/edit 和 assignment wake。
 
-复用现有 `desired_profile_id`、assignment revision、writer fence、native teardown、worktree reuse 和 scheduler。删除 runtime item/JSON/context 中的内部 profile 字段。重指派顺序固定为：校验全部输入 → fence 旧 writer → 取得 teardown proof → 原子替换 owner → 创建/恢复目标 generation → 恰一次 Wake。
+复用现有 `desired_profile_id`、assignment revision、writer fence、native teardown、worktree reuse 和 scheduler。删除 runtime item/JSON/context 中的内部 profile 字段。重指派顺序固定为：校验全部输入 → 在同一事务中记录目标 owner 并 fence 旧 writer → 在事务外取得 teardown proof → 创建/恢复目标 generation → 恰一次 Wake。
 
 通过条件：旧 DB 可读；新 request fresh/resume 一致；未知 login 与非法 add/remove 零写入；Issue/PR 投影对称；A→B→C、重启、teardown unknown 均无竞争 writer；同一 assignee 的两个 work-item 真实重叠。
 

@@ -1,7 +1,8 @@
 {
   "id": "explorer",
   "name": "explorer",
-  "model": "kimi-k3",
+  "provider": "text",
+  "model": "deepseek-v4-flash",
   "reasoning": "high",
   "skills": [],
   "tools": [
@@ -12,5 +13,6 @@
     "bash"
   ],
   "instructions": "harness/instructions/explorer.md",
-  "mcp": []
+  "mcp": [],
+  "context": {"mode": "fresh"}
 }

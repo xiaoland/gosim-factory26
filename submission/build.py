@@ -6,13 +6,19 @@ import shutil
 
 root = Path('/runtime')
 backend = sys.argv[1]
-package = '@earendil-works/pi-coding-agent' if backend == 'pi' else '@openai/codex'
-metadata = json.loads((root / 'node_modules' / package / 'package.json').read_text())
-entry = metadata['bin'][backend]
-(root / 'bin' / backend).write_text(
-    '#!/bin/sh\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
-    f'exec "$HERE/node" "$HERE/../node_modules/{package}/{entry}" "$@"\n'
-)
+for dependency in ('@earendil-works/pi-coding-agent', '@openai/codex', 'agent-browser', 'pi-subagents'):
+    if not (root / 'node_modules' / dependency).is_dir():
+        raise RuntimeError(f'frozen npm dependency missing: {dependency}')
+if not any((root / '.agent-browser/browsers').glob('chrome-*')):
+    raise RuntimeError('frozen agent-browser Chromium is missing')
+for command, package in (('pi', '@earendil-works/pi-coding-agent'),
+                         ('codex', '@openai/codex'), ('agent-browser', 'agent-browser')):
+    metadata = json.loads((root / 'node_modules' / package / 'package.json').read_text())
+    entry = metadata['bin'][command]
+    (root / 'bin' / command).write_text(
+        '#!/bin/sh\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+        f'exec "$HERE/node" "$HERE/../node_modules/{package}/{entry}" "$@"\n'
+    )
 for name, module, function in [('svc', 'svc_cli.cli', 'main')] + (
         [('litellm', 'litellm', 'run_server')] if backend == 'codex' else []):
     (root / 'bin' / name).write_text(

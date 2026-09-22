@@ -30,7 +30,7 @@ def read_json(path, default=None):
 
 
 def run(backend):
-    config = profiles.configuration('pi-team' if backend == 'pi' else 'codex-generalist')
+    config = profiles.configuration('pi-team-mixed' if backend == 'pi' else 'codex-generalist')
     output = ROOT/'runs/integration'/f'{time.strftime("%Y%m%d-%H%M%S")}-{backend}-braid-{uuid.uuid4().hex[:6]}'
     output.mkdir(parents=True)
     work = Path(tempfile.mkdtemp(prefix='f26-braid-', dir='/tmp')).resolve()
@@ -92,7 +92,7 @@ while True:
         return [entry for entry in snapshots() if str(entry.get('work_item_id'))=='1' and entry.get('work_item_kind')=='issue']
     phases = ['foreground','background'] if backend=='pi' else ['foreground']
     def reset_prompt(mode):
-        task = f'只运行 python3 {writer} {work}/{mode}.jsonl，保持前台；不要另行后台化，不要设置短 timeout。宿主会停止本子代理。不要调用 Braid。'
+        task = f'只运行 python3 {writer} {work}/{mode}.jsonl，保持前台；不要另行后台化，不要设置短 timeout。宿主会停止本子代理。不要操作 Issue/PR。'
         if backend=='pi':
             launch = ('调用 subagent，async:'+str(mode=='background').lower()+', context:"fresh", workflowScript:'+json.dumps('return runs.run("writer", { agent: "executor", task: '+json.dumps(task,ensure_ascii=False)+' });',ensure_ascii=False))
         else:
@@ -101,14 +101,16 @@ while True:
 {launch}
 主会话不可运行 writer.py，不要创建 Issue/PR 或关闭 Issue。子代理启动后不要重复派发；在 {work}/{mode}.jsonl 至少有两行前持续等待并检查，不要结束本次响应。宿主观察到真实写入后会修改当前 description 并重建上下文。'''
     profile_ids = list(config['effective']['profiles'])
-    ui = 'team-ui' if backend=='pi' else profile_ids[0]
-    impl = 'team-app' if backend=='pi' else profile_ids[0]
-    final_prompt = f'''这是受控 Braid multi-agent 交付场景。先核对当前工作树 retained.txt 的内容是 retained-dirty；删除此临时检查文件，不要提交它。
+    ui = config['effective']['defaults']['issue']
+    impl = config['effective']['defaults']['pr']
+    ui_login = config['effective']['profiles'][ui]['profile']['assignee_login']
+    impl_login = config['effective']['profiles'][impl]['profile']['assignee_login']
+    final_prompt = f'''这是受控多 Agent 交付场景。先核对当前工作树 retained.txt 的内容是 retained-dirty；删除此临时检查文件，不要提交它。
 创建两个子 Issue（parent=1），分别明确 assignee：
-A. {ui}：交付 colors.py 的 bands() 返回图像 {inputs}/image.png 从上到下的英文颜色名称列表。必须用原生图像工具观察图片，不可解码像素。通过工具编写代码，自己选择并读取已配置的一个相关技能，设计验收并用 PR 实现、提交和合入，PR 也明确指派 {ui}。
-B. {impl}：交付 calc.py 的 add(a,b)，包括负数和零。自己选择并读取已配置的一个相关技能，设计验收并用 PR 实现、提交和合入，PR 明确指派 {impl}。
+A. {ui_login}：交付 colors.py 的 bands() 返回图像 {inputs}/image.png 从上到下的英文颜色名称列表。必须委派 vision 子代理用原生图像工具观察图片，不可解码像素。通过工具编写代码，自己选择并读取已配置的一个相关技能，设计验收并用 PR 实现、提交和合入，PR 也明确指派 {ui_login}。
+B. {impl_login}：交付 calc.py 的 add(a,b)，包括负数和零。自己选择并读取已配置的一个相关技能，设计验收并用 PR 实现、提交和合入，PR 明确指派 {impl_login}。
 两项互不修改对方文件，可独立推进；不要亲自代替它们实现。各子 Issue 用评论向根 Issue 报告产物与证据，完成后 close --reason completed。你通过评论讨论、核对各 PR 已合入，最后验证交付分支的 bands()==['red','green','blue']、add(2,3)==5、add(-4,1)==-3，再关闭根 Issue completed。
-这是临时仓库，允许本地 commit/merge，禁止 push。所有 shell 需要走当前输入给定的 Braid writer 身份。无中途人类介入，不用官方 benchmark，不安装依赖，不开发 Web 应用。'''
+这是临时仓库，允许本地 commit/merge，禁止 push。所有 shell 需要走当前输入给定的 CLI writer 身份。无中途人类介入，不用官方 benchmark，不安装依赖，不开发 Web 应用。'''
     proc=None
     try:
         with factory.responses_adapter(config,output) as responses_url:
@@ -156,7 +158,7 @@ B. {impl}：交付 calc.py 的 add(a,b)，包括负数和零。自己选择并�
                         if mode=='foreground':
                             assert child.get('mode')=='foreground' and proof.get('parent_process_group_terminal') is True, 'foreground process-group proof is invalid'
                         else:
-                            assert child.get('mode')=='background' and all(proof.get(key) is True for key in ('control_requested','parent_process_group_terminal')), 'background process-tree proof is invalid'
+                            assert child.get('mode')=='background' and all(proof.get(key) is True for key in ('process_terminal_observed','active_lease_released')), 'background process-tree proof is invalid'
                         receipt_mtime=Path(old['native_home'],'.factory/subagent-stop.json').stat().st_mtime_ns
                         replacement_file=next(path for path in state.glob('physical/*/session.json') if read_json(path).get('session_id') == replacement_entry['session_id'])
                         assert receipt_mtime <= replacement_file.stat().st_mtime_ns, 'replacement root appeared before native stop receipt'

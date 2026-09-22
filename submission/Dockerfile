@@ -3,16 +3,21 @@ WORKDIR /build/braid
 COPY sources/braid/ ./
 RUN cargo build --locked --release
 
-FROM node:22.22.3-bookworm-slim AS node
+FROM node:24.10.0-bookworm-slim AS node
+WORKDIR /runtime
+COPY harness/npm/package.json harness/npm/package-lock.json ./
+RUN npm ci && npm cache clean --force
 
 FROM python:3.12-slim-bookworm AS runtime
 ARG BACKEND=pi
 COPY --from=node /usr/local/bin/node /usr/local/bin/node
 COPY --from=node /usr/local/lib/node_modules/npm /usr/local/lib/node_modules/npm
-RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
+    ln -s ../lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
 WORKDIR /runtime
-RUN if [ "$BACKEND" = pi ]; then package='@earendil-works/pi-coding-agent@0.85.1'; else package='@openai/codex@0.155.0'; fi; \
-    npm install --save-exact "$package" && npm cache clean --force
+COPY --from=node /runtime/package.json /runtime/package-lock.json ./
+COPY --from=node /runtime/node_modules ./node_modules
+RUN HOME=/runtime ./node_modules/.bin/agent-browser install --with-deps
 COPY sources/svc/ /build/svc/
 RUN python -m pip wheel --wheel-dir /wheels /build/svc/cli && \
     if [ "$BACKEND" = codex ]; then \

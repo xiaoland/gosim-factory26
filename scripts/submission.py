@@ -48,15 +48,28 @@ def platform_config(root, manifest):
     config = factory.load_config(root/'variants/factory/config.json')
     config.update(backend=manifest['backend'], runtime='submission', deployment='arcbench',
                   task='platform', benchmark_revision=None)
-    visual = bool(os.environ.get('VISUAL_API_KEY') or os.environ.get('VISUAL_BASE_URL'))
-    names = ('VISUAL_API_KEY', 'VISUAL_BASE_URL', 'VISUAL_MODEL') if visual else ('OPENAI_API_KEY', 'OPENAI_BASE_URL', 'MODEL')
-    if any(not os.environ.get(name, '').strip() for name in names):
-        raise ValueError('平台模型配置不完整：需要 ' + ', '.join(names))
-    url = urlsplit(os.environ[names[1]])
-    if url.scheme not in ('http', 'https') or not url.hostname or url.username or url.password or url.query or url.fragment:
-        raise ValueError('平台模型地址必须是无内嵌凭据的 HTTP(S) URL')
-    config.update(base_url=os.environ[names[1]], model=os.environ[names[2]],
-                  key_environment=names[0], image_input=visual)
+    def platform_model(names):
+        if any(not os.environ.get(name, '').strip() for name in names):
+            raise ValueError('平台模型配置不完整：需要 ' + ', '.join(names))
+        url = urlsplit(os.environ[names[1]])
+        if url.scheme not in ('http', 'https') or not url.hostname or url.username or url.password or url.query or url.fragment:
+            raise ValueError('平台模型地址必须是无内嵌凭据的 HTTP(S) URL')
+        return os.environ[names[1]], os.environ[names[2]]
+
+    base_url, model = platform_model(('OPENAI_API_KEY', 'OPENAI_BASE_URL', 'MODEL'))
+    if 'effective' in config and model != config['model']:
+        raise ValueError('平台主模型与冻结 variant 不一致')
+    config.update(base_url=base_url, model=model, key_environment='OPENAI_API_KEY', image_input=False)
+    if os.environ.get('VISUAL_API_KEY') or os.environ.get('VISUAL_BASE_URL'):
+        visual_url, visual_model = platform_model(('VISUAL_API_KEY', 'VISUAL_BASE_URL', 'VISUAL_MODEL'))
+        if 'effective' in config:
+            expected = {role['model'] for item in config['effective']['profiles'].values()
+                        for role in item['roles'].values() if role.get('provider') == 'visual'}
+            if expected and expected != {visual_model}:
+                raise ValueError('平台视觉模型与冻结角色不一致')
+        config.update(visual_base_url=visual_url, visual_model=visual_model,
+                      visual_key_environment='VISUAL_API_KEY')
+
     return config
 
 
@@ -73,6 +86,8 @@ def adapter_environment(config, output):
     env = base_environment()
     env.update(HOME=str(home), XDG_CONFIG_HOME=str(home/'.config'),
                FACTORY26_API_KEY=model_key(config), LITELLM_LOCAL_MODEL_COST_MAP='True')
+    if config.get('visual_key_environment'):
+        env['FACTORY26_VISUAL_API_KEY'] = model_key(config, visual=True)
     return env
 
 
@@ -87,11 +102,14 @@ def environment(work, config):
     env.update(HOME=str(home), TMPDIR=str(work/'tmp'), XDG_CONFIG_HOME=str(home/'.config'),
                PI_CODING_AGENT_DIR=str(native), CODEX_HOME=str(native), PI_TELEMETRY='0', PI_OFFLINE='1',
                FACTORY26_API_KEY=model_key(config))
+    if config.get('visual_key_environment'):
+        env['FACTORY26_VISUAL_API_KEY'] = model_key(config, visual=True)
     return native, env
 
 
-def model_key(config):
-    value = os.environ.get(config['key_environment'], '').strip()
+def model_key(config, visual=False):
+    name = config['visual_key_environment'] if visual else config['key_environment']
+    value = os.environ.get(name, '').strip()
     if not value:
         raise ValueError('平台未注入选定模型的 API Key')
     return value

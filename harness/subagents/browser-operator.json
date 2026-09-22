@@ -1,7 +1,8 @@
 {
   "id": "browser-operator",
   "name": "browser-operator",
-  "model": "kimi-k3",
+  "provider": "visual",
+  "model": "deepseek-v4-flash-vision-exp",
   "reasoning": "high",
   "skills": [
     "agent-browser"
@@ -11,5 +12,6 @@
     "bash"
   ],
   "instructions": "harness/instructions/browser-operator.md",
-  "mcp": []
+  "mcp": [],
+  "context": {"mode": "fresh"}
 }

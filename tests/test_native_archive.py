@@ -87,7 +87,8 @@ class NativeArchiveTest(unittest.TestCase):
                      'evidence_source': 'pi-subagents:status/foregroundRuns'},
                     {'mode': 'background', 'run_id': 'run-2', 'parent_session_id': 'pi-child-1',
                      'child_session_id': 'pi-child-2', 'session_file': str(child_two),
-                     'evidence_source': 'pi-subagents:status/processTerminal'},
+                     'evidence_source': 'pi-subagents:status/processTerminal',
+                     'proof': {'process_terminal_observed': True, 'process_terminal': {'runId': 'run-2', 'state': 'observed'}}},
                 ],
             }
             (native_home / '.factory').mkdir(parents=True)
@@ -104,6 +105,7 @@ class NativeArchiveTest(unittest.TestCase):
             self.assertEqual(children['pi-child-1']['native_parent'], 'pi-root')
             self.assertEqual(children['pi-child-2']['native_parent'], 'pi-child-1')
             self.assertEqual(children['pi-child-2']['profile_id'], 'p1')
+            self.assertEqual(children['pi-child-2']['lifecycle_proof'], tree['children'][1]['proof'])
             self.assertNotIn('assignment_generation', children['pi-child-2'])
             self.assertEqual((output / rows[0]['session_tree_manifest']).read_text(), (native_home / '.factory' / 'session-tree.json').read_text())
             self.assertEqual(json.loads((output / 'native' / 'manifest.json').read_text())['sessions'], rows)

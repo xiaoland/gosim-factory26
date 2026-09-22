@@ -29,10 +29,10 @@ def load_config(path=None, backend=None, variant=None, task=None):
     """新运行解析选定配方；历史归档和显式单核心检查保留原入口。"""
     if path is None:
         from profiles import configuration, DEFAULT_VARIANT
-        selected = variant or ("codex-generalist" if backend == "codex" else DEFAULT_VARIANT)
+        selected = variant or DEFAULT_VARIANT
         result = configuration(selected, task or "keep", ROOT)
         if backend is not None and backend != result["backend"]:
-            raise ValueError("backend 与 preset 核心不一致；请显式选择 variant")
+            raise ValueError("backend 与 variant 核心不一致；请显式选择 variant")
         return result
     active = (ROOT / 'variants/factory/config.json').resolve()
     source = Path(path).resolve() if path is not None else active
@@ -304,7 +304,8 @@ def braid_request(config, work, app, native, prompt, state, run_id=None, respons
     backend=config['backend']
     if 'effective' in config:
         from native_profiles import materialize, executable as native_executable
-        profiles, bindings = materialize(config['effective'], work, responses_url or config['base_url'], run_id or work.name)
+        profiles, bindings = materialize(config['effective'], work, responses_url or config['base_url'],
+                                         run_id or work.name, config.get('visual_base_url'))
         request = dict(profiles=profiles, defaults=config['effective']['defaults'], bindings=bindings,
                        prompt=prompt, state=str(state), run_id=run_id or work.name,
                        delivery_ref='refs/heads/braid-delivery', codex=None, pi=None)
@@ -321,7 +322,10 @@ def braid_request(config, work, app, native, prompt, state, run_id=None, respons
         wrapper.write_text('#!/bin/sh\nexec '+shlex.quote(executable)+
                            ' --no-extensions --no-skills --no-prompt-templates --no-themes'+context_flag+' "$@"\n')
         wrapper.chmod(0o755)
-    profile={'id':backend, 'display_name':backend, 'tags':[], 'adapter_type':backend,
+    descriptions = {'pi':'适合通用需求理解、实现与整合；可处理完整工作项。',
+                    'codex':'适合通用需求理解、实现与整合；可处理完整工作项。'}
+    profile={'id':backend, 'display_name':backend, 'assignee_login':backend,
+             'assignee_description':descriptions[backend], 'tags':[], 'adapter_type':backend,
              'adapter_version':'local', 'provider':'deepseek' if backend=='pi' else 'factory26', 'model':config['model'],
              'reasoning':config['thinking'], 'user_instructions':'', 'workspace':str(app),
              'context_soft_ratio':0.8,'context_hard_bytes':1000000}
@@ -418,7 +422,7 @@ def generate(config, run=None, requirements=None):
                 prefix = package_prefix(work, inputs)
             else:
                 prefix = isolation_prefix(work, inputs)
-            workspace_instruction = '使用 Braid 为当前工作项分配的当前 Git worktree。' if workflow=='braid' else f'在 {app} 工作。'
+            workspace_instruction = '使用当前工作项分配的 Git worktree。' if workflow=='braid' else f'在 {app} 工作。'
             prompt = f'''请根据 {inputs} 中完整需求包独立实现 Web 应用。{workspace_instruction}
     阅读 requirements.md、requirements.yaml 和参考图片；格式错误或图片缺失时使用可读需求语义并记录问题。覆盖全部需求、场景和明确指定的初始数据，保留界面文字，使用可访问控件。
     {application_contract(config)}
@@ -1002,8 +1006,8 @@ def main():
     parser.add_argument("command", choices=["bootstrap", "generate", "eval", "analyze", "run", "list", "show", "batch"])
     parser.add_argument("run_id", nargs="?", help="show 的 run ID")
     selection=parser.add_mutually_exclusive_group()
-    selection.add_argument("--config", type=Path, help="显式自定义单核心配置；默认 pi-generalist preset")
-    selection.add_argument("--variant", help="生成的 preset，或 list 的历史 variant 过滤器")
+    selection.add_argument("--config", type=Path, help="显式自定义单核心配置；默认 pi-team-mixed variant")
+    selection.add_argument("--variant", help="生成 variant，或 list 的历史 variant 过滤器")
     parser.add_argument("--backend", choices=('pi', 'codex'), help="生成核心；默认取配置（pi）；list 时过滤 backend")
     parser.add_argument("--task", help="选择 ARC-Bench-Lite 任务，或 list 按任务过滤")
     parser.add_argument("--json", action="store_true", help="输出可机器读取的摘要")
