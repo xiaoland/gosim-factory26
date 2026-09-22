@@ -7,7 +7,6 @@ from pathlib import Path
 import platform
 import shutil
 import signal
-import subprocess
 import sys
 from urllib.parse import urlsplit
 
@@ -113,47 +112,6 @@ def model_key(config, visual=False):
     if not value:
         raise ValueError('平台未注入选定模型的 API Key')
     return value
-
-
-def isolation_prefix(work, inputs):
-    root = factory.ROOT
-    if inputs.is_relative_to(work) or root.is_relative_to(work):
-        raise ValueError('只读输入和参赛制品不得位于可写工作区中')
-    return [sys.executable, str(root/'scripts/linux_sandbox.py'),
-            '--read', str(root), '--read', str(inputs), '--write', str(work), '--']
-
-
-def preflight(prefix, work, inputs, run, env):
-    marker = run/'sandbox-denied.txt'
-    marker.write_text('宿主可读，Agent 不可读')
-    check = '''import errno, pathlib, subprocess, sys
-denied, inputs, work = map(pathlib.Path, sys.argv[1:])
-def forbidden(action):
-    try: action()
-    except OSError as exc:
-        assert exc.errno in (errno.EACCES, errno.EPERM), exc
-    else: raise AssertionError('隔离未拒绝操作')
-forbidden(lambda: denied.read_bytes())
-source = inputs/'requirements.yaml'
-source.read_bytes()
-forbidden(lambda: source.open('w'))
-forbidden(lambda: source.unlink())
-replacement = work/'replacement'
-replacement.write_text('replacement')
-forbidden(lambda: replacement.replace(source))
-(work/'probe').write_text('allowed')
-'''
-    # A grandchild must inherit the same policy, not just the initial launcher.
-    command = [sys.executable, '-c', 'import subprocess,sys; subprocess.run(sys.argv[1:],check=True)',
-               sys.executable, '-c', check, str(marker), str(inputs), str(work)]
-    result = subprocess.run(prefix+command, cwd=work, env=env, capture_output=True, text=True)
-    if result.returncode:
-        raise RuntimeError('参赛文件隔离预检失败：' + result.stderr)
-    if marker.read_text() != '宿主可读，Agent 不可读':
-        raise RuntimeError('隔离预检宿主标记已改变')
-    factory.save(run/'isolation-check.json', {'mechanism':'landlock', 'evaluator_read_denied':True,
-                 'requirements_readable':True, 'requirements_write_denied':True,
-                 'descendants_checked':True, 'network_airgap':False})
 
 
 def validate_application(app):

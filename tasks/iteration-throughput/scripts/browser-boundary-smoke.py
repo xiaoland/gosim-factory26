@@ -26,8 +26,6 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, required=True, help='Unpacked submission package')
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--sandbox-script', type=Path,
-                        help='Test an updated linux_sandbox.py before rebuilding the package')
     parser.add_argument('--library-dir', type=Path,
                         help='Test newly collected runtime libraries before rebuilding the package')
     args = parser.parse_args()
@@ -49,7 +47,6 @@ def main():
     server = ThreadingHTTPServer(('127.0.0.1', 0),
         partial(SimpleHTTPRequestHandler, directory=str(inputs)))
     Thread(target=server.serve_forever, daemon=True).start()
-    sandbox = (args.sandbox_script or root / 'scripts/linux_sandbox.py').resolve()
     passed = False
     try:
         manifest = submission.verify_package(root)
@@ -61,11 +58,7 @@ def main():
                                     'browser-boundary-smoke', config.get('visual_base_url'))
         wrapper = work / 'bin/agent-browser'
         env['PATH'] = str(wrapper.parent) + os.pathsep + env['PATH']
-        prefix = submission.isolation_prefix(work, inputs)
-        prefix[1] = str(sandbox)
-        if args.library_dir:
-            prefix[prefix.index('--'):prefix.index('--')] = [
-                '--read', str(args.library_dir.resolve())]
+        prefix = []
         url = f'http://127.0.0.1:{server.server_port}/'
         observations = {}
         session_envs = {}
@@ -106,9 +99,7 @@ def main():
         record = {
             'status': 'passed',
             'package_manifest_sha256': sha256((root / 'package-manifest.json').read_bytes()).hexdigest(),
-            'sandbox_script': str(sandbox),
-            'sandbox_sha256': sha256(sandbox.read_bytes()).hexdigest(),
-            'isolation': 'submission.isolation_prefix',
+            'isolation': 'direct process launch',
             'environment': 'factory.runtime_environment(submission config)',
             'observations': observations,
         }
@@ -121,7 +112,7 @@ def main():
                 shutil.copy2(source, output / source.name)
         (output / 'failure.json').write_text(json.dumps({
             'status': 'failed', 'error': f'{type(error).__name__}: {error}',
-            'workspace': str(work), 'sandbox_sha256': sha256(sandbox.read_bytes()).hexdigest(),
+            'workspace': str(work),
         }, indent=2) + '\n')
         raise
     finally:

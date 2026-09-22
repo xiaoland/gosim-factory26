@@ -4,7 +4,6 @@ import importlib.util
 import io
 import json
 from pathlib import Path
-import platform
 import subprocess
 import sys
 import tempfile
@@ -194,8 +193,6 @@ class BaselineBoundaryTest(unittest.TestCase):
                      patch.object(factory,'capture',side_effect=['fixed','','pi-version','node-version']), \
                      patch.object(factory,'responses_adapter',return_value=nullcontext(None)), \
                      patch.object(factory,'runtime_environment',side_effect=runtime), \
-                     patch.object(factory,'isolation_prefix',return_value=[]), \
-                     patch.object(factory.subprocess,'run',side_effect=[subprocess.CompletedProcess([],1),subprocess.CompletedProcess([],0)]), \
                      patch.object(factory,'logged',side_effect=failure), \
                      patch.object(factory,'cleanup_workspace',return_value=[]):
                     with self.assertRaises(type(failure)):
@@ -209,10 +206,10 @@ class BaselineBoundaryTest(unittest.TestCase):
 
                 self.assertEqual(metadata['error'],str(failure) or type(failure).__name__)
 
-    def test_pi_exit_zero_requires_native_stop_before_freeze(self):
+    def test_pi_exit_zero_requires_completed_native_turn_before_freeze(self):
         usage={'input':5,'output':2,'cacheRead':0,'cacheWrite':0,'reasoning':1,'totalTokens':7}
 
-        def generated(stop_reason):
+        def generated(stop_reason, drop_native=False):
             with tempfile.TemporaryDirectory() as temp:
                 root=Path(temp); bench=root/'bench'
                 requirements=bench/'arc-bench/webapp/keep/requirements'
@@ -232,21 +229,18 @@ class BaselineBoundaryTest(unittest.TestCase):
                         'usage':usage}})+'\n')
                     return 0
 
-                original_run=subprocess.run
-                def preflight(command, *args, **kwargs):
-                    if command[-1] == str(bench/'package.json'): return subprocess.CompletedProcess(command,1)
-                    if command[-1] == str(requirements/'requirements.md'): return subprocess.CompletedProcess(command,0)
-                    return original_run(command,*args,**kwargs)
+                def cleanup(work):
+                    if drop_native:
+                        (work/'native/session.jsonl').unlink()
+                    return []
 
                 config={'benchmark_revision':'fixed','task':'keep','model':'test','thinking':'high','base_url':'http://unused'}
                 with patch.object(factory,'ROOT',root), patch.object(factory,'BENCH',bench), \
                      patch.object(factory,'capture',side_effect=['fixed','','pi-version','node-version']), \
                      patch.object(factory,'responses_adapter',return_value=nullcontext(None)), \
                      patch.object(factory,'runtime_environment',side_effect=runtime), \
-                     patch.object(factory,'isolation_prefix',return_value=[]), \
-                     patch.object(factory.subprocess,'run',side_effect=preflight), \
                      patch.object(factory,'logged',side_effect=pi), \
-                     patch.object(factory,'cleanup_workspace',return_value=[]):
+                     patch.object(factory,'cleanup_workspace',side_effect=cleanup):
                     try: run=factory.generate(config)
                     except RuntimeError as exc: run=None; error=exc
                     else: error=None
@@ -268,6 +262,14 @@ class BaselineBoundaryTest(unittest.TestCase):
         self.assertEqual((completed['status'],completed['phase']),('generated','frozen'))
         self.assertEqual(completed['usage']['tokens']['totalTokens'],7)
         self.assertEqual(manifest['sessions'][0]['turns'][0]['status'],'completed')
+
+        run,error,partial,manifest=generated('stop',drop_native=True)
+        self.assertIsNotNone(run)
+        self.assertIsNone(error)
+        self.assertEqual((partial['status'],partial['phase']),('generated','frozen'))
+        self.assertEqual(partial['native_diagnostics']['status'],'unknown')
+        self.assertEqual(partial['usage']['coverage'],'unknown')
+        self.assertIsNone(manifest['sessions'][0]['native'])
 
     def test_failed_install_preserves_stage_and_log(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -338,25 +340,6 @@ class BaselineBoundaryTest(unittest.TestCase):
             status=json.loads((run/'remote-evaluation.json').read_text())
             self.assertEqual((status['phase'],status['failed_phase']),('failed','connect'))
             self.assertIn('host unavailable',status['error'])
-
-    @unittest.skipUnless(platform.system() == "Darwin", "macOS isolation boundary")
-    def test_agent_cannot_read_evaluator_or_modify_requirements(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp).resolve()
-            evaluator, inputs = root / "evaluator", root / "input"
-            evaluator.mkdir()
-            inputs.mkdir()
-            secret, requirement = evaluator / "test.js", inputs / "requirements.md"
-            secret.write_text("external assertion")
-            requirement.write_text("allowed requirement")
-            profile = root / "profile.sb"
-            profile.write_text(factory.sandbox_profile([evaluator], inputs))
-            prefix = ["sandbox-exec", "-f", str(profile)]
-            self.assertNotEqual(subprocess.run(prefix + ["cat", str(secret)], capture_output=True).returncode, 0)
-            allowed = subprocess.run(prefix + ["cat", str(requirement)], capture_output=True)
-            self.assertEqual(allowed.stdout, b"allowed requirement")
-            self.assertNotEqual(subprocess.run(prefix + ["touch", str(requirement)], capture_output=True).returncode, 0)
-
 
 if __name__ == "__main__":
     unittest.main()

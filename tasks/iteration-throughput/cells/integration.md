@@ -1,6 +1,6 @@
 # Cell：Pi lifecycle 与整合顺序
 
-状态：已获批实施，尚无评分。Braid实际包场景首次context replacement因缺外部ps/kill失败；修复已提交b2e38b9，无模型overlay检查通过，正构建实际包复验。模型/vision/executor证据复用。下方Observed仅描述实施前反例；批准合同不变，最新证据见末尾。
+状态：本页保留前一实现与资格的历史证据，原生子代理停止证明方案已被用户撤回。当前实施以[Pi边界修正](pi-boundary.md)为准，不再执行本页的三层spike或receipt放行合同。
 
 ## Observed（实施前事实）
 

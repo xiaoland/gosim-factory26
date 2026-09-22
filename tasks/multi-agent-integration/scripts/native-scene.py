@@ -50,7 +50,7 @@ def pi_entry(native, profile):
     tree = json.loads(manifest.read_text()) if manifest.exists() else {}
     return dict(provider='pi',session_id=tree.get('parent_native_session_id'),
                 native_session_path=tree.get('parent_session_file'),native_home=str(native),
-                native_teardown_configured=True,profile_id=profile,parent_native_session_id=None)
+                profile_id=profile,parent_native_session_id=None)
 
 
 def codex_entry_from_events(output, native, profile):
@@ -144,7 +144,7 @@ def run(backend, selected_output=None):
 3. 两个 browser-operator 并行执行，任务分别为：{json.dumps(browser_tasks,ensure_ascii=False)}
 不要让主会话执行浏览器步骤。收齐产物后检查并结束；遇到协议/能力错误请直接报告，不安装或更换核心、扩展或模型。'''
             (output/'prompt.txt').write_text(prompt)
-            prefix = submission.isolation_prefix(work,inputs) if PACKAGE else factory.isolation_prefix(work,inputs)
+            prefix = []
             if backend=='pi':
                 session = native/'parent.jsonl'
                 command = prefix+[binding['executable'],'--provider','factory26','--model',config['model'],
@@ -171,9 +171,14 @@ def run(backend, selected_output=None):
         record['cleanup_pids']=factory.cleanup_workspace(work)
         if not entries:
             entries = [pi_entry(native,parent)] if backend == 'pi' else [codex_entry_from_events(output,native,parent)]
-        archived=archive_sessions(output,native,work,entries)
-        if record['status']=='passed' and (len(archived)<4 or any(e.get('archive_error') for e in archived)):
-            record.update(status='failed',error='Native parent/children evidence incomplete')
+        try:
+            archived=archive_sessions(output,native,work,entries)
+            if any(e.get('archive_error') for e in archived):
+                factory.save(output/'archive-partial.json',
+                             {'status':'partial','entries':archived})
+        except BaseException as exc:
+            factory.save(output/'archive-partial.json',
+                         {'status':'partial','error':f'{type(exc).__name__}: {exc}'})
         # Persist process/oracle termination before optional artifact collection.
         record['finished_at']=time.time(); factory.save(output/'check.json',record)
         try:

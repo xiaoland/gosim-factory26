@@ -128,8 +128,8 @@ def materialize(effective, work, responses_url, run_id, visual_base_url=None):
                                                    for model in sorted(models)])
             write_json(template/'models.json', {'providers':providers})
             write_json(template/'settings.json', {'packages':[], 'subagents':{'disableBuiltins':True}})
-            lifecycle = folder/'factory-subagent-lifecycle.ts'
-            lifecycle.write_text(expanded['lifecycle_extension'])
+            observer = folder/'factory-subagent-observer.ts'
+            observer.write_text(expanded['observer_extension'])
             extension = cache/'node_modules/pi-subagents/index.ts'
             for name, role in expanded['roles'].items():
                 fields = dict(name=name, description=role['instructions'].split('。',1)[0],
@@ -145,7 +145,7 @@ def materialize(effective, work, responses_url, run_id, visual_base_url=None):
                 path.parent.mkdir(exist_ok=True)
                 path.write_text('---\n'+front+'\n---\n\n'+expanded['common']['navigation']+'\n'+role['instructions']+'\n')
             flags = ['--no-extensions','--no-skills','--no-prompt-templates','--no-themes',
-                     '--extension',str(extension),'--extension',str(lifecycle)]
+                     '--extension',str(extension),'--extension',str(observer)]
             for skill in profile['skills']:
                 flags += ['--skill', str(skill_root/skill/'SKILL.md')]
             launcher.write_text('#!/bin/sh\nexec '+shlex.join([executable(core), *flags])+' "$@"\n')
@@ -174,6 +174,4 @@ def materialize(effective, work, responses_url, run_id, visual_base_url=None):
              api_key_environment='FACTORY26_API_KEY', native_template=str(template),
              native_home={'root':str(work/'native-homes')},
              capabilities={'digest':expanded['effective_profile_digest']})
-        if core=='pi':
-            bindings[profile_id]['native_teardown'] = dict(command='factory-subagent-stop',receipt_relpath='.factory/subagent-stop.json')
     return profiles, bindings

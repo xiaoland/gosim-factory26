@@ -140,12 +140,11 @@ def check(backend, svc=False):
 不等待宿主或人类提供下一条消息，不自行 refresh。不要把旧标记复制进其他对象。'''
             request=factory.braid_request(config,work,app,native,prompt,state,output.name)
             factory.save(work/'request.json',request)
-            prefix=factory.isolation_prefix(work,inputs)
             def cli(*args):
                 return subprocess.check_output([str(executable),'--state',str(state),*args],
                                                cwd=app,env=env,text=True)
             with (output/'braid.log').open('w') as log:
-                proc=subprocess.Popen(prefix+[str(executable),'local',str(work/'request.json')],cwd=app,
+                proc=subprocess.Popen([str(executable),'local',str(work/'request.json')],cwd=app,
                                       env=env,stdout=log,stderr=log,start_new_session=True)
                 try:
                     proc.wait()

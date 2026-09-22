@@ -15,7 +15,7 @@ import profiles
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPTS = ('factory.py', 'core.py', 'braid_runtime.py', 'sources.py', 'profiles.py',
-           'native_profiles.py', 'submission.py', 'linux_sandbox.py', 'responses_compat.py')
+           'native_profiles.py', 'submission.py', 'responses_compat.py')
 
 
 def source_input(name, relative):

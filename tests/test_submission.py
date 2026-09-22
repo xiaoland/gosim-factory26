@@ -1,11 +1,8 @@
 """参赛运行边界；不调用模型或读取任何正式测试。"""
-import errno
 import hashlib
 import json
 import os
 from pathlib import Path
-import platform
-import subprocess
 import sys
 import tempfile
 import unittest
@@ -163,44 +160,6 @@ class SubmissionTest(unittest.TestCase):
             self.assertEqual(start.call_args.kwargs['env']['HOST'],'0.0.0.0')
             self.assertTrue(health.call_args.args[0].endswith('/'))
             self.assertEqual(json.loads((result/'summary.json').read_text())['test_timeout_ms'],10000)
-
-    @unittest.skipUnless(platform.system() == 'Linux', '需要真实 Linux Landlock')
-    def test_real_sandbox_inherits_and_cannot_mutate_requirements(self):
-        with tempfile.TemporaryDirectory() as temp:
-            root = Path(temp); work=root/'work'; inputs=root/'inputs'; run=root/'evidence'
-            for folder in (work,inputs,run): folder.mkdir()
-            (inputs/'requirements.yaml').write_text('original')
-            prefix=submission.isolation_prefix(work, inputs)
-            submission.preflight(prefix,work,inputs,run,dict(os.environ))
-            self.assertEqual((inputs/'requirements.yaml').read_text(),'original')
-            with self.assertRaisesRegex(ValueError, '只读输入'):
-                submission.isolation_prefix(work,work/'requirements')
-            # Symlinks do not confer access to a readable host marker.
-            (work/'escape').symlink_to(run/'sandbox-denied.txt')
-            code='import pathlib,sys; pathlib.Path(sys.argv[1]).read_text()'
-            result=subprocess.run(prefix+[sys.executable,'-c',code,str(work/'escape')],capture_output=True,text=True)
-            self.assertNotEqual(result.returncode,0)
-            self.assertIn('PermissionError',result.stderr)
-
-            # Chromium needs its own proc files. Landlock's ptrace domain still
-            # excludes the unsandboxed host's environment, memory and open fds.
-            with (run/'sandbox-denied.txt').open('rb') as marker:
-                probe = r'''import errno, pathlib, sys
-parent, descriptor = sys.argv[1:]
-pathlib.Path('/proc/self/maps').read_bytes()
-pathlib.Path('/proc/self/environ').open('rb').close()
-for suffix in ('environ', 'mem', 'fd/'+descriptor):
-    try:
-        pathlib.Path('/proc/'+parent+'/'+suffix).open('rb').close()
-    except OSError as exc:
-        assert exc.errno in (errno.EACCES, errno.EPERM), exc
-    else:
-        raise AssertionError('host proc access permitted: '+suffix)
-'''
-                result = subprocess.run(prefix+[sys.executable, '-c', probe,
-                    str(os.getpid()), str(marker.fileno())], capture_output=True, text=True)
-                self.assertEqual(result.returncode, 0, result.stderr)
-
 
 if __name__ == '__main__':
     unittest.main()

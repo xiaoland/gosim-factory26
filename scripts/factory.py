@@ -151,12 +151,6 @@ def cleanup_workspace(work):
     return pids
 
 
-def sandbox_profile(denied, readonly):
-    return '(version 1)\n(allow default)\n' + ''.join(
-        f'(deny file-read* file-write* (subpath {json.dumps(str(p.resolve()))}))\n'
-        for p in denied) + f'(deny file-write* (subpath {json.dumps(str(readonly.resolve()))}))\n'
-
-
 def api_key():
     path = Path.home() / ".config/factory26/llm.env"
     for line in path.read_text().splitlines():
@@ -199,21 +193,6 @@ def codex_usage(sessions):
     keys=('input_tokens','cached_input_tokens','cache_write_input_tokens','output_tokens','reasoning_output_tokens','total_tokens')
     native={key:sum(u[key] for u in totals) if all(key in u for u in totals) else None for key in keys}
     return {'sessions':len(sessions),'native_tokens':native,'estimated_cost':None}
-
-
-def isolation_prefix(work, inputs):
-    denied = [ROOT, Path.home() / '.codex', Path.home() / '.pi', Path.home() / '.config/factory26']
-    if platform.system() == 'Darwin':
-        profile = work / 'isolation.sb'
-        profile.write_text(sandbox_profile(denied, inputs))
-        return ['sandbox-exec', '-f', str(profile)]
-    if platform.system() == 'Linux' and shutil.which('bwrap'):
-        command = ['bwrap', '--die-with-parent', '--unshare-pid', '--ro-bind', '/', '/',
-                   '--dev', '/dev', '--proc', '/proc', '--bind', str(work), str(work)]
-        for path in denied:
-            if path.exists(): command += ['--tmpfs', str(path.resolve())]
-        return command + ['--ro-bind', str(inputs), str(inputs)]
-    raise RuntimeError('需要 macOS sandbox-exec 或 Linux bwrap')
 
 
 def runtime_environment(work, config):
@@ -417,16 +396,11 @@ def generate(config, run=None, requirements=None):
             inputs = run/'input' if packaged else work/'requirements'
             app.mkdir(); shutil.copytree(requirements, inputs)
             native, env = runtime_environment(work, config)
-            if packaged:
-                from submission import isolation_prefix as package_prefix
-                prefix = package_prefix(work, inputs)
-            else:
-                prefix = isolation_prefix(work, inputs)
             workspace_instruction = '使用当前工作项分配的 Git worktree。' if workflow=='braid' else f'在 {app} 工作。'
             prompt = f'''请根据 {inputs} 中完整需求包独立实现 Web 应用。{workspace_instruction}
     阅读 requirements.md、requirements.yaml 和参考图片；格式错误或图片缺失时使用可读需求语义并记录问题。覆盖全部需求、场景和明确指定的初始数据，保留界面文字，使用可访问控件。
     {application_contract(config)}
-    本任务授权在本次隔离工作区内设计、实现、安装依赖、自检及本地 Git commit/merge。无人类中途介入；依据需求处理常规歧义，记录重要假设；遇到真实阻塞则报告，不等待用户。禁止 push、发布和修改外部系统或开发源码仓库。
+    本任务授权在本次临时工作区内设计、实现、安装依赖、自检及本地 Git commit/merge。无人类中途介入；依据需求处理常规歧义，记录重要假设；遇到真实阻塞则报告，不等待用户。禁止 push、发布和修改外部系统或开发源码仓库。
     可以编写运行自己的检查，完成后停止服务。不得读取、搜索或下载外部验收测试、benchmark 实现、参考应用或先前实验结果。只依据需求生成，自检后中文说明结果并结束。'''
             (run/'prompt.txt').write_text(prompt)
             if backend == 'pi':
@@ -442,20 +416,8 @@ def generate(config, run=None, requirements=None):
             state = work/'braid-state'
             session_entries = []
             delivery = None
-            phase(run/'run.json',metadata,'preflight',runtime={'work':str(work),'native':str(native),'braid_state':str(state)})
+            metadata['runtime']={'work':str(work),'native':str(native),'braid_state':str(state)}
             try:
-                if packaged:
-                    from submission import preflight
-                    preflight(prefix, work, inputs, run, env)
-                else:
-                    blocked = subprocess.run(prefix+['cat',str(BENCH/'package.json')],capture_output=True)
-                    readable = subprocess.run(prefix+['cat',str(inputs/'requirements.md')],capture_output=True)
-                    if blocked.returncode == 0 or readable.returncode != 0: raise RuntimeError('文件隔离检查失败')
-                if config.get('svc'):
-                    lookup = subprocess.run(prefix+['svc','lookup','--path','index.md'],cwd=app,env=env,capture_output=True,text=True)
-                    if lookup.returncode: raise RuntimeError('沙箱内 svc 不可用: '+lookup.stderr)
-                if not packaged:
-                    save(run/'isolation-check.json', {'evaluator_read_denied':True,'requirements_readable':True,'network_airgap':False})
                 if workflow == 'braid':
                     from braid_runtime import initialize_repository, load_delivery
                     initialize_repository(app)
@@ -468,14 +430,14 @@ def generate(config, run=None, requirements=None):
                     request=braid_request(config,work,app,native,prompt,state,run.name,responses_url)
                     save(work/'braid-request.json',request)
                     phase(run/'run.json',metadata,'braid','braid.log')
-                    code = logged(prefix+[str(braid),'local',str(work/'braid-request.json')],app,env,run/'braid.log', metadata.setdefault('cleanup_errors',[]))
+                    code = logged([str(braid),'local',str(work/'braid-request.json')],app,env,run/'braid.log', metadata.setdefault('cleanup_errors',[]))
                     metadata['process_exit_code']=code
                     if code: raise RuntimeError('braid local 执行失败；参阅 braid.log')
                     delivery=load_delivery(state,app,work,request)
                     metadata['delivery'] = delivery
                 elif backend == 'pi':
                     session = native/'session.jsonl'
-                    command = prefix+['pi','--provider','deepseek','--model',config['model'],'--thinking',config['thinking'],
+                    command = ['pi','--provider','deepseek','--model',config['model'],'--thinking',config['thinking'],
                                       '--mode','json','--print','--no-extensions','--no-skills','--no-prompt-templates','--no-themes',
                                       '--session',str(session)]
                     if not config.get('svc'): command.append('--no-context-files')
@@ -491,7 +453,7 @@ def generate(config, run=None, requirements=None):
                 else:
                     from core import codex_turn
                     phase(run/'run.json',metadata,'agent','codex-events.jsonl')
-                    terminal = codex_turn(prefix+['codex'],app,env,prompt,run,config['model'],config['thinking'])
+                    terminal = codex_turn(['codex'],app,env,prompt,run,config['model'],config['thinking'])
                     session_entries = [{'provider':'codex','session_id':terminal['thread_id'],
                                         'worktree':str(app),'turns':[{'status':'completed'}]}]
                 metadata['status']='generated'
@@ -517,8 +479,11 @@ def generate(config, run=None, requirements=None):
                     # A failed native turn still has useful evidence, identified by its own header.
                     paths = native.glob('sessions/**/*.jsonl') if backend=='codex' else native.glob('session.jsonl')
                     for source in sorted(paths):
-                        with source.open() as stream: header=json.loads(stream.readline())
-                        identity=header.get('payload',{}).get('id') if backend=='codex' else str(source)
+                        try:
+                            with source.open() as stream: header=json.loads(stream.readline())
+                            identity=header.get('payload',{}).get('id') if backend=='codex' else str(source)
+                        except Exception:
+                            identity=str(source)
                         session_entries.append({'provider':backend,'session_id':identity,
                                                 'native_session_path':str(source),'turns':[]})
                 from core import archive_sessions
@@ -529,22 +494,38 @@ def generate(config, run=None, requirements=None):
                 save(run/'application-hashes.json',hashes(run/'application'))
                 metadata['application_sha256']=digest(hashes(run/'application'))
                 metadata.pop('runtime',None)
-                missing=[entry for entry in archived if entry.get('archive_error') or entry.get('evidence_error')]
-                if metadata['status']=='generated' and (not archived or missing):
-                    raise RuntimeError('原生会话证据缺失；参阅 native/manifest.json')
-                if archived and not missing:
+                complete=[entry for entry in archived if entry.get('native') and not entry.get('archive_error')]
+                diagnostic_status=json.loads((run/'native/manifest.json').read_text())['diagnostic_status']
+                metadata['native_diagnostics']={'status':diagnostic_status,
+                    'archived_sessions':len(complete),'reported_sessions':len(archived)}
+                if complete:
                     if backend == 'pi':
-                        usages = [pi_usage(run/entry['native'],require_completed=workflow!='braid'
-                                           and metadata['status']=='generated') for entry in archived]
-                        metadata['usage'] = {'sessions':len(usages),'assistant_responses':sum(u['assistant_responses'] for u in usages),
-                            'summary_events_without_usage':sum(u['summary_events_without_usage'] for u in usages),
-                            'tokens':{key:sum(u['tokens'][key] for u in usages) if all(u['tokens'][key] is not None for u in usages)
-                                      else None for key in usages[0]['tokens']},'estimated_cost':None}
+                        usages=[]
+                        for entry in complete:
+                            try:
+                                usages.append(pi_usage(run/entry['native'],require_completed=workflow!='braid'
+                                                       and metadata['status']=='generated'))
+                            except Exception:
+                                pass
+                        if not usages:
+                            metadata['usage']={'coverage':'unknown','sessions':0,'estimated_cost':None}
+                        else:
+                            coverage='complete' if diagnostic_status=='complete' and len(usages)==len(complete) else 'partial'
+                            metadata['usage'] = {'coverage':coverage,'sessions':len(usages),'assistant_responses':sum(u['assistant_responses'] for u in usages),
+                                'summary_events_without_usage':sum(u['summary_events_without_usage'] for u in usages),
+                                'tokens':{key:sum(u['tokens'][key] for u in usages) if all(u['tokens'][key] is not None for u in usages)
+                                          else None for key in usages[0]['tokens']},'estimated_cost':None}
                     else:
-                        metadata['usage']={'aggregation':'separate-root-and-children; inclusive-parent-accounting-unverified',
-                            'braid_sessions':codex_usage([run/e['native'] for e in archived if not e.get('parent_native_session_id')]),
-                            'native_children':codex_usage([run/e['native'] for e in archived if e.get('parent_native_session_id')]),
-                            'estimated_cost':None}
+                        try:
+                            metadata['usage']={'coverage':diagnostic_status,
+                                'aggregation':'separate-root-and-children; inclusive-parent-accounting-unverified',
+                                'braid_sessions':codex_usage([run/e['native'] for e in complete if not e.get('parent_native_session_id')]),
+                                'native_children':codex_usage([run/e['native'] for e in complete if e.get('parent_native_session_id')]),
+                                'estimated_cost':None}
+                        except Exception:
+                            metadata['usage']={'coverage':'unknown','estimated_cost':None}
+                else:
+                    metadata['usage']={'coverage':'unknown','sessions':0,'estimated_cost':None}
                 phase(run/'run.json',metadata,'frozen' if metadata['status']=='generated' else
                       'interrupted' if metadata['status']=='interrupted' else 'failed')
     except BaseException as exc:

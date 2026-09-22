@@ -12,13 +12,13 @@ python3 scripts/package_agent.py --variant pi-team-mixed --output runs/packages/
 python3 main.py /path/to/requirements --output-dir /path/to/output
 ```
 
-构建需要可用的 Linux x86_64 Docker daemon；`--docker-context` 可省略以使用当前 context。脚本只发送指定构建输入，不上传整个开发目录。Braid 从当前 `sources/braid` 构建；SVC 从当前 `sources/svc` 构建包含 Corpus 的 wheel，Python 依赖用 Linux CPython 3.12 安装到包内目录。Node、所选核心、Chrome及其NSS动态模块、Braid所需的外部`ps`/`kill`与非系统动态库均在构建时安装并随包提供；Pi 需要 Node >=22.19，不能直接使用平台原有 Node 20。精确工具版本由 [Dockerfile](../../submission/Dockerfile) 固定，实际文件哈希、源码身份和执行权限写入 `package-manifest.json`。npm lock 和 Python 依赖清单随 runtime 保留。重复构建不覆盖已有 ZIP；构建时无需模型 key，比赛运行时无需 clone 源码、Cargo 或开发者 venv。
+构建需要可用的 Linux x86_64 Docker daemon；`--docker-context` 可省略以使用当前 context。脚本只发送指定构建输入，不上传整个开发目录。Braid 从当前 `sources/braid` 构建；SVC 从当前 `sources/svc` 构建包含 Corpus 的 wheel，Python 依赖用 Linux CPython 3.12 安装到包内目录。Node、所选核心、Chrome及其NSS动态模块、常用进程工具与非系统动态库均在构建时安装并随包提供；Pi 需要 Node >=22.19，不能直接使用平台原有 Node 20。精确工具版本由 [Dockerfile](../../submission/Dockerfile) 固定，实际文件哈希、源码身份和执行权限写入 `package-manifest.json`。npm lock 和 Python 依赖清单随 runtime 保留。重复构建不覆盖已有 ZIP；构建时无需模型 key，比赛运行时无需 clone 源码、Cargo 或开发者 venv。
 
-入口要求 Linux x86_64、CPython 3.12 和 Landlock ABI >=3。它先校验所有载荷并恢复 ZIP 解压丢失的执行权限，再启动独立 Landlock launcher。规则授权系统运行路径、只读包与需求、可写临时工作区，不开放整个 `/workspace` 或 `/tmp`。Chrome需要读取自身的maps与fd，因此`/proc`以只读方式开放；跨Landlock域的进程敏感文件仍受内核ptrace限制。Linux资格同时检查自身proc可读、宿主的environ/fd/mem被拒绝，不以路径规则替代实际边界验证。运行前检查子孙进程不能读取宿主标记，不能写入、删除或替换需求。内核或 seccomp 不支持时明确失败，不会无隔离回退。网络白名单仍由平台负责；该文件隔离不声称实施了网络隔离。生产 Runner 是否支持此内核能力需要在正式环境核实。
+入口要求 Linux x86_64 和 CPython 3.12。它先校验所有载荷并恢复 ZIP 解压丢失的执行权限，再在临时工作区直接启动原生程序。包、需求、会话配置和交付身份仍由入口分别校验并记录；文件访问限制与网络白名单由运行平台负责，入口不再装配 Landlock 或其它自建沙箱。
 
 文本 provider 必须使用完整的 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`MODEL`。可选完整 `VISUAL_API_KEY`、`VISUAL_BASE_URL`、`VISUAL_MODEL` 只供视觉角色使用，不覆盖主模型；仅有默认 VISUAL_MODEL 不视为提供了视觉凭据。视觉 key 或地址部分提供时立即失败。冻结 variant 的主模型和视觉角色与平台模型不一致时拒绝运行，避免改变实验条件。配置与清单保存环境变量名，不保存 key；运行时只传递实际需要的凭据。
 
-应用交付遵循官方标准布局：`frontend/package.json` 提供 build，`backend/package.json` 提供 start；后端在 `HOST=0.0.0.0 PORT=3000` 下提供前端产物与 API，目标应用兼容 Node 20.19.3。包内 Node 22 用于 Harness，不能推定部署环境也有 Node 22。禁止依赖本地模拟器专用的 `deploy.sh`。入口只在生成成功并冻结后复制应用，保留平台预置的 `.arc`、`.git` 和 `requirements`，拒绝覆盖同名应用文件。输入可为独立需求快照，或输出目录原有的 `requirements/`。证据保存在输出的 `.factory26/<run-id>/`；`run.json` 描述生成，`delivery.json` 单独描述交付成功或失败。
+应用交付遵循官方标准布局：`frontend/package.json` 提供 build，`backend/package.json` 提供 start；后端在 `HOST=0.0.0.0 PORT=3000` 下提供前端产物与 API，目标应用兼容 Node 20.19.3。包内 Node 24 用于 Harness，不能推定部署环境也有 Node 22。禁止依赖本地模拟器专用的 `deploy.sh`。入口只在生成成功并冻结后复制应用，保留平台预置的 `.arc`、`.git` 和 `requirements`，拒绝覆盖同名应用文件。输入可为独立需求快照，或输出目录原有的 `requirements/`。证据保存在输出的 `.factory26/<run-id>/`；`run.json` 描述生成，`delivery.json` 单独描述交付成功或失败。
 
 官方 Competition 的自动化入口为 [competition.py](../../scripts/competition.py)，统一记录 ZIP identity、submission snapshot、task run、日志游标与终态收集。`prepare` 不写平台；其余写入按批准的实验范围执行，任何 POST 结果不确定都先保留 journal，再只读核查，不盲重试。Playground 仍只用于显式 practice，不混入 Competition 结果。
 
@@ -30,7 +30,7 @@ python3 main.py /path/to/requirements --output-dir /path/to/output
 
 ## 环境和启动
 
-生成主机需要 Python 3.12+、Git、uv、Node/npm，以及对应 Pi 或 Codex 可执行文件。macOS 使用 sandbox-exec，Linux 使用 bwrap；模型接入目前在本机 macOS 验证。braid 组合另外需要 Rust 1.93+ 构建本地源码。评测可独立运行在 Linux，不需要模型密钥或 Agent 核心。
+生成主机需要 Python 3.12+、Git、uv、Node/npm，以及对应 Pi 或 Codex 可执行文件。模型接入目前在本机 macOS 验证。braid 组合另外需要 Rust 1.93+ 构建本地源码。评测可独立运行在 Linux，不需要模型密钥或 Agent 核心。
 
 ```sh
 cd ~/Development/factory26
@@ -53,9 +53,9 @@ FACTORY26_API_KEY=你的比赛密钥
 
 ## 生成和评测
 
-生成在独立临时目录运行。两个核心均使用临时 HOME、原生配置目录和筛选后的环境变量。Pi 禁用自动发现个人扩展、技能、提示模板和主题。当前 factory 启用 Braid 和 SVC，将 [harness/AGENTS.md](../../harness/AGENTS.md) 的语义索引复制到运行时 user scope，并按 variant 装配冻结 canonical V&V 路径。活动配置目录、实际注入文件和公共 harness 都保存到新 run。内部只有 svc=true 才复制 SVC 安装和指导；关闭 SVC 的受控 Braid 探针不需要它们。安装在 bootstrap 时完成，生成沙箱内无需联网重装 Corpus。
+生成在独立临时目录运行。两个核心均使用临时 HOME、原生配置目录和筛选后的环境变量。Pi 禁用自动发现个人扩展、技能、提示模板和主题。当前 factory 启用 Braid 和 SVC，将 [harness/AGENTS.md](../../harness/AGENTS.md) 的语义索引复制到运行时 user scope，并按 variant 装配冻结 canonical V&V 路径。活动配置目录、实际注入文件和公共 harness 都保存到新 run。内部只有 svc=true 才复制 SVC 安装和指导；关闭 SVC 的受控 Braid 探针不需要它们。安装在 bootstrap 时完成，运行环境无需联网重装 Corpus。
 
-文件隔离拒绝读取开发仓库、个人 Codex/Pi 配置和比赛密钥文件，需求副本只读；运行前检查评测器不可读、需求可读以及 SVC 可查询。网络用于模型调用与依赖安装，因此这不是网络隔离沙箱，也不是整个用户目录的访问隔离。每次生成有独立工作区和 TMPDIR；浏览器按 run 与原生 session ID 隔离 Cookie、storage 和 socket。主机网络及 Agent 自行硬编码的 /tmp 路径仍共享，出现冲突须作为设施问题保留证据。固定批次先使用两路生成，最多四路冻结后评测，后者使用独立应用目录和分配端口。
+每次生成有独立工作区和 TMPDIR；浏览器按 run 与原生 session ID 隔离 Cookie、storage 和 socket。主机网络及 Agent 自行硬编码的 /tmp 路径仍共享，出现冲突须作为设施问题保留证据。固定批次先使用两路生成，最多四路冻结后评测，后者使用独立应用目录和分配端口。
 
 Codex 使用 app-server stdio，只有所请求线程和 turn 的 completed 通知表示结束。每次 Codex 生成启动一个仅监听 loopback 的 LiteLLM 适配器并在结束后停止；不回退到其他模型。Pi 单会话即使退出码为 0，也须在 Agent 阶段检查最终 stopReason；原生错误保留其正文和已报告用量，不能进入成功冻结。braid 的 Pi provider 等待 agent_settled 后判断终态，允许原生重试和压缩收尾。
 
@@ -107,7 +107,7 @@ python3 scripts/factory.py show <run-id> --eval <evaluation-id> --json
 
 `list/show` 只读已有运行。生成失败时，show 从哈希核实的 Pi 归档提取末条 assistant 的终止原因与记录位置；不展示完整正文，不回溯已恢复或已替代会话的旧错误，损坏或关联不唯一时明确未知。默认 show 先呈现状态、失败和相关入口；指定 --case 时优先展示该用例。全部元数据、路径、会话和 SVC evidence 映射保留在 --json，避免默认输出铺满文件列表。生成状态、所选评测和 SVC coverage 分别展示；最新本地评测失败时不回退到旧分数。用例入口展开有长度标记的错误、从官方 error-context 定向提取的页面片段及行号，以及重定位后的本地截图、视频和 trace。页面事实不自动等于因果结论。历史数据缺少阶段或退出码时显示未知；旧 variant 根据配置推导并显式标记。
 
-新 run 在 setup、preflight、agent/braid、cleanup、frozen/failed/interrupted 时原子更新 `run.json`；新评测记录 install、build、health、tests 等阶段及日志入口。失败保留 `failed_phase`，中断明确标记。Braid 生成失败时另存 `recovery-workspace.json` 并保留原始隔离目录及 Git common repo，以免销毁工作树的恢复依据；成功后清理。此保留不表示失败应用已经冻结可评测，也不表示已有 Factory 一键恢复接口。阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
+新 run 在 setup、agent/braid、cleanup、frozen/failed/interrupted 时原子更新 `run.json`；新评测记录 install、build、health、tests 等阶段及日志入口。失败保留 `failed_phase`，中断明确标记。Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目录及 Git common repo，以免销毁恢复依据；成功后清理。应用终态先持久化，原生会话归档失败另存 partial 证据，不覆盖应用生成结果。阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
 
 远程评测以 `remote-evaluations/<evaluation-id>.json` 保存每次请求的完整观测，`remote-evaluation.json` 仅作为最近观测的兼容入口。请求在启动前分配明确 ID，区分连接、传输、远端运行和下载，每 180 秒获取该 ID 的 summary；SSH 进程退出立即返回，不额外等一个观察周期。下载后核对 run、benchmark 和冻结应用哈希，不按目录差集猜测执行。观测时间与观测失败单独保存，下载后用终态 summary 收口；断线不能被当成远程零分或停止成功。`show` 同时保留最新本地评测与远端状态，不把暂存远端状态当作已下载成绩。
 

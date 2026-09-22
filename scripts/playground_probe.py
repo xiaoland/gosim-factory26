@@ -23,7 +23,7 @@ print("FACTORY26_PROBE " + json.dumps({
     "python": platform.python_version(), "platform": platform.system(),
     "architecture": platform.machine(), "cpu_count": os.cpu_count(),
     "tools": {name: bool(shutil.which(name)) for name in
-              ("node", "npm", "git", "codex", "pi", "uv", "cargo", "bwrap")},
+              ("node", "npm", "git", "codex", "pi", "uv", "cargo")},
     "requirements_present": (Path(args.requirement_path) / "requirements.yaml").is_file(),
     "model_calls": 0
 }), flush=True)

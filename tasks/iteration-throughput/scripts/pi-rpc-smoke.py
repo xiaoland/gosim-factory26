@@ -23,8 +23,7 @@ out.mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='factory26-pi-rpc-') as temp:
     home = Path(temp)
     command = [native_profiles.executable('pi'), '--mode', 'rpc', '--no-extensions', '--no-skills',
-               '--no-prompt-templates', '--no-themes', '--extension', str(cache/'node_modules/pi-subagents/index.ts'),
-               '--extension', str(ROOT/'harness/extensions/factory-subagent-lifecycle.ts')]
+               '--no-prompt-templates', '--no-themes']
     env = {'PATH':os.environ['PATH'], 'HOME':str(home), 'PI_CODING_AGENT_DIR':str(home), 'PI_OFFLINE':'1', 'PI_TELEMETRY':'0'}
     with (out/'stderr.log').open('w') as errors, (out/'rpc.jsonl').open('w') as evidence:
         process = subprocess.Popen(command, cwd=home, env=env, stdin=subprocess.PIPE,
@@ -52,15 +51,10 @@ with tempfile.TemporaryDirectory(prefix='factory26-pi-rpc-') as temp:
         try:
             state=rpc('get_state'); parent=state['sessionId']
             rpc('abort')
-            directory=home/'.factory'; directory.mkdir(exist_ok=True)
-            request={'schema_version':1,'fence_id':'no-model','parent_native_session_id':parent,'started_at':int(time.time())}
-            (directory/'teardown-request.json').write_text(json.dumps(request))
-            rpc('prompt',message='/factory-subagent-stop')
-            receipt=json.loads((directory/'subagent-stop.json').read_text())
-            assert receipt['state']=='ready' and receipt['children']==[], receipt
-            assert receipt['parent_native_session_id']==parent
-            (out/'receipt.json').write_text(json.dumps(receipt,indent=2)+'\n')
-            print(json.dumps({'status':'passed','scope':'actual Pi RPC + lifecycle command, no children/model calls','evidence':str(out)}))
+            process.stdin.close()
+            assert process.wait(timeout=30) == 0, 'Pi RPC did not exit cleanly after stdin EOF'
+            print(json.dumps({'status':'passed','scope':'actual Pi RPC and normal stdin EOF shutdown, no model calls',
+                              'parent_native_session_id':parent,'evidence':str(out)}))
         finally:
             selector.close(); process.terminate()
             try: process.wait(timeout=5)

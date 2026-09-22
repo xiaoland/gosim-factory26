@@ -14,4 +14,4 @@ CLI/对象的公开协作者字段固定为 `assignee_login`/`assignee_descripti
 
 原始 RPC、构建和运行日志留在 `runs/qualification/`；本页不累积逐条日志。只在接口假设失效、需要改变设计或外部事实需要用户输入时升级。默认输出阶段、状态、证据路径；完整日志按需读取。
 
-当前并行出口：capabilities_impl负责procps缺失修复后的单候选打包与无overlay资格；主Agent持有Braid场景启动和官方矩阵放行。native_stall仅用无模型RPC核对会话路径差异，不改产品；linux_run_observer在下一次启动后持有终态观察，不另起实验。前一Braid场景已失败归档（缺ps/kill）；final-a102aa2四包退役且未上传。既有模型、vision/executor和双浏览器证据按变更依赖复用。官方local镜像仍缺失；官网任务/空历史已确认，首次写入仍待资格通过。
+当前并行出口：本轮边界修正已开工，Factory基线4310135。主Agent负责sources/braid，已提交fdb5c19（删除内部子代理控制，EOF关闭Pi），29单元与1CLI通过；factory_boundary_cleanup负责Factory源、被动观察/归档、删除全部自建沙箱及对应检查；direct_run_qualification优先负责短真实braid-scene，随后清理辅助入口和部署文档。真实运行先复用现有Linux runtime，不等新ZIP；一个候选官方闭环后再展开其余variant。此前进程兜底worker已中断。

@@ -41,3 +41,7 @@ Pi 0.85.1已安装实现可见：rpc-mode.js的stdin end调用shutdown，shutdow
 主要影响：删除一个自有生命周期协议，改变Pi退出方式；原生子代理状态不再是Braid放行依据，诊断不完整不再伪装为应用生成失败。
 
 独立只读预演已完成（pi_boundary_rehearsal，Luna medium）：已安装pi-subagents0.56.0在`src/extension/index.ts:1033`响应session_shutdown，cleanup主要处置watcher/poller/scheduler等运行时状态；`src/runs/background/async-job-tracker.ts:662`的dispose没有承诺终止全部后台child。foreground execution有AbortSignal→SIGTERM/SIGKILL映射，但shutdown到全部child abort的完整绑定未确证。该结果限制我们的声明：不能声称EOF证明所有子代理都停止，也不能因此恢复Braid的兜底协议。真实运行中若出现内部异常，按Pi/pi-subagents故障处理；此次预演不扩展成模拟系统。
+
+## 当前验证
+
+Braid实现已提交`fdb5c19`，删除580行、增加41行；29个单元检查与1个CLI检查通过。Factory删除自建沙箱与主动生命周期扩展，改用被动observer；`make test`的124个Python检查和Node observer检查通过，原始输出`/tmp/f26-boundary-full-tests.log`。Debian构建二进制已装入既有Linux容器的`/tmp/factory26-live/boundary-dev/runtime/bin/braid`，正在装配短真实运行；其结果尚未确认。正式评分仍为未开始。

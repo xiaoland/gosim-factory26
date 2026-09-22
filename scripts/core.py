@@ -21,7 +21,7 @@ def _archive_path(value, work, base=None):
         path = (base or work) / path
     path = path.resolve(strict=True)
     if not path.is_relative_to(work.resolve()):
-        raise ValueError('原生会话路径不属于本次隔离目录')
+        raise ValueError('原生会话路径不属于本次运行目录')
     return path
 
 
@@ -73,7 +73,7 @@ def _child_inherited(root, extra=None):
 
 
 def archive_sessions(output, home, work, entries):
-    """Archive Braid sessions and children proven by native parent relations."""
+    """Archive native sessions and passively observed parent relations."""
     output = Path(output).resolve()
     native = output/'native'
     native.mkdir(parents=True, exist_ok=True)
@@ -118,12 +118,14 @@ def archive_sessions(output, home, work, entries):
             native_home = _archive_path(row['native_home'], work)
             tree_path = native_home/'.factory'/'session-tree.json'
             if tree_path.exists():
-                tree = json.loads(tree_path.read_text())
-                root_ids = {str(session_id), str(row.get('native_session_id'))}
-                root_ids.discard('None')
-                if str(tree.get('parent_native_session_id')) not in root_ids:
-                    raise ValueError('Pi session-tree parent identity 与 Braid 根会话不一致')
-                source = tree.get('parent_session_file') or source
+                try:
+                    tree = json.loads(tree_path.read_text())
+                    root_ids = {str(session_id), str(row.get('native_session_id'))}
+                    root_ids.discard('None')
+                    if str(tree.get('parent_native_session_id')) in root_ids:
+                        source = tree.get('parent_session_file') or source
+                except (OSError, ValueError, TypeError, json.JSONDecodeError):
+                    pass
         if not source and provider == 'codex' and isinstance(session_id, str) and re.fullmatch(r'[a-fA-F0-9-]+', session_id):
             native_home = _archive_path(row['native_home'], work) if row.get('native_home') else home
             matches = list(native_home.glob(f'sessions/**/rollout-*-{session_id}.jsonl'))
@@ -145,20 +147,19 @@ def archive_sessions(output, home, work, entries):
             return
         child_home = _archive_path(native_home, work)
         factory_dir = child_home/'.factory'
-        receipt_path = factory_dir/'subagent-stop.json'
         tree_path = factory_dir/'session-tree.json'
-        if not tree_path.exists() and not root.get('native_teardown_configured'):
+        if not tree_path.exists():
+            root_archived['observer_diagnostic_status'] = 'unknown'
             return
-        tree_source = _archive_path(receipt_path if receipt_path.exists() else tree_path, work)
+        tree_source = _archive_path(tree_path, work)
         tree = json.loads(tree_source.read_text())
         if not isinstance(tree, dict) or not isinstance(tree.get('children'), list):
             raise ValueError('Pi session-tree manifest 格式无效')
-        if tree_source == receipt_path and tree.get('state') != 'stopped':
-            raise ValueError('Pi teardown receipt 尚未终结')
         tree_target = native/f'{target_index:03}-{tree_source.name}'
         target_index += 1
         shutil.copy2(tree_source, tree_target)
         root_archived['session_tree_manifest'] = str(tree_target.relative_to(output))
+        root_archived['observer_diagnostic_status'] = tree.get('diagnostic_status', 'unknown')
         parent_id = tree.get('parent_native_session_id')
         root_ids = {str(root_archived.get('native_id')), str(root.get('session_id')),
                     str(root.get('native_session_id')),
@@ -190,10 +191,9 @@ def archive_sessions(output, home, work, entries):
                     'mode': child.get('mode'), 'run_id': child.get('run_id'),
                     'child_id': child.get('child_id'),
                 })
-                if child.get('proof') is not None:
-                    row['lifecycle_proof'] = child['proof']
                 if child.get('artifact_paths') is not None:
                     row['artifact_paths'] = child['artifact_paths']
+                row['association_status'] = child.get('association_status', 'unknown')
                 row = {key: value for key, value in row.items() if value is not None}
                 try:
                     if not child_id or not source_value or not child.get('evidence_source'):
@@ -209,10 +209,12 @@ def archive_sessions(output, home, work, entries):
                         connected.add(str(child_id))
                         archived_child.setdefault('native_parent', str(child_parent))
                 except (OSError, ValueError, TypeError, json.JSONDecodeError) as exc:
+                    row['association_status'] = 'partial'
                     error_row(row, str(exc))
             if not progress:
                 for child in pending:
-                    error_row(_child_inherited(root, {'provider':provider, 'session_id':child.get('child_session_id')}), 'Pi child 没有连通到声明父会话的身份链')
+                    error_row(_child_inherited(root, {'provider':provider, 'session_id':child.get('child_session_id'),
+                              'association_status':'partial'}), 'Pi child 没有连通到声明父会话的身份链')
                 break
 
     def archive_codex_children(root, root_archived, provider):
@@ -282,10 +284,16 @@ def archive_sessions(output, home, work, entries):
                     elif provider == 'codex':
                         archive_codex_children(row, root_archived, provider)
                 except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
-                    root_archived['archive_error'] = str(exc)
+                    root_archived['observer_diagnostic_status'] = 'partial'
+                    root_archived['observer_diagnostic_error'] = str(exc)
         except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
             error_row(row, str(exc))
-    manifest = {'schema_version': 1, 'sessions': archived}
+    valid = [row for row in archived if row.get('native') and not row.get('archive_error')]
+    incomplete_observation = any(row.get('observer_diagnostic_status') in ('partial', 'unknown')
+                                 or row.get('association_status') in ('partial', 'unknown') for row in archived)
+    diagnostic_status = ('unknown' if not valid else 'partial'
+                         if len(valid) != len(archived) or incomplete_observation else 'complete')
+    manifest = {'schema_version': 1, 'diagnostic_status': diagnostic_status, 'sessions': archived}
     (native/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
     return archived
 

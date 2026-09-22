@@ -63,8 +63,7 @@ def main():
         os.environ.update(OPENAI_API_KEY=env['OPENAI_API_KEY'],OPENAI_BASE_URL=env['OPENAI_BASE_URL'],MODEL=env['MODEL'])
         config=submission.platform_config(package,manifest)
         native, agent_env=submission.environment(work,config)
-        prefix=submission.isolation_prefix(work,inputs)
-        submission.preflight(prefix,work,inputs,evidence,agent_env)
+        prefix=[]
         for command in (['node','--version'],['npm','--version'],[backend,'--version'],['braid','--version'],['git','--version'],['svc','lookup','--path','index.md']):
             result=subprocess.run(prefix+command,cwd=work,env=agent_env,capture_output=True,text=True,timeout=60)
             assert result.returncode==0,(command,result.stderr)

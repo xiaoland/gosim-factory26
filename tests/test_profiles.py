@@ -101,6 +101,11 @@ class ProfileBoundaryTest(unittest.TestCase):
             self.assertIn('model: "factory26-visual/deepseek-v4-flash-vision-exp"', browser)
             self.assertIn('defaultContext: "fresh"', browser)
             self.assertNotIn('reviewer', {path.stem for path in (template / 'agents').glob('*.md')})
+            self.assertTrue((work/'capabilities/pi-glm-fast/factory-subagent-observer.ts').is_file())
+            self.assertEqual(set(bindings['pi-glm-fast']), {
+                'adapter_type', 'executable', 'api_key_environment', 'native_template',
+                'native_home', 'capabilities',
+            })
 
     def test_packaged_browser_wrapper_uses_canonical_chromium_launcher(self):
         with tempfile.TemporaryDirectory() as temporary:

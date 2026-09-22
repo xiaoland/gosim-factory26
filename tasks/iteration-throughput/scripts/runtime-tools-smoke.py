@@ -14,7 +14,6 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--root', type=Path, required=True)
     parser.add_argument('--output', type=Path, required=True)
-    parser.add_argument('--sandbox-script', type=Path)
     parser.add_argument('--tools-root', type=Path,
                         help='Test collected tools before rebuilding the package')
     args = parser.parse_args()
@@ -26,17 +25,12 @@ def main():
 
     submission.verify_package(root)
     tools_root = (args.tools_root or root / 'runtime').resolve()
-    sandbox = (args.sandbox_script or root / 'scripts/linux_sandbox.py').resolve()
     work = Path(tempfile.mkdtemp(prefix='f26-tools-smoke-', dir='/tmp')).resolve()
     inputs = Path(tempfile.mkdtemp(prefix='f26-tools-input-', dir='/tmp')).resolve()
     try:
         env = submission.base_environment()
         env['PATH'] = str(tools_root / 'bin') + ':' + env['PATH']
-        prefix = submission.isolation_prefix(work, inputs)
-        prefix[1] = str(sandbox)
-        for path in (tools_root, sandbox):
-            if not path.is_relative_to(root):
-                prefix[prefix.index('--'):prefix.index('--')] = ['--read', str(path)]
+        prefix = []
         probe = r'''import json, os, shutil, subprocess, sys
 ps = shutil.which('ps'); kill = shutil.which('kill')
 assert ps and kill
@@ -61,7 +55,7 @@ print(json.dumps({'ps_listed_self': True, 'process_group_existed': True,
         if result.returncode:
             raise RuntimeError(result.stderr or result.stdout)
         record = json.loads(result.stdout)
-        record.update(status='passed', sandbox_sha256=sha256(sandbox.read_bytes()).hexdigest(),
+        record.update(status='passed',
                       ps_sha256=sha256((tools_root/'libexec/ps').read_bytes()).hexdigest(),
                       kill_sha256=sha256((tools_root/'libexec/kill').read_bytes()).hexdigest())
         (output/'result.json').write_text(json.dumps(record, indent=2) + '\n')

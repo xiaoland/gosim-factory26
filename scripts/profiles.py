@@ -147,7 +147,7 @@ def resolve(variant=DEFAULT_VARIANT, root=ROOT):
                        models=models, common=common,
                        provider={key: value for key, value in catalog.items() if key != 'models'},
                        core_version=package['dependencies']['@earendil-works/pi-coding-agent'],
-                       lifecycle_extension=harness_text('harness/extensions/factory-subagent-lifecycle.ts'),
+                       observer_extension=harness_text('harness/extensions/factory-subagent-observer.ts'),
                        svc_preload=svc['preload'])
         expanded[profile_id] = dict(payload, effective_profile_digest=digest(payload))
     if not set(selected_defaults.values()) <= set(profiles_by_login):

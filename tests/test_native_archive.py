@@ -36,7 +36,7 @@ class NativeArchiveTest(unittest.TestCase):
             self.assertEqual(rows[0]['source_path'], str(canonical))
             self.assertNotIn('archive_error', rows[0])
 
-    def test_pi_finds_canonical_root_and_prefers_terminal_receipt(self):
+    def test_pi_finds_canonical_root_and_archives_passive_children(self):
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp).resolve()
             native_home = work/'pi-home'
@@ -48,23 +48,19 @@ class NativeArchiveTest(unittest.TestCase):
             factory = native_home/'.factory'
             factory.mkdir(parents=True)
             (factory/'session-tree.json').write_text(json.dumps({
-                'schema_version':1, 'parent_native_session_id':'pi-root',
-                'parent_session_file':str(alias), 'children':[{'mode':'foreground'}],
-            }))
-            (factory/'subagent-stop.json').write_text(json.dumps({
-                'schema_version':1, 'state':'stopped', 'parent_native_session_id':'pi-root',
+                'schema_version':1, 'diagnostic_status':'complete', 'parent_native_session_id':'pi-root',
+                'parent_session_file':str(alias),
                 'children':[{'mode':'foreground','run_id':'run-1','parent_session_id':'pi-root',
                     'child_session_id':'pi-child','session_file':str(child),
-                    'evidence_source':'pi-subagents:interrupt/parent-process-tree'}],
+                    'association_status':'complete','evidence_source':'pi-subagents:passive-observer'}],
             }))
             rows = archive_sessions(work/'run',work/'unused',work,[{
                 'provider':'pi','session_id':str(alias),'native_session_id':'pi-root',
                 'native_home':str(native_home),'native_session_path':str(alias),
-                'native_teardown_configured':True,
             }])
             self.assertEqual([row.get('native_id') for row in rows],['pi-root','pi-child'])
             self.assertTrue(all('archive_error' not in row for row in rows))
-            self.assertTrue(rows[0]['session_tree_manifest'].endswith('subagent-stop.json'))
+            self.assertTrue(rows[0]['session_tree_manifest'].endswith('session-tree.json'))
 
     def test_pi_tree_archives_two_connected_levels_and_manifest(self):
         with tempfile.TemporaryDirectory() as temp:
@@ -84,11 +80,10 @@ class NativeArchiveTest(unittest.TestCase):
                 'children': [
                     {'mode': 'foreground', 'run_id': 'run-1', 'parent_session_id': 'pi-root',
                      'child_session_id': 'pi-child-1', 'session_file': str(child_one),
-                     'evidence_source': 'pi-subagents:status/foregroundRuns'},
+                     'association_status':'complete', 'evidence_source': 'pi-subagents:passive-observer'},
                     {'mode': 'background', 'run_id': 'run-2', 'parent_session_id': 'pi-child-1',
                      'child_session_id': 'pi-child-2', 'session_file': str(child_two),
-                     'evidence_source': 'pi-subagents:status/processTerminal',
-                     'proof': {'process_terminal_observed': True, 'process_terminal': {'runId': 'run-2', 'state': 'observed'}}},
+                     'association_status':'complete', 'evidence_source': 'pi-subagents:passive-observer'},
                 ],
             }
             (native_home / '.factory').mkdir(parents=True)
@@ -105,7 +100,7 @@ class NativeArchiveTest(unittest.TestCase):
             self.assertEqual(children['pi-child-1']['native_parent'], 'pi-root')
             self.assertEqual(children['pi-child-2']['native_parent'], 'pi-child-1')
             self.assertEqual(children['pi-child-2']['profile_id'], 'p1')
-            self.assertEqual(children['pi-child-2']['lifecycle_proof'], tree['children'][1]['proof'])
+            self.assertEqual(children['pi-child-2']['association_status'], 'complete')
             self.assertNotIn('assignment_generation', children['pi-child-2'])
             self.assertEqual((output / rows[0]['session_tree_manifest']).read_text(), (native_home / '.factory' / 'session-tree.json').read_text())
             self.assertEqual(json.loads((output / 'native' / 'manifest.json').read_text())['sessions'], rows)
@@ -142,7 +137,7 @@ class NativeArchiveTest(unittest.TestCase):
             errors = [row['archive_error'] for row in rows if row.get('archive_error')]
             self.assertEqual(len(errors), 4)
             self.assertTrue(any('缺少' in error for error in errors))
-            self.assertTrue(any('不属于本次隔离目录' in error for error in errors))
+            self.assertTrue(any('不属于本次运行目录' in error for error in errors))
             self.assertTrue(any('原生身份冲突' in error for error in errors))
             self.assertTrue(any('header 身份' in error for error in errors))
             self.assertEqual(len([row for row in rows if row.get('native_id') == 'duplicate']), 1)
