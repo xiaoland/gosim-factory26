@@ -48,16 +48,16 @@ async function stoppedChildren() {
   const promise = adapter.stop();
   assert.equal(adapter.fenced, true, "new tool calls are fenced before the first RPC reply");
   const receipt = await promise;
-  assert.equal(receipt.state, "stopped");
+  assert.equal(receipt.state, "ready");
   assert.equal(receipt.children.length, 2);
-  assert.deepEqual(receipt.children.find((child) => child.run_id === "fg-1").proof, { control_inactive: true });
+  assert.equal(receipt.children.find((child) => child.run_id === "fg-1").proof.control_requested, true);
   assert.deepEqual(receipt.children.find((child) => child.run_id === "bg-1").proof, { status_terminal: true, process_terminal_observed: true, active_lease_released: true });
   assert.equal(receipt.children.find((child) => child.run_id === "fg-1").child_session_id, "foreground-session");
   assert.equal(receipt.children.find((child) => child.run_id === "fg-1").native_role, "executor");
   assert.equal(receipt.children.find((child) => child.run_id === "fg-1").artifact_paths.outputPath, path.join(home, "foreground-output.md"));
   assert.ok(calls.some(([method, params]) => method === "interrupt" && params.runId === "fg-1"));
   assert.ok(calls.some(([method, params]) => method === "stop" && params.id === "bg-1"));
-  assert.equal(JSON.parse(fs.readFileSync(path.join(home, RECEIPT_RELATIVE_PATH))).state, "stopped");
+  assert.equal(JSON.parse(fs.readFileSync(path.join(home, RECEIPT_RELATIVE_PATH))).state, "ready");
 }
 
 async function canonicalParentFileIsRefreshed() {
@@ -154,7 +154,7 @@ async function workflowResultsAreRetained() {
   const manifestChildren = JSON.parse(fs.readFileSync(path.join(local, ".factory", "session-tree.json"))).children;
   assert.deepEqual(manifestChildren.map((child) => child.child_session_id).sort(), ["workflow-child-session-a", "workflow-child-session-b"]);
   const receipt = await adapter.stop();
-  assert.equal(receipt.state, "stopped");
+  assert.equal(receipt.state, "ready");
   assert.equal(receipt.children.length, 2);
   assert.deepEqual(receipt.children.map((child) => child.child_session_id).sort(), ["workflow-child-session-a", "workflow-child-session-b"]);
   assert.deepEqual(receipt.children.map((child) => child.native_role), ["browser-operator", "browser-operator"]);
@@ -193,7 +193,7 @@ async function directForegroundCompletionIsObserved() {
   });
   adapter.observe({ runId: "direct-run", source: "foreground", state: "interrupted", taskIndex: 0, agent: "executor", sessionFile: childFile });
   const receipt = await adapter.stop();
-  assert.equal(receipt.state, "stopped");
+  assert.equal(receipt.state, "ready");
   assert.equal(receipt.children.length, 1);
   assert.equal(receipt.children[0].child_session_id, "direct-child-session");
   assert.deepEqual(receipt.children[0].proof, { control_inactive: true });

@@ -30,19 +30,19 @@
 
 ## 子树 fence 的可验收边界
 
-Braid 写 `.factory/teardown-request.json(fence_id,parent_native_session_id,started_at)` 到独立 native home，调用 binding 的受控 command，读取 `.factory/subagent-stop.json` 的同 fence receipt。receipt 含 schema_version、fence_id、parent_native_session_id、state（stopped/unknown）、children 证据及 completed_at。foreground 证明其 control 已退出；background 证明 terminal、process-terminal observed 与 lease 释放，不能给 foreground 强加不存在的 background 文件。hook 消费这些原生证明，Braid 校验当前请求身份及最终停止结果，不持有插件的内部调度语义。任一缺失、错误或断连均 block/unknown；随后才 abort/kill 父。父 terminal、Pi abort 或 listener abort 均不构成 child termination proof。
+Braid 写 `.factory/teardown-request.json(fence_id,parent_native_session_id,started_at)` 到独立 native home，调用 binding 的受控 command，读取 `.factory/subagent-stop.json` 的同 fence receipt。hook 先封住新派发；foreground 只证明已按 run ID 请求 interrupt，background 必须证明 terminal、process-terminal observed 与 lease 释放。满足这些条件时 hook 写 `ready`，这不是停止证明。Braid 随后终止并验证自己拥有的 Pi provider 进程组；该组包含 parent、foreground child 及其工具后代。只有进程组为空后，Braid 才把同一 receipt 最终写为 `stopped` 和 `parent_process_group_terminal:true`。任一缺失、错误或断连均 block/unknown；独立进程组的 background 不由父退出冒充终态。
 
 ### 联合失败后修正的 reset 顺序
 
 首次真实 Pi+Braid 场景证明实现偏离了上述合同：`begin_active_context_reset` 先调用 `AgentSession::interrupt`，Pi abort 使 foreground control 消失；稍后 `SessionManager::remove` 才调用 native teardown。child 仍在退出，但 lifecycle bridge 已失去可枚举的 run，因而写出错误的空 receipt。
 
-修正保持现有所有权，不增加 provider 特例：active reset 已经决定废弃整个旧 physical session，因此直接走 `SessionManager::remove`。该共享入口的既有顺序是 `SessionFactory::teardown → AgentSession::close`；Pi factory 在 teardown 内取得 child receipt，close 才 abort 父 turn，Codex factory 继续使用自己的 native close。teardown 失败时旧 session 会放回 manager、记录 fatal stop failure，并且不会 close/interrupt 父；同工作树 replacement 不能启动。
+修正保持现有所有权：active reset 已经决定废弃整个旧 physical session，因此直接走 `SessionManager::remove`。该共享入口的顺序是 `SessionFactory::teardown → AgentSession::close`；Pi factory 在 teardown 内依次取得 hook 的 `ready` receipt、关闭并验证 provider 进程组、最终写入 `stopped` receipt，Codex factory 继续使用自己的 native close。teardown 失败时旧 session 会放回 manager、记录 fatal stop failure，并且不会启动同工作树 replacement。
 
 实现前的黑盒检查使用受控 session/factory 记录外部调用顺序，不读取被测内部状态：成功路径必须观测 `teardown → close/interrupt → replacement`；teardown 失败只能观测 teardown，旧 turn 不被 interrupt，worker 返回 incomplete。Pi extension 的协议检查保留定向 foreground/background 控制、直接 completion payload、证据缺失与 session identity 边界；不再维护 anonymous fleet 推断测试。
 
 ## 现有验证入口与缺口
 
-- `cargo test --offline`：20/20 通过（19 bin-unit + 1 CLI integration）；只有既有 dead-code warnings。`cargo test --offline --lib` 不适用，因为 crate 只有 bin target。
+- `cargo test --offline`：26 项 bin-unit 与 1 项 CLI integration 通过；包含 Pi provider 进程组后代清理和 `ready → process-group terminal → stopped` 的无模型黑盒检查。只有既有 dead-code warnings。
 - 延伸 `local::same_kind_sessions_overlap_reset_independently_and_do_not_starve_close`：两个 profile、同 kind 的独立 claim，显式/default/unknown assignee，same-profile no-op。
 - 延伸 store reset fixture：desired revision 竞争、old writer rejection、重启中 stopping/receipt 缺失、reopen 采用最新 desired。
 - 延伸 `provider::factory::pi_sessions_isolate_context_failure_and_release`：真实 detached child heartbeat/lease；仅父 abort 必须失败，matching receipt 后才停止写入并允许新 generation。另为 Codex native child 加同一 observable contract。

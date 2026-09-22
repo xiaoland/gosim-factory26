@@ -36,7 +36,7 @@ Pi RPC 不支持任意 extension RPC。`prompt` 发送 `/factory-subagent-stop .
 
 background run 使用 `stop`：pi-subagents `stopAsyncRun` 最终调用导出的 `deliverStopRequest({asyncDir,pid?,kill?,signal?,now?,source?,targetIndex?,childId?})`（`runs/background/control-channel.ts:641-710`），runner 监听 control inbox。停止成功的判据是 terminal status、`process-terminal.json.state == "observed"`、active-run lease 已释放；源码仅在 observed terminal 后释放该 lease（`runs/background/async-status.ts:461-463`）。
 
-foreground run 没有 detached runner、`process-terminal.json` 或 active lease。其已有 `interrupt` 管理分支取 `foregroundControls[runId].interrupt()`，该函数 aborts `interruptController`，并把该 signal 传给 `runSync`（`runs/foreground/subagent-executor.ts:3596-3641,5519-5558`）。Pi RPC `abort` 只承诺当前父操作 idle（`docs/rpc.md:124-135`），不能静态推出所有 foreground child 都已结束。因此 lifecycle command 需先设 closing fence（用 Pi `tool_call` 可阻止 `subagent`，`docs/extensions.md:778-793`）、对每一 foreground run 调 bridge `interrupt`，并等待 bridge `status` 证明对应 foreground control 已移除后写 receipt；实际场景再验明 Pi abort 与此 receipt的先后和 child 不再写入。没有 receipt 时保持 unknown/blocked。
+foreground run 没有 detached runner、`process-terminal.json` 或 active lease。其 `interrupt` 管理分支只请求当前 child 中断；真实场景已经证明 control 消失不能推出工具后代退出。lifecycle command 因此只负责 closing fence 和按 run ID 请求 interrupt，写出的 `ready` receipt 不是终态。Braid 启动 Pi provider 时创建独立 POSIX process group；hook ready 后由 Braid 终止并验证该组为空，再把 receipt 最终写成 stopped。Pi RPC `abort`、父 terminal、foreground completion 或 control inactive 单独都不是进程树终态证明。
 
 主 Agent 独立核对：foreground 仍有可持久化的 child sessionFile/artifactPaths，见 subagent-executor.ts 的 rememberForegroundRun、updateRememberedForegroundChild；缺少 background process-terminal 不等于没有 child evidence。通过真实 tool result/status/session-tree 关系归档，不能按文件时间猜父子。
 
@@ -46,13 +46,13 @@ foreground run 没有 detached runner、`process-terminal.json` 或 active lease
 
 | 场景 | 0.56.0 可见证据 | Factory 行为与出口 |
 | --- | --- | --- |
-| 无 child | status 无 live run，manifest 没有已观测 child | 不调用 interrupt，允许空树 stopped。 |
-| 仅 foreground | live foreground control 由 status 正文给出 run ID | 按 run ID interrupt，等待直接 `subagent:foreground-complete` 的 `runId/taskIndex/sessionFile/agent/state`，缺事件则 unknown。 |
+| 无 child | status 无 live run，manifest 没有已观测 child | 不调用 interrupt，hook ready；Braid 验证 parent process group terminal 后 stopped。 |
+| 仅 foreground | live foreground control 由 status 正文给出 run ID | 按 run ID interrupt；有 child session identity 即可 ready，最终终态由 Braid 的 parent process-group proof 给出。 |
 | 仅 background | async snapshot 有活动 run ID | 只按 ID stop；等待 terminal status、process-terminal observed 和 lease released，不调用无目标 interrupt。 |
 | foreground + background | status 正文给 foreground run ID，async snapshot 给 background run ID | 两者均定向控制；background 仍需完整 process-terminal/lease proof，互不靠匿名数量推断。 |
 | completion payload | event payload 本身含 `source:"foreground"`，不是必然嵌在 `event` 字段内 | 两种形状都解析；session 文件 header 提供 child identity，不能从 message ID 或时间推断。 |
 
-`interrupt` 成功只表示 abort 已发出，不是 child 已停止。若已知 foreground 的完成事件未到达，或 parent session-tree 的 canonical 文件没有可验证 header，联合场景必须失败并保留证据。Braid 必须保持 `native teardown → parent close` 的上层顺序，extension 不用 fleet 猜测被上层提前销毁的控制状态。
+`interrupt` 成功只表示 abort 已发出，不是 child 已停止。若 child identity 缺失、background terminal proof 不完整、parent identity 不匹配或 Braid 无法证明 provider 进程组为空，联合场景必须失败并保留证据。extension 不用 fleet 猜测控制状态，Braid 也不把 hook ready 当成 stopped。
 
 ## 最小修改面与局部验证
 

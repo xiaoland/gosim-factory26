@@ -20,7 +20,9 @@ export interface TeardownRequest {
 }
 
 export interface ChildProof {
+	control_requested?: boolean;
 	control_inactive?: boolean;
+	parent_process_group_terminal?: boolean;
 	status_terminal?: boolean;
 	process_terminal_observed?: boolean;
 	active_lease_released?: boolean;
@@ -42,7 +44,7 @@ export interface ChildEvidence {
 
 export interface StopReceipt {
 	schema_version: 1;
-	state: "stopped" | "unknown";
+	state: "ready" | "unknown";
 	fence_id: string;
 	parent_native_session_id: string;
 	started_at: Json;
@@ -63,6 +65,7 @@ interface KnownChild {
 	status?: string;
 	asyncDir?: string;
 	processTerminal?: Record<string, unknown>;
+	controlRequested?: boolean;
 	controlInactive?: boolean;
 }
 
@@ -222,6 +225,7 @@ function addChild(target: Map<string, KnownChild>, input: Partial<KnownChild> & 
 	if (input.status !== undefined) child.status = input.status;
 	if (input.asyncDir !== undefined) child.asyncDir = input.asyncDir;
 	if (input.processTerminal !== undefined) child.processTerminal = input.processTerminal;
+	if (input.controlRequested !== undefined) child.controlRequested = input.controlRequested;
 	if (input.controlInactive !== undefined) child.controlInactive = input.controlInactive;
 	target.set(key, child);
 }
@@ -308,7 +312,10 @@ function collectChildren(statusValue: unknown, parentSessionId: string, known: M
 
 function childReceipt(child: KnownChild): ChildEvidence {
 	const proof = child.mode === "foreground"
-		? { control_inactive: child.controlInactive === true }
+		? {
+			...(child.controlRequested === true ? { control_requested: true } : {}),
+			...(child.controlInactive === true ? { control_inactive: true } : {}),
+		}
 		: processProof(child.processTerminal);
 	return {
 		mode: child.mode,
@@ -321,13 +328,13 @@ function childReceipt(child: KnownChild): ChildEvidence {
 		...(child.nativeRole ? { native_role: child.nativeRole } : {}),
 		status: child.status ?? "unknown",
 		proof,
-		evidence_source: child.mode === "foreground" ? "pi-subagents:status/foregroundRuns" : "pi-subagents:status/processTerminal",
+		evidence_source: child.mode === "foreground" ? "pi-subagents:interrupt/parent-process-group" : "pi-subagents:status/processTerminal",
 	};
 }
 
 function proofComplete(child: KnownChild): boolean {
 	if (!child.childSessionId) return false;
-	if (child.mode === "foreground") return child.controlInactive === true;
+	if (child.mode === "foreground") return child.controlRequested === true || child.controlInactive === true;
 	const proof = processProof(child.processTerminal);
 	return isTerminal(child.status) && proof.process_terminal_observed === true && proof.active_lease_released === true;
 }
@@ -456,8 +463,10 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 				}
 				controlled.add(child);
 				controlledRuns.add(controlKey(child));
-				if (child.mode === "foreground") await callRpc("interrupt", { runId: child.runId });
-				else await callRpc("stop", { id: child.runId, ...(child.childId ? { childId: child.childId } : {}) });
+				if (child.mode === "foreground") {
+					await callRpc("interrupt", { runId: child.runId });
+					child.controlRequested = true;
+				} else await callRpc("stop", { id: child.runId, ...(child.childId ? { childId: child.childId } : {}) });
 			} catch (error) {
 				if (now() >= deadlineAt) return finish(request, "unknown", targets.map(childReceipt), { code: "control_deadline", message: `Lifecycle control exceeded ${deadlineMs}ms.` });
 				child.status = "unknown";
@@ -482,15 +491,17 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 					}
 					controlled.add(child);
 					controlledRuns.add(controlKey(child));
-					if (child.mode === "foreground") await callRpc("interrupt", { runId: child.runId });
-					else await callRpc("stop", { id: child.runId, ...(child.childId ? { childId: child.childId } : {}) });
+					if (child.mode === "foreground") {
+						await callRpc("interrupt", { runId: child.runId });
+						child.controlRequested = true;
+					} else await callRpc("stop", { id: child.runId, ...(child.childId ? { childId: child.childId } : {}) });
 				} catch (error) {
 					if (now() >= deadlineAt) break;
 					child.status = "unknown";
 				}
 			}
 			if (now() >= deadlineAt) break;
-			if (targets.every(proofComplete)) return finish(request, "stopped", targets.map(childReceipt));
+			if (targets.every(proofComplete)) return finish(request, "ready", targets.map(childReceipt));
 			await sleep(Math.min(pollMs, Math.max(1, deadlineAt - now())));
 		}
 		return finish(request, "unknown", targets.map(childReceipt), { code: "control_deadline", message: `Lifecycle control exceeded ${deadlineMs}ms.` });

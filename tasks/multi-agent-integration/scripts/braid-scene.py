@@ -153,7 +153,7 @@ B. {impl}：交付 calc.py 的 add(a,b)，包括负数和零。自己选择并�
                         assert child, 'stop receipt omits active child'
                         proof=child.get('proof',{})
                         if mode=='foreground':
-                            assert child.get('mode')=='foreground' and proof.get('control_inactive') is True, 'foreground proof shape is invalid'
+                            assert child.get('mode')=='foreground' and proof.get('parent_process_group_terminal') is True, 'foreground process-group proof is invalid'
                         else:
                             assert child.get('mode')=='background' and all(proof.get(key) is True for key in ('status_terminal','process_terminal_observed','active_lease_released')), 'background proof shape is invalid'
                         receipt_mtime=Path(old['native_home'],'.factory/subagent-stop.json').stat().st_mtime_ns
