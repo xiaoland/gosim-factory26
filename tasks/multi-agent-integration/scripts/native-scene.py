@@ -174,8 +174,15 @@ def run(backend, selected_output=None):
         archived=archive_sessions(output,native,work,entries)
         if record['status']=='passed' and (len(archived)<4 or any(e.get('archive_error') for e in archived)):
             record.update(status='failed',error='Native parent/children evidence incomplete')
-        shutil.copytree(app,output/'artifacts')
+        # Persist process/oracle termination before optional artifact collection.
         record['finished_at']=time.time(); factory.save(output/'check.json',record)
+        try:
+            shutil.copytree(app,output/'artifacts')
+        except (OSError, shutil.Error) as exc:
+            record['artifact_collection_error']=str(exc)
+            if record['status']=='passed':
+                record.update(status='failed',error='Application evidence collection failed')
+            factory.save(output/'check.json',record)
         if external_inputs: shutil.rmtree(external_inputs)
         # Preserve failed workspaces and original paths for diagnosis.
         if record['status']=='passed': shutil.rmtree(work)

@@ -59,9 +59,9 @@ def main():
     command = args.command[1:] if args.command[:1] == ['--'] else args.command
     if not command:
         parser.error('需要执行命令')
-    # Do not expose /proc (parent fd/env), /tmp or /workspace as whole trees.
-    system = ['/usr', '/bin', '/sbin', '/lib', '/lib64', '/etc',
-              '/proc/cpuinfo', '/proc/meminfo', '/proc/stat', '/proc/sys/kernel/osrelease']
+    # Chromium needs its own proc files. Landlock's domain hierarchy still
+    # denies ptrace-sensitive files of the unsandboxed parent.
+    system = ['/usr', '/bin', '/sbin', '/lib', '/lib64', '/etc', '/proc']
     devices = ['/dev/null', '/dev/urandom', '/dev/random', '/dev/tty']
     restrict([p for p in system if Path(p).exists()] + args.read,
              [p for p in devices if Path(p).exists()] + args.write)

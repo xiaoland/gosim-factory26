@@ -182,6 +182,25 @@ class SubmissionTest(unittest.TestCase):
             self.assertNotEqual(result.returncode,0)
             self.assertIn('PermissionError',result.stderr)
 
+            # Chromium needs its own proc files. Landlock's ptrace domain still
+            # excludes the unsandboxed host's environment, memory and open fds.
+            with (run/'sandbox-denied.txt').open('rb') as marker:
+                probe = r'''import errno, pathlib, sys
+parent, descriptor = sys.argv[1:]
+pathlib.Path('/proc/self/maps').read_bytes()
+pathlib.Path('/proc/self/environ').open('rb').close()
+for suffix in ('environ', 'mem', 'fd/'+descriptor):
+    try:
+        pathlib.Path('/proc/'+parent+'/'+suffix).open('rb').close()
+    except OSError as exc:
+        assert exc.errno in (errno.EACCES, errno.EPERM), exc
+    else:
+        raise AssertionError('host proc access permitted: '+suffix)
+'''
+                result = subprocess.run(prefix+[sys.executable, '-c', probe,
+                    str(os.getpid()), str(marker.fileno())], capture_output=True, text=True)
+                self.assertEqual(result.returncode, 0, result.stderr)
+
 
 if __name__ == '__main__':
     unittest.main()

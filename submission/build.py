@@ -25,21 +25,30 @@ for path in agent_browser_bin.iterdir():
     if path.name not in ('agent-browser.js', 'agent-browser-linux-x64'):
         shutil.rmtree(path) if path.is_dir() else path.unlink()
 chrome = next((root / '.agent-browser/browsers').glob('chrome-*/chrome'))
-dependencies = subprocess.run(['ldd', str(chrome)], check=True, capture_output=True, text=True).stdout
+nss_modules = [Path(line) for line in subprocess.run(
+    ['dpkg-query', '-L', 'libnss3'], check=True, capture_output=True, text=True
+).stdout.splitlines() if '.so' in Path(line).name and Path(line).is_file()]
+if not any(path.name == 'libsoftokn3.so' for path in nss_modules):
+    raise RuntimeError('Chromium NSS modules missing in build image')
+dependencies = '\n'.join(subprocess.run(
+    ['ldd', str(binary)], check=True, capture_output=True, text=True).stdout
+    for binary in (chrome, *nss_modules))
 missing = [line.strip() for line in dependencies.splitlines() if 'not found' in line]
 if missing:
     raise RuntimeError('Chromium dependency missing in build image: ' + ', '.join(missing))
 library = root / 'lib/chromium'
 library.mkdir(parents=True)
 platform_library = re.compile(r'^(?:libc|libm|libpthread|librt|libdl|libresolv)\.so(?:\.|$)|^ld-linux')
+sources = {path.name:path.resolve() for path in nss_modules}
 for line in dependencies.splitlines():
     paths = [Path(field) for field in line.split() if field.startswith('/')]
     if not paths:
         continue
-    source = paths[0]
-    if platform_library.match(source.name):
+    sources.setdefault(paths[0].name, paths[0].resolve())
+for name, source in sources.items():
+    if platform_library.match(name):
         continue
-    shutil.copy2(source.resolve(), library/source.name)
+    shutil.copy2(source, library/name)
 shutil.copytree('/usr/share/fonts', root/'share/fonts')
 shutil.copytree('/usr/share/glib-2.0/schemas', root/'share/glib-2.0/schemas')
 fontconfig = root/'etc/fonts'

@@ -88,3 +88,11 @@ Linux live 容器 `factory26-live-linux-20260922` 已就绪，消费最终 mixed
 Linux native 首轮受控停止（`runs/qualification/live-linux/native`）：父会话两次把 `runs.run` Promise 传入 `runs.all`，后者要求 `{key,agent,task}` descriptor，工作流错误使刚启动 child 被SIGTERM。第三批已自行纠正并有真实vision read与executor响应，但停止指令先于恢复消息被执行；本次重复由诊断/运行消息交错造成，不是provider失败。`extensions: []` 警告无因果关系，实际effective runtime extension与factory26/visual模型选择均有证据（`live-linux-health/provider-resolution.json`）。只修资格输入为上游明确recipe，native-v2复验；runtime/四ZIP不变。运行owner必须先发启动回执再阻塞等待，停止判断核对最新事件，不能把历史错误当当前故障。
 
 Native-v2 的 vision/executor 均 exitCode=0，application 已有 image.json 与 calc.py；当前两个 browser child 并行，父前台 subagent 正在等待。父日志静止不能推断无进展，应沿子会话查当前工具/产物。该轮未改模型、包、runtime；仅资格prompt固定已知API调用形状。
+
+Native-v2 的浏览器真实child持续CDP断开，主线在14:30左右受控停止。collector又因临时`.brdiag`文件消失遮蔽终态，原check残留running；原始记录保留，资格明确未通过。fixture已改为先持久化终态，再收集可选文件，collection error单列，不遮蔽原始失败。
+
+真正的浏览器根因已在同一materialized wrapper、submission environment与Landlock前缀上无模型复现：Chrome不能读取/proc/self/maps、/proc/self/fd并fatal退出。仅加readonly /proc后open/eval/close约12秒通过。官方Landlock的ptrace-domain边界仍限制宿主敏感proc；独立无密钥marker probe证实self maps/env可读，而parent env/fd/mem、hostmarker与input写均被拒绝。该边界加入既有test_submission真实Linux测试，原包实际红灯于self/maps。修复只改linux_sandbox系统读取规则，未扩大工作区或需求写权限，不增加browser broker。资料：https://docs.kernel.org/6.6/userspace-api/landlock.html#ptrace-restrictions 。
+
+资格按变更依赖复用：native-v2已证明真实vision/executor正常及browser子会话使用既定wrapper；新的无模型两身份browser旅程覆盖修复后的页面、截图和存储隔离，再直接进入真实Braid场景，不让LLM重采已通过的视觉/加法步骤。source变更使旧ZIP退役，重新组合相同runtime并冻结四包后才上传；当前仍未发生任何Competition写入。
+
+NSS动态模块是第二个同一打包边界缺陷：普通ldd不会列出softokn/freebl等dlopen模块。build.py现按构建镜像libnss3包manifest收集完整共享库族并递归ldd依赖，保持SONAME别名；不靠逐个fatal补库。proc修复+该库overlay的实际HTTP/storage/screenshot/close旅程25秒通过（browser-boundary-fixed7）；最终包会重新验证，并补充两会话同时存活后的交叉读取oracle。当前126项Python+Node lifecycle通过，真实Linux的self/parent proc及输入边界检查也通过，证据proc-source-test.log。
