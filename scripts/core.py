@@ -113,8 +113,10 @@ def archive_sessions(output, home, work, entries):
     def root_source(row, provider):
         source = row.get('native_session_path')
         session_id = row.get('session_id')
+        native_home = None
         if provider == 'pi' and row.get('native_home'):
-            tree_path = _archive_path(row['native_home'], work)/'.factory'/'session-tree.json'
+            native_home = _archive_path(row['native_home'], work)
+            tree_path = native_home/'.factory'/'session-tree.json'
             if tree_path.exists():
                 tree = json.loads(tree_path.read_text())
                 root_ids = {str(session_id), str(row.get('native_session_id'))}
@@ -128,6 +130,12 @@ def archive_sessions(output, home, work, entries):
             if len(matches) != 1:
                 raise ValueError('Codex thread 没有唯一的原生 rollout')
             source = matches[0]
+        if provider == 'pi' and native_home and source and not Path(source).is_file():
+            native_id = row.get('native_session_id')
+            matches = list(native_home.glob(f'sessions/**/*_{native_id}.jsonl')) if native_id else []
+            if len(matches) != 1:
+                raise ValueError('Pi 根会话没有唯一的规范 session 文件')
+            source = matches[0]
         return _archive_path(source, work)
 
     def archive_pi_children(root, root_archived, provider):
@@ -136,14 +144,18 @@ def archive_sessions(output, home, work, entries):
         if not native_home:
             return
         child_home = _archive_path(native_home, work)
-        tree_path = child_home/'.factory'/'session-tree.json'
+        factory_dir = child_home/'.factory'
+        receipt_path = factory_dir/'subagent-stop.json'
+        tree_path = factory_dir/'session-tree.json'
         if not tree_path.exists() and not root.get('native_teardown_configured'):
             return
-        tree_source = _archive_path(tree_path, work)
+        tree_source = _archive_path(receipt_path if receipt_path.exists() else tree_path, work)
         tree = json.loads(tree_source.read_text())
         if not isinstance(tree, dict) or not isinstance(tree.get('children'), list):
             raise ValueError('Pi session-tree manifest 格式无效')
-        tree_target = native/f'{target_index:03}-session-tree.json'
+        if tree_source == receipt_path and tree.get('state') != 'stopped':
+            raise ValueError('Pi teardown receipt 尚未终结')
+        tree_target = native/f'{target_index:03}-{tree_source.name}'
         target_index += 1
         shutil.copy2(tree_source, tree_target)
         root_archived['session_tree_manifest'] = str(tree_target.relative_to(output))

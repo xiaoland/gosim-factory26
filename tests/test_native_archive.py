@@ -36,6 +36,36 @@ class NativeArchiveTest(unittest.TestCase):
             self.assertEqual(rows[0]['source_path'], str(canonical))
             self.assertNotIn('archive_error', rows[0])
 
+    def test_pi_finds_canonical_root_and_prefers_terminal_receipt(self):
+        with tempfile.TemporaryDirectory() as temp:
+            work = Path(temp).resolve()
+            native_home = work/'pi-home'
+            alias = native_home/'missing.jsonl'
+            canonical = native_home/'sessions'/'project'/f'run_pi-root.jsonl'
+            child = native_home/'child.jsonl'
+            write_jsonl(canonical, {'type':'session','id':'pi-root'})
+            write_jsonl(child, {'type':'session','id':'pi-child'})
+            factory = native_home/'.factory'
+            factory.mkdir(parents=True)
+            (factory/'session-tree.json').write_text(json.dumps({
+                'schema_version':1, 'parent_native_session_id':'pi-root',
+                'parent_session_file':str(alias), 'children':[{'mode':'foreground'}],
+            }))
+            (factory/'subagent-stop.json').write_text(json.dumps({
+                'schema_version':1, 'state':'stopped', 'parent_native_session_id':'pi-root',
+                'children':[{'mode':'foreground','run_id':'run-1','parent_session_id':'pi-root',
+                    'child_session_id':'pi-child','session_file':str(child),
+                    'evidence_source':'pi-subagents:interrupt/parent-process-tree'}],
+            }))
+            rows = archive_sessions(work/'run',work/'unused',work,[{
+                'provider':'pi','session_id':str(alias),'native_session_id':'pi-root',
+                'native_home':str(native_home),'native_session_path':str(alias),
+                'native_teardown_configured':True,
+            }])
+            self.assertEqual([row.get('native_id') for row in rows],['pi-root','pi-child'])
+            self.assertTrue(all('archive_error' not in row for row in rows))
+            self.assertTrue(rows[0]['session_tree_manifest'].endswith('subagent-stop.json'))
+
     def test_pi_tree_archives_two_connected_levels_and_manifest(self):
         with tempfile.TemporaryDirectory() as temp:
             work = Path(temp).resolve()
