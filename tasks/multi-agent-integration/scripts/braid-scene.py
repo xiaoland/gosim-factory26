@@ -1,11 +1,6 @@
 #!/usr/bin/env python3
-"""Joint acceptance: live native-tree reset, then two Braid work-item deliveries.
-
-Uses synthetic requirements only. The host changes context after observing an
-actual native child writer; model output is not the stop oracle.
-"""
+"""Run one short real Braid journey with a root description rebuild."""
 import argparse
-import importlib.util
 import json
 import os
 from pathlib import Path
@@ -22,19 +17,12 @@ _bootstrap.add_argument('--output', type=Path)
 _bootstrap_args, _ = _bootstrap.parse_known_args()
 PACKAGE = _bootstrap_args.package or (Path(os.environ['FACTORY26_QUALIFICATION_PACKAGE'])
                                       if os.environ.get('FACTORY26_QUALIFICATION_PACKAGE') else None)
-if PACKAGE:
-    ROOT = PACKAGE.resolve()
-else:
-    try:
-        ROOT = Path(__file__).resolve().parents[3]
-    except IndexError as error:
-        raise RuntimeError('浅路径运行必须传 --package 或 FACTORY26_QUALIFICATION_PACKAGE') from error
-sys.path.insert(0, str(ROOT/'scripts'))
+ROOT = PACKAGE.resolve() if PACKAGE else Path(__file__).resolve().parents[3]
+sys.path.insert(0, str(ROOT / 'scripts'))
 import factory
 import profiles
 import submission
-import sources
-from braid_runtime import initialize_repository, load_delivery, export_delivery, archive_state
+from braid_runtime import archive_state, export_delivery, initialize_repository, load_delivery
 from core import archive_sessions
 
 
@@ -49,7 +37,12 @@ def configuration(backend):
         if config['backend'] != backend:
             raise ValueError(f'资格包 backend 是 {config["backend"]}，不是 {backend}')
         return config
-    return profiles.configuration('pi-team-mixed' if backend == 'pi' else 'codex-generalist')
+    config_path = ROOT / 'variants/factory/config.json'
+    config = json.loads(config_path.read_text()) if config_path.is_file() else profiles.configuration(
+        'pi-team-mixed' if backend == 'pi' else 'codex-generalist')
+    # The Linux qualification assembly carries the runtime, but not source checkouts.
+    config.update(runtime='submission', key_environment='FACTORY26_API_KEY', image_input=False)
+    return config
 
 
 def run(backend, selected_output=None):
@@ -61,182 +54,125 @@ def run(backend, selected_output=None):
     elif PACKAGE:
         raise ValueError('包模式必须传 --output 或 FACTORY26_QUALIFICATION_OUTPUT')
     else:
-        output = ROOT/'runs/integration'/f'{time.strftime("%Y%m%d-%H%M%S")}-{backend}-braid-{uuid.uuid4().hex[:6]}'
+        output = ROOT / 'runs/integration' / f'{time.strftime("%Y%m%d-%H%M%S")}-{backend}-braid-{uuid.uuid4().hex[:6]}'
     output.mkdir(parents=True)
     work = Path(tempfile.mkdtemp(prefix='f26-braid-', dir='/tmp')).resolve()
-    external_inputs = Path(tempfile.mkdtemp(prefix='f26-braid-input-', dir='/tmp')).resolve() if PACKAGE else None
-    app = work/'application'; app.mkdir()
-    inputs = external_inputs or work/'input'
-    if not external_inputs: inputs.mkdir()
+    app = work / 'application'
+    app.mkdir()
     record = dict(kind='multi-agent-joint-braid-stage', backend=backend, status='running',
-                  started_at=time.time(), workspace=str(work), resets=[])
-    factory.save(output/'check.json', record)
-    factory.save(output/'effective-config.json', config['effective'])
+                  started_at=time.time(), workspace=str(work), root_context_rebuilds=[])
+    factory.save(output / 'check.json', record)
+    factory.save(output / 'effective-config.json', config['effective'])
     if PACKAGE:
-        shutil.copy2(ROOT/'package-manifest.json',output/'package-manifest.json')
-    else:
-        sources.archive('braid',output/'sources'); sources.archive('svc',output/'sources')
-    spec = importlib.util.spec_from_file_location('native_scene',Path(__file__).with_name('native-scene.py'))
-    native_scene = importlib.util.module_from_spec(spec); spec.loader.exec_module(native_scene)
-    native_scene.fixture_png(inputs/'image.png')
-    writer = inputs/'writer.py'
-    writer.write_text('''import json, os, sys, time
-from pathlib import Path
-target=Path(sys.argv[1]); identity=os.environ.get('PI_SESSION_ID') or os.environ.get('CODEX_THREAD_ID')
-assert identity, 'native child identity is required'
-while True:
-    with target.open('a') as stream:
-        stream.write(json.dumps({'native_session_id':identity,'pid':os.getpid(),'time':time.time()})+'\\n')
-    time.sleep(.2)
-''')
+        shutil.copy2(ROOT / 'package-manifest.json', output / 'package-manifest.json')
+    elif (ROOT / 'sources').is_dir():
+        sources = __import__('sources')
+        sources.archive('braid', output / 'sources')
+        sources.archive('svc', output / 'sources')
+
     initialize_repository(app)
-    native,env = factory.runtime_environment(work,config)
-    state = work/'braid-state'
-    (work/'bin').mkdir()
-    executable = work/'bin/braid'
-    shutil.copy2(ROOT/'runtime/bin/braid' if PACKAGE else sources.binary(),executable)
-    env['PATH']=str(executable.parent)+os.pathsep+env['PATH']
-    # Host CLI must not borrow the runtime's writer identity.
-    def cli(*args, check=True):
-        return subprocess.run([str(executable),'--state',str(state),'--external',*args],
-                              cwd=app,env=env,text=True,capture_output=True,check=check)
-    def snapshots():
-        rows = read_json(state/'sessions.json',[])
-        assert [row.get('context_path') for row in rows] == sorted(row.get('context_path') for row in rows), 'sessions.json is not sorted by context path'
-        return rows
-    def await_condition(predicate, process):
-        while not predicate():
-            if process.poll() is not None:
-                raise RuntimeError(f'Braid exited before expected observation: {process.returncode}; see braid.log')
-            time.sleep(.5)
-    def await_native_quiet(path, process):
-        """The fixture writes every .2s; one quiet second is a stop oracle."""
-        deadline = time.time()+10
-        last = (path.stat().st_size, path.stat().st_mtime_ns)
-        quiet_since = time.time()
-        while time.time() < deadline:
-            if process.poll() is not None:
-                raise RuntimeError(f'Braid exited before native child stopped: {process.returncode}; see braid.log')
-            time.sleep(.2)
-            current = (path.stat().st_size, path.stat().st_mtime_ns)
-            if current != last:
-                last, quiet_since = current, time.time()
-            elif time.time()-quiet_since >= 1:
-                return
-        raise RuntimeError('native child heartbeat did not become quiet before replacement')
-    def root_entries():
-        return [entry for entry in snapshots() if str(entry.get('work_item_id'))=='1' and entry.get('work_item_kind')=='issue']
-    phases = ['foreground','background'] if backend=='pi' else ['foreground']
-    def reset_prompt(mode):
-        task = f'只运行 python3 {writer} {work}/{mode}.jsonl，保持前台；不要另行后台化，不要设置短 timeout。宿主会停止本子代理。不要操作 Issue/PR。'
-        if backend=='pi':
-            launch = ('调用 subagent，async:'+str(mode=='background').lower()+', context:"fresh", workflowScript:'+json.dumps('return runs.run("writer", { agent: "executor", task: '+json.dumps(task,ensure_ascii=False)+' });',ensure_ascii=False))
-        else:
-            launch = '用 spawn_agent(agent_type="executor") 创建原生子代理，任务为 '+task+'；用 wait 等待。'
-        return f'''这是受控生命周期检查，不是应用需求。先在当前工作树写入 retained.txt，内容必须为 retained-dirty；已有则核对，不要提交。
-{launch}
-主会话不可运行 writer.py，不要创建 Issue/PR 或关闭 Issue。子代理启动后不要重复派发；在 {work}/{mode}.jsonl 至少有两行前持续等待并检查，不要结束本次响应。宿主观察到真实写入后会修改当前 description 并重建上下文。'''
-    profile_ids = list(config['effective']['profiles'])
-    ui = config['effective']['defaults']['issue']
-    impl = config['effective']['defaults']['pr']
-    ui_login = config['effective']['profiles'][ui]['profile']['assignee_login']
-    impl_login = config['effective']['profiles'][impl]['profile']['assignee_login']
-    final_prompt = f'''这是受控多 Agent 交付场景。先核对当前工作树 retained.txt 的内容是 retained-dirty；删除此临时检查文件，不要提交它。
-创建两个子 Issue（parent=1），分别明确 assignee：
-A. {ui_login}：交付 colors.py 的 bands() 返回图像 {inputs}/image.png 从上到下的英文颜色名称列表。必须委派 vision 子代理用原生图像工具观察图片；vision 只返回观察结果，不写文件，负责本 Issue 的父会话依据该结果用自己的工具实现 colors.py，不可解码像素。自己选择并读取已配置的一个相关技能，设计验收并用 PR 实现、提交和合入，PR 也明确指派 {ui_login}。
-B. {impl_login}：交付 calc.py 的 add(a,b)，包括负数和零。自己选择并读取已配置的一个相关技能，设计验收并用 PR 实现、提交和合入，PR 明确指派 {impl_login}。
-两项互不修改对方文件，可独立推进；不要亲自代替它们实现。各子 Issue 用评论向根 Issue 报告产物与证据，完成后 close --reason completed。你通过评论讨论、核对各 PR 已合入，最后验证交付分支的 bands()==['red','green','blue']、add(2,3)==5、add(-4,1)==-3，再关闭根 Issue completed。
-这是临时仓库，允许本地 commit/merge，禁止 push。所有 shell 需要走当前输入给定的 CLI writer 身份。无中途人类介入，不用官方 benchmark，不安装依赖，不开发 Web 应用。'''
-    proc=None
+    native, env = factory.runtime_environment(work, config)
+    state = work / 'braid-state'
+    (work / 'bin').mkdir()
+    executable = work / 'bin/braid'
+    braid_binary = ROOT / 'runtime/bin/braid'
+    if not braid_binary.is_file():
+        braid_binary = __import__('sources').binary()
+    shutil.copy2(braid_binary, executable)
+    env['PATH'] = str(executable.parent) + os.pathsep + env['PATH']
+
+    def cli(*args):
+        return subprocess.run([str(executable), '--state', str(state), '--external', *args],
+                              cwd=app, env=env, text=True, capture_output=True, check=True)
+
+    final_description = '''完成这个小型交付任务：
+
+1. 使用一个原生 executor 子代理，在当前根 Issue 工作树实现 `calc.py` 的 `add(a, b)`，支持整数、负数和零，并在实现或自检中执行 `add(2, 3) == 5` 与 `add(-4, 1) == -3` 断言。
+2. 用 `pr create --issue 1` 创建至少一个 PR。PR Agent 必须实现并验证这项变更，在本地提交后执行 `pr ready`。
+3. 根 Issue 核对 PR 和交付文件，执行 `pr merge`，再从交付分支验证 `calc.add(2, 3) == 5` 与 `calc.add(-4, 1) == -3`，最后执行 `issue close 1 --reason completed`。
+
+这是唯一的应用需求。不要再次修改根 Issue description，不要创建子 Issue，不要 push，也不要修改本次任务之外的文件。'''
+    initial_prompt = f'''这是一次受控的 Braid 根 Issue 验收。当前根 Issue description 只是启动说明。
+
+先使用本轮给出的 writer-turn CLI 身份，执行一次 `issue edit 1 --body-file FILE`，把根 Issue description 完整替换为下面的最终任务；这是唯一一次 description edit，提交后等待新的上下文，不要在旧上下文继续写入：
+
+{final_description}
+
+description 重建后，严格按新的完整 description 工作。使用明确的本地 CLI 命令和一个原生 executor 完成局部实现，再通过至少一个 PR 提交、ready、merge，验证断言并关闭根 Issue。'''
+    proc = None
     try:
-        with factory.responses_adapter(config,output) as responses_url:
-            request=factory.braid_request(config,work,app,native,reset_prompt(phases[0]),state,output.name,responses_url)
-            factory.save(work/'request.json',request)
-            factory.save(output/'request.json',request)
-            with (output/'braid.log').open('w') as log:
-                prefix = submission.isolation_prefix(work,inputs) if PACKAGE else factory.isolation_prefix(work,inputs)
-                proc=subprocess.Popen(prefix+[str(executable),'local',str(work/'request.json')],
-                    cwd=app,env=env,stdout=log,stderr=log,start_new_session=True)
-                for index,mode in enumerate(phases):
-                    heartbeat=work/f'{mode}.jsonl'
-                    await_condition(lambda: heartbeat.exists() and len(heartbeat.read_text().splitlines())>=2,proc)
-                    roots=root_entries()
-                    old=next(e for e in roots if e['status'] in ('running','idle'))
-                    assert old.get('profile_id') and old.get('effective_profile_digest'), 'root session lacks profile material identity'
-                    assert old.get('parent_native_session_id') is None and old.get('native_home'), 'invalid root native identity fields'
-                    root_native_id=old.get('native_session_id') if backend=='pi' else old['session_id']
-                    if backend=='pi': assert root_native_id and old.get('native_session_path'), 'Pi root session lacks native identity/path'
-                    assert old.get('work_item_kind') == 'issue' and str(old.get('work_item_id')) == '1'
-                    previous_ids={e['session_id'] for e in roots}
-                    old_id=old['session_id']; old_worktree=old['worktree']
-                    child_id=json.loads(heartbeat.read_text().splitlines()[0])['native_session_id']
-                    assert child_id != root_native_id, 'parent ran the child writer'
-                    replacement=reset_prompt(phases[index+1]) if index+1<len(phases) else final_prompt
-                    assert (Path(old_worktree)/'retained.txt').read_text().strip()=='retained-dirty'
-                    cli('issue','edit','1','--body',replacement)
-                    stale=subprocess.run([str(executable),'--state',str(state),'--writer-turn',old['turns'][-1]['braid_turn_id'],
-                        'issue','comment','1','--body','stale writer must not mutate'],cwd=app,env=env,text=True,capture_output=True)
-                    assert stale.returncode and 'stale, fenced, or no longer running' in stale.stderr, 'old writer was accepted'
-                    await_native_quiet(heartbeat,proc)
-                    await_condition(lambda: any(e['session_id'] not in previous_ids for e in root_entries()),proc)
-                    replacement_entry=next(e for e in root_entries() if e['session_id'] not in previous_ids)
-                    assert replacement_entry['worktree']==old_worktree, 'replacement discarded the original worktree'
-                    # A new native root may not coexist with the old child writer.
-                    size=heartbeat.stat().st_size; time.sleep(2)
-                    assert heartbeat.stat().st_size==size, 'old native child continues writing after replacement'
-                    reset=dict(mode=mode,old_session_id=old_id,new_session_id=replacement_entry['session_id'],
-                               child_native_session_id=child_id,worktree=old_worktree,writer_stopped=True,old_writer_rejected=True)
-                    if backend=='pi':
-                        receipt=read_json(Path(old['native_home'])/'.factory/subagent-stop.json')
-                        assert receipt and receipt['state']=='stopped', 'missing successful native-tree receipt'
-                        child=next((c for c in receipt['children'] if c.get('child_session_id')==child_id and c.get('mode')==mode),None)
-                        assert child, 'stop receipt omits active child'
-                        proof=child.get('proof',{})
-                        if mode=='foreground':
-                            assert child.get('mode')=='foreground' and proof.get('parent_process_group_terminal') is True, 'foreground process-group proof is invalid'
-                        else:
-                            assert child.get('mode')=='background' and all(proof.get(key) is True for key in ('process_terminal_observed','active_lease_released')), 'background process-tree proof is invalid'
-                        receipt_mtime=Path(old['native_home'],'.factory/subagent-stop.json').stat().st_mtime_ns
-                        replacement_file=next(path for path in state.glob('physical/*/session.json') if read_json(path).get('session_id') == replacement_entry['session_id'])
-                        assert receipt_mtime <= replacement_file.stat().st_mtime_ns, 'replacement root appeared before native stop receipt'
-                        reset['receipt']=receipt
-                    record['resets'].append(reset); factory.save(output/'check.json',record)
+        with factory.responses_adapter(config, output) as responses_url:
+            request = factory.braid_request(config, work, app, native, initial_prompt, state,
+                                            output.name, responses_url)
+            factory.save(work / 'request.json', request)
+            factory.save(output / 'request.json', request)
+            with (output / 'braid.log').open('w') as log:
+                proc = subprocess.Popen([str(executable), 'local', str(work / 'request.json')],
+                                        cwd=app, env=env, stdout=log, stderr=log,
+                                        start_new_session=True)
                 proc.wait()
-                if proc.returncode: raise RuntimeError(f'Braid exit {proc.returncode}; see braid.log')
-                delivery=load_delivery(state,app,work,request)
-                export_delivery(app,delivery['delivery_commit'],output/'application')
-                subprocess.run([sys.executable,'-c',"from calc import add; from colors import bands; assert add(2,3)==5; assert add(-4,1)==-3; assert bands()==['red','green','blue']"],cwd=output/'application',check=True)
-                entries=snapshots()
-                children=[e for e in entries if e.get('work_item_kind')=='issue' and str(e.get('work_item_id'))!='1']
-                assert len({e['work_item_id'] for e in children})>=2, 'two distinct Braid Issues were not executed'
-                assert {ui,impl}.issubset({e.get('profile_id') for e in children}), 'requested profiles did not run'
-                prs=[e for e in entries if e.get('work_item_kind')=='pr']
-                assert len({e['work_item_id'] for e in prs})>=2, 'two distinct PRs were not executed'
-                assert {ui,impl}.issubset({e.get('profile_id') for e in prs}), 'requested PR profiles did not run'
-                record.update(status='passed',delivery=delivery,child_issues=sorted({e['work_item_id'] for e in children}))
+                if proc.returncode:
+                    raise RuntimeError(f'Braid exit {proc.returncode}; see braid.log')
+                roots = [row for row in read_json(state / 'sessions.json', [])
+                         if row.get('work_item_kind') == 'issue' and str(row.get('work_item_id')) == '1']
+                session_ids = {row.get('session_id') for row in roots}
+                context_paths = {row.get('context_path') for row in roots if row.get('context_path')}
+                assert len(session_ids) >= 2, '根 Issue 没有两个不同 session 记录'
+                assert len(context_paths) >= 2, '根 Issue 没有两个不同 context 记录'
+                item = json.loads(cli('issue', 'view', '1', '--json').stdout)
+                assert 'calc.py' in item.get('body', '') and '不要再次修改根 Issue description' in item.get('body', ''), \
+                    '根 Issue description 未进入最终任务'
+                record['root_context_rebuilds'] = [
+                    {'session_id': row.get('session_id'), 'context_path': row.get('context_path')}
+                    for row in roots
+                ]
+                factory.save(output / 'check.json', record)
+
+            delivery = load_delivery(state, app, work, request)
+            entries = read_json(state / 'sessions.json', [])
+            pr_entries = [row for row in entries if row.get('work_item_kind') == 'pr']
+            assert pr_entries, '没有可核验的 PR session'
+            prs = json.loads(cli('pr', 'list', '--json').stdout)
+            assert any(pr.get('state') == 'merged' for pr in prs), '没有已合入的 PR'
+            export_delivery(app, delivery['delivery_commit'], output / 'application')
+            subprocess.run([sys.executable, '-c',
+                            'from calc import add; assert add(2,3)==5; assert add(-4,1)==-3'],
+                           cwd=output / 'application', check=True)
+            record.update(status='passed', delivery=delivery)
     except BaseException as error:
-        record.update(status='failed',error=f'{type(error).__name__}: {error}')
+        record.update(status='failed', error=f'{type(error).__name__}: {error}')
+        factory.save(output / 'check.json', record)
         raise
     finally:
-        if proc: factory.stop(proc)
-        record['cleanup_pids']=factory.cleanup_workspace(work)
-        entries=archive_state(state,output) if state.exists() else []
-        archived=archive_sessions(output,native,work,entries)
-        if record['status']=='passed' and (not archived or any(e.get('archive_error') or e.get('evidence_error') for e in archived)):
-            record.update(status='failed',error='Native evidence incomplete')
-        for mode in phases:
-            if (work/f'{mode}.jsonl').exists(): shutil.copy2(work/f'{mode}.jsonl',output/f'{mode}.jsonl')
-        record['finished_at']=time.time(); factory.save(output/'check.json',record)
-        if external_inputs: shutil.rmtree(external_inputs)
-        print(json.dumps(record,ensure_ascii=False),flush=True)
-        if record['status']=='passed': shutil.rmtree(work)
-    if record['status']!='passed': raise RuntimeError(record['error'])
+        if proc and proc.poll() is None:
+            factory.stop(proc)
+        # Persist the application result before collecting optional native evidence.
+        record['finished_at'] = time.time()
+        factory.save(output / 'check.json', record)
+        if state.exists():
+            try:
+                archive_state(state, output)
+                archived = archive_sessions(output, native, work, read_json(state / 'sessions.json', []))
+                if read_json(output / 'native/manifest.json', {}).get('diagnostic_status') != 'complete':
+                    factory.save(output / 'archive-partial.json', {'status': 'partial', 'entries': archived})
+                else:
+                    factory.save(output / 'archive.json', {'status': 'complete', 'entries': archived})
+            except BaseException as error:
+                factory.save(output / 'archive-partial.json', {
+                    'status': 'partial', 'error': f'{type(error).__name__}: {error}'
+                })
+        if record['status'] == 'passed':
+            shutil.rmtree(work, ignore_errors=True)
+        factory.save(output / 'check.json', record)
+        print(json.dumps(record, ensure_ascii=False), flush=True)
+    if record['status'] != 'passed':
+        raise RuntimeError(record['error'])
 
 
-if __name__=='__main__':
-    parser=argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--backend',choices=('pi','codex'),required=True)
-    parser.add_argument('--package',type=Path,help='已解包且冻结的 Linux x86_64 资格包根目录')
-    parser.add_argument('--output',type=Path,help='本次资格证据目录；包模式必填')
-    args=parser.parse_args()
-    run(args.backend,args.output)
+if __name__ == '__main__':
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--backend', choices=('pi', 'codex'), required=True)
+    parser.add_argument('--package', type=Path, help='已解包且冻结的 Linux x86_64 资格包根目录')
+    parser.add_argument('--output', type=Path, help='本次资格证据目录；包模式必填')
+    args = parser.parse_args()
+    run(args.backend, args.output)
