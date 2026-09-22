@@ -9,7 +9,9 @@
         "name": "DeepSeek V4 Flash",
         "api": "openai-completions",
         "reasoning": true,
-        "input": ["text"],
+        "input": [
+          "text"
+        ],
         "contextWindow": 1000000,
         "maxTokens": 384000,
         "compat": {
@@ -29,9 +31,10 @@
         }
       },
       "source": "@earendil-works/pi-ai 0.85.1/providers/data/qwen-token-plan.json",
-      "gateway_verified": false,
-      "reasoning_levels": ["high"],
-      "reasoning_mapping": "catalog maps high to reasoning_effort=high; gateway qualification blocked by HTTP 429"
+      "reasoning_levels": [
+        "high"
+      ],
+      "reasoning_mapping": "reasoning_effort=high"
     },
     "deepseek-v4-flash-vision-exp": {
       "descriptor": {
@@ -39,7 +42,10 @@
         "name": "DeepSeek V4 Flash Vision Exp",
         "api": "openai-completions",
         "reasoning": true,
-        "input": ["text", "image"],
+        "input": [
+          "text",
+          "image"
+        ],
         "contextWindow": 128000,
         "maxTokens": 16384,
         "compat": {
@@ -50,9 +56,10 @@
         }
       },
       "source": "Factory run 20260920-113715-0ec213ff and archived Pi tool-use sessions",
-      "gateway_verified": false,
-      "reasoning_levels": ["high"],
-      "reasoning_mapping": "historical Pi sessions observed thinking; current raw gateway qualification blocked by HTTP 429"
+      "reasoning_levels": [
+        "high"
+      ],
+      "reasoning_mapping": "DeepSeek thinking mode; default tool selection"
     },
     "kimi-k3": {
       "descriptor": {
@@ -87,8 +94,9 @@
         }
       },
       "source": "@earendil-works/pi-ai 0.85.1/providers/data/moonshotai-cn.json",
-      "gateway_verified": false,
-      "reasoning_levels": ["high"],
+      "reasoning_levels": [
+        "high"
+      ],
       "reasoning_mapping": "reasoning_effort=high"
     },
     "kimi-k2.7-code": {
@@ -116,7 +124,6 @@
         }
       },
       "source": "@earendil-works/pi-ai 0.85.1/providers/data/moonshotai-cn.json",
-      "gateway_verified": false,
       "reasoning_mapping": "always-on; no effort parameter"
     },
     "glm-5.3-flash": {
@@ -150,8 +157,9 @@
         "maxTokens": 131072
       },
       "source": "@earendil-works/pi-ai 0.85.1/providers/data/zai-coding-cn.json",
-      "gateway_verified": false,
-      "reasoning_levels": ["high"],
+      "reasoning_levels": [
+        "high"
+      ],
       "reasoning_mapping": "reasoning_effort=high"
     }
   }

@@ -17,6 +17,7 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
 WORKDIR /runtime
 COPY --from=node /runtime/package.json /runtime/package-lock.json ./
 COPY --from=node /runtime/node_modules ./node_modules
+RUN apt-get update && apt-get install -y --no-install-recommends sudo && rm -rf /var/lib/apt/lists/*
 RUN HOME=/runtime ./node_modules/.bin/agent-browser install --with-deps
 COPY sources/svc/ /build/svc/
 RUN python -m pip wheel --wheel-dir /wheels /build/svc/cli && \

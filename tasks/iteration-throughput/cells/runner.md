@@ -160,3 +160,7 @@ with competition.Controller(state_dir, secret=key) as controller:
 `summary()` 返回 `status=completed|blocked|running` 和独立 `score_status=complete|unavailable`。前者只表示声明的任务均明确终态且观测资料已收集；FAILED/CANCELLED 不推导零分。后者目前只在每题真实返回非负整数 passed/failed/total、total>0、passed+failed=total，以及有限数值 score 时为 complete。缺这些明确字段就 unavailable，待真实 schema 证据修正消费范围；不靠模型声明或退出码推算成绩。平台原始结果保留于 status 证据，不将逐题 score 合成为官方总榜。
 
 验收：`python3 -m unittest tests.test_competition -q`，16 项通过；覆盖冻结副本与原样恢复、同一 snapshot 两题顺序、unknown snapshot/create/start、错误 identity、成功响应后本地中断、malformed response 恢复、unknown status、游标发布失败重放、旧 snapshot 拒绝、上一 variant 未完成拒绝、锁冲突、缺产物不完成，以及成绩字段不足不计实验完成。与既有 `tests.test_playground` 的联合检查也通过；所有 transport 都是 fake，没有真实网络写入。
+
+## 本轮练习与初赛提交的边界
+
+再次核对用户提供的《参赛须知.pdf》：初赛正式提交由队长发起、使用平台内置独立 key、一次运行两题，两个任务结束后才能开始下一次；个人 key 的平台练习不计最终榜单成绩。本轮按已批准目标运行官网 ARC-Bench-Lite Competition 练习，使用个人比赛 key，不能把这里的分数称为初赛正式成绩。现有 Competition adapter 是已观察的练习 API，不假定它就是 9 月 24 日开放的正式提交 API。PDF 没有给出 ZIP 大小上限；447 MiB 候选仍需实际平台上传资格验证。

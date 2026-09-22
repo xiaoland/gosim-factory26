@@ -231,3 +231,5 @@ python3 scripts/concurrency.py probe --jobs 2 4
 通过 `python3 scripts/concurrency.py status runs/concurrency/<batch-id>` 查看当前阶段、最近完成的用例和证据入口。测试进度读取固定 list reporter 日志末尾，属于观测值；完整逐项结果仍以最终 JSON 为准。评测批次记录在 `runs/concurrency/<batch-id>/batch.json`，保留原始参考的哈希、逐项结果和各任务证据。`completed` 表示完整评测结束；`equivalent` 另外比较每个用例的身份与状态，不能用相同总分替代一致性检查。连续比较 2 路和 4 路时应显式选同一份原始参考。当前 WSL 的冻结 Keep 应用对照已验证 4 路逐项一致，类似评测可优先使用 4 路；这不代表四路完整 Agent 生成或其他任务也已验证。
 
 冻结后 Keep 评测不调用模型；API 并发需单独测量。`probe.json` 只保存 HTTP 状态、finish_reason、usage、延迟和限流信息，不保存模型正文。探针无输出 token 上限、无自动重试，仅有单次 HTTP 连接和传输超时；这些超时不应用于完整 Agent 生成。短请求成功不能证明持续生成的并发额度。远程探针可通过 `--key-stdin` 从 SSH stdin 接收凭据，避免在远端落盘。
+
+Pi 提交包包含 Chromium 的动态库、字体和 GLib schemas，由包内 `runtime/bin/chromium` 启动脚本设置专属运行环境。已在 Bookworm 系列的 Linux x86_64、CPython 3.12、非 root、断网、1 CPU / 2 GiB 容器中验证入口、Pi RPC 和浏览器跨命令操作；真实平台兼容性仍由同一 ZIP 的 Competition 运行确认。Pi 包不包含未消费的 Codex CLI 和其它平台浏览器二进制，本机开发缓存仍保留完整冻结依赖。

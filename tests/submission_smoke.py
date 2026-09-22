@@ -23,7 +23,7 @@ if sys.argv[1:] == ['--version']:
 request=json.loads(pathlib.Path(sys.argv[2]).read_text())
 profile=next(p for p in request['profiles'] if p['id']==request['defaults']['issue']) if 'profiles' in request else request['profile']
 inputs=pathlib.Path(request['prompt'].split('请根据 ',1)[1].split(' 中',1)[0])
-if 'fixture-failure' in (inputs/'requirements.md').read_text(): raise SystemExit(9)
+if (inputs/'requirements.md').is_file() and 'fixture-failure' in (inputs/'requirements.md').read_text(): raise SystemExit(9)
 app=pathlib.Path(profile['workspace']); state=pathlib.Path(request['state']); state.mkdir()
 for directory, scripts in [('frontend',{'build':'node build.js'}),('backend',{'start':'node server.js'})]:
     (app/directory).mkdir()
@@ -37,7 +37,7 @@ subprocess.run(['git','update-ref',request['delivery_ref'],commit],cwd=app,check
 provider=profile['adapter_type']
 session=pathlib.Path(request[provider]['home'])/'session.jsonl'
 identity='11111111-1111-1111-1111-111111111111'
-entries=([{'id':identity},{'message':{'role':'assistant','stopReason':'stop','usage':{'input':0,'output':0,'totalTokens':0}}}] if provider=='pi' else
+entries=([{'type':'session','id':identity},{'message':{'role':'assistant','stopReason':'stop','usage':{'input':0,'output':0,'totalTokens':0}}}] if provider=='pi' else
          [{'type':'session_meta','payload':{'id':identity}},{'type':'event_msg','payload':{'type':'token_count','info':{'total_token_usage':{'input_tokens':0,'output_tokens':0,'total_tokens':0}}}}])
 session.write_text('\n'.join(json.dumps(entry) for entry in entries)+'\n')
 (state/'objects.db').write_text('test-double')

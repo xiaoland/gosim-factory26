@@ -1,6 +1,6 @@
 # 实施分工与集成状态
 
-开工握手已批准，基线为 `7d3b1e6`。各 owner 在已有预演的接缝上实施；只有主 Agent 执行跨组件集成和真实实验。源码更改的依赖按 [plan.md](plan.md) 验证，不将并行编码当作并行放行资格。
+开工握手已批准，基线为 `7d3b1e6`。各 owner 在已有预演的接缝上实施；主 Agent 持有跨组件集成与实验放行权；获授权的运行 Agent 持有具体进程、等待和证据回传。源码更改的依赖按 [plan.md](plan.md) 验证，不将并行编码当作并行放行资格。
 
 | Cell | 实施 owner / 写入边界 | 当前出口 |
 | --- | --- | --- |
@@ -13,3 +13,5 @@
 CLI/对象的公开协作者字段固定为 `assignee_login`/`assignee_description`；variant defaults 使用公开 login，resolver 转为 Braid 内部 defaults（issue/pr profile ID）。文本与视觉 endpoint/key 分开，平台变量不能覆盖冻结模型。跨 owner 接缝通过这些具体合同协调，不复制各自实现。
 
 原始 RPC、构建和运行日志留在 `runs/qualification/`；本页不累积逐条日志。只在接口假设失效、需要改变设计或外部事实需要用户输入时升级。默认输出阶段、状态、证据路径；完整日志按需读取。
+
+当前并行出口：capabilities_impl 完成 Linux Chrome 便携包；entry_qualification（Luna high）按 native→Braid 顺序执行真实合成场景。协议 gate 已通过，Meter 旧429不再阻挡执行。源码接口冻结与Linux装配分开，避免让浏览器系统库装配阻塞Mac协作资格。

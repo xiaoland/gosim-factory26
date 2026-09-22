@@ -70,3 +70,11 @@ Braid `sources/braid/src/provider/factory.rs::teardown`当前只校验extension 
 另外修复包内 platform_config 视觉配置覆盖主模型的问题，文本与视觉 key 各自仅传给消费 provider。新检查覆盖冻结模型不匹配拒绝；submission 10 项检查通过（macOS 跳过 Linux Landlock 1 项）。local 官方 wrapper prepare-only 实际通过；官方矩阵用 barrier 验证独立本地 workspace 并行、hosted snapshot 严格顺序和已完成不重复运行。上述仍不是模型/评分验收。
 
 主线最终无模型检查：`make test` 共 125 项 Python 检查通过（macOS 跳过 1 项 Linux 检查），Pi lifecycle 通过；Braid 32 unit + 1 CLI integration 通过，fmt/diff 检查通过。22 份本轮文档的相对链接无缺失，SVC status 为 healthy。原始日志：`runs/qualification/implementation-tests.log`。首个混合 variant ZIP 为资格候选；真实入口/浏览器检查后提交源码，再用缓存构建四份最终 ZIP。
+
+Factory 实现检查点已提交 `32f1e3c`。首包在浏览器依赖安装处失败：官方 `agent-browser install --with-deps` 调用 sudo，而精简 Python 构建镜像没有 sudo。Braid release 与 npm 安装已缓存；最小修复仅补充构建镜像的 sudo，继续使用浏览器维护的系统依赖清单，避免在 Factory 手抄该清单。此故障没有产生 ZIP 或模型调用。
+
+首包入口与真实 Pi RPC 的 Linux 复验已通过：`runs/qualification/entry-recheck/`，network none、UID/GID 1000、1 CPU、2 GiB；真实工具启动与替身交付不再失败。Chrome 初次运行证明动态库、fonts 与 glib schemas 需要随便携 runtime 装配，由 capabilities owner 处理，仍在本轮打包范围内。首包压缩内容中，未使用 Codex native 占 133.2 MiB、其它平台 agent-browser native 占约 41.8 MiB，本轮 Pi/Linux 包定向移除它们，本机完整缓存和 npm lock 保留。
+
+文本工具调用与视觉工具调用资格已通过，证据由 `runs/qualification/models/` 与 `models-vision-auto/` 组成；视觉400只来自测试强制函数选择，不是 Pi 默认消费者所需参数，未因此修改产品模型或降低 thinking。Luna 持有真实 native→Braid 场景执行；主 Agent 不轮询原始 rollout，失败或终态才收取最小证据。模型目录只保留稳定能力配置，临时 gateway_verified/429状态已移除，实时资格状态归本 cell/runs。
+
+Linux 最终候选 `pi-team-mixed-chromium-candidate-3.zip` 已通过入口、真实 Pi RPC、Chrome loader 与 agent-browser 跨命令检查（打开data页、title、URL、snapshot、close）。SHA256 `a1cc6e660c0a9a3c05dfb59148ccb65deac55b2406c19f7be53661759315bab7`，369 MiB / 解包873 MiB；环境仍为UID1000、1CPU、2GiB、network none，证据 `runs/qualification/container-acceptance-final/`。Chrome私有动态库、字体与schemas随runtime打包，仅启动脚本设置其环境；SVC正文不变。Braid实现提交 `8b2c986`。最终四包用 `scripts/freeze-packages.py` 校验候选hash、source文件和构建输入，复用相同已验runtime。

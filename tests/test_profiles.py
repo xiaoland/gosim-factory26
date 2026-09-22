@@ -46,7 +46,6 @@ class ProfileBoundaryTest(unittest.TestCase):
                     self.assertEqual(role['mcp'], [])
                     self.assertEqual(role['context'], {'mode': 'fresh'})
                     self.assertIn(role['reasoning'], item['models'][role['model']]['reasoning_levels'])
-                    self.assertFalse(item['models'][role['model']]['gateway_verified'])
 
     def test_effective_defaults_match_braid_request_schema(self):
         source = (profiles.ROOT / 'sources/braid/src/config.rs').read_text()
@@ -102,6 +101,19 @@ class ProfileBoundaryTest(unittest.TestCase):
             self.assertIn('model: "factory26-visual/deepseek-v4-flash-vision-exp"', browser)
             self.assertIn('defaultContext: "fresh"', browser)
             self.assertNotIn('reviewer', {path.stem for path in (template / 'agents').glob('*.md')})
+
+    def test_packaged_browser_wrapper_uses_canonical_chromium_launcher(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root = Path(temporary)
+            cache = root/'runtime'
+            (cache/'bin').mkdir(parents=True)
+            (cache/'bin/agent-browser').touch()
+            chromium = cache/'bin/chromium'
+            chromium.touch()
+            native_profiles.browser_wrapper(root/'work', 'fixture', cache)
+            wrapper = (root/'work/bin/agent-browser').read_text()
+            self.assertIn(repr(str(chromium)), wrapper)
+            self.assertNotIn('.agent-browser/browsers/chrome-', wrapper)
 
     def test_digest_tracks_consumed_role_and_invalid_public_identity_fails(self):
         with tempfile.TemporaryDirectory() as temporary:

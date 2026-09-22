@@ -1,4 +1,5 @@
 """No-model qualification of actual Pi RPC and the installed lifecycle command."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -8,16 +9,20 @@ import sys
 import tempfile
 import time
 
-ROOT = Path(__file__).resolve().parents[3]
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--root', type=Path)
+parser.add_argument('--output', type=Path)
+args = parser.parse_args()
+ROOT = (args.root or Path(__file__).resolve().parents[3]).resolve()
 sys.path.insert(0, str(ROOT/'scripts'))
 import native_profiles
 
 cache = native_profiles.runtime_cache()
-out = ROOT/'runs/qualification/pi-rpc-smoke'
+out = args.output or ROOT/'runs/qualification/pi-rpc-smoke'
 out.mkdir(parents=True, exist_ok=True)
 with tempfile.TemporaryDirectory(prefix='factory26-pi-rpc-') as temp:
     home = Path(temp)
-    command = [str(cache/'node_modules/.bin/pi'), '--mode', 'rpc', '--no-extensions', '--no-skills',
+    command = [native_profiles.executable('pi'), '--mode', 'rpc', '--no-extensions', '--no-skills',
                '--no-prompt-templates', '--no-themes', '--extension', str(cache/'node_modules/pi-subagents/index.ts'),
                '--extension', str(ROOT/'harness/extensions/factory-subagent-lifecycle.ts')]
     env = {'PATH':os.environ['PATH'], 'HOME':str(home), 'PI_CODING_AGENT_DIR':str(home), 'PI_OFFLINE':'1', 'PI_TELEMETRY':'0'}

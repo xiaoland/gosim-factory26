@@ -114,6 +114,10 @@ profile 建议：两个 Braid profile 都持有 `ponytail`、`impeccable` 的按
 
 视觉请求同样尝试了本地 `favicon.png` 的 data URL 内容块：`content:[{type:"text",...},{type:"image_url",image_url:{url:"data:image/png;base64,..."}}]`，并带 `reasoning_effort:"high"`、`stream:false`；也返回同一 HTTP `429`，无 usage/cost。该次仅证明额度已阻断，不能重写既有视觉证据。
 
+### 配额恢复后的最小资格重验（2026-09-22）
+
+三模型资格探针已在 `runs/qualification/models/` 与 `runs/qualification/models-vision-auto/` 保存脱敏 request/response。`deepseek-v4-flash` 与 `glm-5.3-flash` 均 HTTP 200，强制 `lookup` 的参数分别为 `{"q":"ping","limit":1}`，且 response 含 `reasoning_content`；二者沿用先前已通过结果，没有重跑。视觉请求第一次在 HTTP 400 返回 `Thinking mode does not support this tool_choice`，证据保留在 `runs/qualification/models/`；provider 只有在消费者显式设置 `options.toolChoice` 时才发送 `tool_choice`，而当前消费者没有这个要求。因此第二次仅移除视觉请求的 named `tool_choice`，保持同一模型、图片、`reasoning_effort:"high"`、`stream:false`、`max_tokens:2048` 和 `observe` 提示，未换模型或降低 thinking，结果 HTTP 200、`finish_reason:"tool_calls"`、`observe({"color":"red"})`、含 `reasoning_content`，usage total 554。当前三模型最小能力资格成立；视觉边界是按消费者实际协议不强制 named `tool_choice`。
+
 ### 可复用既有证据
 
 - `runs/20260920-141339-6138c072/native/*.jsonl` 与 `runs/20260921-142645-6eeb4f7b/native/*.jsonl` 记录过实际 `deepseek-v4-flash-vision-exp` Pi 调用：请求经 `api:"openai-completions"`，响应归一化为 `stopReason:"toolUse"`、`rawStopReason:"tool_calls"`，assistant content 含 `thinking` 与 `toolCall`；usage keys 为 `input/output/cacheRead/cacheWrite/reasoning/totalTokens/cost`。这是 Pi 归一化消息证据，不是裸 HTTP response 的完整字段。

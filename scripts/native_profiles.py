@@ -47,11 +47,16 @@ def executable(core):
 
 def browser_wrapper(work, run_id, cache):
     """Native thread identity is per invocation, unlike HOME shared by children."""
-    browsers = cache/'.agent-browser/browsers'
-    pattern = 'chrome-*/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' if platform.system()=='Darwin' else 'chrome-*/chrome'
-    binaries = list(browsers.glob(pattern))
-    if len(binaries) != 1:
-        raise RuntimeError('locked browser executable is missing or ambiguous; run bootstrap')
+    packaged_browser = cache/'bin/chromium'
+    if packaged_browser.is_file():
+        chrome = packaged_browser
+    else:
+        browsers = cache/'.agent-browser/browsers'
+        pattern = 'chrome-*/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' if platform.system()=='Darwin' else 'chrome-*/chrome'
+        binaries = list(browsers.glob(pattern))
+        if len(binaries) != 1:
+            raise RuntimeError('locked browser executable is missing or ambiguous; run bootstrap')
+        chrome = binaries[0]
     binary = cache/'bin/agent-browser' if (cache/'bin/agent-browser').is_file() else cache/'node_modules/.bin/agent-browser'
     target = work/'bin/agent-browser'
     target.parent.mkdir(parents=True, exist_ok=True)
@@ -70,7 +75,7 @@ state.mkdir(parents=True, exist_ok=True)
 (state/'identity.json').write_text(json.dumps({'run_id':RUN_ID,'native_session_id':identity}))
 env = dict(os.environ, AGENT_BROWSER_SESSION=name, HOME=str(state), AGENT_BROWSER_EXECUTABLE_PATH=CHROME, AGENT_BROWSER_SOCKET_DIR=SOCKETS)
 os.execve(BINARY, [BINARY, '--session', name, *args], env)
-'''.replace('RUN_ID', repr(run_id)).replace('STATE', repr(str(work/'browser'))).replace('BINARY', repr(str(binary))).replace('CHROME', repr(str(binaries[0]))).replace('SOCKETS', repr(str(work/'b'))))
+'''.replace('RUN_ID', repr(run_id)).replace('STATE', repr(str(work/'browser'))).replace('BINARY', repr(str(binary))).replace('CHROME', repr(str(chrome))).replace('SOCKETS', repr(str(work/'b'))))
     target.chmod(0o755)
 
 
