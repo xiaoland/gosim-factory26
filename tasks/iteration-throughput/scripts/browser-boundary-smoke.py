@@ -105,7 +105,7 @@ def main():
             command(prefix, wrapper, app, session_env, 'close')
         record = {
             'status': 'passed',
-            'package_sha256': manifest.get('package_sha256'),
+            'package_manifest_sha256': sha256((root / 'package-manifest.json').read_bytes()).hexdigest(),
             'sandbox_script': str(sandbox),
             'sandbox_sha256': sha256(sandbox.read_bytes()).hexdigest(),
             'isolation': 'submission.isolation_prefix',

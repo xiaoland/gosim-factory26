@@ -3,8 +3,8 @@
 - **Objective**：交付符合官方打包与运行契约的 Pi + Braid + SVC harness，结合官方 Competition 与本地官方 runner 自动完成既定实验，比较快速模型配方及 SVC V&V 的效果，并同时取得通过率、成本、得分和阶段耗时。
 - **Guardrails**：评分仍以完整官方 benchmark 为准；设施失败不能冒充实验结果；不能为了提速把失败详情回灌同一次生成。基础设施修复与正式 score 使用不同阶段，score 开始后冻结 revision。
 - **Verification**：批次自动记录 qualification、排队、生成、artifact-ready、冻结、评测与恢复时间；下一轮可从终态数据计算墙钟、worker 利用率、重复采样次数和主 Agent 介入次数。
-- **Current Truth**：实现阶段已完成主要接线，三模型工具/视觉接口与真实vision/executor通过。真实browser发现Landlock拒绝/proc，已由无模型A/B定位并最小修复；旧四包退役，正复验隔离后重新组合，官方本地镜像仍缺失。进度与责任见 [task-map](task-map.md)，资格证据见 [integration cell](cells/integration.md)。此前一轮 08:54–17:13 共 8h19m。健康的两路前四项只用了约 80 分钟；官方评测每项约 3–5 分钟。主要损耗来自资格验证过晚、application artifact 与 finalization 失败耦合、失败后重复模型采样，以及主 Agent 同时承担 scheduler、日志压缩和恢复。详见 [profile](profile-2026-09-22.md)。产品边界已收敛为一个Factory task对应一个根Issue；运行时Agent只使用GitHub式assignee，内部agent-profile与variant均由Harness隐藏。粗筛组合见[能力装配设计](recipes.md)。
-- **Next Step**：capabilities_impl 完成修复后的两身份browser无模型旅程；主线完成隔离拒绝测试、重新组合ZIP和真实Braid资格，然后创建新manifest启动Lite练习矩阵。原manifest没有远端写入，不用于修复后score。当前Factory工作包含proc修复，Braid仍为 `8b2c986`；不重采已通过native视觉/加法，无新增开工握手。
+- **Current Truth**：实现阶段已完成主要接线，三模型接口、真实vision/executor与修复后的实际包双浏览器/隔离边界通过。proc与NSS缺陷已修复。真实Braid首次context replacement暴露包缺少ps/kill；同隔离域无模型工具probe已通过，正重建单候选包。官方本地镜像仍缺失。进度与责任见 [task-map](task-map.md)，资格证据见 [integration cell](cells/integration.md)。此前一轮 08:54–17:13 共 8h19m。健康的两路前四项只用了约 80 分钟；官方评测每项约 3–5 分钟。主要损耗来自资格验证过晚、application artifact 与 finalization 失败耦合、失败后重复模型采样，以及主 Agent 同时承担 scheduler、日志压缩和恢复。详见 [profile](profile-2026-09-22.md)。产品边界已收敛为一个Factory task对应一个根Issue；运行时Agent只使用GitHub式assignee，内部agent-profile与variant均由Harness隐藏。粗筛组合见[能力装配设计](recipes.md)。
+- **Next Step**：capabilities_impl拥有procps打包与无overlay工具/浏览器边界资格；主Agent核对Pi会话身份接缝，随后启动一次Braid协作资格，由observer独立等待终态。通过后重新冻结四包并启动官方矩阵。final-a102aa2与browser-boundary/manifest未发生远端写入，因缺少进程工具退役；不重采已通过native视觉/加法，无新增开工握手。
 
 ## Proposed loop
 

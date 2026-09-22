@@ -25,26 +25,34 @@ for path in agent_browser_bin.iterdir():
     if path.name not in ('agent-browser.js', 'agent-browser-linux-x64'):
         shutil.rmtree(path) if path.is_dir() else path.unlink()
 chrome = next((root / '.agent-browser/browsers').glob('chrome-*/chrome'))
+platform_library = re.compile(r'^(?:libc|libm|libpthread|librt|libdl|libresolv)\.so(?:\.|$)|^ld-linux')
+
+
+def dependency_sources(binaries, label):
+    dependencies = '\n'.join(subprocess.run(
+        ['ldd', str(binary)], check=True, capture_output=True, text=True).stdout
+        for binary in binaries)
+    missing = [line.strip() for line in dependencies.splitlines() if 'not found' in line]
+    if missing:
+        raise RuntimeError(f'{label} dependency missing in build image: ' + ', '.join(missing))
+    sources = {}
+    for line in dependencies.splitlines():
+        paths = [Path(field) for field in line.split() if field.startswith('/')]
+        if paths:
+            sources.setdefault(paths[0].name, paths[0].resolve())
+    return sources
+
+
 nss_modules = [Path(line) for line in subprocess.run(
     ['dpkg-query', '-L', 'libnss3'], check=True, capture_output=True, text=True
 ).stdout.splitlines() if '.so' in Path(line).name and Path(line).is_file()]
 if not any(path.name == 'libsoftokn3.so' for path in nss_modules):
     raise RuntimeError('Chromium NSS modules missing in build image')
-dependencies = '\n'.join(subprocess.run(
-    ['ldd', str(binary)], check=True, capture_output=True, text=True).stdout
-    for binary in (chrome, *nss_modules))
-missing = [line.strip() for line in dependencies.splitlines() if 'not found' in line]
-if missing:
-    raise RuntimeError('Chromium dependency missing in build image: ' + ', '.join(missing))
 library = root / 'lib/chromium'
 library.mkdir(parents=True)
-platform_library = re.compile(r'^(?:libc|libm|libpthread|librt|libdl|libresolv)\.so(?:\.|$)|^ld-linux')
 sources = {path.name:path.resolve() for path in nss_modules}
-for line in dependencies.splitlines():
-    paths = [Path(field) for field in line.split() if field.startswith('/')]
-    if not paths:
-        continue
-    sources.setdefault(paths[0].name, paths[0].resolve())
+for name, source in dependency_sources((chrome, *nss_modules), 'Chromium').items():
+    sources.setdefault(name, source)
 for name, source in sources.items():
     if platform_library.match(name):
         continue
@@ -70,6 +78,24 @@ fontconfig.mkdir(parents=True)
     'export LD_LIBRARY_PATH FONTCONFIG_PATH FONTCONFIG_FILE GSETTINGS_SCHEMA_DIR XDG_DATA_DIRS\n'
     f'exec "$HERE/../{chrome.relative_to(root)}" "$@"\n'
 )
+tools = {name:Path(path) for name in ('ps', 'kill') if (path := shutil.which(name))}
+if set(tools) != {'ps', 'kill'}:
+    raise RuntimeError('procps tools missing in build image')
+tool_library = root/'lib/tools'
+tool_library.mkdir()
+for name, source in dependency_sources(tools.values(), 'procps').items():
+    if not platform_library.match(name):
+        shutil.copy2(source, tool_library/name)
+tool_executables = root/'libexec'
+tool_executables.mkdir()
+for name, source in tools.items():
+    shutil.copy2(source.resolve(), tool_executables/name)
+    (root/'bin'/name).write_text(
+        '#!/bin/sh\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+        'LD_LIBRARY_PATH="$HERE/../lib/tools${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\n'
+        'export LD_LIBRARY_PATH\n'
+        f'exec "$HERE/../libexec/{name}" "$@"\n'
+    )
 commands = [('pi', '@earendil-works/pi-coding-agent'), ('agent-browser', 'agent-browser')]
 if backend == 'codex':
     commands.append(('codex', '@openai/codex'))

@@ -96,3 +96,7 @@ Native-v2 的浏览器真实child持续CDP断开，主线在14:30左右受控停
 资格按变更依赖复用：native-v2已证明真实vision/executor正常及browser子会话使用既定wrapper；新的无模型两身份browser旅程覆盖修复后的页面、截图和存储隔离，再直接进入真实Braid场景，不让LLM重采已通过的视觉/加法步骤。source变更使旧ZIP退役，重新组合相同runtime并冻结四包后才上传；当前仍未发生任何Competition写入。
 
 NSS动态模块是第二个同一打包边界缺陷：普通ldd不会列出softokn/freebl等dlopen模块。build.py现按构建镜像libnss3包manifest收集完整共享库族并递归ldd依赖，保持SONAME别名；不靠逐个fatal补库。proc修复+该库overlay的实际HTTP/storage/screenshot/close旅程25秒通过（browser-boundary-fixed7）；最终包会重新验证，并补充两会话同时存活后的交叉读取oracle。当前126项Python+Node lifecycle通过，真实Linux的self/parent proc及输入边界检查也通过，证据proc-source-test.log。
+
+最终无overlay资格包 `pi-team-mixed-browser-boundary.zip` SHA256 e73fcbb64aac780a50a61519e015aa7f996ce54017958ce759479ede813d3fa1，388230732 bytes，已通过双浏览器同时存活/交叉读取/真实identity/screenshot/close及真实Linux拒绝检查。证据 `runs/qualification/live-linux/package-fixed-browser/`；外部package-identity.json绑定ZIP与manifest，不从manifest虚构自身ZIP hash。四包复用该runtime冻结在final-a102aa2，mixed完全同hash。Braid实际包场景已于15:01 UTC启动，独立detached wrapper持久化 `evidence/braid-process.json`（scene PID10389），观察Agent不拥有启动/终止权；主线接收终态后进入新manifest官方实验。
+
+Braid首次foreground replacement失败（约166秒）：`capture_native_descendants`调用外部ps，而最小运行镜像不存在ps/kill，导致ENOENT，尚未执行extension stop。修复归打包边界：显式procps依赖、包装两个binary及其动态库。真实同隔离域无模型probe证明ps可枚举自身、kill可探测并停止probe自建group；证据runtime-tools-overlay。此前浏览器四包均未上传，重新构建一个候选后再冻结。另保留会话JSONL的实际source与记录path不同，独立核对，暂不据此改provider。
