@@ -27,3 +27,9 @@ Track：runtime。Phase：ready。状态：active。01 独立预演完成，见 
 当前 Braid 主体提交为 `e9b3471`，后续原生 Pi 身份与 profile 指派竞争修复提交为 `9770e65`；24 项单元检查与 1 项 CLI 集成通过。新增 Issue/PR 重指派检查证明旧 writer 失效、停止前 assignment 保持 pending、停止后使用原路径且保留未提交文件。resume 已新增对 profiles/defaults/bindings 的一致性校验。停止失败通过明确的 fatal 通道返回 incomplete，再收尾其他会话；独立 execute 集成检查覆盖了此前因活动 turn 不归零而永久等待的风险。Pi start/resume 直接采用 RPC `sessionId`，不再从尚未写 header 的 JSONL 反推 UUID；多个 profile 读取同一 pending event 后，事务竞争失败为预期 no-op。以上是代码边界证据，真实 Braid 多 profile 协作、活动原生子树收尾仍未满足 03。
 
 真实联合验收的 Braid 阶段已准备为 `../scripts/braid-scene.py`，并由独立 Agent 对照原生接口预演。受控 child 写入后由宿主触发 description 重建，以真实停止收据、写入静止、writer 拒绝和同工作树复用作为证据，再完成两个不同 profile 的 Issue/PR 小交付。Pi 覆盖 foreground/background，Codex 覆盖原生线程。尚未执行该阶段，不能由脚本存在推定通过。
+
+## 03 真实联合结果（2026-09-22）
+
+Braid `0c68c75` 将 teardown 提升为完整后代进程树的终态边界：在 lifecycle hook 前锁定 Pi 后代，hook 只确认精确控制请求，Braid 关闭并验证树后写入 stopped receipt。受控 Pi 场景实际通过 foreground/background 两种 replacement，旧 writer 被 fenced、heartbeat 静止、原工作树和未提交文件保留；随后两个不同 profile 的子 Issue/PR 完成交付。归档器使用终态 `subagent-stop.json` 并按 Pi UUID 唯一定位规范 session 文件，对该真实场景保留输入重放得到 21 个原生会话、0 个证据错误。
+
+Codex 场景 `20260922-103554-codex-braid-533f50` 完整通过：原生 executor 在 description replacement 后终止，两个子 Issue、两个 PR 和根 Issue 均收敛，delivery commit 为 `df831aad3a6e7a6fa196bbfa74b08de7b4d91bb4`。前一轮曾因子 Issue 只关闭自身、未向根 Issue comment 而正确停在 incomplete；共同 profile 指令现明确 comment/reply 是跨 work-item 唯一推进通道，关闭或等待前必须向父/消费者报告并确认成功。Braid 没有增加隐式完成事件。

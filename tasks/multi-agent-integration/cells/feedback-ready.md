@@ -31,3 +31,9 @@ brief/show 能从 variant/task 下钻到 work-item/profile/native session 和用
 用户正在排查 WSL 网络，建议考虑在线 Playground；暂停新增 WSL 模型运行，已有受控检查保留终态。现有 HTTP 客户端已重新验证登录与 `/requirements` 读取，线上 benchmark catalog 显示 Keep32、BookStack34。原始响应保存在 `runs/integration/playground-availability-20260921/`。数量一致不能证明 runner revision 或用例身份等价，目前不更换八项清单的评测权威。
 
 阻碍不在浏览器操作：上传/启动/等待/收集已有脚本。`package_agent.py` 仍只打包旧单 profile 配置与少量 scripts，Dockerfile 没有 pi-subagents/agent-browser/技能材料；submission 的平台模型配置也还只作用于单模型。直接提交会测错 harness。若改在线完整生成，必须先让既定 effective profiles 和锁定能力进入 Linux 制品，处理多模型映射与原生证据回收，再验证平台隔离/工具可用性；这是有实质范围的适配，尚未实施或上传。当前继续本机可完成的就绪检查，避免网络排障与工具链迁移相互遮蔽。
+
+## 03 联合证据与批次状态（2026-09-22）
+
+原生归档对真实 Pi 终态 receipt 的重放得到 21 个会话、0 个错误；Codex 场景的 rollout parent metadata 也能关联根线程与 executor 子线程。Factory 当前 99 项 Python 检查通过（1 项真实 Landlock 平台跳过），Pi lifecycle Node 检查通过。旧失败 run 保持失败状态，确定性的归档修复在独立 replay 输出验证，没有改写历史记录。
+
+固定批次位于 `runs/batch-multi-agent-20260922-01`。启动时两项 pi-generalist 生成占满 2 个 generation workers，其余六项排队；evaluation workers 上限为 4。该路径只把 ARC-Bench report 的实际用例结果作为实验评分，可修复的生成、协议或设施故障返回本 Cell 继续处理，不作为“分数好坏”的停点。
