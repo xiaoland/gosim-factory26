@@ -84,3 +84,7 @@ Linux 最终候选 `pi-team-mixed-chromium-candidate-3.zip` 已通过入口、�
 真实native场景 `20260922-212127-pi-native-844388` 在Mac上受控停止：vision已正确识别red/green/blue，executor断言通过；两browser重复CDP关闭，底层为嵌套sandbox初始化失败，还有GNU timeout缺失。它未产生完整资格，也未进入Braid/bench。另一个脚本错误是要求只读vision写image.json。修正归属是资格环境与夹具：父会话落盘视觉观察，native/Braid场景改为消费同一已验Linux ZIP，沿submission配置和隔离入口运行，不新增Mac兼容补丁。Linux无模型资格不能外推到Mac live浏览器，反之Mac设施失败也不否定已验Linux browser。
 
 Linux live 容器 `factory26-live-linux-20260922` 已就绪，消费最终 mixed 包 a1cc6e66…；UID1000、1CPU、2GiB，bridge 仅为模型网络与本地页面服务。无模型 entry/RPC 再次通过。联合场景脚本新增 `--package/--output`，直接使用包内 manifest/config/runtime/isolation，不重建近似环境。官网 GET 确认 Lite 66 项与空提交历史，首 variant 状态已在 `runs/competition/iteration-throughput/matrix/hosted/pi-team-deepseek` 本地 prepare，尚无远端写入。
+
+Linux native 首轮受控停止（`runs/qualification/live-linux/native`）：父会话两次把 `runs.run` Promise 传入 `runs.all`，后者要求 `{key,agent,task}` descriptor，工作流错误使刚启动 child 被SIGTERM。第三批已自行纠正并有真实vision read与executor响应，但停止指令先于恢复消息被执行；本次重复由诊断/运行消息交错造成，不是provider失败。`extensions: []` 警告无因果关系，实际effective runtime extension与factory26/visual模型选择均有证据（`live-linux-health/provider-resolution.json`）。只修资格输入为上游明确recipe，native-v2复验；runtime/四ZIP不变。运行owner必须先发启动回执再阻塞等待，停止判断核对最新事件，不能把历史错误当当前故障。
+
+Native-v2 的 vision/executor 均 exitCode=0，application 已有 image.json 与 calc.py；当前两个 browser child 并行，父前台 subagent 正在等待。父日志静止不能推断无进展，应沿子会话查当前工具/产物。该轮未改模型、包、runtime；仅资格prompt固定已知API调用形状。

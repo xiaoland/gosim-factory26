@@ -132,12 +132,16 @@ def run(backend, selected_output=None):
 用 eval 读取 storage 和 cookie，确认均为 {token}，screenshot {app}/{token}.png。
 不要覆盖 --session。将观察写入 {app}/{token}.json，格式 {{"initial":null,"stored":"{token}","cookie":"probe={token}","native_session_id":"实际 PI_SESSION_ID 或 CODEX_THREAD_ID"}}，关闭当前浏览器。
 仅操作这份受控页面和自己的证据文件。''')
-            delegation = ('Pi 子代理调用使用 subagent 的 workflowScript；用 runs.all 派发两个 browser-operator，async:false、context:fresh。'
+            delegation = ('Pi 子代理调用统一传 async:false、context:fresh。workflowScript 单项用 return runs.run("key", {agent:"角色", task:"任务"})；'
+                          '并行用 return await runs.all([{key:"alpha",agent:"browser-operator",task:"任务A"},'
+                          '{key:"beta",agent:"browser-operator",task:"任务B"}])。runs.all 接受带 key 的描述对象，不接受 runs.run 的 Promise；'
+                          '结果为有序数组，用索引读取。两个 browser-operator 必须使用上述并行调用。'
                           if backend=='pi' else '用原生 spawn_agent 启动两个 browser-operator，等待并收取各自结果。')
             prompt = f'''这是 multi-agent 联合验收的原生能力阶段，不是产品开发。不要创建 Issue/PR、不要创建 Git repo、不要调用外部服务。
+{delegation}
 1. 委派 vision 子代理，用其原生图像读取工具观察 {inputs}/image.png；vision 只返回从上到下三条色带的英文名称，不写文件，不可通过解码像素替代图像输入。父会话收到观察结果后用自己的工具写入 {app}/image.json JSON 数组。
 2. 委派 executor 实现 {app}/calc.py 的 add(a,b)，自行运行 add(2,3)==5 和 add(-4,1)==-3 的断言。executor 阅读自己配置的技能，独立完成局部反馈并返回证据。
-3. {delegation} 两个任务分别为：{json.dumps(browser_tasks,ensure_ascii=False)}
+3. 两个 browser-operator 并行执行，任务分别为：{json.dumps(browser_tasks,ensure_ascii=False)}
 不要让主会话执行浏览器步骤。收齐产物后检查并结束；遇到协议/能力错误请直接报告，不安装或更换核心、扩展或模型。'''
             (output/'prompt.txt').write_text(prompt)
             prefix = submission.isolation_prefix(work,inputs) if PACKAGE else factory.isolation_prefix(work,inputs)

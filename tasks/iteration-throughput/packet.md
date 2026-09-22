@@ -4,7 +4,7 @@
 - **Guardrails**：评分仍以完整官方 benchmark 为准；设施失败不能冒充实验结果；不能为了提速把失败详情回灌同一次生成。基础设施修复与正式 score 使用不同阶段，score 开始后冻结 revision。
 - **Verification**：批次自动记录 qualification、排队、生成、artifact-ready、冻结、评测与恢复时间；下一轮可从终态数据计算墙钟、worker 利用率、重复采样次数和主 Agent 介入次数。
 - **Current Truth**：实现阶段已完成主要接线，Linux 提交包、三模型工具/视觉接口和四包冻结已通过；正在同一 Linux ZIP 上做真实 native/Braid 协作资格，官方本地镜像仍缺失。进度与责任见 [task-map](task-map.md)，资格证据见 [integration cell](cells/integration.md)。此前一轮 08:54–17:13 共 8h19m。健康的两路前四项只用了约 80 分钟；官方评测每项约 3–5 分钟。主要损耗来自资格验证过晚、application artifact 与 finalization 失败耦合、失败后重复模型采样，以及主 Agent 同时承担 scheduler、日志压缩和恢复。详见 [profile](profile-2026-09-22.md)。产品边界已收敛为一个Factory task对应一个根Issue；运行时Agent只使用GitHub式assignee，内部agent-profile与variant均由Harness隐藏。粗筛组合见[能力装配设计](recipes.md)。
-- **Next Step**：Linux ZIP、三模型接口与四包冻结已完成。entry_qualification 持有 native→Braid 真实协作资格，主线收到通过证据后用 `runs/competition/iteration-throughput/manifest.json` 启动 Lite 练习矩阵。当前代码检查点 Factory `57d0e90` / Braid `8b2c986`；无新增开工握手。
+- **Next Step**：Linux ZIP、三模型接口与四包冻结已完成。native-v2 正在 Linux 容器执行；linux_run_observer 只观察当前进程，主线持有 Braid 后续启动权，主线收到通过证据后用 `runs/competition/iteration-throughput/manifest.json` 启动 Lite 练习矩阵。当前代码检查点 Factory `57d0e90` / Braid `8b2c986`；无新增开工握手。
 
 ## Proposed loop
 

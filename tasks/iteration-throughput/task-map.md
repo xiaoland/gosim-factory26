@@ -14,4 +14,4 @@ CLI/对象的公开协作者字段固定为 `assignee_login`/`assignee_descripti
 
 原始 RPC、构建和运行日志留在 `runs/qualification/`；本页不累积逐条日志。只在接口假设失效、需要改变设计或外部事实需要用户输入时升级。默认输出阶段、状态、证据路径；完整日志按需读取。
 
-当前并行出口：Linux ZIP 与四包冻结已完成。capabilities_impl 只调整联合资格脚本以直接消费冻结包；entry_qualification（Luna high）持有 Linux 容器，随后按 native→Braid 顺序执行真实合成场景。native_stall 已只读确认 Competition 两任务与空历史，无当前 schema 阻塞；容量仍未确认，保持顺序运行。协议与模型接口 gate 已通过，Meter 旧429不再阻挡执行。
+当前并行出口：Linux ZIP 与四包冻结已完成。capabilities_impl 只调整联合资格脚本以直接消费冻结包；entry_qualification 已暂停；linux_run_observer（Luna medium、最小上下文）只观察现有 native-v2，主线在通过后启动 Braid，防止双重启动。native_stall 已只读确认 Competition 两任务与空历史，无当前 schema 阻塞；容量仍未确认，保持顺序运行。协议与模型接口 gate 已通过，Meter 旧429不再阻挡执行。
