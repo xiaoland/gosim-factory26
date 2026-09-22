@@ -17,7 +17,7 @@ import time
 from urllib.parse import urlencode, urlsplit
 from zipfile import ZipFile
 
-from playground import Client, CONFIG, api_key, redact, run_path
+from playground import ApiError, Client, CONFIG, api_key, redact, run_path
 
 TERMINAL = {'PASSED', 'FAILED', 'CANCELLED'}
 ACTIVE = {'PENDING', 'RUNNING', 'PAUSE_REQUESTED', 'RESUME_REQUESTED'}
@@ -243,6 +243,9 @@ class Controller:
         except Exception as exc:
             # Transport/error text may contain credentials or server response bodies.
             pending['error_class'] = type(exc).__name__
+            if isinstance(exc, ApiError):
+                pending['http_status'] = exc.status
+                pending['error_detail'] = self.safe(exc.detail)
             self.save()
             raise Blocked(operation+' 写入结果未确认，已保留 journal；先只读核查') from None
         pending['response'] = self.safe(response)

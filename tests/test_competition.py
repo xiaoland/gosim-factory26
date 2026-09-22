@@ -114,6 +114,26 @@ class CompetitionTest(unittest.TestCase):
         for path in self.directory.rglob('*.json'):
             self.assertNotIn('secret-not-for-journal', path.read_text())
 
+    def test_http_rejection_retains_safe_details_without_retrying(self):
+        original = self.client.request
+        def rejected(path, method='GET', **kwargs):
+            if method == 'POST':
+                self.client.calls.append((method, path))
+                raise competition.ApiError(413, {'detail': 'too large: secret-not-for-journal',
+                                                 'api_key': 'private'})
+            return original(path, method, **kwargs)
+        with self.controller() as controller:
+            with patch.object(self.client, 'request', side_effect=rejected):
+                with self.assertRaises(competition.Blocked):
+                    controller.snapshot()
+            pending = json.loads((self.directory/'state.json').read_text())['pending']
+            self.assertEqual(pending['http_status'], 413)
+            self.assertEqual(pending['error_detail'],
+                             {'detail': 'too large: [redacted]', 'api_key': '[redacted]'})
+            with self.assertRaises(competition.Blocked):
+                controller.run_all()
+        self.assertEqual(self.posts(), ['/submissions'])
+
     def test_unknown_snapshot_never_reuploads_without_hash_evidence(self):
         self.client.lose_response = '/submissions'
         with self.controller() as controller:

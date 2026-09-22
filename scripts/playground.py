@@ -34,8 +34,9 @@ def redact(value):
 
 
 class ApiError(RuntimeError):
-    def __init__(self, status):
+    def __init__(self, status, detail=None):
         self.status = status
+        self.detail = detail
         super().__init__(f'Playground HTTP {status}' + ('：请先运行 login 更新网站会话' if status == 401 else ''))
 
 
@@ -73,7 +74,11 @@ class Client:
                 raise RuntimeError(f'HTTP 传输失败（curl {result.returncode}）；写请求结果可能未知，不能盲目重试')
             status = int(result.stdout)
             if not 200 <= status < 300:
-                raise ApiError(status)
+                try:
+                    detail = json.loads(response.read_bytes())
+                except (ValueError, UnicodeDecodeError):
+                    detail = None
+                raise ApiError(status, detail)
             return json.loads(response.read_bytes()) if status != 204 else None
 
 
