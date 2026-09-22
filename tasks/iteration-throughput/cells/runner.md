@@ -58,7 +58,7 @@ planned
 ### 恢复与幂等
 
 - 所有写请求都禁止客户端自动重试。响应成功先 fsync/原子保存 identity，再进入下一写；未知传输结果先走只读 GET/history 核查。
-- snapshot POST 未知且没有可由 package hash + request identity 唯一匹配的 history 记录时，状态为 `unknown/blocked`，等待人工核对；不能重复上传或用 display name 猜 identity。
+- snapshot POST 未知时，比较请求前后的 history，接续唯一新增且名称与本次请求相符的 submission。存在歧义时保留现场；不要求平台未提供的 package hash。
 - run create POST 未知时，如果平台只暴露已知 `run_id` 查询，则无法恢复未知 id；adapter 必须保留 `create-unknown` 证据并暂停该 task，不能再 POST。若登录后只读 schema证明有按 submission/task 的 run history，才实现唯一匹配并继续。
 - start POST 未知但 run id 已知时，GET run status/events；`PENDING/RUNNING/PAUSED/PAUSE_REQUESTED/RESUME_REQUESTED` 归 `started`/等待，明确 `PASSED/FAILED/CANCELLED` 才归 terminal，未识别值永远保留 `unknown`。
 - `logs` cursor 使用 `(log_offset, after_event_id)`；同 cursor 重放覆盖同一个 chunk，只有 chunk 已持久化才推进 cursor。status、logs、events、traceability、commit history、source/workspace/archive 各自保存 source 与 observed_at；“日志出现 collected”不等于产物下载成功。
@@ -153,14 +153,14 @@ with competition.Controller(state_dir, secret=key) as controller:
 
 一个 controller 持有 state 目录锁和按 Competition 的 hosted 锁；local 评测队列不使用这些锁。`run_all` 先上传一次 snapshot，再串行完成其各 task，已有终态只补收证据。上传下一 variant 前检查上一 snapshot 的完整标志或全部 task run 的明确终态；创建 task 前检查当前 snapshot 仍是最新。history 必须提供单条记录、明确 `is_latest`，或无歧义 `created_at`；无法识别则停止写入。独立浏览器/其它主机不受本地锁约束，因此真实 smoke 仍须核验服务端 latest 规则。
 
-`state.json` 在每次 POST 前原子保存 pending action，响应到达后先持久化 receipt，再保存确认的 identity。中断或未知响应不会自动重发。snapshot 恢复只接受 history 中此前不存在且唯一匹配 package SHA256 的记录；若服务端不提供 hash，则保持 blocked。create 恢复只接受该 snapshot 的唯一 task-score run，或 `recover --run-id` 指定后由 GET 验证 submission/task 归属的 run。start 恢复需要已启动时间、运行态或明确终态；仅 PENDING 不视为已启动证明。缺 identity 的成功响应同样保留，不默认成功。
+`state.json` 在每次 POST 前原子保存 pending action，响应到达后先持久化 receipt，再保存确认的 identity。中断或未知响应不会自动重发。snapshot 恢复使用 history 中此前不存在、与请求 display name 相符的唯一新增记录；实际 API 没有 package hash，不再要求该字段。create 恢复只接受该 snapshot 的唯一 task-score run，或 `recover --run-id` 指定后由 GET 验证 submission/task 归属的 run。start 恢复需要已启动时间、运行态或明确终态；仅 PENDING 不视为已启动证明。缺 identity 的成功响应同样保留，不默认成功。
 
-每题在 `tasks/<task-id>/` 保存带 source/observed_at 的 status、日志分块、traceability 和 commit history。分块落盘后才推进游标，相同游标重放覆盖同一文件。artifact endpoint 失败保留 `collection_errors`，不能宣称 collected；archive 仅保存可下载 handle，明确 `archive_downloaded=false`。默认轮询间隔 180 秒，拒绝更短间隔；PAUSED 或未知状态停止本地等待，远端任务保持原状。
+每题在 `tasks/<task-id>/` 保存带 source/observed_at 的 status、日志分块、traceability 和 commit history。分块落盘后才推进游标，相同游标重放覆盖同一文件。辅助 artifact endpoint 失败保留 `collection_errors`，不阻断已取得的任务终态或评分；archive 仅保存可下载 handle，明确 `archive_downloaded=false`。默认轮询间隔 180 秒，拒绝更短间隔；PAUSED 或未知状态停止本地等待，远端任务保持原状。
 
-`summary()` 返回 `status=completed|blocked|running` 和独立 `score_status=complete|unavailable`。前者只表示声明的任务均明确终态且观测资料已收集；FAILED/CANCELLED 不推导零分。后者目前只在每题真实返回非负整数 passed/failed/total、total>0、passed+failed=total，以及有限数值 score 时为 complete。缺这些明确字段就 unavailable，待真实 schema 证据修正消费范围；不靠模型声明或退出码推算成绩。平台原始结果保留于 status 证据，不将逐题 score 合成为官方总榜。
+`summary()` 返回 `status=completed|blocked|running` 和独立 `score_status=complete|unavailable`。前者表示声明的任务均已取得明确终态；辅助诊断缺失另列；FAILED/CANCELLED 不推导零分。后者在每题真实返回有限 score 与有效 passed/failed 计数、且与实际 tests 数组长度吻合时为 complete；实际响应没有 total_tests，消费者以测试行数记录总数，并保留 token_cost_usd。不靠模型声明或退出码推算成绩。平台原始结果保留于 status 证据，不将逐题 score 合成为官方总榜。
 
-验收：`python3 -m unittest tests.test_competition -q`，16 项通过；覆盖冻结副本与原样恢复、同一 snapshot 两题顺序、unknown snapshot/create/start、错误 identity、成功响应后本地中断、malformed response 恢复、unknown status、游标发布失败重放、旧 snapshot 拒绝、上一 variant 未完成拒绝、锁冲突、缺产物不完成，以及成绩字段不足不计实验完成。与既有 `tests.test_playground` 的联合检查也通过；所有 transport 都是 fake，没有真实网络写入。
+验收：`python3 -m unittest tests.test_competition -q`，18 项通过；覆盖冻结副本与原样恢复、同一 snapshot 两题顺序、unknown snapshot/create/start、错误 identity、成功响应后本地中断、malformed response 恢复、unknown status、游标发布失败重放、旧 snapshot 拒绝、上一 variant 未完成拒绝、锁冲突、辅助诊断缺失不阻断完成，以及成绩字段不足不计实验完成。与既有 `tests.test_playground` 的联合检查也通过；这些单元检查使用 fake transport；实际官方 submission f9d8960d81a5 已上传，Keep run 007b8fc9d38b 已启动，真实结果归属 runs/competition/iteration-throughput-boundary-20260923/。
 
 ## 本轮练习与初赛提交的边界
 
-再次核对用户提供的《参赛须知.pdf》：初赛正式提交由队长发起、使用平台内置独立 key、一次运行两题，两个任务结束后才能开始下一次；个人 key 的平台练习不计最终榜单成绩。本轮按已批准目标运行官网 ARC-Bench-Lite Competition 练习，使用个人比赛 key，不能把这里的分数称为初赛正式成绩。现有 Competition adapter 是已观察的练习 API，不假定它就是 9 月 24 日开放的正式提交 API。PDF 没有给出 ZIP 大小上限；447 MiB 候选仍需实际平台上传资格验证。
+再次核对用户提供的《参赛须知.pdf》：初赛正式提交由队长发起、使用平台内置独立 key、一次运行两题，两个任务结束后才能开始下一次；个人 key 的平台练习不计最终榜单成绩。本轮按已批准目标运行官网 ARC-Bench-Lite Competition 练习，使用个人比赛 key，不能把这里的分数称为初赛正式成绩。现有 Competition adapter 是已观察的练习 API，不假定它就是 9 月 24 日开放的正式提交 API。PDF 没有给出 ZIP 大小上限；371.72 MiB 候选已被官网接收，不能据此推断平台上限。

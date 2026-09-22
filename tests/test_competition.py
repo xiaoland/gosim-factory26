@@ -34,7 +34,7 @@ class FakeCompetition:
                 assert kwargs['fields']['competition_id'] == 'arc-bench-lite'
                 assert 'api_key' not in kwargs['fields']
                 assert kwargs['secret'] == 'secret-not-for-journal'
-                item = {'id': 'snapshot-1', 'task_scores': []}
+                item = {'id': 'snapshot-1', 'task_scores': [], 'display_name': kwargs['fields']['display_name']}
                 self.snapshots.append(item)
                 value = {'submission': {'id': item['id'], 'api_key': kwargs['secret']}}
             elif path == '/runs':
@@ -147,15 +147,16 @@ class CompetitionTest(unittest.TestCase):
                 controller.run_all()
         self.assertEqual(self.posts(), ['/submissions'])
 
-    def test_unknown_snapshot_never_reuploads_without_hash_evidence(self):
+    def test_unknown_snapshot_recovers_only_unique_new_matching_submission(self):
         self.client.lose_response = '/submissions'
         with self.controller() as controller:
             with self.assertRaises(competition.Blocked):
                 controller.snapshot()
+        self.client.snapshots[0]['display_name'] = 'other-upload'
         with self.controller() as controller:
-            with self.assertRaisesRegex(competition.Blocked, 'package hash'):
+            with self.assertRaisesRegex(competition.Blocked, '同名 submission'):
                 controller.run_all()
-            self.client.snapshots[0]['package_sha256'] = self.inputs['package_sha256']
+            self.client.snapshots[0]['display_name'] = self.inputs['display_name']
             controller.recover()
             self.assertEqual(controller.state['submission_id'], 'snapshot-1')
         self.assertEqual(self.posts(), ['/submissions'])
@@ -217,13 +218,13 @@ class CompetitionTest(unittest.TestCase):
             with patch.object(self.client, 'request', side_effect=missing_id):
                 with self.assertRaises(competition.Blocked):
                     controller.snapshot()
-        self.client.snapshots[0]['package_sha256'] = self.inputs['package_sha256']
+        self.client.snapshots[0]['display_name'] = self.inputs['display_name']
         with self.controller() as controller:
             controller.recover()
             self.assertEqual(controller.state['submission_id'], 'snapshot-1')
         self.assertEqual(self.posts(), ['/submissions'])
 
-    def test_terminal_with_missing_artifact_is_not_complete_or_rerun(self):
+    def test_missing_diagnostic_artifact_does_not_block_completion_or_rerun(self):
         original = self.client.request
         def missing_artifact(path, method='GET', **kwargs):
             if path.endswith('/commit-history'):
@@ -231,9 +232,9 @@ class CompetitionTest(unittest.TestCase):
             return original(path, method, **kwargs)
         with self.controller() as controller:
             with patch.object(self.client, 'request', side_effect=missing_artifact):
-                with self.assertRaises(competition.Blocked):
-                    controller.run_all()
-            self.assertEqual(controller.summary()['status'], 'blocked')
+                controller.run_all()
+            self.assertEqual(controller.summary()['status'], 'completed')
+            self.assertIn('commit-history', controller.state['tasks'][TASKS[0]]['collection_errors'])
             controller.run_all()
         self.assertEqual(self.posts().count('/runs/run-1/start'), 1)
 

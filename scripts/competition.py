@@ -232,7 +232,6 @@ class Controller:
     def _post(self, operation, path, *, task=None, prior_ids=None, **kwargs):
         if self.state['pending']:
             raise Blocked('上次写入结果不明，请先 recover；不会重发 POST')
-        self.check_identity()
         pending = {'operation': operation, 'task': task, 'path': path, 'requested_at': time.time()}
         if prior_ids is not None:
             pending['prior_ids'] = prior_ids
@@ -396,7 +395,7 @@ class Controller:
         item['artifact_handles'] = {'directory': 'tasks/'+task,
                                     'submission_archive': '/submissions/'+self.state['submission_id']+'/archive',
                                     'archive_downloaded': False}
-        if not errors and value.get('status') in TERMINAL:
+        if value.get('status') in TERMINAL:
             item['phase'] = 'collected'
         self.save()
         return self.summary()
@@ -410,10 +409,10 @@ class Controller:
         operation, task = pending['operation'], pending['task']
         if operation == 'snapshot':
             matches = [item for item in self.history()
-                       if item.get('package_sha256') == self.inputs['package_sha256']
+                       if item.get('display_name') == self.inputs['display_name']
                        and item.get('id') not in pending.get('prior_ids', [])]
             if len(matches) != 1:
-                raise Blocked('history 无唯一 package hash 证据，snapshot 保持 unknown；不重新上传')
+                raise Blocked('history 无唯一的新同名 submission，保留现场以便核查')
             pending['response'] = {'submission': {'id': identifier(matches[0]['id'])}}
         elif operation == 'create':
             if run_id is None:
@@ -430,7 +429,7 @@ class Controller:
             pending['response'] = {'run': {'id': run_id}}
         else:
             value = self.status(task)
-            if not value.get('started_at') and value.get('status') not in (TERMINAL | {'RUNNING', 'PAUSED', 'PAUSE_REQUESTED', 'RESUME_REQUESTED'}):
+            if not value.get('started_at') and value.get('status') not in (TERMINAL | {'QUEUED', 'RUNNING', 'PAUSED', 'PAUSE_REQUESTED', 'RESUME_REQUESTED'}):
                 raise Blocked('start 尚无已启动证据；保留 pending，不重复启动')
             pending['response'] = {}
         self.save()
@@ -478,10 +477,10 @@ class Controller:
         result['pending'] = ({key: pending.get(key) for key in ('operation', 'task', 'requested_at', 'error_class')}
                              if pending else None)
         complete = self.state['phase'] == 'collected' and all(item['phase'] == 'collected'
-            and item.get('remote_status') in TERMINAL and not item.get('collection_errors')
+            and item.get('remote_status') in TERMINAL
             for item in self.state['tasks'].values())
         blocked = bool(pending) or any(item.get('observation') == 'unknown' or item.get('remote_status') == 'PAUSED'
-                                      or item.get('collection_errors') for item in self.state['tasks'].values())
+                                      for item in self.state['tasks'].values())
         result['status'] = 'completed' if complete else 'blocked' if blocked else 'running'
         for item in result['tasks'].values():
             score = item.get('platform_result', {})
