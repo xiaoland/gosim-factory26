@@ -124,13 +124,14 @@ B. {impl}：交付 calc.py 的 add(a,b)，包括负数和零。自己选择并�
                     roots=root_entries()
                     old=next(e for e in roots if e['status'] in ('running','idle'))
                     assert old.get('profile_id') and old.get('effective_profile_digest'), 'root session lacks profile material identity'
-                    assert old.get('native_session_id') and old.get('parent_native_session_id') is None, 'invalid root native identity fields'
-                    assert old.get('native_home') and old.get('native_session_path'), 'root session lacks native paths'
+                    assert old.get('parent_native_session_id') is None and old.get('native_home'), 'invalid root native identity fields'
+                    root_native_id=old.get('native_session_id') if backend=='pi' else old['session_id']
+                    if backend=='pi': assert root_native_id and old.get('native_session_path'), 'Pi root session lacks native identity/path'
                     assert old.get('work_item_kind') == 'issue' and str(old.get('work_item_id')) == '1'
                     previous_ids={e['session_id'] for e in roots}
                     old_id=old['session_id']; old_worktree=old['worktree']
                     child_id=json.loads(heartbeat.read_text().splitlines()[0])['native_session_id']
-                    assert child_id != old.get('native_session_id',old_id), 'parent ran the child writer'
+                    assert child_id != root_native_id, 'parent ran the child writer'
                     replacement=reset_prompt(phases[index+1]) if index+1<len(phases) else final_prompt
                     assert (Path(old_worktree)/'retained.txt').read_text().strip()=='retained-dirty'
                     cli('issue','edit','1','--body',replacement)
