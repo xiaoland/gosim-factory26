@@ -149,7 +149,7 @@ B. {impl}：交付 calc.py 的 add(a,b)，包括负数和零。自己选择并�
                     if backend=='pi':
                         receipt=read_json(Path(old['native_home'])/'.factory/subagent-stop.json')
                         assert receipt and receipt['state']=='stopped', 'missing successful native-tree receipt'
-                        child=next((c for c in receipt['children'] if c.get('child_session_id')==child_id),None)
+                        child=next((c for c in receipt['children'] if c.get('child_session_id')==child_id and c.get('mode')==mode),None)
                         assert child, 'stop receipt omits active child'
                         proof=child.get('proof',{})
                         if mode=='foreground':
