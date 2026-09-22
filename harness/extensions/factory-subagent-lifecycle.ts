@@ -162,23 +162,20 @@ function sessionIdFromFile(file: string | undefined): string | undefined {
 	}
 }
 
-function processProof(value: unknown): ChildProof {
-	const terminal = record(value);
-	const canonical = record(terminal?.canonicalSession);
-	const lease = canonical?.leaseDisposition === "released" || canonical?.leaseDisposition === "not-held" || canonical?.canonicalSessionLeaseReleased === true;
-	return {
-		status_terminal: terminal?.state === "observed" ? true : undefined,
-		process_terminal_observed: terminal?.state === "observed",
-		active_lease_released: lease || undefined,
-	};
+function backgroundSessionFile(child: KnownChild): string | undefined {
+	if (!child.asyncDir || !child.childId) return undefined;
+	try {
+		const status = record(readJsonFile(path.join(child.asyncDir, "status.json")));
+		const matches = array(status?.steps).map(record).filter((step) =>
+			step && (string(step.workflowKey) === child.childId || string(step.runId) === child.childId));
+		return matches.length === 1 ? string(matches[0]?.sessionFile) : undefined;
+	} catch {
+		return undefined;
+	}
 }
 
 function isActive(state: unknown): boolean {
 	return state === "running" || state === "queued" || state === "pending";
-}
-
-function isTerminal(state: unknown): boolean {
-	return state === "complete" || state === "completed" || state === "failed" || state === "paused" || state === "stopped" || state === "rejected" || state === "remembered foreground";
 }
 
 function addChild(target: Map<string, KnownChild>, input: Partial<KnownChild> & { runId?: string; parentSessionId?: string }): void {
@@ -316,7 +313,9 @@ function childReceipt(child: KnownChild): ChildEvidence {
 			...(child.controlRequested === true ? { control_requested: true } : {}),
 			...(child.controlInactive === true ? { control_inactive: true } : {}),
 		}
-		: processProof(child.processTerminal);
+		: {
+			...(child.controlRequested === true ? { control_requested: true } : {}),
+		};
 	return {
 		mode: child.mode,
 		run_id: child.runId,
@@ -328,15 +327,13 @@ function childReceipt(child: KnownChild): ChildEvidence {
 		...(child.nativeRole ? { native_role: child.nativeRole } : {}),
 		status: child.status ?? "unknown",
 		proof,
-		evidence_source: child.mode === "foreground" ? "pi-subagents:interrupt/parent-process-group" : "pi-subagents:status/processTerminal",
+		evidence_source: child.mode === "foreground" ? "pi-subagents:interrupt/parent-process-tree" : "pi-subagents:stop/parent-process-tree",
 	};
 }
 
 function proofComplete(child: KnownChild): boolean {
 	if (child.mode === "foreground") return child.controlRequested === true || child.controlInactive === true;
-	if (!child.childSessionId) return false;
-	const proof = processProof(child.processTerminal);
-	return isTerminal(child.status) && proof.process_terminal_observed === true && proof.active_lease_released === true;
+	return Boolean(child.childSessionId && child.controlRequested === true);
 }
 
 export function createLifecycleAdapter(options: LifecycleOptions = {}) {
@@ -410,6 +407,7 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 		if (textStatus.state) child.status = textStatus.state;
 		if (textStatus.sessionFile && !child.sessionFile) child.sessionFile = textStatus.sessionFile;
 		if (textStatus.asyncDir) child.asyncDir = textStatus.asyncDir;
+		if (!child.sessionFile) child.sessionFile = backgroundSessionFile(child);
 		if (!child.nativeRole) child.nativeRole = string(root.agent);
 		const lifecycle = record(record(root.lifecycleStatus)?.processTerminal) ?? record(root.processTerminal);
 		if (lifecycle) child.processTerminal = lifecycle;
@@ -439,6 +437,16 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 				? options.rpcWithDeadline(method, params, remainingMs)
 				: rpc!(method, params);
 		};
+		const stopBackground = async (child: KnownChild): Promise<void> => {
+			const response = statusPayload(await callRpc("stop", { id: child.runId, ...(child.childId ? { childId: child.childId } : {}) }));
+			if (string(response.runId) !== child.runId || response.state !== "stopping") {
+				throw new Error("Pi subagent stop did not acknowledge the targeted run.");
+			}
+			child.controlRequested = true;
+			if (string(response.asyncDir)) child.asyncDir = string(response.asyncDir);
+			if (!child.sessionFile) child.sessionFile = backgroundSessionFile(child);
+			if (child.sessionFile) child.childSessionId = child.childSessionId ?? sessionIdFromFile(child.sessionFile);
+		};
 		try { observe(await callRpc("status")); } catch (error) {
 			if (now() >= deadlineAt) return finish(request, "unknown", [...known.values()].map(childReceipt), { code: "control_deadline", message: `Lifecycle control exceeded ${deadlineMs}ms.` });
 			return finish(request, "unknown", [...known.values()].map(childReceipt), { code: "status_failed", message: error instanceof Error ? error.message : String(error) });
@@ -466,7 +474,7 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 				if (child.mode === "foreground") {
 					await callRpc("interrupt", { runId: child.runId });
 					child.controlRequested = true;
-				} else await callRpc("stop", { id: child.runId, ...(child.childId ? { childId: child.childId } : {}) });
+				} else await stopBackground(child);
 			} catch (error) {
 				if (now() >= deadlineAt) return finish(request, "unknown", targets.map(childReceipt), { code: "control_deadline", message: `Lifecycle control exceeded ${deadlineMs}ms.` });
 				child.status = "unknown";
@@ -494,7 +502,7 @@ export function createLifecycleAdapter(options: LifecycleOptions = {}) {
 					if (child.mode === "foreground") {
 						await callRpc("interrupt", { runId: child.runId });
 						child.controlRequested = true;
-					} else await callRpc("stop", { id: child.runId, ...(child.childId ? { childId: child.childId } : {}) });
+					} else await stopBackground(child);
 				} catch (error) {
 					if (now() >= deadlineAt) break;
 					child.status = "unknown";

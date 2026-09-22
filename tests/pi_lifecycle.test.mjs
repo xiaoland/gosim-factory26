@@ -38,6 +38,7 @@ async function stoppedChildren() {
     if (method === "status" && !params.id) {
       return { text: tick ? "Run: fg-1\nState: remembered foreground\nSession: " + fgSessionFile : "Run: fg-1\nState: running", asyncSnapshot: { runs: [{ id: "bg-1", state: tick ? "stopped" : "running" }] } };
     }
+    if (method === "stop" && params.id === "bg-1") return { runId: "bg-1", state: "stopping" };
     if (params.id === "fg-1") return tick ? { text: `Run: fg-1\nState: remembered foreground\nSession: ${fgSessionFile}` } : { text: `Run: fg-1\nState: running` };
     if (params.id === "bg-1") return tick ? { text: `Run: bg-1\nState: stopped\nSession: ${bgSessionFile}`, details: { lifecycleStatus: { processTerminal: { state: "observed", canonicalSession: { leaseDisposition: "released", freeAtObservation: true } } } } } : { text: "Run: bg-1\nState: running" };
     return {};
@@ -51,7 +52,7 @@ async function stoppedChildren() {
   assert.equal(receipt.state, "ready");
   assert.equal(receipt.children.length, 2);
   assert.equal(receipt.children.find((child) => child.run_id === "fg-1").proof.control_requested, true);
-  assert.deepEqual(receipt.children.find((child) => child.run_id === "bg-1").proof, { status_terminal: true, process_terminal_observed: true, active_lease_released: true });
+  assert.deepEqual(receipt.children.find((child) => child.run_id === "bg-1").proof, { control_requested: true });
   assert.equal(receipt.children.find((child) => child.run_id === "fg-1").child_session_id, "foreground-session");
   assert.equal(receipt.children.find((child) => child.run_id === "fg-1").native_role, "executor");
   assert.equal(receipt.children.find((child) => child.run_id === "fg-1").artifact_paths.outputPath, path.join(home, "foreground-output.md"));
@@ -174,7 +175,7 @@ async function missingProofIsUnknown() {
   }, now: () => tick * 1000, sleep: async () => { tick += 1; }, pollMs: 1, deadlineMs: 2_000 });
   const receipt = await adapter.stop();
   assert.equal(receipt.state, "unknown");
-  assert.equal(receipt.error.code, "control_deadline");
+  assert.equal(receipt.error.code, "background_control_failed");
 }
 
 async function foregroundCanHandOffBeforeSessionIdentityIsPublished() {
