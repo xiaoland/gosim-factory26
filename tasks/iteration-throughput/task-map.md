@@ -15,3 +15,5 @@ CLI/对象的公开协作者字段固定为 `assignee_login`/`assignee_descripti
 原始 RPC、构建和运行日志留在 `runs/qualification/`；本页不累积逐条日志。只在接口假设失效、需要改变设计或外部事实需要用户输入时升级。默认输出阶段、状态、证据路径；完整日志按需读取。
 
 当前并行出口：本轮边界修正已开工，Factory基线4310135。主Agent负责sources/braid，已提交fdb5c19（删除内部子代理控制，EOF关闭Pi），29单元与1CLI通过；factory_boundary_cleanup负责Factory源、被动观察/归档、删除全部自建沙箱及对应检查；direct_run_qualification优先负责短真实braid-scene，随后清理辅助入口和部署文档。真实运行先复用现有Linux runtime，不等新ZIP；一个候选官方闭环后再展开其余variant。此前进程兜底worker已中断。
+
+本轮收尾新增：[清理诊断与恢复阻力](cells/diagnostic-friction.md)。用户已要求处理已有的无收益约束，不只停止增加；当前官方冻结实验继续运行，清理不修改其ZIP。

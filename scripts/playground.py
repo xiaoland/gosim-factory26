@@ -77,7 +77,7 @@ class Client:
                 try:
                     detail = json.loads(response.read_bytes())
                 except (ValueError, UnicodeDecodeError):
-                    detail = None
+                    detail = response.read_text(errors="replace")
                 raise ApiError(status, detail)
             return json.loads(response.read_bytes()) if status != 204 else None
 
