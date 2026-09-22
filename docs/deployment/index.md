@@ -12,9 +12,9 @@ python3 scripts/package_agent.py --variant pi-team-mixed --output runs/packages/
 python3 main.py /path/to/requirements --output-dir /path/to/output
 ```
 
-构建需要可用的 Linux x86_64 Docker daemon；`--docker-context` 可省略以使用当前 context。脚本只发送指定构建输入，不上传整个开发目录。Braid 从当前 `sources/braid` 构建；SVC 从当前 `sources/svc` 构建包含 Corpus 的 wheel，Python 依赖用 Linux CPython 3.12 安装到包内目录。Node 和所选核心也在构建时安装并随包提供；Pi 需要 Node >=22.19，不能直接使用平台原有 Node 20。精确工具版本由 [Dockerfile](../../submission/Dockerfile) 固定，实际文件哈希、源码身份和执行权限写入 `package-manifest.json`。npm lock 和 Python 依赖清单随 runtime 保留。重复构建不覆盖已有 ZIP；构建时无需模型 key，比赛运行时无需 clone 源码、Cargo 或开发者 venv。
+构建需要可用的 Linux x86_64 Docker daemon；`--docker-context` 可省略以使用当前 context。脚本只发送指定构建输入，不上传整个开发目录。Braid 从当前 `sources/braid` 构建；SVC 从当前 `sources/svc` 构建包含 Corpus 的 wheel，Python 依赖用 Linux CPython 3.12 安装到包内目录。Node、所选核心、Chrome及其NSS动态模块、Braid所需的外部`ps`/`kill`与非系统动态库均在构建时安装并随包提供；Pi 需要 Node >=22.19，不能直接使用平台原有 Node 20。精确工具版本由 [Dockerfile](../../submission/Dockerfile) 固定，实际文件哈希、源码身份和执行权限写入 `package-manifest.json`。npm lock 和 Python 依赖清单随 runtime 保留。重复构建不覆盖已有 ZIP；构建时无需模型 key，比赛运行时无需 clone 源码、Cargo 或开发者 venv。
 
-入口要求 Linux x86_64、CPython 3.12 和 Landlock ABI >=3。它先校验所有载荷并恢复 ZIP 解压丢失的执行权限，再启动独立 Landlock launcher。规则只授权系统运行路径、只读包与需求、可写临时工作区，不开放整个 `/workspace`、`/tmp` 或 `/proc`。运行前检查子孙进程不能读取宿主标记，不能写入、删除或替换需求。内核或 seccomp 不支持时明确失败，不会无隔离回退。网络白名单仍由平台负责；该文件隔离不声称实施了网络隔离。生产 Runner 是否支持此内核能力需要在正式环境核实。
+入口要求 Linux x86_64、CPython 3.12 和 Landlock ABI >=3。它先校验所有载荷并恢复 ZIP 解压丢失的执行权限，再启动独立 Landlock launcher。规则授权系统运行路径、只读包与需求、可写临时工作区，不开放整个 `/workspace` 或 `/tmp`。Chrome需要读取自身的maps与fd，因此`/proc`以只读方式开放；跨Landlock域的进程敏感文件仍受内核ptrace限制。Linux资格同时检查自身proc可读、宿主的environ/fd/mem被拒绝，不以路径规则替代实际边界验证。运行前检查子孙进程不能读取宿主标记，不能写入、删除或替换需求。内核或 seccomp 不支持时明确失败，不会无隔离回退。网络白名单仍由平台负责；该文件隔离不声称实施了网络隔离。生产 Runner 是否支持此内核能力需要在正式环境核实。
 
 文本 provider 必须使用完整的 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`MODEL`。可选完整 `VISUAL_API_KEY`、`VISUAL_BASE_URL`、`VISUAL_MODEL` 只供视觉角色使用，不覆盖主模型；仅有默认 VISUAL_MODEL 不视为提供了视觉凭据。视觉 key 或地址部分提供时立即失败。冻结 variant 的主模型和视觉角色与平台模型不一致时拒绝运行，避免改变实验条件。配置与清单保存环境变量名，不保存 key；运行时只传递实际需要的凭据。
 
