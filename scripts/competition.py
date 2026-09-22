@@ -20,7 +20,7 @@ from zipfile import ZipFile
 from playground import ApiError, Client, CONFIG, api_key, redact, run_path
 
 TERMINAL = {'PASSED', 'FAILED', 'CANCELLED'}
-ACTIVE = {'PENDING', 'RUNNING', 'PAUSE_REQUESTED', 'RESUME_REQUESTED'}
+ACTIVE = {'QUEUED', 'PENDING', 'RUNNING', 'PAUSE_REQUESTED', 'RESUME_REQUESTED'}
 
 
 class Blocked(RuntimeError):
@@ -347,8 +347,11 @@ class Controller:
         item.update(remote_status=remote, observed_at=time.time())
         item['platform_result'] = {key: value[key] for key in
             ('score', 'test_pass_rate', 'feature_implementation_rate', 'passed_count', 'failed_count',
-             'total_tests', 'run_duration_seconds', 'token_count', 'token_cost', 'token_cost_currency',
+             'total_tests', 'run_duration_seconds', 'token_count', 'token_cost', 'token_cost_usd', 'token_cost_currency',
              'started_at', 'finished_at') if key in value}
+        # The platform exposes the full test rows, not a total_tests field.
+        if isinstance(value.get('tests'), list):
+            item['platform_result']['total_tests'] = len(value['tests'])
         if remote in TERMINAL:
             item['observation'] = 'known'
             if item['phase'] != 'collected':

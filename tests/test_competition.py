@@ -114,6 +114,19 @@ class CompetitionTest(unittest.TestCase):
         for path in self.directory.rglob('*.json'):
             self.assertNotIn('secret-not-for-journal', path.read_text())
 
+    def test_observed_platform_test_rows_and_usd_cost_are_preserved(self):
+        with self.controller() as controller:
+            controller.snapshot()
+            controller.create(TASKS[0])
+            self.client.runs['run-1'].update(status='PASSED', score=50.0,
+                passed_count=1, failed_count=1, token_cost_usd=0.12,
+                tests=[{'status': 'passed'}, {'status': 'failed'}])
+            controller.status(TASKS[0])
+            result = controller.summary()['tasks'][TASKS[0]]
+            self.assertEqual(result['score_status'], 'complete')
+            self.assertEqual(result['platform_result']['total_tests'], 2)
+            self.assertEqual(result['platform_result']['token_cost_usd'], 0.12)
+
     def test_http_rejection_retains_safe_details_without_retrying(self):
         original = self.client.request
         def rejected(path, method='GET', **kwargs):
@@ -229,6 +242,9 @@ class CompetitionTest(unittest.TestCase):
             controller.snapshot()
             controller.create(TASKS[0])
             controller.start(TASKS[0])
+            self.client.runs['run-1']['status'] = 'QUEUED'
+            controller.status(TASKS[0])
+            self.assertEqual(controller.state['tasks'][TASKS[0]]['observation'], 'known')
             self.client.runs['run-1']['status'] = 'FUTURE_STATE'
             with patch.object(competition.time, 'sleep', side_effect=AssertionError('must stop')):
                 with self.assertRaisesRegex(competition.Blocked, '未知'):
