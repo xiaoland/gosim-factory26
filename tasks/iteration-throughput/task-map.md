@@ -8,10 +8,10 @@
 | 能力装配 | capabilities_impl；profiles/native_profiles/factory/package、harness 配置与 submission Docker 构建 | effective 字段合同、同一 ZIP 材料和消费者测试，`cells/capabilities.md` |
 | Competition | multiagent_boundary_advice；名字沿用旧会话，本次角色是实现者；competition.py 与测试 | 16 项 fake transport 检查、紧凑 summary 与只读恢复，`cells/runner.md` |
 | Lifecycle / 集成 | 主 Agent；extension、Braid provider、core archive、submission 凭据、local runner、official matrix、联合资格脚本 | Node/真实无模型 Pi RPC、7 项 Rust provider 检查、归档与恢复行为验证，`cells/integration.md` |
-| 环境 | 已完成独立只读取证 | Windows Docker 可用于打包；官方 local runner 基础 image 缺失；Meter 非零余额与 key 免费额度拒绝未能对应，`cells/environment.md` |
+| 环境 | 已完成独立只读取证 | Windows Docker 可用于打包；官方 local runner 基础 image 缺失；同一比赛 key 的模型接口已恢复，`cells/environment.md` |
 
 CLI/对象的公开协作者字段固定为 `assignee_login`/`assignee_description`；variant defaults 使用公开 login，resolver 转为 Braid 内部 defaults（issue/pr profile ID）。文本与视觉 endpoint/key 分开，平台变量不能覆盖冻结模型。跨 owner 接缝通过这些具体合同协调，不复制各自实现。
 
 原始 RPC、构建和运行日志留在 `runs/qualification/`；本页不累积逐条日志。只在接口假设失效、需要改变设计或外部事实需要用户输入时升级。默认输出阶段、状态、证据路径；完整日志按需读取。
 
-当前并行出口：capabilities_impl 完成 Linux Chrome 便携包；entry_qualification（Luna high）按 native→Braid 顺序执行真实合成场景。协议 gate 已通过，Meter 旧429不再阻挡执行。源码接口冻结与Linux装配分开，避免让浏览器系统库装配阻塞Mac协作资格。
+当前并行出口：Linux ZIP 与四包冻结已完成。capabilities_impl 只调整联合资格脚本以直接消费冻结包；entry_qualification（Luna high）持有 Linux 容器，随后按 native→Braid 顺序执行真实合成场景。native_stall 已只读确认 Competition 两任务与空历史，无当前 schema 阻塞；容量仍未确认，保持顺序运行。协议与模型接口 gate 已通过，Meter 旧429不再阻挡执行。

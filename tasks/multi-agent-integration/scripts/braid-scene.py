@@ -16,10 +16,23 @@ import tempfile
 import time
 import uuid
 
-ROOT = Path(__file__).resolve().parents[3]
+_bootstrap = argparse.ArgumentParser(add_help=False)
+_bootstrap.add_argument('--package', type=Path)
+_bootstrap.add_argument('--output', type=Path)
+_bootstrap_args, _ = _bootstrap.parse_known_args()
+PACKAGE = _bootstrap_args.package or (Path(os.environ['FACTORY26_QUALIFICATION_PACKAGE'])
+                                      if os.environ.get('FACTORY26_QUALIFICATION_PACKAGE') else None)
+if PACKAGE:
+    ROOT = PACKAGE.resolve()
+else:
+    try:
+        ROOT = Path(__file__).resolve().parents[3]
+    except IndexError as error:
+        raise RuntimeError('浅路径运行必须传 --package 或 FACTORY26_QUALIFICATION_PACKAGE') from error
 sys.path.insert(0, str(ROOT/'scripts'))
 import factory
 import profiles
+import submission
 import sources
 from braid_runtime import initialize_repository, load_delivery, export_delivery, archive_state
 from core import archive_sessions
@@ -29,18 +42,40 @@ def read_json(path, default=None):
     return json.loads(path.read_text()) if path.exists() else default
 
 
-def run(backend):
-    config = profiles.configuration('pi-team-mixed' if backend == 'pi' else 'codex-generalist')
-    output = ROOT/'runs/integration'/f'{time.strftime("%Y%m%d-%H%M%S")}-{backend}-braid-{uuid.uuid4().hex[:6]}'
+def configuration(backend):
+    if PACKAGE:
+        manifest = submission.verify_package(ROOT)
+        config = submission.platform_config(ROOT, manifest)
+        if config['backend'] != backend:
+            raise ValueError(f'资格包 backend 是 {config["backend"]}，不是 {backend}')
+        return config
+    return profiles.configuration('pi-team-mixed' if backend == 'pi' else 'codex-generalist')
+
+
+def run(backend, selected_output=None):
+    config = configuration(backend)
+    selected_output = selected_output or (Path(os.environ['FACTORY26_QUALIFICATION_OUTPUT'])
+                                          if os.environ.get('FACTORY26_QUALIFICATION_OUTPUT') else None)
+    if selected_output:
+        output = selected_output.resolve()
+    elif PACKAGE:
+        raise ValueError('包模式必须传 --output 或 FACTORY26_QUALIFICATION_OUTPUT')
+    else:
+        output = ROOT/'runs/integration'/f'{time.strftime("%Y%m%d-%H%M%S")}-{backend}-braid-{uuid.uuid4().hex[:6]}'
     output.mkdir(parents=True)
     work = Path(tempfile.mkdtemp(prefix='f26-braid-', dir='/tmp')).resolve()
+    external_inputs = Path(tempfile.mkdtemp(prefix='f26-braid-input-', dir='/tmp')).resolve() if PACKAGE else None
     app = work/'application'; app.mkdir()
-    inputs = work/'input'; inputs.mkdir()
+    inputs = external_inputs or work/'input'
+    if not external_inputs: inputs.mkdir()
     record = dict(kind='multi-agent-joint-braid-stage', backend=backend, status='running',
                   started_at=time.time(), workspace=str(work), resets=[])
     factory.save(output/'check.json', record)
     factory.save(output/'effective-config.json', config['effective'])
-    sources.archive('braid',output/'sources'); sources.archive('svc',output/'sources')
+    if PACKAGE:
+        shutil.copy2(ROOT/'package-manifest.json',output/'package-manifest.json')
+    else:
+        sources.archive('braid',output/'sources'); sources.archive('svc',output/'sources')
     spec = importlib.util.spec_from_file_location('native_scene',Path(__file__).with_name('native-scene.py'))
     native_scene = importlib.util.module_from_spec(spec); spec.loader.exec_module(native_scene)
     native_scene.fixture_png(inputs/'image.png')
@@ -58,7 +93,8 @@ while True:
     native,env = factory.runtime_environment(work,config)
     state = work/'braid-state'
     (work/'bin').mkdir()
-    executable = work/'bin/braid'; shutil.copy2(sources.binary(),executable)
+    executable = work/'bin/braid'
+    shutil.copy2(ROOT/'runtime/bin/braid' if PACKAGE else sources.binary(),executable)
     env['PATH']=str(executable.parent)+os.pathsep+env['PATH']
     # Host CLI must not borrow the runtime's writer identity.
     def cli(*args, check=True):
@@ -107,7 +143,7 @@ while True:
     impl_login = config['effective']['profiles'][impl]['profile']['assignee_login']
     final_prompt = f'''这是受控多 Agent 交付场景。先核对当前工作树 retained.txt 的内容是 retained-dirty；删除此临时检查文件，不要提交它。
 创建两个子 Issue（parent=1），分别明确 assignee：
-A. {ui_login}：交付 colors.py 的 bands() 返回图像 {inputs}/image.png 从上到下的英文颜色名称列表。必须委派 vision 子代理用原生图像工具观察图片，不可解码像素。通过工具编写代码，自己选择并读取已配置的一个相关技能，设计验收并用 PR 实现、提交和合入，PR 也明确指派 {ui_login}。
+A. {ui_login}：交付 colors.py 的 bands() 返回图像 {inputs}/image.png 从上到下的英文颜色名称列表。必须委派 vision 子代理用原生图像工具观察图片；vision 只返回观察结果，不写文件，负责本 Issue 的父会话依据该结果用自己的工具实现 colors.py，不可解码像素。自己选择并读取已配置的一个相关技能，设计验收并用 PR 实现、提交和合入，PR 也明确指派 {ui_login}。
 B. {impl_login}：交付 calc.py 的 add(a,b)，包括负数和零。自己选择并读取已配置的一个相关技能，设计验收并用 PR 实现、提交和合入，PR 明确指派 {impl_login}。
 两项互不修改对方文件，可独立推进；不要亲自代替它们实现。各子 Issue 用评论向根 Issue 报告产物与证据，完成后 close --reason completed。你通过评论讨论、核对各 PR 已合入，最后验证交付分支的 bands()==['red','green','blue']、add(2,3)==5、add(-4,1)==-3，再关闭根 Issue completed。
 这是临时仓库，允许本地 commit/merge，禁止 push。所有 shell 需要走当前输入给定的 CLI writer 身份。无中途人类介入，不用官方 benchmark，不安装依赖，不开发 Web 应用。'''
@@ -118,7 +154,8 @@ B. {impl_login}：交付 calc.py 的 add(a,b)，包括负数和零。自己选�
             factory.save(work/'request.json',request)
             factory.save(output/'request.json',request)
             with (output/'braid.log').open('w') as log:
-                proc=subprocess.Popen(factory.isolation_prefix(work,inputs)+[str(executable),'local',str(work/'request.json')],
+                prefix = submission.isolation_prefix(work,inputs) if PACKAGE else factory.isolation_prefix(work,inputs)
+                proc=subprocess.Popen(prefix+[str(executable),'local',str(work/'request.json')],
                     cwd=app,env=env,stdout=log,stderr=log,start_new_session=True)
                 for index,mode in enumerate(phases):
                     heartbeat=work/f'{mode}.jsonl'
@@ -190,6 +227,7 @@ B. {impl_login}：交付 calc.py 的 add(a,b)，包括负数和零。自己选�
         for mode in phases:
             if (work/f'{mode}.jsonl').exists(): shutil.copy2(work/f'{mode}.jsonl',output/f'{mode}.jsonl')
         record['finished_at']=time.time(); factory.save(output/'check.json',record)
+        if external_inputs: shutil.rmtree(external_inputs)
         print(json.dumps(record,ensure_ascii=False),flush=True)
         if record['status']=='passed': shutil.rmtree(work)
     if record['status']!='passed': raise RuntimeError(record['error'])
@@ -198,4 +236,7 @@ B. {impl_login}：交付 calc.py 的 add(a,b)，包括负数和零。自己选�
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--backend',choices=('pi','codex'),required=True)
-    run(parser.parse_args().backend)
+    parser.add_argument('--package',type=Path,help='已解包且冻结的 Linux x86_64 资格包根目录')
+    parser.add_argument('--output',type=Path,help='本次资格证据目录；包模式必填')
+    args=parser.parse_args()
+    run(args.backend,args.output)

@@ -78,9 +78,9 @@ Docker daemon 与官方 image 可得后，先跑一个标准无模型 deploy，�
 
 ### 6. 资格、冻结与实验
 
-先完成一次最小模型接口资格：DeepSeek/GLM 文本 tool call 和 reasoning wire shape，DeepSeek Vision 的图片与 browser screenshot。当前比赛 key 对三次最小调用都返回 429 `insufficient_quota`，因此此 gate 尚未通过；不以静态 catalog 或旧 GLM 声明替代。
+先完成一次最小模型接口资格：DeepSeek/GLM 文本 tool call 和 reasoning wire shape，DeepSeek Vision 的图片与 browser screenshot。该接口门槛已通过：同一比赛 key 的 DeepSeek/GLM 文本和 DeepSeek Vision 均返回 HTTP 200 与实际 tool call；最新证据见 integration cell。先前 429 为已恢复的外部状态，不继续作为阻塞。
 
-随后执行一个 root Issue、可选 child Issue、一个 PR 的真实协作旅程，确认 assignee、comment/reply、packet、ready/merge/finalization 与生命周期合同。再用同一冻结 ZIP 完成一个 Competition smoke。任何设施修复导致 source/material 变化都使资格过期，重新资格后才 score。
+真实native和Braid协作资格都在已验的Linux提交环境中消费同一冻结ZIP，模型网络访问是相对于离线资格的必要变化；不在Mac重装一个近似runtime替代。随后执行一个 root Issue、可选 child Issue、一个 PR 的真实协作旅程，确认 assignee、comment/reply、packet、ready/merge/finalization 与生命周期合同。再用同一冻结 ZIP 完成一个 Competition smoke。任何设施修复导致 source/material 变化都使资格过期，重新资格后才 score。
 
 最终冻结四个 ZIP，执行 `4 variants × 2 ARC-Bench-Lite tasks`。本地先并行提供快速反馈；Competition 按平台 slot 顺序取得全部八个 hosted task 结果。每项记录 venue、package hash、score/pass、cost attribution、generation/evaluation/queue time 和设施失败。低分是有效实验结果，不触发同轮重采样；八项完整后汇总并停止。
 

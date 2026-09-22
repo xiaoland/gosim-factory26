@@ -1,6 +1,6 @@
 # Cell：Pi lifecycle 与整合顺序
 
-状态：已获批实施。无模型代码与协议检查通过，Linux ZIP 入口资格进行中；真实模型/协作与评分尚未通过。下方 Observed 保留实施前反例，最新结果见末尾。
+状态：已获批实施。无模型代码、协议、Linux ZIP 入口、文本/视觉工具接口与四包冻结通过；真实协作资格进行中，尚无评分。下方 Observed 保留实施前反例，最新结果见末尾。
 
 ## Observed
 
@@ -78,3 +78,9 @@ Factory 实现检查点已提交 `32f1e3c`。首包在浏览器依赖安装处�
 文本工具调用与视觉工具调用资格已通过，证据由 `runs/qualification/models/` 与 `models-vision-auto/` 组成；视觉400只来自测试强制函数选择，不是 Pi 默认消费者所需参数，未因此修改产品模型或降低 thinking。Luna 持有真实 native→Braid 场景执行；主 Agent 不轮询原始 rollout，失败或终态才收取最小证据。模型目录只保留稳定能力配置，临时 gateway_verified/429状态已移除，实时资格状态归本 cell/runs。
 
 Linux 最终候选 `pi-team-mixed-chromium-candidate-3.zip` 已通过入口、真实 Pi RPC、Chrome loader 与 agent-browser 跨命令检查（打开data页、title、URL、snapshot、close）。SHA256 `a1cc6e660c0a9a3c05dfb59148ccb65deac55b2406c19f7be53661759315bab7`，369 MiB / 解包873 MiB；环境仍为UID1000、1CPU、2GiB、network none，证据 `runs/qualification/container-acceptance-final/`。Chrome私有动态库、字体与schemas随runtime打包，仅启动脚本设置其环境；SVC正文不变。Braid实现提交 `8b2c986`。最终四包用 `scripts/freeze-packages.py` 校验候选hash、source文件和构建输入，复用相同已验runtime。
+
+最终126项Python检查（1项macOS不适用skip）及Node lifecycle通过，Factory提交 `57d0e90`。四包位于 `runs/packages/iteration-throughput/final-57d0e90/`，manifest为 `runs/competition/iteration-throughput/manifest.json`；离线装配106.79秒、manifest冻结1.23秒。最终mixed与已验候选3的SHA256完全相同，其余三包复用相同runtime bytes；尚未上传或启动Competition。
+
+真实native场景 `20260922-212127-pi-native-844388` 在Mac上受控停止：vision已正确识别red/green/blue，executor断言通过；两browser重复CDP关闭，底层为嵌套sandbox初始化失败，还有GNU timeout缺失。它未产生完整资格，也未进入Braid/bench。另一个脚本错误是要求只读vision写image.json。修正归属是资格环境与夹具：父会话落盘视觉观察，native/Braid场景改为消费同一已验Linux ZIP，沿submission配置和隔离入口运行，不新增Mac兼容补丁。Linux无模型资格不能外推到Mac live浏览器，反之Mac设施失败也不否定已验Linux browser。
+
+Linux live 容器 `factory26-live-linux-20260922` 已就绪，消费最终 mixed 包 a1cc6e66…；UID1000、1CPU、2GiB，bridge 仅为模型网络与本地页面服务。无模型 entry/RPC 再次通过。联合场景脚本新增 `--package/--output`，直接使用包内 manifest/config/runtime/isolation，不重建近似环境。官网 GET 确认 Lite 66 项与空提交历史，首 variant 状态已在 `runs/competition/iteration-throughput/matrix/hosted/pi-team-deepseek` 本地 prepare，尚无远端写入。

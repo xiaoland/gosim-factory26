@@ -16,11 +16,24 @@ import time
 import uuid
 import zlib
 
-ROOT = Path(__file__).resolve().parents[3]
+_bootstrap = argparse.ArgumentParser(add_help=False)
+_bootstrap.add_argument('--package', type=Path)
+_bootstrap.add_argument('--output', type=Path)
+_bootstrap_args, _ = _bootstrap.parse_known_args()
+PACKAGE = _bootstrap_args.package or (Path(os.environ['FACTORY26_QUALIFICATION_PACKAGE'])
+                                      if os.environ.get('FACTORY26_QUALIFICATION_PACKAGE') else None)
+if PACKAGE:
+    ROOT = PACKAGE.resolve()
+else:
+    try:
+        ROOT = Path(__file__).resolve().parents[3]
+    except IndexError as error:
+        raise RuntimeError('浅路径运行必须传 --package 或 FACTORY26_QUALIFICATION_PACKAGE') from error
 sys.path.insert(0, str(ROOT/'scripts'))
 import factory
 import native_profiles
 import profiles
+import submission
 from core import archive_sessions, codex_turn
 
 
@@ -64,19 +77,38 @@ def codex_entry_from_events(output, native, profile):
                 parent_native_session_id=None)
 
 
-def run(backend):
+def configuration(backend):
+    if PACKAGE:
+        manifest = submission.verify_package(ROOT)
+        config = submission.platform_config(ROOT, manifest)
+        if config['backend'] != backend:
+            raise ValueError(f'资格包 backend 是 {config["backend"]}，不是 {backend}')
+        return config
     variant = 'pi-team-mixed' if backend == 'pi' else 'codex-generalist'
-    config = profiles.configuration(variant)
-    output = ROOT/'runs/integration'/f'{time.strftime("%Y%m%d-%H%M%S")}-{backend}-native-{uuid.uuid4().hex[:6]}'
+    return profiles.configuration(variant)
+
+
+def run(backend, selected_output=None):
+    config = configuration(backend)
+    selected_output = selected_output or (Path(os.environ['FACTORY26_QUALIFICATION_OUTPUT'])
+                                          if os.environ.get('FACTORY26_QUALIFICATION_OUTPUT') else None)
+    if selected_output:
+        output = selected_output.resolve()
+    elif PACKAGE:
+        raise ValueError('包模式必须传 --output 或 FACTORY26_QUALIFICATION_OUTPUT')
+    else:
+        output = ROOT/'runs/integration'/f'{time.strftime("%Y%m%d-%H%M%S")}-{backend}-native-{uuid.uuid4().hex[:6]}'
     output.mkdir(parents=True)
     work = Path(tempfile.mkdtemp(prefix='f26-scene-', dir='/tmp')).resolve()
+    external_inputs = Path(tempfile.mkdtemp(prefix='f26-scene-input-', dir='/tmp')).resolve() if PACKAGE else None
     record = dict(kind='multi-agent-joint-native-stage', backend=backend, status='running',
                   started_at=time.time(), workspace=str(work), effective_digest=config['effective']['effective_digest'])
     factory.save(output/'check.json',record)
     factory.save(output/'effective-config.json',config['effective'])
     print(output,flush=True)
     app = work/'application'; app.mkdir()
-    inputs = work/'input'; inputs.mkdir()
+    inputs = external_inputs or work/'input'
+    if not external_inputs: inputs.mkdir()
     fixture_png(inputs/'image.png')
     (inputs/'index.html').write_text('<!doctype html><title>Isolation probe</title><label>Value<input id="value"></label><button onclick="localStorage.setItem(\'probe\',document.querySelector(\'input\').value);document.cookie=\'probe=\'+document.querySelector(\'input\').value">Save</button>')
     handler = partial(SimpleHTTPRequestHandler,directory=str(inputs))
@@ -103,12 +135,12 @@ def run(backend):
             delegation = ('Pi 子代理调用使用 subagent 的 workflowScript；用 runs.all 派发两个 browser-operator，async:false、context:fresh。'
                           if backend=='pi' else '用原生 spawn_agent 启动两个 browser-operator，等待并收取各自结果。')
             prompt = f'''这是 multi-agent 联合验收的原生能力阶段，不是产品开发。不要创建 Issue/PR、不要创建 Git repo、不要调用外部服务。
-1. 委派 vision 子代理，用其原生图像读取工具观察 {inputs}/image.png，把从上到下三条色带的英文名称写为 {app}/image.json 的 JSON 数组。不可通过解码像素替代图像输入。
+1. 委派 vision 子代理，用其原生图像读取工具观察 {inputs}/image.png；vision 只返回从上到下三条色带的英文名称，不写文件，不可通过解码像素替代图像输入。父会话收到观察结果后用自己的工具写入 {app}/image.json JSON 数组。
 2. 委派 executor 实现 {app}/calc.py 的 add(a,b)，自行运行 add(2,3)==5 和 add(-4,1)==-3 的断言。executor 阅读自己配置的技能，独立完成局部反馈并返回证据。
 3. {delegation} 两个任务分别为：{json.dumps(browser_tasks,ensure_ascii=False)}
 不要让主会话执行浏览器步骤。收齐产物后检查并结束；遇到协议/能力错误请直接报告，不安装或更换核心、扩展或模型。'''
             (output/'prompt.txt').write_text(prompt)
-            prefix = factory.isolation_prefix(work,inputs)
+            prefix = submission.isolation_prefix(work,inputs) if PACKAGE else factory.isolation_prefix(work,inputs)
             if backend=='pi':
                 session = native/'parent.jsonl'
                 command = prefix+[binding['executable'],'--provider','factory26','--model',config['model'],
@@ -140,6 +172,7 @@ def run(backend):
             record.update(status='failed',error='Native parent/children evidence incomplete')
         shutil.copytree(app,output/'artifacts')
         record['finished_at']=time.time(); factory.save(output/'check.json',record)
+        if external_inputs: shutil.rmtree(external_inputs)
         # Preserve failed workspaces and original paths for diagnosis.
         if record['status']=='passed': shutil.rmtree(work)
         print(json.dumps(record,ensure_ascii=False),flush=True)
@@ -150,4 +183,7 @@ def run(backend):
 if __name__=='__main__':
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--backend',choices=('pi','codex'),required=True)
-    run(parser.parse_args().backend)
+    parser.add_argument('--package',type=Path,help='已解包且冻结的 Linux x86_64 资格包根目录')
+    parser.add_argument('--output',type=Path,help='本次资格证据目录；包模式必填')
+    args=parser.parse_args()
+    run(args.backend,args.output)
