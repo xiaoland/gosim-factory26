@@ -117,7 +117,9 @@ def archive_sessions(output, home, work, entries):
             tree_path = _archive_path(row['native_home'], work)/'.factory'/'session-tree.json'
             if tree_path.exists():
                 tree = json.loads(tree_path.read_text())
-                if str(tree.get('parent_native_session_id')) != str(session_id):
+                root_ids = {str(session_id), str(row.get('native_session_id'))}
+                root_ids.discard('None')
+                if str(tree.get('parent_native_session_id')) not in root_ids:
                     raise ValueError('Pi session-tree parent identity 与 Braid 根会话不一致')
                 source = tree.get('parent_session_file') or source
         if not source and provider == 'codex' and isinstance(session_id, str) and re.fullmatch(r'[a-fA-F0-9-]+', session_id):
@@ -147,6 +149,7 @@ def archive_sessions(output, home, work, entries):
         root_archived['session_tree_manifest'] = str(tree_target.relative_to(output))
         parent_id = tree.get('parent_native_session_id')
         root_ids = {str(root_archived.get('native_id')), str(root.get('session_id')),
+                    str(root.get('native_session_id')),
                     str(root.get('native_session_path')), str(root_archived.get('source_path'))}
         root_ids.discard('None')
         if not parent_id or str(parent_id) not in root_ids:
@@ -252,7 +255,8 @@ def archive_sessions(output, home, work, entries):
             session_id = row['session_id']
             if provider == 'codex' and str(actual_id) != str(session_id):
                 raise ValueError('原生会话身份与 Braid 清单不同')
-            if provider == 'pi' and str(session_id) not in (str(actual_id), str(source)):
+            if provider == 'pi' and str(actual_id) not in (str(session_id), str(row.get('native_session_id'))) \
+                    and str(session_id) != str(source):
                 raise ValueError('Pi 原生会话身份与清单不同')
             root_key = (provider, str(actual_id))
             root_is_new = root_key not in seen

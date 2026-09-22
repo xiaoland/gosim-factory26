@@ -28,7 +28,8 @@ class NativeArchiveTest(unittest.TestCase):
                 'parent_session_file': str(canonical), 'children': [],
             }))
             rows = archive_sessions(work / 'run', work / 'home', work, [{
-                'provider': 'pi', 'session_id': 'pi-root', 'native_home': str(native_home),
+                'provider': 'pi', 'session_id': str(alias), 'native_session_id': 'pi-root',
+                'native_home': str(native_home),
                 'native_session_path': str(alias),
             }])
             self.assertEqual(rows[0]['native_id'], 'pi-root')
