@@ -99,7 +99,7 @@ while True:
             launch = '用 spawn_agent(agent_type="executor") 创建原生子代理，任务为 '+task+'；用 wait 等待。'
         return f'''这是受控生命周期检查，不是应用需求。先在当前工作树写入 retained.txt，内容必须为 retained-dirty；已有则核对，不要提交。
 {launch}
-主会话不可运行 writer.py，不要创建 Issue/PR 或关闭 Issue。子代理启动后不要重复派发；宿主观察到真实写入后会修改当前 description 并重建上下文。'''
+主会话不可运行 writer.py，不要创建 Issue/PR 或关闭 Issue。子代理启动后不要重复派发；在 {work}/{mode}.jsonl 至少有两行前持续等待并检查，不要结束本次响应。宿主观察到真实写入后会修改当前 description 并重建上下文。'''
     profile_ids = list(config['effective']['profiles'])
     ui = 'team-ui' if backend=='pi' else profile_ids[0]
     impl = 'team-app' if backend=='pi' else profile_ids[0]
