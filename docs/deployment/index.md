@@ -35,7 +35,6 @@ python3 main.py /path/to/requirements --output-dir /path/to/output
 ```sh
 cd ~/Development/factory26
 make bootstrap
-make test
 make run
 ```
 
@@ -163,8 +162,6 @@ wsl.win-ws.localhost 的 ~/Development/factory26 已安装固定 runner 和 Chro
 git -C sources/svc status --short
 git -C sources/braid status --short
 python3 scripts/factory.py bootstrap --backend pi
-make test
-python3 scripts/check_braid.py --backend pi --svc
 ```
 
 直接修改对应源码，运行该仓库要求的检查，再 bootstrap 和创建新 run；不再维护另一份补丁副本。更新上游时在各自仓库显式 fetch/merge，处理本地改动后重建。父仓库 status 不会列出这些独立仓库的改动，提交也应在各自仓库明确执行。
