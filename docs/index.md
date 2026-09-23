@@ -39,6 +39,7 @@
 
 | 主题 | 报告 |
 | --- | --- |
+| Braid OTLP 与会话重建 | [2026-09-24 接入及真实归档验收](../reports/2026-09-24-braid-otlp.md) |
 | 官网完整结果与限制 | [2026-09-23 官网总览](../reports/2026-09-23-official-results.md) |
 | 本地应用得分的过程原因 | [2026-09-23 Agent 过程分析](../reports/2026-09-23-local-agent-process.md) |
 | 发布版本地运行设施的阶段记录 | [2026-09-23 本地实验设施](../reports/2026-09-23-local-experiment-infrastructure.md) |

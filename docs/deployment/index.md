@@ -108,10 +108,29 @@ Runner 若将原始会话或失败 DOM 写到自身不可访问的临时目录�
 ```sh
 python3 scripts/local_experiment.py status "$LOCAL_ASSETS/runs/example-results/<run-id>"
 python3 scripts/local_experiment.py telemetry "$LOCAL_ASSETS/runs/example-results/<run-id>" \
-  --signal traces --export "$LOCAL_ASSETS/runs/exported-otlp"
+  --export "$LOCAL_ASSETS/runs/exported-otlp"
+sources/braid/target/debug/braid telemetry reconstruct \
+  --input "$LOCAL_ASSETS/runs/exported-otlp" --output "$LOCAL_ASSETS/runs/reconstructed-braid"
 ```
 
-`telemetry` 也接受 `--since` 与 `--until` 的 Unix 秒时间戳，导出的 `.pb` 保持接收时的原始 OTLP protobuf 内容。
+`telemetry` 也接受 `--signal`、`--since` 与 `--until`，时间为 Unix 秒；导出的 `.pb` 保持接收时的原始 OTLP protobuf 内容。
+完整重建应导出全部信号，不能只导出 traces；Braid 的原生正文与对象快照在 logs 中。
+`braid telemetry reconstruct` 将消息、对象和完整性报告写入新的输出目录；输入包含多个 Braid 运行时，用 `--run-id <Braid运行ID>` 选择。
+外层实验 ID 与 Braid run_id 各有归属，不互相替代。
+
+当前工作树中的 Braid OTLP 接线在 `braid local` 运行期间采集根会话，Factory 在原生归档后调用 `braid telemetry export` 补采最终文件及 Pi 子代理。
+这依赖配套的新 Braid 二进制与 Factory 代码，历史 ZIP 不会自动获得能力；实时模型链路的验收仍以对应实验记录为准。
+没有 OTEL endpoint 时，Factory 不启动补采进程。
+补采输入为生成目录中的 `telemetry-native.json`，标准 OTEL 环境变量由进程继承，凭据不放入命令参数：
+
+```sh
+braid telemetry export --state <生成目录>/braid-state \
+  --native-manifest <生成目录>/telemetry-native.json
+```
+
+Factory 自动补采最多等待 120 秒；`telemetry-export-status.json` 保留退出码、CLI 的 JSON 报告或本地错误，`telemetry-export.log` 保留输出，Braid 的传输错误另见 `braid-state/telemetry-errors.jsonl`。
+超时、非零退出和归档 gaps 不覆盖应用终态；接收批次也不证明内容完整，应检查重建报告的 missing/partial/unknown 及源端缺口。
+原生正文、工具输出与重建材料可能含敏感内容，按原始运行证据保管。
 
 ### Raw Pi/Codex 基线
 

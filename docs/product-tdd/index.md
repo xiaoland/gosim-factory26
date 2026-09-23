@@ -85,5 +85,16 @@ variant 随后按平台布局交付，记录生成与交付结果；失败现场
 查询时先辨别生产者，保留各自身份，不以相同题名或 variant 名合并不同运行。
 原生会话归档尽量保留原始内容，无法核实身份时记录缺口；诊断失败不应被伪装成应用低分。
 
+当前工作树的 Braid OTLP 接线由 Braid 持有 exporter、原生记录语义和离线重建，Factory 只负责归档后的显式证据交接。
+`braid local` 采集运行中的根会话，`core.archive_sessions` 写完 `native/manifest.json` 后，通过 `braid_runtime.export_telemetry` 调用本次运行的 Braid 二进制，补采最终原生文件与 Pi 内部子代理。
+没有 OTEL endpoint 或 Braid state 时跳过调用；补采限制总等待时间并单独保存退出码、JSON 报告与原始错误，不改变归档返回值或应用终态。
+
+Factory 交接使用归档后的相对路径与经 header 核实的 native identity，保留 provider session 映射及 group、profile、工作项元信息。
+Pi 路径型 session_id 不能标为 Braid 数据库 session UUID；无法核实的原生身份保持 null，归档、observer 与父子关联缺口进入 gaps。
+Braid run_id 来自其 request/result，不能用外层实验 ID 覆盖。
+未解析原文仍可导出，但 missing/partial/unknown 只说明诊断限制；历史文件导出不伪造实时 span 或累加生成计数。
+Collector 继续只保存原始 OTLP 批次，重建通过 Braid 公开 CLI 读取导出的 protobuf，并以源文件清单核对完整性；操作入口见[运行说明](../deployment/index.md)。
+这些说明描述当前代码接线，不能代替实时模型链路验收，也不赋予历史 ZIP 新能力。
+
 当前查询工具尚未统一覆盖所有新旧布局，Viewer 未发现某条记录不证明它没有执行。
 开发依赖恢复也尚未覆盖所有本地未发布修改；这些限制见运行/开发说明，不能用本技术说明宣称已解决。

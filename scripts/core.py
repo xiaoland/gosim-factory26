@@ -6,6 +6,8 @@ import shutil
 import subprocess
 from pathlib import Path
 
+from braid_runtime import export_telemetry
+
 
 _ARCHIVE_INHERITED_KEYS = (
     'profile_id', 'effective_profile_digest', 'work_item_kind', 'work_item_id',
@@ -310,6 +312,7 @@ def archive_sessions(output, home, work, entries):
                          if len(valid) != len(archived) or incomplete_observation else 'complete')
     manifest = {'schema_version': 1, 'diagnostic_status': diagnostic_status, 'sessions': archived}
     (native/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
+    export_telemetry(output, work, manifest)
     return archived
 
 
