@@ -13,6 +13,8 @@
 
 验收关注真实操作：可见具体HTTP错误并能接续既有任务；已有有效交付不会因辅助档案不完整而重采样；原始现场可供诊断；冻结实验结果仍能辨别其实际输入。不增加新的独立验证框架。
 
-控制器侧已清理：HTTP正文保留；每次POST重复ZIP全量hash删除（进入controller时核验一次）；snapshot恢复使用真实history的唯一新增同名项；commit-history/traceability缺失作为诊断警告，不阻断终态与有效评分。18个既有/扩展边界检查通过。当前远端实验及冻结ZIP未改变；当前控制器进程结束后接续使用新代码，无须重跑生成。原生未规范化材料保留与其它包内约束留待实验结束后处理。
+控制器侧已清理：HTTP正文保留；每次POST重复ZIP全量hash删除（进入controller时核验一次）；snapshot恢复使用真实history的唯一新增同名项；commit-history/traceability缺失作为诊断警告，不阻断终态与有效评分。官网后来出现的`STARTING`已按真实状态纳入运行态，保留同一run接续。原生归档现在对缺失或无效header的会话额外保存`unparsed_native`原始文件，仍不伪造原生身份。当前远端实验及冻结ZIP未改变；这些包内改动只进入后续包。
 
-官网实测还暴露实时诊断路径问题：run.json及braid.log在平台可读的.factory26目录，Braid状态和原生会话却在/tmp工作区，文件API对该路径返回404。平台只能显示heartbeat，无法据此判断Issue/PR进展。后续将必要实时状态直接放入可读证据目录；不靠更频繁轮询修补，也不越过平台路径限制。
+官网实测还暴露实时诊断路径问题：run.json及braid.log在平台可读的.factory26目录，Braid状态却在/tmp工作区，文件API对该路径返回404。后续包已改为直接在可读的`.factory26/<run>/braid-state`运行，终态归档复用同一目录；41项针对性检查通过。现行冻结包没有这个能力，不从官网heartbeat推断Issue/PR进展。
+
+本轮末再次检查尚存的疑点：参赛包的`package_agent.source_input`本来就排除Braid文档，文档变化不会使其Docker构建层失效；本地`sources.build/require_build`仍用完整源码快照，文档变化会要求重新执行本地bootstrap，但尚未在本轮实测为显著耗时，不为此扩大构建身份协议。Competition本地journal仍遮蔽精确凭据字段；先前真实障碍是HTTP响应体丢失，现已解决，没有证据表明剩余遮蔽影响本轮诊断。保持原始运行文件在被Git忽略的`runs/`，只针对已观察到的损失继续清理。

@@ -238,20 +238,27 @@ class CompetitionTest(unittest.TestCase):
             controller.run_all()
         self.assertEqual(self.posts().count('/runs/run-1/start'), 1)
 
-    def test_unknown_status_stops_watch_without_claiming_terminal(self):
+    def test_new_live_status_keeps_watching_but_missing_status_stops(self):
         with self.controller() as controller:
             controller.snapshot()
             controller.create(TASKS[0])
             controller.start(TASKS[0])
-            self.client.runs['run-1']['status'] = 'QUEUED'
-            controller.status(TASKS[0])
-            self.assertEqual(controller.state['tasks'][TASKS[0]]['observation'], 'known')
-            self.client.runs['run-1']['status'] = 'FUTURE_STATE'
+            for status in ('QUEUED', 'STARTING'):
+                self.client.runs['run-1']['status'] = status
+                controller.status(TASKS[0])
+                self.assertEqual(controller.state['tasks'][TASKS[0]]['observation'], 'known')
+            self.client.runs['run-1']['status'] = None
             with patch.object(competition.time, 'sleep', side_effect=AssertionError('must stop')):
-                with self.assertRaisesRegex(competition.Blocked, '未知'):
+                with self.assertRaisesRegex(competition.Blocked, '无效'):
                     controller.watch(TASKS[0])
             self.assertEqual(controller.state['tasks'][TASKS[0]]['observation'], 'unknown')
             self.assertNotIn(controller.state['tasks'][TASKS[0]]['phase'], {'terminal', 'collected'})
+            self.client.runs['run-1']['status'] = 'FUTURE_STATE'
+            def finish_after_wait(_):
+                self.client.runs['run-1']['status'] = 'FAILED'
+            with patch.object(competition.time, 'sleep', side_effect=finish_after_wait):
+                controller.watch(TASKS[0])
+            self.assertEqual(controller.state['tasks'][TASKS[0]]['phase'], 'collected')
 
     def test_cursor_publish_failure_replays_same_chunk_without_data_loss(self):
         with self.controller() as controller:

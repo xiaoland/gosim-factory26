@@ -20,7 +20,6 @@ from zipfile import ZipFile
 from playground import ApiError, Client, CONFIG, api_key, redact, run_path
 
 TERMINAL = {'PASSED', 'FAILED', 'CANCELLED'}
-ACTIVE = {'QUEUED', 'PENDING', 'RUNNING', 'PAUSE_REQUESTED', 'RESUME_REQUESTED'}
 
 
 class Blocked(RuntimeError):
@@ -358,7 +357,7 @@ class Controller:
             item['observation'] = 'known'
             if item['phase'] != 'collected':
                 item['phase'] = 'terminal'
-        elif remote not in ACTIVE and remote != 'PAUSED':
+        elif not isinstance(remote, str) or not remote:
             item['observation'] = 'unknown'
         else:
             item['observation'] = 'known'
@@ -432,7 +431,7 @@ class Controller:
             pending['response'] = {'run': {'id': run_id}}
         else:
             value = self.status(task)
-            if not value.get('started_at') and value.get('status') not in (TERMINAL | {'QUEUED', 'RUNNING', 'PAUSED', 'PAUSE_REQUESTED', 'RESUME_REQUESTED'}):
+            if not value.get('started_at') and value.get('status') not in (TERMINAL | {'QUEUED', 'STARTING', 'RUNNING', 'PAUSED', 'PAUSE_REQUESTED', 'RESUME_REQUESTED'}):
                 raise Blocked('start 尚无已启动证据；保留 pending，不重复启动')
             pending['response'] = {}
         self.save()
@@ -447,8 +446,8 @@ class Controller:
             if value.get('status') in TERMINAL:
                 return self.collect(task)
             self.logs(task)
-            if value.get('status') == 'PAUSED' or value.get('status') not in ACTIVE:
-                raise Blocked('远端任务已暂停或状态未知；停止本地等待，不改变远端状态')
+            if value.get('status') == 'PAUSED' or not isinstance(value.get('status'), str) or not value['status']:
+                raise Blocked('远端任务已暂停或状态无效；停止本地等待，不改变远端状态')
             time.sleep(interval)
 
     def run_all(self, *, interval=180):

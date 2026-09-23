@@ -187,6 +187,7 @@ class NativeArchiveTest(unittest.TestCase):
                 'provider':'pi','session_id':str(source),'native_session_path':str(source)}])
             self.assertIn('session header',rows[0]['archive_error'])
             self.assertIsNone(rows[0]['native'])
+            self.assertEqual((work/'run'/rows[0]['unparsed_native']).read_bytes(), source.read_bytes())
 
 
 if __name__ == '__main__':

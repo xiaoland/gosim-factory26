@@ -63,7 +63,7 @@ braid 从 [sources/braid](../../sources/braid/) 构建，运行入口保持 `bra
 
 对象 CLI 直接使用 `braid --state STATE issue/pr view|edit|comment`，不再包含 object 层。正文使用 `--body/-b` 或 `--body-file/-F`，后者接受 stdin 的 `-`；结构化输出显式加 `--json`。`pr create --issue ID --title TITLE --body-file FILE` 直接建立本地实施工作项并激活 Agent，不再先创建请求 comment 或调用 pr ensure；可选 `--request-id` 用于不确定响应后的幂等重试。ready 与根 Issue 接受 merge 的交付边界保持不变。精确命令与上下文行为由 [Braid 本地协议](../../sources/braid/docs/20-product-tdd/local.md)维护。
 
-`braid-state/result.json` 记录 completed/incomplete/failed 和交付 commit。只有根需求、必要 PR 和生命周期收尾收敛才可 completed。Factory 校验返回的 run/ref/仓库及 Git commit 身份，并导出指定 commit；不会按最新工作树或初始应用目录选择交付。
+参赛入口把 Braid 状态直接写入平台可读取的 `.factory26/<run>/braid-state/`，运行中即可查看 Issue/PR、会话和诊断状态；既有冻结包仍把状态留在临时工作区。`braid-state/result.json` 记录 completed/incomplete/failed 和交付 commit。只有根需求与必要 PR 收敛才可 completed。Factory 校验返回的 run/ref/仓库及 Git commit 身份，并导出指定 commit；不会按最新工作树或初始应用目录选择交付。
 
 两个真实核心的受控检查默认关闭 SVC：
 
@@ -107,7 +107,7 @@ python3 scripts/factory.py show <run-id> --eval <evaluation-id> --json
 
 `list/show` 只读已有运行。生成失败时，show 从哈希核实的 Pi 归档提取末条 assistant 的终止原因与记录位置；不展示完整正文，不回溯已恢复或已替代会话的旧错误，损坏或关联不唯一时明确未知。默认 show 先呈现状态、失败和相关入口；指定 --case 时优先展示该用例。全部元数据、路径、会话和 SVC evidence 映射保留在 --json，避免默认输出铺满文件列表。生成状态、所选评测和 SVC coverage 分别展示；最新本地评测失败时不回退到旧分数。用例入口展开有长度标记的错误、从官方 error-context 定向提取的页面片段及行号，以及重定位后的本地截图、视频和 trace。页面事实不自动等于因果结论。历史数据缺少阶段或退出码时显示未知；旧 variant 根据配置推导并显式标记。
 
-新 run 在 setup、agent/braid、cleanup、frozen/failed/interrupted 时原子更新 `run.json`；新评测记录 install、build、health、tests 等阶段及日志入口。失败保留 `failed_phase`，中断明确标记。Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目录及 Git common repo，以免销毁恢复依据；成功后清理。应用终态先持久化，原生会话归档失败另存 partial 证据，不覆盖应用生成结果。阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
+新 run 在 setup、agent/braid、cleanup、frozen/failed/interrupted 时原子更新 `run.json`；新评测记录 install、build、health、tests 等阶段及日志入口。失败保留 `failed_phase`，中断明确标记。Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目录及 Git common repo，以免销毁恢复依据；成功后清理。应用终态先持久化；原生会话缺少规范 header 时另存 `unparsed_native` 原始文件，标记归档错误，不伪造会话身份或覆盖应用结果。阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
 
 远程评测以 `remote-evaluations/<evaluation-id>.json` 保存每次请求的完整观测，`remote-evaluation.json` 仅作为最近观测的兼容入口。请求在启动前分配明确 ID，区分连接、传输、远端运行和下载，每 180 秒获取该 ID 的 summary；SSH 进程退出立即返回，不额外等一个观察周期。下载后核对 run、benchmark 和冻结应用哈希，不按目录差集猜测执行。观测时间与观测失败单独保存，下载后用终态 summary 收口；断线不能被当成远程零分或停止成功。`show` 同时保留最新本地评测与远端状态，不把暂存远端状态当作已下载成绩。
 

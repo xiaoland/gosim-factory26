@@ -64,7 +64,8 @@ def export_delivery(app, commit, output):
 
 def archive_state(state, output):
     """Preserve the original state and return portable evidence references."""
-    shutil.copytree(state, output/'braid-state')
+    if state.resolve() != (output/'braid-state').resolve():
+        shutil.copytree(state, output/'braid-state')
     manifest=state/'sessions.json'
     entries=json.loads(manifest.read_text()) if manifest.exists() else []
     for entry in entries:

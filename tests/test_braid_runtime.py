@@ -7,11 +7,21 @@ import tempfile
 import unittest
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
-from braid_runtime import initialize_repository, load_delivery, export_delivery
+from braid_runtime import initialize_repository, load_delivery, export_delivery, archive_state
 from core import archive_sessions
 
 
 class DeliveryTest(unittest.TestCase):
+    def test_live_state_is_already_archived_without_copying_itself(self):
+        with tempfile.TemporaryDirectory() as temp:
+            output = Path(temp)/'run'; state = output/'braid-state'; state.mkdir(parents=True)
+            (state/'objects.db').write_text('live evidence')
+            (state/'sessions.json').write_text(json.dumps([{'context_path':str(state/'context.md')}]))
+            (state/'context.md').write_text('current context')
+            entries = archive_state(state, output)
+            self.assertEqual((state/'objects.db').read_text(), 'live evidence')
+            self.assertEqual(entries[0]['context_path'], 'braid-state/context.md')
+
     def test_delivery_export_ignores_uncommitted_files_and_rejects_wrong_ref(self):
         with tempfile.TemporaryDirectory() as temp:
             work=Path(temp).resolve(); app=work/'app'; app.mkdir()

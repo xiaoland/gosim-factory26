@@ -10,7 +10,7 @@ Factory26 用于开发和比较参加 GOSIM Agentic Factory / ARC-bench 的 Agen
 
 一个 Factory task invocation 建立一个根 Issue，description 保存任务 prompt 与冻结 requirement bundle 的读取入口。单条 requirement 不自动成为 Issue；Agent 根据目标与协作需要决定是否拆分子 Issue。同一内部 profile 可承载多个独立工作项，现有 Braid driver 可以让它们重叠运行。
 
-运行时 Agent 使用 GitHub 式 Issue、PR、comment、reply、hide/resolve、reaction 和 assignee。成员目录说明协作者能力；Harness 将公开 assignee 映射到内部 profile，运行时无需理解 Braid、模型路由或会话调度。每个工作项同时最多一个活动 owner。重指派复用既有 writer fence、native teardown 和工作树恢复；取得旧 writer 的停止证明后才允许目标 Agent 开始。
+运行时 Agent 使用 GitHub 式 Issue、PR、comment、reply、hide/resolve、reaction 和 assignee。成员目录说明协作者能力；Harness 将公开 assignee 映射到内部 profile，运行时无需理解 Braid、模型路由或会话调度。每个工作项同时最多一个活动 owner。重指派切换工作项的 writer 身份与后续会话；Braid 只关闭自己持有的 Pi 主进程，不管理 Pi 内部 sub-agent 的生命周期。
 
 Issue 对应需求理解、技术方案与最终验收设计，PR 对应实施计划、执行与最终验收。它们是 Agent 可组合使用的能力，不强制固定轮次或自动拆分。跨工作项通过 comment/reply 传递需要的事实、问题和交付证据；PR ready 后由消费者决定接受与合入。根 Issue 完成及生命周期收敛共同确定最终交付 commit。
 

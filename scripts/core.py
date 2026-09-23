@@ -84,8 +84,19 @@ def archive_sessions(output, home, work, entries):
     target_index = 0
 
     def error_row(row, message):
+        nonlocal target_index
         failed = dict(row, native=None, sha256=None)
         failed['archive_error'] = message
+        if row.get('native_session_path'):
+            try:
+                source = _archive_path(row['native_session_path'], work)
+                if source.is_file():
+                    target = native/f'{target_index:03}-unparsed-{source.name}'
+                    target_index += 1
+                    shutil.copy2(source, target)
+                    failed['unparsed_native'] = str(target.relative_to(output))
+            except (OSError, ValueError):
+                pass
         archived.append(failed)
         return failed
 

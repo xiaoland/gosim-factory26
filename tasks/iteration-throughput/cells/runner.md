@@ -155,7 +155,7 @@ with competition.Controller(state_dir, secret=key) as controller:
 
 `state.json` 在每次 POST 前原子保存 pending action，响应到达后先持久化 receipt，再保存确认的 identity。中断或未知响应不会自动重发。snapshot 恢复使用 history 中此前不存在、与请求 display name 相符的唯一新增记录；实际 API 没有 package hash，不再要求该字段。create 恢复只接受该 snapshot 的唯一 task-score run，或 `recover --run-id` 指定后由 GET 验证 submission/task 归属的 run。start 恢复需要已启动时间、运行态或明确终态；仅 PENDING 不视为已启动证明。缺 identity 的成功响应同样保留，不默认成功。
 
-每题在 `tasks/<task-id>/` 保存带 source/observed_at 的 status、日志分块、traceability 和 commit history。分块落盘后才推进游标，相同游标重放覆盖同一文件。辅助 artifact endpoint 失败保留 `collection_errors`，不阻断已取得的任务终态或评分；archive 仅保存可下载 handle，明确 `archive_downloaded=false`。默认轮询间隔 180 秒，拒绝更短间隔；PAUSED 或未知状态停止本地等待，远端任务保持原状。
+每题在 `tasks/<task-id>/` 保存带 source/observed_at 的 status、日志分块、traceability 和 commit history。分块落盘后才推进游标，相同游标重放覆盖同一文件。辅助 artifact endpoint 失败保留 `collection_errors`，不阻断已取得的任务终态或评分；archive 仅保存可下载 handle，明确 `archive_downloaded=false`。默认轮询间隔 180 秒，拒绝更短间隔；明确`PAUSED`或状态字段缺失、无效时停止本地等待。其它非终态继续观察，避免官网新增`STARTING`等运行态时使收分暂停数小时。
 
 `summary()` 返回 `status=completed|blocked|running` 和独立 `score_status=complete|unavailable`。前者表示声明的任务均已取得明确终态；辅助诊断缺失另列；FAILED/CANCELLED 不推导零分。后者在每题真实返回有限 score 与有效 passed/failed 计数、且与实际 tests 数组长度吻合时为 complete；实际响应没有 total_tests，消费者以测试行数记录总数，并保留 token_cost_usd。不靠模型声明或退出码推算成绩。平台原始结果保留于 status 证据，不将逐题 score 合成为官方总榜。
 

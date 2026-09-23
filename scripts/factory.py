@@ -413,7 +413,7 @@ def generate(config, run=None, requirements=None):
                 from core import codex_config
                 codex_config(native, responses_url, config['model'])
             if (native/'AGENTS.md').exists(): shutil.copy2(native/'AGENTS.md',run/'user-AGENTS.md')
-            state = work/'braid-state'
+            state = run/'braid-state'
             session_entries = []
             delivery = None
             metadata['runtime']={'work':str(work),'native':str(native),'braid_state':str(state)}
