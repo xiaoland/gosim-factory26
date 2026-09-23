@@ -73,7 +73,11 @@ def _child_inherited(root, extra=None):
 
 
 def archive_sessions(output, home, work, entries):
-    """Archive native sessions and passively observed parent relations."""
+    """归档原生会话及被动观察的父子关系，返回每份材料的归档记录。
+
+    manifest 的 complete/partial/unknown 描述诊断覆盖，不是应用交付状态。
+    身份无法核实时尽量保留 unparsed_native，并记录错误，不伪造会话关联。
+    """
     output = Path(output).resolve()
     native = output/'native'
     native.mkdir(parents=True, exist_ok=True)

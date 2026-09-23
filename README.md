@@ -1,23 +1,21 @@
 # Factory26
 
-GOSIM Agentic Factory 2026 的 Agent Harness 实验仓库。当前开发 Braid + SVC + Codex app-server/Pi 的 multi-agent harness，保留独立生成、冻结、官方 ARC-Bench-Lite 评测和 SVC analysis 证据。
+GOSIM Agentic Factory 2026 的 Agent Harness 实验仓库。当前开发 Braid + SVC + Codex app-server/Pi 的 multi-agent harness，保留独立生成、冻结、官方 ARC-Bench 评测和 SVC analysis 证据。
+
+当前四个团队 Harness 分别位于 `variants/pi-team-deepseek`、`pi-team-glm`、`pi-team-mixed` 和 `pi-team-vv`，各自持有完整代码、原生角色与指令。它们使用 Pi + Braid，并通过 skill 读取 SVC；raw Pi/Codex 另作基线。
+
+构建一个参赛包：
 
 ```sh
-cd ~/Development/factory26
-python3 scripts/factory.py bootstrap --backend pi
-make test
-python3 scripts/factory.py run --backend pi --eval-host wsl.win-ws.localhost
+python3 scripts/package_agent.py --variant pi-team-mixed \
+  --output runs/packages/mixed.zip --docker-context arcbox-win
 ```
 
-参赛 ZIP 的构建、平台模型注入与运行限制见[参赛包说明](docs/deployment/index.md#参赛包与平台边界)。
+运行与官方 Runner 接入见 [运行文档](docs/deployment/index.md)。开发准备、角色修改与源码运行见 [CONTRIBUTING](CONTRIBUTING.md)，组件与交付关系见[技术说明](docs/product-tdd/index.md)，协作约定见 [AGENTS.md](AGENTS.md)。
 
-运行前按[本地运行文档](docs/deployment/index.md)准备环境和仓库外的比赛密钥。当前范围和实验规则见[产品说明](docs/prd/index.md)，完整文档导航见[文档索引](docs/index.md)。
+包内 `main.py` 接受需求目录和 `--output-dir`；生成与外部评测分开。Braid 管理 Issue/PR 上下文与 comment 协作，SVC 提供按需读取的方法，二者没有直接依赖。新运行使用明确制品，历史结果保持原始条件。
 
-新运行用 `--variant pi-generalist|codex-generalist|pi-team|pi-verification` 选择组合，默认 pi-generalist；`--task keep|bookstack` 选择 Lite 任务。每份 `variants/<variant>/preset.json` 只选择普通 profiles，模型、技能和原生子角色分别归 `harness/` 中对应文件；Braid 不感知 preset。固定八项批次由 [实验清单](experiments/multi-agent-lite.json)管理，联合验收状态见 [task packet](tasks/multi-agent-integration/packet.md)。显式 `--config` 保留自定义单核心及参赛包入口；历史 run 和报告不改写。
-
-`list --backend pi`、`show <run-id> --case <REQ-ID>` 导航结果；`show --run <目录> --profile <ID>` 或 `--session <原生ID>` 定向查询主子会话证据。
-
-`sources/svc`、`sources/braid` 是独立的共同开发 Git 仓库。SVC 通过简短导航提供 Corpus 方法；Braid 围绕本地 Issue/PR 管理会话上下文、围绕 comment 进行异步协作，二者没有直接依赖。Codex 使用固定 LiteLLM 协议适配。Braid 工作项 Agent 与 Codex/Pi 原生子代理是不同层级；能力声明与真实验证结果分开记录。
+以下是历史实验，不代表当前独立实现的成绩。更多结果见[报告索引](docs/index.md)。
 
 首轮四组 Keep 结果：Pi + SVC **7/32**、Codex + SVC **9/32**、Pi + SVC + braid **14/32**、Codex + SVC + braid **8/32**。其中 braid 两组使用旧适配器，不能代表当前本地模式。条件、耗时、清理故障恢复和限制见[四组实验报告](reports/2026-09-20-harness-matrix.md)。
 

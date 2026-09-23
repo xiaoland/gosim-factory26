@@ -1,34 +1,61 @@
-# Factory26 文档索引
+# Factory26 文档与任务入口
 
-本页是项目知识入口。产品承诺、运行方式和实验结果分别维护在各自的归属文档中；SVC 方法通过项目本地 CLI 查询，不复制 Corpus 到仓库。
+当前说明回答项目如何工作；task packet 保存进行中的问题与决定；报告保留特定条件下观察到的结果。
+历史报告和原始 handoff 不作为当前操作规范。
 
-| 内容 | 入口 | 维护范围 |
-| --- | --- | --- |
-| 产品说明 | [PRD](prd/index.md) | 目的、角色、能力范围和实验规则 |
-| 本地运行 | [Deployment](deployment/index.md) | 环境、密钥、执行、恢复和证据查询 |
-| 开发流程 | [AGENTS.md](../AGENTS.md) | 开发入口、更新约定和任务包保留规则 |
-| 可执行事实 | [独立 Harness](../variants/pi-team-mixed/main.py)、[实验执行器](../scripts/local_experiment.py) | 独立 variants、公共实验边界与可机械验证的输入输出 |
-| 四组实验 | [SVC / braid 比较](../reports/2026-09-20-harness-matrix.md) | 首轮四组的状态、条件、结果和限制 |
-| 本地对象接入实验 | [Braid / SVC 检查点](../reports/2026-09-21-braid-svc-checkpoint.md) | 真实接入验证、Keep 失败与主动中断；没有新四组分数 |
-| 实验反馈设施 | [无模型验收](../reports/2026-09-21-experiment-feedback.md) | 全流程终态、低噪诊断与分层协作的验证范围 |
-| 恢复后真实实验 | [Pi + SVC / Keep](../reports/2026-09-21-pi-svc-keep.md) | 当前接入首次完整 32 项成绩与失败分布 |
-| 参赛 P0 验收 | [制品与无模型验收](../reports/2026-09-21-competition-p0.md) | 两种 backend 的 ZIP、隔离与交付检查，以及尚未验证的生产边界 |
-| 实验结论 | [首次 Pi / Keep 基线](../reports/2026-09-20-pi-keep-baseline.md) | 固定运行条件下的结果，不是当前产品承诺 |
-| 开发闭环调查 | [诊断、协议桥与 Playground](../reports/2026-09-20-development-loop.md) | 改进证据、候选源码检查与云端探针范围 |
-| API 与并发实测 | [Playground / WSL](../reports/2026-09-20-playground-concurrency.md) | API 实际执行、云端环境与独立任务并发结果 |
-| 历史输入 | [原始 handoff](handoff-original.md) | 未改写的设计输入，含尚未采用的建议 |
+## 当前说明
 
-## 更新方式
+| 要了解什么 | 入口 |
+| --- | --- |
+| 仓库地图与协作约定 | [AGENTS.md](../AGENTS.md) |
+| 产品目标、协作模型与实验规则 | [PRD](prd/index.md) |
+| 组件责任、调用关系、交付与终态语义 | [Product TDD](product-tdd/index.md) |
+| 修改角色/技能、开发依赖与源码运行 | [CONTRIBUTING](../CONTRIBUTING.md) |
+| 打包、执行、证据查询与恢复 | [Deployment](deployment/index.md) |
 
-先修改内容的归属文档，再调整导航。PRD 维护做什么和为什么，Deployment 维护如何运行；实际参数和版本优先引用源码与配置，实验数据引用对应报告，避免并行维护副本。
+参数与模型值从各 [variant](../variants/) 和实际制品读取，文档解释意义与修改关系，不维护第二份配置表。
+当前支持与设计意图分开写；更新时改写受影响正文，不靠新增声明覆盖过期推荐。
+局部实现理由归代码旁，跨组件约定归技术说明，操作命令归开发/运行说明。
+不创建空模板或针对文档内容的测试。
 
-生成运行器、braid 本地入口和远程评测的使用与约束集中在 Deployment；精确协议字段及终态检查由源码和回归检查维护。不建立空的 Product TDD、Unit TDD 模板；当新的设计约定需要独立维护时，再按 SVC 的准入规则增加文档。
+## 接续任务
 
-任务进行中的假设、计划和状态放在任务包中，不写成长期事实。历史 handoff、实验报告和原始日志不因文档整理而被改写。
+下表按主题导航，不复制各 packet 的授权、进度、PID 或评分。
+打开对应 packet 确认当前事项；远端状态仍以本次观测和原始 journal 为准。
 
-## SVC 入口
+| 主题 | 入口 |
+| --- | --- |
+| 开发体验、文档系统与独立 variant 演化 | [DX](../tasks/developer-experience/packet.md)；[独立 variant 前序材料](../tasks/independent-variants/packet.md) |
+| 参赛 SVC 方法与 skill 接线 | [Corpus](../tasks/svc-corpus-review/packet.md)、[skill](../tasks/svc-skill-integration/packet.md) |
+| 官方与本地实验的组织及恢复 | [双比赛官网记录](../tasks/dual-bench-hosted/packet.md)、[raw 本地基线](../tasks/raw-core-local-baseline/packet.md) |
+| 得分与 Agent 过程分析 | [官网结果](../tasks/official-results/packet.md)、[本地过程](../tasks/local-run-analysis/packet.md) |
+| 协作方法的前序调查 | [会话分析](../tasks/development-loop-review/packet.md) |
 
-项目配置为 [svc.json](../svc.json)。使用 `.venv/bin/svc status --json` 查看配置、Corpus baseline 和集成状态，使用 `.venv/bin/svc lookup --path specs/` 查询文档归属规则。下面生成块内的 `svc` 同样指项目本地 CLI；生成块由 `svc init` 维护，其外内容由项目维护。
+[早期 multi-agent 接入](../tasks/multi-agent-integration/packet.md)、[迭代吞吐](../tasks/iteration-throughput/packet.md)保存其阶段的方案与证据，不自动授权新运行。
+[agent-profile-presets](../tasks/agent-profile-presets/packet.md)已指向接入任务，[SVC CLI 裁减](../tasks/svc-cli-simplification/packet.md)已指向 skill 接线；沿后继入口接续，不启动旧计划。
+其余历史任务材料保留在 [tasks](../tasks/)，未核实完成条件时不仅依据文件日期关闭任务。
+
+## 实验报告与历史材料
+
+| 主题 | 报告 |
+| --- | --- |
+| 官网完整结果与限制 | [2026-09-23 官网总览](../reports/2026-09-23-official-results.md) |
+| 本地应用得分的过程原因 | [2026-09-23 Agent 过程分析](../reports/2026-09-23-local-agent-process.md) |
+| 发布版本地运行设施的阶段记录 | [2026-09-23 本地实验设施](../reports/2026-09-23-local-experiment-infrastructure.md) |
+| 首轮组合比较 | [2026-09-20 四组结果](../reports/2026-09-20-harness-matrix.md)、[原始 Pi 基线](../reports/2026-09-20-pi-keep-baseline.md) |
+| 早期接入与平台适配 | [Braid/SVC 检查点](../reports/2026-09-21-braid-svc-checkpoint.md)、[P0 阶段报告](../reports/2026-09-21-competition-p0.md)、[Pi/SVC Keep](../reports/2026-09-21-pi-svc-keep.md) |
+| 诊断与接口的前序调查 | [开发闭环](../reports/2026-09-20-development-loop.md)、[并发与 API](../reports/2026-09-20-playground-concurrency.md)、[旧反馈设施](../reports/2026-09-21-experiment-feedback.md) |
+| 最初输入 | [原始 handoff](handoff-original.md) |
+
+这些报告中的测试、沙箱、模型或平台可用性描述是当时事实，不是当前方法要求。
+原始证据位于各报告明确指向的运行目录，通常被 Git 忽略，不随源码自动分发。
+
+## 开发侧 SVC
+
+[svc.json](../svc.json)声明开发 Corpus baseline，`.venv/bin/svc status --json`显示本地安装与集成状态，不证明工作流程有效或参赛方法已通过实验。
+文档归属按需查询 `.venv/bin/svc lookup --path specs/`；任务包信息组织查询 `task-packet/`；局部设计与注释原则查询 `taste/implementation/`。
+这些是开发侧方法，参赛侧裁减 Corpus 与 skill 接线另由对应任务和实际 variant 维护。
+生成块由开发 SVC 管理，其中 `svc` 指项目 `.venv/bin/svc`。
 
 <!-- svc:begin navigation sha256=7f7f63d0b8989624f57bd21b82b2ac2d05e4445edfd5af4bc3742996f0754bda -->
 ## SVC Corpus
