@@ -26,25 +26,17 @@ BENCH = ROOT / "third_party/arc-bench"
 
 
 def load_config(path=None, backend=None, variant=None, task=None):
-    """新运行解析选定配方；历史归档和显式单核心检查保留原入口。"""
+    """解析显式配置；活动 variant 由自己的 main.py 持有。"""
     if path is None:
-        from profiles import configuration, DEFAULT_VARIANT
-        selected = variant or DEFAULT_VARIANT
-        result = configuration(selected, task or "keep", ROOT)
-        if backend is not None and backend != result["backend"]:
-            raise ValueError("backend 与 variant 核心不一致；请显式选择 variant")
-        return result
-    active = (ROOT / 'variants/factory/config.json').resolve()
-    source = Path(path).resolve() if path is not None else active
+        raise ValueError('必须显式提供配置；活动 variant 使用自己的 main.py')
+    source = Path(path).resolve()
     config = json.loads(source.read_text())
     if not isinstance(config, dict):
         raise ValueError('配置必须是 JSON 对象')
-    config['variant'] = 'factory' if source == active else 'custom'
+    config.setdefault('variant', 'custom')
     config['backend'] = backend if backend is not None else config.get('backend', 'pi')
     if config['backend'] not in ('pi', 'codex'):
         raise ValueError('backend 必须是 pi 或 codex')
-    if source == active and (config.get('workflow') != 'braid' or config.get('svc') is not True):
-        raise ValueError('factory 配置必须启用 Braid 与 SVC；消融使用显式 --config')
     return config
 
 

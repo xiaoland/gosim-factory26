@@ -77,7 +77,7 @@ Factory 实现检查点已提交 `32f1e3c`。首包在浏览器依赖安装处�
 
 文本工具调用与视觉工具调用资格已通过，证据由 `runs/qualification/models/` 与 `models-vision-auto/` 组成；视觉400只来自测试强制函数选择，不是 Pi 默认消费者所需参数，未因此修改产品模型或降低 thinking。Luna 持有真实 native→Braid 场景执行；主 Agent 不轮询原始 rollout，失败或终态才收取最小证据。模型目录只保留稳定能力配置，临时 gateway_verified/429状态已移除，实时资格状态归本 cell/runs。
 
-Linux 最终候选 `pi-team-mixed-chromium-candidate-3.zip` 已通过入口、真实 Pi RPC、Chrome loader 与 agent-browser 跨命令检查（打开data页、title、URL、snapshot、close）。SHA256 `a1cc6e660c0a9a3c05dfb59148ccb65deac55b2406c19f7be53661759315bab7`，369 MiB / 解包873 MiB；环境仍为UID1000、1CPU、2GiB、network none，证据 `runs/qualification/container-acceptance-final/`。Chrome私有动态库、字体与schemas随runtime打包，仅启动脚本设置其环境；SVC正文不变。Braid实现提交 `8b2c986`。最终四包用 `scripts/freeze-packages.py` 校验候选hash、source文件和构建输入，复用相同已验runtime。
+Linux 最终候选 `pi-team-mixed-chromium-candidate-3.zip` 已通过入口、真实 Pi RPC、Chrome loader 与 agent-browser 跨命令检查（打开data页、title、URL、snapshot、close）。SHA256 `a1cc6e660c0a9a3c05dfb59148ccb65deac55b2406c19f7be53661759315bab7`，369 MiB / 解包873 MiB；环境仍为UID1000、1CPU、2GiB、network none，证据 `runs/qualification/container-acceptance-final/`。Chrome私有动态库、字体与schemas随runtime打包，仅启动脚本设置其环境；SVC正文不变。Braid实现提交 `8b2c986`。最终四包由各自 variant 的 `build.py` 复用相同已验 runtime 构建。
 
 最终126项Python检查（1项macOS不适用skip）及Node lifecycle通过，Factory提交 `57d0e90`。四包位于 `runs/packages/iteration-throughput/final-57d0e90/`，manifest为 `runs/competition/iteration-throughput/manifest.json`；离线装配106.79秒、manifest冻结1.23秒。最终mixed与已验候选3的SHA256完全相同，其余三包复用相同runtime bytes；尚未上传或启动Competition。
 

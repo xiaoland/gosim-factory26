@@ -1,45 +1,15 @@
-"""Run frozen variant ZIPs through Competition and optional official local slots."""
+"""Run frozen variant ZIPs through the historical hosted Competition."""
 import argparse
-from concurrent.futures import ThreadPoolExecutor, wait, FIRST_COMPLETED
+from concurrent.futures import ThreadPoolExecutor
 import fcntl
 import hashlib
 import json
 from pathlib import Path
 import sys
 import time
-from zipfile import ZipFile
 
 import competition
 from factory import api_key, save
-import local_runner
-
-
-def freeze(packages, manifest):
-    """Derive routing and hashes from the exact ZIPs, never from live profiles."""
-    manifest = Path(manifest).resolve()
-    rows = []
-    for package in map(lambda p: Path(p).resolve(), packages):
-        with ZipFile(package) as archive:
-            info = json.loads(archive.read('package-manifest.json'))
-            config = json.loads(archive.read('variants/factory/config.json'))
-        variant = info['capabilities']['variant']
-        if variant != config['effective']['variant']:
-            raise ValueError('ZIP manifest and effective variant disagree')
-        vision = {role['model'] for entry in config['effective']['profiles'].values()
-                  for role in entry['roles'].values() if role['provider'] == 'visual'}
-        if len(vision) != 1:
-            raise ValueError('current matrix requires one explicit visual model')
-        rows.append({'id':variant, 'package':str(package),
-                     'package_sha256':hashlib.sha256(package.read_bytes()).hexdigest(),
-                     'model_config':{'base_url':config['base_url'], 'model':config['model'], 'visual_model':vision.pop()}})
-    if len(rows) != 4 or len({row['id'] for row in rows}) != 4:
-        raise ValueError('freeze requires all four distinct variants')
-    spec = {'competition':'arc-bench-lite', 'variants':rows,
-            'tasks':[{'id':'arc-bench-lite--keep','slug':'keep','expected_tests':32}, {'id':'arc-bench-lite--bookstack','slug':'bookstack','expected_tests':34}]}
-    manifest.parent.mkdir(parents=True, exist_ok=True)
-    with manifest.open('x') as stream:
-        json.dump(spec, stream, ensure_ascii=False, indent=2)
-    return spec
 
 
 def execute(manifest, directory, secret=None):
@@ -163,22 +133,17 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--manifest', type=Path, required=True)
     parser.add_argument('--directory', type=Path)
-    parser.add_argument('--freeze-packages', type=Path, nargs=4)
     args = parser.parse_args()
-    if args.freeze_packages:
-        freeze(args.freeze_packages, args.manifest)
-        print(json.dumps({'status':'frozen','manifest':str(args.manifest.resolve())}))
-        return 0
     if args.directory is None:
         parser.error('--directory is required for execution')
     state = execute(args.manifest, args.directory, secret=api_key())
+    def compact(row):
+        if 'status' in row or 'error' in row:
+            return {key:row.get(key) for key in ('status','score_status','error') if key in row}
+        return {contest:compact(summary) for contest,summary in row.items()}
     print(json.dumps({'status':state['status'], 'evidence':str(args.directory.resolve()),
-        'errors':{venue: state[venue]['error'] for venue in ('hosted', 'local') if 'error' in state[venue]},
-        'hosted':{name: {'status':row.get('status'), 'score_status':row.get('score_status')}
-                  for name,row in state['hosted'].items() if isinstance(row,dict)},
-        'local':{name: {'phase':row.get('phase'), 'passed':row.get('result',{}).get('passed'),
-                        'total':row.get('result',{}).get('total')}
-                 for name,row in state['local'].items() if isinstance(row,dict)}}, ensure_ascii=False))
+        'errors':{venue: state[venue]['error'] for venue in ('hosted',) if 'error' in state[venue]},
+        'hosted':{name:compact(row) for name,row in state['hosted'].items() if isinstance(row,dict)}}, ensure_ascii=False))
     return 0 if state['status'] == 'completed' else 1
 
 

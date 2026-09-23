@@ -140,19 +140,11 @@ python3 scripts/run_feedback.py watch runs/<run-id> --after-event <已处理的e
 
 svc 负责证据导航，不自动判定应用质量。标准 Pi session 缺少执行终态，可能使 overview 显示 `partial`；应结合覆盖声明、运行器退出码与最终模型停止原因判断，不能把 `partial` 一概解释成内容丢失。实际费用未知时保持 null，不用客户端估算替代比赛账单。
 
-## 单一 Harness 与 WSL 评测
+## 历史单核心与远程评测入口
 
-唯一活动配置为 `variants/factory/config.json`，共同使用 Braid + SVC，`--backend pi|codex` 选择核心。配置文件不因覆盖参数而改写；每次 run 保存最终生效的 config，并独立记录 variant 与 backend。旧六份配置及 configs/ 符号链接已删除，可从 Git 历史恢复；旧 runs 继续按各自归档配置和原身份读取。显式 `--config <file>` 保留为 custom 实验入口，供后续消融使用。以 Pi backend 为例：
+活动团队 Harness 只从 `variants/<name>/main.py` 进入；已退役的 shared-config 入口不再提供默认配置。新活动 variant 不经共同 resolver，也不使用旧 batch。
 
-```sh
-python3 scripts/factory.py bootstrap --backend pi
-python3 scripts/factory.py run --backend pi --eval-host wsl.win-ws.localhost
-python3 scripts/factory.py list --variant factory --backend pi
-```
-
-wsl.win-ws.localhost 的 ~/Development/factory26 已安装固定 runner 和 Chromium，重复 bootstrap 会命中缓存。生成仍在本机完成，--eval-host 只传输冻结应用与必要元数据，在 WSL 评测后取回结果；不传比赛密钥，不在每次评测中重装 runner。应用自身依赖仍需在每次隔离评测目录中安装，以免跨实验共享可变状态。省略 --eval-host 则在本机评测。
-
-评测主机需要同步当前 scripts/、variants/ 和必要源码后运行 bootstrap。不能只复制本机 node_modules 或 Python venv 到不同平台。单独重新评测时使用 `eval --run runs/<id> --eval-host wsl.win-ws.localhost`；已有 run 的 eval/analyze/show 使用归档配置，拒绝 backend 或配置覆盖。可用 `--evaluation-id <id>` 指定执行身份，已存在时拒绝覆盖。应用哈希必须保持不变；每次先获取官方用例发现清单，再核对实际测试身份及执行终态。
+旧 run 的 `factory.py eval --run <目录> --eval-host wsl.win-ws.localhost`、list、show 和 analyze 保留；生成时的配置和制品身份不改写。新本地实验按照前面的官方 Runner 路径执行，不复制跨平台 node_modules 或 venv。
 
 ## SVC 与 braid 的共同开发
 

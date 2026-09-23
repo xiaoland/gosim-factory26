@@ -2,7 +2,7 @@
 
 本轮实现前基线为 Factory `9604e58`，Braid 起点为 `bd0cfcc`。用户明确不用实验验收；只做无模型测试、构建和只读历史证据核对，没有新模型请求、core probe、Playground 或 bench。
 
-Factory 已改用 `variants/factory/config.json`，Pi/Codex 由 backend 覆盖；显式自定义配置标为 custom，历史 run 不经过新配置入口。旧六份配置及兼容链接删除，Git 历史与 run 自带 config 保留。list/show、outcome 与 feedback 单独记录 backend。Playground 只读取网关/模型配置，不能为 ZIP 切换核心；提交清单明确这一范围。
+历史 shared-config 方案已退出；活动 variant 直接持有生成入口。显式单核心检查仍要求 `--config`，历史 run 只读回放。list/show、outcome 与 feedback 单独记录 backend；Playground 只读取显式提供的网关/模型配置，不能为 ZIP 切换核心。
 
 Factory 本地 68 项测试通过，覆盖默认配置、Codex 覆盖、自定义配置不回写、旧运行身份和 backend 过滤、失效入口提前拒绝。历史 `pi-svc` run 只读回放仍显示原 9/32；这不是本轮新分数。SVC status 为 healthy，导航与 Corpus 为 current；维护文档链接检查通过。
 

@@ -23,7 +23,7 @@
 - `scripts/profiles.py:33-89` 先读取 `variants/<variant>/preset.json`，强制其只拥有 `profiles` 与 `defaults`，再展开 `harness/profiles/*.json`、`harness/subagents/*.json`、skills 和模型 catalog。它把 `reasoning` 限死为 `high`，把 `mcp` 限死为空，并生成 `effective_digest`。
 - 当前有效结果为 `profiles`（内部 profile ID → `profile`、`roles`、`skills`、`models`、`common`、provider、Pi lifecycle）+ `defaults` + provider；没有公开 `login`/`description`、variant 方法装配或 canonical SVC 内容 hash。
 - `scripts/native_profiles.py:95-98` 将 `display_name` 写成内部 profile ID，`context_soft_ratio=.8` 与 `context_hard_bytes=1000000` 在脚本硬编码；角色实际从各 `harness/subagents/*.json` 展开，Pi 入口通过 `factory-subagent-lifecycle.ts` 接入。
-- `scripts/factory.py:31-35,306-312` 消费 `profiles.configuration()` 并把 effective profiles/defaults/bindings 写入 Braid request；`scripts/batch.py:82-99` 重新解析 variant；`scripts/package_agent.py:130-138` 目前只打包 `variants/factory/config.json`，不是可组合 variant 目录。
+- `scripts/factory.py` 的旧 resolver 接缝曾把 shared-config 投影为 Braid request；当前独立 variant 直接持有运行材料，`scripts/package_agent.py` 只打包所选目录。
 - 当前配置不是目标矩阵：`pi-generalist`、`codex-generalist` 是单 profile；`pi-team` 是 K3 coordinator + GLM UI + K2.7 app；`pi-verification` 另带 reviewer。四个 `preset.json` 都是一对一引用或简单列表，没有独立行为消费者。
 - 当前 catalog 只含 `kimi-k3`、`kimi-k2.7-code`、`glm-5.3-flash`；目标 `deepseek-v4-flash` 与 `deepseek-v4-flash-vision-exp` 尚未进入 catalog。当前 role 文件也仍是 Kimi/GLM 组合，不能只改 profile model 字符串假装原生 role 已可用。
 - `tests/test_profiles.py` 仍断言旧四 variant、preset 数量与 reviewer 形态；它是迁移时必须同步的边界检查，不是新合同的证据。
@@ -120,7 +120,7 @@ profile 建议：两个 Braid profile 都持有 `ponytail`、`impeccable` 的按
 
 ### 可复用既有证据
 
-- `runs/20260920-141339-6138c072/native/*.jsonl` 与 `runs/20260921-142645-6eeb4f7b/native/*.jsonl` 记录过实际 `deepseek-v4-flash-vision-exp` Pi 调用：请求经 `api:"openai-completions"`，响应归一化为 `stopReason:"toolUse"`、`rawStopReason:"tool_calls"`，assistant content 含 `thinking` 与 `toolCall`；usage keys 为 `input/output/cacheRead/cacheWrite/reasoning/totalTokens/cost`。这是 Pi 归一化消息证据，不是裸 HTTP response 的完整字段。
+- `runs/20260920-141339-6138c072/native/*.jsonl` 记录过实际 `deepseek-v4-flash-vision-exp` Pi 调用：请求经 `api:"openai-completions"`，响应归一化为 `stopReason:"toolUse"`、`rawStopReason:"tool_calls"`，assistant content 含 `thinking` 与 `toolCall`；usage keys 为 `input/output/cacheRead/cacheWrite/reasoning/totalTokens/cost`。这是 Pi 归一化消息证据，不是裸 HTTP response 的完整字段。
 - `tasks/multi-agent-integration/cells/capabilities-ready.md` 记录同一能力场景的 `image:true`、executor 和 browser operator 实际运行；Pi 首次归档失败已保留，后续图片/浏览器观察完成但严格 parent/session 归档问题曾独立阻断。该证据支持“视觉输入路径曾被真实消费”，不等于本次 quota 阻断后的新资格。
 - 既有成功记录的 cost 字段可得但只是客户端/provider 计算值，不是 Meter 账单；例如 `20260920-141339-6138c072` 的 native usage cost 汇总为约 `0.0474915168`（币种和结算未知）。本次三次 429 没有 usage/cost，不能估价。
 - `runs/integration/20260921-235700-pi-braid-ca880d/effective-config.json` 仅声明过 GLM UI profile，Braid 在预期观察前退出，没有 GLM assistant response；不能把声明当成 GLM tool-call/reasoning 证据。

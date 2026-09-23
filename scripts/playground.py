@@ -243,7 +243,9 @@ def submit(client, package, requirement, name, offline=False, catalog='benchmark
     with ZipFile(package) as archive:
         if not {'main.py', 'requirements.txt'}.issubset(archive.namelist()):
             raise ValueError('Python ZIP 根目录必须有 main.py 和 requirements.txt')
-    config = load_config(config_path or ROOT/'variants/factory/config.json')
+    if config_path is None:
+        raise ValueError('练习提交需要显式提供 --config')
+    config = load_config(config_path)
     folder = ROOT/'runs/playground'/('upload-'+time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:6])
     folder.mkdir(parents=True)
     manifest = {'package': str(package), 'package_sha256': hashlib.sha256(package.read_bytes()).hexdigest(),
@@ -293,7 +295,7 @@ def main():
     upload.add_argument('--requirement', required=True)
     upload.add_argument('--name', required=True)
     upload.add_argument('--catalog',choices=['benchmark','playground'],default='benchmark')
-    upload.add_argument('--config', type=Path, help='网关/模型配置；默认 factory 配置；不改变 ZIP 中的 harness')
+    upload.add_argument('--config', type=Path, required=True, help='显式提供网关/模型配置；不改变 ZIP 中的 harness')
     upload.add_argument('--practice', action='store_true', help='自带 key 的练习提交，不计正式成绩')
     upload.add_argument('--offline', action='store_true', help='仅用于不会调用模型的探针；使用非凭据占位符')
     rerun=commands.add_parser('run')

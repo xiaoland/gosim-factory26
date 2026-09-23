@@ -69,6 +69,6 @@ Braid 与 SVC 不直接依赖。Factory 负责让 Agent 能访问所引用的材
 
 ## 单一 Variant 与后端
 
-已采用的配置方案：活动配置收敛到 `variants/factory/config.json`，固定 Braid + SVC，backend 用 pi/codex 参数选择；共同 prompt 与入口继续放在 harness/，原生接入沿已有 adapter 维护。不为 backend 复制整套 variant。第一版一个 run 选一种 backend，仍使用比赛给定模型；同时混用两种 backend 不是实现多 Agent 的前提。
+历史方案曾把活动配置收敛到一个 shared-config，固定 Braid + SVC，并用 backend 参数选择核心；该方案已退出活动入口。当前每个团队 variant 自持有 prompt、原生接入和生成流程；backend 差异不再伪装成一个名为 `factory` 的 variant。
 
 历史 run 和报告保留原 variant 名称及实际来源。旧配置退出活动 variant 入口，但迁移前核对旧命令和分析读取的使用者，不删除历史证据。后续消融作为新的显式实验配置加入；成绩比较仍要区分 backend、并发和实际源码，不能因 variant 名相同就混为同条件。

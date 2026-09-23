@@ -144,8 +144,8 @@ def package(variant, output, docker_context):
             shutil.copytree(ROOT / 'harness', bundle / 'harness')
             shutil.copytree(ROOT / 'variants' / variant, bundle / 'variants' / variant)
             config.update(deployment='arcbench')
-            (bundle / 'variants/factory').mkdir(parents=True)
-            (bundle / 'variants/factory/config.json').write_text(json.dumps(config, indent=2) + '\n')
+            (bundle / 'variants' / variant).mkdir(parents=True, exist_ok=True)
+            (bundle / 'variants' / variant / 'config.json').write_text(json.dumps(config, indent=2) + '\n')
             write_zip(bundle, output, backend, records, capabilities)
         finally:
             if container_created:

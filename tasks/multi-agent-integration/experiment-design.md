@@ -15,7 +15,7 @@
 
 平台详情当时显示 12306=138、BookStack=34、Ctrip=126、Keep=32、PrestaShop=87、Stack Overflow=67，共 484。固定本地 revision 的 README 列出 117、34、125、32、86、66，共 460；本轮进一步运行已安装 Playwright 的 `test --list --reporter=json`，实际发现 12306=135、BookStack=34、Ctrip=125、Keep=32、PrestaShop=86、Stack Overflow=66，共 478 项；没有执行测试、生成应用或调用模型。原始清单见 [benchmark-discovery.json](../../runs/agent-profile-presets/benchmark-discovery.json)，评测器工作树仍干净。README 的 12306 声明数与实际发现数不一致；本地发现与平台当前数也不同，不能仅用 README 作分母。正式比较必须固定 requirement 及测试版本、task ID 和实际用例身份，不能只记录总数。
 
-历史依据：[首次基线](../../reports/2026-09-20-pi-keep-baseline.md)、[四组结果](../../reports/2026-09-20-harness-matrix.md)、[恢复后单任务](../../reports/2026-09-21-pi-svc-keep.md)。并行的 competition-p0 已产生新的有效 Keep：run 20260921-142645-6eeb4f7b 为 Pi + Braid + SVC，deepseek-v4-flash-vision-exp，14/32 通过、18 失败、0 skipped/flaky；主 Agent 核对其 outcome、归档配置与 [evaluation summary](../../runs/20260921-142645-6eeb4f7b/evaluation/20260921-143933-d295fb52/summary.json)。它不属于本批 preset 矩阵，也不能自动计作新 preset 的成绩。
+历史依据：[首次基线](../../reports/2026-09-20-pi-keep-baseline.md)、[四组结果](../../reports/2026-09-20-harness-matrix.md)、[恢复后单任务](../../reports/2026-09-21-pi-svc-keep.md)。旧 shared-config 的额外 Keep 运行不属于本批 preset 矩阵，已从本地证据中移除，不能自动计作新 preset 的成绩。
 
 ## Preset 应服务的能力
 

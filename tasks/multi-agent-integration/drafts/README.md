@@ -17,7 +17,7 @@
 | [k3-impeccable](k3-impeccable.json) | coordinator K3；app-engineer K2.7 Code | frontend-design 换为 Impeccable | 复刻界面与交互状态的设计、自检能力是否改善；先完成其无人值守适配复核。 |
 | [k3-domain](k3-domain.json) | coordinator K3；app-engineer K2.7 Code；domain-engineer K3 | 增加可选领域功能 profile | 复杂规则是否需要更集中的领域理解与交付责任，而不是只按 UI/服务分工。 |
 
-每个 variant ID 为 `factory-<preset>`。K3、K2.7 Code、GLM 5.3、GLM 5.3 Flash 的实际 ID 分别为 kimi-k3、kimi-k2.7-code、glm-5.3、glm-5.3-flash。固定一个 preset 的同一份代码和技能版本完成整套任务，不因中间分数修改它；这些是效果假设，不是已验证的模型专长或排名。
+每个 variant ID 使用明确的 preset 名称。K3、K2.7 Code、GLM 5.3、GLM 5.3 Flash 的实际 ID 分别为 kimi-k3、kimi-k2.7-code、glm-5.3、glm-5.3-flash。固定一个 preset 的同一份代码和技能版本完成整套任务，不因中间分数修改它；这些是效果假设，不是已验证的模型专长或排名。
 
 默认根 Issue 直接指派 coordinator，其他 work-item 按明确 profile ID 指派，不经过 label。任何 profile 都可承接 Issue 或 PR，对象职责由共同 Braid 协议定义。profile ID 在所选 preset/run 中解析，有效配置摘要区别同名 profile 的不同配置。
 

@@ -8,7 +8,6 @@ import platform
 import shutil
 import signal
 import sys
-from urllib.parse import urlsplit
 
 import factory
 
@@ -44,32 +43,7 @@ def verify_package(root):
 
 
 def platform_config(root, manifest):
-    config = factory.load_config(root/'variants/factory/config.json')
-    config.update(backend=manifest['backend'], runtime='submission', deployment='arcbench',
-                  task='platform', benchmark_revision=None)
-    def platform_model(names):
-        if any(not os.environ.get(name, '').strip() for name in names):
-            raise ValueError('平台模型配置不完整：需要 ' + ', '.join(names))
-        url = urlsplit(os.environ[names[1]])
-        if url.scheme not in ('http', 'https') or not url.hostname or url.username or url.password or url.query or url.fragment:
-            raise ValueError('平台模型地址必须是无内嵌凭据的 HTTP(S) URL')
-        return os.environ[names[1]], os.environ[names[2]]
-
-    base_url, model = platform_model(('OPENAI_API_KEY', 'OPENAI_BASE_URL', 'MODEL'))
-    if 'effective' in config and model != config['model']:
-        raise ValueError('平台主模型与冻结 variant 不一致')
-    config.update(base_url=base_url, model=model, key_environment='OPENAI_API_KEY', image_input=False)
-    if os.environ.get('VISUAL_API_KEY') or os.environ.get('VISUAL_BASE_URL'):
-        visual_url, visual_model = platform_model(('VISUAL_API_KEY', 'VISUAL_BASE_URL', 'VISUAL_MODEL'))
-        if 'effective' in config:
-            expected = {role['model'] for item in config['effective']['profiles'].values()
-                        for role in item['roles'].values() if role.get('provider') == 'visual'}
-            if expected and expected != {visual_model}:
-                raise ValueError('平台视觉模型与冻结角色不一致')
-        config.update(visual_base_url=visual_url, visual_model=visual_model,
-                      visual_key_environment='VISUAL_API_KEY')
-
-    return config
+    raise ValueError('旧 shared-config 参赛入口已退役；请使用独立 variant 的 main.py')
 
 
 def base_environment():

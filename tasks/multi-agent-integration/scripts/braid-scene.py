@@ -20,7 +20,6 @@ PACKAGE = _bootstrap_args.package or (Path(os.environ['FACTORY26_QUALIFICATION_P
 ROOT = PACKAGE.resolve() if PACKAGE else Path(__file__).resolve().parents[3]
 sys.path.insert(0, str(ROOT / 'scripts'))
 import factory
-import profiles
 import submission
 from braid_runtime import archive_state, export_delivery, initialize_repository, load_delivery
 from core import archive_sessions
@@ -37,12 +36,7 @@ def configuration(backend):
         if config['backend'] != backend:
             raise ValueError(f'资格包 backend 是 {config["backend"]}，不是 {backend}')
         return config
-    config_path = ROOT / 'variants/factory/config.json'
-    config = json.loads(config_path.read_text()) if config_path.is_file() else profiles.configuration(
-        'pi-team-mixed' if backend == 'pi' else 'codex-generalist')
-    # The Linux qualification assembly carries the runtime, but not source checkouts.
-    config.update(runtime='submission', key_environment='FACTORY26_API_KEY', image_input=False)
-    return config
+    raise ValueError('本地 scene 入口已退役；请通过 --package 使用独立 variant 制品')
 
 
 def run(backend, selected_output=None):

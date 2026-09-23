@@ -316,7 +316,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
     probe = sub.add_parser("probe", help="每组只发送 2 或 4 条短模型请求")
-    probe.add_argument("--config", type=Path, default=ROOT / "variants/factory/config.json")
+    probe.add_argument("--config", type=Path, required=True)
     probe.add_argument("--jobs", type=int, nargs="+", choices=(2, 4), default=[2, 4])
     probe.add_argument("--key-stdin", action="store_true", help="从 stdin 接收模型凭据，不保存或打印")
     evaluate = sub.add_parser("eval", help="同时运行独立的单 worker 评测")
