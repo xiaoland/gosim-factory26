@@ -16,7 +16,7 @@ python3 main.py /path/to/requirements --output-dir /path/to/output
 
 入口要求 Linux x86_64 和 CPython 3.12。它先校验所有载荷并恢复 ZIP 解压丢失的执行权限，再在临时工作区直接启动原生程序。包、需求、会话配置和交付身份仍由入口分别校验并记录；文件访问限制与网络白名单由运行平台负责，入口不再装配 Landlock 或其它自建沙箱。
 
-文本 provider 必须使用完整的 `OPENAI_API_KEY`、`OPENAI_BASE_URL`、`MODEL`。可选完整 `VISUAL_API_KEY`、`VISUAL_BASE_URL`、`VISUAL_MODEL` 只供视觉角色使用，不覆盖主模型；仅有默认 VISUAL_MODEL 不视为提供了视觉凭据。视觉 key 或地址部分提供时立即失败。冻结 variant 的主模型和视觉角色与平台模型不一致时拒绝运行，避免改变实验条件。配置与清单保存环境变量名，不保存 key；运行时只传递实际需要的凭据。
+平台通过 `OPENAI_API_KEY`、`OPENAI_BASE_URL` 注入文本连接；`MODEL` 若提供须与根角色一致。可选完整 `VISUAL_API_KEY`、`VISUAL_BASE_URL`、`VISUAL_MODEL` 只供视觉角色使用，不覆盖主模型；仅有默认 VISUAL_MODEL 不视为提供了视觉凭据。视觉地址启用时须同时提供对应 key 与模型；这只是 endpoint/key 路由分离，不代表账户 quota 已隔离或由 Harness 分配，未设置视觉地址时视觉 provider 回退到文本 endpoint/key。冻结 variant 的主模型和视觉角色与平台模型不一致时拒绝运行，避免改变实验条件。配置与清单保存环境变量名，不保存 key；运行时只传递实际需要的凭据。
 
 应用交付遵循官方标准布局：`frontend/package.json` 提供 build，`backend/package.json` 提供 start；后端在 `HOST=0.0.0.0 PORT=3000` 下提供前端产物与 API，目标应用兼容 Node 20.19.3。包内 Node 24 用于 Harness，不能推定部署环境也有 Node 22。禁止依赖本地模拟器专用的 `deploy.sh`。入口只在生成成功并冻结后复制应用，保留平台预置的 `.arc`、`.git` 和 `requirements`，拒绝覆盖同名应用文件。输入可为独立需求快照，或输出目录原有的 `requirements/`。证据保存在输出的 `.factory26/<run-id>/`；`run.json` 描述生成，`delivery.json` 单独描述交付成功或失败。
 
