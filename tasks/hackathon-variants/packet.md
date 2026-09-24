@@ -36,3 +36,5 @@ Pi 使用锁定的 `pi-subagents@0.56.0` 原生扩展，角色 Markdown 明确 m
 当前本地矩阵改为四配置 × 两题的生成与部署验收，使用自购模型网关，不能输出正式通过率或分数；正式计分仍需取得对应测试或另行授权官网运行。`hackathon-generation-matrix.json` 固定 8 个 job、4 并发，2026-09-24 已在 WSL 启动 `local_experiment.py`（启动 PID 904226），结果根目录 `runs/hackathon-generation-20260924`，控制器日志 `hackathon-generation-controller.log`。完成后先检查原始 Runner 终态、应用布局、OTLP 批次与预算消耗，再汇报；不把本地无测试运行与官网正式得分混称。
 
 首个 `pi-base × github` 在生成 525.564 秒后失败：官方 Runner 容器退出码 1，Pi session 最后一个 assistant 消息的 `stopReason` 为 `length`，截断发生在规划阶段，尚无 `frontend/` 或 `backend/`。网关此前该任务请求持续 HTTP 200；因此这是输出长度截断后的接线缺口，不是可计分结果或额度拒绝。`submission/hackathon_main.py` 现对 Pi 在同一 session 中最多续跑 8 次，`raw_main.stream` 支持追加原始事件。WSL 已重新冻结 `pi-base-recovery.zip`（SHA256 `8171aa1a8030dd32d9593c5ecb0bd41229650faf8000b57509ac4a420b6402c0`）和 `pi-svc-recovery.zip`（SHA256 `4d100b05120c394b6fb71028d333ba779c9a7720be0543715d675bbc168181b5`）；待原矩阵占用的并发槽释放后，仅补跑受该问题影响的 Pi case。
+
+WSL 的 `recover_pi_length.py`（PID 910296，日志 `hackathon-pi-recovery-controller.log`）等待首轮控制器结束后，检查八个 job 都已终结，只选择 `phase=failed` 且 Pi 最后一个 assistant `stopReason=length` 的 case，使用上述新 ZIP 生成 `hackathon-pi-recovery-matrix.json` 并启动新的最多 4 并发实验。原始失败记录不会覆盖；其他原因失败不会自动重跑。
