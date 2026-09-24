@@ -96,5 +96,8 @@ Braid run_id 来自其 request/result，不能用外层实验 ID 覆盖。
 Collector 继续只保存原始 OTLP 批次，重建通过 Braid 公开 CLI 读取导出的 protobuf，并以源文件清单核对完整性；操作入口见[运行说明](../deployment/index.md)。
 这些说明描述当前代码接线，不能代替实时模型链路验收，也不赋予历史 ZIP 新能力。
 
+`braid_telemetry_viewer.py` 以实验 run 为入口，通过 OTLP Backend 查询原始批次，再调用 Braid 的官方类型解码与证据重建接口，生成离线静态网站。
+页面通过 OTLP resource 选择 Braid 运行，展示消息、对象和三信号；本地会话归档不作为补齐数据源，Backend 缺失保持可见。图表按 runtime resource 和指标属性分组，不能将累计指标跨实例重复求和，历史导出的操作 span 不当作模型执行。
+
 当前查询工具尚未统一覆盖所有新旧布局，Viewer 未发现某条记录不证明它没有执行。
 开发依赖恢复也尚未覆盖所有本地未发布修改；这些限制见运行/开发说明，不能用本技术说明宣称已解决。

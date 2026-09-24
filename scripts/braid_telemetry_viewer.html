@@ -1,0 +1,1403 @@
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; base-uri 'none'; form-action 'none'"
+    />
+    <title>Braid · 运行诊断</title>
+    <style>
+      :root {
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          sans-serif;
+        color: #202b36;
+        background: #f4f6f9;
+        font-size: 14px;
+        --muted: #64748b;
+        --line: #dce3ec;
+        --accent: #3262d9;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+      }
+      button,
+      input,
+      select {
+        font: inherit;
+      }
+      button,
+      a,
+      input,
+      select,
+      summary {
+        outline-offset: 3px;
+      }
+      button {
+        cursor: pointer;
+      }
+      a {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      a:hover {
+        text-decoration: underline;
+      }
+      h1,
+      h2,
+      h3,
+      p {
+        margin-top: 0;
+      }
+      h1 {
+        font-size: 28px;
+        letter-spacing: -0.035em;
+        margin-bottom: 10px;
+      }
+      h2 {
+        font-size: 20px;
+        letter-spacing: -0.02em;
+      }
+      h3 {
+        font-size: 15px;
+      }
+      p {
+        line-height: 1.7;
+      }
+      .shell {
+        display: grid;
+        grid-template-columns: 208px 1fr;
+        min-height: 100vh;
+      }
+      aside {
+        background: #121e32;
+        color: #b5c1d7;
+        padding: 30px 18px;
+        position: sticky;
+        top: 0;
+        height: 100vh;
+      }
+      .brand {
+        font-size: 25px;
+        font-weight: 800;
+        color: white;
+        letter-spacing: -1px;
+        padding: 0 12px;
+      }
+      .brand small {
+        display: block;
+        font-size: 10px;
+        letter-spacing: 0.2em;
+        color: #8aa1c6;
+        margin: 8px 0 35px;
+      }
+      .nav {
+        display: grid;
+        gap: 7px;
+      }
+      .nav button {
+        border: 0;
+        border-radius: 7px;
+        text-align: left;
+        color: inherit;
+        background: transparent;
+        padding: 12px;
+      }
+      .nav button.active {
+        background: #284477;
+        color: white;
+      }
+      .nav button:hover {
+        background: #223654;
+      }
+      .aside-note {
+        font-size: 11px;
+        line-height: 1.7;
+        padding: 25px 12px;
+        color: #8195b6;
+      }
+      main {
+        padding: 34px 38px 70px;
+        max-width: 1600px;
+        width: 100%;
+        min-width: 0;
+      }
+      .top {
+        display: flex;
+        justify-content: space-between;
+        gap: 20px;
+        align-items: start;
+        border-bottom: 1px solid var(--line);
+        padding-bottom: 22px;
+        margin-bottom: 24px;
+      }
+      .eyebrow {
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+        font-weight: 800;
+        margin-bottom: 9px;
+      }
+      .muted {
+        color: var(--muted);
+      }
+      .mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+      .small {
+        font-size: 12px;
+      }
+      .pill {
+        display: inline-block;
+        border-radius: 5px;
+        padding: 4px 8px;
+        background: #e9eef5;
+        font-size: 11px;
+        white-space: nowrap;
+      }
+      .pill.warn {
+        background: #fff0ce;
+        color: #8b5900;
+      }
+      .pill.ok {
+        background: #dff2e8;
+        color: #186447;
+      }
+      .pill.bad {
+        background: #fee5e5;
+        color: #a33030;
+      }
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 14px;
+        margin-bottom: 24px;
+      }
+      .stat,
+      .panel {
+        background: white;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+      .stat {
+        padding: 19px;
+      }
+      .stat strong {
+        display: block;
+        font-size: 27px;
+        letter-spacing: -0.04em;
+        margin-bottom: 4px;
+      }
+      .stat span {
+        font-size: 12px;
+        color: var(--muted);
+      }
+      .panel {
+        padding: 22px;
+        margin-bottom: 18px;
+      }
+      .notice {
+        border-left: 3px solid #dca138;
+        background: #fff8e9;
+        padding: 13px 17px;
+        margin-bottom: 20px;
+        line-height: 1.6;
+        overflow-wrap: anywhere;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 18px;
+      }
+      .toolbar {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      input,
+      select {
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        background: white;
+        padding: 9px 11px;
+        min-width: 0;
+      }
+      input {
+        flex: 1;
+        min-width: 180px;
+      }
+      button.standard {
+        background: white;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 8px 12px;
+        color: #334155;
+      }
+      button:disabled {
+        opacity: 0.4;
+        cursor: default;
+      }
+      .session-layout {
+        display: grid;
+        grid-template-columns: 250px minmax(0, 1fr);
+        gap: 18px;
+      }
+      .session-list {
+        max-height: 76vh;
+        overflow: auto;
+      }
+      .session-option {
+        display: block;
+        width: 100%;
+        text-align: left;
+        padding: 13px;
+        border: 0;
+        border-bottom: 1px solid var(--line);
+        background: white;
+        color: inherit;
+        overflow-wrap: anywhere;
+      }
+      .session-option.active {
+        background: #eaf0ff;
+        box-shadow: inset 3px 0 var(--accent);
+      }
+      .session-option .mono {
+        font-size: 10px;
+        display: block;
+        margin: 5px 0;
+      }
+      .message {
+        border: 1px solid var(--line);
+        border-left: 3px solid #a5b4cb;
+        border-radius: 7px;
+        padding: 16px;
+        margin: 12px 0;
+        background: white;
+      }
+      .message.assistant {
+        border-left-color: #567be0;
+      }
+      .message.user {
+        border-left-color: #459782;
+      }
+      .message.tool {
+        border-left-color: #b086cd;
+      }
+      .row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .between {
+        justify-content: space-between;
+      }
+      .body {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        line-height: 1.65;
+        font-size: 13px;
+        margin: 14px 0 6px;
+      }
+      .body.long {
+        max-height: 500px;
+        overflow: auto;
+      }
+      details {
+        margin-top: 10px;
+      }
+      summary {
+        cursor: pointer;
+        color: #52657c;
+        font-size: 12px;
+      }
+      pre {
+        white-space: pre-wrap;
+        overflow-wrap: anywhere;
+        background: #f5f7fa;
+        border-radius: 6px;
+        padding: 12px;
+        max-height: 450px;
+        overflow: auto;
+        font-size: 11px;
+        line-height: 1.55;
+      }
+      .table-wrap {
+        overflow: auto;
+      }
+      table {
+        border-collapse: collapse;
+        width: 100%;
+        font-size: 12px;
+      }
+      td,
+      th {
+        text-align: left;
+        padding: 10px;
+        border-bottom: 1px solid var(--line);
+        vertical-align: top;
+        overflow-wrap: anywhere;
+      }
+      th {
+        color: var(--muted);
+        font-weight: 500;
+        font-size: 11px;
+      }
+      td {
+        max-width: 500px;
+      }
+      .empty {
+        padding: 38px 16px;
+        text-align: center;
+        color: var(--muted);
+        line-height: 1.8;
+      }
+      .trace-row {
+        display: grid;
+        grid-template-columns: minmax(160px, 32%) 1fr 85px;
+        gap: 15px;
+        align-items: center;
+        border-bottom: 1px solid #edf0f6;
+        padding: 12px 0;
+      }
+      .track {
+        height: 20px;
+        background: #f0f3f8;
+        border-radius: 3px;
+        position: relative;
+      }
+      .span-bar {
+        background: #7194ec;
+        height: 100%;
+        min-width: 2px;
+        border-radius: 3px;
+        position: absolute;
+      }
+      .span-bar.bad {
+        background: #db7979;
+      }
+      .chart {
+        width: 100%;
+        height: 120px;
+        margin: 14px 0;
+      }
+      .metric-label {
+        font-size: 12px;
+        overflow-wrap: anywhere;
+      }
+      .links {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+        margin: 12px 0;
+      }
+      .pager {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-top: 15px;
+      }
+      .section[hidden] {
+        display: none;
+      }
+      .badge-note {
+        display: block;
+        margin-top: 6px;
+      }
+      .object {
+        scroll-margin-top: 20px;
+      }
+      .comment {
+        border-top: 1px solid var(--line);
+        padding-top: 15px;
+        margin-top: 20px;
+      }
+      .metric-series {
+        border-top: 1px solid var(--line);
+        padding-top: 15px;
+        margin-top: 15px;
+      }
+      @media (max-width: 1000px) {
+        main {
+          padding: 25px 20px;
+        }
+        .shell {
+          grid-template-columns: 170px 1fr;
+        }
+        .session-layout {
+          grid-template-columns: 200px 1fr;
+        }
+        .grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 720px) {
+        .shell {
+          display: block;
+        }
+        aside {
+          position: static;
+          height: auto;
+          padding: 18px;
+        }
+        .brand small,
+        .aside-note {
+          display: none;
+        }
+        .brand {
+          font-size: 21px;
+          margin-bottom: 12px;
+        }
+        .nav {
+          display: flex;
+          overflow: auto;
+          gap: 3px;
+        }
+        .nav button {
+          white-space: nowrap;
+          padding: 9px;
+        }
+        .top {
+          display: block;
+        }
+        .top > div:last-child {
+          margin-top: 12px;
+        }
+        .stats {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .session-layout {
+          grid-template-columns: 1fr;
+        }
+        .session-list {
+          max-height: 210px;
+        }
+        .trace-row {
+          grid-template-columns: 130px 1fr 65px;
+          gap: 8px;
+        }
+        main {
+          padding: 23px 14px;
+        }
+        .panel {
+          padding: 16px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="shell">
+      <aside>
+        <div class="brand">
+          braid<span style="color: #7194ec">.</span
+          ><small>RUN DIAGNOSTICS</small>
+        </div>
+        <nav class="nav" aria-label="诊断视图"></nav>
+        <p class="aside-note">
+          实验 OTLP Backend<br />离线静态快照<br />正文按原始证据保留
+        </p>
+      </aside>
+      <main>
+        <header class="top">
+          <div>
+            <div class="eyebrow">EXPERIMENT / OBSERVABILITY</div>
+            <h1>运行诊断</h1>
+            <div id="run-label" class="mono muted"></div>
+          </div>
+          <div id="header-status"></div>
+        </header>
+        <div id="content"></div>
+      </main>
+    </div>
+    <script id="report-data" type="application/json">
+      /*REPORT_DATA*/
+    </script>
+    <script>
+      "use strict";
+      const D = JSON.parse(document.getElementById("report-data").textContent);
+      const $ = (tag, cls, text) => {
+        const e = document.createElement(tag);
+        if (cls) e.className = cls;
+        if (text !== undefined) e.textContent = String(text);
+        return e;
+      };
+      const append = (p, ...children) => {
+        for (const c of children) if (c) p.append(c);
+        return p;
+      };
+      const pretty = (v) => JSON.stringify(v, null, 2),
+        rows = (name) => D.objects[name]?.rows || [];
+      const val = (v) => {
+        if (!v) return null;
+        for (const k of [
+          "stringValue",
+          "intValue",
+          "doubleValue",
+          "boolValue",
+          "bytesValue",
+        ])
+          if (k in v) return v[k];
+        if (v.arrayValue) return v.arrayValue.values.map(val);
+        if (v.kvlistValue) return attrs(v.kvlistValue.values);
+        return v;
+      };
+      const attrs = (a) =>
+        Object.fromEntries((a || []).map((v) => [v.key, val(v.value)]));
+      const raw = (v, label = "原始记录") =>
+        append($("details"), $("summary", "", label), $("pre", "", pretty(v)));
+      const pill = (text, kind = "") => $("span", "pill " + kind, text);
+      const link = (href, label) => {
+        const a = $("a", "", label);
+        a.href = href;
+        return a;
+      };
+      const empty = (p, text) => p.append($("div", "empty", text));
+      const note = (p, text) => p.append($("p", "muted small", text));
+      const button = (label, fn) => {
+        const b = $("button", "standard", label);
+        b.onclick = fn;
+        return b;
+      };
+      const input = (label, placeholder) => {
+        const e = $("input");
+        e.type = "search";
+        e.placeholder = placeholder;
+        e.setAttribute("aria-label", label);
+        return e;
+      };
+      const ns = (v) => {
+        try {
+          return BigInt(v || 0);
+        } catch {
+          return 0n;
+        }
+      };
+      const when = (v) => {
+        if (!v || ns(v) === 0n) return "时间未知";
+        const t = new Date(Number(ns(v) / 1000000n));
+        return Number.isNaN(t.valueOf())
+          ? "时间未知"
+          : t.toISOString().replace("T", " ").replace("Z", " UTC");
+      };
+      const duration = (end, start) => Number(ns(end) - ns(start)) / 1e6;
+      const table = (headers, entries) => {
+        const t = $("table"),
+          head = $("tr");
+        headers.forEach((v) => head.append($("th", "", v)));
+        t.append(append($("thead"), head));
+        const body = $("tbody");
+        for (const row of entries) {
+          const tr = $("tr");
+          for (const cell of row)
+            tr.append(
+              append(
+                $("td"),
+                cell instanceof Node ? cell : $("span", "", cell ?? "未知"),
+              ),
+            );
+          body.append(tr);
+        }
+        t.append(body);
+        return append($("div", "table-wrap"), t);
+      };
+      const panel = (title) =>
+        append($("section", "panel"), $("h2", "", title));
+      const nav = document.querySelector(".nav"),
+        content = document.getElementById("content"),
+        views = {};
+      const viewSpecs = [
+        ["overview", "总览"],
+        ["sessions", "会话消息"],
+        ["objects", "Issue / PR"],
+        ["traces", "Traces"],
+        ["metrics", "Metrics"],
+        ["logs", "运行日志"],
+        ["evidence", "证据与缺口"],
+      ];
+      for (const [id, title] of viewSpecs) {
+        const b = $("button", "", title);
+        b.onclick = () => show(id);
+        b.dataset.view = id;
+        nav.append(b);
+        const section = $("section", "section");
+        section.hidden = true;
+        views[id] = section;
+        content.append(section);
+      }
+      function show(id) {
+        if (!views[id]) id = "overview";
+        for (const [key, node] of Object.entries(views))
+          node.hidden = key !== id;
+        for (const b of nav.children) {
+          b.classList.toggle("active", b.dataset.view === id);
+          b.setAttribute(
+            "aria-current",
+            b.dataset.view === id ? "page" : "false",
+          );
+        }
+        if (!views[id].dataset.ready) {
+          renderers[id](views[id]);
+          views[id].dataset.ready = "1";
+        }
+        location.hash = id;
+      }
+      document.getElementById("run-label").textContent = D.braid_run_id;
+      const hs = document.getElementById("header-status");
+      hs.append(
+        pill(
+          "证据 " + D.manifest.status,
+          D.manifest.status === "complete" ? "ok" : "warn",
+        ),
+      );
+      hs.append(
+        $(
+          "span",
+          "badge-note muted small",
+          "业务终态 " + (D.terminal?.status || "未知"),
+        ),
+      );
+      function overview(p) {
+        const stats = $("div", "stats");
+        for (const [number, label] of [
+          [D.sessions.length, "原生会话"],
+          [D.sessions.reduce((n, s) => n + s.entries.length, 0), "原生条目"],
+          [rows("local_items").length, "Issue / PR"],
+          [D.diagnostics.spans.length, "已采集 span"],
+        ])
+          stats.append(
+            append(
+              $("div", "stat"),
+              $("strong", "", number),
+              $("span", "", label),
+            ),
+          );
+        p.append(stats);
+        if (D.manifest.gaps.length)
+          p.append(
+            $(
+              "div",
+              "notice",
+              "存在诊断缺口。当前页面仅展示 Backend 已接收并可重建的内容，详细缺口见“证据与缺口”。",
+            ),
+          );
+        const grid = $("div", "grid"),
+          identity = panel("运行身份"),
+          signals = panel("遥测来源");
+        identity.append(
+          table(
+            ["归属", "值"],
+            [
+              ["实验 run", D.experiment.run_id || "未归档实验身份"],
+              ["Braid run", D.braid_run_id],
+              [
+                "组合 / 题目",
+                [
+                  D.experiment.variant,
+                  D.experiment.competition,
+                  D.experiment.task,
+                ]
+                  .filter(Boolean)
+                  .join(" / ") || "未知",
+              ],
+              ["实验阶段", D.experiment.phase || "未知"],
+              ["业务结果", D.terminal?.status || "未知"],
+              ["生成时间", D.generated_at],
+            ],
+          ),
+        );
+        signals.append(
+          table(
+            ["信号", "Backend 批次"],
+            ["logs", "traces", "metrics"].map((k) => [k, D.signals[k] || 0]),
+          ),
+        );
+        note(
+          signals,
+          "批次数包含本实验全部服务；各诊断视图仅显示当前 Braid run。证据正文承载于 logs。",
+        );
+        signals.append(
+          append(
+            $("div", "links"),
+            link("batches.json", "批次清单"),
+            link("decoded.json", "原始三信号 JSON"),
+          ),
+        );
+        append(grid, identity, signals);
+        p.append(grid);
+        if (
+          D.diagnostics.spans.length &&
+          D.diagnostics.spans.every(
+            (v) => v.record.name === "braid.telemetry.export",
+          )
+        )
+          p.append(
+            $(
+              "div",
+              "notice",
+              "本批次只有离线导出操作的 trace / metrics，不包含历史模型执行的实时 trace；会话和对象来自已导出的证据。",
+            ),
+          );
+        const events = panel("Braid 事件时间线");
+        note(
+          events,
+          "使用 Braid 已记录事件，不按 collector 到达时间推断并发因果。",
+        );
+        const list = rows("events")
+          .slice()
+          .sort((a, b) =>
+            String(a.observed_at).localeCompare(String(b.observed_at)),
+          );
+        let count = 0;
+        const holder = $("div");
+        function more() {
+          for (const e of list.slice(count, count + 50))
+            holder.append(
+              append(
+                $("details"),
+                $(
+                  "summary",
+                  "",
+                  `${e.observed_at} · ${e.kind} · ${e.work_item_node_id}`,
+                ),
+                $("p", "body", e.reference || ""),
+                $("pre", "", pretty(e)),
+              ),
+            );
+          count += 50;
+          next.hidden = count >= list.length;
+        }
+        const next = button("继续显示事件", more);
+        append(events, holder, next);
+        more();
+        if (!list.length) empty(events, "没有可恢复事件");
+        p.append(events);
+      }
+      function presentation(entry) {
+        const m = entry.message || entry.payload || entry;
+        let role = m.role || m.type || entry.type || "unknown";
+        if (
+          [
+            "toolResult",
+            "function_call_output",
+            "custom_tool_call_output",
+          ].includes(role)
+        )
+          role = "tool";
+        let parts = [];
+        const blocks = m.content;
+        if (typeof blocks === "string") parts = [blocks];
+        else if (Array.isArray(blocks))
+          parts = blocks.map((b) => {
+            if (typeof b === "string") return b;
+            return (
+              b.text ??
+              b.thinking ??
+              (b.type === "toolCall"
+                ? `工具调用 ${b.name} · ${b.id}\n${pretty(b.arguments)}`
+                : pretty(b))
+            );
+          });
+        if (!parts.length) {
+          if (m.arguments !== undefined)
+            parts = [
+              `工具调用 ${m.name || ""} · ${m.call_id || m.id || ""}\n${typeof m.arguments === "string" ? m.arguments : pretty(m.arguments)}`,
+            ];
+          else if (m.output !== undefined)
+            parts = [
+              typeof m.output === "string" ? m.output : pretty(m.output),
+            ];
+          else if (m.text) parts = [m.text];
+          else parts = [pretty(entry)];
+        }
+        return {
+          role,
+          text: parts.join("\n\n"),
+          time: entry.timestamp || m.timestamp || "",
+          call: m.toolCallId || m.call_id || "",
+          id: entry.id || "",
+          parent: entry.parentId || "",
+        };
+      }
+      function sessions(p) {
+        const toolbar = $("div", "toolbar"),
+          search = input("搜索全部会话内容", "搜索会话、正文、工具或调用 ID…"),
+          role = $("select");
+        role.setAttribute("aria-label", "角色过滤");
+        for (const [v, t] of [
+          ["", "全部角色"],
+          ["user", "用户"],
+          ["assistant", "助手"],
+          ["tool", "工具"],
+        ]) {
+          const o = $("option", "", t);
+          o.value = v;
+          role.append(o);
+        }
+        append(toolbar, search, role);
+        p.append(toolbar);
+        const layout = $("div", "session-layout"),
+          list = $("div", "session-list panel"),
+          body = $("div");
+        list.style.padding = "0";
+        append(layout, list, body);
+        p.append(layout);
+        let selected = 0,
+          page = 0;
+        const cache = D.sessions.map((s) =>
+          s.entries.map((m) => ({
+            m,
+            p: presentation(m.entry),
+            search: pretty(m.entry).toLowerCase(),
+          })),
+        );
+        function draw() {
+          const q = search.value.toLowerCase(),
+            filtered = cache.map((entries) =>
+              entries.filter(
+                (e) =>
+                  (!q || e.search.includes(q)) &&
+                  (!role.value || e.p.role === role.value),
+              ),
+            );
+          const indices = D.sessions
+            .map((_, i) => i)
+            .filter((i) => (!q && !role.value) || filtered[i].length);
+          if (!indices.includes(selected)) selected = indices[0];
+          list.replaceChildren();
+          for (const i of indices) {
+            const s = D.sessions[i],
+              meta = s.metadata;
+            const b = $(
+              "button",
+              "session-option" + (i === selected ? " active" : ""),
+            );
+            append(
+              b,
+              $(
+                "strong",
+                "",
+                `${meta.provider || "unknown"} · ${meta.profile_id || "原生会话"}`,
+              ),
+              $("span", "mono", meta.native_session_id || "身份未知"),
+              $(
+                "span",
+                "muted small",
+                `${meta.work_item_kind || ""} ${meta.work_item_id || ""} · ${filtered[i].length} 条`,
+              ),
+            );
+            b.onclick = () => {
+              selected = i;
+              page = 0;
+              draw();
+            };
+            list.append(b);
+          }
+          body.replaceChildren();
+          if (selected === undefined) {
+            empty(body, "没有匹配的会话条目");
+            return;
+          }
+          const s = D.sessions[selected],
+            meta = s.metadata;
+          const header = panel("会话消息");
+          note(
+            header,
+            `${meta.provider} / ${meta.native_session_id || "身份未知"}`,
+          );
+          if (meta.parent_native_session_id)
+            note(header, "父会话：" + meta.parent_native_session_id);
+          append(
+            header,
+            link("evidence/" + s.file, "下载原始 JSONL"),
+            raw(meta, "会话身份与工作项关联"),
+          );
+          body.append(header);
+          const entries = filtered[selected];
+          for (const e of entries.slice(page * 40, (page + 1) * 40)) {
+            const card = $("article", "message " + e.p.role);
+            append(
+              card,
+              append(
+                $("div", "row between"),
+                pill(e.p.role),
+                $("span", "muted small", `#${e.m.sequence} · ${e.p.time}`),
+              ),
+              $("div", "body long", e.p.text),
+            );
+            if (e.p.id || e.p.parent)
+              card.append(
+                $(
+                  "div",
+                  "mono muted",
+                  `entry ${e.p.id} · parent ${e.p.parent || "—"}`,
+                ),
+              );
+            if (e.p.call)
+              card.append(
+                button("定位调用 " + e.p.call, () => {
+                  search.value = e.p.call;
+                  role.value = "";
+                  page = 0;
+                  draw();
+                }),
+              );
+            card.append(raw(e.m.entry));
+            body.append(card);
+          }
+          const prev = button("上一页", () => {
+              page--;
+              draw();
+            }),
+            next = button("下一页", () => {
+              page++;
+              draw();
+            });
+          prev.disabled = page === 0;
+          next.disabled = (page + 1) * 40 >= entries.length;
+          body.append(
+            append(
+              $("div", "pager"),
+              prev,
+              $(
+                "span",
+                "muted small",
+                `${page + 1} / ${Math.max(1, Math.ceil(entries.length / 40))} · ${entries.length} 条`,
+              ),
+              next,
+            ),
+          );
+        }
+        search.oninput = () => {
+          page = 0;
+          draw();
+        };
+        role.onchange = () => {
+          page = 0;
+          draw();
+        };
+        draw();
+      }
+      function objects(p) {
+        const search = input(
+          "搜索 Issue 和 PR",
+          "搜索 Issue / PR 标题、正文或评论…",
+        );
+        p.append(append($("div", "toolbar"), search));
+        const list = $("div");
+        p.append(list);
+        function draw() {
+          list.replaceChildren();
+          const comments = rows("local_comments");
+          let count = 0;
+          for (const item of rows("local_items")) {
+            const related = comments.filter(
+              (c) => c.work_item_node_id === item.node_id,
+            );
+            if (
+              !pretty([item, related])
+                .toLowerCase()
+                .includes(search.value.toLowerCase())
+            )
+              continue;
+            count++;
+            const state = rows("work_items").find(
+              (w) => w.node_id === item.node_id,
+            );
+            const card = panel(`${item.node_id} · ${item.title}`);
+            card.classList.add("object");
+            card.id = "object-" + item.node_id;
+            card.append(
+              pill(state?.state || "未知"),
+              $("div", "body", item.body ?? "正文已删除或未记录"),
+            );
+            const associations = rows("associations").filter(
+              (a) =>
+                a.issue_node_id === item.node_id ||
+                a.pr_node_id === item.node_id,
+            );
+            for (const a of associations) {
+              const target =
+                a.issue_node_id === item.node_id
+                  ? a.pr_node_id
+                  : a.issue_node_id;
+              const b = button(
+                `关联 ${target} · ${a.active ? "有效" : "已停用"}`,
+                () => {
+                  search.value = "";
+                  draw();
+                  document.getElementById("object-" + target)?.scrollIntoView();
+                },
+              );
+              card.append(b);
+            }
+            for (const c of related.sort(
+              (a, b) => a.comment_id - b.comment_id,
+            )) {
+              const block = $("article", "comment");
+              append(
+                block,
+                append(
+                  $("div", "row"),
+                  $("strong", "", `评论 #${c.comment_id}`),
+                  pill(c.lifecycle),
+                  $("span", "muted small", c.created_at || ""),
+                ),
+              );
+              if (c.reply_to)
+                block.append($("p", "mono", "回复 #" + c.reply_to));
+              block.append($("div", "body", c.body ?? "正文已删除或未记录"));
+              block.append(raw(c, "评论身份、解决与隐藏状态"));
+              card.append(block);
+            }
+            const attached = {
+              object: item,
+              state,
+              merges: rows("local_merges").filter(
+                (m) => m.pr_node_id === item.node_id,
+              ),
+              associations,
+              reactions: rows("local_comment_reactions").filter((r) =>
+                related.some((c) => c.comment_id === r.comment_id),
+              ),
+            };
+            card.append(raw(attached, "对象、合并、关联与 reaction"));
+            list.append(card);
+          }
+          if (!count) empty(list, "没有匹配的 Issue / PR");
+        }
+        search.oninput = draw;
+        draw();
+      }
+      function traces(p) {
+        note(
+          p,
+          "时间轴按 trace 分组。可展开查看 parent span、事件、属性及资源身份；缺失的父 span 不自动补造。",
+        );
+        const groups = new Map();
+        for (const item of D.diagnostics.spans) {
+          const id = item.record.traceId;
+          if (!groups.has(id)) groups.set(id, []);
+          groups.get(id).push(item);
+        }
+        if (!groups.size) empty(p, "Backend 未接收到本运行的 trace");
+        for (const [id, spans] of groups) {
+          const card = panel("Trace " + id);
+          let start = ns(spans[0].record.startTimeUnixNano),
+            end = start;
+          for (const { record: r } of spans) {
+            if (ns(r.startTimeUnixNano) < start)
+              start = ns(r.startTimeUnixNano);
+            if (ns(r.endTimeUnixNano) > end) end = ns(r.endTimeUnixNano);
+          }
+          const range = Math.max(1, Number(end - start));
+          note(card, when(start.toString()));
+          const known = new Map(spans.map((v) => [v.record.spanId, v.record]));
+          for (const item of spans) {
+            const r = item.record;
+            let parent = r.parentSpanId,
+              depth = 0,
+              seen = new Set([r.spanId]);
+            while (known.has(parent) && !seen.has(parent)) {
+              seen.add(parent);
+              depth++;
+              parent = known.get(parent).parentSpanId;
+            }
+            const row = $("div", "trace-row"),
+              title = $("div", "mono", r.name);
+            title.style.paddingLeft = Math.min(depth, 8) * 12 + "px";
+            const track = $("div", "track"),
+              bar = $("div", "span-bar" + (r.status?.code === 2 ? " bad" : ""));
+            bar.style.left =
+              Math.max(
+                0,
+                (Number(ns(r.startTimeUnixNano) - start) / range) * 100,
+              ) + "%";
+            bar.style.width =
+              Math.max(
+                0.3,
+                (Number(ns(r.endTimeUnixNano) - ns(r.startTimeUnixNano)) /
+                  range) *
+                  100,
+              ) + "%";
+            track.append(bar);
+            append(
+              row,
+              title,
+              track,
+              $(
+                "span",
+                "mono",
+                duration(r.endTimeUnixNano, r.startTimeUnixNano).toFixed(2) +
+                  " ms",
+              ),
+            );
+            card.append(row);
+            if (r.parentSpanId && !known.has(r.parentSpanId))
+              note(card, "父 span 未接收：" + r.parentSpanId);
+            card.append(raw(item, "span 属性与事件"));
+          }
+          p.append(card);
+        }
+      }
+      function chart(points) {
+        const finite = points.filter((p) => Number.isFinite(p[1]));
+        if (!finite.length) return $("p", "muted small", "没有可绘制的数值点");
+        const nsuri = "http://www.w3.org/2000/svg",
+          svg = document.createElementNS(nsuri, "svg");
+        svg.setAttribute("viewBox", "0 0 600 120");
+        svg.classList.add("chart");
+        svg.setAttribute("role", "img");
+        svg.setAttribute("aria-label", "按实际时间绘制的指标观测值");
+        let min = Infinity,
+          max = -Infinity,
+          start = Infinity,
+          end = -Infinity;
+        for (const [t, v] of finite) {
+          min = Math.min(min, v);
+          max = Math.max(max, v);
+          start = Math.min(start, t);
+          end = Math.max(end, t);
+        }
+        const xy = finite.map((p) => [
+          20 + ((p[0] - start) / Math.max(1, end - start)) * 560,
+          100 - ((p[1] - min) / (max - min || 1)) * 80,
+        ]);
+        const line = document.createElementNS(nsuri, "polyline");
+        line.setAttribute("points", xy.map((p) => p.join(",")).join(" "));
+        line.setAttribute("fill", "none");
+        line.setAttribute("stroke", "#527fdf");
+        line.setAttribute("stroke-width", "2");
+        svg.append(line);
+        for (let i = 0; i < xy.length; i++) {
+          const c = document.createElementNS(nsuri, "circle");
+          c.setAttribute("cx", xy[i][0]);
+          c.setAttribute("cy", xy[i][1]);
+          c.setAttribute("r", "3");
+          c.setAttribute("fill", "#3262d9");
+          const title = document.createElementNS(nsuri, "title");
+          title.textContent = String(finite[i][1]);
+          c.append(title);
+          svg.append(c);
+        }
+        return svg;
+      }
+      function metrics(p) {
+        note(
+          p,
+          "按 resource、scope 与属性区分序列。累计值不跨 runtime 求和；直方图保留桶和计数，图中仅展示 sum/count 的均值。",
+        );
+        const groups = new Map();
+        for (const item of D.diagnostics.metrics) {
+          const m = item.record;
+          const kind = [
+            "gauge",
+            "sum",
+            "histogram",
+            "exponentialHistogram",
+            "summary",
+          ].find((k) => m[k]);
+          if (!kind) continue;
+          for (const point of m[kind].dataPoints || []) {
+            const labels = attrs(point.attributes),
+              key = pretty([
+                item.resource,
+                item.scope,
+                m.name,
+                m.unit,
+                kind,
+                m[kind].aggregationTemporality,
+                labels,
+              ]);
+            if (!groups.has(key))
+              groups.set(key, { item, kind, labels, points: [] });
+            groups.get(key).points.push(point);
+          }
+        }
+        if (!groups.size) empty(p, "Backend 未接收到本运行的 metrics");
+        for (const { item, kind, labels, points } of groups.values()) {
+          const m = item.record;
+          points.sort((a, b) =>
+            ns(a.timeUnixNano) < ns(b.timeUnixNano) ? -1 : 1,
+          );
+          const card = panel(m.name);
+          append(card, pill(kind), $("p", "metric-label mono", pretty(labels)));
+          note(
+            card,
+            `实例 ${item.resource["service.instance.id"] || "未知"} · 单位 ${m.unit || "无"} · ${m[kind].aggregationTemporality === 2 ? "累计" : m[kind].aggregationTemporality === 1 ? "增量" : "即时/未知"}`,
+          );
+          const y = (v) =>
+            v.flags & 1
+              ? NaN
+              : v.asInt !== undefined
+                ? Number(v.asInt)
+                : v.asDouble !== undefined
+                  ? Number(v.asDouble)
+                  : v.sum !== undefined && Number(v.count) > 0
+                    ? Number(v.sum) / Number(v.count)
+                    : NaN;
+          card.append(
+            chart(
+              points.map((v) => [Number(ns(v.timeUnixNano) / 1000000n), y(v)]),
+            ),
+          );
+          card.append(
+            table(
+              ["时间", "观测值 / 均值", "计数"],
+              points.map((v) => [
+                when(v.timeUnixNano),
+                Number.isFinite(y(v))
+                  ? (v.asInt ?? v.asDouble ?? y(v))
+                  : "未报告",
+                v.count ?? "—",
+              ]),
+            ),
+          );
+          card.append(
+            raw(
+              { resource: item.resource, scope: item.scope, metric: m, points },
+              "完整指标、桶与原始点",
+            ),
+          );
+          p.append(card);
+        }
+      }
+      function logs(p) {
+        const search = input("搜索运行日志", "搜索日志、错误、trace ID…");
+        p.append(append($("div", "toolbar"), search));
+        const list = $("div"),
+          more = button("显示更多日志", () => {
+            limit += 100;
+            draw();
+          });
+        append(p, list, more);
+        let limit = 100;
+        function draw() {
+          list.replaceChildren();
+          const entries = D.diagnostics.logs.filter((v) =>
+            pretty(v).toLowerCase().includes(search.value.toLowerCase()),
+          );
+          for (const item of entries.slice(0, limit)) {
+            const r = item.record,
+              card = $("article", "message");
+            append(
+              card,
+              append(
+                $("div", "row"),
+                pill(
+                  r.severityText || r.severityNumber || "INFO",
+                  r.severityNumber >= 17 ? "bad" : "",
+                ),
+                $(
+                  "span",
+                  "muted small",
+                  when(r.timeUnixNano || r.observedTimeUnixNano),
+                ),
+              ),
+              $(
+                "div",
+                "body",
+                typeof val(r.body) === "string"
+                  ? val(r.body)
+                  : pretty(val(r.body)),
+              ),
+              raw(item),
+            );
+            list.append(card);
+          }
+          more.hidden = limit >= entries.length;
+          if (!entries.length)
+            empty(
+              list,
+              "没有匹配的运行日志。证据传输日志已用于重建，不重复铺在此处。",
+            );
+        }
+        search.oninput = () => {
+          limit = 100;
+          draw();
+        };
+        draw();
+      }
+      function evidence(p) {
+        const gaps = panel("完整性与缺口");
+        gaps.append(
+          pill(
+            D.manifest.status,
+            D.manifest.status === "complete" ? "ok" : "warn",
+          ),
+        );
+        for (const gap of D.manifest.gaps) gaps.append($("p", "notice", gap));
+        for (const error of D.diagnostics.errors)
+          gaps.append($("p", "notice", `${error.file}: ${error.error}`));
+        if (!D.manifest.gaps.length && !D.diagnostics.errors.length)
+          note(
+            gaps,
+            "所选源清单、片段和摘要校验通过；这不证明源端未记录的内容存在。",
+          );
+        p.append(gaps);
+        const downloads = panel("证据下载");
+        note(
+          downloads,
+          "来自本实验 Backend 的原始批次以及当前 Braid run 的重建文件。保留完整正文，按原始运行材料管理。",
+        );
+        downloads.append(
+          append(
+            $("div", "links"),
+            link("batches.json", "Backend 批次清单"),
+            link("decoded.json", "OTLP JSON"),
+            link("reconstruction.json", "重建报告"),
+            link("reconstruction.stderr.log", "重建错误"),
+          ),
+        );
+        downloads.append(
+          table(
+            ["源文件", "类型", "字节", "下载"],
+            D.manifest.artifacts.map((a) => [
+              a.source,
+              a.logical_type,
+              a.bytes,
+              link("evidence/" + a.file, a.file),
+            ]),
+          ),
+        );
+        downloads.append(raw(D.manifest, "完整摘要与源文件映射"));
+        p.append(downloads);
+        const batch = panel("Backend 批次");
+        batch.append(
+          table(
+            ["批次", "信号", "接收时间", "字节"],
+            D.batches.map((b) => [
+              link(b.file, String(b.id)),
+              b.signal,
+              new Date(b.received_at * 1000).toISOString(),
+              b.bytes,
+            ]),
+          ),
+        );
+        p.append(batch);
+      }
+      const renderers = {
+        overview,
+        sessions,
+        objects,
+        traces,
+        metrics,
+        logs,
+        evidence,
+      };
+      show(location.hash.slice(1));
+      window.addEventListener("hashchange", () => show(location.hash.slice(1)));
+    </script>
+  </body>
+</html>

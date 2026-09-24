@@ -36,3 +36,15 @@ Factory 的四个独立 variant 已共用 `core.archive_sessions`，因此只在
 实时模型链路的异步关联、五秒采集成本及 provider 尾部收集没有新的真实模型运行证据。历史有效样本没有原生 compaction 或分支；另找到的两份父子清单共引用 8 个原生文件，但文件已不存在，无法进行子代理全文往返验收。这些边界保留未验证，后续若开展模型实验，应在该实验授权与矩阵中明确覆盖；本次不自动启动实验。
 
 实现仍采用每轮读取源文件和单条有界 manifest。极大源清单或单文件片段引用超过 192 KiB 元数据预算时，会保留缺口并报告 partial；需要由真实大运行证明必要性后再分页元数据。Codex 未知 token 字段保持未知，不从工具事件推算。原始产物目录被 Git 忽略，证据不会随源码提交自动分发。
+
+## 后续静态网站生成
+
+用户随后要求制作静态可视化，并明确入口是包含 Braid 的实验 run，数据从 OTLP Backend 获取。已新增 `scripts/braid_telemetry_viewer.py` 与原生 HTML/JS 模板，通过 `otlp_store.list_batches/read_batch` 查询当前 run 的 Backend，再调用 Braid decode/reconstruct。Braid 解码接口提交为 `d5c963f`，使用官方 protobuf 的 serde 支持，保留三信号全部字段。运行方法见[运行说明](../docs/deployment/index.md)。
+
+静态页面通过 resource 识别 Braid 身份，展示全文会话、工具调用定位、Issue/PR/评论/关系、trace 时间轴、按资源与属性区分的指标以及普通日志和证据缺口。不把本地 state/native 当作替代数据源，不跨 runtime 累加累计指标，不把离线 export span 展示成模型执行。源文字按文本渲染；嵌入 JSON 转义 HTML 结束标签，超出 JavaScript 安全整数范围的值以精确字符串呈现，原始文件另供下载。
+
+真实操作产物位于 [braid-otlp-viewer](../runs/braid-otlp-viewer/)，网站入口为 [site/index.html](../runs/braid-otlp-viewer/site/index.html)。8 个 Backend 批次全部字节一致，重建材料摘要与此前往返结果一致；站点包含 9 个会话、168 条原生 entry、2 个 Issue/PR、6 条评论、2 个 span、6 条 metric 记录，证据状态仍为 partial。另读取一个真实 raw Codex 实验的 Backend，正确报告没有 Braid resource，退出码为 1，没有生成空站点。
+
+`cargo build --locked`、格式检查、Braid 的纳秒精度/trace 身份/损坏批次边界检查和既有分片检查通过；Python 与 JavaScript 语法检查通过。Clippy 仍为前述 43 项既存问题。没有新增或运行 Factory 自身测试，也没有启动模型实验。
+
+浏览器交互与视觉验收未完成：浏览器工具的自动安全审查以 URL 策略拒绝打开本地 file:// 页面，禁止通过其他浏览器通道或服务绕过；因此没有以改地址、HTTP 服务或替代浏览器继续打开。交互仍需在允许访问该产物的环境核实，不能将语法和数据核对当成浏览器验收通过。站点与原始收据均已保留。
