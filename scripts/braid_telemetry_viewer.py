@@ -91,6 +91,31 @@ def invoke(braid, arguments, output, stem):
     return process.returncode
 
 
+def render_prose(braid, output, evidence):
+    texts = set()
+    def collect(item):
+        if isinstance(item, dict):
+            for key, child in item.items():
+                if key in ('body', 'text', 'thinking', 'content', 'message') and isinstance(child, str):
+                    texts.add(child)
+                else:
+                    collect(child)
+        elif isinstance(item, list):
+            for child in item:
+                collect(child)
+    collect(evidence)
+    ordered = sorted(texts)
+    with (output / 'markdown.stderr.log').open('w', encoding='utf-8') as stderr:
+        result = subprocess.run([str(braid), 'telemetry', 'render-markdown'],
+                                input=json.dumps(ordered), text=True, stdout=subprocess.PIPE, stderr=stderr)
+    if result.returncode:
+        raise RuntimeError(f'Markdown 渲染失败；见 {output / "markdown.stderr.log"}')
+    rendered = json.loads(result.stdout)
+    if len(rendered) != len(ordered):
+        raise ValueError('Markdown 渲染结果数量不匹配')
+    return dict(zip(ordered, rendered))
+
+
 def generate(run, output, braid, braid_run_id):
     database = run / 'telemetry.sqlite'
     if not database.is_file():
@@ -156,6 +181,7 @@ def generate(run, output, braid, braid_run_id):
             'signals': dict(Counter(b['signal'] for b in batches)), 'manifest': manifest,
             'sessions': list(sessions.values()), 'objects': objects, 'terminal': terminal,
             'diagnostics': diagnostics(decoded, braid_run_id)}
+    data['markdown'] = render_prose(braid, output, [data['sessions'], objects])
     template = Path(__file__).with_suffix('.html').read_text(encoding='utf-8')
     # script[type=application/json] 也会被 HTML parser 的 </script> 提前结束。
     # ponytail: 单站数据嵌入 HTML；真实大型运行超过浏览器内存时改为按会话分页面。

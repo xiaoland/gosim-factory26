@@ -48,3 +48,11 @@ Factory 的四个独立 variant 已共用 `core.archive_sessions`，因此只在
 `cargo build --locked`、格式检查、Braid 的纳秒精度/trace 身份/损坏批次边界检查和既有分片检查通过；Python 与 JavaScript 语法检查通过。Clippy 仍为前述 43 项既存问题。没有新增或运行 Factory 自身测试，也没有启动模型实验。
 
 浏览器交互与视觉验收未完成：浏览器工具的自动安全审查以 URL 策略拒绝打开本地 file:// 页面，禁止通过其他浏览器通道或服务绕过；因此没有以改地址、HTTP 服务或替代浏览器继续打开。交互仍需在允许访问该产物的环境核实，不能将语法和数据核对当成浏览器验收通过。站点与原始收据均已保留。
+
+## 讨论与聊天呈现改版
+
+用户进一步要求接近 GitHub 的 Issue/PR UI 和 chatbot 消息列表。讨论页已改为列表进入详情，提供状态胶囊、Markdown 描述/评论、回复定位、reaction、成员与关联侧栏，以及已记录的合并提交。PR 分页布局参考 [GitHub 官方说明](https://docs.github.com/en/pull-requests/reference/pull-requests)；未采集的完整 commit 历史、Checks 和 Files changed 显式说明缺口，不伪造检查结果或 diff。
+
+会话按用户与助手区分头像和正文区域，思考折叠，工具参数/输出独立呈现，原生会话、模型与压缩记录作为事件分隔；原始 JSON 退到折叠诊断入口。Markdown 复用已有 Comrak，通过 Braid `render-markdown` 批量渲染，原始 HTML 转义，危险链接拒绝，图片替换为附件提示。Braid 支持提交为 `8921293`，没有引入新 Markdown 库。
+
+新版产物为 [github-chat/index.html](../runs/braid-otlp-viewer/github-chat/index.html)，收据为 `runs/braid-otlp-viewer/github-chat-receipt.json`。重新从真实 Backend 生成的 9 个会话、168 条原生 entry、2 个对象和 6 条评论与上一版完全一致，146 段正文完成 Markdown 转换。构建、语法检查及 Braid Markdown 格式/HTML/危险链接边界检查通过；Clippy 仍为 43 项既存问题，没有新增或运行 Factory 测试。前述浏览器 URL 策略限制仍然存在，本轮未声称已通过视觉或交互验收，也未运行新模型实验。

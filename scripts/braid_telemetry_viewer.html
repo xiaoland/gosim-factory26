@@ -495,6 +495,668 @@
           padding: 16px;
         }
       }
+      /* Source Markdown is rendered by Comrak; these styles cover prose, not raw telemetry. */
+      .markdown-body {
+        font-size: 14px;
+        line-height: 1.7;
+        overflow-wrap: anywhere;
+        color: #1f2328;
+      }
+      .markdown-body > :first-child {
+        margin-top: 0;
+      }
+      .markdown-body > :last-child {
+        margin-bottom: 0;
+      }
+      .markdown-body h1,
+      .markdown-body h2 {
+        font-size: 21px;
+        padding-bottom: 9px;
+        border-bottom: 1px solid #d8dee4;
+        margin: 24px 0 16px;
+        letter-spacing: normal;
+      }
+      .markdown-body h3 {
+        font-size: 17px;
+        margin: 20px 0 12px;
+      }
+      .markdown-body p {
+        margin: 0 0 16px;
+      }
+      .markdown-body ul,
+      .markdown-body ol {
+        padding-left: 25px;
+        margin: 0 0 16px;
+      }
+      .markdown-body li + li {
+        margin-top: 4px;
+      }
+      .markdown-body li > p {
+        margin: 8px 0;
+      }
+      .markdown-body blockquote {
+        border-left: 4px solid #d0d7de;
+        color: #656d76;
+        padding: 0 16px;
+        margin: 16px 0;
+      }
+      .markdown-body code {
+        font:
+          12px ui-monospace,
+          SFMono-Regular,
+          monospace;
+        background: #afb8c133;
+        border-radius: 5px;
+        padding: 2px 5px;
+      }
+      .markdown-body pre {
+        background: #f6f8fa;
+        margin: 14px 0;
+        padding: 16px;
+        max-height: 600px;
+        line-height: 1.6;
+      }
+      .markdown-body pre code {
+        background: none;
+        padding: 0;
+        white-space: pre-wrap;
+      }
+      .markdown-body table {
+        display: block;
+        overflow: auto;
+        width: max-content;
+        max-width: 100%;
+        margin: 16px 0;
+      }
+      .markdown-body td,
+      .markdown-body th {
+        border: 1px solid #d0d7de;
+        padding: 7px 13px;
+      }
+      .markdown-body tr:nth-child(2n) {
+        background: #f6f8fa;
+      }
+      .markdown-body input[type="checkbox"] {
+        min-width: 0;
+        width: 13px;
+        height: 13px;
+        margin: 0 6px 0 -18px;
+        padding: 0;
+        accent-color: #1f883d;
+      }
+      .markdown-body hr {
+        height: 2px;
+        background: #d8dee4;
+        border: 0;
+        margin: 24px 0;
+      }
+      .avatar {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: #dde8fb;
+        color: #315c9a;
+        font-size: 11px;
+        font-weight: 700;
+        border: 1px solid #cbd8ed;
+      }
+      .avatar.user {
+        background: #e1f0e8;
+        color: #287357;
+        border-color: #c5dfd1;
+      }
+      .avatar.tool {
+        background: #eef0f4;
+        color: #596477;
+        border-color: #d8dfe8;
+      }
+      .chat-thread {
+        background: #fff;
+        border: 1px solid var(--line);
+        border-radius: 12px;
+        min-width: 0;
+        overflow: hidden;
+      }
+      .chat-thread-header {
+        padding: 20px 26px;
+        border-bottom: 1px solid #e8ecf1;
+      }
+      .chat-thread-header h2 {
+        display: inline-block;
+        margin: 0 12px 8px 0;
+        font-size: 17px;
+      }
+      .chat-thread-header > a {
+        float: right;
+        font-size: 12px;
+      }
+      .chat-thread-header details {
+        margin-top: 5px;
+      }
+      .chat-messages {
+        padding: 10px 26px;
+      }
+      .chat-message {
+        display: flex;
+        align-items: flex-start;
+        gap: 12px;
+        margin: 26px 0;
+      }
+      .chat-main {
+        min-width: 0;
+        max-width: calc(100% - 44px);
+        flex: 1;
+      }
+      .chat-meta {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-size: 12px;
+        margin: 0 0 10px;
+      }
+      .chat-meta .small {
+        font-size: 10px;
+      }
+      .chat-bubble {
+        min-width: 0;
+      }
+      .chat-message.user {
+        flex-direction: row-reverse;
+      }
+      .chat-message.user .chat-main {
+        flex: 0 1 88%;
+      }
+      .chat-message.user .chat-meta {
+        justify-content: flex-end;
+      }
+      .chat-message.user .chat-bubble {
+        background: #edf3fa;
+        border: 1px solid #e1e8f0;
+        border-radius: 15px 3px 15px 15px;
+        padding: 17px 19px;
+      }
+      .chat-message.assistant .chat-bubble {
+        padding: 4px 0;
+      }
+      .chat-message.tool {
+        margin: 15px 0;
+      }
+      .chat-message.tool .chat-meta {
+        margin-bottom: 5px;
+      }
+      .chat-event {
+        position: relative;
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        padding: 8px 12px;
+        margin: 12px 0;
+        color: #798698;
+        font-size: 11px;
+        background: #f8fafc;
+        border-radius: 6px;
+      }
+      .chat-event strong {
+        font-weight: 500;
+      }
+      .chat-event details {
+        width: 100%;
+        margin: 0;
+        text-align: center;
+      }
+      .chat-event details pre {
+        text-align: left;
+      }
+      .chat-event summary {
+        font-size: 10px;
+      }
+      .message-source {
+        margin-top: 10px;
+      }
+      .message-source > summary {
+        font-size: 10px;
+        color: #8a97a8;
+      }
+      .message-source pre {
+        text-align: left;
+      }
+      .chat-thread > .pager {
+        border-top: 1px solid #e8ecf1;
+        padding: 15px 22px;
+        margin: 0;
+      }
+      .thought {
+        border-left: 2px solid #c9d4e2;
+        padding-left: 13px;
+        margin: 0 0 16px;
+      }
+      .thought summary {
+        color: #7c8798;
+        margin-bottom: 8px;
+      }
+      .thought .markdown-body {
+        color: #64748b;
+        font-size: 12px;
+      }
+      .tool-card {
+        border: 1px solid #dce3eb;
+        border-radius: 8px;
+        background: #fafbfc;
+        margin: 10px 0;
+        overflow: hidden;
+      }
+      .tool-heading {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 11px 13px;
+        background: #f3f5f8;
+        list-style: none;
+      }
+      .tool-heading:after {
+        content: "展开";
+        margin-left: auto;
+        font-size: 10px;
+        color: #8490a1;
+      }
+      .tool-card[open] > .tool-heading:after {
+        content: "收起";
+      }
+      .tool-icon {
+        color: #596f91;
+        font-size: 15px;
+      }
+      .tool-error {
+        border-color: #e9b5b5;
+      }
+      .tool-error > .tool-heading {
+        background: #fff0f0;
+        color: #ac2f35;
+      }
+      .tool-card > button {
+        margin: 10px 13px;
+        font-size: 11px;
+        padding: 5px 8px;
+      }
+      .tool-code {
+        border-radius: 0;
+        font:
+          12px/1.6 ui-monospace,
+          SFMono-Regular,
+          monospace;
+        background: transparent;
+        margin: 0;
+        padding: 12px 14px;
+        max-height: 380px;
+      }
+      .tool-field + .tool-field {
+        border-top: 1px solid #e4e9f0;
+      }
+      .tool-field-label {
+        display: block;
+        padding: 10px 14px 0;
+        text-transform: uppercase;
+        font-size: 9px;
+        letter-spacing: 0.06em;
+        color: #6d7d94;
+      }
+      .tool-field .tool-code {
+        padding-top: 6px;
+      }
+      .attachment {
+        display: block;
+        padding: 12px;
+        border: 1px dashed #cbd5e1;
+        border-radius: 6px;
+        color: #64748b;
+        font-size: 12px;
+      }
+      .github-view {
+        background: #fff;
+        border: 1px solid #d0d7de;
+        border-radius: 8px;
+        padding: 24px;
+        color: #1f2328;
+      }
+      .gh-tabs {
+        display: flex;
+        gap: 6px;
+        border-bottom: 1px solid #d0d7de;
+        margin: 0 0 22px;
+        overflow: auto;
+      }
+      .gh-tabs button.gh-tab {
+        background: transparent;
+        border: 0;
+        border-radius: 0;
+        border-bottom: 2px solid transparent;
+        padding: 14px 13px;
+        white-space: nowrap;
+        color: #1f2328;
+      }
+      .gh-tabs button.gh-tab.selected {
+        border-bottom-color: #fd8c73;
+        font-weight: 650;
+      }
+      .gh-tabs button.gh-tab:hover {
+        background: #f6f8fa;
+      }
+      .gh-issue-list {
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .gh-list-header {
+        background: #f6f8fa;
+        padding: 16px;
+        font-size: 13px;
+        font-weight: 600;
+        border-bottom: 1px solid #d0d7de;
+      }
+      .gh-issue-row {
+        display: flex;
+        width: 100%;
+        gap: 14px;
+        align-items: flex-start;
+        border: 0;
+        border-bottom: 1px solid #d8dee4;
+        background: #fff;
+        text-align: left;
+        padding: 17px;
+        color: #1f2328;
+      }
+      .gh-issue-row:last-child {
+        border-bottom: 0;
+      }
+      .gh-issue-row:hover {
+        background: #f6f8fa;
+      }
+      .gh-issue-info {
+        flex: 1;
+        display: grid;
+        gap: 7px;
+      }
+      .gh-issue-info strong {
+        font-size: 15px;
+      }
+      .gh-state-icon {
+        font-size: 20px;
+        line-height: 1;
+      }
+      .gh-state-icon.open {
+        color: #1a7f37;
+      }
+      .gh-state-icon.merged,
+      .gh-state-icon.closed {
+        color: #8250df;
+      }
+      .gh-state-icon.closed-pr {
+        color: #cf222e;
+      }
+      .gh-title {
+        margin: 22px 0;
+      }
+      .gh-title h1 {
+        font-size: 28px;
+        font-weight: 500;
+        line-height: 1.35;
+        letter-spacing: normal;
+      }
+      .gh-number {
+        color: #656d76;
+        font-weight: 300;
+      }
+      .gh-state {
+        border-radius: 20px;
+        padding: 7px 13px;
+        font-weight: 600;
+        font-size: 13px;
+        color: white;
+        background: #656d76;
+      }
+      .gh-state.open {
+        background: #1f883d;
+      }
+      .gh-state.merged,
+      .gh-state.closed {
+        background: #8250df;
+      }
+      .gh-state.closed-pr {
+        background: #cf222e;
+      }
+      .gh-branches {
+        margin: 14px 0 0;
+        font:
+          12px ui-monospace,
+          SFMono-Regular,
+          monospace;
+        color: #596579;
+        overflow-wrap: anywhere;
+      }
+      .gh-detail-layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 215px;
+        gap: 26px;
+      }
+      .gh-timeline {
+        min-width: 0;
+        position: relative;
+      }
+      .gh-timeline-item {
+        display: flex;
+        align-items: flex-start;
+        gap: 14px;
+        position: relative;
+        margin-bottom: 22px;
+      }
+      .gh-timeline-item:before {
+        content: "";
+        position: absolute;
+        left: 15px;
+        top: 33px;
+        bottom: -23px;
+        border-left: 2px solid #d8dee4;
+      }
+      .gh-timeline-item > .avatar {
+        z-index: 1;
+      }
+      .gh-comment {
+        flex: 1;
+        min-width: 0;
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        overflow: hidden;
+      }
+      .gh-comment-header {
+        background: #f6f8fa;
+        border-bottom: 1px solid #d0d7de;
+        padding: 11px 15px;
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        font-size: 12px;
+      }
+      .gh-comment-number {
+        margin-left: auto;
+        color: #656d76;
+      }
+      .gh-comment-content {
+        padding: 18px 20px;
+      }
+      .gh-comment > details:not(.gh-folded-comment) {
+        padding: 0 15px 10px;
+        margin: 0;
+      }
+      .gh-comment > details > summary {
+        font-size: 10px;
+        color: #87929d;
+      }
+      .gh-folded-comment {
+        margin: 0;
+        background: #f6f8fa;
+      }
+      .gh-folded-comment > summary {
+        padding: 15px;
+      }
+      .gh-folded-comment[open] .gh-comment-content {
+        background: white;
+      }
+      .gh-comment .gh-reply {
+        margin: 10px 15px 0;
+        padding: 4px 8px;
+        font-size: 11px;
+        color: #0969da;
+      }
+      .gh-reactions {
+        padding: 0 15px 12px;
+        display: flex;
+        gap: 6px;
+      }
+      .gh-reactions:empty {
+        display: none;
+      }
+      .gh-reaction {
+        font-size: 12px;
+        border: 1px solid #d0d7de;
+        padding: 3px 9px;
+        border-radius: 20px;
+        background: #f6f8fa;
+      }
+      .gh-side-section {
+        padding: 0 0 20px;
+        margin: 0 0 20px;
+        border-bottom: 1px solid #d8dee4;
+        font-size: 12px;
+      }
+      .gh-side-section h3 {
+        font-size: 12px;
+        color: #656d76;
+        margin-bottom: 12px;
+      }
+      .gh-side-section .row {
+        margin-bottom: 9px;
+      }
+      .gh-side-section .avatar {
+        width: 24px;
+        height: 24px;
+        font-size: 9px;
+      }
+      .gh-side-section button {
+        font-size: 11px;
+        margin: 3px 0;
+      }
+      .gh-side-section > span {
+        display: block;
+      }
+      .gh-side-section > .row > span {
+        display: inline-flex;
+      }
+      .gh-merge-box {
+        border: 1px solid #d0d7de;
+        border-radius: 6px;
+        padding: 18px;
+        margin: 20px 0 20px 46px;
+        background: #f6f8fa;
+      }
+      .gh-merge-box.merged {
+        background: #f6f0ff;
+        border-color: #d8c5f4;
+        color: #6639ba;
+      }
+      .gh-merge-box p {
+        margin: 9px 0 0;
+      }
+      .gh-events {
+        margin: 20px 0 20px 46px;
+      }
+      .gh-event {
+        padding: 12px 0;
+        display: flex;
+        gap: 8px;
+        align-items: baseline;
+        font-size: 12px;
+        border-bottom: 1px solid #eaeef2;
+        flex-wrap: wrap;
+      }
+      .gh-event > div {
+        flex: 1;
+        min-width: 120px;
+        overflow-wrap: anywhere;
+      }
+      .event-dot {
+        color: #8794a7;
+      }
+      .gh-readonly {
+        font-size: 12px;
+        color: #656d76;
+        border-top: 1px solid #d8dee4;
+        padding: 20px 0 0;
+        margin: 25px 0 0 46px;
+      }
+      @media (max-width: 1100px) {
+        .gh-detail-layout {
+          grid-template-columns: minmax(0, 1fr) 165px;
+          gap: 18px;
+        }
+        .github-view {
+          padding: 18px;
+        }
+        .gh-comment-content {
+          padding: 15px;
+        }
+        .chat-messages {
+          padding: 10px 17px;
+        }
+      }
+      @media (max-width: 800px) {
+        .gh-detail-layout {
+          grid-template-columns: 1fr;
+        }
+        .gh-sidebar {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 15px;
+        }
+        .gh-title h1 {
+          font-size: 23px;
+        }
+        .gh-timeline-item {
+          gap: 9px;
+        }
+        .gh-timeline-item > .avatar {
+          width: 26px;
+          height: 26px;
+          font-size: 9px;
+        }
+        .gh-timeline-item:before {
+          left: 12px;
+        }
+        .gh-merge-box,
+        .gh-events,
+        .gh-readonly {
+          margin-left: 35px;
+        }
+        .chat-meta {
+          flex-wrap: wrap;
+          gap: 5px;
+        }
+        .chat-messages {
+          padding: 8px 13px;
+        }
+        .chat-thread-header {
+          padding: 17px;
+        }
+        .chat-message.user .chat-main {
+          flex-basis: 100%;
+        }
+      }
     </style>
   </head>
   <body>
@@ -784,62 +1446,310 @@
         if (!list.length) empty(events, "没有可恢复事件");
         p.append(events);
       }
+      function markdown(text) {
+        const box = $("div", "markdown-body");
+        const html = Object.hasOwn(D.markdown || {}, text)
+          ? D.markdown[text]
+          : undefined;
+        if (html === undefined) {
+          box.textContent = text ?? "";
+          return box;
+        }
+        // Only Comrak-generated markup enters this sink; raw source HTML is escaped upstream.
+        const fragment = document.createElement("template");
+        fragment.innerHTML = html;
+        for (const image of fragment.content.querySelectorAll("img")) {
+          image.replaceWith(
+            $(
+              "span",
+              "attachment",
+              "图片附件 · " + (image.alt || "原始记录中查看"),
+            ),
+          );
+        }
+        for (const a of fragment.content.querySelectorAll("a")) {
+          const href = a.getAttribute("href") || "";
+          if (!/^(https?:|mailto:)/i.test(href)) a.removeAttribute("href");
+          else {
+            a.target = "_blank";
+            a.rel = "noopener noreferrer";
+          }
+        }
+        box.append(fragment.content);
+        return box;
+      }
+      function actor(id) {
+        const agent = rows("agent_instances").find((a) => a.agent_id === id);
+        return (
+          agent?.profile_id || (id ? String(id).slice(0, 12) : "未记录作者")
+        );
+      }
+      const avatar = (name, role = "") =>
+        $(
+          "span",
+          "avatar " + role,
+          String(name || "?")
+            .slice(0, 2)
+            .toUpperCase(),
+        );
       function presentation(entry) {
         const m = entry.message || entry.payload || entry;
-        let role = m.role || m.type || entry.type || "unknown";
+        let role = m.role || "event",
+          blocks = [];
+        const type = m.type || entry.type;
         if (
           [
             "toolResult",
             "function_call_output",
             "custom_tool_call_output",
-          ].includes(role)
+          ].includes(m.role || type)
         )
           role = "tool";
-        let parts = [];
-        const blocks = m.content;
-        if (typeof blocks === "string") parts = [blocks];
-        else if (Array.isArray(blocks))
-          parts = blocks.map((b) => {
-            if (typeof b === "string") return b;
-            return (
-              b.text ??
-              b.thinking ??
-              (b.type === "toolCall"
-                ? `工具调用 ${b.name} · ${b.id}\n${pretty(b.arguments)}`
-                : pretty(b))
-            );
+        if (["function_call", "custom_tool_call"].includes(type)) {
+          role = "assistant";
+          blocks.push({
+            type: "toolCall",
+            name: m.name,
+            id: m.call_id || m.id,
+            arguments: m.arguments ?? m.input,
           });
-        if (!parts.length) {
-          if (m.arguments !== undefined)
-            parts = [
-              `工具调用 ${m.name || ""} · ${m.call_id || m.id || ""}\n${typeof m.arguments === "string" ? m.arguments : pretty(m.arguments)}`,
-            ];
-          else if (m.output !== undefined)
-            parts = [
-              typeof m.output === "string" ? m.output : pretty(m.output),
-            ];
-          else if (m.text) parts = [m.text];
-          else parts = [pretty(entry)];
-        }
+        } else if (type === "reasoning") {
+          role = "assistant";
+          blocks = (m.summary || m.content || []).map((b) => ({
+            type: "thinking",
+            thinking: b.text || "",
+          }));
+        } else if (typeof m.content === "string")
+          blocks = [{ type: "text", text: m.content }];
+        else if (Array.isArray(m.content))
+          blocks = m.content.map((b) =>
+            typeof b === "string" ? { type: "text", text: b } : b,
+          );
+        else if (m.output !== undefined)
+          blocks = [
+            {
+              type: "text",
+              text: typeof m.output === "string" ? m.output : pretty(m.output),
+            },
+          ];
+        else if (m.text) blocks = [{ type: "text", text: m.text }];
+        else if (typeof m.message === "string")
+          blocks = [{ type: "text", text: m.message }];
+        const eventNames = {
+          session: "会话开始",
+          session_meta: "会话开始",
+          model_change: "切换模型",
+          thinking_level_change: "调整思考强度",
+          compaction: "上下文压缩",
+          branch_summary: "分支摘要",
+          session_info: "会话信息",
+          turn_context: "轮次上下文",
+        };
+        const eventTitle =
+          eventNames[entry.type] ||
+          (entry.type === "event_msg" ? m.type : entry.type) ||
+          "原生事件";
+        const eventText = [
+          m.provider,
+          m.modelId || m.model,
+          m.thinkingLevel,
+          m.summary,
+        ]
+          .filter((v) => typeof v === "string")
+          .join(" · ");
         return {
           role,
-          text: parts.join("\n\n"),
+          blocks,
+          type,
+          eventTitle,
+          eventText,
           time: entry.timestamp || m.timestamp || "",
           call: m.toolCallId || m.call_id || "",
           id: entry.id || "",
           parent: entry.parentId || "",
+          error: m.isError === true,
+          name: m.toolName || m.name || "",
         };
+      }
+      function toolArguments(arguments_) {
+        let args = arguments_;
+        if (typeof args === "string") {
+          try {
+            args = JSON.parse(args);
+          } catch {
+            return $("pre", "tool-code", args);
+          }
+        }
+        if (!args || typeof args !== "object")
+          return $("pre", "tool-code", String(args ?? "无参数"));
+        const fields = $("div", "tool-fields");
+        for (const [name, value] of Object.entries(args)) {
+          const field = $("div", "tool-field");
+          append(
+            field,
+            $("span", "tool-field-label", name),
+            $(
+              "pre",
+              "tool-code",
+              typeof value === "string" ? value : pretty(value),
+            ),
+          );
+          fields.append(field);
+        }
+        return fields;
+      }
+      function chatCard(e, meta, locate) {
+        const m = e.p;
+        if (m.role === "event") {
+          const event = $("article", "chat-event");
+          append(
+            event,
+            $("div", "event-rule"),
+            $("span", "event-dot", "·"),
+            $("strong", "", m.eventTitle),
+            $("span", "muted small", m.eventText),
+            $("span", "muted small", m.time),
+          );
+          if (m.blocks.length)
+            event.append(
+              markdown(
+                m.blocks.map((b) => b.text || b.thinking || "").join("\n"),
+              ),
+            );
+          event.append(raw(e.m.entry, "事件详情"));
+          return event;
+        }
+        const names = {
+          user: "用户",
+          assistant: meta.profile_id || "助手",
+          tool: m.name || "工具",
+          system: "系统",
+          developer: "开发指令",
+        };
+        const name = names[m.role] || m.role,
+          card = $("article", "chat-message " + m.role),
+          main = $("div", "chat-main");
+        append(
+          card,
+          avatar(
+            m.role === "user" ? "你" : m.role === "tool" ? "⌘" : name,
+            m.role,
+          ),
+          main,
+        );
+        main.append(
+          append(
+            $("header", "chat-meta"),
+            $("strong", "", name),
+            $("span", "muted small", m.time),
+            $("span", "muted small", `#${e.m.sequence}`),
+          ),
+        );
+        const bubble = $("div", "chat-bubble");
+        main.append(bubble);
+        if (m.role === "tool") {
+          const result = $(
+            "details",
+            "tool-card " + (m.error ? "tool-error" : ""),
+          );
+          const summary = append(
+            $("summary", "tool-heading"),
+            $("span", "tool-icon", m.error ? "!" : "✓"),
+            $("strong", "", m.name || "工具结果"),
+            $("span", "muted small", m.error ? "执行报错" : "返回结果"),
+          );
+          result.append(summary);
+          for (const b of m.blocks) {
+            if (typeof b.text === "string")
+              result.append($("pre", "tool-code", b.text));
+            else
+              result.append(
+                append(
+                  $("details", "native-block"),
+                  $("summary", "", `工具附件 · ${b.type || "未知类型"}`),
+                  $("pre", "", pretty(b)),
+                ),
+              );
+          }
+          if (m.call)
+            result.append(button("查看对应调用", () => locate(m.call)));
+          bubble.append(result);
+        } else
+          for (const b of m.blocks) {
+            if (b.type === "thinking" || b.type === "reasoning") {
+              const thought = $("details", "thought");
+              append(
+                thought,
+                $("summary", "", "思考过程"),
+                markdown(b.thinking || b.text || ""),
+              );
+              bubble.append(thought);
+            } else if (
+              ["text", "input_text", "output_text"].includes(b.type) ||
+              typeof b.text === "string"
+            )
+              bubble.append(markdown(b.text || ""));
+            else if (b.type === "toolCall" || b.type === "function_call") {
+              const tool = $("details", "tool-card");
+              tool.open = true;
+              append(
+                tool,
+                append(
+                  $("summary", "tool-heading"),
+                  $("span", "tool-icon", "⌘"),
+                  $("strong", "", b.name || "工具调用"),
+                  $("span", "muted small", "调用"),
+                ),
+                toolArguments(b.arguments),
+              );
+              if (b.id || b.call_id)
+                tool.append(
+                  button("定位调用与结果", () => locate(b.id || b.call_id)),
+                );
+              bubble.append(tool);
+            } else if (
+              [
+                "image",
+                "input_image",
+                "image_url",
+                "audio",
+                "input_audio",
+              ].includes(b.type)
+            )
+              bubble.append(
+                $(
+                  "div",
+                  "attachment",
+                  `附件 · ${b.type} · 原始内容保留在下载记录中`,
+                ),
+              );
+            else
+              bubble.append(
+                append(
+                  $("details", "native-block"),
+                  $("summary", "", `原生内容 · ${b.type || "未知类型"}`),
+                  $("pre", "", pretty(b)),
+                ),
+              );
+          }
+        if (!m.blocks.length)
+          bubble.append($("p", "muted small", "该条目没有文本正文。"));
+        const source = raw(e.m.entry, "原始记录与消息关联");
+        source.classList.add("message-source");
+        main.append(source);
+        return card;
       }
       function sessions(p) {
         const toolbar = $("div", "toolbar"),
-          search = input("搜索全部会话内容", "搜索会话、正文、工具或调用 ID…"),
+          search = input("搜索全部会话内容", "搜索消息、工具或调用 ID…"),
           role = $("select");
         role.setAttribute("aria-label", "角色过滤");
         for (const [v, t] of [
-          ["", "全部角色"],
+          ["", "全部消息与事件"],
           ["user", "用户"],
           ["assistant", "助手"],
           ["tool", "工具"],
+          ["event", "会话事件"],
         ]) {
           const o = $("option", "", t);
           o.value = v;
@@ -849,7 +1759,7 @@
         p.append(toolbar);
         const layout = $("div", "session-layout"),
           list = $("div", "session-list panel"),
-          body = $("div");
+          body = $("div", "chat-thread");
         list.style.padding = "0";
         append(layout, list, body);
         p.append(layout);
@@ -862,6 +1772,12 @@
             search: pretty(m.entry).toLowerCase(),
           })),
         );
+        function locate(id) {
+          search.value = id;
+          role.value = "";
+          page = 0;
+          draw();
+        }
         function draw() {
           const q = search.value.toLowerCase(),
             filtered = cache.map((entries) =>
@@ -878,17 +1794,17 @@
           list.replaceChildren();
           for (const i of indices) {
             const s = D.sessions[i],
-              meta = s.metadata;
-            const b = $(
-              "button",
-              "session-option" + (i === selected ? " active" : ""),
-            );
+              meta = s.metadata,
+              b = $(
+                "button",
+                "session-option" + (i === selected ? " active" : ""),
+              );
             append(
               b,
-              $(
-                "strong",
-                "",
-                `${meta.provider || "unknown"} · ${meta.profile_id || "原生会话"}`,
+              append(
+                $("div", "row"),
+                avatar(meta.profile_id || meta.provider),
+                $("strong", "", meta.profile_id || meta.provider || "原生会话"),
               ),
               $("span", "mono", meta.native_session_id || "身份未知"),
               $(
@@ -906,56 +1822,31 @@
           }
           body.replaceChildren();
           if (selected === undefined) {
-            empty(body, "没有匹配的会话条目");
+            empty(body, "没有匹配的会话消息");
             return;
           }
           const s = D.sessions[selected],
-            meta = s.metadata;
-          const header = panel("会话消息");
-          note(
+            meta = s.metadata,
+            header = $("header", "chat-thread-header");
+          append(
             header,
-            `${meta.provider} / ${meta.native_session_id || "身份未知"}`,
+            $("h2", "", meta.profile_id || "会话"),
+            $(
+              "span",
+              "muted small",
+              `${meta.provider} · ${meta.work_item_kind || "工作项未知"} ${meta.work_item_id || ""}`,
+            ),
+            link("evidence/" + s.file, "下载会话"),
           );
           if (meta.parent_native_session_id)
             note(header, "父会话：" + meta.parent_native_session_id);
-          append(
-            header,
-            link("evidence/" + s.file, "下载原始 JSONL"),
-            raw(meta, "会话身份与工作项关联"),
-          );
+          header.append(raw(meta, "会话身份"));
           body.append(header);
-          const entries = filtered[selected];
-          for (const e of entries.slice(page * 40, (page + 1) * 40)) {
-            const card = $("article", "message " + e.p.role);
-            append(
-              card,
-              append(
-                $("div", "row between"),
-                pill(e.p.role),
-                $("span", "muted small", `#${e.m.sequence} · ${e.p.time}`),
-              ),
-              $("div", "body long", e.p.text),
-            );
-            if (e.p.id || e.p.parent)
-              card.append(
-                $(
-                  "div",
-                  "mono muted",
-                  `entry ${e.p.id} · parent ${e.p.parent || "—"}`,
-                ),
-              );
-            if (e.p.call)
-              card.append(
-                button("定位调用 " + e.p.call, () => {
-                  search.value = e.p.call;
-                  role.value = "";
-                  page = 0;
-                  draw();
-                }),
-              );
-            card.append(raw(e.m.entry));
-            body.append(card);
-          }
+          const entries = filtered[selected],
+            messages = $("div", "chat-messages");
+          for (const e of entries.slice(page * 40, (page + 1) * 40))
+            messages.append(chatCard(e, meta, locate));
+          body.append(messages);
           const prev = button("上一页", () => {
               page--;
               draw();
@@ -989,95 +1880,442 @@
         };
         draw();
       }
+      function objectStatus(item) {
+        const state =
+          rows("work_items")
+            .find((w) => w.node_id === item.node_id)
+            ?.state?.toLowerCase() || "unknown";
+        const merged =
+          state === "merged" ||
+          rows("local_merges").some(
+            (m) => m.pr_node_id === item.node_id && m.lifecycle === "applied",
+          );
+        return merged
+          ? { text: "Merged", kind: "merged", icon: "⑂" }
+          : state === "open"
+            ? { text: "Open", kind: "open", icon: "○" }
+            : state === "closed"
+              ? {
+                  text: "Closed",
+                  kind: item.node_id.startsWith("pr:") ? "closed-pr" : "closed",
+                  icon: "✓",
+                }
+              : { text: state, kind: "unknown", icon: "?" };
+      }
       function objects(p) {
-        const search = input(
-          "搜索 Issue 和 PR",
-          "搜索 Issue / PR 标题、正文或评论…",
-        );
-        p.append(append($("div", "toolbar"), search));
-        const list = $("div");
-        p.append(list);
+        let selected = null,
+          kind = "issue",
+          tab = "conversation";
+        const all = rows("local_items"),
+          search = input("搜索 Issue 和 PR", "搜索标题、正文或评论…"),
+          container = $("div", "github-view");
+        const toolbar = $("div", "toolbar");
+        toolbar.append(search);
+        append(p, toolbar, container);
+        function choose(id) {
+          selected = id;
+          tab = "conversation";
+          draw();
+        }
+        function reactionBar(comment) {
+          const reactions = rows("local_comment_reactions").filter(
+              (r) => r.comment_id === comment.comment_id,
+            ),
+            groups = new Map(),
+            bar = $("div", "gh-reactions");
+          const icons = {
+            thumbsup: "👍",
+            "+1": "👍",
+            thumbsdown: "👎",
+            "-1": "👎",
+            laugh: "😄",
+            hooray: "🎉",
+            confused: "😕",
+            heart: "❤️",
+            rocket: "🚀",
+            eyes: "👀",
+          };
+          for (const r of reactions) {
+            if (!groups.has(r.expression)) groups.set(r.expression, []);
+            groups.get(r.expression).push(actor(r.actor));
+          }
+          for (const [emoji, names] of groups) {
+            const token = $(
+              "span",
+              "gh-reaction",
+              `${icons[emoji] || emoji} ${names.length}`,
+            );
+            token.title = names.join(", ");
+            bar.append(token);
+          }
+          return bar;
+        }
+        function commentCard(c) {
+          const name = actor(c.writer_group),
+            row = $("article", "gh-timeline-item");
+          row.id = "comment-" + c.comment_id;
+          const card = $("div", "gh-comment"),
+            head = $("header", "gh-comment-header");
+          append(
+            head,
+            $("strong", "", name),
+            $("span", "muted small", `评论于 ${c.created_at || "时间未记录"}`),
+            $("span", "gh-comment-number", "#" + c.comment_id),
+          );
+          append(row, avatar(name), card);
+          card.append(head);
+          if (c.reply_to) {
+            const reply = button("↳ 回复 #" + c.reply_to, () =>
+              document
+                .getElementById("comment-" + c.reply_to)
+                ?.scrollIntoView({ block: "center" }),
+            );
+            reply.classList.add("gh-reply");
+            card.append(reply);
+          }
+          const content = $("div", "gh-comment-content");
+          if (c.body === null || c.lifecycle === "deleted")
+            content.append($("p", "muted", "正文已删除或未记录"));
+          else content.append(markdown(c.body));
+          if (c.lifecycle !== "visible" || c.resolved_through) {
+            const folded = $("details", "gh-folded-comment");
+            append(
+              folded,
+              $(
+                "summary",
+                "",
+                `${c.lifecycle}${c.resolved_through ? " · 已解决至 #" + c.resolved_through : ""}${c.hide_reason ? " · " + c.hide_reason : ""} · 展开正文`,
+              ),
+              content,
+            );
+            card.append(folded);
+          } else card.append(content);
+          append(card, reactionBar(c), raw(c, "评论证据"));
+          return row;
+        }
         function draw() {
-          list.replaceChildren();
-          const comments = rows("local_comments");
-          let count = 0;
-          for (const item of rows("local_items")) {
-            const related = comments.filter(
-              (c) => c.work_item_node_id === item.node_id,
-            );
-            if (
-              !pretty([item, related])
-                .toLowerCase()
-                .includes(search.value.toLowerCase())
-            )
-              continue;
-            count++;
-            const state = rows("work_items").find(
-              (w) => w.node_id === item.node_id,
-            );
-            const card = panel(`${item.node_id} · ${item.title}`);
-            card.classList.add("object");
-            card.id = "object-" + item.node_id;
-            card.append(
-              pill(state?.state || "未知"),
-              $("div", "body", item.body ?? "正文已删除或未记录"),
-            );
-            const associations = rows("associations").filter(
-              (a) =>
-                a.issue_node_id === item.node_id ||
-                a.pr_node_id === item.node_id,
-            );
-            for (const a of associations) {
-              const target =
-                a.issue_node_id === item.node_id
-                  ? a.pr_node_id
-                  : a.issue_node_id;
+          container.replaceChildren();
+          if (!selected) {
+            const tabs = $("div", "gh-tabs");
+            for (const [value, label] of [
+              ["issue", "Issues"],
+              ["pr", "Pull requests"],
+            ]) {
               const b = button(
-                `关联 ${target} · ${a.active ? "有效" : "已停用"}`,
+                `${value === "issue" ? "◉" : "⑂"} ${label}  ${all.filter((i) => i.node_id.startsWith(value + ":")).length}`,
                 () => {
-                  search.value = "";
+                  kind = value;
                   draw();
-                  document.getElementById("object-" + target)?.scrollIntoView();
                 },
               );
-              card.append(b);
+              b.classList.add("gh-tab");
+              b.classList.toggle("selected", kind === value);
+              tabs.append(b);
             }
-            for (const c of related.sort(
-              (a, b) => a.comment_id - b.comment_id,
-            )) {
-              const block = $("article", "comment");
+            container.append(tabs);
+            const items = all.filter(
+              (i) =>
+                i.node_id.startsWith(kind + ":") &&
+                pretty([
+                  i,
+                  rows("local_comments").filter(
+                    (c) => c.work_item_node_id === i.node_id,
+                  ),
+                ])
+                  .toLowerCase()
+                  .includes(search.value.toLowerCase()),
+            );
+            const list = $("div", "gh-issue-list"),
+              open = items.filter(
+                (i) => objectStatus(i).kind === "open",
+              ).length;
+            list.append(
+              $(
+                "header",
+                "gh-list-header",
+                `${open} Open · ${items.length - open} Closed / Other`,
+              ),
+            );
+            for (const item of items) {
+              const state = objectStatus(item),
+                row = $("button", "gh-issue-row");
+              row.onclick = () => choose(item.node_id);
+              const info = $("div", "gh-issue-info");
               append(
-                block,
-                append(
-                  $("div", "row"),
-                  $("strong", "", `评论 #${c.comment_id}`),
-                  pill(c.lifecycle),
-                  $("span", "muted small", c.created_at || ""),
+                row,
+                $("span", "gh-state-icon " + state.kind, state.icon),
+                info,
+                $(
+                  "span",
+                  "muted small",
+                  `☷ ${rows("local_comments").filter((c) => c.work_item_node_id === item.node_id).length}`,
                 ),
               );
-              if (c.reply_to)
-                block.append($("p", "mono", "回复 #" + c.reply_to));
-              block.append($("div", "body", c.body ?? "正文已删除或未记录"));
-              block.append(raw(c, "评论身份、解决与隐藏状态"));
-              card.append(block);
+              append(
+                info,
+                $("strong", "", item.title),
+                $(
+                  "span",
+                  "muted small",
+                  `#${item.node_id.split(":")[1]} · ${state.text}${item.state_reason ? " · " + item.state_reason : ""}`,
+                ),
+              );
+              list.append(row);
             }
-            const attached = {
-              object: item,
-              state,
-              merges: rows("local_merges").filter(
-                (m) => m.pr_node_id === item.node_id,
-              ),
-              associations,
-              reactions: rows("local_comment_reactions").filter((r) =>
-                related.some((c) => c.comment_id === r.comment_id),
-              ),
-            };
-            card.append(raw(attached, "对象、合并、关联与 reaction"));
-            list.append(card);
+            if (!items.length) empty(list, "没有匹配的工作项");
+            container.append(list);
+            return;
           }
-          if (!count) empty(list, "没有匹配的 Issue / PR");
+          const item = all.find((i) => i.node_id === selected);
+          if (!item) {
+            selected = null;
+            draw();
+            return;
+          }
+          const status = objectStatus(item),
+            isPr = item.node_id.startsWith("pr:"),
+            comments = rows("local_comments")
+              .filter((c) => c.work_item_node_id === selected)
+              .sort((a, b) => a.comment_id - b.comment_id),
+            merges = rows("local_merges").filter(
+              (m) => m.pr_node_id === selected,
+            ),
+            relations = rows("associations").filter(
+              (a) => a.issue_node_id === selected || a.pr_node_id === selected,
+            );
+          const back = button(
+            "← " + (isPr ? "Pull requests" : "Issues"),
+            () => {
+              kind = isPr ? "pr" : "issue";
+              selected = null;
+              draw();
+            },
+          );
+          container.append(back);
+          const title = $("header", "gh-title");
+          title.append(
+            append(
+              $("h1"),
+              $("span", "", item.title),
+              $("span", "gh-number", " #" + item.node_id.split(":")[1]),
+            ),
+          );
+          title.append(
+            append(
+              $("div", "row"),
+              $(
+                "span",
+                "gh-state " + status.kind,
+                `${status.icon} ${status.text}`,
+              ),
+              $(
+                "span",
+                "muted",
+                `${comments.length} 条评论 · 修订 ${item.revision ?? "未知"}`,
+              ),
+            ),
+          );
+          if (isPr)
+            title.append(
+              $(
+                "p",
+                "gh-branches",
+                `${item.head_ref || "head 未记录"} → ${rows("local_run")[0]?.delivery_ref || "交付分支未记录"}`,
+              ),
+            );
+          container.append(title);
+          const tabs = $("div", "gh-tabs");
+          for (const [id, label] of isPr
+            ? [
+                ["conversation", "Conversation"],
+                ["commits", "Commits"],
+                ["checks", "Checks · 未采集"],
+                ["files", "Files changed · 未采集"],
+              ]
+            : [["conversation", "Conversation"]]) {
+            const b = button(
+              label + (id === "conversation" ? " " + comments.length : ""),
+              () => {
+                tab = id;
+                draw();
+              },
+            );
+            b.classList.add("gh-tab");
+            b.classList.toggle("selected", id === tab);
+            tabs.append(b);
+          }
+          container.append(tabs);
+          const layout = $("div", "gh-detail-layout"),
+            timeline = $("div", "gh-timeline"),
+            sidebar = $("div", "gh-sidebar");
+          append(layout, timeline, sidebar);
+          container.append(layout);
+          if (tab === "conversation") {
+            const description = append(
+              $("article", "gh-timeline-item"),
+              avatar(isPr ? "PR" : "IS"),
+            );
+            const card = append(
+              $("div", "gh-comment"),
+              append(
+                $("header", "gh-comment-header"),
+                $("strong", "", "工作项描述"),
+                $("span", "muted small", item.node_id),
+              ),
+              append(
+                $("div", "gh-comment-content"),
+                markdown(item.body ?? "正文已删除或未记录"),
+              ),
+            );
+            description.append(card);
+            timeline.append(description);
+            for (const c of comments) timeline.append(commentCard(c));
+            for (const merge of merges) {
+              const box = $(
+                "div",
+                "gh-merge-box " +
+                  (merge.lifecycle === "applied" ? "merged" : ""),
+              );
+              append(
+                box,
+                $(
+                  "strong",
+                  "",
+                  merge.lifecycle === "applied"
+                    ? "⑂ Pull request 已合并"
+                    : "⑂ 合并状态：" + merge.lifecycle,
+                ),
+                $(
+                  "p",
+                  "mono",
+                  merge.merge_commit || merge.head_commit || "提交未记录",
+                ),
+              );
+              if (merge.error) box.append($("p", "body", merge.error));
+              box.append(raw(merge, "合并证据"));
+              timeline.append(box);
+            }
+            const events = rows("events")
+              .filter((e) => e.work_item_node_id === selected)
+              .sort((a, b) =>
+                String(a.observed_at).localeCompare(String(b.observed_at)),
+              );
+            if (events.length) {
+              const eventsBox = $("details", "gh-events");
+              eventsBox.append(
+                $("summary", "", `${events.length} 条 Braid 状态与调度事件`),
+              );
+              for (const event of events)
+                eventsBox.append(
+                  append(
+                    $("div", "gh-event"),
+                    $("span", "event-dot", "·"),
+                    $("div", "", event.reference || event.kind),
+                    $("time", "muted small", event.observed_at),
+                  ),
+                );
+              timeline.append(eventsBox);
+            }
+            timeline.append(
+              $(
+                "div",
+                "gh-readonly",
+                "这是从 OTLP 恢复的只读讨论。原有修改、隐藏和删除状态已保留。",
+              ),
+            );
+          } else if (tab === "commits") {
+            const refs = [];
+            if (item.ready_commit)
+              refs.push(["Ready commit", item.ready_commit]);
+            for (const m of merges)
+              for (const [name, key] of [
+                ["Base", "base_commit"],
+                ["Head", "head_commit"],
+                ["Merge", "merge_commit"],
+              ])
+                if (m[key]) refs.push([name, m[key]]);
+            timeline.append(
+              $(
+                "p",
+                "muted",
+                "已采集的提交引用；Backend 未包含完整 commit 历史或 diff。",
+              ),
+            );
+            timeline.append(table(["用途", "Commit"], refs));
+          } else
+            empty(
+              timeline,
+              tab === "checks"
+                ? "OTLP Backend 未采集 CI Checks，无法判断是否通过。"
+                : "OTLP Backend 未采集文件 diff，无法还原 Files changed。",
+            );
+          function side(title, ...children) {
+            const section = $("section", "gh-side-section");
+            section.append($("h3", "", title));
+            append(section, ...children);
+            sidebar.append(section);
+          }
+          const assignments = rows("assignments").filter(
+              (a) => a.work_item_node_id === selected,
+            ),
+            agents = rows("agent_instances").filter((a) =>
+              assignments.some((v) => v.assignment_id === a.assignment_id),
+            );
+          const members = [...new Set(agents.map((a) => a.profile_id))];
+          side(
+            "参与成员",
+            ...(members.length
+              ? members.map((name) =>
+                  append($("div", "row"), avatar(name), $("span", "", name)),
+                )
+              : [$("span", "muted", "未记录")]),
+          );
+          side(
+            "关联工作项",
+            ...(relations.length
+              ? relations.map((a) => {
+                  const target =
+                      a.issue_node_id === selected
+                        ? a.pr_node_id
+                        : a.issue_node_id,
+                    b = button(`${target}${a.active ? "" : " · 已停用"}`, () =>
+                      choose(target),
+                    );
+                  return b;
+                })
+              : [$("span", "muted", "没有关联记录")]),
+          );
+          side(
+            "状态",
+            $("span", "", status.text),
+            $("p", "muted small", item.state_reason || "未记录状态原因"),
+          );
+          const participants = [
+            ...new Set(comments.map((c) => actor(c.writer_group))),
+          ];
+          side(
+            "讨论参与者",
+            append(
+              $("div", "row"),
+              ...participants.map((name) => {
+                const a = avatar(name);
+                a.title = name;
+                return a;
+              }),
+            ),
+          );
+          side(
+            "原始证据",
+            raw(
+              { item, assignments, agents, merges, relations },
+              "查看对象记录",
+            ),
+          );
         }
-        search.oninput = draw;
+        search.oninput = () => {
+          selected = null;
+          draw();
+        };
         draw();
       }
       function traces(p) {

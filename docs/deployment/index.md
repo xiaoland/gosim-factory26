@@ -144,8 +144,9 @@ python3 scripts/braid_telemetry_viewer.py "$LOCAL_ASSETS/runs/example-results/<r
 ```
 
 输出目录必须尚不存在；打开其中的 `index.html`，或将整个目录交给普通静态文件服务器。
-站点不需要 Python 服务、CDN 或网络请求，提供会话全文搜索、角色过滤、工具调用定位、Issue/PR 与评论、关联和合并信息，以及 trace 时间轴、指标序列、普通运行日志和完整性缺口。
-纳秒时间与超出 JavaScript 安全整数范围的值保留精确文字。未知原生记录可展开查看 JSON，原文按文本显示，不执行其中的 HTML。
+站点不需要 Python 服务、CDN 或网络请求。Issue/PR 提供接近 GitHub 的列表和详情、Open/Closed/Merged 状态、Markdown 正文、评论回复与 reaction、成员和关联侧栏，以及已记录的合并提交；完整 commit 历史、Checks 和 Files changed 未采集时明确显示缺失。
+会话按用户/助手聊天列表展示，思考过程折叠，工具调用参数与结果为独立卡片；原生会话、模型变更和压缩信息保留为事件分隔。支持全文搜索、角色过滤、工具调用定位，同时保留 trace 时间轴、指标序列、普通运行日志和完整性缺口。
+Markdown 使用 Braid 已有 Comrak 渲染，原生 HTML 转义，图片仅显示附件提示，不加载远端内容。纳秒时间与超出 JavaScript 安全整数范围的值保留精确文字；原始 JSON 留在折叠诊断入口，完整源文件仍可下载。
 
 `--braid <二进制>` 可指定配套新版 Braid。一个实验包含多个 Braid run 时，用 `--braid-run-id` 明确选择；没有 Braid resource 时报告错误，不生成冒充成功的空站点。
 生成过程保存 `batches.json`、原始 `otlp/`、`decoded.json`、`evidence/` 及重建错误，页面内容全部来自本次 Backend 查询。
