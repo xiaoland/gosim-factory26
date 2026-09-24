@@ -15,6 +15,7 @@ from native_browser import install as install_browser
 
 ROOT = Path(__file__).resolve().parent
 CONFIG = raw_main.CONFIG
+MAX_PI_CONTINUATIONS = 8
 ROLES = {
     "explorer": ("glm-5.3-flash", "Read the public requirements and current application. Return concrete findings; do not edit files."),
     "executor": ("glm-5.3-flash", "Implement one bounded part of the application. Coordinate files with the parent and validate the result."),
@@ -155,12 +156,19 @@ def run(requirements, output):
     watcher = Thread(target=child_events, args=(native, evidence, stop), daemon=True)
     watcher.start()
     try:
-        code, terminal = raw_main.stream(command, output, env, instruction, evidence,
-                                         LogExporter(evidence, backend, "glm-5.3-flash"),
-                                         send_stdin=backend == "codex")
+        exporter = LogExporter(evidence, backend, "glm-5.3-flash")
+        for continuation in range(MAX_PI_CONTINUATIONS + 1 if backend == "pi" else 1):
+            code, terminal = raw_main.stream(command, output, env, instruction, evidence,
+                                             exporter, send_stdin=backend == "codex",
+                                             append=continuation > 0)
+            if backend != "pi" or code != 0 or terminal != "length" or continuation == MAX_PI_CONTINUATIONS:
+                break
+            command[-1] = ("上一轮模型输出达到长度上限。继续当前会话中未完成的实现工作；"
+                           "不要重新阅读整份需求。先完成必要代码，再验证并交付应用。")
         completed = code == 0 and terminal == ("stop" if backend == "pi" else "turn.completed")
         raw_main.write_json(evidence / "entry-result.json", {
-            "status": "completed" if completed else "failed", "exit_code": code, "terminal": terminal})
+            "status": "completed" if completed else "failed", "exit_code": code,
+            "terminal": terminal, "continuations": continuation})
         return 0 if completed else 1
     except BaseException as exc:
         raw_main.write_json(evidence / "entry-result.json", {

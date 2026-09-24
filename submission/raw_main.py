@@ -48,8 +48,9 @@ def prompt(requirements, output):
 不得读取、搜索或使用外部验收测试、benchmark 实现、参考应用及历史评分。可以安装应用依赖，但不要 push、发布或修改外部系统。无需询问人工；常规歧义自行判断并在最终说明中记录。"""
 
 
-def stream(command, cwd, env, instruction, evidence, exporter, send_stdin=False):
-    with (evidence / "events.jsonl").open("w") as events, (evidence / "stderr.log").open("w") as stderr:
+def stream(command, cwd, env, instruction, evidence, exporter, send_stdin=False, append=False):
+    mode = "a" if append else "w"
+    with (evidence / "events.jsonl").open(mode) as events, (evidence / "stderr.log").open(mode) as stderr:
         process = subprocess.Popen(command, cwd=cwd, env=env, stdin=subprocess.PIPE if send_stdin else subprocess.DEVNULL,
                                    stdout=subprocess.PIPE, stderr=stderr, text=True,
                                    start_new_session=True)

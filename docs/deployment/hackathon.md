@@ -17,6 +17,7 @@ python3 scripts/hackathon_gateway.py --python /home/yyh/.local/bin/python3.12 --
 ```
 
 每个包的原生会话和 stderr 留在交付工作区 `.arc/hackathon/`；[raw_otlp.py](../../submission/raw_otlp.py) 将根进程及子代理会话事件作为 OTLP logs 上报。上报错误也保存在该目录，不改变生成终态。
+Pi 主会话若以模型输出长度上限 `length` 结束，会在同一 session 上最多续跑 8 次，原始事件继续追加；达到上限仍未自然结束时保留失败状态。其他终态不自动重试。
 
 主办方赛事页面提供“Download all requirements” ZIP，同时包含 `hackathon--github`、`hackathon--sheet` 的 `requirements.yaml` 和参考图。2026-09-24 下载快照的 SHA256 为 `9884f23ea10c3dfeee170d1eed57966c8fce9a5ce18a0ac43b3d7942eba8c414`；WSL 的原 ZIP 位于 `factory26-official-local/arcbench-hackathon-requirements.zip`，两题提取到 `platform-inputs/hackathon/{github,sheet}/requirements/`，各自的 `source.json` 记录逐文件哈希。ZIP 不包含 Playwright 评测测试。
 
