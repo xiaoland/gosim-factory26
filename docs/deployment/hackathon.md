@@ -18,4 +18,6 @@ python3 scripts/hackathon_gateway.py --python /home/yyh/.local/bin/python3.12 --
 
 每个包的原生会话和 stderr 留在交付工作区 `.arc/hackathon/`；[raw_otlp.py](../../submission/raw_otlp.py) 将根进程及子代理会话事件作为 OTLP logs 上报。上报错误也保存在该目录，不改变生成终态。
 
-正式矩阵需在 `platform-inputs/hackathon/<task>/` 放入官方公开需求、测试与来源哈希，再通过 [arc_matrix.py](../../scripts/arc_matrix.py) 的 `--case hackathon/<task>` 建立作业，传入网关生成的 `gateway.env`，使用 `--separate-evaluation`。本地 [Runner 适配器](../../scripts/arc_bench_adapter.py) 先生成应用，再对冻结源码评分。2026-09-24 的本地官方资产只有 Lite/Web，官网 API 返回“系统维护”；缺少 Hackathon 两题输入时无法启动有效本地评分。不要用 Lite/Web 或自拟题替代正式结果。
+主办方赛事页面提供“Download all requirements” ZIP，同时包含 `hackathon--github`、`hackathon--sheet` 的 `requirements.yaml` 和参考图。2026-09-24 下载快照的 SHA256 为 `9884f23ea10c3dfeee170d1eed57966c8fce9a5ce18a0ac43b3d7942eba8c414`；WSL 的原 ZIP 位于 `factory26-official-local/arcbench-hackathon-requirements.zip`，两题提取到 `platform-inputs/hackathon/{github,sheet}/requirements/`，各自的 `source.json` 记录逐文件哈希。ZIP 不包含 Playwright 评测测试。
+
+用 [arc_matrix.py](../../scripts/arc_matrix.py) 指定 `--case hackathon/github --case hackathon/sheet --requirements-only --separate-evaluation`，并传入四个冻结 ZIP、官方 Runner、镜像、自购网关的 `gateway.env` 与容器可达的 OTLP 宿主地址，即可通过 [Runner 适配器](../../scripts/arc_bench_adapter.py) 运行本地生成和部署。无测试时结果的 `mode` 是 `requirements-only`、`score` 是 `null`；`completed` 只表示 Agent 入口成功、生成应用具备标准布局、Runner 完成部署，不代表任何官方得分。官方本地 Runner 明确支持省略 `--tests-dir` 并将评测标记为 `skipped`。需要计分时必须另取同一赛题的官方测试，再用有测试的两阶段模式对冻结应用评分，不能用 Lite/Web 测试代替。

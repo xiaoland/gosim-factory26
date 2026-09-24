@@ -124,7 +124,7 @@ def run(args):
         elif args.env_file:
             model_args = ["--env-file", str(args.env_file)]
         if args.separate_evaluation and not args.prepare_only:
-            if args.noop_script is None:
+            if not args.requirements_only and args.noop_script is None:
                 raise ValueError("--noop-script is required for separate evaluation")
             generation = workspace / "official-generation"
             instrumented = instrument_entry(args.agent, workspace / 'observed-agent')
@@ -147,6 +147,20 @@ def run(args):
                           "image_id": image_id, "error": "Agent generation did not produce a complete application"}
                 result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
                 return 1
+            if args.requirements_only:
+                upstream = generation / "local-result.json"
+                runner_result = json.loads(upstream.read_text()) if upstream.is_file() else None
+                complete = (generation_code == 0 and runner_result is not None and
+                            runner_result.get("evaluation_status") == "skipped" and
+                            runner_result.get("container_exit_code") == 0)
+                result = {"schema_version": 1, "status": "completed" if complete else "failed",
+                          "mode": "requirements-only", "generation_exit_code": generation_code,
+                          "generation": entry_result, "image_id": image_id,
+                          "evaluation": runner_result, "score": None}
+                if not complete:
+                    result["error"] = "local Runner did not complete generation and deployment"
+                result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+                return 0 if complete else 1
             frozen = source_hash(app)
             no_op = workspace / "frozen-evaluator.zip"
             with ZipFile(no_op, "w") as archive:
@@ -161,8 +175,9 @@ def run(args):
             loaded_hash = json.loads(witness.read_text())["sha256"] if witness.is_file() else None
         else:
             official = workspace / "official"
-            command = base + ["--agent", str(args.agent), "--tests-dir", str(args.tests),
-                              "--workspace", str(official)] + model_args
+            command = base + ["--agent", str(args.agent), "--workspace", str(official)] + model_args
+            if args.tests is not None:
+                command += ["--tests-dir", str(args.tests)]
             if args.prepare_only:
                 command.append("--prepare-only")
             else:
@@ -211,7 +226,8 @@ def main():
     parser.add_argument("--runner", type=Path, required=True)
     parser.add_argument("--agent", type=Path, required=True)
     parser.add_argument("--requirements", type=Path, required=True)
-    parser.add_argument("--tests", type=Path, required=True)
+    parser.add_argument("--tests", type=Path)
+    parser.add_argument("--requirements-only", action="store_true")
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--competition", required=True)
     parser.add_argument("--task", required=True)
@@ -224,6 +240,10 @@ def main():
                         help="generate without tests, then score the frozen application with a no-op agent")
     parser.add_argument("--noop-script", type=Path)
     args = parser.parse_args()
+    if args.requirements_only != (args.tests is None):
+        parser.error("--requirements-only requires --tests to be omitted, and vice versa")
+    if args.requirements_only and not args.separate_evaluation:
+        parser.error("--requirements-only requires --separate-evaluation")
     return run(args)
 
 
