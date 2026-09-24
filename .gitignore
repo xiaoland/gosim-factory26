@@ -16,3 +16,6 @@ AGENTS.local.md
 
 .adapter/
 .bootstrap/
+
+# Private local API credentials; never package or commit.
+.secrets/

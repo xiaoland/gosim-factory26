@@ -3,6 +3,7 @@
 本文维护运行、证据查询和恢复操作。
 产品规则见 [PRD](../prd/index.md)，组件责任与终态含义见[技术说明](../product-tdd/index.md)，开发准备见 [CONTRIBUTING](../../CONTRIBUTING.md)。
 实验选择以当次任务与冻结清单为准；文中的历史观测不代表平台或机器此刻的状态。
+Hackathon 四配置的 WSL 构建与运行见 [原生 Hackathon 运行说明](hackathon.md)。
 
 ## 参赛包与平台边界
 
