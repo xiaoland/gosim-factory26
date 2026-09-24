@@ -21,7 +21,9 @@ python3 scripts/hackathon_gateway.py --python /home/yyh/.local/bin/python3.12 --
 ```
 
 每个包的原生会话和 stderr 留在交付工作区 `.arc/hackathon/`；[raw_otlp.py](../../submission/raw_otlp.py) 将根进程及子代理会话事件作为 OTLP logs 上报。上报错误也保存在该目录，不改变生成终态。
-Pi 主会话若以模型输出长度上限 `length` 结束，会在同一 session 中继续，原始事件追加保存并记录续跑次数；不另设次数上限，直到自然结束、报错或运行被停止。其他终态不自动重试。Codex 子代理并发采用原生默认值，不额外写死为 4。agent-browser 默认按原生会话隔离；手动调用时采用本 run 的默认会话，也允许显式指定原生命令的 session、profile 和 CDP 参数。
+Pi 主会话若以模型输出长度上限 `length` 结束，会在同一 session 中继续，原始事件追加保存并记录续跑次数；不另设次数上限，直到自然结束、报错或运行被停止。其他终态不自动重试。Codex 子代理并发采用原生默认值，不额外写死为 4。
+
+运行入口直接使用运行时提供的 agent-browser，仅设置 Chrome 路径和本 run 的 `AGENT_BROWSER_SOCKET_DIR`。单个浏览任务可用默认会话；同一 run 内并行操作不同页面时，各任务显式使用不同的 `--session <name>`，每条命令沿用该名称。交接浏览任务时传递会话名，即可保留页面与登录状态；浏览器会话不绑定 Pi/Codex 的 Agent 身份。原生 profile、CDP 等参数仍可直接使用，连接外部浏览器时由调用者决定共享范围。
 
 主办方赛事页面提供“Download all requirements” ZIP，同时包含 `hackathon--github`、`hackathon--sheet` 的 `requirements.yaml` 和参考图。2026-09-24 下载快照的 SHA256 为 `9884f23ea10c3dfeee170d1eed57966c8fce9a5ce18a0ac43b3d7942eba8c414`；WSL 的原 ZIP 位于 `factory26-official-local/arcbench-hackathon-requirements.zip`，两题提取到 `platform-inputs/hackathon/{github,sheet}/requirements/`，各自的 `source.json` 记录逐文件哈希。ZIP 不包含 Playwright 评测测试。
 

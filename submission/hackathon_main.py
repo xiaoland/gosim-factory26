@@ -10,7 +10,6 @@ from threading import Event, Thread
 
 import raw_main
 from raw_otlp import LogExporter
-from native_browser import install as install_browser
 
 
 ROOT = Path(__file__).resolve().parent
@@ -85,14 +84,15 @@ def run(requirements, output):
     tmp = evidence / "tmp"
     home.mkdir(exist_ok=True)
     tmp.mkdir(exist_ok=True)
-    browser_bin = install_browser(evidence, ROOT / "runtime")
     backend = CONFIG["backend"]
     svc = CONFIG["svc"]
     env = dict(os.environ)
     for name in ("OPENAI_API_KEY", "FACTORY26_API_KEY", "GLM_API_KEY", "KIMI_API_KEY", "DEEPSEEK_API_KEY"):
         env.pop(name, None)
     env.update(HOME=str(home), XDG_CONFIG_HOME=str(home / ".config"), TMPDIR=str(tmp),
-               PATH=str(browser_bin) + ":" + str(ROOT / "runtime/bin") + ":/usr/local/bin:/usr/bin:/bin",
+               PATH=str(ROOT / "runtime/bin") + ":/usr/local/bin:/usr/bin:/bin",
+               AGENT_BROWSER_EXECUTABLE_PATH=str(ROOT / "runtime/bin/chromium"),
+               AGENT_BROWSER_SOCKET_DIR=str(evidence / "b"),
                NODE_PATH=str(ROOT / "runtime/node_modules"), PI_OFFLINE="1")
     browser_skill = home / ".agents/skills/agent-browser"
     browser_skill.parent.mkdir(parents=True, exist_ok=True)

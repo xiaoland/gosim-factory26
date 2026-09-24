@@ -10,10 +10,9 @@ import time
 import uuid
 
 from agent_support import (save, phase, hashes, digest, logged, cleanup_workspace,
-                           copy_application, copy_skill, deliver)
+                           copy_application, copy_skill, deliver, browser_executable)
 from braid_runtime import initialize_repository, load_delivery, export_delivery, archive_state
 from core import archive_sessions
-from browser import browser_wrapper
 
 HERE = Path(__file__).resolve().parent
 VARIANT = 'pi-team-deepseek'
@@ -27,7 +26,6 @@ def native_files(work, runtime, skills, base_url, visual_url):
     本次运行只替换连接与路径；包内有哪些技能和会话启用哪些技能分别选择。
     """
     profiles, bindings = [], {}
-    browser_wrapper(work, work.parent.name, runtime)
     for source in sorted((HERE/'agents').iterdir()):
         profile = json.loads((source/'profile.json').read_text())
         folder = work/'capabilities'/profile['id']
@@ -136,7 +134,10 @@ def generate(args):
     env = dict(os.environ, HOME=str(work/'home'), TMPDIR=str(work/'tmp'),
                XDG_CONFIG_HOME=str(work/'home/.config'), PI_CODING_AGENT_DIR=str(native),
                PI_TELEMETRY='0', PI_OFFLINE='1', FACTORY26_API_KEY=key,
-               PATH=str(work/'bin')+os.pathsep+str(runtime/'bin')+os.pathsep+os.environ.get('PATH',''))
+               AGENT_BROWSER_EXECUTABLE_PATH=str(browser_executable(runtime)),
+               AGENT_BROWSER_SOCKET_DIR=str(work/'b'),
+               PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
+                                     str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
     if visual_url:
         env['FACTORY26_VISUAL_API_KEY'] = os.environ['VISUAL_API_KEY']
     begin = time.monotonic()

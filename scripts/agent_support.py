@@ -4,6 +4,17 @@ from pathlib import Path
 
 RESERVED={".arc", ".git", "requirements", ".factory26"}
 
+def browser_executable(runtime):
+    """Locate Chrome in a portable runtime or the native npm installation cache."""
+    packaged = runtime/'bin/chromium'
+    if packaged.is_file():
+        return packaged
+    pattern = 'chrome-*/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' if platform.system()=='Darwin' else 'chrome-*/chrome'
+    binaries = list((runtime/'.agent-browser/browsers').glob(pattern))
+    if len(binaries) != 1:
+        raise RuntimeError(f'expected one installed Chrome in {runtime}; run runtime.py prepare')
+    return binaries[0]
+
 def copy_skill(source, destination):
     """Copy the published skill resources, excluding repository maintenance files.
 

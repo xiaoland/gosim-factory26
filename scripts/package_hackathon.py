@@ -38,7 +38,6 @@ def package(runtime, backend, svc, output):
         "hackathon_models.json": "submission/hackathon_models.json",
         "raw_main.py": "submission/raw_main.py",
         "raw_otlp.py": "submission/raw_otlp.py",
-        "native_browser.py": "submission/native_browser.py",
     }.items()})
     digest = hashlib.sha256(json.dumps({name: hashlib.sha256(path.read_bytes()).hexdigest()
                                       for name, path in files.items()}, sort_keys=True).encode()).hexdigest()

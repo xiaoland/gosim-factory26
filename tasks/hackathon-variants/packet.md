@@ -53,8 +53,20 @@ WSL `check_output_budget.py` 通过新网关实际调用三模型各自 Chat/Res
 
 用户明确要求“不设置，允许无限”，并要求检查过度的安全边界、配置、校验与错误耦合。这里可实现的含义是本地不附加输出上限；供应商默认值和模型上下文仍存在。已停止仍在等待的 128K 补跑控制器 922565。Pi descriptor 不再写 `maxTokens`；网关删除三个输出长度参数，连同 Pi 隐式添加的 16K 一起移除，且不再依赖参赛包的模型配置。新网关位于 `hackathon-gateway-defaults`，端口 4012，启动 PID 928330。三模型 × Chat/Responses 六次真实请求均 HTTP 200、回答 391，合计 618 tokens；LiteLLM 发请求前的六条上游参数记录均无输出长度字段。原始证据在 WSL `provider-defaults-evidence/` 与该网关的 `request-metadata.jsonl`，可重现脚本是隔离目录下 `check_provider_defaults.py`。
 
-本次检查覆盖 Hackathon 入口、网关、浏览器包装器，以及 local_experiment→ARC 矩阵→Runner 适配器路径，并非全仓审计。已删除设施的 64 并发上限、Codex 的额外 4 子代理并发限制、Pi 的 8 次 length 续跑上限、ARC 赛题白名单及自动套用的历史测试数量；无测试生成不再要求 `--separate-evaluation`。正常输入符号链接由快照复制目标内容，目录产物归档保留链接。浏览器包装器保留默认会话隔离，但不再强制原生会话 ID 或禁止原生 session/profile/CDP 参数；入口不再拒绝 HTTPS 网关。
+本次检查覆盖 Hackathon 入口、网关、浏览器包装器，以及 local_experiment→ARC 矩阵→Runner 适配器路径，并非全仓审计。已删除设施的 64 并发上限、Codex 的额外 4 子代理并发限制、Pi 的 8 次 length 续跑上限、ARC 赛题白名单及自动套用的历史测试数量；无测试生成不再要求 `--separate-evaluation`。正常输入符号链接由快照复制目标内容，目录产物归档保留链接。浏览器包装器在本轮先放开原生 session/profile/CDP 参数，随后按下节决定删除；入口不再拒绝 HTTPS 网关。
 
 保留凭据文件权限、网关与 OTLP 身份、run 路径归属、输入身份、冻结应用身份和真实完成状态检查，这些分别防止实际凭据泄露、跨运行写入或把未完成评测当结果。当前 OTLP 接收器的 16MiB 请求大小限制仍保留：它监听容器可达地址并一次性读入内存；放开这个边界需要同步改变存储读取方式。没有改动独立维护的 Braid/SVC 或旧 raw 基线。除上述真实 API 调用外，其余清理以调用路径审查验证，未运行 Factory 测试或包 smoke；完整 benchmark 终态仍待取得。
 
-旧 128K 网关实例已停止。WSL 四份新包 `{pi,codex}-{base,svc}-defaults.zip` 均已完成；补跑控制器 PID 933108 改用 `hackathon-gateway-defaults/gateway.env`，不再传多余的 `separate_evaluation=True`。首轮结束后的 length 补跑清单为 `hackathon-pi-defaults-matrix.json`，结果目录为 `runs/hackathon-pi-defaults-20260924`，日志为 `hackathon-pi-defaults-controller.log`。原首轮八个 job 仍保留原参数，新策略的结果单独记录。
+旧 128K 网关实例已停止。WSL 四份新包 `{pi,codex}-{base,svc}-defaults.zip` 均已完成；当时补跑控制器 PID 933108 改用 `hackathon-gateway-defaults/gateway.env`，不再传多余的 `separate_evaluation=True`。这个尚未开跑的等待控制器现已由下节 952583 替代，网关仍使用供应商默认输出长度。原首轮八个 job 仍保留原参数，新策略的结果单独记录。
+
+## 浏览器隔离简化（2026-09-24）
+
+用户追问各 variant 的 `browser.py` 是否必要。复查时四个 `variants/pi-team-*/browser.py` 内容完全相同，均从 Pi/Codex session ID 派生浏览器身份、重写 HOME，并禁止原生 session/profile/CDP 选项；上一轮仅放开了 Hackathon 的 `submission/native_browser.py`。共享 `harness/skills/agent-browser/SKILL.md` 当时仍保留禁止覆盖 session 的指令，与已放开的 Hackathon 行为不一致。
+
+冻结 agent-browser 0.38.1 自带会话隔离、`--session` 和 `session id --scope worktree`；无需自建浏览器会话管理。Braid 独立的 PI_CODING_AGENT_DIR/CODEX_HOME 只管理 Agent 配置，不自动决定 agent-browser session；同一环境下多个并行浏览任务使用默认 session 仍会相互影响。依据：https://agent-browser.dev/sessions 及运行时包内 `skill-data/core/references/session-management.md`。
+
+用户回复“请处理”，授权实施上述简化。已删除四份 `variants/pi-team-*/browser.py` 和 `submission/native_browser.py`，移除导入、生成包装脚本和打包引用。运行入口直接设置本 run 的 socket 目录与 Chrome 路径；共享 `agent_support.browser_executable` 只解析便携运行时或原生 npm 安装缓存的 Chrome 文件，不管理会话。共享 skill 改为单任务使用默认会话、并行浏览任务显式命名 session、交接时传递名称；删除绑定原生 Agent ID、重写每个浏览会话 HOME、禁止 session/profile/CDP 参数的约束。
+
+WSL 直接操作冻结运行时的 agent-browser：不提供 Pi/Codex ID，两个 session 并行打开 agent-browser 官网首页和 sessions 文档，各自后续 `get url` 保留原页面；改变 `PI_SESSION_ID` 后仍能通过原 session 名继续读取相同页面。两会话已关闭，原始命令输出在 `factory26-official-local/browser-native-evidence/{home,sessions}.jsonl`。这是原生浏览器实际操作证据，没有启动新的模型任务，也没有运行 Factory 测试或包 smoke；完整 benchmark 尚未结束。
+
+WSL 四份 `{pi,codex}-{base,svc}-native-browser.zip` 已重新冻结。包内入口和 skill 的 SHA256 与当前源码一致，均不含 `native_browser.py`；四包 SHA256 记录在 `browser-native-evidence/packages.json`。已停止旧等待控制器 933108，新控制器 PID 952583 使用这些新包和 `hackathon-gateway-defaults/gateway.env`。它等待首轮 PID 904226 结束后，只补跑 length 失败的 Pi case，最多 4 并发；清单为 `hackathon-pi-native-browser-matrix.json`，结果目录为 `runs/hackathon-pi-native-browser-20260924`，日志为 `hackathon-pi-native-browser-controller.log`。首轮及其冻结包保持原样。
