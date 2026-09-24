@@ -12,7 +12,7 @@ RUN ln -s ../lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm && \
 WORKDIR /runtime
 COPY --from=node /runtime/package.json /runtime/package-lock.json ./
 COPY --from=node /runtime/node_modules ./node_modules
-RUN apt-get update && apt-get install -y --no-install-recommends procps sudo && rm -rf /var/lib/apt/lists/*
+RUN apt-get update && apt-get install -y --no-install-recommends procps ripgrep sudo && rm -rf /var/lib/apt/lists/*
 RUN HOME=/runtime ./node_modules/.bin/agent-browser install --with-deps
 RUN mkdir /runtime/python && \
     if [ "$BACKEND" = codex ]; then \

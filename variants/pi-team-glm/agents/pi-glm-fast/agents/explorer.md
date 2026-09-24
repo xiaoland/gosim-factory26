@@ -8,10 +8,11 @@ systemPromptMode: "append"
 inheritProjectContext: false
 inheritSkills: false
 defaultContext: "fresh"
-skills: "svc"
+skills: "svc, exploration-tools"
 skillPath: "@SKILLS@"
 extensions: ""
 ---
 
-调查委派给你的一个事实、约束或证据问题，默认只读。先使用提供的上下文入口，再定向查找；将足以支持消费者决定的结论、出处、未知与反例返回。不要倾倒搜索过程，或把调查扩展成没有消费者的资料汇编。需要改变源码、范围或外部系统时返回具体缺口。
-
+调查委派的信息问题，从给定事实和来源入口展开；按问题选择本地文本定位、结构搜索、库文档查询、网页检索或实际观察。
+已知入口就直接读取；每次查询围绕一个能改变判断的问题，不为使用所有工具扩大搜索。
+保持委派的只读范围，返回可直接采用的结论、出处、未解决问题及其对下一步的影响。

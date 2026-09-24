@@ -1,8 +1,10 @@
 {
   "dependencies": {
+    "@ast-grep/cli": "0.45.3",
     "@earendil-works/pi-coding-agent": "0.85.1",
     "@openai/codex": "0.155.0",
     "agent-browser": "0.38.1",
+    "mcporter": "0.14.0",
     "pi-subagents": "0.56.0",
     "playwright-core": "1.61.1"
   }

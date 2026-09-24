@@ -23,9 +23,11 @@ def package(runtime, backend, svc, output):
     executable = [name for name, path in files.items() if path.stat().st_mode & 0o111]
     if f"runtime/bin/{backend}" not in executable or "runtime/bin/agent-browser" not in executable:
         raise ValueError("runtime lacks native commands")
-    skill = ROOT / "harness/skills/agent-browser"
-    files.update({"skills/agent-browser/" + str(path.relative_to(skill)): path
-                  for path in skill.rglob("*") if path.is_file()})
+    for name in ("agent-browser", "exploration-tools"):
+        skill = ROOT / "harness/skills" / name
+        files.update({f"skills/{name}/" + str(path.relative_to(skill)): path
+                      for path in skill.rglob("*") if path.is_file()})
+    files.update({"agents/" + path.name: path for path in (ROOT / "submission/agents").glob("*.md")})
     if svc:
         skill = ROOT / "sources/svc"
         for part in ("SKILL.md", "references", "assets"):

@@ -54,6 +54,16 @@
 若为 executor 新增技能，同时考虑它的 skills/skillPath 与包中的材料；不因此改动其他 variant 的角色。
 原生接口与精确字段以这些文件及所选原生客户端为准，不在文档另维护全套配置副本。
 
+内部角色从独立历史开始：Pi 的角色声明 `defaultContext:fresh`，父调用显式传 `context:"fresh"`；`inheritProjectContext` 和 `inheritSkills` 分别控制项目指令与技能发现，不代替历史参数。
+`run.py:native_files` 将所选 SVC Explore、Implementation、Design 章节正文和来源目录装入 explorer、executor、specialist，方法仍以随包分发的 SVC 文件为源。
+`exploration-tools` 的短工具指引直接进入这些角色；executor 与 browser-operator 同时取得 agent-browser 指引，vision 保持给定图片分析职责。
+
+原生 Hackathon 四配置由 `submission/hackathon_main.py` 装配：角色简介用于选角，正文在 `submission/agents/`，`scripts/package_hackathon.py` 收录正文和技能。
+Base/SVC 两组提供相同探索工具；只有 SVC 组装入对应方法及完整技能入口。
+Codex 使用原生 `agents/*.toml`；历史由 spawn 参数控制，按实际工具协议传 `fork_context:false` 或 `fork_turns:"none"`。
+Pi 明确 append 基础系统提示、选定技能并关闭内建角色发现。配置表达意图，实际生效与收益仍须从后续真实会话取证。
+
+
 ## 准备实际需要的依赖
 
 原生工具准备不读取 variant、Corpus 或 benchmark：
@@ -67,6 +77,9 @@ python3 scripts/runtime.py path
 Node/npm 必须已可用；按当前 agent-browser 版本使用 Node 24+。
 相同 lock 复用 `~/.cache/factory26/`，Chrome 由 agent-browser 安装器缓存。
 variant 可以选择其他显式 runtime；共享安装不决定其行为。
+Linux 构建另收录 rg、ast-grep 与 MCPorter：前两者按原生二进制启动，MCPorter 使用 Node 24。
+运行入口将 `MCPORTER_CONFIG` 指向已物化的 `exploration-tools/assets/mcporter.json`，通过公共 Context7/Exa 服务查询；工具指引随同该 skill 分发。
+本轮仅更新构建声明与接线，旧 runtime 和冻结包不会因此具备新工具；下次实验前须从当前 lock 构建新资源。
 
 团队 Harness 另需 Braid 二进制与完整 SVC skill。
 使用现有 `sources/braid`、`sources/svc` 工作树。

@@ -11,4 +11,4 @@ p.add_argument('--runtime',type=Path,required=True)
 p.add_argument('--skills',type=Path,required=True)
 a=p.parse_args()
 assemble(HERE,a.stage,a.runtime,a.skills,
-         skills=('svc','ponytail','impeccable','agent-browser'))
+         skills=('svc','ponytail','impeccable','agent-browser','exploration-tools'))

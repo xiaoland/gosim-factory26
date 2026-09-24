@@ -16,33 +16,45 @@ ROOT = Path(__file__).resolve().parent
 CONFIG = raw_main.CONFIG
 MODEL_INFO = json.loads((ROOT / "hackathon_models.json").read_text())
 ROLES = {
-    "explorer": ("glm-5.3-flash", "Read the public requirements and current application. Return concrete findings; do not edit files."),
-    "executor": ("glm-5.3-flash", "Implement one bounded part of the application. Coordinate files with the parent and validate the result."),
-    "browser_operator": ("deepseek-v4-flash-vision-exp", "Inspect reference images and the running application with agent-browser. Report screenshots, console errors and reproducible behavior. Do not read benchmark tests."),
-    "advisor": ("kimi-k3", "Give a read-only independent judgment on requirements, design or a failure. Identify decisive evidence and risks."),
+    "explorer": ("glm-5.3-flash", "调查影响当前决定的信息问题，返回有来源、可采用的结论。"),
+    "executor": ("glm-5.3-flash", "完成一个有明确效果范围和反馈入口的局部实现或修复。"),
+    "browser_operator": ("deepseek-v4-flash-vision-exp", "通过图片或实际页面回答视觉、交互或复现问题。"),
+    "advisor": ("kimi-k3", "对问题定义、方案选择或具体失败提供独立判断。"),
 }
 
 
-def write_roles(native, backend, svc, browser_skill, svc_skill):
+def write_roles(native, backend, svc, skills):
     role_dir = native / "agents"
     role_dir.mkdir(parents=True, exist_ok=True)
-    for name, (model, instruction) in ROLES.items():
-        if svc and name != "browser_operator":
-            instruction += " The SVC skill is available for planning and verification when useful."
+    methods = {"explorer": "explore", "executor": "implementation", "advisor": "design"}
+    for name, (model, description) in ROLES.items():
+        instruction = (ROOT / "agents" / f"{name}.md").read_text()
+        selected = ["agent-browser"] if name == "browser_operator" else ["exploration-tools"]
+        if name == "executor":
+            selected.append("agent-browser")
+        # Supply the small tool guides directly; full SVC stays navigable by skill.
+        for skill in selected:
+            source = skills / skill / "SKILL.md"
+            instruction += f"\n工具指引来源：{source}（相对链接基于 {source.parent}）。\n{source.read_text()}"
+        if svc and name in methods:
+            selected.append("svc")
+            source = skills / "svc/references/methods" / methods[name] / "index.md"
+            instruction += f"\nSVC 方法来源：{source}（相对链接基于 {source.parent}）。\n{source.read_text()}"
+            instruction += f"\n按问题查阅完整技能入口：{skills / 'svc/SKILL.md'}。\n"
         if backend == "codex":
             data = (f'name = {json.dumps(name)}\n'
-                    f'description = {json.dumps(instruction)}\n'
+                    f'description = {json.dumps(description)}\n'
                     f'model = {json.dumps(model)}\n'
                     'model_reasoning_effort = "none"\n'
                     f'developer_instructions = {json.dumps(instruction)}\n')
             (role_dir / f"{name}.toml").write_text(data)
         else:
-            skill = svc_skill if svc and name != "browser_operator" else browser_skill if name == "browser_operator" else None
             tools = "read, grep, find, ls, bash, edit, write" if name == "executor" else "read, grep, find, ls, bash"
-            data = (f"---\nname: {name}\ndescription: {instruction}\nmodel: gateway/{model}\n"
-                    f"tools: {tools}\ninheritProjectContext: false\n"
-                    + (f"skillPath: {skill}\nskills: {skill.name}\n" if skill else "")
-                    + f"---\n\n{instruction}\n")
+            data = (f"---\nname: {name}\ndescription: {json.dumps(description)}\nmodel: gateway/{model}\n"
+                    f"tools: {tools}\ninheritProjectContext: false\ninheritSkills: false\n"
+                    'defaultContext: fresh\nsystemPromptMode: append\nextensions: ""\n'
+                    f"skillPath: {json.dumps(str(skills))}\nskills: {', '.join(selected)}\n"
+                    f"---\n\n{instruction}\n")
             (role_dir / f"{name}.md").write_text(data)
 
 
@@ -97,16 +109,22 @@ def run(requirements, output):
     browser_skill = home / ".agents/skills/agent-browser"
     browser_skill.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(ROOT / "skills/agent-browser", browser_skill)
+    exploration_skill = home / ".agents/skills/exploration-tools"
+    shutil.copytree(ROOT / "skills/exploration-tools", exploration_skill)
+    env["MCPORTER_CONFIG"] = str(exploration_skill / "assets/mcporter.json")
     svc_skill = home / ".agents/skills/svc"
     if svc:
         shutil.copytree(ROOT / "skills/svc", svc_skill)
     instruction = raw_main.prompt(requirements, output) + (
-        "\n可调用 explorer、executor、browser_operator、advisor 四种原生子代理：先让 explorer 梳理需求，"
-        "让 advisor 检查关键设计，让 executor 承担有界实现，让 browser_operator 对参考图和运行页面取证。"
+        "\n可调用 explorer、executor、browser_operator、advisor 四种原生子代理。根据当前问题选择直接完成或委派，角色没有固定交接顺序。"
+        "子代理不继承主会话历史；给出目标、必要事实和材料入口、效果与文件边界、可用反馈及返回要求。"
+        "子代理负责局部反馈和修复，你负责整体判断与集成，后续信息通过消息补充。"
         "交互浏览使用 agent-browser；对生成应用可自行用 playwright-core 编写 Playwright 功能检查，"
         "Chrome 路径可由 which chromium 查得。"
         + ("可按需使用 SVC skill；不要把 SVC 文件复制进交付应用。" if svc else "")
     )
+    instruction += ("Pi 委派调用显式设置 context:\"fresh\"。" if backend == "pi" else
+                    "Codex 委派按实际工具协议显式设置 fork_context:false（V1）或 fork_turns:\"none\"（V2），不复制父历史。")
     raw_main.write_json(evidence / "identity.json", {
         "backend": backend, "svc": svc, "models": {name: model for name, (model, _) in ROLES.items()},
         "main_model": "glm-5.3-flash", "gateway_url": gateway,
@@ -126,13 +144,15 @@ def run(requirements, output):
         raw_main.write_json(native / "models.json", {"providers": {"gateway": {
             "baseUrl": gateway, "apiKey": "$GATEWAY_TOKEN", "api": "openai-completions",
             "models": models}}})
-        write_roles(native, backend, svc, browser_skill, svc_skill)
+        write_roles(native, backend, svc, browser_skill.parent)
+        raw_main.write_json(native / "settings.json", {"packages": [], "subagents": {"disableBuiltins": True}})
         env["PI_CODING_AGENT_DIR"] = str(native)
         command = [str(ROOT / "runtime/bin/pi"), "--provider", "gateway", "--model", "glm-5.3-flash",
                    "--thinking", "off", "--mode", "json", "--print", "--no-prompt-templates",
                    "--no-themes", "--no-context-files", "--extension",
                    str(ROOT / "runtime/node_modules/pi-subagents/index.ts"),
-                   "--skill", str(browser_skill / "SKILL.md")]
+                   "--skill", str(browser_skill / "SKILL.md"),
+                   "--skill", str(exploration_skill / "SKILL.md")]
         if svc:
             command += ["--skill", str(svc_skill / "SKILL.md")]
         command += ["--session", str(evidence / "session.jsonl"), instruction]
@@ -140,7 +160,7 @@ def run(requirements, output):
         native = home / ".codex"
         native.mkdir(parents=True)
         env["CODEX_HOME"] = str(native)
-        write_roles(native, backend, svc, browser_skill, svc_skill)
+        write_roles(native, backend, svc, browser_skill.parent)
         (native / "config.toml").write_text(
             'model = "glm-5.3-flash"\nmodel_provider = "gateway"\n'
             'model_reasoning_effort = "none"\nmodel_reasoning_summary = "none"\n'

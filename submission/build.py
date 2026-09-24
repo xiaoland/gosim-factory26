@@ -8,7 +8,7 @@ import shutil
 
 root = Path('/runtime')
 backend = sys.argv[1]
-for dependency in ('@earendil-works/pi-coding-agent', '@openai/codex', 'agent-browser', 'pi-subagents'):
+for dependency in ('@ast-grep/cli', 'mcporter', '@earendil-works/pi-coding-agent', '@openai/codex', 'agent-browser', 'pi-subagents'):
     if not (root / 'node_modules' / dependency).is_dir():
         raise RuntimeError(f'frozen npm dependency missing: {dependency}')
 if not any((root / '.agent-browser/browsers').glob('chrome-*')):
@@ -78,12 +78,16 @@ fontconfig.mkdir(parents=True)
     'export LD_LIBRARY_PATH FONTCONFIG_PATH FONTCONFIG_FILE GSETTINGS_SCHEMA_DIR XDG_DATA_DIRS\n'
     f'exec "$HERE/../{chrome.relative_to(root)}" "$@"\n'
 )
-tools = {name:Path(path) for name in ('ps', 'kill') if (path := shutil.which(name))}
-if set(tools) != {'ps', 'kill'}:
-    raise RuntimeError('procps tools missing in build image')
+tools = {name:Path(path) for name in ('ps', 'kill', 'rg') if (path := shutil.which(name))}
+if set(tools) != {'ps', 'kill', 'rg'}:
+    raise RuntimeError('runtime tools missing in build image')
+ast_grep = root/'node_modules/.bin/ast-grep'
+if not ast_grep.is_file():
+    raise RuntimeError('frozen ast-grep binary is missing')
+tools['ast-grep'] = ast_grep
 tool_library = root/'lib/tools'
 tool_library.mkdir()
-for name, source in dependency_sources(tools.values(), 'procps').items():
+for name, source in dependency_sources(tools.values(), 'runtime tools').items():
     if not platform_library.match(name):
         shutil.copy2(source, tool_library/name)
 tool_executables = root/'libexec'
@@ -96,7 +100,7 @@ for name, source in tools.items():
         'export LD_LIBRARY_PATH\n'
         f'exec "$HERE/../libexec/{name}" "$@"\n'
     )
-commands = [('pi', '@earendil-works/pi-coding-agent'), ('agent-browser', 'agent-browser')]
+commands = [('pi', '@earendil-works/pi-coding-agent'), ('agent-browser', 'agent-browser'), ('mcporter', 'mcporter')]
 if backend == 'codex':
     commands.append(('codex', '@openai/codex'))
 for command, package in commands:

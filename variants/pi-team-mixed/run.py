@@ -42,7 +42,18 @@ def native_files(work, runtime, skills, base_url, visual_url):
             apiKey='$FACTORY26_VISUAL_API_KEY' if visual_url else '$FACTORY26_API_KEY')
         save(template/'models.json', providers)
         for role in (template/'agents').glob('*.md'):
-            role.write_text(role.read_text().replace('@SKILLS@', json.dumps(str(skills))[1:-1]))
+        methods = {'explorer': 'explore', 'executor': 'implementation', 'specialist': 'design'}
+            instruction = role.read_text().replace('@SKILLS@', json.dumps(str(skills))[1:-1])
+            sources = []
+            if role.stem in methods:
+                sources += [skills/'svc/references/methods'/methods[role.stem]/'index.md',
+                            skills/'exploration-tools/SKILL.md']
+            if role.stem in ('executor', 'browser-operator'):
+                sources.append(skills/'agent-browser/SKILL.md')
+            # Keep methods authoritative in the frozen skill, not copied into role sources.
+            for material in sources:
+                instruction += f'\n方法或工具来源：{material}（相对链接基于 {material.parent}）。\n{material.read_text()}'
+            role.write_text(instruction)
         observer = folder/'factory-subagent-observer.ts'
         shutil.copy2(HERE/'extensions/factory-subagent-observer.ts', observer)
         import shlex
@@ -50,7 +61,7 @@ def native_files(work, runtime, skills, base_url, visual_url):
         flags = [str(pi), '--no-extensions', '--no-skills', '--no-prompt-templates', '--no-themes',
                  '--extension', str(runtime/'node_modules/pi-subagents/index.ts'),
                  '--extension', str(observer)]
-        for skill in ('svc', 'ponytail', 'impeccable'):
+        for skill in ('svc', 'ponytail', 'impeccable', 'exploration-tools'):
             flags += ['--skill', str(skills/skill/'SKILL.md')]
         launcher = folder/'pi'
         launcher.write_text('#!/bin/sh\nexec '+shlex.join(flags)+' "$@"\n')
@@ -86,7 +97,7 @@ def generate(args):
     (work/'tmp').mkdir()
     (work/'bin').mkdir()
     skills = work/'skills'
-    for name in ('svc', 'ponytail', 'impeccable', 'agent-browser'):
+    for name in ('svc', 'ponytail', 'impeccable', 'agent-browser', 'exploration-tools'):
         copy_skill(args.skills_root.resolve(strict=True)/name, skills/name)
     source_braid = (args.braid or runtime/'bin/braid').resolve(strict=True)
     shutil.copy2(source_braid, work/'bin/braid')
@@ -137,6 +148,7 @@ def generate(args):
                AGENT_BROWSER_EXECUTABLE_PATH=str(browser_executable(runtime)),
                AGENT_BROWSER_SOCKET_DIR=str(work/'b'),
                PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
+               MCPORTER_CONFIG=str(skills/'exploration-tools/assets/mcporter.json'),
                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
     if visual_url:
         env['FACTORY26_VISUAL_API_KEY'] = os.environ['VISUAL_API_KEY']

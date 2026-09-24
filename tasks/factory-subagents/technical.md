@@ -1,6 +1,6 @@
 # 原生接线与工具取得方案
 
-本页是已通过复核的技术设计，尚未实施；具体实施计划见 plan.md。
+本页是已通过复核的技术设计，已完成源码接线，尚未运行验收；实施范围见 plan.md。
 保持原生 Codex/Pi 子 Agent，不改变 Braid 调度，不加入父历史过滤代理或新的角色框架。
 
 ## 角色内容与分发
@@ -76,6 +76,6 @@ ast-grep 的入口是原生 ELF，必须直接 exec，不能加入现有统一�
 这与旧冻结包存在多个改变，不能用旧新单次得分差直接归因给某一种工具或 SOP。
 
 实施准备已得到 CLI 和真实文档查询证据；原生上下文配置及观察路径见已完成的 rehearsal-context.md。
-目标 Docker 构建尚未发生，准备结果不替代开工确认或真实模型验收。
+目标 Docker 构建尚未发生；按用户决定，实际构建和模型验收留待后续统一安排。
 
 接口来源：MCPorter [README](https://github.com/openclaw/mcporter)、[CLI](https://github.com/openclaw/mcporter/blob/main/docs/cli-reference.md)、[配置](https://github.com/openclaw/mcporter/blob/main/docs/config.md)；Pi 锁定包的 agents/configuration 文档；Codex 固定版本源码见 findings.md。

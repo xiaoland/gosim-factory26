@@ -1,6 +1,6 @@
 # 角色正文与方法来源
 
-本页是已通过设计复核、待实施的内容方案，描述新 Hackathon 四角色；Braid 的 explorer/executor/browser-operator 对应采用同一方法，specialist 对应 advisor，vision 保持原有纯图片职责。
+本页是已通过设计复核并完成接线、待实验的内容方案，描述新 Hackathon 四角色；Braid 的 explorer/executor/browser-operator 对应采用同一方法，specialist 对应 advisor，vision 保持原有纯图片职责。
 不改变模型：explorer/executor 使用 GLM 5.3 Flash，advisor 使用 Kimi K3，browser_operator 使用 DeepSeek V4 Flash Vision Exp。
 Braid 各成员下的既有子模型保持不变，不随 Hackathon 配方切换。
 
