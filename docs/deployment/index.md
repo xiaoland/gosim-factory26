@@ -17,7 +17,7 @@ python3 main.py /path/to/requirements --output-dir /path/to/output
 
 构建需要可用的 Linux x86_64 Docker daemon；`--docker-context` 可省略以使用当前 context。
 脚本只发送指定构建输入，不上传整个开发目录。
-Braid 从当前 `sources/braid` 构建；SVC 从当前 `sources/svc/corpus` 作为技能材料冻结，不构建或安装 CLI；raw Codex 的 LiteLLM Python 依赖用 Linux CPython 3.12 安装到包内目录。
+Braid 从当前 `sources/braid` 构建；SVC 从当前 `sources/svc` 的完整 skill 直接冻结，不构建或安装 CLI；raw Codex 的 LiteLLM Python 依赖用 Linux CPython 3.12 安装到包内目录。
 Node、所选核心、Chrome及其NSS动态模块、常用进程工具与非系统动态库均在构建时安装并随包提供；Pi 需要 Node >=22.19，不能直接使用平台原有 Node 20。
 精确工具版本由 [Dockerfile](../../submission/Dockerfile) 固定，实际文件哈希、源码身份和执行权限写入 `package-manifest.json`。
 npm lock 和 Python 依赖清单随 runtime 保留。
@@ -360,7 +360,8 @@ Corpus 不设内容测试；新 run 仍需独立实验授权。
 [sources.py](../../scripts/sources.py) 记录 HEAD 及未提交、未跟踪文件的源码哈希；Braid 另记录二进制哈希并在生成前验证构建仍匹配。
 SVC 直接归档源码，不需要构建记录。
 历史 run 的 `sources/` 保存其实际源码归档；新 variant 记录实际代码/材料哈希、原生配置与包载荷，旧 runs 不补写新版本。
-[SVC 技能入口](../../harness/skills/svc/SKILL.md) 提供按需导航，方法正文只来自 Corpus；接线不进入 Braid 控制协议。
+[SVC 技能入口](../../sources/svc/SKILL.md) 由 SVC 自身维护，正文在 references，模板在 assets/templates；常用方法从入口直接到达。
+Factory 的 harness/skills/svc 只链接该源码，运行与打包使用通用 skill 复制操作，制品不依赖此链接；接线不进入 Braid 控制协议。
 
 默认 analyze 使用开发 `.venv/bin/svc`；已有 `--svc-source <path>` 可使用具备 PDM 环境的源码工作树作独立诊断，它记录实际 HEAD 和 CLI 源码哈希，不替换运行时 Corpus，也不改写旧分析。
 SVC analysis 是开发工具，分析没有 SVC 注入的原始 core run 也完全有效。

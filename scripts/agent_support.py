@@ -4,6 +4,24 @@ from pathlib import Path
 
 RESERVED={".arc", ".git", "requirements", ".factory26"}
 
+def copy_skill(source, destination):
+    """Copy the published skill resources, excluding repository maintenance files.
+
+    Factory's skills use SKILL.md and the standard resource directories.
+    Materialize source links so the installed skill remains self-contained.
+    """
+    source, destination = Path(source), Path(destination)
+    destination.mkdir(parents=True)
+    shutil.copy2(source/'SKILL.md', destination/'SKILL.md')
+    for name in ('references', 'assets', 'scripts'):
+        if (source/name).is_dir():
+            shutil.copytree(source/name, destination/name)
+    for pattern in ('LICENSE*', 'NOTICE*'):
+        for path in source.glob(pattern):
+            if path.is_file():
+                shutil.copy2(path, destination/path.name)
+
+
 def capture(*args):
     return subprocess.check_output(args,text=True).strip()
 

@@ -37,6 +37,10 @@ raw 基线由 [raw_main.py](../../submission/raw_main.py)独立执行，可直�
 
 ## Braid、原生 Agent 与 SVC
 
+SVC 的技能入口、方法正文和模板由 `sources/svc` 一处维护，标准分发结构为 SKILL.md、references/、assets/。
+Factory 通过技能来源目录取得完整材料；公共文件操作只负责复制标准资源和许可，各 variant 自行选择装入与启用的技能。
+源码运行和打包共用此复制操作，不解析 SVC 内容，不拼装专用 Corpus，也不复制维护者或 CLI 文件。
+
 | 组件 | 拥有的职责 | 不由它决定的内容 |
 | --- | --- | --- |
 | Factory variant | 将任务转换为根 Issue 的 prompt，选择成员及其原生配置，调用 Braid 并交付应用。 | 不代替 LLM 分解每条 requirement。 |

@@ -72,7 +72,7 @@ runs/                    原始运行产物，Git 忽略
 
 ## 开发侧 SVC
 
-开发和 analysis 使用 `.venv/bin/svc` 的完整 Corpus；参赛 Agent 的 skill 材料来自 `sources/svc/corpus`，两者用途与来源不同。
+开发和 analysis 使用 `runtime.py dev-svc --svc-source <完整开发SVC源码>` 安装的 `.venv/bin/svc`；参赛 Agent 直接装载 `sources/svc` 提供的完整 skill，两者用途与来源不同。
 需要文档归属或任务包方法时按需查询 `specs/`、`task-packet/`，不要预读全部 Corpus。
 下面生成导航中的 `svc` 指开发侧 `.venv/bin/svc`，不是参赛 Agent 的工具。
 

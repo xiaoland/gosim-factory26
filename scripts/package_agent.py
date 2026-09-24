@@ -10,6 +10,8 @@ import sys
 import tempfile
 import zipfile
 
+from agent_support import copy_skill
+
 ROOT=Path(__file__).resolve().parents[1]
 
 def bundle_files(root):
@@ -66,7 +68,7 @@ def write_zip(bundle, output, backend, records, capabilities=None):
             raise
 
 
-def assemble(source, destination, runtime, skill_source, svc_corpus, skills):
+def assemble(source, destination, runtime, skill_source, skills):
     """Copy selected files. This boundary does not parse profiles or choose behavior."""
     destination=Path(destination);destination.mkdir(parents=True)
     source=Path(source)
@@ -78,22 +80,18 @@ def assemble(source, destination, runtime, skill_source, svc_corpus, skills):
     for name in ('agent_support.py','braid_runtime.py','core.py'):
         shutil.copy2(ROOT/'scripts'/name,support/name)
     for name in skills:
-        shutil.copytree(Path(skill_source)/name,destination/'skills'/name)
-    if 'svc' in skills:
-        shutil.copytree(svc_corpus,destination/'skills/svc/corpus',
-                        ignore=shutil.ignore_patterns('AGENTS.md','version.json'))
+        copy_skill(Path(skill_source)/name,destination/'skills'/name)
     shutil.copytree(runtime,destination/'runtime',symlinks=True)
     return destination
 
 
 def package(variant, output, docker_context=None, runtime=None, stage=None,
-            skill_source=None, svc_corpus=None):
+            skill_source=None):
     source=ROOT/'variants'/variant
     if source.parent!=ROOT/'variants' or not (source/'build.py').is_file():
         raise ValueError('请选择含 build.py 的独立 variant')
     if output is not None and Path(output).exists(): raise FileExistsError(output)
     skill_source=Path(skill_source or ROOT/'harness/skills').resolve()
-    svc_corpus=Path(svc_corpus or ROOT/'sources/svc/corpus').resolve()
     from runtime import linux
     (ROOT/'runs').mkdir(exist_ok=True)
     with tempfile.TemporaryDirectory(prefix='package-',dir=ROOT/'runs') as temporary:
@@ -105,8 +103,7 @@ def package(variant, output, docker_context=None, runtime=None, stage=None,
             raise ValueError('团队制品需要包含 Braid 的 Linux runtime；参阅 runtime.py linux --braid-source')
         bundle=Path(stage).resolve() if stage else tmp/'bundle'
         subprocess.run([sys.executable,str(source/'build.py'),'--stage',str(bundle),
-                        '--runtime',str(runtime),'--skills',str(skill_source),
-                        '--svc-corpus',str(svc_corpus)],check=True)
+                        '--runtime',str(runtime),'--skills',str(skill_source)],check=True)
         records=json.loads((runtime/'runtime-source.json').read_text()).get('sources',{}) if (runtime/'runtime-source.json').is_file() else {}
         if output is not None:
             write_zip(bundle,Path(output).resolve(),'pi',records,{'variant':variant})
@@ -123,10 +120,9 @@ def main():
     p.add_argument('--runtime',type=Path,help='复用 runtime.py linux 导出的目录')
     p.add_argument('--docker-context')
     p.add_argument('--skills',type=Path)
-    p.add_argument('--svc-corpus',type=Path)
     a=p.parse_args()
     if a.output is None and a.stage is None:p.error('需要 --output 或 --stage')
-    print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills,a.svc_corpus))
+    print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills))
 
 
 if __name__=='__main__':main()

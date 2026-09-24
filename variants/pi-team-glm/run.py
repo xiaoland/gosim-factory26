@@ -10,7 +10,7 @@ import time
 import uuid
 
 from agent_support import (save, phase, hashes, digest, logged, cleanup_workspace,
-                           copy_application, deliver)
+                           copy_application, copy_skill, deliver)
 from braid_runtime import initialize_repository, load_delivery, export_delivery, archive_state
 from core import archive_sessions
 from browser import browser_wrapper
@@ -88,12 +88,8 @@ def generate(args):
     (work/'tmp').mkdir()
     (work/'bin').mkdir()
     skills = work/'skills'
-    shutil.copytree(args.skills_root.resolve(strict=True), skills)
-    if args.svc_corpus:
-        shutil.copytree(args.svc_corpus.resolve(strict=True), skills/'svc/corpus',
-                        dirs_exist_ok=True, ignore=shutil.ignore_patterns('AGENTS.md','version.json'))
-    if not (skills/'svc/corpus').is_dir():
-        raise ValueError('SVC skill 正文未准备；源码运行请显式传入 --svc-corpus')
+    for name in ('svc', 'ponytail', 'impeccable', 'agent-browser'):
+        copy_skill(args.skills_root.resolve(strict=True)/name, skills/name)
     source_braid = (args.braid or runtime/'bin/braid').resolve(strict=True)
     shutil.copy2(source_braid, work/'bin/braid')
     (work/'bin/braid').chmod(0o755)
@@ -191,7 +187,6 @@ def main():
     parser.add_argument('--runtime', type=Path, default=HERE/'runtime')
     parser.add_argument('--braid', type=Path)
     parser.add_argument('--skills-root', type=Path, default=HERE/'skills')
-    parser.add_argument('--svc-corpus', type=Path)
     parser.add_argument('--base-url')
     parser.add_argument('--prepare-only', action='store_true', help='写出真实原生材料和 Braid 请求，不调用模型')
     args = parser.parse_args()

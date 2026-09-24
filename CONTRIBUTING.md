@@ -68,8 +68,9 @@ Node/npm 必须已可用；按当前 agent-browser 版本使用 Node 24+。
 相同 lock 复用 `~/.cache/factory26/`，Chrome 由 agent-browser 安装器缓存。
 variant 可以选择其他显式 runtime；共享安装不决定其行为。
 
-团队 Harness 另需 Braid 二进制与 SVC Corpus。
-使用现有 `sources/braid`、`sources/svc` 工作树，或在以下命令显式传入其他位置。
+团队 Harness 另需 Braid 二进制与完整 SVC skill。
+使用现有 `sources/braid`、`sources/svc` 工作树。
+`harness/skills/svc` 是指向 `sources/svc` 的目录链接；需要不同技能来源时显式传入包含完整技能的 `--skills-root`（运行）或 `--skills`（打包）。
 缺源码时先确认所需上游与本地修改，不让能力解析触发隐式 clone 或切换分支。
 
 ```sh
@@ -102,7 +103,7 @@ RUNTIME=$(python3 scripts/runtime.py path)
 python3 variants/pi-team-mixed/main.py "$REQUIREMENTS" \
   --output-dir runs/dev-mixed --runtime "$RUNTIME" \
   --braid sources/braid/target/debug/braid \
-  --skills-root harness/skills --svc-corpus sources/svc/corpus \
+  --skills-root harness/skills \
   --base-url http://127.0.0.1:9/v1 --prepare-only
 ```
 
@@ -133,6 +134,11 @@ python3 scripts/package_agent.py --variant pi-team-mixed \
 
 raw 打包可直接使用 `package_raw_core.py --runtime <runtime目录>`，不要求先创建团队 ZIP；`--source <历史ZIP>` 只保留为旧资源的读取方式。
 模型和 backend 仍由 raw 命令显式选择。
+
+SVC 自身就是完整 skill：`sources/svc/SKILL.md`、`references/`、`assets/` 共同构成分发材料。
+`copy_skill` 由源码运行和打包共用，复制入口、标准资源目录及许可文件，将来源链接物化为普通文件。
+维护者 AGENTS、仓库文档、CLI 和开发环境不进入 skill。
+每个 variant 独立选择要提供的技能及哪些会话启用它们；没有 SVC 专用正文参数或二次装配。
 
 纯指令、角色与 skill 变化只重新装配文件，不重新安装 npm、Chrome 或 Runner。
 更换真实运行依赖才重建对应资源。
