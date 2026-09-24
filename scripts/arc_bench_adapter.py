@@ -123,7 +123,7 @@ def run(args):
             model_args = ["--env-file", str(env_file)]
         elif args.env_file:
             model_args = ["--env-file", str(args.env_file)]
-        if args.separate_evaluation and not args.prepare_only:
+        if (args.separate_evaluation or args.requirements_only) and not args.prepare_only:
             if not args.requirements_only and args.noop_script is None:
                 raise ValueError("--noop-script is required for separate evaluation")
             generation = workspace / "official-generation"
@@ -242,8 +242,6 @@ def main():
     args = parser.parse_args()
     if args.requirements_only != (args.tests is None):
         parser.error("--requirements-only requires --tests to be omitted, and vice versa")
-    if args.requirements_only and not args.separate_evaluation:
-        parser.error("--requirements-only requires --separate-evaluation")
     return run(args)
 
 

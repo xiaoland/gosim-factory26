@@ -30,8 +30,6 @@ def save_json(path, value):
 
 def snapshot(source, destination):
     source = Path(source).expanduser().resolve(strict=True)
-    if any(item.is_symlink() for item in (source, *source.rglob("*"))):
-        raise ValueError(f"input contains a symbolic link: {source}")
     if source.is_file():
         destination.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, destination)
@@ -122,10 +120,8 @@ def collect_artifacts(run, paths):
             resolved = source.resolve(strict=True)
             if not resolved.is_relative_to(workspace):
                 raise ValueError("artifact must be inside the run workspace")
-            if source.is_symlink() or resolved.is_dir() and any(item.is_symlink() for item in resolved.rglob("*")):
-                raise ValueError("artifact contains a symbolic link")
             if resolved.is_dir():
-                shutil.copytree(resolved, target)
+                shutil.copytree(resolved, target, symlinks=True)
             else:
                 target.parent.mkdir(parents=True, exist_ok=True)
                 shutil.copy2(resolved, target)
@@ -238,8 +234,8 @@ def run_manifest(manifest_path, runs_root, max_parallel=None, listen_host="127.0
     if manifest.get("schema_version") != 1 or not isinstance(manifest.get("jobs"), list) or not manifest["jobs"]:
         raise ValueError("manifest needs schema_version=1 and a nonempty jobs list")
     workers = max_parallel if max_parallel is not None else manifest.get("max_parallel", 1)
-    if not isinstance(workers, int) or not 1 <= workers <= 64:
-        raise ValueError("max_parallel must be in 1..64")
+    if type(workers) is not int or workers < 1:
+        raise ValueError("max_parallel must be a positive integer")
     root = Path(runs_root).expanduser().resolve()
     root.mkdir(parents=True, exist_ok=True)
     processes = Processes()

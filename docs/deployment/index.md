@@ -113,6 +113,7 @@ python3 scripts/local_experiment.py telemetry "$LOCAL_ASSETS/runs/example-result
 ```
 
 `telemetry` 也接受 `--signal`、`--since` 与 `--until`，时间为 Unix 秒；导出的 `.pb` 保持接收时的原始 OTLP protobuf 内容。
+`--max-parallel` 接受任意正整数，设施不另设并发封顶。输入目录中的符号链接在冻结时复制其目标内容；目录产物归档保留内部符号链接，不因常见的 `node_modules/.bin` 链接拒绝整份产物。ARC 矩阵接受输入目录提供的 `COMPETITION/TASK`，不维护赛题白名单或历史测试数量；是否完整评分依据本次 Runner 的终态与计数，适配器的 `--expected-tests` 仅在调用者明确指定时约束数量。
 Braid 的会话重建、静态网站、补采和逐项排障统一见 [Braid 诊断运行手册](braid-diagnostics.md)。
 常用入口为 `make braid-report RUN=<外层实验run目录> OUTPUT=<新网站目录>`，详情见 `make help` 或 `python3 scripts/braid_telemetry_viewer.py --help`。
 外层实验 run 与 Braid run_id 分别保留，不互相替代；接收批次或生成网站成功都不等于诊断证据完整。

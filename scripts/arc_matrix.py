@@ -7,12 +7,6 @@ from pathlib import Path
 import sys
 
 
-EXPECTED_TESTS = {"arc-bench-lite/keep": 32, "arc-bench-lite/bookstack": 34,
-                  "arc-bench-web/12306": 135, "arc-bench-web/bookstack": 34,
-                  "arc-bench-web/ctrip": 125, "arc-bench-web/keep": 32,
-                  "arc-bench-web/prestashop": 87, "arc-bench-web/stackoverflow": 67}
-
-
 def verify_case(base, competition, task, requirements_only=False):
     identity = f"{competition}--{task}"
     source = json.loads((base / "source.json").read_text())
@@ -41,8 +35,6 @@ def verify_case(base, competition, task, requirements_only=False):
 def build(variants, cases, inputs_root, runner, image=None, env_file=None, workers=2,
           prepare_only=False, container_otlp_host="host.docker.internal", separate_evaluation=False,
           requirements_only=False):
-    if requirements_only and not separate_evaluation:
-        raise ValueError("--requirements-only requires --separate-evaluation")
     if not prepare_only and not image:
         raise ValueError("--image is required for a Runner run")
     adapter = Path(__file__).with_name("arc_bench_adapter.py").resolve()
@@ -56,8 +48,9 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
         agent = Path(artifact).expanduser().resolve(strict=True)
         for case in cases:
             competition, separator, task = case.partition("/")
-            if separator != "/" or competition not in ("arc-bench-lite", "arc-bench-web", "hackathon") or not task:
-                raise ValueError(f"case must be arc-bench-lite/TASK, arc-bench-web/TASK or hackathon/TASK: {case}")
+            if separator != "/" or any(not part or part in (".", "..") or Path(part).name != part
+                                       for part in (competition, task)):
+                raise ValueError(f"case must be COMPETITION/TASK: {case}")
             base = Path(inputs_root).expanduser().resolve(strict=True) / competition / task
             if base not in checked:
                 verify_case(base, competition, task, requirements_only)
@@ -85,8 +78,6 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
                 command.append("--prepare-only")
             else:
                 command += ["--image", image]
-                if case in EXPECTED_TESTS:
-                    command += ["--expected-tests", str(EXPECTED_TESTS[case])]
             if separate_evaluation:
                 command += ["--separate-evaluation"]
                 if not requirements_only:

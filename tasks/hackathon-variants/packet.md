@@ -39,7 +39,7 @@ Pi 使用锁定的 `pi-subagents@0.56.0` 原生扩展，角色 Markdown 明确 m
 
 原先 WSL 的 `recover_pi_length.py`（PID 910296）只准备使用上述续跑包；用户指出第二次出现输出长度问题后，已终止这个尚在等待的补跑控制器，避免继续用 16384 预算补跑。首轮原始矩阵继续保持已冻结参数。
 
-## 输出预算根因与修正（2026-09-24）
+## 输出预算根因与 128K 中间修正（2026-09-24，已被下节取代）
 
 用户要求：“输出长度的问题我们之前也遇到过，这是第二次了，我们应该找到一个根本性的解决方案”。定向读取失败 session 发现最后响应 `output=16384`、`reasoning=16376`、`stopReason=length`。这是一次请求的推理耗尽输出预算，不是网络 JSON 截断。冻结 Pi 0.85.1 的 `docs/models.md` 及 `pi-ai/dist/api/simple-options.js` 证明：自定义模型的 `maxTokens` 可省略，但默认仍是 16384；CLI 路径默认从 descriptor 取值，并按剩余上下文扣除安全余量。此前入口和网关同时硬编码 16384，且网关覆盖所有客户端值，根因在接入配置。只加续跑没有修复它。
 
@@ -48,3 +48,13 @@ Pi 使用锁定的 `pi-subagents@0.56.0` 原生扩展，角色 Markdown 明确 m
 WSL `check_output_budget.py` 通过新网关实际调用三模型各自 Chat/Responses 两条路径，共六次均 HTTP 200、回答 391，合计 687 tokens；请求、响应在 `output-budget-evidence/`。这证明接口接受新预算，不证明长任务已经完成或永不截断。新网关 `request-metadata.jsonl` 用于核对客户端与有效输出预算。后续仅对首轮 length 失败的 Pi case 使用新包与新网关补跑，原失败和原参数记录保留。
 
 新 Pi 包已在 WSL 冻结为 `pi-base-output128k.zip`、`pi-svc-output128k.zip`；替换后的等待控制器 PID 922565，日志 `hackathon-pi-output128k-controller.log`。首轮八个 job 结束后，它将使用新网关生成 `hackathon-pi-output128k-matrix.json`，输出到 `runs/hackathon-pi-output128k-20260924`，最多 4 并发，只补跑 length 失败的 Pi case。首轮在跑和排队任务仍属于原始 16K 参数组，不把它们标记为已采用新预算；若后续对照新参数，须显式生成新矩阵。
+
+## 当前决定：由供应商决定输出长度，并清理多余约束
+
+用户明确要求“不设置，允许无限”，并要求检查过度的安全边界、配置、校验与错误耦合。这里可实现的含义是本地不附加输出上限；供应商默认值和模型上下文仍存在。已停止仍在等待的 128K 补跑控制器 922565。Pi descriptor 不再写 `maxTokens`；网关删除三个输出长度参数，连同 Pi 隐式添加的 16K 一起移除，且不再依赖参赛包的模型配置。新网关位于 `hackathon-gateway-defaults`，端口 4012，启动 PID 928330。三模型 × Chat/Responses 六次真实请求均 HTTP 200、回答 391，合计 618 tokens；LiteLLM 发请求前的六条上游参数记录均无输出长度字段。原始证据在 WSL `provider-defaults-evidence/` 与该网关的 `request-metadata.jsonl`，可重现脚本是隔离目录下 `check_provider_defaults.py`。
+
+本次检查覆盖 Hackathon 入口、网关、浏览器包装器，以及 local_experiment→ARC 矩阵→Runner 适配器路径，并非全仓审计。已删除设施的 64 并发上限、Codex 的额外 4 子代理并发限制、Pi 的 8 次 length 续跑上限、ARC 赛题白名单及自动套用的历史测试数量；无测试生成不再要求 `--separate-evaluation`。正常输入符号链接由快照复制目标内容，目录产物归档保留链接。浏览器包装器保留默认会话隔离，但不再强制原生会话 ID 或禁止原生 session/profile/CDP 参数；入口不再拒绝 HTTPS 网关。
+
+保留凭据文件权限、网关与 OTLP 身份、run 路径归属、输入身份、冻结应用身份和真实完成状态检查，这些分别防止实际凭据泄露、跨运行写入或把未完成评测当结果。当前 OTLP 接收器的 16MiB 请求大小限制仍保留：它监听容器可达地址并一次性读入内存；放开这个边界需要同步改变存储读取方式。没有改动独立维护的 Braid/SVC 或旧 raw 基线。除上述真实 API 调用外，其余清理以调用路径审查验证，未运行 Factory 测试或包 smoke；完整 benchmark 终态仍待取得。
+
+旧 128K 网关实例已停止。WSL 四份新包 `{pi,codex}-{base,svc}-defaults.zip` 均已完成；补跑控制器 PID 933108 改用 `hackathon-gateway-defaults/gateway.env`，不再传多余的 `separate_evaluation=True`。首轮结束后的 length 补跑清单为 `hackathon-pi-defaults-matrix.json`，结果目录为 `runs/hackathon-pi-defaults-20260924`，日志为 `hackathon-pi-defaults-controller.log`。原首轮八个 job 仍保留原参数，新策略的结果单独记录。

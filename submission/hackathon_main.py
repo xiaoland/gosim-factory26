@@ -15,8 +15,7 @@ from native_browser import install as install_browser
 
 ROOT = Path(__file__).resolve().parent
 CONFIG = raw_main.CONFIG
-MODEL_LIMITS = json.loads((ROOT / "hackathon_models.json").read_text())
-MAX_PI_CONTINUATIONS = 8
+MODEL_INFO = json.loads((ROOT / "hackathon_models.json").read_text())
 ROLES = {
     "explorer": ("glm-5.3-flash", "Read the public requirements and current application. Return concrete findings; do not edit files."),
     "executor": ("glm-5.3-flash", "Implement one bounded part of the application. Coordinate files with the parent and validate the result."),
@@ -76,7 +75,7 @@ def run(requirements, output):
         raise ValueError("public requirements.yaml is missing")
     gateway = os.environ.get("GATEWAY_URL", "")
     token = os.environ.get("GATEWAY_TOKEN", "")
-    if not gateway.startswith("http://") or not token:
+    if not gateway or not token:
         raise ValueError("GATEWAY_URL and GATEWAY_TOKEN are required")
     output.mkdir(parents=True, exist_ok=True)
     evidence = output / ".arc/hackathon"
@@ -117,10 +116,10 @@ def run(requirements, output):
         native = home / ".pi/agent"
         native.mkdir(parents=True)
         models = []
-        for model, limits in MODEL_LIMITS.items():
+        for model, info in MODEL_INFO.items():
             models.append({"id": model, "name": model, "api": "openai-completions",
                            "reasoning": False, "input": ["text", "image"],
-                           **limits,
+                           **info,
                            "compat": {"supportsDeveloperRole": False,
                                       "supportsStrictMode": False,
                                       "maxTokensField": "max_tokens"}})
@@ -147,7 +146,7 @@ def run(requirements, output):
             'model_reasoning_effort = "none"\nmodel_reasoning_summary = "none"\n'
             'approval_policy = "never"\nsandbox_mode = "danger-full-access"\nweb_search = "disabled"\n'
             '[features]\nmulti_agent = true\n[agents]\nenabled = true\n'
-            'max_concurrent_threads_per_session = 4\n[model_providers.gateway]\n'
+            '[model_providers.gateway]\n'
             f'name = "Local gateway"\nbase_url = {json.dumps(gateway)}\n'
             'env_key = "GATEWAY_TOKEN"\nwire_api = "responses"\n')
         command = [str(ROOT / "runtime/bin/codex"), "exec", "--json", "--skip-git-repo-check",
@@ -157,12 +156,14 @@ def run(requirements, output):
     watcher.start()
     try:
         exporter = LogExporter(evidence, backend, "glm-5.3-flash")
-        for continuation in range(MAX_PI_CONTINUATIONS + 1 if backend == "pi" else 1):
+        continuation = 0
+        while True:
             code, terminal = raw_main.stream(command, output, env, instruction, evidence,
                                              exporter, send_stdin=backend == "codex",
                                              append=continuation > 0)
-            if backend != "pi" or code != 0 or terminal != "length" or continuation == MAX_PI_CONTINUATIONS:
+            if backend != "pi" or code != 0 or terminal != "length":
                 break
+            continuation += 1
             command[-1] = ("上一轮模型输出达到长度上限。继续当前会话中未完成的实现工作；"
                            "不要重新阅读整份需求。先完成必要代码，再验证并交付应用。")
         completed = code == 0 and terminal == ("stop" if backend == "pi" else "turn.completed")
