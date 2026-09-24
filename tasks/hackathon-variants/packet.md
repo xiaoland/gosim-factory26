@@ -79,8 +79,12 @@ WSL 四份 `{pi,codex}-{base,svc}-native-browser.zip` 已重新冻结。包内�
 
 官网当前页面明确关闭比赛额度的运行不进入排行榜，API 密钥字段仍标记必填。已使用明确的无模型占位值上传并启动回放评测。评价结果只用于这批已冻结产物，不回传隐藏测试给生成 Agent。
 
-首个包已在 WSL 构建：`codex-base-artifact-replay.zip`，98,764 bytes，SHA256 `3f78afcaa8e79029bc00734b46044f08d8ea77cdf22ef93d87624e717805e6d6`。源 run 分别是 `codex-base-hackathon-github-97ad8b8eec`、`codex-base-hackathon-sheet-67ac86e938`；归档分别包含 12、21 个应用文件。官网保存名称 `codex-base-artifact-replay-20260924`，比赛额度 checkbox 已确认关闭，API key 填写无模型调用占位值。官网显示“Started 2 runs”；GitHub 的官方 run 为 `a11ce90b4611`（https://arc-bench.com/runs/a11ce90b4611），已通过既有网站登录客户端保存两题 API 状态和日志到 `runs/playground/<官方 run id>/`，下一步读取终态及评分。表单保留的 deepseek-v4-flash 只是未使用的模型字段，真实生成模型和成本仍来自本地 run。
+首个包已在 WSL 构建：`codex-base-artifact-replay.zip`，98,764 bytes，SHA256 `3f78afcaa8e79029bc00734b46044f08d8ea77cdf22ef93d87624e717805e6d6`。源 run 分别是 `codex-base-hackathon-github-97ad8b8eec`、`codex-base-hackathon-sheet-67ac86e938`；归档分别包含 12、21 个应用文件。官网保存名称 `codex-base-artifact-replay-20260924`，比赛额度 checkbox 已确认关闭，API key 填写无模型调用占位值。官网显示“Started 2 runs”；GitHub 的官方 run 为 `a11ce90b4611`（https://arc-bench.com/runs/a11ce90b4611），已通过既有网站登录客户端保存两题 API 状态和日志到 `runs/playground/<官方 run id>/`，两题现已终态，结果见下文。表单保留的 deepseek-v4-flash 只是未使用的模型字段，真实生成模型和成本仍来自本地 run。
 
 官网实际接线已通过：GitHub run `a11ce90b4611` 显示 generation agent 成功退出、应用完成安装与构建、HTTP 3000 可达，并进入 100 场景的官方 Playwright 评测。Sheet run 为 `e263fcdbc5aa`（https://arc-bench.com/runs/e263fcdbc5aa），任务历史标记失败，具体原因见下段；失败不得在没有测试计数的情况下当成有效零分。
 
-Sheet 的应用已成功部署，官方 API 明确返回 `billing_mode=self_funded`、`status=FAILED`、`failure_reason=Failed to enumerate Playwright tests before execution`、`passed_count=0`、`failed_count=0`、`result_path=null`。这是测试枚举阶段故障，页面/API 的 0 分不是有效的 0/100 测试结果；标准输出只含回放与应用部署成功记录，没有更具体的枚举错误。GitHub 同为 self_funded，仍在官方评测阶段；当前只等待其终态，不修改应用或测试，也不以附加模型调用尝试改变测试枚举故障。
+Sheet 的应用已成功部署，官方 API 明确返回 `billing_mode=self_funded`、`status=FAILED`、`failure_reason=Failed to enumerate Playwright tests before execution`、`passed_count=0`、`failed_count=0`、`result_path=null`。这是测试枚举阶段故障，页面/API 的 0 分不是有效的 0/100 测试结果；标准输出只含回放与应用部署成功记录，没有更具体的枚举错误。GitHub 同为 self_funded，现已返回官方测试结果；没有修改应用或测试，也没有添加模型调用。
+
+最终结果：GitHub 官方 run `a11ce90b4611` 返回 `score=1.0`、`test_pass_rate=1.0`、1 passed / 99 failed，共 100 项；逐项状态为 1 passed、9 failed、90 timedOut。唯一通过项为 `REQ-3-1: Search for and Locate Repositories - Scenario 2`。官网运行页同时显示 `Playwright results parsed: passed=1, failed=99, score=1.0`。API 整体 status=FAILED 表示存在失败测试，不应与 Sheet 的 0/0 枚举故障混为一类。
+
+两题 `run_duration_seconds` 均为 3，模型 tokens/cost 均为 null；这里只验证冻结应用的官方功能表现，不能用回放耗时或空费用比较生成效率。原始状态、日志、来源映射保存在本机 `runs/playground/{a11ce90b4611,e263fcdbc5aa}/`，并复制到 WSL `factory26-official-local/hosted-artifact-replay-20260924/`。回放工具和说明提交为 `eec8ca8`。本轮两题验证结束：GitHub 得到 1% 官方测试通过率，Sheet 因官方测试枚举故障未取得有效评分；没有启动其他 variant 的官网评测或根据隐藏测试修改生成应用。
