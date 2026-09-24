@@ -193,10 +193,17 @@ def generate(run, output, braid, braid_run_id):
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__)
+    parser = argparse.ArgumentParser(
+        description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='示例：\n  python3 scripts/braid_telemetry_viewer.py /path/to/experiment-run --output /path/to/new-site\n'
+               '  make braid-report RUN=/path/to/experiment-run OUTPUT=/path/to/new-site\n\n'
+               '输入是含 telemetry.sqlite 的外层实验 run，不是 .factory26 下的生成目录。\n'
+               '只读取 Backend，不运行模型或补发遥测；输出目录必须尚不存在。\n'
+               '生成成功仍需查看页面完整性状态。排障见 docs/deployment/braid-diagnostics.md。')
     parser.add_argument('run', type=Path, help='实验 run 目录；从其 OTLP Backend 查询 Braid 数据')
     parser.add_argument('--output', required=True, type=Path, help='尚不存在的静态网站目录')
-    parser.add_argument('--braid', type=Path, default=ROOT / 'sources/braid/target/debug/braid')
+    parser.add_argument('--braid', type=Path, default=ROOT / 'sources/braid/target/debug/braid',
+                        help='宿主 Braid 二进制，需支持 decode/reconstruct/render-markdown（默认 sources/braid/target/debug/braid）')
     parser.add_argument('--braid-run-id', help='同一实验包含多个 Braid run 时明确选择')
     args = parser.parse_args()
     try:

@@ -146,6 +146,11 @@ Cargo/npm/Docker 负责增量复用，不另建通用构建系统。
 
 ## 运行证据与收尾
 
+Braid 运行诊断以外层实验 run 为入口：`make braid-report RUN=<实验目录> OUTPUT=<新网站目录>`。
+[诊断运行手册](docs/deployment/braid-diagnostics.md)说明 Backend 查询、补采、失败产物、组件修改位置及验收边界；`run_viewer.py` 负责实验总览，Braid 网站负责 OTLP 内的会话和协作现场，两者不是同一数据视图。
+修改导出语义时从 `sources/braid/src/telemetry.rs`、`evidence.rs` 开始，修改页面从 `scripts/braid_telemetry_viewer.py`、同名 HTML 模板开始；构建本机 Braid 后用已归档真实 Backend 生成新目录核对，不以重新运行模型作为默认验证手段。
+
+
 原始证据位于生成输出的 `.factory26/<id>`，可用 `factory.py show --run <该目录>`、`analyze --run <该目录>`。
 外层实验状态用 `local_experiment.py status <run目录>`；二者描述不同进程边界，不能用其中一个的成功代替另一个。
 默认 viewer 尚未自动发现所有嵌套运行，使用明确路径，不把缺失展示当成没有执行。

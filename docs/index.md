@@ -12,6 +12,7 @@
 | 组件责任、调用关系、交付与终态语义 | [Product TDD](product-tdd/index.md) |
 | 修改角色/技能、开发依赖与源码运行 | [CONTRIBUTING](../CONTRIBUTING.md) |
 | 打包、执行、证据查询与恢复 | [Deployment](deployment/index.md) |
+| Braid OTLP、会话网站与故障定位 | [Braid 诊断运行手册](deployment/braid-diagnostics.md) |
 
 参数与模型值从各 [variant](../variants/) 和实际制品读取，文档解释意义与修改关系，不维护第二份配置表。
 当前支持与设计意图分开写；更新时改写受影响正文，不靠新增声明覆盖过期推荐。

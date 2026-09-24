@@ -109,49 +109,12 @@ Runner 若将原始会话或失败 DOM 写到自身不可访问的临时目录�
 python3 scripts/local_experiment.py status "$LOCAL_ASSETS/runs/example-results/<run-id>"
 python3 scripts/local_experiment.py telemetry "$LOCAL_ASSETS/runs/example-results/<run-id>" \
   --export "$LOCAL_ASSETS/runs/exported-otlp"
-sources/braid/target/debug/braid telemetry reconstruct \
-  --input "$LOCAL_ASSETS/runs/exported-otlp" --output "$LOCAL_ASSETS/runs/reconstructed-braid"
 ```
 
 `telemetry` 也接受 `--signal`、`--since` 与 `--until`，时间为 Unix 秒；导出的 `.pb` 保持接收时的原始 OTLP protobuf 内容。
-完整重建应导出全部信号，不能只导出 traces；Braid 的原生正文与对象快照在 logs 中。
-`braid telemetry reconstruct` 将消息、对象和完整性报告写入新的输出目录；输入包含多个 Braid 运行时，用 `--run-id <Braid运行ID>` 选择。
-外层实验 ID 与 Braid run_id 各有归属，不互相替代。
-
-当前工作树中的 Braid OTLP 接线在 `braid local` 运行期间采集根会话，Factory 在原生归档后调用 `braid telemetry export` 补采最终文件及 Pi 子代理。
-这依赖配套的新 Braid 二进制与 Factory 代码，历史 ZIP 不会自动获得能力；实时模型链路的验收仍以对应实验记录为准。
-没有 OTEL endpoint 时，Factory 不启动补采进程。
-补采输入为生成目录中的 `telemetry-native.json`，标准 OTEL 环境变量由进程继承，凭据不放入命令参数：
-
-```sh
-braid telemetry export --state <生成目录>/braid-state \
-  --native-manifest <生成目录>/telemetry-native.json
-```
-
-Factory 自动补采最多等待 120 秒；`telemetry-export-status.json` 保留退出码、CLI 的 JSON 报告或本地错误，`telemetry-export.log` 保留输出，Braid 的传输错误另见 `braid-state/telemetry-errors.jsonl`。
-超时、非零退出和归档 gaps 不覆盖应用终态；接收批次也不证明内容完整，应检查重建报告的 missing/partial/unknown 及源端缺口。
-原生正文、工具输出与重建材料可能含敏感内容，按原始运行证据保管。
-
-### Braid 静态诊断网站
-
-输入是包含 Braid 的实验 run 目录。工具通过现有 OTLP Backend 查询该 run 的批次，从 resource 的 `service.name=braid` 和 `braid.run.id` 识别运行，不按 variant 名猜测，也不从本地 `braid-state` 或 `native` 文件补齐数据。
-当前 Backend 是 `otlp_store` 管理的 `run/telemetry.sqlite`；远端运行需在能访问该 Backend 的主机执行生成脚本，再取回整个网站目录。
-
-```sh
-cargo build --locked --manifest-path sources/braid/Cargo.toml
-python3 scripts/braid_telemetry_viewer.py "$LOCAL_ASSETS/runs/example-results/<run-id>" \
-  --output "$LOCAL_ASSETS/runs/braid-diagnostics"
-```
-
-输出目录必须尚不存在；打开其中的 `index.html`，或将整个目录交给普通静态文件服务器。
-站点不需要 Python 服务、CDN 或网络请求。Issue/PR 提供接近 GitHub 的列表和详情、Open/Closed/Merged 状态、Markdown 正文、评论回复与 reaction、成员和关联侧栏，以及已记录的合并提交；完整 commit 历史、Checks 和 Files changed 未采集时明确显示缺失。
-会话按用户/助手聊天列表展示，思考过程折叠，工具调用参数与结果为独立卡片；原生会话、模型变更和压缩信息保留为事件分隔。支持全文搜索、角色过滤、工具调用定位，同时保留 trace 时间轴、指标序列、普通运行日志和完整性缺口。
-Markdown 使用 Braid 已有 Comrak 渲染，原生 HTML 转义，图片仅显示附件提示，不加载远端内容。纳秒时间与超出 JavaScript 安全整数范围的值保留精确文字；原始 JSON 留在折叠诊断入口，完整源文件仍可下载。
-
-`--braid <二进制>` 可指定配套新版 Braid。一个实验包含多个 Braid run 时，用 `--braid-run-id` 明确选择；没有 Braid resource 时报告错误，不生成冒充成功的空站点。
-生成过程保存 `batches.json`、原始 `otlp/`、`decoded.json`、`evidence/` 及重建错误，页面内容全部来自本次 Backend 查询。
-`partial`、解码错误或重建失败会在站点中保留，网站生成成功不代表证据完整；运行期间生成的页面仅覆盖开始查询时已接收的批次。
-单站数据嵌入 HTML 并按会话分页展示，容量仍受浏览器内存约束；原始批次下载包含该实验全部服务，分享整个网站前按运行证据检查内容。
+Braid 的会话重建、静态网站、补采和逐项排障统一见 [Braid 诊断运行手册](braid-diagnostics.md)。
+常用入口为 `make braid-report RUN=<外层实验run目录> OUTPUT=<新网站目录>`，详情见 `make help` 或 `python3 scripts/braid_telemetry_viewer.py --help`。
+外层实验 run 与 Braid run_id 分别保留，不互相替代；接收批次或生成网站成功都不等于诊断证据完整。
 
 ### Raw Pi/Codex 基线
 
