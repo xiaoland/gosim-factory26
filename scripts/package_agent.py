@@ -1,4 +1,4 @@
-"""从当前源码快照构建 Linux x86_64 离线参赛 Agent ZIP。"""
+"""Package one independent Harness; runtime and skill inputs are explicit."""
 import argparse
 import hashlib
 import json
@@ -6,45 +6,11 @@ from pathlib import Path
 import shutil
 import stat
 import subprocess
+import sys
 import tempfile
-import uuid
 import zipfile
 
-import sources
-import profiles
-
-ROOT = Path(__file__).resolve().parents[1]
-SCRIPTS = ('factory.py', 'core.py', 'braid_runtime.py', 'sources.py', 'profiles.py',
-           'native_profiles.py', 'submission.py', 'responses_compat.py')
-
-
-def source_input(name, relative):
-    parts = Path(relative).parts
-    if name == 'braid':
-        return parts[0] in ('Cargo.toml', 'Cargo.lock', 'src', 'migrations', 'config.example.toml')
-    return parts[0] == 'corpus' or (len(parts) > 1 and parts[0] == 'cli' and
-            parts[1] in ('pyproject.toml', 'pdm_build.py', 'README.md', 'src'))
-
-
-def prepare_context(context, records):
-    for name, record in records.items():
-        source = sources.checkout(name).resolve()
-        for relative, digest in record['files'].items():
-            if digest is None or not source_input(name, relative):
-                continue
-            path = source / relative
-            if not path.resolve().is_relative_to(source):
-                raise ValueError(f'源码链接越出仓库：{path}')
-            data = path.read_bytes()
-            if hashlib.sha256(data).hexdigest() != digest:
-                raise RuntimeError(f'复制期间 {name} 源码发生变化：{relative}')
-            target = context / 'sources' / name / relative
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_bytes(data)
-    for name in ('Dockerfile', 'build.py'):
-        shutil.copyfile(ROOT / 'submission' / name, context / name)
-    shutil.copytree(ROOT / 'harness/npm', context / 'harness/npm')
-
+ROOT=Path(__file__).resolve().parents[1]
 
 def bundle_files(root):
     """Materialize internal symlinks; reject escape, cycles, and special files."""
@@ -68,7 +34,6 @@ def bundle_files(root):
                 raise ValueError(f'不支持的参赛包条目：{path}')
 
     yield from walk(root, set())
-
 
 def write_zip(bundle, output, backend, records, capabilities=None):
     bundle = bundle.resolve()
@@ -101,68 +66,67 @@ def write_zip(bundle, output, backend, records, capabilities=None):
             raise
 
 
-def capability_manifest(effective, records):
-    if effective['svc']['source_revision'] != records['svc']['revision']:
-        raise RuntimeError('variant SVC revision differs from packaged source snapshot')
-    return {'variant': effective['variant'], 'effective_digest': effective['effective_digest'],
-            'materials': effective['materials']}
+def assemble(source, destination, runtime, skill_source, svc_corpus, skills):
+    """Copy selected files. This boundary does not parse profiles or choose behavior."""
+    destination=Path(destination);destination.mkdir(parents=True)
+    source=Path(source)
+    for item in source.iterdir():
+        if item.name in {'__pycache__','variant.json','build.py'}: continue
+        if item.is_dir(): shutil.copytree(item,destination/item.name)
+        else: shutil.copy2(item,destination/item.name)
+    support=destination/'support';support.mkdir()
+    for name in ('agent_support.py','braid_runtime.py','core.py'):
+        shutil.copy2(ROOT/'scripts'/name,support/name)
+    for name in skills:
+        shutil.copytree(Path(skill_source)/name,destination/'skills'/name)
+    if 'svc' in skills:
+        shutil.copytree(svc_corpus,destination/'skills/svc/corpus',
+                        ignore=shutil.ignore_patterns('AGENTS.md','version.json'))
+    shutil.copytree(runtime,destination/'runtime',symlinks=True)
+    return destination
 
 
-def package(variant, output, docker_context):
-    output = output.resolve()
-    if output.exists():
-        raise FileExistsError(f'输出文件已存在：{output}')
-    config = profiles.configuration(variant, root=ROOT)
-    backend = config['backend']
-    records = {name: sources.snapshot(name) for name in ('svc', 'braid')}
-    capabilities = capability_manifest(config['effective'], records)
-    identifier = 'factory26-package-' + uuid.uuid4().hex
-    docker = ['docker'] + (['--context', docker_context] if docker_context else [])
-    image = identifier + ':build'
-    container_created = False
-    with tempfile.TemporaryDirectory(prefix=identifier) as temporary:
-        temp = Path(temporary)
-        context = temp / 'context'; context.mkdir()
-        bundle = temp / 'bundle'; bundle.mkdir()
-        prepare_context(context, records)
-        try:
-            subprocess.run(docker + ['build', '--platform', 'linux/amd64', '--label',
-                           f'factory26.package={identifier}', '--build-arg', f'BACKEND={backend}',
-                           '-t', image, str(context)], check=True)
-            subprocess.run(docker + ['create', '--name', identifier, '--label',
-                           f'factory26.package={identifier}', image], check=True)
-            container_created = True
-            subprocess.run(docker + ['cp', f'{identifier}:/runtime', str(bundle / 'runtime')], check=True)
-            for name in records:
-                if sources.snapshot(name) != records[name]:
-                    raise RuntimeError(f'打包期间 {name} 源码发生变化，请重试')
-            shutil.copyfile(ROOT / 'submission/main.py', bundle / 'main.py')
-            (bundle / 'requirements.txt').write_text('')
-            (bundle / 'scripts').mkdir()
-            for name in SCRIPTS:
-                shutil.copyfile(ROOT / 'scripts' / name, bundle / 'scripts' / name)
-            shutil.copytree(ROOT / 'harness', bundle / 'harness')
-            shutil.copytree(ROOT / 'variants' / variant, bundle / 'variants' / variant)
-            config.update(deployment='arcbench')
-            (bundle / 'variants' / variant).mkdir(parents=True, exist_ok=True)
-            (bundle / 'variants' / variant / 'config.json').write_text(json.dumps(config, indent=2) + '\n')
-            write_zip(bundle, output, backend, records, capabilities)
-        finally:
-            if container_created:
-                subprocess.run(docker + ['rm', identifier], check=False)
-            subprocess.run(docker + ['image', 'rm', '--no-prune', image], check=False)
-    print(output)
+def package(variant, output, docker_context=None, runtime=None, stage=None,
+            skill_source=None, svc_corpus=None):
+    source=ROOT/'variants'/variant
+    if source.parent!=ROOT/'variants' or not (source/'build.py').is_file():
+        raise ValueError('请选择含 build.py 的独立 variant')
+    if output is not None and Path(output).exists(): raise FileExistsError(output)
+    skill_source=Path(skill_source or ROOT/'harness/skills').resolve()
+    svc_corpus=Path(svc_corpus or ROOT/'sources/svc/corpus').resolve()
+    from runtime import linux
+    (ROOT/'runs').mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='package-',dir=ROOT/'runs') as temporary:
+        tmp=Path(temporary)
+        if runtime is None:
+            runtime=linux(tmp/'runtime','pi',ROOT/'harness/npm',docker_context,ROOT/'sources/braid')
+        runtime=Path(runtime).resolve(strict=True)
+        if not (runtime/'bin/braid').is_file():
+            raise ValueError('团队制品需要包含 Braid 的 Linux runtime；参阅 runtime.py linux --braid-source')
+        bundle=Path(stage).resolve() if stage else tmp/'bundle'
+        subprocess.run([sys.executable,str(source/'build.py'),'--stage',str(bundle),
+                        '--runtime',str(runtime),'--skills',str(skill_source),
+                        '--svc-corpus',str(svc_corpus)],check=True)
+        records=json.loads((runtime/'runtime-source.json').read_text()).get('sources',{}) if (runtime/'runtime-source.json').is_file() else {}
+        if output is not None:
+            write_zip(bundle,Path(output).resolve(),'pi',records,{'variant':variant})
+        elif stage is None:
+            raise ValueError('需要 --output 或 --stage')
+    return Path(output or stage).resolve()
 
 
 def main():
-    parser = argparse.ArgumentParser(description=__doc__, add_help=False)
-    parser.add_argument('-h', '--help', action='help', help='显示帮助并退出')
-    parser.add_argument('--variant', required=True, help='选择要冻结的 capability variant')
-    parser.add_argument('--output', required=True, type=Path, help='输出 ZIP 路径；拒绝覆盖现有文件')
-    parser.add_argument('--docker-context', help='构建使用的 Docker context 名称')
-    args = parser.parse_args()
-    package(args.variant, args.output, args.docker_context)
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('--variant',required=True)
+    p.add_argument('--output',type=Path)
+    p.add_argument('--stage',type=Path,help='准备可直接执行的目录，不压 ZIP')
+    p.add_argument('--runtime',type=Path,help='复用 runtime.py linux 导出的目录')
+    p.add_argument('--docker-context')
+    p.add_argument('--skills',type=Path)
+    p.add_argument('--svc-corpus',type=Path)
+    a=p.parse_args()
+    if a.output is None and a.stage is None:p.error('需要 --output 或 --stage')
+    print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills,a.svc_corpus))
 
 
-if __name__ == '__main__':
-    main()
+if __name__=='__main__':main()

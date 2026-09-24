@@ -1,8 +1,3 @@
-FROM rust:1.93-bookworm AS braid
-WORKDIR /build/braid
-COPY sources/braid/ ./
-RUN cargo build --locked --release
-
 FROM node:24.10.0-bookworm-slim AS node
 WORKDIR /runtime
 COPY harness/npm/package.json harness/npm/package-lock.json ./
@@ -19,13 +14,18 @@ COPY --from=node /runtime/package.json /runtime/package-lock.json ./
 COPY --from=node /runtime/node_modules ./node_modules
 RUN apt-get update && apt-get install -y --no-install-recommends procps sudo && rm -rf /var/lib/apt/lists/*
 RUN HOME=/runtime ./node_modules/.bin/agent-browser install --with-deps
-COPY sources/svc/ /build/svc/
-RUN python -m pip wheel --wheel-dir /wheels /build/svc/cli && \
+RUN mkdir /runtime/python && \
     if [ "$BACKEND" = codex ]; then \
-      python -m pip install --find-links=/wheels --target /runtime/python sustainable-vibe-coding 'litellm[proxy]==1.102.0'; \
-    else python -m pip install --no-index --find-links=/wheels --target /runtime/python sustainable-vibe-coding; fi && \
+      python -m pip install --target /runtime/python 'litellm[proxy]==1.102.0'; fi && \
     PYTHONPATH=/runtime/python python -m pip freeze --path /runtime/python > /runtime/python-requirements.lock
-COPY --from=braid /build/braid/target/release/braid /runtime/bin/braid
 COPY --from=node /usr/local/bin/node /runtime/bin/node
 COPY build.py /build/build.py
 RUN python /build/build.py "$BACKEND"
+
+FROM rust:1.93-bookworm AS braid
+WORKDIR /build/braid
+COPY sources/braid/ ./
+RUN cargo build --locked --release
+
+FROM runtime AS team
+COPY --from=braid /build/braid/target/release/braid /runtime/bin/braid

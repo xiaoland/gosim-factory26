@@ -1,0 +1,115 @@
+"""Prepare native tools without loading a Harness, Corpus or benchmark."""
+import argparse
+import hashlib
+import json
+from pathlib import Path
+import shutil
+import subprocess
+import tempfile
+import uuid
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def cache_path(lock_dir):
+    lock = Path(lock_dir)/'package-lock.json'
+    return Path.home()/'.cache/factory26'/('runtime-'+hashlib.sha256(lock.read_bytes()).hexdigest()[:16])
+
+
+def prepare(lock_dir):
+    lock_dir = Path(lock_dir).resolve()
+    cache = cache_path(lock_dir)
+    lock = lock_dir/'package-lock.json'
+    expected = cache/'package-lock.json'
+    if not expected.is_file() or expected.read_bytes()!=lock.read_bytes() or any(
+            not (cache/'node_modules/.bin'/name).is_file() for name in ('pi','codex','agent-browser')):
+        cache.mkdir(parents=True, exist_ok=True)
+        for name in ('package.json','package-lock.json'):
+            shutil.copy2(lock_dir/name, cache/name)
+        subprocess.run(['npm','ci','--prefix',str(cache)],check=True)
+    import os
+    subprocess.run([str(cache/'node_modules/.bin/agent-browser'),'install'],
+                   env=dict(os.environ,HOME=str(cache)),check=True)
+    return cache
+
+
+def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
+    """Export an independent Linux runtime directory; Docker owns build caching."""
+    output = Path(output).resolve()
+    if output.exists():
+        raise FileExistsError(output)
+    lock_dir = Path(lock_dir).resolve()
+    docker = ['docker']+(['--context',docker_context] if docker_context else [])
+    name = 'factory26-runtime-'+uuid.uuid4().hex
+    records = {}
+    with tempfile.TemporaryDirectory(prefix=name) as tmp:
+        context=Path(tmp)
+        for file in ('Dockerfile','build.py'):
+            shutil.copy2(ROOT/'submission'/file,context/file)
+        shutil.copytree(lock_dir,context/'harness/npm',ignore=shutil.ignore_patterns('node_modules'))
+        if braid_source:
+            source=Path(braid_source).resolve(strict=True)
+            for part in ('Cargo.toml','Cargo.lock','src','migrations','config.example.toml'):
+                origin=source/part;target=context/'sources/braid'/part
+                target.parent.mkdir(parents=True,exist_ok=True)
+                if origin.is_dir(): shutil.copytree(origin,target)
+                elif origin.exists(): shutil.copy2(origin,target)
+            records['braid']={'revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()}
+        created=False
+        try:
+            subprocess.run(docker+['build','--platform','linux/amd64','--target','team' if braid_source else 'runtime',
+                '--build-arg',f'BACKEND={backend}','-t',name,str(context)],check=True)
+            subprocess.run(docker+['create','--name',name,name],check=True);created=True
+            output.parent.mkdir(parents=True,exist_ok=True)
+            subprocess.run(docker+['cp',name+':/runtime',str(output)],check=True)
+        finally:
+            if created: subprocess.run(docker+['rm',name],check=True)
+            subprocess.run(docker+['image','rm','--no-prune',name],check=False)
+    (output/'runtime-source.json').write_text(json.dumps({'backend':backend,'platform':'linux-x86_64',
+        'sources':records,'npm_sha256':hashlib.sha256((lock_dir/'package-lock.json').read_bytes()).hexdigest()},indent=2)+'\n')
+    return output
+
+
+def dev_svc(source):
+    """Install the complete development CLI from an explicitly chosen checkout."""
+    source = source.expanduser().resolve(strict=True)
+    package = source/'cli'
+    if not (package/'pyproject.toml').is_file():
+        raise ValueError('开发 SVC 源码必须包含 cli/pyproject.toml；参赛 Corpus 树不能代替')
+    python = ROOT/'.venv/bin/python'
+    if not python.exists():
+        subprocess.run(['uv', 'venv', '--python', '3.13', str(ROOT/'.venv')], check=True)
+    subprocess.run(['uv', 'pip', 'install', '--python', str(python),
+                    '--reinstall-package', 'sustainable-vibe-coding', str(package)], check=True)
+    info = {'source': str(source),
+            'revision': subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip(),
+            'status': subprocess.check_output(['git', '-C', str(source), 'status', '--short'], text=True),
+            'version': subprocess.check_output([str(ROOT/'.venv/bin/svc'), '--version'], text=True).strip()}
+    target = ROOT/'.bootstrap/dev-svc.json'
+    target.parent.mkdir(exist_ok=True)
+    target.write_text(json.dumps(info, ensure_ascii=False, indent=2)+'\n')
+    return target
+
+
+def main():
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('command',choices=['path','prepare','linux','dev-svc'])
+    p.add_argument('--lock-dir',type=Path,default=ROOT/'harness/npm')
+    p.add_argument('--output',type=Path)
+    p.add_argument('--backend',choices=['pi','codex'],default='pi')
+    p.add_argument('--docker-context')
+    p.add_argument('--braid-source',type=Path,help='Optional team dependency; raw runtimes do not require Braid')
+    p.add_argument('--svc-source',type=Path,help='完整开发 SVC checkout；不是参赛 Corpus')
+    a=p.parse_args()
+    if a.command=='path': result=cache_path(a.lock_dir)
+    elif a.command=='prepare': result=prepare(a.lock_dir)
+    elif a.command=='dev-svc':
+        if a.svc_source is None: p.error('dev-svc requires --svc-source')
+        result=dev_svc(a.svc_source)
+    else:
+        if a.output is None: p.error('linux requires --output')
+        result=linux(a.output,a.backend,a.lock_dir,a.docker_context,a.braid_source)
+    print(result)
+
+
+if __name__=='__main__': main()

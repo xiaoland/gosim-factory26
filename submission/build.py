@@ -108,12 +108,11 @@ for command, package in commands:
         + environment +
         f'exec "$HERE/node" "$HERE/../node_modules/{package}/{entry}" "$@"\n'
     )
-for name, module, function in [('svc', 'svc_cli.cli', 'main')] + (
-        [('litellm', 'litellm', 'run_server')] if backend == 'codex' else []):
-    (root / 'bin' / name).write_text(
+if backend == 'codex':
+    (root / 'bin/litellm').write_text(
         '#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\n'
         "sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'python'))\n"
-        f'from {module} import {function}\nsys.exit({function}())\n'
+        'from litellm import run_server\nsys.exit(run_server())\n'
     )
 for path in (root / 'bin').iterdir():
     path.chmod(0o755)
