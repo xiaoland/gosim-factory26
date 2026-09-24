@@ -33,7 +33,7 @@ Pi 使用锁定的 `pi-subagents@0.56.0` 原生扩展，角色 Markdown 明确 m
 
 用户随后明确回复“确认”，授权按页面所列单人名单创建正式赛事队伍。2026-09-24 页面确认 `Lan_zhijiang` 队伍已建立，余额 ￥500；没有提交 Agent 包或启动官网运行。赛事详情给出 `hackathon--github`、`hackathon--sheet` 两题。通过 GitHub 题页的“Download all requirements”取得同一个 ZIP，内含两题 `requirements.yaml` 和参考图，SHA256 为 `9884f23ea10c3dfeee170d1eed57966c8fce9a5ce18a0ac43b3d7942eba8c414`，没有公开评测测试。原 ZIP 保存在 WSL `factory26-official-local/arcbench-hackathon-requirements.zip`；提取后的两题需求与逐文件哈希在 `platform-inputs/hackathon/{github,sheet}/`。主办方 Runner 明确支持不传 `--tests-dir`，此时跳过评分。
 
-当前本地矩阵改为四配置 × 两题的生成与部署验收，使用自购模型网关，不能输出正式通过率或分数；正式计分仍需取得对应测试或另行授权官网运行。`hackathon-generation-matrix.json` 固定 8 个 job、4 并发，2026-09-24 已在 WSL 启动 `local_experiment.py`（启动 PID 904226），结果根目录 `runs/hackathon-generation-20260924`，控制器日志 `hackathon-generation-controller.log`。完成后先检查原始 Runner 终态、应用布局、OTLP 批次与预算消耗，再汇报；不把本地无测试运行与官网正式得分混称。
+当前本地矩阵改为四配置 × 两题的生成与部署验收，使用自购模型网关，本地不产生正式得分；用户现已授权下节所述官网非榜单产物回放评测。`hackathon-generation-matrix.json` 固定 8 个 job、4 并发，2026-09-24 已在 WSL 启动 `local_experiment.py`（启动 PID 904226），结果根目录 `runs/hackathon-generation-20260924`，控制器日志 `hackathon-generation-controller.log`。完成后先检查原始 Runner 终态、应用布局、OTLP 批次与预算消耗，再汇报；不把本地无测试运行与官网正式得分混称。
 
 首个 `pi-base × github` 在生成 525.564 秒后失败：官方 Runner 容器退出码 1，Pi session 最后一个 assistant 消息的 `stopReason` 为 `length`，截断发生在规划阶段，尚无 `frontend/` 或 `backend/`。网关此前该任务请求持续 HTTP 200；因此这是输出长度截断后的接线缺口，不是可计分结果或额度拒绝。`submission/hackathon_main.py` 现对 Pi 在同一 session 中最多续跑 8 次，`raw_main.stream` 支持追加原始事件。WSL 已重新冻结 `pi-base-recovery.zip`（SHA256 `8171aa1a8030dd32d9593c5ecb0bd41229650faf8000b57509ac4a420b6402c0`）和 `pi-svc-recovery.zip`（SHA256 `4d100b05120c394b6fb71028d333ba779c9a7720be0543715d675bbc168181b5`）；待原矩阵占用的并发槽释放后，仅补跑受该问题影响的 Pi case。
 
@@ -70,3 +70,17 @@ WSL `check_output_budget.py` 通过新网关实际调用三模型各自 Chat/Res
 WSL 直接操作冻结运行时的 agent-browser：不提供 Pi/Codex ID，两个 session 并行打开 agent-browser 官网首页和 sessions 文档，各自后续 `get url` 保留原页面；改变 `PI_SESSION_ID` 后仍能通过原 session 名继续读取相同页面。两会话已关闭，原始命令输出在 `factory26-official-local/browser-native-evidence/{home,sessions}.jsonl`。这是原生浏览器实际操作证据，没有启动新的模型任务，也没有运行 Factory 测试或包 smoke；完整 benchmark 尚未结束。
 
 WSL 四份 `{pi,codex}-{base,svc}-native-browser.zip` 已重新冻结。包内入口和 skill 的 SHA256 与当前源码一致，均不含 `native_browser.py`；四包 SHA256 记录在 `browser-native-evidence/packages.json`。已停止旧等待控制器 933108，新控制器 PID 952583 使用这些新包和 `hackathon-gateway-defaults/gateway.env`。它等待首轮 PID 904226 结束后，只补跑 length 失败的 Pi case，最多 4 并发；清单为 `hackathon-pi-native-browser-matrix.json`，结果目录为 `runs/hackathon-pi-native-browser-20260924`，日志为 `hackathon-pi-native-browser-controller.log`。首轮及其冻结包保持原样。
+
+## 官方隐藏测试的产物回放评测（2026-09-24）
+
+用户提出将本地生成软件打成 Agent 包，在官网不勾选“使用比赛额度评测”，并明确：“我说的等待一段时间，说的就是‘包内刻意 sleep’，但大概是 3~5s，而且可以尝试一些模型调用；重点是，我们要取得官方的评分结果。”本轮据此授权构建产物回放包并发起非榜单官网评测，先用已完成的 `codex-base` GitHub、Sheet 两题验证链路；不改变生成应用，不使用比赛额度。
+
+实现采用 `scripts/package_arc_replay.py` 和 `submission/arc_replay.py`：从 completed 的本地 ARC run 打包应用源码，保留 run、需求及逐文件哈希；按传入 `requirements.yaml` 的 SHA256 选择对应产物，等待 3 秒再交付。包明确标注 artifact-replay，不冒充再次生成；官网耗时和模型消耗不能替代本地生成记录。复用现有源码归档排除项，不带 node_modules、构建产物、Agent 会话或凭据；平台负责重新安装依赖、构建和部署。暂不添加模型请求，仅在平台确实要求时再处理。
+
+官网当前页面明确关闭比赛额度的运行不进入排行榜，API 密钥字段仍标记必填。已使用明确的无模型占位值上传并启动回放评测。评价结果只用于这批已冻结产物，不回传隐藏测试给生成 Agent。
+
+首个包已在 WSL 构建：`codex-base-artifact-replay.zip`，98,764 bytes，SHA256 `3f78afcaa8e79029bc00734b46044f08d8ea77cdf22ef93d87624e717805e6d6`。源 run 分别是 `codex-base-hackathon-github-97ad8b8eec`、`codex-base-hackathon-sheet-67ac86e938`；归档分别包含 12、21 个应用文件。官网保存名称 `codex-base-artifact-replay-20260924`，比赛额度 checkbox 已确认关闭，API key 填写无模型调用占位值。官网显示“Started 2 runs”；GitHub 的官方 run 为 `a11ce90b4611`（https://arc-bench.com/runs/a11ce90b4611），已通过既有网站登录客户端保存两题 API 状态和日志到 `runs/playground/<官方 run id>/`，下一步读取终态及评分。表单保留的 deepseek-v4-flash 只是未使用的模型字段，真实生成模型和成本仍来自本地 run。
+
+官网实际接线已通过：GitHub run `a11ce90b4611` 显示 generation agent 成功退出、应用完成安装与构建、HTTP 3000 可达，并进入 100 场景的官方 Playwright 评测。Sheet run 为 `e263fcdbc5aa`（https://arc-bench.com/runs/e263fcdbc5aa），任务历史标记失败，具体原因见下段；失败不得在没有测试计数的情况下当成有效零分。
+
+Sheet 的应用已成功部署，官方 API 明确返回 `billing_mode=self_funded`、`status=FAILED`、`failure_reason=Failed to enumerate Playwright tests before execution`、`passed_count=0`、`failed_count=0`、`result_path=null`。这是测试枚举阶段故障，页面/API 的 0 分不是有效的 0/100 测试结果；标准输出只含回放与应用部署成功记录，没有更具体的枚举错误。GitHub 同为 self_funded，仍在官方评测阶段；当前只等待其终态，不修改应用或测试，也不以附加模型调用尝试改变测试枚举故障。
