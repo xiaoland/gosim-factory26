@@ -37,4 +37,14 @@ Pi 使用锁定的 `pi-subagents@0.56.0` 原生扩展，角色 Markdown 明确 m
 
 首个 `pi-base × github` 在生成 525.564 秒后失败：官方 Runner 容器退出码 1，Pi session 最后一个 assistant 消息的 `stopReason` 为 `length`，截断发生在规划阶段，尚无 `frontend/` 或 `backend/`。网关此前该任务请求持续 HTTP 200；因此这是输出长度截断后的接线缺口，不是可计分结果或额度拒绝。`submission/hackathon_main.py` 现对 Pi 在同一 session 中最多续跑 8 次，`raw_main.stream` 支持追加原始事件。WSL 已重新冻结 `pi-base-recovery.zip`（SHA256 `8171aa1a8030dd32d9593c5ecb0bd41229650faf8000b57509ac4a420b6402c0`）和 `pi-svc-recovery.zip`（SHA256 `4d100b05120c394b6fb71028d333ba779c9a7720be0543715d675bbc168181b5`）；待原矩阵占用的并发槽释放后，仅补跑受该问题影响的 Pi case。
 
-WSL 的 `recover_pi_length.py`（PID 910296，日志 `hackathon-pi-recovery-controller.log`）等待首轮控制器结束后，检查八个 job 都已终结，只选择 `phase=failed` 且 Pi 最后一个 assistant `stopReason=length` 的 case，使用上述新 ZIP 生成 `hackathon-pi-recovery-matrix.json` 并启动新的最多 4 并发实验。原始失败记录不会覆盖；其他原因失败不会自动重跑。
+原先 WSL 的 `recover_pi_length.py`（PID 910296）只准备使用上述续跑包；用户指出第二次出现输出长度问题后，已终止这个尚在等待的补跑控制器，避免继续用 16384 预算补跑。首轮原始矩阵继续保持已冻结参数。
+
+## 输出预算根因与修正（2026-09-24）
+
+用户要求：“输出长度的问题我们之前也遇到过，这是第二次了，我们应该找到一个根本性的解决方案”。定向读取失败 session 发现最后响应 `output=16384`、`reasoning=16376`、`stopReason=length`。这是一次请求的推理耗尽输出预算，不是网络 JSON 截断。冻结 Pi 0.85.1 的 `docs/models.md` 及 `pi-ai/dist/api/simple-options.js` 证明：自定义模型的 `maxTokens` 可省略，但默认仍是 16384；CLI 路径默认从 descriptor 取值，并按剩余上下文扣除安全余量。此前入口和网关同时硬编码 16384，且网关覆盖所有客户端值，根因在接入配置。只加续跑没有修复它。
+
+官方 GLM 参数页列出 `glm-5.3-flash` 默认 65536、最大 131072，强制启用思考、默认 max；Kimi K3 的默认输出预算为 131072；DeepSeek 当前 Flash 最大支持 384K。本轮将三模型的实验输出预算设为 131072，统一放在 `submission/hackathon_models.json`，由 Pi、打包器和网关共用，网关尊重客户端更小的预算。模型能力与实验预算不混称；没有改动供应商默认推理政策。新实例使用端口 4011、`hackathon-gateway-output128k`，不修改首轮使用的 4010 实例。
+
+WSL `check_output_budget.py` 通过新网关实际调用三模型各自 Chat/Responses 两条路径，共六次均 HTTP 200、回答 391，合计 687 tokens；请求、响应在 `output-budget-evidence/`。这证明接口接受新预算，不证明长任务已经完成或永不截断。新网关 `request-metadata.jsonl` 用于核对客户端与有效输出预算。后续仅对首轮 length 失败的 Pi case 使用新包与新网关补跑，原失败和原参数记录保留。
+
+新 Pi 包已在 WSL 冻结为 `pi-base-output128k.zip`、`pi-svc-output128k.zip`；替换后的等待控制器 PID 922565，日志 `hackathon-pi-output128k-controller.log`。首轮八个 job 结束后，它将使用新网关生成 `hackathon-pi-output128k-matrix.json`，输出到 `runs/hackathon-pi-output128k-20260924`，最多 4 并发，只补跑 length 失败的 Pi case。首轮在跑和排队任务仍属于原始 16K 参数组，不把它们标记为已采用新预算；若后续对照新参数，须显式生成新矩阵。

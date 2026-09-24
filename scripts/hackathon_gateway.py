@@ -68,6 +68,7 @@ def main():
         },
     }
     (state / "gateway.json").write_text(json.dumps(config, indent=2) + "\n")
+    (state / "model-limits.json").write_bytes((ROOT / "submission/hackathon_models.json").read_bytes())
     (state / "gateway.env").write_text(
         f"GATEWAY_URL=http://{args.container_host}:{args.port}/v1\nGATEWAY_TOKEN={token}\n"
     )

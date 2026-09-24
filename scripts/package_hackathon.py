@@ -35,6 +35,7 @@ def package(runtime, backend, svc, output):
                           for path in paths if path.is_file()})
     files.update({name: ROOT / path for name, path in {
         "main.py": "submission/hackathon_main.py",
+        "hackathon_models.json": "submission/hackathon_models.json",
         "raw_main.py": "submission/raw_main.py",
         "raw_otlp.py": "submission/raw_otlp.py",
         "native_browser.py": "submission/native_browser.py",

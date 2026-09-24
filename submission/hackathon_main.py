@@ -15,6 +15,7 @@ from native_browser import install as install_browser
 
 ROOT = Path(__file__).resolve().parent
 CONFIG = raw_main.CONFIG
+MODEL_LIMITS = json.loads((ROOT / "hackathon_models.json").read_text())
 MAX_PI_CONTINUATIONS = 8
 ROLES = {
     "explorer": ("glm-5.3-flash", "Read the public requirements and current application. Return concrete findings; do not edit files."),
@@ -116,11 +117,10 @@ def run(requirements, output):
         native = home / ".pi/agent"
         native.mkdir(parents=True)
         models = []
-        for model, context in (("glm-5.3-flash", 1000000), ("kimi-k3", 262144),
-                               ("deepseek-v4-flash-vision-exp", 128000)):
+        for model, limits in MODEL_LIMITS.items():
             models.append({"id": model, "name": model, "api": "openai-completions",
                            "reasoning": False, "input": ["text", "image"],
-                           "contextWindow": context, "maxTokens": 16384,
+                           **limits,
                            "compat": {"supportsDeveloperRole": False,
                                       "supportsStrictMode": False,
                                       "maxTokensField": "max_tokens"}})
