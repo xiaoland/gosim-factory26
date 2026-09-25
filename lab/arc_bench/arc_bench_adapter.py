@@ -8,7 +8,9 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import re
 import shutil
+import signal
 import subprocess
 import sys
 import tempfile
@@ -18,6 +20,7 @@ from zipfile import ZipFile
 OTEL_NAMES = ("OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_PROTOCOL",
               "OTEL_EXPORTER_OTLP_HEADERS", "OTEL_EXPORTER_OTLP_COMPRESSION")
 EXCLUDED_SOURCE = {".arc", ".factory26", ".git", "requirements", "node_modules", ".cache", "dist", "build"}
+CONTAINER_LINE = re.compile(r"^Container: (arcbench-local-[0-9a-f]{12})$", re.MULTILINE)
 
 
 def instrument_entry(agent, destination):
@@ -92,6 +95,36 @@ def model_environment(base, output, host):
     output.chmod(0o600)
 
 
+def cleanup_container(stdout_path, owned_workspace, evidence_path):
+    """Remove only the container whose /workspace bind belongs to this invocation."""
+    match = CONTAINER_LINE.search(stdout_path.read_text(errors="replace")) if stdout_path.is_file() else None
+    record = {"container": match.group(1) if match else None,
+              "workspace": str(owned_workspace), "status": "not-started"}
+    if match:
+        name = match.group(1)
+        try:
+            inspected = json.loads(subprocess.check_output(
+                ["docker", "inspect", name], text=True, stderr=subprocess.STDOUT, timeout=1))[0]
+            owned = any(mount.get("Type") == "bind" and
+                        Path(mount.get("Source", "")).resolve() == owned_workspace.resolve() and
+                        mount.get("Destination") == "/workspace"
+                        for mount in inspected.get("Mounts", []))
+            if not owned:
+                record.update(status="ownership-mismatch", mounts=inspected.get("Mounts", []))
+            else:
+                subprocess.run(["docker", "rm", "--force", name], check=True,
+                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=2)
+                record["status"] = "removed"
+        except subprocess.CalledProcessError as exc:
+            output = exc.output or ""
+            record.update(status="absent" if "No such" in output else "cleanup-failed", error=output.strip())
+        except (OSError, subprocess.TimeoutExpired, ValueError, json.JSONDecodeError) as exc:
+            record.update(status="cleanup-unconfirmed", error=f"{type(exc).__name__}: {exc}")
+    with evidence_path.open("a") as stream:
+        stream.write(json.dumps(record, ensure_ascii=False) + "\n")
+    return record
+
+
 def run(args):
     workspace = args.workspace.resolve()
     workspace.mkdir(parents=True, exist_ok=True)
@@ -111,9 +144,19 @@ def run(args):
         environment = dict(os.environ)
         for variable in ("OPENAI_API_KEY", "OPENAI_BASE_URL", "FACTORY26_API_KEY"):
             environment.pop(variable, None)
-        with (workspace / f"{name}.stdout.log").open("wb") as stdout, \
-             (workspace / f"{name}.stderr.log").open("wb") as stderr:
-            return subprocess.run(command, env=environment, stdout=stdout, stderr=stderr).returncode
+        stdout_path = workspace / f"{name}.stdout.log"
+        stderr_path = workspace / f"{name}.stderr.log"
+        owned_workspace = Path(command[command.index("--workspace") + 1]).resolve()
+        previous = signal.getsignal(signal.SIGTERM)
+        def interrupt(_number, _frame):
+            raise KeyboardInterrupt
+        signal.signal(signal.SIGTERM, interrupt)
+        try:
+            with stdout_path.open("wb") as stdout, stderr_path.open("wb") as stderr:
+                return subprocess.run(command, env=environment, stdout=stdout, stderr=stderr).returncode
+        finally:
+            signal.signal(signal.SIGTERM, previous)
+            cleanup_container(stdout_path, owned_workspace, workspace / "container-cleanup.jsonl")
 
     with tempfile.TemporaryDirectory(prefix="experiment-arc-env-") as temporary:
         env_file = Path(temporary) / "model.env"
