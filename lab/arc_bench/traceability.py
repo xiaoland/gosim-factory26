@@ -165,6 +165,41 @@ def _local(run, node):
             "evidence": evidence}
 
 
+def _hosted_history(folder):
+    history_archive = folder / "commit-history.json"
+    history_observations = sorted((folder / "observations" / "commit-history").glob("*.json"))
+    history_attempt = _read(history_observations[-1]) if history_observations else (
+        _read(history_archive) if history_archive.is_file() else None)
+    history_available = None
+    history_path = None
+    for candidate in reversed(([history_archive] if history_archive.is_file() else []) +
+                              history_observations):
+        record = _read(candidate)
+        candidate_value = record.get("value", record) if isinstance(record, dict) else None
+        if (isinstance(candidate_value, dict) and
+                candidate_value.get("availability") != "workspace_unavailable" and
+                isinstance(candidate_value.get("commits"), list)):
+            history_available, history_path = record, candidate
+            break
+    attempt_value = history_attempt.get("value", history_attempt) if isinstance(history_attempt, dict) else None
+    available_value = history_available.get("value", history_available) if history_available else None
+    attempt_details = None
+    if isinstance(history_attempt, dict):
+        attempt_details = {key: history_attempt[key] for key in
+                           ("observed_at", "source", "status", "error", "read_error")
+                           if key in history_attempt}
+        if isinstance(attempt_value, dict):
+            attempt_details["availability"] = attempt_value.get("availability")
+    return {"status": "available" if history_available else
+                      "unavailable" if history_attempt else "unknown",
+            "last_attempt": attempt_details,
+            "last_available": {"observed_at": history_available.get("observed_at"),
+                               "source": history_available.get("source"),
+                               "path": str(history_path),
+                               "commits": len(available_value["commits"])}
+                              if history_available else None}
+
+
 def _hosted(folder, node):
     archive = folder / "traceability.json"
     latest = _read(archive) if archive.is_file() else None
@@ -204,14 +239,17 @@ def _hosted(folder, node):
                              if isinstance(attempt, dict) else None,
                              "last_success": {"observed_at": success.get("observed_at"),
                                               "source": success.get("source"), "path": str(success_path)}
-                             if isinstance(success, dict) else None}}
+                             if isinstance(success, dict) else None},
+            "commit_history": _hosted_history(folder)}
 
 
 def inspect(path, node=None):
     path = Path(path).expanduser().resolve(strict=True)
     if (path / "run.json").is_file():
         return _local(path, node)
-    if (path / "traceability.json").is_file() or (path / "observations" / "traceability").is_dir():
+    if ((path / "traceability.json").is_file() or (path / "observations" / "traceability").is_dir()
+            or (path / "commit-history.json").is_file()
+            or (path / "observations" / "commit-history").is_dir()):
         return _hosted(path, node)
     raise ValueError(f"no ARC run or hosted task evidence at {path}")
 

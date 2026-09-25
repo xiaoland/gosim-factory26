@@ -163,26 +163,34 @@ def generate(args):
     if not history_tool.is_file():
         history_tool = HERE.parents[1]/'lab/arc_bench/agent_runtime/__main__.py'
 
-    def publish_history(*, preview=False):
+    def publish_history(*, preview=False, ref=None):
         if not history_tool.is_file():
+            history.clear()
             history.update(status='unavailable', error=f'ARC runtime tool missing: {history_tool}')
             return
+        history.clear()
         command = [sys.executable, str(history_tool), 'publish-history',
-                   '--source-repo', str(app), '--ref', request['delivery_ref'],
-                   '--output-dir', str(output)]
+                   '--source-repo', str(app), '--ref', ref or request['delivery_ref'],
+                   '--output-dir', str(output), '--json']
         if preview:
             command.append('--preview')
+        result = None
         try:
             result = subprocess.run(command, capture_output=True, text=True)
-            if result.returncode:
-                history.update(status='failed', error=result.stderr.strip()[-2000:] or
-                               f'ARC history publisher exited {result.returncode}')
-                return
-            value = json.loads(result.stdout)
-            history.update(status=value['status'], commit=value['commit'])
-            history.pop('error', None)
-        except (OSError, ValueError, KeyError) as exc:
-            history.update(status='failed', error=f'{type(exc).__name__}: {exc}')
+            response = json.loads(result.stdout)
+            if response['api_version'] != 1 or response['operation'] != 'publish-history':
+                raise ValueError('unsupported ARC history result')
+            history.update(status=response['status'], commit=response['result'].get('selected_commit'),
+                           result=response['result'], error=response.get('error'),
+                           diagnostic_error=response.get('diagnostic_error'),
+                           exit_code=result.returncode, stderr=result.stderr)
+            if result.returncode != (0 if response['status'] == 'completed' else 1):
+                history.update(status='failed', protocol_error='ARC history exit code disagrees with result')
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            history.update(status='failed', error={'type': type(exc).__name__, 'message': str(exc)},
+                           stdout=result.stdout if result is not None else None,
+                           stderr=result.stderr if result is not None else None,
+                           exit_code=result.returncode if result is not None else None)
 
     def watch_history():
         # The selected delivery ref changes on merges, independently of the blocking Braid call.
@@ -208,7 +216,7 @@ def generate(args):
         metadata['delivery'] = delivery
         export_delivery(app, delivery['delivery_commit'], run/'application')
         deliver(run/'application', output)
-        publish_history(preview=True)
+        publish_history(preview=True, ref=delivery['delivery_commit'])
         metadata['status'] = 'generated'
         save(run/'application-hashes.json', hashes(run/'application'))
         save(run/'delivery.json', {'status':'delivered', 'application_sha256':digest(hashes(run/'application'))})
@@ -232,7 +240,7 @@ def generate(args):
             metadata['diagnostic_error'] = str(exc)
         metadata.update(generation_seconds=time.monotonic()-begin, generation_finished_at=time.time())
         phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
-    if error is not None or history.get('status') not in ('published', 'unchanged'):
+    if error is not None or history.get('status') != 'completed':
         save(run/'recovery-workspace.json', {'path':str(work), 'request':str(run/'braid-request.json')})
     else:
         shutil.rmtree(work)

@@ -50,14 +50,15 @@ ARC 的官网 Run detail 使用官方 SDK 写入 Runner 的 `.arc/traceability/*
 ```sh
 python3 -m lab.arc_bench runtime export --output /path/to/arc-runtime.pyz
 python3 /path/to/arc-runtime.pyz guide
-python3 /path/to/arc-runtime.pyz methods
+python3 /path/to/arc-runtime.pyz version --json
+python3 /path/to/arc-runtime.pyz methods --json
 ```
 
-该文件包含 2026-09-25 官方 starter 的 `arcbench-agent-runtime` 0.1.0 和调用入口，运行时使用 Runner 的 `ARCBENCH_*` 路径，无需现场安装 SDK。多代理写同一个 run 时统一通过此入口调用官方高层方法；锁只保护通过该入口进行的操作。Agent 应根据实际工作上报需求、接口和测试关系；自报的测试状态不等于官方评分。现有包不会因为设施能够采集而自动出现关联。
+该文件包含 2026-09-25 官方 starter 的 `arcbench-agent-runtime` 0.1.0 和调用入口，运行时使用 Runner 的 `ARCBENCH_*` 路径，无需现场安装 SDK。公共 CLI 的 `traceability <方法>` 和 `events <方法>` 接受官方 SDK 的 JSON 关键字参数；`methods --json` 列出本包装器 v1 固定支持的方法与签名。操作加 `--json` 后，stdout 返回单个包含 `api_version`、`operation`、`status`、`paths`、`result` 及适用时 `error` 的结果；退出码 0 表示操作完成，1 表示失败或部分完成。旧命令默认输出仍兼容。多代理写同一个 run 时统一通过此入口调用官方高层方法；锁只保护通过该入口进行的操作。Agent 应根据实际工作上报需求、接口和测试关系；自报的测试状态不等于官方评分。现有包不会因为设施能够采集而自动出现关联。
 
-需要在官网展示真实 Git 提交的 Harness 可用同一工具执行 `publish-history --source-repo <仓库> --ref <交付引用> [--output-dir <Runner项目目录>]`。它将选定提交及其祖先导入 Runner 项目目录的受管 Git 仓库，通知官网刷新 commit history，不改动应用文件；应用已交付后加 `--preview` 刷新预览。活动 `pi-team-mixed` 包自带该工具，生成中每五秒检查一次交付分支，交付后再发布选定提交。同步结果写入本次 `.factory26/<run>/history-publication.json`；失败不改变应用生成结果，源 worktree 留作恢复。只发布交付分支可达的提交，未合并的 Agent 分支不会出现。
+需要在官网展示真实 Git 提交的 Harness 可选两种命令：直接在 Runner 项目目录维护 Git 仓库时使用 `notify-history [--output-dir <Runner项目目录>] --json`；内部仓库开发时使用 `publish-history --source-repo <仓库> --ref <引用或OID> [--output-dir <Runner项目目录>] --json`。后者将选定提交及其祖先导入 Runner 项目目录的受管 Git 仓库，不改动应用文件或索引；`--preview` 在应用已就位后请求预览刷新。两种命令每次调用都尝试写入刷新信号，结果分别报告 `history_changed`、`history_updated` 和 `signal_written`；写入信号不证明官网已显示。仓库选择、轮询、重试和清理由 variant 决定。活动 `pi-team-mixed` 包自带该工具，生成中每五秒检查一次交付分支，交付后用冻结的交付 OID 再发布；结果写入本次 `.factory26/<run>/history-publication.json`。历史发布失败不改变应用生成结果，源 worktree 留作恢复；未合并分支和未提交文件不在发布范围内。
 
-本地 run 与官网 task 的已保存证据可用 `python3 -m lab.arc_bench traceability <目录> [--node <需求ID>] [--json]` 查询；默认不发网络请求。它区分包内工具、实际记录与采集状态。本地保留原始表和事件，官网在既有监控轮询与显式 `collect` 时保存每次追溯及 commit history 响应或具体失败；失败不覆盖上次成功值。终态若返回 `workspace_unavailable`，原始观察保留，但不会覆盖运行中已保存的提交列表。官网没有已确认的自定义文件下载能力，因此查询不会把托管工具调用日志标为已取得。通用 OTLP 仍保存 Harness 自选的 Agent 过程信号。
+本地 run 与官网 task 的已保存证据可用 `python3 -m lab.arc_bench traceability <目录> [--node <需求ID>] [--json]` 查询；默认不发网络请求。它区分包内工具、实际记录与采集状态。本地保留原始表和事件，官网在既有监控轮询与显式 `collect` 时保存每次追溯及 commit history 响应或具体失败；查询分别显示提交历史的最近观察与最近可用列表的时间、来源和数量。终态若返回 `workspace_unavailable`，原始观察保留，但不会覆盖运行中已保存的提交列表。官网没有已确认的自定义文件下载能力，因此查询不会把托管工具调用日志标为已取得。通用 OTLP 仍保存 Harness 自选的 Agent 过程信号。
 
 同一比赛只允许最新 snapshot 承接新任务。
 历史混合矩阵由 [official_matrix.py](../../lab/arc_bench/official_matrix.py) 运行：四个冻结 variant 依次推进；每个 variant 的 Lite 两题与 Web 六题由两个 Competition controller 并行执行，各比赛内部逐题运行。

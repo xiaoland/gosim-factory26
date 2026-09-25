@@ -1,47 +1,52 @@
-# 官网 Run detail 可追溯性调查
+# ARC 可追溯性与 Git 历史接入
 
-状态：公共能力已按授权落地，真实运行验收另需确定实验范围。用户确认原话：“是的，按这个方向继续。”其复核对象是上一轮提出的通用实验设施、ARC 适配层和事实生产者的职责划分。随后用户指示“没错，继续，直到方案收敛”，授权继续设计并自主解决常规工程取舍；对已收敛的 [design.md](design.md) 又明确指示“同意，开始落地”，授权实施其中的公共 ARC 上报工具、采集与查询、包身份兼容及相应文档。具体 Harness 接线、新模型运行和官网上传不属于本次范围。
+## 当前阶段与授权
 
-2026-09-25 用户指出官网 Run detail 看不到“可追溯性”，提供 [Runtime API 文档](https://arc-bench.com/api-doc)并建议接入。Agent 将这句话误判为授权，直接修改活动 variant；用户随后指出越权，并要求从实验基础设施的角度讨论。误改的源码、文档及 SDK 副本已撤回；未打包、提交或运行新模型。后续只调查与设计，得到明确实施授权前不再改源码。
+稳定公共接口已落地到工作区，待实际 Runner/官网运行证据验收。[design.md](design.md)记录获授权的接口方案；已提交实现的基线是 `896e3a8`。用户在复核方案后明确指示“好的，你可以开始实现了”，授权本轮公共 ARC 接口、mixed 薄接线迁移及受影响文档的源码改动。模型运行、官网上传和新提交不在本次授权中。
 
-已查官方文档：`arcbench_agent_runtime` 在参赛 Agent 的 Runner 工作区写 `.arc/traceability/*.json` 与 `.arc/runner-events.jsonl`，官网后端消费它们刷新 Run detail。旧 OTLP 上报是本地实验过程证据，不会自动填充官网这组文件。官方 Python starter 已下载至忽略的 `runs/official-runtime-observability/starter-20260925.zip`；SHA-256 为 `efad0e6c9986aeb14c2aa75a61fa34ca6278b73767bb257076a1fe75bbbd0386`。这是调查证据，不是项目依赖。
+用户最新确认的边界是：“harness薄接线可以有，但是应该让variant自己实现，相对的，ARC 公共接入组件就要提供相应的稳定的界面。”这取代此前将轮询和线程生命周期收回公共组件的建议。variant 中存在接线代码不构成边界缺陷；审查重点是公共接口是否依赖特定布局、框架和生命周期，以及调用结果是否足以支持消费者自行处理失败。
 
-只读核查：`lab/arc_bench/competition.py:collect` 已获取 `/runs/{id}/traceability?node_id=__all__` 和增量日志、commit history；`lab/arc_bench/playground.py:collect` 也获取 traceability。`lab/arc_bench/arc_bench_adapter.py` 保存本地 Runner workspace，`lab/arc_bench/results.py` 定位其中的 runner events。历史 `runs/competition/iteration-throughput-boundary-20260923/hosted/` 下五份不同 variant/task 的 `traceability.json` 都成功取得平台值，但 `interfaces`、`tests` 均为零；这表明所查旧运行的采集链路可用，空视图至少有上游未产生关联的可能，不证明全部运行和当前官网仍如此。
+## 要解决的问题
 
-已认可的方向：通用实验设施负责保存原始 OTLP 与外部命令结果；ARC 适配层负责保存和查询官方 Runner/官网的原始 traceability/events，向运行者提供平台协议材料。需求到实现和测试的真实关系由执行 Agent 或其 Harness 在工作时上报；基础设施不从 OTLP、文件名或 Git 提交推断并填充官网图。接入适用于任意 Harness，不由 `pi-team-mixed` 独占。
+Harness 作者应能通过已分发工具的公开接口独立接线。安装、Agent 指令、仓库选择、调用时机和恢复策略归 variant；官方协议、一次操作的写入与通知、结果及诊断归公共组件。通用 lab 的 OTLP 接收不增加 ARC 业务约束。
 
-本轮只读核查发现，现有 `instrument_entry` 是观察标准入口的本地包装，不能直接视为适用于任意上传包的材料安装器。Competition 的 prepare 消费冻结包，并要求本项目 manifest；这也不是所有外部 Harness 已经通用的构建接口。后续设计须明确支持包如何与原包的路径、依赖安装和清单共存，避免为了接入观测而迁移原包目录造成行为差异。
+`896e3a8` 基线的具体缺口，本轮均已在工作区处理：
 
-上报支持采用可独立分发的 Python zipapp，内含固定来源的官方 SDK、命令入口、简短说明和来源记录。Harness 作者通过自己的原生机制将入口与说明交给 Agent，在自身打包时纳入该文件；设施不解析其 profile、不自动修改系统提示或重新布置原包目录。本地和官网消费同一个冻结 Agent 包，材料存在与实际使用分别记录。不承诺任意旧 ZIP 加入工具后即可自动产生关联。
+- `publish-history` 只支持内部仓库向 Runner 目录导入，拒绝源与目标相同；直接在 Runner 仓库工作的 Harness 缺少对应入口。
+- Traceability 方法由 SDK 反射得出；包装层没有独立接口版本，返回值和错误形式也未统一。
+- Git 更新与刷新信号分两步完成，但返回值没有表达部分完成。HEAD 相同会提前返回，可能漏掉上次失败的刷新通知；`--preview` 还会修改目标索引。
+- mixed 最终发布重新解析交付分支，未直接使用已冻结的 delivery commit；stderr 只保留末尾摘要，公共 Git 失败也未统一写入操作记录。
+- mixed 构建导入公共 CLI 的 `__main__` 函数并压制 stdout，让内部 Python 布局成了消费者接口。
 
-证据采集默认工作，不以上报支持是否启用为条件：本地读取 Runner 原始文件，官网使用已有接口。查询分别呈现支持材料是否提供、实际收到哪些事件和记录、采集是否成功及截至何时，不能将空表等同于未接入或将 SDK 自报 passed 等同于官方评分。当前 `competition.collect` 只保存异常类名，会丢失 Client 已保留的 HTTP 状态和响应内容；`results.py` 枚举 `.arc` 顶层文件，尚未显式链接嵌套 traceability 表。这是已确认的设施诊断与证据入口缺口。
+轮询周期、线程、重试、工作区保留和提示词仍由 variant 决定。需求到实现及测试的关系必须由实际工作者提供。
 
-官方 starter 中的两个 skill 脚本实际上直接实现文件协议，并未调用 SDK。因此它们不能不经核对就当成官网文档要求的 SDK 调用入口；复用官方 SDK 本身。通用 OTLP 接收继续不要求 ARC 字段，ARC 数据保持原始文件与响应，解释归 ARC 查询/分析组件。
+## 已实现与已知限制
 
-补充核查：SDK 0.1.0 无第三方依赖，要求 Python >=3.10；JSON 表写入使用固定临时文件且没有跨进程锁，读错误会退为空表。共享入口需要对同一数据目录的 SDK 操作加文件锁，并在调用前防止损坏的已有表被当成空表覆盖。WSL 当前 Runner 镜像声明 `/workspace/sdk` 的 PYTHONPATH，但实际没有 SDK，不能依赖环境变量推断依赖已经安装。官网已存日志只含整理后的 `stage/status/summary` 等字段，不具备原始 SDK 事件类型；采集不得依赖它们触发可靠的逐变更快照。
+`896e3a8` 提供固定来源 SDK 的独立 zipapp、追溯命令及查询、官网观察记录，并在 mixed 构建和运行中接入 Git 历史发布。官网已有轮询会采集 commit history；`workspace_unavailable` 保留在观察记录中，不覆盖此前取得的列表。mixed 尚未把需求、实现、测试上报纳入 Agent 工作指引；工具入包不等于这些关联已产生。
 
-前一轮设计只更新本 packet 和新增设计记录，没有修改运行源码、构建包、运行模型或上传官网，也没有提交。当前按已认可方案落地公共能力；真实运行和提交仍分别遵守授权边界。
+该提交按内容暂存，未纳入工作区其他 Braid、SVC 和实验设施改动。接续时应同时查看提交与工作区差异，不能将当前整个工作区视为该提交内容。上一轮还在工作区更新过本地 ARC 证据链接，其提交归属以 Git 差异为准。
 
-## 2026-09-25 实施与验收
+当前只发布选定交付提交的祖先，不包含未合并分支或未提交修改。官网是否在运行中读取到这些对象、终态是否继续保留工作区，尚无真实 run 验证。辅助证据缺失不能解释为 Agent 没运行，也不自动改变应用生成或评分结果。
 
-公共工具保存在 `lab/arc_bench/agent_runtime/`，包含从官方 starter 原样提取的七个 SDK Python 文件、上游 README/pyproject、来源及逐文件摘要，以及调用 SDK 高层追溯和状态方法的独立命令入口。`python -m lab.arc_bench runtime export` 用标准库生成自包含 zipapp，输出 SHA256；包内的说明、方法签名和调用结果不依赖具体 Harness。入口使用 Runner 原生路径，以文件锁保护经过入口的并发 SDK 调用，在写入前拒绝损坏的既有表，并把调用结果单独记录在 `.arc/runtime-reporting/operations.jsonl`。锁不能约束绕过入口的 SDK 写入者，SDK 多文件操作也不具备事务保证。
+## 证据与验证边界
 
-ARC 采集入口新增只读 `traceability <run或task目录>` 查询。本地读取 Runner spec 指定或默认的追溯目录、原始事件和工具调用记录；矩阵把相关路径交给通用制品索引，结果解释器也链接嵌套表。Competition 与 Playground 在已有监控轮询时采集官网追溯；每次成功或失败都留时间、来源和 HTTP 细节，最近成功值作为兼容副本保留。Competition 的包校验改为接受官方根入口包，存在 Factory manifest 时继续严格核对。技术说明、运行说明及 lab 入口文档同步更新，没有向通用 lab 引入 ARC 语义。
+| 证据 | 支持的结论与限制 |
+| --- | --- |
+| [官方文档](https://arc-bench.com/api-doc)与[固定 SDK 源码](../../lab/arc_bench/agent_runtime/) | SDK 在 Runner project_dir 操作 Git，通过 runner-events 发刷新信号；信号本身不上传提交对象。 |
+| `runs/official-runtime-observability/starter-20260925.zip` | 官方 starter 调查副本；SHA256 为 `efad0e6c9986aeb14c2aa75a61fa34ca6278b73767bb257076a1fe75bbbd0386`。SDK 来源及逐文件摘要另见 SOURCE.json。 |
+| `runs/competition/iteration-throughput-boundary-20260923/hosted/` | 五份历史追溯响应 interfaces/tests 为空；五份 commit-history 响应为 workspace_unavailable。不能证明当前官网行为或空视图的唯一原因。 |
+| [公共入口](../../lab/arc_bench/agent_runtime/__main__.py)、[mixed 接线](../../variants/pi-team-mixed/run.py)及[构建](../../variants/pi-team-mixed/build.py) | 支持上面列出的接口缺口；是源码证据，不是运行成功证据。 |
 
-WSL 隔离工作区 `/home/yyh/Development/factory26-official-local/official-runtime-observability-20260925/implementation/` 接收了本轮 lab 源码快照。38 个 Python 文件已完成 AST 语法解析；导出的 `final/arc-runtime.pyz` SHA256 为 `69a77b881a5ddcb8a7f5349055451c9e150336ec1a31719514cb880cef0977e3`，导出报告 SDK 版本 0.1.0。最终归档静态核对了入口存在及七个官方 SDK 源文件与 SOURCE.json 摘要一致；未运行包 smoke 或伪造 Agent 调用。
+上一轮在 WSL 隔离目录 `/home/yyh/Development/factory26-official-local/official-runtime-observability-20260925/implementation/` 导出过追溯工具，核对源码摘要，并只读查询历史空响应。该工具 SHA256 为 `69a77b881a5ddcb8a7f5349055451c9e150336ec1a31719514cb880cef0977e3`，早于 Git 接入，不能作为当前工具身份。随后 Git 改动只做静态语法与 diff 检查；提交前解析了 14 个暂存 Python 文件。没有运行 Factory 测试、包 smoke、新模型或官网任务。
 
-把历史 `pi-team-mixed/arc-bench-lite--keep` 的原始官网 `traceability.json` 放到该隔离工作区只读查询，新入口报告 `last_attempt.status=completed`、interfaces=0、tests=0、traceability.status=empty、工具使用未知，与文件中的平台事实一致。这核对了旧记录兼容和采集成功空表的展示，不证明新工具曾在 Agent、官网或多进程并发中运行。WSL 已发布 Runner 镜像的源码还核对到 `ARCBENCH_OUTPUT_DIR=/workspace/template`，默认 `.arc/traceability`，并允许 spec 指定目录；本地查询对后者做工作区内路径映射。
+本轮继续遵守仓库不运行 Factory 自身测试或模拟探针的规则。真实行为验收须使用经授权的实际运行，先冻结包、任务、凭据模式和完成条件；静态检查不能替代官网展示验收。
 
-本轮没有运行新的模型或 benchmark、没有上传官网、没有修改活动 variant、没有提交。后续真实接入验收须先选择实际 Harness、冻结包与任务，再按实验边界记录输入、矩阵与完成条件；成功标准是 Agent 的真实上报和官网 Run detail/保存响应的对应关系，而不是本地能导出 zipapp。
+## 本轮实现与下一步
 
-## Git commit history 后续调查
+公共 `arc-runtime.pyz` 现在以版本化 CLI 和 JSON 结果作为跨 Harness 边界，提供固定方法列表、原地 Git 通知与内部仓库发布。发布先解析 OID，目标只改受管 Git 元数据；每次调用均尝试刷新，失败结果保留原始 Git 命令、退出码和输出。mixed 通过公开命令导出工具、读取 v1 结果，最终用已冻结 OID 和确认持有该提交的仓库发布；轮询与现场保留仍由 variant 持有。官网证据查询区分提交历史最近观察与最近可用列表。公共组件未增加 supervisor、后台轮询器或自动提示词注入。
 
-用户进一步要求调查能否把 Braid 的真实提交历史接入官网 Run detail。本轮只读调查，尚未授权该接入的源码修改。官方 SDK 的 Git 操作针对 Runner `project_dir`（本地 Runner 为 `/workspace/template`），`notify_commit_history_changed` 只发刷新信号，不上传提交对象。当前活动 Harness 在 `.factory26/<run>/work/application` 内提交，最终以 `git archive` 导出应用并删除成功运行的内部 worktree，所以 Runner 项目目录没有该仓库的历史。历史官网记录中五份 `commit-history` 响应均为 `workspace_unavailable`；无法据此断言仅复制 Git 历史就能使终态页面可查。
+静态验收对四份受影响 Python 文件完成 AST 解析，并核对 40 个 traceability、14 个 events 公开方法均存在于固定 SDK；目标差异通过 `git diff --check`。未运行 Factory 自身测试、包 smoke、真实模型或官网任务，因此尚无公共工具在 Runner 中执行、官网收到刷新及 Run detail 展示的证据。后续实际运行需另行冻结包、任务、凭据模式和终点；完整 Agent 语义上报也需单独确定事实生产者。用户随后指示“可以提交”，授权仅提交本轮 ARC 接口及接线改动；工作区其他任务的未提交改动继续保留。
 
-建议保持公共能力与 Harness 分离：由 ARC 接入层提供接受源仓库和选定提交的历史发布动作，在 Runner 项目目录导入真实提交祖先并用官方 SDK 发刷新信号；Harness 只传递仓库与交付引用。先验证运行中页面能读取该仓库，再决定是否需要持续同步未交付的工作分支。设施采集应在已有官网轮询中保存 `commit-history` 响应，区分运行中可见与终态工作区不可用。不能以合成提交、单个 hash、Git bundle 文件或 OTLP 冒充官网 Git 历史。真实官网验证需要单独确定实验输入、额度和完成条件。
+## 授权沿革
 
-用户随后明确指示“同意，应用修改”，授权上述公共 Git 历史发布、活动 Harness 接线、官网运行中采集及相应文档修改。`arc-runtime.pyz publish-history` 只接受源仓库、提交引用和 Runner 项目目录；导入选定提交的真实祖先，更新受管 `arc-delivery` 引用与 HEAD，通过官方 SDK 发送刷新信号，不改动应用文件或接管已有非受管仓库。`--preview` 用于应用交付后的预览刷新。活动 `pi-team-mixed` 构建时纳入该工具，Braid 运行期间每五秒检查交付引用，交付后再发布一次；发布失败单独保留在 `history-publication.json`，不冒充生成失败，并保留源 worktree 供恢复。官网 Competition 和 Playground 沿用原有监控周期采集 commit history；`workspace_unavailable` 观察保留但不覆盖此前采到的提交列表。
-
-本轮没有运行模型、benchmark 或官网提交；历史页面能否在运行中显示、终态能否继续访问，仍需后续经授权的真实官网 run 验证。未增加 Factory 自身测试或模拟探针。
-
-已对本轮涉及的六个 Python 文件做 AST 语法解析，`git diff --check` 无空白错误。它们只证明源码可解析及补丁格式正常，不证明 Git 导入或官网展示在真实 Runner 中生效。
+用户先认可公共设施与事实生产者分工，随后“同意，开始落地”，授权公共上报工具、采集查询和包身份兼容。早期未经授权的 variant 追溯接线曾撤回，这项教训仍适用。Git 历史调查后，用户以“同意，应用修改”授权公共历史发布及 mixed 接线，再以“可以提交”授权提交，形成 `896e3a8`。本轮用户进一步纠正责任边界并要求技术规划，随后“好的，你可以开始实现了”授权该方案的源码实施。

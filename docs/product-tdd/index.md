@@ -35,9 +35,9 @@ raw 基线由 [raw_main.py](../../variants/raw/raw_main.py)独立执行，可直
 [arc_matrix.py](../../lab/arc_bench/arc_matrix.py)选择实验组合；[arc_bench_adapter.py](../../lab/arc_bench/arc_bench_adapter.py)调用官方 Runner；[ARC 结果解释](../../lab/arc_bench/results.py)与[原生过程证据](../../lab/analysis/native_evidence.py)只用于可选分析。
 替换 Harness 不应要求实验控制器识别另一种私有会话格式。
 
-ARC 官网运行追溯由独立分发的官方 SDK 命令入口写入 Runner 的 `.arc` 文件。Harness 选择是否把该入口交给 Agent，并负责所上报关系的真实性；ARC 适配层保存本地文件和官网 API 响应、提供查询。通用 lab 只连接运行与制品，不从 OTLP 或代码推断官方关系。材料存在、实际调用、采集成功和官方评测结果在查询中保持不同证据来源。
+ARC 官网运行追溯由独立分发的官方 SDK 命令入口写入 Runner 的 `.arc` 文件。跨 Harness 的稳定接口是版本化 CLI 及其 JSON 结果，SDK 内部 Python 模块不作为消费者接口。Harness 选择是否把该入口交给 Agent，并负责所上报关系的真实性；ARC 适配层保存本地文件和官网 API 响应、提供查询。通用 lab 只连接运行与制品，不从 OTLP 或代码推断官方关系。材料存在、实际调用、采集成功和官方评测结果在查询中保持不同证据来源。
 
-Git 历史是独立的 ARC 展示通道。公共 `arc-runtime.pyz publish-history` 接收任意源仓库与提交引用，把真实祖先导入 Runner 项目目录并用官方 SDK 发刷新信号；它不解释 Braid 状态，也不修改交付应用。活动 Harness 负责选择交付引用和同步时机。官网适配器在现有轮询中采集提交列表及不可用响应，不能将终态工作区不可用推断为 Agent 没有提交。
+Git 历史是独立的 ARC 展示通道。公共 `arc-runtime.pyz notify-history` 对 Runner 目录中既有仓库发送刷新信号；`publish-history` 则接收内部源仓库与提交引用，把真实祖先导入 Runner 项目目录的受管仓库后发送信号。公共工具不解释 Braid 状态，不修改交付应用或索引，分别报告历史更新和信号写入情况。variant 负责仓库和提交选择、同步时机、重试及工作区保留。官网适配器在现有轮询中采集提交列表及不可用响应，查询分别呈现最近观察和最近可用值，不能将终态工作区不可用推断为 Agent 没有提交。
 
 ## Braid、原生 Agent 与 SVC
 
