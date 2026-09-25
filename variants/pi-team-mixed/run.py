@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 from pathlib import Path
+import shlex
 import shutil
 import signal
 import subprocess
@@ -20,6 +21,8 @@ from core import archive_sessions
 HERE = Path(__file__).resolve().parent
 VARIANT = 'pi-team-mixed'
 DEFAULTS = {'issue': 'pi-glm-fast', 'pr': 'pi-deepseek-fast'}
+BACKGROUND_COMPLETION_RULE = ('后台命令若承担当前工作项的交付或验收，取得其完成结果和退出码后才报告完成；'
+                              '需要常驻的服务在使用结束后主动停止。')
 
 
 def native_files(work, runtime, skills, base_url, visual_url):
@@ -28,6 +31,9 @@ def native_files(work, runtime, skills, base_url, visual_url):
     成员主模型归 profile，内部角色归原生 agents Markdown。
     本次运行只替换连接与路径；包内有哪些技能和会话启用哪些技能分别选择。
     """
+    background_bash = runtime/'node_modules/pi-background-bash/index.ts'
+    if not background_bash.is_file():
+        raise FileNotFoundError(f'后台执行扩展缺失：{background_bash}')
     profiles, bindings = [], {}
     for source in sorted((HERE/'agents').iterdir()):
         profile = json.loads((source/'profile.json').read_text())
@@ -36,7 +42,8 @@ def native_files(work, runtime, skills, base_url, visual_url):
         shutil.copytree(source, template)
         (template/'profile.json').unlink()
         (template/'instructions.md').unlink()
-        profile.update(user_instructions=(source/'instructions.md').read_text(),
+        profile.update(user_instructions=(source/'instructions.md').read_text().rstrip() +
+                       '\n\n' + BACKGROUND_COMPLETION_RULE + '\n',
                        workspace=str(work/'application'))
         providers = json.loads((template/'models.json').read_text())
         providers['providers']['factory26']['baseUrl'] = base_url
@@ -47,6 +54,12 @@ def native_files(work, runtime, skills, base_url, visual_url):
         methods = {'explorer': 'explore', 'executor': 'implementation', 'specialist': 'design'}
         for role in (template/'agents').glob('*.md'):
             instruction = role.read_text().replace('@SKILLS@', json.dumps(str(skills))[1:-1])
+            if role.stem != 'vision':
+                marker = 'extensions: ""'
+                if marker not in instruction:
+                    raise ValueError(f'内部角色扩展配置已变化：{role}')
+                instruction = instruction.replace(marker, f'extensions: "{background_bash}"', 1)
+                instruction += '\n' + BACKGROUND_COMPLETION_RULE + '\n'
             sources = []
             if role.stem in methods:
                 sources += [skills/'svc/references/methods'/methods[role.stem]/'index.md',
@@ -59,10 +72,10 @@ def native_files(work, runtime, skills, base_url, visual_url):
             role.write_text(instruction)
         observer = folder/'factory-subagent-observer.ts'
         shutil.copy2(HERE/'extensions/factory-subagent-observer.ts', observer)
-        import shlex
         pi = runtime/'bin/pi' if (runtime/'bin/pi').is_file() else runtime/'node_modules/.bin/pi'
         flags = [str(pi), '--no-extensions', '--no-skills', '--no-prompt-templates', '--no-themes',
                  '--extension', str(runtime/'node_modules/pi-subagents/index.ts'),
+                 '--extension', str(background_bash),
                  '--extension', str(observer)]
         for skill in ('svc', 'ponytail', 'impeccable', 'exploration-tools'):
             flags += ['--skill', str(skills/skill/'SKILL.md')]
@@ -99,6 +112,13 @@ def generate(args):
     native = work/'home/.pi/agent'; native.mkdir(parents=True)
     (work/'tmp').mkdir()
     (work/'bin').mkdir()
+    pbb = runtime/'node_modules/pi-background-bash/bin/pbb.js'
+    pil = runtime/'node_modules/pi-lane/bin/pil.js'
+    if not pbb.is_file() or not pil.is_file():
+        raise FileNotFoundError(f'后台任务 CLI 缺失：{pbb} 或 {pil}')
+    pbb_launcher = work/'bin/pbb'
+    pbb_launcher.write_text('#!/bin/sh\nexec ' + shlex.join((str(runtime/'bin/node'), str(pbb))) + ' "$@"\n')
+    pbb_launcher.chmod(0o755)
     skills = work/'skills'
     for name in ('svc', 'ponytail', 'impeccable', 'agent-browser', 'exploration-tools'):
         copy_skill(args.skills_root.resolve(strict=True)/name, skills/name)
@@ -148,6 +168,7 @@ def generate(args):
     env = dict(os.environ, HOME=str(work/'home'), TMPDIR=str(work/'tmp'),
                XDG_CONFIG_HOME=str(work/'home/.config'), PI_CODING_AGENT_DIR=str(native),
                PI_TELEMETRY='0', PI_OFFLINE='1', FACTORY26_API_KEY=key,
+               PBB_PIL_BIN=str(pil),
                AGENT_BROWSER_EXECUTABLE_PATH=str(browser_executable(runtime)),
                AGENT_BROWSER_SOCKET_DIR=str(work/'b'),
                MCPORTER_CONFIG=str(skills/'exploration-tools/assets/mcporter.json'),

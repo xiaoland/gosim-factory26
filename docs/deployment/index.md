@@ -28,6 +28,8 @@ npm lock 和 Python 依赖清单随 runtime 保留。
 它先校验所有载荷并恢复 ZIP 解压丢失的执行权限，再在临时工作区直接启动原生程序。
 包、需求、会话配置和交付身份仍由入口分别校验并记录；文件访问限制与网络白名单由运行平台负责，入口不再装配 Landlock 或其它自建沙箱。
 
+活动 `pi-team-mixed` 的新包包含受管后台 Bash：普通命令运行超过 30 秒时返回任务 ID，进程保持运行；预期长任务也可由插件原生 `background: true` 参数直接后台启动。当前 Pi 会话中可用 `pbb list`、`pbb status <ID>`、`pbb tail <ID>` 查看状态与日志，`pbb kill <ID>` 明确停止；记录保存在该次工作区 `work/home/.pi/pbb/`。命令显式传入的 `timeout` 仍是会终止进程的硬期限，不能与自动转后台阈值混淆。会话关闭会清理其后台进程；原已冻结 ZIP 和暂停的 run 不获得此能力。
+
 平台通过 `OPENAI_API_KEY`、`OPENAI_BASE_URL` 注入文本连接；`MODEL` 若提供须与根角色一致。
 可选完整 `VISUAL_API_KEY`、`VISUAL_BASE_URL`、`VISUAL_MODEL` 只供视觉角色使用，不覆盖主模型；仅有默认 VISUAL_MODEL 不视为提供了视觉凭据。
 视觉地址启用时须同时提供对应 key 与模型；这只是 endpoint/key 路由分离，不代表账户 quota 已隔离或由 Harness 分配，未设置视觉地址时视觉 provider 回退到文本 endpoint/key。
