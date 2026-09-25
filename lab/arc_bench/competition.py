@@ -18,6 +18,7 @@ from urllib.parse import urlencode, urlsplit
 from zipfile import ZipFile
 
 from .playground import ApiError, Client, CONFIG, api_key, redact, run_path
+from .traceability import collect_hosted
 
 TERMINAL = {'PASSED', 'FAILED', 'CANCELLED'}
 
@@ -84,18 +85,20 @@ def package_identity(package):
             if (name.is_absolute() or '..' in name.parts or '\\' in entry.filename
                     or stat.S_ISLNK(entry.external_attr >> 16)):
                 raise ValueError('ZIP 包含越界路径或符号链接')
-        if not {'main.py', 'requirements.txt', 'package-manifest.json'} <= set(names):
-            raise ValueError('ZIP 根目录缺少 main.py、requirements.txt 或 package-manifest.json')
-        manifest = json.loads(archive.read('package-manifest.json'))
-        if not isinstance(manifest, dict) or not isinstance(manifest.get('files'), dict):
-            raise ValueError('package manifest 缺少载荷清单')
-        actual = {e.filename for e in entries if not e.is_dir()} - {'package-manifest.json'}
-        if actual != set(manifest['files']):
-            raise ValueError('ZIP 载荷与 manifest 不一致')
-        for name, record in manifest['files'].items():
-            with archive.open(name) as stream:
-                if hashlib.file_digest(stream, 'sha256').hexdigest() != record.get('sha256'):
-                    raise ValueError('ZIP 载荷哈希不匹配')
+        if not {'main.py', 'requirements.txt'} <= set(names):
+            raise ValueError('ZIP 根目录缺少 main.py 或 requirements.txt')
+        manifest = {}
+        if 'package-manifest.json' in names:
+            manifest = json.loads(archive.read('package-manifest.json'))
+            if not isinstance(manifest, dict) or not isinstance(manifest.get('files'), dict):
+                raise ValueError('package manifest 缺少载荷清单')
+            actual = {e.filename for e in entries if not e.is_dir()} - {'package-manifest.json'}
+            if actual != set(manifest['files']):
+                raise ValueError('ZIP 载荷与 manifest 不一致')
+            for name, record in manifest['files'].items():
+                with archive.open(name) as stream:
+                    if hashlib.file_digest(stream, 'sha256').hexdigest() != record.get('sha256'):
+                        raise ValueError('ZIP 载荷哈希不匹配')
     return manifest
 
 
@@ -398,15 +401,8 @@ class Controller:
         value = self.status(task)
         self.logs(task)
         item = self.state['tasks'][task]
-        errors = {}
-        for endpoint, name in [('traceability?node_id=__all__', 'traceability'), ('commit-history', 'commit-history')]:
-            path = run_path(item['run_id'])+'/'+endpoint
-            try:
-                artifact = self.client.request(path)
-                self.record('tasks/'+task+'/'+name+'.json', artifact, path)
-            except Exception as exc:
-                errors[name] = type(exc).__name__
-        item['collection_errors'] = errors
+        self.collect_artifact(task, 'traceability')
+        self.collect_artifact(task, 'commit-history')
         item['artifact_handles'] = {'directory': 'tasks/'+task,
                                     'submission_archive': '/submissions/'+self.state['submission_id']+'/archive',
                                     'archive_downloaded': False}
@@ -414,6 +410,20 @@ class Controller:
             item['phase'] = 'collected'
         self.save()
         return self.summary()
+
+    def collect_artifact(self, task, name):
+        item = self.state['tasks'][task]
+        endpoint = 'traceability?node_id=__all__' if name == 'traceability' else 'commit-history'
+        path = run_path(item['run_id']) + '/' + endpoint
+        observation = collect_hosted(self.client, path, self.directory/'tasks'/task, name,
+                                     save=atomic_json, redact=self.safe)
+        errors = item.setdefault('collection_errors', {})
+        if observation['status'] == 'failed':
+            errors[name] = observation['error']
+        else:
+            errors.pop(name, None)
+        self.save()
+        return observation
 
     def recover(self, *, run_id=None):
         """核查未确认 POST。缺少唯一远端 identity 时保留 pending。"""
@@ -459,6 +469,8 @@ class Controller:
             if value.get('status') in TERMINAL:
                 return self.collect(task)
             self.logs(task)
+            self.collect_artifact(task, 'traceability')
+            self.collect_artifact(task, 'commit-history')
             if value.get('status') == 'PAUSED' or not isinstance(value.get('status'), str) or not value['status']:
                 raise Blocked('远端任务已暂停或状态无效；停止本地等待，不改变远端状态')
             time.sleep(interval)

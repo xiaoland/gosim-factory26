@@ -1,0 +1,15 @@
+{
+  "name": "arcbench-agent-runtime",
+  "version": "0.1.0",
+  "source": "https://arc-bench.com/api/requirements/12306/starter-agent?catalog=benchmark&language=python&template=blank",
+  "starter_sha256": "efad0e6c9986aeb14c2aa75a61fa34ca6278b73767bb257076a1fe75bbbd0386",
+  "sdk_files_sha256": {
+    "__init__.py": "815ef1ee083d1377fe251452ad6296e53ca1bdc25e2b7a07de9afb96c26c1f86",
+    "context.py": "083f4b0071611d480fd87831f266dfe98b6460cbfd390aea2b77ba8f35174587",
+    "events.py": "b5d262ab8a77d57e279b134568e4b3509a357a13088ba20fa8ab96d1b0aa5a14",
+    "gitops.py": "e35e0fc34c5d685361c67c4b049a741fb824e56375b8a6bacc64968d98f5cdbf",
+    "jsonio.py": "604a78c049b72bf4b98186f6d9d8c315ae52fd1e77e113338b740ef660bd2123",
+    "runtime.py": "cefa97de838973ac592c9a9ad25077f90b74dde9dbb14c548f2e45ac02b9960c",
+    "traceability.py": "55fc6684973fc036ed22ead5e2ca64865fd44f7c3e814683c0c7e8e8a915f408"
+  }
+}

@@ -6,6 +6,9 @@ import os
 from pathlib import Path
 import shutil
 import signal
+import subprocess
+import sys
+import threading
 import time
 import uuid
 
@@ -41,8 +44,8 @@ def native_files(work, runtime, skills, base_url, visual_url):
             baseUrl=visual_url or base_url,
             apiKey='$FACTORY26_VISUAL_API_KEY' if visual_url else '$FACTORY26_API_KEY')
         save(template/'models.json', providers)
-        for role in (template/'agents').glob('*.md'):
         methods = {'explorer': 'explore', 'executor': 'implementation', 'specialist': 'design'}
+        for role in (template/'agents').glob('*.md'):
             instruction = role.read_text().replace('@SKILLS@', json.dumps(str(skills))[1:-1])
             sources = []
             if role.stem in methods:
@@ -147,18 +150,57 @@ def generate(args):
                PI_TELEMETRY='0', PI_OFFLINE='1', FACTORY26_API_KEY=key,
                AGENT_BROWSER_EXECUTABLE_PATH=str(browser_executable(runtime)),
                AGENT_BROWSER_SOCKET_DIR=str(work/'b'),
-               PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
                MCPORTER_CONFIG=str(skills/'exploration-tools/assets/mcporter.json'),
+               PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
     if visual_url:
         env['FACTORY26_VISUAL_API_KEY'] = os.environ['VISUAL_API_KEY']
     begin = time.monotonic()
     error = None
+    history = {'status': 'not_started'}
+    history_stop = threading.Event()
+    history_tool = HERE/'arc-runtime.pyz'
+    if not history_tool.is_file():
+        history_tool = HERE.parents[1]/'lab/arc_bench/agent_runtime/__main__.py'
+
+    def publish_history(*, preview=False):
+        if not history_tool.is_file():
+            history.update(status='unavailable', error=f'ARC runtime tool missing: {history_tool}')
+            return
+        command = [sys.executable, str(history_tool), 'publish-history',
+                   '--source-repo', str(app), '--ref', request['delivery_ref'],
+                   '--output-dir', str(output)]
+        if preview:
+            command.append('--preview')
+        try:
+            result = subprocess.run(command, capture_output=True, text=True)
+            if result.returncode:
+                history.update(status='failed', error=result.stderr.strip()[-2000:] or
+                               f'ARC history publisher exited {result.returncode}')
+                return
+            value = json.loads(result.stdout)
+            history.update(status=value['status'], commit=value['commit'])
+            history.pop('error', None)
+        except (OSError, ValueError, KeyError) as exc:
+            history.update(status='failed', error=f'{type(exc).__name__}: {exc}')
+
+    def watch_history():
+        # The selected delivery ref changes on merges, independently of the blocking Braid call.
+        while not history_stop.is_set():
+            publish_history()
+            history_stop.wait(5)
+
     try:
         initialize_repository(app)
         phase(run/'run.json', metadata, 'braid', 'braid.log')
-        code = logged([str(work/'bin/braid'), 'local', str(run/'braid-request.json')],
-                      app, env, run/'braid.log', metadata.setdefault('cleanup_errors', []))
+        history_thread = threading.Thread(target=watch_history, name='arc-history', daemon=True)
+        history_thread.start()
+        try:
+            code = logged([str(work/'bin/braid'), 'local', str(run/'braid-request.json')],
+                          app, env, run/'braid.log', metadata.setdefault('cleanup_errors', []))
+        finally:
+            history_stop.set()
+            history_thread.join()
         metadata['process_exit_code'] = code
         if code:
             raise RuntimeError(f'braid local 退出 {code}；见 braid.log')
@@ -166,6 +208,7 @@ def generate(args):
         metadata['delivery'] = delivery
         export_delivery(app, delivery['delivery_commit'], run/'application')
         deliver(run/'application', output)
+        publish_history(preview=True)
         metadata['status'] = 'generated'
         save(run/'application-hashes.json', hashes(run/'application'))
         save(run/'delivery.json', {'status':'delivered', 'application_sha256':digest(hashes(run/'application'))})
@@ -175,6 +218,10 @@ def generate(args):
                         error=str(exc) or type(exc).__name__, failed_phase=metadata.get('phase'))
         save(run/'delivery.json', {'status':'failed','error':metadata['error']})
     finally:
+        try:
+            save(run/'history-publication.json', history)
+        except OSError as exc:
+            metadata['history_diagnostic_error'] = str(exc)
         # Evidence failures stay separate from the generating process's original error.
         try:
             metadata['cleanup_pids'] = cleanup_workspace(work)
@@ -185,10 +232,12 @@ def generate(args):
             metadata['diagnostic_error'] = str(exc)
         metadata.update(generation_seconds=time.monotonic()-begin, generation_finished_at=time.time())
         phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
-    if error is not None:
+    if error is not None or history.get('status') not in ('published', 'unchanged'):
         save(run/'recovery-workspace.json', {'path':str(work), 'request':str(run/'braid-request.json')})
+    else:
+        shutil.rmtree(work)
+    if error is not None:
         raise error
-    shutil.rmtree(work)
     return run
 
 

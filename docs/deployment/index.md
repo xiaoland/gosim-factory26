@@ -45,6 +45,20 @@ npm lock 和 Python 依赖清单随 runtime 保留。
 `prepare` 不写平台；其余写入按批准的实验范围执行，任何 POST 结果不确定都先保留 journal，再只读核查，不盲重试。
 Playground 仍只用于显式 practice，不混入 Competition 结果。
 
+ARC 的官网 Run detail 使用官方 SDK 写入 Runner 的 `.arc/traceability/*.json` 与 `.arc/runner-events.jsonl`。需要此能力的 Harness 可在 WSL 导出公共工具，并在自身包构建、清单冻结之前放入 ZIP，通过自己的原生指令或工具机制将绝对路径交给 Agent：
+
+```sh
+python3 -m lab.arc_bench runtime export --output /path/to/arc-runtime.pyz
+python3 /path/to/arc-runtime.pyz guide
+python3 /path/to/arc-runtime.pyz methods
+```
+
+该文件包含 2026-09-25 官方 starter 的 `arcbench-agent-runtime` 0.1.0 和调用入口，运行时使用 Runner 的 `ARCBENCH_*` 路径，无需现场安装 SDK。多代理写同一个 run 时统一通过此入口调用官方高层方法；锁只保护通过该入口进行的操作。Agent 应根据实际工作上报需求、接口和测试关系；自报的测试状态不等于官方评分。现有包不会因为设施能够采集而自动出现关联。
+
+需要在官网展示真实 Git 提交的 Harness 可用同一工具执行 `publish-history --source-repo <仓库> --ref <交付引用> [--output-dir <Runner项目目录>]`。它将选定提交及其祖先导入 Runner 项目目录的受管 Git 仓库，通知官网刷新 commit history，不改动应用文件；应用已交付后加 `--preview` 刷新预览。活动 `pi-team-mixed` 包自带该工具，生成中每五秒检查一次交付分支，交付后再发布选定提交。同步结果写入本次 `.factory26/<run>/history-publication.json`；失败不改变应用生成结果，源 worktree 留作恢复。只发布交付分支可达的提交，未合并的 Agent 分支不会出现。
+
+本地 run 与官网 task 的已保存证据可用 `python3 -m lab.arc_bench traceability <目录> [--node <需求ID>] [--json]` 查询；默认不发网络请求。它区分包内工具、实际记录与采集状态。本地保留原始表和事件，官网在既有监控轮询与显式 `collect` 时保存每次追溯及 commit history 响应或具体失败；失败不覆盖上次成功值。终态若返回 `workspace_unavailable`，原始观察保留，但不会覆盖运行中已保存的提交列表。官网没有已确认的自定义文件下载能力，因此查询不会把托管工具调用日志标为已取得。通用 OTLP 仍保存 Harness 自选的 Agent 过程信号。
+
 同一比赛只允许最新 snapshot 承接新任务。
 历史混合矩阵由 [official_matrix.py](../../lab/arc_bench/official_matrix.py) 运行：四个冻结 variant 依次推进；每个 variant 的 Lite 两题与 Web 六题由两个 Competition controller 并行执行，各比赛内部逐题运行。
 两侧全部取得终态、完整评分及 manifest 声明的测试数，才上传下一 variant。

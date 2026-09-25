@@ -15,6 +15,8 @@ from urllib.parse import quote, urlencode
 import uuid
 from zipfile import ZipFile
 
+from .traceability import collect_hosted, inspect as inspect_traceability
+
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -91,7 +93,8 @@ class Client:
                 command += ['--form', f'api_key=<{key_file}']
             result = subprocess.run(command, input=payload, capture_output=True)
             if result.returncode:
-                raise RuntimeError(f'HTTP 传输失败（curl {result.returncode}）；写请求结果可能未知，不能盲目重试')
+                detail = result.stderr.decode(errors='replace').strip()
+                raise RuntimeError(f'HTTP 传输失败（curl {result.returncode}）：{detail}；写请求结果可能未知，不能盲目重试')
             status = int(result.stdout)
             if not 200 <= status < 300:
                 try:
@@ -227,6 +230,10 @@ def saved_summary(run_id, value=None, *, now=None):
     result = summary(value, events=events, observation=observation, traceability=traceability, now=now)
     if traceability is not None:
         result['traceability']['source'] = observation.get('traceability', {}).get('source') or str(path)
+    if path.is_file() or (folder/'observations/traceability').is_dir():
+        evidence = inspect_traceability(folder)['traceability']
+        result['traceability']['last_attempt'] = evidence['last_attempt']
+        result['traceability']['last_success'] = evidence['last_success']
     return result
 
 
@@ -250,10 +257,19 @@ def collect(client, run_id):
     value = status(client, run_id)
     logs(client, run_id)
     folder = output_dir(run_id)
-    for endpoint, filename in [('traceability?node_id=__all__', 'traceability.json'), ('commit-history', 'commit-history.json')]:
-        save(folder/filename, redact(client.request(run_path(run_id)+'/'+endpoint)))
-        record_observation(folder, filename.removesuffix('.json'), run_path(run_id)+'/'+endpoint)
+    collect_artifact(client, run_id, 'traceability')
+    collect_artifact(client, run_id, 'commit-history')
     return value
+
+
+def collect_artifact(client, run_id, name):
+    endpoint = 'traceability?node_id=__all__' if name == 'traceability' else 'commit-history'
+    source = run_path(run_id) + '/' + endpoint
+    observation = collect_hosted(client, source, output_dir(run_id), name, save=save,
+                                 redact=redact, latest_wrapped=False)
+    if observation['status'] == 'completed':
+        record_observation(output_dir(run_id), name, source)
+    return observation
 
 
 def submit(client, package, requirement, name, offline=False, catalog='benchmark', config_path=None, *, practice=False):
@@ -369,6 +385,8 @@ def main():
                 result['event_id'] = event_id
                 print(json.dumps(result,ensure_ascii=False,indent=2))
                 return
+            collect_artifact(client, args.run_id, 'traceability')
+            collect_artifact(client, args.run_id, 'commit-history')
             time.sleep(args.interval)
     elif args.command in ('start', 'cancel'):
         practice_record(run_id=args.run_id)
