@@ -18,7 +18,7 @@ package:
 
 braid-report:
 	@test -n "$(RUN)" -a -n "$(OUTPUT)" || (echo '需要 RUN=/path/to/experiment-run OUTPUT=/path/to/new-site'; exit 2)
-	$(PYTHON) scripts/braid_telemetry_viewer.py "$(RUN)" --output "$(OUTPUT)" --braid "$(BRAID)" $(if $(BRAID_RUN_ID),--braid-run-id "$(BRAID_RUN_ID)")
+	$(PYTHON) -m lab.analysis.braid_telemetry_viewer "$(RUN)" --output "$(OUTPUT)" --braid "$(BRAID)" $(if $(BRAID_RUN_ID),--braid-run-id "$(BRAID_RUN_ID)")
 
 help:
 	@echo 'tools         准备原生工具'

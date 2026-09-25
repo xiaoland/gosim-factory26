@@ -41,12 +41,12 @@ npm lock 和 Python 依赖清单随 runtime 保留。
 输入可为独立需求快照，或输出目录原有的 `requirements/`。
 证据保存在输出的 `.factory26/<run-id>/`；`run.json` 描述生成，`delivery.json` 单独描述交付成功或失败。
 
-官方 Competition 的自动化入口为 [competition.py](../../scripts/competition.py)，统一记录 ZIP identity、submission snapshot、task run、日志游标与终态收集。
+官方 Competition 的自动化入口为 [competition.py](../../lab/arc_bench/competition.py)，统一记录 ZIP identity、submission snapshot、task run、日志游标与终态收集。
 `prepare` 不写平台；其余写入按批准的实验范围执行，任何 POST 结果不确定都先保留 journal，再只读核查，不盲重试。
 Playground 仍只用于显式 practice，不混入 Competition 结果。
 
 同一比赛只允许最新 snapshot 承接新任务。
-历史混合矩阵由 [official_matrix.py](../../scripts/official_matrix.py) 运行：四个冻结 variant 依次推进；每个 variant 的 Lite 两题与 Web 六题由两个 Competition controller 并行执行，各比赛内部逐题运行。
+历史混合矩阵由 [official_matrix.py](../../lab/arc_bench/official_matrix.py) 运行：四个冻结 variant 依次推进；每个 variant 的 Lite 两题与 Web 六题由两个 Competition controller 并行执行，各比赛内部逐题运行。
 两侧全部取得终态、完整评分及 manifest 声明的测试数，才上传下一 variant。
 已完成一侧在重启后复用原 journal，不重复 POST；历史 Lite 单比赛 manifest 仍可恢复。
 客户端并行请求不能证明官网同时分配执行槽，报告应保存各 run 的实际状态和时间。
@@ -59,9 +59,9 @@ Lite/Web 的隔离输入位于仓库同级 `factory26-official-local/platform-in
 
 ## Lite/Web 本地实验
 
-[arc_matrix.py](../../scripts/arc_matrix.py) 将冻结 Agent ZIP 与 Lite/Web 任务展开为可并行的 job；[local_experiment.py](../../scripts/local_experiment.py) 为每个 job 冻结输入、建立独立 run 目录并运行指定命令。
+[arc_matrix.py](../../lab/arc_bench/arc_matrix.py) 将冻结 Agent ZIP 与 Lite/Web 任务展开为可并行的 job；[lab.run](../../lab/run.py) 为每个 job 冻结输入、建立独立 run 目录并运行指定命令。
 它只要求外部 Runner 写入 `workspace/experiment-result.json`，不导入 Factory、Braid 或 Agent 会话格式。
-[arc_bench_adapter.py](../../scripts/arc_bench_adapter.py) 是单独的 ARC-Bench 适配器：调用主办方 `local_submit.py`，保存其原始 workspace 和 `local-result.json`，核对评测完成及用例计数，再写通用结果。
+[arc_bench_adapter.py](../../lab/arc_bench/arc_bench_adapter.py) 是单独的 ARC-Bench 适配器：调用主办方 `local_submit.py`，保存其原始 workspace 和 `local-result.json`，核对评测完成及用例计数，再写通用结果。
 评测完成后的低分仍是有效结果；Runner 没有产出完整评测时是执行失败。
 
 本项目的本地容器构建、Agent 生成和 benchmark 评测统一在 WSL（`wsl.win-ws.localhost`）执行。
@@ -73,27 +73,28 @@ WSL 本轮使用独立 Docker Engine，不重启其他项目所在的 Docker Des
 2026-09-23 的 WSL 观测为 IPv6 可用、IPv4 不通，当时独立 Docker Engine 的默认 bridge 已按 [Docker IPv6 文档](https://docs.docker.com/engine/daemon/ipv6/)启用 IPv6；只验证 WSL 宿主网络不足以证明容器能访问模型。
 出现共享运行环境故障时停止派发，保留完整生成的应用；环境恢复后仅补评测，不把设施失败计作模型零分。
 以下命令在 WSL 仓库中执行，先固定镜像与输入。
-以下路径按仓库与 `factory26-official-local` 同级布置；Docker daemon 必须能访问 bind mount 的实际路径。
+以下路径按仓库与 `factory26-official-local` 同级布置；Docker daemon 必须能访问 bind mount 的实际路径。现存 Runner 固定副本位于旧实验目录 `raw-baseline-20260923-wsl/runner`，新实验可显式引用，后续归档进 `runners/<revision>/` 时须记录实际来源身份。
 基础镜像 digest 是 2026-09-23 核验的 `linux/amd64` 发布物；若换镜像，保留新 digest 和每个 run 的 `image_id`，不要将两者的分数视作同一环境。
 
 ```sh
 LOCAL_ASSETS=../factory26-official-local
+RUNNER="$LOCAL_ASSETS/raw-baseline-20260923-wsl/runner"
 ARCBENCH_LOCAL_BASE_IMAGE=gyataro/arcbench-runner@sha256:40e003ed470dbd4c120b9019876ba77303d38dc8b34be7f6e313fe0563dd14de \
-ARCBENCH_LOCAL_PLATFORM=linux/amd64 "$LOCAL_ASSETS/runner/build-image.sh"
+ARCBENCH_LOCAL_PLATFORM=linux/amd64 "$RUNNER/build-image.sh"
 
-python3 scripts/arc_matrix.py \
+python3 -m lab.arc_bench.arc_matrix \
   --variant deepseek=runs/packages/iteration-throughput-boundary/pi-team-deepseek.zip \
   --variant mixed=runs/packages/iteration-throughput-boundary/pi-team-mixed.zip \
   --case arc-bench-lite/keep --case arc-bench-web/keep \
-  --inputs-root "$LOCAL_ASSETS/platform-inputs" --runner "$LOCAL_ASSETS/runner" \
+  --inputs-root "$LOCAL_ASSETS/platform-inputs" --runner "$RUNNER" \
   --image arcbench-local-submit:latest --workers 4 --separate-evaluation \
-  --output "$LOCAL_ASSETS/runs/example-matrix.json"
+  --output "$LOCAL_ASSETS/experiments/example/manifest.json"
 
-python3 scripts/local_experiment.py run "$LOCAL_ASSETS/runs/example-matrix.json" \
-  --runs-root "$LOCAL_ASSETS/runs/example-results" --listen-host 0.0.0.0
+python3 -m lab.run run "$LOCAL_ASSETS/experiments/example/manifest.json" \
+  --runs-root "$LOCAL_ASSETS/experiments/example/runs" --listen-host 0.0.0.0
 ```
 
-真实模型需在 `arc_matrix.py` 加 `--env-file ~/.config/factory26/llm.env`；该文件权限为 `600`，适配器临时合入 OTLP 参数后传给 Docker，运行结束删除临时副本。
+真实模型需在 `arc_matrix.py` 加 `--env-file .secrets/arc-bench.env`；该文件权限为 `600`，适配器临时合入 OTLP 参数后传给 Docker，运行结束删除临时副本。
 `--prepare-only` 只准备两类输入与制品装配，不产生评分。
 独立生成使用 `--separate-evaluation`，生成阶段不传公开测试；省略该选项的单阶段路径不作为独立生成基线。
 矩阵中的每个执行都有独立 run ID；同一赛题、不同 variant 可以同时运行，`--workers` 只限制总并发，不按赛题或 variant 加锁。
@@ -107,24 +108,24 @@ Docker 容器要连到 Collector 时使用 `--listen-host 0.0.0.0`。
 Runner 若将原始会话或失败 DOM 写到自身不可访问的临时目录，外层设施无法在销毁后补采，应让 Runner 或 Harness 在运行时写入持久 workspace。
 
 ```sh
-python3 scripts/local_experiment.py status "$LOCAL_ASSETS/runs/example-results/<run-id>"
-python3 scripts/local_experiment.py telemetry "$LOCAL_ASSETS/runs/example-results/<run-id>" \
-  --export "$LOCAL_ASSETS/runs/exported-otlp"
+python3 -m lab.run status "$LOCAL_ASSETS/experiments/example/runs/<run-id>"
+python3 -m lab.run telemetry "$LOCAL_ASSETS/experiments/example/runs/<run-id>" \
+  --export "$LOCAL_ASSETS/experiments/example/analysis/exported-otlp"
 ```
 
 `telemetry` 也接受 `--signal`、`--since` 与 `--until`，时间为 Unix 秒；导出的 `.pb` 保持接收时的原始 OTLP protobuf 内容。
 `--max-parallel` 接受任意正整数，设施不另设并发封顶。输入目录中的符号链接在冻结时复制其目标内容；目录产物归档保留内部符号链接，不因常见的 `node_modules/.bin` 链接拒绝整份产物。ARC 矩阵接受输入目录提供的 `COMPETITION/TASK`，不维护赛题白名单或历史测试数量；是否完整评分依据本次 Runner 的终态与计数，适配器的 `--expected-tests` 仅在调用者明确指定时约束数量。
 Braid 的会话重建、静态网站、补采和逐项排障统一见 [Braid 诊断运行手册](braid-diagnostics.md)。
-常用入口为 `make braid-report RUN=<外层实验run目录> OUTPUT=<新网站目录>`，详情见 `make help` 或 `python3 scripts/braid_telemetry_viewer.py --help`。
+常用入口为 `make braid-report RUN=<外层实验run目录> OUTPUT=<新网站目录>`，详情见 `make help` 或 `python3 -m lab.analysis.braid_telemetry_viewer --help`。
 外层实验 run 与 Braid run_id 分别保留，不互相替代；接收批次或生成网站成功都不等于诊断证据完整。
 
 ### Raw Pi/Codex 基线
 
-[package_raw_core.py](../../scripts/package_raw_core.py) 可直接消费 `runtime.py linux` 导出的原生工具目录，也保留从历史 ZIP 提取 runtime 的方式，再加入独立的 [raw_main.py](../../submission/raw_main.py) 入口。
-模型请求参数由 [raw_models.json](../../submission/raw_models.json) 按模型 API 定义，两个核心的 ZIP 固定同一组 `thinking`、`reasoning_effort` 和 `max_tokens` 参数、模型 descriptor 和来源摘要；不读取 Factory harness 的模型配置，也不加载 Factory、Braid、SVC、项目技能或外部子代理。
+[package_raw_core.py](../../scripts/package_raw_core.py) 可直接消费 `runtime.py linux` 导出的原生工具目录，也保留从历史 ZIP 提取 runtime 的方式，再加入独立的 [raw_main.py](../../variants/raw/raw_main.py) 入口。
+模型请求参数由 [raw_models.json](../../variants/raw/raw_models.json) 按模型 API 定义，两个核心的 ZIP 固定同一组 `thinking`、`reasoning_effort` 和 `max_tokens` 参数、模型 descriptor 和来源摘要；不读取 Factory harness 的模型配置，也不加载 Factory、Braid、SVC、项目技能或外部子代理。
 具体运行模型与资格状态由实验记录维护；通道曾返回额度拒绝，不代表模型持续不可用，恢复后应以真实 API 请求确认所选参数和工具调用。
 Pi 直接使用 JSON 输出和原生 session；Codex 使用 JSON 输出的原生 CLI，Chat 网关接入沿用 LiteLLM Responses 兼容层，并由 raw 专用适配器移除 Codex 自带的 reasoning 字段。
-入口将完整原生事件、stderr、会话与终态写在应用工作区 `.arc/raw/`；[raw_otlp.py](../../submission/raw_otlp.py) 将过程事件作为 OTLP logs 发送，跳过高频的逐 token `message_update`。
+入口将完整原生事件、stderr、会话与终态写在应用工作区 `.arc/raw/`；[raw_otlp.py](../../variants/raw/raw_otlp.py) 将过程事件作为 OTLP logs 发送，跳过高频的逐 token `message_update`。
 上报失败记在同一目录，不覆盖生成终态。
 这些事件的分析语义由实验使用者决定。
 
@@ -145,7 +146,7 @@ raw 实验可使用 `~/.config/factory26/llm.env` 的 `FACTORY26_API_KEY`；raw 
 评测阶段不向空入口注入模型凭据。
 生成目录中的原生事件和 OTLP 批次可能包含需求、工具输出或模型文本，分享前检查内容。
 
-raw 的 API 参数以 [raw_models.json](../../submission/raw_models.json) 和包内 raw-config.json 为准。
+raw 的 API 参数以 [raw_models.json](../../variants/raw/raw_models.json) 和包内 raw-config.json 为准。
 原生客户端档位及协议转换不能代替实际 API 能力事实；历史参数调查见[模型推理记录](../../reports/2026-09-23-model-reasoning-probe.md)。
 具体运行组合、资格状态和未完成事项归 [raw 任务](../../tasks/raw-core-local-baseline/packet.md)，不在操作说明中同步另一份矩阵。
 
@@ -176,26 +177,27 @@ VV 组在 mixed 的基础上增加验收方法短指引；这些新源码不等�
 Harness 应将自身未完成/失败表达为非零退出。
 
 旧 run 的 eval/analyze/show 继续读取其归档配置；不要以新 variant 重写旧结果。
-新实验状态使用 local_experiment 的 status，完整评分失败用例是有效结果，生成/评测设施中断不是零分。
+新实验状态使用 `lab.run status` 查看原始执行记录；`lab.analysis.factory show` 解释 ARC 生成、部署和评分。完整评分失败用例是有效结果，生成/评测设施中断不是零分。
 
 ## 按记录生产者查询
 
 先确认拿到的是外层实验目录、Harness 内层目录还是平台 journal；它们的状态描述不同过程。
-当前没有覆盖这些格式的统一 brief 入口。
+`lab.run status` 读取通用执行记录；`lab.analysis.factory show` 解释 ARC 和 Factory 证据；平台 journal 继续由官网工具解释。
 
 | 记录类型 | 从哪里开始 | 下一层证据与限制 |
 | --- | --- | --- |
-| local_experiment 外层 run | `python3 scripts/local_experiment.py status <run目录>` | run.json 的 phase/result、stdout/stderr、workspace 内官方结果；不把旧 run_feedback 的 unknown 当作该实验没有终态。 |
-| Factory 团队生成 | `python3 scripts/factory.py show --run <输出/.factory26/id>` | braid.log、delivery.json、braid-state、native/manifest.json；使用显式路径，不依赖根 runs 的自动发现。 |
+| 实验外层 run | `python3 -m lab.run status <run目录>` | 原样显示保存的 phase、result、输入身份、错误与 OTLP 元数据；不推断评分。 |
+| ARC/Factory 分析 | `python3 -m lab.analysis.factory show --run <run目录>` | 分别解释生成、部署、评分及已归档过程证据。 |
+| Factory 团队生成 | `python3 -m lab.analysis.factory show --run <输出/.factory26/id>` | braid.log、delivery.json、braid-state、native/manifest.json；使用显式路径，不依赖根 runs 的自动发现。 |
 | raw 生成 | 官方 workspace 的 `template/.arc/raw/` | 原生事件、stderr、身份与入口结果；外部评分在外层 Runner 结果中。 |
-| 历史 Factory run | `python3 scripts/run_feedback.py brief <旧run目录>` 或 factory show | 旧 status/outcome 格式与归档评测；这是旧流程摘要，不是任意目录的通用解释器。 |
+| 历史 Factory run | `python3 -m lab.analysis.run_feedback brief <旧run目录>` 或 factory show | 旧 status/outcome 格式与归档评测；这是旧流程摘要，不是任意目录的通用解释器。 |
 | Competition / Playground | 对应 journal、已保存 status 和平台原始结果 | 记录观察时间、远端 ID、完整评分与采集缺口；历史文件不证明远端当前状态。 |
 
 Factory show 可以按原归档支持的评测和用例继续定位：
 
 ```sh
-python3 scripts/factory.py show --run /path/to/factory-run --case REQ-2.2
-python3 scripts/factory.py show --run /path/to/factory-run --eval <evaluation-id> --json
+python3 -m lab.analysis.factory show --run /path/to/factory-run --case REQ-2.2
+python3 -m lab.analysis.factory show --run /path/to/factory-run --eval <evaluation-id> --json
 ```
 
 `list/show` 只读已有运行。
@@ -210,11 +212,12 @@ python3 scripts/factory.py show --run /path/to/factory-run --eval <evaluation-id
 浏览多个归档时，可以生成本机静态诊断页：
 
 ```sh
-python3 scripts/run_viewer.py
+python3 -m lab.analysis.run_viewer
 open runs/viewer/index.html
 ```
 
-当前页面按生产者发现根目录的 Factory run、Competition hosted 控制器声明的平台 run 和已保存的 Playground run；不会完整发现外层 local_experiment 或新嵌套 .factory26 记录，缺少展示不表示未执行。
+页面发现 runs 下嵌套的 Factory/lab 外层记录，以及 Competition hosted 控制器和 Playground 的归档。
+例如 `python3 -m lab.analysis.run_viewer --root ../factory26-official-local --output ../factory26-official-local/experiments/<id>/analysis/viewer` 可将页面放在本次分析目录。默认输出仍为输入根的 `runs/viewer`。
 矩阵、批次、派生 `analysis/run.json` 不算独立 run。
 列表可搜索 run ID、组合和状态；详情分开展示生成/平台状态、完整评分、逐用例错误、执行过程和可打开的归档证据。
 Competition 的 `FAILED` 可以带有效低分，运行中、生成失败和评测中断则显示评分未知。
@@ -256,11 +259,11 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 
 主会话不定时读取原始流，也不通过每三分钟唤醒一次模型来模拟事件通知。
 当前使用子 Agent 的原生完成消息回传，验收范围限于主会话仍活跃的情况；尚未验证主会话结束或 App 关闭后的唤醒。
-local_experiment 应等待执行进程完成并读取持久结果；下面的只读等待命令只适用于旧 Factory 状态格式：
+lab.run 应等待执行进程完成并读取持久结果；下面的只读等待命令只适用于旧 Factory 状态格式：
 
 ```sh
-python3 scripts/run_feedback.py watch runs/<run-id>
-python3 scripts/run_feedback.py watch runs/<run-id> --after-event <已处理的event_id>
+python3 -m lab.analysis.run_feedback watch runs/<run-id>
+python3 -m lab.analysis.run_feedback watch runs/<run-id> --after-event <已处理的event_id>
 ```
 
 独立 `watch` 没有被观测进程的句柄，因此以至少 180 秒的间隔检查文件；发现终态后立即返回。
@@ -276,7 +279,7 @@ python3 scripts/run_feedback.py watch runs/<run-id> --after-event <已处理的e
 缺失证据保留身份及错误，不能用最新文件代替。
 退出时清理 Agent 与应用进程组；报告中的相对产物链接依赖本机保留的 run，不会随源码自动分发。
 
-`python3 scripts/factory.py analyze --run <Factory生成目录>` 为每个原生会话分别导出 `analysis/<序号>-<来源指纹>/evidence-v4.zip`，保存 overview、模型 usage 和 provenance。
+`python3 -m lab.analysis.factory analyze --run <Factory生成目录>` 为每个原生会话分别导出 `analysis/<序号>-<来源指纹>/evidence-v4.zip`，保存 overview、模型 usage 和 provenance。
 来源指纹包含原生内容、实际 provider 和 exporter；缓存使用前核对原生清单与产物哈希。
 相同来源复用已完成分析；来源变化重新导出，全部查询成功后才发布目录，失败不覆盖已有分析。
 历史目录保持原样。
@@ -346,17 +349,17 @@ trace 提供关联的标准化调用上下文；只有需要精确内容恢复�
 
 ## 历史 Playground 操作
 
-[playground.py](../../scripts/playground.py) 使用网站 HTTP 接口完成登录、上传、运行和证据收集，日常实验不需要浏览器。
-首次运行 `python3 scripts/playground.py login`，交互输入网站邮箱和密码；也可以通过 `--credentials ~/.config/factory26/playground-login.json` 读取权限为 600 的 JSON 文件（email、password）。
+[playground.py](../../lab/arc_bench/playground.py) 使用网站 HTTP 接口完成登录、上传、运行和证据收集，日常实验不需要浏览器。
+首次运行 `python3 -m lab.arc_bench.playground login`，交互输入网站邮箱和密码；也可以通过 `--credentials ~/.config/factory26/playground-login.json` 读取权限为 600 的 JSON 文件（email、password）。
 登录验证后保存权限为 600 的 `~/.config/factory26/playground.cookies.txt`。
 网站会话与比赛模型密钥分开保管，登录信息不进入仓库或命令参数。
 
 ```sh
-python3 scripts/playground.py whoami
-python3 scripts/playground.py requirements --catalog benchmark
-python3 scripts/playground.py submit --practice --package /path/to/agent.zip --config /path/to/model-config.json --requirement keep --name factory-keep
-python3 scripts/playground.py watch <run-id>
-python3 scripts/playground.py collect <run-id>
+python3 -m lab.arc_bench.playground whoami
+python3 -m lab.arc_bench.playground requirements --catalog benchmark
+python3 -m lab.arc_bench.playground submit --practice --package /path/to/agent.zip --config /path/to/model-config.json --requirement keep --name factory-keep
+python3 -m lab.arc_bench.playground watch <run-id>
+python3 -m lab.arc_bench.playground collect <run-id>
 ```
 
 上传前必须准备符合平台契约的 Python Agent ZIP，根目录包含 main.py 与 requirements.txt。
@@ -367,7 +370,7 @@ python3 scripts/playground.py collect <run-id>
 
 续跑、启动和取消只接受本工具清单中明确记录为 practice/probe 的 ID；未知、正式和缺少分类的历史 ID 请通过平台管理。
 
-同一包重跑使用 `python3 scripts/playground.py run --submission <submission-id> --requirement <requirement-id>`，避免重复上传。
+同一包重跑使用 `python3 -m lab.arc_bench.playground run --submission <submission-id> --requirement <requirement-id>`，避免重复上传。
 已创建但尚未启动的 run 使用 `start <run-id>`；明确结束云端执行使用 `cancel <run-id>`。
 中断本地 `watch` 只停止等待，不改变云端 run。
 401 表示需要重新登录。
@@ -388,8 +391,8 @@ Playground 与 Competition、本地评测具有不同身份，具体参赛包的
 
 ## 旧执行入口与历史记录
 
-共同配置的 `factory.py batch` 已退役，不再用旧 multi-agent-lite 清单启动新矩阵。
-新矩阵使用前述 arc_matrix/local_experiment 路径；旧 batch.json、inputs.json 及各 run 保留为历史证据，不迁移成新的运行身份。
+共同配置的 Factory batch 已退役，不再用旧 multi-agent-lite 清单启动新矩阵。
+新矩阵使用 `lab.arc_bench.arc_matrix` 和 `lab.run`；当前 Lite 配方见 [pi-team-mixed 矩阵](../../experiments/pi-team-mixed-lite/README.md)。[旧 multi-agent-lite 定义](../../experiments/archive/multi-agent-lite.json)、batch.json、inputs.json 及各 run 保留为历史证据，不迁移成新的运行身份。
 
 concurrency.py 是旧评测并发与模型探测工具，不承担当前矩阵调度。
 其历史记录位于 `runs/concurrency/`，曾有的并发观测只支持相应应用、接口和当时环境，不能推导当前吞吐或模型额度。

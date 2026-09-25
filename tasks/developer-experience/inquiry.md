@@ -27,7 +27,7 @@
 | DX-05 | [raw_otlp.py](../../submission/raw_otlp.py) 的 ScopeLogs.scope 写入裸字符串；捕获当前编码输出并按官方 schema 做内存解码，发现长度越界。 | 字节持久化成功无法保证下游标准工具可消费。 | 当前生产函数输出的独立结构检查。 |
 | DX-06 | [test_raw_baseline.py](../../tests/test_raw_baseline.py) 只断言批次数、字节包含 tool_call，不解码 OTLP。Makefile 未运行文档命令或冷启动检查；本轮本地文件链接检查无断链，README 命令仍失败。 | 检查通过与开发者承诺之间缺乏对应关系。 | 测试边界和入口复核；未据测试数量评价质量。 |
 | DX-07 | [local_experiment.py](../../scripts/local_experiment.py) 用 phase 存终态；[run_feedback.py](../../scripts/run_feedback.py) 主要按旧 status/outcome 解析。新 completed 状态输入返回 status=unknown。viewer 只扫描仓库 runs 根下的旧生产者布局，未接入同级新设施结果。 | 用户需先知道设施代际，才能选对查询入口。 | 解析函数内存复现、发现路径静态检查。 |
-| DX-08 | profiles.configuration 用特定 [multi-agent-lite.json](../../experiments/multi-agent-lite.json) 决定允许任务；ARC 两阶段适配硬编码 `.arc/raw/entry-result.json`。 | 实验选择与通用配置耦合；生成结果判定依赖具体 raw 壳。 | 调用路径确认。 |
+| DX-08 | profiles.configuration 用特定 [multi-agent-lite.json](../../experiments/archive/multi-agent-lite.json) 决定允许任务；ARC 两阶段适配硬编码 `.arc/raw/entry-result.json`。 | 实验选择与通用配置耦合；生成结果判定依赖具体 raw 壳。 | 调用路径确认。 |
 | DX-09 | [package_raw_core.py](../../scripts/package_raw_core.py) 必须从已有 Factory ZIP 提取 runtime；当前 package_agent 走只接受 Pi core 的 profile resolver。raw Codex 依赖历史 ZIP，当前入口未闭合其源码重建路径。 | 制品即使有哈希，也不等于能够从当前声明的输入重建。 | 当前构建入口检查；未断言历史 ZIP 已损坏或不可用。 |
 | DX-10 | local_experiment 先为全矩阵串行 copytree/copy2 和哈希，再打印 queued 并启动 pool。四个 api-v4 ZIP 约 91.6/91.6/331.8/331.8 MiB，八题副本约 6.61 GiB。 | 首次反馈前存在重复准备成本，workers 只作用于后续执行。 | 文件大小与控制流确认；尚未测量时间瓶颈。 |
 | DX-11 | PRD 保存某轮活动矩阵及 task 验收链接；同级 factory26-official-local README 仍宣称生产 Runner 未公开，并指向旧模拟器。 | 长期行为、当前实验与历史材料具有相互矛盾的“当前”表述。 | 本地文档对照；不从 packet 数量推断每个任务都已过期。 |

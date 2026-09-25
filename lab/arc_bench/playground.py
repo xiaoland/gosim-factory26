@@ -15,7 +15,27 @@ from urllib.parse import quote, urlencode
 import uuid
 from zipfile import ZipFile
 
-from factory import ROOT, api_key, load_config, save
+ROOT = Path(__file__).resolve().parents[2]
+
+
+def save(path, value):
+    path = Path(path)
+    temporary = path.with_name(path.name + "." + uuid.uuid4().hex + ".tmp")
+    try:
+        temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
+        temporary.replace(path)
+    finally:
+        temporary.unlink(missing_ok=True)
+
+
+def api_key():
+    path = Path.home() / ".config/factory26/llm.env"
+    for line in path.read_text().splitlines():
+        if line.startswith("FACTORY26_API_KEY="):
+            value = line.split("=", 1)[1].strip().strip('"').strip("'")
+            if value:
+                return value
+    raise RuntimeError(f"请先在 {path} 填写 FACTORY26_API_KEY")
 
 API = 'https://arc-bench.com/api'
 CONFIG = Path.home()/'.config/factory26'
@@ -245,7 +265,7 @@ def submit(client, package, requirement, name, offline=False, catalog='benchmark
             raise ValueError('Python ZIP 根目录必须有 main.py 和 requirements.txt')
     if config_path is None:
         raise ValueError('练习提交需要显式提供 --config')
-    config = load_config(config_path)
+    config = json.loads(Path(config_path).read_text())
     folder = ROOT/'runs/playground'/('upload-'+time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:6])
     folder.mkdir(parents=True)
     manifest = {'package': str(package), 'package_sha256': hashlib.sha256(package.read_bytes()).hexdigest(),

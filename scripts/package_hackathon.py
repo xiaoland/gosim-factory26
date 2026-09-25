@@ -27,7 +27,7 @@ def package(runtime, backend, svc, output):
         skill = ROOT / "harness/skills" / name
         files.update({f"skills/{name}/" + str(path.relative_to(skill)): path
                       for path in skill.rglob("*") if path.is_file()})
-    files.update({"agents/" + path.name: path for path in (ROOT / "submission/agents").glob("*.md")})
+    files.update({"agents/" + path.name: path for path in (ROOT / "variants/native-hackathon/agents").glob("*.md")})
     if svc:
         skill = ROOT / "sources/svc"
         for part in ("SKILL.md", "references", "assets"):
@@ -36,10 +36,10 @@ def package(runtime, backend, svc, output):
             files.update({"skills/svc/" + str(path.relative_to(skill)): path
                           for path in paths if path.is_file()})
     files.update({name: ROOT / path for name, path in {
-        "main.py": "submission/hackathon_main.py",
-        "hackathon_models.json": "submission/hackathon_models.json",
-        "raw_main.py": "submission/raw_main.py",
-        "raw_otlp.py": "submission/raw_otlp.py",
+        "main.py": "variants/native-hackathon/hackathon_main.py",
+        "hackathon_models.json": "variants/native-hackathon/hackathon_models.json",
+        "raw_main.py": "variants/raw/raw_main.py",
+        "raw_otlp.py": "variants/raw/raw_otlp.py",
     }.items()})
     digest = hashlib.sha256(json.dumps({name: hashlib.sha256(path.read_bytes()).hexdigest()
                                       for name, path in files.items()}, sort_keys=True).encode()).hexdigest()

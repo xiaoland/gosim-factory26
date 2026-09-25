@@ -339,6 +339,15 @@ def collect(run: Path) -> dict:
     run = Path(run).resolve()
     metadata_path = run / "run.json"
     metadata = _read(metadata_path)
+    if isinstance(metadata, dict) and 'result_path' in metadata:
+        from .inspect_runs import experiment_summary
+        detail = experiment_summary(run, metadata)
+        brief = {key: detail[key] for key in ('variant', 'task', 'status', 'stage', 'error',
+                 'generation', 'deployment', 'evaluation', 'factory_runs', 'native', 'applications', 'warnings')}
+        brief.update(run_id=detail['id'], terminal=detail['status'] in TERMINAL,
+                     evidence_paths=list(detail['evidence'].values()))
+        brief['event_id'] = _event_id(detail['id'], brief)
+        return brief
     metadata_issues = []
     if not isinstance(metadata, dict):
         metadata = {}

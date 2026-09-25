@@ -11,11 +11,12 @@ variants/<name>/          每个团队 Harness 的独立实现
   agents/                Braid 成员与 Pi 内部角色的原生配置和指令
   build.py / extensions/ 材料选择与原生扩展
 harness/                 共用技能材料与工具依赖声明
-submission/              Linux 资源构建、raw 基线及历史入口
-scripts/                 打包、运行支持、实验执行和证据查询
+submission/              Linux 公共交付和资源构建
+scripts/                 打包、运行支持与模型网关
+lab/                     通用实验执行与 OTLP；ARC 接入；可选过程分析
 sources/                 独立维护的 Braid/SVC 仓库，父仓库 Git 忽略
 third_party/             外部评测器和历史依赖，Git 忽略
-experiments/             特定实验清单，不是 Harness 的全局配置
+experiments/             实验配方与归档定义，不是 Harness 的全局配置
 tasks/                   当前问题、设计、授权、计划与恢复点
 reports/                 带条件和证据入口的历史结论
 runs/                    原始运行产物，Git 忽略
@@ -67,6 +68,7 @@ runs/                    原始运行产物，Git 忽略
 完成既定 benchmark 后无论分数高低先汇报，由用户决定下一轮；遵守用户的停止要求。
 
 长实验优先由程序记录终态并通过执行完成或获授权子 Agent 的完成消息返回，不频繁唤醒主 Agent 读取心跳。
+实验监控使用 [run-monitor](agents/run-monitor.md) 的 `gpt-5.6-luna / low` 配置；工具会话的续等留在程序编排内，不每分钟回到模型调用 wait。
 远端没有事件接口时，后台采集从三分钟间隔起步；token 增长不等于语义进展。
 恢复、等待和不同记录格式的查询方法见运行说明，不把旧 watcher 当作所有 run 的统一入口。
 

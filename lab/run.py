@@ -15,7 +15,8 @@ import sys
 from threading import Event, Lock
 import time
 
-from otlp_store import SIGNALS, initialize, list_batches, read_batch, receiver
+from .otlp import SIGNALS, initialize, list_batches, read_batch, receiver
+from .status import read_status
 
 
 NAME = re.compile(r"[a-z][a-z0-9_]*\Z")
@@ -289,8 +290,7 @@ def main():
         states = run_manifest(args.manifest, args.runs_root, args.max_parallel, args.listen_host)
         return 0 if all(item["phase"] == "completed" for item in states) else 1
     if args.action == "status":
-        from inspect_runs import show_run
-        print(json.dumps(show_run(args.run), ensure_ascii=False, indent=2))
+        print(json.dumps(read_status(args.run), ensure_ascii=False, indent=2))
         return 0
     database = args.run / "telemetry.sqlite"
     rows = list_batches(database, args.signal, args.since, args.until)

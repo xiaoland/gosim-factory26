@@ -2,7 +2,7 @@
 
 GOSIM Agentic Factory 2026 的 Agent Harness 实验仓库。当前开发 Braid + SVC + Codex app-server/Pi 的 multi-agent harness，保留独立生成、冻结、官方 ARC-Bench 评测和 SVC analysis 证据。
 
-当前四个团队 Harness 分别位于 `variants/pi-team-deepseek`、`pi-team-glm`、`pi-team-mixed` 和 `pi-team-vv`，各自持有完整代码、原生角色与指令。它们使用 Pi + Braid，并通过 skill 读取 SVC；raw Pi/Codex 另作基线。
+当前唯一活动 Harness 为 `variants/pi-team-mixed`：Pi + Braid + SVC，持有完整代码、原生角色与指令。其它团队及原生对照已停用／归档，保留历史实现和结果；详见 [Variant 状态](variants/README.md)。
 
 构建一个参赛包：
 
@@ -11,7 +11,7 @@ python3 scripts/package_agent.py --variant pi-team-mixed \
   --output runs/packages/mixed.zip --docker-context arcbox-win
 ```
 
-运行与官方 Runner 接入见 [运行文档](docs/deployment/index.md)。开发准备、角色修改与源码运行见 [CONTRIBUTING](CONTRIBUTING.md)，组件与交付关系见[技术说明](docs/product-tdd/index.md)，协作约定见 [AGENTS.md](AGENTS.md)。
+运行与官方 Runner 接入见 [运行文档](docs/deployment/index.md)；当前 Lite 两阶段矩阵配方位于 [experiments](experiments/pi-team-mixed-lite/README.md)。开发准备、角色修改与源码运行见 [CONTRIBUTING](CONTRIBUTING.md)，组件与交付关系见[技术说明](docs/product-tdd/index.md)，协作约定见 [AGENTS.md](AGENTS.md)。
 
 包内 `main.py` 接受需求目录和 `--output-dir`；生成与外部评测分开。Braid 管理 Issue/PR 上下文与 comment 协作，SVC 提供按需读取的方法，二者没有直接依赖。新运行使用明确制品，历史结果保持原始条件。
 

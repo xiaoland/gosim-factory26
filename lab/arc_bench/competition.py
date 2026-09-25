@@ -17,7 +17,7 @@ import time
 from urllib.parse import urlencode, urlsplit
 from zipfile import ZipFile
 
-from playground import ApiError, Client, CONFIG, api_key, redact, run_path
+from .playground import ApiError, Client, CONFIG, api_key, redact, run_path
 
 TERMINAL = {'PASSED', 'FAILED', 'CANCELLED'}
 
@@ -99,12 +99,15 @@ def package_identity(package):
     return manifest
 
 
-def prepare(directory, package, *, competition_id, variant, tasks, model_config, name=None):
+def prepare(directory, package, *, competition_id, variant, tasks, model_config, name=None,
+            credential_mode='self_funded'):
     """一次 variant 对应一个冻结 ZIP 和多个 task；相同输入只读复用。"""
     competition_id, variant = identifier(competition_id), identifier(variant)
     tasks = [identifier(task) for task in tasks]
     if not tasks or len(set(tasks)) != len(tasks):
         raise ValueError('task 列表必须非空且不重复')
+    if credential_mode not in {'self_funded', 'official_evaluation'}:
+        raise ValueError('credential_mode 必须是 self_funded 或 official_evaluation')
     settings = {key: model_config.get(key) for key in ('base_url', 'model', 'visual_model')}
     if not settings['base_url'] or not settings['model']:
         raise ValueError('model_config 需要 base_url 与 model')
@@ -116,8 +119,11 @@ def prepare(directory, package, *, competition_id, variant, tasks, model_config,
     if directory.exists():
         try:
             existing = json.loads((directory/'inputs.json').read_text())
+            # Historical journals used a caller-supplied key before this field existed.
+            existing.setdefault('credential_mode', 'self_funded')
             expected = {'competition_id': competition_id, 'variant': variant, 'tasks': tasks,
                         'model_config': settings, 'display_name': name or variant,
+                        'credential_mode': credential_mode,
                         'package_sha256': digest(package)}
             if (any(existing.get(key) != value for key, value in expected.items())
                     or digest(directory/'agent.zip') != existing['package_sha256']
@@ -140,6 +146,7 @@ def prepare(directory, package, *, competition_id, variant, tasks, model_config,
     value = dict(schema_version=1, venue='hosted', competition_id=competition_id,
                  variant=variant, package_sha256=digest(frozen), package='agent.zip',
                  package_manifest=redact(manifest), model_config=settings, tasks=tasks,
+                 credential_mode=credential_mode,
                  display_name=name or variant, created_at=time.time())
     atomic_json(directory/'inputs.json', value)
     state = dict(schema_version=1, venue='hosted', competition_id=competition_id,
@@ -182,6 +189,9 @@ class Controller:
         try:
             self.locks.enter_context(locked(self.directory/'controller.lock'))
             self.inputs = json.loads((self.directory/'inputs.json').read_text())
+            self.inputs.setdefault('credential_mode', 'self_funded')
+            if self.inputs['credential_mode'] not in {'self_funded', 'official_evaluation'}:
+                raise ValueError('journal 包含未知 credential_mode')
             competition = identifier(self.inputs['competition_id'])
             self.locks.enter_context(locked(self.lock_root/(competition+'.lock')))
             self.state = json.loads((self.directory/'state.json').read_text())
@@ -305,13 +315,16 @@ class Controller:
                 value = self.client.request(run_path(identifier(run_id)))
                 if value.get('id') != run_id or value.get('status') not in TERMINAL:
                     raise Blocked('上一个 snapshot 仍有未终结任务，禁止提前上传新 variant')
-        if not self.secret:
-            raise ValueError('snapshot 需要通过内存提供模型 key；不会写入 journal')
+        credential_mode = self.inputs['credential_mode']
+        secret = self.secret if credential_mode == 'self_funded' else None
+        if credential_mode == 'self_funded' and not secret:
+            raise ValueError('self_funded snapshot 需要通过内存提供模型 key；不会写入 journal')
         self._post('snapshot', '/submissions', fields={
             'competition_id': self.inputs['competition_id'], 'runtime': 'python',
             'catalog': 'competition', 'agent_source': 'upload',
+            'credential_mode': credential_mode,
             'display_name': self.inputs['display_name'], **self.inputs['model_config']},
-            package=self.directory/'agent.zip', secret=self.secret,
+            package=self.directory/'agent.zip', secret=secret,
             prior_ids=[item['id'] for item in history])
         return self.state['submission_id']
 
@@ -349,7 +362,7 @@ class Controller:
         item['platform_result'] = {key: value[key] for key in
             ('score', 'test_pass_rate', 'feature_implementation_rate', 'passed_count', 'failed_count',
              'total_tests', 'run_duration_seconds', 'token_count', 'token_cost', 'token_cost_usd', 'token_cost_currency',
-             'started_at', 'finished_at') if key in value}
+             'started_at', 'finished_at', 'billing_mode', 'credential_mode') if key in value}
         # The platform exposes the full test rows, not a total_tests field.
         if isinstance(value.get('tests'), list):
             item['platform_result']['total_tests'] = len(value['tests'])
@@ -475,6 +488,7 @@ class Controller:
     def summary(self):
         result = {key: self.safe(self.state[key]) for key in
                   ('venue', 'competition_id', 'package_sha256', 'phase', 'submission_id', 'tasks')}
+        result['credential_mode'] = self.inputs['credential_mode']
         pending = self.state['pending']
         result['pending'] = ({key: pending.get(key) for key in ('operation', 'task', 'requested_at', 'error_class')}
                              if pending else None)
@@ -507,6 +521,8 @@ def main():
     prep.add_argument('--task', action='append', required=True)
     prep.add_argument('--model-config', required=True, type=Path)
     prep.add_argument('--name')
+    prep.add_argument('--credential-mode', choices=('self_funded', 'official_evaluation'),
+                      default='self_funded', help='冻结此次提交的凭据模式；正式额度模式不读取个人 key')
     prep.add_argument('--json', action='store_true', help='输出完整结构化结果；默认只显示身份与证据路径')
     for action in ('snapshot', 'create', 'start', 'status', 'logs', 'collect', 'recover', 'watch', 'run-all'):
         command = commands.add_parser(action)
@@ -523,13 +539,16 @@ def main():
     args = parser.parse_args()
     if args.command == 'prepare':
         value = prepare(args.state, args.package, competition_id=args.competition, variant=args.variant,
-                        tasks=args.task, model_config=json.loads(args.model_config.read_text()), name=args.name)
-        value = {key: value[key] for key in ('venue', 'variant', 'competition_id', 'package_sha256')}
+                        tasks=args.task, model_config=json.loads(args.model_config.read_text()), name=args.name,
+                        credential_mode=args.credential_mode)
+        value = {key: value[key] for key in ('venue', 'variant', 'competition_id', 'package_sha256', 'credential_mode')}
     else:
-        secret = None
-        if args.command in {'snapshot', 'run-all'}:
-            secret = 'unused-offline-probe' if args.offline else api_key()
-        with Controller(args.state, secret=secret) as controller:
+        with Controller(args.state) as controller:
+            if args.command in {'snapshot', 'run-all'}:
+                if controller.inputs['credential_mode'] == 'self_funded':
+                    controller.secret = 'unused-offline-probe' if args.offline else api_key()
+                elif args.offline:
+                    parser.error('--offline 仅适用于 self_funded')
             if args.command in {'watch', 'run-all'}:
                 method = controller.watch if args.command == 'watch' else controller.run_all
                 method(*([args.task] if args.command == 'watch' else []), interval=args.interval)
@@ -539,7 +558,7 @@ def main():
                 getattr(controller, args.command)(*([args.task] if hasattr(args, 'task') else []))
             value = controller.summary()
     if not args.json:
-        compact = {key: value[key] for key in ('status', 'phase', 'submission_id', 'score_status', 'package_sha256') if key in value}
+        compact = {key: value[key] for key in ('status', 'phase', 'submission_id', 'score_status', 'package_sha256', 'credential_mode') if key in value}
         compact['evidence'] = str(args.state.resolve())
         if 'tasks' in value:
             compact['tasks'] = {task: {key: item[key] for key in ('phase', 'run_id', 'score_status') if key in item}

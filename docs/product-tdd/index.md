@@ -29,10 +29,10 @@ variants/<name>/main.py          variant/build.py + 指定工具与技能材料
 
 [runtime.py](../../scripts/runtime.py)准备工具，不读取题目或角色配置。
 [package_agent.py](../../scripts/package_agent.py)调用所选 variant 的 build.py 装入显式材料；打包不是应用生成。
-raw 基线由 [raw_main.py](../../submission/raw_main.py)独立执行，可直接使用工具资源，不必经过团队 Harness。
+raw 基线由 [raw_main.py](../../variants/raw/raw_main.py)独立执行，可直接使用工具资源，不必经过团队 Harness。
 
-[local_experiment.py](../../scripts/local_experiment.py)运行外部 argv 并保存输入、结果和原始观测，不解释 Agent 的内部协作。
-[arc_matrix.py](../../scripts/arc_matrix.py)选择实验组合；[arc_bench_adapter.py](../../scripts/arc_bench_adapter.py)调用官方 Runner 并解释其评测结果。
+[lab.run](../../lab/run.py)运行外部 argv 并保存输入、结果和原始 OTLP 批次；[lab.status](../../lab/status.py)只呈现保存状态，不解释 Agent 的内部协作。
+[arc_matrix.py](../../lab/arc_bench/arc_matrix.py)选择实验组合；[arc_bench_adapter.py](../../lab/arc_bench/arc_bench_adapter.py)调用官方 Runner；[ARC 结果解释](../../lab/arc_bench/results.py)与[原生过程证据](../../lab/analysis/native_evidence.py)只用于可选分析。
 替换 Harness 不应要求实验控制器识别另一种私有会话格式。
 
 ## Braid、原生 Agent 与 SVC
@@ -104,5 +104,5 @@ Collector 继续只保存原始 OTLP 批次，重建通过 Braid 公开 CLI 读�
 `braid_telemetry_viewer.py` 以实验 run 为入口，通过 OTLP Backend 查询原始批次，再调用 Braid 的官方类型解码与证据重建接口，生成离线静态网站。
 页面通过 OTLP resource 选择 Braid 运行，展示消息、对象和三信号；本地会话归档不作为补齐数据源，Backend 缺失保持可见。图表按 runtime resource 和指标属性分组，不能将累计指标跨实例重复求和，历史导出的操作 span 不当作模型执行。
 
-当前查询工具尚未统一覆盖所有新旧布局，Viewer 未发现某条记录不证明它没有执行。
+查询层读取 Factory 与 lab 外层 run 的实际记录，分别呈现生成、部署和评分；完整评分不能由容器退出码推导，缺少原始证据仍显示未知。
 开发依赖恢复也尚未覆盖所有本地未发布修改；这些限制见运行/开发说明，不能用本技术说明宣称已解决。

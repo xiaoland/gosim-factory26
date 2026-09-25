@@ -6,10 +6,7 @@ import json
 from pathlib import Path
 from zipfile import ZipFile, ZIP_DEFLATED
 
-from arc_bench_adapter import EXCLUDED_SOURCE
-
-
-ROOT = Path(__file__).resolve().parents[1]
+from .arc_bench_adapter import EXCLUDED_SOURCE
 
 
 def package(runs, output):
@@ -46,7 +43,7 @@ def package(runs, output):
     with output.open("xb") as stream:
         try:
             with ZipFile(stream, "w", compression=ZIP_DEFLATED) as archive:
-                archive.write(ROOT / "submission/arc_replay.py", "main.py")
+                archive.write(Path(__file__).with_name("arc_replay.py"), "main.py")
                 archive.writestr("requirements.txt", "")
                 archive.writestr("replay-manifest.json", json.dumps(manifest, ensure_ascii=False, indent=2) + "\n")
                 for name, path in files.items():

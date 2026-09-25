@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | Harness 的指令、角色、协作或执行 | `variants/<name>/main.py`、`run.py`、`agents/` | 生成运行的原生配置、会话与应用，获授权的 bench 得分。 |
 | 原生工具或打包 | `scripts/runtime.py`、variant 的 `build.py`、`scripts/package_agent.py` | 实际安装、构建与提交过程的输出。 |
-| 实验执行或 ARC 接入 | `scripts/local_experiment.py`、`arc_bench_adapter.py` | 官方 Runner 的真实运行与原始错误。 |
+| 实验执行或 ARC 接入 | `lab/run.py`、`lab/otlp.py`、`lab/arc_bench/arc_bench_adapter.py` | 官方 Runner 的真实运行与原始错误。 |
 | Pi 子代理观测 | variant 的 `extensions/` | 实际会话和原始观测记录。 |
 | Braid | `sources/braid` 自身说明和公开 local 接口 | 自身构建和实际 Harness 调用结果。 |
 | SVC skill 接线 | variant 的启动参数、角色 Markdown、`build.py` | 运行中实际读取的技能及上下文。 |
@@ -58,7 +58,7 @@
 `run.py:native_files` 将所选 SVC Explore、Implementation、Design 章节正文和来源目录装入 explorer、executor、specialist，方法仍以随包分发的 SVC 文件为源。
 `exploration-tools` 的短工具指引直接进入这些角色；executor 与 browser-operator 同时取得 agent-browser 指引，vision 保持给定图片分析职责。
 
-原生 Hackathon 四配置由 `submission/hackathon_main.py` 装配：角色简介用于选角，正文在 `submission/agents/`，`scripts/package_hackathon.py` 收录正文和技能。
+原生 Hackathon 四配置由 `variants/native-hackathon/hackathon_main.py` 装配：角色简介用于选角，正文在 `variants/native-hackathon/agents/`，`scripts/package_hackathon.py` 收录正文和技能。
 Base/SVC 两组提供相同探索工具；只有 SVC 组装入对应方法及完整技能入口。
 Codex 使用原生 `agents/*.toml`；历史由 spawn 参数控制，按实际工具协议传 `fork_context:false` 或 `fork_turns:"none"`。
 Pi 明确 append 基础系统提示、选定技能并关闭内建角色发现。配置表达意图，实际生效与收益仍须从后续真实会话取证。
@@ -160,15 +160,15 @@ Cargo/npm/Docker 负责增量复用，不另建通用构建系统。
 ## 运行证据与收尾
 
 Braid 运行诊断以外层实验 run 为入口：`make braid-report RUN=<实验目录> OUTPUT=<新网站目录>`。
-[诊断运行手册](docs/deployment/braid-diagnostics.md)说明 Backend 查询、补采、失败产物、组件修改位置及验收边界；`run_viewer.py` 负责实验总览，Braid 网站负责 OTLP 内的会话和协作现场，两者不是同一数据视图。
-修改导出语义时从 `sources/braid/src/telemetry.rs`、`evidence.rs` 开始，修改页面从 `scripts/braid_telemetry_viewer.py`、同名 HTML 模板开始；构建本机 Braid 后用已归档真实 Backend 生成新目录核对，不以重新运行模型作为默认验证手段。
+[诊断运行手册](docs/deployment/braid-diagnostics.md)说明 Backend 查询、补采、失败产物、组件修改位置及验收边界；`lab.analysis.run_viewer` 负责实验总览，Braid 网站负责 OTLP 内的会话和协作现场，两者不是同一数据视图。
+修改导出语义时从 `sources/braid/src/telemetry.rs`、`evidence.rs` 开始，修改页面从 `lab/analysis/braid_telemetry_viewer.py`、同名 HTML 模板开始；构建本机 Braid 后用已归档真实 Backend 生成新目录核对，不以重新运行模型作为默认验证手段。
 
 
-原始证据位于生成输出的 `.factory26/<id>`，可用 `factory.py show --run <该目录>`、`analyze --run <该目录>`。
-外层实验状态用 `local_experiment.py status <run目录>`；二者描述不同进程边界，不能用其中一个的成功代替另一个。
-默认 viewer 尚未自动发现所有嵌套运行，使用明确路径，不把缺失展示当成没有执行。
+原始证据位于生成输出的 `.factory26/<id>`，可用 `python3 -m lab.analysis.factory show --run <该目录>`、`python3 -m lab.analysis.factory analyze --run <该目录>`。
+外层实验状态用 `python3 -m lab.run status <run目录>`；详细 ARC/Factory 解释用 `python3 -m lab.analysis.factory show --run <run目录>`。二者描述不同进程边界，不能用其中一个的成功代替另一个。
+`python3 -m lab.analysis.run_viewer --root <包含runs的根目录>` 发现嵌套实验，进入一条 run 后停止递归扫描其输入和依赖。
 
-旧 `factory.py` 的活动 variant 默认生成和 batch 已退休；旧结果查询和旧官网 journal 保留。
+旧 Factory 的活动 variant 默认生成和 batch 已退休；旧结果查询和旧官网 journal 保留。
 跨仓库改动记录实际依赖与运行结果；更新受影响的操作说明。
 不要为了文档一致重写历史实验报告。
 

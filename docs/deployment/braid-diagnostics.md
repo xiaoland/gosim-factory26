@@ -36,7 +36,7 @@ make braid-report RUN=/path/to/experiment-run OUTPUT=/path/to/new-site
 直接脚本入口与 Make 入口等价：
 
 ```sh
-python3 scripts/braid_telemetry_viewer.py /path/to/experiment-run \
+python3 -m lab.analysis.braid_telemetry_viewer /path/to/experiment-run \
   --output /path/to/new-site --braid /path/to/host-braid
 ```
 
@@ -45,14 +45,14 @@ python3 scripts/braid_telemetry_viewer.py /path/to/experiment-run \
 只想检查接收情况或导出 protobuf 时：
 
 ```sh
-python3 scripts/local_experiment.py telemetry /path/to/experiment-run
-python3 scripts/local_experiment.py telemetry /path/to/experiment-run --export /path/to/otlp
+python3 -m lab.run telemetry /path/to/experiment-run
+python3 -m lab.run telemetry /path/to/experiment-run --export /path/to/otlp
 sources/braid/target/debug/braid telemetry decode --input /path/to/otlp > /path/to/decoded.json
 sources/braid/target/debug/braid telemetry reconstruct \
   --input /path/to/otlp --output /path/to/new-evidence
 ```
 
-`local_experiment telemetry` 可按 `--signal`、`--since`、`--until` 筛选；完整重建应导出全部批次，不能只取 traces，也不能将分片所在时段筛掉。`decode` 依赖文件名的 `-logs.pb`、`-traces.pb`、`-metrics.pb` 后缀区分 wire schema，不要随意改名。多运行重建使用 `reconstruct --run-id <内层ID>`。
+`lab.run telemetry` 可按 `--signal`、`--since`、`--until` 筛选；完整重建应导出全部批次，不能只取 traces，也不能将分片所在时段筛掉。`decode` 依赖文件名的 `-logs.pb`、`-traces.pb`、`-metrics.pb` 后缀区分 wire schema，不要随意改名。多运行重建使用 `reconstruct --run-id <内层ID>`。
 
 ## 从哪些文件开始排障
 
@@ -105,9 +105,9 @@ Factory 自动补采最多等待 120 秒，错误单独记录，不覆盖应用�
 | 原生/对象快照、分片、摘要、重建、protobuf 解码与 Markdown | `sources/braid/src/evidence.rs`、`src/cli/mod.rs` |
 | run/session/turn 生命周期埋点 | `sources/braid/src/local.rs`、`src/group/`、`src/provider/` |
 | Factory 归档结束后的补采和错误留存 | `scripts/core.py`、`scripts/braid_runtime.py` |
-| 实验接收、run 隔离与批次查询 | `scripts/local_experiment.py`、`scripts/otlp_store.py` |
-| Backend 查询、运行选择与生成网站 | `scripts/braid_telemetry_viewer.py` |
-| GitHub 式讨论、聊天与三信号展示 | `scripts/braid_telemetry_viewer.html` |
+| 实验接收、run 隔离与批次查询 | `lab/run.py`、`lab/otlp.py` |
+| Backend 查询、运行选择与生成网站 | `lab/analysis/braid_telemetry_viewer.py` |
+| GitHub 式讨论、聊天与三信号展示 | `lab/analysis/braid_telemetry_viewer.html` |
 
 当前已经以真实 Backend 数据核对原生字节、对象、重复导出和 HTTP 错误；构建及格式/语法检查也有记录。实时模型链路、子代理全文、原生 compaction/分支仍缺新的真实材料；浏览器视觉与交互验收受工具 URL 策略阻断，未宣称通过。后续实际验证和原始收据入口见[阶段报告](../../reports/2026-09-24-braid-otlp.md)。
 

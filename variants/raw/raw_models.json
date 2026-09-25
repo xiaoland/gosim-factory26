@@ -1,0 +1,125 @@
+{
+  "deepseek-v4-flash-vision-exp": {
+    "descriptor": {
+      "id": "deepseek-v4-flash-vision-exp",
+      "name": "DeepSeek V4 Flash Vision Exp",
+      "api": "openai-completions",
+      "reasoning": true,
+      "input": [
+        "text",
+        "image"
+      ],
+      "contextWindow": 128000,
+      "maxTokens": 16384,
+      "thinkingLevelMap": {
+        "off": "none"
+      },
+      "compat": {
+        "supportsStore": false,
+        "supportsDeveloperRole": false,
+        "maxTokensField": "max_tokens",
+        "thinkingFormat": "deepseek"
+      }
+    },
+    "chat_parameters": {
+      "thinking": {
+        "type": "disabled"
+      }
+    }
+  },
+  "glm-5.3-flash": {
+    "descriptor": {
+      "id": "glm-5.3-flash",
+      "name": "GLM-5.3-Flash",
+      "api": "openai-completions",
+      "reasoning": true,
+      "input": [
+        "text",
+        "image"
+      ],
+      "contextWindow": 1000000,
+      "maxTokens": 131072,
+      "thinkingLevelMap": {
+        "off": null,
+        "low": "low",
+        "high": "high",
+        "max": "max"
+      },
+      "compat": {
+        "supportsStore": false,
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": true,
+        "maxTokensField": "max_tokens",
+        "thinkingFormat": "zai",
+        "zaiToolStream": true
+      }
+    },
+    "chat_parameters": {
+      "thinking": {
+        "type": "enabled",
+        "clear_thinking": false
+      },
+      "reasoning_effort": "low"
+    }
+  },
+  "kimi-k2.7-code": {
+    "descriptor": {
+      "id": "kimi-k2.7-code",
+      "name": "Kimi K2.7 Code",
+      "api": "openai-completions",
+      "reasoning": true,
+      "input": [
+        "text",
+        "image"
+      ],
+      "contextWindow": 262144,
+      "maxTokens": 262144,
+      "thinkingLevelMap": {
+        "off": null
+      },
+      "compat": {
+        "supportsStore": false,
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStrictMode": false,
+        "maxTokensField": "max_tokens",
+        "thinkingFormat": "deepseek"
+      }
+    },
+    "chat_parameters": {
+      "thinking": {
+        "type": "enabled"
+      }
+    }
+  },
+  "qwen3.6-plus": {
+    "descriptor": {
+      "id": "qwen3.6-plus",
+      "name": "Qwen 3.6 Plus",
+      "api": "openai-completions",
+      "reasoning": true,
+      "input": [
+        "text",
+        "image"
+      ],
+      "contextWindow": 1000000,
+      "maxTokens": 65536,
+      "thinkingLevelMap": {
+        "off": "none"
+      },
+      "compat": {
+        "supportsStore": false,
+        "supportsDeveloperRole": false,
+        "supportsReasoningEffort": false,
+        "supportsStrictMode": false,
+        "maxTokensField": "max_tokens",
+        "thinkingFormat": "deepseek"
+      }
+    },
+    "chat_parameters": {
+      "thinking": {
+        "type": "disabled"
+      }
+    }
+  }
+}

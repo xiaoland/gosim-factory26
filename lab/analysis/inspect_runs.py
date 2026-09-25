@@ -6,6 +6,9 @@ from pathlib import Path
 import re
 import time
 
+from lab.arc_bench.results import experiment_summary as arc_summary
+from .native_evidence import discover
+
 
 ERROR_LIMIT = 4000
 ANSI = re.compile(r"\x1b(?:\[[0-?]*[ -/]*[@-~]|\][^\x07]*(?:\x07|\x1b\\))")
@@ -25,7 +28,7 @@ def _read(path, warnings):
 def _error(value):
     clean = ANSI.sub("", str(value or ""))
     clean = re.sub(r"[\x00-\x08\x0b-\x1f\x7f]", "", clean)
-    return {"text": clean[:ERROR_LIMIT], "truncated": len(clean) > ERROR_LIMIT}
+    return {"text": clean, "truncated": False}
 
 
 def _existing(path):
@@ -104,9 +107,36 @@ def _analysis(run, warnings):
     return result
 
 
+def experiment_summary(run, metadata):
+    detail = arc_summary(run, metadata)
+    detail.update(discover(run, detail))
+    return detail
+
+
+def render_experiment(detail):
+    lines = [f"{detail['id']} | {detail['variant']} | {detail['task']} | {detail['status']}",
+             f"生成: {detail['generation']['status']}；部署: {detail['deployment']['status']}；"
+             f"评分: {detail['evaluation']['status']}；得分: {_score_text(detail['evaluation'])}"]
+    for name, error in (('执行', detail.get('error')), ('生成', detail['generation'].get('error')),
+                        ('部署', detail['deployment'].get('error')), ('评分', detail['evaluation'].get('error'))):
+        if error:
+            lines.append(f"{name}错误: {error.get('text') if isinstance(error, dict) else error}")
+    for label, paths in (('Factory 会话入口', detail['factory_runs']), ('原生会话', detail['native']),
+                         ('应用', detail['applications'])):
+        lines.extend(f'{label}: {path}' for path in paths)
+    lines.append('原始证据（全部路径见 --json）:')
+    lines.extend('  '+str(path) for name, path in detail['evidence'].items()
+                 if name in ('run.json', 'stdout.log', 'stderr.log', 'workspace/experiment-result.json')
+                 or Path(name).name in ('runner-events.jsonl', 'playwright-report.json', 'local-result.json'))
+    lines.extend('警告: '+warning for warning in detail['warnings'])
+    return '\n'.join(lines)
+
+
 def _summary(run, evaluation=None):
     warnings = []
     metadata = _read(run / "run.json", warnings)
+    if "result_path" in metadata:
+        return experiment_summary(run, metadata), metadata, []
     config = _read(run / "config.json", warnings)
     variant, inferred = _variant(metadata, config)
     folders = sorted(path for path in (run / "evaluation").glob("*") if path.is_dir())
@@ -150,7 +180,19 @@ def _summary(run, evaluation=None):
 def list_runs(root, variant=None, task=None, backend=None) -> list[dict]:
     """按目录名逆序列出有 run.json 的实验；缺失指标使用 null/unknown。"""
     result = []
-    for path in sorted((Path(root).resolve() / "runs").glob("*/run.json"), reverse=True):
+    paths = []
+    # Stop at each run: inputs, app dependencies and nested sessions are not experiments.
+    for folder, directories, files in os.walk(Path(root).resolve()/'runs'):
+        directories[:] = [d for d in directories if d not in
+                          {'node_modules', '.git', 'inputs', 'workspace', 'work', 'artifacts',
+                           'runtime', 'viewer', 'sources', 'application', 'native', 'submission'}]
+        if 'run.json' in files:
+            path = Path(folder)/'run.json'
+            metadata = _read(path, [])
+            if 'result_path' in metadata or 'backend' in metadata or 'variant' in metadata:
+                paths.append(path)
+                directories.clear()
+    for path in sorted(paths, reverse=True):
         row, _, _ = _summary(path.parent)
         if ((variant is None or row["variant"] == variant) and (task is None or row["task"] == task)
                 and (backend is None or row["backend"] == backend)):
@@ -459,6 +501,10 @@ def show_run(run, evaluation=None, case=None, profile=None, session=None) -> dic
     """返回摘要和证据路径；指定 case 时只展开该用例的有界错误与附件。"""
     run = Path(run).resolve()
     detail, metadata, folders = _summary(run, evaluation)
+    if detail.get('producer') == 'local_experiment':
+        if any(value is not None for value in (evaluation, case, profile, session)):
+            raise ValueError('筛选会话请用摘要中的 Factory 目录；逐例证据见 Playwright report')
+        return detail
     detail["evaluations"] = [{"id": folder.name, "path": str(folder)} for folder in folders]
     detail["runtime"] = metadata.get("runtime")
     detail["live_braid"] = _live_braid(metadata, detail["warnings"])
@@ -504,6 +550,8 @@ def render_list(rows) -> str:
 
 
 def render_show(detail) -> str:
+    if detail.get("producer") == "local_experiment":
+        return render_experiment(detail)
     def path_text(value):
         path = Path(value)
         return str(path.relative_to(detail["path"])) if path.is_relative_to(detail["path"]) else str(path)

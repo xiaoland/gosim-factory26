@@ -9,9 +9,9 @@ from pathlib import Path
 import subprocess
 import sys
 
-from otlp_store import list_batches, read_batch
+from lab.otlp import list_batches, read_batch
 
-ROOT = Path(__file__).resolve().parents[1]
+ROOT = Path(__file__).resolve().parents[2]
 
 
 def read_json(path):
@@ -195,7 +195,7 @@ def generate(run, output, braid, braid_run_id):
 def main():
     parser = argparse.ArgumentParser(
         description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter,
-        epilog='示例：\n  python3 scripts/braid_telemetry_viewer.py /path/to/experiment-run --output /path/to/new-site\n'
+        epilog='示例：\n  python3 -m lab.analysis.braid_telemetry_viewer /path/to/experiment-run --output /path/to/new-site\n'
                '  make braid-report RUN=/path/to/experiment-run OUTPUT=/path/to/new-site\n\n'
                '输入是含 telemetry.sqlite 的外层实验 run，不是 .factory26 下的生成目录。\n'
                '只读取 Backend，不运行模型或补发遥测；输出目录必须尚不存在。\n'
