@@ -36,3 +36,9 @@
 首次启动在输入冻结时暴露 `lab/plan.py` 的日志函数与同名局部变量冲突，尚未启动任何 job。改名后第二次启动发现独立 WSL 环境缺少既有 `lab/requirements.txt` 的 OTLP 协议包，也尚未启动 job；已在本次实验目录的 `.venv` 安装声明依赖。第三次启动 mixed 组，真实 Runner 的两题容器已经创建。两次失败原始日志保留在 mixed generation 目录，不算模型或应用结果。设施修正尚未单独提交：当前 `lab/plan.py` 属于父仓库先前未跟踪的 lab 文件，提交时须避免误纳入其他任务改动。
 
 任务本地 `runs/acceptance-workflow/20260926/follow-through.py` 已复制到 WSL，真实生成全终态后顺序冻结两组应用、运行各 71 项模拟测试并生成报告；失败时停止，不自动重复已有 run。独立监控 `/root/acceptance_local_monitor`（gpt-5.6-luna/low）只等该脚本终态，不修改实验。下一步：待真实结果就绪，核对逐题评分、最终交付身份及验收行为，先向用户报告。用户本轮明确授权自由提交与启动实验。
+
+### 首批生成的可修复打包故障
+
+首批四个 run 均在模型调用前 `finished` 且 `generation_exit_code=1`：`run.py` 报缺 `/runtime/node_modules/pi-background-bash/bin/pbb.js` 或 `/runtime/node_modules/pi-lane/bin/pil.js`。原因是本轮从旧冻结 ZIP 复用了早于后台 Bash 接线的 Linux runtime，未把当前 `harness/npm` 锁文件要求与运行入口核对。原始错误在四个 run 的 `workspace/official-generation/execution.debug.log`，旧 ZIP 和 run 原样保留，不能计为应用或模型得分；首个 `follow-through.py` 因四个生成失败按设计停止，没有运行模拟测试。
+
+现已依据当前锁文件的完整性摘要取得并核对 `pi-background-bash@1.0.5`、锁定提交的 `pi-lane` 与 `pi-pending` 三个包，补进复用的 Linux runtime；检查所有当前锁文件中的非可选依赖在 runtime 内无缺失、无版本错配。重新冻结的两个 ZIP SHA256 为 `2122b29191a522d0eb1acb7ead3fc469335517b09bb050096fd2e2dfa7c7fcda` 与 `85fe04cb9a96b11e92f78630a1a2d044e9c94b80cf1bc112a82df2e09e6e95d9`，文件差异仍只限两份指引、两个 reviewer 角色和 `run.py` variant 身份。新制品进入全新的生成状态目录，不对旧 run 作重复尝试。
