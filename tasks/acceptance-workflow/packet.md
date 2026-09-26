@@ -29,9 +29,10 @@
 ## 运行现场
 
 `pi-team-mixed` 与 `pi-team-reviewer` 已分别打包到 `runs/acceptance-workflow/20260926/`，SHA256 为 `cb0731983d106fc6349267a8fe50c7d9dde88d72872e794e1685e45e726028b7`、`ee1172fb7a49851b605a893c618002c71b8d15e202a99cd7485a36918dd5b551`。两包原有 22,524 个文件逐项比对，仅 `run.py`、两份成员指引不同，reviewer 包另有两份原生 reviewer 角色文件。Linux runtime 从旧冻结包复用；Runner、镜像与浏览器未重装。两包传至 WSL 后 SHA256 与本机一致。
+本轮 variant 与任务记录已提交为 `727c3c0`；打包发生在提交前，所用文件内容与提交文件一致。仓库原有多项其它任务的未提交改动未纳入本次提交。
 
 本地执行目录为 WSL `/home/yyh/Development/factory26-acceptance-workflow-20260926/`。公开 GitHub/Sheet 需求、官方本地 Runner 和镜像已核实；模型使用官方 API 的本地受限 env 文件，测试在生成阶段不可见。生成记录分别写在 `runs/20260926-mixed-generation/` 与 `runs/20260926-reviewer-generation/`，各含两题；混合组并发 2，reviewer 组初始并发 1，避免同一 15 GiB 主机过载。
 
 首次启动在输入冻结时暴露 `lab/plan.py` 的日志函数与同名局部变量冲突，尚未启动任何 job。改名后第二次启动发现独立 WSL 环境缺少既有 `lab/requirements.txt` 的 OTLP 协议包，也尚未启动 job；已在本次实验目录的 `.venv` 安装声明依赖。第三次启动 mixed 组，真实 Runner 的两题容器已经创建。两次失败原始日志保留在 mixed generation 目录，不算模型或应用结果。设施修正尚未单独提交：当前 `lab/plan.py` 属于父仓库先前未跟踪的 lab 文件，提交时须避免误纳入其他任务改动。
 
-下一步：等待四次真实生成终态；对成功交付的每组两题冻结应用，运行本地 71 项模拟测试并保留原始证据。完整结果后先向用户报告。用户本轮明确授权自由提交与启动实验。
+任务本地 `runs/acceptance-workflow/20260926/follow-through.py` 已复制到 WSL，真实生成全终态后顺序冻结两组应用、运行各 71 项模拟测试并生成报告；失败时停止，不自动重复已有 run。独立监控 `/root/acceptance_local_monitor`（gpt-5.6-luna/low）只等该脚本终态，不修改实验。下一步：待真实结果就绪，核对逐题评分、最终交付身份及验收行为，先向用户报告。用户本轮明确授权自由提交与启动实验。
