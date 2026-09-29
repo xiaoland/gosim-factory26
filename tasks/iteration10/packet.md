@@ -18,7 +18,8 @@ Factory/Braid/SVC及设施不新增或运行测试、模拟探针；生成应用
 | 原生结束边界及恢复修复 | 源码修正及最终审查消费已完成 | [原生cell](cells/lifecycle-architecture/packet.md)、[合并恢复](cells/merge-recovery-fr2.md)、[历史归档](cells/session-archive-c1.md) |
 | 根检查提示增强 | 主线；用户明确授权 | [提醒cell](cells/root-check-packet.md)：每第二次附整理提示，源码与编译核对完成，未部署 |
 | 原生sub-agent简化 | 主线；用户已批准实施，补丁及静态核对完成 | [简化cell](cells/subagent-simplification.md)：保留能力、候选缺口、已实施简化与验证限制 |
-| 本次两题实验 | 已启动，WSL两题running | [实验计划](experiments.md)：恢复决定后才构建、冻结与运行 |
+| 运行中重置通知异常 | 主线；已定位重复Deferred→failed及监控漏报，用户授权直接修复和热部署 | [现场诊断](cells/reset-notice-live.md)；819次未开始投递，随后通知已送达 |
+| 本次两题实验 | 已暂停止损；Braid 640ebd8 编译通过，正在 Linux 构建并保留原工作区接续 | [实验计划](experiments.md)：恢复决定后才构建、冻结与运行 |
 
 下一步：[原生sub-agent简化](cells/subagent-simplification.md)已按批准范围落地；保留当前依赖，已构建冻结，进入真实运行验证。[此前委派返回补核](repair-review/final/subagent-returns.md)中的status_surfaces清理已完成；[审查取舍](repair-review/final/decisions.md)已形成；查询式失败事实补齐已完成并通过编译，主线已核对输出与恢复路径；三个仓库[源码检查点与实验前条件](cells/source-checkpoint.md)已整理，待用户恢复实验决定后构建冻结。Node入口及文档/packet责任已补齐，analytics已完成。不要重新全读两题或再开目录覆盖审查。
 已批准范围内的局部修复继续由负责子代理完成；涉及产品义务或范围变化，给出具体因果与方案后交用户决定。实验按已批准配方推进。
