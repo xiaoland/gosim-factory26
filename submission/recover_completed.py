@@ -201,12 +201,8 @@ def main():
         key = os.environ.get("OPENAI_API_KEY") or os.environ.get("FACTORY26_API_KEY")
         if not key:
             raise ValueError("generation recovery requires the current run API key")
-        for path in run.rglob("*"):
-            if path.is_file() and not os.access(path, os.X_OK):
-                with path.open("rb") as stream:
-                    signature = stream.read(4)
-                if signature.startswith(b"#!") or signature == b"\x7fELF":
-                    path.chmod(path.stat().st_mode | 0o111)
+        # Workspace ZIP extraction above preserves stored modes; packaged tools
+        # get executable bits from verify_package, and new launchers set theirs.
         browser = str(browser_executable(runtime))
         # Keep old async records discoverable while giving browser sockets a short path.
         env.update(PORTLESS_PORT="1355", PORTLESS_HTTPS="0", PORTLESS_SYNC_HOSTS="0",

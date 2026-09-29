@@ -37,3 +37,14 @@ WSL 使用相同 ZIP、官方本地 Runner、公开 Hackathon requirements 并�
 GitHub run：`pi-minimal--hackathon--github-59aaf58e7462bc`，`started_at=1790689981.3825152`。
 复用现有4020网关，以 `.secrets/models.env` 中 BigModel / Moonshot 凭据路由；GLM请求发往 `open.bigmodel.cn`，Kimi发往 `api.moonshot.cn`，保留模型与推理参数。两供应商真实 models 查询确认相应模型存在。
 观察窗口以新run起点重新计算；只有GitHub，Sheet不再启动。官网继续仅prepared，不自动提交。
+
+## 能力采用修正（2026-09-29，已授权）
+
+用户要求停止pi-minimal调查，并随后批准修正；当前run已停止，未获此次修正后的重启指令。
+- 原Ponytail仅是共享改写skill，未安装原生Pi扩展。pi-minimal现vendor官方4.10.0最小依赖，主会话和advisor显式加载扩展，PONYTAIL_DEFAULT_MODE=full；不改I11共享技能。
+- 根据用户 ~/.codex/AGENTS.md 提取无人值守适用的方法，合入variants/pi-minimal/instructions.md；去除人类审批/等待/确认，保留判断、设计、真实证据、文档与advisor方法，并补齐一般性流程。不修改个人原文件，不引入SVC/Braid。
+- 增加advisor的决策时机、按问题路由skill、依赖文档查证条件；subagents采用原生compact工具说明。auth技能description仅在此variant打包副本改写。
+- 新capability-evidence扩展从实际before_provider_request记录system/developer、tools和model，按内容摘要去重，不保存会话正文/header或发探针，主/子会话均加载。
+- better-sqlite3首次binding问题已由原Agent修复；预包新增app-env选目标Node20与11.10.0/ABI115原生缓存，不预置生成应用源码/依赖树。详情prepacked-native.md。
+- I11恢复的全量文件权限扫描已删除；本轮正在运行的旧代码未被热改。I11于14:45:02Z真正进入Braid，14:46起已有context replacement；原I10现场保持暂停。
+源码语法检查完成；更新纯Pi runtime正在构建，新制品尚未通过模型运行验收。

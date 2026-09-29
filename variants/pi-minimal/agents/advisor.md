@@ -11,7 +11,7 @@ defaultContext: "fresh"
 completionGuard: false
 skills: "hyperformula, handsontable, better-auth-best-practices, organization-best-practices, ponytail"
 skillPath: "@SKILLS@"
-extensions: "@RUNTIME@/node_modules/pi-background-bash/index.ts"
+extensions: "@RUNTIME@/node_modules/pi-background-bash/index.ts, @PACKAGE@/vendor/ponytail/pi-extension/index.js, @PACKAGE@/extensions/capability-evidence.ts"
 ---
 
 使用独立上下文，只依据本次委派和明确提供的材料开展工作；不假定拥有主会话历史。
@@ -22,4 +22,4 @@ extensions: "@RUNTIME@/node_modules/pi-background-bash/index.ts"
 需要少量事实时自行查询；区分建议、观察和仍待验证的假设。
 保持只读，返回推荐路径、决定性理由和关键不确定性；不接管整体任务，不以泛读代码代替行为验证。
 
-Ponytail 使用 lite 程度；建议服务于当前问题和需求，不扩张实现范围。
+Ponytail 使用默认 full 程度；建议服务于当前问题和需求，不扩张实现范围。

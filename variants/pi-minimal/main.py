@@ -41,9 +41,12 @@ def run(requirements, output):
     roles = native/'agents'
     roles.mkdir(exist_ok=True)
     for source in (ROOT/'agents').glob('*.md'):
-        text = source.read_text().replace('@RUNTIME@', str(runtime)).replace('@SKILLS@', str(ROOT/'skills'))
+        text = source.read_text().replace('@RUNTIME@', str(runtime)).replace('@SKILLS@', str(ROOT/'skills')).replace('@PACKAGE@', str(ROOT))
         (roles/source.name).write_text(text)
     save(native/'settings.json', {'packages': [], 'subagents': {'disableBuiltins': True}})
+    subagent_config = native/'extensions/subagent'
+    subagent_config.mkdir(parents=True, exist_ok=True)
+    save(subagent_config/'config.json', {'toolDescriptionMode': 'compact'})
     (home/'.config').mkdir(exist_ok=True)
     env = dict(os.environ)
     for name in list(env):
@@ -51,6 +54,7 @@ def run(requirements, output):
             env.pop(name)
     env.update(HOME=str(home), XDG_CONFIG_HOME=str(home/'.config'), PI_CODING_AGENT_DIR=str(native),
                FACTORY26_API_KEY=key, PI_OFFLINE='1',
+               PONYTAIL_DEFAULT_MODE='full', PI_CAPABILITY_EVIDENCE_DIR=str(evidence/'capabilities'),
                PATH=str(runtime/'bin')+':/usr/local/bin:/usr/bin:/bin',
                NODE_PATH=str(runtime/'node_modules'), PI_SUBAGENT_PI_BINARY=str(runtime/'bin/pi'),
                MCPORTER_CONFIG=str(ROOT/'mcporter.json'),
@@ -59,10 +63,13 @@ def run(requirements, output):
                BROWSER_EXECUTABLE_PATH=str(runtime/'bin/chromium'),
                BROWSER_CHECK_NODE_MODULES=str(runtime/'node_modules'))
     instruction = (ROOT/'instructions.md').read_text().replace('@REQUIREMENTS@', str(requirements)).replace('@OUTPUT@', str(output))
+    (evidence/'user-instructions.md').write_text(instruction)
     command = [str(runtime/'bin/pi'), '--provider', 'factory26', '--model', 'glm-5.3-flash',
                '--thinking', 'high', '--mode', 'json', '--print', '--no-context-files',
                '--no-prompt-templates', '--no-themes', '--extension', str(runtime/'node_modules/pi-subagents/index.ts'),
                '--extension', str(runtime/'node_modules/pi-background-bash/index.ts'),
+               '--extension', str(ROOT/'vendor/ponytail/pi-extension/index.js'),
+               '--extension', str(ROOT/'extensions/capability-evidence.ts'),
                '--session', str(evidence/'session.jsonl')]
     for name in SKILLS:
         command += ['--skill', str(ROOT/'skills'/name/'SKILL.md')]

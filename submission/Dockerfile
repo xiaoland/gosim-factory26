@@ -25,6 +25,10 @@ RUN mkdir /runtime/python && \
       python -m pip install --target /runtime/python 'litellm[proxy]==1.102.0'; fi && \
     PYTHONPATH=/runtime/python python -m pip freeze --path /runtime/python > /runtime/python-requirements.lock
 COPY --from=node /usr/local/bin/node /runtime/bin/node
+# Application native addon, separate from the Node 24 harness dependencies.
+ADD --checksum=sha256:a16b1df74f095e47b6404b4af1c237d2aca75f431d8f4d1f498419263632ed03 \
+    https://github.com/WiseLibs/better-sqlite3/releases/download/v11.10.0/better-sqlite3-v11.10.0-node-v115-linux-x64.tar.gz \
+    /runtime/native-prebuilds/better-sqlite3-v11.10.0-node-v115-linux-x64.tar.gz
 COPY build.py /build/build.py
 RUN python /build/build.py "$BACKEND"
 

@@ -23,11 +23,24 @@ def build(runtime, output):
         stage = Path(temporary)
         for name in ('main.py', 'models.json', 'instructions.md', 'mcporter.json', 'requirements.txt'):
             shutil.copy2(HERE/name, stage/name)
-        shutil.copytree(HERE/'agents', stage/'agents')
+        for folder in ('agents', 'extensions', 'vendor'):
+            shutil.copytree(HERE/folder, stage/folder)
         shutil.copy2(ROOT/'scripts/agent_support.py', stage/'agent_support.py')
         shutil.copy2(ROOT/'variants/raw/raw_otlp.py', stage/'raw_otlp.py')
         for name in SKILLS:
-            copy_skill(ROOT/'harness/skills'/name, stage/'skills'/name)
+            source = (HERE/'vendor/ponytail/skills/ponytail' if name == 'ponytail'
+                      else ROOT/'harness/skills'/name)
+            copy_skill(source, stage/'skills'/name)
+        descriptions = {
+            'better-auth-best-practices': 'Use when designing account registration, login, password recovery, or persistent sessions; evaluate existing authentication support before choosing a library or implementing it yourself.',
+            'organization-best-practices': 'Use when designing organizations, teams, invitations, membership, or permissions; compare the product requirements with existing support before implementing your own.',
+        }
+        for name, description in descriptions.items():
+            guide = stage/'skills'/name/'SKILL.md'
+            lines = guide.read_text().splitlines()
+            index = next(i for i, line in enumerate(lines) if line.startswith('description:'))
+            lines[index] = 'description: ' + description
+            guide.write_text('\n'.join(lines) + '\n')
         browser_guide = stage/'skills/agent-browser/SKILL.md'
         browser_guide.write_text(browser_guide.read_text().replace(
             'Use svc-verification’s result interpretation to judge coverage and applicability to another candidate; ',

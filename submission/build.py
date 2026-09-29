@@ -102,6 +102,19 @@ for name, source in tools.items():
         'export LD_LIBRARY_PATH\n'
         f'exec "$HERE/../libexec/{name}" "$@"\n'
     )
+# The official runner supplies the application Node; tools keep their frozen Node 24.
+(root / 'bin/app-env').write_text(
+    '#!/bin/sh\nset -eu\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+    'if [ "$#" -eq 0 ]; then echo "usage: app-env COMMAND [ARG...]" >&2; exit 2; fi\n'
+    'if [ ! -x /usr/local/bin/node ] || [ "$(/usr/local/bin/node --version)" != v20.19.3 ]; then\n'
+    '  echo "app-env requires the official runner Node 20.19.3 at /usr/local/bin/node" >&2; exit 1\n'
+    'fi\n'
+    'PATH="/usr/local/bin:$PATH"\n'
+    'FACTORY26_APP_NODE=/usr/local/bin/node\n'
+    'npm_config_better_sqlite3_local_prebuilds="$HERE/../native-prebuilds"\n'
+    'export PATH FACTORY26_APP_NODE npm_config_better_sqlite3_local_prebuilds\n'
+    'exec "$@"\n'
+)
 commands = [('pi', '@earendil-works/pi-coding-agent'), ('agent-browser', 'agent-browser'),
             ('mcporter', 'mcporter'), ('playwright', 'playwright'),
             ('pnpm', 'pnpm'), ('portless', 'portless')]
@@ -111,10 +124,11 @@ for command, package in commands:
     metadata = json.loads((root / 'node_modules' / package / 'package.json').read_text())
     entry = metadata['bin'][command]
     environment = ': "${AGENT_BROWSER_EXECUTABLE_PATH:=$HERE/chromium}"\nexport AGENT_BROWSER_EXECUTABLE_PATH\n' if command == 'agent-browser' else ''
+    node = '${FACTORY26_APP_NODE:-$HERE/node}' if command == 'pnpm' else '$HERE/node'
     (root / 'bin' / command).write_text(
         '#!/bin/sh\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
         + environment +
-        f'exec "$HERE/node" "$HERE/../node_modules/{package}/{entry}" "$@"\n'
+        f'exec "{node}" "$HERE/../node_modules/{package}/{entry}" "$@"\n'
     )
 if backend == 'codex':
     (root / 'bin/litellm').write_text(
