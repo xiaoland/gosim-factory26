@@ -1,0 +1,193 @@
+--- a/src/runs/background/notify.ts
++++ b/src/runs/background/notify.ts
+@@ -95,6 +95,8 @@
+ 
+ export interface CompletionNotifier {
+ 	deliver(result: CompletionNotification): Promise<boolean>;
++	beginDrain(): void;
++	endDrain(): void;
+ 	dispose(): void;
+ }
+ 
+@@ -335,6 +337,7 @@
+ 	const batchConfig = resolveCompletionBatchConfig(options.batchConfig);
+ 	const batchers = new Map<string, CompletionBatcher<PendingCompletion>>();
+ 	let disposed = false;
++	let draining = false;
+ 
+ 	const settle = (items: PendingCompletion[], accepted: boolean) => {
+ 		for (const item of items) {
+@@ -379,7 +382,7 @@
+ 			triggerTurn: result.triggerTurn !== false,
+ 			resolve,
+ 		};
+-		if (details.source === "foreground") {
++		if (draining || details.source === "foreground") {
+ 			emit([item]);
+ 			return completion;
+ 		}
+@@ -402,6 +405,11 @@
+ 
+ 	return {
+ 		deliver,
++		beginDrain() {
++			draining = true;
++			for (const batcher of batchers.values()) batcher.flush();
++		},
++		endDrain() { draining = false; },
+ 		dispose() {
+ 			if (disposed) return;
+ 			disposed = true;
+--- a/src/runs/background/result-watcher.ts
++++ b/src/runs/background/result-watcher.ts
+@@ -199,6 +199,7 @@
+ 	primeExistingResults: (options?: { triggerTurn?: boolean }) => void;
+ 	refreshResultDelivery: () => void;
+ 	stopResultWatcher: () => void;
++	drainCurrentSessionResults: () => Promise<void>;
+ } {
+ 	const fsApi = deps.fs ?? fs;
+ 	const timers = deps.timers ?? { setTimeout, clearTimeout, setInterval, clearInterval };
+@@ -206,7 +207,8 @@
+ 	const parseResult = deps.parseResult ?? ((raw: string) => JSON.parse(raw) as ResultFileData);
+ 	const deliverIntercomResults = deps.deliverIntercomResults !== false;
+ 	const pendingTriggerTurn = new Map<string, boolean>();
+-	const processing = new Set<string>();
++	const processing = new Map<string, Promise<void>>();
++	const acceptedResults = new Map<string, PublicResultIdentity>();
+ 	const identityCache = new Map<string, { signature: string; identity: ResultFileIdentity }>();
+ 	let deliveryActive = true;
+ 	let deliveryEpoch = 0;
+@@ -314,6 +316,7 @@
+ 		try {
+ 			if (publicResultFileExists(file)) fsApi.unlinkSync(publicResultPath(file));
+ 			identityCache.delete(file);
++			acceptedResults.delete(file);
+ 			removeResultIndex(resultsDir, sessionId, runId, toolCallId);
+ 			return true;
+ 		} catch (error) {
+@@ -324,8 +327,7 @@
+ 			return true;
+ 		}
+ 	};
+-	const handleResult = async (file: string, triggerTurn: boolean) => {
+-		if (processing.has(file)) return;
++	const processResult = async (file: string, triggerTurn: boolean) => {
+ 		let observed: ReadonlySet<string> | undefined;
+ 		try {
+ 			if (!shouldProcessResult(file)) {
+@@ -339,7 +341,6 @@
+ 			scheduleResult(file, triggerTurn, RETRY_DELAY_MS);
+ 			return;
+ 		}
+-		processing.add(file);
+ 		let rereadReplacedPayload = false;
+ 		let resultPath = publicResultPath(file);
+ 		const readPublicResultIdentity = (): PublicResultIdentity | undefined => {
+@@ -547,6 +548,10 @@
+ 				scheduleResult(file, triggerTurn, RETRY_DELAY_MS);
+ 				return;
+ 			}
++			acceptedResults.set(file, {
++				state: typeof data.state === "string" ? data.state : undefined,
++				timestamp: typeof data.timestamp === "number" ? data.timestamp : undefined,
++			});
+ 			if (markReplacedPayload()) return;
+ 			try {
+ 				data = markDeliveredNotification(publicResultPath(file), data, runId, Date.now());
+@@ -592,9 +597,17 @@
+ 				scheduleResult(file, triggerTurn, RETRY_DELAY_MS);
+ 			} else if (!isNotFound(error)) console.error(`Failed to process subagent result file '${resultPath}':`, error);
+ 		} finally {
+-			processing.delete(file);
+ 			if (rereadReplacedPayload) scheduleResult(file, triggerTurn);
+ 		}
++	};
++
++	const handleResult = (file: string, triggerTurn: boolean): Promise<void> => {
++		const active = processing.get(file);
++		if (active) return active;
++		const task = processResult(file, triggerTurn);
++		processing.set(file, task);
++		void task.then(() => processing.delete(file), () => processing.delete(file));
++		return task;
+ 	};
+ 
+ 	state.resultFileCoalescer = createFileCoalescer((file) => {
+@@ -642,6 +655,34 @@
+ 		} catch (error) {
+ 			if (!isNotFound(error)) console.error(`Failed to scan subagent result index in '${resultsDir}':`, error);
+ 		}
++	};
++
++	const drainCurrentSessionResults = async () => {
++		const sessionId = state.currentSessionId;
++		if (!sessionId) throw new Error("Cannot drain subagent results without a Pi session identity.");
++		const currentResults = () => resultCandidateFilesForSession(resultsDir, sessionId).filter((file) => {
++			const identity = inspectResult(file)?.identity;
++			if (identity?.sessionId && (identity.sessionId !== sessionId || identity.completionOwnerId !== state.completionOwnerId)) return false;
++			try {
++				const payload = resultPayloadPath(file);
++				if (payload) {
++					const current = JSON.parse(fsApi.readFileSync(payload, "utf-8")) as ResultFileData;
++					if (hasDeliveredNotification(current)) return false;
++					const accepted = acceptedResults.get(file);
++					if (accepted && (accepted.state !== undefined || accepted.timestamp !== undefined)
++						&& accepted.state === current.state && accepted.timestamp === current.timestamp) return false;
++				}
++			} catch { /* Treat unreadable results as undelivered. */ }
++			return true;
++		});
++		const files = currentResults();
++		for (const file of files) {
++			state.resultFileCoalescer.flush(file);
++			await handleResult(file, true);
++		}
++		await Promise.all(files.map((file) => processing.get(file)).filter((task): task is Promise<void> => task !== undefined));
++		const remaining = currentResults();
++		if (remaining.length) throw new Error(`Subagent results were not accepted for session '${sessionId}': ${remaining.join(", ")}`);
+ 	};
+ 
+ 	const clearResultScan = () => {
+@@ -762,8 +803,9 @@
+ 		state.resultFileCoalescer.clear();
+ 		pendingTriggerTurn.clear();
+ 		processing.clear();
++		acceptedResults.clear();
+ 		identityCache.clear();
+ 	};
+ 
+-	return { startResultWatcher, primeExistingResults, stopResultWatcher, refreshResultDelivery: () => { primeExistingResults(); startDemandPolling(); } };
+-}
++	return { startResultWatcher, primeExistingResults, stopResultWatcher, drainCurrentSessionResults, refreshResultDelivery: () => { primeExistingResults(); startDemandPolling(); } };
++}
+--- a/src/extension/index.ts
++++ b/src/extension/index.ts
+@@ -718,7 +718,26 @@
+ 	registerWaitTool(pi, state, waitToolConfig.enabled, waitSubscriptionManager);
+ 
+ 	pi.on("agent_end", async (_event, ctx) => {
+-		if (!ctx.hasUI) await drainOutstandingWork({ state, events: pi.events });
++		if (!ctx.hasUI) {
++			completionNotifier.beginDrain();
++			try {
++				let drainError: unknown;
++				try {
++					await drainOutstandingWork({ state, events: pi.events });
++				} catch (error) {
++					drainError = error;
++				}
++				try {
++					await resultWatcher.drainCurrentSessionResults();
++				} catch (resultError) {
++					if (drainError) throw new Error(`Background drain failed: ${String(drainError)}; result delivery failed: ${String(resultError)}`);
++					throw resultError;
++				}
++				if (drainError) throw drainError;
++			} finally {
++				completionNotifier.endDrain();
++			}
++		}
+ 		const ownerSessionId = state.currentSessionId;
+ 		if (!ownerSessionId) return;
+ 		goalTurnId += 1;

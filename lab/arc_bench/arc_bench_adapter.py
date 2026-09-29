@@ -14,13 +14,40 @@ import signal
 import subprocess
 import sys
 import tempfile
+import time
 from urllib.parse import urlsplit, urlunsplit
 from zipfile import ZipFile
 
+if __package__:
+    from .arc_artifacts import verify as verify_application
+else:
+    from arc_artifacts import verify as verify_application
+
 OTEL_NAMES = ("OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_PROTOCOL",
-              "OTEL_EXPORTER_OTLP_HEADERS", "OTEL_EXPORTER_OTLP_COMPRESSION")
+              "OTEL_EXPORTER_OTLP_HEADERS", "OTEL_EXPORTER_OTLP_COMPRESSION", *(
+                  f"OTEL_EXPORTER_OTLP_{signal}_{setting}"
+                  for signal in ("TRACES", "LOGS", "METRICS")
+                  for setting in ("ENDPOINT", "PROTOCOL", "HEADERS", "COMPRESSION")))
 EXCLUDED_SOURCE = {".arc", ".factory26", ".git", "requirements", "node_modules", ".cache", "dist", "build"}
 CONTAINER_LINE = re.compile(r"^Container: (arcbench-local-[0-9a-f]{12})$", re.MULTILINE)
+EVENT_SEQUENCE = 0
+
+
+def emit(kind, **details):
+    global EVENT_SEQUENCE
+    directory = os.environ.get("EXPERIMENT_EVENT_DIR")
+    if not directory:
+        return
+    EVENT_SEQUENCE += 1
+    path = Path(directory) / "arc-bench.jsonl"
+    try:
+        with path.open("a") as stream:
+            stream.write(json.dumps({"schema_version": 1, "producer": "arc-bench-adapter",
+                                     "run_id": os.environ.get("EXPERIMENT_RUN_ID"),
+                                     "seq": EVENT_SEQUENCE, "time": time.time(), "kind": kind,
+                                     **details}, ensure_ascii=False) + "\n")
+    except OSError as exc:
+        print(f"ARC evidence event failed: {exc}", file=sys.stderr)
 
 
 def instrument_entry(agent, destination):
@@ -37,20 +64,47 @@ def instrument_entry(agent, destination):
         with ZipFile(agent) as archive:
             archive.extractall(original)
     shutil.copy2(original / 'requirements.txt', destination / 'requirements.txt')
-    (destination / 'main.py').write_text('''import argparse, json, subprocess, sys
+    shutil.copy2(Path(__file__).with_name('arc_artifacts.py'), destination / 'arc_artifacts.py')
+    (destination / 'main.py').write_text('''import argparse, json, os, signal, subprocess, sys, time
 from pathlib import Path
+from arc_artifacts import copy_snapshot
 parser=argparse.ArgumentParser(add_help=False)
 parser.add_argument('--output-dir',type=Path,required=True)
 args,_=parser.parse_known_args()
 result=args.output_dir/'.arc/adapter-agent-result.json'
 result.parent.mkdir(parents=True,exist_ok=True)
+process=None
+code=None
+cleanup='not-started'
 try:
-    code=subprocess.call([sys.executable,str(Path(__file__).parent/'agent/main.py'),*sys.argv[1:]])
+    process=subprocess.Popen([sys.executable,str(Path(__file__).parent/'agent/main.py'),*sys.argv[1:]],start_new_session=True)
+    code=process.wait()
 except BaseException as exc:
-    result.write_text(json.dumps({'status':'failed','error':str(exc)})+'\\n')
+    result.write_text(json.dumps({'status':'failed','exit_code':code,'error':str(exc)})+'\\n')
     raise
-result.write_text(json.dumps({'status':'completed' if code==0 else 'failed','exit_code':code})+'\\n')
-raise SystemExit(code)
+finally:
+    if process is not None:
+        try:
+            os.killpg(process.pid,signal.SIGTERM)
+            deadline=time.monotonic()+5
+            while time.monotonic()<deadline:
+                try: os.killpg(process.pid,0)
+                except ProcessLookupError: break
+                time.sleep(.1)
+            else:
+                os.killpg(process.pid,signal.SIGKILL)
+            cleanup='signalled'
+        except ProcessLookupError:
+            cleanup='already-exited'
+if code:
+    result.write_text(json.dumps({'status':'failed','exit_code':code,'process_group_cleanup':cleanup})+'\\n')
+    raise SystemExit(code)
+try:
+    receipt=copy_snapshot(args.output_dir,args.output_dir.parent/'.lab-artifacts')
+except BaseException as exc:
+    result.write_text(json.dumps({'status':'failed','exit_code':code,'process_group_cleanup':cleanup,'publication_error':str(exc)})+'\\n')
+    raise
+result.write_text(json.dumps({'status':'completed','exit_code':code,'process_group_cleanup':cleanup,'application_sha256':receipt['sha256']})+'\\n')
 ''')
     return destination
 
@@ -72,6 +126,28 @@ def source_hash(root):
     return digest.hexdigest()
 
 
+def noop_package(workspace, script, receipt):
+    output = workspace / "frozen-evaluator.zip"
+    with ZipFile(output, "w") as archive:
+        archive.write(script, "main.py")
+        archive.write(Path(__file__).with_name("arc_artifacts.py"), "arc_artifacts.py")
+        archive.write(receipt, "expected-application.json")
+        archive.writestr("requirements.txt", "")
+    return output
+
+
+def reported_scenario(report, scenario):
+    titles = []
+    def walk(suite):
+        for spec in suite.get("specs", []):
+            titles.extend(spec.get("title", "") for _ in spec.get("tests", []))
+        for child in suite.get("suites", []):
+            walk(child)
+    for suite in report.get("suites", []):
+        walk(suite)
+    return len(titles) == 1 and len([title for title in titles if title.startswith(scenario + " ::")]) == 1
+
+
 def container_endpoint(host):
     endpoint = urlsplit(os.environ["OTEL_EXPORTER_OTLP_ENDPOINT"])
     if not host or any(character in host for character in "/:@"):
@@ -88,50 +164,86 @@ def model_environment(base, output, host):
             if line.split("=", 1)[0].strip() not in OTEL_NAMES:
                 lines.append(line)
     for name in OTEL_NAMES:
-        value = container_endpoint(host) if name == "OTEL_EXPORTER_OTLP_ENDPOINT" else os.environ.get(name, "")
+        value = os.environ.get(name, "")
+        if value and name.endswith("_ENDPOINT"):
+            original = urlsplit(value)
+            if not host or any(character in host for character in "/:@"):
+                raise ValueError("container OTLP host must be a hostname or IPv4 address")
+            value = urlunsplit((original.scheme, f"{host}:{original.port}", original.path, "", ""))
         if value:
             lines.append(f"{name}={value}")
     output.write_text("\n".join(lines) + "\n")
     output.chmod(0o600)
 
 
-def cleanup_container(stdout_path, owned_workspace, evidence_path):
-    """Remove only the container whose /workspace bind belongs to this invocation."""
-    match = CONTAINER_LINE.search(stdout_path.read_text(errors="replace")) if stdout_path.is_file() else None
-    record = {"container": match.group(1) if match else None,
-              "workspace": str(owned_workspace), "status": "not-started"}
-    if match:
-        name = match.group(1)
+def resource_observation(resource_path, *, cleanup=False):
+    """Only a recorded exact name/ID plus the expected bind grants cleanup authority."""
+    resource = json.loads(resource_path.read_text())
+    workspace = Path(resource["workspace"]).resolve()
+    identifier = resource.get("container_id") or resource.get("container_name")
+    record = {"resource": str(resource_path), "container_name": resource.get("container_name"),
+              "container_id": resource.get("container_id"), "workspace": str(workspace)}
+    if resource.get("image_id") is None:
+        return {**record, "status": "not-applicable"}
+    if not identifier:
+        return {**record, "status": "launch-unconfirmed"}
+    try:
+        inspected = json.loads(subprocess.check_output(
+            ["docker", "inspect", identifier], text=True, stderr=subprocess.STDOUT, timeout=5))[0]
+    except subprocess.CalledProcessError as exc:
+        output = exc.output or ""
+        return {**record, "status": "absent" if "No such" in output else "inspect-failed",
+                "error": output.strip()}
+    except (OSError, subprocess.TimeoutExpired, ValueError) as exc:
+        return {**record, "status": "inspect-failed", "error": f"{type(exc).__name__}: {exc}"}
+    owned = any(mount.get("Type") == "bind" and
+                Path(mount.get("Source", "")).resolve() == workspace and
+                mount.get("Destination") == "/workspace" for mount in inspected.get("Mounts", []))
+    if not owned or (resource.get("container_id") and resource["container_id"] != inspected.get("Id")):
+        return {**record, "status": "ownership-mismatch", "observed_id": inspected.get("Id"),
+                "mounts": inspected.get("Mounts", [])}
+    record.update(container_id=inspected["Id"], status="owned")
+    if cleanup:
         try:
-            inspected = json.loads(subprocess.check_output(
-                ["docker", "inspect", name], text=True, stderr=subprocess.STDOUT, timeout=1))[0]
-            owned = any(mount.get("Type") == "bind" and
-                        Path(mount.get("Source", "")).resolve() == owned_workspace.resolve() and
-                        mount.get("Destination") == "/workspace"
-                        for mount in inspected.get("Mounts", []))
-            if not owned:
-                record.update(status="ownership-mismatch", mounts=inspected.get("Mounts", []))
-            else:
-                subprocess.run(["docker", "rm", "--force", name], check=True,
-                               stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=2)
-                record["status"] = "removed"
-        except subprocess.CalledProcessError as exc:
-            output = exc.output or ""
-            record.update(status="absent" if "No such" in output else "cleanup-failed", error=output.strip())
-        except (OSError, subprocess.TimeoutExpired, ValueError, json.JSONDecodeError) as exc:
+            subprocess.run(["docker", "rm", "--force", inspected["Id"]], check=True,
+                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=10)
+            record["status"] = "removed"
+        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
             record.update(status="cleanup-unconfirmed", error=f"{type(exc).__name__}: {exc}")
-    with evidence_path.open("a") as stream:
-        stream.write(json.dumps(record, ensure_ascii=False) + "\n")
     return record
+
+
+def resource_command(workspace, action):
+    records = []
+    for path in sorted(workspace.glob("*.resource.json")):
+        records.append(resource_observation(path, cleanup=action == "cleanup"))
+    result = {"workspace": str(workspace), "resources": records}
+    print(json.dumps(result, ensure_ascii=False))
+    return 0 if all(row["status"] in ({"absent", "removed", "not-applicable"} if action == "cleanup" else
+                                     {"absent", "owned", "not-applicable"}) for row in records) else 2
+
+
+def write_resource(path, value):
+    temporary = path.with_suffix(".partial")
+    temporary.write_text(json.dumps(value, ensure_ascii=False) + "\n")
+    temporary.replace(path)
 
 
 def run(args):
     workspace = args.workspace.resolve()
     workspace.mkdir(parents=True, exist_ok=True)
+    if args.selection:
+        selected_tests = workspace / "scenario-tests"
+        shutil.copytree(args.tests, selected_tests, ignore=shutil.ignore_patterns("selections"))
+        shutil.copy2(args.selection, selected_tests / "selection.json")
+        args.tests = selected_tests
     result_path = workspace / "experiment-result.json"
     base = [sys.executable, str(args.runner / "local_submit.py"), "run",
             "--competition", args.competition, "--task", args.task,
             "--requirements-dir", str(args.requirements)]
+    for flag in ('memory', 'cpus'):
+        if getattr(args, flag):
+            base.extend(['--' + flag, getattr(args, flag)])
     image_id = None
     if not args.prepare_only:
         if not args.image:
@@ -147,43 +259,113 @@ def run(args):
         stdout_path = workspace / f"{name}.stdout.log"
         stderr_path = workspace / f"{name}.stderr.log"
         owned_workspace = Path(command[command.index("--workspace") + 1]).resolve()
+        resource = workspace / f"{name}.resource.json"
+        facts = {"workspace": str(owned_workspace), "image_id": image_id,
+                 "runner": str(args.runner.resolve()), "state": "launching"}
+        write_resource(resource, facts)
+        emit("stage-started", stage=name, resource=str(resource))
         previous = signal.getsignal(signal.SIGTERM)
         def interrupt(_number, _frame):
             raise KeyboardInterrupt
         signal.signal(signal.SIGTERM, interrupt)
         try:
             with stdout_path.open("wb") as stdout, stderr_path.open("wb") as stderr:
-                return subprocess.run(command, env=environment, stdout=stdout, stderr=stderr).returncode
+                process = subprocess.Popen(command, env=environment, stdout=subprocess.PIPE, stderr=stderr)
+                for line in iter(process.stdout.readline, b""):
+                    stdout.write(line)
+                    stdout.flush()
+                    match = CONTAINER_LINE.search(line.decode(errors="replace"))
+                    if match:
+                        facts.update(container_name=match.group(1), state="named")
+                        write_resource(resource, facts)
+                        emit("resource-acquired", stage=name, name=match.group(1), resource=str(resource))
+                        observed = resource_observation(resource)
+                        if observed["status"] == "owned":
+                            facts.update(container_id=observed["container_id"], state="owned")
+                            write_resource(resource, facts)
+                exit_code = process.wait()
+                emit("stage-ended", stage=name, exit_code=exit_code)
+                return exit_code
+        except BaseException as exc:
+            emit("error", stage=name, error=f"{type(exc).__name__}: {exc}")
+            raise
         finally:
             signal.signal(signal.SIGTERM, previous)
-            cleanup_container(stdout_path, owned_workspace, workspace / "container-cleanup.jsonl")
+            observation = resource_observation(resource, cleanup=True)
+            with (workspace / "container-cleanup.jsonl").open("a") as stream:
+                stream.write(json.dumps(observation, ensure_ascii=False) + "\n")
+            emit("resource-released", stage=name, observation=observation)
+
+    if args.application:
+        expected = verify_application(args.application, args.application_receipt)
+        no_op = noop_package(workspace, args.noop_script, args.application_receipt)
+        official = workspace / "official"
+        command = base + ["--agent", str(no_op), "--template", str(args.application),
+                          "--tests-dir", str(args.tests), "--workspace", str(official),
+                          "--image", image_id]
+        code = invoke(command, "evaluation")
+        witness = official / "template/.arc/frozen-source.json"
+        actual = json.loads(witness.read_text()) if witness.is_file() else None
+        upstream = official / "local-result.json"
+        evaluation = json.loads(upstream.read_text()) if upstream.is_file() else None
+        passed, failed, total = (evaluation.get(key) for key in ("passed", "failed", "total")) if evaluation else (None, None, None)
+        complete = (code == 0 and actual is not None and actual.get("sha256") == expected["sha256"]
+                    and evaluation is not None and evaluation.get("evaluation_status") == "completed"
+                    and all(type(value) is int and value >= 0 for value in (passed, failed, total))
+                    and total > 0 and passed + failed == total)
+        if args.expected_tests is not None:
+            complete = complete and total == args.expected_tests
+        if args.expected_scenario:
+            report = official / "template/.arc/playwright-report.json"
+            complete = complete and report.is_file() and reported_scenario(
+                json.loads(report.read_text()), args.expected_scenario)
+        result = {"schema_version": 1, "status": "completed" if complete else "failed",
+                  "mode": "application-evaluation", "runner_exit_code": code, "image_id": image_id,
+                  "application_sha256": expected["sha256"], "loaded_application_sha256": actual.get("sha256") if actual else None,
+                  "evaluation": evaluation, "source_run_id": args.source_run_id}
+        if complete:
+            result["summary"] = {name: evaluation.get(name) for name in ("passed", "failed", "total", "score")}
+        else:
+            result["error"] = ("application witness does not match frozen input" if actual and
+                               actual.get("sha256") != expected["sha256"] else
+                               "local Runner did not complete the selected evaluation")
+        result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
+        return 0 if complete else 1
 
     with tempfile.TemporaryDirectory(prefix="experiment-arc-env-") as temporary:
         env_file = Path(temporary) / "model.env"
         model_args = []
+        wrapped_env = os.environ.get("ARC_MODEL_ENV_FILE")
+        if wrapped_env and args.env_file and Path(wrapped_env).resolve() != args.env_file.resolve():
+            raise ValueError("model env was provided both by gateway wrapper and --env-file")
+        source_env = Path(wrapped_env) if wrapped_env else args.env_file
         if "OTEL_EXPORTER_OTLP_ENDPOINT" in os.environ:
-            model_environment(args.env_file, env_file, args.container_otlp_host)
+            model_environment(source_env, env_file, args.container_otlp_host)
             model_args = ["--env-file", str(env_file)]
-        elif args.env_file:
-            model_args = ["--env-file", str(args.env_file)]
+        elif source_env:
+            model_args = ["--env-file", str(source_env)]
         if (args.separate_evaluation or args.requirements_only) and not args.prepare_only:
             if not args.requirements_only and args.noop_script is None:
                 raise ValueError("--noop-script is required for separate evaluation")
             generation = workspace / "official-generation"
             instrumented = instrument_entry(args.agent, workspace / 'observed-agent')
             generation_command = base + ["--agent", str(instrumented), "--workspace", str(generation),
-                                         "--image", args.image] + model_args
+                                         "--image", image_id] + model_args
             generation_code = invoke(generation_command, "generation")
             entry = generation / "template/.arc/adapter-agent-result.json"
             if entry.is_file():
                 entry_result = json.loads(entry.read_text())
             else:
                 entry_result = {"status": "failed", "error": "Agent entry produced no terminal process result"}
-            app = generation / "template"
+            app = generation / ".lab-artifacts/application"
+            receipt_path = generation / ".lab-artifacts/receipt.json"
             # Runner 还会部署应用，其退出码可能表示部署失败。
             # 用独立入口结果判断生成，再让下一阶段对冻结应用部署和评分。
             ready = (entry_result.get("status") == "completed" and
+                     receipt_path.is_file() and
                      all((app / part / "package.json").is_file() for part in ("frontend", "backend")))
+            if receipt_path.is_file():
+                emit("artifact-published", stage="generation", receipt=str(receipt_path))
             if not ready:
                 result = {"schema_version": 1, "status": "failed", "stage": "generation",
                           "generation_exit_code": generation_code, "generation": entry_result,
@@ -204,27 +386,26 @@ def run(args):
                     result["error"] = "local Runner did not complete generation and deployment"
                 result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
                 return 0 if complete else 1
-            frozen = source_hash(app)
-            no_op = workspace / "frozen-evaluator.zip"
-            with ZipFile(no_op, "w") as archive:
-                archive.write(args.noop_script, "main.py")
-                archive.writestr("requirements.txt", "")
+            frozen = json.loads(receipt_path.read_text())["sha256"]
+            verify_application(app, receipt_path)
+            no_op = noop_package(workspace, args.noop_script, receipt_path)
             official = workspace / "official-evaluation"
             evaluation_command = base + ["--agent", str(no_op), "--template", str(app),
                                          "--tests-dir", str(args.tests), "--workspace", str(official),
-                                         "--image", args.image]
+                                         "--image", image_id]
             evaluation_code = invoke(evaluation_command, "evaluation")
             witness = official / "template/.arc/frozen-source.json"
             loaded_hash = json.loads(witness.read_text())["sha256"] if witness.is_file() else None
         else:
             official = workspace / "official"
-            command = base + ["--agent", str(args.agent), "--workspace", str(official)] + model_args
+            instrumented = instrument_entry(args.agent, workspace / 'observed-agent') if not args.prepare_only else args.agent
+            command = base + ["--agent", str(instrumented), "--workspace", str(official)] + model_args
             if args.tests is not None:
                 command += ["--tests-dir", str(args.tests)]
             if args.prepare_only:
                 command.append("--prepare-only")
             else:
-                command.extend(("--image", args.image))
+                command.extend(("--image", image_id))
             evaluation_code = invoke(command, "runner")
             generation_code = None
             entry_result = None
@@ -237,7 +418,7 @@ def run(args):
     elif upstream.is_file():
         evaluation = json.loads(upstream.read_text())
         passed, failed, total = (evaluation.get(key) for key in ("passed", "failed", "total"))
-        complete = (evaluation.get("evaluation_status") == "completed" and
+        complete = (evaluation_code == 0 and evaluation.get("evaluation_status") == "completed" and
                     all(type(value) is int and value >= 0 for value in (passed, failed, total)) and
                     total > 0 and passed + failed == total)
         if args.expected_tests is not None:
@@ -265,17 +446,30 @@ def run(args):
 
 
 def main():
+    if sys.argv[1:2] == ["resource"]:
+        resource_parser = argparse.ArgumentParser(description="Inspect or clean registered ARC containers")
+        resource_parser.add_argument("action", choices=("inspect", "cleanup"))
+        resource_parser.add_argument("--workspace", type=Path, required=True)
+        resource_args = resource_parser.parse_args(sys.argv[2:])
+        return resource_command(resource_args.workspace.resolve(strict=True), resource_args.action)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--runner", type=Path, required=True)
-    parser.add_argument("--agent", type=Path, required=True)
+    parser.add_argument("--agent", type=Path)
+    parser.add_argument("--application", type=Path)
+    parser.add_argument("--application-receipt", type=Path)
+    parser.add_argument("--source-run-id")
     parser.add_argument("--requirements", type=Path, required=True)
     parser.add_argument("--tests", type=Path)
+    parser.add_argument("--selection", type=Path)
     parser.add_argument("--requirements-only", action="store_true")
     parser.add_argument("--workspace", type=Path, required=True)
     parser.add_argument("--competition", required=True)
     parser.add_argument("--task", required=True)
     parser.add_argument("--image")
+    parser.add_argument("--memory", help="pass the Docker memory limit to the official local runner")
+    parser.add_argument("--cpus", help="pass the Docker CPU quota to the official local runner")
     parser.add_argument("--expected-tests", type=int)
+    parser.add_argument("--expected-scenario")
     parser.add_argument("--env-file", type=Path)
     parser.add_argument("--container-otlp-host", default="host.docker.internal")
     parser.add_argument("--prepare-only", action="store_true")
@@ -283,6 +477,10 @@ def main():
                         help="generate without tests, then score the frozen application with a no-op agent")
     parser.add_argument("--noop-script", type=Path)
     args = parser.parse_args()
+    if bool(args.agent) == bool(args.application):
+        parser.error("provide exactly one of --agent or --application")
+    if args.application and (args.application_receipt is None or args.noop_script is None or args.tests is None):
+        parser.error("application evaluation needs receipt, noop script and tests")
     if args.requirements_only != (args.tests is None):
         parser.error("--requirements-only requires --tests to be omitted, and vice versa")
     return run(args)

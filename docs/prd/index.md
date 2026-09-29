@@ -3,7 +3,7 @@
 Factory26 用于开发和比较参加 GOSIM Agentic Factory / ARC-Bench 的 Agent Harness。
 本项目由 Coding Agent 开发，用户参与需求、方案与授权决策；被评测的运行时 Agent 则在无用户中途介入的环境中接收需求包并生成应用。
 
-每次实验应能回答：输入了什么需求、使用哪个 Harness 和模型、产生什么应用、评测如何结束，以及证据在哪里。
+每次实验应能回答：冻结了哪些输入和实际执行代码、使用哪个 Harness 和模型、产生什么应用、评测如何结束，以及 Agent 过程和错误的原始证据在哪里。一次任务的多次尝试分别保留；模型请求如经过共享网关，应能关联到确切 run，而不是靠相近时间推测。
 组件实现见[技术说明](../product-tdd/index.md)，执行与恢复见[运行说明](../deployment/index.md)，实验结论与当前任务从[文档索引](../index.md)进入。
 
 ## Harness 的产品行为
@@ -14,6 +14,7 @@ LLM 拥有任务语义与决策，Harness 提供理解和改变环境所需的�
 团队 Harness 使用 GitHub 式 Issue、PR、comment/reply、hide/resolve、reaction 和 assignee。
 一次任务调用建立根 Issue，其 description 保存任务 prompt 与需求包入口；不是每条 requirement 自动生成一个 Issue。
 Agent 按需要创建子 Issue，按协作者描述指派工作，不需要理解内部 profile、模型路由或 Braid 调度。
+Factory 只选择根 Issue 的启动成员，后续工作项由 Agent 指派；未指派对象不自动启动。
 
 Issue 承载需求理解、技术方案与最终验收设计；PR 承载实施计划、执行与最终验收。
 这种设计与实现分离不要求固定只执行一次“设计→实现”。
@@ -22,10 +23,11 @@ Issue 承载需求理解、技术方案与最终验收设计；PR 承载实施�
 multi-agent 指多个 Braid 工作项的 Agent 协作，sub-agent 指原生 Pi/Codex 会话内部的局部委派。
 两者具有不同的上下文和生命周期，不能因内部子代理异常就让 Braid 接管其生命周期。
 SVC 提供文档、任务包、探索与实施方法、有界委派及 V&V；它与 Braid 独立，由 Harness 选择如何接入。
+Braid 不复制 V&V 方法或替 Agent 判断证据充分性；它提供保存和交流这些判断的工作项与讨论操作。
 
 ## 当前实现与产品要求的区别
 
-当前团队实现位于独立的 `variants/pi-team-*` 目录，采用 Pi、Braid 和按需读取的 SVC skill。
+当前活动团队实现为 `variants/pi-braid`，采用 Pi、Braid 和 SVC skill；另有独立实验工作流与历史归档，状态以 [Variant 索引](../../variants/README.md) 为准。
 raw Pi/Codex 是独立基线，不能把 raw Codex 的 CLI 路径等同于团队 Codex app-server 接入。
 具体模型、技能、角色和实验矩阵由所选源码、冻结包及实验任务决定，不在这里维护另一份清单。
 

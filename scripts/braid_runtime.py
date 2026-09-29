@@ -2,7 +2,6 @@
 import json
 import os
 from pathlib import Path
-import re
 import shutil
 import subprocess
 import sys
@@ -19,39 +18,31 @@ def initialize_repository(app):
                     '初始化本次生成的应用仓库'], check=True)
 
 
-def load_delivery(state, app, work, request):
-    result = json.loads((state/'result.json').read_text())
-    if result.get('schema_version') != 1 or result.get('status') != 'completed':
-        raise RuntimeError(f'Braid 尚未完成交付: {result.get("status")} / {result.get("reason")}')
-    if any(result.get(key) != request[key] for key in ('run_id','delivery_ref')):
-        raise RuntimeError('Braid 交付身份与启动请求不一致')
-    if result.get('root_issue') != {'kind':'issue','id':'1'}:
-        raise RuntimeError('Braid 交付没有对应本次根 Issue')
-    repository = Path(result['repository']).resolve(strict=True)
-    if repository != app.resolve() or not repository.is_relative_to(work.resolve()):
-        raise RuntimeError('Braid 返回的交付仓库不属于本次运行')
-    commit = result.get('delivery_commit', '')
-    if not re.fullmatch(r'[0-9a-f]{40}|[0-9a-f]{64}', commit):
-        raise RuntimeError('Braid 没有返回不可变交付 commit')
-    object_type = subprocess.check_output(['git', '-C', str(repository), 'cat-file', '-t', commit], text=True).strip()
-    if object_type != 'commit':
-        raise RuntimeError('交付 Git 对象不是 commit')
-    delivery_ref = result.get('delivery_ref', '')
-    if not delivery_ref.startswith('refs/heads/'):
-        raise RuntimeError('交付分支没有完整本地 ref')
-    head = subprocess.check_output(['git', '-C', str(repository), 'rev-parse', '--verify',
-                                    '--end-of-options', delivery_ref], text=True).strip()
-    if head != commit:
-        raise RuntimeError('交付分支与返回 commit 不一致')
-    for key in ('objects_database', 'sessions_manifest'):
-        path = Path(result[key]).resolve(strict=True)
-        if not path.is_relative_to(state.resolve()):
-            raise RuntimeError(f'Braid {key} 不属于本次状态目录')
-    return result
+def read_runtime_result(state):
+    """Keep operational evidence separate from the application's exportability."""
+    try:
+        return json.loads((state/'result.json').read_text())
+    except (OSError, ValueError) as exc:
+        return {'status': 'unavailable', 'error': str(exc)}
+
+
+def load_delivery(app, request):
+    """Freeze Factory's selected ref; work-item and runtime states do not gate it."""
+    repository = app.resolve(strict=True)
+    delivery_ref = request['delivery_ref']
+    commit = subprocess.check_output(
+        ['git', '-C', str(repository), 'rev-parse', '--verify', '--end-of-options',
+         delivery_ref + '^{commit}'], text=True).strip()
+    return {'run_id': request['run_id'], 'repository': str(repository),
+            'delivery_ref': delivery_ref, 'delivery_commit': commit}
 
 
 def export_delivery(app, commit, output):
-    """Export precisely the accepted commit, independently of worktree contents."""
+    """Export the selected commit, independently of worktree contents."""
+    files = subprocess.check_output(
+        ['git', '-C', str(app), 'ls-tree', '-r', '--name-only', commit])
+    if not files.strip():
+        raise RuntimeError('交付 commit 不含应用文件；请查看 Braid result 中的原始状态和原因')
     output.mkdir()
     proc = subprocess.Popen(['git', '-C', str(app), 'archive', '--format=tar', commit], stdout=subprocess.PIPE)
     try:
@@ -85,10 +76,11 @@ def archive_state(state, output):
     return entries
 
 
-def export_telemetry(output, work, archived_manifest):
+def export_telemetry(output, work, archived_manifest, env=None):
     """补采已归档的原生证据；遥测失败不改变归档或应用终态。"""
     state = output/'braid-state'
-    if not state.is_dir() or not any(os.environ.get(key) for key in (
+    environment = env if env is not None else os.environ
+    if not state.is_dir() or not any(environment.get(key) for key in (
             'OTEL_EXPORTER_OTLP_ENDPOINT', 'OTEL_EXPORTER_OTLP_TRACES_ENDPOINT',
             'OTEL_EXPORTER_OTLP_LOGS_ENDPOINT', 'OTEL_EXPORTER_OTLP_METRICS_ENDPOINT')):
         return
@@ -129,7 +121,7 @@ def export_telemetry(output, work, archived_manifest):
                 gaps.append(f'{label} 没有已归档原生文件')
                 continue
             session = {key: row[key] for key in (
-                'group_id', 'profile_id', 'effective_profile_digest', 'assignment_generation',
+                'group_id', 'member_login', 'profile_id', 'effective_profile_digest', 'assignment_generation',
                 'work_item_kind', 'work_item_id', 'native_role', 'evidence_source', 'sha256',
                 'association_status', 'observer_diagnostic_status',
             ) if row.get(key) is not None}
@@ -154,7 +146,7 @@ def export_telemetry(output, work, archived_manifest):
         with log_path.open('a') as log:
             proc = subprocess.run([str(work/'bin/braid'), 'telemetry', 'export', '--state', str(state),
                                    '--native-manifest', str(manifest)], stdout=subprocess.PIPE,
-                                  stderr=log, timeout=120, text=True)
+                                   stderr=log, timeout=120, text=True, env=environment)
             log.write(proc.stdout)
         result.update(status='exited', exit_code=proc.returncode)
         if proc.stdout.strip():

@@ -1,0 +1,14 @@
+{
+  "id": "pi-minimax",
+  "display_name": "pi-minimax",
+  "assignee_login": "minimax",
+  "assignee_description": "处理需求理解、设计、实现与整合；支持长上下文的完整工作项。",
+  "tags": [],
+  "adapter_type": "pi",
+  "adapter_version": "0.85.1",
+  "provider": "factory26",
+  "model": "minimax-m3",
+  "reasoning": "high",
+  "context_soft_ratio": 0.8,
+  "context_hard_bytes": 1000000
+}

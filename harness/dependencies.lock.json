@@ -25,7 +25,32 @@
     },
     "agent-browser": {
       "source": "npm:agent-browser@0.38.1 bundled core skill",
-      "adaptation": "Factory navigation only; native CLI owns full reference"
+      "adaptation": "Factory navigation and optional service/check lifecycle helper; native CLI owns browser reference"
+    },
+    "hyperformula": {
+      "repository": "https://github.com/handsontable/handsontable-skills",
+      "revision": "4cc046f0bbd3aa3b7ebaa2b923f9a07e58bd659b",
+      "adaptation": "Short entry; pinned upstream task references and MIT license"
+    },
+    "handsontable": {
+      "repository": "https://github.com/handsontable/handsontable-skills",
+      "revision": "4cc046f0bbd3aa3b7ebaa2b923f9a07e58bd659b",
+      "adaptation": "Short entry; pinned upstream task references and MIT license"
+    },
+    "better-auth-best-practices": {
+      "source": "Original guide based on https://www.better-auth.com/docs/",
+      "research_revision": "better-auth/skills@20c9e88a5c007461a703f1c213572b073196113e",
+      "adaptation": "Original concise entry; no upstream skills text copied"
+    },
+    "organization-best-practices": {
+      "source": "Original guide based on https://www.better-auth.com/docs/plugins/organization",
+      "research_revision": "better-auth/skills@20c9e88a5c007461a703f1c213572b073196113e",
+      "adaptation": "Original concise entry; no upstream skills text copied"
+    },
+    "fixing-accessibility": {
+      "repository": "https://github.com/ibelick/ui-skills",
+      "revision": "fd0889bdf72aee45c32028b4643b09735d5b5a34",
+      "adaptation": "Condensed interaction guidance; pinned upstream MIT license"
     }
   }
 }

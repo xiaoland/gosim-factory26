@@ -21,15 +21,38 @@ def prepare(lock_dir):
     cache = cache_path(lock_dir)
     lock = lock_dir/'package-lock.json'
     expected = cache/'package-lock.json'
+    patches = (
+        ('pi-background-bash', 'pi-background-bash-1.0.5.patch', ('extensions/background-bash.ts',)),
+        ('pi-subagents', 'pi-subagents-0.56.0-completion-boundary.patch',
+         ('src/extension/index.ts', 'src/runs/background/notify.ts', 'src/runs/background/result-watcher.ts')),
+        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-braid-boundary.patch', ('dist/core/agent-session.js',)),
+    )
+    def patch_matches(package, patch_name, target_names):
+        patch_file = lock_dir/'patches'/patch_name
+        targets = [cache/'node_modules'/package/name for name in target_names]
+        stamp = cache/(patch_name+'.sha256')
+        return (stamp.is_file() and all(target.is_file() for target in targets) and
+                stamp.read_text().splitlines() ==
+                [hashlib.sha256(patch_file.read_bytes()).hexdigest(),
+                 *(hashlib.sha256(target.read_bytes()).hexdigest() for target in targets)])
     if not expected.is_file() or expected.read_bytes()!=lock.read_bytes() or any(
-            not (cache/'node_modules/.bin'/name).is_file() for name in ('pi','codex','agent-browser')):
+            not (cache/'node_modules/.bin'/name).is_file() for name in ('pi','codex','agent-browser','playwright','pnpm','portless')) or \
+            not all(patch_matches(*item) for item in patches):
         cache.mkdir(parents=True, exist_ok=True)
         for name in ('package.json','package-lock.json'):
             shutil.copy2(lock_dir/name, cache/name)
-        subprocess.run(['npm','ci','--prefix',str(cache)],check=True)
+        subprocess.run(['npm','ci','--legacy-peer-deps','--prefix',str(cache)],check=True)
+        for package, patch_name, target_names in patches:
+            patch_file = lock_dir/'patches'/patch_name
+            targets = [cache/'node_modules'/package/name for name in target_names]
+            subprocess.run(['patch','--batch','--fuzz=0','-p1','-d',str(cache/'node_modules'/package),
+                            '-i',str(patch_file)],check=True)
+            (cache/(patch_name+'.sha256')).write_text(
+                hashlib.sha256(patch_file.read_bytes()).hexdigest()+'\n'+
+                ''.join(hashlib.sha256(target.read_bytes()).hexdigest()+'\n' for target in targets))
     import os
-    subprocess.run([str(cache/'node_modules/.bin/agent-browser'),'install'],
-                   env=dict(os.environ,HOME=str(cache)),check=True)
+    subprocess.run([str(cache/'node_modules/.bin/playwright'),'install','chromium','--no-shell'],
+                   env=dict(os.environ,PLAYWRIGHT_BROWSERS_PATH=str(cache/'.playwright')),check=True)
     return cache
 
 
@@ -66,7 +89,12 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
             if created: subprocess.run(docker+['rm',name],check=True)
             subprocess.run(docker+['image','rm','--no-prune',name],check=False)
     (output/'runtime-source.json').write_text(json.dumps({'backend':backend,'platform':'linux-x86_64',
-        'sources':records,'npm_sha256':hashlib.sha256((lock_dir/'package-lock.json').read_bytes()).hexdigest()},indent=2)+'\n')
+        'sources':records,'npm_sha256':hashlib.sha256((lock_dir/'package-lock.json').read_bytes()).hexdigest(),
+        'native_patch_sha256':{name:hashlib.sha256(file.read_bytes()).hexdigest()
+                               for name in ('pi-background-bash-1.0.5.patch',
+                                            'pi-subagents-0.56.0-completion-boundary.patch',
+                                            'pi-coding-agent-0.85.1-braid-boundary.patch')
+                               for file in [lock_dir/'patches'/name]}},indent=2)+'\n')
     return output
 
 

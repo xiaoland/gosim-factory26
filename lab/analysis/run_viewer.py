@@ -52,7 +52,8 @@ def file_link(path, label, output, runs):
     if not path:
         return ""
     path = Path(path).resolve()
-    if not path.is_relative_to(runs.resolve()) or not path.exists():
+    if not (path.is_relative_to(runs.resolve()) or
+            path.is_relative_to((runs.parent / "analysis").resolve())) or not path.exists():
         return ""
     relative = os.path.relpath(path, output)
     return f'<a href="{escape(quote(relative, safe="/"), quote=True)}">{txt(label)}</a>'
@@ -372,20 +373,29 @@ def local_cases(detail):
     return cases, warnings
 
 
+def naming_fields(labels):
+    return [(title, labels[key], None) for key, title in
+            (("experiment_key", "实验编号"), ("case", "配置行"), ("operation", "执行类型"), ("run_name", "运行名"))
+            if labels.get(key)]
+
+
 def experiment_run(path, detail):
     cases, warnings = local_cases(detail)
     generation, deployment, evaluation = (detail[k] for k in ('generation', 'deployment', 'evaluation'))
+    evidence = list(detail['evidence'].items()) + [("分析", item['path']) for item in detail.get('analysis', [])]
     return {'kind': 'Local experiment', 'id': detail['id'],
             'key': 'experiment-'+hashlib.sha256(str(path).encode()).hexdigest()[:16],
-            'title': detail['id'], 'subtitle': f"{detail['variant']} · {detail['competition']} · {detail['task']}",
+            'title': detail.get('labels', {}).get('run_name') or detail['id'],
+            'subtitle': f"{detail['variant']} · {detail['competition']} · {detail['task']}",
             'status': detail['status'], 'stage': detail['stage'], 'evaluation_status': evaluation['status'],
             'score': evaluation['score'], 'platform_score': None, 'observed': detail['observed_at'],
             'fields': [('实验状态', detail['status'], None), ('生成', generation['status'], None),
                        ('部署', deployment['status'], None), ('评分', evaluation['status'], None),
-                       ('外层进程退出码', detail['runner_exit_code'], '退出码不是得分')],
+                       ('外层进程退出码', detail['runner_exit_code'], '退出码不是得分'),
+                       ('Run ID', detail['id'], None)] + naming_fields(detail.get('labels', {})),
             'errors': [('执行', detail['error']), ('生成', (generation.get('error') or {}).get('text')),
                        ('部署', deployment.get('error')), ('评分', (evaluation.get('error') or {}).get('text'))],
-            'steps': [], 'cases': cases, 'evidence': list(detail['evidence'].items()),
+            'steps': [], 'cases': cases, 'evidence': evidence,
             'process': {'kind': 'evidence', 'paths': [('Factory 生成目录', p) for p in detail['factory_runs']]
                         + [('原生会话', p) for p in detail['native']] + [('应用', p) for p in detail['applications']]},
             'warnings': detail['warnings']+warnings, 'path': str(path)}
@@ -437,13 +447,26 @@ def local_run(path):
 def hosted_runs(runs):
     rows = []
     warnings = []
-    for inputs_path in sorted((runs / "competition").glob("**/hosted/*/inputs.json")):
+    journals = []
+    # A journal's saved type identifies it; experiment directory names are only navigation.
+    for folder, directories, files in os.walk(runs):
+        directories[:] = [name for name in directories if name not in
+                          {'node_modules', '.git', 'inputs', 'workspace', 'work', 'artifacts',
+                           'runtime', 'viewer', 'sources', 'source', 'source-snapshots', 'application', 'native', 'submission'}]
+        if 'inputs.json' in files and 'state.json' in files:
+            journals.append(Path(folder) / 'inputs.json')
+            directories.clear()
+        elif 'run.json' in files:
+            directories.clear()
+    for inputs_path in sorted(journals):
         folder = inputs_path.parent
         if not all(path.resolve().is_relative_to(runs.resolve()) for path in (inputs_path, folder / "state.json")):
             warnings.append(f"{folder}: 归档路径越界")
             continue
         try:
             inputs, state = read_json(inputs_path), read_json(folder / "state.json")
+            if inputs.get('venue') != 'hosted':
+                continue
             if any(inputs.get(key) != state.get(key) for key in ("competition_id", "package_sha256")):
                 raise ValueError("inputs.json 与 state.json 身份不符")
             tasks = state.get("tasks")
@@ -492,17 +515,19 @@ def hosted_runs(runs):
                     platform[key] = value.get(key)
             platform["status"] = item.get("remote_status") or value.get("status")
             score = score_from_platform(platform)
-            rows.append(platform_run("Competition", item["run_id"], task, inputs.get("variant") or folder.name,
+            rows.append(platform_run("Competition", item["run_id"], task,
+                item.get('labels', {}).get('variant') or inputs.get("variant") or "未知实现",
                 platform["status"], item.get("phase"), score, observed, value if status_matches else {},
                 [("控制状态", folder / "state.json"), ("平台状态", status_path),
                  ("追踪", path / "traceability.json"), ("提交历史", path / "commit-history.json"),
                  ("应用现场", path / "analysis" / "official-stdout.log")]
                 + [("日志 · " + p.stem, p) for p in sorted((path / "logs").glob("*.json"))],
-                local_warnings, path, runs))
+                local_warnings, path, runs, labels=item.get('labels', {})))
     return rows, warnings
 
 
-def platform_run(kind, run_id, task, variant, status, stage, score, observed, value, evidence, warnings, path, runs):
+def platform_run(kind, run_id, task, variant, status, stage, score, observed, value, evidence, warnings, path, runs, *, labels=None):
+    labels = labels or {}
     cases = []
     for test in value.get("tests", []) if isinstance(value.get("tests"), list) else []:
         if not isinstance(test, dict):
@@ -527,11 +552,12 @@ def platform_run(kind, run_id, task, variant, status, stage, score, observed, va
     slug = re.sub(r"[^A-Za-z0-9_-]", "-", str(run_id))
     fingerprint = hashlib.sha1(str(path).encode()).hexdigest()[:10]
     return {"kind": kind, "id": run_id, "key": f"{kind.lower()}-{slug}-{fingerprint}",
-            "title": run_id, "subtitle": f"{variant} · {task}", "status": status or "unknown", "stage": stage,
+            "title": labels.get('run_name') or run_id, "subtitle": f"{variant} · {task}", "status": status or "unknown", "stage": stage,
             "evaluation_status": status, "score": None, "platform_score": score, "observed": observed,
             "fields": [("平台状态", status, stage), ("组合", variant, None), ("任务", task, None),
                        ("平台分数", score["score"] if score else None, "终态且计数完整" if score else "未取得完整评分"),
-                       ("开始时间", value.get("started_at"), None), ("结束时间", value.get("finished_at"), None)],
+                       ("开始时间", value.get("started_at"), None), ("结束时间", value.get("finished_at"), None),
+                       ("Run ID", run_id, None)] + naming_fields(labels),
             "errors": errors, "steps": visible_steps, "cases": cases, "evidence": evidence, "warnings": warnings,
             "process": platform_process(path, runs),
             "path": str(path)}
@@ -559,12 +585,14 @@ def playground_runs(runs):
                 observed = read_json(observation).get("status", {}).get("observed_at")
             except (OSError, ValueError, AttributeError) as exc:
                 warnings.append(f"{observation}: {exc}")
+        submission = read_json(folder / 'submission.json') if (folder / 'submission.json').is_file() else {}
         rows.append(platform_run("Playground", value["id"], value.get("requirement_id") or "未知任务",
-            value.get("display_name") or "Playground", value.get("status"), None,
+            submission.get('labels', {}).get('variant') or value.get("display_name") or "未知实现", value.get("status"), None,
             score_from_platform(value), observed, value,
             [("平台状态", path), ("观测记录", observation), ("追踪", folder / "traceability.json"),
              ("提交历史", folder / "commit-history.json")]
-            + [("日志 · " + p.stem, p) for p in sorted((folder / "logs").glob("*.json"))], [], folder, runs))
+            + [("日志 · " + p.stem, p) for p in sorted((folder / "logs").glob("*.json"))], [], folder, runs,
+            labels=submission.get('labels', {})))
     return rows, warnings
 
 

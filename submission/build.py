@@ -8,11 +8,14 @@ import shutil
 
 root = Path('/runtime')
 backend = sys.argv[1]
-for dependency in ('@ast-grep/cli', 'mcporter', '@earendil-works/pi-coding-agent', '@openai/codex', 'agent-browser', 'pi-subagents'):
+for dependency in ('@ast-grep/cli', 'mcporter', '@earendil-works/pi-coding-agent', '@openai/codex', 'agent-browser', 'pi-subagents', '@playwright/test', 'pnpm', 'portless'):
     if not (root / 'node_modules' / dependency).is_dir():
         raise RuntimeError(f'frozen npm dependency missing: {dependency}')
-if not any((root / '.agent-browser/browsers').glob('chrome-*')):
-    raise RuntimeError('frozen agent-browser Chromium is missing')
+chrome = Path(subprocess.check_output(
+    ['node', '-e', "process.stdout.write(require('playwright').chromium.executablePath())"],
+    cwd=root, text=True))
+if not chrome.is_file():
+    raise RuntimeError(f'frozen Playwright Chromium is missing: {chrome}')
 if backend == 'pi':
     for package in ('@openai/codex', '@openai/codex-linux-x64'):
         target = root/'node_modules'/package
@@ -24,7 +27,6 @@ agent_browser_bin = root/'node_modules/agent-browser/bin'
 for path in agent_browser_bin.iterdir():
     if path.name not in ('agent-browser.js', 'agent-browser-linux-x64'):
         shutil.rmtree(path) if path.is_dir() else path.unlink()
-chrome = next((root / '.agent-browser/browsers').glob('chrome-*/chrome'))
 platform_library = re.compile(r'^(?:libc|libm|libpthread|librt|libdl|libresolv)\.so(?:\.|$)|^ld-linux')
 
 
@@ -100,7 +102,9 @@ for name, source in tools.items():
         'export LD_LIBRARY_PATH\n'
         f'exec "$HERE/../libexec/{name}" "$@"\n'
     )
-commands = [('pi', '@earendil-works/pi-coding-agent'), ('agent-browser', 'agent-browser'), ('mcporter', 'mcporter')]
+commands = [('pi', '@earendil-works/pi-coding-agent'), ('agent-browser', 'agent-browser'),
+            ('mcporter', 'mcporter'), ('playwright', 'playwright'),
+            ('pnpm', 'pnpm'), ('portless', 'portless')]
 if backend == 'codex':
     commands.append(('codex', '@openai/codex'))
 for command, package in commands:

@@ -1,0 +1,14 @@
+{
+  "id": "pi-kimi-k3",
+  "display_name": "pi-kimi-k3",
+  "assignee_login": "kimi",
+  "assignee_description": "适合通用需求理解、设计、实现与整合；可处理完整工作项。",
+  "tags": [],
+  "adapter_type": "pi",
+  "adapter_version": "0.85.1",
+  "provider": "factory26",
+  "model": "kimi-k3",
+  "reasoning": "high",
+  "context_soft_ratio": 0.8,
+  "context_hard_bytes": 1000000
+}

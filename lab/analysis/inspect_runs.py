@@ -7,6 +7,7 @@ import re
 import time
 
 from lab.arc_bench.results import experiment_summary as arc_summary
+from lab.status import is_lab_run, show_run as lab_show_run
 from .native_evidence import discover
 
 
@@ -108,8 +109,24 @@ def _analysis(run, warnings):
 
 
 def experiment_summary(run, metadata):
+    if metadata.get("schema_version") == 2 and metadata.get("adapter_kind") != "arc-bench":
+        record = lab_show_run(run)
+        return {"producer": "local_experiment", "id": record["run_id"],
+                "labels": record.get("labels", {}), "source_application": record.get("source_application"),
+                "path": str(run), "variant": metadata.get("variant"),
+                "competition": metadata.get("competition"), "task": metadata.get("task"),
+                "status": record["phase"], "stage": None, "observed_at": metadata.get("finished_at"),
+                "runner_exit_code": record["process_exit_code"], "error": record.get("error"),
+                "generation": {"status": "unknown"}, "deployment": {"status": "unknown"},
+                "evaluation": {"status": (record.get("result") or {}).get("status") or "unknown",
+                               "score": None}, "factory_runs": [], "native": [], "applications": [],
+                "warnings": [], "analysis": record["analysis"],
+                "evidence": {"run.json": str(run / "run.json"),
+                                               **{key: value for key, value in record["evidence"].items()
+                                                  if isinstance(value, str)}}}
     detail = arc_summary(run, metadata)
     detail.update(discover(run, detail))
+    detail["analysis"] = lab_show_run(run)["analysis"]
     return detail
 
 
@@ -117,6 +134,8 @@ def render_experiment(detail):
     lines = [f"{detail['id']} | {detail['variant']} | {detail['task']} | {detail['status']}",
              f"生成: {detail['generation']['status']}；部署: {detail['deployment']['status']}；"
              f"评分: {detail['evaluation']['status']}；得分: {_score_text(detail['evaluation'])}"]
+    if detail.get('labels'):
+        lines.append('实验标签: ' + json.dumps(detail['labels'], ensure_ascii=False))
     for name, error in (('执行', detail.get('error')), ('生成', detail['generation'].get('error')),
                         ('部署', detail['deployment'].get('error')), ('评分', detail['evaluation'].get('error'))):
         if error:
@@ -135,7 +154,7 @@ def render_experiment(detail):
 def _summary(run, evaluation=None):
     warnings = []
     metadata = _read(run / "run.json", warnings)
-    if "result_path" in metadata:
+    if is_lab_run(metadata):
         return experiment_summary(run, metadata), metadata, []
     config = _read(run / "config.json", warnings)
     variant, inferred = _variant(metadata, config)
@@ -189,7 +208,7 @@ def list_runs(root, variant=None, task=None, backend=None) -> list[dict]:
         if 'run.json' in files:
             path = Path(folder)/'run.json'
             metadata = _read(path, [])
-            if 'result_path' in metadata or 'backend' in metadata or 'variant' in metadata:
+            if is_lab_run(metadata) or 'backend' in metadata or 'variant' in metadata:
                 paths.append(path)
                 directories.clear()
     for path in sorted(paths, reverse=True):

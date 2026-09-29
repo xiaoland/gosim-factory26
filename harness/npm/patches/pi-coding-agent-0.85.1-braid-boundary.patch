@@ -1,0 +1,65 @@
+--- a/dist/core/agent-session.js
++++ b/dist/core/agent-session.js
+@@ -348,7 +348,7 @@
+         this._isAgentRunActive = false;
+         try {
+             await this._extensionRunner.emit({ type: "agent_settled" });
+-            this._emit({ type: "agent_settled" });
++            this._emit({ type: "agent_settled", ...(process.env.BRAID_AGENT_RUNTIME === "1" && this._braidCallCancelled ? { cancelled: true } : {}) });
+         }
+         finally {
+             this._resolveIdleWaitIfIdle();
+@@ -771,13 +771,35 @@
+     // =========================================================================
+     async _runAgentPrompt(messages) {
+         this._isAgentRunActive = true;
++        this._braidCallCancelled = false;
++        let agentEndFailed = false;
++        const unsubscribe = process.env.BRAID_AGENT_RUNTIME === "1"
++            ? this._extensionRunner.onError((error) => { if (error.event === "agent_end") agentEndFailed = true; })
++            : () => { };
+         try {
+             await this.agent.prompt(messages);
+-            while (await this._handlePostAgentRun()) {
++            while (!agentEndFailed && !this._braidCallCancelled && await this._handlePostAgentRun()) {
++                if (agentEndFailed || this._braidCallCancelled) break;
+                 await this.agent.continue();
+             }
+         }
+         finally {
++            unsubscribe();
++            if (process.env.BRAID_AGENT_RUNTIME === "1" && (agentEndFailed || this._braidCallCancelled)) {
++                const queued = [...this.agent.steeringQueue.drain(), ...this.agent.followUpQueue.drain()];
++                this._steeringMessages = [];
++                this._followUpMessages = [];
++                this._emitQueueUpdate();
++                for (const message of queued) {
++                    if (message.role === "custom") this._appendCustomMessage(message);
++                    else {
++                        this.agent.state.messages.push(message);
++                        this.sessionManager.appendMessage(message);
++                        this._emit({ type: "message_start", message });
++                        this._emit({ type: "message_end", message });
++                    }
++                }
++            }
+             this._systemPromptOverride = undefined;
+             this._flushPendingBashMessages();
+             this._flushPendingCustomMessages();
+@@ -1117,7 +1139,7 @@
+                 this.agent.steer(appMessage);
+             }
+         }
+-        else if (options?.triggerTurn) {
++        else if (options?.triggerTurn && process.env.BRAID_AGENT_RUNTIME !== "1") {
+             await this._runAgentPrompt(appMessage);
+         }
+         else if (this.isStreaming) {
+@@ -1220,6 +1242,7 @@
+      * Abort current operation and wait for agent to become idle.
+      */
+     async abort() {
++        if (process.env.BRAID_AGENT_RUNTIME === "1" && this._isAgentRunActive) this._braidCallCancelled = true;
+         this.abortRetry();
+         this.abortCompaction();
+         this.abortBranchSummary();

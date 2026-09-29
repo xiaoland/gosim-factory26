@@ -1,17 +1,17 @@
-"""Native agent transports; provider homes are supplied by the isolated run."""
+"""Archive native sessions and their work-item identities from completed runs."""
 import json
 import hashlib
 import re
 import shutil
-import subprocess
 from pathlib import Path
+from urllib.parse import quote
 
 from braid_runtime import export_telemetry
 
 
 _ARCHIVE_INHERITED_KEYS = (
     'profile_id', 'effective_profile_digest', 'work_item_kind', 'work_item_id',
-    'assignment_generation', 'native_home',
+    'assignment_generation', 'member_login', 'native_home',
 )
 
 
@@ -74,7 +74,29 @@ def _child_inherited(root, extra=None):
     return row
 
 
-def archive_sessions(output, home, work, entries):
+def _pi_session_tree(native_home, work, parent_ids):
+    """Select evidence for this parent, not whichever parent last used its home."""
+    factory = native_home / '.factory'
+    candidates = [factory / 'session-tree.json']
+    candidates.extend(factory / 'session-trees' / f'{quote(parent, safe="")}.json'
+                      for parent in sorted(parent_ids) if "/" not in parent and "\\" not in parent)
+    found = False
+    for candidate in candidates:
+        if not candidate.exists():
+            continue
+        found = True
+        source = _archive_path(candidate, work)
+        tree = json.loads(source.read_text())
+        if not isinstance(tree, dict) or not isinstance(tree.get('children'), list):
+            raise ValueError(f'Pi session-tree manifest 格式无效: {source}')
+        if str(tree.get('parent_native_session_id')) in parent_ids:
+            return source, tree
+    if found:
+        raise ValueError('Pi 当前及历史 session-tree 均不匹配所归档父会话')
+    return None
+
+
+def archive_sessions(output, home, work, entries, telemetry_env=None):
     """归档原生会话及被动观察的父子关系，返回每份材料的归档记录。
 
     manifest 的 complete/partial/unknown 描述诊断覆盖，不是应用交付状态。
@@ -133,16 +155,14 @@ def archive_sessions(output, home, work, entries):
         native_home = None
         if provider == 'pi' and row.get('native_home'):
             native_home = _archive_path(row['native_home'], work)
-            tree_path = native_home/'.factory'/'session-tree.json'
-            if tree_path.exists():
-                try:
-                    tree = json.loads(tree_path.read_text())
-                    root_ids = {str(session_id), str(row.get('native_session_id'))}
-                    root_ids.discard('None')
-                    if str(tree.get('parent_native_session_id')) in root_ids:
-                        source = tree.get('parent_session_file') or source
-                except (OSError, ValueError, TypeError, json.JSONDecodeError):
-                    pass
+            try:
+                root_ids = {str(value) for value in (session_id, row.get('native_session_id'))
+                            if value is not None}
+                selected = _pi_session_tree(native_home, work, root_ids)
+                if selected:
+                    source = selected[1].get('parent_session_file') or source
+            except (OSError, ValueError, TypeError, json.JSONDecodeError):
+                pass  # Preserve the native file; archive_pi_children records index errors separately.
         if not source and provider == 'codex' and isinstance(session_id, str) and re.fullmatch(r'[a-fA-F0-9-]+', session_id):
             native_home = _archive_path(row['native_home'], work) if row.get('native_home') else home
             matches = list(native_home.glob(f'sessions/**/rollout-*-{session_id}.jsonl'))
@@ -163,27 +183,21 @@ def archive_sessions(output, home, work, entries):
         if not native_home:
             return
         child_home = _archive_path(native_home, work)
-        factory_dir = child_home/'.factory'
-        tree_path = factory_dir/'session-tree.json'
-        if not tree_path.exists():
+        root_ids = {str(root_archived.get('native_id')), str(root.get('session_id')),
+                    str(root.get('native_session_id')),
+                    str(root.get('native_session_path')), str(root_archived.get('source_path'))}
+        root_ids.discard('None')
+        selected = _pi_session_tree(child_home, work, root_ids)
+        if selected is None:
             root_archived['observer_diagnostic_status'] = 'unknown'
             return
-        tree_source = _archive_path(tree_path, work)
-        tree = json.loads(tree_source.read_text())
-        if not isinstance(tree, dict) or not isinstance(tree.get('children'), list):
-            raise ValueError('Pi session-tree manifest 格式无效')
+        tree_source, tree = selected
         tree_target = native/f'{target_index:03}-{tree_source.name}'
         target_index += 1
         shutil.copy2(tree_source, tree_target)
         root_archived['session_tree_manifest'] = str(tree_target.relative_to(output))
         root_archived['observer_diagnostic_status'] = tree.get('diagnostic_status', 'unknown')
-        parent_id = tree.get('parent_native_session_id')
-        root_ids = {str(root_archived.get('native_id')), str(root.get('session_id')),
-                    str(root.get('native_session_id')),
-                    str(root.get('native_session_path')), str(root_archived.get('source_path'))}
-        root_ids.discard('None')
-        if not parent_id or str(parent_id) not in root_ids:
-            raise ValueError('Pi session-tree parent identity 与 Braid 根会话不一致')
+        parent_id = tree['parent_native_session_id']
         pending = list(tree['children'])
         connected = set(root_ids)
         while pending:
@@ -312,86 +326,5 @@ def archive_sessions(output, home, work, entries):
                          if len(valid) != len(archived) or incomplete_observation else 'complete')
     manifest = {'schema_version': 1, 'diagnostic_status': diagnostic_status, 'sessions': archived}
     (native/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
-    export_telemetry(output, work, manifest)
+    export_telemetry(output, work, manifest, env=telemetry_env)
     return archived
-
-
-def codex_turn(command, app, env, prompt, output, model, thinking):
-    """Drive app-server v2; only turn/completed establishes completion."""
-    with (output / 'codex-events.jsonl').open('w') as events, (output / 'codex.stderr.log').open('w') as err:
-        proc = subprocess.Popen(command + ['app-server', '--stdio'], cwd=app, env=env,
-                                stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=err,
-                                text=True, start_new_session=True)
-        next_id = 0
-        deferred = []
-        def send(method, params, request=True):
-            nonlocal next_id
-            frame = {'method': method, 'params': params}
-            if request:
-                next_id += 1
-                frame['id'] = next_id
-            proc.stdin.write(json.dumps(frame) + '\n'); proc.stdin.flush()
-            return next_id
-        def receive():
-            line = proc.stdout.readline()
-            if not line:
-                raise RuntimeError('Codex app-server disconnected before terminal')
-            events.write(line); events.flush()
-            frame = json.loads(line)
-            if 'method' in frame and 'id' in frame:
-                # No operator exists. Reject unsupported interactive requests explicitly.
-                proc.stdin.write(json.dumps({'id':frame['id'], 'error':{'code':-32601,'message':'Unattended harness has no interactive handler'}})+'\n')
-                proc.stdin.flush()
-            return frame
-        def request(method, params):
-            request_id = send(method, params)
-            while True:
-                frame = receive()
-                if frame.get('id') == request_id and 'method' not in frame:
-                    if 'error' in frame: raise RuntimeError(str(frame['error']))
-                    return frame['result']
-                deferred.append(frame)
-        try:
-            request('initialize', {'clientInfo': {'name':'factory26','version':'1'}, 'capabilities':{'experimentalApi':True}})
-            send('initialized', {}, False)
-            result = request('thread/start', {'cwd':str(app), 'model':model,
-                             'approvalPolicy':'never', 'sandbox':'danger-full-access', 'ephemeral':False})
-            thread = result['thread']['id']
-            started = request('turn/start', {'threadId':thread, 'input':[{'type':'text','text':prompt}], 'effort':thinking})
-            usage = None
-            while True:
-                frame = deferred.pop(0) if deferred else receive()
-                if frame.get('params',{}).get('threadId') != thread: continue
-                if frame.get('method') == 'thread/tokenUsage/updated': usage = frame['params'].get('tokenUsage')
-                if frame.get('method') == 'turn/completed':
-                    turn = frame['params']['turn']
-                    if turn['id'] != started['turn']['id']: continue
-                    if turn['status'] != 'completed': raise RuntimeError(str(turn))
-                    return {'thread_id':thread, 'native_usage':usage, 'estimated_cost':None}
-        finally:
-            # Imported lazily so this transport can also be used in standalone probes.
-            import os, signal
-            try: os.killpg(proc.pid, signal.SIGTERM)
-            except ProcessLookupError: pass
-            try: proc.wait(timeout=5)
-            except subprocess.TimeoutExpired:
-                os.killpg(proc.pid, signal.SIGKILL); proc.wait()
-            proc.stdin.close()
-            proc.stdout.close()
-
-
-def codex_config(home, base_url, model, context_window=None):
-    context = f'model_context_window = {int(context_window)}\n' if context_window is not None else ''
-    (home / 'config.toml').write_text(context + f'''model_supports_reasoning_summaries = true
-model_reasoning_summary = "none"
-model = {json.dumps(model)}
-model_provider = "factory26"
-approval_policy = "never"
-sandbox_mode = "danger-full-access"
-web_search = "disabled"
-[model_providers.factory26]
-name = "Factory26 competition"
-base_url = {json.dumps(base_url)}
-env_key = "FACTORY26_API_KEY"
-wire_api = "responses"
-''')

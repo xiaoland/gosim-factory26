@@ -14,6 +14,20 @@ from agent_support import copy_skill
 
 ROOT=Path(__file__).resolve().parents[1]
 
+def is_metadata_path(path):
+    """Exclude transport-created macOS metadata from runnable package payloads."""
+    return any(part.startswith('._') or part in {'.DS_Store', '__MACOSX'}
+               for part in Path(path).parts)
+
+
+def prune_metadata(root):
+    for path in sorted(root.rglob('*'), key=lambda item: len(item.parts), reverse=True):
+        if is_metadata_path(path.name) and (path.exists() or path.is_symlink()):
+            if path.is_dir() and not path.is_symlink():
+                shutil.rmtree(path)
+            else:
+                path.unlink()
+
 def bundle_files(root):
     """Materialize internal symlinks; reject escape, cycles, and special files."""
     root = root.resolve()
@@ -25,6 +39,8 @@ def bundle_files(root):
         if resolved in ancestors:
             raise ValueError(f'参赛包链接形成循环：{directory}')
         for path in sorted(directory.iterdir()):
+            if is_metadata_path(path.name):
+                continue
             target = path.resolve()
             if not target.is_relative_to(root):
                 raise ValueError(f'参赛包链接越出根目录：{path}')
@@ -77,8 +93,15 @@ def assemble(source, destination, runtime, skill_source, skills):
         if item.is_dir(): shutil.copytree(item,destination/item.name)
         else: shutil.copy2(item,destination/item.name)
     support=destination/'support';support.mkdir()
-    for name in ('agent_support.py','braid_runtime.py','core.py'):
+    for name in ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs'):
         shutil.copy2(ROOT/'scripts'/name,support/name)
+    if source.name in {'pi-braid', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
+        shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
+        subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', '--no-compile',
+                        '--target', str(support/'otlp-deps'), '-r', str(ROOT/'lab/requirements.txt')],
+                       check=True)
+        for binary in (support/'otlp-deps').rglob('*.so'):
+            binary.unlink()  # protobuf's pure Python implementation works across build/target hosts.
     for name in skills:
         copy_skill(Path(skill_source)/name,destination/'skills'/name)
     shutil.copytree(runtime,destination/'runtime',symlinks=True)
@@ -104,6 +127,7 @@ def package(variant, output, docker_context=None, runtime=None, stage=None,
         bundle=Path(stage).resolve() if stage else tmp/'bundle'
         subprocess.run([sys.executable,str(source/'build.py'),'--stage',str(bundle),
                         '--runtime',str(runtime),'--skills',str(skill_source)],check=True)
+        prune_metadata(bundle)
         records=json.loads((runtime/'runtime-source.json').read_text()).get('sources',{}) if (runtime/'runtime-source.json').is_file() else {}
         if output is not None:
             write_zip(bundle,Path(output).resolve(),'pi',records,{'variant':variant})

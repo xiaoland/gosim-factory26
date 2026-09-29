@@ -2,7 +2,7 @@
 """ARC-bench Playground HTTP 客户端；日常运行不依赖浏览器。"""
 import argparse
 from collections import Counter
-from datetime import datetime
+from datetime import datetime, timezone
 import getpass
 import hashlib
 import json
@@ -16,6 +16,7 @@ import uuid
 from zipfile import ZipFile
 
 from .traceability import collect_hosted, inspect as inspect_traceability
+from .arc_artifacts import package_metadata
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -28,6 +29,17 @@ def save(path, value):
         temporary.replace(path)
     finally:
         temporary.unlink(missing_ok=True)
+
+
+def polling_interval(run, *, steady=480):
+    """Poll every 3 minutes for the first 10 minutes, then at steady cadence."""
+    started = run.get('started_at') or run.get('created_at')
+    if not started:
+        return 180
+    stamp = datetime.fromisoformat(started.replace('Z', '+00:00'))
+    if stamp.tzinfo is None:
+        stamp = stamp.replace(tzinfo=timezone.utc)
+    return 180 if time.time() - stamp.timestamp() < 600 else steady
 
 
 def api_key():
@@ -71,6 +83,7 @@ class Client:
         with tempfile.TemporaryDirectory(prefix='factory26-http-') as temp:
             response = Path(temp)/'response'
             command = ['curl', '-q', '--silent', '--show-error', '--proto', '=https',
+                       '--connect-timeout', '30', '--max-time', '1200' if package is not None else '180',
                        '--request', method, '--cookie', str(self.cookie),
                        '--output', str(response), '--write-out', '%{http_code}', API+path]
             if login:
@@ -228,6 +241,11 @@ def saved_summary(run_id, value=None, *, now=None):
     path = folder/'traceability.json'
     traceability = json.loads(path.read_text()) if path.exists() else None
     result = summary(value, events=events, observation=observation, traceability=traceability, now=now)
+    submission_path = folder/'submission.json'
+    if submission_path.is_file():
+        submission = json.loads(submission_path.read_text())
+        result.update({key: submission[key] for key in ('display_name', 'labels', 'package_identity',
+                                                       'package_sha256', 'submission_id') if key in submission})
     if traceability is not None:
         result['traceability']['source'] = observation.get('traceability', {}).get('source') or str(path)
     if path.is_file() or (folder/'observations/traceability').is_dir():
@@ -272,7 +290,8 @@ def collect_artifact(client, run_id, name):
     return observation
 
 
-def submit(client, package, requirement, name, offline=False, catalog='benchmark', config_path=None, *, practice=False):
+def submit(client, package, requirement, name, offline=False, catalog='benchmark', config_path=None, *, practice=False,
+           experiment_key=None, case=None, run_name=None):
     if not (practice or offline):
         raise ValueError('此接口仅用于练习；请显式选择 --practice。正式评测使用队长的平台入口和平台内置 key。')
     package = Path(package).resolve()
@@ -282,9 +301,14 @@ def submit(client, package, requirement, name, offline=False, catalog='benchmark
     if config_path is None:
         raise ValueError('练习提交需要显式提供 --config')
     config = json.loads(Path(config_path).read_text())
+    identity = package_metadata(package)
+    labels = {'operation': identity['operation'],
+              **{key: value for key, value in (('experiment_key', experiment_key), ('case', case),
+                                             ('run_name', run_name), ('variant', identity['variant'])) if value is not None}}
     folder = ROOT/'runs/playground'/('upload-'+time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:6])
     folder.mkdir(parents=True)
     manifest = {'package': str(package), 'package_sha256': hashlib.sha256(package.read_bytes()).hexdigest(),
+                'display_name': name, 'labels': labels, 'package_identity': identity,
                 'requirement': requirement, 'catalog': catalog, 'model': config['model'], 'offline': offline,
                 'model_config': {'model':config['model'],'base_url':config['base_url']},
                 'configuration_scope': 'model-settings-only',
@@ -337,6 +361,10 @@ def main():
     rerun=commands.add_parser('run')
     rerun.add_argument('--submission',required=True)
     rerun.add_argument('--requirement',required=True)
+    for command in (upload, rerun):
+        command.add_argument('--experiment-key')
+        command.add_argument('--case', help='实验配置行；与包内 variant 分开')
+        command.add_argument('--run-name', help='本次实际执行的可读名称；重跑不沿用旧名')
     for action in ('status', 'logs', 'collect', 'watch', 'start', 'cancel'):
         command = commands.add_parser(action); command.add_argument('run_id')
         if action == 'watch':
@@ -356,13 +384,20 @@ def main():
         items=client.request('/requirements?'+urlencode({'catalog':args.catalog}))
         print(json.dumps([{k:v.get(k) for k in ('id','title','total_tests')} for v in items],ensure_ascii=False,indent=2));return
     if args.command == 'submit':
-        value = submit(client, args.package, args.requirement, args.name, args.offline, args.catalog, args.config, practice=args.practice)
+        value = submit(client, args.package, args.requirement, args.name, args.offline, args.catalog, args.config,
+                       practice=args.practice, experiment_key=args.experiment_key, case=args.case, run_name=args.run_name)
     elif args.command == 'run':
         previous=practice_record(submission_id=args.submission)
+        labels = {key: value for key, value in previous.get('labels', {}).items() if key != 'run_name'}
+        labels.update({key: value for key, value in (('experiment_key', args.experiment_key), ('case', args.case),
+                                                    ('run_name', args.run_name)) if value is not None})
         created=client.request('/runs','POST',fields={'submission_id':args.submission,'requirement_id':args.requirement})
         run_id=created['run']['id']
         folder=output_dir(run_id)
         value={'submission_id':args.submission,'requirement':args.requirement,'run_id':run_id,'phase':'start',
+               'labels': labels, 'created_at': time.time(),
+               **{key: previous[key] for key in ('package', 'package_sha256', 'package_identity', 'display_name',
+                                                'catalog', 'model_config', 'configuration_scope', 'offline') if key in previous},
                'submission_kind':previous['submission_kind'],'ranking_eligible':False}
         save(folder/'submission.json',value)
         client.request(run_path(run_id)+'/start','POST')

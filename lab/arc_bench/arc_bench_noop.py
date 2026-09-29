@@ -5,6 +5,8 @@ import hashlib
 import json
 from pathlib import Path
 
+from arc_artifacts import verify as verify_application
+
 
 EXCLUDED = {".arc", ".factory26", ".git", "requirements", "node_modules", ".cache", "dist", "build"}
 
@@ -32,9 +34,14 @@ def main():
     parser.add_argument("--output-dir", type=Path, required=True)
     args = parser.parse_args()
     output = args.output_dir.resolve()
+    expected = Path(__file__).with_name("expected-application.json")
+    if expected.is_file():
+        identity = verify_application(output, expected)
+    else:
+        identity = {"algorithm": "arc-legacy-source-sha256-v1", "sha256": source_hash(output)}
     witness = output / ".arc/frozen-source.json"
     witness.parent.mkdir(parents=True, exist_ok=True)
-    witness.write_text(json.dumps({"sha256": source_hash(output)}) + "\n")
+    witness.write_text(json.dumps(identity, ensure_ascii=False) + "\n")
 
 
 if __name__ == "__main__":

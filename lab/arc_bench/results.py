@@ -58,7 +58,9 @@ def experiment_summary(run, metadata):
             generation = read(generation_dir/'template/.arc/raw/entry-result.json')
     applications = []
     for folder in directories:
-        for pattern in ('*.json', '*.log', 'template/.arc/*.json', 'template/.arc/*.jsonl', 'template/.arc/*.log'):
+        for pattern in ('*.json', '*.log', 'template/.arc/*.json', 'template/.arc/*.jsonl',
+                        'template/.arc/*.log', 'template/.arc/traceability/*.json',
+                        'template/.arc/runtime-reporting/*.jsonl'):
             for path in folder.glob(pattern):
                 link(path)
         app = folder/'template'
@@ -91,7 +93,7 @@ def experiment_summary(run, metadata):
                         deployment['status'] = 'running'
             except (ValueError, AttributeError) as exc:
                 warnings.append(f'{events}:{number}: {exc}')
-    if deployment['status'] == 'running' and metadata.get('phase') in ('completed', 'failed', 'interrupted'):
+    if deployment['status'] == 'running' and metadata.get('phase') in ('completed', 'failed', 'interrupted', 'finished', 'cancelled', 'lost'):
         deployment['status'] = 'incomplete'
     passed, failed, total = (evaluation.get(k) for k in ('passed', 'failed', 'total'))
     complete = (evaluation.get('evaluation_status') == 'completed'
@@ -110,6 +112,7 @@ def experiment_summary(run, metadata):
                          'raw': evaluation}
     error = metadata.get('error') or result.get('error')
     return {'producer': 'local_experiment', 'id': metadata.get('run_id', run.name), 'path': str(run),
+            'labels': metadata.get('labels', {}), 'source_application': metadata.get('source_application'),
             'variant': metadata.get('variant'), 'variant_inferred': False, 'backend': None,
             'task': metadata.get('task'), 'competition': metadata.get('competition'), 'model': None,
             'status': metadata.get('phase', 'unknown'), 'stage': result.get('stage') or metadata.get('phase'),

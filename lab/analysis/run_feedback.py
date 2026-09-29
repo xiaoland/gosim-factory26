@@ -8,6 +8,8 @@ from pathlib import Path
 import threading
 import time
 
+from lab.status import is_lab_run
+
 
 MIN_INTERVAL = 180
 MAX_ERRORS = 8
@@ -339,12 +341,12 @@ def collect(run: Path) -> dict:
     run = Path(run).resolve()
     metadata_path = run / "run.json"
     metadata = _read(metadata_path)
-    if isinstance(metadata, dict) and 'result_path' in metadata:
+    if isinstance(metadata, dict) and is_lab_run(metadata):
         from .inspect_runs import experiment_summary
         detail = experiment_summary(run, metadata)
-        brief = {key: detail[key] for key in ('variant', 'task', 'status', 'stage', 'error',
+        brief = {key: detail[key] for key in ('variant', 'task', 'status', 'stage', 'error', 'labels', 'source_application',
                  'generation', 'deployment', 'evaluation', 'factory_runs', 'native', 'applications', 'warnings')}
-        brief.update(run_id=detail['id'], terminal=detail['status'] in TERMINAL,
+        brief.update(run_id=detail['id'], terminal=detail['status'] in TERMINAL | {'finished', 'cancelled', 'lost'},
                      evidence_paths=list(detail['evidence'].values()))
         brief['event_id'] = _event_id(detail['id'], brief)
         return brief

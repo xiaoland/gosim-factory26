@@ -1282,6 +1282,7 @@
       const viewSpecs = [
         ["overview", "总览"],
         ["sessions", "会话消息"],
+        ["profile", "Token 与耗时"],
         ["objects", "Issue / PR"],
         ["traces", "Traces"],
         ["metrics", "Metrics"],
@@ -1445,6 +1446,57 @@
         more();
         if (!list.length) empty(events, "没有可恢复事件");
         p.append(events);
+      }
+      function profile(p) {
+        const profile = D.profile;
+        if (!profile) {
+          note(p, D.profile_error || "没有找到对应生成目录的 Pi 记录；此视图没有 token 与 Pi 回调时间数据。");
+          return;
+        }
+        note(p, `原生材料 ${profile.coverage.native_manifest}；Pi 时间事件 ${profile.coverage.timing_events}；未结束请求 ${profile.coverage.open_requests}，未结束工具 ${profile.coverage.open_tools}。运行中用量仅覆盖已有消息，未结束请求用量未知。Pi input 与 cacheRead 分列；它们不是供应商账单或缓存命中证明。模型时间从请求发出到最终消息，首增量是客户端可见延迟；并发区间不相加为总墙钟。`);
+        if (profile.coverage.gaps.length) note(p, `剖面缺口：${profile.coverage.gaps.join("；")}`);
+        p.append(append($("p"), link("profile.json", "下载机器可读剖面")));
+        const summary = panel("运行时间与已知用量");
+        summary.append(table(["口径", "值"], [
+          ["生成墙钟 ms", profile.summary.run_wall_ms],
+          ["已观测活动区间并集 ms", profile.summary.observed_active_union_ms],
+          ["模型调用累计 ms", profile.summary.request_sum_ms],
+          ["工具执行累计 ms", profile.summary.tool_sum_ms],
+          ["assistant 消息", profile.summary.messages],
+          ["费用", "未知（无本地价格口径）"],
+        ]));
+        p.append(summary);
+        const models = panel("按模型汇总");
+        models.append(table(["实际模型 / provider", "Braid 成员 / 原生主会话 / Pi 子会话", "成功 / 错误消息", "输入", "输出", "缓存读", "缓存写", "请求完成/总数", "调用累计 ms", "活动并集 ms"],
+          profile.models.map((row) => [`${row.model} / ${row.provider}`, `${row.braid_members ?? "未知"} / ${row.braid_sessions} / ${row.pi_subagent_sessions}`, `${row.successful_messages} / ${row.error_messages}`,
+            row.tokens.input, row.tokens.output,
+            row.tokens.cacheRead, row.tokens.cacheWrite,
+            `${row.completed_requests}/${row.requests}`, row.request_sum_ms, row.observed_active_union_ms])));
+        p.append(models);
+        const sessions = panel("按原生会话汇总");
+        sessions.append(table(["会话", "类别", "成员", "工作项", "角色 / 父会话", "消息", "输入", "输出", "模型 ms", "工具 ms", "活动并集 ms"],
+          profile.sessions.map((row) => [row.session_id, row.session_kind, row.profile_id, row.work_item_id,
+            [row.native_role, row.parent_native_session_id || row.native_parent].filter(Boolean).join(" / ") || null,
+            row.messages, row.tokens.input, row.tokens.output, row.request_sum_ms,
+            row.tool_sum_ms, row.observed_active_union_ms])));
+        p.append(sessions);
+        const token = (row, key) => row.tokens[key] === null ? "未知" :
+          `${row.tokens[key]} / ${row.known_messages[key]} 条已知`;
+        const usage = panel("原生 assistant usage");
+        usage.append(table(["会话", "实际模型 / provider", "结果", "消息", "输入", "输出", "缓存读", "缓存写", "推理"],
+          profile.usage.map((row) => [row.session_id, `${row.model} / ${row.provider}`, row.outcome, row.messages,
+            ...["input", "output", "cacheRead", "cacheWrite", "reasoning"].map((key) => token(row, key))])));
+        p.append(usage);
+        const requests = panel("模型调用");
+        requests.append(table(["会话", "实际模型 / provider", "请求", "请求→首增量 ms", "请求→结束 ms"],
+          profile.requests.map((row) => [row.session_id, `${row.model} / ${row.provider}`, row.request_id,
+            row.time_to_first_update_ms, row.duration_ms])));
+        p.append(requests);
+        const tools = panel("工具执行");
+        tools.append(table(["会话", "工具", "调用", "耗时 ms", "错误"],
+          profile.tools.map((row) => [row.session_id, row.tool_name, row.tool_call_id,
+            row.duration_ms, row.is_error])));
+        p.append(tools);
       }
       function markdown(text) {
         const box = $("div", "markdown-body");
@@ -2578,7 +2630,14 @@
         for (const gap of D.manifest.gaps) gaps.append($("p", "notice", gap));
         for (const error of D.diagnostics.errors)
           gaps.append($("p", "notice", `${error.file}: ${error.error}`));
-        if (!D.manifest.gaps.length && !D.diagnostics.errors.length)
+        if (D.source_errors?.length) {
+          note(gaps, "源端记录了错误或警告；OTLP capture 超时的批次是否丢失未知，Backend 已收批次与重建结果不证明源端完整。");
+          for (const error of D.source_errors)
+            gaps.append(append($("p", "notice"),
+              link(error.file, `${error.source}:${error.line ?? "更早"}`),
+              ` ${error.message}`));
+        }
+        if (!D.manifest.gaps.length && !D.diagnostics.errors.length && !D.source_errors?.length)
           note(
             gaps,
             "所选源清单、片段和摘要校验通过；这不证明源端未记录的内容存在。",
@@ -2628,6 +2687,7 @@
       const renderers = {
         overview,
         sessions,
+        profile,
         objects,
         traces,
         metrics,

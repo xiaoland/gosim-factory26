@@ -29,7 +29,7 @@ def package(runtime, backend, svc, output):
                       for path in skill.rglob("*") if path.is_file()})
     files.update({"agents/" + path.name: path for path in (ROOT / "variants/native-hackathon/agents").glob("*.md")})
     if svc:
-        skill = ROOT / "sources/svc"
+        skill = ROOT / "harness/skills/svc"
         for part in ("SKILL.md", "references", "assets"):
             origin = skill / part
             paths = [origin] if origin.is_file() else origin.rglob("*")

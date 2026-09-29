@@ -15,7 +15,7 @@ variants/<name>/main.py          variant/build.py + 指定工具与技能材料
                                 │
                原生材料 → Braid local → Pi 主会话
                                 │           └─ Pi 原生 sub-agent
-                       accepted commit
+                    共同 origin 的交付 ref → commit
                                 │
                          frontend/backend 应用
                                 │
@@ -31,7 +31,7 @@ variants/<name>/main.py          variant/build.py + 指定工具与技能材料
 [package_agent.py](../../scripts/package_agent.py)调用所选 variant 的 build.py 装入显式材料；打包不是应用生成。
 raw 基线由 [raw_main.py](../../variants/raw/raw_main.py)独立执行，可直接使用工具资源，不必经过团队 Harness。
 
-[lab.run](../../lab/run.py)运行外部 argv 并保存输入、结果和原始 OTLP 批次；[lab.status](../../lab/status.py)只呈现保存状态，不解释 Agent 的内部协作。
+[lab](../../lab/README.md)将外部 argv 与共享输入冻结为实验，控制器按槽位分配尝试并保存进程、操作和原始 OTLP 事实；[lab.status](../../lab/status.py)只呈现保存状态，不解释 Agent 的内部协作。不同 Harness 可直接作为外部命令运行，不需要实现设施内部接口。
 [arc_matrix.py](../../lab/arc_bench/arc_matrix.py)选择实验组合；[arc_bench_adapter.py](../../lab/arc_bench/arc_bench_adapter.py)调用官方 Runner；[ARC 结果解释](../../lab/arc_bench/results.py)与[原生过程证据](../../lab/analysis/native_evidence.py)只用于可选分析。
 替换 Harness 不应要求实验控制器识别另一种私有会话格式。
 
@@ -41,38 +41,52 @@ Git 历史是独立的 ARC 展示通道。公共 `arc-runtime.pyz notify-history
 
 ## Braid、原生 Agent 与 SVC
 
-SVC 的技能入口、方法正文和模板由 `sources/svc` 一处维护，标准分发结构为 SKILL.md、references/、assets/。
+SVC 的六个技能入口、方法正文和模板由 `sources/svc/skills/` 一处维护，每个技能使用 SKILL.md、references/、assets/ 标准分发结构。
 Factory 通过技能来源目录取得完整材料；公共文件操作只负责复制标准资源和许可，各 variant 自行选择装入与启用的技能。
 源码运行和打包共用此复制操作，不解析 SVC 内容，不拼装专用 Corpus，也不复制维护者或 CLI 文件。
 
+
 | 组件 | 拥有的职责 | 不由它决定的内容 |
 | --- | --- | --- |
-| Factory variant | 将任务转换为根 Issue 的 prompt，选择成员及其原生配置，调用 Braid 并交付应用。 | 不代替 LLM 分解每条 requirement。 |
-| Braid | Issue/PR 对象、comment 协作、工作项上下文和所属主会话的执行。 | 不理解 preset，不控制 Pi 内部子代理生命周期，不读取 SVC task packet。 |
+| 参赛 Harness 的 adapter/wrapper | 将任务转换为根 Issue 的 prompt，提供成员及其原生配置，选择根启动成员，调用 Braid 并交付应用。 | 不代替 LLM 分解任务或指派后续 Issue/PR。 |
+| Braid | Issue 设计与独立 PR 实施的分工、Issue/PR 对象、具体成员身份、comment 协作、工作项上下文、独立 Git clone 与共同 origin 的已发布分支。 | 不提供 V&V 方法，不理解 preset，不控制 Pi 内部子代理生命周期，不读取 SVC task packet。 |
 | Pi/Codex 原生接入 | 单个工作项内的原生会话、工具与内部子代理。 | 内部 explorer/executor 不是可指派的 Braid 成员。 |
 | SVC skill | 按需提供文档、任务包、工作方法与 V&V 指引。 | 不拥有 Braid 对象或实验调度。 |
 
-对运行时 Agent，成员通过 GitHub 式 assignee 显示；内部 profile 是接入配置，不是它需要学习的产品概念。
-跨工作项的信息通过 comment/reply 传递；私有会话内容不会因创建子 Issue 自动共享。
+对运行时 Agent，成员通过 GitHub 式 assignee 显示；指派时选择的是能力配置别名，操作会返回新 Agent 的具体成员名。内部 profile ID、原生会话 ID 只用于宿主调度和证据关联。
+variant 通过 `root_profile_id` 明确指派根 Issue，后续对象未指定 assignee 时保持未指派，不自动挑选成员。
+创建 PR 本身不会启动 PR 成员。Braid 的成员指引要求在实施前创建并指派关联 PR，由独立 PR 负责人承接计划、排障、实现与验收；Issue 负责人维护需求、方案、验收依据及协作决定。此分工不限制成员讨论或合并其他人的成果，也不由 Braid 自动挑选模型。当前 pi-braid 工作流由根 Issue 直接承担共享架构与开发反馈设施的设计和交付责任，以直接关联的独立基础 PR 落地，再分批指派可消费该基础的业务子项；最终通过 develop → main 整合 PR 验收。各 Issue 保留原需求、场景、设计和验收依据，PR 承接线性计划、预演排障、实现及验证。根 Issue 在理解完整需求后建立或接续项目文档入口，发布整体设计和共享契约；各 Issue 建立或接续自己的 task packet，关联 PR 接续同一任务的 packet。项目文档保存跨任务的权威定义，packet 保存当前判断、计划、证据与下一步，通过链接关联而不复制定义。这些责任由 variant 的成员常驻指令表达，具体方法由 svc-documentation 和 svc-task-packet 两个独立技能提供。原生 executor 仅协助当前 PR 的局部实现，不承担已经指派给另一 Braid 成员的同一工作。
+CLI 的运行位置和调用身份由原生执行环境提供；Agent 使用普通对象命令，不传 state 或 writer-turn。
+跨工作项的信息通过 comment/reply 传递；代码通过各自 clone 对共同 origin 的 push/fetch 共享，私有会话内容不会因创建子 Issue 自动共享。
 代码修改应保持这些边界，Braid 自身的详细行为归其独立仓库，Factory 不复制维护一份内部设计。
+
+Agent 的协作入口借助已有的 GitHub 使用经验，介绍 Issue/PR 的查看、评论与指派，并提示“像人类一样协作”。
+设计与实现分离的角色责任由 Braid 的 Issue/PR 指引和独立会话、工作区支持；具体怎样调查、设计、计划、验证由 SVC 提供通用方法。Braid 不据此自动选择实现者，也不以创建对象代替实际交接。
+Factory 是参赛 Agent 的称呼，variant 实现负责装配组件，不另设能力指引层。
+原生子代理的发现与调用由 Codex/Pi 及其扩展介绍，角色配置承载模型、工具与 SOP。
+Braid 不授予任务权限，不固定根成员独占合并，也不判断比赛产物是否完成。
 
 ## 角色与材料的三个消费者
 
-以 [mixed](../../variants/pi-team-mixed/) 为例，`agents/<id>/profile.json` 和 `instructions.md` 构成本次 Braid 成员及主会话指引。
+以 [mixed](../../variants/pi-braid/) 为例，`agents/<id>/profile.json` 和 `instructions.md` 构成本次 Braid 成员及主会话指引。
 `run.py:native_files` 生成主会话 launcher 与 binding，替换当前运行的 endpoint 和技能路径；原生 `models.json/settings.json` 由 Pi 消费。
 `agents/<id>/agents/*.md` 则由 Pi 子代理扩展消费，声明工作项内部角色的模型、工具和技能。
 `build.py` 决定包中实际存在的材料。
-
-活动 mixed variant 将固定版本的 `pi-background-bash` 显式加载到 Braid 成员 Pi 会话和有 Bash 权限的内部角色；插件覆盖原生 Bash，普通命令超过 30 秒会交还带任务 ID 的运行状态，命令继续执行，终态由插件回传。插件自身提供工具用法提示。Braid 仍以 Pi 的 `agent_settled` 记录工作项回合终态，不追踪插件尚未完成的后台命令，因此成员须在报告交付或验收完成前取得必要命令的终态和退出码。
+活动 mixed variant 将固定版本的 `pi-background-bash` 显式加载到 Braid 成员 Pi 会话和有 Bash 权限的内部角色；插件覆盖原生 Bash，普通命令超过 30 秒会交还带任务 ID 的运行状态，命令继续执行，终态由插件回传。插件自身提供工具用法提示。Braid 以 Pi 的 `agent_settled` 记录一次调用的执行终态，不追踪原生子任务或插件内部作业。
+原生接入的完成契约是：当前有限工作结束，其必要结果被父会话接收并完成后续处理后，才能正常结束调用；排空异常必须保留原始错误并投影为失败，不能以最后一条正常回应替代。
+service 和历史任务结果可以在调用之间积累事实，但不能在调用结束后自行启动模型；后续被 Braid 接受的输入可以消费这些记录。执行终态不等于产品验收完成，业务判断仍由 Agent 根据证据作出。
 
 因此“包里有某技能”“主会话启用该技能”“某个子代理启用该技能”是三个不同选择。
 修改方法见 CONTRIBUTING；这里不复制各角色的模型值或原生字段定义。
 
 ## 交付与评测
 
-Braid 进程退出成功还不构成交付。
-`braid_runtime.load_delivery` 读取本次结果并核对交付身份，`export_delivery` 从 accepted commit 导出应用，而不是复制仍可能有未提交修改的工作树。
-variant 随后按平台布局交付，记录生成与交付结果；失败现场与辅助归档错误分别保留。
+Braid 返回 quiescent、blocked 或 failed 等操作状态，variant 分别保存进程退出码及运行结果。
+`braid_runtime.load_delivery` 只解析请求指定的 ref 与确切 commit，`export_delivery` 只导出该提交；工作流程的完成判断由 variant 持有。
+活动 `pi-braid` 要求 Braid 正常退出、status 为 quiescent 且 result.root_issue.state 为 CLOSED 后才交付 origin/main。根仍 OPEN、blocked/failed 或状态不可取得时保留未完成与现场，不将已有部分应用当正常交付。
+该 variant 的持续成员指引安排子 PR 合 develop、根整合 PR 在候选上完成完整自动化验收后合 main；Braid 提供普通 base/head 与工作项事实，不判断验收质量或替 Agent 选择子项模型。根 CLOSED 是团队的完成报告，并非产品正确性的机器证明。
+variant 随后按平台布局交付，记录生成与交付结果；真实运行故障仍保留原始结果和可恢复工作区，即使当前提交已经可以独立评测。
+缺少 ref、无法导出或布局不满足平台要求仍是应用交付故障；不从任意 PR 或未提交工作树猜测替代产物。
 具体文件写入和中断恢复仍受当前实现限制，不把这一顺序解释成跨所有文件的事务保证。
 
 本地独立生成应使用 ARC 适配器的两阶段模式：生成时不传公开测试，再对冻结应用评分。
@@ -84,7 +98,7 @@ variant 随后按平台布局交付，记录生成与交付结果；失败现场
 | 观察 | 能说明什么 | 不能据此说明什么 |
 | --- | --- | --- |
 | 标准 Agent 入口成功 | Harness 报告其生成流程完成；适配器另外要求交付布局存在。 | 应用满足全部需求。 |
-| Braid accepted commit | 本次团队实现选定的交付版本。 | 该版本已经通过外部评分。 |
+| Factory 冻结的集成 commit | 此次提供给 Runner 的确切应用版本。 | 工作项全部关闭、Braid 无执行错误，或应用满足全部需求。 |
 | 官方完整评测结果 | 此任务、制品和环境下的有效评分，低分也属于结果。 | 另一版本或另一评测环境具有相同效果。 |
 | 外层 local experiment completed | 适配器结果报告完成；具体评分在 result 中。 | 所有用例通过，或所有原生会话已完整归档。 |
 | OTLP received | 接收器保存了批次。 | 标准消费者已成功解码，或 Agent 过程记录完整。 |
@@ -111,4 +125,17 @@ Collector 继续只保存原始 OTLP 批次，重建通过 Braid 公开 CLI 读�
 页面通过 OTLP resource 选择 Braid 运行，展示消息、对象和三信号；本地会话归档不作为补齐数据源，Backend 缺失保持可见。图表按 runtime resource 和指标属性分组，不能将累计指标跨实例重复求和，历史导出的操作 span 不当作模型执行。
 
 查询层读取 Factory 与 lab 外层 run 的实际记录，分别呈现生成、部署和评分；完整评分不能由容器退出码推导，缺少原始证据仍显示未知。
-开发依赖恢复也尚未覆盖所有本地未发布修改；这些限制见运行/开发说明，不能用本技术说明宣称已解决。
+Viewer 从外层实验链接原生会话和原始错误，不读取生成器配置来启动或重建实验。
+独立源码以 Git bundle、工作区 patch 和未跟踪文件交接，依赖由目标平台原生工具重建；范围与命令见开发说明。
+
+## 实现、实验与执行身份
+
+variant 标识独立维护的 Harness，实验 case 标识该问题中的配置行，run ID 标识一次实际执行。人类实验编号与运行名都不能替代包、应用和机器身份。命名登记见 [实验导航](../../experiments/README.md)。
+
+通用 lab 的 `labels` 是字符串元信息。稳定值随 job 冻结，本次执行标签随 operation request 和 run 保存；执行标签不能覆盖冻结值，retry 不继承上次执行标签。通用调度不理解 g/r、ARC task 或 Harness。状态查询和可选分析展示 run 中的保存值。
+
+ARC 团队包身份以 `package-manifest.json` 的 `capabilities.variant` 为准，旧顶层 variant 兼容读取，两者冲突时报错。`arc_matrix --candidate CASE=ZIP` 将配置行与真实包身份分开；旧 `--variant NAME=ZIP` 是身份声明，不能用于覆盖一个已知的包身份。缺失身份保持未知，声明和已验证来源分别保存。Competition 保留顶层 variant 的原调用声明以兼容续接，真实包身份在 `package_identity`，新逐题 labels 只标注已有来源证明的 variant。
+
+重放包可以携带多题和不同生成来源。按需求匹配 replay case 后，把来源 run、原实验/包引用与带算法的应用摘要传给 `source_application`；不以 submission 名或第一个 case 推断整个包的来源。旧 replay 的文件哈希映射摘要与新应用树摘要是不同算法，不能直接互换。原始来源缺失时不从名称或原生 Agent 会话猜测。
+
+本地 Hackathon 报告先明确选择冻结实验/job 集或显式 run 集，再按 case、赛题、应用、suite、镜像及其他冻结执行输入隔离。替代关系只来自同一实验/job 的显式 retry 链；独立重复分别呈现。缺来源的记录保留可观察结果与缺失原因，不拼接总分。分组键只在本报告内使用，真实关联字段独立保存。

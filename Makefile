@@ -1,5 +1,5 @@
 PYTHON ?= python3
-VARIANT ?= pi-team-mixed
+VARIANT ?= pi-braid
 RUNTIME ?=
 OUTPUT ?=
 RUN ?=

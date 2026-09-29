@@ -33,12 +33,15 @@ def export_runtime(argv):
 
 
 def main():
+    if sys.argv[1:2] == ["evaluate"]:
+        from .evaluate import main as evaluate
+        return evaluate(sys.argv[2:])
     if sys.argv[1:3] == ["runtime", "export"]:
         return export_runtime(sys.argv[3:])
     if sys.argv[1:2] == ["traceability"]:
         from .traceability import main as traceability
         return traceability(sys.argv[2:])
-    raise SystemExit("usage: python -m lab.arc_bench {runtime export|traceability} ...")
+    raise SystemExit("usage: python -m lab.arc_bench {evaluate|runtime export|traceability} ...")
 
 
 if __name__ == "__main__":

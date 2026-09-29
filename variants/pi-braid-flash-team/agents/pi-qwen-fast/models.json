@@ -1,0 +1,130 @@
+{
+  "providers": {
+    "factory26": {
+      "baseUrl": "@BASE_URL@",
+      "api": "openai-completions",
+      "apiKey": "$FACTORY26_API_KEY",
+      "models": [
+        {
+          "id": "deepseek-v4-flash",
+          "name": "DeepSeek V4 Flash",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 1000000,
+          "maxTokens": 384000,
+          "compat": {
+            "supportsStore": false,
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": true,
+            "thinkingFormat": "qwen"
+          },
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": null,
+            "medium": null,
+            "high": "high",
+            "xhigh": null,
+            "max": "max"
+          }
+        },
+        {
+          "id": "kimi-k3",
+          "name": "Kimi K3",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 1048576,
+          "maxTokens": 131072,
+          "compat": {
+            "supportsStore": false,
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": true,
+            "maxTokensField": "max_tokens",
+            "supportsStrictMode": false,
+            "thinkingFormat": "openai",
+            "requiresReasoningContentOnAssistantMessages": true,
+            "deferredToolsMode": "kimi"
+          },
+          "thinkingLevelMap": {
+            "off": null,
+            "minimal": null,
+            "low": "low",
+            "medium": null,
+            "high": "high",
+            "xhigh": null,
+            "max": "max"
+          }
+        },
+        {
+          "id": "qwen3.6-flash",
+          "name": "Qwen3.6 Flash",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 1000000,
+          "maxTokens": 65536,
+          "compat": {
+            "supportsStore": false,
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "maxTokensField": "max_tokens",
+            "thinkingFormat": "qwen"
+          }
+        },
+        {
+          "id": "minimax-m3",
+          "name": "MiniMax M3",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": [
+            "text"
+          ],
+          "contextWindow": 1000000,
+          "maxTokens": 512000,
+          "compat": {
+            "supportsStore": false,
+            "supportsDeveloperRole": false,
+            "supportsReasoningEffort": false,
+            "maxTokensField": "max_tokens",
+            "thinkingFormat": "openai",
+            "requiresReasoningContentOnAssistantMessages": true
+          }
+        }
+      ]
+    },
+    "factory26-visual": {
+      "baseUrl": "@BASE_URL@",
+      "api": "openai-completions",
+      "apiKey": "$FACTORY26_API_KEY",
+      "models": [
+        {
+          "id": "deepseek-v4-flash-vision-exp",
+          "name": "DeepSeek V4 Flash Vision Exp",
+          "api": "openai-completions",
+          "reasoning": true,
+          "input": [
+            "text",
+            "image"
+          ],
+          "contextWindow": 128000,
+          "maxTokens": 16384,
+          "compat": {
+            "supportsStore": false,
+            "supportsDeveloperRole": false,
+            "maxTokensField": "max_tokens",
+            "thinkingFormat": "deepseek"
+          }
+        }
+      ]
+    }
+  }
+}

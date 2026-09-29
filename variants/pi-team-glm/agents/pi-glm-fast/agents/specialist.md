@@ -1,7 +1,7 @@
 ---
 name: "specialist"
 description: "对问题定义、重要方案选择或具体失败提供独立判断"
-model: "factory26/kimi-k3"
+model: "factory26/deepseek-v4-flash"
 thinking: "high"
 tools: "read, grep, find, ls, bash"
 systemPromptMode: "append"

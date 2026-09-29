@@ -10,13 +10,14 @@ import time
 import uuid
 
 from agent_support import (save, phase, hashes, digest, logged, cleanup_workspace,
-                           copy_application, copy_skill, deliver, browser_executable)
-from braid_runtime import initialize_repository, load_delivery, export_delivery, archive_state
+                           copy_application, copy_skill, deliver, browser_executable, budgeted_pi)
+from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
+                           export_delivery, archive_state)
 from core import archive_sessions
 
 HERE = Path(__file__).resolve().parent
 VARIANT = 'pi-team-glm'
-DEFAULTS = {'issue': 'pi-glm-fast', 'pr': 'pi-glm-fast'}
+ROOT_PROFILE_ID = 'pi-glm-fast'
 
 
 def native_files(work, runtime, skills, base_url, visual_url):
@@ -41,8 +42,8 @@ def native_files(work, runtime, skills, base_url, visual_url):
             baseUrl=visual_url or base_url,
             apiKey='$FACTORY26_VISUAL_API_KEY' if visual_url else '$FACTORY26_API_KEY')
         save(template/'models.json', providers)
-        for role in (template/'agents').glob('*.md'):
         methods = {'explorer': 'explore', 'executor': 'implementation', 'specialist': 'design'}
+        for role in (template/'agents').glob('*.md'):
             instruction = role.read_text().replace('@SKILLS@', json.dumps(str(skills))[1:-1])
             sources = []
             if role.stem in methods:
@@ -57,7 +58,7 @@ def native_files(work, runtime, skills, base_url, visual_url):
         observer = folder/'factory-subagent-observer.ts'
         shutil.copy2(HERE/'extensions/factory-subagent-observer.ts', observer)
         import shlex
-        pi = runtime/'bin/pi' if (runtime/'bin/pi').is_file() else runtime/'node_modules/.bin/pi'
+        pi = budgeted_pi(runtime, work.parent)
         flags = [str(pi), '--no-extensions', '--no-skills', '--no-prompt-templates', '--no-themes',
                  '--extension', str(runtime/'node_modules/pi-subagents/index.ts'),
                  '--extension', str(observer)]
@@ -74,7 +75,7 @@ def native_files(work, runtime, skills, base_url, visual_url):
 
 
 def generate(args):
-    """从本次 Braid 交付 commit 导出应用，并记录生成及辅助归档结果。
+    """从选定集成分支的确切 commit 导出应用，分别记录运行与产物结果。
 
     prepare-only 只准备材料，不产生交付；进入生成后的失败保留工作现场。
     辅助归档异常单独记入 diagnostic_error，不能冒充外部评分或覆盖生成错误。
@@ -108,7 +109,7 @@ def generate(args):
         raise ValueError('需要 --base-url 或 OPENAI_BASE_URL')
     visual_url = os.environ.get('VISUAL_BASE_URL')
     profiles, bindings = native_files(work, runtime, skills, base_url, visual_url)
-    root_profile = next(p for p in profiles if p['id']==DEFAULTS['issue'])
+    root_profile = next(p for p in profiles if p['id']==ROOT_PROFILE_ID)
     if os.environ.get('MODEL') and os.environ['MODEL'] != root_profile['model']:
         raise ValueError('平台主模型与此 variant 不一致')
     if visual_url and os.environ.get('VISUAL_MODEL') != 'deepseek-v4-flash-vision-exp':
@@ -123,15 +124,15 @@ def generate(args):
                                           for p in code_files if p.is_file()})
     save(run/'materials.json', {'agents':hashes(HERE/'agents'), 'skills':hashes(skills),
                                'runtime':str(runtime), 'braid':str(source_braid)})
-    prompt = f'''请根据 {inputs} 中完整需求包独立实现 Web 应用。使用当前工作项分配的 Git worktree。
+    prompt = f'''本次任务的需求来源是 {inputs} 中的完整需求包，最终交付是满足需求的 Web 应用。使用当前工作项分配的 Git worktree。
 阅读 requirements.md、requirements.yaml 和参考图片；格式错误或图片缺失时使用可读需求语义并记录问题。覆盖全部需求、场景和明确指定的初始数据，保留界面文字，使用可访问控件。
 交付 frontend/package.json 和 backend/package.json。平台先在 frontend 执行 npm install、npm run build，再在 backend 执行 npm install、HOST=0.0.0.0 PORT=3000 npm run start。目标应用兼容 Node.js 20.19.3；后端必须通过 HOST/PORT 提供构建后的前端与 API，首页可访问；启动须在 120 秒内完成。禁止依赖根 npm start 或 deploy.sh；不要交付 requirements、.arc、.git、.factory26 等平台保留目录。
 本任务授权在本次临时工作区内设计、实现、安装依赖、自检及本地 Git commit/merge。无人类中途介入；依据需求处理常规歧义，记录重要假设；遇到真实阻塞则报告，不等待用户。禁止 push、发布和修改外部系统或开发源码仓库。
-可以编写运行自己的检查，完成后停止服务。不得读取、搜索或下载外部验收测试、benchmark 实现、参考应用或先前实验结果。只依据需求生成，自检后中文说明结果并结束。'''
+可以编写运行自己的检查，完成后停止服务。不得读取、搜索或下载外部验收测试、benchmark 实现、参考应用或先前实验结果。只依据需求生成，最终交付时用中文说明结果。'''
     (run/'prompt.txt').write_text(prompt)
     state = run/'braid-state'
-    pi = runtime/'bin/pi' if (runtime/'bin/pi').is_file() else runtime/'node_modules/.bin/pi'
-    request = dict(profiles=profiles, defaults=DEFAULTS, bindings=bindings,
+    pi = budgeted_pi(runtime, work.parent)
+    request = dict(profiles=profiles, root_profile_id=ROOT_PROFILE_ID, bindings=bindings,
                    prompt=prompt, state=str(state), run_id=run.name,
                    delivery_ref='refs/heads/braid-delivery', codex=None,
                    pi=dict(executable=str(pi), home=str(native), api_key_environment='FACTORY26_API_KEY'))
@@ -147,8 +148,8 @@ def generate(args):
                PI_TELEMETRY='0', PI_OFFLINE='1', FACTORY26_API_KEY=key,
                AGENT_BROWSER_EXECUTABLE_PATH=str(browser_executable(runtime)),
                AGENT_BROWSER_SOCKET_DIR=str(work/'b'),
-               PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
                MCPORTER_CONFIG=str(skills/'exploration-tools/assets/mcporter.json'),
+               PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
     if visual_url:
         env['FACTORY26_VISUAL_API_KEY'] = os.environ['VISUAL_API_KEY']
@@ -160,9 +161,8 @@ def generate(args):
         code = logged([str(work/'bin/braid'), 'local', str(run/'braid-request.json')],
                       app, env, run/'braid.log', metadata.setdefault('cleanup_errors', []))
         metadata['process_exit_code'] = code
-        if code:
-            raise RuntimeError(f'braid local 退出 {code}；见 braid.log')
-        delivery = load_delivery(state, app, work, request)
+        metadata['braid'] = read_runtime_result(state)
+        delivery = load_delivery(app, request)
         metadata['delivery'] = delivery
         export_delivery(app, delivery['delivery_commit'], run/'application')
         deliver(run/'application', output)
@@ -185,10 +185,12 @@ def generate(args):
             metadata['diagnostic_error'] = str(exc)
         metadata.update(generation_seconds=time.monotonic()-begin, generation_finished_at=time.time())
         phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
-    if error is not None:
+    if error is not None or metadata.get('process_exit_code') != 0 or metadata.get('braid', {}).get('status') != 'quiescent':
         save(run/'recovery-workspace.json', {'path':str(work), 'request':str(run/'braid-request.json')})
+    else:
+        shutil.rmtree(work)
+    if error is not None:
         raise error
-    shutil.rmtree(work)
     return run
 
 

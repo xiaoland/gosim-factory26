@@ -1,92 +1,84 @@
-"""Build the two editable upstream repositories; archive the actual inputs per run."""
-import hashlib
+"""交接独立 Git 源码仓库，包括本地提交、未提交修改与未跟踪文件。"""
+import argparse
 import json
 from pathlib import Path
 import subprocess
 import tarfile
 
 
-ROOT = Path(__file__).resolve().parents[1]
+def git(source, *args):
+    return subprocess.check_output(['git', '-C', str(source), *args])
 
 
-def checkout(name):
-    if name not in ('svc', 'braid'):
-        raise ValueError('unknown source repository')
-    return ROOT / 'sources' / name
+def export(source, output):
+    source = source.resolve(strict=True)
+    output = output.resolve()
+    if output.is_relative_to(source):
+        raise ValueError('交接目录必须位于源码仓库之外')
+    output.mkdir(parents=True, exist_ok=False)
+    revision = git(source, 'rev-parse', 'HEAD').decode().strip()
+    branch = git(source, 'branch', '--show-current').decode().strip()
+    # The bundle keeps unpublished commits; the patch flattens staged/unstaged edits.
+    subprocess.run(['git', '-C', str(source), 'bundle', 'create', str(output/'repository.bundle'),
+                    '--all', 'HEAD'], check=True)
+    shallow = Path(git(source, 'rev-parse', '--git-path', 'shallow').decode().strip())
+    if not shallow.is_absolute():
+        shallow = source/shallow
+    if shallow.is_file():
+        (output/'shallow').write_bytes(shallow.read_bytes())
+    (output/'worktree.patch').write_bytes(git(source, 'diff', '--binary', 'HEAD'))
+    untracked = git(source, 'ls-files', '--others', '--exclude-standard', '-z').decode().split('\0')
+    with tarfile.open(output/'untracked.tar.gz', 'w:gz') as archive:
+        for name in untracked:
+            if name:
+                archive.add(source/name, arcname=name, recursive=False)
+    remotes = git(source, 'remote').decode().splitlines()
+    origin = git(source, 'remote', 'get-url', 'origin').decode().strip() if 'origin' in remotes else None
+    (output/'source.json').write_text(json.dumps({'source': str(source), 'revision': revision,
+        'branch': branch, 'origin': origin,
+        'status': git(source, 'status', '--short').decode()}, ensure_ascii=False, indent=2)+'\n')
+    return output
 
 
-def snapshot(name):
-    source = checkout(name)
-    revision = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, text=True).strip()
-    names = subprocess.check_output(
-        ['git', 'ls-files', '-z', '--cached', '--others', '--exclude-standard'], cwd=source
-    ).decode().split('\0')
-    files = {name: hashlib.sha256((source / name).read_bytes()).hexdigest()
-             if (source / name).is_file() else None for name in sorted(set(names)) if name}
-    return {'revision': revision, 'files': files}
-
-
-def binary():
-    return checkout('braid') / 'target/debug/braid'
-
-
-def artifact_hashes(name):
-    if name == 'braid':
-        return {'braid': hashlib.sha256(binary().read_bytes()).hexdigest()}
-    package = next((ROOT / '.venv/lib').glob('python*/site-packages/svc_cli'))
-    return {str(path.relative_to(package)): hashlib.sha256(path.read_bytes()).hexdigest()
-            for path in sorted(package.rglob('*')) if path.is_file() and '__pycache__' not in path.parts}
-
-
-def build(name):
-    source = checkout(name)
-    if not source.exists():
-        source.parent.mkdir(parents=True, exist_ok=True)
-        subprocess.run(['git', 'clone', '--branch', 'main',
-                        f'https://github.com/xiaoland/{name}.git', str(source)], check=True)
-    before = snapshot(name)
-    stamp = ROOT / '.bootstrap' / f'{name}-build.json'
-    stamp.parent.mkdir(exist_ok=True)
-    artifact = binary() if name == 'braid' else ROOT / '.venv/bin/svc'
-    if stamp.exists() and artifact.exists():
-        recorded = json.loads(stamp.read_text())
-        if recorded['source'] == before and recorded['artifacts'] == artifact_hashes(name):
-            print(f'[缓存] {name} source build', flush=True)
-            return
-    if name == 'braid':
-        subprocess.run(['cargo', 'build', '--locked'], cwd=source, check=True)
+def restore(archive, destination):
+    archive = archive.resolve(strict=True)
+    destination = destination.resolve()
+    if destination.exists():
+        raise FileExistsError(f'恢复只接受新目录: {destination}')
+    record = json.loads((archive/'source.json').read_text())
+    destination.mkdir(parents=True)
+    git(destination, 'init')
+    # Git bundle stores objects but omits the boundary of a shallow checkout.
+    if (archive/'shallow').exists():
+        (destination/'.git/shallow').write_bytes((archive/'shallow').read_bytes())
+    refs = git(destination, 'bundle', 'unbundle', str(archive/'repository.bundle')).decode().splitlines()
+    for row in refs:
+        revision, ref = row.split(' ', 1)
+        if ref != 'HEAD':
+            git(destination, 'update-ref', ref, revision)
+    if record['branch']:
+        git(destination, 'checkout', '-B', record['branch'], record['revision'])
     else:
-        if not (ROOT / '.venv/bin/python').exists():
-            subprocess.run(['uv', 'venv', str(ROOT / '.venv')], check=True)
-        subprocess.run(['uv', 'pip', 'install', '--python', str(ROOT / '.venv/bin/python'),
-                        '--reinstall-package', 'sustainable-vibe-coding', str(source / 'cli')], check=True)
-    if snapshot(name) != before:
-        raise RuntimeError(f'{name} source changed during build; rebuild before running')
-    record = {'source': before, 'artifacts': artifact_hashes(name)}
-    stamp.write_text(json.dumps(record, indent=2) + '\n')
+        git(destination, 'checkout', '--detach', record['revision'])
+    patch = archive/'worktree.patch'
+    if patch.stat().st_size:
+        git(destination, 'apply', '--binary', str(patch))
+    with tarfile.open(archive/'untracked.tar.gz') as bundle:
+        bundle.extractall(destination, filter='data')
+    if record['origin']:
+        git(destination, 'remote', 'add', 'origin', record['origin'])
+    return destination
 
 
-def require_build(name):
-    stamp = ROOT / '.bootstrap' / f'{name}-build.json'
-    if not stamp.exists():
-        raise RuntimeError(f'{name} has no recorded build; run bootstrap')
-    record = json.loads(stamp.read_text())
-    if record['source'] != snapshot(name):
-        raise RuntimeError(f'{name} source changed; run bootstrap before generation')
-    if record['artifacts'] != artifact_hashes(name):
-        raise RuntimeError(f'{name} installation differs from recorded build; run bootstrap')
-    return record
+def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('command', choices=['export', 'restore'])
+    parser.add_argument('source', type=Path, help='源码仓库，或先前 export 的交接目录')
+    parser.add_argument('destination', type=Path, help='必须是尚不存在的新目录')
+    args = parser.parse_args()
+    print(export(args.source, args.destination) if args.command == 'export'
+          else restore(args.source, args.destination))
 
 
-def archive(name, output):
-    record = require_build(name)
-    output.mkdir(exist_ok=True)
-    (output / f'{name}.json').write_text(json.dumps(record, indent=2) + '\n')
-    # A complete source snapshot also preserves uncommitted and untracked edits.
-    with tarfile.open(output / f'{name}.tar.gz', 'w:gz') as bundle:
-        for path, digest in record['source']['files'].items():
-            if digest is not None:
-                bundle.add(checkout(name) / path, arcname=path, recursive=False)
-    if snapshot(name) != record['source']:
-        raise RuntimeError(f'{name} changed while archiving')
-    return record
+if __name__ == '__main__':
+    main()

@@ -6,12 +6,15 @@ from datetime import datetime, timezone
 import hashlib
 import json
 from pathlib import Path
+import re
 import subprocess
 import sys
 
-from lab.otlp import list_batches, read_batch
+from lab.otlp import database_for_run, list_batches, read_batch
+from lab.analysis.native_profile import profile as native_profile
 
 ROOT = Path(__file__).resolve().parents[2]
+ANSI = re.compile(r'\x1b\[[0-9;]*m')
 
 
 def read_json(path):
@@ -116,8 +119,35 @@ def render_prose(braid, output, evidence):
     return dict(zip(ordered, rendered))
 
 
+def source_errors(generation, run, output):
+    """Keep original diagnostics beside a bounded index; a failed export may be absent from OTLP."""
+    sources = [(generation / 'braid-state/telemetry-errors.jsonl', 'OTLP capture'),
+               (generation / 'braid.log', 'Braid'),
+               (run / 'workspace/generation.stderr.log', 'runner')]
+    copied = output / 'source-errors'
+    found = []
+    for source, label in sources:
+        if not source.is_file() or not source.stat().st_size:
+            continue
+        copied.mkdir(exist_ok=True)
+        destination = copied / source.name
+        original = source.read_bytes()
+        destination.write_bytes(original)
+        lines = original.decode('utf-8', errors='replace').splitlines()
+        selected = [(number, ANSI.sub('', line)) for number, line in enumerate(lines, 1)
+                    if label == 'OTLP capture' or ('ERROR' in line or 'WARN' in line or
+                    'Meter baseline unavailable' in line)]
+        for number, line in selected[-30:]:
+            found.append({'source': label, 'file': str(destination.relative_to(output)),
+                          'line': number, 'message': line[:1200]})
+        if len(selected) > 30:
+            found.append({'source': label, 'file': str(destination.relative_to(output)),
+                          'line': None, 'message': f'{len(selected) - 30} earlier errors in original file'})
+    return found
+
+
 def generate(run, output, braid, braid_run_id):
-    database = run / 'telemetry.sqlite'
+    database = database_for_run(run)
     if not database.is_file():
         raise ValueError(f'实验 run 的 OTLP Backend 不存在：{database}')
     if not braid.is_file():
@@ -181,6 +211,22 @@ def generate(run, output, braid, braid_run_id):
             'signals': dict(Counter(b['signal'] for b in batches)), 'manifest': manifest,
             'sessions': list(sessions.values()), 'objects': objects, 'terminal': terminal,
             'diagnostics': diagnostics(decoded, braid_run_id)}
+    candidates = [path for path in (database.parent, run) if path.name == braid_run_id]
+    candidates.extend(run/'workspace'/name/'template'/'.factory26'/braid_run_id
+                      for name in ('official-generation', 'official', 'official-evaluation'))
+    generation = next((path for path in candidates if
+                       (path/'native/manifest.json').is_file() or
+                       (path/'pi-timing.jsonl').is_file()), None)
+    data['profile'] = None
+    data['source_errors'] = []
+    if generation:
+        data['source_errors'] = source_errors(generation, run, output)
+        try:
+            data['profile'] = native_profile(generation)
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            data['profile_error'] = f'{type(exc).__name__}: {exc}'
+    if data['profile']:
+        write_json(output / 'profile.json', data['profile'])
     data['markdown'] = render_prose(braid, output, [data['sessions'], objects])
     template = Path(__file__).with_suffix('.html').read_text(encoding='utf-8')
     # script[type=application/json] 也会被 HTML parser 的 </script> 提前结束。
@@ -188,6 +234,19 @@ def generate(run, output, braid, braid_run_id):
     payload = json.dumps(browser_values(data), ensure_ascii=False).replace('&', '\\u0026').replace('<', '\\u003c').replace('>', '\\u003e')
     payload = payload.replace('\u2028', '\\u2028').replace('\u2029', '\\u2029')
     (output / 'index.html').write_text(template.replace('/*REPORT_DATA*/', payload), encoding='utf-8')
+    with braid.open('rb') as binary:
+        braid_sha256 = hashlib.file_digest(binary, 'sha256').hexdigest()
+    write_json(output / 'analysis.json', {
+        'schema_version': 1, 'title': 'Braid OTLP process view',
+        'created_at': data['generated_at'], 'run_id': metadata.get('run_id'),
+        'source_run': str(run), 'source_database': str(database),
+        'batch_until_id': batches[-1]['id'] if batches else None,
+        'batch_manifest': 'batches.json', 'braid_run_id': braid_run_id,
+        'source_capture_errors': len(data['source_errors']),
+        'tool': 'lab.analysis.braid_telemetry_viewer',
+        'tool_sha256': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+        'braid_sha256': braid_sha256,
+        'result': 'index.html'})
     return {'index': str(output / 'index.html'), 'braid_run_id': braid_run_id,
             'evidence_status': manifest['status'], 'sessions': len(sessions), 'batches': len(batches)}
 

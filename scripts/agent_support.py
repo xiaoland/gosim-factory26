@@ -1,19 +1,89 @@
 """File, process and delivery operations; no Harness selection or orchestration."""
-import hashlib,json,os,platform,shutil,signal,subprocess,time,uuid
+import hashlib,json,os,platform,selectors,shutil,signal,subprocess,sys,time,uuid
+import shlex
 from pathlib import Path
 
 RESERVED={".arc", ".git", "requirements", ".factory26"}
 
+def start_local_telemetry(run):
+    """Start the existing SQLite OTLP receiver without placing its token on disk."""
+    module = Path(__file__).resolve().with_name('otlp.py')
+    if not module.is_file():
+        module = Path(__file__).resolve().parents[1]/'lab/otlp.py'
+    log = (run/'telemetry-collector.log').open('w')
+    process = subprocess.Popen([sys.executable, str(module), '--serve-run', str(run)],
+                               cwd=module.parent, stdout=subprocess.PIPE, stderr=log, text=True)
+    log.close()
+    try:
+        with selectors.DefaultSelector() as selector:
+            selector.register(process.stdout, selectors.EVENT_READ)
+            if not selector.select(20):
+                raise TimeoutError('OTLP receiver did not announce its endpoint')
+        binding = json.loads(process.stdout.readline())
+        if not binding.get('endpoint') or not binding.get('token'):
+            raise ValueError('OTLP receiver returned an incomplete binding')
+        process.stdout.close()
+        return process, binding
+    except BaseException:
+        process.terminate()
+        process.wait(timeout=20)
+        raise
+
+def telemetry_environment(binding):
+    endpoint = binding['endpoint']
+    headers = 'x-experiment-token=' + binding['token']
+    values = dict(OTEL_EXPORTER_OTLP_ENDPOINT=endpoint,
+                  OTEL_EXPORTER_OTLP_PROTOCOL='http/protobuf',
+                  OTEL_EXPORTER_OTLP_HEADERS=headers,
+                  OTEL_EXPORTER_OTLP_COMPRESSION='none')
+    for name in ('TRACES', 'LOGS', 'METRICS'):
+        prefix = 'OTEL_EXPORTER_OTLP_' + name
+        values[prefix + '_ENDPOINT'] = endpoint + '/v1/' + name.lower()
+        values[prefix + '_PROTOCOL'] = 'http/protobuf'
+        values[prefix + '_HEADERS'] = headers
+        values[prefix + '_COMPRESSION'] = 'none'
+    return values
+
+def stop_local_telemetry(process):
+    process.terminate()
+    try:
+        code = process.wait(timeout=30)
+    except subprocess.TimeoutExpired:
+        process.kill()
+        process.wait()
+        raise TimeoutError('OTLP receiver did not stop within 30 seconds')
+    if code:
+        raise RuntimeError(f'OTLP receiver exited {code}')
+
+def budgeted_pi(runtime, run):
+    """Both Braid and pi-subagents launch Pi through the same per-run spending guard."""
+    pi = runtime/'bin/pi' if (runtime/'bin/pi').is_file() else runtime/'node_modules/.bin/pi'
+    guard = Path(__file__).resolve().with_name('model_budget.mjs')
+    if not guard.is_file():
+        raise FileNotFoundError(guard)
+    launcher = run/'budgeted-pi'
+    launcher.write_text('#!/bin/sh\n'
+        +'export FACTORY26_MODEL_BUDGET_PATH='+shlex.quote(str(run/'expensive-model-session'))+'\n'
+        +'export PI_SUBAGENT_PI_BINARY='+shlex.quote(str(launcher))+'\n'
+        +'if [ -n "${FACTORY26_PI_TIMING_EXTENSION:-}" ]; then\n'
+        +'  set -- --extension "$FACTORY26_PI_TIMING_EXTENSION" "$@"\n'
+        +'fi\n'
+        +'exec '+shlex.join([str(pi), '--extension', str(guard)])+' "$@"\n')
+    launcher.chmod(0o755)
+    return launcher
+
 def browser_executable(runtime):
-    """Locate Chrome in a portable runtime or the native npm installation cache."""
+    """Use the portable wrapper or the browser paired with this runtime's Playwright."""
     packaged = runtime/'bin/chromium'
     if packaged.is_file():
         return packaged
-    pattern = 'chrome-*/Google Chrome for Testing.app/Contents/MacOS/Google Chrome for Testing' if platform.system()=='Darwin' else 'chrome-*/chrome'
-    binaries = list((runtime/'.agent-browser/browsers').glob(pattern))
-    if len(binaries) != 1:
-        raise RuntimeError(f'expected one installed Chrome in {runtime}; run runtime.py prepare')
-    return binaries[0]
+    binary = Path(subprocess.check_output(
+        ['node', '-e', "process.stdout.write(require('playwright').chromium.executablePath())"],
+        cwd=runtime, env=dict(os.environ, PLAYWRIGHT_BROWSERS_PATH=str(runtime/'.playwright')),
+        text=True))
+    if not binary.is_file():
+        raise FileNotFoundError(f'{binary}; run runtime.py prepare')
+    return binary
 
 def copy_skill(source, destination):
     """Copy the published skill resources, excluding repository maintenance files.

@@ -1,0 +1,14 @@
+{
+  "id": "pi-kimi-k27-code",
+  "display_name": "pi-kimi-k27-code",
+  "assignee_login": "kimi",
+  "assignee_description": "负责根 Issue 的需求理解、设计、任务拆分与最终整合，也可直接实现应用代码。",
+  "tags": ["root-only"],
+  "adapter_type": "pi",
+  "adapter_version": "0.85.1",
+  "provider": "factory26",
+  "model": "kimi-k2.7-code",
+  "reasoning": "high",
+  "context_soft_ratio": 0.8,
+  "context_hard_bytes": 1000000
+}

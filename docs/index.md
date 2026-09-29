@@ -12,11 +12,14 @@
 | 组件责任、调用关系、交付与终态语义 | [Product TDD](product-tdd/index.md) |
 | 修改角色/技能、开发依赖与源码运行 | [CONTRIBUTING](../CONTRIBUTING.md) |
 | 打包、执行、证据查询与恢复 | [Deployment](deployment/index.md) |
+| 外部命令实验、OTLP 与控制 CLI 契约 | [Lab](../lab/README.md) |
+| 实验登记、运行命名与配方 | [实验导航](../experiments/README.md) |
 | Braid OTLP、会话网站与故障定位 | [Braid 诊断运行手册](deployment/braid-diagnostics.md) |
-| 当前 Lite 两阶段本地矩阵配方 | [pi-team-mixed Lite](../experiments/pi-team-mixed-lite/README.md) |
+| 当前 Lite 两阶段本地矩阵配方 | [pi-braid Lite](../experiments/pi-braid-lite/README.md) |
 
-当前活动实现与归档状态见 [Variant 索引](../variants/README.md)。
 参数与模型值从各 [variant](../variants/) 和实际制品读取，文档解释意义与修改关系，不维护第二份配置表。
+当前活动实现与归档状态见 [Variant 索引](../variants/README.md)；本会话的已落地、待验证和暂停事项见 [迭代总览树](../tasks/iteration-map.md)。
+当前自费回放与修复版完整实验见 [预算与交付](../tasks/competition-budget/packet.md)；旧正式运行记录保留历史身份，不构成新参赛授权。
 当前支持与设计意图分开写；更新时改写受影响正文，不靠新增声明覆盖过期推荐。
 局部实现理由归代码旁，跨组件约定归技术说明，操作命令归开发/运行说明。
 不创建空模板或针对文档内容的测试。
@@ -28,9 +31,16 @@
 
 | 主题 | 入口 |
 | --- | --- |
+| 当前主线、授权与工作单元 | [迭代10 packet](../tasks/iteration10/packet.md)；仅追溯更早经过时读[历史迭代树](../tasks/iteration-map.md) |
 | 开发体验、文档系统与独立 variant 演化 | [DX](../tasks/developer-experience/packet.md)；[独立 variant 前序材料](../tasks/independent-variants/packet.md) |
+| Variant、实验与运行的命名整理 | [命名方案任务](../tasks/variant-experiment-naming/packet.md)（实现与文档已完成，证据及验证边界见 packet） |
 | 参赛 SVC 方法与 skill 接线 | [Corpus](../tasks/svc-corpus-review/packet.md)、[skill](../tasks/svc-skill-integration/packet.md) |
+| Hackathon 能力选型与 SVC 技能路由 | [技能与工具设计](../tasks/hackathon-capabilities/packet.md)；[既有 Lite 基线](../tasks/hackathon-team-baseline/packet.md) |
+| Braid 工作项上下文、CLI 易用性与 Agent 指派 | [Braid 改进](../tasks/braid-usability/packet.md) |
 | 官方与本地实验的组织及恢复 | [双比赛官网记录](../tasks/dual-bench-hosted/packet.md)、[raw 本地基线](../tasks/raw-core-local-baseline/packet.md) |
+| 官网中断恢复、低频监控与耗时改进 | [实验设施](../tasks/experiment-infrastructure/packet.md) |
+| Braid 独立架构与功能审查 | [架构审查](../tasks/braid-architecture-audit/packet.md) |
+| 本轮 GitHub / Sheet 得分根因 | [GitHub](../tasks/github-score-diagnosis/packet.md)、[Sheet](../tasks/sheet-score-diagnosis/packet.md) |
 | 得分与 Agent 过程分析 | [官网结果](../tasks/official-results/packet.md)、[本地过程](../tasks/local-run-analysis/packet.md) |
 | 协作方法的前序调查 | [会话分析](../tasks/development-loop-review/packet.md) |
 
@@ -66,3 +76,5 @@
 
 Use `svc lookup` when packaged Sustainable Vibe Coding Corpus guidance is relevant, and discover its browse/search/read grammar through `svc lookup --help`. Project documentation outside this marked block remains Consumer-owned.
 <!-- svc:end navigation -->
+
+- [Braid 产品加固与 Flash Team](../tasks/braid-product-hardening/packet.md)：授权修复、产品审查、WSL 两题实验。
