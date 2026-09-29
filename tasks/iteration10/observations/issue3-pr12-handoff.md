@@ -20,6 +20,8 @@
 
 Issue #3 评论 #40 的结尾同样写明“若你本轮已不再运行，回一句即可，我按 #39 + #41 接手”。当时 glm-6 原生会话正在运行且已编辑；没有看到它放弃任务或确认接手的回复。Issue 系统提示词要求 Issue 负责人处理设计、协作决定和返回结果，进入实施后由关联 PR 负责人在独立工作区推进实现；因此自行 checkout 并提交 PR 分支不是提示词授予的常规职责。`local_comment_delivery.status=delivered` 只应与原生输入时间一同解读，不能从发布 head 未变推断对方未收到或未行动。
 
+PR #12 显式指定的 head 是 `refs/heads/braid/issue-3-m1`，这是 Issue 负责人 05:33:00Z 先推送设计提交 `07980ef` 后，于 05:33:13Z 创建 PR 时用 `--head` 交给 glm-6 承接的已发布分支。SQLite `worktrees` 记录 Issue #3 和 PR #12 分别在 `.../worktrees/issue-3/pi-deepseek-fast-g1` 与 `.../worktrees/pr-12/pi-glm-fast-g1`，Braid 用 `git clone --no-local` 建立独立 clone；同名远程 ref 不意味着共用物理工作区，也不要求 PR 必须新建 `braid/pr-12`。glm-6 于 05:47:19Z 推送 `9d30be4` 到 PR head。越界发生在 Issue 负责人之后从自己的 clone 于 05:53:43Z 提交、05:58:41Z 推送 `a194fee` 到同一远程 PR head。`d262e52` 是 glm-6 在 05:59:02Z 提交、05:59:44Z 发布到独立 WIP ref 的在途成果，不是 Issue 负责人写入。因而问题是交接责任失守，而非显式 `--head` 或 clone 隔离缺陷。热修复见[实施记录](../cells/issue3-pr12-handoff-implementation.md)。
+
 ## 挂起 reset 与后续判断
 
 reset `01a0eba2-0a37-7f43-88c1-096d357f3b6c` 属于 **PR #11**，不是 Issue #3 / PR #12：05:27:40 创建，旧 provider `...pi-deepseek-fast-01a0eba1...jsonl` 的 wake turn 自 05:27:00 持续 running。原生文件在 05:30:28–06:05:11 至少有 595 条 assistant/tool/user 活动，05:34:59、05:44:33、05:48:31、05:52:43、06:00:29 等有 reset 通知；这是原生仍忙、等待自然完成的另一工作项，不是 #46 的投递前提。
