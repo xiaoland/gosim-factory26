@@ -42,3 +42,5 @@ Pi的后台follow-up可在已settled之后继续原生工作；Pi reader在没�
 用户明确要求立即修复，不再逐次确认。2026-09-29 05:09:47 UTC 已暂停两题容器，保留原工作区；热部署目录为 WSL `runs/e20260928-03-check-receipts/hotfix-01`。两份 SQLite 已用 backup API 保存。Braid `640ebd8` 完成编译，正在构建 Linux 二进制；使用既有 continuation 接线恢复同一 Braid run，不重建应用。监控同时补齐未开始投递失败和 schema 16 的待投递记录。
 
 2026-09-29 05:21 UTC 热部署成功，Linux binary SHA256 `f974830709a62d5583a194997076c1b634e4e3a96f60df0876070f34e9db202f`。首次接续因容器 root 与原工作区 UID 1000 不同遭 Git 归属检查拒绝，尚未进入原生执行；修正 continuation 按原工作区 uid/gid 启动后，在 `hotfix-01/generation-02` 接续。GitHub `pi-braid--hackathon--github-575299dc237d16`、Sheet `pi-braid--hackathon--sheet-2faf63f9812725` 均 running，schema 16 字段已迁移，初查分别4/2活动turn，恢复后失败数0。Sheet有一条invalid Pi session警告，交原修复worker追查，未据此声明所有原生会话恢复完成。监控使用更新脚本，3分钟/8分钟采集。
+
+Sheet 恢复警告已核实：旧 PR #2 JSONL 缺 session 头；此前待处理的 context reset 于05:21:48完成，新 provider session 已建立，根 Issue 于05:21:51也完成替换。警告对应已淘汰旧会话，不是当前恢复阻塞。缺头产生原因尚未确认，不能归因于本次修复；保留作后续会话归档定向调查。
