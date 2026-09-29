@@ -1,6 +1,6 @@
 # 迭代10：有效协作与可信交付
 
-更新时间：2026-09-29。当前阶段是最终修复审查结论消费与剩余局部修正；analytics实现及独立核对均已返回，待主线整合最终取舍。新实验暂停，统一制品未冻结。
+更新时间：2026-09-29。当前阶段是审查取舍及对应源码修正已收口，三个仓库检查点已提交；等待恢复实验决定后的构建冻结与真实运行验证。新实验暂停，统一制品未冻结。
 
 ## 目标与当前授权
 
@@ -13,9 +13,9 @@ Factory/Braid/SVC及设施不新增或运行测试、模拟探针；生成应用
 
 | 工作单元 | 当前责任人 | 下一次返回／入口 |
 | --- | --- | --- |
-| 最终修复审查与假阳性核查 | 方法审查final_product_methods；运行时审查native_boundary_review；主线整合取舍 | [最终审查packet](repair-review/final/packet.md)：报告、待决修正与覆盖边界 |
-| 可观测性与跨链analytics | 实现与独立核对均已返回；主线收口 | [analytics cell](cells/audit-analytics.md)：功能、真实材料反馈与残余限制 |
-| 原生结束边界及恢复修复 | 实施已返回；最终审查消费 | [原生cell](cells/lifecycle-architecture/packet.md)、[合并恢复](cells/merge-recovery-fr2.md)、[历史归档](cells/session-archive-c1.md) |
+| 最终修复审查与假阳性核查 | 独立报告已返回；主线取舍与对应修正已完成 | [最终审查packet](repair-review/final/packet.md)：报告、最终取舍与覆盖边界 |
+| 可观测性与跨链analytics | 实现、独立核对与主线收口已完成 | [analytics cell](cells/audit-analytics.md)：功能、真实材料反馈与残余限制 |
+| 原生结束边界及恢复修复 | 源码修正及最终审查消费已完成 | [原生cell](cells/lifecycle-architecture/packet.md)、[合并恢复](cells/merge-recovery-fr2.md)、[历史归档](cells/session-archive-c1.md) |
 | 根检查提示增强 | 主线；用户明确授权 | [提醒cell](cells/root-check-packet.md)：每第二次附整理提示，源码与编译核对完成，未部署 |
 | 下一次两题实验 | 暂停，无监控或生成任务待接续 | [实验计划](experiments.md)：恢复决定后才构建、冻结与运行 |
 
