@@ -25,6 +25,19 @@ def prepare(lock_dir):
         ('pi-background-bash', 'pi-background-bash-1.0.5.patch', ('extensions/background-bash.ts',)),
         ('pi-subagents', 'pi-subagents-0.56.0-completion-boundary.patch',
          ('src/extension/index.ts', 'src/runs/background/notify.ts', 'src/runs/background/result-watcher.ts')),
+        ('pi-subagents', 'pi-subagents-0.56.0-acceptance-off.patch',
+         ('README.md',
+          'docs/agents.md',
+          'docs/tool-reference.md',
+          'src/extension/schemas.ts',
+          'src/extension/tool-description.ts',
+          'src/runs/background/async-resume.ts',
+          'src/runs/background/async-status.ts',
+          'src/runs/background/run-status.ts',
+          'src/runs/foreground/execution.ts',
+          'src/runs/foreground/subagent-executor.ts',
+          'src/runs/shared/acceptance.ts',
+          'src/runs/shared/structured-output.ts')),
         ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-braid-boundary.patch', ('dist/core/agent-session.js',)),
     )
     def patch_matches(package, patch_name, target_names):
@@ -93,6 +106,7 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
         'native_patch_sha256':{name:hashlib.sha256(file.read_bytes()).hexdigest()
                                for name in ('pi-background-bash-1.0.5.patch',
                                             'pi-subagents-0.56.0-completion-boundary.patch',
+                                            'pi-subagents-0.56.0-acceptance-off.patch',
                                             'pi-coding-agent-0.85.1-braid-boundary.patch')
                                for file in [lock_dir/'patches'/name]}},indent=2)+'\n')
     return output

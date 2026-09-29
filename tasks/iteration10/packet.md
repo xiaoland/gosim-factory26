@@ -1,6 +1,6 @@
 # 迭代10：有效协作与可信交付
 
-更新时间：2026-09-29。当前阶段是此前sub-agent返回补核及相应修正已完成：status_surfaces清理已提交，acceptance非阻断语义观察已补入。等待恢复实验决定后的构建冻结与真实运行验证。新实验暂停，统一制品未冻结。
+更新时间：2026-09-29。当前阶段是原生sub-agent自动验收关闭已实施，补丁应用及静态检查已完成，动态验证待恢复实验授权。此前sub-agent返回补核及status_surfaces清理已完成。新实验暂停，统一制品未冻结。
 
 ## 目标与当前授权
 
@@ -17,9 +17,10 @@ Factory/Braid/SVC及设施不新增或运行测试、模拟探针；生成应用
 | 可观测性与跨链analytics | 实现、独立核对与主线收口已完成 | [analytics cell](cells/audit-analytics.md)：功能、真实材料反馈与残余限制 |
 | 原生结束边界及恢复修复 | 源码修正及最终审查消费已完成 | [原生cell](cells/lifecycle-architecture/packet.md)、[合并恢复](cells/merge-recovery-fr2.md)、[历史归档](cells/session-archive-c1.md) |
 | 根检查提示增强 | 主线；用户明确授权 | [提醒cell](cells/root-check-packet.md)：每第二次附整理提示，源码与编译核对完成，未部署 |
+| 原生sub-agent简化 | 主线；用户已批准实施，补丁及静态核对完成 | [简化cell](cells/subagent-simplification.md)：保留能力、候选缺口、已实施简化与验证限制 |
 | 下一次两题实验 | 暂停，无监控或生成任务待接续 | [实验计划](experiments.md)：恢复决定后才构建、冻结与运行 |
 
-下一步：[此前委派返回补核](repair-review/final/subagent-returns.md)中的status_surfaces清理已完成；[审查取舍](repair-review/final/decisions.md)已形成；查询式失败事实补齐已完成并通过编译，主线已核对输出与恢复路径；三个仓库[源码检查点与实验前条件](cells/source-checkpoint.md)已整理，待用户恢复实验决定后构建冻结。Node入口及文档/packet责任已补齐，analytics已完成。不要重新全读两题或再开目录覆盖审查。
+下一步：[原生sub-agent简化](cells/subagent-simplification.md)已按批准范围落地；保留当前依赖，等待实验恢复授权后构建冻结与真实验证。[此前委派返回补核](repair-review/final/subagent-returns.md)中的status_surfaces清理已完成；[审查取舍](repair-review/final/decisions.md)已形成；查询式失败事实补齐已完成并通过编译，主线已核对输出与恢复路径；三个仓库[源码检查点与实验前条件](cells/source-checkpoint.md)已整理，待用户恢复实验决定后构建冻结。Node入口及文档/packet责任已补齐，analytics已完成。不要重新全读两题或再开目录覆盖审查。
 已批准范围内的局部修复继续由负责子代理完成；涉及产品义务或范围变化，给出具体因果与方案后交用户决定。实验暂停保持不变。
 
 ## 按问题找材料

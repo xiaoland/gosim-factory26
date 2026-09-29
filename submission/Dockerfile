@@ -16,6 +16,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends procps ripgrep 
 COPY harness/npm/patches/ /build/patches/
 RUN patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-background-bash -i /build/patches/pi-background-bash-1.0.5.patch && \
     patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-subagents -i /build/patches/pi-subagents-0.56.0-completion-boundary.patch && \
+    patch --batch --fuzz=0 -p1 -d /runtime/node_modules/pi-subagents -i /build/patches/pi-subagents-0.56.0-acceptance-off.patch && \
     patch --batch --fuzz=0 -p1 -d /runtime/node_modules/@earendil-works/pi-coding-agent -i /build/patches/pi-coding-agent-0.85.1-braid-boundary.patch
 ENV PLAYWRIGHT_BROWSERS_PATH=/runtime/.playwright
 RUN ./node_modules/.bin/playwright install chromium --with-deps --no-shell

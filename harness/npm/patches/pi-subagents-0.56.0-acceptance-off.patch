@@ -1,0 +1,817 @@
+--- a/README.md
++++ b/README.md
+@@ -119,7 +119,7 @@
+ | [Models](https://github.com/nicobailon/pi-subagents/blob/main/docs/models.md) | Default models, per-role overrides, recommended tiering, fallbacks, thinking levels, model scope enforcement, profiles. |
+ | [Workflows](https://github.com/nicobailon/pi-subagents/blob/main/docs/workflows.md) | Orchestration patterns, prompt shortcuts, scripted workflows, worktree isolation, child-to-parent coordination, the recursion guard. |
+ | [Watchdog](https://github.com/nicobailon/pi-subagents/blob/main/docs/watchdog.md) | The opt-in adversarial change reviewer, scope monitoring, LSP checks, and child tool permissions. |
+-| [Tool reference](https://github.com/nicobailon/pi-subagents/blob/main/docs/tool-reference.md) | Every `subagent` parameter, management actions, status/control actions, acceptance gates, external CLI runners. |
++| [Tool reference](https://github.com/nicobailon/pi-subagents/blob/main/docs/tool-reference.md) | Every `subagent` parameter, management actions, status/control actions, external CLI runners. |
+ | [Observability](https://github.com/nicobailon/pi-subagents/blob/main/docs/observability.md) | FleetView, the fleet inspector, lifecycle artifacts, events, logs, session sharing. |
+ | [Missions and schedules](https://github.com/nicobailon/pi-subagents/blob/main/docs/missions.md) | Durable mission records, delivery receipts, timed and recurring runs. |
+ | [Configuration](https://github.com/nicobailon/pi-subagents/blob/main/docs/configuration.md) | Every `config.json` key and environment variable. |
+--- a/docs/agents.md
++++ b/docs/agents.md
+@@ -111,10 +111,10 @@
+ }
+ ```
+ 
+-Supported override fields: `description`, `output`, `outputMode`, `defaultReads`, `model`, `defaultProvider`, `fallbackModels`, `thinking`, `systemPromptMode`, `inheritProjectContext`, `inheritSkills`, `defaultContext`, `acceptanceRole`, `disabled`, `skills`, `tools`, and `systemPrompt`.
++Supported override fields: `description`, `output`, `outputMode`, `defaultReads`, `model`, `defaultProvider`, `fallbackModels`, `thinking`, `systemPromptMode`, `inheritProjectContext`, `inheritSkills`, `defaultContext`, `disabled`, `skills`, `tools`, and `systemPrompt`.
+ 
+ - `description` replaces the discovered description for builtin and custom agents, which lets list output show deployment-specific routing or model metadata.
+-- Use `output: false`, `defaultReads: false`, `defaultContext: false`, or `acceptanceRole: false` to clear an inherited value.
++- Use `output: false`, `defaultReads: false`, `defaultContext: false` to clear an inherited value.
+ - Use `tools: "inherit"` on a builtin when that one role should omit its bundled tool allowlist and receive Pi's normal builtins and ambient extensions. This keeps strict tools as the default for other builtins.
+ - Project overrides beat user overrides.
+ - Matching user and project agents also receive override fields that their frontmatter leaves unset, so a shared project config agent can keep the persona while local settings choose the model.
+@@ -173,8 +173,6 @@
+ timeoutMs: 900000
+ toolTimeoutMs: 600000
+ turnBudget: {"maxTurns":20,"graceTurns":2}
+-acceptance: {"level":"none","reason":"lightweight lookup"}
+-acceptanceRole: read-only
+ completionGuard: false
+ interactive: true
+ maxSubagentDepth: 1
+@@ -219,8 +217,6 @@
+ | `timeoutMs` | Positive integer default runtime deadline in milliseconds for single-agent launches. Foreground launches use 30 minutes when neither the call nor agent provides a timeout; explicit `timeoutMs`/`maxRuntimeMs` and agent defaults win. |
+ | `toolTimeoutMs` | Optional positive integer hard per-tool-call deadline in milliseconds. An explicit call value wins, then this agent default, global `toolTimeoutMs`, and `PI_SUBAGENT_TOOL_TIMEOUT_MS`. When omitted, known-fast built-in tools get a five-minute default; long-running tools get attention notices but no hard default. It does not extend the run-level deadline; `contact_supervisor`, `intercom`, and `subagent_wait` are exempt. |
+ | `turnBudget` | JSON object default such as `{"maxTurns":20,"graceTurns":2}` for single-agent launches. An explicit call value wins, followed by this agent default, then global `turnBudget` config. |
+-| `acceptance` | Acceptance default for single-agent launches. Use a scalar level such as `checked` or an inline/block YAML map such as `{ level: "none", reason: "lightweight lookup" }`. Explicit call values win; chain and parallel acceptance remains task/step configuration. |
+-| `acceptanceRole` | Optional `read-only` or `writer` role for automatic acceptance inference. Explicit task mutation or no-edit intent wins; otherwise the declared role replaces agent-name guessing. This does not grant or revoke tools. |
+ | `completionGuard` | Set `false` only for non-implementation agents that may mention implementation words while using mutation-capable tools such as `bash`. |
+ | `interactive` | Parsed for compatibility but not currently enforced. |
+ | `maxSubagentDepth` | Tightens nested delegation for this agent's children. |
+--- a/docs/tool-reference.md
++++ b/docs/tool-reference.md
+@@ -56,8 +56,6 @@
+ | `includeProgress` | boolean | false | Include full progress in result. |
+ | `share` | boolean | false | Upload session export to GitHub Gist. |
+ | `sessionDir` | string | derived | Override session log directory. |
+-| `acceptance` | string/object/false | inferred | Configure evidence gates. See [Acceptance gates](#acceptance-gates). |
+-| `gate` | string | - | One host-run verification command, shorthand for `acceptance: { level: "verified", verify: [{ id: "gate", command }] }`. Also valid on individual `runs.run`/`runs.all` items. Cannot be combined with `acceptance`, and is rejected with retained `resume`. |
+ 
+ ### Budget guidance for writers
+ 
+@@ -156,8 +154,6 @@
+   extensions: "",
+   skills: "parallel-scout",
+   thinking: "high",
+-  acceptance: { level: "none", reason: "lightweight lookup" },
+-  acceptanceRole: "read-only",
+   output: "context.md",
+   reads: "shared-context.md",
+   progress: true
+@@ -165,8 +161,6 @@
+ 
+ 
+ { action: "update", agent: "code-analysis.scout", config: { model: "openai/gpt-4o" } }
+-{ action: "update", agent: "code-analysis.scout", config: { acceptance: "" } } // clear the frontmatter default
+-{ action: "update", agent: "code-analysis.scout", config: { acceptanceRole: false } } // restore inferred name fallback
+ { action: "delete", agent: "scout" }
+ 
+ { action: "eject", agent: "reviewer" }
+@@ -251,72 +245,13 @@
+ 
+ The persisted `steering` ledger retains 20 requests and replaces the old `steerCount`/`lastSteerAt` fields.
+ 
+-## Acceptance gates
+-
+-Every run resolves an effective acceptance policy. Callers may omit `acceptance` for the inferred default, or set it on single runs, top-level parallel task items, chain steps, static parallel tasks, and dynamic fanout templates.
+-
+-```ts
+-{
+-  agent: "worker",
+-  task: "Implement the fix",
+-  acceptance: {
+-    level: "verified",
+-    criteria: ["Patch the bug without widening scope"],
+-    evidence: ["changed-files", "tests-added", "commands-run", "residual-risks", "no-staged-files"],
+-    verify: [{ id: "focused", command: "npm test", timeoutMs: 120000 }]
+-  }
+-}
+-```
+-
+-### One-command gates
+-
+-When one host-run command is the entire verification contract, use the `gate` shorthand instead of a full `acceptance` object:
+-
+-```js
+-{ workflowScript: `return runs.run("impl", { agent: "worker", task: "Implement the fix", gate: "npm test" })` }
+-```
+-
+-`gate` normalizes to verified acceptance with that single command, so the runtime executes it on the host and records the result as evidence. Verification results are memoized per tracked workspace state and effective environment, so an unchanged tree does not rerun the same command. Use explicit `acceptance.verify` when you need multiple commands, timeouts, or custom criteria. `gate` cannot be combined with `acceptance` and is rejected on retained `resume` items. With `worktree: true`, the gate runs inside the child's managed worktree.
+-
+-### Levels and inference
+-
+-Acceptance evidence levels are `auto`, `none`, `attested`, `checked`, and `verified`. `acceptance: "auto"` is the default.
+-
+-Review is a separate gate configured with `acceptance.review`:
+-
+-- Async, risky, and dynamic writer contexts infer checked evidence plus `review: { agent: "reviewer", required: true }`.
+-- Read-only tasks infer lightweight attestation.
+-- Normal writer tasks infer checked evidence without review.
+-
+-Agent frontmatter or `subagents.agentOverrides` may set `acceptanceRole: "read-only" | "writer"` for ambiguous tasks. Explicit task mutation or no-edit intent wins over that role, while omitted metadata preserves the existing reviewer/scout/worker name heuristics. The role affects acceptance inference only and does not change tool access.
+-
+-Edge cases:
+-
+-- The bare string `"none"` is rejected; use `{ level: "none", reason: "..." }` instead.
+-- `acceptance: false` is accepted only as a deprecated shorthand for disabling gates.
+-- For reviewer/read-only calls, omit `acceptance`.
+-- The explicit value `"reviewed"` is not a policy level: it remains schema-recognized only so semantic preflight can explain the mistake without spawning a child. To require review of a writer result, use `acceptance: { level: "checked", review: { required: true, agent: "reviewer" } }` and orchestrate the reviewer separately.
+-- With `agentContract: { version: 1 }`, omitted, `"auto"`, and `false` mean no acceptance request for that run; explicit acceptance is reported separately from execution.
+-
+-### Evidence status
+-
+-Acceptance provenance is stored separately from child prose. `evidenceStatus` preserves evidence progress when the overall status is waiting on or has completed review:
+-
+-- `claimed`: child finished but did not provide structured evidence.
+-- `attested`: child returned a structured acceptance report.
+-- `checked`: runtime structural checks passed, such as required evidence and no staged files.
+-- `verified`: configured runtime verification commands passed. Child-reported command success does not count.
+-- `review-required`: required evidence passed, but no independent reviewer result has been supplied.
+-- `reviewed`: an independent reviewer result is present and has no blockers.
+-- `rejected`: attestation, structural checks, verification, or review failed.
+-
+-### The acceptance report
+-
+-For `attested` or stricter levels, the child prompt includes a standardized acceptance section and asks for a fenced `acceptance-report` JSON block.
+-
+-The parser canonicalizes known enum synonyms, snake_case report keys and wrappers, underscore fence tags, unambiguous scalar arrays, string booleans, and criterion-id separators. Unknown or ambiguous keys and enum values fail with field-level diagnostics. Explicit empty `changedFiles` and `testsAddedOrUpdated` arrays are recorded as not applicable; missing fields and empty required command or validation evidence still fail.
+-
+-Acceptance fences are removed from normal output artifacts, while the raw child transcript remains intact and per-child metadata stores the complete acceptance ledger and parsed report. Explicit failed gates fail the run. Inferred gates remain observable without failing the run.
++## Result evaluation
++
++This build delegates result evaluation to the calling agent.
++Execution reports completion, failure, cancellation, output and usage; it does not infer acceptance requirements or run verification commands or reviewers.
++Delegate checks as ordinary tasks and inspect their results.
++Historical acceptance records remain readable, but are not reactivated when continuing a session.
++
+ 
+ ## Herdr project panes
+ 
+--- a/src/extension/schemas.ts
++++ b/src/extension/schemas.ts
+@@ -65,41 +65,10 @@
+ 	description: "JSON Schema object for strict structured output. Non-object roots are rejected.",
+ });
+ 
+-const AcceptanceEvidenceKinds = [
+-	"changed-files",
+-	"tests-added",
+-	"commands-run",
+-	"validation-output",
+-	"residual-risks",
+-	"no-staged-files",
+-	"diff-summary",
+-	"review-findings",
+-	"manual-notes",
+-];
+-
+-const AcceptanceOverride = Type.Unsafe({
+-	anyOf: [
+-		{ type: "string", enum: ["auto", "attested", "checked"] },
+-		{
+-			type: "string",
+-			enum: ["reviewed"],
+-			deprecated: true,
+-			description: "Invalid as an explicit policy. Recognized only so preflight can explain that reviewed is an achieved status.",
+-		},
+-		{ type: "boolean", enum: [false] },
+-		{ type: "object", additionalProperties: true },
+-	],
+-	description: `Optional acceptance policy. For reviewer/read-only calls, omit acceptance. Example: { level: "checked", evidence: ["commands-run", "changed-files"] }. Supported evidence kinds: ${AcceptanceEvidenceKinds.join(", ")}. Evidence levels end at verified; use acceptance.review.required for review. Omitted means auto-inferred unless agentContract compatibility behavior is enabled.`,
+-});
+-
+ const AgentContractOverride = Type.Object({
+ 	version: Type.Integer({ minimum: 1, maximum: 1, description: "Enable compatibility behavior for this run/child." }),
+ }, { additionalProperties: false, description: "Compatibility behavior. Omit for the default behavior." });
+ 
+-const ChainGateOverride = Type.String({
+-	enum: ["execution", "acceptance"],
+-	description: "For chain steps with agentContract, choose whether the chain advances on execution success or acceptance success. Defaults to execution.",
+-});
+ 
+ const TurnBudgetOverride = Type.Object({
+ 	maxTurns: Type.Integer({ minimum: 1 }),
+@@ -147,9 +116,7 @@
+ 	model: Type.Optional(Type.String({ description: "Override model for this task" })),
+ 	fast: Type.Optional(Type.Boolean({ description: "Opt into priority service tier for supported native OpenAI-Codex child models. This can increase quota or cost." })),
+ 	toolBudget: Type.Optional(ToolBudgetOverride),
+-	acceptance: Type.Optional(AcceptanceOverride),
+ 	agentContract: Type.Optional(AgentContractOverride),
+-	gateOn: Type.Optional(ChainGateOverride),
+ });
+ 
+ export const DynamicExpandSchema = Type.Object({
+@@ -178,9 +145,7 @@
+ 	model: Type.Optional(Type.String({ description: "Override model for this task" })),
+ 	fast: Type.Optional(Type.Boolean({ description: "Opt into priority service tier for supported native OpenAI-Codex child models. This can increase quota or cost." })),
+ 	toolBudget: Type.Optional(ToolBudgetOverride),
+-	acceptance: Type.Optional(AcceptanceOverride),
+ 	agentContract: Type.Optional(AgentContractOverride),
+-	gateOn: Type.Optional(ChainGateOverride),
+ }, { additionalProperties: false });
+ 
+ export const DynamicCollectSchema = Type.Object({
+@@ -207,9 +172,7 @@
+ 	model: Type.Optional(Type.String({ description: "Override model for this step" })),
+ 	fast: Type.Optional(Type.Boolean({ description: "Opt into priority service tier for supported native OpenAI-Codex child models. This can increase quota or cost." })),
+ 	toolBudget: Type.Optional(ToolBudgetOverride),
+-	acceptance: Type.Optional(AcceptanceOverride),
+ 	agentContract: Type.Optional(AgentContractOverride),
+-	gateOn: Type.Optional(ChainGateOverride),
+ 	parallel: Type.Optional(Type.Unsafe({
+ 		anyOf: [
+ 			Type.Array(ParallelTaskSchema, { minItems: 1, description: "Tasks to run in parallel" }),
+@@ -312,7 +275,7 @@
+ 		],
+ 		description: "Agent config for create/update. Object or JSON string."
+ 	})),
+-	workflowScript: Type.Optional(Type.String({ minLength: 1, description: "Trusted inline JavaScript statement body. Normally async unless asyncByDefault:false; set async:true when async matters. Use async:false only when the parent must block until completion, never for reviews or gates. Use explicit return for output. Use top-level await, plain helper functions, or explicit Promise chains; nested async function, arrow, and method helpers are rejected. Use await runs.run(key, {agent, task, worktree?, gate?}) or runs.run(key, {resume, task}), where resume is a retained run id or {workflowRunId,key,latest:true} from a durable async workflow receipt. Use runs.all([...]), await runs.steer(key, message, {mode?, index?, ackTimeoutMs?}), runs.status(id), runs.ref(s), emit(value), console, and return. For ordinary parallel fanout, use await runs.all([{key, agent, task}, ...]); it resolves to an ordered array, not a key map, so use results[0], destructuring, or results.map(...), not results.<key>. Do not read .output from unawaited runs.run launches. Stored runs.run promises are only for advanced rolling fanout, and each must later be observed with direct await, Promise.race, or Promise.all. runs.steer targets a prior stable child key, never a raw run id, and must be awaited or returned. Mission workflows also have async state.get(key) and state.set(key, JSONValue). Compose sequential and parallel phases dynamically. Set worktree:true at workflow or child level for a separate managed worktree; child fields override workflow defaults. gate is one host-run command and cannot be combined with acceptance. runs.run accepts one child only. No filesystem, shell, Pi tools, or host globals." })),
++	workflowScript: Type.Optional(Type.String({ minLength: 1, description: "Trusted inline JavaScript statement body. Normally async unless asyncByDefault:false; set async:true when async matters. Use async:false only when the parent must block until completion, never for reviews or gates. Use explicit return for output. Use top-level await, plain helper functions, or explicit Promise chains; nested async function, arrow, and method helpers are rejected. Use await runs.run(key, {agent, task, worktree?}) or runs.run(key, {resume, task}), where resume is a retained run id or {workflowRunId,key,latest:true} from a durable async workflow receipt. Use runs.all([...]), await runs.steer(key, message, {mode?, index?, ackTimeoutMs?}), runs.status(id), runs.ref(s), emit(value), console, and return. For ordinary parallel fanout, use await runs.all([{key, agent, task}, ...]); it resolves to an ordered array, not a key map, so use results[0], destructuring, or results.map(...), not results.<key>. Do not read .output from unawaited runs.run launches. Stored runs.run promises are only for advanced rolling fanout, and each must later be observed with direct await, Promise.race, or Promise.all. runs.steer targets a prior stable child key, never a raw run id, and must be awaited or returned. Mission workflows also have async state.get(key) and state.set(key, JSONValue). Compose sequential and parallel phases dynamically. Set worktree:true at workflow or child level for a separate managed worktree; child fields override workflow defaults. runs.run accepts one child only. No filesystem, shell, Pi tools, or host globals." })),
+ 	chatProgress: Type.Optional(Type.String({ enum: ["auto", "off", "live-card"], description: "WorkflowScript chat progress projection. auto shows a live in-chat card only for watched foreground workflows in the same Git repository; it is off otherwise. Explicit live-card requires same-repository async:false; async workflows should omit chatProgress or use auto/off." })),
+ 	isolation: Type.Optional(Type.String({ enum: ["none", "worktree"], description: "Workflow child isolation. none runs in the shared cwd; worktree requires managed git worktree isolation." })),
+ 	worktree: Type.Optional(Type.Boolean({ description: "Managed child isolation. true gives each workflow child a separate git worktree; an individual runs.run/runs.all item can override a workflow default with worktree:false." })),
+@@ -350,8 +313,6 @@
+ 	fast: Type.Optional(Type.Boolean({ description: "Opt into priority service tier for supported native OpenAI-Codex child models. Default false. This can increase quota or cost." })),
+ 	outputSchema: Type.Optional(JsonSchemaObject),
+ 	agentContract: Type.Optional(AgentContractOverride),
+-	acceptance: Type.Optional(AcceptanceOverride),
+-	gate: Type.Optional(Type.String({ minLength: 1, description: "Host gate command. Cannot be combined with acceptance." })),
+ };
+ 
+ const SubagentParamsSchema = Type.Object(SubagentParamProperties);
+--- a/src/extension/tool-description.ts
++++ b/src/extension/tool-description.ts
+@@ -34,11 +34,11 @@
+ EXECUTION:
+ • Before executing, use { action: "list" } and run only executable/non-disabled configured agents.
+ • When passing an explicit model to a child (on the call or a runs.run/runs.all item), first call { action: "models" } and copy an exact provider/id; bare ids resolve only when unique in the registry, and agent names (e.g. gpt-pro, advisor) are not model ids.
+-• SINGLE CHILD: { agent:"worker", task:"..." }. This structured form starts exactly one direct child. Fields such as model, context, cwd, worktree, output, budgets, acceptance, and async apply to that child. Do not combine agent/task with action or workflowScript.
++• SINGLE CHILD: { agent:"worker", task:"..." }. This structured form starts exactly one direct child. Fields such as model, context, cwd, worktree, output, budgets and async apply to that child. Do not combine agent/task with action or workflowScript.
+ • WORKFLOW SCRIPT: { workflowScript: "return runs.run('main', {agent:'worker', task:'...'})" }. Use stable-key runs.run for one child and await runs.all([{key,agent,task}, ...]) for ordinary parallel children. runs.all resolves to an ordered array, not a key map, so use results[0], array destructuring, or results.map((result) => result.output), not results.<key>. Do not read .output from unawaited runs.run launches. Stored runs.run promises are only for advanced rolling fanout and each must later be observed with direct await, Promise.race, or Promise.all. Ordinary JavaScript provides sequence, branching, filtering, retries, and aggregation. workflowScript is an ordinary JavaScript statement body, so use an explicit return for a useful result. Use top-level await, plain helper functions, or explicit Promise chains; nested async function, arrow, and method helpers are rejected. For task text with Markdown fences or shell blocks, build quoted lines instead of nesting raw template literals: \`const task=["Run:","\`\`\`bash","npm test","\`\`\`"].join("\\n")\`. Scripts normally start async unless config sets asyncByDefault:false; set async:true explicitly when async behavior matters. Pass async:false only when the parent must block until completion, never for final reviews or gates. Same-repo blocking workflows default to a live in-chat card; explicit live-card requires same-repository async:false, so async workflows should omit chatProgress or use auto/off. Workflow-level child controls default onto each runs.run launch, and explicit child fields override them. Use {action:"children.list"} to list recent retained workflow children with resumable/not-resumable reasons. Resume only rows reported resumable. For a simple follow-up or implementation challenge, use {action:"resume", id:"run-id", message:"..."}. Resume keeps the stored agent/model/tool contract. If no resumable child is listed, launch a same-role fallback challenge and label it as fallback. Inside workflowScript, continue one with runs.run(key, {resume:"run-id", task:"follow-up"}); workflow resumes wait for completed output, and loops must continue from each latest returned runId. Await runs.steer(key, message, {mode?, index?, ackTimeoutMs?}) to guide a prior keyed child without exposing its run id; receipts are queued, delivered, missed, or failed. Always await or return runs.steer. For repository mutation lanes, set worktree:true on the workflow or individual runs.run/runs.all item for managed isolation; each parallel child gets a separate worktree and handoff artifact. A workflow usageBudget is enforced once across the workflow. Available globals are runs.run, runs.all, runs.steer, runs.status, runs.ref/refs, emit, console, and standard JavaScript only. Workflows get async state.get(key) and state.set(key, JSONValue) through their automatic or explicit mission; mission:false workflows do not have a state global. Scripts cannot access filesystem, shell, arbitrary Pi tools, or host globals.
+ • Sequential example: { workflowScript: "const a = await runs.run('analyze', {agent:'agent-a', task:'Analyze the request'}); return (await runs.run('plan', {agent:'agent-b', task:'Plan from: '+a.output})).output" }
+ • Parallel example: { workflowScript: "const [a,b] = await runs.all([{key:'correctness',agent:'agent-a',task:'Review correctness'},{key:'tests',agent:'agent-b',task:'Review tests'}]); return {correctness:a.output,tests:b.output}" }
+-• Optional context is "fresh", "fork", or "profile". profile requires the selected agent's declared defaultContext and ignores config defaultSubagentContext. Explicit fresh/fork wins. When omitted, config defaultSubagentContext wins over agent defaultContext. timeoutMs/maxRuntimeMs apply to foreground and async workflows; foreground workflows default to 30 minutes and async workflows have no default timeout. Omit acceptance for reviewer/read-only calls; evidence levels end at verified, and acceptance.review.required requests independent writer review.
++• Optional context is "fresh", "fork", or "profile". profile requires the selected agent's declared defaultContext and ignores config defaultSubagentContext. Explicit fresh/fork wins. When omitted, config defaultSubagentContext wins over agent defaultContext. timeoutMs/maxRuntimeMs apply to foreground and async workflows; foreground workflows default to 30 minutes and async workflows have no default timeout. The delegating agent decides whether the returned result satisfies its task.
+ • Durable mission attachment is automatic by default. Use missionId to attach an existing mission, mission:{...} to override auto-create, or mission:false for ephemeral work. A mission object needs exactly one non-empty title or summary; objective and labels are optional. goal may only be true and requires budget:{tokens}.
+ 
+ MANAGEMENT / CONTROL (use action; omit execution fields):
+@@ -56,7 +56,7 @@
+ • SINGLE {agent:"worker",task:"..."} starts exactly one direct child. Fields apply to that child. Do not combine agent/task with action or workflowScript.
+ • SCRIPT {workflowScript:"return runs.run('main', {agent:'worker', task:'...'})"}. Use stable-key runs.run for one child and await runs.all([{key,agent,task}, ...]) for ordinary parallel work. runs.all resolves to an ordered array, not a key map; use results[0], destructuring, or results.map(...), not results.<key>. Do not read .output from unawaited runs.run launches. Stored runs.run promises are only for advanced rolling fanout and each must later be observed with direct await, Promise.race, or Promise.all. Await runs.steer(key,message,options?) to guide a prior keyed child; it returns queued, delivered, missed, or failed and never accepts a raw run id. Always await or return steering calls. Use {action:"children.list"} for recent retained workflow children and resume only rows reported resumable. Use {action:"resume",id:"run-id",message:"..."} for a simple follow-up or challenge; resume keeps the stored agent/model/tool contract. If none is resumable, launch a same-role fallback challenge and label it as fallback. Inside workflowScript use runs.run(key,{resume:"run-id",task:"follow-up"}) when the script must wait for completion and continue from the latest returned runId. Workflows get async state.get/state.set through their automatic or explicit mission; mission:false does not. Scripts are ordinary JavaScript statement bodies; use explicit return for a useful result. Use top-level await, plain helper functions, or explicit Promise chains; nested async function, arrow, and method helpers are rejected. For task text with Markdown fences or shell blocks, build quoted lines instead of nesting raw template literals: \`const task=["Run:","\`\`\`bash","npm test","\`\`\`"].join("\\n")\`. Use JavaScript for sequence, branching, retries, and aggregation. For repository mutation lanes, use worktree:true on the workflow or runs.run/runs.all item for managed isolation. Scripts normally start async unless config sets asyncByDefault:false; set async:true explicitly when async behavior matters. async:false blocks the parent until completion and auto-enables a same-repo live chat card unless chatProgress is off; explicit live-card requires same-repository async:false, so async workflows should omit chatProgress or use auto/off.
+ • Example: {workflowScript:"const [a,b]=await runs.all([{key:'a',agent:'agent-a',task:'Implement A',worktree:true},{key:'b',agent:'agent-b',task:'Implement B',worktree:true}]); return [a.output,b.output]"}
+-• context can be fresh, fork, or profile. profile requires the selected agent's declared defaultContext and ignores defaultSubagentContext. Explicit fresh/fork wins; omitted context follows defaultSubagentContext before agent defaultContext. timeoutMs/maxRuntimeMs apply to foreground and async workflows; foreground workflows default to 30 minutes and async workflows have no default timeout. Omit acceptance for reviewer/read-only calls.
++• context can be fresh, fork, or profile. profile requires the selected agent's declared defaultContext and ignores defaultSubagentContext. Explicit fresh/fork wins; omitted context follows defaultSubagentContext before agent defaultContext. timeoutMs/maxRuntimeMs apply to foreground and async workflows; foreground workflows default to 30 minutes and async workflows have no default timeout. The delegating agent evaluates the returned result.
+ 
+ MANAGE / CONTROL:
+ • Use action without execution fields for list/get/models/guide/authoring, refine/refine.show/refine.rollback, mission, watchdog, status, interrupt, stop, resume, steer, script-only scheduling, diagnostics, and other management actions. guide reads shipped current-version docs by topic.
+--- a/src/runs/background/async-resume.ts
++++ b/src/runs/background/async-resume.ts
+@@ -3,7 +3,6 @@
+ import { DIRS, type AcceptanceInput, type AsyncStatus, type ResolvedTurnBudget, type SteeringRecoveryDescriptor, type SubagentRunMode } from "../../shared/types.ts";
+ import type { AgentConfig } from "../../agents/agents.ts";
+ import { normalizeExtensionBindings } from "../shared/extension-bindings.ts";
+-import { validateAcceptanceInput } from "../shared/acceptance.ts";
+ import { validateToolBudgetConfig } from "../shared/tool-budget.ts";
+ import { intersectSubagentCapabilityCeilings, parseSubagentCapabilityCeiling, type ResolvedSubagentCapabilityCeiling } from "../shared/capability-ceiling.ts";
+ import { validateRunFanoutBudgetDescriptor } from "../shared/run-fanout-budget.ts";
+@@ -278,9 +277,8 @@
+ }
+ 
+ function normalizeRecoveryAcceptance(value: unknown, descriptorPath: string): AcceptanceInput {
+-	const errors = validateAcceptanceInput(value, "recoveryDescriptor.acceptance");
+-	if (errors.length) throw new Error(`Invalid async recovery descriptor '${descriptorPath}': ${errors.join(" ")}`);
+-	return value as AcceptanceInput;
++	// Retain the historical record on disk; resumed execution has no acceptance policy.
++	return false;
+ }
+ 
+ function normalizeRecoveryTurnBudget(value: unknown, descriptorPath: string): ResolvedTurnBudget {
+--- a/src/runs/background/async-status.ts
++++ b/src/runs/background/async-status.ts
+@@ -296,7 +296,7 @@
+ 			...(step.turnBudget ? { turnBudget: step.turnBudget } : {}),
+ 			...(step.turnBudgetExceeded !== undefined ? { turnBudgetExceeded: step.turnBudgetExceeded } : {}),
+ 			...(step.wrapUpRequested !== undefined ? { wrapUpRequested: step.wrapUpRequested } : {}),
+-			...(step.acceptance ? { acceptance: step.acceptance } : {}),
++			...(step.acceptance && step.acceptance.status !== "not-required" ? { acceptance: step.acceptance } : {}),
+ 			...(step.agentContract ? { agentContract: step.agentContract } : {}),
+ 			...(step.launchContractDigest ? { launchContractDigest: step.launchContractDigest } : {}),
+ 			...(step.launchResolvedExtensions ? { launchResolvedExtensions: step.launchResolvedExtensions } : {}),
+--- a/src/runs/background/run-status.ts
++++ b/src/runs/background/run-status.ts
+@@ -197,7 +197,7 @@
+ 			`${child.index + 1}. ${child.agent} ${child.status}`,
+ 			child.exitCode !== undefined ? `exit ${child.exitCode}` : undefined,
+ 			child.detachedReason ? `detached: ${child.detachedReason}` : undefined,
+-			child.acceptance ? `acceptance: ${child.acceptance.status}` : undefined,
++			child.acceptance && child.acceptance.status !== "not-required" ? `acceptance: ${child.acceptance.status}` : undefined,
+ 			child.error ? `error: ${child.error}` : undefined,
+ 			output ? `output: ${output.slice(0, 160)}` : undefined,
+ 		].filter(Boolean);
+@@ -530,7 +530,7 @@
+ 				const steeringText = formatSteeringSummary(step);
+ 				const steeringSuffix = steeringText ? `, steering: ${steeringText}` : "";
+ 				const errorText = step.error ? `, error: ${step.error}` : "";
+-				const acceptanceText = step.acceptance?.status ? `, acceptance: ${step.acceptance.status}` : "";
++				const acceptanceText = step.acceptance?.status && step.acceptance.status !== "not-required" ? `, acceptance: ${step.acceptance.status}` : "";
+ 				const budgetText = step.turnBudget ? `, turn budget: ${step.turnBudget.turnCount}/${step.turnBudget.maxTurns}+${step.turnBudget.graceTurns} (${step.turnBudget.outcome})` : "";
+ 				const display = step.label ? `${step.label} (${step.agent})` : step.agent;
+ 				const phase = step.phase ? `[${step.phase}] ` : "";
+--- a/src/runs/foreground/execution.ts
++++ b/src/runs/foreground/execution.ts
+@@ -200,8 +200,8 @@
+ 
+ function buildPendingAcceptanceLedger(acceptance: ResolvedAcceptanceConfig): AcceptanceLedger {
+ 	return {
+-		status: "pending",
+-		evidenceStatus: "pending",
++		status: acceptance.level === "none" ? "not-required" : "pending",
++		evidenceStatus: acceptance.level === "none" ? "not-required" : "pending",
+ 		explicit: acceptance.explicit,
+ 		effectiveAcceptance: acceptance,
+ 		inferredReason: acceptance.inferredReason,
+--- a/src/runs/foreground/subagent-executor.ts
++++ b/src/runs/foreground/subagent-executor.ts
+@@ -689,7 +689,7 @@
+ 				...(result.transcriptPath ? { transcriptPath: result.transcriptPath } : {}),
+ 				...(result.transcriptError ? { transcriptError: result.transcriptError } : {}),
+ 				...(result.detachedReason ? { detachedReason: result.detachedReason } : {}),
+-				...(result.acceptance ? { acceptance: result.acceptance } : {}),
++				...(result.acceptance && result.acceptance.status !== "not-required" ? { acceptance: result.acceptance } : {}),
+ 				...(result.launchContractDigest ? { launchContractDigest: result.launchContractDigest } : {}),
+ 				...(input.extensionBindings ? { extensionBindings: input.extensionBindings } : {}),
+ 				...(result.launchResolvedExtensions ? { launchResolvedExtensions: result.launchResolvedExtensions } : {}),
+@@ -770,7 +770,7 @@
+ 		...(input.result.transcriptPath ? { transcriptPath: input.result.transcriptPath } : {}),
+ 		...(input.result.transcriptError ? { transcriptError: input.result.transcriptError } : {}),
+ 		...(input.result.detachedReason ? { detachedReason: input.result.detachedReason } : {}),
+-		...(input.result.acceptance ? { acceptance: input.result.acceptance } : {}),
++		...(input.result.acceptance && input.result.acceptance.status !== "not-required" ? { acceptance: input.result.acceptance } : {}),
+ 		...(input.result.launchContractDigest ? { launchContractDigest: input.result.launchContractDigest } : {}),
+ 		...(input.result.launchResolvedExtensions ? { launchResolvedExtensions: input.result.launchResolvedExtensions } : {}),
+ 		...(input.result.runtimeAcknowledgedExtensions ? { runtimeAcknowledgedExtensions: input.result.runtimeAcknowledgedExtensions } : {}),
+@@ -2057,7 +2057,7 @@
+ 			...(completed.structuredOutput !== undefined ? { structuredOutput: completed.structuredOutput } : {}),
+ 			...(completed.structuredOutputPath ? { structuredOutputPath: completed.structuredOutputPath } : {}),
+ 			...(completed.structuredOutputSchemaPath ? { structuredOutputSchemaPath: completed.structuredOutputSchemaPath } : {}),
+-			...(completed.acceptance ? { acceptance: completed.acceptance } : {}),
++			...(completed.acceptance && completed.acceptance.status !== "not-required" ? { acceptance: completed.acceptance } : {}),
+ 		};
+ 		return {
+ 			content: [{ type: "text", text: completed.output || completed.error || `Revived ${target.source} subagent ${revivedId} completed without output.` }],
+@@ -3066,7 +3066,7 @@
+ 		...(completed.structuredOutput !== undefined ? { structuredOutput: completed.structuredOutput } : {}),
+ 		...(completed.structuredOutputPath ? { structuredOutputPath: completed.structuredOutputPath } : {}),
+ 		...(completed.structuredOutputSchemaPath ? { structuredOutputSchemaPath: completed.structuredOutputSchemaPath } : {}),
+-		...(completed.acceptance ? { acceptance: completed.acceptance } : {}),
++		...(completed.acceptance && completed.acceptance.status !== "not-required" ? { acceptance: completed.acceptance } : {}),
+ 	});
+ 	return {
+ 		content: [{ type: "text", text: completed.output || completed.error || `Async workflow child ${options.runId} completed without output.` }],
+--- a/src/runs/shared/acceptance.ts
++++ b/src/runs/shared/acceptance.ts
+@@ -158,10 +158,8 @@
+ 	| { ok: false; error: string };
+ 
+ export function normalizeGateAcceptance(gate: unknown, acceptance: AcceptanceInput | undefined): GateAcceptanceNormalizationResult {
+-	if (gate === undefined) return acceptance === undefined ? { ok: true } : { ok: true, acceptance };
+-	if (typeof gate !== "string" || !gate.trim()) return { ok: false, error: "gate must be a non-empty command string." };
+-	if (acceptance !== undefined) return { ok: false, error: "gate cannot be combined with acceptance; use one gate command or acceptance.verify." };
+-	return { ok: true, acceptance: { level: "verified", verify: [{ id: "gate", command: gate.trim() }] } };
++	if (gate !== undefined) return { ok: false, error: "Host acceptance gates are unavailable. Delegate checks as ordinary work and inspect their results." };
++	return { ok: true };
+ }
+ 
+ function explicitAcceptanceCanDisable(explicit: AcceptanceConfig): boolean {
+@@ -174,132 +172,9 @@
+ }
+ 
+ export function validateAcceptanceInput(input: unknown, pathLabel = "acceptance"): string[] {
+-	const errors: string[] = [];
+-	if (input === undefined) return errors;
+-	if (input === false) return errors;
+-	if (typeof input === "string") {
+-		if (input === "reviewed") errors.push(`${pathLabel} ${EXPLICIT_REVIEWED_UNAVAILABLE}`);
+-		else if (!VALID_LEVELS.has(input as AcceptanceLevel)) errors.push(`${pathLabel} has invalid level '${input}'.`);
+-		else if (input === "none") errors.push(`${pathLabel} level "none" requires a reason; use { level: "none", reason: "..." }.`);
+-		else if (input === "verified") errors.push(`${pathLabel} level "verified" requires object form with at least one runtime verify command. Use level "checked" or provide a non-empty acceptance.verify array.`);
+-		return errors;
+-	}
+-	if (!input || typeof input !== "object" || Array.isArray(input)) {
+-		errors.push(`${pathLabel} must be a string level, false, or an object. ${ACCEPTANCE_OBJECT_EXAMPLE}`);
+-		return errors;
+-	}
+-	const value = input as Record<string, unknown>;
+-	for (const key of Object.keys(value)) {
+-		if (!ACCEPTANCE_CONFIG_KEYS.has(key)) errors.push(`${pathLabel}.${key} is not supported.`);
+-	}
+-	if (value.level === "reviewed") {
+-		errors.push(`${pathLabel}.level ${EXPLICIT_REVIEWED_UNAVAILABLE}`);
+-	} else if (value.level !== undefined && (typeof value.level !== "string" || !VALID_LEVELS.has(value.level as AcceptanceLevel))) {
+-		errors.push(`${pathLabel}.level must be one of auto, none, attested, checked, verified.`);
+-	}
+-	if (value.level === "none" && (typeof value.reason !== "string" || !value.reason.trim())) {
+-		errors.push(`${pathLabel}.reason is required when level is none.`);
+-	}
+-	if (value.reason !== undefined && typeof value.reason !== "string") errors.push(`${pathLabel}.reason must be a string.`);
+-	if (value.criteria !== undefined && !Array.isArray(value.criteria)) errors.push(`${pathLabel}.criteria must be an array.`);
+-	if (Array.isArray(value.criteria)) {
+-		const criterionIds = new Set<string>();
+-		for (const [index, criterion] of value.criteria.entries()) {
+-			if (typeof criterion === "string") continue;
+-			const criterionPath = `${pathLabel}.criteria[${index}]`;
+-			if (!criterion || typeof criterion !== "object" || Array.isArray(criterion)) {
+-				errors.push(`${criterionPath} must be a string or an object.`);
+-				continue;
+-			}
+-			const gate = criterion as Record<string, unknown>;
+-			for (const key of Object.keys(gate)) {
+-				if (!ACCEPTANCE_GATE_KEYS.has(key)) errors.push(`${criterionPath}.${key} is not supported.`);
+-			}
+-			if (typeof gate.id !== "string" || !gate.id.trim()) {
+-				errors.push(`${criterionPath}.id is required.`);
+-			} else {
+-				const normalizedId = normalizedToken(gate.id);
+-				if (criterionIds.has(normalizedId)) errors.push(`${criterionPath}.id duplicates normalized criterion id '${normalizedId}'.`);
+-				criterionIds.add(normalizedId);
+-			}
+-			if (typeof gate.must !== "string" || !gate.must.trim()) errors.push(`${criterionPath}.must is required.`);
+-			if (gate.evidence !== undefined && !Array.isArray(gate.evidence)) errors.push(`${criterionPath}.evidence must be an array. ${ACCEPTANCE_EVIDENCE_HELP}`);
+-			if (Array.isArray(gate.evidence)) {
+-				for (const [evidenceIndex, item] of gate.evidence.entries()) {
+-					if (typeof item !== "string" || !VALID_EVIDENCE.has(item as AcceptanceEvidenceKind)) {
+-						errors.push(unsupportedEvidenceKindMessage(`${criterionPath}.evidence[${evidenceIndex}]`, item));
+-					}
+-				}
+-			}
+-			if (gate.severity !== undefined && gate.severity !== "required" && gate.severity !== "recommended") {
+-				errors.push(`${criterionPath}.severity must be required or recommended.`);
+-			}
+-		}
+-	}
+-	if (Array.isArray(value.evidence)) {
+-		for (const [index, item] of value.evidence.entries()) {
+-			if (typeof item !== "string" || !VALID_EVIDENCE.has(item as AcceptanceEvidenceKind)) {
+-				errors.push(unsupportedEvidenceKindMessage(`${pathLabel}.evidence[${index}]`, item));
+-			}
+-		}
+-	} else if (value.evidence !== undefined) {
+-		errors.push(`${pathLabel}.evidence must be an array. ${ACCEPTANCE_EVIDENCE_HELP}`);
+-	}
+-	if (value.level === "verified" && (!Array.isArray(value.verify) || value.verify.length === 0)) {
+-		errors.push(`${pathLabel}.verify must contain at least one runtime command when level is verified. Use level "checked" or provide a non-empty acceptance.verify array.`);
+-	} else if (value.verify !== undefined && !Array.isArray(value.verify)) {
+-		errors.push(`${pathLabel}.verify must be an array.`);
+-	}
+-	if (Array.isArray(value.verify)) {
+-		for (const [index, command] of value.verify.entries()) {
+-			if (!command || typeof command !== "object" || Array.isArray(command)) {
+-				errors.push(`${pathLabel}.verify[${index}] must be an object.`);
+-				continue;
+-			}
+-			const cmd = command as Record<string, unknown>;
+-			for (const key of Object.keys(cmd)) {
+-				if (!ACCEPTANCE_VERIFY_KEYS.has(key)) errors.push(`${pathLabel}.verify[${index}].${key} is not supported.`);
+-			}
+-			if (typeof cmd.id !== "string" || !cmd.id.trim()) errors.push(`${pathLabel}.verify[${index}].id is required.`);
+-			if (typeof cmd.command !== "string" || !cmd.command.trim()) errors.push(`${pathLabel}.verify[${index}].command is required.`);
+-			if (cmd.timeoutMs !== undefined && (typeof cmd.timeoutMs !== "number" || !Number.isInteger(cmd.timeoutMs) || cmd.timeoutMs < 1)) {
+-				errors.push(`${pathLabel}.verify[${index}].timeoutMs must be an integer >= 1.`);
+-			}
+-			if (cmd.cwd !== undefined && typeof cmd.cwd !== "string") errors.push(`${pathLabel}.verify[${index}].cwd must be a string.`);
+-			if (cmd.env !== undefined) {
+-				if (!cmd.env || typeof cmd.env !== "object" || Array.isArray(cmd.env)) {
+-					errors.push(`${pathLabel}.verify[${index}].env must be an object.`);
+-				} else {
+-					for (const [envKey, envValue] of Object.entries(cmd.env as Record<string, unknown>)) {
+-						if (typeof envValue !== "string") errors.push(`${pathLabel}.verify[${index}].env.${envKey} must be a string.`);
+-					}
+-				}
+-			}
+-			if (cmd.allowFailure !== undefined && typeof cmd.allowFailure !== "boolean") {
+-				errors.push(`${pathLabel}.verify[${index}].allowFailure must be a boolean.`);
+-			}
+-		}
+-	}
+-	if (value.review !== undefined && value.review !== false) {
+-		if (!value.review || typeof value.review !== "object" || Array.isArray(value.review)) {
+-			errors.push(`${pathLabel}.review must be false or an object.`);
+-		} else {
+-			const review = value.review as Record<string, unknown>;
+-			for (const key of Object.keys(review)) {
+-				if (!ACCEPTANCE_REVIEW_KEYS.has(key)) errors.push(`${pathLabel}.review.${key} is not supported.`);
+-			}
+-			if (review.agent !== undefined && typeof review.agent !== "string") errors.push(`${pathLabel}.review.agent must be a string.`);
+-			if (review.focus !== undefined && typeof review.focus !== "string") errors.push(`${pathLabel}.review.focus must be a string.`);
+-			if (review.required !== undefined && typeof review.required !== "boolean") errors.push(`${pathLabel}.review.required must be a boolean.`);
+-		}
+-	}
+-	if (value.stopRules !== undefined && !Array.isArray(value.stopRules)) errors.push(`${pathLabel}.stopRules must be an array.`);
+-	if (Array.isArray(value.stopRules)) {
+-		for (const [index, item] of value.stopRules.entries()) {
+-			if (typeof item !== "string") errors.push(`${pathLabel}.stopRules[${index}] must be a string.`);
+-		}
+-	}
+-	return errors;
++	if (input === undefined || input === false || input === "none" ||
++		(input !== null && typeof input === "object" && "level" in input && input.level === "none")) return [];
++	return [`${pathLabel} is unavailable. Delegate the task without an acceptance policy; judge its result yourself.`];
+ }
+ 
+ export function validateExecutionAcceptance(input: {
+@@ -352,52 +227,8 @@
+ 	dynamicGroup?: boolean;
+ 	agentContract?: AgentContract;
+ }): ResolvedAcceptanceConfig {
+-	const explicit = normalizeAcceptanceInput(input.explicit);
+-	const explicitLevel = normalizeLevel(explicit.level);
+-	if (isAgentContractV1(input.agentContract)) {
+-		const level = explicitAcceptanceCanDisable(explicit) || explicitLevel === "auto"
+-			? "none"
+-			: explicitLevel;
+-		const evidence = unique(explicit.evidence ?? []);
+-		const criteria = normalizeCriteria(
+-			explicit.criteria as Array<string | { id?: string; must?: string; evidence?: AcceptanceEvidenceKind[]; severity?: "required" | "recommended" }> | undefined,
+-			evidence,
+-		);
+-		return {
+-			level,
+-			explicit: input.explicit !== undefined,
+-			inferredReason: [],
+-			criteria,
+-			evidence,
+-			verify: explicit.verify ?? [],
+-			review: explicit.review,
+-			stopRules: explicit.stopRules ?? [],
+-			reason: explicit.reason,
+-		};
+-	}
+-	const inferred = inferLevel(input);
+-	const level = explicitAcceptanceCanDisable(explicit)
+-		? "none"
+-		: explicitLevel === "auto"
+-			? inferred.level
+-			: (LEVEL_RANK[explicitLevel] >= LEVEL_RANK[inferred.level] ? explicitLevel : inferred.level);
+-	const evidence = unique([...(level === inferred.level ? inferred.evidence : requiredEvidenceForLevel(level)), ...(explicit.evidence ?? [])]);
+-	const criteria = normalizeCriteria(
+-		(explicit.criteria?.length ? explicit.criteria : inferred.criteria) as Array<string | { id?: string; must?: string; evidence?: AcceptanceEvidenceKind[]; severity?: "required" | "recommended" }>,
+-		evidence,
+-	);
+-	const review = explicit.review !== undefined ? explicit.review : inferred.review;
+-	return {
+-		level,
+-		explicit: input.explicit !== undefined,
+-		inferredReason: inferred.reasons,
+-		criteria,
+-		evidence,
+-		verify: explicit.verify ?? [],
+-		review,
+-		stopRules: explicit.stopRules ?? [],
+-		reason: explicit.reason,
+-	};
++	// Acceptance belongs to the delegating agent, not the execution extension.
++	return { level: "none", explicit: false, inferredReason: [], criteria: [], evidence: [], verify: [], stopRules: [] };
+ }
+ 
+ function acceptanceRequiresChildReport(acceptance: ResolvedAcceptanceConfig): boolean {
+@@ -405,58 +236,7 @@
+ }
+ 
+ export function formatAcceptancePrompt(acceptance: ResolvedAcceptanceConfig, options: { reportOptional?: boolean; structuredOutput?: boolean } = {}): string {
+-	if (acceptance.level === "none") return "";
+-	if (options.reportOptional && !acceptanceRequiresChildReport(acceptance)) return "";
+-	const lines = [
+-		"",
+-		"## Acceptance Contract",
+-		`Acceptance level: ${acceptance.level}`,
+-		"Completion is not accepted from prose alone. End with a structured acceptance report.",
+-		"",
+-		"Criteria:",
+-		...(acceptance.criteria.length ? acceptance.criteria.map((criterion) => `- ${criterion.id}: ${criterion.must}`) : ["- Return the requested result."]),
+-		"",
+-		`Required evidence: ${acceptance.evidence.join(", ") || "none"}`,
+-	];
+-	if (acceptance.verify.length > 0) {
+-		lines.push("", "Runtime verification commands configured by parent:");
+-		for (const command of acceptance.verify) lines.push(`- ${command.id}: ${command.command}`);
+-	}
+-	if (acceptance.review) {
+-		lines.push("", `Review gate: ${acceptance.review.required === false ? "optional" : "required"}${acceptance.review.agent ? ` by ${acceptance.review.agent}` : ""}.`);
+-		if (acceptance.review.focus) lines.push(`Review focus: ${acceptance.review.focus}`);
+-	}
+-	if (acceptance.stopRules.length > 0) {
+-		lines.push("", "Stop rules:", ...acceptance.stopRules.map((rule) => `- ${rule}`));
+-	}
+-	lines.push(
+-		"",
+-		options.structuredOutput
+-			? "Include an `acceptanceReport` object in your final `structured_output` tool call in this shape:"
+-			: "Finish with a fenced JSON block tagged `acceptance-report` in this shape:",
+-		"Use empty arrays when no items apply; array fields contain strings unless object entries are shown.",
+-		"Empty-string entries (`[\"\"]`) are ignored; use `[]` when nothing applies.",
+-		"`criteriaSatisfied[].status` must be exactly one of: satisfied, not-satisfied, not-applicable.",
+-		"`commandsRun[].result` must be exactly one of: passed, failed, not-run.",
+-		"`manualNotes` and `notes` are optional strings; an empty string means no note and does not satisfy `manual-notes` evidence.",
+-		...(options.structuredOutput ? [] : ["```acceptance-report"]),
+-		JSON.stringify({
+-			criteriaSatisfied: acceptance.criteria
+-				.filter((criterion) => criterion.severity !== "recommended")
+-				.map((criterion) => ({ id: criterion.id, status: "satisfied", evidence: "specific proof" })),
+-			changedFiles: ["src/file.ts"],
+-			testsAddedOrUpdated: ["test/file.test.ts"],
+-			commandsRun: [{ command: "command", result: "passed", summary: "short result" }],
+-			validationOutput: ["validation output or concise summary"],
+-			residualRisks: ["none"],
+-			noStagedFiles: true,
+-			diffSummary: "short description of the diff",
+-			reviewFindings: ["blocker: file.ts:12 - issue found, or no blockers"],
+-			manualNotes: "anything else the parent should know",
+-		}, null, 2),
+-		...(options.structuredOutput ? [] : ["```"]),
+-	);
+-	return lines.join("\n");
++	return "";
+ }
+ 
+ function extractBalancedJson(text: string, start: number): string | undefined {
+@@ -783,26 +563,8 @@
+ }
+ 
+ export function stripAcceptanceReport(output: string): string {
+-	const trailingFencePattern = /\n?```(acceptance[-_]report|json|jsonc|json5)\s*\n([\s\S]*?)```\s*/gi;
+-	let trailingFence: { index: number; tag: string; body: string } | undefined;
+-	for (const match of output.matchAll(trailingFencePattern)) {
+-		const end = (match.index ?? 0) + match[0].length;
+-		if (output.slice(end).trim().length === 0 && match[1] && match[2]) {
+-			trailingFence = { index: match.index ?? 0, tag: match[1].toLowerCase(), body: match[2] };
+-		}
+-	}
+-	if (trailingFence) {
+-		if (trailingFence.tag === "acceptance-report" || trailingFence.tag === "acceptance_report") return output.slice(0, trailingFence.index).trimEnd();
+-		try {
+-			if (parseGenericJsonAcceptanceReportBody(trailingFence.body).report) return output.slice(0, trailingFence.index).trimEnd();
+-		} catch {
+-			// Leave unrelated or malformed generic JSON fences visible.
+-		}
+-	}
+-	return output
+-		.replace(/\n?```acceptance[-_]report\s*\n[\s\S]*?```\s*$/i, "")
+-		.replace(/\n?ACCEPTANCE_REPORT\s*:\s*\{[\s\S]*\}\s*$/i, "")
+-		.trimEnd();
++	// The extension no longer owns a report protocol; preserve the child's output.
++	return output;
+ }
+ 
+ function isStringArray(value: unknown): value is string[] {
+@@ -1282,122 +1044,15 @@
+ 	artifactsDir?: string;
+ 	runId?: string;
+ }): Promise<AcceptanceLedger> {
+-	const acceptance = input.acceptance;
+-	const initialStatus = acceptance.level === "none" ? "not-required" : "claimed";
+-	const ledger: AcceptanceLedger = {
+-		status: initialStatus,
+-		evidenceStatus: initialStatus,
+-		explicit: acceptance.explicit,
+-		effectiveAcceptance: acceptance,
+-		inferredReason: acceptance.inferredReason,
+-		criteria: acceptance.criteria,
+-		runtimeChecks: [],
+-		verifyRuns: [],
+-	};
+-	if (acceptance.level === "none") return ledger;
+-
+-	const parsed = input.reportError
+-		? { error: input.reportError }
+-		: input.report
+-		? (() => {
+-			const validation = validateAcceptanceReport(input.report);
+-			return validation.report
+-				? { report: validation.report }
+-				: { error: `Failed to parse acceptance-report: Invalid acceptance-report: ${validation.errors.join("; ")}` };
+-		})()
+-		: parseAcceptanceReportSources(input.output, input.fileOutput);
+-	const needsReport = acceptanceRequiresChildReport(acceptance);
+-	if (parsed.report) {
+-		ledger.childReport = parsed.report;
+-		ledger.status = "attested";
+-		ledger.evidenceStatus = "attested";
+-	} else if (!input.reportOptional || needsReport || parsed.error !== ACCEPTANCE_REPORT_NOT_FOUND) {
+-		ledger.childReportParseError = parsed.error;
+-		ledger.runtimeChecks.push({ id: "attestation", status: "failed", message: parsed.error ?? "Structured acceptance report missing." });
+-		if (!input.reportOptional) {
+-			ledger.status = "rejected";
+-			ledger.evidenceStatus = "rejected";
+-			return ledger;
+-		}
+-	} else {
+-		ledger.childReportParseError = parsed.error;
+-	}
+-
+-	if (parsed.report && LEVEL_RANK[acceptance.level] >= LEVEL_RANK.checked) {
+-		ledger.runtimeChecks = [
+-			...ledger.runtimeChecks,
+-			...checkCriteriaSatisfied(acceptance.criteria, parsed.report),
+-			...runStructuralChecks(acceptance, parsed.report, input.cwd),
+-		];
+-		if (!ledger.runtimeChecks.some((check) => check.status === "failed")) {
+-			ledger.status = "checked";
+-			ledger.evidenceStatus = "checked";
+-		}
+-	}
+-
+-	if (LEVEL_RANK[acceptance.level] >= LEVEL_RANK.verified && (acceptance.level === "verified" || acceptance.verify.length > 0)) {
+-		if (acceptance.level === "verified" && acceptance.verify.length === 0) {
+-			ledger.runtimeChecks.push({ id: "verification-config", status: "failed", message: "verified acceptance requires runtime verify commands." });
+-			ledger.status = "rejected";
+-			ledger.evidenceStatus = "rejected";
+-			return ledger;
+-		}
+-		ledger.verifyRuns = [];
+-		for (const command of acceptance.verify) {
+-			ledger.verifyRuns.push(await runMemoizedVerifyCommand(command, input.cwd, {
+-				signal: input.signal,
+-				abortMessage: input.abortMessage,
+-				artifactsDir: input.artifactsDir,
+-				runId: input.runId,
+-			}));
+-			if (input.signal?.aborted) break;
+-		}
+-		if (ledger.verifyRuns.some((run) => run.status === "failed" || run.status === "timed-out")) {
+-			ledger.status = "rejected";
+-			ledger.evidenceStatus = "rejected";
+-			return ledger;
+-		}
+-		if (!ledger.runtimeChecks.some((check) => check.status === "failed")) {
+-			ledger.status = "verified";
+-			ledger.evidenceStatus = "verified";
+-		}
+-	}
+-
+-	if (ledger.runtimeChecks.some((check) => check.status === "failed")) {
+-		ledger.status = "rejected";
+-		ledger.evidenceStatus = "rejected";
+-		return ledger;
+-	}
+-	if (ledger.status === "claimed") {
+-		ledger.status = acceptance.level === "verified" ? "verified" : acceptance.level;
+-		ledger.evidenceStatus = ledger.status;
+-	}
+-
+-	if (acceptance.review) {
+-		if (input.reviewResult?.status === "reviewed") {
+-			ledger.reviewResult = input.reviewResult;
+-			ledger.status = "reviewed";
+-		} else if (input.reviewResult?.status === "blockers") {
+-			ledger.reviewResult = input.reviewResult;
+-			ledger.status = "rejected";
+-		} else if (acceptance.review.required !== false) {
+-			ledger.reviewResult = input.reviewResult ?? {
+-				status: "review-required",
+-				findings: [{
+-					severity: "non-blocking",
+-					issue: "Independent review has not been supplied.",
+-					rationale: "The run cannot be marked reviewed from child evidence alone.",
+-				}],
+-			};
+-			ledger.status = "review-required";
+-		}
+-	}
+-
+-	return ledger;
++	// Recovered jobs can contain an older policy. Never execute its commands or review.
++	const acceptance = resolveEffectiveAcceptance({ agentName: "" });
++	return { status: "not-required", evidenceStatus: "not-required", explicit: false,
++		effectiveAcceptance: acceptance, inferredReason: [], criteria: [], runtimeChecks: [], verifyRuns: [] };
+ }
+ 
+ export function buildSkippedAcceptanceLedger(acceptance: ResolvedAcceptanceConfig, input: { id: string; message: string }): AcceptanceLedger {
+-	const status = acceptance.level === "none" ? "not-required" : "rejected";
++	acceptance = resolveEffectiveAcceptance({ agentName: "" });
++	const status = "not-required";
+ 	return {
+ 		status,
+ 		evidenceStatus: status,
+--- a/src/runs/shared/structured-output.ts
++++ b/src/runs/shared/structured-output.ts
+@@ -66,7 +66,6 @@
+ 		type: "object",
+ 		properties: {
+ 			value: rewriteLocalJsonPointerRefs(schema, "#/properties/value"),
+-			...(options.acceptanceReport ? { acceptanceReport: { type: "object" } } : {}),
+ 		},
+ 		required: ["value"],
+ 		additionalProperties: false,
+@@ -137,7 +136,7 @@
+ 	const schemaPath = path.join(dir, "schema.json");
+ 	const outputPath = path.join(dir, "output.json");
+ 	fs.writeFileSync(schemaPath, JSON.stringify(schema), { mode: 0o600 });
+-	return { schema, schemaPath, outputPath, ...(options.captureAcceptanceReport ? { acceptanceReportPath: path.join(dir, "acceptance-report.json") } : {}) };
++	return { schema, schemaPath, outputPath };
+ }
+ 
+ export async function validateStructuredOutputValue(schema: JsonSchemaObject, value: unknown): Promise<{ status: "valid" } | { status: "invalid"; message: string }> {

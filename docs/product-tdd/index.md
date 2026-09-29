@@ -28,6 +28,9 @@ variants/<name>/main.py          variant/build.py + 指定工具与技能材料
 这些支持模块不决定某个 variant 的协作方式或模型配方。
 
 [runtime.py](../../scripts/runtime.py)准备工具，不读取题目或角色配置。
+锁定的`pi-subagents 0.56.0`通过原生依赖补丁关闭自动验收：扩展提供执行、结果、错误与用量，不推断验收等级、不要求验收报告，也不代替委派者执行验证命令或判定任务达标。
+旧验收记录保留可读，接续执行不重新启用其策略；这项行为由原生扩展负责，不进入Braid或SVC配置。
+补丁同时接入本地依赖缓存与Linux预打包环境，既有冻结包不会自动更新。
 [package_agent.py](../../scripts/package_agent.py)调用所选 variant 的 build.py 装入显式材料；打包不是应用生成。
 raw 基线由 [raw_main.py](../../variants/raw/raw_main.py)独立执行，可直接使用工具资源，不必经过团队 Harness。
 
