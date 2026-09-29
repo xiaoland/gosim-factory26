@@ -104,7 +104,7 @@ def package_identity(package):
 
 
 def prepare(directory, package, *, competition_id, variant, tasks, model_config, name=None,
-            credential_mode='self_funded', experiment_key=None, case=None, run_names=None):
+            credential_mode='self_funded', experiment_key=None, case=None, run_names=None, allow_competition_credit=False):
     """一次 variant 对应一个冻结 ZIP 和多个 task；相同输入只读复用。"""
     competition_id, variant = identifier(competition_id), identifier(variant)
     tasks = [identifier(task) for task in tasks]
@@ -120,8 +120,8 @@ def prepare(directory, package, *, competition_id, variant, tasks, model_config,
         raise ValueError('experiment_key 和 case 必须是非空字符串')
     if credential_mode not in {'self_funded', 'official_evaluation'}:
         raise ValueError('credential_mode 必须是 self_funded 或 official_evaluation')
-    if credential_mode != 'self_funded':
-        raise Blocked('参赛额度已停用；实验必须使用 self_funded 和自带 API key')
+    if credential_mode != 'self_funded' and not allow_competition_credit:
+        raise Blocked('正式参赛须明确传 --allow-competition-credit；实验使用 self_funded')
     settings = {key: model_config.get(key) for key in ('base_url', 'model', 'visual_model')}
     if not settings['base_url'] or not settings['model']:
         raise ValueError('model_config 需要 base_url 与 model')
@@ -169,7 +169,7 @@ def prepare(directory, package, *, competition_id, variant, tasks, model_config,
                  variant=variant, package_sha256=digest(frozen), package='agent.zip',
                  package_manifest=redact(manifest), model_config=settings, tasks=tasks,
                  package_identity=metadata, labels=labels, run_names=run_names,
-                 credential_mode=credential_mode,
+                 credential_mode=credential_mode, allow_competition_credit=allow_competition_credit,
                  display_name=name or variant, created_at=time.time())
     atomic_json(directory/'inputs.json', value)
     state = dict(schema_version=1, venue='hosted', competition_id=competition_id,
@@ -271,8 +271,10 @@ class Controller:
         return value
 
     def _post(self, operation, path, *, task=None, prior_ids=None, **kwargs):
-        if self.inputs['credential_mode'] != 'self_funded':
-            raise Blocked('参赛额度已停用；此历史 journal 仅允许读取、恢复身份和收集证据')
+        if self.inputs['credential_mode'] != 'self_funded' and not self.inputs.get('allow_competition_credit'):
+            raise Blocked('此历史 journal 未获正式参赛授权，仅允许读取和收集证据')
+        if (self.directory/'budget-stop.json').exists():
+            raise Blocked('余额保护已停止此运行，禁止新的远端写入')
         if self.state['pending']:
             raise Blocked('上次写入结果不明，请先 recover；不会重发 POST')
         pending = {'operation': operation, 'task': task, 'path': path, 'requested_at': time.time()}
@@ -571,6 +573,7 @@ def main():
     prep.add_argument('--run-names', type=Path, help='JSON：task ID 到本次运行名的映射')
     prep.add_argument('--credential-mode', choices=('self_funded', 'official_evaluation'),
                       default='self_funded', help='冻结此次提交的凭据模式；正式额度模式不读取个人 key')
+    prep.add_argument('--allow-competition-credit', action='store_true', help='仅在用户明确授权本次正式参赛后使用')
     prep.add_argument('--json', action='store_true', help='输出完整结构化结果；默认只显示身份与证据路径')
     for action in ('snapshot', 'create', 'start', 'status', 'logs', 'collect', 'recover', 'watch', 'run-all'):
         command = commands.add_parser(action)
@@ -588,7 +591,7 @@ def main():
     if args.command == 'prepare':
         value = prepare(args.state, args.package, competition_id=args.competition, variant=args.variant,
                         tasks=args.task, model_config=json.loads(args.model_config.read_text()), name=args.name,
-                        credential_mode=args.credential_mode, experiment_key=args.experiment_key, case=args.case,
+                        credential_mode=args.credential_mode, allow_competition_credit=args.allow_competition_credit, experiment_key=args.experiment_key, case=args.case,
                         run_names=json.loads(args.run_names.read_text()) if args.run_names else None)
         if not args.json:
             value = {key: value[key] for key in ('venue', 'variant', 'competition_id', 'package_sha256', 'credential_mode', 'labels', 'run_names') if key in value}
