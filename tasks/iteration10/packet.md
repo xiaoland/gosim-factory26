@@ -20,7 +20,7 @@ Factory/Braid/SVC及设施不新增或运行测试、模拟探针；生成应用
 | 原生sub-agent简化 | 主线；用户已批准实施，补丁及静态核对完成 | [简化cell](cells/subagent-simplification.md)：保留能力、候选缺口、已实施简化与验证限制 |
 | 运行中重置通知异常 | 主线；已定位重复Deferred→failed及监控漏报，用户授权直接修复和热部署 | [现场诊断](cells/reset-notice-live.md)；819次未开始投递，随后通知已送达 |
 | 运行行为观察 | 主线语义判断；独立worker实现增量采集 | [四项观察与当前基线](observations/behavior.md)：sub-agents、Issue/一般流程、skills；目录快照与证据链 |
-| 本次两题实验 | 用户已批准接手边界热修复；两题已暂停并保留现场，准备hotfix-02 | [实验计划](experiments.md)：恢复决定后才构建、冻结与运行 |
+| 本次两题实验 | hotfix-02已部署Braid 5c95743；两题14:31接续running，新指令与pr view实际生效 | [实验计划](experiments.md)：恢复决定后才构建、冻结与运行 |
 
 下一步：[原生sub-agent简化](cells/subagent-simplification.md)已按批准范围落地；保留当前依赖，已构建冻结，进入真实运行验证。[此前委派返回补核](repair-review/final/subagent-returns.md)中的status_surfaces清理已完成；[审查取舍](repair-review/final/decisions.md)已形成；查询式失败事实补齐已完成并通过编译，主线已核对输出与恢复路径；三个仓库[源码检查点与实验前条件](cells/source-checkpoint.md)已整理，待用户恢复实验决定后构建冻结。Node入口及文档/packet责任已补齐，analytics已完成。不要重新全读两题或再开目录覆盖审查。
 已批准范围内的局部修复继续由负责子代理完成；涉及产品义务或范围变化，给出具体因果与方案后交用户决定。实验按已批准配方推进。
