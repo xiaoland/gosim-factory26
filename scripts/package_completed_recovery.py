@@ -66,7 +66,7 @@ def main():
                                  if not is_metadata_path(name)}
             if args.refresh_native_materials:
                 variant = manifest.get("capabilities", {}).get("variant")
-                if variant not in {"pi-braid", "pi-braid-flash-team"}:
+                if variant not in {"pi-braid", "pi-braid-flash-team", "pi-braid-i11"}:
                     raise ValueError(f"unsupported Braid variant for native refresh: {variant}")
                 instructions = sorted(name for name in manifest["files"]
                                       if len(Path(name).parts) == 3 and Path(name).parts[0] == "agents"

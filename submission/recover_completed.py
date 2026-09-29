@@ -10,6 +10,7 @@ import time
 import tempfile
 from pathlib import Path
 import shutil
+import shlex
 import subprocess
 import sys
 from zipfile import ZipFile
@@ -138,8 +139,6 @@ def main():
         # Retain the prior files so this hotfix has an inspectable before/after.
         import run as variant
         old_profiles = {profile["id"]: profile for profile in request["profiles"]}
-        routes = {name: json.loads((work / "capabilities" / name / "native-template/models.json").read_text())
-                  for name in old_profiles}
         for name in ("skills", "capabilities"):
             (work / name).rename(run / f"recovery-source-{name}-{time.time_ns()}")
         shutil.copytree(ROOT / "skills", work / "skills")
@@ -148,15 +147,35 @@ def main():
             os.environ.get("VISUAL_BASE_URL"))
         if {profile["id"] for profile in profiles} != set(old_profiles):
             raise ValueError("native material hotfix cannot change assigned profiles")
+        refreshable = {"user_instructions", "context_window_tokens"}
         for profile in profiles:
             original = old_profiles[profile["id"]]
-            if any(profile.get(key) != original.get(key) for key in ("model", "reasoning")):
-                raise ValueError("native material hotfix cannot change the model recipe")
-            original["user_instructions"] = profile["user_instructions"]
-            target = Path(bindings[profile["id"]]["native_template"]) / "models.json"
-            target.write_text(json.dumps(routes[profile["id"]], indent=2) + "\n")
+            if ({key: value for key, value in profile.items() if key not in refreshable}
+                    != {key: value for key, value in original.items() if key not in refreshable}):
+                raise ValueError("native material hotfix cannot change Profile identity or model recipe")
         shutil.copy2(run / "braid-request.json", run / "recovery-source-braid-request.json")
+        # Braid permits instruction/binding refresh but treats the token window as
+        # recipe identity. Migrate only this metadata in the retained request;
+        # the stored Profile revision remains old so native sessions are rebuilt.
+        retained_path = run / "braid-state/request.json"
+        retained = json.loads(retained_path.read_text())
+        current_profiles = {profile["id"]: profile for profile in profiles}
+        shutil.copy2(retained_path, run / "recovery-source-state-request.json")
+        for profile in retained["profiles"]:
+            current = current_profiles[profile["id"]]
+            if "context_window_tokens" in current:
+                profile["context_window_tokens"] = current["context_window_tokens"]
+        retained_path.write_text(json.dumps(retained, indent=2) + "\n")
+        request["profiles"] = profiles
         request["bindings"] = bindings
+        request["root_check_messages"] = variant.ROOT_CHECK_MESSAGES
+        request["pi"]["executable"] = str(variant.budgeted_pi(runtime, run))
+        # Use current package routes/compatibility and rebuild the helper launcher;
+        # retained native models and launcher paths belong to the old package.
+        pbb = work / "bin/pbb"
+        pbb.write_text("#!/bin/sh\nexec " + shlex.join((str(runtime / "bin/node"),
+                       str(runtime / "node_modules/pi-background-bash/bin/pbb.js"))) + ' "$@"\n')
+        pbb.chmod(0o755)
         (run / "braid-request.json").write_text(json.dumps(request, indent=2) + "\n")
         material_record = run / "materials.json"
         if material_record.exists():
@@ -190,7 +209,11 @@ def main():
                     path.chmod(path.stat().st_mode | 0o111)
         browser = str(browser_executable(runtime))
         # Keep old async records discoverable while giving browser sockets a short path.
-        env.update(HOME=str(work / "home"), TMPDIR=tempfile.mkdtemp(prefix="f26-", dir="/tmp"),
+        env.update(PORTLESS_PORT="1355", PORTLESS_HTTPS="0", PORTLESS_SYNC_HOSTS="0",
+                   PORTLESS_STATE_DIR=str(work / "tmp/portless"),
+                   npm_config_cache=str(work / "cache/npm"),
+                   npm_config_store_dir=str(work / "cache/pnpm"),
+                   HOME=str(work / "home"), TMPDIR=tempfile.mkdtemp(prefix="f26-", dir="/tmp"),
                    PI_SUBAGENTS_TEMP_ROOT=str(work / "tmp" / f"pi-subagents-uid-{os.getuid()}"),
                    XDG_CONFIG_HOME=str(work / "home/.config"),
                    PI_CODING_AGENT_DIR=str(work / "home/.pi/agent"),
