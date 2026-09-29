@@ -34,7 +34,8 @@ def build(runtime, output):
             ''))
         shutil.copytree(runtime, stage/'runtime', symlinks=True)
         executables = [str(path.relative_to(stage)) for path in (stage/'runtime').rglob('*')
-                       if path.is_file() and path.stat().st_mode & 0o111]
+                       if path.is_file() and path.stat().st_mode & 0o111
+                       and 'node_modules/.bin' not in str(path.relative_to(stage))]
         (stage/'runtime-executables.json').write_text(json.dumps(executables)+'\n')
         source = json.loads((runtime/'runtime-source.json').read_text())
         write_zip(stage, output, 'pi', source, {'variant': 'pi-minimal'})
