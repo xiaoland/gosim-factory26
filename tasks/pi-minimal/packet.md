@@ -28,3 +28,12 @@ WSL 使用相同 ZIP、官方本地 Runner、公开 Hackathon requirements 并�
 - 检查：真实进展、模型及唯一advisor角色、技能/视觉/浏览器/MCP/后台任务的调用和错误；尚未触发组件明确标未验证，不强行注入调用要求改变配方。
 
 官网后续启动仍受每600秒参赛余额检查、低于200取消和阻断后续任务的规则约束；当前未启动官网和余额守护，避免误报本地启动为正式参赛。
+
+### 当前有效范围：仅 GitHub，自有 BigModel / Kimi key
+
+用户随后限定“可行性验证只跑一个题目”及“我们自己的API key，而不是arc key”。已停止上述两条 ARC key 尝试，保留原始产物；原生 events 中尚无 assistant message_end，不能据此断言没有产生任何上游费用。
+
+当前唯一有效实验：`/home/yyh/Development/factory26/runs/pi-minimal/20260929/local/own-key-generation`。
+GitHub run：`pi-minimal--hackathon--github-59aaf58e7462bc`，`started_at=1790689981.3825152`。
+复用现有4020网关，以 `.secrets/models.env` 中 BigModel / Moonshot 凭据路由；GLM请求发往 `open.bigmodel.cn`，Kimi发往 `api.moonshot.cn`，保留模型与推理参数。两供应商真实 models 查询确认相应模型存在。
+观察窗口以新run起点重新计算；只有GitHub，Sheet不再启动。官网继续仅prepared，不自动提交。
