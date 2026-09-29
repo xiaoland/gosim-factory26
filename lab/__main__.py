@@ -17,7 +17,6 @@ from .plan import create
 from .records import read_json, write_json
 from .run import _expand, controller, start
 from .status import experiment_summary, read_status, show
-from .analysis.trace import trace as trace_run
 
 
 def _experiment_for_run(run):
@@ -422,6 +421,8 @@ def main(argv=None):
         print(json.dumps(value, ensure_ascii=False, indent=2))
         return 0
     if args.action == "trace":
+        # Background controller snapshots intentionally omit optional analysis modules.
+        from .analysis.trace import trace as trace_run
         if args.offset < 0 or args.bytes < 1:
             parser.error("offset must be nonnegative and bytes positive")
         value = trace_run(args.run, work_item=args.work_item, session=args.session, pid=args.pid,

@@ -1,6 +1,6 @@
-# 第十次迭代：标准协作与检查工具后的全新 Hackathon（用户暂停启动）
+# 第十次迭代：标准协作与检查工具后的全新 Hackathon（已授权启动）
 
-当前状态与启动授权统一以[主packet](packet.md)为准：实验暂停，统一新包未构建，两题未启动。
+当前状态与启动授权统一以[主packet](packet.md)为准：2026-09-29用户明确“开始实验”；完整新包已冻结，GitHub和Sheet均已启动。
 本页只保存恢复实验时的配方、操作安排与观察目标，不保留已经被暂停覆盖的旧启动指令。
 旧Sheet自费评分58/100属于上一轮，不能归因于迭代10修改。
 
@@ -22,7 +22,7 @@ WSL新目录预定 `/home/yyh/Development/factory26/runs/e20260928-03-check-rece
 
 前十分钟每三分钟、之后每八分钟由脚本采集，并保留各题独立终态。
 关注根基础PR是否真正承接实施、子项是否保留原始场景和前提、当前判据能否区分已知的简化错误，以及当前候选的检查结果是否在合并前被消费。
-另外观察原生acceptance/review-required是否把只读结果误标成实施未完成，或诱发父追加不存在reviewer的无意义工作；该字段已确认不阻断返回，不预先加新机制。
+原生自动验收已统一关闭：核对新委派不再注入验收契约或要求reviewer，同时确认后台执行、接续、结果与usage仍正常。
 原生角色按机会→发现/尝试→实际模型与工具→返回→父决定记录；没有机会不强迫调用，未触发不写成已验。
 对provider错误保留原生stopReason/errorMessage、连续failed turn、错误首末时间、最近成功及本次恢复边界；文件活动或running不是模型调用成功。
 针对重复Context、关闭联系、PBB完成、旧子任务交接和Collector重试，分别观察对应原始消息/收据，不用token下降代替正确性。
@@ -30,3 +30,14 @@ WSL新目录预定 `/home/yyh/Development/factory26/runs/e20260928-03-check-rece
 2026-09-28 只读模型目录：Kimi含kimi-k3，BigModel含glm-5.3-flash；DeepSeek目录列deepseek-flash（服务声明V4.1-Flash，支持text/image）而未列旧v4-flash别名。旧网关成功运行时仍使用旧别名，目录缺名不直接证明请求不支持；新实际请求保留请求名/路由/响应模型，不静默换模型。目录结果不证明工具流式往返或余额充足。
 
 生成使用 `lab.arc_bench.arc_matrix --requirements-only`，不使用历史本地评分matrix。该生成入口不提供memory/cpus顶层参数；生成manifest后为每条ARC adapter命令明确追加 --memory 4g --cpus 2，再冻结manifest，避免依赖runner默认2GiB。一次性的实验配方修改不扩大成全局配置功能。
+
+## 本次启动回执（2026-09-29）
+
+- 实验ID：`exp-20260929-121835-68ed35`，沿用预定目录`e20260928-03-check-receipts`，不是9月28日旧运行。
+- GitHub：`pi-braid--hackathon--github-7fe42a1248f9d8`。
+- Sheet：`pi-braid--hackathon--sheet-3b5e3eeaa3b062`。
+- ZIP SHA256：`7d8dc70a3ed7e178685e5d9514cdc508c404adaaed83d8cbd6ea13b945f2708a`。
+- 新网关：4020，使用原`.secrets/models.env`的BigModel/DeepSeek/Moonshot自带key；独立gateway日志。
+- 启动时发现CLI顶层导入可选analysis模块，精简controller-source没有该目录；已将trace导入移动到对应命令分支，并从同一generation目录接续。两次失败启动均未创建run，接续后恰好两题各一条run。
+- 原控制器文件、异常及实际执行哈希保留在实验根`controller-main-before.py`、`controller-startup-failure.log`、`controller-hotfix.json`；原manifest的controller_source清单是修复前身份，应结合hotfix记录读取。ZIP及题目输入未改变。
+- 监控：脚本PID819719，`gpt-5.6-luna/low`接管事件等待；正常采样3＋8分钟，不依据running声称模型成功或生成完成。
