@@ -19,14 +19,11 @@ def main():
         raise SystemExit(2)
     with (TARGET/'budget-monitor.log').open('a') as log:
         guard = subprocess.Popen([sys.executable, '-u', str(Path(__file__).with_name('budget_guard.py')), str(TARGET)],
-                                 cwd=ROOT, stdout=log, stderr=subprocess.STDOUT)
+                                 cwd=ROOT, stdout=log, stderr=subprocess.STDOUT, start_new_session=True)
         (TARGET/'processes.json').write_text(json.dumps({'controller_pid': os.getpid(), 'budget_guard_pid': guard.pid})+'\n')
-        try:
-            with Controller(TARGET) as controller:
-                controller.run_all(interval=480)
-        finally:
-            guard.terminate()
-            guard.wait(timeout=20)
+        # The budget guard must survive a controller/network failure while the remote run continues.
+        with Controller(TARGET) as controller:
+            controller.run_all(interval=480)
 
 
 if __name__ == '__main__':

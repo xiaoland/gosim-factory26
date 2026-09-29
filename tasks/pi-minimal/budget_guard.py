@@ -177,6 +177,9 @@ def main():
         print(json.dumps(result, ensure_ascii=False), flush=True)
         if args.once or args.check:
             return 2 if result["status"] == "stopped" else 0
+        state_path = journal / "state.json"
+        if state_path.is_file() and json.loads(state_path.read_text()).get("phase") == "collected":
+            return 0
         time.sleep(INTERVAL)
 
 
