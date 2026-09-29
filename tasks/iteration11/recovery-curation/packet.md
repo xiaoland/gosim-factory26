@@ -23,3 +23,11 @@ Issue/PR保留身份和真实完成状态，先精简正文、以有理由hide�
 ## 2026-09-29 接续实施
 
 已核实先前实际完成的是完整归档、副本与摘剪建议，未应用摘剪。此次先落实GitHub正文/评论整理，保留所有代码与未提交进度，再用最新I11和刷新材料接续。Sheet与两个原I10容器保持暂停；无需等待Sheet整理。
+
+冻结完成：接续包 `runs/iteration11/20260929-feasibility/agent.zip`，SHA256 `78f5f53e746a1baad8a3f6e41cfd66f0632477ecf575fea6a8170248431fe1c5`；mode=workspace-resume，refresh_native_materials=true。原需求yaml与WSL当前公开需求哈希相同（bdc17d23…）。最新Braid二进制eda9d88d…；恢复来源和材料身份在同目录recovery-source.json。
+
+## 已发起的本地接续
+
+WSL目录：`/home/yyh/Development/factory26/runs/iteration11/20260929-feasibility/generation`。
+唯一run：`pi-braid-i11--hackathon--github-65b879cdc68a1f`；`started_at=1790691530.925718`。Runner已进入running，仍须核实解压/恢复和新Pi会话，不能将控制器running当作恢复成功。
+沿用自有4020供应商网关，4GiB/2CPU，无Sheet、无官网提交、无本地评分。readable-cli接管实际Braid启动后5/10/15/20分钟SSH tar+scp取包及原生行为检查；观察写 `local-observation.md`，原始证据落 `runs/iteration11/20260929-feasibility/observations/`。
