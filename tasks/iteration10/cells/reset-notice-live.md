@@ -44,3 +44,7 @@ Pi的后台follow-up可在已settled之后继续原生工作；Pi reader在没�
 2026-09-29 05:21 UTC 热部署成功，Linux binary SHA256 `f974830709a62d5583a194997076c1b634e4e3a96f60df0876070f34e9db202f`。首次接续因容器 root 与原工作区 UID 1000 不同遭 Git 归属检查拒绝，尚未进入原生执行；修正 continuation 按原工作区 uid/gid 启动后，在 `hotfix-01/generation-02` 接续。GitHub `pi-braid--hackathon--github-575299dc237d16`、Sheet `pi-braid--hackathon--sheet-2faf63f9812725` 均 running，schema 16 字段已迁移，初查分别4/2活动turn，恢复后失败数0。Sheet有一条invalid Pi session警告，交原修复worker追查，未据此声明所有原生会话恢复完成。监控使用更新脚本，3分钟/8分钟采集。
 
 Sheet 恢复警告已核实：旧 PR #2 JSONL 缺 session 头；此前待处理的 context reset 于05:21:48完成，新 provider session 已建立，根 Issue 于05:21:51也完成替换。警告对应已淘汰旧会话，不是当前恢复阻塞。缺头产生原因尚未确认，不能归因于本次修复；保留作后续会话归档定向调查。
+
+## 恢复点选择补充
+
+用户要求后续优先使用观察到的错误大规模开始之前的检查点。已同步到仓库协作规则和恢复操作文档。本次实际采用05:09暂停时的完整工作区，晚于04:46开始的投递失败风暴，不能称为错误前恢复。初查实验目录可见原冻结包与暂停后的两份SQLite备份，尚未确认存在扩散前应用/Git、Braid和原生会话一致的完整检查点；数据库备份不能独自承担整体回退。当前不据此再次中断已恢复运行。
