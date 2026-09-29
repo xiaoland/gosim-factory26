@@ -22,6 +22,7 @@ WSL新目录预定 `/home/yyh/Development/factory26/runs/e20260928-03-check-rece
 
 前十分钟每三分钟、之后每八分钟由脚本采集，并保留各题独立终态。
 关注根基础PR是否真正承接实施、子项是否保留原始场景和前提、当前判据能否区分已知的简化错误，以及当前候选的检查结果是否在合并前被消费。
+另外观察原生acceptance/review-required是否把只读结果误标成实施未完成，或诱发父追加不存在reviewer的无意义工作；该字段已确认不阻断返回，不预先加新机制。
 原生角色按机会→发现/尝试→实际模型与工具→返回→父决定记录；没有机会不强迫调用，未触发不写成已验。
 对provider错误保留原生stopReason/errorMessage、连续failed turn、错误首末时间、最近成功及本次恢复边界；文件活动或running不是模型调用成功。
 针对重复Context、关闭联系、PBB完成、旧子任务交接和Collector重试，分别观察对应原始消息/收据，不用token下降代替正确性。

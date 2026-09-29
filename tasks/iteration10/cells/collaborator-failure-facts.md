@@ -6,4 +6,4 @@
 
 Agent `status --json` 的每项新增 `execution`：当前故障时含 `outcome`（`failed`、`unknown`、`recovery_unavailable`）、`at`、`summary`，否则为 null。Issue/PR view 同样显示；`--json execution_error` 读取去除 UUID 的完整错误，原文仍在数据库。事实只说明最近尝试，不表明业务完成，不触发改派或广播。
 
-依用户暂停边界未做测试、模拟探针或实验；`cargo check` 通过，原有 dead-code warning 仍在。SQL 查询未做动态验证，需在主线整体交付时按用户恢复实验决定验证。未提交。
+依用户暂停边界未做测试、模拟探针或实验；`cargo check` 通过，原有 dead-code warning 仍在。SQL 查询未做动态验证，需在主线整体交付时按用户恢复实验决定验证。已纳入Braid提交034372a。
