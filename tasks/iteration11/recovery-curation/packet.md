@@ -31,3 +31,6 @@ Issue/PR保留身份和真实完成状态，先精简正文、以有理由hide�
 WSL目录：`/home/yyh/Development/factory26/runs/iteration11/20260929-feasibility/generation`。
 唯一run：`pi-braid-i11--hackathon--github-65b879cdc68a1f`；`started_at=1790691530.925718`。Runner已进入running，仍须核实解压/恢复和新Pi会话，不能将控制器running当作恢复成功。
 沿用自有4020供应商网关，4GiB/2CPU，无Sheet、无官网提交、无本地评分。readable-cli接管实际Braid启动后5/10/15/20分钟SSH tar+scp取包及原生行为检查；观察写 `local-observation.md`，原始证据落 `runs/iteration11/20260929-feasibility/observations/`。
+
+## 恢复故障修正（已授权）
+用户明确要求可随时推进恢复缺陷修复。原I11现已停机保留；最新核对根Issue1仍OPEN且blocked，Issue6已CLOSED、PR16已MERGED、PR20旧assignment已retired且有新会话，不能机械重试历史四条reset。readable-cli负责仅在offline-resume中恢复仍有效、未创建新物理身份的失败reset及原始错误保留；final_product_methods负责一致归档与新恢复包，主线负责部署接续。原I10不动。修复以根恢复真实执行为验收，不以编译通过作恢复成功。

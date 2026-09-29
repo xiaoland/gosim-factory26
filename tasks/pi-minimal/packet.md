@@ -62,3 +62,6 @@ GitHub run：`pi-minimal--hackathon--github-59aaf58e7462bc`，`started_at=179068
 
 ## 正式参赛授权更新
 用户明确授权停止本地 pi-minimal、提交官网参赛；余额每600秒检查，≤100元立即取消并禁止后续题启动。提交当前修正版纯Harness（native-fix/base-agent.zip），不包含本地生成应用或保留session；两题沿先前批准矩阵。原未上传 prepared journal 保存为 official-pre-native-fix，新 official journal 冻结新版。I11恢复修复继续，原I10保持暂停。
+
+正式提交已创建：submission `f9bd3524fe75`，GitHub run `f3424d6aa387` 已进入RUNNING；Sheet由同一控制器顺序创建。冻结纯Harness SHA256 `c727b9aa9d0948dd1a5ac2d8c39bad45fe99a8c3fcf5bc4ac171d1ae535dec27`。提交前参赛余额285.862202元；余额守护PID42828、控制器PID42814，完整身份记录于official/processes.json。网站run仍返回billing_mode=self_funded，需与submission credential_mode独立记录，不把此字段当成未参赛。
+本地接续run `pi-minimal--hackathon--github-2c26574a6a09be` 已按用户要求cancelled，finished_at=1790696261.6131678；工作区保留。
