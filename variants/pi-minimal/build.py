@@ -28,6 +28,10 @@ def build(runtime, output):
         shutil.copy2(ROOT/'variants/raw/raw_otlp.py', stage/'raw_otlp.py')
         for name in SKILLS:
             copy_skill(ROOT/'harness/skills'/name, stage/'skills'/name)
+        browser_guide = stage/'skills/agent-browser/SKILL.md'
+        browser_guide.write_text(browser_guide.read_text().replace(
+            'Use svc-verification’s result interpretation to judge coverage and applicability to another candidate; ',
+            ''))
         shutil.copytree(runtime, stage/'runtime', symlinks=True)
         executables = [str(path.relative_to(stage)) for path in (stage/'runtime').rglob('*')
                        if path.is_file() and path.stat().st_mode & 0o111]
