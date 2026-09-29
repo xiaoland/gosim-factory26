@@ -1,6 +1,6 @@
 # Ponytail 原生 Pi 扩展接入核对
 
-状态：已完成上游追踪和最小 vendor 复制（2026-09-29）。本次没有修改共享 `harness/skills/ponytail`、`variants/pi-minimal/main.py` 或 `build.py`，没有重建 npm runtime、运行测试或调用模型。
+状态：已完成上游追踪和最小 vendor 复制（2026-09-29）。共享 `harness/skills/ponytail` 保持不变。主线已在 main.py/build.py/agents/advisor.md 完成实际接线；未运行模型验收。
 
 ## 上游来源与复制范围
 
@@ -84,3 +84,7 @@ advisor 仍由现有 `pi-subagents` 根据 `variants/pi-minimal/agents/advisor.m
 已完成：上游 import 追踪、版本/commit 核对、目标文件复制、复制哈希比对和静态 JS 语法检查。未执行 Pi runtime，因为当前任务明确不重建 runtime、不运行模型或测试。
 
 主线接线时需要把 vendor 目录随 stage 带入，并将主 Pi 的 `--extension`/`--skill` 改为上述路径；同时决定是否让 advisor 的 `skillPath` 使用 vendor skill 目录。其余余额 watcher、认证检查和模型配置保持现有实现。
+
+## 已应用的主线接线
+
+main.py显式设置PONYTAIL_DEFAULT_MODE=full，并加载vendor扩展；build.py复制vendor和官方skill到skills/ponytail，advisor的现有skillPath无需再指向另一目录。advisor显式加载同一Ponytail扩展及capability-evidence扩展；不会依赖父进程自动注入。替换@PACKAGE@为冻结包绝对路径。最终provider请求侧的记录用于下次真实运行核对full系统指令是否进入主/子会话。
