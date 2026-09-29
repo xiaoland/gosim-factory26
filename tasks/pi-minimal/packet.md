@@ -40,7 +40,7 @@ GitHub run：`pi-minimal--hackathon--github-59aaf58e7462bc`，`started_at=179068
 
 ## 能力采用修正（2026-09-29，已授权）
 
-用户要求停止pi-minimal调查，并随后批准修正；当前run已停止，未获此次修正后的重启指令。
+用户要求停止pi-minimal调查，并随后批准修正；原run已停止；用户随后授权“恢复pi-minimal，10分钟后重新观察组件使用情况”。
 - 原Ponytail仅是共享改写skill，未安装原生Pi扩展。pi-minimal现vendor官方4.10.0最小依赖，主会话和advisor显式加载扩展，PONYTAIL_DEFAULT_MODE=full；不改I11共享技能。
 - 根据用户 ~/.codex/AGENTS.md 提取无人值守适用的方法，合入variants/pi-minimal/instructions.md；去除人类审批/等待/确认，保留判断、设计、真实证据、文档与advisor方法，并补齐一般性流程。不修改个人原文件，不引入SVC/Braid。
 - 增加advisor的决策时机、按问题路由skill、依赖文档查证条件；subagents采用原生compact工具说明。auth技能description仅在此variant打包副本改写。
@@ -48,3 +48,12 @@ GitHub run：`pi-minimal--hackathon--github-59aaf58e7462bc`，`started_at=179068
 - better-sqlite3首次binding问题已由原Agent修复；预包新增app-env选目标Node20与11.10.0/ABI115原生缓存，不预置生成应用源码/依赖树。详情prepacked-native.md。
 - I11恢复的全量文件权限扫描已删除；本轮正在运行的旧代码未被热改。I11于14:45:02Z真正进入Braid，14:46起已有context replacement；原I10现场保持暂停。
 源码语法检查完成；更新纯Pi runtime正在构建，新制品尚未通过模型运行验收。
+
+## 修正后接续（2026-09-29）
+
+保留原 GitHub 应用与 Pi session，剔除依赖/浏览器缓存后在相同容器路径恢复；不重新生成需求、不启动 Sheet、不提交官网。
+原始归档 8,709 个文件，无跳过的符号链接，SHA256 `2186d32aaede8de0867e106ba42d0279a2aaed33ac75733d2eac486cec611667`。
+新冻结包 SHA256 `3998ee50feaefc55fb1e6e539027f4a5be77aeed2da98385a69b798e2c7e2aac`。
+接续脚本位于 `resume/`；新运行使用 BigModel/Moonshot 自有凭据、4GiB/2CPU；实际恢复后第10分钟检查新会话增量和 provider-facing 能力证据。
+原运行归档保留；依赖由 Agent 使用 app-env 在目标 Node20 下重新安装。
+新实验目录：WSL `runs/pi-minimal/20260929/native-fix/own-key-generation`，身份与观察结果记录到 [resume-observation.md](resume-observation.md)。
