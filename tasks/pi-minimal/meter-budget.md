@@ -19,7 +19,7 @@ Meter 页面 `https://meter.arc-bench.com/user` 的现有登录会话显示个�
 - 接口：`GET https://arc-bench.com/api/competitions/hackathon/registration`
 - 关键字段：`competition_type=official`、`registered=true`、`initial_budget_cny=500.0`、`remaining_budget_cny=285.862202`、`currency=CNY`
 
-因此当前正式参赛余额为 **285.862202 CNY**，高于用户授权门槛 200，可以启动。CLI 用保存的网站会话访问该接口，保护脚本对 HTTP/身份/schema 错误 fail-closed，不猜测余额，也不输出 cookie 或 access key。Meter 的个人账户接口仍记录在上面，避免把两种余额混淆。
+因此当前正式参赛余额为 **285.862202 CNY**，高于用户授权门槛 100，可以启动。CLI 用保存的网站会话访问该接口，保护脚本对 HTTP/身份/schema 错误 fail-closed，不猜测余额，也不输出 cookie 或 access key。Meter 的个人账户接口仍记录在上面，避免把两种余额混淆。
 
 ## 保护路径
 
@@ -39,7 +39,7 @@ python3 tasks/pi-minimal/budget_guard.py runs/pi-minimal/20260929/official --onc
 python3 tasks/pi-minimal/budget_guard.py runs/pi-minimal/20260929/official
 ```
 
-脚本启动即查询一次，此后每 600 秒查询。正式比赛余额低于 200 时写入该 journal 的 `budget-stop.json`，并检查 `state.json` 中的每个 run：先读取状态和 `submission_id`，只对属于该 journal submission 且未终态的 run 调用既有官方取消接口 `POST /api/runs/{run_id}/cancel`，再读取状态确认。余额查询失败也写 `reason=budget_unavailable` 的停止标志，阻止继续启动；不会取消未经身份核对的 run。
+脚本启动即查询一次，此后每 600 秒查询。正式比赛余额不高于 100 时写入该 journal 的 `budget-stop.json`，并检查 `state.json` 中的每个 run：先读取状态和 `submission_id`，只对属于该 journal submission 且未终态的 run 调用既有官方取消接口 `POST /api/runs/{run_id}/cancel`，再读取状态确认。余额查询失败也写 `reason=budget_unavailable` 的停止标志，阻止继续启动；不会取消未经身份核对的 run。
 
 `--check` 只查询一次且不取消，适合每次开始下一题前的闸门：
 

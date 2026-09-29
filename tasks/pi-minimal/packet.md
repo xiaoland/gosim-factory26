@@ -2,7 +2,7 @@
 
 目标：截止前准备原生 Pi + background tasks + subagents 的独立 variant，移除 SVC/Braid，回到直接完成产品需求的最小方式。
 
-用户已复核精简配置，授权实现、自由提交及官网正式参赛；每10分钟检查余额，低于200停止。I10仍暂停，I11源码保留。
+用户已复核精简配置，授权实现、自由提交及官网正式参赛；每10分钟检查余额，不高于100停止。I10仍暂停，I11源码保留。
 
 明确输入：GLM-5.3-flash 主会话（含视觉），Kimi 2.7 advisor；不设其它子角色；agent-browser、赛题相关技能、Context7/Exa；原生后台任务与subagents。无SVC/Braid。
 
@@ -27,7 +27,7 @@ WSL 使用相同 ZIP、官方本地 Runner、公开 Hackathon requirements 并�
 - 观察：第5/10/15/20分钟留存工作区及原生会话；`lite_baseline_monitor`负责定时归档下载和语义检查；输出 `local-observation.md`，原始快照在 `runs/pi-minimal/20260929/local-observations/`。
 - 检查：真实进展、模型及唯一advisor角色、技能/视觉/浏览器/MCP/后台任务的调用和错误；尚未触发组件明确标未验证，不强行注入调用要求改变配方。
 
-官网后续启动仍受每600秒参赛余额检查、低于200取消和阻断后续任务的规则约束；当前未启动官网和余额守护，避免误报本地启动为正式参赛。
+官网后续启动仍受每600秒参赛余额检查、不高于100取消和阻断后续任务的规则约束；当前未启动官网和余额守护，避免误报本地启动为正式参赛。
 
 ### 当前有效范围：仅 GitHub，自有 BigModel / Kimi key
 
@@ -57,3 +57,8 @@ GitHub run：`pi-minimal--hackathon--github-59aaf58e7462bc`，`started_at=179068
 接续脚本位于 `resume/`；新运行使用 BigModel/Moonshot 自有凭据、4GiB/2CPU；实际恢复后第10分钟检查新会话增量和 provider-facing 能力证据。
 原运行归档保留；依赖由 Agent 使用 app-env 在目标 Node20 下重新安装。
 新实验目录：WSL `runs/pi-minimal/20260929/native-fix/own-key-generation`，身份与观察结果记录到 [resume-observation.md](resume-observation.md)。
+
+本轮实际 run 已确定为 `pi-minimal--hackathon--github-2c26574a6a09be`，恢复源为 `pi-minimal--hackathon--github-59aaf58e7462bc`；首次新的 provider-facing capability 记录时间为 `2026-09-29T15:08:57.466Z`，10 分钟取证节点为 `2026-09-29T15:18:22Z`。观察报告已完成：主请求真实注入 Ponytail full，主工具面含 compact subagent 工具，PBB 与 Node20/native SQLite 有真实证据；advisor、Context7/Exa 和浏览器尚未触发，后端首次启动的 `reactionsFor` 重复声明已单独记录。详见 [resume-observation.md](resume-observation.md)。
+
+## 正式参赛授权更新
+用户明确授权停止本地 pi-minimal、提交官网参赛；余额每600秒检查，≤100元立即取消并禁止后续题启动。提交当前修正版纯Harness（native-fix/base-agent.zip），不包含本地生成应用或保留session；两题沿先前批准矩阵。原未上传 prepared journal 保存为 official-pre-native-fix，新 official journal 冻结新版。I11恢复修复继续，原I10保持暂停。

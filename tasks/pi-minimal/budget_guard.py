@@ -26,7 +26,7 @@ STOP_NAME = "budget-stop.json"
 EVENTS_NAME = "budget-events.jsonl"
 COMPETITION = "hackathon"
 COMPETITION_REGISTRATION = "/competitions/hackathon/registration"
-THRESHOLD = 200.0
+THRESHOLD = 100.0
 INTERVAL = 600
 
 
@@ -157,7 +157,7 @@ def check_once(journal, client, cancel=True):
         marker = stop(journal, observation, "budget_unavailable")
         return {"status": "stopped", "marker": marker, "cancellations": []}
     append_event(journal, {"event": "balance", **observation})
-    if observation["balance"] < THRESHOLD:
+    if observation["balance"] <= THRESHOLD:
         marker = stop(journal, observation, "balance_below_threshold")
         cancellations = cancel_target_runs(journal) if cancel else []
         return {"status": "stopped", "marker": marker, "cancellations": cancellations}
