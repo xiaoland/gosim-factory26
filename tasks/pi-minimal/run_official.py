@@ -23,6 +23,13 @@ def main():
         (TARGET/'processes.json').write_text(json.dumps({'controller_pid': os.getpid(), 'budget_guard_pid': guard.pid})+'\n')
         # The budget guard must survive a controller/network failure while the remote run continues.
         with Controller(TARGET) as controller:
+            if controller.state["pending"]:
+                controller.recover()
+            controller.snapshot()
+            for task, item in controller.state["tasks"].items():
+                if item["phase"] not in {"terminal", "collected"}:
+                    controller.create(task)
+                    controller.start(task)
             controller.run_all(interval=480)
 
 
