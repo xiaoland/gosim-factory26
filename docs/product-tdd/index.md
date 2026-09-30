@@ -36,6 +36,7 @@ variants/<name>/main.py          variant/build.py + 指定工具与技能材料
 raw 基线由 [raw_main.py](../../variants/raw/raw_main.py)独立执行，可直接使用工具资源，不必经过团队 Harness。
 
 [lab](../../lab/README.md)将外部 argv 与共享输入冻结为实验，控制器按槽位分配尝试并保存进程、操作和原始 OTLP 事实；[lab.status](../../lab/status.py)只呈现保存状态，不解释 Agent 的内部协作。不同 Harness 可直接作为外部命令运行，不需要实现设施内部接口。
+新 schema v3 冻结 storage policy 和稳定宿主 controller Python 依赖；attempt 分配及增加并发前核对目标文件系统 available bytes/inodes、host reserve、workspace/telemetry/finalization 及构建峰值。运行中异步观测占块，软阈值暂停派发，硬阈值受控停止进程组；外部资源仍须独立核实。历史 v1/v2 保持 legacy-unbudgeted。
 [arc_matrix.py](../../lab/arc_bench/arc_matrix.py)选择实验组合；[arc_bench_adapter.py](../../lab/arc_bench/arc_bench_adapter.py)调用官方 Runner；[ARC 结果解释](../../lab/arc_bench/results.py)与[原生过程证据](../../lab/analysis/native_evidence.py)只用于可选分析。
 替换 Harness 不应要求实验控制器识别另一种私有会话格式。
 
@@ -141,15 +142,17 @@ variant 随后按平台布局交付，记录生成与交付结果；真实运行
 查询时先辨别生产者，保留各自身份，不以相同题名或 variant 名合并不同运行。
 原生会话归档尽量保留原始内容，无法核实身份时记录缺口；诊断失败不应被伪装成应用低分。
 
-当前工作树的 Braid OTLP 接线由 Braid 持有 exporter、原生记录语义和离线重建，Factory 只负责归档后的显式证据交接。
-`braid local` 采集运行中的根会话，`core.archive_sessions` 写完 `native/manifest.json` 后，通过 `braid_runtime.export_telemetry` 调用本次运行的 Braid 二进制，补采最终原生文件与 Pi 内部子代理。
+当前工作树的 Braid OTLP 接线由 Braid 持有 exporter、原生记录语义和离线重建，Factory 负责归档后的显式交接。Braid state 与 native 原文是普通 decision 归档的内容权威；OTLP 默认发送操作信号及内容身份、字节数、覆盖状态和 usage 摘要。
+`braid local` 周期性发送有界摘要；`core.archive_sessions` 完成 `native/manifest.json` 后，通过本次 Braid 二进制补发最终摘要和内部子代理覆盖。仅显式 `telemetry export --portable` 发送完整原文分片，保留跨边界离线重建格式。
 没有 OTEL endpoint 或 Braid state 时跳过调用；补采限制总等待时间并单独保存退出码、JSON 报告与原始错误，不改变归档返回值或应用终态。
 
 Factory 交接使用归档后的相对路径与经 header 核实的 native identity，保留 provider session 映射及 group、profile、工作项元信息。
 Pi 路径型 session_id 不能标为 Braid 数据库 session UUID；无法核实的原生身份保持 null，归档、observer 与父子关联缺口进入 gaps。
 Braid run_id 来自其 request/result，不能用外层实验 ID 覆盖。
 未解析原文仍可导出，但 missing/partial/unknown 只说明诊断限制；历史文件导出不伪造实时 span 或累加生成计数。
-Collector 继续只保存原始 OTLP 批次，重建通过 Braid 公开 CLI 读取导出的 protobuf，并以源文件清单核对完整性；操作入口见[Braid 诊断手册](../deployment/braid-diagnostics.md)。
+Collector 继续只保存原始 OTLP 批次。默认摘要不能重建原文；portable export 才能通过 Braid CLI 读取 protobuf 并按源清单核对完整性。操作入口见[Braid 诊断手册](../deployment/braid-diagnostics.md)。
+I13 finalizer 写 archive.json，分别记录执行、交付、评测、诊断覆盖、原文保存、恢复承诺及回收状态。归档复制/读取失败或声明原文未保存会阻止删除 work，应用结果独立保留；关联覆盖不全本身不等于原文丢失。只有 eligible 回执且无恢复承诺才释放 work；冻结 I12 材料不变。
+当前可执行归档级仅为 decision，其它级别尚未实现且在配方边界拒绝。schema v3 用稳定宿主 asset.json 同时绑定 controller、job 与 inspect/cleanup Python launcher，计划和启动核对环境树身份。只读 GC 按冻结实验、run、recovery 和归档回执建立引用视图，仅精确 work 可成为候选；资产未见引用不等于删除授权，当前没有 apply。
 这些说明描述当前代码接线，不能代替实时模型链路验收，也不赋予历史 ZIP 新能力。
 
 `braid_telemetry_viewer.py` 以实验 run 为入口，通过 OTLP Backend 查询原始批次，再调用 Braid 的官方类型解码与证据重建接口，生成离线静态网站。
@@ -171,4 +174,4 @@ ARC 团队包身份以 `package-manifest.json` 的 `capabilities.variant` 为准
 
 本地 Hackathon 报告先明确选择冻结实验/job 集或显式 run 集，再按 case、赛题、应用、suite、镜像及其他冻结执行输入隔离。替代关系只来自同一实验/job 的显式 retry 链；独立重复分别呈现。缺来源的记录保留可观察结果与缺失原因，不拼接总分。分组键只在本报告内使用，真实关联字段独立保存。
 
-存储生命周期治理在独立 `feat/experiment-storage-lifecycle` worktree 实施，其默认摘要、归档回执、预算与 GC 尚未合入本主线。本页的当前 OTLP/工作区行为不能由该分支方案覆盖；合入时才更新跨组件保存和释放合同，原始任务与分支身份见[存储任务](../../tasks/experiment-storage-lifecycle/packet.md)。
+存储生命周期成果已按来源提交增量整合至当前开发主线和 I13；来源、合入身份、实际反馈及未验边界见[存储任务](../../tasks/experiment-storage-lifecycle/packet.md)与[I13 合入回执](../../tasks/iteration13/storage-lifecycle-integration.md)。源码接线不代表宿主资产已建立、预算停止/归档删除已实测或历史材料已迁移。

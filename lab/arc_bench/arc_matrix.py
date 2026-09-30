@@ -3,11 +3,27 @@
 import argparse
 import hashlib
 import json
+import math
 from pathlib import Path
 import re
 import sys
 
+from ..assets import host_runtime
 from .arc_artifacts import package_metadata
+
+
+def positive_float(value):
+    number = float(value)
+    if not math.isfinite(number) or number <= 0:
+        raise argparse.ArgumentTypeError("must be positive")
+    return number
+
+
+def nonnegative_float(value):
+    number = float(value)
+    if not math.isfinite(number) or number < 0:
+        raise argparse.ArgumentTypeError("must be nonnegative")
+    return number
 
 
 def verify_case(base, competition, task, requirements_only=False):
@@ -37,9 +53,19 @@ def verify_case(base, competition, task, requirements_only=False):
 
 def build(variants, cases, inputs_root, runner, image=None, env_file=None, workers=2,
           prepare_only=False, container_otlp_host="host.docker.internal", separate_evaluation=False,
-          requirements_only=False, gateway_state=None, gateway_include_vars=(), *, candidates=None, experiment_key=None):
+          requirements_only=False, gateway_state=None, gateway_include_vars=(), *, candidates=None,
+          experiment_key=None, storage=None, host_runtime_receipt=None):
     if not prepare_only and not image:
         raise ValueError("--image is required for a Runner run")
+    if storage and host_runtime_receipt is None:
+        raise ValueError("schema v3 requires --host-runtime")
+    runtime = host_runtime(host_runtime_receipt) if host_runtime_receipt else None
+    python = runtime["launcher"] if runtime else sys.executable
+    runtime_dependency = ({"purpose": "execution_cleanup", "kind": "host-lab-runtime",
+                           "location": runtime["root"], "launcher": runtime["launcher"],
+                           "receipt": runtime["receipt"], "identity": runtime["identity"]}
+                          if runtime else {"purpose": "execution_cleanup", "kind": "python",
+                                           "location": str(Path(sys.executable).absolute())})
     adapter = Path(__file__).resolve().parent
     noop = Path(__file__).with_name("arc_bench_noop.py").resolve()
     jobs = []
@@ -95,7 +121,7 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
             for key in (("requirements",) if requirements_only else ("requirements", "tests")):
                 if not Path(inputs[key]).is_dir():
                     raise ValueError(f"missing {key}: {inputs[key]}")
-            command = [sys.executable, "{adapter}/arc_bench_adapter.py", "--runner", "{runner}",
+            command = [python, "{adapter}/arc_bench_adapter.py", "--runner", "{runner}",
                        "--agent", "{agent}", "--requirements", "{requirements}",
                        "--workspace", "{workspace}",
                        "--competition", competition, "--task", task]
@@ -119,7 +145,7 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
                 inputs["gateway_service"] = str(Path(gateway_state).expanduser().resolve(strict=True) / "service.json")
                 inputs["gateway_callback"] = str(Path(gateway_state).expanduser().resolve(strict=True) /
                                                   "code/hackathon_gateway_compat.py")
-                wrapper = [sys.executable, "{gateway}", "wrap", "--service-state",
+                wrapper = [python, "{gateway}", "wrap", "--service-state",
                            str(Path(gateway_state).expanduser().resolve(strict=True)),
                            "--url-env", "OPENAI_BASE_URL", "--key-env", "OPENAI_API_KEY",
                            "--env-file-var", "ARC_MODEL_ENV_FILE"]
@@ -130,12 +156,12 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
                 command = wrapper + ["--"] + command
             if container_otlp_host != "host.docker.internal":
                 command += ["--container-otlp-host", container_otlp_host]
-            handlers = {action: [[sys.executable, "{adapter}/arc_bench_adapter.py",
+            handlers = {action: [[python, "{adapter}/arc_bench_adapter.py",
                                    "resource", action, "--workspace", "{workspace}"]]
                         for action in ("inspect", "cleanup")}
             if gateway_state:
                 for action in handlers:
-                    handlers[action].append([sys.executable, "{gateway}", "resource", action,
+                    handlers[action].append([python, "{gateway}", "resource", action,
                                              "--service-state", str(Path(gateway_state).expanduser().resolve(strict=True)),
                                              "--run-dir", "{run_dir}", "--run-id", "{run_id}"])
             arc_root = ("workspace/official-generation/template/.arc" if separate_evaluation or requirements_only
@@ -151,10 +177,15 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
                          "adapter_kind": "arc-bench", "result_path": "workspace/experiment-result.json",
                          "artifact_paths": arc_artifacts,
                          "resource_handlers": handlers,
+                         "dependencies": [runtime_dependency],
                          "venue": "official-local-prepare" if prepare_only else
                                   "official-local-generation" if requirements_only else "official-local-simulation",
                          "inputs": inputs, "command": command})
-    return {"schema_version": 2, "max_parallel": workers, "jobs": jobs}
+    result = {"schema_version": 3 if storage else 2, "max_parallel": workers, "jobs": jobs}
+    if storage:
+        result["storage"] = storage
+        result["controller_runtime"] = runtime_dependency
+    return result
 
 
 def main():
@@ -166,12 +197,26 @@ def main():
     parser.add_argument("--case", action="append", required=True, help="COMPETITION/TASK; repeatable")
     parser.add_argument("--inputs-root", type=Path, required=True)
     parser.add_argument("--runner", type=Path, required=True)
+    parser.add_argument("--host-runtime", type=Path, required=True,
+                        help="asset.json from scripts/runtime.py host-lab")
     parser.add_argument("--image")
     parser.add_argument("--env-file", type=Path)
     parser.add_argument("--gateway-state", type=Path, help="running local gateway state with per-run binding")
     parser.add_argument("--gateway-include-var", action="append", default=[],
                         help="copy one additional name from --env-file into the run client env")
     parser.add_argument("--workers", type=int, default=2)
+    parser.add_argument("--workspace-cap-gib", type=positive_float, required=True,
+                        help="each concurrent run's workspace limit")
+    parser.add_argument("--telemetry-cap-gib", type=positive_float, required=True,
+                        help="each concurrent run's raw OTLP limit")
+    parser.add_argument("--finalization-scratch-gib", type=positive_float, required=True,
+                        help="scratch required to finish one run without deleting active evidence")
+    parser.add_argument("--host-reserve-gib", type=positive_float, default=50,
+                        help="filesystem free-space floor; default: 50 GiB")
+    parser.add_argument("--build-cap-gib", type=nonnegative_float, default=0,
+                        help="additional package/image build peak")
+    parser.add_argument("--archive-level", choices=("decision",),
+                        default="decision")
     parser.add_argument("--container-otlp-host", default="host.docker.internal")
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--separate-evaluation", action="store_true")
@@ -179,10 +224,19 @@ def main():
                         help="Run published requirements without unavailable local tests; no score is produced")
     parser.add_argument("--output", type=Path, required=True)
     args = parser.parse_args()
+    gib = 1024 ** 3
+    storage = {"host_reserve_bytes": math.ceil(args.host_reserve_gib * gib),
+               "workspace_bytes_per_run": math.ceil(args.workspace_cap_gib * gib),
+               "telemetry_bytes_per_run": math.ceil(args.telemetry_cap_gib * gib),
+               "finalization_scratch_bytes_per_run": math.ceil(args.finalization_scratch_gib * gib),
+               "build_bytes": math.ceil(args.build_cap_gib * gib),
+               "archive_level": args.archive_level, "inode_reserve_percent": 10}
     result = build(args.variant, args.case, args.inputs_root, args.runner, args.image,
                    args.env_file, args.workers, args.prepare_only, args.container_otlp_host,
                    args.separate_evaluation, args.requirements_only,
-                   args.gateway_state, args.gateway_include_var, candidates=args.candidate, experiment_key=args.experiment_key)
+                   args.gateway_state, args.gateway_include_var, candidates=args.candidate,
+                   experiment_key=args.experiment_key, storage=storage,
+                   host_runtime_receipt=args.host_runtime)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
     print(args.output.resolve())

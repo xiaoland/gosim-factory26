@@ -59,7 +59,7 @@ Competition 和 Playground 展示已归档的 `runner_events`，按事件 ID 去
 各生产者的阶段字段以其实际记录为准。
 团队入口记录 prepared、braid 及结束阶段，旧生成和评测入口还有 setup、cleanup、install、build、health、tests 等记录，不能用一套阶段列表套用所有 run。
 失败保留 `failed_phase`，中断明确标记。
-Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目录及 Git common repo，以免销毁恢复依据；成功后清理。
+Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目录及 Git common repo，以免销毁恢复依据。I13 收尾写 `archive.json`，只有 `reclaim_state.status=eligible` 才删除 `work/`；真实归档复制/读取失败、声明原文未保存或仍有恢复承诺都会阻塞回收。原文完整而关联或 observer 覆盖不全时仍保留诊断缺口，不用其一概改写应用结果。冻结 I12 不随此改动升级。
 应用终态先持久化；原生会话缺少规范 header 时另存 `unparsed_native` 原始文件，标记归档错误，不伪造会话身份或覆盖应用结果。
 阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
 
@@ -148,3 +148,11 @@ printf '%s\n' '{"version":3,"intent":"trace","event":<match返回的ref对象>}'
 trace 返回关联调用的标准化上下文；只有需要精确原文或原生审计时才用 read。外部评测发生于生成之后，错误未必存在于生成 transcript；先判断用例暴露的应用缺口，再定向回看当时实现和自验，不能把用例编号强行关联到工具调用。
 
 新主线的只读跨链查询也可使用 `lab trace <生成run> --work-item issue:6` 或 `--session <native_id>`。它依据保存的身份字段列出来源，不按时间邻近推断因果；缺失和多义结果保留。原文分页和参数以 [Lab](../../lab/README.md)为准。
+
+## 存储回收候选
+
+`python3 -m lab gc-plan --root <记录域> --asset-root <稳定资产父目录> --protect <活动现场>` 只读已有记录并输出计划。先选择完整的消费记录域和明确保护路径；本命令不扫描运行进程来补造所有权，不应仅因旧目录或 `completed` 判定可删。
+
+首版只将有效 v1 `archive.json` 精确声明的 `work` 列为候选，核对 archive ID、持久对象身份、原文保存状态及恢复/保护引用。I12/I13 活跃或未确认状态受保护；缺件、摘要变化、旧回执缺少原文保存确认、扫描错误和恢复承诺都会阻塞。报告区分 `candidate`、`blocked` 和 `already_absent`，所有条目的 `reclaim_authorized` 都是 false。稳定资产的 `unreferenced_in_scope` 仅表示扫描范围内未见消费者，不构成删除权限。当前没有 GC apply；历史迁移、I12 现场处置和 WSL/VHDX 停机须另行授权。
+
+Console registry（如历史 I12 的 `console-runs.json`）尚未接入引用扫描。它可以引用 run 内 host binary、shared submission、state/native 原路径及长期访问容器的 mounts；停止 server 不会移除访问容器，也不解除这些依赖。扫描 `complete` 只覆盖支持的记录格式，操作前须按实际 registry 和容器事实对这些路径添加 `--protect`。Console 生命周期整理归独立设施任务，本入口不迁移其原文读取或 I12 现场。

@@ -2,12 +2,15 @@
 
 import argparse
 import json
+import math
 from pathlib import Path
 import shutil
 import sys
 
 from .arc_artifacts import application_source as application_origin, copy_snapshot, verify as verify_application
-from lab.plan import create
+from .arc_matrix import positive_float, nonnegative_float
+from lab.assets import host_runtime
+from lab.plan import create, storage_policy
 from lab.records import read_json
 from lab.run import start
 from lab.status import read_status
@@ -45,9 +48,16 @@ def _argument(command, flag):
     return command[command.index(flag) + 1] if flag in command else None
 
 
-def prepare(run, output, *, tests=None, selection=None, image=None, runner=None, experiment_key=None, case=None):
+def prepare(run, output, *, host_runtime_receipt, storage, tests=None, selection=None,
+            image=None, runner=None, experiment_key=None, case=None):
     run = Path(run).expanduser().resolve(strict=True)
     output = Path(output).expanduser().resolve()
+    storage = storage_policy({"storage": storage}, 3)
+    runtime = host_runtime(host_runtime_receipt)
+    python = runtime["launcher"]
+    runtime_dependency = {"purpose": "execution_cleanup", "kind": "host-lab-runtime",
+                          "location": runtime["root"], "launcher": python,
+                          "receipt": runtime["receipt"], "identity": runtime["identity"]}
     state = read_status(run)
     app = source_application(run)
     tests = Path(tests).expanduser().resolve(strict=True) if tests else source_input(run, state, "tests")
@@ -77,7 +87,7 @@ def prepare(run, output, *, tests=None, selection=None, image=None, runner=None,
                          "application": str(source / "application"),
                          "application_receipt": str(source / "receipt.json"),
                          "requirements": str(requirement), "tests": str(tests), "runner": str(runner)}
-        argv = [sys.executable, "{adapter}/arc_bench_adapter.py", "--runner", "{runner}",
+        argv = [python, "{adapter}/arc_bench_adapter.py", "--runner", "{runner}",
                 "--application", "{application}", "--application-receipt", "{application_receipt}",
                 "--noop-script", "{noop}", "--requirements", "{requirements}",
                 "--tests", "{tests}", "--workspace", "{workspace}",
@@ -98,14 +108,17 @@ def prepare(run, output, *, tests=None, selection=None, image=None, runner=None,
                "source_application": application_origin(state, run, receipt,
                    "published" if ".lab-artifacts" in app.parts else "imported-now"),
                "inputs": frozen_inputs, "command": argv,
-               "resource_handlers": {action: [sys.executable, "{adapter}/arc_bench_adapter.py",
+               "dependencies": [runtime_dependency],
+               "resource_handlers": {action: [python, "{adapter}/arc_bench_adapter.py",
                                              "resource", action, "--workspace", "{workspace}"]
                                      for action in ("inspect", "cleanup")},
                "artifact_paths": ["workspace/official/local-result.json",
                                   "workspace/official/template/.arc/playwright-report.json",
                                   "workspace/evaluation.stdout.log", "workspace/evaluation.stderr.log"]}
         recipe = staging / "recipe.json"
-        recipe.write_text(json.dumps({"schema_version": 2, "max_parallel": 1, "jobs": [job]}, indent=2) + "\n")
+        recipe.write_text(json.dumps({"schema_version": 3, "max_parallel": 1, "jobs": [job],
+                                      "storage": storage, "controller_runtime": runtime_dependency},
+                                     indent=2) + "\n")
         return create(recipe, experiment_root=output)
     finally:
         shutil.rmtree(staging)
@@ -118,14 +131,30 @@ def main(argv=None):
     parser.add_argument("--tests", type=Path, help="explicit frozen test directory if source run has none")
     parser.add_argument("--selection", type=Path)
     parser.add_argument("--runner", type=Path)
+    parser.add_argument("--host-runtime", type=Path, required=True,
+                        help="asset.json from scripts/runtime.py host-lab")
+    parser.add_argument("--workspace-cap-gib", type=positive_float, required=True)
+    parser.add_argument("--telemetry-cap-gib", type=positive_float, required=True)
+    parser.add_argument("--finalization-scratch-gib", type=positive_float, required=True)
+    parser.add_argument("--host-reserve-gib", type=positive_float, default=50)
+    parser.add_argument("--build-cap-gib", type=nonnegative_float, default=0)
+    parser.add_argument("--archive-level", choices=("decision",), default="decision")
     parser.add_argument("--image", help="image ID; changing it creates a different evaluation condition")
     parser.add_argument("--plan-only", action="store_true")
     parser.add_argument("--experiment-key")
     parser.add_argument("--case", help="experiment configuration row, independent of source variant")
     parser.add_argument("--run-labels", type=Path, help="execution labels for job evaluation")
     args = parser.parse_args(argv)
+    gib = 1024 ** 3
+    storage = {"host_reserve_bytes": math.ceil(args.host_reserve_gib * gib),
+               "workspace_bytes_per_run": math.ceil(args.workspace_cap_gib * gib),
+               "telemetry_bytes_per_run": math.ceil(args.telemetry_cap_gib * gib),
+               "finalization_scratch_bytes_per_run": math.ceil(args.finalization_scratch_gib * gib),
+               "build_bytes": math.ceil(args.build_cap_gib * gib),
+               "archive_level": args.archive_level, "inode_reserve_percent": 10}
     experiment = prepare(args.run, args.output, tests=args.tests, selection=args.selection,
-                         runner=args.runner, image=args.image, experiment_key=args.experiment_key, case=args.case)
+                         runner=args.runner, image=args.image, experiment_key=args.experiment_key, case=args.case,
+                         host_runtime_receipt=args.host_runtime, storage=storage)
     print(json.dumps({"experiment": str(experiment), "source_run": str(args.run)}, ensure_ascii=False), flush=True)
     return 0 if args.plan_only else start(experiment, run_labels=read_json(args.run_labels) if args.run_labels else None)
 

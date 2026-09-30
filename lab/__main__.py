@@ -11,6 +11,7 @@ import subprocess
 import sys
 import time
 
+from .assets import frozen_host_runtime
 from .control import owner_state, process_start, send, wait_for_change
 from .otlp import SIGNALS, database_for_run, export_batches, list_batches, list_receive_errors, new_session, receiver
 from .plan import create
@@ -188,6 +189,12 @@ def _resource_action(run, action):
         commands = None
     if not commands:
         return {"status": "unavailable", "reason": f"no frozen {action} handler"}
+    if manifest.get("schema_version") == 3:
+        try:
+            frozen_host_runtime(manifest.get("controller_runtime"))
+        except (OSError, ValueError) as exc:
+            return {"status": "unconfirmed",
+                    "reason": f"host runtime verification failed: {type(exc).__name__}: {exc}"}
     if isinstance(commands[0], str):
         commands = [commands]
     mapping = {"run_id": Path(run).name, "run_dir": str(run),
@@ -266,6 +273,10 @@ def main(argv=None):
     reconcile.add_argument("reference", type=Path)
     cleanup = commands.add_parser("cleanup", help="explicitly clean frozen owned resources of one run")
     cleanup.add_argument("run", type=Path)
+    gc_plan_cmd = commands.add_parser("gc-plan", help="build a read-only, receipt-bound reclamation plan")
+    gc_plan_cmd.add_argument("--root", action="append", type=Path, required=True)
+    gc_plan_cmd.add_argument("--asset-root", action="append", type=Path, default=[])
+    gc_plan_cmd.add_argument("--protect", action="append", type=Path, default=[])
     evidence = commands.add_parser("evidence")
     evidence.add_argument("run", type=Path)
     evidence.add_argument("path", nargs="?")
@@ -408,6 +419,11 @@ def main(argv=None):
         write_json(output / f"cleanup-{time.time_ns()}.json", {"run": str(run), **result})
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0 if result["status"] == "completed" else 2
+    if args.action == "gc-plan":
+        from .gc import plan as gc_plan
+        value = gc_plan(args.root, args.asset_root, args.protect)
+        print(json.dumps(value, ensure_ascii=False, indent=2))
+        return 0 if value["complete"] else 2
     if args.action == "evidence":
         if args.path and args.session:
             parser.error("path and --session are mutually exclusive")

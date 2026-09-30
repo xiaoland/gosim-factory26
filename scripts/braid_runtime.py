@@ -76,16 +76,19 @@ def archive_state(state, output):
     return entries
 
 
-def export_telemetry(output, work, archived_manifest, env=None):
-    """补采已归档的原生证据；遥测失败不改变归档或应用终态。"""
+def export_telemetry(output, work, archived_manifest, env=None, *, portable=False):
+    """导出归档摘要；只有显式 portable 才把原文复制进 OTLP。"""
     state = output/'braid-state'
     environment = env if env is not None else os.environ
     if not state.is_dir() or not any(environment.get(key) for key in (
             'OTEL_EXPORTER_OTLP_ENDPOINT', 'OTEL_EXPORTER_OTLP_TRACES_ENDPOINT',
             'OTEL_EXPORTER_OTLP_LOGS_ENDPOINT', 'OTEL_EXPORTER_OTLP_METRICS_ENDPOINT')):
-        return
+        result = {'status': 'not_configured', 'mode': 'portable' if portable else 'summary'}
+        (output/'telemetry-export-status.json').write_text(
+            json.dumps(result, ensure_ascii=False, indent=2)+'\n')
+        return result
     log_path = output/'telemetry-export.log'
-    result = {'log': log_path.name}
+    result = {'log': log_path.name, 'mode': 'portable' if portable else 'summary'}
     try:
         gaps = []
         identities = []
@@ -144,8 +147,11 @@ def export_telemetry(output, work, archived_manifest, env=None):
         manifest.write_text(json.dumps(dict(schema_version=1, run_id=identities[0],
                                             sessions=sessions, gaps=gaps), ensure_ascii=False, indent=2)+'\n')
         with log_path.open('a') as log:
-            proc = subprocess.run([str(work/'bin/braid'), 'telemetry', 'export', '--state', str(state),
-                                   '--native-manifest', str(manifest)], stdout=subprocess.PIPE,
+            command = [str(work/'bin/braid'), '--state', str(state), 'telemetry', 'export',
+                       '--native-manifest', str(manifest)]
+            if portable:
+                command.append('--portable')
+            proc = subprocess.run(command, stdout=subprocess.PIPE,
                                    stderr=log, timeout=120, text=True, env=environment)
             log.write(proc.stdout)
         result.update(status='exited', exit_code=proc.returncode)
@@ -165,3 +171,4 @@ def export_telemetry(output, work, archived_manifest, env=None):
         (output/'telemetry-export-status.json').write_text(json.dumps(result, ensure_ascii=False, indent=2)+'\n')
     except OSError as exc:
         print(f'无法保存 Braid telemetry export 状态: {exc}', file=sys.stderr)
+    return result

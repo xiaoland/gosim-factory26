@@ -14,6 +14,7 @@ import sys
 from threading import Event, Thread
 import time
 
+from .assets import frozen_host_runtime
 from .control import Control, exclusive, process_start
 from .otlp import SIGNALS, database_for_run, initialize, list_batches, new_session, receiver
 from .plan import create
@@ -89,6 +90,43 @@ def execution_labels(manifest, requested):
     return requested
 
 
+def _storage_preflight(experiment, manifest, slots, *, retry=False):
+    root = _run_root(experiment, manifest)
+    policy = manifest.get("storage")
+    observed_at = time.time()
+    identifier = f"{time.time_ns()}-{secrets.token_hex(4)}"
+    if policy is None:
+        receipt = {"schema_version": 1, "id": identifier, "status": "legacy-unbudgeted",
+                   "observed_at": observed_at, "filesystem": str(root)}
+    else:
+        stats = os.statvfs(root)
+        available = stats.f_bavail * stats.f_frsize
+        free_inodes = stats.f_favail
+        inode_reserve = stats.f_files * policy["inode_reserve_percent"] // 100
+        concurrent = 1 if retry else slots
+        per_run = (policy["workspace_bytes_per_run"] + policy["telemetry_bytes_per_run"] +
+                   policy["finalization_scratch_bytes_per_run"])
+        required = (policy["host_reserve_bytes"] + concurrent * per_run +
+                    (0 if retry else policy["build_bytes"]))
+        ready = available >= required and free_inodes >= inode_reserve
+        receipt = {"schema_version": 1, "id": identifier,
+                   "status": "ready" if ready else "blocked", "observed_at": observed_at,
+                   "filesystem": str(root), "slots": concurrent, "retry": retry,
+                   "policy": policy, "available_bytes": available,
+                   "required_bytes": required, "free_inodes": free_inodes,
+                   "required_free_inodes": inode_reserve}
+    destination = Path(experiment) / "storage-preflights" / f"{identifier}.json"
+    write_json(destination, receipt)
+    write_json(Path(experiment) / "storage-preflight.json", receipt)
+    if receipt["status"] == "blocked":
+        raise ValueError(
+            f"storage preflight blocked: available={receipt['available_bytes']} "
+            f"required={receipt['required_bytes']} free_inodes={receipt['free_inodes']} "
+            f"required_free_inodes={receipt['required_free_inodes']}; receipt={destination}"
+        )
+    return receipt
+
+
 def _allocate(experiment, manifest, controller, retry_of=None, operation_id=None, run_labels=None):
     runs = _run_root(experiment, manifest)
     requested = []
@@ -141,6 +179,12 @@ def _allocate(experiment, manifest, controller, retry_of=None, operation_id=None
                  "inputs": frozen, "command": command, "result_path": result_path,
                  "artifact_paths": artifact_paths, "adapter_kind": job.get("adapter_kind"),
                  "resource_handlers": resource_handlers}
+        if manifest.get("controller_runtime"):
+            state["controller_runtime"] = manifest["controller_runtime"]
+        if job.get("dependencies"):
+            state["dependencies"] = job["dependencies"]
+        if manifest.get("storage"):
+            state["storage"] = manifest["storage"]
         if job.get("source_application"):
             state["source_application"] = job["source_application"]
         if preflight_error:
@@ -264,6 +308,141 @@ def _signal_stop(event_queue):
     signal.signal(signal.SIGTERM, handle)
 
 
+def _run_storage_usage(root):
+    by_inode = {}
+    errors = []
+    telemetry_paths = {root / name for name in
+                       ("telemetry.sqlite", "telemetry.sqlite-wal", "telemetry.sqlite-shm")}
+    for database in (root / "workspace").glob("*/template/.factory26/*/telemetry.sqlite"):
+        telemetry_paths.update((database, database.with_name("telemetry.sqlite-wal"),
+                                database.with_name("telemetry.sqlite-shm")))
+    for directory, names, files in os.walk(root, followlinks=False, onerror=errors.append):
+        names.sort(); files.sort()
+        folder = Path(directory)
+        paths = [folder/name for name in names + files]
+        if folder == Path(root):
+            paths.insert(0, folder)
+        for path in paths:
+            try:
+                info = path.lstat()
+            except FileNotFoundError:
+                continue
+            except OSError as exc:
+                errors.append(exc)
+                continue
+            key = (info.st_dev, info.st_ino)
+            prior = by_inode.get(key, {"bytes": 0, "telemetry": False})
+            by_inode[key] = {"bytes": max(prior["bytes"], info.st_blocks * 512),
+                             "telemetry": prior["telemetry"] or path in telemetry_paths}
+    allocated = sum(item["bytes"] for item in by_inode.values())
+    telemetry = sum(item["bytes"] for item in by_inode.values() if item["telemetry"])
+    return {"allocated_bytes": allocated, "workspace_bytes": max(0, allocated - telemetry),
+            "telemetry_bytes": telemetry, "inodes": len(by_inode),
+            "scan_errors": [f"{type(error).__name__}: {error}" for error in errors]}
+
+
+def _storage_observation(experiment, manifest, active):
+    root = _run_root(experiment, manifest)
+    policy = manifest["storage"]
+    runs = {name: _run_storage_usage(path) for name, path in sorted(active.items())}
+    stats = os.statvfs(root)
+    reasons = []
+    hard_runs = set()
+    status = "ready"
+    for run_id, usage in runs.items():
+        for field, cap in (("workspace_bytes", policy["workspace_bytes_per_run"]),
+                           ("telemetry_bytes", policy["telemetry_bytes_per_run"])):
+            if usage[field] >= cap:
+                status = "hard"
+                hard_runs.add(run_id)
+                reasons.append(f"{run_id} {field}={usage[field]} reached cap={cap}")
+            elif usage[field] >= cap * 4 // 5 and status != "hard":
+                status = "soft"
+                reasons.append(f"{run_id} {field}={usage[field]} reached 80% of cap={cap}")
+    scan_errors = [{"run_id": run_id, "errors": usage["scan_errors"]}
+                   for run_id, usage in runs.items() if usage["scan_errors"]]
+    if scan_errors and status == "ready":
+        status = "unknown"
+        reasons.append("one or more run directory scans were incomplete")
+    available = stats.f_bavail * stats.f_frsize
+    free_inodes = stats.f_favail
+    inode_reserve = stats.f_files * policy["inode_reserve_percent"] // 100
+    host_hard = available < policy["host_reserve_bytes"] or free_inodes < inode_reserve
+    if host_hard:
+        status = "hard"
+        reasons.append(
+            f"host reserve crossed: available={available}/{policy['host_reserve_bytes']} "
+            f"free_inodes={free_inodes}/{inode_reserve}"
+        )
+    soft_floor = (policy["host_reserve_bytes"] +
+                  max(1, len(active)) * policy["finalization_scratch_bytes_per_run"])
+    if status in {"ready", "unknown"} and available < soft_floor:
+        status = "soft"
+        reasons.append(f"available={available} below finalization floor={soft_floor}")
+    return {"schema_version": 1, "observed_at": time.time(), "status": status,
+            "filesystem": str(root), "available_bytes": available,
+            "free_inodes": free_inodes, "required_free_inodes": inode_reserve,
+            "runs": runs, "hard_runs": sorted(hard_runs), "host_hard": host_hard,
+            "scan_errors": scan_errors, "reasons": reasons}
+
+
+def _measure_storage(experiment, manifest, active, events):
+    try:
+        observation = _storage_observation(experiment, manifest, active)
+    except Exception as exc:
+        observation = {"schema_version": 1, "observed_at": time.time(), "status": "unknown",
+                       "filesystem": str(Path(experiment) / manifest["runs_root"]), "host_hard": False,
+                       "hard_runs": [], "runs": {},
+                       "scan_errors": [{"error": f"{type(exc).__name__}: {exc}"}],
+                       "reasons": ["storage observation failed"]}
+    events.put(("storage-observed", observation))
+
+
+def _append_storage_observation(experiment, observation):
+    path = Path(experiment) / "storage-observations.jsonl"
+    with path.open("a") as stream:
+        stream.write(json.dumps(observation, ensure_ascii=False) + "\n")
+        stream.flush()
+        os.fsync(stream.fileno())
+
+
+def _storage_stop_record(observation):
+    return {**observation, "writer_scope": "controller_process_group",
+            "resource_state": "unconfirmed"}
+
+
+def _diagnostic(message):
+    try:
+        os.write(2, (message + "\n").encode(errors="replace"))
+    except OSError:
+        pass
+
+
+def _stop_active(active, sig=signal.SIGTERM, names=None):
+    selected = active.values() if names is None else (
+        active[name] for name in names if name in active)
+    for current in selected:
+        current["stop"].set()
+        process = current["process"]
+        if process is not None and process.poll() is None:
+            try:
+                os.killpg(process.pid, sig)
+            except ProcessLookupError:
+                pass
+
+
+def _request_stop(active, targets, kill_targets, kill_escalated, deadline, stop_grace):
+    targets = set(targets)
+    kill_targets.update(targets)
+    if kill_escalated:
+        _stop_active(active, signal.SIGKILL, names=targets)
+    else:
+        _stop_active(active, names=targets)
+        if targets and deadline is None:
+            deadline = time.monotonic() + stop_grace
+    return deadline
+
+
 def controller(experiment, *, retry_of=None, listen_host="127.0.0.1", stop_grace=30, run_labels=None):
     experiment = Path(experiment).resolve(strict=True)
     manifest = read_json(experiment / "manifest.json")
@@ -271,12 +450,23 @@ def controller(experiment, *, retry_of=None, listen_host="127.0.0.1", stop_grace
         raise ValueError("controller needs a frozen experiment")
     run_labels = execution_labels(manifest, run_labels)
     with exclusive(experiment), receiver(listen_host) as server:
+        preflight = _storage_preflight(experiment, manifest, manifest["max_parallel"],
+                                       retry=retry_of is not None)
         control = Control(experiment)
         _signal_stop(control.commands)
         pending = deque()
         active = {}
         slots = manifest["max_parallel"]
         stopping = False
+        stopping_reason = None
+        dispatch_paused = False
+        storage_stop = None
+        budget_stops = {}
+        kill_targets = set()
+        kill_escalated = False
+        controller_started = time.monotonic()
+        next_storage_check = controller_started + 180 if manifest.get("storage") else None
+        storage_scan_running = False
         deadline = None
         try:
             operation_id = secrets.token_hex(12)
@@ -284,7 +474,7 @@ def controller(experiment, *, retry_of=None, listen_host="127.0.0.1", stop_grace
             write_json(operation_dir / f"{operation_id}.request.json", {
                 "id": operation_id, "action": "retry" if retry_of else "run",
                 "retry_of": str(retry_of) if retry_of else None, "created_at": time.time(),
-                "run_labels": run_labels})
+                "run_labels": run_labels, "storage_preflight": preflight["id"]})
             pending = deque(_allocate(experiment, manifest, control, retry_of, operation_id, run_labels))
             write_json(operation_dir / f"{operation_id}.result.json", {
                 "id": operation_id, "action": "retry" if retry_of else "run",
@@ -292,17 +482,33 @@ def controller(experiment, *, retry_of=None, listen_host="127.0.0.1", stop_grace
             control.emit("operation", operation_id=operation_id,
                          action="retry" if retry_of else "run", allocated=len(pending))
             while pending or active:
-                while pending and not stopping and len(active) < slots:
-                    run, state = pending.popleft()
-                    requested = Event()
-                    thread = Thread(target=_worker, args=(run, server, control.commands, requested), daemon=True)
-                    active[run.name] = {"run": run, "thread": thread, "stop": requested, "process": None}
-                    thread.start()
-                timeout = max(0, deadline - time.monotonic()) if deadline is not None else None
-                try:
-                    item = control.commands.get(timeout=timeout)
-                except Empty:
-                    item = ("stop-deadline",)
+                now = time.monotonic()
+                item = ("stop-deadline",) if deadline is not None and now >= deadline else None
+                if (item is None and next_storage_check is not None and
+                        now >= next_storage_check and not storage_scan_running):
+                    snapshot = {name: current["run"] for name, current in active.items()}
+                    Thread(target=_measure_storage,
+                           args=(experiment, manifest, snapshot, control.commands), daemon=True).start()
+                    storage_scan_running = True
+                    next_storage_check = None
+                if item is None:
+                    while (pending and not stopping and not dispatch_paused and
+                           not storage_scan_running and len(active) < slots):
+                        run, state = pending.popleft()
+                        requested = Event()
+                        thread = Thread(target=_worker, args=(run, server, control.commands, requested), daemon=True)
+                        active[run.name] = {"run": run, "thread": thread, "stop": requested,
+                                            "process": None}
+                        thread.start()
+                    now = time.monotonic()
+                    timeouts = ([max(0, deadline - now)] if deadline is not None else [])
+                    if next_storage_check is not None:
+                        timeouts.append(max(0, next_storage_check - now))
+                    timeout = min(timeouts) if timeouts else None
+                    try:
+                        item = control.commands.get(timeout=timeout)
+                    except Empty:
+                        continue
                 if len(item) == 2 and isinstance(item[0], dict):
                     request, reply = item
                     identifier = request.get("id")
@@ -317,74 +523,134 @@ def controller(experiment, *, retry_of=None, listen_host="127.0.0.1", stop_grace
                     saved = read_json(operation_dir / f"{identifier}.request.json")
                     action = saved.get("action")
                     if action == "parallel" and type(saved.get("slots")) is int and saved["slots"] > 0:
-                        slots = saved["slots"]
-                        response = {"id": identifier, "action": action, "slots": slots}
+                        try:
+                            checked = _storage_preflight(experiment, manifest, saved["slots"])
+                            slots = saved["slots"]
+                            response = {"id": identifier, "action": action, "slots": slots,
+                                        "storage_preflight": checked["id"]}
+                        except (OSError, ValueError) as exc:
+                            response = {"id": identifier, "action": action,
+                                        "error": f"{type(exc).__name__}: {exc}"}
                     elif action == "stop":
                         stopping = True
-                        deadline = time.monotonic() + stop_grace
-                        for item_active in active.values():
-                            item_active["stop"].set()
-                            process = item_active["process"]
-                            if process is not None and process.poll() is None:
-                                try:
-                                    os.killpg(process.pid, signal.SIGTERM)
-                                except ProcessLookupError:
-                                    pass
+                        stopping_reason = "requested"
+                        deadline = _request_stop(active, active, kill_targets, kill_escalated,
+                                                 deadline, stop_grace)
                         response = {"id": identifier, "action": action, "status": "requested"}
                     else:
                         response = {"id": identifier, "error": f"unknown action: {action}"}
-                    write_json(outcome, response)
-                    control.emit("operation", operation_id=identifier, action=action)
+                    try:
+                        write_json(outcome, response)
+                        control.emit("operation", operation_id=identifier, action=action)
+                    except OSError as exc:
+                        detail = f"{type(exc).__name__}: {exc}"
+                        response = {**response,
+                                    "error": f"operation enacted but receipt persistence failed: {detail}"}
+                        _diagnostic(f"operation receipt persistence failed: {detail}")
                     reply.put(response)
                 elif item[0] == "signal":
                     stopping = True
-                    deadline = time.monotonic() + stop_grace
-                    for current in active.values():
-                        current["stop"].set()
-                        process = current["process"]
-                        if process is not None and process.poll() is None:
-                            try:
-                                os.killpg(process.pid, signal.SIGTERM)
-                            except ProcessLookupError:
-                                pass
+                    stopping_reason = f"signal:{item[1]}"
+                    deadline = _request_stop(active, active, kill_targets, kill_escalated,
+                                             deadline, stop_grace)
                 elif item[0] == "started":
                     _, run, process = item
                     current = active[run.name]
                     current["process"] = process
+                    if run.name in kill_targets:
+                        _stop_active(active, signal.SIGKILL if kill_escalated else signal.SIGTERM,
+                                     names={run.name})
                     state = read_status(run)
                     state.update(phase="running", started_at=time.time(), pid=process.pid,
                                  process_start=process_start(process.pid), pgid=process.pid)
-                    write_json(run / "run.json", {k: v for k, v in state.items() if k != "path"})
-                    control.emit("attempt-started", run_id=run.name, pid=process.pid)
+                    try:
+                        write_json(run / "run.json", {k: v for k, v in state.items() if k != "path"})
+                        control.emit("attempt-started", run_id=run.name, pid=process.pid)
+                    except OSError as exc:
+                        _diagnostic(f"attempt start persistence failed: {type(exc).__name__}: {exc}")
                 elif item[0] in ("exited", "launch-error", "cancelled"):
                     kind, run, value = item
                     current = active.pop(run.name)
                     current["thread"].join()
                     state = read_status(run)
-                    state.update(phase="cancelled" if stopping or kind == "cancelled" else "finished",
+                    budget_stop = budget_stops.pop(run.name, None)
+                    state.update(phase="cancelled" if stopping or kind == "cancelled" or budget_stop
+                                 else "finished",
                                  finished_at=time.time())
+                    if budget_stop is not None:
+                        state["cancellation"] = "storage_budget_exceeded"
+                        state["storage_budget"] = _storage_stop_record(budget_stop)
+                    elif stopping:
+                        state["cancellation"] = stopping_reason or "controller-stop"
+                    if storage_stop is not None and budget_stop is None:
+                        state["storage_budget"] = _storage_stop_record(storage_stop)
                     if kind == "exited":
                         state["runner_exit_code"] = value
                     else:
                         state["error"] = value
-                    _collect(run, {k: v for k, v in state.items() if k != "path"})
-                    control.emit("attempt-exited", run_id=run.name, phase=state["phase"],
-                                 exit_code=state.get("runner_exit_code"))
+                    try:
+                        _collect(run, {k: v for k, v in state.items() if k != "path"})
+                        control.emit("attempt-exited", run_id=run.name, phase=state["phase"],
+                                     exit_code=state.get("runner_exit_code"))
+                    except OSError as exc:
+                        _diagnostic(f"attempt exit persistence failed: {type(exc).__name__}: {exc}")
+                    if dispatch_paused and next_storage_check is not None:
+                        next_storage_check = min(next_storage_check, time.monotonic())
+                    kill_targets.discard(run.name)
+                    if not kill_targets and not stopping:
+                        deadline = None
+                        kill_escalated = False
+                elif item[0] == "storage-observed":
+                    observation = item[1]
+                    storage_scan_running = False
+                    stale_runs = set(observation["runs"]) - set(active)
+                    previous = dispatch_paused
+                    dispatch_paused = observation["status"] in {"soft", "hard", "unknown"}
+                    if observation["status"] == "hard":
+                        if observation["host_hard"]:
+                            storage_stop = observation
+                            stopping = True
+                            stopping_reason = "storage_budget_exceeded"
+                            deadline = _request_stop(active, active, kill_targets, kill_escalated,
+                                                     deadline, stop_grace)
+                        else:
+                            targets = set(observation["hard_runs"]) & set(active)
+                            budget_stops.update((name, observation) for name in targets)
+                            deadline = _request_stop(active, targets, kill_targets, kill_escalated,
+                                                     deadline, stop_grace)
+                    interval = 180 if time.monotonic() - controller_started < 600 else 480
+                    next_storage_check = time.monotonic() + (0 if stale_runs else interval)
+                    try:
+                        _append_storage_observation(experiment, observation)
+                    except OSError as exc:
+                        _diagnostic(f"storage observation persistence failed: "
+                                    f"{type(exc).__name__}: {exc}")
+                    try:
+                        if observation["status"] == "hard":
+                            control.emit("storage-budget-hard", reasons=observation["reasons"])
+                        elif dispatch_paused != previous:
+                            control.emit("storage-dispatch-paused" if dispatch_paused else
+                                         "storage-dispatch-resumed", reasons=observation["reasons"])
+                    except OSError as exc:
+                        _diagnostic(f"storage notification persistence failed: "
+                                    f"{type(exc).__name__}: {exc}")
                 elif item[0] == "stop-deadline":
-                    for current in active.values():
-                        process = current["process"]
-                        if process is not None and process.poll() is None:
-                            try:
-                                os.killpg(process.pid, signal.SIGKILL)
-                            except ProcessLookupError:
-                                pass
+                    _stop_active(active, signal.SIGKILL, kill_targets)
+                    kill_escalated = True
                     deadline = None
                 if stopping:
                     while pending:
                         run, state = pending.popleft()
-                        state.update(phase="cancelled", finished_at=time.time(), cancellation="before-start")
-                        write_json(run / "run.json", state)
-                        control.emit("attempt-cancelled", run_id=run.name)
+                        state.update(phase="cancelled", finished_at=time.time(),
+                                     cancellation=stopping_reason or "before-start")
+                        if storage_stop is not None:
+                            state["storage_budget"] = _storage_stop_record(storage_stop)
+                        try:
+                            write_json(run / "run.json", state)
+                            control.emit("attempt-cancelled", run_id=run.name)
+                        except OSError as exc:
+                            _diagnostic(f"attempt cancellation persistence failed: "
+                                        f"{type(exc).__name__}: {exc}")
         finally:
             for current in active.values():
                 current["stop"].set()
@@ -399,6 +665,12 @@ def controller(experiment, *, retry_of=None, listen_host="127.0.0.1", stop_grace
                     state = read_status(run)
                     state.update(phase="lost", ownership_observed_at=time.time(),
                                  controller_error="controller ended before the attempt exit was recorded")
+                    if run.name in budget_stops:
+                        state["cancellation"] = "storage_budget_exceeded"
+                        state["storage_budget"] = _storage_stop_record(budget_stops[run.name])
+                    elif storage_stop is not None:
+                        state["cancellation"] = "storage_budget_exceeded"
+                        state["storage_budget"] = _storage_stop_record(storage_stop)
                     write_json(run / "run.json", {k: v for k, v in state.items() if k != "path"})
                 except OSError:
                     pass
@@ -417,13 +689,16 @@ def controller(experiment, *, retry_of=None, listen_host="127.0.0.1", stop_grace
 def _frozen_command(experiment, *, retry_of=None, listen_host="127.0.0.1", run_labels=None):
     experiment = Path(experiment).resolve(strict=True)
     source = experiment / "controller-source"
+    manifest = read_json(experiment / "manifest.json")
+    runtime = manifest.get("controller_runtime", {})
+    python = frozen_host_runtime(runtime)["launcher"] if manifest.get("schema_version") == 3 else sys.executable
     env = dict(os.environ)
     env["PYTHONPATH"] = str(source) + (os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
-    command = [sys.executable, "-m", "lab", "_controller", str(experiment), "--listen-host", listen_host]
+    command = [python, "-m", "lab", "_controller", str(experiment), "--listen-host", listen_host]
     if retry_of:
         command += ["--retry-of", str(Path(retry_of).resolve(strict=True))]
     if run_labels is not None:
-        execution_labels(read_json(experiment / "manifest.json"), run_labels)
+        execution_labels(manifest, run_labels)
         # Pass the consumed contents, not a mutable file read later by a background controller.
         command += ["--run-labels-json", json.dumps(run_labels, ensure_ascii=False)]
     return command, env

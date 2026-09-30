@@ -19,7 +19,7 @@ from agent_support import (save, phase, hashes, digest, logged, cleanup_workspac
                            start_local_telemetry, telemetry_environment, stop_local_telemetry)
 from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
                            export_delivery, archive_state)
-from core import archive_sessions
+from core import archive_sessions, finalize_archive
 
 HERE = Path(__file__).resolve().parent
 VARIANT = 'pi-braid-i13'
@@ -361,12 +361,26 @@ def generate(args):
                 metadata['telemetry_diagnostic_error'] = f'{type(exc).__name__}: {exc}'
         metadata.update(generation_seconds=time.monotonic()-begin, generation_finished_at=time.time())
         phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
-    if (error is not None or metadata.get('process_exit_code') != 0 or
-            metadata.get('braid', {}).get('status') != 'quiescent' or
-            history.get('status') != 'completed'):
+    recovery_required = (error is not None or metadata.get('process_exit_code') != 0 or
+                         metadata.get('braid', {}).get('status') != 'quiescent' or
+                         history.get('status') != 'completed')
+    if recovery_required:
         save(run/'recovery-workspace.json', {'path':str(work), 'request':str(run/'braid-request.json')})
-    else:
-        shutil.rmtree(work)
+    try:
+        receipt = finalize_archive(run, reclaim_workspace=not recovery_required)
+        if receipt['reclaim_state']['status'] == 'eligible':
+            shutil.rmtree(work)
+        elif work.exists() and not recovery_required:
+            save(run/'recovery-workspace.json', {
+                'path':str(work), 'request':str(run/'braid-request.json'),
+                'reason':'archive receipt did not authorize workspace reclamation'})
+            finalize_archive(run, reclaim_workspace=False)
+    except Exception as exc:
+        metadata['archive_error'] = f'{type(exc).__name__}: {exc}'
+        save(run/'recovery-workspace.json', {
+            'path':str(work), 'request':str(run/'braid-request.json'),
+            'reason':'archive finalization failed', 'error':metadata['archive_error']})
+        phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
     if error is not None:
         raise error
     return run

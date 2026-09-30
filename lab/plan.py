@@ -9,13 +9,39 @@ import socket
 import sys
 import time
 
+from .assets import host_runtime
 from .records import inventory, merge_labels, read_json, write_json
+
+
+def storage_policy(manifest, version):
+    policy = manifest.get("storage")
+    if version < 3:
+        if policy is not None:
+            raise ValueError("storage policy requires schema_version 3")
+        return None
+    if not isinstance(policy, dict):
+        raise ValueError("schema_version 3 requires a storage policy")
+    required = ("host_reserve_bytes", "workspace_bytes_per_run", "telemetry_bytes_per_run",
+                "finalization_scratch_bytes_per_run", "build_bytes", "archive_level")
+    if any(name not in policy for name in required):
+        raise ValueError("storage policy is missing required fields")
+    for name in required[:-1]:
+        value = policy[name]
+        if type(value) is not int or value < (0 if name == "build_bytes" else 1):
+            raise ValueError(f"storage {name} must be a positive integer byte count")
+    if policy["archive_level"] != "decision":
+        raise ValueError("only the implemented decision archive level is supported")
+    percent = policy.get("inode_reserve_percent", 10)
+    if type(percent) is not int or not 1 <= percent <= 50:
+        raise ValueError("storage inode_reserve_percent must be an integer from 1 to 50")
+    return {name: policy[name] for name in required} | {"inode_reserve_percent": percent}
 
 
 def normalize(manifest, base):
     version = manifest.get("schema_version")
-    if version not in (1, 2) or not isinstance(manifest.get("jobs"), list) or not manifest["jobs"]:
-        raise ValueError("manifest must contain schema_version 1 or 2 and a nonempty jobs list")
+    if version not in (1, 2, 3) or not isinstance(manifest.get("jobs"), list) or not manifest["jobs"]:
+        raise ValueError("manifest must contain schema_version 1, 2 or 3 and a nonempty jobs list")
+    storage = storage_policy(manifest, version)
     jobs = []
     used = set()
     for index, value in enumerate(manifest["jobs"], 1):
@@ -54,6 +80,15 @@ def normalize(manifest, base):
         result = {"id": job_id, "labels": labels, "inputs": {}, "command": command,
                   "artifact_paths": value.get("artifact_paths", []),
                   "adapter_kind": value.get("adapter_kind") or ("arc-bench" if version == 1 else None)}
+        dependencies = value.get("dependencies", [])
+        if not isinstance(dependencies, list) or any(not isinstance(item, dict) or
+                item.get("purpose") not in {"execution", "cleanup", "recovery", "execution_cleanup"} or
+                not isinstance(item.get("kind"), str) or not item["kind"] or
+                not isinstance(item.get("location"), str) or not item["location"]
+                for item in dependencies):
+            raise ValueError(f"invalid dependencies for {job_id}")
+        if dependencies:
+            result["dependencies"] = dependencies
         if "result_path" in value or version == 1:
             result["result_path"] = value.get("result_path", "workspace/experiment-result.json")
         if handlers:
@@ -68,7 +103,34 @@ def normalize(manifest, base):
     slots = manifest.get("max_parallel", 1)
     if type(slots) is not int or slots < 1:
         raise ValueError("max_parallel must be a positive integer")
-    return jobs, slots
+    controller_runtime = manifest.get("controller_runtime")
+    if controller_runtime is None and version < 3:
+        controller_runtime = {"kind": "python", "purpose": "execution_cleanup",
+                              "location": str(Path(sys.executable).absolute())}
+    if not isinstance(controller_runtime, dict) or controller_runtime.get("purpose") != "execution_cleanup" or not isinstance(
+            controller_runtime.get("kind"), str) or not isinstance(controller_runtime.get("location"), str):
+        raise ValueError("manifest needs a valid controller_runtime")
+    if version == 3 and (controller_runtime.get("kind") != "host-lab-runtime" or
+                         not isinstance(controller_runtime.get("receipt"), str)):
+        raise ValueError("schema v3 requires a host-lab-runtime controller receipt")
+    return jobs, slots, storage, version, controller_runtime
+
+
+def freeze_dependency(dependency, assets=None):
+    if dependency["kind"] != "host-lab-runtime":
+        return dependency
+    receipt = dependency.get("receipt", "")
+    assets = {} if assets is None else assets
+    if receipt not in assets:
+        assets[receipt] = host_runtime(receipt)
+    runtime = assets[receipt]
+    for field in ("location", "launcher", "identity"):
+        actual = runtime["root" if field == "location" else field]
+        if dependency.get(field) != actual:
+            raise ValueError(f"declared host runtime {field} disagrees with its receipt")
+    return {**dependency, "location": runtime["root"], "launcher": runtime["launcher"],
+            "receipt": runtime["receipt"], "identity": runtime["identity"],
+            "host_platform": runtime["host_platform"]}
 
 
 def freeze_input(source, directory):
@@ -108,7 +170,7 @@ def freeze_controller(experiment):
 def create(manifest_path, *, experiment_root=None, runs_root=None, max_parallel=None):
     manifest_path = Path(manifest_path).expanduser().resolve(strict=True)
     raw = read_json(manifest_path)
-    jobs, slots = normalize(raw, manifest_path.parent)
+    jobs, slots, storage, version, controller_runtime = normalize(raw, manifest_path.parent)
     if max_parallel is not None:
         if type(max_parallel) is not int or max_parallel < 1:
             raise ValueError("max_parallel must be a positive integer")
@@ -140,6 +202,11 @@ def create(manifest_path, *, experiment_root=None, runs_root=None, max_parallel=
     (experiment / "analysis").mkdir()
     source_controller = freeze_controller(experiment)
     record("controller-frozen", sha256=source_controller["sha256"])
+    host_assets = {}
+    controller_runtime = freeze_dependency(controller_runtime, host_assets)
+    for job in jobs:
+        if job.get("dependencies"):
+            job["dependencies"] = [freeze_dependency(item, host_assets) for item in job["dependencies"]]
     by_source = {}
     for job in jobs:
         frozen = {}
@@ -162,12 +229,15 @@ def create(manifest_path, *, experiment_root=None, runs_root=None, max_parallel=
                                 "sha256": frozen_source["sha256"], "algorithm": frozen_source["algorithm"]}
         job["inputs"] = frozen
         job["preparation"] = {"status": "failed" if errors else "ready", "errors": errors}
-    final = {"schema_version": 2, "record_type": "lab.experiment", "experiment_id": experiment_id,
+    final = {"schema_version": version, "record_type": "lab.experiment", "experiment_id": experiment_id,
              "source_manifest": str(manifest_path), "created_at": time.time(), "host": socket.gethostname(),
-             "python": sys.version, "working_directory": os.getcwd(),
+             "python": sys.version, "controller_runtime": controller_runtime,
+             "working_directory": os.getcwd(),
              "runs_root": os.path.relpath(runs, experiment), "max_parallel": slots,
              "controller_source": source_controller, "jobs": jobs,
              "comparison": raw.get("comparison")}
+    if storage is not None:
+        final["storage"] = storage
     write_json(experiment / "manifest.json", final)
     record("plan-published", ready=sum(job["preparation"]["status"] == "ready" for job in jobs),
            failed=sum(job["preparation"]["status"] == "failed" for job in jobs))

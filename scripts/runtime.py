@@ -2,13 +2,19 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
+import platform
 import shutil
 import subprocess
+import sys
 import tempfile
 import uuid
 
 ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from lab.assets import asset_inventory
 
 
 def cache_path(lock_dir):
@@ -83,7 +89,6 @@ def prepare(lock_dir):
             (cache/(patch_name+'.sha256')).write_text(
                 hashlib.sha256(patch_file.read_bytes()).hexdigest()+'\n'+
                 ''.join(hashlib.sha256(target.read_bytes()).hexdigest()+'\n' for target in targets))
-    import os
     subprocess.run([str(cache/'node_modules/.bin/playwright'),'install','chromium','--no-shell'],
                    env=dict(os.environ,PLAYWRIGHT_BROWSERS_PATH=str(cache/'.playwright')),check=True)
     return cache
@@ -160,21 +165,52 @@ def dev_svc(source):
     return target
 
 
+def host_lab(output, base_python):
+    """Build one immutable host Python environment for lab controllers and jobs."""
+    output = output.expanduser().absolute()
+    base_python = base_python.expanduser().absolute()
+    if output.exists():
+        raise FileExistsError(output)
+    if not base_python.is_file() or not os.access(base_python, os.X_OK):
+        raise ValueError(f'host lab base Python is not executable: {base_python}')
+    requirements = ROOT/'lab/requirements.txt'
+    output.parent.mkdir(parents=True, exist_ok=True)
+    subprocess.run(['uv', 'venv', '--python', str(base_python), str(output)], check=True)
+    launcher = output/('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
+    subprocess.run(['uv', 'pip', 'install', '--python', str(launcher), '-r', str(requirements)], check=True)
+    packages = sorted(subprocess.check_output(
+        ['uv', 'pip', 'freeze', '--python', str(launcher)], text=True).splitlines())
+    version = subprocess.check_output(
+        [str(launcher), '-c', 'import platform; print(platform.python_version())'], text=True).strip()
+    receipt = {'schema_version': 1, 'record_type': 'factory26.host-runtime',
+               'root': str(output), 'launcher': str(launcher), 'base_python': str(base_python),
+               'python_version': version, 'host_platform': platform.platform(),
+               'requirements': str(requirements),
+               'requirements_sha256': hashlib.sha256(requirements.read_bytes()).hexdigest(),
+               'packages': packages, 'identity': asset_inventory(output)}
+    (output/'asset.json').write_text(json.dumps(receipt, ensure_ascii=False, indent=2)+'\n')
+    return output/'asset.json'
+
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command',choices=['path','prepare','linux','dev-svc'])
+    p.add_argument('command',choices=['path','prepare','linux','dev-svc','host-lab'])
     p.add_argument('--lock-dir',type=Path,default=ROOT/'harness/npm')
     p.add_argument('--output',type=Path)
     p.add_argument('--backend',choices=['pi','codex'],default='pi')
     p.add_argument('--docker-context')
     p.add_argument('--braid-source',type=Path,help='Optional team dependency; raw runtimes do not require Braid')
     p.add_argument('--svc-source',type=Path,help='完整开发 SVC checkout；不是参赛 Corpus')
+    p.add_argument('--python',type=Path,help='host-lab 使用的明确基础 Python')
     a=p.parse_args()
     if a.command=='path': result=cache_path(a.lock_dir)
     elif a.command=='prepare': result=prepare(a.lock_dir)
     elif a.command=='dev-svc':
         if a.svc_source is None: p.error('dev-svc requires --svc-source')
         result=dev_svc(a.svc_source)
+    elif a.command=='host-lab':
+        if a.output is None or a.python is None: p.error('host-lab requires --output and --python')
+        result=host_lab(a.output,a.python)
     else:
         if a.output is None: p.error('linux requires --output')
         result=linux(a.output,a.backend,a.lock_dir,a.docker_context,a.braid_source)

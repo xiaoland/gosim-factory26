@@ -25,6 +25,9 @@ macOS 仅用于编辑、传输制品和查看结果，不为这些实验创建�
 ```sh
 LOCAL_ASSETS=../factory26-official-local
 RUNNER="$LOCAL_ASSETS/raw-baseline-20260923-wsl/runner"
+python3 scripts/runtime.py host-lab --python /usr/bin/python3.12 \
+  --output "$LOCAL_ASSETS/runtimes/lab-<build-id>"
+HOST_RUNTIME="$LOCAL_ASSETS/runtimes/lab-<build-id>/asset.json"
 ARCBENCH_LOCAL_BASE_IMAGE=gyataro/arcbench-runner@sha256:40e003ed470dbd4c120b9019876ba77303d38dc8b34be7f6e313fe0563dd14de \
 ARCBENCH_LOCAL_PLATFORM=linux/amd64 "$RUNNER/build-image.sh"
 
@@ -32,7 +35,10 @@ python3 -m lab.arc_bench.arc_matrix \
   --candidate candidate=/path/to/frozen-agent.zip \
   --case arc-bench-lite/keep --case arc-bench-web/keep \
   --inputs-root "$LOCAL_ASSETS/platform-inputs" --runner "$RUNNER" \
+  --host-runtime "$HOST_RUNTIME" \
   --image arcbench-local-submit:latest --workers 4 --separate-evaluation \
+  --workspace-cap-gib 24 --telemetry-cap-gib 4 --finalization-scratch-gib 8 \
+  --host-reserve-gib 50 --build-cap-gib 20 --archive-level decision \
   --output "$LOCAL_ASSETS/experiments/example/manifest.json"
 
 python3 -m lab run "$LOCAL_ASSETS/experiments/example/manifest.json" \
@@ -40,11 +46,17 @@ python3 -m lab run "$LOCAL_ASSETS/experiments/example/manifest.json" \
 ```
 
 真实模型可在 `arc_matrix.py` 指定直连模型的 `--env-file .secrets/arc-bench.env`，或指定新网关实例的 `--gateway-state <状态目录>` 并按需提供 `--env-file` 中的额外客户端变量。网关模式由每个 run 的临时凭据绑定请求，`--env-file` 不再同时直接传给 Runner；官方 Meter 凭据仍独立。模型 env 文件权限为 `600`，适配器临时合入 OTLP 参数后传给 Docker，运行结束删除临时副本。
+`host-lab` 在明确的稳定宿主目录建立不可覆盖的 Python 环境并写 `asset.json`；失败目录没有有效回执，不能消费。schema v3 配方显式选择该回执，controller、adapter、gateway wrapper 与 inspect/cleanup 共用其 launcher，计划和每次启动核对环境树身份。基础 Python 和独立 gateway service 仍是分别记录的宿主前提，不能从本次命令推断它们已建立。
+
+容量值只是命令形状示例；每轮须依据冻结包、Runner workspace、telemetry 和归档峰值在 packet 声明预算。当前可执行归档级仅为 `decision`，其它级别尚未实现，CLI 和 schema v3 配方会拒绝。新 ARC 配方写 schema v3，attempt 分配和增加并发前保存空间/inode 预检；历史 v1/v2 保持 `legacy-unbudgeted`，不能据此声称通过容量保护。
+
+运行中异步容量观察写入 `storage-observations.jsonl`；达到 80% 或扫描不完整时暂停新派发，单 run 达到 cap 时停止对应进程组，host reserve/inode 触底时停止全部受控进程组。预算停止保留 workspace、OTLP、原错和阈值，不触发 GC，也不能计作模型零分。进程组退出不能证明容器等外部资源已停；`run.json` 保存 `unconfirmed`，须用 `reconcile` 核实并按需显式 `cleanup`。
+
 `--prepare-only` 只准备两类输入与制品装配，不产生评分。
 独立生成使用 `--separate-evaluation`，生成阶段不传公开测试；省略该选项的单阶段路径不作为独立生成基线。
 矩阵中的每个执行都有独立 run ID；同一赛题、不同 variant 可以同时运行，`--workers` 只限制总并发，不按赛题或 variant 加锁。
 `run.json` 保存输入快照哈希、适配器退出码、原始 Runner 结果和遥测取得情况；原始 Runner 退出码在 `result.runner_exit_code`。
-当前主线将 Runner workspace、stdout/stderr 和声明归档的产物留在 run 目录中。存储生命周期分支的归档回执和 GC 尚未合入，不能依据 completed 或目录名自行删除恢复依赖。
+当前主线将 Runner workspace、stdout/stderr 和声明归档的产物留在外层 run 目录中。I13 内层归档只有回执授权才删除其精确 `work`；这不授权清理外层 Runner 现场。只读候选查询与保护边界见[证据说明](evidence.md#存储回收候选)。
 
 运行期间，基础设施提供带 run 凭据的 OTLP/HTTP protobuf 接收端，支持 traces、logs 和 metrics。
 通用 OTEL exporter 环境变量注入外部 Runner；适配器把端点改成容器可访问的 `host.docker.internal`，Linux 上若该名字不可用可通过 `arc_matrix.py --container-otlp-host <宿主机网关地址>` 指定。
@@ -55,7 +67,7 @@ Runner 若将原始会话或失败 DOM 写到自身不可访问的临时目录�
 
 ## 冻结应用的本地复评
 
-已生成的 ARC 应用可用 `python3 -m lab.arc_bench evaluate <来源run> --output <新实验目录>` 单独复评。命令优先核验入口前发布的应用，沿用来源的冻结需求、测试、Runner 与镜像 ID；旧 run 缺测试快照时显式补 `--tests <已冻结测试目录>`。加 `--plan-only` 只准备新实验。复评通过 `--template` 和核验型 noop 消费应用，不运行生成 Agent，也不传模型凭据。改变测试范围或镜像会产生新的评测条件。
+已生成的 ARC 应用可用 `python3 -m lab.arc_bench evaluate <来源run> --output <新实验目录> --host-runtime <稳定asset.json> --workspace-cap-gib <容量> --telemetry-cap-gib <容量> --finalization-scratch-gib <容量>` 单独复评。新复评同样冻结 schema v3、稳定 Python 与本次预算；预算须按复评峰值声明，不自动继承来源生成的现场解释器或预算。命令优先核验入口前发布的应用，沿用来源的冻结需求、测试、Runner 与镜像 ID；旧 run 缺测试快照时显式补 `--tests <已冻结测试目录>`。加 `--plan-only` 只准备新实验。复评通过 `--template` 和核验型 noop 消费应用，不运行生成 Agent，也不传模型凭据。改变测试范围或镜像会产生新的评测条件。
 
 ```sh
 python3 -m lab show "$LOCAL_ASSETS/experiments/example/runs/<run-id>"

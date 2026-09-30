@@ -36,7 +36,7 @@ Pi 主会话若以模型输出长度上限 `length` 结束，会在同一 sessio
 
 主办方赛事页面提供“Download all requirements” ZIP，同时包含 `hackathon--github`、`hackathon--sheet` 的 `requirements.yaml` 和参考图。2026-09-24 下载快照的 SHA256 为 `9884f23ea10c3dfeee170d1eed57966c8fce9a5ce18a0ac43b3d7942eba8c414`；WSL 的原 ZIP 位于 `factory26-official-local/arcbench-hackathon-requirements.zip`，两题提取到 `platform-inputs/hackathon/{github,sheet}/requirements/`，各自的 `source.json` 记录逐文件哈希。ZIP 不包含 Playwright 评测测试。
 
-用 [arc_matrix.py](../../lab/arc_bench/arc_matrix.py) 指定 `--case hackathon/github --case hackathon/sheet --requirements-only`，并传入冻结 ZIP、官方 Runner、镜像、新网关实例的 `--gateway-state` 与容器可达的 OTLP 宿主地址，即可通过 [Runner 适配器](../../lab/arc_bench/arc_bench_adapter.py) 运行本地生成和部署。每个 run 取得独立临时网关凭据，请求诊断按 run 保存并尝试作为 OTLP logs 上报。无测试时结果的 `mode` 是 `requirements-only`、`score` 是 `null`；`completed` 只表示 Agent 入口成功、生成应用具备标准布局、Runner 完成部署，不代表任何官方得分。官方本地 Runner 明确支持省略 `--tests-dir` 并将评测标记为 `skipped`。需要在本地计分时必须另取同一赛题的官方测试，再用有测试的两阶段模式对冻结应用评分，不能用 Lite/Web 测试代替。
+用 [arc_matrix.py](../../lab/arc_bench/arc_matrix.py) 指定 `--case hackathon/github --case hackathon/sheet --requirements-only`，并传入冻结 ZIP、官方 Runner、镜像、稳定宿主 `--host-runtime <asset.json>` 与 workspace/telemetry/finalization 容量预算、新网关实例的 `--gateway-state` 与容器可达的 OTLP 宿主地址，即可通过 [Runner 适配器](../../lab/arc_bench/arc_bench_adapter.py) 运行本地生成和部署。每个 run 取得独立临时网关凭据，请求诊断按 run 保存并尝试作为 OTLP logs 上报。无测试时结果的 `mode` 是 `requirements-only`、`score` 是 `null`；`completed` 只表示 Agent 入口成功、生成应用具备标准布局、Runner 完成部署，不代表任何官方得分。官方本地 Runner 明确支持省略 `--tests-dir` 并将评测标记为 `skipped`。需要在本地计分时必须另取同一赛题的官方测试，再用有测试的两阶段模式对冻结应用评分，不能用 Lite/Web 测试代替。
 
 ## 将冻结产物交给官网评测
 

@@ -1,11 +1,15 @@
 """Archive native sessions and their work-item identities from completed runs."""
 import json
 import hashlib
+import os
 import re
 import shutil
+import stat
+import time
 from pathlib import Path
 from urllib.parse import quote
 
+from agent_support import save
 from braid_runtime import export_telemetry
 
 
@@ -74,6 +78,173 @@ def _child_inherited(root, extra=None):
     return row
 
 
+def _read_json(path, default=None):
+    try:
+        return json.loads(path.read_text())
+    except (OSError, ValueError):
+        return default
+
+
+def _file_identity(path):
+    with path.open('rb') as stream:
+        digest = hashlib.file_digest(stream, 'sha256').hexdigest()
+    return {'algorithm': 'file-bytes-sha256-v1', 'sha256': digest,
+            'bytes': path.stat().st_size, 'kind': 'file'}
+
+
+def _tree_identity(root):
+    """Hash paths, file bytes and symlink targets without following links."""
+    entries = []
+    total = 0
+    def failed(error):
+        raise error
+    for directory, names, files in os.walk(root, followlinks=False, onerror=failed):
+        names.sort(); files.sort()
+        folder = Path(directory)
+        for name in names[:]:
+            path = folder/name
+            relative = path.relative_to(root).as_posix()
+            mode = path.lstat().st_mode
+            if stat.S_ISLNK(mode):
+                entries.append({'path': relative, 'type': 'link', 'target': os.readlink(path)})
+                names.remove(name)
+            else:
+                entries.append({'path': relative, 'type': 'directory'})
+        for name in files:
+            path = folder/name
+            relative = path.relative_to(root).as_posix()
+            mode = path.lstat().st_mode
+            if stat.S_ISLNK(mode):
+                entries.append({'path': relative, 'type': 'link', 'target': os.readlink(path)})
+            elif stat.S_ISREG(mode):
+                identity = _file_identity(path)
+                total += identity['bytes']
+                entries.append({'path': relative, 'type': 'file',
+                                'sha256': identity['sha256'],
+                                'executable': bool(mode & 0o111)})
+            else:
+                raise ValueError(f'归档含不支持的文件类型: {path}')
+    encoded = json.dumps(entries, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()
+    return {'algorithm': 'tree-sha256-v1', 'sha256': hashlib.sha256(encoded).hexdigest(),
+            'bytes': total, 'entries': len(entries), 'kind': 'directory'}
+
+
+def _native_preservation_gaps(output, manifest):
+    sessions = manifest.get('sessions')
+    if not isinstance(sessions, list):
+        return ['native manifest 缺少 sessions 清单']
+    gaps = []
+    for index, row in enumerate(sessions):
+        if not isinstance(row, dict):
+            gaps.append(f'native session {index} 不是对象')
+            continue
+        if row.get('observer_preservation_error'):
+            gaps.append(f"native session {index}: {row['observer_preservation_error']}")
+        original = row.get('native') or row.get('unparsed_native')
+        if not original:
+            gaps.append(f'native session {index} 未保存声明的原文')
+            continue
+        for field in ('native', 'unparsed_native', 'session_tree_manifest'):
+            relative = row.get(field)
+            if not relative:
+                continue
+            try:
+                path = (output / relative).resolve(strict=True)
+                if not path.is_relative_to(output / 'native') or not path.is_file():
+                    raise ValueError('原文不在持久 native 目录内')
+                identity = _file_identity(path)
+                expected = row.get('sha256' if field == 'native' else 'unparsed_sha256')
+                if field != 'session_tree_manifest' and expected and identity['sha256'] != expected:
+                    raise ValueError('原文 sha256 与 manifest 不一致')
+            except (OSError, TypeError, ValueError) as exc:
+                gaps.append(f'native session {index} {field}: {type(exc).__name__}: {exc}')
+    return gaps
+
+
+def finalize_archive(output, *, reclaim_workspace):
+    """Write one decision-archive receipt and decide whether work may be reclaimed."""
+    output = Path(output).resolve()
+    if not output.is_dir():
+        raise FileNotFoundError(output)
+    objects = []
+    roots = ('application', 'braid-state', 'native', 'native-config')
+    files = ('run.json', 'config.json', 'input-hashes.json', 'implementation-hashes.json',
+             'materials.json', 'application-hashes.json', 'delivery.json',
+             'history-publication.json', 'telemetry-export-status.json',
+             'telemetry-collector.log', 'telemetry-export.log', 'pi-timing.jsonl',
+             'recovery-workspace.json')
+    selected = [output/name for name in roots + files]
+    selected.extend(sorted(output.glob('telemetry.sqlite*')))
+    seen = set()
+    for path in selected:
+        if path in seen or not (path.exists() or path.is_symlink()):
+            continue
+        seen.add(path)
+        if path.is_symlink():
+            raise ValueError(f'归档根不能是符号链接: {path}')
+        identity = _tree_identity(path) if path.is_dir() else _file_identity(path)
+        objects.append({'path': path.relative_to(output).as_posix(), **identity})
+
+    run = _read_json(output/'run.json', {})
+    delivery = _read_json(output/'delivery.json', {})
+    native = _read_json(output/'native/manifest.json', {})
+    request = _read_json(output/'braid-state/request.json', {})
+    result = _read_json(output/'braid-state/result.json', {})
+    telemetry = _read_json(output/'telemetry-export-status.json', {'status': 'unknown'})
+    gaps = []
+    run_ids = {value for value in (request.get('run_id'), result.get('run_id'))
+               if isinstance(value, str) and value}
+    if len(run_ids) != 1:
+        gaps.append('Braid request/result 缺少唯一 run_id')
+    if native.get('diagnostic_status') != 'complete':
+        gaps.append(f"native diagnostic_status={native.get('diagnostic_status', 'unknown')}")
+    if telemetry.get('status') not in {'exited', 'not_configured'} or telemetry.get('exit_code', 0) != 0:
+        gaps.append(f"telemetry export status={telemetry.get('status', 'unknown')}")
+    preservation_gaps = _native_preservation_gaps(output, native)
+    if run.get('diagnostic_error'):
+        preservation_gaps.append(f"归档保存失败: {run['diagnostic_error']}")
+
+    recovery = _read_json(output/'recovery-workspace.json')
+    materials = _read_json(output/'materials.json', {})
+    purpose = 'recovery' if recovery else 'provenance'
+    dependencies = [{'purpose': purpose, 'kind': kind, 'location': location}
+                    for kind, location in (('runtime', materials.get('runtime')),
+                                           ('braid_binary', materials.get('braid')))
+                    if isinstance(location, str) and location]
+    required = {'braid-state', 'native', 'native-config', 'run.json'}
+    if delivery.get('status') == 'delivered':
+        required.add('application')
+    present = {item['path'] for item in objects}
+    missing = sorted(required - present)
+    reasons = []
+    if not reclaim_workspace:
+        reasons.append('运行仍有恢复承诺或未满足既有成功条件')
+    if missing:
+        reasons.append('归档缺少关键对象: ' + ', '.join(missing))
+    reasons.extend(preservation_gaps)
+    reclaim = 'blocked' if reasons else 'eligible'
+    receipt = {
+        'schema_version': 1, 'record_type': 'factory26.archive', 'archive_level': 'decision',
+        'run_id': output.name, 'braid_run_id': next(iter(run_ids)) if len(run_ids) == 1 else None,
+        'created_at': time.time(), 'objects': objects, 'dependencies': dependencies,
+        'execution_result': {'status': run.get('status', 'unknown'), 'phase': run.get('phase'),
+                             'error': run.get('error')},
+        'delivery_result': delivery,
+        'evaluation_result': {'status': 'not_applicable', 'reason': 'generation archive'},
+        'diagnostic_coverage': {'status': native.get('diagnostic_status', 'unknown'),
+                                'telemetry': telemetry, 'gaps': gaps,
+                                'preservation': {'status': 'partial' if preservation_gaps else 'complete',
+                                                 'gaps': preservation_gaps}},
+        'recovery_capability': {'status': 'declared' if recovery else 'none',
+                                'workspace': recovery.get('path') if recovery else None},
+        'reclaim_state': {'status': reclaim, 'target': 'work', 'reasons': reasons},
+    }
+    receipt['archive_id'] = hashlib.sha256(json.dumps(
+        receipt, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()).hexdigest()
+    save(output/'archive.json', receipt)
+    return receipt
+
+
 def _pi_session_tree(native_home, work, parent_ids):
     """Select evidence for this parent, not whichever parent last used its home."""
     factory = native_home / '.factory'
@@ -123,6 +294,7 @@ def archive_sessions(output, home, work, entries, telemetry_env=None):
                     target_index += 1
                     shutil.copy2(source, target)
                     failed['unparsed_native'] = str(target.relative_to(output))
+                    failed['unparsed_sha256'] = _file_identity(target)['sha256']
             except (OSError, ValueError):
                 pass
         archived.append(failed)
@@ -317,6 +489,8 @@ def archive_sessions(output, home, work, entries, telemetry_env=None):
                 except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
                     root_archived['observer_diagnostic_status'] = 'partial'
                     root_archived['observer_diagnostic_error'] = str(exc)
+                    if isinstance(exc, OSError):
+                        root_archived['observer_preservation_error'] = f'{type(exc).__name__}: {exc}'
         except (OSError, ValueError, KeyError, TypeError, json.JSONDecodeError) as exc:
             error_row(row, str(exc))
     valid = [row for row in archived if row.get('native') and not row.get('archive_error')]
