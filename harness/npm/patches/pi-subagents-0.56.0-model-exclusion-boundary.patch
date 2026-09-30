@@ -1,0 +1,99 @@
+--- a/src/runs/shared/model-exclusions.ts
++++ b/src/runs/shared/model-exclusions.ts
+@@ -176,6 +176,31 @@
+ }
+ 
+ /**
++ * Return the active exclusion that blocks a full provider/model id.
++ * Callers use this only for diagnostics; it never clears or bypasses an exclusion.
++ */
++export function findModelExclusion(fullId: string, opts?: { now?: number }): ModelExclusion | undefined {
++	ensureLoaded();
++	const timestamp = opts?.now ?? Date.now();
++	const { provider, modelId } = parseModelKey(fullId);
++	return exclusions.find((entry) => entryMatches(entry, modelId, provider, timestamp));
++}
++
++function diagnosticReason(reason: string | undefined): string {
++	if (!reason) return "provider runtime failure";
++	if (/429|rate.?limit|quota|credit|balance/i.test(reason)) return "provider rate/quota failure";
++	if (/401|auth|api.?key|unauthori[sz]ed/i.test(reason)) return "provider authentication failure";
++	return "provider runtime failure";
++}
++
++/** Format an active exclusion without exposing stored provider error text. */
++export function describeModelExclusion(fullId: string, opts?: { now?: number }): string | undefined {
++	const entry = findModelExclusion(fullId, opts);
++	if (!entry) return undefined;
++	return `model '${fullId}' is excluded until ${new Date(entry.expiresAt).toISOString()} (${diagnosticReason(entry.reason)}).`;
++}
++
++/**
+  * Number of live (non-expired) exclusions.
+  */
+ export function getExcludedCount(): number {
+--- a/src/runs/shared/model-fallback.ts
++++ b/src/runs/shared/model-fallback.ts
+@@ -1,6 +1,6 @@
+ import { splitKnownThinkingSuffix, type ModelInfo as AvailableModelInfo } from "../../shared/model-info.ts";
+ import type { Usage } from "../../shared/types.ts";
+-import { filterFallbackCandidates, parseModelKey, recordModelFailure } from "./model-exclusions.ts";
++import { describeModelExclusion, filterFallbackCandidates, parseModelKey, recordModelFailure } from "./model-exclusions.ts";
+ import { checkModelScope, type ModelScopeCheckRule, type ModelScopeViolation, type ModelSource } from "./model-scope.ts";
+ 
+ export type { AvailableModelInfo };
+@@ -394,7 +394,15 @@
+ 		seen.add(normalized);
+ 		candidates.push(normalized);
+ 	}
+-	return filterFallbackCandidates(candidates);
++	const filtered = filterFallbackCandidates(candidates);
++	if (candidates.length > 0 && filtered.length === 0) {
++		const details = candidates
++			.map((candidate) => describeModelExclusion(candidate))
++			.filter((detail): detail is string => detail !== undefined)
++			.join(" ");
++		throw new Error(`All requested subagent model candidates are temporarily excluded; refusing ambient provider fallback. ${details}`.trim());
++	}
++	return filtered;
+ }
+ 
+ const RETRYABLE_MODEL_FAILURE_PATTERNS = [
+--- a/src/runs/background/subagent-runner.ts
++++ b/src/runs/background/subagent-runner.ts
+@@ -88,6 +88,7 @@
+ import { claimRunFanoutBatch, getRunFanoutBudgetSnapshot } from "../shared/run-fanout-budget.ts";
+ import { nestedSummaryFromAsyncStatus, projectNestedEvents, resolveNestedAsyncDir, writeNestedEvent } from "../shared/nested-events.ts";
+ import { formatModelAttemptNote, formatSubagentModelVerificationError, isContextOverflow, isRetryableModelFailure, recordRetryableModelFailure } from "../shared/model-fallback.ts";
++import { describeModelExclusion } from "../shared/model-exclusions.ts";
+ import {
+ 	SUBAGENT_STARTUP_RETRY_DELAYS_MS,
+ 	formatSubagentExtensionConflictError,
+@@ -1508,6 +1509,14 @@
+ 		});
+ 	}
+ 
++	if (step.modelCandidates !== undefined && step.modelCandidates.length === 0) {
++		const diagnostic = step.model ? describeModelExclusion(step.model) : undefined;
++		const error = diagnostic
++			? `No launchable subagent model candidates; refusing ambient provider fallback. ${diagnostic}`
++			: "No launchable subagent model candidates; refusing ambient provider fallback.";
++		return omitUndefinedProperties({ agent: step.agent, context: step.context, output: error, error, success: false, exitCode: 1 });
++	}
++
+ 	const candidates = step.modelCandidates !== undefined
+ 		? step.modelCandidates.length > 0 ? step.modelCandidates : [undefined]
+ 		: step.model
+@@ -3788,6 +3797,12 @@
+ 					const thinkingOverride = step.thinkingOverrides?.[itemIndex];
+ 					const model = thinkingOverride ? applyThinkingSuffix(step.parallel.model, thinkingOverride, true) : step.parallel.model;
+ 					const configThinking = thinkingOverride ? thinkingOverride : step.parallel.thinking;
++					if (step.parallel.modelCandidates !== undefined && step.parallel.modelCandidates.length === 0) {
++						const diagnostic = step.parallel.model ? describeModelExclusion(step.parallel.model) : undefined;
++						throw new Error(diagnostic
++							? `No launchable subagent model candidates; refusing ambient provider fallback. ${diagnostic}`
++							: "No launchable subagent model candidates; refusing ambient provider fallback.");
++					}
+ 					const candidates = step.parallel.modelCandidates !== undefined
+ 						? step.parallel.modelCandidates.length > 0
+ 							? step.parallel.modelCandidates.map((candidate) => thinkingOverride ? applyThinkingSuffix(candidate, thinkingOverride, true) ?? candidate : candidate)
