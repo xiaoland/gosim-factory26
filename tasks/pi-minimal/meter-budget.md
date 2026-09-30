@@ -1,6 +1,6 @@
 # pi-minimal Meter 余额保护
 
-当前：两题已终态，旧守护正常退出，账面余额 246.100666 CNY。新源码已接入 Pi 用量估算，尚未打包或在新官网运行验证；旧冻结包缺少导出的原生用量，不能补算历史在途费用。
+当前：旧参赛两题已终态，参赛余额最后核实246.100666 CNY。新self_funded两题已启动，2026-09-30 08:54:41 CST真实官网工作区下载含Pi用量，脚本首次完成37次响应的估算：GitHub0.2219508元、Sheet0.19994576元，记录无缺口。持续脚本每600秒采集，模式不查询比赛余额、不设个人自费取消阈值。正在进行的请求不计入已知消费；这不是供应商账单或实时账户余额。当前入口见本文self_funded observe段。
 
 ## 已核实的账户与当前余额
 
@@ -74,6 +74,26 @@ Sheet 的失败发生在生成阶段：16:45:22 UTC `main.py` 等待 Pi stdout �
 控制器与同一个余额守护已顺序交接到新 PID 54251 / 54271，journal 的 Sheet 身份替换为新 run；GitHub f3424d6aa387 不变。旧 Sheet task journal 已归档。守护仍每 600 秒检查账面余额，阈值 100；原生用量不可取得的问题尚未解决，不能宣称它估算了在途费用。
 
 2026-09-30 01:12 CST 核查：守护 PID 54271 存活，01:11 余额记录为 260.172023 CNY。GitHub f3424d6aa387 已 FAILED（部署 npm install 返回1），费用 21.093226 CNY；Sheet d03625688de8 RUNNING。rerun 已自动启动，先前控制器再 start 得409退出；现复用 Controller.recover() 只读核对后接续采集，控制器 PID55781，原守护不重启。不再重复远端 start。原生用量估算仍未实现。
+
+## 2026-09-30 self_funded observe
+
+用户授权的自费两题 journal 为：
+
+`runs/pi-minimal/20260930/self-funded`
+
+启动观察器的参数为：
+
+```sh
+python3 tasks/pi-minimal/budget_guard.py \
+  runs/pi-minimal/20260930/self-funded \
+  --self-funded-observe
+```
+
+首次检查立即执行，此后每 600 秒下载每个活动 run 的 template bundle。该模式只读取 run 身份和 `template/.factory26/pi-minimal/pi-timing.jsonl`，按 `request_id` 去重，将主会话和 advisor 按 timing 记录中的 `provider/model` 分组；它不查询 hackathon registration，不读取个人 Meter 余额，不写停止阈值，也不取消 run。快照缺少 timing 文件、provider/model、usage 或价格时记录 `usage_unknown`，不把未知费用算成零成本结论。
+
+本模式使用 [provider-prices.json](provider-prices.json)。2026-09-30通过浏览器实际渲染 BigModel 官方价格页 `https://open.bigmodel.cn/pricing`，GLM-5.3-Flash卡片确认输入0.8、输出2.8、缓存命中0.23 CNY/百万tokens。FAQ另提限时五折，但没有本账号优惠适用证明，故使用标准价作保守估算。此前ARC目录不作为直连供应商证据。Moonshot `moonshot/kimi-k2.7-code` 的只读模型页和价格来自官方 `https://platform.kimi.com/docs/pricing/chat`：`6.50/27.00/1.30 CNY / 1M`（缓存未命中输入/输出/缓存命中输入）。两者均不使用 ARC 价格表；缓存写入单价未确认，若 timing 出现非零 `cacheWrite`，该模型成本保持未知。
+
+已有真实 bundle `runs/pi-minimal/20260929/budget-live/f3424d6aa387-project-new.zip` 已只读核对：不含 `template/.factory26/pi-minimal/pi-timing.jsonl`，观察结果为 `usage_unknown`；这证明当前脚本不会把缺失输入误报为零费用。未启动新 run、未上传或取消任何 run。运行中的在途请求、下载间隔和供应商最终账单仍不在 timing 快照的可见范围内。
 
 ## 当前修复：脚本相对 Pi home 与费用估算
 

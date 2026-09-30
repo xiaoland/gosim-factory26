@@ -40,17 +40,25 @@ def run(requirements, output):
         raise ValueError(f'Pi home is already bound to a different workspace: {home}')
     native = (home/'.pi/agent').resolve()
     native.mkdir(parents=True, exist_ok=True)
-    key = os.environ.get('OPENAI_API_KEY') or os.environ.get('FACTORY26_API_KEY')
-    base = os.environ.get('OPENAI_BASE_URL') or os.environ.get('FACTORY26_BASE_URL')
-    if not key or not base:
-        raise ValueError('Runner must provide OPENAI_API_KEY and OPENAI_BASE_URL')
-    models = json.loads((ROOT/'models.json').read_text())
-    models['providers']['factory26']['baseUrl'] = base
+    private_models = ROOT/'private-models.json'
+    main_provider, advisor_model = 'factory26', 'factory26/kimi-k2.7-code'
+    key = None
+    if private_models.is_file():
+        models = json.loads(private_models.read_text())
+        main_provider, advisor_model = 'bigmodel', 'moonshot/kimi-k2.7-code'
+    else:
+        key = os.environ.get('OPENAI_API_KEY') or os.environ.get('FACTORY26_API_KEY')
+        base = os.environ.get('OPENAI_BASE_URL') or os.environ.get('FACTORY26_BASE_URL')
+        if not key or not base:
+            raise ValueError('Runner must provide OPENAI_API_KEY and OPENAI_BASE_URL')
+        models = json.loads((ROOT/'models.json').read_text())
+        models['providers']['factory26']['baseUrl'] = base
     save(native/'models.json', models)
     roles = native/'agents'
     roles.mkdir(exist_ok=True)
     for source in (ROOT/'agents').glob('*.md'):
         text = source.read_text().replace('@RUNTIME@', str(runtime)).replace('@SKILLS@', str(ROOT/'skills')).replace('@PACKAGE@', str(ROOT))
+        text = text.replace('factory26/kimi-k2.7-code', advisor_model)
         (roles/source.name).write_text(text)
     save(native/'settings.json', {'packages': [], 'subagents': {'disableBuiltins': True}})
     subagent_config = native/'extensions/subagent'
@@ -59,10 +67,13 @@ def run(requirements, output):
     (home/'.config').mkdir(exist_ok=True)
     env = dict(os.environ)
     for name in list(env):
-        if name.startswith('BRAID_') or name == 'FACTORY26_MODEL_BUDGET_PATH':
+        if name.startswith('BRAID_') or name == 'FACTORY26_MODEL_BUDGET_PATH' or (
+                private_models.is_file() and name in ('OPENAI_API_KEY', 'OPENAI_BASE_URL', 'FACTORY26_API_KEY', 'FACTORY26_BASE_URL')):
             env.pop(name)
+    if key:
+        env['FACTORY26_API_KEY'] = key
     env.update(HOME=str(home), XDG_CONFIG_HOME=str(home/'.config'), PI_CODING_AGENT_DIR=str(native),
-               FACTORY26_API_KEY=key, PI_OFFLINE='1',
+               PI_OFFLINE='1',
                PONYTAIL_DEFAULT_MODE='full', PI_CAPABILITY_EVIDENCE_DIR=str(evidence/'capabilities'),
                FACTORY26_PI_TIMING_FILE=str(evidence/'pi-timing.jsonl'),
                PATH=str(runtime/'bin')+':/usr/local/bin:/usr/bin:/bin',
@@ -74,7 +85,7 @@ def run(requirements, output):
                BROWSER_CHECK_NODE_MODULES=str(runtime/'node_modules'))
     instruction = (ROOT/'instructions.md').read_text().replace('@REQUIREMENTS@', str(requirements)).replace('@OUTPUT@', str(output))
     (evidence/'user-instructions.md').write_text(instruction)
-    command = [str(runtime/'bin/pi'), '--provider', 'factory26', '--model', 'glm-5.3-flash',
+    command = [str(runtime/'bin/pi'), '--provider', main_provider, '--model', 'glm-5.3-flash',
                '--thinking', 'high', '--mode', 'json', '--print', '--no-context-files',
                '--no-prompt-templates', '--no-themes', '--extension', str(runtime/'node_modules/pi-subagents/index.ts'),
                '--extension', str(runtime/'node_modules/pi-background-bash/index.ts'),
@@ -87,7 +98,7 @@ def run(requirements, output):
     command += [instruction]
     exporter = LogExporter(evidence, 'pi-session', 'glm-5.3-flash')
     save(evidence/'identity.json', {'variant': 'pi-minimal', 'main_model': 'glm-5.3-flash',
-                                  'advisor': 'kimi-k2.7-code', 'skills': SKILLS})
+                                  'main_provider': main_provider, 'advisor': advisor_model, 'skills': SKILLS})
     continuation = 0
     process = None
     try:

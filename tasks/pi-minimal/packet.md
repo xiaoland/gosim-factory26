@@ -75,3 +75,7 @@ GitHub run：`pi-minimal--hackathon--github-59aaf58e7462bc`，`started_at=179068
 GitHub原始安装错误为后端npm的edgesOut空引用；前端install/build成功。后端声明vitest ^5.0.2，仅pnpm-lock；锁定Vitest5.0.2需要Node ^22.12||^24||>=26，与已声明目标Node20.19.3不兼容。npm Arborist同类空引用有上游记录，但本次缺少/root/.npm debug栈，尚不能证明具体触发点；pnpm依赖树切换npm、未锁定npm peer解析是候选因素。建议Agent在目标Node下对干净交付副本执行官方npm安装/build/start，按兼容性选依赖；Harness不直接修改生成应用。完整平台错误保存 runs/pi-minimal/20260929/install-diagnosis/platform-install.log，manifest与npm registry元数据保存同目录。
 
 用户随后要求仅pi-minimal删除pnpm、portless的使用要求。已改为应用使用Node20.19.3 + npm，正式命令含 --include=optional --no-audit --no-fund，保留package-lock.json并在干净副本验证前端安装/build与后端安装/start；保留Vitest但要求选择兼容目标Node的版本。预包工具未删除，其它variant未改；旧冻结ZIP/已结束官网运行不变，尚未重打包或重跑。
+
+## 2026-09-30 自费官网两题（当前授权）
+
+用户授权用当前修正版在官网 self_funded 并行运行两题，先核实际启动和费用监控再汇报I11。用户进一步指定BigModel和Kimi地址/密钥打包进上传包，不使用单一ARC模型路由或参赛额度。models只读查询已确认两家分别提供glm-5.3-flash、kimi-k2.7-code；主Pi使用bigmodel，advisor使用moonshot，配方/模型ID保持。凭据仅取.secrets/models.env并写入本次制品private-models.json，不加入Git或打印。新 journal `runs/pi-minimal/20260930/self-funded`；冻结 ZIP SHA256 `1c50df83e817bc29e011b88682a21e891a555d4302cebe4bbed8f904fb51da2b`，submission `643fc8f5340f`。GitHub `7338d6d166d9`、Sheet `1d653b593474` 分别于08:47:43/51 CST进入RUNNING。控制器PID81443先并行启动两题，再收集。首次下载已确认两题原生会话、identity、pi-timing均可取得，主请求provider=bigmodel。08:54:41 CST独立常驻脚本记录37个已完成请求、无usage缺口：GitHub约0.221951元，Sheet约0.199946元；每600秒继续抓取，正在返回前的两条请求不计入。Advisor已配置moonshot，当前尚无实际调用证据；后续发生时从同一timing流分组。BigModel以官方标准价保守估计，不假设折扣；这是已观察消费，不是供应商账户实时余额。进程身份保存journal/usage-monitor-process.json。费用按实际供应商记录；不得拿比赛100元阈值套到自费账户。

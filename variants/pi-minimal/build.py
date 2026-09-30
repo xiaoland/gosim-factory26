@@ -11,18 +11,31 @@ ROOT = HERE.parents[1]
 sys.path.insert(0, str(ROOT/'scripts'))
 from package_agent import write_zip
 from agent_support import copy_skill
+from hackathon_gateway import read_assignments
 
 SKILLS = ('agent-browser', 'hyperformula', 'handsontable', 'better-auth-best-practices',
           'organization-best-practices', 'fixing-accessibility', 'ponytail')
 
 
-def build(runtime, output):
+def build(runtime, output, credentials=None):
     if (runtime/'bin/braid').exists():
         raise ValueError('pi-minimal requires a native Pi runtime without Braid')
     with tempfile.TemporaryDirectory(prefix='pi-minimal-', dir=ROOT/'runs') as temporary:
         stage = Path(temporary)
         for name in ('main.py', 'models.json', 'instructions.md', 'mcporter.json', 'requirements.txt'):
             shutil.copy2(HERE/name, stage/name)
+        if credentials:
+            values = read_assignments(credentials)
+            declared = json.loads((HERE/'models.json').read_text())['providers']['factory26']['models']
+            providers = {}
+            for vendor, provider, model in [('GLM', 'bigmodel', 'glm-5.3-flash'),
+                                             ('KIMI', 'moonshot', 'kimi-k2.7-code')]:
+                base, key = values.get(vendor+'_BASE_URL'), values.get(vendor+'_API_KEY')
+                if not base or not key:
+                    raise ValueError(f'Missing {vendor} URL/key in credentials file')
+                providers[provider] = {'baseUrl': base.rstrip('/'), 'api': 'openai-completions',
+                                       'apiKey': key, 'models': [next(x for x in declared if x['id'] == model)]}
+            (stage/'private-models.json').write_text(json.dumps({'providers': providers}))
         for folder in ('agents', 'extensions', 'vendor'):
             shutil.copytree(HERE/folder, stage/folder)
         shutil.copy2(ROOT/'scripts/agent_support.py', stage/'agent_support.py')
@@ -58,5 +71,6 @@ if __name__ == '__main__':
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--runtime', type=Path, required=True)
     p.add_argument('--output', type=Path, required=True)
+    p.add_argument('--credentials', type=Path, help='Embed authorized BigModel/Kimi routes in this upload only')
     a = p.parse_args()
-    build(a.runtime.resolve(strict=True), a.output.resolve())
+    build(a.runtime.resolve(strict=True), a.output.resolve(), a.credentials)

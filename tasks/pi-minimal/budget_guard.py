@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Guard the pi-minimal official journal against an exhausted competition budget.
+"""Observe pi-minimal usage and guard the legacy official journal.
 
 The guard is intentionally independent of Competition's controller lock.  It
 only reads the competition registration and target journal, and it cancels a run after verifying
@@ -23,6 +23,7 @@ from usage_budget import active_cost
 
 
 TARGET = (ROOT / "runs/pi-minimal/20260929/official").resolve()
+SELF_FUNDED_TARGET = (ROOT / "runs/pi-minimal/20260930/self-funded").resolve()
 STOP_NAME = "budget-stop.json"
 EVENTS_NAME = "budget-events.jsonl"
 COMPETITION = "hackathon"
@@ -35,10 +36,12 @@ class GuardError(RuntimeError):
     """A balance observation or journal identity could not be trusted."""
 
 
-def target_journal(value):
+def target_journal(value, self_funded=False):
     path = Path(value).expanduser().resolve()
-    if path != TARGET:
-        raise GuardError(f"只允许 pi-minimal 官方 journal：{TARGET}")
+    expected = SELF_FUNDED_TARGET if self_funded else TARGET
+    if path != expected:
+        kind = "self_funded" if self_funded else "官方"
+        raise GuardError(f"只允许 pi-minimal {kind} journal：{expected}")
     path.mkdir(parents=True, exist_ok=True)
     return path
 
@@ -171,17 +174,47 @@ def check_once(journal, client, cancel=True):
     return {"status": "usage_unknown" if usage.get('incomplete') else "clear", "observation": observation}
 
 
+def observe_self_funded(journal, client):
+    """Record known direct-provider usage without inventing a stop threshold."""
+    try:
+        usage = active_cost(journal, client, tariff_name='provider-prices.json',
+                            include_terminal=True)
+    except Exception as exc:
+        usage = {
+            'cost_cny': 0,
+            'cost_status': 'unknown',
+            'incomplete': True,
+            'error': type(exc).__name__,
+            'runs': [],
+        }
+    observation = {
+        "observed_at": datetime.now(timezone.utc).isoformat(),
+        "billing_mode": "self_funded",
+        "journal": str(journal),
+        "stop_policy": "none",
+        "usage": usage,
+    }
+    append_event(journal, {"event": "self_funded_usage", **observation})
+    return {
+        "status": "observed" if not usage.get("incomplete") else "usage_unknown",
+        "observation": observation,
+    }
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("journal", type=Path)
+    parser.add_argument("--self-funded-observe", action="store_true",
+                        help="观察自费 provider usage；不查询比赛余额、不取消 run")
     parser.add_argument("--once", action="store_true", help="只查询一次；默认每 600 秒继续查询")
     parser.add_argument("--check", action="store_true", help="查询一次且不取消已启动目标 run")
     args = parser.parse_args()
-    journal = target_journal(args.journal)
+    journal = target_journal(args.journal, self_funded=args.self_funded_observe)
     client = Client()
     while True:
         started = time.monotonic()
-        result = check_once(journal, client, cancel=not args.check)
+        result = (observe_self_funded(journal, client) if args.self_funded_observe
+                  else check_once(journal, client, cancel=not args.check))
         print(json.dumps(result, ensure_ascii=False), flush=True)
         if args.once or args.check:
             return 2 if result["status"] == "stopped" else 0
