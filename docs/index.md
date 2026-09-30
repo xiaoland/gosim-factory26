@@ -31,7 +31,8 @@
 
 | 主题 | 入口 |
 | --- | --- |
-| 当前主线、授权与工作单元 | [迭代10 packet](../tasks/iteration10/packet.md)；仅追溯更早经过时读[历史迭代树](../tasks/iteration-map.md) |
+| 当前主线、授权与工作单元 | [迭代12 packet](../tasks/iteration12/packet.md)：工作连续性、摘剪接续与人工介入console；[I11恢复与最终评分](../tasks/iteration11/runtime-stalls/packet.md)，前序[迭代11](../tasks/iteration11/packet.md)及[迭代10](../tasks/iteration10/packet.md)保留原始设计和运行证据 |
+| 实时查看与介入I12 Issue/PR | [协作console](deployment/console.md)，写入复用Braid CLI；人工介入是本轮研究条件 |
 | 开发体验、文档系统与独立 variant 演化 | [DX](../tasks/developer-experience/packet.md)；[独立 variant 前序材料](../tasks/independent-variants/packet.md) |
 | Variant、实验与运行的命名整理 | [命名方案任务](../tasks/variant-experiment-naming/packet.md)（实现与文档已完成，证据及验证边界见 packet） |
 | 参赛 SVC 方法与 skill 接线 | [Corpus](../tasks/svc-corpus-review/packet.md)、[skill](../tasks/svc-skill-integration/packet.md) |

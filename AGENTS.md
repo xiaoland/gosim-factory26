@@ -23,7 +23,7 @@ reports/                 带条件和证据入口的历史结论
 runs/                    原始运行产物，Git 忽略
 ```
 
-当前开发基线是 `pi-braid`；独立实验工作流与历史实现的状态见 [Variant 状态](variants/README.md)。
+当前开发入口是 `pi-braid-i12`，I11交付及I10运行基线保留；独立实验工作流与历史实现的状态见 [Variant 状态](variants/README.md)。
 
 | 要做什么 | 先读哪里 |
 | --- | --- |
