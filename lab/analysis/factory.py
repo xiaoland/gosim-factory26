@@ -83,7 +83,7 @@ def analyze(run, svc_source=None):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('command', choices=['list', 'show', 'analyze'])
+    parser.add_argument('command', choices=['list', 'show', 'watch', 'analyze'])
     parser.add_argument('run_id', nargs='?')
     parser.add_argument('--run', type=Path)
     parser.add_argument('--root', type=Path, default=ROOT, help='包含 runs/ 的项目或实验根目录')
@@ -103,14 +103,29 @@ def main():
     else:
         selected = args.run or (args.root/'runs'/args.run_id if args.run_id else None)
         if selected is None:
-            parser.error('show/analyze 需要 --run 或 run ID')
+            parser.error('show/watch/analyze 需要 --run 或 run ID')
         if args.command == 'analyze':
             analyze(selected.resolve(), args.svc_source.resolve() if args.svc_source else None)
             return
+        if args.command == 'watch':
+            selected = selected.resolve()
+            while True:
+                result = show_run(selected)
+                row = {'observed_at': time.time(), 'run_id': result['id'], 'phase': result['status'],
+                       'runtime_blocker': result.get('runtime_blocker')}
+                if result.get('warnings'):
+                    row['warnings'] = result['warnings']
+                print(json.dumps(row, ensure_ascii=False), flush=True)
+                if row['runtime_blocker'] and row['runtime_blocker']['status'] == 'blocked':
+                    return 2
+                if row['phase'] in {'completed', 'failed', 'interrupted', 'finished', 'cancelled', 'lost'}:
+                    return 0
+                started = json.loads((selected/'run.json').read_text()).get('started_at') or row['observed_at']
+                time.sleep(180 if row['observed_at'] - started < 600 else 480)
         result = show_run(selected, evaluation=args.evaluation, case=args.case, profile=args.profile, session=args.session)
         output = render_show(result)
     print(json.dumps(result, ensure_ascii=False, indent=2) if args.json else output)
 
 
 if __name__ == '__main__':
-    main()
+    raise SystemExit(main())

@@ -134,6 +134,18 @@ def render_experiment(detail):
     lines = [f"{detail['id']} | {detail['variant']} | {detail['task']} | {detail['status']}",
              f"生成: {detail['generation']['status']}；部署: {detail['deployment']['status']}；"
              f"评分: {detail['evaluation']['status']}；得分: {_score_text(detail['evaluation'])}"]
+    blocker = detail.get('runtime_blocker')
+    if blocker:
+        if blocker['status'] == 'clear':
+            lines.append(f"Braid 实时: active turn={blocker['active_turns']}，pending event={blocker['pending_events']}")
+        else:
+            items = '、'.join(owner['work_item'] for owner in blocker['blocked_owners'])
+            label = '基础设施阻断' if blocker['status'] == 'blocked' else '受阻负责人'
+            lines.append(f"{label}: {items}；active turn={blocker['active_turns']}，pending event={blocker['pending_events']}")
+            errors = sorted({owner['context_error'] for owner in blocker['blocked_owners']})
+            lines.extend(f"  Context 错误: {error}" for error in errors)
+            if blocker['provider_log_error']:
+                lines.append(f"  原始 provider 错误: {blocker['provider_log_error']}")
     if detail.get('labels'):
         lines.append('实验标签: ' + json.dumps(detail['labels'], ensure_ascii=False))
     for name, error in (('执行', detail.get('error')), ('生成', detail['generation'].get('error')),
