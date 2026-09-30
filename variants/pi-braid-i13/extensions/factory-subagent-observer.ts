@@ -318,7 +318,7 @@ function handoffLine(run: PreviousRun): string {
 	const state = result && ["complete", "failed", "paused", "stopped", "rejected"].includes(result.state)
 		? `native result ${result.state}`
 		: status ? `native status ${status.state}${status.updated ? ` at ${status.updated}` : ""}` : "native status unavailable (unknown after cold restore)";
-	return `- ${run.role} ${run.id} (parent ${run.parent}): ${state}${artifact ? `; ${artifact}` : ""}; artifacts ${path.join(run.home, "subagent-artifacts")}; inspect subagent({action:"status",id:"${run.id}"}).`;
+	return `- ${run.role} ${run.id} (parent ${run.parent}): ${state}${artifact ? `; ${artifact}` : ""}; artifacts ${path.join(run.home, "subagent-artifacts")}.`;
 }
 
 export function factorySubagentObserver(pi: {
@@ -403,7 +403,7 @@ export function factorySubagentObserver(pi: {
 		introduced = true;
 		const currentHome = process.env.PI_CODING_AGENT_DIR;
 		const index = currentHome ? path.join(currentHome, ".factory", "previous-subagents.json") : "(unavailable)";
-		return { message: { customType: "factory-subagent-handoff", content: `Previous native subagent runs for this same worktree (verify before re-delegating a write task). Showing ${Math.min(handoff.length, 8)}/${handoff.length}; full run index: ${index}. Results are re-read on recovery; completion updates are recorded while this native session is alive, without starting a new response. Inspect pending results needed for your work before declaring completion. These entries do not transfer task ownership.\n${handoff.slice(0, 8).map(handoffLine).join("\n")}`, display: true } };
+		return { message: { customType: "factory-subagent-handoff", content: `Previous native subagent runs for this same worktree. Showing ${Math.min(handoff.length, 8)}/${handoff.length}; full run index: ${index}. Results were re-read on recovery; later completion updates will be recorded without starting a new response. These entries do not transfer task ownership.\n${handoff.slice(0, 8).map(handoffLine).join("\n")}`, display: true } };
 	});
 	pi.on("session_shutdown", () => { activeSession = undefined; closeWatchers(); checks.clear(); handoff = []; });
 	pi.on("tool_result", (event, context) => {
@@ -413,7 +413,7 @@ export function factorySubagentObserver(pi: {
 			const content = event.content ?? [];
 			const text = content.filter((part: any) => part.type === "text").map((part: any) => part.text).join("\n");
 			if (/Unknown agent\b/i.test(text)) return { content: [...content, {
-				type: "text", text: 'Use subagent({action:"list"}) to choose a native role. A Braid assignment already gives that work to its member; native roles assist your own bounded work. Check the existing owner before retrying, and do not map a member/model name to executor to start the same assigned issue again.',
+				type: "text", text: 'This call did not start a native role. Braid member names, model IDs, and subagent role names belong to separate namespaces.',
 			}] };
 		}
 		// Keep the native result; explain the separate bash job namespace at the failed call.
@@ -426,9 +426,9 @@ export function factorySubagentObserver(pi: {
 		const empty = !id && text.includes("No active async runs or registered provider work in this session. Nothing to wait for.");
 		if (!missingJob && !empty) return;
 		const hint = missingJob
-			? `${id} is a Pi Background Bash job, not a native subagent run ID. Use pbb status ${id} or pbb tail ${id} for early progress; aggregate subagent_wait includes registered background tasks.`
-			: "There is no pending native subagent or registered background task. Long-lived services (service:true) do not count as pending results; use pbb status/tail when you need to inspect a service.";
-		return { content: [...content, { type: "text", text: `${hint} Bash completion messages arrive automatically. Continue independent work; if only waiting remains, end this response so completion can wake you. Do not create another sleep-and-poll bash job.` }] };
+			? `${id} identifies a Pi Background Bash job; no native subagent run matched it.`
+			: "There is no pending native subagent or registered background task in this session. Long-lived services (service:true) are excluded from pending results.";
+		return { content: [...content, { type: "text", text: hint }] };
 	});
 	for (const event of ["subagent:async-started", "subagent:control-event", "subagent:foreground-complete", "subagent:process-terminal"])
 		pi.events.on(event, (value) => current().observe(value));

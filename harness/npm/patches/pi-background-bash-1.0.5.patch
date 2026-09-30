@@ -34,19 +34,19 @@
  });
  
  const JOB_ID_PREFIX = "bg";
-@@ -216,6 +222,12 @@
+@@ -214,6 +220,12 @@
+ 		laneRoot: process.env.PI_LANE_ROOT,
+ 		root: process.env.PBB_ROOT || join(homedir(), ".pi", "pbb"),
  	};
- }
- 
++}
++
 +function currentPiSessionId(ctx: { sessionManager: { getSessionFile(): string | null | undefined; getSessionId(): string | null | undefined } }): string {
 +	const sessionId = ctx.sessionManager.getSessionFile() ?? ctx.sessionManager.getSessionId();
 +	if (!sessionId) throw new Error("Cannot track background bash job without a Pi session identity.");
 +	return sessionId;
-+}
-+
- function asRecord(value: unknown): Record<string, unknown> | undefined {
- 	return value && typeof value === "object" ? (value as Record<string, unknown>) : undefined;
  }
+ 
+ function asRecord(value: unknown): Record<string, unknown> | undefined {
 @@ -753,7 +765,7 @@
  			display: true,
  			details: item.details,
@@ -56,16 +56,14 @@
  	);
  }
  
-@@ -924,10 +936,18 @@
- 		}
- 	}
+@@ -926,8 +938,16 @@
  	nextJobNumber = Math.max(nextJobNumber, max + 1);
-+}
-+
-+function pendingCompletionJobs(): ActiveJob[] {
-+	return [...activeJobs.values()].filter((job) => job.ownerSessionId && !job.service);
  }
  
++function pendingCompletionJobs(): ActiveJob[] {
++	return [...activeJobs.values()].filter((job) => job.ownerSessionId && !job.service);
++}
++
  export default function backgroundBashExtension(pi: ExtensionAPI) {
  	installProcessHooks();
 +	const unregisterBackgroundWork = registerBackgroundWorkProvider({
@@ -102,21 +100,28 @@
  	});
  
  	pi.on("context", (event) => {
-@@ -969,10 +994,10 @@
+@@ -969,16 +994,10 @@
  	pi.registerTool({
  		name: "bash",
  		label: "bash",
 -		description: `Execute a bash command in the current working directory. Returns stdout and stderr. Verbose background results are truncated with the full output available through pbb tail. Set background: true to run immediately in the background and get a job id. Otherwise, if the command is still running after the configured auto-background threshold (${formatThreshold(DEFAULT_AUTO_BACKGROUND_AFTER_SECONDS)} by default), it is automatically moved to the background; a <pi_context source="pi-background-bash" kind="background_bash_result"> message is injected when it finishes. Optionally provide a timeout in seconds.`,
 -		promptSnippet: `Execute bash commands (ls, grep, find, etc.); timeout is in seconds. Set background: true for long-running non-interactive commands. Commands still running after the configured auto-background threshold (${formatThreshold(DEFAULT_AUTO_BACKGROUND_AFTER_SECONDS)} by default) automatically move to background and wake you with a pi-background-bash result when finished.`,
-+		description: `Execute a bash command in the current working directory. Returns stdout and stderr. Verbose background results are truncated with the full output available through pbb tail. Set background: true to run immediately in the background and get a job id. Otherwise, if the command is still running after the configured auto-background threshold (${formatThreshold(DEFAULT_AUTO_BACKGROUND_AFTER_SECONDS)} by default), it is automatically moved to the background; a <pi_context source="pi-background-bash" kind="background_bash_result"> message is injected when it finishes. Optionally provide a timeout in seconds. Set service: true to start a long-lived server or watcher in the background without waiting for it to exit.`,
-+		promptSnippet: `Execute bash commands (ls, grep, find, etc.); timeout is in seconds. Set background: true for long-running non-interactive commands. Commands still running after the configured auto-background threshold (${formatThreshold(DEFAULT_AUTO_BACKGROUND_AFTER_SECONDS)} by default) automatically move to background and wake you with a pi-background-bash result when finished. Set service: true for persistent servers or watchers; it also starts the job in the background.`,
- 		promptGuidelines: [
+-		promptGuidelines: [
 -			"Use bash with background: true for long-running non-interactive commands such as builds, full test suites, dev servers, watchers, deploys, downloads, or commands you do not need before the next step.",
-+			"Use bash with background: true for long-running non-interactive commands such as builds, full test suites, deploys, or downloads. For persistent dev servers and watchers, set service: true to start them in the background without waiting for exit.",
- 			`Use bash normally for shell commands; Pi automatically moves bash commands that run longer than the configured auto-background threshold (${formatThreshold(DEFAULT_AUTO_BACKGROUND_AFTER_SECONDS)} by default) to the background.`,
- 			"When bash reports that a command started or moved to background, do not retry it just to wait; continue independent work or tell the user the job is running.",
- 			"Use the pbb CLI (`pbb list`, `pbb status <job>`, `pbb tail <job>`) only when you need progress before the completion follow-up arrives, need full truncated logs, or need to manage a job; pbb defaults to the current pi-lane runtime instance when available.",
-@@ -987,7 +1012,7 @@
+-			`Use bash normally for shell commands; Pi automatically moves bash commands that run longer than the configured auto-background threshold (${formatThreshold(DEFAULT_AUTO_BACKGROUND_AFTER_SECONDS)} by default) to the background.`,
+-			"When bash reports that a command started or moved to background, do not retry it just to wait; continue independent work or tell the user the job is running.",
+-			"Use the pbb CLI (`pbb list`, `pbb status <job>`, `pbb tail <job>`) only when you need progress before the completion follow-up arrives, need full truncated logs, or need to manage a job; pbb defaults to the current pi-lane runtime instance when available.",
+-			"When a <pi_context source=\"pi-background-bash\" kind=\"background_bash_result\"> message appears, treat it like the final result of the original bash command.",
+-			"Do not use bash for interactive commands that require stdin unless the user explicitly asks for that behavior.",
+-		],
++		description: `Execute a bash command in the current working directory. Returns stdout and stderr. Optionally provide a timeout in seconds. Set background:true to run a long non-interactive command immediately in the background and get a job id; otherwise commands still running after the configured threshold (${formatThreshold(DEFAULT_AUTO_BACKGROUND_AFTER_SECONDS)} by default) automatically move to background. Set service:true for a persistent server or watcher; it starts in the background and does not delay session completion.
++A <pi_context source="pi-background-bash" kind="background_bash_result"> message carries the final result of the original command. Obtain that result and exit code before reporting completion. Do not retry a background command merely to wait. Verbose results are truncated; use pbb tail for full logs. Use pbb list/status/tail only for early progress, full logs, or job management; pbb defaults to the current pi-lane runtime instance, so an empty current list does not describe old jobs. After session replacement, read retained results with pbb status/tail and the returned globalJobId.
++Do not use bash for interactive commands requiring stdin unless the user explicitly asks.`,
++		promptSnippet: "Execute shell commands and manage background jobs.",
+ 		parameters: schema,
+ 		async execute(toolCallId, params, signal, onUpdate, ctx): Promise<AgentToolResult<BashToolDetails | BackgroundBashDetails>> {
+ 			const autoAfterSeconds = getAutoBackgroundAfterSeconds(ctx.cwd);
+@@ -987,7 +1006,7 @@
  				throw new Error("Command aborted");
  			}
  
@@ -125,7 +130,7 @@
  				if (activeJobs.size >= MAX_ACTIVE_JOBS) {
  					throw new Error(`Too many bash jobs running (${activeJobs.size}/${MAX_ACTIVE_JOBS}). Wait for one to finish before starting another.`);
  				}
-@@ -996,6 +1021,8 @@
+@@ -996,6 +1015,8 @@
  					id: formatJobId(nextJobNumber++),
  					command: params.command,
  					toolCallId,
@@ -134,7 +139,7 @@
  					abortController: new AbortController(),
  					startedAt: Date.now(),
  					cwd: ctx.cwd,
-@@ -1009,10 +1036,11 @@
+@@ -1009,10 +1030,11 @@
  					id: job.id,
  					text: job.command,
  					startedAt: job.startedAt,
@@ -147,7 +152,7 @@
  				// Capture cwd eagerly: the completion callback may fire after session
  				// teardown (headless one-shot exit), when ctx.cwd access throws.
  				const jobCwd = ctx.cwd;
-@@ -1022,7 +1050,9 @@
+@@ -1022,7 +1044,9 @@
  				scheduleDetachedBackgroundToolResultRepair(ctx, toolCallId);
  
  				return {
@@ -158,7 +163,7 @@
  					details: runningJobDetails(job, ctx.cwd),
  				};
  			}
-@@ -1078,6 +1108,7 @@
+@@ -1078,6 +1102,7 @@
  				latestBody = getText(update);
  				if (!backgrounded) onUpdate?.(update);
  			});
@@ -166,7 +171,7 @@
  
  			const winner = await Promise.race([completedPromise, waitForBackgroundThreshold(autoAfterSeconds)]);
  			if (winner !== "background") {
-@@ -1093,6 +1124,8 @@
+@@ -1093,6 +1118,8 @@
  			job.id = formatJobId(nextJobNumber++);
  			job.cwd = ctx.cwd;
  			job.pbb = pbbIdentity(ctx);
@@ -175,7 +180,7 @@
  			activeJobs.set(job.id, job);
  			recordPbbJobStarted(job, ctx.cwd);
  			appendPbbLogDelta(job, latestBody);
-@@ -1100,7 +1133,7 @@
+@@ -1100,7 +1127,7 @@
  				id: job.id,
  				text: job.command,
  				startedAt: job.startedAt,

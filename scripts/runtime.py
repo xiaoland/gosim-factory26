@@ -39,14 +39,18 @@ def prepare(lock_dir):
           'skills/pi-subagents/references/prompting-and-roles.md',
           'src/extension/schemas.ts',
           'src/extension/tool-description.ts',
+          'src/runs/background/async-execution.ts',
           'src/runs/background/async-resume.ts',
           'src/runs/background/async-status.ts',
           'src/runs/background/run-status.ts',
+          'src/runs/background/subagent-runner.ts',
+          'src/runs/background/wait-tool.ts',
           'src/runs/foreground/execution.ts',
           'src/runs/foreground/subagent-executor.ts',
           'src/runs/shared/acceptance.ts',
+          'src/runs/shared/single-output.ts',
           'src/runs/shared/structured-output.ts')),
-        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-braid-boundary.patch', ('dist/core/agent-session.js',)),
+        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-braid-boundary.patch', ('dist/core/agent-session.js', 'dist/core/tools/edit.js', 'dist/core/tools/grep.js', 'dist/core/tools/find.js', 'dist/core/resource-loader.js')),
     )
     def patch_matches(package, patch_name, target_names):
         patch_file = lock_dir/'patches'/patch_name
@@ -68,6 +72,10 @@ def prepare(lock_dir):
             targets = [cache/'node_modules'/package/name for name in target_names]
             subprocess.run(['patch','--batch','--fuzz=0','-p1','-d',str(cache/'node_modules'/package),
                             '-i',str(patch_file)],check=True)
+        # Later patches may touch an earlier patch's targets; record the final assembly.
+        for package, patch_name, target_names in patches:
+            patch_file = lock_dir/'patches'/patch_name
+            targets = [cache/'node_modules'/package/name for name in target_names]
             (cache/(patch_name+'.sha256')).write_text(
                 hashlib.sha256(patch_file.read_bytes()).hexdigest()+'\n'+
                 ''.join(hashlib.sha256(target.read_bytes()).hexdigest()+'\n' for target in targets))
