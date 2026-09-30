@@ -1,4 +1,5 @@
-"""Run both approved tasks with the bundled BigModel and Moonshot routes."""
+"""Run both approved tasks with the credentials bundled in the frozen package."""
+import argparse
 import json
 import os
 from pathlib import Path
@@ -12,7 +13,9 @@ from lab.arc_bench.competition import Controller
 
 
 def main():
-    journal = ROOT/'runs/pi-minimal/20260930/self-funded'
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('journal', type=Path)
+    journal = parser.parse_args().journal.resolve()
     inputs = json.loads((journal/'inputs.json').read_text())
     if inputs['credential_mode'] != 'self_funded':
         raise ValueError('This experiment must not use competition credit')

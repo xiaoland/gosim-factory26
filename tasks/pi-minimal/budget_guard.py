@@ -23,7 +23,6 @@ from usage_budget import active_cost
 
 
 TARGET = (ROOT / "runs/pi-minimal/20260929/official").resolve()
-SELF_FUNDED_TARGET = (ROOT / "runs/pi-minimal/20260930/self-funded").resolve()
 STOP_NAME = "budget-stop.json"
 EVENTS_NAME = "budget-events.jsonl"
 COMPETITION = "hackathon"
@@ -38,11 +37,12 @@ class GuardError(RuntimeError):
 
 def target_journal(value, self_funded=False):
     path = Path(value).expanduser().resolve()
-    expected = SELF_FUNDED_TARGET if self_funded else TARGET
-    if path != expected:
-        kind = "self_funded" if self_funded else "官方"
-        raise GuardError(f"只允许 pi-minimal {kind} journal：{expected}")
-    path.mkdir(parents=True, exist_ok=True)
+    if self_funded:
+        inputs = json.loads((path/'inputs.json').read_text())
+        if inputs.get('variant') != 'pi-minimal' or inputs.get('credential_mode') != 'self_funded':
+            raise GuardError('观察器需要 pi-minimal self_funded journal')
+    elif path != TARGET:
+        raise GuardError(f"只允许 pi-minimal 官方 journal：{TARGET}")
     return path
 
 

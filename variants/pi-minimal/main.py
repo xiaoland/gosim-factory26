@@ -45,7 +45,7 @@ def run(requirements, output):
     key = None
     if private_models.is_file():
         models = json.loads(private_models.read_text())
-        main_provider, advisor_model = 'bigmodel', 'moonshot/kimi-k2.7-code'
+        main_provider, advisor_model = 'bigmodel', 'arc/kimi-k2.7-code'
     else:
         key = os.environ.get('OPENAI_API_KEY') or os.environ.get('FACTORY26_API_KEY')
         base = os.environ.get('OPENAI_BASE_URL') or os.environ.get('FACTORY26_BASE_URL')

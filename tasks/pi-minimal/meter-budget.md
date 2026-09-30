@@ -1,6 +1,6 @@
 # pi-minimal Meter 余额保护
 
-当前：旧参赛两题已终态，参赛余额最后核实246.100666 CNY。新self_funded两题已启动，2026-09-30 08:54:41 CST真实官网工作区下载含Pi用量，脚本首次完成37次响应的估算：GitHub0.2219508元、Sheet0.19994576元，记录无缺口。持续脚本每600秒采集，模式不查询比赛余额、不设个人自费取消阈值。正在进行的请求不计入已知消费；这不是供应商账单或实时账户余额。当前入口见本文self_funded observe段。
+当前：旧self_funded两题已按用户要求取消，快照保留。用户授权以BigModel主模型、ARC自带key的Kimi advisor从头重跑，当前journal为 `runs/pi-minimal/20260930/arc-advisor/official`。费用脚本按provider/model分组，每600秒采集；ARC自带key与正式参赛额度分开，不使用100元比赛停止阈值。新运行的实际用量证据待启动后记录。
 
 ## 已核实的账户与当前余额
 
@@ -79,13 +79,15 @@ Sheet 的失败发生在生成阶段：16:45:22 UTC `main.py` 等待 Pi stdout �
 
 用户授权的自费两题 journal 为：
 
-`runs/pi-minimal/20260930/self-funded`
+`runs/pi-minimal/20260930/arc-advisor/official`
+
+观察器读取journal中的variant/credential_mode来限定pi-minimal自费运行，不再把单个实验目录写死。旧self-funded记录保持可读取。
 
 启动观察器的参数为：
 
 ```sh
 python3 tasks/pi-minimal/budget_guard.py \
-  runs/pi-minimal/20260930/self-funded \
+  runs/pi-minimal/20260930/arc-advisor/official \
   --self-funded-observe
 ```
 
@@ -102,3 +104,5 @@ python3 tasks/pi-minimal/budget_guard.py \
 复用原 factory-pi-timing.ts，不增加模型提示词、工具或模型调用；主 Pi 和 advisor 都装载，统一写 pi-timing.jsonl。新增 usage_budget.py 从同一官方工作区下载入口读取该文件，以 request_id 去重，只计算 message_end 中已返回的用量；Pi input 已排除 cacheRead/cacheWrite，推理 token 已包含在 output，不重复计费。ARC 当前价格来自已认证的 /api/user/models，快照见 arc-prices.json。
 
 既有 budget_guard.py 每600秒采集活动 run，估计余量=采集后官网账面余额−未终态 run 的已知费用，≤100取消该journal两题。每次从完整快照重算，不累加重复下载；下载期间终态的 run 由随后账面余额覆盖。费用数据缺失、未知模型、损坏或部分行明确标 usage_unknown，不把差额当可信余量。正在生成但尚未返回的请求、采样和下载延迟仍不计入已知费用，因此这是软阈值。监控没有启动新实验；下一次授权运行须确认可下载 timing 文件并与终态官方费用比较。
+
+最新真实采集（08:56:54 CST）：GitHub0.2219508元、Sheet0.32302944元，合计0.54498024元，脚本PID82936。Sheet的Moonshot组出现两次请求、0用量；进一步读取原生子会话确认均为供应商余额不足429，不是成功的免费调用。当前可确认费用证据采集和GLM工作，advisor受账户条件阻断。

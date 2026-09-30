@@ -1,5 +1,15 @@
 # Pi 最小参赛 Variant
 
+## 2026-09-30 改用 ARC advisor，从头重跑（当前状态）
+
+用户先暂停两题，再指定“Kimi使用ARC key”，随后明确“直接重新开始”。旧GitHub `7338d6d166d9`、Sheet `1d653b593474`均已CANCELLED；原始应用和Pi会话暂停快照保存在 `runs/pi-minimal/20260930/self-funded/pause/receipt.json`。先前准备的两个resume.zip不使用，接续脚本的本轮临时改动已撤回。
+
+新实验从公开需求开始，不带入旧应用或会话。主模型仍为BigModel GLM-5.3-flash，advisor使用`~/.config/factory26/llm.env`中的个人ARC key，provider=arc、模型kimi-k2.7-code；只读models查询确认该模型可选，真实调用待新运行验证。模式self_funded，不占比赛额度。新冻结纯Harness `runs/pi-minimal/20260930/arc-advisor/base-agent.zip`，SHA256 `b4196fd387909a21a39a34e8c10f2a69c621057c7ed4f0647b60db3eeaf66e6a`；journal为同目录official。费用观察继续每600秒，按BigModel与ARC分组，启动身份随后写入。I11本地恢复独立继续，原I10不动。
+
+## 历史过程
+
+以下保留各阶段当时的决定；当前运行范围和路由以开头为准。
+
 目标：截止前准备原生 Pi + background tasks + subagents 的独立 variant，移除 SVC/Braid，回到直接完成产品需求的最小方式。
 
 用户已复核精简配置，授权实现、自由提交及官网正式参赛；每10分钟检查余额，不高于100停止。I10仍暂停，I11源码保留。
@@ -78,4 +88,4 @@ GitHub原始安装错误为后端npm的edgesOut空引用；前端install/build�
 
 ## 2026-09-30 自费官网两题（当前授权）
 
-用户授权用当前修正版在官网 self_funded 并行运行两题，先核实际启动和费用监控再汇报I11。用户进一步指定BigModel和Kimi地址/密钥打包进上传包，不使用单一ARC模型路由或参赛额度。models只读查询已确认两家分别提供glm-5.3-flash、kimi-k2.7-code；主Pi使用bigmodel，advisor使用moonshot，配方/模型ID保持。凭据仅取.secrets/models.env并写入本次制品private-models.json，不加入Git或打印。新 journal `runs/pi-minimal/20260930/self-funded`；冻结 ZIP SHA256 `1c50df83e817bc29e011b88682a21e891a555d4302cebe4bbed8f904fb51da2b`，submission `643fc8f5340f`。GitHub `7338d6d166d9`、Sheet `1d653b593474` 分别于08:47:43/51 CST进入RUNNING。控制器PID81443先并行启动两题，再收集。首次下载已确认两题原生会话、identity、pi-timing均可取得，主请求provider=bigmodel。08:54:41 CST独立常驻脚本记录37个已完成请求、无usage缺口：GitHub约0.221951元，Sheet约0.199946元；每600秒继续抓取，正在返回前的两条请求不计入。Advisor已配置moonshot，当前尚无实际调用证据；后续发生时从同一timing流分组。BigModel以官方标准价保守估计，不假设折扣；这是已观察消费，不是供应商账户实时余额。进程身份保存journal/usage-monitor-process.json。费用按实际供应商记录；不得拿比赛100元阈值套到自费账户。
+用户授权用当前修正版在官网 self_funded 并行运行两题，先核实际启动和费用监控再汇报I11。用户进一步指定BigModel和Kimi地址/密钥打包进上传包，不使用单一ARC模型路由或参赛额度。models只读查询已确认两家分别提供glm-5.3-flash、kimi-k2.7-code；主Pi使用bigmodel，advisor使用moonshot，配方/模型ID保持。凭据仅取.secrets/models.env并写入本次制品private-models.json，不加入Git或打印。新 journal `runs/pi-minimal/20260930/self-funded`；冻结 ZIP SHA256 `1c50df83e817bc29e011b88682a21e891a555d4302cebe4bbed8f904fb51da2b`，submission `643fc8f5340f`。GitHub `7338d6d166d9`、Sheet `1d653b593474` 分别于08:47:43/51 CST进入RUNNING。控制器PID81443先并行启动两题，再收集。首次下载已确认两题原生会话、identity、pi-timing均可取得，主请求provider=bigmodel。08:54:41 CST独立常驻脚本记录37个已完成请求、无usage缺口：GitHub约0.221951元，Sheet约0.199946元；每600秒继续抓取，正在返回前的两条请求不计入。08:56:54 CST下一次真实采集已看到Sheet两次moonshot/kimi-k2.7-code请求，但原生子会话均返回429 exceeded_current_quota_error（供应商明确余额不足），usage为0；因此证实路由/记录可取得，不能声称advisor成功工作。GLM两题仍推进，估算累计0.54498024元。需用户处理Kimi额度；未自行换模型或调用参赛额度。BigModel以官方标准价保守估计，不假设折扣；这是已观察消费，不是供应商账户实时余额。进程身份保存journal/usage-monitor-process.json。费用按实际供应商记录；不得拿比赛100元阈值套到自费账户。
