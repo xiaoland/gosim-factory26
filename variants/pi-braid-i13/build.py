@@ -12,7 +12,7 @@ p.add_argument('--runtime',type=Path,required=True)
 p.add_argument('--skills',type=Path,required=True)
 a=p.parse_args()
 assemble(HERE,a.stage,a.runtime,a.skills,
-         skills=('svc-sub-agents','svc-task-packet','svc-documentation','svc-investigation','svc-design','svc-implementation',
+         skills=('svc-sub-agents','svc-task-packet','svc-documentation',
                  'svc-verification','hyperformula','handsontable','better-auth-best-practices',
                  'organization-best-practices','fixing-accessibility','ponytail','impeccable',
                  'agent-browser'))

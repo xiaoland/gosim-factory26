@@ -31,7 +31,7 @@ ROOT_CHECK_MESSAGES = (
     '检查相关 Issue/PR 的讨论：把已形成的决定归入当前说明，隐藏失效内容并说明理由，解决已结束的讨论；保留未决问题。'
     '更新已有内容，不追加重复进度，也不为本次提醒重复检查已有效的结果。',
 )
-MAIN_SKILLS = ('svc-sub-agents', 'svc-task-packet','svc-documentation', 'svc-investigation', 'svc-design', 'svc-implementation',
+MAIN_SKILLS = ('svc-sub-agents', 'svc-task-packet','svc-documentation',
                'svc-verification', 'hyperformula', 'handsontable', 'better-auth-best-practices',
                'organization-best-practices', 'fixing-accessibility', 'ponytail', 'impeccable',
                'agent-browser')

@@ -83,7 +83,7 @@ Linux 构建另收录 rg、ast-grep 与 MCPorter：前两者按原生二进制�
 
 团队 Harness 另需 Braid 二进制与 SVC 技能集合。
 使用现有 `sources/braid`、`sources/svc` 工作树。
-当前活动 variant 使用 `harness/skills/svc-{task-packet,investigation,design,implementation,verification}` 五个目录链接，指向 `sources/svc/skills/`；`harness/skills/svc` 是归档 variant 的历史快照。需要不同技能来源时显式传入包含所选完整技能的 `--skills-root`（运行）或 `--skills`（打包）。
+I13 使用 `harness/skills/svc-{documentation,task-packet,sub-agents,verification}` 四个目录链接，指向 `sources/svc/skills/`；其它技能链接保留供既有消费者使用，`harness/skills/svc` 是归档 variant 的历史快照。需要不同技能来源时显式传入包含所选完整技能的 `--skills-root`（运行）或 `--skills`（打包）。
 缺源码时先确认所需上游与本地修改，不让能力解析触发隐式 clone 或切换分支。
 
 ```sh
@@ -177,7 +177,7 @@ python3 scripts/package_agent.py --variant pi-braid \
 raw 打包可直接使用 `package_raw_core.py --runtime <runtime目录>`，不要求先创建团队 ZIP；`--source <历史ZIP>` 只保留为旧资源的读取方式。
 模型和 backend 仍由 raw 命令显式选择。
 
-SVC 在 `sources/svc/skills/` 提供五个独立完整的 skill；各目录的 `SKILL.md`、`references/` 与 `assets/` 构成对应分发材料。
+SVC 在 `sources/svc/skills/` 保留七个独立 skill 源码目录；I13 选择 documentation、task-packet、sub-agents、verification 四项，不打包或引用 investigation、design、implementation。各技能目录的 `SKILL.md`、`references/` 与 `assets/` 构成对应分发材料。
 `copy_skill` 由源码运行和打包共用，复制入口、标准资源目录及许可文件，将来源链接物化为普通文件。
 维护者 AGENTS、仓库文档、CLI 和开发环境不进入 skill。
 每个 variant 独立选择要提供的技能及哪些会话启用它们；没有 SVC 专用正文参数或二次装配。
