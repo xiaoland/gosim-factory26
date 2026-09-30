@@ -1,6 +1,6 @@
 # 原生 Hackathon 本地运行
 
-此四配置实验已归档，保留运行和证据恢复说明。当前活动实现与新实验见 [Variant 状态](../../variants/README.md) 和 [正式比赛基线任务](../../tasks/hackathon-team-baseline/packet.md)。
+此四配置实验已归档，保留运行和证据恢复说明。当前开发入口见 [Variant 索引](../../variants/README.md)，该对照的来源及后继实验入口见[历史基线任务](../../tasks/hackathon-team-baseline/packet.md)，新运行仍按对应 packet 的当前授权执行。
 
 这次对照有 `codex-base`、`codex-svc`、`pi-base`、`pi-svc` 四个配置。Codex 与 Pi 各自使用原生子代理，不经 Braid；同一核心的两组差异是 SVC skill 及其选定方法章节的装载。主 Agent、explorer、executor 使用 GLM 5.3 Flash，advisor 使用 Kimi K3，browser operator 使用 DeepSeek V4 Flash Vision Exp。四组都有 agent-browser 和独立的 `playwright-core`，后者供 Agent 自行检查生成应用。角色由 [hackathon_main.py](../../variants/native-hackathon/hackathon_main.py) 装配。
 
@@ -8,14 +8,14 @@
 Explorer、executor、advisor 直接取得 exploration-tools 指引；SVC 组还分别取得 Explore、Implementation、Design 原文及其导航来源，browser operator 保持工具专项指引。
 子代理使用独立历史，父会话在委派中给出必要事实、材料入口和范围。Pi 使用 fresh、append 与显式技能选择，并关闭内建角色；Codex 按原生 spawn 工具字段明确不继承父历史。
 各组运行入口均配置 `MCPORTER_CONFIG`，新运行资源包含 rg、ast-grep 和 MCPorter；详细使用方法随 exploration-tools skill 分发。
-本轮子代理改造尚未构建或实验验收，现有冻结 ZIP 不受源码修改影响；下一轮统一实验前须构建新 runtime 并重新打包。
+角色源码和历史冻结 ZIP 的材料不同；对应改造当时未取得完整实验验收。恢复旧实验必须使用它自己的冻结资源，不能依据当前源码推断旧 ZIP 已具备新能力。
 
 
-只在 WSL 构建、运行模型和评测。自购供应商凭据在项目内 `.secrets/models.env`，权限为 `600`。[hackathon_gateway.py](../../scripts/hackathon_gateway.py) 在 WSL 宿主读取它，向容器只传 `GATEWAY_URL` 与临时 `GATEWAY_TOKEN`。这组历史实验默认由网关移除客户端自带的推理、温度和采样参数，让供应商使用自己的默认值；新实验若需保留现有配方，可为独立网关实例传 `--preserve-parameters`。`request-metadata.jsonl` 记录模型、客户端原始输出预算与规范化参数，不记录消息正文或密钥。官方 Runner 的宿主 `OPENAI_API_KEY` 由适配器清除，避免把第三方密钥交给 ARC Meter。先用 `docker network inspect bridge` 核实容器能访问的宿主地址；本机是 `172.17.0.1`。
+只在 WSL 构建、运行模型和评测。自购供应商凭据在项目内 `.secrets/models.env`，权限为 `600`。[hackathon_gateway.py](../../scripts/hackathon_gateway.py) 在 WSL 宿主读取它，向容器只传 `GATEWAY_URL` 与临时 `GATEWAY_TOKEN`。这组历史实验默认由网关移除客户端自带的推理、温度和采样参数，让供应商使用自己的默认值；新实验若需保留现有配方，可为独立网关实例传 `--preserve-parameters`。`request-metadata.jsonl` 记录模型、客户端原始输出预算与规范化参数，不记录消息正文或密钥。官方 Runner 的宿主 `OPENAI_API_KEY` 由适配器清除，避免把第三方密钥交给 ARC Meter。先用 `docker network inspect bridge` 核实容器能访问的宿主地址；历史环境使用 `172.17.0.1`，新环境须重新核对实际地址。
 
 本实验不另设输出长度预算。网关移除客户端的 `max_tokens`、`max_completion_tokens`、`max_output_tokens`，由供应商决定默认行为。Pi 0.85.1 即使省略 descriptor 的 `maxTokens` 仍会自动发送 16384，因此必须在 API 边界移除，单删配置无效。[hackathon_models.json](../../variants/native-hackathon/hackathon_models.json) 只供 Pi 声明上下文信息，网关不再读取参赛包的模型文件。`request-metadata.jsonl` 分别记录规范化参数和 LiteLLM 转换后的上游参数，可检查兼容层是否重新补入上限。修改运行策略时使用新网关实例和新包，保留既有实验的参数记录。
 
-不传长度不代表供应商无限生成：GLM 5.3 Flash 官方默认 65536，Kimi K3 默认 131072，模型及剩余上下文仍有限制。依据：[GLM 参数](https://docs.bigmodel.cn/cn/guide/start/concept-param)、[Kimi Chat API](https://platform.kimi.com/docs/api/chat)。`--thinking off` 仅避免 Pi 注入推理档位；GLM 5.3 Flash 仍按供应商默认思考。DeepSeek 官方已将本实验保留的 `deepseek-v4-flash-vision-exp` 别名路由到 V4.1 Flash，见[官方说明](https://api-docs.deepseek.com/quick_start/pricing/)。
+不传长度不代表供应商无限生成，模型默认值与上下文限制仍生效；当时的参数与别名调查见[本地能力任务](../../tasks/hackathon-capabilities/packet.md)，不能作为此刻供应商接口的承诺。`--thinking off` 只避免 Pi 注入推理档位，供应商仍可按其默认策略思考。
 
 在 WSL 仓库执行，输出目录须是全新路径；网关示例的 4013 端口也须先确认空闲：
 
@@ -40,14 +40,4 @@ Pi 主会话若以模型输出长度上限 `length` 结束，会在同一 sessio
 
 ## 将冻结产物交给官网评测
 
-官网未公开测试时，可将已完成的本地应用封装为产物回放包，通过非榜单运行取得隐藏测试反馈。构建仍在 WSL 执行。每题生成完成后立即单独打包并提交官网，以 `self_funded` 评分，不等待同批其它题目完成。多题重放包仍可用于已全部完成的历史应用，但不能给同一需求放入多个候选应用：
-
-```sh
-python3 -m lab.arc_bench.package_arc_replay \
-  --run ../factory26-official-local/runs/<matrix>/<github-run-id> \
-  --output ../factory26-official-local/<variant>-artifact-replay.zip
-```
-
-打包器依据已发布的应用声明判断可复用性，即使后续 Runner 部署或评测失败也可使用已完整发布的应用；旧运行没有声明时会校验现存标准应用并标明是在打包时导入。它不携带依赖缓存、Agent 会话或环境凭据。应用的持久化数据保留生成结束时的状态，打包器不替应用重置数据或修改实现。`replay-manifest.json` 记录来源 run、需求 SHA256 和归档文件哈希。入口根据实际传入的 `requirements.yaml` 哈希选择应用，等待 3 秒后将文件交付到输出目录；不匹配时直接报告实际哈希，避免对错误版本的需求评分。官网再负责安装依赖、构建、部署和运行测试。
-
-提交名称使用 `artifact-replay`，关闭“使用比赛额度评测”。回放入口不调用模型。2026-09-24 实测 API 密钥表单接受 `artifact-replay-no-model-calls` 占位值，两题 API 的 `billing_mode` 均为 `self_funded`，应用均成功交付和部署；评分是否完成需继续检查测试终态与计数。官网回放耗时和模型开销不能当作原生成性能，生成成本继续取自对应本地 run。保存官方 run 链接、测试通过数、评分和具体错误，并与回放包 SHA256 关联；不要把隐藏测试反馈传入仍在生成的 Agent。
+已完成应用与生成中明确 Git 提交的回放是跨 Harness 能力，操作、阶段身份和隐藏反馈隔离已归到[恢复与回放手册](recovery.md#冻结应用与阶段提交回放)。本页保留四配置的历史生成条件；回放评分不能当作原生成耗时或模型性能。

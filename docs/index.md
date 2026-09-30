@@ -1,6 +1,6 @@
 # Factory26 文档与任务入口
 
-当前说明回答项目如何工作；task packet 保存进行中的问题与决定；报告保留特定条件下观察到的结果。
+当前说明解释产品目标、组件约定与操作方法；task packet 保存当前问题、决定、授权及下一步；报告保留特定条件下观察到的结果。
 历史报告和原始 handoff 不作为当前操作规范。
 
 ## 当前说明
@@ -15,10 +15,10 @@
 | 外部命令实验、OTLP 与控制 CLI 契约 | [Lab](../lab/README.md) |
 | 实验登记、运行命名与配方 | [实验导航](../experiments/README.md) |
 | Braid OTLP、会话网站与故障定位 | [Braid 诊断运行手册](deployment/braid-diagnostics.md) |
-| 当前 Lite 两阶段本地矩阵配方 | [pi-braid Lite](../experiments/pi-braid-lite/README.md) |
+| 人工查看对象、会话或暂停运行 | [Console 接入](deployment/console.md) |
 
 参数与模型值从各 [variant](../variants/) 和实际制品读取，文档解释意义与修改关系，不维护第二份配置表。
-当前活动实现与归档状态见 [Variant 索引](../variants/README.md)；本会话的已落地、待验证和暂停事项见 [迭代总览树](../tasks/iteration-map.md)。
+当前开发入口与保留实现见 [Variant 索引](../variants/README.md)；迭代接续从 [I13 packet](../tasks/iteration13/packet.md) 和 [迭代总览树](../tasks/iteration-map.md) 定位，具体状态归对应 packet。
 当前自费回放与修复版完整实验见 [预算与交付](../tasks/competition-budget/packet.md)；旧正式运行记录保留历史身份，不构成新参赛授权。
 当前支持与设计意图分开写；更新时改写受影响正文，不靠新增声明覆盖过期推荐。
 局部实现理由归代码旁，跨组件约定归技术说明，操作命令归开发/运行说明。
@@ -31,16 +31,19 @@
 
 | 主题 | 入口 |
 | --- | --- |
-| 当前主线、授权与工作单元 | [迭代12 packet](../tasks/iteration12/packet.md)：从零运行已暂停，保留工作连续性修复及人工介入console；[I11恢复与最终评分](../tasks/iteration11/runtime-stalls/packet.md)，前序[迭代11](../tasks/iteration11/packet.md)及[迭代10](../tasks/iteration10/packet.md)保留原始设计和运行证据 |
-| 当前V&V改写与后续协作改进 | [迭代13 packet](../tasks/iteration13/packet.md)：V&V元理论、内容与导航改写已提交，运行采用未验证；G01及角色接线、Console整体暂停/恢复分别保留待办状态 |
-| 实时查看与介入I12 Issue/PR | [协作console](deployment/console.md)，写入复用Braid CLI；人工介入是本轮研究条件 |
+| 当前开发、授权与工作单元 | [I13 packet](../tasks/iteration13/packet.md)；工具、原生子代理、提示词和协作方法各批实施与未验事项均从此进入。 |
+| 前序生成、人工介入与结果来源 | [I12 packet](../tasks/iteration12/packet.md)、[I11 packet](../tasks/iteration11/packet.md)、[I11恢复与评分](../tasks/iteration11/runtime-stalls/packet.md)、[I10 packet](../tasks/iteration10/packet.md)；冻结实现和现场不随 I13 更新。 |
+| 协作现场的查看、会话与物理控制 | [Console packet](../tasks/braid-console-control/packet.md)；通用接入与边界见[操作说明](deployment/console.md)。 |
 | 开发体验、文档系统与独立 variant 演化 | [DX](../tasks/developer-experience/packet.md)；[独立 variant 前序材料](../tasks/independent-variants/packet.md) |
 | Variant、实验与运行的命名整理 | [命名方案任务](../tasks/variant-experiment-naming/packet.md)（实现与文档已完成，证据及验证边界见 packet） |
 | 参赛 SVC 方法与 skill 接线 | [Corpus](../tasks/svc-corpus-review/packet.md)、[skill](../tasks/svc-skill-integration/packet.md) |
 | Hackathon 能力选型与 SVC 技能路由 | [技能与工具设计](../tasks/hackathon-capabilities/packet.md)；[既有 Lite 基线](../tasks/hackathon-team-baseline/packet.md) |
 | Braid 工作项上下文、CLI 易用性与 Agent 指派 | [Braid 改进](../tasks/braid-usability/packet.md) |
 | 官方与本地实验的组织及恢复 | [双比赛官网记录](../tasks/dual-bench-hosted/packet.md)、[raw 本地基线](../tasks/raw-core-local-baseline/packet.md) |
-| 官网中断恢复、低频监控与耗时改进 | [实验设施](../tasks/experiment-infrastructure/packet.md) |
+| 官网中断恢复、低频监控与耗时改进 | [实验设施](../tasks/experiment-infrastructure/packet.md)，长期操作见[恢复手册](deployment/recovery.md)。 |
+| 实验来源、查询与存储生命周期 | [端到端追溯](../tasks/experiment-traceability/packet.md)、[存储生命周期](../tasks/experiment-storage-lifecycle/packet.md)；后者的独立实现仍以分支/worktree 为准。 |
+| Braid 产品加固与独立实验 | [产品加固](../tasks/braid-product-hardening/packet.md)；已授权范围及实测限制由 packet 保存。 |
+| 长期文档整理 | [本轮 packet](../tasks/durable-docs-curation/packet.md)，包含归属、来源及未核实边界。 |
 | Braid 独立架构与功能审查 | [架构审查](../tasks/braid-architecture-audit/packet.md) |
 | 本轮 GitHub / Sheet 得分根因 | [GitHub](../tasks/github-score-diagnosis/packet.md)、[Sheet](../tasks/sheet-score-diagnosis/packet.md) |
 | 得分与 Agent 过程分析 | [官网结果](../tasks/official-results/packet.md)、[本地过程](../tasks/local-run-analysis/packet.md) |
@@ -78,5 +81,3 @@
 
 Use `svc lookup` when packaged Sustainable Vibe Coding Corpus guidance is relevant, and discover its browse/search/read grammar through `svc lookup --help`. Project documentation outside this marked block remains Consumer-owned.
 <!-- svc:end navigation -->
-
-- [Braid 产品加固与 Flash Team](../tasks/braid-product-hardening/packet.md)：授权修复、产品审查、WSL 两题实验。

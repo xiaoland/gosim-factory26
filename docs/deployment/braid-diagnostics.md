@@ -4,7 +4,7 @@
 
 ## 已具备的能力与数据来源
 
-Braid 在配置 OTEL endpoint 时导出 traces、logs、metrics：trace 记录本次运行的生命周期与耗时，logs 承载普通诊断及完整原生文件/对象快照，metrics 记录操作结果和已知 Pi usage。运行期间每五秒采集已落盘根会话及对象，结束时收尾；Factory 完成原生归档后补采最终文件和内部子代理。`pi-braid` 与 `pi-braid-flash-team` 的新包会在生成容器内启动独立接收器，把三信号写入生成目录 `.factory26/<run>/telemetry.sqlite`；接收器持续到最终补采结束后关闭。其端口由系统分配在容器 loopback，不占用应用评测的 3000 端口。若接收器启动失败，`run.json` 的 `telemetry_diagnostic_error` 和 `telemetry-collector.log` 保留原因，生成仍继续。
+Braid 在配置 OTEL endpoint 时导出 traces、logs、metrics：trace 记录本次运行的生命周期与耗时，logs 承载普通诊断及完整原生文件/对象快照，metrics 记录操作结果和已知 Pi usage。运行期间每五秒采集已落盘根会话及对象，结束时收尾；Factory 完成原生归档后补采最终文件和内部子代理。采用当前包内接收器接线的 Pi/Braid 团队新包会在生成容器内启动独立接收器，把三信号写入生成目录 `.factory26/<run>/telemetry.sqlite`；接收器持续到最终补采结束后关闭。其端口由系统分配在容器 loopback，不占用应用评测的 3000 端口。若接收器启动失败，`run.json` 的 `telemetry_diagnostic_error` 和 `telemetry-collector.log` 保留原因，生成仍继续。
 
 含请求计时修正的 Collector 每处理一个 POST，会向同目录 `telemetry-collector.log` 写一条 `event=otlp_request_timing` JSON。`started_at`/`finished_at` 是 Unix 时间戳（秒）；`read_ms`、`decode_ms`、`persist_ms`、`response_write_ms`、`total_ms` 是本机 monotonic 耗时（毫秒）。未进入的阶段为 `null`，失败请求保留已走阶段、`failure_stage` 和 HTTP 状态；成功提交的批次带 `batch_id`。`persist_ms` 包含 SHA-256、入库与 commit，`response_write_ms` 只代表本地写出，不证明客户端已收到回执。记录仅包含 signal、collector session、字节数和上述时间/状态，不包含 token、headers 或 payload；历史包及实施前运行没有这些记录。
 
@@ -60,7 +60,7 @@ sources/braid/target/debug/braid telemetry reconstruct \
 
 `native_profile` 的 token 数来自 Pi assistant 消息的 `usage`，按原生消息 ID 去重；按实际 model/provider、根成员与 Pi 子会话、成功与错误消息分组。每个字段同时显示已知消息数，缺失字段保持未知。Pi 回调只记录请求、响应头、首个实际流增量、最终消息和工具起止的时间及身份，不保存 prompt、响应正文或工具参数。请求到首增量是客户端可见延迟，不能称为服务端推理时间；未结束请求的用量与耗时未知，未结束工具耗时未知。模型调用、工具和并行任务的累计时长不能相加当总墙钟。旧归档没有这些新回调时间，剖面会明确标记 `timing_events=absent`。Pi 的 input 与 cacheRead 是分别报告的字段；cacheRead 为 0 不能证明供应商没有缓存命中，Pi 的 cost=0 也不是账单，当前剖面不估算费用或性价比。
 
-WSL Runner 的外层 Collector 仍为其他 Harness 提供接收。上述两个 variant 使用包内 Collector，因而外层 `telemetry.sqlite` 可以为空；`lab telemetry`、外层 run 终态统计与 viewer 会优先定位工作区归档中的包内数据库，并显示所用路径。官网旧运行的工作区已有取回记录；**新自包含包**的 `telemetry.sqlite` 随官网工作区取回尚未由真实新运行核对。当前没有验证官网公网实时接收，也没有为它配置外部端点。
+WSL Runner 的外层 Collector 仍为其他 Harness 提供接收。采用该接线的 variant 使用包内 Collector，因而外层 `telemetry.sqlite` 可以为空；`lab telemetry`、外层 run 终态统计与 viewer 会优先定位工作区归档中的包内数据库，并显示所用路径。官网旧运行的工作区已有取回记录；**新自包含包**的 `telemetry.sqlite` 随官网工作区取回尚未由真实新运行核对。当前没有验证官网公网实时接收，也没有为它配置外部端点。
 
 ## 从哪些文件开始排障
 
@@ -119,7 +119,7 @@ Factory 自动补采最多等待 120 秒，错误单独记录，不覆盖应用�
 | Backend 查询、运行选择与生成网站 | `lab/analysis/braid_telemetry_viewer.py` |
 | GitHub 式讨论、聊天与三信号展示 | `lab/analysis/braid_telemetry_viewer.html` |
 
-当前已经以真实 Backend 数据核对原生字节、对象、重复导出和 HTTP 错误；构建及格式/语法检查也有记录。实时模型链路、子代理全文、原生 compaction/分支仍缺新的真实材料；浏览器视觉与交互验收受工具 URL 策略阻断，未宣称通过。后续实际验证和原始收据入口见[阶段报告](../../reports/2026-09-24-braid-otlp.md)。
+真实 Backend 已核对原生字节、对象、重复导出和 HTTP 错误；新包也有构建、接收器写入和原生材料反馈。各迭代实际运行材料需与冻结身份一起解释，不能据这些局部结果承诺所有历史或新运行的实时链路、子代理全文及 compaction/分支完整性。早期网站视觉与交互验收受工具 URL 策略阻断，未宣称通过。早期验证与原始收据见[阶段报告](../../reports/2026-09-24-braid-otlp.md)，自包含 Collector、Pi 时间回调和后续原生关联修复见[设施实施](../../tasks/experiment-infrastructure/cells/self-contained-observability.md)及当前迭代 packet；不同来源的验收范围不能混用。
 
 修改展示优先用已归档真实 Backend 生成新目录并核对原始数据，不默认启动模型实验，不新增 Factory 测试、mock 或 smoke。改 Braid 需在其独立仓库构建并更新对应合同；旧包不会因宿主代码更新获得新 exporter 能力。
 
@@ -135,9 +135,6 @@ Factory 自动补采最多等待 120 秒，错误单独记录，不覆盖应用�
 用量按响应时间，耗时按操作开始时间；跨边界操作排除数另列，不把旧运行耗时算入新窗口。
 模型汇总的 Braid 成员数、原生主会话数、Pi 子会话数分别列出；Context reset 后同一成员会有多个原生主会话。
 供应商 usage 与账单不同，错误请求的零用量不证明免费。
-
-本地生成的 `arc_bench_adapter.py --memory 4g --cpus 2` 将资源参数原样传给官方 local runner；未指定时沿用 runner 默认值。
-记录资源配额与 cgroup 压力后再比较耗时，不把不同资源条件下的变化单独归功于模型或 Harness。
 
 ## 原生子任务与浏览器临时目录
 

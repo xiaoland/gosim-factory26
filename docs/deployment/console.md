@@ -16,6 +16,16 @@
 
 部署验收须实际读取各run的列表、根Issue及已有PR详情，并再次核对原容器的`Paused`状态；读取成功不单独证明写入可用。若原进程暂停在SQLite写事务内，按实际错误及journal处理，不通过解锁或自动恢复绕过。
 
+## 对象、会话与原生正文
+
+工作项页面按 Braid agent → provider sessions 展示当前和历史原生关系，来源是登记 binary 的 `status --json.physical_sessions`；Braid、provider 和 native 身份分别保留。此目录按 physical 材料枚举，空列表不能证明从未执行，缺失正文也不抹去可得元数据。
+
+正文通过 `GET /api/transcript` 按稳定字节游标分页读取，先核对原生 header 的 native 身份。浏览器只传 run、physical 记录 ID 与 offset，不提供任意文件路径；具体分页和数据边界归 Console README。文件缺失或身份不匹配保留错误，不从另一会话补正文。关系、工具 call/result 和原文位置帮助取证，不能从历史 provider 状态推断生成容器此刻是否暂停。
+
+当前已经取得真实 Pi 会话的只读接口反馈，Codex 正文和页面直链、前后导航及草稿保护仍有未验边界。人工编辑成功、控制回执、模型读取消息和最终任务效果分别核实；完整证据及缺口归[会话导航记录](../../tasks/braid-console-control/session-navigation.md)。
+
+## 运行身份与实际验收
+
 当前I12的运行身份、部署PID、人工输入journal与停止证据见 [I12 packet](../../tasks/iteration12/packet.md)、[Console记录](../../tasks/iteration12/console.md)及[部署记录](../../tasks/iteration12/deployment.md)。
 I12是人工介入研究条件；旧I11摘剪接续已停止，不再用作当前生成起点。原始记录仍保留，历史页面与旧源码位置仅供追溯。
 I12暂停后访问的修复及真实操作边界见 [I13 Console暂停访问记录](../../tasks/iteration13/console-paused-access.md)。

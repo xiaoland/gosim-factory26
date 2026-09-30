@@ -6,8 +6,10 @@
 
 | 实现 | 状态 | 维护职责 |
 | --- | --- | --- |
-| [pi-braid](pi-braid/) | 活动基线 | 当前持续开发流程，develop/main 集成、自动化整体验收和真实完成后的交付。 |
-| [pi-braid-i13](pi-braid-i13/) | 当前开发，尚未冻结实验 | 独立副本承载子Agent简化、完整工具与三层委派；其它批次按[I13 packet](../tasks/iteration13/packet.md)推进。 |
+| [pi-braid](pi-braid/) | 保留的 I10 基线 | 原运行使用的冻结包与逐次恢复来源见 [I10 packet](../tasks/iteration10/packet.md)，目录源码不能替代旧制品身份。 |
+| [pi-braid-i11](pi-braid-i11/) | 保留的 I11 实现 | 原生成、交付及评分来源见 [I11 packet](../tasks/iteration11/packet.md)。 |
+| [pi-braid-i12](pi-braid-i12/) | 保留的 I12 人工介入实现 | 原冻结运行及暂停现场见 [I12 packet](../tasks/iteration12/packet.md)；Console 在开发侧，不装入制品。 |
+| [pi-braid-i13](pi-braid-i13/) | 当前开发入口 | 独立维护当前生成、角色、工具与方法材料；已实现范围、待验边界和后续方案见 [I13 packet](../tasks/iteration13/packet.md)。 |
 | [pi-braid-flash-team](pi-braid-flash-team/) | 实验实现 | 从最新 pi-braid 独立派生；GLM 根成员，Qwen/MiniMax 工作项成员；原生子角色保持来源模型。 |
 | [pi-braid-kimi-root](pi-braid-kimi-root/) | 实验实现 | 从当前 pi-braid 独立派生；仅根成员使用 Kimi K2.7 Code，GLM/DeepSeek 工作项成员及原生角色保持基线。 |
 | [pi-braid-coordinator](pi-braid-coordinator/) | 实验实现 | 根只协调，不写应用代码，也不作为后续工作项的可指派成员。 |
@@ -19,7 +21,8 @@ coordinator 与 review 保留各自现有行为，没有随改名自动同步基
 
 独立实现使用 `<engine>-<coordination>[-<workflow>]`。engine 表示 Pi/Codex 等客户端；coordination 表示 Braid 或原生委派；workflow 只用于值得独立维护的职责或生命周期差异。原生委派不等于单 Agent。
 
-仅修改模型、供应商、预算、技能选择或普通提示词版本时，通常以实验 case 和冻结输入区分，不创建永久 variant。由指令表达的协调或验收职责仍可能是真实工作流差异，不能仅按文件类型判断。
+仅修改模型、供应商、预算、技能选择或普通提示词版本时，通常以实验 case 和冻结输入区分，不创建永久 variant。
+I11–I13 是用户明确要求的迭代隔离副本，保留迭代后缀，不代表新增模型家族。Braid/SVC 共用源码仍会演进；I10 的隔离依据是冻结包和逐次热修复来源，不是声称整个依赖树已复制。由指令表达的协调或验收职责仍可能是真实工作流差异，不能仅按文件类型判断。
 
 | 旧活动入口 | 当前入口 |
 | --- | --- |
@@ -41,4 +44,4 @@ coordinator 与 review 保留各自现有行为，没有随改名自动同步基
 
 家族是导航分类，不是可执行别名。历史实现的技能、分支、导出与清理流程可能不同，不代表当前基线的等价配置。
 
-实验均停用参赛额度，新制品须符合按 Braid session 的预算保护，见 [预算与交付](../tasks/competition-budget/packet.md)。索引不记录某次成绩或“正在构建”等运行瞬态；历史结果与来源关系见 [官网运行总览](../tasks/competition-budget/packet.md#官网-hackathon-运行总览2026-09-26-核对)。
+当前实验使用自带 key 的 `self_funded`；旧 pi-minimal 正式参赛记录保留历史身份，不恢复其自动接续授权。正式参赛须针对具体冻结产物取得新授权。新制品须符合按 Braid session 的预算保护，现行边界见 [AGENTS.md](../AGENTS.md#实验边界)与[预算与交付](../tasks/competition-budget/packet.md)。索引不记录某次成绩或“正在构建”等运行瞬态；历史结果与来源关系见 [官网运行总览](../tasks/competition-budget/packet.md#官网-hackathon-运行总览2026-09-26-核对)。

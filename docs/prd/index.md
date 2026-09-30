@@ -1,7 +1,7 @@
 # Factory26 产品说明
 
 Factory26 用于开发和比较参加 GOSIM Agentic Factory / ARC-Bench 的 Agent Harness。
-本项目由 Coding Agent 开发，用户参与需求、方案与授权决策；被评测的运行时 Agent 则在无用户中途介入的环境中接收需求包并生成应用。
+本项目由 Coding Agent 开发，用户参与需求、方案与授权决策；被评测的运行时 Agent 则依据冻结输入接收需求包并生成应用。独立生成基线没有用户中途介入；人工介入研究须单独记录其条件，不能混作同一基线。
 
 每次实验应能回答：冻结了哪些输入和实际执行代码、使用哪个 Harness 和模型、产生什么应用、评测如何结束，以及 Agent 过程和错误的原始证据在哪里。一次任务的多次尝试分别保留；模型请求如经过共享网关，应能关联到确切 run，而不是靠相近时间推测。
 组件实现见[技术说明](../product-tdd/index.md)，执行与恢复见[运行说明](../deployment/index.md)，实验结论与当前任务从[文档索引](../index.md)进入。
@@ -24,12 +24,12 @@ Issue 承载需求理解、技术方案与最终验收设计；PR 承载实施�
 
 multi-agent 指多个 Braid 工作项的 Agent 协作，sub-agent 指原生 Pi/Codex 会话内部的局部委派。
 两者具有不同的上下文和生命周期，不能因内部子代理异常就让 Braid 接管其生命周期。
-SVC 提供文档、任务包、探索与实施方法、有界委派及 V&V；它与 Braid 独立，由 Harness 选择如何接入。
+SVC 提供文档、任务包、有界委派及 V&V 的通用方法；它与 Braid 独立，由 Harness 选择如何接入。
 Braid 不复制 V&V 方法或替 Agent 判断证据充分性；它提供保存和交流这些判断的工作项与讨论操作。
 
 ## 当前实现与产品要求的区别
 
-当前活动团队实现为 `variants/pi-braid`，采用 Pi、Braid 和 SVC skill；另有独立实验工作流与历史归档，状态以 [Variant 索引](../../variants/README.md) 为准。
+当前开发团队实现为 `variants/pi-braid-i13`，采用 Pi、Braid 和独立 SVC skill。I10–I12 的源码、冻结输入与运行证据保留原身份，另有独立实验工作流与历史归档，入口以 [Variant 索引](../../variants/README.md) 为准；当前实施和未验事项归 [I13 packet](../../tasks/iteration13/packet.md)。
 raw Pi/Codex 是独立基线，不能把 raw Codex 的 CLI 路径等同于团队 Codex app-server 接入。
 具体模型、技能、角色和实验矩阵由所选源码、冻结包及实验任务决定，不在这里维护另一份清单。
 
@@ -47,7 +47,7 @@ raw Pi/Codex 是独立基线，不能把 raw Codex 的 CLI 路径等同于团队
 可恢复的设施故障属于已授权实验闭环，不能把它当成取得评分而提前结束；无法继续或前提发生实质变化时报告具体阻塞。
 取得既定 benchmark 的完整结果后先汇报，由用户决定下一轮；沿用验收方法不等于自动开启下一轮实验。
 
-每次实验的题目、variant、完成条件和授权归对应 task packet，执行身份和结果归冻结清单与原始记录。
+每次实验的题目、variant、完成条件和授权归对应 task packet，执行身份和结果归冻结清单与原始记录。当前实验采用自带 key 的 `self_funded`，历史正式额度记录不授予新运行权限；正式参赛须针对具体冻结产物取得新的明确授权。
 长期产品说明不固定某轮题目数或矩阵规模。
 只有输入、源码/制品、应用与评分身份明确的结果才能横向比较；历史单任务、Playground、本地公开评测和官网评分分别标明条件。
 

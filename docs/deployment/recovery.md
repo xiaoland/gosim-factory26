@@ -1,0 +1,77 @@
+# 工作区恢复、应用重放与监控
+
+本文说明已授权实验中如何保留进度、接续工作区或对冻结应用评分。改变设施与运行模型是不同授权范围；新一次执行须有明确输入、来源和完成条件。产品边界见 [PRD](../prd/index.md)，具体历史恢复与实测范围见[实验设施 packet](../../tasks/experiment-infrastructure/packet.md)。
+
+## 实验恢复与反馈循环
+
+选择执行方式时，先区分三类运行：
+
+| 方式 | 输入与产出 | 结果归属 |
+| --- | --- | --- |
+| 新 Harness 实验 | 冻结 Harness、需求和模型条件，重新生成应用，再评分 | 本次冻结 Harness 的完整执行结果。 |
+| 工作区断点恢复 | 保留原始 ZIP，在副本中恢复代码、会话和协作状态，完成必要的剩余工作 | 原始运行加明确恢复改动后的结果，不是原版本独立完成。 |
+| 完成应用重放 | 冻结已完成的应用，用既有 replay 打包入口部署评分，不再调用生成 Harness | 指定应用版本的评分；不能冒称一次新的端到端生成成绩。 |
+
+### 完成工作区与未完成接续
+
+已完成的 Braid 工作区用 `python3 scripts/package_completed_recovery.py --source-run-id <旧run> --workspace <官网工作区ZIP> --base-package <旧冻结包> --braid <修复版Linux二进制> --braid-source <对应源码快照> --output <新包>` 准备。新包携带原工作区与哈希；入口恢复原 Braid run、确认所有工作项终态，再导出旧 `main`。每个新包使用独立的 Competition journal 和 `self_funded`，旧 run 不会原地恢复；具体来源及身份见当轮 packet。默认模式发现开放工作项会拒绝生成，防止一次重评意外调用模型。
+
+自费迭代遇到未完成的生成中断时，保留原始 ZIP 和完整 Braid 工作区。打包命令添加 `--continue-generation` 可准备未完成工作区的接续包；它恢复原模型与工具环境、Git 索引及保留文件，调用原 `braid local` 请求，不改数据库生命周期。此模式只用于来源执行环境已经停止的快照；恢复入口显式调用 `braid local REQUEST --offline-resume`，由 Braid 撤销旧执行身份、修复输入重放并准备会话，Factory 不修改数据库。未完成接续已有平稳续进的官网实际反馈，但该 run 后由用户主动结束，没有恢复后的完整评分结论；已完成恢复模式另有生成、部署和评分证据。具体范围见 [设施 packet](../../tasks/experiment-infrastructure/packet.md#验证与限制)，已有 g03–g05 手写包不作为此入口验收。原始证据保持只读，接续时新增的通知要标明来源，不能改写成历史上已经送达。
+
+### 选择检查点并刷新材料
+
+热恢复先确定错误首次出现及开始大规模扩散的时间，优先选择扩散前最近的可恢复检查点，避免把已受影响的上下文和协作状态原样带入修复后的运行。核对检查点内应用与 Git、Braid 数据库和原生会话的时间及相互引用；单独回退应用提交不能代表整个运行已回退。保留当前现场，记录选择依据、会丢弃的有效进度以及缺失材料。没有可确认的较早检查点时，明确记录限制，再按已授权范围接续。
+
+需要把新的技能和原生指令应用于半成品时，使用包含新 variant 材料的 `--base-package`，并同时指定 `--continue-generation --refresh-native-materials`。恢复入口重建宿主拥有的 skills、capabilities 和成员指令，保留旧材料副本、应用工作区、协作记录和原模型路由；Braid 在离线恢复边界重建受影响的原生会话。仅替换二进制而不刷新材料，不代表新技能或提示词已生效。原执行须先停止，每次接续使用新的包和运行目录。
+
+
+接续入口从工作区 ZIP 还原 Unix 文件权限和符号链接，使用包内 Pi 时间回调与 OTLP 接收器追加本次采集。Braid 结束后重新归档原生会话，原 ZIP 自带的 `native/` 先保存在 `recovery-source-native-<时间戳>/`；`recovery-diagnostics.json` 分别记录采集、归档和清理错误。清理失败仍阻断交付。旧来源和新接续的采集时间段应分开解读，不能把恢复后新增记录当作旧运行的当时状态。
+
+应用生成完成后冻结交付版本，通过官网自费应用重放取得官方评分；本地模拟分数和启动检查不替代官网评分。工作区接续与应用重放分别记录来源，不能把重放分数冒称为一次新的端到端生成成绩。正式参赛提交从冻结 Harness 和需求重新生成，以测量完整执行；自费迭代不因此丢弃可续接的工作区。
+
+## 官网监控
+
+监控由程序与一次性审查者分工。程序在 run 启动后前 10 分钟每 3 分钟、随后每 8 分钟读取状态和阶段；运行中默认不下载整个工作区，也不调用模型。终态时下载原始工作区，保存总分、阶段及身份，然后退出；终态下载失败另记 `evidence_errors` 并随终态告警退出，不把缺证据当已收齐，也不因不存在的失败工作区无限等待。官网工作区打包下载允许 10 分钟，覆盖通常的 2–3 分钟。需要语义监督时明确添加 `--review`，每批下载后启动读取 [固定审查指令](../../agents/run-monitor.md) 的一次性审查者。审查者不计时或轮询。
+
+下载、审查进程启动、审查结果保存、告警提交与取消确认分别留收据。文件哈希变化、token 增长不等于进展；下载失败不等于实验失败；通知系统接受提醒不代表人已看到。审查失败必须成为明确告警，不能把 needs_review 文件视作已经有人处理。每批保存提示词版本、模型、输入证据路径与结论，避免并发重复审查同一批。
+
+短题暴露通用缺陷时，先保留全部现场并确定原因，再做有针对性的修复验证。在已授权的官网并行实验中，可按当轮规则取消同轮未终态的 Hackathon 运行；取消需要实际请求及远端状态确认。本地断点恢复应保留进度、受控暂停后续接，不机械沿用官网取消策略，也不在活动进程中无记录更换二进制。合理等待、外部故障与 Harness 缺陷分别处理，禁止无依据反复重生成。
+
+每轮在 task packet 登记题目、模型、来源、费用模式、调度、告警消费者和完成条件。官网默认使用 API、`self_funded` 自带 key、非参赛，不占比赛额度；策略可复用不等于无限付费授权。
+
+执行入口：`python3 -m lab.arc_bench.hosted_monitor <证据目录> --journal <Competition状态目录> [--journal <另一个状态目录>]`。省略 `--journal` 时沿用 `<目录>/hackathon` 或 `arc-bench-lite` 布局。默认只观察；已有明确取消授权且使用旧目录布局时，才可添加 `--cancel-on-lite-failure`。`FAILED` 但评分完成不触发联动取消；明确的生成/部署失败或审查者有证据的阻塞结论才进入取消路径。历史本地恢复使用任务内的 `runs/e20260927-01-handoff/local-monitor.py`；它不是所有 run 的统一入口。新本地观察入口见 [证据查询](evidence.md#等待反馈与交接)。
+
+## 历史本地 attempt 的恢复
+
+恢复历史 attempt 的采样时，若该 attempt 保存了 `monitor-generation.py`，用该 attempt 的 `generation-monitor.jsonl` 查看最后采样时间，再用 `pgrep -af '[m]onitor-generation.py'` 核对**同一路径**的监控进程仍在；旧采样行不能证明程序仍活着。只在确认该 attempt 没有现存监控进程且两题仍运行时，使用 attempt 的 Python 重新启动其原脚本并保留 stdout/stderr 到 `monitor.log`。脚本从各题 `run.json.started_at` 计算前十分钟每 180 秒、之后每 480 秒的间隔，接续不会重置观察窗；这只恢复采样，不重启生成或模型，也不代替原生 Pi/数据库核对。
+
+两题运行由一次性 `run-experiment.py` 包装时，用户取消会使 `lab run` 返回非零；包装脚本不能仅凭子进程退出码把取消记作实验失败。新 attempt 的包装脚本应在非零返回后读取两题 `run.json.phase`：均为 `cancelled` 时记录外层 `cancelled` 并跳过评分，其余故障保留原错误。旧 attempt 的 `execution.json` 和脚本保持原样，报告同时展示外层错误与逐题取消事实。
+
+## 冻结应用与阶段提交回放
+
+官网未公开测试时，可将已完成的本地应用封装为产物回放包，通过非榜单运行取得隐藏测试反馈。构建仍在 WSL 执行。每题生成完成后立即单独打包并提交官网，以 `self_funded` 评分，不等待同批其它题目完成。多题重放包仍可用于已全部完成的历史应用，但不能给同一需求放入多个候选应用：
+
+```sh
+python3 -m lab.arc_bench.package_arc_replay \
+  --run ../factory26-official-local/runs/<matrix>/<github-run-id> \
+  --output ../factory26-official-local/<variant>-artifact-replay.zip
+```
+
+打包器依据已发布的应用声明判断可复用性，即使后续 Runner 部署或评测失败也可使用已完整发布的应用；旧运行没有声明时会校验现存标准应用并标明是在打包时导入。它不携带依赖缓存、Agent 会话或环境凭据。应用的持久化数据保留生成结束时的状态，打包器不替应用重置数据或修改实现。`replay-manifest.json` 记录来源 run、需求 SHA256 和归档文件哈希。入口根据实际传入的 `requirements.yaml` 哈希选择应用，等待 3 秒后将文件交付到输出目录；不匹配时直接报告实际哈希，避免对错误版本的需求评分。官网再负责安装依赖、构建、部署和运行测试。
+
+生成尚未完成时，获得阶段评分授权后可显式冻结已提交的分支。此模式必须同时指定 `--git-repo` 与 `--ref`，只接受一个来源 `--run`；来源 run 提供题目和原生成身份，应用内容只来自该 Git 提交：
+
+```sh
+python3 -m lab.arc_bench.package_arc_replay \
+  --run runs/<experiment>/generation/runs/<run-id> \
+  --git-repo /path/to/braid-state/origin.git --ref refs/heads/develop \
+  --output runs/<experiment>/phase-replay/<task>-provisional.zip
+```
+
+打包器将 ref 解析一次为 commit，再用该 SHA 执行 `git archive`，在临时目录复用原有应用清单与打包流程，不读取正在写入的工作树，也不停止生成。清单的 `source_application` 保存 `provisional: true`、Git 仓库/ref/commit 和来源 run，`provenance` 为 `git-archive-provisional`；这些身份继续传入官网 journal。阶段应用不冒充已发布交付，不生成 published receipt。只有提交中的持久化文件会进入快照，未提交的数据不另行补入；缺少标准 `frontend/package.json` 或 `backend/package.json` 时直接失败，不能替生成 Agent 补代码或调整数据以取得评分。
+
+阶段 ZIP 和官网 journal 使用独立路径，名称注明 `provisional`，仍只走 `self_funded`。已有上传或创建结果不确定时，先读取对应 journal 和官网状态，不重复上传。阶段评分与生成完成后的正式应用评分分别记录，隐藏评分反馈不传给仍在生成的 Agent。
+
+重放沿用 [Competition 的 journal 与比赛锁边界](competition.md#参赛包与平台边界)。监控退出时先读日志并刷新原 run 状态；已经终结则 collect，仍在运行才接续同一 journal 的 watch，不重复创建 run。
+
+提交名称使用 `artifact-replay`，关闭“使用比赛额度评测”。回放入口不调用模型。2026-09-24 实测 API 密钥表单接受 `artifact-replay-no-model-calls` 占位值，两题 API 的 `billing_mode` 均为 `self_funded`，应用均成功交付和部署；评分是否完成需继续检查测试终态与计数。官网回放耗时和模型开销不能当作原生成性能，生成成本继续取自对应本地 run。保存官方 run 链接、测试通过数、评分和具体错误，并与回放包 SHA256 关联；不要把隐藏测试反馈传入仍在生成的 Agent。

@@ -38,7 +38,7 @@
 
 ## 修改一个成员或内部角色
 
-下面以 `variants/pi-braid` 为例，其他 variant 独立维护自己的选择。
+下面以当前开发的 `variants/pi-braid-i13` 为例，其他 variant 独立维护自己的选择；旧冻结包按自身材料解释。
 
 | 想改变什么 | 修改位置 | 需要一起理解的消费者 |
 | --- | --- | --- |
@@ -58,11 +58,7 @@ I13内部角色默认使用独立历史（`defaultContext:fresh`），以本次�
 
 [pi-braid-i13](variants/pi-braid-i13/)的角色description帮助调用方选择有委派价值的工作，正文说明用途；不声明角色工具白名单。`settings.json`选择默认基础工具，原生扩展提供委派、联络、等待及后台执行能力。`run.py`只替换角色的技能和扩展路径，不追加父profile、运行条件或方法正文；以`PI_SUBAGENT_MAX_DEPTH=3`限制子层深度。完整工具能力不代替委派的目标与修改范围。原生接口介绍工具使用，技能提供按需方法，不在角色中重复维护。
 
-原生 Hackathon 四配置由 `variants/native-hackathon/hackathon_main.py` 装配：角色简介用于选角，正文在 `variants/native-hackathon/agents/`，`scripts/package_hackathon.py` 收录正文和技能。
-Base/SVC 两组提供相同探索工具；只有 SVC 组装入对应方法及完整技能入口。
-Codex 使用原生 `agents/*.toml`；历史由 spawn 参数控制，按实际工具协议传 `fork_context:false` 或 `fork_turns:"none"`。
-Pi 明确 append 基础系统提示、选定技能并关闭内建角色发现。配置表达意图，实际生效与收益仍须从后续真实会话取证。
-
+原生 Hackathon 四配置是独立的历史对照，其角色装配、原生历史与网关参数见 [归档运行说明](docs/deployment/hackathon.md)。不要把该实验的材料注入方式套用到当前 I13。
 
 ## 准备实际需要的依赖
 
@@ -91,7 +87,7 @@ I13 使用 `harness/skills/svc-{documentation,task-packet,sub-agents,verificatio
 cargo build --locked --manifest-path sources/braid/Cargo.toml
 ```
 
-开发侧 `.venv/bin/svc` 是独立的开发/analysis 工具；参赛 Agent 只使用技能材料，不安装 SVC CLI。
+开发侧 `.venv/bin/svc` 是独立的开发/analysis 工具；运行时 Agent 只使用技能材料，不安装 SVC CLI。
 显式选择完整开发源码安装，要求本机有 uv 和 Git：
 
 ```sh
@@ -99,7 +95,7 @@ python3 scripts/runtime.py dev-svc --svc-source ~/Development/svc
 ```
 
 该命令创建或复用 `.venv`，安装所选工作树的 `cli/`，并将来源路径、HEAD、工作区状态和版本写入 `.bootstrap/dev-svc.json`。
-本次采用完整开发源码 `80996c115ba635c6b85db47d0b14663293b95f12` 加该工作树本地修改，CLI 为 15.0.0；只切到相同 HEAD 不包含本地修改，须同时交接下面的源码归档。
+安装来源身份以本机 `.bootstrap/dev-svc.json` 和实际源码归档为准；只取得同一 HEAD 不包含尚未提交的本地修改，跨机器必须同时交接它们。
 其安装版本与项目 Corpus baseline 可由 `.venv/bin/svc status --json` 查看，配置健康不代表开发路径或模型接线已经验收。
 
 ### 换机器时哪些内容会缺失
@@ -139,18 +135,18 @@ Cargo、uv 和 runtime 准备在目标平台重建依赖，不复制跨平台 ve
 ## 直接验证源码
 
 以下命令写出真实原生配置、技能目录和 Braid request，不启动 Braid 或调用模型。
-`REQUIREMENTS` 指向带 requirements.yaml 的小需求目录，不要求整个 benchmark。
+`REQUIREMENTS` 指向本次允许的输入目录。I13 校验目录和实际读取错误，不要求 `requirements.yaml` 作为生成硬门槛；ARC 材料解释由独立技能承担，根 Issue 提供输入入口。历史 variant 的输入要求以其入口为准。
 
 ```sh
 RUNTIME=$(python3 scripts/runtime.py path)
-python3 variants/pi-braid/main.py "$REQUIREMENTS" \
-  --output-dir runs/dev-mixed --runtime "$RUNTIME" \
+python3 variants/pi-braid-i13/main.py "$REQUIREMENTS" \
+  --output-dir runs/dev-i13 --runtime "$RUNTIME" \
   --braid sources/braid/target/debug/braid \
   --skills-root harness/skills \
   --base-url http://127.0.0.1:9/v1 --prepare-only
 ```
 
-输出路径为 `runs/dev-mixed/.factory26/<id>`。
+输出路径为 `runs/dev-i13/.factory26/<id>`。
 从 braid-request.json、work/capabilities 下的原生材料开始检查，不再追踪 effective config 的两层转换。
 真实运行去掉 `--prepare-only`，使用实际 base URL，并由调用环境注入 `OPENAI_API_KEY` 或 `FACTORY26_API_KEY`。
 密钥不放进源码或命令参数；角色模型由各 variant 固定，MODEL 若提供则必须匹配根角色。
@@ -167,18 +163,18 @@ Linux runtime 可单独构建；下例团队资源包含 Braid，raw 资源省�
 ```sh
 python3 scripts/runtime.py linux --backend pi --docker-context arcbox-win \
   --braid-source sources/braid --output runs/runtime-team
-python3 scripts/package_agent.py --variant pi-braid \
-  --runtime runs/runtime-team --stage runs/staged-mixed
+python3 scripts/package_agent.py --variant pi-braid-i13 \
+  --runtime runs/runtime-team --stage runs/staged-i13
 ```
 
 官方 Runner 的 `--agent` 接受已展开目录，局部验证不必压 ZIP。
-要冻结参赛包，将上述 `--stage` 换成 `--output runs/packages/mixed.zip`；同一源码、材料与资源参与两种封装。
+要冻结参赛包，将上述 `--stage` 换成 `--output runs/packages/pi-braid-i13.zip`；同一源码、材料与资源参与两种封装。
 已有输出不覆盖。
 
 raw 打包可直接使用 `package_raw_core.py --runtime <runtime目录>`，不要求先创建团队 ZIP；`--source <历史ZIP>` 只保留为旧资源的读取方式。
 模型和 backend 仍由 raw 命令显式选择。
 
-SVC 在 `sources/svc/skills/` 保留七个独立 skill 源码目录；I13 选择 documentation、task-packet、sub-agents、verification 四项，不打包或引用 investigation、design、implementation。各技能目录的 `SKILL.md`、`references/` 与 `assets/` 构成对应分发材料。
+SVC 的独立技能源码由 `sources/svc/skills/` 维护；I13 选择 documentation、task-packet、sub-agents、verification 四项，不打包或引用 investigation、design、implementation。各技能目录的 `SKILL.md`、`references/` 与 `assets/` 构成对应分发材料。
 `copy_skill` 由源码运行和打包共用，复制入口、标准资源目录及许可文件，将来源链接物化为普通文件。
 维护者 AGENTS、仓库文档、CLI 和开发环境不进入 skill。
 每个 variant 独立选择要提供的技能及哪些会话启用它们；没有 SVC 专用正文参数或二次装配。
@@ -187,22 +183,14 @@ SVC 在 `sources/svc/skills/` 保留七个独立 skill 源码目录；I13 选择
 更换真实运行依赖才重建对应资源。
 Cargo/npm/Docker 负责增量复用，不另建通用构建系统。
 
-
 ## 运行证据与收尾
 
 Braid 运行诊断以外层实验 run 为入口：`make braid-report RUN=<实验目录> OUTPUT=<新网站目录>`。
 [诊断运行手册](docs/deployment/braid-diagnostics.md)说明 Backend 查询、补采、失败产物、组件修改位置及验收边界；`lab.analysis.run_viewer` 负责实验总览，Braid 网站负责 OTLP 内的会话和协作现场，两者不是同一数据视图。
 修改导出语义时从 `sources/braid/src/telemetry.rs`、`evidence.rs` 开始，修改页面从 `lab/analysis/braid_telemetry_viewer.py`、同名 HTML 模板开始；构建本机 Braid 后用已归档真实 Backend 生成新目录核对，不以重新运行模型作为默认验证手段。
 
-原始证据位于生成输出的 `.factory26/<id>`，可用 `python3 -m lab.analysis.factory show --run <该目录>`、`analyze --run <该目录>`。
-外层实验状态先用 `python3 -m lab show <实验或run目录>`；详细 ARC/Factory 解释用 `python3 -m lab.analysis.factory show --run <run目录>`。二者描述不同进程边界，不能用其中一个的成功代替另一个。
-`lab.analysis.factory show` 和 `lab.analysis.run_feedback brief` 同时接受这两种目录；外层摘要链接生成、部署、评分、应用、原生会话和原始错误。
-`python3 -m lab.analysis.run_viewer --root <包含runs的根目录>` 发现嵌套实验，进入一条 run 后停止递归扫描其输入和依赖。
+原始证据位于生成输出的 `.factory26/<id>`；外层 lab run 与官网 journal 分别记录其执行和采集边界。先按[记录生产者](docs/deployment/evidence.md#按记录生产者查询)选择查询入口，不用外层进程成功代替生成或评分完成。静态网站、SVC 原生分析与长运行观察同归[证据手册](docs/deployment/evidence.md)。
 
-`lab.analysis.factory` 只保留 list/show/analyze；旧配置式 generate/run/bootstrap/eval/batch、concurrency 及 shared submission 入口已删除。
-官网客户端、历史查询与诊断不再 import 旧生成器；旧结果和官网 journal 保留。
-跨仓库改动记录实际依赖与运行结果；更新受影响的操作说明。
-不要为了文档一致重写历史实验报告。
+`lab.analysis.factory` 提供 list/show/watch/analyze；旧配置式 generate/run/bootstrap/eval/batch、concurrency 及 shared submission 已退役，官网客户端和历史查询不再 import 旧生成器。旧结果与 journal 保留原身份。新官网提交显式提供模型 JSON，矩阵消费冻结 manifest；完整操作见[平台手册](docs/deployment/competition.md)。
 
-旧 `official_matrix.py --freeze-packages` 入口已移除。
-新官网提交用 `competition.py prepare --model-config <平台模型JSON>` 显式提供 base_url、model、visual_model；矩阵执行消费显式 manifest，不能反向解析任意 Harness 的内部配置。
+跨仓库改动记录实际依赖与反馈，更新受影响的操作说明。当前工具与材料实施依据见 [I13 packet](tasks/iteration13/packet.md)及其各批回执；编译、材料组装、真实工具响应和完整生成收益是不同证据，不能互相替代。不要为文档一致改写历史报告。
