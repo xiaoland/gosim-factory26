@@ -49,9 +49,9 @@ I13
 │  ├─ implementation/investigation/design不打包、不引用，源码保留
 │  ├─ documentation恢复完整项目知识方法；sub-agents恢复一般委派方法，自包含且不含具体角色内容
 │  └─ task-packet恢复工作记忆循环，去growth；复用已改V&V
-├─ Braid软件协作及ARC requirements tree → R01/R05/R06/R09［两处ARC耦合修正已提交1c8b9f9，其余方法仍在方案阶段］
+├─ Braid软件协作及ARC requirements tree → R01/R05/R06/R09［整组已获开工；两处ARC耦合修正已提交1c8b9f9］
 │  ├─ 当前义务、候选、独立讨论、增量、承接及终态，不止命令用法
-│  ├─ 父节点自身要求、内聚子树及跨枝完整操作；区分来源、依赖、责任与证据
+│  ├─ 父节点自身要求、按成果与依赖分工、跨枝完整操作；区分来源、依赖、责任与证据
 │  └─ 未接手义务、初态、消费者变化、证明范围及同次结果归属
 ├─ Factory/Braid提示词分层与入口 → R09［已提交；原生装配/编译通过，动态会话待验］
 │  ├─ 简化Issue/PR system prompt、Factory追加要求及profile，去除层间重复
@@ -88,6 +88,10 @@ I12-G02/G03、E01/E02的历史状态保留在 [I12问题账](../iteration12/i11-
 I12曾按用户要求暂停，冻结材料和运行身份不变；当前物理状态见 [I12 packet](../iteration12/packet.md)。独立I13已由子Agent批次创建；本轮仍未启动实验。
 
 ## 当前下一步
+
+用户本轮明确：“好的，现在可以开工该组了。然后我们看看i13树”。完整“Braid协作方法＋ARC requirements”按[已审文件结构与范围](collaboration-requirements-plan.md#整组实施范围与本次授权)进入实施，继续由GPT-6.1-Sol / extra-high子Agent接续两项独立技能、references、I13材料接线和方法迁移；主线核对I13树并独立消费结果。两处耦合先行成果1c8b9f9直接复用，模型实验、部署与I12状态不在本次范围。下一待处理的独立源码组为存储生命周期成果合入；冻结与实验继续等待各组收敛及具体实验安排。
+
+长期文档整理已完成并提交 `a17dcc7`：15份文档归回产品、技术、开发、运行与导航职责，实际CLI帮助和链接核对完成；详情见[整理任务](../durable-docs-curation/packet.md)。主线继续将后续实现增量写回这些既有归属，不重新建立平行说明。
 
 用户要求确认两个技能的文件组织以支持progressive closure，已补充[文件级结构](collaboration-requirements-plan.md#文件组织与逐层收敛)：SKILL.md持有可独立使用的核心判断与理由，references分别闭合一类实际决定，完整通用案例唯一归Braid技能；ARC单向引用，SVC方法保持原归属。当前耦合修正仅落地有实际用途的ARC主文件及交付reference，其余文件不预建空壳。
 
