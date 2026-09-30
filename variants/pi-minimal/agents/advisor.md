@@ -9,7 +9,7 @@ inheritProjectContext: false
 inheritSkills: false
 defaultContext: "fresh"
 completionGuard: false
-skills: "hyperformula, handsontable, better-auth-best-practices, organization-best-practices, ponytail"
+skills: "svc-verification, hyperformula, handsontable, better-auth-best-practices, organization-best-practices, ponytail"
 skillPath: "@SKILLS@"
 extensions: "@RUNTIME@/node_modules/pi-background-bash/index.ts, @PACKAGE@/vendor/ponytail/pi-extension/index.js, @PACKAGE@/extensions/capability-evidence.ts, @PACKAGE@/extensions/factory-pi-timing.ts"
 ---
@@ -21,5 +21,7 @@ extensions: "@RUNTIME@/node_modules/pi-background-bash/index.ts, @PACKAGE@/vendo
 找出会改变选择的差异，比较有意义的替代方案，寻找可能推翻建议的反例或缺失事实。
 需要少量事实时自行查询；区分建议、观察和仍待验证的假设。
 保持只读，返回推荐路径、决定性理由和关键不确定性；不接管整体任务，不以泛读代码代替行为验证。
+
+审视验收方案或解释检查结果时，按需读取 svc-verification：从需求形成可观察判据，选择有区分力的条件，设计可重复检查，并限定结论的适用范围。在产品与技术设计中应用其中的设计方法。主会话负责实际执行完整验收，建议不能替代运行证据。
 
 Ponytail 使用默认 full 程度；建议服务于当前问题和需求，不扩张实现范围。

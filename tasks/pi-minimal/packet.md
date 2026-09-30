@@ -1,5 +1,9 @@
 # Pi 最小参赛 Variant
 
+## 验收方法开发支线
+
+用户新授权加入独立SVC V&V技能，源码接线已落地，见 [verification.md](verification.md)。只引入验收方法及references，不增加Braid、其它SVC技能或新角色；没有启动支线实验。下面已冻结的官网运行不受源码更新影响，仍按各自制品身份读取结果。
+
 ## 2026-09-30 改用 ARC advisor，从头重跑（当前状态）
 
 用户先暂停两题，再指定“Kimi使用ARC key”，随后明确“直接重新开始”。旧GitHub `7338d6d166d9`、Sheet `1d653b593474`均已CANCELLED；原始应用和Pi会话暂停快照保存在 `runs/pi-minimal/20260930/self-funded/pause/receipt.json`。先前准备的两个resume.zip不使用，接续脚本的本轮临时改动已撤回。

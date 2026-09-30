@@ -5,21 +5,15 @@ import argparse
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import mimetypes
 import os
 from pathlib import Path
 import subprocess
 import threading
-from urllib.parse import parse_qs, urlsplit
-
-try:
-    from markdown_it import MarkdownIt
-except ImportError:
-    MARKDOWN = None
-else:
-    MARKDOWN = MarkdownIt("commonmark", {"html": False, "linkify": False}).enable("table").disable("image")
+from urllib.parse import parse_qs, unquote, urlsplit
 
 
-PAGE = Path(__file__).with_name("index.html")
+WEB_DIST = Path(__file__).parent / "web" / "dist"
 JOURNAL_LOCK = threading.Lock()
 MAX_POST = 1_000_000
 
@@ -34,23 +28,26 @@ def load_registry(path):
             raise ValueError("每个运行需要 id")
         if entry["id"] in runs or not entry["id"]:
             raise ValueError("运行 id 不得为空或重复")
-        if entry.get("kind") not in ("i11", "i12") or type(entry.get("writable")) is not bool:
-            raise ValueError(f'{entry["id"]}: kind/writable 无效')
-        if entry["writable"] != (entry["kind"] == "i12"):
-            raise ValueError(f'{entry["id"]}: 仅 I12 可写')
+        if type(entry.get("writable")) is not bool:
+            raise ValueError(f'{entry["id"]}: writable 无效')
         state, binary = Path(entry["state"]), Path(entry["binary"])
         if not state.is_absolute() or not (state / "braid.sqlite3").is_file():
             raise ValueError(f'{entry["id"]}: state 需为现存绝对路径')
         if not binary.is_absolute() or not binary.is_file() or not os.access(binary, os.X_OK):
             raise ValueError(f'{entry["id"]}: binary 需为可执行绝对路径')
+        cli_command = entry.get("cli_command")
+        if cli_command is not None and (not isinstance(cli_command, list) or not cli_command
+                                       or not all(isinstance(part, str) and part for part in cli_command)):
+            raise ValueError(f'{entry["id"]}: cli_command 须为非空命令参数列表')
         runs[entry["id"]] = {"id": entry["id"], "label": str(entry.get("label") or entry["id"]),
-                             "kind": entry["kind"], "writable": entry["writable"],
-                             "state": str(state), "binary": str(binary)}
+                             "writable": entry["writable"],
+                             "state": str(state), "binary": str(binary), "cli_command": cli_command}
     return runs
 
 
 def braid(run, args, body=None, *, write=False):
-    command = [run["binary"], "--state", run["state"]]
+    # Persisted Git/worktree paths belong to the run's execution namespace.
+    command = list(run["cli_command"] or [run["binary"], "--state", run["state"]])
     if write:
         command.append("--external")
     command.extend(args)
@@ -71,17 +68,8 @@ def braid_json(run, args):
     return json.loads(braid(run, args))
 
 
-def add_html(record):
-    if MARKDOWN is not None and isinstance(record.get("body"), str):
-        record["body_html"] = MARKDOWN.render(record["body"])
-    return record
-
-
 def item_view(run, kind, item_id):
-    item = add_html(braid_json(run, [kind, "view", str(item_id), "--json"]))
-    for comment in item.get("comments", []):
-        add_html(comment)
-    return item
+    return braid_json(run, [kind, "view", str(item_id), "--json"])
 
 
 def action_command(payload):
@@ -146,7 +134,6 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", "application/json; charset=utf-8")
         self.send_header("Cache-Control", "no-store")
         self.send_header("X-Content-Type-Options", "nosniff")
-        self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'none'")
         self.send_header("Content-Length", str(len(encoded)))
         self.end_headers()
         self.wfile.write(encoded)
@@ -159,13 +146,20 @@ class Handler(BaseHTTPRequestHandler):
 
     def do_GET(self):
         url = urlsplit(self.path)
-        if url.path == "/":
-            body = PAGE.read_bytes()
+        if not url.path.startswith("/api/"):
+            path = (WEB_DIST / unquote(url.path).lstrip("/")).resolve()
+            if not path.is_relative_to(WEB_DIST.resolve()):
+                return self.reply(404, {"error": "文件不存在"})
+            if url.path == "/":
+                path = WEB_DIST / "index.html"
+            if not path.is_file():
+                return self.reply(404, {"error": "文件不存在；请先在 web 中执行 pnpm build"})
+            body = path.read_bytes()
             self.send_response(200)
-            self.send_header("Content-Type", "text/html; charset=utf-8")
+            self.send_header("Content-Type", mimetypes.guess_type(path.name)[0] or "application/octet-stream")
             self.send_header("Cache-Control", "no-store")
             self.send_header("X-Content-Type-Options", "nosniff")
-            self.send_header("Content-Security-Policy", "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'self'; img-src 'none'")
+            self.send_header("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:")
             self.send_header("Content-Length", str(len(body)))
             self.end_headers()
             self.wfile.write(body)
@@ -173,7 +167,7 @@ class Handler(BaseHTTPRequestHandler):
         params = {key: values[0] for key, values in parse_qs(url.query).items()}
         try:
             if url.path == "/api/runs":
-                data = [{key: run[key] for key in ("id", "label", "kind", "writable")}
+                data = [{key: run[key] for key in ("id", "label", "writable")}
                         for run in self.runs.values()]
             elif url.path == "/api/items":
                 run = self.run_for(params.get("run"))
@@ -199,7 +193,7 @@ class Handler(BaseHTTPRequestHandler):
                 command = ["comment", "view", str(comment_id), "--include-hidden", "--json"]
                 if params.get("thread") == "1":
                     command.insert(3, "--thread")
-                data = [add_html(comment) for comment in braid_json(run, command)]
+                data = braid_json(run, command)
             else:
                 return self.reply(404, {"error": "路由不存在"})
             self.reply(200, data)
@@ -247,6 +241,9 @@ class Handler(BaseHTTPRequestHandler):
                 return self.reply(502, {"error": f"CLI 已返回成功，但 journal 写入失败：{error}。请勿重试操作；先核对 Braid 状态。",
                                         "result": stdout})
             self.reply(200, {"result": stdout})
+        except RuntimeError as error:
+            # A failed pre-write read has no mutation receipt to reconcile.
+            self.reply(502, {"error": str(error)})
         except (ValueError, OSError, KeyError, json.JSONDecodeError) as error:
             self.reply(400, {"error": str(error)})
 

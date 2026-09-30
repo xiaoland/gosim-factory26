@@ -11,6 +11,7 @@ variants/<name>/          每个团队 Harness 的独立实现
   agents/                Braid 成员与 Pi 内部角色的原生配置和指令
   build.py / extensions/ 材料选择与原生扩展
 agents/                  开发侧可复用子 Agent 提示词与委派模型配置
+braid-console/           独立 React 协作界面及 Braid CLI 桥，不进入参赛包
 harness/                 共用技能材料与工具依赖声明
 submission/              Linux 公共交付和资源构建
 scripts/                 打包、运行支持与模型网关

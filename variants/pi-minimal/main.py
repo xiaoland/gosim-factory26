@@ -10,7 +10,7 @@ from raw_otlp import LogExporter
 from agent_support import cleanup_workspace, stop
 
 ROOT = Path(__file__).resolve().parent
-SKILLS = ('agent-browser', 'hyperformula', 'handsontable', 'better-auth-best-practices',
+SKILLS = ('svc-verification', 'agent-browser', 'hyperformula', 'handsontable', 'better-auth-best-practices',
           'organization-best-practices', 'fixing-accessibility', 'ponytail')
 
 
@@ -86,7 +86,7 @@ def run(requirements, output):
     instruction = (ROOT/'instructions.md').read_text().replace('@REQUIREMENTS@', str(requirements)).replace('@OUTPUT@', str(output))
     (evidence/'user-instructions.md').write_text(instruction)
     command = [str(runtime/'bin/pi'), '--provider', main_provider, '--model', 'glm-5.3-flash',
-               '--thinking', 'high', '--mode', 'json', '--print', '--no-context-files',
+               '--thinking', 'high', '--mode', 'json', '--print', '--no-context-files', '--no-skills',
                '--no-prompt-templates', '--no-themes', '--extension', str(runtime/'node_modules/pi-subagents/index.ts'),
                '--extension', str(runtime/'node_modules/pi-background-bash/index.ts'),
                '--extension', str(ROOT/'vendor/ponytail/pi-extension/index.js'),

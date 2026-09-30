@@ -1,5 +1,18 @@
 # I12 实时协作 Console
 
+## 当前方案
+
+用户已要求重做前端并使用独立目录。当前实现位于 `braid-console/server.py` 与 `braid-console/web/`，前端为React/TypeScript/Vite、Ant Design与TanStack Query，Markdown在前端渲染。通用操作说明归 [Braid Console README](../../braid-console/README.md)。不另建Git仓库，不进入参赛包。
+CLI bridge已从旧服务切换到该目录；registry权限只取明确的writable，不绑定迭代名字。当前登记两个从零现场，旧摘剪不在当前页面中。下面第一版历史操作用来证明CLI与通知接线，不代表新前端或当前生成起点。
+
+生产构建通过，最新JS为 `index-C0GXS2id.js`。真实浏览器先在退役只读对象上确认Markdown、筛选、按需展开与无写控件，然后切至新运行，看到根Issue及有负责人、独立分支的PR #2。新现场HTTP两侧Issue/PR详情均返回200，浏览器显示可编辑、评论与回复入口。没有为了验证页面而修改新实验对象。
+
+宿主直接调用CLI读取PR曾因Braid保存的容器内origin.git路径报错。修复位于Console registry接线：`cli_command`在相应运行容器内调用同一冻结binary与state，不改数据库路径、不复制对象或在失败后切换现场。该命令由宿主配置，不接收浏览器执行参数。Braid binary SHA256仍为 `190c74bd24db7e969ae25b41ef541e322ec1775c7b445949c439f9c2e4a7398c`。
+
+服务位于WSL `127.0.0.1:8765`，PID `1777475`；registry、log、PID及新的人工输入journal在 `runs/iteration12/fresh/console-*`。Mac沿用SSH tunnel `9260`，入口 http://127.0.0.1:8765/。运行ID为 `i12-fresh-github` / `i12-fresh-sheet`，与旧摘剪不同，避免旧草稿被发送给新对象。当前服务依赖实际生成容器；停止后不会静默改用其它状态副本。
+
+## 第一版接线证据（已退役）
+
 目标是让开发者在 I12 的 GitHub、Sheet 两个 Braid 运行中实际操作 Issue/PR，而不是让 Agent 额外承担可观测性工作。获授权范围包括本地网页、明确的运行 registry、独立介入 journal 和使用配套 CLI 的写入。I11 如需对照，只读登记。Console 不进入参赛交付。
 
 实现位置为 `lab/console/server.py` 和 `lab/console/index.html`；运行方法归 [部署说明](../../docs/deployment/console.md)。现有 `lab/analysis/run_viewer.py` 是归档快照；`tasks/official-collaboration-review/template.html` 的对象列表、讨论层级和状态标签供界面参考。实时操作需要 CLI 读写，因此不复用静态导出流程或引入前端框架。

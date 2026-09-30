@@ -1,4 +1,4 @@
-"""Freeze the independent native Pi variant; no Braid or SVC materials."""
+"""Freeze the independent native Pi variant with explicitly selected skills."""
 import argparse
 import json
 from pathlib import Path
@@ -13,7 +13,7 @@ from package_agent import write_zip
 from agent_support import copy_skill
 from hackathon_gateway import read_assignments
 
-SKILLS = ('agent-browser', 'hyperformula', 'handsontable', 'better-auth-best-practices',
+SKILLS = ('svc-verification', 'agent-browser', 'hyperformula', 'handsontable', 'better-auth-best-practices',
           'organization-best-practices', 'fixing-accessibility', 'ponytail')
 
 
@@ -56,10 +56,6 @@ def build(runtime, output, credentials=None, arc_credentials=None):
             index = next(i for i, line in enumerate(lines) if line.startswith('description:'))
             lines[index] = 'description: ' + description
             guide.write_text('\n'.join(lines) + '\n')
-        browser_guide = stage/'skills/agent-browser/SKILL.md'
-        browser_guide.write_text(browser_guide.read_text().replace(
-            'Use svc-verification’s result interpretation to judge coverage and applicability to another candidate; ',
-            ''))
         shutil.copytree(runtime, stage/'runtime', symlinks=True)
         executables = [str(path.relative_to(stage)) for path in (stage/'runtime').rglob('*')
                        if path.is_file() and path.stat().st_mode & 0o111

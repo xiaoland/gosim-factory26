@@ -255,5 +255,7 @@ def verify_package(root):
             raise ValueError(f'参赛载荷哈希不匹配：{name}')
         # Python ZIP extraction does not preserve executable permission bits.
         if record['executable']:
-            path.chmod(path.stat().st_mode | 0o111)
+            mode = path.stat().st_mode
+            if mode & 0o111 != 0o111:
+                path.chmod(mode | 0o111)
     return manifest
