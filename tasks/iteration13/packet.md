@@ -78,3 +78,11 @@ Python编译、两处原生补丁的实际适用及语法编译通过；真实re
 已按用户“好的，开工，应用该修正”删除工具及包内帮助的cwd级单writer、普通写入强制隔离和父方应用全部修正要求；worktree只说明参数效果，条件性单writer示例保留。调用方无需先设计局部执行细节，现有executor与SVC委派方法承担独立收敛。本批扩展已有acceptance-off补丁及runtime目标hash清单，未新增调度或权限机制，既有Linux接线直接消费该补丁。
 
 从原始npm归档实际应用完整四份补丁成功；Python与TypeScript语法/emit编译通过；两个真实I13配置生成的description/metadata及full/compact/custom附加说明均已核对。相对旧补丁链只改变七份原生说明文件，I12的25份文件身份未变。详见[executor实施与证据](executor-followup.md#实施与反馈2026-09-30)及 `runs/iteration13/executor-guidance-20260930/`；未运行模型、测试、包smoke或实验，实际并发效果与委派净收益保留待验。
+
+## SVC与Executor批次整合完成（2026-09-30）
+
+SVC `a0af6e14a9f6cd2b19e1565e5d08d82fe3672139`、Factory `1a377c9446618270218476d6df354b2fd2cb419c`完成本批SVC方案；executor原生说明修正在Factory `84344b4b913cd5e036cd8e99fa9f5cd301da55c5`。三项均未push，其它工作区改动保留。当前状态以本段和对应实施记录为准，前文历史开工状态不再代表待办。
+
+主线独立读取技能方法正文及实际launcher/角色材料，并核对prepare-only最终work/skills的32份文件与SVC源码一致：仅分发documentation、sub-agents、task-packet、verification；三项退出技能源码仍在；documentation五分支完整；sub-agents自包含且无具体角色内容；task-packet去growth。原始构建缺pip错误及半成品保留，隔离补齐pip后标准build和真实GitHub requirements的prepare-only完成。详情归[实施记录](svc-skills-implementation.md)，主线文件身份核对在 `runs/iteration13/svc-skills-20260930/primary-material-review.json`。
+
+SVC材料构建复用上批runtime并保留其旧补丁身份；executor修正另从原始npm包组装完整补丁链、编译并生成实际说明，两者没有混报为新Linux实验制品。I12现存材料/运行未改动，也未运行模型或实验；实际方法采用、并发行为与净收益仍待后续授权观察。documentation/task-packet强制应用、profile整体去重及Braid协作/requirements tree仍属后续待复核范围。
