@@ -58,7 +58,7 @@ I13
 │  └─ documentation/task-packet强制应用及首次读取入口；技能正文独立提供
 ├─ 工具接线［已提交09a32c4；Linux/材料/Context7/FFF通过，Exa待有效key］
 │  └─ Context7/Exa打包自有key并脱离mcporter；增加pi-fff
-├─ 合入feat/experiment-storage-lifecycle［2026-10-01新增；分支成果已定位，待合入］
+├─ 合入feat/experiment-storage-lifecycle［2026-10-01已获开工；委派并行整合中］
 │  └─ decision归档、预算、稳定Python资产、只读GC计划及Braid OTLP摘要
 └─ I13载体、冻结与实验［开发载体已建立；冻结/实验未启动；I12由用户控制］
    ├─ I13基线：采用共同的新角色、方法和vision模型
@@ -89,7 +89,9 @@ I12曾按用户要求暂停，冻结材料和运行身份不变；当前物理�
 
 ## 当前下一步
 
-用户本轮明确：“好的，现在可以开工该组了。然后我们看看i13树”。完整“Braid协作方法＋ARC requirements”按[已审文件结构与范围](collaboration-requirements-plan.md#整组实施范围与本次授权)进入实施，继续由GPT-6.1-Sol / extra-high子Agent接续两项独立技能、references、I13材料接线和方法迁移；主线核对I13树并独立消费结果。两处耦合先行成果1c8b9f9直接复用，模型实验、部署与I12状态不在本次范围。下一待处理的独立源码组为存储生命周期成果合入；冻结与实验继续等待各组收敛及具体实验安排。
+用户继续明确：“好的，也可以委派开工 合入 experiment-storage-lifecycle”。已委派 `/root/i13_storage_lifecycle_integration`（GPT-6.1-Sol / extra-high）整合Factory来源六提交至4e1bb08及独立Braid的e87b82b，核对当前dirty和I13接续，完成必要适配、编译/实际接口反馈及文档。来源接在I12的归档收尾逻辑迁入I13，保留冻结I12现场；与技能实施者直接协调run.py及TDD文件交接，lab/scripts/Braid先独立推进。范围不包括模型实验、部署、真实宿主runtime建立、历史/I12 GC plan、GC apply、历史清理或运行状态变更。来源及整合回执归[整合记录](storage-lifecycle-integration.md)，存储方法与原授权归[原任务](../experiment-storage-lifecycle/packet.md)。本轮可提交限定增量，不push。
+
+用户本轮明确：“好的，现在可以开工该组了。然后我们看看i13树”。完整“Braid协作方法＋ARC requirements”按[已审文件结构与范围](collaboration-requirements-plan.md#整组实施范围与本次授权)进入实施，继续由GPT-6.1-Sol / extra-high子Agent接续两项独立技能、references、I13材料接线和方法迁移；主线核对I13树并独立消费结果。两处耦合先行成果1c8b9f9直接复用，模型实验、部署与I12状态不在本次范围。存储生命周期成果合入随后也已获开工授权并行推进；冻结与实验继续等待各组收敛及具体实验安排。
 
 长期文档整理已完成并提交 `a17dcc7`：15份文档归回产品、技术、开发、运行与导航职责，实际CLI帮助和链接核对完成；详情见[整理任务](../durable-docs-curation/packet.md)。主线继续将后续实现增量写回这些既有归属，不重新建立平行说明。
 
