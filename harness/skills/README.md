@@ -10,11 +10,14 @@
 | impeccable | pbakaus 的 craft-floor：层级、间距、真实内容、状态、可读性和界面反馈；不接入 launcher、hooks、菜单、强制产物或脱离 brief 的样式禁令。 |
 | diagnosing-bugs | Matt Pocock 的症状反馈循环、最小复现、可区分假设与根因修复；移除硬性红测前置、固定假设数量、人工确认和每次永久回归测试要求。 |
 | ponytail | 4.10.0 的复用顺序与复杂度判断；仅作用于技术实施，不削减授权要求，不替代 SVC 工作流程，也不强制回答格式。 |
-| arc-bench | I13 的独立 ARC Bench 适配材料；从本次允许需求解释输入，按需读取平台交付合同，正文与 reference 不进入 profile 或任务提示词。 |
+| braid-collaboration | I13 的通用 Braid 协作判断：按成果组织责任、消费交接与变化、接受结果和结束义务；完整案例只保存一份，文档、委派与 V&V 深层方法引用 SVC。 |
+| arc-bench | I13 的独立 ARC Bench 适配材料：理解原树、父层和跨枝承诺，追溯工作与覆盖，按需读取平台交付合同；单向引用通用 Braid 方法。 |
 | agent-browser | Factory 的薄操作导航；完整指令由固定版本 CLI 的 `skills get core` 提供。scripts/with-service.py 可包装已有检查入口（check-only）或一项前台服务，保留首轮日志、退出结果和调用者声明的运行前提，收尾自有进程组；不提供业务断言或改写应用。 |
 | hyperformula、handsontable | Handsontable 维护者技能的短入口与固定 commit 的按主题参考；两项仅在选用相应库时提供知识，不安装应用库。技能 MIT 许可与运行库许可分开。 |
 | better-auth-best-practices、organization-best-practices | 基于 Better Auth 官方文档独立撰写的短入口；组织插件和默认权限只在符合产品要求时选用。 |
 | fixing-accessibility | 基于 ibelick/ui-skills 的交互要点，保留 MIT 许可；以需求和实际浏览器行为确定修复。 |
+
+I13 通过既有独立技能复制与发现机制装入上述两项方法。profile 只给协作读取入口和配方政策，根 Issue 给本次允许输入与 ARC 技能入口；主文件与 references 正文均按需读取，不内联到 system、profile、role 或 task。
 
 本项目获选的技能资源使用 SKILL.md 与 references/、assets/、scripts/ 标准目录；许可文件随包保留。
 Factory 不解析方法正文，也不为 SVC 补装第二份 Corpus。

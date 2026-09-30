@@ -63,7 +63,7 @@ variant 通过 `root_profile_id` 明确指派根 Issue，后续对象未指定 a
 
 I13 的根 Issue 直接负责共享架构与开发反馈设施，通过关联的独立基础 PR 落地，再指派可消费该基础的业务子项；最终通过 develop → main 整合 PR 验收。工作项保留原需求和场景入口，不能把父项摘要或需求编号清单当作子项已经取得完整合同。根 Issue 发布跨任务的产品、技术与验收约定；各 Issue 及关联 PR 接续同一任务的 packet。项目文档拥有稳定定义，packet 拥有当前判断、计划、证据与下一步，两者通过链接关联。
 
-上述责任目前由 variant 的常驻指令和根任务表达，文档与任务包方法来自独立 SVC 技能；完整 Braid 协作方法及 ARC 需求树材料仍在 [I13 方案](../../tasks/iteration13/collaboration-requirements-plan.md)，尚未作为完整技能实施。原生 executor 协助当前工作项，不承接已经指派给另一 Braid 成员的同一责任。
+I13 的配方政策保留在 profile：根基础 PR、develop → main 路线、advisor/vision 分工及应用反馈工具。独立 [braid-collaboration](../../harness/skills/braid-collaboration/SKILL.md) 持有工作边界、交接采用、变化和关闭方法，[arc-bench](../../harness/skills/arc-bench/SKILL.md) 持有需求层级、跨枝承诺、来源追溯与平台前提；后者单向引用通用协作方法。项目知识、task packet、原生委派与 V&V 的完整方法继续归 SVC，不在新技能复制。原生 executor 协助当前工作项，不承接已经指派给另一 Braid 成员的同一责任。
 CLI 的运行位置和调用身份由原生执行环境提供；Agent 使用普通对象命令，不传 state 或 writer-turn。
 跨工作项的信息通过 comment/reply 传递；代码通过各自 clone 对共同 origin 的 push/fetch 共享，私有会话内容不会因创建子 Issue 自动共享。
 代码修改应保持这些边界，Braid 自身的详细行为归其独立仓库，Factory 不复制维护一份内部设计。
@@ -91,9 +91,11 @@ Braid 当前主线只有有效 description 变化触发上下文重建，传播�
 
 I13原生子代理保留独立上下文，角色不设置工具白名单，父profile和运行条件不自动追加给child。技能保持独立文件，system/profile/role/task prompt只允许技能名称、描述和路径，不内联SKILL.md或references正文。所有角色可使用后台Bash与原生委派工具；run环境设置最大子层为3，深度、能力上限和结果回送仍由原生扩展执行。锁定版本的窄补丁让未声明工具且能力上限允许的child取得fanout入口，并简化其自动边界文案；显式工具声明仍遵守原有上限。这些改变进入新runtime构建，不追溯修改冻结运行。
 
-I13按实际消费者分配稳定指令：Braid提供工作项身份、职责和通用对象协议，profile持有develop→main路线及advisor/vision等配方政策，运行条件持有通用工具环境与工作范围，原生工具description持有调用契约。角色目录description供父会话选择，角色正文与声明的技能发现信息进入child，二者不互相拼接。非简单工作首次开始或接续时，主成员及适用的explorer/executor读取documentation、task-packet技能并复用已有知识和任务资料；一次会话不因接续而反复注入方法。配置输出文件的child只在system取得输出义务，task不追加同一副本；恢复消息只补实际身份、状态与材料入口。
+I13按实际消费者分配稳定指令：Braid提供工作项身份、职责和通用对象协议，profile持有develop→main路线及advisor/vision等配方政策，运行条件持有通用工具环境与工作范围，原生工具description持有调用契约。角色目录description供父会话选择，角色正文与声明的技能发现信息进入child，二者不互相拼接。主成员开始或接续Braid工作时从profile取得协作技能读取入口，非简单工作的项目知识与task packet连接由技能指向SVC；适用的原生explorer/executor继续沿其自身技能声明读取材料。一次会话不因接续而反复注入方法。配置输出文件的child只在system取得输出义务，task不追加同一副本；恢复消息只补实际身份、状态与材料入口。
 
-I13的ARC特定输入与交付知识集中在独立 `arc-bench` 技能及其reference，根Issue description提供本次输入位置和读取入口。技能按普通材料选择、复制和发现，正文不进入profile；后续工作项由Agent给出适用合同的入口，不靠复制整份根正文传播。生成入口接收并复制输入目录，不以 `requirements.yaml` 是否存在判断任务能否开始；读取失败保留实际文件错误，材料解释和缺口由Agent处理。Braid/Pi请求不增加需求节点、依赖或覆盖字段。现有赛事启动参数、归档元信息和应用导出仍由外围协议持有，ARC知识迁移不改变它们。
+I13 的两份主技能各自给出完整核心判断，references 按当前决定展开；共同设置案例只在 Braid 技能保存一份，ARC references 按需单向引用。build 选择包内材料，run 使用既有 copy_skill 与 Pi --skill 机制复制和发现两项技能，不解析正文或增加自动内容装配。
+
+I13的ARC特定输入与交付知识集中在独立 `arc-bench` 技能及其reference，根Issue description只提供本次任务、输入位置、技能读取入口及输出语言等任务参数。技能按普通材料选择、复制和发现，正文不进入profile；后续工作项由Agent给出适用合同的入口，不靠复制整份根正文传播。生成入口接收并复制输入目录，不以 `requirements.yaml` 是否存在判断任务能否开始；读取失败保留实际文件错误，材料解释和缺口由Agent处理。Braid/Pi请求不增加需求节点、依赖或覆盖字段。现有赛事启动参数、归档元信息和应用导出仍由外围协议持有，ARC知识迁移不改变它们。
 
 I13 将固定版本的 `pi-background-bash` 显式加载到 Braid 成员 Pi 会话和有 Bash 权限的内部角色；插件覆盖原生 Bash，普通命令超过 30 秒会交还带任务 ID 的运行状态，命令继续执行，终态由插件回传。插件自身提供工具用法提示。Braid 以 Pi 的 `agent_settled` 记录一次调用的执行终态，不追踪原生子任务或插件内部作业。
 原生接入的完成契约是：当前有限工作结束，其必要结果被父会话接收并完成后续处理后，才能正常结束调用；排空异常必须保留原始错误并投影为失败，不能以最后一条正常回应替代。

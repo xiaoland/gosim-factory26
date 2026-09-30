@@ -31,7 +31,7 @@ ROOT_CHECK_MESSAGES = (
 MAIN_SKILLS = ('svc-sub-agents', 'svc-task-packet','svc-documentation',
                'svc-verification', 'hyperformula', 'handsontable', 'better-auth-best-practices',
                'organization-best-practices', 'fixing-accessibility', 'ponytail', 'impeccable',
-               'agent-browser', 'context7-docs', 'arc-bench')
+               'agent-browser', 'context7-docs', 'braid-collaboration', 'arc-bench')
 # Braid member conditions stay in the parent profile; native children receive their own role and task.
 RUN_CONDITIONS = '''交付条件
 本次为人工介入研究运行；用户可通过Issue/PR评论提出澄清、纠正或工作请求，按对象中的明确输入协作。依据原始需求处理常规歧义并记录重要假设，遇到不可自行解决的阻塞时保留证据。当前工作项或委派决定你的职责和可修改范围，下列环境约定不扩大它。
@@ -188,11 +188,8 @@ def generate(args):
                                           for p in code_files if p.is_file()})
     save(run/'materials.json', {'agents':hashes(HERE/'agents'), 'skills':hashes(skills),
                                'runtime':str(runtime), 'braid':str(source_braid)})
-    prompt = f'''本次任务来自 ARC Bench，需求来源是 {inputs} 中的完整需求包，最终交付是满足需求的 Web 应用。
-处理本次需求及平台交付前，读取独立技能 arc-bench：{skills/'arc-bench/SKILL.md'}。后续承担相关设计、实现或验收的工作项需获得本次输入及适用技能/reference入口。
-先在根 Issue 完成足以支撑分工的产品、技术与验收方案：结合原始需求、场景和参考图，明确关键用户路径、并列对象的范围、初始状态的归属、跨任务接口与共用视觉/交互约定，保留重要假设和未决问题。只记录影响分工或验收的决定，不以整理后的摘要替代原需求。
-根 Issue 直接负责共享架构、脚手架与开发反馈设施的设计和交付；创建关联根 Issue 的基础 PR 并指派独立负责人实施，不再把整套基础责任转为子 Issue，也不在 Issue 工作区先完成应用实现。基础 PR 要发布可消费的接口与最小真实使用结果，根负责人核实后合入共同分支。
-将业务需求拆分为多个子 Issue：按可相对独立交付、验证的结果组织，紧密相关、需要连续处理的需求合为一项。每个子 Issue 自包含相关原需求和场景入口、要交付的结果、前置数据/状态、共享决定及依赖；父 Issue 正文不会自动成为子项上下文。按依赖分批 assign 给合适的 Agent，消费基础成果的业务项在基础可用后启动，可独立工作并行开展。基础回归问题出现时根据受影响边界调整分派，不把曾经合并当作当前仍可用的证明。根 Issue 统筹依赖与整合，并通过最终整合 PR 完成整体交付。
+    prompt = f'''本次任务来自 ARC Bench，需求来源是 {inputs} 中的完整允许需求包，最终交付是满足需求的 Web 应用。
+处理本次需求、设计、实现和交付时，读取独立技能 arc-bench：{skills/'arc-bench/SKILL.md'}，按当前问题读取其适用reference。
 最终交付时用中文说明结果。'''
     (run/'prompt.txt').write_text(prompt)
     state = run/'braid-state'

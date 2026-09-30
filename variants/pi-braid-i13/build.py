@@ -17,7 +17,7 @@ assemble(HERE,a.stage,a.runtime,a.skills,
          skills=('svc-sub-agents','svc-task-packet','svc-documentation',
                  'svc-verification','hyperformula','handsontable','better-auth-best-practices',
                  'organization-best-practices','fixing-accessibility','ponytail','impeccable',
-                 'agent-browser','arc-bench'))
+                 'agent-browser','braid-collaboration','arc-bench'))
 copy_skill(a.runtime/'node_modules/@upstash/context7-pi/skills/context7-docs',
            a.stage/'skills/context7-docs')
 if a.tool_env is not None:
