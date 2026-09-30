@@ -19,3 +19,26 @@ AGENTS.local.md
 
 # Private local API credentials; never package or commit.
 .secrets/
+
+# Historical run snapshots remain at their evidence paths; new raw evidence goes in runs/.
+/tasks/iteration10/run-audit/*/evidence/
+/tasks/iteration10/run-audit/sheet/final-app/
+/tasks/iteration10/run-audit/sheet/readable/
+/tasks/iteration10/run-audit/sheet/paragraphs/
+/tasks/iteration10/run-audit/sheet/vision-final-images/
+/tasks/iteration10/instruction-audit/frozen/
+/tasks/iteration10/instruction-audit/effective/
+/tasks/iteration10/instruction-audit/evidence.json
+/tasks/iteration10/instruction-audit/feedback.json
+/tasks/iteration10/instruction-audit/frozen-input-sources.tar.gz
+/tasks/iteration10/instruction-audit/frozen-tool-sources.tar.gz
+/tasks/iteration11/run-audit/github/snapshot-*/
+/tasks/iteration11/run-audit/github/snapshot-*.zip
+/tasks/iteration11/run-audit/github/source.git/
+/tasks/iteration11/run-audit/github/source.git.bundle
+/tasks/iteration11/run-audit/github/pbb-evidence/
+/tasks/iteration11/run-audit/github/pbb-0824.tar.gz
+/tasks/iteration11/run-audit/github/runtime-evidence/
+/tasks/iteration11/run-audit/sheet/evidence/
+/tasks/iteration11/sheet-effectiveness-analysis/evidence/
+/tasks/iteration11/braid-context-methodology/evidence/

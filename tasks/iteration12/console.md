@@ -2,6 +2,10 @@
 
 ## 当前方案
 
+当前登记2026-09-30从零重启的两个run，已于15:59:13 CST整体暂停，见 [restart.md](restart.md)。CLI桥通过容器内执行访问对象，Docker整体暂停也会阻止这些执行；暂停期间的Console读写可用性尚未建立，不能沿用启动时的成功记录。允许人工读写而冻结Agent与定期评论的整体暂停/恢复能力归I13待办。
+
+暂停前接线：WSL服务PID6073，registry为 `runs/iteration12/restart-20260930/console-runs.json`，运行ID为 `i12-restart-github` / `i12-restart-sheet`。Mac已恢复8765 SSH转发并向Codex浏览器发送打开请求；真实HTTP两题列表各返回根Issue #1、负责人glm-1。入口 http://127.0.0.1:8765/，此前已验证查看、编辑、评论与回复。下面fresh PID1777475和旧ID属于先前已退役现场，不是当前接线。
+
 用户已要求重做前端并使用独立目录。当前实现位于 `braid-console/server.py` 与 `braid-console/web/`，前端为React/TypeScript/Vite、Ant Design与TanStack Query，Markdown在前端渲染。通用操作说明归 [Braid Console README](../../braid-console/README.md)。不另建Git仓库，不进入参赛包。
 CLI bridge已从旧服务切换到该目录；registry权限只取明确的writable，不绑定迭代名字。当前登记两个从零现场，旧摘剪不在当前页面中。下面第一版历史操作用来证明CLI与通知接线，不代表新前端或当前生成起点。
 

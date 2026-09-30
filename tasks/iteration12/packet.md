@@ -1,6 +1,6 @@
 # I12：连续工作、明确协作操作与人工语义诊断
 
-2026-09-30。当前阶段：核心修复及新版 Console 已落地，两题从零生成已启动并有真实模型响应。原摘剪接续已停止并保留证据。
+2026-09-30。当前阶段：两题已按用户“可以暂停 I12 了，内容已经太多，我已经看到很多问题”整体暂停。15:59:13 CST确认两个容器Running=true、Paused=true，冻结全部容器内Agent会话与Braid定期检查，不取消、清理或自动恢复。代码、Git、对象及原生会话保留，暂停状态的数据库文件另存；部署身份与暂停回执以 [从零重启](restart.md) 为准。两题此前15:14:51/52 CST分别取得真实GLM响应及成功工具结果；原12:25:47 CST现场保留为退役证据。核心修复及新版Console已落地，Console整体暂停/恢复能力已登记到I13、尚未实现。
 授权原话：“其它的各项处置我都同意，请你应用它们为 I12 并且从 I11 的运行状态中再次进行摘剪……另外 I12 还实现一个实时的可交互的 web console”。
 
 ## 目标与边界
@@ -34,8 +34,24 @@ I12
 │  └─ 记录人工介入来源；显式registry控制读写，旧摘剪只读
 └─ 5. pi-minimal验收技能支线［pi_minimal_verification］
    ├─ 仅svc-verification及其references，不引入Braid/其它SVC技能或新角色
-   └─ 原生技能和材料接线已落地；本次不启动支线实验
+   └─ 原生接线已落地；后续单独授权的官网GitHub自费运行见pi-minimal packet，不接续I12
 ```
+
+## I11 GitHub评分归因的新增消费
+
+用户要求：“是否有i11 github的评测的分析结果，如果没有，请安排分析，找到的问题也纳入i12。”
+已有独立定向报告确认最终应用正常送达和启动，并追出跨对象需求承接悬空、需求编号覆盖被误用为行为覆盖；它不能解释全部96项失败。
+问题账已有I12-G01/G02/G03。用户补充的“最终审查沿用mapping”和“失败日志、旧成功标签与packet错配”经补齐的PR23原生过程确认，登记G04/G05；两题共有的重复核查及提交变化误判统一登记E01/E02。通用修复归属、实际投递与待验证边界以 [问题账](i11-github-score/findings.md) 为准。
+主线完成方法/角色入口核对及独立材料调查后，用户明确要求“那么将G01/G04/G05纳入I13的范围内”。这三项连同 [具体方法方案](../iteration13/quality-methods.md) 转交 [I13 packet](../iteration13/packet.md)，保留原编号和证据；尚未实施，不以E01/E02已经部署代替质量问题闭合。I12从零生成随后按用户要求暂停，保留既有修复与采用证据，不改变冻结制品或清理现场。
+原Astra medium补充调查已按用户新指示中断并保留提取材料，改由GPT-6 Astra / xhigh接续整体低分及I12未闭合问题的根因分析。独立调查已返回 [综合报告](root-cause-review/report.md)，包含需求与验收共用错误前提、Pi配置根/session目录混用、watch结果消费缺口及I12连续性的实际行为证据。主线已按新从零授权部署Pi目录、成员指派及历史成果职责修正；质量方法按问题账继续区分待修与采用未证，不以报告返回或启动成功视为全部修复完成。范围、分工与证据边界见 [根因排查cell](root-cause-review/packet.md)，原 [评分调查断点](i11-github-score/investigation.md) 作为交接入口保留。
+
+## 成员指派修正已完成并进入新从零运行
+
+用户针对具体范围授权：“这点不需要分析了，直接修改”；进一步要求“按配方，委派一个后，按序号递增，虚拟下一个assignee”。
+对象及CLI由 `assign_members_impl`（GPT-6.1 Sol / high）实现，主线同步provider与I12成员指引，并在真实归档副本核对候选查询和指派；不写或运行测试，不启动模型。
+每配方独立提供下一位虚拟assignee，读取不占号，成功指派才认领并递增。编译及实际归档副本CLI操作通过：`glm-17 → glm-18 → glm-19`，`deepseek-24`不变；重复当前成员幂等，裸配方名与已认领名字明确拒绝。完整回执及未覆盖的运行行为见实施记录。
+范围为下一位虚拟成员、事务内认领、输入/回执/负责人同名、帮助及指引；调度容量、原生子代理、工作区和旧writer交接边界保持。
+此项最初仅获源码修改授权，没有更新暂停现场。随后按新的从零启动授权，连同Pi目录修正冻结为Linux binary `38c68450fa93399e7dabd3c4c912410a503e59152cb13f3d3c724ce7d9fc708d`，进入当前新运行；旧冻结binary保持不变。见 [方案](assignment-members.md)、[实施记录](assignment-implementation.md) 与 [部署](restart.md)。
 
 ## 推进与验收
 
@@ -49,11 +65,15 @@ Console使用明确的当次binary/state身份；从零使用标准variant入口
 
 ## 当前实施状态
 
+最新启动授权覆盖GitHub/Sheet从零本地生成，两题各4GiB/2CPU，沿用自有API原配方与3+8观察，不运行本地评分；每題交付后独立self_funded官网重放。启动前带入新成员指派机制，修正已证Pi配置根/session目录冲突，补齐已经批准的历史成果与整合状态分工材料投递；为既有watch指定结果消费者。旧暂停现场保全后停止旧外层与容器，避免两批模型同时运行。新的质量方法结论仍按根因报告和问题账区分采用证据与未批准候选，不以此次启动视为全部发现已经修复。
+
+先前指示：“不，请先暂停I12”。当时已核对容器身份并执行Docker pause，GitHub与Sheet均确认 `Paused=true`、无OOM；未取消、清理、重建或改动应用/Braid/原生会话，不影响pi-minimal。回执为 `runs/iteration12/fresh/pause-receipt.json`，Mac与WSL各保留一份。后续从零重启不是恢复这些旧模型；退役处理见restart记录。
+
 Braid Linux编译完成；自编辑及自然完成后的reset只更新Context，真实中断保留接续，讨论resolve回执明确范围。
 SVC专门的SHA规则已移除，保留按相关变化与实际条件判断证据的方法，I12角色的交接指引已收敛。摘剪正文改动仅属于退役现场，不会带入从零生成。
 Console新版位于独立braid-console目录，React生产构建通过，旧plain页面及执行路径已移除。当前只登记两个从零现场并允许人工介入；CLI在各自容器中执行，保持Braid已存Git路径的环境身份。真实HTTP与浏览器已读取两题根Issue和PR #2，不为核验随意发表新评论。入口是 http://127.0.0.1:8765/；部署及旧评论证据归console记录。
 原I12摘剪尝试：GitHub run `pi-braid-i12--hackathon--github-690b8b3f871be2`，Sheet run `pi-braid-i12--hackathon--sheet-6c9d2806b4fac4`，已按最新决定cancelled/exit-15，容器不存在、cleanup完成、gateway绑定撤销，workspace及全部原生证据保留。停止前两根已有真实模型响应并成功读取#333/#567，wake为consumed；说明前期console消息接线可用，不是完整生成验收。证据见 `runs/iteration12/deployment/stopped/receipt.json`。
-从零GitHub run `pi-braid-i12--hackathon--github-715fa714f396de`、Sheet run `pi-braid-i12--hackathon--sheet-8559b80ecb7f15` 已启动，初始Git树为空，每题新DB初始只有根Issue、无评论、一个成员与一次处理；原生会话已有真实工具调用，当前正在建立共享基础并拆分需求。每题4GiB/2CPU，自有API模型配方不变，3+8 watcher持续采集。评分仍使用冻结应用官网self_funded重放；尚未交付或评分。
+先前从零GitHub run `pi-braid-i12--hackathon--github-715fa714f396de`、Sheet run `pi-braid-i12--hackathon--sheet-8559b80ecb7f15` 已退役保留；其自然完成reset及真实评论消费是E01的历史行为证据。当前运行为GitHub `pi-braid-i12--hackathon--github-4ad2b95fc11c89`、Sheet `pi-braid-i12--hackathon--sheet-ab453a24432a17`，分别于15:14:51/52 CST取得首个真实模型响应与成功工具结果。每题新空Git seed、新DB和独立原生目录，各4GiB/2CPU，自有API模型配方不变，3+8 watcher持续采集。评分仍使用冻结应用官网self_funded重放；尚未交付或评分。完整身份见restart.md，不再将退役run写作当前执行。
 pi-minimal支线已显式接入完整svc-verification与references，主会话及独立advisor可按问题读取；保留agent-browser快速反馈和主会话自动化最终验收。源码及材料路径核对完成，没有更新现有冻结官网制品或启动支线实验。
 父仓库I12实现、console及导航提交 `86ec49e`。Braid/SVC本次改动叠加在之前已批准但尚未提交的I11材料上；没有可靠开工前基线用于分离时，不猜测暂存或夹带提交。运行身份来自完整dirty源码冻结及材料清单，而非声称HEAD等于制品。
 
@@ -65,3 +85,9 @@ pi-minimal支线已显式接入完整svc-verification与references，主会话�
 - [WSL部署](deployment.md)：材料刷新、资源、真实响应与监控回执。
 - [pi-minimal验收接线](../pi-minimal/verification.md)：支线范围、实际采用方式及未验证项。
 - 原因原始材料：[I11补充归因](../iteration11/runtime-stalls/packet.md)。
+- [I11 GitHub评分问题账](i11-github-score/findings.md)：已有定向报告、已证问题、补充分析与I12消费状态。
+- [I13需求责任与验收方法修正](../iteration13/packet.md)：G01/G04/G05已转交；后续V&V元理论、内容与导航改写获单独开工授权，角色接线及其余单元仍按I13状态推进。
+- [I12未闭合问题根因排查](root-cause-review/packet.md)：Astra xhigh报告已返回，区分已证根因、待验证与证据不足，修复尚待消费。
+- [指派直接选择成员名](assignment-members.md)：源码及实际CLI核对完成，每配方独立递增的下一位虚拟assignee，已进入新从零运行；旧现场不改动。
+- [原生目录修正](native-directory.md)：配置根与活动session存放目录分离，历史记录不迁移；真实子Pi启动后的文件连续性待新运行验证。
+- [从零重启](restart.md)：本次启动授权、旧现场保全、新冻结材料、两题身份与监控回传。

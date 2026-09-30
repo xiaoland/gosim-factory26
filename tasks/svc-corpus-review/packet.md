@@ -1,13 +1,19 @@
-# SVC 非 V&V Corpus 的后续清理
+# SVC Corpus 审查
 
-状态：2026-09-23 设计与验收获批，用户明确允许按方案应用；独立消费预演已通过，进入实施。官网实验仍使用冻结的 ZIP 与指引，Corpus 改动不回写当前批次。V&V 由 [multi-agent 接入](../multi-agent-integration/packet.md) 持有，本包先处理非 V&V 内容，跨包建议见[候选改稿](design.md)。
+目标：让 Factory 的无人值守 Agent 只加载完成 Web 应用 requirement 所需的 SVC 指引，同时让本项目开发与诊断继续使用完整 SVC。
 
-目标：按真实消费问题重新评估 Corpus 的组织与表达，优先删除、合并和清理；不预设既有“骨架”正确，也不为目录对称性增补内容。开始本任务前重读 SVC 当时版本，不能把旧观察当作永久事实。
+当前入口：SVC已是 `sources/svc/skills/` 下七个独立技能。当前V&V元理论、内容与导航的进一步改写由 [I13](../iteration13/packet.md) 承接，并已获开工授权；本包保存早期精简和增强的决定与证据。
+历史上参赛侧单技能用于早期实验，之后五技能拆分与接线由 [Hackathon 能力任务](../hackathon-capabilities/packet.md) 完成材料层面验收；这些形态不覆盖当前技能目录。
+开发和 analysis 继续使用独立完整 SVC；两边的内容不会自动同步。
 
-已有线索来自 [协作模式分析](../development-loop-review/analysis.md) 和 [共同工作方法](../multi-agent/working-methods.md)：Design 总入口的抽象定义与判断路径可能错位；Implementation 的线性计划缺少通过预演收敛分支的实际指导；无具体消费价值的标签/重复声明需要清理。Sub-agent 方法的工作边界、上下文压缩和局部反馈思路当前用于 profile 设计，本轮不改其 Corpus 正文。
+2026-09-24 的 [Corpus 增强](enhancement.md) 已完成正文改稿和编辑复核，原先的 corpus/ 路径由后续 [完整 skill 迁移](../svc-skill-integration/native-skill.md) 替换。
+迁移同时清退 Factory 包装文件和 SVC 专用装配参数，并使常用方法从 SKILL.md 直接可达。
+历史精简、增强记录保留当时路径和材料，不覆盖当前入口。
 
-本次只读审计核对 `~/Development/svc` 的当前 checkout 为 `80996c1`（`ref/v15-engineering-simplification`）；Corpus 干净，但 CLI 工作树有其他未提交改动。Factory 旧文档引用的 `393b935` 在该 checkout 中不可解析，实施前先确定目标版本。审计发现 Design 总入口缺从真实旅程收敛方案的判断路径，Implementation 提到线性计划却未说如何预演高代价未知；没有足够证据支持当前修改 Task Packet 或 Sub-agent Corpus。设计、具体改稿、验收和实施门槛详见 [design.md](design.md)。
+本包的早期实施已有正文和材料层面的结果，不把后续运行自动计作这些旧版本的独立效果验收。单技能时期的方法正文由历史 `harness/skills/svc` 快照保留，当前实施状态以I13及对应冻结材料为准。
+评分实验沿用既有安排；独立 variant 与 DX 的完成也不替代 Corpus 和 skill 接线的行为验收。
 
-实施路径：只替换 SVC 的 Design 总入口与 Implementation 计划段落；按 SVC 发布规则同步版本、变更片段及版本断言；运行 Corpus 发布/链接检查和消费场景。Task Packet、Sub-agent 与 V&V 正文不改。预演采用两名独立读者、匿名 A/B 顺序互换：二人均在通用内容应用任务中优先选出候选 Design 的路由、状态与权限判断路径，且没有额外加载 Corpus；在过期外部 API 任务中均先要求最小真实探针、停止条件和首个 slice；在局部变量改名任务中均直接执行，不要求预演。候选文本没有造成明显的额外查阅或简单任务阻滞。
-
-当前门槛：保留实施前基线，然后应用最小文本 diff；验证完成后记录结果与残余。不以增加文件、术语或模板作为成功标准。本任务不阻塞官网批次。
+- [Factory Corpus 的目录、行文和验收方案](agent-first-review.md)
+- [本轮实施与非 bench 验收证据](implementation.md)
+- [场景耦合审查](overfit-audit.md)
+- [前一阶段通用 SVC 的 Design/Implementation 改稿](design.md)
