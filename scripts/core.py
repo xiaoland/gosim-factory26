@@ -131,8 +131,8 @@ def _tree_identity(root):
 
 def _native_preservation_gaps(output, manifest):
     sessions = manifest.get('sessions')
-    if not isinstance(sessions, list):
-        return ['native manifest 缺少 sessions 清单']
+    if not isinstance(sessions, list) or not sessions:
+        return ['native manifest 缺少已保存会话清单']
     gaps = []
     for index, row in enumerate(sessions):
         if not isinstance(row, dict):
@@ -217,7 +217,7 @@ def finalize_archive(output, *, reclaim_workspace):
     present = {item['path'] for item in objects}
     missing = sorted(required - present)
     reasons = []
-    if not reclaim_workspace:
+    if not reclaim_workspace or recovery:
         reasons.append('运行仍有恢复承诺或未满足既有成功条件')
     if missing:
         reasons.append('归档缺少关键对象: ' + ', '.join(missing))

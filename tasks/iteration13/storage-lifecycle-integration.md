@@ -22,7 +22,7 @@ Factory 合入提交通过本文件的 Git history 查得；限定增量与实�
 
 ## 集成时收敛的边界
 
-独立 advisor 发现来源回执只检查目录存在，native-config 半复制及未保存原文仍可能授权删除 work。本批将原文保存独立于关联覆盖：实际归档复制/读取错误、manifest 声明的原文缺失/摘要不符、observer 原件读取失败阻塞回收；已经保存 native/unparsed 原文、仅身份或观察关联不全时保留诊断缺口。归档辅助错误不改写已交付应用结果，失败回执保留 work 和 recovery-workspace。
+独立 advisor 发现来源回执只检查目录存在，native-config 半复制及未保存原文仍可能授权删除 work。本批将原文保存独立于关联覆盖：实际归档复制/读取错误、空会话清单、manifest 声明的原文缺失/摘要不符、observer 原件读取失败阻塞回收；finalizer 也独立检查已声明的恢复文件，不只依赖调用者布尔参数；已经保存 native/unparsed 原文、仅身份或观察关联不全时保留诊断缺口。归档辅助错误不改写已交付应用结果，失败回执保留 work 和 recovery-workspace。
 
 来源接受四级 archive_level，但执行只实现 decision。本批 CLI/schema v3 只接受 decision，避免声明 resumable 却删除其 workspace。score-only/resumable/forensic 继续作为设计方案，显式 portable 手工导出仍可用。历史 v1/v2 冻结控制器、旧 ZIP 与恢复材料不迁移，旧兼容启动仍标 legacy-unbudgeted；没有原文保存确认的旧回执不能成为 GC 候选。
 
