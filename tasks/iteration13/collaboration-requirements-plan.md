@@ -1,6 +1,6 @@
 # I13：Braid 协作方法与 Requirements 树
 
-2026-10-01。用户已审查本方案并认为没有问题，随后要求查看观察、研究与方案之间的推导，并明确ARC特定适配限定在Agent Skill与root Issue description。用户现已同意“现有代码也需要收回两处耦合”，这两处独立开工；其余协作与需求树方法仍处于方案阶段。[证据与推导说明](collaboration-requirements-rationale.md)及ARC compiler固定版本调查已完成。工具与提示词两条实现线已完成各自源码及材料反馈；Exa凭据由用户明天修正，不阻塞本组。
+2026-10-01。用户已审查本方案并认为没有问题，随后要求查看观察、研究与方案之间的推导，并明确ARC特定适配限定在Agent Skill与root Issue description。用户现已同意“现有代码也需要收回两处耦合”，两处修正已完成并提交1c8b9f9，编译与真实材料核对通过，见[实施记录](arc-boundary-implementation.md)；其余协作与需求树方法仍处于方案阶段。[证据与推导说明](collaboration-requirements-rationale.md)及ARC compiler固定版本调查已完成。工具与提示词两条实现线已完成各自源码及材料反馈；Exa凭据由用户明天修正，不阻塞本组。
 
 方案持续接受推导与证据修正。用户明确允许推导改进方案；此前认可不冻结具体设计，也不要求研究只为已有选择补充理由。设计修订直接同步正文及受影响计划，源码实施仍沿对应授权范围处理。
 
@@ -68,9 +68,9 @@ harness/skills/
 
 用户原话：“比赛本意想要的是泛化的coding agent harness，我们得避免ARC反过来塑造我们的harness实现……将arc特定的适配限定在agent skill、root issue description。”据此，Braid/Pi及通用扩展保持对需求语义无感：不认识FOLDER/ATOMIC、需求dependencies、应用初态、测试层次或覆盖状态，不用这些信息自动建Issue、调度节点、限制工具或判断完成。通用协作技能也不反向依赖ARC技能。
 
-当前 `run.py` 的 `RUN_CONDITIONS` 会追加到每个profile，其中已有ARC平台专属内容，需在本批迁出：frontend/backend目录及npm流程、Node 20.19.3、HOST/PORT与3000端口、120秒启动、平台保留目录、检查 `/usr/local/bin/node` 与工具Node区别等。它们集中到ARC技能的交付reference；root description给出入口及本次任务参数。混合句按归属拆分：portless工具用法与停止自有服务是通用环境，预留评测端口及正式应用安装/启动契约属于ARC材料。既定通用工具选择、角色与协作政策按已审方案保留。
+本批已从追加到每个profile的 `RUN_CONDITIONS` 迁出ARC平台专属内容：frontend/backend目录及npm流程、Node 20.19.3、HOST/PORT与3000端口、120秒启动、平台保留目录、检查 `/usr/local/bin/node` 与工具Node区别等。它们集中到ARC技能的交付reference；root description给出入口及本次任务参数。混合句按归属拆分：portless工具用法与停止自有服务是通用环境，预留评测端口及正式应用安装/启动契约属于ARC材料。既定通用工具选择、角色与协作政策按已审方案保留。
 
-`generate()`目前在模型启动前硬性要求 `requirements.yaml`；后续流程仅复制、记录身份并传递需求目录，没有运行时YAML消费者。本批改为仅确认输入是目录，复制读取失败保留实际错误；文件名、完整性及可读需求的解释归root description与ARC技能。移除这项门槛不引入新的解析器或适配接口。
+`generate()`原先在模型启动前硬性要求 `requirements.yaml`；后续流程仅复制、记录身份并传递需求目录，没有运行时YAML消费者。本批已改为仅确认输入是目录，复制读取失败保留实际错误；文件名、完整性及可读需求的解释归root description与ARC技能。移除这项门槛没有引入新的解析器或适配接口。
 
 赛事启动参数、输入/输出传输、应用导出以及 `deployment='arcbench'` 等记录身份继续归现有外围接入；这些协议不参与Agent的需求判断，本批不扩展成历史接入层重构。`braid-request`仍只传普通prompt、profiles、bindings和交付ref，不增加ARC语义字段。后续实现需将此稳定职责补入既有PRD/技术说明，不另造一套架构文档。
 
@@ -123,6 +123,8 @@ Braid方法随后处理各成员如何继续这份工作。编辑器负责人可
 用户原话：“我同意你的‘现有代码也需要收回两处耦合’，而且这很关键。”本条针对前述具体修正的明确同意，作为迁出ARC平台契约与移除YAML硬门槛的开工依据。已委派GPT-6.1-Sol / extra-high子Agent，独占I13 run/build、arc-bench技能及交付reference、技能索引和[实施记录](arc-boundary-implementation.md)；主线维护PRD/技术说明及任务资料并独立核对结果。ARC技能本次先提供可直接使用的输入入口和交付适配方法，其后完整需求树方法在同一技能中接续。
 
 本次不提前实现通用braid-collaboration技能、共同完整案例或整体协作方法迁移；既有根任务的需求阅读和协作政策继续有效。反馈复用已构建runtime，做编译及真实prepare-only材料核对，不运行模型、测试或实验，不改变I12。只提交本次增量，保留其它工作区修改。
+
+本批源码和技能已完成并提交1c8b9f9，Python编译及两次最终prepare-only通过。主线直接回读最终请求、profile和复制材料，确认平台合同已迁出、正文未内联、复制技能与当前源码一致、通用请求字段及交付ref未改变。真实无YAML图片目录仅证明目录入口已解除文件名门槛，不证明缺失需求能够完成生成；模型采用、应用交付和Linux平台部署未在本批运行。原始反馈归[实施记录](arc-boundary-implementation.md)，主线复核在 `runs/iteration13/arc-boundary-20261001/primary/material-read-final.json`。
 
 ### 整组后续范围
 
