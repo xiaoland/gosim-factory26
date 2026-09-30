@@ -42,7 +42,7 @@ I12
 用户要求：“是否有i11 github的评测的分析结果，如果没有，请安排分析，找到的问题也纳入i12。”
 已有独立定向报告确认最终应用正常送达和启动，并追出跨对象需求承接悬空、需求编号覆盖被误用为行为覆盖；它不能解释全部96项失败。
 问题账已有I12-G01/G02/G03。用户补充的“最终审查沿用mapping”和“失败日志、旧成功标签与packet错配”经补齐的PR23原生过程确认，登记G04/G05；两题共有的重复核查及提交变化误判统一登记E01/E02。通用修复归属、实际投递与待验证边界以 [问题账](i11-github-score/findings.md) 为准。
-主线完成方法/角色入口核对及独立材料调查后，用户明确要求“那么将G01/G04/G05纳入I13的范围内”。这三项连同 [具体方法方案](../iteration13/quality-methods.md) 转交 [I13 packet](../iteration13/packet.md)，保留原编号和证据；尚未实施，不以E01/E02已经部署代替质量问题闭合。I12从零生成随后按用户要求暂停，保留既有修复与采用证据，不改变冻结制品或清理现场。
+主线完成方法/角色入口核对及独立材料调查后，用户明确要求“那么将G01/G04/G05纳入I13的范围内”。这三项连同 [具体方法方案](../iteration13/quality-methods.md) 转交 [I13 packet](../iteration13/packet.md)，保留原编号和证据。G04/G05现已融入SVC V&V元理论改写（`31906a5`），尚未部署到冻结I12；G01及角色接线继续由I13推进，不以E01/E02已经部署代替质量问题闭合。I12从零生成随后按用户要求暂停，保留既有修复与采用证据，不改变冻结制品或清理现场。
 原Astra medium补充调查已按用户新指示中断并保留提取材料，改由GPT-6 Astra / xhigh接续整体低分及I12未闭合问题的根因分析。独立调查已返回 [综合报告](root-cause-review/report.md)，包含需求与验收共用错误前提、Pi配置根/session目录混用、watch结果消费缺口及I12连续性的实际行为证据。主线已按新从零授权部署Pi目录、成员指派及历史成果职责修正；质量方法按问题账继续区分待修与采用未证，不以报告返回或启动成功视为全部修复完成。范围、分工与证据边界见 [根因排查cell](root-cause-review/packet.md)，原 [评分调查断点](i11-github-score/investigation.md) 作为交接入口保留。
 
 ## 成员指派修正已完成并进入新从零运行
@@ -71,7 +71,7 @@ Console使用明确的当次binary/state身份；从零使用标准variant入口
 
 Braid Linux编译完成；自编辑及自然完成后的reset只更新Context，真实中断保留接续，讨论resolve回执明确范围。
 SVC专门的SHA规则已移除，保留按相关变化与实际条件判断证据的方法，I12角色的交接指引已收敛。摘剪正文改动仅属于退役现场，不会带入从零生成。
-Console新版位于独立braid-console目录，React生产构建通过，旧plain页面及执行路径已移除。当前只登记两个从零现场并允许人工介入；CLI在各自容器中执行，保持Braid已存Git路径的环境身份。真实HTTP与浏览器已读取两题根Issue和PR #2，不为核验随意发表新评论。入口是 http://127.0.0.1:8765/；部署及旧评论证据归console记录。
+Console新版位于独立braid-console目录，React生产构建通过，旧plain页面及执行路径已移除。当前只登记两个从零现场并允许人工介入；暂停后的CLI桥已改为每题独立访问容器，保持原数据库、Git路径和冻结binary身份。两题列表、根Issue与已有PR详情的真实HTTP读取成功；此次没有发表测试评论，写入效果尚未实测。入口是 http://127.0.0.1:8765/；部署及旧评论证据归console记录。
 原I12摘剪尝试：GitHub run `pi-braid-i12--hackathon--github-690b8b3f871be2`，Sheet run `pi-braid-i12--hackathon--sheet-6c9d2806b4fac4`，已按最新决定cancelled/exit-15，容器不存在、cleanup完成、gateway绑定撤销，workspace及全部原生证据保留。停止前两根已有真实模型响应并成功读取#333/#567，wake为consumed；说明前期console消息接线可用，不是完整生成验收。证据见 `runs/iteration12/deployment/stopped/receipt.json`。
 先前从零GitHub run `pi-braid-i12--hackathon--github-715fa714f396de`、Sheet run `pi-braid-i12--hackathon--sheet-8559b80ecb7f15` 已退役保留；其自然完成reset及真实评论消费是E01的历史行为证据。当前运行为GitHub `pi-braid-i12--hackathon--github-4ad2b95fc11c89`、Sheet `pi-braid-i12--hackathon--sheet-ab453a24432a17`，分别于15:14:51/52 CST取得首个真实模型响应与成功工具结果。每题新空Git seed、新DB和独立原生目录，各4GiB/2CPU，自有API模型配方不变，3+8 watcher持续采集。评分仍使用冻结应用官网self_funded重放；尚未交付或评分。完整身份见restart.md，不再将退役run写作当前执行。
 pi-minimal支线已显式接入完整svc-verification与references，主会话及独立advisor可按问题读取；保留agent-browser快速反馈和主会话自动化最终验收。源码及材料路径核对完成，没有更新现有冻结官网制品或启动支线实验。

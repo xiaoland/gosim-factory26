@@ -5,7 +5,7 @@
 用户要求“可以暂停 I12 了，内容已经太多，我已经看到很多问题”。2026-09-30 15:59:13 CST实际确认下面两条当前容器均Running=true、Paused=true；全部容器内Agent会话及Braid定期检查一并冻结，没有取消、清理或重启，不自动恢复。
 代码、Git、Issue/PR、原生会话及内存中的运行现场留在原处。暂停时的 `braid.sqlite3*` 文件复制到WSL `runs/iteration12/restart-20260930/paused-20260930/<case>/raw-db/`，原始Docker身份、状态和路径见同目录上层的 `pause-receipt.json`。
 该文件副本用于复审，不单凭它宣称具有完整冷恢复检查点。以下启动和进展记录均为暂停前事实。
-Console整体暂停/恢复以及暂停后的人工读写能力纳入 [I13 packet](../iteration13/packet.md)，本次紧急暂停不等同该产品能力已完成。
+Console整体暂停/恢复能力纳入 [I13 packet](../iteration13/packet.md)。暂停后的读取已通过独立CLI访问容器恢复，实际写入尚未验证；接线及证据见 [暂停访问修复](../iteration13/console-paused-access.md)，本次修复不包含整体暂停/恢复按钮。
 
 ## 启动事实与历史过程
 

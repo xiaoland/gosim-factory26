@@ -25,7 +25,7 @@ I10/I11原有15,440个未跟踪文件、约1.55GB，其中大量为归档展开�
 根目录36字节的 `escaped.jsonl` 内容为历史session占位记录，已移至 `runs/iteration13/vv-rework-20260930/loose-files/` 保留。
 
 当前导航区分I12暂停和I13改写；早期Corpus packet已指向七技能现状及I13承接，不再把五技能拆分写成当前布局。
-I12 Console记录明确：当前Docker整体冻结会阻止容器内CLI桥，暂停后的人工读写不是已完成能力。
+I12 Console记录已同步支线结果：每题独立CLI访问容器恢复暂停后的原现场读取；真实写入尚未验证，完整暂停/恢复按钮仍待推进。
 
 ## 提交安排
 
@@ -37,4 +37,4 @@ SVC独立仓库提交本次V&V正文及必要导航。
 SVC已提交 `31906a5`（9文件）：六份V&V正文以及design入口、implementation入口和test-first导航。
 implementation/workflow原先未提交的交接依据段通过局部暂存保留在工作树，未夹带入本次提交；旧CLI、documentation和planning改动同样保留。
 内容复核及未部署边界见 [V&V复审](vv-skill-review.md#实施结果与复核)。
-父仓库提交身份由Git历史记录，后续Console修复单独提交，不把其进行中的代码纳入本次文档整理。
+父仓库已提交 `b8b4915`，包括本轮文档整理、忽略路径和V&V原始研究材料；后续Console修复单独提交，不把其进行中的改动纳入这次文档整理。
