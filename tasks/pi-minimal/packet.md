@@ -73,3 +73,5 @@ GitHub run：`pi-minimal--hackathon--github-59aaf58e7462bc`，`started_at=179068
 官网 GitHub f3424d6aa387 部署失败、Sheet重试 d03625688de8 3/100，两题终态已收集，余额246.100666。用户授权定制脚本相对 Pi home。已修改 .factory26 下持久证据、脚本旁pi-home映射及旧本地恢复路径；复用Pi timing扩展覆盖main/advisor，费用守护增加按ARC价格估计未结算费用。源码语法和真实只读账面查询可验证，尚未重新打包或跑官网，详见meter-budget.md。
 
 GitHub原始安装错误为后端npm的edgesOut空引用；前端install/build成功。后端声明vitest ^5.0.2，仅pnpm-lock；锁定Vitest5.0.2需要Node ^22.12||^24||>=26，与已声明目标Node20.19.3不兼容。npm Arborist同类空引用有上游记录，但本次缺少/root/.npm debug栈，尚不能证明具体触发点；pnpm依赖树切换npm、未锁定npm peer解析是候选因素。建议Agent在目标Node下对干净交付副本执行官方npm安装/build/start，按兼容性选依赖；Harness不直接修改生成应用。完整平台错误保存 runs/pi-minimal/20260929/install-diagnosis/platform-install.log，manifest与npm registry元数据保存同目录。
+
+用户随后要求仅pi-minimal删除pnpm、portless的使用要求。已改为应用使用Node20.19.3 + npm，正式命令含 --include=optional --no-audit --no-fund，保留package-lock.json并在干净副本验证前端安装/build与后端安装/start；保留Vitest但要求选择兼容目标Node的版本。预包工具未删除，其它variant未改；旧冻结ZIP/已结束官网运行不变，尚未重打包或重跑。

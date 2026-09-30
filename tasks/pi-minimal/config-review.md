@@ -9,7 +9,8 @@
 | 扩展 | pi-subagents、pi-background-bash；无Braid、SVC |
 | 技能 | agent-browser、hyperformula、handsontable、better-auth-best-practices、organization-best-practices、fixing-accessibility、ponytail（官方4.10.0原生Pi扩展，full） |
 | MCP | Context7、Exa，通过mcporter |
-| 工具环境 | pnpm、portless、rg、ast-grep、Chromium、Playwright |
+| 应用环境 | Node 20.19.3 + npm，保留 package-lock.json；不要求 pnpm、portless |
+| 工具环境 | app-env、rg、ast-grep、Chromium、Playwright；预包现有 pnpm、portless 保留但不作为工作要求 |
 | 条件 | 保留已批准通用交付条件，无Issue/PR/packet流程，无额外角色或强制委派 |
 | 参赛 | 同一冻结包，hackathon--github与hackathon--sheet，official_evaluation |
 

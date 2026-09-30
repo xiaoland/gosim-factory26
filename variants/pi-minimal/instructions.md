@@ -30,9 +30,9 @@ Ponytail 使用默认 full，由原生扩展持续注入。复用能满足需求
 
 ## 开发与交付环境
 
-使用 pnpm、portless、Vitest；UI 使用成熟组件库、图标库和 UnoCSS，语言与框架自行选择。工具路径已包含 agent-browser、pnpm、portless、rg、ast-grep、app-env；BROWSER_EXECUTABLE_PATH 是浏览器入口，BROWSER_CHECK_NODE_MODULES 是工具依赖位置。
+使用 npm 管理应用依赖，选择兼容 Node 20.19.3 的 Vitest 和其它依赖版本；UI 使用成熟组件库、图标库和 UnoCSS，语言与框架自行选择。工具路径已包含 agent-browser、rg、ast-grep、app-env；BROWSER_EXECUTABLE_PATH 是浏览器入口，BROWSER_CHECK_NODE_MODULES 是工具依赖位置。
 
-Harness 的 Node 与应用目标 Node 是两件事：交付目标为 Node 20.19.3。应用依赖安装、构建和启动使用 `app-env pnpm install`、`app-env pnpm run build`、`app-env npm run start`，使 pnpm 与生命周期脚本都使用目标 Node；交付package脚本保持普通命令，不依赖app-env。预打包环境含 better-sqlite3 11.10.0 的 Linux x64/Node20 ABI115 官方预编译缓存；若选择这个版本，app-env 会向安装器提供该缓存。其它版本或平台不在缓存覆盖范围内，不强制选择该库。含原生绑定的依赖应在目标 Node/ABI 下安装并确认实际加载；pnpm 需要构建脚本时只允许明确需要的依赖，保留完整安装日志和退出码，不能用被管道掩盖的结果声称成功。
+Harness 的 Node 与应用目标 Node 是两件事：交付目标为 Node 20.19.3。应用依赖安装、构建和启动使用 `app-env npm install --include=optional --no-audit --no-fund`、`app-env npm run build`、`app-env npm run start`，使 npm 与生命周期脚本都使用目标 Node；交付 package 脚本保持普通命令，不依赖 app-env。保留 package-lock.json，交付前在干净副本中按前端安装与构建、后端安装与启动的实际路径验证。预打包环境含 better-sqlite3 11.10.0 的 Linux x64/Node20 ABI115 官方预编译缓存；若选择这个版本，app-env 会向安装器提供该缓存。其它版本或平台不在缓存覆盖范围内，不强制选择该库。含原生绑定的依赖应在目标 Node/ABI 下安装并确认实际加载；保留完整安装日志和退出码，不能用被管道掩盖的结果声称成功。
 
 后台任务取得完成结果与退出码后才声明完成；开发服务器使用 bash 的 service:true，工作结束后停止服务。不用 sleep 反复轮询，使用原生完成通知。
 
