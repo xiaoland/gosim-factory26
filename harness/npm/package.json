@@ -2,8 +2,10 @@
   "dependencies": {
     "@ast-grep/cli": "0.45.3",
     "@earendil-works/pi-coding-agent": "0.85.1",
+    "@ff-labs/pi-fff": "0.11.0",
     "@openai/codex": "0.155.0",
     "@playwright/test": "1.61.1",
+    "@upstash/context7-pi": "0.1.2",
     "agent-browser": "0.38.1",
     "mcporter": "0.14.0",
     "pi-background-bash": "1.0.5",

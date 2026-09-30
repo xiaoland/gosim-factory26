@@ -78,8 +78,9 @@ Node/npm 必须已可用；按当前 agent-browser 版本使用 Node 24+。
 相同 lock 复用 `~/.cache/factory26/`，Chromium 由 Playwright 安装器按 lock 配套版本缓存，agent-browser 与 Playwright Test 复用该二进制。
 variant 可以选择其他显式 runtime；共享安装不决定其行为。
 Linux 构建另收录 rg、ast-grep 与 MCPorter：前两者按原生二进制启动，MCPorter 使用 Node 24。
-运行入口将 `MCPORTER_CONFIG` 指向已物化的 `exploration-tools/assets/mcporter.json`，按需通过 Context7、Exa、Handsontable Docs 服务查询；工具指引随同该 skill 分发。
-本轮仅更新构建声明与接线，旧 runtime 和冻结包不会因此具备新工具；下次实验前须从当前 lock 构建新资源。
+各 variant 将 `MCPORTER_CONFIG` 指向自身的 `tools/mcporter.json`。I13 仅保留 Handsontable Docs；Context7 0.1.2 与 Exa 改为 Pi 原生工具，默认供主成员、explorer 和 executor 使用，其它内部角色不默认加载。pi-fff 0.11.0 以 `tools-only` 覆盖主成员与全部内部角色，保留 Pi 原生 find/grep；不启用可选 multi-grep。Context7 技能保持独立文件，包内 prompt 模板不加载。
+I13 打包可显式传 `--tool-env .env.i13-tools`，将 `CONTEXT7_API_KEY` 与 `EXA_API_KEY` 写入非 Git 制品的 `.private/tool-env.json`。输入只按 dotenv 赋值读取，不执行 shell、不读取个人配置。运行环境的同名变量覆盖包内值，主/子进程继承同一环境。该目录及 ZIP 含私有凭据，只作为私有运行制品保存。
+旧 runtime 和冻结包不会因此具备新工具；下次实验前须从当前 lock 和补丁构建新资源。
 
 团队 Harness 另需 Braid 二进制与 SVC 技能集合。
 使用现有 `sources/braid`、`sources/svc` 工作树。

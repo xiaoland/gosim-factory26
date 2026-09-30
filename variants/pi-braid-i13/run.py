@@ -31,7 +31,7 @@ ROOT_CHECK_MESSAGES = (
 MAIN_SKILLS = ('svc-sub-agents', 'svc-task-packet','svc-documentation',
                'svc-verification', 'hyperformula', 'handsontable', 'better-auth-best-practices',
                'organization-best-practices', 'fixing-accessibility', 'ponytail', 'impeccable',
-               'agent-browser')
+               'agent-browser', 'context7-docs')
 # Braid member conditions stay in the parent profile; native children receive their own role and task.
 RUN_CONDITIONS = '''交付条件
 本次为人工介入研究运行；用户可通过Issue/PR评论提出澄清、纠正或工作请求，按对象中的明确输入协作。依据原始需求处理常规歧义并记录重要假设，遇到不可自行解决的阻塞时保留证据。当前工作项或委派决定你的职责和可修改范围，下列环境约定不扩大它。
@@ -58,8 +58,12 @@ def native_files(work, runtime, skills, base_url, visual_url):
     本次运行只替换连接与路径；包内有哪些技能和会话启用哪些技能分别选择。
     """
     background_bash = runtime/'node_modules/pi-background-bash/index.ts'
-    if not background_bash.is_file():
-        raise FileNotFoundError(f'后台执行扩展缺失：{background_bash}')
+    fff = runtime/'node_modules/@ff-labs/pi-fff/src/index.ts'
+    context7 = runtime/'node_modules/@upstash/context7-pi/extensions/context7.ts'
+    exa = HERE/'extensions/exa.ts'
+    for extension in (background_bash, fff, context7, exa):
+        if not extension.is_file():
+            raise FileNotFoundError(f'原生工具扩展缺失：{extension}')
     profiles, bindings = [], {}
     for source in sorted((HERE/'agents').iterdir()):
         profile = json.loads((source/'profile.json').read_text())
@@ -80,12 +84,17 @@ def native_files(work, runtime, skills, base_url, visual_url):
             baseUrl=visual_url or base_url,
             apiKey='$FACTORY26_VISUAL_API_KEY' if visual_url else '$FACTORY26_API_KEY')
         save(template/'models.json', providers)
+        save(template/'pi-fff.json', {'mode':'tools-only'})
         for role in (template/'agents').glob('*.md'):
             instruction = role.read_text().replace('@SKILLS@', json.dumps(str(skills))[1:-1])
             marker = 'extensions: ""'
             if marker not in instruction:
                 raise ValueError(f'内部角色扩展配置已变化：{role}')
-            instruction = instruction.replace(marker, f'extensions: "{background_bash}"', 1)
+            extensions = [background_bash, fff]
+            if role.stem in {'explorer', 'executor'}:
+                extensions += [context7, exa]
+                instruction = instruction.replace('skills: "', 'skills: "context7-docs, ', 1)
+            instruction = instruction.replace(marker, 'extensions: '+json.dumps(', '.join(map(str,extensions))), 1)
             role.write_text(instruction)
         observer = folder/'factory-subagent-observer.ts'
         shutil.copy2(HERE/'extensions/factory-subagent-observer.ts', observer)
@@ -93,7 +102,9 @@ def native_files(work, runtime, skills, base_url, visual_url):
         flags = [str(pi), '--no-extensions', '--no-skills', '--no-prompt-templates', '--no-themes',
                  '--extension', str(runtime/'node_modules/pi-subagents/index.ts'),
                  '--extension', str(background_bash),
-                 '--extension', str(observer)]
+                 '--extension', str(observer),
+                 '--extension', str(fff), '--fff-mode', 'tools-only',
+                 '--extension', str(context7), '--extension', str(exa)]
         for skill in MAIN_SKILLS:
             flags += ['--skill', str(skills/skill/'SKILL.md')]
         launcher = folder/'pi'
@@ -104,6 +115,18 @@ def native_files(work, runtime, skills, base_url, visual_url):
             native_home={'root':str(work/'native-homes')})
         profiles.append(profile)
     return profiles, bindings
+
+
+def tool_environment():
+    """Package-local credentials are defaults; explicit run environment wins."""
+    names = ('CONTEXT7_API_KEY', 'EXA_API_KEY')
+    private = HERE/'.private/tool-env.json'
+    values = json.loads(private.read_text()) if private.is_file() else {}
+    if not isinstance(values, dict) or (private.is_file() and set(values) != set(names)) or any(
+            not isinstance(value, str) or not value for value in values.values()):
+        raise ValueError('包内工具凭据配置需要已知变量的非空字符串值')
+    return {name:os.environ.get(name, values.get(name)) for name in names
+            if name in os.environ or name in values}
 
 
 def generate(args):
@@ -138,7 +161,9 @@ def generate(args):
     pbb_launcher.chmod(0o755)
     skills = work/'skills'
     for name in MAIN_SKILLS:
-        copy_skill(args.skills_root.resolve(strict=True)/name, skills/name)
+        source = (runtime/'node_modules/@upstash/context7-pi/skills/context7-docs'
+                  if name == 'context7-docs' else args.skills_root.resolve(strict=True)/name)
+        copy_skill(source, skills/name)
     source_braid = (args.braid or runtime/'bin/braid').resolve(strict=True)
     shutil.copy2(source_braid, work/'bin/braid')
     (work/'bin/braid').chmod(0o755)
@@ -191,7 +216,8 @@ def generate(args):
         raise ValueError('需要 OPENAI_API_KEY 或 FACTORY26_API_KEY')
     browser = str(browser_executable(runtime))
     # Chromium sockets require a short path; retain Pi's durable async state separately.
-    env = dict(os.environ, PORTLESS_PORT='1355', PORTLESS_HTTPS='0',
+    env = dict(os.environ, **tool_environment(), PORTLESS_PORT='1355', PORTLESS_HTTPS='0',
+               PI_FFF_MODE='tools-only', PI_FFF_MULTIGREP='0',
                PORTLESS_SYNC_HOSTS='0', PORTLESS_STATE_DIR=str(work/'tmp/portless'),
                npm_config_cache=str(work/'cache/npm'),
                npm_config_store_dir=str(work/'cache/pnpm'),

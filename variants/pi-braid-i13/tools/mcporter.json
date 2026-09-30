@@ -1,8 +1,6 @@
 {
   "imports": [],
   "mcpServers": {
-    "context7": {"url": "https://mcp.context7.com/mcp"},
-    "exa": {"url": "https://mcp.exa.ai/mcp"},
     "handsontable-docs": {"url": "https://docs-assistant.handsontable.com/mcp"}
   }
 }

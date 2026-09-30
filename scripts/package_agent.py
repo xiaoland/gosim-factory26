@@ -2,7 +2,9 @@
 import argparse
 import hashlib
 import json
+import os
 from pathlib import Path
+import shlex
 import shutil
 import stat
 import subprocess
@@ -13,6 +15,43 @@ import zipfile
 from agent_support import copy_skill
 
 ROOT=Path(__file__).resolve().parents[1]
+
+TOOL_KEY_NAMES = ('CONTEXT7_API_KEY', 'EXA_API_KEY')
+
+
+def require_private_artifact(path):
+    path = Path(path).resolve()
+    if path.is_relative_to(ROOT) and subprocess.run(
+            ['git', 'check-ignore', '-q', '--', str(path)], cwd=ROOT).returncode != 0:
+        raise ValueError('含工具凭据的私有制品须放在 Git 忽略目录（如 runs/）或仓库外')
+
+
+def write_tool_credentials(env_file, destination):
+    """Read an explicit two-key dotenv input as data, never as shell commands."""
+    values = {}
+    for number, line in enumerate(Path(env_file).read_text().splitlines(), 1):
+        line = line.strip()
+        if not line or line.startswith('#'):
+            continue
+        name, separator, value = line.removeprefix('export ').partition('=')
+        name = name.strip()
+        if not separator or name not in TOOL_KEY_NAMES or name in values:
+            raise ValueError(f'工具凭据输入第 {number} 行不是唯一的已知变量赋值')
+        try:
+            tokens = shlex.split(value, comments=True, posix=True)
+        except ValueError:
+            raise ValueError(f'工具凭据输入第 {number} 行引号不完整') from None
+        if len(tokens) != 1 or not tokens[0]:
+            raise ValueError(f'工具凭据输入第 {number} 行需要一个非空值')
+        values[name] = tokens[0]
+    if set(values) != set(TOOL_KEY_NAMES):
+        raise ValueError('工具凭据输入需要 CONTEXT7_API_KEY 与 EXA_API_KEY')
+    target = Path(destination)/'.private/tool-env.json'
+    require_private_artifact(target)
+    target.parent.mkdir(mode=0o700)
+    with os.fdopen(os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as stream:
+        json.dump(values, stream)
+        stream.write('\n')
 
 def is_metadata_path(path):
     """Exclude transport-created macOS metadata from runnable package payloads."""
@@ -55,6 +94,8 @@ def bundle_files(root):
 
 def write_zip(bundle, output, backend, records, capabilities=None):
     bundle = bundle.resolve()
+    if (bundle/'.private').is_dir():
+        require_private_artifact(output)
     files = [path for path in bundle_files(bundle)
              if path != bundle / 'package-manifest.json'
              and 'node_modules/.bin' not in path.relative_to(bundle).as_posix()]
@@ -70,12 +111,14 @@ def write_zip(bundle, output, backend, records, capabilities=None):
     files.append(bundle / 'package-manifest.json')
     output.parent.mkdir(parents=True, exist_ok=True)
     with output.open('xb') as stream:
+        if (bundle/'.private').is_dir():
+            output.chmod(0o600)
         try:
             with zipfile.ZipFile(stream, 'w', compression=zipfile.ZIP_DEFLATED) as archive:
                 for path in files:
                     info = zipfile.ZipInfo(path.relative_to(bundle).as_posix())
                     info.create_system = 3
-                    mode = 0o755 if path.stat().st_mode & 0o111 else 0o644
+                    mode = 0o600 if path.relative_to(bundle).parts[0] == '.private' else (0o755 if path.stat().st_mode & 0o111 else 0o644)
                     info.external_attr = (stat.S_IFREG | mode) << 16
                     info.compress_type = zipfile.ZIP_DEFLATED
                     archive.writestr(info, path.read_bytes())
@@ -109,11 +152,13 @@ def assemble(source, destination, runtime, skill_source, skills):
 
 
 def package(variant, output, docker_context=None, runtime=None, stage=None,
-            skill_source=None):
+            skill_source=None, tool_env=None):
     source=ROOT/'variants'/variant
     if source.parent!=ROOT/'variants' or not (source/'build.py').is_file():
         raise ValueError('请选择含 build.py 的独立 variant')
     if output is not None and Path(output).exists(): raise FileExistsError(output)
+    if tool_env is not None and variant != 'pi-braid-i13':
+        raise ValueError('--tool-env 当前仅供 pi-braid-i13 使用')
     skill_source=Path(skill_source or ROOT/'harness/skills').resolve()
     from runtime import linux
     (ROOT/'runs').mkdir(exist_ok=True)
@@ -125,8 +170,11 @@ def package(variant, output, docker_context=None, runtime=None, stage=None,
         if not (runtime/'bin/braid').is_file():
             raise ValueError('团队制品需要包含 Braid 的 Linux runtime；参阅 runtime.py linux --braid-source')
         bundle=Path(stage).resolve() if stage else tmp/'bundle'
-        subprocess.run([sys.executable,str(source/'build.py'),'--stage',str(bundle),
-                        '--runtime',str(runtime),'--skills',str(skill_source)],check=True)
+        build = [sys.executable,str(source/'build.py'),'--stage',str(bundle),
+                 '--runtime',str(runtime),'--skills',str(skill_source)]
+        if tool_env is not None:
+            build += ['--tool-env', str(Path(tool_env).resolve(strict=True))]
+        subprocess.run(build,check=True)
         prune_metadata(bundle)
         records=json.loads((runtime/'runtime-source.json').read_text()).get('sources',{}) if (runtime/'runtime-source.json').is_file() else {}
         if output is not None:
@@ -144,9 +192,10 @@ def main():
     p.add_argument('--runtime',type=Path,help='复用 runtime.py linux 导出的目录')
     p.add_argument('--docker-context')
     p.add_argument('--skills',type=Path)
+    p.add_argument('--tool-env',type=Path,help='I13 两服务凭据的显式 dotenv 输入；仅写入非 Git 制品私有配置')
     a=p.parse_args()
     if a.output is None and a.stage is None:p.error('需要 --output 或 --stage')
-    print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills))
+    print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills,a.tool_env))
 
 
 if __name__=='__main__':main()

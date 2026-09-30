@@ -21,7 +21,7 @@ Factory 不解析方法正文，也不为 SVC 补装第二份 Corpus。
 
 浏览器操作默认使用 agent-browser。最终验收按需求选择可重复的应用测试或脚本；已安装的 Playwright Test 与 Chromium 仍可按需使用，不另设独立验收技能。
 
-通用调查工具知识直接归 explorer 角色提示词；MCP 服务配置归各 variant 的 tools/mcporter.json，环境变量 MCPORTER_CONFIG 供工具读取，不再提供 exploration-tools 独立技能。
+通用调查工具知识直接归 explorer 角色提示词；MCP 服务配置归各 variant 的 tools/mcporter.json，环境变量 MCPORTER_CONFIG 供工具读取，不再提供 exploration-tools 独立技能。I13 的 Context7/Exa 使用原生 Pi 工具；Context7 的独立 `context7-docs` 技能从锁定并补丁后的官方 npm 包收录，主成员与 explorer/executor 显式发现，其正文不进入 profile 或角色提示词。其它 variant 仍以自身接线为准。
 
 当前 `pi-braid` 与 `pi-braid-flash-team` 在 build.py 冻结此技能，run.py 将其加入成员主会话的技能目录，executor 和 browser-operator 的原生配置也启用它。
 因此两者共享同一工具入口；工具可供检查执行者调用，不将最终验收职责转给 browser-operator。

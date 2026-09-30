@@ -8,7 +8,7 @@ import shutil
 
 root = Path('/runtime')
 backend = sys.argv[1]
-for dependency in ('@ast-grep/cli', 'mcporter', '@earendil-works/pi-coding-agent', '@openai/codex', 'agent-browser', 'pi-subagents', '@playwright/test', 'pnpm', 'portless'):
+for dependency in ('@ast-grep/cli', 'mcporter', '@earendil-works/pi-coding-agent', '@openai/codex', 'agent-browser', 'pi-subagents', '@playwright/test', 'pnpm', 'portless', '@upstash/context7-pi', '@ff-labs/pi-fff', '@ff-labs/fff-bin-linux-x64-gnu'):
     if not (root / 'node_modules' / dependency).is_dir():
         raise RuntimeError(f'frozen npm dependency missing: {dependency}')
 chrome = Path(subprocess.check_output(

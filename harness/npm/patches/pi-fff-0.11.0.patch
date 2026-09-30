@@ -1,0 +1,57 @@
+--- a/src/index.ts
++++ b/src/index.ts
+@@ -992,14 +992,8 @@
+   });
+ 
+   queueTool(() => toolNames.grep, {
+-    description: `Grep file contents. Smart-case, auto-detects regex vs literal, git-aware. Results are ranked by frecency (most-accessed files first); matches within a file stay in source order. Default limit ${DEFAULT_GREP_LIMIT}.`,
++    description: `Grep file contents. Auto-detects regex vs literal, git-aware. Literal queries are most efficient. Results are ranked by frecency (most-accessed files first); matches within a file stay in source order.`,
+     promptSnippet: "Grep contents",
+-    promptGuidelines: (names) => [
+-      `${names.grep}: prefer bare identifiers as patterns. Literal queries are most efficient.`,
+-      `${names.grep}: use path for include ('src/', '*.ts') and exclude for noise ('test/,*.min.js').`,
+-      `${names.grep}: caseSensitive: true when you need exact case (smart-case otherwise).`,
+-      `${names.grep}: after 1-2 greps, read the top match instead of more greps.`,
+-    ],
+     parameters: grepSchema,
+ 
+     async execute(_toolCallId, params, signal) {
+@@ -1158,7 +1152,7 @@
+   const findSchema = Type.Object({
+     pattern: Type.String({
+       description:
+-        "Fuzzy filename search and glob search. Frecency-ranked, git-aware. Multi-word = narrower (AND) not bound to order, use for multi word related concept search. Prefer this over ls/find/bash as the first exploration step whenever the user names a concept, feature, or symbol — it surfaces the relevant files in one call. Only use ls/read on a directory when you specifically need the alphabetical layout of an unknown repo, or when a concept search returned nothing.",
++        "Fuzzy path terms or glob pattern. Multiple terms narrow results (AND) without imposing term order. For exact filenames use a glob in path; to list a directory use path: dir/** with an empty or wildcard pattern.",
+     }),
+     path: Type.Optional(
+       Type.String({
+@@ -1183,16 +1177,8 @@
+   });
+ 
+   queueTool(() => toolNames.find, {
+-    description: `Fuzzy path search and glob search. Matches against the whole repo-relative path, not just the filename. Frecency-ranked, git-aware. Multi-word = narrower (AND). Default limit ${DEFAULT_FIND_LIMIT}.`,
++    description: `Fuzzy path and glob search against the whole repo-relative path, not just the filename. Frecency-ranked, git-aware.`,
+     promptSnippet: "Find files by path or glob",
+-    promptGuidelines: (names) => [
+-      `${names.find}: matches the WHOLE path, not just the filename — \`profile\` hits \`chrome/browser/profiles/x.cc\` too.`,
+-      `${names.find}: keep queries to 1-2 terms; extra words narrow.`,
+-      `${names.find}: use for paths, not content. Use ${names.grep} for content.`,
+-      `${names.find}: for exact path matches use a glob in \`path\` — e.g. path: '**/profile.h' for exact filename, or path: 'src/**/profile.h' scoped to a subtree. Bare patterns are fuzzy.`,
+-      `${names.find}: to list everything inside a directory, pass path: 'dir/**' with an empty or wildcard pattern instead of using pattern alone.`,
+-      `${names.find}: use exclude: 'test/,*.min.js' to cut noise in large repos.`,
+-    ],
+     parameters: findSchema,
+ 
+     async execute(_toolCallId, params, signal) {
+@@ -1324,11 +1310,6 @@
+       description:
+         "Search file contents for ANY of multiple literal patterns (OR, SIMD Aho-Corasick). Faster than regex alternation.",
+       promptSnippet: "Multi-pattern OR content search",
+-      promptGuidelines: (names) => [
+-        `${names.multiGrep}: use when searching for several identifiers at once.`,
+-        `${names.multiGrep}: include all naming-convention variants (snake/camel/Pascal).`,
+-        `${names.multiGrep}: patterns are literal. Use constraints for file filters.`,
+-      ],
+       parameters: multiGrepSchema,
+ 
+       async execute(_toolCallId, params, signal) {

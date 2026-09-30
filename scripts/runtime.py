@@ -53,6 +53,8 @@ def prepare(lock_dir):
           'src/runs/shared/single-output.ts',
           'src/runs/shared/structured-output.ts')),
         ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-braid-boundary.patch', ('dist/core/agent-session.js', 'dist/core/tools/edit.js', 'dist/core/tools/grep.js', 'dist/core/tools/find.js', 'dist/core/resource-loader.js')),
+        ('@upstash/context7-pi', 'context7-pi-0.1.2.patch', ('lib/prompts.ts', 'lib/api.ts', 'skills/context7-docs/SKILL.md')),
+        ('@ff-labs/pi-fff', 'pi-fff-0.11.0.patch', ('src/index.ts',)),
     )
     def patch_matches(package, patch_name, target_names):
         patch_file = lock_dir/'patches'/patch_name
@@ -101,6 +103,15 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
         for file in ('Dockerfile','build.py'):
             shutil.copy2(ROOT/'submission'/file,context/file)
         shutil.copytree(lock_dir,context/'harness/npm',ignore=shutil.ignore_patterns('node_modules'))
+        npm_sha256 = hashlib.sha256((context/'harness/npm/package-lock.json').read_bytes()).hexdigest()
+        native_patch_sha256 = {name:hashlib.sha256((context/'harness/npm/patches'/name).read_bytes()).hexdigest()
+                               for name in ('pi-background-bash-1.0.5.patch',
+                                            'pi-subagents-0.56.0-completion-boundary.patch',
+                                            'pi-subagents-0.56.0-model-exclusion-boundary.patch',
+                                            'pi-subagents-0.56.0-open-tools.patch',
+                                            'pi-subagents-0.56.0-acceptance-off.patch',
+                                            'pi-coding-agent-0.85.1-braid-boundary.patch',
+                                            'context7-pi-0.1.2.patch', 'pi-fff-0.11.0.patch')}
         if braid_source:
             source=Path(braid_source).resolve(strict=True)
             for part in ('Cargo.toml','Cargo.lock','src','migrations','config.example.toml'):
@@ -108,7 +119,10 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
                 target.parent.mkdir(parents=True,exist_ok=True)
                 if origin.is_dir(): shutil.copytree(origin,target)
                 elif origin.exists(): shutil.copy2(origin,target)
-            records['braid']={'revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip()}
+            braid_files = {str(path.relative_to(context/'sources/braid')):hashlib.sha256(path.read_bytes()).hexdigest()
+                           for path in (context/'sources/braid').rglob('*') if path.is_file()}
+            records['braid']={'revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip(),
+                              'source_sha256':hashlib.sha256(json.dumps(braid_files,sort_keys=True).encode()).hexdigest()}
         created=False
         try:
             subprocess.run(docker+['build','--platform','linux/amd64','--target','team' if braid_source else 'runtime',
@@ -120,15 +134,8 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
             if created: subprocess.run(docker+['rm',name],check=True)
             subprocess.run(docker+['image','rm','--no-prune',name],check=False)
     (output/'runtime-source.json').write_text(json.dumps({'backend':backend,'platform':'linux-x86_64',
-        'sources':records,'npm_sha256':hashlib.sha256((lock_dir/'package-lock.json').read_bytes()).hexdigest(),
-        'native_patch_sha256':{name:hashlib.sha256(file.read_bytes()).hexdigest()
-                               for name in ('pi-background-bash-1.0.5.patch',
-                                            'pi-subagents-0.56.0-completion-boundary.patch',
-                                            'pi-subagents-0.56.0-model-exclusion-boundary.patch',
-                                            'pi-subagents-0.56.0-open-tools.patch',
-                                            'pi-subagents-0.56.0-acceptance-off.patch',
-                                            'pi-coding-agent-0.85.1-braid-boundary.patch')
-                               for file in [lock_dir/'patches'/name]}},indent=2)+'\n')
+        'sources':records,'npm_sha256':npm_sha256,
+        'native_patch_sha256':native_patch_sha256},indent=2)+'\n')
     return output
 
 
