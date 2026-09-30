@@ -49,7 +49,7 @@ I13
 │  ├─ implementation/investigation/design不打包、不引用，源码保留
 │  ├─ documentation恢复完整项目知识方法；sub-agents恢复一般委派方法，自包含且不含具体角色内容
 │  └─ task-packet恢复工作记忆循环，去growth；复用已改V&V
-├─ Braid软件协作及ARC requirements tree → R01/R05/R06/R09［方案已认可；复核观察/研究/推导并调查新参考，源码未开工］
+├─ Braid软件协作及ARC requirements tree → R01/R05/R06/R09［已按泛化边界修订具体范围，源码未开工］
 │  ├─ 当前义务、候选、独立讨论、增量、承接及终态，不止命令用法
 │  ├─ 父节点自身要求、内聚子树及跨枝完整操作；区分来源、依赖、责任与证据
 │  └─ 未接手义务、初态、消费者变化、证明范围及同次结果归属
@@ -88,6 +88,8 @@ I12-G02/G03、E01/E02的历史状态保留在 [I12问题账](../iteration12/i11-
 I12曾按用户要求暂停，冻结材料和运行身份不变；当前物理状态见 [I12 packet](../iteration12/packet.md)。独立I13已由子Agent批次创建；本轮仍未启动实验。
 
 ## 当前下一步
+
+用户最新要求继续当前主线，并明确“比赛本意想要的是泛化的coding agent harness……将arc特定的适配限定在agent skill、root issue description”。该边界已进入[实施方案](collaboration-requirements-plan.md)：通用协作技能与ARC适配分离，后者由原拟 `arc-requirements` 改名为 `arc-bench`，承载需求阅读和交付reference；迁出当前profile中的ARC平台契约，root description提供本次材料入口；移除运行时对 `requirements.yaml` 的硬门槛，只传输入目录。Braid/Pi不增加节点、依赖或覆盖语义，现有外围调用/交付协议保留。独立advisor已只读核对上述范围与验收方式，主线采纳；本轮仅修订任务资料，未据“继续”扩大为源码开工。Exa由用户明天修正，等待其通知后复核，不阻塞本组。
 
 用户最新认可协作与需求树方案，要求进一步查看I12人工复审、I11过程、人类协作/GitHub/LLM上下文研究如何支持方案，并新增参考 `code-philia/agentic-requirement-compiler`。主线已整理[证据与推导](collaboration-requirements-rationale.md)，将人工原稿I12-2补入M12—M17；独立只读子Agent核对官方提交a119f22，区分可借鉴的共享合同、真实执行与追溯，以及父义务、消费者变化和覆盖终态尚未得到保证的边界。方案补清来源、依赖、责任与证据的区别，落点仍为两项独立技能；源码尚未开工。下一段保留前次两条实现线的开工原话。
 
