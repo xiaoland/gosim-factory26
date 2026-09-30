@@ -49,7 +49,7 @@ I13
 │  ├─ implementation/investigation/design不打包、不引用，源码保留
 │  ├─ documentation恢复完整项目知识方法；sub-agents恢复一般委派方法，自包含且不含具体角色内容
 │  └─ task-packet恢复工作记忆循环，去growth；复用已改V&V
-├─ Braid软件协作及ARC requirements tree → R01/R05/R06/R09［已按泛化边界修订具体范围，源码未开工］
+├─ Braid软件协作及ARC requirements tree → R01/R05/R06/R09［两处ARC耦合修正开工，其余方法仍在方案阶段］
 │  ├─ 当前义务、候选、独立讨论、增量、承接及终态，不止命令用法
 │  ├─ 父节点自身要求、内聚子树及跨枝完整操作；区分来源、依赖、责任与证据
 │  └─ 未接手义务、初态、消费者变化、证明范围及同次结果归属
@@ -88,6 +88,12 @@ I12-G02/G03、E01/E02的历史状态保留在 [I12问题账](../iteration12/i11-
 I12曾按用户要求暂停，冻结材料和运行身份不变；当前物理状态见 [I12 packet](../iteration12/packet.md)。独立I13已由子Agent批次创建；本轮仍未启动实验。
 
 ## 当前下一步
+
+用户要求确认两个技能的文件组织以支持progressive closure，已补充[文件级结构](collaboration-requirements-plan.md#文件组织与逐层收敛)：SKILL.md持有可独立使用的核心判断与理由，references分别闭合一类实际决定，完整通用案例唯一归Braid技能；ARC单向引用，SVC方法保持原归属。当前耦合修正仅落地有实际用途的ARC主文件及交付reference，其余文件不预建空壳。
+
+用户另明确：“长期以来，我们迭代太着急太快，没有去整理durable docs，是时候安排一个subagent去进行整理。”已委派 `/root/durable_docs_curation`（GPT-6.1-Sol / extra-high）独立整理Factory的PRD、技术说明、开发/运行入口与索引，归[长期文档整理](../durable-docs-curation/packet.md)。它核对稳定知识与当前代码/证据，保留任务与历史原件，不把待验或未合入成果写成当前行为；先避开本批主线持有的PRD/TDD及实现者持有的技能索引，按所有权交接后再整合。本线不阻塞I13耦合修正和方法讨论。
+
+用户最新原话：“我同意你的‘现有代码也需要收回两处耦合’，而且这很关键。”据此开工前次已明确的两项具体修改：迁出所有profile中的ARC平台契约，由独立arc-bench技能/reference及root description承接；移除 `requirements.yaml` 的运行时硬门槛，保持目录传递。已委派 `/root/i13_arc_boundary_implementation`（GPT-6.1-Sol / extra-high）完成限定源码、独立技能、接线和真实材料反馈；主线拥有PRD/技术说明、当前方案和任务资料并独立核对。详细范围归[方案的开工段](collaboration-requirements-plan.md#当前已开工的两处耦合)，整体协作方法不由此提前开工。Exa继续等待用户明天修正，不重试；本批不运行模型、测试或实验，不修改I12。
 
 用户澄清“推导可以改进方案”，要求确认没有避免推导改变方案。已明确以证据检验和修订设计，已有认可及源码开工阶段不作为保持原方案的理由。复核中进一步修正原“默认沿内聚子树分域”：分工先看可消费成果与真实依赖，子树只提供来源和候选切分，跨枝工作无需作为例外处理。此项依据是已有跨对象义务遗漏、树与依赖区别及分解研究，已同步方案与推导正文；本轮没有新增源码改动。
 

@@ -79,7 +79,9 @@ Braid 不授予任务权限，不固定根成员独占合并，也不判断比�
 
 I13原生子代理保留独立上下文，角色不设置工具白名单，父profile和运行条件不自动追加给child。技能保持独立文件，system/profile/role/task prompt只允许技能名称、描述和路径，不内联SKILL.md或references正文。所有角色可使用后台Bash与原生委派工具；run环境设置最大子层为3，深度、能力上限和结果回送仍由原生扩展执行。锁定版本的窄补丁让未声明工具且能力上限允许的child取得fanout入口，并简化其自动边界文案；显式工具声明仍遵守原有上限。这些改变进入新runtime构建，不追溯修改冻结运行。
 
-I13按实际消费者分配稳定指令：Braid提供工作项身份、职责和通用对象协议，profile持有develop→main路线及advisor/vision等配方政策，运行条件持有交付环境与工具要求，原生工具description持有调用契约。角色目录description供父会话选择，角色正文与声明的技能发现信息进入child，二者不互相拼接。非简单工作首次开始或接续时，主成员及适用的explorer/executor读取documentation、task-packet技能并复用已有知识和任务资料；一次会话不因接续而反复注入方法。配置输出文件的child只在system取得输出义务，task不追加同一副本；恢复消息只补实际身份、状态与材料入口。
+I13按实际消费者分配稳定指令：Braid提供工作项身份、职责和通用对象协议，profile持有develop→main路线及advisor/vision等配方政策，运行条件持有通用工具环境与工作范围，原生工具description持有调用契约。角色目录description供父会话选择，角色正文与声明的技能发现信息进入child，二者不互相拼接。非简单工作首次开始或接续时，主成员及适用的explorer/executor读取documentation、task-packet技能并复用已有知识和任务资料；一次会话不因接续而反复注入方法。配置输出文件的child只在system取得输出义务，task不追加同一副本；恢复消息只补实际身份、状态与材料入口。
+
+I13的ARC特定输入与交付知识集中在独立 `arc-bench` 技能及其reference，根Issue description提供本次输入位置和读取入口。技能按普通材料选择、复制和发现，正文不进入profile；后续工作项由Agent给出适用合同的入口，不靠复制整份根正文传播。生成入口接收并复制输入目录，不以 `requirements.yaml` 是否存在判断任务能否开始；读取失败保留实际文件错误，材料解释和缺口由Agent处理。Braid/Pi请求不增加需求节点、依赖或覆盖字段。现有赛事启动参数、归档元信息和应用导出仍由外围协议持有，ARC知识迁移不改变它们。
 
 活动 mixed variant 将固定版本的 `pi-background-bash` 显式加载到 Braid 成员 Pi 会话和有 Bash 权限的内部角色；插件覆盖原生 Bash，普通命令超过 30 秒会交还带任务 ID 的运行状态，命令继续执行，终态由插件回传。插件自身提供工具用法提示。Braid 以 Pi 的 `agent_settled` 记录一次调用的执行终态，不追踪原生子任务或插件内部作业。
 原生接入的完成契约是：当前有限工作结束，其必要结果被父会话接收并完成后续处理后，才能正常结束调用；排空异常必须保留原始错误并投影为失败，不能以最后一条正常回应替代。

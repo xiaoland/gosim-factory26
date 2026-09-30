@@ -11,6 +11,8 @@ Factory26 用于开发和比较参加 GOSIM Agentic Factory / ARC-Bench 的 Agen
 LLM 拥有任务语义与决策，Harness 提供理解和改变环境所需的能力。
 是否拆分任务、怎样协作、采用哪些工具和工作方法，应由 Agent 根据问题决定，不因存在 multi-agent 能力而强制拆分。
 
+产品目标是可泛化的Coding Agent Harness，ARC-Bench提供任务与评估场景。ARC特定的需求格式、解释方法和平台交付知识通过独立Agent Skill与根Issue description提供；技能正文按需读取，根description给出本次任务与材料入口。通用运行时不根据ARC节点、需求依赖或覆盖状态决定分工、调度与完成。赛事调用、输入传输和应用导出继续由外围接入处理，这些协议不承担需求判断。
+
 团队 Harness 使用 GitHub 式 Issue、PR、comment/reply、hide/resolve、reaction 和 assignee。
 一次任务调用建立根 Issue，其 description 保存任务 prompt 与需求包入口；不是每条 requirement 自动生成一个 Issue。
 Agent 按需要创建子 Issue，按协作者描述指派工作，不需要理解内部 profile、模型路由或 Braid 调度。
