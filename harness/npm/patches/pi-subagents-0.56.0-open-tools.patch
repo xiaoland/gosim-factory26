@@ -1,0 +1,32 @@
+--- a/src/runs/shared/pi-args.ts
++++ b/src/runs/shared/pi-args.ts
+@@ -453,7 +453,9 @@
+ 					? ["read", ...requestedBuiltinTools]
+ 					: requestedBuiltinTools
+ 				).filter((tool) => !allowedToolSet || allowedToolSet.has(tool));
+-	const fanoutAuthorized = declaredBuiltinTools.includes("subagent");
++	const fanoutAuthorized =
++		declaredBuiltinTools.includes("subagent") ||
++		(input.tools === undefined && allowedToolSet === undefined);
+ 	const toolExtensionPaths: string[] = capabilityCeiling?.denyExtensions
+ 		? []
+ 		: (input.tools ?? []).filter(
+--- a/src/runs/shared/subagent-prompt-runtime.ts
++++ b/src/runs/shared/subagent-prompt-runtime.ts
+@@ -49,14 +49,8 @@
+ 	"If you need to edit files, use the available editing tools. Do not print tool-call syntax, patches, or pseudo-tool calls as text.",
+ ].join("\n");
+ 
+-export const CHILD_FANOUT_BOUNDARY_INSTRUCTIONS = [
+-	"You are a child subagent with explicit fanout responsibility for this assigned task.",
+-	"The parent session owns final orchestration, acceptance, and follow-up implementation launches.",
+-	"You may use the `subagent` tool only for the fanout work explicitly requested in this task.",
+-	"Do not broaden yourself into general parent orchestration. Do not launch follow-up workers unless the task explicitly asks for that.",
+-	"The maxSubagentDepth cap still applies and may block further fanout.",
+-	"If you need to edit files, use the available editing tools. Do not print tool-call syntax, patches, or pseudo-tool calls as text.",
+-].join("\n");
++export const CHILD_FANOUT_BOUNDARY_INSTRUCTIONS =
++	"You are a subagent working on the assigned task. Use the available tools and subagents to carry it through; the parent session integrates the results.";
+ 
+ const PARENT_ONLY_CUSTOM_MESSAGE_TYPES = new Set([
+ 	"subagent-orchestration-instructions",

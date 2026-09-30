@@ -1,12 +1,13 @@
 # Variant 索引
 
-当前开发基线为 [pi-braid](pi-braid/)，采用 Pi、Braid 与 SVC。每个 variant 独立维护流程、原生角色与材料；目录相似不表示它们只差一个开关。选择或创建实验先看 [实验导航](../experiments/README.md)，实际输入和运行授权归所属 task packet。
+当前开发基线为 [pi-braid-i13](pi-braid-i13/)，I12冻结运行及I10运行基线保留，采用 Pi、Braid 与 SVC。每个 variant 独立维护流程、原生角色与材料；目录相似不表示它们只差一个开关。选择或创建实验先看 [实验导航](../experiments/README.md)，实际输入和运行授权归所属 task packet。
 
 ## 活动与实验实现
 
 | 实现 | 状态 | 维护职责 |
 | --- | --- | --- |
 | [pi-braid](pi-braid/) | 活动基线 | 当前持续开发流程，develop/main 集成、自动化整体验收和真实完成后的交付。 |
+| [pi-braid-i13](pi-braid-i13/) | 当前开发，尚未冻结实验 | 独立副本承载子Agent简化、完整工具与三层委派；其它批次按[I13 packet](../tasks/iteration13/packet.md)推进。 |
 | [pi-braid-flash-team](pi-braid-flash-team/) | 实验实现 | 从最新 pi-braid 独立派生；GLM 根成员，Qwen/MiniMax 工作项成员；原生子角色保持来源模型。 |
 | [pi-braid-kimi-root](pi-braid-kimi-root/) | 实验实现 | 从当前 pi-braid 独立派生；仅根成员使用 Kimi K2.7 Code，GLM/DeepSeek 工作项成员及原生角色保持基线。 |
 | [pi-braid-coordinator](pi-braid-coordinator/) | 实验实现 | 根只协调，不写应用代码，也不作为后续工作项的可指派成员。 |

@@ -59,3 +59,11 @@ I12已按用户要求暂停，冻结材料和运行身份不变，见 [I12 packe
 
 实现状态由本packet维护；三项问题的因果证据与采用判据见 [方法修正](quality-methods.md)，V&V新的内容结构、入口及改写深度见 [技能复审](vv-skill-review.md)。
 历史原生依据留在 [I11 PR23过程](../iteration11/braid-context-methodology/final-pr23-flow.md)、[根最终审阅](../iteration11/braid-context-methodology/final-root-flow.md) 与 [跨模块承接分析](../pi-minimal/github-score-analysis/i11-mechanisms-forward.md)，不复制或改写原始证据。
+
+## 子Agent批次实施结果（2026-09-30）
+
+本段更新本批当前状态，前文未开工描述属于其对应历史复核时点。用户明确授权：“你可以按这个方案开工『I13-sub-agent简化与改进』了；注意你一直都可以自由git commit。”已从当前I12形成独立pi-braid-i13，完成五角色简化、开放原生工具和再委派、子层最大3、移除child自动运行/方法正文，以及两视觉角色换用glm-5.3-flash；共享补丁安装、runtime身份记录与I13 OTLP材料接线已同步。实施范围和观察归[子Agent实施记录](subagents-implementation.md)，方案归[已复核方案](subagents-plan.md)。
+
+Python编译、两处原生补丁的实际适用及语法编译通过；真实requirements目录分别走共用endpoint与独立visual endpoint的prepare-only，两次均生成十份角色，正文与源码仅经路径替换后的内容一致，技能/扩展路径完整，模板和共享native home无SYSTEM.md。原生启动和技能发现按实际源码核对；未运行模型、测试、包smoke或实验，真实三层委派、联络往返、结果回送及视觉API仍未验。I12的25份文件身份未变，冻结runtime和现存运行未修改；提交只纳入本批增量，未push。
+
+本批源码及材料核对已完成，主Agent持有整合责任。executor并发写策略仍按[独立讨论](executor-followup.md)继续；下一批[SVC Agent Skills方案](svc-skills-plan.md)由主线按用户最新修正继续核对，待对应开工授权；当前MAIN_SKILLS/build清单仍保留三旧技能。I13尚未冻结实验制品，不由本批实现或commit启动模型运行。

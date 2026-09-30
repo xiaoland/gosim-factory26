@@ -54,9 +54,9 @@
 若为 executor 新增技能，同时考虑它的 skills/skillPath 与包中的材料；不因此改动其他 variant 的角色。
 原生接口与精确字段以这些文件及所选原生客户端为准，不在文档另维护全套配置副本。
 
-内部角色从独立历史开始：Pi 的角色声明 `defaultContext:fresh`，父调用显式传 `context:"fresh"`；`inheritProjectContext` 和 `inheritSkills` 分别控制项目指令与技能发现，不代替历史参数。
-`run.py:native_files` 将所选 SVC investigation、implementation、design 工作方法正文和来源目录装入 explorer、executor、advisor，方法仍以随包分发的 SVC 文件为源。
-`exploration-tools` 的短工具指引直接进入这些角色；主会话与 executor 可使用 agent-browser 技能，browser-operator 取得其操作指引，vision 保持给定图片分析职责。最终验收按需求选择可重复的测试或脚本，不绑定独立验收技能。
+I13内部角色默认使用独立历史（`defaultContext:fresh`），以本次委派和按需读取取得背景；`inheritProjectContext:false`与`inheritSkills:false`关闭自动继承。角色保留自己的技能发现入口，模型按需读取独立文件。所有Agent Skill的SKILL.md及references正文均不得拼入system、profile、role或task prompt，发现信息只含名称、description和路径；这条约定同时适用于主会话与子代理。历史冻结包保留原身份，不能据当前文档推断其输入已改变。
+
+[pi-braid-i13](variants/pi-braid-i13/)的角色description帮助调用方选择有委派价值的工作，正文说明用途；不声明角色工具白名单。`settings.json`选择默认基础工具，原生扩展提供委派、联络、等待及后台执行能力。`run.py`只替换角色的技能和扩展路径，不追加父profile、运行条件或方法正文；以`PI_SUBAGENT_MAX_DEPTH=3`限制子层深度。完整工具能力不代替委派的目标与修改范围。原生接口介绍工具使用，技能提供按需方法，不在角色中重复维护。
 
 原生 Hackathon 四配置由 `variants/native-hackathon/hackathon_main.py` 装配：角色简介用于选角，正文在 `variants/native-hackathon/agents/`，`scripts/package_hackathon.py` 收录正文和技能。
 Base/SVC 两组提供相同探索工具；只有 SVC 组装入对应方法及完整技能入口。

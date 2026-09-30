@@ -66,15 +66,18 @@ CLI 的运行位置和调用身份由原生执行环境提供；Agent 使用普�
 Agent 的协作入口借助已有的 GitHub 使用经验，介绍 Issue/PR 的查看、评论与指派，并提示“像人类一样协作”。
 设计与实现分离的角色责任由 Braid 的 Issue/PR 指引和独立会话、工作区支持；具体怎样调查、设计、计划、验证由 SVC 提供通用方法。Braid 不据此自动选择实现者，也不以创建对象代替实际交接。
 Factory 是参赛 Agent 的称呼，variant 实现负责装配组件，不另设能力指引层。
-原生子代理的发现与调用由 Codex/Pi 及其扩展介绍，角色配置承载模型、工具与 SOP。
+原生子代理的发现与调用由 Codex/Pi 及其扩展介绍，角色配置承载用途、模型与按需技能入口。
 Braid 不授予任务权限，不固定根成员独占合并，也不判断比赛产物是否完成。
 
 ## 角色与材料的三个消费者
 
 以 [mixed](../../variants/pi-braid/) 为例，`agents/<id>/profile.json` 和 `instructions.md` 构成本次 Braid 成员及主会话指引。
 `run.py:native_files` 生成主会话 launcher 与 binding，替换当前运行的 endpoint 和技能路径；原生 `models.json/settings.json` 由 Pi 消费。
-`agents/<id>/agents/*.md` 则由 Pi 子代理扩展消费，声明工作项内部角色的模型、工具和技能。
+`agents/<id>/agents/*.md` 则由 Pi 子代理扩展消费，声明工作项内部角色的用途、模型与技能入口。
 `build.py` 决定包中实际存在的材料。
+
+I13原生子代理保留独立上下文，角色不设置工具白名单，父profile和运行条件不自动追加给child。技能保持独立文件，system/profile/role/task prompt只允许技能名称、描述和路径，不内联SKILL.md或references正文。所有角色可使用后台Bash与原生委派工具；run环境设置最大子层为3，深度、能力上限和结果回送仍由原生扩展执行。锁定版本的窄补丁让未声明工具且能力上限允许的child取得fanout入口，并简化其自动边界文案；显式工具声明仍遵守原有上限。这些改变进入新runtime构建，不追溯修改冻结运行。
+
 活动 mixed variant 将固定版本的 `pi-background-bash` 显式加载到 Braid 成员 Pi 会话和有 Bash 权限的内部角色；插件覆盖原生 Bash，普通命令超过 30 秒会交还带任务 ID 的运行状态，命令继续执行，终态由插件回传。插件自身提供工具用法提示。Braid 以 Pi 的 `agent_settled` 记录一次调用的执行终态，不追踪原生子任务或插件内部作业。
 原生接入的完成契约是：当前有限工作结束，其必要结果被父会话接收并完成后续处理后，才能正常结束调用；排空异常必须保留原始错误并投影为失败，不能以最后一条正常回应替代。
 service 和历史任务结果可以在调用之间积累事实，但不能在调用结束后自行启动模型；后续被 Braid 接受的输入可以消费这些记录。执行终态不等于产品验收完成，业务判断仍由 Agent 根据证据作出。
