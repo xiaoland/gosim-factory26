@@ -67,3 +67,14 @@ I12已按用户要求暂停，冻结材料和运行身份不变，见 [I12 packe
 Python编译、两处原生补丁的实际适用及语法编译通过；真实requirements目录分别走共用endpoint与独立visual endpoint的prepare-only，两次均生成十份角色，正文与源码仅经路径替换后的内容一致，技能/扩展路径完整，模板和共享native home无SYSTEM.md。原生启动和技能发现按实际源码核对；未运行模型、测试、包smoke或实验，真实三层委派、联络往返、结果回送及视觉API仍未验。I12的25份文件身份未变，冻结runtime和现存运行未修改；提交只纳入本批增量，未push。
 
 本批源码及材料核对已完成，主Agent持有整合责任。executor并发写策略仍按[独立讨论](executor-followup.md)继续；下一批[SVC Agent Skills方案](svc-skills-plan.md)由主线按用户最新修正继续核对，待对应开工授权；当前MAIN_SKILLS/build清单仍保留三旧技能。I13尚未冻结实验制品，不由本批实现或commit启动模型运行。
+
+## Executor原生说明修正开工（2026-09-30）
+
+用户原话：“好的，开工，应用该修正”。按[最新收敛方案](executor-followup.md)删除Pi扩展的cwd级单writer、普通写入强制隔离和父方应用全部修正等说明，同步包内重复入口；不另加父方执行设计要求、writer锁或协调协议。原生派生与worktree能力保留，SVC委派方法由并行批次处理。本批反馈来自实际依赖补丁应用、编译和工具说明材料生成，不启动模型、实验或修改I12冻结运行。起点与快照在 `runs/iteration13/executor-guidance-20260930/`。
+
+
+## Executor原生说明修正结果（2026-09-30）
+
+已按用户“好的，开工，应用该修正”删除工具及包内帮助的cwd级单writer、普通写入强制隔离和父方应用全部修正要求；worktree只说明参数效果，条件性单writer示例保留。调用方无需先设计局部执行细节，现有executor与SVC委派方法承担独立收敛。本批扩展已有acceptance-off补丁及runtime目标hash清单，未新增调度或权限机制，既有Linux接线直接消费该补丁。
+
+从原始npm归档实际应用完整四份补丁成功；Python与TypeScript语法/emit编译通过；两个真实I13配置生成的description/metadata及full/compact/custom附加说明均已核对。相对旧补丁链只改变七份原生说明文件，I12的25份文件身份未变。详见[executor实施与证据](executor-followup.md#实施与反馈2026-09-30)及 `runs/iteration13/executor-guidance-20260930/`；未运行模型、测试、包smoke或实验，实际并发效果与委派净收益保留待验。
