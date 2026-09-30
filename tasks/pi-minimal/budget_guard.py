@@ -19,6 +19,7 @@ ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
 
 from lab.arc_bench.playground import Client, TERMINAL, run_path
+from usage_budget import active_cost
 
 
 TARGET = (ROOT / "runs/pi-minimal/20260929/official").resolve()
@@ -147,6 +148,10 @@ def cancel_target_runs(journal):
 
 def check_once(journal, client, cancel=True):
     try:
+        usage = active_cost(journal, client)
+    except Exception as exc:
+        usage = {'cost_cny': 0, 'incomplete': True, 'error': str(exc), 'runs': []}
+    try:
         observation = observe_balance(client)
     except GuardError as exc:
         observation = {
@@ -157,11 +162,13 @@ def check_once(journal, client, cancel=True):
         marker = stop(journal, observation, "budget_unavailable")
         return {"status": "stopped", "marker": marker, "cancellations": []}
     append_event(journal, {"event": "balance", **observation})
-    if observation["balance"] <= THRESHOLD:
+    observation.update(usage=usage, estimated_balance=observation['balance'] - usage['cost_cny'])
+    append_event(journal, {"event": "estimated_balance", **observation})
+    if observation["estimated_balance"] <= THRESHOLD:
         marker = stop(journal, observation, "balance_below_threshold")
         cancellations = cancel_target_runs(journal) if cancel else []
         return {"status": "stopped", "marker": marker, "cancellations": cancellations}
-    return {"status": "clear", "observation": observation}
+    return {"status": "usage_unknown" if usage.get('incomplete') else "clear", "observation": observation}
 
 
 def main():
@@ -173,6 +180,7 @@ def main():
     journal = target_journal(args.journal)
     client = Client()
     while True:
+        started = time.monotonic()
         result = check_once(journal, client, cancel=not args.check)
         print(json.dumps(result, ensure_ascii=False), flush=True)
         if args.once or args.check:
@@ -180,7 +188,7 @@ def main():
         state_path = journal / "state.json"
         if state_path.is_file() and json.loads(state_path.read_text()).get("phase") == "collected":
             return 0
-        time.sleep(INTERVAL)
+        time.sleep(max(0, INTERVAL - (time.monotonic() - started)))
 
 
 if __name__ == "__main__":

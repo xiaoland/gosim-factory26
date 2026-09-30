@@ -1,6 +1,6 @@
 # pi-minimal Meter 余额保护
 
-状态：已安装保护脚本；当前正式比赛余额高于门槛，可以启动，但必须持续止损。
+当前：两题已终态，旧守护正常退出，账面余额 246.100666 CNY。新源码已接入 Pi 用量估算，尚未打包或在新官网运行验证；旧冻结包缺少导出的原生用量，不能补算历史在途费用。
 
 ## 已核实的账户与当前余额
 
@@ -19,7 +19,7 @@ Meter 页面 `https://meter.arc-bench.com/user` 的现有登录会话显示个�
 - 接口：`GET https://arc-bench.com/api/competitions/hackathon/registration`
 - 关键字段：`competition_type=official`、`registered=true`、`initial_budget_cny=500.0`、`remaining_budget_cny=285.862202`、`currency=CNY`
 
-因此当前正式参赛余额为 **285.862202 CNY**，高于用户授权门槛 100，可以启动。CLI 用保存的网站会话访问该接口，保护脚本对 HTTP/身份/schema 错误 fail-closed，不猜测余额，也不输出 cookie 或 access key。Meter 的个人账户接口仍记录在上面，避免把两种余额混淆。
+这是 2026-09-29 启动前读到的正式参赛余额。2026-09-29 16:45 UTC Sheet 运行结算后，余额变为 **281.265249 CNY**。CLI 用保存的网站会话访问该接口，保护脚本对 HTTP/身份/schema 错误 fail-closed，不猜测余额，也不输出 cookie 或 access key。Meter 的个人账户接口仍记录在上面，避免把两种余额混淆。
 
 ## 保护路径
 
@@ -54,3 +54,31 @@ python3 tasks/pi-minimal/budget_guard.py runs/pi-minimal/20260929/official --che
 - watcher 使用现有 ArcBench 网站会话查询比赛额度；不能把任何 cookie 或 access key 写入仓库或命令输出。
 - 保护是“停止新增远端写入 + 取消同一 submission 的在途 run”；它不取消其他历史 journal，也不删除或改写比赛证据。
 - 本次只做了源码语法与真实只读额度核对，未上传、启动、取消任何比赛 run，未调用模型。
+
+## 运行中预算盲区（2026-09-30 复核）
+
+GitHub `f3424d6aa387` 仍为 RUNNING，run 接口的 `token_count`、`token_cost_usd`、`token_cost_currency` 均为 null，`settled_at` 也为 null。Sheet `ed9bb83f8e1b` 已 FAILED，终态记 `token_count=15420252`、`token_cost_usd=4.596953`、`token_cost_currency=CNY`；比赛余额从 285.862202 降至 281.265249，差额正好为 4.596953。这证明本轮可观察的比赛余额在 Sheet 终态后才纳入其费用，不能当成扣除了 GitHub 在途费用的实时余额。终态费用字段名带 `usd`，但本次货币字段明确为 `CNY`，按后者理解，不再换算。
+
+先前下载的两个 `/runs/{id}/workspace/template-bundle` ZIP 是较早时点的包，不能用来判断当时以后的生成进展。2026-09-30 重新从该接口下载 Sheet 终态包（716,460 bytes、40 条目，SHA256 `15c73246177f8c53b33d162e10556ed86fadd6943f89a6a934cef9b6d6e0b2f8`），并保存官网文件 panel 重新 Packaging 后的 GitHub 包（3,443,438 bytes、70 条目，SHA256 `2ee19eb02bb6a57e53da4ca0983d88ca90af6036f168d2ac7fda19c740123b13`）。两个新包都含比旧包更多的生成文件，却均没有 `template/.arc/` 或 `session.jsonl`。它们保存在 `runs/pi-minimal/20260929/budget-live/*-project-new.zip`。
+
+冻结入口 `variants/pi-minimal/main.py` 将 Pi session 写到 `output/.arc/pi-minimal/session.jsonl`，官网 generation 命令明确传 `--output-dir /workspace/template`，因此预期源位置是 `/workspace/template/.arc/pi-minimal/session.jsonl`。`cleanup_workspace` 只终止剩余工作区进程，不删除该目录。本地同入口保留的 `runs/pi-minimal/20260929/native-fix/retained-workspace.zip` 确实含该原生 session。另一方面，历史 K3/Braid 的多份官网 `template-bundle` 有隐藏 `.factory26`，没有 `.arc` 条目。这些观察支持**官网包未导出 `.arc`**，但无法单凭 ZIP 区分服务端清理与打包过滤，也不能概括为官网无法下载工作区。官网 `/runs/{id}/source` 读取 `.arc/pi-minimal/session.jsonl` 等路径返回 404，说明该单文件读取方式同样未提供原生记录。`/runs/{id}/logs` 亦无 Pi 逐条 usage。目前可以下载应用工作区代码，却不能从已核实的接口取得按消息/模型的在途费用输入。历史 Meter 单价仍需在拿到 usage 后核当前价格及计费口径。
+
+Sheet 的失败发生在生成阶段：16:45:22 UTC `main.py` 等待 Pi stdout 时收到 SIGTERM，其 handler 抛出 `KeyboardInterrupt: terminated`；平台在 16:45:38 将 `start_agent` 记为失败，`run_tests` 仍 pending，并报告主进程 SIGINT。现有平台日志不能判断 SIGTERM 的发起者。`budget-events.jsonl` 至 16:44:42 仅有 balance 事件，没有取消或 budget stop；PID 45669 的原单一守护仍运行，故 Sheet 失败不能归因为该守护。
+
+当前每 600 秒的守护只覆盖已结算余额。新包缺原生 JSONL，因此没有让未知费用默认为零，也没有启动第二个守护或猜测取消 GitHub。最小观测修复是让官网工作区包提供 `.arc/pi-minimal`，或另行提供在途 run 的 CNY 金额；届时按模型消息身份跨快照去重，用 ARC 当前输入、缓存命中/写入、输出单价估算，并在 run 费用进入比赛余额后排除已结算部分。即使补齐，10 分钟下载和模型持续运行仍使 100 元只是软阈值，不能保证硬保留。
+
+## Sheet 一次重试（用户追加授权）
+
+已重新下载终态工作区（40 条目）并核对平台日志，仍无法确定 SIGTERM 发起者。依用户“如果没有能找到原因，可以重试一次”，2026-09-29 17:00 UTC 对原 run ed9bb83f8e1b 调用官网现有 rerun，生成 d03625688de8，沿用 submission f9bd3524fe75 和原冻结 ZIP，已确认 RUNNING。旧运行和响应保存在 runs/pi-minimal/20260929/sheet-retry；未重新上传或修改制品。
+
+控制器与同一个余额守护已顺序交接到新 PID 54251 / 54271，journal 的 Sheet 身份替换为新 run；GitHub f3424d6aa387 不变。旧 Sheet task journal 已归档。守护仍每 600 秒检查账面余额，阈值 100；原生用量不可取得的问题尚未解决，不能宣称它估算了在途费用。
+
+2026-09-30 01:12 CST 核查：守护 PID 54271 存活，01:11 余额记录为 260.172023 CNY。GitHub f3424d6aa387 已 FAILED（部署 npm install 返回1），费用 21.093226 CNY；Sheet d03625688de8 RUNNING。rerun 已自动启动，先前控制器再 start 得409退出；现复用 Controller.recover() 只读核对后接续采集，控制器 PID55781，原守护不重启。不再重复远端 start。原生用量估算仍未实现。
+
+## 当前修复：脚本相对 Pi home 与费用估算
+
+用户要求轻量定制 Pi home 并复用既有实验接线。main.py 旁的 pi-home 链接到输出 .factory26/pi-minimal/home；显式设置 HOME、PI_CODING_AGENT_DIR，主原生 session、事件、advisor 原生记录及后台任务状态均保存在 .factory26 下。恢复入口只对旧本地包搬迁 .arc/pi-minimal 并保留旧路径符号链接，以免历史中的绝对路径失效。原冻结制品与既有运行没有改动。
+
+复用原 factory-pi-timing.ts，不增加模型提示词、工具或模型调用；主 Pi 和 advisor 都装载，统一写 pi-timing.jsonl。新增 usage_budget.py 从同一官方工作区下载入口读取该文件，以 request_id 去重，只计算 message_end 中已返回的用量；Pi input 已排除 cacheRead/cacheWrite，推理 token 已包含在 output，不重复计费。ARC 当前价格来自已认证的 /api/user/models，快照见 arc-prices.json。
+
+既有 budget_guard.py 每600秒采集活动 run，估计余量=采集后官网账面余额−未终态 run 的已知费用，≤100取消该journal两题。每次从完整快照重算，不累加重复下载；下载期间终态的 run 由随后账面余额覆盖。费用数据缺失、未知模型、损坏或部分行明确标 usage_unknown，不把差额当可信余量。正在生成但尚未返回的请求、采样和下载延迟仍不计入已知费用，因此这是软阈值。监控没有启动新实验；下一次授权运行须确认可下载 timing 文件并与终态官方费用比较。

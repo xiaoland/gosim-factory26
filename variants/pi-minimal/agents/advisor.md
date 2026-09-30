@@ -11,7 +11,7 @@ defaultContext: "fresh"
 completionGuard: false
 skills: "hyperformula, handsontable, better-auth-best-practices, organization-best-practices, ponytail"
 skillPath: "@SKILLS@"
-extensions: "@RUNTIME@/node_modules/pi-background-bash/index.ts, @PACKAGE@/vendor/ponytail/pi-extension/index.js, @PACKAGE@/extensions/capability-evidence.ts"
+extensions: "@RUNTIME@/node_modules/pi-background-bash/index.ts, @PACKAGE@/vendor/ponytail/pi-extension/index.js, @PACKAGE@/extensions/capability-evidence.ts, @PACKAGE@/extensions/factory-pi-timing.ts"
 ---
 
 使用独立上下文，只依据本次委派和明确提供的材料开展工作；不假定拥有主会话历史。

@@ -1,0 +1,17 @@
+{
+  "source": "https://meter.arc-bench.com/api/user/models",
+  "observed_at": "2026-09-30T00:33:38.681134+00:00",
+  "unit": "CNY / 1M tokens",
+  "models": {
+    "glm-5.3-flash": {
+      "input": 0.8,
+      "output": 2.8,
+      "cache_hit": 0.23
+    },
+    "kimi-k2.7-code": {
+      "input": 6.5,
+      "output": 27.0,
+      "cache_hit": 1.3
+    }
+  }
+}

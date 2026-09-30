@@ -26,10 +26,19 @@ def run(requirements, output):
         path = ROOT/relative
         path.chmod(path.stat().st_mode | 0o111)
     output.mkdir(parents=True, exist_ok=True)
-    evidence = output/'.arc/pi-minimal'
+    # ARC does not expose .arc in downloaded workspaces; use the existing
+    # experiment evidence directory, independently of the generated app.
+    evidence = output/'.factory26/pi-minimal'
     evidence.mkdir(parents=True, exist_ok=True)
-    home = evidence/'home'
-    native = home/'.pi/agent'
+    saved_home = evidence/'home'
+    saved_home.mkdir(exist_ok=True)
+    # Pi sees a script-relative home; its physical contents remain downloadable.
+    home = ROOT/'pi-home'
+    if not home.is_symlink() and not home.exists():
+        home.symlink_to(saved_home, target_is_directory=True)
+    if not home.is_symlink() or home.resolve() != saved_home.resolve():
+        raise ValueError(f'Pi home is already bound to a different workspace: {home}')
+    native = (home/'.pi/agent').resolve()
     native.mkdir(parents=True, exist_ok=True)
     key = os.environ.get('OPENAI_API_KEY') or os.environ.get('FACTORY26_API_KEY')
     base = os.environ.get('OPENAI_BASE_URL') or os.environ.get('FACTORY26_BASE_URL')
@@ -55,6 +64,7 @@ def run(requirements, output):
     env.update(HOME=str(home), XDG_CONFIG_HOME=str(home/'.config'), PI_CODING_AGENT_DIR=str(native),
                FACTORY26_API_KEY=key, PI_OFFLINE='1',
                PONYTAIL_DEFAULT_MODE='full', PI_CAPABILITY_EVIDENCE_DIR=str(evidence/'capabilities'),
+               FACTORY26_PI_TIMING_FILE=str(evidence/'pi-timing.jsonl'),
                PATH=str(runtime/'bin')+':/usr/local/bin:/usr/bin:/bin',
                NODE_PATH=str(runtime/'node_modules'), PI_SUBAGENT_PI_BINARY=str(runtime/'bin/pi'),
                MCPORTER_CONFIG=str(ROOT/'mcporter.json'),
@@ -70,6 +80,7 @@ def run(requirements, output):
                '--extension', str(runtime/'node_modules/pi-background-bash/index.ts'),
                '--extension', str(ROOT/'vendor/ponytail/pi-extension/index.js'),
                '--extension', str(ROOT/'extensions/capability-evidence.ts'),
+               '--extension', str(ROOT/'extensions/factory-pi-timing.ts'),
                '--session', str(evidence/'session.jsonl')]
     for name in SKILLS:
         command += ['--skill', str(ROOT/'skills'/name/'SKILL.md')]
