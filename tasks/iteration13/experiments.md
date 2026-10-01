@@ -1,38 +1,42 @@
 # e20261001-01：I13 首轮实验
 
-当前状态：原运行均已停止并保全，尚无有效应用评分。用户最新将本轮分成两条执行线：Flash 两题优先恢复到官网、非参赛、使用 ARC API；GLM 两题留在本地、使用自有模型 API。移除 DeepSeek Braid 成员是要求，GLM-5.3-Flash 只是当前剩余可选成员，不建立永久的 PR 模型限定。
+当前状态（2026-10-01 17:13 CST核对）：GLM/Sheet已在WSL真实启动，尚未取得首条模型请求证据；另外三项仍在恢复准备。原运行均已停止并保全，尚无有效应用评分。当前为官网Flash两项、自有API本地GLM两项。移除DeepSeek Braid成员，内部DeepSeek sub-agent保留；不建立永久的PR模型限定。
 
 ## 启动以来的工作树
 
 ```text
 I13 / e20261001-01
-├─ 共同要求［已授权］
-│  ├─ 移除DeepSeek Braid成员；内部DeepSeek sub-agent保留
-│  ├─ Flash根/K2.7 Code advisor、GLM根/K3 advisor及其余角色配方保留
-│  └─ 四个逻辑运行：官网两项 + 本地两项，分别冻结身份与计费通道
-├─ 官网线［优先Flash/GitHub；有诊断前置］
-│  ├─ Flash/GitHub：从官网终态工作区恢复
-│  ├─ Flash/Sheet：从本地一致快照恢复到官网
-│  ├─ 不勾选使用比赛额度评测；官方ARC地址 + 自有API key
-│  ├─ 关键SIGKILL采集与统一Linux构建［完成；恢复入口attempt隔离接线中］
-│  ├─ 两个恢复包、费用模式与journal［准备中］
-│  └─ 自动尝试恢复机制［调查方案；重试与费用上限尚未冻结］
-├─ 本地线［不被官网诊断前置阻塞］
-│  ├─ GLM/GitHub：从本地一致快照接续
-│  ├─ GLM/Sheet：干净启动
-│  ├─ 使用自有bigmodel/kimi/ds/qwen等API［通道核对中］
-│  └─ 两路recipe、包和运行身份［准备中］
-├─ 共用恢复与配置工作
-│  ├─ 官网ZIP自动导出、原件保全、权限/路径恢复［完成］
-│  ├─ I13源码移除DeepSeek成员［完成］
-│  ├─ 当前可指派目录读取本次request，历史成员不再漏入［完成并实际操作验证］
-│  └─ 保留在途成员/工作树/会话的受审计迁移［实施中］
-└─ 配套设施与证据
-   ├─ Exp Console：WSL唯一HTTP、Mac8765转发［完成］；新运行接线待身份
-   ├─ 独立Luna会话 + automation［已建立］；分别接入官网/本地证据
-   ├─ 官网SIGKILL根因［未知］；WSL没有同类故障事实
-   └─ 尚无有效评分；旧官网0分未进入评测，不是应用验收零分
+├─ I13主体改造［源码与材料完成；整体收益待本轮实验］
+│  └─ CLI、上下文、sub-agent、SVC、协作/需求树、提示词、工具、存储生命周期
+├─ 四个逻辑运行［已启动1项；另3项准备中］
+│  ├─ Flash/GitHub → 官网接续［优先；未启动］
+│  │  └─ 成员迁移实际反馈通过；最终诊断入口复核、组包和启动待完成
+│  ├─ Flash/Sheet → 官网接续［未启动］
+│  │  └─ 本地一致快照已保全；复用恢复入口，完成反向路径兼容与最终包
+│  ├─ GLM/GitHub → WSL接续［未启动］
+│  │  └─ 旧原生会话切自有网关的显式接口已写；待稳定版验证/冻结
+│  └─ GLM/Sheet → WSL干净启动［17:12:39容器已运行］
+│     └─ 当前仍在初始化；首条模型请求与语义进展待证据
+├─ 模型与费用［配置确定］
+│  ├─ 官网：不勾选使用比赛额度评测、不上榜；官方ARC地址 + 自有key
+│  ├─ 本地：自有API；GLM→Bigmodel，K3→Kimi，内部DS Flash→Qwen
+│  └─ DeepSeek Braid成员已移除；旧在途工作保留身份、显式迁至GLM
+├─ 官网SIGKILL诊断与恢复［官网启动前置］
+│  ├─ 资源/cgroup/进程及自身信号记录［完成，真实Linux操作验证］
+│  ├─ 统一Linux Braid构建［完成］
+│  ├─ 新旧attempt证据隔离、启动/wait接线［修订完成；独立复核中］
+│  ├─ ZIP导出/原件保全/权限与路径恢复［基础能力完成］
+│  ├─ 自动恢复［方案完成，未实现/未开启收费重试；建议每来源至多1次］
+│  └─ 历史SIGKILL来源［未知］；没有WSL同类故障事实
+└─ 配套设施与知识
+   ├─ Exp Console［唯一实例；新本地两个固定目录已纳入接入范围］
+   ├─ 自有API网关［已运行；绑定200、撤销401，未发额外付费探测］
+   ├─ Luna独立监控会话 + automation［已建立；新运行证据逐项接入］
+   ├─ 参赛须知durable docs［完成，PDF/规则/PRD/索引已提交］
+   └─ 原失败/暂停现场［已保全］；本轮尚无有效应用评分
 ```
+
+本地Sheet真实身份：experiment `exp-20261001-171054-581f65`，run `glm-root--hackathon--sheet-45bf2d21de2ec4`；容器 `arcbench-local-1bcf230cc22d`，4 GiB/2 CPU、bridge、1000:1000，读回running且未暂停。包SHA256为 `a0a42a42955e755179cf9086950de2ad010023154043ab7e5951cd7e0ae5d5b9`，来源见 `runs/iteration13/local-self-funded-20261001/sheet-start-readback.json` 与 `sheet-clean-receipt.json`。本地两题使用同批下独立冻结的 `sheet/`、`github/` 实验，因为既有lab冻结后不能追加job；共同experiment_key为 `e20261001-01`、batch为 `local-self-funded-20261001`，本地总并行上限2。
 
 不再执行的分支：WSL宿主SIGKILL追踪已撤回；第二个Console HTTP已退役；原两槽位矩阵已停止；单项g03及四项全本地新矩阵均未启动，现由两官网、两本地取代。旧Debian恢复与I12不在范围内。旧官网run保持终态，新官网恢复使用新身份并明确来源。
 
@@ -40,7 +44,7 @@ I13 / e20261001-01
 
 用户另要求“看看能否加入自动尝试恢复的机制”。当前授权包括调查、设计与实现准备，未冻结自动收费重试次数或费用上限；不据此无限重试。优先复用现有monitor、competition journal和恢复打包，先定义SIGKILL/终态判据、完整保全、同run核查及pending写请求处理，再确定自动启动边界。隐藏评测反馈仍不进入生成Agent。
 
-用户已澄清：“不参加比赛”指提交时不勾选“使用比赛额度评测”，使用官方 ARC API 地址和我们自己的 API key，而不是比赛 key。继续使用原 competition 题库，显式 `credential_mode=self_funded` 并关闭比赛额度许可；不再引入不上榜条件。此前主线将费用选择扩大成排行榜排除要求是误解，相关启动等待已撤销。统一 Linux Braid SHA256 为 `a8afac46d2a8268dc3e7e163e673220216caaeee892b6d3af01c743b70144414`，标准源码树 SHA256 为 `088d94e5eb89bf8b1332414088fee621e2cf9879ca21f99151a1569f874e361c`。恢复入口需将导入的 `process-evidence` 与本次 attempt 分离，记录本次 Braid 启动和 wait；旧 SIGKILL 不得触发本次自动恢复。
+用户已澄清：“不参加比赛”指提交时不勾选“使用比赛额度评测”，使用官方 ARC API 地址和我们自己的 API key，而不是比赛 key。继续使用原 competition 题库，显式 `credential_mode=self_funded` 并关闭比赛额度许可；用户确认不勾选即不上榜，不要求另换题库。此前主线将费用选择扩大成排行榜排除要求是误解，相关启动等待已撤销。统一 Linux Braid SHA256 为 `a8afac46d2a8268dc3e7e163e673220216caaeee892b6d3af01c743b70144414`，标准源码树 SHA256 为 `088d94e5eb89bf8b1332414088fee621e2cf9879ca21f99151a1569f874e361c`。恢复入口需将导入的 `process-evidence` 与本次 attempt 分离，记录本次 Braid 启动和 wait；旧 SIGKILL 不得触发本次自动恢复。
 
 分工：官网恢复子Agent持有两个包和journal准备；诊断子Agent持有采集就绪与自动恢复方案；目录/本地子Agent持有统一Braid构建、GLM自有通道和本地两项准备。子Agent之间直接交接具体制品，主线整合当前决策、发布前置、实际启动与结果，不逐项代做执行细节。
 
@@ -52,7 +56,7 @@ I13 / e20261001-01
 
 两条live已通过唯一 Console 的写者门闩与 Docker pause 保全。完整 template ZIP 在复制前后均确认同一容器处于暂停状态，包含 clone 私有 Git、未提交文件、Braid SQLite/WAL 和原生历史；Mac副本SHA一致、SQLite quick_check均为ok。Flash/Sheet快照SHA `1158466fe93bada0007be4b5735f8ded2ab344c75731bc9df702886fe8a3eb4d`，GLM/GitHub为 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`，回执归 `runs/iteration13/local-20261001/model-cutover/`。旧控制器先降一槽位禁止旧配方队列混启，保全后通过操作 `69a1a4e4aaf227e059ae9329` 停止。独立读回确认controller finished、两个原容器已移除；两条生成为计划内cancelled，GLM/Sheet未开始即取消。这不是新的运行故障。原四槽位新矩阵未启动，现改为官网两项与本地两项。
 
-迁移保留原profile ID、member、assignment、worktree和Pi session，旧DeepSeek执行profile改用GLM并撤出新指派目录；新指派只使用现有pi-glm-fast。当前目录按摘要revision的数值最大项选择，无法可靠表达当前配置，故修为读取冻结request中的当前目录；历史profiles不改。旧Pi home在factory26下没有GLM定义，需定向补入同款GLM定义，保留内部角色和DeepSeek sub-agent。两个request的旧原件与变更回执单独保存；不放宽普通offline-resume的一致性检查。此前拟建 `e20261001-01-glm-pr-20261001` 与单项 `recovery-g03` 均未执行，现由两官网、两本地的新journal取代。
+迁移保留原profile ID、member、assignment、worktree和Pi session，旧DeepSeek执行profile改用GLM并撤出新指派目录；新指派只使用现有pi-glm-fast。旧目录按摘要revision的数值最大项选择，无法可靠表达当前配置；现已修为读取冻结request中的当前目录，并通过真实允许/拒绝指派操作验证，历史profiles不改。旧Pi home在factory26下没有GLM定义，需定向补入同款GLM定义，保留内部角色和DeepSeek sub-agent。两个request的旧原件与变更回执单独保存；不放宽普通offline-resume的一致性检查。此前拟建 `e20261001-01-glm-pr-20261001` 与单项 `recovery-g03` 均未执行，现由两官网、两本地的新journal取代。
 
 ## 首轮 WSL 启动范围（已停止）
 

@@ -2,7 +2,7 @@
 
 ## 当前：官网 Flash 恢复与本地 GLM 自有通道（2026-10-01）
 
-最新授权把四项分成两官网、两本地：Flash/GitHub优先从官网终态保全副本恢复到官网，Flash/Sheet从本地一致快照恢复到官网，两者非参赛、使用ARC API；官网SIGKILL关键证据采集成为这两项的启动硬前置，并调查有界自动恢复。GLM/GitHub留本地接续、GLM/Sheet本地干净启动，两者切到自有bigmodel/kimi/ds/qwen等API。移除DeepSeek Braid成员即可，不额外限定PR必须用GLM；内部DeepSeek sub-agent保留。原运行已保全并停止，当前没有新的模型生成。
+最新授权把四项分成两官网、两本地：Flash/GitHub优先从官网终态保全副本恢复到官网，Flash/Sheet从本地一致快照恢复到官网，两者非参赛、使用ARC API；官网SIGKILL关键证据采集成为这两项的启动硬前置，并调查有界自动恢复。GLM/GitHub留本地接续、GLM/Sheet本地干净启动，两者切到自有bigmodel/kimi/ds/qwen等API。移除DeepSeek Braid成员即可，不额外限定PR必须用GLM；内部DeepSeek sub-agent保留。原运行已保全并停止；2026-10-01 17:12:39 CST，新的GLM/Sheet容器已启动，其余三项仍准备中。该次读回尚无首条模型请求证据。
 
 用户补充澄清：官网提交不勾选“使用比赛额度评测”即可；ARC API 指官方地址配自有 API key，不使用比赛 key。原 competition 题库可继续使用，无“不上榜”额外要求。主线此前混淆题库、费用模式和排行范围，已撤销该等待；恢复包与诊断前置通过后直接执行已授权两次启动。
 
@@ -94,7 +94,7 @@ I13
 │  └─ Context7/Exa打包自有key并脱离mcporter；增加pi-fff
 ├─ 合入feat/experiment-storage-lifecycle［Factory 937affc/db272ce、Braid 8325ed6已提交；编译与真实材料通过，运行行为待验］
 │  └─ decision归档、预算、稳定Python资产、只读GC计划及Braid OTLP摘要
-└─ I13载体、冻结与实验［两包已冻结；Flash/K2.7 Code官网GitHub已启动；其它暂停］
+└─ I13载体、冻结与实验［当前两官网/两本地；实时状态归experiments.md顶部］
    ├─ I13基线：采用共同的新角色、方法和vision模型
    └─ GLM-5.3-root组：根改GLM-5.3，advisor保留K3；不是纯根模型对照
 ```
