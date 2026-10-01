@@ -1,12 +1,61 @@
 # Factory26 Exp Console
 
-2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；稳定服务、归档只读和GC引用收敛已提交55fe50a。当前唯一服务已迁至WSL，保留两份独立归档并接入真实I13现场，Mac8765只做SSH转发。用户纠正后核实I12已在独立磁盘清理中终止，历史资料在项目内；不再以接回旧暂停现场为目标。Console不属于I13或生成Harness迭代。
+2026-10-01。独立实验基础设施任务。当前唯一服务为Debian-Rebuild上的原生Python Console，Mac8765只作SSH转发。用户已删除原Debian-Factory26，并取消六条Console登记与journal迁移，采用空登记基线；历史部署身份只作下面的证据，不再当作当前状态。Console不属于I13或生成Harness迭代。
+
+## 当前恢复点：阅读能力已部署，两条新现场已验收
+
+用户先要求用树整理外部变化，随后明确“是的，没错，按这个推进”。本轮已完成整理后的清理、空基线部署、精确接入、真实验收与本任务限定提交；不push。
+
+```text
+Exp Console
+├─ 产品范围［完成］
+│  ├─ Provider默认对话，工具/思考折叠，错误直接可见
+│  ├─ 同源Trace、完整原始记录、调用/结果分别定位、返回阅读位置
+│  ├─ Agent/Provider登记工作区文件，Markdown源码与预览
+│  └─ run级origin各分支，固定完整commit只读阅读
+├─ 验收［完成本轮真实Pi范围］
+│  ├─ TypeScript/Vite、Python编译通过；未运行设施测试
+│  ├─ 空基线及两条新现场HTTP、浏览器深链/刷新/前后导航
+│  ├─ 跨页工具配对、真实错误、Chat/Trace位置、文件/分支位置保留
+│  └─ 390px对话及文件布局实际核对，最终浏览器无warning/error
+├─ 唯一部署［已上线］
+│  ├─ Debian-Rebuild，Python3.13.5，原生HTTP PID163346
+│  ├─ service 4161a417-fede-4be5-b692-162350a3d826
+│  ├─ /home/yyh/.local/share/factory26/exp-console/20261001-session-reading-release
+│  └─ Mac8765独立SSH转发PID93554；服务和转发均无自动重启
+├─ 新运行接入［完成］
+│  ├─ I13-GLM/GitHub：glm-root--hackathon--github-f9e238c1b698a5
+│  ├─ I13-GLM/Sheet：glm-root--hackathon--sheet-a45a22ec644204
+│  └─ 每项独立CLI访问容器，共享原named volume及official-generation子目录
+└─ 旧迁移［已取消、临时材料已清理］
+   ├─ 不恢复原发行版，不导入旧六条记录或journal
+   ├─ 移除迁移特有的code.json归档映射，保留live代码读取范围
+   └─ 已停止VHD复制并删除本任务临时副本及未执行的迁移脚本
+```
+
+用户开工原话：“同意，你可以开始了。你可以自由提交，也可以随意重新部署现在的那个实例。”后续位置修正：“直接在 Debian-Rebuild 就行”。基线决定：“不必在乎 console 运行记录了，运行包很早就导出了，我们可以有一个干净的基线，重头开始”，并告知正在重启`I13-GLM/*`两项。这覆盖此前保留原六条登记与journal的迁移安排；取消的计划及下方部署身份只作历史来源。
+
+新现场来自`runs/iteration13/local-rebuild-20261001/experiment`的manifest `exp-20261001-184401-7c84dd`、operation `4718c005aa48a8b7d328c007`及真实resource/transport。实际request保留GitHub namespace `20261001-074336-af6f78cd`，Sheet为`20261001-104900-3b994a70`；没有按新lab run名猜namespace。生成期间Mac阶段目录不更新，不能作为live来源。producer run.json原字节复制到稳定服务sources，缺失的实验名和终态保持未知。
+
+Docker的Mounts.Source只给volume根，HostConfig中的Subpath决定实际文件根。Console用户不能遍历Docker宿主数据目录，故共享挂载按同volume/目标的Subpath核实，state/workspace存在性在已验证所有权和挂载的访问容器内检查；准确宿主映射供GC引用，稳定binary哈希仍在宿主核对。本机接入保留原目录检查。没有升root、chmod或修改lab transport。访问容器使用`--init`、无网络、不启动Agent。部署只替换Console自有访问容器；两条原runtime完整ID与StartedAt保持，最终均Running且未Paused，没有业务提交、pause/resume或模型启动。
+
+最终冻结12个程序及前端文件，与本地release-files逐项一致。旧HTTP PID75042已退出，旧manifest退役，旧配置、active、launch和journal保存到新根history；此前空基线及中间版本只作本轮历史。最新身份与原始回执归`runs/braid-console-control/20261001-session-reading-implementation/release-deployment.json`、`release-identity.json`、`release-http.json`及页面截图。完成范围与未观测边界归[Agent Session阅读记录](provider-session-reading.md)，通用操作归[Console README](../../braid-console/README.md)。
+
+访问容器使用同一named volume，形成Docker实际消费者引用，防止实验结束时材料被清理。lab清理遇到volume仍被占用会保留具体错误并记未确认，不改变生成或评分结果。最终清理必须先关闭转发和HTTP、停止访问容器、release接入、明确移除该访问容器，再执行实验资源清理；仅停止容器仍保留volume引用。原runtime被移除后，Console读取与物理控制分别判断，不声称仍可控制原生成。
+
+取材期间创建的Windows临时VHD复制已在核对PID23360完整Copy-Item命令后停止；核对独有临时文件为普通文件、长度45,925,531,648字节后删除。它不再是恢复来源。Rebuild未执行的迁移脚本及本地同用途材料也已删除，没有对原实验数据做转换。原六条记录、旧journal或旧磁盘不属于本轮完成条件。
+
+## 2026-10-01：位置调整后的迁移尝试（已取消）
+
+用户在部署时明确“我不认识 Debian-Factory26，如果是容器的话，那就太过度了，完全没必要这样套壳，直接在 Debian-Rebuild 就行”。已解释前者是独立WSL发行版，非Console容器；按指示改为Debian-Rebuild原生HTTP，不创建Console容器或恢复生成。Rebuild有Python3.13.5/Git2.47.3，原服务、四workspace及Docker接入均不在其中。经advisor核对，保留六个run IDs，两archive原样迁移，四个已停止现场转换有来源与采集时点的只读材料，旧容器ID只作历史；新宿主按现有prepare协议冻结新service ID，原journal入history，不冒充新进程身份。
+
+原VHD位于`D:\WSLDistros\Debian-Factory26\ext4.vhdx`，约45.9GB。离线ro,noload挂载取得原服务ID/manifest/journal、四份state存在事实，但新Sheet的status.json stat返回`Errno117 Structure needs cleaning`。该挂载未回放ext4journal，不能据此断言永久损坏。advisor建议一次隔离VHD副本正常日志回放以区分原因；D盘1.01TB空闲，Rebuild122.9GB空闲，原盘已分离，正在复制独立VHD。原发行版与生成不启动，不对原盘写修复，不升级e2fsck；若副本仍不可读则保留具体缺口并交回决定。迁移新增code.json仅为保存目录建立明确physical映射、snapshot_at和origin根，现有无映射归档仍报缺来源；代码映射错误独立于对象/原生阅读。
 
 ## 2026-10-01：单实例接入 WSL 当前现场
 
 用户明确只有一个Console实例，主线经独立advisor核对后沿clean/hard cutoff授权收敛：复用WSL空service `c5c21595-811d-4dde-b6b4-83a77cf1bbc8`，完整复制两份Mac归档并保留原ID，先离线核对/register，再停止Mac PID56220并原子退役manifest、保存history，最后启动WSL唯一HTTP，原8765入口只保留独立SSH转发。原Mac归档不删除；没有新增跨宿主adapter、改源码或兼容层。WSL断线归档也不可用的取舍已向用户说明。
 
-当前服务根 `/home/yyh/.local/share/factory26/exp-console/20261001-i13-live`。归档完整文件树hash、根Issue、对象、会话及原文回包迁前后一致，已登记真实GLM GitHub与Flash Sheet，各自runtime/对象/会话/native读取成功，其余按精确矩阵真实allocation、资源和数据库等待。没有测试comment、生成暂停/恢复或模型启动。IDs、PID、journal、后台操作参数、保护路径及Flash GitHub原生成容器退出边界归[I13单实例回执](../iteration13/console-launch.md)；本节为当前部署状态，以下各节的原Mac身份仅作历史来源。
+当前服务根 `/home/yyh/.local/share/factory26/exp-console/20261001-i13-live`。归档完整文件树hash、根Issue、对象、会话及原文回包迁前后一致，已登记真实GLM GitHub与Flash Sheet，各自runtime/对象/会话/native读取成功，其余按精确矩阵真实allocation、资源和数据库等待。没有测试comment、生成暂停/恢复或模型启动。IDs、PID、journal、后台操作参数、保护路径及Flash GitHub原生成容器退出边界归[I13单实例回执](../iteration13/console-launch.md)；本节的WSL部署已随原发行版删除而结束，以下各节的原Mac身份也仅作历史来源。
 
 ## 2026-10-01：正式路径路由完成
 

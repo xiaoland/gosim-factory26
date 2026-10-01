@@ -13,6 +13,7 @@ import { type Action, type ControlReceipt, type Item, type Kind, type Relation, 
 import { BodyInput, Markdown } from './Markdown';
 import Discussion from './Discussion';
 import Sessions, { SessionLinks } from './Sessions';
+import FileBrowser from './FileBrowser';
 import type { RegisteredRun } from './runs';
 
 type EditDraft = { title: string; body: string; revision: number };
@@ -230,6 +231,7 @@ export default function BraidRun({ currentRun, selected, onSelect, onDirty, onBu
   onDirty: (dirty: boolean) => void; onBusy: (busy: boolean) => void;
 }) {
   const run = currentRun.id;
+  const [repositoryOpen, setRepositoryOpen] = useState(false);
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState('all');
   const [state, setState] = useState('all');
@@ -256,11 +258,15 @@ export default function BraidRun({ currentRun, selected, onSelect, onDirty, onBu
   function resetFilters() { setSearch(''); setKind('all'); setState('all'); setAssignee('all'); }
   return <>
       <div className="workspace-top"><Row align="center"><Code2 /><span className="font-semibold">{currentRun.mode === 'archive' ? '归档浏览' : '实时协作'}</span><span className="muted">/</span><span>{currentRun.label || '运行'}</span></Row>
-        <StatusBadge icon={currentRun.writable ? <LockOpen /> : <Lock />} tone={currentRun.writable ? 'blue' : 'default'}>{currentRun.writable ? '人工介入' : '只读'}</StatusBadge></div>
+        <Row align="center" wrap><ActionButton icon={<GitBranch />} disabled={busy || controlBusy} onClick={() => setRepositoryOpen(true)}>浏览 origin 代码</ActionButton><StatusBadge icon={currentRun.writable ? <LockOpen /> : <Lock />} tone={currentRun.writable ? 'blue' : 'default'}>{currentRun.writable ? '人工介入' : '只读'}</StatusBadge></Row></div>
       {currentRun.writable && <Notice className="context-note" tone="info" title="人工操作以 external 身份通过 Braid CLI 写入；投递回执不表示 Agent 已读取。" />}
       {currentRun.mode === 'archive' && <details className="archive-note"><summary><Archive size={15} aria-hidden="true" /><span>保存状态只读</span><span className="muted">查看保存范围与材料缺口</span></summary>
         <div>{currentRun.coverage.map((message, index) => <p key={index}>{message}</p>)}</div></details>}
       {currentRun.controllable && <RunControl key={run} run={currentRun} busy={busy} onBusy={setControlBusy} />}
+      <EditorDialog title="本次运行的 origin 代码" description="只读浏览共享已发布代码；选择分支后固定到具体提交，不切换 Agent 工作区。" wide open={repositoryOpen} onClose={() => setRepositoryOpen(false)}
+        footer={<ActionButton onClick={() => setRepositoryOpen(false)}>返回工作项</ActionButton>}>
+        <FileBrowser run={run} originOnly />
+      </EditorDialog>
       <div className="workspace-layout">
         <aside className="item-panel">
           <div className="list-heading"><Row justify="space-between" align="center"><h4>工作项 <StatusBadge>{all.length}</StatusBadge></h4>{filtering && <ActionButton size="xs" variant="ghost" onClick={resetFilters}>清除筛选</ActionButton>}</Row>

@@ -9,7 +9,7 @@ import subprocess
 
 
 AGENT_ENV = ("BRAID_AGENT_RUNTIME", "BRAID_STATE", "BRAID_CLI_BINDING_ID")
-INSPECT_FORMAT = '{"id":{{json .Id}},"state":{{json .State}},"mounts":{{json .Mounts}},"labels":{{json .Config.Labels}}}'
+INSPECT_FORMAT = '{"id":{{json .Id}},"state":{{json .State}},"mounts":{{json .Mounts}},"mount_options":{{json .HostConfig.Mounts}},"labels":{{json .Config.Labels}}}'
 WRITER_GATE = """
 import json, pathlib, select, sqlite3, sys
 connection = None
@@ -66,6 +66,7 @@ def configuration(value):
         for mount in value["mounts"]:
             if (not isinstance(mount, dict) or not isinstance(mount.get("source"), str)
                     or not PurePosixPath(mount["source"]).is_absolute()
+                    or ".." in PurePosixPath(mount["source"]).parts
                     or not isinstance(mount.get("destination"), str)
                     or not PurePosixPath(mount["destination"]).is_absolute()
                     or ".." in PurePosixPath(mount["destination"]).parts):
@@ -114,7 +115,7 @@ def inspect(container, config=None):
 
 def confirm_mounts(config, value):
     for expected in config.get("mounts", []):
-        if not any(mount["Source"] == expected["source"] and mount["Destination"] == expected["destination"] for mount in value["mounts"]):
+        if not any(mount_source(value, mount) == expected["source"] and mount["Destination"] == expected["destination"] for mount in value["mounts"]):
             raise RuntimeError(f"访问容器挂载与登记不匹配：{expected}")
     if config.get("mounts"):
         declared = {"id": "registered", "mounts": [{"Source": mount["source"], "Destination": mount["destination"]}
@@ -134,13 +135,28 @@ def status(config):
     return state_view(inspect(config["runtime_container"], config))
 
 
+def mount_source(value, mount):
+    source = PurePosixPath(mount["Source"])
+    if mount.get("Type") == "volume":
+        options = [option for option in value.get("mount_options") or []
+                   if option.get("Type") == "volume" and option.get("Target") == mount["Destination"]
+                   and option.get("Source") == mount.get("Name")]
+        if len(options) > 1:
+            raise RuntimeError("Docker volume 挂载选项有歧义：" + mount["Destination"])
+        subpath = (options[0].get("VolumeOptions") or {}).get("Subpath", "") if options else ""
+        if not isinstance(subpath, str) or (subpath and (subpath.startswith("/") or any(part in ("", ".", "..") for part in subpath.split("/")))):
+            raise RuntimeError("Docker volume Subpath 无效：" + repr(subpath))
+        source /= subpath
+    return str(source)
+
+
 def mounted_database(value, database):
     path = PurePosixPath(database)
     mounts = [mount for mount in value["mounts"] if path.is_relative_to(mount["Destination"])]
     if not mounts:
         raise RuntimeError(f"容器 {value['id']} 的数据库未位于共享挂载中：{database}")
     mount = max(mounts, key=lambda entry: len(PurePosixPath(entry["Destination"]).parts))
-    return str(PurePosixPath(mount["Source"]) / path.relative_to(mount["Destination"]))
+    return str(PurePosixPath(mount_source(value, mount)) / path.relative_to(mount["Destination"]))
 
 
 @contextmanager

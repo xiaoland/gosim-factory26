@@ -20,6 +20,7 @@ from urllib.parse import parse_qs, unquote, urlsplit
 
 import docker_runtime
 import native_sessions
+import code_files
 import archives
 import service
 import run_records
@@ -294,6 +295,18 @@ class Handler(BaseHTTPRequestHandler):
                 data = archive_reader(run).comment(comment_id, params.get("thread") == "1") if run["mode"] == "archive" else braid_json(run, command)
             elif url.path == "/api/sessions":
                 data = session_inventory(self.run_for(params.get("run")))
+            elif url.path == "/api/code/refs":
+                data = code_files.refs(self.run_for(params.get("run")))
+            elif url.path == "/api/code":
+                run = self.run_for(params.get("run"))
+                source = params.get("source")
+                record = None
+                if source == "workspace" and run["mode"] != "archive":
+                    record = next((record for record in session_inventory(run)
+                                   if record["record_id"] == params.get("provider")), None)
+                    if record is None:
+                        raise ValueError("CLI 未发现此 provider session 记录")
+                data = code_files.read(run, source, params.get("path", ""), record=record, commit=params.get("commit"))
             elif url.path == "/api/transcript":
                 run = self.run_for(params.get("run"))
                 record = next((record for record in session_inventory(run)

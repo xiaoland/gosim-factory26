@@ -2,14 +2,24 @@
 
 Factory实验的薄接入入口，提供已登记运行的Home和Braid专用详情，属于实验基础设施，不依赖SVC或ARC，不进入参赛包。源码仍位于braid-console/，保留在Factory26父仓库中，没有独立Git仓库。Console拥有服务接入与显示状态；lab/冻结材料拥有实验事实，Braid CLI与归档拥有协作事实。
 
-`web/`使用React、TypeScript、Vite、shadcn/ui、Tailwind CSS、Radix、Lucide与TanStack Query。App只管理Home、运行选择、React Router路径导航及离页保护；Home与runs.ts负责通用登记摘要，http.ts保留HTTP错误和响应。BraidRun负责工作项列表、详情、物理控制及其查询，Sessions负责Braid/provider/native历史；Braid对象类型留在api.ts，不建立插件或adapter框架。
+`web/`使用React、TypeScript、Vite、shadcn/ui、Tailwind CSS、Radix、Lucide与TanStack Query。App只管理Home、运行选择、React Router路径导航及离页保护；Home与runs.ts负责通用登记摘要，http.ts保留HTTP错误和响应。BraidRun负责工作项列表、详情、物理控制及其查询，Sessions负责会话导航，Transcript提供同源对话与Trace，FileBrowser提供工作区和origin阅读；Braid对象类型留在api.ts，不建立插件或adapter框架。
 `server.py` 提供 HTTP 接口并服务构建后的前端。现场对象操作调用登记的 Braid CLI；归档浏览由 `archives.py` 读取保存的 SQLite 页面字段，不启动 CLI、worker 或原 Git。`docker_runtime.py` 只控制登记容器的物理暂停/恢复，并协调暂停时的 SQLite 写者锁；不修改业务数据或另建调度逻辑。Braid 继续拥有对象、Git及事件语义，不需要知道 Console、实验名或 ARC。
 
 工作项详情的 Braid agent sessions 入口可查看对应 provider sessions 及历史。关系来自登记CLI的 `status --json.physical_sessions`；`group_id` 是持久Braid agent身份，provider恢复身份与native ID分别呈现。明确的 `replaced/retired` 标为历史，其他状态保留CLI原始生命周期，不推断当前归属；实际暂停/运行状态看上方生成状态。CLI按physical目录枚举，缺失physical材料的会话可能未列出，空结果不表示从未启动。
 
-provider详情按需阅读原生对话、工具参数、结果、具体错误及turn历史。`native_sessions.py`只从CLI返回的路径读取，在固定Docker访问容器或本机运行中执行只读JSONL读取；浏览器仅提交physical记录ID和字节偏移。读取核对文件header的native ID，每批最多50条、约1MiB，保留完整行与稳定字节游标；单行超过8MiB明确报告边界，末尾未完整行等下次读取。工具大文本可滚动查看，完整原生记录可展开；图片等非文本内容呈原生JSON。凭据字段、Bearer、常见key格式与读取环境中凭据值脱敏。原生日志缺失或身份不匹配单独报错，会话元数据保留，服务不重建历史文件。
+Provider详情默认以对话阅读原生输入与Agent正文，工具、思考和后台通知折叠为过程活动，具体错误直接可见。原生user标为“输入”，不推断来自人类；工具按全部已加载记录中的唯一call ID配对，跨父链不连续、压缩或分支摘要停止配对，返回仅表示“已返回”。每条正文、调用和结果可定位到同源Trace的字节位置；切换保留阅读位置，Trace保留全部原生事件与完整脱敏JSON。历史仍从开头分批加载、手动刷新，已加载末条不代表最新进展。身份材料与turn历史按需展开。
+
+`native_sessions.py`只从CLI返回的路径读取，在固定Docker访问容器或本机运行中执行只读JSONL读取；浏览器仅提交physical记录ID和字节偏移。读取核对文件header的native ID，每批最多50条、约1MiB，保留完整行与稳定字节游标；单行超过8MiB明确报告边界，末尾未完整行等下次读取。工具大文本可滚动查看，完整原生记录可展开；图片等非文本内容呈原生JSON。凭据字段、Bearer、常见key格式与读取环境中凭据值脱敏。原生日志缺失或身份不匹配单独报错，会话元数据保留，服务不重建历史文件。
 
 当前支持Pi与Codex JSONL header身份核对及原生记录展示；已在I12真实Pi会话验收，Codex尚未实测。服务不接受自由cli_command；原生读取使用固定Docker配置或受管理本机运行。关系与正文接口分别为 `GET /api/sessions?run=<ID>`、`GET /api/transcript?run=<ID>&provider=<physical记录ID>&offset=<字节位置>`。
+
+Agent和Provider页的“文件”可浏览CLI登记worktree的当前文件，包含未提交、未跟踪和`.braid`材料；多个不同目录须明确选择。改派可沿用同一目录，因此历史会话路径不是历史快照，也不证明当前归属。读取时间随目录、正文分别显示，刷新不暂停生成或建立完整快照。
+
+“origin分支”以及运行页的“浏览origin代码”读取本次运行`state/origin.git`共享裸库的`refs/heads/*`。选择分支固定完整commit，目录、文件及缓存始终绑定该commit；刷新列表保留版本，显式“更新到分支最新”才切换。运行级阅读弹窗保留下面工作项的草稿。origin只包含已push的代码，空树不能替换为Agent当前工作区。
+
+`code_files.py`在登记CLI同一namespace执行固定只读reader。`GET /api/code/refs?run=<ID>`列分支，`GET /api/code?run=<ID>&source=workspace&provider=<physical记录ID>&path=<相对路径>`读取登记目录；origin读取改传`source=origin&commit=<完整SHA>`。浏览器不能指定绝对根路径。读取核对实际容器及嵌套挂载来源，拒绝`.git`、越界与符号链接穿越；符号链接和子模块仅展示保存的目标或身份。特殊文件不读取，目录超过2000项或文件超过1MiB明确报错，不静默截断；二进制及非UTF-8内容说明不可预览。代码及HTML作为文本，Markdown沿用安全预览，凭据复用原生reader的脱敏规则。
+
+origin读取使用`for-each-ref`、`ls-tree -z`和`cat-file`，读取前明确拒绝partial clone/promisor配置和对象标记，保留禁用lazy fetch的环境保护，不执行checkout、fetch、clone、filters或Braid工作树恢复校验。当前代码阅读只接入live来源；归档文件入口直接说明缺少origin和会话工作区映射，不读取原绝对目录、重建仓库或拿最终应用代替分支历史。
 
 页面使用React Router显式路径：`/`、`/runs/:run`、`/runs/:run/issues/:id`或`prs/:id`，会话层级追加`/agents/:agent/providers/:provider`。页面身份只来自路径，不解析旧`?run&kind&id&agent&provider`，也不重定向旧链接；查询参数不承担页面身份。有效深链直接打开及刷新由Python返回前端入口，缺失资源、未知API和不合法页面路径保留404。离开工作项时，未提交草稿保护同时作用于点击和浏览器历史导航，取消切换保留原URL与草稿；操作中阻止切换。
 
@@ -69,19 +79,22 @@ python3 braid-console/service.py serve --service /absolute/stable/exp-console/de
 Braid状态里的Git与工作树路径属于生成时的执行环境。运行在容器中时，稳定接入的宿主`state`、`workspace`保存实际执行根；服务只接受受管理本机CLI或固定Docker配置，不支持自由cli_command。若需要暂停生成后继续人工访问，先为每个运行创建一个独立CLI访问容器：
 
 ```sh
-docker run -d --name <访问容器名称> --label factory26.console.run=<运行ID> \
+docker run -d --init --name <访问容器名称> --label factory26.console.run=<运行ID> \
   --label factory26.console.service=<稳定服务ID> \
   --mount type=bind,source=<受管理binary>,target=/console/braid,readonly \
-  --network none --volumes-from <原容器完整ID> \
+  --mount type=bind,source=<原工作区在宿主的实际根>,target=<原容器工作区路径> \
+  --network none \
   --user <原容器用户> --workdir <原容器工作目录> \
   --entrypoint sleep <原容器image完整ID> infinity
 ```
 
 登记固定Docker配置后，服务通过该访问容器执行受管理binary的对象CLI；不接受浏览器或registry提供自由命令。
 
-原容器ID、image ID、用户、工作目录和挂载须从实际运行核对；binary及state必须位于共享挂载中，并在访问容器里保留原绝对路径。`--volumes-from`共享现存挂载及其读写权限，不复制数据库或继承原容器的环境变量；固定image并覆盖entrypoint只运行`sleep`待命，`--network none`隔离网络。对象CLI不启动Braid worker，也不恢复原生成容器；人工评论仍按原生事务入队，待用户恢复后由原runtime消费。复用访问容器避免每次浏览器轮询都创建和移除容器。
+原容器ID、image ID、用户、工作目录和挂载须从实际运行核对；binary及state必须位于共享挂载中，并在访问容器里保留原绝对路径。显式挂载实际工作区，不复制数据库或继承原容器的环境变量；有其它执行所需挂载时一并按实际来源登记。固定image并覆盖entrypoint只运行`sleep`待命，`--init`使停止信号能结束待命进程，`--network none`隔离网络。对象CLI不启动Braid worker，也不恢复原生成容器；人工评论仍按原生事务入队，待用户恢复后由原runtime消费。复用访问容器避免每次浏览器轮询都创建和移除容器。
 
-访问容器由Console接入管理命令 `access-start/access-stop --service <目录> --run <ID>` 显式启停，不设置自动重启。命令先核对固定context、完整ID、service/run所有权标签和真实挂载；不操作借用或未知容器，不自动重建。停止HTTP不停止访问容器，停止访问容器也不解除可恢复配置的引用。移除容器须由操作方在解除接入、核对所有权后另行执行；本轮不移除历史容器。生成容器属于实验，只接受既有明确pause/resume操作，不归Console清理。
+生成使用Docker named volume的`volume-subpath`时，`Mounts.Source`是volume根，实际工作区为该根加上`HostConfig.Mounts`中同一volume、目标目录的`VolumeOptions.Subpath`。上例的工作区挂载须改为`--mount type=volume,source=<原volume名称>,target=<原容器工作区路径>,volume-subpath=<原stage子目录>`，使用同一named volume及子目录。不能只用volume根或假定`--volumes-from`保留子目录；只bind宿主子目录也不会建立Docker的volume消费者引用。Console的共享路径核对采用同一换算，并继续核对最长嵌套挂载。Docker接入的宿主state/workspace保存精确映射供GC引用，存在性在固定访问容器内核实；原生Console用户不需要遍历Docker宿主数据目录，也不需要root权限。本机接入仍直接核实宿主目录，受管理binary的宿主身份检查保持。
+
+访问容器由Console接入管理命令 `access-start/access-stop --service <目录> --run <ID>` 显式启停，不设置自动重启。命令先核对固定context、完整ID、service/run所有权标签和真实挂载；不操作借用或未知容器，不自动重建。停止HTTP不停止访问容器，停止访问容器也不解除可恢复配置的引用。移除容器须由操作方在解除接入、核对所有权后另行执行。named volume在访问容器停止后仍被引用；最终清理顺序为关闭转发和HTTP、停止访问容器、release接入、明确移除该访问容器，再执行实验资源清理。生成结束及原runtime被移除后，访问容器仍可保留读取材料，但原runtime控制不再可用。生成容器属于实验，只接受既有明确pause/resume操作，不归Console清理。
 
 需要页面暂停/恢复控制时，在同一run中登记下面的`docker`配置，替换其中的完整容器ID及实际路径，不同时设置`cli_command`：
 

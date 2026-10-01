@@ -31,6 +31,8 @@ HTTP停止只结束它自己的进程。SSH转发由操作方独立管理；访�
 
 正文通过 `GET /api/transcript` 按稳定字节游标分页读取，先核对原生 header 的 native 身份。浏览器只传 run、physical 记录 ID 与 offset，不提供任意文件路径；具体分页和数据边界归 Console README。文件缺失或身份不匹配保留错误，不从另一会话补正文。关系、工具 call/result 和原文位置帮助取证，不能从历史 provider 状态推断生成容器此刻是否暂停。
 
+Provider默认对话与Trace共用分页原文，调用和结果有独立来源定位。Agent/Provider文件入口读取登记worktree当前文件，运行级origin入口固定分支提交；历史登记不等于文件快照，未push代码不在origin。读取不修改Git、切换工作区或暂停生成；缺失的归档来源直接报错。代码接口与读取边界归Console README，当前实现及新增验收结果归[Agent Session阅读记录](../../tasks/braid-console-control/provider-session-reading.md)。
+
 当前已经取得真实 Pi 会话的只读接口及页面反馈，归档深链和前后导航已在 shadcn/ui 制品核对；Codex 正文和可写现场的草稿保护仍未实测。人工编辑成功、控制回执、模型读取消息和最终任务效果分别核实；前序接口证据归[会话导航记录](../../tasks/braid-console-control/session-navigation.md)，当前路由与 UI 结果归[路径路由回执](../../tasks/braid-console-control/path-routing.md)。
 
 ## 运行身份与实际验收
@@ -39,6 +41,8 @@ I12已在独立磁盘清理中终止，归档在runs/wsl-retained-20260930/；�
 I12是人工介入研究条件；旧I11摘剪接续已停止，不再用作当前生成起点。原始记录仍保留，历史页面与旧源码位置仅供追溯。
 当前Console控制与验收归 [独立任务](../../tasks/braid-console-control/packet.md)；[暂停访问历史记录](../../tasks/iteration13/console-paused-access.md)保留当时故障和接线证据，不作为I13范围。
 
-当前唯一服务运行在WSL，入口仍为 [Console](http://127.0.0.1:8765/)。稳定根 `/home/yyh/.local/share/factory26/exp-console/20261001-i13-live`，service ID `c5c21595-811d-4dde-b6b4-83a77cf1bbc8`；Mac8765只做独立SSH转发，8766方案已退役。两份原Mac归档完整复制到新根archives并保留原run IDs，原文件未删除；Mac路径路由服务HTTP已退出、manifest已退役，配置/active及前序history保存在WSL新根history，不执行旧launch。归档与现场均由WSL唯一HTTP提供，WSL或转发断线时归档页面也不可用。
+当前唯一服务直接运行在Debian-Rebuild，入口为 [Console](http://127.0.0.1:8765/)。稳定根 `/home/yyh/.local/share/factory26/exp-console/20261001-session-reading-release`，service ID `4161a417-fede-4be5-b692-162350a3d826`，HTTP PID163346。Mac8765为独立SSH转发；HTTP与转发均不配置自动重启。原Debian-Factory26已由用户删除，用户明确取消旧Console登记与journal迁移，本轮从空登记基线接入两条新I13-GLM现场。
 
-本轮精确矩阵的真实资源与数据库出现后，使用独立network-none访问容器和配套register接入，限定目录的操作程序负责接线，非Console自动发现或实验调度。用户改选自有 API 本地 GLM 两题后，操作程序仅增加精确 sheet/github 实验白名单；两个新运行均已登记后正常退出。当前保留两份 archive、两条已停止生成的旧现场和两条新 GLM 现场，停止旧生成不删除其可读 workspace 或登记身份。根 Issue/会话均可读，新 runtime 成功，旧 runtime 的具体错误保留。归档内容、各运行/容器/binary 身份、实际 HTTP 与接入回执归[I13单实例回执](../../tasks/iteration13/console-launch.md)。未为验收提交评论、编辑或暂停/恢复生成，这些业务写入及新暂停/恢复行为仍未重验。前序路由与页面实现见[路径路由回执](../../tasks/braid-console-control/path-routing.md)，原首页架构切换见[首页与服务切换回执](../../tasks/braid-console-control/home-entry.md)。
+接入的是`glm-root--hackathon--github-f9e238c1b698a5`和`glm-root--hackathon--sheet-a45a22ec644204`。allocation、resource/transport、实际Braid request及数据库映射已核对，两条生成runtime持续运行。实际Pi对话、跨页Trace定位、工作区、非空origin固定提交、深链和前后导航已验收；具体结果与未观测边界归[阅读记录](../../tasks/braid-console-control/provider-session-reading.md)。此前六条接入、归档复制与暂停访问材料只作历史证据，不表示当前服务仍拥有它们。
+
+每项访问容器使用原named volume及同一`volume-subpath`，保留实际消费者引用；宿主路径供GC保护，存在性在固定访问容器内核实。最终清理须关闭转发与HTTP、停止访问容器、release接入、明确移除访问容器，然后执行实验资源清理。仅停止访问容器仍占用volume；原生成runtime被移除后，材料读取可继续，物理控制单独报告不可用。创建与核对步骤归[Console README](../../braid-console/README.md)，最新部署回执归[独立任务](../../tasks/braid-console-control/packet.md)。

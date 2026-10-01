@@ -73,11 +73,13 @@ def live_error(run):
             raise ValueError("live接入缺少binary SHA-256身份")
         if archives.identity(binary) != expected:
             raise ValueError(f"受管理 binary 身份已改变：{binary}")
-        if not (Path(run["state"]) / "braid.sqlite3").is_file():
+        if run.get("docker"):
+            docker_paths(run, run["service_id"])
+        elif not (Path(run["state"]) / "braid.sqlite3").is_file():
             raise ValueError(f"state 缺少数据库：{run['state']}")
-        if not run.get("workspace") or not Path(run["workspace"]).is_dir():
+        elif not run.get("workspace") or not Path(run["workspace"]).is_dir():
             raise ValueError(f"workspace 不可达：{run['workspace']}")
-    except (OSError, ValueError) as error:
+    except (OSError, ValueError, RuntimeError, KeyError) as error:
         return f"{type(error).__name__}: {error}"
     return None
 
@@ -115,7 +117,7 @@ def managed_binary(destination, source):
     return managed, digest
 
 
-def registrations(destination, entries):
+def registrations(destination, entries, service_id):
     if not isinstance(entries, list):
         raise ValueError("registry 必须是运行列表")
     runs, seen = [], set()
@@ -141,19 +143,24 @@ def registrations(destination, entries):
         elif mode == "live":
             if type(entry.get("writable")) is not bool or entry.get("cli_command"):
                 raise ValueError("live 需要明确 writable；受管理服务不接受自由 cli_command")
-            state = Path(entry["state"]).resolve(strict=True)
-            if not (state / "braid.sqlite3").is_file():
+            config = docker_runtime.configuration(entry["docker"]) if entry.get("docker") else None
+            state, workspace = Path(entry["state"]), Path(entry["workspace"])
+            if config:
+                for path in (state, workspace):
+                    if not path.is_absolute() or ".." in path.parts:
+                        raise ValueError("Docker state/workspace 需要实际宿主绝对路径")
+            else:
+                state, workspace = state.resolve(strict=True), workspace.resolve(strict=True)
+            if not config and not (state / "braid.sqlite3").is_file():
                 raise ValueError("live state 必须包含现存 Braid 数据库")
-            workspace = Path(entry["workspace"]).resolve(strict=True)
-            if not workspace.is_dir():
+            if not config and not workspace.is_dir():
                 raise ValueError("live workspace 必须是原执行路径空间的宿主目录")
             managed, digest = managed_binary(destination, Path(entry["binary"]))
             run.update(writable=entry["writable"], state=str(state), workspace=str(workspace), binary=str(managed), binary_sha256=digest)
-            if entry.get("docker"):
-                config = docker_runtime.configuration(entry["docker"])
+            if config:
                 if not config.get("context") or not config.get("mounts"):
                     raise ValueError("受管理 Docker 接入需要固定 context 与宿主 mounts")
-                if not any(Path(mount["source"]).resolve() == workspace for mount in config["mounts"]):
+                if not any(Path(mount["source"]) == workspace for mount in config["mounts"]):
                     raise ValueError("Docker mounts 必须明确包含登记的 workspace 宿主根")
                 from pathlib import PurePosixPath
                 state_in_container = PurePosixPath(config["state"])
@@ -161,12 +168,13 @@ def registrations(destination, entries):
                 if not containing:
                     raise ValueError("Docker state 未映射到登记的宿主挂载")
                 mount = max(containing, key=lambda value: len(PurePosixPath(value["destination"]).parts))
-                if (Path(mount["source"]) / state_in_container.relative_to(mount["destination"])).resolve() != state:
+                if Path(mount["source"]) / state_in_container.relative_to(mount["destination"]) != state:
                     raise ValueError("Docker state 映射与宿主 state 不一致")
                 # The deployer mounts this prepared binary at the declared container binary path.
                 config["mounts"].append({"source": str(managed), "destination": config["binary"]})
                 config["access_owner"] = "console"
                 run["docker"] = config
+                docker_paths(run, service_id)
         else:
             raise ValueError("每项 mode 必须是 live 或 archive")
         runs.append(run)
@@ -197,8 +205,9 @@ def prepare(destination, registry, python, *, development_output=False):
     destination.mkdir(parents=True)
     selected = destination / "app"
     freeze_application(selected)
-    runs = registrations(destination, entries)
-    record = {"schema_version": 1, "record_type": "factory26.exp-console-service", "service_id": str(uuid.uuid4()),
+    service_id = str(uuid.uuid4())
+    runs = registrations(destination, entries, service_id)
+    record = {"schema_version": 1, "record_type": "factory26.exp-console-service", "service_id": service_id,
               "host": socket.gethostname(), "created_at": stamp(), "state": "registered", "interpreter": runtime,
               "deployment_scope": "development-output" if development_output else "service",
               "artifact_files": {path.relative_to(destination).as_posix(): archives.identity(path)
@@ -222,6 +231,26 @@ def access(record, run):
         raise ValueError("访问容器所有权标签不匹配；不能操作或解除引用")
     docker_runtime.confirm_mounts(config, value)
     return config, value
+
+
+def docker_paths(run, service_id):
+    config, value = access({"service_id": service_id}, run)
+    if not value["state"]["Running"] or value["state"]["Paused"]:
+        raise ValueError("CLI 访问容器需要运行且未暂停")
+    workspaces = [mount["destination"] for mount in config["mounts"] if mount["source"] == run["workspace"]]
+    if not workspaces:
+        raise ValueError("Docker mounts 未声明 workspace 宿主根")
+    # Host volume parents need not be traversable by the Console user. Read in the CLI namespace.
+    reader = """
+import pathlib, sys
+database = pathlib.Path(sys.argv[1]) / 'braid.sqlite3'
+if not database.is_file():
+    raise FileNotFoundError('state 缺少数据库：' + str(database))
+for path in sys.argv[2:]:
+    if not pathlib.Path(path).is_dir():
+        raise NotADirectoryError('workspace 不可达：' + path)
+"""
+    docker_runtime.docker(["exec", config["cli_container"], "python3", "-c", reader, config["state"], *workspaces], config)
 
 
 def main():
@@ -269,7 +298,7 @@ def main():
                             managed, digest = managed_binary(root, args.source)
                             result = {"binary": str(managed), "sha256": digest}
                         else:
-                            additions = registrations(root, json.loads(args.registry.read_text()))
+                            additions = registrations(root, json.loads(args.registry.read_text()), record["service_id"])
                             used = {run["id"] for run in record["runs"]} | set(record.get("retired_run_ids", []))
                             if {run["id"] for run in additions} & used:
                                 raise ValueError("运行 id 已登记或已释放；禁止将旧身份重新指向新现场或归档")

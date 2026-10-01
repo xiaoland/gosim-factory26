@@ -5,11 +5,12 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { api, url } from './http';
 import { useState, type ReactNode } from 'react';
-import { ArrowLeft, RotateCw } from 'lucide-react';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { type NativeEntry, type ProviderSession, type Selection, type TranscriptPage } from './api';
+import { ArrowLeft } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { type ProviderSession, type Selection } from './api';
 import { routeURL } from './navigation';
-import { Markdown } from './Markdown';
+import Transcript from './Transcript';
+import FileBrowser from './FileBrowser';
 
 const coverage = '展示登记 CLI 可枚举的当前与历史记录；缺失 physical 材料的会话可能未列出。生命周期来自 Braid 记录，实际执行状态以页面上方的生成状态为准。';
 const historical = (session: ProviderSession) => ['replaced', 'retired'].includes(session.status);
@@ -44,71 +45,6 @@ export function SessionLinks({ run, selected, onSelect }: { run: string; selecte
     <p className="subtle">包括历史 provider；缺失 physical 材料的记录可能未列出。</p>
     {!!records.filter(record => !record.group_id).length && <span className="warning-text">存在未绑定 Braid agent 的记录。</span>}
   </div>;
-}
-
-function object(value: unknown): Record<string, unknown> | null {
-  return value && typeof value === 'object' && !Array.isArray(value) ? value as Record<string, unknown> : null;
-}
-function json(value: unknown) { return JSON.stringify(value, null, 2); }
-function NativeBlock({ value }: { value: unknown }) {
-  const block = object(value);
-  if (!block) return <pre className="native-code">{typeof value === 'string' ? value : json(value)}</pre>;
-  if (block.type === 'toolCall' || block.type === 'function_call') return <details className="native-tool" open>
-    <summary>工具调用 · {String(block.name || '未记录')} <code>{String(block.id || block.call_id || '')}</code></summary>
-    <pre className="native-code">{typeof block.arguments === 'string' ? block.arguments : json(block.arguments)}</pre>
-  </details>;
-  if (block.type === 'thinking' || block.type === 'reasoning') return <details className="native-thinking">
-    <summary>思考内容</summary><pre className="native-code">{String(block.thinking || block.text || json(block))}</pre>
-  </details>;
-  if (typeof block.text === 'string') return <Markdown body={block.text} />;
-  return <details><summary>原生内容 · {String(block.type || '未知类型')}</summary><pre className="native-code">{json(block)}</pre></details>;
-}
-function NativeRecord({ entry }: { entry: NativeEntry }) {
-  if (entry.error) return <Notice tone="error" title={`JSONL 字节 ${entry.offset} 解析失败`} description={<><pre>{entry.error}</pre><pre className="native-code">{entry.raw}</pre></>} />;
-  const value = entry.value || {};
-  const payload = object(value.message) || (value.type === 'response_item' ? object(value.payload) : null);
-  const role = payload?.role;
-  const content = payload?.content;
-  const tool = role === 'toolResult' || payload?.type === 'function_call_output';
-  if (payload && (role || payload.type === 'function_call' || tool)) return <article className={`native-entry ${tool ? 'native-result' : ''} ${payload.isError ? 'native-failed' : ''}`}>
-    <Row className="native-entry-head" gap={8} wrap><StatusBadge tone={tool ? payload.isError ? 'error' : 'cyan' : role === 'user' ? 'blue' : 'green'}>
-      {tool ? '工具结果' : role === 'user' ? '用户' : role === 'assistant' ? 'Agent' : '工具调用'}</StatusBadge>
-      {tool && <strong>{String(payload.toolName || payload.name || '')}</strong>}
-      {!!(payload.toolCallId || payload.call_id) && <code>{String(payload.toolCallId || payload.call_id)}</code>}
-      {!!payload.isError && <StatusBadge tone="error">isError=true</StatusBadge>}
-      <span className="muted">{String(value.timestamp || payload.timestamp || '')} · 字节 {entry.offset}</span>
-    </Row>
-    <div className="native-entry-body">{Array.isArray(content) ? content.map((block, index) => tool
-      ? <pre className="native-code" key={index}>{String(object(block)?.text ?? json(block))}</pre>
-      : <NativeBlock key={index} value={block} />) : content ? <NativeBlock value={content} /> : payload.type === 'function_call' ? <NativeBlock value={payload} />
-      : <pre className="native-code">{typeof payload.output === 'string' ? payload.output : json(payload)}</pre>}
-      {!!(payload.errorMessage || payload.error) && <Notice tone="error" title="原生错误" description={<pre>{String(payload.errorMessage || json(payload.error))}</pre>} />}
-      <details className="native-raw"><summary>完整原生记录</summary><pre className="native-code">{json(value)}</pre></details>
-    </div>
-  </article>;
-  return <details className="native-metadata"><summary>{String(value.type || '原生事件')} · {String(value.timestamp || '')} · 字节 {entry.offset}</summary><pre className="native-code">{json(value)}</pre></details>;
-}
-function Transcript({ run, record }: { run: string; record: ProviderSession }) {
-  const query = useInfiniteQuery({
-    queryKey: ['transcript', run, record.record_id], initialPageParam: 0,
-    queryFn: ({ signal, pageParam }) => api<TranscriptPage>(url('/api/transcript', { run, provider: record.record_id, offset: pageParam }), signal),
-    getNextPageParam: page => page.eof ? undefined : page.next_offset, retry: false,
-  });
-  const pages = query.data?.pages || [];
-  const last = pages.at(-1);
-  const entries = pages.flatMap(page => page.entries);
-  return <section className="native-transcript" aria-label="原生对话与工具调用">
-    <Row align="center" justify="space-between" gap={12} wrap><h4>原生对话与工具调用</h4>
-      <ActionButton icon={<RotateCw />} pending={query.isFetching} onClick={() => { void query.refetch(); }}>刷新已加载记录</ActionButton></Row>
-    <span className="muted">按文件位置分批读取；工具参数、结果和错误保留原始内容，凭据字段脱敏。</span>
-    {query.error && <Notice className="error-alert" tone="error" title="原生文件读取失败；会话元数据仍可查看" description={<pre>{query.error.message}</pre>} />}
-    {query.isPending && <LoadingSkeleton rows={6} />}
-    {entries.map(entry => <NativeRecord key={entry.offset} entry={entry} />)}
-    {!query.isPending && !query.error && !entries.length && <EmptyState description={last?.waiting ? '文件末尾记录尚未写完整，请稍后刷新' : '原生文件没有记录'} />}
-    {last && <Row className="native-pagination" gap={12} align="center" wrap><span className="muted">已加载 {entries.length} 条记录 · 字节 {last.next_offset} / {last.size}{last.eof ? ' · 已到当前文件末尾' : ''}</span>
-      {query.hasNextPage && <ActionButton pending={query.isFetchingNextPage} onClick={() => { void query.fetchNextPage(); }}>{last.waiting ? '重新读取未完成的末尾' : '加载后续记录'}</ActionButton>}
-    </Row>}
-  </section>;
 }
 
 function TurnHistory({ provider }: { provider: ProviderSession }) {
@@ -146,6 +82,14 @@ function ProviderDirectory({ run, records, agent, onSelect }: { run: string; rec
   </div>;
 }
 
+function AgentFiles({ run, records, children }: { run: string; records: ProviderSession[]; children: ReactNode }) {
+  const [view, setView] = useState('sessions');
+  const [opened, setOpened] = useState(false);
+  return <><Tabs className="session-transcript-tabs" value={view} onValueChange={value => { setView(value); if (value === 'files') setOpened(true); }}>
+    <TabsList aria-label="Agent 会话内容"><TabsTrigger value="sessions">会话目录</TabsTrigger><TabsTrigger value="files">文件</TabsTrigger></TabsList>
+  </Tabs><div hidden={view !== 'sessions'}>{children}</div>{opened && <div hidden={view !== 'files'}><FileBrowser run={run} records={records} /></div>}</>;
+}
+
 export default function Sessions({ run, selected, onSelect }: { run: string; selected: Selection; onSelect: (value: Selection) => void }) {
   const query = useSessions(run);
   const records = itemSessions(query.data || [], selected).filter(record => record.group_id === selected.agent);
@@ -161,8 +105,7 @@ export default function Sessions({ run, selected, onSelect }: { run: string; sel
     </BreadcrumbList></Breadcrumb>
     <ActionButton className="session-back" icon={<ArrowLeft />} onClick={() => onSelect(selected.provider ? agent : item)}>{selected.provider ? '返回 agent session' : '返回工作项'}</ActionButton>
     <div className="detail-heading"><div className="detail-eyebrow">{selected.provider ? 'PROVIDER SESSION' : 'BRAID AGENT SESSION'}</div>
-      <h2>{selected.provider ? provider?.native_session_id || selected.provider : [...new Set(records.map(record => record.profile_id))].join(' / ') || 'Braid agent session'}</h2>
-      <CopyText className="session-identity">{selected.provider ? provider?.session_id || selected.provider : selected.agent}</CopyText>
+      <h2>{selected.provider ? provider ? `${provider.profile_id} 的会话` : 'Provider session' : [...new Set(records.map(record => record.profile_id))].join(' / ') || 'Braid agent session'}</h2>
     </div>
     <p className="session-coverage muted">{query.data?.some(record => record.source_mode === 'archive') ? '归档中的会话目录与历史。生命周期来自保存记录，缺失材料保留具体错误。' : coverage}</p>
     {query.error && <Notice tone="error" title="会话关系读取失败；缓存不能证明当前状态" description={<pre>{query.error.message}</pre>} />}
@@ -171,11 +114,12 @@ export default function Sessions({ run, selected, onSelect }: { run: string; sel
       : provider ? <>
         <Row gap={8} wrap><SessionState session={provider} /><StatusBadge>{provider.provider}</StatusBadge><StatusBadge>{provider.profile_id}</StatusBadge></Row>
         {provider.archive_native_error && <Notice tone="warning" title="归档原文不可定位" description={provider.archive_native_error} />}
-        <Transcript key={`transcript-${provider.record_id}`} run={run} record={provider} />
+        <Transcript key={`transcript-${provider.record_id}`} run={run} record={provider} files={<FileBrowser run={run} records={[provider]} />} />
         <details className="technical-details"><summary>会话身份与材料 <span className="muted">路径、revision 与来源</span></summary>
         <dl className="session-facts">{[
           { key: 'agent', label: 'Braid agent ID', children: <CopyText>{provider.group_id}</CopyText> },
           { key: 'record', label: 'Physical 记录 ID', children: provider.record_id },
+          { key: 'recovery', label: 'Provider 恢复身份', children: <CopyText>{provider.session_id}</CopyText> },
           { key: 'native', label: 'Native session ID', children: provider.native_session_id || '未确认' },
           { key: 'parent', label: 'Parent native ID', children: provider.parent_native_session_id || '未记录' },
           { key: 'generation', label: 'Assignment generation', children: provider.assignment_generation ?? '未记录' },
@@ -188,13 +132,14 @@ export default function Sessions({ run, selected, onSelect }: { run: string; sel
         ].map(fact => <div key={fact.key}><dt>{fact.label}</dt><dd>{fact.children}</dd></div>)}</dl>
         </details>
         <TurnHistory key={`turns-${provider.record_id}`} provider={provider} />
-      </> : <>
+      </> : <AgentFiles key={selected.agent} run={run} records={records}>
+        <details className="technical-details"><summary>Agent 身份</summary><CopyText className="session-identity">{selected.agent}</CopyText></details>
         <dl className="session-facts">{[
           { key: 'item', label: '工作项', children: label }, { key: 'providers', label: '已发现 provider', children: `${records.length} 条，其中 ${records.filter(historical).length} 条历史` },
           { key: 'generation', label: 'Assignment generation', children: [...new Set(records.map(record => record.assignment_generation ?? '未记录'))].join(', ') },
         ].map(fact => <div key={fact.key}><dt>{fact.label}</dt><dd>{fact.children}</dd></div>)}</dl>
         <h4>Provider sessions · 包括历史</h4>
         <ProviderDirectory key={selected.agent} run={run} records={records} agent={agent} onSelect={onSelect} />
-      </>}
+      </AgentFiles>}
   </section>;
 }
