@@ -1,0 +1,19 @@
+# I13-2 官网 Flash/Sheet 取消后恢复来源
+
+2026-10-01。用户在监控会话明确要求“取消该运行，等待 I13-2 一起热修复恢复”，主线已读取并核实这项授权。原平台运行 `691028015e69` 为 CANCELLED；本次只准备派生恢复包和无模型验收，不在此操作中发官网写请求或启动生成。Braid run 为 `20261001-074506-6e7af22b`，沿用 Flash/K2.7-code 配方。原件是 `runs/iteration13/hosted-recovery-20261001/sheet-user-cancel/workspace.zip`，父 SHA 为 `0e9c2798c80ab56641f7937aed861416d164dd495a716378e702975a795fa13b`；原 ZIP 未被改写。
+
+平台 ZIP 遗漏各 clone 私有 `.git`。独立复核与实际派生操作核对了 root 原生 session `01a0f6f1-c36c-7164-b5a0-3824ef040019`：物理第 335 行是 checkout tool call，第 336 行是与之匹配、`isError:false` 的结果，显示 `verify-pr4` 和 `bc9c94a`。root 的全部 89 个 tracked 文件字节与 `bc9c94abe095057db755928ebcb7b598dde36882` 一致，该 tree 也与当前 develop/PR 5 基线 `743c543e5e048aa3172639436b4c252cf93b742b` 相同。数据库的 `head_ref/local_branch=main` 是早期登记，不能代替这项实际 Git 证据。
+
+在独占的 `runs/iteration13/i13-2-20261001/hosted-sheet-recovery/derived/` 副本中，仅重建 root 的 Git 管理信息：HEAD 指向 `verify-pr4`，ref 为上述 bc9c94a，index 由该 commit 的 tree 构建，remote 为 `/workspace/template/.factory26/20261001-074506-6e7af22b/braid-state/origin.git`。Git fetch 读取派生的发布 origin；没有 checkout 覆盖工作文件，没有制造提交。新管理配置关闭 reflog 并忽略平台导出丢失的 executable mode 差异；它不是原 clone 配置的恢复证明。原 staging、reflog 和未发布提交历史仍不可恢复。其它 clone 的管理信息留给既有恢复入口重建。
+
+PR 2、3、4 的 MERGED 状态保留。PR 5 保留 `backend/src/types.ts` 与 `backend/src/undo.ts` 两个 tracked 修改，六个新增源码/迁移文件，以及 `.work/packet.md` 和 `.work/seed-note.md`。其 reset `01a0f78a-0a19-7cf3-b972-baa46554ddf8` 仍为 interrupting、continuation 1、new_session_id 为 null；没有修改、消耗或重新发起它。provider session、agent、assignment、worktree、context reset 及 reset event 的原有列与全部行 hash 均保持。
+
+现有 Braid CLI 在派生 Issue 1 创建了唯一维护输入 comment 84，随后实际 `comment view` 读回为 visible，并排队给 `glm-1`。输入说明取消后接续、PR 2—4 已合入、root Git 重建范围与局限、PR 5 未提交内容及 packet 保留、接续已有 reset，并要求先核对实际状态，再依据新版独立 SVC 与 braid 技能整理、发布工作记忆。没有内联技能正文、导入隐藏评测或重放已完成工作。
+
+派生 ZIP 为 `hosted-sheet-recovery/workspace.zip`，SHA 为 `c99d8ff357ce610c5eb2d57bb243a7a90172dc40a620c36d8ae57326d0f3789d`，大小 169,265,868 bytes，含 8,770 个文件成员。原 8,741 个文件均被逐项核对；仅 Braid SQLite 的 WAL/SHM 因维护输入变动，其余原件字节保持，新增文件仅为 root Git 管理信息。36 个原生会话/模型文件具有字节数、行数及 SHA 保留原件。冻结后的 ZIP 另行提取数据库和 root Git 记录读回，确认身份、pending reset 与 comment 84 内容符合派生决定。
+
+证据入口为同目录的 `receipt.json`、`parent-index.json`、`root-tree-evidence.json`、`root-checkout-evidence.json`、`root-git-reconstruction.json`、`pr5-preserved-work.json`、`native-preservation.json`、`maintenance-input.json` 与 `frozen-readback/receipt.json`。`derive.py` 保留实际操作。主线用冻结 I13-2 Flash base 与此派生 ZIP 打最终恢复包；该包仍须在无网络隔离容器通过真实 prepare-only，随后由主线处理收费运行的启动。
+
+第一份最终包 `flash-root-sheet-resume.zip`（SHA `9e879198920898daded5b18f74cc6dfe6df94bf290ab791b81659d24a1554f1f`）已在原隔离容器真实执行 prepare-only，main.py 返回 1，错误为 `ValueError: native material refresh changes pi-deepseek-fast.model`。原件位于 `recovery-prepare/hosted-sheet/`。实际 ROOT 为 `/workspace/submission/agent`、uid/gid 为 501:20、output 为 `/workspace/template`；容器无网络、无挂载，命令含 --prepare-only，失败发生于原生材料刷新、生成入口之前。派生应用、缺失 clone Git 的重建与 root 私有 Git 已留存；未启动模型或提交官网请求。
+
+根因是 Flash base 仍有同名 DeepSeek profile，而保留的旧身份已经迁移为 GLM。旧刷新逻辑仅在 ID 不存在于 current 时选择 GLM 材料，因而选择了同名的新 DeepSeek 材料。主线明确授权修正 `submission/recover_completed.py`：只有旧 ID 为 pi-deepseek-fast、model 为 glm-5.3-flash、带 root-only 且不是 root 时，统一选 pi-glm-fast 材料；同名 current capability 已由本次 native_files 新建时，仅替换它，原 capability 备份与 native home 保留。其余模型变化仍拒绝。该源码已语法编译通过；不重跑未冻结中间包，待主线把恢复入口修正和新 Braid binary 一起冻结后，再接续真实 prepare-only。先前失败与两项本地准备现场均不覆盖。

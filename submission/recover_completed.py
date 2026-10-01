@@ -97,15 +97,15 @@ def refresh_native_materials(run, request, runtime, variant):
         raise ValueError("native material refresh cannot introduce assigned profiles")
     profiles, changes = [], []
     for profile_id, original in old_profiles.items():
-        material_id = profile_id
-        if profile_id not in current:
-            # Earlier I13 migration retained this historical identity for existing
-            # members while removing it from new assignments. Do not migrate twice.
-            if (profile_id != "pi-deepseek-fast" or original.get("model") != "glm-5.3-flash"
-                    or "root-only" not in original.get("tags", [])
-                    or request["root_profile_id"] == profile_id):
-                raise ValueError(f"no authorized native materials for retained profile {profile_id}")
-            material_id = "pi-glm-fast"
+        # 已迁移的成员保留历史 ID；base 中同名的新 DeepSeek profile
+        # 不代表它仍使用 DeepSeek 材料，不能仅依据 ID 是否存在来选择。
+        retained_glm_identity = (profile_id == "pi-deepseek-fast"
+                                 and original.get("model") == "glm-5.3-flash"
+                                 and "root-only" in original.get("tags", [])
+                                 and request["root_profile_id"] != profile_id)
+        material_id = "pi-glm-fast" if retained_glm_identity else profile_id
+        if material_id not in current:
+            raise ValueError(f"no authorized native materials for retained profile {profile_id}")
         replacement = current[material_id]
         for key in ("adapter_type", "adapter_version", "provider", "model", "reasoning",
                     "context_soft_ratio", "context_hard_bytes", "context_window_tokens"):
@@ -115,6 +115,10 @@ def refresh_native_materials(run, request, runtime, variant):
         if material_id != profile_id:
             source_folder = work / "capabilities" / material_id
             folder = work / "capabilities" / profile_id
+            # 原 capabilities 已归档；这里只替换 native_files 本次新建的
+            # 同名材料，不触碰保留的 native home 或模型配置。
+            if folder.exists():
+                shutil.rmtree(folder)
             shutil.copytree(source_folder, folder)
             launcher = folder / "pi"
             launcher.write_text(launcher.read_text().replace(str(source_folder), str(folder)))
