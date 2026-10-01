@@ -1,8 +1,16 @@
 # I13：Braid、子Agent与协作方法改进
 
-## 当前：官网 Flash 恢复与本地 GLM 自有通道（2026-10-01）
+2026-10-01：[I13-2](i13-2/packet.md) 的资源等待误判和历史GLM材料选择缺陷已修复，新Linux包已冻结。本地GLM/GitHub、GLM/Sheet已启动新物理尝试，首批原件确认两项原Pi接续、Sheet等待资源后继续，AGENTS与共享packet已有发布回执；官网Flash/Sheet已按self_funded创建 `f16834f58674`，原取消来源与全部失败现场保留。监控已完全由脚本执行，模型角色停用、heartbeat暂停；同一Console已切换唯一新服务。准确身份与未覆盖验收以[实验树](experiments.md)及I13-2 packet为准。
 
-最新授权把四项分成两官网、两本地：Flash/GitHub优先从官网终态保全副本恢复到官网，Flash/Sheet从本地一致快照恢复到官网，两者非参赛、使用ARC API；官网SIGKILL关键证据采集成为这两项的启动硬前置，并调查有界自动恢复。GLM/GitHub留本地接续、GLM/Sheet本地干净启动，两者切到自有bigmodel/kimi/ds/qwen等API。移除DeepSeek Braid成员即可，不额外限定PR必须用GLM；内部DeepSeek sub-agent保留。原运行已保全并停止，后续四项均已启动过。官网两项曾RUNNING且诊断采集实际通过；最新GitHub已生成失败，Sheet继续运行。用户确认WSL重建为Debian-Rebuild，授权本地有快照即恢复、没有则重新启动。具体进展归下方实验树。
+## 当前：I13-2 改进与过程验收（2026-10-01）
+
+用户此前暂停本地 GLM 两项，明确同意 OOM 防范方案，并要求根据 Sheet PR 2、Issue 1 的实际过程修正协作材料重复和根评论隐藏语义；无需等待最终评分即可验收 I13 改进。用户指示“这些改进，作为 I13-2，并且热恢复到 I13 的运行”。本轮授权、保全来源、实施分工和验收归 [I13-2 packet](i13-2/packet.md)。暂停现场、修正和本地恢复包检查已完成，当前按上方新身份接续；官网新收费范围仅包含用户追加的Sheet接续，模型配方不变。Console本次只做既有单实例的兼容部署与新run登记。下文其余旧身份及运行状态均为历史事实。
+
+用户随后明确：“那我们将该运行取消，然后等待 I13-2 一起热修复来恢复吧”。官网Flash/Sheet `691028015e69` 已于21:14:51 CST取消，实际POST响应及独立GET确认 `CANCELLED`；尚未评测，实际计费字段暂未返回。最新工作区已取得HTTP200并校验，来源SHA256 `0e9c2798c80ab56641f7937aed861416d164dd495a716378e702975a795fa13b`，原件与取消/下载回执归 `runs/iteration13/hosted-recovery-20261001/sheet-user-cancel/`。本次指示将该Sheet纳入I13-2完成后的恢复范围；当时等待改进及冻结来源，现已按上方新身份执行唯一获授权接续。旧快照不足以证明持续卡死，新原件实际包含21:13成功的代码编辑，先前卡死判断撤回。
+
+## 前一阶段：官网 Flash 恢复与本地 GLM 自有通道（2026-10-01）
+
+最新授权把四项分成两官网、两本地：Flash/GitHub优先从官网终态保全副本恢复到官网，Flash/Sheet从本地一致快照恢复到官网，两者非参赛、使用ARCAPI；官网SIGKILL关键证据采集成为这两项的启动硬前置，并调查有界自动恢复。GLM/GitHub留本地接续、GLM/Sheet本地干净启动，两者切到自有bigmodel/kimi/ds/qwen等API。移除DeepSeek Braid成员即可，不额外限定PR必须用GLM；内部DeepSeek sub-agent保留。原运行已保全并停止，后续四项均已启动过。官网两项曾RUNNING且诊断采集实际通过；GitHub之后生成失败，Sheet按用户指示取消并等待I13-2恢复，本地两项当时暂停。用户确认WSL重建为Debian-Rebuild，授权本地有快照即恢复、没有则重新启动。具体进展归下方实验树。
 
 用户补充澄清：官网提交不勾选“使用比赛额度评测”即可；ARC API 指官方地址配自有 API key，不使用比赛 key。原 competition 题库可继续使用，无“不上榜”额外要求。主线此前混淆题库、费用模式和排行范围，已撤销该等待；恢复包与诊断前置通过后直接执行已授权两次启动。
 

@@ -1,6 +1,6 @@
 # I13-2：内存压力、协作材料与过程验收
 
-2026-10-01。I13-2 源码与材料已完成，Linux 编译、原生执行实际操作和两份本地恢复包的真实 prepare-only 操作通过。21:43 CST 已停止两个旧生成容器，从保全副本启动新 experiment `exp-20261001-212808-5a935b`；当前正在读取新执行回执、接入单一 Console 与独立监控。用户取消的官网 Flash/Sheet `691028015e69` 正从取消后原件准备接续材料。本文件记录本轮增量；I13 模型、费用和实验关系归[实验树](../experiments.md)。
+2026-10-01。首次真实部署暴露的资源暂缓终态误判和历史成员材料选择错误均已修复。新的本地 experiment `exp-20261001-223204-4b68eb` 已启动两项，首批原件确认两项原Pi实际resume，Sheet在同一attempt中等待资源后继续，九份已采集原生历史prefix保持；官网Sheet通过真实prepare-only及文件/身份核对后，已创建 `f16834f58674`，self_funded、比赛额度关闭。原暂停现场、首次失败卷与取消后原件完整保留；同一Console已切换新服务，旧两项归档与新两项live分开登记。监控已由纯脚本接管，不唤醒审查模型。当前证据与修复归本packet，I13整体实验关系归[实验树](../experiments.md)。
 
 ## 授权与目标
 
@@ -8,7 +8,7 @@
 
 这条指示授权落实[已讨论的 OOM 方案](../../experiment-signal-diagnostics/packet.md)、调查和修正本次协作缺陷、用已有真实过程验收 I13，并将完成的改进应用到可确认的暂停检查点。恢复继续使用对应 I13 模型与费用配方，保留 Git、Braid 与原生会话。它不改变官网新收费尝试的边界，不以自动重试消耗额度换取进展。Console 的独立改进和部署仍由原会话负责。
 
-新增官网Sheet授权原话：“那我们将该运行取消，然后等待 I13-2 一起热修复来恢复吧”。取消已实际执行并确认，后续Sheet接续纳入本次I13-2范围；当前等待改进完成和新恢复输入冻结，由主线核对来源、费用模式与实际新身份后执行，不立即启动或重复重试，不据此恢复已失败的官网GitHub。
+新增官网Sheet授权原话：“那我们将该运行取消，然后等待 I13-2 一起热修复来恢复吧”。取消已实际执行并确认，后续Sheet接续纳入本次I13-2范围；该范围现已完成改进、冻结、真实prepare-only并启动唯一新执行；不重复重试，不据此恢复已失败的官网GitHub。
 
 用户给出的协作事实入口是 GLM/Sheet `glm-root--hackathon--sheet-a45a22ec644204` 的 PR 2 与 Issue 1。PR description 中疑似重复了应由 task packet、durable docs、AGENTS.md 承接的内容；根讨论中存在过时评论。用户明确预期：隐藏根评论时，它下面所有子评论也隐藏。调查需要区分实际材料重复、技能未被采用、提示冲突、对象语义与展示差异，不能仅凭篇幅判断协作失败。
 
@@ -60,9 +60,44 @@ I13-2
 
 官网Sheet须另记取消后来源的Git重建限制：平台遗漏clone私有 `.git`；根checkout有原生操作与89个已发布文件共同支持，可仅重建为 `verify-pr4@bc9c94a`，保留PR5未提交改动和已在途的context reset。它不等于原暂存区、reflog或未发布提交历史已经恢复。待派生ZIP、冻结包和实际prepare-only回执收齐后再执行本次获授权的Sheet接续。
 
+## 首次实际部署反馈与修正
+
+本地两项于13:56Z完成材料刷新，Braid尝试offline-resume时遭遇资源准入暂缓：GitHub PSI avg10从8.11下降到5.43，Sheet从30下降到24.57；可用charge余量分别约1.82GB和2.16GB，oom_kill均0。worker把资源原因记入恢复错误，local将其聚合成 `provider recovery returned an error` 并blocked退出。Docker实际ExitCode1、Pid0、OOMKilled=false；没有观察到本次Pi启动/握手。原日志与准确限制归[首次接续验收](first-continuation.md)。这不是新OOM或模型生成结果，技能采用、packet发布尚未覆盖。
+
+修正须保留资源暂缓的类型与等待状态，避免将所有Deferred（还用于运输错误、streaming或恢复额度耗尽）一并豁免；原队列、claim、reset及会话身份继续保留，压力恢复后由既有循环接续。PSI累计total在观察窗口未增加而avg10正在衰减，当前不据此放宽阈值。独立判断归[startup-deferral-review.md](startup-deferral-review.md)，源码与实际验证归[startup-deferral-fix.md](startup-deferral-fix.md)。
+
+官网Sheet的首版冻结包 `9e879198…` 仅做prepare-only，没有官网写请求。它因 `native material refresh changes pi-deepseek-fast.model` 停止：原历史identity已迁移为GLM-5.3-Flash/root-only，但Flash base仍包含旧同名DeepSeek模板，刷新逻辑只有在ID缺失时才选择GLM材料。修正限定该已授权迁移且非root的历史identity，无论模板是否同名均选择GLM材料；保留原profile/model、会话与transport，其它模型变化仍拒绝。失败原件归 `recovery-prepare/hosted-sheet/`，来源重建记录归[官网Sheet恢复](hosted-sheet-recovery.md)。
+
+两项修正完成后冻结新的Linux binary与恢复包，旧失败包、未提交官网journal、停止容器及原始错误继续保留。原本地自动评分有成功及发布门槛，本次入口故障不触发重放；主线不会把同一未确认写入重发为第二次官网收费请求。
+
+## 修正后的第二次本地部署
+
+资源类型修复已提交 `468dadd`，材料选择修复为 `111b3a0`。Linux 使用缓存编译镜像、禁用构建网络执行 `cargo build --locked --offline --release --jobs 2` 成功；源码集合 SHA256 为 `89d19889b3e965147b6c00ded21717e32bb42ed05f34ef31ce6a11e7ffa82443`，binary 为 `9d322da9e3dde2d8fb065cff2f5543fdc668dd8dcd2e653a31e87fb1a34874eb`。原生 runtime、技能与模型配方沿用已核对的 I13-2 材料，旧ZIP保持原样。
+
+| 目标 | 第二次物理运行或当前阶段 | 新ZIP SHA256 |
+| --- | --- | --- |
+| GLM/GitHub | `glm-root--hackathon--github-a94a67b4b3d85b`，原Pi已接续 | `5e80c89aa8a74c48c04b4ca963a1a4d310a50ac26aebeda57a68b58356a5f932` |
+| GLM/Sheet | `glm-root--hackathon--sheet-8046cfb0695023`，等待资源后已接续 | `9a48d4604db95be60ba62d456cf1f49a145825820b87e87b3b8c16e9084b044a` |
+| 官网 Flash/Sheet | `f16834f58674`，journal `hosted-sheet-r2` | `7de33f7d23a910ec61e4b639275305cdd05222416ff01f2e757d55e58c1ff316` |
+
+新的本地 recipe、冻结实验、当前矩阵、成功后评分跟随及原件归 `runs/iteration13/i13-2-20261001/revision2/`。recipe SHA256 为 `cc5ea8ec405daede3d765b827af52ca7ff1b4b63d8b223a310b45d14d5ce344c`，保持两路并发、每容器4GiB/2CPU与原自有API配方。两项均使用原已保全的停止检查点；首次失败没有观察到Pi启动，不从其中提取新的应用进度。
+
+官网新submission为 `e69e9764310c`，run为 `f16834f58674`。`hosted-sheet-r2/launch-receipt.json` 保存 snapshot/create/start 与独立status/history读回，billing_mode=self_funded、allow_competition_credit=false、pending=null；最初读回QUEUED，脚本随后保存RUNNING及本轮active provider。提交前实际prepare-only和最终readback均exit0，746份保留文件、36份原native、PR5十项未提交文件及pending reset保持，新68份技能与70份home材料匹配冻结包。启动脚本首次仅因本地模块路径缺失而未进入API，错误原件保留；修正后在脚本内部核对最终prepare回执、包SHA和无写身份journal，才执行唯一获授权提交。
+
+
+首批实际接续已完成一次性取证：两项 root 与原 PR 均在本轮边界后完成 resume/握手，九份已采集 native 保留来源 prefix。Sheet 同一次执行中保留原 reset 等待资源，随后 resume 并应用该 reset，直接覆盖此次资源暂缓修复。两 root 均成功取得维护评论、读取独立技能，并把 AGENTS 与共享 packet 发布到私有 origin/develop（GitHub ccba351、Sheet 3c107ab）。这证明接续和材料补齐已经发生，尚不等于所有协作目标或最终应用通过。原件与覆盖限制归[首次接续验收](first-continuation.md)。
+
+首次 experiment 已自然取得两条 `finished/failed` 终态，原终态跟随按成功门槛跳过官方重放。其最终完整归档另被快照外符号链接阻断，卷与helper保留，详见[回收终态诊断](transport-finalization.md)。这不改变原始恢复入口exit1事实，也不以归档失败冒充应用评分。
+
+## 监控调整（用户新增授权）
+
+用户明确：“让运行监控用脚本来实现，做到自动化，不继续使用模型，可以通过检查 provider sessions 的状态来判断是否 stale。”据此，`i13-wsl` heartbeat已设PAUSED，监控聊天已idle，不再唤醒Luna或其它审查模型。新官网采集不使用会调用模型的旧 `--review` 路径。由 `local_monitor` 与 `hosted_monitor` 脚本按实际provider identity、生命周期、最后活动和连续观测判断正常等待、不可用、疑似stale及终态，保留阈值/来源与unknown；疑似stale不自动视为有效失败，也不触发收费重跑。实现和实际历史批次反馈归[纯脚本监控](script-monitor.md)。这不取消已经授权的运行本身或成功产物的独立官方评分。
+
+源码已提交 `48bb51b`，官网排队/初始化分支为 `dbcaa2b`，当前会话汇总修正为 `aaf4971`。本地后台PID与源码SHA归 `revision2/background-launch.json`（首个PID17338，当前48111）；官网归 `hosted-sheet-r2/monitor-launch.json`（首个PID27102，当前48187）。首批本地原件为 `revision2/observation/monitor/20261001T144445.120401Z`，stderr空；分类仅供定位，实际接续验收仍读取原生记录。默认至少两样本、30分钟无可观测活动才提示suspected_stale；长期不可读原件独立记observation_missing。两处输出目录各自持有文件锁、scheduler与终态记录，旧模型采集不恢复。当前会话优先于导入历史的汇总修正已用真实批次回读确认，两条脚本按精确进程身份重启，scheduler历史和下次采集时间不变，回执为 script-monitor/monitor-restart-current-priority.json。
+
 ## 验收决定
 
-新 Braid 已从冻结源码构建 Linux binary，源码集合 SHA256 为 `17f93d620849abd0d72efc8770cabfcd39bbc3c610756ff3c4fbb7484b9a4dfb`，binary 为 `bde76a5adcfa581d0d7e24c9bc9cddc32a07bca49888ee0cf8315f00bee03dc5`。实际 Linux 操作确认有限作业减载、服务保留、execution fence 拒绝后续启动和父 Pi 被 SIGKILL 后的离线清理。独立 `/proc` 观察确认父 wait=-9 时子进程仍存活，清理后不再可写；共享 Portless proxy 保持同一 birth 存活并继续响应，最终由 run owner 停止。原件归 `native-runtime/linux-operations/`，适用范围和未触发的模型行为见 [原生实施](native-runtime.md)。这不是强制 OOM 实验，也不能据此保证任意命令不会耗尽内存。
+首版 I13-2 Braid 从冻结源码构建 Linux binary，源码集合 SHA256 为 `17f93d620849abd0d72efc8770cabfcd39bbc3c610756ff3c4fbb7484b9a4dfb`，binary 为 `bde76a5adcfa581d0d7e24c9bc9cddc32a07bca49888ee0cf8315f00bee03dc5`。实际 Linux 操作确认有限作业减载、服务保留、execution fence 拒绝后续启动和父 Pi 被 SIGKILL 后的离线清理。独立 `/proc` 观察确认父 wait=-9 时子进程仍存活，清理后不再可写；共享 Portless proxy 保持同一 birth 存活并继续响应，最终由 run owner 停止。原件归 `native-runtime/linux-operations/`，适用范围和未触发的模型行为见 [原生实施](native-runtime.md)。这不是强制 OOM 实验，也不能据此保证任意命令不会耗尽内存。
 
 先消费既有生成过程，不等待分数，也不把生成中间态或未评测的零分当作最终应用质量。每项原 I13 目标记录实际触发场景、观察结果、证据入口、未覆盖边界与本轮是否需要修改。重点确认文档各自承担什么、PR 是否复制长期依据、根上下文是否持续保留失效消息，以及遇到资源压力时能否收敛负载和接续原工作。
 
