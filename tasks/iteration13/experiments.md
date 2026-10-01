@@ -1,10 +1,27 @@
 # e20261001-01：I13 首轮实验
 
-当前状态：GitHub单题已在生成阶段异常终止，尚未评测；用户已授权子Agent保全工作区并排查证据，正在执行。此前用户因 WSL 问题改为官网参赛，明确授权“上传到官网运行，参加比赛，使用比赛额度，跑github先，继续按3+8监控实际运行状态（glm-5.3-flash variant）”。本次仅启动 `pi-braid-i13` 的 GitHub 一次；WSL、本地矩阵、Sheet 与 GLM 根组继续暂停。以下旧本地安排保留为历史方案，不作为本次官网启动前提。
+当前状态：官网 GitHub 在生成阶段异常终止，未取得有效评分；原始工作区与诊断证据已保全。用户已报告 WSL 恢复并明确授权启动四项本地运行，允许 Flash/GitHub 接续，同时改进官网运行的信号取证。本轮正在准备新的本地执行，旧官网 run 保持终态。
+
+## 当前 WSL 启动范围
+
+授权原话：“改进这个实验的基础设施，让这种信号的来源能够被捕捉到”，以及“现在 WSL 已经恢复了，让我们启动4个运行吧（glm-5.3-flash--github的可以接续）”。本批沿用下文两组模型配方、ARC 模型额度及逐题官网 self_funded 应用重放；并发上限2、每容器4 GiB/2 CPU，先启动两项 GitHub，再由空闲槽位启动 Sheet。没有新增官网 Harness 生成。
+
+| 运行名 | 起点 |
+| --- | --- |
+| `e20261001-01--flash-root--github--g02` | 从官网 `346bc3b51b09` 的稳定终态副本重建接续，Braid run `20261001-052115-e45f4278`。 |
+| `e20261001-01--glm-root--github--g01` | 原冻结 GLM/K3 包，干净生成。 |
+| `e20261001-01--flash-root--sheet--g01` | 原冻结 Flash/K2.7 Code 包，干净生成。 |
+| `e20261001-01--glm-root--sheet--g01` | 原冻结 GLM/K3 包，干净生成。 |
+
+Flash/GitHub 来源 ZIP SHA256 `6e75992bb5146ac61092628d1488cde3b5bf329b5f4ca5ff20e3acc82ab4bbbd`；其需求 SHA256 `bdc17d23265a6b1948aec150e69d0b2accfa37db4c569305c97be7ff7f3b0b8f` 与本地 GitHub 输入一致。旧进程已经终止，SQLite/WAL 可一致读取，六个 Braid 物理会话和三个 child 原生文件均已保全。平台遗漏各 clone 私有 `.git`；恢复入口从发布 ref 重建索引并保留文件，再走 Braid offline-resume 撤销失效执行身份。私有 HEAD、未发布历史与原索引无法证明恢复；这是有来源的重建接续，不是完整原子检查点。较早运行中 ZIP 同样不完整且会丢有效文件进度，故采用稳定终态副本。详见[失败调查](hosted-github-failure.md)。
+
+本批证据目录 `runs/iteration13/local-20261001/`。用户已明确 SIGKILL 只出现在官网，WSL 从未发生。此前把宿主取证列为本批启动前置的方案已撤回；没有部署或启用 WSL collector，没有执行信号/OOM验证。官网可得的 cgroup、进程、退出证据与平台接口另行调查，不阻塞本批 WSL 生成。单实例 Console 接入按用户最新要求核对，不启动第二个服务实例。
+
+已恢复宿主 `factory26-i13-wsl`、Docker daemon `a76759eb-0145-45f3-be55-ed98b48ef91f`、稳定 Python 与旧资产身份均重新核验；宿主约15.59 GiB内存、4 GiB swap、465 GiB可用磁盘支持原定两路并发。schema v3保留52 GiB host reserve、每run24 GiB workspace/4 GiB telemetry/8 GiB finalization scratch及12 GiB build，最终以启动时容量预检为准。四项模型、题目、制品与实际 ID 在启动回执中冻结；隐藏评测结果不进入仍在生成的 Agent。
 
 2026-10-01 用户在审阅最终检查结果后明确：“好的，可以启动 I13 了。”本轮承接两组根配方各生成 GitHub、Sheet 一次，共四次新生成的建议，授权必要的根对照实现、最终材料冻结、独立干净宿主建立、本地生成、Console 人工介入与逐题官网应用重放。I12 已结束，仅保留其归档；当时无法挂载的旧 Debian VHDX 和冷备不进入恢复范围。
 
-## 当前官网启动范围
+## 首次官网启动范围（已结束）
 
 运行名 `e20261001-01--flash-root--github--g01`；Competition 为 `hackathon`，task 为 `hackathon--github`。使用官网本次提供的原始需求，不向 Agent 提供本地或隐藏评测内容。模型仍是根 `glm-5.3-flash/high`、advisor `kimi-k2.7-code`、视觉 `glm-5.3-flash`，全部走 ARC。
 

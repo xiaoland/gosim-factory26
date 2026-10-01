@@ -225,6 +225,11 @@ def main():
                                          str(runtime / "node_modules/.bin"), env.get("PATH", ""))))
         if os.environ.get("VISUAL_API_KEY"):
             env["FACTORY26_VISUAL_API_KEY"] = os.environ["VISUAL_API_KEY"]
+        if manifest.get("capabilities", {}).get("variant") in {"pi-braid-i13", "pi-braid-i13-glm-root"}:
+            import run as variant
+            # These process settings are not retained in the native session files.
+            env.update(variant.tool_environment(), PI_FFF_MODE="tools-only", PI_FFF_MULTIGREP="0",
+                       PI_SUBAGENT_MAX_DEPTH="3")
     (run / "recovery-provenance.json").write_text(json.dumps(source, indent=2) + "\n")
     # A source archive is historical; live readers must see the resumed sessions.
     old_native = run / "native"
