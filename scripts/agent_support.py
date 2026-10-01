@@ -1,9 +1,294 @@
 """File, process and delivery operations; no Harness selection or orchestration."""
 import hashlib,json,os,platform,selectors,shutil,signal,subprocess,sys,time,uuid
 import shlex
+import re
+import fcntl
+import errno
 from pathlib import Path
 
 RESERVED={".arc", ".git", "requirements", ".factory26"}
+
+def evidence_time():
+    return {'realtime_ns': time.time_ns(), 'monotonic_ns': time.monotonic_ns()}
+
+def evidence_error(error):
+    return {'type': type(error).__name__, 'message': str(error),
+            'errno': getattr(error, 'errno', None), 'filename': getattr(error, 'filename', None)}
+
+def process_identity(pid):
+    """Container-visible identity and resources; do not read argv or credentials."""
+    root = Path('/proc')/str(pid)
+    row = {'pid': pid, 'errors': {}}
+    try:
+        fields = (root/'stat').read_text().rsplit(')', 1)[1].split()
+        row.update(ppid=int(fields[1]), pgid=int(fields[2]), starttime=int(fields[19]),
+                   state=fields[0], rss_pages=int(fields[21]))
+    except (OSError, ValueError, IndexError) as error:
+        row['errors']['stat'] = evidence_error(error)
+    for name in ('comm', 'cgroup', 'status'):
+        try:
+            value = (root/name).read_text()
+            if name == 'status':
+                row['status'] = {key: value.strip() for line in value.splitlines() if ':' in line
+                                 for key, value in [line.split(':', 1)]
+                                 if key in {'Tgid', 'Pid', 'PPid', 'NSpid', 'Threads', 'VmRSS', 'VmHWM', 'CapEff'}}
+            else:
+                row[name] = value.strip()
+        except OSError as error:
+            row['errors'][name] = evidence_error(error)
+    for name in ('exe', 'cwd', 'ns/pid', 'ns/cgroup'):
+        try:
+            row[name] = os.readlink(root/name)
+        except OSError as error:
+            row['errors'][name] = evidence_error(error)
+    return row
+
+def process_evidence(run, name, row, *, cap_bytes=8*1024*1024):
+    """Append bounded evidence; failure must never change the operation being observed."""
+    folder = Path(run)/'process-evidence'
+    path = folder/name
+    marker = path.with_suffix(path.suffix+'.capped.json')
+    try:
+        folder.mkdir(exist_ok=True)
+        with path.open('ab', buffering=0) as stream:
+            fcntl.flock(stream, fcntl.LOCK_EX)
+            if marker.exists():
+                return False
+            value = {'schema_version': 1, **evidence_time(), **row}
+            encoded = (json.dumps(value, ensure_ascii=False)+'\n').encode()
+            size = os.fstat(stream.fileno()).st_size
+            if size+len(encoded) > cap_bytes-4096:
+                value = {'kind': 'log_capped', 'cap_bytes': cap_bytes, 'bytes_before': size,
+                         'dropped_kind': row.get('kind'), **evidence_time()}
+                save(marker, value)
+                encoded = (json.dumps(value)+'\n').encode()
+                if stream.write(encoded) != len(encoded):
+                    raise OSError(errno.EIO, 'incomplete process evidence append', str(path))
+                os.fsync(stream.fileno())
+                return False
+            if stream.write(encoded) != len(encoded):
+                raise OSError(errno.EIO, 'incomplete process evidence append', str(path))
+            os.fsync(stream.fileno())
+        return True
+    except (OSError, TypeError, ValueError) as error:
+        try:
+            print(f'process evidence failed: {path}: {json.dumps(evidence_error(error))}', file=sys.stderr, flush=True)
+        except OSError:
+            pass
+        return False
+
+class ResourceEvidence:
+    """Read the namespace's visible cgroup and processes from the existing collector."""
+    memory_files = ('memory.events', 'memory.events.local', 'memory.current', 'memory.peak',
+                    'memory.max', 'memory.oom.group', 'memory.swap.current', 'memory.swap.peak',
+                    'memory.swap.max', 'pids.current', 'pids.max', 'pids.events')
+
+    def __init__(self, run):
+        self.run = Path(run)
+        self.cgroup = None
+        self.errors = {}
+        self.cap_bytes = 64*1024*1024
+        self.segment_bytes = 31*1024*1024
+        self.samples = 0
+        self.capped = False
+        self.rotations = 0
+        self.segment_started = None
+        self.previous_started = None
+        self.root_pid = os.getppid()
+        root_process = process_identity(self.root_pid)
+        self.root_starttime = root_process.get('starttime')
+        self.membership = None
+        capabilities = {'kind': 'capabilities', 'collector': process_identity(os.getpid()),
+                        'interval_seconds': 2, 'max_processes_per_sample': 256,
+                        'cap_bytes': self.cap_bytes, 'host_signal_sender': 'unavailable', 'raw': {},
+                        'segment_bytes': self.segment_bytes, 'baseline_cap_bytes': 2*1024*1024,
+                        'root_pid': self.root_pid, 'clock_ticks': os.sysconf('SC_CLK_TCK'),
+                        'root_process': root_process,
+                        'page_size': os.sysconf('SC_PAGE_SIZE'),
+                        'selection_order': ['run-tree-by-depth', 'run-cwd', 'current-cgroup', 'other-visible'],
+                        'errors': self.errors}
+        for name in ('/proc/self/cgroup', '/proc/self/mountinfo', '/proc/sys/kernel/random/boot_id'):
+            try:
+                capabilities['raw'][name] = Path(name).read_text()
+            except OSError as error:
+                self.errors[name] = evidence_error(error)
+        membership = next((line[3:] for line in capabilities['raw'].get('/proc/self/cgroup', '').splitlines()
+                           if line.startswith('0::')), None)
+        self.membership = capabilities['raw'].get('/proc/self/cgroup', '').strip()
+        for line in capabilities['raw'].get('/proc/self/mountinfo', '').splitlines():
+            before, separator, after = line.partition(' - ')
+            if not separator or after.split()[0] != 'cgroup2' or membership is None:
+                continue
+            fields = before.split()
+            mount_root, mount = (Path(re.sub(r'\\([0-7]{3})', lambda match: chr(int(match[1], 8)), fields[i]))
+                                for i in (3, 4))
+            if membership == '/':
+                candidate = mount
+            elif Path(membership).is_relative_to(mount_root):
+                candidate = mount/Path(membership).relative_to(mount_root)
+            else:
+                continue
+            if '..' in candidate.parts:
+                continue
+            self.cgroup = candidate
+            break
+        capabilities['cgroup_path'] = str(self.cgroup) if self.cgroup else None
+        capabilities['cgroup_mapping'] = 'visible-cgroup-v2' if self.cgroup else 'unavailable'
+        process_evidence(self.run, 'resources-baseline.jsonl', capabilities, cap_bytes=2*1024*1024)
+        self.sample('baseline')
+
+    def sample(self, kind='sample'):
+        row = {'kind': kind, 'cgroup_path': str(self.cgroup) if self.cgroup else None,
+               'values': {}, 'errors': {}, 'processes': [], 'process_limit': 256,
+               'processes_omitted': 0, 'visible_processes': 0, 'sample_started': evidence_time(),
+               'scope_counts': {}, 'scope_omitted': {}, 'classification_errors': [],
+               'classification_errors_omitted': 0}
+        if self.cgroup:
+            try:
+                info = self.cgroup.stat()
+                row['cgroup_identity'] = {'device': info.st_dev, 'inode': info.st_ino}
+            except OSError as error:
+                row['errors']['cgroup_identity'] = evidence_error(error)
+            for name in self.memory_files:
+                try:
+                    row['values'][name] = (self.cgroup/name).read_text().strip()
+                except OSError as error:
+                    row['errors'][name] = evidence_error(error)
+        try:
+            entries = sorted((entry for entry in Path('/proc').iterdir() if entry.name.isdigit()),
+                             key=lambda entry: int(entry.name))
+            row['visible_processes'] = len(entries)
+            inventory = {}
+            for entry in entries:
+                item = {'pid': int(entry.name), 'ppid': None, 'starttime': None, 'cgroup': None, 'cwd': None}
+                for name in ('stat', 'cgroup', 'cwd'):
+                    try:
+                        if name == 'stat':
+                            fields = (entry/name).read_text().rsplit(')', 1)[1].split()
+                            item['ppid'], item['starttime'] = int(fields[1]), int(fields[19])
+                        elif name == 'cgroup':
+                            item['cgroup'] = (entry/name).read_text().strip()
+                        else:
+                            item['cwd'] = Path(os.readlink(entry/name))
+                    except (OSError, ValueError, IndexError) as error:
+                        if len(row['classification_errors']) < 32:
+                            row['classification_errors'].append({'pid': item['pid'], 'field': name,
+                                                                 **evidence_error(error)})
+                        else:
+                            row['classification_errors_omitted'] += 1
+                inventory[item['pid']] = item
+            ranked = []
+            root_matches = (self.root_starttime is not None and
+                            inventory.get(self.root_pid, {}).get('starttime') == self.root_starttime)
+            for pid, item in inventory.items():
+                parent, depth, seen = pid, 0, set()
+                while parent in inventory and parent != self.root_pid and parent not in seen:
+                    seen.add(parent)
+                    parent = inventory[parent]['ppid']
+                    depth += 1
+                if root_matches and parent == self.root_pid:
+                    priority, scope = 0, 'run-tree'
+                elif item['cwd'] is not None and item['cwd'].is_relative_to(self.run):
+                    priority, scope = 1, 'run-cwd'
+                elif self.membership and item['cgroup'] == self.membership:
+                    priority, scope = 2, 'current-cgroup'
+                else:
+                    priority, scope = 3, 'other-visible'
+                row['scope_counts'][scope] = row['scope_counts'].get(scope, 0)+1
+                ranked.append((priority, depth if priority == 0 else 0, pid, scope))
+            ranked.sort()
+            for _priority, depth, pid, scope in ranked[:256]:
+                row['processes'].append({**process_identity(pid), 'sampling_scope': scope,
+                                         'tree_depth': depth if scope == 'run-tree' else None})
+            for _priority, _depth, _pid, scope in ranked[256:]:
+                row['scope_omitted'][scope] = row['scope_omitted'].get(scope, 0)+1
+            row['processes_omitted'] = max(0, len(entries)-256)
+        except OSError as error:
+            row['errors']['process_scan'] = evidence_error(error)
+        if kind == 'baseline':
+            written = process_evidence(self.run, 'resources-baseline.jsonl', row, cap_bytes=2*1024*1024)
+        else:
+            path = self.run/'process-evidence/resources.jsonl'
+            previous = path.with_name('resources.previous.jsonl')
+            marker = path.with_suffix(path.suffix+'.capped.json')
+            try:
+                size = path.stat().st_size if path.exists() else 0
+                encoded_bytes = len(json.dumps(row, ensure_ascii=False).encode())+256
+                if path.exists() and (size+encoded_bytes > self.segment_bytes-4096 or marker.exists()):
+                    discarded = previous.stat().st_size if previous.exists() else 0
+                    path.replace(previous)
+                    marker.unlink(missing_ok=True)
+                    self.rotations += 1
+                    self.previous_started = self.segment_started
+                    self.segment_started = None
+                    process_evidence(self.run, 'resources.jsonl', {
+                        'kind': 'resource_rotation', 'rotation': self.rotations,
+                        'previous_bytes': size, 'discarded_previous_bytes': discarded,
+                        'previous_started_monotonic_ns': self.previous_started,
+                    }, cap_bytes=self.segment_bytes)
+                if self.segment_started is None:
+                    self.segment_started = row['sample_started']['monotonic_ns']
+                written = process_evidence(self.run, 'resources.jsonl', row, cap_bytes=self.segment_bytes)
+            except OSError as error:
+                row['errors']['rotation'] = evidence_error(error)
+                written = False
+        self.samples += 1
+        self.capped = (self.run/'process-evidence/resources.jsonl.capped.json').exists()
+        status = {'kind': 'resource_status', 'samples': self.samples, 'last_sample_kind': kind,
+                  'capped': self.capped, 'write_succeeded': written,
+                  'cgroup_mapping': 'visible-cgroup-v2' if self.cgroup else 'unavailable',
+                  'processes_omitted': row['processes_omitted'], 'errors': row['errors'],
+                  'scope_counts': row['scope_counts'], 'scope_omitted': row['scope_omitted'],
+                  'rotations': self.rotations, 'segment_bytes': self.segment_bytes,
+                  'current_started_monotonic_ns': self.segment_started,
+                  'previous_started_monotonic_ns': self.previous_started,
+                  'capability_errors': self.errors, **evidence_time()}
+        try:
+            save(self.run/'process-evidence/resource-status.json', status)
+        except OSError as error:
+            print(f'resource status failed: {json.dumps(evidence_error(error))}', file=sys.stderr, flush=True)
+
+def _signal_process(target, sig, run, reason, *, group=False):
+    pid = target if isinstance(target, int) else target.pid
+    method = 'killpg' if group else 'kill' if isinstance(target, int) else 'Popen.send_signal'
+    identifier = uuid.uuid4().hex
+    row = {'kind': 'signal', 'request_id': identifier, 'phase': 'request',
+           'sender': process_identity(os.getpid()), 'target': process_identity(pid),
+           'target_kind': 'pgid' if group else 'pid', 'target_id': pid,
+           'signal': int(sig), 'reason': reason, 'method': method}
+    if run is not None:
+        process_evidence(run, 'operations.jsonl', row)
+    try:
+        if group:
+            os.killpg(pid, sig)
+        elif isinstance(target, int):
+            os.kill(pid, sig)
+        else:
+            target.send_signal(sig)
+    except BaseException as error:
+        if run is not None:
+            process_evidence(run, 'operations.jsonl', {**row, 'phase': 'result',
+                                                       'result': 'error', 'error': evidence_error(error)})
+        raise
+    if run is not None:
+        process_evidence(run, 'operations.jsonl', {**row, 'phase': 'result', 'result': 'returned'})
+
+def _wait_process(proc, run, reason, *, timeout=None):
+    row = {'kind': 'wait', 'request_id': uuid.uuid4().hex, 'phase': 'request',
+           'pid': proc.pid, 'reason': reason, 'timeout_seconds': timeout}
+    if run is not None:
+        process_evidence(run, 'operations.jsonl', row)
+    try:
+        code = proc.wait(timeout=timeout)
+    except BaseException as error:
+        if run is not None:
+            process_evidence(run, 'operations.jsonl', {**row, 'phase': 'result',
+                                                       'result': 'error', 'error': evidence_error(error)})
+        raise
+    if run is not None:
+        process_evidence(run, 'operations.jsonl', {**row, 'phase': 'result', 'result': 'reaped',
+                                                   'exit_code': code, 'signal': -code if code < 0 else None})
+    return code
 
 def start_local_telemetry(run):
     """Start the existing SQLite OTLP receiver without placing its token on disk."""
@@ -13,6 +298,9 @@ def start_local_telemetry(run):
     log = (run/'telemetry-collector.log').open('w')
     process = subprocess.Popen([sys.executable, str(module), '--serve-run', str(run)],
                                cwd=module.parent, stdout=subprocess.PIPE, stderr=log, text=True)
+    process._factory26_evidence_run = run
+    process_evidence(run, 'operations.jsonl', {'kind': 'process_started', 'role': 'telemetry-collector',
+                                              'process': process_identity(process.pid)})
     log.close()
     try:
         with selectors.DefaultSelector() as selector:
@@ -25,8 +313,8 @@ def start_local_telemetry(run):
         process.stdout.close()
         return process, binding
     except BaseException:
-        process.terminate()
-        process.wait(timeout=20)
+        _signal_process(process, signal.SIGTERM, run, 'collector-startup-failed')
+        _wait_process(process, run, 'collector-startup-failed', timeout=20)
         raise
 
 def telemetry_environment(binding):
@@ -45,12 +333,13 @@ def telemetry_environment(binding):
     return values
 
 def stop_local_telemetry(process):
-    process.terminate()
+    run = getattr(process, '_factory26_evidence_run', None)
+    _signal_process(process, signal.SIGTERM, run, 'collector-stop')
     try:
-        code = process.wait(timeout=30)
+        code = _wait_process(process, run, 'collector-stop', timeout=30)
     except subprocess.TimeoutExpired:
-        process.kill()
-        process.wait()
+        _signal_process(process, signal.SIGKILL, run, 'collector-stop-timeout')
+        _wait_process(process, run, 'collector-stop-timeout')
         raise TimeoutError('OTLP receiver did not stop within 30 seconds')
     if code:
         raise RuntimeError(f'OTLP receiver exited {code}')
@@ -138,9 +427,9 @@ def copy_application(source, output):
 def digest(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
-def signal_group(proc, sig):
+def signal_group(proc, sig, run=None, reason='process-group-cleanup'):
     try:
-        os.killpg(proc.pid,sig)
+        _signal_process(proc, sig, run, reason, group=True)
     except ProcessLookupError:
         pass
     except PermissionError:
@@ -150,12 +439,12 @@ def signal_group(proc, sig):
                for line in states if len(line.split())==2):
             raise
 
-def stop(proc):
-    signal_group(proc,signal.SIGTERM)
-    try: proc.wait(timeout=5)
+def stop(proc, run=None):
+    signal_group(proc,signal.SIGTERM,run)
+    try: _wait_process(proc,run,'process-group-cleanup',timeout=5)
     except subprocess.TimeoutExpired: pass
-    signal_group(proc,signal.SIGKILL)
-    proc.wait()
+    signal_group(proc,signal.SIGKILL,run)
+    _wait_process(proc,run,'process-group-cleanup')
 
 def workspace_processes(work):
     """Include app-server tool jobs that start their own process sessions."""
@@ -179,11 +468,11 @@ def workspace_processes(work):
 def cleanup_workspace(work):
     pids=workspace_processes(work)
     for pid in pids:
-        try: os.kill(pid,signal.SIGTERM)
+        try: _signal_process(pid,signal.SIGTERM,work,'workspace-cleanup')
         except ProcessLookupError: pass
     if pids: time.sleep(.2)
     for pid in workspace_processes(work):
-        try: os.kill(pid,signal.SIGKILL)
+        try: _signal_process(pid,signal.SIGKILL,work,'workspace-cleanup')
         except ProcessLookupError: pass
     remaining=workspace_processes(work)
     if remaining: raise RuntimeError(f'workspace processes remain after cleanup: {remaining}')
@@ -193,10 +482,12 @@ def logged(command, cwd, env, log, cleanup_errors=None):
     with log.open("w") as output:
         proc = subprocess.Popen(command, cwd=cwd, env=env, stdout=output,
                                 stderr=subprocess.STDOUT, start_new_session=True)
+        process_evidence(log.parent, 'operations.jsonl', {'kind': 'process_started', 'role': 'logged-command',
+                                                         'process': process_identity(proc.pid), 'log': str(log)})
         try:
-            return proc.wait()
+            return _wait_process(proc,log.parent,'logged-command')
         finally:
-            try: stop(proc)
+            try: stop(proc,log.parent)
             except PermissionError as exc:
                 # Generation has an outer, verified workspace cleanup before freezing.
                 if cleanup_errors is None or proc.returncode is None: raise

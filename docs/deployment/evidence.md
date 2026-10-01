@@ -63,6 +63,12 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 应用终态先持久化；原生会话缺少规范 header 时另存 `unparsed_native` 原始文件，标记归档错误，不伪造会话身份或覆盖应用结果。
 阶段更新时间表示最后一次阶段变化，不代表进程仍存活；服务不健康时可由阶段日志定位。
 
+使用 `start_local_telemetry` 的新冻结团队包，其本地 OTLP collector 同时每两秒将容器可见的 cgroup/proc 事实保存到生成 run 的 `process-evidence/`。`resources-baseline.jsonl` 保留 namespace、mount/cgroup 原件和启动基线；`resources.jsonl` 与 `resources.previous.jsonl` 保存资源限制和后续计数、PID/starttime/PGID/RSS，不可读字段保存具体 errno。`operations.jsonl` 保存共享支持模块自身的信号请求、API 返回和 wait；Braid 的 `braid.log` 保存 Pi 原有的 wait、shutdown 及 Child owner 释放事实。这些文件进入原有归档对象，辅助采集失败不改变生成结果。历史冻结包与工作区没有这些材料时，不能补推历史资源事实。
+
+资源数据由两个各 31 MiB 的段轮转，基线另有 2 MiB 上限，持续保留末端样本。轮转记录明确保存上一段及被丢弃旧段的字节数；`resource-status.json` 保存最后采样状态、当前/上一段开始时点及轮转次数。基线和低频操作 JSONL 分别限制为 2 MiB、8 MiB，达到上限写同名 `.capped.json` marker。单个样本最多记录 256 个进程，优先 collector 父进程的后代树并按层级保留上层进程，其次为 run 内 cwd、当前 cgroup、其它可见进程；各范围计数和遗漏数均保留。这些采样范围不等同工作项归属。首先核对基线、cgroup inode/路径、可见 namespace、读取错误、遗漏数及轮转覆盖，再解释计数变化。`memory.events` 与 `.local` 的范围不同；`oom_kill` 增量证明对应范围内发生 OOM 杀进程，不能单独证明哪一个 Pi 是 victim，`memory.max=max` 也不证明被 namespace 隐藏的祖先没有限制。
+
+成功信号 API 返回只记录请求结果，死亡原因另看 wait。Pi Child owner 释放记录不证明 Tokio 实际发送信号。容器内没有平台宿主信号审计，不能确定外部 sender；collector 若同遭 SIGKILL，最后样本也不是终止原因。官网能下载的仍是平台保留的 workspace/template，宿主 kernel、Docker 和祖先 cgroup 的因果证据需要平台提供。当前实施与实际覆盖见 [进程终止证据 packet](../../tasks/experiment-signal-diagnostics/packet.md)。
+
 历史远程评测以 `remote-evaluations/<evaluation-id>.json` 保存每次请求的完整观测，`remote-evaluation.json` 仅作为最近观测的兼容入口。
 请求在启动前分配明确 ID，区分连接、传输、远端运行和下载，每 180 秒获取该 ID 的 summary；SSH 进程退出立即返回，不额外等一个观察周期。
 下载后核对 run、benchmark 和冻结应用哈希，不按目录差集猜测执行。

@@ -6,11 +6,35 @@ use std::io::BufRead as _;
 
 struct PiProcess {
     writer: ChildStdin,
-    child: Child,
+    child: PiChild,
     #[allow(dead_code)]
     stdout_handle: tokio::task::JoinHandle<()>,
     #[allow(dead_code)]
     stderr_handle: tokio::task::JoinHandle<()>,
+}
+
+struct PiChild(Child);
+
+impl std::ops::Deref for PiChild {
+    type Target = Child;
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
+    }
+}
+
+impl std::ops::DerefMut for PiChild {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.0
+    }
+}
+
+impl Drop for PiChild {
+    fn drop(&mut self) {
+        // Tokio retains its existing cleanup. Release is not proof that it sent a signal.
+        tracing::info!(pid = self.0.id(), sender_pid = std::process::id(),
+            kill_on_drop_at_creation = true, signal_outcome = "unobserved", "Pi child owner released");
+    }
 }
 
 struct PiRequest {
@@ -83,12 +107,36 @@ impl PiProvider {
         // EOF invokes Pi's own runtime disposal and extension shutdown hooks.
         // Internal subagents belong to Pi, not to Braid's process supervisor.
         drop(writer);
+        let pid = child.id();
+        tracing::info!(pid, phase = "request", reason = "stdin-eof-shutdown", timeout_seconds = 180,
+            "Pi child wait");
         let result = match timeout(Duration::from_secs(180), child.wait()).await {
-            Ok(Ok(status)) if status.success() => Ok(()),
-            Ok(Ok(status)) => Err(ProviderError::Protocol(format!("Pi exited with {status}"))),
-            Ok(Err(error)) => Err(ProviderError::Protocol(error.to_string())),
+            Ok(Ok(status)) => {
+                #[cfg(unix)]
+                let signal = std::os::unix::process::ExitStatusExt::signal(&status);
+                #[cfg(not(unix))]
+                let signal: Option<i32> = None;
+                tracing::info!(pid, phase = "result", exit_code = status.code(), signal,
+                    status = %status, "Pi child wait");
+                if status.success() { Ok(()) } else {
+                    Err(ProviderError::Protocol(format!("Pi exited with {status}")))
+                }
+            }
+            Ok(Err(error)) => {
+                tracing::warn!(pid, phase = "result", errno = error.raw_os_error(), %error,
+                    "Pi child wait failed");
+                Err(ProviderError::Protocol(error.to_string()))
+            }
             Err(_) => {
-                let _ = child.kill().await;
+                tracing::warn!(pid, phase = "result", reason = "timeout", "Pi child wait failed");
+                tracing::warn!(pid, sender_pid = std::process::id(), phase = "request", signal = 9,
+                    reason = "shutdown-timeout", "Pi child kill and wait");
+                match child.kill().await {
+                    Ok(()) => tracing::warn!(pid, phase = "result", result = "returned",
+                        "Pi child kill and wait"),
+                    Err(error) => tracing::warn!(pid, phase = "result", errno = error.raw_os_error(),
+                        %error, "Pi child kill and wait failed"),
+                }
                 Err(ProviderError::Timeout { method: "Pi shutdown".into() })
             }
         };
@@ -204,8 +252,19 @@ impl PiProvider {
         cmd.current_dir(workspace);
         cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).kill_on_drop(true);
 
-        let mut child = cmd.spawn()?;
+        let mut child = PiChild(cmd.spawn()?);
         tracing::info!(pid = child.id(), profile = %profile.id, workspace = %workspace.display(), native_home = ?state.config.home, session_dir = %session_dir.display(), resume = session.is_some(), "Pi process started");
+        #[cfg(target_os = "linux")]
+        if let Some(pid) = child.id() {
+            for name in ["stat", "cgroup"] {
+                let path = format!("/proc/{pid}/{name}");
+                match std::fs::read_to_string(&path) {
+                    Ok(raw) => tracing::info!(pid, %path, raw = %raw.trim(), "Pi process identity"),
+                    Err(error) => tracing::warn!(pid, %path, errno = error.raw_os_error(), %error,
+                        "Pi process identity unavailable"),
+                }
+            }
+        }
         let writer = child
             .stdin
             .take()

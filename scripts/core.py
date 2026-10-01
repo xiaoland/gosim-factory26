@@ -9,7 +9,7 @@ import time
 from pathlib import Path
 from urllib.parse import quote
 
-from agent_support import save
+from agent_support import save, evidence_error
 from braid_runtime import export_telemetry
 
 
@@ -167,22 +167,30 @@ def finalize_archive(output, *, reclaim_workspace):
     if not output.is_dir():
         raise FileNotFoundError(output)
     objects = []
-    roots = ('application', 'braid-state', 'native', 'native-config')
+    roots = ('application', 'braid-state', 'native', 'native-config', 'process-evidence')
     files = ('run.json', 'config.json', 'input-hashes.json', 'implementation-hashes.json',
              'materials.json', 'application-hashes.json', 'delivery.json',
              'history-publication.json', 'telemetry-export-status.json',
              'telemetry-collector.log', 'telemetry-export.log', 'pi-timing.jsonl',
-             'recovery-workspace.json')
+             'recovery-workspace.json', 'braid.log', 'recovery-braid.log')
     selected = [output/name for name in roots + files]
     selected.extend(sorted(output.glob('telemetry.sqlite*')))
     seen = set()
+    evidence_errors = []
+    auxiliary = {'process-evidence', 'braid.log', 'recovery-braid.log'}
     for path in selected:
         if path in seen or not (path.exists() or path.is_symlink()):
             continue
         seen.add(path)
-        if path.is_symlink():
-            raise ValueError(f'归档根不能是符号链接: {path}')
-        identity = _tree_identity(path) if path.is_dir() else _file_identity(path)
+        try:
+            if path.is_symlink():
+                raise ValueError(f'归档根不能是符号链接: {path}')
+            identity = _tree_identity(path) if path.is_dir() else _file_identity(path)
+        except (OSError, ValueError) as error:
+            if path.name not in auxiliary:
+                raise
+            evidence_errors.append({'path': path.relative_to(output).as_posix(), **evidence_error(error)})
+            continue
         objects.append({'path': path.relative_to(output).as_posix(), **identity})
 
     run = _read_json(output/'run.json', {})
@@ -233,6 +241,7 @@ def finalize_archive(output, *, reclaim_workspace):
         'evaluation_result': {'status': 'not_applicable', 'reason': 'generation archive'},
         'diagnostic_coverage': {'status': native.get('diagnostic_status', 'unknown'),
                                 'telemetry': telemetry, 'gaps': gaps,
+                                'process_evidence_errors': evidence_errors,
                                 'preservation': {'status': 'partial' if preservation_gaps else 'complete',
                                                  'gaps': preservation_gaps}},
         'recovery_capability': {'status': 'declared' if recovery else 'none',

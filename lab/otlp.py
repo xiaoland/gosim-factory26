@@ -369,6 +369,19 @@ def serve_run(run):
     database = run / "telemetry.sqlite"
     session = new_session(database, "generation")
     token = secrets.token_urlsafe(24)
+    support = Path(__file__).resolve().parent
+    if not (support / "agent_support.py").is_file():
+        support = support.parent / "scripts"
+    sys.path.insert(0, str(support))
+    from agent_support import ResourceEvidence, evidence_error, process_evidence
+    evidence = None
+    try:
+        evidence = ResourceEvidence(run)
+    except Exception as error:
+        process_evidence(run, "resources-baseline.jsonl", {
+            "kind": "collector_error", "phase": "startup", "error": evidence_error(error)},
+            cap_bytes=2*1024*1024)
+        print(f"resource evidence startup failed: {type(error).__name__}: {error}", file=sys.stderr, flush=True)
     with receiver() as server:
         server.register(token, database, session)
         stopped = Event()
@@ -376,9 +389,26 @@ def serve_run(run):
         print(json.dumps({"endpoint": f"http://127.0.0.1:{server.server_port}",
                           "token": token, "session": session}), flush=True)
         try:
-            stopped.wait()
+            while not stopped.wait(2):
+                if evidence is not None:
+                    try:
+                        evidence.sample()
+                    except Exception as error:
+                        process_evidence(run, "resources-baseline.jsonl", {
+                            "kind": "collector_error", "phase": "sample", "error": evidence_error(error)},
+                            cap_bytes=2*1024*1024)
+                        print(f"resource evidence failed: {type(error).__name__}: {error}", file=sys.stderr, flush=True)
         except KeyboardInterrupt:
             pass
+        finally:
+            if evidence is not None:
+                try:
+                    evidence.sample("final")
+                except Exception as error:
+                    process_evidence(run, "resources-baseline.jsonl", {
+                        "kind": "collector_error", "phase": "final", "error": evidence_error(error)},
+                        cap_bytes=2*1024*1024)
+                    print(f"final resource evidence failed: {type(error).__name__}: {error}", file=sys.stderr, flush=True)
     with connect(database) as db:
         db.execute("PRAGMA wal_checkpoint(TRUNCATE)")
 
