@@ -1684,7 +1684,7 @@ impl LocalObjects {
         profile: Option<&str>,
         requested_head: Option<&str>,
     ) -> Result<PrCreateResult> {
-        self.create_pr_with_options(turn, issue_ids, title, body, request_id, profile, None, requested_head, false)
+        self.create_pr_with_options(turn, issue_ids, title, body, request_id, profile, None, requested_head, true)
     }
     #[allow(clippy::too_many_arguments)]
     pub fn create_pr_with_options(

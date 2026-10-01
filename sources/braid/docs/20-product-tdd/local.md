@@ -34,7 +34,7 @@ Braid 直接用 `get_state` 取得其身份，不再发送一次 `new_session` �
 
 local_items 保存 Issue/PR 的完整标题、正文、状态原因、PR base/head ref、创建时的 base commit、曾观察到的独有 head commit、draft、最近一次 ready 时观察的 commit 和可选 request-id。local_comments 保存稳定 comment id、完整可恢复正文、生命周期及作者；删除保留墓碑并清除正文。associations 是独立的 N:M 关系表。一个 Issue 可以关联多个 PR，一个 PR 可以关联多个 Issue。`--issue` 和 `pr link` 表示提供需求与讨论背景，不是 GitHub Development 面板的自动关闭链接；创建、link 的帮助与回执明确此区别。关闭意图另由 PR 正文关键字表示，见合并契约。新建 Issue 和 PR 在同一仓库共用递增编号，根 Issue 为 #1，后续对象从两类当前最大编号之后分配。旧库可能已有 Issue #1 与 PR #1；它们继续按 kind+number 访问，不迁移编号，新对象仍从两类最大编号之后分配。
 
-`pr create` 直接建立本地 PR 对象；显式指定 assignee 才会通知该负责人处理。它不发布 GitHub PR。`--base BRANCH` 选择本次 origin 中已发布的目标分支，缺省为 delivery ref；`--head BRANCH` 采用已发布的源分支，缺省时从所选 base 建立 `braid/pr-ID` 分支。两个参数都须是分支引用，不接受任意 commit。创建默认非 draft，可用 `--draft` 指定草稿。命令输出给出实际 head/base ref 及 commit。可选 `--request-id` 是调用方提供的精确重试键：同键只返回首次创建的 PR，不更新标题、正文或关联，也不重复激活；省略时每次新建，不按标题或正文猜测重复。创建分支前先验证全部关联 Issue。Git ref 不随 SQLite 回滚；若重试遇到同名残留分支，只在其 tip 等于本次选择的 head 时复用，否则拒绝覆盖并保留现场。PR、关联和需要的 Assign 事件在同一个 SQLite transaction 内提交。
+`pr create` 直接建立本地 PR 对象；显式指定 assignee 才会通知该负责人处理。它不发布 GitHub PR。`--base BRANCH` 选择本次 origin 中已发布的目标分支，缺省为 delivery ref；`--head BRANCH` 采用已发布的源分支，缺省时从所选 base 建立 `braid/pr-ID` 分支。两个参数都须是分支引用，不接受任意 commit。新建 PR 默认 draft，`--draft` 保留兼容；完成后用 `pr ready ID` 标记可合并。已有 PR 的 draft 状态保留，`--request-id` 重试也不改变它。命令输出给出实际 head/base ref 及 commit。可选 `--request-id` 是调用方提供的精确重试键：同键只返回首次创建的 PR，不更新标题、正文或关联，也不重复激活；省略时每次新建，不按标题或正文猜测重复。创建分支前先验证全部关联 Issue。Git ref 不随 SQLite 回滚；若重试遇到同名残留分支，只在其 tip 等于本次选择的 head 时复用，否则拒绝覆盖并保留现场。PR、关联和需要的 Assign 事件在同一个 SQLite transaction 内提交。
 
 Agent 在原生执行环境中直接运行 `braid` 对象命令。CLI 从该执行实例继承运行目录与不透明身份，在对象写事务中解析当前 session、assignment 和作者；不需要 Agent 复制运行参数。宿主传运行目录时把 `--state PATH` 放在子命令前，例如 `braid --state PATH issue list --state all`，以区分运行目录和列表状态筛选。宿主的显式控制输入仍使用 `--external`，Agent 执行环境不能使用它。身份只授权其所属工作项的当前执行，不按工作目录或 login 猜测最新 session；旧执行被替换或改派后不能借用新执行的身份。
 
@@ -128,7 +128,7 @@ Unknown 保留原执行记录，不等于成功或历史不可恢复。确认旧
 
 ## 合并、收敛与恢复
 
-处理 PR 的 Agent 在本地 commit 并 push 到 origin 的 PR head ref 后，可调用 `pr ready ID` 清除 draft；`pr ready ID --undo` 恢复 draft。ready 从共享裸 origin 读取 head，不依赖调用者持有 PR 私人 clone，保存最近观察的 commit 并通知关联 Issue。拥有有效执行身份的工作项 Agent 可按当前需要调用 merge；Braid 不限定根 Issue #1 为唯一操作者。merge 读取该 PR 记录的 base/head 当前 origin commit，拒绝 draft、未发布的分支与无新提交的源分支；可选 `--match-head-commit SHA` 用于调用者确认自己看到的源头仍未变化。不带该选项时以执行事务读取的当前 head 为准。冲突报告 PR、源分支和目标分支，合并不发生。Agent 根据事实自行决定 fetch、整合、push 或关闭 PR。
+处理 PR 的 Agent 在本地 commit 并 push 到 origin 的 PR head ref 后，可调用 `pr ready ID` 清除 draft；`pr ready ID --undo` 恢复 draft。ready 从共享裸 origin 读取 head，不依赖调用者持有 PR 私人 clone，保存最近观察的 commit 并通知该 PR 的显式关注者。拥有有效执行身份的工作项 Agent 可按当前需要调用 merge；Braid 不限定根 Issue #1 为唯一操作者。merge 读取该 PR 记录的 base/head 当前 origin commit，拒绝 draft、未发布的分支与无新提交的源分支；可选 `--match-head-commit SHA` 用于调用者确认自己看到的源头仍未变化。不带该选项时以执行事务读取的当前 head 为准。冲突报告 PR、源分支和目标分支，合并不发生。Agent 根据事实自行决定 fetch、整合、push 或关闭 PR。
 
 合并对象先写入 origin 的 Git object database，精确 base/head ref、输入 commit 与结果保存为该 PR 的 prepared intent，随后验证源 head，并以 CAS 更新该 PR 的 base ref，最后记录 PR merged 状态和事件。重启依据 intent 记录的引用及 origin 实际引用恢复；Git 已更新而 SQLite 尚未收据时不生成第二次合并。即使目标随后快进到包含该 prepared merge 的提交，也沿冻结 intent 结算 PR 与声明的 Issue，保留当前目标引用；目标历史不包含该 merge 时拒绝结算。显式 merge 重试若仍需发布冻结 merge，`--match-head-commit` 必须匹配 intent 保存的 head；已发布 merge 的结算不再受后来 head 变化影响。其它 PR 可选择不同 base，各自只更新自己的目标引用。这个过程不检查或改动其它 Agent clone 的 HEAD、index 或工作文件。Agent 可通过 fetch 取得合并后的分支。冲突 PR 可以明确关闭放弃；prepared 的未知合并仍必须处置。
 

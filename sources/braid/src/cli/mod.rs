@@ -344,7 +344,8 @@ enum PrCommand {
         /// 已发布在本次 origin 中的源分支；省略时新建 PR 分支。
         #[arg(long, value_name = "BRANCH")]
         head: Option<String>,
-        #[arg(long)]
+        /// 新建 PR 默认为草稿；沿用 --draft，完成后用 pr ready 标记可合并。
+        #[arg(long, default_value_t = true)]
         draft: bool,
         #[arg(long)]
         json: bool,
