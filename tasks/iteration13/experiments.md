@@ -19,6 +19,25 @@ Flash/GitHub 来源 ZIP SHA256 `6e75992bb5146ac61092628d1488cde3b5bf329b5f4ca5ff
 
 已恢复宿主 `factory26-i13-wsl`、Docker daemon `a76759eb-0145-45f3-be55-ed98b48ef91f`、稳定 Python 与旧资产身份均重新核验；宿主约15.59 GiB内存、4 GiB swap、465 GiB可用磁盘支持原定两路并发。schema v3保留52 GiB host reserve、每run24 GiB workspace/4 GiB telemetry/8 GiB finalization scratch及12 GiB build，最终以启动时容量预检为准。四项模型、题目、制品与实际 ID 在启动回执中冻结；隐藏评测结果不进入仍在生成的 Agent。
 
+### 本地启动与恢复设施错误
+
+15:42 CST 已一次性启动冻结矩阵 `/home/yyh/factory26/experiments/e20261001-01-local-20261001`，controller `controller-bcfe252ace2f`、PID3563。镜像为 `sha256:c5d3e2765a92d26093257ffa0363094f4aff502e37d5fa4dc59d1435127b3225`；启动容量预检通过，所需136 GiB、当时可用约463 GiB。四项 allocation 如下；准确记录由 `runs/iteration13/local-20261001/active-matrix.json` 关联。
+
+| 配置 / 题目 | lab run 后缀 | 首次启动反馈 |
+| --- | --- | --- |
+| Flash / GitHub | `4afc8896760859` | 15:44:08 恢复入口退出1，尚未启动 Pi；完整失败现场已封存。 |
+| GLM / GitHub | `00bf489759b139` | Braid `20261001-074336-af6f78cd`，15:44:07 Pi 握手完成，实际阅读需求并开展工作。 |
+| Flash / Sheet | `f893bdb3298d69` | 前一槽位释放后启动，Braid `20261001-074506-6e7af22b`，实际委派视觉分析。 |
+| GLM / Sheet | `2cf88b952f231c` | 已分配，等待原控制器的空闲槽位。 |
+
+Flash/GitHub 首个恢复包 SHA256 `96302a70c4df8fb65472de9b3e156fb2af944dd6eb3f3701e339c55f6b75bf06` 的24214项载荷均核验一致，但实际部署暴露恢复设施缺口：官网 ZIP 将声明的启动器保存为0600，Braid `SessionFactory::check` 的 `which::which` 因不可执行返回 `session is unavailable`；四个 provider 组均未进入 Pi 启动。进一步核对确认，官网旧绝对包路径是 `/workspace/submission/runtime`，本地 adapter 的真实包位置是 `/workspace/submission/agent/runtime`。修复限定于已声明启动器权限和已知包装层的路径别名，不改模型配方、技能或原生历史。该错误不是 SIGKILL，也不是应用有效零分。
+
+原始 `recovery-braid.log` 与入口 traceback 保存在本地 `preparation/flash-github-recovery-{braid,error}.log`；包含 Git/Braid/native 的完整失败现场归档266006235 bytes、SHA256 `eae5dcb74312935f13746b4e64505661808afa20ac650e57d287bc1190b404d8`，远端和Mac一致。Meter baseline 另报宿主 DNS `Errno -3`，仅作为 Meter 证据缺口，不替代实际恢复退出原因。其它干净运行继续，未为恢复问题重启它们。
+
+用户随后要求把反复手工导出、组包与权限处理自动化，纳入实验设施改进。主线正在通过本次真实导出实现和验证一条可重复命令；修复后的接续会登记新包/执行身份并保持总并发不超过2，不覆盖失败尝试。
+
+后台 `monitor-local.py` 以3+8间隔保存定向状态和会话片段，复用 Luna/low 内容审查；`follow-batch.py` 通过 `lab.wait` 取得终态并逐题执行既定应用重放。两者的PID/入口归 `background-launch.json`、`monitor-restart.json`。初始两批审查误把恢复目录里的官网历史当成本次进展，已撤销其结论；采集已补充本次 `experiment-result.json`、退出码和 `recovery-braid.log` 必读，主线以原始错误独立纠正。独立[实验监控会话](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706)及 `i13-wsl` heartbeat 消费已有结果，不另行平行轮询。旧官网监控保持终止。
+
 2026-10-01 用户在审阅最终检查结果后明确：“好的，可以启动 I13 了。”本轮承接两组根配方各生成 GitHub、Sheet 一次，共四次新生成的建议，授权必要的根对照实现、最终材料冻结、独立干净宿主建立、本地生成、Console 人工介入与逐题官网应用重放。I12 已结束，仅保留其归档；当时无法挂载的旧 Debian VHDX 和冷备不进入恢复范围。
 
 ## 首次官网启动范围（已结束）
