@@ -1,6 +1,6 @@
 # e20261001-01：I13 首轮实验
 
-当前状态（2026-10-01）：用户确认Debian-Rebuild已恢复、旧数据应已清除，授权“有快照就恢复，没有就重新启动吧”。GLM/GitHub从Mac完整快照e207…接续，GLM/Sheet干净启动，两项纳入 `828a3da`、使用自有API、登记新attempt。Console由另一会话负责，不阻塞实验。官网Flash/GitHub `377afa346c92` 生成失败未评测；Flash/Sheet `691028015e69` 18:16采集仍RUNNING。官网新诊断证据分析中，不自动重跑。本轮尚无有效应用评分。
+当前状态（2026-10-01）：用户确认Debian-Rebuild已恢复、旧数据应已清除，授权“有快照就恢复，没有就重新启动吧”。GLM/GitHub从Mac完整快照e207…接续，GLM/Sheet干净启动，两项纳入 `828a3da`、使用自有API、登记新attempt。Console由另一会话负责，不阻塞实验。官网Flash/GitHub `377afa346c92` 生成失败未评测；Flash/Sheet `691028015e69` 18:16采集仍RUNNING。官网新诊断已证容器OOM，与当前Pi的SIGKILL强关联；缺内核victim/sender直接证据，不自动重跑。本轮尚无有效应用评分。
 
 ## 启动以来的工作树
 
@@ -10,7 +10,7 @@ I13 / e20261001-01
 │  └─ CLI、上下文、sub-agent、SVC、协作/需求树、提示词、工具、存储生命周期
 ├─ 四个逻辑运行［官网GitHub失败/Sheet运行；本地迁至Debian-Rebuild恢复中］
 │  ├─ Flash/GitHub → 官网接续［FAILED；377afa346c92］
-│  │  └─ 18:07生成阶段失败，未评测；新终态证据分析中
+│  │  └─ 18:07生成阶段失败，未评测；已证2GiB容器OOM，与Pi SIGKILL强关联
 │  ├─ Flash/Sheet → 官网接续［RUNNING；691028015e69］
 │  │  └─ 由本地快照恢复；根/PR旧会话接续、官网诊断采集通过
 │  ├─ GLM/GitHub → Debian-Rebuild接续［完整快照恢复准备中］
@@ -23,14 +23,14 @@ I13 / e20261001-01
 │  └─ DeepSeek Braid成员已移除；旧在途工作保留身份、显式迁至GLM
 ├─ PR描述重复读取修正［828a3da已完成；待应用本地GLM两项］
 │  ├─ 根因：首轮已覆盖的关联事件仍命令重读；无重复全文注入，技能不改
-│  └─ 编译/真实CLI反馈通过；Linux制品构建中；GitHub保留现存快照会话，Sheet新建
+│  └─ 编译/真实CLI反馈通过；Linux制品5e98b937…已交付；GitHub保留快照会话，Sheet新建
 ├─ 官网SIGKILL诊断与恢复［官网启动前置］
 │  ├─ 资源/cgroup/进程及自身信号记录［完成，真实Linux操作验证］
 │  ├─ 统一Linux Braid构建［完成］
 │  ├─ 新旧attempt隔离、启动/wait接线［最终包和官网实际采集通过］
 │  ├─ ZIP导出/原件保全/权限与路径恢复［基础能力完成］
 │  ├─ 自动恢复［方案完成，未实现/未开启收费重试；建议每来源至多1次］
-│  └─ 历史SIGKILL来源［未知］；没有WSL同类故障事实
+│  └─ 本次OOM已证/Pi死亡强关联；历史SIGKILL来源仍未知，无WSL同类事实
 └─ 配套设施与知识
    ├─ Exp Console［另一个会话负责改进/部署；不阻塞本轮］
    ├─ 自有API网关［按新宿主实际网络重建运行接线］
@@ -41,7 +41,7 @@ I13 / e20261001-01
 
 本地最新授权：“我们重新开始处理吧；console那边有另外一个 agent 在改进和部署它，我们继续启动 I13-GLM，不受 console 阻塞”；“有快照就恢复，没有就重新启动吧”。GitHub恢复来源为 `runs/iteration13/local-20261001/model-cutover/glm-root--hackathon--github-00bf489759b139-workspace.zip`，SHA256 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`。其后e057…现场已不在，不以失败请求记录代替完整工作区。Sheet原45bf…现场同样未完整保全，按新尝试干净生成。Mac持有控制器/输入/最终记录，复用远程Docker workspace传输在Debian-Rebuild执行；本任务不修改另一会话拥有的传输适配或Console实现。
 
-本次GitHub终态原件：`runs/iteration13/hosted-recovery-20261001/monitor/20261001T101157.239125Z/377afa346c92/status.json`。开始17:25:00.509841、结束18:07:23.187847 CST；平台 `run_duration_seconds=2465`，两时间戳差约2542.68秒，分别保留。平台记录token67,750,296，`token_cost_usd=17.136155`但 `token_cost_currency=CNY`，按原币种记录17.136155元，不把字段名当美元。score=0、passed/failed均0、evaluation_started_at=null，不是有效应用零分。原始failure_reason仅main.py exit1，内部因果由独立子Agent消费当前诊断证据确认。
+本次GitHub终态原件：`runs/iteration13/hosted-recovery-20261001/monitor/20261001T101157.239125Z/377afa346c92/status.json`。开始17:25:00.509841、结束18:07:23.187847 CST；平台 `run_duration_seconds=2465`，两时间戳差约2542.68秒，分别保留。平台记录token67,750,296，`token_cost_usd=17.136155`但 `token_cost_currency=CNY`，按原币种记录17.136155元，不把字段名当美元。score=0、passed/failed均0、evaluation_started_at=null，不是有效应用零分。原始failure_reason仅main.py exit1；当前attempt的Pi PID291真实wait为SIGKILL。同一cgroup的 `oom_kill` 从0增至2，第二次增量窗口（10:06:11.616253Z—10:06:14.409900Z）内，同birth PID291由S变Z；memory.max为2GiB。已证容器OOM及当前Pi SIGKILL，两者强关联，仍缺内核victim/sender直接证据。我方清理晚于退出。主线已独立读取ZIP内resources第339/340行、Pi wait及构建身份，不依赖审查者自报。详见[本次失败分析](hosted-github-recovery-failure.md)。
 
 官网真实身份与费用：GitHub submission `66774c63c885` / run `377afa346c92`，Sheet submission `5ada036f2340` / run `691028015e69`。两者 submission credential_mode 与 run billing_mode 均读回self_funded，比赛额度许可false、pending=null；原生恢复、官方实际binary身份与新attempt均已核验。官网首次工作区分别取得46/76次成功的2秒采样，cgroup-v2能力无错误；GitHub可见memory.max为2GiB，宿主signal sender仍不可见。这些证据不证明历史SIGKILL原因。首次现场归 `runs/iteration13/hosted-recovery-20261001/{github,sheet}-first-workspace/`，后台collector PID58107在Mac存活，继续既定3+8采集，不依赖WSL；最新outcome来源与时间由monitor目录保存。
 

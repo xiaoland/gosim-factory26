@@ -35,4 +35,8 @@
 
 本批只需从修改后的 `sources/braid/src/group/provider.rs` 与 `sources/braid/src/objects.rs` 重新构建 Braid binary。`sources/braid/docs/20-product-tdd/context.md` 和本页是说明材料；无需刷新 profile、技能、native home、Pi transport 或角色文件。实际恢复应保全停止现场和旧历史，在恢复副本覆盖新 binary，再沿原 offline-resume 边界继续。worker 在 offline-resume 重新生成 `local_instructions`；Pi 同时使用原 `--session` 和更新的 `--append-system-prompt`，本地负责人已核实 Pi 重建 base system 而保持同一 native session。本批不新增 reset 理由或改写历史。历史及已排队事件的 reference 不迁移，通用指令和按需事件标题提供接续语义，新产生事件使用中性入口。
 
-部署与两路本地实验的整合由主线和本地负责人承担；本任务没有构建整个实验包、部署或操作 WSL。
+Linux交付已完成：在上一版combined冻结源码上仅叠加 `828a3da` 的两个源码文件，保留成员目录修正 `4ce6d31` 与信号诊断 `727c2c0`。标准源码SHA256为 `5181c5b2dfb0f547b46775c7b5cdbcc20476ea83ee392275f438100f27a093aa`，Linux x86_64 release binary为 `5e98b9374d20870fc6dd45406b4b2d4efc41bf9e6fbb9f3edd4ff64ae8f50a73`。制品和构建/源码逐文件核对回执在 `runs/iteration13/pr-context-duplication-20261001/linux-combined/`；主线独立重算binary摘要一致。
+
+首次构建虽然exit0，但归零tar时间与共享target使Cargo复用旧根包binary，交付前的实际摘要核对发现不符。原attempt归 `stale-cache-attempt/`；仅清理Braid根包的release缓存后离线实际重编译，未重新安装依赖或工具链。最终构建保留12条已有warning。
+
+部署与两路本地实验的整合由主线和本地负责人承担。旧Debian数据已清除，用户已明确授权“有快照就恢复，没有就重新启动吧”：GitHub保留Mac完整快照的原生会话，Sheet干净启动。宿主迁移引起的transport和已授权成员迁移属于恢复接线，不是本提示修正的新要求。当前Linux制品已交付，包内身份及实际运行生效仍待本地启动回执。
