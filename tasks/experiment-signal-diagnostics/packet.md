@@ -19,3 +19,19 @@ SIGKILL 无法在被杀进程内捕捉。cgroup `oom_kill` 增量只能证明其
 2026-10-01 主线转达新优先级：Flash/GitHub 与 Flash/Sheet 迁回官网非参赛生成，使用 ARC API；本版本成为这两条新启动的前置。恢复包需要冻结 `support/agent_support.py`、`support/core.py`、`support/otlp.py`，保留原 `support/otlp-deps`，并将本次 `pi.rs` 与 catalog 修复编入同一 Linux Braid。恢复入口 copy 后必须取得实际 `work/bin/braid` SHA，而非只更改 manifest。包和 Linux 编译由对应负责人实施。本任务只提交当前文件，不 push，不改四项 WSL 冻结包。官网 proc/cgroup 真实权限和首次采集完整性仍由下一次已授权新 run 的 capability/error 原件确认；WSL 回执不作官网保证。
 
 自动恢复机制另作有界设计，不启动收费重试。恢复决策必须绑定当前官网 attempt 和本次新启动/退出身份，排除导入的旧 result、native 与 SIGKILL 日志。仅 generation 阶段、评测未开始、平台已终态且来源停止后考虑；当前版本不增加自动重试。
+
+## 自动恢复建议（未实现）
+
+推荐复用 `lab/arc_bench/hosted_monitor.py` 的终态采集及既有监控锁，增加一个由冻结实验策略显式启用的恢复分支，不另建服务。策略只允许名单中的非参赛 `self_funded` / ARC API 生成，按原始来源 family 累计至多一次生成接续；恢复 run 再失败就停止，不把新 run 重新当成拥有一次额度的来源。初始 Flash/GitHub、Flash/Sheet 的已授权启动不等这个分支，分析本身不授权额外收费请求。上线付费分支前要冻结允许的来源、一次接续额度及费用/时间边界。
+
+恢复候选必须同时满足：重新 GET 并核对当前平台官网 run、submission、task 身份，明确 `FAILED` 且执行环境已停止；当前 generation 阶段失败，`evaluation_started_at` 明确为空、测试仍未开始，不能把字段缺失当作未开始；当前 attempt 有真实的新 Braid 启动和 PID/starttime 身份，以及其运行期间新 Pi 启动与对应 wait 的 signal 9（或主 Braid 自身 wait=-9）事实。仅字符串 SIGKILL、旧 Braid run ID、旧 result 或 native 会话内容不足。信号来源仍可未知；这是获准后进行一次接续的故障判据，不是将其归因为平台或 OOM。
+
+恢复入口应在任何准备操作前持久化新 attempt UUID，绑定父来源、当前包/需求 SHA 和可取得的当前平台 run；保全导入的 `process-evidence/`、旧 recovery 日志、旧 result，当前日志和采样用新的目录。主 Braid 请求、实际 spawn 的 PID/starttime/namespace、二进制 SHA、wait 分别记录，保留原错误和原生命周期。Pi 的当前启动 identity 与 wait 从独立的新 Braid 日志关联；同一 PID 必须在同一个新进程生命周期内解释。g02 这种新 Pi 尚未启动就 EACCES 的情况应分类为当前启动权限错误，旧来源的 SIGKILL 被排除。现有 `result.json` 没有 attempt 或时间身份，不能靠其原路径仍存在或 mtime 判断本次执行。准备模式也不能当模型已启动。缺少新身份、日志写失败、wait 不可得或归属不唯一时，停止自动决策并留下缺口，不补猜事实。
+
+首先保全当前 raw API 状态/日志、工作区 ZIP、下载 HTTP 收据、CRC/SHA、包与请求身份；确认 Braid DB/WAL、origin/ref、worktree 文件、原生 session/header 可相互对应，缺失私有 Git 与非原子快照的限制保留。然后复用 `scripts/package_completed_recovery.py --journal ... --continue-generation` 从原件副本建立独立恢复包，保持模型配方、材料和预算保护，使用已验证的 runtime；在新目录执行既有无模型准备反馈。该入口当前只相信已保存 journal 终态，自动分支须在打包前和写请求前重新核对远端停止事实。完整可恢复检查点无法确认、材料/模型不同或需要新修复时退出自动路径，交回决定。
+
+远端写入统一复用 `competition.Controller.prepare`、`_post`、`recover` 的持久化 pending 和锁边界。`recover` 在这里核查未确认的 HTTP 写入，不恢复容器或生成进程。上传、create、start 任一响应未知都保留 pending，只读核查同一 submission/task/run，不重发 POST，也不重新生成 ZIP 绕过 pending；找不到唯一 identity 时停止。新恢复 journal 关联原来源与 attempt、保持非参赛费用模式，执行后仍由现有 monitor 采集；重复失败、用户停止/取消、budget-stop、exit 78、认证/额度拒绝、确认资源边界不足、源码/材料变化、评测已经开始都不触发第二次生成。部署或应用评测失败走已冻结应用的独立重放范围，不能通过重新生成自动争取分数。token 增长和 reviewer 分类不参与这些门控。
+
+现有已核实客户端仅提供创建新 run、start、cancel 和状态/产物读取；未发现可复用的失败容器重启接口。`PAUSED` 或恢复请求状态也不证明终态容器可原地重建。因此本方案使用新容器、新 run、新包身份，保留旧 Braid run 的工作记忆并由 Braid `--offline-resume` 处理，不向旧 `/start` 请求赌博。新生成会继续消耗 ARC API 额度；有限次不代表有限美元。现有成本观察可能延迟，按 Braid session 的模型限制也不是金额上限；若没有已冻结的新增费用/时间额度及可用的停止条件，只自动保全和准备包，停止在创建/启动之前。
+
+最少实施面为 `lab/arc_bench/hosted_monitor.py` 的终态恢复分支与 family 回执，以及由现有负责人接线的 `submission/recover_completed.py` attempt/启动证据；`competition.py` 和打包器继续复用，只有身份校验或入口不够用的具体缺口才扩展。验收保留当前真实 Linux EACCES/SIGKILL/wait 回执、新旧 attempt 隔离与实际恢复包的 `--prepare-only` 反馈；HTTP 不确定写入和真实收费接续必须在之后明确获授权的官网操作中取得原件，不引入模拟测试、探针套件或为验收制造收费重试。
