@@ -80,6 +80,10 @@ def normalize(manifest, base):
         result = {"id": job_id, "labels": labels, "inputs": {}, "command": command,
                   "artifact_paths": value.get("artifact_paths", []),
                   "adapter_kind": value.get("adapter_kind") or ("arc-bench" if version == 1 else None)}
+        if "docker" in value:
+            if type(value["docker"]) is not bool:
+                raise ValueError(f"docker must be a boolean for {job_id}")
+            result["docker"] = value["docker"]
         dependencies = value.get("dependencies", [])
         if not isinstance(dependencies, list) or any(not isinstance(item, dict) or
                 item.get("purpose") not in {"execution", "cleanup", "recovery", "execution_cleanup"} or

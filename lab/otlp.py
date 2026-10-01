@@ -115,7 +115,11 @@ def database_for_run(run):
         raise ValueError("archived telemetry database escapes run directory")
     if len(candidates) > 1:
         raise ValueError("multiple archived telemetry databases; select the generation run directly")
-    return candidates[0] if candidates else run / "telemetry.sqlite"
+    if candidates:
+        return candidates[0]
+    collected = [run / "workspace" / stage / "template/.arc/adapter-telemetry/telemetry.sqlite"
+                 for stage in ("official-generation", "official", "official-evaluation")]
+    return next((path for path in collected if path.is_file()), run / "telemetry.sqlite")
 
 
 def read_batch(path, batch_id):

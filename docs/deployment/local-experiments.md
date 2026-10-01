@@ -9,23 +9,21 @@
 [arc_bench_adapter.py](../../lab/arc_bench/arc_bench_adapter.py) 是单独的 ARC-Bench 适配器：调用主办方 `local_submit.py`，保存其原始 workspace 和 `local-result.json`，核对评测完成及用例计数，再写通用结果。
 评测完成后的低分仍是有效结果；Runner 没有产出完整评测时是执行失败。
 
-本项目的本地容器构建、Agent 生成和 benchmark 评测统一在 WSL（`wsl.win-ws.localhost`）执行。
-macOS 仅用于编辑、传输制品和查看结果，不为这些实验创建或启动 Colima。
-从 macOS 用 `tar` 向 WSL 传源码时，设置 `COPYFILE_DISABLE=1` 并使用 `tar --no-xattrs`，避免将 `._*`、`.DS_Store` 或 `__MACOSX` 元数据送入独立源码快照和 Agent ZIP。打包入口也会过滤这些路径；已生成的旧 ZIP 保留原样，恢复包装时过滤其载荷与 manifest。
-控制器、Docker daemon 和 workspace 必须使用经过实际 bind mount 验证的路径；能连接 Windows Docker Desktop socket 并不证明它能挂载 WSL 目录。
-既有实验使用 WSL 独立 Docker Engine；操作前核对本轮实际 daemon，不重启其他项目的 Docker Desktop。
+Mac 保存源码、Git、实验控制器及最终 run 目录，Docker daemon 只运行容器。通过标准 `docker context use <context>` 或 `DOCKER_CONTEXT=<context>` 选择 daemon；项目不维护设备、地址或 SSH 清单。每个声明使用 Docker 的 attempt 在启动时冻结实际 endpoint、TLS 参数和 daemon ID，build、run、inspect、stop 与 cleanup 使用该连接。运行中切换当前 context 不改变已开始的 attempt。
 
-长矩阵启动前检查 WSL 磁盘、容器内模型 API 和容器至 OTLP collector 的连接。
-2026-09-23 的 WSL 观测为 IPv6 可用、IPv4 不通，当时独立 Docker Engine 的默认 bridge 已按 [Docker IPv6 文档](https://docs.docker.com/engine/daemon/ipv6/)启用 IPv6；只验证 WSL 宿主网络不足以证明容器能访问模型。
-出现共享运行环境故障时停止派发，保留完整生成的应用；环境恢复后仅补评测，不把设施失败计作模型零分。
-以下命令在 WSL 仓库中执行，先固定镜像与输入。
-以下路径按仓库与 `factory26-official-local` 同级布置；Docker daemon 必须能访问 bind mount 的实际路径。现存 Runner 固定副本位于旧实验目录 `raw-baseline-20260923-wsl/runner`，新实验可显式引用，后续归档进 `runners/<revision>/` 时须记录实际来源身份。
+Unix socket daemon 保留本地 bind mount 路径。远程 endpoint 使用带 experiment/run/attempt/owner 标签的 attempt named volume 和 helper container；官方 Runner 仍在 Mac 装配阶段 workspace，适配器将冻结输入和 SHA-256 清单送入 volume，再以 `volume-subpath` 挂载阶段目录。需要 Docker Engine 26/API 1.45 或更新版本。挂载的实际类型、volume 名称/标签、子目录、完整容器 ID 及镜像 ID共同确认资源归属。Mountpoint 只保存为该 daemon 的执行证据，不用作项目配置或源码路径。
+
+执行退出后先保存官方本地结算回执，再回收 workspace、容器日志和原始证据到 Mac。下载先进入临时目录，对照远端输出清单核验 SHA-256，再发布到原阶段目录；各阶段输出已核验且执行容器已清理后，才删除 helper 与 volume。`docker-workspace.json` 保存执行副本、回收与清理状态，`*.input-manifest.json` 和 `*.output-manifest.json` 保存完整文件清单。Mac 的 `run.json`、stdout/stderr、`experiment-result.json` 与归档始终为权威记录。
+
+取消时仍沿用控制器的 TERM/KILL 语义，适配器只停止经精确归属核验的本 attempt 容器，再尝试回收。daemon 不可达、复制或哈希校验失败均保留具体错误和 `unconfirmed`/回收失败状态；volume 保留供恢复，不能据本地进程退出声称远端已清理。`lab reconcile <run>` 只核对，恢复连接后 `lab cleanup <run>` 停止所属容器、重试未完成的回收，并在核验成功后释放 volume，不重新装配或启动 Agent。历史资源没有冻结 endpoint 时保持 unconfirmed，不能拿当前 context 猜测清理位置。Console 的本宿主 Unix socket 限制不受此接线影响。
+
+长矩阵启动前检查 Mac 回收空间、远端磁盘和容器内模型 API。Mac 容量预算只覆盖本地权威目录，不等于远端 volume 的存储配额；远端临时空间须另外确认。远程回收会同时保留下载 tar、解压目录与原阶段目录，workspace cap 和 finalization scratch 必须按这个峰值声明，不能只按最终应用大小估算。出现共享环境故障时停止派发，保留完整生成的应用，环境恢复后仅补评测，不把设施失败计作模型零分。以下命令在 Mac 仓库执行，Runner 与输入都使用 Mac 上的冻结目录；镜像在所选 daemon 构建。基础 Python 使用本机明确的可执行路径。
 基础镜像 digest 是 2026-09-23 核验的 `linux/amd64` 发布物；若换镜像，保留新 digest 和每个 run 的 `image_id`，不要将两者的分数视作同一环境。
 
 ```sh
 LOCAL_ASSETS=../factory26-official-local
-RUNNER="$LOCAL_ASSETS/raw-baseline-20260923-wsl/runner"
-python3 scripts/runtime.py host-lab --python /usr/bin/python3.12 \
+RUNNER="$LOCAL_ASSETS/runners/<revision>"
+python3 scripts/runtime.py host-lab --python /path/to/host/python3.12 \
   --output "$LOCAL_ASSETS/runtimes/lab-<build-id>"
 HOST_RUNTIME="$LOCAL_ASSETS/runtimes/lab-<build-id>/asset.json"
 ARCBENCH_LOCAL_BASE_IMAGE=gyataro/arcbench-runner@sha256:40e003ed470dbd4c120b9019876ba77303d38dc8b34be7f6e313fe0563dd14de \
@@ -42,10 +40,10 @@ python3 -m lab.arc_bench.arc_matrix \
   --output "$LOCAL_ASSETS/experiments/example/manifest.json"
 
 python3 -m lab run "$LOCAL_ASSETS/experiments/example/manifest.json" \
-  --runs-root "$LOCAL_ASSETS/experiments/example/runs" --listen-host 0.0.0.0
+  --runs-root "$LOCAL_ASSETS/experiments/example/runs"
 ```
 
-真实模型可在 `arc_matrix.py` 指定直连模型的 `--env-file .secrets/arc-bench.env`，或指定新网关实例的 `--gateway-state <状态目录>` 并按需提供 `--env-file` 中的额外客户端变量。网关模式由每个 run 的临时凭据绑定请求，`--env-file` 不再同时直接传给 Runner；官方 Meter 凭据仍独立。模型 env 文件权限为 `600`，适配器临时合入 OTLP 参数后传给 Docker，运行结束删除临时副本。
+真实模型可在 `arc_matrix.py` 指定直连模型的 `--env-file .secrets/arc-bench.env`，或指定新网关实例的 `--gateway-state <状态目录>` 并按需提供 `--env-file` 中的额外客户端变量。Mac 网关的客户端地址必须有经远端容器验证可达的显式入口，不能沿用 loopback 或把远端 host.docker.internal 当作 Mac；适配器不自动开放网关端口。网关模式由每个 run 的临时凭据绑定请求，`--env-file` 不再同时直接传给 Runner；官方 Meter 凭据仍独立。模型 env 文件权限为 `600`，适配器临时合入 OTLP 参数后传给 Docker，运行结束删除临时副本。
 `host-lab` 在明确的稳定宿主目录建立不可覆盖的 Python 环境并写 `asset.json`；失败目录没有有效回执，不能消费。schema v3 配方显式选择该回执，controller、adapter、gateway wrapper 与 inspect/cleanup 共用其 launcher，计划和每次启动核对环境树身份。基础 Python 和独立 gateway service 仍是分别记录的宿主前提，不能从本次命令推断它们已建立。
 
 容量值只是命令形状示例；每轮须依据冻结包、Runner workspace、telemetry 和归档峰值在 packet 声明预算。当前可执行归档级仅为 `decision`，其它级别尚未实现，CLI 和 schema v3 配方会拒绝。新 ARC 配方写 schema v3，attempt 分配和增加并发前保存空间/inode 预检；历史 v1/v2 保持 `legacy-unbudgeted`，不能据此声称通过容量保护。
@@ -59,10 +57,9 @@ python3 -m lab run "$LOCAL_ASSETS/experiments/example/manifest.json" \
 当前主线将 Runner workspace、stdout/stderr 和声明归档的产物留在外层 run 目录中。I13 内层归档只有回执授权才删除其精确 `work`；这不授权清理外层 Runner 现场。只读候选查询与保护边界见[证据说明](evidence.md#存储回收候选)。
 
 运行期间，基础设施提供带 run 凭据的 OTLP/HTTP protobuf 接收端，支持 traces、logs 和 metrics。
-通用 OTEL exporter 环境变量注入外部 Runner；适配器把端点改成容器可访问的 `host.docker.internal`，Linux 上若该名字不可用可通过 `arc_matrix.py --container-otlp-host <宿主机网关地址>` 指定。
-Docker 容器要连到 Collector 时使用 `--listen-host 0.0.0.0`。
-接收端只保存原始 OTLP 批次并按 run、时间和信号类型查询，不规定 Agent 上报语义；Harness 未上报时 `telemetry.status=absent`，不影响评分。
-
+本地 daemon 默认将通用 OTEL exporter 端点改为 `host.docker.internal`；本地 Linux 可用 `--container-otlp-host <宿主网关>` 显式选择入口，并自行验证容器可达性及 collector 监听地址。
+远程 daemon 默认通过包装入口复用现有 OTLP receiver，在执行容器 loopback 收集 traces/logs/metrics 到 `template/.arc/adapter-telemetry/telemetry.sqlite`，随 workspace 核验回收。I13 自身的 `.factory26/<run>/telemetry.sqlite` 仍优先作为其过程查询来源。Mac collector 默认仅监听 loopback；远端 `host.docker.internal` 不代表 Mac。只有调用方明确配置并验证了网络入口时，才使用 `--container-otlp-host <可达的collector主机>`，不会自动开放 Mac 端口。
+接收端只保存原始 OTLP 批次，不规定 Agent 上报语义；未上报保持 absent，不影响评分。
 Runner 若将原始会话或失败 DOM 写到自身不可访问的临时目录，外层设施无法在销毁后补采，应让 Runner 或 Harness 在运行时写入持久 workspace。
 
 ## 冻结应用的本地复评

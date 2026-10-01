@@ -15,6 +15,7 @@ ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
 
 from lab.assets import asset_inventory
+from lab.docker_endpoint import freeze as freeze_docker, environment as docker_environment, confirm as confirm_docker
 
 
 def cache_path(lock_dir):
@@ -100,7 +101,9 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
     if output.exists():
         raise FileExistsError(output)
     lock_dir = Path(lock_dir).resolve()
-    docker = ['docker']+(['--context',docker_context] if docker_context else [])
+    endpoint = freeze_docker(docker_context)
+    docker = endpoint['argv']
+    docker_env = docker_environment(endpoint)
     name = 'factory26-runtime-'+uuid.uuid4().hex
     records = {}
     with tempfile.TemporaryDirectory(prefix=name) as tmp:
@@ -131,15 +134,17 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
         created=False
         try:
             subprocess.run(docker+['build','--platform','linux/amd64','--target','team' if braid_source else 'runtime',
-                '--build-arg',f'BACKEND={backend}','-t',name,str(context)],check=True)
-            subprocess.run(docker+['create','--name',name,name],check=True);created=True
+                '--build-arg',f'BACKEND={backend}','-t',name,str(context)],check=True,env=docker_env)
+            confirm_docker(endpoint)
+            subprocess.run(docker+['create','--name',name,name],check=True,env=docker_env);created=True
             output.parent.mkdir(parents=True,exist_ok=True)
-            subprocess.run(docker+['cp',name+':/runtime',str(output)],check=True)
+            subprocess.run(docker+['cp',name+':/runtime',str(output)],check=True,env=docker_env)
         finally:
-            if created: subprocess.run(docker+['rm',name],check=True)
-            subprocess.run(docker+['image','rm','--no-prune',name],check=False)
+            confirm_docker(endpoint)
+            if created: subprocess.run(docker+['rm',name],check=True,env=docker_env)
+            subprocess.run(docker+['image','rm','--no-prune',name],check=False,env=docker_env)
     (output/'runtime-source.json').write_text(json.dumps({'backend':backend,'platform':'linux-x86_64',
-        'sources':records,'npm_sha256':npm_sha256,
+        'sources':records,'npm_sha256':npm_sha256,'docker_endpoint':endpoint,
         'native_patch_sha256':native_patch_sha256},indent=2)+'\n')
     return output
 

@@ -4,7 +4,9 @@
 
 ARC 官网追溯材料的导出、运行证据采集与查询归 [ARC 平台运行说明](../docs/deployment/competition.md)中的 ARC 适配层；通用 Collector 不要求任何 ARC 字段。
 
-在 WSL 的独立 Python 环境安装 [requirements.txt](requirements.txt)。`python3 -m lab plan <recipe> --experiment-root <新目录>` 只冻结输入；`python3 -m lab run <recipe> --experiment-root <新目录>` 冻结后执行。`run <已冻结实验目录>` 只安排从未分配尝试的 job；`retry <run目录>` 明确增加一次尝试。输入在一个实验内按来源共享冻结，命令和控制器源码也保存在实验内；改变配方或源码应建立新实验。
+job 声明 `docker: true` 时，控制器在 attempt 启动时冻结标准 Docker CLI 选择的 endpoint 和 daemon ID，写入 `run.json`，并向外部命令提供固定的 Docker 环境与 `EXPERIMENT_DOCKER_ENDPOINT` JSON。重试是新 attempt，可重新选择 daemon；已有资源的 inspect/cleanup 使用原回执。workspace 传输由相应执行适配器负责，控制器不把本地路径当成远端路径。ARC 的 named volume、回收哈希门禁、文件化 OTLP 和失败恢复见[本地实验](../docs/deployment/local-experiments.md)。
+
+在控制器宿主的独立 Python 环境安装 [requirements.txt](requirements.txt)。`python3 -m lab plan <recipe> --experiment-root <新目录>` 只冻结输入；`python3 -m lab run <recipe> --experiment-root <新目录>` 冻结后执行。`run <已冻结实验目录>` 只安排从未分配尝试的 job；`retry <run目录>` 明确增加一次尝试。输入在一个实验内按来源共享冻结，命令和控制器源码也保存在实验内；改变配方或源码应建立新实验。
 
 v3 `storage` 必须声明 `host_reserve_bytes`、每 run 的 `workspace_bytes_per_run`、`telemetry_bytes_per_run`、`finalization_scratch_bytes_per_run`、一次性 `build_bytes` 和 `archive_level`。当前只支持已实现的 `decision`，其它级别在冻结边界拒绝。控制器在分配 attempt 之前用目标文件系统的实际 available bytes/inodes 计算并发峰值，保存 `storage-preflights/<id>.json` 和最新 `storage-preflight.json`；不足时不创建 attempt。`parallel` 增加槽位前重新预检。预检只证明启动时有预算，不代替运行中限额或终态归档回执。
 

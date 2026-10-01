@@ -7,8 +7,9 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import re
+import secrets
+from pathlib import Path
 import shutil
 import signal
 import subprocess
@@ -20,8 +21,11 @@ from zipfile import ZipFile
 
 if __package__:
     from .arc_artifacts import verify as verify_application
+    from .docker_workspace import Workspace, observe, selected_endpoint, error_text
 else:
     from arc_artifacts import verify as verify_application
+    from docker_workspace import Workspace, observe, selected_endpoint, error_text
+from lab.docker_endpoint import environment as docker_environment
 
 OTEL_NAMES = ("OTEL_EXPORTER_OTLP_ENDPOINT", "OTEL_EXPORTER_OTLP_PROTOCOL",
               "OTEL_EXPORTER_OTLP_HEADERS", "OTEL_EXPORTER_OTLP_COMPRESSION", *(
@@ -50,7 +54,7 @@ def emit(kind, **details):
         print(f"ARC evidence event failed: {exc}", file=sys.stderr)
 
 
-def instrument_entry(agent, destination):
+def instrument_entry(agent, destination, *, file_telemetry=False):
     """在副本外记录标准入口的终态，不修改原制品及其清单。
 
     原入口保留在 agent/ 子目录，其代码不变，参数与标准输出原样传递。
@@ -65,6 +69,34 @@ def instrument_entry(agent, destination):
             archive.extractall(original)
     shutil.copy2(original / 'requirements.txt', destination / 'requirements.txt')
     shutil.copy2(Path(__file__).with_name('arc_artifacts.py'), destination / 'arc_artifacts.py')
+    if file_telemetry:
+        from lab import otlp
+        import google.protobuf
+        import google.rpc
+        import opentelemetry.proto
+        support = destination / 'collector-support'
+        support.mkdir()
+        shutil.copy2(otlp.__file__, support / 'otlp.py')
+        (support / 'collector.py').write_text('''import json, secrets, signal, sys
+from pathlib import Path
+from threading import Event
+from otlp import connect, initialize, new_session, receiver
+database=Path(sys.argv[1])/'telemetry.sqlite'
+initialize(database)
+session=new_session(database,'arc-adapter')
+token=secrets.token_urlsafe(24)
+stopped=Event()
+signal.signal(signal.SIGTERM,lambda *_: stopped.set())
+with receiver() as server:
+    server.register(token,database,session)
+    print(json.dumps({'endpoint':f'http://127.0.0.1:{server.server_port}','token':token}),flush=True)
+    stopped.wait()
+with connect(database) as db: db.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+''')
+        for module in (google.protobuf, google.rpc, opentelemetry.proto):
+            source = Path(next(iter(module.__path__)))
+            target = support.joinpath(*module.__name__.split('.'))
+            shutil.copytree(source, target, ignore=shutil.ignore_patterns('__pycache__', '*.so', '*.pyd'))
     (destination / 'main.py').write_text('''import argparse, json, os, signal, subprocess, sys, time
 from pathlib import Path
 from arc_artifacts import copy_snapshot
@@ -76,8 +108,37 @@ result.parent.mkdir(parents=True,exist_ok=True)
 process=None
 code=None
 cleanup='not-started'
+collector=None
+environment=dict(os.environ)
+support=Path(__file__).parent/'collector-support'
+if support.is_dir():
+    import select
+    telemetry=args.output_dir/'.arc/adapter-telemetry'
+    telemetry.mkdir(parents=True,exist_ok=True)
+    collector_environment=dict(environment,PYTHONPATH=str(support))
+    collector=subprocess.Popen([sys.executable,str(support/'collector.py'),str(telemetry)],
+                               env=collector_environment,stdout=subprocess.PIPE,
+                               stderr=(telemetry/'collector.log').open('w'),text=True,start_new_session=True)
+    if not select.select([collector.stdout],[],[],20)[0]:
+        collector.terminate()
+        collector.wait(timeout=5)
+        raise RuntimeError('workspace collector did not announce its binding')
+    binding=json.loads(collector.stdout.readline())
+    collector.stdout.close()
+    endpoint=binding['endpoint']
+    headers='x-experiment-token='+binding['token']
+    for name in tuple(environment):
+        if name.startswith('OTEL_EXPORTER_OTLP_'): environment.pop(name)
+    environment.update(OTEL_EXPORTER_OTLP_ENDPOINT=endpoint,OTEL_EXPORTER_OTLP_PROTOCOL='http/protobuf',
+                       OTEL_EXPORTER_OTLP_HEADERS=headers,OTEL_EXPORTER_OTLP_COMPRESSION='none')
+    for name in ('TRACES','LOGS','METRICS'):
+        prefix='OTEL_EXPORTER_OTLP_'+name
+        environment[prefix+'_ENDPOINT']=endpoint+'/v1/'+name.lower()
+        environment[prefix+'_PROTOCOL']='http/protobuf'
+        environment[prefix+'_HEADERS']=headers
+        environment[prefix+'_COMPRESSION']='none'
 try:
-    process=subprocess.Popen([sys.executable,str(Path(__file__).parent/'agent/main.py'),*sys.argv[1:]],start_new_session=True)
+    process=subprocess.Popen([sys.executable,str(Path(__file__).parent/'agent/main.py'),*sys.argv[1:]],start_new_session=True,env=environment)
     code=process.wait()
 except BaseException as exc:
     result.write_text(json.dumps({'status':'failed','exit_code':code,'error':str(exc)})+'\\n')
@@ -96,6 +157,15 @@ finally:
             cleanup='signalled'
         except ProcessLookupError:
             cleanup='already-exited'
+    if collector is not None:
+        collector.terminate()
+        try: collector.wait(timeout=20)
+        except subprocess.TimeoutExpired:
+            collector.kill()
+            collector.wait()
+        if collector.returncode:
+            result.write_text(json.dumps({'status':'failed','collector_exit_code':collector.returncode})+'\\n')
+            raise RuntimeError('workspace collector did not stop cleanly')
 if code:
     result.write_text(json.dumps({'status':'failed','exit_code':code,'process_group_cleanup':cleanup})+'\\n')
     raise SystemExit(code)
@@ -165,6 +235,8 @@ def model_environment(base, output, host):
                 lines.append(line)
     for name in OTEL_NAMES:
         value = os.environ.get(name, "")
+        if host is None:
+            continue
         if value and name.endswith("_ENDPOINT"):
             original = urlsplit(value)
             if not host or any(character in host for character in "/:@"):
@@ -177,46 +249,15 @@ def model_environment(base, output, host):
 
 
 def resource_observation(resource_path, *, cleanup=False):
-    """Only a recorded exact name/ID plus the expected bind grants cleanup authority."""
-    resource = json.loads(resource_path.read_text())
-    workspace = Path(resource["workspace"]).resolve()
-    identifier = resource.get("container_id") or resource.get("container_name")
-    record = {"resource": str(resource_path), "container_name": resource.get("container_name"),
-              "container_id": resource.get("container_id"), "workspace": str(workspace)}
-    if resource.get("image_id") is None:
-        return {**record, "status": "not-applicable"}
-    if not identifier:
-        return {**record, "status": "launch-unconfirmed"}
-    try:
-        inspected = json.loads(subprocess.check_output(
-            ["docker", "inspect", identifier], text=True, stderr=subprocess.STDOUT, timeout=5))[0]
-    except subprocess.CalledProcessError as exc:
-        output = exc.output or ""
-        return {**record, "status": "absent" if "No such" in output else "inspect-failed",
-                "error": output.strip()}
-    except (OSError, subprocess.TimeoutExpired, ValueError) as exc:
-        return {**record, "status": "inspect-failed", "error": f"{type(exc).__name__}: {exc}"}
-    owned = any(mount.get("Type") == "bind" and
-                Path(mount.get("Source", "")).resolve() == workspace and
-                mount.get("Destination") == "/workspace" for mount in inspected.get("Mounts", []))
-    if not owned or (resource.get("container_id") and resource["container_id"] != inspected.get("Id")):
-        return {**record, "status": "ownership-mismatch", "observed_id": inspected.get("Id"),
-                "mounts": inspected.get("Mounts", [])}
-    record.update(container_id=inspected["Id"], status="owned")
-    if cleanup:
-        try:
-            subprocess.run(["docker", "rm", "--force", inspected["Id"]], check=True,
-                           stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=10)
-            record["status"] = "removed"
-        except (OSError, subprocess.CalledProcessError, subprocess.TimeoutExpired) as exc:
-            record.update(status="cleanup-unconfirmed", error=f"{type(exc).__name__}: {exc}")
-    return record
+    return observe(resource_path, cleanup=cleanup)
 
 
 def resource_command(workspace, action):
-    records = []
-    for path in sorted(workspace.glob("*.resource.json")):
-        records.append(resource_observation(path, cleanup=action == "cleanup"))
+    records = [resource_observation(path, cleanup=action == "cleanup")
+               for path in sorted(workspace.glob("*.resource.json"))]
+    receipt = workspace / 'docker-workspace.json'
+    if receipt.is_file():
+        records.append(Workspace(receipt).finish(cleanup=action == "cleanup"))
     result = {"workspace": str(workspace), "resources": records}
     print(json.dumps(result, ensure_ascii=False))
     return 0 if all(row["status"] in ({"absent", "removed", "not-applicable"} if action == "cleanup" else
@@ -229,7 +270,7 @@ def write_resource(path, value):
     temporary.replace(path)
 
 
-def run(args):
+def execute_run(args, endpoint, owner_token):
     workspace = args.workspace.resolve()
     workspace.mkdir(parents=True, exist_ok=True)
     if args.selection:
@@ -248,10 +289,18 @@ def run(args):
     if not args.prepare_only:
         if not args.image:
             raise ValueError("a built local Runner image is required")
-        image = json.loads(subprocess.check_output(["docker", "image", "inspect", args.image], text=True))[0]
+        image = json.loads(subprocess.check_output(endpoint["argv"] + ["image", "inspect", args.image],
+                                                       env=docker_environment(endpoint), text=True))[0]
         image_id = image["Id"]
         if image.get("Architecture") != "amd64":
             raise ValueError("the published ARC-Bench Runner requires linux/amd64")
+    transport = Workspace.create(workspace, endpoint, image_id, owner_token=owner_token) if image_id and endpoint['remote'] else None
+    file_telemetry = bool(endpoint and endpoint['remote'] and not args.container_otlp_host)
+    ownership = transport.value['labels'] if transport else {
+        'io.factory26.experiment': os.environ.get('EXPERIMENT_ID', 'standalone'),
+        'io.factory26.run': os.environ.get('EXPERIMENT_RUN_ID', workspace.parent.name),
+        'io.factory26.attempt': os.environ.get('EXPERIMENT_ATTEMPT', '1'),
+        'io.factory26.owner': secrets.token_hex(16)}
     def invoke(command, name):
         environment = dict(os.environ)
         for variable in ("OPENAI_API_KEY", "OPENAI_BASE_URL", "FACTORY26_API_KEY"):
@@ -261,9 +310,16 @@ def run(args):
         owned_workspace = Path(command[command.index("--workspace") + 1]).resolve()
         resource = workspace / f"{name}.resource.json"
         facts = {"workspace": str(owned_workspace), "image_id": image_id,
-                 "runner": str(args.runner.resolve()), "state": "launching"}
+                 "runner": str(args.runner.resolve()), "state": "not-started", "endpoint": endpoint,
+                 "labels": {**ownership, 'io.factory26.stage': name}}
+        if transport:
+            facts['transport'] = str(transport.path)
         write_resource(resource, facts)
         emit("stage-started", stage=name, resource=str(resource))
+        if image_id:
+            command = [sys.executable, str(Path(__file__).with_name('docker_workspace.py')),
+                       '--resource', str(resource), '--runner', str(args.runner / 'local_submit.py'), '--', *command[2:]]
+        process = None
         previous = signal.getsignal(signal.SIGTERM)
         def interrupt(_number, _frame):
             raise KeyboardInterrupt
@@ -276,13 +332,8 @@ def run(args):
                     stdout.flush()
                     match = CONTAINER_LINE.search(line.decode(errors="replace"))
                     if match:
-                        facts.update(container_name=match.group(1), state="named")
-                        write_resource(resource, facts)
+                        # The wrapper owns the receipt; stdout only supplies the existing event notification.
                         emit("resource-acquired", stage=name, name=match.group(1), resource=str(resource))
-                        observed = resource_observation(resource)
-                        if observed["status"] == "owned":
-                            facts.update(container_id=observed["container_id"], state="owned")
-                            write_resource(resource, facts)
                 exit_code = process.wait()
                 emit("stage-ended", stage=name, exit_code=exit_code)
                 return exit_code
@@ -290,11 +341,20 @@ def run(args):
             emit("error", stage=name, error=f"{type(exc).__name__}: {exc}")
             raise
         finally:
-            signal.signal(signal.SIGTERM, previous)
+            # Wait for the Runner wrapper to stop its exact container and recover output before fallback cleanup.
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+            if process is not None and process.poll() is None:
+                process.terminate()
+                try:
+                    process.wait(timeout=20)
+                except subprocess.TimeoutExpired:
+                    process.kill()
+                    process.wait()
             observation = resource_observation(resource, cleanup=True)
             with (workspace / "container-cleanup.jsonl").open("a") as stream:
                 stream.write(json.dumps(observation, ensure_ascii=False) + "\n")
             emit("resource-released", stage=name, observation=observation)
+            signal.signal(signal.SIGTERM, previous)
 
     if args.application:
         expected = verify_application(args.application, args.application_receipt)
@@ -340,7 +400,7 @@ def run(args):
             raise ValueError("model env was provided both by gateway wrapper and --env-file")
         source_env = Path(wrapped_env) if wrapped_env else args.env_file
         if "OTEL_EXPORTER_OTLP_ENDPOINT" in os.environ:
-            model_environment(source_env, env_file, args.container_otlp_host)
+            model_environment(source_env, env_file, None if file_telemetry else (args.container_otlp_host or "host.docker.internal"))
             model_args = ["--env-file", str(env_file)]
         elif source_env:
             model_args = ["--env-file", str(source_env)]
@@ -348,7 +408,7 @@ def run(args):
             if not args.requirements_only and args.noop_script is None:
                 raise ValueError("--noop-script is required for separate evaluation")
             generation = workspace / "official-generation"
-            instrumented = instrument_entry(args.agent, workspace / 'observed-agent')
+            instrumented = instrument_entry(args.agent, workspace / 'observed-agent', file_telemetry=file_telemetry)
             generation_command = base + ["--agent", str(instrumented), "--workspace", str(generation),
                                          "--image", image_id] + model_args
             generation_code = invoke(generation_command, "generation")
@@ -398,7 +458,7 @@ def run(args):
             loaded_hash = json.loads(witness.read_text())["sha256"] if witness.is_file() else None
         else:
             official = workspace / "official"
-            instrumented = instrument_entry(args.agent, workspace / 'observed-agent') if not args.prepare_only else args.agent
+            instrumented = instrument_entry(args.agent, workspace / 'observed-agent', file_telemetry=file_telemetry) if not args.prepare_only else args.agent
             command = base + ["--agent", str(instrumented), "--workspace", str(official)] + model_args
             if args.tests is not None:
                 command += ["--tests-dir", str(args.tests)]
@@ -445,6 +505,31 @@ def run(args):
     return 0 if result["status"] == "completed" else 1
 
 
+def run(args):
+    workspace = args.workspace.resolve()
+    workspace.mkdir(parents=True, exist_ok=True)
+    if (workspace / 'docker-workspace.json').exists():
+        raise ValueError('workspace already has a transport receipt; use reconcile/cleanup instead of rerunning')
+    endpoint = None if args.prepare_only else selected_endpoint()
+    owner_token = secrets.token_hex(16)
+    if endpoint:
+        write_resource(workspace / 'docker-endpoint.json', endpoint)
+    try:
+        return execute_run(args, endpoint, owner_token)
+    except BaseException as error:
+        write_resource(workspace / 'experiment-result.json', {
+            'schema_version': 1, 'status': 'cancelled' if isinstance(error, KeyboardInterrupt) else 'failed',
+            'error': error_text(error), 'stage': 'execution-or-recovery'})
+        raise
+    finally:
+        receipt = workspace / 'docker-workspace.json'
+        if receipt.is_file() and json.loads(receipt.read_text()).get('labels', {}).get('io.factory26.owner') == owner_token:
+            signal.signal(signal.SIGTERM, signal.SIG_IGN)
+            outcome = Workspace(receipt).finish(cleanup=True)
+            write_resource(workspace / 'workspace-cleanup.json', outcome)
+            emit('workspace-released', observation=outcome)
+
+
 def main():
     if sys.argv[1:2] == ["resource"]:
         resource_parser = argparse.ArgumentParser(description="Inspect or clean registered ARC containers")
@@ -471,7 +556,7 @@ def main():
     parser.add_argument("--expected-tests", type=int)
     parser.add_argument("--expected-scenario")
     parser.add_argument("--env-file", type=Path)
-    parser.add_argument("--container-otlp-host", default="host.docker.internal")
+    parser.add_argument("--container-otlp-host", help="explicit collector host; remote default collects workspace files")
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--separate-evaluation", action="store_true",
                         help="generate without tests, then score the frozen application with a no-op agent")

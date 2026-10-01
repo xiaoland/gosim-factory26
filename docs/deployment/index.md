@@ -7,7 +7,7 @@
 | 当前要完成的操作 | 操作说明 | 先确认什么 |
 | --- | --- | --- |
 | 确认练习/正式模式、冻结 Harness，向官网提交或收集结果 | [平台与制品](competition.md) | [赛事须知与模式](competition.md#赛事规则与提交模式)、variant、ZIP SHA256、模型通道和本次授权。 |
-| 用官方本地 Runner 独立生成，再对应用评分 | [本地实验](local-experiments.md) | WSL daemon、冻结需求/测试/镜像及两阶段边界。 |
+| 用官方本地 Runner 独立生成，再对应用评分 | [本地实验](local-experiments.md) | 本次 Docker endpoint、冻结需求/测试/镜像、workspace 回收及两阶段边界。 |
 | 判断哪一层失败，定位原始记录 | [证据查询](evidence.md) | 外层 lab run、内层 `.factory26` 或官网 journal 的生产者。 |
 | 接续中断工作区，或重新评分已完成应用 | [恢复与重放](recovery.md) | 源执行已停止、完整检查点、具体恢复改动和新运行身份。 |
 | 读取 Braid 遥测、原生会话及 token/耗时 | [Braid 诊断](braid-diagnostics.md) | Backend 与内层 Braid run ID、源端错误、归档或实时材料范围。 |

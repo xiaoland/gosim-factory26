@@ -204,10 +204,15 @@ def _resource_action(run, action):
         mapping[name] = str(Path(run) / "inputs" / name /
                             source.name) if source.is_file() else str(Path(run) / "inputs" / name)
     results = []
+    env = dict(os.environ)
+    env["PYTHONPATH"] = str(experiment / "controller-source") + (
+        os.pathsep + env["PYTHONPATH"] if env.get("PYTHONPATH") else "")
+    if state.get("docker_endpoint"):
+        env["EXPERIMENT_DOCKER_ENDPOINT"] = json.dumps(state["docker_endpoint"])
     for argv in commands:
         try:
             observed = subprocess.run(_expand(argv, mapping), cwd=Path(run) / "workspace", capture_output=True,
-                                      text=True, timeout=45)
+                                      text=True, timeout=None if action == "cleanup" else 45, env=env)
             try:
                 details = json.loads(observed.stdout)
             except json.JSONDecodeError:
@@ -414,6 +419,14 @@ def main(argv=None):
         if state.get("pid") and state.get("process_start") == process_start(state["pid"]):
             raise ValueError("the recorded process still exists; stop it before resource cleanup")
         result = _resource_action(run, "cleanup")
+        transport = run / "workspace/docker-workspace.json"
+        if transport.is_file():
+            try:
+                state["workspace_transport"] = read_json(transport)
+                state["resource_state"] = "cleaned" if state["workspace_transport"].get("state") == "removed" else "unconfirmed"
+            except (OSError, ValueError) as error:
+                state.update(resource_state="unconfirmed", workspace_transport_error=f"{type(error).__name__}: {error}")
+            write_json(run / "run.json", {key: value for key, value in state.items() if key != "path"})
         output = experiment / "controllers" / owner["controller_id"] / "observations"
         output.mkdir(parents=True, exist_ok=True)
         write_json(output / f"cleanup-{time.time_ns()}.json", {"run": str(run), **result})

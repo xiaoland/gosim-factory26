@@ -99,7 +99,8 @@ def prepare(run, output, *, host_runtime_receipt, storage, tests=None, selection
             case = read_json(selection).get("scenario_id")
             if case:
                 argv += ["--expected-scenario", case, "--expected-tests", "1"]
-        job = {"id": "evaluation", "adapter_kind": "arc-bench", "result_path": "workspace/experiment-result.json",
+        job = {"id": "evaluation", "adapter_kind": "arc-bench", "docker": True,
+               "result_path": "workspace/experiment-result.json",
                "competition": competition,
                **({"variant": state["variant"]} if state.get("variant") else {}),
                "task": state.get("task") or task, "venue": "frozen-application-evaluation",

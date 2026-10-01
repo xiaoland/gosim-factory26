@@ -50,12 +50,12 @@
 每个 ZIP 固定一个 variant 及其全部能力材料；根目录 `main.py` 接受平台传入的需求，不读取本地 benchmark，也不执行评测：
 
 ```sh
-python3 scripts/package_agent.py --variant pi-braid-i13 --output runs/packages/pi-braid-i13.zip --docker-context arcbox-win
+python3 scripts/package_agent.py --variant pi-braid-i13 --output runs/packages/pi-braid-i13.zip
 # 以下命令在解压后的 ZIP 根目录执行，并由调用环境提供模型变量。
 python3 main.py /path/to/requirements --output-dir /path/to/output
 ```
 
-构建需要可用的 Linux x86_64 Docker daemon；`--docker-context` 可省略以使用当前 context。
+构建需要可用的 Linux x86_64 Docker daemon。默认尊重标准 `docker context use` 或 `DOCKER_CONTEXT`；`--docker-context` 只用于显式覆盖本次构建。runtime 在构建开始时冻结实际 endpoint，后续 build/create/cp/remove 共用该连接，不受中途 context 切换影响。源码、Git 和制品留在 Mac，远端只运行容器。
 脚本只发送指定构建输入，不上传整个开发目录。
 Braid 从当前 `sources/braid` 构建；团队 variant 从 `sources/svc/skills/` 冻结自己选定的独立 SVC 技能；I13 选择 documentation、task-packet、sub-agents、verification 四项，不构建或安装 CLI；raw Codex 的 LiteLLM Python 依赖用 Linux CPython 3.12 安装到包内目录。
 Node、所选核心、Chrome 及其 NSS 动态模块、常用进程工具与非系统动态库均在构建时安装并随包提供。当前 Harness 使用 Node 24，应用仍须兼容平台 Node 20.19.3。
@@ -112,7 +112,7 @@ Competition prepare 还可显式冻结 `--experiment-key`、`--case`、`--run-na
 
 ### ARC 追溯与 Git 历史
 
-ARC 的官网 Run detail 使用官方 SDK 写入 Runner 的 `.arc/traceability/*.json` 与 `.arc/runner-events.jsonl`。需要此能力的 Harness 可在 WSL 导出公共工具，并在自身包构建、清单冻结之前放入 ZIP，通过自己的原生指令或工具机制将绝对路径交给 Agent：
+ARC 的官网 Run detail 使用官方 SDK 写入 Runner 的 `.arc/traceability/*.json` 与 `.arc/runner-events.jsonl`。需要此能力的 Harness 可在控制器宿主导出公共工具，并在自身包构建、清单冻结之前放入 ZIP，通过自己的原生指令或工具机制将绝对路径交给 Agent：
 
 ```sh
 python3 -m lab.arc_bench runtime export --output /path/to/arc-runtime.pyz

@@ -5,7 +5,6 @@ OUTPUT ?=
 RUN ?=
 BRAID ?= sources/braid/target/debug/braid
 BRAID_RUN_ID ?=
-DOCKER_CONTEXT ?= arcbox-win
 
 .PHONY: tools package braid-report help
 # Tool preparation deliberately does not resolve a variant or install a benchmark.
@@ -14,7 +13,7 @@ tools:
 
 package:
 	@test -n "$(OUTPUT)" || (echo '需要 OUTPUT=/path/to/agent.zip'; exit 2)
-	$(PYTHON) scripts/package_agent.py --variant "$(VARIANT)" --output "$(OUTPUT)" $(if $(RUNTIME),--runtime "$(RUNTIME)",--docker-context "$(DOCKER_CONTEXT)")
+	$(PYTHON) scripts/package_agent.py --variant "$(VARIANT)" --output "$(OUTPUT)" $(if $(RUNTIME),--runtime "$(RUNTIME)",$(if $(DOCKER_CONTEXT),--docker-context "$(DOCKER_CONTEXT)"))
 
 braid-report:
 	@test -n "$(RUN)" -a -n "$(OUTPUT)" || (echo '需要 RUN=/path/to/experiment-run OUTPUT=/path/to/new-site'; exit 2)

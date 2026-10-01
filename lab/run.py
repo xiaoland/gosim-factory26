@@ -16,6 +16,7 @@ import time
 
 from .assets import frozen_host_runtime
 from .control import Control, exclusive, process_start
+from .docker_endpoint import freeze as freeze_docker, environment as docker_environment
 from .otlp import SIGNALS, database_for_run, initialize, list_batches, new_session, receiver
 from .plan import create
 from .records import merge_labels, read_json, write_json
@@ -179,6 +180,8 @@ def _allocate(experiment, manifest, controller, retry_of=None, operation_id=None
                  "inputs": frozen, "command": command, "result_path": result_path,
                  "artifact_paths": artifact_paths, "adapter_kind": job.get("adapter_kind"),
                  "resource_handlers": resource_handlers}
+        if job.get("docker"):
+            state["docker"] = True
         if manifest.get("controller_runtime"):
             state["controller_runtime"] = manifest["controller_runtime"]
         if job.get("dependencies"):
@@ -216,6 +219,14 @@ def _environment(run, server, token):
         env[f"{prefix}_PROTOCOL"] = "http/protobuf"
         env[f"{prefix}_HEADERS"] = headers
         env[f"{prefix}_COMPRESSION"] = "none"
+    state = read_status(run)
+    env.update(EXPERIMENT_ID=state["experiment_id"], EXPERIMENT_ATTEMPT=str(state["attempt"]))
+    if state.get("docker_endpoint"):
+        for name in ("DOCKER_CONTEXT", "DOCKER_HOST", "DOCKER_TLS", "DOCKER_TLS_VERIFY", "DOCKER_CERT_PATH"):
+            env.pop(name, None)
+        env.update({key: value for key, value in docker_environment(state["docker_endpoint"]).items()
+                    if key.startswith("DOCKER_")})
+        env["EXPERIMENT_DOCKER_ENDPOINT"] = json.dumps(state["docker_endpoint"])
     return env
 
 
@@ -226,6 +237,9 @@ def _worker(run, server, events, stop_requested):
             events.put(("cancelled", run, None))
             return
         state = read_status(run)
+        if state.get("docker"):
+            state["docker_endpoint"] = freeze_docker()
+            write_json(run / "run.json", {key: value for key, value in state.items() if key != "path"})
         token = secrets.token_urlsafe(24)
         session = new_session(run / "telemetry.sqlite")
         server.register(token, run / "telemetry.sqlite", session)
@@ -269,6 +283,14 @@ def _artifact_index(run, paths):
 
 
 def _collect(run, state):
+    transport = run / "workspace/docker-workspace.json"
+    if transport.is_file():
+        try:
+            state["workspace_transport"] = read_json(transport)
+            state["resource_state"] = ("cleaned" if state["workspace_transport"].get("state") == "removed"
+                                       else "unconfirmed")
+        except (OSError, ValueError) as error:
+            state.update(resource_state="unconfirmed", workspace_transport_error=f"{type(error).__name__}: {error}")
     path = run / state["result_path"] if state.get("result_path") else None
     if path is not None:
         try:

@@ -36,6 +36,8 @@ variants/<name>/main.py          variant/build.py + 指定工具与技能材料
 raw 基线由 [raw_main.py](../../variants/raw/raw_main.py)独立执行，可直接使用工具资源，不必经过团队 Harness。
 
 [lab](../../lab/README.md)将外部 argv 与共享输入冻结为实验，控制器按槽位分配尝试并保存进程、操作和原始 OTLP 事实；[lab.status](../../lab/status.py)只呈现保存状态，不解释 Agent 的内部协作。不同 Harness 可直接作为外部命令运行，不需要实现设施内部接口。
+Docker 是容器执行边界，Mac 控制器和 run 记录仍持有源码及实验事实。声明 Docker 的 attempt 冻结标准 CLI 选中的 endpoint 和 daemon ID，资源操作复用该身份。本地 bind 路径保留；ARC 远程接入使用带所有权标签的 named volume、阶段子目录及 helper 传输，官方 Runner 在本地装配和解释结果。输出清单核验并发布到原 run 后才允许释放远端副本；不可达或回收失败保持 unconfirmed 并支持显式 cleanup 补采。Console 访问容器仍只支持本宿主 Unix socket context。远程 OTLP 默认在执行容器 loopback 收集并随文件回收，网络 collector 入口必须显式选择和验证。操作与限制见[本地实验](../deployment/local-experiments.md)。
+
 新 schema v3 冻结 storage policy 和稳定宿主 controller Python 依赖；attempt 分配及增加并发前核对目标文件系统 available bytes/inodes、host reserve、workspace/telemetry/finalization 及构建峰值。运行中异步观测占块，软阈值暂停派发，硬阈值受控停止进程组；外部资源仍须独立核实。历史 v1/v2 保持 legacy-unbudgeted。
 [arc_matrix.py](../../lab/arc_bench/arc_matrix.py)选择实验组合；[arc_bench_adapter.py](../../lab/arc_bench/arc_bench_adapter.py)调用官方 Runner；[ARC 结果解释](../../lab/arc_bench/results.py)与[原生过程证据](../../lab/analysis/native_evidence.py)只用于可选分析。
 替换 Harness 不应要求实验控制器识别另一种私有会话格式。

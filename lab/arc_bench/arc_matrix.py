@@ -52,7 +52,7 @@ def verify_case(base, competition, task, requirements_only=False):
 
 
 def build(variants, cases, inputs_root, runner, image=None, env_file=None, workers=2,
-          prepare_only=False, container_otlp_host="host.docker.internal", separate_evaluation=False,
+          prepare_only=False, container_otlp_host=None, separate_evaluation=False,
           requirements_only=False, gateway_state=None, gateway_include_vars=(), *, candidates=None,
           experiment_key=None, storage=None, host_runtime_receipt=None):
     if not prepare_only and not image:
@@ -154,7 +154,7 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
                 for variable in gateway_include_vars:
                     wrapper += ["--include-var", variable]
                 command = wrapper + ["--"] + command
-            if container_otlp_host != "host.docker.internal":
+            if container_otlp_host:
                 command += ["--container-otlp-host", container_otlp_host]
             handlers = {action: [[python, "{adapter}/arc_bench_adapter.py",
                                    "resource", action, "--workspace", "{workspace}"]]
@@ -175,6 +175,7 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
                          **({"variant": variant} if variant else {}), "competition": competition, "task": task,
                          "labels": labels, **({"source_application": origin} if origin else {}),
                          "adapter_kind": "arc-bench", "result_path": "workspace/experiment-result.json",
+                         "docker": not prepare_only,
                          "artifact_paths": arc_artifacts,
                          "resource_handlers": handlers,
                          "dependencies": [runtime_dependency],
@@ -217,7 +218,7 @@ def main():
                         help="additional package/image build peak")
     parser.add_argument("--archive-level", choices=("decision",),
                         default="decision")
-    parser.add_argument("--container-otlp-host", default="host.docker.internal")
+    parser.add_argument("--container-otlp-host", help="explicit reachable collector host; remote default collects files")
     parser.add_argument("--prepare-only", action="store_true")
     parser.add_argument("--separate-evaluation", action="store_true")
     parser.add_argument("--requirements-only", action="store_true",

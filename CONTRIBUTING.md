@@ -156,10 +156,10 @@ python3 variants/pi-braid-i13/main.py "$REQUIREMENTS" \
 ## 构建独立运行资源与制品
 
 Linux runtime 可单独构建；下例团队资源包含 Braid，raw 资源省略 `--braid-source`，不会读取 Braid/SVC 或团队配方。
-先选择可用 Docker context，不修改全局默认。
+先通过标准 `docker context use` 或 `DOCKER_CONTEXT` 选择可用 daemon；构建入口在开始时冻结 endpoint。源码、Git 和输出仍在本地，构建输入由 Docker CLI 传输。
 
 ```sh
-python3 scripts/runtime.py linux --backend pi --docker-context arcbox-win \
+python3 scripts/runtime.py linux --backend pi \
   --braid-source sources/braid --output runs/runtime-team
 python3 scripts/package_agent.py --variant pi-braid-i13 \
   --runtime runs/runtime-team --stage runs/staged-i13
