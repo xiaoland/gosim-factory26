@@ -23,13 +23,15 @@ Mac两份原始归档保留，未删除或修改。HTTP、SSH转发、Console自
 | Flash GitHub | `flash-root--hackathon--github-4afc8896760859` | 未登记；原生成容器退出并移除，恢复归主线 |
 | GLM Sheet | `glm-root--hackathon--sheet-2cf88b952f231c` | 未出现生成资源/数据库，后台等待实际启动 |
 
-Flash GitHub原容器 `e3ccda4ed279c60465717e379a3094afe4d37e7bb40aea6f8e013933f459dad4` 先读到removing/Dead=true/Running=false/ExitCode=1，随后inspect返回不存在，具体事实已交主线。Console不重建生成或伪造旧身份。退出后空槽位启动Sheet，故初次成功接入的是上述两条真实运行。主线后续计划将修复后的Flash GitHub放入独立一项experiment；新目录不在当前watch范围，须由主线提供精确配置后扩展，禁止扫描任意run。
+Flash GitHub原容器 `e3ccda4ed279c60465717e379a3094afe4d37e7bb40aea6f8e013933f459dad4` 先读到removing/Dead=true/Running=false/ExitCode=1，随后inspect返回不存在，具体事实已交主线。Console不重建生成或伪造旧身份。退出后空槽位启动Sheet，故初次成功接入的是上述两条真实运行。主线已提供修复后Flash GitHub的精确experiment `/home/yyh/factory26/experiments/e20261001-01-recovery-g03` 及job ID `flash-root--hackathon--github`，现已纳入watch白名单；未出现目录/manifest时正常等待，禁止扫描任意run。
 
 访问容器沿用原完整image、1000:1000用户、/workspace工作目录和实际共享挂载，额外只读挂载受管理binary，具有service/run标签；只执行sleep infinity，network none、无自动重启。GLM GitHub生成/访问容器为 `bd7cc655b8163762428c4764962ac809d2980adf9f9fad1a13e603363f9a385b` / `0392f0430db3e840a7abe4a2b6673d5f8eb8b608d82b1dec3a2a2f62e2ed99db`；Flash Sheet为 `0a1723b4a8632b525888e4d3945874ff9ff7760f7239e8dc4650f4e4185b99ed` / `d321a3808ef85916e09f3207088d63ce9a3ed78e3db90e508172ffb77ab5fc6f`。容器state以实际最长匹配挂载对应同一宿主DB，没有复制或修改数据库。
 
-后台脚本是新根 `operations/attach-live.py`，PID **7303**，只管理本服务配置与自有访问容器。它读取精确矩阵，按同job最新attempt取得allocation；已登记run ID跳过、保留旧身份，禁止覆写。flock阻止重复操作程序；复用访问容器前核对标签、image、用户、命令、网络和实际挂载。资源齐备后创建独立访问容器、短停已确认的本HTTP、调用冻结register、重启本HTTP，不影响生成。前十分钟每三分钟查看，之后每八分钟；四组当前allocation都登记后退出，等待不唤醒模型。本轮Flash失败使done仍为false，不能声称四项均接入。
+后台脚本是新根 `operations/attach-live.py`，当前PID **101386**（替换休眠中的旧PID7303），只管理本服务配置与自有访问容器。它只读取原精确矩阵的四个job和g03精确目录的Flash GitHub单job，按每个来源同job最新attempt取得allocation；g03真实allocation出现后接替失败的Flash GitHub逻辑目标，不覆写任何旧run ID；已登记run ID跳过、保留旧身份，禁止覆写。flock阻止重复操作程序；复用访问容器前核对标签、image、用户、命令、网络和实际挂载。资源齐备后创建独立访问容器、短停已确认的本HTTP、调用冻结register、重启本HTTP，不影响生成。前十分钟每三分钟查看，之后每八分钟；g03真实allocation及其它三组当前allocation都登记后退出，等待不唤醒模型。本轮Flash失败使done仍为false，不能声称四项均接入。
 
 操作追加 `operations/live-attach.jsonl`，管理原始回执归 `console-actions.jsonl`；`operations/live-attach-process.json`、`live-attach-status.json`、`live-attach.stdout.log` 记录进程、接入状态和具体错误。身份或边界不匹配使脚本退出并保留unconfirmed，不自动重建。接续先读取这些记录再核对实际进程，不信任历史PID。
+
+白名单扩展回执：watcher instance `a7ec4685-4408-4ba3-b81d-0d1124ef9c7a`，脚本SHA-256 `07b600610cc440e98359524c68be32445ab571e6db8ebc4ae65c34670153071f`。旧watcher确认处于hrtimer_nanosleep后仅终止该操作进程，再原子替换脚本并启动新watcher；HTTP仍为PID6809、原instance和service身份未变。g03目录尚不存在，recovery_allocated=false、done=false，GLM Sheet继续等待。两live和两archive的root/items复核均HTTP200，live runtime均HTTP200、未暂停。证据是runs目录中的watcher-g03-before.json、watcher-g03-after.json和watcher-g03-readonly.json；远端live-attach.jsonl有watcher-update-g03的started/completed回执。新实验尚未plan或启动，本次没有创建g03容器或DB。
 
 ## 实际反馈与保护范围
 
