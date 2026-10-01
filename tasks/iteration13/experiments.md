@@ -14,7 +14,7 @@ I13 / e20261001-01
 │  ├─ Flash/GitHub：从官网终态工作区恢复
 │  ├─ Flash/Sheet：从本地一致快照恢复到官网
 │  ├─ 非参赛模式、ARC API；不是official_evaluation竞赛额度模式
-│  ├─ 关键SIGKILL证据采集与真实接线［启动硬前置，正在收尾］
+│  ├─ 关键SIGKILL采集与统一Linux构建［完成；恢复入口attempt隔离接线中］
 │  ├─ 两个恢复包、费用模式与journal［准备中］
 │  └─ 自动尝试恢复机制［调查方案；重试与费用上限尚未冻结］
 ├─ 本地线［不被官网诊断前置阻塞］
@@ -25,7 +25,7 @@ I13 / e20261001-01
 ├─ 共用恢复与配置工作
 │  ├─ 官网ZIP自动导出、原件保全、权限/路径恢复［完成］
 │  ├─ I13源码移除DeepSeek成员［完成］
-│  ├─ 当前可指派目录不再按摘要revision大小选历史配置［实施中］
+│  ├─ 当前可指派目录读取本次request，历史成员不再漏入［完成并实际操作验证］
 │  └─ 保留在途成员/工作树/会话的受审计迁移［实施中］
 └─ 配套设施与证据
    ├─ Exp Console：WSL唯一HTTP、Mac8765转发［完成］；新运行接线待身份
@@ -39,6 +39,8 @@ I13 / e20261001-01
 用户授权原话：“优先处理让 flash/github 恢复，并且是恢复到官网；flash/sheet也放到官网运行；都不参加比赛，使用 ARC API”；“前提是做好了收集/采集更多（关键的）帮助排查 SIGKILL 根本原因的工作”；“glm/* 留在本地运行，并且使用我们自己的 bigmodel, kimi, ds, qwen 等 API”。这覆盖此前“全部ARC、全部本地、官网诊断不阻塞”的安排。官网两项拟采用 self_funded 凭据模式并提供ARC API通道，最终以冻结输入及平台读回核对，不把比赛task名称当参赛模式证据。自有API凭据只从私有文件注入，模型ID与endpoint对应关系先验证。
 
 用户另要求“看看能否加入自动尝试恢复的机制”。当前授权包括调查、设计与实现准备，未冻结自动收费重试次数或费用上限；不据此无限重试。优先复用现有monitor、competition journal和恢复打包，先定义SIGKILL/终态判据、完整保全、同run核查及pending写请求处理，再确定自动启动边界。隐藏评测反馈仍不进入生成Agent。
+
+发布前置核对：平台的 `catalog` 与 `credential_mode` 是独立字段，`self_funded` 不能单独证明非参赛；官网线正在核对非参赛入口与原题需求能否同时满足。统一 Linux Braid SHA256 为 `a8afac46d2a8268dc3e7e163e673220216caaeee892b6d3af01c743b70144414`，标准源码树 SHA256 为 `088d94e5eb89bf8b1332414088fee621e2cf9879ca21f99151a1569f874e361c`。恢复入口需将导入的 `process-evidence` 与本次 attempt 分离，记录本次 Braid 启动和 wait；旧 SIGKILL 不得触发本次自动恢复。
 
 分工：官网恢复子Agent持有两个包和journal准备；诊断子Agent持有采集就绪与自动恢复方案；目录/本地子Agent持有统一Braid构建、GLM自有通道和本地两项准备。子Agent之间直接交接具体制品，主线整合当前决策、发布前置、实际启动与结果，不逐项代做执行细节。
 
@@ -129,7 +131,7 @@ Mac 后台协调进程46943、3+8采集进程46944已经启动，使用 `lab.arc
 
 回执入口为 `runs/iteration13/hosted-20261001/launch-summary.json`、`submission-history-after.json`、`monitor-launch.json` 与 `monitor/`。本地WSL无新增操作，Sheet和GLM根组未启动。
 
-## 配方与判断目标
+## 首次冻结配方与判断目标（通道及成员已由顶部当前安排更新）
 
 | case | variant | 根 Issue | 原生 advisor | 子 Issue / PR 与其余原生角色 |
 | --- | --- | --- | --- | --- |
