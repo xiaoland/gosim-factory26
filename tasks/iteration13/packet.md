@@ -8,6 +8,12 @@
 
 [当前工作树与执行安排](experiments.md#启动以来的工作树)是本轮事实入口。三个子Agent分别负责官网恢复包、诊断与自动恢复方案、Braid目录与本地通道准备，互相交接制品，主线负责整合与启动。下文“两槽位、四项全本地、全部ARC、诊断不阻塞”均为此前阶段历史，不能作为当前启动依据。自动恢复的次数与费用边界尚未冻结，不自行反复创建收费尝试。
 
+### Debian-Rebuild恢复与新官网故障（2026-10-01 18:19 CST）
+
+用户确认“WSL现在已经恢复（而且不再是Debian-Factory26，而是Debian-Rebuild）”。本地接续恢复执行：原负责人核实新发行版/boot/目录/daemon与本轮两现场，保全后恢复自有网关、唯一Console及GLM/GitHub、GLM/Sheet；另一子Agent从冻结Braid源叠加 `828a3da` 构建Linux制品。不会复用旧PID或默认旧路径仍在，也不直接回退原始起点。最新完整可恢复现场优先；无法确认保全进度时再返回具体缺口。
+
+同次读取既有Mac监控发现官网GitHub `377afa346c92` 已在18:07:23 CST终止，18:11批次采到FAILED，生成失败且未进入评测，Sheet `691028015e69` 的18:16批次仍RUNNING。原信号诊断子Agent已接手当前attempt的终态原件分析，尚未断言SIGKILL或OOM；官网未自动收费重试，Sheet及监控继续。本地宿主重建与官网故障分别处理，不据时间接近推因。
+
 ### PR描述重复读取（2026-10-01，新开工）
 
 用户观察 `flash-root--hackathon--sheet` 的PR2：provider session的context/user-message已有PR description，后续LLM又读取描述。用户提出两种可能：“initial user message 重复 context”；“braid-collaboration 技能存在缺陷（过度的谨慎、一致性要求）”，并授权“可以委派 sub-agent 去排查和确认；修复结果纳入本地的 GLM/* 运行”。两种原因当前均是待核对假设，不直接当作缺陷结论。

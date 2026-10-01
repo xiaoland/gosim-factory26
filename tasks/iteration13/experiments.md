@@ -1,20 +1,20 @@
 # e20261001-01：I13 首轮实验
 
-当前状态（2026-10-01 17:47 CST核对）：四项均已实际启动过；Flash/GitHub与Flash/Sheet的官网恢复均为RUNNING，尚未评测。用户报告WSL意外重启、正在恢复，本地两项与Console当前状态按只读快照确认，不自动改网络或重启。重启前GLM/Sheet已有成功模型请求，GLM/GitHub已接续原生会话但因网桥地址错位出现 `No route to host`，尚无成功模型请求。本轮尚无有效应用评分。
+当前状态（2026-10-01 18:19 CST）：用户确认WSL恢复为Debian-Rebuild，本地两项开始重新核实宿主及现场，并纳入 `828a3da` 的PR读取提示修正。官网Flash/GitHub `377afa346c92` 于18:07:23终止，18:11采集为FAILED，尚未评测；Flash/Sheet `691028015e69` 18:16采集仍RUNNING。官网故障已委派分析当前attempt的新诊断证据，不自动重跑。本轮尚无有效应用评分。
 ## 启动以来的工作树
 
 ```text
 I13 / e20261001-01
 ├─ I13主体改造［源码与材料完成；整体收益待本轮实验］
 │  └─ CLI、上下文、sub-agent、SVC、协作/需求树、提示词、工具、存储生命周期
-├─ 四个逻辑运行［均已启动过；官网运行，本地受WSL重启影响］
-│  ├─ Flash/GitHub → 官网接续［RUNNING；377afa346c92］
-│  │  └─ 包实际验证、旧会话接续与官网诊断采集均通过；尚未评测
+├─ 四个逻辑运行［官网GitHub失败/Sheet运行；本地迁至Debian-Rebuild恢复中］
+│  ├─ Flash/GitHub → 官网接续［FAILED；377afa346c92］
+│  │  └─ 18:07生成阶段失败，未评测；新终态证据分析中
 │  ├─ Flash/Sheet → 官网接续［RUNNING；691028015e69］
 │  │  └─ 由本地快照恢复；根/PR旧会话接续、官网诊断采集通过
-│  ├─ GLM/GitHub → WSL接续［重启后状态未知；SSH连接重置］
+│  ├─ GLM/GitHub → Debian-Rebuild接续［宿主/最新现场核对中］
 │  │  └─ 旧会话接续通过；重启前网桥地址错位阻断模型请求
-│  └─ GLM/Sheet → WSL干净启动［重启后状态未知；SSH连接重置］
+│  └─ GLM/Sheet → Debian-Rebuild接续［宿主/最新现场核对中］
 │     └─ 实际GLM-5.3模型请求已成功；应用语义进展由后续原生证据判断
 ├─ 模型与费用［配置确定］
 │  ├─ 官网：不勾选使用比赛额度评测、不上榜；官方ARC地址 + 自有key
@@ -22,7 +22,7 @@ I13 / e20261001-01
 │  └─ DeepSeek Braid成员已移除；旧在途工作保留身份、显式迁至GLM
 ├─ PR描述重复读取修正［828a3da已完成；待应用本地GLM两项］
 │  ├─ 根因：首轮已覆盖的关联事件仍命令重读；无重复全文注入，技能不改
-│  └─ 编译/真实CLI反馈通过；保留当前现场与会话，WSL恢复后换新binary
+│  └─ 编译/真实CLI反馈通过；Linux制品构建中，保留当前现场与会话应用
 ├─ 官网SIGKILL诊断与恢复［官网启动前置］
 │  ├─ 资源/cgroup/进程及自身信号记录［完成，真实Linux操作验证］
 │  ├─ 统一Linux Braid构建［完成］
@@ -37,6 +37,8 @@ I13 / e20261001-01
    ├─ 参赛须知durable docs［完成，PDF/规则/PRD/索引已提交］
    └─ 原失败/暂停现场［已保全］；本轮尚无有效应用评分
 ```
+
+本次GitHub终态原件：`runs/iteration13/hosted-recovery-20261001/monitor/20261001T101157.239125Z/377afa346c92/status.json`。开始17:25:00.509841、结束18:07:23.187847 CST；平台 `run_duration_seconds=2465`，两时间戳差约2542.68秒，分别保留。平台记录token67,750,296，`token_cost_usd=17.136155`但 `token_cost_currency=CNY`，按原币种记录17.136155元，不把字段名当美元。score=0、passed/failed均0、evaluation_started_at=null，不是有效应用零分。原始failure_reason仅main.py exit1，内部因果由独立子Agent消费当前诊断证据确认。
 
 官网真实身份与费用：GitHub submission `66774c63c885` / run `377afa346c92`，Sheet submission `5ada036f2340` / run `691028015e69`。两者 submission credential_mode 与 run billing_mode 均读回self_funded，比赛额度许可false、pending=null；原生恢复、官方实际binary身份与新attempt均已核验。官网首次工作区分别取得46/76次成功的2秒采样，cgroup-v2能力无错误；GitHub可见memory.max为2GiB，宿主signal sender仍不可见。这些证据不证明历史SIGKILL原因。首次现场归 `runs/iteration13/hosted-recovery-20261001/{github,sheet}-first-workspace/`，后台collector PID58107在Mac存活，继续既定3+8采集，不依赖WSL；最新outcome来源与时间由monitor目录保存。
 
