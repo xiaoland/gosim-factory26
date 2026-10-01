@@ -39,4 +39,6 @@ I12已在独立磁盘清理中终止，归档在runs/wsl-retained-20260930/；�
 I12是人工介入研究条件；旧I11摘剪接续已停止，不再用作当前生成起点。原始记录仍保留，历史页面与旧源码位置仅供追溯。
 当前Console控制与验收归 [独立任务](../../tasks/braid-console-control/packet.md)；[暂停访问历史记录](../../tasks/iteration13/console-paused-access.md)保留当时故障和接线证据，不作为I13范围。
 
-当前本机只读服务入口为 http://127.0.0.1:8765/，稳定根 `/Users/lanzhijiang/.local/share/factory26/exp-console/20261001-path-routing-final`，service ID `4db9c009-e8d5-421b-97ec-b4e1e70c0705`。前序服务配置已退役，历史材料放新根history，不继续执行旧launch。两份归档、当前制品及实际页面反馈见[路径路由回执](../../tasks/braid-console-control/path-routing.md)；原首页架构切换证据见[首页与服务切换回执](../../tasks/braid-console-control/home-entry.md)。没有可写现场，因此本批不声称草稿提交与物理控制已重验。
+当前唯一服务运行在WSL，入口仍为 [Console](http://127.0.0.1:8765/)。稳定根 `/home/yyh/.local/share/factory26/exp-console/20261001-i13-live`，service ID `c5c21595-811d-4dde-b6b4-83a77cf1bbc8`；Mac8765只做独立SSH转发，8766方案已退役。两份原Mac归档完整复制到新根archives并保留原run IDs，原文件未删除；Mac路径路由服务HTTP已退出、manifest已退役，配置/active及前序history保存在WSL新根history，不执行旧launch。归档与现场均由WSL唯一HTTP提供，WSL或转发断线时归档页面也不可用。
+
+本轮精确矩阵的真实资源与数据库出现后，使用独立network-none访问容器和配套register接入，后续接入由限定本矩阵的操作程序等待，非Console自动发现或实验调度。归档内容核对、初次两条live及原文读取、资源身份和未完成接入归[I13单实例回执](../../tasks/iteration13/console-launch.md)。未为验收提交评论、编辑或暂停/恢复生成，这些业务写入及新暂停/恢复行为仍未重验。前序路由与页面实现见[路径路由回执](../../tasks/braid-console-control/path-routing.md)，原首页架构切换见[首页与服务切换回执](../../tasks/braid-console-control/home-entry.md)。

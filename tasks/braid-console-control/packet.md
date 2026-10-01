@@ -1,6 +1,12 @@
 # Factory26 Exp Console
 
-2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；稳定服务、归档只读和GC引用收敛已提交55fe50a。当前Mac稳定服务已启动并登记两份独立归档。用户纠正后核实I12已在独立磁盘清理中终止，历史资料在项目内；后续按归档接入，不再以接回旧暂停现场为目标。Console不属于I13或生成Harness迭代。
+2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；稳定服务、归档只读和GC引用收敛已提交55fe50a。当前唯一服务已迁至WSL，保留两份独立归档并接入真实I13现场，Mac8765只做SSH转发。用户纠正后核实I12已在独立磁盘清理中终止，历史资料在项目内；不再以接回旧暂停现场为目标。Console不属于I13或生成Harness迭代。
+
+## 2026-10-01：单实例接入 WSL 当前现场
+
+用户明确只有一个Console实例，主线经独立advisor核对后沿clean/hard cutoff授权收敛：复用WSL空service `c5c21595-811d-4dde-b6b4-83a77cf1bbc8`，完整复制两份Mac归档并保留原ID，先离线核对/register，再停止Mac PID56220并原子退役manifest、保存history，最后启动WSL唯一HTTP，原8765入口只保留独立SSH转发。原Mac归档不删除；没有新增跨宿主adapter、改源码或兼容层。WSL断线归档也不可用的取舍已向用户说明。
+
+当前服务根 `/home/yyh/.local/share/factory26/exp-console/20261001-i13-live`。归档完整文件树hash、根Issue、对象、会话及原文回包迁前后一致，已登记真实GLM GitHub与Flash Sheet，各自runtime/对象/会话/native读取成功，其余按精确矩阵真实allocation、资源和数据库等待。没有测试comment、生成暂停/恢复或模型启动。IDs、PID、journal、后台操作参数、保护路径及Flash GitHub原生成容器退出边界归[I13单实例回执](../iteration13/console-launch.md)；本节为当前部署状态，以下各节的原Mac身份仅作历史来源。
 
 ## 2026-10-01：正式路径路由完成
 
