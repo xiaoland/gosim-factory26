@@ -1,6 +1,6 @@
 # I13：Braid、子Agent与协作方法改进
 
-2026-10-01 当前阶段：用户因 WSL 问题明确改为官网参赛，授权使用比赛额度先跑 GLM-5.3-Flash variant 的 GitHub，并继续3+8实际状态监控。已按[首轮实验当前范围](experiments.md#当前官网启动范围)启动官网 GitHub：submission `d0692dd35545`，run `346bc3b51b09`，13:20:59 CST开始，首批状态RUNNING；13:24:58已直接核实根会话的真实工具调用与vision委派；复用 Flash/K2.7 Code 冻结包，3+8采集和Luna内容审查已运行。WSL与其余三项运行继续暂停，不恢复 I12。此前暂停现场见 `runs/iteration13/start-20261001/pause-receipt.json`；submission保存official_evaluation，run计费字段却为self_funded；差异及原始回执保留在实验记录中。
+2026-10-01 当前阶段：用户因 WSL 问题明确改为官网参赛，授权使用比赛额度先跑 GLM-5.3-Flash variant 的 GitHub，并继续3+8实际状态监控。已按[首轮实验当前范围](experiments.md#当前官网启动范围)启动官网 GitHub：submission `d0692dd35545`，run `346bc3b51b09`，13:20:59 CST开始，首批状态RUNNING；13:24:58已直接核实根会话的真实工具调用与vision委派；复用 Flash/K2.7 Code 冻结包，3+8采集和Luna内容审查已运行。WSL与其余三项运行继续暂停，不恢复 I12。监控与heartbeat现已移交独立[GPT-5.6-Luna会话](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706)，主会话不再定时跟进。此前暂停现场见 `runs/iteration13/start-20261001/pause-receipt.json`；submission保存official_evaluation，run计费字段却为self_funded；差异及原始回执保留在实验记录中。
 
 2026-10-01 旧本地启动授权与准备经过（现已暂停）：用户在最终检查后明确“好的，可以启动 I13 了”。此前准备[首轮实验](experiments.md)：两组 × GitHub/Sheet 共四次新生成，全部使用 ARC，独立干净 WSL 本地运行并保留 Console 人工介入，每题完成立即冻结应用并官网独立重放。启动准备包括已提出的独立 Debian-Factory26、GLM-5.3 根专用 variant 与最终私有制品；不对当时无法挂载的旧 Debian VHDX做写修复，也不恢复 I12。随后用户先要求“K2.7 code 替代 K3”，再修正“GLM-5.3 组继续使用 K3”：最终 Flash 根组 advisor 使用精确 `kimi-k2.7-code`，GLM-5.3 根组 advisor 保留 `kimi-k3`，本轮不再是纯根模型对照。当前尚未发起模型请求，实际运行与制品身份以实验记录为准。此前[最终检查](final-readiness.md)保留准备证据，其待授权描述由本次明确启动指示取代。
 

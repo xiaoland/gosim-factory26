@@ -21,11 +21,13 @@
 
 官网保存的 submission 已核实 `credential_mode=official_evaluation`；本次未提供个人模型 key。run 返回 `billing_mode=self_funded`，两者不一致，与既有平台记录的差异相同。原始 submission history、status 与启动摘要均保留在新证据目录；实际费用归属不能仅凭其中一个字段断言，后续继续核对。
 
-Mac 后台协调进程46943、3+8采集进程46944已经启动，使用 `lab.arc_bench.hosted_monitor --review` 与独立 `agents/run-monitor.md`（GPT-5.6-Luna/low）。首批实际状态与归档读取成功，归档当时仅含需求，尚无原生会话，因此只能证明平台启动阶段，不能证明模型已开始有效开发。第一次内容审查已结束；主线已消费其引用并保留此证据缺口。终态由 `follow-hosted.py` 收集 status、logs、traceability 与 Git history。当前会话 heartbeat `i13-github` 每8分钟消费已有监控结果，仅在故障、完成或需要决定时通知。
+Mac 后台协调进程46943、3+8采集进程46944已经启动，使用 `lab.arc_bench.hosted_monitor --review` 与独立 `agents/run-monitor.md`（GPT-5.6-Luna/low）。首批实际状态与归档读取成功，归档当时仅含需求，尚无原生会话，因此只能证明平台启动阶段，不能证明模型已开始有效开发。第一次内容审查已结束；主线已消费其引用并保留此证据缺口。终态由 `follow-hosted.py` 收集 status、logs、traceability 与 Git history。heartbeat `i13-github` 每8分钟消费已有监控结果，仅在故障、完成或需要决定时通知；现已按用户要求迁入独立[GPT-5.6-Luna监控会话](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706)（low），主开发会话不再定时唤醒。
 
 第二批13:24:58 CST已取得Braid与原生会话，主线直接读取确认：根Issue #1开放且有1个活跃turn，根Agent已检查应用仓库与Node环境，启动应用依赖安装（30秒后自动进入bg001），并于13:24:42调用vision子Agent分析12张需求参考图。这证明模型和实际工具链已开始工作；应用实现、最终覆盖、advisor调用与评分仍待后续证据。
 
-13:34批次的原生证据确认：根Agent提交设计资料、创建基础PR #2并指派DeepSeek；DeepSeek已读取需求与设计。根曾误用comment --message，随后读help改用body-file并成功发布评论，属于已自行恢复的调用错误。监控旧逻辑按文件名字典序选中advisor/vision旧子会话，审查因此错误关联到Issue/PR；主线已直接读取两条当前Braid原生会话纠正。监控现按physical_sessions的原生路径生成带工作项/profile身份的session_evidence，当前两条会话均进入必读列表；实际归档读回及Python编译通过。仅重启Mac监控（协调PID53789，当前采集PID53790），保留同一run与下一次采集时点，官网生成未中断。回执为 `monitor-session-selection-readback.json`、`monitor-restart-session-mapping.json`；新采集批次反馈待下一次既定时点。
+13:34批次的原生证据确认：根Agent提交设计资料、创建基础PR #2并指派DeepSeek；DeepSeek已读取需求与设计。根曾误用comment --message，随后读help改用body-file并成功发布评论，属于已自行恢复的调用错误。监控旧逻辑按文件名字典序选中advisor/vision旧子会话，审查因此错误关联到Issue/PR；主线已直接读取两条当前Braid原生会话纠正。监控现按physical_sessions的原生路径生成带工作项/profile身份的session_evidence，当前两条会话均进入必读列表；实际归档读回及Python编译通过。仅重启Mac监控（协调PID53789，当前采集PID53790），保留同一run与下一次采集时点，官网生成未中断。回执为 `monitor-session-selection-readback.json`、`monitor-restart-session-mapping.json`；13:44既定采集已实际返回正确的session_evidence映射，关联文件均存在。
+
+监控会话移交：用户明确要求创建GPT-5.6-Luna独立会话并将automation迁入。已创建 `01a0f613-082a-7251-a25f-e99acbc37706`，将现有 `i13-github` 的target_thread_id从主开发会话改到该会话，保持原8分钟频率；现有3+8后台采集及官网run均未重启。原始配置读回在 `monitor-thread-handoff.json`。后续日常监控与终态通知由该会话负责。
 
 回执入口为 `runs/iteration13/hosted-20261001/launch-summary.json`、`submission-history-after.json`、`monitor-launch.json` 与 `monitor/`。本地WSL无新增操作，Sheet和GLM根组未启动。
 
