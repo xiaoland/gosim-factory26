@@ -14,6 +14,8 @@ Profile 的 `assignee_login` 是成员命名前缀，`assignee_description` 是�
 
 带 `root-only` tag 的 Profile 可由宿主通过 `root_profile_id` 用作根 Issue 入口，并沿同一命名前缀规则生成根成员；它不出现在普通指派目录中，也不能由后续 Issue/PR 的 assignee 操作选择。旧具体成员名保留，不重新编号；下一位取 `local_items.desired_member_login`、`assignments.member_login` 和保留的 `local_subscriptions.member_login` 中同一精确前缀加正整数的最大序号加一，不再由旧 `local_run.next_member_sequence` 全局计数决定。取消指派保留已认领名字的历史，即使尚未创建原生会话，也不回收序号。其余 provider、model、reasoning、user_instructions 和上下文限制只属于宿主诊断；binding 持有 executable、native_template、native_home.root、能力材料摘要。模型只有 Profile 一个权威，PiConfig 不再重复模型与 reasoning。local 请求必须为实际使用的 adapter 提供对应的 `codex`、`pi` 或 `bub` 配置，不能缺少或多出未使用的配置。Codex 配置保留版本/schema 身份；连接凭据只传环境变量名或凭据文件路径，不写入运行归档。每个新物理会话从模板派生独立 native home，resume 必须定位原 home。
 
+当前候选目录、根成员命名和新指派校验只读取已冻结的 `state/request.json` profiles，其有效ID、公开前缀、职责和tags是当前配置事实。请求缺失、解析失败或配置无效时明确拒绝，不从历史profiles表回退；已移除或新增root-only的配置不再提供新候选。profiles表保留历史物化配方，revision是内容hash的前15位，不表示时间顺序，不能通过max(revision)判断当前配置。宿主隐藏诊断 `profile list/view` 的回包标记 `source=profile-history`，其中数值最大的历史revision也不代表当前有效配置；既有负责人、历史成员及序号继续保留。此读取边界不改变离线恢复的模型与配方一致性检查。
+
 state 是输入仓库外的绝对目录。首次运行建立当前嵌入 schema 的 braid.sqlite3、请求身份记录及裸 origin；再次以相同 run_id、输入 HEAD、delivery_ref、prompt 及 profile 材料启动可恢复运行状态。运行持有独占文件锁，阻止两个 runtime 同时控制同一 state。不同请求不能覆写旧证据；origin 的已发布提交和每个 Agent clone 的本地文件在恢复时保留。旧版本已封存状态仍拒绝恢复，无需迁移。早期迁移保持不可变，其中历史远端缓存表不再是本地正文权威，也没有远端 worker 消费它们。v5 保留旧 comment 身份并加入讨论线程；v6 曾保存工作项 Profile 及旧默认指派；v7 在 Profile record 增加可空的公开 assignee 投影；v10 保存 PR base/head/draft 与合并引用；v11 保存评论定向投递回执；v12 保存工作项关注、活动历史和根 Issue 空闲检查状态；v13 为新建 PR 保存创建时的 base commit，以及 Braid 曾观察到不在目标分支中的 head commit，旧 PR 保持空值。新运行只用明确的根成员和对象 assignee；旧库已记录的非空 assignee 保留，不根据 model、provider 或内部 ID 推断新的公开身份。
 
 ## Pi 启动与失败恢复

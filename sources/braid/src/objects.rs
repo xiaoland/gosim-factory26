@@ -1,5 +1,6 @@
 //! Local Issue/PR authority. Object and event writes share one SQLite transaction.
 use crate::{
+    config::Profile,
     context::{
         self, Actor, CanonicalContext, CommentReaction, CommentSnapshot, IssueSnapshot,
         PullRequestSnapshot, WorkItemKind, WorkItemReference,
@@ -9,7 +10,7 @@ use crate::{
 use anyhow::{Context as _, Result, bail, ensure};
 use comrak::{Arena, Options, nodes::NodeValue, parse_document};
 use rusqlite::{Connection, OptionalExtension, Transaction, TransactionBehavior, params};
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 use std::{
     collections::{BTreeMap, BTreeSet},
     fmt,
@@ -128,6 +129,10 @@ struct AssigneeCandidate {
     profile: String,
     login: String,
     description: String,
+}
+#[derive(Deserialize)]
+struct FrozenProfiles {
+    profiles: Vec<Profile>,
 }
 #[derive(Serialize)]
 pub struct CommentResolution {
@@ -248,7 +253,10 @@ impl LocalObjects {
             params![run_id, repo.to_string_lossy(), delivery_ref],
         )?;
         let profile_id = root_profile_id.to_owned();
-        let member_login = Self::next_member_for_profile(&tx, root_profile_id)?;
+        let root_profile = self.current_profiles()?.into_iter()
+            .find(|profile| profile.id == root_profile_id)
+            .with_context(|| format!("当前 request 未配置根 Profile {root_profile_id}"))?;
+        let member_login = Self::next_member_for_profile(&tx, &root_profile)?;
         self.create_item(&tx, "issue", "任务", prompt, None, None, None)?;
         tx.execute("UPDATE local_items SET desired_profile_id=?1,desired_member_login=?2 WHERE node_id='issue:1'", params![profile_id,member_login])?;
         Self::subscribe_in(&tx, "issue:1", &member_login, "assignment")?;
@@ -536,24 +544,38 @@ impl LocalObjects {
     pub fn profiles(&self) -> Result<Vec<serde_json::Value>> {
         let c = self.connect()?;
         Ok(c.prepare("SELECT profile_id,revision,effective_digest,provider_kind,tags FROM profiles p WHERE revision=(SELECT max(revision) FROM profiles n WHERE n.profile_id=p.profile_id) ORDER BY profile_id")?
-            .query_map([], |r| Ok(serde_json::json!({"id":r.get::<_,String>(0)?,"revision":r.get::<_,i64>(1)?,"effective_profile_digest":r.get::<_,String>(2)?,"adapter_type":r.get::<_,String>(3)?,"tags":serde_json::from_str::<serde_json::Value>(&r.get::<_,String>(4)?).unwrap_or_else(|_| serde_json::json!([]))})))?
+            .query_map([], |r| Ok(serde_json::json!({"source":"profile-history","id":r.get::<_,String>(0)?,"revision":r.get::<_,i64>(1)?,"effective_profile_digest":r.get::<_,String>(2)?,"adapter_type":r.get::<_,String>(3)?,"tags":serde_json::from_str::<serde_json::Value>(&r.get::<_,String>(4)?).unwrap_or_else(|_| serde_json::json!([]))})))?
             .collect::<rusqlite::Result<Vec<_>>>()?)
     }
 
     pub fn assignee_directory(&self) -> Result<Vec<serde_json::Value>> {
         let mut c = self.connect()?;
         let tx = c.transaction()?;
-        Self::assignee_candidates(&tx)?.into_iter()
+        self.assignee_candidates(&tx)?.into_iter()
             .map(|candidate| serde_json::to_value(candidate).map_err(Into::into))
             .collect()
     }
-    fn assignee_candidates(c: &Connection) -> Result<Vec<AssigneeCandidate>> {
-        let profiles = c.prepare("SELECT p.profile_id,p.assignee_description FROM profiles p WHERE p.assignee_login IS NOT NULL AND NOT EXISTS (SELECT 1 FROM json_each(p.tags) WHERE value='root-only') AND p.revision=(SELECT max(n.revision) FROM profiles n WHERE n.profile_id=p.profile_id) ORDER BY p.assignee_login")?
-            .query_map([], |r| Ok((r.get::<_, String>(0)?, r.get::<_, String>(1)?)))?
-            .collect::<rusqlite::Result<Vec<_>>>()?;
-        profiles.into_iter().map(|(profile, description)| {
+    fn current_profiles(&self) -> Result<Vec<Profile>> {
+        let path = self.state.join("request.json");
+        let bytes = std::fs::read(&path).with_context(|| format!("无法读取当前成员配置 {}", path.display()))?;
+        let frozen: FrozenProfiles = serde_json::from_slice(&bytes)
+            .with_context(|| format!("当前成员配置无效 {}", path.display()))?;
+        ensure!(!frozen.profiles.is_empty(), "当前 request 的 profiles 不能为空");
+        let mut ids = BTreeSet::new();
+        let mut logins = BTreeSet::new();
+        for profile in &frozen.profiles {
+            profile.validate().with_context(|| format!("当前 Profile {} 无效", profile.id))?;
+            ensure!(!profile.id.is_empty() && ids.insert(profile.id.as_str()), "当前 request 的 Profile ID 为空或重复：{}", profile.id);
+            ensure!(logins.insert(profile.assignee_login.as_str()), "当前 request 的成员前缀重复：{}", profile.assignee_login);
+        }
+        Ok(frozen.profiles)
+    }
+    fn assignee_candidates(&self, c: &Connection) -> Result<Vec<AssigneeCandidate>> {
+        let mut profiles = self.current_profiles()?;
+        profiles.sort_by(|a, b| a.assignee_login.cmp(&b.assignee_login));
+        profiles.into_iter().filter(|profile| !profile.has_tag("root-only")).map(|profile| {
             let login = Self::next_member_for_profile(c, &profile)?;
-            Ok(AssigneeCandidate { profile, login, description })
+            Ok(AssigneeCandidate { profile: profile.id, login, description: profile.assignee_description })
         }).collect()
     }
 
@@ -574,7 +596,7 @@ impl LocalObjects {
             "only this work item group can change its assignee");
         let login = Self::normalize_login(login)?;
         if item.assignees.first().is_none_or(|actor| actor.login != login) {
-            let (profile, login) = Self::profile_for_login(&tx, &login)?;
+            let (profile, login) = self.profile_for_login(&tx, &login)?;
             self.replace_assignee_in(&tx, kind, id, &profile, &login, &item, writer.as_ref(), true)?;
         }
         tx.commit()?;
@@ -585,9 +607,9 @@ impl LocalObjects {
         ensure!(!login.is_empty() && !login.starts_with('@'), "invalid assignee login {login:?}");
         Ok(login.to_ascii_lowercase())
     }
-    fn profile_for_login(tx: &Transaction<'_>, login: &str) -> Result<(String, String)> {
+    fn profile_for_login(&self, tx: &Transaction<'_>, login: &str) -> Result<(String, String)> {
         let login = Self::normalize_login(login)?;
-        let candidates = Self::assignee_candidates(tx)?;
+        let candidates = self.assignee_candidates(tx)?;
         let mut matching = candidates.iter().filter(|candidate| candidate.login == login);
         let Some(candidate) = matching.next() else {
             let options = candidates.iter().map(|candidate| candidate.login.as_str()).collect::<Vec<_>>();
@@ -596,13 +618,8 @@ impl LocalObjects {
         ensure!(matching.next().is_none(), "成员 {login} 对应多个配置");
         Ok((candidate.profile.clone(), candidate.login.clone()))
     }
-    fn next_member_for_profile(c: &Connection, profile: &str) -> Result<String> {
-        let alias: Option<String> = c.query_row(
-            "SELECT assignee_login FROM profiles WHERE profile_id=?1 ORDER BY revision DESC LIMIT 1",
-            [profile], |r| r.get(0),
-        )?;
-        let alias = alias.context("成员配置缺少公开命名前缀")?;
-        let prefix = format!("{alias}-");
+    fn next_member_for_profile(c: &Connection, profile: &Profile) -> Result<String> {
+        let prefix = format!("{}-", profile.assignee_login);
         // 订阅历史保留在会话物化前已取消的成员名；查询候选不认领名字。
         let history = c.prepare("SELECT desired_member_login FROM local_items WHERE desired_member_login IS NOT NULL UNION SELECT member_login FROM assignments WHERE member_login IS NOT NULL UNION SELECT member_login FROM local_subscriptions")?
             .query_map([], |r| r.get::<_, String>(0))?
@@ -683,7 +700,7 @@ impl LocalObjects {
         kind_static(kind)?;
         ensure!(!title.trim().is_empty(), "title is empty");
         let desired_assignment = desired_profile
-            .map(|login| Self::profile_for_login(tx, login))
+            .map(|login| self.profile_for_login(tx, login))
             .transpose()?;
         let id: i64 = tx.query_row(
             "SELECT coalesce(max(number),0)+1 FROM work_items WHERE repository_node_id='local'",
@@ -928,7 +945,7 @@ impl LocalObjects {
         let same_assignee = add_login.as_deref().is_some_and(|login| Some(login) == current_login);
         let remove_login = if same_assignee { None } else { remove_login };
         let add = if same_assignee { None } else {
-            add_login.as_deref().map(|login| Self::profile_for_login(&tx, login)).transpose()?
+            add_login.as_deref().map(|login| self.profile_for_login(&tx, login)).transpose()?
         };
         if add.is_some() && remove_login.is_none() {
             ensure!(current_login.is_none(), "work item already has an active assignee; remove the current member when replacing it");
@@ -1683,7 +1700,7 @@ impl LocalObjects {
             }
         }
         if let Some(login) = profile {
-            Self::profile_for_login(&tx, login)?;
+            self.profile_for_login(&tx, login)?;
         }
         ensure!(!issue_ids.is_empty(), "PR requires at least one --issue");
         ensure!(!title.trim().is_empty(), "title is empty");
