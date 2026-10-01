@@ -243,7 +243,7 @@ impl GroupDriver<'_> {
                 Ok(())
             }
             Err(error) => {
-                if matches!(error, crate::agent_session::SessionError::Deferred(_)) {
+                if error.is_deferred() {
                     store.defer_agent_assignment(materialization.assignment_id, candidate.event_id, error.to_string())?;
                     return Err(error.into());
                 }

@@ -28,6 +28,8 @@ type PendingRequests = BTreeMap<i64, oneshot::Sender<Result<Value, ProviderError
 pub enum ProviderError {
     #[error("provider deferred input: {0}")]
     Deferred(String),
+    #[error("provider waiting for resources: {0}")]
+    ResourceDeferred(String),
     #[error("cannot start provider process: {0}")]
     Start(#[from] std::io::Error),
     #[error("provider request {method} timed out")]

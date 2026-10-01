@@ -202,7 +202,7 @@ impl PiProvider {
             Ok(response) => response,
             Err(error) => {
                 if let Some(reason) = state.process.as_ref().and_then(startup_deferred) {
-                    return Err(ProviderError::Deferred(reason));
+                    return Err(ProviderError::ResourceDeferred(reason));
                 }
                 return Err(error);
             }
@@ -474,7 +474,7 @@ impl AgentProvider for PiProvider {
             .map_err(
             |error| match error {
                 ProviderError::CreatedWithoutIdentity(_) => error,
-                ProviderError::Deferred(_) => error,
+                ProviderError::Deferred(_) | ProviderError::ResourceDeferred(_) => error,
                 other => ProviderError::CreatedWithoutIdentity(other.to_string()),
             },
         )?;
@@ -553,7 +553,7 @@ impl AgentProvider for PiProvider {
         }
         if let Some(pressure) = resource_status().await.map_err(|error| ProviderError::Deferred(error.to_string()))? {
             if pressure["status"] != "normal" {
-                return Err(ProviderError::Deferred(format!("resource pressure: {pressure}")));
+                return Err(ProviderError::ResourceDeferred(format!("resource pressure: {pressure}")));
             }
         }
         let turn_id = uuid::Uuid::now_v7().to_string();

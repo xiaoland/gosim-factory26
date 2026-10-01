@@ -52,7 +52,7 @@ pub(crate) fn record_context_unavailable(
 }
 
 impl GroupDriver<'_> {
-    pub(super) async fn handle_next_work_item_lifecycle(&self) -> (bool, Option<RunningAgentTurn>, Option<String>) {
+    pub(super) async fn handle_next_work_item_lifecycle(&self) -> (bool, Option<RunningAgentTurn>, Option<anyhow::Error>) {
         let store = self.store;
         let work_item_kind = self.spec.kind.as_str();
         let candidate = match store.work_item_lifecycle_candidates(work_item_kind.into(), 1) {
@@ -87,8 +87,9 @@ impl GroupDriver<'_> {
                     tracing::error!(%error, work_item_kind, "cannot reactivate reopened Agent Group");
                     if matches!(error.downcast_ref::<crate::agent_session::SessionError>(),
                         Some(crate::agent_session::SessionError::Deferred(_)
+                            | crate::agent_session::SessionError::ResourceDeferred(_)
                             | crate::agent_session::SessionError::Unavailable)) {
-                        retryable_error = Some(error.to_string());
+                        retryable_error = Some(error);
                     }
                 }
                 (true, None, retryable_error)
@@ -210,7 +211,7 @@ impl GroupDriver<'_> {
                         Err(crate::agent_session::SessionError::HistoryUnavailable(reason)) => {
                             tracing::warn!(provider_session = %session.id, %reason, "native history missing; starting with current Context");
                         }
-                        Err(error @ (crate::agent_session::SessionError::Deferred(_) | crate::agent_session::SessionError::Unavailable)) => {
+                        Err(error @ (crate::agent_session::SessionError::Deferred(_) | crate::agent_session::SessionError::ResourceDeferred(_) | crate::agent_session::SessionError::Unavailable)) => {
                             retryable_resume = true;
                             return Err(error.into());
                         }
@@ -251,7 +252,7 @@ impl GroupDriver<'_> {
                 Ok(())
             }
             Err(error) => {
-                if retryable_resume || matches!(error.downcast_ref::<crate::agent_session::SessionError>(), Some(crate::agent_session::SessionError::Deferred(_))) {
+                if retryable_resume || error.downcast_ref::<crate::agent_session::SessionError>().is_some_and(crate::agent_session::SessionError::is_deferred) {
                     store.defer_work_item_reactivation(
                         candidate.event_id,
                         materialization.assignment_id,
@@ -302,7 +303,7 @@ impl GroupDriver<'_> {
         let reset_id = reset.reset_id.clone();
         let assignment_id = reset.assignment_id.clone();
         if let Err(error) = Box::pin(self.materialize_context_reset(reset)).await {
-            if matches!(error.downcast_ref::<crate::agent_session::SessionError>(), Some(crate::agent_session::SessionError::Deferred(_))) {
+            if error.downcast_ref::<crate::agent_session::SessionError>().is_some_and(crate::agent_session::SessionError::is_deferred) {
                 tracing::info!(%error, reset = %reset_id, "Context materialization deferred; reset retained");
                 return Ok(false);
             }
@@ -426,7 +427,7 @@ impl GroupDriver<'_> {
                 tracing::error!("running input unexpectedly started a new turn; batch remains runnable");
                 return;
             }
-            Err(crate::agent_session::SessionError::Deferred(_)) => return,
+            Err(error) if error.is_deferred() => return,
             Err(error) => {
                 tracing::warn!(%error, "active turn did not accept input; batch remains runnable");
                 return;
@@ -519,8 +520,8 @@ impl GroupDriver<'_> {
                 return None;
             }
             Err(error) => {
-                if matches!(error, crate::agent_session::SessionError::Deferred(_)) {
-                    sessions.record_session_deferred(&claim.provider_session_id, error.to_string()).await;
+                if error.is_deferred() {
+                    sessions.record_session_deferred(&claim.provider_session_id, error.clone()).await;
                     let deferred = if let Some(reset_id) = &claim.reset_id {
                         store.defer_context_reset_notice(
                             reset_id.clone(), claim.turn_id.clone(), "retry".into(), Some(error.to_string()),
@@ -537,6 +538,7 @@ impl GroupDriver<'_> {
                 let lifecycle: String = match error {
                     crate::agent_session::SessionError::Unavailable => "unknown".into(),
                     crate::agent_session::SessionError::Deferred(_)
+                    | crate::agent_session::SessionError::ResourceDeferred(_)
                     | crate::agent_session::SessionError::HistoryUnavailable(_)
                     | crate::agent_session::SessionError::Failed(_)
                     | crate::agent_session::SessionError::StopUnproved(_)

@@ -78,11 +78,14 @@ pub enum SessionEvent {
     TurnTerminal { provider_turn_id: String, outcome: TurnOutcome, error: Option<String> },
 }
 
-#[derive(Debug, thiserror::Error)]
+#[derive(Debug, Clone, thiserror::Error)]
 pub enum SessionError {
     /// No input was accepted; retain the durable message for later delivery.
     #[error("session deferred input: {0}")]
     Deferred(String),
+    /// Resource admission accepted no input; retry when admission permits.
+    #[error("session waiting for resources: {0}")]
+    ResourceDeferred(String),
     #[error("session failed: {0}")]
     Failed(String),
     #[error("session is unavailable")]
@@ -96,6 +99,16 @@ pub enum SessionError {
     /// Retain even an unknown identity as evidence; it is not an unstarted attempt.
     #[error("physical session materialization failed: {reason}")]
     Materialization { session_id: Option<String>, reason: String },
+}
+
+impl SessionError {
+    pub(crate) fn is_deferred(&self) -> bool {
+        matches!(self, Self::Deferred(_) | Self::ResourceDeferred(_))
+    }
+
+    pub(crate) fn is_resource_deferred(&self) -> bool {
+        matches!(self, Self::ResourceDeferred(_))
+    }
 }
 
 /// The core-facing Agent Session handle.

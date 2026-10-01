@@ -341,6 +341,7 @@ impl AgentSession for ProviderAgentSession {
 pub(super) fn map_provider_error(error: ProviderError) -> SessionError {
     match error {
         ProviderError::Deferred(message) => SessionError::Deferred(message),
+        ProviderError::ResourceDeferred(message) => SessionError::ResourceDeferred(message),
         ProviderError::Start(_) | ProviderError::Timeout { .. } | ProviderError::Disconnected => {
             SessionError::Unavailable
         }

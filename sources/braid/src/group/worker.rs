@@ -158,6 +158,7 @@ impl GroupDriver<'_> {
                     candidate.provider_session_id.clone(),
                     message.into(),
                 )?;
+                unavailable = Some(crate::agent_session::SessionError::Failed(message.into()));
                 continue;
             };
             let head_ref = if self.spec.kind == GroupKind::Pr {
@@ -168,6 +169,7 @@ impl GroupDriver<'_> {
                         candidate.provider_session_id.clone(),
                         message.into(),
                     )?;
+                    unavailable = Some(crate::agent_session::SessionError::Failed(message.into()));
                     continue;
                 };
                 Some(head_ref)
@@ -219,6 +221,7 @@ impl GroupDriver<'_> {
                     candidate.provider_session_id.clone(),
                     message.into(),
                 )?;
+                unavailable = Some(crate::agent_session::SessionError::Failed(message.into()));
                 continue;
             }
             let mut effective_profile = profile.clone();
@@ -254,6 +257,9 @@ impl GroupDriver<'_> {
                     store.begin_provider_replacement(candidate.provider_session_id.clone(), self.spec.profile_record.clone())?;
                     tracing::warn!(provider_session = %candidate.provider_session_id, %reason, "native history missing; requesting fresh Context");
                 }
+                Err(error @ crate::agent_session::SessionError::ResourceDeferred(_)) => {
+                    if unavailable.is_none() { unavailable = Some(error); }
+                }
                 Err(error @ (crate::agent_session::SessionError::Unavailable | crate::agent_session::SessionError::Deferred(_))) => {
                     unavailable = Some(error)
                 }
@@ -263,6 +269,7 @@ impl GroupDriver<'_> {
                         error.to_string(),
                     )?;
                     tracing::error!(%error, kind = self.spec.kind.as_str(), number = candidate.number, provider_session = %candidate.provider_session_id, "cannot resume provider session");
+                    unavailable = Some(error);
                 }
             }
         }
@@ -459,6 +466,7 @@ impl GroupDriver<'_> {
                     group: self.spec.group_id(),
                     error: Some(error.to_string()),
                     can_progress: false,
+                    waiting_for_resources: false,
                 })
                 .await;
             return None;
@@ -486,6 +494,7 @@ impl GroupDriver<'_> {
                                 group: self.spec.group_id(),
                                 error: Some(message.clone()),
                                 can_progress: false,
+                                waiting_for_resources: false,
                             }).await;
                             return Some(message);
                         }
@@ -505,6 +514,7 @@ impl GroupDriver<'_> {
                         group: self.spec.group_id(),
                         error: Some(message.clone()),
                         can_progress: false,
+                        waiting_for_resources: false,
                     })
                     .await;
                 return Some(message);
@@ -520,6 +530,7 @@ impl GroupDriver<'_> {
                         group: self.spec.group_id(),
                         error: Some(message.clone()),
                         can_progress: false,
+                        waiting_for_resources: false,
                     })
                     .await;
                 return Some(message);
@@ -546,7 +557,7 @@ impl GroupDriver<'_> {
                     Ok(()) => self.resume(&running.keys().cloned().collect()).await,
                     Err(error) => Err(error.into()),
                 };
-                recovery_error = result.err().map(|error| error.to_string());
+                recovery_error = result.err();
                 if let Some(error) = &recovery_error {
                     tracing::warn!(%error, kind = self.spec.kind.as_str(), "session recovery unavailable");
                 }
@@ -581,6 +592,7 @@ impl GroupDriver<'_> {
                                 group: self.spec.group_id(),
                                 error: Some(message.clone()),
                                 can_progress: false,
+                                waiting_for_resources: false,
                             })
                             .await;
                         return Some(message);
@@ -599,19 +611,28 @@ impl GroupDriver<'_> {
                         group: self.spec.group_id(),
                         error: Some(error.clone()),
                         can_progress: false,
+                        waiting_for_resources: false,
                     })
                     .await;
                 return Some(error);
             }
             if materialize {
-                let deferred = self.sessions.take_deferred().await;
+                let deferred = self.sessions.take_deferred().await.map(anyhow::Error::from);
                 let can_progress = match self.can_progress(&running, available, deferred.is_some()).await {
                     Ok(can_progress) => can_progress,
-                    Err(error) => { recovery_error = Some(error.to_string()); false }
+                    Err(error) => { recovery_error = Some(error); false }
                 };
-                let error = recovery_error.clone().or_else(|| reactivation_error.clone()).or(deferred);
+                let errors = [recovery_error.as_ref(), reactivation_error.as_ref(), deferred.as_ref()];
+                let resource_wait = |error: &anyhow::Error| error
+                    .downcast_ref::<crate::agent_session::SessionError>()
+                    .is_some_and(crate::agent_session::SessionError::is_resource_deferred);
+                // A resource wait cannot hide another member's recovery error.
+                let error = errors.iter().copied().flatten().find(|error| !resource_wait(error))
+                    .or_else(|| errors.into_iter().flatten().next());
+                let waiting_for_resources = error.is_some_and(resource_wait);
                 if reports.send(crate::health::ProviderHealthUpdate {
-                    group: self.spec.group_id(), error, can_progress,
+                    group: self.spec.group_id(), error: error.map(ToString::to_string), can_progress,
+                    waiting_for_resources,
                 }).await.is_err() { return None; }
             }
         }

@@ -165,7 +165,7 @@ impl PiSessions {
     async fn check_start_resources(&self) -> Result<(), SessionError> {
         let resource = super::pi::resource_status().await.map_err(|error| SessionError::Deferred(error.to_string()))?;
         if let Some(resource) = resource {
-            if resource["status"] != "normal" { return Err(SessionError::Deferred(format!("resource pressure: {resource}"))); }
+            if resource["status"] != "normal" { return Err(SessionError::ResourceDeferred(format!("resource pressure: {resource}"))); }
         }
         Ok(())
     }

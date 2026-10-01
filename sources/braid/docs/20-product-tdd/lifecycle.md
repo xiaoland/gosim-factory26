@@ -16,7 +16,7 @@ Context 失效先保留待重建事件，并将变更引用告知原会话。运
 
 启用运行资源控制时，所有 Pi start/resume、description reset 与重新激活均通过同一共享 launcher 准入。launcher 用运行目录的文件锁登记启动 UUID、进程 birth identity 和独立 PGID 后 exec 原 Pi，payload 在登记之前不能执行。资源拒绝必须有该启动 UUID 对应的 `resource_deferred` 原件，不能仅按退出码 75 推断。普通 turn 只检查当前压力，不再领取整个进程生命周期的启动 reservation。拒绝 start 保留原 assignment 代次、clone 和激活事件；拒绝 reset 保留 materializing reset；拒绝 sleeping activation 保留原责任与联系，各路径均可接续，不将资源不足写成永久的 assignment blocked。
 
-各 group 复用既有两秒恢复循环；共享 factory 按 collector sample 串行执行至多一次原生 `relieve_pressure`，随后重读压力。原生运行时选择确切自有的有限作业并保存退出、部分输出与资源原因，Braid 不读取工具私有作业表。每个成员的一条连续 Unknown 链只自动恢复一次，成功 completed 或明确的新工作输入才解除限制；自动恢复通知、Braid 系统评论及自身 deferred/failed 重放不解除限制。恢复仍受实际资源准入约束。driver 向 local 报告实际 `can_progress`，同组健康成员的输入、物化和 reset 可继续；对于资源 Deferred 和恢复限次等可延期错误，只有所有已观察 group 都不能推进且存在具体错误时，local 才返回可恢复的 blocked，并保留任务与历史。真正 owned execution 停止证明为 unknown 时仍沿既有 fatal 边界立即阻断整轮；本轮未建立任意未知 writer 的独立权限撤销或隔离。
+各 group 复用既有两秒恢复循环；共享 factory 按 collector sample 串行执行至多一次原生 `relieve_pressure`，随后重读压力。原生运行时选择确切自有的有限作业并保存退出、部分输出与资源原因，Braid 不读取工具私有作业表。每个成员的一条连续 Unknown 链只自动恢复一次，成功 completed 或明确的新工作输入才解除限制；自动恢复通知、Braid 系统评论及自身 deferred/failed 重放不解除限制。资源准入拒绝使用独立的 `ResourceDeferred` 类型，不消耗 Unknown 恢复额度；driver 在 `provider_health` 中报告 `waiting_for_resources`，保留待执行义务并继续等待采样恢复，即使所有 group 暂时都在等待，也不封存整轮。`can_progress` 仍只报告真实活动，不把等待伪装为推进。资源等待不能掩盖同组或其它 group 的真实恢复失败、配置不兼容或恢复额度耗尽；这些错误在所有已观察 group 均不能推进时仍可返回 blocked。真正 owned execution 停止证明为 unknown 时仍沿既有 fatal 边界立即阻断整轮；本轮未建立任意未知 writer 的独立权限撤销或隔离。
 
 close/merge 不中断当前执行，也不额外授予 finalization。自己关闭只保存对象状态；外部关闭作为普通输入投递给负责人。真实待处理输入继续执行，无输入的关闭成员自然休眠并保留责任关系；reopen 或定向评论可重新激活。旧归档的 finalizing 状态仍能沿既有恢复链收尾，新关闭不创建该状态。
 

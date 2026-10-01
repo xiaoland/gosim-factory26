@@ -19,7 +19,7 @@ pub(super) struct SessionManager {
     stop_failure: Mutex<Option<String>>,
     uncertain_recoveries: Mutex<HashSet<String>>,
     recovery_inputs: Mutex<HashMap<String, HashSet<String>>>,
-    deferred: Mutex<Option<String>>,
+    deferred: Mutex<Option<SessionError>>,
     deferred_sessions: Mutex<HashSet<String>>,
 }
 
@@ -77,13 +77,19 @@ impl SessionManager {
     pub(super) async fn note_completed(&self, id: &str) {
         self.uncertain_recoveries.lock().await.remove(id);
     }
-    pub(super) async fn record_deferred(&self, error: String) {
-        *self.deferred.lock().await = Some(error);
+    pub(super) async fn record_deferred(&self, error: SessionError) {
+        let mut deferred = self.deferred.lock().await;
+        if error.is_resource_deferred()
+            && deferred.as_ref().is_some_and(|prior| !prior.is_resource_deferred())
+        {
+            return;
+        }
+        *deferred = Some(error);
     }
-    pub(super) async fn take_deferred(&self) -> Option<String> {
+    pub(super) async fn take_deferred(&self) -> Option<SessionError> {
         self.deferred.lock().await.take()
     }
-    pub(super) async fn record_session_deferred(&self, id: &str, error: String) {
+    pub(super) async fn record_session_deferred(&self, id: &str, error: SessionError) {
         self.deferred_sessions.lock().await.insert(id.to_owned());
         self.record_deferred(error).await;
     }
@@ -134,7 +140,11 @@ impl SessionManager {
         let binding_id = uuid::Uuid::now_v7().to_string();
         let cli = CliContext { state: self.state.clone(), binding_id: binding_id.clone() };
         let created = self.factory.start(profile, instructions, context, cli).await;
-        if let Err(error @ SessionError::Deferred(_)) = &created { self.record_deferred(error.to_string()).await; }
+        if let Err(error) = &created
+            && error.is_deferred()
+        {
+            self.record_deferred(error.clone()).await;
+        }
         if let Err(error @ SessionError::StopUnproved(_)) = &created { self.record_stop_failure(error).await; }
         let CreatedSession { id, session, .. } = created?;
         self.stopped.lock().await.remove(&id);
@@ -156,7 +166,11 @@ impl SessionManager {
         let binding_id = uuid::Uuid::now_v7().to_string();
         let cli = CliContext { state: self.state.clone(), binding_id: binding_id.clone() };
         let created = self.factory.resume(&id, profile, instructions, cli).await;
-        if let Err(error @ SessionError::Deferred(_)) = &created { self.record_session_deferred(&id, error.to_string()).await; }
+        if let Err(error) = &created
+            && error.is_deferred()
+        {
+            self.record_session_deferred(&id, error.clone()).await;
+        }
         if let Err(error @ SessionError::StopUnproved(_)) = &created { self.record_stop_failure(error).await; }
         let created = created?;
         self.clear_session_deferred(&id).await;

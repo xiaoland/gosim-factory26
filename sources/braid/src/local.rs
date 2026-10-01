@@ -123,7 +123,7 @@ impl SessionFactory for RecordingFactory {
                 json!({"session_id":session_id,"provider":profile.adapter_type,"profile_id":profile.id,"worktree":profile.workspace(),"native_home":null,"native_session_path":if profile.adapter_type=="pi" {session_id.clone()} else {None},"status":"unknown","error":reason,"turns":[]})
             }
             Err(error) => {
-                json!({"session_id":null,"provider":profile.adapter_type,"profile_id":profile.id,"worktree":profile.workspace(),"native_home":null,"native_session_path":null,"status":"failed","error":error.to_string()})
+                json!({"session_id":null,"provider":profile.adapter_type,"profile_id":profile.id,"worktree":profile.workspace(),"native_home":null,"native_session_path":null,"status":if error.is_deferred() {"deferred"} else {"failed"},"error":error.to_string()})
             }
         };
         meta.as_object_mut()
@@ -135,7 +135,11 @@ impl SessionFactory for RecordingFactory {
             }
             return Err(SessionError::Failed(error.to_string()));
         }
-        telemetry.finish(if result.is_ok() { "completed" } else { "failed" });
+        telemetry.finish(match &result {
+            Ok(_) => "completed",
+            Err(error) if error.is_deferred() => "deferred",
+            Err(_) => "failed",
+        });
         result
     }
     async fn resume(
@@ -150,7 +154,11 @@ impl SessionFactory for RecordingFactory {
             vec![opentelemetry::KeyValue::new("braid.provider_session.id", id.to_owned())],
         );
         let result = self.inner.resume(id, profile, instructions, cli).await;
-        telemetry.finish(if result.is_ok() { "completed" } else { "failed" });
+        telemetry.finish(match &result {
+            Ok(_) => "completed",
+            Err(error) if error.is_deferred() => "deferred",
+            Err(_) => "failed",
+        });
         result
     }
     async fn teardown(&self, id: &str) -> std::result::Result<(), SessionError> {
@@ -522,8 +530,7 @@ async fn drive(
     }
     drop(reports);
     drop(fatal_stops);
-    let mut errors = std::collections::BTreeMap::new();
-    let mut progress = std::collections::BTreeMap::new();
+    let mut provider_health = std::collections::BTreeMap::new();
     let result = async {
         loop {
             tokio::select! {
@@ -534,29 +541,28 @@ async fn drive(
             }
             store.advance_scheduler()?;
             while let Ok(report) = health.try_recv() {
-                progress.insert(report.group.clone(), report.can_progress);
-                errors.insert(report.group, report.error);
+                provider_health.insert(report.group.clone(), report);
             }
             write_json(&request.state.join("sessions.json"), &sessions(&objects)?)?;
-            let current = status(&objects)?;
+            let mut current = status(&objects)?;
+            current["provider_health"] = json!(provider_health);
             write_json(&request.state.join("status.json"), &current)?;
             // Closed scope stops ordinary dispatch in the store. Wait for already
             // accepted execution and reset continuations to finish naturally.
             if delivery_complete(&current) && execution_settled(&current) {
                 return Ok(("quiescent".into(), "根 Issue 与全部工作项已完成".into()));
             }
-            if errors.len() == config.profiles.len() * 2
-                && errors.values().any(Option::is_some)
+            if provider_health.len() == config.profiles.len() * 2
+                && provider_health.values().any(|report| report.error.is_some() && !report.waiting_for_resources)
                 && current["active_turns"] == 0
-                && progress.len() == config.profiles.len() * 2
-                && !progress.values().any(|can_progress| *can_progress)
+                && !provider_health.values().any(|report| report.can_progress)
             {
                 return Ok((
                     "blocked".into(),
-                    format!("provider recovery returned an error: {errors:?}; retained state can resume"),
+                    format!("provider recovery returned an error: {provider_health:?}; retained state can resume"),
                 ));
             }
-            if errors.len() == config.profiles.len() * 2
+            if provider_health.len() == config.profiles.len() * 2
                 && current["blocked_groups"].as_i64().unwrap_or(0) > 0
                 && current["active_turns"] == 0
                 && current["pending_batches"] == 0
@@ -567,6 +573,9 @@ async fn drive(
                     "blocked".into(),
                     "必要 group 物化或恢复已 blocked，状态与输入已保留".into(),
                 ));
+            }
+            if provider_health.values().any(|report| report.waiting_for_resources) {
+                continue;
             }
             if !quiescent(&current) {
                 objects.root_idle_tick(&request.root_check_messages)?;
