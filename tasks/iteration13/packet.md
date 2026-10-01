@@ -1,6 +1,8 @@
 # I13：Braid、子Agent与协作方法改进
 
-2026-10-01 当前阶段：用户在最终检查后明确“好的，可以启动 I13 了”。正在执行[首轮实验](experiments.md)：两组 × GitHub/Sheet 共四次新生成，全部使用 ARC，独立干净 WSL 本地运行并保留 Console 人工介入，每题完成立即冻结应用并官网独立重放。启动准备包括已提出的独立 Debian-Factory26、GLM-5.3 根专用 variant 与最终私有制品；不对当时无法挂载的旧 Debian VHDX做写修复，也不恢复 I12。随后用户先要求“K2.7 code 替代 K3”，再修正“GLM-5.3 组继续使用 K3”：最终 Flash 根组 advisor 使用精确 `kimi-k2.7-code`，GLM-5.3 根组 advisor 保留 `kimi-k3`，本轮不再是纯根模型对照。当前尚未发起模型请求，实际运行与制品身份以实验记录为准。此前[最终检查](final-readiness.md)保留准备证据，其待授权描述由本次明确启动指示取代。
+2026-10-01 当前阶段：用户因 WSL 问题明确改为官网参赛，授权使用比赛额度先跑 GLM-5.3-Flash variant 的 GitHub，并继续3+8实际状态监控。已按[首轮实验当前范围](experiments.md#当前官网启动范围)启动官网 GitHub：submission `d0692dd35545`，run `346bc3b51b09`，13:20:59 CST开始，首批状态RUNNING；复用 Flash/K2.7 Code 冻结包，3+8采集和Luna内容审查已运行。WSL与其余三项运行继续暂停，不恢复 I12。此前暂停现场见 `runs/iteration13/start-20261001/pause-receipt.json`；submission保存official_evaluation，run计费字段却为self_funded；差异及原始回执保留在实验记录中。
+
+2026-10-01 旧本地启动授权与准备经过（现已暂停）：用户在最终检查后明确“好的，可以启动 I13 了”。此前准备[首轮实验](experiments.md)：两组 × GitHub/Sheet 共四次新生成，全部使用 ARC，独立干净 WSL 本地运行并保留 Console 人工介入，每题完成立即冻结应用并官网独立重放。启动准备包括已提出的独立 Debian-Factory26、GLM-5.3 根专用 variant 与最终私有制品；不对当时无法挂载的旧 Debian VHDX做写修复，也不恢复 I12。随后用户先要求“K2.7 code 替代 K3”，再修正“GLM-5.3 组继续使用 K3”：最终 Flash 根组 advisor 使用精确 `kimi-k2.7-code`，GLM-5.3 根组 advisor 保留 `kimi-k3`，本轮不再是纯根模型对照。当前尚未发起模型请求，实际运行与制品身份以实验记录为准。此前[最终检查](final-readiness.md)保留准备证据，其待授权描述由本次明确启动指示取代。
 
 2026-09-30。当前阶段：[CLI C01—C04](repair-design.md)与[上下文重建核心机制](context-implementation.md)分别获准开工，源码及技术文档已完成，整合编译和归档只读操作通过；真实运行行为尚未验收。[正文折叠与根提醒整理](materials-plan.md)源码与文档已完成，编译和已有归档只读反馈通过，新增折叠/提醒行为仍待实际验收；用户最新清单已与原问题树核对，角色、SVC、协作方法、需求树及提示词方案已同步；子Agent简化批次已在独立I13完成并提交7f8ad6e，编译和实际材料生成通过，真实委派未验；[SVC批次](svc-skills-implementation.md)已完成并提交（SVC a0af6e1、Factory 1a377c9），源码及实际材料已独立核对，executor原生说明修正已提交84344b4并通过补丁/编译/材料核对，真实并发与收益仍待验，实验未启动。冻结I12材料未变；用户确认手动恢复后已再次暂停，现场状态见下方接续记录。Console已移交独立[实验设施任务](../braid-console-control/packet.md)，已部署，不计入I13问题或完成条件。
 用户原话：“那么将G01/G04/G05纳入I13的范围内”。这条指示确定本轮范围；实施及实验仍按仓库约定在具体影响呈现后取得开工依据。
@@ -62,9 +64,9 @@ I13
 │  └─ Context7/Exa打包自有key并脱离mcporter；增加pi-fff
 ├─ 合入feat/experiment-storage-lifecycle［Factory 937affc/db272ce、Braid 8325ed6已提交；编译与真实材料通过，运行行为待验］
 │  └─ decision归档、预算、稳定Python资产、只读GC计划及Braid OTLP摘要
-└─ I13载体、冻结与实验［开发载体已建立；冻结/实验未启动；I12由用户控制］
+└─ I13载体、冻结与实验［两包已冻结；Flash/K2.7 Code官网GitHub已启动；其它暂停］
    ├─ I13基线：采用共同的新角色、方法和vision模型
-   └─ GLM-5.3-root对照：只额外改变根Issue对应Braid session模型
+   └─ GLM-5.3-root组：根改GLM-5.3，advisor保留K3；不是纯根模型对照
 ```
 
 保留历史编号 `I12-G01`、`I12-G04`、`I12-G05` 及其证据入口，修复由本packet负责，不另造一组重复问题。
@@ -91,7 +93,7 @@ I12此前暂停后已在独立磁盘清理任务中主动终止；[清理执行�
 
 ## 当前下一步
 
-以[最终检查](final-readiness.md)收敛 GLM-5.3 根对照、全模型 ARC 接线和实验宿主；随后冻结两份含已修正工具 key 的私有包，呈现具体题目、两组相同条件、容量预算及官网重放安排。用户本轮“最终进行一次检查，为开始实验做好准备”授权本次核对和材料准备，不启动模型或评分。恢复 ARC 额度的许可已经取得，不重复询问；这不自动改变本地人工介入研究的场所，也不恢复旧运行。Qwen 配置保留但不进入本轮路由。
+按[官网单题范围](experiments.md#当前官网启动范围)监控已启动GitHub，消费3+8程序与定向内容审查，核对实际生成行为与计费差异，终态收集并汇报。不把此前全ARC路由许可当作本次参赛依据；本次依据是用户明确“上传到官网运行，参加比赛，使用比赛额度”。其余题目、GLM根组与WSL继续暂停。
 
 ## 批次完成与复核记录
 

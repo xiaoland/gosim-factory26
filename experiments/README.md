@@ -52,4 +52,4 @@ case 是实验内的配置行，例如 `flash-root`、`coordinator`；它可以�
 
 已授权待启动：[e20260928-03：标准协作与检查工具后的全新 Hackathon](../tasks/braid-github-minimal-review/experiments.md)，以前轮 Sheet 完成官网评分为前置。
 
-当前已授权：[e20261001-01：I13 首轮实验](../tasks/iteration13/experiments.md)，Flash/K2.7 Code 与 GLM-5.3/K3 两组各生成 GitHub、Sheet，全部 ARC，本地生成并逐题官网重放。
+当前已授权：[e20261001-01：I13 首轮实验](../tasks/iteration13/experiments.md)，先将 Flash/K2.7 Code 冻结包用于官网 GitHub 单题正式参赛，使用比赛额度及3+8监控；旧本地矩阵、Sheet和GLM根组继续暂停。
