@@ -30,3 +30,7 @@ e2e 的最后一轮 skill 诊断指引晚于本轮包冻结：当前源码补充
 根模型判据为 I13 的两题两组正式最终分数完整，GLM 两题平均减 Flash 两题平均至少 10 个百分点。当前四个指定来源均无有效完整最终结果，首次三项均冻结 Flash。未来未派发项在各自 `selection.json` 承诺前重新消费已有结果；已经交给 operation 的项保持原选择。若后来切换，按实际根模型分层比较，不能将不同条件合并成严格机制对照。
 
 纯脚本采集已逐项接收以上真实 run，独立监控会话 [I13 实验监控](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706) 使用 GPT-5.6-Luna / low，每十分钟消费已有证据。普通进展安静，仅在明确新故障、终态或需要用户决定时通知。dispatcher 或 worker 异常时保留原 operation 并停止后续派发，按身份核查接续同一记录，不另造收费尝试。
+
+三项新现场已登记到[原Console](http://127.0.0.1:8765/)，同一service 8cc80cad-d873-49ed-ab49-e958ba8852a3在约53秒HTTP停机后恢复为PID924012。主线独立GET读回七条：原两archive、两I13与新增三I14，access_error均null；登记方逐项Issue、sessions和已有provider正文均200。原生成容器出生身份、旧登记、归档文件及服务程序保持原身份。排队项尚无实际现场，不预登记；回执归 console-registration/receipt.json，主线读回归 console-registration-primary-readback.json。
+
+Console取证首次完整docker inspect误把含实际ARC凭据的Env打印到内部工具回执；该回执无法由本任务撤回。未写入仓库或登记证据文件，随后统一改成白名单字段，不在此记录凭据值。此次失误不计作运行故障，现有生成继续执行。
