@@ -6,7 +6,7 @@
 
 | 当前要完成的操作 | 操作说明 | 先确认什么 |
 | --- | --- | --- |
-| 冻结团队 Harness，向官网提交或收集结果 | [平台与制品](competition.md) | variant、ZIP SHA256、模型配置、费用模式和本次授权。 |
+| 确认练习/正式模式、冻结 Harness，向官网提交或收集结果 | [平台与制品](competition.md) | [赛事须知与模式](competition.md#赛事规则与提交模式)、variant、ZIP SHA256、模型通道和本次授权。 |
 | 用官方本地 Runner 独立生成，再对应用评分 | [本地实验](local-experiments.md) | WSL daemon、冻结需求/测试/镜像及两阶段边界。 |
 | 判断哪一层失败，定位原始记录 | [证据查询](evidence.md) | 外层 lab run、内层 `.factory26` 或官网 journal 的生产者。 |
 | 接续中断工作区，或重新评分已完成应用 | [恢复与重放](recovery.md) | 源执行已停止、完整检查点、具体恢复改动和新运行身份。 |

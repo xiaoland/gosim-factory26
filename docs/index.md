@@ -11,6 +11,7 @@
 | 产品目标、协作模型与实验规则 | [PRD](prd/index.md) |
 | 组件责任、调用关系、交付与终态语义 | [Product TDD](product-tdd/index.md) |
 | 修改角色/技能、开发依赖与源码运行 | [CONTRIBUTING](../CONTRIBUTING.md) |
+| 赛事须知、练习/正式模式、计分与环境边界 | [平台与制品](deployment/competition.md#赛事规则与提交模式)，含原始 PDF 与页码来源。 |
 | 打包、执行、证据查询与恢复 | [Deployment](deployment/index.md) |
 | 外部命令实验、OTLP 与控制 CLI 契约 | [Lab](../lab/README.md) |
 | 实验登记、运行命名与配方 | [实验导航](../experiments/README.md) |
