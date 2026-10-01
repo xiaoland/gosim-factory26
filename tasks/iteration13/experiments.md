@@ -1,6 +1,37 @@
 # e20261001-01：I13 首轮实验
 
-当前状态：官网 GitHub 在生成阶段异常终止，未取得有效评分；工作区已保全。本地已有 GLM/GitHub 与 Flash/Sheet 两条活动运行、GLM/Sheet 排队，Flash/GitHub 的首次恢复在模型启动前失败，修复包正在验收。用户最新要求本轮移除 DeepSeek Braid Agent，仅保留 sub-agent 中的 DeepSeek，并行上限改为4；当前正在实施配方切换和进度保全，旧官网 run 保持终态。
+当前状态（2026-10-01 16:28 CST）：没有模型生成正在运行。官网 GitHub 在生成阶段异常终止，未取得有效评分；首次本地恢复在模型启动前失败。两条随后启动的本地生成已为用户授权的模型切换完成一致保全并停止，旧排队项取消，旧控制器已退出。正在准备移除 DeepSeek Braid Agent、保留 DeepSeek sub-agent 的四并行新矩阵；旧官网 run 保持终态。
+
+## 启动以来的工作树
+
+```text
+I13 / e20261001-01
+├─ 本轮目标与当前配方［已授权］
+│  ├─ Flash根 + K2.7 Code advisor × GitHub / Sheet
+│  ├─ GLM-5.3根 + K3 advisor × GitHub / Sheet
+│  ├─ Braid工作项仅使用GLM-5.3-Flash；内部DeepSeek子角色保留
+│  └─ ARC通道、四并行、逐题完成后独立官网应用重放
+├─ 四个逻辑运行［新矩阵准备中，当前0条生成］
+│  ├─ Flash / GitHub：官网SIGKILL终态 → 首次本地恢复失败 → 修复并迁移后接续
+│  ├─ Flash / Sheet：本地有实际实现 → 一致快照已保全 → 迁移后接续
+│  ├─ GLM / GitHub：本地有实际进展 → 一致快照已保全 → 迁移后接续
+│  └─ GLM / Sheet：旧队列未开始 → 新配方干净启动
+├─ 重新启动的必要工作
+│  ├─ 官网导出与恢复权限/路径自动化［完成，无模型Linux操作通过］
+│  ├─ I13源码取消DeepSeek成员［完成；不代表运行时已切换］
+│  ├─ Braid候选目录改读当前配置［实施与编译中］
+│  ├─ 受审计的在途模型迁移及旧native home补入GLM定义［实施中］
+│  └─ 新包与4槽位矩阵冻结、启动、真实模型身份核验［待上述完成］
+└─ 配套设施
+   ├─ Exp Console：WSL唯一HTTP、Mac8765转发［完成］；新四项接入待新ID
+   ├─ 独立Luna监控会话与automation［已建立］；新矩阵接线待新ID
+   ├─ 官网SIGKILL诊断：容器资源/自身信号证据［并行实施，不阻塞本轮］
+   └─ 官方评分：尚无有效应用成绩；旧官网0分不是评测失败结果
+```
+
+不再执行的分支：WSL宿主SIGKILL追踪方案已撤回；第二个Console HTTP已退役；原两槽位矩阵已停止；单项g03恢复计划从未启动，已由新的四项配方切换取代。旧Debian恢复、I12及新的官网Harness生成均不在当前启动范围内。当前SIGKILL根因仍未知，不能认定OOM，也没有WSL自发SIGKILL的证据。
+
+主线依赖顺序为“目录修复与迁移验证 → 冻结新包与四项输入 → 四并行启动并确认真实GLM调用 → 接入同一Console与监控 → 逐题交付/评分”。官网诊断设施独立收尾。尚无新结果，不把准备检查或启动器成功作为应用验收。
 
 ### 当前配方调整授权
 
@@ -8,7 +39,7 @@
 
 当前运行的 Braid 将成员配置读入内存，offline-resume 又检查原配方一致性，不能靠修改源码文件就宣称已应用。主线正核对受审计的迁移与一致工作区保全，避免丢弃正在写入的 PR。四并发沿用每容器4 GiB/2 CPU；实际容量检查约12.4 GiB可用内存、451 GiB磁盘，两条生成容器当前分别约1.0 GiB和0.7 GiB。启动前仍执行四槽位容量预检。
 
-两条live已通过唯一 Console 的写者门闩与 Docker pause 保全。完整 template ZIP 在复制前后均确认同一容器处于暂停状态，包含 clone 私有 Git、未提交文件、Braid SQLite/WAL 和原生历史；Mac副本SHA一致、SQLite quick_check均为ok。Flash/Sheet快照SHA `1158466fe93bada0007be4b5735f8ded2ab344c75731bc9df702886fe8a3eb4d`，GLM/GitHub为 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`，回执归 `runs/iteration13/local-20261001/model-cutover/`。旧控制器暂降一槽位以禁止新旧配方混启（两条已暂停运行仍占位）；这是迁移期间的准入控制，目标新矩阵仍是4槽位。旧执行尚未终止，不允许现在恢复同一副本。
+两条live已通过唯一 Console 的写者门闩与 Docker pause 保全。完整 template ZIP 在复制前后均确认同一容器处于暂停状态，包含 clone 私有 Git、未提交文件、Braid SQLite/WAL 和原生历史；Mac副本SHA一致、SQLite quick_check均为ok。Flash/Sheet快照SHA `1158466fe93bada0007be4b5735f8ded2ab344c75731bc9df702886fe8a3eb4d`，GLM/GitHub为 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`，回执归 `runs/iteration13/local-20261001/model-cutover/`。旧控制器先降一槽位禁止旧配方队列混启，保全后通过操作 `69a1a4e4aaf227e059ae9329` 停止。独立读回确认controller finished、两个原容器已移除；两条生成为计划内cancelled，GLM/Sheet未开始即取消。这不是新的运行故障。新矩阵目标为4槽位。
 
 迁移保留原profile ID、member、assignment、worktree和Pi session，旧DeepSeek执行profile改用GLM并撤出新指派目录；新指派只使用现有pi-glm-fast。当前目录按摘要revision的数值最大项选择，无法可靠表达当前配置，故修为读取冻结request中的当前目录；历史profiles不改。旧Pi home在factory26下没有GLM定义，需定向补入同款GLM定义，保留内部角色和DeepSeek sub-agent。两个request的旧原件与变更回执单独保存；不放宽普通offline-resume的一致性检查。新实验目录拟为 `e20261001-01-glm-pr-20261001`，此前单项 `recovery-g03` 方案未执行，已由本次四项切换取代。
 
