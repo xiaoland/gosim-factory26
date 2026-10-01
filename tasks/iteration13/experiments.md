@@ -23,6 +23,8 @@
 
 Mac 后台协调进程46943、3+8采集进程46944已经启动，使用 `lab.arc_bench.hosted_monitor --review` 与独立 `agents/run-monitor.md`（GPT-5.6-Luna/low）。首批实际状态与归档读取成功，归档当时仅含需求，尚无原生会话，因此只能证明平台启动阶段，不能证明模型已开始有效开发。第一次内容审查已结束；主线已消费其引用并保留此证据缺口。终态由 `follow-hosted.py` 收集 status、logs、traceability 与 Git history。当前会话 heartbeat `i13-github` 每8分钟消费已有监控结果，仅在故障、完成或需要决定时通知。
 
+第二批13:24:58 CST已取得Braid与原生会话，主线直接读取确认：根Issue #1开放且有1个活跃turn，根Agent已检查应用仓库与Node环境，启动应用依赖安装（30秒后自动进入bg001），并于13:24:42调用vision子Agent分析12张需求参考图。这证明模型和实际工具链已开始工作；应用实现、最终覆盖、advisor调用与评分仍待后续证据。
+
 回执入口为 `runs/iteration13/hosted-20261001/launch-summary.json`、`submission-history-after.json`、`monitor-launch.json` 与 `monitor/`。本地WSL无新增操作，Sheet和GLM根组未启动。
 
 ## 配方与判断目标
