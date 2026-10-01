@@ -6,7 +6,7 @@
 
 对象列表、详情及已展开讨论每五秒读取 CLI 状态；未展开的隐藏正文和已解决历史只按需读取。编辑与评论草稿保存在当前页面中，不被轮询替换。所有写入均为一次明确的 `/api/action` 请求，不自动重试；HTTP 409 保留正文编辑草稿与原 revision，核对最新正文后可明确采用最新 revision。页面刷新或离开时草稿不会永久保存。
 
-工作项、Braid agent及provider详情使用原生History API管理query链接，主动切换增加历史条目，后退/前进重新读取URL；历史切换遵守同一未提交草稿保护。会话关系每五秒读取，原生JSONL正文按需按字节位置分页，刷新已加载页不会自动加载整份日志。元数据与正文读取失败分别呈现。
+工作项、Braid agent及provider详情使用React Router的显式路径，路由表与URL生成在`src/navigation.ts`。Router统一管理点击、后退/前进与草稿/busy阻塞，不再自管history索引。根路径只显示Home；旧query页面身份完全退役，不解析或重定向。Python仅对有效页面结构返回入口，缺失静态资源/API保持404。会话关系每五秒读取，原生JSONL正文按需按字节位置分页，刷新已加载页不会自动加载整份日志。元数据与正文读取失败分别呈现。
 
 UI 的本地源码位于 `src/components/ui/`，`components.json` 保留 shadcn CLI 配置，`src/theme.css` 统一主题 token，`style.css` 负责 Console 布局。`components/console-ui.tsx` 组合业务提示、按钮请求态和可访问弹窗，不保留 Ant API 兼容层。后续组件可用 `pnpm dlx shadcn@latest add <组件>` 添加。
 

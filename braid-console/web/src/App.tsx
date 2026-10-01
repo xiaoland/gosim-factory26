@@ -14,7 +14,7 @@ export default function App() {
   const client = useQueryClient();
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
-  const { run, selected, update } = useNavigation(dirty, busy, proceed => {
+  const { run, selected, missing, update, cancel } = useNavigation(dirty, busy, proceed => {
     setPendingNavigation(() => proceed);
   });
   const runs = useQuery({ queryKey: ['runs'], queryFn: ({ signal }) => registeredRuns(signal), refetchInterval: 5000, retry: false });
@@ -42,12 +42,12 @@ export default function App() {
     </header>
     <main className="workspace">
       {runs.error && <Notice className="error-alert" tone="error" title="运行登记读取失败" description={<pre>{runs.error.message}</pre>} />}
-      {runs.isPending ? <LoadingSkeleton /> : !runs.data ? <ActionButton onClick={refresh}>重新读取登记</ActionButton> : !run ? <Home runs={runs.data} busy={busy} onOpen={value => update({ run: value, selected: null })} />
+      {missing ? <Notice tone="error" title="页面不存在" description={<><p>此路径不是有效的 Console 页面。</p><ActionButton onClick={home}>返回首页</ActionButton></>} /> : runs.isPending ? <LoadingSkeleton /> : !runs.data ? <ActionButton onClick={refresh}>重新读取登记</ActionButton> : !run ? <Home runs={runs.data} busy={busy} onOpen={value => update({ run: value, selected: null })} />
         : !currentRun ? <Notice tone="error" title="此运行未登记" description={<><p>链接中的运行 ID：<code>{run}</code>。页面保留此身份，不切换到其它运行。</p><ActionButton onClick={home}>返回首页</ActionButton></>} />
           : currentRun.harness !== 'braid' ? <Notice tone="warning" title="此接入类型尚不支持详情" description={<ActionButton onClick={home}>返回首页</ActionButton>} />
             : <Suspense fallback={<LoadingSkeleton rows={6} />}><BraidRun key={run} currentRun={currentRun} selected={selected} onSelect={(value, replace) => update({ run, selected: value }, replace)} onDirty={setDirty} onBusy={setBusy} /></Suspense>}
     </main>
-    <AlertDialog open={!!pendingNavigation} onOpenChange={open => { if (!open) setPendingNavigation(null); }}><AlertDialogContent>
+    <AlertDialog open={!!pendingNavigation} onOpenChange={open => { if (!open) { cancel(); setPendingNavigation(null); } }}><AlertDialogContent>
       <AlertDialogHeader><AlertDialogTitle>当前草稿尚未提交</AlertDialogTitle><AlertDialogDescription>切换将丢弃当前标题、正文或评论草稿。</AlertDialogDescription></AlertDialogHeader>
       <AlertDialogFooter><AlertDialogCancel>继续编辑</AlertDialogCancel><AlertDialogAction onClick={() => { setDirty(false); pendingNavigation?.(); setPendingNavigation(null); }}>丢弃并切换</AlertDialogAction></AlertDialogFooter>
     </AlertDialogContent></AlertDialog>

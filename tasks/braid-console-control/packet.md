@@ -2,6 +2,16 @@
 
 2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；稳定服务、归档只读和GC引用收敛已提交55fe50a。当前Mac稳定服务已启动并登记两份独立归档。用户纠正后核实I12已在独立磁盘清理中终止，历史资料在项目内；后续按归档接入，不再以接回旧暂停现场为目标。Console不属于I13或生成Harness迭代。
 
+## 2026-10-01：正式路径路由完成
+
+用户收敛：“我本质上只是想把路由理顺”，明确“不用保留现有参数的兼容和跳转”，并授权：“嗯，好的，你可以开始……是让 subagent 去做”。本轮由子Agent实现，保留Python后端，不迁移Node；移除query页面身份和自管history，采用React Router显式Home/run/issues/prs/agent/provider路径。query只允许实际筛选用途，本轮既有筛选仍为页面本地状态，不额外扩展持久化。
+
+服务仅对合法页面结构提供SPA入口，未知页面/缺失静态资源/未知API保持404。React处理未知运行与对象、非法编号；深链刷新和前后导航统一走Router，草稿取消/丢弃和busy保护保留。无旧query解析或重定向。使用编译、真实登记归档HTTP和浏览器操作，不创建live、业务写入或模型运行，不编写/运行设施测试。冻结新根、核对旧进程和锁、保存history/config并退役manifest后部署；主Agent按最新明确commit授权规则收尾，不push。
+
+React Router显式路径、Router blocker及Python严格页面入口已完成，旧query身份完全退役。Python/TypeScript/Vite构建通过；首页新增Router后546.34kB，有500kB提示如实保留。真实两份归档18条HTTP、Issue/PR与会话路径、刷新和前后导航已核对；最终Chrome无warning/error。主Agent独立发现的叶路由声明warning已修复并重新冻结，不只记录缺口。
+
+当前稳定根`/Users/lanzhijiang/.local/share/factory26/exp-console/20261001-path-routing-final`，service ID`4db9c009-e8d5-421b-97ec-b4e1e70c0705`，HTTP PID56220/PPID1。旧shadcn与中间路径服务已退出、锁核对、保存history并退役manifest；归档材料身份/存在记录一致，无业务写入或模型运行。当前仅两只读归档，草稿提交与busy现场边界不声称实际重验。完整范围、结果和证据见[路径路由回执](path-routing.md)。主Agent已独立复核实际HTTP、原文、刷新、前后导航及旧query退役，沿用项目明确自主git commit授权限定提交，不push；范围内实现和部署已完成。
+
 ## 2026-10-01：shadcn/ui 与 UI/UX 改进完成
 
 用户直接指示：“请你改进 Exp Console：使其使用 shadcn ui 而不是 ant design”。此指示作为本范围开工依据，沿用本任务直接应用、部署与限定 commit 的授权，不 push。
@@ -14,7 +24,7 @@
 
 真实 Chrome 操作覆盖两份归档的首页、Issue/PR、筛选、会话关系及原生正文深链。822条Turn显示17页并实际切到第2页；Pi正文首页加载24条记录，原文缺失归档保持具体HTTP400。首页/原文之间前后导航及首页刷新已核对，最终页面没有React warning/error；实际操作发现的重复React key已修复后重新冻结。10条只读HTTP回执中9条200、1条预期的原文缺失400；12个归档文件身份/存在记录前后一致。没有设施测试、模型运行或业务写入。
 
-当前服务为 `/Users/lanzhijiang/.local/share/factory26/exp-console/20261001-shadcn-ui-final`，service ID `97a16025-2f26-4032-b54e-98269264e8fd`，HTTP PID38698/PPID1，入口 http://127.0.0.1:8765/。冻结制品校验通过，前序home与中间迁移服务已停止、manifest退役，配置/active/launch及旧history接续到新根；journal未存在如实记录。保留两份原归档接入，不配置自启。
+此批服务（已由上方路径路由制品接替）为 `/Users/lanzhijiang/.local/share/factory26/exp-console/20261001-shadcn-ui-final`，service ID `97a16025-2f26-4032-b54e-98269264e8fd`，HTTP PID38698/PPID1，入口 http://127.0.0.1:8765/。冻结制品校验通过，前序home与中间迁移服务已停止、manifest退役，配置/active/launch及旧history接续到新根；journal未存在如实记录。保留两份原归档接入，不配置自启。
 
 完成回执与剩余边界归[shadcn/ui 迁移](shadcn-ui.md)。原始证据入口：`runs/braid-console-control/20261001-shadcn-ui/`，含限定起点源码、完整工作区状态、构建、部署、HTTP、截图及导航回执。当前仅只读归档，可写草稿确认、保存/评论、暂停/恢复与Codex原文未重验；不创建现场补验。本批限定commit，不push；后续用户决定下一轮体验方向。
 

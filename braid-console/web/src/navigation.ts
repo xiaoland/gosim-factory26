@@ -1,60 +1,53 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
+import { useBlocker, useMatches, useNavigate } from 'react-router-dom';
 import type { Selection } from './api';
 
 interface Route { run: string; selected: Selection | null }
-function readRoute(): Route {
-  const params = new URLSearchParams(location.search);
-  const kind = params.get('kind');
-  const id = Number(params.get('id'));
-  const agent = params.get('agent') || undefined;
-  return { run: params.get('run') || '', selected: (kind === 'issue' || kind === 'pr') && Number.isInteger(id) && id > 0
-    ? { kind, id, ...(agent ? { agent, provider: params.get('provider') || undefined } : {}) } : null };
-}
+// Explicit page identities; queries never select a run, work item or session.
+// App owns the persistent workspace and editor; matched endpoints provide identity
+// without remounting those drafts. Every leaf has an explicit empty view.
+const PageIdentity = () => null;
+export const pageRoutes = [
+  { index: true, Component: PageIdentity },
+  { path: 'runs/:run', Component: PageIdentity, caseSensitive: true },
+  ...['issues', 'prs'].flatMap(kind => [
+    { path: `runs/:run/${kind}/:id`, Component: PageIdentity, caseSensitive: true, handle: { kind: kind === 'issues' ? 'issue' : 'pr' } },
+    { path: `runs/:run/${kind}/:id/agents/:agent`, Component: PageIdentity, caseSensitive: true, handle: { kind: kind === 'issues' ? 'issue' : 'pr' } },
+    { path: `runs/:run/${kind}/:id/agents/:agent/providers/:provider`, Component: PageIdentity, caseSensitive: true, handle: { kind: kind === 'issues' ? 'issue' : 'pr' } },
+  ]),
+  { path: '*', Component: PageIdentity, handle: { missing: true } },
+];
 export function routeURL(run: string, selected: Selection | null) {
-  if (!run) return location.pathname;
-  const params = new URLSearchParams({ run, ...(selected ? { kind: selected.kind, id: String(selected.id),
-    ...(selected.agent ? { agent: selected.agent } : {}), ...(selected.provider ? { provider: selected.provider } : {}) } : {}) });
-  return `${location.pathname}?${params}`;
+  if (!run) return '/';
+  let path = `/runs/${encodeURIComponent(run)}`;
+  if (selected) {
+    path += `/${selected.kind === 'issue' ? 'issues' : 'prs'}/${selected.id}`;
+    if (selected.agent) path += `/agents/${encodeURIComponent(selected.agent)}`;
+    if (selected.provider && selected.agent) path += `/providers/${encodeURIComponent(selected.provider)}`;
+  }
+  return path;
 }
 
 export function useNavigation(dirty: boolean, busy: boolean, confirm: (proceed: () => void) => void) {
-  const [route, setRoute] = useState(readRoute);
-  const index = useRef(Number(history.state?.braidConsoleIndex) || 0);
-  const restoring = useRef<{ delta: number; blocked: boolean } | null>(null);
-  const accepted = useRef(false);
-  const conditions = useRef({ dirty, busy, confirm });
-  conditions.current = { dirty, busy, confirm };
+  const navigate = useNavigate();
+  const match = useMatches().at(-1)!;
+  const { run = '', id, agent, provider } = match.params;
+  const handle = match.handle as { kind?: Selection['kind']; missing?: boolean } | undefined;
+  const invalidSegment = Object.values(match.params).some(value => value && (/[\\/\x00-\x1f]/.test(value) || value === '.' || value === '..'));
+  const missing = !!handle?.missing || invalidSegment || (!!id && (!/^[1-9][0-9]*$/.test(id) || !Number.isSafeInteger(Number(id))));
+  const selected: Selection | null = !missing && handle?.kind && id ? { kind: handle.kind, id: Number(id), ...(agent ? { agent, provider } : {}) } : null;
+  const blocker = useBlocker(dirty || busy);
+  const proceeding = useRef(false);
+  const conditions = useRef({ busy, confirm });
+  conditions.current = { busy, confirm };
   useEffect(() => {
-    history.replaceState({ ...history.state, braidConsoleIndex: index.current }, '');
-    function pop(event: PopStateEvent) {
-      if (restoring.current) {
-        const { delta, blocked } = restoring.current;
-        restoring.current = null;
-        if (!blocked) conditions.current.confirm(() => { accepted.current = true; history.go(delta); });
-        return;
-      }
-      const nextIndex = Number(event.state?.braidConsoleIndex) || 0;
-      const delta = nextIndex - index.current;
-      if (!accepted.current && delta && (conditions.current.dirty || conditions.current.busy)) {
-        restoring.current = { delta, blocked: conditions.current.busy };
-        history.go(-delta);
-        return;
-      }
-      accepted.current = false;
-      index.current = nextIndex;
-      setRoute(readRoute());
-    }
-    window.addEventListener('popstate', pop);
-    return () => window.removeEventListener('popstate', pop);
-  }, []);
+    if (blocker.state === 'unblocked') proceeding.current = false;
+    if (blocker.state !== 'blocked') return;
+    if (conditions.current.busy) blocker.reset();
+    else conditions.current.confirm(() => { proceeding.current = true; blocker.proceed(); });
+  }, [blocker]);
   function update(next: Route, replace = false) {
-    function apply() {
-      if (!replace) index.current += 1;
-      history[replace ? 'replaceState' : 'pushState']({ braidConsoleIndex: index.current }, '', routeURL(next.run, next.selected));
-      setRoute(next);
-    }
-    if (replace) apply();
-    else if (!busy) dirty ? confirm(apply) : apply();
+    if (!busy) void navigate(routeURL(next.run, next.selected), { replace });
   }
-  return { ...route, update };
+  return { run, selected, missing, update, cancel: () => { if (blocker.state === 'blocked' && !proceeding.current) blocker.reset(); } };
 }

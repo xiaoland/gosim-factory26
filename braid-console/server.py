@@ -8,6 +8,7 @@ import json
 import logging
 from logging.handlers import RotatingFileHandler
 import mimetypes
+import re
 import os
 from pathlib import Path
 import subprocess
@@ -27,6 +28,21 @@ import run_records
 WEB_DIST = Path(__file__).parent / "web" / "dist"
 JOURNAL_LOCK = threading.Lock()
 MAX_POST = 1_000_000
+# Only declared application pages receive the SPA entry. Missing assets and API
+# endpoints keep their real error responses rather than becoming HTML.
+APP_PAGE = re.compile(r"/runs/[^/]+(?:/(?:issues|prs)/[1-9][0-9]*(?:/agents/[^/]+(?:/providers/[^/]+)?)?)?/?")
+
+
+def application_page(path):
+    if path == "/":
+        return True
+    parts = path.split("/")
+    if any(part in (".", "..") or "\\" in part or any(ord(c) < 32 for c in part) for part in parts):
+        return False
+    if not APP_PAGE.fullmatch(path):
+        return False
+    return len(parts) < 5 or int(parts[4]) <= 9007199254740991
+
 
 
 def load_registry(path):
@@ -221,7 +237,7 @@ class Handler(BaseHTTPRequestHandler):
             path = (WEB_DIST / unquote(url.path).lstrip("/")).resolve()
             if not path.is_relative_to(WEB_DIST.resolve()):
                 return self.reply(404, {"error": "文件不存在"})
-            if url.path == "/":
+            if application_page(unquote(url.path)):
                 path = WEB_DIST / "index.html"
             if not path.is_file():
                 return self.reply(404, {"error": "文件不存在；请先在 web 中执行 pnpm build"})

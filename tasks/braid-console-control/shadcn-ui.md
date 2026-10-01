@@ -20,7 +20,9 @@ Chrome实际读取两份登记归档：首页、GitHub Issue #1、PR #2、状态
 
 原始证据在`runs/braid-console-control/20261001-shadcn-ui/`：`frontend-build.log`、`http.final.json`、`archive-files.before.json`/`archive-files.after.json`、`navigation.final.json`、`home.final.png`、`provider.final.png`及实际页面文本。没有模型运行、归档修改或业务POST。
 
-## 当前部署
+## 此批部署（已退役）
+
+后续正式路径路由制品已接替此服务；以下身份保留历史证据，不能用于当前启动。当前入口与制品归[路径路由回执](path-routing.md)。
 
 入口 http://127.0.0.1:8765/。稳定根`/Users/lanzhijiang/.local/share/factory26/exp-console/20261001-shadcn-ui-final`，service ID `97a16025-2f26-4032-b54e-98269264e8fd`，2026-10-01T03:27:45Z启动，HTTP PID38698/PPID1。`service.py show`核对冻结程序、前端和Python身份成功。归档接入仍为`pi-archive-20260920`和`github-final-20260930`，均只读。
 
