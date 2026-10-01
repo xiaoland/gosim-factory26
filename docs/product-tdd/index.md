@@ -66,6 +66,8 @@ variant 通过 `root_profile_id` 明确指派根 Issue，后续对象未指定 a
 
 I13 的根 Issue 直接负责共享架构与开发反馈设施，通过关联的独立基础 PR 落地，再指派可消费该基础的业务子项；最终通过 develop → main 整合 PR 验收。工作项保留原需求和场景入口，不能把父项摘要或需求编号清单当作子项已经取得完整合同。根 Issue 发布跨任务的产品、技术与验收约定；各 Issue 及关联 PR 接续同一任务的 packet。项目文档拥有稳定定义，packet 拥有当前判断、计划、证据与下一步，两者通过链接关联。
 
+I13-2 的 profile 明确强制采用文档与 packet，并提供独立技能入口；通用启用时机与工作记忆方法归 SVC。当前 clone 根、共享提交、候选发布及 description/comment 的具体职责归 braid-collaboration。材料留在适用 Git 工作树，发布后由 AGENTS 阅读入口发现；运行私有目录不替代共同交付。Braid 不解析 packet 内容来替代 Agent 的采用判断。
+
 I13 的配方政策保留在 profile：根基础 PR、develop → main 路线、advisor/vision 分工及应用反馈工具。独立 [braid-collaboration](../../harness/skills/braid-collaboration/SKILL.md) 持有工作边界、交接采用、变化和关闭方法，[arc-bench](../../harness/skills/arc-bench/SKILL.md) 持有需求层级、跨枝承诺、来源追溯与平台前提；后者单向引用通用协作方法。项目知识、task packet、原生委派与 V&V 的完整方法继续归 SVC，不在新技能复制。原生 executor 协助当前工作项，不承接已经指派给另一 Braid 成员的同一责任。
 CLI 的运行位置和调用身份由原生执行环境提供；Agent 使用普通对象命令，不传 state 或 writer-turn。
 跨工作项的信息通过 comment/reply 传递；代码通过各自 clone 对共同 origin 的 push/fetch 共享，私有会话内容不会因创建子 Issue 自动共享。

@@ -231,7 +231,7 @@ def main():
             raise ValueError("Braid source identity differs from actual snapshot members")
     with ZipFile(workspace) as archive:
         candidates = [p for p in archive.namelist() if p.startswith("template/.factory26/")
-                      and p.endswith("/braid-state/request.json")]
+                      and len(Path(p).parts) == 5 and p.endswith("/braid-state/request.json")]
         if len(candidates) != 1:
             raise ValueError(f"expected one retained Braid run, found {len(candidates)}")
         braid_run = candidates[0].split("/")[2]
