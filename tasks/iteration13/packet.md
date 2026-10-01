@@ -12,7 +12,7 @@
 
 用户确认旧Debian-Factory26的数据应已清除，并明确：“我们重新开始处理吧；console那边有另外一个 agent 在改进和部署它，我们继续启动 I13-GLM，不受 console 阻塞”；对于恢复范围，答复“有快照就恢复，没有就重新启动吧”。据此，GLM/GitHub从Mac已保全的完整快照 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4` 接续，GLM/Sheet无最新完整快照，从干净起点启动；两项登记新attempt、使用自有API并纳入 `828a3da`。GitHub沿用已授权的DeepSeek Braid成员迁移及原生transport更新，保留快照中的Git、Braid和会话历史；不把已丢失的较晚现场声称为恢复来源。
 
-执行采用Mac持有源码、冻结输入、控制器和最终记录，Debian-Rebuild的Docker运行容器；复用正在落地的[远程workspace传输](../docker-workspace/packet.md)。不恢复旧远端开发目录、不继续查找已清除VHD，也不部署Console；Console由另一会话负责，独立于本轮启动。新Linux Braid（SHA256前缀5e98b937）已交付，两项运行准备继续，真实启动身份和反馈归[实验树](experiments.md)。
+执行采用Mac持有源码、冻结输入、控制器和最终记录，Debian-Rebuild的Docker运行容器；复用正在落地的[远程workspace传输](../docker-workspace/packet.md)。不恢复旧远端开发目录、不继续查找已清除VHD，也不部署Console；Console由另一会话负责，独立于本轮启动。新Linux Braid（SHA256前缀5e98b937）已在两个真实容器读回；experiment `exp-20261001-184401-7c84dd` 两项18:44:46启动、18:49首个GLM-5.3真实请求完成。GitHub接回原native根会话，Sheet干净生成。现有3+8采集、逐题终态应用重放和Luna监控已接入；真实身份与证据归[实验树](experiments.md)。
 
 官网GitHub `377afa346c92` 已在18:07:23 CST终止，18:11批次采到FAILED，生成失败且未进入评测；Sheet `691028015e69` 的18:16批次仍RUNNING。[当前attempt诊断](hosted-github-recovery-failure.md)已完成：同一2GiB cgroup的OOM kill计数0→2；第二次增量窗口中Pi PID291由存活变为僵尸，随后Braid真实wait收到SIGKILL。我方清理发生在退出之后。容器OOM已证，PID291死因与OOM强关联，缺内核victim/sender直接证据；不能反向解释历次官网失败。官网未自动收费重试，Sheet及既有监控继续。本地宿主重建与官网故障分别处理，不据时间接近推因。
 
@@ -24,7 +24,7 @@ GPT-6.1-Sol / xhigh子Agent负责从已保全的PR2原生会话与消息生产�
 
 调查与修复已完成，提交 `828a3da`。实际首条消息只包含一次7559-byte上下文，后续PR view却读回同一1813-byte description；直接已证诱因是创建时关联事件在首轮快照已覆盖后仍命令“读取 braid pr view 2”。模型在读取skill前已决定view，未证明skill造成该动作，因此技能不改。现已把共享事件改为中性详情/正文入口，并明确复用当前已有内容、按需补缺或核对变化。编译及冻结DB副本的真实CLI操作通过，主线已独立核对。[调查、证据和验证](pr-context-duplication.md)保存精确来源。
 
-本地应用尚未完成：新Linux binary已交付；按上方最新授权，GitHub从现存完整快照接续，Sheet干净启动。offline-resume会向原native session重新提供新通用指令，无需reset；已排队旧事件及native历史不回写。源码完成不等于已在本地生效，后续行为改善仍由GLM实际运行验证。
+本地应用已完成：新Linux binary在两只运行容器的摘要均已读回一致；按上方最新授权，GitHub从现存完整快照接续原会话，Sheet干净启动。offline-resume会向原native session重新提供新通用指令，无需reset；已排队旧事件及native历史不回写。本次已确认新制品实际运行；模型是否减少重读仍由后续GLM实际行为验证。
 
 WSL已恢复为Debian-Rebuild，原远端现场已清除；用户已授权按有无完整快照分别恢复或重启。不因文档/技能修改自动丢弃原生会话，也不增加机械重读或版本校验协议。沿用不编写/运行Factory、Braid或SVC测试的要求，用实际既有材料和编译反馈核对。
 

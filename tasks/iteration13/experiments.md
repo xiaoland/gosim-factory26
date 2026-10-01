@@ -1,6 +1,6 @@
 # e20261001-01：I13 首轮实验
 
-当前状态（2026-10-01）：用户确认Debian-Rebuild已恢复、旧数据应已清除，授权“有快照就恢复，没有就重新启动吧”。GLM/GitHub从Mac完整快照e207…接续，GLM/Sheet干净启动，两项纳入 `828a3da`、使用自有API、登记新attempt。Console由另一会话负责，不阻塞实验。官网Flash/GitHub `377afa346c92` 生成失败未评测；Flash/Sheet `691028015e69` 18:16采集仍RUNNING。官网新诊断已证容器OOM，与当前Pi的SIGKILL强关联；缺内核victim/sender直接证据，不自动重跑。本轮尚无有效应用评分。
+当前状态（2026-10-01）：用户确认Debian-Rebuild已恢复、旧数据应已清除，授权“有快照就恢复，没有就重新启动吧”。GLM/GitHub从Mac完整快照e207…接续，GLM/Sheet干净启动；新experiment `exp-20261001-184401-7c84dd` 的两项已启动，两项首个真实GLM-5.3请求均已完成。两项纳入 `828a3da`、使用自有API。Console由另一会话负责，不阻塞实验。官网Flash/GitHub `377afa346c92` 生成失败未评测；Flash/Sheet `691028015e69` 18:48采集仍RUNNING。官网新诊断已证容器OOM，与当前Pi的SIGKILL强关联；缺内核victim/sender直接证据，不自动重跑。本轮尚无有效应用评分。
 
 ## 启动以来的工作树
 
@@ -13,15 +13,15 @@ I13 / e20261001-01
 │  │  └─ 18:07生成阶段失败，未评测；已证2GiB容器OOM，与Pi SIGKILL强关联
 │  ├─ Flash/Sheet → 官网接续［RUNNING；691028015e69］
 │  │  └─ 由本地快照恢复；根/PR旧会话接续、官网诊断采集通过
-│  ├─ GLM/GitHub → Debian-Rebuild接续［完整快照恢复准备中］
+│  ├─ GLM/GitHub → Debian-Rebuild接续［RUNNING；f9e238c1b698a5，自有API已完成请求］
 │  │  └─ 来源e207…；保留Git/Braid/native，显式成员迁移与transport更新
-│  └─ GLM/Sheet → Debian-Rebuild干净启动［准备中］
+│  └─ GLM/Sheet → Debian-Rebuild干净启动［RUNNING；a45a22ec644204，自有API已完成请求］
 │     └─ 较晚现场无完整快照；用户已授权重新开始
 ├─ 模型与费用［配置确定］
 │  ├─ 官网：不勾选使用比赛额度评测、不上榜；官方ARC地址 + 自有key
 │  ├─ 本地：自有API；GLM→Bigmodel，K3→Kimi，内部DS Flash→Qwen
 │  └─ DeepSeek Braid成员已移除；旧在途工作保留身份、显式迁至GLM
-├─ PR描述重复读取修正［828a3da已完成；待应用本地GLM两项］
+├─ PR描述重复读取修正［828a3da已完成；两项新包已纳入］
 │  ├─ 根因：首轮已覆盖的关联事件仍命令重读；无重复全文注入，技能不改
 │  └─ 编译/真实CLI反馈通过；Linux制品5e98b937…已交付；GitHub保留快照会话，Sheet新建
 ├─ 官网SIGKILL诊断与恢复［官网启动前置］
@@ -33,13 +33,17 @@ I13 / e20261001-01
 │  └─ 本次OOM已证/Pi死亡强关联；历史SIGKILL来源仍未知，无WSL同类事实
 └─ 配套设施与知识
    ├─ Exp Console［另一个会话负责改进/部署；不阻塞本轮］
-   ├─ 自有API网关［按新宿主实际网络重建运行接线］
+   ├─ 自有API网关［Mac4020已运行；两项真实请求已成功］
    ├─ Luna独立监控 + automation［已接新身份；官网3+8采集在Mac继续］
    ├─ 参赛须知durable docs［完成，PDF/规则/PRD/索引已提交］
    └─ 原失败/暂停现场［已保全］；本轮尚无有效应用评分
 ```
 
 本地最新授权：“我们重新开始处理吧；console那边有另外一个 agent 在改进和部署它，我们继续启动 I13-GLM，不受 console 阻塞”；“有快照就恢复，没有就重新启动吧”。GitHub恢复来源为 `runs/iteration13/local-20261001/model-cutover/glm-root--hackathon--github-00bf489759b139-workspace.zip`，SHA256 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`。其后e057…现场已不在，不以失败请求记录代替完整工作区。Sheet原45bf…现场同样未完整保全，按新尝试干净生成。Mac持有控制器/输入/最终记录，复用远程Docker workspace传输在Debian-Rebuild执行；本任务不修改另一会话拥有的传输适配或Console实现。
+
+Debian-Rebuild的新包已冻结在 `runs/iteration13/local-rebuild-20261001/`：GitHub接续包SHA256 `cdeb0e52df13017831d381017c8d0ade1ff2891395f8b0fd980e365434ed928b`，Sheet干净包 `90cef82d45d3e3b796d79dac7442491501eb38da85ed03cd74b33ac79346056b`。两包内Braid均为 `5e98b9374d20870fc6dd45406b4b2d4efc41bf9e6fbb9f3edd4ff64ae8f50a73`；主线独立重新计算ZIP和包内binary摘要一致。Mac控制器源码快照为 `bdc6edc2a902854a84dccfbe9dfdcd58dfa76b3e19a2f175497155f55b2a8760`，包含远程volume传输。Mac网关在172.16.249.154:4020运行：授权models读取200、无效token401；远端bridge容器可达同入口，未发额外模型请求。官方wrapper已构建为 `sha256:a2d86e7815bcfe5d6f1da6414ad03b4c31f2cfaed070c80be2479a9027d47c8e`。18:44:46 CST两项已由Mac `controller-244ad1f7d7c9`（PID98966）启动，experiment `exp-20261001-184401-7c84dd`；GitHub run `glm-root--hackathon--github-f9e238c1b698a5`，Sheet run `glm-root--hackathon--sheet-a45a22ec644204`。执行endpoint为development-1 / `ssh://wsl.win-ws.localhost`，daemon `0c1d4a2e-b921-49be-a075-1e30571f0995`。工作区已上传并进入生成；主线独立读取网关实际metadata确认GitHub首个GLM-5.3 stream完成于18:49:26.304 CST，Sheet为18:49:23.373 CST；两项均无归属当前run的请求错误，Sheet后续还有GLM-5.3-Flash请求完成。准确回执在 `primary-first-generation-readback.json`。这证明真实模型transport已工作，不以请求数代表应用语义进度。运行中两容器已读回4GiB/2CPU及相同新版binary，目录仅glm-1可分派。GitHub八项原生历史prefix摘要与快照一致，10:49:04.239Z的Pi启动 `resume=true`；10:49:13.842Z握手仍为原native `01a0f66b-8bef-77c7-883a-8adb41c2532a`。当前容器GitHub为 `ce340c645485e03c84d729eca5d58f1bca796c8737c63b470e787297754f80d6`，Sheet为 `08d9ec9180a56c71d9677972581bc3ee7202e1fbd501d76099698232ba5650f5`。准确材料为 `live-readback.json` 及首轮monitor内当前 `recovery-braid.log`。
+
+现有3+8采集已以Mac `monitor-local.py`运行；首轮 `monitor/20261001T105421.312714Z/outcome.json` 包含两项实际Braid状态、会话身份及原生原件。`follow-batch.py`通过Mac `lab.wait`逐题收到终态、冻结已发布应用并独立self_funded官网重放，不等另一题；未发布应用则保存对应终态，未自动收费重试。主线独立核对后台argv/启动时间及空stderr，已交给既有Luna/low监控会话和 `i13-wsl` automation。实际PID以最新 `background-launch.json` 为准；不建立平行采集。
 
 本次GitHub终态原件：`runs/iteration13/hosted-recovery-20261001/monitor/20261001T101157.239125Z/377afa346c92/status.json`。开始17:25:00.509841、结束18:07:23.187847 CST；平台 `run_duration_seconds=2465`，两时间戳差约2542.68秒，分别保留。平台记录token67,750,296，`token_cost_usd=17.136155`但 `token_cost_currency=CNY`，按原币种记录17.136155元，不把字段名当美元。score=0、passed/failed均0、evaluation_started_at=null，不是有效应用零分。原始failure_reason仅main.py exit1；当前attempt的Pi PID291真实wait为SIGKILL。同一cgroup的 `oom_kill` 从0增至2，第二次增量窗口（10:06:11.616253Z—10:06:14.409900Z）内，同birth PID291由S变Z；memory.max为2GiB。已证容器OOM及当前Pi SIGKILL，两者强关联，仍缺内核victim/sender直接证据。我方清理晚于退出。主线已独立读取ZIP内resources第339/340行、Pi wait及构建身份，不依赖审查者自报。详见[本次失败分析](hosted-github-recovery-failure.md)。
 

@@ -39,4 +39,4 @@ Linux交付已完成：在上一版combined冻结源码上仅叠加 `828a3da` �
 
 首次构建虽然exit0，但归零tar时间与共享target使Cargo复用旧根包binary，交付前的实际摘要核对发现不符。原attempt归 `stale-cache-attempt/`；仅清理Braid根包的release缓存后离线实际重编译，未重新安装依赖或工具链。最终构建保留12条已有warning。
 
-部署与两路本地实验的整合由主线和本地负责人承担。旧Debian数据已清除，用户已明确授权“有快照就恢复，没有就重新启动吧”：GitHub保留Mac完整快照的原生会话，Sheet干净启动。宿主迁移引起的transport和已授权成员迁移属于恢复接线，不是本提示修正的新要求。当前Linux制品已交付，包内身份及实际运行生效仍待本地启动回执。
+部署与两路本地实验的整合由主线和本地负责人承担。旧Debian数据已清除，用户已明确授权“有快照就恢复，没有就重新启动吧”：GitHub保留Mac完整快照的原生会话，Sheet干净启动。宿主迁移引起的transport和已授权成员迁移属于恢复接线，不是本提示修正的新要求。Linux制品已交付并实际应用：`runs/iteration13/local-rebuild-20261001/live-readback.json`记录两只运行容器的binary摘要为5e98b937…，GitHub保留八项原生历史prefix，首轮采集的当前recovery-braid.log确认Pi以resume=true接回原native根会话。两项首个真实GLM-5.3请求均已完成；这证明制品和会话接线，不证明模型已减少重读。后续观察由既有3+8采集与Luna监控承担。
