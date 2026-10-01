@@ -1,13 +1,13 @@
 # I13 根对照实施收据
 
-2026-10-01。用户已明确“好的，可以启动 I13 了”，随后指定基线用 K2.7 Code 替代 K3，又更正“GLM-5.3 组继续使用 K3”。本页记录本轮独立制品及模型配置；实验启动、题目与宿主归主 packet。
+2026-10-01。用户已明确“好的，可以启动 I13 了”，随后指定基线用 K2.7 Code 替代 K3，又更正“GLM-5.3 组继续使用 K3”。本页记录本轮独立制品及模型配置；实验启动、题目与宿主归主 packet。当前进一步取消 DeepSeek Braid 成员，已有运行的实际切换回执归 experiments.md；下方最初冻结哈希保持为历史来源。
 
 | 制品 | 根 Issue | advisor | 可指派成员 |
 | --- | --- | --- | --- |
-| `pi-braid-i13` | GLM-5.3-Flash / high | `kimi-k2.7-code`，开启推理，不发送 effort | 原 GLM-5.3-Flash 与 DeepSeek-V4-Flash |
+| `pi-braid-i13` | GLM-5.3-Flash / high | `kimi-k2.7-code`，开启推理，不发送 effort | GLM-5.3-Flash / high |
 | `pi-braid-i13-glm-root` | GLM-5.3 / high，root-only | `kimi-k3` / high | 同上 |
 
-对照同时改变根模型和 advisor 模型，结果不能解释为仅根模型的消融。新增 `pi-glm-root` 的 instruction、原生角色、工具和技能模板沿用原 `pi-glm-fast`；两个原成员及其十份角色保留原配方。root-only 标签使新增根不进入可指派成员清单。根与子 Issue、PR 之间不自动传播模型选择。
+对照同时改变根模型和 advisor 模型，结果不能解释为仅根模型的消融。新增 `pi-glm-root` 的 instruction、原生角色、工具和技能模板沿用原 `pi-glm-fast`；保留成员的原生角色配方不变，其中仍允许 DeepSeek sub-agent。root-only 标签使新增根不进入可指派成员清单。根与子 Issue、PR 之间不自动传播模型选择。
 
 ## Descriptor 与证据
 

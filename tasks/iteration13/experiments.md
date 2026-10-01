@@ -1,6 +1,16 @@
 # e20261001-01：I13 首轮实验
 
-当前状态：官网 GitHub 在生成阶段异常终止，未取得有效评分；原始工作区与诊断证据已保全。用户已报告 WSL 恢复并明确授权启动四项本地运行，允许 Flash/GitHub 接续，同时改进官网运行的信号取证。本轮正在准备新的本地执行，旧官网 run 保持终态。
+当前状态：官网 GitHub 在生成阶段异常终止，未取得有效评分；工作区已保全。本地已有 GLM/GitHub 与 Flash/Sheet 两条活动运行、GLM/Sheet 排队，Flash/GitHub 的首次恢复在模型启动前失败，修复包正在验收。用户最新要求本轮移除 DeepSeek Braid Agent，仅保留 sub-agent 中的 DeepSeek，并行上限改为4；当前正在实施配方切换和进度保全，旧官网 run 保持终态。
+
+### 当前配方调整授权
+
+用户原话：“不要再用 DeepSeek 作为 PR 的可分派模型（也就是说可以继续在 sub-agent 中使用，但不能作为 Braid Agent）”；“就在这次 I13，我希望现在的这次实验就可以应用”；“我们应该可以支撑4个并行”。本次工作项成员使用现有 GLM-5.3-Flash，两个 case 的根模型、advisor 和内部角色配方保持不变。四项实际进入新配方的时间、来源与新执行身份需分别记录，先前 DeepSeek 产生的历史进度不改写为 GLM 产出。旧冻结包和原尝试保留。
+
+当前运行的 Braid 将成员配置读入内存，offline-resume 又检查原配方一致性，不能靠修改源码文件就宣称已应用。主线正核对受审计的迁移与一致工作区保全，避免丢弃正在写入的 PR。四并发沿用每容器4 GiB/2 CPU；实际容量检查约12.4 GiB可用内存、451 GiB磁盘，两条生成容器当前分别约1.0 GiB和0.7 GiB。启动前仍执行四槽位容量预检。
+
+两条live已通过唯一 Console 的写者门闩与 Docker pause 保全。完整 template ZIP 在复制前后均确认同一容器处于暂停状态，包含 clone 私有 Git、未提交文件、Braid SQLite/WAL 和原生历史；Mac副本SHA一致、SQLite quick_check均为ok。Flash/Sheet快照SHA `1158466fe93bada0007be4b5735f8ded2ab344c75731bc9df702886fe8a3eb4d`，GLM/GitHub为 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`，回执归 `runs/iteration13/local-20261001/model-cutover/`。旧控制器暂降一槽位以禁止新旧配方混启（两条已暂停运行仍占位）；这是迁移期间的准入控制，目标新矩阵仍是4槽位。旧执行尚未终止，不允许现在恢复同一副本。
+
+迁移保留原profile ID、member、assignment、worktree和Pi session，旧DeepSeek执行profile改用GLM并撤出新指派目录；新指派只使用现有pi-glm-fast。当前目录按摘要revision的数值最大项选择，无法可靠表达当前配置，故修为读取冻结request中的当前目录；历史profiles不改。旧Pi home在factory26下没有GLM定义，需定向补入同款GLM定义，保留内部角色和DeepSeek sub-agent。两个request的旧原件与变更回执单独保存；不放宽普通offline-resume的一致性检查。新实验目录拟为 `e20261001-01-glm-pr-20261001`，此前单项 `recovery-g03` 方案未执行，已由本次四项切换取代。
 
 ## 当前 WSL 启动范围
 
