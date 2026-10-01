@@ -312,6 +312,8 @@ def execute_run(args, endpoint, owner_token):
         facts = {"workspace": str(owned_workspace), "image_id": image_id,
                  "runner": str(args.runner.resolve()), "state": "not-started", "endpoint": endpoint,
                  "labels": {**ownership, 'io.factory26.stage': name}}
+        if args.shared_docker_slots is not None:
+            facts['shared_docker_slots'] = args.shared_docker_slots
         if transport:
             facts['transport'] = str(transport.path)
         write_resource(resource, facts)
@@ -412,6 +414,18 @@ def execute_run(args, endpoint, owner_token):
             generation_command = base + ["--agent", str(instrumented), "--workspace", str(generation),
                                          "--image", image_id] + model_args
             generation_code = invoke(generation_command, "generation")
+            if transport:
+                transport = Workspace(transport.path)
+                recovered = transport.value['stages'].get('official-generation', {})
+                if recovered.get('recovery') != 'verified':
+                    physical = json.loads((workspace / 'generation.resource.json').read_text())
+                    write_resource(result_path, {'schema_version': 1, 'status': 'failed',
+                        'stage': 'output-recovery', 'generation_exit_code': generation_code,
+                        'generation': {'status': 'unknown', 'reason': 'execution output has not been recovered'},
+                        'container_exit_code': physical.get('container_exit_code'),
+                        'recovery': recovered, 'error': recovered.get('error'),
+                        'image_id': image_id})
+                    return 1
             entry = generation / "template/.arc/adapter-agent-result.json"
             if entry.is_file():
                 entry_result = json.loads(entry.read_text())
@@ -525,7 +539,7 @@ def run(args):
         receipt = workspace / 'docker-workspace.json'
         if receipt.is_file() and json.loads(receipt.read_text()).get('labels', {}).get('io.factory26.owner') == owner_token:
             signal.signal(signal.SIGTERM, signal.SIG_IGN)
-            outcome = Workspace(receipt).finish(cleanup=True)
+            outcome = Workspace(receipt).finish(cleanup=True, retry_recovery=False)
             write_resource(workspace / 'workspace-cleanup.json', outcome)
             emit('workspace-released', observation=outcome)
 
@@ -553,6 +567,7 @@ def main():
     parser.add_argument("--image")
     parser.add_argument("--memory", help="pass the Docker memory limit to the official local runner")
     parser.add_argument("--cpus", help="pass the Docker CPU quota to the official local runner")
+    parser.add_argument("--shared-docker-slots", type=int, help="shared execution-container capacity on the frozen Docker daemon")
     parser.add_argument("--expected-tests", type=int)
     parser.add_argument("--expected-scenario")
     parser.add_argument("--env-file", type=Path)

@@ -10,18 +10,25 @@ import shutil
 import signal
 import subprocess
 import sys
-import tarfile
 import tempfile
+import time
 from types import SimpleNamespace
 
 if not __package__:
     sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
 from lab.docker_endpoint import confirm, environment, execute, freeze
 from lab.records import inventory, read_json, write_json
+if __package__:
+    from .workspace_archive import output_inventory, extract_output
+    from .docker_admission import admit
+else:
+    from workspace_archive import output_inventory, extract_output
+    from docker_admission import admit
 
 # Use the same inventory implementation on both hosts, without platform metadata.
 REMOTE_INVENTORY = Path(sys.modules[inventory.__module__].__file__).read_text() + '\nprint(json.dumps(inventory(Path(sys.argv[1]))))'
 REMOTE_INVENTORY = 'import sys\n' + REMOTE_INVENTORY
+REMOTE_OUTPUT_INVENTORY = Path(sys.modules[output_inventory.__module__].__file__).read_text() + '\nimport sys; print(json.dumps(output_inventory(Path(sys.argv[1]))))'
 LABEL_PREFIX = 'io.factory26.'
 
 
@@ -237,9 +244,11 @@ class Workspace:
                 self.value['recovery'] = 'verified' if all(item['recovery'] == 'verified' for item in self.value['stages'].values()) else 'pending'
                 self.save()
                 return {'status': 'verified', 'stage': stage, 'sha256': expected['sha256'], 'source': entry['source']}
+            entry['recovery_attempted_at'] = time.time()
+            self.save()
             helper = self.helper()
             remote = '/transfer/' + stage
-            expected = json.loads(docker(self.endpoint, ['exec', helper, 'python3', '-c', REMOTE_INVENTORY, remote],
+            expected = json.loads(docker(self.endpoint, ['exec', helper, 'python3', '-c', REMOTE_OUTPUT_INVENTORY, remote],
                                          text=True, capture_output=True, timeout=600).stdout)
             write_json(Path(entry['resource']).with_suffix('.output-manifest.json'), expected)
             local = Path(entry['workspace'])
@@ -252,15 +261,16 @@ class Workspace:
                     metadata[name] = saved
             with tempfile.TemporaryDirectory(prefix='.' + stage + '-recovery-', dir=local.parent) as temporary:
                 scratch = Path(temporary)
-                archive = scratch / 'workspace.tar'
-                with archive.open('wb') as stream:
+                archive = Path(entry['resource']).with_suffix(f'.output-{time.time_ns()}.tar')
+                entry['archive'] = str(archive)
+                self.save()
+                with archive.open('xb') as stream:
+                    archive.chmod(0o600)
                     docker(self.endpoint, ['cp', helper + ':' + remote + '/.', '-'], stdout=stream,
                            stderr=subprocess.PIPE, timeout=600)
                 incoming = scratch / 'workspace'
-                incoming.mkdir()
-                with tarfile.open(archive) as stream:
-                    stream.extractall(incoming, filter='data')
-                actual = inventory(incoming)
+                extract_output(archive, incoming)
+                actual = output_inventory(incoming)
                 if actual != expected:
                     raise ValueError('downloaded workspace inventory/hash differs from remote output')
                 # Official Runner writes this locally after docker run, outside the execution copy.
@@ -278,6 +288,8 @@ class Workspace:
             self.save()
             return {'status': 'verified', 'stage': stage, 'sha256': expected['sha256']}
         except BaseException as error:
+            entry.setdefault('first_error', error_text(error))
+            entry.setdefault('recovery_errors', []).append({'observed_at': time.time(), 'error': error_text(error)})
             entry.update(recovery='failed', error=error_text(error))
             self.value.update(recovery='failed', state='retained')
             self.save()
@@ -287,11 +299,12 @@ class Workspace:
         expected = read_json(Path(entry['resource']).with_suffix('.output-manifest.json'))
         if expected['sha256'] != entry['output_sha256']:
             raise ValueError('saved output manifest identity differs from recovery receipt')
-        actual = {row['path']: row for row in inventory(Path(entry['workspace']))['entries']}
+        actual_inventory = output_inventory(Path(entry['workspace'])) if expected['algorithm'] == 'workspace-output-sha256-v1' else inventory(Path(entry['workspace']))
+        actual = {row['path']: row for row in actual_inventory['entries']}
         if any(actual.get(row['path']) != row for row in expected['entries']):
             raise ValueError('verified local output is missing or changed; remote volume retained')
 
-    def finish(self, *, cleanup=False):
+    def finish(self, *, cleanup=False, retry_recovery=True):
         try:
             volume = volume_owned(self.value)
             if volume is None:
@@ -307,6 +320,8 @@ class Workspace:
                 if observed['status'] not in {'absent', 'removed'}:
                     raise ValueError(json.dumps(observed))
                 if entry['recovery'] != 'verified':
+                    if not retry_recovery:
+                        raise ValueError('output recovery is not verified; runner owns automatic recovery, retained for explicit recovery: ' + entry.get('error', entry['recovery']))
                     self.recover(stage)
                 self.confirm_local(entry)
             if not self.value['stages']:
@@ -344,6 +359,7 @@ def runner_main(resource_path, runner_path, argv):
     child = None
     entered = False
     launching = False
+    recovery_attempted = False
 
     def interrupt(_number, _frame):
         raise KeyboardInterrupt
@@ -387,14 +403,15 @@ def runner_main(resource_path, runner_path, argv):
         write_json(resource_path, resource)
         return subprocess.CompletedProcess(command, code)
 
-    def run_container(args, local):
-        nonlocal entered
+    def execute_container(args, local):
+        nonlocal entered, recovery_attempted
         if local != workspace:
             raise ValueError('official Runner workspace differs from registered workspace')
         entered = True
         try:
             code = original(args, local)
             if transport:
+                recovery_attempted = True
                 transport.recover(local.name)
             return code
         finally:
@@ -413,11 +430,16 @@ def runner_main(resource_path, runner_path, argv):
                     child.wait()
             observation = observe(resource_path, cleanup=True)
             write_json(resource_path.with_suffix('.cleanup.json'), observation)
-            if transport and local.name in transport.value['stages'] and transport.value['stages'][local.name]['recovery'] != 'verified':
+            if transport and not recovery_attempted and local.name in transport.value['stages'] and transport.value['stages'][local.name]['recovery'] != 'verified':
                 try:
+                    recovery_attempted = True
                     transport.recover(local.name)
                 except Exception as error:
                     print('workspace recovery failed: ' + error_text(error), file=sys.stderr)
+
+    def run_container(args, local):
+        with admit(endpoint, {**resource, 'resource_path': str(resource_path)}):
+            return execute_container(args, local)
 
     upstream.subprocess = SimpleNamespace(run=run_docker)
     upstream.run_container = run_container

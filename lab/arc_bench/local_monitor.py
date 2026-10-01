@@ -10,7 +10,7 @@ from pathlib import Path
 import subprocess
 import time
 
-from .hosted_monitor import alert
+from .hosted_monitor import alert, accept_run, collected_run, publish_acceptance, collector_session
 from .provider_liveness import assess, transition
 
 TERMINAL={'completed','finished','failed','interrupted','cancelled','lost'}
@@ -96,50 +96,65 @@ def main():
     schedule=monitor/'scheduler.json'
     state=json.loads(schedule.read_text()) if schedule.exists() else {'done':[],'liveness':{},'notifications':{}}
     state.update(pid=os.getpid(),matrix=str(args.matrix.resolve()),module_sha256=hashlib.sha256(module_source.encode()).hexdigest(),model_invoked=False)
-    save(schedule,state)
-    while True:
-        config=json.loads(args.matrix.read_text());runs=[Path(p) for p in config['runs']]
-        pending=[run for run in runs if run.name not in state['done']]
-        if not pending:break
-        delay=state.get('next_at',0)-time.time()
-        if delay>0:
+    state.pop('all_done',None)
+    with collector_session(output,schedule,state):
+        while True:
+            config=json.loads(args.matrix.read_text());runs=[Path(p).resolve() for p in config['runs']]
+            known={str(run) for run in runs}
+            runs.extend(Path(record['identity']['record']).parent for rid,record in state.get('accepted',{}).items()
+                if rid not in state['done'] and str(Path(record['identity']['record']).parent) not in known)
+            for run in runs:
+                record=json.loads((run/'run.json').read_text())
+                if record.get('run_id')!=run.name:raise ValueError(f'matrix run identity mismatch: {run}')
+                accept_run(state,run.name,{'matrix':str(args.matrix.resolve()),'record':str(run/'run.json'),'run_id':run.name,'created_at':record.get('created_at')})
+            save(schedule,state);publish_acceptance(output,state)
+            pending=[run for run in runs if run.name not in state['done']]
+            if not pending:
+                state['all_done']=True
+                break
+            delay=state.get('next_at',0)-time.time() if all(state['accepted'][run.name]['first_batch'] or run.name in state['liveness'] for run in pending) else 0
+            if delay>0:
+                if args.once:break
+                time.sleep(min(10,delay))
+                continue
+            if state.get('next_at',0)>time.time():
+                pending=[run for run in pending if not state['accepted'][run.name]['first_batch'] and run.name not in state['liveness']]
+            batch=monitor/datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ');batch.mkdir()
+            rows=[];verdicts=[]
+            for run in pending:
+                try:item=collect(run,batch,module_source)
+                except Exception as error:item={'run_id':run.name,'observed_at':time.time(),'phase':'unknown','observation_error':f'{type(error).__name__}: {error}','files':{},'provider_sources':[]}
+                dest=batch/run.name;dest.mkdir()
+                for key,value in item.pop('files').items():
+                    path=Path(key)
+                    if path.is_absolute() or '..' in path.parts:raise ValueError('invalid evidence path')
+                    target=dest/path;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(base64.b64decode(value))
+                sources=item.get('provider_sources',[])
+                observation={'observed_at':item['observed_at'],'phase':item['phase'],'run_error':item.get('error'),
+                    'physical_running':item.get('physical_running'),'observation_error':item.get('observation_error'),
+                    'boundary':max([s['boundary'] for s in sources if s.get('boundary') is not None],default=item.get('started_at')),
+                    'sessions':[session for source in sources for session in source['sessions']],
+                    'errors':[error for source in sources for error in source['errors']],
+                    'provider_health':{group:health for source in sources for group,health in source.get('provider_health',{}).items()}}
+                verdict=assess(observation,state['liveness'].get(run.name),stale_after=args.stale_after_seconds,min_samples=args.minimum_samples)
+                if item.get('status') in ('paused','preparing'):
+                    verdict['classification']=item['status']
+                state['liveness'][run.name]=verdict
+                notice=transition(run.name,verdict,state['notifications'])
+                if notice:alert(output,'provider_liveness',notice)
+                item['evidence']=str(dest);item['model_invoked']=False
+                save(dest/'collection.json',item);save(dest/'provider-observation.json',observation);save(dest/'liveness.json',verdict)
+                collected_run(state,run.name,batch,item.get('observation_error'))
+                rows.append(item);verdicts.append({'run_id':run.name,**verdict})
+                if item['phase'] in TERMINAL:state['done'].append(run.name)
+            save(batch/'outcome.json',{'runs':rows,'liveness':verdicts,'done':state['done'],'model_invoked':False})
+            starts=[json.loads((run/'run.json').read_text()).get('started_at') for run in runs]
+            earliest=min([stamp for stamp in starts if isinstance(stamp,(int,float))],default=time.time())
+            next_at=state.get('next_at',0)
+            state.update(last_batch=str(batch),last_completed_at=time.time(),next_at=next_at if next_at>time.time() else time.time()+(180 if time.time()-earliest<600 else 480))
+            save(schedule,state);publish_acceptance(output,state)
+            print(json.dumps({'batch':str(batch),'states':{v['run_id']:v['classification'] for v in verdicts}},ensure_ascii=False),flush=True)
+            state['all_done']=all(run.name in state['done'] for run in runs)
             if args.once:break
-            time.sleep(delay)
-        batch=monitor/datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ');batch.mkdir()
-        rows=[];verdicts=[]
-        for run in pending:
-            try:item=collect(run,batch,module_source)
-            except Exception as error:item={'run_id':run.name,'observed_at':time.time(),'phase':'unknown','observation_error':f'{type(error).__name__}: {error}','files':{},'provider_sources':[]}
-            dest=batch/run.name;dest.mkdir()
-            for key,value in item.pop('files').items():
-                path=Path(key)
-                if path.is_absolute() or '..' in path.parts:raise ValueError('invalid evidence path')
-                target=dest/path;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(base64.b64decode(value))
-            sources=item.get('provider_sources',[])
-            observation={'observed_at':item['observed_at'],'phase':item['phase'],'run_error':item.get('error'),
-                'physical_running':item.get('physical_running'),'observation_error':item.get('observation_error'),
-                'boundary':max([s['boundary'] for s in sources if s.get('boundary') is not None],default=item.get('started_at')),
-                'sessions':[session for source in sources for session in source['sessions']],
-                'errors':[error for source in sources for error in source['errors']],
-                'provider_health':{group:health for source in sources for group,health in source.get('provider_health',{}).items()}}
-            verdict=assess(observation,state['liveness'].get(run.name),stale_after=args.stale_after_seconds,min_samples=args.minimum_samples)
-            if item.get('status') in ('paused','preparing'):
-                verdict['classification']=item['status']
-            state['liveness'][run.name]=verdict
-            notice=transition(run.name,verdict,state['notifications'])
-            if notice:alert(output,'provider_liveness',notice)
-            item['evidence']=str(dest);item['model_invoked']=False
-            save(dest/'collection.json',item);save(dest/'provider-observation.json',observation);save(dest/'liveness.json',verdict)
-            rows.append(item);verdicts.append({'run_id':run.name,**verdict})
-            if item['phase'] in TERMINAL:state['done'].append(run.name)
-        save(batch/'outcome.json',{'runs':rows,'liveness':verdicts,'done':state['done'],'model_invoked':False})
-        starts=[json.loads((run/'run.json').read_text()).get('started_at') for run in runs]
-        earliest=min([stamp for stamp in starts if isinstance(stamp,(int,float))],default=time.time())
-        state.update(last_batch=str(batch),last_completed_at=time.time(),next_at=time.time()+(180 if time.time()-earliest<600 else 480))
-        save(schedule,state)
-        print(json.dumps({'batch':str(batch),'states':{v['run_id']:v['classification'] for v in verdicts}},ensure_ascii=False),flush=True)
-        if args.once:break
-    if all(Path(p).name in state['done'] for p in json.loads(args.matrix.read_text())['runs']):
-        save(monitor/'completion.json',{'finished_at':time.time(),'done':state['done'],'model_invoked':False})
 
 if __name__=='__main__':main()

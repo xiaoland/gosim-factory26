@@ -2,6 +2,7 @@
 import datetime
 import hashlib
 import json
+import re
 from pathlib import Path
 import sqlite3
 import time
@@ -135,7 +136,7 @@ def assess(observation, previous=None, *, stale_after=1800, min_samples=2):
     if observation.get('observation_error'):
         report['errors'].append(observation['observation_error'])
     phase = str(observation.get('phase', '')).lower()
-    terminal = phase in ('completed', 'finished', 'failed', 'cancelled', 'canceled', 'interrupted', 'lost')
+    terminal = phase in ('passed', 'completed', 'finished', 'failed', 'cancelled', 'canceled', 'interrupted', 'lost')
     if terminal:
         report['classification'] = 'terminal'
     elif phase in ('evaluating', 'finalizing'):
@@ -217,7 +218,10 @@ def transition(run_id, report, saved):
     signature = {'classification': report['classification'], 'errors': report['errors'], 'run_error': report['run_error'],
                  'group_errors': report.get('group_errors'),
                  'faults': [(r['session_id'], r['classification'], r['reason'], r['native'].get('error')) for r in report['sessions'] if r['classification'] in faults]}
-    key = hashlib.sha256(json.dumps(signature, sort_keys=True).encode()).hexdigest()
+    # Batch export prefixes vary while the underlying relative evidence error stays the same.
+    encoded = re.sub(r'[^\s\"\']*/monitor/\d{8}T\d{6}(?:\.\d+)?Z/', '<batch>/',
+                     json.dumps(signature, sort_keys=True))
+    key = hashlib.sha256(encoded.encode()).hexdigest()
     old = saved.get(run_id, {})
     saved[run_id] = {'key': key, 'classification': report['classification']}
     if old.get('key') == key:

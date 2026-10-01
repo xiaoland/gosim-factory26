@@ -170,6 +170,12 @@ Viewer 从外层实验链接原生会话和原始错误，不读取生成器配�
 
 ## 实现、实验与执行身份
 
+ARC 的 operation 是一次已批准范围的持久接续入口，不拥有另一套生成状态。prepare 冻结实际 experiment 或 Competition inputs 以及操作源码；run 消费该冻结结果，status 从原 run、journal 和 scheduler 读回。启动、终态重放、观察与完成判断使用同一份实验/job 作用域，不能从共享目录里发现的其它 run 扩大执行范围。恢复准备显式绑定实际输入，准备成功与来源停止各自成立后才允许恢复启动。组件原始记录继续是事实来源，跨组件回执只证明交接效果。
+
+controller、collector 和 Docker 准入共享完整进程身份语义：同机且确认为不存在是 lost，存在但缺少出生依据是 unknown，只有非空出生依据匹配才是 alive。旧记录不回填猜测身份；unknown 阻断接管、重试和破坏性清理。collector 的确定失败终止当前自动接续，显式重入才接管原 scheduler；正常终态后的新订阅可重新启动观察。输出归档保留链接字面值且不跟随外链；严格输入冻结与执行输出保全是不同契约，归档失败保留远端唯一副本，不改判为模型生成失败。
+
+跨本地 controller 的执行容量由冻结 Docker daemon 上的共享准入控制，矩阵 workers 仍只控制本矩阵。准入同时计真实活动执行容器与尚未物化的 reservation，完整身份未知的 reservation 保留容量；物理退出与进程失联确认共同决定释放。当前 registry 只保证同宿主、同用户的参与者，不提供跨宿主分布式锁，所有共享消费者须选择相同容量和 registry。
+
 variant 标识独立维护的 Harness，实验 case 标识该问题中的配置行，run ID 标识一次实际执行。人类实验编号与运行名都不能替代包、应用和机器身份。命名登记见 [实验导航](../../experiments/README.md)。
 
 通用 lab 的 `labels` 是字符串元信息。稳定值随 job 冻结，本次执行标签随 operation request 和 run 保存；执行标签不能覆盖冻结值，retry 不继承上次执行标签。通用调度不理解 g/r、ARC task 或 Harness。状态查询和可选分析展示 run 中的保存值。

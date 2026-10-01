@@ -12,7 +12,7 @@ import sys
 import time
 
 from .assets import frozen_host_runtime
-from .control import owner_state, process_start, send, wait_for_change
+from .control import owner_state, process_state, send, wait_for_change
 from .otlp import SIGNALS, database_for_run, export_batches, list_batches, list_receive_errors, new_session, receiver
 from .plan import create
 from .records import read_json, write_json
@@ -401,8 +401,7 @@ def main(argv=None):
         if (reference / "run.json").is_file():
             row = read_status(reference)
             observation.update(saved_phase=row.get("phase"), saved_pid=row.get("pid"),
-                               process_state="alive" if row.get("pid") and
-                               row.get("process_start") == process_start(row["pid"]) else "unconfirmed",
+                               process_state=process_state(row),
                                resources=_resource_action(reference, "inspect"))
         output = experiment / "controllers" / (active["controller_id"] if active else "orphan") / "observations"
         output.mkdir(parents=True, exist_ok=True)
@@ -414,10 +413,15 @@ def main(argv=None):
         experiment = _experiment_for_run(run)
         state = read_status(run)
         owner = read_json(experiment / "active.json")
-        if state.get("phase") == "running" and owner_state(owner) == "alive":
+        ownership = owner_state(owner)
+        if ownership == "unknown":
+            raise ValueError("controller identity is unknown; reconcile before resource cleanup")
+        if state.get("phase") == "running" and ownership == "alive":
             raise ValueError("active run must be stopped through its controller before cleanup")
-        if state.get("pid") and state.get("process_start") == process_start(state["pid"]):
-            raise ValueError("the recorded process still exists; stop it before resource cleanup")
+        if state.get("pid") or state.get("started_at"):
+            worker = process_state(state)
+            if worker != "lost":
+                raise ValueError(f"recorded process is {worker}; confirm it has exited before resource cleanup")
         result = _resource_action(run, "cleanup")
         transport = run / "workspace/docker-workspace.json"
         if transport.is_file():

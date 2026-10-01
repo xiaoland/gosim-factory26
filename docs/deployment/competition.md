@@ -108,6 +108,8 @@ python3 -m lab.arc_bench.competition prepare \
 
 后续 `snapshot`、`create --task`、`start --task` 是官网写入，只有所属实验授权覆盖时执行；`run-all` 按 journal 顺序推进。写入回复未知时先用 `recover --state <同一journal>` 核对已发生的副作用。已有 run 使用 `status`、`logs`、`watch` 或 `collect`，均传同一 `--state` 和 `--task`，不因监控中断创建新 run。自动监控与间隔见[恢复手册](recovery.md#官网监控)。
 
+共享操作入口通过 `Controller.launch()` 在同一比赛锁内核对 pending、snapshot、create 和 start，取得实际身份后释放锁，再交接采集；不会持锁等到比赛终态。`launch-receipt.json` 保留每次启动结果，`write-receipts/` 保存写入原响应；未确认的写请求只读核对，不自动重发。操作入口和费用范围见[恢复手册](recovery.md#持续执行一个已授权操作)。
+
 Competition prepare 还可显式冻结 `--experiment-key`、`--case`、`--run-names <JSON文件>`；最后一项以 task ID 对应本次运行名。名称不替代包 SHA256、真实 run ID 或来源应用摘要；完整规则见[实验导航](../../experiments/README.md)。Playground 仍只用于显式 practice，不混入 Competition 结果。
 
 ### ARC 追溯与 Git 历史

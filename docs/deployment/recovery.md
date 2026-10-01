@@ -4,6 +4,16 @@
 
 ## 实验恢复与反馈循环
 
+### 持续执行一个已授权操作
+
+`python3 -m lab.arc_bench operation prepare <规格.json> --directory <私有操作目录>` 冻结一次已授权操作，`operation run <同一目录>` 派出后台跟随，`operation status <同一目录>` 查询实际执行和采集记录。后台派出返回 `accepted`，不等于平台已启动或采集已接收。操作目录放在 Git 忽略的 `runs/` 或仓库外；凭据只通过私有 `credential_file` 引用。已有四项 I13 的接线不会因源码更新自动迁移。
+
+规格必须写明 `authorization` 和 `venue`。本地操作引用 `recipe` 或已有冻结 `experiment`，两者只能选一项；可附 `run_labels`。已有多 attempt 时必须用 `run_ids` 明确选择；未分配的 job 只消费首次 attempt，后续 retry 不扩充旧操作范围。需要恢复时，`preparations` 保存恢复准备请求，`preparation_jobs` 将本地 job ID 显式绑定准备 ID；已有 experiment 仅核对实际冻结包，不改写旧输入。官网操作的 `hosted` 数组逐项指定 `id`、`package` 或 `preparation` 及原 Competition prepare 的题目、模型、费用参数。新增收费范围必须在所属 packet 获准，文本授权字段不能自行产生授权。
+
+恢复准备请求引用已有 `package`，或提供 `recovery` 的来源 workspace/base package、允许材料变更和必要 Git 重建依据，并指定 `docker_image` 与 Docker endpoint/context。准备在独占、无网络、无模型凭据的 Linux 容器执行原包 `--prepare-only`，保留实际镜像、UID/GID、原日志和独立读回。准备成功只证明文件准备完成；恢复启动还必须核验同一来源已停止及实际执行 ZIP 与准备回执一致。缺少私有 clone Git 时需逐 clone 的明确 commit、branch 和证据，不能用数据库登记 branch 推断最后 checkout。
+
+本地自动官网重放须另在规格中冻结 `replay.defaults` 或 `replay.jobs` 的 Competition 参数。跟随者仅消费本次 manifest 的实验和 job，保留每个来源 run 的重放包、同一官网 journal 与结果回执；普通本地操作省略 replay 就不会评分。重入继续同一 journal，不把不确定 POST 当作未执行。collector 的确定失败保留已启动 run 和原错误，停止当前自动接续；修复前提后显式再次 `operation run`，不会每五秒自动重启。
+
 选择执行方式时，先区分三类运行：
 
 | 方式 | 输入与产出 | 结果归属 |
@@ -85,6 +95,8 @@ python3 scripts/package_completed_recovery.py \
 应用生成完成后冻结交付版本，通过官网自费应用重放取得官方评分；本地模拟分数和启动检查不替代官网评分。工作区接续与应用重放分别记录来源，不能把重放分数冒称为一次新的端到端生成成绩。正式参赛提交从冻结 Harness 和需求重新生成，以测量完整执行；自费迭代不因此丢弃可续接的工作区。
 
 ## 官网监控
+
+`hosted_monitor --targets <文件>` 接收动态 JSON 订阅，文件为数组或 `{"targets": [...]}`；每项指定 `journal`、`run_id` 和 `submission_id`。操作入口在锁内原子追加订阅；collector 在本地等待期间重读它，远端采样间隔保持不变。已有 run 的身份不能替换，移除订阅也不放弃仍活动的观察。scheduler 拥有接收事实，`monitor/accepted.json` 是统一公开查询回执，包含接收身份、首批原件、逐 run 终态及 collector 生命周期；消费者不猜内部 scheduler 文件名。首批采集和实际身份都成立后才证明观察已接入，操作按自身 run 集完成，不等待其它订阅。`monitor/completion.json` 区分 collector 的 completed、failed 与 interrupted，不能把 collector 的退出当作平台终态。
 
 监控完全由脚本执行，不唤醒审查模型。程序在 run 启动后前 10 分钟每 3 分钟、随后每 8 分钟读取状态和阶段，并下载官网模板导出取得当前 provider 证据；下载保留原 ZIP，允许 10 分钟，不把耗时当成生成停滞。只选择 `template/.factory26/<id>/braid-state/status.json`，历史嵌套状态不参与当前判断。provider_sessions 与 turns 从导出的 DB/WAL 取得一致 SQLite 读取快照，原生文件以来源身份及恢复开始时间划界；导出文件集合本身是否原子仍为未知。终态保存总分、阶段及原件后退出；终态下载失败另记 evidence_errors 并告警，不无限等待缺失的失败工作区。
 

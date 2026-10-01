@@ -1,5 +1,7 @@
 """Read hosted run/provider evidence at 3+8 intervals; notify script liveness changes and exit at terminal."""
 import argparse
+from contextlib import contextmanager
+import signal
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 import fcntl
@@ -10,9 +12,101 @@ import subprocess
 import time
 import zipfile
 from .playground import COOKIE, TERMINAL, save, polling_interval
+from lab.control import process_identity
 from .provider_liveness import assess, collect_provider_evidence, epoch, transition
 
 COMPETITIONS=('arc-bench-lite','hackathon')
+
+def publish_acceptance(base,state):
+    save(base/'monitor/accepted.json',{'observed_at':time.time(),
+        'collector':state['collector'],'collector_status':state.get('collector_status'),
+        'started_at':state.get('started_at'),'finished_at':state.get('finished_at'),
+        'error':state.get('exit_error'),'done':state.get('done',[]),
+        'authority':'scheduler accepted records','accepted':state.get('accepted',{}),'model_invoked':False})
+
+
+def accept_run(state,rid,identity):
+    accepted=state.setdefault('accepted',{})
+    old=accepted.get(rid)
+    if old and old['identity']!=identity:
+        raise ValueError(f'collector target identity changed: {rid}')
+    if old is not None:
+        old['last_accepted_at']=time.time()
+    if old is None:
+        accepted[rid]={'identity':identity,'accepted_at':time.time(),
+            'first_batch':None,'last_successful_at':None}
+    return accepted[rid]
+
+
+def collected_run(state,rid,batch,error=None):
+    record=state.get('accepted',{}).get(rid)
+    if record is None:return
+    record.update(last_batch=str(batch),last_observed_at=time.time(),last_error=error)
+    if record['first_batch'] is None:record['first_batch']=str(batch)
+    if not error:record['last_successful_at']=time.time()
+
+
+@contextmanager
+def collector_session(base,path,state):
+    state.update(collector=process_identity(),started_at=time.time(),collector_status='running')
+    state.pop('finished_at',None)
+    save(path,state);publish_acceptance(base,state)
+    previous=signal.getsignal(signal.SIGTERM)
+    def terminate(_signal,_frame):raise KeyboardInterrupt('collector received SIGTERM')
+    signal.signal(signal.SIGTERM,terminate)
+    status='completed'
+    error=None
+    try:
+        yield
+        status='completed' if state.get('all_done') else 'once'
+    except BaseException as exc:
+        status='interrupted' if isinstance(exc,(KeyboardInterrupt,SystemExit)) else 'failed'
+        error={'error_class':type(exc).__name__,'detail':str(exc)}
+        raise
+    finally:
+        state.update(collector_status=status,finished_at=time.time())
+        if error:state['exit_error']=error
+        else:state.pop('exit_error',None)
+        save(path,state);publish_acceptance(base,state)
+        save(base/'monitor/completion.json',{'finished_at':state['finished_at'],'status':status,
+            'error':error,'collector':state['collector'],'done':state['done'],
+            'accepted':state.get('accepted',{}),'scheduler':str(path),'model_invoked':False})
+        signal.signal(signal.SIGTERM,previous)
+
+
+def read_targets(journals,target_file,state):
+    requested=[]
+    if target_file:
+        value=json.loads(target_file.read_text())
+        requested=value.get('targets') if isinstance(value,dict) else value
+        if not isinstance(requested,list):raise ValueError('targets must be a JSON list or an object with targets')
+    for path in journals:
+        journal=json.loads((path/'state.json').read_text())
+        requested.extend({'journal':str(path),'run_id':item['run_id'],'submission_id':journal['submission_id']}
+            for item in journal['tasks'].values() if item.get('run_id'))
+    bound={}
+    for target in requested:
+        path=Path(target['journal'])
+        if not path.is_absolute():raise ValueError('target journal must be absolute')
+        path=path.resolve();journal=json.loads((path/'state.json').read_text())
+        rid=target['run_id'];sid=target['submission_id']
+        tasks=[task for task,item in journal['tasks'].items() if item.get('run_id')==rid]
+        if journal.get('submission_id')!=sid or len(tasks)!=1:
+            raise ValueError(f'target no longer matches journal identity: {path} / {rid}')
+        identity={'journal':str(path),'run_id':rid,'submission_id':sid,
+            'competition_id':journal['competition_id'],'task_id':tasks[0]}
+        accept_run(state,rid,identity)
+        bound[rid]=identity
+    # A removed active subscription remains owned until terminal; never silently abandon it.
+    for rid,record in state.get('accepted',{}).items():
+        if rid not in state['done'] and rid not in bound:
+            identity=record['identity'];path=Path(identity['journal'])
+            journal=json.loads((path/'state.json').read_text())
+            if (journal.get('submission_id')!=identity['submission_id'] or
+                    journal['tasks'].get(identity['task_id'],{}).get('run_id')!=rid):
+                raise ValueError(f'accepted journal identity changed: {path} / {rid}')
+            bound[rid]=identity
+    return bound
 
 def alert(base,kind,data):
     record={'time':time.time(),'kind':kind,**data}
@@ -43,12 +137,16 @@ def session_evidence(braid_status,native_sessions):
                 'source':str(source),'path':str(target) if target else None})
     return rows
 
-def collect(base,comp,task,rid,batch,with_workspace=True):
+def collect(base,comp,task,rid,batch,with_workspace=True,expected_submission=None):
     dest=batch/rid;dest.mkdir()
     row={'run_id':rid,'competition':comp,'task':task,'evidence':str(dest),'started_at':time.time()}
     try:
         download('/runs/'+rid,dest/'status.json')
         status=json.loads((dest/'status.json').read_text());status=status.get('run',status)
+        if (status.get('id')!=rid or status.get('requirement_id',task)!=task
+                or status.get('competition_id',comp)!=comp
+                or (expected_submission is not None and status.get('submission_id')!=expected_submission)):
+            raise ValueError('remote status identity differs from accepted target; response retained in status.json')
         row['status']=status.get('status');row['failure_reason']=status.get('failure_reason')
         row['boundary']=epoch(status.get('started_at') or status.get('created_at'))
         row['evaluation_started_at']=status.get('evaluation_started_at')
@@ -105,7 +203,7 @@ def collect(base,comp,task,rid,batch,with_workspace=True):
     row['finished_at']=time.time();save(dest/'collection.json',row)
     return row
 
-def run_batch(base,journals,state,*,stale_after=1800,min_samples=2):
+def run_batch(base,journals,state,*,stale_after=1800,min_samples=2,targets=None):
     stamp=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
     batch=base/'monitor'/stamp;batch.mkdir(parents=True)
     jobs=[]
@@ -113,11 +211,18 @@ def run_batch(base,journals,state,*,stale_after=1800,min_samples=2):
         journal=json.loads((path/'state.json').read_text())
         comp=journal['competition_id']
         jobs += [(comp,task,item['run_id']) for task,item in journal['tasks'].items() if item.get('run_id') and item['run_id'] not in state['done']]
+    if targets is not None:
+        jobs=[(item['competition_id'],item['task_id'],rid) for rid,item in targets.items() if rid not in state['done']]
     with ThreadPoolExecutor(max_workers=4) as pool:
-        rows=list(pool.map(lambda x:collect(base,*x,batch,with_workspace=True),jobs))
+        rows=list(pool.map(lambda x:collect(base,*x,batch,with_workspace=True,
+            expected_submission=targets[x[2]]['submission_id'] if targets is not None else None),jobs))
     assessments=[]
     for row in rows:
         rid=row['run_id']
+        collected_run(state,rid,batch,row.get('observation_error') or row.get('workspace_error'))
+        if row.get('status') and rid in state.get('accepted',{}):
+            state['accepted'][rid]['last_status_successful_at']=row['finished_at']
+        state.setdefault('run_next',{})[rid]=time.time()+row.get('poll_interval',180)
         observation=row.get('provider_observation') or {'observed_at':row['finished_at'],
             'phase':row.get('status'),'run_error':row.get('failure_reason'),'sessions':[],
             'errors':[], 'observation_error':row.get('observation_error') or row.get('workspace_error')}
@@ -145,6 +250,7 @@ def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('directory',type=Path)
     p.add_argument('--journal',type=Path,action='append',help='Existing competition journal; repeat for independent runs')
+    p.add_argument('--targets',type=Path,help='Dynamic JSON target subscriptions with journal/run/submission identity')
     p.add_argument('--once',action='store_true')
     p.add_argument('--review',action='store_true',help='Compatibility: provider evidence and script liveness only; never invokes a model')
     p.add_argument('--observe-only',action='store_true',help='Compatibility: observations are now the default')
@@ -161,26 +267,32 @@ def main():
     base=a.directory.resolve();(base/'monitor').mkdir(parents=True,exist_ok=True)
     lock=(base/'monitor/lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     journals=[path.resolve() for path in a.journal] if a.journal else [base/c for c in (a.competition or COMPETITIONS) if (base/c/'state.json').exists()]
-    if not journals:p.error('no existing run journals found')
+    if not journals and not a.targets:p.error('no existing run journals found')
     path=base/'monitor/scheduler-v2.json'
     state=json.loads(path.read_text()) if path.exists() else {'done':[],'reviews':[],'next':{}}
     state.update(pid=os.getpid(),journals=[str(j) for j in journals],semantic_review=False,model_invoked=False,
                  stale_after_seconds=a.stale_after_seconds,minimum_samples=a.minimum_samples)
-    save(path,state)
-    while True:
-        active=[]
-        for journal in journals:
-            items=json.loads((journal/'state.json').read_text())['tasks'].values()
-            if any(i.get('run_id') and i['run_id'] not in state['done'] for i in items):active.append(journal)
-        if not active:break
-        due=[j for j in active if state['next'].get(str(j),0)<=time.time()]
-        if due:
-            run_batch(base,due,state,stale_after=a.stale_after_seconds,min_samples=a.minimum_samples)
-            save(path,state)
-            if a.once:break
-        elif a.once:break
-        else:time.sleep(max(1,min(state['next'][str(j)] for j in active)-time.time()))
-    state['finished_at']=time.time();save(path,state)
+    state.pop('all_done',None)
+    with collector_session(base,path,state):
+        while True:
+            targets=read_targets(journals,a.targets,state)
+            state['journals']=list(dict.fromkeys(item['journal'] for item in targets.values()))
+            save(path,state);publish_acceptance(base,state)
+            active={rid:item for rid,item in targets.items() if rid not in state['done']}
+            if not active:
+                state['all_done']=True
+                break
+            due={rid:item for rid,item in active.items() if state.get('run_next',{}).get(rid,
+                0 if not state['accepted'][rid]['first_batch'] and rid not in state.get('liveness',{}) else state['next'].get(item['journal'],0))<=time.time()}
+            if due:
+                run_batch(base,[],state,stale_after=a.stale_after_seconds,min_samples=a.minimum_samples,targets=due)
+                for journal in {item['journal'] for item in due.values()}:
+                    state['next'][journal]=min(state['run_next'][rid] for rid,item in due.items() if item['journal']==journal)
+                save(path,state);publish_acceptance(base,state)
+                state['all_done']=all(rid in state['done'] for rid in targets)
+                if a.once:break
+            elif a.once:break
+            else:time.sleep(10)
     print(json.dumps({'done':state['done'],'state':str(path)},ensure_ascii=False),flush=True)
 
 if __name__=='__main__':main()

@@ -54,7 +54,14 @@ def verify_case(base, competition, task, requirements_only=False):
 def build(variants, cases, inputs_root, runner, image=None, env_file=None, workers=2,
           prepare_only=False, container_otlp_host=None, separate_evaluation=False,
           requirements_only=False, gateway_state=None, gateway_include_vars=(), *, candidates=None,
-          experiment_key=None, storage=None, host_runtime_receipt=None):
+          experiment_key=None, storage=None, host_runtime_receipt=None, shared_docker_slots=None,
+          memory=None, cpus=None):
+    if shared_docker_slots is not None and (type(shared_docker_slots) is not int or shared_docker_slots <= 0):
+        raise ValueError("shared Docker slots must be a positive integer")
+    if memory is not None and (not isinstance(memory, str) or not memory.strip()):
+        raise ValueError("Docker memory limit must be a nonempty string")
+    if cpus is not None and (not math.isfinite(float(cpus)) or float(cpus) <= 0):
+        raise ValueError("Docker CPU quota must be positive and finite")
     if not prepare_only and not image:
         raise ValueError("--image is required for a Runner run")
     if storage and host_runtime_receipt is None:
@@ -154,6 +161,11 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
                 for variable in gateway_include_vars:
                     wrapper += ["--include-var", variable]
                 command = wrapper + ["--"] + command
+            for flag, value in (("--memory", memory), ("--cpus", cpus)):
+                if value is not None:
+                    command += [flag, str(value)]
+            if shared_docker_slots is not None:
+                command += ["--shared-docker-slots", str(shared_docker_slots)]
             if container_otlp_host:
                 command += ["--container-otlp-host", container_otlp_host]
             handlers = {action: [[python, "{adapter}/arc_bench_adapter.py",
@@ -206,6 +218,10 @@ def main():
     parser.add_argument("--gateway-include-var", action="append", default=[],
                         help="copy one additional name from --env-file into the run client env")
     parser.add_argument("--workers", type=int, default=2)
+    parser.add_argument("--memory", help="explicit Docker memory limit for each run, e.g. 2g")
+    parser.add_argument("--cpus", type=positive_float, help="explicit Docker CPU quota for each run")
+    parser.add_argument("--shared-docker-slots", type=int,
+                        help="same-host shared execution capacity on the frozen Docker daemon")
     parser.add_argument("--workspace-cap-gib", type=positive_float, required=True,
                         help="each concurrent run's workspace limit")
     parser.add_argument("--telemetry-cap-gib", type=positive_float, required=True,
@@ -237,7 +253,8 @@ def main():
                    args.separate_evaluation, args.requirements_only,
                    args.gateway_state, args.gateway_include_var, candidates=args.candidate,
                    experiment_key=args.experiment_key, storage=storage,
-                   host_runtime_receipt=args.host_runtime)
+                   host_runtime_receipt=args.host_runtime, shared_docker_slots=args.shared_docker_slots,
+                   memory=args.memory, cpus=args.cpus)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
     print(args.output.resolve())

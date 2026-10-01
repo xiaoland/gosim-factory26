@@ -460,19 +460,24 @@ def main():
             raise ValueError(f"retained clone is outside Braid run: {target}")
         if (target / ".git").exists():
             continue
+        relative = target.relative_to(run).as_posix()
+        reconstruction = source.get("git_reconstruction", {}).get(relative)
+        if not reconstruction:
+            raise ValueError(f"clone .git missing; explicit Git reconstruction evidence required: {relative}")
+        commit, branch = reconstruction["commit"], reconstruction["branch"]
+        if not reconstruction.get("evidence"):
+            raise ValueError(f"Git reconstruction lacks evidence: {relative}")
         target.mkdir(parents=True, exist_ok=True)
         def git(*arguments):
             return subprocess.check_output(["git", "-C", str(target), *arguments], text=True).strip()
         git("init", "-q", "-b", branch)
         git("remote", "add", "origin", str(origin))
         git("fetch", "-q", "origin")
-        ref = seed if target == app else "refs/remotes/origin/" + branch
-        if target != app and subprocess.run(
-                ["git", "-C", str(target), "rev-parse", "--verify", ref],
-                stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL).returncode:
-            ref = "refs/remotes/origin/" + head_ref.removeprefix("refs/heads/")
-        commit = git("rev-parse", "--verify", ref)
+        resolved = git("rev-parse", "--verify", commit + "^{commit}")
+        if resolved != commit:
+            raise ValueError(f"Git reconstruction requires full confirmed commit: {relative}")
         git("update-ref", "refs/heads/" + branch, commit)
+        git("symbolic-ref", "HEAD", "refs/heads/" + branch)
         # Rebuild the index without checkout: retain uncommitted snapshot files.
         git("read-tree", commit)
         git("config", "user.name", "Factory Agent")
@@ -480,9 +485,10 @@ def main():
         git("config", "commit.gpgsign", "false")
         (target / ".git/info/exclude").write_text(".braid/\nnode_modules/\n")
         git_repairs.append({"path": str(target), "published_base": commit,
+                            "branch": branch, "evidence": reconstruction["evidence"],
                             "retained_changes": git("status", "--porcelain")})
     (run / "recovery-git.json").write_text(json.dumps({
-        "limitation": "Clone .git omitted by platform; unpublished commit history cannot be restored",
+        "limitation": "Clone .git omitted; reconstructed HEAD/index from explicit evidence. Original staging, reflog and unpublished history are not restored",
         "repaired": git_repairs}, indent=2) + "\n")
     prior_result = run / "braid-state/result.json"
     if prior_result.exists():

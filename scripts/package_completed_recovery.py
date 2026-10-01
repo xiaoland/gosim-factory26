@@ -91,7 +91,8 @@ def validate_archive(path, index_path, *, workspace=False, manifest=None):
 
 def journal_inputs(folder, task, run_id, evidence):
     inputs_path, state_path = folder / "inputs.json", folder / "state.json"
-    inputs, state = json.loads(inputs_path.read_text()), json.loads(state_path.read_text())
+    inputs_raw, state_raw = inputs_path.read_bytes(), state_path.read_bytes()
+    inputs, state = json.loads(inputs_raw), json.loads(state_raw)
     if inputs.get("venue") != "hosted" or state.get("venue") != "hosted":
         raise ValueError("recovery journal must describe a hosted run")
     tasks = state["tasks"]
@@ -113,7 +114,11 @@ def journal_inputs(folder, task, run_id, evidence):
                "package_sha256": inputs["package_sha256"],
                "terminal_status": selected["remote_status"], "observed_at": selected.get("observed_at"),
                "status_source": "saved journal, not a fresh API observation",
-               "inputs_sha256": digest(inputs_path), "state_sha256": digest(state_path)}
+               "inputs_sha256": hashlib.sha256(inputs_raw).hexdigest(), "state_sha256": hashlib.sha256(state_raw).hexdigest(),
+               "frozen_observation": {"inputs_member": "recovery-journal-inputs.json", "state_member": "recovery-journal-state.json"}}
+    for name, raw in (("recovery-journal-inputs.json", inputs_raw), ("recovery-journal-state.json", state_raw)):
+        (evidence / name).write_bytes(raw)
+        (evidence / name).chmod(0o600)
     save(evidence / "journal.json", receipt)
     return inputs, receipt
 
@@ -128,6 +133,12 @@ def main():
     parser.add_argument("--workspace", type=Path, help="Reuse an original ZIP; otherwise download the official bundle")
     parser.add_argument("--workspace-sha256", help="Expected SHA256 of a reused original ZIP")
     parser.add_argument("--base-package", type=Path)
+    parser.add_argument("--source-package", type=Path, help="Original frozen journal package when target base differs")
+    parser.add_argument("--stop-receipt", type=Path, help="Saved independent source execution observation")
+    parser.add_argument("--stop-container", help="Exact source container ID selected from a multi-run stop receipt")
+    parser.add_argument("--source-identity", type=Path, help="Saved source run/container/daemon identity observation")
+    parser.add_argument("--stop-identity", type=Path, help="Saved pre-stop daemon/container observation when legacy stop omits daemon")
+    parser.add_argument("--git-reconstruction", type=Path, help="Explicit per-clone commit, branch and evidence records")
     parser.add_argument("--braid", type=Path, help="Explicit binary override; default is exact binary from frozen package")
     parser.add_argument("--braid-source", type=Path, help="Optional source snapshot for reproducing a binary override")
     parser.add_argument("--braid-source-identity", type=Path,
@@ -159,6 +170,14 @@ def main():
         parser.error("provide --journal or both --source-run-id and --base-package")
     if args.task and not args.journal:
         parser.error("--task requires --journal")
+    if args.source_package and not args.journal:
+        parser.error("--source-package requires --journal")
+    if args.stop_container and not args.stop_receipt:
+        parser.error("--stop-container requires --stop-receipt")
+    if args.source_identity and not args.stop_receipt:
+        parser.error("--source-identity requires --stop-receipt")
+    if args.stop_identity and not args.source_identity:
+        parser.error("--stop-identity requires --source-identity")
     output = args.output.resolve()
     if output.exists():
         raise FileExistsError(output)
@@ -175,12 +194,25 @@ def main():
             args.base_package = journal / inputs["package"]
     base = args.base_package.resolve(strict=True)
     base_sha256 = digest(base)
-    if inputs and base_sha256 != inputs["package_sha256"]:
-        raise ValueError("base package SHA256 differs from frozen journal")
+    if inputs:
+        source_package = (args.source_package or journal / inputs["package"]).resolve(strict=True)
+        if digest(source_package) != inputs["package_sha256"]:
+            raise ValueError("source package SHA256 differs from frozen journal")
+        with ZipFile(source_package) as archive:
+            source_manifest = json.loads(archive.read("package-manifest.json"))
+        if source_manifest != inputs["package_manifest"]:
+            raise ValueError("source package manifest differs from frozen journal")
+        validate_archive(source_package, evidence / "source-package-index.json", manifest=source_manifest)
+        binding["source_package"] = str(source_package)
+        binding["source_package_verification"] = {
+            "sha256": digest(source_package),
+            "manifest_sha256": hashlib.sha256(json.dumps(source_manifest, sort_keys=True).encode()).hexdigest(),
+            "verification": "source archive SHA, manifest and member hashes validated while freezing"}
+        save(evidence / "journal.json", binding)
+        if base_sha256 != inputs["package_sha256"] and not args.refresh_native_materials:
+            raise ValueError("different target base requires explicit --refresh-native-materials")
     with ZipFile(base) as archive:
         frozen_manifest = json.loads(archive.read("package-manifest.json"))
-    if inputs and frozen_manifest != inputs["package_manifest"]:
-        raise ValueError("base package manifest differs from frozen journal")
     if args.replace_braid_deepseek_with_glm and frozen_manifest.get("capabilities", {}).get("variant") not in {
             "pi-braid-i13", "pi-braid-i13-glm-root"}:
         raise ValueError("DeepSeek Braid migration supports only the two I13 variants")
@@ -253,6 +285,42 @@ def main():
         if material_mismatches and not args.refresh_native_materials:
             raise ValueError(f"workspace material differs from frozen package: {material_mismatches}")
         requirements_sha256 = hashlib.sha256(archive.read("template/requirements/requirements.yaml")).hexdigest()
+    stop_binding = None
+    if args.stop_receipt:
+        stop_path = args.stop_receipt.resolve(strict=True)
+        stop = json.loads(stop_path.read_text())
+        candidates = stop.get("runs", [stop])
+        selected = [row for row in candidates if (row.get("container") or row.get("container_id")) == args.stop_container] if args.stop_container else candidates
+        if len(selected) != 1:
+            raise ValueError("stop receipt requires a unique --stop-container identity")
+        observed = selected[0]
+        state = observed.get("after", observed.get("state", {}))
+        container = observed.get("container") or observed.get("container_id")
+        if not container or state.get("Running") is not False or state.get("Pid") != 0:
+            raise ValueError("stop receipt lacks an exact stopped container observation")
+        if observed.get("source_run_id") and observed["source_run_id"] != args.source_run_id:
+            raise ValueError("stop receipt source run differs")
+        shutil.copy2(stop_path, evidence / "source-stop.json")
+        stop_binding = {"path": str(stop_path), "sha256": digest(stop_path), "container_id": container,
+                        "observation": observed, "observed_at": stop.get("finished_at", stop.get("at")),
+                        "run_binding": "embedded source_run_id" if observed.get("source_run_id") else "caller-selected container; receipt does not embed source_run_id",
+                        "status_source": "saved container stop observation, not a fresh Docker observation"}
+    git_reconstruction = None
+    if args.git_reconstruction:
+        git_path = args.git_reconstruction.resolve(strict=True)
+        git_reconstruction = json.loads(git_path.read_text())
+        if not isinstance(git_reconstruction, dict):
+            raise ValueError("Git reconstruction must map run-relative clone paths to evidence records")
+        for name, record in git_reconstruction.items():
+            path = PurePosixPath(name)
+            commit = record.get("commit", "")
+            if (path.is_absolute() or ".." in path.parts or not path.parts or "\\" in name
+                    or len(commit) not in {40, 64} or any(character not in "0123456789abcdef" for character in commit)
+                    or not record.get("branch") or not record.get("evidence")):
+                raise ValueError(f"Git reconstruction requires safe clone path, full commit, branch and evidence: {name}")
+            subprocess.run(["git", "check-ref-format", "--branch", record["branch"]],
+                           check=True, stdout=subprocess.DEVNULL, stderr=subprocess.PIPE)
+        shutil.copy2(git_path, evidence / "git-reconstruction.json")
     source = {"source_run_id": args.source_run_id, "braid_run_id": braid_run,
               "workspace_sha256": workspace_sha256, "base_package_sha256": base_sha256,
               "braid_sha256": digest(braid), "braid_source_sha256": digest(braid_source) if braid_source else None,
@@ -270,9 +338,30 @@ def main():
               "refresh_native_materials": args.refresh_native_materials}
     if binding:
         source["journal_binding"] = binding
+    if stop_binding:
+        source["stop_binding"] = stop_binding
+        source["source_stop_confirmation"] = "saved container stop observation; see run_binding limitation"
+    if args.source_identity:
+        identity_path = args.source_identity.resolve(strict=True)
+        source["source_identity_binding"] = {"path": str(identity_path), "sha256": digest(identity_path)}
+        shutil.copy2(identity_path, evidence / "source-identity.json")
+        if args.stop_identity:
+            stop_identity_path = args.stop_identity.resolve(strict=True)
+            source["source_identity_binding"]["stop_identity"] = {"path": str(stop_identity_path), "sha256": digest(stop_identity_path)}
+            shutil.copy2(stop_identity_path, evidence / "stop-identity.json")
+        sys.path.insert(0, str(ROOT))
+        from lab.arc_bench.recovery import container_stop_basis
+        source["source_stop_basis"] = container_stop_basis(source)
+        source["source_stop_confirmation"] = "saved container stop linked to source identity; not a fresh observation"
+    if git_reconstruction is not None:
+        source["git_reconstruction"] = git_reconstruction
+        source["git_reconstruction_sha256"] = digest(git_path)
     main_file = ROOT / "submission/recover_completed.py"
     replacements = {"main.py": main_file, "runtime/bin/braid": braid,
                     "recovery-workspace.zip": workspace}
+    if binding:
+        replacements.update({name: evidence / name for name in (
+            "recovery-journal-inputs.json", "recovery-journal-state.json")})
     if braid_source:
         replacements["recovery-braid-source.tar.gz"] = braid_source
     if source_identity:
@@ -331,7 +420,9 @@ def main():
                     replacements.update({name: (ROOT / "variants" / variant / name).resolve(strict=True)
                                          for name in instructions})
             skipped = set(replacements) | {"recovery-source.json", "package-manifest.json", "recovery-braid-source.tar.gz",
-                                           "recovery-braid-source-identity.json"}
+                                           "recovery-braid-source-identity.json", "recovery-journal-inputs.json", "recovery-journal-state.json"}
+            for name in ("recovery-journal-inputs.json", "recovery-journal-state.json"):
+                manifest["files"].pop(name, None)
             manifest["files"].pop("recovery-braid-source.tar.gz", None)
             manifest["files"].pop("recovery-braid-source-identity.json", None)
             for item in original.infolist():

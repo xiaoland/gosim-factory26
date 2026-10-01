@@ -17,6 +17,8 @@ Unix socket daemon 保留本地 bind mount 路径。远程 endpoint 使用带 ex
 
 取消时仍沿用控制器的 TERM/KILL 语义，适配器只停止经精确归属核验的本 attempt 容器，再尝试回收。daemon 不可达、复制或哈希校验失败均保留具体错误和 `unconfirmed`/回收失败状态；volume 保留供恢复，不能据本地进程退出声称远端已清理。`lab reconcile <run>` 只核对，恢复连接后 `lab cleanup <run>` 停止所属容器、重试未完成的回收，并在核验成功后释放 volume，不重新装配或启动 Agent。历史资源没有冻结 endpoint 时保持 unconfirmed，不能拿当前 context 猜测清理位置。Console 的本宿主 Unix socket 限制不受此接线影响。
 
+控制器与新 worker 登记本机 host、boot ID、PID 和原生出生身份；Linux 使用 `/proc`，Mac 使用 boot UUID 与 libproc 的微秒出生时间。旧记录不回填，也不把两个空出生字段当作匹配。确认同机 PID 已消失，或同一 boot 的出生身份不再匹配时，才判 lost；进程存在但历史身份不足、宿主不同或查询不可读均保持 unknown。仍标 running 的未知控制器阻断接管，未知控制器阻断 cleanup，未知已启动 worker 阻断 retry 与 cleanup；reconcile 保存这项事实，不自行修复历史身份。旧 worker 缺 host 时不能仅凭本机 PID 不存在放行。
+
 长矩阵启动前检查 Mac 回收空间、远端磁盘和容器内模型 API。Mac 容量预算只覆盖本地权威目录，不等于远端 volume 的存储配额；远端临时空间须另外确认。远程回收会同时保留下载 tar、解压目录与原阶段目录，workspace cap 和 finalization scratch 必须按这个峰值声明，不能只按最终应用大小估算。出现共享环境故障时停止派发，保留完整生成的应用，环境恢复后仅补评测，不把设施失败计作模型零分。以下命令在 Mac 仓库执行，Runner 与输入都使用 Mac 上的冻结目录；镜像在所选 daemon 构建。基础 Python 使用本机明确的可执行路径。
 基础镜像 digest 是 2026-09-23 核验的 `linux/amd64` 发布物；若换镜像，保留新 digest 和每个 run 的 `image_id`，不要将两者的分数视作同一环境。
 
@@ -35,6 +37,7 @@ python3 -m lab.arc_bench.arc_matrix \
   --inputs-root "$LOCAL_ASSETS/platform-inputs" --runner "$RUNNER" \
   --host-runtime "$HOST_RUNTIME" \
   --image arcbench-local-submit:latest --workers 4 --separate-evaluation \
+  --shared-docker-slots 5 --memory 2g --cpus 2 \
   --workspace-cap-gib 24 --telemetry-cap-gib 4 --finalization-scratch-gib 8 \
   --host-reserve-gib 50 --build-cap-gib 20 --archive-level decision \
   --output "$LOCAL_ASSETS/experiments/example/manifest.json"
@@ -52,7 +55,13 @@ python3 -m lab run "$LOCAL_ASSETS/experiments/example/manifest.json" \
 
 `--prepare-only` 只准备两类输入与制品装配，不产生评分。
 独立生成使用 `--separate-evaluation`，生成阶段不传公开测试；省略该选项的单阶段路径不作为独立生成基线。
-矩阵中的每个执行都有独立 run ID；同一赛题、不同 variant 可以同时运行，`--workers` 只限制总并发，不按赛题或 variant 加锁。
+矩阵中的每个执行都有独立 run ID；同一赛题、不同 variant 可以同时运行，`--workers` 只限制该实验控制器的派发并发，不按赛题或 variant 加锁。`arc_matrix --memory 2g --cpus 2` 将每个新 run 的 Docker 内存和 CPU 参数冻结到 adapter argv；Python 调用对应 `build(..., memory="2g", cpus="2")`。不指定时沿用官方 Runner 默认值，不改写旧配方。容器内存与 CPU 限制不等于 schema v3 的 workspace、telemetry 和归档存储预算。
+
+需要多个控制器共享执行容量时，所有新矩阵显式设置 `--shared-docker-slots 5`，Python 调用对应 `build(..., shared_docker_slots=5)`。准入按冻结 daemon ID，在同一控制器宿主的 `~/.config/factory26/docker-admission/<daemon-id哈希>/` 使用持久 registry 和文件锁；XDG_CONFIG_HOME 可改变配置根目录，FACTORY26_DOCKER_ADMISSION_ROOT 可指定统一准入根目录。所有参与控制器须使用同一稳定目录，不为每个 run 单设目录；已有 registry 与请求的槽数不一致时拒绝执行。五槽是同宿主、同用户或共享锁目录、同 daemon 的共同上限，各控制器的 workers 不会各得到五槽。不同宿主、独立锁目录或未接入准入的外部执行者不受同一锁协调，不能据此声称跨宿主全局限流。
+
+准入计入 daemon 上带 `io.factory26.stage` 标签的 running、paused 和 restarting 执行容器；helper 不带此标签，不占执行槽。新启动前的 reservation 另占槽，匹配同 run/attempt/stage/owner 的实际活动容器后只计一次；未知进程身份不会自动释放 reservation，确认 lost 后仍须独立 Docker 读回证明没有对应活动执行。容量不足时程序每五秒等待并保存状态变化，不调用模型。准入覆盖输入传输、执行及 finally 的停止和回收，退出时释放本次 reservation；仍在运行的物理容器继续计入。最新事实与变化保存在 registry 的 `receipts/<lease-id>.json`、同名 `.jsonl` 和阶段旁的 `*.resource.admission.json`。观察时间表示该次读回，不等于持续健康保证。
+
+例如同一 daemon 已有两条旧 I13 执行时，五槽中只余三槽；新矩阵使用 `--memory 2g --cpus 2` 不改变原两条的 4GiB 配额，旧执行结束后新增执行自动获得更多可用槽。不替换旧冻结 controller-source 来接入新政策。共享锁机制的存在与容量读回不能替代多控制器并发、满槽等待或失联回收的实际运行验收。
 `run.json` 保存输入快照哈希、适配器退出码、原始 Runner 结果和遥测取得情况；原始 Runner 退出码在 `result.runner_exit_code`。
 当前主线将 Runner workspace、stdout/stderr 和声明归档的产物留在外层 run 目录中。I13 内层归档只有回执授权才删除其精确 `work`；这不授权清理外层 Runner 现场。只读候选查询与保护边界见[证据说明](evidence.md#存储回收候选)。
 
@@ -73,7 +82,7 @@ python3 -m lab telemetry "$LOCAL_ASSETS/experiments/example/runs/<run-id>" \
 ```
 
 `telemetry` 也接受 `--signal`、`--since`、`--until`、`--after-id`、`--until-id` 与 `--limit`；导出的 `.pb` 保持接收时的原始 OTLP protobuf 内容。`evidence <run> <相对路径> --offset N --bytes N` 按范围读取原始文件。`events`/`wait` 使用持久游标；`parallel` 可在执行中调整总槽位，`stop` 请求停止，`reconcile` 只核对已登记资源，`cleanup` 才显式清理。失联后不自动重跑已有尝试。
-`--max-parallel` 接受任意正整数，设施不另设并发封顶。冻结目录保留内部符号链接，但拒绝指向快照外部的链接；ARC 矩阵接受输入目录提供的 `COMPETITION/TASK`，不维护赛题白名单或历史测试数量；是否完整评分依据本次 Runner 的终态与计数，适配器的 `--expected-tests` 仅在调用者明确指定时约束数量。
+`--max-parallel` 接受任意正整数，调整的是单控制器派发槽位；已冻结的共享 Docker 准入上限独立生效，不能通过增加 max-parallel 绕过。冻结目录保留内部符号链接，但拒绝指向快照外部的链接；ARC 矩阵接受输入目录提供的 `COMPETITION/TASK`，不维护赛题白名单或历史测试数量；是否完整评分依据本次 Runner 的终态与计数，适配器的 `--expected-tests` 仅在调用者明确指定时约束数量。
 Braid 的会话重建、静态网站、补采和逐项排障统一见 [Braid 诊断运行手册](braid-diagnostics.md)。
 常用入口为 `make braid-report RUN=<外层实验run目录> OUTPUT=<新网站目录>`，详情见 `make help` 或 `python3 -m lab.analysis.braid_telemetry_viewer --help`。
 外层实验 run 与 Braid run_id 分别保留，不互相替代；接收批次或生成网站成功都不等于诊断证据完整。
@@ -117,7 +126,7 @@ raw 的 API 参数以 [raw_models.json](../../variants/raw/raw_models.json) 和�
 历史接口、环境与资格证据见 [迭代 task packet](../../tasks/iteration-throughput/packet.md)。
 本地模拟结果不能宣称官网评分通过。
 
-本地生成的 `arc_bench_adapter.py --memory 4g --cpus 2` 将资源参数原样传给官方 local runner；未指定时沿用 runner 默认值。
+本地生成的内存与 CPU 参数经 `arc_matrix --memory <Docker内存值> --cpus <CPU数>` 冻结，再由 adapter 原样传给官方 local runner；未指定时沿用 runner 默认值。
 记录资源配额与 cgroup 压力后再比较耗时，不把不同资源条件下的变化单独归功于模型或 Harness。
 
 ## 工具、浏览器与应用验收

@@ -15,7 +15,7 @@ from threading import Event, Thread
 import time
 
 from .assets import frozen_host_runtime
-from .control import Control, exclusive, process_start
+from .control import Control, exclusive, process_identity, process_state
 from .docker_endpoint import freeze as freeze_docker, environment as docker_environment
 from .otlp import SIGNALS, database_for_run, initialize, list_batches, new_session, receiver
 from .plan import create
@@ -134,8 +134,10 @@ def _allocate(experiment, manifest, controller, retry_of=None, operation_id=None
     source = read_status(retry_of) if retry_of else None
     if source and source.get("experiment_id") != manifest["experiment_id"]:
         raise ValueError("retry run belongs to a different experiment")
-    if source and source.get("pid") and source.get("process_start") == process_start(source["pid"]):
-        raise ValueError("source attempt process is still alive; inspect or stop it before retry")
+    if source and (source.get("pid") or source.get("started_at")):
+        state = process_state(source)
+        if state != "lost":
+            raise ValueError(f"source attempt process is {state}; confirm it has exited before retry")
     for job in manifest["jobs"]:
         if job["preparation"]["status"] != "ready":
             continue
@@ -583,8 +585,8 @@ def controller(experiment, *, retry_of=None, listen_host="127.0.0.1", stop_grace
                         _stop_active(active, signal.SIGKILL if kill_escalated else signal.SIGTERM,
                                      names={run.name})
                     state = read_status(run)
-                    state.update(phase="running", started_at=time.time(), pid=process.pid,
-                                 process_start=process_start(process.pid), pgid=process.pid)
+                    state.update(phase="running", started_at=time.time(),
+                                 **process_identity(process.pid), pgid=process.pid)
                     try:
                         write_json(run / "run.json", {k: v for k, v in state.items() if k != "path"})
                         control.emit("attempt-started", run_id=run.name, pid=process.pid)
