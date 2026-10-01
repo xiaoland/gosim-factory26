@@ -1,6 +1,7 @@
 # e20261001-01：I13 首轮实验
 
-当前状态（2026-10-01 18:19 CST）：用户确认WSL恢复为Debian-Rebuild，本地两项开始重新核实宿主及现场，并纳入 `828a3da` 的PR读取提示修正。官网Flash/GitHub `377afa346c92` 于18:07:23终止，18:11采集为FAILED，尚未评测；Flash/Sheet `691028015e69` 18:16采集仍RUNNING。官网故障已委派分析当前attempt的新诊断证据，不自动重跑。本轮尚无有效应用评分。
+当前状态（2026-10-01）：用户确认Debian-Rebuild已恢复、旧数据应已清除，授权“有快照就恢复，没有就重新启动吧”。GLM/GitHub从Mac完整快照e207…接续，GLM/Sheet干净启动，两项纳入 `828a3da`、使用自有API、登记新attempt。Console由另一会话负责，不阻塞实验。官网Flash/GitHub `377afa346c92` 生成失败未评测；Flash/Sheet `691028015e69` 18:16采集仍RUNNING。官网新诊断证据分析中，不自动重跑。本轮尚无有效应用评分。
+
 ## 启动以来的工作树
 
 ```text
@@ -12,17 +13,17 @@ I13 / e20261001-01
 │  │  └─ 18:07生成阶段失败，未评测；新终态证据分析中
 │  ├─ Flash/Sheet → 官网接续［RUNNING；691028015e69］
 │  │  └─ 由本地快照恢复；根/PR旧会话接续、官网诊断采集通过
-│  ├─ GLM/GitHub → Debian-Rebuild接续［宿主/最新现场核对中］
-│  │  └─ 旧会话接续通过；重启前网桥地址错位阻断模型请求
-│  └─ GLM/Sheet → Debian-Rebuild接续［宿主/最新现场核对中］
-│     └─ 实际GLM-5.3模型请求已成功；应用语义进展由后续原生证据判断
+│  ├─ GLM/GitHub → Debian-Rebuild接续［完整快照恢复准备中］
+│  │  └─ 来源e207…；保留Git/Braid/native，显式成员迁移与transport更新
+│  └─ GLM/Sheet → Debian-Rebuild干净启动［准备中］
+│     └─ 较晚现场无完整快照；用户已授权重新开始
 ├─ 模型与费用［配置确定］
 │  ├─ 官网：不勾选使用比赛额度评测、不上榜；官方ARC地址 + 自有key
 │  ├─ 本地：自有API；GLM→Bigmodel，K3→Kimi，内部DS Flash→Qwen
 │  └─ DeepSeek Braid成员已移除；旧在途工作保留身份、显式迁至GLM
 ├─ PR描述重复读取修正［828a3da已完成；待应用本地GLM两项］
 │  ├─ 根因：首轮已覆盖的关联事件仍命令重读；无重复全文注入，技能不改
-│  └─ 编译/真实CLI反馈通过；Linux制品构建中，保留当前现场与会话应用
+│  └─ 编译/真实CLI反馈通过；Linux制品构建中；GitHub保留现存快照会话，Sheet新建
 ├─ 官网SIGKILL诊断与恢复［官网启动前置］
 │  ├─ 资源/cgroup/进程及自身信号记录［完成，真实Linux操作验证］
 │  ├─ 统一Linux Braid构建［完成］
@@ -31,18 +32,20 @@ I13 / e20261001-01
 │  ├─ 自动恢复［方案完成，未实现/未开启收费重试；建议每来源至多1次］
 │  └─ 历史SIGKILL来源［未知］；没有WSL同类故障事实
 └─ 配套设施与知识
-   ├─ Exp Console［唯一实例；新两项已接入，WSL恢复后需核对可达性］
-   ├─ 自有API网关［重启前已运行并验证；本次不擅自重启］
+   ├─ Exp Console［另一个会话负责改进/部署；不阻塞本轮］
+   ├─ 自有API网关［按新宿主实际网络重建运行接线］
    ├─ Luna独立监控 + automation［已接新身份；官网3+8采集在Mac继续］
    ├─ 参赛须知durable docs［完成，PDF/规则/PRD/索引已提交］
    └─ 原失败/暂停现场［已保全］；本轮尚无有效应用评分
 ```
 
+本地最新授权：“我们重新开始处理吧；console那边有另外一个 agent 在改进和部署它，我们继续启动 I13-GLM，不受 console 阻塞”；“有快照就恢复，没有就重新启动吧”。GitHub恢复来源为 `runs/iteration13/local-20261001/model-cutover/glm-root--hackathon--github-00bf489759b139-workspace.zip`，SHA256 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`。其后e057…现场已不在，不以失败请求记录代替完整工作区。Sheet原45bf…现场同样未完整保全，按新尝试干净生成。Mac持有控制器/输入/最终记录，复用远程Docker workspace传输在Debian-Rebuild执行；本任务不修改另一会话拥有的传输适配或Console实现。
+
 本次GitHub终态原件：`runs/iteration13/hosted-recovery-20261001/monitor/20261001T101157.239125Z/377afa346c92/status.json`。开始17:25:00.509841、结束18:07:23.187847 CST；平台 `run_duration_seconds=2465`，两时间戳差约2542.68秒，分别保留。平台记录token67,750,296，`token_cost_usd=17.136155`但 `token_cost_currency=CNY`，按原币种记录17.136155元，不把字段名当美元。score=0、passed/failed均0、evaluation_started_at=null，不是有效应用零分。原始failure_reason仅main.py exit1，内部因果由独立子Agent消费当前诊断证据确认。
 
 官网真实身份与费用：GitHub submission `66774c63c885` / run `377afa346c92`，Sheet submission `5ada036f2340` / run `691028015e69`。两者 submission credential_mode 与 run billing_mode 均读回self_funded，比赛额度许可false、pending=null；原生恢复、官方实际binary身份与新attempt均已核验。官网首次工作区分别取得46/76次成功的2秒采样，cgroup-v2能力无错误；GitHub可见memory.max为2GiB，宿主signal sender仍不可见。这些证据不证明历史SIGKILL原因。首次现场归 `runs/iteration13/hosted-recovery-20261001/{github,sheet}-first-workspace/`，后台collector PID58107在Mac存活，继续既定3+8采集，不依赖WSL；最新outcome来源与时间由monitor目录保存。
 
-WSL重启前本地GitHub身份为 `glm-root--hackathon--github-e057e34c3d510a`，原会话握手成功。其native transport配置已核对正确，但Docker网络配置为172.17.0.0/16，宿主docker0实际只有172.30.0.1/24；真实只读GET返回 `Errno 113 No route to host`。这是重启前网络观察，不能当作重启后的事实或SIGKILL。17:46:57 CST单次只读SSH在2.10秒返回exit255、`kex_exchange_identification: read: Connection reset by peer`，未取得当前boot、容器、controller、网关或Console事实；不复用旧PID。本次回执为 `runs/iteration13/local-self-funded-20261001/wsl-restart-readonly-20261001T094657Z.json`。用户正在恢复WSL，本轮只读核对，不修改网络、启动/重启服务或生成。
+WSL重启前本地GitHub身份为 `glm-root--hackathon--github-e057e34c3d510a`，原会话握手成功。其native transport配置已核对正确，但Docker网络配置为172.17.0.0/16，宿主docker0实际只有172.30.0.1/24；真实只读GET返回 `Errno 113 No route to host`。这是重启前网络观察，不能当作重启后的事实或SIGKILL。17:46:57 CST单次只读SSH在2.10秒返回exit255、`kex_exchange_identification: read: Connection reset by peer`，未取得当前boot、容器、controller、网关或Console事实；不复用旧PID。本次回执为 `runs/iteration13/local-self-funded-20261001/wsl-restart-readonly-20261001T094657Z.json`。这属于此前暂停时点；现已由上方Debian-Rebuild重启授权取代。
 
 本地Sheet真实身份：experiment `exp-20261001-171054-581f65`，run `glm-root--hackathon--sheet-45bf2d21de2ec4`；容器 `arcbench-local-1bcf230cc22d`，4 GiB/2 CPU、bridge、1000:1000，读回running且未暂停。包SHA256为 `a0a42a42955e755179cf9086950de2ad010023154043ab7e5951cd7e0ae5d5b9`，来源见 `runs/iteration13/local-self-funded-20261001/sheet-start-readback.json` 与 `sheet-clean-receipt.json`。运行负责人随后核对实际网关日志：17:13:14 CST首个 `glm-5.3` 请求完成，第二请求也完成；两者归该run的独立binding，参数保持high/thinking配方，未发送额外付费探测。本地两题使用同批下独立冻结的 `sheet/`、`github/` 实验，因为既有lab冻结后不能追加job；共同experiment_key为 `e20261001-01`、batch为 `local-self-funded-20261001`，本地总并行上限2。
 

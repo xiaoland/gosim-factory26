@@ -2,17 +2,19 @@
 
 ## 当前：官网 Flash 恢复与本地 GLM 自有通道（2026-10-01）
 
-最新授权把四项分成两官网、两本地：Flash/GitHub优先从官网终态保全副本恢复到官网，Flash/Sheet从本地一致快照恢复到官网，两者非参赛、使用ARC API；官网SIGKILL关键证据采集成为这两项的启动硬前置，并调查有界自动恢复。GLM/GitHub留本地接续、GLM/Sheet本地干净启动，两者切到自有bigmodel/kimi/ds/qwen等API。移除DeepSeek Braid成员即可，不额外限定PR必须用GLM；内部DeepSeek sub-agent保留。原运行已保全并停止，后续四项均已启动过。2026-10-01 17:45 CST，官网两项RUNNING且诊断采集实际通过；用户报告WSL意外重启、正在恢复，本地两项状态只读核对，当前不自行改网络或重启。具体进展归下方实验树。
+最新授权把四项分成两官网、两本地：Flash/GitHub优先从官网终态保全副本恢复到官网，Flash/Sheet从本地一致快照恢复到官网，两者非参赛、使用ARC API；官网SIGKILL关键证据采集成为这两项的启动硬前置，并调查有界自动恢复。GLM/GitHub留本地接续、GLM/Sheet本地干净启动，两者切到自有bigmodel/kimi/ds/qwen等API。移除DeepSeek Braid成员即可，不额外限定PR必须用GLM；内部DeepSeek sub-agent保留。原运行已保全并停止，后续四项均已启动过。官网两项曾RUNNING且诊断采集实际通过；最新GitHub已生成失败，Sheet继续运行。用户确认WSL重建为Debian-Rebuild，授权本地有快照即恢复、没有则重新启动。具体进展归下方实验树。
 
 用户补充澄清：官网提交不勾选“使用比赛额度评测”即可；ARC API 指官方地址配自有 API key，不使用比赛 key。原 competition 题库可继续使用，无“不上榜”额外要求。主线此前混淆题库、费用模式和排行范围，已撤销该等待；恢复包与诊断前置通过后直接执行已授权两次启动。
 
 [当前工作树与执行安排](experiments.md#启动以来的工作树)是本轮事实入口。三个子Agent分别负责官网恢复包、诊断与自动恢复方案、Braid目录与本地通道准备，互相交接制品，主线负责整合与启动。下文“两槽位、四项全本地、全部ARC、诊断不阻塞”均为此前阶段历史，不能作为当前启动依据。自动恢复的次数与费用边界尚未冻结，不自行反复创建收费尝试。
 
-### Debian-Rebuild恢复与新官网故障（2026-10-01 18:19 CST）
+### Debian-Rebuild接续授权与新官网故障（2026-10-01）
 
-用户确认“WSL现在已经恢复（而且不再是Debian-Factory26，而是Debian-Rebuild）”。本地接续恢复执行：原负责人核实新发行版/boot/目录/daemon与本轮两现场，保全后恢复自有网关、唯一Console及GLM/GitHub、GLM/Sheet；另一子Agent从冻结Braid源叠加 `828a3da` 构建Linux制品。不会复用旧PID或默认旧路径仍在，也不直接回退原始起点。最新完整可恢复现场优先；无法确认保全进度时再返回具体缺口。
+用户确认旧Debian-Factory26的数据应已清除，并明确：“我们重新开始处理吧；console那边有另外一个 agent 在改进和部署它，我们继续启动 I13-GLM，不受 console 阻塞”；对于恢复范围，答复“有快照就恢复，没有就重新启动吧”。据此，GLM/GitHub从Mac已保全的完整快照 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4` 接续，GLM/Sheet无最新完整快照，从干净起点启动；两项登记新attempt、使用自有API并纳入 `828a3da`。GitHub沿用已授权的DeepSeek Braid成员迁移及原生transport更新，保留快照中的Git、Braid和会话历史；不把已丢失的较晚现场声称为恢复来源。
 
-同次读取既有Mac监控发现官网GitHub `377afa346c92` 已在18:07:23 CST终止，18:11批次采到FAILED，生成失败且未进入评测，Sheet `691028015e69` 的18:16批次仍RUNNING。原信号诊断子Agent已接手当前attempt的终态原件分析，尚未断言SIGKILL或OOM；官网未自动收费重试，Sheet及监控继续。本地宿主重建与官网故障分别处理，不据时间接近推因。
+执行采用Mac持有源码、冻结输入、控制器和最终记录，Debian-Rebuild的Docker运行容器；复用正在落地的[远程workspace传输](../docker-workspace/packet.md)。不恢复旧远端开发目录、不继续查找已清除VHD，也不部署Console；Console由另一会话负责，独立于本轮启动。当前新Linux Braid构建与两项运行准备并行，真实启动身份和反馈归[实验树](experiments.md)。
+
+官网GitHub `377afa346c92` 已在18:07:23 CST终止，18:11批次采到FAILED，生成失败且未进入评测；Sheet `691028015e69` 的18:16批次仍RUNNING。原信号诊断子Agent分析当前attempt的新证据；官网未自动收费重试，Sheet及既有监控继续。本地宿主重建与官网故障分别处理，不据时间接近推因。
 
 ### PR描述重复读取（2026-10-01，新开工）
 
@@ -22,9 +24,9 @@ GPT-6.1-Sol / xhigh子Agent负责从已保全的PR2原生会话与消息生产�
 
 调查与修复已完成，提交 `828a3da`。实际首条消息只包含一次7559-byte上下文，后续PR view却读回同一1813-byte description；直接已证诱因是创建时关联事件在首轮快照已覆盖后仍命令“读取 braid pr view 2”。模型在读取skill前已决定view，未证明skill造成该动作，因此技能不改。现已把共享事件改为中性详情/正文入口，并明确复用当前已有内容、按需补缺或核对变化。编译及冻结DB副本的真实CLI操作通过，主线已独立核对。[调查、证据和验证](pr-context-duplication.md)保存精确来源。
 
-本地应用尚未完成：需要新Linux binary及WSL重启后的两个当前工作区；旧起始快照不能代表本轮进度。offline-resume会向原native session重新提供新通用指令，无需reset；已排队旧事件及native历史不回写。源码完成不等于已在本地生效，后续行为改善仍由GLM实际运行验证。
+本地应用尚未完成：新Linux binary正在构建；按上方最新授权，GitHub从现存完整快照接续，Sheet干净启动。offline-resume会向原native session重新提供新通用指令，无需reset；已排队旧事件及native历史不回写。源码完成不等于已在本地生效，后续行为改善仍由GLM实际运行验证。
 
-WSL仍由用户恢复，先使用Mac保全副本调查/修复/编译；本地应用须先核实重启后保留现场与当前进度，不能以早期起点覆盖新进度。不因文档/技能修改自动丢弃原生会话，也不增加机械重读或版本校验协议。沿用不编写/运行Factory、Braid或SVC测试的要求，用实际既有材料和编译反馈核对。
+WSL已恢复为Debian-Rebuild，原远端现场已清除；用户已授权按有无完整快照分别恢复或重启。不因文档/技能修改自动丢弃原生会话，也不增加机械重读或版本校验协议。沿用不编写/运行Factory、Braid或SVC测试的要求，用实际既有材料和编译反馈核对。
 
 ### 此前本地启动与配方调整（已由最新分流更新）
 
