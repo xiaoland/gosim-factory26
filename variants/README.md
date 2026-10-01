@@ -10,6 +10,7 @@
 | [pi-braid-i11](pi-braid-i11/) | 保留的 I11 实现 | 原生成、交付及评分来源见 [I11 packet](../tasks/iteration11/packet.md)。 |
 | [pi-braid-i12](pi-braid-i12/) | 保留的 I12 人工介入实现 | 原冻结运行及暂停现场见 [I12 packet](../tasks/iteration12/packet.md)；Console 在开发侧，不装入制品。 |
 | [pi-braid-i13](pi-braid-i13/) | 当前开发入口 | 独立维护当前生成、角色、工具与方法材料；已实现范围、待验边界和后续方案见 [I13 packet](../tasks/iteration13/packet.md)。 |
+| [pi-braid-i13-glm-root](pi-braid-i13-glm-root/) | I13 根模型对照 | 增设 root-only GLM-5.3 根；两个 Flash 可指派成员保持基线。该组 advisor 保留 K3，基线 advisor 使用 K2.7 Code；冻结与解释边界见 [对照收据](../tasks/iteration13/root-comparison.md)。 |
 | [pi-braid-flash-team](pi-braid-flash-team/) | 实验实现 | 从最新 pi-braid 独立派生；GLM 根成员，Qwen/MiniMax 工作项成员；原生子角色保持来源模型。 |
 | [pi-braid-kimi-root](pi-braid-kimi-root/) | 实验实现 | 从当前 pi-braid 独立派生；仅根成员使用 Kimi K2.7 Code，GLM/DeepSeek 工作项成员及原生角色保持基线。 |
 | [pi-braid-coordinator](pi-braid-coordinator/) | 实验实现 | 根只协调，不写应用代码，也不作为后续工作项的可指派成员。 |

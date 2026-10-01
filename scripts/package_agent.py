@@ -138,7 +138,7 @@ def assemble(source, destination, runtime, skill_source, skills):
     support=destination/'support';support.mkdir()
     for name in ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs'):
         shutil.copy2(ROOT/'scripts'/name,support/name)
-    if source.name in {'pi-braid', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
+    if source.name in {'pi-braid', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
         shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
         subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', '--no-compile',
                         '--target', str(support/'otlp-deps'), '-r', str(ROOT/'lab/requirements.txt')],
@@ -157,8 +157,8 @@ def package(variant, output, docker_context=None, runtime=None, stage=None,
     if source.parent!=ROOT/'variants' or not (source/'build.py').is_file():
         raise ValueError('请选择含 build.py 的独立 variant')
     if output is not None and Path(output).exists(): raise FileExistsError(output)
-    if tool_env is not None and variant != 'pi-braid-i13':
-        raise ValueError('--tool-env 当前仅供 pi-braid-i13 使用')
+    if tool_env is not None and variant not in {'pi-braid-i13', 'pi-braid-i13-glm-root'}:
+        raise ValueError('--tool-env 当前仅供 I13 基线与 GLM 根对照使用')
     skill_source=Path(skill_source or ROOT/'harness/skills').resolve()
     from runtime import linux
     (ROOT/'runs').mkdir(exist_ok=True)
