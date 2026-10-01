@@ -34,6 +34,19 @@ def download(path,target):
                       '--output',str(target),'--write-out','%{http_code}','https://arc-bench.com/api'+path],capture_output=True,text=True,timeout=1250)
     if r.returncode or r.stdout!='200':raise RuntimeError(f'HTTP {r.stdout}; curl {r.returncode}; {r.stderr[:500]}')
 
+def session_evidence(braid_status,native_sessions):
+    """Bind native files to the work items in Braid's current physical sessions."""
+    rows=[]
+    for source in braid_status:
+        for session in json.loads(source.read_text()).get('physical_sessions',[]):
+            parts=Path(session.get('native_session_path') or '').parts
+            key=parts[parts.index('.factory26'):] if '.factory26' in parts else None
+            target=native_sessions.get(key)
+            rows.append({**{name:session.get(name) for name in
+                ('work_item_kind','work_item_id','profile_id','status','native_session_id')},
+                'source':str(source),'path':str(target) if target else None})
+    return rows
+
 def collect(base,comp,task,rid,batch,with_workspace=True):
     dest=batch/rid;dest.mkdir()
     row={'run_id':rid,'competition':comp,'task':task,'evidence':str(dest),'started_at':time.time()}
@@ -53,7 +66,7 @@ def collect(base,comp,task,rid,batch,with_workspace=True):
             download('/runs/'+rid+'/workspace/template-bundle',dest/'workspace.zip')
             index=[]
             braid_status=[]
-            native_sessions=[]
+            native_sessions={}
             with zipfile.ZipFile(dest/'workspace.zip') as z:
                 for item in z.infolist():
                     path=Path(item.filename)
@@ -65,10 +78,11 @@ def collect(base,comp,task,rid,batch,with_workspace=True):
                             if item.filename.endswith('/braid-state/status.json'):
                                 braid_status.append(target)
                             if 'native-homes' in path.parts and path.suffix=='.jsonl':
-                                native_sessions.append((path.name,target))
+                                native_sessions[path.parts[path.parts.index('.factory26'):]]=target
             save(dest/'archive-index.json',index)
-            row['required_reads']=[str(path) for path in braid_status[:1]]
-            row['required_reads'] += [str(path) for _,path in sorted(native_sessions)[-2:]]
+            row['session_evidence']=session_evidence(braid_status,native_sessions)
+            row['required_reads']=list(dict.fromkeys([str(path) for path in braid_status]
+                + [session['path'] for session in row['session_evidence'] if session['path']]))
         except Exception as e:row['workspace_error']=str(e)
     except Exception as e:row['observation_error']=str(e)
     row['finished_at']=time.time();save(dest/'collection.json',row)

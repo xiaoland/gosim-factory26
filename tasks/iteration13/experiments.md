@@ -25,6 +25,8 @@ Mac 后台协调进程46943、3+8采集进程46944已经启动，使用 `lab.arc
 
 第二批13:24:58 CST已取得Braid与原生会话，主线直接读取确认：根Issue #1开放且有1个活跃turn，根Agent已检查应用仓库与Node环境，启动应用依赖安装（30秒后自动进入bg001），并于13:24:42调用vision子Agent分析12张需求参考图。这证明模型和实际工具链已开始工作；应用实现、最终覆盖、advisor调用与评分仍待后续证据。
 
+13:34批次的原生证据确认：根Agent提交设计资料、创建基础PR #2并指派DeepSeek；DeepSeek已读取需求与设计。根曾误用comment --message，随后读help改用body-file并成功发布评论，属于已自行恢复的调用错误。监控旧逻辑按文件名字典序选中advisor/vision旧子会话，审查因此错误关联到Issue/PR；主线已直接读取两条当前Braid原生会话纠正。监控现按physical_sessions的原生路径生成带工作项/profile身份的session_evidence，当前两条会话均进入必读列表；实际归档读回及Python编译通过。仅重启Mac监控（协调PID53789，当前采集PID53790），保留同一run与下一次采集时点，官网生成未中断。回执为 `monitor-session-selection-readback.json`、`monitor-restart-session-mapping.json`；新采集批次反馈待下一次既定时点。
+
 回执入口为 `runs/iteration13/hosted-20261001/launch-summary.json`、`submission-history-after.json`、`monitor-launch.json` 与 `monitor/`。本地WSL无新增操作，Sheet和GLM根组未启动。
 
 ## 配方与判断目标

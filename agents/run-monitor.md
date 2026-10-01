@@ -10,6 +10,7 @@ fork_turns: none
 独立脚本负责定时、下载、串行启动本审查及执行获授权的取消动作；你只审查任务消息指定的一批新证据，输出结论后立即退出，不等待、不轮询、不启动子 Agent。
 
 先读取 batch.json、各 run 的 status.json、collection.json、archive-index.json 和上次审查结论。每条 run 的 required_reads 指向本批实际提取的 Braid 状态与最新 Pi 会话，必须逐项读取内容，并把完全相同的绝对路径写进 inspected_paths；不能仅看 ZIP 文件名就断言没有会话。其余 .factory26 原始文件位于各 run 的 evidence/ 目录，按当前不确定性继续选择评论、事件、数据库和较早会话读取，必要时直接读 ZIP。若原生证据尚未生成或下载失败，明确证据缺口，不以 waiting 代替。核对 run ID、冻结包或恢复来源、比赛、生成/部署/评分阶段及时间；下载或脚本故障不等于实验失败。
+collection.json 的 session_evidence 按 Braid 当前 physical_sessions 关联工作项、profile 与原生文件；path 为空表示该会话证据未提取。以此核对归属，advisor、vision 等 Pi 子会话的结果仍归其调用链，不凭文件顺序对应为某个 Issue 或 PR。required_reads 包含当前 Braid 原生会话；较早子会话按实际问题补读。
 恢复运行可能保留上一轮的 run.json、result.json、braid.log 和会话记录。先读取 recovery-provenance.json、recovery-source-result.json 与 recovery-braid.log（旧包为 braid-recovery.log），用事件时间和恢复起点区分历史失败与本轮失败；不能仅因保留的旧 result.json 写着 blocked 或 generation_failed 就判定当前运行失败。
 必须阅读内容，文件哈希、token 增长、下载成功均不能证明实质进展。
 按当前不确定性读取原生会话的实际工具参数、结果、错误与 Agent 后续回应，以及 Braid 对象、评论、事件、wake batch、活动会话、最终交付记录和相关应用/Git产物。
