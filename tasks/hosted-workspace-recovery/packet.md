@@ -1,6 +1,6 @@
 # 官网工作区自动导出与恢复准备
 
-2026-10-01，用户要求“一条脚本自动导出官网工作区、校验原 ZIP、组恢复包并处理权限”，避免每次手工组合重复排查。本任务接续 `scripts/package_completed_recovery.py` 与 `submission/recover_completed.py`，授权包含对应文档、真实原件组包、隔离 Linux 容器中的无模型原生启动验证，以及仅纳入本任务文件的 commit；不启动模型、官网 POST 或修改活动 WSL 包。
+2026-10-01，用户要求“一条脚本自动导出官网工作区、校验原 ZIP、组恢复包并处理权限”，避免每次手工组合重复排查。本任务接续 `scripts/package_completed_recovery.py` 与 `submission/recover_completed.py`，初始授权包含对应文档、真实原件组包、隔离 Linux 容器中的无模型原生启动验证，以及仅纳入本任务文件的 commit；初始阶段不启动模型或官网 POST。后续新增的兼容迁移、官网练习启动授权和实际结果见下文，活动 WSL 原包持续保留。
 
 问题来自 I13 Flash/GitHub 官网 run `346bc3b51b09` 的终态 ZIP：27768 个文件均为 `0600`，其中 Pi/binding launcher 无法执行；原生配置引用 `/workspace/submission/runtime`，本地 wrapper 实际部署为 `/workspace/submission/agent/runtime`。失败调查及检查点限制见 [原 run 报告](../iteration13/hosted-github-failure.md)。
 
@@ -39,11 +39,11 @@ python3 scripts/package_completed_recovery.py \
 
 实际回执确认四个声明的 launcher 从 `0600` 修复为 `0755`，六个旧包目录链接指向 agent payload；Git 索引按旧入口重建并保留未提交文件。反馈见 [linux-preparation.log](../../runs/iteration13/local-20261001/recovery-automated/linux-preparation.log) 和 [linux-launchers.json](../../runs/iteration13/local-20261001/recovery-automated/linux-launchers.json)。没有执行 Braid local、模型调用或 Factory/Braid 测试套件；只做 Python 编译、真实归档及实际原生工具运行。
 
-2026-10-01 后续用户将本轮 I13 的 Braid 成员配方调整为不分派 DeepSeek、并发上限 4。这里的旧配方包仅作恢复能力验收，不直接投入新 g03；模型配方和正式恢复由主线另行冻结。本任务未修改配方、运行中包或旧失败现场。
+2026-10-01 后续用户将本轮 I13 的 Braid 成员配方调整为不分派 DeepSeek、并发上限 4。这里的旧配方包仅作恢复能力验收，不直接投入新 g03；模型配方和正式恢复由主线另行冻结。该早期验收未修改配方、运行中包或旧失败现场；后续配方迁移采用新显式选项和独立包，见下文。
 
 ## 恢复边界
 
-自动校验不把 ZIP 宣告为完整检查点。本次来源终态来自已保存 journal，失败调查曾保留 status API 500 的原始响应，本次没有获取新状态，不能把旧终态当本次新观察。无 journal 的老模式只记录调用方确认来源已停止，脚本没有独立证明。平台遗漏 clone 私有 `.git` 的限制保留；应用源码和未提交文件从原件恢复，索引按已发布 origin ref 重建，无法重建未发布私有提交。包的可启动性、原生会话实际 offline resume 和最终评分是不同反馈；本任务完成无模型启动链验证，运行部署由主线负责。
+自动校验不把 ZIP 宣告为完整检查点。本次来源终态来自已保存 journal，失败调查曾保留 status API 500 的原始响应，本次没有获取新状态，不能把旧终态当本次新观察。无 journal 的老模式只记录调用方确认来源已停止，脚本没有独立证明。平台遗漏 clone 私有 `.git` 的限制保留；应用源码和未提交文件从原件恢复，索引按已发布 origin ref 重建，无法重建未发布私有提交。包的可启动性、原生会话实际 offline resume 和最终评分是不同反馈；早期阶段只完成无模型启动链验证；后续两个官网练习的初始部署获主线明确委派，已完成，持续监控消费者仍由主线持有。
 
 ## 本轮兼容迁移与官网练习授权
 
@@ -54,3 +54,19 @@ python3 scripts/package_completed_recovery.py \
 统一采集制品由信号与 catalog 两任务提供：binary SHA `a8afac46d2a8268dc3e7e163e673220216caaeee892b6d3af01c743b70144414`，源码文件树 SHA `088d94e5eb89bf8b1332414088fee621e2cf9879ca21f99151a1569f874e361c`，source tar SHA `5c69a5a787789741c18aae5167a47a2a070cca504e0fa75ad972572d98582248`。三个 support 模块按 commit `727c2c0` 实际内容叠加；整个旧过程证据、旧 attempt 和旧结果从当前路径隔离，当前恢复前建立新 UUID。新辅助写入缺权限保留 errno 后继续，主 Braid 的 Popen/wait 记录不改变原异常生命周期。
 
 本地通道恢复另有显式 `--override-native-transport`，官网不启用。实际无模型迁移反馈已覆盖三个保留旧 session（含 sleeping），session ID、历史消息数及哈希前后一致，当前执行模型为 GLM；原始 RPC 回执位于 `runs/iteration13/local-20261001/recovery-model-migration/`。最终统一包的官方布局 prepare-only 与实际平台启动尚需写入本节后续结果。
+
+本轮最终恢复源码提交 `c5f528d`。统一包 GitHub SHA `6ae8b277c367477e29aef3befbe8c57dc5e497290a79463b13b269b342cf5983`（671360810 bytes），Sheet SHA `07c8ae652038a50854dd97b25d02df468d2103fb3bab4ccff8eec73c34d6283a`（633554138 bytes）。两者均在 Linux 实际官网 `/workspace/submission` 布局、断网容器中完成 prepare-only；每包的 budgeted-pi 和两个 binding launcher 均退出 0、版本 0.85.1，复制后的 Braid SHA 正确且实际 `--version` 启动/等待记录完整。Sheet 单层反向路径链接实际通过。原件、逐项索引与 receipt 分别位于 `hosted-recovery-20261001/<题目>-package/recovery-evidence/`；实际运行回执位于该目录的 `linux-operation/`。
+
+最终 GitHub 的三个真实旧 session RPC 仍为相同 session ID、历史消息数及哈希，当前模型均 GLM-5.3-Flash；最终 Sheet 的一个旧 session RPC 同身份、保留原 session 文件内容前缀，190 条历史消息可读、模型 GLM-5.3-Flash。全部只读 get_state/get_messages，无 prompt/模型请求；RPC 的新增 model_change 仅发生在验收副本。
+
+GitHub 官网初始接续已按授权上传、创建并启动：submission `66774c63c885`、run [`377afa346c92`](https://arc-bench.com/runs/377afa346c92)，初始读回 STARTING、submission credential_mode 与 run billing_mode 均 self_funded，journal pending 为 null。实际 ARC key 仅从授权私有 env 注入内存，并确认与私有配置身份相同；回执仅保存一致性布尔值。独立 journal 位于 `hosted-recovery-20261001/github/`，Sheet 同级 journal 的单次上传进行中。
+
+本地运输 opt-in 由另一执行任务在真实接续包中实际验收：4 份 declared template/retained home 的 factory26 URL 与 key 变量指向本地网关，完整 modeldefs、其它 provider 与 8 份 native JSONL 字节哈希保持。反馈见 `runs/iteration13/local-self-funded-20261001/github-prepare-readback.json`；该本地包与官网包分别冻结，官网两包未启用 transport override。
+
+Sheet 也已完成单次上传、创建及 start：submission `5ada036f2340`、run [`691028015e69`](https://arc-bench.com/runs/691028015e69)，随后状态 RUNNING、deploy_agent completed/start_agent running；费用模式回读同为 self_funded、pending 为 null。GitHub 来源与 Sheet 的 controller stop 回读分别保存在原 journal 和 `hosted-recovery-20261001/sheet-source-stop.json`。
+
+GitHub 首次官网现场 GET 200，原 ZIP SHA `7bc50637f8effb09b46fd88507ec39eab435cc11fee00bb9ef298c6dfe791766`，27792 成员逐项 CRC/SHA 通过；新 attempt `0fde190635764f079fc17e043328e7cc`、实际 Braid SHA 正确。`process-evidence` 原件显示 cgroup-v2 可读，2 秒采样已写入 46 次、无 capability 错误；baseline memory.max=2GiB、oom/oom_kill=0，宿主 sender 仍 unavailable。Braid log 明确 PR5 对原 native session 的握手和 compatible resume 成功。证据原件与摘要在 `hosted-recovery-20261001/github-first-workspace/`，这是一份首次运行观察，不能称为终态或完全一致的停止检查点。
+
+两新 journal 已交给既有 `lab.arc_bench.hosted_monitor` 后台程序，PID `58107`，默认仅观察、3 分钟/8 分钟间隔、终态归档后退出；启动回执在 `hosted-recovery-20261001/monitor-start.json`。评分尚未完成，后续状态及语义判断由主线既有监控消费者接续；不要另起重复采集程序或盲目收费重试。
+
+Sheet 首次官网现场 GET 200，ZIP SHA `78c9be45e8a91275a33f716daabfd5617a31e89dea75719d41fe7a9d8a1e1472`，6289 个实际平台导出成员的 CRC/SHA 通过。新 attempt `94058a60b1864ea9809c419cf6e55440`，实际 Braid SHA 正确；cgroup-v2 能力无错误，已完成 76 次 2 秒采样且写入成功。Braid 原始日志确认根 Issue1 与 PR2 都恢复原 session 握手；PR2 历史 profile ID 保留、当前 request 模型为 GLM-5.3-Flash、root-only 排除新指派。证据在 `hosted-recovery-20261001/sheet-first-workspace/`。两条官网 run 均已 RUNNING；本任务完成导出/准备/迁移/初次启动与采集，后续评分和故障归因由既有监控接续，宿主信号 sender 的缺口保留。
