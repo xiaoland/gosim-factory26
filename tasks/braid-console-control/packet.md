@@ -1,12 +1,20 @@
 # Braid Console 运行控制
 
-2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；稳定服务、归档只读和GC引用收敛已提交55fe50a。当前按用户新授权在Mac稳定目录启动Console并登记两份独立归档；WSL启动被磁盘挂载错误阻挡，原现场控制尚未接回。Console不属于I13或生成Harness迭代。
+2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；稳定服务、归档只读和GC引用收敛已提交55fe50a。当前Mac稳定服务已启动并登记两份独立归档。用户纠正后核实I12已在独立磁盘清理中终止，历史资料在项目内；后续按归档接入，不再以接回旧暂停现场为目标。Console不属于I13或生成Harness迭代。
+
+## 2026-10-01：清理归档与目标纠正
+
+用户指出原数据已归档到本项目，要求核对执行记录。[WSL清理记录](../../runs/wsl-retained-20260930/README.md)明确保存main、i12-current、acceptance-workflow及official-local；最终步骤记载I12主动终止、WSL关闭、VHDX Full压缩480.62→71.17GiB，Debian停止。此前本会话“保留暂停并接回live”的假设已失效。GPT-5.6-Sol / Medium修复子Agent已停止修复，仅完成Windows只读诊断；未修盘、重建或恢复运行。
+
+实际读取确认i12-current/control两份在线一致SQLite备份可读，分别有6/13条provider_sessions；2个根仓库及7个worktree的9份Git bundles可列refs，映射和dirty patches存在。约19:39采集的sessions/status/physical也保留，但没有标准native/manifest，不能声称已经具备Console原生正文归档接口或覆盖最终终止时点。副本restart目录下stopped/final-state.json实际指向更早fresh运行，不作本轮重启I12的最终停止回执。核对结果在 `runs/braid-console-control/20261001-service-start/cleanup-archive-review.json`。
+
+用户进一步表示“可能没有恢复i12的必要了，我觉得”，主线同意保留已结束实验及归档，不恢复I12。修复方向改为恢复今后需要的可用WSL执行环境，并优先消费已归档历史材料；不强求全量恢复旧盘，I12恢复不是验收条件。旧VHDX问题与Console历史浏览分别处理；现有Mac服务继续可用。子Agent先核对非破坏修复、冷备及新环境选项，未授权覆盖旧盘或安装替代发行版。
 
 ## 2026-10-01：启动与跨实验接入
 
 用户明确：“使braid console启动，我期望它可以控制多个run（且不必是同一实验）”，随后表示“debian已经恢复了”。现有registry按run独立登记，没有实验一致性约束；每项分别持有state、binary、workspace、访问及生成容器身份与权限。一个宿主可以在同一服务登记不同实验的live/archive；归档始终只读。受管理Docker控制仍要求同宿主daemon，跨宿主聚合不在本次实现中。
 
-实际Windows列表仍为Debian Stopped，原WSL SSH端口122返回Connection reset。经Windows已有SSH入口启动Debian时，系统报告无法挂载 `D:\WSLDebian\ext4.vhdx`：文件或目录损坏、不可读取，代码 `Wsl/Service/CreateInstance/MountDisk/HCS/0x80070570`。这只记录本次系统返回，未执行磁盘修复、重新注册、容器启动/恢复或实验重建；待该挂载恢复可用后才能核对并接回原live现场。
+实际Windows列表仍为Debian Stopped，原WSL SSH端口122返回Connection reset。经Windows已有SSH入口启动Debian时，系统报告无法挂载 `D:\WSLDebian\ext4.vhdx`：文件或目录损坏、不可读取，代码 `Wsl/Service/CreateInstance/MountDisk/HCS/0x80070570`。这只记录本次系统返回，未执行磁盘修复、重新注册、容器启动/恢复或实验重建；此前拟恢复挂载并接回旧live的方向已被上方归档证据修正。
 
 已启动本机 [Console](http://127.0.0.1:8765/)，稳定服务目录 `/Users/lanzhijiang/.local/share/factory26/console/20261001-55fe50a`，service ID `91f08b49-0698-4f05-89f6-9c226d3655fc`。冻结Python3.12和程序/前端，配置为目录内manifest.json，journal与轮转日志同属该服务。HTTP PID75619，经独立命令确认父进程为1且服务持续可读；没有SSH转发、登录自启或自动重启。停止只针对核对过命令与启动时间的此HTTP实例，不解除归档引用。
 
