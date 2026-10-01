@@ -1,6 +1,18 @@
 # Braid Console 运行控制
 
-2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；本轮完成稳定服务、归档只读和GC引用收敛，并在新制品中取得真实归档接口及浏览器反馈。旧WSL部署未启动或迁移。Console不属于I13或生成Harness迭代。
+2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；稳定服务、归档只读和GC引用收敛已提交55fe50a。当前按用户新授权在Mac稳定目录启动Console并登记两份独立归档；WSL启动被磁盘挂载错误阻挡，原现场控制尚未接回。Console不属于I13或生成Harness迭代。
+
+## 2026-10-01：启动与跨实验接入
+
+用户明确：“使braid console启动，我期望它可以控制多个run（且不必是同一实验）”，随后表示“debian已经恢复了”。现有registry按run独立登记，没有实验一致性约束；每项分别持有state、binary、workspace、访问及生成容器身份与权限。一个宿主可以在同一服务登记不同实验的live/archive；归档始终只读。受管理Docker控制仍要求同宿主daemon，跨宿主聚合不在本次实现中。
+
+实际Windows列表仍为Debian Stopped，原WSL SSH端口122返回Connection reset。经Windows已有SSH入口启动Debian时，系统报告无法挂载 `D:\WSLDebian\ext4.vhdx`：文件或目录损坏、不可读取，代码 `Wsl/Service/CreateInstance/MountDisk/HCS/0x80070570`。这只记录本次系统返回，未执行磁盘修复、重新注册、容器启动/恢复或实验重建；待该挂载恢复可用后才能核对并接回原live现场。
+
+已启动本机 [Console](http://127.0.0.1:8765/)，稳定服务目录 `/Users/lanzhijiang/.local/share/factory26/console/20261001-55fe50a`，service ID `91f08b49-0698-4f05-89f6-9c226d3655fc`。冻结Python3.12和程序/前端，配置为目录内manifest.json，journal与轮转日志同属该服务。HTTP PID75619，经独立命令确认父进程为1且服务持续可读；没有SSH转发、登录自启或自动重启。停止只针对核对过命令与启动时间的此HTTP实例，不解除归档引用。
+
+实际登记 `pi-archive-20260920` 和 `github-final-20260930` 两个独立保存运行；各自对象、根Issue和会话接口均HTTP200，分别为1/23个对象、1/215条会话。当前只有归档浏览，不把可读历史冒充live控制。自动浏览器访问因admin-enforced policy无法验证而被拒绝，未绕过；本轮页面交互未重验，沿用前轮同制品真实浏览器证据并记录本轮HTTP结果。
+
+本轮对新稳定服务记录域执行只读GC plan，complete=true、6条依赖引用、零错误与零候选。未来GC扫描须纳入 `/Users/lanzhijiang/.local/share/factory26/console`；未扫描时须显式保护服务及其manifest引用，HTTP停止不解除这些引用。没有扫描历史运行域或apply。原始部署身份、只读HTTP、GC回执与WSL原始错误均保存在 `runs/braid-console-control/20261001-service-start/`。
 
 
 ## 2026-10-01：生命周期收敛开工

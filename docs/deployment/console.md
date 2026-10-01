@@ -5,7 +5,7 @@
 通用构建、启动、registry与操作语义见其README，不在本页维护第二份API说明。
 
 长期服务用README中的 `service.py prepare/serve` 放在实验目录之外，冻结程序、前端与稳定Python身份；配置、HTTP身份、轮转日志和人工journal归此服务目录。每run明确 `live/archive`：现场登记真实state、原workspace及受管理binary；归档只读浏览保存状态与manifest定位的原文，不依赖旧生成容器或Git。新制品不覆盖旧服务，不自动迁移历史或启动WSL。
-实验启动时登记真实Braid state和binary，用独立运行ID区分当前现场与历史副本。
+实验启动时登记真实Braid state和binary，用独立运行ID区分当前现场与历史副本。同一Console可同时登记不同实验的多个run；每项独立绑定路径、配套binary、权限和可选生成容器，不要求共同实验ID。受管理Docker控制需要同宿主daemon，不能把跨实验接入解释成已支持跨宿主聚合。
 从零入口在运行后创建实际state；不能为页面预建数据库或将旧state改名冒充新运行。
 数据库出现后显式register并重启Console；`writable`是现场的对象修改权限，归档强制不可写及不可控制，不根据I11/I12等名称猜测。可选Docker配置单独授权该run的物理控制，并固定本宿主context、完整容器ID、实际宿主挂载及所有权标签。归档缺字段、会话目录或native manifest时保留可得数据与缺口，不能把保存状态当当前执行状态。
 
