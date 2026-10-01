@@ -10,6 +10,7 @@ import shutil
 import stat
 import subprocess
 import sys
+import tarfile
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED
 
 from package_agent import is_metadata_path, require_private_artifact
@@ -129,15 +130,31 @@ def main():
     parser.add_argument("--base-package", type=Path)
     parser.add_argument("--braid", type=Path, help="Explicit binary override; default is exact binary from frozen package")
     parser.add_argument("--braid-source", type=Path, help="Optional source snapshot for reproducing a binary override")
+    parser.add_argument("--braid-source-identity", type=Path,
+                        help="Optional source files/tree receipt; verifies braid/ members in --braid-source")
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--evidence-dir", type=Path, help="New directory for original ZIP, indices and receipts")
     parser.add_argument("--continue-generation", action="store_true",
                         help="Resume open work items with models; source execution must already be stopped")
+    parser.add_argument("--replace-braid-deepseek-with-glm", action="store_true",
+                        help="Explicit I13 recipe migration: retain historical DeepSeek profile identity, execute GLM")
+    parser.add_argument("--with-official-signal-evidence", action="store_true",
+                        help="Overlay current collector/support/archive modules; requires explicit combined Braid binary")
+    parser.add_argument("--override-native-transport", action="store_true",
+                        help="Explicitly bind retained native factory26 transports to this run's model URLs and key variables")
     parser.add_argument("--refresh-native-materials", action="store_true",
                         help="Use current variant instructions and collector with refreshed native materials")
     args = parser.parse_args()
     if args.refresh_native_materials and not args.continue_generation:
         parser.error("--refresh-native-materials requires --continue-generation")
+    if args.replace_braid_deepseek_with_glm and (not args.continue_generation or args.refresh_native_materials):
+        parser.error("--replace-braid-deepseek-with-glm requires --continue-generation and unchanged native materials")
+    if args.with_official_signal_evidence and not args.braid:
+        parser.error("--with-official-signal-evidence requires --braid with the combined signal/catalog implementation")
+    if args.override_native_transport and (not args.continue_generation or args.refresh_native_materials):
+        parser.error("--override-native-transport requires --continue-generation and unchanged native materials")
+    if args.braid_source_identity and (not args.braid or not args.braid_source):
+        parser.error("--braid-source-identity requires both --braid and --braid-source")
     if not args.journal and (not args.source_run_id or not args.base_package):
         parser.error("provide --journal or both --source-run-id and --base-package")
     if args.task and not args.journal:
@@ -164,6 +181,9 @@ def main():
         frozen_manifest = json.loads(archive.read("package-manifest.json"))
     if inputs and frozen_manifest != inputs["package_manifest"]:
         raise ValueError("base package manifest differs from frozen journal")
+    if args.replace_braid_deepseek_with_glm and frozen_manifest.get("capabilities", {}).get("variant") not in {
+            "pi-braid-i13", "pi-braid-i13-glm-root"}:
+        raise ValueError("DeepSeek Braid migration supports only the two I13 variants")
     validate_archive(base, evidence / "base-index.json", manifest=frozen_manifest)
     if args.workspace:
         original_workspace = args.workspace.resolve(strict=True)
@@ -188,6 +208,27 @@ def main():
             shutil.copyfileobj(incoming, outgoing)
         braid.chmod(0o600)
     braid_source = args.braid_source.resolve(strict=True) if args.braid_source else None
+    source_identity = None
+    if args.braid_source_identity:
+        source_identity_path = args.braid_source_identity.resolve(strict=True)
+        source_identity = json.loads(source_identity_path.read_text())
+        actual_sources = {}
+        with tarfile.open(braid_source) as archive:
+            for item in archive.getmembers():
+                path = PurePosixPath(item.name)
+                if path.is_absolute() or ".." in path.parts or not path.parts or path.parts[0] != "braid":
+                    raise ValueError(f"unexpected Braid source snapshot path: {item.name}")
+                if item.isdir():
+                    continue
+                name = path.relative_to("braid").as_posix()
+                if not item.isfile() or name in actual_sources:
+                    raise ValueError(f"unexpected or duplicate Braid source member: {item.name}")
+                with archive.extractfile(item) as stream:
+                    actual_sources[name] = hashlib.file_digest(stream, "sha256").hexdigest()
+        aggregate = hashlib.sha256(json.dumps(actual_sources, sort_keys=True).encode()).hexdigest()
+        if (source_identity.get("algorithm") != "sha256-json-sorted-files"
+                or source_identity.get("files") != actual_sources or source_identity.get("source_sha256") != aggregate):
+            raise ValueError("Braid source identity differs from actual snapshot members")
     with ZipFile(workspace) as archive:
         candidates = [p for p in archive.namelist() if p.startswith("template/.factory26/")
                       and p.endswith("/braid-state/request.json")]
@@ -216,11 +257,16 @@ def main():
               "workspace_sha256": workspace_sha256, "base_package_sha256": base_sha256,
               "braid_sha256": digest(braid), "braid_source_sha256": digest(braid_source) if braid_source else None,
               "braid_binary_source": "explicit override" if args.braid else "frozen package runtime/bin/braid",
+              "braid_source_role": "auxiliary snapshot for caller-supplied binary" if args.braid
+                                   else "auxiliary snapshot; executing frozen binary",
               "frozen_braid_source": frozen_manifest.get("sources", {}).get("braid"),
               "requirements_sha256": requirements_sha256,
               "source_stop_confirmation": "saved terminal journal" if binding else "caller-confirmed; not independently verified",
               "workspace_material_differences": material_mismatches,
               "mode": "workspace-resume" if args.continue_generation else "completed-workspace-recovery",
+              "replace_braid_deepseek_with_glm": args.replace_braid_deepseek_with_glm,
+              "with_official_signal_evidence": args.with_official_signal_evidence,
+              "override_native_transport": args.override_native_transport,
               "refresh_native_materials": args.refresh_native_materials}
     if binding:
         source["journal_binding"] = binding
@@ -229,6 +275,17 @@ def main():
                     "recovery-workspace.zip": workspace}
     if braid_source:
         replacements["recovery-braid-source.tar.gz"] = braid_source
+    if source_identity:
+        replacements["recovery-braid-source-identity.json"] = source_identity_path
+        source["braid_compiled_source_sha256"] = source_identity["source_sha256"]
+        source["braid_source_identity_sha256"] = digest(source_identity_path)
+    if args.with_official_signal_evidence:
+        signal_files = {"support/agent_support.py": ROOT / "scripts/agent_support.py",
+                        "support/core.py": ROOT / "scripts/core.py", "support/otlp.py": ROOT / "lab/otlp.py"}
+        if not set(signal_files) <= set(frozen_manifest["files"]):
+            raise ValueError("frozen package lacks expected signal-evidence support modules")
+        replacements.update(signal_files)
+        source["signal_evidence_files_sha256"] = {name: digest(path) for name, path in signal_files.items()}
     output.parent.mkdir(parents=True, exist_ok=True)
     created = False
     try:
@@ -254,8 +311,10 @@ def main():
                 replacements[observer] = (ROOT / "variants" / variant / observer).resolve(strict=True)
                 replacements.update({name: (ROOT / "variants" / variant / name).resolve(strict=True)
                                      for name in instructions})
-            skipped = set(replacements) | {"recovery-source.json", "package-manifest.json", "recovery-braid-source.tar.gz"}
+            skipped = set(replacements) | {"recovery-source.json", "package-manifest.json", "recovery-braid-source.tar.gz",
+                                           "recovery-braid-source-identity.json"}
             manifest["files"].pop("recovery-braid-source.tar.gz", None)
+            manifest["files"].pop("recovery-braid-source-identity.json", None)
             for item in original.infolist():
                 if item.filename in skipped or is_metadata_path(item.filename):
                     continue
@@ -272,9 +331,15 @@ def main():
             target.writestr("recovery-source.json", encoded, compress_type=ZIP_DEFLATED)
             manifest["files"]["recovery-source.json"] = {"sha256": hashlib.sha256(encoded).hexdigest(),
                                                           "executable": False}
+            if args.braid:
+                # The original revision/tree hash describes the frozen binary, not this override.
+                manifest["sources"]["braid"] = {"binary_source": "caller-supplied override"}
             manifest["sources"]["braid"]["binary_sha256"] = source["braid_sha256"]
             if braid_source:
                 manifest["sources"]["braid"]["source_snapshot_sha256"] = source["braid_source_sha256"]
+            if source_identity:
+                manifest["sources"]["braid"].update(source_sha256=source_identity["source_sha256"],
+                                                     source_identity="recovery-braid-source-identity.json")
             target.writestr("package-manifest.json", json.dumps(manifest, ensure_ascii=False),
                             compress_type=ZIP_DEFLATED)
     except BaseException:

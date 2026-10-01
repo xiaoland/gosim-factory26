@@ -5,8 +5,10 @@ import hashlib
 import json
 import os
 import sqlite3
+import signal
 import stat
 import time
+import uuid
 import tempfile
 from pathlib import Path
 import shutil
@@ -24,13 +26,32 @@ from braid_runtime import archive_state, export_delivery, load_delivery
 from core import archive_sessions
 
 
+def diagnostic_receipt(path, value, errors):
+    try:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
+    except OSError as exc:
+        row = {"path": str(path), "error": {"type": type(exc).__name__, "message": str(exc),
+                                           "errno": exc.errno, "filename": exc.filename}}
+        errors.append(row)
+        try:
+            print(f"Recovery evidence unavailable: {json.dumps(row)}", file=sys.stderr, flush=True)
+        except OSError:
+            pass
+
+
 def restore_launch_paths(run, request):
     """Restore declared launchers and the source package paths used by native sessions."""
     source_root = Path(json.loads((run / "materials.json").read_text())["runtime"]).parent
     aliases = []
     if source_root != ROOT:
-        # The local ARC adapter wraps a submitted package in submission/agent.
-        if ROOT.name != "agent" or ROOT.parent != source_root:
+        # The local ARC adapter wraps a submitted package in submission/agent;
+        # retained local sessions need the same one-level alias when moved back.
+        if ROOT.name == "agent" and ROOT.parent == source_root:
+            pass
+        elif source_root.name == "agent" and source_root.parent == ROOT:
+            source_root.mkdir(exist_ok=True)
+        else:
             raise ValueError(f"unsupported recovery package relocation: {source_root} -> {ROOT}")
         for name in ("runtime", "support", "extensions", "tools", "agents", "skills"):
             target = ROOT / name
@@ -58,6 +79,193 @@ def restore_launch_paths(run, request):
     }, indent=2) + "\n")
 
 
+def replace_braid_deepseek_with_glm(run, variant):
+    """Migrate this I13 execution recipe while retaining member and session identities."""
+    if variant not in {"pi-braid-i13", "pi-braid-i13-glm-root"}:
+        raise ValueError(f"unsupported DeepSeek Braid migration variant: {variant}")
+    old_id, target_id = "pi-deepseek-fast", "pi-glm-fast"
+    request_paths = [run / "braid-request.json", run / "braid-state/request.json"]
+    requests = [json.loads(path.read_text()) for path in request_paths]
+    if requests[0]["root_profile_id"] != requests[1]["root_profile_id"]:
+        raise ValueError("launcher and retained requests disagree on root identity")
+    migrations = []
+    for request in requests:
+        profiles = {profile["id"]: profile for profile in request["profiles"]}
+        if len(profiles) != len(request["profiles"]):
+            raise ValueError("duplicate profile identity in migration request")
+        old, target = profiles[old_id], profiles[target_id]
+        if (old.get("adapter_type"), old.get("provider"), old.get("model")) != (
+                "pi", "factory26", "deepseek-v4-flash"):
+            raise ValueError("migration requires pi-deepseek-fast factory26/deepseek-v4-flash")
+        if (target.get("adapter_type"), target.get("provider"), target.get("model")) != (
+                "pi", "factory26", "glm-5.3-flash"):
+            raise ValueError("migration requires pi-glm-fast factory26/glm-5.3-flash")
+        if request["root_profile_id"] == old_id:
+            raise ValueError("migration cannot change the root model")
+        updates = {name: target[name] for name in (
+            "provider", "model", "reasoning", "context_soft_ratio", "context_hard_bytes", "context_window_tokens",
+        )}
+        updates.update(display_name=f"{old['display_name']} (GLM-5.3-Flash)",
+                       tags=list(dict.fromkeys([*old.get("tags", []), "root-only"])))
+        migrations.append({"profile_id": old_id, "before": {name: old.get(name) for name in updates},
+                           "after": updates})
+        old.update(updates)
+    if migrations[0] != migrations[1]:
+        raise ValueError("launcher and retained requests disagree on model migration")
+
+    def retained_path(value):
+        path = Path(value).resolve(strict=True)
+        if not path.is_relative_to(run.resolve()):
+            raise ValueError(f"model migration path escapes Braid run: {value}")
+        return path
+
+    target_binding = requests[0]["bindings"][target_id]
+    target_models = json.loads(retained_path(
+        retained_path(target_binding["native_template"]) / "models.json").read_text())
+    provider = target_models["providers"]["factory26"]
+    definitions = [model for model in provider["models"] if model["id"] == "glm-5.3-flash"]
+    if len(definitions) != 1:
+        raise ValueError("target native template does not contain exactly one GLM-5.3-Flash definition")
+    definition = definitions[0]
+    configurations = {retained_path(request["bindings"][old_id]["native_template"]) / "models.json"
+                      for request in requests}
+    native_roots = {retained_path(request["bindings"][old_id]["native_home"]["root"])
+                    for request in requests}
+    # I13's native factory names every home <profile-id>-<uuid>. Include sleeping
+    # and replaced homes; resuming an existing home does not recopy its template.
+    homes = {retained_path(path) for root in native_roots for path in root.glob(old_id + "-*")
+             if path.is_dir()}
+    configurations.update(home / "models.json" for home in homes)
+    changes = {}
+    for path in sorted(configurations):
+        path = retained_path(path)
+        value = json.loads(path.read_text())
+        current = value["providers"]["factory26"]
+        if any(current.get(name) != provider.get(name) for name in ("baseUrl", "api", "apiKey")):
+            raise ValueError(f"native factory26 transport differs from GLM template: {path}")
+        matching = [i for i, model in enumerate(current["models"]) if model["id"] == definition["id"]]
+        if len(matching) > 1:
+            raise ValueError(f"duplicate GLM model definition in {path}")
+        if matching:
+            current["models"][matching[0]] = definition
+        else:
+            current["models"].append(definition)
+        changes[path] = value
+    changes.update(zip(request_paths, requests))
+    originals = run / "recovery-model-migration/originals"
+    originals.mkdir(parents=True, exist_ok=False)
+    history = [{"path": str(path), "sha256": hashlib.sha256(path.read_bytes()).hexdigest()}
+               for home in sorted(homes) for path in sorted((home / "sessions").rglob("*.jsonl"))]
+    records = []
+    for path, value in changes.items():
+        backup = originals / path.relative_to(run)
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, backup)
+        before = hashlib.sha256(path.read_bytes()).hexdigest()
+        encoded = (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode()
+        records.append({"path": str(path), "original": str(backup), "before_sha256": before,
+                        "after_sha256": hashlib.sha256(encoded).hexdigest()})
+        # Each file is complete before replacement; a failure stops before Braid starts.
+        temporary = path.with_name(path.name + ".model-migration.tmp")
+        with temporary.open("xb") as stream:
+            stream.write(encoded)
+        temporary.chmod(stat.S_IMODE(path.stat().st_mode))
+        temporary.replace(path)
+    receipt = {"operation": "replace-braid-deepseek-with-glm", "variant": variant,
+               "applied_at": time.time(), "profile_change": migrations[0],
+               "target_model_definition": definition, "files": records,
+               "native_homes": [str(home) for home in sorted(homes)], "retained_history": history,
+               "root_profile_id": requests[0]["root_profile_id"],
+               "preserved": ["profile ID", "member identity", "assignments", "worktrees", "native history",
+                             "root and other profiles", "subagent roles", "instructions", "skills"],
+               "new_assignments": "old profile excluded by root-only tag"}
+    (run / "recovery-model-migration.json").write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n")
+    return requests[0]
+
+
+def execute_braid(command, *, run, app, env, log, evidence):
+    if not evidence:
+        subprocess.run(command, cwd=app, env=env, stdout=log, stderr=subprocess.STDOUT, check=True)
+        return
+    from agent_support import (process_evidence, process_identity, evidence_error,
+                               _wait_process, _signal_process)
+    operation = {"kind": "spawn", "role": "recovery-braid", "request_id": uuid.uuid4().hex,
+                 "command": command, "phase": "request"}
+    process_evidence(run, "operations.jsonl", operation)
+    try:
+        with subprocess.Popen(command, cwd=app, env=env, stdout=log, stderr=subprocess.STDOUT) as child:
+            process_evidence(run, "operations.jsonl", {
+                **operation, "kind": "process_started", "phase": "result",
+                "process": process_identity(child.pid),
+            })
+            try:
+                code = _wait_process(child, run, "recovery-braid")
+            except BaseException:
+                # Match subprocess.run: kill this child, then let Popen.__exit__
+                # retain its normal wait or bounded KeyboardInterrupt policy.
+                _signal_process(child, signal.SIGKILL, run, "recovery-braid-run-exception")
+                raise
+    except OSError as exc:
+        process_evidence(run, "operations.jsonl", {
+            **operation, "phase": "result", "result": "error", "error": evidence_error(exc),
+        })
+        raise
+    if code:
+        raise subprocess.CalledProcessError(code, command)
+
+
+def override_native_transport(run, request):
+    """Apply an explicitly selected run transport without changing native models."""
+    base_url = os.environ.get("OPENAI_BASE_URL")
+    if not base_url:
+        raise ValueError("native transport override requires OPENAI_BASE_URL")
+    visual_url = os.environ.get("VISUAL_BASE_URL")
+    configurations = set()
+    for profile_id, binding in request["bindings"].items():
+        template = Path(binding["native_template"]).resolve(strict=True)
+        native_root = Path(binding["native_home"]["root"]).resolve(strict=True)
+        if not template.is_relative_to(run) or not native_root.is_relative_to(run):
+            raise ValueError(f"native transport path escapes Braid run: {profile_id}")
+        configurations.add(template / "models.json")
+        configurations.update(home / "models.json" for home in native_root.glob(profile_id + "-*")
+                              if home.is_dir())
+    changes = {}
+    for path in sorted(configurations):
+        if not path.resolve(strict=True).is_relative_to(run):
+            raise ValueError(f"native models path escapes Braid run: {path}")
+        value = json.loads(path.read_text())
+        providers = value["providers"]
+        providers["factory26"].update(baseUrl=base_url, apiKey="$FACTORY26_API_KEY")
+        if "factory26-visual" in providers:
+            providers["factory26-visual"].update(
+                baseUrl=visual_url or base_url,
+                apiKey="$FACTORY26_VISUAL_API_KEY" if visual_url else "$FACTORY26_API_KEY")
+        changes[path] = value
+    originals = run / "recovery-native-transport/originals"
+    originals.mkdir(parents=True, exist_ok=False)
+    records = []
+    for path, value in changes.items():
+        backup = originals / path.relative_to(run)
+        backup.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, backup)
+        encoded = (json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode()
+        records.append({"path": str(path), "original": str(backup),
+                        "before_sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+                        "after_sha256": hashlib.sha256(encoded).hexdigest()})
+        temporary = path.with_name(path.name + ".transport-override.tmp")
+        with temporary.open("xb") as stream:
+            stream.write(encoded)
+        temporary.chmod(stat.S_IMODE(path.stat().st_mode))
+        temporary.replace(path)
+    (run / "recovery-native-transport.json").write_text(json.dumps({
+        "operation": "override-native-transport", "applied_at": time.time(), "files": records,
+        "providers": ["factory26", "factory26-visual"],
+        "base_url_source": "OPENAI_BASE_URL", "visual_url_source": "VISUAL_BASE_URL or OPENAI_BASE_URL",
+        "key_variables": ["FACTORY26_API_KEY", "FACTORY26_VISUAL_API_KEY when VISUAL_BASE_URL is set"],
+        "preserved": ["provider IDs", "model definitions", "profiles", "roles", "recipe", "history"],
+    }, indent=2) + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("requirements_dir", type=Path)
@@ -80,8 +288,19 @@ def main():
     requirement = args.requirements_dir / "requirements.yaml"
     if hashlib.sha256(requirement.read_bytes()).hexdigest() != source["requirements_sha256"]:
         raise ValueError("current requirements differ from retained workspace")
+    evidence_errors = []
+    declared_run_id = os.environ.get("ARC_BENCH_RUN_ID") or os.environ.get("ARC_RUN_ID")
+    attempt = {"attempt_id": uuid.uuid4().hex, "started_at": time.time(), "phase": "restoring",
+               "source_run_id": source["source_run_id"], "braid_run_id": source["braid_run_id"],
+               "source_workspace_sha256": source["workspace_sha256"], "current_platform_run_id": declared_run_id,
+               "current_platform_binding": "declared environment" if declared_run_id
+                    else "not exposed; bind this attempt receipt to the new official journal/run artifact",
+               "mode": "prepare-only" if args.prepare_only else "recovery-execution"}
+    run.mkdir(parents=True)
+    diagnostic_receipt(run / "recovery-attempt.json", attempt, evidence_errors)
     print("Recovery: restoring retained workspace", flush=True)
     prior_logs = run / f"recovery-source-logs-{time.time_ns()}"
+    prior_process_evidence = run / f"recovery-source-process-evidence-{time.time_ns()}"
     directories = []
     with ZipFile(workspace) as archive:
         for entry in archive.infolist():
@@ -95,9 +314,13 @@ def main():
                       if len(path.parts) > 1 and path.parts[1] == ".arc"
                       else output.joinpath(*path.parts[1:]))
             if path.parts[1:3] == (".factory26", source["braid_run_id"]) and path.name in {
-                "recovery-braid.log", "recovery-diagnostics.json", "telemetry-collector.log"
+                "recovery-braid.log", "recovery-diagnostics.json", "telemetry-collector.log",
+                "recovery-attempt.json", "recovery-braid-binary.json", "recovery-preparation.json",
+                "recovery-launch-paths.json", "recovery-provenance.json", "recovery-git.json",
             } and len(path.parts) == 4:
                 target = prior_logs / path.name
+            if path.parts[1:4] == (".factory26", source["braid_run_id"], "process-evidence"):
+                target = prior_process_evidence.joinpath(*path.parts[4:])
             if target != output and not target.parent.resolve().is_relative_to(output):
                 raise ValueError(f"workspace link escapes output: {entry.filename}")
             if target.is_symlink():
@@ -129,6 +352,14 @@ def main():
         worktrees = db.execute("SELECT path,head_ref,local_branch FROM worktrees").fetchall()
     if open_items and not continuing:
         raise ValueError(f"workspace has unfinished items; explicit generation recovery required: {open_items}")
+    if source.get("replace_braid_deepseek_with_glm"):
+        if not continuing:
+            raise ValueError("Braid model migration requires explicit generation recovery")
+        request = replace_braid_deepseek_with_glm(run, manifest.get("capabilities", {}).get("variant"))
+    if source.get("override_native_transport"):
+        if not continuing:
+            raise ValueError("native transport override requires explicit generation recovery")
+        override_native_transport(run, request)
     origin = run / "braid-state/origin.git"
     app = run / "work/application"
     seed = json.loads((run / "braid-state/request.json").read_text())["seed_commit"]
@@ -167,7 +398,7 @@ def main():
         "repaired": git_repairs}, indent=2) + "\n")
     prior_result = run / "braid-state/result.json"
     if prior_result.exists():
-        shutil.copy2(prior_result, run / "recovery-source-result.json")
+        prior_result.rename(run / "recovery-source-result.json")
     work, runtime = run / "work", ROOT / "runtime"
     if continuing:
         restore_launch_paths(run, request)
@@ -234,6 +465,14 @@ def main():
     braid = work / "bin/braid"
     shutil.copy2(runtime / "bin/braid", braid)
     braid.chmod(0o755)
+    actual_braid_sha256 = hashlib.sha256(braid.read_bytes()).hexdigest()
+    if actual_braid_sha256 != source["braid_sha256"]:
+        raise ValueError("restored Braid binary differs from recovery source")
+    diagnostic_receipt(run / "recovery-braid-binary.json", {
+        "packaged": str(runtime / "bin/braid"), "restored": str(braid),
+        "sha256": actual_braid_sha256,
+        "source_sha256": source["braid_sha256"],
+    }, evidence_errors)
     env = dict(os.environ)
     if continuing:
         key = os.environ.get("OPENAI_API_KEY") or os.environ.get("FACTORY26_API_KEY")
@@ -269,6 +508,11 @@ def main():
             env.update(variant.tool_environment(), PI_FFF_MODE="tools-only", PI_FFF_MULTIGREP="0",
                        PI_SUBAGENT_MAX_DEPTH="3")
     (run / "recovery-provenance.json").write_text(json.dumps(source, indent=2) + "\n")
+    attempt.update(phase="prepared", prepared_at=time.time(), evidence_errors=evidence_errors,
+                   source_process_evidence=str(prior_process_evidence) if prior_process_evidence.exists() else None)
+    diagnostic_receipt(run / "recovery-attempt.json", attempt, evidence_errors)
+    if source.get("with_official_signal_evidence"):
+        diagnostic_receipt(run / "process-evidence/attempt.json", attempt, evidence_errors)
     if args.prepare_only:
         save_environment = {name: env[name] for name in (
             "HOME", "TMPDIR", "PATH", "PI_CODING_AGENT_DIR", "PI_OFFLINE",
@@ -280,6 +524,10 @@ def main():
             "pi_executable": request.get("pi", {}).get("executable"),
             "binding_executables": {name: binding["executable"]
                                     for name, binding in request.get("bindings", {}).items()},
+            "model_migration_receipt": str(run / "recovery-model-migration.json")
+                                       if source.get("replace_braid_deepseek_with_glm") else None,
+            "native_transport_receipt": str(run / "recovery-native-transport.json")
+                                        if source.get("override_native_transport") else None,
         }, indent=2) + "\n")
         print(f"Recovery: prepared without starting Braid; run={run}", flush=True)
         return
@@ -288,6 +536,8 @@ def main():
     if old_native.exists() or old_native.is_symlink():
         old_native.rename(run / f"recovery-source-native-{time.time_ns()}")
     diagnostics = {}
+    if evidence_errors:
+        diagnostics["process_evidence_errors"] = evidence_errors
     collector = None
     execution_error = None
     cleanup_error = None
@@ -302,8 +552,8 @@ def main():
             if continuing:
                 command.append("--offline-resume")
             print(f"Recovery: resuming Braid; log={run / 'recovery-braid.log'}", flush=True)
-            subprocess.run(command, cwd=app,
-                           env=env, stdout=log, stderr=subprocess.STDOUT, check=True)
+            execute_braid(command, run=run, app=app, env=env, log=log,
+                          evidence=source.get("with_official_signal_evidence", False))
     except BaseException as exc:
         execution_error = exc
     finally:

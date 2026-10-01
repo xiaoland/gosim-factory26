@@ -44,3 +44,13 @@ python3 scripts/package_completed_recovery.py \
 ## 恢复边界
 
 自动校验不把 ZIP 宣告为完整检查点。本次来源终态来自已保存 journal，失败调查曾保留 status API 500 的原始响应，本次没有获取新状态，不能把旧终态当本次新观察。无 journal 的老模式只记录调用方确认来源已停止，脚本没有独立证明。平台遗漏 clone 私有 `.git` 的限制保留；应用源码和未提交文件从原件恢复，索引按已发布 origin ref 重建，无法重建未发布私有提交。包的可启动性、原生会话实际 offline resume 和最终评分是不同反馈；本任务完成无模型启动链验证，运行部署由主线负责。
+
+## 本轮兼容迁移与官网练习授权
+
+2026-10-01 后续用户明确本轮移除 DeepSeek Braid 成员并提高并发至 4；旧成员保留历史身份临时使用同 request 的 GLM 执行，DeepSeek 内部 sub-agent、根 Flash、advisor K2.7 Code 保留。这不是永久 GLM-only 策略。显式 `--replace-braid-deepseek-with-glm` 完成上述窄迁移，普通离线 guard 不变。源码快照和二进制 override 的实际新身份独立记录，原冻结身份持续保留。
+
+用户要求官网运行的“非参赛”是关闭“使用比赛额度评测”，使用自己的 ARC API key。主线授权完成接线、真实 prepare-only 与包身份核验后，依次上传、创建并启动 Flash/GitHub 与 Flash/Sheet 官网练习，GitHub 优先且不等待 Sheet；`credential_mode=self_funded`、`allow_competition_credit=false`。比赛须知与用户确认见 [比赛运行说明](../../docs/deployment/competition.md)。不盲目重发未知 POST，不自动收费重试。新增证据位于 `runs/iteration13/hosted-recovery-20261001/`。
+
+统一采集制品由信号与 catalog 两任务提供：binary SHA `a8afac46d2a8268dc3e7e163e673220216caaeee892b6d3af01c743b70144414`，源码文件树 SHA `088d94e5eb89bf8b1332414088fee621e2cf9879ca21f99151a1569f874e361c`，source tar SHA `5c69a5a787789741c18aae5167a47a2a070cca504e0fa75ad972572d98582248`。三个 support 模块按 commit `727c2c0` 实际内容叠加；整个旧过程证据、旧 attempt 和旧结果从当前路径隔离，当前恢复前建立新 UUID。新辅助写入缺权限保留 errno 后继续，主 Braid 的 Popen/wait 记录不改变原异常生命周期。
+
+本地通道恢复另有显式 `--override-native-transport`，官网不启用。实际无模型迁移反馈已覆盖三个保留旧 session（含 sleeping），session ID、历史消息数及哈希前后一致，当前执行模型为 GLM；原始 RPC 回执位于 `runs/iteration13/local-20261001/recovery-model-migration/`。最终统一包的官方布局 prepare-only 与实际平台启动尚需写入本节后续结果。

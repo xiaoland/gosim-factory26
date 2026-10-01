@@ -26,7 +26,7 @@ python3 scripts/package_completed_recovery.py \
 
 原始 ZIP、下载 HTTP 状态及时间、每个成员的 CRC/SHA256、冻结包和恢复包索引保存在默认的 `<新包文件名去掉.zip>-evidence/`，可用 `--evidence-dir` 指定新目录。目录和输出必须尚不存在，原件不覆盖、不改权限或内容；下载失败保留响应原文和传输错误。使用已经保存的原件时添加 `--workspace <原ZIP> --workspace-sha256 <预期SHA256>`，入口复制它到独立证据目录。此时收据明确说明 run 关联来自选定 journal，ZIP 本身未嵌入官网 run 身份；保存的终态也不会冒充新取得的状态。
 
-显式修复版二进制仍可用 `--braid <Linux二进制>`；`--braid-source <源码tar.gz>` 是可选复现材料，不是执行依赖。不传源码 tar 时保留冻结 manifest 的源码身份，`recovery-source.json` 分别记录冻结源码和本次二进制来源。没有 journal 的历史用法仍支持 `--source-run-id <旧run> --base-package <冻结包> --workspace <原ZIP>`，来源已停止的判断由对应 packet 负责。
+显式修复版二进制仍可用 `--braid <Linux二进制>`；`--braid-source <源码tar.gz>` 是可选复现材料，不是执行依赖。默认二进制保留冻结 manifest 的源码身份。显式覆盖二进制时，新 manifest 的 Braid 来源只记录本次 binary SHA 和可选源码 tar SHA，不继承旧 revision/source_sha256；原源码身份保存在 `recovery-source.json.frozen_braid_source`，不能把源码 tar 的容器哈希当源码树哈希，或把旧 revision 当新 binary 的来源。没有 journal 的历史用法仍支持 `--source-run-id <旧run> --base-package <冻结包> --workspace <原ZIP>`，来源已停止的判断由对应 packet 负责。
 
 新包携带原工作区与哈希；默认入口恢复原 Braid run、确认所有工作项终态，再导出旧 `main`。每个新包使用独立的 Competition journal 和当轮已冻结的费用模式，旧 run 不会原地恢复；具体来源及身份见当轮 packet。默认模式发现开放工作项会拒绝生成，防止一次重评意外调用模型。
 
@@ -43,6 +43,8 @@ I13 的归档回执将恢复承诺和原文保存分别记录；即使应用已�
 
 接续入口从工作区 ZIP 还原 Unix 文件权限和符号链接。官网导出会把执行文件降为 `0600` 时，冻结包执行位按 manifest 恢复；保留的 `request.pi.executable`、各 binding 的 executable 和 `work/bin/pbb` 按声明恢复 `0755`，要求解析后仍在同一 Braid run 内。原生会话使用旧 `/workspace/submission/runtime` 路径、本地 ARC wrapper 把包放在 `/workspace/submission/agent` 时，入口仅为包内存在的 runtime、support、extensions、tools、agents、skills 建立兼容链接；已占用且指向不同位置的路径会拒绝恢复。修复列表写入 `recovery-launch-paths.json`，不会批量 chmod 文件或改写历史技能、指令和配置。
 
+相反方向的本地来源恢复到官网也支持上述单层布局：旧材料引用 `/workspace/submission/agent`，官网包实际位于 `/workspace/submission` 时，仅在 `agent/` 下建立六个包目录的链接。其它重定位仍拒绝，避免把历史路径猜成当前目录。
+
 只准备现场而不运行 Braid，可在 Linux x86_64、Python 3.12 的实际 ARC 包布局中执行：
 
 ```sh
@@ -54,7 +56,31 @@ python3 /workspace/submission/agent/main.py /workspace/template/requirements \
 
 官网遗漏 private clone `.git` 时，入口仍从保留的 `origin.git` 和已发布 ref 重建索引，使用 `git read-tree` 保留未提交文件，记录 `recovery-git.json`；未发布的私有提交历史不能凭文件猜回。自动打包校验不是完整可恢复检查点认证，仍须核对应用、Braid DB/WAL 和原生会话的停止时点及对应性。
 
+I13 本轮已授权的执行模型变更用显式选项 `--continue-generation --replace-braid-deepseek-with-glm`，不能通过替换普通冻结材料暗中应用。仅支持 `pi-braid-i13` 和 `pi-braid-i13-glm-root`：旧 `pi-deepseek-fast` 必须是 `factory26/deepseek-v4-flash`，同一 request 的目标 `pi-glm-fast` 必须是 `factory26/glm-5.3-flash`。例如对已保全本地快照：
+
+```sh
+python3 scripts/package_completed_recovery.py \
+  --source-run-id <来源执行ID> --base-package <该variant原冻结ZIP> \
+  --workspace <一致快照ZIP> --workspace-sha256 <原ZIP-SHA256> \
+  --braid <本次Linux二进制> --braid-source <本次源码tar.gz> \
+  --braid-source-identity <本次源码文件清单JSON> \
+  --output runs/<实验>/model-cutover/recovery.zip \
+  --continue-generation --replace-braid-deepseek-with-glm
+```
+
+打包仍先核对原工作区与原 base 材料，原 ZIP 不变；receipt 显式记录迁移选项。恢复副本中先保存 `braid-request.json` 和 `braid-state/request.json` 原文，再一致更新旧 profile 的模型、reasoning/context 参数和显示名，追加 `root-only` 使它退出新指派。原 profile ID、成员 login、assignment、worktree 和既有原生历史保留；根及其它 profile、DeepSeek sub-agent 角色、instructions 和 skills 不变，不修改普通 Braid offline guard。`root-only` 对新指派的实际行为还依赖本次 Braid binary 的成员目录实现。
+
+同款 GLM 定义从目标 binding 的原生 template 取得，只补入受影响旧 template 和全部 `<pi-deepseek-fast>-<uuid>` native home 的 `factory26.models`，包括 sleeping/replaced home；旧 home 恢复时不会自动刷新 template。其它 provider、DeepSeek 定义与内部角色保持原样；缺文件、目标定义不唯一或 factory26 transport 不一致会拒绝迁移。`recovery-model-migration/originals/` 保存原请求和原 models.json，`recovery-model-migration.json` 保存前后哈希、profile 变更及全部 home/history 入口。执行准备或正式接续前，由主线保证旧执行已停止。
+
+二进制覆盖时，manifest 不沿用原冻结源码的 revision 或 SHA。原身份保存在 `recovery-source.frozen_braid_source`；`--braid-source` 记录新源码 tar 的容器 SHA，`--braid-source-identity` 逐项核对 tar 中 `braid/` 文件及 `sha256-json-sorted-files` 聚合 SHA，再记录新编译源码身份。辅助源码快照没有提供时，不宣称新 binary 来自原源码。
+
+本地通道切换另用显式 `--override-native-transport`，官网恢复默认关闭。恢复时以当前 `OPENAI_BASE_URL` 和 `$FACTORY26_API_KEY` 更新每个声明的 template 与全部保留 home 的 `factory26` 连接；存在 `factory26-visual` 时沿用 variant 的 `VISUAL_BASE_URL`/`$FACTORY26_VISUAL_API_KEY`，未指定 visual URL 则使用主连接。只改 URL 和 key 变量名，模型定义、profile、角色及历史不变；原 models.json 与前后哈希保存在 `recovery-native-transport/` 和 `recovery-native-transport.json`。选项要求接续模式，不能静默替换官网运输，也不把实际 key 写入回执。
+
+迁移的无模型反馈使用 `--prepare-only` 与断网容器中的真实 Pi RPC：对保留的 session 文件以新 profile 的 `--provider factory26 --model glm-5.3-flash --session <旧文件>` 启动，读取 `get_state` 与 `get_messages`，核对同一 sessionId/sessionFile、新 GLM 定义和历史消息内容。只发这些读取命令，不发送 prompt；原 session 文件始终留在原 ZIP 中，RPC 的新 model_change 只写到验收副本。此反馈不等于 Braid offline-resume、模型请求或最终交付已经成功。
+
 实际接续使用包内 Pi 时间回调与 OTLP 接收器追加本次采集。Braid 结束后重新归档原生会话，原 ZIP 自带的 `native/` 先保存在 `recovery-source-native-<时间戳>/`；`recovery-diagnostics.json` 分别记录采集、归档和清理错误。清理失败仍阻断交付。旧来源和新接续的采集时间段应分开解读，不能把恢复后新增记录当作旧运行的当时状态。
+
+本轮官网信号取证通过 `--with-official-signal-evidence` 同时冻结 collector、运行支持、归档模块及明确提供的统一 Braid binary；依赖沿用原冻结包。恢复开始即建立新 attempt UUID，旧 attempt/日志回执及整个 `process-evidence/` 导向独立来源目录，旧 `result.json` 也移出当前 Braid 状态路径。新 attempt 记录来源 run、workspace SHA、Braid run；平台没有暴露当前 run ID 时，由新 journal 与归档绑定，不能猜测。主 Braid 启动记录 request、PID 身份和实际 wait/exit，保留原 `subprocess.run` 的单进程异常清理策略。新增辅助回执写入失败保留具体 errno 并继续；缺证据不用于自动归因。复制到 `work/bin/braid` 的实际 SHA 必须与包身份一致，校验本身仍是启动边界。
 
 应用生成完成后冻结交付版本，通过官网自费应用重放取得官方评分；本地模拟分数和启动检查不替代官网评分。工作区接续与应用重放分别记录来源，不能把重放分数冒称为一次新的端到端生成成绩。正式参赛提交从冻结 Harness 和需求重新生成，以测量完整执行；自费迭代不因此丢弃可续接的工作区。
 
