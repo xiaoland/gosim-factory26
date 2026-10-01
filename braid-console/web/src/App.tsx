@@ -1,19 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Alert, App as AntApp, Avatar, Badge, Button, Divider, Empty, Flex, Input, Modal, Select, Skeleton, Space, Spin, Tag, Tooltip, Typography } from 'antd';
-import { BranchesOutlined, CheckCircleOutlined, CloseCircleOutlined, CodeOutlined, EditOutlined, EyeOutlined, ExclamationCircleOutlined, FileTextOutlined, LockOutlined, MessageOutlined, PullRequestOutlined, ReloadOutlined, SearchOutlined, SendOutlined, UnlockOutlined, UserOutlined } from '@ant-design/icons';
+import { BranchesOutlined, CheckCircleOutlined, CloseCircleOutlined, CodeOutlined, EditOutlined, EyeOutlined, ExclamationCircleOutlined, FileTextOutlined, LockOutlined, MessageOutlined, PauseCircleOutlined, PlayCircleOutlined, PullRequestOutlined, ReloadOutlined, SearchOutlined, SendOutlined, UnlockOutlined, UserOutlined } from '@ant-design/icons';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { api, ApiError, url, type Action, type Item, type Kind, type Relation, type Run, type WorkItem } from './api';
+import { api, ApiError, url, type Action, type ControlReceipt, type Item, type Kind, type Relation, type Run, type RuntimeState, type Selection, type WorkItem } from './api';
 import { BodyInput, Markdown } from './Markdown';
 import Discussion from './Discussion';
+import Sessions, { SessionLinks } from './Sessions';
+import { useNavigation } from './navigation';
 
 const { Text, Title } = Typography;
-type Selection = { kind: Kind; id: number };
 type EditDraft = { title: string; body: string; revision: number };
-const initial = new URLSearchParams(location.search);
-const initialKind = initial.get('kind');
-const initialId = Number(initial.get('id'));
-const initialSelection = (initialKind === 'issue' || initialKind === 'pr') && Number.isInteger(initialId) && initialId > 0
-  ? { kind: initialKind, id: initialId } as Selection : null;
 
 function ItemIcon({ item }: { item: Pick<WorkItem, 'kind' | 'state'> }) {
   const closed = item.state !== 'OPEN';
@@ -31,6 +27,51 @@ function StateTag({ state }: { state: string }) {
 function ErrorAlert({ error, title, onClose }: { error: Error | null; title: string; onClose?: () => void }) {
   return error && <Alert className="error-alert" type="error" showIcon title={title}
     description={<pre>{error.message}</pre>} closable={!!onClose} onClose={onClose} />;
+}
+
+function RunControl({ run, busy, onBusy }: { run: Run; busy: boolean; onBusy: (busy: boolean) => void }) {
+  const client = useQueryClient();
+  const { message, modal } = AntApp.useApp();
+  const queryKey = ['runtime', run.id];
+  const query = useQuery({
+    queryKey, queryFn: ({ signal }) => api<RuntimeState>(url('/api/runtime', { run: run.id }), signal),
+    refetchInterval: 5000, retry: false,
+  });
+  const mutation = useMutation({
+    retry: false,
+    mutationFn: (action: 'pause' | 'resume') => api<ControlReceipt>('/api/control', undefined, { run: run.id, action }),
+    onSuccess: (receipt, action) => {
+      client.setQueryData(queryKey, receipt.runtime);
+      message.success(action === 'pause' ? run.writable ? '生成已暂停；人工输入仍可提交。' : '生成已暂停。' : '生成已恢复；将继续处理已入队输入。');
+    },
+    onSettled: () => { void client.invalidateQueries({ queryKey }); },
+  });
+  useEffect(() => { onBusy(mutation.isPending); }, [mutation.isPending, onBusy]);
+  const runtime = query.error ? undefined : query.data;
+  function resume() {
+    modal.confirm({
+      title: '恢复 ' + run.label + ' 的生成？',
+      content: '恢复会继续该运行的全部 Agent 会话、Braid 定期检查，并处理暂停期间已入队的人工输入。',
+      okText: '恢复生成', cancelText: '保持暂停',
+      onOk: () => { mutation.mutate('resume'); },
+    });
+  }
+  return <section className="run-control" aria-label="生成运行控制">
+    <Flex justify="space-between" align="center" gap={12} wrap>
+      <Space wrap>
+        <Tag color={runtime?.paused ? 'orange' : runtime?.running ? 'green' : 'default'}
+          icon={runtime?.paused ? <PauseCircleOutlined /> : <PlayCircleOutlined />}>
+          {runtime ? runtime.paused ? '生成已暂停' : runtime.running ? '生成运行中' : '生成已停止 · ' + runtime.status : query.error ? '生成状态未确认' : '读取生成状态…'}
+        </Tag>
+        <Text type="secondary">{runtime?.paused ? run.writable ? '全部 Agent 会话和定期检查已冻结；人工编辑与评论保留。' : '全部 Agent 会话和定期检查已冻结。' : '暂停作用于当前运行的全部 Agent 会话和定期检查。'}</Text>
+      </Space>
+      {runtime?.running && <Button icon={runtime.paused ? <PlayCircleOutlined /> : <PauseCircleOutlined />}
+        loading={mutation.isPending} disabled={busy || !!query.error}
+        onClick={() => runtime.paused ? resume() : mutation.mutate('pause')}>{runtime.paused ? '恢复生成' : '暂停生成'}</Button>}
+    </Flex>
+    <ErrorAlert error={query.error} title="生成状态读取失败；上次状态不能作为控制结果" />
+    <ErrorAlert error={mutation.error} title="运行控制未完成；核对实际状态与 journal" onClose={() => mutation.reset()} />
+  </section>;
 }
 
 function Detail({ run, selected, writable, onSelect, onDirty, onBusy }: {
@@ -149,6 +190,7 @@ function Detail({ run, selected, writable, onSelect, onDirty, onBusy }: {
         </section>}
       </div>
       <aside className="metadata">
+        <SessionLinks run={run} selected={selected} onSelect={onSelect} />
         <div className="metadata-section"><div className="metadata-label"><UserOutlined /> 负责人</div>
           {item.assignees.length ? item.assignees.map(a => <div className="assignee" key={a.login}><Avatar size={24} icon={<UserOutlined />} /><strong>@{a.login}</strong></div>) : <Text type="secondary">未指派</Text>}
         </div>
@@ -187,42 +229,33 @@ function Detail({ run, selected, writable, onSelect, onDirty, onBusy }: {
 export default function App() {
   const { modal } = AntApp.useApp();
   const client = useQueryClient();
-  const [run, setRun] = useState(initial.get('run') || '');
-  const [selected, setSelected] = useState<Selection | null>(initialSelection);
   const [search, setSearch] = useState('');
   const [kind, setKind] = useState('all');
   const [state, setState] = useState('all');
   const [assignee, setAssignee] = useState('all');
   const [dirty, setDirty] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [controlBusy, setControlBusy] = useState(false);
+  const { run, selected, update } = useNavigation(dirty, busy || controlBusy, proceed => {
+    modal.confirm({ title: '当前草稿尚未提交', content: '切换将丢弃当前标题、正文或评论草稿。', okText: '丢弃并切换', cancelText: '继续编辑', onOk: () => { setDirty(false); proceed(); } });
+  });
   const runs = useQuery({ queryKey: ['runs'], queryFn: ({ signal }) => api<Run[]>('/api/runs', signal), refetchInterval: 5000 });
   const currentRun = runs.data?.find(r => r.id === run);
   const items = useQuery({ queryKey: ['items', run], queryFn: ({ signal }) => api<WorkItem[]>(url('/api/items', { run }), signal), enabled: !!currentRun, refetchInterval: 5000 });
   useEffect(() => {
-    if (runs.data?.length && !run) setRun(runs.data[0].id);
+    if (runs.data?.length && !run) update({ run: runs.data[0].id, selected }, true);
   }, [runs.data, run]);
   useEffect(() => {
-    if (!selected && items.data?.length) setSelected({ kind: items.data[0].kind, id: items.data[0].id });
+    if (!selected && items.data?.length) update({ run, selected: { kind: items.data[0].kind, id: items.data[0].id } }, true);
   }, [items.data, selected]);
   useEffect(() => {
-    if (run) {
-      const params = new URLSearchParams({ run, ...(selected ? { kind: selected.kind, id: String(selected.id) } : {}) });
-      history.replaceState(null, '', `${location.pathname}?${params}${location.hash}`);
-    }
-  }, [run, selected]);
-  useEffect(() => {
-    function protect(event: BeforeUnloadEvent) { if (dirty || busy) { event.preventDefault(); event.returnValue = ''; } }
+    function protect(event: BeforeUnloadEvent) { if (dirty || busy || controlBusy) { event.preventDefault(); event.returnValue = ''; } }
     window.addEventListener('beforeunload', protect);
     return () => window.removeEventListener('beforeunload', protect);
-  }, [dirty, busy]);
-  function navigate(next: () => void) {
-    if (busy) return;
-    if (dirty) modal.confirm({ title: '当前草稿尚未提交', content: '切换将丢弃当前标题、正文或评论草稿。', okText: '丢弃并切换', cancelText: '继续编辑', onOk: () => { setDirty(false); next(); } });
-    else next();
-  }
+  }, [dirty, busy, controlBusy]);
   function choose(value: Selection) {
-    if (value.kind === selected?.kind && value.id === selected.id) return;
-    navigate(() => { setSelected(value); history.replaceState(null, '', `${location.pathname}${location.search}`); document.querySelector('.detail-panel')?.scrollTo(0, 0); });
+    if (value.kind === selected?.kind && value.id === selected.id && value.agent === selected.agent && value.provider === selected.provider) return;
+    update({ run, selected: value });
   }
   const all = items.data || [];
   const needle = search.trim().toLowerCase();
@@ -234,17 +267,19 @@ export default function App() {
     <header className="app-header">
       <a className="brand" href="/" onClick={event => event.preventDefault()}><span className="brand-mark"><BranchesOutlined /></span><strong>Braid</strong><span>Console</span></a>
       <Divider orientation="vertical" />
-      <Select className="run-select" aria-label="选择运行" value={run || undefined} placeholder="选择运行" loading={runs.isPending} disabled={busy}
-        onChange={value => navigate(() => { setRun(value); setSelected(null); setSearch(''); setAssignee('all'); })}
+      <Select className="run-select" aria-label="选择运行" value={run || undefined} placeholder="选择运行" loading={runs.isPending} disabled={busy || controlBusy}
+        onChange={value => { update({ run: value, selected: null }); setSearch(''); setAssignee('all'); }}
         options={runs.data?.map(r => ({ value: r.id, label: <Space><span>{r.label}</span><Tag color={r.writable ? 'blue' : 'default'}>{r.writable ? '可人工介入' : '只读'}</Tag></Space> }))} />
-      <div className="header-status"><Badge status="processing" /><span>每 5 秒刷新</span><Tooltip title="立即读取列表与对象"><Button type="text" aria-label="刷新" icon={<ReloadOutlined />} onClick={() => { void items.refetch(); void runs.refetch(); void client.invalidateQueries({ queryKey: ['item', run] }); }} /></Tooltip></div>
+      <div className="header-status"><Badge status="processing" /><span>每 5 秒刷新</span><Tooltip title="立即读取列表、对象、会话与生成状态"><Button type="text" aria-label="刷新" icon={<ReloadOutlined />} onClick={() => { void items.refetch(); void runs.refetch(); void client.invalidateQueries({ queryKey: ['item', run] }); void client.invalidateQueries({ queryKey: ['sessions', run] }); void client.invalidateQueries({ queryKey: ['runtime', run] }); }} /></Tooltip></div>
     </header>
     <main className="workspace">
       <ErrorAlert error={runs.error} title="运行列表读取失败" />
       {!!run && runs.data && !currentRun && <Alert type="error" showIcon title="此运行未登记，请选择已登记的运行。" />}
-      <div className="workspace-top"><Space><CodeOutlined /><Text strong>实时协作</Text><Text type="secondary">/</Text><Text>{currentRun?.label || '运行'}</Text></Space>
+      <div className="workspace-top"><Space><CodeOutlined /><Text strong>{currentRun?.mode === 'archive' ? '归档浏览' : '实时协作'}</Text><Text type="secondary">/</Text><Text>{currentRun?.label || '运行'}</Text></Space>
         <Tag icon={currentRun?.writable ? <UnlockOutlined /> : <LockOutlined />} color={currentRun?.writable ? 'blue' : 'default'}>{currentRun?.writable ? '人工介入' : '只读'}</Tag></div>
       <Alert className="context-note" type="info" showIcon title={currentRun?.writable ? '人工操作以 external 身份通过 Braid CLI 写入；投递回执不表示 Agent 已读取。' : '此运行仅供阅读；运行切换和内容展开均为只读操作。'} />
+      {currentRun?.mode === 'archive' && <Alert className="context-note" type="warning" showIcon title="保存时的归档状态" description={currentRun.coverage.map((message, index) => <div key={index}>{message}</div>)} />}
+      {currentRun?.controllable && <RunControl key={run} run={currentRun} busy={busy} onBusy={setControlBusy} />}
       <div className="workspace-layout">
         <aside className="item-panel">
           <div className="list-heading"><Flex justify="space-between" align="center"><Title level={4}>工作项</Title><Badge count={all.length} color="#667085" /></Flex>
@@ -263,9 +298,10 @@ export default function App() {
                 <div className="item-owner"><UserOutlined /> {item.assignees.map(a => `@${a.login}`).join(', ') || '未指派'}</div>
               </div></button>) : <Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description={all.length ? '没有符合筛选条件的工作项' : '暂无工作项'} />}
           </div>
-          <div className="list-footer"><span>{filtered.length} / {all.length} 个工作项</span>{items.isFetching ? <Spin size="small" /> : <span>CLI 实时读取</span>}</div>
+          <div className="list-footer"><span>{filtered.length} / {all.length} 个工作项</span>{items.isFetching ? <Spin size="small" /> : <span>{currentRun?.mode === 'archive' ? '保存状态只读' : 'CLI 实时读取'}</span>}</div>
         </aside>
-        {selected && currentRun ? <Detail key={`${run}/${selected.kind}/${selected.id}`} run={run} selected={selected} writable={currentRun.writable} onSelect={choose} onDirty={setDirty} onBusy={setBusy} />
+        {selected && currentRun ? selected.agent ? <Sessions run={run} selected={selected} onSelect={choose} />
+          : <Detail key={`${run}/${selected.kind}/${selected.id}`} run={run} selected={selected} writable={currentRun.writable} onSelect={choose} onDirty={setDirty} onBusy={setBusy} />
           : <section className="detail-panel detail-empty"><Empty image={Empty.PRESENTED_IMAGE_SIMPLE} description="选择一个 Issue 或 Pull request" /></section>}
       </div>
     </main>

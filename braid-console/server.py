@@ -1,16 +1,27 @@
 #!/usr/bin/env python3
-"""Local, live Braid collaboration console. Writes only through the Braid CLI."""
+"""Braid Console: live CLI access and saved, read-only archive browsing."""
 
 import argparse
+from contextlib import nullcontext
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
+import logging
+from logging.handlers import RotatingFileHandler
 import mimetypes
 import os
 from pathlib import Path
 import subprocess
+import signal
+import sys
 import threading
+import uuid
 from urllib.parse import parse_qs, unquote, urlsplit
+
+import docker_runtime
+import native_sessions
+import archives
+import service
 
 
 WEB_DIST = Path(__file__).parent / "web" / "dist"
@@ -20,7 +31,11 @@ MAX_POST = 1_000_000
 
 def load_registry(path):
     data = json.loads(path.read_text())
-    if not isinstance(data, list) or not data:
+    managed = isinstance(data, dict) and data.get("record_type") == "factory26.console-service"
+    service_id = data.get("service_id") if managed else None
+    if managed:
+        data = data["runs"]
+    if not isinstance(data, list) or (not data and not managed):
         raise ValueError("registry 必须是非空运行列表")
     runs = {}
     for entry in data:
@@ -30,24 +45,51 @@ def load_registry(path):
             raise ValueError("运行 id 不得为空或重复")
         if type(entry.get("writable")) is not bool:
             raise ValueError(f'{entry["id"]}: writable 无效')
-        state, binary = Path(entry["state"]), Path(entry["binary"])
-        if not state.is_absolute() or not (state / "braid.sqlite3").is_file():
+        run = {"id": entry["id"], "label": str(entry.get("label") or entry["id"]),
+               "writable": entry["writable"], "mode": entry.get("mode", "live"),
+               "docker": None, "cli_command": None, "operation_lock": threading.Lock(),
+               "coverage": [], "archive_error": None, "service_id": service_id}
+        if run["mode"] == "archive":
+            if run["writable"] or entry.get("docker") or entry.get("cli_command"):
+                raise ValueError("归档禁止写入和物理控制")
+            try:
+                run["archive_reader"] = archives.Archive(entry["archive"], entry.get("archive_files"))
+                run["coverage"] = run["archive_reader"].coverage
+            except (OSError, ValueError, archives.sqlite3.Error) as error:
+                run["archive_error"] = f"{type(error).__name__}: {error}"
+                run["coverage"] = ["归档读取不可用：" + run["archive_error"]]
+            runs[entry["id"]] = run
+            continue
+        if run["mode"] != "live":
+            raise ValueError("mode 必须是 live 或 archive")
+        state, binary = Path(entry["state"]), Path(entry.get("binary") or "/unregistered-binary")
+        if not state.is_absolute() or (not entry.get("docker") and not (state / "braid.sqlite3").is_file()):
             raise ValueError(f'{entry["id"]}: state 需为现存绝对路径')
-        if not binary.is_absolute() or not binary.is_file() or not os.access(binary, os.X_OK):
+        if not entry.get("docker") and (not binary.is_absolute() or not binary.is_file() or not os.access(binary, os.X_OK)):
             raise ValueError(f'{entry["id"]}: binary 需为可执行绝对路径')
         cli_command = entry.get("cli_command")
         if cli_command is not None and (not isinstance(cli_command, list) or not cli_command
                                        or not all(isinstance(part, str) and part for part in cli_command)):
             raise ValueError(f'{entry["id"]}: cli_command 须为非空命令参数列表')
-        runs[entry["id"]] = {"id": entry["id"], "label": str(entry.get("label") or entry["id"]),
-                             "writable": entry["writable"],
-                             "state": str(state), "binary": str(binary), "cli_command": cli_command}
+        docker = entry.get("docker")
+        if docker is not None:
+            if cli_command is not None:
+                raise ValueError(f'{entry["id"]}: docker 与 cli_command 不可同时登记')
+            docker = docker_runtime.configuration(docker)
+            cli_command = docker_runtime.cli_command(docker)
+        run.update(state=str(state), binary=str(binary), cli_command=cli_command, docker=docker)
+        runs[entry["id"]] = run
     return runs
 
 
 def braid(run, args, body=None, *, write=False):
     # Persisted Git/worktree paths belong to the run's execution namespace.
     command = list(run["cli_command"] or [run["binary"], "--state", run["state"]])
+    if run["docker"] and run["docker"].get("mounts"):
+        if run["service_id"]:
+            service.access({"service_id": run["service_id"]}, run)
+        else:
+            docker_runtime.confirm_mounts(run["docker"], docker_runtime.inspect(run["docker"]["cli_container"], run["docker"]))
     if write:
         command.append("--external")
     command.extend(args)
@@ -69,7 +111,24 @@ def braid_json(run, args):
 
 
 def item_view(run, kind, item_id):
+    if run["mode"] == "archive":
+        return archive_reader(run).item(kind, item_id)
     return braid_json(run, [kind, "view", str(item_id), "--json"])
+
+
+def archive_reader(run):
+    if run["archive_error"]:
+        raise ValueError(run["archive_error"])
+    return run["archive_reader"]
+
+
+def session_inventory(run):
+    if run["mode"] == "archive":
+        return archive_reader(run).records
+    records = braid_json(run, ["status", "--json"])["physical_sessions"]
+    for record in records:
+        record["record_id"] = Path(record["context_path"]).parent.name
+    return records
 
 
 def action_command(payload):
@@ -124,9 +183,17 @@ def journal(path, record):
         os.fsync(stream.fileno())
 
 
+class ConsoleServer(ThreadingHTTPServer):
+    def handle_error(self, request, client_address):
+        logging.getLogger("console.access").exception("HTTP request failed: %s", client_address)
+
+
 class Handler(BaseHTTPRequestHandler):
     runs = {}
     journal_path = None
+
+    def log_message(self, format, *args):
+        logging.getLogger("console.access").info("%s %s", self.client_address[0], format % args)
 
     def reply(self, status, data):
         encoded = json.dumps(data, ensure_ascii=False).encode()
@@ -167,12 +234,20 @@ class Handler(BaseHTTPRequestHandler):
         params = {key: values[0] for key, values in parse_qs(url.query).items()}
         try:
             if url.path == "/api/runs":
-                data = [{key: run[key] for key in ("id", "label", "writable")}
+                data = [{**{key: run[key] for key in ("id", "label", "writable", "mode", "coverage")},
+                         "controllable": run["docker"] is not None}
                         for run in self.runs.values()]
+            elif url.path == "/api/runtime":
+                run = self.run_for(params.get("run"))
+                if run["docker"] is None:
+                    raise ValueError("此运行未登记物理运行控制")
+                data = docker_runtime.status(run["docker"])
             elif url.path == "/api/items":
                 run = self.run_for(params.get("run"))
                 data = []
-                for kind in ("issue", "pr"):
+                if run["mode"] == "archive":
+                    data = archive_reader(run).items()
+                for kind in (() if run["mode"] == "archive" else ("issue", "pr")):
                     listed = braid_json(run, [kind, "list", "--state", "all", "--limit", "10000",
                                               "--json", "kind,id,number,title,state,assignees,revision"])
                     data.extend(listed)
@@ -193,15 +268,27 @@ class Handler(BaseHTTPRequestHandler):
                 command = ["comment", "view", str(comment_id), "--include-hidden", "--json"]
                 if params.get("thread") == "1":
                     command.insert(3, "--thread")
-                data = braid_json(run, command)
+                data = archive_reader(run).comment(comment_id, params.get("thread") == "1") if run["mode"] == "archive" else braid_json(run, command)
+            elif url.path == "/api/sessions":
+                data = session_inventory(self.run_for(params.get("run")))
+            elif url.path == "/api/transcript":
+                run = self.run_for(params.get("run"))
+                record = next((record for record in session_inventory(run)
+                               if record["record_id"] == params.get("provider")), None)
+                if record is None:
+                    raise ValueError("CLI 未发现此 provider session 记录")
+                if run["mode"] == "archive":
+                    record = archive_reader(run).native_record(record)
+                data = native_sessions.read_page(run, record, int(params.get("offset", "0")))
             else:
                 return self.reply(404, {"error": "路由不存在"})
             self.reply(200, data)
-        except (ValueError, RuntimeError, OSError, KeyError, json.JSONDecodeError) as error:
+        except (ValueError, RuntimeError, OSError, KeyError, archives.sqlite3.Error) as error:
             self.reply(400, {"error": str(error)})
 
     def do_POST(self):
-        if urlsplit(self.path).path != "/api/action":
+        route = urlsplit(self.path).path
+        if route not in ("/api/action", "/api/control"):
             return self.reply(404, {"error": "路由不存在"})
         origin = self.headers.get("Origin")
         host = self.headers.get("Host")
@@ -217,52 +304,120 @@ class Handler(BaseHTTPRequestHandler):
             if not isinstance(payload, dict):
                 raise ValueError("请求必须是对象")
             run = self.run_for(payload.get("run"))
-            if not run["writable"]:
-                raise ValueError("此运行只读")
-            command, body = action_command(payload)
-            current = braid_json(run, [payload["kind"], "view", str(payload["id"]), "--json"])
-            if payload["action"] == "edit" and current["revision"] != payload["revision"]:
-                return self.reply(409, {"error": "对象已变化；刷新后检查草稿再提交"})
-            comment_id = payload.get("comment") or payload.get("reply_to")
-            if comment_id is not None and not any(int(c["database_id"]) == comment_id for c in current.get("comments", [])):
-                raise ValueError("评论不属于当前对象")
-            entry = {"at": datetime.now(timezone.utc).isoformat(), "run": run["id"],
-                     "state": run["state"], "action": payload["action"], "kind": payload["kind"],
-                     "id": payload["id"], "input": payload, "cli": command, "status": "started"}
-            journal(self.journal_path, entry)
-            try:
-                stdout = braid(run, command, body, write=True)
-            except RuntimeError as error:
-                journal(self.journal_path, {**entry, "status": "unconfirmed", "error": str(error)})
-                return self.reply(502, {"error": str(error) + "\n结果不确定；先刷新状态并查 journal，勿自动重试。"})
-            try:
-                journal(self.journal_path, {**entry, "status": "completed", "result": stdout})
-            except OSError as error:
-                return self.reply(502, {"error": f"CLI 已返回成功，但 journal 写入失败：{error}。请勿重试操作；先核对 Braid 状态。",
-                                        "result": stdout})
-            self.reply(200, {"result": stdout})
+            if run["mode"] == "archive":
+                return self.reply(403, {"error": "归档仅供阅读，禁止人工修改和运行控制"})
+            with run["operation_lock"]:
+                if route == "/api/control":
+                    self.control_run(run, payload)
+                else:
+                    self.change_item(run, payload)
         except RuntimeError as error:
             # A failed pre-write read has no mutation receipt to reconcile.
             self.reply(502, {"error": str(error)})
         except (ValueError, OSError, KeyError, json.JSONDecodeError) as error:
             self.reply(400, {"error": str(error)})
 
+    def control_run(self, run, payload):
+        action = payload.get("action")
+        if action not in ("pause", "resume") or run["docker"] is None:
+            raise ValueError("运行控制需要已登记容器及 pause/resume 操作")
+        if run["service_id"]:
+            service.access({"service_id": run["service_id"]}, run)
+        entry = {"at": datetime.now(timezone.utc).isoformat(), "run": run["id"],
+                 "action": "runtime_" + action, "input": payload,
+                 "container": run["docker"]["runtime_container"], "status": "started"}
+        journal(self.journal_path, entry)
+        try:
+            result = docker_runtime.control(run["docker"], action)
+        except docker_runtime.ControlError as error:
+            journal(self.journal_path, {**entry, "status": "unconfirmed" if error.uncertain else "failed",
+                                        "error": str(error)})
+            detail = "\n控制结果未确认；刷新运行状态并查 journal，勿自动重试。" if error.uncertain else "\n未执行 Docker 暂停/恢复命令；请按读取到的实际状态处理。"
+            return self.reply(502, {"error": str(error) + detail})
+        try:
+            journal(self.journal_path, {**entry, "status": "completed", "result": result})
+        except OSError as error:
+            return self.reply(502, {"error": f"运行控制已执行，但 journal 写入失败：{error}。先核对实际状态，勿重试。",
+                                    "result": result})
+        self.reply(200, result)
+
+    def change_item(self, run, payload):
+        if not run["writable"]:
+            raise ValueError("此运行只读")
+        command, body = action_command(payload)
+        current = braid_json(run, [payload["kind"], "view", str(payload["id"]), "--json"])
+        if payload["action"] == "edit" and current["revision"] != payload["revision"]:
+            return self.reply(409, {"error": "对象已变化；刷新后检查草稿再提交"})
+        comment_id = payload.get("comment") or payload.get("reply_to")
+        if comment_id is not None and not any(int(c["database_id"]) == comment_id for c in current.get("comments", [])):
+            raise ValueError("评论不属于当前对象")
+        entry = {"at": datetime.now(timezone.utc).isoformat(), "run": run["id"],
+                 "state": run["state"], "action": payload["action"], "kind": payload["kind"],
+                 "id": payload["id"], "input": payload, "cli": command, "status": "started"}
+        journal(self.journal_path, entry)
+        try:
+            stdout = braid(run, command, body, write=True)
+        except RuntimeError as error:
+            journal(self.journal_path, {**entry, "status": "unconfirmed", "error": str(error)})
+            return self.reply(502, {"error": str(error) + "\n结果不确定；先刷新状态并查 journal，勿自动重试。"})
+        try:
+            journal(self.journal_path, {**entry, "status": "completed", "result": stdout})
+        except OSError as error:
+            return self.reply(502, {"error": f"CLI 已返回成功，但 journal 写入失败：{error}。请勿重试操作；先核对 Braid 状态。",
+                                    "result": stdout})
+        self.reply(200, {"result": stdout})
+
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--registry", type=Path, required=True)
-    parser.add_argument("--journal", type=Path, required=True)
+    parser.add_argument("--service", type=Path, help="受管理稳定Console服务目录")
+    parser.add_argument("--registry", type=Path, help="旧接线兼容入口；需显式保护全部外部引用")
+    parser.add_argument("--journal", type=Path)
     parser.add_argument("--port", type=int, default=8765)
     options = parser.parse_args()
-    Handler.runs = load_registry(options.registry)
-    options.journal.parent.mkdir(parents=True, exist_ok=True)
-    Handler.journal_path = options.journal
-    server = ThreadingHTTPServer(("127.0.0.1", options.port), Handler)
-    print(f"人工介入实验 console: http://127.0.0.1:{server.server_port}", flush=True)
-    try:
-        server.serve_forever()
-    except KeyboardInterrupt:
-        pass
+    root, record = None, None
+    if options.service:
+        if options.registry or options.journal:
+            parser.error("--service 不与旧 --registry/--journal 混用")
+        root = options.service.resolve(strict=True)
+        record = service.read(root)
+        if Path(__file__).resolve() != root / "program/server.py":
+            raise ValueError("--service 必须执行冻结 program/server.py；请使用 service.py serve")
+        if Path(sys.executable).resolve() != Path(record["interpreter"]["executable"]):
+            raise ValueError("请使用 service.py serve 启动登记的Python")
+        options.registry, options.journal = root / "manifest.json", root / record["journal"]
+    elif not options.registry or not options.journal:
+        parser.error("使用 --service；旧接线需同时提供 --registry 和 --journal")
+    logs = (root or options.journal.parent) / "logs"; logs.mkdir(parents=True, exist_ok=True)
+    limits = record["access_log"] if record else {"max_bytes": 5 * 1024 * 1024, "backups": 3}
+    logger = logging.getLogger("console.access"); logger.setLevel(logging.INFO)
+    handler = RotatingFileHandler(logs / "http.log", maxBytes=limits["max_bytes"], backupCount=limits["backups"], encoding="utf-8")
+    handler.setFormatter(logging.Formatter("%(asctime)s %(message)s")); logger.addHandler(handler)
+    with service.service_lock(root) if root else nullcontext():
+        Handler.runs = load_registry(options.registry)
+        options.journal.parent.mkdir(parents=True, exist_ok=True)
+        Handler.journal_path = options.journal
+        server = ConsoleServer(("127.0.0.1", options.port), Handler)
+        server.daemon_threads = False
+        instance = {"phase": "running", "owner": "console", "pid": os.getpid(), "instance_id": str(uuid.uuid4()),
+                    "service_id": record["service_id"] if record else None, "port": server.server_port,
+                    "started_at": service.stamp(), "host": service.socket.gethostname()}
+        if root:
+            service.write_json(root / "active.json", instance)
+        def terminate(*_):
+            raise KeyboardInterrupt
+        signal.signal(signal.SIGTERM, terminate)
+        print(f"Console: http://127.0.0.1:{server.server_port} PID={os.getpid()}", flush=True)
+        try:
+            server.serve_forever()
+        except KeyboardInterrupt:
+            pass
+        finally:
+            server.server_close()
+            if root:
+                service.write_json(root / "active.json", {**instance, "phase": "finished", "stopped_at": service.stamp(),
+                                                         "references_released": False})
+            handler.close()
 
 
 if __name__ == "__main__":

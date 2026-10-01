@@ -1,5 +1,38 @@
 export type Kind = 'issue' | 'pr';
-export interface Run { id: string; label: string; writable: boolean }
+export interface Selection { kind: Kind; id: number; agent?: string; provider?: string }
+export interface ProviderSession {
+  record_id: string;
+  group_id?: string | null;
+  work_item_kind?: Kind;
+  work_item_id?: string;
+  assignment_generation?: number | null;
+  profile_id: string;
+  provider: string;
+  session_id?: string | null;
+  native_session_id?: string | null;
+  native_session_path?: string | null;
+  parent_native_session_id?: string | null;
+  status: string;
+  context_revision?: string | null;
+  effective_profile_digest?: string | null;
+  context_path: string;
+  instructions_path: string;
+  worktree?: string | null;
+  turns?: { braid_turn_id: string; provider_turn_id?: string | null; status: string; trigger_kind: string; input_path: string }[];
+  source_mode?: 'archive';
+  archive_native_error?: string | null;
+}
+export interface NativeEntry { offset: number; value?: Record<string, unknown>; error?: string; raw?: string }
+export interface TranscriptPage { entries: NativeEntry[]; next_offset: number; size: number; eof: boolean; waiting: boolean }
+export interface Run { id: string; label: string; writable: boolean; controllable: boolean; mode: 'live' | 'archive'; coverage: string[] }
+export interface RuntimeState {
+  status: string;
+  running: boolean;
+  paused: boolean;
+  pid: number;
+  started_at: string;
+}
+export interface ControlReceipt { runtime: RuntimeState; changed: boolean; writer_lock?: 'available' }
 export interface Assignee { login: string }
 export interface WorkItem {
   kind: Kind;

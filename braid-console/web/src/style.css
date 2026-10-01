@@ -22,6 +22,9 @@ button:focus-visible, a:focus-visible { outline: 2px solid #2563eb; outline-offs
 .context-note { margin-bottom: 20px; }
 .context-note.ant-alert { border-color: #d6e4f9; background: #edf4ff; }
 .context-note .ant-alert-title { font-size: 12px; color: #446184; }
+.run-control { background: #fff; border: 1px solid #dce2e9; border-radius: 8px; padding: 12px 16px; margin-bottom: 20px; }
+.run-control .ant-typography { font-size: 12px; }
+.run-control>.error-alert { margin: 12px 0 0; }
 .workspace-layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 22px; align-items: start; }
 .item-panel, .detail-panel { background: #fff; border: 1px solid #dce2e9; border-radius: 10px; box-shadow: 0 2px 5px #10203003; }
 .item-panel { position: sticky; top: 20px; overflow: hidden; }
@@ -110,6 +113,29 @@ button:focus-visible, a:focus-visible { outline: 2px solid #2563eb; outline-offs
 .error-alert pre, .ant-alert-description pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; margin: 0; }
 .item-panel>.error-alert { margin: 12px; }
 .cli-receipt { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.session-links pre, .session-panel .ant-alert pre { white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+.session-link { font-size: 11px; margin-bottom: 14px; }
+.session-link a { display: flex; flex-direction: column; gap: 5px; overflow-wrap: anywhere; }
+.session-link>.ant-typography { display: block; font-size: 10px; margin-top: 5px; }
+.session-back { margin: 18px 0; }
+.session-identity, .session-facts .ant-descriptions-item-content { overflow-wrap: anywhere; word-break: break-word; font-size: 12px; }
+.session-facts { margin: 20px 0 28px; }
+.session-panel .ant-table code { font-size: 11px; }
+.native-transcript { margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e9ef; }
+.native-transcript>.ant-typography { display: block; margin-bottom: 18px; font-size: 12px; }
+.native-transcript .error-alert { margin-top: 14px; }
+.native-entry { margin: 14px 0; border: 1px solid #dce3ec; border-radius: 8px; overflow: hidden; }
+.native-entry-head { padding: 10px 14px; background: #f6f8fb; font-size: 11px; border-bottom: 1px solid #e5e9ef; overflow-wrap: anywhere; }
+.native-entry-head .ant-tag { margin: 0; }
+.native-entry-body { padding: 14px; }
+.native-entry-body>.markdown { max-height: 450px; overflow: auto; }
+.native-result { border-color: #b9dce2; }
+.native-failed { border-color: #e6a9a9; }
+.native-code { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 11px; line-height: 1.65; background: #f6f8fb; border-radius: 5px; padding: 12px; max-height: 450px; overflow: auto; }
+.native-tool, .native-thinking, .native-metadata, .native-raw { font-size: 12px; margin: 10px 0; }
+.native-tool summary, .native-thinking summary, .native-metadata summary, .native-raw summary { cursor: pointer; color: #46658e; overflow-wrap: anywhere; }
+.native-metadata { padding: 10px 14px; background: #f6f8fb; border-radius: 5px; }
+.native-pagination { margin-top: 20px; }
 .markdown { font-size: 13px; line-height: 1.75; color: #344054; overflow-wrap: anywhere; }
 .markdown>:first-child { margin-top: 0; }
 .markdown>:last-child { margin-bottom: 0; }

@@ -137,6 +137,46 @@ def _rows(value, source, field, errors):
     return []
 
 
+def _console_references(record, path, references, errors):
+    """Recoverable Console configuration pins dependencies even when HTTP has stopped."""
+    if record.get("schema_version") != 1 or record.get("state") != "registered":
+        errors.append({"path": str(path), "error": "unknown Console service schema or registration state"})
+    if record.get("host") != socket.gethostname():
+        errors.append({"path": str(path), "error": "Console service belongs to another host; paths cannot be mapped"})
+    def pin(location, kind):
+        if not isinstance(location, str) or not Path(location).is_absolute():
+            errors.append({"path": str(path), "error": f"Console {kind} needs an absolute host path"})
+            return
+        _dependency({"location": location, "kind": kind, "purpose": "execution_cleanup"}, path, references, errors)
+    pin(str(path.parent.absolute()), "console-service")
+    interpreter = record.get("interpreter")
+    if not isinstance(interpreter, dict):
+        errors.append({"path": str(path), "error": "Console interpreter identity is missing"})
+    else:
+        for key in ("executable", "prefix", "base_prefix"):
+            pin(interpreter.get(key), "console-python-" + key)
+    for run in _rows(record.get("runs"), path, "Console runs", errors):
+        if not isinstance(run, dict):
+            errors.append({"path": str(path), "error": "Console run is not an object"})
+            continue
+        if run.get("mode") == "archive":
+            if run.get("writable") is not False or run.get("docker") or run.get("cli_command"):
+                errors.append({"path": str(path), "error": "Console archive has writable or container configuration"})
+            pin(run.get("archive"), "console-archive")
+        elif run.get("mode") == "live":
+            for key in ("binary", "state", "workspace"):
+                pin(run.get(key), "console-live-" + key)
+            docker = run.get("docker")
+            if docker is not None:
+                if not isinstance(docker, dict) or not docker.get("context"):
+                    errors.append({"path": str(path), "error": "Console Docker execution namespace is unknown"})
+                    continue
+                for mount in _rows(docker.get("mounts"), path, "Console host mounts", errors):
+                    pin(mount.get("source") if isinstance(mount, dict) else None, "console-access-mount")
+        else:
+            errors.append({"path": str(path), "error": "Console run has unknown mode"})
+
+
 def _archive_candidate(path, receipt, references, protections, complete):
     producer = path.parent.absolute()
     reclaim = receipt.get("reclaim_state") or {}
@@ -263,7 +303,9 @@ def plan(roots, asset_roots=(), protected=()):
         record = _read(path, errors)
         if record is None:
             continue
-        if path.name == "manifest.json" and record.get("record_type") == "lab.experiment":
+        if path.name == "manifest.json" and record.get("record_type") == "factory26.console-service":
+            _console_references(record, path, references, errors)
+        elif path.name == "manifest.json" and record.get("record_type") == "lab.experiment":
             if record.get("schema_version") == 3 and not isinstance(record.get("controller_runtime"), dict):
                 errors.append({"path": str(path), "error": "schema v3 controller_runtime is missing"})
             if record.get("controller_runtime") is not None:

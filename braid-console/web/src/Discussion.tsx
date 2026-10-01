@@ -58,11 +58,8 @@ function CommentCard({ comment, expandedBody, depth, ...props }: Props & {
     <Flex className="comment-footer" justify="space-between" gap={8} wrap>
       {props.writable ? <Space size={4} wrap>
         <Button size="small" type="text" icon={<MessageOutlined />} disabled={props.busy} onClick={() => props.onReply(id)}>回复</Button>
-        {!comment.deleted && <>
-          <Button size="small" type="text" disabled={props.busy} onClick={() => hidden ? props.onAction({ action: 'unhide', comment: id }) : props.onHide(id)}>{hidden ? '取消隐藏' : '隐藏'}</Button>
-          <Button size="small" type="text" icon={<CheckCircleOutlined />} disabled={props.busy}
-            onClick={() => props.onAction({ action: resolved ? 'unresolve' : 'resolve', comment: id })}>{resolved ? '取消解决' : '解决线程'}</Button>
-        </>}
+        {!comment.deleted && <Button size="small" type="text" disabled={props.busy}
+          onClick={() => hidden ? props.onAction({ action: 'unhide', comment: id }) : props.onHide(id)}>{hidden ? '取消此条隐藏' : '隐藏此条'}</Button>}
       </Space> : <span />}
       {showHidden && needsBody && <Button size="small" type="text" onClick={() => setShowHidden(false)}>收起正文</Button>}
     </Flex>
@@ -72,6 +69,8 @@ function CommentCard({ comment, expandedBody, depth, ...props }: Props & {
 function Thread({ nodes, ...props }: Props & { nodes: Comment[] }) {
   const [expanded, setExpanded] = useState(false);
   const root = Number(nodes[0].thread_root);
+  const rootComment = nodes.find(comment => Number(comment.database_id) === root);
+  const resolved = rootComment?.resolved || rootComment?.folded;
   const folded = nodes.filter(c => c.folded);
   const fetched = useQuery({
     queryKey: ['thread', props.run, root],
@@ -111,6 +110,14 @@ function Thread({ nodes, ...props }: Props & { nodes: Comment[] }) {
     return value;
   }
   return <section className="thread">
+    <Flex className="thread-summary" wrap>
+      <Space direction="vertical" size={2}>
+        <strong>讨论根 #{root}</strong>
+        <span className="subtle">解决会折叠整串已有评论，取消解决会展开已解决历史；新回复不会自动折叠。局部整理请隐藏此条。</span>
+      </Space>
+      {props.writable && rootComment && !rootComment.deleted && <Button size="small" type="text" icon={<CheckCircleOutlined />} disabled={props.busy}
+        onClick={() => props.onAction({ action: resolved ? 'unresolve' : 'resolve', comment: root })}>{resolved ? '取消整串解决' : '解决整串讨论'}</Button>}
+    </Flex>
     {!!folded.length && <div className="thread-summary">
       <Space wrap><CheckCircleOutlined /><strong>已解决的历史</strong><span className="subtle">线程 #{root} · {folded.length} 条评论</span></Space>
       <Button size="small" type="text" icon={expanded ? <UpOutlined /> : <DownOutlined />} loading={fetched.isFetching}
