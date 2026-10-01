@@ -9,9 +9,11 @@
 
 对照同时改变根模型和 advisor 模型，结果不能解释为仅根模型的消融。新增 `pi-glm-root` 的 instruction、原生角色、工具和技能模板沿用原 `pi-glm-fast`；保留成员的原生角色配方不变，其中仍允许 DeepSeek sub-agent。root-only 标签使新增根不进入可指派成员清单。根与子 Issue、PR 之间不自动传播模型选择。
 
-## Descriptor 与证据
+## 最初 ARC Descriptor 与证据
 
-ARC endpoint 固定采用 `https://api.arc-bench.com/v1`，凭据由实际启动环境提供；模板仍经原生生成函数将本次 endpoint 写入 models.json。当前精确 ID 来自 `runs/iteration13/final-readiness-20261001/arc-models.json`，该发现响应只证明存在，不证明能力。
+最新运行已分流为官网Flash使用ARC、本地GLM使用自有API，实际通道以 experiments.md 新冻结输入为准。以下保留最初ARC制品的descriptor依据。
+
+最初 ARC endpoint 采用 `https://api.arc-bench.com/v1`，凭据由实际启动环境提供；模板仍经原生生成函数将本次 endpoint 写入 models.json。当前精确 ID 来自 `runs/iteration13/final-readiness-20261001/arc-models.json`，该发现响应只证明存在，不证明能力。
 
 GLM-5.3 采用文本输入、1,000,000 context、131,072 maxTokens，支持工具，推理仅开启；档位映射为 low/high/max，根保持与基线相同 high。依据 [Z.ai 官方文档](https://docs.z.ai/guides/llm/glm-5.3)，不沿用 Flash 的 image 声明。Pi 的 zai 兼容路径发送 thinking.enabled、clear_thinking=false、reasoning_effort=high，并沿用已有工具流兼容；当前 ARC 参数可用性留给首次真实 I13 请求反馈，没有增加 Chat 测试任务。
 

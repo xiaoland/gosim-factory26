@@ -1,49 +1,58 @@
 # e20261001-01：I13 首轮实验
 
-当前状态（2026-10-01 16:28 CST）：没有模型生成正在运行。官网 GitHub 在生成阶段异常终止，未取得有效评分；首次本地恢复在模型启动前失败。两条随后启动的本地生成已为用户授权的模型切换完成一致保全并停止，旧排队项取消，旧控制器已退出。正在准备移除 DeepSeek Braid Agent、保留 DeepSeek sub-agent 的四并行新矩阵；旧官网 run 保持终态。
+当前状态：原运行均已停止并保全，尚无有效应用评分。用户最新将本轮分成两条执行线：Flash 两题优先恢复到官网、非参赛、使用 ARC API；GLM 两题留在本地、使用自有模型 API。移除 DeepSeek Braid 成员是要求，GLM-5.3-Flash 只是当前剩余可选成员，不建立永久的 PR 模型限定。
 
 ## 启动以来的工作树
 
 ```text
 I13 / e20261001-01
-├─ 本轮目标与当前配方［已授权］
-│  ├─ Flash根 + K2.7 Code advisor × GitHub / Sheet
-│  ├─ GLM-5.3根 + K3 advisor × GitHub / Sheet
-│  ├─ Braid工作项仅使用GLM-5.3-Flash；内部DeepSeek子角色保留
-│  └─ ARC通道、四并行、逐题完成后独立官网应用重放
-├─ 四个逻辑运行［新矩阵准备中，当前0条生成］
-│  ├─ Flash / GitHub：官网SIGKILL终态 → 首次本地恢复失败 → 修复并迁移后接续
-│  ├─ Flash / Sheet：本地有实际实现 → 一致快照已保全 → 迁移后接续
-│  ├─ GLM / GitHub：本地有实际进展 → 一致快照已保全 → 迁移后接续
-│  └─ GLM / Sheet：旧队列未开始 → 新配方干净启动
-├─ 重新启动的必要工作
-│  ├─ 官网导出与恢复权限/路径自动化［完成，无模型Linux操作通过］
-│  ├─ I13源码取消DeepSeek成员［完成；不代表运行时已切换］
-│  ├─ Braid候选目录改读当前配置［实施与编译中］
-│  ├─ 受审计的在途模型迁移及旧native home补入GLM定义［实施中］
-│  └─ 新包与4槽位矩阵冻结、启动、真实模型身份核验［待上述完成］
-└─ 配套设施
-   ├─ Exp Console：WSL唯一HTTP、Mac8765转发［完成］；新四项接入待新ID
-   ├─ 独立Luna监控会话与automation［已建立］；新矩阵接线待新ID
-   ├─ 官网SIGKILL诊断：容器资源/自身信号证据［并行实施，不阻塞本轮］
-   └─ 官方评分：尚无有效应用成绩；旧官网0分不是评测失败结果
+├─ 共同要求［已授权］
+│  ├─ 移除DeepSeek Braid成员；内部DeepSeek sub-agent保留
+│  ├─ Flash根/K2.7 Code advisor、GLM根/K3 advisor及其余角色配方保留
+│  └─ 四个逻辑运行：官网两项 + 本地两项，分别冻结身份与计费通道
+├─ 官网线［优先Flash/GitHub；有诊断前置］
+│  ├─ Flash/GitHub：从官网终态工作区恢复
+│  ├─ Flash/Sheet：从本地一致快照恢复到官网
+│  ├─ 非参赛模式、ARC API；不是official_evaluation竞赛额度模式
+│  ├─ 关键SIGKILL证据采集与真实接线［启动硬前置，正在收尾］
+│  ├─ 两个恢复包、费用模式与journal［准备中］
+│  └─ 自动尝试恢复机制［调查方案；重试与费用上限尚未冻结］
+├─ 本地线［不被官网诊断前置阻塞］
+│  ├─ GLM/GitHub：从本地一致快照接续
+│  ├─ GLM/Sheet：干净启动
+│  ├─ 使用自有bigmodel/kimi/ds/qwen等API［通道核对中］
+│  └─ 两路recipe、包和运行身份［准备中］
+├─ 共用恢复与配置工作
+│  ├─ 官网ZIP自动导出、原件保全、权限/路径恢复［完成］
+│  ├─ I13源码移除DeepSeek成员［完成］
+│  ├─ 当前可指派目录不再按摘要revision大小选历史配置［实施中］
+│  └─ 保留在途成员/工作树/会话的受审计迁移［实施中］
+└─ 配套设施与证据
+   ├─ Exp Console：WSL唯一HTTP、Mac8765转发［完成］；新运行接线待身份
+   ├─ 独立Luna会话 + automation［已建立］；分别接入官网/本地证据
+   ├─ 官网SIGKILL根因［未知］；WSL没有同类故障事实
+   └─ 尚无有效评分；旧官网0分未进入评测，不是应用验收零分
 ```
 
-不再执行的分支：WSL宿主SIGKILL追踪方案已撤回；第二个Console HTTP已退役；原两槽位矩阵已停止；单项g03恢复计划从未启动，已由新的四项配方切换取代。旧Debian恢复、I12及新的官网Harness生成均不在当前启动范围内。当前SIGKILL根因仍未知，不能认定OOM，也没有WSL自发SIGKILL的证据。
+不再执行的分支：WSL宿主SIGKILL追踪已撤回；第二个Console HTTP已退役；原两槽位矩阵已停止；单项g03及四项全本地新矩阵均未启动，现由两官网、两本地取代。旧Debian恢复与I12不在范围内。旧官网run保持终态，新官网恢复使用新身份并明确来源。
 
-主线依赖顺序为“目录修复与迁移验证 → 冻结新包与四项输入 → 四并行启动并确认真实GLM调用 → 接入同一Console与监控 → 逐题交付/评分”。官网诊断设施独立收尾。尚无新结果，不把准备检查或启动器成功作为应用验收。
+用户授权原话：“优先处理让 flash/github 恢复，并且是恢复到官网；flash/sheet也放到官网运行；都不参加比赛，使用 ARC API”；“前提是做好了收集/采集更多（关键的）帮助排查 SIGKILL 根本原因的工作”；“glm/* 留在本地运行，并且使用我们自己的 bigmodel, kimi, ds, qwen 等 API”。这覆盖此前“全部ARC、全部本地、官网诊断不阻塞”的安排。官网两项拟采用 self_funded 凭据模式并提供ARC API通道，最终以冻结输入及平台读回核对，不把比赛task名称当参赛模式证据。自有API凭据只从私有文件注入，模型ID与endpoint对应关系先验证。
+
+用户另要求“看看能否加入自动尝试恢复的机制”。当前授权包括调查、设计与实现准备，未冻结自动收费重试次数或费用上限；不据此无限重试。优先复用现有monitor、competition journal和恢复打包，先定义SIGKILL/终态判据、完整保全、同run核查及pending写请求处理，再确定自动启动边界。隐藏评测反馈仍不进入生成Agent。
+
+分工：官网恢复子Agent持有两个包和journal准备；诊断子Agent持有采集就绪与自动恢复方案；目录/本地子Agent持有统一Braid构建、GLM自有通道和本地两项准备。子Agent之间直接交接具体制品，主线整合当前决策、发布前置、实际启动与结果，不逐项代做执行细节。
 
 ### 当前配方调整授权
 
-用户原话：“不要再用 DeepSeek 作为 PR 的可分派模型（也就是说可以继续在 sub-agent 中使用，但不能作为 Braid Agent）”；“就在这次 I13，我希望现在的这次实验就可以应用”；“我们应该可以支撑4个并行”。本次工作项成员使用现有 GLM-5.3-Flash，两个 case 的根模型、advisor 和内部角色配方保持不变。四项实际进入新配方的时间、来源与新执行身份需分别记录，先前 DeepSeek 产生的历史进度不改写为 GLM 产出。旧冻结包和原尝试保留。
+用户原话：“不要再用 DeepSeek 作为 PR 的可分派模型（也就是说可以继续在 sub-agent 中使用，但不能作为 Braid Agent）”；“就在这次 I13，我希望现在的这次实验就可以应用”；“我们应该可以支撑4个并行”。当前迁移暂用剩余的 GLM-5.3-Flash 成员，不将其设为永久PR模型限制；两个 case 的根模型、advisor 和内部角色配方保持不变。四项实际进入新配方的时间、来源与新执行身份需分别记录，先前 DeepSeek 产生的历史进度不改写为 GLM 产出。旧冻结包和原尝试保留。
 
-当前运行的 Braid 将成员配置读入内存，offline-resume 又检查原配方一致性，不能靠修改源码文件就宣称已应用。主线正核对受审计的迁移与一致工作区保全，避免丢弃正在写入的 PR。四并发沿用每容器4 GiB/2 CPU；实际容量检查约12.4 GiB可用内存、451 GiB磁盘，两条生成容器当前分别约1.0 GiB和0.7 GiB。启动前仍执行四槽位容量预检。
+当前运行的 Braid 将成员配置读入内存，offline-resume 又检查原配方一致性，不能靠修改源码文件就宣称已应用。主线正核对受审计的迁移与一致工作区保全，避免丢弃正在写入的 PR。四并发沿用每容器4 GiB/2 CPU；实际容量检查约12.4 GiB可用内存、451 GiB磁盘，两条生成容器当前分别约1.0 GiB和0.7 GiB。这是此前全本地四槽位准备的容量依据；最新安排只在本地运行GLM两项。
 
-两条live已通过唯一 Console 的写者门闩与 Docker pause 保全。完整 template ZIP 在复制前后均确认同一容器处于暂停状态，包含 clone 私有 Git、未提交文件、Braid SQLite/WAL 和原生历史；Mac副本SHA一致、SQLite quick_check均为ok。Flash/Sheet快照SHA `1158466fe93bada0007be4b5735f8ded2ab344c75731bc9df702886fe8a3eb4d`，GLM/GitHub为 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`，回执归 `runs/iteration13/local-20261001/model-cutover/`。旧控制器先降一槽位禁止旧配方队列混启，保全后通过操作 `69a1a4e4aaf227e059ae9329` 停止。独立读回确认controller finished、两个原容器已移除；两条生成为计划内cancelled，GLM/Sheet未开始即取消。这不是新的运行故障。新矩阵目标为4槽位。
+两条live已通过唯一 Console 的写者门闩与 Docker pause 保全。完整 template ZIP 在复制前后均确认同一容器处于暂停状态，包含 clone 私有 Git、未提交文件、Braid SQLite/WAL 和原生历史；Mac副本SHA一致、SQLite quick_check均为ok。Flash/Sheet快照SHA `1158466fe93bada0007be4b5735f8ded2ab344c75731bc9df702886fe8a3eb4d`，GLM/GitHub为 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`，回执归 `runs/iteration13/local-20261001/model-cutover/`。旧控制器先降一槽位禁止旧配方队列混启，保全后通过操作 `69a1a4e4aaf227e059ae9329` 停止。独立读回确认controller finished、两个原容器已移除；两条生成为计划内cancelled，GLM/Sheet未开始即取消。这不是新的运行故障。原四槽位新矩阵未启动，现改为官网两项与本地两项。
 
-迁移保留原profile ID、member、assignment、worktree和Pi session，旧DeepSeek执行profile改用GLM并撤出新指派目录；新指派只使用现有pi-glm-fast。当前目录按摘要revision的数值最大项选择，无法可靠表达当前配置，故修为读取冻结request中的当前目录；历史profiles不改。旧Pi home在factory26下没有GLM定义，需定向补入同款GLM定义，保留内部角色和DeepSeek sub-agent。两个request的旧原件与变更回执单独保存；不放宽普通offline-resume的一致性检查。新实验目录拟为 `e20261001-01-glm-pr-20261001`，此前单项 `recovery-g03` 方案未执行，已由本次四项切换取代。
+迁移保留原profile ID、member、assignment、worktree和Pi session，旧DeepSeek执行profile改用GLM并撤出新指派目录；新指派只使用现有pi-glm-fast。当前目录按摘要revision的数值最大项选择，无法可靠表达当前配置，故修为读取冻结request中的当前目录；历史profiles不改。旧Pi home在factory26下没有GLM定义，需定向补入同款GLM定义，保留内部角色和DeepSeek sub-agent。两个request的旧原件与变更回执单独保存；不放宽普通offline-resume的一致性检查。此前拟建 `e20261001-01-glm-pr-20261001` 与单项 `recovery-g03` 均未执行，现由两官网、两本地的新journal取代。
 
-## 当前 WSL 启动范围
+## 首轮 WSL 启动范围（已停止）
 
 授权原话：“改进这个实验的基础设施，让这种信号的来源能够被捕捉到”，以及“现在 WSL 已经恢复了，让我们启动4个运行吧（glm-5.3-flash--github的可以接续）”。本批沿用下文两组模型配方、ARC 模型额度及逐题官网 self_funded 应用重放；并发上限2、每容器4 GiB/2 CPU，先启动两项 GitHub，再由空闲槽位启动 Sheet。没有新增官网 Harness 生成。
 
