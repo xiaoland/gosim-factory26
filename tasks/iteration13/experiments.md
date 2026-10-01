@@ -13,7 +13,7 @@ I13 / e20261001-01
 ├─ 官网线［优先Flash/GitHub；有诊断前置］
 │  ├─ Flash/GitHub：从官网终态工作区恢复
 │  ├─ Flash/Sheet：从本地一致快照恢复到官网
-│  ├─ 非参赛模式、ARC API；不是official_evaluation竞赛额度模式
+│  ├─ 不勾选使用比赛额度评测；官方ARC地址 + 自有API key
 │  ├─ 关键SIGKILL采集与统一Linux构建［完成；恢复入口attempt隔离接线中］
 │  ├─ 两个恢复包、费用模式与journal［准备中］
 │  └─ 自动尝试恢复机制［调查方案；重试与费用上限尚未冻结］
@@ -40,7 +40,7 @@ I13 / e20261001-01
 
 用户另要求“看看能否加入自动尝试恢复的机制”。当前授权包括调查、设计与实现准备，未冻结自动收费重试次数或费用上限；不据此无限重试。优先复用现有monitor、competition journal和恢复打包，先定义SIGKILL/终态判据、完整保全、同run核查及pending写请求处理，再确定自动启动边界。隐藏评测反馈仍不进入生成Agent。
 
-发布前置核对：平台的 `catalog` 与 `credential_mode` 是独立字段，`self_funded` 不能单独证明非参赛；官网线正在核对非参赛入口与原题需求能否同时满足。统一 Linux Braid SHA256 为 `a8afac46d2a8268dc3e7e163e673220216caaeee892b6d3af01c743b70144414`，标准源码树 SHA256 为 `088d94e5eb89bf8b1332414088fee621e2cf9879ca21f99151a1569f874e361c`。恢复入口需将导入的 `process-evidence` 与本次 attempt 分离，记录本次 Braid 启动和 wait；旧 SIGKILL 不得触发本次自动恢复。
+用户已澄清：“不参加比赛”指提交时不勾选“使用比赛额度评测”，使用官方 ARC API 地址和我们自己的 API key，而不是比赛 key。继续使用原 competition 题库，显式 `credential_mode=self_funded` 并关闭比赛额度许可；不再引入不上榜条件。此前主线将费用选择扩大成排行榜排除要求是误解，相关启动等待已撤销。统一 Linux Braid SHA256 为 `a8afac46d2a8268dc3e7e163e673220216caaeee892b6d3af01c743b70144414`，标准源码树 SHA256 为 `088d94e5eb89bf8b1332414088fee621e2cf9879ca21f99151a1569f874e361c`。恢复入口需将导入的 `process-evidence` 与本次 attempt 分离，记录本次 Braid 启动和 wait；旧 SIGKILL 不得触发本次自动恢复。
 
 分工：官网恢复子Agent持有两个包和journal准备；诊断子Agent持有采集就绪与自动恢复方案；目录/本地子Agent持有统一Braid构建、GLM自有通道和本地两项准备。子Agent之间直接交接具体制品，主线整合当前决策、发布前置、实际启动与结果，不逐项代做执行细节。
 
