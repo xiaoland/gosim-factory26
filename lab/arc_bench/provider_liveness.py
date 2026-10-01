@@ -196,7 +196,7 @@ def assess(observation, previous=None, *, stale_after=1800, min_samples=2):
             'native': native, 'turn': turn, 'reason': reason,
             'tool_liveness': 'unknown' if native.get('pending_tools') else 'not_observed'})
     if 'classification' not in report:
-        priority = ('provider_failed', 'provider_unavailable', 'observation_missing', 'suspected_stale', 'activity_unknown', 'historical_or_unknown', 'resource_wait', 'active', 'sleeping', 'idle')
+        priority = ('provider_failed', 'provider_unavailable', 'observation_missing', 'suspected_stale', 'activity_unknown', 'resource_wait', 'active', 'sleeping', 'idle', 'historical_or_unknown')
         states = {item['classification'] for item in report['sessions']}
         report['classification'] = next((state for state in priority if state in states), 'observation_missing')
     waiting_groups = [key for key, health in report['provider_health'].items()

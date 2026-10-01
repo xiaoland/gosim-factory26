@@ -88,7 +88,7 @@ python3 scripts/package_completed_recovery.py \
 
 监控完全由脚本执行，不唤醒审查模型。程序在 run 启动后前 10 分钟每 3 分钟、随后每 8 分钟读取状态和阶段，并下载官网模板导出取得当前 provider 证据；下载保留原 ZIP，允许 10 分钟，不把耗时当成生成停滞。只选择 `template/.factory26/<id>/braid-state/status.json`，历史嵌套状态不参与当前判断。provider_sessions 与 turns 从导出的 DB/WAL 取得一致 SQLite 读取快照，原生文件以来源身份及恢复开始时间划界；导出文件集合本身是否原子仍为未知。终态保存总分、阶段及原件后退出；终态下载失败另记 evidence_errors 并告警，不无限等待缺失的失败工作区。
 
-每批保存实际来源、观察时间、provider 身份与生命周期、native 活动元数据、阈值及未知。默认至少两次采样、30 分钟没有状态或实际活动变化才提示 suspected_stale；这是活动/存活异常提示，语义进度仍未知。sleeping、idle 与明确资源等待分别记录；idle 但 turn 仍 starting/running 不按正常闲置处理。未配结果的历史 tool call 不证明工具仍执行，不提供无限等待豁免；仅静止一次、token 不增或导入的 running 状态不能触发 stale。状态及故障签名去重通知，原错误保持完整，通知系统接受提醒不证明人已看到。
+每批保存实际来源、观察时间、provider 身份与生命周期、native 活动元数据、阈值及未知。默认至少两次采样、30 分钟没有状态或实际活动变化才提示 suspected_stale；这是活动/存活异常提示，语义进度仍未知。已确认本轮 provider 身份后，native 证据持续不可读达到相同时间/样本门槛时报告 observation_missing 并保留原错误，不宣称 stale。sleeping、idle 与明确资源等待分别记录；idle 但 turn 仍 starting/running 不按正常闲置处理。汇总时当前会话优先于导入的历史会话，历史休眠记录不会掩盖当前活动。未配结果的历史 tool call 不证明工具仍执行，不提供无限等待豁免；仅静止一次、token 不增或导入的 running 状态不能触发 stale。状态及故障签名去重通知，原错误保持完整，通知系统接受提醒不证明人已看到。
 
 短题暴露通用缺陷时，先保留全部现场并确定原因，再做有针对性的修复验证。在已授权的官网并行实验中，可按当轮规则取消同轮未终态的 Hackathon 运行；取消需要实际请求及远端状态确认。本地断点恢复应保留进度、受控暂停后续接，不机械沿用官网取消策略，也不在活动进程中无记录更换二进制。合理等待、外部故障与 Harness 缺陷分别处理，禁止无依据反复重生成。
 
