@@ -159,6 +159,8 @@ def _console_references(record, path, references, errors):
         if not isinstance(run, dict):
             errors.append({"path": str(path), "error": "Console run is not an object"})
             continue
+        if run.get("run_record"):
+            pin(run["run_record"], "console-run-record")
         if run.get("mode") == "archive":
             if run.get("writable") is not False or run.get("docker") or run.get("cli_command"):
                 errors.append({"path": str(path), "error": "Console archive has writable or container configuration"})
@@ -303,8 +305,10 @@ def plan(roots, asset_roots=(), protected=()):
         record = _read(path, errors)
         if record is None:
             continue
-        if path.name == "manifest.json" and record.get("record_type") == "factory26.console-service":
+        if path.name == "manifest.json" and record.get("record_type") == "factory26.exp-console-service":
             _console_references(record, path, references, errors)
+        elif path.name == "manifest.json" and record.get("record_type") == "factory26.console-service":
+            errors.append({"path": str(path), "error": "obsolete Console service format; retire or explicitly protect before planning cleanup"})
         elif path.name == "manifest.json" and record.get("record_type") == "lab.experiment":
             if record.get("schema_version") == 3 and not isinstance(record.get("controller_runtime"), dict):
                 errors.append({"path": str(path), "error": "schema v3 controller_runtime is missing"})

@@ -160,3 +160,31 @@ button:focus-visible, a:focus-visible { outline: 2px solid #2563eb; outline-offs
 @media (max-width: 1250px) { .workspace-layout { grid-template-columns: 295px minmax(0, 1fr); gap: 16px; } .detail-panel { padding: 22px; } .detail-content { grid-template-columns: minmax(0, 1fr); } .metadata { display: flex; gap: 20px; flex-wrap: wrap; border-top: 1px solid #e5e9ef; padding-top: 20px; } .metadata-section { flex: 1; min-width: 180px; } }
 @media (max-width: 850px) { .app-header { height: auto; min-height: 76px; padding: 18px 20px; flex-wrap: wrap; gap: 12px; } .app-header .ant-divider, .header-status>span { display: none; } .run-select { min-width: 220px; } .header-status { margin-left: 0; } .workspace { padding: 20px 16px; } .workspace-layout { grid-template-columns: minmax(0, 1fr); } .item-panel { position: static; } .item-list { max-height: 330px; min-height: 120px; } .detail-panel { padding: 18px; } .detail-heading h2.ant-typography { font-size: 22px; } .discussion-title>.ant-typography { display: none; } }
 @media (max-width: 480px) { .brand>span:last-child { display: none; } .run-select { min-width: 160px; } .workspace-top>.ant-space { font-size: 12px; } .body-card, .editor-card { padding: 14px; } .comment-head { padding: 10px; gap: 7px !important; } .comment-body { padding: 12px; } .thread-summary { flex-wrap: wrap; } .comment-card { margin-left: 0 !important; } }
+.home { max-width: 1200px; margin: 16px auto; }
+.home-heading { display: flex; justify-content: space-between; align-items: center; gap: 24px; margin-bottom: 28px; }
+.home-heading h1.ant-typography { margin: 8px 0 12px; font-size: 30px; }
+.home-eyebrow { letter-spacing: 1.5px; font-size: 11px; color: #667085; }
+.home-empty, .registration-note, .run-card { padding: 26px; border: 1px solid #dce2e9; border-radius: 10px; background: #fff; }
+.home-empty { text-align: center; padding-block: 45px; }
+.run-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 390px), 1fr)); gap: 22px; }
+.run-card { min-width: 0; display: flex; flex-direction: column; align-items: flex-start; }
+.run-card h3.ant-typography { margin: 18px 0 8px; font-size: 20px; overflow-wrap: anywhere; }
+.run-id { font-size: 12px; overflow-wrap: anywhere; }
+.run-facts { width: 100%; font-size: 12px; margin: 22px 0; }
+.run-facts>div { display: grid; grid-template-columns: 105px minmax(0, 1fr); padding: 7px 0; }
+.run-facts dt { color: #667085; }
+.run-facts dd { margin: 0; overflow-wrap: anywhere; }
+.run-facts small { display: block; color: #8792a2; margin-top: 4px; }
+.run-capabilities { width: 100%; border-top: 1px solid #ecf0f4; padding-top: 12px; font-size: 12px; line-height: 1.7; }
+.run-capabilities p { display: flex; gap: 12px; margin: 5px 0; }
+.run-capabilities strong { min-width: 85px; font-weight: 500; }
+.run-coverage, .run-source { font-size: 12px; line-height: 1.7; width: 100%; margin: 14px 0 0; }
+.run-coverage summary, .run-source summary { cursor: pointer; color: #46658e; }
+.run-coverage p, .run-source p { color: #667085; overflow-wrap: anywhere; }
+.run-card>.ant-btn { margin-top: 22px; }
+.run-card>.ant-alert { width: 100%; margin-top: 12px; }
+.run-card pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+.registration-note { margin-top: 28px; font-size: 13px; }
+.registration-note pre { background: #f6f8fb; padding: 14px; white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; }
+.registration-note h4.ant-typography { margin-top: 0; }
+@media (max-width: 850px) { .home { margin-top: 0; } .home-heading { align-items: flex-start; } .home-heading h1.ant-typography { font-size: 26px; } .run-card, .registration-note { padding: 20px; } }

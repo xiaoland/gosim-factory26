@@ -1,6 +1,18 @@
-# Braid Console 运行控制
+# Factory26 Exp Console
 
 2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；稳定服务、归档只读和GC引用收敛已提交55fe50a。当前Mac稳定服务已启动并登记两份独立归档。用户纠正后核实I12已在独立磁盘清理中终止，历史资料在项目内；后续按归档接入，不再以接回旧暂停现场为目标。Console不属于I13或生成Harness迭代。
+
+## 2026-10-01：Factory26 Exp Console 首页与架构收口完成
+
+用户明确授权：“同意，不过这就意味着架构上要处理干净哦，你可以开工了（只是授权，你总是可以继续调查、规划、设计），不要阻塞主线。”本批独立实施、部署、实际核对与限定commit，不push，不重复索要开工。产品为薄的Factory实验入口，保留Braid专用详情；Console只拥有服务接入和显示状态，运行事实归lab/冻结材料，协作事实归Braid CLI/归档。
+
+完成条件是Home永远可访问，零run有空状态与现有登记方法；列出已登记运行、live/archive和真实访问能力，进入Braid项及返回Home，保留既有深链/前后导航/草稿保护。来源、variant、实验名只展示明确材料事实，缺失未知，不猜目录或从Issue关闭推导实验终态。当前不扩非Braid、全历史迁移、自动发现、网页登记、实验启动/重试/调度、跨宿主聚合或adapter框架，也不因为改名搬整个目录。
+
+用户随后明确修正：“不必保留原服务目录，甚至可以进一步改进服务目录等，建立一个干净的架构、实现，做hard cutoff”。按此撤销保留旧服务根/身份与schema兼容，使用新稳定根、新service ID、固定app和单一manifest；删掉stage/activate/rollback及旧自由registry入口。advisor重新复核引用交接：先准备显式两archive新接入，核实停止旧HTTP并保存配置/journal历史，原子退役旧manifest，再启动新服务。旧journal保留证据，不混入新活动journal；不删除历史实验资料，不自动迁移或回退，不制造永久双权威。验收使用编译、真实空登记和真实归档API/服务及可用浏览器；不建立或运行设施测试、mock、fixture、probe。浏览器policy仍阻断时如实记录，不换渠道绕过。I12已结束，本批不触WSL/VHDX、生成容器、模型或业务写入。
+
+本批已完成源码、编译、真实空服务/归档HTTP及Chrome首页/深链/前后导航反馈，并hard cutoff部署到 `/Users/lanzhijiang/.local/share/factory26/exp-console/20261001-home`。service ID `f5319ab4-537d-4cc4-9b21-26b911a859b8`，HTTP PID84660/PPID1，2026-10-01T02:31:44Z启动，入口仍 http://127.0.0.1:8765/。旧PID75619已核对停止，旧manifest已退役，历史配置/active/launch保存到新根history；旧journal不存在如实记录。最终只有新manifest的6条GC保护引用，归档文件前后身份一致。当前仅两archive，真实写入/草稿确认与物理控制未验，不启动现场补验。
+
+本批方案、完成证据与未验边界归[首页与服务切换回执](home-entry.md)，原始材料在 `runs/braid-console-control/20261001-exp-console-home/`。起点Console代码已在55fe50a提交；保存当前源码与实际部署配置快照，保留TDD assignee及其它工作区dirty。
 
 ## 2026-10-01：清理归档与目标纠正
 
@@ -10,7 +22,7 @@
 
 用户进一步表示“可能没有恢复i12的必要了，我觉得”，主线同意保留已结束实验及归档，不恢复I12。修复方向改为恢复今后需要的可用WSL执行环境，并优先消费已归档历史材料；不强求全量恢复旧盘，I12恢复不是验收条件。旧VHDX问题与Console历史浏览分别处理；现有Mac服务继续可用。子Agent先核对非破坏修复、冷备及新环境选项，未授权覆盖旧盘或安装替代发行版。
 
-## 2026-10-01：启动与跨实验接入
+## 2026-10-01：启动与跨实验接入（前序部署，已退役）
 
 用户明确：“使braid console启动，我期望它可以控制多个run（且不必是同一实验）”，随后表示“debian已经恢复了”。现有registry按run独立登记，没有实验一致性约束；每项分别持有state、binary、workspace、访问及生成容器身份与权限。一个宿主可以在同一服务登记不同实验的live/archive；归档始终只读。受管理Docker控制仍要求同宿主daemon，跨宿主聚合不在本次实现中。
 

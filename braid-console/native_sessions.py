@@ -72,10 +72,8 @@ def read_page(run, record, offset):
                "provider": record.get("provider"), "offset": offset}
     if run["docker"] is not None:
         command = docker_runtime.base_command(run["docker"]) + ["exec", "-i", run["docker"]["cli_container"], "python3", "-c", READER]
-    elif run["cli_command"] is None:
-        command = [sys.executable, "-E", "-s", "-c", READER]
     else:
-        raise ValueError("自定义 cli_command 未登记原生文件读取环境；请使用固定 Docker 配置或本机运行")
+        command = [sys.executable, "-E", "-s", "-c", READER]
     try:
         result = subprocess.run(command, input=json.dumps(request), text=True, capture_output=True,
                                 timeout=30, check=False)

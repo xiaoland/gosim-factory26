@@ -1,8 +1,9 @@
+import { api, url } from './http';
 import type { ReactNode } from 'react';
 import { Alert, Breadcrumb, Button, Descriptions, Empty, Flex, Skeleton, Space, Table, Tag, Typography } from 'antd';
 import { ArrowLeftOutlined, ReloadOutlined } from '@ant-design/icons';
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
-import { api, url, type NativeEntry, type ProviderSession, type Selection, type TranscriptPage } from './api';
+import { type NativeEntry, type ProviderSession, type Selection, type TranscriptPage } from './api';
 import { routeURL } from './navigation';
 import { Markdown } from './Markdown';
 

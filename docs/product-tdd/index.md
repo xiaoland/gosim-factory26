@@ -107,7 +107,7 @@ service 和历史任务结果可以在调用之间积累事实，但不能在调
 
 ## 人工查看与物理运行控制
 
-Braid Console 是开发侧实验设施，不进入生成制品。现场通过配套 Braid CLI 读取对象、实施人工编辑和取得会话目录；归档以只读 SQLite 投影读取保存对象，用保存的会话目录及 native manifest 定位原文，不依赖旧 Git、workspace 或访问容器，不重建工作项或 provider 生命周期。稳定服务制品冻结程序、前端、Python身份和受管理binary；接入明确 live/archive、运行身份、读写权限及独立的Docker物理控制。服务 manifest 直接表达可恢复配置的GC引用，HTTP停止不解除依赖；显式release保留身份墓碑与journal回执。HTTP、转发、访问容器及实验生成容器分别拥有生命周期，只有标记为Console自有的访问容器可由其管理命令启停；访问日志轮转，人工journal保留。Braid 不依赖 Console、ARC 或 Docker。
+Factory26 Exp Console是开发侧实验设施，不进入生成制品。通用Home与运行选择只拥有接入和显示状态，零登记可用；运行事实来自lab/冻结生产者记录，缺失保持未知，协作事实归Braid。App/Home、通用Run/HTTP与BraidRun/Sessions及对象类型分开，不引入未有第二消费者的adapter框架。服务使用新稳定根、固定app和单一manifest格式，hard cutoff旧服务接口，不保留升级/回退平台；旧配置和journal作为退役历史证据保存，新manifest是唯一权威配置。现场通过配套 Braid CLI 读取对象、实施人工编辑和取得会话目录；归档以只读 SQLite 投影读取保存对象，用保存的会话目录及 native manifest 定位原文，不依赖旧 Git、workspace 或访问容器，不重建工作项或 provider 生命周期。稳定服务制品冻结程序、前端、Python身份和受管理binary；接入明确 live/archive、运行身份、读写权限及独立的Docker物理控制。服务 manifest 直接表达可恢复配置的GC引用，HTTP停止不解除依赖；显式release保留身份墓碑与journal回执。HTTP、转发、访问容器及实验生成容器分别拥有生命周期，只有标记为Console自有的访问容器可由其管理命令启停；访问日志轮转，人工journal保留。Braid 不依赖 Console、ARC 或 Docker。
 
 Docker 适配层暂停整个生成容器，Console 使用同一数据库/Git 的独立无网络访问容器继续人工访问。新暂停先在同一 Linux WAL 锁域取得写者门闩，确认容器已暂停后释放；锁只是暂停事务边界，不能代替完整恢复检查点。错误保留现场，不自动恢复、重建或解锁。实际部署及读取、写入、resume 和浏览器交互的不同验收范围见[Console packet](../../tasks/braid-console-control/packet.md)，操作归[接入说明](../deployment/console.md)。
 

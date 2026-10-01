@@ -4,7 +4,6 @@ import argparse
 from contextlib import contextmanager
 from datetime import datetime, timezone
 import fcntl
-import hashlib
 import json
 import os
 from pathlib import Path
@@ -40,24 +39,47 @@ def service_lock(root):
         yield
 
 
-def read(root, *, verify=True):
+def read(root):
     root = root.resolve(strict=True)
     record = json.loads((root / "manifest.json").read_text())
-    if record.get("record_type") != "factory26.console-service" or record.get("schema_version") != 1:
+    if record.get("record_type") != "factory26.exp-console-service" or record.get("schema_version") != 1 or record.get("state") != "registered":
         raise ValueError("不支持此 Console 服务制品")
     if record.get("host") != socket.gethostname():
         raise ValueError("服务登记在另一宿主；需要在目标宿主重新准备，不猜测路径空间")
-    if verify:
-        python = record["interpreter"]
-        if archives.identity(Path(python["executable"])) != python["sha256"]:
-            raise ValueError("登记 Python 身份已改变；重新准备服务制品")
-        for relative, expected in record["artifact_files"].items():
-            if archives.identity(archives.within(root, relative)) != expected:
-                raise ValueError(f"Console 制品身份已改变：{relative}")
-        for run in record["runs"]:
-            if run.get("mode") == "live" and archives.identity(Path(run["binary"])) != run["binary_sha256"]:
-                raise ValueError(f"{run['id']}: 受管理 binary 身份已改变")
+    python = record["interpreter"]
+    if archives.identity(Path(python["executable"])) != python["sha256"]:
+        raise ValueError("登记 Python 身份已改变；重新准备服务制品")
+    for relative, expected in record["artifact_files"].items():
+        if archives.identity(archives.within(root, relative)) != expected:
+            raise ValueError(f"Console 制品身份已改变：{relative}")
+    selected = archives.within(root, "app")
+    for relative in record["artifact_files"]:
+        if not archives.within(root, relative).is_relative_to(selected):
+            raise ValueError("制品文件不属于当前所选程序")
+    for required in ("service.py", "server.py", "web/dist/index.html"):
+        if (selected / required).relative_to(root).as_posix() not in record["artifact_files"]:
+            raise ValueError(f"所选程序缺少冻结身份：{required}")
     return record
+
+
+def live_error(run):
+    """A missing live dependency disables that run, without hiding the service Home."""
+    try:
+        binary = Path(run["binary"])
+        if not binary.is_file() or not os.access(binary, os.X_OK):
+            raise ValueError(f"binary 不可执行：{binary}")
+        expected = run.get("binary_sha256")
+        if not isinstance(expected, str) or len(expected) != 64:
+            raise ValueError("live接入缺少binary SHA-256身份")
+        if archives.identity(binary) != expected:
+            raise ValueError(f"受管理 binary 身份已改变：{binary}")
+        if not (Path(run["state"]) / "braid.sqlite3").is_file():
+            raise ValueError(f"state 缺少数据库：{run['state']}")
+        if not run.get("workspace") or not Path(run["workspace"]).is_dir():
+            raise ValueError(f"workspace 不可达：{run['workspace']}")
+    except (OSError, ValueError) as error:
+        return f"{type(error).__name__}: {error}"
+    return None
 
 
 def interpreter(path):
@@ -103,6 +125,14 @@ def registrations(destination, entries):
         seen.add(entry["id"])
         mode = entry.get("mode")
         run = {"id": entry["id"], "label": str(entry.get("label") or entry["id"]), "mode": mode}
+        if entry.get("harness", "braid") != "braid":
+            raise ValueError("当前只支持 Braid 接入")
+        run["harness"] = "braid"
+        if entry.get("run_record"):
+            source_record = Path(entry["run_record"]).resolve(strict=True)
+            if not source_record.is_file():
+                raise ValueError("run_record 必须是现存生产者 JSON 文件")
+            run["run_record"] = str(source_record)
         if mode == "archive":
             if entry.get("writable", False) or entry.get("docker") or entry.get("cli_command"):
                 raise ValueError("archive 不得登记写入权限、CLI 或容器控制")
@@ -143,6 +173,16 @@ def registrations(destination, entries):
     return runs
 
 
+def freeze_application(destination):
+    source = Path(__file__).resolve().parent
+    if not (source / "web/dist/index.html").is_file():
+        raise ValueError("先构建前端 web/dist")
+    destination.mkdir(parents=True)
+    for path in sorted(source.glob("*.py")):
+        shutil.copy2(path, destination / path.name)
+    shutil.copytree(source / "web/dist", destination / "web/dist")
+
+
 def prepare(destination, registry, python, *, development_output=False):
     # A prepared directory is never silently updated or installed over a live service.
     destination = destination.expanduser().absolute()
@@ -154,20 +194,15 @@ def prepare(destination, registry, python, *, development_output=False):
     if not isinstance(entries, list):
         raise ValueError("输入 registry 必须是运行列表；允许先准备空服务再登记实际接入")
     runtime = interpreter(python)
-    source = Path(__file__).resolve().parent
-    if not (source / "web/dist/index.html").is_file():
-        raise ValueError("先构建前端 web/dist")
     destination.mkdir(parents=True)
-    program = destination / "program"; program.mkdir()
-    for path in sorted(source.glob("*.py")):
-        shutil.copy2(path, program / path.name)
-    shutil.copytree(source / "web/dist", program / "web/dist")
+    selected = destination / "app"
+    freeze_application(selected)
     runs = registrations(destination, entries)
-    record = {"schema_version": 1, "record_type": "factory26.console-service", "service_id": str(uuid.uuid4()),
+    record = {"schema_version": 1, "record_type": "factory26.exp-console-service", "service_id": str(uuid.uuid4()),
               "host": socket.gethostname(), "created_at": stamp(), "state": "registered", "interpreter": runtime,
               "deployment_scope": "development-output" if development_output else "service",
               "artifact_files": {path.relative_to(destination).as_posix(): archives.identity(path)
-                                 for path in sorted(program.rglob("*")) if path.is_file()},
+                                 for path in sorted(selected.rglob("*")) if path.is_file()},
               "runs": runs, "retired_run_ids": [], "resources": {"http": {"owner": "console", "bind": "127.0.0.1"},
                                           "ssh_forward": {"owner": "operator", "managed_by_http": False},
                                           "generation_containers": {"owner": "experiment", "managed_by_http": False}},
@@ -219,7 +254,7 @@ def main():
         record = read(root)
         if args.command == "serve":
             os.execv(record["interpreter"]["executable"], [record["interpreter"]["executable"], "-E", "-s",
-                     str(root / "program/server.py"), "--service", str(root), "--port", str(args.port)])
+                     str(root / "app/server.py"), "--service", str(root), "--port", str(args.port)])
         if args.command == "show":
             result = record
         else:

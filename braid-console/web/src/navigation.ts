@@ -11,8 +11,10 @@ function readRoute(): Route {
     ? { kind, id, ...(agent ? { agent, provider: params.get('provider') || undefined } : {}) } : null };
 }
 export function routeURL(run: string, selected: Selection | null) {
-  return `${location.pathname}?${new URLSearchParams({ run, ...(selected ? { kind: selected.kind, id: String(selected.id),
-    ...(selected.agent ? { agent: selected.agent } : {}), ...(selected.provider ? { provider: selected.provider } : {}) } : {}) })}`;
+  if (!run) return location.pathname;
+  const params = new URLSearchParams({ run, ...(selected ? { kind: selected.kind, id: String(selected.id),
+    ...(selected.agent ? { agent: selected.agent } : {}), ...(selected.provider ? { provider: selected.provider } : {}) } : {}) });
+  return `${location.pathname}?${params}`;
 }
 
 export function useNavigation(dirty: boolean, busy: boolean, confirm: (proceed: () => void) => void) {

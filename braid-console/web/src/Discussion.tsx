@@ -1,8 +1,9 @@
+import { api, url } from './http';
 import { useState } from 'react';
 import { Alert, Avatar, Button, Flex, Space, Tag, Tooltip } from 'antd';
 import { CheckCircleOutlined, DownOutlined, EyeInvisibleOutlined, EyeOutlined, MessageOutlined, UpOutlined, UserOutlined } from '@ant-design/icons';
 import { useQuery } from '@tanstack/react-query';
-import { api, url, type Action, type Comment } from './api';
+import { type Action, type Comment } from './api';
 import { Markdown } from './Markdown';
 
 interface Props {

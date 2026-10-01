@@ -1,8 +1,7 @@
 #!/usr/bin/env python3
-"""Braid Console: live CLI access and saved, read-only archive browsing."""
+"""Factory26 Exp Console: registered experiments and Braid collaboration details."""
 
 import argparse
-from contextlib import nullcontext
 from datetime import datetime, timezone
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
@@ -22,6 +21,7 @@ import docker_runtime
 import native_sessions
 import archives
 import service
+import run_records
 
 
 WEB_DIST = Path(__file__).parent / "web" / "dist"
@@ -31,12 +31,12 @@ MAX_POST = 1_000_000
 
 def load_registry(path):
     data = json.loads(path.read_text())
-    managed = isinstance(data, dict) and data.get("record_type") == "factory26.console-service"
-    service_id = data.get("service_id") if managed else None
-    if managed:
-        data = data["runs"]
-    if not isinstance(data, list) or (not data and not managed):
-        raise ValueError("registry 必须是非空运行列表")
+    if not isinstance(data, dict) or data.get("record_type") != "factory26.exp-console-service":
+        raise ValueError("使用Factory26 Exp Console服务manifest；旧registry不再支持")
+    service_id = data["service_id"]
+    data = data["runs"]
+    if not isinstance(data, list):
+        raise ValueError("服务runs必须是列表；允许零登记")
     runs = {}
     for entry in data:
         if not isinstance(entry, dict) or not isinstance(entry.get("id"), str):
@@ -48,7 +48,10 @@ def load_registry(path):
         run = {"id": entry["id"], "label": str(entry.get("label") or entry["id"]),
                "writable": entry["writable"], "mode": entry.get("mode", "live"),
                "docker": None, "cli_command": None, "operation_lock": threading.Lock(),
-               "coverage": [], "archive_error": None, "service_id": service_id}
+               "coverage": [], "archive_error": None, "service_id": service_id,
+               "harness": entry.get("harness", "braid"), "facts": run_records.facts(entry), "access_error": None}
+        if run["harness"] != "braid":
+            raise ValueError(f'{entry["id"]}: 当前只支持Braid接入')
         if run["mode"] == "archive":
             if run["writable"] or entry.get("docker") or entry.get("cli_command"):
                 raise ValueError("归档禁止写入和物理控制")
@@ -57,27 +60,25 @@ def load_registry(path):
                 run["coverage"] = run["archive_reader"].coverage
             except (OSError, ValueError, archives.sqlite3.Error) as error:
                 run["archive_error"] = f"{type(error).__name__}: {error}"
+                run["access_error"] = run["archive_error"]
                 run["coverage"] = ["归档读取不可用：" + run["archive_error"]]
             runs[entry["id"]] = run
             continue
         if run["mode"] != "live":
             raise ValueError("mode 必须是 live 或 archive")
         state, binary = Path(entry["state"]), Path(entry.get("binary") or "/unregistered-binary")
-        if not state.is_absolute() or (not entry.get("docker") and not (state / "braid.sqlite3").is_file()):
-            raise ValueError(f'{entry["id"]}: state 需为现存绝对路径')
-        if not entry.get("docker") and (not binary.is_absolute() or not binary.is_file() or not os.access(binary, os.X_OK)):
-            raise ValueError(f'{entry["id"]}: binary 需为可执行绝对路径')
-        cli_command = entry.get("cli_command")
-        if cli_command is not None and (not isinstance(cli_command, list) or not cli_command
-                                       or not all(isinstance(part, str) and part for part in cli_command)):
-            raise ValueError(f'{entry["id"]}: cli_command 须为非空命令参数列表')
+        if not state.is_absolute() or not binary.is_absolute():
+            raise ValueError(f'{entry["id"]}: state/binary 需为绝对路径')
+        if entry.get("cli_command"):
+            raise ValueError("不支持自由cli_command；使用受管理本机binary或Docker配置")
+        cli_command = None
         docker = entry.get("docker")
         if docker is not None:
-            if cli_command is not None:
-                raise ValueError(f'{entry["id"]}: docker 与 cli_command 不可同时登记')
             docker = docker_runtime.configuration(docker)
             cli_command = docker_runtime.cli_command(docker)
-        run.update(state=str(state), binary=str(binary), cli_command=cli_command, docker=docker)
+        run.update(state=str(state), binary=str(binary), cli_command=cli_command, docker=docker,
+                   binary_sha256=entry.get("binary_sha256"), workspace=entry.get("workspace"))
+        run["access_error"] = service.live_error(run)
         runs[entry["id"]] = run
     return runs
 
@@ -86,10 +87,7 @@ def braid(run, args, body=None, *, write=False):
     # Persisted Git/worktree paths belong to the run's execution namespace.
     command = list(run["cli_command"] or [run["binary"], "--state", run["state"]])
     if run["docker"] and run["docker"].get("mounts"):
-        if run["service_id"]:
-            service.access({"service_id": run["service_id"]}, run)
-        else:
-            docker_runtime.confirm_mounts(run["docker"], docker_runtime.inspect(run["docker"]["cli_container"], run["docker"]))
+        service.access({"service_id": run["service_id"]}, run)
     if write:
         command.append("--external")
     command.extend(args)
@@ -207,9 +205,15 @@ class Handler(BaseHTTPRequestHandler):
 
     def run_for(self, value):
         try:
-            return self.runs[value]
+            run = self.runs[value]
         except KeyError as error:
             raise ValueError("未登记的运行") from error
+        if run["mode"] == "live":
+            error = service.live_error(run)
+            run["access_error"] = error
+            if error:
+                raise ValueError(error)
+        return run
 
     def do_GET(self):
         url = urlsplit(self.path)
@@ -234,9 +238,12 @@ class Handler(BaseHTTPRequestHandler):
         params = {key: values[0] for key, values in parse_qs(url.query).items()}
         try:
             if url.path == "/api/runs":
-                data = [{**{key: run[key] for key in ("id", "label", "writable", "mode", "coverage")},
-                         "controllable": run["docker"] is not None}
-                        for run in self.runs.values()]
+                data = []
+                for run in self.runs.values():
+                    error = run["access_error"]
+                    data.append({**{key: run[key] for key in ("id", "label", "harness", "writable", "mode", "coverage", "facts")},
+                                 "access_error": error, "controllable": run["docker"] is not None,
+                                 "read_check": "unavailable" if error else "saved-archive" if run["mode"] == "archive" else "not-read"})
             elif url.path == "/api/runtime":
                 run = self.run_for(params.get("run"))
                 if run["docker"] is None:
@@ -321,8 +328,7 @@ class Handler(BaseHTTPRequestHandler):
         action = payload.get("action")
         if action not in ("pause", "resume") or run["docker"] is None:
             raise ValueError("运行控制需要已登记容器及 pause/resume 操作")
-        if run["service_id"]:
-            service.access({"service_id": run["service_id"]}, run)
+        service.access({"service_id": run["service_id"]}, run)
         entry = {"at": datetime.now(timezone.utc).isoformat(), "run": run["id"],
                  "action": "runtime_" + action, "input": payload,
                  "container": run["docker"]["runtime_container"], "status": "started"}
@@ -370,40 +376,33 @@ class Handler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--service", type=Path, help="受管理稳定Console服务目录")
-    parser.add_argument("--registry", type=Path, help="旧接线兼容入口；需显式保护全部外部引用")
-    parser.add_argument("--journal", type=Path)
+    parser.add_argument("--service", required=True, type=Path, help="Factory26 Exp Console稳定服务目录")
     parser.add_argument("--port", type=int, default=8765)
     options = parser.parse_args()
-    root, record = None, None
-    if options.service:
-        if options.registry or options.journal:
-            parser.error("--service 不与旧 --registry/--journal 混用")
-        root = options.service.resolve(strict=True)
-        record = service.read(root)
-        if Path(__file__).resolve() != root / "program/server.py":
-            raise ValueError("--service 必须执行冻结 program/server.py；请使用 service.py serve")
-        if Path(sys.executable).resolve() != Path(record["interpreter"]["executable"]):
-            raise ValueError("请使用 service.py serve 启动登记的Python")
-        options.registry, options.journal = root / "manifest.json", root / record["journal"]
-    elif not options.registry or not options.journal:
-        parser.error("使用 --service；旧接线需同时提供 --registry 和 --journal")
-    logs = (root or options.journal.parent) / "logs"; logs.mkdir(parents=True, exist_ok=True)
-    limits = record["access_log"] if record else {"max_bytes": 5 * 1024 * 1024, "backups": 3}
+    root = options.service.resolve(strict=True)
+    record = service.read(root)
+    if Path(__file__).resolve() != root / "app/server.py":
+        raise ValueError("必须执行服务冻结app/server.py；请使用service.py serve")
+    if Path(sys.executable).resolve() != Path(record["interpreter"]["executable"]):
+        raise ValueError("请使用service.py serve启动登记Python")
+    options.registry, options.journal = root / "manifest.json", root / record["journal"]
+    logs = root / "logs"; logs.mkdir(parents=True, exist_ok=True)
+    limits = record["access_log"]
     logger = logging.getLogger("console.access"); logger.setLevel(logging.INFO)
     handler = RotatingFileHandler(logs / "http.log", maxBytes=limits["max_bytes"], backupCount=limits["backups"], encoding="utf-8")
     handler.setFormatter(logging.Formatter("%(asctime)s %(message)s")); logger.addHandler(handler)
-    with service.service_lock(root) if root else nullcontext():
+    with service.service_lock(root):
+        record = service.read(root)
         Handler.runs = load_registry(options.registry)
         options.journal.parent.mkdir(parents=True, exist_ok=True)
         Handler.journal_path = options.journal
         server = ConsoleServer(("127.0.0.1", options.port), Handler)
         server.daemon_threads = False
         instance = {"phase": "running", "owner": "console", "pid": os.getpid(), "instance_id": str(uuid.uuid4()),
-                    "service_id": record["service_id"] if record else None, "port": server.server_port,
-                    "started_at": service.stamp(), "host": service.socket.gethostname()}
-        if root:
-            service.write_json(root / "active.json", instance)
+                    "service_id": record["service_id"], "port": server.server_port,
+                    "started_at": service.stamp(), "host": service.socket.gethostname(),
+                    "application": "app"}
+        service.write_json(root / "active.json", instance)
         def terminate(*_):
             raise KeyboardInterrupt
         signal.signal(signal.SIGTERM, terminate)
@@ -414,9 +413,8 @@ def main():
             pass
         finally:
             server.server_close()
-            if root:
-                service.write_json(root / "active.json", {**instance, "phase": "finished", "stopped_at": service.stamp(),
-                                                         "references_released": False})
+            service.write_json(root / "active.json", {**instance, "phase": "finished", "stopped_at": service.stamp(),
+                                                      "references_released": False})
             handler.close()
 
 
