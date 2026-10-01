@@ -1,0 +1,534 @@
+{
+  "$defs": {
+    "CliUsageOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "invalid-cli-usage",
+          "default": "invalid-cli-usage",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "CliUsageOutput",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "LookupDirectoryEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "document_count": {
+          "title": "Document Count",
+          "type": "integer"
+        },
+        "kind": {
+          "const": "directory",
+          "default": "directory",
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "document_count"
+      ],
+      "title": "LookupDirectoryEntry",
+      "type": "object"
+    },
+    "LookupDocument": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "title": "Content",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "title",
+        "sha256",
+        "content"
+      ],
+      "title": "LookupDocument",
+      "type": "object"
+    },
+    "LookupDocumentEntry": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "const": "document",
+          "default": "document",
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "title",
+        "sha256"
+      ],
+      "title": "LookupDocumentEntry",
+      "type": "object"
+    },
+    "LookupKeywordCandidate": {
+      "additionalProperties": false,
+      "properties": {
+        "excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Excerpt"
+        },
+        "matched_in": {
+          "items": {
+            "enum": [
+              "path",
+              "content"
+            ],
+            "type": "string"
+          },
+          "title": "Matched In",
+          "type": "array"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "title": {
+          "title": "Title",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "title",
+        "sha256",
+        "matched_in"
+      ],
+      "title": "LookupKeywordCandidate",
+      "type": "object"
+    },
+    "LookupKeywordOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "candidates": {
+          "items": {
+            "$ref": "#/$defs/LookupKeywordCandidate"
+          },
+          "title": "Candidates",
+          "type": "array"
+        },
+        "command": {
+          "const": "lookup",
+          "default": "lookup",
+          "title": "Command",
+          "type": "string"
+        },
+        "corpus_version": {
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "limit": {
+          "title": "Limit",
+          "type": "integer"
+        },
+        "mode": {
+          "const": "keyword",
+          "default": "keyword",
+          "title": "Mode",
+          "type": "string"
+        },
+        "query": {
+          "title": "Query",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "scope": {
+          "enum": [
+            "path",
+            "both"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "truncated": {
+          "title": "Truncated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "corpus_version",
+        "query",
+        "scope",
+        "limit",
+        "truncated",
+        "candidates"
+      ],
+      "title": "LookupKeywordOutput",
+      "type": "object"
+    },
+    "LookupListOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "lookup",
+          "default": "lookup",
+          "title": "Command",
+          "type": "string"
+        },
+        "corpus_version": {
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "entries": {
+          "items": {
+            "discriminator": {
+              "mapping": {
+                "directory": "#/$defs/LookupDirectoryEntry",
+                "document": "#/$defs/LookupDocumentEntry"
+              },
+              "propertyName": "kind"
+            },
+            "oneOf": [
+              {
+                "$ref": "#/$defs/LookupDirectoryEntry"
+              },
+              {
+                "$ref": "#/$defs/LookupDocumentEntry"
+              }
+            ]
+          },
+          "title": "Entries",
+          "type": "array"
+        },
+        "mode": {
+          "const": "list",
+          "default": "list",
+          "title": "Mode",
+          "type": "string"
+        },
+        "prefix": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Prefix"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "corpus_version",
+        "prefix",
+        "entries"
+      ],
+      "title": "LookupListOutput",
+      "type": "object"
+    },
+    "LookupPathOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "lookup",
+          "default": "lookup",
+          "title": "Command",
+          "type": "string"
+        },
+        "corpus_version": {
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "document": {
+          "$ref": "#/$defs/LookupDocument"
+        },
+        "mode": {
+          "const": "path",
+          "default": "path",
+          "title": "Mode",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "corpus_version",
+        "document"
+      ],
+      "title": "LookupPathOutput",
+      "type": "object"
+    },
+    "LookupRegexMatch": {
+      "additionalProperties": false,
+      "properties": {
+        "column": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Column"
+        },
+        "excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Excerpt"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        },
+        "surface": {
+          "enum": [
+            "path",
+            "content"
+          ],
+          "title": "Surface",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256",
+        "surface"
+      ],
+      "title": "LookupRegexMatch",
+      "type": "object"
+    },
+    "LookupRegexOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "lookup",
+          "default": "lookup",
+          "title": "Command",
+          "type": "string"
+        },
+        "corpus_version": {
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "limit": {
+          "title": "Limit",
+          "type": "integer"
+        },
+        "matches": {
+          "items": {
+            "$ref": "#/$defs/LookupRegexMatch"
+          },
+          "title": "Matches",
+          "type": "array"
+        },
+        "mode": {
+          "const": "regex",
+          "default": "regex",
+          "title": "Mode",
+          "type": "string"
+        },
+        "query": {
+          "title": "Query",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "scope": {
+          "enum": [
+            "path",
+            "both"
+          ],
+          "title": "Scope",
+          "type": "string"
+        },
+        "truncated": {
+          "title": "Truncated",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "corpus_version",
+        "query",
+        "scope",
+        "limit",
+        "truncated",
+        "matches"
+      ],
+      "title": "LookupRegexOutput",
+      "type": "object"
+    },
+    "MachineError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/MachineErrorBody"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "MachineError",
+      "type": "object"
+    },
+    "MachineErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "title": "MachineErrorBody",
+      "type": "object"
+    }
+  },
+  "$id": "urn:svc:cli-output:lookup:v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "discriminator": {
+        "mapping": {
+          "keyword": "#/$defs/LookupKeywordOutput",
+          "list": "#/$defs/LookupListOutput",
+          "path": "#/$defs/LookupPathOutput",
+          "regex": "#/$defs/LookupRegexOutput"
+        },
+        "propertyName": "mode"
+      },
+      "oneOf": [
+        {
+          "$ref": "#/$defs/LookupListOutput"
+        },
+        {
+          "$ref": "#/$defs/LookupPathOutput"
+        },
+        {
+          "$ref": "#/$defs/LookupKeywordOutput"
+        },
+        {
+          "$ref": "#/$defs/LookupRegexOutput"
+        }
+      ]
+    },
+    {
+      "$ref": "#/$defs/MachineError"
+    },
+    {
+      "$ref": "#/$defs/CliUsageOutput"
+    }
+  ],
+  "title": "SVC lookup machine output",
+  "x-svc-result-schema-version": 2
+}

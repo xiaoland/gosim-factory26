@@ -1,0 +1,23 @@
+language: svc.double/v0
+scenario:
+  name: illegal-phase
+  claim: generation cannot select request traffic
+  boundary: {name: provider, protocol: http}
+  interactions:
+    - name: one
+      provenance: {kind: synthetic, source: https://example.invalid/one}
+      request:
+        method: POST
+        path: /one
+        body:
+          structured:
+            id:
+              $bsl:
+                kind: generated
+                semantic: rfc.uuid
+                using: svc.uuid-v4/v1
+                validate:
+                  kind: semantic
+                  semantic: rfc.uuid
+                  using: svc.rfc-uuid/v1
+      response: {status: 200}

@@ -1,0 +1,12 @@
+$defs:
+  Node:
+    type: object
+    required: [value, next]
+    additionalProperties: false
+    properties:
+      value:
+        type: string
+      next:
+        anyOf:
+          - $ref: '#/$defs/Node'
+          - type: 'null'

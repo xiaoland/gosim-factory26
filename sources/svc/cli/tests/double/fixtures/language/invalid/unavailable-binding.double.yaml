@@ -1,0 +1,18 @@
+language: svc.double/v0
+scenario:
+  name: unavailable-binding
+  claim: derivation cannot read undeclared bindings
+  boundary: {name: provider, protocol: http}
+  interactions:
+    - name: one
+      provenance: {kind: synthetic, source: https://example.invalid/one}
+      request: {method: POST, path: /one}
+      response:
+        status: 200
+        body:
+          structured:
+            id:
+              $bsl:
+                kind: derived
+                expression: bindings.missing
+                validate: {kind: regex, pattern: '^x$'}

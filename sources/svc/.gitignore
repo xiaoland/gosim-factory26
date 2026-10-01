@@ -1,0 +1,16 @@
+# Python
+*.pyc
+.venv
+.pdm-python
+.import_linter_cache/
+.mypy_cache/
+.pytest_cache/
+.ruff_cache/
+
+# Build
+build
+dist/
+.pdm-build/
+
+# Filesystem
+.DS_Store

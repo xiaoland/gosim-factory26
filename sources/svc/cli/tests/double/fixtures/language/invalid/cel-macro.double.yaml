@@ -1,0 +1,18 @@
+language: svc.double/v0
+scenario:
+  name: cel-macro
+  claim: iterative CEL macros are outside the language
+  boundary: {name: provider, protocol: http}
+  interactions:
+    - name: one
+      provenance: {kind: synthetic, source: https://example.invalid/one}
+      request: {method: POST, path: /one}
+      response:
+        status: 200
+        body:
+          structured:
+            values:
+              $bsl:
+                kind: derived
+                expression: '[1, 2, 3].map(x, x + 1)'
+                validate: {kind: exact, value: [2, 3, 4]}

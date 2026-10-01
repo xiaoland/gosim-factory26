@@ -1,0 +1,17 @@
+$defs:
+  CreatePayment:
+    type: object
+    required: [externalId]
+    additionalProperties: false
+    properties:
+      externalId:
+        type: string
+        format: uuid
+  PaymentCreated:
+    type: object
+    required: [paymentId]
+    additionalProperties: false
+    properties:
+      paymentId:
+        type: string
+        pattern: '^[a-z0-9]{24}$'

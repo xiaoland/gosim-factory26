@@ -157,7 +157,7 @@ def dev_svc(source):
                     '--reinstall-package', 'sustainable-vibe-coding', str(package)], check=True)
     info = {'source': str(source),
             'revision': subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip(),
-            'status': subprocess.check_output(['git', '-C', str(source), 'status', '--short'], text=True),
+            'status': subprocess.check_output(['git', '-C', str(source), 'status', '--short', '--', '.'], text=True),
             'version': subprocess.check_output([str(ROOT/'.venv/bin/svc'), '--version'], text=True).strip()}
     target = ROOT/'.bootstrap/dev-svc.json'
     target.parent.mkdir(exist_ok=True)

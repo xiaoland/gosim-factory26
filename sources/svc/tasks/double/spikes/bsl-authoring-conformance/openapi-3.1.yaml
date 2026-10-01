@@ -1,0 +1,42 @@
+openapi: 3.1.0
+info:
+  title: Spike mobility boundary
+  version: 1.0.0
+paths:
+  /v1/rides:
+    post:
+      operationId: createRide
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateRide"
+      responses:
+        "201":
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/RideCreated"
+components:
+  schemas:
+    CreateRide:
+      type: object
+      required: [externalId]
+      additionalProperties: false
+      properties:
+        externalId:
+          type: string
+          format: uuid
+    RideCreated:
+      type: object
+      required: [rideId, vehicleRegistration]
+      additionalProperties: false
+      properties:
+        rideId:
+          type: string
+          pattern: ^ride_[a-z0-9]{16}$
+        vehicleRegistration:
+          type: string
+          pattern: ^[A-HJ-PR-Y]{2}[0-9]{2} [A-HJ-PR-Z]{3}$

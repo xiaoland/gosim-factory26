@@ -1,0 +1,5 @@
+{"timestamp":"2026-09-01T10:00:02Z","type":"session_meta","payload":{"id":"child","parent_thread_id":"root","cwd":"/workspace/demo"}}
+{"timestamp":"2026-09-01T10:00:03Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"inspect tests"}]}}
+{"timestamp":"2026-09-01T10:00:04Z","type":"response_item","payload":{"type":"function_call","name":"exec_command","call_id":"run-tests","arguments":"{\"cmd\":\"pytest\"}"}}
+{"timestamp":"2026-09-01T10:00:05Z","type":"response_item","payload":{"type":"function_call_output","call_id":"run-tests","output":"1 failed"}}
+{"timestamp":"2026-09-01T10:00:06Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":80,"cached_input_tokens":0,"output_tokens":15,"reasoning_output_tokens":5,"total_tokens":95},"last_token_usage":{"input_tokens":80,"cached_input_tokens":0,"output_tokens":15,"reasoning_output_tokens":5,"total_tokens":95},"model_context_window":200000}}}

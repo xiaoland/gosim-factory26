@@ -1,0 +1,783 @@
+{
+  "$defs": {
+    "CliUsageOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "invalid-cli-usage",
+          "default": "invalid-cli-usage",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "CliUsageOutput",
+      "type": "object"
+    },
+    "ConfigurationCurrentStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "base": {
+          "$ref": "#/$defs/ConfigurationFileStatus"
+        },
+        "effective": {
+          "$ref": "#/$defs/ConfigurationEffectiveStatus"
+        },
+        "local": {
+          "$ref": "#/$defs/ConfigurationFileStatus"
+        },
+        "status": {
+          "const": "current",
+          "default": "current",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "base",
+        "local",
+        "effective"
+      ],
+      "title": "ConfigurationCurrentStatus",
+      "type": "object"
+    },
+    "ConfigurationEffectiveStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "title": "Digest",
+          "type": "string"
+        },
+        "status": {
+          "const": "valid",
+          "default": "valid",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "digest"
+      ],
+      "title": "ConfigurationEffectiveStatus",
+      "type": "object"
+    },
+    "ConfigurationFileStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Digest"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "valid",
+            "absent"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "status",
+        "digest"
+      ],
+      "title": "ConfigurationFileStatus",
+      "type": "object"
+    },
+    "ConfigurationUnavailableStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "status": {
+          "enum": [
+            "invalid",
+            "not-configured",
+            "not-inspected"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "ConfigurationUnavailableStatus",
+      "type": "object"
+    },
+    "CorpusStatusOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "available_version": {
+          "title": "Available Version",
+          "type": "string"
+        },
+        "project_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Project Version"
+        },
+        "status": {
+          "enum": [
+            "absent",
+            "behind",
+            "current",
+            "ahead",
+            "unavailable"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "project_version",
+        "available_version"
+      ],
+      "title": "CorpusStatusOutput",
+      "type": "object"
+    },
+    "DeclaredDevStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "observation": {
+          "const": "declaration-only",
+          "default": "declaration-only",
+          "title": "Observation",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "unavailable",
+            "not-declared",
+            "declared"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "targets": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Targets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "status",
+        "targets"
+      ],
+      "title": "DeclaredDevStatus",
+      "type": "object"
+    },
+    "DeclaredRunStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Entries",
+          "type": "array"
+        },
+        "observation": {
+          "const": "declaration-only",
+          "default": "declaration-only",
+          "title": "Observation",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "unavailable",
+            "not-declared",
+            "declared"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "entries"
+      ],
+      "title": "DeclaredRunStatus",
+      "type": "object"
+    },
+    "GuidanceStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "agent-router",
+            "docs-navigation",
+            "legacy-cli-skill",
+            "local-config-ignore"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "message": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Message"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "missing",
+            "unanchored",
+            "modified",
+            "current",
+            "outdated",
+            "unowned",
+            "clean-generated"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "status"
+      ],
+      "title": "GuidanceStatus",
+      "type": "object"
+    },
+    "IntegrationAnomaly": {
+      "additionalProperties": false,
+      "properties": {
+        "kind": {
+          "enum": [
+            "agent-router",
+            "docs-navigation",
+            "legacy-cli-skill",
+            "local-config-ignore"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "missing",
+            "unanchored",
+            "modified",
+            "current",
+            "outdated",
+            "unowned",
+            "clean-generated"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "kind",
+        "status"
+      ],
+      "title": "IntegrationAnomaly",
+      "type": "object"
+    },
+    "IntegrationStatusOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "anomalies": {
+          "items": {
+            "$ref": "#/$defs/IntegrationAnomaly"
+          },
+          "title": "Anomalies",
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "blocked",
+            "repairable",
+            "current"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "anomalies"
+      ],
+      "title": "IntegrationStatusOutput",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "MachineError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/MachineErrorBody"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "MachineError",
+      "type": "object"
+    },
+    "MachineErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "title": "MachineErrorBody",
+      "type": "object"
+    },
+    "NextActionOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "plan-integration-establishment",
+            "repair-project-configuration",
+            "plan-project-upgrade",
+            "migrate-project-configuration",
+            "plan-integration-repair",
+            "install-compatible-corpus",
+            "continue"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "command": {
+          "anyOf": [
+            {
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Command"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "reason"
+      ],
+      "title": "NextActionOutput",
+      "type": "object"
+    },
+    "ProjectInvalidStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "status": {
+          "const": "invalid",
+          "default": "invalid",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "message"
+      ],
+      "title": "ProjectInvalidStatus",
+      "type": "object"
+    },
+    "ProjectMissingStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "corpus_version": {
+          "default": null,
+          "title": "Corpus Version",
+          "type": "null"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "status": {
+          "const": "missing",
+          "default": "missing",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path"
+      ],
+      "title": "ProjectMissingStatus",
+      "type": "object"
+    },
+    "ProjectSchemaBlockedStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "corpus_version": {
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "const": "schema-write-blocked",
+          "default": "schema-write-blocked",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "schema_version",
+        "corpus_version"
+      ],
+      "title": "ProjectSchemaBlockedStatus",
+      "type": "object"
+    },
+    "ProjectVersionStatus": {
+      "additionalProperties": false,
+      "properties": {
+        "corpus_version": {
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "schema_version": {
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "current",
+            "corpus-behind",
+            "corpus-ahead"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "status",
+        "schema_version",
+        "corpus_version"
+      ],
+      "title": "ProjectVersionStatus",
+      "type": "object"
+    },
+    "RootStatusOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "available_corpus_version": {
+          "title": "Available Corpus Version",
+          "type": "string"
+        },
+        "configuration": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ConfigurationUnavailableStatus"
+            },
+            {
+              "$ref": "#/$defs/ConfigurationCurrentStatus"
+            }
+          ],
+          "title": "Configuration"
+        },
+        "corpus": {
+          "$ref": "#/$defs/CorpusStatusOutput"
+        },
+        "dev": {
+          "$ref": "#/$defs/DeclaredDevStatus"
+        },
+        "guidance": {
+          "items": {
+            "$ref": "#/$defs/GuidanceStatus"
+          },
+          "title": "Guidance",
+          "type": "array"
+        },
+        "healthy": {
+          "title": "Healthy",
+          "type": "boolean"
+        },
+        "installed_cli_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Installed Cli Version"
+        },
+        "integration": {
+          "$ref": "#/$defs/IntegrationStatusOutput"
+        },
+        "managed_ignore": {
+          "$ref": "#/$defs/GuidanceStatus"
+        },
+        "next": {
+          "$ref": "#/$defs/NextActionOutput"
+        },
+        "project": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/ProjectMissingStatus"
+            },
+            {
+              "$ref": "#/$defs/ProjectInvalidStatus"
+            },
+            {
+              "$ref": "#/$defs/ProjectSchemaBlockedStatus"
+            },
+            {
+              "$ref": "#/$defs/ProjectVersionStatus"
+            }
+          ],
+          "title": "Project"
+        },
+        "resource_mode": {
+          "enum": [
+            "source",
+            "wheel"
+          ],
+          "title": "Resource Mode",
+          "type": "string"
+        },
+        "retired_skill": {
+          "$ref": "#/$defs/GuidanceStatus"
+        },
+        "run": {
+          "$ref": "#/$defs/DeclaredRunStatus"
+        },
+        "runtime": {
+          "$ref": "#/$defs/RuntimeStatusOutput"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "unadopted",
+            "malformed",
+            "actionable",
+            "healthy"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "workspace": {
+          "$ref": "#/$defs/WorkspaceIdentity"
+        }
+      },
+      "required": [
+        "status",
+        "next",
+        "installed_cli_version",
+        "available_corpus_version",
+        "resource_mode",
+        "runtime",
+        "workspace",
+        "project",
+        "corpus",
+        "configuration",
+        "dev",
+        "run",
+        "managed_ignore",
+        "guidance",
+        "retired_skill",
+        "integration",
+        "healthy"
+      ],
+      "title": "RootStatusOutput",
+      "type": "object"
+    },
+    "RuntimeStatusOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "status": {
+          "enum": [
+            "source-tree",
+            "installed"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status"
+      ],
+      "title": "RuntimeStatusOutput",
+      "type": "object"
+    },
+    "WorkspaceIdentity": {
+      "additionalProperties": false,
+      "description": "Stable identity facts for one executable workspace.",
+      "properties": {
+        "instance": {
+          "title": "Instance",
+          "type": "string"
+        },
+        "namespace_id": {
+          "title": "Namespace Id",
+          "type": "string"
+        },
+        "repository_id": {
+          "title": "Repository Id",
+          "type": "string"
+        },
+        "repository_kind": {
+          "enum": [
+            "git",
+            "non-git"
+          ],
+          "title": "Repository Kind",
+          "type": "string"
+        },
+        "root": {
+          "format": "path",
+          "title": "Root",
+          "type": "string"
+        },
+        "worktree_id": {
+          "title": "Worktree Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "root",
+        "namespace_id",
+        "repository_kind",
+        "repository_id",
+        "worktree_id",
+        "instance"
+      ],
+      "title": "WorkspaceIdentity",
+      "type": "object"
+    }
+  },
+  "$id": "urn:svc:cli-output:status:v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/RootStatusOutput"
+    },
+    {
+      "$ref": "#/$defs/MachineError"
+    },
+    {
+      "$ref": "#/$defs/CliUsageOutput"
+    }
+  ],
+  "title": "SVC status machine output",
+  "x-svc-result-schema-version": 2
+}

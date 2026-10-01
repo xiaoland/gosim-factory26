@@ -2,7 +2,7 @@
 
 Factory实验的薄接入入口，提供已登记运行的Home和Braid专用详情，属于实验基础设施，不依赖SVC或ARC，不进入参赛包。源码仍位于braid-console/，保留在Factory26父仓库中，没有独立Git仓库。Console拥有服务接入与显示状态；lab/冻结材料拥有实验事实，Braid CLI与归档拥有协作事实。
 
-`web/`使用React、TypeScript、Vite、Ant Design和TanStack Query。App只管理Home、运行选择、query导航及离页保护；Home与runs.ts负责通用登记摘要，http.ts保留HTTP错误和响应。BraidRun负责工作项列表、详情、物理控制及其查询，Sessions负责Braid/provider/native历史；Braid对象类型留在api.ts，不建立插件或adapter框架。
+`web/`使用React、TypeScript、Vite、shadcn/ui、Tailwind CSS、Radix、Lucide与TanStack Query。App只管理Home、运行选择、React Router路径导航及离页保护；Home与runs.ts负责通用登记摘要，http.ts保留HTTP错误和响应。BraidRun负责工作项列表、详情、物理控制及其查询，Sessions负责Braid/provider/native历史；Braid对象类型留在api.ts，不建立插件或adapter框架。
 `server.py` 提供 HTTP 接口并服务构建后的前端。现场对象操作调用登记的 Braid CLI；归档浏览由 `archives.py` 读取保存的 SQLite 页面字段，不启动 CLI、worker 或原 Git。`docker_runtime.py` 只控制登记容器的物理暂停/恢复，并协调暂停时的 SQLite 写者锁；不修改业务数据或另建调度逻辑。Braid 继续拥有对象、Git及事件语义，不需要知道 Console、实验名或 ARC。
 
 工作项详情的 Braid agent sessions 入口可查看对应 provider sessions 及历史。关系来自登记CLI的 `status --json.physical_sessions`；`group_id` 是持久Braid agent身份，provider恢复身份与native ID分别呈现。明确的 `replaced/retired` 标为历史，其他状态保留CLI原始生命周期，不推断当前归属；实际暂停/运行状态看上方生成状态。CLI按physical目录枚举，缺失physical材料的会话可能未列出，空结果不表示从未启动。
@@ -11,11 +11,11 @@ provider详情按需阅读原生对话、工具参数、结果、具体错误及
 
 当前支持Pi与Codex JSONL header身份核对及原生记录展示；已在I12真实Pi会话验收，Codex尚未实测。服务不接受自由cli_command；原生读取使用固定Docker配置或受管理本机运行。关系与正文接口分别为 `GET /api/sessions?run=<ID>`、`GET /api/transcript?run=<ID>&provider=<physical记录ID>&offset=<字节位置>`。
 
-页面继续使用query链接 `?run&kind&id`，会话层级添加 `agent&provider`，可直接打开、刷新和后退/前进；无需额外路由依赖。离开工作项时，未提交草稿保护同时作用于点击和浏览器历史导航，取消切换会恢复原URL与草稿。
+页面使用React Router显式路径：`/`、`/runs/:run`、`/runs/:run/issues/:id`或`prs/:id`，会话层级追加`/agents/:agent/providers/:provider`。页面身份只来自路径，不解析旧`?run&kind&id&agent&provider`，也不重定向旧链接；查询参数不承担页面身份。有效深链直接打开及刷新由Python返回前端入口，缺失资源、未知API和不合法页面路径保留404。离开工作项时，未提交草稿保护同时作用于点击和浏览器历史导航，取消切换保留原URL与草稿；操作中阻止切换。
 
 ## 首页与运行事实
 
-没有run的URL始终打开Home，零登记明确显示空状态和管理CLI方法；不会自动选首项或渲染工作项加载骨架。未登记run保留链接身份并提供返回Home，不转向别的现场。选择Braid项才发起对象及运行状态读取；品牌和首页按钮与原深链、前后导航一起经过草稿保护。
+根路径始终打开Home，零登记明确显示空状态和管理CLI方法；不会自动选首项或渲染工作项加载骨架。未登记run保留链接身份并提供返回Home，不转向别的现场。选择Braid项才发起对象及运行状态读取；品牌和首页按钮与原深链、前后导航一起经过草稿保护。
 
 Home展示登记的live/archive、人工写入许可和是否登记暂停/恢复。许可不表示此刻可执行：现场状态在Braid详情由实际CLI/Docker读取，具体失败保留；首页不批量查询所有现场。归档显示启动核对所得保存对象范围和native等缺口，不能据此声称完整历史。
 

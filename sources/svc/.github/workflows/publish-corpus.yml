@@ -1,0 +1,62 @@
+name: Publish Corpus
+
+on:
+  push:
+    branches: [main]
+    paths: [CORPUS_CHANGELOG.md]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: svc-corpus-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pdm-project/setup-pdm@973541a5febeafcfdadf8a51211435be6ecfd90f # v4.5
+        with:
+          python-version: "3.11"
+          version: 2.28.0
+          cache: true
+      - run: pdm lock --check
+      - run: pdm install --frozen-lockfile -d -G quality -G test
+      - id: release
+        name: Bind the prepared Corpus version
+        run: |
+          version=$(python -c 'import json; print(json.load(open("corpus/version.json"))["corpus_version"])')
+          [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          python -m tools.release_notes CORPUS_CHANGELOG.md "$version" --output /tmp/corpus-release-notes.md
+          echo "tag=corpus-v$version" >> "$GITHUB_OUTPUT"
+      - name: Check prepared Corpus release
+        env:
+          SVC_BASE_REF: ${{ github.event.before }}
+        run: pdm run check-corpus-release
+      - name: Create release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            test "$(git rev-list -n 1 "$TAG")" = "$GITHUB_SHA"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag --annotate "$TAG" --message "Release $TAG"
+            auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 --wrap=0)
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push origin "refs/tags/$TAG"
+          fi
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: gh release create "$TAG" --verify-tag --notes-file /tmp/corpus-release-notes.md --title "$TAG"

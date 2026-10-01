@@ -1,0 +1,351 @@
+#![allow(clippy::all, clippy::pedantic)]
+use std::sync::{
+    Arc, OnceLock,
+    atomic::{AtomicBool, Ordering},
+};
+
+use tokio::sync::{Mutex, broadcast};
+
+use crate::{
+    agent_session::{AgentSession, SendResult, SessionError, SessionEvent, TurnOutcome},
+    config::Profile,
+    provider::{AgentProvider, ProviderError, ProviderNotification},
+};
+
+/// Adapter-internal dispatch state. Not part of the core contract: the core
+/// reacts to the `SessionEvent` stream, and operator-visible status is owned
+/// by the durable store.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum SessionStatus {
+    Idle,
+    Running,
+    Failed,
+}
+
+/// Adapter-level wrapper that exposes the core `AgentSession` contract over the
+/// lower-level `AgentProvider` primitives.
+pub struct ProviderAgentSession {
+    provider: Arc<dyn AgentProvider>,
+    unavailable: AtomicBool,
+    listener: OnceLock<tokio::task::AbortHandle>,
+    profile: Profile,
+    instructions: String,
+    inner: Mutex<SessionInner>,
+    sending: Mutex<()>,
+    events: broadcast::Sender<SessionEvent>,
+}
+
+struct SessionInner {
+    status: SessionStatus,
+    thread_id: Option<String>,
+    current_turn_id: Option<String>,
+    /// The most recently terminated turn. Guards against a provider
+    /// re-emitting `TurnStarted` for a turn that already has its terminal,
+    /// which would otherwise resurrect it (Started after Terminal).
+    last_terminal_turn_id: Option<String>,
+}
+
+impl SessionInner {
+    /// Record a turn start and report whether it is new. The provider reports
+    /// one fact ("turn X started on this thread") through two observations —
+    /// the `turn/start` response and the async notification — and the adapter
+    /// must project exactly one `TurnStarted` per turn.
+    fn note_turn_started(&mut self, turn_id: &str) -> bool {
+        if self.current_turn_id.as_deref() == Some(turn_id)
+            || self.last_terminal_turn_id.as_deref() == Some(turn_id)
+        {
+            return false;
+        }
+        self.current_turn_id = Some(turn_id.to_owned());
+        self.status = SessionStatus::Running;
+        true
+    }
+}
+
+impl ProviderAgentSession {
+    /// Wrap the provider handle and spawn the notification listener that
+    /// translates provider notifications into core `SessionEvent`s.
+    fn spawn(
+        provider: Arc<dyn AgentProvider>,
+        profile: Profile,
+        instructions: String,
+        thread_id: Option<String>,
+    ) -> Arc<Self> {
+        let (events, _) = broadcast::channel(512);
+        let session = Arc::new(Self {
+            provider,
+            unavailable: AtomicBool::new(false),
+            listener: OnceLock::new(),
+            profile,
+            instructions,
+            sending: Mutex::new(()),
+            inner: Mutex::new(SessionInner {
+                status: SessionStatus::Idle,
+                thread_id,
+                current_turn_id: None,
+                last_terminal_turn_id: None,
+            }),
+            events,
+        });
+        let listener = Arc::downgrade(&session);
+        let mut notifications = session.provider.subscribe();
+        let connection = Arc::clone(&session.provider);
+        let task = tokio::spawn(async move {
+            loop {
+                let notification = tokio::select! {
+                    biased;
+                    result = notifications.recv() => match result {
+                        Ok(notification) => notification,
+                        Err(error) => {
+                            tracing::warn!(%error, "session notification stream lost; handle is unavailable");
+                            ProviderNotification::Disconnected
+                        }
+                    },
+                    () = connection.closed() => ProviderNotification::Disconnected,
+                };
+                let Some(session) = listener.upgrade() else { break };
+                if session.handle_notification(notification).await {
+                    break;
+                }
+            }
+        });
+        session.listener.set(task.abort_handle()).expect("session listener initialized once");
+        session
+    }
+
+    pub async fn start(
+        provider: Arc<dyn AgentProvider>,
+        profile: Profile,
+        instructions: String,
+        initial_context: Option<String>,
+    ) -> Result<Arc<Self>, SessionError> {
+        let session = Self::spawn(provider, profile, instructions, None);
+        let provider_session = session
+            .provider
+            .start_session(&session.profile, &session.instructions)
+            .await
+            .map_err(map_provider_error)?;
+        session.inner.lock().await.thread_id = Some(provider_session.thread_id.clone());
+        if let Some(context) = initial_context {
+            session.provider.inject_context(&provider_session.thread_id, &context).await.map_err(
+                |error| SessionError::Materialization {
+                    session_id: Some(provider_session.thread_id.clone()),
+                    reason: error.to_string(),
+                },
+            )?;
+        }
+        Ok(session)
+    }
+
+    pub async fn resume(
+        provider: Arc<dyn AgentProvider>,
+        profile: Profile,
+        instructions: String,
+        thread_id: &str,
+    ) -> Result<Arc<Self>, SessionError> {
+        let session = Self::spawn(provider, profile, instructions, Some(thread_id.to_owned()));
+        session
+            .provider
+            .resume_session(thread_id, &session.profile, &session.instructions)
+            .await
+            .map_err(|error| match error {
+                // A resume timeout or broken transport does not prove that the
+                // persisted native session disappeared. Retain its identity.
+                ProviderError::Start(_) | ProviderError::Timeout { .. } | ProviderError::Disconnected =>
+                    SessionError::Deferred(error.to_string()),
+                other => map_provider_error(other),
+            })?;
+        Ok(session)
+    }
+
+    /// The current physical provider thread id, if a session exists.
+    ///
+    /// This is a concrete-type accessor, not part of the core `AgentSession`
+    /// contract: the core persists the id in the durable store right after
+    /// creation, and the store remains the authority from then on.
+    pub async fn thread_id(&self) -> Option<String> {
+        self.inner.lock().await.thread_id.clone()
+    }
+
+    async fn handle_notification(self: &Arc<Self>, notification: ProviderNotification) -> bool {
+        let mut inner = self.inner.lock().await;
+        match notification {
+            ProviderNotification::TurnStarted { thread_id, turn_id } => {
+                if inner.thread_id.as_ref() == Some(&thread_id) && inner.note_turn_started(&turn_id)
+                {
+                    let _ =
+                        self.events.send(SessionEvent::TurnStarted { provider_turn_id: turn_id });
+                }
+                false
+            }
+            ProviderNotification::TurnCompleted { thread_id, turn_id, status, error } => {
+                if inner.thread_id.as_ref() == Some(&thread_id) {
+                    if inner.current_turn_id.as_deref() == Some(turn_id.as_str()) {
+                        let outcome = match status.as_str() {
+                            "completed" => TurnOutcome::Completed,
+                            "interrupted" => TurnOutcome::Interrupted,
+                            "failed" => TurnOutcome::Failed,
+                            _ => TurnOutcome::Unknown,
+                        };
+                        inner.current_turn_id = None;
+                        inner.last_terminal_turn_id = Some(turn_id.clone());
+                        inner.status = SessionStatus::Idle;
+                        let _ = self.events.send(SessionEvent::TurnTerminal {
+                            provider_turn_id: turn_id,
+                            outcome,
+                            error,
+                        });
+                    } else {
+                        // Duplicate or stale terminal (e.g. replayed after
+                        // resume): accepting it would double-emit the
+                        // terminal and, worse, clear the tracking of a
+                        // different turn that is currently running.
+                        tracing::warn!(
+                            %turn_id,
+                            current = ?inner.current_turn_id,
+                            "ignoring duplicate or stale TurnCompleted"
+                        );
+                    }
+                }
+                false
+            }
+            ProviderNotification::Disconnected => {
+                // A started turn must never be left without a terminal:
+                // synthesize Unknown for the in-flight turn, then fail the
+                // session. Availability remains observable even without a turn
+                // subscription; the group can recover this handle while idle.
+                if let Some(turn_id) = inner.current_turn_id.clone() {
+                    inner.last_terminal_turn_id = Some(turn_id.clone());
+                    let _ = self.events.send(SessionEvent::TurnTerminal {
+                        provider_turn_id: turn_id,
+                        outcome: TurnOutcome::Unknown,
+                        error: Some("provider disconnected".into()),
+                    });
+                }
+                inner.status = SessionStatus::Failed;
+                self.unavailable.store(true, Ordering::SeqCst);
+                true
+            }
+            ProviderNotification::Activity { method, thread_id, turn_id } => {
+                tracing::trace!(%method, ?thread_id, ?turn_id, "provider activity");
+                false
+            }
+        }
+    }
+}
+
+#[async_trait::async_trait]
+impl AgentSession for ProviderAgentSession {
+    fn events(&self) -> broadcast::Receiver<SessionEvent> {
+        self.events.subscribe()
+    }
+
+    fn is_unavailable(&self) -> bool {
+        self.unavailable.load(Ordering::SeqCst)
+    }
+
+    async fn can_accept_input(&self) -> Result<bool, SessionError> {
+        let inner = self.inner.lock().await;
+        if self.is_unavailable() || inner.status == SessionStatus::Failed {
+            return Err(SessionError::Unavailable);
+        }
+        if inner.status == SessionStatus::Running {
+            return Ok(false);
+        }
+        let thread_id = inner.thread_id.clone()
+            .ok_or_else(|| SessionError::Failed("no provider session".into()))?;
+        drop(inner);
+        self.provider.can_accept_input(&thread_id).await.map_err(map_provider_error)
+    }
+
+    async fn close(&self) -> Result<(), SessionError> {
+        self.unavailable.store(true, Ordering::SeqCst);
+        let result = self.interrupt().await;
+        if let Some(listener) = self.listener.get() {
+            listener.abort();
+        }
+        result
+    }
+
+    async fn send_user_msg(&self, msg: String, steering: bool) -> Result<SendResult, SessionError> {
+        let _sending = self.sending.lock().await;
+        let (thread_id, turn_id) = {
+            let inner = self.inner.lock().await;
+            if self.is_unavailable() || inner.status == SessionStatus::Failed {
+                return Err(SessionError::Unavailable);
+            }
+            if msg.is_empty() {
+                return Ok(SendResult::Acknowledged);
+            }
+            let running = inner.status == SessionStatus::Running;
+            if running != steering {
+                return Err(SessionError::Deferred(if running {
+                    "a turn is already running".into()
+                } else {
+                    "the observed turn has ended".into()
+                }));
+            }
+            (inner.thread_id.clone()
+                .ok_or_else(|| SessionError::Failed("no provider session".into()))?,
+             inner.current_turn_id.clone())
+        };
+        if let Some(turn_id) = turn_id {
+            self.provider.steer(&thread_id, &turn_id, &msg).await.map_err(map_provider_error)?;
+            return Ok(SendResult::Acknowledged);
+        }
+
+        let turn = self
+            .provider
+            .start_turn(&thread_id, &self.profile, &msg)
+            .await
+            .map_err(map_provider_error)?;
+        let mut inner = self.inner.lock().await;
+        if self.is_unavailable() || inner.status == SessionStatus::Failed {
+            return Err(SessionError::Unavailable);
+        }
+        if inner.note_turn_started(&turn.turn_id) {
+            let _ = self.events.send(SessionEvent::TurnStarted { provider_turn_id: turn.turn_id });
+        }
+        Ok(SendResult::Started)
+    }
+
+    async fn interrupt(&self) -> Result<(), SessionError> {
+        let _sending = self.sending.lock().await;
+        let inner = self.inner.lock().await;
+        let (Some(thread_id), Some(turn_id)) =
+            (inner.thread_id.clone(), inner.current_turn_id.clone())
+        else {
+            // No in-flight turn: termination is already the state.
+            return Ok(());
+        };
+        drop(inner);
+        self.provider.interrupt(&thread_id, &turn_id).await.map_err(map_provider_error)
+    }
+
+    async fn message_was_processed(&self, message: &str) -> Result<bool, SessionError> {
+        let thread_id = self.inner.lock().await.thread_id.clone()
+            .ok_or_else(|| SessionError::Failed("no provider session".into()))?;
+        self.provider.message_was_processed(&thread_id, message).await.map_err(map_provider_error)
+    }
+}
+
+pub(super) fn map_provider_error(error: ProviderError) -> SessionError {
+    match error {
+        ProviderError::Deferred(message) => SessionError::Deferred(message),
+        ProviderError::Start(_) | ProviderError::Timeout { .. } | ProviderError::Disconnected => {
+            SessionError::Unavailable
+        }
+        ProviderError::Protocol(message) => SessionError::Failed(message),
+        ProviderError::CreatedWithoutIdentity(reason) => {
+            SessionError::Materialization { session_id: None, reason }
+        }
+    }
+}
+
+impl Drop for ProviderAgentSession {
+    fn drop(&mut self) {
+        if let Some(listener) = self.listener.get() {
+            listener.abort();
+        }
+    }
+}

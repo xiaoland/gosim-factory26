@@ -1,0 +1,424 @@
+{
+  "$defs": {
+    "BlockerOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "path",
+        "message"
+      ],
+      "title": "BlockerOutput",
+      "type": "object"
+    },
+    "CliUsageOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "invalid-cli-usage",
+          "default": "invalid-cli-usage",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "CliUsageOutput",
+      "type": "object"
+    },
+    "CorpusBaselineOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "enum": [
+            "create",
+            "unchanged"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Version"
+        }
+      },
+      "required": [
+        "disposition",
+        "version"
+      ],
+      "title": "CorpusBaselineOutput",
+      "type": "object"
+    },
+    "FileStateOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "posix_mode": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Posix Mode"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "state": {
+          "enum": [
+            "absent",
+            "file"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "FileStateOutput",
+      "type": "object"
+    },
+    "InitApplyOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "init",
+          "default": "init",
+          "title": "Command",
+          "type": "string"
+        },
+        "corpus_baseline": {
+          "$ref": "#/$defs/CorpusBaselineOutput"
+        },
+        "corpus_version": {
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "intent": {
+          "enum": [
+            "establish",
+            "repair"
+          ],
+          "title": "Intent",
+          "type": "string"
+        },
+        "mode": {
+          "const": "apply",
+          "default": "apply",
+          "title": "Mode",
+          "type": "string"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/$defs/InitOperationOutput"
+          },
+          "title": "Operations",
+          "type": "array"
+        },
+        "plan_digest": {
+          "title": "Plan Digest",
+          "type": "string"
+        },
+        "repo": {
+          "title": "Repo",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 3,
+          "default": 3,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "noop",
+            "applied"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "verification": {
+          "$ref": "#/$defs/InitVerificationOutput"
+        }
+      },
+      "required": [
+        "status",
+        "repo",
+        "intent",
+        "corpus_version",
+        "corpus_baseline",
+        "plan_digest",
+        "operations",
+        "verification"
+      ],
+      "title": "InitApplyOutput",
+      "type": "object"
+    },
+    "InitOperationOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "create",
+            "append",
+            "refresh",
+            "rewrite",
+            "delete"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "after": {
+          "$ref": "#/$defs/FileStateOutput"
+        },
+        "before": {
+          "$ref": "#/$defs/FileStateOutput"
+        },
+        "extent": {
+          "enum": [
+            "whole-file",
+            "svc-managed-block"
+          ],
+          "title": "Extent",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "surface": {
+          "enum": [
+            "project-state",
+            "local-config-ignore",
+            "local-agent-instructions",
+            "agent-router",
+            "docs-navigation",
+            "legacy-cli-skill"
+          ],
+          "title": "Surface",
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "path",
+        "surface",
+        "extent",
+        "before",
+        "after"
+      ],
+      "title": "InitOperationOutput",
+      "type": "object"
+    },
+    "InitPlanOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "blockers": {
+          "items": {
+            "$ref": "#/$defs/BlockerOutput"
+          },
+          "title": "Blockers",
+          "type": "array"
+        },
+        "command": {
+          "const": "init",
+          "default": "init",
+          "title": "Command",
+          "type": "string"
+        },
+        "corpus_baseline": {
+          "$ref": "#/$defs/CorpusBaselineOutput"
+        },
+        "corpus_version": {
+          "title": "Corpus Version",
+          "type": "string"
+        },
+        "intent": {
+          "enum": [
+            "establish",
+            "repair"
+          ],
+          "title": "Intent",
+          "type": "string"
+        },
+        "mode": {
+          "const": "plan",
+          "default": "plan",
+          "title": "Mode",
+          "type": "string"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/$defs/InitOperationOutput"
+          },
+          "title": "Operations",
+          "type": "array"
+        },
+        "plan_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Plan Digest"
+        },
+        "repo": {
+          "title": "Repo",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 3,
+          "default": 3,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "blocked",
+            "ready",
+            "noop"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "repo",
+        "intent",
+        "corpus_version",
+        "corpus_baseline",
+        "operations",
+        "blockers"
+      ],
+      "title": "InitPlanOutput",
+      "type": "object"
+    },
+    "InitVerificationOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "scope": {
+          "const": "planned-path-postconditions",
+          "default": "planned-path-postconditions",
+          "title": "Scope",
+          "type": "string"
+        },
+        "status": {
+          "const": "passed",
+          "default": "passed",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "InitVerificationOutput",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "MachineError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/MachineErrorBody"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "MachineError",
+      "type": "object"
+    },
+    "MachineErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "title": "MachineErrorBody",
+      "type": "object"
+    }
+  },
+  "$id": "urn:svc:cli-output:init:v3",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/InitPlanOutput"
+    },
+    {
+      "$ref": "#/$defs/InitApplyOutput"
+    },
+    {
+      "$ref": "#/$defs/MachineError"
+    },
+    {
+      "$ref": "#/$defs/CliUsageOutput"
+    }
+  ],
+  "title": "SVC init machine output",
+  "x-svc-result-schema-version": 3
+}
