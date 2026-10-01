@@ -25,7 +25,9 @@ provider_health 的 key 是 kind:profile.id，保留为组级证据。组在资�
 官网 r2 journal 已绑定 submission e69e9764310c / run f16834f58674，self_funded、关闭比赛额度。纯脚本入口已实际启动：
 
 ```sh
-python3 -m lab.arc_bench.hosted_monitor /Volumes/WorkSSD/Development/factory26/runs/iteration13/i13-2-20261001/hosted-sheet-r2 --journal /Volumes/WorkSSD/Development/factory26/runs/iteration13/i13-2-20261001/hosted-sheet-r2
+python3 -m lab.arc_bench.hosted_monitor /Volumes/WorkSSD/Development/factory26/runs/iteration13/i13-2-20261001/hosted-sheet-r2 --journal /Volumes/WorkSSD/Development/factory26/runs/iteration13/i13-2-20261001/hosted-sheet-r2 --journal /Volumes/WorkSSD/Development/factory26/runs/iteration13/i13-2-20261001/hosted-github-r2
 ```
 
 主实现已提交 48bb51b，官网排队/初始化分支为 dbcaa2b。汇总排序修正后，核对旧 PID 的启动时间和完整命令，依次停止旧监控并启动同一入口：本地 17338→48111，官网 27102→48187。scheduler 中的采样历史、去重状态和下次采集时间逐项保持，没有新增并行采集。准确回执为 script-monitor/monitor-restart-current-priority.json；当前 PID 与源码 SHA 分别归 revision2/background-launch.json 和 hosted-sheet-r2/monitor-launch.json。i13-wsl heartbeat 保持 PAUSED，监控聊天不再承担周期审查。Console 单实例部署另归 console-deployment.md。
+
+用户追加恢复Flash/GitHub后，同一collector纳入submission `8fad2a412927` / run `e1aa595f6995`，仍用上述Sheet输出目录统一保存两条官网journal。23:51 CST核对精确进程身份并在采集间隔中停止48187，启动245；原Sheet的next、liveness、notifications和done在交接前后逐项一致。`script-monitor/github-attach-receipt.json` 保存交接回执，`hosted-sheet-r2/monitor-launch.json` 保存现行完整身份。首批GitHub为RUNNING/deploy_agent，classification=preparing，model_invoked=false、无采集错误；其后沿用3+8节奏，不因添加journal重置Sheet历史。

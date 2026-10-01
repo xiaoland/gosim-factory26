@@ -1,6 +1,6 @@
 # I13-2：内存压力、协作材料与过程验收
 
-2026-10-01。首次真实部署暴露的资源暂缓终态误判和历史成员材料选择错误均已修复。新的本地 experiment `exp-20261001-223204-4b68eb` 已启动两项，首批原件确认两项原Pi实际resume，Sheet在同一attempt中等待资源后继续，九份已采集原生历史prefix保持；官网Sheet通过真实prepare-only及文件/身份核对后，已创建 `f16834f58674`，self_funded、比赛额度关闭。原暂停现场、首次失败卷与取消后原件完整保留；同一Console已切换新服务，旧两项归档与新两项live分开登记，实际HTTP/UI读取通过，详见[部署回执](console-deployment.md)。监控已由纯脚本接管，不唤醒审查模型。当前证据与修复归本packet，I13整体实验关系归[实验树](../experiments.md)。
+2026-10-01。首次真实部署暴露的资源暂缓终态误判和历史成员材料选择错误均已修复。新的本地 experiment `exp-20261001-223204-4b68eb` 已启动两项，首批原件确认两项原Pi实际resume，Sheet在同一attempt中等待资源后继续，九份已采集原生历史prefix保持；官网Sheet通过真实prepare-only及文件/身份核对后，已创建 `f16834f58674`，self_funded、比赛额度关闭。用户随后追加授权恢复官网Flash/GitHub，现已按同一I13-2配方从保全终态创建 `e1aa595f6995`，self_funded、比赛额度关闭；首批为平台部署阶段，尚未取得新Pi接续证据。原暂停现场、首次失败卷与取消后原件完整保留；同一Console已切换新服务，旧两项归档与新两项live分开登记，实际HTTP/UI读取通过，详见[部署回执](console-deployment.md)。监控已由纯脚本接管，不唤醒审查模型。当前证据与修复归本packet，I13整体实验关系归[实验树](../experiments.md)。
 
 ## 授权与目标
 
@@ -89,11 +89,23 @@ I13-2
 
 首次 experiment 已自然取得两条 `finished/failed` 终态，原终态跟随按成功门槛跳过官方重放。其最终完整归档另被快照外符号链接阻断，卷与helper保留，详见[回收终态诊断](transport-finalization.md)。这不改变原始恢复入口exit1事实，也不以归档失败冒充应用评分。
 
+## 官网 Flash/GitHub 新增恢复授权
+
+用户在三项接续完成后明确：“flash/github 也请恢复”。本次恢复目标是失败 run `377afa346c92` 的最新可恢复终态工作区，原件 SHA256 `88f2c0c85ffde65ea7fa5db8adb1b96c8692bd2188383f6e85d584177abb486b`。沿用 I13-2 Flash r2 冻结材料、根 GLM-5.3-Flash/advisor Kimi-K2.7-Code、自有 ARC key 与 self_funded，关闭比赛额度。保留原生/Braid/应用进度，平台遗漏的私有 Git 只按实际证据重建并声明限制；先完成隔离 prepare-only，再创建一次新的官网执行。写请求结果不明时只读恢复核查，不重复提交。
+
+恢复输入、工作树和实际准备由 `i13_2_native_runtime` 有界负责，主线负责费用与journal核对、唯一提交和接入既有纯脚本监控。启动前官网题目GET已确认hackathon及GitHub题目可用；旧run的附加GET曾返回HTTP500（该次仅保存错误字符串，响应正文缺失），不以此覆盖已保全的FAILED原件。回执归 github-launch-preparation/。既有两项本地GLM、官网Sheet及Console不受影响。完成条件为恢复包/来源可追溯、实际准备通过、官网新身份与费用模式读回、脚本开始采集该run；长期运行及最终评分另按现有实验流程收集。事实归[GitHub恢复记录](hosted-github-recovery.md)。
+
+本次 GitHub 派生工作区 SHA256 为 `95476f6e56cc15e12a5ca0b7aa4aa44b8c62819ec75154d49fbbd1c6873cb7d6`，最终 ZIP 为 `bd897c86b9dbb56186d3929522e01d2dff19d76fb940f1b613e00ee80751f615`（701169017 bytes）。根私有 Git 依据原生成功提交及八文件tree重建为 `base-scaffolding@828d17e76c962135b1d0827dc62c24ebf76d419e`；PR4/5/6 的在途修改保留。真实 Linux prepare-only 已退出0，stderr为空；786份保留文件、35份原生材料、原identity/工作树状态保持，68份技能与56份home材料匹配。主线另行复算原/派生ZIP及15份原生对话JSONL，均匹配。准确准备回执归 `recovery-prepare/hosted-github-r2/receipt.json`。
+
+唯一提交入口 `launch-hosted-github-r2.py` 已成功完成snapshot/create/start，全流程在同一competition锁内串行执行，没有重发。新submission为 `8fad2a412927`，run为 `e1aa595f6995`，journal `hosted-github-r2` 的pending=null，独立读回billing_mode=self_funded、submission credential_mode=self_funded。比赛额度在冻结输入中为false。23:51:07 CST首批脚本原件为RUNNING、deploy_agent=running、start_agent=pending，当前只能确认平台部署，不能宣称Pi已resume。
+
+既有官网collector按保存的完整进程身份从48187切到245，在同一输出目录追加GitHub journal；Sheet的next/liveness/notifications/done逐项保持，没有新增并行collector或模型审查。回执为 `script-monitor/github-attach-receipt.json`，首批原件为 `hosted-sheet-r2/monitor/20261001T155107.297047Z/`；准确新进程身份归 `hosted-sheet-r2/monitor-launch.json`。
+
 ## 监控调整（用户新增授权）
 
 用户明确：“让运行监控用脚本来实现，做到自动化，不继续使用模型，可以通过检查 provider sessions 的状态来判断是否 stale。”据此，`i13-wsl` heartbeat已设PAUSED，监控聊天已idle，不再唤醒Luna或其它审查模型。新官网采集不使用会调用模型的旧 `--review` 路径。由 `local_monitor` 与 `hosted_monitor` 脚本按实际provider identity、生命周期、最后活动和连续观测判断正常等待、不可用、疑似stale及终态，保留阈值/来源与unknown；疑似stale不自动视为有效失败，也不触发收费重跑。实现和实际历史批次反馈归[纯脚本监控](script-monitor.md)。这不取消已经授权的运行本身或成功产物的独立官方评分。
 
-源码已提交 `48bb51b`，官网排队/初始化分支为 `dbcaa2b`，当前会话汇总修正为 `aaf4971`。本地后台PID与源码SHA归 `revision2/background-launch.json`（首个PID17338，当前48111）；官网归 `hosted-sheet-r2/monitor-launch.json`（首个PID27102，当前48187）。首批本地原件为 `revision2/observation/monitor/20261001T144445.120401Z`，stderr空；分类仅供定位，实际接续验收仍读取原生记录。默认至少两样本、30分钟无可观测活动才提示suspected_stale；长期不可读原件独立记observation_missing。两处输出目录各自持有文件锁、scheduler与终态记录，旧模型采集不恢复。当前会话优先于导入历史的汇总修正已用真实批次回读确认，两条脚本按精确进程身份重启，scheduler历史和下次采集时间不变，回执为 script-monitor/monitor-restart-current-priority.json。
+源码已提交 `48bb51b`，官网排队/初始化分支为 `dbcaa2b`，当前会话汇总修正为 `aaf4971`。本地后台PID与源码SHA归 `revision2/background-launch.json`（首个PID17338，当前48111）；官网归 `hosted-sheet-r2/monitor-launch.json`（首个PID27102，经48187后，追加GitHub的当前PID为245）。首批本地原件为 `revision2/observation/monitor/20261001T144445.120401Z`，stderr空；分类仅供定位，实际接续验收仍读取原生记录。默认至少两样本、30分钟无可观测活动才提示suspected_stale；长期不可读原件独立记observation_missing。两处输出目录各自持有文件锁、scheduler与终态记录，旧模型采集不恢复。当前会话优先于导入历史的汇总修正已用真实批次回读确认，两条脚本按精确进程身份重启，scheduler历史和下次采集时间不变，回执为 script-monitor/monitor-restart-current-priority.json。
 
 ## 验收决定
 
@@ -109,4 +121,4 @@ OOM 的完成证据应覆盖：旧执行及其拥有的子作业确实停止；�
 
 SVC 强制要求的发布验收按实际协作阶段解释：根共享文档、项目阅读入口和根任务 packet 应在消费者依赖它们之前发布到可取得的共同提交；PR 的当前 packet 随其候选发布，让负责人和接续者可读，合入后在 `origin/develop` 保留。正在进行的局部试验不要求每个文件修改都发布，但仅存在于未提交私有 clone 的 packet 不能声称已完成交接。恢复后必须补齐当前工作中已经欠缺的材料及发布，而非只等待新任务自然采用新文案。
 
-修正完成后先报告实际改动、保全来源与恢复影响，再按本次授权热恢复本地两项及上述已取消的官网Sheet；若来源完整性或必要方案超出本次授权出现实质变化，则把最小决定交回用户。已失败官网GitHub的收费恢复不在新增Sheet指示范围内。
+修正完成后先报告实际改动、保全来源与恢复影响，再按本次授权热恢复本地两项及上述已取消的官网Sheet；若来源完整性或必要方案超出本次授权出现实质变化，则把最小决定交回用户。此前已失败官网GitHub不在新增Sheet指示范围内；用户随后明确“flash/github 也请恢复”，现将其单次I13-2官网接续纳入授权。

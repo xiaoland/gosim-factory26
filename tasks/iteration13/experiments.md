@@ -1,6 +1,6 @@
 # e20261001-01：I13 首轮实验
 
-当前状态（2026-10-01，I13-2 修正后恢复）：新本地 experiment `exp-20261001-223204-4b68eb` 已启动 GLM/GitHub `a94a67b4b3d85b` 与GLM/Sheet `8046cfb0695023`；首批原件确认两项原Pi接续，Sheet等待资源后继续；两项均已发布共享packet。官网Flash/Sheet已创建submission `e69e9764310c` / run `f16834f58674`，准确读回self_funded、关闭比赛额度、pending=null；原取消来源691028015e69保留。Flash/GitHub `377afa346c92` 没有新收费重试。两项首次I13-2入口失败及其原卷保全，资源等待误判和历史GLM材料选择均已修复。监控已完全改为脚本，本地和官网分别接线，不唤醒模型；Console同一入口已切换唯一新服务。详见[I13-2当前状态](i13-2/packet.md)，本轮仍无有效应用评分。下方保留各历史阶段的原始身份与事实，不能用旧PID或旧监控授权覆盖本段。
+当前状态（2026-10-01，I13-2 修正后恢复）：新本地 experiment `exp-20261001-223204-4b68eb` 已启动 GLM/GitHub `a94a67b4b3d85b` 与GLM/Sheet `8046cfb0695023`；首批原件确认两项原Pi接续，Sheet等待资源后继续；两项均已发布共享packet。官网Flash/Sheet已创建submission `e69e9764310c` / run `f16834f58674`，准确读回self_funded、关闭比赛额度、pending=null；原取消来源691028015e69保留。用户随后追加“flash/github 也请恢复”，现已从失败 run `377afa346c92` 的保全终态创建 submission `8fad2a412927` / run `e1aa595f6995`；真实prepare通过，self_funded、关闭比赛额度、pending=null。首批脚本采集为RUNNING/deploy_agent，尚未取得新Pi接续证据。两项首次I13-2入口失败及其原卷保全，资源等待误判和历史GLM材料选择均已修复。监控已完全改为脚本，本地和官网分别接线，不唤醒模型；Console同一入口已切换唯一新服务。详见[I13-2当前状态](i13-2/packet.md)，本轮仍无有效应用评分。下方保留各历史阶段的原始身份与事实，不能用旧PID或旧监控授权覆盖本段。
 
 ## 启动以来的工作树
 
@@ -8,11 +8,11 @@
 I13 / e20261001-01
 ├─ I13主体改造［源码与材料完成；整体收益待本轮实验］
 │  └─ CLI、上下文、sub-agent、SVC、协作/需求树、提示词、工具、存储生命周期
-├─ I13-2［两处部署缺陷已修；三项真实接续］
-│  └─ OOM 防范、协作材料归属、根评论隐藏后代；本地两项＋官网Sheet已启动
-├─ 四个逻辑运行［三项I13-2恢复执行；Flash/GitHub保持终态］
-│  ├─ Flash/GitHub → 官网接续［FAILED；377afa346c92］
-│  │  └─ 18:07生成阶段失败，未评测；已证2GiB容器OOM，与Pi SIGKILL强关联
+├─ I13-2［两处部署缺陷已修；四项恢复执行已启动］
+│  └─ OOM 防范、协作材料归属、根评论隐藏后代；Flash/GitHub尚在平台部署
+├─ 四个逻辑运行［本地GLM两项＋官网Flash两项］
+│  ├─ Flash/GitHub → 官网I13-2接续［RUNNING/deploy_agent；e1aa595f6995］
+│  │  └─ 来源377afa346c92终态；保留进度、纳入I13-2，self_funded、比赛额度关闭
 │  ├─ Flash/Sheet → 官网I13-2接续［RUNNING；f16834f58674］
 │  │  └─ 从21:14取消工作区重建接续；self_funded、自有ARC key，不上榜
 │  ├─ GLM/GitHub → Debian-Rebuild接续［原Pi已接续；a94a67b4b3d85b］
