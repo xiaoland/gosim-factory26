@@ -140,3 +140,44 @@ fn run_git(git: &Path, cwd: Option<&Path>, args: &[&str]) -> Result<String, Work
     }
     Ok(String::from_utf8_lossy(&output.stdout).trim().to_owned())
 }
+
+/// A review clone fetches a retained ref rather than following the live PR branch.
+pub struct ReviewWorktreeRequest<'a> {
+    pub source: &'a Path,
+    pub target: &'a Path,
+    pub git: &'a Path,
+    pub commit: &'a str,
+    pub retained_ref: &'a str,
+    pub local_branch: &'a str,
+    pub member_login: &'a str,
+}
+pub fn provision_review(request: &ReviewWorktreeRequest<'_>) -> Result<ProvisionedWorktree, WorktreeError> {
+    let source = canonical_repository(request.source)?;
+    if !Repository::open(&source)?.is_bare() { return Err(WorktreeError::NotRepository(source)); }
+    if !request.target.exists() {
+        if let Some(parent) = request.target.parent() {
+            std::fs::create_dir_all(parent).map_err(|source|WorktreeError::Io {path:parent.to_path_buf(),source})?;
+        }
+        let target=request.target.to_str().ok_or_else(||WorktreeError::Git("review path is not UTF-8".into()))?;
+        let origin=source.to_str().ok_or_else(||WorktreeError::Git("review origin is not UTF-8".into()))?;
+        run_git(request.git,None,&["clone","--no-local","--no-checkout",origin,target])?;
+        run_git(request.git,Some(request.target),&["fetch","origin",request.retained_ref])?;
+        let fetched=run_git(request.git,Some(request.target),&["rev-parse","FETCH_HEAD"])?;
+        if fetched!=request.commit {return Err(WorktreeError::Git(format!("retained review ref {} resolved to {fetched}, expected {}",request.retained_ref,request.commit)));}
+        run_git(request.git,Some(request.target),&["switch","-c",request.local_branch,request.commit])?;
+        exclude_private_notes(request.target)?;
+    }
+    verify_review(request.target,&source,request.commit,request.member_login,request.git)?;
+    let path=request.target.canonicalize().map_err(|source|WorktreeError::Io {path:request.target.to_path_buf(),source})?;
+    let branch=run_git(request.git,Some(&path),&["symbolic-ref","--short","HEAD"])?;
+    if branch!=request.local_branch {return Err(WorktreeError::TargetConflict(path));}
+    Ok(ProvisionedWorktree{source,path,head_ref:request.retained_ref.into(),local_branch:request.local_branch.into()})
+}
+
+/// Verify without resetting: dirty files remain available as review evidence.
+pub fn verify_review(path:&Path,origin:&Path,commit:&str,member:&str,git:&Path) -> Result<(),WorktreeError> {
+    resume(path,origin,member,git)?;
+    let actual=run_git(git,Some(path),&["rev-parse","HEAD"])?;
+    if actual!=commit {return Err(WorktreeError::Git(format!("review checkout HEAD is {actual}, expected frozen candidate {commit}")));}
+    exclude_private_notes(path)
+}

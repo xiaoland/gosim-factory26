@@ -1,0 +1,16 @@
+{
+  "id": "pi-glm-root",
+  "display_name": "pi-glm-root",
+  "assignee_login": "glm-root",
+  "assignee_description": "适合通用需求理解、设计、实现与整合；适合成本敏感的完整工作项。",
+  "tags": [
+    "root-only"
+  ],
+  "adapter_type": "pi",
+  "adapter_version": "0.85.1",
+  "provider": "factory26",
+  "model": "glm-5.3",
+  "reasoning": "high",
+  "context_soft_ratio": 0.8,
+  "context_hard_bytes": 1000000
+}

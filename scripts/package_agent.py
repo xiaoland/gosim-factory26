@@ -17,6 +17,7 @@ from agent_support import copy_skill
 ROOT=Path(__file__).resolve().parents[1]
 
 TOOL_KEY_NAMES = ('CONTEXT7_API_KEY', 'EXA_API_KEY')
+I14_VARIANTS = {'pi-braid-i14', 'pi-braid-i14-cleaner', 'pi-braid-i14-reviewer', 'pi-braid-i14-e2e'}
 
 
 def require_private_artifact(path):
@@ -138,7 +139,7 @@ def assemble(source, destination, runtime, skill_source, skills):
     support=destination/'support';support.mkdir()
     for name in ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs','runtime_resources.py'):
         shutil.copy2(ROOT/'scripts'/name,support/name)
-    if source.name in {'pi-braid', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
+    if source.name in I14_VARIANTS | {'pi-braid', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
         shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
         subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', '--no-compile',
                         '--target', str(support/'otlp-deps'), '-r', str(ROOT/'lab/requirements.txt')],
@@ -152,13 +153,13 @@ def assemble(source, destination, runtime, skill_source, skills):
 
 
 def package(variant, output, docker_context=None, runtime=None, stage=None,
-            skill_source=None, tool_env=None):
+            skill_source=None, tool_env=None, e2e_runtime=None):
     source=ROOT/'variants'/variant
     if source.parent!=ROOT/'variants' or not (source/'build.py').is_file():
         raise ValueError('请选择含 build.py 的独立 variant')
     if output is not None and Path(output).exists(): raise FileExistsError(output)
-    if tool_env is not None and variant not in {'pi-braid-i13', 'pi-braid-i13-glm-root'}:
-        raise ValueError('--tool-env 当前仅供 I13 基线与 GLM 根对照使用')
+    if tool_env is not None and variant not in I14_VARIANTS | {'pi-braid-i13', 'pi-braid-i13-glm-root'}:
+        raise ValueError('--tool-env 仅供明确接线的 I13/I14 variant 使用')
     skill_source=Path(skill_source or ROOT/'harness/skills').resolve()
     from runtime import linux
     (ROOT/'runs').mkdir(exist_ok=True)
@@ -174,6 +175,10 @@ def package(variant, output, docker_context=None, runtime=None, stage=None,
                  '--runtime',str(runtime),'--skills',str(skill_source)]
         if tool_env is not None:
             build += ['--tool-env', str(Path(tool_env).resolve(strict=True))]
+        if e2e_runtime is not None:
+            if variant != 'pi-braid-i14-e2e':
+                raise ValueError('--e2e-runtime 仅供 I14 e2e 工具对照')
+            build += ['--e2e-runtime', str(Path(e2e_runtime).resolve(strict=True))]
         subprocess.run(build,check=True)
         prune_metadata(bundle)
         records=json.loads((runtime/'runtime-source.json').read_text()).get('sources',{}) if (runtime/'runtime-source.json').is_file() else {}
@@ -192,10 +197,11 @@ def main():
     p.add_argument('--runtime',type=Path,help='复用 runtime.py linux 导出的目录')
     p.add_argument('--docker-context')
     p.add_argument('--skills',type=Path)
-    p.add_argument('--tool-env',type=Path,help='I13 两服务凭据的显式 dotenv 输入；仅写入非 Git 制品私有配置')
+    p.add_argument('--tool-env',type=Path,help='工具凭据的显式 dotenv 输入；仅写入非 Git 制品私有配置')
+    p.add_argument('--e2e-runtime',type=Path,help='I14 e2e 独立 Linux 工具与浏览器目录')
     a=p.parse_args()
     if a.output is None and a.stage is None:p.error('需要 --output 或 --stage')
-    print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills,a.tool_env))
+    print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills,a.tool_env,a.e2e_runtime))
 
 
 if __name__=='__main__':main()

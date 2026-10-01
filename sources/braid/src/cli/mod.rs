@@ -1,3 +1,6 @@
+mod review;
+mod maintenance;
+
 use crate::{
     context::CommentSnapshot,
     objects::{CommentResolution, IssueCreateResult, Item, ItemEditResult, LocalObjects, PrCreateResult},
@@ -24,6 +27,11 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum Command {
+    #[command(hide = true)]
+    Maintenance {
+        #[command(subcommand)]
+        command: maintenance::MaintenanceCommand,
+    },
     /// 宿主诊断：导出原始证据或从 OTLP 重建。
     Telemetry {
         #[command(subcommand)]
@@ -100,6 +108,9 @@ enum AssigneeCommand {
     List {
         #[arg(long)]
         json: bool,
+        /// 仅列专门reviewer成员；普通目录不包括这些成员。
+        #[arg(long)]
+        reviewer: bool,
     },
 }
 
@@ -284,6 +295,9 @@ enum IssueCommand {
 
 #[derive(Subcommand)]
 enum PrCommand {
+    /// 请求固定候选验收；不改变draft或PR实施责任。
+    RequestReview { id:i64, #[arg(long)] issue:Option<i64>, #[arg(long)] request_id:String, #[arg(long)] json:bool },
+    Review { #[command(subcommand)] command:review::ReviewCommand },
     /// 默认最多 30 项，按编号倒序；输出说明 has_more，JSON 数组的截断提示写入 stderr。
     List {
         #[arg(short = 's', long = "state", value_name = "STATE", value_enum, default_value = "open")]
@@ -402,6 +416,9 @@ enum PrCommand {
         id: i64,
         #[arg(long)]
         match_head_commit: Option<String>,
+        /// 依此Approved结论合并，要求固定base/head与需求依据仍适用。
+        #[arg(long)]
+        review: Option<i64>,
         /// 使用当前支持的本地 merge commit 策略；省略时保持原有行为。
         #[arg(long, conflicts_with_all = ["squash", "rebase"])]
         merge: bool,
@@ -636,8 +653,8 @@ fn print_item(
     Ok(())
 }
 
-const ISSUE_VIEW_FIELDS: &[&str] = &["parent_issue", "sub_issues", "associated_prs", "subscriptions", "execution_error"];
-const PR_VIEW_FIELDS: &[&str] = &["associated_issues", "closing_issues", "base_commit", "head_commit", "base_error", "head_error", "merge_commit", "subscriptions", "execution_error", "assignee_activity", "assignee_deliveries", "headRefOid", "baseRefOid"];
+const ISSUE_VIEW_FIELDS: &[&str] = &["review_requests","parent_issue", "sub_issues", "associated_prs", "subscriptions", "execution_error"];
+const PR_VIEW_FIELDS: &[&str] = &["review_requests","associated_issues", "closing_issues", "base_commit", "head_commit", "base_error", "head_error", "merge_commit", "subscriptions", "execution_error", "assignee_activity", "assignee_deliveries", "headRefOid", "baseRefOid"];
 const COMMENT_FIELDS: &[&str] = &["node_id", "database_id", "repository", "work_item_number", "author", "created_at", "updated_at", "body", "minimized", "minimized_reason", "hidden_by", "hidden_by_reason", "pinned", "deleted", "reply_to", "thread_root", "resolved", "folded", "reactions", "lifecycle", "read_body_with", "deliveries"];
 
 fn view_fields<'a>(kind: &str, fields: &'a str) -> Result<Vec<&'a str>> {
@@ -923,18 +940,20 @@ pub async fn run() -> Result<()> {
     let reading = matches!(
         &command,
         Command::Status { .. }
+            | Command::Maintenance { command: maintenance::MaintenanceCommand::Receipt { .. } }
             | Command::Context { .. }
             | Command::Assignee { .. }
             | Command::Issue { command: IssueCommand::List { .. } | IssueCommand::View { .. } }
             | Command::Pr { command: PrCommand::List { .. } | PrCommand::View { .. } }
             | Command::Comment { command: CommentCommand::View { .. } }
-    );
+    ) || matches!(&command,Command::Pr {command:PrCommand::Review {command}} if command.is_read_only());
     ensure!(
         reading || writer_turn.is_some() || external || agent_runtime,
         "此操作需要当前 Agent 的有效执行身份，或由宿主使用 --external"
     );
     let turn = writer_turn.as_deref();
     match command {
+        Command::Maintenance { command } => maintenance::run(&objects, turn, command),
         Command::Local { .. } | Command::Telemetry { .. } => unreachable!(),
         Command::Status { json: as_json } => {
             if agent_runtime {
@@ -1005,8 +1024,8 @@ pub async fn run() -> Result<()> {
                 }
             }
         }
-        Command::Assignee { command: AssigneeCommand::List { json } } => {
-            let directory = objects.assignee_directory()?;
+        Command::Assignee { command: AssigneeCommand::List { json,reviewer } } => {
+            let directory = if reviewer {objects.reviewer_directory()?} else {objects.assignee_directory()?};
             if json { return output(directory); }
             for member in directory {
                 println!("{}：{}", member["login"].as_str().expect("login"), member["description"].as_str().expect("description"));
@@ -1091,6 +1110,8 @@ pub async fn run() -> Result<()> {
             },
         },
         Command::Pr { command } => match command {
+            PrCommand::RequestReview{id,issue,request_id,json}=>review::print(&objects.request_review(turn,id,issue,&request_id)?,json),
+            PrCommand::Review{command}=>review::execute(&objects,turn,command),
             PrCommand::List { filter_state, limit, assignee, base, head, json } => {
                 let state = match filter_state { PrListState::Open => "open", PrListState::Closed => "closed", PrListState::Merged => "merged", PrListState::All => "all" };
                 let fields = json.json.as_deref().map(|fields| selected_fields(fields, false)).transpose()?;
@@ -1160,9 +1181,9 @@ pub async fn run() -> Result<()> {
                 value["effect"] = "仅观察已发布 head；不证明实现完成或收件人已处理".into();
                 mutation_json(id, value)
             },
-            PrCommand::Merge { id, match_head_commit, merge: _, squash, rebase, auto, disable_auto } => {
+            PrCommand::Merge { id, match_head_commit, review, merge: _, squash, rebase, auto, disable_auto } => {
                 ensure!(!squash && !rebase && !auto && !disable_auto, "当前只支持即时本地 merge；--squash、--rebase、--auto 和 --disable-auto 尚未实现");
-                let result = objects.merge_with_match(turn, id, match_head_commit.as_deref())?;
+                let result = objects.merge_with_review(turn, id, match_head_commit.as_deref(),review)?;
                 let mut value = serde_json::to_value(result)?;
                 value["kind"] = "pr".into();
                 value["state"] = "MERGED".into();

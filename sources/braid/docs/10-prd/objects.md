@@ -23,9 +23,11 @@
 
 The exact projection is the [Context contract](../20-product-tdd/context.md).
 
-本地入口另提供两个稳定工作项：workspace 中的 `.braid/design.md` 保存当前设计，
-`.braid/implementation.md` 保存当前实施事实。显式交接或刷新会替换物理会话，保留
-工作项身份和应用文件；其输入、动作与证据契约见[本地工作项](../20-product-tdd/local.md)。
+本地入口以SQLite中的Issue、PR、正文和讨论为协作权威，每个被指派工作项拥有独立成员和clone，不再维护设计/实施Markdown镜像。当前Context与生命周期契约见[本地工作项](../20-product-tdd/local.md)。
+
+本地PR还可拥有明确的ReviewRequest。请求绑定具体PR、验收Issue、固定base/head和需求依据；请求是否完成、原候选结论和结论是否仍适用于当前候选是不同事实。默认由验收Issue现有负责人处理，也可委派reviewer-only成员。委派建立独立执行身份与冻结checkout，源PR实施者保持原责任。一次请求保存不可覆写的Approved、ChangesRequested或Inconclusive，或有原因的Cancelled；候选修复后使用新请求，PR关闭不代替验收。
+
+Review是内部执行节点，不是额外Issue，也不进入普通Issue/PR目录。代码判断与浏览器验收由当前review责任承担，实际服务、数据和观察必须对应冻结候选；Braid提供独立路径和证据记录，不把原生执行结束或工作项状态当作产品通过。显式依结论合并时使用--review核验候选与依据，历史结论持续可读。
 
 ### 本地评论可见性
 

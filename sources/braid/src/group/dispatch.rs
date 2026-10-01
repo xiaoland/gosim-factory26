@@ -14,7 +14,7 @@ use crate::{
     agent_session::SendResult,
     context::{self, CanonicalContext, ContextError, ContextPressure},
     group::issue_agent::{provision_issue_agent_worktree, resolve_issue_worktree_ref},
-    group::provider::{issue_system_prompt, pr_system_prompt, render_context_reset_notice, render_context_reset_source, render_event_references},
+    group::provider::{issue_system_prompt, pr_system_prompt, review_system_prompt, render_context_reset_notice, render_context_reset_source, render_event_references},
     objects::{RepositoryName, WorkItemLocator},
     queue::scheduler::record_context_pressure,
     store::{ContextResetClaim, StoreActor, TurnClaim, WorkItemLifecycleCandidate},
@@ -158,7 +158,13 @@ impl GroupDriver<'_> {
                     pr_system_prompt(config, profile, candidate.number, &head_ref, Some(&materialization.member_login)),
                     effective_profile,
                 )
-            } else {
+            } else if candidate.work_item_kind=="review" {
+                let path=materialization.worktree_path.clone().context("review reactivation has no frozen checkout")?;
+                github.verify_reviewer_checkout(candidate.number as i64,&path,&materialization.member_login,&config.tools.git)?;
+                let mut effective_profile=profile.clone();
+                effective_profile.workspace=Some(path);
+                (github.canonical("review",candidate.number as i64)?,review_system_prompt(config,profile,candidate.number,Some(&materialization.member_login)),effective_profile)
+            } else if candidate.work_item_kind=="issue" {
                 let issue = context::materialize_issue(github, &locator, 100).await?;
                 let repository_node_id = issue.repository_node_id.clone();
                 let canonical = CanonicalContext::Issue(issue);
@@ -189,7 +195,7 @@ impl GroupDriver<'_> {
                     issue_system_prompt(config, profile, candidate.number, Some(&materialization.member_login)),
                     effective_profile,
                 )
-            };
+            } else {bail!("unsupported reactivation kind {}",candidate.work_item_kind)};
             let instruction_revision = hex::encode(Sha256::digest(instructions.as_bytes()));
             let sleeping = materialization.sleeping_session.as_ref();
             if let Some(session) = sleeping {
@@ -343,6 +349,8 @@ impl GroupDriver<'_> {
             )
         } else if reset.work_item_kind == "issue" {
             CanonicalContext::Issue(context::materialize_issue(github, &locator, 100).await?)
+        } else if reset.work_item_kind=="review" {
+            github.canonical("review",reset.number as i64)?
         } else {
             bail!("unsupported Context reset Work Item kind {}", reset.work_item_kind);
         };
@@ -371,6 +379,11 @@ impl GroupDriver<'_> {
                 .context("PR Context reset has no local branch reference")?;
             effective_profile.workspace = Some(worktree.clone());
             pr_system_prompt(config, profile, reset.number, head_ref, reset.member_login.as_deref())
+        } else if reset.work_item_kind=="review" {
+            let worktree=reset.worktree_path.as_ref().context("review reset has no frozen checkout")?;
+            github.verify_reviewer_checkout(reset.number as i64,worktree,reset.member_login.as_deref().context("review reset has no member")?,&config.tools.git)?;
+            effective_profile.workspace=Some(worktree.clone());
+            review_system_prompt(config,profile,reset.number,reset.member_login.as_deref())
         } else {
             let worktree = reset
                 .worktree_path

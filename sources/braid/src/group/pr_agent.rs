@@ -2,7 +2,6 @@
 use super::worker::GroupDriver;
 
 use anyhow::{Result, bail};
-use sha2::{Digest, Sha256};
 
 use crate::{
     config::{Config, Profile},
@@ -111,7 +110,7 @@ impl GroupDriver<'_> {
         };
         for candidate in candidates {
             if candidate.action == "unassign" {
-                if let Err(error) = self.settle_pr_unassignment(candidate).await {
+                if let Err(error) = self.settle_unassignment(candidate).await {
                     tracing::error!(%error, "cannot settle PR unassignment");
                 }
                 continue;
@@ -128,41 +127,6 @@ impl GroupDriver<'_> {
         }
     }
 
-    async fn settle_pr_unassignment(&self, candidate: AssignmentCandidate) -> Result<()> {
-        if candidate.target_profile_id.as_deref().is_some_and(|owner| owner != self.spec.profile.id) {
-            return Ok(());
-        }
-        let event_id = candidate.event_id;
-        let outcome = self.store.retire_unassigned_work_item(
-            event_id.clone(),
-            self.config.scheduler.quiet_seconds,
-        )?;
-        if !outcome.settled {
-            return Ok(());
-        }
-        let owned: std::collections::HashSet<_> = self.store
-            .stopping_provider_sessions(
-                self.spec.profile.id.clone(),
-                candidate.work_item_kind,
-            )?
-            .into_iter()
-            .collect();
-        if !outcome.provider_sessions.iter().all(|id| owned.contains(id)) {
-            return Ok(());
-        }
-        let first_session = outcome.provider_sessions.first().cloned();
-        for id in outcome.provider_sessions {
-            if self.sessions.is_managed(&id).await {
-                self.sessions.remove(&id).await?;
-            }
-        }
-        if let Some(id) = first_session {
-            self.store.retire_stopping_provider_session(id)?;
-        }
-        self.store.finish_unassigned_work_item(event_id)?;
-        Ok(())
-    }
-
     pub(super) async fn materialize_pr_assignment(
         &self,
         candidate: AssignmentCandidate,
@@ -170,7 +134,6 @@ impl GroupDriver<'_> {
         let store = self.store;
         let github = self.github;
         let config = self.config;
-        let sessions = &self.sessions;
         let profile = &self.spec.profile;
         let profile_record = &self.spec.profile_record;
         if candidate.work_item_kind != "pr"
@@ -217,39 +180,6 @@ impl GroupDriver<'_> {
             }
         };
         let instructions = pr_system_prompt(config, profile, candidate.number, &prepared.head_ref, Some(&materialization.member_login));
-        let instruction_revision = hex::encode(Sha256::digest(instructions.as_bytes()));
-        let memory = prepared.rendered.text.clone();
-        let result = sessions.start(effective_profile.clone(), instructions.clone(), memory).await;
-        match result {
-            Ok((thread_id, binding_id)) => {
-                if let Err(error) = store.complete_agent_assignment(
-                    materialization.clone(),
-                    thread_id.clone(),
-                    binding_id,
-                    prepared.rendered.revision.clone(),
-                    instruction_revision,
-                ) {
-                    sessions.remove(&thread_id).await?;
-                    return Err(error.into());
-                }
-                if prepared.rendered.pressure == ContextPressure::Soft {
-                }
-                tracing::info!(
-                    pr = candidate.number,
-                    worktree = %effective_profile.workspace().display(),
-                    model = ?profile.model,
-                    "PR Implementation Agent session has current Context"
-                );
-                Ok(())
-            }
-            Err(error) => {
-                if error.is_deferred() {
-                    store.defer_agent_assignment(materialization.assignment_id, candidate.event_id, error.to_string())?;
-                    return Err(error.into());
-                }
-                store.fail_agent_assignment(materialization.assignment_id, error.to_string())?;
-                Err(error.into())
-            }
-        }
+        self.start_materialized_assignment(&candidate,materialization,effective_profile,instructions,prepared.rendered).await
     }
 }

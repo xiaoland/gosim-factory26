@@ -15,7 +15,7 @@ use super::{
     SessionManager,
     provider::{
         issue_system_prompt, materialized_profile_with_binding,
-        operational_status_unknown_profile, pr_system_prompt,
+        operational_status_unknown_profile, pr_system_prompt, review_system_prompt,
     },
 };
 use crate::{
@@ -29,6 +29,7 @@ use crate::{
 pub(crate) enum GroupKind {
     Issue,
     Pr,
+    Review,
 }
 
 impl GroupKind {
@@ -36,6 +37,7 @@ impl GroupKind {
         match self {
             Self::Issue => "issue",
             Self::Pr => "pr",
+            Self::Review => "review",
         }
     }
 }
@@ -184,6 +186,7 @@ impl GroupDriver<'_> {
                     head_ref,
                     candidate.member_login.as_deref(),
                 ),
+                None if self.spec.kind==GroupKind::Review => review_system_prompt(self.config,profile,candidate.number,candidate.member_login.as_deref()),
                 None => issue_system_prompt(
                     self.config,
                     profile,
@@ -223,6 +226,13 @@ impl GroupDriver<'_> {
                 )?;
                 unavailable = Some(crate::agent_session::SessionError::Failed(message.into()));
                 continue;
+            }
+            if self.spec.kind==GroupKind::Review {
+                if let Err(error)=self.github.verify_reviewer_checkout(candidate.number as i64,&worktree_path,candidate.member_login.as_deref().unwrap_or(""),&self.config.tools.git) {
+                    store.block_provider_session(candidate.provider_session_id.clone(),error.to_string())?;
+                    unavailable=Some(crate::agent_session::SessionError::Failed(error.to_string()));
+                    continue;
+                }
             }
             let mut effective_profile = profile.clone();
             effective_profile.workspace = Some(worktree_path);
@@ -279,10 +289,31 @@ impl GroupDriver<'_> {
         Ok(())
     }
 
+    pub(super) async fn start_materialized_assignment(&self,candidate:&crate::store::AssignmentCandidate,materialization:crate::store::AgentMaterialization,
+        profile:Profile,instructions:String,rendered:crate::context::RenderedContext)->Result<()> {
+        let instruction_revision=hex::encode(Sha256::digest(instructions.as_bytes()));
+        match self.sessions.start(profile,instructions,rendered.text).await {
+            Ok((thread_id,binding_id))=>{
+                if let Err(error)=self.store.complete_agent_assignment(materialization,thread_id.clone(),binding_id,rendered.revision,instruction_revision) {
+                    self.sessions.remove(&thread_id).await?;
+                    return Err(error.into());
+                }
+                Ok(())
+            }
+            Err(error)=>{
+                if error.is_deferred() {
+                    self.store.defer_agent_assignment(materialization.assignment_id,candidate.event_id.clone(),error.to_string())?;
+                } else {self.store.fail_agent_assignment(materialization.assignment_id,error.to_string())?;}
+                Err(error.into())
+            }
+        }
+    }
+
     async fn materialize_next_assignment(&self) {
         match self.spec.kind {
             GroupKind::Issue => self.materialize_next_issue_assignment().await,
             GroupKind::Pr => Box::pin(self.materialize_next_pr_assignment()).await,
+            GroupKind::Review => Box::pin(self.materialize_next_review_assignment()).await,
         }
     }
 }

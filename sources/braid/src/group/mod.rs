@@ -4,6 +4,7 @@
 pub(crate) mod dispatch;
 pub(crate) mod issue_agent;
 pub(crate) mod pr_agent;
+pub(crate) mod review_agent;
 pub(crate) mod provider;
 mod session_manager;
 

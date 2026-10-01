@@ -128,6 +128,7 @@ pub struct IssueSnapshot {
     pub duplicate_pairs: Vec<(WorkItemReference, WorkItemReference)>,
     pub associated_prs: Vec<WorkItemReference>,
     pub comments: Vec<CommentSnapshot>,
+    pub review_requests: Vec<crate::objects::review::ReviewSummary>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -181,6 +182,7 @@ pub struct PullRequestSnapshot {
     pub conversation: Vec<CommentSnapshot>,
     pub reviews: Vec<ReviewSnapshot>,
     pub review_threads: Vec<ReviewThreadSnapshot>,
+    pub review_requests: Vec<crate::objects::review::ReviewSummary>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -188,6 +190,7 @@ pub struct PullRequestSnapshot {
 pub enum CanonicalContext {
     Issue(IssueSnapshot),
     PullRequest(PullRequestSnapshot),
+    ReviewRequest(crate::objects::review::ReviewRequestContext),
 }
 
 #[derive(Debug, Clone, Copy, Serialize, PartialEq, Eq)]
@@ -278,6 +281,7 @@ fn render_projected(context: &CanonicalContext, soft_ratio: f64, hard_bytes: usi
     match context {
         CanonicalContext::Issue(issue) => render_issue(&mut text, issue, tier),
         CanonicalContext::PullRequest(pull_request) => render_pull_request(&mut text, pull_request, tier),
+        CanonicalContext::ReviewRequest(review) => render_review_request(&mut text,review,tier),
     }
     if tier == ContextTier::References { append_read_paths(&mut text, context); }
     finish_rendered(text, soft_ratio, hard_bytes, tier)
@@ -315,6 +319,7 @@ fn index_comments(context: &mut CanonicalContext) {
     let comments = match context {
         CanonicalContext::Issue(issue) => &mut issue.comments,
         CanonicalContext::PullRequest(pr) => &mut pr.conversation,
+        CanonicalContext::ReviewRequest(review) => &mut review.comments,
     };
     for comment in comments { comment.body = None; }
 }
@@ -334,6 +339,11 @@ fn reference_projection(context: &mut CanonicalContext, limit: usize) {
                 issue.body = truncate_chars(&project_body(&issue.body), limit / 2);
             }
         }
+        CanonicalContext::ReviewRequest(review) => {
+            review.comments.clear();
+            review.review.request.requirements_body=truncate_chars(&project_body(&review.review.request.requirements_body),limit);
+            if let Some(conclusion)=&mut review.review.request.conclusion {conclusion.body=truncate_chars(&conclusion.body,limit);conclusion.evidence.clear();}
+        }
     }
 }
 
@@ -347,6 +357,10 @@ fn append_read_paths(output: &mut String, context: &CanonicalContext) {
     let (kind, number) = match context {
         CanonicalContext::Issue(issue) => ("issue", issue.number),
         CanonicalContext::PullRequest(pr) => ("pr", pr.number),
+        CanonicalContext::ReviewRequest(review) => {
+            push_line(output,&format!("固定候选及完整依据：braid pr review view {} {}",review.review.request.pr,review.review.request.id));
+            return;
+        }
     };
     heading(output, 2, "Read more");
     push_line(output, &format!("工作项投影：braid context {kind} {number}"));
@@ -361,6 +375,7 @@ fn minimum_locator(context: &CanonicalContext) -> String {
     match context {
         CanonicalContext::Issue(issue) => format!("# Issue {} - {}\n工作项投影：braid context issue {}\n完整正文：braid issue view {} --json body\n", issue.number, issue.state, issue.number, issue.number),
         CanonicalContext::PullRequest(pr) => format!("# PR {} - {}\n工作项投影：braid context pr {}\n完整正文：braid pr view {} --json body\n", pr.number, pr.state, pr.number, pr.number),
+        CanonicalContext::ReviewRequest(review) => format!("# Review {} - {}\n固定候选及完整依据：braid pr review view {} {}\n",review.review.request.id,review.review.request.status.as_str(),review.review.request.pr,review.review.request.id),
     }
 }
 
@@ -372,6 +387,7 @@ pub fn record_context_revision(
     let node_id = match context {
         CanonicalContext::Issue(issue) => &issue.node_id,
         CanonicalContext::PullRequest(pull_request) => &pull_request.node_id,
+        CanonicalContext::ReviewRequest(review) => &review.node_id,
     };
     store.set_context_revision(node_id.clone(), rendered.revision.clone())?;
     Ok(())
@@ -407,6 +423,7 @@ fn render_issue_at(output: &mut String, issue: &IssueSnapshot, level: usize, ass
             fenced_body(output, &project_body(&issue.body));
         }
     }
+    if !associated {render_review_summaries(output,&issue.review_requests,level+1);}
     if !associated && !issue.comments.is_empty() {
         heading(output, level + 1, "Discussion");
         render_context_comments(output, &issue.comments, level + 2, tier == ContextTier::CommentIndex);
@@ -441,6 +458,7 @@ fn render_pull_request(output: &mut String, pull_request: &PullRequestSnapshot, 
             fenced_body(output, &project_body(&pull_request.body));
         }
     }
+    render_review_summaries(output,&pull_request.review_requests,2);
     if !pull_request.conversation.is_empty() {
         heading(output, 2, "Discussion");
         render_context_comments(output, &pull_request.conversation, 3, tier == ContextTier::CommentIndex);
@@ -857,3 +875,35 @@ fn source_range(
 
 // Local materialization queries and response adapters follow. They are kept in
 // this module because partial canonical data must never escape into projection.
+
+fn render_review_summaries(output:&mut String,summaries:&[crate::objects::review::ReviewSummary],level:usize) {
+    if summaries.is_empty() {return;}
+    heading(output,level,"Review requests（最近30项；结论只对应列出的冻结候选）");
+    for review in summaries {
+        push_line(output,&format!("Review {}: PR {}, Issue {}, {}, {}, @{}, frozen head {}, verdict {:?}; braid pr review view {} {} 核对当前适用性",
+            review.id,review.pr,review.issue,review.status.as_str(),review.responsibility.as_str(),review.member.as_deref().unwrap_or("unassigned"),review.head_commit,review.verdict,review.pr,review.id));
+    }
+}
+fn render_review_request(output:&mut String,snapshot:&crate::objects::review::ReviewRequestContext,tier:ContextTier) {
+    let view=&snapshot.review;
+    let request=&view.request;
+    heading(output,1,&format!("Review {} - {} - @{}",request.id,request.status.as_str(),view.current_member.as_deref().unwrap_or("unassigned")));
+    push_line(output,&format!("源 PR: braid pr view {}; 验收 Issue: braid issue view {}",request.pr,request.issue));
+    push_line(output,&format!("责任: {} revision {}; base {} at {}; head {} at {}; tree {}",request.responsibility.as_str(),request.responsibility_revision,request.base_ref,request.base_commit,request.head_ref,request.head_commit,request.head_tree));
+    push_line(output,&format!("当前候选适用性: {}; {}",view.applicable,view.freshness_errors.join("; ")));
+    push_line(output,&format!("依据: Issue revision {}, digest {}；只冻结正文及其显式材料入口，外部目标版本需在验收证据记录。",request.requirements_revision,request.requirements_digest));
+    heading(output,2,"Frozen requirements");
+    let body=if tier==ContextTier::References {request.requirements_body.clone()} else {project_body(&request.requirements_body)};
+    fenced_body(output,&body);
+    if let Some(checkout)=&view.checkout {push_line(output,&format!("冻结 checkout: {} (commit {}, tree {})",checkout.path.display(),checkout.commit,checkout.tree));}
+    if let Some(conclusion)=&request.conclusion {
+        heading(output,2,&format!("Conclusion {} by {}",conclusion.verdict.as_str(),conclusion.member));
+        fenced_body(output,&conclusion.body);
+        for evidence in &conclusion.evidence {push_line(output,&format!("Evidence: {evidence}"));}
+        push_line(output,&format!("实际 checkout commit {}, tree {}; dirty {:?}",conclusion.checkout_commit,conclusion.checkout_tree,conclusion.checkout_dirty));
+    } else if request.status==crate::objects::review::ReviewStatus::Pending {
+        push_line(output,&format!("待办: 审查固定候选代码与浏览器行为。先 braid pr review checkout {} {}，记录候选服务/数据/端口和证据；结论用 braid pr review conclude {} {} --verdict approved|changes-requested|inconclusive --body-file FILE --evidence PATH。需要实现修改时联系PR负责人并发新请求。",request.pr,request.id,request.pr,request.id));
+    }
+    if let Some(reason)=&request.cancelled_reason {push_line(output,&format!("Cancelled: {reason}"));}
+    if !snapshot.comments.is_empty() {render_context_comments(output,&snapshot.comments,2,tier==ContextTier::CommentIndex);}
+}

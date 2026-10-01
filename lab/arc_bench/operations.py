@@ -246,20 +246,22 @@ def verify_inputs(directory, inputs):
             raise ValueError('prepared package changed')
 
 
-def component_state(path):
-    if not path.exists():
-        return 'absent'
-    row = read_json(path)
-    if row.get('phase') in {'completed', 'failed', 'interrupted'}:
-        return 'finished'
-    return process_state(row)
+def worker_owner(directory):
+    """Use the current worker, preserving a confirmed birth across partial launch receipts."""
+    actual = read_json(directory / 'worker.json') if (directory / 'worker.json').exists() else {}
+    launched = read_json(directory / 'worker-launch.json') if (directory / 'worker-launch.json').exists() else {}
+    if actual and launched and all(actual.get(k) == launched.get(k) for k in ('pid', 'boot_id', 'process_start')):
+        return actual
+    return max((actual, launched), key=lambda row: row.get('started_at', 0))
 
 
 def spawn(directory, name, command, python, *, cwd=None):
     receipt = directory / (name + '-launch.json')
-    state = component_state(directory / 'worker.json' if name == 'worker' and (directory / 'worker.json').exists() else receipt)
+    owner = worker_owner(directory) if name == 'worker' else read_json(receipt) if receipt.exists() else {}
+    state = ('finished' if owner.get('phase') in {'completed', 'failed', 'interrupted'} else
+             process_state(owner) if owner else 'absent')
     if state == 'alive':
-        return read_json(receipt)
+        return owner
     if state == 'unknown':
         raise Blocked(f'{name} process ownership is unknown; retain existing process')
     env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', PYTHONPATH=str(directory / 'source'))
@@ -589,7 +591,7 @@ def status(directory):
     directory = Path(directory).resolve(strict=True)
     inputs = read_json(directory / 'inputs.json')
     result = {'operation': str(directory), 'venue': inputs['venue'], 'authorization': inputs['authorization'],
-              'observed_at': time.time(), 'worker': read_json(directory / 'worker.json') if (directory / 'worker.json').exists() else None}
+              'observed_at': time.time(), 'worker': worker_owner(directory) or None}
     if result['worker']:
         result['worker']['physical_state'] = process_state(result['worker'])
     handoff = read_json(directory / 'handoff.json') if (directory / 'handoff.json').exists() else {'journals': inputs.get('journals', []), 'runs': []}

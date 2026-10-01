@@ -94,6 +94,8 @@ const MIGRATIONS: &[Migration] = &[
         name: "deferred_input",
         sql: include_str!("../../migrations/0016_deferred_input.sql"),
     },
+    Migration { version: 17, name: "pr_reviews", sql: include_str!("../../migrations/0017_pr_reviews.sql") },
+    Migration { version: 18, name: "work_item_maintenance", sql: include_str!("../../migrations/0018_work_item_maintenance.sql") },
 ];
 
 #[derive(Debug, Error)]
@@ -2860,6 +2862,7 @@ fn tracked_work_items(database: &Path) -> Result<Vec<TrackedWorkItem>, StoreErro
     let mut statement = connection.prepare(
         "SELECT w.node_id,r.name_with_owner,w.kind,w.number,w.state
          FROM work_items w JOIN repositories r ON r.node_id=w.repository_node_id
+         WHERE w.kind IN ('issue','pr')
          ORDER BY r.name_with_owner,w.kind,w.number",
     )?;
     let rows = statement.query_map([], |row| {
@@ -3764,7 +3767,7 @@ fn begin_work_item_reactivation(
              FROM events e
              JOIN work_items w ON w.node_id=e.work_item_node_id
              JOIN local_items l ON l.node_id=w.node_id
-             WHERE e.event_id=?1 AND e.lifecycle='pending' AND w.kind IN ('issue','pr')",
+             WHERE e.event_id=?1 AND e.lifecycle='pending' AND w.kind IN ('issue','pr','review')",
             [event_id],
             |row| {
                 Ok((
@@ -4378,8 +4381,9 @@ fn begin_agent_assignment(
          JOIN agent_instances ai ON ai.agent_id=wt.agent_id
          JOIN assignments a ON a.assignment_id=ai.assignment_id
          WHERE a.work_item_node_id=?1 AND a.lifecycle IN ('retired','blocked')
+           AND (?2!='review' OR a.assignment_revision=?3)
          ORDER BY a.generation DESC LIMIT 1",
-            [&work_item_node_id],
+            params![work_item_node_id,work_item_kind,sqlite_u64(assignment_revision,"assignment revision")?],
             |row| Ok((row.get(0)?, PathBuf::from(row.get::<_, String>(1)?), row.get(2)?)),
         )
         .optional()?;
@@ -4710,7 +4714,7 @@ fn complete_agent_assignment(
         [&materialization.agent_id],
         |row| row.get::<_, String>(0),
     )?;
-    if role == "pr_implementation_agent"
+    if matches!(role.as_str(), "pr_implementation_agent" | "pr_reviewer_agent")
         && transaction
             .query_row(
                 "SELECT 1 FROM worktrees WHERE agent_id=?1 AND lifecycle='active'",
@@ -5572,7 +5576,8 @@ fn remove_turn_rocket(
 pub(crate) fn local_delivery_closed(connection: &Connection) -> Result<bool, StoreError> {
     Ok(connection.query_row(
         "SELECT EXISTS(SELECT 1 FROM work_items WHERE node_id='issue:1' AND state='CLOSED')
-         AND NOT EXISTS(SELECT 1 FROM work_items WHERE state NOT IN ('CLOSED','MERGED'))
+         AND NOT EXISTS(SELECT 1 FROM work_items WHERE kind IN ('issue','pr') AND state NOT IN ('CLOSED','MERGED'))
+         AND NOT EXISTS(SELECT 1 FROM review_requests WHERE status='pending')
          AND NOT EXISTS(SELECT 1 FROM local_merges m JOIN work_items w ON w.node_id=m.pr_node_id
                         WHERE m.lifecycle='prepared' OR (m.lifecycle='conflict' AND w.state='OPEN'))",
         [], |row| row.get(0),
@@ -6285,7 +6290,7 @@ fn scalar_u64(connection: &Connection, query: &str) -> Result<u64, StoreError> {
 }
 
 fn validate_work_item_kind(kind: &str) -> Result<(), StoreError> {
-    if matches!(kind, "issue" | "pr") {
+    if matches!(kind, "issue" | "pr" | "review") {
         Ok(())
     } else {
         Err(StoreError::InvalidData(format!("unknown Work Item kind {kind}")))
@@ -6296,6 +6301,7 @@ fn agent_role_for_kind(kind: &str) -> Result<&'static str, StoreError> {
     match kind {
         "issue" => Ok("issue_agent"),
         "pr" => Ok("pr_implementation_agent"),
+        "review" => Ok("pr_reviewer_agent"),
         other => Err(StoreError::InvalidData(format!("unknown Work Item kind {other}"))),
     }
 }
@@ -6423,32 +6429,43 @@ fn validate_ledger(ledger: &[LedgerEntry]) -> Result<(), StoreError> {
 }
 
 fn apply_one(connection: &mut Connection, migration: &Migration) -> Result<(), StoreError> {
-    connection.execute_batch("BEGIN EXCLUSIVE").map_err(|error| StoreError::Migration {
-        version: migration.version,
-        message: error.to_string(),
-    })?;
-    let result = (|| -> Result<(), rusqlite::Error> {
+    let rebuild_parent = migration.version == 17;
+    let failure = |message: String| StoreError::Migration { version: migration.version, message };
+    if rebuild_parent && !connection.is_autocommit() {
+        return Err(failure("work_items rebuild requires an autocommit connection".into()));
+    }
+    let result = (|| -> Result<(), StoreError> {
+        if rebuild_parent {
+            connection.execute_batch("PRAGMA foreign_keys=OFF")?;
+            if connection.query_row("PRAGMA foreign_keys", [], |r| r.get::<_, i64>(0))? != 0 {
+                return Err(failure("cannot disable foreign_keys before work_items rebuild".into()));
+            }
+        }
+        connection.execute_batch("BEGIN EXCLUSIVE")?;
         connection.execute_batch(migration.sql)?;
+        if rebuild_parent {
+            let mut check = connection.prepare("PRAGMA foreign_key_check")?;
+            let mut rows = check.query([])?;
+            if let Some(row) = rows.next()? {
+                return Err(failure(format!("foreign_key_check: table={}, rowid={:?}, parent={}, fk={}",
+                    row.get::<_, String>(0)?, row.get::<_, Option<i64>>(1)?, row.get::<_, String>(2)?, row.get::<_, i64>(3)?)));
+            }
+        }
         connection.execute(
             "INSERT INTO schema_migrations(version, name, checksum, applied_at) VALUES (?1, ?2, ?3, ?4)",
-            (
-                migration.version,
-                migration.name,
-                migration_checksum(migration),
-                now_rfc3339(),
-            ),
+            (migration.version, migration.name, migration_checksum(migration), now_rfc3339()),
         )?;
         connection.execute_batch("COMMIT")?;
         Ok(())
     })();
-    if let Err(error) = result {
-        let _ = connection.execute_batch("ROLLBACK");
-        return Err(StoreError::Migration {
-            version: migration.version,
-            message: error.to_string(),
-        });
+    if result.is_err() && !connection.is_autocommit() { let _ = connection.execute_batch("ROLLBACK"); }
+    if rebuild_parent {
+        connection.execute_batch("PRAGMA foreign_keys=ON").map_err(|error| failure(format!("foreign_keys restoration failed: {error}; migration result: {result:?}")))?;
+        if connection.query_row("PRAGMA foreign_keys", [], |r| r.get::<_, i64>(0))? != 1 {
+            return Err(failure(format!("foreign_keys restoration not confirmed; migration result: {result:?}")));
+        }
     }
-    Ok(())
+    result.map_err(|error| failure(error.to_string()))
 }
 
 fn create_backup(

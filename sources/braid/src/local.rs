@@ -257,9 +257,9 @@ pub(crate) fn sessions(objects: &LocalObjects) -> Result<Vec<Value>> {
 pub fn status(objects: &LocalObjects) -> Result<Value> {
     let c = objects.connect()?;
     let count = |sql: &str| -> Result<i64> { Ok(c.query_row(sql, [], |r| r.get(0))?) };
-    let items=c.prepare("SELECT w.kind,w.number,w.state,l.state_reason,l.head_ref,l.ready_commit,l.base_ref,l.draft FROM work_items w JOIN local_items l ON l.node_id=w.node_id ORDER BY w.kind,w.number")?.query_map([],|r|Ok(json!({"kind":r.get::<_,String>(0)?,"id":r.get::<_,i64>(1)?,"state":r.get::<_,String>(2)?,"reason":r.get::<_,Option<String>>(3)?,"head_ref":r.get::<_,Option<String>>(4)?,"ready_commit":r.get::<_,Option<String>>(5)?,"base_ref":r.get::<_,Option<String>>(6)?,"draft":r.get::<_,bool>(7)?})))?.collect::<Result<Vec<_>,_>>()?;
+    let items=c.prepare("SELECT w.kind,w.number,w.state,l.state_reason,l.head_ref,l.ready_commit,l.base_ref,l.draft FROM work_items w JOIN local_items l ON l.node_id=w.node_id WHERE w.kind IN ('issue','pr') ORDER BY w.kind,w.number")?.query_map([],|r|Ok(json!({"kind":r.get::<_,String>(0)?,"id":r.get::<_,i64>(1)?,"state":r.get::<_,String>(2)?,"reason":r.get::<_,Option<String>>(3)?,"head_ref":r.get::<_,Option<String>>(4)?,"ready_commit":r.get::<_,Option<String>>(5)?,"base_ref":r.get::<_,Option<String>>(6)?,"draft":r.get::<_,bool>(7)?})))?.collect::<Result<Vec<_>,_>>()?;
     Ok(
-        json!({"items":items,"delivery_closed":crate::store::local_delivery_closed(&c)?,"queued_comment_deliveries":count("SELECT count(*) FROM local_comment_delivery WHERE status='queued'")?,"active_turns":count("SELECT count(*) FROM turns WHERE lifecycle IN ('starting','running')")?,"pending_batches":count("SELECT count(*) FROM wake_batches b WHERE lifecycle IN ('pending','runnable') AND EXISTS(SELECT 1 FROM assignments a WHERE a.work_item_node_id=b.work_item_node_id AND a.lifecycle IN ('active','materializing','finalizing'))")?,"pending_events":count("SELECT count(*) FROM events e WHERE lifecycle IN ('pending','resetting') AND (kind IN ('assign','lifecycle','invalidate') OR (kind='mention' AND detail='direct_contact'))")?,"pending_continuations":count("SELECT count(*) FROM wake_batches b JOIN wake_batch_events be ON be.batch_id=b.batch_id JOIN events e ON e.event_id=be.event_id JOIN context_resets cr ON e.dedupe_key='reset-continuation:' || cr.reset_id WHERE b.lifecycle IN ('pending','runnable') AND cr.lifecycle='applied' AND cr.continuation=1 AND e.lifecycle='pending'")?,"pending_resets":count("SELECT count(*) FROM context_resets WHERE lifecycle IN ('interrupting','materializing')")?,"materializing_groups":count("SELECT count(*) FROM assignments WHERE lifecycle='materializing'")?,"blocked_groups":count("SELECT count(*) FROM agent_instances ai JOIN assignments a ON a.assignment_id=ai.assignment_id WHERE ai.lifecycle='blocked' AND a.generation=(SELECT max(generation) FROM assignments n WHERE n.work_item_node_id=a.work_item_node_id)")?,"unresolved_merges":count("SELECT count(*) FROM local_merges m JOIN work_items w ON w.node_id=m.pr_node_id WHERE m.lifecycle='prepared' OR (m.lifecycle='conflict' AND w.state='OPEN')")?,"physical_sessions":sessions(objects)?}),
+        json!({"items":items,"review_requests": objects.review_status()?,"delivery_closed":crate::store::local_delivery_closed(&c)?,"queued_comment_deliveries":count("SELECT count(*) FROM local_comment_delivery WHERE status='queued'")?,"active_turns":count("SELECT count(*) FROM turns WHERE lifecycle IN ('starting','running')")?,"pending_batches":count("SELECT count(*) FROM wake_batches b WHERE lifecycle IN ('pending','runnable') AND EXISTS(SELECT 1 FROM assignments a WHERE a.work_item_node_id=b.work_item_node_id AND a.lifecycle IN ('active','materializing','finalizing'))")?,"pending_events":count("SELECT count(*) FROM events e WHERE lifecycle IN ('pending','resetting') AND (kind IN ('assign','lifecycle','invalidate') OR (kind='mention' AND detail='direct_contact'))")?,"pending_continuations":count("SELECT count(*) FROM wake_batches b JOIN wake_batch_events be ON be.batch_id=b.batch_id JOIN events e ON e.event_id=be.event_id JOIN context_resets cr ON e.dedupe_key='reset-continuation:' || cr.reset_id WHERE b.lifecycle IN ('pending','runnable') AND cr.lifecycle='applied' AND cr.continuation=1 AND e.lifecycle='pending'")?,"pending_resets":count("SELECT count(*) FROM context_resets WHERE lifecycle IN ('interrupting','materializing')")?,"materializing_groups":count("SELECT count(*) FROM assignments WHERE lifecycle='materializing'")?,"blocked_groups":count("SELECT count(*) FROM agent_instances ai JOIN assignments a ON a.assignment_id=ai.assignment_id WHERE ai.lifecycle='blocked' AND a.generation=(SELECT max(generation) FROM assignments n WHERE n.work_item_node_id=a.work_item_node_id)")?,"unresolved_merges":count("SELECT count(*) FROM local_merges m JOIN work_items w ON w.node_id=m.pr_node_id WHERE m.lifecycle='prepared' OR (m.lifecycle='conflict' AND w.state='OPEN')")?,"physical_sessions":sessions(objects)?}),
     )
 }
 fn quiescent(status: &Value) -> bool {
@@ -506,8 +506,12 @@ async fn drive(
     let (reports, mut health) = tokio::sync::mpsc::channel(32);
     let (fatal_stops, mut fatal_stop_events) = tokio::sync::mpsc::channel(8);
     let mut workers = vec![];
-    for kind in [GroupKind::Issue, GroupKind::Pr] {
-        for profile in config.profiles.iter().cloned() {
+    let mut worker_count=0usize;
+    for kind in [GroupKind::Issue, GroupKind::Pr, GroupKind::Review] {
+        for profile in config.profiles.iter().filter(|profile| {
+            if kind==GroupKind::Review {profile.has_tag("reviewer-only") && !profile.has_tag("root-only")} else {!profile.has_tag("reviewer-only")}
+        }).cloned() {
+            worker_count+=1;
             let binding = config
                 .bindings
                 .get(&profile.id)
@@ -552,7 +556,7 @@ async fn drive(
             if delivery_complete(&current) && execution_settled(&current) {
                 return Ok(("quiescent".into(), "根 Issue 与全部工作项已完成".into()));
             }
-            if provider_health.len() == config.profiles.len() * 2
+            if provider_health.len() == worker_count
                 && provider_health.values().any(|report| report.error.is_some() && !report.waiting_for_resources)
                 && current["active_turns"] == 0
                 && !provider_health.values().any(|report| report.can_progress)
@@ -562,7 +566,7 @@ async fn drive(
                     format!("provider recovery returned an error: {provider_health:?}; retained state can resume"),
                 ));
             }
-            if provider_health.len() == config.profiles.len() * 2
+            if provider_health.len() == worker_count
                 && current["blocked_groups"].as_i64().unwrap_or(0) > 0
                 && current["active_turns"] == 0
                 && current["pending_batches"] == 0

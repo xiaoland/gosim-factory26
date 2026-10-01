@@ -1,4 +1,7 @@
 //! Local Issue/PR authority. Object and event writes share one SQLite transaction.
+pub mod maintenance;
+pub mod review;
+
 use crate::{
     config::Profile,
     context::{
@@ -203,6 +206,9 @@ fn mentioned_members(markdown: &str) -> BTreeSet<String> {
         }
     }
     members
+}
+fn execution_kind_static(kind: &str) -> Result<&'static str> {
+    match kind { "issue" => Ok("issue"), "pr" => Ok("pr"), "review" => Ok("review"), _ => bail!("unknown execution kind {kind}") }
 }
 fn kind_static(kind: &str) -> Result<&'static str> {
     match kind {
@@ -574,7 +580,7 @@ impl LocalObjects {
     fn assignee_candidates(&self, c: &Connection) -> Result<Vec<AssigneeCandidate>> {
         let mut profiles = self.current_profiles()?;
         profiles.sort_by(|a, b| a.assignee_login.cmp(&b.assignee_login));
-        profiles.into_iter().filter(|profile| !profile.has_tag("root-only")).map(|profile| {
+        profiles.into_iter().filter(|profile| !profile.has_tag("root-only") && !profile.has_tag("reviewer-only")).map(|profile| {
             let login = Self::next_member_for_profile(c, &profile)?;
             Ok(AssigneeCandidate { profile: profile.id, login, description: profile.assignee_description })
         }).collect()
@@ -704,7 +710,7 @@ impl LocalObjects {
             .map(|login| self.profile_for_login(tx, login))
             .transpose()?;
         let id: i64 = tx.query_row(
-            "SELECT coalesce(max(number),0)+1 FROM work_items WHERE repository_node_id='local'",
+            "SELECT coalesce(max(number),0)+1 FROM work_items WHERE repository_node_id='local' AND kind IN ('issue','pr')",
             [],
             |r| r.get::<_, i64>(0),
         )?;
@@ -757,12 +763,12 @@ impl LocalObjects {
         let kind = if kind == EventKind::Invalidate && assignment_lifecycle.is_none() { EventKind::Noop } else { kind };
         let event = IngressEvent {
             delivery_guid: uuid::Uuid::now_v7().to_string(),
-            event_name: if target_kind == "issue" { "issues" } else { "pull_request" }.into(),
+            event_name: match target_kind.as_str() { "issue" => "issues", "pr" => "pull_request", "review" => "review", _ => bail!("unknown execution kind {target_kind}") }.into(),
             action: detail.map(str::to_owned),
             repository_node_id: "local".into(),
             repository: "local/run".into(),
             work_item_node_id: Some(target.into()),
-            work_item_kind: Some(kind_static(&target_kind)?),
+            work_item_kind: Some(execution_kind_static(&target_kind)?),
             work_item_number: Some(id as u64),
             work_item_state: Some(state),
             object_node_id: Some(object.unwrap_or_else(|| target.into())),
@@ -1461,11 +1467,7 @@ impl LocalObjects {
             repository_node_id: "local".into(),
             repository: "local/run".into(),
             number: item.id as u64,
-            kind: if item.kind == "issue" {
-                WorkItemKind::Issue
-            } else {
-                WorkItemKind::PullRequest
-            },
+            kind: match item.kind.as_str() { "issue" => WorkItemKind::Issue, "pr" => WorkItemKind::PullRequest, other => panic!("internal kind {other} has no public reference") },
             title: item.title.clone(),
             state: item.state.clone(),
             state_reason: item.reason.clone(),
@@ -1497,6 +1499,7 @@ impl LocalObjects {
                 .map(|id| Self::item(c, "pr", id).map(|i| Self::reference(&i)))
                 .collect::<Result<_>>()?,
             comments: Self::comments(c, &node("issue", id))?,
+            review_requests: review::summaries_in(c,"issue",id)?,
             parent,
             sub_issues: children
                 .into_iter()
@@ -1537,6 +1540,7 @@ impl LocalObjects {
                 .map(|id| Self::issue_in(&tx, id))
                 .collect::<Result<_>>()?,
             conversation: Self::comments(&tx, &node("pr", id))?,
+            review_requests: review::summaries_in(&tx,"pr",id)?,
             ..Default::default()
         })
     }
@@ -1544,6 +1548,7 @@ impl LocalObjects {
         match kind {
             "issue" => Ok(CanonicalContext::Issue(self.issue(id)?)),
             "pr" => Ok(CanonicalContext::PullRequest(self.pull_request(id)?)),
+            "review" => Ok(CanonicalContext::ReviewRequest(self.review_context(id)?)),
             _ => bail!("kind must be issue or pr"),
         }
     }
@@ -1556,6 +1561,7 @@ impl LocalObjects {
         let connection = connection.transaction()?;
         let item = Self::item_for_read(&connection, kind, id, kind == "pr" && wants("closing_issues"), wants("execution_error"))?;
         let mut details = serde_json::Map::new();
+        if wants("review_requests") {details.insert("review_requests".into(),serde_json::to_value(review::summaries_in(&connection,kind,id)?)?);}
         if wants("execution_error") { details.insert("execution_error".into(), serde_json::to_value(item.execution.and_then(|fact| fact.error))?); }
         if wants("subscriptions") { details.insert("subscriptions".into(), serde_json::to_value(self.subscriptions(kind, id)?)?); }
         if kind == "issue" {
@@ -2024,6 +2030,9 @@ impl LocalObjects {
         self.merge_with_match(turn, id, None).map(|result| result.merge_commit)
     }
     pub fn merge_with_match(&self, turn: Option<&str>, id: i64, expected_head: Option<&str>) -> Result<MergeResult> {
+        self.merge_with_review(turn,id,expected_head,None)
+    }
+    pub fn merge_with_review(&self, turn: Option<&str>, id: i64, expected_head: Option<&str>, review:Option<i64>) -> Result<MergeResult> {
         let mut c = self.connect()?;
         let tx = c.transaction_with_behavior(TransactionBehavior::Immediate)?;
         let writer = self.writer(&tx, turn)?;
@@ -2042,6 +2051,8 @@ impl LocalObjects {
             |r| r.get(0),
         ).optional()?;
         if let Some(merged) = prepared {
+            let saved:Option<i64>=tx.query_row("SELECT review_request_id FROM local_merges WHERE pr_node_id=?1",[node("pr",id)],|r|r.get(0))?;
+            ensure!(review.is_none() || review==saved,"saved merge intent is bound to review {saved:?}; cannot replace it with {review:?}");
             drop(tx);
             return self.apply_merge(id, expected_head).with_context(|| format!("PR #{id} has saved merge intent {merged}; application result is not confirmed; inspect braid pr view {id} --json state,merge_commit"));
         }
@@ -2054,6 +2065,7 @@ impl LocalObjects {
         }
         let reference = item.base_ref.context("PR has no base")?;
         let base = git(&source, &["rev-parse", &reference])?;
+        if let Some(review)=review {self.validate_review_merge_in(&tx,id,review)?;}
         let repo = git2::Repository::open(&source)?;
         let base_object = repo.find_commit(git2::Oid::from_str(&base)?)?;
         let head_object = repo.find_commit(git2::Oid::from_str(&head)?)?;
@@ -2076,6 +2088,7 @@ impl LocalObjects {
                 "INSERT INTO local_merges(pr_node_id,base_commit,head_commit,merge_commit,base_ref,head_ref,lifecycle,writer_group,writer_turn,writer_node) VALUES(?1,?2,?3,?4,?5,?6,'applied',?7,?8,?9) ON CONFLICT(pr_node_id) DO UPDATE SET base_commit=excluded.base_commit,head_commit=excluded.head_commit,merge_commit=excluded.merge_commit,base_ref=excluded.base_ref,head_ref=excluded.head_ref,lifecycle='applied',error=NULL,writer_group=excluded.writer_group,writer_turn=excluded.writer_turn,writer_node=excluded.writer_node",
                 params![node("pr",id),created_base,head,base,reference,branch,writer.as_ref().map(|w|&w.group),writer.as_ref().map(|w|&w.turn),writer.as_ref().map(|w|&w.node)],
             )?;
+            tx.execute("UPDATE local_merges SET review_request_id=?2 WHERE pr_node_id=?1",params![node("pr",id),review])?;
             let closing = self.closing_issues_in(&tx, &item.body, &reference)?;
             tx.execute("UPDATE local_merges SET closing_issues=?2 WHERE pr_node_id=?1",
                 params![node("pr", id), serde_json::to_string(&closing)?])?;
@@ -2130,6 +2143,7 @@ impl LocalObjects {
             )?
             .to_string();
         tx.execute("INSERT INTO local_merges(pr_node_id,base_commit,head_commit,merge_commit,base_ref,head_ref,lifecycle) VALUES(?1,?2,?3,?4,?5,?6,'prepared') ON CONFLICT(pr_node_id) DO UPDATE SET base_commit=excluded.base_commit,head_commit=excluded.head_commit,merge_commit=excluded.merge_commit,base_ref=excluded.base_ref,head_ref=excluded.head_ref,lifecycle='prepared',error=NULL",params![node("pr",id),base,head,merged,reference,branch])?;
+        tx.execute("UPDATE local_merges SET review_request_id=?2 WHERE pr_node_id=?1",params![node("pr",id),review])?;
         let closing = self.closing_issues_in(&tx, &item.body, &reference)?;
         tx.execute("UPDATE local_merges SET closing_issues=?2 WHERE pr_node_id=?1",
             params![node("pr", id), serde_json::to_string(&closing)?])?;
@@ -2167,6 +2181,8 @@ impl LocalObjects {
         let source = self.repository()?;
         let current = git(&source, &["rev-parse", &reference])?;
         let publish_error = if current == base {
+            let review:Option<i64>=tx.query_row("SELECT review_request_id FROM local_merges WHERE pr_node_id=?1",[node("pr",id)],|r|r.get(0))?;
+            if let Some(review)=review {self.validate_review_merge_in(&tx,id,review)?;}
             if let Some(expected) = expected_head {
                 ensure!(expected == head, "PR #{id} prepared head {head} differs from expected {expected}");
             }

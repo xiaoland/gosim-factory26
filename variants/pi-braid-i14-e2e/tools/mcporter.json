@@ -1,0 +1,12 @@
+{
+  "imports": [],
+  "mcpServers": {
+    "handsontable-docs": {"url": "https://docs-assistant.handsontable.com/mcp"},
+    "e2e": {
+      "command": "e2e",
+      "args": ["mcp", "--headless"],
+      "cwd": "${PWD}",
+      "lifecycle": "keep-alive"
+    }
+  }
+}

@@ -45,6 +45,14 @@ including completed, not-planned, and duplicate Issues, contributes only its
 reference, state/reason, and relationship metadata. Reopening restores full
 Context on the next materialization.
 
+### 本地固定候选验收
+
+本地ready与request-review是分开的动作：实现者发布候选并ready后，请求所关联Issue的当前负责人验收。恰好一个关联Issue才可默认选择，多个时明确指出验收Issue。Issue负责人在保持自身工作区的同时取得独立候选checkout，或把请求交给专门reviewer成员；后者只承接验收执行，PR实施者继续修复和发布。
+
+验收者检查固定候选的代码行为、逻辑与边界，并独立运行应用取得浏览器观察；有缺口时说明，不将“已执行”自动解释成Approved。结论保存候选Git身份、需求依据、观察和证据。继续修改后的候选发新请求；旧请求的结果保留，但引用、提交或需求变化会使其不适用。明确依某次Approved整合时用merge --review守住这些条件。
+
+请求Completed或有原因地Cancelled才结束该责任，PR关闭不替代它。有限本地运行在公开交付范围完成之外，还等待所有明确请求结束及已经接受的执行结清；这些状态仍不证明应用质量。CLI与恢复细节归[本地契约](../20-product-tdd/local.md)。
+
 ### Close, Merge, Reopen, and Unassign
 
 Issue unassignment is debounced; once settled it retires the active Issue Agent

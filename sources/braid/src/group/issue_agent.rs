@@ -86,7 +86,7 @@ pub(super) async fn resolve_issue_worktree_ref(
             .iter()
             .filter_map(|branch| branch.strip_prefix(prefix.as_str()))
             .collect(),
-        CanonicalContext::PullRequest(_) => Vec::new(),
+        CanonicalContext::PullRequest(_) | CanonicalContext::ReviewRequest(_) => Vec::new(),
     };
     if same_repository.len() == 1 {
         return Ok(same_repository[0].to_owned());
@@ -97,7 +97,7 @@ pub(super) async fn resolve_issue_worktree_ref(
 impl GroupDriver<'_> {
     /// Settle a native Issue unassignment after its debounce window and
     /// confirm teardown of any provider session owned by this driver.
-    pub(super) async fn settle_issue_unassignment(
+    pub(super) async fn settle_unassignment(
         &self,
         candidate: AssignmentCandidate,
     ) -> Result<()> {
@@ -134,7 +134,7 @@ impl GroupDriver<'_> {
             store.retire_stopping_provider_session(provider_session_id)?;
         }
         store.finish_unassigned_work_item(event_id)?;
-        tracing::info!(issue = candidate.number, "retired unassigned Issue Agent Group");
+        tracing::info!(kind = candidate.work_item_kind, number = candidate.number, "retired unassigned Agent Group");
         Ok(())
     }
 
@@ -149,7 +149,7 @@ impl GroupDriver<'_> {
         };
         for candidate in candidates {
             if candidate.action == "unassign" {
-                if let Err(error) = self.settle_issue_unassignment(candidate).await {
+                if let Err(error) = self.settle_unassignment(candidate).await {
                     tracing::error!(%error, "cannot settle Issue unassignment");
                 }
                 continue;

@@ -28,6 +28,8 @@ const TABLES: &[&str] = &[
     "local_comment_reactions",
     "associations",
     "local_merges",
+    "review_requests",
+    "review_checkouts",
     "assignments",
     "agent_instances",
     "provider_sessions",

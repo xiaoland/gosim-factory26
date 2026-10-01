@@ -96,6 +96,36 @@ Issue 与 PR 的普通评论均支持 `comment ID --reply-to COMMENT_ID`（完�
 
 CLI 在同一 SQLite immediate transaction 内通过执行身份检查当前 group、session、assignment 与 reset 屏障，修改正文/关系并写入语义事件。Context 失效后，原 turn 在通知与自然收尾期间保留当前责任范围内的写入；进入 teardown 后旧身份才失效。取消指派、运行封存等独立权限边界立即生效。被拒绝的写入不留下半个正文或事件。每个事件记录实际 writer group/turn，不能以统一 Agent-origin 标签忽略所有组。
 
+## 固定候选 review
+
+`pr ready` 只观察已发布 head 并切换 draft。PR 当前负责人通过 `pr request-review PR [--issue ISSUE] --request-id KEY` 另行请求验收；该动作不改 draft、PR assignee 或实施工作区。只有恰好一个关联 Issue 时才默认选它，零个或多个关联要求明确处理；所选 Issue 必须关联该 PR 且有当前可用负责人。同 key 重试读取首次请求，不冻结新候选或重新通知。
+
+`review_requests` 是请求、责任和结论的权威。请求保存源 PR、验收 Issue、请求成员及实际 agent/turn（宿主明确输入标为 external），以及 origin 的规范 base/head ref、完整 commit、head tree、Issue 正文 revision、原文和内容 digest。正文中的材料入口一并冻结，但不宣称追踪入口指向的全部外部内容版本。Git 在创建请求时以 ref 事务核验 base/head，并保留 `refs/braid/reviews/ID/base|head`；强推或删除源分支后仍可取得原候选。Git 和 SQLite 不能原子提交，数据库失败可能留下可追溯的独立保留引用，重试不会静默覆盖它们。
+
+每个请求有内部 `review:ID` work item，编号不参与公开 Issue/PR 编号分配。Pending 对应 OPEN，Completed/Cancelled 对应 CLOSED；结论为 Approved、ChangesRequested 或 Inconclusive。默认 IssueOwner 使用所选 Issue 当前负责人和既有会话，不复制该 Issue assignment。Issue 改派后当前新成员接续未完成请求，旧 writer 不再有提交权。该路径的请求关闭不生成无人消费的独立 review lifecycle。
+
+验收 Issue 当前负责人可用 `assignee list --reviewer` 选择下一位专门成员，并通过 `pr review assign PR REQUEST --assignee MEMBER` 只改变该请求的责任。`reviewer-only` Profile 从普通目录及 Issue/PR driver 排除，只进入 Review driver；根 Profile 另按 root-only 原契约处理。委派使用请求节点的 assignment、wake、队列、provider session、CLI 绑定与 Context reset，PR 实施者继续持有原节点。委派后结论只能由当前 review assignment 提交；Issue 当前负责人仍可查看、讨论、继续委派或明确 cancel。责任 revision 不匹配的在途 writer 被拒绝，Completed 不能重新提交结论或恢复成新候选，后续修复使用新请求。
+
+`pr review checkout PR REQUEST` 为当前责任取得独立候选 clone，重复调用返回同一路径。`review_checkouts` 按请求、责任 revision 和默认 IssueOwner 的当前 Issue assignment revision 登记 origin、path、固定 commit/tree、成员与实际创建身份。专门 reviewer 同时使用既有 agent-owned worktrees，默认 Issue 会话保留自己的 cwd。改派不接管旧责任的脏 clone，新责任从保留 ref 取得原候选；同一责任恢复核对登记路径、origin 和实际 HEAD，不静默 reset 文件。Braid提供独立候选路径，不自动管理应用端口、服务或浏览器数据；验收者应独立运行并记录这些事实。
+
+`pr review conclude PR REQUEST --verdict approved|changes-requested|inconclusive --body-file FILE [--evidence PATH]` 核验 Pending、PR 对应关系和当前具体责任，从登记 checkout 读取实际 HEAD/tree 和脏文件观察。HEAD/tree 不符时拒绝提交；结论正文、证据入口及脏文件事实保存后不再覆写。正文应说明代码判断、真实浏览器结果或不适用理由，以及未证明的边界；原生执行 completed 不自动形成 Approved。过时请求仍可保存对原候选的结论，但不会因此适用于当前候选。结论或 `pr review cancel PR REQUEST --reason TEXT` 的取消原因与节点关闭、activity及向PR实施者/验收Issue当前负责人去重投递同事务保存；关闭PR不自动批准或取消请求。
+
+`pr review list PR` 有界返回最近30项及 has_more，`view PR REQUEST` 按明确ID读取完整事实；Issue/PR Context加入同样有界的请求摘要与读取入口，Review Context保留冻结依据、候选、责任、待办、结论与实际checkout。view用当前PR引用、origin提交和Issue正文digest计算 applicable及具体freshness_errors，不在push时重写历史。status公开items仍只有Issue/PR，review_requests单独展示摘要；portable对象快照保留请求和checkout全行。
+
+v17在已有迁移lease与backup内扩展work_items kind，并增加review请求、checkout及local_merges.review_request_id。父表重建只在该版本于事务外关闭本连接FK，原行和主键完整复制后drop/rename，事务内foreign_key_check无返回行才写ledger和commit；成功和失败路径均恢复并核对FK。旧迁移和checksum不变，旧PR不回填review。
+
+## 工作项维护批次
+
+原生入口可以为当前负责人执行一次独立维护，再用 `braid maintenance snapshot --operation-id UUID --native-source FILE` 和 `braid maintenance apply --input FILE` 接入 Braid。维护不是可指派成员，只能修改当前 Issue/PR 的 description、hide 评论分支和 resolve 讨论根。snapshot 必须取得现有 writer；目标由 writer 所属工作项决定，不接受 external 维护写入。原生入口负责取得准确历史截点、执行独立推理并判断完整正常响应与取消，维护结果只声明最终正文和评论 ID，不选择目标或执行身份。
+
+维护快照在一致读事务取得原始完整正文、该项全部评论的正文与作者、线程关系、可见性、resolved_through，以及实际供给的 OPEN 关联 Issue 和祖先需求背景。未投影原文与这些资料的稳定摘要共同构成提交前提；普通 context_revision 或单个 local_items.revision 不能代替它。apply 在短 SQLite immediate transaction 内重新验证当前 session、turn、assignment、reset 屏障及捕获的 writer 身份，再重读整份供给资料。新回复、评论编辑、hide/resolve、正文或供给需求变化会使整批过时，拒绝任何部分效果；不自动合并或重跑模型。模型执行期间不持有数据库写锁。
+
+结果仅接受可选字符串 description、带非空理由的 hide 数组和 resolve 根 ID 数组；省略 description 表示保留，空字符串表示清空，null 被拒绝。全部 ID 必须属于当前项，未知字段、重复 ID、回复被当作 resolve 根或同根同时 hide/resolve 均拒绝。来源相等后才应用全部效果，resolve 使用已观察快照的截止，不把后来未读回复折叠；hide 仍遵守现有、未来后代一起隐藏的原有语义。正文最终净变化沿现有 HTML 注释过滤和 description_changed 规则产生所需失效，Issue 继续传播到实际展开其正文的 PR。每次正文净变化只调用一次该规则，讨论事实与原有投递规则仍各自保留。
+
+对象、活动、事件、投递义务和维护回执在同一事务提交。回执保存 operation ID、发起成员及执行身份、原生截点、来源和结果摘要、实际 changed/no-op、讨论根/截止、事件 ID，以及原生入口提供的模型与 usage 事实。相同 operation ID 与相同请求返回原回执，即使来源 writer 后来已失效也不重复效果；同 ID 的不同请求拒绝。`braid maintenance receipt UUID` 是只读恢复入口，回包 null 只说明读取时没有持久回执。提交结果未知时先读回执，不能在原提交进程可能仍运行时启动竞争提交或重跑模型。
+
+原生入口应在独立维护完整正常结束且父工具尚未返回时提交，使父方当前 turn 仍能沿现有 writer 契约写入。已观察到取消则不开始 apply；提交后才取消不能报告未修改，回执读取失败时保留未知状态。维护不建立额外完成评论或通知队列，提交后的事件才可沿现有调度派发。hide/resolve 对旧原生历史的限制继续适用；能力收益和真实模型完成反馈由调用方验收，不由维护回执推断。
+
 ## 当前 Context 与执行
 
 当前正文、可见 comment 和直接关联图由单一数据库物化，沿原 renderer 生成完整 Context。Issue、PR 初次启动和 Context reset 都直接把 renderer 的正文交给原生会话，不追加 working memory、canonical 或 provider history 包装。自身或祖先隐藏以及删除的 comment 只留下身份、生命周期和隐藏来源元数据，正文不进入模型输入；PR 仅展开 OPEN 的直接关联 Issue description，不展开其评论；关闭的关联 Issue 只保留引用。
@@ -120,7 +150,7 @@ description 发生 Invalidate 时，runtime 先通过同一原会话完成重建
 
 已提交的 description 自编辑不依赖另一条外部消息才重建活动会话的 Context。物化事务读取旧 session 最后一条非重建通知 turn 的持久终态：`completed` 不产生 continuation，`interrupted`、`failed` 或 `unknown` 保留续接；没有旧 turn 也不造工作请求。terminal 先到和 reset 先到均进入同一通知与重建流程，独立新消息仍由原 wake batch 投递。terminal 结算不得抢先休眠仍需重建的 group。重启持有独占运行锁后可接管已完成原生 teardown 的 materializing reset；遗留的 interrupting reset 若没有已验证的通知与退出证明则标为 blocked，不能建立竞争写者。
 
-每个 profile 的 Issue 与 PR driver 各自维护按物理 session 索引的活动集合；同类 Issue 或 PR 可以同时执行，不要求父 Agent 结束当前执行让位。恢复保留仍被活动集合持有的 session；一个会话 reset、失联或关闭不移除其它会话。close/merge 不授予额外执行轮次：负责人自己关闭只记录状态，其他人的关闭作为普通输入送达负责人；当前执行自然结束。旧归档的 finalizing 状态仍能恢复，但新关闭事件不再创建该阶段。
+普通 profile 的 Issue 与 PR driver及reviewer-only profile的Review driver各自维护按物理 session 索引的活动集合；同类 Issue 或 PR 可以同时执行，不要求父 Agent 结束当前执行让位。恢复保留仍被活动集合持有的 session；一个会话 reset、失联或关闭不移除其它会话。close/merge 不授予额外执行轮次：负责人自己关闭只记录状态，其他人的关闭作为普通输入送达负责人；当前执行自然结束。旧归档的 finalizing 状态仍能恢复，但新关闭事件不再创建该阶段。
 
 Issue 与 PR 保存成员协作所需的问题、方案、变更和决定；成员按实际需要在讨论中协调。runtime 不从讨论状态推断阶段、批准或任务完成，也不规定角色分工、阶段目录、评论数、工作项数量或原生子代理的使用方式。V&V 方法由调用方选择，Braid 只说明对象与交付操作。维护者仍需区分 Braid 工作项会话与 provider 原生会话树：后者不建立 Braid assignment。Pi adapter 关闭自己持有的 RPC stdin，等待 Pi 主进程退出，使用 Pi 正常 shutdown 路径。原生子代理的前后台执行、清理、进程与 lease 均由 Pi 及其扩展负责；Braid 不配置原生子代理停止命令、不检查内部停止收据，也不替其管理进程树。Codex adapter 管理其独立 app-server。
 
@@ -131,6 +161,9 @@ Unknown 保留原执行记录，不等于成功或历史不可恢复。确认旧
 处理 PR 的 Agent 在本地 commit 并 push 到 origin 的 PR head ref 后，可调用 `pr ready ID` 清除 draft；`pr ready ID --undo` 恢复 draft。ready 从共享裸 origin 读取 head，不依赖调用者持有 PR 私人 clone，保存最近观察的 commit 并通知该 PR 的显式关注者。拥有有效执行身份的工作项 Agent 可按当前需要调用 merge；Braid 不限定根 Issue #1 为唯一操作者。merge 读取该 PR 记录的 base/head 当前 origin commit，拒绝 draft、未发布的分支与无新提交的源分支；可选 `--match-head-commit SHA` 用于调用者确认自己看到的源头仍未变化。不带该选项时以执行事务读取的当前 head 为准。冲突报告 PR、源分支和目标分支，合并不发生。Agent 根据事实自行决定 fetch、整合、push 或关闭 PR。
 
 合并对象先写入 origin 的 Git object database，精确 base/head ref、输入 commit 与结果保存为该 PR 的 prepared intent，随后验证源 head，并以 CAS 更新该 PR 的 base ref，最后记录 PR merged 状态和事件。重启依据 intent 记录的引用及 origin 实际引用恢复；Git 已更新而 SQLite 尚未收据时不生成第二次合并。即使目标随后快进到包含该 prepared merge 的提交，也沿冻结 intent 结算 PR 与声明的 Issue，保留当前目标引用；目标历史不包含该 merge 时拒绝结算。显式 merge 重试若仍需发布冻结 merge，`--match-head-commit` 必须匹配 intent 保存的 head；已发布 merge 的结算不再受后来 head 变化影响。其它 PR 可选择不同 base，各自只更新自己的目标引用。这个过程不检查或改动其它 Agent clone 的 HEAD、index 或工作文件。Agent 可通过 fetch 取得合并后的分支。冲突 PR 可以明确关闭放弃；prepared 的未知合并仍必须处置。
+
+
+显式 `pr merge PR --review REQUEST` 要求该请求绑定同一PR、已有Approved，且当前base/head ref、commit及验收Issue依据digest都匹配；未传该选项保留原合并策略。新merge intent保存request ID，prepared重试不能改换或补挂另一请求。尚未发布时，显式重试和自动恢复再次核对冻结结论及需求，Git仍以base/head CAS保护发布。若origin已经真实包含该prepared merge，恢复只记录已发生效果，不因合入后base变化或后来需求变化拒绝既有收据或回滚引用。首次登记已包含head的整合也经过明确review的适用性核验；历史已MERGED早返不重新批准已发生效果。
 
 若调用 merge 时目标分支已包含当前 head，Braid 只在曾经观察到该 PR 的 head 不在当时目标分支中、且当前 head 仍包含这个观察到的提交时，将 PR 记录为已整合；它不再次写 Git ref。显式 head 可在创建时建立该证据；`pr ready` 即使对已非 draft 的 PR 也会重新观察已发布的 head。只保存创建时 base 不足以证明整合：源分支也可能只是随后同步了目标分支。返回和保存的 `merge_commit` 是本次判定时观察到的目标分支 tip，可能晚于真正引入 head 的提交。没有上述正证时，包括旧 PR 缺少观察记录的情况，Braid 只报告当前目标已含 head，不修改状态。这个判断仅在显式 merge 请求时发生，不周期同步外部 Git 变化。
 
@@ -192,7 +225,7 @@ Braid 撤销旧 CLI 身份，将来源 provider 标识记录为本次启动已�
 CLI文本将消息投递回执与评论正文分区，`delivered`展示为“会话已接受评论输入”，不将接收状态展示成成员的任务完成声明；JSON仍在`deliveries`中保留原状态和原因。
 全范围终态及待执行的正文失效继续沿既有结束与 Context reset 边界处理，不用 steer 绕过这些边界。
 
-`status.delivery_closed` 与派发、退出共用全部对象终态及合并状态判据。
+`status.delivery_closed` 与派发、退出共用公开Issue/PR终态、无未完成merge及所有显式review请求Completed/Cancelled的判据；内部review不成为公开应用交付对象，在途turn/reset/队列仍沿统一执行事实判断。
 根已关闭但仍有开放对象、且当前无可执行输入时，返回 blocked 并保留现场，不把静止解释为完成。
 `queued_comment_deliveries` 和结果中的 `retained_input` 说明本轮未派发的评论数量及原始回执查询入口；全范围关闭后不会为了清空普通消息继续创建执行，重新打开范围后才可继续处理。
 
@@ -223,6 +256,6 @@ python3 -c 'import json; from pathlib import Path; print(json.loads(Path("/tmp/c
 ```
 不增加空正文禁令、内容长度阈值、写前确认或 shell 解析器。
 
-`braid assignee list [--json]` 是本地扩展，对应 GitHub repository assignees API 的用途。目录返回每个可指派配方的下一位具体候选成员及职责，排除 root-only；读取无写入，不附加到上下文或固定指令。实际输入须使用当次仍可认领的候选名字。
+`braid assignee list [--json]` 是本地扩展，对应 GitHub repository assignees API 的用途。目录返回每个可指派配方的下一位具体候选成员及职责，排除 root-only和reviewer-only；`--reviewer`只返回专门reviewer目录；读取无写入，不附加到上下文或固定指令。实际输入须使用当次仍可认领的候选名字。
 
 Bub 的独立进程、指令插件、持久化首轮 Context、Deferred 忙时输入及 Unknown 取消边界见 [原生 ACP adapter](app-server.md#bub-原生-acp-adapter)。本地入口仍只组成一个 adapter 类型；不在本次接入中改变队列调度或增加跨 adapter 混用。

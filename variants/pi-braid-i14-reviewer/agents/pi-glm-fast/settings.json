@@ -1,0 +1,15 @@
+{
+  "packages": [],
+  "subagents": {
+    "disableBuiltins": true
+  },
+  "defaultTools": [
+    "read",
+    "bash",
+    "edit",
+    "write",
+    "grep",
+    "find",
+    "ls"
+  ]
+}
