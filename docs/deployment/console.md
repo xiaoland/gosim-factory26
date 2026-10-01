@@ -1,7 +1,7 @@
 # Factory26 Exp Console 开发接入
 
 [Factory26 Exp Console](../../braid-console/README.md)是独立目录中的实验基础设施，没有独立Git仓库，不进入参赛包或Harness迭代范围。
-前端使用React、TypeScript、Vite、Ant Design及TanStack Query；对象HTTP桥调用配套Braid CLI，修改沿用对象事务和消息投递。物理运行控制归Docker适配层；Braid不依赖Console或实验平台。
+前端使用React、TypeScript、Vite、shadcn/ui、Tailwind CSS、Radix和Lucide及TanStack Query；对象HTTP桥调用配套Braid CLI，修改沿用对象事务和消息投递。物理运行控制归Docker适配层；Braid不依赖Console或实验平台。
 通用构建、启动、registry与操作语义见其README，不在本页维护第二份API说明。
 
 Home始终可访问，空登记有明确登记方法；Braid详情保持专用对象、会话与物理控制。页面展示权限配置与保存事实，当前现场可用性由实际详情读取核实；生产者记录缺失保持未知。
@@ -31,7 +31,7 @@ HTTP停止只结束它自己的进程。SSH转发由操作方独立管理；访�
 
 正文通过 `GET /api/transcript` 按稳定字节游标分页读取，先核对原生 header 的 native 身份。浏览器只传 run、physical 记录 ID 与 offset，不提供任意文件路径；具体分页和数据边界归 Console README。文件缺失或身份不匹配保留错误，不从另一会话补正文。关系、工具 call/result 和原文位置帮助取证，不能从历史 provider 状态推断生成容器此刻是否暂停。
 
-当前已经取得真实 Pi 会话的只读接口反馈，Codex 正文和页面直链、前后导航及草稿保护仍有未验边界。人工编辑成功、控制回执、模型读取消息和最终任务效果分别核实；完整证据及缺口归[会话导航记录](../../tasks/braid-console-control/session-navigation.md)。
+当前已经取得真实 Pi 会话的只读接口及页面反馈，归档深链和前后导航已在 shadcn/ui 制品核对；Codex 正文和可写现场的草稿保护仍未实测。人工编辑成功、控制回执、模型读取消息和最终任务效果分别核实；前序接口证据归[会话导航记录](../../tasks/braid-console-control/session-navigation.md)，当前 UI 结果归[shadcn/ui 回执](../../tasks/braid-console-control/shadcn-ui.md)。
 
 ## 运行身份与实际验收
 
@@ -39,4 +39,4 @@ I12已在独立磁盘清理中终止，归档在runs/wsl-retained-20260930/；�
 I12是人工介入研究条件；旧I11摘剪接续已停止，不再用作当前生成起点。原始记录仍保留，历史页面与旧源码位置仅供追溯。
 当前Console控制与验收归 [独立任务](../../tasks/braid-console-control/packet.md)；[暂停访问历史记录](../../tasks/iteration13/console-paused-access.md)保留当时故障和接线证据，不作为I13范围。
 
-当前本机只读服务入口为 http://127.0.0.1:8765/，稳定根 `/Users/lanzhijiang/.local/share/factory26/exp-console/20261001-home`。旧console/20261001-55fe50a配置已退役，历史材料放新根history，不继续执行旧launch。当前两份归档、服务身份、hard cutoff顺序及实际首页/深链/导航反馈见[首页与服务切换回执](../../tasks/braid-console-control/home-entry.md)；没有可写现场，因此本批不声称草稿提交与物理控制已重验。
+当前本机只读服务入口为 http://127.0.0.1:8765/，稳定根 `/Users/lanzhijiang/.local/share/factory26/exp-console/20261001-shadcn-ui-final`，service ID `97a16025-2f26-4032-b54e-98269264e8fd`。前序服务配置已退役，历史材料放新根history，不继续执行旧launch。两份归档、当前制品及实际页面反馈见[shadcn/ui 回执](../../tasks/braid-console-control/shadcn-ui.md)；原首页架构切换证据见[首页与服务切换回执](../../tasks/braid-console-control/home-entry.md)。没有可写现场，因此本批不声称草稿提交与物理控制已重验。

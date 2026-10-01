@@ -2,6 +2,22 @@
 
 2026-10-01。独立实验基础设施任务。前序运行控制和会话导航已有真实现场反馈；稳定服务、归档只读和GC引用收敛已提交55fe50a。当前Mac稳定服务已启动并登记两份独立归档。用户纠正后核实I12已在独立磁盘清理中终止，历史资料在项目内；后续按归档接入，不再以接回旧暂停现场为目标。Console不属于I13或生成Harness迭代。
 
+## 2026-10-01：shadcn/ui 与 UI/UX 改进完成
+
+用户直接指示：“请你改进 Exp Console：使其使用 shadcn ui 而不是 ant design”。此指示作为本范围开工依据，沿用本任务直接应用、部署与限定 commit 的授权，不 push。
+
+范围为 web 的 UI 依赖、主题与页面组件：首页、运行选择、工作项、讨论、会话/原文、编辑预览及确认弹窗。采用 shadcn/ui 本地组件、Tailwind CSS、Radix 与 Lucide；删除 Ant Design 与其图标/样式/provider，不建立 Ant API 兼容层。App/Home 与 BraidRun/Sessions 的职责和现有 query 导航、草稿保护、revision/错误及单次写入语义保持。用户随后补充：“用 Shadcn UI 不只是死板地替换组件，还可以调整相关的 UI/UX 体验”。据此将范围扩到首页运行概览、工作项筛选与清除、归档说明渐进展开、会话原文优先及技术材料/Turn 历史折叠与分页；不只迁移组件外观。
+
+实施按官方现有 Vite 接入，先完成可编译源码，使用真实已登记归档核验首页、筛选、Issue/PR、会话及原文深链、返回/历史导航和错误显示，再冻结新稳定服务根并切换 8765。保留旧服务身份、配置与 journal 来源，退役旧权威 manifest，不修改归档材料或建立另一现场。仅编译、构建和实际操作，不编写或运行设施测试。当前两份接入均只读；真实写入、草稿确认和 Docker 控制不能据此声称已验。
+
+已移除 Ant Design 依赖、图标及样式/provider，接入16个官方 shadcn/ui 本地组件、Tailwind CSS 4 和统一主题。新增首页概览、工作项 Tabs/清除筛选、可展开归档说明、会话历史筛选/搜索；provider 原文置前，身份材料与 Turn 历史折叠，Turn 每页50条。Braid 详情按需加载，首屏 JS 为454.70 kB（gzip141.41 kB），TypeScript/Vite 构建通过且无大 chunk 警告。
+
+真实 Chrome 操作覆盖两份归档的首页、Issue/PR、筛选、会话关系及原生正文深链。822条Turn显示17页并实际切到第2页；Pi正文首页加载24条记录，原文缺失归档保持具体HTTP400。首页/原文之间前后导航及首页刷新已核对，最终页面没有React warning/error；实际操作发现的重复React key已修复后重新冻结。10条只读HTTP回执中9条200、1条预期的原文缺失400；12个归档文件身份/存在记录前后一致。没有设施测试、模型运行或业务写入。
+
+当前服务为 `/Users/lanzhijiang/.local/share/factory26/exp-console/20261001-shadcn-ui-final`，service ID `97a16025-2f26-4032-b54e-98269264e8fd`，HTTP PID38698/PPID1，入口 http://127.0.0.1:8765/。冻结制品校验通过，前序home与中间迁移服务已停止、manifest退役，配置/active/launch及旧history接续到新根；journal未存在如实记录。保留两份原归档接入，不配置自启。
+
+完成回执与剩余边界归[shadcn/ui 迁移](shadcn-ui.md)。原始证据入口：`runs/braid-console-control/20261001-shadcn-ui/`，含限定起点源码、完整工作区状态、构建、部署、HTTP、截图及导航回执。当前仅只读归档，可写草稿确认、保存/评论、暂停/恢复与Codex原文未重验；不创建现场补验。本批限定commit，不push；后续用户决定下一轮体验方向。
+
 ## 2026-10-01：Factory26 Exp Console 首页与架构收口完成
 
 用户明确授权：“同意，不过这就意味着架构上要处理干净哦，你可以开工了（只是授权，你总是可以继续调查、规划、设计），不要阻塞主线。”本批独立实施、部署、实际核对与限定commit，不push，不重复索要开工。产品为薄的Factory实验入口，保留Braid专用详情；Console只拥有服务接入和显示状态，运行事实归lab/冻结材料，协作事实归Braid CLI/归档。

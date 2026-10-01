@@ -2,7 +2,7 @@
 
 Factory实验的薄接入入口，提供已登记运行的Home和Braid专用详情，属于实验基础设施，不依赖SVC或ARC，不进入参赛包。源码仍位于braid-console/，保留在Factory26父仓库中，没有独立Git仓库。Console拥有服务接入与显示状态；lab/冻结材料拥有实验事实，Braid CLI与归档拥有协作事实。
 
-`web/`使用React、TypeScript、Vite、Ant Design和TanStack Query。App只管理Home、运行选择、query导航及离页保护；Home与runs.ts负责通用登记摘要，http.ts保留HTTP错误和响应。BraidRun负责工作项列表、详情、物理控制及其查询，Sessions负责Braid/provider/native历史；Braid对象类型留在api.ts，不建立插件或adapter框架。
+`web/`使用React、TypeScript、Vite、shadcn/ui、Tailwind CSS、Radix、Lucide与TanStack Query。App只管理Home、运行选择、query导航及离页保护；Home与runs.ts负责通用登记摘要，http.ts保留HTTP错误和响应。BraidRun负责工作项列表、详情、物理控制及其查询，Sessions负责Braid/provider/native历史；Braid对象类型留在api.ts，不建立插件或adapter框架。
 `server.py` 提供 HTTP 接口并服务构建后的前端。现场对象操作调用登记的 Braid CLI；归档浏览由 `archives.py` 读取保存的 SQLite 页面字段，不启动 CLI、worker 或原 Git。`docker_runtime.py` 只控制登记容器的物理暂停/恢复，并协调暂停时的 SQLite 写者锁；不修改业务数据或另建调度逻辑。Braid 继续拥有对象、Git及事件语义，不需要知道 Console、实验名或 ARC。
 
 工作项详情的 Braid agent sessions 入口可查看对应 provider sessions 及历史。关系来自登记CLI的 `status --json.physical_sessions`；`group_id` 是持久Braid agent身份，provider恢复身份与native ID分别呈现。明确的 `replaced/retired` 标为历史，其他状态保留CLI原始生命周期，不推断当前归属；实际暂停/运行状态看上方生成状态。CLI按physical目录枚举，缺失physical材料的会话可能未列出，空结果不表示从未启动。
