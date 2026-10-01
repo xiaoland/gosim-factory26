@@ -1,32 +1,28 @@
-"""Monitor hosted journals every 3 minutes initially, then every 8 minutes; collect terminal evidence and exit."""
+"""Read hosted run/provider evidence at 3+8 intervals; notify script liveness changes and exit at terminal."""
 import argparse
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 import fcntl
-import hashlib
 import json
 import os
 from pathlib import Path
 import subprocess
 import time
 import zipfile
-from .playground import Client, COOKIE, TERMINAL, save, polling_interval
+from .playground import COOKIE, TERMINAL, save, polling_interval
+from .provider_liveness import assess, collect_provider_evidence, epoch, transition
 
-ROOT=Path(__file__).resolve().parents[2]
-PROMPT=ROOT/'agents/run-monitor.md'
 COMPETITIONS=('arc-bench-lite','hackathon')
-SCHEMA={'type':'object','properties':{'reviews':{'type':'array','items':{'type':'object','properties':{
-    'run_id':{'type':'string'},'classification':{'type':'string','enum':['progress','waiting','needs_review','confirmed_stall','harness_failure','completed']},
-    'observations':{'type':'array','items':{'type':'object','properties':{'source':{'type':'string'},'quote':{'type':'string'},'significance':{'type':'string'}},'required':['source','quote','significance'],'additionalProperties':False}},'inspected_paths':{'type':'array','items':{'type':'string'}},'summary':{'type':'string'},'evidence':{'type':'array','items':{'type':'string'}},
-    'recommended_action':{'type':'string','enum':['continue','cancel_hackathon','review']},'needs_decision':{'type':'boolean'}},
-    'required':['run_id','classification','observations','inspected_paths','summary','evidence','recommended_action','needs_decision'],'additionalProperties':False}}},'required':['reviews'],'additionalProperties':False}
 
 def alert(base,kind,data):
     record={'time':time.time(),'kind':kind,**data}
     message=f'Factory26: {kind}，查看 {base}/monitor/alerts.jsonl'
     # A successful OS call confirms submission, not human receipt.
-    result=subprocess.run(['osascript','-e','display notification '+json.dumps(message,ensure_ascii=False)+' with title "Factory26"'],capture_output=True,text=True)
-    record['desktop_notification']={'exit_code':result.returncode,'error':result.stderr.strip(),'human_seen':'unknown'}
+    try:
+        result=subprocess.run(['osascript','-e','display notification '+json.dumps(message,ensure_ascii=False)+' with title "Factory26"'],capture_output=True,text=True,timeout=10)
+        record['desktop_notification']={'exit_code':result.returncode,'error':result.stderr.strip(),'human_seen':'unknown'}
+    except (OSError, subprocess.TimeoutExpired) as error:
+        record['desktop_notification']={'error':str(error),'human_seen':'unknown'}
     with (base/'monitor/alerts.jsonl').open('a') as f:f.write(json.dumps(record,ensure_ascii=False)+'\n')
 
 def download(path,target):
@@ -54,6 +50,7 @@ def collect(base,comp,task,rid,batch,with_workspace=True):
         download('/runs/'+rid,dest/'status.json')
         status=json.loads((dest/'status.json').read_text());status=status.get('run',status)
         row['status']=status.get('status');row['failure_reason']=status.get('failure_reason')
+        row['boundary']=epoch(status.get('started_at') or status.get('created_at'))
         row['evaluation_started_at']=status.get('evaluation_started_at')
         row['poll_interval']=polling_interval(status)
         row['score']={key:status.get(key) for key in ('score','passed_count','failed_count',
@@ -75,12 +72,24 @@ def collect(base,comp,task,rid,batch,with_workspace=True):
                     if not path.is_absolute() and '..' not in path.parts and '.factory26' in path.parts and not any(x in path.parts for x in ['node_modules','runtime','.cache']):
                         if path.suffix in {'.jsonl','.json','.md','.log','.sqlite3'} or path.name.endswith(('.sqlite3-wal','.sqlite3-shm')):
                             target=dest/'evidence'/path;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(z.read(item))
-                            if item.filename.endswith('/braid-state/status.json'):
+                            if (len(path.parts)==5 and path.parts[:2]==('template','.factory26')
+                                    and path.parts[3:]==('braid-state','status.json')):
                                 braid_status.append(target)
                             if 'native-homes' in path.parts and path.suffix=='.jsonl':
                                 native_sessions[path.parts[path.parts.index('.factory26'):]]=target
             save(dest/'archive-index.json',index)
             row['session_evidence']=session_evidence(braid_status,native_sessions)
+            observed=time.time()
+            sources=[collect_provider_evidence(path.parent,observed,row['boundary'],exported=True) for path in braid_status]
+            provider_phase=row['status']
+            if row['status'] not in TERMINAL and row.get('evaluation_started_at'):
+                provider_phase='finalizing'
+            row['provider_observation']={'observed_at':observed,'phase':provider_phase,
+                'run_error':row.get('failure_reason'),'boundary':max([v for v in [row['boundary'],*[s.get('boundary') for s in sources]] if v is not None],default=None),
+                'sessions':[item for source in sources for item in source['sessions']],
+                'errors':[error for source in sources for error in source['errors']],
+                'provider_health':{group:health for source in sources for group,health in source.get('provider_health',{}).items()}, 'sources':sources}
+            save(dest/'provider-observation.json',row['provider_observation'])
             row['required_reads']=list(dict.fromkeys([str(path) for path in braid_status]
                 + [session['path'] for session in row['session_evidence'] if session['path']]))
         except Exception as e:row['workspace_error']=str(e)
@@ -88,60 +97,7 @@ def collect(base,comp,task,rid,batch,with_workspace=True):
     row['finished_at']=time.time();save(dest/'collection.json',row)
     return row
 
-def review(base,batch,rows,previous):
-    prompt=PROMPT.read_text();(batch/'instructions.md').write_text(prompt)
-    settings=dict(line.split(': ',1) for line in prompt.split('---',2)[1].splitlines() if ': ' in line)
-    model=settings['model'];effort=settings['reasoning_effort']
-    save(batch/'schema.json',SCHEMA)
-    save(batch/'batch.json',{'runs':rows,'previous_reviews':previous,'package':str(base/'package.json')})
-    command=['codex','exec','--ephemeral','--skip-git-repo-check','-C',str(ROOT),'-m',model,'-c',f'model_reasoning_effort="{effort}"',
-             '--dangerously-bypass-approvals-and-sandbox','--json','--output-schema',str(batch/'schema.json'),'--output-last-message',str(batch/'review.json'),'-']
-    message=f'读取并遵循固定审查指令 {batch}/instructions.md（源 {PROMPT}）。本次只审查 {batch}/batch.json 指定的新证据；完成即退出。不要开展本项目其他工作。'
-    receipt={'model':model,'reasoning':effort,'instructions_sha256':hashlib.sha256(prompt.encode()).hexdigest(),'started_at':time.time(),'state':'starting'}
-    save(batch/'review-execution.json',receipt)
-    with (batch/'review-events.jsonl').open('w') as out,(batch/'review-stderr.log').open('w') as err:
-        process=subprocess.Popen(command,stdin=subprocess.PIPE,stdout=out,stderr=err,text=True)
-        receipt.update(pid=process.pid,state='running');save(batch/'review-execution.json',receipt)
-        process.communicate(message)
-    receipt.update(exit_code=process.returncode,finished_at=time.time(),state='completed' if process.returncode==0 else 'failed')
-    save(batch/'review-execution.json',receipt)
-    if process.returncode:raise RuntimeError(f'reviewer exited {process.returncode}; {batch}/review-stderr.log')
-    result=json.loads((batch/'review.json').read_text())
-    expected={r['run_id'] for r in rows}
-    if {r['run_id'] for r in result['reviews']}!=expected:raise RuntimeError('review does not cover exactly the collected run IDs')
-    required={r['run_id']:set(r.get('required_reads',[])) for r in rows}
-    for verdict in result['reviews']:
-        missing=required[verdict['run_id']]-set(verdict['inspected_paths'])
-        if missing:raise RuntimeError(f'review omitted required evidence: {sorted(missing)}')
-        # Quotations of parsed JSON need not match its escaped bytes. Preserve the
-        # observations and tool transcript for content review, rather than reject
-        # a useful alert on formatting and thereby hide the reported failure.
-        if not verdict['observations']:
-            raise RuntimeError('review lacks content observations')
-    return result['reviews']
-
-def cancel_hackathon(base,trigger):
-    journal=base/'hackathon/state.json'
-    if not journal.exists():return
-    client=Client();state=json.loads(journal.read_text())
-    for task,item in state['tasks'].items():
-        rid=item.get('run_id')
-        if not rid:continue
-        result={'run_id':rid,'task':task,'trigger':trigger,'time':time.time()}
-        try:
-            before=client.request('/runs/'+rid);before=before.get('run',before)
-            if before.get('submission_id')!=state['submission_id']:raise RuntimeError('run submission differs from this journal')
-            result['before']=before.get('status')
-            if before.get('status') not in TERMINAL:
-                result['response']=client.request('/runs/'+rid+'/cancel',method='POST')
-                after=client.request('/runs/'+rid);after=after.get('run',after);result['after']=after.get('status')
-                result['confirmed']=after.get('status')=='CANCELLED'
-            else:result['already_terminal']=True
-        except Exception as e:result['error']=str(e)
-        save(base/'monitor'/('cancel-'+rid+'.json'),result)
-        alert(base,'hackathon_cancel_result',result)
-
-def run_batch(base,journals,state,*,semantic_review=False,cancel_on_lite_failure=False):
+def run_batch(base,journals,state,*,stale_after=1800,min_samples=2):
     stamp=datetime.datetime.now(datetime.timezone.utc).strftime('%Y%m%dT%H%M%S.%fZ')
     batch=base/'monitor'/stamp;batch.mkdir(parents=True)
     jobs=[]
@@ -150,30 +106,24 @@ def run_batch(base,journals,state,*,semantic_review=False,cancel_on_lite_failure
         comp=journal['competition_id']
         jobs += [(comp,task,item['run_id']) for task,item in journal['tasks'].items() if item.get('run_id') and item['run_id'] not in state['done']]
     with ThreadPoolExecutor(max_workers=4) as pool:
-        rows=list(pool.map(lambda x:collect(base,*x,batch,with_workspace=semantic_review),jobs))
-    # FAILED also means a scored application failed scenarios, not a harness failure.
-    failures=[r for r in rows if r['competition']=='arc-bench-lite' and r.get('status')=='FAILED'
-              and any(r.get('stages',{}).get(stage)=='failed' for stage in ('deploy_agent','start_agent'))]
-    if failures and cancel_on_lite_failure:cancel_hackathon(base,{'type':'lite_failed','runs':failures})
-    if rows and semantic_review:
-        try:
-            reviews=review(base,batch,rows,state.get('reviews',[]))
-            state.setdefault('reviews',[]).append(str(batch/'review.json'))
-            lite={r['run_id'] for r in rows if r['competition']=='arc-bench-lite'}
-            triggers=[r for r in reviews if r['run_id'] in lite and r['recommended_action']=='cancel_hackathon' and r['classification'] in {'confirmed_stall','harness_failure'} and r['evidence']]
-            if triggers and not failures and cancel_on_lite_failure:cancel_hackathon(base,{'type':'semantic_review','reviews':triggers,'source':str(batch/'review.json')})
-            alerts=[r for r in reviews if r['classification'] not in {'progress','waiting'}]
-            if alerts:alert(base,'review_result',{'reviews':alerts,'path':str(batch/'review.json')})
-        except Exception as e:alert(base,'review_failed',{'error':str(e),'batch':str(batch)})
+        rows=list(pool.map(lambda x:collect(base,*x,batch,with_workspace=True),jobs))
+    assessments=[]
     for row in rows:
+        rid=row['run_id']
+        observation=row.get('provider_observation') or {'observed_at':row['finished_at'],
+            'phase':row.get('status'),'run_error':row.get('failure_reason'),'sessions':[],
+            'errors':[], 'observation_error':row.get('observation_error') or row.get('workspace_error')}
+        verdict=assess(observation,state.setdefault('liveness',{}).get(rid),stale_after=stale_after,min_samples=min_samples)
+        state['liveness'][rid]=verdict
+        save(Path(row['evidence'])/'liveness.json',verdict)
+        assessments.append({'run_id':rid,**verdict})
+        notice=transition(rid,verdict,state.setdefault('notifications',{}))
+        if notice:alert(base,'provider_liveness',notice)
         if row.get('status') in TERMINAL:
-            state['done'].append(row['run_id'])
+            state['done'].append(rid)
             if row.get('workspace_error'):
-                state.setdefault('evidence_errors',{})[row['run_id']]=row['workspace_error']
-            alert(base,'terminal',row)
-        elif row.get('observation_error'):
-            alert(base,'observation_failed',row)
-    save(batch/'outcome.json',{'runs':rows,'done':state['done']})
+                state.setdefault('evidence_errors',{})[rid]=row['workspace_error']
+    save(batch/'outcome.json',{'runs':rows,'liveness':assessments,'done':state['done'],'model_invoked':False})
     for path in journals:
         journal=json.loads((path/'state.json').read_text())
         ids={item.get('run_id') for item in journal['tasks'].values()}
@@ -186,22 +136,26 @@ def main():
     p.add_argument('directory',type=Path)
     p.add_argument('--journal',type=Path,action='append',help='Existing competition journal; repeat for independent runs')
     p.add_argument('--once',action='store_true')
-    p.add_argument('--review',action='store_true',help='Download live workspaces and request one-shot semantic review')
+    p.add_argument('--review',action='store_true',help='Compatibility: provider evidence and script liveness only; never invokes a model')
     p.add_argument('--observe-only',action='store_true',help='Compatibility: observations are now the default')
-    p.add_argument('--cancel-on-lite-failure',action='store_true',help='Explicitly authorized cancellation of sibling Hackathon runs')
+    p.add_argument('--cancel-on-lite-failure',action='store_true',help='Removed: monitoring never cancels runs')
+    p.add_argument('--stale-after-seconds',type=int,default=1800)
+    p.add_argument('--minimum-samples',type=int,default=2)
     p.add_argument('--competition',action='append',choices=list(COMPETITIONS))
     a=p.parse_args()
-    if a.observe_only and a.cancel_on_lite_failure:
-        p.error('--observe-only conflicts with --cancel-on-lite-failure')
-    if a.journal and a.cancel_on_lite_failure:
-        p.error('sibling cancellation requires the legacy directory/hackathon journal layout')
+    if a.cancel_on_lite_failure:
+        p.error('--cancel-on-lite-failure is removed; monitoring is read-only')
+    if a.stale_after_seconds<=0 or a.minimum_samples<2:
+        p.error('stale threshold must be positive and minimum samples must be at least 2')
+    os.umask(0o077)
     base=a.directory.resolve();(base/'monitor').mkdir(parents=True,exist_ok=True)
     lock=(base/'monitor/lock').open('w');fcntl.flock(lock,fcntl.LOCK_EX|fcntl.LOCK_NB)
     journals=[path.resolve() for path in a.journal] if a.journal else [base/c for c in (a.competition or COMPETITIONS) if (base/c/'state.json').exists()]
     if not journals:p.error('no existing run journals found')
     path=base/'monitor/scheduler-v2.json'
     state=json.loads(path.read_text()) if path.exists() else {'done':[],'reviews':[],'next':{}}
-    state.update(pid=os.getpid(),journals=[str(j) for j in journals],semantic_review=a.review)
+    state.update(pid=os.getpid(),journals=[str(j) for j in journals],semantic_review=False,model_invoked=False,
+                 stale_after_seconds=a.stale_after_seconds,minimum_samples=a.minimum_samples)
     save(path,state)
     while True:
         active=[]
@@ -211,7 +165,7 @@ def main():
         if not active:break
         due=[j for j in active if state['next'].get(str(j),0)<=time.time()]
         if due:
-            run_batch(base,due,state,semantic_review=a.review,cancel_on_lite_failure=a.cancel_on_lite_failure)
+            run_batch(base,due,state,stale_after=a.stale_after_seconds,min_samples=a.minimum_samples)
             save(path,state)
             if a.once:break
         elif a.once:break

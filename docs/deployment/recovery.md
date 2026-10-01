@@ -86,15 +86,15 @@ python3 scripts/package_completed_recovery.py \
 
 ## 官网监控
 
-监控由程序与一次性审查者分工。程序在 run 启动后前 10 分钟每 3 分钟、随后每 8 分钟读取状态和阶段；运行中默认不下载整个工作区，也不调用模型。终态时下载原始工作区，保存总分、阶段及身份，然后退出；终态下载失败另记 `evidence_errors` 并随终态告警退出，不把缺证据当已收齐，也不因不存在的失败工作区无限等待。官网工作区打包下载允许 10 分钟，覆盖通常的 2–3 分钟。需要语义监督时明确添加 `--review`，每批下载后启动读取 [固定审查指令](../../agents/run-monitor.md) 的一次性审查者。审查者不计时或轮询。
+监控完全由脚本执行，不唤醒审查模型。程序在 run 启动后前 10 分钟每 3 分钟、随后每 8 分钟读取状态和阶段，并下载官网模板导出取得当前 provider 证据；下载保留原 ZIP，允许 10 分钟，不把耗时当成生成停滞。只选择 `template/.factory26/<id>/braid-state/status.json`，历史嵌套状态不参与当前判断。provider_sessions 与 turns 从导出的 DB/WAL 取得一致 SQLite 读取快照，原生文件以来源身份及恢复开始时间划界；导出文件集合本身是否原子仍为未知。终态保存总分、阶段及原件后退出；终态下载失败另记 evidence_errors 并告警，不无限等待缺失的失败工作区。
 
-下载、审查进程启动、审查结果保存、告警提交与取消确认分别留收据。文件哈希变化、token 增长不等于进展；下载失败不等于实验失败；通知系统接受提醒不代表人已看到。审查失败必须成为明确告警，不能把 needs_review 文件视作已经有人处理。每批保存提示词版本、模型、输入证据路径与结论，避免并发重复审查同一批。
+每批保存实际来源、观察时间、provider 身份与生命周期、native 活动元数据、阈值及未知。默认至少两次采样、30 分钟没有状态或实际活动变化才提示 suspected_stale；这是活动/存活异常提示，语义进度仍未知。sleeping、idle 与明确资源等待分别记录；idle 但 turn 仍 starting/running 不按正常闲置处理。未配结果的历史 tool call 不证明工具仍执行，不提供无限等待豁免；仅静止一次、token 不增或导入的 running 状态不能触发 stale。状态及故障签名去重通知，原错误保持完整，通知系统接受提醒不证明人已看到。
 
 短题暴露通用缺陷时，先保留全部现场并确定原因，再做有针对性的修复验证。在已授权的官网并行实验中，可按当轮规则取消同轮未终态的 Hackathon 运行；取消需要实际请求及远端状态确认。本地断点恢复应保留进度、受控暂停后续接，不机械沿用官网取消策略，也不在活动进程中无记录更换二进制。合理等待、外部故障与 Harness 缺陷分别处理，禁止无依据反复重生成。
 
 每轮在 task packet 登记题目、模型、来源、费用模式、调度、告警消费者和完成条件。官网默认使用 API、`self_funded` 自带 key、非参赛，不占比赛额度；策略可复用不等于无限付费授权。
 
-执行入口：`python3 -m lab.arc_bench.hosted_monitor <证据目录> --journal <Competition状态目录> [--journal <另一个状态目录>]`。省略 `--journal` 时沿用 `<目录>/hackathon` 或 `arc-bench-lite` 布局。默认只观察；已有明确取消授权且使用旧目录布局时，才可添加 `--cancel-on-lite-failure`。`FAILED` 但评分完成不触发联动取消；明确的生成/部署失败或审查者有证据的阻塞结论才进入取消路径。历史本地恢复使用任务内的 `runs/e20260927-01-handoff/local-monitor.py`；它不是所有 run 的统一入口。新本地观察入口见 [证据查询](evidence.md#等待反馈与交接)。
+执行入口：`python3 -m lab.arc_bench.hosted_monitor <证据目录> --journal <Competition状态目录> [--journal <另一个状态目录>]`。省略 journal 时沿用该目录的 hackathon 或 arc-bench-lite 布局。`--stale-after-seconds` 与 `--minimum-samples` 可调整阈值；旧 `--review` 仅兼容为纯脚本判断，不调用模型。取消选项已经拒绝，监控不自动取消、恢复、提交或收费重跑。历史本地脚本保留原件；当前本地脚本入口见[证据查询](evidence.md#等待反馈与交接)。
 
 ## 历史本地 attempt 的恢复
 

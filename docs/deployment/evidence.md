@@ -77,9 +77,8 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 
 ## 等待、反馈与交接
 
-长实验优先由程序持有运行命令并保存终态；需要语义监督时使用已获授权的 [run-monitor](../../agents/run-monitor.md) 子 Agent，主 Agent 处理其他工作或等待完成消息。
-交接只需本次目标、配置与证据路径、完成条件、允许操作和停止条件。
-子 Agent 根据程序摘要判断哪些证据值得展开，返回结果、依据、未知和需要决策的事项；不转发整段日志。
+长实验由程序持有运行命令、采集证据并保存终态；运行监控不再唤醒模型。官网与本地共享 provider 活动判断，保存来源身份、生命周期、恢复边界与 native 元数据；疑似 stale 仅表示长时间没有可观测活动，不判断语义进度。
+本地启动 `python3 -m lab.arc_bench.local_monitor --matrix /absolute/active-matrix.json --output /absolute/collector-output`，首轮立即采样，随后沿 3+8 分钟间隔。矩阵明确实际 lab run 路径，输出保留 scheduler、每批 provider-observation/liveness、原始有界材料、通知和终态；阈值可通过 stale-after-seconds 与 minimum-samples 调整。生成容器停止而 lab 仍回传时记 stopped_finalizing，不反复 exec 或把回传阶段当未知采集失败；source 终态及 transport-finalization 原错误分别保留。监控只读，不替代已有成功门控评分跟随。
 每次实验结束先向用户汇报，由用户决定下一轮，不自动重跑。
 
 旧 Factory `run` 的后台观察器每 180 秒读取已有事件并保存 `feedback.json`，相同类别错误不重复输出，执行退出时立即刷新终态。
@@ -88,7 +87,6 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 没有完整结果的旧 run 明确标记 `scope=generation`，不能据此声称 bench 已完成。
 
 主会话不定时读取原始流，也不通过每三分钟唤醒一次模型来模拟事件通知。
-使用子 Agent 的原生完成消息回传时，已有验收范围限于主会话仍活跃的情况；主会话结束或 App 关闭后的唤醒仍未验证。
 ARC 本地生成的恢复启动需要同时接续观察器。外层 `running` 只表示执行进程仍在，不能证明 Braid 负责人可执行。
 
 ```sh
