@@ -24,11 +24,47 @@ from braid_runtime import archive_state, export_delivery, load_delivery
 from core import archive_sessions
 
 
+def restore_launch_paths(run, request):
+    """Restore declared launchers and the source package paths used by native sessions."""
+    source_root = Path(json.loads((run / "materials.json").read_text())["runtime"]).parent
+    aliases = []
+    if source_root != ROOT:
+        # The local ARC adapter wraps a submitted package in submission/agent.
+        if ROOT.name != "agent" or ROOT.parent != source_root:
+            raise ValueError(f"unsupported recovery package relocation: {source_root} -> {ROOT}")
+        for name in ("runtime", "support", "extensions", "tools", "agents", "skills"):
+            target = ROOT / name
+            if not target.is_dir():
+                continue
+            alias = source_root / name
+            if alias.exists() or alias.is_symlink():
+                if alias.resolve() != target.resolve():
+                    raise ValueError(f"recovery package path is already occupied: {alias}")
+            else:
+                alias.symlink_to(target, target_is_directory=True)
+            aliases.append({"path": str(alias), "target": str(target)})
+    paths = {Path(request["pi"]["executable"]), run / "work/bin/pbb"}
+    paths.update(Path(binding["executable"]) for binding in request["bindings"].values())
+    repaired = []
+    for path in sorted(paths):
+        if not path.resolve(strict=True).is_relative_to(run):
+            raise ValueError(f"retained launcher is outside Braid run: {path}")
+        before = stat.S_IMODE(path.stat().st_mode)
+        # Hosted workspace exports can reduce every file to 0600, including launchers.
+        path.chmod(0o755)
+        repaired.append({"path": str(path), "previous_mode": oct(before), "mode": "0o755"})
+    (run / "recovery-launch-paths.json").write_text(json.dumps({
+        "package_aliases": aliases, "launchers": repaired,
+    }, indent=2) + "\n")
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("requirements_dir", type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--type", default="web")
+    parser.add_argument("--prepare-only", action="store_true",
+                        help="Restore and verify the workspace without starting Braid or calling models")
     args = parser.parse_args()
     print("Recovery: verifying packaged runtime and workspace", flush=True)
     manifest = verify_package(ROOT)
@@ -133,6 +169,8 @@ def main():
     if prior_result.exists():
         shutil.copy2(prior_result, run / "recovery-source-result.json")
     work, runtime = run / "work", ROOT / "runtime"
+    if continuing:
+        restore_launch_paths(run, request)
     if source.get("refresh_native_materials"):
         print("Recovery: refreshing native instructions and skills", flush=True)
         # Rebuild harness-owned materials, not application files or the object store.
@@ -199,7 +237,7 @@ def main():
     env = dict(os.environ)
     if continuing:
         key = os.environ.get("OPENAI_API_KEY") or os.environ.get("FACTORY26_API_KEY")
-        if not key:
+        if not key and not args.prepare_only:
             raise ValueError("generation recovery requires the current run API key")
         # Workspace ZIP extraction above preserves stored modes; packaged tools
         # get executable bits from verify_package, and new launchers set theirs.
@@ -213,7 +251,7 @@ def main():
                    PI_SUBAGENTS_TEMP_ROOT=str(work / "tmp" / f"pi-subagents-uid-{os.getuid()}"),
                    XDG_CONFIG_HOME=str(work / "home/.config"),
                    PI_CODING_AGENT_DIR=str(work / "home/.pi/agent"),
-                   PI_TELEMETRY="0", PI_OFFLINE="1", FACTORY26_API_KEY=key,
+                   PI_TELEMETRY="0", PI_OFFLINE="1", FACTORY26_API_KEY=key or "",
                    PBB_PIL_BIN=str(runtime / "node_modules/pi-lane/bin/pil.js"),
                    AGENT_BROWSER_EXECUTABLE_PATH=browser, BROWSER_EXECUTABLE_PATH=browser,
                    BROWSER_CHECK_NODE_MODULES=str(runtime / "node_modules"),
@@ -231,6 +269,20 @@ def main():
             env.update(variant.tool_environment(), PI_FFF_MODE="tools-only", PI_FFF_MULTIGREP="0",
                        PI_SUBAGENT_MAX_DEPTH="3")
     (run / "recovery-provenance.json").write_text(json.dumps(source, indent=2) + "\n")
+    if args.prepare_only:
+        save_environment = {name: env[name] for name in (
+            "HOME", "TMPDIR", "PATH", "PI_CODING_AGENT_DIR", "PI_OFFLINE",
+            "PI_SUBAGENT_MAX_DEPTH", "PI_FFF_MODE", "PI_FFF_MULTIGREP",
+        ) if name in env}
+        (run / "recovery-preparation.json").write_text(json.dumps({
+            "mode": "prepare-only", "models_started": False, "braid": str(braid),
+            "launcher_environment": save_environment,
+            "pi_executable": request.get("pi", {}).get("executable"),
+            "binding_executables": {name: binding["executable"]
+                                    for name, binding in request.get("bindings", {}).items()},
+        }, indent=2) + "\n")
+        print(f"Recovery: prepared without starting Braid; run={run}", flush=True)
+        return
     # A source archive is historical; live readers must see the resumed sessions.
     old_native = run / "native"
     if old_native.exists() or old_native.is_symlink():

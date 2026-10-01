@@ -1,13 +1,25 @@
 """Freeze a hosted Braid workspace for self-funded recovery; generation requires explicit opt-in."""
 
 import argparse
+from datetime import datetime, timezone
 import hashlib
 import json
-from pathlib import Path
+import os
+from pathlib import Path, PurePosixPath
 import shutil
+import stat
+import subprocess
+import sys
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED
 
-from package_agent import is_metadata_path
+from package_agent import is_metadata_path, require_private_artifact
+
+ROOT = Path(__file__).resolve().parents[1]
+
+
+def save(path, value):
+    path.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
+    path.chmod(0o600)
 
 
 def digest(path):
@@ -15,14 +27,110 @@ def digest(path):
         return hashlib.file_digest(stream, "sha256").hexdigest()
 
 
+def get_workspace(run_id, evidence):
+    """Keep the response body even when the official read-only download fails."""
+    sys.path.insert(0, str(ROOT))
+    from lab.arc_bench.playground import API, Client, run_path
+    endpoint = run_path(run_id) + "/workspace/template-bundle"
+    target = evidence / "workspace.zip"
+    receipt = {"method": "GET", "url": API + endpoint, "run_id": run_id,
+               "started_at": datetime.now(timezone.utc).isoformat()}
+    result = subprocess.run([
+        "curl", "-q", "--silent", "--show-error", "--proto", "=https",
+        "--connect-timeout", "30", "--max-time", "600", "--request", "GET",
+        "--cookie", str(Client().cookie), "--output", str(target),
+        "--write-out", "%{http_code}", API + endpoint,
+    ], capture_output=True, text=True)
+    receipt.update(finished_at=datetime.now(timezone.utc).isoformat(),
+                   http_status=result.stdout.strip(), curl_exit_code=result.returncode,
+                   transport_error=result.stderr.strip())
+    if target.exists():
+        target.chmod(0o600)
+        receipt.update(bytes=target.stat().st_size, sha256=digest(target), body=str(target))
+    save(evidence / "download.json", receipt)
+    if result.returncode or result.stdout.strip() != "200":
+        raise RuntimeError(f"workspace GET HTTP {receipt['http_status']}; curl {result.returncode}; "
+                           f"raw response and receipt retained in {evidence}")
+    return target
+
+
+def validate_archive(path, index_path, *, workspace=False, manifest=None):
+    """Check every member's CRC and hash without extracting or executing it."""
+    rows = []
+    with ZipFile(path) as archive:
+        seen = set()
+        for item in archive.infolist():
+            name = PurePosixPath(item.filename)
+            if (name.is_absolute() or ".." in name.parts or "\\" in item.filename
+                    or not name.parts or (workspace and name.parts[0] != "template")
+                    or name.as_posix() in seen):
+                raise ValueError(f"unsafe or duplicate ZIP path: {item.filename}")
+            seen.add(name.as_posix())
+            mode = item.external_attr >> 16
+            if not workspace and stat.S_ISLNK(mode):
+                raise ValueError(f"package contains symlink: {item.filename}")
+            if item.is_dir():
+                continue
+            with archive.open(item) as stream:
+                sha256 = hashlib.file_digest(stream, "sha256").hexdigest()
+            if manifest is not None and not is_metadata_path(item.filename) and item.filename != "package-manifest.json":
+                record = manifest["files"].get(item.filename)
+                if not record or record["sha256"] != sha256:
+                    raise ValueError(f"package manifest hash mismatch: {item.filename}")
+            rows.append({"path": item.filename, "bytes": item.file_size,
+                         "crc32": f"{item.CRC:08x}", "mode": oct(mode), "sha256": sha256})
+        if manifest is not None:
+            actual = {row["path"] for row in rows if row["path"] != "package-manifest.json"
+                      and not is_metadata_path(row["path"])}
+            if actual != {name for name in manifest["files"] if not is_metadata_path(name)}:
+                raise ValueError("package manifest member set differs from ZIP")
+    save(index_path, rows)
+    return rows
+
+
+def journal_inputs(folder, task, run_id, evidence):
+    inputs_path, state_path = folder / "inputs.json", folder / "state.json"
+    inputs, state = json.loads(inputs_path.read_text()), json.loads(state_path.read_text())
+    if inputs.get("venue") != "hosted" or state.get("venue") != "hosted":
+        raise ValueError("recovery journal must describe a hosted run")
+    tasks = state["tasks"]
+    if task is None:
+        if len(tasks) != 1:
+            raise ValueError("journal has multiple tasks; specify --task")
+        task = next(iter(tasks))
+    selected = tasks[task]
+    if task not in inputs["tasks"] or not selected.get("run_id"):
+        raise ValueError("journal has no frozen input and run for selected task")
+    if run_id is not None and selected["run_id"] != run_id:
+        raise ValueError("--source-run-id differs from journal")
+    if selected.get("remote_status") not in {"PASSED", "FAILED", "CANCELLED"} or state.get("pending"):
+        raise ValueError("journal does not confirm a stopped source run")
+    if not inputs.get("package_sha256") or inputs["package_sha256"] != state.get("package_sha256"):
+        raise ValueError("journal package SHA256 differs between inputs and state")
+    receipt = {"journal": str(folder), "task": task, "run_id": selected["run_id"],
+               "submission_id": state.get("submission_id"),
+               "package_sha256": inputs["package_sha256"],
+               "terminal_status": selected["remote_status"], "observed_at": selected.get("observed_at"),
+               "status_source": "saved journal, not a fresh API observation",
+               "inputs_sha256": digest(inputs_path), "state_sha256": digest(state_path)}
+    save(evidence / "journal.json", receipt)
+    return inputs, receipt
+
+
 def main():
+    # Frozen runtime material can contain tool credentials, including while writing.
+    os.umask(0o077)
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--source-run-id", required=True)
-    parser.add_argument("--workspace", type=Path, required=True)
-    parser.add_argument("--base-package", type=Path, required=True)
-    parser.add_argument("--braid", type=Path, required=True)
-    parser.add_argument("--braid-source", type=Path, required=True)
+    parser.add_argument("--journal", type=Path, help="Hosted Competition journal; discovers frozen package and run")
+    parser.add_argument("--task", help="Required only when the journal contains multiple tasks")
+    parser.add_argument("--source-run-id")
+    parser.add_argument("--workspace", type=Path, help="Reuse an original ZIP; otherwise download the official bundle")
+    parser.add_argument("--workspace-sha256", help="Expected SHA256 of a reused original ZIP")
+    parser.add_argument("--base-package", type=Path)
+    parser.add_argument("--braid", type=Path, help="Explicit binary override; default is exact binary from frozen package")
+    parser.add_argument("--braid-source", type=Path, help="Optional source snapshot for reproducing a binary override")
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--evidence-dir", type=Path, help="New directory for original ZIP, indices and receipts")
     parser.add_argument("--continue-generation", action="store_true",
                         help="Resume open work items with models; source execution must already be stopped")
     parser.add_argument("--refresh-native-materials", action="store_true",
@@ -30,13 +138,56 @@ def main():
     args = parser.parse_args()
     if args.refresh_native_materials and not args.continue_generation:
         parser.error("--refresh-native-materials requires --continue-generation")
-    workspace = args.workspace.resolve(strict=True)
-    base = args.base_package.resolve(strict=True)
-    braid = args.braid.resolve(strict=True)
-    braid_source = args.braid_source.resolve(strict=True)
+    if not args.journal and (not args.source_run_id or not args.base_package):
+        parser.error("provide --journal or both --source-run-id and --base-package")
+    if args.task and not args.journal:
+        parser.error("--task requires --journal")
     output = args.output.resolve()
     if output.exists():
         raise FileExistsError(output)
+    evidence = (args.evidence_dir or output.parent / (output.stem + "-evidence")).resolve()
+    require_private_artifact(output)
+    require_private_artifact(evidence)
+    evidence.mkdir(parents=True, mode=0o700, exist_ok=False)
+    inputs = binding = None
+    if args.journal:
+        journal = args.journal.resolve(strict=True)
+        inputs, binding = journal_inputs(journal, args.task, args.source_run_id, evidence)
+        args.source_run_id = binding["run_id"]
+        if args.base_package is None:
+            args.base_package = journal / inputs["package"]
+    base = args.base_package.resolve(strict=True)
+    base_sha256 = digest(base)
+    if inputs and base_sha256 != inputs["package_sha256"]:
+        raise ValueError("base package SHA256 differs from frozen journal")
+    with ZipFile(base) as archive:
+        frozen_manifest = json.loads(archive.read("package-manifest.json"))
+    if inputs and frozen_manifest != inputs["package_manifest"]:
+        raise ValueError("base package manifest differs from frozen journal")
+    validate_archive(base, evidence / "base-index.json", manifest=frozen_manifest)
+    if args.workspace:
+        original_workspace = args.workspace.resolve(strict=True)
+        workspace = evidence / "workspace.zip"
+        with original_workspace.open("rb") as incoming, workspace.open("xb") as outgoing:
+            shutil.copyfileobj(incoming, outgoing)
+        workspace.chmod(0o600)
+        save(evidence / "workspace-origin.json", {"mode": "reused original", "path": str(original_workspace),
+             "sha256": digest(original_workspace), "run_binding": "selected source run; not embedded official identity",
+             "preserved_at": datetime.now(timezone.utc).isoformat()})
+    else:
+        workspace = get_workspace(args.source_run_id, evidence)
+    workspace_sha256 = digest(workspace)
+    if args.workspace_sha256 and workspace_sha256 != args.workspace_sha256:
+        raise ValueError("workspace SHA256 differs from expected original")
+    validate_archive(workspace, evidence / "workspace-index.json", workspace=True)
+    if args.braid:
+        braid = args.braid.resolve(strict=True)
+    else:
+        braid = evidence / "braid"
+        with ZipFile(base) as archive, archive.open("runtime/bin/braid") as incoming, braid.open("xb") as outgoing:
+            shutil.copyfileobj(incoming, outgoing)
+        braid.chmod(0o600)
+    braid_source = args.braid_source.resolve(strict=True) if args.braid_source else None
     with ZipFile(workspace) as archive:
         candidates = [p for p in archive.namelist() if p.startswith("template/.factory26/")
                       and p.endswith("/braid-state/request.json")]
@@ -46,21 +197,44 @@ def main():
         request = json.loads(archive.read(candidates[0]))
         if request.get("run_id") != braid_run:
             raise ValueError("retained Braid run identity differs from its path")
+        live_request = json.loads(archive.read(f"template/.factory26/{braid_run}/braid-request.json"))
+        if (live_request.get("run_id") != braid_run
+                or live_request.get("state") != f"/workspace/template/.factory26/{braid_run}/braid-state"):
+            raise ValueError("retained launcher request does not match the official workspace layout")
+        for name in ("braid-state/braid.sqlite3", "materials.json"):
+            archive.getinfo(f"template/.factory26/{braid_run}/{name}")
+        materials = json.loads(archive.read(f"template/.factory26/{braid_run}/materials.json"))
+        material_mismatches = []
+        for section in ("agents", "skills"):
+            for name, sha256 in materials.get(section, {}).items():
+                if frozen_manifest["files"].get(f"{section}/{name}", {}).get("sha256") != sha256:
+                    material_mismatches.append(f"{section}/{name}")
+        if material_mismatches and not args.refresh_native_materials:
+            raise ValueError(f"workspace material differs from frozen package: {material_mismatches}")
         requirements_sha256 = hashlib.sha256(archive.read("template/requirements/requirements.yaml")).hexdigest()
     source = {"source_run_id": args.source_run_id, "braid_run_id": braid_run,
-              "workspace_sha256": digest(workspace), "base_package_sha256": digest(base),
-              "braid_sha256": digest(braid), "braid_source_sha256": digest(braid_source),
+              "workspace_sha256": workspace_sha256, "base_package_sha256": base_sha256,
+              "braid_sha256": digest(braid), "braid_source_sha256": digest(braid_source) if braid_source else None,
+              "braid_binary_source": "explicit override" if args.braid else "frozen package runtime/bin/braid",
+              "frozen_braid_source": frozen_manifest.get("sources", {}).get("braid"),
               "requirements_sha256": requirements_sha256,
+              "source_stop_confirmation": "saved terminal journal" if binding else "caller-confirmed; not independently verified",
+              "workspace_material_differences": material_mismatches,
               "mode": "workspace-resume" if args.continue_generation else "completed-workspace-recovery",
               "refresh_native_materials": args.refresh_native_materials}
-    root = Path(__file__).resolve().parents[1]
-    main_file = root / "submission/recover_completed.py"
+    if binding:
+        source["journal_binding"] = binding
+    main_file = ROOT / "submission/recover_completed.py"
     replacements = {"main.py": main_file, "runtime/bin/braid": braid,
-                    "recovery-braid-source.tar.gz": braid_source,
                     "recovery-workspace.zip": workspace}
+    if braid_source:
+        replacements["recovery-braid-source.tar.gz"] = braid_source
     output.parent.mkdir(parents=True, exist_ok=True)
+    created = False
     try:
-        with ZipFile(base) as original, ZipFile(output, "w", allowZip64=True) as target:
+        stream = output.open("xb")
+        created = True
+        with stream, ZipFile(base) as original, ZipFile(stream, "w", allowZip64=True) as target:
             manifest = json.loads(original.read("package-manifest.json"))
             manifest["files"] = {name: record for name, record in manifest["files"].items()
                                  if not is_metadata_path(name)}
@@ -76,11 +250,12 @@ def main():
                         or not instructions):
                     raise ValueError("base package is missing collector, observer, or variant instructions")
                 refreshed = ["support/otlp.py", observer, *instructions]
-                replacements["support/otlp.py"] = (root / "lab/otlp.py").resolve(strict=True)
-                replacements[observer] = (root / "variants" / variant / observer).resolve(strict=True)
-                replacements.update({name: (root / "variants" / variant / name).resolve(strict=True)
+                replacements["support/otlp.py"] = (ROOT / "lab/otlp.py").resolve(strict=True)
+                replacements[observer] = (ROOT / "variants" / variant / observer).resolve(strict=True)
+                replacements.update({name: (ROOT / "variants" / variant / name).resolve(strict=True)
                                      for name in instructions})
-            skipped = set(replacements) | {"recovery-source.json", "package-manifest.json"}
+            skipped = set(replacements) | {"recovery-source.json", "package-manifest.json", "recovery-braid-source.tar.gz"}
+            manifest["files"].pop("recovery-braid-source.tar.gz", None)
             for item in original.infolist():
                 if item.filename in skipped or is_metadata_path(item.filename):
                     continue
@@ -98,13 +273,19 @@ def main():
             manifest["files"]["recovery-source.json"] = {"sha256": hashlib.sha256(encoded).hexdigest(),
                                                           "executable": False}
             manifest["sources"]["braid"]["binary_sha256"] = source["braid_sha256"]
-            manifest["sources"]["braid"]["source_snapshot_sha256"] = source["braid_source_sha256"]
+            if braid_source:
+                manifest["sources"]["braid"]["source_snapshot_sha256"] = source["braid_source_sha256"]
             target.writestr("package-manifest.json", json.dumps(manifest, ensure_ascii=False),
                             compress_type=ZIP_DEFLATED)
     except BaseException:
-        output.unlink(missing_ok=True)
+        if created:
+            output.unlink(missing_ok=True)
         raise
-    print(json.dumps({"package": str(output), "sha256": digest(output), **source}, ensure_ascii=False))
+    output.chmod(0o600)
+    validate_archive(output, evidence / "recovery-index.json", manifest=manifest)
+    receipt = {"package": str(output), "sha256": digest(output), "evidence": str(evidence), **source}
+    save(evidence / "receipt.json", receipt)
+    print(json.dumps(receipt, ensure_ascii=False))
 
 
 if __name__ == "__main__":

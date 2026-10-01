@@ -14,7 +14,21 @@
 
 ### 完成工作区与未完成接续
 
-已完成的 Braid 工作区用 `python3 scripts/package_completed_recovery.py --source-run-id <旧run> --workspace <官网工作区ZIP> --base-package <旧冻结包> --braid <修复版Linux二进制> --braid-source <对应源码快照> --output <新包>` 准备。新包携带原工作区与哈希；入口恢复原 Braid run、确认所有工作项终态，再导出旧 `main`。每个新包使用独立的 Competition journal 和 `self_funded`，旧 run 不会原地恢复；具体来源及身份见当轮 packet。默认模式发现开放工作项会拒绝生成，防止一次重评意外调用模型。
+官网工作区用一条命令导出并准备恢复包：
+
+```sh
+python3 scripts/package_completed_recovery.py \
+  --journal runs/<实验>/<官网journal> \
+  --output runs/<实验>/recovery/recovery.zip
+```
+
+入口从 journal 的 `inputs.json` 和 `state.json` 选择旧 run，核对冻结包 SHA256、完整 manifest 和已保存终态；多题 journal 添加 `--task <题目>`。它复用 Playground 网站 Cookie，只读下载 `/api/runs/<run>/workspace/template-bundle`，默认直接使用冻结包内的 `runtime/bin/braid`。需要接续尚未完成的生成时，显式添加 `--continue-generation`。这个打包过程不启动模型或官网 run。
+
+原始 ZIP、下载 HTTP 状态及时间、每个成员的 CRC/SHA256、冻结包和恢复包索引保存在默认的 `<新包文件名去掉.zip>-evidence/`，可用 `--evidence-dir` 指定新目录。目录和输出必须尚不存在，原件不覆盖、不改权限或内容；下载失败保留响应原文和传输错误。使用已经保存的原件时添加 `--workspace <原ZIP> --workspace-sha256 <预期SHA256>`，入口复制它到独立证据目录。此时收据明确说明 run 关联来自选定 journal，ZIP 本身未嵌入官网 run 身份；保存的终态也不会冒充新取得的状态。
+
+显式修复版二进制仍可用 `--braid <Linux二进制>`；`--braid-source <源码tar.gz>` 是可选复现材料，不是执行依赖。不传源码 tar 时保留冻结 manifest 的源码身份，`recovery-source.json` 分别记录冻结源码和本次二进制来源。没有 journal 的历史用法仍支持 `--source-run-id <旧run> --base-package <冻结包> --workspace <原ZIP>`，来源已停止的判断由对应 packet 负责。
+
+新包携带原工作区与哈希；默认入口恢复原 Braid run、确认所有工作项终态，再导出旧 `main`。每个新包使用独立的 Competition journal 和当轮已冻结的费用模式，旧 run 不会原地恢复；具体来源及身份见当轮 packet。默认模式发现开放工作项会拒绝生成，防止一次重评意外调用模型。
 
 自费迭代遇到未完成的生成中断时，保留原始 ZIP 和完整 Braid 工作区。打包命令添加 `--continue-generation` 可准备未完成工作区的接续包；它恢复原模型与工具环境、Git 索引及保留文件，调用原 `braid local` 请求，不改数据库生命周期。此模式只用于来源执行环境已经停止的快照；恢复入口显式调用 `braid local REQUEST --offline-resume`，由 Braid 撤销旧执行身份、修复输入重放并准备会话，Factory 不修改数据库。未完成接续已有平稳续进的官网实际反馈，但该 run 后由用户主动结束，没有恢复后的完整评分结论；已完成恢复模式另有生成、部署和评分证据。具体范围见 [设施 packet](../../tasks/experiment-infrastructure/packet.md#验证与限制)，已有 g03–g05 手写包不作为此入口验收。原始证据保持只读，接续时新增的通知要标明来源，不能改写成历史上已经送达。
 
@@ -27,7 +41,20 @@ I13 的归档回执将恢复承诺和原文保存分别记录；即使应用已�
 需要把新的技能和原生指令应用于半成品时，使用包含新 variant 材料的 `--base-package`，并同时指定 `--continue-generation --refresh-native-materials`。恢复入口重建宿主拥有的 skills、capabilities 和成员指令，保留旧材料副本、应用工作区、协作记录和原模型路由；Braid 在离线恢复边界重建受影响的原生会话。仅替换二进制而不刷新材料，不代表新技能或提示词已生效。原执行须先停止，每次接续使用新的包和运行目录。
 
 
-接续入口从工作区 ZIP 还原 Unix 文件权限和符号链接，使用包内 Pi 时间回调与 OTLP 接收器追加本次采集。Braid 结束后重新归档原生会话，原 ZIP 自带的 `native/` 先保存在 `recovery-source-native-<时间戳>/`；`recovery-diagnostics.json` 分别记录采集、归档和清理错误。清理失败仍阻断交付。旧来源和新接续的采集时间段应分开解读，不能把恢复后新增记录当作旧运行的当时状态。
+接续入口从工作区 ZIP 还原 Unix 文件权限和符号链接。官网导出会把执行文件降为 `0600` 时，冻结包执行位按 manifest 恢复；保留的 `request.pi.executable`、各 binding 的 executable 和 `work/bin/pbb` 按声明恢复 `0755`，要求解析后仍在同一 Braid run 内。原生会话使用旧 `/workspace/submission/runtime` 路径、本地 ARC wrapper 把包放在 `/workspace/submission/agent` 时，入口仅为包内存在的 runtime、support、extensions、tools、agents、skills 建立兼容链接；已占用且指向不同位置的路径会拒绝恢复。修复列表写入 `recovery-launch-paths.json`，不会批量 chmod 文件或改写历史技能、指令和配置。
+
+只准备现场而不运行 Braid，可在 Linux x86_64、Python 3.12 的实际 ARC 包布局中执行：
+
+```sh
+python3 /workspace/submission/agent/main.py /workspace/template/requirements \
+  --output-dir /workspace/template --prepare-only
+```
+
+准备仍核验完整包、需求和工作区，恢复 Git 索引、已声明执行位和兼容路径，写入 `recovery-preparation.json` 后退出。它不需要模型 key，不启动采集器、Braid 或模型，不改旧 `native/` 归档。可在 `--network none` 容器中按收据的 `launcher_environment` 执行实际 `pi_executable --version` 和各 `binding_executables --version`，核对启动链。这个反馈不能证明模型调用、离线会话恢复或最终评分成功；准备目录也不能再作为全新执行目录使用。
+
+官网遗漏 private clone `.git` 时，入口仍从保留的 `origin.git` 和已发布 ref 重建索引，使用 `git read-tree` 保留未提交文件，记录 `recovery-git.json`；未发布的私有提交历史不能凭文件猜回。自动打包校验不是完整可恢复检查点认证，仍须核对应用、Braid DB/WAL 和原生会话的停止时点及对应性。
+
+实际接续使用包内 Pi 时间回调与 OTLP 接收器追加本次采集。Braid 结束后重新归档原生会话，原 ZIP 自带的 `native/` 先保存在 `recovery-source-native-<时间戳>/`；`recovery-diagnostics.json` 分别记录采集、归档和清理错误。清理失败仍阻断交付。旧来源和新接续的采集时间段应分开解读，不能把恢复后新增记录当作旧运行的当时状态。
 
 应用生成完成后冻结交付版本，通过官网自费应用重放取得官方评分；本地模拟分数和启动检查不替代官网评分。工作区接续与应用重放分别记录来源，不能把重放分数冒称为一次新的端到端生成成绩。正式参赛提交从冻结 Harness 和需求重新生成，以测量完整执行；自费迭代不因此丢弃可续接的工作区。
 
