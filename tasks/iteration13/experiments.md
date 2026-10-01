@@ -1,6 +1,6 @@
 # e20261001-01：I13 首轮实验
 
-当前状态：用户因 WSL 问题改为官网参赛，明确授权“上传到官网运行，参加比赛，使用比赛额度，跑github先，继续按3+8监控实际运行状态（glm-5.3-flash variant）”。本次仅启动 `pi-braid-i13` 的 GitHub 一次；WSL、本地矩阵、Sheet 与 GLM 根组继续暂停。以下旧本地安排保留为历史方案，不作为本次官网启动前提。
+当前状态：GitHub单题已在生成阶段异常终止，尚未评测；用户已授权子Agent保全工作区并排查证据，正在执行。此前用户因 WSL 问题改为官网参赛，明确授权“上传到官网运行，参加比赛，使用比赛额度，跑github先，继续按3+8监控实际运行状态（glm-5.3-flash variant）”。本次仅启动 `pi-braid-i13` 的 GitHub 一次；WSL、本地矩阵、Sheet 与 GLM 根组继续暂停。以下旧本地安排保留为历史方案，不作为本次官网启动前提。
 
 2026-10-01 用户在审阅最终检查结果后明确：“好的，可以启动 I13 了。”本轮承接两组根配方各生成 GitHub、Sheet 一次，共四次新生成的建议，授权必要的根对照实现、最终材料冻结、独立干净宿主建立、本地生成、Console 人工介入与逐题官网应用重放。I12 已结束，仅保留其归档；当时无法挂载的旧 Debian VHDX 和冷备不进入恢复范围。
 
@@ -20,6 +20,16 @@
 2026-10-01 13:20:59 CST 启动；submission `d0692dd35545`，run [`346bc3b51b09`](https://arc-bench.com/runs/346bc3b51b09)。官网已完成环境部署并进入生成阶段；首批13:21:10的状态为 RUNNING，评测尚未开始。
 
 官网保存的 submission 已核实 `credential_mode=official_evaluation`；本次未提供个人模型 key。run 返回 `billing_mode=self_funded`，两者不一致，与既有平台记录的差异相同。原始 submission history、status 与启动摘要均保留在新证据目录；实际费用归属不能仅凭其中一个字段断言，后续继续核对。
+
+### 官网终态（2026-10-01 15:04 CST）
+
+run `346bc3b51b09` 已终止，状态为 `FAILED`，发生在生成阶段，未进入官方评测：`deploy_agent=completed`、`start_agent=failed`、`run_tests=pending`、`evaluation_started_at=null`。官网记录的分数为 `0.0`，通过/失败测试数均为 `0`，因此这不是一次有效的应用评分。
+
+终态回执记录：开始 `2026-10-01T05:20:59.107371Z`，结束 `2026-10-01T06:50:48.440272Z`，持续 `5335` 秒；token `58165820`，费用 `13.328865 CNY`，`billing_mode=self_funded`。submission 仍为 `credential_mode=official_evaluation`，二者差异保留，不能仅凭字段断言实际费用归属。
+
+官网 failure_reason 只有外层命令 `python3 /workspace/submission/main.py ...` 返回非零，没有 traceback。终止前 Braid 仍有 PR #3/#4/#5 的实际编辑与测试活动，`active_turns=3`、`blocked_groups=0`、`delivery_closed=false`；PR #5 同时出现 Node 24 不满足项目 `>=20 <21` 的依赖错误，但现有证据不足以证明它就是外层退出根因。因此本次结论为“生成阶段未归因终止”，不是已确认的 Harness、应用或 provider 故障。
+
+完整终态证据入口：`runs/iteration13/hosted-20261001/completion.json` 与 `runs/iteration13/hosted-20261001/monitor/20261001T065751.899359Z/346bc3b51b09/`；独立监控已完成采集，未重发请求、未启动第二次收费尝试。用户随后明确要求“安排sub-agent保留工作区并且排查证据”。已委派 `/root/i13_hosted_failure_evidence`（GPT-6.1-Sol / extra-high）下载并核验官网可得工作区与日志、保留Git/未提交worktree/Braid数据库和会话、核对终止因果与恢复一致性。独立输出归 `failure-investigation/` 与 `tasks/iteration13/hosted-github-failure.md`；当前无重跑或源码修复动作。
 
 Mac 后台协调进程46943、3+8采集进程46944已经启动，使用 `lab.arc_bench.hosted_monitor --review` 与独立 `agents/run-monitor.md`（GPT-5.6-Luna/low）。首批实际状态与归档读取成功，归档当时仅含需求，尚无原生会话，因此只能证明平台启动阶段，不能证明模型已开始有效开发。第一次内容审查已结束；主线已消费其引用并保留此证据缺口。终态由 `follow-hosted.py` 收集 status、logs、traceability 与 Git history。heartbeat `i13-github` 每8分钟消费已有监控结果，仅在故障、完成或需要决定时通知；现已按用户要求迁入独立[GPT-5.6-Luna监控会话](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706)（low），主开发会话不再定时唤醒。
 

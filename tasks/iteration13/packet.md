@@ -1,6 +1,16 @@
 # I13：Braid、子Agent与协作方法改进
 
-2026-10-01 当前阶段：用户因 WSL 问题明确改为官网参赛，授权使用比赛额度先跑 GLM-5.3-Flash variant 的 GitHub，并继续3+8实际状态监控。已按[首轮实验当前范围](experiments.md#当前官网启动范围)启动官网 GitHub：submission `d0692dd35545`，run `346bc3b51b09`，13:20:59 CST开始，首批状态RUNNING；13:24:58已直接核实根会话的真实工具调用与vision委派；复用 Flash/K2.7 Code 冻结包，3+8采集和Luna内容审查已运行。WSL与其余三项运行继续暂停，不恢复 I12。监控与heartbeat现已移交独立[GPT-5.6-Luna会话](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706)，主会话不再定时跟进。此前暂停现场见 `runs/iteration13/start-20261001/pause-receipt.json`；submission保存official_evaluation，run计费字段却为self_funded；差异及原始回执保留在实验记录中。
+## 官网 GitHub 首轮终态（2026-10-01）
+
+本次唯一获授权的官网 GitHub run 已异常终止：submission `d0692dd35545`，run `346bc3b51b09`，冻结包 SHA256 `afca9654b10544851885c748060d7d283b2d40b0890363f6acfb9a2dfe677877`，variant `pi-braid-i13`。run 在生成阶段 `FAILED`，未进入官方评测；官网分数 `0.0` 仅表示未评测，测试通过/失败均为 `0`。
+
+准确终态：开始 `2026-10-01T05:20:59.107371Z`，结束 `2026-10-01T06:50:48.440272Z`，耗时 `5335` 秒；token `58165820`，费用 `13.328865 CNY`，run 字段 `billing_mode=self_funded`，submission 字段仍为 `credential_mode=official_evaluation`。费用归属保留为未能仅凭字段确认的差异。
+
+外层 failure_reason 只有 `main.py` 非零退出，没有底层 traceback。终止前 Braid 的 PR #3/#4/#5 仍有实际工具活动，`active_turns=3`、`blocked_groups=0`、`delivery_closed=false`；其中 PR #5 有 Node 24 与项目 `>=20 <21` 不匹配，但尚不能将其确认为外层失败根因。结论为未归因的生成终止，保留现场，不自动取消、重发或重跑。
+
+证据入口：`runs/iteration13/hosted-20261001/completion.json`、`runs/iteration13/hosted-20261001/monitor/20261001T065751.899359Z/346bc3b51b09/`。用户现已明确要求“安排sub-agent保留工作区并且排查证据”，现场保全与因果调查已交给 GPT-6.1-Sol / extra-high 子Agent `/root/i13_hosted_failure_evidence`。子Agent负责独立保全目录 `runs/iteration13/hosted-20261001/failure-investigation/` 与调查文档 `tasks/iteration13/hosted-github-failure.md`，主线整合回执。授权限于保全、只读取证和诊断，先确认Git/未提交worktree、Braid数据库与原生会话的同次运行关系及可恢复边界；WSL、Sheet、GLM根组、修改冻结包与第二次收费尝试仍不启动。
+
+2026-10-01 启动经过：用户因 WSL 问题明确改为官网参赛，授权使用比赛额度先跑 GLM-5.3-Flash variant 的 GitHub，并继续3+8实际状态监控。已按[首轮实验当前范围](experiments.md#当前官网启动范围)启动官网 GitHub：submission `d0692dd35545`，run `346bc3b51b09`，13:20:59 CST开始，首批状态RUNNING；13:24:58已直接核实根会话的真实工具调用与vision委派；复用 Flash/K2.7 Code 冻结包，3+8采集和Luna内容审查已运行。WSL与其余三项运行继续暂停，不恢复 I12。监控与heartbeat现已移交独立[GPT-5.6-Luna会话](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706)，主会话不再定时跟进。此前暂停现场见 `runs/iteration13/start-20261001/pause-receipt.json`；submission保存official_evaluation，run计费字段却为self_funded；差异及原始回执保留在实验记录中。
 
 2026-10-01 旧本地启动授权与准备经过（现已暂停）：用户在最终检查后明确“好的，可以启动 I13 了”。此前准备[首轮实验](experiments.md)：两组 × GitHub/Sheet 共四次新生成，全部使用 ARC，独立干净 WSL 本地运行并保留 Console 人工介入，每题完成立即冻结应用并官网独立重放。启动准备包括已提出的独立 Debian-Factory26、GLM-5.3 根专用 variant 与最终私有制品；不对当时无法挂载的旧 Debian VHDX做写修复，也不恢复 I12。随后用户先要求“K2.7 code 替代 K3”，再修正“GLM-5.3 组继续使用 K3”：最终 Flash 根组 advisor 使用精确 `kimi-k2.7-code`，GLM-5.3 根组 advisor 保留 `kimi-k3`，本轮不再是纯根模型对照。当前尚未发起模型请求，实际运行与制品身份以实验记录为准。此前[最终检查](final-readiness.md)保留准备证据，其待授权描述由本次明确启动指示取代。
 
@@ -93,7 +103,7 @@ I12此前暂停后已在独立磁盘清理任务中主动终止；[清理执行�
 
 ## 当前下一步
 
-按[官网单题范围](experiments.md#当前官网启动范围)监控已启动GitHub，消费3+8程序与定向内容审查，核对实际生成行为与计费差异，终态收集并汇报。不把此前全ARC路由许可当作本次参赛依据；本次依据是用户明确“上传到官网运行，参加比赛，使用比赛额度”。其余题目、GLM根组与WSL继续暂停。
+完成已授权的官网GitHub失败现场保全和因果调查，核对入口退出码1背后的原始错误、异常前最后有效工作及可恢复边界。以子Agent独立保全回执和原件形成结论后向用户汇报；本轮不改冻结包、不恢复或新建收费运行，WSL与其它矩阵继续暂停。
 
 ## 批次完成与复核记录
 
