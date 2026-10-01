@@ -1,0 +1,70 @@
+--- a/dist/modes/rpc/rpc-mode.js
++++ b/dist/modes/rpc/rpc-mode.js
+@@ -21,6 +21,7 @@
+  * Listens for JSON commands on stdin, outputs events and responses on stdout.
+  */
+ export async function runRpcMode(runtimeHost) {
++    const managedRuntime = process.env.FACTORY_NATIVE_RUNTIME_MODULE ? await import(process.env.FACTORY_NATIVE_RUNTIME_MODULE) : undefined;
+     takeOverStdout();
+     let session = runtimeHost.session;
+     let unsubscribe;
+@@ -344,6 +345,12 @@
+             // =================================================================
+             // State
+             // =================================================================
++            case "stop_owned_execution": {
++                return success(id, "stop_owned_execution", managedRuntime ? await managedRuntime.cleanupOwnedExecution({ skipSelf: true }) : { status: "unknown", reason: "managed_runtime_unavailable" });
++            }
++            case "relieve_pressure": {
++                return success(id, "relieve_pressure", managedRuntime ? await managedRuntime.relievePressure() : { status: "unknown", reason: "managed_runtime_unavailable" });
++            }
+             case "get_state": {
+                 const state = {
+                     model: session.model,
+@@ -358,6 +365,7 @@
+                     autoCompactionEnabled: session.autoCompactionEnabled,
+                     messageCount: session.messages.length,
+                     pendingMessageCount: session.pendingMessageCount,
++                    managed_state: managedRuntime?.managedState(session) ?? { status: "unknown", reason: "managed_runtime_unavailable" },
+                 };
+                 return success(id, "get_state", state);
+             }
+@@ -589,6 +597,10 @@
+         unsubscribe?.();
+         unsubscribeBackpressure?.();
+         await runtimeHost.dispose();
++        if (managedRuntime) {
++            const stop = await managedRuntime.cleanupOwnedExecution({ skipSelf: true });
++            if (stop.status !== "stopped") console.error("Native child stop remains unknown:", stop.reason);
++        }
+         detachInput();
+         process.stdin.pause();
+         if (signal !== "SIGTERM") {
+--- a/dist/core/tools/bash.js
++++ b/dist/core/tools/bash.js
+@@ -47,13 +47,16 @@
+                 throw new Error(`Working directory does not exist: ${cwd}\nCannot execute ${shellName} commands.`);
+             }
+             const commandFromStdin = shellConfig.commandTransport === "stdin";
+-            const child = spawn(shellConfig.shell, commandFromStdin ? shellConfig.args : [...shellConfig.args, command], {
++            const managedRuntime = globalThis[Symbol.for("factory26.native-runtime.v1")];
++            const child = (managedRuntime?.spawnManaged ?? spawn)(shellConfig.shell, commandFromStdin ? shellConfig.args : [...shellConfig.args, command], {
+                 cwd,
+                 detached: process.platform !== "win32",
+                 env: env ?? getShellEnv(),
+                 stdio: [commandFromStdin ? "pipe" : "ignore", "pipe", "pipe"],
+                 windowsHide: true,
+             });
++            let rawClose;
++            child.once("close", (exitCode, signal) => { rawClose = { exit_code: exitCode, signal, observed_at: Date.now() }; });
+             if (commandFromStdin) {
+                 child.stdin?.on("error", () => { });
+                 child.stdin?.end(command);
+@@ -88,6 +91,7 @@
+                 // Handle shell spawn errors and wait for the process to terminate without hanging
+                 // on inherited stdio handles held by detached descendants.
+                 const exitCode = await waitForChildProcess(child);
++                await managedRuntime?.finishManagedProcess(child, rawClose ?? { exit_code: exitCode, observed_at: Date.now() });
+                 if (signal?.aborted) {
+                     throw new Error("aborted");
+                 }

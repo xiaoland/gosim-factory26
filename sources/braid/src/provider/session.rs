@@ -258,6 +258,15 @@ impl AgentSession for ProviderAgentSession {
         self.provider.can_accept_input(&thread_id).await.map_err(map_provider_error)
     }
 
+    async fn managed_state(&self) -> Result<crate::agent_session::ManagedState, SessionError> {
+        let inner = self.inner.lock().await;
+        if self.is_unavailable() { return Err(SessionError::Unavailable); }
+        if inner.status == SessionStatus::Running { return Ok(crate::agent_session::ManagedState::Busy); }
+        let id = inner.thread_id.clone().ok_or_else(|| SessionError::Failed("no provider session".into()))?;
+        drop(inner);
+        self.provider.managed_state(&id).await.map_err(map_provider_error)
+    }
+
     async fn close(&self) -> Result<(), SessionError> {
         self.unavailable.store(true, Ordering::SeqCst);
         let result = self.interrupt().await;

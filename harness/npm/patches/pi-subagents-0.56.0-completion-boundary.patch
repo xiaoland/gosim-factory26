@@ -168,7 +168,7 @@
  
  	pi.on("agent_end", async (_event, ctx) => {
 -		if (!ctx.hasUI) await drainOutstandingWork({ state, events: pi.events });
-+		if (!ctx.hasUI) {
++		if (ctx.mode !== "tui") {
 +			completionNotifier.beginDrain();
 +			try {
 +				let drainError: unknown;
@@ -191,3 +191,32 @@
  		const ownerSessionId = state.currentSessionId;
  		if (!ownerSessionId) return;
  		goalTurnId += 1;
+--- a/src/shared/utils.ts
++++ b/src/shared/utils.ts
+@@ -307,6 +307,10 @@
+  * Get the final text output from a list of messages
+  */
+ export function getFinalOutput(messages: Message[]): string {
++	const lastAssistant = messages.findLast((message) => message.role === "assistant");
++	if (lastAssistant?.role === "assistant" && lastAssistant.stopReason === "length") {
++		return `[结果不完整：stopReason=length，回答因长度限制截断。保留以下部分内容；按需仅补缺失部分，不必重做已完成工作。]\n\n${extractTextFromContent(lastAssistant.content)}`;
++	}
+ 	const validTextParts: string[] = [];
+ 	for (let i = messages.length - 1; i >= 0; i--) {
+ 		const msg = messages[i];
+@@ -509,6 +513,15 @@
+  * Detect errors in subagent execution from messages (only errors with no subsequent success)
+  */
+ export function detectSubagentError(messages: Message[]): ErrorInfo {
++	const lastAssistant = messages.findLast((message) => message.role === "assistant");
++	if (lastAssistant?.role === "assistant" && lastAssistant.stopReason === "length") {
++		return {
++			hasError: true,
++			exitCode: 1,
++			errorType: "response",
++			details: "stopReason=length：回答因长度限制截断，已有部分内容已保留；是否补齐缺失内容由调用者决定。",
++		};
++	}
+ 	let lastAssistantTextIndex = -1;
+ 	for (let i = messages.length - 1; i >= 0; i--) {
+ 		const msg = messages[i];

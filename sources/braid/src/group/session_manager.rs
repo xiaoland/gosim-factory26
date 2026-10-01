@@ -17,6 +17,10 @@ pub(super) struct SessionManager {
     sessions: Mutex<HashMap<String, ManagedSession>>,
     stopped: Mutex<HashSet<String>>,
     stop_failure: Mutex<Option<String>>,
+    uncertain_recoveries: Mutex<HashSet<String>>,
+    recovery_inputs: Mutex<HashMap<String, HashSet<String>>>,
+    deferred: Mutex<Option<String>>,
+    deferred_sessions: Mutex<HashSet<String>>,
 }
 
 struct ManagedSession {
@@ -42,11 +46,52 @@ impl SessionManager {
             sessions: Mutex::new(HashMap::new()),
             stopped: Mutex::new(stopped.into_iter().collect()),
             stop_failure: Mutex::new(None),
+            uncertain_recoveries: Mutex::new(HashSet::new()),
+            recovery_inputs: Mutex::new(HashMap::new()),
+            deferred: Mutex::new(None),
+            deferred_sessions: Mutex::new(HashSet::new()),
         }
     }
 
     pub(super) async fn check(&self) -> Result<(), SessionError> {
         self.factory.check().await
+    }
+    pub(super) async fn maintain_resources(&self) -> Result<(), SessionError> {
+        self.factory.maintain_resources().await
+    }
+    pub(super) async fn managed_ids(&self) -> Vec<String> {
+        self.sessions.lock().await.keys().cloned().collect()
+    }
+    pub(super) async fn allow_uncertain_recovery(&self, id: &str, new_inputs: &[String]) -> bool {
+        let mut inputs = self.recovery_inputs.lock().await;
+        let seen = inputs.entry(id.to_owned()).or_default();
+        if new_inputs.iter().any(|input| !seen.contains(input)) {
+            seen.extend(new_inputs.iter().cloned());
+            self.uncertain_recoveries.lock().await.remove(id);
+        }
+        !self.uncertain_recoveries.lock().await.contains(id)
+    }
+    pub(super) async fn note_uncertain_recovery(&self, id: &str) {
+        self.uncertain_recoveries.lock().await.insert(id.to_owned());
+    }
+    pub(super) async fn note_completed(&self, id: &str) {
+        self.uncertain_recoveries.lock().await.remove(id);
+    }
+    pub(super) async fn record_deferred(&self, error: String) {
+        *self.deferred.lock().await = Some(error);
+    }
+    pub(super) async fn take_deferred(&self) -> Option<String> {
+        self.deferred.lock().await.take()
+    }
+    pub(super) async fn record_session_deferred(&self, id: &str, error: String) {
+        self.deferred_sessions.lock().await.insert(id.to_owned());
+        self.record_deferred(error).await;
+    }
+    pub(super) async fn session_deferred(&self, id: &str) -> bool {
+        self.deferred_sessions.lock().await.contains(id)
+    }
+    pub(super) async fn clear_session_deferred(&self, id: &str) {
+        self.deferred_sessions.lock().await.remove(id);
     }
 
     pub(super) async fn get(&self, id: &str) -> Option<Arc<dyn AgentSession>> {
@@ -88,8 +133,10 @@ impl SessionManager {
     ) -> Result<(String, String), SessionError> {
         let binding_id = uuid::Uuid::now_v7().to_string();
         let cli = CliContext { state: self.state.clone(), binding_id: binding_id.clone() };
-        let CreatedSession { id, session, .. } =
-            self.factory.start(profile, instructions, context, cli).await?;
+        let created = self.factory.start(profile, instructions, context, cli).await;
+        if let Err(error @ SessionError::Deferred(_)) = &created { self.record_deferred(error.to_string()).await; }
+        if let Err(error @ SessionError::StopUnproved(_)) = &created { self.record_stop_failure(error).await; }
+        let CreatedSession { id, session, .. } = created?;
         self.stopped.lock().await.remove(&id);
         self.sessions.lock().await.insert(id.clone(), observed_session(&id, session));
         Ok((id, binding_id))
@@ -108,7 +155,11 @@ impl SessionManager {
         self.remove(&id).await?;
         let binding_id = uuid::Uuid::now_v7().to_string();
         let cli = CliContext { state: self.state.clone(), binding_id: binding_id.clone() };
-        let created = self.factory.resume(&id, profile, instructions, cli).await?;
+        let created = self.factory.resume(&id, profile, instructions, cli).await;
+        if let Err(error @ SessionError::Deferred(_)) = &created { self.record_session_deferred(&id, error.to_string()).await; }
+        if let Err(error @ SessionError::StopUnproved(_)) = &created { self.record_stop_failure(error).await; }
+        let created = created?;
+        self.clear_session_deferred(&id).await;
         if created.id != id {
             let _ = created.session.close().await;
             return Err(SessionError::Failed("resume changed the durable session identity".into()));

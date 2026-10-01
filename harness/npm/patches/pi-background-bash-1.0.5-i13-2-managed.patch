@@ -1,0 +1,77 @@
+--- a/extensions/background-bash.ts
++++ b/extensions/background-bash.ts
+@@ -91,6 +91,7 @@
+ 	ownerSessionId?: string;
+ 	service?: boolean;
+ 	completion?: Promise<CompletedBashRun>;
++	startError?: string;
+ 	abortController: AbortController;
+ 	startedAt: number;
+ 	cwd?: string;
+@@ -585,12 +586,20 @@
+ 			resolve(completed);
+ 		};
+ 
+-		const child = spawn("bash", ["-lc", params.command], {
++		const managedRuntime = (globalThis as any)[Symbol.for("factory26.native-runtime.v1")];
++		let child: ChildProcess;
++		try {
++		child = (managedRuntime?.spawnManaged ?? spawn)("bash", ["-lc", params.command], {
+ 			cwd,
+ 			env: process.env,
+ 			detached: true,
+ 			stdio: ["ignore", "pipe", "pipe"],
+-		});
++		}, { kind: "tool", service: job.service, manifest: job.pbb ? join(pbbJobsDir(job.pbb), `${job.id}.json`) : undefined });
++		} catch (error) {
++			job.startError = error instanceof Error ? error.message : String(error);
++			finish({ status: "error", error, body: job.startError, details: undefined, outcome: "error", exitCode: null });
++			return;
++		}
+ 		job.child = child;
+ 		job.pid = child.pid;
+ 		job.pgid = child.pid;
+@@ -630,7 +639,8 @@
+ 			finish({ status: "error", error, body: error.message, details: undefined, outcome: "error", exitCode: null });
+ 		});
+ 
+-		child.on("close", (code, signalName) => {
++		child.on("close", async (code, signalName) => {
++			await managedRuntime?.finishManagedProcess(child, { exit_code: code, signal: signalName, observed_at: Date.now() });
+ 			if (timedOut) {
+ 				const body = completionBody(output, `Command timed out after ${params.timeout} seconds`);
+ 				finish({ status: "error", error: new Error(body), body, details: undefined, outcome: "timeout", exitCode: code, signal: signalName ?? undefined });
+@@ -953,6 +963,11 @@
+ 
+ export default function backgroundBashExtension(pi: ExtensionAPI) {
+ 	installProcessHooks();
++	const managedRuntime = (globalThis as any)[Symbol.for("factory26.native-runtime.v1")];
++	const unregisterManaged = managedRuntime?.registerManagedProvider("pi-background-bash", () => ({
++		status: activeJobs.size || pendingBackgroundResultFollowUps.length ? "busy" : "quiescent",
++		reason: activeJobs.size ? "finite_job_or_service_active" : "result_not_consumed",
++	}));
+ 	const unregisterBackgroundWork = registerBackgroundWorkProvider({
+ 		name: "pi-background-bash",
+ 		listActiveWork: () => pendingCompletionJobs().map((job) => ({ id: job.id, sessionId: job.ownerSessionId! })),
+@@ -983,6 +998,7 @@
+ 		const outcomes = await Promise.allSettled(jobs.map((job) => job.completion ??
+ 			Promise.reject(new Error(`Background bash job ${job.id} has no completion promise.`))));
+ 		unregisterBackgroundWork();
++		unregisterManaged?.();
+ 		// Completion callbacks have persisted their results before notifications are discarded.
+ 		pendingBackgroundResultFollowUps.length = 0;
+ 		pendingJobs.detach();
+@@ -1048,6 +1064,13 @@
+ 				});
+ 
+ 				const completedPromise = runPbbBash(job, ctx.cwd, params);
++				if (job.startError) {
++					const completed = await completedPromise;
++					recordPbbJobCompleted(job, completed, ctx.cwd, Date.now() - job.startedAt);
++					activeJobs.delete(job.id);
++					pendingJobs.finish(job.id);
++					throw new Error(job.startError);
++				}
+ 				// Capture cwd eagerly: the completion callback may fire after session
+ 				// teardown (headless one-shot exit), when ctx.cwd access throws.
+ 				const jobCwd = ctx.cwd;

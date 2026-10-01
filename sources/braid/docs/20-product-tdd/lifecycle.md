@@ -12,6 +12,12 @@ Context 失效先保留待重建事件，并将变更引用告知原会话。运
 
 持久化 idle 只描述 Braid 已管理 turn 的状态；Pi 原生会话仍可能执行后台 follow-up。新普通输入与重置通知领取前均核对原生当前是否可接收，发送时若状态变化而返回 Deferred，则保留待投递义务。重置通知复用同一未开始 turn，记录原始延后原因、首次和最近延后时间及次数，不记为执行失败；旧会话仍须收到通知并完成原生证据验证后才能替换。
 
+支持 managed execution 的 Pi 将原生静止与输入可接收分别报告。`get_state.data.managed_state` 包含 `status` 和当前 `execution_id`；只有身份一致的 `quiescent` 可以卸载 OPEN 的 idle 成员。服务、后台工作或未消费结果使原生仍为 busy，但服务驻留本身不禁止普通输入。卸载前在同一 Store 事务确认当前 assignment/member/version、无活动 turn、待输入或 reset，并清除旧 `cli_binding_id`；事务之后到达的新输入继续留队。停止证明通过后释放物理句柄，逻辑成员、provider session、clone 与 native history 保留，正常卸载不制造 Unknown。恢复检查仍保留有效句柄，只为真实排队输入、必要 Context 重建或未知执行接续恢复进程；无输入的普通 idle 成员不会被周期检查全部拉起。不新增持久 residency 字段，既有 binding fence 和运行内句柄集合承担这一区分。
+
+启用运行资源控制时，所有 Pi start/resume、description reset 与重新激活均通过同一共享 launcher 准入。launcher 用运行目录的文件锁登记启动 UUID、进程 birth identity 和独立 PGID 后 exec 原 Pi，payload 在登记之前不能执行。资源拒绝必须有该启动 UUID 对应的 `resource_deferred` 原件，不能仅按退出码 75 推断。普通 turn 只检查当前压力，不再领取整个进程生命周期的启动 reservation。拒绝 start 保留原 assignment 代次、clone 和激活事件；拒绝 reset 保留 materializing reset；拒绝 sleeping activation 保留原责任与联系，各路径均可接续，不将资源不足写成永久的 assignment blocked。
+
+各 group 复用既有两秒恢复循环；共享 factory 按 collector sample 串行执行至多一次原生 `relieve_pressure`，随后重读压力。原生运行时选择确切自有的有限作业并保存退出、部分输出与资源原因，Braid 不读取工具私有作业表。每个成员的一条连续 Unknown 链只自动恢复一次，成功 completed 或明确的新工作输入才解除限制；自动恢复通知、Braid 系统评论及自身 deferred/failed 重放不解除限制。恢复仍受实际资源准入约束。driver 向 local 报告实际 `can_progress`，同组健康成员的输入、物化和 reset 可继续；对于资源 Deferred 和恢复限次等可延期错误，只有所有已观察 group 都不能推进且存在具体错误时，local 才返回可恢复的 blocked，并保留任务与历史。真正 owned execution 停止证明为 unknown 时仍沿既有 fatal 边界立即阻断整轮；本轮未建立任意未知 writer 的独立权限撤销或隔离。
+
 close/merge 不中断当前执行，也不额外授予 finalization。自己关闭只保存对象状态；外部关闭作为普通输入投递给负责人。真实待处理输入继续执行，无输入的关闭成员自然休眠并保留责任关系；reopen 或定向评论可重新激活。旧归档的 finalizing 状态仍能沿既有恢复链收尾，新关闭不创建该状态。
 
 关闭成员重新激活时，将同一成员、当前指派版本已排队的定向联系合入同一 wake batch，每条联系仍保留独立投递收据。原生端接受输入后才标 delivered；拒绝或 Deferred 保留待投递状态。成员仍活动时到达的联系继续排程，存在待处理批次时不先休眠；旧指派地址返回 unreachable。
@@ -21,6 +27,8 @@ close/merge 不中断当前执行，也不额外授予 finalization。自己关�
 同一原生 adapter 的模型及指令可在实际 resume 时更新：Pi 的新进程使用 model、thinking 和 append-system-prompt，Codex 的 thread/resume 使用 model 和 developerInstructions，下一 turn 使用当前 effort。活动进程不会仅因配置摘要变化重建或即时采用全部新配置。旧 native home 的模板材料继续保留；native_template 只在真正创建新 home 时复制，不覆盖既有材料、会话文件或 Pi 内部 Agent 的记录。repository、adapter、当前责任身份和工作树约束仍须成立，不兼容时保留具体原因并阻断。
 
 unknown 不证明原生历史丢失。活动 handle 丢失或终态未收到时，保留旧 turn 的 unknown 和原始错误，先通过已管理 provider 的 teardown，或宿主确认停止并取得 runtime lock 的 offline-resume，证明旧 writer 已停，再 resume 同一原生身份。resume 成功后将 session 恢复为 idle，并排入一次明确的恢复事实：上次终态未收到，依据原生历史、当前工作区和对象核对后接续。恢复通知按旧 turn 去重，不盲重放旧输入、不追认旧执行成功；确认停止失败时不能创建另一写者。真正 description reset 的在途恢复仍沿其独立证据约束。
+
+Pi 的停止流程先调用原生 `stop_owned_execution` 关闭执行准入并停止自有子作业，再关闭 stdin、等待父进程，最后通过同一执行目录的离线 cleanup 核实父进程及脱离父子树的 owned execution 已全部停止。父 wait 的退出码、signal 或具体错误单独保留；非零退出不自动证明 teardown 失败，成功 wait 也不替代 owned execution 停止证明。只有离线收据为 `stopped` 才释放新代次；`unknown`、超时、权限错误或身份冲突保持原 ownership 并阻断第二 writer。新 Pi 使用独立 PGID，停止旧执行不信任或杀死历史共享 PGID。初始化或 resume 中途失败也须完成同一停止闭环，未确认停止的所有权保留在 factory，并经 stop-proof 错误交给 local。
 
 Pi 路径可完整查找且确切原生文件已经缺失时，adapter 返回 HistoryUnavailable，才允许按当前投影 start；具体缺失原因保留在旧 session 的 last_resume_error。仅在当前配置根找不到 Codex home 不能证明原生历史已丢失，故保留该具体错误并阻断。resume 的启动错误、超时、断连或暂时不可用保留身份及原始错误，将本次休眠联系退回待投递；不会永久缓存暂时不可用。失败恢复中已启动的原生进程须确认退出后才能重试，退出失败保留其 ownership。worker 沿既有恢复检查重试，无活动时 local 可返回 blocked，保留现场供同请求恢复。
 

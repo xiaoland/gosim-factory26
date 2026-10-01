@@ -79,6 +79,90 @@ def restore_launch_paths(run, request):
     }, indent=2) + "\n")
 
 
+def refresh_native_materials(run, request, runtime, variant):
+    """Refresh owned materials in templates and retained homes, preserving native memory."""
+    work = run / "work"
+    old_profiles = {profile["id"]: profile for profile in request["profiles"]}
+    old_bindings = request["bindings"]
+    backup = run / f"recovery-native-materials-{time.time_ns()}"
+    backup.mkdir()
+    for name in ("skills", "capabilities"):
+        (work / name).rename(backup / name)
+    shutil.copytree(ROOT / "skills", work / "skills")
+    profiles, bindings = variant.native_files(
+        work, runtime, work / "skills", os.environ["OPENAI_BASE_URL"],
+        os.environ.get("VISUAL_BASE_URL"))
+    current = {profile["id"]: profile for profile in profiles}
+    if set(current) - set(old_profiles):
+        raise ValueError("native material refresh cannot introduce assigned profiles")
+    profiles, changes = [], []
+    for profile_id, original in old_profiles.items():
+        material_id = profile_id
+        if profile_id not in current:
+            # Earlier I13 migration retained this historical identity for existing
+            # members while removing it from new assignments. Do not migrate twice.
+            if (profile_id != "pi-deepseek-fast" or original.get("model") != "glm-5.3-flash"
+                    or "root-only" not in original.get("tags", [])
+                    or request["root_profile_id"] == profile_id):
+                raise ValueError(f"no authorized native materials for retained profile {profile_id}")
+            material_id = "pi-glm-fast"
+        replacement = current[material_id]
+        for key in ("adapter_type", "adapter_version", "provider", "model", "reasoning",
+                    "context_soft_ratio", "context_hard_bytes", "context_window_tokens"):
+            if original.get(key) != replacement.get(key):
+                raise ValueError(f"native material refresh changes {profile_id}.{key}")
+        profiles.append(dict(original, user_instructions=replacement["user_instructions"]))
+        if material_id != profile_id:
+            source_folder = work / "capabilities" / material_id
+            folder = work / "capabilities" / profile_id
+            shutil.copytree(source_folder, folder)
+            launcher = folder / "pi"
+            launcher.write_text(launcher.read_text().replace(str(source_folder), str(folder)))
+            bindings[profile_id] = dict(bindings[material_id], executable=str(launcher),
+                                        native_template=str(folder / "native-template"))
+        template = Path(bindings[profile_id]["native_template"])
+        old_template = backup / "capabilities" / Path(
+            old_bindings[profile_id]["native_template"]).relative_to(work / "capabilities")
+        # Keep every provider/model/transport setting from this run's own recipe.
+        shutil.copy2(old_template / "models.json", template / "models.json")
+        native_root = Path(old_bindings[profile_id]["native_home"]["root"])
+        if not native_root.resolve().is_relative_to(work.resolve()):
+            raise ValueError(f"native home root escapes the retained work directory: {native_root}")
+        bindings[profile_id]["native_home"] = old_bindings[profile_id]["native_home"]
+        for home in sorted(native_root.glob(profile_id + "-*")):
+            if not home.is_dir() or not home.resolve().is_relative_to(native_root.resolve()):
+                raise ValueError(f"invalid retained native home: {home}")
+            before = hashes(home / "sessions")
+            model_sha256 = hashlib.sha256((home / "models.json").read_bytes()).hexdigest()
+            archived = backup / "native-homes" / home.name
+            archived.mkdir(parents=True)
+            material_changes = {}
+            for name in ("agents", "settings.json", "pi-fff.json"):
+                target, source_path = home / name, template / name
+                if not source_path.exists():
+                    continue
+                if target.exists():
+                    target.rename(archived / name)
+                if source_path.is_dir():
+                    shutil.copytree(source_path, target)
+                    material_changes[name] = hashes(target)
+                else:
+                    shutil.copy2(source_path, target)
+                    material_changes[name] = hashlib.sha256(target.read_bytes()).hexdigest()
+            if before != hashes(home / "sessions") or model_sha256 != hashlib.sha256(
+                    (home / "models.json").read_bytes()).hexdigest():
+                raise ValueError(f"native memory or model recipe changed during material refresh: {home}")
+            changes.append({"profile_id": profile_id, "materials_profile": material_id,
+                            "home": str(home), "backup": str(archived),
+                            "session_files_unchanged": before, "models_sha256": model_sha256,
+                            "materials": material_changes})
+    (run / "recovery-native-materials.json").write_text(json.dumps({
+        "source": "frozen package", "backup": str(backup), "homes": changes,
+        "preserved": "Profile/model recipe, native sessions, authentication and application worktrees",
+    }, ensure_ascii=False, indent=2) + "\n")
+    return profiles, bindings
+
+
 def replace_braid_deepseek_with_glm(run, variant):
     """Migrate this I13 execution recipe while retaining member and session identities."""
     if variant not in {"pi-braid-i13", "pi-braid-i13-glm-root"}:
@@ -407,25 +491,28 @@ def main():
         # Rebuild harness-owned materials, not application files or the object store.
         # Retain the prior files so this hotfix has an inspectable before/after.
         import run as variant
-        old_profiles = {profile["id"]: profile for profile in request["profiles"]}
-        for name in ("skills", "capabilities"):
-            (work / name).rename(run / f"recovery-source-{name}-{time.time_ns()}")
-        shutil.copytree(ROOT / "skills", work / "skills")
-        profiles, bindings = variant.native_files(
-            work, runtime, work / "skills", os.environ["OPENAI_BASE_URL"],
-            os.environ.get("VISUAL_BASE_URL"))
-        if {profile["id"] for profile in profiles} != set(old_profiles):
-            raise ValueError("native material hotfix cannot change assigned profiles")
-        refreshable = {"user_instructions", "context_window_tokens"}
-        for profile in profiles:
-            original = old_profiles[profile["id"]]
-            if ({key: value for key, value in profile.items() if key not in refreshable}
-                    != {key: value for key, value in original.items() if key not in refreshable}):
-                raise ValueError("native material hotfix cannot change Profile identity or model recipe")
+        if source.get("resource_admission") == "i13-2-v1":
+            profiles, bindings = refresh_native_materials(run, request, runtime, variant)
+        else:
+            old_profiles = {profile["id"]: profile for profile in request["profiles"]}
+            for name in ("skills", "capabilities"):
+                (work / name).rename(run / f"recovery-source-{name}-{time.time_ns()}")
+            shutil.copytree(ROOT / "skills", work / "skills")
+            profiles, bindings = variant.native_files(
+                work, runtime, work / "skills", os.environ["OPENAI_BASE_URL"],
+                os.environ.get("VISUAL_BASE_URL"))
+            if {profile["id"] for profile in profiles} != set(old_profiles):
+                raise ValueError("native material hotfix cannot change assigned profiles")
+            refreshable = {"user_instructions", "context_window_tokens"}
+            for profile in profiles:
+                original = old_profiles[profile["id"]]
+                if ({key: value for key, value in profile.items() if key not in refreshable}
+                        != {key: value for key, value in original.items() if key not in refreshable}):
+                    raise ValueError("native material hotfix cannot change Profile identity or model recipe")
         shutil.copy2(run / "braid-request.json", run / "recovery-source-braid-request.json")
         # Braid permits instruction/binding refresh but treats the token window as
-        # recipe identity. Migrate only this metadata in the retained request;
-        # the stored Profile revision remains old so native sessions are rebuilt.
+        # recipe identity. Keep the stored Profile revision for Braid to reconcile
+        # updated instructions with the retained native session on resume.
         retained_path = run / "braid-state/request.json"
         retained = json.loads(retained_path.read_text())
         current_profiles = {profile["id"]: profile for profile in profiles}
@@ -507,6 +594,9 @@ def main():
             # These process settings are not retained in the native session files.
             env.update(variant.tool_environment(), PI_FFF_MODE="tools-only", PI_FFF_MULTIGREP="0",
                        PI_SUBAGENT_MAX_DEPTH="3")
+        if source.get("resource_admission") == "i13-2-v1":
+            from agent_support import runtime_resource_environment
+            env.update(runtime_resource_environment(runtime, run))
     (run / "recovery-provenance.json").write_text(json.dumps(source, indent=2) + "\n")
     attempt.update(phase="prepared", prepared_at=time.time(), evidence_errors=evidence_errors,
                    source_process_evidence=str(prior_process_evidence) if prior_process_evidence.exists() else None)
@@ -539,6 +629,7 @@ def main():
     if evidence_errors:
         diagnostics["process_evidence_errors"] = evidence_errors
     collector = None
+    shared_proxy = None
     execution_error = None
     cleanup_error = None
     try:
@@ -547,6 +638,9 @@ def main():
             env.update(telemetry_environment(binding))
         except Exception as exc:
             diagnostics["telemetry_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
+        if source.get("resource_admission") == "i13-2-v1":
+            from agent_support import start_shared_proxy, stop_shared_proxy
+            shared_proxy = start_shared_proxy(runtime, run, env)
         with (run / "recovery-braid.log").open("w") as log:
             command = [str(braid), "local", str(run / "braid-request.json")]
             if continuing:
@@ -557,6 +651,11 @@ def main():
     except BaseException as exc:
         execution_error = exc
     finally:
+        if shared_proxy is not None:
+            try:
+                stop_shared_proxy(shared_proxy, run)
+            except Exception as exc:
+                diagnostics['shared_proxy_cleanup_error'] = f'{type(exc).__name__}: {exc}'
         if continuing:
             try:
                 cleanup_workspace(run)

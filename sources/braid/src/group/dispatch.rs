@@ -251,7 +251,7 @@ impl GroupDriver<'_> {
                 Ok(())
             }
             Err(error) => {
-                if retryable_resume {
+                if retryable_resume || matches!(error.downcast_ref::<crate::agent_session::SessionError>(), Some(crate::agent_session::SessionError::Deferred(_))) {
                     store.defer_work_item_reactivation(
                         candidate.event_id,
                         materialization.assignment_id,
@@ -302,6 +302,10 @@ impl GroupDriver<'_> {
         let reset_id = reset.reset_id.clone();
         let assignment_id = reset.assignment_id.clone();
         if let Err(error) = Box::pin(self.materialize_context_reset(reset)).await {
+            if matches!(error.downcast_ref::<crate::agent_session::SessionError>(), Some(crate::agent_session::SessionError::Deferred(_))) {
+                tracing::info!(%error, reset = %reset_id, "Context materialization deferred; reset retained");
+                return Ok(false);
+            }
             if !is_context_too_large(&error)
                 && let Err(status_error) =
                     record_context_unavailable(store, &assignment_id, &error)
@@ -508,7 +512,7 @@ impl GroupDriver<'_> {
         // authority for provider turn identity — cannot be missed.
         let mut events = session.events();
         match session.send_user_msg(reference.clone(), false).await {
-            Ok(SendResult::Started) => {}
+            Ok(SendResult::Started) => { sessions.clear_session_deferred(&claim.provider_session_id).await; }
             Ok(SendResult::Acknowledged) => {
                 tracing::error!(turn = %claim.turn_id, "AgentSession did not start a turn");
                 fail_claimed_turn(store, &claim, "failed", "AgentSession did not start a turn".into());
@@ -516,6 +520,7 @@ impl GroupDriver<'_> {
             }
             Err(error) => {
                 if matches!(error, crate::agent_session::SessionError::Deferred(_)) {
+                    sessions.record_session_deferred(&claim.provider_session_id, error.to_string()).await;
                     let deferred = if let Some(reset_id) = &claim.reset_id {
                         store.defer_context_reset_notice(
                             reset_id.clone(), claim.turn_id.clone(), "retry".into(), Some(error.to_string()),
@@ -534,6 +539,7 @@ impl GroupDriver<'_> {
                     crate::agent_session::SessionError::Deferred(_)
                     | crate::agent_session::SessionError::HistoryUnavailable(_)
                     | crate::agent_session::SessionError::Failed(_)
+                    | crate::agent_session::SessionError::StopUnproved(_)
                     | crate::agent_session::SessionError::Materialization { .. } => "failed".into(),
                 };
                 fail_claimed_turn(store, &claim, &lifecycle, error.to_string());

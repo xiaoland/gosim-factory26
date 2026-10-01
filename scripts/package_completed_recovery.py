@@ -143,7 +143,7 @@ def main():
     parser.add_argument("--override-native-transport", action="store_true",
                         help="Explicitly bind retained native factory26 transports to this run's model URLs and key variables")
     parser.add_argument("--refresh-native-materials", action="store_true",
-                        help="Use current variant instructions and collector with refreshed native materials")
+                        help="Refresh owned native materials; I13 uses the complete frozen I13-2 base package")
     args = parser.parse_args()
     if args.refresh_native_materials and not args.continue_generation:
         parser.error("--refresh-native-materials requires --continue-generation")
@@ -297,7 +297,8 @@ def main():
                                  if not is_metadata_path(name)}
             if args.refresh_native_materials:
                 variant = manifest.get("capabilities", {}).get("variant")
-                if variant not in {"pi-braid", "pi-braid-flash-team", "pi-braid-i11"}:
+                i13_refresh = variant in {"pi-braid-i13", "pi-braid-i13-glm-root"}
+                if not i13_refresh and variant not in {"pi-braid", "pi-braid-flash-team", "pi-braid-i11"}:
                     raise ValueError(f"unsupported Braid variant for native refresh: {variant}")
                 instructions = sorted(name for name in manifest["files"]
                                       if len(Path(name).parts) == 3 and Path(name).parts[0] == "agents"
@@ -306,11 +307,29 @@ def main():
                 if ("support/otlp.py" not in manifest["files"] or observer not in manifest["files"]
                         or not instructions):
                     raise ValueError("base package is missing collector, observer, or variant instructions")
-                refreshed = ["support/otlp.py", observer, *instructions]
-                replacements["support/otlp.py"] = (ROOT / "lab/otlp.py").resolve(strict=True)
-                replacements[observer] = (ROOT / "variants" / variant / observer).resolve(strict=True)
-                replacements.update({name: (ROOT / "variants" / variant / name).resolve(strict=True)
-                                     for name in instructions})
+                if i13_refresh:
+                    # I13-2 replaces the complete frozen runtime, roles and independent
+                    # skills. Do not quietly mix current checkout files into that base.
+                    required = {"runtime/native-managed.mjs", "support/runtime_resources.py"}
+                    if not required <= set(manifest["files"]):
+                        raise ValueError("I13 native refresh requires a complete I13-2 base package")
+                    runtime_source = json.loads(original.read("runtime/runtime-source.json"))
+                    patches = {"pi-coding-agent-0.85.1-i13-2-managed.patch",
+                               "pi-background-bash-1.0.5-i13-2-managed.patch",
+                               "pi-subagents-0.56.0-i13-2-managed.patch"}
+                    if not patches <= set(runtime_source.get("native_patch_sha256", {})):
+                        raise ValueError("I13 native refresh runtime lacks managed process patches")
+                    refreshed = sorted(name for name in manifest["files"] if
+                                       name.startswith(("agents/", "skills/", "extensions/"))
+                                       or name in required or name == "run.py")
+                    source.update(native_materials_source="frozen base package",
+                                  resource_admission="i13-2-v1")
+                else:
+                    refreshed = ["support/otlp.py", observer, *instructions]
+                    replacements["support/otlp.py"] = (ROOT / "lab/otlp.py").resolve(strict=True)
+                    replacements[observer] = (ROOT / "variants" / variant / observer).resolve(strict=True)
+                    replacements.update({name: (ROOT / "variants" / variant / name).resolve(strict=True)
+                                         for name in instructions})
             skipped = set(replacements) | {"recovery-source.json", "package-manifest.json", "recovery-braid-source.tar.gz",
                                            "recovery-braid-source-identity.json"}
             manifest["files"].pop("recovery-braid-source.tar.gz", None)

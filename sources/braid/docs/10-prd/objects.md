@@ -27,6 +27,10 @@ The exact projection is the [Context contract](../20-product-tdd/context.md).
 `.braid/implementation.md` 保存当前实施事实。显式交接或刷新会替换物理会话，保留
 工作项身份和应用文件；其输入、动作与证据契约见[本地工作项](../20-product-tdd/local.md)。
 
+### 本地评论可见性
+
+评论的自身隐藏、删除与讨论解决分别保存。隐藏一条评论时，该条及其现有、未来后代的正文从普通对象读取、模型 Context 和 Console 展示中隐藏；中间回复只影响自己的分支。取消祖先隐藏不会清除后代自身的隐藏选择。精准读取也遵守祖先隐藏，显式追溯可读仍保存的正文；删除正文不可恢复。解决仍折叠当时的讨论前缀，新回复不会自动折叠。接口与通知行为见[本地工作项](../20-product-tdd/local.md)。
+
 ### Agent Profiles and Groups
 
 An Agent Profile is a versioned Braid configuration containing a provider,

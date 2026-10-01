@@ -83,6 +83,8 @@ Braid 当前主线只有有效 description 变化触发上下文重建，传播�
 
 恢复先区分继续原生历史与真正建立新会话。没有适用的描述失效时保留原 session 和实际 context revision，不因 profile 或指令摘要改变抹去历史；模板只在创建 native home 时复制，已有进程不声称即时采用所有新文件。执行终态 unknown 先确认旧执行已停止和原生可恢复性，再提供一次明确的继续输入；不能盲重放旧输入或追认成功。只有确切历史丢失才进入相应新建路径，权限、歧义、暂时不可用和不兼容配置保留具体错误。
 
+I13-2 将物理执行停止、OPEN idle 卸载和共享内存准入接入原生生命周期；跨组件职责、覆盖条件与压力策略归[运行资源约定](runtime-resources.md)。热更新独立技能和角色时显式刷新保留 home 中的 Harness 材料，并核对原生历史与模型配方未改变；只替换 native template 不足以更新已有 home。
+
 这些源码已整合编译并核对既有材料，活动重建、休眠 resume、unknown 接续与并发改派的完整模型行为仍未实测，也未应用到冻结 I12。依据与当前验收范围见[上下文实施](../../tasks/iteration13/context-implementation.md)和[连续性实施](../../tasks/iteration13/session-continuity-implementation.md)；旧 ZIP 不因宿主源码更新而改变。
 
 ## 角色与材料的三个消费者

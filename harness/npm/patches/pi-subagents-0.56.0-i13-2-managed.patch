@@ -1,0 +1,251 @@
+--- a/src/runs/foreground/execution.ts
++++ b/src/runs/foreground/execution.ts
+@@ -541,12 +541,22 @@
+ 
+ 	const exitCode = await new Promise<number>((resolve) => {
+ 		const spawnSpec = getPiSpawnCommand(args);
+-		const proc = spawn(spawnSpec.command, spawnSpec.args, {
++		const managedRuntime = (globalThis as any)[Symbol.for("factory26.native-runtime.v1")];
++		let proc: ReturnType<typeof spawn>;
++		try {
++		proc = (managedRuntime?.spawnManaged ?? spawn)(spawnSpec.command, spawnSpec.args, {
+ 			cwd: options.cwd ?? runtimeCwd,
+ 			env: spawnEnv,
+ 			stdio: ["ignore", "pipe", "pipe"],
+ 			windowsHide: true,
+-		});
++		}, { kind: "native", manifest: shared.jsonlPath });
++		} catch (error) {
++			result.error = error instanceof Error ? error.message : String(error);
++			result.finalOutput = result.error;
++			cleanupTempDir(tempDir);
++			resolve(75);
++			return;
++		}
+ 		const jsonlWriter = createJsonlWriter(shared.jsonlPath, proc.stdout);
+ 		let processClosed = false;
+ 		let lifecycleFinished = false;
+@@ -1310,7 +1320,8 @@
+ 			childExited = true;
+ 			clearFinalDrainTimers();
+ 		});
+-		proc.on("close", (code, signal) => {
++		proc.on("close", async (code, signal) => {
++			await managedRuntime?.finishManagedProcess(proc, { exit_code: code, signal, observed_at: Date.now() });
+ 			if (lifecycleFinished) return;
+ 			processClosed = true;
+ 			clearFinalDrainTimers();
+@@ -1917,7 +1928,7 @@
+ 			// Preserve the legacy intercom handoff contract: once this logical run has
+ 			// been handed to a supervisor, terminating that attempt must not launch a
+ 			// startup retry or model fallback. Explicit user detach retains fallback.
+-			if (intercomDetached || result.timedOut || result.turnBudgetExceeded) break modelAttemptsLoop;
++			if (intercomDetached || result.timedOut || result.turnBudgetExceeded || result.error?.startsWith("resource_deferred:")) break modelAttemptsLoop;
+ 			if (attemptSucceeded) break modelAttemptsLoop;
+ 
+ 			const startupFailure = isRetryableSubagentStartupFailure({
+--- a/src/runs/background/async-execution.ts
++++ b/src/runs/background/async-execution.ts
+@@ -537,7 +537,9 @@
+ 			stdoutFd = fs.openSync(logPaths.stdoutPath, "a");
+ 			stderrFd = fs.openSync(logPaths.stderrPath, "a");
+ 		}
+-		const proc = spawn(nodeCommand, [jitiCliPath, runner, cfgPath], {
++		const managedRuntime = (globalThis as any)[Symbol.for("factory26.native-runtime.v1")];
++		if (managedRuntime && launchAsyncDir) fs.rmSync(path.join(launchAsyncDir, "native-child-startup.json"), { force: true });
++		const proc = (managedRuntime?.spawnManaged ?? spawn)(nodeCommand, [jitiCliPath, runner, cfgPath], {
+ 			cwd,
+ 			detached: true,
+ 			stdio: ["ignore", stdoutFd ?? "ignore", stderrFd ?? "ignore"],
+@@ -546,13 +548,14 @@
+ 				...omitExtensionBindingsEnv(process.env),
+ 				...(piPackageRoot ? { [PI_CODING_AGENT_PACKAGE_ROOT_ENV]: piPackageRoot } : {}),
+ 			},
+-		});
++		}, { kind: "native", manifest: launchAsyncDir ? path.join(launchAsyncDir, "status.json") : undefined });
+ 		closeFd(stdoutFd);
+ 		closeFd(stderrFd);
+ 		proc.on("error", (error) => {
+ 			console.error(`[pi-subagents] async spawn failed: ${error.message}`);
+ 		});
+-		proc.once("close", (exitCode, signal) => {
++		proc.once("close", async (exitCode, signal) => {
++			await managedRuntime?.finishManagedProcess(proc, { exit_code: exitCode, signal, observed_at: Date.now() });
+ 			const launch = launchConfig as { asyncDir?: unknown; id?: unknown; nestedRoute?: NestedRouteInfo; nestedSelf?: { parentRunId: string; parentStepIndex?: number; depth: number; path?: Array<{ runId: string; stepIndex?: number; agent?: string }> } };
+ 			const asyncDir = launch.asyncDir;
+ 			const runId = launch.id;
+@@ -642,6 +645,16 @@
+ 				fs.rmSync(startupPath, { force: true });
+ 			} catch {
+ 				// Proceed is the commit point; handshake cleanup cannot turn a running revival into a start error.
++			}
++		}
++		if (managedRuntime && launchAsyncDir) {
++			try {
++				const startup = managedRuntime.waitChildStartup(launchAsyncDir, RUNNER_STARTUP_TIMEOUT_MS);
++				if (startup.status !== "started") throw new Error(startup.reason || "Async child was not physically started.");
++			} catch (error) {
++				const message = error instanceof Error ? error.message : String(error);
++				terminateRunnerBeforeProceed(proc.pid);
++				return { pid: proc.pid, runnerProcessInstanceId, error: message, terminationObserved: false, startupDidNotProceed: false };
+ 			}
+ 		}
+ 		return { pid: proc.pid, runnerProcessInstanceId };
+--- a/src/runs/background/subagent-runner.ts
++++ b/src/runs/background/subagent-runner.ts
+@@ -583,13 +583,25 @@
+ 			...(piPackageRoot ? { piPackageRoot } : {}),
+ 			...(piArgv1 ? { argv1: piArgv1 } : {}),
+ 		});
+-		const child = spawn(spawnSpec.command, spawnSpec.args, {
++		const managedRuntime = (globalThis as any)[Symbol.for("factory26.native-runtime.v1")];
++		let child: ReturnType<typeof spawn>;
++		try {
++		child = (managedRuntime?.spawnManaged ?? spawn)(spawnSpec.command, spawnSpec.args, {
+ 			cwd,
+ 			stdio: ["ignore", "pipe", "pipe"],
+ 			env: spawnEnv,
+ 			windowsHide: true,
+ 			detached: process.platform !== "win32",
+-		});
++		}, { kind: "native", manifest: outputFile });
++		managedRuntime?.publishChildStartup(path.dirname(outputFile), "started");
++		} catch (error) {
++			const message = error instanceof Error ? error.message : String(error);
++			managedRuntime?.publishChildStartup(path.dirname(outputFile), "failed", message);
++			outputStream.end();
++			onWriterProcess?.({ state: "none" });
++			resolve({ stderr: message, exitCode: 75, messages: [], usage: emptyUsage(), toolCount: 0, durationMs: Date.now() - startedAt, error: message, finalOutput: message, outputState: "absent", processInstanceId, processTree: { state: "unknown", reason: "verification-failed", diagnostic: message } });
++			return;
++		}
+ 		let processTreeController: OwnedProcessTreeController | undefined;
+ 		const stderrTail = createBoundedByteTail();
+ 		const rawStdoutTail = createBoundedByteTail();
+@@ -598,7 +610,7 @@
+ 		let model: string | undefined;
+ 		let writerRegistrationError: string | undefined;
+ 		if (typeof child.pid === "number") {
+-			processTreeController = createOwnedProcessTreeController(child.pid);
++			processTreeController = managedRuntime?.createManagedProcessTreeController(child) ?? createOwnedProcessTreeController(child.pid);
+ 			try {
+ 				onWriterProcess?.({ state: "running", pid: child.pid });
+ 			} catch (writerError) {
+@@ -988,6 +1000,7 @@
+ 			clearDrainTimers();
+ 		});
+ 		child.on("close", async (exitCode, signal) => {
++			await managedRuntime?.finishManagedProcess(child, { exit_code: exitCode, signal, observed_at: Date.now() });
+ 			settled = true;
+ 			const processCloseObservedAt = Date.now();
+ 			const processTree = processTreeController
+@@ -1817,7 +1830,8 @@
+ 			turnBudgetExceeded: run.turnBudgetExceeded,
+ 		})) ? formatProcessSignalError(run.processSignal!) : undefined;
+ 		const error = formatSubagentExtensionConflictError(
+-			toolAvailabilityError
++			(run.error?.startsWith("resource_deferred:") ? run.error : undefined)
++				?? toolAvailabilityError
+ 				?? completionGuardError
+ 				?? structuredError
+ 				?? emptyOutputError
+@@ -1849,7 +1863,7 @@
+ 			toolBudget = toolBudgetState(step.toolBudget, toolMessages.length, blockedMessage ? (blockedMessage as { toolName?: string }).toolName : undefined);
+ 		}
+ 		finalResult = { ...run, exitCode: effectiveExitCode, model: candidate ?? run.model, error, structuredOutput, runtimeAcknowledgedExtensions, ...(step.agentContract ? { agentContract: step.agentContract } : {}), ...(fileMutationEffect ? { effects: { fileMutation: fileMutationEffect } } : {}) } as RunPiStreamingResult & { structuredOutput?: unknown; agentContract?: import("../../shared/types.ts").AgentContract; effects?: import("../../shared/types.ts").EffectsProjection };
+-		if (run.turnBudgetExceeded) break modelAttemptsLoop;
++		if (run.turnBudgetExceeded || run.error?.startsWith("resource_deferred:")) break modelAttemptsLoop;
+ 		if (run.stopped || run.timedOut || ctx.timeoutSignal?.aborted || ctx.stopSignal?.aborted || ctx.skipAcceptance?.()) break modelAttemptsLoop;
+ 		if (attempt.success || completionGuardTriggered) break modelAttemptsLoop;
+ 
+@@ -5384,6 +5398,7 @@
+ }
+ 
+ async function runConfiguredSubagent(config: SubagentRunConfig): Promise<void> {
++	const managedRuntime = process.env.FACTORY_NATIVE_RUNTIME_MODULE ? await import(process.env.FACTORY_NATIVE_RUNTIME_MODULE) : undefined;
+ 	let lease: ReturnType<typeof acquireSessionLease> | undefined;
+ 	let startupCommitted = config.revivalLease === undefined;
+ 	const startupPath = path.join(config.asyncDir, "runner-startup.json");
+@@ -5415,6 +5430,10 @@
+ 			}
+ 		}
+ 		await runSubagent(config, lease ? (writer) => lease!.updateWriter(writer) : undefined);
++		if (managedRuntime && !fs.existsSync(path.join(config.asyncDir, "native-child-startup.json"))) {
++			const status = JSON.parse(fs.readFileSync(path.join(config.asyncDir, "status.json"), "utf8"));
++			managedRuntime.publishChildStartup(config.asyncDir, "failed", status.error ?? status.steps?.find((step: any) => step.error)?.error ?? "No native Pi child was started; the retained status records the completed preparation or failure.");
++		}
+ 	} catch (error) {
+ 		if (config.revivalLease && !startupCommitted) {
+ 			try {
+@@ -5423,6 +5442,7 @@
+ 				// The parent will time out and terminate this runner if the handshake cannot be written.
+ 			}
+ 		}
++		managedRuntime?.publishChildStartup(config.asyncDir, "failed", error instanceof Error ? error.message : String(error));
+ 		throw error;
+ 	} finally {
+ 		process.off("exit", releaseOnExit);
+--- a/src/runs/background/result-watcher.ts
++++ b/src/runs/background/result-watcher.ts
+@@ -200,6 +200,7 @@
+ 	refreshResultDelivery: () => void;
+ 	stopResultWatcher: () => void;
+ 	drainCurrentSessionResults: () => Promise<void>;
++	hasUnconsumedCurrentSessionResults: () => boolean;
+ } {
+ 	const fsApi = deps.fs ?? fs;
+ 	const timers = deps.timers ?? { setTimeout, clearTimeout, setInterval, clearInterval };
+@@ -657,10 +658,10 @@
+ 		}
+ 	};
+ 
+-	const drainCurrentSessionResults = async () => {
++	const currentResults = () => {
+ 		const sessionId = state.currentSessionId;
+-		if (!sessionId) throw new Error("Cannot drain subagent results without a Pi session identity.");
+-		const currentResults = () => resultCandidateFilesForSession(resultsDir, sessionId).filter((file) => {
++		if (!sessionId) throw new Error("Cannot inspect subagent results without a Pi session identity.");
++		return resultCandidateFilesForSession(resultsDir, sessionId).filter((file) => {
+ 			const identity = inspectResult(file)?.identity;
+ 			if (identity?.sessionId && (identity.sessionId !== sessionId || identity.completionOwnerId !== state.completionOwnerId)) return false;
+ 			try {
+@@ -675,6 +676,10 @@
+ 			} catch { /* Treat unreadable results as undelivered. */ }
+ 			return true;
+ 		});
++	};
++	const hasUnconsumedCurrentSessionResults = () => processing.size > 0 || currentResults().length > 0;
++	const drainCurrentSessionResults = async () => {
++		const sessionId = state.currentSessionId;
+ 		const files = currentResults();
+ 		for (const file of files) {
+ 			state.resultFileCoalescer.flush(file);
+@@ -807,5 +812,5 @@
+ 		identityCache.clear();
+ 	};
+ 
+-	return { startResultWatcher, primeExistingResults, stopResultWatcher, drainCurrentSessionResults, refreshResultDelivery: () => { primeExistingResults(); startDemandPolling(); } };
+-}
++	return { startResultWatcher, primeExistingResults, stopResultWatcher, drainCurrentSessionResults, hasUnconsumedCurrentSessionResults, refreshResultDelivery: () => { primeExistingResults(); startDemandPolling(); } };
++}
+--- a/src/extension/index.ts
++++ b/src/extension/index.ts
+@@ -530,6 +530,11 @@
+ 	);
+ 	const { startResultWatcher, primeExistingResults, stopResultWatcher } = resultWatcher;
+ 	refreshResultDelivery = resultWatcher.refreshResultDelivery;
++	const managedRuntime = (globalThis as any)[Symbol.for("factory26.native-runtime.v1")];
++	const unregisterManaged = managedRuntime?.registerManagedProvider("pi-subagents", () => ({
++		status: resultWatcher.hasUnconsumedCurrentSessionResults() ? "busy" : "quiescent",
++		reason: "result_not_consumed",
++	}));
+ 	const asyncRetentionAbort = new AbortController();
+ 	const asyncRetentionTimer = setTimeout(async () => {
+ 		try {
+@@ -1050,6 +1055,7 @@
+ 	});
+ 
+ 	pi.on("session_shutdown", async () => {
++		unregisterManaged?.();
+ 		runtimeEntry.cleanup();
+ 		await herdrStatusBridge.flush();
+ 	});

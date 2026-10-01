@@ -23,7 +23,7 @@ pub(crate) fn session_factory(config: ProviderConfig) -> anyhow::Result<Arc<dyn 
             providers: Mutex::new(BTreeMap::new()),
         })),
         (None, Some(config), None) => {
-            Ok(Arc::new(PiSessions { config, bindings, providers: Mutex::new(BTreeMap::new()) }))
+            Ok(Arc::new(PiSessions { config, bindings, providers: Mutex::new(BTreeMap::new()), pressure_sample: Mutex::new(None) }))
         }
         (None, None, Some(config)) => Ok(Arc::new(bub::BubSessions::new(config, bindings))),
         _ => anyhow::bail!("必须配置且仅配置一个会话 adapter"),
@@ -158,9 +158,17 @@ struct PiSessions {
     config: PiConfig,
     bindings: BTreeMap<String, RuntimeBinding>,
     providers: Mutex<BTreeMap<String, Arc<PiProvider>>>,
+    pressure_sample: Mutex<Option<String>>,
 }
 
 impl PiSessions {
+    async fn check_start_resources(&self) -> Result<(), SessionError> {
+        let resource = super::pi::resource_status().await.map_err(|error| SessionError::Deferred(error.to_string()))?;
+        if let Some(resource) = resource {
+            if resource["status"] != "normal" { return Err(SessionError::Deferred(format!("resource pressure: {resource}"))); }
+        }
+        Ok(())
+    }
     fn config_for(
         &self,
         profile: &Profile,
@@ -266,6 +274,29 @@ fn materialize_native_home(
 
 #[async_trait::async_trait]
 impl SessionFactory for PiSessions {
+    async fn maintain_resources(&self) -> Result<(), SessionError> {
+        // The same factory is shared by every group; keep one relief operation
+        // in flight and consume each collector sample at most once.
+        let mut last_sample = self.pressure_sample.lock().await;
+        let Some(status) = super::pi::resource_status().await.map_err(super::session::map_provider_error)? else { return Ok(()); };
+        let sample = status["sample_id"].to_string();
+        if last_sample.as_ref() == Some(&sample) { return Ok(()); }
+        *last_sample = Some(sample);
+        if !matches!(status["status"].as_str(), Some("pressured" | "critical")) { return Ok(()); }
+        let providers: Vec<_> = self.providers.lock().await.values().cloned().collect();
+        for provider in providers {
+            match provider.relieve_pressure().await {
+                Ok(receipt) => {
+                    tracing::warn!(pressure = %status, receipt = %receipt, "native pressure relief");
+                    if receipt["data"]["status"] == "relieved" { break; }
+                }
+                Err(error) => tracing::warn!(%error, "native pressure relief unavailable"),
+            }
+        }
+        let after = super::pi::resource_status().await.map_err(super::session::map_provider_error)?;
+        tracing::info!(before = %status, after = ?after, "resource pressure after relief");
+        Ok(())
+    }
     async fn check(&self) -> Result<(), SessionError> {
         // Pi has no global process: processes belong to physical sessions.
         let executable = self
@@ -283,15 +314,26 @@ impl SessionFactory for PiSessions {
         context: String,
         cli: CliContext,
     ) -> Result<CreatedSession, SessionError> {
+        self.check_start_resources().await?;
         let config = self.config_for(&profile, None)?;
         let provider = Arc::new(PiProvider::connect(&config, cli, None));
-        let session = ProviderAgentSession::start(
+        let session = match ProviderAgentSession::start(
             Arc::clone(&provider) as Arc<dyn AgentProvider>,
             profile,
             instructions,
             Some(context),
         )
-        .await?;
+        .await {
+            Ok(session) => session,
+            Err(error) => {
+                if let Err(stop) = provider.close_native().await {
+                    let identity = provider.native_session_id().await.unwrap_or_else(|| uuid::Uuid::now_v7().to_string());
+                    self.providers.lock().await.insert(identity, provider);
+                    return Err(SessionError::StopUnproved(format!("{error}; failed start teardown: {stop}")));
+                }
+                return Err(error);
+            }
+        };
         let native_home = config.home.clone();
         let mut result = created(session, native_home.clone()).await?;
         result.native_session_path = Some(PathBuf::from(&result.id));
@@ -307,6 +349,7 @@ impl SessionFactory for PiSessions {
         instructions: String,
         cli: CliContext,
     ) -> Result<CreatedSession, SessionError> {
+        self.check_start_resources().await?;
         if self.providers.lock().await.contains_key(id) { self.teardown(id).await?; }
         let (native_path, home) = self.resume_path(&profile, id)?;
         let config = self.config_for(&profile, Some(home))?;
@@ -319,7 +362,7 @@ impl SessionFactory for PiSessions {
                 if let Err(stop_error) = provider.close_native().await {
                     // Keep ownership so the next attempt must settle this writer.
                     self.providers.lock().await.insert(id.to_owned(), provider);
-                    return Err(SessionError::Failed(format!("{error}; failed resume teardown: {stop_error}")));
+                    return Err(SessionError::StopUnproved(format!("{error}; failed resume teardown: {stop_error}")));
                 }
                 return Err(error);
             }

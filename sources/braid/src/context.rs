@@ -85,6 +85,8 @@ pub struct CommentSnapshot {
     pub body: Option<String>,
     pub minimized: bool,
     pub minimized_reason: Option<String>,
+    pub hidden_by: Option<i64>,
+    pub hidden_by_reason: Option<String>,
     pub pinned: bool,
     pub deleted: bool,
     pub reply_to: Option<i64>,
@@ -503,8 +505,16 @@ fn render_comment(output: &mut String, comment: &CommentSnapshot, level: usize, 
         if let Some(reason) = &comment.minimized_reason {
             title.push_str(&format!(" ({})", one_line(reason)));
         }
-    } else if comment.folded || comment.resolved {
-        title.push_str(" - resolved");
+    }
+    if !comment.deleted {
+        if let Some(ancestor) = comment.hidden_by {
+            title.push_str(&format!(" - hidden by ancestor #{ancestor}"));
+            if let Some(reason) = &comment.hidden_by_reason {
+                title.push_str(&format!(" ({})", one_line(reason)));
+            }
+        } else if !comment.minimized && (comment.folded || comment.resolved) {
+            title.push_str(" - resolved");
+        }
     }
     if comment.pinned { title.push_str(" - pinned"); }
     if level <= 6 {
@@ -516,7 +526,7 @@ fn render_comment(output: &mut String, comment: &CommentSnapshot, level: usize, 
     let content_indent = if level <= 6 { 0 } else { (level - 7) * 2 + 2 };
     let padding = " ".repeat(content_indent);
     if comment.deleted { return; }
-    if comment.minimized && (filter_html || comment.body.is_none()) {
+    if (comment.minimized || comment.hidden_by.is_some()) && (filter_html || comment.body.is_none()) {
         output.push('\n');
         return;
     }

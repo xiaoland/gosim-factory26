@@ -197,7 +197,7 @@ impl GroupDriver<'_> {
         context::record_context_revision(&canonical, &rendered, store)?;
         let preserve_wake = rendered.pressure != ContextPressure::Hard;
         let Some(materialization) = store.begin_agent_assignment(
-            candidate.event_id,
+            candidate.event_id.clone(),
             profile_record.clone(),
             Some(rendered.revision.clone()),
             preserve_wake,
@@ -279,6 +279,10 @@ impl GroupDriver<'_> {
                 Ok(())
             }
             Err(error) => {
+                if matches!(error, crate::agent_session::SessionError::Deferred(_)) {
+                    store.defer_agent_assignment(materialization.assignment_id, candidate.event_id, error.to_string())?;
+                    return Err(error.into());
+                }
                 store.fail_agent_assignment(materialization.assignment_id, error.to_string())?;
                 Err(error.into())
             }

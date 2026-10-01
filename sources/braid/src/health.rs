@@ -4,4 +4,5 @@
 pub(crate) struct ProviderHealthUpdate {
     pub(crate) group: String,
     pub(crate) error: Option<String>,
+    pub(crate) can_progress: bool,
 }

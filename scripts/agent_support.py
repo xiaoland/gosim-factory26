@@ -80,6 +80,7 @@ def process_evidence(run, name, row, *, cap_bytes=8*1024*1024):
 class ResourceEvidence:
     """Read the namespace's visible cgroup and processes from the existing collector."""
     memory_files = ('memory.events', 'memory.events.local', 'memory.current', 'memory.peak',
+                    'memory.stat', 'memory.pressure',
                     'memory.max', 'memory.oom.group', 'memory.swap.current', 'memory.swap.peak',
                     'memory.swap.max', 'pids.current', 'pids.max', 'pids.events')
 
@@ -232,6 +233,19 @@ class ResourceEvidence:
             except OSError as error:
                 row['errors']['rotation'] = evidence_error(error)
                 written = False
+        latest = self.run/'process-evidence/resource-latest.json'
+        temporary = latest.with_name(f'.{latest.name}.{uuid.uuid4().hex}.tmp')
+        try:
+            # Keep the admission input small; the rotating journal owns process detail.
+            with temporary.open('x') as stream:
+                json.dump({key: row[key] for key in
+                           ('sample_started', 'cgroup_path', 'values', 'errors')}
+                          | {'cgroup_identity': row.get('cgroup_identity')}, stream)
+            temporary.replace(latest)
+        except OSError as error:
+            print(f'resource latest failed: {json.dumps(evidence_error(error))}', file=sys.stderr, flush=True)
+        finally:
+            temporary.unlink(missing_ok=True)
         self.samples += 1
         self.capped = (self.run/'process-evidence/resources.jsonl.capped.json').exists()
         status = {'kind': 'resource_status', 'samples': self.samples, 'last_sample_kind': kind,
@@ -354,12 +368,88 @@ def budgeted_pi(runtime, run):
     launcher.write_text('#!/bin/sh\n'
         +'export FACTORY26_MODEL_BUDGET_PATH='+shlex.quote(str(run/'expensive-model-session'))+'\n'
         +'export PI_SUBAGENT_PI_BINARY='+shlex.quote(str(launcher))+'\n'
+        +'if [ -n "${FACTORY_NATIVE_RUNTIME_MODULE:-}" ]; then\n'
+        +'  set -- --extension "$FACTORY_NATIVE_RUNTIME_MODULE" "$@"\n'
+        +'fi\n'
         +'if [ -n "${FACTORY26_PI_TIMING_EXTENSION:-}" ]; then\n'
         +'  set -- --extension "$FACTORY26_PI_TIMING_EXTENSION" "$@"\n'
         +'fi\n'
         +'exec '+shlex.join([str(pi), '--extension', str(guard)])+' "$@"\n')
     launcher.chmod(0o755)
     return launcher
+
+
+def runtime_resource_environment(runtime, run):
+    """Configure one generation's shared resource admission and native ownership."""
+    helper = Path(__file__).resolve().with_name('runtime_resources.py')
+    native_module = Path(runtime)/'native-managed.mjs'
+    for source in (helper, native_module):
+        if not source.is_file():
+            raise FileNotFoundError(source)
+    directory = Path(run)/'process-control'
+    subprocess.run([sys.executable, str(helper), 'configure', '--directory', str(directory),
+                    '--sample-path', str(Path(run)/'process-evidence/resource-latest.json')],
+                   check=True, stdout=subprocess.DEVNULL)
+    return {'FACTORY_RESOURCE_HELPER': str(helper), 'FACTORY_RESOURCE_PYTHON': sys.executable,
+            'FACTORY_RESOURCE_DIR': str(directory),
+            'FACTORY_NATIVE_RUNTIME_MODULE': str(native_module)}
+
+
+def start_shared_proxy(runtime, run, env):
+    """Own the run's shared proxy outside any member's finite tool execution."""
+    import http.client
+    port = int(env['PORTLESS_PORT'])
+    if not 0 < port < 65536 or env.get('PORTLESS_HTTPS') != '0':
+        raise ValueError('shared proxy requires the declared unprivileged HTTP run endpoint')
+
+    def ready():
+        connection = http.client.HTTPConnection('127.0.0.1', port, timeout=.5)
+        try:
+            connection.request('HEAD', '/')
+            response = connection.getresponse()
+            return response.getheader('X-Portless') == '1'
+        except (OSError, http.client.HTTPException):
+            return False
+        finally:
+            connection.close()
+
+    if ready():
+        raise RuntimeError(f'portless proxy already listens on {port}; this run has no owner handle')
+    environment = {key: value for key, value in env.items() if key not in {
+        'FACTORY_NATIVE_EXECUTION_ID', 'FACTORY_NATIVE_EXECUTION_DIR', 'FACTORY_NATIVE_START_ID'}}
+    command = [str(runtime/'bin/node'), str(runtime/'node_modules/portless/dist/cli.js'),
+               'proxy', 'start', '--foreground', '--skip-trust', '--no-tls', '-p', str(port)]
+    log = run/'shared-proxy.log'
+    with log.open('w') as stream:
+        child = subprocess.Popen(command, cwd=run, env=environment, start_new_session=True,
+                                 stdout=stream, stderr=subprocess.STDOUT)
+    identity = process_identity(child.pid)
+    process_evidence(run, 'operations.jsonl', {'kind': 'process_started', 'role': 'shared-proxy',
+                                              'process': identity, 'log': str(log)})
+    try:
+        deadline = time.monotonic() + 30
+        while child.poll() is None:
+            if ready():
+                save(run/'shared-proxy.json', {'owner': 'run', 'process': identity, 'port': port,
+                                               'ready_header': 'X-Portless: 1', 'log': str(log)})
+                return child
+            if time.monotonic() >= deadline:
+                raise TimeoutError(f'portless proxy readiness timed out; raw output: {log}')
+            time.sleep(.1)
+        raise RuntimeError(f'portless proxy exited {child.returncode} before readiness; raw output: {log}')
+    except BaseException:
+        stop_shared_proxy(child, run)
+        raise
+
+
+def stop_shared_proxy(child, run):
+    """Wait the foreground owner; never infer ownership from a stale proxy PID file."""
+    _signal_process(child, signal.SIGTERM, run, 'shared-proxy-stop')
+    try:
+        return _wait_process(child, run, 'shared-proxy-stop', timeout=5)
+    except subprocess.TimeoutExpired:
+        _signal_process(child, signal.SIGKILL, run, 'shared-proxy-stop-timeout')
+        return _wait_process(child, run, 'shared-proxy-stop-timeout')
 
 def browser_executable(runtime):
     """Use the portable wrapper or the browser paired with this runtime's Playwright."""

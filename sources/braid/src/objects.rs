@@ -420,7 +420,8 @@ impl LocalObjects {
                         messages[(sent % messages.len() as i64) as usize].as_str()
                     };
                     // Creation activity distinguishes these reminders from other Braid
-                    // comments. Hide only each reminder, keeping replies and the cycle.
+                    // comments. Preserve replies' own state; ancestor visibility hides
+                    // their bodies together with the superseded reminder.
                     let previous = tx.prepare("SELECT c.comment_id FROM local_comments c
                         WHERE c.work_item_node_id='issue:1' AND c.system_author='Braid' AND c.lifecycle='visible'
                         AND EXISTS(SELECT 1 FROM local_activity a WHERE a.work_item_node_id=c.work_item_node_id
@@ -1084,16 +1085,23 @@ impl LocalObjects {
         let writer = self.writer(&tx, turn)?.context("last comment requires a current member")?;
         Self::item(&tx, kind, id)?;
         let login = Self::member_login(&tx, Some(&writer))?.context("current member has no login")?;
-        tx.query_row("SELECT c.comment_id FROM local_comments c
+        let candidates = tx.prepare("SELECT c.comment_id FROM local_comments c
             JOIN agent_instances ai ON ai.agent_id=c.writer_group
             JOIN assignments a ON a.assignment_id=ai.assignment_id
             WHERE c.work_item_node_id=?1 AND a.member_login=?2 AND c.lifecycle='visible'
-            ORDER BY c.comment_id DESC LIMIT 1", params![node(kind,id),login], |row| row.get(0))
-            .optional()?
-            .context("当前成员在此工作项没有可编辑或删除的评论")
+            ORDER BY c.comment_id DESC")?
+            .query_map(params![node(kind,id),login], |row| row.get::<_, i64>(0))?
+            .collect::<rusqlite::Result<Vec<_>>>()?;
+        for id in candidates {
+            if Self::comment_hidden_by(&tx, id)?.is_none() { return Ok(id); }
+        }
+        bail!("当前成员在此工作项没有可编辑或删除的可见评论")
     }
 
     fn deliver_comment_to(&self, tx: &Transaction<'_>, comment: i64, login: &str, writer: Option<&Writer>, action: &str) -> Result<Option<String>> {
+        if matches!(action, "created" | "edited" | "mentioned") && Self::comment_effectively_hidden(tx, comment)? {
+            return Ok(None);
+        }
         let source: String = tx.query_row("SELECT work_item_node_id FROM local_comments WHERE comment_id=?1", [comment], |r| r.get(0))?;
         let current: Option<(String,String,i64)> = tx.query_row("SELECT l.node_id,w.state,l.assignment_revision FROM local_items l JOIN work_items w ON w.node_id=l.node_id WHERE l.desired_member_login=?1", [login], |r| Ok((r.get(0)?,r.get(1)?,r.get(2)?))).optional()?;
         let (status, reason, event_id) = if let Some((target,state,revision)) = current {
@@ -1282,7 +1290,7 @@ impl LocalObjects {
         let mut threads = BTreeMap::new();
         for id in ids.iter().copied().collect::<BTreeSet<_>>() {
             let (root, cutoff): (i64, Option<i64>) = tx.query_row("SELECT root.comment_id,root.resolved_through FROM local_comments c JOIN local_comments root ON root.comment_id=c.thread_root WHERE c.comment_id=?1", [id], |r| Ok((r.get(0)?, r.get(1)?)))?;
-            ensure!(id == root, "comment #{id} is a reply in discussion root #{root}; no comments changed; use braid comment {} {root} for the whole discussion, or braid comment hide {id} --reason TEXT for only this comment", if resolved { "resolve" } else { "unresolve" });
+            ensure!(id == root, "comment #{id} is a reply in discussion root #{root}; no comments changed; use braid comment {} {root} for the whole discussion, or braid comment hide {id} --reason TEXT for this reply branch", if resolved { "resolve" } else { "unresolve" });
             let next = if resolved {
                 Some(tx.query_row(
                     "SELECT max(comment_id) FROM local_comments WHERE thread_root=?1",
@@ -1358,6 +1366,23 @@ impl LocalObjects {
     fn comments(c: &Connection, target: &str) -> Result<Vec<CommentSnapshot>> {
         Self::read_comments(c, target, None, None, false, false, true, true)
     }
+    // Read from the complete ancestry, including for a single-comment view.
+    // Reply IDs always follow their parents, so the chain cannot cycle.
+    fn comment_hidden_by(c: &Connection, id: i64) -> rusqlite::Result<Option<(i64, Option<String>)>> {
+        c.query_row(
+            "WITH RECURSIVE ancestors(comment_id,reply_to,lifecycle,hide_reason,depth) AS (
+                SELECT p.comment_id,p.reply_to,p.lifecycle,p.hide_reason,1
+                FROM local_comments c JOIN local_comments p ON p.comment_id=c.reply_to WHERE c.comment_id=?1
+                UNION ALL SELECT p.comment_id,p.reply_to,p.lifecycle,p.hide_reason,a.depth+1
+                FROM ancestors a JOIN local_comments p ON p.comment_id=a.reply_to
+             ) SELECT comment_id,hide_reason FROM ancestors WHERE lifecycle='hidden' ORDER BY depth LIMIT 1",
+            [id], |row| Ok((row.get(0)?, row.get(1)?)),
+        ).optional()
+    }
+    fn comment_effectively_hidden(c: &Connection, id: i64) -> rusqlite::Result<bool> {
+        let own: bool = c.query_row("SELECT lifecycle!='visible' FROM local_comments WHERE comment_id=?1", [id], |row| row.get(0))?;
+        Ok(own || Self::comment_hidden_by(c, id)?.is_some())
+    }
     fn display_member(c: &Connection, raw: Option<String>) -> rusqlite::Result<String> {
         let Some(raw) = raw else { return Ok("external".into()) };
         if matches!(raw.as_str(), "external" | "Braid") { return Ok(raw); }
@@ -1383,13 +1408,15 @@ impl LocalObjects {
             let author_login = Self::display_member(c, author)?;
             let cutoff:Option<i64>=r.get(9)?;
             let folded=cutoff.is_some_and(|cutoff| id<=cutoff);
-            let visible=life=="visible" && (!folded || expand_resolved);
+            let hidden_by = Self::comment_hidden_by(c, id)?;
+            let visible=life=="visible" && hidden_by.is_none() && (!folded || expand_resolved);
             Ok(CommentSnapshot {
                 node_id:format!("comment:{id}"),database_id:id.to_string(),repository:"local/run".into(),work_item_number:r.get::<_,i64>(1)? as u64,
                 author:Some(Actor {node_id:format!("member:{author_login}"),login:author_login}),
                 created_at:r.get(4)?, updated_at:if visible || include_hidden {r.get(5)?} else {r.get(4)?},
                 body:if life!="deleted" && (visible || include_hidden) {r.get(3)?} else {None},
                 minimized:life=="hidden",minimized_reason:r.get(10)?,pinned:false,deleted:life=="deleted",
+                hidden_by:hidden_by.as_ref().map(|(id, _)| *id),hidden_by_reason:hidden_by.and_then(|(_, reason)| reason),
                 reply_to:r.get(7)?,thread_root:r.get(8)?,resolved:cutoff.is_some(),folded,reactions:vec![],
             })
         })?.collect::<Result<Vec<_>,_>>()?;

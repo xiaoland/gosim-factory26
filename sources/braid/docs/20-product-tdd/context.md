@@ -1,6 +1,6 @@
 # 本地 Context
 
-当前完整对象由 SQLite 物化，再由 context 模块既有 renderer 投影。Issue Context 包含当前标题、正文、生命周期、直接关联 PR 引用和 comment；PR Context 先呈现 PR 自身正文、状态、分支和 comment，再在关联需求区只呈现 OPEN 的直接关联 Issue 的 description，不展开关联讨论。关闭的关联 Issue 仅保留关联引用；隐藏/删除 comment 保留身份与生命周期元数据，正文不进入当前模型输入，已解决讨论只留根标记；若又有新回复，新内容继续可见。隐藏/已解决标记不逐条附加读取指令。
+当前完整对象由 SQLite 物化，再由 context 模块既有 renderer 投影。Issue Context 包含当前标题、正文、生命周期、直接关联 PR 引用和 comment；PR Context 先呈现 PR 自身正文、状态、分支和 comment，再在关联需求区只呈现 OPEN 的直接关联 Issue 的 description，不展开关联讨论。关闭的关联 Issue 仅保留关联引用；自身或任一祖先隐藏以及删除的 comment 保留身份、生命周期与隐藏来源元数据，正文不进入当前模型输入，已解决讨论只留根标记；若又有新回复，新内容继续可见。隐藏/已解决标记不逐条附加读取指令。
 
 显示身份使用 Issue/PR/Comment 编号，不重复单仓库身份或 local 前缀。短元数据合入标题，不显示创建/更新时间；时间和内部关系仍保留在底层记录及结构化诊断中。description 与 comment 正文置于长度足以包住原文反引号的围栏中，回复按真实父子关系组织标题层级。
 
@@ -15,7 +15,7 @@ Context 是工作数据。角色、运行授权和 CLI 协议通过独立 instru
 
 comment 的创建、编辑、hide/unhide/delete、resolve/unresolve 和 hide 理由变化按实际参与者及订阅关系增量通知，不向操作者回送自己的操作，也不替换原生会话。
 标题及关系更新同样通过增量引用和 CLI 读取取得当前状态。
-隐藏和折叠立即影响对象读取与后续投影，但不会从已运行会话的历史中擦除旧文字。
+隐藏计算沿完整祖先链，精准单条读取也不能绕过；`minimized` 表达自身隐藏，`hidden_by` 与 `hidden_by_reason` 指向最近隐藏祖先。普通 renderer 对两者均消除正文；显式追溯可以读取保留的隐藏正文，不能恢复删除正文或改变普通投影。隐藏和折叠立即影响对象读取与后续投影，但不会从已运行会话的历史中擦除旧文字。
 休眠成员的 description 变化按其具体指派与 revision 留存，不仅为刷新上下文而唤醒；真正收到联系或重新打开时才处理。
 只有确实待应用的 description 变化才令恢复改为新建，不因完整对象哈希变化丢弃历史。
 

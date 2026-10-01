@@ -17,6 +17,7 @@ import uuid
 from agent_support import (save, phase, hashes, digest, logged, cleanup_workspace,
                            copy_application, copy_skill, deliver, browser_executable, budgeted_pi,
                            start_local_telemetry, telemetry_environment, stop_local_telemetry)
+from agent_support import runtime_resource_environment, start_shared_proxy, stop_shared_proxy
 from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
@@ -25,8 +26,8 @@ HERE = Path(__file__).resolve().parent
 VARIANT = 'pi-braid-i13'
 ROOT_PROFILE_ID = 'pi-glm-fast'
 ROOT_CHECK_MESSAGES = (
-    '请检查当前工作进展。',
-    '请检查当前工作进展，并整理当前 task packet 及相关 Issue/PR 的当前入口。',
+    '请检查当前工作进展；没有新事实、决定或行动时结束处理，无需公开回执。',
+    '请检查当前工作进展；仅在变化影响当前判断、下一步或交接时维护已有 task packet 与相关 Issue/PR 入口，无变化无需重复整理或公开回执。',
 )
 MAIN_SKILLS = ('svc-sub-agents', 'svc-task-packet','svc-documentation',
                'svc-verification', 'hyperformula', 'handsontable', 'better-auth-best-practices',
@@ -233,6 +234,7 @@ def generate(args):
                PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
     collector = None
+    env.update(runtime_resource_environment(runtime, run))
     try:
         collector, binding = start_local_telemetry(run)
         env.update(telemetry_environment(binding))
@@ -301,8 +303,10 @@ def generate(args):
             publish_history()
             history_stop.wait(5)
 
+    shared_proxy = None
     try:
         initialize_repository(app)
+        shared_proxy = start_shared_proxy(runtime, run, env)
         phase(run/'run.json', metadata, 'braid', 'braid.log')
         history_thread = threading.Thread(target=watch_history, name='arc-history', daemon=True)
         history_thread.start()
@@ -336,6 +340,11 @@ def generate(args):
                         error=str(exc) or type(exc).__name__, failed_phase=metadata.get('phase'))
         save(run/'delivery.json', {'status':'failed','error':metadata['error']})
     finally:
+        if shared_proxy is not None:
+            try:
+                stop_shared_proxy(shared_proxy, run)
+            except Exception as exc:
+                metadata['shared_proxy_cleanup_error'] = str(exc)
         try:
             save(run/'history-publication.json', history)
         except OSError as exc:

@@ -156,6 +156,9 @@ impl SessionFactory for RecordingFactory {
     async fn teardown(&self, id: &str) -> std::result::Result<(), SessionError> {
         self.inner.teardown(id).await
     }
+    async fn maintain_resources(&self) -> std::result::Result<(), SessionError> {
+        self.inner.maintain_resources().await
+    }
 }
 fn config(request: &Request) -> Result<Config> {
     ensure!(!request.profiles.is_empty(), "profiles must not be empty");
@@ -520,6 +523,7 @@ async fn drive(
     drop(reports);
     drop(fatal_stops);
     let mut errors = std::collections::BTreeMap::new();
+    let mut progress = std::collections::BTreeMap::new();
     let result = async {
         loop {
             tokio::select! {
@@ -530,6 +534,7 @@ async fn drive(
             }
             store.advance_scheduler()?;
             while let Ok(report) = health.try_recv() {
+                progress.insert(report.group.clone(), report.can_progress);
                 errors.insert(report.group, report.error);
             }
             write_json(&request.state.join("sessions.json"), &sessions(&objects)?)?;
@@ -543,7 +548,8 @@ async fn drive(
             if errors.len() == config.profiles.len() * 2
                 && errors.values().any(Option::is_some)
                 && current["active_turns"] == 0
-                && current["pending_resets"] == 0
+                && progress.len() == config.profiles.len() * 2
+                && !progress.values().any(|can_progress| *can_progress)
             {
                 return Ok((
                     "blocked".into(),

@@ -119,6 +119,7 @@ impl GroupDriver<'_> {
         self.sessions.retain(&retained).await?;
         let mut unavailable = None;
         for candidate in candidates {
+            if !candidate.needs_resume { continue; }
             if active_sessions.contains(&candidate.provider_session_id)
                 || self.sessions.is_live(&candidate.provider_session_id).await
             {
@@ -126,6 +127,14 @@ impl GroupDriver<'_> {
             }
             if self.sessions.is_managed(&candidate.provider_session_id).await {
                 self.sessions.remove(&candidate.provider_session_id).await?;
+            }
+            if candidate.session_lifecycle == "unknown" && !self.sessions.allow_uncertain_recovery(
+                &candidate.provider_session_id, &candidate.new_input_ids,
+            ).await {
+                let error = crate::agent_session::SessionError::Deferred("automatic Unknown recovery already used; awaiting completed execution or new work input".into());
+                store.record_provider_resume_error(candidate.provider_session_id.clone(), error.to_string())?;
+                unavailable = Some(error);
+                continue;
             }
             // Fence a lost handle before checking compatibility, so a blocked
             // session cannot leave a running turn behind.
@@ -228,6 +237,9 @@ impl GroupDriver<'_> {
                             self.spec.profile_record.clone(),
                             instruction_revision.clone(),
                         )?;
+                        if candidate.session_lifecycle == "unknown" {
+                            self.sessions.note_uncertain_recovery(&candidate.provider_session_id).await;
+                        }
                     }
                     tracing::info!(
                         kind = self.spec.kind.as_str(), number = candidate.number,
@@ -312,6 +324,7 @@ impl GroupDriver<'_> {
         error: Option<String>,
     ) -> Result<(), crate::agent_session::SessionError> {
         active.telemetry.finish(lifecycle);
+        if lifecycle == "completed" { self.sessions.note_completed(&active.claim.provider_session_id).await; }
         let result = if let Some(reset_id) = &active.reset_id {
             let reset = self.store.refresh_context_reset(reset_id.clone());
             let expected = reset.as_ref().map(super::provider::render_context_reset_notice);
@@ -445,6 +458,7 @@ impl GroupDriver<'_> {
                 .send(crate::health::ProviderHealthUpdate {
                     group: self.spec.group_id(),
                     error: Some(error.to_string()),
+                    can_progress: false,
                 })
                 .await;
             return None;
@@ -455,6 +469,7 @@ impl GroupDriver<'_> {
         let mut recovery = tokio::time::Instant::now();
         let mut reactivation_retry = tokio::time::Instant::now();
         let mut reactivation_error = None;
+        let mut recovery_error = None;
         let mut available = false;
         loop {
             tokio::select! {
@@ -470,6 +485,7 @@ impl GroupDriver<'_> {
                             let _ = reports.send(crate::health::ProviderHealthUpdate {
                                 group: self.spec.group_id(),
                                 error: Some(message.clone()),
+                                can_progress: false,
                             }).await;
                             return Some(message);
                         }
@@ -488,6 +504,7 @@ impl GroupDriver<'_> {
                     .send(crate::health::ProviderHealthUpdate {
                         group: self.spec.group_id(),
                         error: Some(message.clone()),
+                        can_progress: false,
                     })
                     .await;
                 return Some(message);
@@ -502,6 +519,7 @@ impl GroupDriver<'_> {
                     .send(crate::health::ProviderHealthUpdate {
                         group: self.spec.group_id(),
                         error: Some(message.clone()),
+                        can_progress: false,
                     })
                     .await;
                 return Some(message);
@@ -510,26 +528,27 @@ impl GroupDriver<'_> {
                 self.begin_active_context_reset(active).await;
                 self.forward_running_input(active).await;
             }
-            if tokio::time::Instant::now() >= recovery {
+            let materialize = tokio::time::Instant::now() >= recovery;
+            if materialize {
+                if let Err(error) = self.sessions.maintain_resources().await {
+                    tracing::warn!(%error, "resource pressure maintenance unavailable");
+                }
+                if let Err(error) = self.unload_idle_sessions(&running.keys().cloned().collect()).await {
+                    if let Some(stop) = self.sessions.take_stop_failure().await {
+                        let _ = fatal_stops.send(stop).await;
+                        return Some(error.to_string());
+                    }
+                    tracing::warn!(%error, "cannot unload idle native session");
+                }
                 let readiness = self.sessions.check().await;
                 available = readiness.is_ok();
                 let result = match readiness {
                     Ok(()) => self.resume(&running.keys().cloned().collect()).await,
                     Err(error) => Err(error.into()),
                 };
-                let error = result.err().map(|error| error.to_string()).or_else(|| reactivation_error.clone());
-                if let Some(error) = &error {
+                recovery_error = result.err().map(|error| error.to_string());
+                if let Some(error) = &recovery_error {
                     tracing::warn!(%error, kind = self.spec.kind.as_str(), "session recovery unavailable");
-                }
-                if reports
-                    .send(crate::health::ProviderHealthUpdate {
-                        group: self.spec.group_id(),
-                        error,
-                    })
-                    .await
-                    .is_err()
-                {
-                    return None;
                 }
                 if let Some(error) = self.sessions.take_stop_failure().await {
                     let _ = fatal_stops.send(error.clone()).await;
@@ -545,18 +564,10 @@ impl GroupDriver<'_> {
                     }
                     if let Some(error) = retryable_error {
                         reactivation_retry = recovery;
-                        reactivation_error = Some(error.clone());
-                        let _ = reports.send(crate::health::ProviderHealthUpdate {
-                            group: self.spec.group_id(),
-                            error: Some(error),
-                        }).await;
-                    } else if reactivation_error.take().is_some() {
-                        let _ = reports.send(crate::health::ProviderHealthUpdate {
-                            group: self.spec.group_id(),
-                            error: None,
-                        }).await;
-                    }
+                        reactivation_error = Some(error);
+                    } else { reactivation_error = None; }
                 }
+                if materialize {
                 match Box::pin(self.materialize_next_context_reset()).await {
                     Ok(_) => {}
                     Err(error) => {
@@ -569,12 +580,14 @@ impl GroupDriver<'_> {
                             .send(crate::health::ProviderHealthUpdate {
                                 group: self.spec.group_id(),
                                 error: Some(message.clone()),
+                                can_progress: false,
                             })
                             .await;
                         return Some(message);
                     }
                 }
                 self.materialize_next_assignment().await;
+                }
             }
             if let Some(active) = self.start_next_agent_turn().await {
                 running.insert(active.claim.provider_session_id.clone(), active);
@@ -585,11 +598,67 @@ impl GroupDriver<'_> {
                     .send(crate::health::ProviderHealthUpdate {
                         group: self.spec.group_id(),
                         error: Some(error.clone()),
+                        can_progress: false,
                     })
                     .await;
                 return Some(error);
             }
+            if materialize {
+                let deferred = self.sessions.take_deferred().await;
+                let can_progress = match self.can_progress(&running, available, deferred.is_some()).await {
+                    Ok(can_progress) => can_progress,
+                    Err(error) => { recovery_error = Some(error.to_string()); false }
+                };
+                let error = recovery_error.clone().or_else(|| reactivation_error.clone()).or(deferred);
+                if reports.send(crate::health::ProviderHealthUpdate {
+                    group: self.spec.group_id(), error, can_progress,
+                }).await.is_err() { return None; }
+            }
         }
+    }
+}
+
+impl GroupDriver<'_> {
+    async fn can_progress(&self, running: &HashMap<String, RunningAgentTurn>, available: bool, deferred: bool) -> Result<bool> {
+        if !running.is_empty() { return Ok(true); }
+        // Native streaming can continue between Braid turns. A service merely
+        // remaining resident does not by itself count as work making progress.
+        for id in self.sessions.managed_ids().await {
+            if let Some(session) = self.sessions.get(&id).await {
+                if matches!(session.can_accept_input().await, Ok(false)) { return Ok(true); }
+            }
+        }
+        let candidates = self.store.provider_resume_candidates(self.spec.profile.id.clone(), self.spec.kind.as_str().into())?;
+        for candidate in candidates {
+            if !candidate.needs_resume { continue; }
+            if candidate.session_lifecycle == "unknown" && !self.sessions.allow_uncertain_recovery(
+                &candidate.provider_session_id, &candidate.new_input_ids,
+            ).await { continue; }
+            if self.sessions.is_live(&candidate.provider_session_id).await {
+                if !self.sessions.session_deferred(&candidate.provider_session_id).await { return Ok(true); }
+            } else if available && !deferred && !self.sessions.session_deferred(&candidate.provider_session_id).await {
+                return Ok(true);
+            }
+        }
+        if !available || deferred { return Ok(false); }
+        if self.store.ready_context_reset(self.spec.kind.as_str().into(), self.spec.profile.id.clone())?.is_some() { return Ok(true); }
+        if !self.store.assignment_candidates(self.spec.kind.as_str().into(), self.spec.profile.id.clone())?.is_empty() { return Ok(true); }
+        Ok(!self.store.work_item_lifecycle_candidates(self.spec.kind.as_str().into(), 1)?.is_empty())
+    }
+
+    async fn unload_idle_sessions(&self, active: &HashSet<String>) -> Result<()> {
+        for id in self.sessions.managed_ids().await {
+            if active.contains(&id) { continue; }
+            let Some(session) = self.sessions.get(&id).await else { continue; };
+            if !matches!(session.managed_state().await, Ok(crate::agent_session::ManagedState::Quiescent)) { continue; }
+            // Fencing and input inspection share a Store transaction. Inputs
+            // arriving after this boundary remain queued for the next resume.
+            if self.store.fence_idle_provider(id.clone())? {
+                self.sessions.remove(&id).await?;
+                tracing::info!(provider_session = %id, "unloaded quiescent OPEN member; logical session retained");
+            }
+        }
+        Ok(())
     }
 }
 

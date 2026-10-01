@@ -5,8 +5,10 @@ use std::sync::atomic::AtomicBool;
 use std::io::BufRead as _;
 
 struct PiProcess {
-    writer: ChildStdin,
+    writer: Option<ChildStdin>,
     child: PiChild,
+    execution: Option<(PathBuf, String)>,
+    startup_receipt: Option<PathBuf>,
     #[allow(dead_code)]
     stdout_handle: tokio::task::JoinHandle<()>,
     #[allow(dead_code)]
@@ -102,15 +104,21 @@ impl PiProvider {
             return Err(ProviderError::Protocol("Pi shutdown previously failed".into()));
         }
         let mut state = self.state.lock().await;
-        let Some(process) = state.process.take() else { return Ok(()) };
-        let PiProcess { writer, mut child, .. } = process;
+        if state.process.is_none() { return Ok(()); }
+        if state.process.as_ref().is_some_and(|process| process.execution.is_some()) {
+            match Self::request(&mut state, json!({"type":"stop_owned_execution"})).await {
+                Ok(receipt) => tracing::info!(receipt = %receipt, "Pi owned execution shutdown receipt"),
+                Err(error) => tracing::warn!(%error, "Pi shutdown RPC unavailable; offline cleanup required"),
+            }
+        }
+        let mut process = state.process.take().expect("checked Pi process");
         // EOF invokes Pi's own runtime disposal and extension shutdown hooks.
         // Internal subagents belong to Pi, not to Braid's process supervisor.
-        drop(writer);
-        let pid = child.id();
+        process.writer.take();
+        let pid = process.child.id();
         tracing::info!(pid, phase = "request", reason = "stdin-eof-shutdown", timeout_seconds = 180,
             "Pi child wait");
-        let result = match timeout(Duration::from_secs(180), child.wait()).await {
+        let waited = match timeout(Duration::from_secs(180), process.child.wait()).await {
             Ok(Ok(status)) => {
                 #[cfg(unix)]
                 let signal = std::os::unix::process::ExitStatusExt::signal(&status);
@@ -118,9 +126,13 @@ impl PiProvider {
                 let signal: Option<i32> = None;
                 tracing::info!(pid, phase = "result", exit_code = status.code(), signal,
                     status = %status, "Pi child wait");
-                if status.success() { Ok(()) } else {
-                    Err(ProviderError::Protocol(format!("Pi exited with {status}")))
+                if let Some((directory, identity)) = &process.execution {
+                    if let Err(error) = crate::local::write_json(&directory.join("parent-wait.json"),
+                        &json!({"execution_id":identity,"pid":pid,"exit_code":status.code(),"signal":signal,"status":status.to_string()})) {
+                        tracing::warn!(%error, "cannot persist Pi parent wait receipt");
+                    }
                 }
+                Ok(status)
             }
             Ok(Err(error)) => {
                 tracing::warn!(pid, phase = "result", errno = error.raw_os_error(), %error,
@@ -131,20 +143,49 @@ impl PiProvider {
                 tracing::warn!(pid, phase = "result", reason = "timeout", "Pi child wait failed");
                 tracing::warn!(pid, sender_pid = std::process::id(), phase = "request", signal = 9,
                     reason = "shutdown-timeout", "Pi child kill and wait");
-                match child.kill().await {
-                    Ok(()) => tracing::warn!(pid, phase = "result", result = "returned",
-                        "Pi child kill and wait"),
-                    Err(error) => tracing::warn!(pid, phase = "result", errno = error.raw_os_error(),
-                        %error, "Pi child kill and wait failed"),
+                match timeout(Duration::from_secs(5), process.child.kill()).await {
+                    Ok(Ok(())) => {
+                        tracing::warn!(pid, phase = "result", result = "returned", "Pi child kill and wait");
+                        process.child.wait().await.map_err(|error| ProviderError::Protocol(error.to_string()))
+                    }
+                    Ok(Err(error)) => {
+                        tracing::warn!(pid, phase = "result", errno = error.raw_os_error(), %error, "Pi child kill and wait failed");
+                        Err(ProviderError::Protocol(error.to_string()))
+                    }
+                    Err(_) => Err(ProviderError::Timeout { method: "Pi shutdown kill".into() }),
                 }
-                Err(ProviderError::Timeout { method: "Pi shutdown".into() })
             }
         };
-        if result.is_err() {
+        // A failed turn or a SIGKILL is an execution outcome, not a cleanup
+        // verdict. Detached work must be settled from persisted ownership.
+        let result = if startup_deferred(&process).is_some() {
+            waited.map(|_| ())
+        } else if let Some((directory, identity)) = &process.execution {
+            if let Err(error) = &waited {
+                if let Err(write_error) = crate::local::write_json(&directory.join("parent-wait.json"),
+                    &json!({"execution_id":identity,"pid":pid,"wait_error":error.to_string()})) {
+                    tracing::warn!(%write_error, "cannot persist Pi parent wait error");
+                }
+            }
+            stop_owned_execution_offline(directory, identity).await
+        } else {
+            waited.and_then(|status| {
+                if status.success() { Ok(()) }
+                else { Err(ProviderError::Protocol(format!("Pi exited with {status}; owned execution stop proof unavailable"))) }
+            })
+        };
+        if let Err(error) = &result {
             self.teardown_failed.store(true, Ordering::Release);
+            state.process = Some(process);
+            tracing::error!(%error, "Pi owned execution stop unproved");
         }
         self.closed.send_replace(true);
         result
+    }
+
+    pub(crate) async fn relieve_pressure(&self) -> Result<Value, ProviderError> {
+        let mut state = self.state.lock().await;
+        Self::request(&mut state, json!({"type":"relieve_pressure"})).await
     }
 
     pub(crate) async fn native_session_id(&self) -> Option<String> {
@@ -157,8 +198,15 @@ impl PiProvider {
     ) -> Result<(String, String), ProviderError> {
         let startup_timeout = Duration::from_secs(state.config.startup_timeout_seconds);
         let started = std::time::Instant::now();
-        let state_resp = Self::request_with_turn(state, json!({"type": "get_state"}), None, startup_timeout)
-            .await?;
+        let state_resp = match Self::request_with_turn(state, json!({"type": "get_state"}), None, startup_timeout).await {
+            Ok(response) => response,
+            Err(error) => {
+                if let Some(reason) = state.process.as_ref().and_then(startup_deferred) {
+                    return Err(ProviderError::Deferred(reason));
+                }
+                return Err(error);
+            }
+        };
         let data = state_resp.get("data").and_then(Value::as_object).ok_or_else(|| {
             ProviderError::CreatedWithoutIdentity("get_state missing data".into())
         })?;
@@ -189,7 +237,28 @@ impl PiProvider {
         workspace: &Path,
         session: Option<&str>,
     ) -> Result<(), ProviderError> {
-        let mut cmd = Command::new(&state.config.executable);
+        let start_id = uuid::Uuid::now_v7().to_string();
+        let execution = std::env::var_os("FACTORY_NATIVE_RUNTIME_MODULE").map(|_| {
+            let home = state.config.home.as_deref().unwrap_or(workspace);
+            (home.join("managed-executions").join(&start_id), start_id.clone())
+        });
+        let mut startup_receipt = None;
+        let mut cmd = if let Some(helper) = std::env::var_os("FACTORY_RESOURCE_HELPER") {
+            let python = std::env::var_os("FACTORY_RESOURCE_PYTHON").ok_or_else(|| ProviderError::Protocol("FACTORY_RESOURCE_PYTHON is missing".into()))?;
+            let directory = std::env::var_os("FACTORY_RESOURCE_DIR").ok_or_else(|| ProviderError::Protocol("FACTORY_RESOURCE_DIR is missing".into()))?;
+            startup_receipt = Some(PathBuf::from(directory).join("starts").join(format!("{start_id}.json")));
+            let mut command = Command::new(python);
+            command.arg(helper).args(["launch", "--start-id", &start_id, "--kind", "native", "--"]).arg(&state.config.executable);
+            command
+        } else { Command::new(&state.config.executable) };
+        if let Some((directory, identity)) = &execution {
+            std::fs::create_dir_all(directory).map_err(ProviderError::Start)?;
+            cmd.env("FACTORY_NATIVE_EXECUTION_DIR", directory).env("FACTORY_NATIVE_EXECUTION_ID", identity);
+        }
+        if startup_receipt.is_some() && execution.is_none() {
+            return Err(ProviderError::Protocol("resource admission requires FACTORY_NATIVE_RUNTIME_MODULE".into()));
+        }
+        cmd.env_remove("FACTORY_NATIVE_START_ID");
         cmd.args(["--mode", "rpc"])
             .env("BRAID_AGENT_RUNTIME", "1")
             .env("PI_TIMING", "1")
@@ -251,6 +320,8 @@ impl PiProvider {
         }
         cmd.current_dir(workspace);
         cmd.stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).kill_on_drop(true);
+        #[cfg(unix)]
+        cmd.process_group(0);
 
         let mut child = PiChild(cmd.spawn()?);
         tracing::info!(pid = child.id(), profile = %profile.id, workspace = %workspace.display(), native_home = ?state.config.home, session_dir = %session_dir.display(), resume = session.is_some(), "Pi process started");
@@ -286,7 +357,7 @@ impl PiProvider {
             Arc::clone(&self.turn_id),
         );
         let stderr_handle = spawn_pi_stderr(stderr, state.config.home.clone());
-        state.process = Some(PiProcess { writer, child, stdout_handle, stderr_handle });
+        state.process = Some(PiProcess { writer: Some(writer), child, execution, startup_receipt, stdout_handle, stderr_handle });
         Ok(())
     }
 
@@ -312,11 +383,12 @@ impl PiProvider {
             bytes.push(b'\n');
             bytes
         };
-        if let Err(error) = process.writer.write_all(&bytes).await {
+        let writer = process.writer.as_mut().ok_or(ProviderError::Disconnected)?;
+        if let Err(error) = writer.write_all(&bytes).await {
             state.pending.lock().await.remove(&id);
             return Err(ProviderError::Start(error));
         }
-        if let Err(error) = process.writer.flush().await {
+        if let Err(error) = writer.flush().await {
             state.pending.lock().await.remove(&id);
             return Err(ProviderError::Start(error));
         }
@@ -355,6 +427,21 @@ impl AgentProvider for PiProvider {
         let native = Self::request(&mut state, json!({"type": "get_state"})).await?;
         Ok(!native_is_busy(&native))
     }
+    async fn managed_state(&self, _thread_id: &str) -> Result<crate::agent_session::ManagedState, ProviderError> {
+        let mut state = self.state.lock().await;
+        let native = Self::request(&mut state, json!({"type":"get_state"})).await?;
+        if let Some((_, identity)) = state.process.as_ref().and_then(|process| process.execution.as_ref()) {
+            if native["data"]["managed_state"]["execution_id"].as_str() != Some(identity.as_str()) {
+                tracing::warn!(response = %native, execution = identity, "native managed state identity mismatch");
+                return Ok(crate::agent_session::ManagedState::Unknown);
+            }
+        }
+        Ok(match native["data"]["managed_state"]["status"].as_str() {
+            Some("quiescent") => crate::agent_session::ManagedState::Quiescent,
+            Some("busy") => crate::agent_session::ManagedState::Busy,
+            _ => crate::agent_session::ManagedState::Unknown,
+        })
+    }
     fn subscribe(&self) -> broadcast::Receiver<ProviderNotification> {
         self.notifications.subscribe()
     }
@@ -387,6 +474,7 @@ impl AgentProvider for PiProvider {
             .map_err(
             |error| match error {
                 ProviderError::CreatedWithoutIdentity(_) => error,
+                ProviderError::Deferred(_) => error,
                 other => ProviderError::CreatedWithoutIdentity(other.to_string()),
             },
         )?;
@@ -462,6 +550,11 @@ impl AgentProvider for PiProvider {
         let native = Self::request(&mut state, json!({"type": "get_state"})).await?;
         if native_is_busy(&native) {
             return Err(ProviderError::Deferred("Pi is streaming or compacting".into()));
+        }
+        if let Some(pressure) = resource_status().await.map_err(|error| ProviderError::Deferred(error.to_string()))? {
+            if pressure["status"] != "normal" {
+                return Err(ProviderError::Deferred(format!("resource pressure: {pressure}")));
+            }
         }
         let turn_id = uuid::Uuid::now_v7().to_string();
         *self.thread_id.lock().await = state.session.clone().unwrap_or_default();
@@ -544,6 +637,40 @@ impl AgentProvider for PiProvider {
 
 fn native_is_busy(response: &Value) -> bool {
     response["data"]["isStreaming"] == true || response["data"]["isCompacting"] == true
+}
+
+fn startup_deferred(process: &PiProcess) -> Option<String> {
+    let receipt = process.startup_receipt.as_ref()?;
+    let raw = std::fs::read(receipt).ok()?;
+    let value: Value = serde_json::from_slice(&raw).ok()?;
+    (value["status"] == "resource_deferred").then(|| format!("resource_deferred: {value}"))
+}
+
+pub(super) async fn resource_status() -> Result<Option<Value>, ProviderError> {
+    let Some(helper) = std::env::var_os("FACTORY_RESOURCE_HELPER") else { return Ok(None); };
+    let python = std::env::var_os("FACTORY_RESOURCE_PYTHON").ok_or_else(|| ProviderError::Protocol("FACTORY_RESOURCE_PYTHON is missing".into()))?;
+    let directory = std::env::var_os("FACTORY_RESOURCE_DIR").ok_or_else(|| ProviderError::Protocol("FACTORY_RESOURCE_DIR is missing".into()))?;
+    let output = timeout(Duration::from_secs(5), Command::new(python).arg(helper).arg("status").arg("--directory").arg(directory).output())
+        .await.map_err(|_| ProviderError::Timeout { method: "resource status".into() })??;
+    if !output.status.success() {
+        return Err(ProviderError::Protocol(format!("resource status exited {}; stdout={}; stderr={}", output.status,
+            String::from_utf8_lossy(&output.stdout), String::from_utf8_lossy(&output.stderr))));
+    }
+    let value: Value = serde_json::from_slice(&output.stdout).map_err(|error| ProviderError::Protocol(format!("invalid resource status: {error}; stdout={}", String::from_utf8_lossy(&output.stdout))))?;
+    Ok(Some(value))
+}
+
+async fn stop_owned_execution_offline(directory: &Path, identity: &str) -> Result<(), ProviderError> {
+    let module = std::env::var_os("FACTORY_NATIVE_RUNTIME_MODULE").ok_or_else(|| ProviderError::Protocol("native runtime cleanup module is missing".into()))?;
+    let output = timeout(Duration::from_secs(30), Command::new("node").arg(module)
+        .args(["cleanup", "--execution-dir"]).arg(directory).arg("--execution-id").arg(identity).output())
+        .await.map_err(|_| ProviderError::Timeout { method: "owned execution cleanup".into() })??;
+    let raw = String::from_utf8_lossy(&output.stdout);
+    let receipt: Value = serde_json::from_slice(&output.stdout).map_err(|error| ProviderError::Protocol(format!("invalid owned execution cleanup receipt: {error}; status={}; stdout={raw}; stderr={}", output.status, String::from_utf8_lossy(&output.stderr))))?;
+    tracing::info!(execution = identity, directory = %directory.display(), receipt = %receipt, status = %output.status,
+        stderr = %String::from_utf8_lossy(&output.stderr), "Pi offline owned execution cleanup");
+    if output.status.success() && receipt["status"] == "stopped" { Ok(()) }
+    else { Err(ProviderError::Protocol(format!("owned execution stop unproved: {receipt}; status={}; stderr={}", output.status, String::from_utf8_lossy(&output.stderr)))) }
 }
 
 #[allow(clippy::too_many_arguments)]

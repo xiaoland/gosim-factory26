@@ -478,6 +478,8 @@ pub struct ProviderResumeCandidate {
     pub active_turn_lifecycle: Option<String>,
     pub worktree_path: Option<PathBuf>,
     pub worktree_head_ref: Option<String>,
+    pub needs_resume: bool,
+    pub new_input_ids: Vec<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]
@@ -764,6 +766,12 @@ impl StoreActor {
         receiver.recv().map_err(|_| StoreError::ActorStopped)?
     }
 
+    pub fn fence_idle_provider(&self, provider_session_id: String) -> Result<bool, StoreError> {
+        let (reply, receiver) = mpsc::channel();
+        self.sender.send(Command::FenceIdleProvider(provider_session_id, reply)).map_err(|_| StoreError::ActorUnavailable)?;
+        receiver.recv().map_err(|_| StoreError::ActorStopped)?
+    }
+
     pub fn record_provider_resume(&self, provider_session_id: String, binding_id: String, profile: ProfileRecord, instruction_revision: String) -> Result<(), StoreError> {
         let (reply, receiver) = mpsc::channel();
         self.sender
@@ -1008,6 +1016,12 @@ impl StoreActor {
         self.sender
             .send(Command::FailAgentAssignment(assignment_id, error, reply))
             .map_err(|_| StoreError::ActorUnavailable)?;
+        receiver.recv().map_err(|_| StoreError::ActorStopped)?
+    }
+
+    pub fn defer_agent_assignment(&self, assignment: String, event: String, error: String) -> Result<(), StoreError> {
+        let (reply, receiver) = mpsc::channel();
+        self.sender.send(Command::DeferAgentAssignment(assignment, event, error, reply)).map_err(|_| StoreError::ActorUnavailable)?;
         receiver.recv().map_err(|_| StoreError::ActorStopped)?
     }
 
@@ -1279,6 +1293,8 @@ enum Command {
     BeginProviderReplacement(String, ProfileRecord, Sender<Result<Option<ContextResetClaim>, StoreError>>),
     PrepareOfflineResume(Sender<Result<Vec<String>, StoreError>>),
     ClearProviderBinding(String, Sender<Result<(), StoreError>>),
+    FenceIdleProvider(String, Sender<Result<bool, StoreError>>),
+    DeferAgentAssignment(String, String, String, Sender<Result<(), StoreError>>),
     RecordProviderResume(String, String, ProfileRecord, String, Sender<Result<(), StoreError>>),
     RecordProviderResumeError(String, String, Sender<Result<(), StoreError>>),
     BlockProviderSession(String, String, Sender<Result<(), StoreError>>),
@@ -1453,6 +1469,12 @@ fn actor_loop(database: &Path, backups: &Path, receiver: Receiver<Command>) {
             }
             Command::ClearProviderBinding(provider_session_id, reply) => {
                 let _ = reply.send(clear_provider_binding(database, &provider_session_id));
+            }
+            Command::FenceIdleProvider(provider_session_id, reply) => {
+                let _ = reply.send(fence_idle_provider(database, &provider_session_id));
+            }
+            Command::DeferAgentAssignment(assignment, event, error, reply) => {
+                let _ = reply.send(defer_agent_assignment(database, &assignment, &event, &error));
             }
             Command::RecordProviderResume(provider_session_id, binding_id, profile, instruction_revision, reply) => {
                 let _ = reply.send(record_provider_resume(database, &provider_session_id, &binding_id, &profile, &instruction_revision));
@@ -2973,15 +2995,36 @@ fn provider_resume_candidates(
     let mut statement = connection.prepare(
         "SELECT a.assignment_id,ps.provider_session_id,r.name_with_owner,w.number,
                 ai.profile_id,ai.profile_revision,a.member_login,ps.instruction_revision,ps.lifecycle,
-                t.turn_id,t.lifecycle,wt.path,wt.head_ref,w.kind,ps.provider_kind
+                t.turn_id,t.lifecycle,wt.path,wt.head_ref,w.kind,ps.provider_kind,
+                (ps.lifecycle IN ('running','unknown','blocked') OR
+                 EXISTS(SELECT 1 FROM wake_batches b JOIN wake_batch_events be ON be.batch_id=b.batch_id
+                        JOIN events e ON e.event_id=be.event_id WHERE b.work_item_node_id=w.node_id
+                        AND b.lifecycle IN ('pending','runnable') AND e.lifecycle='pending'
+                        AND (e.recipient_login IS NULL OR e.recipient_login=a.member_login)
+                        AND (e.recipient_revision IS NULL OR e.recipient_revision=a.assignment_revision)) OR
+                 EXISTS(SELECT 1 FROM events e WHERE e.work_item_node_id=w.node_id AND e.kind='invalidate'
+                        AND e.lifecycle='pending' AND (e.recipient_login IS NULL OR e.recipient_login=a.member_login)
+                        AND (e.recipient_revision=a.assignment_revision OR (e.recipient_revision IS NULL AND e.observed_at>=a.assigned_at))) OR
+                 EXISTS(SELECT 1 FROM context_resets cr WHERE cr.old_session_id=ps.session_id AND cr.lifecycle='interrupting')) AS needs_resume,
+                (SELECT json_group_array(e.event_id) FROM events e WHERE e.work_item_node_id=w.node_id AND e.lifecycle='pending'
+                 AND e.kind IN ('wake','mention','invalidate','lifecycle')
+                 AND coalesce(e.detail,'') NOT IN ('uncertain_continuation','reset_continuation')
+                 AND coalesce(e.dedupe_key,'') NOT LIKE 'braid-failed-turn-replay-v1:%'
+                 AND coalesce(e.dedupe_key,'') NOT LIKE 'deferred-input:%'
+                 AND NOT EXISTS(SELECT 1 FROM local_comment_delivery d JOIN local_comments c ON c.comment_id=d.comment_id
+                                WHERE d.event_id=e.event_id AND c.system_author='Braid')
+                 AND (e.recipient_login IS NULL OR e.recipient_login=a.member_login)
+                 AND (e.recipient_revision=a.assignment_revision OR (e.recipient_revision IS NULL AND e.observed_at>=a.assigned_at))
+                ) AS new_input_ids
          FROM assignments a
          JOIN work_items w ON w.node_id=a.work_item_node_id AND w.kind=?2
          JOIN repositories r ON r.node_id=w.repository_node_id
          JOIN agent_instances ai ON ai.assignment_id=a.assignment_id
-         JOIN local_items l ON l.node_id=w.node_id AND l.desired_profile_id=ai.profile_id AND l.assignment_revision=a.assignment_revision
+         JOIN local_items l ON l.node_id=w.node_id AND l.desired_profile_id=ai.profile_id AND l.desired_member_login=a.member_login AND l.assignment_revision=a.assignment_revision
          JOIN provider_sessions ps ON ps.agent_id=ai.agent_id
            AND (ps.lifecycle IN ('idle','running','unknown') OR
-                (ps.lifecycle='blocked' AND ps.last_resume_error='persisted provider session is incompatible with its Profile/worktree'))
+                (ps.lifecycle='blocked' AND (ps.last_resume_error='persisted provider session is incompatible with its Profile/worktree'
+                 OR ps.last_resume_error LIKE 'session deferred input:%' OR ps.last_resume_error='session is unavailable')))
          LEFT JOIN worktrees wt ON wt.agent_id=ai.agent_id AND wt.lifecycle='active'
          LEFT JOIN turns t ON t.session_id=ps.session_id
            AND t.turn_id=(SELECT latest.turn_id FROM turns latest WHERE latest.session_id=ps.session_id AND latest.lifecycle IN ('starting','running','unknown') ORDER BY latest.turn_id DESC LIMIT 1)
@@ -3006,6 +3049,9 @@ fn provider_resume_candidates(
             worktree_path: row.get::<_, Option<String>>(11)?.map(PathBuf::from),
             worktree_head_ref: row.get(12)?,
             work_item_kind: row.get(13)?,
+            needs_resume: row.get(15)?,
+            new_input_ids: serde_json::from_str(&row.get::<_,String>(16)?).map_err(|error|
+                rusqlite::Error::FromSqlConversionFailure(16, rusqlite::types::Type::Text, Box::new(error)))?,
         })
     })?;
     rows.collect::<Result<Vec<_>, _>>().map_err(StoreError::from)
@@ -3335,6 +3381,30 @@ fn clear_provider_binding(database: &Path, provider_session_id: &str) -> Result<
         [provider_session_id],
     )?;
     if updated == 1 { Ok(()) } else { Err(StoreError::InvalidData(format!("provider session {provider_session_id} is not resumable"))) }
+}
+
+fn fence_idle_provider(database: &Path, id: &str) -> Result<bool, StoreError> {
+    require_current_schema(database)?;
+    let mut connection = open_read_write(database)?;
+    configure_connection(&connection)?;
+    let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+    let updated = transaction.execute(
+        "UPDATE provider_sessions SET cli_binding_id=NULL WHERE provider_session_id=?1 AND lifecycle='idle'
+         AND cli_binding_id IS NOT NULL AND EXISTS(
+           SELECT 1 FROM agent_instances ai JOIN assignments a ON a.assignment_id=ai.assignment_id
+           JOIN work_items w ON w.node_id=a.work_item_node_id
+           JOIN local_items l ON l.node_id=w.node_id
+           WHERE ai.agent_id=provider_sessions.agent_id AND ai.lifecycle='idle' AND a.lifecycle='active' AND w.state='OPEN'
+             AND l.desired_profile_id=ai.profile_id AND l.desired_member_login=a.member_login
+             AND l.assignment_revision=a.assignment_revision
+             AND NOT EXISTS(SELECT 1 FROM turns t WHERE t.session_id=provider_sessions.session_id AND t.lifecycle IN ('starting','running'))
+             AND NOT EXISTS(SELECT 1 FROM wake_batches b WHERE b.work_item_node_id=w.node_id AND b.lifecycle IN ('pending','runnable'))
+             AND NOT EXISTS(SELECT 1 FROM events e WHERE e.work_item_node_id=w.node_id AND e.lifecycle IN ('pending','resetting','materializing'))
+             AND NOT EXISTS(SELECT 1 FROM context_resets cr WHERE cr.agent_id=ai.agent_id AND cr.lifecycle IN ('interrupting','materializing')))",
+        [id],
+    )?;
+    transaction.commit()?;
+    Ok(updated == 1)
 }
 
 fn record_provider_resume(database: &Path, provider_session_id: &str, binding_id: &str, profile: &ProfileRecord, instruction_revision: &str) -> Result<(), StoreError> {
@@ -3940,7 +4010,7 @@ fn complete_work_item_reactivation(
         [&materialization.assignment_id],
     )?;
     transaction.execute(
-        "UPDATE agent_instances SET lifecycle='idle'
+        "UPDATE agent_instances SET lifecycle='idle',context_error=NULL
          WHERE agent_id=?1 AND lifecycle='materializing'",
         [&materialization.agent_id],
     )?;
@@ -4040,7 +4110,6 @@ fn defer_work_item_reactivation_transaction(
         "SELECT ai.agent_id FROM assignments a
          JOIN agent_instances ai ON ai.assignment_id=a.assignment_id
          JOIN events e ON e.work_item_node_id=a.work_item_node_id
-         JOIN provider_sessions ps ON ps.agent_id=ai.agent_id AND ps.lifecycle='sleeping'
          WHERE a.assignment_id=?1 AND e.event_id=?2
            AND a.lifecycle='materializing' AND ai.lifecycle='materializing'
            AND e.lifecycle='materializing'",
@@ -4051,6 +4120,7 @@ fn defer_work_item_reactivation_transaction(
     transaction.execute("UPDATE events SET lifecycle='pending' WHERE event_id=?1", [event_id])?;
     transaction.execute("UPDATE assignments SET lifecycle='sleeping' WHERE assignment_id=?1", [assignment_id])?;
     transaction.execute("UPDATE agent_instances SET lifecycle='sleeping' WHERE agent_id=?1", [&agent_id])?;
+    transaction.execute("UPDATE agent_instances SET context_error=?2 WHERE agent_id=?1", params![agent_id,error])?;
     transaction.execute(
         "UPDATE provider_sessions SET last_resume_error=?2,last_resume_failed_at=?3 WHERE agent_id=?1 AND lifecycle='sleeping'",
         params![agent_id, error, now_rfc3339()],
@@ -4255,6 +4325,27 @@ fn begin_agent_assignment(
     }
     let role = agent_role_for_kind(&work_item_kind)?;
     upsert_profile_record(&transaction, profile)?;
+    let deferred = transaction.query_row(
+        "SELECT a.assignment_id,ai.agent_id,a.generation,a.assignment_revision,ai.profile_revision,a.member_login,wt.path,wt.head_ref
+         FROM assignments a JOIN agent_instances ai ON ai.assignment_id=a.assignment_id
+         LEFT JOIN worktrees wt ON wt.agent_id=ai.agent_id AND wt.lifecycle='active'
+         WHERE a.work_item_node_id=?1 AND a.lifecycle='materializing' AND ai.lifecycle='materializing'
+           AND a.assignment_revision=?2 AND a.member_login=?3 AND ai.profile_id=?4",
+        params![work_item_node_id,sqlite_u64(assignment_revision,"assignment revision")?,desired_member_login,profile.profile_id],
+        |row| Ok(AgentMaterialization {
+            assignment_id: row.get(0)?, agent_id: row.get(1)?, work_item_node_id: work_item_node_id.clone(),
+            generation: sqlite_i64_to_u64(row.get(2)?,"generation")?,
+            assignment_revision: sqlite_i64_to_u64(row.get(3)?,"assignment revision")?,
+            profile_id: profile.profile_id.clone(), profile_revision: sqlite_i64_to_u64(row.get(4)?,"profile revision")?,
+            member_login: row.get(5)?, worktree_path: row.get::<_,Option<String>>(6)?.map(PathBuf::from),
+            worktree_head_ref: row.get(7)?, sleeping_session: None, description_event_ids: Vec::new(),
+        }),
+    ).optional()?;
+    if let Some(materialization) = deferred {
+        transaction.execute("UPDATE events SET lifecycle='consumed' WHERE event_id=?1", [event_id])?;
+        transaction.commit()?;
+        return Ok(Some(materialization));
+    }
     if !preserve_wake_batch {
         transaction.execute(
             "UPDATE wake_batches SET lifecycle='consumed',updated_at=?2
@@ -4658,7 +4749,7 @@ fn complete_agent_assignment(
         [&materialization.assignment_id],
     )?;
     let agent = transaction.execute(
-        "UPDATE agent_instances SET lifecycle='idle'
+        "UPDATE agent_instances SET lifecycle='idle',context_error=NULL
          WHERE agent_id=?1 AND lifecycle='materializing'",
         [&materialization.agent_id],
     )?;
@@ -4699,6 +4790,23 @@ fn fail_agent_assignment(
            AND lifecycle='active'",
         params![assignment_id, now],
     )?;
+    transaction.commit()?;
+    Ok(())
+}
+
+fn defer_agent_assignment(database: &Path, assignment: &str, event: &str, error: &str) -> Result<(), StoreError> {
+    require_current_schema(database)?;
+    let mut connection = open_read_write(database)?;
+    configure_connection(&connection)?;
+    let transaction = connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+    let updated = transaction.execute(
+        "UPDATE events SET lifecycle='pending' WHERE event_id=?1 AND lifecycle='consumed'
+         AND work_item_node_id=(SELECT work_item_node_id FROM assignments WHERE assignment_id=?2 AND lifecycle='materializing')
+         AND NOT EXISTS(SELECT 1 FROM provider_sessions ps JOIN agent_instances ai ON ai.agent_id=ps.agent_id WHERE ai.assignment_id=?2)",
+        params![event,assignment],
+    )?;
+    if updated != 1 { return Err(StoreError::InvalidData(format!("deferred assignment {assignment} changed before retry"))); }
+    transaction.execute("UPDATE agent_instances SET context_error=?2 WHERE assignment_id=?1 AND lifecycle='materializing'", params![assignment,error])?;
     transaction.commit()?;
     Ok(())
 }

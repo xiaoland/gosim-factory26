@@ -1,3 +1,141 @@
+--- a/bin/pbb.js
++++ b/bin/pbb.js
+@@ -109,7 +109,7 @@
+   }
+ }
+ 
+-let pilInstancesCache;
++const pilInstancesCache = new Map();
+ 
+ function failPil(id, message, error) {
+   const detail = error instanceof Error ? error.message : String(error || "");
+@@ -130,7 +130,7 @@
+ }
+ 
+ function readPilInstances(id) {
+-  if (pilInstancesCache !== undefined) return pilInstancesCache;
++  if (pilInstancesCache.has(id.sessionKey)) return pilInstancesCache.get(id.sessionKey);
+   const pil = pilCommand(id);
+   try {
+     const raw = execFileSync(pil.file, [...pil.args, "instances", "--json"], {
+@@ -146,26 +146,41 @@
+         PI_LANE_CURRENT_LANE: id.lane,
+       },
+     });
+-    pilInstancesCache = JSON.parse(raw).instances || [];
++    pilInstancesCache.set(id.sessionKey, JSON.parse(raw).instances || []);
+   } catch (error) {
+     failPil(id, "tracked pi-lane pil command failed", error);
+   }
+-  return pilInstancesCache;
++  return pilInstancesCache.get(id.sessionKey);
+ }
+ 
+ function ownerInfo(id, job) {
+   const state = readPilInstances(id).find((item) => item.instanceId === job.instanceId);
++  // PBB also runs without a pi-lane extension; its own identity records the owner PID.
++  const ownerPid = readJson(join(instanceDir(id, job.instanceId), "identity.json"))?.pid;
++  let ownerLive = Boolean(state?.live);
++  if (!state && Number.isInteger(ownerPid) && ownerPid > 0) {
++    try { process.kill(ownerPid, 0); ownerLive = true; }
++    catch (error) {
++      if (error.code === "EPERM") ownerLive = true;
++      else if (error.code !== "ESRCH") throw error;
++    }
++  }
+   return {
+-    ownerStatus: state?.status || "unknown",
++    ownerStatus: state?.status || (ownerLive ? "running" : "unknown"),
+     ownerLastSeenAt: state?.lastSeenAt || "",
+     ownerLastSeenAgeMs: state?.lastSeenAgeMs,
+-    ownerLive: Boolean(state?.live),
+-    ownerStale: !state?.live,
++    ownerLive,
++    ownerStale: !ownerLive,
+   };
+ }
+ 
+ function enrichJob(id, job, path) {
+-  return { ...job, ...ownerInfo(id, job), _path: path };
++  const owner = ownerInfo(id, job);
++  const missingCompletion = owner.ownerStale && ["running", "kill_requested"].includes(job.status);
++  return { ...job, ...owner, ...(missingCompletion ? {
++    recordedStatus: job.status, status: "unknown", outcome: "unknown", exitCode: null,
++    reason: "owner_unavailable_without_completion",
++  } : {}), _path: path };
+ }
+ 
+ function listInstanceIds(id, scope, explicitInstance) {
+@@ -191,8 +206,27 @@
+   return jobs.sort((a, b) => String(a.startedAt ?? "").localeCompare(String(b.startedAt ?? "")) || String(a.jobId).localeCompare(String(b.jobId)));
+ }
+ 
+-function findJob(id, jobId, opts) {
+-  const jobs = readJobs(id, opts).filter((job) => job.jobId === jobId || job.globalJobId === jobId);
++function findJob(id, jobId, opts, acrossSessions = false) {
++  let jobs;
++  if (acrossSessions && opts.scope === "global") {
++    // Global IDs are read across retained sessions; short IDs keep their existing scope.
++    const [instance, localJob, extra] = jobId.split(":");
++    jobs = [];
++    const sessions = join(id.root, "sessions");
++    if (!extra && /^bg[0-9]+$/.test(localJob || "") && existsSync(sessions)) {
++      for (const entry of readdirSync(sessions, { withFileTypes: true })) {
++        if (!entry.isDirectory()) continue;
++        const source = { ...id, sessionKey: entry.name };
++        // Match a directory entry before using the caller's instance in a path.
++        if (!listInstanceIds(source, "session").includes(instance)) continue;
++        const path = join(jobsDir(source, instance), `${localJob}.json`);
++        const job = readJson(path);
++        if (job?.globalJobId === jobId) jobs.push(enrichJob({ ...source, ...job, root: id.root }, job, path));
++      }
++    }
++  } else {
++    jobs = readJobs(id, opts).filter((job) => job.jobId === jobId || job.globalJobId === jobId);
++  }
+   if (jobs.length === 0) return { error: "missing", jobs };
+   if (jobs.length > 1) return { error: "ambiguous", jobs };
+   return { job: jobs[0], jobs };
+@@ -275,8 +309,8 @@
+ 
+ function printStatus(id, jobId, opts) {
+   if (!jobId) return printList(id, opts);
+-  const scope = opts.scope || (opts.instance ? "session" : "current-instance");
+-  const result = findJob(id, jobId, { scope, instance: opts.instance });
++  const scope = jobId?.includes(":") ? "global" : opts.scope || (opts.instance ? "session" : "current-instance");
++  const result = findJob(id, jobId, { scope, instance: opts.instance }, true);
+   if (result.error === "missing") {
+     console.error(context("pbb.error", { session_key: id.sessionKey, instance_id: id.instanceId, scope, job_id: jobId, error: "unknown_job" }, `unknown job ${jobId}`));
+     process.exit(2);
+@@ -300,8 +334,8 @@
+ }
+ 
+ function printTail(id, jobId, opts) {
+-  const scope = opts.scope || (opts.instance ? "session" : "current-instance");
+-  const result = findJob(id, jobId, { scope, instance: opts.instance });
++  const scope = jobId?.includes(":") ? "global" : opts.scope || (opts.instance ? "session" : "current-instance");
++  const result = findJob(id, jobId, { scope, instance: opts.instance }, true);
+   if (!result.job) {
+     console.error(context("pbb.error", { session_key: id.sessionKey, instance_id: id.instanceId, scope, job_id: jobId, error: result.error === "ambiguous" ? "ambiguous_job" : "unknown_job" }, `${result.error === "ambiguous" ? "ambiguous" : "unknown"} job ${jobId}`));
+     process.exit(result.error === "ambiguous" ? 3 : 2);
+@@ -341,7 +375,7 @@
+     process.exit(result.error === "ambiguous" ? 3 : 2);
+   }
+   const job = result.job;
+-  if (!["running", "kill_requested"].includes(job.status)) {
++  if (!["running", "kill_requested"].includes(job.recordedStatus ?? job.status)) {
+     console.log(context("pbb.kill", { session_id: id.sessionId, session_key: id.sessionKey, instance_id: id.instanceId, lane: id.lane, scope, job_id: job.jobId, owner_instance_id: job.instanceId, status: job.status, requested: false }, `${job.jobId} is not running; no kill requested`));
+     return;
+   }
+@@ -378,7 +412,7 @@
+ const id = identity();
+ 
+ if (["help", "--help", "-h"].includes(command)) {
+-  console.log(`pbb - Pi background bash inspector\n\nCommands:\n  pbb self [--json]\n  pbb list [--scope current-instance|session] [--instance ID] [--json]\n  pbb instances [--json]\n  pbb status [JOB] [--json]\n  pbb tail JOB [-n LINES] [--full] [--json]\n  pbb kill JOB [--stale] [--signal TERM]\n\nDefaults to the current pi-lane instance using PI_LANE_* env vars.`);
++  console.log(`pbb - Pi background bash inspector\n\nCommands:\n  pbb self [--json]\n  pbb list [--scope current-instance|session] [--instance ID] [--json]\n  pbb instances [--json]\n  pbb status [JOB] [--json]\n  pbb tail JOB [-n LINES] [--full] [--json]\n  pbb kill JOB [--stale] [--signal TERM]\n\nDefaults to the current pi-lane instance using PI_LANE_* env vars. An empty list covers only that scope.\nUse pbb status/tail INSTANCE:bgNNN to read a retained result across sessions. Missing completion from an unavailable owner is unknown, not a confirmed cancellation.`);
+   process.exit(0);
+ }
+ 
 --- a/extensions/background-bash.ts
 +++ b/extensions/background-bash.ts
 @@ -8,6 +8,7 @@
@@ -16,7 +154,15 @@
  };
  
  type CompletedBashRun =
-@@ -85,6 +87,9 @@
+@@ -59,6 +61,7 @@
+ 			details: BashToolDetails | undefined;
+ 			outcome: Outcome;
+ 			exitCode: number | null;
++			signal?: NodeJS.Signals;
+ 	  };
+ 
+ type PbbIdentity = {
+@@ -85,6 +88,9 @@
  	id: string;
  	command: string;
  	toolCallId: string;
@@ -26,7 +172,7 @@
  	abortController: AbortController;
  	startedAt: number;
  	cwd?: string;
-@@ -107,6 +112,7 @@
+@@ -107,6 +113,7 @@
  	command: Type.String({ description: "Bash command to execute" }),
  	timeout: Type.Optional(Type.Number({ description: "Timeout in seconds (optional, no default timeout)" })),
  	background: Type.Optional(Type.Boolean({ description: "Run immediately in the background and return a job id" })),
@@ -34,7 +180,7 @@
  });
  
  const JOB_ID_PREFIX = "bg";
-@@ -214,6 +220,12 @@
+@@ -214,6 +221,12 @@
  		laneRoot: process.env.PI_LANE_ROOT,
  		root: process.env.PBB_ROOT || join(homedir(), ".pi", "pbb"),
  	};
@@ -47,7 +193,30 @@
  }
  
  function asRecord(value: unknown): Record<string, unknown> | undefined {
-@@ -753,7 +765,7 @@
+@@ -503,6 +516,7 @@
+ 		status: completed.outcome === "exit" ? "exited" : completed.outcome,
+ 		outcome: completed.outcome,
+ 		exitCode: completed.exitCode,
++		signal: completed.status === "error" ? completed.signal : undefined,
+ 		completedAt: new Date().toISOString(),
+ 		durationMs,
+ 		lastEventId: job.lastEventId,
+@@ -619,12 +633,12 @@
+ 		child.on("close", (code, signalName) => {
+ 			if (timedOut) {
+ 				const body = completionBody(output, `Command timed out after ${params.timeout} seconds`);
+-				finish({ status: "error", error: new Error(body), body, details: undefined, outcome: "timeout", exitCode: null });
++				finish({ status: "error", error: new Error(body), body, details: undefined, outcome: "timeout", exitCode: code, signal: signalName ?? undefined });
+ 				return;
+ 			}
+ 			if (aborted || signalName) {
+ 				const body = completionBody(output, "Command aborted");
+-				finish({ status: "error", error: new Error(body), body, details: undefined, outcome: "abort", exitCode: null });
++				finish({ status: "error", error: new Error(body), body, details: undefined, outcome: "abort", exitCode: code, signal: signalName ?? undefined });
+ 				return;
+ 			}
+ 			if (code === 0) {
+@@ -753,7 +767,7 @@
  			display: true,
  			details: item.details,
  		},
@@ -56,7 +225,50 @@
  	);
  }
  
-@@ -926,8 +938,16 @@
+@@ -783,12 +797,11 @@
+ }
+ 
+ function deliverBackgroundResult(pi: ExtensionAPI, job: ActiveJob, completed: CompletedBashRun, cwd: string) {
++	const durationMs = Date.now() - job.startedAt;
++	recordPbbJobCompleted(job, completed, cwd, durationMs);
+ 	activeJobs.delete(job.id);
+ 	pendingJobs.finish(job.id);
+ 	if (shuttingDown) return;
+-
+-	const durationMs = Date.now() - job.startedAt;
+-	recordPbbJobCompleted(job, completed, cwd, durationMs);
+ 	const body = truncateBackgroundBody(job, completed.body);
+ 	const content = buildXmlResult(job, completed.outcome, completed.exitCode, durationMs, body);
+ 	const details: BackgroundBashDetails = {
+@@ -898,8 +911,6 @@
+ 		job.abortController.abort();
+ 		if (job.runner === "pbb") killProcessGroup(job.pgid ?? job.pid, "SIGTERM");
+ 	}
+-	activeJobs.clear();
+-	pendingJobs.clear();
+ }
+ 
+ function installProcessHooks() {
+@@ -908,7 +919,17 @@
+ 	// Best-effort last resort. Normal cleanup happens on Pi's session_shutdown event;
+ 	// do not install SIGINT/SIGTERM handlers here because that would interfere with
+ 	// Pi's own process-level signal handling.
+-	process.once("exit", abortAllJobs);
++	process.once("exit", () => {
++		// The event loop cannot observe child exits here. Never claim cancellation.
++		for (const job of activeJobs.values()) {
++			try {
++				writePbbJob(job, { status: "unknown", outcome: "unknown", reason: "owner_exited_before_completion" });
++			} catch (error) {
++				console.error(`Could not record unknown outcome for ${job.id}:`, error);
++			}
++		}
++		abortAllJobs();
++	});
+ }
+ 
+ function restoreJobCounterFromSession(ctx: { sessionManager?: { getEntries?: () => unknown[] } }) {
+@@ -926,8 +947,16 @@
  	nextJobNumber = Math.max(nextJobNumber, max + 1);
  }
  
@@ -73,25 +285,32 @@
  
  	pi.registerMessageRenderer<BackgroundBashDetails>(CUSTOM_TYPE, (message, options, theme) => {
  		const details = message.details;
-@@ -949,16 +969,21 @@
+@@ -949,16 +978,26 @@
  	});
  
  	pi.on("session_shutdown", async () => {
-+		unregisterBackgroundWork();
++		const jobs = [...activeJobs.values()];
  		abortAllJobs();
++		const outcomes = await Promise.allSettled(jobs.map((job) => job.completion ??
++			Promise.reject(new Error(`Background bash job ${job.id} has no completion promise.`))));
++		unregisterBackgroundWork();
++		// Completion callbacks have persisted their results before notifications are discarded.
  		pendingBackgroundResultFollowUps.length = 0;
  		pendingJobs.detach();
- 	});
- 
+-	});
+-
 -	pi.on("agent_end", async () => {
 -		// Treat agent_end as the event-driven idle boundary, but defer one macrotask
 -		// so Pi can finish unwinding the just-ended turn before the follow-up starts.
 -		const handle = setImmediate(() => flushPendingBackgroundResultFollowUps(pi));
 -		handle.unref?.();
++		for (const outcome of outcomes) if (outcome.status === "rejected") throw outcome.reason;
++	});
++
 +	pi.on("agent_end", async (_event, ctx) => {
 +		// Child Pi sessions may load PBB without pi-subagents. Await their own
-+		// finite jobs before headless shutdown can abort them.
-+		if (!ctx.hasUI) await Promise.all(pendingCompletionJobs().map((job) => {
++		// finite jobs before non-interactive shutdown can abort them; RPC has a UI proxy.
++		if (ctx.mode !== "tui") await Promise.all(pendingCompletionJobs().map((job) => {
 +			if (!job.completion) throw new Error(`Background bash job ${job.id} has no completion promise.`);
 +			return job.completion;
 +		}));
@@ -100,7 +319,7 @@
  	});
  
  	pi.on("context", (event) => {
-@@ -969,16 +994,10 @@
+@@ -969,16 +1008,10 @@
  	pi.registerTool({
  		name: "bash",
  		label: "bash",
@@ -121,7 +340,7 @@
  		parameters: schema,
  		async execute(toolCallId, params, signal, onUpdate, ctx): Promise<AgentToolResult<BashToolDetails | BackgroundBashDetails>> {
  			const autoAfterSeconds = getAutoBackgroundAfterSeconds(ctx.cwd);
-@@ -987,7 +1006,7 @@
+@@ -987,7 +1020,7 @@
  				throw new Error("Command aborted");
  			}
  
@@ -130,7 +349,7 @@
  				if (activeJobs.size >= MAX_ACTIVE_JOBS) {
  					throw new Error(`Too many bash jobs running (${activeJobs.size}/${MAX_ACTIVE_JOBS}). Wait for one to finish before starting another.`);
  				}
-@@ -996,6 +1015,8 @@
+@@ -996,6 +1029,8 @@
  					id: formatJobId(nextJobNumber++),
  					command: params.command,
  					toolCallId,
@@ -139,7 +358,7 @@
  					abortController: new AbortController(),
  					startedAt: Date.now(),
  					cwd: ctx.cwd,
-@@ -1009,10 +1030,11 @@
+@@ -1009,20 +1044,23 @@
  					id: job.id,
  					text: job.command,
  					startedAt: job.startedAt,
@@ -148,11 +367,14 @@
  				});
  
  				const completedPromise = runPbbBash(job, ctx.cwd, params);
-+				job.completion = completedPromise;
  				// Capture cwd eagerly: the completion callback may fire after session
  				// teardown (headless one-shot exit), when ctx.cwd access throws.
  				const jobCwd = ctx.cwd;
-@@ -1022,7 +1044,9 @@
+-				void completedPromise.then((completed) => {
++				job.completion = completedPromise.then((completed) => {
+ 					deliverBackgroundResult(pi, job, completed, jobCwd);
++					return completed;
+ 				});
  				scheduleDetachedBackgroundToolResultRepair(ctx, toolCallId);
  
  				return {
@@ -163,7 +385,17 @@
  					details: runningJobDetails(job, ctx.cwd),
  				};
  			}
-@@ -1078,6 +1102,7 @@
+@@ -1041,7 +1079,8 @@
+ 				if (signal?.aborted) forwardAbort();
+ 				else signal?.addEventListener("abort", forwardAbort, { once: true });
+ 				try {
+-					const completed = await runPbbBash(job, ctx.cwd, params, onUpdate);
++					job.completion = runPbbBash(job, ctx.cwd, params, onUpdate);
++					const completed = await job.completion;
+ 					if (completed.status === "success") return truncateForegroundResult(job, completed);
+ 					rethrowBashError(completed, job);
+ 				} finally {
+@@ -1078,6 +1117,7 @@
  				latestBody = getText(update);
  				if (!backgrounded) onUpdate?.(update);
  			});
@@ -171,7 +403,7 @@
  
  			const winner = await Promise.race([completedPromise, waitForBackgroundThreshold(autoAfterSeconds)]);
  			if (winner !== "background") {
-@@ -1093,6 +1118,8 @@
+@@ -1093,6 +1133,8 @@
  			job.id = formatJobId(nextJobNumber++);
  			job.cwd = ctx.cwd;
  			job.pbb = pbbIdentity(ctx);
@@ -180,7 +412,7 @@
  			activeJobs.set(job.id, job);
  			recordPbbJobStarted(job, ctx.cwd);
  			appendPbbLogDelta(job, latestBody);
-@@ -1100,7 +1127,7 @@
+@@ -1100,14 +1142,15 @@
  				id: job.id,
  				text: job.command,
  				startedAt: job.startedAt,
@@ -189,3 +421,12 @@
  			});
  
  			// Capture cwd eagerly: the completion callback may fire after session
+ 			// teardown (headless one-shot exit), when ctx.cwd access throws.
+ 			const jobCwd = ctx.cwd;
+-			void completedPromise.then((completed) => {
++			job.completion = completedPromise.then((completed) => {
+ 				deliverBackgroundResult(pi, job, completed, jobCwd);
++				return completed;
+ 			});
+ 			scheduleDetachedBackgroundToolResultRepair(ctx, toolCallId);
+ 

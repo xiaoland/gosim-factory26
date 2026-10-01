@@ -67,6 +67,10 @@ pub trait AgentProvider: Send + Sync {
         Ok(true)
     }
 
+    async fn managed_state(&self, _thread_id: &str) -> Result<crate::agent_session::ManagedState, ProviderError> {
+        Ok(crate::agent_session::ManagedState::Unknown)
+    }
+
     /// Resolves when the provider connection is permanently closed (process
     /// exit, stdio EOF, fatal protocol error). Connection death is a
     /// connection-scoped fact observed inside the adapter. Adapter session

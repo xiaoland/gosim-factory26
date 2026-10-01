@@ -436,12 +436,12 @@ enum PrCommand {
 #[derive(Subcommand)]
 enum CommentCommand {
     /// 精准读取一条评论；--thread 显式展开所属讨论。JSON 为数组，单条含一项。
-    /// 常用字段：database_id,body,thread_root,reply_to,resolved,folded,reactions,deliveries。
+    /// 常用字段：database_id,body,thread_root,reply_to,hidden_by,resolved,folded,reactions,deliveries。
     View {
         id: i64,
         #[arg(long)]
         thread: bool,
-        /// 展开 hidden 和 resolved 历史；直接读取指定评论会显示已折叠的可见正文。
+        /// 追溯自身或祖先隐藏及 resolved 历史；直接读取不会绕过祖先隐藏。
         #[arg(long)]
         include_hidden: bool,
         #[command(flatten)]
@@ -454,6 +454,7 @@ enum CommentCommand {
         #[arg(long)]
         json: bool,
     },
+    /// 隐藏本条及其现有、未来后代正文；保留每条自身的隐藏选择。
     Hide {
         /// 评论 ID；可一次提供多个，例如 hide 8 9 --reason '已整理'。
         #[arg(required = true, num_args = 1..)]
@@ -463,6 +464,7 @@ enum CommentCommand {
         #[arg(long)]
         json: bool,
     },
+    /// 取消本条自身隐藏；后代自身或其它祖先的隐藏仍生效。
     Unhide {
         id: i64,
         #[arg(long)]
@@ -635,7 +637,7 @@ fn print_item(
 
 const ISSUE_VIEW_FIELDS: &[&str] = &["parent_issue", "sub_issues", "associated_prs", "subscriptions", "execution_error"];
 const PR_VIEW_FIELDS: &[&str] = &["associated_issues", "closing_issues", "base_commit", "head_commit", "base_error", "head_error", "merge_commit", "subscriptions", "execution_error", "assignee_activity", "assignee_deliveries", "headRefOid", "baseRefOid"];
-const COMMENT_FIELDS: &[&str] = &["node_id", "database_id", "repository", "work_item_number", "author", "created_at", "updated_at", "body", "minimized", "minimized_reason", "pinned", "deleted", "reply_to", "thread_root", "resolved", "folded", "reactions", "lifecycle", "read_body_with", "deliveries"];
+const COMMENT_FIELDS: &[&str] = &["node_id", "database_id", "repository", "work_item_number", "author", "created_at", "updated_at", "body", "minimized", "minimized_reason", "hidden_by", "hidden_by_reason", "pinned", "deleted", "reply_to", "thread_root", "resolved", "folded", "reactions", "lifecycle", "read_body_with", "deliveries"];
 
 fn view_fields<'a>(kind: &str, fields: &'a str) -> Result<Vec<&'a str>> {
     let extra = if kind == "pr" { PR_VIEW_FIELDS } else { ISSUE_VIEW_FIELDS };
@@ -775,8 +777,8 @@ fn mutation_json(id: i64, mut value: Value) -> Result<()> {
 
 fn print_change(kind: &str, id: i64, action: &str, changed: bool, as_json: bool) -> Result<()> {
     let effect = match action {
-        "hidden" => "仅此正文，回复保留",
-        "unhidden" => "仍尊重讨论折叠",
+        "hidden" => "本条及现有、未来后代正文隐藏，各条自身状态保留",
+        "unhidden" => "仅取消本条自身隐藏，后代自身或其它祖先隐藏及讨论折叠保留",
         "deleted" => "正文不可恢复，回复保留",
         _ => "",
     };
@@ -1210,10 +1212,13 @@ pub async fn run() -> Result<()> {
                 let results = objects.hide_comments(turn, &ids, reason.as_deref())?;
                 if json {
                     #[derive(serde::Serialize)]
-                    struct HiddenComment { id: i64, changed: bool, action: &'static str }
-                    output(results.iter().map(|(id, changed)| HiddenComment { id: *id, changed: *changed, action: "hidden" }).collect::<Vec<_>>())
+                    struct HiddenComment { id: i64, changed: bool, action: &'static str, effect: &'static str }
+                    output(results.iter().map(|(id, changed)| HiddenComment { id: *id, changed: *changed, action: "hidden", effect: "本条及现有、未来后代正文隐藏，各条自身状态保留" }).collect::<Vec<_>>())
                 }
-                else { for (id, changed) in results { print_change("comment", id, "hidden", changed, false)?; } Ok(()) }
+                else {
+                    for (id, changed) in results { print_change("comment", id, "hidden", changed, false)?; }
+                    Ok(())
+                }
             }
             CommentCommand::Unhide { id, json } => {
                 let changed = objects.comment_lifecycle(turn, id, "unhide")?;

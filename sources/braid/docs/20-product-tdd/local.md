@@ -4,7 +4,7 @@
 
 面向 Agent 的稳定入口只介绍熟悉的协作对象：使用 `braid` CLI 操作 Issue / PR，常用操作沿用 GitHub CLI 的形式；Issue 和 PR 可以指派给其他 Agent，成员通过正文、评论和回复协作。创建未指派的工作项不启动独立成员；指派才建立该项的成员与工作区，创建回执应明确显示实际负责人或未指派状态。维护者所需的 queue、session、provider 和 Context 生命周期仍记录在本文后续章节，但不作为使用 CLI 前必须理解的概念，稳定指令说明 Issue 负责需求、设计和验收依据，实施前指派关联 PR，由独立 PR 负责人承担计划、排障、实现与验收；它不规定这些工作的具体方法，也不指导原生子代理使用。
 
-Braid将当前Issue/PR身份及职责、成员名、通用对象协议与调用方profile拼成一份instructions。通用协议按工作资料、讨论整理、通知与读取、指派交接和CLI差异组织；指派即启动独立成员、published head与在途工作不同、正文edit为全量替换、root resolve与单条hide、订阅和Closes语义只在此处说明。增量评论本身不要求公开回复；成员可在持续保留的clone文件中保存私有状态，只将接手者需要的结论、依据与入口放入公开讨论。调用方profile负责自身配方政策与交付条件，避免再复制通用协议或原生工具教程；具体工作事实归Context和事件消息。已有原生历史不因指令文案去重而改写。
+Braid将当前Issue/PR身份及职责、成员名、通用对象协议与调用方profile拼成一份instructions。通用协议按工作资料、讨论整理、通知与读取、指派交接和CLI差异组织；指派即启动独立成员、published head与在途工作不同、正文edit为全量替换、root resolve与分支hide、订阅和Closes语义只在此处说明。增量评论本身不要求公开回复；成员可在持续保留的clone文件中保存私有状态；交接依赖的共同文档和任务材料随适用提交发布，description 解释本工作项的目标、交付差异、依赖、仍欠义务与材料入口，讨论保留本次变化。调用方profile负责自身配方政策与交付条件，避免再复制通用协议或原生工具教程；具体工作事实归Context和事件消息。已有原生历史不因指令文案去重而改写。
 
 ## 请求与启动
 
@@ -84,13 +84,13 @@ Agent 通过 GitHub 式 assignee 认识协作者。`braid assignee list [--json]
 
 在 Agent runtime 中，`status` 列出 Issue/PR 的编号、标题、状态、公开负责人及当前指派最近一次失败、结果未知或恢复暂不可用的执行事实；`status --json` 保留 `items` 外壳并为每项输出 `kind`、`id`、`title`、`state`、`assignees`、`execution`。`execution` 只含结果、发生时间和至多 200 字符的首条错误摘要；没有当前故障时为 null。Issue/PR view 提供同一事实，`--json execution_error` 可读取去除 UUID 的完整错误文本。原始错误持久保存在 `turns.error` 或已有恢复字段中，由宿主数据库诊断取得。失败事实查询不依赖 Profile 的通知开关；上下文压力及具体错误仍保存到既有状态记录。最近尝试是执行事实，不判断 Issue/PR 是否完成，也不自动改派或广播评论；后续成功终态或成功恢复会清除当前故障投影。无 runtime 标记时，宿主仍获得原有执行计数、物理 session 和诊断字段；内部 `local::status` 也继续为调度与结果判定生产同一摘要。
 
-Issue 与 PR 的普通评论均支持 `comment ID --reply-to COMMENT_ID`（完整前缀是 `issue comment` 或 `pr comment`）。回复必须指向同一 work-item 中已有评论，跨项错误指出实际所属项和单条读取入口；删除只保留墓碑，不删除回复关系。`comment view ID` 直接读取指定评论时显示已解决讨论中仍可见的正文；`--thread` 浏览整段讨论时仍折叠已解决历史。独立隐藏的正文继续隐藏，输出给出 `--include-hidden` 的读取命令；该参数也可展开整串的隐藏及 resolved 历史，无法恢复已删除正文。 单条读取在 SQL 中直接限定 Comment ID，不先加载整串再筛选。`comment view ID --json` 保持数组形状，精准单条含一项，`--thread` 是整串数组；支持 `--json database_id,body`、`--json deliveries` 等字段选择，未知字段报出合法字段。全文 body 不自动截断，`--thread` 仍受原可见性规则控制。
+Issue 与 PR 的普通评论均支持 `comment ID --reply-to COMMENT_ID`（完整前缀是 `issue comment` 或 `pr comment`）。回复必须指向同一 work-item 中已有评论，跨项错误指出实际所属项和单条读取入口；删除只保留墓碑，不删除回复关系。`comment view ID` 直接读取指定评论时显示已解决讨论中仍可见的正文；`--thread` 浏览整段讨论时仍折叠已解决历史。自身或任一祖先隐藏的正文继续隐藏，输出给出 `--include-hidden` 的读取命令；该参数也可展开整串的隐藏及 resolved 历史，无法恢复已删除正文。 单条读取在 SQL 中直接限定 Comment ID，并从完整祖先链计算最近隐藏祖先，不依赖已筛选的评论切片。`comment view ID --json` 保持数组形状，精准单条含一项，`--thread` 是整串数组；支持 `--json database_id,body`、`--json deliveries` 等字段选择，未知字段报出合法字段。全文 body 不自动截断，`--thread` 仍受原可见性规则控制。
 
 `issue/pr comment ID --edit-last` 修改当前 Braid 成员在该工作项最后一条未隐藏、未删除的评论（已解决线程仍计入），正文仍用 `-b` 或 `-F`；`--delete-last --yes` 删除同一范围内的最后一条评论，不接受正文。宿主 `--external` 没有当前成员身份，不能使用 last 模式。没有可选目标时报错，不隐式创建新评论。按评论 ID 的 `comment edit/delete` 继续提供精确操作。
 
 `comment resolve ROOT [ROOT...]` 与 `comment unresolve ROOT [ROOT...]` **只接受讨论根 ID**。传入回复 ID 时整批不写入，错误给出其所属根及正确命令；需要局部整理时使用 `comment hide ID --reason TEXT`。resolve 记录该根讨论当前最大 Comment ID 为折叠截止，后来的回复仍可见并送达，不自动 unresolve。重复 resolve 可把已新增的回复纳入新的前缀；unresolve 清除整串截止，仍尊重独立 hide/delete。同根平级回复不能分别 resolve，独立关闭条件应建立独立根讨论。
 
-两条命令的批量参数和 `--json` 对称。回执给 `thread_root`、此前的 `previous_resolved_through`、现在的 `resolved_through`、`affected_comments` 和 `changed`；affected_comments 是此次前缀范围发生改变的评论记录数，包含独立 hidden/deleted 记录，不等于实际可见正文数量。文本同时说明新回复继续可见、hide/delete 保留。单次多 ID hide/resolve/unresolve 在一个 SQLite 事务中先校验全部目标，再更新及发出既有事件；重复 ID 去重，校验失败不提交部分结果。`comment hide ID [ID...] --reason TEXT` 的理由可选，保留正文与身份，不隐藏后续回复；delete 清除正文且不可恢复。hide、unhide、delete、edit 及 reaction 的短回执从本次动作返回 changed，不通过后读当前对象推断。`comment reaction add|remove ID EXPRESSION` 用当前逻辑 Agent（宿主为 external）署名，同作者同表达幂等；reaction、resolve 都不改变交付状态。
+两条命令的批量参数和 `--json` 对称。回执给 `thread_root`、此前的 `previous_resolved_through`、现在的 `resolved_through`、`affected_comments` 和 `changed`；affected_comments 是此次前缀范围发生改变的评论记录数，包含独立 hidden/deleted 记录，不等于实际可见正文数量。文本同时说明新回复继续可见、hide/delete 保留。单次多 ID hide/resolve/unresolve 在一个 SQLite 事务中先校验全部目标，再更新及发出既有事件；重复 ID 去重，校验失败不提交部分结果。`comment hide ID [ID...] --reason TEXT` 的理由可选，保留正文与身份；本条及其现有、未来后代正文从普通读取中隐藏，中间节点只影响本分支。持久 lifecycle、hide_reason 仍属于每条自身，计算字段 hidden_by 和 hidden_by_reason 指向最近隐藏祖先。unhide 仅清除本条自身隐藏，不能抹去后代自身或其它祖先的隐藏；delete 清除正文且不可恢复。hide、unhide、delete、edit 及 reaction 的短回执从本次动作返回 changed，不通过后读当前对象推断。`comment reaction add|remove ID EXPRESSION` 用当前逻辑 Agent（宿主为 external）署名，同作者同表达幂等；reaction、resolve 都不改变交付状态。
 
 `issue create --parent ID`、`issue edit ID --parent ID` 和 `issue edit ID --remove-parent` 提供可选父关系，拒绝不存在的父项、自引用和环。上下文展示父子引用，不递归复制需求，也不自动分解、审批或关闭子项。父子状态可在对象中读取；子 Issue 关闭本身不唤醒父成员。需要交接时，子成员回到约定的父 Issue 讨论回复结果。
 
@@ -98,10 +98,10 @@ CLI 在同一 SQLite immediate transaction 内通过执行身份检查当前 gro
 
 ## 当前 Context 与执行
 
-当前正文、可见 comment 和直接关联图由单一数据库物化，沿原 renderer 生成完整 Context。Issue、PR 初次启动和 Context reset 都直接把 renderer 的正文交给原生会话，不追加 working memory、canonical 或 provider history 包装。隐藏与删除 comment 只留下身份和生命周期元数据，正文不进入模型输入；PR 仅展开 OPEN 的直接关联 Issue description，不展开其评论；关闭的关联 Issue 只保留引用。
+当前正文、可见 comment 和直接关联图由单一数据库物化，沿原 renderer 生成完整 Context。Issue、PR 初次启动和 Context reset 都直接把 renderer 的正文交给原生会话，不追加 working memory、canonical 或 provider history 包装。自身或祖先隐藏以及删除的 comment 只留下身份、生命周期和隐藏来源元数据，正文不进入模型输入；PR 仅展开 OPEN 的直接关联 Issue description，不展开其评论；关闭的关联 Issue 只保留引用。
 
 description 的实际可见内容变化使对应旧输入失效，包括自身修改；同值写入与仅 HTML 注释变化不产生重建。
-comment 的创建、编辑、隐藏、恢复、删除、hide 理由、resolve/unresolve，以及标题和关联关系变化均不产生 Invalidate。
+comment 的创建、编辑、隐藏、恢复、删除、hide 理由、resolve/unresolve，以及标题和关联关系变化均不产生 Invalidate。自身或祖先隐藏分支中的新增、编辑和 @ 不产生普通正文通知；hide/unhide 等状态通知仍纠正参与者认识。普通事件只保留引用，读取时再次应用当前可见性，显式 `--include-hidden` 追溯不改变普通投影或对象状态。
 对象状态照常保存，增量通知按实际成员和参与/订阅关系送达，排除执行操作的成员本人，而不是排除评论的历史作者或同模型的所有会话。
 hide/resolve 立即改变 CLI/Console 和下次投影，不能据此宣称旧原生历史已经删除那些文字。
 description 自编辑仍通知原会话后替换物理会话；只有旧工作 turn 未正常完成才自动续接。
@@ -143,7 +143,7 @@ PR 正文中可用 `Closes #N`、`Fixes #N`、`Resolves #N` 声明合并后关�
 旧 prepared intent 没有声明记录时不追溯推断，已关闭 Issue 不重复通知；普通 PR close、冲突、head/CAS 不匹配或非默认分支合并不关闭 Issue。
 子 PR 合入 develop 的关闭声明不随之后 develop→main 合并自动追溯，最终 PR 可明确列出所关闭的 Issue。
 
-Issue close 只要求原因，不检查其它工作项、已合入 PR 或交付树；close/merge 不打断当前执行，已关闭工作项的既有会话完成收尾后休眠。并行到达的评论保留在既有 batch，收尾后需要时重新激活当前成员。根 Issue 开放且其成员连续空闲五分钟时，Braid 以自己的名字发评论“请检查当前工作进展。”；调用方可通过可选 `root_check_messages` 文本列表轮换提醒，省略或空列表保持默认文字，空白成员被拒绝。每次提醒按已提交的根检查活动数选择下一条；同一事务隐藏此前所有仍可见的根检查提醒，再写入新评论、活动和一次投递。旧提醒由 issue:1 上 Braid 系统作者及对应 `commented / root progress check` 创建活动共同识别，不能只凭作者或正文判断。隐藏只改变旧提醒单条的 lifecycle、原因、revision 与更新时间，并记录 Braid 的 hide 活动；保留原正文、回复和讨论解决边界，不触发额外通知。其它 Braid 状态评论与成员回复保持原状。事务任一步失败均回滚，不能先永久隐藏旧提醒却没有新提醒。重启接续、隐藏或删除评论不会重置轮换。提醒内容由调用方决定，Braid不内置工作方法。评论留在根 Issue 历史中，仅向当前根负责人投递，不唤醒其他关注者。已有输入、执行或恢复中不提醒。根开放且可继续执行时，local 等待后续检查，不因暂时静止而退出。根与所有 Issue 均关闭、所有 PR 均合并或关闭且没有未解决合并时，local 停止派发普通讨论输入；已经开始的执行、正在物化的会话与 reset continuation 自然收尾后才返回 quiescent。末轮可以更正状态或重开工作项，此时继续正常派发。边界后的普通通知保留在数据库，明确重开工作范围后可继续处理，不再延长本次执行；应用完成仍由调用方判断。启动恢复时同时核对对象范围与遗留执行，不能仅凭 CLOSED 跳过未完成执行。其它情况下，必要物化或恢复受阻返回 blocked。状态与工作树保留，可用相同请求恢复。
+Issue close 只要求原因，不检查其它工作项、已合入 PR 或交付树；close/merge 不打断当前执行，已关闭工作项的既有会话完成收尾后休眠。并行到达的评论保留在既有 batch，收尾后需要时重新激活当前成员。根 Issue 开放且其成员连续空闲五分钟时，Braid 以自己的名字发评论“请检查当前工作进展。”；调用方可通过可选 `root_check_messages` 文本列表轮换提醒，省略或空列表保持默认文字，空白成员被拒绝。每次提醒按已提交的根检查活动数选择下一条；同一事务隐藏此前所有仍可见的根检查提醒，再写入新评论、活动和一次投递。旧提醒由 issue:1 上 Braid 系统作者及对应 `commented / root progress check` 创建活动共同识别，不能只凭作者或正文判断。隐藏只改变旧提醒自身的 lifecycle、原因、revision 与更新时间，其后代正文由祖先可见性共同隐藏，并记录 Braid 的 hide 活动；保留原正文、回复和讨论解决边界，不触发额外通知。其它 Braid 状态评论与成员回复的持久态保持原状。事务任一步失败均回滚，不能先永久隐藏旧提醒却没有新提醒。重启接续、隐藏或删除评论不会重置轮换。提醒内容由调用方决定，Braid不内置工作方法。评论留在根 Issue 历史中，仅向当前根负责人投递，不唤醒其他关注者。已有输入、执行或恢复中不提醒。根开放且可继续执行时，local 等待后续检查，不因暂时静止而退出。根与所有 Issue 均关闭、所有 PR 均合并或关闭且没有未解决合并时，local 停止派发普通讨论输入；已经开始的执行、正在物化的会话与 reset continuation 自然收尾后才返回 quiescent。末轮可以更正状态或重开工作项，此时继续正常派发。边界后的普通通知保留在数据库，明确重开工作范围后可继续处理，不再延长本次执行；应用完成仍由调用方判断。启动恢复时同时核对对象范围与遗留执行，不能仅凭 CLOSED 跳过未完成执行。其它情况下，必要物化或恢复受阻返回 blocked。状态与工作树保留，可用相同请求恢复。
 
 Braid 不因收敛而封存运行。每次退出时从当前 delivery ref 读取确切 commit，供调用方决定如何使用；失败时也尽可能记录该提交，但不以提交是否存在覆盖原始错误。旧版本已封存的状态仍保持只读且拒绝恢复。
 

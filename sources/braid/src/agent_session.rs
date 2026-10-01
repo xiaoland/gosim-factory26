@@ -40,6 +40,14 @@ pub enum SendResult {
     Acknowledged,
 }
 
+/// Native execution can retain work after the managed turn has ended.
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum ManagedState {
+    Quiescent,
+    Busy,
+    Unknown,
+}
+
 /// Lifecycle events that the core needs to react to.
 ///
 /// Delivery guarantees, enforced by the adapter:
@@ -79,6 +87,8 @@ pub enum SessionError {
     Failed(String),
     #[error("session is unavailable")]
     Unavailable,
+    #[error("owned execution stop is unproved: {0}")]
+    StopUnproved(String),
     /// The adapter confirmed that the persisted native history cannot be located.
     #[error("native history is unavailable: {0}")]
     HistoryUnavailable(String),
@@ -107,6 +117,11 @@ pub trait AgentSession: Send + Sync {
     /// Whether a new ordinary input can currently be accepted. This is only
     /// a snapshot; `send_user_msg` may still race and return Deferred.
     async fn can_accept_input(&self) -> Result<bool, SessionError>;
+
+    /// Only Quiescent authorizes releasing an otherwise idle logical member.
+    async fn managed_state(&self) -> Result<ManagedState, SessionError> {
+        Ok(ManagedState::Unknown)
+    }
 
     /// Release this handle's execution resources, best-effort interrupting
     /// its active turn. Other sessions must remain usable.
@@ -151,6 +166,8 @@ pub(crate) struct CreatedSession {
 pub(crate) trait SessionFactory: Send + Sync {
     /// Check runtime availability even before a Work Item has a session.
     async fn check(&self) -> Result<(), SessionError>;
+    /// Serialize pressure relief across all groups sharing this factory.
+    async fn maintain_resources(&self) -> Result<(), SessionError> { Ok(()) }
     async fn start(
         &self,
         profile: crate::config::Profile,

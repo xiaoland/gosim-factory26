@@ -29,9 +29,9 @@ def prepare(lock_dir):
     lock = lock_dir/'package-lock.json'
     expected = cache/'package-lock.json'
     patches = (
-        ('pi-background-bash', 'pi-background-bash-1.0.5.patch', ('extensions/background-bash.ts',)),
+        ('pi-background-bash', 'pi-background-bash-1.0.5.patch', ('extensions/background-bash.ts', 'bin/pbb.js')),
         ('pi-subagents', 'pi-subagents-0.56.0-completion-boundary.patch',
-         ('src/extension/index.ts', 'src/runs/background/notify.ts', 'src/runs/background/result-watcher.ts')),
+         ('src/extension/index.ts', 'src/runs/background/notify.ts', 'src/runs/background/result-watcher.ts', 'src/shared/utils.ts')),
         ('pi-subagents', 'pi-subagents-0.56.0-model-exclusion-boundary.patch',
          ('src/runs/shared/model-exclusions.ts', 'src/runs/shared/model-fallback.ts', 'src/runs/background/subagent-runner.ts')),
         ('pi-subagents', 'pi-subagents-0.56.0-open-tools.patch',
@@ -59,9 +59,17 @@ def prepare(lock_dir):
           'src/runs/shared/acceptance.ts',
           'src/runs/shared/single-output.ts',
           'src/runs/shared/structured-output.ts')),
-        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-braid-boundary.patch', ('dist/core/agent-session.js', 'dist/core/tools/edit.js', 'dist/core/tools/grep.js', 'dist/core/tools/find.js', 'dist/core/resource-loader.js')),
+        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-braid-boundary.patch', ('dist/core/agent-session.js', 'dist/core/tools/edit.js', 'dist/core/tools/grep.js', 'dist/core/tools/find.js', 'dist/core/resource-loader.js', 'dist/bundle/cli.js', 'dist/bundle/rpc-entry.js')),
         ('@upstash/context7-pi', 'context7-pi-0.1.2.patch', ('lib/prompts.ts', 'lib/api.ts', 'skills/context7-docs/SKILL.md')),
         ('@ff-labs/pi-fff', 'pi-fff-0.11.0.patch', ('src/index.ts',)),
+        ('@earendil-works/pi-coding-agent', 'pi-coding-agent-0.85.1-i13-2-managed.patch',
+         ('dist/modes/rpc/rpc-mode.js', 'dist/core/tools/bash.js')),
+        ('pi-background-bash', 'pi-background-bash-1.0.5-i13-2-managed.patch',
+         ('extensions/background-bash.ts',)),
+        ('pi-subagents', 'pi-subagents-0.56.0-i13-2-managed.patch',
+         ('src/runs/foreground/execution.ts', 'src/runs/background/async-execution.ts',
+          'src/runs/background/subagent-runner.ts', 'src/runs/background/result-watcher.ts',
+          'src/extension/index.ts')),
     )
     def patch_matches(package, patch_name, target_names):
         patch_file = lock_dir/'patches'/patch_name
@@ -90,6 +98,7 @@ def prepare(lock_dir):
             (cache/(patch_name+'.sha256')).write_text(
                 hashlib.sha256(patch_file.read_bytes()).hexdigest()+'\n'+
                 ''.join(hashlib.sha256(target.read_bytes()).hexdigest()+'\n' for target in targets))
+    shutil.copy2(lock_dir/'native-managed.mjs', cache/'native-managed.mjs')
     subprocess.run([str(cache/'node_modules/.bin/playwright'),'install','chromium','--no-shell'],
                    env=dict(os.environ,PLAYWRIGHT_BROWSERS_PATH=str(cache/'.playwright')),check=True)
     return cache
@@ -119,7 +128,10 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
                                             'pi-subagents-0.56.0-open-tools.patch',
                                             'pi-subagents-0.56.0-acceptance-off.patch',
                                             'pi-coding-agent-0.85.1-braid-boundary.patch',
-                                            'context7-pi-0.1.2.patch', 'pi-fff-0.11.0.patch')}
+                                            'context7-pi-0.1.2.patch', 'pi-fff-0.11.0.patch',
+                                            'pi-coding-agent-0.85.1-i13-2-managed.patch',
+                                            'pi-background-bash-1.0.5-i13-2-managed.patch',
+                                            'pi-subagents-0.56.0-i13-2-managed.patch')}
         if braid_source:
             source=Path(braid_source).resolve(strict=True)
             for part in ('Cargo.toml','Cargo.lock','src','migrations','config.example.toml'):
@@ -145,7 +157,9 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
             subprocess.run(docker+['image','rm','--no-prune',name],check=False,env=docker_env)
     (output/'runtime-source.json').write_text(json.dumps({'backend':backend,'platform':'linux-x86_64',
         'sources':records,'npm_sha256':npm_sha256,'docker_endpoint':endpoint,
-        'native_patch_sha256':native_patch_sha256},indent=2)+'\n')
+        'native_patch_sha256':native_patch_sha256,
+        'native_modules_sha256': {'native-managed.mjs': hashlib.sha256(
+            (lock_dir/'native-managed.mjs').read_bytes()).hexdigest()}},indent=2)+'\n')
     return output
 
 

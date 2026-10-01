@@ -136,7 +136,7 @@ def assemble(source, destination, runtime, skill_source, skills):
         if item.is_dir(): shutil.copytree(item,destination/item.name)
         else: shutil.copy2(item,destination/item.name)
     support=destination/'support';support.mkdir()
-    for name in ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs'):
+    for name in ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs','runtime_resources.py'):
         shutil.copy2(ROOT/'scripts'/name,support/name)
     if source.name in {'pi-braid', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
         shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
