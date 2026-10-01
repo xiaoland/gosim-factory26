@@ -29,6 +29,8 @@ run `346bc3b51b09` 已终止，状态为 `FAILED`，发生在生成阶段，未�
 
 官网 failure_reason 仅报告 `main.py` 非零退出；随后子Agent在原始官网日志 `github/tasks/hackathon--github/logs/03436d68fef7e8d8.json` 找到14:50:04 CST的完整traceback，主线已直接核对。`run.py:321` 因Braid exit=1抛错，result.reason为 `native teardown could not be proven: session failed: Pi exited with signal: 9 (SIGKILL)`。直接退出链已确认，SIGKILL来源及被杀会话仍在调查，不能据此断言OOM或平台限制。此前PR中的Node版本错误也不能直接当成本次全局终止原因；未自动恢复或重跑。
 
+现场保全回执：15:07:02—15:07:58 CST新鲜GET工作区成功（HTTP200），原始ZIP277814542 bytes、27768项、CRC逐项通过；SHA256 `6e75992bb5146ac61092628d1488cde3b5bf329b5f4ca5ff20e3acc82ab4bbbd`，主线独立重新计算一致。文件清单确认包含需求、worktrees、origin.git、Braid sqlite/WAL/SHM、native-homes与原生归档；原件及下载/完整性回执在 `runs/iteration13/hosted-20261001/failure-investigation/20261001T070702.797343Z/`。后续status/log/traceability GET返回HTTP500（Internal Server Error），错误原文保留；此前已成功采集的终态原件仍在，不能将本次取证API错误推定为此前运行退出原因。Git/Braid/会话是否形成可直接恢复的完整一致检查点仍在核对。
+
 完整终态证据入口：`runs/iteration13/hosted-20261001/completion.json` 与 `runs/iteration13/hosted-20261001/monitor/20261001T065751.899359Z/346bc3b51b09/`；独立监控已完成采集，未重发请求、未启动第二次收费尝试。用户随后明确要求“安排sub-agent保留工作区并且排查证据”。已委派 `/root/i13_hosted_failure_evidence`（GPT-6.1-Sol / extra-high）下载并核验官网可得工作区与日志、保留Git/未提交worktree/Braid数据库和会话、核对终止因果与恢复一致性。独立输出归 `failure-investigation/` 与 `tasks/iteration13/hosted-github-failure.md`；当前无重跑或源码修复动作。
 
 Mac 后台协调进程46943、3+8采集进程46944已经启动，使用 `lab.arc_bench.hosted_monitor --review` 与独立 `agents/run-monitor.md`（GPT-5.6-Luna/low）。首批实际状态与归档读取成功，归档当时仅含需求，尚无原生会话，因此只能证明平台启动阶段，不能证明模型已开始有效开发。第一次内容审查已结束；主线已消费其引用并保留此证据缺口。终态由 `follow-hosted.py` 收集 status、logs、traceability 与 Git history。heartbeat `i13-github` 每8分钟消费已有监控结果，仅在故障、完成或需要决定时通知；现已按用户要求迁入独立[GPT-5.6-Luna监控会话](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706)（low），主开发会话不再定时唤醒。
