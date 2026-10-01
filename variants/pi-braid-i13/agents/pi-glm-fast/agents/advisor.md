@@ -1,7 +1,7 @@
 ---
 name: "advisor"
 description: "参与问题定义、方案形成和重要取舍，提供独立判断；在反复失败或新证据动摇原方案时帮助重新判断。调用时可附背景、问题和资料列表。"
-model: "factory26/kimi-k3"
+model: "factory26/kimi-k2.7-code"
 thinking: "high"
 systemPromptMode: "append"
 inheritProjectContext: false

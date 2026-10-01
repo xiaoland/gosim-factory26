@@ -61,34 +61,27 @@
           "maxTokens": 131072
         },
         {
-          "id": "kimi-k3",
-          "name": "Kimi K3",
+          "id": "kimi-k2.7-code",
+          "name": "Kimi K2.7 Code",
           "api": "openai-completions",
           "reasoning": true,
           "input": [
             "text",
             "image"
           ],
-          "contextWindow": 1048576,
+          "contextWindow": 262144,
           "maxTokens": 131072,
+          "thinkingLevelMap": {
+            "off": null
+          },
           "compat": {
             "supportsStore": false,
             "supportsDeveloperRole": false,
-            "supportsReasoningEffort": true,
-            "maxTokensField": "max_tokens",
+            "supportsReasoningEffort": false,
             "supportsStrictMode": false,
-            "thinkingFormat": "openai",
-            "requiresReasoningContentOnAssistantMessages": true,
-            "deferredToolsMode": "kimi"
-          },
-          "thinkingLevelMap": {
-            "off": null,
-            "minimal": null,
-            "low": "low",
-            "medium": null,
-            "high": "high",
-            "xhigh": null,
-            "max": "max"
+            "maxTokensField": "max_tokens",
+            "thinkingFormat": "deepseek",
+            "requiresReasoningContentOnAssistantMessages": true
           }
         }
       ]
