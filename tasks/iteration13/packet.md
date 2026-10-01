@@ -1,5 +1,7 @@
 # I13：Braid、子Agent与协作方法改进
 
+2026-10-01 当前阶段：各实施批次已汇合，正在进行[实验前最终检查](final-readiness.md)。当前 Braid/Python 编译、最终 Linux 候选构建及 GitHub/Sheet 包内装配通过；两组最终私有冻结和模型实验尚未启动。用户报告新增额度并最终确认“全部切回 ARC，包括 GLM-5.3”，此前 Qwen 路由要求由此取代；独立根配方及 ARC 完整模型接线仍待收尾。Exa 修正 key 后，真实原生检索和正文均 HTTP 200。Debian 本地实验环境尚未恢复。I12 已终止并归档；下文暂停、未开工等描述保留其当时记录，不代表当前现场。
+
 2026-09-30。当前阶段：[CLI C01—C04](repair-design.md)与[上下文重建核心机制](context-implementation.md)分别获准开工，源码及技术文档已完成，整合编译和归档只读操作通过；真实运行行为尚未验收。[正文折叠与根提醒整理](materials-plan.md)源码与文档已完成，编译和已有归档只读反馈通过，新增折叠/提醒行为仍待实际验收；用户最新清单已与原问题树核对，角色、SVC、协作方法、需求树及提示词方案已同步；子Agent简化批次已在独立I13完成并提交7f8ad6e，编译和实际材料生成通过，真实委派未验；[SVC批次](svc-skills-implementation.md)已完成并提交（SVC a0af6e1、Factory 1a377c9），源码及实际材料已独立核对，executor原生说明修正已提交84344b4并通过补丁/编译/材料核对，真实并发与收益仍待验，实验未启动。冻结I12材料未变；用户确认手动恢复后已再次暂停，现场状态见下方接续记录。Console已移交独立[实验设施任务](../braid-console-control/packet.md)，已部署，不计入I13问题或完成条件。
 用户原话：“那么将G01/G04/G05纳入I13的范围内”。这条指示确定本轮范围；实施及实验仍按仓库约定在具体影响呈现后取得开工依据。
 
@@ -56,7 +58,7 @@ I13
 ├─ Factory/Braid提示词分层与入口 → R09［已提交；原生装配/编译通过，动态会话待验］
 │  ├─ 简化Issue/PR system prompt、Factory追加要求及profile，去除层间重复
 │  └─ documentation/task-packet强制应用及首次读取入口；技能正文独立提供
-├─ 工具接线［已提交09a32c4；Linux/材料/Context7/FFF通过，Exa待有效key］
+├─ 工具接线［已提交09a32c4；Linux/材料/Context7/FFF通过，Exa修正key后检索/正文均200］
 │  └─ Context7/Exa打包自有key并脱离mcporter；增加pi-fff
 ├─ 合入feat/experiment-storage-lifecycle［Factory 937affc/db272ce、Braid 8325ed6已提交；编译与真实材料通过，运行行为待验］
 │  └─ decision归档、预算、稳定Python资产、只读GC计划及Braid OTLP摘要
@@ -88,6 +90,10 @@ I12-G02/G03、E01/E02的历史状态保留在 [I12问题账](../iteration12/i11-
 I12此前暂停后已在独立磁盘清理任务中主动终止；[清理执行记录](../../runs/wsl-retained-20260930/README.md)与项目内归档现已核对，不能继续按仍存活的暂停现场处理。历史身份与采集边界见 [I12 packet](../iteration12/packet.md)。独立I13已由子Agent批次创建；本轮仍未启动实验。
 
 ## 当前下一步
+
+以[最终检查](final-readiness.md)收敛 GLM-5.3 根对照、全模型 ARC 接线和实验宿主；随后冻结两份含已修正工具 key 的私有包，呈现具体题目、两组相同条件、容量预算及官网重放安排。用户本轮“最终进行一次检查，为开始实验做好准备”授权本次核对和材料准备，不启动模型或评分。恢复 ARC 额度的许可已经取得，不重复询问；这不自动改变本地人工介入研究的场所，也不恢复旧运行。Qwen 配置保留但不进入本轮路由。
+
+## 批次完成与复核记录
 
 存储生命周期成果已限定合入：Factory `937affc`、收尾边界修正 `db272ce`，独立Braid `8325ed6`。I13接入decision归档、预算保护与稳定宿主资产，保留冻结I12；源码核对还修正了原文保存失败、空native manifest和恢复文件仍存在时的回收门禁。编译、CLI帮助与真实prepare通过，归档删除、预算停止、资产建立及复评运行仍未验。详见[整合记录](storage-lifecycle-integration.md)。Console生命周期和Bub接入现已另获开工并分别委派，不属于I13；Alma等待明确原生接口。
 

@@ -48,10 +48,10 @@ npm lock 和 Python 依赖清单随 runtime 保留。
 通用参赛包只需满足平台的根入口 `main.py` 与 `requirements.txt`；Factory 包另有 `package-manifest.json` 时，Competition 会核对其中每个文件的哈希。所有包的冻结身份仍是 ZIP SHA256。
 `prepare` 不写平台；其余写入按批准的实验范围执行，任何 POST 结果不确定都先保留 journal，再只读核查，不盲重试。
 `prepare --credential-mode self_funded` 使用自带模型 key，也是旧 journal 缺失该字段时的历史语义。
-当前实验默认使用 `self_funded`。正式参赛额度的旧自动接续授权已撤销；只有针对具体冻结产物取得新的明确授权后，才使用 `prepare --credential-mode official_evaluation --allow-competition-credit`。源码把该显式门控冻结在 inputs 中，后续写入继续核对；CLI 支持这个参数不构成实验授权。旧 journal 仍可读取和收集证据。
+费用来源按本轮实验 packet 决定。2026-10-01 用户已允许 I13 恢复 ARC 额度并让所有模型使用 ARC；具体制品、矩阵与启动安排仍按 [I13 packet](../../tasks/iteration13/packet.md)确认。正式参赛额度的旧自动接续授权仍已撤销。选择平台 `official_evaluation` 模式时使用 `prepare --credential-mode official_evaluation --allow-competition-credit`；源码把该显式门控冻结在 inputs 中，后续写入继续核对。模型 API 通道与官网生成场所是不同决定，不能仅从“使用 ARC”推导改成官网生成。旧 journal 仍可读取和收集证据。
 凭据模式与 ZIP、模型配置一起冻结在 inputs.json 中，重用目录时必须相同；改变模式使用新的状态目录。后续 snapshot/run-all 从该记录取值，不另传开关。
 摘要的 credential_mode 是请求模式；实际运行返回的 billing_mode 另保留在 platform_result 和原始 status.json，不能混为一谈。
-后续官网实验使用 `self_funded`，冻结模型配置与自带 key 对应的服务地址一致；明确参加比赛须另获授权。
+使用 `self_funded` 时，冻结模型配置与自带 key 对应的服务地址一致；使用平台额度时，记录实际请求模式及平台返回的计费模式。不能把旧 journal 的费用配置无条件复用到新实验。
 预算决定以 Braid session 为边界，七类昂贵模型合计只允许一个 Braid session 使用；Pi 原生会话和 sub-agent 不单独占用 Braid 名额。
 当前团队源码以 CLI binding 对应的 Braid 逻辑成员领取名额；上下文重建沿用同一成员，原生子会话不另占名额。旧冻结包不包含这项修正。
 限制是模型使用权限，不是金额上限；一个长会话仍可能很昂贵。

@@ -1,5 +1,7 @@
 # I13 工具接线实施
 
+2026-10-01 最终检查更新：用户已修正 `.env.i13-tools` 中的 Exa key。主线通过当前 Pi SDK 装载本扩展，真实 `exa_search` 和 `exa_contents` 均返回 HTTP 200，request ID 分别为 `e3df760b2149abc6c823561538f085a3`、`0b51ab645155d73876fc2e595907eafd`。原始结果在 `runs/iteration13/final-readiness-20261001/exa/`；没有调用模型。下文 401 为原凭据的历史反馈，已不构成当前阻塞，最终私有实验包仍需装入修正后的值。
+
 2026-10-01。范围来自用户已复核的 [工具与提示词方案](tools-prompts-plan.md) 和 [审计](tools-prompts-audit.md)。开工依据是用户：“我已经配置好了 .env.i13key。我复核了这份 tools-prompts-audit.md，没问题。你可以开工工具接线和Factory/Braid 提示词了。然后我们来讨论Braid 协作方法与 Requirements 树。”本页记录工具组；Braid 协作方法和 Requirements 树不在本组源码范围。
 
 工作区起点与限定文件快照保存在 `runs/iteration13/tools-implementation-20261001/start/`，原始操作与构建反馈归同一证据目录。开始时已有大量其它任务修改；构建前提已单独提交 `a08070c`，收录此前已授权的 model-exclusion正文、必要构建引用与本次 GNU格式修正；它不算新工具功能。本组工具提交只收录起点之后的工具增量，共享 `run.py`、`runtime.py` 和 Git index 与提示词协作者串行协调。
