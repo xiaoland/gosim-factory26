@@ -235,6 +235,8 @@ def main():
     parser.add_argument("--python", default="python3.12", help="Python ABI used to build LiteLLM")
     parser.add_argument("--state", type=Path, required=True)
     parser.add_argument("--port", type=int, default=4010)
+    parser.add_argument("--listen-host", default="0.0.0.0",
+                        help="网关监听地址；远端容器可使用明确可达的宿主地址")
     parser.add_argument("--preserve-parameters", action="store_true",
                         help="保留客户端推理、采样和输出参数，用于按现有配方运行")
     parser.add_argument("--model-vendor", action="append", default=[], metavar="MODEL=VENDOR",
@@ -284,7 +286,8 @@ def main():
     )
     (state / "gateway.env").chmod(0o600)
     (state / "service.json").write_text(json.dumps({"service_id": secrets.token_hex(12),
-        "port": args.port, "preserve_parameters": args.preserve_parameters,
+        "port": args.port, "listen_host": args.listen_host,
+        "preserve_parameters": args.preserve_parameters,
         "callback_sha256": hashlib.sha256((source / "hackathon_gateway_compat.py").read_bytes()).hexdigest()}, indent=2) + "\n")
     runtime = args.runtime.resolve(strict=True)
     env = dict(os.environ, **read_secrets(args.secrets, models), LITELLM_MASTER_KEY=token,
@@ -294,7 +297,7 @@ def main():
     env["PYTHONPATH"] = ":".join((str(source), str(ROOT / "submission"),
                                     str(runtime / "python")))
     command = [args.python, str(runtime / "bin/litellm"), "--config", str(state / "gateway.json"),
-               "--host", "0.0.0.0", "--port", str(args.port)]
+               "--host", args.listen_host, "--port", str(args.port)]
     with (state / "gateway.log").open("a") as log:
         return subprocess.call(command, env=env, stdout=log, stderr=log)
 

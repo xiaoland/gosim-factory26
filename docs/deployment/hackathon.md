@@ -13,6 +13,8 @@ Explorer、executor、advisor 直接取得 exploration-tools 指引；SVC 组还
 
 只在 WSL 构建、运行模型和评测。自购供应商凭据在项目内 `.secrets/models.env`，权限为 `600`。[hackathon_gateway.py](../../scripts/hackathon_gateway.py) 在 WSL 宿主读取它，向容器只传 `GATEWAY_URL` 与临时 `GATEWAY_TOKEN`。这组历史实验默认由网关移除客户端自带的推理、温度和采样参数，让供应商使用自己的默认值；新实验若需保留现有配方，可为独立网关实例传 `--preserve-parameters`。`request-metadata.jsonl` 记录模型、客户端原始输出预算与规范化参数，不记录消息正文或密钥。官方 Runner 的宿主 `OPENAI_API_KEY` 由适配器清除，避免把第三方密钥交给 ARC Meter。先用 `docker network inspect bridge` 核实容器能访问的宿主地址；历史环境使用 `172.17.0.1`，新环境须重新核对实际地址。
 
+2026-10-01 的 Debian-Rebuild 本地接续由 Mac 保存控制器、冻结输入和网关凭据，生成容器通过 `development-1` 在远端 Docker 执行。网关与每个 run 的凭据绑定目录必须在同一文件系统；使用 Mac 原生 Python 环境时须安装对应平台的 LiteLLM，不能复用 Linux 的 Python 扩展。`--listen-host` 可将网关监听限定到已验证可达的 Mac 地址，`--container-host` 只声明容器使用的地址。供应商凭据仍只由网关读取，容器取得独立临时 token；原始请求参数沿用冻结配方。远端容器的 OTLP 采用本地 loopback 收集并随 workspace 回收，不把 WSL bridge 地址当作 Mac collector。
+
 新实例可重复传入 `--model-vendor MODEL=VENDOR`，显式增加或覆盖该实例的供应商路由；供应商为 `GLM`、`KIMI`、`DEEPSEEK` 或 `QWEN`，读取同名前缀的 `*_BASE_URL` 和 `*_API_KEY`。模型ID保持原样，不自动替换别名，未覆盖项沿用历史默认。启动前只读核实供应商当前模型目录；目录存在不等于推理参数、工具或视觉能力已取得生成反馈。I13 本次自有通道显式使用 `glm-5.3=GLM` 和 `deepseek-v4-flash=QWEN`，保留原有 Flash GLM 与 K3 路由。
 
 本实验不另设输出长度预算。网关移除客户端的 `max_tokens`、`max_completion_tokens`、`max_output_tokens`，由供应商决定默认行为。Pi 0.85.1 即使省略 descriptor 的 `maxTokens` 仍会自动发送 16384，因此必须在 API 边界移除，单删配置无效。[hackathon_models.json](../../variants/native-hackathon/hackathon_models.json) 只供 Pi 声明上下文信息，网关不再读取参赛包的模型文件。`request-metadata.jsonl` 分别记录规范化参数和 LiteLLM 转换后的上游参数，可检查兼容层是否重新补入上限。修改运行策略时使用新网关实例和新包，保留既有实验的参数记录。
