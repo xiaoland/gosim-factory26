@@ -27,7 +27,7 @@ run `346bc3b51b09` 已终止，状态为 `FAILED`，发生在生成阶段，未�
 
 终态回执记录：开始 `2026-10-01T05:20:59.107371Z`，结束 `2026-10-01T06:50:48.440272Z`，持续 `5335` 秒；token `58165820`，费用 `13.328865 CNY`，`billing_mode=self_funded`。submission 仍为 `credential_mode=official_evaluation`，二者差异保留，不能仅凭字段断言实际费用归属。
 
-官网 failure_reason 只有外层命令 `python3 /workspace/submission/main.py ...` 返回非零，没有 traceback。终止前 Braid 仍有 PR #3/#4/#5 的实际编辑与测试活动，`active_turns=3`、`blocked_groups=0`、`delivery_closed=false`；PR #5 同时出现 Node 24 不满足项目 `>=20 <21` 的依赖错误，但现有证据不足以证明它就是外层退出根因。因此本次结论为“生成阶段未归因终止”，不是已确认的 Harness、应用或 provider 故障。
+官网 failure_reason 仅报告 `main.py` 非零退出；随后子Agent在原始官网日志 `github/tasks/hackathon--github/logs/03436d68fef7e8d8.json` 找到14:50:04 CST的完整traceback，主线已直接核对。`run.py:321` 因Braid exit=1抛错，result.reason为 `native teardown could not be proven: session failed: Pi exited with signal: 9 (SIGKILL)`。直接退出链已确认，SIGKILL来源及被杀会话仍在调查，不能据此断言OOM或平台限制。此前PR中的Node版本错误也不能直接当成本次全局终止原因；未自动恢复或重跑。
 
 完整终态证据入口：`runs/iteration13/hosted-20261001/completion.json` 与 `runs/iteration13/hosted-20261001/monitor/20261001T065751.899359Z/346bc3b51b09/`；独立监控已完成采集，未重发请求、未启动第二次收费尝试。用户随后明确要求“安排sub-agent保留工作区并且排查证据”。已委派 `/root/i13_hosted_failure_evidence`（GPT-6.1-Sol / extra-high）下载并核验官网可得工作区与日志、保留Git/未提交worktree/Braid数据库和会话、核对终止因果与恢复一致性。独立输出归 `failure-investigation/` 与 `tasks/iteration13/hosted-github-failure.md`；当前无重跑或源码修复动作。
 
