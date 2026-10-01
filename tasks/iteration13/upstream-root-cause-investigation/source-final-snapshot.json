@@ -1,0 +1,54 @@
+{
+  "captured_at": "2026-09-30T09:46:05.876337+00:00",
+  "note": "Concurrent upstream edits observed; packet/findings/manual-review and new repair-design re-read. Scope of this investigation remains read-only plus this new directory.",
+  "files": [
+    {
+      "path": "AGENTS.md",
+      "sha256": "7956481e7218bc2ef5120be5e9330361a55313ad7b979c24c612756129335d31",
+      "bytes": 10016,
+      "changed_since_start": false
+    },
+    {
+      "path": "tasks/iteration13/packet.md",
+      "sha256": "40ded70a15bf0876e4c976d1449b3fd6f955855c72fb9f43ad27df5c833c797b",
+      "bytes": 12020,
+      "changed_since_start": true
+    },
+    {
+      "path": "tasks/iteration13/findings.md",
+      "sha256": "6d07842c260961db824213bb6620e9b4b03f94414577316a2d323bbf51db817c",
+      "bytes": 25382,
+      "changed_since_start": true
+    },
+    {
+      "path": "tasks/iteration13/quality-methods.md",
+      "sha256": "e9530b82dfe0a523fad8003cbbdba5c0f5863fa3d515a3ac16458f97b4b4c108",
+      "bytes": 13858,
+      "changed_since_start": false
+    },
+    {
+      "path": "tasks/iteration13/i12-manual-review.md",
+      "sha256": "5a4c7e16c025ea935eac992b80dfe227920e8853bad0133832b0fa6a06c0c72b",
+      "bytes": 6181,
+      "changed_since_start": true
+    },
+    {
+      "path": "tasks/iteration12/packet.md",
+      "sha256": "6daee3c283fd3ead78ed57c8a37cbddbdaadc995ed9378ec0e36e151906ec7c7",
+      "bytes": 13507,
+      "changed_since_start": false
+    },
+    {
+      "path": "tasks/iteration12/i11-github-score/findings.md",
+      "sha256": "b7adebcb0ea3f0de13882133004679c978ecbb8f89f0ff6858eb1bc1b23c8f3b",
+      "bytes": 9545,
+      "changed_since_start": false
+    },
+    {
+      "path": "tasks/iteration13/repair-design.md",
+      "sha256": "654aa17f3111fd54d1acca85f180c56a435658a743f32e272c7fb5c753b23d91",
+      "bytes": 13200,
+      "changed_since_start": null
+    }
+  ]
+}

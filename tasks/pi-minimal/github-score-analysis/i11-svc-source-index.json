@@ -1,0 +1,369 @@
+{
+  "R0": {
+    "path": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-glm-fast-01a0eb68-19b6-7c30-91d6-bd339f346335/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.jsonl",
+    "sha256": "f939e20e7999a9242df74765351535ca69e631f11612b60dc2bf90c740e80721",
+    "selected_messages": [
+      {
+        "line": 4,
+        "id": "76aa11cc",
+        "timestamp": "2026-09-29T04:24:36.120Z"
+      },
+      {
+        "line": 12,
+        "id": "4d03fd07",
+        "timestamp": "2026-09-29T04:25:23.352Z"
+      },
+      {
+        "line": 15,
+        "id": "c5fad910",
+        "timestamp": "2026-09-29T04:25:27.987Z"
+      },
+      {
+        "line": 16,
+        "id": "785accbb",
+        "timestamp": "2026-09-29T04:25:31.856Z"
+      },
+      {
+        "line": 17,
+        "id": "ec3bcfee",
+        "timestamp": "2026-09-29T04:25:31.862Z"
+      },
+      {
+        "line": 18,
+        "id": "01761bdb",
+        "timestamp": "2026-09-29T04:25:35.565Z"
+      },
+      {
+        "line": 19,
+        "id": "57699230",
+        "timestamp": "2026-09-29T04:25:35.570Z"
+      },
+      {
+        "line": 20,
+        "id": "e9ae717c",
+        "timestamp": "2026-09-29T04:25:38.511Z"
+      },
+      {
+        "line": 21,
+        "id": "934950e1",
+        "timestamp": "2026-09-29T04:25:38.518Z"
+      },
+      {
+        "line": 22,
+        "id": "e3a4b6fc",
+        "timestamp": "2026-09-29T04:25:42.251Z"
+      },
+      {
+        "line": 23,
+        "id": "6e4d98f1",
+        "timestamp": "2026-09-29T04:25:42.255Z"
+      },
+      {
+        "line": 27,
+        "id": "faf03fd9",
+        "timestamp": "2026-09-29T04:26:35.315Z"
+      },
+      {
+        "line": 29,
+        "id": "fd573950",
+        "timestamp": "2026-09-29T04:26:35.341Z"
+      }
+    ]
+  },
+  "R1": {
+    "path": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-glm-fast-01a0eb68-19b6-7c30-91d6-bd339f346335/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.jsonl",
+    "sha256": "3a0e89acacef6a7222310ecda59ca6a050a377f0484a7f18833d5bde71bcfc4c",
+    "selected_messages": [
+      {
+        "line": 7,
+        "id": "bb56baa7",
+        "timestamp": "2026-09-29T04:28:48.281Z"
+      },
+      {
+        "line": 14,
+        "id": "bd44a06c",
+        "timestamp": "2026-09-29T04:29:58.782Z"
+      },
+      {
+        "line": 18,
+        "id": "0bc55a3f",
+        "timestamp": "2026-09-29T04:30:35.291Z"
+      },
+      {
+        "line": 23,
+        "id": "fb64badb",
+        "timestamp": "2026-09-29T04:31:39.346Z"
+      },
+      {
+        "line": 27,
+        "id": "aa4a801e",
+        "timestamp": "2026-09-29T04:32:02.548Z"
+      },
+      {
+        "line": 29,
+        "id": "3593cf65",
+        "timestamp": "2026-09-29T04:33:07.080Z"
+      },
+      {
+        "line": 31,
+        "id": "7b7e8f87",
+        "timestamp": "2026-09-29T04:33:51.566Z"
+      },
+      {
+        "line": 33,
+        "id": "860f4a1d",
+        "timestamp": "2026-09-29T04:34:35.233Z"
+      },
+      {
+        "line": 35,
+        "id": "462a823f",
+        "timestamp": "2026-09-29T04:35:00.007Z"
+      },
+      {
+        "line": 57,
+        "id": "f6c7f330",
+        "timestamp": "2026-09-29T04:46:40.612Z"
+      }
+    ]
+  },
+  "F": {
+    "path": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl",
+    "sha256": "2cbada6151474a24978a716a08af215c0a13724fa7d4dc41d9a23969159f3fb2",
+    "selected_messages": [
+      {
+        "line": 11,
+        "id": "2fa802fe",
+        "timestamp": "2026-09-29T04:32:09.447Z"
+      },
+      {
+        "line": 14,
+        "id": "6880645e",
+        "timestamp": "2026-09-29T04:32:10.731Z"
+      },
+      {
+        "line": 17,
+        "id": "e2639f4e",
+        "timestamp": "2026-09-29T04:32:11.865Z"
+      },
+      {
+        "line": 32,
+        "id": "7fb2bb58",
+        "timestamp": "2026-09-29T04:32:25.180Z"
+      },
+      {
+        "line": 34,
+        "id": "f1df03ae",
+        "timestamp": "2026-09-29T04:32:36.910Z"
+      },
+      {
+        "line": 164,
+        "id": "65f8f145",
+        "timestamp": "2026-09-29T04:38:58.695Z"
+      },
+      {
+        "line": 165,
+        "id": "c31177b8",
+        "timestamp": "2026-09-29T04:38:58.698Z"
+      },
+      {
+        "line": 166,
+        "id": "bb6543b5",
+        "timestamp": "2026-09-29T04:39:00.922Z"
+      },
+      {
+        "line": 169,
+        "id": "f4c97079",
+        "timestamp": "2026-09-29T04:39:04.568Z"
+      },
+      {
+        "line": 170,
+        "id": "8a66375b",
+        "timestamp": "2026-09-29T04:39:04.580Z"
+      },
+      {
+        "line": 171,
+        "id": "9e83a2d3",
+        "timestamp": "2026-09-29T04:39:10.132Z"
+      }
+    ]
+  },
+  "F2": {
+    "path": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb87-4b86-7120-94b7-48d154ee7a52/2026-09-29T04-58-28-477Z_01a0eb87-4efd-7459-8477-889fdba3a0b9.jsonl",
+    "sha256": "6d80e28c023464f1173599339122465575ddf5b2e6922fa80ba0ad7af5cf1d33",
+    "selected_messages": [
+      {
+        "line": 4,
+        "id": "3832a877",
+        "timestamp": "2026-09-29T04:58:29.489Z"
+      },
+      {
+        "line": 24,
+        "id": "05317d3c",
+        "timestamp": "2026-09-29T04:58:41.881Z"
+      },
+      {
+        "line": 27,
+        "id": "cea13641",
+        "timestamp": "2026-09-29T04:58:45.618Z"
+      },
+      {
+        "line": 29,
+        "id": "705f57b9",
+        "timestamp": "2026-09-29T04:58:48.298Z"
+      },
+      {
+        "line": 41,
+        "id": "18cd2329",
+        "timestamp": "2026-09-29T04:59:54.909Z"
+      }
+    ]
+  },
+  "M1": {
+    "path": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb9c-c422-72c0-87f6-a7a31405fc10/2026-09-29T05-21-55-648Z_01a0eb9c-c7c0-703c-ab53-66b5631db0e3.jsonl",
+    "sha256": "a343d719fbbd7cdcdd3a9e414391ba32ea80934a3943f07b1777f216360b18cd",
+    "selected_messages": [
+      {
+        "line": 4,
+        "id": "fa7cae35",
+        "timestamp": "2026-09-29T05:23:29.891Z"
+      },
+      {
+        "line": 5,
+        "id": "aea53d5b",
+        "timestamp": "2026-09-29T05:23:29.912Z"
+      },
+      {
+        "line": 6,
+        "id": "9cf5e122",
+        "timestamp": "2026-09-29T05:23:29.912Z"
+      },
+      {
+        "line": 7,
+        "id": "1cbfbccb",
+        "timestamp": "2026-09-29T05:23:31.697Z"
+      }
+    ]
+  },
+  "M4": {
+    "path": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/2026-09-29T06-51-32-078Z_01a0ebee-d16e-72f4-80c5-d2fdd59e5e56.jsonl",
+    "sha256": "e6b0a5302706130f95b2e088260d6a0bd042a4a69363e84753cb2a618c0781cf",
+    "selected_messages": [
+      {
+        "line": 23,
+        "id": "190ffc98",
+        "timestamp": "2026-09-29T06:54:55.988Z"
+      },
+      {
+        "line": 29,
+        "id": "e6106536",
+        "timestamp": "2026-09-29T06:55:09.305Z"
+      },
+      {
+        "line": 48,
+        "id": "1878e2da",
+        "timestamp": "2026-09-29T07:05:10.479Z"
+      },
+      {
+        "line": 50,
+        "id": "08911909",
+        "timestamp": "2026-09-29T07:05:15.975Z"
+      },
+      {
+        "line": 54,
+        "id": "8026d27d",
+        "timestamp": "2026-09-29T07:05:22.504Z"
+      },
+      {
+        "line": 85,
+        "id": "56a95132",
+        "timestamp": "2026-09-29T07:06:30.415Z"
+      },
+      {
+        "line": 89,
+        "id": "c898eec7",
+        "timestamp": "2026-09-29T07:06:39.505Z"
+      }
+    ]
+  },
+  "M5": {
+    "path": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+    "sha256": "852bce398bdd8424bcd2ab25b8cfec929a21e86fa2bc5bb10ade52d91ffd93ee",
+    "selected_messages": [
+      {
+        "line": 330,
+        "id": "a468dbe0",
+        "timestamp": "2026-09-29T07:55:43.450Z"
+      },
+      {
+        "line": 332,
+        "id": "3ea90367",
+        "timestamp": "2026-09-29T07:55:48.901Z"
+      },
+      {
+        "line": 334,
+        "id": "b8cb8459",
+        "timestamp": "2026-09-29T07:55:53.542Z"
+      },
+      {
+        "line": 345,
+        "id": "d9f3ae68",
+        "timestamp": "2026-09-29T07:56:33.257Z"
+      },
+      {
+        "line": 346,
+        "id": "9cf0869c",
+        "timestamp": "2026-09-29T07:56:33.278Z"
+      },
+      {
+        "line": 347,
+        "id": "71858fd3",
+        "timestamp": "2026-09-29T07:56:37.922Z"
+      },
+      {
+        "line": 348,
+        "id": "1371b5ee",
+        "timestamp": "2026-09-29T07:56:37.926Z"
+      },
+      {
+        "line": 349,
+        "id": "31a85dd0",
+        "timestamp": "2026-09-29T07:56:40.421Z"
+      },
+      {
+        "line": 350,
+        "id": "8645a035",
+        "timestamp": "2026-09-29T07:56:40.436Z"
+      },
+      {
+        "line": 353,
+        "id": "a661f4dd",
+        "timestamp": "2026-09-29T07:56:45.621Z"
+      },
+      {
+        "line": 355,
+        "id": "8869e46a",
+        "timestamp": "2026-09-29T07:56:53.420Z"
+      },
+      {
+        "line": 359,
+        "id": "b1a5fb48",
+        "timestamp": "2026-09-29T07:57:03.161Z"
+      },
+      {
+        "line": 361,
+        "id": "7c5353c3",
+        "timestamp": "2026-09-29T07:57:07.968Z"
+      },
+      {
+        "line": 363,
+        "id": "861b0258",
+        "timestamp": "2026-09-29T07:57:15.620Z"
+      },
+      {
+        "line": 365,
+        "id": "f9823b37",
+        "timestamp": "2026-09-29T07:57:19.265Z"
+      }
+    ]
+  }
+}

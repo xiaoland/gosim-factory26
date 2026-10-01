@@ -138,7 +138,7 @@ def assemble(source, destination, runtime, skill_source, skills):
     support=destination/'support';support.mkdir()
     for name in ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs'):
         shutil.copy2(ROOT/'scripts'/name,support/name)
-    if source.name in {'pi-braid', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
+    if source.name in {'pi-braid', 'pi-braid-i11', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
         shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
         subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', '--no-compile',
                         '--target', str(support/'otlp-deps'), '-r', str(ROOT/'lab/requirements.txt')],

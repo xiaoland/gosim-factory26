@@ -1,0 +1,19 @@
+# Pi 额度错误从原生终止到本地监控的丢失点
+
+本页核对 2026-09-28 attempt-09 Sheet 的已保存原生 Pi JSONL、Braid SQLite/status/log 和当时的 `monitor-generation.py`，并沿当前 Braid 源码追踪一次失败的最短路径。读取发生在 09 停止前后，没有发送模型请求或修改运行。用户补充额度后的恢复成败不属于本页结论。原生记录含供应商返回的 429 与“余额不足或无可用资源包”；本页不读取凭据、请求 headers 或负载。
+
+## 现场：生成仍在运行，模型却连续失败
+
+09 Sheet 新根物理 Pi 会话 `2026-09-28T08-30-18-958Z_01a0e722-e54e-74e5-85bb-e2504876eeb7.jsonl` 在 **08:32:02–08:35:38 UTC** 记录 22 条 assistant `stopReason=error`，`errorMessage` 均指向 `glm-5.3-flash` 的 429/余额不足；这段未见 `stopReason=stop`。对应根 Braid provider session `01a0e722-ec35-7d80-a8ec-71f01c914c96` 在只读截面已有四个 `failed` turn（08:31:57、08:32:33、08:33:50、08:34:27 起），第五个 `running`；该 session 仍为 `running`，`local_run` 也为 `running`。后者描述进程与调度生命期，并不证明模型请求成功。恢复前的旧根 provider session 在 08:02–08:11 也留下连续 `failed` turn，因此这是跨恢复的可见失败，不是一条可忽略的瞬时 429。计数是本次截面，不代表最终重试总数。
+
+旧 09 `recovery-braid.log` 在同一时段有 `session terminal with error`，但其字段只写 `Pi settled with Some("error")` 和 `provider_turn_id`，没有原生 429 原因。`braid-state/status.json` 提供 `physical_sessions[].turns[].status=failed` 和调度计数，却没有该 turn 的错误正文；`provider_sessions.last_resume_error` 仅记录恢复失败，不能挪用于模型生成错误。09 `monitor-generation.py` 只看外层 `run.json`/agent receipt、DB 的 `local_run`、items、active turns/pending events 及最新原生文件修改时间，故会显示 `running` 和最近活动，却不提示请求持续失败。常规 `lab/analysis/inspect_runs.py::_pi_terminal` 仅在生成整体 `generation_failed` 的归档结果中解析最后原生 assistant 错误；运行中的观测也读不到这个原因。
+
+## 最短调用链与修复边界
+
+Pi RPC 的 `message_end.message` 具有 `stopReason` 和 `errorMessage`。已安装的 `@earendil-works/pi-coding-agent` 的 `dist/modes/rpc/rpc-mode.js` 对 session 事件调用 `output(toJsonEvent(event))`，`dist/modes/json-event.js` 仅改写 `message_update`，对 `message_end` 原样传出，因此这个字段确会到达 Braid 的 RPC 读取边界。旧 `provider/pi.rs::parse_pi_event` 只保存最后 `stopReason`；直到 `agent_settled` 才按最后 reason 判定 `TurnCompleted`，失败时写泛化文本。这个等待边界是正确的：Pi 可能在同一物理 turn 的中途报错、重试后以 `stop` 成功，不能在首次 `message_end(error)` 就终结 Braid turn。随后 `provider/session.rs::handle_notification` 把 `TurnCompleted.error` 传给现有 `SessionEvent::TurnTerminal`；`group/worker.rs::poll_running` 将 error 打 warning，但 `finish_running` 只把生命周期送入 `store::mark_turn_terminal`。健康/本地完成判断主要看 check/resume 是否可用、活跃 turn 与 blocked group；单次模型错误不等于 adapter 不可用，因此不应把每个 429 直接写成全局 `provider=unavailable` 或强制终止实验。
+
+本次最小源码修复仅在 `provider/pi.rs` 保存最后 assistant 的 `(stopReason,errorMessage)`，在 `agent_settled` 的**失败终态**使用原生错误填充既有 `TurnCompleted.error`；无原文才回退到 stop reason。成功 `stop` 仍清除中途错误。已有 `SessionEvent` 与 worker warning 无需新字段，DB schema 与原有生命周期/重试语义不变。定向 parser 测试覆盖 error→stop 成功不带错误、失败终态保留原生消息及 `length` 仍失败；`cargo test -q provider::pi::terminal_tests::pi_terminal_waits_for_recovery_and_rejects_length` 和 `cargo check --bin braid -q` 通过。Linux 离线 release 构建通过；独立增量二进制 `attempt-09/braid-linux-provider-error-v1` SHA256 为 `9eddeac8c66549e78f247ad380ccc04bcd0020cbadfa8911b16e6726e250abf8`，对应完整源码包 `braid-source-provider-error-v1.tar.gz` SHA256 为 `ef1d463f6d42d9222db4052be1ea70f6e0779228c969301cb44f7570e0bfe758`。与 final-v2 源码目录相比，仅 `src/provider/pi.rs` 不同；旧 final-v2 包与二进制未覆盖，增量来源见同目录 `braid-build-provenance-provider-error-v1.json`。
+
+监控由 `monitor-generation.py` 现有所有者追加读取原生 assistant 终止字段，并与已有 `failed` turn 对照：报告最近错误摘要、首末时间、连续失败与最近是否恢复成功；**不改变**外层 `running`/停止判定，不硬编码 429 一定不可恢复。判读时单次 error 后有 `stop` 是可恢复尝试；跨多个已结束 Braid turn 且之后仍无成功模型响应，是持续受阻信号。本页的四个失败 turn 与 22 条原生 error 符合后一类。监控沿用其 `inherited_snapshot`/`current_recovery` 边界，不能把恢复包的旧原生错误冒充本轮新失败。此处只是错误可见性修复；额度恢复与否需看后续真实请求，不由日志或余额动作推断。
+
+现场内层根：`/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation/template/.factory26/20260928-025746-66feadac`。原生文件在其 `work/native-homes/pi-glm-fast-01a0e722-a083-7553-8812-5612fb9a362c/`，状态/DB/log 分别为 `braid-state/status.json`、`braid-state/braid.sqlite3`、`recovery-braid.log`。监控脚本位于 attempt-09 根 `monitor-generation.py`。

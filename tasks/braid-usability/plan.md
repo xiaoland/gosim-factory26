@@ -1,6 +1,16 @@
 # 实施计划与开工影响
 
-状态：设计及验收方案已获用户“复核通过”；三份独立预演完成，具体开工影响已呈现并获同意，开始实施。
+## 已授权的边界补正
+
+2026-09-24 用户明确“你可以应用这些修正了”，并限定自主工作流程仅用于 Braid Factory、“像人类一样协作”只保留一句。
+当前增量按 [职责边界](run-boundary.md) 实施：独立 Agent 处理 Braid local/objects/evidence 和 Braid 规范；主 Agent 同时处理 Factory 导出、Braid 原生提示、成员指令及 Factory 规范。
+接口提前收敛为 quiescent/blocked/failed 与本次 ref 的 commit；Factory 自己冻结请求指定的 ref，不消费协作状态作为交付许可。
+实现之后使用既有编译和 Linux 构建，再以一个新冻结 mixed ZIP 完成 Lite 两题，沿用逐 run 独立分析；旧运行保持原样，无需新测试设施或协议模拟。
+
+以下保留此前易用性改造的实施准备，当前增量以本段和边界文档为准。
+
+
+状态：设计及验收方案已复核，三份独立预演完成；主 Agent 曾在缺少独立开工确认时错误推进。用户现明确不必停止或撤回，继续依据与纠正记录见 [packet](packet.md)。
 用户进一步明确：V&V 方法归 SVC Corpus，Braid 不承载 V&V 方法指引。
 
 ## 预演后的决定

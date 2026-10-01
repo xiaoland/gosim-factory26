@@ -44,3 +44,12 @@
 现已依据当前锁文件的完整性摘要取得并核对 `pi-background-bash@1.0.5`、锁定提交的 `pi-lane` 与 `pi-pending` 三个包，补进复用的 Linux runtime；检查所有当前锁文件中的非可选依赖在 runtime 内无缺失、无版本错配。重新冻结的两个 ZIP SHA256 为 `2122b29191a522d0eb1acb7ead3fc469335517b09bb050096fd2e2dfa7c7fcda` 与 `85fe04cb9a96b11e92f78630a1a2d044e9c94b80cf1bc112a82df2e09e6e95d9`，文件差异仍只限两份指引、两个 reviewer 角色和 `run.py` variant 身份。新制品进入全新的生成状态目录，不对旧 run 作重复尝试。
 
 第二批生成现场为 WSL `runs/20260926-mixed-generation-v2/` 与 `runs/20260926-reviewer-generation-v2/`，分别由自己的 Lab 控制器运行；任务本地 `follow-through-v2.py` 监测四个生成 run，终态判据为 Lab `phase=finished` 且 `result.status=completed`，随后写入 `runs/20260926-{mixed,reviewer}-score-v2/`。最初脚本误把 Lab 的 `finished` 当失败，已在四个生成仍运行时仅重启编排脚本，不改生成、ZIP 或状态；当前脚本日志是 WSL `follow-through-v2b.log`。截至当前可见三个 Runner 容器与三个活跃根 Issue 会话，Braid 尚无阻塞或模型错误；剩余 reviewer Sheet 在同组并发 1 的队列中。
+
+2026-09-26 预算迭代期间只读核对 `follow-through-v2b.log`：mixed 两题均已 finished，reviewer GitHub 仍 running、Sheet queued。日志未记录完整模拟评分；未重启或重跑。
+
+## 2026-09-26 宿主重启前维护
+
+用户准备重启WSL宿主，发现本旧实验容器1d8be64c895e仍在运行。主Agent起初误称其它会话，经本packet核对后纠正：这是本会话遗留实验，未及时收尾。
+22:00（UTC+8）核对GitHub run job-0001-8ba2162ece7df8：原生会话最后活动11:25，Braid active_turns=0、pending_events=3；这是长时间无新原生会话活动的未完成现场，不是完成评分。当前只记录事实，不在维护窗口推断具体生命周期根因。
+已按宿主重启收尾授权停止follow-through-v2.py（PID93567），并请求停止reviewer矩阵控制器exp-20260926-104110-2b768a，包含取消未启动的Sheet。保留原始run、Git和原生会话，不自动恢复、重跑或评分。后续是否继续该旧对照需结合当前先Lite后Hackathon的顺序重新决定。
+维护停止已完成（operation d944eb8a12b963cac79e18a6）：GitHub与未启动的Sheet均cancelled，控制器及自动接续进程退出；WSL docker ps为空。遗留的15分钟shell观察器PID94970也已停止。旧实验记录、编排日志及完整模板现场已归档到Mac runs/acceptance-integrity/20260926/lite/old-reviewer-pre-reboot.tar.gz，WSL原始数据保留。

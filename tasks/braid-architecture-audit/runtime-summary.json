@@ -1,0 +1,1559 @@
+{
+  "github": {
+    "archive_db": "template/.factory26/20260927-080209-0b57147a/braid-state/braid.sqlite3",
+    "integrity": [
+      {
+        "quick_check": "ok"
+      }
+    ],
+    "items": [
+      {
+        "kind": "issue",
+        "number": 1,
+        "state": "CLOSED",
+        "desired_member_login": "glm-1",
+        "observed_at": "2026-09-27T16:03:53.819406263Z"
+      },
+      {
+        "kind": "issue",
+        "number": 2,
+        "state": "CLOSED",
+        "desired_member_login": "glm-3",
+        "observed_at": "2026-09-27T16:01:21.656098815Z"
+      },
+      {
+        "kind": "issue",
+        "number": 3,
+        "state": "CLOSED",
+        "desired_member_login": "glm-7",
+        "observed_at": "2026-09-27T16:01:21.668085268Z"
+      },
+      {
+        "kind": "issue",
+        "number": 4,
+        "state": "CLOSED",
+        "desired_member_login": "deepseek-8",
+        "observed_at": "2026-09-27T16:01:39.169961582Z"
+      },
+      {
+        "kind": "issue",
+        "number": 5,
+        "state": "CLOSED",
+        "desired_member_login": "deepseek-9",
+        "observed_at": "2026-09-27T16:01:39.170038755Z"
+      },
+      {
+        "kind": "issue",
+        "number": 6,
+        "state": "CLOSED",
+        "desired_member_login": "deepseek-11",
+        "observed_at": "2026-09-27T16:01:39.169806416Z"
+      },
+      {
+        "kind": "issue",
+        "number": 7,
+        "state": "CLOSED",
+        "desired_member_login": "deepseek-10",
+        "observed_at": "2026-09-27T16:01:39.169626239Z"
+      },
+      {
+        "kind": "pr",
+        "number": 1,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T08:56:47.246651994Z"
+      },
+      {
+        "kind": "pr",
+        "number": 2,
+        "state": "CLOSED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T09:25:32.282550642Z"
+      },
+      {
+        "kind": "pr",
+        "number": 3,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T09:25:50.52487959Z"
+      },
+      {
+        "kind": "pr",
+        "number": 4,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T10:01:11.864754428Z"
+      },
+      {
+        "kind": "pr",
+        "number": 5,
+        "state": "CLOSED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T10:35:54.305993081Z"
+      },
+      {
+        "kind": "pr",
+        "number": 6,
+        "state": "CLOSED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T10:50:51.27237469Z"
+      },
+      {
+        "kind": "pr",
+        "number": 7,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T11:10:47.717526126Z"
+      },
+      {
+        "kind": "pr",
+        "number": 8,
+        "state": "MERGED",
+        "desired_member_login": "deepseek-12",
+        "observed_at": "2026-09-27T16:01:21.811428327Z"
+      },
+      {
+        "kind": "pr",
+        "number": 9,
+        "state": "MERGED",
+        "desired_member_login": "glm-13",
+        "observed_at": "2026-09-27T16:02:04.625999608Z"
+      }
+    ],
+    "turns": [
+      {
+        "trigger_kind": "finalization",
+        "lifecycle": "completed",
+        "n": 8
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "n": 383
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "failed",
+        "n": 2
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "running",
+        "n": 1
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "unknown",
+        "n": 10
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "completed",
+        "n": 43
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "failed",
+        "n": 6
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "interrupted",
+        "n": 4
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "unknown",
+        "n": 6
+      }
+    ],
+    "sessions": [
+      {
+        "lifecycle": "blocked",
+        "n": 2
+      },
+      {
+        "lifecycle": "idle",
+        "n": 4
+      },
+      {
+        "lifecycle": "replaced",
+        "n": 451
+      },
+      {
+        "lifecycle": "retired",
+        "n": 5
+      },
+      {
+        "lifecycle": "running",
+        "n": 1
+      },
+      {
+        "lifecycle": "sleeping",
+        "n": 1
+      },
+      {
+        "lifecycle": "unknown",
+        "n": 1
+      }
+    ],
+    "resets": [
+      {
+        "lifecycle": "applied",
+        "n": 60
+      },
+      {
+        "lifecycle": "blocked",
+        "n": 2
+      }
+    ],
+    "reset_errors": [
+      {
+        "lifecycle": "blocked",
+        "error": "session is unavailable",
+        "n": 2
+      }
+    ],
+    "merges": [
+      {
+        "lifecycle": "applied",
+        "n": 6
+      }
+    ],
+    "events": [
+      {
+        "kind": "assign",
+        "detail": null,
+        "lifecycle": "consumed",
+        "n": 11
+      },
+      {
+        "kind": "assign",
+        "detail": "activate",
+        "lifecycle": "consumed",
+        "n": 5
+      },
+      {
+        "kind": "invalidate",
+        "detail": null,
+        "lifecycle": "consumed",
+        "n": 48
+      },
+      {
+        "kind": "lifecycle",
+        "detail": "closed",
+        "lifecycle": "consumed",
+        "n": 16
+      },
+      {
+        "kind": "mention",
+        "detail": "direct_contact",
+        "lifecycle": "consumed",
+        "n": 304
+      },
+      {
+        "kind": "mention",
+        "detail": "direct_contact",
+        "lifecycle": "pending",
+        "n": 336
+      },
+      {
+        "kind": "noop",
+        "detail": null,
+        "lifecycle": "consumed",
+        "n": 9
+      },
+      {
+        "kind": "wake",
+        "detail": null,
+        "lifecycle": "consumed",
+        "n": 441
+      },
+      {
+        "kind": "wake",
+        "detail": null,
+        "lifecycle": "pending",
+        "n": 157
+      },
+      {
+        "kind": "wake",
+        "detail": null,
+        "lifecycle": "superseded",
+        "n": 18
+      }
+    ],
+    "deliveries": [
+      {
+        "status": "delivered",
+        "reason": null,
+        "n": 645
+      },
+      {
+        "status": "queued",
+        "reason": null,
+        "n": 317
+      },
+      {
+        "status": "unreachable",
+        "reason": "@deepseek is not a concrete member in this run",
+        "n": 4
+      },
+      {
+        "status": "unreachable",
+        "reason": "@deepseek-12 has no resumable session",
+        "n": 3
+      },
+      {
+        "status": "unreachable",
+        "reason": "@deepseek-2 was reassigned; current assignee: @glm-3",
+        "n": 13
+      },
+      {
+        "status": "unreachable",
+        "reason": "@deepseek-5 was reassigned; current assignee: @deepseek-8",
+        "n": 129
+      },
+      {
+        "status": "unreachable",
+        "reason": "@glm-3 has no resumable session",
+        "n": 15
+      },
+      {
+        "status": "unreachable",
+        "reason": "@glm-4 was reassigned; current assignee: @glm-7",
+        "n": 141
+      },
+      {
+        "status": "unreachable",
+        "reason": "@glm-6 was reassigned; current assignee: @deepseek-9",
+        "n": 103
+      },
+      {
+        "status": "unreachable",
+        "reason": "@glm-7 has no resumable session",
+        "n": 5
+      },
+      {
+        "status": "unreachable",
+        "reason": "assigned member is unavailable",
+        "n": 140
+      }
+    ],
+    "latest_turns": [
+      {
+        "trigger_kind": "finalization",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:02:59.9358261Z",
+        "ended_at": "2026-09-27T16:03:53.192443821Z"
+      },
+      {
+        "trigger_kind": "finalization",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:02:04.806433828Z",
+        "ended_at": "2026-09-27T16:02:23.811682849Z"
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:00:34.5284494Z",
+        "ended_at": "2026-09-27T16:02:04.035503639Z"
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T15:28:10.212177592Z",
+        "ended_at": "2026-09-27T16:02:59.202018232Z"
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "failed",
+        "started_at": "2026-09-27T15:16:20.17313976Z",
+        "ended_at": "2026-09-27T15:28:10.177991345Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "running",
+        "started_at": "2026-09-27T14:41:46.632843535Z",
+        "ended_at": null
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T14:28:16.261871823Z",
+        "ended_at": "2026-09-27T14:41:43.739423187Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T14:22:20.677868696Z",
+        "ended_at": "2026-09-27T14:28:13.636656475Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T14:14:06.86222063Z",
+        "ended_at": "2026-09-27T14:22:18.09198558Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T14:10:27.560775099Z",
+        "ended_at": "2026-09-27T14:14:04.037433289Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "unknown",
+        "started_at": "2026-09-27T13:37:45.802757972Z",
+        "ended_at": "2026-09-27T14:09:45.186846838Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "unknown",
+        "started_at": "2026-09-27T13:37:06.724302391Z",
+        "ended_at": "2026-09-27T14:09:45.368114751Z"
+      }
+    ],
+    "recent_comments": [
+      {
+        "comment_id": 284,
+        "work_item_node_id": "pr:9",
+        "created_at": "2026-09-27T16:01:47.376448726Z",
+        "body": "最终交付回执(PR #9 负责人):本 PR 已合并,origin/main=5f64f3c(Merge local PR #9),合并后 main 树与验收候选 addd4c6 逐字节一致(git diff 为空),验收证据对交付内容有效。根 Issue #1 已据此关闭,子 Issue #2–#7 全部关闭。任务完整交付:REQ-1~REQ-6 全部 46 项需求 + 种子数据,平台启动契约(frontend npm run build → backend HOST/PORT 单端口服务,≤120s)验证通过。工作树干净,自检服务已全部停止,无遗留后台任务。"
+      },
+      {
+        "comment_id": 283,
+        "work_item_node_id": "issue:1",
+        "created_at": "2026-09-27T16:01:39.169406501Z",
+        "body": "# 最终交付确认(根 Issue #1 关闭)\n\nPR #9(develop → main 整合交付)已合并:origin/main 合并提交 **5f64f3c**,整合候选 **addd4c6** 已成为 main 祖先。关闭前最终核验:\n\n**交付一致性(刚执行)**\n- `git diff origin/develop origin/main` 为空:合并后 main 树与全量验收所针对的候选 addd4c6 **逐字节一致**,验收证据对交付内容有效。\n- 交付物齐备:`frontend/package.json`、`backend/package.json`、`docs/architecture.md` 契约文档、`checks/` 自动化检查;树中无 requirements/.arc/.factory26 等平台保留目录。\n\n**覆盖范围(全部 46 项需求,子 Issue #2–#7 全部关闭)**\n- #2 共享基础:monorepo 脚手架、账号认证 REQ-1-*、全局种子数据、架构契约\n- #3 组织治理 REQ-2-*(组织/团队层级/成员治理/仓库授权)\n- #4 仓库核心与代码版本控制 REQ-3-*/REQ-4-*(14 项)\n- #5 Issue 管理 REQ-5-*(9 项)\n- #6 PR 基础 REQ-6-2-*、6-3-1、6-3-2\n- #7 评审与合并控制 REQ-6-1、6-3-3/6-3-4、6-4、6-5、6-6\n\n**最终候选全量验收证据(非 3000 端口 4301-4324、临时 APP_DATA_PATH、TMPDIR=/tmp、服务已全部停止)**\n- frontend `npm run build` 成功(tsc -b + vite)\n- API 检查:check.js 105/105、check4.js 133/133、check6.js 66/66、check7.js 84/84,均 exit 0\n- Playwright 全量 10 个 spec:**58/58 通过**,exit 0\n- 平台启动契约:backend `HOST=0.0.0.0 PORT=3000 npm run start` 单端口服务 API + 构建产物,正常启动自动准备全部种子数据,≤120s\n\n**各子项回归复验承诺**已在整合验收中兑现或保留记录(REQ-2 治理回归 governance.spec.ts、REQ-5 issues-* 24 项均含在最终 58 项全量中)。若官方评测发现回归,可按各子 Issue 记录的复跑入口重开对应 Issue 并点名原负责人。\n\n根 Issue #1 就此关闭,任务完整交付。\n"
+      },
+      {
+        "comment_id": 282,
+        "work_item_node_id": "issue:1",
+        "created_at": "2026-09-27T16:01:21.567516108Z",
+        "body": "补充:上一条交付总结的 @ 提及因部分历史负责人会话已结束而未投递,内容本身不受影响。最终交付状态不变:PR #9 已合并到 main(5f64f3c),根 Issue 依据 PR #9 的全量验收证据关闭。"
+      },
+      {
+        "comment_id": 281,
+        "work_item_node_id": "issue:1",
+        "created_at": "2026-09-27T16:01:16.886569833Z",
+        "body": "#1 最终交付完成(develop → main 整合 PR #9 已合并,main @ 5f64f3c)\n\n**交付物**:简化版 GitHub 协作平台,覆盖 requirements 全部 46 项原子需求(REQ-1 账号认证、REQ-2 组织治理、REQ-3/4 仓库与代码版本控制、REQ-5 Issue 管理、REQ-6 PR/评审/合并),含全部指定种子数据。交付 frontend/package.json 与 backend/package.json;平台构建/启动契约验证通过(frontend npm run build;backend HOST/PORT 单端口服务 API + 构建产物,≤120s,3000 端口留评测)。\n\n**最终候选全量验收(根负责人执行,针对已发布 head addd4c6/merge 5f64f3c,非 3000 端口、临时数据目录、TMPDIR=/tmp、完成后服务全部停止)**\n- frontend build:成功\n- API 自检:check.js 105/105、check4.js 133/133、check6.js 66/66、check7.js 84/84(均 exit 0)\n- Playwright 浏览器全量 10 个 spec:**58/58 通过,exit 0**\n- 过程记录:首轮 issue7 REQ-6-3-3 一例超时,定位为测试辅助函数在客户端路由后于 diff 数据挂载前执行的竞态(产品行为无缺陷);修复 expandFiles 等待挂载(addd4c6,仅测试辅助、无断言变更)后全量复跑通过,运行所用测试文件与候选提交一致。\n\n**协作回执**:#2–#7 全部关闭合入;各子项负责人(@glm-3 @glm-7 @deepseek-8 @deepseek-9 @deepseek-11 @deepseek-12)的 REQ 回归复验承诺在本次全量验收中已覆盖(58 项含 governance/issue4/issues-*/pr-basics/issue7 全部检查),无需重开。\n\n本根 Issue 关闭:整合 PR #9 已按 --match-head-commit addd4c6 合并到 main(merge 5f64f3c),完整验收证据见 PR #9 正文。"
+      },
+      {
+        "comment_id": 280,
+        "work_item_node_id": "issue:6",
+        "created_at": "2026-09-27T14:39:17.530824067Z",
+        "body": "回执(@deepseek-10,Issue #7 侧):收到例行确认,无行动项。\n\n刚 git fetch origin 复核:origin/develop 头为 2accac1(Merge local PR #8,#7 交付 head 3e61a4a 包含于其中),与 comment 249 所述一致;#7 交付文件(backend/pulls.js、check7.js、run-browser-check7.sh、checks/issue7.spec.ts、PullChecks/PullFiles/pullShell)在 2accac1 树中均在列,与 #6 交付(check6.js、pr-basics.spec.ts、PullDetail/pullShell)无重叠、互不回归。\n\n#7 已关闭、无未决工作;若 develop→main 整合(根 Issue #1)需要 REQ-6 复验,可 @deepseek-10 提供 check7.js(85/85,端口 4197)与 issue7.spec.ts(6/6)复跑入口,或直接 @deepseek-11 复验 PR 基础。"
+      },
+      {
+        "comment_id": 279,
+        "work_item_node_id": "issue:3",
+        "created_at": "2026-09-27T14:21:21.971885327Z",
+        "body": "回执(@glm-7,thread 244,Issue #7 侧 @deepseek-10):核验一致,无行动项,与你结论互为印证。\n\n刚 git fetch origin 复核 f52ade5..2accac1 差异,确为纯 PR 域增量:\n- 新增 backend/pulls.js、backend/scripts/check7.js、checks/issue7.spec.ts、run-browser-check7.sh;server.js 改动仅三处——引入 pullsRouter/detailPayload/onBranchCommit、commits 写端点接入 onBranchCommit 钩子、GET /pulls/:number 重构为 detailPayload;seed.js 仅扩展 pulls 记录字段(checks.commit、mergedBy/mergedAt/mergeCommit)。\n- 未触碰 governance.js / repoaccess.js / issues.js / 权限模型,不涉及 REQ-2-*;REQ-2 既验行为(访客隔离、成员级联清理、授权唯一性/effective role 重算)不受 #7 交付影响。\n\n#7 维持关闭,无未决事项;REQ-2 回归复验按约定保留至 develop→main 整合验收在最终候选上执行,如届时发现权限模型相关回归,按约定重开 #3 点名你复验。"
+      },
+      {
+        "comment_id": 278,
+        "work_item_node_id": "issue:4",
+        "created_at": "2026-09-27T13:36:19.241349325Z",
+        "body": "#7/#8 侧例行核验确认(对应 comment 262)\n\n刚 git fetch origin + 本地复核,PR #8 / Issue #7 无未决事项,无需新增行动项:\n\n- origin/develop = 2accac1(Merge local PR #8,13:06:38),merge 双亲 = f52ade5 + 3e61a4a(验收 head),与 comment 248 结论一致;origin/issue-7-review-merge 仍为 3e61a4a。\n- Issue #7 已关闭(completed,comment 243),REQ-6-1、6-3-3/6-3-4、6-4、6-5、6-6 随 #8 合入 develop。\n- 评论 262 的核验与本项互不冲突:#7 交付物(check7.js、issue7.spec.ts、pulls.js 等)在 develop 完好;#4/#7 均无交叉行动项。\n\ndevelop→main 整合(@glm-1 统筹侧)如需 #7 范围回归复验,入口与约定同 comment 240:backend/scripts/check7.js(API)与 checks/issue7.spec.ts + pr-basics.spec.ts(Playwright),TMPDIR=/tmp、非 3000 端口、临时 APP_DATA_PATH、用后即停;需要时 @deepseek-12 按约定执行并回报证据。\n\n交接回 @glm-1:本项已交付且关闭,无阻塞。"
+      },
+      {
+        "comment_id": 277,
+        "work_item_node_id": "issue:3",
+        "created_at": "2026-09-27T13:36:13.176738554Z",
+        "body": "回执(#3 例行核验):#3 保持关闭,无行动项。\n\n核验(刚执行):git fetch origin,origin/develop 仍为 2accac1(#2–#7 全部在共享 develop),交付 head cc307ba 仍被包含(git merge-base --is-ancestor 验证通过);origin/main 仍为 d31aebf,尚无 develop → main 整合 PR;远程无新增分支;本 worktree 干净、无常驻服务(无 3000/4101/4102/4103 监听);自 comment 269 后本 Issue 无新评论或点名。\n\nREQ-2-* 回归复验约定继续保留至 develop → main 整合验收,在最终候选上执行;若发现回归(访客隔离、成员级联清理、授权唯一性/effective role 重算)或需求补充,请重开本 Issue 并点名 @glm-7;复跑入口:backend/scripts/check.js(105 项)与 checks/governance.spec.ts(5 项)。"
+      }
+    ],
+    "counts": {
+      "local_comments": 284,
+      "turns": 463,
+      "provider_sessions": 465,
+      "events": 1345,
+      "wake_batches": 471,
+      "assignments": 13,
+      "agent_instances": 13
+    },
+    "batch_failure": {
+      "empty_turns": [
+        {
+          "trigger_kind": "terminal_contact",
+          "n": 236
+        },
+        {
+          "trigger_kind": "wake_batch",
+          "n": 1
+        }
+      ],
+      "empty_by_item": [
+        {
+          "work_item_node_id": "issue:3",
+          "n": 91,
+          "first": "2026-09-27T11:57:46.605081199Z",
+          "last": "2026-09-27T13:37:06.724302391Z"
+        },
+        {
+          "work_item_node_id": "issue:4",
+          "n": 57,
+          "first": "2026-09-27T11:57:48.846747077Z",
+          "last": "2026-09-27T13:35:28.295999691Z"
+        },
+        {
+          "work_item_node_id": "issue:5",
+          "n": 39,
+          "first": "2026-09-27T11:57:50.254377617Z",
+          "last": "2026-09-27T13:36:38.754984379Z"
+        },
+        {
+          "work_item_node_id": "issue:6",
+          "n": 49,
+          "first": "2026-09-27T11:57:51.767287173Z",
+          "last": "2026-09-27T13:35:39.471855468Z"
+        },
+        {
+          "work_item_node_id": "pr:8",
+          "n": 1,
+          "first": "2026-09-27T11:57:42.118526915Z",
+          "last": "2026-09-27T11:57:42.118526915Z"
+        }
+      ],
+      "pending_bound_consumed": [
+        {
+          "event_id": "01a0e1f7-83fd-7590-94e1-5cdc28508f3a",
+          "work_item_node_id": "issue:7",
+          "reference": "新 Issue 需求",
+          "lifecycle": "pending",
+          "batch_id": "01a0e1f7-83fd-7590-94e1-5ce451518e17",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e27d-69e4-77a0-aff6-ffa332e7dbeb",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T10:51:05.096076235Z",
+          "ended_at": "2026-09-27T11:34:20.866911494Z"
+        },
+        {
+          "event_id": "01a0e27d-5e8e-7492-a7be-dd4d1392b486",
+          "work_item_node_id": "issue:7",
+          "reference": "issue:7 comment 50; read `comment view 50 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e1f7-83fd-7590-94e1-5ce451518e17",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e27d-69e4-77a0-aff6-ffa332e7dbeb",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T10:51:05.096076235Z",
+          "ended_at": "2026-09-27T11:34:20.866911494Z"
+        },
+        {
+          "event_id": "01a0e27e-77d9-7f01-9a5b-fe46e0b0979c",
+          "work_item_node_id": "issue:7",
+          "reference": "issue:7 comment 54; read `comment view 54 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e27e-77d9-7f01-9a5b-fe5ae7f5dbb6",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e2ba-6830-7083-a2f2-46c44dc464f1",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T11:57:42.344210312Z",
+          "ended_at": "2026-09-27T14:09:45.251846512Z"
+        },
+        {
+          "event_id": "01a0e27e-9353-7e02-8f45-4859539668f7",
+          "work_item_node_id": "issue:7",
+          "reference": "issue:1 comment 55; read `comment view 55 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e27e-77d9-7f01-9a5b-fe5ae7f5dbb6",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e2ba-6830-7083-a2f2-46c44dc464f1",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T11:57:42.344210312Z",
+          "ended_at": "2026-09-27T14:09:45.251846512Z"
+        },
+        {
+          "event_id": "01a0e27f-153d-7281-bf42-a82fb209f891",
+          "work_item_node_id": "issue:7",
+          "reference": "issue:1 comment 57; read `comment view 57 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e27e-77d9-7f01-9a5b-fe5ae7f5dbb6",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e2ba-6830-7083-a2f2-46c44dc464f1",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T11:57:42.344210312Z",
+          "ended_at": "2026-09-27T14:09:45.251846512Z"
+        },
+        {
+          "event_id": "01a0e27f-9da2-7033-8d91-150f49d0886f",
+          "work_item_node_id": "issue:7",
+          "reference": "issue:1 comment 58; read `comment view 58 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e27e-77d9-7f01-9a5b-fe5ae7f5dbb6",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e2ba-6830-7083-a2f2-46c44dc464f1",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T11:57:42.344210312Z",
+          "ended_at": "2026-09-27T14:09:45.251846512Z"
+        },
+        {
+          "event_id": "01a0e27f-a9b9-7541-81f6-27b668dbedb2",
+          "work_item_node_id": "issue:7",
+          "reference": "issue:1 comment 59; read `comment view 59 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e27e-77d9-7f01-9a5b-fe5ae7f5dbb6",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e2ba-6830-7083-a2f2-46c44dc464f1",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T11:57:42.344210312Z",
+          "ended_at": "2026-09-27T14:09:45.251846512Z"
+        },
+        {
+          "event_id": "01a0e27f-b342-70a0-be07-8336695d9c0a",
+          "work_item_node_id": "issue:7",
+          "reference": "issue:1 comment 60; read `comment view 60 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e27e-77d9-7f01-9a5b-fe5ae7f5dbb6",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e2ba-6830-7083-a2f2-46c44dc464f1",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T11:57:42.344210312Z",
+          "ended_at": "2026-09-27T14:09:45.251846512Z"
+        }
+      ],
+      "last_empty_turns": [
+        {
+          "turn_id": "01a0e315-6a8c-74d0-bb8a-8d4cf057f851",
+          "batch_id": "01a0e315-654b-7e22-bc2e-849e726062ff",
+          "started_at": "2026-09-27T13:37:06.724302391Z",
+          "ended_at": "2026-09-27T14:09:45.368114751Z",
+          "lifecycle": "unknown",
+          "work_item_node_id": "issue:3",
+          "event_count": 0,
+          "provider_session_id": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e315-60a4-7263-b12c-548418447b4e/2026-09-27T13-37-05-327Z_01a0e315-652f-7784-962d-0a5f7da3776f.jsonl",
+          "input_paths": [
+            "template/.factory26/20260927-080209-0b57147a/braid-state/turns/01a0e315-6a8c-74d0-bb8a-8d4cf057f851.md"
+          ],
+          "inputs": [
+            "请处理 Issue #3。\n\n对象：local/run#3\n\n使用 `braid issue view 3 --comments` 查看当前内容。\n"
+          ],
+          "native_matches": [],
+          "native_message_excerpt": []
+        },
+        {
+          "turn_id": "01a0e314-fd58-7df0-91e9-2c772b40af63",
+          "batch_id": "01a0e314-f75a-78b2-b4d5-f1bea46b1fc7",
+          "started_at": "2026-09-27T13:36:38.754984379Z",
+          "ended_at": "2026-09-27T14:09:45.238416142Z",
+          "lifecycle": "unknown",
+          "work_item_node_id": "issue:5",
+          "event_count": 0,
+          "provider_session_id": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-deepseek-fast-01a0e314-f18e-7642-8337-15c968c15fd7/2026-09-27T13-36-37-026Z_01a0e314-f6a2-71be-b06f-cfb6181e57b5.jsonl",
+          "input_paths": [
+            "template/.factory26/20260927-080209-0b57147a/braid-state/turns/01a0e314-fd58-7df0-91e9-2c772b40af63.md"
+          ],
+          "inputs": [
+            "请处理 Issue #5。\n\n对象：local/run#5\n\n使用 `braid issue view 5 --comments` 查看当前内容。\n"
+          ],
+          "native_matches": [
+            "template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-deepseek-fast-01a0e314-f18e-7642-8337-15c968c15fd7/sessions/--workspace-template-.factory26-20260927-080209-0b57147a-braid-state-worktrees-issue-5-pi-glm-fast-g1--/2026-09-27T13-36-37-026Z_01a0e314-f6a2-71be-b06f-cfb6181e57b5.jsonl"
+          ],
+          "native_message_excerpt": [
+            {
+              "role": "user",
+              "id": "aa46d423",
+              "timestamp": "2026-09-27T13:36:38.753Z",
+              "text_tail": "hread: 266 (open)\n\n## REQ-5 在最新 origin/develop head(2accac1,PR #8 合入后)复验记录(@deepseek-9)\n\n#5 已关闭且交付不变;PR #8(评审与合并控制)合入后 develop 由 f52ade5 前进到 2accac1,改动涉及 server.js 路由、seed.js、styles.css、docs/architecture.md 等 REQ-5 依赖的共享文件,故按 #223 的既有模式对当前 head 再做一次复验:\n\n- **API check**(backend/scripts/check.js,CHECK_PORT=4181,临时数据目录):105 passed / 0 failed\n- **REQ-5 + REQ-2 浏览器套件**(issues-list/create-edit/comments/meta/status + governance,CHECK_PORT=4192,临时 APP_DATA_PATH):首轮 28 passed / 1 failed,唯一失败为 Chromium `Page crashed`(signIn 阶段页面加载即崩溃,非应用断言),与 #223 记载的多 Agent 并发浏览器负载同类 flake;隔离重跑(CHECK_PORT=4194,临时数据目录)**29/29 passed,exit 0**\n- **frontend npm run build**:成功(vite build)\n- 服务已停止,端口 4192/4194 已释放,无残留进程\n\n变更面核查:自 merge e670fde 后,REQ-5 核心文件(backend/issues.js、IssueDetail/IssuesList/NewIssue.tsx、五个 issues-*.spec.ts)未被后续 PR 改动(git log 确认;PR #7 仅对共享 RepoLayout.tsx 增 1 行,PR #8 未触及 issues 路由/数据)。结论:REQ-5 交付在新基线(2accac1)上仍成立,本 Issue 维持关闭,无未决项。\n\n### Comment: local/run#issuecomment-276 by @deepseek-9\nPosted: 2026-09-27T13:35:51.193637114Z\nThread: 276 (open)\n\n## 状态确认(@deepseek-9):当前 develop head 与 #266 复验点一致,无需重跑\n\n#5 已关闭且交付不变。核查当前状态:\n\n- **基线**:origin/develop head = 2accac1,与 #266 完成全套复验(API check 105/105、REQ-5+REQ-2 浏览器 29/29、frontend build)的提交完全一致(git rev-parse 相同);此后无新 PR 合入,基线未再前进。\n- **变更面**:git log e670fde..origin/develop 显示 REQ-5 核心文件(backend/issues.js、IssueDetail/IssuesList/NewIssue.tsx、五个 issues-*.spec.ts)自 merge 后零改动;本地工作区与 origin/develop 逐文件一致。\n\n按\"不重复同一套已经有效的验收\"原则,基线未变化时不再重跑全套检查,直接沿用 #266 的有效证据。结论:#5 维持关闭,无未决项、无待办。\n\n\n\n请处理 Issue #5。\n\n对象：local/run#5\n\n使用 `braid issue view 5 --comments` 查看当前内容。\n"
+            }
+          ]
+        },
+        {
+          "turn_id": "01a0e314-15c7-7d20-9b52-cb2d4c7a3df5",
+          "batch_id": "01a0e314-11b6-7f21-a619-1aea7e7083f8",
+          "started_at": "2026-09-27T13:35:39.471855468Z",
+          "ended_at": "2026-09-27T14:09:45.277248481Z",
+          "lifecycle": "unknown",
+          "work_item_node_id": "issue:6",
+          "event_count": 0,
+          "provider_session_id": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-deepseek-fast-01a0e314-0c62-76f1-b1ae-8663aa64bb0a/2026-09-27T13-35-38-314Z_01a0e314-114a-7136-bb7d-37dd2c233093.jsonl",
+          "input_paths": [
+            "template/.factory26/20260927-080209-0b57147a/braid-state/turns/01a0e314-15c7-7d20-9b52-cb2d4c7a3df5.md"
+          ],
+          "inputs": [
+            "请处理 Issue #6。\n\n对象：local/run#6\n\n使用 `braid issue view 6 --comments` 查看当前内容。\n"
+          ]
+        },
+        {
+          "turn_id": "01a0e313-ea1d-7bc0-af65-8bf99d8734ec",
+          "batch_id": "01a0e313-e414-7931-993a-03888b1af548",
+          "started_at": "2026-09-27T13:35:28.295999691Z",
+          "ended_at": "2026-09-27T14:09:45.224280234Z",
+          "lifecycle": "unknown",
+          "work_item_node_id": "issue:4",
+          "event_count": 0,
+          "provider_session_id": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-deepseek-fast-01a0e313-de18-7380-bbed-68dcfeb68943/2026-09-27T13-35-26-711Z_01a0e313-e3f7-73b2-80ad-7d1097319f63.jsonl",
+          "input_paths": [
+            "template/.factory26/20260927-080209-0b57147a/braid-state/turns/01a0e313-ea1d-7bc0-af65-8bf99d8734ec.md"
+          ],
+          "inputs": [
+            "请处理 Issue #4。\n\n对象：local/run#4\n\n使用 `braid issue view 4 --comments` 查看当前内容。\n"
+          ]
+        }
+      ],
+      "pending_bound_consumed_count": 160
+    },
+    "outbox": [
+      {
+        "operation": "comment_create",
+        "lifecycle": "pending",
+        "n": 11
+      }
+    ],
+    "owner_leases": 0,
+    "terminal_contacts_without_comment_after": [
+      {
+        "n": 0,
+        "first": null,
+        "last": null
+      }
+    ],
+    "empty_terminal_fraction": {
+      "all_turns": 396,
+      "empty_turns": 236
+    },
+    "pending_direct_contact_examples": [
+      {
+        "event_id": "01a0e286-c7dd-7d22-9499-2f23da73c97c",
+        "work_item_node_id": "issue:5",
+        "reference": "issue:1 comment 79; read `comment view 79 --thread`",
+        "lifecycle": "pending",
+        "batch_id": "01a0e2a4-cba4-7731-8ccf-dc86fba68357",
+        "batch_lifecycle": "consumed",
+        "turn_id": "01a0e2a4-d365-7b12-8c37-1bc0fbca4ae4",
+        "turn_lifecycle": "unknown",
+        "started_at": "2026-09-27T11:34:08.272427724Z",
+        "ended_at": "2026-09-27T11:57:08.883903586Z"
+      },
+      {
+        "event_id": "01a0e287-fee3-7430-9c4b-88227a48f922",
+        "work_item_node_id": "issue:4",
+        "reference": "issue:7 comment 82; read `comment view 82 --thread`",
+        "lifecycle": "pending",
+        "batch_id": "01a0e2a1-b4ec-76a0-84f6-e0591acf6bb6",
+        "batch_lifecycle": "consumed",
+        "turn_id": "01a0e2a1-bcbf-78d3-8767-ce33e480096a",
+        "turn_lifecycle": "unknown",
+        "started_at": "2026-09-27T11:30:46.67050672Z",
+        "ended_at": "2026-09-27T11:57:08.869370452Z"
+      },
+      {
+        "event_id": "01a0e294-c68b-78a2-a163-f53093bfd357",
+        "work_item_node_id": "issue:6",
+        "reference": "issue:3 comment 132; read `comment view 132 --thread`",
+        "lifecycle": "pending",
+        "batch_id": "01a0e2a4-61c3-7761-975f-27fc54d47671",
+        "batch_lifecycle": "consumed",
+        "turn_id": "01a0e2a4-6745-7333-9816-fd0593a783c7",
+        "turn_lifecycle": "unknown",
+        "started_at": "2026-09-27T11:33:40.466573583Z",
+        "ended_at": "2026-09-27T11:57:39.106291059Z"
+      }
+    ],
+    "manifest_shape": "list",
+    "root_lifecycle": [
+      {
+        "kind": "lifecycle",
+        "detail": "closed",
+        "observed_at": "2026-09-27T16:01:21.578469561Z",
+        "reference": "issue #1 CLOSED: 全部 6 个子 Issue(#2–#7)已合入 develop;develop → main 整合 PR #9 已按 --match-head-commit addd4c6 合并(main @ 5f64f3c)。最终候选全量验收:frontend build 成功;API 自检 105+133+66+84 全部通过;Playwright 全量 58/58 exit 0。覆盖 requirements 全部 46 项需求与种子数据,平台启动契约验证通过。"
+      }
+    ],
+    "database_sha256": "115150ff64332beaffa479e32f4c2423a6c05db505fdd29e1d5a81203561e5c8",
+    "archive_has_wal": false,
+    "archive_sha256": "d4ca397ed629598ebe2801f75cfaf6f51d74454ae4bd831c21ccd82153af5200"
+  },
+  "sheet": {
+    "archive_db": "template/.factory26/20260927-082825-d9c4f6ea/braid-state/braid.sqlite3",
+    "integrity": [
+      {
+        "quick_check": "ok"
+      }
+    ],
+    "items": [
+      {
+        "kind": "issue",
+        "number": 1,
+        "state": "CLOSED",
+        "desired_member_login": "glm-1",
+        "observed_at": "2026-09-27T16:44:32.637110937Z"
+      },
+      {
+        "kind": "issue",
+        "number": 2,
+        "state": "CLOSED",
+        "desired_member_login": "deepseek-2",
+        "observed_at": "2026-09-27T16:31:13.483675668Z"
+      },
+      {
+        "kind": "issue",
+        "number": 3,
+        "state": "CLOSED",
+        "desired_member_login": "glm-3",
+        "observed_at": "2026-09-27T16:44:31.225878764Z"
+      },
+      {
+        "kind": "issue",
+        "number": 4,
+        "state": "CLOSED",
+        "desired_member_login": "deepseek-4",
+        "observed_at": "2026-09-27T16:58:14.652247041Z"
+      },
+      {
+        "kind": "issue",
+        "number": 5,
+        "state": "CLOSED",
+        "desired_member_login": "glm-5",
+        "observed_at": "2026-09-27T16:58:26.258083645Z"
+      },
+      {
+        "kind": "issue",
+        "number": 6,
+        "state": "CLOSED",
+        "desired_member_login": "glm-6",
+        "observed_at": "2026-09-27T16:44:31.937037579Z"
+      },
+      {
+        "kind": "pr",
+        "number": 1,
+        "state": "MERGED",
+        "desired_member_login": "glm-7",
+        "observed_at": "2026-09-27T16:41:35.74238937Z"
+      },
+      {
+        "kind": "pr",
+        "number": 2,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T08:57:54.460598758Z"
+      },
+      {
+        "kind": "pr",
+        "number": 3,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T09:36:26.555000506Z"
+      },
+      {
+        "kind": "pr",
+        "number": 4,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T09:48:46.150205529Z"
+      },
+      {
+        "kind": "pr",
+        "number": 5,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T09:57:31.266074681Z"
+      },
+      {
+        "kind": "pr",
+        "number": 6,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T10:32:21.133348122Z"
+      },
+      {
+        "kind": "pr",
+        "number": 7,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T12:00:44.759161375Z"
+      },
+      {
+        "kind": "pr",
+        "number": 8,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T12:21:22.157689193Z"
+      },
+      {
+        "kind": "pr",
+        "number": 9,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T15:22:41.877125647Z"
+      },
+      {
+        "kind": "pr",
+        "number": 10,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T14:58:33.837321045Z"
+      },
+      {
+        "kind": "pr",
+        "number": 11,
+        "state": "MERGED",
+        "desired_member_login": null,
+        "observed_at": "2026-09-27T13:26:49.957593899Z"
+      }
+    ],
+    "turns": [
+      {
+        "trigger_kind": "finalization",
+        "lifecycle": "completed",
+        "n": 6
+      },
+      {
+        "trigger_kind": "finalization",
+        "lifecycle": "failed",
+        "n": 1
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "n": 589
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "failed",
+        "n": 2
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "running",
+        "n": 2
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "unknown",
+        "n": 16
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "completed",
+        "n": 68
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "failed",
+        "n": 1
+      },
+      {
+        "trigger_kind": "wake_batch",
+        "lifecycle": "unknown",
+        "n": 8
+      }
+    ],
+    "sessions": [
+      {
+        "lifecycle": "idle",
+        "n": 2
+      },
+      {
+        "lifecycle": "replaced",
+        "n": 679
+      },
+      {
+        "lifecycle": "running",
+        "n": 2
+      },
+      {
+        "lifecycle": "sleeping",
+        "n": 3
+      }
+    ],
+    "resets": [
+      {
+        "lifecycle": "applied",
+        "n": 84
+      }
+    ],
+    "reset_errors": [],
+    "merges": [
+      {
+        "lifecycle": "applied",
+        "n": 11
+      }
+    ],
+    "events": [
+      {
+        "kind": "assign",
+        "detail": null,
+        "lifecycle": "consumed",
+        "n": 6
+      },
+      {
+        "kind": "assign",
+        "detail": "activate",
+        "lifecycle": "consumed",
+        "n": 1
+      },
+      {
+        "kind": "invalidate",
+        "detail": null,
+        "lifecycle": "consumed",
+        "n": 78
+      },
+      {
+        "kind": "lifecycle",
+        "detail": "closed",
+        "lifecycle": "consumed",
+        "n": 17
+      },
+      {
+        "kind": "mention",
+        "detail": "direct_contact",
+        "lifecycle": "consumed",
+        "n": 154
+      },
+      {
+        "kind": "mention",
+        "detail": "direct_contact",
+        "lifecycle": "pending",
+        "n": 253
+      },
+      {
+        "kind": "noop",
+        "detail": null,
+        "lifecycle": "consumed",
+        "n": 16
+      },
+      {
+        "kind": "wake",
+        "detail": null,
+        "lifecycle": "consumed",
+        "n": 360
+      },
+      {
+        "kind": "wake",
+        "detail": null,
+        "lifecycle": "pending",
+        "n": 137
+      }
+    ],
+    "deliveries": [
+      {
+        "status": "delivered",
+        "reason": null,
+        "n": 605
+      },
+      {
+        "status": "queued",
+        "reason": null,
+        "n": 229
+      },
+      {
+        "status": "unreachable",
+        "reason": "@3d722a2 is not a concrete member in this run",
+        "n": 2
+      },
+      {
+        "status": "unreachable",
+        "reason": "@46ff084 is not a concrete member in this run",
+        "n": 1
+      },
+      {
+        "status": "unreachable",
+        "reason": "@57683a8 is not a concrete member in this run",
+        "n": 1
+      },
+      {
+        "status": "unreachable",
+        "reason": "@7ad4be2 is not a concrete member in this run",
+        "n": 1
+      },
+      {
+        "status": "unreachable",
+        "reason": "@gglm-5 is not a concrete member in this run",
+        "n": 1
+      },
+      {
+        "status": "unreachable",
+        "reason": "@glm-2 is not a concrete member in this run",
+        "n": 1
+      },
+      {
+        "status": "unreachable",
+        "reason": "@playwright is not a concrete member in this run",
+        "n": 1
+      }
+    ],
+    "latest_turns": [
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "running",
+        "started_at": "2026-09-27T16:58:27.349049672Z",
+        "ended_at": null
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:58:18.819789374Z",
+        "ended_at": "2026-09-27T16:58:25.554527478Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "running",
+        "started_at": "2026-09-27T16:58:15.753938653Z",
+        "ended_at": null
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:58:07.382149582Z",
+        "ended_at": "2026-09-27T16:58:16.867233292Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:57:50.11847172Z",
+        "ended_at": "2026-09-27T16:58:05.103753276Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:57:41.56291256Z",
+        "ended_at": "2026-09-27T16:57:48.047449585Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:57:31.919970458Z",
+        "ended_at": "2026-09-27T16:58:13.985480643Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:57:30.062564069Z",
+        "ended_at": "2026-09-27T16:57:39.326408866Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:57:14.611826988Z",
+        "ended_at": "2026-09-27T16:57:27.846636663Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:57:07.836657988Z",
+        "ended_at": "2026-09-27T16:57:29.820619953Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:56:59.610499417Z",
+        "ended_at": "2026-09-27T16:57:12.590383796Z"
+      },
+      {
+        "trigger_kind": "terminal_contact",
+        "lifecycle": "completed",
+        "started_at": "2026-09-27T16:56:49.094566879Z",
+        "ended_at": "2026-09-27T16:56:57.57543402Z"
+      }
+    ],
+    "recent_comments": [
+      {
+        "comment_id": 216,
+        "work_item_node_id": "issue:4",
+        "created_at": "2026-09-27T16:44:31.225680656Z",
+        "body": "## 复核确认（main@4023362 未变）— 维持关闭，无待办 ✅\n\n@glm-1 本次唤醒复核 Issue #4 终态：origin/main 仍为 4023362、origin/develop 仍为 8152b05（与 comment 214 一致，之后无新提交、无新评论；两者内容 diff 为空）。已重新在临时 worktree 检出 origin/main@4023362 取证：\n\n- backend `npm test` 一条命令：**66/66 PASS**（formula-engine 42 + structure 17 + clipboard 7），structure 17 项为本子项；退出码 0；\n- REQ-2 交付文件均在 main：checks/worksheets.spec.ts（6 项）、checks/structure.spec.ts（5 项）、backend/test/structure.test.mjs（17 项）；\n- npm test script 已含全套件（formula-engine && structure && clipboard）。\n\nIssue #4 维持关闭，无待办；根整合验收已覆盖本子项全部检查（36/36 浏览器 + 66/66 后端单测），无需进一步行动。"
+      },
+      {
+        "comment_id": 215,
+        "work_item_node_id": "issue:4",
+        "created_at": "2026-09-27T16:44:04.162000202Z",
+        "body": "@deepseek-4 收到（comment 214），与此前 213/208/204/202 等历次回执内容一致：main@4023362 未变、REQ-2 证据有效、无待办——核对归档，无需再取证。\n\n请停止此类唤醒式重复复核：根 Issue #1 已关闭交付（PR #1 合并，最终验收 66/66 单测 + 36/36 检查归档于 pr:1 comment 170/171），#4 与全部子 Issue 均处终态，按根 Issue comment 85/194 约定，纯确认类回执不再逐条回复。除非出现真实回归或新需求（届时 reopen 并点名），本 Issue 不需要任何后续动作。我已 unsubscribe 本 Issue，不再响应此类同步。"
+      },
+      {
+        "comment_id": 214,
+        "work_item_node_id": "issue:4",
+        "created_at": "2026-09-27T16:43:41.684944191Z",
+        "body": "## 复核确认（main@4023362 未变）— 维持关闭，无待办 ✅\n\n@glm-1 本次唤醒复核 Issue #4 终态：origin/main 仍为 4023362、origin/develop 仍为 8152b05（与 comment 213 一致，之后无新提交、无新评论；两者内容 diff 为空）。已重新在临时 worktree 检出 origin/main@4023362 取证：\n\n- backend `npm test` 一条命令：**66/66 PASS**（formula-engine 42 + structure 17 + clipboard 7），structure 17 项为本子项；退出码 0；\n- REQ-2 交付文件均在 main：checks/worksheets.spec.ts（6 项）、checks/structure.spec.ts（5 项）、backend/test/structure.test.mjs（17 项）；\n- npm test script 已含全套件（formula-engine && structure && clipboard）。\n\nIssue #4 维持关闭，无待办；根整合验收已覆盖本子项全部检查（36/36 浏览器 + 66/66 后端单测），无需进一步行动。"
+      },
+      {
+        "comment_id": 213,
+        "work_item_node_id": "issue:4",
+        "created_at": "2026-09-27T16:42:29.659641413Z",
+        "body": "@glm-1 复核确认（main@4023362 未变）— 维持关闭，无待办 ✅\n\n本次唤醒复核 Issue #4 终态：origin/main 仍为 4023362、origin/develop 仍为 8152b05（与 comment 208 一致，之后无新提交、无新评论；两者内容 diff 为空）。已重新在临时 worktree 检出 origin/main@4023362 取证：\n\n- backend `npm test` 一条命令：**66/66 PASS**（formula-engine 42 + structure 17 + clipboard 7），structure 17 项为本子项；退出码 0；\n- REQ-2 交付文件均在 main：checks/worksheets.spec.ts（6 项）、checks/structure.spec.ts（5 项）、backend/test/structure.test.mjs（17 项）；\n- npm test script 已含全套件（formula-engine && structure && clipboard）。\n\nIssue #4 维持关闭，无待办；根整合验收已覆盖本子项全部检查（36/36 浏览器 + 66/66 后端单测），无需进一步行动。"
+      },
+      {
+        "comment_id": 212,
+        "work_item_node_id": "issue:6",
+        "created_at": "2026-09-27T16:42:20.77150322Z",
+        "body": "整合 PR #1 侧（@glm-7）确认 comment 211 回执，并采纳你的提议：状态已连续多轮一致（origin/main=4023362、origin/develop=8152b05、两树 diff 为空，刚 fetch 复核），此后对无实质变化的例行复核不再逐轮发确认回执。出现实质变化（新提交、验收失败、reopen）时我会立即响应并点名相关方。PR #1 已合并交付并关闭，验收证据归档于 PR #1 comment 170，无待办。\n"
+      },
+      {
+        "comment_id": 211,
+        "work_item_node_id": "issue:6",
+        "created_at": "2026-09-27T16:41:31.475649183Z",
+        "body": "REQ-5 负责人（@glm-6）最后回执：已知悉 issue #4 comment 208 复核（main@4023362 未变，与 202/204 结论相同，无新提交）。本地 fetch 核对一致：origin/main=4023362、origin/develop=8152b05，两树 diff 为空；a6b9a7e 仍为 main 祖先（PR #10 经 merge 8152b05 完整包含）。Issue #6 维持关闭，无待办。\n\n重申 comment 209 提议：各子项与整合方状态已连续多轮一致且无任何变化，此后对无实质内容的例行复核（无新提交、无回归失败、无 reopen）我将不再逐轮发确认回执；出现实质变化（新提交、验收失败、reopen）时我会立即响应并点名相关方。\n"
+      },
+      {
+        "comment_id": 210,
+        "work_item_node_id": "issue:6",
+        "created_at": "2026-09-27T16:41:27.192353987Z",
+        "body": "@glm-7 同意采纳该建议：双方状态已连续多轮一致（origin/main=4023362、origin/develop=8152b05，两树 diff 为空，a6b9a7e 为 main 祖先），停止逐轮互发确认回执。PR #1 已合并交付并关闭，验收证据归档于 PR #1 comment 170。后续仅在有实质变化（新提交、回归失败、reopen）时点名对方；无实质变化则不再回复。"
+      },
+      {
+        "comment_id": 209,
+        "work_item_node_id": "issue:6",
+        "created_at": "2026-09-27T16:40:51.573493557Z",
+        "body": "@glm-7 收讫本轮同步（comment 207），与我本地 fetch 核对一致：origin/main=4023362、origin/develop=8152b05，两树 diff 为空，a6b9a7e 为 main 祖先，无任何变化。REQ-5 侧确认交付闭环、无待办。建议：双方状态已连续多轮一致，后续若无实际内容（新提交、回归失败或 reopen），不再逐轮互发确认回执，避免噪音；有实质变化时再点名对方即可。"
+      }
+    ],
+    "counts": {
+      "local_comments": 216,
+      "turns": 693,
+      "provider_sessions": 686,
+      "events": 1022,
+      "wake_batches": 693,
+      "assignments": 7,
+      "agent_instances": 7
+    },
+    "batch_failure": {
+      "empty_turns": [
+        {
+          "trigger_kind": "terminal_contact",
+          "n": 441
+        },
+        {
+          "trigger_kind": "wake_batch",
+          "n": 2
+        }
+      ],
+      "empty_by_item": [
+        {
+          "work_item_node_id": "issue:1",
+          "n": 1,
+          "first": "2026-09-27T14:01:01.478787256Z",
+          "last": "2026-09-27T14:01:01.478787256Z"
+        },
+        {
+          "work_item_node_id": "issue:2",
+          "n": 12,
+          "first": "2026-09-27T11:47:54.150744424Z",
+          "last": "2026-09-27T13:36:29.760000186Z"
+        },
+        {
+          "work_item_node_id": "issue:3",
+          "n": 73,
+          "first": "2026-09-27T11:47:57.57726305Z",
+          "last": "2026-09-27T13:35:36.411861862Z"
+        },
+        {
+          "work_item_node_id": "issue:4",
+          "n": 81,
+          "first": "2026-09-27T14:01:03.86527801Z",
+          "last": "2026-09-27T16:58:15.753938653Z"
+        },
+        {
+          "work_item_node_id": "issue:5",
+          "n": 275,
+          "first": "2026-09-27T14:01:05.775640315Z",
+          "last": "2026-09-27T16:58:27.349049672Z"
+        },
+        {
+          "work_item_node_id": "pr:1",
+          "n": 1,
+          "first": "2026-09-27T11:47:49.955887195Z",
+          "last": "2026-09-27T11:47:49.955887195Z"
+        }
+      ],
+      "pending_bound_consumed": [
+        {
+          "event_id": "01a0e1ff-a610-78c2-a3e9-405e52ff0ec5",
+          "work_item_node_id": "issue:5",
+          "reference": "新 Issue 需求",
+          "lifecycle": "pending",
+          "batch_id": "01a0e1ff-a610-78c2-a3e9-4065b6a9e29c",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e24f-d3b6-7cb2-b3b2-2ba9b6c02ef6",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T10:01:17.502045375Z",
+          "ended_at": "2026-09-27T11:47:16.517382388Z"
+        },
+        {
+          "event_id": "01a0e1ff-a617-70e3-8760-3b7044976b72",
+          "work_item_node_id": "issue:6",
+          "reference": "新 Issue 需求",
+          "lifecycle": "pending",
+          "batch_id": "01a0e1ff-a618-7790-822f-19edb27b59d2",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e24f-d3fb-7e52-b8a2-06728b92545c",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T10:01:17.580516441Z",
+          "ended_at": "2026-09-27T10:35:28.947913147Z"
+        },
+        {
+          "event_id": "01a0e250-8166-7b71-aa40-dc09a86effd8",
+          "work_item_node_id": "issue:4",
+          "reference": "issue:1 comment 17; read `comment view 17 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e250-8166-7b71-aa40-dc1d9d265593",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e26d-e350-7ab2-918d-8da52fd11935",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T10:34:07.96157291Z",
+          "ended_at": "2026-09-27T10:35:28.972756141Z"
+        },
+        {
+          "event_id": "01a0e250-8167-7382-938c-932420da1ab5",
+          "work_item_node_id": "issue:6",
+          "reference": "issue:1 comment 17; read `comment view 17 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e250-8167-7382-938c-933da86a6a78",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e2b1-5e16-7540-9957-529a4a2b3678",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T11:47:49.97681612Z",
+          "ended_at": "2026-09-27T14:00:41.579543309Z"
+        },
+        {
+          "event_id": "01a0e251-22dd-70f1-a626-691fa3494909",
+          "work_item_node_id": "issue:4",
+          "reference": "issue:1 comment 19; read `comment view 19 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e250-8166-7b71-aa40-dc1d9d265593",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e26d-e350-7ab2-918d-8da52fd11935",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T10:34:07.96157291Z",
+          "ended_at": "2026-09-27T10:35:28.972756141Z"
+        },
+        {
+          "event_id": "01a0e251-22de-70d1-96cc-86c89408125a",
+          "work_item_node_id": "issue:6",
+          "reference": "issue:1 comment 19; read `comment view 19 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e250-8167-7382-938c-933da86a6a78",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e2b1-5e16-7540-9957-529a4a2b3678",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T11:47:49.97681612Z",
+          "ended_at": "2026-09-27T14:00:41.579543309Z"
+        },
+        {
+          "event_id": "01a0e251-3b80-7373-b41c-e210058eaaa7",
+          "work_item_node_id": "issue:4",
+          "reference": "issue:4 comment 20; read `comment view 20 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e250-8166-7b71-aa40-dc1d9d265593",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e26d-e350-7ab2-918d-8da52fd11935",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T10:34:07.96157291Z",
+          "ended_at": "2026-09-27T10:35:28.972756141Z"
+        },
+        {
+          "event_id": "01a0e251-3b95-7010-aed5-d5e6017b20c2",
+          "work_item_node_id": "issue:6",
+          "reference": "issue:6 comment 22; read `comment view 22 --thread`",
+          "lifecycle": "pending",
+          "batch_id": "01a0e250-8167-7382-938c-933da86a6a78",
+          "batch_lifecycle": "consumed",
+          "turn_id": "01a0e2b1-5e16-7540-9957-529a4a2b3678",
+          "trigger_kind": "wake_batch",
+          "turn_lifecycle": "unknown",
+          "started_at": "2026-09-27T11:47:49.97681612Z",
+          "ended_at": "2026-09-27T14:00:41.579543309Z"
+        }
+      ],
+      "last_empty_turns": [
+        {
+          "turn_id": "01a0e3cd-c088-7872-b44c-196649a253a5",
+          "batch_id": "01a0e3cd-bc52-7e41-b83e-c42c32ee97bd",
+          "started_at": "2026-09-27T16:58:27.349049672Z",
+          "ended_at": null,
+          "lifecycle": "running",
+          "work_item_node_id": "issue:5",
+          "event_count": 0,
+          "provider_session_id": "/workspace/template/.factory26/20260927-082825-d9c4f6ea/work/native-homes/pi-glm-fast-01a0e3cd-b9a9-7681-bff2-6550151c66e7/2026-09-27T16-58-26-234Z_01a0e3cd-bc3a-75df-8396-d0a72ca0999e.jsonl",
+          "input_paths": [
+            "template/.factory26/20260927-082825-d9c4f6ea/braid-state/turns/01a0e3cd-c088-7872-b44c-196649a253a5.md"
+          ],
+          "inputs": [
+            "请处理 Issue #5。\n\n对象：local/run#5\n\n使用 `braid issue view 5 --comments` 查看当前内容。\n"
+          ],
+          "native_matches": [],
+          "native_message_excerpt": []
+        },
+        {
+          "turn_id": "01a0e3cd-9f3b-7620-b7e5-e0822c1c6c7f",
+          "batch_id": "01a0e3cd-9a45-7cf3-b9a3-6a4e65e88bab",
+          "started_at": "2026-09-27T16:58:18.819789374Z",
+          "ended_at": "2026-09-27T16:58:25.554527478Z",
+          "lifecycle": "completed",
+          "work_item_node_id": "issue:5",
+          "event_count": 0,
+          "provider_session_id": "/workspace/template/.factory26/20260927-082825-d9c4f6ea/work/native-homes/pi-glm-fast-01a0e3cd-97b8-7052-8d86-40e65c41eb5f/2026-09-27T16-58-17-526Z_01a0e3cd-9a36-71f5-b5dd-40f7ba8d12e1.jsonl",
+          "input_paths": [
+            "template/.factory26/20260927-082825-d9c4f6ea/braid-state/turns/01a0e3cd-9f3b-7620-b7e5-e0822c1c6c7f.md"
+          ],
+          "inputs": [
+            "请处理 Issue #5。\n\n对象：local/run#5\n\n使用 `braid issue view 5 --comments` 查看当前内容。\n"
+          ],
+          "native_matches": [
+            "template/.factory26/20260927-082825-d9c4f6ea/work/native-homes/pi-glm-fast-01a0e3cd-97b8-7052-8d86-40e65c41eb5f/2026-09-27T16-58-17-526Z_01a0e3cd-9a36-71f5-b5dd-40f7ba8d12e1.jsonl"
+          ],
+          "native_message_excerpt": [
+            {
+              "role": "user",
+              "id": "36b88e5b",
+              "timestamp": "2026-09-27T16:58:18.819Z",
+              "text_tail": "113Z\nThread: 21 (resolved)\nState: folded by thread resolution; use comment view --include-hidden to read\n\n### Comment: local/run#issuecomment-35 by @glm-1\nPosted: 2026-09-27T10:12:04.052710104Z\nThread: 35 (resolved)\nState: folded by thread resolution; use comment view --include-hidden to read\n\n### Comment: local/run#issuecomment-110 by @glm-1\nPosted: 2026-09-27T12:36:39.65590392Z\nThread: 110 (resolved)\nState: folded by thread resolution; use comment view --include-hidden to read\n\n### Comment: local/run#issuecomment-142 by @glm-5\nPosted: 2026-09-27T13:30:43.361570794Z\nThread: 142 (resolved)\nState: folded by thread resolution; use comment view --include-hidden to read\n\n### Comment: local/run#issuecomment-148 by @glm-5\nPosted: 2026-09-27T14:02:56.808186133Z\nThread: 142 (resolved)\nReply to: comment 142\nState: folded by thread resolution; use comment view --include-hidden to read\n\n### Comment: local/run#issuecomment-149 by @glm-5\nPosted: 2026-09-27T14:04:38.593887213Z\nThread: 110 (resolved)\nReply to: comment 110\nState: folded by thread resolution; use comment view --include-hidden to read\n\n### Comment: local/run#issuecomment-155 by @glm-5\nPosted: 2026-09-27T14:37:37.836263932Z\nThread: 21 (resolved)\nReply to: comment 21\nState: folded by thread resolution; use comment view --include-hidden to read\n\n### Comment: local/run#issuecomment-156 by @glm-5\nPosted: 2026-09-27T14:37:56.950129836Z\nThread: 35 (resolved)\nReply to: comment 35\nState: folded by thread resolution; use comment view --include-hidden to read\n\n\n\n请处理 Issue #5。\n\n对象：local/run#5\n\n使用 `braid issue view 5 --comments` 查看当前内容。\n"
+            },
+            {
+              "role": "assistant",
+              "id": "81f5417c",
+              "timestamp": "2026-09-27T16:58:25.301Z",
+              "text_tail": "Issue #5 已经处于 CLOSED 状态，无需进一步处理。当前状态确认：\n\n- **交付**：REQ-3-1-2（批量粘贴）、REQ-3-2-1（区域复制/剪切/粘贴）、REQ-3-2-2（撤销/重做）均已实现并通过 PR #9 合入 develop（merge 7ad4be2，head a0faa97）。\n- **验收**：backend 66/66 单测 + Playwright 30/30 浏览器检查全部通过，覆盖了验收要点中的粘贴矩形、A1:B2→D1:E2 公式相对引用、剪切移动、连续 undo/redo、验证拒绝回滚及结构变更撤销链路。\n- **交接**：验证契约按根裁决以本实现为源（validation.js + PUT validation-rules），已向父 Issue #1 交接；develop→main 最终整合验收由根负责人执行，父 Issue #1 也已关闭。\n\n没有遗留工作项，不需要重新打开或补充操作。"
+            }
+          ]
+        },
+        {
+          "turn_id": "01a0e3cd-933b-7081-9b42-3954d26f1960",
+          "batch_id": "01a0e3cd-8efc-7023-bab9-c2475da93d33",
+          "started_at": "2026-09-27T16:58:15.753938653Z",
+          "ended_at": null,
+          "lifecycle": "running",
+          "work_item_node_id": "issue:4",
+          "event_count": 0,
+          "provider_session_id": "/workspace/template/.factory26/20260927-082825-d9c4f6ea/work/native-homes/pi-deepseek-fast-01a0e3cd-8c78-77a1-8a66-802f079bdc56/2026-09-27T16-58-14-636Z_01a0e3cd-8eec-77c3-83f4-a2362b54851c.jsonl",
+          "input_paths": [
+            "template/.factory26/20260927-082825-d9c4f6ea/braid-state/turns/01a0e3cd-933b-7081-9b42-3954d26f1960.md"
+          ],
+          "inputs": [
+            "请处理 Issue #4。\n\n对象：local/run#4\n\n使用 `braid issue view 4 --comments` 查看当前内容。\n"
+          ]
+        },
+        {
+          "turn_id": "01a0e3cd-728e-78b2-a870-6b0f01c39bef",
+          "batch_id": "01a0e3cd-6c9c-7371-b543-ba334c5acb28",
+          "started_at": "2026-09-27T16:58:07.382149582Z",
+          "ended_at": "2026-09-27T16:58:16.867233292Z",
+          "lifecycle": "completed",
+          "work_item_node_id": "issue:5",
+          "event_count": 0,
+          "provider_session_id": "/workspace/template/.factory26/20260927-082825-d9c4f6ea/work/native-homes/pi-glm-fast-01a0e3cd-69c5-7b92-a295-b7e7ef5ffff4/2026-09-27T16-58-05-837Z_01a0e3cd-6c8d-7530-9883-f445b5c1786e.jsonl",
+          "input_paths": [
+            "template/.factory26/20260927-082825-d9c4f6ea/braid-state/turns/01a0e3cd-728e-78b2-a870-6b0f01c39bef.md"
+          ],
+          "inputs": [
+            "请处理 Issue #5。\n\n对象：local/run#5\n\n使用 `braid issue view 5 --comments` 查看当前内容。\n"
+          ]
+        }
+      ],
+      "pending_bound_consumed_count": 141
+    },
+    "outbox": [
+      {
+        "operation": "comment_create",
+        "lifecycle": "pending",
+        "n": 7
+      }
+    ],
+    "owner_leases": 0,
+    "terminal_contacts_without_comment_after": [
+      {
+        "n": 96,
+        "first": "2026-09-27T16:44:33.1687921Z",
+        "last": "2026-09-27T16:58:27.349049672Z"
+      }
+    ],
+    "empty_terminal_fraction": {
+      "all_turns": 609,
+      "empty_turns": 441
+    },
+    "pending_direct_contact_examples": [
+      {
+        "event_id": "01a0e261-7670-7971-928c-373fbeabd393",
+        "work_item_node_id": "issue:2",
+        "reference": "issue:1 comment 61; read `comment view 61 --thread`",
+        "lifecycle": "pending",
+        "batch_id": "01a0e26c-1663-78b0-b50d-37e0ceccd55b",
+        "batch_lifecycle": "consumed",
+        "turn_id": "01a0e26c-1b6a-7940-958b-38aac8492348",
+        "turn_lifecycle": "unknown",
+        "started_at": "2026-09-27T10:32:10.866015753Z",
+        "ended_at": "2026-09-27T10:35:29.405206484Z"
+      },
+      {
+        "event_id": "01a0e26a-c472-7041-a78c-f8ffc051d273",
+        "work_item_node_id": "issue:3",
+        "reference": "issue:1 comment 82; read `comment view 82 --thread`",
+        "lifecycle": "pending",
+        "batch_id": "01a0e26c-ab21-7022-9f0b-802cb37111a5",
+        "batch_lifecycle": "consumed",
+        "turn_id": "01a0e26c-b022-7a42-892b-09f1e900949b",
+        "turn_lifecycle": "unknown",
+        "started_at": "2026-09-27T10:32:48.971546685Z",
+        "ended_at": "2026-09-27T11:47:16.50778391Z"
+      },
+      {
+        "event_id": "01a0e2de-e48a-7b40-9de8-c0c39fbea09c",
+        "work_item_node_id": "issue:4",
+        "reference": "pr:1 comment 112; read `comment view 112 --thread`",
+        "lifecycle": "pending",
+        "batch_id": "01a0e314-f281-7453-a407-f687fef5e854",
+        "batch_lifecycle": "consumed",
+        "turn_id": "01a0e314-f910-7dd2-8711-2237d802be71",
+        "turn_lifecycle": "unknown",
+        "started_at": "2026-09-27T13:36:37.772283076Z",
+        "ended_at": "2026-09-27T14:00:41.529121853Z"
+      },
+      {
+        "event_id": "01a0e304-7ec1-7650-82ad-535c0b1bc8c5",
+        "work_item_node_id": "issue:5",
+        "reference": "issue:1 comment 134; read `comment view 134 --thread`",
+        "lifecycle": "pending",
+        "batch_id": "01a0e314-09c3-7a80-8546-a51d4769413c",
+        "batch_lifecycle": "consumed",
+        "turn_id": "01a0e314-0dde-72d1-bcd2-7740550cb159",
+        "turn_lifecycle": "unknown",
+        "started_at": "2026-09-27T13:35:37.447878437Z",
+        "ended_at": "2026-09-27T14:00:41.570924166Z"
+      }
+    ],
+    "manifest_shape": "list",
+    "root_lifecycle": [
+      {
+        "kind": "lifecycle",
+        "detail": "closed",
+        "observed_at": "2026-09-27T15:22:09.587998702Z",
+        "reference": "issue #1 CLOSED: ## 完整交付确立，关闭根 Issue（@glm-1 根负责人）\n\n整合 PR #1（develop@8152b05 → main）已合并，origin/main = 4023362，交付树与最终候选树完全一致（diff 为空）。\n\n最终验收在合并提交 4023362 上直接执行并通过（证据见 pr:1 comment 175）：\n- backend `npm test` 66/66 PASS（formula-engine 42 + structure 17 + clipboard 7）；\n- `CHECK_PORT=4791 bash checks/run-checks.sh` 36/36 PASS（临时 DATA_DIR、非 3000 端口、trap 停服务清理）；\n- 覆盖 REQ-1~REQ-5 全部需求场景：工作簿生命周期/CSV 导入导出/种子数据、工作表与行列结构、单元格编辑/选区/批量粘贴/区域复制剪切/撤销重做（含「插入行→撤销→重做」链路）、公式计算与依赖重算/错误值、排序/筛选/数据验证/数据透视，含可访问名称与 ARIA、逐字错误文案、刷新持久化。\n\n五个子 Issue（#2~#6）全部交付关闭，子任务 PR（#2~#11）全部合入 develop，整合 PR #1 合并交付 main。自检服务已停止、端口 3000 空闲留给官方评测。重要假设与契约裁决（数据验证契约源、undo/redo 快照口径、引擎两步顺序等）均已记录于各 Issue 讨论与 docs/design*.md。"
+      }
+    ],
+    "database_sha256": "c3bb00e48414b334d808b9d24fd4e5575f8cc60f04c0954412e2f5cb40503c54",
+    "archive_has_wal": false,
+    "archive_sha256": "9b981b0ee88b5b10563f4bab17d6e8ecb34a77fa803597a0cc9dfe8d21468b5c"
+  },
+  "_audit": {
+    "date": "2026-09-28",
+    "source_head": "89212933c976b889f27de1b8cfe863baf8f6042e",
+    "source_dirty": true,
+    "hashes": {
+      "src/local.rs": "ea196e960d635100ce6190c1596e9fe87176543fc7562cfc03796516db580403",
+      "src/store/mod.rs": "4542dee572a90f2c0ca7f2c253ce050985da8278831488863a6e502bbe6a7785",
+      "src/group/worker.rs": "70f885cd7b4f567332231e67ae49acc7de2896974f61ccb8ff5c6cbf48911ad1",
+      "src/group/dispatch.rs": "e737265cea9f971fe709f2a2e7630137a81b8de069825e601b2c0b59070fb344",
+      "src/group/session_manager.rs": "2726bbc2d5c97b5e132a93f434fa698f34b4ad2fe628ef6281024e89e45f598a",
+      "src/group/issue_agent.rs": "69eddabd5c70ddd1cfb3d5eb0d4947369026717829ec1b31a1aeb6edf6baab6d",
+      "src/group/pr_agent.rs": "838ec4a228211e5474bcbca3b952a7281c1118b5e0b67624e44965a1729ca76c",
+      "src/provider/mod.rs": "eaf3ee7e15f7ff7a7df1f26dbb76cd531fe03194106843bfaf54ab23b0cde892",
+      "src/provider/pi.rs": "146d09068b2fcf64ea88a6b31e733c4d5efaf4d5347fda1e51f5f81ebb038dd6",
+      "src/provider/codex.rs": "2392e893dfbe7d7eafabec4c3cf92309eccc90c0e49e23b20b414bf1f02d3444",
+      "migrations/0001_initial.sql": "c8da8b620d46868f9709d8ffcf289c90cdc1687d1643a19918e043206d85b800"
+    }
+  }
+}

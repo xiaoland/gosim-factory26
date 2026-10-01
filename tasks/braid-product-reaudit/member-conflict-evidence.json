@@ -1,0 +1,103 @@
+{
+  "archive": "runs/e20260927-03-github-resume/g01/stop-preservation/20260927T133809Z/e4e7f35f55eb/workspace.zip",
+  "database_entry": "template/.factory26/20260927-080209-0b57147a/braid-state/braid.sqlite3",
+  "log_entries": [
+    "template/.factory26/20260927-080209-0b57147a/braid-recovery.log"
+  ],
+  "unique_error_count": 21206,
+  "first_error": "\u001b[2m2026-09-27T11:57:44.111963Z\u001b[0m \u001b[31mERROR\u001b[0m \u001b[1mbraid.run\u001b[0m\u001b[1m{\u001b[0m\u001b[3mbraid.run.id\u001b[0m\u001b[2m=\u001b[0m20260927-080209-0b57147a\u001b[1m}\u001b[0m\u001b[2m:\u001b[0m \u001b[2mbraid::group::issue_agent\u001b[0m\u001b[2m:\u001b[0m cannot materialize Issue Agent assignment \u001b[3merror\u001b[0m\u001b[2m=\u001b[0mSQLite operation failed: UNIQUE constraint failed: assignments.member_login",
+  "last_error": "\u001b[2m2026-09-27T13:37:57.215527Z\u001b[0m \u001b[31mERROR\u001b[0m \u001b[1mbraid.run\u001b[0m\u001b[1m{\u001b[0m\u001b[3mbraid.run.id\u001b[0m\u001b[2m=\u001b[0m20260927-080209-0b57147a\u001b[1m}\u001b[0m\u001b[2m:\u001b[0m \u001b[2mbraid::group::issue_agent\u001b[0m\u001b[2m:\u001b[0m cannot materialize Issue Agent assignment \u001b[3merror\u001b[0m\u001b[2m=\u001b[0mSQLite operation failed: UNIQUE constraint failed: assignments.member_login",
+  "queries": {
+    "issue2_assignments": {
+      "sql": "SELECT a.assignment_id,a.work_item_node_id,a.generation,a.member_login,a.lifecycle,a.assigned_at,a.retired_at,l.desired_member_login,l.assignment_revision FROM assignments a JOIN local_items l ON l.node_id=a.work_item_node_id WHERE a.work_item_node_id='issue:2'",
+      "rows": [
+        {
+          "assignment_id": "01a0e1f3-5885-7780-8c06-5872d58b0cb9",
+          "work_item_node_id": "issue:2",
+          "generation": 1,
+          "member_login": "deepseek-2",
+          "lifecycle": "retired",
+          "assigned_at": "2026-09-27T08:20:16.644615736Z",
+          "retired_at": "2026-09-27T08:30:38.103166401Z",
+          "desired_member_login": "glm-3",
+          "assignment_revision": 2
+        },
+        {
+          "assignment_id": "01a0e1fc-d4a7-7752-acd8-b432d6ecb0bb",
+          "work_item_node_id": "issue:2",
+          "generation": 2,
+          "member_login": "glm-3",
+          "lifecycle": "blocked",
+          "assigned_at": "2026-09-27T08:30:38.247008956Z",
+          "retired_at": "2026-09-27T11:57:39.027553307Z",
+          "desired_member_login": "glm-3",
+          "assignment_revision": 2
+        }
+      ]
+    },
+    "issue2_pending": {
+      "sql": "SELECT kind,detail,lifecycle,recipient_login,count(*) count FROM events WHERE work_item_node_id='issue:2' AND lifecycle='pending' GROUP BY kind,detail,lifecycle,recipient_login",
+      "rows": [
+        {
+          "kind": "mention",
+          "detail": "direct_contact",
+          "lifecycle": "pending",
+          "recipient_login": "glm-3",
+          "count": 27
+        }
+      ]
+    },
+    "issue2_first_pending": {
+      "sql": "SELECT event_id,kind,detail,reference,recipient_login,recipient_revision,observed_at FROM events WHERE work_item_node_id='issue:2' AND lifecycle='pending' ORDER BY observed_at LIMIT 3",
+      "rows": [
+        {
+          "event_id": "01a0e29b-b2ba-72e0-9272-dfd0b39707f8",
+          "kind": "mention",
+          "detail": "direct_contact",
+          "reference": "issue:3 comment 159; read `comment view 159 --thread`",
+          "recipient_login": "glm-3",
+          "recipient_revision": 2,
+          "observed_at": "2026-09-27T11:24:09.786444388Z"
+        },
+        {
+          "event_id": "01a0e29b-bfbd-71e2-9754-37d50c5fb00e",
+          "kind": "mention",
+          "detail": "direct_contact",
+          "reference": "issue:7 comment 160; read `comment view 160 --thread`",
+          "recipient_login": "glm-3",
+          "recipient_revision": 2,
+          "observed_at": "2026-09-27T11:24:13.11786484Z"
+        },
+        {
+          "event_id": "01a0e29b-c4a6-7ee1-a85e-26f5385f3a82",
+          "kind": "mention",
+          "detail": "direct_contact",
+          "reference": "issue:7 comment 161; read `comment view 161 --thread`",
+          "recipient_login": "glm-3",
+          "recipient_revision": 2,
+          "observed_at": "2026-09-27T11:24:14.374580232Z"
+        }
+      ]
+    },
+    "issue2_delivery": {
+      "sql": "SELECT status,reason,count(*) count FROM local_comment_delivery WHERE recipient_login='glm-3' GROUP BY status,reason",
+      "rows": [
+        {
+          "status": "delivered",
+          "reason": null,
+          "count": 19
+        },
+        {
+          "status": "queued",
+          "reason": null,
+          "count": 25
+        },
+        {
+          "status": "unreachable",
+          "reason": "@glm-3 has no resumable session",
+          "count": 11
+        }
+      ]
+    }
+  }
+}

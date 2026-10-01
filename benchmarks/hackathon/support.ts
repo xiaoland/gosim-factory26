@@ -68,8 +68,12 @@ export async function signIn(page: Page, identity = 'alice.dev@example.test', pa
 
 export async function openRepository(page: Page) {
   await start(page);
-  await page.getByRole('link', { name: /acme-docs/i }).first().click();
-  await expect(page.getByText(/acme-docs/i).first()).toBeVisible();
+  // REQ-3-1 provides a search entry; a repository shortcut on Home is optional.
+  const search = page.getByRole('searchbox', { name: 'Search', exact: true });
+  await search.fill('acme-docs');
+  await search.press('Enter');
+  await page.getByRole('link', { name: 'acme-docs', exact: true }).click();
+  await expect(page.getByRole('heading', { name: /acme-docs/ })).toBeVisible();
 }
 
 export async function openWorkbook(page: Page) {

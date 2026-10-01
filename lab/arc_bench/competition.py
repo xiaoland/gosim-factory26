@@ -4,6 +4,7 @@ import argparse
 from contextlib import contextmanager
 from datetime import datetime
 import fcntl
+from functools import wraps
 import hashlib
 import json
 import math
@@ -72,6 +73,21 @@ def locked(path):
             yield
         finally:
             fcntl.flock(stream, fcntl.LOCK_UN)
+
+
+def competition_write(method):
+    """保护 latest snapshot 检查及写入；run_all 内的嵌套操作沿用同一把锁。"""
+    @wraps(method)
+    def call(self, *args, **kwargs):
+        if self._competition_locked:
+            return method(self, *args, **kwargs)
+        with locked(self.lock_root/(identifier(self.inputs['competition_id'])+'.lock')):
+            self._competition_locked = True
+            try:
+                return method(self, *args, **kwargs)
+            finally:
+                self._competition_locked = False
+    return call
 
 
 def package_identity(package):
@@ -208,12 +224,13 @@ def latest_snapshot(history):
 
 
 class Controller:
-    """在 with 块内使用；持有本地状态锁与同 Cookie/比赛的排他锁。"""
+    """在 with 块内独占本地 journal；比赛排他锁只保护提交与启动流程。"""
     def __init__(self, directory, client=None, *, secret=None, lock_root=None):
         self.directory = Path(directory).resolve()
         self.client = client if client is not None else Client()
         self.secret = secret
         self.lock_root = Path(lock_root) if lock_root else CONFIG/'competition-locks'
+        self._competition_locked = False
 
     def __enter__(self):
         from contextlib import ExitStack
@@ -224,8 +241,7 @@ class Controller:
             self.inputs.setdefault('credential_mode', 'self_funded')
             if self.inputs['credential_mode'] not in {'self_funded', 'official_evaluation'}:
                 raise ValueError('journal 包含未知 credential_mode')
-            competition = identifier(self.inputs['competition_id'])
-            self.locks.enter_context(locked(self.lock_root/(competition+'.lock')))
+            identifier(self.inputs['competition_id'])
             self.state = json.loads((self.directory/'state.json').read_text())
             self.check_identity()
             self._apply_receipt()
@@ -328,6 +344,7 @@ class Controller:
             if (require_links or key in value) and value.get(key) != expected:
                 raise Blocked('返回的 run 不属于冻结 snapshot/task')
 
+    @competition_write
     def snapshot(self):
         if self.state['submission_id']:
             return self.state['submission_id']
@@ -354,6 +371,7 @@ class Controller:
             prior_ids=[item['id'] for item in history])
         return self.state['submission_id']
 
+    @competition_write
     def create(self, task):
         item = self.state['tasks'][task]
         if item['run_id']:
@@ -369,6 +387,7 @@ class Controller:
             'submission_id': self.state['submission_id'], 'requirement_id': task})
         return item['run_id']
 
+    @competition_write
     def start(self, task):
         item = self.state['tasks'][task]
         if item['phase'] in {'started', 'terminal', 'collected'}:
@@ -506,6 +525,7 @@ class Controller:
                 raise Blocked('远端任务已暂停或状态无效；停止本地等待，不改变远端状态')
             time.sleep(polling_interval(value, steady=interval))
 
+    @competition_write
     def run_all(self, *, interval=480):
         """同一 snapshot 按声明顺序完成任务；已有终态不重跑。"""
         if interval < 180:

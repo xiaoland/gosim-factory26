@@ -1,6 +1,8 @@
 # 迭代10：有效协作与可信交付
 
-更新时间：2026-09-29。当前阶段是WSL两题已启动。2026-09-29用户明确“开始实验”，恢复本页实验授权。冻结ZIP `7d8dc70a3ed7e178685e5d9514cdc508c404adaaed83d8cbd6ea13b945f2708a`包含最新原生自动验收关闭补丁。
+更新时间：2026-09-29。当前阶段：用户要求暂停GitHub hotfix-02、Sheet hotfix-04；已以docker pause冻结两容器，工作区与内存保留，未经用户指示不恢复。2026-09-29用户明确“开始实验”，恢复本页实验授权。冻结ZIP `7d8dc70a3ed7e178685e5d9514cdc508c404adaaed83d8cbd6ea13b945f2708a`包含最新原生自动验收关闭补丁。
+
+新发现的共享决定变更修正与本轮全过程审查已转入 [iteration11](../iteration11/packet.md)。本页继续承载现有两题运行、热修复与结果；不要将新的方法改动误记为现有冻结包内容。
 
 ## 目标与当前授权
 
@@ -9,21 +11,35 @@
 用户最新“开始实验”恢复迭代10两题全新生成及独立官网self_funded重放评分；不使用参赛额度。用户再次确认本迭代自由提交授权，按有界改动整理提交；提交不代表部署或实验恢复。
 Factory/Braid/SVC及设施不新增或运行测试、模拟探针；生成应用自身检查和将来获授权的真实实验保留。
 
-## 当前工作与下一次返回
+## 当前状态：用户暂停（2026-09-29）
 
-| 工作单元 | 当前责任人 | 下一次返回／入口 |
+两容器已核实Paused=true；宿主控制器仍等待，Docker的Running=true不表示正在生成。暂停记录：WSL实验目录user-pause.json。下表是暂停前最近一次进展，仅供接续参考。
+
+| 题目 | 当前执行 | 状态与下一步 |
 | --- | --- | --- |
-| 最终修复审查与假阳性核查 | 独立报告已返回；主线取舍与对应修正已完成 | [最终审查packet](repair-review/final/packet.md)：报告、最终取舍与覆盖边界 |
-| 可观测性与跨链analytics | 实现、独立核对与主线收口已完成 | [analytics cell](cells/audit-analytics.md)：功能、真实材料反馈与残余限制 |
-| 原生结束边界及恢复修复 | 源码修正及最终审查消费已完成 | [原生cell](cells/lifecycle-architecture/packet.md)、[合并恢复](cells/merge-recovery-fr2.md)、[历史归档](cells/session-archive-c1.md) |
-| 根检查提示增强 | 主线；用户明确授权 | [提醒cell](cells/root-check-packet.md)：每第二次附整理提示，源码与编译核对完成，未部署 |
-| 原生sub-agent简化 | 主线；用户已批准实施，补丁及静态核对完成 | [简化cell](cells/subagent-simplification.md)：保留能力、候选缺口、已实施简化与验证限制 |
-| 运行中重置通知异常 | 主线；已定位重复Deferred→failed及监控漏报，用户授权直接修复和热部署 | [现场诊断](cells/reset-notice-live.md)；819次未开始投递，随后通知已送达 |
-| 运行行为观察 | 主线语义判断；独立worker实现增量采集 | [四项观察与当前基线](observations/behavior.md)：sub-agents、Issue/一般流程、skills；目录快照与证据链 |
-| 本次两题实验 | hotfix-02已部署Braid 5c95743；两题14:31接续running，新指令与pr view实际生效 | [实验计划](experiments.md)：恢复决定后才构建、冻结与运行 |
+| GitHub | hotfix-02，`pi-braid--hackathon--github-db0f28e3288046`，Braid `5c95743` | running，4 active/0 blocked；develop=5b6c7d4，第三批PR19/20实施中，Issue10待其上游合入后指派 |
+| Sheet | hotfix-04，`pi-braid--hackathon--sheet-a2ce3ac2d41459`，Braid `4fa65da` | running，未交付；develop=4e1a7bc，PR12 head42f9c5b全量检查中，后续还有B关联回归与最终整合验收 |
 
-下一步：[原生sub-agent简化](cells/subagent-simplification.md)已按批准范围落地；保留当前依赖，已构建冻结，进入真实运行验证。[此前委派返回补核](repair-review/final/subagent-returns.md)中的status_surfaces清理已完成；[审查取舍](repair-review/final/decisions.md)已形成；查询式失败事实补齐已完成并通过编译，主线已核对输出与恢复路径；三个仓库[源码检查点与实验前条件](cells/source-checkpoint.md)已整理，待用户恢复实验决定后构建冻结。Node入口及文档/packet责任已补齐，analytics已完成。不要重新全读两题或再开目录覆盖审查。
-已批准范围内的局部修复继续由负责子代理完成；涉及产品义务或范围变化，给出具体因果与方案后交用户决定。实验按已批准配方推进。
+GitHub root评论220自述先前检查被恢复中断，当前改setsid执行；已直接核实进程与输出：full/grep两段exit0，platform仍运行。模型对历史终止原因的自述不当作独立根因证据，已交I11-05定位。
+Sheet较早a592c3e阶段快照官网评分36/100（64失败），不是当前4e1a7bc分数；GitHub 4a8f3c9阶段评分4/100（96失败）；原监控比赛锁过宽已修复，两题结果均collected。见[阶段重放](../iteration11/cells/phase-replay.md)。
+两题继续使用原冻结输入、自有API及4GiB/2CPU；阶段评分和最终评分都走官网self_funded，不做本地评分，不将隐藏反馈注入生成Agent。
+
+剩余交付工作及条件性时间估计见[I10交付估计](../iteration11/observations/delivery-estimate/report.md)。
+
+## 已部署与待完成
+
+| 范围 | 当前结论 | 证据入口 |
+| --- | --- | --- |
+| 实验前累计改进 | 已进入本轮冻结基线：Braid协作/恢复、原生sub-agent简化、SVC七技能与文档/packet/V&V/规划、预打包环境、analytics | [源码与构建起点](cells/source-checkpoint.md)、[实验制品](experiments.md)、[审查取舍](repair-review/final/decisions.md)；历史页中的“待启动”不覆盖本页 |
+| hotfix-01：重置通知反复Deferred→failed | `640ebd8`已部署，保留同一投递义务；监控补齐未开始失败识别 | [现场与修复](cells/reset-notice-live.md) |
+| hotfix-02：未确认交接便改写PR head | `5c95743`已部署；PR view呈现事实，指引明确负责人交接 | [证据与修复](cells/issue3-pr12-handoff-implementation.md)；实际行为效果仍观察 |
+| hotfix-03：Sheet数据库锁及次生结果权限错误 | `8ad1589`仅Sheet部署；移除每连接WAL设置、锁等待30s；旧结果文件保留移开；首次恢复只覆盖子项，根仍 blocked | [故障与首次恢复边界](cells/sheet-continuation-failure.md)；具体持锁者未能唯一确认 |
+| hotfix-04：Sheet根会话未恢复 | `4fa65da`修复 blocked 旧 writer 的显式改派退休栅栏；保留失败证据并以新 @glm-9 根会话接续 | [现场、停机归档与根恢复](cells/sheet-continuation-failure.md) |
+| 运行观察 | 脚本3+8分钟采集异常及四项行为；只在明确异常或终态返回 | [四项观察](observations/behavior.md)：subagents、Issue流程、一般流程、skills |
+| 最终验收 | 未完成 | 生成完整交付→各题官网重放评分→汇报结果 |
+
+主线责任是处理当前运行的明确故障、核实恢复和完成后评分；独立审查两题全过程及下一轮改进属于iteration11。
+Sheet故障修复不计入两个run analysis的工作范围。监控曾把旧retained事件误判为GitHub终态，已更正；运行身份必须以当前run.json及真实进程核对。
 
 ## 按问题找材料
 

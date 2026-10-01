@@ -1,11 +1,12 @@
 # Variant 索引
 
-当前开发基线为 [pi-braid-i13](pi-braid-i13/)，I12冻结运行及I10运行基线保留，采用 Pi、Braid 与 SVC。每个 variant 独立维护流程、原生角色与材料；目录相似不表示它们只差一个开关。选择或创建实验先看 [实验导航](../experiments/README.md)，实际输入和运行授权归所属 task packet。
+I10 运行基线为 [pi-braid](pi-braid/)，I11 保留独立副本 [pi-braid-i11](pi-braid-i11/)，I12 保留 [pi-braid-i12](pi-braid-i12/)，当前 I13 在 [pi-braid-i13](pi-braid-i13/) 开发，均采用 Pi、Braid 与 SVC。每个 variant 独立维护流程、原生角色与材料；目录相似不表示它们只差一个开关。选择或创建实验先看 [实验导航](../experiments/README.md)，实际输入和运行授权归所属 task packet。
 
 ## 活动与实验实现
 
 | 实现 | 状态 | 维护职责 |
 | --- | --- | --- |
+| [pi-minimal](pi-minimal/) | 独立原生 Pi 参赛实现 | GLM 主会话与 Kimi advisor，后台任务；无 Braid/SVC。授权与余额保护见 [任务包](../tasks/pi-minimal/packet.md)。 |
 | [pi-braid](pi-braid/) | 保留的 I10 基线 | 原运行使用的冻结包与逐次恢复来源见 [I10 packet](../tasks/iteration10/packet.md)，目录源码不能替代旧制品身份。 |
 | [pi-braid-i11](pi-braid-i11/) | 保留的 I11 实现 | 原生成、交付及评分来源见 [I11 packet](../tasks/iteration11/packet.md)。 |
 | [pi-braid-i12](pi-braid-i12/) | 保留的 I12 人工介入实现 | 原冻结运行及暂停现场见 [I12 packet](../tasks/iteration12/packet.md)；Console 在开发侧，不装入制品。 |

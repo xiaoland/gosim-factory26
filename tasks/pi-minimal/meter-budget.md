@@ -1,6 +1,8 @@
 # pi-minimal Meter 余额保护
 
-当前：旧self_funded两题已按用户要求取消，快照保留。用户授权以BigModel主模型、ARC自带key的Kimi advisor从头重跑，当前journal为 `runs/pi-minimal/20260930/arc-advisor/official`。费用脚本按provider/model分组，每600秒采集；ARC自带key与正式参赛额度分开，不使用100元比赛停止阈值。新运行的实际用量证据待启动后记录。
+当前实验是加入svc-verification后的单题GitHub自费运行，身份见 [verification-run.md](verification-run.md)。费用观察与比赛额度守护是不同模式；自费模式不应用比赛取消阈值，也不查询比赛余额。下面各时间点的余额、用量和进程属于对应历史运行。
+
+2026-09-30用户新增比赛额度例外：预计扣除在途费用后的余量低于20元，不取消当前运行；仍阻止新增任务。此改动不授权新的比赛运行。
 
 ## 已核实的账户与当前余额
 
@@ -39,7 +41,15 @@ python3 tasks/pi-minimal/budget_guard.py runs/pi-minimal/20260929/official --onc
 python3 tasks/pi-minimal/budget_guard.py runs/pi-minimal/20260929/official
 ```
 
-脚本启动即查询一次，此后每 600 秒查询。正式比赛余额不高于 100 时写入该 journal 的 `budget-stop.json`，并检查 `state.json` 中的每个 run：先读取状态和 `submission_id`，只对属于该 journal submission 且未终态的 run 调用既有官方取消接口 `POST /api/runs/{run_id}/cancel`，再读取状态确认。余额查询失败也写 `reason=budget_unavailable` 的停止标志，阻止继续启动；不会取消未经身份核对的 run。
+脚本启动即查询一次，此后每600秒查询。先按完整快照估计同一journal的在途未结算费用，再查询官网比赛账面余额，以两者之差决定动作。
+
+| 预计扣费后比赛余量 | 已在运行的任务 | 新任务 |
+| --- | --- | --- |
+| 大于100元 | 继续运行 | 本守护不额外阻断，仍须已有实验授权 |
+| 20～100元，含边界 | 核对身份后取消 | 阻断 |
+| 低于20元，包括负值 | 保留运行，不发送取消请求 | 阻断 |
+
+余量不高于100元时仍写入该journal的 `budget-stop.json`。低于20元的回执为 `status=new_runs_blocked`、`reason=balance_below_no_cancel_floor`、空取消列表，并记录 `keep_running` 事件；20～100元时只对属于该journal submission且未终态的run调用既有官方取消接口 `POST /api/runs/{run_id}/cancel`，再读取状态确认。正好20元仍属取消区间。余额查询失败写 `reason=budget_unavailable` 的停止标志，阻止继续启动，不猜测余额，也不取消未经身份核对的run。
 
 `--check` 只查询一次且不取消，适合每次开始下一题前的闸门：
 
@@ -52,7 +62,7 @@ python3 tasks/pi-minimal/budget_guard.py runs/pi-minimal/20260929/official --che
 ## 限制
 
 - watcher 使用现有 ArcBench 网站会话查询比赛额度；不能把任何 cookie 或 access key 写入仓库或命令输出。
-- 保护是“停止新增远端写入 + 取消同一 submission 的在途 run”；它不取消其他历史 journal，也不删除或改写比赛证据。
+- 保护先阻止新增远端写入，再依据余量区间决定是否取消同一submission的在途run；它不取消其它journal，也不删除或改写比赛证据。
 - 本次只做了源码语法与真实只读额度核对，未上传、启动、取消任何比赛 run，未调用模型。
 
 ## 运行中预算盲区（2026-09-30 复核）
@@ -103,6 +113,6 @@ python3 tasks/pi-minimal/budget_guard.py \
 
 复用原 factory-pi-timing.ts，不增加模型提示词、工具或模型调用；主 Pi 和 advisor 都装载，统一写 pi-timing.jsonl。新增 usage_budget.py 从同一官方工作区下载入口读取该文件，以 request_id 去重，只计算 message_end 中已返回的用量；Pi input 已排除 cacheRead/cacheWrite，推理 token 已包含在 output，不重复计费。ARC 当前价格来自已认证的 /api/user/models，快照见 arc-prices.json。
 
-既有 budget_guard.py 每600秒采集活动 run，估计余量=采集后官网账面余额−未终态 run 的已知费用，≤100取消该journal两题。每次从完整快照重算，不累加重复下载；下载期间终态的 run 由随后账面余额覆盖。费用数据缺失、未知模型、损坏或部分行明确标 usage_unknown，不把差额当可信余量。正在生成但尚未返回的请求、采样和下载延迟仍不计入已知费用，因此这是软阈值。监控没有启动新实验；下一次授权运行须确认可下载 timing 文件并与终态官方费用比较。
+既有budget_guard.py每600秒采集活动run，估计余量=采集后官网账面余额−未终态run的已知费用；当前取消区间为20～100元，低于20元保留现有运行但阻止新任务。每次从完整快照重算，不累加重复下载；下载期间终态的run由随后账面余额覆盖。费用数据缺失、未知模型、损坏或部分行明确标usage_unknown，不把差额当可信余量。正在生成但尚未返回的请求、采样和下载延迟仍不计入已知费用，因此这是软阈值。监控没有启动新实验；下一次授权运行须确认可下载timing文件并与终态官方费用比较。
 
 最新真实采集（08:56:54 CST）：GitHub0.2219508元、Sheet0.32302944元，合计0.54498024元，脚本PID82936。Sheet的Moonshot组出现两次请求、0用量；进一步读取原生子会话确认均为供应商余额不足429，不是成功的免费调用。当前可确认费用证据采集和GLM工作，advisor受账户条件阻断。

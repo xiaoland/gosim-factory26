@@ -1,15 +1,17 @@
 # I12 2026-09-30 从零重启
 
-## 当前状态：已暂停
+## 当前状态：用户确认I12再次暂停
 
-用户要求“可以暂停 I12 了，内容已经太多，我已经看到很多问题”。2026-09-30 15:59:13 CST实际确认下面两条当前容器均Running=true、Paused=true；全部容器内Agent会话及Braid定期检查一并冻结，没有取消、清理或重启，不自动恢复。
+用户要求“可以暂停 I12 了，内容已经太多，我已经看到很多问题”。2026-09-30 15:59:13 CST实际确认下面两条当前容器均Running=true、Paused=true；全部容器内Agent会话及Braid定期检查一并冻结，没有取消、清理或重启。
+随后Console journal记录19:25:33 CST的GitHub `runtime_resume` started→completed、changed=true；20:18/20:21 CST读取确认GitHub Running=true/Paused=false、PID 5217，Sheet Running=true/Paused=true、PID 5181，容器与StartedAt保持原身份。由[I13接续会话](../iteration13/packet.md)核对并更新，本次没有执行暂停或恢复。不能用此前暂停记录覆盖当前现场，也不因本次handoff自动改变运行状态。
+用户随后明确：“I12 是我手动通过 Braid Console 恢复的；我现在已经再次暂停”。因此上述19:25恢复归属用户操作，当前按最新用户说明记录为再次暂停，20:52 CST实际Console API确认两题Running=true、Paused=true，GitHub/Sheet PID仍为5217/5181，StartedAt未变（回执见 `runs/braid-console-control/20260930-session-navigation/http.before.json`）；本次不执行恢复或暂停。
 代码、Git、Issue/PR、原生会话及内存中的运行现场留在原处。暂停时的 `braid.sqlite3*` 文件复制到WSL `runs/iteration12/restart-20260930/paused-20260930/<case>/raw-db/`，原始Docker身份、状态和路径见同目录上层的 `pause-receipt.json`。
 该文件副本用于复审，不单凭它宣称具有完整冷恢复检查点。以下启动和进展记录均为暂停前事实。
-Console整体暂停/恢复能力纳入 [I13 packet](../iteration13/packet.md)。暂停后的读取已通过独立CLI访问容器恢复，实际写入尚未验证；接线及证据见 [暂停访问修复](../iteration13/console-paused-access.md)，本次修复不包含整体暂停/恢复按钮。
+Console整体暂停/恢复能力已独立实现并部署，归[设施任务](../braid-console-control/packet.md)。暂停后的读取已通过独立CLI访问容器恢复；19:25的真实恢复回执已记录，恢复后的Agent采用需另核。接线及早期证据见 [暂停访问修复](../iteration13/console-paused-access.md)，其“不包含整体控制按钮”仅是当时修复范围。
 
 ## 启动事实与历史过程
 
-下面按当时顺序保留准备、受阻、启动和观察记录，其中“下一步”“尚未启动”描述对应历史时点；当前暂停状态以上节为准。
+下面按当时顺序保留准备、受阻、启动和观察记录，其中“下一步”“尚未启动”描述对应历史时点；当前运行状态以上节为准。
 
 用户授权原话：“好的，现在可以启动 I12（考虑从0重启了）”。本次范围为同两份官方 GitHub/Sheet requirements、自有 BigModel/Kimi/DeepSeek 原配方，两题各 4GiB/2CPU；不执行本地评分，不使用参赛额度，不恢复旧运行。
 

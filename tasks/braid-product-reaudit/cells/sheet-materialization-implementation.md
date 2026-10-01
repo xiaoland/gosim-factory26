@@ -1,0 +1,19 @@
+# Sheet 中断物化恢复：实现与隔离验证
+
+实现范围仅为 Braid `src/store/mod.rs::prepare_offline_resume`。可部署的最小差异保存在 `runs/sheet-materialization-recovery/materialization.patch`（SHA-256 `d859816a73cb8d96f5d7e8a2a652a574617f750a5ff144c2644a5a139dfeea6e`，83 行统一 diff）；它基于改动前的当前文件提取，已无冲突应用于实际 03 使用的 roles-v1 冻结源码包（SHA-256 `70e867ee3c3d1e19645c6907eb35c446e0b62ad11c7a774e1d9aa2088971c82d`）。`roles-v1-deploy-source/` 是原包加这一个补丁的独立候选，不含验证用测试代码；`roles-v1-source/` 内的临时 Rust 测试只用于隔离验证。没有提交，也没有改冻结应用、活动运行数据库或第十次迭代。
+
+离线入口本来由宿主在确认旧执行已停止并持有 runtime lock 后调用。补丁在该事务中找 `assignment=materializing` 且对应 agent 没有 `provider_sessions` 的责任。若工作项 OPEN 且持久化的成员、Profile、assignment revision 与当前 desired 值一致，就退休未完成的旧 generation，保留 worktree 记录并把它标为 retired，再加入按原 `assigned_at` 排序的 urgent `assign/activate` 事件，由正常物化路径建立新 generation、复用原 worktree。旧行的 `member_login` 只在 OPEN 情形释放为 NULL：schema 的 `assignments_member_login` 索引对**全部** generation 唯一，不释放会让相同逻辑成员的新 generation 插入时报 UNIQUE；旧成员名写入退休 agent 的 `context_error`，当前 desired identity 和新 generation 保留 `glm-16`。以原指派时间给恢复事件排序，保证中断期间晚到的 direct-contact 不会先被当作启动事件消费，造成收件回执悬空。
+
+若工作项 CLOSED/MERGED，补丁退休旧 assignment/agent/worktree，保留旧 `member_login`，消费该工作项待处理的 `lifecycle/closed` 通知，不生成 activation，也不创建新 provider/turn。两条分支都只处理无 provider 的中断物化；已有 provider 的 materializing 行不在此路径内。事务提交前失败则整体回滚，第二次离线恢复找不到已退休的行，因而不会重复调度。`execution_settled()` 的 materializing 检查未动。
+
+隔离验证使用实际 08 DB 的独立拷贝 `attempt08-original.sqlite3`（SHA-256 `9cef6073ac278f944f3bf4edff6496c45e285347aab78f41cfde230d296df3cd`），先由 roles-v1 正常 migration 将 schema 12 升至 13。临时 Braid 测试 `actual_attempt08_open_then_merged_and_existing_provider` 通过：原 PR #19 OPEN 责任恰好处理一次；重复恢复不重复事件；后续 `assignment_candidates` 选中原成员 `glm-16`，`begin_agent_assignment` 创建新 generation 并转移相同 `worktree_id/path`。为验证未提交内容，在副本中将原 worktree 路径映射到隔离 Git clone 并写入未提交的 `uncommitted.txt`，调用实际 `worktree::resume` 后文件内容仍在。模拟中断期间晚到的 direct-contact 与其 queued delivery 在激活后仍分别为 pending/queued。把同一真实 DB 副本中的 PR #19 改成 MERGED 并加入关闭通知时，两次恢复只退休旧责任、消费通知，assignment 数量不增加，也没有恢复 activation。再给旧 agent 注入一个 provider session 的副本中，它仍保持 materializing，证明该路径不会误退休已有 provider 的责任。08 原始工作树当时为 clean，所以“未提交文件”是隔离 clone 的哨兵，非声称 08 原本有脏文件。
+
+另用 SQLite 在线 backup 以**只读连接**取得活动 03 的独立快照 `attempt09-03-snapshot.sqlite3`（SHA-256 `5da4023f6801394285826301cbe39d4528769fbb8b5fc0740466b53c5698ef72`）；取证时没有修改原 DB。其 root CLOSED、PR #19/26 MERGED、materializing=1、blocked_groups=10、active_turns=0。临时测试 `actual_closed_continuation03_settles_without_dispatch` 通过：恢复两次后 materializing=0、PR #19 旧责任 retired、关闭通知 consumed；assignment 与 provider session 总数不变、blocked_groups 仍 10、active_turns 仍 0，没有 `offline-materialization` activation；PR #19 既有 direct-contact 事件仍 pending，`local_delivery_closed()` 仍为 true。该值在现有 `begin_agent_assignment`、reactivation 与 runnable-turn 路径阻止新模型工作。后续普通调度可能把已合并且无原生会话的成员收件标为 unreachable；消息及回执行保留，不能将其误称为已送达。
+
+`cargo check --offline` 对无临时测试的 `roles-v1-deploy-source/` 通过；上述两项隔离 Rust 行为测试均通过。此次验证并未启动完整 Factory 设施测试，也未触碰官方评分。实际部署仍以主 Agent 在受控停止 03、冻结工作区并确认无旧写入者后使用 Linux 候选接续为前提；任何热替换正在运行的 Braid 都不满足离线入口的安全条件。OPEN 分支如果现有 desired 成员/Profile/revision 与中断记录不同，会显式报错并回滚，需要先调查身份变化，而不会静默把旧 worktree 指给新身份。
+
+## 真实恢复与官网接续
+
+03已通过lab stop确认cancelled，原Docker容器不再运行；完整8.7GB工作区冻结为WSL runs/sheet-materialization-recovery/stopped03-workspace.tar.gz，SHA62592dfbc13df47cd35dca4e640ea587627b56f7bf43a3610e8e6c48dcb07d14。仅roles-v1+本次补丁的Linux二进制e80b0f7bac73bf1e3fde4de9cfc370eda8a79a7428f95d7abccd6c196a6b96c6已进入新接续，未刷新原生材料。
+新本地run为pi-braid--hackathon--sheet-130e238edd5a6a，Braid自然返回quiescent、exit0；materializing=0。原main提交3fb842a46362c6c676bb2e99f92453d46f8394d9被正常导出，恢复前后tree同为577ecba337455e48310e7f1f150acfcdccee4657；比较收据在原保留工作区continuation-1790600888628872349-application-identity.json。
+旧监听82066已停止，新单题监听21670已完成打包/prepare/snapshot/create/start，不重复启动原run。官网新run https://arc-bench.com/runs/fbcbda090229 ，billing_mode=self_funded，13:10UTC已启动，当前无分数。journal沿用原continuation-03/sheet-official，明确source_application归新恢复run。第十次迭代新完整运行未启动。
