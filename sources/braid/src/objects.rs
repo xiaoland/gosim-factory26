@@ -961,7 +961,7 @@ impl LocalObjects {
                 }
                 let mut affected = vec![node(kind,id)];
                 affected.extend([item.parent,parent].into_iter().flatten().map(|parent| node("issue",parent)));
-                self.metadata_changed(&tx, &affected, writer.as_ref(), &format!("Issue #{id} parent changed；读取 `braid issue view {id}`"))?;
+                self.metadata_changed(&tx, &affected, writer.as_ref(), &format!("Issue #{id} parent changed；详情入口：`braid issue view {id}`"))?;
             }
         }
         let title = title.unwrap_or(&item.title);
@@ -980,7 +980,7 @@ impl LocalObjects {
                     self.notify_followers(&tx, &node(kind,id), writer.as_ref(), &format!("{kind} #{id} description changed"))?;
                     self.description_changed(&tx, &node(kind,id), writer.as_ref(), &format!("{kind} #{id} description 已修改"))?;
                 } else {
-                    self.metadata_changed(&tx, &[node(kind,id)], writer.as_ref(), &format!("{kind} #{id} title 已修改；读取 `braid {kind} view {id}`"))?;
+                    self.metadata_changed(&tx, &[node(kind,id)], writer.as_ref(), &format!("{kind} #{id} title 已修改；详情入口：`braid {kind} view {id}`"))?;
                 }
             }
         }
@@ -1105,7 +1105,7 @@ impl LocalObjects {
             let label = if source.starts_with("issue:") { "Issue" } else { "PR" };
             let number = source.split(':').nth(1).unwrap_or(&source);
             let author = Self::member_login(tx, writer)?.map(|login| format!("（@{login}）")).unwrap_or_default();
-            let reference = format!("{label} #{number}：评论 #{comment} {action}{author}；读取 `braid comment view {comment}`");
+            let reference = format!("{label} #{number}：评论 #{comment} {action}{author}；正文入口：`braid comment view {comment}`");
             let event = self.emit_with_id(tx, &target, kind, (state != "OPEN").then_some("direct_contact"), &reference, writer, Some(format!("comment:{comment}")))?;
             if let Some(ref event) = event {
                 tx.execute("UPDATE events SET recipient_login=?2,recipient_revision=?3 WHERE event_id=?1", params![event,login,revision])?;
@@ -1819,7 +1819,7 @@ impl LocalObjects {
         Self::activity_in(tx, &node("issue",issue), writer, if active { "linked_pr" } else { "unlinked_pr" }, None, &format!("PR #{pr}"))?;
         Self::activity_in(tx, &node("pr",pr), writer, if active { "linked_issue" } else { "unlinked_issue" }, None, &format!("Issue #{issue}"))?;
         self.metadata_changed(tx, &[node("pr",pr),node("issue",issue)], writer,
-            &format!("PR #{pr} 与 Issue #{issue} 关联变为 {active}；读取 `braid pr view {pr}`"))?;
+            &format!("PR #{pr} 与 Issue #{issue} 关联变为 {active}；详情入口：`braid pr view {pr}`"))?;
         Ok(true)
     }
     pub fn link(&self, turn: Option<&str>, pr: i64, issue: i64, active: bool) -> Result<bool> {

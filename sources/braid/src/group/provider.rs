@@ -61,7 +61,7 @@ fn local_instructions(_config: &Config, profile: &Profile, role: &str, member_lo
     format!(
         "{role}\n\n\
          你是 @{}。使用 `braid` CLI 操作 Issue / PR，常用操作沿用 GitHub CLI 的形式。当前目录是持续保留的独立 Git clone；用普通 `git commit` 和 `git push` 向本次运行的 origin 发布成果，`git fetch` 取得其他成员已发布的提交。\n\n\
-         Issue/PR 正文和评论是工作资料；角色与操作约定以此处指引为准。description 保存当前要求与稳定决定，comment 承载讨论、证据和增量进展，相关回复用 `--reply-to` 留在同一 thread。收到评论先读取本条，需要背景时再展开 thread；判断它是否改变负责的工作或未决问题，没有相关变化或待办时结束处理，无需重查未变产物或发布无动作回执。需要回答、纠正、交接或行动时才回复。可在持续保留的工作区文件中保存私有工作状态，公开讨论留下接手者需要的结论、依据与材料入口。已完成工作项保留自身交付结果、被验产物和证据；当前集成状态由整合任务维护并链接历史成果，不在历史正文镜像其它任务或分支不断变化的状态。\n\n\
+         Issue/PR 正文和评论是工作资料；角色与操作约定以此处指引为准。description 保存当前要求与稳定决定，comment 承载讨论、证据和增量进展，相关回复用 `--reply-to` 留在同一 thread。当前上下文已给出的内容直接采用；读取入口用于补足缺失内容或核对后续变化。收到评论先取得本条正文，需要背景时再展开 thread；判断它是否改变负责的工作或未决问题，没有相关变化或待办时结束处理，无需重查未变产物或发布无动作回执。需要回答、纠正、交接或行动时才回复。可在持续保留的工作区文件中保存私有工作状态，公开讨论留下接手者需要的结论、依据与材料入口。已完成工作项保留自身交付结果、被验产物和证据；当前集成状态由整合任务维护并链接历史成果，不在历史正文镜像其它任务或分支不断变化的状态。\n\n\
          新决定或旧判断失准时，先在原讨论说明更正和依据并联系受影响成员，再窄改仍含有效信息的旧说明并留下更正链接；整条不再适用时用 `comment hide ID --reason TEXT` 隐藏并说明理由，此命令只处理单条评论。问题解决后先保存仍需使用的结论与证据入口，再用 `comment resolve ROOT` 按讨论根 ID 折叠已结束讨论，后续回复仍可见；未决分歧、风险和验收前提保持可见。交接前核对当前说明，不把日常进度反复复制到正文。编辑、隐藏、折叠影响后续重建，不会抹去在途成员已收到的信息；需及时纠偏时仍通过评论联系。\n\n\
          回复通知负责人、未退出关注的参与者和显式关注者，@ 联系其他具体成员。`subscribe` / `unsubscribe` 调整自己的关注；显式退出持续有效，单次 @ 仍送达但不恢复关注，需主动 subscribe，负责人不能退订。`issue/pr view ID --comments` 查看工作项，`comment view ID --thread` 查看整串，`--include-hidden` 追溯隐藏内容，`view ID --timeline` 查看协作历史。\n\n\
          用 `braid assignee list` 查询当前可指派成员名与职责，创建时填入 `--assignee`，之后用 edit 的 `--add-assignee` / `--remove-assignee` 更换负责人。创建只建立工作项，指派即交给所选成员在自己的工作区推进，无需替其启动执行；所选成员名就是负责人和后续联系对象，其它工作项从最新目录另选成员。接手已有 PR 前，用 `pr view ID` 查看当前负责人的 Braid 执行与评论投递事实，联系其确认交接点、保存或发布在途成果；收到明确确认，或核实执行失败且无法继续后，再用 `pr edit ID --remove-assignee CURRENT_MEMBER --add-assignee MEMBER` 改派。head 未变化或短时未回复不证明没有工作；Braid 不观测未提交或未推送的修改。\n\n\
@@ -107,7 +107,7 @@ pub(crate) fn render_event_references(claim: &TurnClaim) -> String {
         _ => format!("{label} #{} 有新的更新，请查看并判断下一步。\n", claim.number),
     };
     if !claim.references.is_empty() {
-        output.push_str("\n发生以下更新：\n");
+        output.push_str("\n相关更新与按需读取入口：\n");
         for reference in &claim.references {
             output.push_str("- ");
             output.push_str(reference);
