@@ -1,6 +1,6 @@
 # e20261001-01：I13 首轮实验
 
-当前状态（2026-10-01 17:13 CST核对）：GLM/Sheet已在WSL真实启动，尚未取得首条模型请求证据；另外三项仍在恢复准备。原运行均已停止并保全，尚无有效应用评分。当前为官网Flash两项、自有API本地GLM两项。移除DeepSeek Braid成员，内部DeepSeek sub-agent保留；不建立永久的PR模型限定。
+当前状态（2026-10-01 17:15 CST核对）：GLM/Sheet已在WSL真实启动，17:13:14起网关已记录实际GLM-5.3请求完成；另外三项仍在恢复准备。原运行均已停止并保全，尚无有效应用评分。当前为官网Flash两项、自有API本地GLM两项。移除DeepSeek Braid成员，内部DeepSeek sub-agent保留；不建立永久的PR模型限定。
 
 ## 启动以来的工作树
 
@@ -10,13 +10,13 @@ I13 / e20261001-01
 │  └─ CLI、上下文、sub-agent、SVC、协作/需求树、提示词、工具、存储生命周期
 ├─ 四个逻辑运行［已启动1项；另3项准备中］
 │  ├─ Flash/GitHub → 官网接续［优先；未启动］
-│  │  └─ 成员迁移实际反馈通过；最终诊断入口复核、组包和启动待完成
+│  │  └─ 成员迁移实际反馈、诊断入口独立复核通过；最终包实际验证和启动待完成
 │  ├─ Flash/Sheet → 官网接续［未启动］
 │  │  └─ 本地一致快照已保全；复用恢复入口，完成反向路径兼容与最终包
 │  ├─ GLM/GitHub → WSL接续［未启动］
 │  │  └─ 旧原生会话切自有网关的显式接口已写；待稳定版验证/冻结
 │  └─ GLM/Sheet → WSL干净启动［17:12:39容器已运行］
-│     └─ 当前仍在初始化；首条模型请求与语义进展待证据
+│     └─ 实际GLM-5.3模型请求已成功；应用语义进展由后续原生证据判断
 ├─ 模型与费用［配置确定］
 │  ├─ 官网：不勾选使用比赛额度评测、不上榜；官方ARC地址 + 自有key
 │  ├─ 本地：自有API；GLM→Bigmodel，K3→Kimi，内部DS Flash→Qwen
@@ -24,7 +24,7 @@ I13 / e20261001-01
 ├─ 官网SIGKILL诊断与恢复［官网启动前置］
 │  ├─ 资源/cgroup/进程及自身信号记录［完成，真实Linux操作验证］
 │  ├─ 统一Linux Braid构建［完成］
-│  ├─ 新旧attempt证据隔离、启动/wait接线［修订完成；独立复核中］
+│  ├─ 新旧attempt证据隔离、启动/wait接线［源码独立复核通过；最终包实际验证待完成］
 │  ├─ ZIP导出/原件保全/权限与路径恢复［基础能力完成］
 │  ├─ 自动恢复［方案完成，未实现/未开启收费重试；建议每来源至多1次］
 │  └─ 历史SIGKILL来源［未知］；没有WSL同类故障事实
@@ -36,7 +36,7 @@ I13 / e20261001-01
    └─ 原失败/暂停现场［已保全］；本轮尚无有效应用评分
 ```
 
-本地Sheet真实身份：experiment `exp-20261001-171054-581f65`，run `glm-root--hackathon--sheet-45bf2d21de2ec4`；容器 `arcbench-local-1bcf230cc22d`，4 GiB/2 CPU、bridge、1000:1000，读回running且未暂停。包SHA256为 `a0a42a42955e755179cf9086950de2ad010023154043ab7e5951cd7e0ae5d5b9`，来源见 `runs/iteration13/local-self-funded-20261001/sheet-start-readback.json` 与 `sheet-clean-receipt.json`。本地两题使用同批下独立冻结的 `sheet/`、`github/` 实验，因为既有lab冻结后不能追加job；共同experiment_key为 `e20261001-01`、batch为 `local-self-funded-20261001`，本地总并行上限2。
+本地Sheet真实身份：experiment `exp-20261001-171054-581f65`，run `glm-root--hackathon--sheet-45bf2d21de2ec4`；容器 `arcbench-local-1bcf230cc22d`，4 GiB/2 CPU、bridge、1000:1000，读回running且未暂停。包SHA256为 `a0a42a42955e755179cf9086950de2ad010023154043ab7e5951cd7e0ae5d5b9`，来源见 `runs/iteration13/local-self-funded-20261001/sheet-start-readback.json` 与 `sheet-clean-receipt.json`。运行负责人随后核对实际网关日志：17:13:14 CST首个 `glm-5.3` 请求完成，第二请求也完成；两者归该run的独立binding，参数保持high/thinking配方，未发送额外付费探测。本地两题使用同批下独立冻结的 `sheet/`、`github/` 实验，因为既有lab冻结后不能追加job；共同experiment_key为 `e20261001-01`、batch为 `local-self-funded-20261001`，本地总并行上限2。
 
 不再执行的分支：WSL宿主SIGKILL追踪已撤回；第二个Console HTTP已退役；原两槽位矩阵已停止；单项g03及四项全本地新矩阵均未启动，现由两官网、两本地取代。旧Debian恢复与I12不在范围内。旧官网run保持终态，新官网恢复使用新身份并明确来源。
 
