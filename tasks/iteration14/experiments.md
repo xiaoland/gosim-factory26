@@ -23,6 +23,8 @@
 
 首批三容器已经实际启动，独立读取确认 memory=2147483648、NanoCpus=2000000000、init=true、MODEL/VISUAL_MODEL均为glm-5.3-flash。回执在 initial-container-readback.json；此时仍处于SDK材料准备，尚未据此声称模型开始调用或应用进展。
 
+随后三项均建立真实Braid数据库、根provider_session及Pi原生session，lifecycle=running；config.json读回对应各variant、Flash / high。独立身份回执为 initial-provider-readback.json，启动综合为 start-summary.json。根工作进程和原生session已经存在，但尚不据此声称cleaner调用、reviewer验收或应用进展。实现提交为2d6784f；冻结源码和包始终以各自摘要为准。
+
 e2e 的最后一轮 skill 诊断指引晚于本轮包冻结：当前源码补充了默认Chromium、不重复安装、应用run显式ai-trace及失败schema用量/规划回退说明。运行代码和addon一致，冻结包保留原skill文本与摘要，不偷偷替换；原包已包含ai-trace能力说明。后续包可采用新的指引，该差异不算已在I14-0采用。
 
 根模型判据为 I13 的两题两组正式最终分数完整，GLM 两题平均减 Flash 两题平均至少 10 个百分点。当前四个指定来源均无有效完整最终结果，首次三项均冻结 Flash。未来未派发项在各自 `selection.json` 承诺前重新消费已有结果；已经交给 operation 的项保持原选择。若后来切换，按实际根模型分层比较，不能将不同条件合并成严格机制对照。
