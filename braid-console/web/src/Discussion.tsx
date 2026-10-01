@@ -25,7 +25,8 @@ function CommentCard({ comment, expandedBody, depth, ...props }: Props & {
 }) {
   const [showHidden, setShowHidden] = useState(false);
   const id = Number(comment.database_id);
-  const hidden = comment.minimized || comment.lifecycle === 'hidden';
+  const ownHidden = comment.minimized || comment.lifecycle === 'hidden';
+  const hidden = ownHidden || comment.hidden_by != null;
   const needsBody = (hidden || comment.body == null) && !comment.deleted;
   const fetched = useQuery({
     queryKey: ['comment', props.run, id],
@@ -55,12 +56,13 @@ function CommentCard({ comment, expandedBody, depth, ...props }: Props & {
       </Row>}
       {fetched.error && showHidden && <Notice tone="error" title="正文读取失败" description={<pre>{fetched.error.message}</pre>} />}
       {comment.minimized_reason && <div className="hidden-reason"><EyeOff /> 隐藏原因：{comment.minimized_reason}</div>}
+      {comment.hidden_by != null && <div className="hidden-reason"><EyeOff /> 由祖先 <a href={`#comment-${comment.hidden_by}`}>#{comment.hidden_by}</a> 隐藏{comment.hidden_by_reason ? `：${comment.hidden_by_reason}` : ''}</div>}
     </div>
     <Row className="comment-footer" justify="space-between" gap={8} wrap>
       {props.writable ? <Row gap={4} wrap>
         <ActionButton size="sm" variant="ghost" icon={<MessageSquare />} disabled={props.busy} onClick={() => props.onReply(id)}>回复</ActionButton>
         {!comment.deleted && <ActionButton size="sm" variant="ghost" disabled={props.busy}
-          onClick={() => hidden ? props.onAction({ action: 'unhide', comment: id }) : props.onHide(id)}>{hidden ? '取消此条隐藏' : '隐藏此条'}</ActionButton>}
+          onClick={() => ownHidden ? props.onAction({ action: 'unhide', comment: id }) : props.onHide(id)}>{ownHidden ? '取消此条自身隐藏' : '隐藏此分支'}</ActionButton>}
       </Row> : <span />}
       {showHidden && needsBody && <ActionButton size="sm" variant="ghost" onClick={() => setShowHidden(false)}>收起正文</ActionButton>}
     </Row>
@@ -114,7 +116,7 @@ function Thread({ nodes, ...props }: Props & { nodes: Comment[] }) {
     <Row className="thread-summary" wrap>
       <Stack>
         <strong>讨论根 #{root}</strong>
-        <span className="subtle">解决会折叠整串已有评论，取消解决会展开已解决历史；新回复不会自动折叠。局部整理请隐藏此条。</span>
+        <span className="subtle">解决会折叠整串已有评论，新回复不会自动折叠。隐藏覆盖该条及其现有、未来后代；取消隐藏保留后代自身的隐藏选择。</span>
       </Stack>
       {props.writable && rootComment && !rootComment.deleted && <ActionButton size="sm" variant="ghost" icon={<CircleCheck />} disabled={props.busy}
         onClick={() => props.onAction({ action: resolved ? 'unresolve' : 'resolve', comment: root })}>{resolved ? '取消整串解决' : '解决整串讨论'}</ActionButton>}

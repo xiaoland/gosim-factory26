@@ -59,6 +59,8 @@ export interface Comment {
   resolved: boolean;
   minimized: boolean;
   minimized_reason: string | null;
+  hidden_by: number | null;
+  hidden_by_reason: string | null;
   deleted: boolean;
   lifecycle: string;
 }

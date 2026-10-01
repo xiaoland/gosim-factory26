@@ -1,11 +1,15 @@
 ---
 name: svc-task-packet
-description: Use for multi-step work to keep current reasoning, decisions, evidence, and work in progress usable outside the conversation, during investigation, implementation, coordination, and recovery.
+description: Use before and during non-trivial investigation, design, implementation, coordination, or recovery to keep current reasoning, decisions, evidence, and work in progress usable outside the conversation.
 metadata:
   version: "16.0.0"
 ---
 
 # Task Packet
+
+A task packet holds the task's current explanation, route, evidence, and next action.
+Use [project documentation](../svc-documentation/SKILL.md#relationship-to-task-state) for reusable product, technical, and operating definitions; link them from the packet rather than keeping a second definition.
+A work summary or handoff communicates the result, remaining obligations, and the material its recipient needs; it does not replace the packet or the shared definition.
 
 Conversation accumulates in time order, while the current decision depends on a smaller set of still-applicable facts, explanations, and unanswered questions.
 Appending every return makes that basis harder to recover and can revive an old conclusion after its assumptions changed.
@@ -15,16 +19,19 @@ It helps reasoning and action during the task, rather than merely documenting pr
 
 ## Start With the Existing Material
 
-For work with more than one obvious action, create or resume `tasks/<task-id>/packet.md`.
+When work needs investigation, design decisions, a multi-step implementation route, coordination, or recovery, create or resume `tasks/<task-id>/packet.md` before beginning that work.
+An immediate, self-contained action that needs no retained reasoning, dependencies, or continuation can proceed without a packet.
 First inspect an existing task entry and work in progress; do not start a competing packet or repeat work merely because the conversation changed.
+Establish the current basis and next action before implementation, then use and revise the packet as work proceeds; do not wait for code completion or the end of a session to create it.
 A short entry can begin with the following content, without requiring these as fixed headings:
 
 - The outcome and boundaries, with the original requirement entry.
 - The current explanation or decision and the evidence that supports it.
 - Material questions or assumptions that remain unresolved.
 - The next useful action, why it follows, and what observation or return can change it.
-- Existing owners and ongoing work, with entries to their materials and results when coordination matters.
+- Contributors and ongoing work that affect this task's next action, with entries to their current materials and results.
 
+Keep other work at its own entry; record only the dependency and ownership that affect this route rather than copying another task's contract, plan, or progress.
 Link the original observation, source, or detailed work rather than copying every transcript into the entry.
 The entry must still explain the current basis; a list of links leaves the next owner to reconstruct the answer.
 Keep it short enough to recover the problem and route before reading depth.
@@ -57,6 +64,7 @@ Preserve the condition and source that explain why a conclusion changed, while r
 Do not falsify history by replacing the original failed output with a later successful result.
 
 At handoff or recovery, leave enough current synthesis and ongoing-work entries to avoid repeating retrieval or overlapping existing effects.
+The recipient reads and resumes that basis before starting dependent work.
 At completion, state the actual result and remaining uncertainty with their evidence.
 Implemented source, raw observations, and durable project knowledge retain their own locations; the packet does not become another project specification.
 

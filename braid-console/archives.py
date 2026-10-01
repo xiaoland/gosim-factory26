@@ -155,19 +155,24 @@ class Archive:
     def comments(self, connection, target, *, include_hidden=False):
         rows = [dict(row) for row in connection.execute("SELECT * FROM local_comments WHERE work_item_node_id=? ORDER BY comment_id", (target,))]
         roots = {row["comment_id"]: row for row in rows}
+        hidden_ancestors = {}
         result = []
         for row in rows:
             root = row.get("thread_root", row["comment_id"])
             cutoff = roots.get(root, {}).get("resolved_through")
             folded = cutoff is not None and row["comment_id"] <= cutoff
-            visible = row["lifecycle"] == "visible" and not folded
+            parent = roots.get(row.get("reply_to"))
+            hidden_by = parent["comment_id"] if parent and parent["lifecycle"] == "hidden" else hidden_ancestors.get(row.get("reply_to"))
+            hidden_ancestors[row["comment_id"]] = hidden_by
+            visible = row["lifecycle"] == "visible" and hidden_by is None and not folded
             result.append({"database_id": str(row["comment_id"]),
                            "author": {"login": self.member(connection, row.get("system_author") or row["writer_group"])},
                            "body": row["body"] if row["lifecycle"] != "deleted" and (visible or include_hidden) else None,
-                           "created_at": row["created_at"], "updated_at": row["updated_at"],
+                           "created_at": row["created_at"], "updated_at": row["updated_at"] if visible or include_hidden else row["created_at"],
                            "reply_to": row.get("reply_to"), "thread_root": root,
                            "resolved": cutoff is not None, "folded": folded,
                            "minimized": row["lifecycle"] == "hidden", "minimized_reason": row.get("hide_reason"),
+                           "hidden_by": hidden_by, "hidden_by_reason": roots[hidden_by].get("hide_reason") if hidden_by is not None else None,
                            "deleted": row["lifecycle"] == "deleted", "lifecycle": row["lifecycle"]})
         return result
 
