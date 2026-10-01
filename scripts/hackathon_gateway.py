@@ -24,7 +24,7 @@ MODELS = {
 }
 
 
-def read_secrets(path):
+def read_secrets(path, models):
     path = path.resolve(strict=True)
     if path.stat().st_mode & 0o077:
         raise ValueError("model secrets must have mode 600")
@@ -36,7 +36,7 @@ def read_secrets(path):
         if not separator:
             raise ValueError(f"invalid secret assignment: {name}")
         values[name.strip()] = value.strip().strip('"').strip("'")
-    for vendor in MODELS.values():
+    for vendor in set(models.values()):
         for suffix in ("API_KEY", "BASE_URL"):
             if not values.get(f"{vendor}_{suffix}"):
                 raise ValueError(f"missing {vendor}_{suffix}")
@@ -237,9 +237,17 @@ def main():
     parser.add_argument("--port", type=int, default=4010)
     parser.add_argument("--preserve-parameters", action="store_true",
                         help="保留客户端推理、采样和输出参数，用于按现有配方运行")
+    parser.add_argument("--model-vendor", action="append", default=[], metavar="MODEL=VENDOR",
+                        help="显式增加或覆盖本次模型路由；VENDOR 为 GLM/KIMI/DEEPSEEK/QWEN")
     parser.add_argument("--container-host", default="172.17.0.1",
                         help="Docker bridge address of the WSL host")
     args = parser.parse_args()
+    models = dict(MODELS)
+    for route in args.model_vendor:
+        model, separator, vendor = route.partition("=")
+        if not separator or not model or vendor not in {"GLM", "KIMI", "DEEPSEEK", "QWEN"}:
+            raise ValueError(f"invalid model route {route!r}; expected MODEL=GLM/KIMI/DEEPSEEK/QWEN")
+        models[model] = vendor
     state = args.state.resolve()
     state.mkdir(parents=True, exist_ok=True)
     state.chmod(0o700)
@@ -262,7 +270,7 @@ def main():
                 "use_chat_completions_api": True,
             },
             "model_info": {"mode": "chat"},
-        } for model, vendor in MODELS.items()],
+        } for model, vendor in models.items()],
         "general_settings": {"master_key": "os.environ/LITELLM_MASTER_KEY",
                              "custom_auth": "hackathon_gateway_compat.user_api_key_auth"},
         "litellm_settings": {
@@ -279,7 +287,7 @@ def main():
         "port": args.port, "preserve_parameters": args.preserve_parameters,
         "callback_sha256": hashlib.sha256((source / "hackathon_gateway_compat.py").read_bytes()).hexdigest()}, indent=2) + "\n")
     runtime = args.runtime.resolve(strict=True)
-    env = dict(os.environ, **read_secrets(args.secrets), LITELLM_MASTER_KEY=token,
+    env = dict(os.environ, **read_secrets(args.secrets, models), LITELLM_MASTER_KEY=token,
                GATEWAY_REQUEST_LOG=str(state / "request-metadata.jsonl"),
                GATEWAY_BINDINGS_DIR=str(state / "bindings"),
                GATEWAY_PRESERVE_PARAMETERS="1" if args.preserve_parameters else "0")
