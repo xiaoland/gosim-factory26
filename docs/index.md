@@ -39,9 +39,10 @@
 | 参赛 SVC 方法与 skill 接线 | [Corpus](../tasks/svc-corpus-review/packet.md)、[skill](../tasks/svc-skill-integration/packet.md) |
 | Hackathon 能力选型与 SVC 技能路由 | [技能与工具设计](../tasks/hackathon-capabilities/packet.md)；[既有 Lite 基线](../tasks/hackathon-team-baseline/packet.md) |
 | Braid 工作项上下文、CLI 易用性与 Agent 指派 | [Braid 改进](../tasks/braid-usability/packet.md) |
+| Bub 原生 Agent 接入 | [独立接入任务](../tasks/braid-provider-expansion/packet.md)，已获开工且不属于 I13；Alma 暂缓。 |
 | 官方与本地实验的组织及恢复 | [双比赛官网记录](../tasks/dual-bench-hosted/packet.md)、[raw 本地基线](../tasks/raw-core-local-baseline/packet.md) |
 | 官网中断恢复、低频监控与耗时改进 | [实验设施](../tasks/experiment-infrastructure/packet.md)，长期操作见[恢复手册](deployment/recovery.md)。 |
-| 实验来源、查询与存储生命周期 | [端到端追溯](../tasks/experiment-traceability/packet.md)、[存储生命周期](../tasks/experiment-storage-lifecycle/packet.md)；后者的独立实现仍以分支/worktree 为准。 |
+| 实验来源、查询与存储生命周期 | [端到端追溯](../tasks/experiment-traceability/packet.md)、[存储生命周期](../tasks/experiment-storage-lifecycle/packet.md)；成果已[合入 I13](../tasks/iteration13/storage-lifecycle-integration.md)，现场操作范围另行记录。 |
 | Braid 产品加固与独立实验 | [产品加固](../tasks/braid-product-hardening/packet.md)；已授权范围及实测限制由 packet 保存。 |
 | 长期文档整理 | [本轮 packet](../tasks/durable-docs-curation/packet.md)，包含归属、来源及未核实边界。 |
 | Braid 独立架构与功能审查 | [架构审查](../tasks/braid-architecture-audit/packet.md) |
