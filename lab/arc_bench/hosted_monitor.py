@@ -56,6 +56,12 @@ def collect(base,comp,task,rid,batch,with_workspace=True):
         row['score']={key:status.get(key) for key in ('score','passed_count','failed_count',
             'feature_implemented_count','feature_total_count','token_cost_usd')}
         row['stages']={step['key']:step.get('status') for step in status.get('steps',[]) if 'key' in step}
+        if row['status']=='QUEUED' or (row['status'] not in TERMINAL
+                and row['stages'].get('start_agent')=='pending'
+                and row['stages'].get('deploy_agent') in ('pending','running','completed')):
+            row['preparing']=True
+            row['finished_at']=time.time();save(dest/'collection.json',row)
+            return row
         if not with_workspace and row['status'] not in TERMINAL:
             row['finished_at']=time.time();save(dest/'collection.json',row)
             return row
@@ -90,6 +96,8 @@ def collect(base,comp,task,rid,batch,with_workspace=True):
                 'errors':[error for source in sources for error in source['errors']],
                 'provider_health':{group:health for source in sources for group,health in source.get('provider_health',{}).items()}, 'sources':sources}
             save(dest/'provider-observation.json',row['provider_observation'])
+            if not sources and row['status'] not in TERMINAL:
+                row['preparing']=True
             row['required_reads']=list(dict.fromkeys([str(path) for path in braid_status]
                 + [session['path'] for session in row['session_evidence'] if session['path']]))
         except Exception as e:row['workspace_error']=str(e)
@@ -114,6 +122,8 @@ def run_batch(base,journals,state,*,stale_after=1800,min_samples=2):
             'phase':row.get('status'),'run_error':row.get('failure_reason'),'sessions':[],
             'errors':[], 'observation_error':row.get('observation_error') or row.get('workspace_error')}
         verdict=assess(observation,state.setdefault('liveness',{}).get(rid),stale_after=stale_after,min_samples=min_samples)
+        if row.get('preparing') and not state['liveness'].get(rid,{}).get('sessions'):
+            verdict['classification']='preparing'
         state['liveness'][rid]=verdict
         save(Path(row['evidence'])/'liveness.json',verdict)
         assessments.append({'run_id':rid,**verdict})
