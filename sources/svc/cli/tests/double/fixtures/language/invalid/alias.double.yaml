@@ -1,0 +1,10 @@
+language: svc.double/v0
+scenario:
+  name: aliases
+  claim: &hidden hidden structure is forbidden
+  boundary: {name: provider, protocol: http}
+  interactions:
+    - name: one
+      provenance: {kind: synthetic, source: https://example.invalid/one}
+      request: {method: POST, path: /one}
+      response: {status: 200, headers: {x-copy: *hidden}}

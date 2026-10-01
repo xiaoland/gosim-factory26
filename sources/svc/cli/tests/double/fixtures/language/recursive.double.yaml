@@ -1,0 +1,28 @@
+language: svc.double/v0
+scenario:
+  name: recursive-contract
+  claim: local recursive schemas remain immutable and network-free
+  boundary:
+    name: recursive-provider
+    protocol: http
+    contract:
+      kind: openapi-3.1-operation
+      source: contracts/recursive.openapi.yaml
+      method: POST
+      path: /v1/nodes
+  interactions:
+    - name: create-node
+      provenance:
+        kind: provider-contract
+        source: contracts/recursive.openapi.yaml#/paths/~1v1~1nodes/post
+      request:
+        method: POST
+        path: /v1/nodes
+        body:
+          structured:
+            value: root
+            next:
+              value: child
+              next: null
+      response:
+        status: 204

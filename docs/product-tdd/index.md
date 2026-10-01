@@ -67,7 +67,7 @@ I13 的根 Issue 直接负责共享架构与开发反馈设施，通过关联的
 I13 的配方政策保留在 profile：根基础 PR、develop → main 路线、advisor/vision 分工及应用反馈工具。独立 [braid-collaboration](../../harness/skills/braid-collaboration/SKILL.md) 持有工作边界、交接采用、变化和关闭方法，[arc-bench](../../harness/skills/arc-bench/SKILL.md) 持有需求层级、跨枝承诺、来源追溯与平台前提；后者单向引用通用协作方法。项目知识、task packet、原生委派与 V&V 的完整方法继续归 SVC，不在新技能复制。原生 executor 协助当前工作项，不承接已经指派给另一 Braid 成员的同一责任。
 CLI 的运行位置和调用身份由原生执行环境提供；Agent 使用普通对象命令，不传 state 或 writer-turn。
 跨工作项的信息通过 comment/reply 传递；代码通过各自 clone 对共同 origin 的 push/fetch 共享，私有会话内容不会因创建子 Issue 自动共享。
-代码修改应保持这些边界，Braid 自身的详细行为归其独立仓库，Factory 不复制维护一份内部设计。
+代码修改应保持这些边界，Braid 自身的详细行为归 `sources/braid/docs/`，Factory 不复制维护一份内部设计。Braid 与 SVC 源码由本仓库 Git 统一跟踪；源码归属统一不改变组件的运行时职责。
 
 Agent 的协作入口借助已有的 GitHub 使用经验，介绍 Issue/PR 的查看、评论与指派，并提示“像人类一样协作”。
 设计与实现分离的角色责任由 Braid 的 Issue/PR 指引和独立会话、工作区支持；具体怎样调查、设计、计划、验证由 SVC 提供通用方法。Braid 不据此自动选择实现者，也不以创建对象代替实际交接。

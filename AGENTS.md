@@ -16,7 +16,7 @@ harness/                 共用技能材料与工具依赖声明
 submission/              Linux 公共交付和资源构建
 scripts/                 打包、运行支持与模型网关
 lab/                     通用实验执行与 OTLP；ARC 接入；可选过程分析
-sources/                 独立维护的 Braid/SVC 仓库，父仓库 Git 忽略
+sources/                 本仓库统一跟踪的 Braid/SVC 源码，保留各自组件边界
 third_party/             外部评测器和历史依赖，Git 忽略
 experiments/             实验配方与归档定义，不是 Harness 的全局配置
 tasks/                   当前问题、设计、授权、计划与恢复点

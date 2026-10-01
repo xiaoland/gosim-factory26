@@ -1,0 +1,305 @@
+{
+  "$defs": {
+    "CliUsageOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "invalid-cli-usage",
+          "default": "invalid-cli-usage",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "CliUsageOutput",
+      "type": "object"
+    },
+    "DoubleDiagnosticOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "column": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Column"
+        },
+        "line": {
+          "anyOf": [
+            {
+              "minimum": 1,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Line"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        }
+      },
+      "required": [
+        "code",
+        "message"
+      ],
+      "title": "DoubleDiagnosticOutput",
+      "type": "object"
+    },
+    "DoubleSnapshotOutput": {
+      "additionalProperties": false,
+      "description": "Identity-only projection; snapshot content is deliberately private.",
+      "properties": {
+        "bytes": {
+          "minimum": 0,
+          "title": "Bytes",
+          "type": "integer"
+        },
+        "logical_path": {
+          "title": "Logical Path",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "logical_path",
+        "sha256",
+        "bytes"
+      ],
+      "title": "DoubleSnapshotOutput",
+      "type": "object"
+    },
+    "DoubleValidateOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "claim": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Claim"
+        },
+        "command": {
+          "const": "double validate",
+          "default": "double validate",
+          "title": "Command",
+          "type": "string"
+        },
+        "diagnostic": {
+          "anyOf": [
+            {
+              "$ref": "#/$defs/DoubleDiagnosticOutput"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null
+        },
+        "fidelity": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Fidelity",
+          "type": "array"
+        },
+        "module": {
+          "title": "Module",
+          "type": "string"
+        },
+        "nonclaims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Nonclaims",
+          "type": "array"
+        },
+        "scenario_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scenario Digest"
+        },
+        "scenario_name": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Scenario Name"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "snapshots": {
+          "items": {
+            "$ref": "#/$defs/DoubleSnapshotOutput"
+          },
+          "title": "Snapshots",
+          "type": "array"
+        },
+        "valid": {
+          "title": "Valid",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "module",
+        "valid",
+        "fidelity",
+        "nonclaims",
+        "snapshots"
+      ],
+      "title": "DoubleValidateOutput",
+      "type": "object"
+    },
+    "DoubleValidateRuntimeUnavailableOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "double validate",
+          "default": "double validate",
+          "title": "Command",
+          "type": "string"
+        },
+        "continuation": {
+          "const": "pip install 'sustainable-vibe-coding[double]'",
+          "default": "pip install 'sustainable-vibe-coding[double]'",
+          "title": "Continuation",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "const": "double-runtime-unavailable",
+          "default": "double-runtime-unavailable",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "DoubleValidateRuntimeUnavailableOutput",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "MachineError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/MachineErrorBody"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "MachineError",
+      "type": "object"
+    },
+    "MachineErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "title": "MachineErrorBody",
+      "type": "object"
+    }
+  },
+  "$id": "urn:svc:cli-output:double-validate:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/DoubleValidateOutput"
+    },
+    {
+      "$ref": "#/$defs/DoubleValidateRuntimeUnavailableOutput"
+    },
+    {
+      "$ref": "#/$defs/MachineError"
+    },
+    {
+      "$ref": "#/$defs/CliUsageOutput"
+    }
+  ],
+  "title": "SVC double-validate machine output",
+  "x-svc-result-schema-version": 1
+}

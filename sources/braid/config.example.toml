@@ -1,0 +1,15 @@
+# local request JSON 的 profile 示例；连接参数通过 codex 或 pi 字段独立提供。
+id = "local"
+display_name = "Local coding agent"
+assignee_login = "local-agent"
+assignee_description = "处理本地 Issue 和 PR 的通用编码任务。"
+tags = ["issue", "pr"]
+adapter_type = "pi"
+adapter_version = "local"
+provider = "local"
+model = "model"
+reasoning = "high"
+user_instructions = ""
+workspace = "/absolute/path/to/repository"
+context_soft_ratio = 0.8
+context_hard_bytes = 1000000

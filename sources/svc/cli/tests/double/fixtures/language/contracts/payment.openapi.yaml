@@ -1,0 +1,20 @@
+openapi: 3.1.0
+info:
+  title: Payment provider fixture
+  version: 1.0.0
+paths:
+  /v1/payments:
+    post:
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: schemas.yaml#/$defs/CreatePayment
+      responses:
+        '201':
+          description: Created
+          content:
+            application/json:
+              schema:
+                $ref: schemas.yaml#/$defs/PaymentCreated

@@ -1,0 +1,117 @@
+language: svc.double/v0
+
+scenario:
+  name: payment-confirmed
+  claim: consumer exposes a paid order after an accepted provider event
+  boundary:
+    name: payment-provider
+    protocol: http
+    contract:
+      kind: openapi-3.1-operation
+      source: contracts/payment.openapi.yaml
+      method: POST
+      path: /v1/payments
+  policy:
+    event-targets: loopback-only
+
+  interactions:
+    - name: create-payment
+      provenance:
+        kind: provider-contract
+        source: contracts/payment.openapi.yaml#/paths/~1v1~1payments/post
+      request:
+        method: POST
+        path: /v1/payments
+        query:
+          observed-at: 2026-08-10T02:00:00Z
+          trace:
+            $bsl:
+              kind: match
+              example: trace-001
+              match:
+                kind: regex
+                pattern: '^trace-[0-9]{3}$'
+        headers:
+          Content-Type: application/json
+          X-Request-Id:
+            $bsl:
+              kind: capture
+              name: request_id
+              example: 00000000-0000-4000-8000-000000000002
+              match:
+                kind: semantic
+                semantic: rfc.uuid
+                using: svc.rfc-uuid/v1
+        body:
+          structured:
+            externalId:
+              $bsl:
+                kind: capture
+                name: external_id
+                example: 00000000-0000-4000-8000-000000000001
+                match:
+                  kind: semantic
+                  semantic: rfc.uuid
+                  using: svc.rfc-uuid/v1
+      response:
+        status: 201
+        headers:
+          Content-Type: application/json
+          X-Payment-Id:
+            $bsl:
+              kind: generated
+              semantic: opaque-token
+              using: svc.opaque-token/v1
+              options:
+                alphabet: lower-alphanumeric
+                length: 24
+              bind: payment_id
+              validate:
+                kind: regex
+                pattern: '^[a-z0-9]{24}$'
+        body:
+          structured:
+            paymentId:
+              $bsl:
+                kind: derived
+                expression: bindings.payment_id
+                validate:
+                  kind: regex
+                  pattern: '^[a-z0-9]{24}$'
+
+  events:
+    - name: payment.succeeded
+      target: consumer.payment-events
+      provenance:
+        kind: provider-documentation
+        source: https://provider.example/docs/payment-events
+      request:
+        method: POST
+        path: /webhooks/payment
+        headers:
+          Content-Type: application/json
+          X-Request-Id:
+            $bsl:
+              kind: derived
+              expression: bindings.request_id
+              validate:
+                kind: semantic
+                semantic: rfc.uuid
+                using: svc.rfc-uuid/v1
+        body:
+          structured:
+            externalId:
+              $bsl:
+                kind: derived
+                expression: bindings.external_id
+                validate:
+                  kind: semantic
+                  semantic: rfc.uuid
+                  using: svc.rfc-uuid/v1
+            paymentId:
+              $bsl:
+                kind: derived
+                expression: bindings.payment_id
+                validate:
+                  kind: regex
+                  pattern: '^[a-z0-9]{24}$'

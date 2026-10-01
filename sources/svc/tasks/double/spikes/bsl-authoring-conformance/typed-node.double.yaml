@@ -1,0 +1,102 @@
+language: svc.bsl/v0-spike
+
+scenario:
+  name: accepted-ride-correlation
+  claim: propagation
+  boundary: mobility-provider
+  contract:
+    kind: openapi-3.1-operation
+    source: openapi-3.1.yaml
+    method: POST
+    path: /v1/rides
+  policy:
+    unmatched: fail
+    real-egress: deny
+    state: isolated-run
+
+  run:
+    seed: 123
+    clock: "2026-08-10T10:00:00+08:00"
+
+  interactions:
+    - name: create-ride
+      provenance:
+        kind: consumer-contract
+        source: openapi-3.1.yaml#/paths/~1v1~1rides/post
+      fidelity:
+        claims: [http-json-subset, selected-operation-schema, selected-values]
+        non-claims: [provider-business-behavior, provider-currentness, tls]
+      request:
+        method: POST
+        path: /v1/rides
+        body:
+          json:
+            externalId:
+              $bsl:
+                example: 00000000-0000-4000-8000-000000000001
+                match:
+                  semantic: rfc.uuid
+                bind: external_id
+      response:
+        status: 201
+        headers:
+          Content-Type: application/json
+        body:
+          json:
+            rideId:
+              $bsl:
+                generate:
+                  semantic: opaque.provider-token
+                  using: svc.opaque-token/v1
+                  match:
+                    regex: ^ride_[a-z0-9]{16}$
+                bind: ride_id
+            vehicleRegistration:
+              $bsl:
+                generate:
+                  semantic: uk.dvla.current-registration-mark.syntax
+                  using: spike.uk-dvla-current-style/v1
+                  locale: en_GB
+                  authority: https://dvlaregistrations.dvla.gov.uk/help/search.html?id=1&search_text=%2A
+                  match:
+                    semantic: uk.dvla.current-registration-mark.syntax
+                    using: spike.uk-dvla-current-style-validator/v1
+                bind: vehicle_registration
+
+  events:
+    - name: ride.accepted
+      provenance:
+        kind: consumer-contract
+        source: spike-scenario
+      fidelity:
+        claims: [http-json-subset, explicit-correlation]
+        non-claims: [provider-scheduling, retry, signing]
+      to: consumer.ride-events
+      request:
+        method: POST
+        path: /events/rides
+        headers:
+          Content-Type: application/json
+          X-Provider-Event:
+            $bsl:
+              derive: "'event-' + captures.ride_id"
+              match:
+                regex: ^event-ride_[a-z0-9]{16}$
+        body:
+          json:
+            externalId:
+              $bsl:
+                derive: captures.external_id
+                match:
+                  semantic: rfc.uuid
+            rideId:
+              $bsl:
+                derive: captures.ride_id
+                match:
+                  regex: ^ride_[a-z0-9]{16}$
+            vehicleRegistration:
+              $bsl:
+                derive: captures.vehicle_registration
+                match:
+                  semantic: uk.dvla.current-registration-mark.syntax
+                  using: spike.uk-dvla-current-style-validator/v1

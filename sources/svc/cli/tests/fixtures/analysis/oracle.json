@@ -1,0 +1,30 @@
+{
+  "codex": {
+    "executions": ["root", "child"],
+    "delegations": [["root", "child"]],
+    "usage": {
+      "root": {"input": 160, "output": 20, "cache_read": 30, "reasoning": 6, "total": 180},
+      "child": {"input": 80, "output": 15, "cache_read": 0, "reasoning": 5, "total": 95}
+    },
+    "highest_usage_execution": "child",
+    "highest_usage_metric": "output"
+  },
+  "pi": {
+    "active_leaf": "a2",
+    "active_path": ["u1", "a1", "t1", "b1", "c1", "a2"],
+    "all_work_usage": {"input": 114, "output": 25, "cache_read": 15, "cache_write": 0, "reasoning": 3},
+    "active_path_usage": {"input": 94, "output": 20, "cache_read": 15, "cache_write": 0, "reasoning": 3},
+    "fork_new_usage": {"input": 12, "output": 4, "cache_read": 2, "cache_write": 0},
+    "fork_relation": "history_inheritance"
+  },
+  "accounting_cases": {
+    "identical_duplicate": {"samples": [10, 10], "known_delta": 10, "ambiguous": 0},
+    "conflicting_duplicate": {"samples": [10, 12], "known_delta": 0, "ambiguous": 2},
+    "unknown_cumulative_baseline": {"samples": [100, 140], "known_delta": 40, "unknown_baseline": 100},
+    "known_zero_baseline": {"samples": [100, 140], "known_delta": 140, "unknown_baseline": 0},
+    "reset": {"samples": [100, 140, 20, 35], "known_delta": 175, "unknown_baseline": 0},
+    "unexplained_decrease": {"samples": [100, 140, 20], "known_delta": 140, "ambiguous": 1},
+    "self_and_subtree": {"self": 20, "subtree": 50, "reported_separately": true},
+    "missing_metric": {"input": 10, "output": null}
+  }
+}

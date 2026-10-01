@@ -12,6 +12,8 @@ def git(source, *args):
 
 def export(source, output):
     source = source.resolve(strict=True)
+    if Path(git(source, 'rev-parse', '--show-toplevel').decode().strip()).resolve() != source:
+        raise ValueError('只接受独立仓库根目录；本仓库中的源码目录请通过父仓库交接')
     output = output.resolve()
     if output.is_relative_to(source):
         raise ValueError('交接目录必须位于源码仓库之外')

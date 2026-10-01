@@ -79,7 +79,7 @@ I13 打包可显式传 `--tool-env .env.i13-tools`，将 `CONTEXT7_API_KEY` 与 
 旧 runtime 和冻结包不会因此具备新工具；下次实验前须从当前 lock 和补丁构建新资源。
 
 团队 Harness 另需 Braid 二进制与 SVC 技能集合。
-使用现有 `sources/braid`、`sources/svc` 工作树。
+使用本仓库的 `sources/braid`、`sources/svc` 源码目录；它们由 Factory26 Git 统一跟踪，不再是嵌套仓库。
 I13 使用 `harness/skills/svc-{documentation,task-packet,sub-agents,verification}` 四个目录链接，指向 `sources/svc/skills/`；其它技能链接保留供既有消费者使用，`harness/skills/svc` 是归档 variant 的历史快照。需要不同技能来源时显式传入包含所选完整技能的 `--skills-root`（运行）或 `--skills`（打包）。
 缺源码时先确认所需上游与本地修改，不让能力解析触发隐式 clone 或切换分支。
 
@@ -104,29 +104,27 @@ python3 scripts/runtime.py dev-svc --svc-source ~/Development/svc
 | --- | --- |
 | 本仓 variant、技能入口、工具 lock | 跟随已提交源码；未提交改动需要单独交接。 |
 | npm/Linux 工具 | 通过上述 runtime 入口准备，使用对应 lock 和构建输入。 |
-| `sources/braid`、`sources/svc` | 独立 Git 仓库，父仓库 clone 不会带入；需取得实际采用的版本及尚未发布的本地修改。仅 clone 上游 main 不能保证等价。 |
+| `sources/braid`、`sources/svc` | 随本仓库 clone/checkout 取得；源码版本归父仓库 commit，未提交改动仍需单独交接。 |
 | 开发 `.venv/bin/svc` | 恢复完整开发 SVC 源码后运行 `runtime.py dev-svc --svc-source <该目录>`；不从裁减后的参赛树安装。 |
 | 官方 Runner、题目、镜像与旧 runs | 按运行说明取得或交接；它们不随源码自动出现。 |
 
-独立仓库按实际源码交接，不依赖先提交或推送：
+Factory26、Braid 与参赛 SVC 技能一起通过本仓库交接，不再分别 export/restore。迁入时的源码身份和独立 Git 历史恢复材料见[源码纳入记录](tasks/source-repository-integration/packet.md)。
+
+开发侧完整 SVC 若仍位于外部独立仓库，可按实际源码交接，不依赖先提交或推送：
 
 ```sh
-python3 scripts/sources.py export sources/braid /path/to/handoff/braid
-python3 scripts/sources.py export sources/svc /path/to/handoff/factory-svc
 python3 scripts/sources.py export ~/Development/svc /path/to/handoff/dev-svc
 ```
 
 将整个 handoff 目录复制到另一机器，恢复到尚不存在的目录：
 
 ```sh
-python3 scripts/sources.py restore /path/to/handoff/braid sources/braid
-python3 scripts/sources.py restore /path/to/handoff/factory-svc sources/svc
 python3 scripts/sources.py restore /path/to/handoff/dev-svc ~/Development/svc
 python3 scripts/runtime.py dev-svc --svc-source ~/Development/svc
 cargo build --locked --manifest-path sources/braid/Cargo.toml
 ```
 
-交接包含 Git bundle、本地修改的 binary patch、未跟踪文件、浅克隆边界及来源记录。
+外部独立仓库的交接包含 Git bundle、本地修改的 binary patch、未跟踪文件、浅克隆边界及来源记录。`sources.py export` 只接受仓库根目录，拒绝把本仓库中的源码子目录误导出为整个 Factory26。
 恢复保留本地提交、分支、origin 和修改内容；原有暂存/未暂存划分合并成工作区修改，Git 忽略的构建产物、环境和凭据不复制。
 现有目录拒绝覆盖；先选新位置，再决定是否替换旧工作树。
 这不是跨仓库事务快照，export 期间不要编辑该源码树；本仓未提交改动仍须另行交接。

@@ -1,0 +1,61 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pdm-project/setup-pdm@973541a5febeafcfdadf8a51211435be6ecfd90f # v4.5
+        with:
+          python-version: "3.11"
+          version: 2.28.0
+          cache: true
+      - run: pdm lock --check
+      - run: pdm install --frozen-lockfile -d -G quality -G test -G double
+      - name: Check repository contract
+        env:
+          SVC_BASE_REF: ${{ github.event.pull_request.base.sha || github.event.before }}
+        run: pdm run check
+      - run: pdm build -p cli
+      - name: Accept the built wheel
+        run: |
+          wheel=(cli/dist/*.whl)
+          test "${#wheel[@]}" -eq 1
+          mkdir -p /tmp/svc-wheelhouse
+          python -m pip download --dest /tmp/svc-wheelhouse "${wheel[0]}"
+          sha=$(python -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' "${wheel[0]}")
+          python tools/accept_agent_thread.py --slice all --wheel "${wheel[0]}" --expected-sha256 "$sha" --wheelhouse /tmp/svc-wheelhouse
+          python -m venv /tmp/svc-wheel
+          /tmp/svc-wheel/bin/pip install "${wheel[0]}[double]"
+          /tmp/svc-wheel/bin/svc --help
+          /tmp/svc-wheel/bin/svc lookup --path task-packet/ --json
+          /tmp/svc-wheel/bin/svc double validate cli/tests/double/fixtures/language/payment.double.yaml --json
+
+  python-next:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: pdm-project/setup-pdm@973541a5febeafcfdadf8a51211435be6ecfd90f # v4.5
+        with:
+          python-version: "3.14"
+          version: 2.28.0
+          cache: true
+      - run: pdm install --frozen-lockfile -d -G test -G double
+      - run: pdm run test

@@ -1,0 +1,7 @@
+language: svc.double/v0
+scenario:
+  name: unknown-key
+  claim: unknown fields fail closed
+  assertion: this product assertion is forbidden
+  boundary: {name: provider, protocol: http}
+  interactions: []

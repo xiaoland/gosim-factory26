@@ -1,0 +1,200 @@
+{
+  "$defs": {
+    "CliUsageOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "invalid-cli-usage",
+          "default": "invalid-cli-usage",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "CliUsageOutput",
+      "type": "object"
+    },
+    "DoubleEmitOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "double emit",
+          "default": "double emit",
+          "title": "Command",
+          "type": "string"
+        },
+        "event": {
+          "title": "Event",
+          "type": "string"
+        },
+        "http_status": {
+          "anyOf": [
+            {
+              "maximum": 599,
+              "minimum": 100,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Http Status"
+        },
+        "reason": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Reason"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "acknowledged",
+            "not-acknowledged",
+            "transport-failed",
+            "control-unavailable"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        }
+      },
+      "required": [
+        "run_id",
+        "event",
+        "status"
+      ],
+      "title": "DoubleEmitOutput",
+      "type": "object"
+    },
+    "DoubleEmitRuntimeUnavailableOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "double emit",
+          "default": "double emit",
+          "title": "Command",
+          "type": "string"
+        },
+        "continuation": {
+          "const": "pip install 'sustainable-vibe-coding[double]'",
+          "default": "pip install 'sustainable-vibe-coding[double]'",
+          "title": "Continuation",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "const": "double-runtime-unavailable",
+          "default": "double-runtime-unavailable",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "DoubleEmitRuntimeUnavailableOutput",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "MachineError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/MachineErrorBody"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "MachineError",
+      "type": "object"
+    },
+    "MachineErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "title": "MachineErrorBody",
+      "type": "object"
+    }
+  },
+  "$id": "urn:svc:cli-output:double-emit:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/DoubleEmitOutput"
+    },
+    {
+      "$ref": "#/$defs/DoubleEmitRuntimeUnavailableOutput"
+    },
+    {
+      "$ref": "#/$defs/MachineError"
+    },
+    {
+      "$ref": "#/$defs/CliUsageOutput"
+    }
+  ],
+  "title": "SVC double-emit machine output",
+  "x-svc-result-schema-version": 1
+}

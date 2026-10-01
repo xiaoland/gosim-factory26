@@ -1,0 +1,186 @@
+[project]
+name = "svc-workspace"
+version = "0.0.0"
+description = "Repository workspace for the SVC Corpus, tooling, and CLI."
+requires-python = ">=3.11"
+dependencies = []
+
+[project.optional-dependencies]
+double = ["sustainable-vibe-coding[double]"]
+
+[dependency-groups]
+quality = [
+    "mypy>=2.3,<2.4",
+    "import-linter>=2.13,<3",
+    "towncrier>=25.8,<26",
+]
+test = [
+    "pytest>=9,<10",
+    "pytest-asyncio>=1.4,<2",
+    "ruff>=0.15,<0.16",
+]
+
+[tool.pdm]
+distribution = false
+
+[tool.pdm.workspace]
+members = ["cli"]
+
+[tool.pdm.scripts]
+build-cli-output-schemas = "python -m tools.build_cli_output_schemas"
+check-cli-output-schemas = "python -m tools.build_cli_output_schemas --check"
+svc = "python -m svc_cli.cli"
+test-root = "pytest tests"
+test-cli = "pytest cli/tests"
+test = "pytest"
+format = "ruff format cli/src cli/tests tools tests"
+format-check = "ruff format --check cli/src cli/tests tools tests"
+lint = "ruff check cli/src cli/tests tools tests"
+lint-imports = "lint-imports"
+typecheck = "mypy"
+check = { composite = ["check-cli-output-schemas", "format-check", "lint", "typecheck", "lint-imports", "test"] }
+
+[tool.mypy]
+python_version = "3.11"
+files = [
+    "cli/src/svc_cli/*.py",
+    "cli/src/svc_cli/cli_output",
+    "cli/src/svc_cli/dev",
+    "cli/src/svc_cli/double",
+    "cli/src/svc_cli/run",
+    "cli/pdm_build.py",
+    "tools",
+]
+follow_imports = "silent"
+plugins = ["pydantic.mypy"]
+check_untyped_defs = true
+disallow_any_generics = true
+warn_unused_ignores = true
+show_error_codes = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+
+[tool.importlinter]
+root_package = "svc_cli"
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Analysis core remains provider UI and network neutral"
+type = "forbidden"
+source_modules = [
+    "svc_cli.analysis.protocol",
+    "svc_cli.analysis.query_v3",
+    "svc_cli.analysis.read_v3",
+]
+forbidden_modules = [
+    "svc_cli.telemetry.providers",
+    "textual",
+    "rich",
+    "urllib",
+    "http",
+    "socket",
+    "requests",
+    "httpx",
+]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Shared workspace identity remains public-domain neutral"
+type = "forbidden"
+source_modules = ["svc_cli.workspace"]
+forbidden_modules = ["svc_cli.dev", "svc_cli.double", "svc_cli.run"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Shared execution mechanics remain public-domain neutral"
+type = "forbidden"
+source_modules = ["svc_cli._execution"]
+forbidden_modules = ["svc_cli.dev", "svc_cli.double", "svc_cli.run"]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Shared file transactions remain controller neutral"
+type = "forbidden"
+source_modules = ["svc_cli.plans"]
+forbidden_modules = [
+    "svc_cli.dev",
+    "svc_cli.double",
+    "svc_cli.integration",
+    "svc_cli.project",
+    "svc_cli.run",
+    "svc_cli.upgrade",
+]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Release authority remains project-domain neutral"
+type = "forbidden"
+source_modules = ["svc_cli.release"]
+forbidden_modules = [
+    "svc_cli.dev",
+    "svc_cli.double",
+    "svc_cli.project",
+    "svc_cli.run",
+    "svc_cli.upgrade",
+]
+allow_indirect_imports = true
+
+[[tool.importlinter.contracts]]
+name = "Application services remain CLI interface neutral"
+type = "forbidden"
+source_modules = [
+    "svc_cli._execution",
+    "svc_cli.catalog",
+    "svc_cli.config",
+    "svc_cli.dev",
+    "svc_cli.double",
+    "svc_cli.errors",
+    "svc_cli.integration",
+    "svc_cli.lookup",
+    "svc_cli.model",
+    "svc_cli.plans",
+    "svc_cli.project",
+    "svc_cli.release",
+    "svc_cli.resources",
+    "svc_cli.run",
+    "svc_cli.upgrade",
+    "svc_cli.workspace",
+]
+forbidden_modules = [
+    "svc_cli.cli",
+    "svc_cli.cli_output",
+    "svc_cli.output_schema",
+]
+
+[[tool.importlinter.contracts]]
+name = "Command domains do not depend on the output schema registry"
+type = "forbidden"
+source_modules = [
+    "svc_cli.dev",
+    "svc_cli.double",
+    "svc_cli.lookup",
+    "svc_cli.project",
+    "svc_cli.run",
+    "svc_cli.upgrade",
+]
+forbidden_modules = ["svc_cli.output_schema"]
+allow_indirect_imports = true
+
+[tool.pytest.ini_options]
+addopts = ["--strict-config", "--strict-markers", "-ra"]
+testpaths = ["tests", "cli/tests"]
+asyncio_mode = "strict"
+asyncio_default_fixture_loop_scope = "function"
+asyncio_default_test_loop_scope = "function"
+pythonpath = [".", "cli/tests"]
+
+[tool.ruff]
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E4", "E7", "E9", "F", "B", "TID251"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"unittest".msg = "SVC tests use native pytest fixtures and monkeypatch."

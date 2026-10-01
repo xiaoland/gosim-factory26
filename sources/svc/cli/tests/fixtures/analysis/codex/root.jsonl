@@ -1,0 +1,7 @@
+{"timestamp":"2026-09-01T10:00:00Z","type":"session_meta","payload":{"id":"root","cwd":"/workspace/demo"}}
+{"timestamp":"2026-09-01T10:00:01Z","type":"response_item","payload":{"type":"message","role":"user","content":[{"type":"input_text","text":"Inspect the failing tests"}]}}
+{"timestamp":"2026-09-01T10:00:02Z","type":"response_item","payload":{"type":"function_call","name":"spawn_agent","call_id":"spawn-child","arguments":"{\"task\":\"inspect tests\"}"}}
+{"timestamp":"2026-09-01T10:00:02Z","type":"response_item","payload":{"type":"function_call_output","call_id":"spawn-child","output":"{\"agent_id\":\"child\"}"}}
+{"timestamp":"2026-09-01T10:00:03Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":100,"cached_input_tokens":20,"output_tokens":10,"reasoning_output_tokens":4,"total_tokens":110},"last_token_usage":{"input_tokens":100,"cached_input_tokens":20,"output_tokens":10,"reasoning_output_tokens":4,"total_tokens":110},"model_context_window":200000}}}
+{"timestamp":"2026-09-01T10:00:04Z","type":"event_msg","payload":{"type":"token_count","info":{"total_token_usage":{"input_tokens":160,"cached_input_tokens":30,"output_tokens":20,"reasoning_output_tokens":6,"total_tokens":180},"last_token_usage":{"input_tokens":60,"cached_input_tokens":10,"output_tokens":10,"reasoning_output_tokens":2,"total_tokens":70},"model_context_window":200000}}}
+{"timestamp":"2026-09-01T10:00:05Z","type":"event_msg","payload":{"type":"task_complete","status":"completed"}}

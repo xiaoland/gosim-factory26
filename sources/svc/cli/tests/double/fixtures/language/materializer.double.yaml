@@ -1,0 +1,23 @@
+language: svc.double/v0
+scenario:
+  name: materializer-inspection
+  claim: validation inspects but never executes Consumer materializer code
+  boundary:
+    name: provider
+    protocol: http
+  interactions:
+    - name: materialized-response
+      provenance:
+        kind: synthetic
+        source: https://example.invalid/materializer-fixture
+      request:
+        method: POST
+        path: /materialize
+      response:
+        status: 200
+        materializer:
+          argv: [python3, materializer-sentinel.py]
+          cwd: .
+          env: {}
+          timeout-ms: 2000
+          max-output-bytes: 1048576

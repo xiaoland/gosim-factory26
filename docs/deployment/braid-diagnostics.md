@@ -26,7 +26,7 @@ portable evidence 的页面包括 GitHub 式 Issue/PR 列表和讨论详情、�
 
 ## 常用操作
 
-在仓库根目录执行。需要 Python 3 和本机可执行的配套 Braid；当前 UI 需要二进制支持 `decode`、`reconstruct`、`render-markdown`。`sources/braid` 是独立仓库，代码取得及跨机器交接见[开发说明](../../CONTRIBUTING.md)。
+在仓库根目录执行。需要 Python 3 和本机可执行的配套 Braid；当前 UI 需要二进制支持 `decode`、`reconstruct`、`render-markdown`。`sources/braid` 由本仓库统一跟踪，代码取得及跨机器交接见[开发说明](../../CONTRIBUTING.md)。
 
 ```sh
 cargo build --locked --manifest-path sources/braid/Cargo.toml
@@ -123,7 +123,7 @@ Factory 自动补采最多等待 120 秒，错误单独记录，不覆盖应用�
 
 真实 Backend 已核对原生字节、对象、重复导出和 HTTP 错误；新包也有构建、接收器写入和原生材料反馈。各迭代实际运行材料需与冻结身份一起解释，不能据这些局部结果承诺所有历史或新运行的实时链路、子代理全文及 compaction/分支完整性。早期网站视觉与交互验收受工具 URL 策略阻断，未宣称通过。早期验证与原始收据见[阶段报告](../../reports/2026-09-24-braid-otlp.md)，自包含 Collector、Pi 时间回调和后续原生关联修复见[设施实施](../../tasks/experiment-infrastructure/cells/self-contained-observability.md)及当前迭代 packet；不同来源的验收范围不能混用。
 
-修改展示优先用已归档真实 Backend 生成新目录并核对原始数据，不默认启动模型实验，不新增 Factory 测试、mock 或 smoke。改 Braid 需在其独立仓库构建并更新对应合同；旧包不会因宿主代码更新获得新 exporter 能力。
+修改展示优先用已归档真实 Backend 生成新目录并核对原始数据，不默认启动模型实验，不新增 Factory 测试、mock 或 smoke。改 Braid 需从 `sources/braid` 构建并更新其组件合同；旧包不会因宿主代码更新获得新 exporter 能力。
 
 完整会话和工具输出可能含敏感运行内容，分享整个网站前检查原始批次与下载文件。单站数据当前嵌入 HTML，按会话分页仅限制 DOM 数量，整体容量仍受浏览器内存约束。源 manifest 元数据超过预算会报告 partial；诊断工具不能自行恢复已经丢失的源信息。
 

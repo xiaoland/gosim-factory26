@@ -1,0 +1,76 @@
+name: Publish CLI
+
+on:
+  push:
+    branches: [main]
+    paths: [CLI_CHANGELOG.md]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: svc-cli-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - uses: pdm-project/setup-pdm@973541a5febeafcfdadf8a51211435be6ecfd90f # v4.5
+        with:
+          python-version: "3.11"
+          version: 2.28.0
+          cache: true
+      - run: pdm lock --check
+      - run: pdm install --frozen-lockfile -d -G quality -G test -G double
+      - id: release
+        name: Bind the prepared static version
+        run: |
+          version=$(python -c 'import tomllib; print(tomllib.load(open("cli/pyproject.toml", "rb"))["project"]["version"])')
+          [[ "$version" =~ ^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)$ ]]
+          python -m tools.release_notes CLI_CHANGELOG.md "$version" --output /tmp/cli-release-notes.md
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "tag=cli-v$version" >> "$GITHUB_OUTPUT"
+      - name: Check prepared release
+        env:
+          SVC_BASE_REF: ${{ github.event.before }}
+        run: pdm run check
+      - run: pdm build -p cli --dest ../release/python
+      - name: Accept the built wheel
+        run: |
+          wheel=(release/python/*.whl)
+          test "${#wheel[@]}" -eq 1
+          mkdir -p /tmp/svc-release-wheelhouse
+          python -m pip download --dest /tmp/svc-release-wheelhouse "${wheel[0]}"
+          sha=$(python -c 'import hashlib,sys; print(hashlib.sha256(open(sys.argv[1], "rb").read()).hexdigest())' "${wheel[0]}")
+          python tools/accept_agent_thread.py --slice all --wheel "${wheel[0]}" --expected-sha256 "$sha" --wheelhouse /tmp/svc-release-wheelhouse
+      - name: Create release tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: |
+          if git show-ref --verify --quiet "refs/tags/$TAG"; then
+            test "$(git rev-list -n 1 "$TAG")" = "$GITHUB_SHA"
+          else
+            git config user.name "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git tag --annotate "$TAG" --message "Release $TAG"
+            auth=$(printf 'x-access-token:%s' "$GH_TOKEN" | base64 --wrap=0)
+            git -c "http.https://github.com/.extraheader=AUTHORIZATION: basic $auth" push origin "refs/tags/$TAG"
+          fi
+      - uses: pypa/gh-action-pypi-publish@cef221092ed1bacb1cc03d23a2d87d1d172e277b # release/v1
+        with:
+          packages-dir: release/python/
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+        run: gh release create "$TAG" release/python/* --verify-tag --notes-file /tmp/cli-release-notes.md --title "$TAG"

@@ -1,0 +1,524 @@
+{
+  "$defs": {
+    "BlockerOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "path",
+        "message"
+      ],
+      "title": "BlockerOutput",
+      "type": "object"
+    },
+    "CliUsageOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "invalid-cli-usage",
+          "default": "invalid-cli-usage",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "CliUsageOutput",
+      "type": "object"
+    },
+    "CorpusGuideReference": {
+      "additionalProperties": false,
+      "properties": {
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "sha256": {
+          "title": "Sha256",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "sha256"
+      ],
+      "title": "CorpusGuideReference",
+      "type": "object"
+    },
+    "CorpusReleaseOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "guides": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/CorpusGuideReference"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Guides"
+        },
+        "migration": {
+          "enum": [
+            "guide",
+            "not-required"
+          ],
+          "title": "Migration",
+          "type": "string"
+        },
+        "version": {
+          "title": "Version",
+          "type": "string"
+        }
+      },
+      "required": [
+        "version",
+        "migration"
+      ],
+      "title": "CorpusReleaseOutput",
+      "type": "object"
+    },
+    "FileStateOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "posix_mode": {
+          "anyOf": [
+            {
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Posix Mode"
+        },
+        "sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Sha256"
+        },
+        "state": {
+          "enum": [
+            "absent",
+            "file"
+          ],
+          "title": "State",
+          "type": "string"
+        }
+      },
+      "required": [
+        "state"
+      ],
+      "title": "FileStateOutput",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "MachineError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/MachineErrorBody"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "MachineError",
+      "type": "object"
+    },
+    "MachineErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "title": "MachineErrorBody",
+      "type": "object"
+    },
+    "UpgradeApplyOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "changed": {
+          "title": "Changed",
+          "type": "integer"
+        },
+        "command": {
+          "const": "upgrade",
+          "default": "upgrade",
+          "title": "Command",
+          "type": "string"
+        },
+        "corpus": {
+          "$ref": "#/$defs/UpgradeCorpusDetails"
+        },
+        "migration": {
+          "$ref": "#/$defs/UpgradeMigrationOutput"
+        },
+        "mode": {
+          "const": "apply",
+          "default": "apply",
+          "title": "Mode",
+          "type": "string"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/$defs/UpgradeOperationOutput"
+          },
+          "title": "Operations",
+          "type": "array"
+        },
+        "plan_digest": {
+          "title": "Plan Digest",
+          "type": "string"
+        },
+        "repo": {
+          "title": "Repo",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "const": "applied",
+          "default": "applied",
+          "title": "Status",
+          "type": "string"
+        },
+        "verification": {
+          "const": "passed",
+          "default": "passed",
+          "title": "Verification",
+          "type": "string"
+        }
+      },
+      "required": [
+        "repo",
+        "plan_digest",
+        "changed",
+        "operations",
+        "corpus",
+        "migration"
+      ],
+      "title": "UpgradeApplyOutput",
+      "type": "object"
+    },
+    "UpgradeCorpusDetails": {
+      "additionalProperties": false,
+      "properties": {
+        "available_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Available Version"
+        },
+        "from_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "From Version"
+        },
+        "project_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Project Version"
+        },
+        "releases": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/CorpusReleaseOutput"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Releases"
+        },
+        "status": {
+          "anyOf": [
+            {
+              "const": "current",
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Status"
+        },
+        "to_version": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "To Version"
+        }
+      },
+      "title": "UpgradeCorpusDetails",
+      "type": "object"
+    },
+    "UpgradeMigrationOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "disposition": {
+          "enum": [
+            "caller-asserted",
+            "not-required"
+          ],
+          "title": "Disposition",
+          "type": "string"
+        },
+        "guidance": {
+          "items": {
+            "$ref": "#/$defs/CorpusGuideReference"
+          },
+          "title": "Guidance",
+          "type": "array"
+        }
+      },
+      "required": [
+        "disposition",
+        "guidance"
+      ],
+      "title": "UpgradeMigrationOutput",
+      "type": "object"
+    },
+    "UpgradeOperationOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "enum": [
+            "create",
+            "append",
+            "refresh",
+            "rewrite",
+            "delete"
+          ],
+          "title": "Action",
+          "type": "string"
+        },
+        "after": {
+          "$ref": "#/$defs/FileStateOutput"
+        },
+        "before": {
+          "$ref": "#/$defs/FileStateOutput"
+        },
+        "extent": {
+          "const": "json-field",
+          "title": "Extent",
+          "type": "string"
+        },
+        "path": {
+          "title": "Path",
+          "type": "string"
+        },
+        "reason": {
+          "title": "Reason",
+          "type": "string"
+        },
+        "surface": {
+          "const": "project-corpus-baseline",
+          "title": "Surface",
+          "type": "string"
+        }
+      },
+      "required": [
+        "path",
+        "action",
+        "reason",
+        "before",
+        "after",
+        "surface",
+        "extent"
+      ],
+      "title": "UpgradeOperationOutput",
+      "type": "object"
+    },
+    "UpgradePlanOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "blockers": {
+          "anyOf": [
+            {
+              "items": {
+                "$ref": "#/$defs/BlockerOutput"
+              },
+              "type": "array"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Blockers"
+        },
+        "command": {
+          "const": "upgrade",
+          "default": "upgrade",
+          "title": "Command",
+          "type": "string"
+        },
+        "corpus": {
+          "$ref": "#/$defs/UpgradeCorpusDetails"
+        },
+        "mode": {
+          "const": "plan",
+          "default": "plan",
+          "title": "Mode",
+          "type": "string"
+        },
+        "operations": {
+          "items": {
+            "$ref": "#/$defs/UpgradeOperationOutput"
+          },
+          "title": "Operations",
+          "type": "array"
+        },
+        "plan_digest": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Plan Digest"
+        },
+        "repo": {
+          "title": "Repo",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "enum": [
+            "noop",
+            "blocked",
+            "ready",
+            "migration-required"
+          ],
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "status",
+        "repo",
+        "operations",
+        "corpus"
+      ],
+      "title": "UpgradePlanOutput",
+      "type": "object"
+    }
+  },
+  "$id": "urn:svc:cli-output:upgrade:v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/UpgradePlanOutput"
+    },
+    {
+      "$ref": "#/$defs/UpgradeApplyOutput"
+    },
+    {
+      "$ref": "#/$defs/MachineError"
+    },
+    {
+      "$ref": "#/$defs/CliUsageOutput"
+    }
+  ],
+  "title": "SVC upgrade machine output",
+  "x-svc-result-schema-version": 2
+}

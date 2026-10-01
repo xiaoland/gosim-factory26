@@ -1,0 +1,629 @@
+{
+  "$defs": {
+    "CliUsageOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "invalid-cli-usage",
+          "default": "invalid-cli-usage",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "CliUsageOutput",
+      "type": "object"
+    },
+    "DoubleJournalEntryOutput": {
+      "additionalProperties": false,
+      "description": "One already-redacted boundary fact from the carrier journal.",
+      "properties": {
+        "at": {
+          "title": "At",
+          "type": "string"
+        },
+        "facts": {
+          "$ref": "#/$defs/DoubleJournalFactsOutput"
+        },
+        "kind": {
+          "enum": [
+            "request",
+            "event",
+            "runtime"
+          ],
+          "title": "Kind",
+          "type": "string"
+        },
+        "sequence": {
+          "minimum": 1,
+          "title": "Sequence",
+          "type": "integer"
+        },
+        "status": {
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sequence",
+        "at",
+        "kind",
+        "status",
+        "facts"
+      ],
+      "title": "DoubleJournalEntryOutput",
+      "type": "object"
+    },
+    "DoubleJournalFactsOutput": {
+      "additionalProperties": false,
+      "description": "Bounded public journal facts; captures and raw envelopes are absent.",
+      "properties": {
+        "body_excerpt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body Excerpt"
+        },
+        "body_truncated": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Body Truncated"
+        },
+        "diagnostics": {
+          "default": [],
+          "items": {
+            "type": "string"
+          },
+          "title": "Diagnostics",
+          "type": "array"
+        },
+        "event": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Event"
+        },
+        "http_status": {
+          "anyOf": [
+            {
+              "maximum": 599,
+              "minimum": 100,
+              "type": "integer"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Http Status"
+        },
+        "interaction": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Interaction"
+        },
+        "method": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Method"
+        },
+        "path": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Path"
+        },
+        "request_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Request Sha256"
+        },
+        "response_sha256": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Response Sha256"
+        },
+        "target": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Target"
+        }
+      },
+      "title": "DoubleJournalFactsOutput",
+      "type": "object"
+    },
+    "DoubleJournalOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "entries": {
+          "items": {
+            "$ref": "#/$defs/DoubleJournalEntryOutput"
+          },
+          "title": "Entries",
+          "type": "array"
+        },
+        "omitted": {
+          "minimum": 0,
+          "title": "Omitted",
+          "type": "integer"
+        },
+        "retained": {
+          "minimum": 0,
+          "title": "Retained",
+          "type": "integer"
+        },
+        "total": {
+          "minimum": 0,
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "total",
+        "retained",
+        "omitted",
+        "entries"
+      ],
+      "title": "DoubleJournalOutput",
+      "type": "object"
+    },
+    "DoubleObserveOutput": {
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "if": {
+            "properties": {
+              "authority": {
+                "const": "active-carrier"
+              }
+            },
+            "required": [
+              "authority"
+            ]
+          },
+          "then": {
+            "properties": {
+              "control_status": {
+                "const": "available"
+              },
+              "observation": {
+                "properties": {
+                  "sealed": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authority": {
+                "const": "sealed-snapshot"
+              }
+            },
+            "required": [
+              "authority"
+            ]
+          },
+          "then": {
+            "properties": {
+              "control_status": {
+                "const": "not-required"
+              },
+              "observation": {
+                "properties": {
+                  "sealed": {
+                    "const": true
+                  },
+                  "status": {
+                    "const": "stopped"
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "if": {
+            "properties": {
+              "authority": {
+                "const": "unsealed-projection"
+              }
+            },
+            "required": [
+              "authority"
+            ]
+          },
+          "then": {
+            "properties": {
+              "control_status": {
+                "const": "control-unavailable"
+              },
+              "observation": {
+                "properties": {
+                  "sealed": {
+                    "const": false
+                  }
+                }
+              }
+            }
+          }
+        }
+      ],
+      "properties": {
+        "authority": {
+          "enum": [
+            "active-carrier",
+            "sealed-snapshot",
+            "unsealed-projection"
+          ],
+          "title": "Authority",
+          "type": "string"
+        },
+        "command": {
+          "const": "double observe",
+          "default": "double observe",
+          "title": "Command",
+          "type": "string"
+        },
+        "control_status": {
+          "enum": [
+            "available",
+            "not-required",
+            "control-unavailable"
+          ],
+          "title": "Control Status",
+          "type": "string"
+        },
+        "observation": {
+          "$ref": "#/$defs/DoubleRunObservationOutput"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "observation",
+        "authority",
+        "control_status"
+      ],
+      "title": "DoubleObserveOutput",
+      "type": "object"
+    },
+    "DoubleObserveRuntimeUnavailableOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "double observe",
+          "default": "double observe",
+          "title": "Command",
+          "type": "string"
+        },
+        "continuation": {
+          "const": "pip install 'sustainable-vibe-coding[double]'",
+          "default": "pip install 'sustainable-vibe-coding[double]'",
+          "title": "Continuation",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "const": "double-runtime-unavailable",
+          "default": "double-runtime-unavailable",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "DoubleObserveRuntimeUnavailableOutput",
+      "type": "object"
+    },
+    "DoubleReplayOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "clock": {
+          "title": "Clock",
+          "type": "string"
+        },
+        "generators": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Generators",
+          "type": "array"
+        },
+        "runtime": {
+          "title": "Runtime",
+          "type": "string"
+        },
+        "seed": {
+          "maximum": 18446744073709551615,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "validators": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Validators",
+          "type": "array"
+        }
+      },
+      "required": [
+        "seed",
+        "clock",
+        "generators",
+        "validators",
+        "runtime"
+      ],
+      "title": "DoubleReplayOutput",
+      "type": "object"
+    },
+    "DoubleRunObservationOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "bindings": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Bindings",
+          "type": "array"
+        },
+        "failure": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "default": null,
+          "title": "Failure"
+        },
+        "journal": {
+          "$ref": "#/$defs/DoubleJournalOutput"
+        },
+        "nonclaims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Nonclaims",
+          "type": "array"
+        },
+        "replay": {
+          "$ref": "#/$defs/DoubleReplayOutput"
+        },
+        "responder_url": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Responder Url"
+        },
+        "run_context_digest": {
+          "title": "Run Context Digest",
+          "type": "string"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "scenario_digest": {
+          "title": "Scenario Digest",
+          "type": "string"
+        },
+        "scenario_name": {
+          "title": "Scenario Name",
+          "type": "string"
+        },
+        "sealed": {
+          "title": "Sealed",
+          "type": "boolean"
+        },
+        "status": {
+          "enum": [
+            "bootstrapping",
+            "ready",
+            "stopping",
+            "stopped",
+            "failed"
+          ],
+          "title": "Status",
+          "type": "string"
+        },
+        "targets": {
+          "items": {
+            "$ref": "#/$defs/DoubleTargetOutput"
+          },
+          "title": "Targets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "run_id",
+        "scenario_name",
+        "status",
+        "sealed",
+        "responder_url",
+        "scenario_digest",
+        "run_context_digest",
+        "replay",
+        "targets",
+        "bindings",
+        "journal",
+        "nonclaims"
+      ],
+      "title": "DoubleRunObservationOutput",
+      "type": "object"
+    },
+    "DoubleTargetOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "origin": {
+          "title": "Origin",
+          "type": "string"
+        },
+        "remote": {
+          "title": "Remote",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "origin",
+        "remote"
+      ],
+      "title": "DoubleTargetOutput",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "MachineError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/MachineErrorBody"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "MachineError",
+      "type": "object"
+    },
+    "MachineErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "title": "MachineErrorBody",
+      "type": "object"
+    }
+  },
+  "$id": "urn:svc:cli-output:double-observe:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/DoubleObserveOutput"
+    },
+    {
+      "$ref": "#/$defs/DoubleObserveRuntimeUnavailableOutput"
+    },
+    {
+      "$ref": "#/$defs/MachineError"
+    },
+    {
+      "$ref": "#/$defs/CliUsageOutput"
+    }
+  ],
+  "title": "SVC double-observe machine output",
+  "x-svc-result-schema-version": 1
+}

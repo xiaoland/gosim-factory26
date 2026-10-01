@@ -1,0 +1,156 @@
+{
+  "$defs": {
+    "CliUsageOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "invalid-cli-usage",
+          "default": "invalid-cli-usage",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "CliUsageOutput",
+      "type": "object"
+    },
+    "DevIdentityOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "dev identity",
+          "default": "dev identity",
+          "title": "Command",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 2,
+          "default": 2,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "workspace": {
+          "$ref": "#/$defs/WorkspaceIdentity"
+        }
+      },
+      "required": [
+        "workspace"
+      ],
+      "title": "DevIdentityOutput",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "MachineError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/MachineErrorBody"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "MachineError",
+      "type": "object"
+    },
+    "MachineErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "title": "MachineErrorBody",
+      "type": "object"
+    },
+    "WorkspaceIdentity": {
+      "additionalProperties": false,
+      "description": "Stable identity facts for one executable workspace.",
+      "properties": {
+        "instance": {
+          "title": "Instance",
+          "type": "string"
+        },
+        "namespace_id": {
+          "title": "Namespace Id",
+          "type": "string"
+        },
+        "repository_id": {
+          "title": "Repository Id",
+          "type": "string"
+        },
+        "repository_kind": {
+          "enum": [
+            "git",
+            "non-git"
+          ],
+          "title": "Repository Kind",
+          "type": "string"
+        },
+        "root": {
+          "format": "path",
+          "title": "Root",
+          "type": "string"
+        },
+        "worktree_id": {
+          "title": "Worktree Id",
+          "type": "string"
+        }
+      },
+      "required": [
+        "root",
+        "namespace_id",
+        "repository_kind",
+        "repository_id",
+        "worktree_id",
+        "instance"
+      ],
+      "title": "WorkspaceIdentity",
+      "type": "object"
+    }
+  },
+  "$id": "urn:svc:cli-output:dev-identity:v2",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/DevIdentityOutput"
+    },
+    {
+      "$ref": "#/$defs/MachineError"
+    },
+    {
+      "$ref": "#/$defs/CliUsageOutput"
+    }
+  ],
+  "title": "SVC dev-identity machine output",
+  "x-svc-result-schema-version": 2
+}

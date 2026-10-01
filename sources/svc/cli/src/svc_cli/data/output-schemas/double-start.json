@@ -1,0 +1,257 @@
+{
+  "$defs": {
+    "CliUsageOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "const": "invalid-cli-usage",
+          "default": "invalid-cli-usage",
+          "title": "Code",
+          "type": "string"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "title": "CliUsageOutput",
+      "type": "object"
+    },
+    "DoubleReplayOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "clock": {
+          "title": "Clock",
+          "type": "string"
+        },
+        "generators": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Generators",
+          "type": "array"
+        },
+        "runtime": {
+          "title": "Runtime",
+          "type": "string"
+        },
+        "seed": {
+          "maximum": 18446744073709551615,
+          "minimum": 0,
+          "title": "Seed",
+          "type": "integer"
+        },
+        "validators": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Validators",
+          "type": "array"
+        }
+      },
+      "required": [
+        "seed",
+        "clock",
+        "generators",
+        "validators",
+        "runtime"
+      ],
+      "title": "DoubleReplayOutput",
+      "type": "object"
+    },
+    "DoubleStartOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "double start",
+          "default": "double start",
+          "title": "Command",
+          "type": "string"
+        },
+        "module": {
+          "title": "Module",
+          "type": "string"
+        },
+        "nonclaims": {
+          "items": {
+            "type": "string"
+          },
+          "title": "Nonclaims",
+          "type": "array"
+        },
+        "replay": {
+          "$ref": "#/$defs/DoubleReplayOutput"
+        },
+        "responder_url": {
+          "title": "Responder Url",
+          "type": "string"
+        },
+        "run_context_digest": {
+          "title": "Run Context Digest",
+          "type": "string"
+        },
+        "run_id": {
+          "title": "Run Id",
+          "type": "string"
+        },
+        "scenario_digest": {
+          "title": "Scenario Digest",
+          "type": "string"
+        },
+        "scenario_name": {
+          "title": "Scenario Name",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "targets": {
+          "items": {
+            "$ref": "#/$defs/DoubleTargetOutput"
+          },
+          "title": "Targets",
+          "type": "array"
+        }
+      },
+      "required": [
+        "run_id",
+        "module",
+        "scenario_name",
+        "responder_url",
+        "scenario_digest",
+        "run_context_digest",
+        "replay",
+        "targets",
+        "nonclaims"
+      ],
+      "title": "DoubleStartOutput",
+      "type": "object"
+    },
+    "DoubleStartRuntimeUnavailableOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "command": {
+          "const": "double start",
+          "default": "double start",
+          "title": "Command",
+          "type": "string"
+        },
+        "continuation": {
+          "const": "pip install 'sustainable-vibe-coding[double]'",
+          "default": "pip install 'sustainable-vibe-coding[double]'",
+          "title": "Continuation",
+          "type": "string"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        },
+        "status": {
+          "const": "double-runtime-unavailable",
+          "default": "double-runtime-unavailable",
+          "title": "Status",
+          "type": "string"
+        }
+      },
+      "title": "DoubleStartRuntimeUnavailableOutput",
+      "type": "object"
+    },
+    "DoubleTargetOutput": {
+      "additionalProperties": false,
+      "properties": {
+        "name": {
+          "title": "Name",
+          "type": "string"
+        },
+        "origin": {
+          "title": "Origin",
+          "type": "string"
+        },
+        "remote": {
+          "title": "Remote",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "name",
+        "origin",
+        "remote"
+      ],
+      "title": "DoubleTargetOutput",
+      "type": "object"
+    },
+    "JsonValue": {},
+    "MachineError": {
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "$ref": "#/$defs/MachineErrorBody"
+        },
+        "schema_version": {
+          "const": 1,
+          "default": 1,
+          "title": "Schema Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "error"
+      ],
+      "title": "MachineError",
+      "type": "object"
+    },
+    "MachineErrorBody": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "title": "Code",
+          "type": "string"
+        },
+        "details": {
+          "additionalProperties": {
+            "$ref": "#/$defs/JsonValue"
+          },
+          "title": "Details",
+          "type": "object"
+        },
+        "message": {
+          "title": "Message",
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "message",
+        "details"
+      ],
+      "title": "MachineErrorBody",
+      "type": "object"
+    }
+  },
+  "$id": "urn:svc:cli-output:double-start:v1",
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "anyOf": [
+    {
+      "$ref": "#/$defs/DoubleStartOutput"
+    },
+    {
+      "$ref": "#/$defs/DoubleStartRuntimeUnavailableOutput"
+    },
+    {
+      "$ref": "#/$defs/MachineError"
+    },
+    {
+      "$ref": "#/$defs/CliUsageOutput"
+    }
+  ],
+  "title": "SVC double-start machine output",
+  "x-svc-result-schema-version": 1
+}

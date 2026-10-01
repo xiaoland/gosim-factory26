@@ -1,0 +1,7 @@
+//! Provider health observations sent from group workers to the local runtime.
+
+/// Per-driver observations are aggregated before publishing provider health.
+pub(crate) struct ProviderHealthUpdate {
+    pub(crate) group: String,
+    pub(crate) error: Option<String>,
+}
