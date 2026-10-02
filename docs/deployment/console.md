@@ -58,3 +58,15 @@ I13-2首次部署直接运行在Debian-Rebuild，入口为 [Console](http://127.
 每项访问容器使用原named volume及同一`volume-subpath`，保留实际消费者引用；宿主路径供GC保护，存在性在固定访问容器内核实。最终清理须关闭转发与HTTP、停止访问容器、release接入、明确移除访问容器，然后执行实验资源清理。仅停止访问容器仍占用volume；原生成runtime被移除后，材料读取可继续，物理控制单独报告不可用。创建与核对步骤归[Console README](../../braid-console/README.md)，最新部署回执归[I13-2部署记录](../../tasks/iteration13/i13-2/console-deployment.md)。
 
 2026-10-02 的审阅阅读修复已切换到 Debian-Rebuild 稳定根 `/home/yyh/.local/share/factory26/exp-console/20261002-review-sessions`，保持原 service ID `8cc80cad-d873-49ed-ab49-e958ba8852a3`、七条登记、原 binary 和访问容器绑定；当前 HTTP PID1676167，instance `8ccaaf92-02f0-4a60-904e-5564ba6957c3`。旧 HTTP 已退出，旧 manifest 已退役，配置及 journal 原字节保存在对应后继根 history，不新增访问容器、模型运行或自动启动。Mac8765仍使用原转发。PR2 → review1 → reviewer agent → provider → 原生对话/Trace、provider 深链刷新及返回审阅已实际操作；七项 Issue 与 sessions 均返回200，真实 reviewer 正文返回200。部署与边界归 [审阅阅读任务](../../tasks/console-reviewer/packet.md)。
+
+
+## 读取当前远端生成容器
+
+当当前 `lab exp` 的 Braid 数据库和原生会话仍在生成容器 overlay 中，独立访问容器不能共享该现场。应在持有原 experiment 和冻结 controller launcher 的宿主准备 Console，显式登记 Docker `access_mode: "runtime-readonly"`。此方式的 `runtime_container` 和 `cli_container` 必须是同一个原容器完整 ID，并声明实际 SSH `endpoint`、`daemon_id`、`started_at`、owner `labels`、容器内 `binary` 及其 `binary_sha256`、容器内 `state` 和 `workspace`，以及 `exp.experiment/attempt_id`。顶层 `state/workspace` 与容器路径一致；不声明 `mounts` 或 `access_owner`，也不把远端 overlay 路径伪装为本地目录。顶层 `binary` 仍是准备时可核对的同字节可执行制品。
+
+准备时通过冻结 exp controller 核对实际资源与出生身份，读取时再次核对 daemon、容器身份、状态、数据库和 binary。注册必须 `writable: false`；此方式没有物理控制权限，所有写入、暂停/恢复和 `access-start/access-stop` 均拒绝。`release` 仅解除登记，不操作原生成容器。既有独立访问容器的 Unix context、共享挂载及显式控制合同不受影响。
+
+按生产者发布的有效 active bindings 选择实际 attempt 和 Braid run ID，只有数据库已存在才登记。Console 首页刷新对应 attempt 的 `observation.json`，核对 experiment/attempt/job/dispatch 身份，显示实际生产者状态和观测时点；没有登记的运行不会自动发现。生成容器结束后，此只读接入报告具体不可读边界，应将保全后的实际终态材料另行登记 archive，不能把旧 ID 改指另一次生成。切换宿主时保留原服务历史入口和材料。
+
+
+当前 live provider 若为 `idle`、CLI 明确返回空 `turns`、读取从偏移零开始且该服务此前未读到该 provider 正文，精确登记的 JSONL 路径尚不存在时，原文接口返回 `availability: "not-persisted"`，页面显示文件目前不存在、等待首次轮次持久化对话。它不表示模型正在执行或已经交付应用；上下文替换后准备好但尚未收到新输入的 provider 可以处于这个状态。已有 Turn、该服务此前读到过正文、其它文件错误或非零偏移的缺失仍保留具体读取错误，不能都当作等待。

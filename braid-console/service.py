@@ -74,7 +74,10 @@ def live_error(run):
         if archives.identity(binary) != expected:
             raise ValueError(f"受管理 binary 身份已改变：{binary}")
         if run.get("docker"):
-            docker_paths(run, run["service_id"])
+            if run["docker"].get("access_mode") == "runtime-readonly":
+                docker_runtime.readonly_paths(run["docker"])
+            else:
+                docker_paths(run, run["service_id"])
         elif not (Path(run["state"]) / "braid.sqlite3").is_file():
             raise ValueError(f"state 缺少数据库：{run['state']}")
         elif not run.get("workspace") or not Path(run["workspace"]).is_dir():
@@ -159,7 +162,13 @@ def registrations(destination, entries, service_id):
                 raise ValueError("live workspace 必须是原执行路径空间的宿主目录")
             managed, digest = managed_binary(destination, Path(entry["binary"]))
             run.update(writable=entry["writable"], state=str(state), workspace=str(workspace), binary=str(managed), binary_sha256=digest)
-            if config:
+            if config and config.get("access_mode") == "runtime-readonly":
+                if entry["writable"] or str(state) != config["state"] or str(workspace) != config["workspace"] or digest != config["binary_sha256"]:
+                    raise ValueError("原容器接入须只读，state/workspace/binary 与实际 namespace 身份一致")
+                run["docker"] = config
+                docker_runtime.execution_binding(config)
+                docker_runtime.readonly_paths(config)
+            elif config:
                 if not config.get("context") or not config.get("mounts"):
                     raise ValueError("受管理 Docker 接入需要固定 context 与宿主 mounts")
                 if not any(Path(mount["source"]) == workspace for mount in config["mounts"]):
@@ -323,7 +332,7 @@ def main():
                 journal(root / record["journal"], event)
                 try:
                     if args.command == "release":
-                        if run.get("docker"):
+                        if run.get("docker") and run["docker"].get("access_mode") != "runtime-readonly":
                             _, value = access(record, run)
                             if value["state"]["Running"]:
                                 raise ValueError("访问容器仍在运行；先显式停止Console自有访问容器")

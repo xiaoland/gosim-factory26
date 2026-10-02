@@ -275,19 +275,24 @@ def _read(run, source, path="", *, record=None, commit=None, action="read"):
         raise ValueError("CLI 未提供此会话的有效 worktree 登记目录")
     root = str(PurePosixPath(root))
     if config:
-        _, access = service.access({"service_id": run["service_id"]}, run)
-        if not access["state"]["Running"] or access["state"]["Paused"]:
-            raise ValueError("CLI 访问容器需要运行且未暂停")
-        declared = {"id": "registered", "mounts": [{"Source": mount["source"], "Destination": mount["destination"]}
-                                                  for mount in config["mounts"]]}
-        expected = docker_runtime.mounted_database(declared, root)
-        inspected_paths = [root] + [mount["Destination"] for mount in access["mounts"]
-                                    if PurePosixPath(mount["Destination"]).is_relative_to(PurePosixPath(root))]
-        for inspected_path in inspected_paths:
-            if docker_runtime.mounted_database(access, inspected_path) != docker_runtime.mounted_database(declared, inspected_path):
-                raise ValueError("容器实际嵌套挂载改变代码读取来源：" + inspected_path)
-        if source == "workspace" and not Path(expected).is_relative_to(Path(run["workspace"])):
-            raise ValueError("会话 worktree 不在登记 workspace 挂载内：" + root)
+        if config.get("access_mode") == "runtime-readonly":
+            docker_runtime.readonly_paths(config)
+            if not PurePosixPath(root).is_relative_to(PurePosixPath(config["workspace"])):
+                raise ValueError("代码根不在已登记原容器 workspace 内：" + root)
+        else:
+            _, access = service.access({"service_id": run["service_id"]}, run)
+            if not access["state"]["Running"] or access["state"]["Paused"]:
+                raise ValueError("CLI 访问容器需要运行且未暂停")
+            declared = {"id": "registered", "mounts": [{"Source": mount["source"], "Destination": mount["destination"]}
+                                                      for mount in config["mounts"]]}
+            expected = docker_runtime.mounted_database(declared, root)
+            inspected_paths = [root] + [mount["Destination"] for mount in access["mounts"]
+                                        if PurePosixPath(mount["Destination"]).is_relative_to(PurePosixPath(root))]
+            for inspected_path in inspected_paths:
+                if docker_runtime.mounted_database(access, inspected_path) != docker_runtime.mounted_database(declared, inspected_path):
+                    raise ValueError("容器实际嵌套挂载改变代码读取来源：" + inspected_path)
+            if source == "workspace" and not Path(expected).is_relative_to(Path(run["workspace"])):
+                raise ValueError("会话 worktree 不在登记 workspace 挂载内：" + root)
         command = docker_runtime.base_command(config) + ["exec", "-i", config["cli_container"], "python3", "-c", READER]
     else:
         if source == "workspace" and not Path(root).is_relative_to(Path(run["workspace"])):

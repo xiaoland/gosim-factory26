@@ -282,8 +282,10 @@ export default function Transcript({ run, record, files }: { run: string; record
       }
     } else if (scrollPositions.current[mode] !== undefined) window.scrollTo({ top: scrollPositions.current[mode] });
   }, [mode, selectedOffset]);
+  const emptyNotice = last?.availability === 'not-persisted' ? '尚无持久化对话；等待首次轮次。原生记录文件目前不存在。'
+    : last?.waiting ? '文件末尾记录尚未写完整，请稍后刷新' : '原生文件没有记录';
   const pagination = <Row className="native-pagination" align="center" justify="space-between" gap={12} wrap>
-    <span className="muted">{last ? `已加载 ${entries.length} 条记录 · 字节 [0, ${last.next_offset}) / 当前文件 ${last.size} 字节${last.eof ? ' · 已到本次读取的文件末尾' : ' · 当前显示会话开头，后面还有记录'}${last.waiting ? ' · 末尾记录尚未写完整' : ''}` : '从会话开头读取；每批最多 50 条，按 1 MiB 边界读取（完整记录不截断）。'}</span>
+    <span className="muted">{last?.availability === 'not-persisted' ? last.notice : last ? `已加载 ${entries.length} 条记录 · 字节 [0, ${last.next_offset}) / 当前文件 ${last.size} 字节${last.eof ? ' · 已到本次读取的文件末尾' : ' · 当前显示会话开头，后面还有记录'}${last.waiting ? ' · 末尾记录尚未写完整' : ''}` : '从会话开头读取；每批最多 50 条，按 1 MiB 边界读取（完整记录不截断）。'}</span>
     <Row align="center" gap={8} wrap><ActionButton icon={<RotateCw />} pending={query.isFetching && !query.isFetchingNextPage} disabled={query.isFetchingNextPage} onClick={() => { void query.refetch(); }}>刷新已加载内容</ActionButton>
       {query.hasNextPage && <ActionButton pending={query.isFetchingNextPage} disabled={query.isFetching && !query.isFetchingNextPage} onClick={() => { void query.fetchNextPage(); }}>{last?.waiting ? '重新读取末尾后续' : '加载后续记录'}</ActionButton>}</Row>
   </Row>;
@@ -295,13 +297,13 @@ export default function Transcript({ run, record, files }: { run: string; record
         {query.isPending && <LoadingSkeleton rows={6} />}
       </div>
       <TabsContent value="chat" forceMount hidden={mode !== 'chat'} className="transcript-chat">{items.map(item => <ChatRecord key={item.key} item={item} onTrace={showTrace} />)}
-        {!query.isPending && !query.error && !entries.length && <EmptyState description={last?.waiting ? '文件末尾记录尚未写完整，请稍后刷新' : '原生文件没有记录'} />}
+        {!query.isPending && !query.error && !entries.length && <EmptyState description={emptyNotice} />}
         {!!entries.length && !items.length && <EmptyState description="已加载记录只有会话元数据；Trace 保留全部原生记录，后续内容需继续加载。" />}
       </TabsContent>
       <TabsContent value="trace" forceMount hidden={mode !== 'trace'} className="transcript-trace">{entries.map(entry => <article key={entry.offset} tabIndex={-1}
         ref={element => { if (element) traceRefs.current.set(entry.offset, element); else traceRefs.current.delete(entry.offset); }}
         className={`trace-entry ${selectedOffset === entry.offset ? 'trace-selected' : ''}`}><TraceRecord entry={entry} /></article>)}
-        {!query.isPending && !query.error && !entries.length && <EmptyState description={last?.waiting ? '文件末尾记录尚未写完整，请稍后刷新' : '原生文件没有记录'} />}
+        {!query.isPending && !query.error && !entries.length && <EmptyState description={emptyNotice} />}
       </TabsContent>
       {filesVisited && <TabsContent value="files" forceMount hidden={mode !== 'files'} className="transcript-files">{files}</TabsContent>}
       <div hidden={mode === 'files'}>{last && pagination}</div>

@@ -1,6 +1,8 @@
 # Factory26 Exp Console
 
-2026-10-01。独立实验基础设施任务。当前唯一服务为Debian-Rebuild上的原生Python Console，Mac8765只作SSH转发。用户已删除原Debian-Factory26，并取消六条Console登记与journal迁移，采用空登记基线；历史部署身份只作下面的证据，不再当作当前状态。Console不属于I13或生成Harness迭代。
+2026-10-02 当前接续：[当前实验接入修复](current-runs.md)。8765 已切换为 Mac 原生只读 Console，正确接入两组当前 baseline；旧 Debian-Rebuild 服务保留为历史入口。以下 2026-10-01 部署身份与验收均为历史记录。
+
+2026-10-01。独立实验基础设施任务。彼时唯一服务为Debian-Rebuild上的原生Python Console，Mac8765只作SSH转发。用户已删除原Debian-Factory26，并取消六条Console登记与journal迁移，采用空登记基线；历史部署身份只作下面的证据，不再当作当前状态。Console不属于I13或生成Harness迭代。
 
 ## 当前恢复点：阅读能力已部署，两条新现场已验收
 

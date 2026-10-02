@@ -23,7 +23,7 @@ export interface ProviderSession {
   archive_native_error?: string | null;
 }
 export interface NativeEntry { offset: number; value?: Record<string, unknown>; error?: string; raw?: string }
-export interface TranscriptPage { entries: NativeEntry[]; next_offset: number; size: number; eof: boolean; waiting: boolean }
+export interface TranscriptPage { entries: NativeEntry[]; next_offset: number; size: number | null; eof: boolean; waiting: boolean; availability?: "not-persisted"; path?: string; notice?: string }
 export interface RuntimeState {
   status: string;
   running: boolean;

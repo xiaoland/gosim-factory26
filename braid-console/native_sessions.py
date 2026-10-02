@@ -17,7 +17,16 @@ request = json.load(sys.stdin)
 path, expected, provider, offset = (request[k] for k in ("path", "native_id", "provider", "offset"))
 if offset < 0:
     raise ValueError("原生记录偏移不得为负")
-with open(path, "rb") as stream:
+try:
+    stream = open(path, "rb")
+except FileNotFoundError as error:
+    if error.filename != path or not request.get("waiting_first_turn"):
+        raise
+    print(json.dumps({"entries": [], "next_offset": 0, "size": None, "eof": True, "waiting": False,
+                      "availability": "not-persisted", "path": path,
+                      "notice": "原生记录文件尚不存在；当前 provider 空闲且没有 Braid Turn，等待首次轮次持久化对话。"}, ensure_ascii=False))
+    sys.exit(0)
+with stream:
     header = json.loads(stream.readline(8 * 1024 * 1024))
     actual = header.get("id") if provider == "pi" else header.get("payload", {}).get("id") if provider == "codex" else None
     if not expected or actual != expected:
@@ -56,7 +65,11 @@ def read_page(run, record, offset):
     path = record.get("native_session_path")
     if not isinstance(path, str) or not Path(path).is_absolute():
         raise ValueError("CLI 未提供此会话的有效原生文件路径")
-    request = {"path": path, "native_id": record.get("native_session_id"),
+    seen = run.setdefault("native_records_read", set())
+    waiting_first_turn = (run["mode"] == "live" and record.get("status") == "idle"
+                          and record.get("turns") == [] and record.get("record_id") not in seen
+                          and offset == 0 and bool(record.get("native_session_id")))
+    request = {"waiting_first_turn": waiting_first_turn, "path": path, "native_id": record.get("native_session_id"),
                "provider": record.get("provider"), "offset": offset}
     if run["docker"] is not None:
         command = docker_runtime.base_command(run["docker"]) + ["exec", "-i", run["docker"]["cli_container"], "python3", "-c", READER]
@@ -69,4 +82,7 @@ def read_page(run, record, offset):
         raise RuntimeError(f"原生会话读取未确认：{error}") from error
     if result.returncode:
         raise RuntimeError(f"原生会话读取退出码 {result.returncode}: {result.stderr.strip()}\n{result.stdout.strip()}")
-    return json.loads(result.stdout)
+    page = json.loads(result.stdout)
+    if page.get("availability") != "not-persisted":
+        seen.add(record.get("record_id"))
+    return page

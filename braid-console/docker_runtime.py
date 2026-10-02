@@ -24,17 +24,38 @@ def configuration(value):
     for key in ("runtime_container", "cli_container"):
         if not isinstance(value.get(key), str) or not re.fullmatch("[0-9a-f]{64}", value[key]):
             raise ValueError(f"docker.{key} 需要容器完整 ID")
-    if value["runtime_container"] == value["cli_container"]:
+    readonly = value.get("access_mode") == "runtime-readonly"
+    if value.get("access_mode") not in (None, "runtime-readonly"):
+        raise ValueError("未知 Docker access_mode")
+    if readonly and value["runtime_container"] != value["cli_container"]:
+        raise ValueError("只读现场必须使用原生成容器")
+    if not readonly and value["runtime_container"] == value["cli_container"]:
         raise ValueError("生成容器与 CLI 访问容器必须分离")
     for key in ("binary", "state"):
         path = value.get(key)
         if not isinstance(path, str) or not PurePosixPath(path).is_absolute() or ".." in PurePosixPath(path).parts:
             raise ValueError(f"docker.{key} 需要容器内绝对路径")
     result = {key: value[key] for key in ("runtime_container", "cli_container", "binary", "state")}
-    access_id = value.get('access_resource_id')
-    if not isinstance(access_id, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,127}', access_id):
-        raise ValueError('docker.access_resource_id 需要域权威中已创建的 Console accessor 身份')
-    result['access_resource_id'] = access_id
+    if readonly:
+        if value.get("mounts") or value.get("access_owner"):
+            raise ValueError("原容器只读接入不声明共享挂载或 Console 所有权")
+        for key in ("endpoint", "daemon_id", "started_at", "binary_sha256", "workspace"):
+            if not isinstance(value.get(key), str) or not value[key]:
+                raise ValueError("原容器只读接入缺少 " + key)
+            result[key] = value[key]
+        if not result["endpoint"].startswith("ssh://") or not re.fullmatch(r"[0-9a-f]{64}", result["binary_sha256"]):
+            raise ValueError("只读接入需要明确 SSH Docker endpoint 与 binary SHA-256")
+        if not PurePosixPath(result["workspace"]).is_absolute() or ".." in PurePosixPath(result["workspace"]).parts:
+            raise ValueError("只读 workspace 须为原容器绝对路径")
+        labels = value.get("labels")
+        if not isinstance(labels, dict) or not labels or not all(isinstance(k, str) and isinstance(v, str) for k,v in labels.items()):
+            raise ValueError("只读接入需要原生成容器 owner labels")
+        result.update(access_mode="runtime-readonly", labels=dict(labels))
+    else:
+        access_id = value.get('access_resource_id')
+        if not isinstance(access_id, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,127}', access_id):
+            raise ValueError('docker.access_resource_id 需要域权威中已创建的 Console accessor 身份')
+        result['access_resource_id'] = access_id
     if value.get("context") is not None:
         if not isinstance(value["context"], str) or not value["context"]:
             raise ValueError("docker.context 必须是固定非空名称")
@@ -64,10 +85,14 @@ def configuration(value):
                 or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", binding["attempt_id"])):
             raise ValueError("docker.exp 需要绝对 experiment 路径及固定 attempt_id")
         result["exp"] = dict(binding)
+    if readonly and not result.get("exp"):
+        raise ValueError("原容器只读接入需要 exp attempt 绑定")
     return result
 
 
 def base_command(config=None):
+    if config and config.get("access_mode") == "runtime-readonly":
+        return ["docker", "--host", config["endpoint"]]
     return ["docker", "--context", config["context"]] if config and config.get("context") else ["docker"]
 
 
@@ -90,7 +115,7 @@ def docker(args, config=None):
 
 
 def inspect(container, config=None):
-    if config and config.get("context"):
+    if config and config.get("context") and config.get("access_mode") != "runtime-readonly":
         context = json.loads(docker(["context", "inspect", config["context"]], config))[0]
         endpoint = context["Endpoints"]["docker"]["Host"]
         if not endpoint.startswith("unix://"):
@@ -98,6 +123,29 @@ def inspect(container, config=None):
     value = json.loads(docker(["inspect", "--format", INSPECT_FORMAT, container], config))
     if value["id"] != container:
         raise RuntimeError("Docker 返回的容器身份与登记不一致")
+    if config and config.get("access_mode") == "runtime-readonly":
+        daemon = docker(["info", "--format", "{{.ID}}"], config).strip()
+        if daemon != config["daemon_id"] or value["state"].get("StartedAt") != config["started_at"] or any(
+                value["labels"].get(key) != expected for key, expected in config["labels"].items()):
+            raise RuntimeError("原生成容器 daemon、出生身份或 owner 与登记不一致")
+    return value
+
+
+def readonly_paths(config):
+    value = inspect(config["runtime_container"], config)
+    if not value["state"]["Running"] or value["state"]["Paused"]:
+        raise ValueError("原生成容器需运行且未暂停；终态材料须独立登记归档")
+    # Read in the producer namespace; overlay paths are never represented as host mounts.
+    reader = """
+import hashlib,pathlib,sys
+if hashlib.sha256(pathlib.Path(sys.argv[1]).read_bytes()).hexdigest() != sys.argv[2]:
+    raise ValueError('runtime binary SHA-256 不匹配')
+if not (pathlib.Path(sys.argv[3])/'braid.sqlite3').is_file():
+    raise FileNotFoundError('原 state 数据库不存在')
+if not pathlib.Path(sys.argv[4]).is_dir():
+    raise NotADirectoryError('原 workspace 不存在')
+"""
+    docker(["exec", config["cli_container"], "python3", "-c", reader, config["binary"], config["binary_sha256"], config["state"], config["workspace"]], config)
     return value
 
 
@@ -153,7 +201,8 @@ def execution_binding(config):
         raise ValueError("缺少新 exp attempt 绑定；旧现场保留原冻结服务")
     root = Path(binding["experiment"])
     manifest = json.loads((root / "experiment.json").read_text())
-    if manifest.get("kind") != "factory26.exp.experiment" or manifest.get("schema_version") != 2:
+    supported = (1, 2) if config.get("access_mode") == "runtime-readonly" else (2,)
+    if manifest.get("kind") != "factory26.exp.experiment" or manifest.get("schema_version") not in supported:
         raise ValueError("Console 需要新 experiment 合同")
     command = [manifest["controller_runtime"]["launcher"], "-B", "-m", "lab.exp.controller"]
     import os
@@ -168,6 +217,8 @@ def execution_binding(config):
         raise ValueError("Console 显示容器与 exp attempt 实际资源不同")
     physical = inspect(config["runtime_container"], config)
     match = matches[0]
+    if config.get("access_mode") == "runtime-readonly" and (match.get("daemon_id") != config["daemon_id"] or (match.get("endpoint") or {}).get("host") != config["endpoint"]):
+        raise ValueError("Console endpoint/daemon 与实际 exp 资源不同")
     if physical["state"].get("StartedAt") != match.get("started_at") or any(
             physical["labels"].get(key) != value for key, value in match.get("labels", {}).items()):
         raise ValueError("Console 容器出生身份或 owner 与执行回执不同")
@@ -185,6 +236,8 @@ def access_control(config, action, request_id):
 
 
 def control(config, action):
+    if config.get("access_mode") == "runtime-readonly":
+        raise ControlError("原生成容器只读接入禁止物理控制", uncertain=False)
     if action == "pause":
         raise ControlError("当前 Harness 尚无公开静止协调合同，Console 不暂停可能持有写事务的进程", uncertain=False)
     try:

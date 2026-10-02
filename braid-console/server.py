@@ -68,7 +68,7 @@ def load_registry(path):
                "writable": entry["writable"], "mode": entry.get("mode", "live"),
                "docker": None, "cli_command": None, "operation_lock": threading.Lock(),
                "coverage": [], "archive_error": None, "service_id": service_id,
-               "harness": entry.get("harness", "braid"), "facts": run_records.facts(entry), "access_error": None}
+               "harness": entry.get("harness", "braid"), "facts": run_records.facts(entry), "producer_entry": entry, "access_error": None}
         if run["harness"] != "braid":
             raise ValueError(f'{entry["id"]}: 当前只支持Braid接入')
         if run["mode"] == "archive":
@@ -94,6 +94,8 @@ def load_registry(path):
         docker = entry.get("docker")
         if docker is not None:
             docker = docker_runtime.configuration(docker)
+            if docker.get("access_mode") == "runtime-readonly" and run["writable"]:
+                raise ValueError("原生成容器接入必须只读")
             cli_command = docker_runtime.cli_command(docker)
         run.update(state=str(state), binary=str(binary), cli_command=cli_command, docker=docker,
                    binary_sha256=entry.get("binary_sha256"), workspace=entry.get("workspace"))
@@ -103,6 +105,8 @@ def load_registry(path):
 
 
 def braid(run, args, body=None, *, write=False):
+    if write and (not run["writable"] or (run["docker"] or {}).get("access_mode") == "runtime-readonly"):
+        raise ValueError("此运行只读")
     # Persisted Git/worktree paths belong to the run's execution namespace.
     command = list(run["cli_command"] or [run["binary"], "--state", run["state"]])
     if run["docker"] and run["docker"].get("mounts"):
@@ -259,9 +263,12 @@ class Handler(BaseHTTPRequestHandler):
             if url.path == "/api/runs":
                 data = []
                 for run in self.runs.values():
+                    if run["mode"] == "live":
+                        run["access_error"] = service.live_error(run)
+                    run["facts"] = run_records.facts(run["producer_entry"])
                     error = run["access_error"]
                     data.append({**{key: run[key] for key in ("id", "label", "harness", "writable", "mode", "coverage", "facts")},
-                                 "access_error": error, "controllable": run["docker"] is not None,
+                                 "access_error": error, "controllable": run["docker"] is not None and run["docker"].get("access_mode") != "runtime-readonly",
                                  "read_check": "unavailable" if error else "saved-archive" if run["mode"] == "archive" else "not-read"})
             elif url.path == "/api/runtime":
                 run = self.run_for(params.get("run"))
@@ -364,6 +371,8 @@ class Handler(BaseHTTPRequestHandler):
             self.reply(400, {"error": str(error)})
 
     def control_run(self, run, payload):
+        if (run["docker"] or {}).get("access_mode") == "runtime-readonly":
+            raise ValueError("原生成容器接入禁止物理控制")
         action = payload.get("action")
         if action not in ("pause", "resume") or run["docker"] is None:
             raise ValueError("运行控制需要已登记容器及 pause/resume 操作")
