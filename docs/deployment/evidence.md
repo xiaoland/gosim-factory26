@@ -81,6 +81,10 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 ## 等待、反馈与交接
 
 长实验由程序持有运行命令、采集证据并保存终态；运行监控不再唤醒模型。官网与本地共享 provider 活动判断，保存来源身份、生命周期、恢复边界与 native 元数据；疑似 stale 仅表示长时间没有可观测活动，不判断语义进度。
+旧 journal 的 `hosted_monitor` 每轮仍从平台下载完整 `workspace.zip`，采样频率不变；平台没有增量证据接口，此改动只减少本地永久占用。普通成功轮次在临时 `scratch/` 中读取 Braid status、recovery attempt、SQLite DB/WAL 与完整 native 文件，再永久保存判定实际使用的原始 status/recovery、`provider-rows.json` 的选取 provider/turn 行值，以及每个 native 的 `header.jsonl`、`tail.raw` 和 `source.json`。窗口保存原始末 1 MiB，首尾半行、原文件字节数、offset 和 ZIP member 来源均明确记录；窗口不是完整 native，也不提供恢复承诺。provider 活动、原文件 bytes 和 fingerprint 仍来自完整 scratch，不能通过窗口文件大小重新推导。SQLite 摘录只保存本轮所选原始行，不是完整数据库，不能据此独立重跑全表选最新的查询。`required_reads` 只引用本轮永久证据。
+
+已有 `assess/transition` 的终态、进入新故障或故障实质变化会保留本轮完整 ZIP；相同持续故障通过 `prior_full_evidence` 引用先前全现场。原生文件本来缺失时保存 expected source、原错误和 ZIP index 中不存在的依据，仍按原规则表示观察缺口；相同持续缺口不强制重复全 ZIP。解析、其它读取或写入失败保留本轮原下载和具体错误，下载未通过 ZIP 读取时明确标为未核实，不能冒充完整现场。成功轮次先将判定证据、索引、collection、liveness、outcome 及 `retention.json` 回执同步到存储，再清理本轮 scratch；普通轮最后释放本轮 ZIP。回执的 `release_state=authorized` 表示已耐久保存的释放许可，实际是否已经释放以该文件是否仍存在为准；中断时不从许可推断删除完成。此流程不扫描或回收历史轮次，也不升级已运行的冻结 collector。
+
 本地启动 `python3 -m lab.arc_bench.local_monitor --matrix /absolute/active-matrix.json --output /absolute/collector-output`，首轮立即采样，随后沿 3+8 分钟间隔。矩阵明确实际 lab run 路径，输出保留 scheduler、每批 provider-observation/liveness、原始有界材料、通知和终态；阈值可通过 stale-after-seconds 与 minimum-samples 调整。生成容器停止而 lab 仍回传时记 stopped_finalizing，不反复 exec 或把回传阶段当未知采集失败；source 终态及 transport-finalization 原错误分别保留。监控只读，不替代已有成功门控评分跟随。
 每次实验结束先向用户汇报，由用户决定下一轮，不自动重跑。
 

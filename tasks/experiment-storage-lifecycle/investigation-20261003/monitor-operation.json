@@ -1,0 +1,21 @@
+{
+  "source": "/Volumes/WorkSSD/Development/factory26/runs/iteration13/i13-2-20261001/hosted-sheet-r2/monitor/20261001T174303.462955Z/f16834f58674/workspace.zip",
+  "source_zip_bytes": 164995785,
+  "source_sha256_before": "27e3d8abf12d15e759db29484f528651726c99d55fb38c596aa84358f8a23299",
+  "source_sha256_after": "27e3d8abf12d15e759db29484f528651726c99d55fb38c596aa84358f8a23299",
+  "source_status": "FAILED",
+  "classification": "terminal",
+  "scratch_bytes_before_release": 15236514,
+  "permanent_decision_bytes": 6508663,
+  "zip_retained": true,
+  "scratch_exists": false,
+  "required_reads_all_exist": true,
+  "elapsed_seconds": 0.3373129367828369,
+  "implementation_sha256": {
+    "lab/arc_bench/hosted_monitor.py": "748878cc02b06a6696fc1ebec1e3e7a7049b9b6b3fe09c8b3559edd899be139f",
+    "lab/arc_bench/provider_liveness.py": "07888af5a43ce72955b6dc76c537efd2d16805b1e4bde7ca904695850adf5c6d"
+  },
+  "scope": "existing real terminal ZIP via COW; no source phase change, network/model/Docker/test fixtures; original preserved; ordinary round physical release not validated (original source no longer available)",
+  "provider_observations": 6,
+  "fingerprints_and_activity_match": true
+}

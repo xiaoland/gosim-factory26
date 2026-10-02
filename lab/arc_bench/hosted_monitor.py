@@ -2,6 +2,7 @@
 import argparse
 from contextlib import contextmanager
 import signal
+import shutil
 from concurrent.futures import ThreadPoolExecutor
 import datetime
 import fcntl
@@ -137,9 +138,137 @@ def session_evidence(braid_status,native_sessions):
                 'source':str(source),'path':str(target) if target else None})
     return rows
 
+def collect_workspace(dest, row):
+    """Read the complete native scratch; retain only the exact liveness decision inputs."""
+    scratch = dest / 'scratch'
+    scratch.mkdir()
+    braid_status, index = [], []
+    with zipfile.ZipFile(dest / 'workspace.zip') as archive:
+        for item in archive.infolist():
+            path = Path(item.filename)
+            if item.is_dir():
+                continue
+            index.append({'path': item.filename, 'bytes': item.file_size})
+            if path.is_absolute() or '..' in path.parts or '.factory26' not in path.parts:
+                continue
+            if any(part in path.parts for part in ('node_modules', 'runtime', '.cache')):
+                continue
+            state = path.parent.name == 'braid-state' and path.name in ('status.json', 'braid.sqlite3', 'braid.sqlite3-wal', 'braid.sqlite3-shm')
+            native = 'native-homes' in path.parts and path.suffix == '.jsonl'
+            if not (state or native or path.name == 'recovery-attempt.json'):
+                continue
+            target = scratch / path
+            target.parent.mkdir(parents=True, exist_ok=True)
+            with archive.open(item) as source, target.open('xb') as output:
+                shutil.copyfileobj(source, output)
+            if state and path.name == 'status.json':
+                braid_status.append(target)
+    row['workspace_zip_valid'] = True
+    save(dest / 'archive-index.json', index)
+    observed = time.time()
+    sources = [collect_provider_evidence(path.parent, observed, row['boundary'], exported=True,
+                evidence_root=dest / 'evidence' / path.parent.relative_to(scratch), source_root=scratch)
+               for path in braid_status]
+    native_sessions = {}
+    archive_members = {item['path'] for item in index}
+    for source in sources:
+        for session in source['sessions']:
+            native = session['native']
+            origin = native.get('retained_evidence', {}).get('source') or native.get('expected_source')
+            native['archive_member_present'] = origin in archive_members if origin is not None else None
+            member = Path(native.get('retained_evidence', {}).get('source', ''))
+            if '.factory26' in member.parts:
+                native_sessions[member.parts[member.parts.index('.factory26'):]] = Path(native['path'])
+    permanent_status = [Path(source['source']) / 'status.json' for source in sources
+                        if (Path(source['source']) / 'status.json').is_file()]
+    row['session_evidence'] = session_evidence(permanent_status, native_sessions)
+    provider_phase = 'finalizing' if row['status'] not in TERMINAL and row.get('evaluation_started_at') else row['status']
+    row['provider_observation'] = {'observed_at': observed, 'phase': provider_phase,
+        'run_error': row.get('failure_reason'),
+        'boundary': max([value for value in [row['boundary'], *[source.get('boundary') for source in sources]] if value is not None], default=None),
+        'sessions': [session for source in sources for session in source['sessions']],
+        'errors': [error for source in sources for error in source['errors']],
+        'provider_health': {group: health for source in sources for group, health in source.get('provider_health', {}).items()},
+        'sources': sources}
+    save(dest / 'provider-observation.json', row['provider_observation'])
+    row['required_reads'] = list(dict.fromkeys([str(dest / 'status.json'), str(dest / 'archive-index.json')] +
+        [path for source in sources for path in source.get('required_reads', [])]))
+    evidence_errors = [error for source in sources for error in source['errors']]
+    evidence_errors.extend(error for source in sources for session in source['sessions']
+                           for error in session['native'].get('parse_errors', []))
+    evidence_errors.extend(session['native']['error'] for source in sources for session in source['sessions']
+                           if session['native'].get('error') and not session['native'].get('source_absent'))
+    if evidence_errors:
+        row['evidence_errors'] = evidence_errors
+    if not sources and row['status'] not in TERMINAL:
+        row['preparing'] = True
+
+
+def evidence_retention(row, verdict, notice, state):
+    """Choose full evidence using the existing transition identity, without repeated fault copies."""
+    rid = row['run_id']
+    previous = state.setdefault('full_evidence', {}).get(rid)
+    faults = ('observation_missing', 'provider_failed', 'provider_unavailable', 'suspected_stale', 'stopped_finalizing')
+    failed = row.get('workspace_error') or row.get('observation_error') or row.get('evidence_errors')
+    full = row.get('status') in TERMINAL or bool(failed) or (verdict['classification'] in faults and (notice is not None or previous is None))
+    if full:
+        archive = Path(row['evidence']) / 'workspace.zip'
+        receipt = {'coverage': 'complete-platform-workspace-zip' if row.get('workspace_zip_valid') else 'unverified-platform-download',
+                   'available': archive.exists(), 'path': str(archive),
+                   'prior_full_evidence': {key: previous.get(key) for key in ('coverage', 'available', 'path', 'reason')} if previous else None, 'reason': 'terminal' if row.get('status') in TERMINAL else 'evidence-error' if failed else 'fault-transition'}
+        if row.get('workspace_zip_valid'):
+            state['full_evidence'][rid] = receipt
+    else:
+        receipt = {'coverage': 'liveness-decision-inputs', 'complete_native': False, 'prior_full_evidence': previous,
+                   'reason': 'unchanged-fault' if verdict['classification'] in faults else 'ordinary-observation'}
+    row['retention'] = receipt
+    return full
+
+
+def durable_evidence(path, *, omit=()):
+    """Persist decision inputs and indexes before releasing this round's downloaded ZIP."""
+    path = Path(path)
+    omitted = {Path(item) for item in omit}
+    directories = []
+    for parent, names, files in os.walk(path):
+        names[:] = [name for name in names if Path(parent) / name not in omitted]
+        directories.append(Path(parent))
+        for name in files:
+            member = Path(parent) / name
+            if member in omitted:
+                continue
+            with member.open('rb') as source:
+                os.fsync(source.fileno())
+    for directory in reversed(directories):
+        descriptor = os.open(directory, os.O_RDONLY)
+        try:
+            os.fsync(descriptor)
+        finally:
+            os.close(descriptor)
+
+
+def release_round(row):
+    dest = Path(row['evidence'])
+    archive, scratch = dest / 'workspace.zip', dest / 'scratch'
+    if not archive.exists():
+        return
+    ordinary = row['retention']['coverage'] == 'liveness-decision-inputs'
+    receipt = {**row['retention'], 'release_state': 'authorized' if ordinary else 'zip-retained',
+               'source_zip_bytes': archive.stat().st_size,
+               'scratch_policy': 'temporary after successful durable observation'}
+    save(dest / 'retention.json', receipt)
+    durable_evidence(dest, omit=(archive, scratch) if ordinary else (scratch,))
+    if row.get('workspace_error') or row.get('observation_error') or row.get('evidence_errors'):
+        return
+    shutil.rmtree(scratch)
+    if ordinary:
+        # No required writes follow deletion: the durable decision/receipt already authorizes this round only.
+        archive.unlink()
+
+
 def collect(base,comp,task,rid,batch,with_workspace=True,expected_submission=None):
     dest=batch/rid;dest.mkdir()
-    row={'run_id':rid,'competition':comp,'task':task,'evidence':str(dest),'started_at':time.time()}
+    row={'run_id':rid,'competition':comp,'task':task,'evidence':str(dest),'started_at':time.time(), 'required_reads':[str(dest / 'status.json')]}
     try:
         download('/runs/'+rid,dest/'status.json')
         status=json.loads((dest/'status.json').read_text());status=status.get('run',status)
@@ -165,39 +294,7 @@ def collect(base,comp,task,rid,batch,with_workspace=True,expected_submission=Non
             return row
         try:
             download('/runs/'+rid+'/workspace/template-bundle',dest/'workspace.zip')
-            index=[]
-            braid_status=[]
-            native_sessions={}
-            with zipfile.ZipFile(dest/'workspace.zip') as z:
-                for item in z.infolist():
-                    path=Path(item.filename)
-                    if item.is_dir():continue
-                    index.append({'path':item.filename,'bytes':item.file_size})
-                    if not path.is_absolute() and '..' not in path.parts and '.factory26' in path.parts and not any(x in path.parts for x in ['node_modules','runtime','.cache']):
-                        if path.suffix in {'.jsonl','.json','.md','.log','.sqlite3'} or path.name.endswith(('.sqlite3-wal','.sqlite3-shm')):
-                            target=dest/'evidence'/path;target.parent.mkdir(parents=True,exist_ok=True);target.write_bytes(z.read(item))
-                            if (len(path.parts)==5 and path.parts[:2]==('template','.factory26')
-                                    and path.parts[3:]==('braid-state','status.json')):
-                                braid_status.append(target)
-                            if 'native-homes' in path.parts and path.suffix=='.jsonl':
-                                native_sessions[path.parts[path.parts.index('.factory26'):]]=target
-            save(dest/'archive-index.json',index)
-            row['session_evidence']=session_evidence(braid_status,native_sessions)
-            observed=time.time()
-            sources=[collect_provider_evidence(path.parent,observed,row['boundary'],exported=True) for path in braid_status]
-            provider_phase=row['status']
-            if row['status'] not in TERMINAL and row.get('evaluation_started_at'):
-                provider_phase='finalizing'
-            row['provider_observation']={'observed_at':observed,'phase':provider_phase,
-                'run_error':row.get('failure_reason'),'boundary':max([v for v in [row['boundary'],*[s.get('boundary') for s in sources]] if v is not None],default=None),
-                'sessions':[item for source in sources for item in source['sessions']],
-                'errors':[error for source in sources for error in source['errors']],
-                'provider_health':{group:health for source in sources for group,health in source.get('provider_health',{}).items()}, 'sources':sources}
-            save(dest/'provider-observation.json',row['provider_observation'])
-            if not sources and row['status'] not in TERMINAL:
-                row['preparing']=True
-            row['required_reads']=list(dict.fromkeys([str(path) for path in braid_status]
-                + [session['path'] for session in row['session_evidence'] if session['path']]))
+            collect_workspace(dest, row)
         except Exception as e:row['workspace_error']=str(e)
     except Exception as e:row['observation_error']=str(e)
     row['finished_at']=time.time();save(dest/'collection.json',row)
@@ -233,12 +330,21 @@ def run_batch(base,journals,state,*,stale_after=1800,min_samples=2,targets=None)
         save(Path(row['evidence'])/'liveness.json',verdict)
         assessments.append({'run_id':rid,**verdict})
         notice=transition(rid,verdict,state.setdefault('notifications',{}))
+        evidence_retention(row, verdict, notice, state)
+        save(Path(row['evidence']) / 'collection.json', row)
         if notice:alert(base,'provider_liveness',notice)
         if row.get('status') in TERMINAL:
             state['done'].append(rid)
             if row.get('workspace_error'):
                 state.setdefault('evidence_errors',{})[rid]=row['workspace_error']
     save(batch/'outcome.json',{'runs':rows,'liveness':assessments,'done':state['done'],'model_invoked':False})
+    durable_evidence(batch, omit=tuple(Path(row['evidence']) / name for row in rows for name in ('workspace.zip', 'scratch')))
+    for row in rows:
+        try:
+            release_round(row)
+        except Exception as error:
+            row['retention_error'] = {'error_class': type(error).__name__, 'detail': str(error)}
+            save(Path(row['evidence']) / 'retention-error.json', row['retention_error'])
     for path in journals:
         journal=json.loads((path/'state.json').read_text())
         ids={item.get('run_id') for item in journal['tasks'].values()}

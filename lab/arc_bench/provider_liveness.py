@@ -3,6 +3,7 @@ import datetime
 import hashlib
 import json
 import re
+import shutil
 from pathlib import Path
 import sqlite3
 import time
@@ -19,17 +20,31 @@ def epoch(value):
     return None
 
 
-def native_activity(path, expected_id=None, *, exported=False):
+def native_activity(path, expected_id=None, *, exported=False, evidence_dir=None, archive_member=None):
     result = {'path': str(path), 'available': False}
     try:
         info = path.stat()
         with path.open('rb') as stream:
-            header = json.loads(stream.readline())
+            header_bytes = stream.readline()
+            header = json.loads(header_bytes)
             if expected_id and header.get('id') != expected_id:
                 raise ValueError('native header identity differs from physical session')
             start = max(0, info.st_size - 1024 * 1024)
             stream.seek(start)
             data = stream.read()
+        if evidence_dir is not None:
+            evidence_dir = Path(evidence_dir)
+            evidence_dir.mkdir(parents=True, exist_ok=True)
+            (evidence_dir / 'header.jsonl').write_bytes(header_bytes)
+            (evidence_dir / 'tail.raw').write_bytes(data)
+            metadata = {'coverage': 'native-header-and-tail-window', 'complete_native': False,
+                        'source': archive_member or str(path), 'source_bytes': info.st_size,
+                        'offset': start, 'captured_bytes': len(data), 'header_bytes': len(header_bytes),
+                        'partial_first_line': bool(start),
+                        'partial_last_line': bool(data and not data.endswith(b'\n'))}
+            (evidence_dir / 'source.json').write_text(json.dumps(metadata, ensure_ascii=False, indent=2) + '\n')
+            result.update(path=str(evidence_dir / 'source.json'), retained_evidence=metadata,
+                          required_reads=[str(evidence_dir / name) for name in ('source.json', 'header.jsonl', 'tail.raw')])
         if start:
             data = data.partition(b'\n')[2]
         lines = data.split(b'\n')[:-1]
@@ -58,18 +73,31 @@ def native_activity(path, expected_id=None, *, exported=False):
                       parse_errors=errors[:3])
     except (OSError, ValueError) as error:
         result['error'] = f'{type(error).__name__}: {error}'
+        if isinstance(error, FileNotFoundError):
+            result['source_absent'] = True
+            result['expected_source'] = archive_member or str(path)
     return result
 
 
-def collect_provider_evidence(state_root, observed_at, boundary=None, *, exported=False):
+def collect_provider_evidence(state_root, observed_at, boundary=None, *, exported=False, evidence_root=None, source_root=None):
     """A SQLite backup includes the matching WAL in one read snapshot; originals stay intact."""
     state_root = Path(state_root)
-    result = {'observed_at': observed_at, 'boundary': boundary, 'source': str(state_root),
+    evidence_root = Path(evidence_root) if evidence_root is not None else None
+    required_reads = []
+    if evidence_root is not None:
+        evidence_root.mkdir(parents=True, exist_ok=True)
+        result_source = evidence_root
+    else:
+        result_source = state_root
+    result = {'observed_at': observed_at, 'boundary': boundary, 'source': str(result_source),
               'sessions': [], 'errors': [], 'exported': exported}
     status_path = state_root / 'status.json'
     physical, health = [], {}
     try:
         status = json.loads(status_path.read_text())
+        if evidence_root is not None:
+            shutil.copy2(status_path, evidence_root / 'status.json')
+            required_reads.append(str(evidence_root / 'status.json'))
         physical = status.get('physical_sessions', [])
         health = status.get('provider_health', {})
         result['provider_health'] = health
@@ -80,6 +108,9 @@ def collect_provider_evidence(state_root, observed_at, boundary=None, *, exporte
     if attempt.is_file():
         try:
             record = json.loads(attempt.read_text())
+            if evidence_root is not None:
+                shutil.copy2(attempt, evidence_root.parent / 'recovery-attempt.json')
+                required_reads.append(str(evidence_root.parent / 'recovery-attempt.json'))
             result['recovery_attempt'] = record
             stamps = [epoch(record.get(key)) for key in ('started_at', 'created_at', 'started_at_ns', 'created_at_ns')]
             result['boundary'] = max([v for v in [boundary, *stamps] if v is not None], default=None)
@@ -105,12 +136,15 @@ def collect_provider_evidence(state_root, observed_at, boundary=None, *, exporte
         latest = {}
         for row in providers:
             latest[row['agent_id']] = row
+        selected_turns = []
         for row in latest.values():
             if row['lifecycle'] in ('replaced', 'retired'):
                 continue
             matches = [p for p in physical if p.get('session_id') == row['provider_session_id']]
             item = {**row, 'physical': matches[-1] if matches else None,
                     'turn': next((t for t in reversed(turns) if t['session_id'] == row['session_id']), None)}
+            if item['turn'] is not None:
+                selected_turns.append(item['turn'])
             raw = row.get('provider_session_id')
             native = Path(raw or '')
             # Exports retain original absolute identities; only this source's namespace is eligible.
@@ -119,10 +153,28 @@ def collect_provider_evidence(state_root, observed_at, boundary=None, *, exporte
                 if relative and relative[0] == state_root.parent.name:
                     native = state_root.parent.joinpath(*relative[1:])
             expected = (item['physical'] or {}).get('native_session_id')
-            item['native'] = native_activity(native, expected, exported=exported) if raw else {'available': False, 'error': 'native identity absent'}
+            window = evidence_root.parent / 'native-windows' / hashlib.sha256(str(native).encode()).hexdigest()[:24] if evidence_root is not None else None
+            member = str(native.relative_to(source_root)) if source_root is not None and native.is_relative_to(source_root) else str(native)
+            item['native'] = native_activity(native, expected, exported=exported, evidence_dir=window, archive_member=member) if raw else {'available': False, 'error': 'native identity absent'}
+            required_reads.extend(item['native'].get('required_reads', []))
             result['sessions'].append(item)
+        if evidence_root is not None:
+            retained = evidence_root / 'provider-rows.json'
+            # Keep raw SQLite values selected by the existing latest-provider/last-turn queries.
+            def sqlite_value(value):
+                if isinstance(value, bytes):
+                    import base64
+                    return {'sqlite_blob_base64': base64.b64encode(value).decode()}
+                raise TypeError('unsupported SQLite row value: ' + type(value).__name__)
+            retained.write_text(json.dumps({'source': str(database.relative_to(source_root)) if source_root is not None else str(database),
+                'database_consistency': result['database_consistency'], 'provider_selection': 'last row per agent ORDER BY started_at,session_id',
+                'turn_selection': 'last matching session ORDER BY started_at,turn_id',
+                'providers': list(latest.values()), 'turns': selected_turns}, ensure_ascii=False, indent=2, default=sqlite_value) + '\n')
+            required_reads.append(str(retained))
     except (OSError, sqlite3.Error, TimeoutError) as error:
         result['errors'].append(f'{database}: {type(error).__name__}: {error}')
+    if evidence_root is not None:
+        result['required_reads'] = required_reads
     return result
 
 
