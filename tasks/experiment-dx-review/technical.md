@@ -1,8 +1,8 @@
-# Exp 基线合同与生命周期
+# Exp 技术合同与实现边界
 
 2026-10-02，经独立预演修正并实施的合同。本文只定义新基线；旧格式进入history读取或显式artifact import，不进入以下写入/控制。产品边界见[design](design.md)，迁移和验收见[preparation](preparation.md)。字段名在实现中按此统一，内容缺失不以默认值补成授权或成功。
 
-本文件是已实现基线的技术合同。2026-10-02用户要求回到架构性问题后，最新[架构讨论稿](design.md)尚未形成新的LLD或字段迁移决定；此处保留当前行为，不把讨论中的能力追认为已实现。当前阶段以packet为准。
+前轮基线已实施，但合同描述不等于每项能力都已完成运行验收。下文先保留该基线合同；文末“下一版方案”列出本轮源码核对出的缺口和拟议接口，尚未实施或冻结字段迁移。最新职责与生命周期归[design](design.md)，当前阶段以packet为准。
 
 ## 记录与存储
 
@@ -114,3 +114,93 @@ Readiness 查询原 recipe 或已 build manifest，复用冻结 runtime、artifa
 用户指定主验收为缩短打包、启动运行、热修复恢复运行的耗时。分别以完整打包命令至制品完成、启动请求至入口确认、取得明确热修复输入至恢复入口确认为端到端区间。记录输入规模、代码/runtime身份、宿主、缓存条件和阶段耗时；同类真实输入才可比较。减少哈希次数、doctor耗时或单次复制都只能解释变化，不能代替上述验收。平台排队、上传、来源停止等待和模型首请求各自记录，不从本地确认推断实际模型成功。
 
 通用打包器将哈希与 ZIP 写入合成一次文件读取，manifest 描述实际写入的字节；保留原压缩策略。直接存储内嵌 ZIP 在真实包上节省压缩时间但增大上传体积，因目标包含上传总耗时而未采用。文件权限和内容清单合同保持不变，ZIP 容器哈希因编码变化会改变。首次运行与热恢复尚需代表性端到端反馈，不能由打包局部改进宣布完成。
+
+## 下一版方案：当前缺口与接口责任
+
+本节为技术方案，不是当前CLI或schema说明。调查对象为独立DX分支；I14启动复盘中的ResourceEvidence、`--execute-prepared`等修复属于原owner的对应版本，不能追认为本分支能力。正式迁移前核对已提交版本与真实材料，不合入其他owner的在途文件。
+
+| 本分支当前行为 | 下一版合同要求 |
+| --- | --- |
+| build把输入收进run专属store，为每个run重新制作执行代码；Docker launch经控制宿主copy/cp。 | 材料跨run存在，运行绑定引用；缺失才构建或输运，执行域直接装配已有材料。 |
+| publish核验并原子rename，payload仍是普通可写目录。 | 明确写入覆盖；受控published只读消费，弱Local继续核验收到的字节。 |
+| from_job只支持generate→evaluate，等producer终态及archive非pending。 | 消费特定输出合同及必要成功事实；named产物发布和保留可独立于整域archive。 |
+| checkpoint检查停止identity后copy；结构读回不能证明获取期间没有writer。 | Harness证明获取切点与writer关闭覆盖；通用hash、Git fsck或DB完整性不能补出该事实。 |
+| prepare仅复制checkpoint，allowed_changes为空；runtime identity非空不等于语义兼容。 | Harness声明允许变更和兼容条件，实际产出派生语义；不静默把任意热补丁记为已支持。 |
+| declared output存在就发布，不解释最终/阶段application合同。 | 生产者分别声明prepared可执行、最终交付或阶段快照；artifact存在不等于交付成功。 |
+| launch_pending先于只读physical查询；snapshot会写registry、释放预约。 | 按具体动作登记意图和效果，query只读，reconcile显式；查询超时不扩大成entry未知。 |
+| physical在helper锁外取得，随后用于释放；GC仅保守pin新exp目录。 | 动作版本参与释放判定；域内保留与GC排序，多位置关系不能由本机路径扫描猜测。 |
+
+### 资产发布、位置与保留
+
+继续使用artifact_id与manifest SHA及producer relation。构建复用指向既有发布产物和其依赖依据，不再次publish同一副本制造新生产身份；真实重新构建或修改材料则产生新artifact。内容寻址去重不是本轮合同的前提。可变源码/配置冻结一次取得实际内容身份；builder公开实际源码、lock、参数、目标及外部依赖身份到产物的选择依据，依赖尚未冻结则说明缺口，controller不由每个实验维护手写失效列表。ZIP封装单独绑定输入引用及编码参数，不将重新封装算作runtime重新生产。
+
+域存储owner维护位置可用性与消费者保留，controller只保存其引用及回执。位置绑定完整artifact引用、domain与store/volume资产身份、受限相对位置、核验方法和观察；绝对路径由部署resolver解析。资产位置不依赖attempt出生身份，host重启也不自动使持久内容失效。可用、损坏、失联分别解释，不能改原manifest或用另一副本的成功填补失联位置。
+
+发布与producer初始保留共同可见，不能先暴露published位置再补保留。消费者以稳定consumer、用途和请求，在域锁内确认位置未进入删除并登记保留，取得回执后才绑定/装配。保留同时保护承载它的volume/store或父目录，各用途独立release；producer退出或archive收尾不能绕过保留直接删除载体。跨域目标发布并承担保留后，源才按既定政策释放。崩溃留下的多余保留可查询、补完，不能按时间超期自动丢弃；controller不可达不解除consumer责任。元数据沿用文件原子发布与现有锁。
+
+GC同锁登记稳定删除意图，无有效保留且满足writer关闭及既定保存承诺后才删除。Consumer先retain则删除被拒绝，删除意图先成立则新retain被拒绝；先前扫描结果不授权稍后删除。删除效果响应丢失查询原请求，失败保留具体对象与缺口，不恢复为可用或改称不存在；确认尚未发生删除才可取消意图。Retain只防回收，内容和装配仍由其相应事实证明。
+
+Docker域用持久assets volume保留published，工作负载只获得只读访问；producer向staging写入，由存储owner核验并发布。可写恢复材料进入独立workspace，原artifact不随Git/SQLite写入改变。Local无法排除同UID写入口时，在装配复制/读取边界核验字节并复用本次结果，普通目录不消费永久可信receipt。具体copy/COW能力是后端选择；不为此引入通用overlay或扩大权限隔离体系。
+
+同daemon消费先取得小型manifest和域位置事实，直接装配named output；完整archive由原owner继续保全。跨daemon缺内容时transfer保持原identity、保留partial并核验接收内容后发布。当前托管仅支持整包ZIP提交；submission是消费关系，除非平台具备完整读回及核验能力，不能登记成该artifact的可物化副本，也不自动继承费用授权。
+
+### 证明覆盖与失效
+
+内容事实归store，恢复/交付语义归Harness，目标能力和装配归backend/runner，当前来源关闭归实际控制权威。沿已有readback正向保存检查范围、实际依赖、目标条件和缺口，消费者按用途选择所需事实；“validator相同”只能维持已覆盖的保证，不能把存在性或结构解析升级为恢复成功。Compiler从producer能力与维护的目标配置解析这些绑定，不要求开发者拼接新的proof identity。
+
+| 变化或动作 | 延续的事实 | 需重新取得的事实 |
+| --- | --- | --- |
+| 同目标新run、已有受控发布材料 | 内容与有相同依赖的生产语义。 | consumer保留、新attempt及其装配/ready/entry；当前容量与授权门控。 |
+| 配方或模型政策改变 | 未依赖该配置的runtime/Harness材料、原checkpoint来源。 | 实际受影响的构建/恢复语义与新配方绑定；模型嵌入材料时不得忽略。 |
+| Harness热修复 | 原checkpoint内容、来源和历史证据。 | 允许变更、validator/依赖和目标兼容判定、派生prepared及新run关系。 |
+| OS/runtime/native布局改变 | 内容身份及原语义的历史覆盖。 | Harness目标兼容或迁移hook读回、新目标装配。 |
+| 跨域接收或弱Local读取 | producer来源、匹配内容所覆盖的语义。 | 实际接收字节、目标位置/保留与装配。 |
+| workspace已被入口/accessor写入 | 原发布artifact的事实。 | 当前workspace状态；不能复用其初始装配核验来证明运行后内容。 |
+| 来源重启或writer覆盖变化 | 取得时的历史原件。 | 当前控制覆盖、停止与一致切点依据；旧stopped不发新启动许可。 |
+
+Checkpoint获取至少关闭全部相关writer，或消费Harness明确的一致快照协议。域受管动作排序及关闭覆盖保护整个获取窗口，捕获前后两次stopped观察不能排除中间写入；覆盖失效即partial/unknown。DB/WAL、Git对象/未提交工作和native尾部属于同一获取窗口，分别解析成功只证明结构可读。从origin补HEAD/index产生带缺口的派生事实，不能改写为原历史完整。
+
+热修复派生合同绑定原checkpoint、修复材料、允许与实际变更、validator及其相关解释器依赖、目标条件和恢复损失。只重取变化触及的语义，不将所有Harness源码变化视为整个checkpoint失效。目标身份变化先由Harness判断兼容；无需迁移内容时增加目标兼容事实，保留原prepared引用，不复制相同内容制造新prepared。
+
+Application合同至少固定允许需求、内容、来源attempt、最终或阶段身份、选定commit与未提交内容处理、交付生产事实。评价消费这一冻结及其授权，不要求恢复complete，也不从目录存在或producer退出0推断交付完成。Prepared同样须有自己合同的成功发布事实；该事实成立后，后续archive/telemetry错误不撤销其语义或触发再次prepare。
+
+### 域权威与动作效果
+
+域配置先界定受管容量池和谁能创建/启动/重启。受管动作共同排序，未明确释放的请求继续占位；终止并释放的执行不得重启，新执行重新准入。暂停/恢复沿同身份且不释放容量。外部调度者共享权威或划分独立池；管理员绕过控制路径作为维护/接管处理。名额预约与宿主物理资源保证分开，不能通过每次全量inspect补出不存在的排他调度约定。
+
+在此覆盖内，终态及writer关闭可以成为单调事实，启动消费域权威及覆盖状态，不每次重扫同一停止来源。旧来源可被外部重启、accessor未纳入覆盖或发生维护接管时，这个依据不成立，须重新取得对应观察。减少检查来自责任和失效合同，不来自把陈旧事实改标为新鲜。
+
+覆盖包含SDK child、runner、Console等受管控制入口。维护先关闭新动作并推进覆盖版本，再进行外部操作及重新对账；reserve/reconcile提交核对此版本。无法关闭或观察外部控制入口的域保持保守边界，不能把手工约定追认为终态保证。覆盖版本是现有域事实的修订，预约周期可由既有request/incarnation绑定表示，不要求开发者掌握另一组身份。
+
+以下为能力划分，函数名仅用于讨论，不是新增CLI命令或第二套状态机：
+
+| 能力 | 唯一效果owner与接续合同 |
+| --- | --- |
+| preflight | Backend只读环境与能力观察，不初始化helper/volume或隐式安装依赖；失败保留原错与覆盖，沿原attempt重查。 |
+| domain query | 读取既有权威事实，可经短时helper只读挂载已存在资产；不得新建缺失volume、写registry、释放预约或启动负载。查询通道自身的对象/错误由backend负责，不扩大为entry未知。 |
+| initialize/handoff | 域owner建立或接管维护的权威资产及覆盖，独立于每次run；缺失时报告未建立，不夹在只读查询里。 |
+| reserve/reconcile | 域权威登记稳定请求、参数与占位，或应用明确核对结果；响应丢失查询同请求，不重新分配。 |
+| materialize | Backend分别持久登记资源create、输入装配、runner启动意图；查询精确对象身份、内容读回及出生身份后接续。 |
+| runner ready | Runner发布固定runtime、装配、控制入口、限额和必需服务事实；OTLP与ResourceEvidence分别声明，容器started不代替ready。 |
+| start entry | Runner先登记固定入口请求与启动窗口，再绑定进程出生及效果；未知窗口只查询，不重发main。 |
+| publish/export | 原producer与backend分别拥有内容发布和输运；接续同发布意图及artifact身份，partial输运不改变entry事实。 |
+
+Controller只发意图并消费上述owner事实；公开状态不产生另一份可修改的执行终态。一次dispatch可组织这些动作，但不能仅留下一个覆盖所有阶段的launch_pending。各作用域已确认的事实按原owner序列保留，后续失败不回滚为“所有步骤未知”。
+
+受管动作在共同锁内先登记意图并推进版本，再调用物理动作、保存效果。超时不清除pending，动作版本相同也不能排除迟到副作用。物理观察前取得对象动作版本，观察可在锁外进行；释放时核对精确终态、对象出生、预约周期、此前动作及覆盖版本、无未决物化/启动/重启，并保证该终态不可受管重启。不能观察后才补入最新版本。
+
+未知受管对象保留其已有占位，不强迫其他仍有容量的请求等待该对象成功inspect；无法界定外部占用的覆盖缺口仍阻塞相关容量许可。Not-started只能由效果owner证明未进入副作用调用且无旧调用在途，不能由调用者依据缺文件产生。释放不能只靠未发现容器、旧terminal快照或TTL。原实现的snapshot必须拆成只读query与明确reconcile，而不是只改函数名称。
+
+只读helper的生命周期归backend查询通道，具有稳定query请求和自己的错误范围。挂载须保护既有权威资产身份及生命周期；仅先inspect再挂载不能排除删除/重建交错。Docker会在挂载缺失named volume时创建它，`--mount`也不例外，不能把只读选项当成“仅打开既有卷”。[Docker官方说明](https://docs.docker.com/engine/storage/volumes/#start-a-container-with-a-volume)。域维护/删除门控须覆盖查询期间，或实际查询机制拒绝隐式初始化；缺失权威报告未建立，失败报告原错，不能返回空registry。
+
+I14两份原错分别限定边界：reserve前inspect超时尚未调用reserve helper/负载create，但此前authority volume已可能建立，不能称完全无副作用；export docker cp超时可能留下partial或仍在进行的复制，只影响输运，不能重跑prepare/收费入口。保留具体对象、HTTP/退出/超时原件，效果未知不被宽泛的retry掩盖。
+
+Ready逐项服务失败时，先对账原collector/控制入口等动作；只有入口尚未受理且对应旧动作已结束或隔离，才修复缺项并继续原请求，不重启整个runner补偿。Export固定源封口、发布身份与各stage写入范围；先确认旧复制结束或隔离它的目标写入，再接续同产物，不把超时等同复制已停。
+
+### 架构检验与实施前核实
+
+三类流程并列验收，不指定首条实施路径。真实输入下同时记录用户发起到可交付制品/入口确认的端到端时间、主动操作次数，以及构建、扫描、装配、传输、等待和收尾的实际工作。首次缺资产、无变化复用、相关局部变更分别说明输入与缓存条件。移出关键路径的archive工作及保留仍计入总成本和完成责任；没有实测前不承诺倍率。
+
+最有判别力的实施前核实是：现存终态控制路径能否绕过准入重新启动；负载/accessor是否仍持有发布存储可写入口；consumer保留与GC是否存在无保护窗口。答案分别决定是否能减少全域inspect、跨阶段重复哈希和archive等待。接口预演还须覆盖响应丢失后查询、controller重连、目标位置失联、同产物不同用途和有修复材料的恢复；使用现存错误/材料推演，并将无法取得的实际效果标为待验收，不造fixture或运行设施测试。
+
+拟实施涉及controller/compiler、artifacts、backend/admission/runner、Harness公共producer及GC/投影的职责调整；代码面与字段迁移尚未冻结。真实模型、平台写入、旧来源停止、Console部署与数据清理仍按各任务范围，不由本节扩大授权。下一阶段以该接口与失败合同完成有界预演和具体实施说明，再交付开工复核对象。
