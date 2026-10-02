@@ -1,5 +1,7 @@
 # Cleaner 隐藏评论上下文修复
 
+当前状态：用户最新要求收束实验基础设施，已停止所有新增冻结、prepare、launch和模型请求。最终恢复包已装配，但未执行prepare、未启动runtime、未发送通知；先前启动授权不再自动接续。制品与停止交接见 `runs/iteration14/cleaner-hidden-context-20261002/stopped-handoff.json`。
+
 2026-10-02。用户经主会话明确授权：“独立会话立即修复隐藏评论上下文膨胀并至少热部署到I14 cleaner”。范围为模型 context 投影、真实运行读回和该 cleaner 的保全热恢复，不启动新实验矩阵或恢复暂停 dispatcher。
 
 现有 `render_context_comments` 仅折叠 resolved 后代；hidden 分支仍逐条输出作者、祖先与重复理由。改为省略具有 hidden_by 的后代，将自身隐藏的分支根按完全相同的可选理由聚合为一行。root hidden 状态保留；中间节点 hide 只缩减其分支，保留其它可见回复。已 resolved 前缀仍按现有 cutoff 规则处理。原始数据库、正文、hide/resolve 和 CLI 追溯语义不变。
@@ -59,3 +61,17 @@ Docker 实际标签、daemon、StartedAt 与原 operation/run 对齐后，来源
 用户确认WSL恢复后，只读核对原服务 `/home/yyh/.local/share/factory26/exp-console/20261002-review-sessions`：service `8cc80cad-d873-49ed-ab49-e958ba8852a3`、instance `8ccaaf92-02f0-4a60-904e-5564ba6957c3`、PID1676167 running、8765端口、7条registry；`/api/runs` HTTP200。旧cleaner仍指原container/volume及已停止的专属CLI accessor，`read_check=unavailable`，`/api/runtime` HTTP400保留具体“CLI访问容器需要运行且未暂停”。未启停Console或任何生成/accessor，不解除baseline暂停。读回为 `console-{runs,service,runtime-source}-readback.json`。
 
 恢复后的新physical run仍按dev2冻结输入，不能因WSL恢复换回旧宿主。登记接口由现有唯一服务owner执行 `binary`/`register`，须HTTP停止后登记新的run身份及明确来源，不能覆盖旧ID。实际源码 `braid-console/docker_runtime.py:108`拒绝非unix://context；原服务位于WSL，new runtime位于另一dev2 daemon，所以直接live登记有明确跨宿主边界缺口，已报主线，不为此新建Console。`console-registration-handoff.json`保存实际接口和待填newrun/container/StartedAt/volume挂载/state/managed binary/accessor所有权等输入；当前未生成新物理身份，不能将模板当已登记。最终材料仍待职责方法方案，未prepare/launch。
+
+## 已决定的职责入口与最终冻结条件
+
+主线提交最小cleaner入口修复 `b13f4290`：两成员instructions以已有快照、需求与task材料进入工作，补充查询服务具体信息缺口、折叠、新变化或冲突；braid-collaboration按当前实际问题加载。SVC职责/MAIN_SKILLS/Braid/cleaner扩展保持。两instructions预期SHA256均为 `cc4765ccc58dfcf6823a164b8e598af2c05caa04a25901ad07b6b07bb7d3ab2d`，须进入最终fresh managed base。最终通知取消恢复后一律立即重读两主文件，只报告换版事实、技能名/path/hash，由角色本次判断消费；旧强制重读notice/计划作为原候选保留，不再用于launch。
+
+What/Why技能正文仍由独立会话改写，本会话等待最终技能SHA。主线正在核对恢复后WSL容量，最后host选择尚未交付；已冻结dev2候选原样保留，不并行换宿主或启动prepare。Console跨宿主限制不自动授权新模块/第二实例。最终技能、成员instructions、通知接口与host决定均明确后，才一次冻结并执行唯一prepare。
+
+## 收束交接
+
+主线转达用户最新要求整理实验基础设施，并重新明确供应商配方与Harness能力边界、GLM5.3/Qwen方向。本会话立即停止新增freeze/prepare/launch及模型请求，不自行改模型或输入。停止到达前，最终fresh managed base和带正常一次换版notice的恢复package装配成功；最终skills/两成员instructions/shared main/binary/完整workspace/notice均可从制品manifest核对。`final-prepare.py`仅保存、未执行，其成功开关 `final-packaging-complete.json`未创建，`operation-wsl-return`未建立；没有在途offline准备、runtime或模型请求。通知没有发送，角色/技能的运行读取和判断采用未取得证据。
+
+最终独立plan为 `final-material-notice-plan.json`，正文只报告技能换版name/path/hash、不要求统一复读；Wsl-return recipe/spec独立保留，旧spec、dev2候选及所有原件不改。实际artifact路径/SHA/bytes与包内身份见 `stopped-handoff.json`。先前容量只读门控记录远端55,826,632,704 bytes可用、预计额外峰值17,274,589,926 bytes、五槽占用3/可用2，来源同一container仍Stopped/Exit137/OOMKilled=false；这是当时门控，不代替未来启动核对。
+
+Console最近只读核对仍是同一WSL服务、8765/7条登记；旧cleaner专属CLI accessor保持停止，HTTP200列表/具体runtime400保存。主线最后选择WSL与Console同宿主，dev2跨宿主限制仍保留作历史候选边界；未修改registry、新建实例或HTTP/collector。来源container/helper/volume、旧host adapter SIGSTOP现场与全部归档保留，无cleanup，dispatcher/baseline不解除暂停，其它run不操作。下一阶段需主线基于用户新方向明确后再推进，不活跃常驻等待。
