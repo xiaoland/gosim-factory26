@@ -2,6 +2,8 @@
 
 2026-10-02，完整新基线已获开工授权并实施。用户hard-cutoff取向取代此前P0兼容计划；原derive_prepared_transport/prepared_receipt补丁路线不再作为实施目标。完整职责、生命周期和验收合同见[design](design.md)。源码、文档和真实离线证据发布已完成；未变更已有模型、平台、旧派发者或 Console。
 
+2026-10-02用户要求先讨论架构，本轮不选择首条实施路径或开工范围。以下保留原基线的实施准备与历史切换依据；最新职责/生命周期取舍见[架构讨论稿](design.md)，当前阶段见packet，不能以本文旧路线推进本轮源码改动。
+
 ## 新合同与公开入口
 
 新执行领域使用独立kind与schema_version，不能仅增加旧manifest的数字版本继续走normalize兼容分支。拟定experiment kind为factory26.exp.experiment、首版schema_version=1；记录分别标注request、execution、artifact、telemetry和analysis kind，旧lab v1/v2/v3及Competition journal不能进入新写入/控制。
