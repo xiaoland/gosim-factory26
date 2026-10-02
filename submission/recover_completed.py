@@ -27,6 +27,8 @@ from core import archive_sessions
 
 
 ARC_BASE_URL = "https://api.arc-bench.com/v1"
+I14_VARIANTS = frozenset({"pi-braid-i14", "pi-braid-i14-cleaner",
+                          "pi-braid-i14-reviewer", "pi-braid-i14-e2e"})
 NON_ARC_MODEL_AUTH = frozenset("""
 OPENAI_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_OAUTH_TOKEN ANTHROPIC_API_KEY
 COPILOT_GITHUB_TOKEN ANT_LING_API_KEY QWEN_TOKEN_PLAN_API_KEY QWEN_TOKEN_PLAN_CN_API_KEY
@@ -114,7 +116,7 @@ def restore_launch_paths(run, request):
     }, indent=2) + "\n")
 
 
-def refresh_native_materials(run, request, runtime, variant):
+def refresh_native_materials(run, request, runtime, variant, *, arc_only=False):
     """Refresh owned materials in templates and retained homes, preserving native memory."""
     work = run / "work"
     old_profiles = {profile["id"]: profile for profile in request["profiles"]}
@@ -125,8 +127,8 @@ def refresh_native_materials(run, request, runtime, variant):
         (work / name).rename(backup / name)
     shutil.copytree(ROOT / "skills", work / "skills")
     profiles, bindings = variant.native_files(
-        work, runtime, work / "skills", os.environ["OPENAI_BASE_URL"],
-        os.environ.get("VISUAL_BASE_URL"))
+        work, runtime, work / "skills", ARC_BASE_URL if arc_only else os.environ["OPENAI_BASE_URL"],
+        None if arc_only else os.environ.get("VISUAL_BASE_URL"))
     current = {profile["id"]: profile for profile in profiles}
     if set(current) - set(old_profiles):
         raise ValueError("native material refresh cannot introduce assigned profiles")
@@ -422,10 +424,10 @@ def main():
     print("Recovery: verifying packaged runtime and workspace", flush=True)
     manifest = verify_package(ROOT)
     source = json.loads((ROOT / "recovery-source.json").read_text())
-    arc_only = (source.get("override_native_transport") and
-                manifest.get("capabilities", {}).get("variant") in
-                {"pi-braid-i13", "pi-braid-i13-glm-root", "pi-braid-i14", "pi-braid-i14-cleaner",
-                 "pi-braid-i14-reviewer", "pi-braid-i14-e2e"})
+    variant_name = manifest.get("capabilities", {}).get("variant")
+    arc_only = ((variant_name in I14_VARIANTS and source["mode"] == "workspace-resume") or
+                (source.get("override_native_transport") and
+                 variant_name in {"pi-braid-i13", "pi-braid-i13-glm-root"}))
     model_env = arc_recovery_environment(prepare_only=args.prepare_only) if arc_only else dict(os.environ)
     workspace = ROOT / "recovery-workspace.zip"
     if manifest["files"]["recovery-workspace.zip"]["sha256"] != source["workspace_sha256"]:
@@ -509,7 +511,8 @@ def main():
     if source.get("override_native_transport"):
         if not continuing:
             raise ValueError("native transport override requires explicit generation recovery")
-        override_native_transport(run, request, arc_only=arc_only)
+        if variant_name not in I14_VARIANTS:
+            override_native_transport(run, request, arc_only=arc_only)
     origin = run / "braid-state/origin.git"
     app = run / "work/application"
     seed = json.loads((run / "braid-state/request.json").read_text())["seed_commit"]
@@ -563,8 +566,8 @@ def main():
         # Rebuild harness-owned materials, not application files or the object store.
         # Retain the prior files so this hotfix has an inspectable before/after.
         import run as variant
-        if source.get("resource_admission") == "i13-2-v1":
-            profiles, bindings = refresh_native_materials(run, request, runtime, variant)
+        if source.get("resource_admission") == "i13-2-v1" or variant_name in I14_VARIANTS:
+            profiles, bindings = refresh_native_materials(run, request, runtime, variant, arc_only=arc_only)
         else:
             old_profiles = {profile["id"]: profile for profile in request["profiles"]}
             for name in ("skills", "capabilities"):
@@ -621,6 +624,10 @@ def main():
             str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in code_files if path.is_file()
         }, indent=2) + "\n")
+    if variant_name in I14_VARIANTS and continuing:
+        # Apply the selected route after refresh has restored retained model
+        # definitions, so new materials cannot undo the mandatory ARC connection.
+        override_native_transport(run, request, arc_only=True)
     braid = work / "bin/braid"
     shutil.copy2(runtime / "bin/braid", braid)
     braid.chmod(0o755)
@@ -667,7 +674,7 @@ def main():
                                          str(runtime / "node_modules/.bin"), env.get("PATH", ""))))
         if not arc_only and os.environ.get("VISUAL_API_KEY"):
             env["FACTORY26_VISUAL_API_KEY"] = os.environ["VISUAL_API_KEY"]
-        if manifest.get("capabilities", {}).get("variant") in {"pi-braid-i13", "pi-braid-i13-glm-root"}:
+        if variant_name in {"pi-braid-i13", "pi-braid-i13-glm-root"} | I14_VARIANTS:
             import run as variant
             # These process settings are not retained in the native session files.
             env.update(variant.tool_environment(), PI_FFF_MODE="tools-only", PI_FFF_MULTIGREP="0",
@@ -703,7 +710,7 @@ def main():
             "model_migration_receipt": str(run / "recovery-model-migration.json")
                                        if source.get("replace_braid_deepseek_with_glm") else None,
             "native_transport_receipt": str(run / "recovery-native-transport.json")
-                                        if source.get("override_native_transport") else None,
+                                        if source.get("override_native_transport") or arc_only else None,
         }, indent=2) + "\n")
         print(f"Recovery: prepared without starting Braid; run={run}", flush=True)
         return

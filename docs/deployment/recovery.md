@@ -61,7 +61,9 @@ I13 的归档回执将恢复承诺和原文保存分别记录；即使应用已�
 
 热恢复先确定错误首次出现及开始大规模扩散的时间，优先选择扩散前最近的可恢复检查点，避免把已受影响的上下文和协作状态原样带入修复后的运行。核对检查点内应用与 Git、Braid 数据库和原生会话的时间及相互引用；单独回退应用提交不能代表整个运行已回退。保留当前现场，记录选择依据、会丢弃的有效进度以及缺失材料。没有可确认的较早检查点时，明确记录限制，再按已授权范围接续。
 
-需要把新的技能和原生指令应用于半成品时，使用包含新 variant 材料的 `--base-package`，并同时指定 `--continue-generation --refresh-native-materials`。恢复入口重建宿主拥有的 skills、capabilities 和成员指令，保留旧材料副本、应用工作区、协作记录和原模型路由；Braid 在离线恢复边界重建受影响的原生会话。仅替换二进制而不刷新材料，不代表新技能或提示词已生效。原执行须先停止，每次接续使用新的包和运行目录。
+需要把新的技能和原生指令应用于半成品时，使用包含新 variant 材料的 `--base-package`，并同时指定 `--continue-generation --refresh-native-materials`。恢复入口重建宿主拥有的 skills、capabilities 和成员指令，保留旧材料副本、应用工作区、协作记录和原模型配方；Braid 在离线恢复边界重建受影响的原生会话。仅替换二进制而不刷新材料，不代表新技能或提示词已生效。原执行须先停止，每次接续使用新的包和运行目录。
+
+I13 和四个 I14 variant 的刷新使用完整冻结 base 内的 runtime、角色和独立 skills，要求同时包含 managed native 模块、资源 helper 和三项 managed process patch。入口逐项核对原 profile 的 provider、model、reasoning 和上下文参数，保留根成员选择、旧模型定义、native home 和原生 session 文件，仅刷新所属材料。四个 I14 的继续生成始终使用 ARC；因此只传 `--refresh-native-materials` 即可刷新新材料并落实 ARC，无需同时传 `--override-native-transport`。两项 CLI 标志仍互斥，历史非 I14 的显式 transport 边界沿用。
 
 
 接续入口从工作区 ZIP 还原 Unix 文件权限和符号链接。官网导出会把执行文件降为 `0600` 时，冻结包执行位按 manifest 恢复；保留的 `request.pi.executable`、各 binding 的 executable 和 `work/bin/pbb` 按声明恢复 `0755`，要求解析后仍在同一 Braid run 内。原生会话使用旧 `/workspace/submission/runtime` 路径、本地 ARC wrapper 把包放在 `/workspace/submission/agent` 时，入口仅为包内存在的 runtime、support、extensions、tools、agents、skills 建立兼容链接；已占用且指向不同位置的路径会拒绝恢复。修复列表写入 `recovery-launch-paths.json`，不会批量 chmod 文件或改写历史技能、指令和配置。
@@ -97,7 +99,7 @@ python3 scripts/package_completed_recovery.py \
 
 二进制覆盖时，manifest 不沿用原冻结源码的 revision 或 SHA。原身份保存在 `recovery-source.frozen_braid_source`；`--braid-source` 记录新源码 tar 的容器 SHA，`--braid-source-identity` 逐项核对 tar 中 `braid/` 文件及 `sha256-json-sorted-files` 聚合 SHA，再记录新编译源码身份。辅助源码快照没有提供时，不宣称新 binary 来自原源码。
 
-本地通道切换另用显式 `--override-native-transport`，官网恢复默认关闭。I13/I14 的显式切换固定到 ARC：所有声明的 template 和保留 home 中，两个 provider 都使用 `https://api.arc-bench.com/v1` 与 `$FACTORY26_API_KEY`，其它供应商 URL、不同视觉 key 和不同主 key 会被拒绝。恢复先保全原 models/settings/auth；清空有更高优先级的 stored auth，并用原生严格 provider scope 避免子 Agent 落入其它供应商。模型名称、profile 和对话历史保持，当前 key 不进入回执。其它历史 variant 的显式 transport 选项保持原主/视觉通道行为；普通官网恢复不会被静默改成通道切换。来源及前后哈希归 `recovery-native-transport/` 与 `recovery-native-transport.json`。
+I13 本地通道切换另用显式 `--override-native-transport`，其官网恢复默认关闭。I13 的显式切换和所有 I14 的继续生成固定到 ARC：所有声明的 template 和保留 home 中，两个 provider 都使用 `https://api.arc-bench.com/v1` 与 `$FACTORY26_API_KEY`，其它供应商 URL、不同视觉 key 和不同主 key 会被拒绝。I14 打包自动在 `recovery-source.json` 声明有效 transport 覆盖，供既有独立读回核对允许的文件变更；恢复在材料刷新完成后应用 ARC，避免回填旧模型定义时覆盖本次连接。恢复先保全原 models/settings/auth；清空有更高优先级的 stored auth，并用原生严格 provider scope 避免子 Agent 落入其它供应商。模型名称、profile 和对话历史保持，当前 key 不进入回执。其它历史 variant 的显式 transport 选项保持原主/视觉通道行为。来源及前后哈希归 `recovery-native-transport/` 与 `recovery-native-transport.json`。
 
 未完成生成接续按实际完整 runtime 能力恢复共用资源环境，不只依赖旧 recovery-source 的声明 flag；`native-managed.mjs` 与 `support/runtime_resources.py` 必须同时存在。已有明确资源声明仍按原约束校验。`recovery-resource-environment.json` 记录能力、启用结果和无 key 的路径环境；这使显式模型切换或仅更新 binary 的恢复也能继续使用资源准入保护，缺少能力的旧包不冒充已启用。
 

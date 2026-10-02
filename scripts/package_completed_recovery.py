@@ -16,6 +16,8 @@ from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED
 from package_agent import is_metadata_path, require_private_artifact
 
 ROOT = Path(__file__).resolve().parents[1]
+I14_VARIANTS = frozenset({"pi-braid-i14", "pi-braid-i14-cleaner",
+                          "pi-braid-i14-reviewer", "pi-braid-i14-e2e"})
 
 
 def save(path, value):
@@ -154,7 +156,7 @@ def main():
     parser.add_argument("--override-native-transport", action="store_true",
                         help="Explicitly bind retained native factory26 transports to this run's model URLs and key variables")
     parser.add_argument("--refresh-native-materials", action="store_true",
-                        help="Refresh owned native materials; I13 uses the complete frozen I13-2 base package")
+                        help="Refresh owned native materials; I13/I14 use the complete frozen managed base package")
     args = parser.parse_args()
     if args.refresh_native_materials and not args.continue_generation:
         parser.error("--refresh-native-materials requires --continue-generation")
@@ -213,6 +215,7 @@ def main():
             raise ValueError("different target base requires explicit --refresh-native-materials")
     with ZipFile(base) as archive:
         frozen_manifest = json.loads(archive.read("package-manifest.json"))
+    variant = frozen_manifest.get("capabilities", {}).get("variant")
     if args.replace_braid_deepseek_with_glm and frozen_manifest.get("capabilities", {}).get("variant") not in {
             "pi-braid-i13", "pi-braid-i13-glm-root"}:
         raise ValueError("DeepSeek Braid migration supports only the two I13 variants")
@@ -334,7 +337,8 @@ def main():
               "mode": "workspace-resume" if args.continue_generation else "completed-workspace-recovery",
               "replace_braid_deepseek_with_glm": args.replace_braid_deepseek_with_glm,
               "with_official_signal_evidence": args.with_official_signal_evidence,
-              "override_native_transport": args.override_native_transport,
+              "override_native_transport": args.override_native_transport or (
+                  args.continue_generation and variant in I14_VARIANTS),
               "refresh_native_materials": args.refresh_native_materials}
     if binding:
         source["journal_binding"] = binding
@@ -387,7 +391,8 @@ def main():
             if args.refresh_native_materials:
                 variant = manifest.get("capabilities", {}).get("variant")
                 i13_refresh = variant in {"pi-braid-i13", "pi-braid-i13-glm-root"}
-                if not i13_refresh and variant not in {"pi-braid", "pi-braid-flash-team", "pi-braid-i11"}:
+                managed_refresh = i13_refresh or variant in I14_VARIANTS
+                if not managed_refresh and variant not in {"pi-braid", "pi-braid-flash-team", "pi-braid-i11"}:
                     raise ValueError(f"unsupported Braid variant for native refresh: {variant}")
                 instructions = sorted(name for name in manifest["files"]
                                       if len(Path(name).parts) == 3 and Path(name).parts[0] == "agents"
@@ -396,23 +401,24 @@ def main():
                 if ("support/otlp.py" not in manifest["files"] or observer not in manifest["files"]
                         or not instructions):
                     raise ValueError("base package is missing collector, observer, or variant instructions")
-                if i13_refresh:
-                    # I13-2 replaces the complete frozen runtime, roles and independent
+                if managed_refresh:
+                    # Managed variants replace the complete frozen runtime, roles and independent
                     # skills. Do not quietly mix current checkout files into that base.
                     required = {"runtime/native-managed.mjs", "support/runtime_resources.py"}
                     if not required <= set(manifest["files"]):
-                        raise ValueError("I13 native refresh requires a complete I13-2 base package")
+                        raise ValueError("managed native refresh requires a complete frozen base package")
                     runtime_source = json.loads(original.read("runtime/runtime-source.json"))
                     patches = {"pi-coding-agent-0.85.1-i13-2-managed.patch",
                                "pi-background-bash-1.0.5-i13-2-managed.patch",
                                "pi-subagents-0.56.0-i13-2-managed.patch"}
                     if not patches <= set(runtime_source.get("native_patch_sha256", {})):
-                        raise ValueError("I13 native refresh runtime lacks managed process patches")
+                        raise ValueError("native refresh runtime lacks managed process patches")
                     refreshed = sorted(name for name in manifest["files"] if
                                        name.startswith(("agents/", "skills/", "extensions/"))
                                        or name in required or name == "run.py")
-                    source.update(native_materials_source="frozen base package",
-                                  resource_admission="i13-2-v1")
+                    source["native_materials_source"] = "frozen base package"
+                    if i13_refresh:
+                        source["resource_admission"] = "i13-2-v1"
                 else:
                     refreshed = ["support/otlp.py", observer, *instructions]
                     replacements["support/otlp.py"] = (ROOT / "lab/otlp.py").resolve(strict=True)
