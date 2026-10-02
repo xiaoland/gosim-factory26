@@ -260,7 +260,11 @@ def selection(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=No
             'PI_SUBAGENT_PI_BINARY' not in spawning):
         raise ValueError('冻结child接线未声明继承父环境及预算包装器；不复用此runtime')
     skill_source = Path(skill_source or ROOT/'harness/skills').resolve(strict=True)
-    dependencies = {'variant': variant, 'variant_source': _tree_identity(source),
+    # assemble copies every source member except variant.json and build.py;
+    # build.py still participates because it executes the material selection.
+    variant_source = {name: identity for name, identity in _tree_identity(source).items()
+                      if name != 'variant.json'}
+    dependencies = {'variant': variant, 'variant_source': variant_source,
                     'builder': _tree_identity(Path(__file__)), 'runtime': _tree_identity(runtime),
                     'skills': {name: _tree_identity(skill_source/name) for name in skills},
                     'support': {name: _tree_identity(ROOT/'scripts'/name) for name in
