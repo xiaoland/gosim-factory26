@@ -41,3 +41,13 @@ WSL新目录预定 `/home/yyh/Development/factory26/runs/e20260928-03-check-rece
 - 启动时发现CLI顶层导入可选analysis模块，精简controller-source没有该目录；已将trace导入移动到对应命令分支，并从同一generation目录接续。两次失败启动均未创建run，接续后恰好两题各一条run。
 - 原控制器文件、异常及实际执行哈希保留在实验根`controller-main-before.py`、`controller-startup-failure.log`、`controller-hotfix.json`；原manifest的controller_source清单是修复前身份，应结合hotfix记录读取。ZIP及题目输入未改变。
 - 监控：脚本PID819719，`gpt-5.6-luna/low`接管事件等待；正常采样3＋8分钟，不依据running声称模型成功或生成完成。
+
+## 运行观察：2026-09-29 12:50（UTC+8）
+
+两题内层Braid约12:24启动，已运行约26分钟；GitHub有9个开放Issue、1个开放PR，Sheet有6个开放Issue、1个开放PR，尚无合并/评分。
+两题原生记录均见vision委派读取参考图；GitHub PR会话实际使用agent-browser检查菜单/退出交互并清理开发进程，Sheet PR会话实际编写Grid、FormulaBar、WorksheetTabs等组件。
+网关及原生会话均有DeepSeek成功工具调用证据，不只是外层running。
+
+新增异常待定位：GitHub同一PR会话累计超过300条failed turns，trigger_kind全部为context_reset_notice，started_at及error均为空；对应非continuation的context_reset从04:46:42Z起停在interrupting，至04:50:39Z仍更新，关联invalidate事件处于resetting。
+这不是300次已证实的模型API失败；当前只能确认reset通知派发出现反复失败记录。根Issue会话仍有后续运行，不能将其等同整题停止。
+监控failed_turns_since_start按started_at过滤，因此漏掉这些无started_at的失败记录；需要补充调度启动前失败/重试的观察口径，不可将已有零计数解释成没有调度异常。

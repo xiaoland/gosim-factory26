@@ -1,0 +1,512 @@
+{
+  "coverage": [
+    {
+      "source": "hosted/github",
+      "native_sessions": 459,
+      "unmatched_manifest": [
+        "01a0e24c-ed64-7653-acb9-50dfa1715890",
+        "01a0e28b-414a-7580-bd0c-4c5f773d303f",
+        "01a0e2a5-05c6-72a2-a890-69c07f7aa06e",
+        "01a0e315-652f-7784-962d-0a5f7da3776f",
+        "01a0e315-fde9-7751-9b20-1303d7c2f2d1",
+        "01a0e333-dc9c-73a8-8f8d-f6e076fd7b37",
+        "01a0e333-ec9e-76d9-aa5b-ec9a7bcac345",
+        "01a0e333-f8b6-76e8-84bb-c7af70370a17",
+        "01a0e39b-cd4b-75ac-939b-6f2827100a61"
+      ],
+      "direct_roles": {
+        "deepseek": 3,
+        "executor": 3
+      }
+    },
+    {
+      "source": "hosted/sheet",
+      "native_sessions": 682,
+      "unmatched_manifest": [
+        "01a0e25e-9a5b-7200-a648-4f6a0668bd29",
+        "01a0e32b-4e36-7267-91b8-21ceaddb839c",
+        "01a0e32b-5d6c-726e-afda-749d01724088",
+        "01a0e3cd-bc3a-75df-8396-d0a72ca0999e"
+      ],
+      "direct_roles": {}
+    },
+    {
+      "source": "local/e20260928-01-flash-team/pi-braid-flash-team--hackathon--github-356dab3a5fe6a6",
+      "native_sessions": 8,
+      "unmatched_manifest": [],
+      "direct_roles": {}
+    },
+    {
+      "source": "local/e20260928-01-flash-team/pi-braid-flash-team--hackathon--sheet-739b90d54f05db",
+      "native_sessions": 6,
+      "unmatched_manifest": [],
+      "direct_roles": {
+        "minimax": 1,
+        "executor": 1
+      }
+    },
+    {
+      "source": "local/e20260928-02-deepseek-direct/pi-braid--hackathon--sheet-984a08e3155e3e",
+      "native_sessions": 263,
+      "unmatched_manifest": [
+        "01a0e62a-4c2e-76db-abaf-429d94fd33ec",
+        "01a0e62a-4ef5-7634-87a2-5f2a71e49635",
+        "01a0e64a-12f4-715b-b24a-19440745a75f",
+        "01a0e64a-15a4-77d5-b817-26515ae31e97",
+        "01a0e722-f156-7188-8c1c-3242fce120f2",
+        "01a0e727-c1d1-70c1-8811-22fdbaf20935",
+        "01a0e7e2-06c5-714f-bdbb-a826338b6d81",
+        "01a0e7e2-824d-75c3-b554-aa12eef31e97",
+        "01a0e7e3-6f57-7030-9f09-b48c2c55a01f"
+      ],
+      "direct_roles": {
+        "vision": 1
+      }
+    },
+    {
+      "source": "local/e20260928-02-deepseek-direct/pi-braid--hackathon--github-88884da4b94a0f",
+      "native_sessions": 42,
+      "unmatched_manifest": [
+        "01a0e629-91f8-7496-9aac-f8242c916477",
+        "01a0e649-f8dd-7046-b4aa-1c1fda24d865",
+        "01a0e6fd-0fdc-7380-b235-509038a4a0b4",
+        "01a0e6fd-6f7d-746d-89c1-c88d3c07cbe5",
+        "01a0e722-32bc-70bb-857f-0f48c79f1178",
+        "01a0e77c-bc29-77c8-a378-f5d23a06ba81"
+      ],
+      "direct_roles": {
+        "vision": 5
+      }
+    }
+  ],
+  "executions": [
+    {
+      "source": "hosted/github",
+      "session": "01a0e299-90fd-7652-8f9c-ac54e0f5e402",
+      "path": "template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e299-8037-70f0-affa-22ca36003df4/sessions/--workspace-template-.factory26-20260927-080209-0b57147a-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-27T11-21-50-077Z_01a0e299-90fd-7652-8f9c-ac54e0f5e402.jsonl",
+      "line": 27,
+      "timestamp": "2026-09-27T11:24:54.561Z",
+      "id": "call_2d057aed3a3a45648a2e9430",
+      "name": "subagent",
+      "arguments": {
+        "agent": "executor",
+        "task": "你在 /workspace/template/.factory26/20260927-080209-0b57147a/braid-state/worktrees/issue-1/pi-glm-fast-g1 工作(该 cwd 是你唯一的写入区,不要触碰其它 worktree,尤其是 issue-7 的 worktree——那里有另一位 Agent 在工作)。\n\n背景:这是\"简化版 GitHub 协作平台\"项目。当前 git 仓库正处于一次**进行中的 rebase**:`issue-7-integration` 分支(基于 origin/issue-7-review-merge 的快照 d00c0ba,基线 7f22406)正在 rebase 到 f52ade5(origin/develop,#6 PR 基础已合入)。有 5 个冲突文件待解决:backend/server.js、frontend/src/App.tsx、frontend/src/pages/repo/PullDetail.tsx(AA)、frontend/src/pages/repo/PullsList.tsx(AA)、frontend/src/styles.css。\n\n快照内容 = Issue #7 的评审与合并控制实现(REQ-6-1 分支保护+Checks、REQ-6-3-3 行内评论、REQ-6-3-4 Review changes 表单、REQ-6-4 Reviewers picker、REQ-6-5 合并控制、REQ-6-6 关闭/重开),核心新文件 backend/pulls.js(599 行,API 纯增量追加)、backend/scripts/check7.js、checks/issue7.spec.ts、frontend SettingsBranches.tsx 扩展,以及它自带的 PullDetail.tsx(691 行,自含宿主+功能)。\n\ndevelop(f52ade5)已含 #6 交付的 PR 基础:PullsList.tsx、ComparePull.tsx、PullDetail.tsx(81 行)、pullShell.tsx、PullCommits.tsx、PullFiles.tsx、App.tsx 路由(/pulls、/pulls/:number、/compare)、backend server.js 中 #6 路由、styles.css #6 块。\n\n## 冲突解决原则(必须遵守)\n1. **详情页宿主以 develop 版本为基准**:PullDetail.tsx、pullShell.tsx、PullsList.tsx、PullCommits.tsx、PullFiles.tsx、ComparePull.tsx 均采用 develop(f52ade5)版本;把快照中的 #7 功能(评审 approve/request changes、行内评论、Reviewers picker、Checks 状态、Merge 按钮与合并控制、关闭/重开)作为增量嫁接进 develop 的宿主结构中。参考快照版 PullDetail.tsx(git show d00c0ba:frontend/src/pages/repo/PullDetail.tsx)提取功能逻辑与 UI,但宿主结构、路由参数、tab 结构沿用 develop 版。若某些功能依赖快照版宿主的结构,可适度扩展 develop 宿主,但不得删除/破坏 #6 已验收的列表/比较/创建/详情 tab/diff 功能。\n2. **backend/pulls.js 整体保留**(纯增量模块);backend/server.js 以 develop 版为基准,把快照 server.js 中 #7 新增的路由/中间件(api.use 追加的 pulls 评论/评审/reviewers/checks/merge/ready/close/reopen/protection 等)合入,注意不要重复 #6 已有的路由。\n3. **App.tsx**:以 develop 版为基准,快照若引入 develop 没有的路由才追加;路由路径重复的以 develop 为准。\n4. **styles.css**:两边的新增块做并集,选择器冲突时避免破坏 #6 页面样式。\n5. SettingsBranches.tsx、checks/issue7.spec.ts、check7.js、run-browser-check7.sh、backend/seed.js 改动仅快照侧有,直接保留快照版本。\n6. docs/architecture.md:两边改动合并(快照补充了 stale/checks/merge 字段与 onBranchCommit 语义)。\n7. 完成后 `git rebase --continue`(保留原提交信息),不要 push。\n\n## 验证(全部通过才算完成)\n- frontend:`npm run build`(tsc -b + vite build)必须成功。\n- backend 检查(在 backend 目录):`node scripts/check.js`(基线 105 项)、`node scripts/check6.js`(66 项)、`node scripts/check7.js` 全部通过。启动后端时用 `HOST=127.0.0.1 PORT=4201 APP_DATA_PATH=/tmp/issue7-integration-data.json node server.js`(或各脚本约定的方式),**禁止用 3000 端口**;检查完成后必须停止你启动的所有服务进程。\n- 浏览器检查:`TMPDIR=/tmp npx playwright test checks/issue7.spec.ts`(以及若可行跑 checks/governance.spec.ts 与 pr-basics.spec.ts 回归)在隔离端口+临时 APP_DATA_PATH 下通过;Playwright 需 TMPDIR=/tmp(默认长 TMPDIR 会导致 chromium 启动假失败)。\n- 若快照功能嫁接后 check7.js/issue7.spec.ts 因宿主结构差异失败,允许小幅修正前端嫁接代码与检查选择器使其通过,但不得删减 #7 需求覆盖;不得修改 backend/pulls.js 的 API 语义。\n\n## 汇报\n返回:解决方式摘要(每个冲突文件的取舍)、构建结果、各检查的通过数/总数、启动过的端口与是否已全部停止、遗留风险。用中文。"
+      },
+      "result": {
+        "session": "01a0e299-90fd-7652-8f9c-ac54e0f5e402",
+        "path": "template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e299-8037-70f0-affa-22ca36003df4/sessions/--workspace-template-.factory26-20260927-080209-0b57147a-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-27T11-21-50-077Z_01a0e299-90fd-7652-8f9c-ac54e0f5e402.jsonl",
+        "line": 28,
+        "timestamp": "2026-09-27T11:24:54.759Z",
+        "name": "subagent",
+        "text": "Run fan-out: 1/64 used, 63 remaining\nAsync: executor [7befc0b1-e0d9-48a9-ba62-49a7be07756a]\n\nThe async run is detached and running in the background.\nYou are in an interactive session. By default, return control to the user now; Pi will wake you on completion when the run finishes or needs attention. Do NOT call subagent_wait() merely to wait, and do not run sleep/polling loops to wait for it.\nWhen you need an explicit wake for one known run but do not need same-turn results, call subagent_wait({ id: \"...\", nonBlocking: true }) to arm a subscription and return immediately.\nOverride the default and call blocking subagent_wait() before ending the turn only when the current request is run-to-completion — for example, the user asked you to report results back here before continuing, or a skill must finish in one turn. In that case, call subagent_wait() to block until the run completes so its results are delivered in this turn instead of deferred.\nOtherwise, continue any independent work or return control to the user. Use subagent({ action: \"status\", id: \"...\" }) for a one-shot status/result or to inspect a blocked/stale run, never as a wait loop.\nMission: 46147e45-ec4e-4f17-b762-1fc8b500ecf2 (active)",
+        "details": {
+          "mode": "single",
+          "runId": "7befc0b1-e0d9-48a9-ba62-49a7be07756a",
+          "results": [],
+          "asyncId": "7befc0b1-e0d9-48a9-ba62-49a7be07756a",
+          "asyncDir": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/7befc0b1-e0d9-48a9-ba62-49a7be07756a",
+          "launchContractDigest": "04e4c9999e4dcf1bf81fccad7ace7d01a10f0b9f3894f686ceccfa033d618d62",
+          "launchResolvedExtensions": {
+            "version": 1,
+            "source": "launch-resolved",
+            "disableAmbientExtensions": true,
+            "runtime": [
+              "sha256:3b57f5f5034984a9"
+            ],
+            "configured": [
+              "sha256:fc690ea7ef63e8a6"
+            ],
+            "effective": [
+              "sha256:3b57f5f5034984a9",
+              "sha256:fc690ea7ef63e8a6"
+            ],
+            "omitted": {
+              "runtime": 0,
+              "configured": 0,
+              "effective": 0
+            }
+          },
+          "context": "fresh",
+          "timeoutMs": 1800000,
+          "deadlineAt": 1790510094578,
+          "runFanoutBudget": {
+            "used": 1,
+            "limit": 64,
+            "remaining": 63
+          },
+          "missionId": "46147e45-ec4e-4f17-b762-1fc8b500ecf2",
+          "missionPath": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e299-8037-70f0-affa-22ca36003df4/missions/projects/65aba75bd612bb37f07ab8aac238ed3af175856fc386409010ee352aedec5a75/46147e45-ec4e-4f17-b762-1fc8b500ecf2.json",
+          "mission": {
+            "schemaVersion": 1,
+            "id": "46147e45-ec4e-4f17-b762-1fc8b500ecf2",
+            "title": "[prompt redacted]",
+            "objective": "[prompt redacted]",
+            "status": "active",
+            "createdAt": "2026-09-27T11:24:54.570Z",
+            "updatedAt": "2026-09-27T11:24:54.680Z",
+            "runs": [
+              {
+                "runId": "7befc0b1-e0d9-48a9-ba62-49a7be07756a",
+                "mode": "single",
+                "asyncDir": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/7befc0b1-e0d9-48a9-ba62-49a7be07756a",
+                "status": "active",
+                "startedAt": "2026-09-27T11:24:54.679Z"
+              }
+            ],
+            "workflowChildren": [],
+            "decisions": [],
+            "artifacts": [
+              {
+                "kind": "status",
+                "path": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/7befc0b1-e0d9-48a9-ba62-49a7be07756a/status.json"
+              },
+              {
+                "kind": "other",
+                "path": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/7befc0b1-e0d9-48a9-ba62-49a7be07756a/events.jsonl",
+                "description": "Lifecycle events"
+              }
+            ],
+            "receipts": [],
+            "cwd": "/workspace/template/.factory26/20260927-080209-0b57147a/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+            "ownerSessionId": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e299-8037-70f0-affa-22ca36003df4/2026-09-27T11-21-50-077Z_01a0e299-90fd-7652-8f9c-ac54e0f5e402.jsonl"
+          }
+        }
+      },
+      "task_characters": 2790
+    },
+    {
+      "source": "hosted/github",
+      "session": "01a0e29d-9511-719a-9662-a40b1351d755",
+      "path": "template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e29d-8d70-7f43-a288-4027e9d8c829/sessions/--workspace-template-.factory26-20260927-080209-0b57147a-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-27T11-26-13-265Z_01a0e29d-9511-719a-9662-a40b1351d755.jsonl",
+      "line": 21,
+      "timestamp": "2026-09-27T11:27:55.985Z",
+      "id": "call_b42ca1f62d534fe09bd7f8fe",
+      "name": "subagent",
+      "arguments": {
+        "agent": "executor",
+        "task": "你在 /workspace/template/.factory26/20260927-080209-0b57147a/braid-state/worktrees/issue-1/pi-glm-fast-g1 工作（该目录当前正处于 rebase 中途，你是唯一写入者，直接在此完成，不要创建新 worktree）。\n\n# 背景\n这是\"简化版 GitHub 协作平台\"根 Issue 的 #7（评审与合并控制）集成分支 issue-7-integration 的 rebase：把快照 d00c0ba（基于旧基线 7f22406）rebase 到 origin/develop f52ade5（已含 #6 PR 基础）。rebase 已停在冲突点，5 个文件未解决：backend/server.js、frontend/src/App.tsx、frontend/src/pages/repo/PullDetail.tsx、frontend/src/pages/repo/PullsList.tsx、frontend/src/styles.css。其余文件已暂存：backend/pulls.js(新增,写端点全集)、backend/scripts/check7.js、backend/scripts/run-browser-check7.sh、backend/seed.js(M)、checks/issue7.spec.ts、docs/architecture.md(M)、frontend/src/pages/SettingsBranches.tsx(M,保护规则 UI)、frontend/src/pages/repo/PullCompare.tsx(新增)。\n\n先读 docs/architecture.md（develop 版 + 快照增量）了解契约；后端读 backend/server.js（develop 侧读端点）与 backend/pulls.js（快照写端点）；前端读 frontend/src/pages/repo/ 下 PullDetail.tsx/pullShell.tsx/PullCommits.tsx/PullFiles.tsx/PullsList.tsx/ComparePull.tsx（develop 版）与快照版 PullDetail.tsx/PullsList.tsx/PullCompare.tsx。\n\n# 冲突解决规则（契约方硬性裁决，必须逐条遵守）\n1. **读 API 只增不减**：develop 的 `GET /pulls` 行含 `reviews:[{reviewer,decision}]` 字段（#6 已发布），rebase 后必须保留；快照的 `hasReviews` 可作为附加字段保留。\n2. **同一端点只能有一个 handler**：\n   - `GET /pulls/:number`：以 develop 的聚合 payload 为基准，把快照 detailPayload 的评审/合并状态字段（reviews 含 stale、checks.commit、mergedBy/mergedAt/mergeCommit 等）**追加**进去，形状兼容；\n   - `POST /pulls`、`POST /pulls/:n/ready`：快照 server.js 里有一份减配版，pulls.js 里有一份完整版——删掉 server.js 里的，统一收进 pulls.js；\n   - 保留 develop server.js 的 `compareState`/`comparableCommits` helpers 和 `GET /compare`（快照删了这些 helper，不能跟着删）。\n3. **前端路由以 develop 为准**：保留 develop 五条路由（/pulls→PullsList、/pulls/compare→ComparePull、/pulls/:number + /commits + /files→pullShell 体系）；**丢弃**快照的 `/pulls/new`(PullCompare.tsx) 路由和 `/pulls/:number/:tab?` 模式。快照 PullCompare.tsx 若含 develop 缺失的功能控件（如 Review changes 表单 REQ-6-3-4），先把控件移植进 develop 的 PullDetail/pullShell，再删除 PullCompare.tsx 文件及 App.tsx 中的引用。App.tsx 冲突全部按 develop 五条路由解决。\n4. **PullDetail.tsx**：以 develop 版为宿主基准，把快照的评审(REQ-6-3-4 Review changes 表单)、行内评论(REQ-6-3-3)、Reviewers picker(REQ-6-4)、Checks/合并控制(REQ-6-5)、关闭/重开(REQ-6-6)控件作为增量嫁接进去。集成后逐项核对 REQ-6-1/6-3-3/6-3-4/6-4/6-5/6-6 的 UI 与 API 都在。\n5. **PullsList.tsx**：以 develop 版为基准（含 reviews 过滤），快照如有额外功能（如 merged/closed 过滤项）作为增量合入。\n6. **styles.css**：两个世界的样式都保留，按既有约定作用域化（.sidebar-picker 等先例），不得覆盖他人页面样式。\n7. **docs/architecture.md**：合并快照增量（reviews[].stale、checks.commit、mergedBy/mergedAt/mergeCommit、\"Pull 写 API(backend/pulls.js)\"条目、onBranchCommit 钩子）后，把 \"Pull request 基础\" 小节更新为最终归宿表述（写端点在 pulls.js、读 API 增补字段清单），消除与快照表述的不一致。\n8. backend/seed.js、SettingsBranches.tsx、check7.js、issue7.spec.ts 已无冲突，但需检查其引用的 API/组件在集成后仍存在（如 check7/issue7.spec 若引用了被删的 /pulls/new 路由或 PullCompare 组件，改为对准 develop 路由与 ComparePull）。issue7.spec.ts 中对快照 UI 结构的断言（如 :tab? 路由）需改写为对 develop 宿主结构的断言。\n\n# 完成冲突后\n1. `git rebase --continue`（用清晰提交信息，如 \"Rebase issue-7 snapshot onto f52ade5: integrate review/merge onto develop host\"）；**不要 push 到 develop**，只推 issue-7-integration。\n2. frontend: `npm install`（若需要）+ `npm run build` 必须成功。\n3. backend 自检（全部用非 3000 端口，选 4181-4199 内空闲端口；APP_DATA_PATH 用 /tmp 下临时文件；TMPDIR=/tmp 避免 chromium SingletonSocket 路径超限；每个服务用完立即停）：依次跑 backend/scripts/check.js、check4.js、check6.js、check7.js，记录各自通过数；再跑 Playwright：`TMPDIR=/tmp npx playwright test --config checks/playwright.config.ts` 全量（governance + issue4 + issues-* + pr-basics + issue7）。任何失败都要修复后复跑，不得带病收工。若确属环境 flake（如浏览器崩溃），隔离复跑该 spec 取得有效结果并在报告中说明。\n4. 自检全部通过后：`git push origin issue-7-integration`。\n5. 清理你自己启动的所有服务/进程，临时数据保留在 /tmp 无妨。\n\n# 报告\n返回：冲突解决摘要（每个文件怎么解决、丢弃了什么、移植了什么）、REQ-6-1/6-3-3/6-3-4/6-4/6-5/6-6 各自的落点（文件+关键函数/组件）、全部检查的通过数与端口/数据目录、推送的 commit hash。若遇到无法决定的契约歧义，停下来在报告中列出，不要自行发明语义。"
+      },
+      "result": {
+        "session": "01a0e29d-9511-719a-9662-a40b1351d755",
+        "path": "template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e29d-8d70-7f43-a288-4027e9d8c829/sessions/--workspace-template-.factory26-20260927-080209-0b57147a-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-27T11-26-13-265Z_01a0e29d-9511-719a-9662-a40b1351d755.jsonl",
+        "line": 22,
+        "timestamp": "2026-09-27T11:27:56.067Z",
+        "name": "subagent",
+        "text": "Run fan-out: 1/64 used, 63 remaining\nAsync: executor [76d53282-1604-439f-9e94-ae8a1bf8ad97]\n\nThe async run is detached and running in the background.\nYou are in an interactive session. By default, return control to the user now; Pi will wake you on completion when the run finishes or needs attention. Do NOT call subagent_wait() merely to wait, and do not run sleep/polling loops to wait for it.\nWhen you need an explicit wake for one known run but do not need same-turn results, call subagent_wait({ id: \"...\", nonBlocking: true }) to arm a subscription and return immediately.\nOverride the default and call blocking subagent_wait() before ending the turn only when the current request is run-to-completion — for example, the user asked you to report results back here before continuing, or a skill must finish in one turn. In that case, call subagent_wait() to block until the run completes so its results are delivered in this turn instead of deferred.\nOtherwise, continue any independent work or return control to the user. Use subagent({ action: \"status\", id: \"...\" }) for a one-shot status/result or to inspect a blocked/stale run, never as a wait loop.\nMission: 4a3cce02-66f1-40cc-8e02-ef30b1d79534 (active)",
+        "details": {
+          "mode": "single",
+          "runId": "76d53282-1604-439f-9e94-ae8a1bf8ad97",
+          "results": [],
+          "asyncId": "76d53282-1604-439f-9e94-ae8a1bf8ad97",
+          "asyncDir": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/76d53282-1604-439f-9e94-ae8a1bf8ad97",
+          "launchContractDigest": "b4f9873d29b723d407eee54a72aee342b86b8b2efea304a09fa49a8966a6ea38",
+          "launchResolvedExtensions": {
+            "version": 1,
+            "source": "launch-resolved",
+            "disableAmbientExtensions": true,
+            "runtime": [
+              "sha256:3b57f5f5034984a9"
+            ],
+            "configured": [
+              "sha256:fc690ea7ef63e8a6"
+            ],
+            "effective": [
+              "sha256:3b57f5f5034984a9",
+              "sha256:fc690ea7ef63e8a6"
+            ],
+            "omitted": {
+              "runtime": 0,
+              "configured": 0,
+              "effective": 0
+            }
+          },
+          "context": "fresh",
+          "timeoutMs": 1800000,
+          "deadlineAt": 1790510276003,
+          "runFanoutBudget": {
+            "used": 1,
+            "limit": 64,
+            "remaining": 63
+          },
+          "missionId": "4a3cce02-66f1-40cc-8e02-ef30b1d79534",
+          "missionPath": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e29d-8d70-7f43-a288-4027e9d8c829/missions/projects/65aba75bd612bb37f07ab8aac238ed3af175856fc386409010ee352aedec5a75/4a3cce02-66f1-40cc-8e02-ef30b1d79534.json",
+          "mission": {
+            "schemaVersion": 1,
+            "id": "4a3cce02-66f1-40cc-8e02-ef30b1d79534",
+            "title": "[prompt redacted]",
+            "objective": "[prompt redacted]",
+            "status": "active",
+            "createdAt": "2026-09-27T11:27:55.994Z",
+            "updatedAt": "2026-09-27T11:27:56.062Z",
+            "runs": [
+              {
+                "runId": "76d53282-1604-439f-9e94-ae8a1bf8ad97",
+                "mode": "single",
+                "asyncDir": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/76d53282-1604-439f-9e94-ae8a1bf8ad97",
+                "status": "active",
+                "startedAt": "2026-09-27T11:27:56.061Z"
+              }
+            ],
+            "workflowChildren": [],
+            "decisions": [],
+            "artifacts": [
+              {
+                "kind": "status",
+                "path": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/76d53282-1604-439f-9e94-ae8a1bf8ad97/status.json"
+              },
+              {
+                "kind": "other",
+                "path": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/76d53282-1604-439f-9e94-ae8a1bf8ad97/events.jsonl",
+                "description": "Lifecycle events"
+              }
+            ],
+            "receipts": [],
+            "cwd": "/workspace/template/.factory26/20260927-080209-0b57147a/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+            "ownerSessionId": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e29d-8d70-7f43-a288-4027e9d8c829/2026-09-27T11-26-13-265Z_01a0e29d-9511-719a-9662-a40b1351d755.jsonl"
+          }
+        }
+      },
+      "task_characters": 3671
+    },
+    {
+      "source": "hosted/github",
+      "session": "01a0e2ba-6e7a-7719-929d-7923f8e4cca7",
+      "path": "template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e2ba-66a8-7792-b5ff-c55436ff8b7a/sessions/--workspace-template-.factory26-20260927-080209-0b57147a-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-27T11-57-43-930Z_01a0e2ba-6e7a-7719-929d-7923f8e4cca7.jsonl",
+      "line": 33,
+      "timestamp": "2026-09-27T12:05:45.793Z",
+      "id": "call_9ed009834b2944038968f91c",
+      "name": "subagent",
+      "arguments": {
+        "agent": "executor",
+        "async": true,
+        "task": "在仓库 /workspace/template/.factory26/20260927-080209-0b57147a/braid-state/worktrees/issue-1/pi-glm-fast-g1(已检出的本地分支 issue-7-integration,HEAD=d00c0ba,即 PR #8 快照\"评审与合并控制\"实现,基于旧基线 7f22406)上完成 rebase 集成:将分支 rebase 到 origin/develop(f52ade5,#6 PR 基础已合入,详情页宿主以 develop 为基准),解决冲突后自检,推送 origin/issue-7-integration。这是 Issue #7(REQ-6-1 分支保护规则+Checks、REQ-6-3-3 行内评论、REQ-6-3-4 Review changes 表单、REQ-6-4 Reviewers picker、REQ-6-5 合并控制、REQ-6-6 关闭/重开)的集成分支;#7 范围的功能语义以快照中 backend/scripts/check7.js 与 checks/issue7.spec.ts 的断言为准,不得丢失覆盖。\n\n先 `git fetch origin`。冲突裁决规则(已由根 Issue 与契约负责人定案,必须遵守):\n1. 读 API 只增不减:GET /repos/:owner/:name/pulls 行数据恢复 develop 版的 reviews:[{reviewer,decision}] 字段(快照删成了 hasReviews:boolean;hasReviews 可作为附加字段保留);GET /repos/:owner/:name/pulls/:number 以 develop 的聚合 payload 为基准(pull/myRole/diff/commits),把快照 detailPayload 的评审/合并状态字段追加进去,形状兼容;GET /compare 及其 helper(comparableCommits/compareState)保留 develop 版,不得删除。\n2. 写端点唯一 handler:POST /pulls、POST /pulls/:number/ready 等同一端点只能有一个 handler,统一收进 backend/pulls.js,删除 server.js 中的重复版本(快照已把 server.js 读端点改用 detailPayload/onBranchCommit,保持该结构)。\n3. 前端以 develop 为宿主:保留 develop 五条路由(/pulls→PullsList、/pulls/compare→ComparePull、/pulls/:number + /commits + /files→pullShell 体系);丢弃快照的 /pulls/new(PullCompare.tsx)路由与 /pulls/:number/:tab? 模式,删除 frontend/src/pages/repo/PullCompare.tsx;把快照中评审/行内评论/Reviewers/Checks/合并按钮/关闭重开控件集成进 develop 版 PullDetail.tsx/pullShell.tsx;PullsList.tsx 以 develop 版为基准,把快照新增的 review 过滤(依赖 reviews 字段)并入。\n4. docs/architecture.md:不得净删除 develop 的 \"Pull request 基础(子 Issue #6)\" 小节(GET /compare 访问矩阵、POST /pulls 校验规则、POST /pulls/:number/ready 语义、#6 前端五路由与自检脚本约定 check6.js 4103 / pr-basics.spec.ts 4126 必须保留);把快照新增内容(reviews[].stale、checks[name].commit、mergedBy/mergedAt/mergeCommit、\"Pull 写 API(backend/pulls.js)\" 小节、onBranchCommit 语义)追加并入,并在 #6 小节中补充写端点最终归宿(backend/pulls.js)的说明。\n5. 快照对 backend/seed.js、frontend/src/pages/SettingsBranches.tsx 的修改(保护规则/Checks 种子与设置页 UI)保留并确保与 develop 的 seed 内容兼容合并。\n\n自检要求(全部通过后才推送):\n- frontend: npm install(如需要)后 npm run build 成功;\n- backend: 以 HOST=127.0.0.1、非 3000 端口(用 4300-4399 内空闲端口,各服务错开)、APP_DATA_PATH 指向 /tmp 下临时文件启动,依次跑 backend/scripts/check.js、check4.js、check6.js、check7.js,全部通过;结束停止全部自己启动的服务;\n- 浏览器检查:TMPDIR=/tmp,npx playwright test --config checks/playwright.config.ts 跑 checks/pr-basics.spec.ts、checks/issue7.spec.ts(按 develop 宿主结构调整断言)、checks/governance.spec.ts、checks/issues-*.spec.ts,全部通过;结果目录写到临时位置。\n- 环境约束:3000 端口留给官方评测不可占用;不得改动交付应用初始状态;临时数据用完即弃。\n\n完成后:先 `git tag issue-7-snapshot-backup d00c0ba` 备份快照,再 git push origin issue-7-integration;最终报告:rebase 后 commit sha、冲突解决要点、四套 API check 与 Playwright 的通过数/退出码、frontend build 结果。不要合并到 develop、不要动 origin/develop 和 origin/issue-7-review-merge、不要创建 PR——验收与合并由根负责人执行。若遇到无法推断的阻塞,立即停止并报告,不要自行更改裁决规则。"
+      },
+      "result": {
+        "session": "01a0e2ba-6e7a-7719-929d-7923f8e4cca7",
+        "path": "template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e2ba-66a8-7792-b5ff-c55436ff8b7a/sessions/--workspace-template-.factory26-20260927-080209-0b57147a-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-27T11-57-43-930Z_01a0e2ba-6e7a-7719-929d-7923f8e4cca7.jsonl",
+        "line": 34,
+        "timestamp": "2026-09-27T12:05:45.827Z",
+        "name": "subagent",
+        "text": "Run fan-out: 1/64 used, 63 remaining\nAsync: executor [56af2cee-145a-4048-883d-d98d91a176d8]\n\nThe async run is detached and running in the background.\nYou are in an interactive session. By default, return control to the user now; Pi will wake you on completion when the run finishes or needs attention. Do NOT call subagent_wait() merely to wait, and do not run sleep/polling loops to wait for it.\nWhen you need an explicit wake for one known run but do not need same-turn results, call subagent_wait({ id: \"...\", nonBlocking: true }) to arm a subscription and return immediately.\nOverride the default and call blocking subagent_wait() before ending the turn only when the current request is run-to-completion — for example, the user asked you to report results back here before continuing, or a skill must finish in one turn. In that case, call subagent_wait() to block until the run completes so its results are delivered in this turn instead of deferred.\nOtherwise, continue any independent work or return control to the user. Use subagent({ action: \"status\", id: \"...\" }) for a one-shot status/result or to inspect a blocked/stale run, never as a wait loop.\nMission: a9cd392f-0f9c-4e53-8057-f10f75b215b5 (active)",
+        "details": {
+          "mode": "single",
+          "runId": "56af2cee-145a-4048-883d-d98d91a176d8",
+          "results": [],
+          "asyncId": "56af2cee-145a-4048-883d-d98d91a176d8",
+          "asyncDir": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/56af2cee-145a-4048-883d-d98d91a176d8",
+          "launchContractDigest": "4a994ed0d3f20417ed54fb1fec6c64c599c81e3c0609f6d4c9626e2625e6bf1f",
+          "launchResolvedExtensions": {
+            "version": 1,
+            "source": "launch-resolved",
+            "disableAmbientExtensions": true,
+            "runtime": [
+              "sha256:3b57f5f5034984a9"
+            ],
+            "configured": [
+              "sha256:fc690ea7ef63e8a6"
+            ],
+            "effective": [
+              "sha256:3b57f5f5034984a9",
+              "sha256:fc690ea7ef63e8a6"
+            ],
+            "omitted": {
+              "runtime": 0,
+              "configured": 0,
+              "effective": 0
+            }
+          },
+          "context": "fresh",
+          "timeoutMs": 1800000,
+          "deadlineAt": 1790512545807,
+          "runFanoutBudget": {
+            "used": 1,
+            "limit": 64,
+            "remaining": 63
+          },
+          "missionId": "a9cd392f-0f9c-4e53-8057-f10f75b215b5",
+          "missionPath": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e2ba-66a8-7792-b5ff-c55436ff8b7a/missions/projects/65aba75bd612bb37f07ab8aac238ed3af175856fc386409010ee352aedec5a75/a9cd392f-0f9c-4e53-8057-f10f75b215b5.json",
+          "mission": {
+            "schemaVersion": 1,
+            "id": "a9cd392f-0f9c-4e53-8057-f10f75b215b5",
+            "title": "[prompt redacted]",
+            "objective": "[prompt redacted]",
+            "status": "active",
+            "createdAt": "2026-09-27T12:05:45.800Z",
+            "updatedAt": "2026-09-27T12:05:45.824Z",
+            "runs": [
+              {
+                "runId": "56af2cee-145a-4048-883d-d98d91a176d8",
+                "mode": "single",
+                "asyncDir": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/56af2cee-145a-4048-883d-d98d91a176d8",
+                "status": "active",
+                "startedAt": "2026-09-27T12:05:45.823Z"
+              }
+            ],
+            "workflowChildren": [],
+            "decisions": [],
+            "artifacts": [
+              {
+                "kind": "status",
+                "path": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/56af2cee-145a-4048-883d-d98d91a176d8/status.json"
+              },
+              {
+                "kind": "other",
+                "path": "/workspace/template/.factory26/20260927-080209-0b57147a/work/tmp/pi-subagents-uid-0/async-subagent-runs/56af2cee-145a-4048-883d-d98d91a176d8/events.jsonl",
+                "description": "Lifecycle events"
+              }
+            ],
+            "receipts": [],
+            "cwd": "/workspace/template/.factory26/20260927-080209-0b57147a/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+            "ownerSessionId": "/workspace/template/.factory26/20260927-080209-0b57147a/work/native-homes/pi-glm-fast-01a0e2ba-66a8-7792-b5ff-c55436ff8b7a/2026-09-27T11-57-43-930Z_01a0e2ba-6e7a-7719-929d-7923f8e4cca7.jsonl"
+          }
+        }
+      },
+      "task_characters": 2747
+    },
+    {
+      "source": "local/e20260928-01-flash-team/pi-braid-flash-team--hackathon--sheet-739b90d54f05db",
+      "session": "01a0e5f3-916b-7222-9cc8-a17bf775891c",
+      "path": "/home/yyh/Development/factory26/runs/e20260928-01-flash-team/attempt-02/generation/runs/pi-braid-flash-team--hackathon--sheet-739b90d54f05db/workspace/official-generation/template/.factory26/20260928-025750-fb85c109/work/native-homes/pi-glm-fast-01a0e5f3-4acd-7360-b669-54d7e57b4b7b/sessions/--workspace-template-.factory26-20260928-025750-fb85c109-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-28T02-59-00-076Z_01a0e5f3-916b-7222-9cc8-a17bf775891c.jsonl",
+      "line": 56,
+      "timestamp": "2026-09-28T03:10:22.793Z",
+      "id": "call_59e257bcb6eb4a52b20990b3",
+      "name": "subagent",
+      "arguments": {
+        "agent": "executor",
+        "async": true,
+        "task": "你负责实现 braid Issue #2（共享基础）。当前目录 /workspace/template/.factory26/20260928-025750-fb85c109/braid-state/worktrees/issue-1/pi-glm-fast-g1 是持续保留的 Git clone（origin 为本次运行共享仓库）。先运行 `braid issue view 2` 了解完整任务描述，再 `git fetch origin && git checkout -b feat/issue-2-foundation origin/develop`。\n\n需求来源（必读）：\n- /workspace/template/.factory26/20260928-025750-fb85c109/input/requirements.yaml —— 场景(scenarios)块是模板化文本，以 ATOMIC 节点的 description 为准；本任务覆盖 REQ-1-1-1、REQ-1-2-1、REQ-3-1-1、REQ-3-1-3 以及 REQ-1/REQ-2 的 ARIA 基线（tab/grid/gridcell/rowheader/columnheader 角色与可访问名称，详见 Issue #2 正文）。\n- 参考界面图：/workspace/template/.factory26/20260928-025750-fb85c109/input/reference/（workbook-home.png、worksheet-overview.png、create-workbook.png 等），界面风格模仿 Google Sheets（参考图中布局即可，不必复刻像素；可访问名称一律用需求文本里指定的英文）。\n\n交付要求（细节以 Issue #2 正文为准）：\n1. frontend/（Vite + React + TypeScript）+ backend/（Node 20 + Express，零外部数据库，JSON 文件持久化，数据目录可用环境变量覆盖）。平台流程：frontend `npm install && npm run build`，backend `npm install && HOST=0.0.0.0 PORT=3000 npm run start`（≤120s 启动，backend 静态托管构建产物 + API，首页可访问）。禁止根 npm start / deploy.sh；不提交 requirements、.arc、.git、.factory26 等目录。\n2. 正常启动时自动准备种子数据：工作簿 `Q3 Sales`（Sheet1: A1=Region, A2=East, B2=1200, A3=North, B3=800；Sheet2: 含 East/1200、North/800 两行）。\n3. 数据模型与 API 需预留公式（原式）、验证规则、筛选、透视表、行列结构、每表完整选择矩形、最后活动表、Last updated（修改型操作成功后更新）。把共享契约写入 docs/CONTRACTS.md。\n4. 实现首页（工作簿列表 + `Last updated: <值>` + 以工作簿名为可访问名称的链接 + `New blank workbook` 按钮 + 创建页 `Create` 按钮）、编辑器（工作簿名、Last updated、ARIA tab 工作表标签、grid `Worksheet grid` + aria-multiselectable、gridcell 可访问名称为坐标如 A1、`Formula bar` 文本框、rowheader/columnheader）、单元格编辑（Enter 提交/Escape 取消/公式原样保存显示）、矩形选择（点击+拖拽，aria-selected 精确反映，选择矩形按工作表持久化，刷新/重开一致，切表不覆盖）。\n\n工作流程：\n1) 实现 + 本地自检（自检服务端口用 3100 等非 3000 端口，数据目录用临时位置，结束后停止服务）。编写可重复的自动化检查：浏览器端检查直接使用 browser-checks 技能（先读 /workspace/template/.factory26/20260928-025750-fb85c109/work/skills/browser-checks/SKILL.md，其中含已安装工具与写法），覆盖 ARIA 角色/可访问名称、编辑提交/取消、选择持久化、刷新一致性、种子数据。\n2) `git push origin feat/issue-2-foundation`，`braid pr create --issue 2 --base develop --head feat/issue-2-foundation --title \"共享基础：脚手架、数据模型、首页/编辑器、网格编辑与选择\" --body <摘要>`。\n3) 检查全绿后 `braid pr merge <PR_ID>`，随后 `git fetch origin && git checkout develop && git pull` 确认合入。\n4) 在 Issue #2 评论（`braid issue comment 2 --message ...`）发布：共享契约要点摘要（数据模型/API/种子数据/求值语义占位）、PR 编号、验过的 commit、自检端口约定（告知后续负责人：3000 留给评测，自检用其它端口、临时数据目录、用完停服务）。需要接力的人会读这条评论。\n\n授权：仅限本仓库与本次 origin 的 git commit/push/fetch/merge、braid 操作、依赖安装与本地自检；禁止外部 push/发布。Node 目标兼容 20.19.3（当前本机 node 为 v24，避免使用仅新版本特性）。完成后返回：PR 编号、合入 commit、检查结果摘要、契约要点。"
+      },
+      "result": {
+        "session": "01a0e5f3-916b-7222-9cc8-a17bf775891c",
+        "path": "/home/yyh/Development/factory26/runs/e20260928-01-flash-team/attempt-02/generation/runs/pi-braid-flash-team--hackathon--sheet-739b90d54f05db/workspace/official-generation/template/.factory26/20260928-025750-fb85c109/work/native-homes/pi-glm-fast-01a0e5f3-4acd-7360-b669-54d7e57b4b7b/sessions/--workspace-template-.factory26-20260928-025750-fb85c109-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-28T02-59-00-076Z_01a0e5f3-916b-7222-9cc8-a17bf775891c.jsonl",
+        "line": 57,
+        "timestamp": "2026-09-28T03:10:22.950Z",
+        "name": "subagent",
+        "text": "Run fan-out: 1/64 used, 63 remaining\nAsync: executor [785baf8d-d7bd-4b00-a153-a7d39929e41d]\n\nThe async run is detached and running in the background.\nYou are in an interactive session. By default, return control to the user now; Pi will wake you on completion when the run finishes or needs attention. Do NOT call subagent_wait() merely to wait, and do not run sleep/polling loops to wait for it.\nWhen you need an explicit wake for one known run but do not need same-turn results, call subagent_wait({ id: \"...\", nonBlocking: true }) to arm a subscription and return immediately.\nOverride the default and call blocking subagent_wait() before ending the turn only when the current request is run-to-completion — for example, the user asked you to report results back here before continuing, or a skill must finish in one turn. In that case, call subagent_wait() to block until the run completes so its results are delivered in this turn instead of deferred.\nOtherwise, continue any independent work or return control to the user. Use subagent({ action: \"status\", id: \"...\" }) for a one-shot status/result or to inspect a blocked/stale run, never as a wait loop.\nMission: 774551de-5803-4ba3-bf49-62bd23c55e41 (active)",
+        "details": {
+          "mode": "single",
+          "runId": "785baf8d-d7bd-4b00-a153-a7d39929e41d",
+          "results": [],
+          "asyncId": "785baf8d-d7bd-4b00-a153-a7d39929e41d",
+          "asyncDir": "/workspace/template/.factory26/20260928-025750-fb85c109/work/tmp/pi-subagents-uid-1000/async-subagent-runs/785baf8d-d7bd-4b00-a153-a7d39929e41d",
+          "launchContractDigest": "b9d85322790f201224e23283e307a0e7d915ed0486fae922dbf27eb2ca6d0a64",
+          "launchResolvedExtensions": {
+            "version": 1,
+            "source": "launch-resolved",
+            "disableAmbientExtensions": true,
+            "runtime": [
+              "sha256:a07159fcd04e105b"
+            ],
+            "configured": [
+              "sha256:f03a70d3a1f2e6d2"
+            ],
+            "effective": [
+              "sha256:a07159fcd04e105b",
+              "sha256:f03a70d3a1f2e6d2"
+            ],
+            "omitted": {
+              "runtime": 0,
+              "configured": 0,
+              "effective": 0
+            }
+          },
+          "context": "fresh",
+          "timeoutMs": 1800000,
+          "deadlineAt": 1790566822819,
+          "runFanoutBudget": {
+            "used": 1,
+            "limit": 64,
+            "remaining": 63
+          },
+          "missionId": "774551de-5803-4ba3-bf49-62bd23c55e41",
+          "missionPath": "/workspace/template/.factory26/20260928-025750-fb85c109/work/native-homes/pi-glm-fast-01a0e5f3-4acd-7360-b669-54d7e57b4b7b/missions/projects/d5e9b05c3f611bd35887906f0e38037c0f7c339a5ec5dbfb1ae7cab94b1d8313/774551de-5803-4ba3-bf49-62bd23c55e41.json",
+          "mission": {
+            "schemaVersion": 1,
+            "id": "774551de-5803-4ba3-bf49-62bd23c55e41",
+            "title": "[prompt redacted]",
+            "objective": "[prompt redacted]",
+            "status": "active",
+            "createdAt": "2026-09-28T03:10:22.809Z",
+            "updatedAt": "2026-09-28T03:10:22.842Z",
+            "runs": [
+              {
+                "runId": "785baf8d-d7bd-4b00-a153-a7d39929e41d",
+                "mode": "single",
+                "asyncDir": "/workspace/template/.factory26/20260928-025750-fb85c109/work/tmp/pi-subagents-uid-1000/async-subagent-runs/785baf8d-d7bd-4b00-a153-a7d39929e41d",
+                "status": "active",
+                "startedAt": "2026-09-28T03:10:22.842Z"
+              }
+            ],
+            "workflowChildren": [],
+            "decisions": [],
+            "artifacts": [
+              {
+                "kind": "status",
+                "path": "/workspace/template/.factory26/20260928-025750-fb85c109/work/tmp/pi-subagents-uid-1000/async-subagent-runs/785baf8d-d7bd-4b00-a153-a7d39929e41d/status.json"
+              },
+              {
+                "kind": "other",
+                "path": "/workspace/template/.factory26/20260928-025750-fb85c109/work/tmp/pi-subagents-uid-1000/async-subagent-runs/785baf8d-d7bd-4b00-a153-a7d39929e41d/events.jsonl",
+                "description": "Lifecycle events"
+              }
+            ],
+            "receipts": [],
+            "cwd": "/workspace/template/.factory26/20260928-025750-fb85c109/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+            "ownerSessionId": "/workspace/template/.factory26/20260928-025750-fb85c109/work/native-homes/pi-glm-fast-01a0e5f3-4acd-7360-b669-54d7e57b4b7b/2026-09-28T02-59-00-076Z_01a0e5f3-916b-7222-9cc8-a17bf775891c.jsonl"
+          }
+        }
+      },
+      "task_characters": 2527
+    }
+  ],
+  "current_sources": [
+    {
+      "path": "variants/pi-braid/agents/pi-glm-fast/instructions.md",
+      "sha256": "5151256e6ced7320c9e00002d8bdfe2d19b80497c0a42aff6c21e68a02f322d1"
+    },
+    {
+      "path": "variants/pi-braid/agents/pi-glm-fast/agents/explorer.md",
+      "sha256": "8fcc759f7ed7578108e140aed965daad8a0656b9bcd86c28f28e81c1530ff366"
+    },
+    {
+      "path": "variants/pi-braid/agents/pi-glm-fast/agents/executor.md",
+      "sha256": "6bb5a7ef732c71b376fd4f5c5c851b4b45721553489e005c3c7c65bf21bfbdff"
+    },
+    {
+      "path": "variants/pi-braid/agents/pi-glm-fast/agents/advisor.md",
+      "sha256": "750ddd60126a558c2b2c8f6bbfe6cfc489796e619007aa598401375e04238c57"
+    },
+    {
+      "path": "variants/pi-braid/run.py",
+      "sha256": "70ea0189cb942ba521c6edeb11669a2999b667de43b8a7143a14cd25a0b0c1a0"
+    },
+    {
+      "path": "variants/pi-braid/extensions/factory-subagent-observer.ts",
+      "sha256": "0af7fae7ef2756aac242908ee636067d6a12842571f6b018b0ecadc0f83d4471"
+    },
+    {
+      "path": "sources/svc/skills/svc-sub-agents/SKILL.md",
+      "sha256": "4a894d7ef200737a144a1b29be152043df690b1107674a49d6896b86820588bb"
+    },
+    {
+      "path": "sources/svc/skills/svc-design/references/workflow.md",
+      "sha256": "84a4b07c94617870b7a8aaab96358d95b4941eedfe90ce76976a536a93384af7"
+    },
+    {
+      "path": "sources/svc/skills/svc-investigation/references/delegating-investigation.md",
+      "sha256": "2f96600943525a5031f451d2e0e45ce0c9ce61595fcd488f989d79b32eeb1dcd"
+    },
+    {
+      "path": "sources/svc/skills/svc-implementation/references/delegating-implementation.md",
+      "sha256": "c49bdb231c06e89eb6083693136a5483b1a6c67447cbc4198a391c690b9672fe"
+    },
+    {
+      "path": "scripts/hackathon_gateway.py",
+      "sha256": "205c5a8c49d2811c7b584ffb35df5c9973944be3630cc83264086adc36bbfd18"
+    },
+    {
+      "path": "scripts/model_budget.mjs",
+      "sha256": "3f8170f9c9e3c509d4fcf4af93d7a4e6871b3579f3f02ccc48eb242cbf8f0937"
+    }
+  ]
+}

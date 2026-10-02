@@ -1,0 +1,48 @@
+{
+  "observed": "2026-09-30T05:17:00.266583+00:00",
+  "api_runs": [
+    {
+      "id": "i12-fresh-github",
+      "label": "I12 Github · 从零生成 · 人工介入",
+      "writable": true
+    },
+    {
+      "id": "i12-fresh-sheet",
+      "label": "I12 Sheet · 从零生成 · 人工介入",
+      "writable": true
+    }
+  ],
+  "github": {
+    "lines": 12,
+    "last": {
+      "observed_at": 1790745052.4408238,
+      "run_id": "pi-braid-i12--hackathon--github-715fa714f396de",
+      "phase": "running",
+      "runtime_blocker": {
+        "status": "clear",
+        "source": "/home/yyh/Development/factory26/runs/iteration12/fresh/github/generation/runs/pi-braid-i12--hackathon--github-715fa714f396de/workspace/official-generation/template/.factory26/20260930-035653-f3702b83/braid-state/braid.sqlite3",
+        "active_turns": 1,
+        "pending_events": 7,
+        "blocked_owners": []
+      }
+    },
+    "stderr": ""
+  },
+  "sheet": {
+    "lines": 12,
+    "last": {
+      "observed_at": 1790745052.3940125,
+      "run_id": "pi-braid-i12--hackathon--sheet-8559b80ecb7f15",
+      "phase": "running",
+      "runtime_blocker": {
+        "status": "clear",
+        "source": "/home/yyh/Development/factory26/runs/iteration12/fresh/sheet/generation/runs/pi-braid-i12--hackathon--sheet-8559b80ecb7f15/workspace/official-generation/template/.factory26/20260930-035654-b1b8ead7/braid-state/braid.sqlite3",
+        "active_turns": 1,
+        "pending_events": 9,
+        "blocked_owners": []
+      }
+    },
+    "stderr": ""
+  },
+  "console-server.log": "2026 13:16:18] \"GET /api/item?run=i12-fresh-sheet&kind=issue&id=11 HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:18] \"GET /api/items?run=i12-fresh-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:20] \"GET /api/items?run=i12-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:23] \"GET /api/runs HTTP/1.1\" 200 -\n127.0.0.1 - - [30/Sep/2026 13:16:23] \"GET /api/item?run=i12-fresh-sheet&kind=issue&id=11 HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:23] \"GET /api/items?run=i12-fresh-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:25] \"GET /api/items?run=i12-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:28] \"GET /api/runs HTTP/1.1\" 200 -\n127.0.0.1 - - [30/Sep/2026 13:16:28] \"GET /api/item?run=i12-fresh-sheet&kind=issue&id=11 HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:28] \"GET /api/items?run=i12-fresh-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:30] \"GET /api/items?run=i12-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:33] \"GET /api/runs HTTP/1.1\" 200 -\n127.0.0.1 - - [30/Sep/2026 13:16:33] \"GET /api/item?run=i12-fresh-sheet&kind=issue&id=11 HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:33] \"GET /api/items?run=i12-fresh-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:35] \"GET /api/items?run=i12-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:38] \"GET /api/runs HTTP/1.1\" 200 -\n127.0.0.1 - - [30/Sep/2026 13:16:38] \"GET /api/item?run=i12-fresh-sheet&kind=issue&id=11 HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:38] \"GET /api/items?run=i12-fresh-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:40] \"GET /api/items?run=i12-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:43] \"GET /api/runs HTTP/1.1\" 200 -\n127.0.0.1 - - [30/Sep/2026 13:16:43] \"GET /api/item?run=i12-fresh-sheet&kind=issue&id=11 HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:44] \"GET /api/items?run=i12-fresh-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:45] \"GET /api/items?run=i12-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:48] \"GET /api/runs HTTP/1.1\" 200 -\n127.0.0.1 - - [30/Sep/2026 13:16:48] \"GET /api/item?run=i12-fresh-sheet&kind=issue&id=11 HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:49] \"GET /api/items?run=i12-fresh-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:50] \"GET /api/items?run=i12-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:53] \"GET /api/runs HTTP/1.1\" 200 -\n127.0.0.1 - - [30/Sep/2026 13:16:54] \"GET /api/item?run=i12-fresh-sheet&kind=issue&id=11 HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:54] \"GET /api/items?run=i12-fresh-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:55] \"GET /api/items?run=i12-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:59] \"GET /api/runs HTTP/1.1\" 200 -\n127.0.0.1 - - [30/Sep/2026 13:16:59] \"GET /api/item?run=i12-fresh-sheet&kind=issue&id=11 HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:16:59] \"GET /api/items?run=i12-fresh-sheet HTTP/1.1\" 400 -\n127.0.0.1 - - [30/Sep/2026 13:17:00] \"GET /api/runs HTTP/1.1\" 200 -\n"
+}

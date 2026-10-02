@@ -1,0 +1,132 @@
+5194: fn complete_context_reset(
+5195:     database: &Path,
+5196:     reset_id: &str,
+5197:     provider_session_id: &str,
+5198:     binding_id: &str,
+5199:     context_revision: &str,
+5200:     instruction_revision: &str,
+5201: ) -> Result<(), StoreError> {
+5202:     require_current_schema(database)?;
+5203:     let now = now_rfc3339();
+5204:     let mut connection = open_read_write(database)?;
+5205:     configure_connection(&connection)?;
+5206:     let transaction =
+5207:         connection.transaction_with_behavior(rusqlite::TransactionBehavior::Immediate)?;
+5208:     let (agent_id, old_session_id, work_item_node_id, continuation) = transaction
+5209:         .query_row(
+5210:             "SELECT cr.agent_id,cr.old_session_id,a.work_item_node_id,cr.continuation
+5211:              FROM context_resets cr
+5212:              JOIN agent_instances ai ON ai.agent_id=cr.agent_id
+5213:              JOIN assignments a ON a.assignment_id=ai.assignment_id
+5214:              JOIN local_items l ON l.node_id=a.work_item_node_id
+5215:              WHERE cr.reset_id=?1 AND cr.lifecycle='materializing'
+5216:                AND a.lifecycle IN ('active','finalizing','blocked')
+5217:                AND l.desired_profile_id=ai.profile_id
+5218:                AND l.desired_member_login=a.member_login
+5219:                AND l.assignment_revision=a.assignment_revision",
+5220:             [reset_id],
+5221:             |row| {
+5222:                 Ok((
+5223:                     row.get::<_, String>(0)?,
+5224:                     row.get::<_, String>(1)?,
+5225:                     row.get::<_, String>(2)?,
+5226:                     row.get::<_, i64>(3)? != 0,
+5227:                 ))
+5228:             },
+5229:         )
+5230:         .optional()?
+5231:         .ok_or_else(|| {
+5232:             StoreError::InvalidData(format!("context reset {reset_id} is not materializing"))
+5233:         })?;
+5234:     let new_session_id = Uuid::now_v7().to_string();
+5235:     transaction.execute(
+5236:         "INSERT INTO provider_sessions(
+5237:            session_id,agent_id,provider_kind,provider_session_id,cli_binding_id,context_revision,
+5238:            instruction_revision,lifecycle,started_at
+5239:          ) VALUES (?1,?2,(SELECT p.provider_kind FROM agent_instances ai
+5240:              JOIN profiles p ON p.profile_id=ai.profile_id AND p.revision=ai.profile_revision
+5241:              WHERE ai.agent_id=?2),?3,?4,?5,?6,'idle',?7)",
+5242:         params![
+5243:             new_session_id,
+5244:             agent_id,
+5245:             provider_session_id,
+5246:             binding_id,
+5247:             context_revision,
+5248:             instruction_revision,
+5249:             now,
+5250:         ],
+5251:     )?;
+5252:     transaction.execute(
+5253:         "UPDATE provider_sessions SET lifecycle='replaced' WHERE session_id=?1",
+5254:         [&old_session_id],
+5255:     )?;
+5256:     transaction.execute(
+5257:         "UPDATE assignments SET lifecycle=CASE
+5258:            WHEN (SELECT state FROM work_items WHERE node_id=assignments.work_item_node_id)='OPEN'
+5259:            THEN 'active' ELSE 'finalizing' END,retired_at=NULL
+5260:          WHERE assignment_id=(SELECT assignment_id FROM agent_instances WHERE agent_id=?1)
+5261:            AND lifecycle='blocked'",
+5262:         [&agent_id],
+5263:     )?;
+5264:     transaction
+5265:         .execute("UPDATE agent_instances SET lifecycle=CASE WHEN (SELECT lifecycle FROM assignments WHERE assignment_id=agent_instances.assignment_id)='finalizing' THEN 'finalizing' ELSE 'idle' END WHERE agent_id=?1", [&agent_id])?;
+5266:     transaction.execute(
+5267:         "UPDATE work_items SET context_revision=?2,observed_at=?3 WHERE node_id=?1",
+5268:         params![work_item_node_id, context_revision, now],
+5269:     )?;
+5270:     transaction.execute(
+5271:         "UPDATE context_resets SET new_session_id=?2,context_revision_after=?3,
+5272:            lifecycle='applied',updated_at=?4 WHERE reset_id=?1",
+5273:         params![reset_id, new_session_id, context_revision, now],
+5274:     )?;
+5275:     let event_ids = {
+5276:         let mut statement = transaction.prepare(
+5277:             "SELECT event_id FROM context_reset_events WHERE reset_id=?1 ORDER BY ordinal",
+5278:         )?;
+5279:         statement
+5280:             .query_map([reset_id], |row| row.get::<_, String>(0))?
+5281:             .collect::<Result<Vec<_>, _>>()?
+5282:     };
+5283:     if continuation {
+5284:         // Invalidation has been applied, so its events stay historical. A new
+5285:         // Wake continues the accepted work without re-invalidating the session
+5286:         // or trying to rebind an event that already belongs to an old batch.
+5287:         let references = event_ids.iter().map(|id| transaction.query_row(
+5288:             "SELECT reference FROM events WHERE event_id=?1", [id], |row| row.get::<_,String>(0),
+5289:         )).collect::<Result<Vec<_>,_>>()?;
+5290:         let reference = if references.is_empty() { "请继续处理当前工作项。".to_owned() } else { references.join("\n") };
+5291:         let continuation_id = Uuid::now_v7().to_string();
+5292:         transaction.execute(
+5293:             "INSERT INTO events(event_id,work_item_node_id,kind,detail,origin,reference,lifecycle,dedupe_key,observed_at)
+5294:              VALUES(?1,?2,'wake','reset_continuation','local',?3,'pending',?4,?5)",
+5295:             params![continuation_id,work_item_node_id,reference,format!("reset-continuation:{reset_id}"),now],
+5296:         )?;
+5297:         schedule_event(&transaction, &work_item_node_id, &continuation_id,
+5298:             SchedulerPolicy { quiet_seconds: 0, event_threshold: 1 }, true, &now)?;
+5299:     } else {
+5300:         transaction.execute(
+5301:             "UPDATE wake_batches SET lifecycle='consumed',updated_at=?2
+5302:              WHERE lifecycle IN ('pending','runnable')
+5303:                AND EXISTS (
+5304:                  SELECT 1 FROM wake_batch_events be
+5305:                  JOIN context_reset_events cre ON cre.event_id=be.event_id
+5306:                  WHERE be.batch_id=wake_batches.batch_id AND cre.reset_id=?1
+5307:                )
+5308:                AND NOT EXISTS (
+5309:                  SELECT 1 FROM wake_batch_events be
+5310:                  JOIN events e ON e.event_id=be.event_id
+5311:                  WHERE be.batch_id=wake_batches.batch_id AND e.lifecycle='pending'
+5312:                )",
+5313:             params![reset_id, now],
+5314:         )?;
+5315:     }
+5316:     for event_id in event_ids {
+5317:         transaction.execute(
+5318:             "UPDATE events SET lifecycle='consumed' WHERE event_id=?1 AND lifecycle='resetting'",
+5319:             [event_id],
+5320:         )?;
+5321:     }
+5322:     transaction.commit()?;
+5323:     Ok(())
+5324: }
+5325: 

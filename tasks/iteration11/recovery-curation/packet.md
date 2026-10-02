@@ -18,7 +18,7 @@ Issue/PR保留身份和真实完成状态，先精简正文、以有理由hide�
 - Sheet负责人：sheet_run_status，材料归sheet/，特别消除重复无动作确认、保留契约演进的有效决定。
 - 主线：完整归档和副本准备、统一应用与恢复边界；主对话继续与用户迭代I11。
 
-目前：完整归档已保留；GitHub副本已实际摘剪（6项正文、27条评论隐藏），Git/未提交进度保留。正在冻结I11接续包，尚未启动；Sheet不在本次验证范围。
+当前（2026-09-30 10:03 CST）：两题均已恢复真实生成。GitHub 新原位 attempt `github-0d0cb6e9982fc1` / `f26-continue-0d0cb6e9982fc1` 使用 `d76d65f…`，保留 `github-5c52a331ef0d5c` 的实际 workspace；三项原 blocked reset 均 applied，root/PR22/Issue10 新 Pi 身份已于09:59取得真实 assistant。root 已调用并成功读取评论 #331/#332，DB投递均为delivered；本轮握手实际123–129秒，证明此次冷启动不能由旧30秒窗口覆盖，但不把某一处初始化耗时单独当唯一原因。旧失败 attempt 结论保留。Sheet `sheet-396538bc0dda96` / `arcbench-local-c4e461e6ada9` 继续使用旧 `3056feb7…` 有效生成，不为对齐版本打断。新watch首条均真实定位DB且无blocked owner：GitHub 2 active/6 pending；Sheet 1 active/21 pending。观察脚本PID分别1698832/1698834，输出在WSL `runs/iteration11/runtime-stalls/watches/{github,sheet}/watch.jsonl`。两题均未据此宣称最终交付；原I10仍暂停。
 
 ## 2026-09-29 接续实施
 
@@ -34,3 +34,12 @@ WSL目录：`/home/yyh/Development/factory26/runs/iteration11/20260929-feasibili
 
 ## 恢复故障修正（已授权）
 用户明确要求可随时推进恢复缺陷修复。原I11现已停机保留；最新核对根Issue1仍OPEN且blocked，Issue6已CLOSED、PR16已MERGED、PR20旧assignment已retired且有新会话，不能机械重试历史四条reset。readable-cli负责仅在offline-resume中恢复仍有效、未创建新物理身份的失败reset及原始错误保留；final_product_methods负责一致归档与新恢复包，主线负责部署接续。原I10不动。修复以根恢复真实执行为验收，不以编译通过作恢复成功。
+
+## 2026-09-30 00:16 CST 进展
+冷接续run `pi-braid-i11--hackathon--github-f402061b5bc88f` 仍running。根原blocked reset已经applied，有真实模型响应；随后自编辑重建+continuation再次成功。只恢复根，未复活已关闭/合并/被替代的历史reset。
+PR19/20/21现均MERGED、Issue7/9均CLOSED；根正文记录develop=e5110cb，main=2914d2d。剩余Issue10/M6b（评审、行内评论、reviewers、合并与关闭/重开）已指派deepseek-21，真实session正在读需求/契约/测试与设计；尚无对应实施PR，也没有最终develop→main整合PR。局部测试数字不当成最终应用验收。
+新缺陷：Issue10 advisor默认gpt5.5触发OpenAI401，显式factory26/kimi-k3也失败（细因待查），随后请求explorer。analytics_executor负责仅I11配置/路由定位及必要修复，材料advisor-routing.md；不自行换配方、凭据，不改生成应用。
+
+## Sheet 接续授权与交付范围
+
+用户“好，那么将sheet也推进吧”授权本地 I11 Sheet 接续，沿用自有 API、4 GiB / 2 CPU，不做本地评分。三入口摘剪已完成，保留全部评论和原始代码：根 Issue、Issue #4、PR #13 的正文仅收敛当前任务、证据范围和剩余事项。PR #13 仍 OPEN；已有 68 项 E2E 通过不等于完成最终验收。curated DB 与变更依据见 sheet/packet.md，启动身份见 sheet/launch.md。advisor 路由调查独立推进；未证实的修复不进入冻结包，也不继续作为 Sheet 启动前置。

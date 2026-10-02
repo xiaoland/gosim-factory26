@@ -75,3 +75,9 @@ GitHub REQ-1-3 明确要求每个改密场景拥有独立账户状态，REQ-2-2-
 最终验收使用回放 ZIP `3f78afcaa8e79029bc00734b46044f08d8ea77cdf22ef93d87624e717805e6d6`、`arcbench-local-submit:latest`（image ID `sha256:840105914e…19d`）、4 并发，在每场景独立的官方 Runner 实例中完成。汇总为 GitHub `0/47 passed, 4 failed, 43 blocked`，Sheet `11/24 passed, 11 failed, 2 blocked`；`incomplete=0`、`unexecuted=0`。GitHub 的主要共同阻断是冻结应用不能用公开凭据建立登录会话，因此 43 项不能解释为各自业务能力失败。Sheet 通过项为打开工作簿、导出 CSV、增加/切换/重命名工作表、编辑/选择单元格，以及四项公式计算与持久化能力。
 
 收口校验从最终报告选出的 71 个 run 逐一读取原始 Playwright JSON：场景 ID 71 个且无重复，每个 run 恰好一个测试、一个 trace 和 `status=absent` 的容器清理终态，共 60 张失败截图；不存在遗留的 ARC 容器。注册、仓库搜索和工作表重命名初跑暴露了同名或前缀匹配导致的测试选择器歧义；分别收窄到 `main`、精确名称或对应 dialog 后单独重跑，其中工作表重命名得到通过，另外两项留下真实业务失败。结果位于 WSL `/home/yyh/Development/factory26-official-local/experiments/hackathon-local-eval-20260925/full/analysis/`，原始 runs 位于同级 `full/runs/`。本轮没有调用模型、重新生成软件或访问官网。
+
+## 结果身份与局部说明修正
+
+用户指出矩阵写死 `codex-base-artifact-replay` 会让替换 `--replay` ZIP 后的 run 仍带旧标签，形成第二份身份来源。现改为读取 ZIP 内 `replay-manifest.json`，按需求哈希取对应 case 的原始 `variant`；本次冻结包解析出的值是 `codex-base`。每个新 job 同时冻结测试脚本和 `coverage.json`，selection 保存其联合哈希。配方 README 说明了回放身份、重试选择与报告身份口径。
+
+报告现在逐条核对选中 run 的场景、原子需求、需求文件哈希和冻结测试源码，拒绝把不同回放输入的结果混为一个报告。顶层 `suite_sha256` 只在选中 run 具有相同的完整测试集快照时给出；旧 run 缺少覆盖映射快照时保留逐条源码哈希并将顶层值置空。用既有 71 条真实 run 重算，结果数未变，识别出 3 个历史测试源码快照且 `coverage_snapshots_complete=false`。在 WSL 仅生成一条新清单，确认其 variant 来自 ZIP 且新测试包含覆盖映射；未重新运行应用、模型或评测。

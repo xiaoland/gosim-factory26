@@ -1,0 +1,25 @@
+{
+  "read_at": "2026-09-28T11:15:37.272484+00:00",
+  "braid_head": "89212933c976b889f27de1b8cfe863baf8f6042e",
+  "boundary": "Read-only review of dirty working tree; HEAD alone does not identify the implementation. No code changes or tests.",
+  "sources": {
+    "AGENTS.md": "e2c495e298d99ca8bddf6cdd528cd9616d70a2809d51bd2844a4d21f19fce48f",
+    "docs/20-product-tdd/local.md": "367f5251c4f16b28dc7b621d90bd5505928e869fe750fe77f2225e91703378db",
+    "docs/20-product-tdd/context.md": "3cd3dc1623079a87f17fde722d5e965200c85aa93c5c2fdd73bdeeb100e2f314",
+    "docs/10-prd/README.md": "149773776b826ffe96e8f3a4ea2d0d6c0fcc4863104a63242c9812f95ec7c069",
+    "src/local.rs": "9962fdd3ac27c37be098c5fd78a6716629180e0dd5a0e1fd7053deb6f5ee79a5",
+    "src/objects.rs": "e5bead9064faac46c8a38b6e0fdf40f0f3bb169fcf538a021e13a73be16a80c3",
+    "src/cli/mod.rs": "6e93e48f29667bc07c9ade5a12c1a80d4faaaac6b9cb900e3a4c77b5a1805b36",
+    "src/context.rs": "0a28e19098a28412013f919dc61f57490f3bd9914852613a55c1d93834d7c156",
+    "src/group/provider.rs": "9e246189d697d1c3a5cfdbbc25664d1968f0c7f77f7e140c29429b93db1d12e9",
+    "src/group/dispatch.rs": "9450c95ba3356b25856faefac1d7a3039af6ff8ada05058fbbc30d4a5d1849ca",
+    "src/group/pr_agent.rs": "d0b5e1eaae9e623bb5b12d65cd4b48db60e2ec68f7160d7a3138e71ca72b8448",
+    "src/worktree.rs": "cab0de5e582af7046e8027f9ebf1c4140bbb968bf5bbcb13469576a2da4dd250",
+    "src/store/mod.rs": "a73cacd5a083bde9bd702b0910e41ceb1533d5c222f196b948e97e259ba4a9ec",
+    "src/provider/pi.rs": "fb46e9043e862def82891300f65c425c3d5de99410e03abd54dc0caa27d3be62"
+  },
+  "observed_live_origin_HEAD": {
+    "github-88884da4b94a0f": "refs/heads/main",
+    "sheet-984a08e3155e3e": "refs/heads/main"
+  }
+}

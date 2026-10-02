@@ -19,3 +19,7 @@ Braid 另有一个 `feat/experiment-storage-lifecycle` 历史 worktree。迁移�
 两目录的 `git rev-parse --show-toplevel` 均归 Factory26，独立 `.git` 已移出源码目录。父仓库待纳入 670 份普通文件；逐项读回未发现缺失、意外内容修改或可执行权限变化，仅 Braid 的 ignore、组件说明和 SVC 的缓存 ignore 按本次范围修改。历史 Braid worktree 的 HEAD 和状态保持原身份，原始读回回执保存在证据目录。
 
 受影响的 Python 入口编译通过；`cargo build --locked --manifest-path sources/braid/Cargo.toml` 成功，保留 13 条已有编译警告及完整日志。实际执行本仓源码交接入口时，旧的子目录导出方式被拒绝，且未创建输出目录。只取得编译、Git、文件及命令反馈，不编写或运行 Factory/Braid/SVC 测试，不启动模型或实验。提交仅包含迁入源码和本批相关增量，保留其它工作区修改，不 push。
+
+## 发布授权与历史整合
+
+用户随后明确要求“好的，完成 push”。本轮发布范围截止源码纳入提交 `3b79a2e`，不包含主会话随后新增的实验提交。远端 `origin/main` 当时为独立发布分支的 `bc94e54`，与本地主线分叉；在隔离 index 中合并两条历史，保留远端已发布内容及其 ignore 规则，不强制覆盖，不切换或改写共享工作区。唯一正文冲突在 AGENTS 的实验费用说明：保留阶段快照重放说明，并采用较新的本轮冻结费用模式。Braid/SVC 两源码子树保持 `3b79a2e` 的完整内容。发布回执和远端读回身份保存在原证据目录。

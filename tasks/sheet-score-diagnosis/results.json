@@ -1,0 +1,41 @@
+{
+  "source_run": "bd7ac1b232ba",
+  "replay_run": "1efffb84ae1b",
+  "delivered_main": "402336217ef1329f71b8f15560cfbf19d514e82f",
+  "official_summary": {
+    "score": 58,
+    "passed_count": 58,
+    "failed_count": 42,
+    "feature_implemented_count": 8,
+    "feature_total_count": 24,
+    "per_case_tests_available": false
+  },
+  "upstream_trace": {
+    "frozen_requirement_atomics": 24,
+    "frozen_requirement_scenarios": 100,
+    "req5_scenarios_with_a1_c6_given": 26,
+    "visible_native_jsonl_scanned_for_skill_tool_arguments": 682,
+    "visible_skill_reads": {
+      "svc_verification": 0,
+      "browser_checks": 4,
+      "svc_design": 1,
+      "svc_implementation": 2
+    },
+    "interpretation_limit": "Counts cover explicit tool-call arguments in recorded native JSONL; they do not prove whether startup skill metadata or other unrecorded guidance was injected."
+  },
+  "local_environment": "macOS; extracted delivered app; Node 20.19.3; isolated DATA_DIR and localhost port; service stopped",
+  "api_repro": {
+    "seed": { "A1": "Region", "B1": "", "C1": "", "A2": "", "B2": "" },
+    "mixedPivot": { "status": 400, "error": "Value field requires numeric values" },
+    "validatedFormula": { "status": 200, "display": "101" }
+  },
+  "browser_repro": {
+    "seed": { "A1": "Region", "B1": "", "C1": "", "A2": "" },
+    "number_range_0_100_formula_input": { "cell": "B2", "formula_bar": "=101", "display": "101", "alerts": [] }
+  },
+  "source_artifacts": [
+    "runs/e20260928-completed-replay/sheet/source-workspace.zip",
+    "runs/e20260928-completed-replay/sheet/official/workspace-after-generation.zip",
+    "runs/e20260928-completed-replay/sheet/official/tasks/hackathon--sheet/status.json"
+  ]
+}

@@ -1,0 +1,412 @@
+{
+  "created_at": "2026-09-30T09:46:05.876337+00:00",
+  "scope": "Primary independent reread of the listed original records, focused substantive passages and relevant tool arguments/results only; not full messages in every case, not all retained sessions. Subagent independent reads are separately recorded.",
+  "records": [
+    {
+      "topic": "R01",
+      "id": "0c9834b3",
+      "timestamp": "2026-09-29T06:12:18.423Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ebc5-39a0-7bb2-be1f-37d732a318ef/2026-09-29T06-06-09-340Z_01a0ebc5-45bc-775b-a25e-221e837eed23.jsonl",
+      "line": 50,
+      "source_sha256": "309cd9fde7c693d9d8fd9c02aff63808f9818605736e7a208fcad0560cf13e00",
+      "record_sha256": "1030d1c7379555ec308dc5e97431393ca5a8489ae67ffb5d8039388d4b769fe1"
+    },
+    {
+      "topic": "R01",
+      "id": "58a9d136",
+      "timestamp": "2026-09-29T06:58:32.170Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ebee-ce8f-7730-9269-3864fbb38de2/2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668.jsonl",
+      "line": 7,
+      "source_sha256": "397146bf1de4d55ffe9a0b1b3c98e51fd669b23fb82c9e58c46012f60df7828d",
+      "record_sha256": "c64202a230146d27b4c1add8b81b807ca229ce9d41057ad5a88845c4e970ed3e"
+    },
+    {
+      "topic": "R01",
+      "id": "4d03fd07",
+      "timestamp": "2026-09-29T04:25:23.352Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0eb68-19b6-7c30-91d6-bd339f346335/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.jsonl",
+      "line": 12,
+      "source_sha256": "f939e20e7999a9242df74765351535ca69e631f11612b60dc2bf90c740e80721",
+      "record_sha256": "c9bc0b914f6232acaefb799f65eed5b8d8c810746e5221f9a35f2e1253ea74b5"
+    },
+    {
+      "topic": "R01",
+      "id": "c6aed31b",
+      "timestamp": "2026-09-29T11:32:20.844Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eced-cecc-7eb2-bfab-6a06f74d89eb/2026-09-29T11-30-03-972Z_01a0eced-d244-74e4-8fc0-6cda931f6d8e.jsonl",
+      "line": 72,
+      "source_sha256": "7f128116744572c1e38d727424969b97a49539b90874dafe329b145df23cd37b",
+      "record_sha256": "daab097a2383fa9e583f834e477fc9957362c450fdcd87d6ba346c7150104563"
+    },
+    {
+      "topic": "R01",
+      "id": "2d348c5b",
+      "timestamp": "2026-09-29T11:32:52.816Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eced-cecc-7eb2-bfab-6a06f74d89eb/2026-09-29T11-30-03-972Z_01a0eced-d244-74e4-8fc0-6cda931f6d8e.jsonl",
+      "line": 73,
+      "source_sha256": "7f128116744572c1e38d727424969b97a49539b90874dafe329b145df23cd37b",
+      "record_sha256": "59947180b56c58edbe7f03707cf29a67c92173ec922d4b1ebfd4bc98b68b8950"
+    },
+    {
+      "topic": "R01",
+      "id": "21775e48",
+      "timestamp": "2026-09-29T11:25:21.530Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ecda-0a49-7150-8165-fbbf5e03cd0a/2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b/3c3e53c9-f18d-4882-86e9-3a16ee6b3715/run-0/session.jsonl",
+      "line": 40,
+      "source_sha256": "01c6b803bbb3efa4d1beb4b2cd95a071ff5565880744be8e546e6227f3a44d7f",
+      "record_sha256": "1d368deb348be0b794148a746edf9654826bb850f1cefa6cf0cf9a106ffb2375"
+    },
+    {
+      "topic": "R01",
+      "id": "f24f8ddf",
+      "timestamp": "2026-09-29T11:58:59.442Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ed06-9b7a-7d43-ae0f-6c957a97797a/2026-09-29T11-57-12-563Z_01a0ed06-abf3-7749-a38f-c3cc84fe125a.jsonl",
+      "line": 45,
+      "source_sha256": "655299f285eab4446fe6a30b2bf47262cb37305c138f04bb98b4926dca29ab6a",
+      "record_sha256": "cad72ab6e3ee30cd778ad6d836991decc4dc94eda0492a37e1ebb9333b436b66"
+    },
+    {
+      "topic": "R01",
+      "id": "24b163a3",
+      "timestamp": "2026-09-29T16:27:48.776Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl",
+      "line": 270,
+      "source_sha256": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+      "record_sha256": "28db5ca708bb693e0d90efc3fd5eb6b5d3bf202d6142c72416075fbb5e3ad561"
+    },
+    {
+      "topic": "R01",
+      "id": "fa9e3624",
+      "timestamp": "2026-09-30T02:03:59.567Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "line": 48,
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "01da41fc0b49252a64f6669b08ef10c1d084a6f931b8e09a9d77291c06ab5171"
+    },
+    {
+      "topic": "R01",
+      "id": "45506478",
+      "timestamp": "2026-09-30T02:04:53.750Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "line": 71,
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "32e02f0deb138425d2d6d69b81404baf512a2992dbd5b503fd6c7bbd2944ca1b"
+    },
+    {
+      "topic": "R05",
+      "id": "af35e89f",
+      "timestamp": "2026-09-30T02:26:38.646Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "line": 213,
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "072914b4b5da761c171bef517bd0c8081a04addc67b99ad2219cd25da66ee0cf"
+    },
+    {
+      "topic": "R05",
+      "id": "84c69c1b",
+      "timestamp": "2026-09-30T02:26:40.328Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "line": 215,
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "2e8d7b4fbc70cc769e20cd9e963a2bab538b7c2fa165b302f09cdb0bcbefabdb"
+    },
+    {
+      "topic": "R05",
+      "id": "f59feacb",
+      "timestamp": "2026-09-30T02:26:51.645Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "line": 216,
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "b8deb90f542240de9780a4dc6b8be223cc88876b9a9758e9d34f8a0abe5ecdb8"
+    },
+    {
+      "topic": "R05",
+      "id": "acb9c42c",
+      "timestamp": "2026-09-30T02:26:52.972Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "line": 217,
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "0bdf3c1ecb0dcdec2ecaa4c026728f50bfa920fcda4af8aeeec55d2bb63d05ec"
+    },
+    {
+      "topic": "R05",
+      "id": "6e23bea4",
+      "timestamp": "2026-09-30T02:26:52.975Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "line": 218,
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "9dd2e18b37ff1aa8124d2d7c7b1be7cacab8bb4c6fbe506d311eb364d3b6a9e0"
+    },
+    {
+      "topic": "R05",
+      "id": "90349809",
+      "timestamp": "2026-09-30T02:27:01.474Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "line": 219,
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "f4e22db01b004ea79c02236ec9ccca3fca258a439a919d0d419b5a060045cb2c"
+    },
+    {
+      "topic": "R05",
+      "id": "bf6e7ef0",
+      "timestamp": "2026-09-30T02:35:04.224Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "line": 297,
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "23fcf081bac32cc9af3f067dc0722e277cef4636c3778d25b0a4211abe224315"
+    },
+    {
+      "topic": "R06",
+      "id": "01b86c82",
+      "timestamp": "2026-09-29T14:54:45.927Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eda1-19a5-7dc2-b4da-966d3d9f6427/2026-09-29T14-46-17-412Z_01a0eda1-7844-737b-a333-776771c4cf0e.jsonl",
+      "line": 100,
+      "source_sha256": "16cb13935b6faed014bc8e38d915cbdc4b96e2a6e2b4c4a4f16631c5c7e2d747",
+      "record_sha256": "afab59fa33983c08d0b22f521ebd4942b2d64ee975afaae83b060f15a3884d72"
+    },
+    {
+      "topic": "R06",
+      "id": "6b429d59",
+      "timestamp": "2026-09-29T14:58:02.341Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eda1-19a5-7dc2-b4da-966d3d9f6427/2026-09-29T14-46-17-412Z_01a0eda1-7844-737b-a333-776771c4cf0e.jsonl",
+      "line": 118,
+      "source_sha256": "16cb13935b6faed014bc8e38d915cbdc4b96e2a6e2b4c4a4f16631c5c7e2d747",
+      "record_sha256": "0aa42e4f327994e83a897e610f213aeab8adccbf771b8af4273bab6d9b46c2fe"
+    },
+    {
+      "topic": "R06",
+      "id": "0266d6ce",
+      "timestamp": "2026-09-29T14:58:10.291Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eda1-19a5-7dc2-b4da-966d3d9f6427/2026-09-29T14-46-17-412Z_01a0eda1-7844-737b-a333-776771c4cf0e.jsonl",
+      "line": 124,
+      "source_sha256": "16cb13935b6faed014bc8e38d915cbdc4b96e2a6e2b4c4a4f16631c5c7e2d747",
+      "record_sha256": "0d7ee06d3343934ac945917d7405d0c369e3eb6313804304de0f05362df4734a"
+    },
+    {
+      "topic": "R06",
+      "id": "5221a5a4",
+      "timestamp": "2026-09-29T16:04:45.840Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ede7-c373-7652-bdb8-2b2d5f53e1c7/2026-09-29T16-03-05-477Z_01a0ede7-c885-7154-afc8-14c84d474152.jsonl",
+      "line": 16,
+      "source_sha256": "faa5cede7853a695c39ee3ef0bb4943ae13809b79554c04179bb7770262d37be",
+      "record_sha256": "83c8fe3179d3d54419f173d1c6e9346fb2679466b00169662988b495c96a2ab8"
+    },
+    {
+      "topic": "R06",
+      "id": "fcf26f04",
+      "timestamp": "2026-09-29T16:04:52.419Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ede7-c373-7652-bdb8-2b2d5f53e1c7/2026-09-29T16-03-05-477Z_01a0ede7-c885-7154-afc8-14c84d474152.jsonl",
+      "line": 19,
+      "source_sha256": "faa5cede7853a695c39ee3ef0bb4943ae13809b79554c04179bb7770262d37be",
+      "record_sha256": "00891dd46ca098b535908c32d4908fdf4ecbcec82e0df914ca5a8a0f5e994c1b"
+    },
+    {
+      "topic": "R06",
+      "id": "04c7774d",
+      "timestamp": "2026-09-29T16:04:52.834Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ede7-c373-7652-bdb8-2b2d5f53e1c7/2026-09-29T16-03-05-477Z_01a0ede7-c885-7154-afc8-14c84d474152.jsonl",
+      "line": 20,
+      "source_sha256": "faa5cede7853a695c39ee3ef0bb4943ae13809b79554c04179bb7770262d37be",
+      "record_sha256": "184035734c8ca183513cd621e5652076db226a67ba91d57166b5935217e1d8cb"
+    },
+    {
+      "topic": "R06",
+      "id": "eba3634a",
+      "timestamp": "2026-09-29T16:06:07.328Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ede7-c373-7652-bdb8-2b2d5f53e1c7/2026-09-29T16-03-05-477Z_01a0ede7-c885-7154-afc8-14c84d474152.jsonl",
+      "line": 29,
+      "source_sha256": "faa5cede7853a695c39ee3ef0bb4943ae13809b79554c04179bb7770262d37be",
+      "record_sha256": "a8cc6eedac4e6b7316fa7cdb2072838ee520f14ebcad0856be6e2d765d5f6ca7"
+    },
+    {
+      "topic": "R07",
+      "id": "b2e5e70b",
+      "timestamp": "2026-09-29T05:30:13.373Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-11-pi-deepseek-fast-g1--/2026-09-29T05-26-59-511Z_01a0eba1-6ab7-7751-8a0a-e84a52a71f95.jsonl",
+      "line": 77,
+      "source_sha256": "6b4ff1214085f2829697217aea6f816baefdcc791791732bf1514ca5e87c79c6",
+      "record_sha256": "72236e603dd441657e111be34f213e37f3508523c9636ccb235d4aec9fb958d2"
+    },
+    {
+      "topic": "R07",
+      "id": "771f60d1",
+      "timestamp": "2026-09-29T07:02:29.656Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-15-pi-deepseek-fast-g1--/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "line": 52,
+      "source_sha256": "c8ab940fdbc9cf47b2fb35cd8f45bf0eb44c093354cf56695bdcc06094288954",
+      "record_sha256": "f18f66d0e189b40ba421eac134c0abce571881b60e262637e8f4430fff889e5b"
+    },
+    {
+      "topic": "R07",
+      "id": "99f24d72",
+      "timestamp": "2026-09-29T07:02:29.677Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-15-pi-deepseek-fast-g1--/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "line": 53,
+      "source_sha256": "c8ab940fdbc9cf47b2fb35cd8f45bf0eb44c093354cf56695bdcc06094288954",
+      "record_sha256": "20fa351125700f52c168936b456adbe93eb7d1f00fbfe321d90072422d19e426"
+    },
+    {
+      "topic": "R07",
+      "id": "295759f1",
+      "timestamp": "2026-09-29T07:02:32.697Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-15-pi-deepseek-fast-g1--/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "line": 54,
+      "source_sha256": "c8ab940fdbc9cf47b2fb35cd8f45bf0eb44c093354cf56695bdcc06094288954",
+      "record_sha256": "5beaa62fcb620c9bec7f93dcd613dcbed78c11238c01e8abb7964e58c6220a50"
+    },
+    {
+      "topic": "R07",
+      "id": "4f3be2f7",
+      "timestamp": "2026-09-29T07:03:18.834Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-15-pi-deepseek-fast-g1--/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "line": 61,
+      "source_sha256": "c8ab940fdbc9cf47b2fb35cd8f45bf0eb44c093354cf56695bdcc06094288954",
+      "record_sha256": "04137662c6e67735c2b815a3ed04a4accae0d26e1cc28886977c993ddc253eb9"
+    },
+    {
+      "topic": "R07",
+      "id": "e7cb4933",
+      "timestamp": "2026-09-29T11:30:22.329Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eced-327a-7310-9cab-541f3d72c4c4/2026-09-29T11-29-23-964Z_01a0eced-35fc-75bd-97bf-dc7ef3f0f0b3.jsonl",
+      "line": 56,
+      "source_sha256": "bb51991a8c671c27a52f5a3d6726172a9a7ee6b42fb0efeac03531e716e823c7",
+      "record_sha256": "6e842401d62a53ff87c279fe5917349559e91cc966bd2e51a281badfb05db7e2"
+    },
+    {
+      "topic": "R07",
+      "id": "837aab9f",
+      "timestamp": "2026-09-29T11:31:16.209Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eced-cecc-7eb2-bfab-6a06f74d89eb/2026-09-29T11-30-03-972Z_01a0eced-d244-74e4-8fc0-6cda931f6d8e.jsonl",
+      "line": 52,
+      "source_sha256": "7f128116744572c1e38d727424969b97a49539b90874dafe329b145df23cd37b",
+      "record_sha256": "cc1f5e4bb7d9ba0cfaa384c93faeb6ae4628d002acdbfd097b6d3827e5c09224"
+    },
+    {
+      "topic": "R07",
+      "id": "216fcd0a",
+      "timestamp": "2026-09-29T16:19:38.831Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl",
+      "line": 17,
+      "source_sha256": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+      "record_sha256": "10f6f5b264d07681aa68dbcc6207f4792d1be5b1bf69804b7f32c4eab6948401"
+    },
+    {
+      "topic": "R07",
+      "id": "f7dcc6d2",
+      "timestamp": "2026-09-29T16:20:09.065Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl",
+      "line": 66,
+      "source_sha256": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+      "record_sha256": "e6d40d22f47977f413eb2861f187be69aa6b14d3e5bd350c41d207ae406b7a20"
+    },
+    {
+      "topic": "R07",
+      "id": "43c2e4a3",
+      "timestamp": "2026-09-29T16:51:46.376Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ee03-d899-7fd2-893d-a14a20bb83a9/2026-09-29T16-33-47-006Z_01a0ee03-e1fe-7121-9c3f-05eb462c77ed.jsonl",
+      "line": 32,
+      "source_sha256": "b456bcd0fd3b7c42b1ca200750d9c22b0963c5cf5a6ca5d9aed28c419333cb0f",
+      "record_sha256": "194a684751e66277e0edae6fd9067d49a7a57ff1998c549e651fa67bfd1e69eb"
+    },
+    {
+      "topic": "R07",
+      "id": "9da8216d",
+      "timestamp": "2026-09-29T07:04:00.944Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-15-pi-deepseek-fast-g1--/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "line": 71,
+      "source_sha256": "c8ab940fdbc9cf47b2fb35cd8f45bf0eb44c093354cf56695bdcc06094288954",
+      "record_sha256": "a1d764834ef01f3b6f2a5b63837b5152fe8d262a39318fd3a97489607def1450"
+    },
+    {
+      "topic": "R07",
+      "id": "4f570cf4",
+      "timestamp": "2026-09-29T07:04:03.569Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-15-pi-deepseek-fast-g1--/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "line": 73,
+      "source_sha256": "c8ab940fdbc9cf47b2fb35cd8f45bf0eb44c093354cf56695bdcc06094288954",
+      "record_sha256": "a88e78ef7a2a9e1f417dba3a988b52e455fe4bca8e8dab9680ed5a0aaed05126"
+    },
+    {
+      "topic": "R07",
+      "id": "d271d8e9",
+      "timestamp": "2026-09-29T07:04:05.807Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-15-pi-deepseek-fast-g1--/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "line": 75,
+      "source_sha256": "c8ab940fdbc9cf47b2fb35cd8f45bf0eb44c093354cf56695bdcc06094288954",
+      "record_sha256": "1e96deb70e0786d1e12aa54618e8d1d5bebc366237cdca63302ca9f4d7b7936e"
+    },
+    {
+      "topic": "R07",
+      "id": "4265d1cc",
+      "timestamp": "2026-09-29T07:04:25.843Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-15-pi-deepseek-fast-g1--/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "line": 77,
+      "source_sha256": "c8ab940fdbc9cf47b2fb35cd8f45bf0eb44c093354cf56695bdcc06094288954",
+      "record_sha256": "ebf143e377851e45401d7b9e0e84b043c4a70fb2da5d45a7f7900efb8686d20a"
+    },
+    {
+      "topic": "R07",
+      "id": "67ecd988",
+      "timestamp": "2026-09-29T16:20:37.045Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl",
+      "line": 92,
+      "source_sha256": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+      "record_sha256": "2cd64029ebc15420c18a45e748c03466397abdc26654ed2a69533cc8e5646b77"
+    },
+    {
+      "topic": "R07",
+      "id": "809f6fb9",
+      "timestamp": "2026-09-29T16:20:40.747Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl",
+      "line": 94,
+      "source_sha256": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+      "record_sha256": "d282fb12045a6fdbfb1181c76996dfa5daad56761cda4c3c5b87948a1a243f4f"
+    },
+    {
+      "topic": "R07",
+      "id": "0074e055",
+      "timestamp": "2026-09-29T16:20:43.595Z",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl",
+      "line": 96,
+      "source_sha256": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+      "record_sha256": "77dfa8d6d8c1713d4e9fb18b221108a7baf4c43df693c5b9abce841fa3ac7e55"
+    }
+  ],
+  "static_reads": [
+    {
+      "path": "runs/analysis/i11-github-e68661975b53/20260930T033923Z/extracted/template/frontend/src/features/pulls/PullDetailPage.tsx",
+      "lines": "278–294,487–502,643–660",
+      "sha256": "fc19005a16529b4d397a6e24207d6562a2da0d3fd94b3b830e716efc926a81c6"
+    },
+    {
+      "path": "runs/analysis/i11-github-e68661975b53/20260930T033923Z/extracted/template/frontend/src/features/repo/RepositoryContentsPage.tsx",
+      "lines": "89–102",
+      "sha256": "3557666340b8e05842f5dfde2afcc0afda106e2b426a35d209035774f29e1dba"
+    },
+    {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/agents/executor.md",
+      "lines": "1–79",
+      "sha256": "422647f28f7c2945961f33c1bd7bd2bed7128c6745ef9cd3da444d3ea6700cf5"
+    },
+    {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/physical/01a0ebf8-5cf0-7531-87fa-1a5e10ddf232/instructions.md",
+      "lines": "delegation and scope sections, especially29–31",
+      "sha256": "893b07440ac1fe107cbf534aa118d77d0ae1d34ddad25bc964d4569f38eb398f"
+    },
+    {
+      "path": "runs/iteration11/20260929-feasibility/runtime/node_modules/pi-subagents/src/extension/tool-description.ts",
+      "lines": "9–49, not asserted as exact provider request",
+      "sha256": "8049a8413a061d8597e584edf62903edee534cb9a19603edff374d216754d78d"
+    },
+    {
+      "path": "runs/iteration12/restart-20260930/materials/variants/pi-braid-i12/agents/pi-deepseek-fast/agents/executor.md",
+      "lines": "1–21",
+      "sha256": "76006c0997f9835fd08583a1377ed78e0c3c1eada54d601402339ac61f4cb14e"
+    },
+    {
+      "path": "runs/iteration12/restart-20260930/materials/variants/pi-braid-i12/agents/pi-deepseek-fast/instructions.md",
+      "lines": "1–23",
+      "sha256": "703deb1f298fd0755e7dd9ff0d9d2044e036d787820a94eb5909391d06909d8c"
+    }
+  ]
+}

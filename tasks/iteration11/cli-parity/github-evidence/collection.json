@@ -1,0 +1,280 @@
+{
+  "observed_at": "2026-09-29T11:09:22.929961+00:00",
+  "help_commands": [
+    [
+      "gh",
+      "issue",
+      "create",
+      "--help"
+    ],
+    [
+      "gh",
+      "issue",
+      "view",
+      "--help"
+    ],
+    [
+      "gh",
+      "issue",
+      "list",
+      "--help"
+    ],
+    [
+      "gh",
+      "issue",
+      "edit",
+      "--help"
+    ],
+    [
+      "gh",
+      "issue",
+      "comment",
+      "--help"
+    ],
+    [
+      "gh",
+      "issue",
+      "close",
+      "--help"
+    ],
+    [
+      "gh",
+      "issue",
+      "reopen",
+      "--help"
+    ],
+    [
+      "gh",
+      "pr",
+      "create",
+      "--help"
+    ],
+    [
+      "gh",
+      "pr",
+      "view",
+      "--help"
+    ],
+    [
+      "gh",
+      "pr",
+      "list",
+      "--help"
+    ],
+    [
+      "gh",
+      "pr",
+      "edit",
+      "--help"
+    ],
+    [
+      "gh",
+      "pr",
+      "comment",
+      "--help"
+    ],
+    [
+      "gh",
+      "pr",
+      "close",
+      "--help"
+    ],
+    [
+      "gh",
+      "pr",
+      "reopen",
+      "--help"
+    ],
+    [
+      "gh",
+      "pr",
+      "merge",
+      "--help"
+    ],
+    [
+      "gh",
+      "pr",
+      "ready",
+      "--help"
+    ]
+  ],
+  "source": [
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/create/create.go",
+      "path": "source/pkg/cmd/issue/create/create.go",
+      "sha256": "7c16778a651e2f6a88e4d49ae2af32f434ec214fe4d9566c3aa10c807a2bec11"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/view/view.go",
+      "path": "source/pkg/cmd/issue/view/view.go",
+      "sha256": "7781222b2f2ad45ab25118c0cb4c6386a4aa7075eb1386aa80466a2ae8a20fe6"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/list/list.go",
+      "path": "source/pkg/cmd/issue/list/list.go",
+      "sha256": "0605ba315eccd4dce7316ef3c4a63bf92f7c2e5c4321f12e1524d60b26902d32"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/edit/edit.go",
+      "path": "source/pkg/cmd/issue/edit/edit.go",
+      "sha256": "3b6a8a0192d1ef36c0627683342024e834f5206a4e8212cca636f223858caba6"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/comment/comment.go",
+      "path": "source/pkg/cmd/issue/comment/comment.go",
+      "sha256": "0b8fddd79a7b5867a55d6786bf52ed622bedbb5ede282f3b62bd797a662f768a"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/close/close.go",
+      "path": "source/pkg/cmd/issue/close/close.go",
+      "sha256": "e7c6ccc9886836e0ebdec598e214d07f0941acaebcf1252a9737023e76196c2f"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/reopen/reopen.go",
+      "path": "source/pkg/cmd/issue/reopen/reopen.go",
+      "sha256": "1c570f7f14cc52a2cff931a55dabadabaa1438859810e7bf416d8a25b0a3eb0f"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/create/create.go",
+      "path": "source/pkg/cmd/pr/create/create.go",
+      "sha256": "4188355951ad4bbd94ae8f5647e40ccf09dd4d6d2012ac8e62ad076594640b3d"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/view/view.go",
+      "path": "source/pkg/cmd/pr/view/view.go",
+      "sha256": "48952a89ba69d3baa70fe712fca153206eb37e8d2253c46bd06d302bee5ff1a8"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/list/list.go",
+      "path": "source/pkg/cmd/pr/list/list.go",
+      "sha256": "47e42f3330faeded9aee7832ebc484e0c4f29d09788d286c14d9f88d1ee568eb"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/edit/edit.go",
+      "path": "source/pkg/cmd/pr/edit/edit.go",
+      "sha256": "654524d0e19fc623857c6b1c328e08347df1f27ca4b80619dcb21e23cd783fe7"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/comment/comment.go",
+      "path": "source/pkg/cmd/pr/comment/comment.go",
+      "sha256": "fc3190015fe2c9878fef8cace6f3a837f02d2581b0d02cb974249a07b818210a"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/close/close.go",
+      "path": "source/pkg/cmd/pr/close/close.go",
+      "sha256": "bcfd3c90438616944f21697d6422fda9673266ddccba3330655d60ebbcbf8957"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/reopen/reopen.go",
+      "path": "source/pkg/cmd/pr/reopen/reopen.go",
+      "sha256": "408fdb85c27d27aa628cc2937c926ffeaa0fdb0d2c2278eb51308cadc9e65ecc"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/merge/merge.go",
+      "path": "source/pkg/cmd/pr/merge/merge.go",
+      "sha256": "8ba138b27493b36fa808c83e46b0cb0a48fe5aebd7aa6e506bae6edb92862045"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/ready/ready.go",
+      "path": "source/pkg/cmd/pr/ready/ready.go",
+      "sha256": "eda1386e8336aef0e8a2ccc651be77121f9faf977801956dc5705b332d311423"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/shared/commentable.go",
+      "path": "source/pkg/cmd/pr/shared/commentable.go",
+      "sha256": "74397abb1aed26f1e04944729985586e30d52a3e81686c074c3fc9cb88416b94"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/shared/comments.go",
+      "path": "source/pkg/cmd/pr/shared/comments.go",
+      "sha256": "b7ed2fb9a469f8384224581f3afb603b2580a4ed24c0d043497919b846abad5a"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/shared/editable.go",
+      "path": "source/pkg/cmd/pr/shared/editable.go",
+      "sha256": "1f6540c71ed1f670cf8d4f36d7624c9827e2cc9012c317276847183331260c16"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/shared/editable_http.go",
+      "path": "source/pkg/cmd/pr/shared/editable_http.go",
+      "sha256": "65dc68c20a3be6d3bffeac721ab75f4ffe1b48b84a373c86591663396ea099de"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/shared/finder.go",
+      "path": "source/pkg/cmd/pr/shared/finder.go",
+      "sha256": "266f9645df185bb1e9f984293781b9b21c39f0d9dc973ad3d80c2c7fc571dd27"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/shared/lister.go",
+      "path": "source/pkg/cmd/pr/shared/lister.go",
+      "sha256": "ba016b29bb76de13e4e8b69c2679b6d7feadaa67f6158b8cf417cd1e7f4d5237"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/shared/params.go",
+      "path": "source/pkg/cmd/pr/shared/params.go",
+      "sha256": "1824b3c3af1a7bf3223dc60b16ce4832147dc5cc7a898ed9629004dcc803f938"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/shared/display.go",
+      "path": "source/pkg/cmd/pr/shared/display.go",
+      "sha256": "ccf4a3103cfa555581b8c040def757eaa108d2b03782109ada6c1a4c6c50c22a"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmdutil/file_input.go",
+      "path": "source/pkg/cmdutil/file_input.go",
+      "sha256": "94076f6234180f85f2a555a5733e024146ea2c0cac54af19c86c72b015252828"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmdutil/json_flags.go",
+      "path": "source/pkg/cmdutil/json_flags.go",
+      "sha256": "064e129c586f09ba8bcb625edacfce8c9831a0651637a9e9c29d2a2b2c221ed0"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmdutil/flags.go",
+      "path": "source/pkg/cmdutil/flags.go",
+      "sha256": "103a5c069a262740edd3a317eb6a38fc2eb73e5dbf1af10ce3bf320eb59d0a41"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmdutil/errors.go",
+      "path": "source/pkg/cmdutil/errors.go",
+      "sha256": "f45497168ca5b58983eaf75529f4f01e7f9870b7a926fea8bbe0a8f44866d0e5"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/view/http.go",
+      "path": "source/pkg/cmd/issue/view/http.go",
+      "sha256": "115485f64d4f95d94e881ae103fd18bd307019c3a2b761423b6ee8d3c91715b8"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/pr/merge/http.go",
+      "path": "source/pkg/cmd/pr/merge/http.go",
+      "sha256": "0b48a32aafb85d238367e2e4a6f5967718c3770f702e2563bf9a8ceb5b917002"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/shared/lookup.go",
+      "path": "source/pkg/cmd/issue/shared/lookup.go",
+      "sha256": "aa6e5b86f585015c31e56eb2ad0fc575b8cc02801643cc958d524c20c3d6393b"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/shared/display.go",
+      "path": "source/pkg/cmd/issue/shared/display.go",
+      "sha256": "966cfe0e1e0739e048bb9ac61ba6fa8af23ce2bdecbe1d831fd79ce9f5ae67e0"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/pkg/cmd/issue/list/http.go",
+      "path": "source/pkg/cmd/issue/list/http.go",
+      "sha256": "09f377e49c4ee13a5bc9fa855f0d3361b3bf4dce59cff01a83446e6218bb72ce"
+    },
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/api/issue.go",
+      "error": "curl: (56) The requested URL returned error: 404\n"
+    }
+  ],
+  "fetch_note": "Python urllib本机证书链失败，改用系统curl正常验证TLS下载；未绕过证书校验。",
+  "additional_sources": [
+    {
+      "url": "https://raw.githubusercontent.com/cli/cli/v2.89.0/internal/ghcmd/cmd.go",
+      "local_path": "source/ghcmd.go",
+      "sha256": "d7c29331b33856669a65e210c2c263c32876bf33a2bca186c914874027de4194"
+    }
+  ]
+}

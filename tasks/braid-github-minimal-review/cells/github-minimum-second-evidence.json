@@ -1,0 +1,325 @@
+{
+  "sheet": {
+    "command_occurrences_not_success_counts": {
+      "braid pr create": 22,
+      "braid issue reopen": 3,
+      "braid comment create": 48,
+      "braid issue close": 25,
+      "braid issue edit": 25,
+      "braid comment resolve": 6,
+      "braid pr edit": 21,
+      "braid pr merge": 20,
+      "braid pr subscribe": 2,
+      "braid issue subscribe": 1,
+      "braid comment edit": 3,
+      "braid pr close": 2,
+      "braid comment hide": 2
+    },
+    "selected_actions": [
+      {
+        "session": "01a0e7a0-4f74-7430-bf9f-3ee4877fd286",
+        "path": "work/native-homes/pi-deepseek-fast-01a0e7a0-3e3a-7773-843e-87e260c87a56/2026-09-28T10-47-18-132Z_01a0e7a0-4f74-7430-bf9f-3ee4877fd286.jsonl",
+        "line": 343,
+        "timestamp": "2026-09-28T11:17:45.271Z",
+        "command_lines": [
+          "- 建议 @glm-1：`braid pr merge 24 --match-head-commit 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8`（合并动作只执行一次）。",
+          "braid pr comment 24 -F /tmp/pr24-ready.md 2>&1 | tail -4"
+        ],
+        "result": "comment #362\n@deepseek-22: queued\n@glm-1: queued"
+      },
+      {
+        "session": "01a0e7a0-4f74-7430-bf9f-3ee4877fd286",
+        "path": "work/native-homes/pi-deepseek-fast-01a0e7a0-3e3a-7773-843e-87e260c87a56/2026-09-28T10-47-18-132Z_01a0e7a0-4f74-7430-bf9f-3ee4877fd286.jsonl",
+        "line": 345,
+        "timestamp": "2026-09-28T11:17:49.927Z",
+        "command_lines": [
+          "3. **请 @glm-1** 以 `braid pr merge 24 --match-head-commit 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8` 合并（只执行一次）。合入后我按 #306/#312 口径以该合并提交为交付点关闭 Issue #4，并把 REQ-5/#7 的载体顺延复验交给已对账方（#360 已登记在途候选）。",
+          "braid issue comment 4 --reply-to 358 -F /tmp/issue4-pr24.md 2>&1 | tail -4; echo \"=== verify ===\"; braid pr view 24 2>&1 | head -8"
+        ],
+        "result": "@deepseek-5: queued\n@glm-1: queued\n@glm-4: unreachable (@glm-4 was reassigned; current assignee: @deepseek-17)\n@glm-6: unreachable (@glm-6 has no resumable session)\n=== verify ===\npr #24: REQ-2-2-2 跟进：重开透视编辑器显示可见错误（陈旧字段/失效源矩形 + 可恢复路径）\nstate: OPEN\nhead: refs/heads/fix/req2-pivot-editor-missing-field\ndraft: false\nassignee: @deepseek-22\n\n## REQ-2-2-2 未决项：重开透视编辑器显示可见错误（#4 重开项）"
+      },
+      {
+        "session": "01a0e7a0-4f74-7430-bf9f-3ee4877fd286",
+        "path": "work/native-homes/pi-deepseek-fast-01a0e7a0-3e3a-7773-843e-87e260c87a56/2026-09-28T10-47-18-132Z_01a0e7a0-4f74-7430-bf9f-3ee4877fd286.jsonl",
+        "line": 358,
+        "timestamp": "2026-09-28T11:18:22.920Z",
+        "command_lines": [
+          "- 建议 @glm-1：`braid pr merge 25 --match-head-commit 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8`（**只合并本 PR 一次**；#24 已关闭为重复载体）。",
+          "braid pr comment 25 -F /tmp/pr25-ready.md 2>&1 | tail -4"
+        ],
+        "result": "comment #366\n@deepseek-18: queued\n@deepseek-23: queued\n@glm-1: queued"
+      },
+      {
+        "session": "01a0e7a0-4f74-7430-bf9f-3ee4877fd286",
+        "path": "work/native-homes/pi-deepseek-fast-01a0e7a0-3e3a-7773-843e-87e260c87a56/2026-09-28T10-47-18-132Z_01a0e7a0-4f74-7430-bf9f-3ee4877fd286.jsonl",
+        "line": 360,
+        "timestamp": "2026-09-28T11:18:28.143Z",
+        "command_lines": [
+          "- **合并请只执行一次**：`braid pr merge 25 --match-head-commit 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8`。",
+          "braid issue comment 4 --reply-to 364 -F /tmp/issue4-carrier-fix.md 2>&1 | tail -4; echo \"=== state ===\"; braid pr list 2>&1 | tail -3; braid issue view 4 2>&1 | grep \"^PR:\""
+        ],
+        "result": "@deepseek-5: queued\n@glm-1: queued\n@glm-4: unreachable (@glm-4 was reassigned; current assignee: @deepseek-17)\n@glm-6: unreachable (@glm-6 has no resumable session)\n=== state ===\n#23\tMERGED\t@deepseek-21\tREQ-3-2-2 跟进：结构 undo 恢复跨表 inbound 引用（History 侧 relatedSheets）+ fixme 转正\n#24\tCLOSED\t@deepseek-22\tREQ-2-2-2 跟进：重开透视编辑器显示可见错误（陈旧字段/失效源矩形 + 可恢复路径）\n#25\tOPEN\t@deepseek-23\tREQ-2-2-2 跟进修复：陈旧透视字段在重开编辑器时给出可见报错\nPR: #20 [MERGED] REQ-2 工作表生命周期与行列结构（REQ-2-1-*、REQ-2-2-*）\nPR: #24 [CLOSED] REQ-2-2-2 跟进：重开透视编辑器显示可见错误（陈旧字段/失效源矩形 + 可恢复路径）\nPR: #25 [OPEN] REQ-2-2-2 跟进修复：陈旧透视字段在重开编辑器时给出可见报错"
+      },
+      {
+        "session": "01a0e7a0-4f74-7430-bf9f-3ee4877fd286",
+        "path": "work/native-homes/pi-deepseek-fast-01a0e7a0-3e3a-7773-843e-87e260c87a56/2026-09-28T10-47-18-132Z_01a0e7a0-4f74-7430-bf9f-3ee4877fd286.jsonl",
+        "line": 375,
+        "timestamp": "2026-09-28T11:19:26.482Z",
+        "command_lines": [
+          "- 我此前建议的 `--match-head-commit 8826b4d…` **已失效**（head 变了）；请以实际 head 为准：`braid pr merge 25 --match-head-commit dfcc039e6527bcaba1d23ee731c62b194ca2e9f4`。若合并前 head 再前进，我会重取并更正，请以我最新一条为准。",
+          "braid pr comment 25 --reply-to 366 -F /tmp/pr25-head-move.md 2>&1 | tail -4"
+        ],
+        "result": "comment #370\n@deepseek-18: queued\n@deepseek-23: queued\n@glm-1: queued"
+      },
+      {
+        "session": "01a0e7a0-4f74-7430-bf9f-3ee4877fd286",
+        "path": "work/native-homes/pi-deepseek-fast-01a0e7a0-3e3a-7773-843e-87e260c87a56/2026-09-28T10-47-18-132Z_01a0e7a0-4f74-7430-bf9f-3ee4877fd286.jsonl",
+        "line": 447,
+        "timestamp": "2026-09-28T11:56:56.127Z",
+        "command_lines": [
+          "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-4/pi-glm-fast-g1 && braid comment hide 390 --reason \"写入探针误发（绑定恢复自检），非实质内容，隐藏以免干扰记录。\" 2>&1 | tail -2"
+        ],
+        "result": ""
+      },
+      {
+        "session": "01a0e7e2-724c-77fb-8e5e-6d87fbe363c2",
+        "path": "work/native-homes/pi-deepseek-fast-01a0e7e2-6ce0-76f2-91a8-c2ea1a5beb2c/2026-09-28T11-59-32-428Z_01a0e7e2-724c-77fb-8e5e-6d87fbe363c2.jsonl",
+        "line": 17,
+        "timestamp": "2026-09-28T11:59:54.078Z",
+        "command_lines": [
+          "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-4/pi-glm-fast-g1 && braid comment resolve --help 2>&1 | head -30; echo ===; braid comment hide --help 2>&1 | head -20"
+        ],
+        "result": "Usage: braid comment resolve [OPTIONS] <IDS>...\n\nArguments:\n  <IDS>...  评论 ID；可一次提供多个，例如 resolve 4 7。\n\nOptions:\n      --state <STATE>  \n  -h, --help           Print help\n===\nUsage: braid comment hide [OPTIONS] <IDS>...\n\nArguments:\n  <IDS>...  评论 ID；可一次提供多个，例如 hide 8 9 --reason '已整理'。\n\nOptions:\n      --reason <REASON>  \n      --state <STATE>    \n  -h, --help             Print help"
+      },
+      {
+        "session": "01a0e750-f3cb-7190-89fd-06143726d5b6",
+        "path": "work/native-homes/pi-glm-fast-01a0e750-a07f-71c3-8011-5811e8dc7193/2026-09-28T09-20-37-323Z_01a0e750-f3cb-7190-89fd-06143726d5b6.jsonl",
+        "line": 370,
+        "timestamp": "2026-09-28T10:44:43.828Z",
+        "command_lines": [
+          "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid issue reopen 4 2>&1 | tail -2; cat > /tmp/c4g.md <<'EOF'",
+          "braid issue comment 4 --reply-to 312 -F /tmp/c4g.md 2>&1 | tail -2"
+        ],
+        "result": "@glm-4: unreachable (@glm-4 was reassigned; current assignee: @deepseek-17)\n@glm-6: queued"
+      },
+      {
+        "session": "01a0e750-f3cb-7190-89fd-06143726d5b6",
+        "path": "work/native-homes/pi-glm-fast-01a0e750-a07f-71c3-8011-5811e8dc7193/2026-09-28T09-20-37-323Z_01a0e750-f3cb-7190-89fd-06143726d5b6.jsonl",
+        "line": 474,
+        "timestamp": "2026-09-28T11:08:08.668Z",
+        "command_lines": [
+          "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid pr merge 23 --match-head-commit 9063ca15357a38bd13ebc72562238de6eb86d76c 2>&1 | tail -3"
+        ],
+        "result": "{\n  \"merge_commit\": \"b4a4b0c75ca69a337760ebecf37e796433842adc\"\n}"
+      },
+      {
+        "session": "01a0e750-f3cb-7190-89fd-06143726d5b6",
+        "path": "work/native-homes/pi-glm-fast-01a0e750-a07f-71c3-8011-5811e8dc7193/2026-09-28T09-20-37-323Z_01a0e750-f3cb-7190-89fd-06143726d5b6.jsonl",
+        "line": 531,
+        "timestamp": "2026-09-28T11:18:26.242Z",
+        "command_lines": [
+          "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid pr merge 24 --match-head-commit 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8 2>&1 | tail -3"
+        ],
+        "result": "error: PR is closed"
+      },
+      {
+        "session": "01a0e750-f3cb-7190-89fd-06143726d5b6",
+        "path": "work/native-homes/pi-glm-fast-01a0e750-a07f-71c3-8011-5811e8dc7193/2026-09-28T09-20-37-323Z_01a0e750-f3cb-7190-89fd-06143726d5b6.jsonl",
+        "line": 540,
+        "timestamp": "2026-09-28T11:18:52.066Z",
+        "command_lines": [
+          "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid pr merge 25 --match-head-commit 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8 2>&1 | tail -3"
+        ],
+        "result": "error: PR #25 head changed: expected 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8, current dfcc039e6527bcaba1d23ee731c62b194ca2e9f4"
+      },
+      {
+        "session": "01a0e750-f3cb-7190-89fd-06143726d5b6",
+        "path": "work/native-homes/pi-glm-fast-01a0e750-a07f-71c3-8011-5811e8dc7193/2026-09-28T09-20-37-323Z_01a0e750-f3cb-7190-89fd-06143726d5b6.jsonl",
+        "line": 548,
+        "timestamp": "2026-09-28T11:19:40.773Z",
+        "command_lines": [
+          "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid comment view 369 --thread 2>&1 | sed -n '/#369/,$p' | head -20; echo ===; braid pr merge 25 --match-head-commit dfcc039e6527bcaba1d23ee731c62b194ca2e9f4 2>&1 | tail -3"
+        ],
+        "result": "comment #369 [visible]\nthread: 69 [open]\nreply-to: 271\n@deepseek-10 收到，#7（REQ-5）侧无待办、不加动作。两点确认：\n\n1. **parity 守卫的归属成立**：`frontend/src/domain/validation.ts` 仍是 REQ-3 侧临时适配层，契约本体在 `backend/src/domain/req5`；两实现逐项一致性由 `checks/unit/req5-parity.test.ts` 守护（#7 c199 已按 4 pass / 0 skipped 登记，PR #17 后无变化）。#7 不要求 REQ-3 改为 re-export。\n2. **载体核对（本轮 fetch）**：`origin/develop` 仍为 `b4a4b0c`，即 #7 c355 实跑过的候选（`checks/req5-all.sh` = REQ5_ALL_PASS：unit 20/20、parity 4/4、CSV 7/7、api 84 checks、ui 10 passed；`checks/req3-move-api.mjs` M1–M8 = 10/10）。#7 保持 closed，关闭口径不变（c222/c230）。\n\n在途 `origin/fix/req2-pivot-editor-missing-field @ 8826b4d`（触及 `PivotDialogs.tsx`）合入后，我按 c360 在该合并提交上复验 `req5-all.sh` + M1–M8。\ncomment #69 -> @deepseek-5: delivered\ncomment #81 -> @deepseek-10: delivered\ncomment #81 -> @deepseek-7: delivered\ncomment #81 -> @glm-1: delivered\ncomment #81 -> @glm-6: delivered\ncomment #83 -> @glm-1: delivered\ncomment #84 -> @deepseek-5: delivered\ncomment #98 -> @deepseek-5: delivered\ncomment #98 -> @glm-1: delivered\ncomment #101 -> @glm-1: delivered\ncomment #101 -> @glm-6: delivered\n===\n{\n  \"merge_commit\": \"cc5b876dfbc5faed6bba5afa592eeeb0ec82ffe7\"\n}"
+      },
+      {
+        "session": "01a0e759-cdfa-7489-8194-a7aefb3ffb28",
+        "path": "work/native-homes/pi-glm-fast-01a0e759-740f-71e0-b000-d746bf69ccae/2026-09-28T09-30-17-466Z_01a0e759-cdfa-7489-8194-a7aefb3ffb28.jsonl",
+        "line": 210,
+        "timestamp": "2026-09-28T10:02:37.076Z",
+        "command_lines": [
+          "braid pr create --issue 6 --title \"REQ-4 F3 补充检查：越界 #REF! 整链路与复制后源不变断言\" --body-file /tmp/pr6-body.md --base develop --head issue-6-f3-checks --assignee glm-1 --json 2>&1 | tail -20"
+        ],
+        "result": "error: 未知可指派 Agent glm-1；可用名称：deepseek、glm。已分配成员的名字不能再次用于 --assignee；选择可用名称后会返回一位新的负责人"
+      }
+    ],
+    "selected_comments": [
+      {
+        "comment_id": 313,
+        "work_item_node_id": "issue:4",
+        "body": "【根处置：重开本 Issue 承接 REQ-2-2-2 缺口（#311）】@deepseek-18 @deepseek-17\n\n1. **时间线说明**：deepseek-18 #311 的\"暂缓合并\"请求与我的合并动作竞速——我在 #305（deepseek-17 ready 判定）后即按 `--match-head-commit 779c560` 合并，develop 已前进到 **db23b1f**。该缺口因此已存在于 develop，无法以撤回方式处理，需跟进修复。\n2. **缺口成立**：REQ-2-2-2 原文 \"If a selected header is deleted, **refreshing or opening the pivot table editor** displays a visible error requiring the field to be reselected and preserves the last successful result\"——\"opening the editor\" 一半在 db23b1f 上不成立（editorPayload 无错误字段、PivotEditor 加载路径无判定），deepseek-18 的探针与机制分析我采信。**本 Issue 重开，以此缺口为唯一未决项**；#306/#312 记录的其余交付面维持有效。\n3. **修复载体**：@deepseek-18 已开工（其 #311 方案：PivotEditor 由 editor 载荷判定\"config 引用字段不在当前 options\"→ 显示与 Refresh 相同文案，不改 routes/data.ts、不新增 API）。请在新分支延续（feat/req2-worksheets 的历史已随合并进入 develop，勿 force-push），完成后提跟进 PR `--base develop --head <新分支>`，附：①重开编辑器可见错误的浏览器/API 用例（覆盖\"删字段列后重开\"与\"刷新持久\"两条）；②全量 run.sh + req5-ui.sh 回归；③head + 退出码。复核按 deepseek-17 的 Ready 清单第 5 条（routes/data.ts 不得再有新 diff）执行。\n4. **@deepseek-17**：请继续以 owner 视角复核该跟进 PR；issue #4 保持 OPEN 直至修复合入。\n",
+        "lifecycle": "visible",
+        "reply_to": 312,
+        "thread_root": 89,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 345,
+        "work_item_node_id": "pr:23",
+        "body": "【PR #23 复核结论（#300 指定复核者 @deepseek-17）：**ready**】\n\n按 #298 四条边界 + #299 证据位逐条核完，结论 ready。以下均为我在 head `9063ca1` 上的独立实跑/实查，不转述负责人摘要。\n\n## 0. 运行条件与 head\n- 独立 worktree：`/tmp/ds17-pr23-verify`（`git worktree add --detach 9063ca1`，未改动任何被审文件；`git -C … status` 干净）。\n- **tree 等价自证**：`git rev-parse 8362408^{tree} 9063ca1^{tree}` → 两次 `d26124c7894aff488766952934193717a1eacc19`；`git diff 8362408 9063ca1` 空；`git merge-base --is-ancestor db23b1f HEAD` = yes。故负责人实跑所对应的内容与最终 head 逐字节一致（这也是我复用其全量 `run.sh` 49 passed 对其它 project 覆盖的依据，见边界 4）。\n- 改动面实查：`git diff --name-only db23b1f..9063ca1` = `frontend/src/{api.ts,domain/editing.ts,pages/EditorPage.tsx}` + `checks/{req3-integration.spec.ts,unit/editing.test.ts}`；`shared/`、`backend/` 无 diff（与 #338 REQ-4 侧结论一致）。\n\n## 1. 表集合算法与 relatedSheets 载荷（静态 + 单测）\n- `relatedStructureDiff(before, after, operatedSheetId)` 按 `(sheetId, ref)` 求 raw 差：**排除被操作表**、未变化 ref 不下发、`raw:null` 表达删格 → 与 #220 第 2/3/6 条一致；键以 `\\u0000` 分隔（sheetId/ref 不含 NUL），`snapshotSheetCells` 与活对象解耦，捕获点在被操作之前、求差在响应之后。\n- `api.ts`：`relatedSheets` 为空/未传时**不发送该字段** → 缺省行为逐字节不变（#220 第 1 条回归红线）。\n- 单测（我实跑）：`node --test checks/unit/editing.test.ts` → **15 pass / 0 fail（exit 0）**，含新增 4 条：other-sheets-only 双向、removed cell → `raw:null`、仅被操作表改动时 `{before:[],after:[]}`、快照解耦。\n\n## 2. redo 对称性\n- `Operation.structureRelatedBefore/After` 双向记录；`undo` 发 `structureRelatedBefore`、`redo` 发 `structureRelatedAfter`，与 `sheet` 同请求、由端点在**同一次 `runWithFormulas` + 一次 `saveWorkbook`** 内原子应用（端点在 develop，见 #286/#304 核对）。\n- #237 的 pivot 失效表示（`sourceRange:null`）随 **after 快照** verbatim 回写（#238 第 1 点），redo 后 Refresh 仍落可见报错分支；恢复 run 不触发 structural 调用（#285/#324 管线事实）。\n\n## 3. fixme 转正与跨表断言在最终 head 实跑（独立环境）\n```\nplaywright test --config …/checks/playwright.config.ts --project req3-integration --reporter list\n  自有空闲端口 53509、临时 DATA_DIR=/tmp/ds17-pr23-data2-bK8cgE、BROWSER=chromium-1200、TMPDIR=/tmp/pwt\n  ✓ :427 inserting a row and a column can be undone and redone        （原 test.fixme，#4 #302 记录的 skip）\n  ✓ :457 a structure undo restores cross-sheet inbound references\n  11 passed (7.8m)   PW_REQ3_INTEGRATION_EXIT=0\n  checks/results/ds17-browser-20260928T105834/.last-run.json = {\"status\":\"passed\",\"failedTests\":[]}\n  结束停服：kill 后 lsof 53509 无监听（none）\n```\n其余构建/类型面：`backend npm run build`=0、`frontend npm run build`=0、`tsc -p checks/tsconfig.json`=0。\n\n## 4. 证据形式与复用边界\n- 我的证据：head `9063ca1` + 上述命令 + 退出码 + 运行条件，全部可复现。\n- 负责人全量 `run.sh` 49 passed / `.last-run.json` passed（含 `worksheet-lifecycle`、`csv`、`req3-core` 等其它 project）**经 tree 等价对其内容成立**，我据此不重复整套；本 PR 只改结构捕获/恢复与两处检查，故我以独立 `req3-integration` + 单测 + tsc 作为针对改动面的独立证据，符合「局部检查复用但不以旧 PASS 代替当前候选」的口径。\n\n## 5. 残留项（均非阻塞，供合并方知悉）\n- 端点侧**未做 ref 界内（rowCount/colCount）断言**：属 #286 第 4 点「已记录边界」，恢复载荷来自快照天然界内，冻结契约 #220 的失败清单不含界内检查，不在本 PR 范围。\n- 客户端只对 **raw** 求差（不含 dims/元数据）：与 #220 第 3 条一致（结构操作只改被操作表 dims，其它表只需恢复 raw），value 由引擎同 run 回填。\n- CSV 侧按 #337/#340 判定不触发重新取证；合入时 `run.sh` 会顺带覆盖 `[csv]` 4 例。\n\n**结论：ready。** 建议 @glm-1 按 #330 三项收齐后以 `--match-head-commit 9063ca1` 合并；若 base `develop` 或 head 在合并前发生影响结论的变化，我重取证据。\n",
+        "lifecycle": "visible",
+        "reply_to": null,
+        "thread_root": 345,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 353,
+        "work_item_node_id": "issue:5",
+        "body": "## 合并后核验（@deepseek-5）：合并树与验过的 head 逐字节一致，REQ-3 交付面完成\n\n按我的 owner 侧收尾，对合并结果做了三项实测：\n\n```\nmerge commit   b4a4b0c   parents = db23b1f + 9063ca1   （--match-head-commit 9063ca1 已兑现）\ngit diff 9063ca1 origin/develop   -> 空        （develop 树 = @deepseek-17 #345 判 ready 的同一 head）\ngit diff --stat db23b1f origin/develop -> 恰好本 PR 的 5 个文件（+189/-11），无夹带：\n    checks/req3-integration.spec.ts | checks/unit/editing.test.ts | frontend/src/api.ts\n    frontend/src/domain/editing.ts  | frontend/src/pages/EditorPage.tsx\ngrep test.fixme/test.skip @ develop -> 无命中（req3-integration 现 11 例）\n```\n因此 #346 的 `49 passed / 0 failed / 0 skipped` + `RUN_SH_EXIT=0`，#344/#345/#347 的独立实跑（`--project=req3-integration` 11 passed / exit 0，`:427` 转正与 `:457` 跨表恢复）对 develop `b4a4b0c` 直接成立，无需重跑。\n\n### REQ-3 交付面（develop `b4a4b0c` 上）\n编辑与公式栏一致性/行内编辑、Escape 与刷新持久、依赖重算、二维粘贴与右键 `Paste`、矩形选区 aria-selected 与逐表持久化、复制/剪切（公式相对/绝对偏移、跨表安全）、0-100 原子拒绝（message/hint 双元素）、Undo/Redo 按钮与 Ctrl+Z/Y、新修改禁用 redo、undo 不跨工作簿、moveCells 范围移动、**行列结构 undo（跨表 inbound 恢复 + 规则范围/透视 sourceRange 随快照恢复）** —— 均有可重复入口（`./checks/run.sh`、`checks/req3-move-api.mjs`、`node --test checks/unit/editing.test.ts`）。\n\n我这边无待办；Issue #5 的关闭由根负责人按 #351 执行（不重复关闭动作）。\n",
+        "lifecycle": "visible",
+        "reply_to": 351,
+        "thread_root": 69,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 358,
+        "work_item_node_id": "issue:4",
+        "body": "【#4 owner：跟进分支 `8826b4d` 独立预验证通过（判据 1–7 全绿），仅缺判据 8 的 PR】@deepseek-18 @glm-1\n\n我在自己的环境上对已推送的跟进 head 做了完整独立取证（`git worktree add --detach 8826b4d`，**未改动分支内容**；`/tmp/ds17-req2-verify`），结果如下。\n\n## head / tree / 合规面\n```\nHEAD 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8   TREE 2e59287f0efb0b132d23a573b57064333e76a81d\nmerge-base --is-ancestor db23b1f HEAD  -> yes\ngit diff --name-only develop...HEAD    -> checks/worksheet-lifecycle.spec.ts, frontend/src/components/data/PivotDialogs.tsx\n合规面 git diff develop..HEAD -- backend/src/routes/data.ts backend/src/middleware backend/src/csv.ts frontend/src/domain/csv.ts -> 空（判据 6 红线满足）\n对 develop（现 b4a4b0c）git merge-tree --write-tree -> exit 0\n```\n\n## 实跑（各自独立服务器 + 空闲端口 + 临时 DATA_DIR，结束停服）\n| 检查 | 结果 | exit |\n| --- | --- | --- |\n| `backend` / `frontend` build | ok / ok | 0 / 0 |\n| `tsc -p checks/tsconfig.json` | ok | 0 |\n| `tsx --test checks/unit/structure.test.ts` | **14 pass / 0 fail** | 0 |\n| `node --test checks/unit/editing.test.ts` | 11 pass / 0 fail | 0 |\n| `node checks/api-req2.mjs`（fresh server，71 项） | **71 passed / 0 failed** | 0 |\n| `playwright --project worksheet-lifecycle` | **12 passed (3.7m)**，`.last-run.json = {\"status\":\"passed\",\"failedTests\":[]}` | 0 |\n| `checks/req5-all.sh --skip-build` | 各步 exit 0 → **`REQ5_ALL_PASS`**（req5 unit/parity、frontend 7 例、req5-api、req5-ui 10 例） | 0 |\n\n判据对应（均在 `checks/worksheet-lifecycle.spec.ts`，可重复执行）：\n- **判据 1/2/3** ← `:688 source column deleted: reopening the pivot editor shows the visible error and keeps the last result`：删字段列→重开编辑器出现同一文案、**reload 后仍可见**、透视结果与**源表**（A1=Region/B1=Status/A2=East/B2=Open/A4=South，来自 8826b4d 新增断言）全程不变；\n- **判据 4** ← `:742 stale pivot field is not silently replaced: reselecting a field recovers the pivot`：原样 Apply 可见失败且结果保留、重选有效字段后 Apply 重算成功、告警消失、Refresh 转为成功；\n- **判据 5** ← `:629 structure op that deletes a pivot's whole source range fails the refresh visibly, undo restores it`（8826b4d 增强为「**打开编辑器即报错**且不自动重算」）→ 结构 undo 后恢复正常；\n- **判据 7** ← 上述 `:742` 中的有效透视**无**报错反向断言 + 既有用例全绿（`worksheet-lifecycle` 12/12、`api-req2` 71/71）；\n- **判据 6** ← 合规 diff 为空 + `REQ5_ALL_PASS`（REQ-5 全链回归，正是本次改动的最直接风险面）。\n\n一条方法误差记录（不构成产品结论）：我最初用 `node --test checks/unit/structure.test.ts` 得到 link 失败（`StructureOpError` 为类型位置导入，Node 原生 type-stripping 下 ESM link 报错）；按仓库惯例 `tsx --test` 复跑即 **14/14 通过**，与 @deepseek-21 #344 记录 `BROWSER_EXECUTABLE_PATH` 笔误那次同属方法问题，已更正。\n\n## 结论与待办\n- **判据 1–7 在 `8826b4d` 上成立**（预验证，可复用；不替代 PR 形式要件）。\n- **唯一未满足：判据 8** —— 至今没有 `--base develop` 的跟进 PR（`braid pr list` 最新仍为 #23，分支停在 `8826b4d`）。\n- 请 **@deepseek-18** 本轮内推送跟进 PR 并回贴其自身退出码；**若本轮结束仍无 PR**，我按 #254 先例以 owner 身份建立 PR（head 固定 `8826b4d`、base `develop=b4a4b0c`、merge-tree exit 0），并把上述独立证据作为复核依据直接交 @glm-1 合并——不再重复同一套检查。\n\n—— @deepseek-17\n",
+        "lifecycle": "visible",
+        "reply_to": 325,
+        "thread_root": 89,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 362,
+        "work_item_node_id": "pr:24",
+        "body": "【复核结论（#4 owner @deepseek-17，本 PR 评审）：**ready**】@deepseek-22 @glm-1\n\n本 PR 由我建立（head 固定负责人最终提交 `8826b4d`，未改动分支历史；接管条件见 Issue #4 #358）。判据按 #316 第 1–8 条 + #325 更正口径逐条核完，结论 **ready**。\n\n## 判据 1–7（我在独立环境实跑，非转述）\n条件：独立 worktree `/tmp/ds17-req2-verify`（`git worktree add --detach 8826b4d`，未改被审文件）；各段检查各自 fresh 后端 + 空闲端口 + 临时 `DATA_DIR`，结束停服、端口无监听。\n\n```\nbackend build 0 / frontend build 0 / tsc -p checks/tsconfig.json 0\ntsx --test checks/unit/structure.test.ts   -> 14 pass / 0 fail (exit 0)\nnode --test checks/unit/editing.test.ts    -> 11 pass / 0 fail\nnode checks/api-req2.mjs                   -> 71 passed / 0 failed (exit 0)\nplaywright --project worksheet-lifecycle   -> 12 passed (3.7m) exit 0, .last-run.json={\"status\":\"passed\",\"failedTests\":[]}\nchecks/req5-all.sh --skip-build            -> REQ5_ALL_PASS\n```\n- 判据 1/2/3 ← `:688`（删字段列→重开可见同一文案、**reload 后仍可见**、透视结果与**源表**全程不变）；\n- 判据 4 ← `:742`（陈旧字段原样 Apply 可见失败且结果保留；重选有效字段后 Apply 重算成功、告警消失、Refresh 转成功）；\n- 判据 5 ← `:629`（源矩形删空：**打开即报错**、不自动重算，结构 undo 后恢复）；\n- 判据 6 ← 合规面 `git diff develop..HEAD -- backend/src/routes/data.ts backend/src/middleware backend/src/csv.ts frontend/src/domain/csv.ts` **为空** + `REQ5_ALL_PASS`；\n- 判据 7 ← `:742` 中「有效透视打开编辑器**无**报错」反向断言 + 既有 `worksheet-lifecycle` 12/12、`api-req2` 71/71 无回归。\n\n## 判据 8\n- `--base develop` ✅（base `b4a4b0c`，`git merge-tree --write-tree develop 8826b4d` exit 0）；head/退出码/运行条件 ✅（上表，作者为独立评审方）；新分支、未 force-push `feat/req2-worksheets` ✅。\n- **待补但不阻塞**：负责人侧自身检查的退出码回贴（`run.sh` / `req5-all.sh`）。@deepseek-22 若愿意复跑并回贴，我按同 head 直接对账；不改变本结论。\n\n## 合并与关闭\n- 建议 @glm-1：`braid pr merge 24 --match-head-commit 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8`（合并动作只执行一次）。\n- 合入后我以该提交为交付点关闭 Issue #4（#306/#312 口径），并把 REQ-5/#7 的载体顺延复验交接给已登记的对账方（#360）。\n- 残留（非阻塞、已记录边界）：端点 ref 界内断言仍缺（#286 第 4 点），客户端表集合只按 raw 求差（#220 第 3 条）——均不属本 PR 范围。\n",
+        "lifecycle": "visible",
+        "reply_to": null,
+        "thread_root": 362,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 366,
+        "work_item_node_id": "pr:25",
+        "body": "【复核结论（#4 owner @deepseek-17）：**ready** —— 按 #316 第 1–8 条 + #325 更正口径】@deepseek-18 @deepseek-23 @glm-1\n\n本 PR 是 #4 重开项的唯一载体（我建立的重复 PR #24 已关闭，理由注明指向本 PR；同 head `8826b4d`、同 base `b4a4b0c`）。合并请只执行一次。\n\n## 一、我在同一 head 上的独立实跑（与我建立的 #24 comment #362 同一套，非转述）\n条件：独立 worktree `/tmp/ds17-req2-verify`（`git worktree add --detach 8826b4d`，未改被审文件）；各段 fresh 后端 + 空闲端口 + 临时 `DATA_DIR`，结束停服、端口无监听。\n```\nbackend build 0 / frontend build 0 / tsc -p checks/tsconfig.json 0\ntsx --test checks/unit/structure.test.ts   -> 14 pass / 0 fail (exit 0)\nnode --test checks/unit/editing.test.ts    -> 11 pass / 0 fail\nnode checks/api-req2.mjs (fresh server)    -> 71 passed / 0 failed (exit 0)\nplaywright --project worksheet-lifecycle   -> 12 passed (3.7m) exit 0\n                                              .last-run.json = {\"status\":\"passed\",\"failedTests\":[]}\nchecks/req5-all.sh --skip-build            -> REQ5_ALL_PASS\n合规面 git diff develop..HEAD -- backend/src/routes/data.ts backend/src/middleware backend/src/csv.ts frontend/src/domain/csv.ts -> 空\n```\n判据映射：`:688`→1/2/3（重开可见同一文案、reload 后仍可见、结果与**源表**不变）；`:742`→4（陈旧字段不被静默替换、重选后 Apply 重算成功/告警消失/Refresh 转成功）与 7 的反向断言（有效透视无报错）；`:629`→5（源矩形删空打开即报错、不自动重算、结构 undo 恢复）；6 ← 合规 diff 空 + `REQ5_ALL_PASS`。\n\n与本 PR 描述中的负责人自跑（`run.sh` 49 passed / 0 failed、`req5-all.sh` REQ5_ALL_PASS、`api-req2` 71/71、单测 14/14）**互相印证**，两条独立线路结论一致。\n\n## 二、一个解读要点（避免误读为与 PR #23 冲突）\n本 PR 记录的 `run.sh`「**1 skipped**」= `req3-integration.spec.ts:427`，原因是该 head 基于 `db23b1f`（PR #23 尚未并入），该用例在 `db23b1f` 上仍是 fixme；PR #23 合并后 develop 已把它转正（#361 已从合并树读出：`:423` 用例存在、文件无 fixme/skip）。我在合并基线上的 `worksheet-lifecycle` 12/12 与 `REQ5_ALL_PASS` 也覆盖了这一面。因此「1 skipped」是 base 相对事实，**不是**回归，与 #346 的「0 skipped」不矛盾。\n\n## 三、判据 8 与合并\n- 形式要件齐：`--base develop` ✅、head commit ✅、各检查退出码与运行条件 ✅（本 PR + #362 两侧均有）、未 force-push `feat/req2-worksheets` ✅；无待补项。\n- 建议 @glm-1：`braid pr merge 25 --match-head-commit 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8`（**只合并本 PR 一次**；#24 已关闭为重复载体）。\n- 合入后我按 #306/#312 口径以该合并提交为交付点关闭 Issue #4，并把 REQ-5/#7 载体顺延复验交给已登记对账方（#360/#365）。\n\n残留（非阻塞，沿用已记录边界）：端点 ref 界内断言缺失（#286 第 4 点）、客户端表集合只按 raw 求差（#220 第 3 条），均不在本 PR 范围。\n",
+        "lifecycle": "visible",
+        "reply_to": null,
+        "thread_root": 366,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 368,
+        "work_item_node_id": "issue:4",
+        "body": "【载体更正：#4 跟进项的唯一载体是 **PR #25**，我建立的 #24 已关闭为重复】@glm-1 @deepseek-18\n\n我在 #364 中说「载体是 PR #24」，需要更正——两条创建在 **16 秒内**撞车（#24 由我 11:17:36 建立，#25 由负责人 @deepseek-18 11:17:52 建立，同 head `8826b4d` / 同 base `b4a4b0c`），说明负责人的 PR 实际已在同一时刻发出，我的接管条件（#358 预告）在时序上是**竞速中的误判**，不是其停滞。据此处置：\n\n- **唯一载体 = PR #25**（负责人自建、含其自跑证据：`run.sh` 49 passed/0 failed、`req5-all.sh` REQ5_ALL_PASS、`api-req2` 71/71、单测 14/14）。\n- **PR #24 已关闭**，关闭理由注明指向 #25；我在 #24 的复核证据（comment #362）与 ready 结论已**转入 PR #25 comment #366**，与负责人的自跑互相印证。\n- **合并请只执行一次**：`braid pr merge 25 --match-head-commit 8826b4d7168d8d3be2369a09ee468dbcf6ebbda8`。\n- 一条解读要点（已写在 #25）：该 PR 记录的 `run.sh`「1 skipped」是 base 相对事实（其 head 基于 `db23b1f`，`req3-integration.spec.ts:427` 那时仍是 fixme，PR #23 合入后才转正），**不是**回归；合并后套件为 0 skip（#361 已从合并树核验）。\n\n复核结论维持 **ready**（判据 1–7 由我在同 head 上独立实跑：`structure.test.ts` 14/14、`editing.test.ts` 11/11、`api-req2.mjs` **71/71**、`worksheet-lifecycle` **12/12（exit 0）**、`req5-all.sh` **REQ5_ALL_PASS**、合规 diff 空；判据 8 形式要件齐）。合入后我以该合并提交为交付点关闭 Issue #4。\n",
+        "lifecycle": "visible",
+        "reply_to": 364,
+        "thread_root": 89,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 370,
+        "work_item_node_id": "pr:25",
+        "body": "【head 已前进：`8826b4d` → `dfcc039`，合并指引更正 + 我在新 head 上重取证据】@glm-1 @deepseek-18 @deepseek-23\n\n**事实（实测）**\n```\norigin/fix/req2-pivot-editor-missing-field: 8826b4d -> dfcc039\ndfcc039 = \"Merge remote-tracking branch 'origin/develop' into fix/req2-pivot-editor-missing-field\"\ngit diff --stat 8826b4d dfcc039  -> 恰为 PR #23 的 5 个文件（checks/req3-integration.spec.ts、checks/unit/editing.test.ts、frontend/src/{api.ts,domain/editing.ts,pages/EditorPage.tsx}）\ndfcc039^{tree} = 577ecba337455e48310e7f1f150acfcdccee4657\ngit merge-tree --write-tree origin/develop 8826b4d -> 577ecba3…（同值）\n```\n即：这是把 develop（`b4a4b0c`）并入分支的 merge，**结果与自动 merge-tree 逐字节一致、无冲突解决偏差**；分支自身的 2 个文件（`PivotDialogs.tsx`、`worksheet-lifecycle.spec.ts`）未再改动。\n\n**合并指引更正**\n- 我此前建议的 `--match-head-commit 8826b4d…` **已失效**（head 变了）；请以实际 head 为准：`braid pr merge 25 --match-head-commit dfcc039e6527bcaba1d23ee731c62b194ca2e9f4`。若合并前 head 再前进，我会重取并更正，请以我最新一条为准。\n- 分组证据仍是成立的：REQ-2 面我已独立实跑于 `8826b4d`（`worksheet-lifecycle` 12/12、`api-req2` 71/71、`REQ5_ALL_PASS`、合规 diff 空）；PR #23 面我已独立实跑于 `9063ca1`（`--project req3-integration` 11/11，含 `:427` 原 fixme 与 `:457` 跨表恢复）；`577ecba3` 正是二者的并集。\n- 但按「证据须对应实际检查的提交」的口径，我**已在 `dfcc039` 上重跑**完整面：`backend/frontend` 重构、`tsc`、`tsx --test structure.test.ts`、`editing.test.ts`、`api-req2.mjs`（fresh server）、**完整 `checks/run.sh`（7 项目）**、`checks/req5-all.sh`。结果（head/退出码/运行条件）我会随后回贴；**在那一贴之前请不要用旧 head 的退出码合并**。\n\n**一条解读要点**：新 head 里 `req3-integration.spec.ts:427` 已随 develop 转正，因此套件应为 **0 skip**；PR 描述中「1 skipped」是其基于 `db23b1f` 的旧记录（base 相对事实），不与之矛盾。\n",
+        "lifecycle": "visible",
+        "reply_to": 366,
+        "thread_root": 366,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 385,
+        "work_item_node_id": "pr:25",
+        "body": "## 【合并树证据补齐：我独立实跑 `dfcc039`（= 合并树 `cc5b876`）全绿】@deepseek-17 @deepseek-23 @glm-1\n\n回应 #370 留下的缺口（\"结果随后回贴\"）。PR #25 已由 @glm-1 以 head `dfcc039` 合入 develop（merge `cc5b876`）；我在**合并前就在该 head 上启动了完整实跑**，现结果齐全，正好满足\"证据须对应实际检查的提交\"。\n\n### 一、合并树等价（实测）\n```\norigin/fix/req2-pivot-editor-missing-field @ dfcc039e6527bcaba1d23ee731c62b194ca2e9f4\norigin/develop                            @ cc5b876dfbc5faed6bba5afa592eeeb0ec82ffe7 (Merge local PR #25)\ngit rev-parse dfcc039^{tree} cc5b876^{tree}  -> 577ecba337455e48310e7f1f150acfcdccee4657（同值）\ngit diff --stat dfcc039 cc5b876             -> 空\n```\n即下列证据对合并树 `cc5b876` 直接成立。\n\n### 二、运行条件\n- 被测：本 PR 分支工作区 @ `dfcc039`（= `8826b4d` + 并入 `origin/develop@b4a4b0c`，即 PR #23 的 5 个文件；分支自身 2 个文件未再改动）；工作区 clean。\n- `node scripts/bootstrap-shared-engine.cjs`、`cd frontend && npm run build`、`cd backend && npm run build`、`cd checks && tsc -p tsconfig.json` **均 exit 0**。\n- `BROWSER_EXECUTABLE_PATH=/workspace/submission/agent/runtime/bin/chromium`；每个 runner/spec 自带空闲端口 + 全新临时 `DATA_DIR`，结束停服（端口无监听、无本 lane 残留服务）；未使用 3000。\n\n### 三、实跑结果（head `dfcc039`）\n| 检查 | 命令 | 结果 | 退出码 |\n| --- | --- | --- | --- |\n| 单测 | `cd checks && npx tsx --test unit/structure.test.ts` | 14 pass / 0 fail | 0 |\n| API（fresh server + 全新 `DATA_DIR`） | `node checks/api-req2.mjs <fresh>` | 71 passed / 0 failed | 0 |\n| 全量浏览器 | `bash checks/run.sh --skip-build`（7 项目） | **51 passed / 0 failed / 0 skipped**（21.1m） | 0 |\n| REQ-5 全链 | `bash checks/req5-all.sh --skip-build` | **`REQ5_ALL_PASS`**：unit REQ-5 20/0 + parity 4/0 + CSV 7/0 + `req5-api.mjs` ALL PASS (84 checks) + `req5-ui.sh` **10/10**（4.8m） | 0 |\n\n其中：\n- `worksheet-lifecycle` **12/12**，含本 PR 新增 `:688 source column deleted: reopening the pivot editor shows the visible error and keeps the last result`（47.1s）与 `:742 stale pivot field is not silently replaced: reselecting a field recovers the pivot`（判据 1/2/3/4/5/7）。\n- `req3-integration` **10/10**，含原 fixme `:427` 已随 develop 转正（29.6s）与 `:457` 跨表 inbound 恢复（38.3s）；`req5-ui.sh` 的历史红例 `:194`/`:234` 在合并树上均绿。\n\n### 四、解读要点（接 #370 第二条）\n本 head 上 `run.sh` 为 **0 skipped**（`req3-integration.spec.ts:427` 已转正），因此 PR 描述中基于 `db23b1f` 记录的「1 skipped」是 base 相对事实，已在合并树上消解；两处记录不矛盾。\n\n### 五、合规面（合并树上复核）\n`git diff --stat db23b1f dfcc039 -- backend/src/routes/data.ts backend/src/middleware/validationGuard.ts backend/src/csv.ts backend/src/routes/csv.ts frontend/src/domain/csv.ts backend/src/routes/sheets.ts backend/src/store.ts backend/src/formulas.ts` **为空**；vs `db23b1f` 的全部差异 = 本 PR 的 2 个文件（`frontend/src/components/data/PivotDialogs.tsx`、`checks/worksheet-lifecycle.spec.ts`）+ PR #23 的 5 个文件。未新增 API、未改 REQ-5 语义、未动启动种子。\n\n### 六、收尾\n- 本 PR 已合并（`cc5b876`），分支 `fix/req2-pivot-editor-missing-field` 无未推提交，我这条 lane 的自启服务已全部停止。\n- @deepseek-17 可按此证据以 `cc5b876` 为交付点关闭 Issue #4；REQ-5 载体顺延复验与 History 侧后续项不回流本项。\n- 残留仍为两条已记录边界（端点 ref 界内断言 #286 第 4 点、客户端表集合只按 raw 求差 #220 第 3 条），非阻塞。\n",
+        "lifecycle": "visible",
+        "reply_to": 370,
+        "thread_root": 366,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 386,
+        "work_item_node_id": "issue:4",
+        "body": "## 【交付完成：REQ-2-2-2 的 opening 一半已修并合入 develop `cc5b876`】@deepseek-17 @glm-1\n\n回应 #313 的重开项（本 Issue 唯一未决项）。载体为 **PR #25**（`--base develop --head fix/req2-pivot-editor-missing-field`），已由 @glm-1 合并：\n\n```\norigin/develop = cc5b876 (Merge local PR #25)   parents b4a4b0c + dfcc039\ndfcc039^{tree} -> 577ecba337455e48310e7f1f150acfcdccee4657\ncc5b876^{tree} -> 577ecba337455e48310e7f1f150acfcdccee4657   （同值）\n```\n\n### 交付内容\n- `frontend/src/components/data/PivotDialogs.tsx`：`PivotEditor` 由 editor 载荷派生可见错误——源范围失效（`sourceRange` 为空，即矩形被删空）或 config 的 row/col/value 字段不在当前 `options` 中 → 显示与 Refresh 相同的 `Pivot field is no longer available. Select a new field.`；纯展示判定，不重算、不自动应用、不改存储配置。不改 `routes/data.ts`、不新增 API、不改 REQ-5 语义。\n- `checks/worksheet-lifecycle.spec.ts`：新增 2 例 + 增强 1 例（删列后重开可见报错 + reload 持久 + 结果与**源表**不变；陈旧字段不被静默替换 + 重选后可恢复；源矩形删空打开即报错且不自动重算；有效透视打开无报错反向断言）。\n\n### 合并树上的实跑证据（我，head `dfcc039` = 合并树）\n独立 worktree、空闲端口 + 全新临时 `DATA_DIR`、结束停服、未用 3000：\n\n| 检查 | 结果 | exit |\n| --- | --- | --- |\n| `cd frontend && npm run build` / `cd backend && npm run build` / `cd checks && tsc -p tsconfig.json` | ok / ok / ok | 0 / 0 / 0 |\n| `npx tsx --test checks/unit/structure.test.ts` | 14 pass / 0 fail | 0 |\n| `node checks/api-req2.mjs <fresh>` | 71 passed / 0 failed | 0 |\n| `bash checks/run.sh --skip-build`（7 项目） | **51 passed / 0 failed / 0 skipped**（21.1m） | 0 |\n| `bash checks/req5-all.sh --skip-build` | **`REQ5_ALL_PASS`**（unit 20/0、parity 4/0、CSV 7/0、api 84 checks、ui 10/10） | 0 |\n\n`worksheet-lifecycle` **12/12**（含新增 `:688`、`:742`）；`req3-integration` 10/10，含原 fixme `:427` 已随 PR #23 转正 → 合并树 0 skip。合规面 `git diff db23b1f dfcc039 -- <data.ts/validationGuard/csv/sheets/store/formulas>` 为空。\n\n完整逐条证据与运行条件见 **PR #25 comment #385**（并回应 #370 的 dfcc039 证据要求）。\n\n### 边界（不回流本项）\n- 端点 ref 界内断言（#286 第 4 点）、客户端表集合只按 raw 求差（#220 第 3 条）维持已记录边界，非阻塞。\n- REQ-5 载体顺延复验（#7 c373 已在 `cc5b876` 完成）、REQ-3 结构 undo（#5 已关闭）均不回流本 Issue。\n\n@deepseek-17 可按 `cc5b876` 为交付点关闭本 Issue。我的 lane 无未推提交，自启服务已全部停止。\n\n—— @deepseek-18\n",
+        "lifecycle": "visible",
+        "reply_to": 313,
+        "thread_root": 89,
+        "hide_reason": null
+      },
+      {
+        "comment_id": 390,
+        "work_item_node_id": "issue:4",
+        "body": "probe",
+        "lifecycle": "hidden",
+        "reply_to": null,
+        "thread_root": 390,
+        "hide_reason": "写入探针误发（绑定恢复自检），非实质内容，隐藏以免干扰记录。"
+      },
+      {
+        "comment_id": 392,
+        "work_item_node_id": "issue:4",
+        "body": "【#4 owner 验收记录（补录）：交付点 `cc5b876`，我在合并树上的独立实跑全部通过】@glm-1 @deepseek-18\n\nIssue 已由根负责人关闭（关闭理由见 close reason）；我上一条因写入绑定过期未落地，这里补上 owner 侧的验收记录，使记录完整、可对账。\n\n## 一、head / tree 等价（实测）\n```\norigin/develop = cc5b876 (Merge local PR #25, parents b4a4b0c + dfcc039)\ndfcc039^{tree} == cc5b876^{tree} == 577ecba337455e48310e7f1f150acfcdccee4657\ngit diff dfcc039 cc5b876 -> 空\n```\n我的实跑在 `dfcc039` 上完成（`git worktree add --detach dfcc039`，未改被审文件），**直接对应合并树**。\n\n## 二、我的独立实跑（运行条件：独立 worktree；各 runner/spec 自带空闲端口 + 全新临时 `DATA_DIR`，结束停服；Chromium `chromium-1200/chrome-linux64/chrome`；未用 3000）\n```\nbackend build / frontend build / tsc -p checks/tsconfig.json   -> 0 / 0 / 0\ntsx --test checks/unit/structure.test.ts                      -> 14 pass / 0 fail        (exit 0)\nnode --test checks/unit/editing.test.ts                       -> 11 pass / 0 fail        (exit 0)\nnode checks/api-req2.mjs <fresh server>                       -> 71 passed / 0 failed    (exit 0)\nbash checks/run.sh --skip-build (7 项目 / 51 例)               -> 51 passed / 0 failed / 0 skipped (28.1m, exit 0)\nbash checks/req5-all.sh --skip-build                          -> REQ5_ALL_PASS           (exit 0)\n合规面 git diff db23b1f dfcc039 -- <data.ts/validationGuard/csv/sheets/store/formulas> -> 空\n```\n关键用例：`:688`（删列后重开编辑器可见错误、reload 持久、结果与源表不变 → 判据 1/2/3）、`:742`（陈旧字段不被静默替换、重选后恢复、有效透视无报错反向断言 → 判据 4/7）、`:629`（源矩形删空 → 打开即报错、undo 恢复 → 判据 5）；`req3-integration` 11/11（含原 fixme `:427` 与跨表恢复 `:457`），套件 **0 skip**（计数按 #387 更正为 11 例）。\n\n## 三、结论与边界\n- **交付点 `cc5b876`**：REQ-2 唯一未决项（REQ-2-2-2 的 opening 一半）在合并树上成立；其余 REQ-2 交付面沿用 `db23b1f` 既有结论（PR #20 #305），不重取。负责人自跑（#385/#386）与我的复跑数字一致。\n- 已记录边界（非阻塞）：端点 ref 界内断言缺失（#286 第 4 点）、客户端表集合只按 raw 求差（#220 第 3 条）。\n- 不回流本 Issue：REQ-3 结构 undo（#5 已关闭）、REQ-5 载体顺延复验（#7 已在 `cc5b876` 完成，见 #373/#382）、CSV（#318）。\n- 最终验收入口：`origin/develop` 的 `checks/run.sh`、`checks/req5-all.sh`、`checks/api-req2.mjs`、`checks/unit/structure.test.ts`；根 #1 的整合 PR #26（候选 `cc5b876`）可在最终候选上直接跑全套。\n- 我这条 lane 无残留进程与监听端口；`/tmp/ds17-req2-verify`（`dfcc039`）保留以便对账。\n\n（另：comment #390 是我恢复写入后的探针误发，已隐藏。）\n",
+        "lifecycle": "visible",
+        "reply_to": 386,
+        "thread_root": 89,
+        "hide_reason": null
+      }
+    ],
+    "pr24_25": [
+      {
+        "node_id": "pr:24",
+        "base_ref": "refs/heads/develop",
+        "head_ref": "refs/heads/fix/req2-pivot-editor-missing-field",
+        "state_reason": "重复载体：#4 跟进项的唯一载体改为负责人 @deepseek-18 在 16 秒后建立的 PR #25（同 head 8826b4d / 同 base develop b4a4b0c）。本 PR 是我按其回归结束仍未建 PR 的观察（Issue #4 #358 预告条件）建立的兜底，现由 #25 承担；复核证据见本 PR comment #362，已转入 #25。请只合并 #25 一次。"
+      },
+      {
+        "node_id": "pr:25",
+        "base_ref": "refs/heads/develop",
+        "head_ref": "refs/heads/fix/req2-pivot-editor-missing-field",
+        "state_reason": null
+      }
+    ]
+  },
+  "github": {
+    "command_occurrences_not_success_counts": {
+      "braid pr edit": 7,
+      "braid comment create": 1,
+      "braid pr merge": 4,
+      "braid issue close": 3,
+      "braid pr create": 2
+    },
+    "selected_actions": [
+      {
+        "session": "01a0e750-dac3-76af-96b9-505a17fe6fff",
+        "path": "work/native-homes/pi-glm-fast-01a0e750-9d9e-7fb0-acf0-f41a4f58d956/2026-09-28T09-20-30-915Z_01a0e750-dac3-76af-96b9-505a17fe6fff.jsonl",
+        "line": 202,
+        "timestamp": "2026-09-28T10:06:08.275Z",
+        "command_lines": [
+          "cd /workspace/template/.factory26/20260928-030347-78b10c07/braid-state/worktrees/issue-1/pi-glm-fast-g1 && git fetch origin 2>&1 | tail -1; git log --oneline -1 origin/develop; braid pr merge 13 --match-head-commit eec19cf 2>&1; git fetch origin 2>&1 | tail -2; git log --oneline -1 origin/main"
+        ],
+        "result": "   a6afc4a..c3fb22d  main       -> origin/main\neec19cf e2e 对齐种子调整：fork 历史断言改用 Document search flow；req6a 种子 PR 计数 4→5\nerror: 当前调用已失效，本次修改未写入\nc3fb22d Merge local PR #13"
+      },
+      {
+        "session": "01a0e758-28ea-772a-af6b-be0ec8bcdd4f",
+        "path": "work/native-homes/pi-glm-fast-01a0e757-f380-7590-9434-4c02fd9f8266/2026-09-28T09-28-29-674Z_01a0e758-28ea-772a-af6b-be0ec8bcdd4f.jsonl",
+        "line": 286,
+        "timestamp": "2026-09-28T10:03:44.849Z",
+        "command_lines": [
+          "for i in 1 2 3 4 5 6 7 8; do o=$(braid pr merge 13 --match-head-commit $FULL 2>&1|tail -1); echo \"try$i:${o:0:60}\"; case \"$o\" in *merged*|*Merge*|*合并*) break;; esac; case \"$o\" in error:*) sleep 12; continue;; esac; break; done"
+        ],
+        "result": "try1:}"
+      }
+    ],
+    "selected_comments": []
+  },
+  "source": {
+    "head": "89212933c976b889f27de1b8cfe863baf8f6042e",
+    "sha256": {
+      "src/objects.rs": "519bde31cc3859317f7ba78e31634db689e187b39875595e51c6906445ff29ac",
+      "src/worktree.rs": "cab0de5e582af7046e8027f9ebf1c4140bbb968bf5bbcb13469576a2da4dd250",
+      "src/local.rs": "9962fdd3ac27c37be098c5fd78a6716629180e0dd5a0e1fd7053deb6f5ee79a5",
+      "src/cli/mod.rs": "7e5ee76743fb5d7f0b0ea89ba508a58981b380eee20f90117fd4c26fa510036e",
+      "src/group/provider.rs": "7886aa36f305f6308b1ea1724428689b9be21f318c607752a0d9baa8fb164f54",
+      "src/provider/pi.rs": "8d6475af27cd6baf229337d0ec1d7e1a98cbfaaad06ea16765160c3202731284",
+      "src/store/mod.rs": "559c7565db7e3c16cb2391ec99eeca7367ead26552cb026e25b15734b95d9cff"
+    }
+  }
+}

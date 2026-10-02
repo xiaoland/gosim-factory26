@@ -88,3 +88,50 @@ Sheet 的应用已成功部署，官方 API 明确返回 `billing_mode=self_fund
 最终结果：GitHub 官方 run `a11ce90b4611` 返回 `score=1.0`、`test_pass_rate=1.0`、1 passed / 99 failed，共 100 项；逐项状态为 1 passed、9 failed、90 timedOut。唯一通过项为 `REQ-3-1: Search for and Locate Repositories - Scenario 2`。官网运行页同时显示 `Playwright results parsed: passed=1, failed=99, score=1.0`。API 整体 status=FAILED 表示存在失败测试，不应与 Sheet 的 0/0 枚举故障混为一类。
 
 两题 `run_duration_seconds` 均为 3，模型 tokens/cost 均为 null；这里只验证冻结应用的官方功能表现，不能用回放耗时或空费用比较生成效率。原始状态、日志、来源映射保存在本机 `runs/playground/{a11ce90b4611,e263fcdbc5aa}/`，并复制到 WSL `factory26-official-local/hosted-artifact-replay-20260924/`。回放工具和说明提交为 `eec8ca8`。本轮两题验证结束：GitHub 得到 1% 官方测试通过率，Sheet 因官方测试枚举故障未取得有效评分；没有启动其他 variant 的官网评测或根据隐藏测试修改生成应用。
+
+### 2026-09-24：低通过率的生成应用取证
+
+用户要求分析生成软件，判断本地环境是否造成低分。本轮只分析 codex-base GitHub 冻结交付，未改生成代码、未调用模型或重新提交。WSL 将原提交 ZIP 解压至 `/home/yyh/Development/factory26-official-local/diagnosis-replay-20260924`，构建前端，在 4317 端口运行独立副本，以现有 Chromium / Playwright 操作真实应用。原始产物不受副本写入影响。ZIP 内 GitHub 的 12 个文件均与原生成目录逐字节一致。
+
+官方结果为 1 passed、9 failed、90 timedOut。9 个 failed 全部是首页两个同名 Sign in 链接导致 strict mode violation；90 个超时的返回信息不足以逐一定位，不能当作 90 个独立功能缺失。官方已成功完成安装、构建、部署，因此没有证据支持应用整体未启动。
+
+真实浏览器复现：以公开种子账户登录，`POST /api/auth/login` 返回 200 和正确用户，但页面停在 `/signin` 的 Redirecting…。`frontend/public/app.js:662` 丢弃登录响应，没有更新 `state.session`；该变量仅在启动时读取，workspacePage 因仍为空而重定向。整页导航后会话恢复，仓库、Issues、Pull requests 页面能显示种子数据。该登录缺陷足以阻断依赖登录的流程，是大量超时的有力解释，但不能据此给全部 90 个用例归因。
+
+刷新恢复登录后，从 Workspace 点击 New repository，实际显示 You do not have permission to create repositories。`canGlobal` 需要 session.permissions 或 session.role，而真实 `/api/session` 只返回 user，前后端契约不一致。New organization 使用同一判断。另发现 `can` 将 role 转为小写，却与首字母大写角色列表比较；此项为静态缺陷，部分操作有显式 permissions 可绕过，尚未逐项验证影响。
+
+浏览器观察保存在 `runs/playground/a11ce90b4611/local-diagnosis/observations.json`；WSL 同名诊断目录含 `github-browser-observations.json` 与 `login-stuck.png`。Sheet 的官方枚举失败仍独立看待：没有有效测试分数。本轮证据表明 GitHub 存在生成应用自身的基础流程与契约缺陷，不支持将 1% 简化为本地环境故障或 99% 功能未实现。尚未追查生成过程为何没有发现这些缺陷，也未全量验收两款应用。
+
+### 2026-09-24：追查生成阶段验收为何漏检
+
+用户认可继续追查；本轮仅读取既有 rollout，无新生成、模型调用或官方提交。定向提取保存在 `runs/playground/a11ce90b4611/local-diagnosis/generation-evidence.json`，带原 rollout 路径、行号、UTC 时间。
+
+主 Agent 确实安排了前后端 executor、advisor、browser_operator，并实际执行 Chromium 和 API 检查。browser_operator 在 12:03 UTC 报告了六类缺陷，主 Agent 随后修复其中多项，所以不能说没有浏览器验收。联调曾使用修改前启动的旧后端进程；主 Agent 在 12:01 识别并重启。浏览器工具和应用进程最终均可运行，此历史干扰不能解释最终产物仍有的登录状态缺陷。
+
+关键漏检证据：12:12 创建的 `/tmp/flow-check.cjs` 点击 Sign in 后仅等待 500ms、打印 body，没有断言 Workspace 或账号菜单出现，随后直接 `page.goto` 仓库 URL。该整页导航重新启动前端、重新读取 cookie 会话，绕过了单页应用登录状态未更新的问题。12:12:47、12:14:28、12:15:17 三次工具结果都直接包含 `after login Octo Lite Sign in Create an account Redirecting…`，主 Agent 未修复这一问题。最终 12:23 的回归主要是 curl 登录和接口 200，以及 `/tmp/ui-check2.cjs` 逐 URL 打开匿名页面；12:23:58 宣称“最终回归通过”，12:24:24 宣称实现完成。该证据只能支持部分接口和页面可用，不能支持连续用户流程验收通过。
+
+并行实现的接口契约只有 cookie、静态目录、API 前缀、错误格式等概述；前端被要求依赖 effectiveRole/permissions，却未与实际 session 返回体完成对齐。12:11:39 主 Agent 的权限修补还引入 TitleCase 角色列表与既有小写 role 比较的缺陷。可见问题涉及集成与修复后验收，并非单纯上游模型响应截断或 Chromium 不可用。现有证据不支持认定流式警告是这些缺陷的原因。
+
+建议后续调整生成侧验收方式：以允许需求为依据，从干净浏览器会话连续走用户路径，对登录结果和关键写操作持久化使用明确断言；诊断用的刷新、直接 URL 与 API 登录应标明，不能替代该路径通过。实验设施继续区分生成进程完成与应用验收通过，不替具体 harness 编写业务验收。本轮未实施这些修改。
+
+### 2026-09-24：Sheet 官方评测单独重试
+
+用户授权“可以单独重试一下sheet task的eval吗”。复用官方 submission `6a6b0fd01d50` 的原冻结应用回放包，仅启动 Sheet，新 run `963db7dca6c2`，前次为 `e263fcdbc5aa`。API 已核实 billing_mode=self_funded；没有重新生成、调用模型或重跑 GitHub。终态和日志保存在 `runs/playground/963db7dca6c2/`，submission.json 保留前次运行关联与原应用哈希。当前等待官方结果；此前的测试枚举失败尚不能归因于生成代码。
+
+Sheet 重试 `963db7dca6c2` 已于北京时间 2026-09-25 00:11:57 完成：API 显示 Evaluation completed，1 passed / 99 failed，test_pass_rate=1.0，状态 FAILED，原始原因 Runner exited with test failures or runtime errors。此次未再次卡在测试枚举，证明同一冻结提交能够进入评分；前次枚举故障不能作为应用零分。终态 tests=[]，当前缺逐例明细，不能判断99项的具体原因。self_funded 未变化；原始状态及日志位于 runs/playground/963db7dca6c2/。
+
+### 2026-09-25：Sheet 冻结应用原因分析
+
+用户授权“也是做相应的原因分析”。未新生成、未调用模型、未修改冻结应用或再提交。官方 run 963db7dca6c2 的 tests=[]，日志只暴露构建启动与回放，未给出99项失败的逐例原因，因此本轮不能提供官方失败项的精确归因或占比。
+
+在 WSL 独立回放副本的 4318 端口构建并实际用 Chromium 操作，结束后停止诊断服务。ZIP 的21个文件逐字节匹配原生成产物；本地构建得到与官网日志相同的 Vite JS/CSS 文件名。已有 Q3 Sales 正常打开，B1 输入 =1+2 显示3，刷新仍为3，无页面异常。由此排除“整个应用不可用”这一解释，未发现这些缺陷由运行环境造成。
+
+实际复现的需求违约：
+- 首页 New blank workbook / Create 成功后仍在首页，gridCount=0，没有进入新工作簿编辑器。HomePage.jsx 的 createWorkbook 丢弃响应，仅关闭对话框并 reload 列表。
+- Import CSV / Confirm import 成功后同样停留首页，gridCount=0。importWorkbook 有同样的实现问题。
+- 同一浏览器会话先在 Q3 Sales 编辑 C1，再从首页打开 diagnosis-new，点击 Undo：URL仍指向 diagnosis-new 的ID，页面标题和网格却变成 Q3 Sales/Region。backend/src/server.js 的 getSession 只按 x-session-id 保存past/future，撤销未校验记录所属workbook，返回了另一工作簿的快照。此为实际隔离故障，不仅是命名差异。
+
+种子数据另有覆盖缺口：冻结包只有 Q3 Sales/Sheet1/A1=Region，而公开需求不同组还描述 Sheet2、销售数据范围和公式依赖等种子状态。生成 Agent 在最终答复明确将“同名种子状态不共存”作为歧义处理，仅保留最小种子。官方是否为各组重新准备这些状态未知，不能将此项直接计作99项失败根因。
+
+生成过程并非没有真实验收。两次 browser_operator 操作了实际应用并报告可访问性、滚动、键盘、菜单布局等缺陷；主 Agent 修复后再检查。最终浏览器检查重点在已有 Q3 Sales 的编辑、公式、选择、工作表及UI修复，没有证明首页创建/导入自动进入编辑器、跨工作簿撤销隔离通过。前端executor自身报告仅 npm install/build 验证。部分前端原生 rollout 有无法按JSON解析的行，已标记证据缺口，不据此推定模型生成中断。当前证据显示验收覆盖与集成问题，但仍不能精确解释官方99项失败。
+
+证据：runs/playground/963db7dca6c2/local-diagnosis/ 下 sheet-browser-observations.json、sheet-cross-workbook-undo.json、sheet-generation-evidence.json（附原rollout及行号）。WSL原始副本位于 factory26-official-local/diagnosis-replay-20260924。

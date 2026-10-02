@@ -1,0 +1,53 @@
+{
+  "date": "2026-09-30",
+  "repo": "/Volumes/WorkSSD/Development/factory26/sources/braid",
+  "head": "0712a58d0e5f7af225473d6c48c4aa740c20dfbf",
+  "dirty": true,
+  "files": [
+    {
+      "path": "sources/braid/src/cli/mod.rs",
+      "sha256": "0c3f1e75cbef4dafdc79c223473830eec42381bdb6c68ee7bc39aa85bc187ac9",
+      "bytes": 47304
+    },
+    {
+      "path": "sources/braid/src/objects.rs",
+      "sha256": "773bcb68ec5ba2a4e68c63a451f07550cf10508a437cb700299642813cfb676c",
+      "bytes": 113748
+    },
+    {
+      "path": "sources/braid/src/context.rs",
+      "sha256": "7d092b54855be71bbd7780a82e93b3e54bb63b7f362ed76e394aa7ffadc0db15",
+      "bytes": 23130
+    },
+    {
+      "path": "sources/braid/src/group/provider.rs",
+      "sha256": "95e905c0ec718e3056f93442d2bc7153756882c2aa68e169eafc01231e56a424",
+      "bytes": 10414
+    },
+    {
+      "path": "sources/braid/src/group/dispatch.rs",
+      "sha256": "dab677c5943dde5053d183291283bb6ed9747e691c682f4fb6338b7561bb62cf",
+      "bytes": 30739
+    },
+    {
+      "path": "sources/braid/src/store/mod.rs",
+      "sha256": "67118e34cde7912810b7f3bf9c2b5cc48d46fa7d9aed73ef5315c7b9e0125a49",
+      "bytes": 263349
+    },
+    {
+      "path": "sources/braid/docs/20-product-tdd/local.md",
+      "sha256": "60eb26ac8dab6d699aed7699865b7c30f83c79ea9670c3ba828b5a842a25dc2e",
+      "bytes": 39159
+    }
+  ],
+  "diff_sha256": "bc25d7a1fc43493d622ae6b2117a0a16b9219dd40f57ca2b935b1f2b5ea9747d",
+  "final_reread_sha256_matches": true,
+  "historical_extraction": {
+    "archive": "runs/iteration11/20260930-completed-turn-resume/build/braid-source.tar.gz",
+    "archive_sha256": "fa7e91a01c8a6b09ecdb3b2730babebc271cc9f5a4ab3afdbf09b2278675fc28",
+    "member": "braid/src/store/mod.rs",
+    "source_lines": "5194-5325",
+    "output": "historical-reset-completion.txt",
+    "output_sha256": "8812024a3ad7a7fecc99e32a7b148d32e35c4fe7a24e1d5d1b25326e271ab995"
+  }
+}

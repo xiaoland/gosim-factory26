@@ -1,0 +1,624 @@
+{
+  "report": "r05.md",
+  "read_on": "2026-09-30",
+  "scope": "I11 GitHub PR23; no model/test/app/evaluation execution",
+  "sources": {
+    "A": {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "bytes": 665200
+    },
+    "F": {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0f028-5b31-72f3-a8a9-801b3ec467d8/2026-09-30T02-32-54-672Z_01a0f028-668f-71a0-927f-af1e093fe10e.jsonl",
+      "sha256": "a070a46ba534057390409a3d68f3acd92cb804d0e4c3ecc54f5945ef9f592a96",
+      "bytes": 126836
+    },
+    "P_instructions": {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/physical/01a0f00c-629e-7391-9c31-6756812a8ec5/instructions.md",
+      "sha256": "aa9cf4baa09b22bd21fbe65e399c5cbb52b53dd81e5337824420f1fd0ad3ce7d",
+      "bytes": 16324
+    },
+    "P_session": {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/physical/01a0f00c-629e-7391-9c31-6756812a8ec5/session.json",
+      "sha256": "1cc684f562ea53d82360cc9ab79159b90ee893e78e11b2a7c22ace636714f8b8",
+      "bytes": 1225
+    },
+    "materials": {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/materials.json",
+      "sha256": "3462f7b34839abe668a6a172c2f0149761a0dc38cc0127f727f797adab179a36",
+      "bytes": 8910
+    },
+    "current_I13_findings": {
+      "path": "tasks/iteration13/findings.md",
+      "sha256": "6d07842c260961db824213bb6620e9b4b03f94414577316a2d323bbf51db817c",
+      "bytes": 25382
+    },
+    "current_I13_quality_methods": {
+      "path": "tasks/iteration13/quality-methods.md",
+      "sha256": "e9530b82dfe0a523fad8003cbbdba5c0f5863fa3d515a3ac16458f97b4b4c108",
+      "bytes": 13858
+    },
+    "current_I13_vv_review": {
+      "path": "tasks/iteration13/vv-skill-review.md",
+      "sha256": "d8205948e7de65d9fa9468be588591c55c9915115f2548f145fca7fe96543097",
+      "bytes": 13651
+    },
+    "original_G05": {
+      "path": "tasks/iteration12/i11-github-score/findings.md",
+      "sha256": "b7adebcb0ea3f0de13882133004679c978ecbb8f89f0ff6858eb1bc1b23c8f3b",
+      "bytes": 9545
+    },
+    "S_agent-browser/SKILL.md": {
+      "path": "runs/iteration12/recovery/github/template/.factory26/20260929-042409-1202e245/work/skills/agent-browser/SKILL.md",
+      "sha256": "20351de9004fc254010aee1e95f2234d78e03629f419ea8ddd4d8f0bcb3555e5",
+      "bytes": 6037,
+      "matches_terminal_material_hash": true
+    },
+    "S_agent-browser/scripts/with-service.py": {
+      "path": "runs/iteration12/recovery/github/template/.factory26/20260929-042409-1202e245/work/skills/agent-browser/scripts/with-service.py",
+      "sha256": "777c4348d9c68cc4b3bc8cf0d6001939d44d079ba15091e54b0aabd3990ea582",
+      "bytes": 11083,
+      "matches_terminal_material_hash": true
+    },
+    "S_svc-verification/SKILL.md": {
+      "path": "runs/iteration12/recovery/github/template/.factory26/20260929-042409-1202e245/work/skills/svc-verification/SKILL.md",
+      "sha256": "3b7ecb08c1cd22bfabe2f69e328c4b4d323e52b0f83fadba6ce0fad5ea286354",
+      "bytes": 2105,
+      "matches_terminal_material_hash": true
+    },
+    "S_svc-verification/references/repeatable-checks.md": {
+      "path": "runs/iteration12/recovery/github/template/.factory26/20260929-042409-1202e245/work/skills/svc-verification/references/repeatable-checks.md",
+      "sha256": "b1555848697eb0ad9842d40d2651681ad4a80241594df90c565281aea3dba36c",
+      "bytes": 3964,
+      "matches_terminal_material_hash": true
+    },
+    "current_I13_packet": {
+      "path": "tasks/iteration13/packet.md",
+      "sha256": "40ded70a15bf0876e4c976d1449b3fd6f955855c72fb9f43ad27df5c833c797b",
+      "bytes": 12020
+    },
+    "current_I13_repair_design": {
+      "path": "tasks/iteration13/repair-design.md",
+      "sha256": "654aa17f3111fd54d1acca85f180c56a435658a743f32e272c7fb5c753b23d91",
+      "bytes": 13200
+    }
+  },
+  "references": {
+    "A": [
+      {
+        "line": 4,
+        "id": "d5b04db7",
+        "timestamp": "2026-09-30T02:02:27.077Z",
+        "type": "message",
+        "role": "user"
+      },
+      {
+        "line": 35,
+        "id": "ce7d1cd4",
+        "timestamp": "2026-09-30T02:03:08.410Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 73,
+        "id": "8ebb3f6e",
+        "timestamp": "2026-09-30T02:05:25.691Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 74,
+        "id": "0fbaa935",
+        "timestamp": "2026-09-30T02:05:25.694Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 132,
+        "id": "38917b20",
+        "timestamp": "2026-09-30T02:12:06.747Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 135,
+        "id": "5884ce43",
+        "timestamp": "2026-09-30T02:12:09.036Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 138,
+        "id": "735eee0c",
+        "timestamp": "2026-09-30T02:12:12.994Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 139,
+        "id": "3a520e37",
+        "timestamp": "2026-09-30T02:12:19.625Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 140,
+        "id": "ca8e8c23",
+        "timestamp": "2026-09-30T02:12:22.717Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 147,
+        "id": "f4bfd2e7",
+        "timestamp": "2026-09-30T02:13:14.767Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 154,
+        "id": "af664d10",
+        "timestamp": "2026-09-30T02:13:58.625Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 213,
+        "id": "af35e89f",
+        "timestamp": "2026-09-30T02:26:38.646Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 214,
+        "id": "ff3886e5",
+        "timestamp": "2026-09-30T02:26:38.654Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 215,
+        "id": "84c69c1b",
+        "timestamp": "2026-09-30T02:26:40.328Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 216,
+        "id": "f59feacb",
+        "timestamp": "2026-09-30T02:26:51.645Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 217,
+        "id": "acb9c42c",
+        "timestamp": "2026-09-30T02:26:52.972Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 218,
+        "id": "6e23bea4",
+        "timestamp": "2026-09-30T02:26:52.975Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 219,
+        "id": "90349809",
+        "timestamp": "2026-09-30T02:27:01.474Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 223,
+        "id": "087c9964",
+        "timestamp": "2026-09-30T02:27:31.192Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 224,
+        "id": "2b53f7c2",
+        "timestamp": "2026-09-30T02:27:49.826Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 233,
+        "id": "392e99d8",
+        "timestamp": "2026-09-30T02:28:32.144Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 235,
+        "id": "d34a127f",
+        "timestamp": "2026-09-30T02:28:41.908Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 236,
+        "id": "7001a13a",
+        "timestamp": "2026-09-30T02:28:48.581Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 237,
+        "id": "b2d8daf1",
+        "timestamp": "2026-09-30T02:28:50.294Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 238,
+        "id": "6ba0f7f9",
+        "timestamp": "2026-09-30T02:28:50.323Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 239,
+        "id": "8b340d6f",
+        "timestamp": "2026-09-30T02:28:52.774Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 240,
+        "id": "e0f328e3",
+        "timestamp": "2026-09-30T02:28:52.814Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 243,
+        "id": "ae68a63e",
+        "timestamp": "2026-09-30T02:28:57.311Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 244,
+        "id": "c9e76ce5",
+        "timestamp": "2026-09-30T02:28:57.320Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 254,
+        "id": "f66d0c73",
+        "timestamp": "2026-09-30T02:29:24.235Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 255,
+        "id": "6f652220",
+        "timestamp": "2026-09-30T02:29:26.341Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 256,
+        "id": "2a7622ce",
+        "timestamp": "2026-09-30T02:29:26.364Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 257,
+        "id": "f1e978fa",
+        "timestamp": "2026-09-30T02:29:46.195Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 258,
+        "id": "478f656c",
+        "timestamp": "2026-09-30T02:29:46.290Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 261,
+        "id": "f651817a",
+        "timestamp": "2026-09-30T02:30:00.243Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 263,
+        "id": "ac9b67ac",
+        "timestamp": "2026-09-30T02:30:05.785Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 264,
+        "id": "e1914013",
+        "timestamp": "2026-09-30T02:30:05.900Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 269,
+        "id": "36c6d683",
+        "timestamp": "2026-09-30T02:30:16.438Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 279,
+        "id": "17f3b28d",
+        "timestamp": "2026-09-30T02:30:32.567Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 280,
+        "id": "c47324a5",
+        "timestamp": "2026-09-30T02:30:32.577Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 291,
+        "id": "bf018523",
+        "timestamp": "2026-09-30T02:34:50.666Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 292,
+        "id": "47240c81",
+        "timestamp": "2026-09-30T02:34:50.689Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 297,
+        "id": "bf6e7ef0",
+        "timestamp": "2026-09-30T02:35:04.224Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 298,
+        "id": "d94c78f2",
+        "timestamp": "2026-09-30T02:35:04.232Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 302,
+        "id": "2e7e6207",
+        "timestamp": "2026-09-30T02:35:08.970Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 303,
+        "id": "82518359",
+        "timestamp": "2026-09-30T02:35:09.089Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 304,
+        "id": "716c2a82",
+        "timestamp": "2026-09-30T02:35:17.443Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 305,
+        "id": "eebbcbf5",
+        "timestamp": "2026-09-30T02:35:17.447Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 306,
+        "id": "b0ac89d9",
+        "timestamp": "2026-09-30T02:35:19.023Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 307,
+        "id": "854ed611",
+        "timestamp": "2026-09-30T02:35:19.397Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 310,
+        "id": "00c7eb3e",
+        "timestamp": "2026-09-30T02:35:28.357Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 311,
+        "id": "19c60cad",
+        "timestamp": "2026-09-30T02:35:28.359Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 312,
+        "id": "48e6bcaa",
+        "timestamp": "2026-09-30T02:35:29.720Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 313,
+        "id": "943eb680",
+        "timestamp": "2026-09-30T02:35:30.767Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 315,
+        "id": "6bb67c66",
+        "timestamp": "2026-09-30T02:35:33.129Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 316,
+        "id": "ab5e311a",
+        "timestamp": "2026-09-30T02:35:34.220Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 317,
+        "id": "2a584356",
+        "timestamp": "2026-09-30T02:35:34.220Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 321,
+        "id": "00187d64",
+        "timestamp": "2026-09-30T02:35:43.286Z",
+        "type": "custom_message",
+        "role": null
+      },
+      {
+        "line": 322,
+        "id": "724a30ac",
+        "timestamp": "2026-09-30T02:35:47.638Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 323,
+        "id": "14e37872",
+        "timestamp": "2026-09-30T02:35:47.664Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 324,
+        "id": "93a8a561",
+        "timestamp": "2026-09-30T02:35:49.604Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 325,
+        "id": "29542ee6",
+        "timestamp": "2026-09-30T02:35:49.605Z",
+        "type": "custom_message",
+        "role": null
+      }
+    ],
+    "F": [
+      {
+        "line": 13,
+        "id": "087ec1a4",
+        "timestamp": "2026-09-30T02:35:34.086Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 14,
+        "id": "310c4705",
+        "timestamp": "2026-09-30T02:35:34.304Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 15,
+        "id": "7da3be3a",
+        "timestamp": "2026-09-30T02:35:34.305Z",
+        "type": "message",
+        "role": "user"
+      },
+      {
+        "line": 16,
+        "id": "e5921d87",
+        "timestamp": "2026-09-30T02:35:37.935Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 17,
+        "id": "17301696",
+        "timestamp": "2026-09-30T02:35:37.951Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 18,
+        "id": "1f8ec4d5",
+        "timestamp": "2026-09-30T02:35:50.242Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 19,
+        "id": "a8477457",
+        "timestamp": "2026-09-30T02:35:50.264Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 20,
+        "id": "1c7d4663",
+        "timestamp": "2026-09-30T02:35:50.264Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 21,
+        "id": "9801442c",
+        "timestamp": "2026-09-30T02:35:56.720Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 22,
+        "id": "551e1ada",
+        "timestamp": "2026-09-30T02:35:57.295Z",
+        "type": "message",
+        "role": "toolResult"
+      },
+      {
+        "line": 23,
+        "id": "8586d62f",
+        "timestamp": "2026-09-30T02:36:05.509Z",
+        "type": "message",
+        "role": "assistant"
+      },
+      {
+        "line": 24,
+        "id": "8f9e4d6b",
+        "timestamp": "2026-09-30T02:36:06.117Z",
+        "type": "message",
+        "role": "toolResult"
+      }
+    ]
+  },
+  "reading_boundary": {
+    "A": "Targeted raw reads: requirements L4; logging, result and packet construction L132-154, L212-219, L221-266 selected (large reasoning filtered where indicated), L269/L279/L297 full, L304/L310/L315-325. Tool-call scan of A for actual skill/wrapper usage. Not a full-lineage read.",
+    "F": "Raw L13-24 role plans, exact commands and returns.",
+    "P": "instructions L1-42 and session mapping fully read.",
+    "S": "agent-browser SKILL L1-58, svc-verification SKILL L1-31, repeatable-checks L1-47 read fully; with-service selected implementation/argument/result lines read. Four file hashes match terminal materials.",
+    "current_revision": "At completion read current I13 packet L1-42 and new repair-design L1-72. Global stage is repair-design convergence pending review, with R05 nonadoption reason still open and no added mandatory wrapper."
+  },
+  "key_discrimination": [
+    "isolated first successful run was only a filtered tool result; first saved isolated file was the later failing run",
+    "new failure was visible and discussed before wrong file binding",
+    "first wrong binding found in A L297 edit, copied into A L304 write, not generated by a log summary script",
+    "bg014 logs were intentionally overwritten by bg015, but its delayed notice was correctly distinguished in A L322-325",
+    "independent-directory tool existed with matching terminal material hashes; nonadoption reason remains unobserved"
+  ]
+}

@@ -1,0 +1,113 @@
+{
+  "recovery_plan": {
+    "path": "/home/yyh/Development/factory26/runs/sheet-materialization-recovery/recovery-plan.json",
+    "data": {
+      "operation": "recover stopped Sheet generation; application tree unchanged",
+      "source_run": "pi-braid--hackathon--sheet-22730f82778f3a",
+      "expected_main": "3fb842a46362c6c676bb2e99f92453d46f8394d9",
+      "candidate_binary_sha256": "e80b0f7bac73bf1e3fde4de9cfc370eda8a79a7428f95d7abccd6c196a6b96c6",
+      "candidate_source_sha256": "268d6d4202aac46cbc5e48a85666ee57956b2c58f5b857e62b67c8e408050c17",
+      "patch_sha256": "d859816a73cb8d96f5d7e8a2a652a574617f750a5ff144c2644a5a139dfeea6e",
+      "native_materials_refresh": false,
+      "new_iteration_authorized": false,
+      "entry_files": {
+        "continue-container.py": "606d507a16cac35630c38c3bf7a4051e8f62d30a583e5fd29fbea3187ff5e162",
+        "continue-in-place.py": "352cd6cbd75ac0090b691c7f236d3f326c2babc8e6fc10358afb524536e82d23"
+      }
+    }
+  },
+  "recovery_result": {
+    "path": "/home/yyh/Development/factory26/runs/sheet-materialization-recovery/generation/runs/pi-braid--hackathon--sheet-130e238edd5a6a/workspace/experiment-result.json",
+    "data": {
+      "schema_version": 1,
+      "status": "completed",
+      "mode": "local-workspace-continuation",
+      "source_run_id": "pi-braid--hackathon--sheet-22730f82778f3a",
+      "retained_braid_run_id": "20260928-025746-66feadac",
+      "image_id": "sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d",
+      "container_exit_code": 0,
+      "generation": {
+        "status": "completed",
+        "exit_code": 0,
+        "process_group_cleanup": "already-exited",
+        "application_sha256": "9022b53b7a827a3dd29df7477a5645e2207450fb0aa25efd97ae0a527ac7f28f"
+      },
+      "application_sha256": "9022b53b7a827a3dd29df7477a5645e2207450fb0aa25efd97ae0a527ac7f28f"
+    }
+  },
+  "recovery_gateway": {
+    "path": "/home/yyh/Development/factory26/runs/sheet-materialization-recovery/generation/runs/pi-braid--hackathon--sheet-130e238edd5a6a/artifacts/gateway-export-result.json",
+    "data": {
+      "status": "empty",
+      "offset": 17426513
+    }
+  },
+  "stopped03": {
+    "path": "/home/yyh/Development/factory26/runs/sheet-materialization-recovery/stop03-confirmed.json",
+    "data": {
+      "at": 1790600518.6603453,
+      "phase": "cancelled",
+      "container_running": false,
+      "old_run": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--sheet-22730f82778f3a",
+      "stop_confirmed": true
+    }
+  },
+  "last_monitor": {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation-monitor.jsonl",
+    "data": {
+      "at": 1790600925.0204298,
+      "runs": [
+        {
+          "task": "github",
+          "run": "pi-braid--hackathon--github-3d75045c72f1d6",
+          "state": "ready",
+          "agent_status": "completed",
+          "runner_exit": null,
+          "receipt": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation/.lab-artifacts/receipt.json",
+          "restore": {
+            "phase": "braid_started",
+            "last_reported": "[2026-09-28 08:29:16] [runner] generation-agent.stdout | Recovery: resuming Braid; log=/workspace/template/.factory26/20260928-030347-78b10c07/recovery-braid.log"
+          },
+          "braid_statistics_origin": "current_recovery",
+          "braid": {
+            "run": "running",
+            "items": 22,
+            "active_turns": 0,
+            "pending_events": 8
+          },
+          "failed_turns_since_start": 0,
+          "recent_provider_errors": [],
+          "native": {
+            "sessions": 39,
+            "newest_age_seconds": 10773
+          }
+        },
+        {
+          "task": "sheet",
+          "run": "pi-braid--hackathon--sheet-22730f82778f3a",
+          "state": "failed",
+          "agent_status": null,
+          "runner_exit": null,
+          "receipt": null,
+          "restore": {
+            "phase": "braid_started",
+            "last_reported": "[2026-09-28 08:29:55] [runner] generation-agent.stdout | Recovery: resuming Braid; log=/workspace/template/.factory26/20260928-025746-66feadac/recovery-braid.log"
+          },
+          "braid_statistics_origin": "current_recovery",
+          "braid": {
+            "run": "running",
+            "items": 33,
+            "active_turns": 0,
+            "pending_events": 60
+          },
+          "failed_turns_since_start": 0,
+          "recent_provider_errors": [],
+          "native": {
+            "sessions": 260,
+            "newest_age_seconds": 3980
+          }
+        }
+      ]
+    }
+  }
+}

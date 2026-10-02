@@ -1,14 +1,24 @@
 # Pi 最小参赛 Variant
 
+## 当前实验：新增验收方法后自费运行GitHub
+
+用户已明确授权只跑官网Hackathon GitHub，使用当前pi-minimal与独立svc-verification技能；不启动Sheet或比赛额度监控。配方仍为BigModel GLM-5.3-flash主会话、个人ARC key的Kimi-k2.7-code advisor。I12保持暂停。范围、冻结身份与实际run见 [verification-run.md](verification-run.md)；以下旧冻结运行不因本次源码更新而改变。
+
+## 比赛余额守护调整（2026-09-30）
+
+用户直接要求：“如果发现该运行要扣除的费用扣除到我们剩下的比赛额度上面的话，已经少于20，那么就不要取消运行。”已据此修改 `budget_guard.py` 的比赛额度模式：官网账面比赛余额减去同一 journal 在途运行的已知未结算费用，结果低于20元时保留现有运行；20～100元（含边界）仍取消该 journal 中经身份核对的在途运行。两种情况都保留停止标记，阻止创建或启动后续任务；100元以上继续观察。用户没有授权由此启动新比赛运行或恢复I12。
+
+当前运行采用 self_funded，仅观察供应商费用，不套用比赛余额阈值。此次没有重启观察器、查询额度或取消run；语法检查和命令帮助核对通过，实际金额分支未通过运行取得行为证据。规则与费用估算限制见 [余额说明](meter-budget.md)。
+
 ## 验收方法开发支线
 
-用户新授权加入独立SVC V&V技能，源码接线已落地，见 [verification.md](verification.md)。只引入验收方法及references，不增加Braid、其它SVC技能或新角色；没有启动支线实验。下面已冻结的官网运行不受源码更新影响，仍按各自制品身份读取结果。
+用户新授权加入独立SVC V&V技能，源码接线已落地，见 [verification.md](verification.md)。只引入验收方法及references，不增加Braid、其它SVC技能或新角色；原接线阶段没有启动实验，现在按开头的新授权进入单题官网验证。下面旧冻结运行不受源码更新影响，仍按各自制品身份读取结果。
 
-## 2026-09-30 改用 ARC advisor，从头重跑（当前状态）
+## 早前实验：2026-09-30 改用 ARC advisor，从头重跑
 
 用户先暂停两题，再指定“Kimi使用ARC key”，随后明确“直接重新开始”。旧GitHub `7338d6d166d9`、Sheet `1d653b593474`均已CANCELLED；原始应用和Pi会话暂停快照保存在 `runs/pi-minimal/20260930/self-funded/pause/receipt.json`。先前准备的两个resume.zip不使用，接续脚本的本轮临时改动已撤回。
 
-新实验从公开需求开始，不带入旧应用或会话。主模型仍为BigModel GLM-5.3-flash，advisor使用`~/.config/factory26/llm.env`中的个人ARC key，provider=arc、模型kimi-k2.7-code；只读models查询确认该模型可选，真实调用待新运行验证。模式self_funded，不占比赛额度。新冻结纯Harness `runs/pi-minimal/20260930/arc-advisor/base-agent.zip`，SHA256 `b4196fd387909a21a39a34e8c10f2a69c621057c7ed4f0647b60db3eeaf66e6a`；journal为同目录official。费用观察继续每600秒，按BigModel与ARC分组，启动身份随后写入。I11本地恢复独立继续，原I10不动。
+新实验从公开需求开始，不带入旧应用或会话。主模型仍为BigModel GLM-5.3-flash，advisor使用`~/.config/factory26/llm.env`中的个人ARC key，provider=arc、模型kimi-k2.7-code；只读models查询确认该模型可选，真实调用待新运行验证。模式self_funded，不占比赛额度。新冻结纯Harness `runs/pi-minimal/20260930/arc-advisor/base-agent.zip`，SHA256 `b4196fd387909a21a39a34e8c10f2a69c621057c7ed4f0647b60db3eeaf66e6a`；journal为同目录official。新submission `f12fdf5540a1`；GitHub `c3fea0c3488c`、Sheet `6dc68bef2081` 已发起。控制器PID85097，费用观察PID85415，每600秒按BigModel与ARC分组。两题09:18:33/39 CST进入RUNNING。09:20:41首次真实费用采集成功，23次GLM完成响应，无usage缺口，合计约0.245517元；Kimi尚未触发，真实调用待后续观察。实际状态记录在journal/startup-status.json，首笔数据first-usage.json，持续记录usage-monitor.log。I11本地恢复独立继续，原I10不动。
 
 ## 历史过程
 

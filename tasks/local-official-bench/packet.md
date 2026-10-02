@@ -2,15 +2,15 @@
 
 ## 目标与控制状态
 
-目标是在当前 `factory26` 工作树旁建立独立的本地实验目录，使同一冻结参赛 ZIP 能按主办方 `local_submit.py` 的容器流程运行 `arc-bench-lite` 和 `arc-bench-web` 的公开需求与测试，并明确记录它与官网生产评分的身份差异。当前仅完成只读调查、隔离 `--prepare-only` 预演和方案；尚未取得本任务的 impact handshake，不修改产品源码、不启动新的模型生成或正式评测。用户已允许随时使用真实模型；模型许可不改变镜像与输入来源的验收门槛。
+目标是在当前 `factory26` 工作树旁建立独立的本地实验目录，使同一冻结参赛 ZIP 能按主办方 `local_submit.py` 的容器流程运行 `arc-bench-lite` 和 `arc-bench-web` 的公开需求与测试，并明确记录它与官网生产评分的身份差异。用户已批准开工。官方 `local_submit.py` 的生产镜像路径仍停在 `--prepare-only`；另在隔离目录建立 `platform-public-local` 诊断入口，已用无模型 fixture 在 Mac/WSL 实际部署应用并执行 Lite/Web Keep 各一例。没有启动新的真实模型生成或完整本地成绩；镜像与输入来源仍限定结论。
 
-当前 `scripts/official_matrix.py` 仍有进程；其 `matrix.json` 标为 running、hosted 记录远端暂停/未知。隔离环境不复用该控制器、状态目录、工作区或 Docker 容器。现有未提交改动保持原样。
+旧 Lite 控制器已在双比赛矩阵接管时本地退出；隔离环境不复用官网控制器、状态目录、工作区或 Docker 容器。现有其他 WSL 本地生成进程及用户未提交改动保持原样。
 
 ## 已核实的事实
 
 - 主办方 `code-philia/hackathon-local-simulation` 固定提交 `cfbbc287ee1bbffcf1e936545e4803145693a8d8`，`local_submit.py run` 接受任意 competition/task、显式 requirements/tests、Agent ZIP、workspace 与 image；`--prepare-only` 已通过无模型 fixture。
 - 该仓库的镜像只是在生产 Runner 基础镜像上加本地入口。基础镜像需来自另一仓库的 `backend/runner/Dockerfile` 或主办方发布的镜像；现有 Windows Docker daemon 镜像列表没有 `arcbench-runner:local-base` 或 `arcbench-local-submit:latest`。`third_party/arc-bench/Dockerfile` 是 ARC baseline 环境，不能替代。
-- 当前 `factory.py` 与 `local-package-run.py` 在宿主/WSL 使用公开测试，固定 `arc-bench` 为 `1eb018367bedd618d3b9ced406ce07fb423d4956`。公开上游 HEAD 为 `ddc7e40e4a715eadfd309a333b0da785192886e7`；同一应用在官网与这两版公开测试的成绩未对齐。
+- 历史宿主/WSL 对照曾使用 `factory.py` 与旧的 package runner，固定 `arc-bench` 为 `1eb018367bedd618d3b9ced406ce07fb423d4956`。旧 runner 已退役；公开上游 HEAD 为 `ddc7e40e4a715eadfd309a333b0da785192886e7`，同一应用在官网与这两版公开测试的成绩未对齐。
 - 当前活动矩阵只配置 Lite 的 Keep/BookStack；公开 Web 有六题。`scripts/local_runner.py` 和 `scripts/official_matrix.py` 均硬编码 Lite，Web 须直接调用固定主办方脚本。2026-09-23 平台只读 Competition detail 列出 Web 484 项，但正确的公开测试接口发现 478 项。因此任务 ID、需求、测试哈希和版本必须逐题保存，不能仅凭题名或公开用例数宣称官网测试完全一致。
 - Mac 的 `arcbox-win` Docker context 指向 `ssh://win-ws.localhost` Windows 主机，可读取其 Linux Docker daemon 镜像，但 bind mount 的源路径由该主机解释；另一个 `wsl.win-ws.localhost` 的 WSL 默认 `/var/run/docker.sock` 当前不可连接。容器执行须先在 Windows 主机可挂载的独立路径验证最小 bind mount。
 
@@ -32,6 +32,14 @@
 
 独立 Agent 只读预演确认当前两个项目 controller 均限 Lite，固定模拟器内置输入亦不能承载 Web；直接传显式目录是共同路径。其检查还指出无模型 fixture 的实际容器 smoke 应清空继承的模型环境，避免意外访问 Meter。上述 `--prepare-only` 已由主 Agent 在隔离目录实际执行，独立 Agent 未启动容器或模型。
 
+## 缺镜像时的可运行诊断路径
+
+主办方模拟器的完整容器路径仍需精确生产 Runner；用公开基底拼装一个同名镜像无法证明一致性。现使用隔离目录的 `platform_public_run.py` 支持八个 `{competition, task}` 输入，读取对应平台公开需求、测试和素材哈希；可用 `--package` 运行冻结 ZIP、冻结交付应用、安装/构建/启动 frontend/backend，再用公开 Playwright 测试输出报告，也可用 `--application` 或 `--url` 复用已有应用/服务。该路径复用本项目的包校验、应用合同、进程收尾和结果完整性检查，但不是主办方生产 Runner，结果标记 `platform-public-local`，只输出公开测试通过率，不推算官网成本或综合分。使用方法见隔离目录 `README.md`。
+
+独立 Advisor 建议在缺生产镜像时走这条明确标记的诊断链，不伪造 `run_submission.py`。无模型接线预演先对 Mac 的 Lite/Web Keep `REQ-2.1` 分别调用 Playwright，来源哈希不同、报告中的 helper 路径各自指向正确比赛；随后用确定性 `diagnostic-agent.zip` 完成 ZIP → 需求 → 应用 → build/start → Playwright 闭环，在 Mac 和 WSL 两侧均产生完整 0/1 测试报告（这是故意简单应用的有效失败，不是模型成绩）。WSL 隔离目录位于 `/home/yyh/Development/factory26-official-local`，不会改动两个既有 WSL 本地生成进程。Mac 平台公开输入的八题需求、素材、测试哈希已全部核验；WSL 复制时出现的 AppleDouble `._*` 文件已在隔离副本清理，避免 Playwright 将其当 spec 解析。完整八题真实模型运行尚未启动，不能把无模型 smoke 称为正式本地分数。
+
+完整公开题验收：在 WSL 使用既有已交付的 `pi-team-glm` BookStack 应用，以 Node 20.19.3 和当前 Playwright 1.61.1 跑 `arc-bench-lite--bookstack` 的平台公开输入，`platform_public_run.py` 进程退出 0、测试退出 1，34 项全部发现并执行，7/34 通过，27 项为 10 秒 UI locator 超时；`state.json` 标记 `phase=completed`、`partial=false`，应用 SHA256 为 `248e27d6b62e1b398fcc5d73a0b5240be173a23f828154ce43c4062bab2d81ab`。原始证据位于 WSL `/home/yyh/Development/factory26-official-local/runs/glm-lite-bookstack-full/`。这证明诊断入口能完成整题并保留低分，不证明与官网 Runner 一致；该应用原本来自旧版公开需求，结果不作为同输入官网校准配对。
+
 ## 实施前最小预演与验收
 
 1. 获取主办方生产基础 Runner 的不可变镜像 digest，或带 `backend/runner/Dockerfile`、`run_submission.py` 的精确源码版本；核对它与官网日志的版本身份。若只能取得近似镜像，应单独标记 compatibility，不称官方一致。
@@ -42,4 +50,4 @@
 
 ## 影响与待决门槛
 
-首选复用官方脚本，不修改当前 Factory 的生成/评测流程；必要新增文件仅为独立目录的输入清单和调用说明。如果后续必须把它接回本仓库控制器，先重新复核所有权、失败恢复与测试，再扩大范围。项目 AGENTS.md 对非简单开发设施改动要求方案、验收、独立 Agent 预演、impact handshake、实现前提交、实施验收；本 packet 目前只记录前三项的准备，尚未请求或取得开工同意。取得镜像身份与可挂载主机路径是完整运行的外部前提。
+主办方容器路径继续复用官方脚本；新诊断入口只存在于仓库同级隔离目录，不修改当前 Factory 的生成/评测流程或 `third_party/`。用户已明确开工，实施前提交 `b65e95b` 只记录任务包；缺镜像的备选实现与验证见上节。取得镜像身份与可挂载主机路径仍是完整官方容器运行的外部前提。

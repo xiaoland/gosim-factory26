@@ -1,6 +1,6 @@
 # I11：恢复停滞根治与真实交付距离
 
-当前阶段：源码修复、两题独立审查和 GitHub 真实接续验证已完成；两题继续生成。2026-09-30，用户要求找到过去两次 I11 卡住的根本原因，做长期修复，同时分析两题 Issue/PR、估计剩余时间并核验 I11 改动。
+当前阶段：两题生成已完成，最终交付已冻结并上传官网以self_funded重放评分；后续连续性与协作操作修正转入I12。2026-09-30，用户要求找到过去两次 I11 卡住的根本原因，做长期修复，同时分析两题 Issue/PR、估计剩余时间并核验 I11 改动。
 
 ## 问题与判断边界
 
@@ -60,3 +60,22 @@ Sheet `396538bc0dda96` 保持旧binary继续，已成功恢复root/PR13；不将
 | 未触发的能力边界 | Sheet无新sub-agent spawn；两题无新vision length案例，20%上下文降档也无充分样本 | 继续记为未验证，不为补验证而打断当前收尾或制造新实验 |
 
 本轮Braid恢复源码提交 `0712a58`；编译制品基于冻结源加本任务增量，与完整脏工作树分开记录。
+
+## 用户补充归因的复核（方案讨论，尚未应用）
+
+2026-09-30用户提供两题原生记录的三条进一步归因，要求主线判断。源码核对补齐以下边界：
+
+- R3b：`begin_context_reset_connection` 以 `selected_turn_id.is_some() || self_edit` 设置 continuation；`complete_context_reset` 随后创建 `reset_continuation` wake；`render_event_references` 对该输入仍写“请处理工作项”。因此自行整理可以重新制造处理请求，不能只将反例归于Agent无视通知指引。修复设计须区分更新投影、接续尚未完成的处理和投递新输入；Braid呈现发生的事实，不判断业务是否需要重新验收。保留description编辑完整重建及真实新问题联系已完成负责人的能力。
+- I11-09b：SVC interpreting-results及两份角色指令已包含证据适用性、停止复验及match-head用途；新增同义原则不足以解决旧PR正文“head变化即重验”的冲突。需要清退当前对象中冲突纪律，使交接分别携带原观察归属、当前候选适用性与合并目标。历史原始观察不改写；真实产品、检查、数据或运行条件变化仍需相应反馈，不按文件后缀豁免。
+- I11-06b：resolve/unresolve参数接收评论ID，实际映射至thread根并更新resolved_through；命令成功返回单位值，未清晰返回实际范围。保持讨论级语义，帮助与回执明确thread根及折叠范围；局部整理使用hide及理由。resolved后新增回复仍可见，不新建消息过滤器。
+
+此外，已完成工作项正文应保存其交付、约束和证据，不持续镜像其它分支/工作项的最新全局状态；集成任务拥有当前集成状态并链接历史成果。此为文档职责修正，Braid不自动分类自然语言内容或重写项目结论。
+本次只读实现核对与packet整理；未修改运行、应用或上述产品机制，也未启动实验。
+
+## 完成交付与官网评分
+
+两题生成成功结束，根Issue关闭，最终PR合入：GitHub main `442dc1cf776f144688d8ad667a76dd026f553e27`，Sheet main `10cba2ad888fd60f283382158c1bfb00b0fad240`。
+按用户要求立即冻结为应用重放包，未继续生成或修改应用。包SHA256 `bc4cab139ed9cf3c282a1b3359ed1d6a8e5f552dcf13efda30144a44fb5076fc`，来源与原始证据见 `runs/iteration11/final-replay-20260930/{replay-manifest.json,official/}`。
+官网submission `87acf1919de7`；[Sheet run fe617f4f8526](https://arc-bench.com/runs/fe617f4f8526)、[GitHub run e68661975b53](https://arc-bench.com/runs/e68661975b53) 均确认billing_mode为self_funded，重放不调用模型、不占参赛额度。
+官网两题完整评分已收集：Sheet为59通过/41失败，功能8/24；GitHub为4通过/96失败，功能1/47。两题部署、应用启动与评分阶段均完成，均不提供逐例错误；不根据阶段完成或分数推断具体失败根因。3+8采集脚本已按两题终态正常结束，journal中phase=collected、pending=null。
+I12的工作流修正、独立恢复起点及人工介入console见 [I12 packet](../../iteration12/packet.md)。原始I11交付及评分反馈不改写，也不将隐藏评分反馈注入I12生成。
