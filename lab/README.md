@@ -32,3 +32,8 @@ Docker 离线 job 显式设置 backend.network="none"，create 记录在 attempt
 制品用 `artifact import/verify/export/transfer` 发布、核验及装配，`evidence` 按受限 member/字节游标读取。导入历史字节不会取得新执行证明。`telemetry snapshot/batches/export/ingest` 保留 stream/epoch/源序列、原始 protobuf 与错误；摄取同源批次幂等，冲突原件保留。Analyze 固定原件摘要和采集截止点；没有调用身份时模型用量明确未知，不从原始批次数推导 token 或费用。
 
 Harness checkpoint/prepare 的公共生产接口、来源停止门控和路径限制见[恢复说明](../docs/deployment/recovery.md)。模型/收费生命周期与跨环境恢复的尚未取得实测见[任务 packet](../tasks/experiment-dx-review/packet.md)。本仓库不运行设施测试或 smoke；真实离线材料取得的反馈不替代模型实验验收。
+
+
+托管监控只有一个采集 owner：持有该 experiment 控制锁的冻结 controller 调用 hosted adapter。adapter 自己持久保存 next_observation_at，前十分钟每三分钟、此后每八分钟查询并保留平台原件；终态导出也由同一 adapter 完成。不要把新 run 接入旧 hosted_monitor、伪造 legacy journal 或启动第二 collector。Luna 每十分钟使用该实验冻结 runtime/source 的 `lab monitor EXPERIMENT --json` 消费保存记录；这是 status 的只读入口，仅核对本机 controller 出生身份，不请求平台。
+
+监控消费分别看 controller 生命周期、attempt 的 pending/remote_status/具体错误、archive、平台结果和原件时间。provider 新鲜度取该 attempt/platform 中 `/runs/RUN_ID` 成功观察的时间，不能使用本次查询 read_at 或 token 增长代替；controller 失联时报告缺口，不接管采集或重跑入口。重复状态保持安静，终态、具体故障、身份变化或需要用户动作才通知。原 collector 对旧来源的采集权限不会自动转移给新 run；新 run 可以先启动，Luna 订阅接收回执独立成立。真实接续消费合同见 `runs/experiment-dx-review/real-handoff-20261002/monitor-consumer-contract.json`。

@@ -117,3 +117,6 @@ Harness checkpoint/validate/prepare 是公开、离线、版本化 producer。Pr
 实际交接已发布于 `runs/experiment-dx-review/real-handoff-20261002/consumer-handoff.json`：development2-endpoint.json、development2-first-use-scope.json 和 development2-authority-handoff.json 已经由真实 Docker 只读命令产出，reservations=absent，实时物理对象仅1个用户Redis及其卷；没有创建准入 helper/负载、释放或控制任何旧资源。来源声明与有限扫描覆盖分别保留，不追认未知自定义域为空。r4恢复owner已实际调用 import-source-stop 成功，source-identity.json/source-stop-evidence.json位于其r4根；本会话核对原件摘要和出生绑定，并独立GET保存legacy-source-current-observation.json（成功时有文件），launch仍需自身当前观察。
 
 随后发现实际 Docker backend 未消费断网要求，已补齐显式 backend.network=none，冻结参数校验、create --network none、docker-create-intent.json 和物理 inspect 网络门控，未声明network的生成行为不变。编译及差异检查通过，实际离线job由原恢复owner独占派发并产生物理回执；本会话没有以编译冒充真实断网验收，没有改其producer/凭据/packager源码。DX方案扩展延后，优先接续官网任务。
+
+
+托管监控最小交接（2026-10-02）：复用已有 lab monitor/status 只读接口，无须为即将启动的 hosted 再建采集器或状态数据库。controller 的 hosted adapter 是唯一新 run API采集与终态导出 owner，原PID77062保留旧 cancelled source 范围；不伪造journal，不迁移旧monitor目录。Luna每十分钟消费保存的身份/状态/原错/archive/终态，禁止live observe/Client/第二collector；绑定实际experiment→controller出生→attempt→submission/run后才声称订阅具体新run。未接收订阅不阻塞hosted启动。consumer合同与实际离线readback位于 real-handoff-20261002/monitor-consumer-contract.json 和 monitor-readback-offline-repair.json，真实repair-final已completed，读回没有平台请求、模型调用或collector创建。新hosted run尚未作为实际观察对象，接收身份和告警效果不能凭合同存在宣布验收。本会话未更改旧collector、Luna自动化或原恢复owner。
