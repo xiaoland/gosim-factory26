@@ -1,6 +1,6 @@
 # I14：协作职责与独立验收实验
 
-2026-10-01开始，2026-10-02更新。用户已明确授权 I14-0 实现、基础验收和实验启动，不等待 I13 正式成果；I13 完成后的问题改进与目标对账移至 I14-1。PR 创建默认 draft 已提交 e7d88e7。cleaner、reviewer 和 e2e 接线已委派实施，主线负责共同 variant、基础集成、冻结矩阵及启动。现有 I13 不热改本轮包；采集继续复用原脚本，独立 GPT-5.6-Luna / low 监控恢复为每十分钟消费已保存摘要与告警。
+2026-10-01开始，2026-10-02更新。I14-0机制源码与基础反馈已完成，实际采用和收益待运行对账；后续问题改进移至I14-1。当前新增冻结与启动暂挂，设施干净基线方案正在重做，见下方当前树。既有采集与独立GPT-5.6-Luna / low十分钟监控继续消费已保存摘要与告警。
 
 ## 用户目标与授权
 
@@ -12,61 +12,53 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 
 ## 当前事实与下一步
 
-2026-10-02 10:48 CST，用户要求先停下来用树整理，主线暂停新的技能改造和额外启动；在途保全继续。用户明确说明 baseline 是其主动暂停，并授权将下一项改进集中在 braid-collaboration 与 ARC 需求方法，热修复到 I14 系列。当前独立分析报告实际对应官网 Flash/Sheet，arc-requirements 的现行技能名称是 arc-bench；不把它记作尚未取得正式结果的本地 GLM/Sheet。
+2026-10-02，本次整理覆盖用户最新三项修正：“‘强制 ARC’听起来像是过度处置”；“让 GLM-5.3 用 qwen AI”；“实验基础设施即将进行较大的重构和改进；我们整理一下情况”。据此，新增冻结、prepare、launch 和模型请求已暂挂，GLM 与 cleaner 执行者完成交接并结束活跃等待。原官网 Flash/GitHub 及唯一采集器继续；baseline 的用户暂停、旧 dispatcher 和源适配器的 SIGSTOP 保持。以下是当前事实，后续日期段落保留当时操作记录，不构成自动启动依据。
 
 ```text
 当前实验与改进
-├─ I13
-│  ├─ Flash/Sheet：正式74分，独立过程分析完成
-│  ├─ Flash/GitHub：官网7e8ec62670df已RUNNING；原native历史完整接续，新工具调用已观察
-│  ├─ GLM/GitHub：7906项完整选择性保全；源此前仅paused，实际stop仍待确认，接续未启动
-│  └─ GLM/Sheet：唯一输运1800秒超时；partial保留，不作为完整恢复快照，接续未启动
-├─ I14-0：四variant×两题；dispatcher暂挂，不新增实验矩阵
-│  ├─ baseline/GitHub：用户主动暂停，保持暂停
-│  ├─ cleaner/GitHub：旧source已物理停止，聚合修复读回通过，保全/热恢复继续
-│  ├─ reviewer/GitHub：此前running、Console修复已部署；WSL不可用后当前状态未确认
-│  ├─ e2e/GitHub及四项Sheet：五项仍待派发
-│  └─ 各组共有技能改进：首轮材料已提交；What/Why及cleaner职责入口再迭代，待最终冻结/热部署
-└─ 共同设施
-   ├─ Braid资源等待/快照内存与新增证据：共用源码已编译，旧运行不自动更新
-   ├─ ARC-only与模型DX：源码已完成，具体部署以各恢复/新冻结回执为准
-   ├─ prepared-workspace输运：共享reentry已提交，实际完整读回与唯一官网接续通过
-   └─ WSL/SSH/Docker/存储：homelab独立会话诊断，主线不重启daemon或WSL
+├─ I13：四个逻辑运行
+│  ├─ Flash/Sheet：正式74/100，通过74/失败26；独立过程分析完成
+│  ├─ Flash/GitHub：官网7e8ec62670df继续，12:30 CST原采集器读回RUNNING
+│  │  └─ 原native历史完整接续及新工具调用已直接观察；尚无最终评分
+│  └─ GLM/GitHub、GLM/Sheet：两源实际stopped，完整选择性保全已核验
+│     └─ 未完成生成或上传评分；本次未新冻结、prepare或恢复模型
+├─ I14-0：四variant×两题，仍为八个逻辑目标
+│  ├─ baseline/GitHub：用户暂停，当前物理容器paused
+│  ├─ reviewer/GitHub：当前物理容器paused；此前Console适配已部署
+│  ├─ cleaner/GitHub：旧源实际stopped；最终恢复包完成，未prepare/launch
+│  └─ e2e/GitHub及四项Sheet：五项未派发，dispatcher保持暂挂
+├─ I14材料与机制
+│  ├─ draft、cleaner、reviewer、e2e：源码及既有实际操作反馈完成，收益待实验
+│  ├─ 隐藏评论聚合：77个同理由隐藏根压为一行，实际投影读回通过
+│  │  └─ 新binary进入cleaner候选；该现场没有隐藏thread后代实例，未覆盖此实景
+│  ├─ 协作/需求技能：What/Why改写a31eb888完成；Hook暂缓
+│  └─ cleaner成员入口：b13f4290完成，已有快照起步、按具体信息缺口查询
+│     └─ 最终材料已进入cleaner候选；部署、通知送达、方法采用与收益尚未验证
+└─ 实验设施
+   ├─ 已有能力：共用Braid内存修复、实际资源采集、输运reentry、模型事实查询
+   ├─ 当前耦合：Harness/恢复固化ARC、停止回执schema不匹配、owner存活占槽
+   ├─ 宿主：WSL已恢复；development-2仅备用，未发生迁移或新生成
+   ├─ Console：唯一WSL/8765服务可访问；旧cleaner访问器停，未登记新physical run
+   └─ 新基线：独立controller/runner与hard-cutoff方案重做中，尚未实施
 ```
 
-用户指定的 homelab / GPT-5.6-Sol / medium 会话已创建并实际开始：[WSL 实验基础设施：恢复传输阻塞排查与修复](codex://threads/01a0fa82-8883-7cc0-942b-8cf8cb1a16c3)。它负责宿主设施，Factory26 lab/arc_bench/recovery.py 仍由 i14_arc_only_implementation 单独负责，官网恢复会话只读该共享文件。主线保留整体协调及启动门控。修复只针对有证据的原因，不由Docker CLI超时认定daemon全挂、OOM或磁盘损坏。
+I13正式结果、费用字段与来源归[实验记录](../iteration13/experiments.md)。两GLM当前恢复边界归[只读交接](../iteration13/i13-2/glm-final-recovery.md)，canonical全保全回执为 `runs/iteration13/i13-2-20261001/arc-hot-recovery-20261002/handoff-state.json`。GitHub 7906项、Sheet 10398项选定进度材料均已逐项核验，含应用/Git、Braid DB/WAL及native历史；这是有明确排除依据的完整选择性保全，不是全volume字节备份。此前Sheet超时的partial与原错误独立保留，不能替代后来成功归档。
 
-用户随后明确“好的，继续推进”，并授权尝试 sfp7 的 development-2，之后将“恢复 I13 flash/github”设为第一优先级。主线已实读新 endpoint `ssh://sfp7-ws.localhost`、daemon `e316f857-fe3d-4e7b-8236-9376f063fedc`：Linux x86_64、8CPU、约15.2GiB内存、可用约13.3GiB、磁盘剩余约174GiB、PSI接近零，只有现有Redis服务，没有Factory实验。旧operation的冻结endpoint不改；准备或迁移到新host须登记新操作身份，保全和停止门控仍保留。旧WSL当前不可用，下方此前的容器读回保留其观察时点，不冒充现在仍可控制。
+cleaner的[恢复packet](cleaner-hidden-context/packet.md)及 `runs/iteration14/cleaner-hidden-context-20261002/stopped-handoff.json` 记录最终ZIP `41d5ddb40887464ed5323f0ba26226e6f6c305c2d34bafe35dd8848a4d27d4ab`。它包含新版binary、两技能与两成员入口，并携带仅名称/路径/hash的一次换版通知计划；没有operation、offline prepare、通知发送或模型请求。保存的prepare脚本并未执行。原现场、helper、volume和旧候选均保留；不将候选组装成功记成部署。
 
-两项技能工作已并行交给 [I14：协作与 ARC 需求方法改进](codex://threads/01a0fa92-eb8e-7143-81fa-21eb002790f7)，GPT-6.1-Sol/medium。它独占 harness/skills/braid-collaboration/ 与 harness/skills/arc-bench/ 及[任务包](collaboration-requirements/packet.md)，已提交材料 ed9a97bb、部署接口复核 60ba2e01；主线负责新材料冻结和实际热恢复。该会话不操作run/Console，不修改Braid、shared recovery或packager，不阻塞Flash/GitHub。完成材料不等于现场已部署或产生改进效果。
+两技能独立会话 [I14：协作与 ARC 需求方法改进](codex://threads/01a0fa92-eb8e-7143-81fa-21eb002790f7) 已完成材料、职责方案与交接，详情归[方法packet](collaboration-requirements/packet.md)。技能保持独立文件，Pi发现入口保留名称、description和路径；四root prompt不重复description。换版通知不统一强制复读，实际职责决定取材。PR2/PR3开场确有对已投影字段的重复读取，但PR3评论29的交接正文未投影，有具体查询价值，因此成员入口改为从已有材料推进、围绕未知定向补充。SVC知识/packet、语义裁决与验收仍由负责人承担，例行description和讨论维护交cleaner。
 
-保留四个root prompt源码：Pi原生技能发现已提供名称、description和路径，根Issue不再重复description。恢复输入携带完整新技能目录，并向实际接续消费者传一次技能名称、实际文件路径与新主文件hash；加载范围由本次职责与判断决定，不因恢复就统一立即复读两技能。不内联正文、不要求全员ACK。部署读回、通知送达及相关决定中的实际采用分别取证。完整旧新hash和方法复核归独立任务包。
+供应商选择收回到实验配方。历史“全部切回ARC，包括GLM-5.3”和“I14继续ARC”解释现有冻结身份；最新Qwen指示作为GLM-5.3下一次配方修正，尚未改运行现场。四个I14 run.py及共享恢复入口当前确有ARC-only拒绝或覆盖，属于待收回的源码耦合，不是通用Harness的产品规则。其他模型路由、凭据来源和官网费用模式分别冻结，不能把模型渠道变化解释成启用比赛额度。DeepSeek不可成为Braid可指派成员、每run高价模型合计仅一个Braid session、技能不得内联仍是独立约束。下一次启动需冻结修正后的完整模型配方。
 
-development-2所需Runner已编译并交cleaner独立恢复owner：镜像 `sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681`，daemon身份仍为 `e316f857-fe3d-4e7b-8236-9376f063fedc`。冻结Runner来自I13已使用的control/runner，官方base固定为 `gyataro/arcbench-runner@sha256:40e003ed470dbd4c120b9019876ba77303d38dc8b34be7f6e313fe0563dd14de`；断网、501:20直接读取运行metadata为CPython3.12.3、glibc2.39、Linux/x86_64，退出0，无模型或原source重启。构建与读回原件归 `runs/iteration14/development2-runner-20261002/`。新image只能进入新操作冻结输入，不能改写旧endpoint或冒充旧image；同一宿主原Redis服务未修改。
+WSL本次独立读回仍为 daemon `0c1d4a2e-b921-49be-a075-1e30571f0995`、boot `0569f94d-32fc-4b45-8a89-ba4df70f94c3`，资源与镜像归 `runs/iteration14/wsl-capacity-return-20261002.json`。五槽registry实际保留三个alive owner reservation：baseline/reviewer容器paused、cleaner容器stopped但owner alive；未释放或接管。另一个已编译Runner的development-2候选只作保留资产，不能修改旧operation endpoint或并行重复准备。Console唯一WSL服务 `8cc80cad-d873-49ed-ab49-e958ba8852a3` / port8765，最新GET /api/runs为HTTP200；旧cleaner accessor停止导致具体runtime读取400，新physical run不存在。当前Console Docker接线只支持unix endpoint，不能宣称已支持development-2的SSH context。
 
-cleaner已保存 `cleaner-hidden-context-20261002/skills-refresh-recovery-plan.json`，明确Issue1/root glm-1与仍实施PR3的glm-3是实际消费者，不唤醒完成的glm-2。共享owner已完成显式恢复通知输入：prepare-only只核对/冻结计划，runtime在材料刷新与ARC保护之后、首次launch前，通过现有normal comment发送一次并留回执；计划request_id绑定此次恢复输入，不是CLI幂等参数。不临时修改DB或native历史。旧3ce599fb保留其材料刷新/ARC身份，新接口需最终通知计划/hash/ZIP后方可实际prepare/恢复。
-
-用户随后补充cleaner目标：“让 work-item agent 不必 'Let me start by reading the braid-collaboration skill and viewing the PR.'”。两成员instructions首段确实无条件要求开始/接续时读取该技能；具体原生句与PR投影内容仍由方法会话定向核对。改进要区分例行对象整理与实施、交接、需求裁决和验收的判断责任；同时确认初始PR快照覆盖了什么，不能仅把必要查询一律关闭。方法会话还收到用户直接授权：Skill主体应围绕足以区分选择的What/Why，暂缓Hook，同意其下一步。这些新决定纳入同一材料线，首轮ed9a97bb/60ba2e01保留历史身份；当前候选冻结和强制重读两主文件的通知不当最终部署，cleaner首次launch待职责方案与最终新材料收敛。
-
-定向原生核对与独立advisor的方案已收敛，主线据用户这项明确目标及既有I14实现授权修改cleaner两份成员instructions首段：以已有工作项快照/需求/任务材料为起点，补充查询服务于影响判断的具体缺口、折叠、新变化或冲突，协作方法按实际问题取得。PR2/PR3开场确实重复查询了投影已有字段，但PR3评论29的交接正文当时未在投影中，读取它有具体价值；不将所有查询归为浪费。例行description/讨论维护仍交cleaner，SVC知识与packet、原承诺/交接采用/验收判断仍归有能力的负责人。MAIN_SKILLS发现、Braid core和cleaner无工具一轮机制保持；未内联技能正文。部署及运行采用待最终包/真实接续取证，完整依据归方法任务包。
-
-用户最新报告WSL已恢复。GLM唯一owner获授权按冻结endpoint及实际container身份重新核对两源、完成实际stop与保全门控；旧dispatcher和baseline暂停保持，完整Sheet快照以前不恢复生成。cleaner已具备独立development-2操作输入，不因WSL恢复修改旧spec或并行换宿主；唯一Console重新核对可访问性，不新建实例。
-
-恢复通知接口首轮已ready，packager `7ea9f02f…`、main `a12ae58d…`，仅增加显式 `--material-notice-plan`，lab unchanged。CLI的comment实际没有request-id；计划request_id只是本次冻结输入身份，不是CLI原生幂等键。发送前保存pending，成功或重入以正常comment id、目标、external作者、bodySHA及实际delivery唯一核对；pending后零/多条或结果不明不重发并阻断launch。prepare-only不发送通知，不写DB/native。接口及旧候选保留供最终材料接续，尚未实际prepare/launch，不据源码就绪宣称通知或材料采用已经发生。
-
-技能改进的判断依据是分析报告已经区分的义务交接、原文与新增约定冲突、真实跨层调用及合并证据充分性；不是单纯增加读取次数、篇幅或模板。改进保持通用Harness边界，ARC特定方法仍归独立技能与根Issue入口。热修复须记录各run的旧/新技能身份与实际采用时点，避免把混合版本的过程视为从启动起统一使用新方法；不将隐藏评分或具体失分答案送入仍生成的Agent。
-
-新PR创建默认draft已完成并提交e7d88e7，保留--draft兼容，继续用pr ready/--undo；不改旧PR、迁移或request-id重试状态。主线独立读取前后SQLite、具体merge错误、实际Git效果和编译原件；原生session数量为零，准备阶段真实blocked不当成功运行。[draft记录](draft.md)保存命令、错误和覆盖边界。
-
-review接缝已查明：ready不是请求验收，PR单负责人改派会停止实施者；需要独立的review请求与执行责任。cleaner的原生继承能力已核对Pi0.85.1实际源码，不能直接用会切换主runtime的fork/clone。advisor已独立建议按需维护操作、结束后一次提交、固定候选review和三个独立variant方向。产品边界、提交竞争与实验判据归[机制方案](mechanisms.md)；I13承接与语言依据归[证据对账](evidence.md)。原始观察归runs/iteration14；确定的Braid产品契约回归其PRD/TDD，Factory实验安排回归对应variant/配方。
-
-cleaner/reviewer实施准备已经完成，详见 cleaner-preparation.md、reviewer-preparation.md。开源e2e实际发布及MCP接缝已核对，见 tester-e2e.md。按最新开工授权完成代码、真实操作反馈和I14-0实验；I13正式成果继续由原采集脚本收集，之后逐项移交I14-1。
-
-I13目标与当前过程验收分别归 tasks/iteration13/packet.md、tasks/iteration13/i13-2/process-acceptance.md；正式身份与进展归 tasks/iteration13/experiments.md。当前本地GLM两项为a94a67b4b3d85b/8046cfb0695023，官网Flash/Sheet为f16834f58674，官网Flash/GitHub为7e8ec62670df，旧e1aa595f6995已取消保全。创建完成、过程采用、最终评分分别保留证据，未触发机制不自动标为失败。
+本次没有重启daemon/WSL、解除baseline暂停、cleanup源、创建第二Console或collector。下一步先完成设施新基线的方案/实施范围复核，再以原件和明确配方接续，不能让已结束的恢复worker继续无任务等待。新Flash/GitHub的OTLP flush HTTP503仍作为辅助采集缺陷保留，生成继续且本地原件存在；根因未知，不据此认定生成终态或OOM。
 
 ## 独立实验设施会话
 
-用户明确要求“安排另一个独立的会话去改进实验基础设施”，范围为热恢复、本地/官网启动与持续监控，也允许改造必要的Braid/Factory接口。已创建并确认[Factory26 实验启动、热恢复与监控自动化](codex://threads/01a0f82f-23db-74d3-85b4-901b3b23fff0)正在开展调查。它拥有设施自动化线，当前会话拥有I14机制/variant线；创建prompt已给出I13真实journal/回执、费用模式与在途源码边界。不再把重复手拼启动/恢复流程混进I14机制方案，不建立第二Console或并行采集。具体方案与后续实施由该会话独立向用户复核。
+原 [Factory26 实验启动、热恢复与监控自动化](codex://threads/01a0f82f-23db-74d3-85b4-901b3b23fff0) 已完成并提交897f307，提供已有operation/admission/采集等能力；其上一轮实现已结束，不是当前大重构的活跃执行者。当前大重构的方案owner为 [实验 DX：模型路由与运行配置可见性](codex://threads/01a0fa4f-471a-7963-a4e5-bc4a6071113e)，权威任务为 [设施DX复核](../experiment-dx-review/packet.md)。用户在该会话明确支持hard-cutoff、干净基线、长期正确优先；owner正在重做完整controller/独立runner方案，旧P0兼容准备已撤回，新的具体实施范围尚未开工。
+
+主线已将最新Qwen/ARC边界、两源完整保全、停止回执schema不匹配、三个保留reservation、cleaner未启动候选及唯一采集/Console事实交给该owner，不另建竞争的重构线。新基线需要区分controller意图与runner执行效果、检查点语义与输运、原件身份与portable引用、独立执行/采集生命周期，并覆盖新旧切换与活动旧run交接。已有功能不冒充新基线完成；本次整理不自动授权停止或迁移活动官网run。
 
 ## tester.army/e2e 工具对照
 
@@ -75,9 +67,9 @@ I13目标与当前过程验收分别归 tasks/iteration13/packet.md、tasks/iter
 该项与cleaner、专门reviewer分开作为工具因素。建议同共同基线配对，只改变优先浏览器/E2E能力，cleaner关闭、review仍由Issue现有负责人执行，保留agent-browser后记录实际使用哪条工具路径。已有Playwright确定性验收与官方benchmark仍保留；不因引入工具就删除原验收判据。是否另设专门reviewer搭配e2e的组合，等独立效果成立后决定。
 
 
-## I14-0 开工与实验冻结
+## I14-0 开工与实验冻结（历史阶段记录）
 
-用户最新原话：“本地（WSL）运行现在应该有两个槽位，我们扩充到5个，并且将内存缩小到 2GiB 来贴近官网runner的配置；I14-0 实验不必等待I13的运行完成和问题改进了，这些留到 I14-1；I14 不使用 ARC API，而是我们自有的 bigmodel, kimi, ds, qwen。我已经相当于授权你开工，你可以实现、基础验收、启动实验。”用户同时恢复“gpt-5.6-luna low 继续监控（每10分钟）各运行”，要求复用脚本能力。该指示是本轮源码、基础真实反馈和具体实验的开工依据。
+当时用户原话：“本地（WSL）运行现在应该有两个槽位，我们扩充到5个，并且将内存缩小到 2GiB 来贴近官网runner的配置；I14-0 实验不必等待I13的运行完成和问题改进了，这些留到 I14-1；I14 不使用 ARC API，而是我们自有的 bigmodel, kimi, ds, qwen。我已经相当于授权你开工，你可以实现、基础验收、启动实验。”用户同时恢复“gpt-5.6-luna low 继续监控（每10分钟）各运行”，要求复用脚本能力。该指示是本轮源码、基础真实反馈和具体实验的开工依据。
 
 本轮 experiment_key 为 e20261002-01、batch 为 i14-0。四个独立variant为 pi-braid-i14、pi-braid-i14-cleaner、pi-braid-i14-reviewer、pi-braid-i14-e2e，各自从干净起点运行 GitHub 与 Sheet 一次，共八项。允许需求沿用 I13 已冻结的官方题目需求包，不读取外部测试或旧应用。共同模型配方按最新修正使用自有ARC额度：根与普通Braid成员GLM-5.3-Flash / high，原生advisor Kimi K3，内部DeepSeek Flash可用于sub-agent，不能成为Braid可指派成员。备用GLM-5.3根profile带root-only，任何run的高价模型Braid session总量只允许一个，保留现有预算保护。视觉模型GLM-5.3-Flash。各组仅机制/工具因素不同，不增加根模型因素或重复次数。
 
@@ -98,7 +90,7 @@ I13目标与当前过程验收分别归 tasks/iteration13/packet.md、tasks/iter
 
 已采用 [有限实验dispatcher](../../experiments/i14-0/README.md)，复用独立设施会话的operation prepare/run、shared admission、采集和自动应用重放。每目标稳定一个operation目录；逐项选择root、保存selection、冻结私有MODELenv及recipe，再等实际admission事实才放出下一项。snapshot不能预约槽，真正五槽限制由admit实现。模型承诺点是该项派发冻结，未来未派发目标可采用新结果；冻结到实际准入存在短暂窗口，不能宣称所有尚未实际执行项都可原地切换。发生失联或明确失败时安全停止队列并保留原operation，身份核查后恢复同一记录，不新增尝试。唯一active-matrix是聚合引用，各operation保留自己的采集目录，Luna每十分钟消费已有证据。
 
-## 2026-10-02 ARC-only 与共用 Braid 修复
+## 2026-10-02 ARC-only 与共用 Braid 修复（历史实施记录）
 
 用户要求后续 I14 不在任何地方使用自有模型 API；Context7/Exa 工具凭据不属于模型供应商切换。本次 canonical 四入口、子 Agent 原生 modelScope、e2e 和 dispatcher 已拒绝非 ARC endpoint/分离 key，并移除继承的供应商认证。实际四次 prepare-only 完成，九模板均 ARC，同一 FACTORY26_API_KEY；四个非 ARC URL 在创建输出目录前被拒绝。详细边界和证据归 [arc-only.md](arc-only.md)。运行/排队的旧冻结制品没有现场修改，不能声称已经部署新保护。
 

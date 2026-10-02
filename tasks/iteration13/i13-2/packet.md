@@ -1,6 +1,16 @@
 # I13-2：内存压力、协作材料与过程验收
 
-2026-10-01。首次真实部署暴露的资源暂缓终态误判和历史成员材料选择错误均已修复。新的本地 experiment `exp-20261001-223204-4b68eb` 已启动两项，首批原件确认两项原Pi实际resume，Sheet在同一attempt中等待资源后继续，九份已采集原生历史prefix保持；官网Sheet通过真实prepare-only及文件/身份核对后，已创建 `f16834f58674`，self_funded、比赛额度关闭。用户随后追加授权恢复官网Flash/GitHub，现已按同一I13-2配方从保全终态创建 `e1aa595f6995`，self_funded、比赛额度关闭；首批为平台部署阶段，尚未取得新Pi接续证据。原暂停现场、首次失败卷与取消后原件完整保留；同一Console已切换新服务，旧两项归档与新两项live分开登记，实际HTTP/UI读取通过，详见[部署回执](console-deployment.md)。监控已由纯脚本接管，不唤醒审查模型。当前证据与修复归本packet，I13整体实验关系归[实验树](../experiments.md)。
+2026-10-01开始，2026-10-02更新。I13-2处理内存压力、协作材料归属和过程验收。当前Flash/Sheet已完成评分、Flash/GitHub继续官网接续，两本地GLM已停止并完整选择性保全；新增恢复暂挂。当前范围见下节，历史部署/监控调整按日期保留；整体实验关系归[实验树](../experiments.md)。
+
+## 当前接续边界（2026-10-02 本次整理）
+
+用户最新要求先整理实验设施重构，并指出“强制ARC”范围过大、GLM-5.3应走Qwen。新增冻结、prepare、launch及模型请求暂挂；已有Flash/GitHub和采集继续，用户的baseline暂停保持。共享恢复worker及新的GLM只读worker都已结束本阶段等待，旧启动授权不自动接续。本次只整理任务状态，没有改活动供应商、cleanup源或新增收费尝试。
+
+Flash/Sheet已完成正式74分和独立过程分析；Flash/GitHub `7e8ec62670df` 在原collector 12:30 CST批次为RUNNING，原native续接与新工具调用已直接核对，评分未开始。保留现有自有ARC key / self_funded / 比赛额度关闭身份，不为本次方案修改活动run。
+
+WSL恢复后，GLM/GitHub `a94a67b4b3d85b` 和GLM/Sheet `8046cfb0695023` 两源已实际stopped。GitHub7906项、Sheet10398项选择性完整材料核验完成；原volume/helper/source、曾超时partial和具体错误保留。source-agent.zip与可恢复workspace ZIP分别记录，不能混称。canonical为 `runs/iteration13/i13-2-20261001/arc-hot-recovery-20261002/handoff-state.json`，只读新增核对归[GLM交接](glm-final-recovery.md)。后者发现停止回执schema与packager不兼容、三个alive owner reservation仍占槽；没有修改原件、释放准入或创建新的派生恢复输入。
+
+此前全部ARC的明示授权是历史冻结依据；最新Qwen指示是GLM-5.3下一配方修正。I14四入口和共享恢复固化ARC-only的实际代码耦合归[设施重构](../../experiment-dx-review/packet.md)方案owner收回，供应商、凭据来源与官网费用模式分别配置。尚未实施这项源码修正或完整新配方，不能把旧ARC制品标为已走Qwen。后文操作日期段落保留历史事实，完整当前树归[实验记录](../experiments.md)。
 
 ## 授权与目标
 
@@ -170,4 +180,4 @@ Flash/GitHub第一优先级闭环已取得官网新身份：共享reentry修复�
 
 新内存明细已有8份；最新cgroup current=1943109632、peak/limit=2147483648，file=1288318976、anon=522674176，events max=223、oom=0、oom_kill=0，PSI avg10=0。这只说明此观察时点尚无OOM，不证明所有历史根因或长期资源问题已消除。Braid capture耗时1840ms、RSS从272864降至255584kB；其error字段原文为“evidence flush: 1 records, 6 ms”。主线随后只读033109批次ZIP中的telemetry-errors.jsonl，取得完整错误链：“evidence flush: 1 records, 8 ms: Operation failed: errs: [Err(InternalFailure(\"HTTP export failed with status code: 503\"))]”，该次capture耗时1885ms。共用源码确认错误发生在OTLP force_flush，不能将外层短字符串误读为采集成功，也不据503认定生成失败或OOM。原ZIP、资源明细与诊断保留；尚未确认503端点根因，后续继续由同一采集器记录。
 
-本地GLM保全的最新边界：GitHub 7906项选择性完整进度已保全；可恢复workspace ZIP为111263241 bytes，源source-agent.zip另约796MiB，不能混称同一原件。Sheet唯一Docker exec压缩输运1800秒后exit1，partial为73758720 bytes、SHA256 `537a4969753448cf437c8023eb988ce011d157ab2af337475b409a9bb0795a04`，无完整workspace ZIP或receipt，不能作为恢复来源。具体原始TimeoutExpired、stderr和精确本地输运进程退出/孤儿回收记录在 `arc-hot-recovery-20261002/sheet-transport-failure.json`；未重发远端请求，原source/volume/helper保留。两源此前仅确认paused，当前WSL不可用，实际stop门槛尚未满足；不启动新GLM模型或解除dispatcher暂停。
+本地GLM保全最终边界已由本次完整交接替代早期paused/partial状态：两源实际stopped（Exit137、OOMKilledfalse），原StartedAt及container身份保持。GitHub7906项与Sheet10398项选择性进度材料全部核验，包含Git/DB/native；原源、helper、volume未清理。Sheet先前1800秒超时和73758720 bytes partial（SHA256 `537a4969753448cf437c8023eb988ce011d157ab2af337475b409a9bb0795a04`）仍保留为失败原件，后来成功归档不覆盖它。最终完整性与停止原件归 `arc-hot-recovery-20261002/handoff-state.json` 及两题source-stop/snapshot回执。新恢复目前按本次整理暂挂，未prepare或launch；旧dispatcher/SIGSTOP适配器不解除。
