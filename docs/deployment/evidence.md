@@ -65,6 +65,8 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 
 使用 `start_local_telemetry` 的新冻结团队包，其本地 OTLP collector 同时每两秒将容器可见的 cgroup/proc 事实保存到生成 run 的 `process-evidence/`。`resources-baseline.jsonl` 保留 namespace、mount/cgroup 原件和启动基线；`resources.jsonl` 与 `resources.previous.jsonl` 保存资源限制和后续计数、PID/starttime/PGID/RSS，不可读字段保存具体 errno。`operations.jsonl` 保存共享支持模块自身的信号请求、API 返回和 wait；Braid 的 `braid.log` 保存 Pi 原有的 wait、shutdown 及 Child owner 释放事实。这些文件进入原有归档对象，辅助采集失败不改变生成结果。历史冻结包与工作区没有这些材料时，不能补推历史资源事实。
 
+新版 collector 优先记录存活进程，避免大量 zombie 用尽详细进程名额。它另外汇总全部可见进程各 scope 的存活/死亡数和 RSS，并在原有循环内每十秒读取最大十二个存活内存使用者的 `smaps_rollup`、I/O 和文件描述符类别计数，保留读取后 birth identity 核对。`status` 同时记录 RssAnon、RssFile、RssShmem、VmSwap。RSS 汇总可能重复计算共享页，不能当作 cgroup charge；PSS 和匿名/文件/共享内存细分用于进一步归因。读取失败或 PID 已消失保持具体错误，不推断内存为零；不读取 argv、环境变量或文件内容，也没有新增权限要求和内核追踪能力。
+
 资源数据由两个各 31 MiB 的段轮转，基线另有 2 MiB 上限，持续保留末端样本。轮转记录明确保存上一段及被丢弃旧段的字节数；`resource-status.json` 保存最后采样状态、当前/上一段开始时点及轮转次数。基线和低频操作 JSONL 分别限制为 2 MiB、8 MiB，达到上限写同名 `.capped.json` marker。单个样本最多记录 256 个进程，优先 collector 父进程的后代树并按层级保留上层进程，其次为 run 内 cwd、当前 cgroup、其它可见进程；各范围计数和遗漏数均保留。这些采样范围不等同工作项归属。首先核对基线、cgroup inode/路径、可见 namespace、读取错误、遗漏数及轮转覆盖，再解释计数变化。`memory.events` 与 `.local` 的范围不同；`oom_kill` 增量证明对应范围内发生 OOM 杀进程，不能单独证明哪一个 Pi 是 victim，`memory.max=max` 也不证明被 namespace 隐藏的祖先没有限制。
 
 成功信号 API 返回只记录请求结果，死亡原因另看 wait。Pi Child owner 释放记录不证明 Tokio 实际发送信号。容器内没有平台宿主信号审计，不能确定外部 sender；collector 若同遭 SIGKILL，最后样本也不是终止原因。官网能下载的仍是平台保留的 workspace/template，宿主 kernel、Docker 和祖先 cgroup 的因果证据需要平台提供。当前实施与实际覆盖见 [进程终止证据 packet](../../tasks/experiment-signal-diagnostics/packet.md)。
@@ -160,3 +162,21 @@ trace 返回关联调用的标准化上下文；只有需要精确原文或原�
 首版只将有效 v1 `archive.json` 精确声明的 `work` 列为候选，核对 archive ID、持久对象身份、原文保存状态及恢复/保护引用。I12/I13 活跃或未确认状态受保护；缺件、摘要变化、旧回执缺少原文保存确认、扫描错误和恢复承诺都会阻塞。报告区分 `candidate`、`blocked` 和 `already_absent`，所有条目的 `reclaim_authorized` 都是 false。稳定资产的 `unreferenced_in_scope` 仅表示扫描范围内未见消费者，不构成删除权限。当前没有 GC apply；历史迁移、I12 现场处置和 WSL/VHDX 停机须另行授权。
 
 Console registry（如历史 I12 的 `console-runs.json`）尚未接入引用扫描。它可以引用 run 内 host binary、shared submission、state/native 原路径及长期访问容器的 mounts；停止 server 不会移除访问容器，也不解除这些依赖。扫描 `complete` 只覆盖支持的记录格式，操作前须按实际 registry 和容器事实对这些路径添加 `--protect`。Console 生命周期整理归独立设施任务，本入口不迁移其原文读取或 I12 现场。
+
+## 实验模型、连接与配置漂移
+
+直接查询同一 operation 或已有 active-matrix，不必委派 Agent audit。默认输出可读表格；`--json` 返回供 Console/monitor 消费的完整投影。
+
+```sh
+python3 -B -m lab.arc_bench operation models /absolute/operation
+python3 -B -m lab.arc_bench operation models /absolute/active-matrix.json --live
+python3 -B -m lab.arc_bench operation models /absolute/lab-run --live --json
+```
+
+默认只读已保存的 `monitor/<batch>/<run>/model-facts.json` 或已回收工作区，`operation status` 同时包含 `model_facts`。`--live` 复用 local_monitor 的容器身份校验，做一次 Docker inspect/exec 只读查询，不创建采集循环、启动模型或读取原生 rollout 正文。它仅读取模型配置、连接回执、timing 的公开字段及活动进程连接变量；整个 env、模型 apiKey 和提示词都不越过采集边界。URL 不输出 userinfo、query、fragment 或非标准路径。
+
+`desired` 取明确的 selection 回执；`frozen` 沿 manifest/run 的实际 input 绑定读取 ZIP 与 model_env，并显示实际/期望 SHA256。env 未绑定为 input 时不把当前私有文件冒充冻结输入。`actual` 的 `runtime_selected` 来自 Braid 当前 request、Pi template 与已物化 native home；`process_environment` 来自与本次 timing 路径匹配的活动进程。恢复回执与实现哈希独立列入来源，当前仓库 HEAD 不作为运行版本。`observed_usage` 只投影 timing 已记录的 provider/model/session，未使用的配置仍只是可选材料；服务端底层模型不能由客户端记录独立证明。e2e 配置以静态 model/baseURL 投影，未运行时不会制造调用事实。
+
+provider 别名 `factory26` 不证明供应商；公开 endpoint 为 ARC 时只证明客户端连接 ARC。认证变量存在只证明认证输入已配置，不证明账单是自费或比赛额度。Competition journal 的明确 credential_mode 与独立评分 replay_policy 分开显示；没有生成费用回执时保持 unknown。`drift` 比较已有的模型、endpoint 和冻结输入字节，发现差异列出具体来源；缺材料则 unknown，`no_observed_drift` 仅表示已覆盖字段未见差异。
+
+新冻结采集器在原采样周期保存上述投影，不增加轮询。已经启动的冻结 collector-source 不自动升级，旧运行可用 `--live` 查询；没有模型事实归档的终态运行只能报告现存材料及缺口。当前实现与实际读回边界见[模型事实任务](../../tasks/experiment-model-facts/packet.md)。

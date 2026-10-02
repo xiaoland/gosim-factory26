@@ -604,6 +604,8 @@ def status(directory):
             result['observers'].append({'directory': str(path), 'accepted': read_json(monitor / 'accepted.json'),
                                        'completion': read_json(monitor / 'completion.json') if (monitor / 'completion.json').exists() else None})
     result['follower'] = read_json(directory / 'follower-accepted.json') if (directory / 'follower-accepted.json').exists() else None
+    from .model_facts import operation_snapshot
+    result['model_facts'] = operation_snapshot(directory)
     return redact(result)
 
 
@@ -615,8 +617,15 @@ def main(argv=None):
     prepared.add_argument('--directory', type=Path, required=True)
     for name in ('run', 'status', '_work'):
         commands.add_parser(name).add_argument('directory', type=Path)
+    facts = commands.add_parser('models', help='只读模型事实：声明、冻结、实际配置与漂移')
+    facts.add_argument('directory', type=Path, help='operation目录或active-matrix.json')
+    facts.add_argument('--json', action='store_true', help='输出完整JSON供Console/monitor消费')
+    facts.add_argument('--live', action='store_true', help='复用既有采集器单次只读Docker查询，不调用模型')
     args = parser.parse_args(argv)
-    if args.action == 'prepare':
+    if args.action == 'models':
+        from .model_facts import query
+        value = query(args.directory, live=args.live)
+    elif args.action == 'prepare':
         value = prepare(args.spec, args.directory)
     elif args.action == 'run':
         value = run(args.directory)
@@ -624,5 +633,9 @@ def main(argv=None):
         value = work(args.directory)
     else:
         value = status(args.directory)
-    print(json.dumps(value, ensure_ascii=False))
+    if args.action == 'models' and not args.json:
+        from .model_facts import render
+        print(render(value))
+    else:
+        print(json.dumps(value, ensure_ascii=False))
     return 0
