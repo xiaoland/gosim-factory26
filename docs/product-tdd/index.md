@@ -12,7 +12,7 @@
 
 `lab.exp.projection` 从保存的公开生产者事实构建统一实验视图，status 与 monitor 共用目标、阶段、输入依赖、当前 attempt、历史关系、产物覆盖、阻塞及操作建议。比较目标通过配方的 case/variant 显式声明；已经分配的评价不因后来生成重试而改绑。投影保留生产者身份、证据时点和原错，不保存另一份可手改的成功状态或启动采集器。Controller 提供操作建议，实际执行仍核对原冻结执行器及当前物理门控；旧停止证据、完整归档和入口成功不能互相替代。操作方法与覆盖限制见 [Lab 入口](../../lab/README.md)。
 
-执行终态、归档、遥测封口、传输和评分分别成立。Docker named output 封口并取得保留后，同域消费者直接装配，跨域或平台消费才取得独立输运；完整归档由原 owner 独立收尾；设施失败保留原错及未完成阶段，不解释为有效零分。费用模式、模型、供应商与凭据来源冻结在配方，运行凭据通过私有部署引用提供。通用层不读 Braid 私有 SQL，Harness 的公开 checkpoint producer 持有恢复语义核验。
+执行终态、归档、遥测封口、传输和评分分别成立。Docker named output 封口并取得保留后，同域消费者直接装配，跨域或平台消费才取得独立输运；完整归档由原 owner 独立收尾。已封口的归档 staging 通过保存 handover 身份并同盘 rename 交给 artifact store，省去再复制一份归档；发布失败从原请求和已转移 payload 接续，不丢弃原运行现场。输运 scratch 只有在最终消费路径完成内容核对、耐久保存并取得回执后才可释放；未确认半成品与历史归档保留。设施失败保留原错及未完成阶段，不解释为有效零分。费用模式、模型、供应商与凭据来源冻结在配方，运行凭据通过私有部署引用提供。通用层不读 Braid 私有 SQL，Harness 的公开 checkpoint producer 持有恢复语义核验。
 
 Prepared 内容与来源停止证明分别发布；启动核对同一执行 instance 的当前物理停止观察和实际目标 OS、架构、runtime、logical root。当前 producer 只支持保持这些原生路径约束的装配，跨 OS/根路径迁移没有隐式文本替换。Docker 准入权威属于实际 daemon，共同卷冻结实现和容量；旧 dispatcher、预留和在途启动未明确交接时禁止新域接管。Console 工作项操作继续使用 Braid 公共 CLI，物理控制使用该 experiment 的冻结执行协议；尚无公开静止协调能力时拒绝 Console 暂停。
 
@@ -53,6 +53,8 @@ Docker 是容器执行边界，Mac 控制器和 run 记录仍持有源码及实�
 新实验使用 `factory26.exp.experiment` schema 2，环境配置使用 `factory26.exp.environment` schema 1；实验定义、编译、执行、预算与资源门禁、资产发布、归档和输运的当前合同及命令以 [Lab 入口](../../lab/README.md) 为准，本说明只保留跨组件约束，不复制字段表。Controller、独立 runner 和托管 adapter 分别持有编排、单次 attempt 执行与平台身份；保存的事实按入口结果、执行、归档、输运和平台反馈分别判断，不能互相替代。旧 schema v3 的异步占块、80% 软阈值和 `asset.json` 合同保留为历史解释，不能据其推导新执行的保障。
 [arc_matrix.py](../../lab/arc_bench/arc_matrix.py)选择实验组合；[arc_bench_adapter.py](../../lab/arc_bench/arc_bench_adapter.py)调用官方 Runner；[ARC 结果解释](../../lab/arc_bench/results.py)与[原生过程证据](../../lab/analysis/native_evidence.py)只用于可选分析。
 替换 Harness 不应要求实验控制器识别另一种私有会话格式。
+
+四个新 I14 Harness 将冻结定义、运行派生输入和可写状态分开。Variant 声明语义边界，公共材料生产者冻结资产，Lab 保留并装配真实引用；checkpoint/prepared v3 保存状态及定义关系，不重复携带 runtime。Docker 只读挂载定义；Local 沿既有 verified-read 合同，不宣称内核权限隔离。SDK 仍需要自包含交付，适配器保留其原导出树及 inventory；终态捕获只在实际容器路径映射和完整内容身份均核实后省略定义副本，保存组合证明及独立依赖保留。缺口保留原树，不按目录名称猜测。终态组合 archive 与完整可恢复 checkpoint 是不同能力。
 
 ARC 官网运行追溯由独立分发的官方 SDK 命令入口写入 Runner 的 `.arc` 文件。跨 Harness 的稳定接口是版本化 CLI 及其 JSON 结果，SDK 内部 Python 模块不作为消费者接口。Harness 选择是否把该入口交给 Agent，并负责所上报关系的真实性；ARC 适配层保存本地文件和官网 API 响应、提供查询。通用 lab 只连接运行与制品，不从 OTLP 或代码推断官方关系。材料存在、实际调用、采集成功和官方评测结果在查询中保持不同证据来源。
 

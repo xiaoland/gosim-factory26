@@ -224,6 +224,12 @@ class Workspace:
 
     def save(self):
         write_json(self.path, self.value)
+        for path in (self.path, self.path.parent):
+            descriptor = os.open(path, os.O_RDONLY)
+            try:
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
 
     def helper(self, *, allow_stopped=False):
         if volume_owned(self.value) is None:
@@ -273,6 +279,10 @@ class Workspace:
         entry = self.value['stages'][stage]
         resource = read_json(Path(entry['resource']))
         try:
+            if entry.get('recovery') == 'verified':
+                self.confirm_local(entry)
+                self.release_archive(entry)
+                return {'status': 'verified', 'stage': stage, 'sha256': entry['output_sha256']}
             value = container_owned(resource)
             if value is None and resource.get('state') != 'not-started':
                 raise ValueError('execution object absent; output capture identity unconfirmed')
@@ -314,6 +324,7 @@ class Workspace:
                 scratch = Path(temporary)
                 archive = Path(entry['resource']).with_suffix(f'.output-{time.time_ns()}.tar')
                 entry['archive'] = str(archive)
+                entry['archive_role'] = 'transport-scratch'
                 self.save()
                 with archive.open('xb') as stream:
                     archive.chmod(0o600)
@@ -335,9 +346,27 @@ class Workspace:
                     previous.replace(local)
                     raise
             writer(capture_resource, capture_physical, 'capture-end', capture_id + '-end')
+            # The installed workspace, not the transport tar, becomes the durable preserved output.
+            for directory, _, files in os.walk(local, topdown=False, followlinks=False):
+                for name in files:
+                    path = Path(directory) / name
+                    if path.is_file() and not path.is_symlink():
+                        with path.open('rb') as stream:
+                            os.fsync(stream.fileno())
+                descriptor = os.open(directory, os.O_RDONLY)
+                try:
+                    os.fsync(descriptor)
+                finally:
+                    os.close(descriptor)
+            descriptor = os.open(local.parent, os.O_RDONLY)
+            try:
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
             entry.update(recovery='verified', output_sha256=expected['sha256'])
             self.value['recovery'] = 'verified' if all(item['recovery'] == 'verified' for item in self.value['stages'].values()) else 'pending'
             self.save()
+            self.release_archive(entry)
             return {'status': 'verified', 'stage': stage, 'sha256': expected['sha256']}
         except BaseException as error:
             entry.setdefault('first_error', error_text(error))
@@ -346,6 +375,26 @@ class Workspace:
             self.value.update(recovery='failed', state='retained')
             self.save()
             raise
+
+    def release_archive(self, entry):
+        """Release only this producer's confirmed scratch; historical archives stay untouched."""
+        if entry.get('archive_role') != 'transport-scratch' or entry.get('archive_released_at'):
+            return
+        self.confirm_local(entry)
+        archive = Path(entry['archive'])
+        try:
+            archive.unlink(missing_ok=True)
+            descriptor = os.open(archive.parent, os.O_RDONLY)
+            try:
+                os.fsync(descriptor)
+            finally:
+                os.close(descriptor)
+            entry['archive_released_at'] = time.time()
+            entry.pop('archive_release_error', None)
+        except OSError as error:
+            # Failed scratch release does not revoke an already durable output recovery.
+            entry['archive_release_error'] = error_text(error)
+        self.save()
 
     def confirm_local(self, entry):
         expected = read_json(Path(entry['resource']).with_suffix('.output-manifest.json'))

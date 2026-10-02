@@ -1,0 +1,26 @@
+{
+  "source_files_compiled": [
+    "lab/arc_bench/arc_bench_adapter.py",
+    "lab/arc_bench/docker_workspace.py",
+    "lab/exp/artifacts.py",
+    "lab/exp/backends.py",
+    "lab/exp/controller.py",
+    "lab/exp/environment.py",
+    "lab/exp/runner.py",
+    "scripts/braid_runtime.py",
+    "scripts/package_agent.py",
+    "submission/exp_checkpoint.py",
+    "submission/recover_completed.py",
+    "variants/pi-braid-i14-cleaner/main.py",
+    "variants/pi-braid-i14-cleaner/run.py",
+    "variants/pi-braid-i14-e2e/main.py",
+    "variants/pi-braid-i14-e2e/run.py",
+    "variants/pi-braid-i14-reviewer/main.py",
+    "variants/pi-braid-i14-reviewer/run.py",
+    "variants/pi-braid-i14/main.py",
+    "variants/pi-braid-i14/run.py",
+    "scripts/harness_layout.py"
+  ],
+  "embedded_entries_compiled": 2,
+  "method": "in-memory compilation only; no tests or runtime execution"
+}

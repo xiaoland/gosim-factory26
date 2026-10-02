@@ -789,8 +789,15 @@ def execute_prepared(args):
     if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != binding['manifest_sha256']:
         raise ValueError('prepared manifest与装配绑定不一致')
     import exp_checkpoint
-    validation = exp_checkpoint.validate(manifest_path.parent)
     manifest = json.loads(manifest_path.read_text())
+    # Runner already resolved/retained v3 assets and verified the assembly. The standalone
+    # delivered module must not import an implicit controller-side lab package.
+    if manifest.get('schema_version') == 3:
+        validation = {'status': manifest['status']}
+        if not assembly.get('definitions'):
+            raise ValueError('v3 prepared执行缺少runner定义装配回执')
+    else:
+        validation = exp_checkpoint.validate(manifest_path.parent)
     if manifest['kind'] != 'factory26.harness.prepared' or validation['status'] != 'complete':
         raise ValueError('prepared执行需要新版完整恢复合同')
     run = Path(binding['run_root'])
@@ -799,25 +806,28 @@ def execute_prepared(args):
     request = json.loads((run/'braid-request.json').read_text())
     if request['state'] != str(run/'braid-state'): raise ValueError('Braid state logical root不匹配')
     work = run/'work'
+    definitions = {row['name']: Path(row['logical_root']) for row in manifest.get('definition_assets', [])}
+    runtime = definitions.get('runtime', ROOT/'runtime')
+    agent = definitions.get('agent', ROOT)
+    braid = definitions.get('braid', work/'bin/braid')
     from agent_support import runtime_resource_environment, model_bindings
     _, env = model_bindings(require_key=True)
-    env.update(runtime_resource_environment(ROOT/'runtime',run),
+    env.update(runtime_resource_environment(runtime,run),
                XDG_CONFIG_HOME=str(work/'home/.config'),
                npm_config_cache=str(work/'cache/npm'), npm_config_store_dir=str(work/'cache/pnpm'),
                PI_SUBAGENTS_TEMP_ROOT=str(work/'tmp'/f'pi-subagents-uid-{os.getuid()}'),
-               MCPORTER_CONFIG=str(ROOT/'tools/mcporter.json'),
-               PBB_PIL_BIN=str(ROOT/'runtime/node_modules/pi-lane/bin/pil.js'),
-               AGENT_BROWSER_EXECUTABLE_PATH=str(browser_executable(ROOT/'runtime')),
-               BROWSER_EXECUTABLE_PATH=str(browser_executable(ROOT/'runtime')),
-               BROWSER_CHECK_NODE_MODULES=str(ROOT/'runtime/node_modules'),
+               MCPORTER_CONFIG=str(agent/'tools/mcporter.json'),
+               PBB_PIL_BIN=str(runtime/'node_modules/pi-lane/bin/pil.js'),
+               AGENT_BROWSER_EXECUTABLE_PATH=str(browser_executable(runtime)),
+               BROWSER_EXECUTABLE_PATH=str(browser_executable(runtime)),
+               BROWSER_CHECK_NODE_MODULES=str(runtime/'node_modules'),
                HOME=str(work/'home'), TMPDIR=str(work/'tmp'), PI_CODING_AGENT_DIR=str(work/'home/.pi/agent'),
                PI_OFFLINE='1', PI_TELEMETRY='0', PI_SUBAGENT_MAX_DEPTH='3',
-               PATH=os.pathsep.join((str(work/'bin'),str(ROOT/'runtime/bin'),str(ROOT/'runtime/node_modules/.bin'),env.get('PATH',''))))
+               PATH=os.pathsep.join((str(work/'bin'),str(runtime/'bin'),str(runtime/'node_modules/.bin'),env.get('PATH',''))))
     collector,binding = start_local_telemetry(run)
     env.update(telemetry_environment(binding))
     from agent_support import start_shared_proxy, stop_shared_proxy
-    shared_proxy = start_shared_proxy(ROOT/'runtime',run,env)
-    braid = work/'bin/braid'
+    shared_proxy = start_shared_proxy(runtime,run,env)
     try:
         with (run/'recovery-braid.log').open('w') as log:
             execute_braid([str(braid),'local',str(run/'braid-request.json'),'--resume'],

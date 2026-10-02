@@ -58,10 +58,12 @@ def resolve(value, profile, *, base=None):
     for name, production in productions.items():
         if production.get('producer') == 'prepare':
             production['source'] = str((base / production['source']).resolve(strict=True))
-            for category in ('materials', 'nodegyp_tools', 'runtime'):
+            for category in ('materials', 'nodegyp_tools', 'runtime', 'definition_assets'):
                 for row in production['repair'].get(category, []):
                     if 'source' in row:
                         row['source'] = str((base / row['source']).resolve(strict=True))
+                    if 'store' in row:
+                        row['store'] = str((base / row['store']).resolve(strict=True))
             continue
         if production.get('producer') != 'harness':
             raise ValueError('unsupported production: ' + name)
@@ -87,10 +89,12 @@ def plan_prepare(selection):
     if set(selection) != {'producer', 'source', 'target', 'repair'}:
         raise ValueError('prepare production needs explicit source, target and repair')
     source = Path(selection['source']).resolve(strict=True)
+    if read(source / 'harness-manifest.json').get('schema_version') != 3:
+        raise ValueError('new prepare production requires separated v3 checkpoint')
     dependencies = {'manifest_sha256': digest(source / 'harness-manifest.json'),
                     'hook_sha256': digest(Path(exp_checkpoint.__file__)), 'target': selection['target'],
                     'repair': selection['repair'], 'materials': {}}
-    for category in ('materials', 'nodegyp_tools', 'runtime'):
+    for category in ('materials', 'nodegyp_tools', 'runtime', 'definition_assets'):
         for row in selection['repair'].get(category, []):
             if 'source' in row:
                 path = Path(row['source']).resolve(strict=True)
@@ -141,7 +145,7 @@ def produce_materials(spec, directory, store):
                     from submission.exp_checkpoint import prepare
                     if output.exists():
                         output.rename(output.with_name(key + '-' + str(time.time_ns()) + '-partial'))
-                    prepared = prepare(Path(selection['source']), output, selection['target'], selection['repair'])
+                    prepared = prepare(Path(selection['source']), output, selection['target'], selection['repair'], artifact_store=store)
                     ref = artifacts.publish(store, output, 'prepared', provenance={
                         'producer': 'harness.prepare', 'dependencies': expected,
                         'prepared_id': prepared['prepared_id']},

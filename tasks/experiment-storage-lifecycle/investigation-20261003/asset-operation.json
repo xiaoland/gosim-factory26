@@ -1,0 +1,25 @@
+{
+  "operation": "actual publication of current repository documents; no failure injection, Docker, or model execution",
+  "bytes": 65050,
+  "source_staging_remains": false,
+  "same_reentry_reference": true,
+  "same_consumer_contents": true,
+  "publication_seconds": 0.004681082908064127,
+  "reentry_seconds": 0.003233041148632765,
+  "materialize_seconds": 0.003118916880339384,
+  "layout_operation": {
+    "operation": "bind existing published repository documents; not Harness runtime or prepare execution",
+    "reference": {
+      "artifact_id": "artifact-78f1b79a63dd0417d4f7b365",
+      "manifest_sha256": "e8058737e14baa618e3622075e6ca1cde1ede129b531d2a68775bae194dd00a5"
+    },
+    "definition_roles": 3,
+    "unique_asset_refs": 1,
+    "state_root": "/Volumes/WorkSSD/Development/factory26/runs/experiment-storage-dx/storage-owner-20261003/layout-operation",
+    "all_members": [
+      ".",
+      ".",
+      "."
+    ]
+  }
+}

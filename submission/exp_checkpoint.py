@@ -21,7 +21,8 @@ import uuid
 
 KIND = 'factory26.harness.checkpoint'
 PREPARED = 'factory26.harness.prepared'
-HOOK = 'pi-braid-logical-layout-v2'
+LEGACY_HOOK = 'pi-braid-logical-layout-v2'
+HOOK = 'pi-braid-separated-layout-v3'
 PRODUCER_SOURCE_SHA256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 
 
@@ -78,35 +79,50 @@ def path_at(root, member):
     return path
 
 
-def semantic_readback(payload, logical_root, materials=None):
+def semantic_readback(payload, logical_root, materials=None, definition_mounts=None):
     """Harness-owned readback: preserve Git, Braid DB/WAL and native history."""
     gaps, git, native = [], [], []
     mounts = [(str(logical_root), payload)]
     mounts += [(str(row['logical_root']), path_at(payload.parent, row['member'])) for row in materials or []]
-    # Link checks need current types and targets; byte integrity is checked by validate().
-    for logical, physical in mounts:
-        for name, item in inventory(physical, hash_files=False).items():
-            if item['type'] == 'symlink':
-                link = physical / name
-                if not link.resolve().is_relative_to(payload.parent):
-                    gaps.append({'kind': 'external_link', 'path': str(Path(logical) / name), 'target': item['target'],
-                                 'impact': '链接字面值保留；当前 hook 不装配外部链接目标'})
-    if gaps:
-        # Git and SQLite can follow indirect files inside their own formats.
-        # Keep the snapshot, but do not read through unresolved external links.
-        return {'gaps': gaps, 'git': git, 'native': native}
-
-    def resolve(value):
-        path = Path(value)
+    mounts += definition_mounts or []
+    allowed = [payload.parent.resolve(), *(physical.resolve() for _, physical in definition_mounts or [])]
+    def resolve(value, visited=None):
+        path = Path(os.path.normpath(value))
+        visited = set() if visited is None else visited
+        if str(path) in visited:
+            gaps.append({'kind': 'external_link', 'path': value, 'impact': '声明路径包含循环链接'})
+            return None
         for logical, physical in sorted(mounts, key=lambda row: len(row[0]), reverse=True):
             if path.is_relative_to(logical):
-                candidate = physical / path.relative_to(logical)
-                if not candidate.resolve().is_relative_to(payload.parent):
-                    gaps.append({'kind': 'external_link', 'path': value, 'impact': '不沿链接读取快照之外的现场'})
+                relative = path.relative_to(logical)
+                candidate = physical
+                for index, part in enumerate(relative.parts):
+                    candidate = candidate / part
+                    if candidate.is_symlink():
+                        target = Path(os.readlink(candidate))
+                        if not target.is_absolute():
+                            target = Path(logical).joinpath(*relative.parts[:index]) / target
+                        target = target.joinpath(*relative.parts[index+1:])
+                        return resolve(str(target), visited | {str(path)})
+                if not any(candidate.resolve().is_relative_to(root) or candidate.resolve() == root for root in allowed):
+                    gaps.append({'kind': 'external_link', 'path': value, 'impact': '不沿链接读取声明状态和定义之外的现场'})
                     return None
                 return candidate
         gaps.append({'kind': 'external_path', 'path': value, 'impact': '目标必须显式装配此外部材料'})
         return None
+
+    scan_mounts = []
+    for logical, physical in sorted(mounts, key=lambda row: len(row[1].parts)):
+        if not any(physical.is_relative_to(parent) for _, parent in scan_mounts):
+            scan_mounts.append((logical, physical))
+    # Resolve literals through declared logical roots, never through the live source tree.
+    for logical, physical in scan_mounts:
+        for name, item in inventory(physical, hash_files=False).items() if physical.is_dir() else []:
+            if item['type'] == 'symlink' and resolve(str(Path(logical) / name)) is None:
+                gaps.append({'kind': 'external_link', 'path': str(Path(logical) / name), 'target': item['target'],
+                             'impact': '链接字面值保留；目标缺少声明绑定'})
+    if gaps:
+        return {'gaps': gaps, 'git': git, 'native': native}
 
     state = payload / 'braid-state'
     request_file = payload / 'braid-request.json'
@@ -117,7 +133,7 @@ def semantic_readback(payload, logical_root, materials=None):
     request = json.loads(request_file.read_text())
     # SQLite may write shared-memory state even for a read-only WAL connection.
     # Read a disposable copy so validation never changes published evidence.
-    with tempfile.TemporaryDirectory(prefix='harness-readback-') as temporary:
+    with tempfile.TemporaryDirectory(prefix='harness-readback-', dir=payload.parent.parent.parent) as temporary:
         copied = Path(temporary) / database.name
         for suffix in ('', '-wal', '-shm'):
             original = Path(str(database) + suffix)
@@ -184,8 +200,8 @@ def semantic_readback(payload, logical_root, materials=None):
         if head.returncode or objects.returncode:
             gaps.append({'kind': 'git_history', 'member': member,
                          'error': head.stderr.strip() + objects.stderr.strip()})
-    for logical, physical in mounts:
-        for member, row in inventory(physical, hash_files=False).items():
+    for logical, physical in scan_mounts:
+        for member, row in inventory(physical, hash_files=False).items() if physical.is_dir() else []:
             if row['type'] != 'symlink':
                 continue
             destination = Path(row['target'])
@@ -257,7 +273,7 @@ def validator_identity():
 
 
 def capabilities():
-    return {'schema_version': 2, 'stopped_checkpoint': True, 'active_checkpoint': False,
+    return {'schema_version': 3, 'stopped_checkpoint': True, 'active_checkpoint': False,
             'same_logical_root_cross_daemon': True, 'native_path_migration': False,
             'cross_os': False, 'cross_architecture': False, 'prepare_hook': HOOK,
             'repair_hooks': ['materials-refresh', 'provider-transport', 'internal-alias',
@@ -290,7 +306,7 @@ def _repair_link(root, member):
     return path
 
 
-def _refresh_native(run, logical_root, material):
+def _refresh_native(run, logical_root, material, logical_material_root=None):
     request_path = run/'braid-request.json'
     request = json.loads(request_path.read_text())
     condition = next((ast.literal_eval(node.value) for node in ast.parse((material/'run.py').read_text()).body
@@ -316,7 +332,12 @@ def _refresh_native(run, logical_root, material):
                 target.write_text('---'+old_parts[1]+'---'+fresh_parts[2])
     skills = run/'work/skills'
     if skills.exists(): shutil.rmtree(skills)
-    shutil.copytree(material/'skills',skills,symlinks=True)
+    if logical_material_root is None:
+        shutil.copytree(material/'skills',skills,symlinks=True)
+    else:
+        skills.mkdir()
+        for source in (material/'skills').iterdir():
+            (skills/source.name).symlink_to(Path(logical_material_root)/'skills'/source.name, target_is_directory=True)
     write(request_path,request)
     state_request = run/'braid-state/request.json'
     if state_request.is_file():
@@ -421,15 +442,115 @@ def apply_repairs(output, manifest, repair):
                         'sha256':digest(tool),'runtime_identity':row['runtime_identity']})
     return effects
 
-def validate(root):
+def definition_assets(rows, state_root):
+    """Validate declared dependency relations; do not infer exclusions from an old tree."""
+    from lab.exp.core import identifier, member
+    names, assets = set(), []
+    state_root = Path(state_root)
+    for row in rows:
+        name = identifier(row['name'])
+        if name in names:
+            raise ValueError('definition asset name重复：' + name)
+        names.add(name)
+        logical = Path(row['logical_root'])
+        if not logical.is_absolute() or logical == Path('/') or '..' in logical.parts:
+            raise ValueError('definition logical_root必须为有界绝对路径')
+        if logical.is_relative_to(state_root) or state_root.is_relative_to(logical):
+            raise ValueError('definition与运行state混装；不能猜测排除旧目录')
+        reference = row['artifact']
+        if set(reference) != {'artifact_id', 'manifest_sha256'}:
+            raise ValueError('definition asset需要明确artifact reference')
+        identifier(reference['artifact_id'])
+        asset = {'name': name, 'logical_root': str(logical), 'artifact': reference, 'member': member(row.get('member', '.'))}
+        if row.get('identity') is not None:
+            asset['identity'] = row['identity']
+        for previous in assets:
+            parent, child = (previous, asset) if logical.is_relative_to(previous['logical_root']) else (asset, previous)
+            if Path(child['logical_root']).is_relative_to(parent['logical_root']):
+                relative = Path(child['logical_root']).relative_to(parent['logical_root'])
+                expected = (Path(parent['member']) / relative).as_posix()
+                if child['artifact'] != parent['artifact'] or child['member'] != expected:
+                    raise ValueError('重叠definition必须引用同一artifact及一致member关系')
+        assets.append(asset)
+    if not assets:
+        raise ValueError('separated checkpoint需要非空definition资产关系')
+    return assets
+
+
+def definition_mount_roots(rows, state_root):
+    """Fold matching semantic sub-assets into one physical definition placement."""
+    assets = sorted(definition_assets(rows, state_root), key=lambda row: len(Path(row['logical_root']).parts))
+    result = []
+    for row in assets:
+        if not any(Path(row['logical_root']).is_relative_to(parent['logical_root']) for parent in result):
+            result.append(row)
+    return result
+
+
+def resolve_definition_assets(root, manifest, artifact_store=None, verified=None):
+    """Verify each immutable payload once per resolution, then retain semantic members."""
+    from lab.exp import artifacts
+    from lab.exp.core import canonical, member
+    bindings_path = root / 'provenance/asset-bindings.json'
+    saved = json.loads(bindings_path.read_text()) if bindings_path.exists() else {}
+    consumer = manifest.get('prepared_id', manifest['checkpoint_id'])
+    mounts, bindings = [], {}
+    verified = {} if verified is None else verified
+    for row in definition_assets(manifest['definition_assets'], manifest['layout']['run_root']):
+        location = saved.get(row['name'], {})
+        if not artifact_store and not location.get('store'):
+            raise ValueError('definition缺少已解析artifact store：' + row['name'])
+        store = Path(artifact_store or location['store']).resolve(strict=True)
+        request_id = 'definition-' + canonical([consumer, row['name'], row['artifact']])[:40]
+        hold = artifacts.retain(store, row['artifact'], consumer, 'harness-definition/' + row['name'], request_id)
+        key = (str(store), canonical(row['artifact']))
+        if key not in verified:
+            verified[key] = artifacts.resolve(store, row['artifact'], consumer=consumer, retention=hold)
+        payload = verified[key]
+        relative = member(row['member'])
+        path = payload if relative == '.' else payload / relative
+        current = payload
+        for part in Path(relative).parts:
+            if part != '.':
+                current = current / part
+                if current.is_symlink():
+                    raise ValueError('definition member不能经过未绑定alias：' + relative)
+        if not path.exists() or not path.resolve().is_relative_to(payload.resolve()):
+            raise ValueError('definition member不存在或逃离artifact：' + relative)
+        mounts.append((row['logical_root'], path))
+        bindings[row['name']] = {'store': str(store), 'root': str(path), 'reference': row['artifact'],
+                                 'member': row['member'], 'consumer': consumer, 'retention': hold}
+    return mounts, bindings
+
+
+def validation_receipt(root, manifest, readback):
+    """Record one completed producer readback; public validate obtains a new one."""
+    consistency = manifest.get('acquisition', {}).get('status', 'unknown')
+    return {'kind': 'factory26.harness.validation', 'schema_version': 2, 'validator':validator_identity(),
+            'coverage': {'content': 'verified', 'structure': 'partial' if readback['gaps'] else 'complete',
+                         'acquisition': consistency, 'runtime_execution': 'not-observed'},
+            'manifest_sha256': digest(Path(root) / 'harness-manifest.json'),
+            'status': manifest['status'] if manifest['schema_version'] >= 2 else 'partial', 'readback': readback,
+            'capabilities': manifest['capabilities']}
+
+
+def validate(root, artifact_store=None, *, _verified_assets=None):
     root = Path(root).resolve(strict=True)
     manifest = json.loads((root / 'harness-manifest.json').read_text())
-    if manifest.get('kind') not in {KIND, PREPARED} or manifest.get('schema_version') not in {1, 2}:
+    if manifest.get('kind') not in {KIND, PREPARED} or manifest.get('schema_version') not in {1, 2, 3}:
         raise ValueError('不是当前 Harness checkpoint/prepared 合同')
     actual = inventory(root / 'content')
     if actual != manifest['files']:
         raise ValueError('检查点内容清单与读回不一致')
     identity = manifest['source_identity']
+    if manifest.get('state_provenance'):
+        proof = manifest['state_provenance']
+        original = path_at(root, proof['member'])
+        if digest(original) != proof['sha256']:
+            raise ValueError('state export来源原件发生变化')
+        exported = json.loads(original.read_text())['state_binding']
+        if any(exported['source_identity'].get(key) != identity[key] for key in source_identity_fields(identity)) or not Path(manifest['layout']['run_root']).is_relative_to(exported['logical_root']):
+            raise ValueError('state export来源执行/逻辑namespace不同')
     source_identity_fields(identity, legacy_read=manifest['schema_version'] == 1)
     if manifest['kind'] == KIND:
         stop = manifest['stop_provenance']
@@ -438,106 +559,226 @@ def validate(root):
             raise ValueError('停止来源原件发生变化')
         observed = json.loads(original.read_text())
         validate_stop_identity(identity, observed, legacy_read=manifest['schema_version'] == 1)
-    if manifest['schema_version'] == 2 and manifest.get('validator',{}).get('hook') != HOOK:
+    if manifest['schema_version'] >= 2 and manifest.get('validator',{}).get('hook') != (HOOK if manifest['schema_version'] == 3 else LEGACY_HOOK):
         raise ValueError('Harness validator hook不支持此证明覆盖')
-    readback = semantic_readback(root / 'content/run', manifest['layout']['run_root'], manifest['materials'])
+    if manifest['schema_version'] == 3:
+        mounts, _ = resolve_definition_assets(root, manifest, artifact_store, _verified_assets)
+        readback = semantic_readback(root / 'content/run', manifest['layout']['run_root'], definition_mounts=mounts)
+    else:
+        readback = semantic_readback(root / 'content/run', manifest['layout']['run_root'], manifest['materials'])
     consistency = manifest.get('acquisition', {}).get('status', 'unknown')
-    expected_status = 'partial' if readback['gaps'] or (manifest['schema_version'] == 2 and consistency != 'writer-closed') else 'complete'
-    if manifest['schema_version'] == 2 and manifest['status'] != expected_status:
+    expected_status = 'partial' if readback['gaps'] or (manifest['schema_version'] >= 2 and consistency != 'writer-closed') else 'complete'
+    if manifest['schema_version'] >= 2 and manifest['status'] != expected_status:
         raise ValueError('检查点完整性声明与实际缺口不一致')
-    if manifest['schema_version'] == 2 and readback['gaps'] != manifest['readback']['gaps']:
+    if manifest['schema_version'] >= 2 and readback['gaps'] != manifest['readback']['gaps']:
         raise ValueError('检查点语义缺口与独立读回不一致')
-    return {'kind': 'factory26.harness.validation', 'schema_version': 2, 'validator':validator_identity(),
-            'coverage': {'content': 'verified', 'structure': 'partial' if readback['gaps'] else 'complete',
-                         'acquisition': consistency, 'runtime_execution': 'not-observed'},
-            'manifest_sha256': digest(root / 'harness-manifest.json'),
-            'status': manifest['status'] if manifest['schema_version'] == 2 else 'partial', 'readback': readback,
-            'capabilities': manifest['capabilities']}
+    return validation_receipt(root, manifest, readback)
 
 
-def checkpoint(source, output, identity, stop, materials, acquisition=None):
-    source = source.resolve(strict=True)
-    identity_value = json.loads(identity.read_text())
-    stop_value = json.loads(stop.read_text())
+def checkpoint(source, output, identity, stop, materials=(), acquisition=None, definition_bindings=None, state_binding=None):
+    source = Path(source).resolve(strict=True)
+    layout_path = source / 'harness-layout.json'
+    if not layout_path.is_file() or materials:
+        raise ValueError('新checkpoint需要显式separated harness-layout；旧v2来源保留原冻结producer，不猜排除材料')
+    layout = json.loads(layout_path.read_text())
+    if layout.get('kind') != 'factory26.harness.layout' or layout.get('schema_version') != 1:
+        raise ValueError('harness-layout不绑定当前state root')
+    logical_root = Path(layout['state_root'])
+    export = json.loads(Path(state_binding).read_text()) if state_binding else None
+    export_binding = export.get('state_binding') if export else None
+    if logical_root != source and not export_binding:
+        raise ValueError('导出state需要显式state-binding真实export回执；不猜原logical路径')
+    source_layout = {'run_root': str(logical_root), 'os': platform.system(), 'architecture': platform.machine()}
+    if export_binding:
+        from lab.exp import artifacts
+        try:
+            relative = logical_root.relative_to(export_binding['logical_root'])
+        except ValueError:
+            raise ValueError('state logical root不在该export namespace内')
+        installed = Path(export_binding['installed_root'])
+        current = installed
+        for part in relative.parts:
+            current = current / part
+            if current.is_symlink():
+                raise ValueError('export state路径不能经过alias')
+        expected = artifacts.contents_member(export_binding['contents'], relative.as_posix())
+        if (export.get('status') != 'preserved' or current.resolve() != source
+                or export_binding['installed_member'] != 'workspace'
+                or export['installed']['workspace'] != export_binding['contents']
+                or artifacts.contents(source) != expected):
+            raise ValueError('state-binding与真实导出state/装配不一致')
+        if export_binding['source_identity']['backend_identity'].get('container_id') != export['source'].get('container_id'):
+            raise ValueError('state-binding不是export来源container')
+        source_layout = {'run_root': str(logical_root), **export_binding['platform']}
+    declared = []
+    physical = {}
+    overrides = definition_bindings or {}
+    if set(overrides) - {row['name'] for row in layout['definitions']}:
+        raise ValueError('definition binding包含未声明name')
+    for row in layout['definitions']:
+        asset_binding = overrides.get(row['name'], row.get('artifact'))
+        if not asset_binding or not asset_binding.get('store'):
+            raise ValueError('checkpoint definition缺少真实artifact binding：' + row['name'])
+        original = row.get('artifact')
+        if original and (original['reference'] != asset_binding['reference'] or original.get('member', '.') != asset_binding.get('member', '.')):
+            raise ValueError('definition override只能选择同ref/member解析位置；换版必须显式prepare repair：' + row['name'])
+        declared.append({'name': row['name'], 'logical_root': row['logical_root'], 'identity': row['identity'],
+                         'artifact': asset_binding['reference'], 'member': asset_binding.get('member', '.')})
+        physical[row['name']] = {'store': str(Path(asset_binding['store']).resolve(strict=True))}
+    assets = definition_assets(declared, logical_root)
+    identity_value, stop_value = json.loads(identity.read_text()), json.loads(stop.read_text())
     validate_stop_identity(identity_value, stop_value)
+    if export_binding and any(export_binding['source_identity'].get(key) != identity_value[key] for key in source_identity_fields(identity_value)):
+        raise ValueError('state-binding不是当前停止来源执行身份')
     acquisition_value = _acquisition(acquisition, identity_value)
-    output = output.absolute()
+    output = Path(output).absolute()
     if output.exists() or output.is_relative_to(source):
         raise ValueError('检查点输出必须是来源以外的新目录')
     output.mkdir(parents=True)
-    write(output / 'production.json', {'phase': 'staging', 'argv': sys.argv,
-                                      'producer': HOOK, 'source': str(source)})
-    (output / 'content').mkdir()
-    shutil.copytree(source, output / 'content/run', symlinks=True,copy_function=copy_file)
-    copied = []
-    for number, material in enumerate(materials):
-        original = material.resolve(strict=True)
-        if output.is_relative_to(original):
-            raise ValueError('检查点输出不能位于材料来源内部')
-        member = f'content/materials/{number}'
-        shutil.copytree(original, output / member, symlinks=True,copy_function=copy_file)
-        copied.append({'logical_root': str(original), 'member': member.removeprefix('content/')})
+    write(output / 'production.json', {'phase': 'staging', 'argv': sys.argv, 'producer': HOOK, 'source': str(source)})
     (output / 'provenance').mkdir()
+    write(output / 'provenance/asset-bindings.json', physical)
+    manifest = {'kind': KIND, 'schema_version': 3, 'checkpoint_id': 'hcp-' + uuid.uuid4().hex,
+                'producer': {'name': 'pi-braid-checkpoint', 'hook': HOOK, 'sha256': PRODUCER_SOURCE_SHA256},
+                'created_at': datetime.now(timezone.utc).isoformat(), 'source_identity': identity_value,
+                'acquisition': acquisition_value, 'validator': validator_identity(), 'coverage': capabilities(),
+                'layout': source_layout,
+                'definition_assets': assets, 'derived_inputs': layout['derived_inputs'], 'capabilities': capabilities()}
+    verified_assets = {}
+    mounts, bindings = resolve_definition_assets(output, manifest, verified=verified_assets)
+    from lab.exp import artifacts
+    physical_roots = dict(mounts)
+    for row in definition_mount_roots(assets, logical_root):
+        logical, actual = row['logical_root'], physical_roots[row['logical_root']]
+        if export_binding:
+            placement = next((value for value in export_binding['definitions'] if value['logical_root'] == logical
+                              and value['artifact'] == row['artifact'] and value['member'] == row['member']), None)
+            if not placement or placement.get('access') != 'read-only':
+                placement = next((value for value in export_binding.get('readonly_inputs', [])
+                                  if value['artifact'] == row['artifact']
+                                  and str(Path(value['root']) / row['member']) == logical), None)
+                if not placement:
+                    raise ValueError('导出definition缺少原执行真实RO input装配关系：' + logical)
+        elif Path(logical).resolve() != actual.resolve() and artifacts.contents(Path(logical)) != artifacts.member_contents(bindings[row['name']]['store'], row['artifact'], row['member']):
+            raise ValueError('声明definition与冻结artifact内容不同：' + logical)
+    write(output / 'provenance/asset-bindings.json', bindings)
+    if export:
+        shutil.copy2(state_binding, output / 'provenance/state-export.json')
+        manifest['state_provenance'] = {'member': 'provenance/state-export.json', 'sha256': digest(Path(state_binding))}
+    (output / 'content').mkdir()
+    shutil.copytree(source, output / 'content/run', symlinks=True, copy_function=copy_file)
     shutil.copy2(identity, output / 'provenance/source-identity.json')
     shutil.copy2(stop, output / 'provenance/stop-observation.json')
-    readback = semantic_readback(output / 'content/run', source, copied)
-    manifest = {'kind': KIND, 'schema_version': 2, 'checkpoint_id': 'hcp-' + uuid.uuid4().hex,
-                'producer': {'name': 'pi-braid-checkpoint', 'hook': HOOK, 'sha256': PRODUCER_SOURCE_SHA256},
-                'created_at': datetime.now(timezone.utc).isoformat(),
-                'source_identity': identity_value, 'acquisition': acquisition_value,
-                'validator': validator_identity(), 'coverage': capabilities(),
-                'stop_provenance': {'sha256': digest(stop), 'member': 'provenance/stop-observation.json',
-                                    'role': 'historical_acquisition_basis'},
-                'layout': {'run_root': str(source), 'os': platform.system(), 'architecture': platform.machine()},
-                'materials': copied, 'files': inventory(output / 'content'),
-                'status': 'partial' if readback['gaps'] or acquisition_value['status'] != 'writer-closed' else 'complete', 'readback': readback,
-                'capabilities': capabilities()}
+    readback = semantic_readback(output / 'content/run', logical_root, definition_mounts=mounts)
+    manifest.update(stop_provenance={'sha256': digest(stop), 'member': 'provenance/stop-observation.json',
+                                    'role': 'historical_acquisition_basis'}, files=inventory(output / 'content'),
+                    status='partial' if readback['gaps'] or acquisition_value['status'] != 'writer-closed' else 'complete', readback=readback)
     write(output / 'harness-manifest.json', manifest)
-    write(output / 'validation.json', validate(output))
+    write(output / 'validation.json', validation_receipt(output, manifest, readback))
     write(output / 'production.json', {'phase': 'published', 'argv': sys.argv, 'producer': HOOK})
     return manifest
 
 
-def prepare(source, output, target, repair=None):
-    validation = validate(source)
-    if validation['coverage']['structure'] != 'complete' and not repair:
-        raise ValueError('结构缺损 checkpoint 需要明确支持的修复；不重建历史')
+def prepare(source, output, target, repair=None, artifact_store=None):
+    source = Path(source).resolve(strict=True)
     manifest = json.loads((source / 'harness-manifest.json').read_text())
-    if manifest['kind'] not in {KIND,PREPARED}:
-        raise ValueError('prepare 输入必须是 checkpoint 或已有派生prepared')
+    if manifest.get('schema_version') != 3:
+        raise ValueError('新prepare只消费separated v3 checkpoint；旧v2保留原冻结producer及完整现场')
+    verified_assets = {}
+    validation = validate(source, _verified_assets=verified_assets)
+    repair = repair or {}
+    if set(repair) - {'definition_assets', 'provider_bindings', 'transient_links', 'nodegyp_tools'}:
+        raise ValueError('v3修复仅支持显式definition关系替换与既有状态派生输入修复，不修改原共享材料')
+    if validation['coverage']['structure'] != 'complete' and not repair:
+        raise ValueError('结构缺损checkpoint需要明确支持的修复；不重建历史')
     if target.get('run_root') != manifest['layout']['run_root'] or target.get('os') != manifest['layout']['os']:
-        raise ValueError('当前 native hook 只支持同 OS、同 logical root；跨根迁移不受支持')
-    if target.get('architecture') != manifest['layout']['architecture']:
-        raise ValueError('当前冻结 binary 只支持同 architecture')
-    if not target.get('runtime_identity'):
-        raise ValueError('prepare 必须显式冻结目标 runtime_identity')
-    output = output.absolute()
-    source = source.resolve(strict=True)
+        raise ValueError('当前native hook只支持同OS、同run logical root')
+    if target.get('architecture') != manifest['layout']['architecture'] or not target.get('runtime_identity'):
+        raise ValueError('prepare需要同architecture及明确目标runtime identity')
+    output = Path(output).absolute()
     if output.exists() or output.is_relative_to(source):
-        raise ValueError('prepared 输出必须为来源外部的新目录')
+        raise ValueError('prepared输出必须为来源外部的新目录')
     output.mkdir(parents=True)
     write(output / 'production.json', {'phase': 'staging', 'argv': sys.argv, 'producer': HOOK})
-    shutil.copytree(source / 'content', output / 'content', symlinks=True,copy_function=copy_file)
-    before = inventory(output/'content')
-    changes = apply_repairs(output, {**manifest, 'target_layout':target}, repair or {})
-    readback = semantic_readback(output/'content/run', manifest['layout']['run_root'], manifest['materials'])
-    after = inventory(output/'content')
-    actual_changes = [{'member': name, 'before': before.get(name), 'after': after.get(name)}
-                      for name in sorted(set(before) | set(after)) if before.get(name) != after.get(name)]
-    prepared = {key: value for key, value in manifest.items() if key not in {'stop_provenance'}}
-    prepared.update(kind=PREPARED, schema_version=2, validator=validator_identity(), capabilities=capabilities(),
-                    acquisition=manifest.get('acquisition', {'status':'unknown','limitation':'legacy source has no acquisition-window proof'}),
-                    readback=readback, files=after,
+    shutil.copytree(source / 'provenance', output / 'provenance', symlinks=True, copy_function=copy_file)
+    shutil.copytree(source / 'content', output / 'content', symlinks=True, copy_function=copy_file)
+    before = manifest['files']
+    old_mounts, old_bindings = resolve_definition_assets(source, manifest, verified=verified_assets)
+    assets = {row['name']: dict(row) for row in manifest['definition_assets']}
+    locations = {name: dict(value) for name, value in old_bindings.items()}
+    changes, seen = [], set()
+    for row in repair.get('definition_assets', []):
+        name = row['name']
+        if name in seen or name not in assets or set(row) - {'name', 'artifact', 'member', 'store'}:
+            raise ValueError('definition修复需要唯一已声明name、明确reference/member及可选store')
+        seen.add(name)
+        original = assets[name]
+        fresh = {**original, 'artifact': row['artifact'], 'member': row.get('member', original['member'])}
+        fresh['identity'] = {'kind': 'artifact-member', 'reference': fresh['artifact'], 'member': fresh['member']}
+        assets[name] = fresh
+        if row.get('store'):
+            locations[name] = {'store': str(Path(row['store']).resolve(strict=True))}
+        changes.append({'hook': 'definition-reference', 'name': name, 'before': original, 'after': fresh})
+    prepared = {key: value for key, value in manifest.items() if key != 'stop_provenance'}
+    prepared.update(kind=PREPARED, schema_version=3, prepared_id='hprep-' + uuid.uuid4().hex,
+                    definition_assets=definition_assets(list(assets.values()), manifest['layout']['run_root']),
+                    target_layout=target, validator=validator_identity(), capabilities=capabilities())
+    write(output / 'provenance/asset-bindings.json', locations)
+    # Explicitly acquire every dependency at the selected worker store; source references remain retained.
+    if artifact_store:
+        from lab.exp import artifacts
+        from lab.exp.core import canonical
+        transferred = set()
+        for row in prepared['definition_assets']:
+            source_store = locations[row['name']]['store']
+            key = (str(Path(source_store).resolve()), canonical(row['artifact']))
+            if key not in transferred:
+                if Path(source_store).resolve() != Path(artifact_store).resolve():
+                    artifacts.transfer(source_store, artifact_store, row['artifact'], consumer=prepared['prepared_id'])
+                    verified_assets[(str(Path(artifact_store).resolve()), canonical(row['artifact']))] = Path(artifact_store).resolve() / row['artifact']['artifact_id'] / 'payload'
+                transferred.add(key)
+    mounts, bindings = resolve_definition_assets(output, prepared, artifact_store, verified_assets)
+    write(output / 'provenance/asset-bindings.json', bindings)
+    old_by_root, new_by_root = dict(old_mounts), dict(mounts)
+    if not target['runtime_identity'].get('image_id'):
+        from lab.exp import artifacts
+        for asset in definition_mount_roots(prepared['definition_assets'], target['run_root']):
+            logical = Path(asset['logical_root'])
+            physical = new_by_root[asset['logical_root']]
+            if (logical.exists() or logical.is_symlink()) and logical.resolve() != physical.resolve():
+                expected = artifacts.member_contents(bindings[asset['name']]['store'], asset['artifact'], asset['member'])
+                if artifacts.contents(logical.resolve()) != expected:
+                    raise ValueError('Local definition logical root occupied by original content; cannot replace immutable source: ' + str(logical))
+    runtime_asset = next((row for row in prepared['definition_assets'] if row['name'] == 'runtime'), None)
+    if runtime_asset and runtime_asset['name'] in seen:
+        old, new = old_by_root[runtime_asset['logical_root']], new_by_root[runtime_asset['logical_root']]
+        for member in ('bin/braid', 'native-managed.mjs', 'node_modules/@earendil-works/pi-coding-agent/package.json'):
+            if not (old/member).is_file() or not (new/member).is_file() or digest(old/member) != digest(new/member):
+                raise ValueError('definition替换必须保留原Braid/native hook/Pi协议；不能迁移会话')
+    if 'agent' in seen:
+        agent = assets['agent']
+        _refresh_native(output/'content/run', Path(manifest['layout']['run_root']),
+                        new_by_root[agent['logical_root']], agent['logical_root'])
+    state_repairs = {key: value for key, value in repair.items() if key != 'definition_assets'}
+    effects = apply_repairs(output, prepared, state_repairs)
+    run_layout = output / 'content/run/harness-layout.json'
+    layout = json.loads(run_layout.read_text())
+    for row in layout['definitions']:
+        asset = assets[row['name']]
+        row['identity'] = asset.get('identity', row['identity'])
+        row['artifact'] = {'reference': asset['artifact'], 'store': bindings[row['name']]['store'], 'member': asset['member']}
+    write(run_layout, layout)
+    after = inventory(output / 'content')
+    readback = semantic_readback(output / 'content/run', manifest['layout']['run_root'], definition_mounts=mounts)
+    file_changes = [{'member': name, 'before': before.get(name), 'after': after.get(name)}
+                    for name in sorted(set(before) | set(after)) if before.get(name) != after.get(name)]
+    prepared.update(files=after, readback=readback, changes=file_changes, repair_effects=[*changes, *effects],
                     status='complete' if not readback['gaps'] and manifest.get('acquisition',{}).get('status') == 'writer-closed' else 'partial',
-                    losses=[*manifest.get('losses', []),*[gap for gap in readback['gaps'] if gap['kind']=='lost-original-git-history']], changes=actual_changes, repair_effects=changes,
-                    prepared_id='hprep-' + uuid.uuid4().hex,
-                    source_input={'kind':manifest['kind'],'manifest_sha256':digest(source/'harness-manifest.json')},
-                    source_checkpoint={'checkpoint_id': manifest['checkpoint_id'],
-                                       'manifest_sha256': digest(source / 'harness-manifest.json')},
-                    allowed_changes=repair or {}, target_layout=target,
-                    preparation={'argv': sys.argv, 'network': False, 'model_credentials': False, 'hook': HOOK})
+                    source_input={'kind': manifest['kind'], 'manifest_sha256': digest(source/'harness-manifest.json')},
+                    source_checkpoint={'checkpoint_id': manifest['checkpoint_id'], 'manifest_sha256': digest(source/'harness-manifest.json')},
+                    allowed_changes=repair, preparation={'argv': sys.argv, 'network': False, 'model_credentials': False, 'hook': HOOK})
     write(output / 'harness-manifest.json', prepared)
-    write(output / 'validation.json', validate(output))
+    write(output / 'validation.json', validation_receipt(output, prepared, readback))
     write(output / 'production.json', {'phase': 'published', 'argv': sys.argv, 'producer': HOOK})
     return prepared
 
@@ -585,7 +826,10 @@ def main():
     parser.add_argument('--output', type=Path)
     parser.add_argument('--source-identity', type=Path)
     parser.add_argument('--stop-evidence', type=Path)
-    parser.add_argument('--materials-root', action='append', default=[], type=Path)
+    parser.add_argument('--materials-root', action='append', default=[], type=Path, help='旧混装捕获已退役；不推断排除目录')
+    parser.add_argument('--definition-bindings', type=Path, help='按layout definition name提供真实reference/store/member')
+    parser.add_argument('--state-binding', type=Path, help='已分离Docker状态导出的真实export.json；保留原logical root和执行平台')
+    parser.add_argument('--artifact-store', type=Path, help='明确解析/装配definition资产的当前位置')
     parser.add_argument('--target-layout', type=Path)
     parser.add_argument('--acquisition', type=Path)
     parser.add_argument('--repair', type=Path)
@@ -601,15 +845,15 @@ def main():
             parser.error('application 需要 output/requirements/source-identity/delivery-kind')
         result = application(args.source,args.output,args.requirements,args.source_identity,args.delivery_kind,args.commit)
     elif args.command == 'validate':
-        result = validate(args.source)
+        result = validate(args.source, args.artifact_store)
     elif args.command == 'checkpoint':
         if not args.output or not args.source_identity or not args.stop_evidence:
             parser.error('checkpoint 需要 output/source-identity/stop-evidence')
-        result = checkpoint(args.source, args.output, args.source_identity, args.stop_evidence, args.materials_root,args.acquisition)
+        result = checkpoint(args.source, args.output, args.source_identity, args.stop_evidence, args.materials_root,args.acquisition, json.loads(args.definition_bindings.read_text()) if args.definition_bindings else None, args.state_binding)
     else:
         if not args.output or not args.target_layout:
             parser.error('prepare 需要 output/target-layout')
-        result = prepare(args.source, args.output, json.loads(args.target_layout.read_text()),json.loads(args.repair.read_text()) if args.repair else None)
+        result = prepare(args.source, args.output, json.loads(args.target_layout.read_text()),json.loads(args.repair.read_text()) if args.repair else None, args.artifact_store)
     print(json.dumps(result, ensure_ascii=False, indent=2))
 
 

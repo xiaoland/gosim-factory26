@@ -60,13 +60,35 @@ def instrument_entry(agent, destination, *, file_telemetry=False):
     原入口保留在 agent/ 子目录，其代码不变，参数与标准输出原样传递。
     这里只观察进程，不解释任意 Harness 的私有会话或交付格式。
     """
+    destination = Path(destination)
     original = destination / 'agent'
+    from lab.exp.artifacts import copy_file, verify
+    # A delivery copy belongs beside the execution, not in the state captured by
+    # the outer runner. The official SDK can still consume a self-contained tree.
     if agent.is_dir():
-        shutil.copytree(agent, original)
+        shutil.copytree(agent, original, copy_function=copy_file)
     else:
         original.mkdir(parents=True)
         with ZipFile(agent) as archive:
             archive.extractall(original)
+    binding = None
+    for value in json.loads(os.environ.get('FACTORY26_EXP_INPUT_BINDINGS', '{}')).values():
+        source = Path(value['root']).resolve(strict=True)
+        if source != agent.resolve(strict=True):
+            continue
+        reference = value['reference']
+        if agent.is_file():
+            packaged = verify(value['store'], reference)
+            reference = packaged.get('provenance', {}).get('material')
+            if reference is None:
+                break
+            material = verify(value['store'], reference)
+            if material['contents']['kind'] != 'directory':
+                raise ValueError('agent delivery material relation must reference a directory')
+        binding = {'reference': reference, 'store': value['store']}
+        break
+    if binding is not None:
+        (destination / 'definition-binding.json').write_text(json.dumps(binding) + '\n')
     shutil.copy2(original / 'requirements.txt', destination / 'requirements.txt')
     shutil.copy2(Path(__file__).with_name('arc_artifacts.py'), destination / 'arc_artifacts.py')
     if file_telemetry:
@@ -117,6 +139,12 @@ code=None
 cleanup='not-started'
 collector=None
 environment=dict(os.environ)
+definition_root=str(Path(__file__).parent/'agent')
+definition=Path(__file__).parent/'definition-binding.json'
+if definition.is_file():
+    binding=json.loads(definition.read_text())
+    environment['FACTORY26_EXP_INPUT_BINDINGS']=json.dumps({
+        'agent':dict(binding,root=str(Path(__file__).parent/'agent'))})
 support=Path(__file__).parent/'collector-support'
 if support.is_dir():
     import select
@@ -183,9 +211,59 @@ try:
 except BaseException as exc:
     result.write_text(json.dumps({'status':'failed','exit_code':code,'process_group_cleanup':cleanup,'publication_error':str(exc)})+'\\n')
     raise
-result.write_text(json.dumps({'status':'completed','exit_code':code,'process_group_cleanup':cleanup,'application_sha256':receipt['sha256']})+'\\n')
+result.write_text(json.dumps({'status':'completed','exit_code':code,'process_group_cleanup':cleanup,
+    'application_sha256':receipt['sha256'],'definition_root':definition_root})+'\\n')
 ''')
     return destination
+
+
+def record_capture_layout(workspace, stage, entry, resource_path, delivery):
+    """Declare a copied SDK definition for verification by the terminal capturer.
+
+    No SDK files are removed: its output-inventory and recovery contract remain
+    intact. Only a proven immutable subtree may be omitted from the later archive.
+    """
+    from lab.exp.core import atomic, read
+    workspace, stage = Path(workspace).resolve(), Path(stage).resolve()
+    path = workspace / 'capture-layout.json'
+    value = read(path) if path.exists() else {'kind': 'factory26.harness.capture',
+        'schema_version': 1, 'definition_roots': [], 'gaps': []}
+    if value.get('kind') != 'factory26.harness.capture' or value.get('schema_version') != 1:
+        raise ValueError('SDK capture layout belongs to a different contract')
+    try:
+        if entry.get('status') != 'completed':
+            raise ValueError('SDK definition capture lacks completed entry receipt')
+        binding_path = delivery / 'definition-binding.json'
+        if not binding_path.is_file():
+            raise ValueError('SDK delivery has no retained definition artifact relation')
+        binding, resource = read(binding_path), read(resource_path)
+        if resource.get('state') != 'exited' or not resource.get('container_id'):
+            raise ValueError('SDK execution terminality is not confirmed')
+        if Path(resource['workspace']).resolve() != stage or not stage.is_relative_to(workspace):
+            raise ValueError('SDK capture namespace does not bind the owned stage')
+        if resource.get('transport'):
+            transport = read(Path(resource['transport']))
+            if transport['stages'][resource['stage']].get('recovery') != 'verified':
+                raise ValueError('SDK capture requires verified output reception')
+        logical = Path(entry['definition_root'])
+        if not logical.is_absolute() or '..' in logical.parts or not logical.is_relative_to('/workspace') or logical == Path('/workspace'):
+            raise ValueError('wrapper definition root escapes the SDK workspace namespace')
+        actual = stage / logical.relative_to('/workspace')
+        if actual.is_symlink() or not actual.is_dir() or not actual.resolve().is_relative_to(stage):
+            raise ValueError('received SDK definition root is missing or redirected')
+        row = {'path': actual.relative_to(workspace).as_posix(), 'artifact': binding['reference'], 'member': '.',
+               'source': {'stage': stage.relative_to(workspace).as_posix(), 'container_id': resource['container_id'],
+                          'state': 'exited', 'definition_root': str(logical)}}
+        previous = next((item for item in value['definition_roots'] if item['path'] == row['path']), None)
+        if previous is not None and previous != row:
+            raise ValueError('SDK capture declaration changed for an existing definition root')
+        if previous is None:
+            value['definition_roots'].append(row)
+    except (OSError, ValueError, KeyError) as exc:
+        value['gaps'].append({'stage': stage.relative_to(workspace).as_posix(),
+                              'error_class': type(exc).__name__, 'detail': str(exc)})
+    atomic(path, value)
+    return value
 
 
 def source_hash(root):
@@ -451,7 +529,7 @@ def execute_run(args, endpoint, owner_token):
             if not args.requirements_only and args.noop_script is None:
                 raise ValueError("--noop-script is required for separate evaluation")
             generation = workspace / "official-generation"
-            instrumented = instrument_entry(args.agent, workspace / 'observed-agent', file_telemetry=file_telemetry)
+            instrumented = instrument_entry(args.agent, workspace.parent / 'delivery' / 'observed-agent', file_telemetry=file_telemetry)
             generation_command = base + ["--agent", str(instrumented), "--workspace", str(generation),
                                          "--image", image_id] + model_args
             generation_code = invoke(generation_command, "generation")
@@ -472,6 +550,8 @@ def execute_run(args, endpoint, owner_token):
                 entry_result = json.loads(entry.read_text())
             else:
                 entry_result = {"status": "failed", "error": "Agent entry produced no terminal process result"}
+            record_capture_layout(workspace, generation, entry_result,
+                                  workspace / 'generation.resource.json', instrumented)
             app = generation / ".lab-artifacts/application"
             receipt_path = generation / ".lab-artifacts/receipt.json"
             # Runner 还会部署应用，其退出码可能表示部署失败。
@@ -513,7 +593,7 @@ def execute_run(args, endpoint, owner_token):
             loaded_hash = json.loads(witness.read_text())["sha256"] if witness.is_file() else None
         else:
             official = workspace / "official"
-            instrumented = instrument_entry(args.agent, workspace / 'observed-agent', file_telemetry=file_telemetry) if not args.prepare_only else args.agent
+            instrumented = instrument_entry(args.agent, workspace.parent / 'delivery' / 'observed-agent', file_telemetry=file_telemetry) if not args.prepare_only else args.agent
             command = base + ["--agent", str(instrumented), "--workspace", str(official)] + model_args
             if args.tests is not None:
                 command += ["--tests-dir", str(args.tests)]
@@ -522,6 +602,11 @@ def execute_run(args, endpoint, owner_token):
             else:
                 command.extend(("--image", image_id))
             evaluation_code = invoke(command, "runner")
+            if not args.prepare_only:
+                entry = official / 'template/.arc/adapter-agent-result.json'
+                entry_result = json.loads(entry.read_text()) if entry.is_file() else {}
+                record_capture_layout(workspace, official, entry_result,
+                                      workspace / 'runner.resource.json', instrumented)
             generation_code = None
             entry_result = None
             frozen = loaded_hash = None

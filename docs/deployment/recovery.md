@@ -2,7 +2,13 @@
 
 ## 当前 checkpoint、prepare 与停止门控
 
-新 Harness checkpoint/prepared/application producer 使用 schema 2。`python3 submission/exp_checkpoint.py checkpoint --source RUN --output NEW --source-identity IDENTITY_JSON --stop-evidence STOP_JSON --acquisition ACQUISITION_JSON` 保存来源材料，获取窗口需要覆盖全部 writer 的连续关闭证明。停止原件只证明观察时点，不能排除复制期间的中途写入。没有获取窗口证明或原 Git/native 历史缺失时保留 partial；历史 schema 1 只读，不补造 complete。
+新 I14 Harness 的 checkpoint/prepared producer 使用 schema 3，application 保持 schema 2。Checkpoint v3 只捕获运行状态，通过 `harness-layout.json` 的真实 artifact reference/member 保留定义依赖；prepared 在准备和执行时解析这些依赖。物理 store 是解析位置，不进入内容身份。缺少实际 artifact relation 的 Hosted package identity 不能被补造为完整恢复能力。历史 checkpoint/prepared schema 1/2 按原冻结生产者及自包含合同读取，新 producer 不猜测旧混合树中哪些目录可以省略。
+
+定义资产包括入口、角色、技能、扩展、工具 runtime 和 Braid；每次绑定的小型 native 配置、request 和 launcher 留在可写状态。四个新 I14 入口直接读取冻结 Braid，通过小型链接树访问技能，不再将这些定义复制进运行目录。定义资产的保留独立于 attempt 生命周期。
+
+`python3 submission/exp_checkpoint.py checkpoint --source RUN --output NEW --source-identity IDENTITY_JSON --stop-evidence STOP_JSON --acquisition ACQUISITION_JSON` 保存来源材料，获取窗口需要覆盖全部 writer 的连续关闭证明。停止原件只证明观察时点，不能排除复制期间的中途写入。没有获取窗口证明或原 Git/native 历史缺失时保留 partial；历史 schema 1 只读，不补造 complete。
+
+Docker 导出后的保存位置与原运行逻辑根不同。对新分离布局，checkpoint 用 `--state-binding <attempt/export.json>` 消费真实导出回执；`--source` 仍明确选择本机的运行状态目录。生产者核对导出 namespace、已安装目录及成员内容，保留原执行 OS/architecture 和逻辑路径，不从 Mac 的平台或当前 `/assets` 目录猜来源。首次运行和 prepared 接续都使用这条关系；停止与获取窗口证明仍独立提供。嵌套 SDK 的 `/workspace` 若没有自己的实际导出映射，不能套用外层 `/execution/workspace`，应保留具体缺口。
 
 真实 hosted 来源使用 `python3 -m lab import-source-stop --experiment EXPERIMENT --attempt ATTEMPT --birth BIRTH_GET_JSON --status TERMINAL_GET_JSON --cancel-evidence CANCEL_JSON --authorization "已获授权的恢复范围" --identity-output NEW_IDENTITY_JSON --output NEW_STOP_JSON`。`--experiment` 与 `--attempt` 必须成对提供；导入核对冻结合同、实际 attempt、execution 和派发绑定，以及来源与独立终态 GET 的 run、submission、competition、task、创建及启动时间。取消响应只作为原件保留，独立 GET 必须确认终态和结束时间。输出保留真实 attempt 和 execution incarnation，不伪装成 legacy 来源；两个输出均须为新文件。导入不执行停止，也不授予启动许可。恢复启动仍须显式提供 deployment 的私有 `cookie_file`，通过独立 GET 确认同一来源确已停止。
 
@@ -12,7 +18,7 @@
 
 低层 `prepare --source CHECKPOINT --output NEW --target-layout JSON --repair REPAIR_JSON` 保留，无网络或模型请求。有限修复覆盖材料刷新、已声明 provider transport、内部路径别名、已退役 transient link、外部 node-gyp 工具物化及明确兼容 runtime 替换。每项核对原 literal/目标范围，记录实际变化与损失；Git、native 历史与应用工作不由材料刷新覆盖。结构 partial 可以离线派生以解释缺口，但结果没有完整获取/语义保证仍为 partial，不能进入完整恢复执行。
 
-当前 hook 仅支持同 OS、architecture、logical run_root 和明确 runtime_identity。Docker 可在另一 daemon 的独立路径空间保持同根；跨 OS、架构/native 根迁移、任意 patch 及 Git 历史重建不进入完整恢复能力。Prepared 不携带停止许可；launch 重新核对同一来源 instance 的当前停止和实际目标装配。入口消费已经装配的 prepared workspace，不再解压重建整包。
+v3 的定义换版使用 repair 的 `definition_assets` 数组，每项给出已有 `name`、新 `artifact` reference、`member` 和可选解析 `store`。同一物理资产中的嵌套角色必须保持同一引用及一致成员关系，不能只改变其中一个角色。准备和验证可用 `--artifact-store STORE` 指定当前解析位置。定义换版不改变其 logical_root，保留前后关系；不以全树文本替换迁移路径。Local 若原逻辑位置仍被旧定义占用，明确阻塞，不能覆盖旧资产。Docker 在独立 namespace 中装配只读定义与可写状态。当前 hook 仅支持同 OS、architecture、logical run_root 和明确 runtime_identity。Docker 可在另一 daemon 的独立路径空间保持同根；跨 OS、架构/native 根迁移、任意 patch 及 Git 历史重建不进入完整恢复能力。Prepared 不携带停止许可；launch 重新核对同一来源 instance 的当前停止和实际目标装配。入口消费已经装配的 prepared workspace，不再解压重建整包。
 
 `application` 独立冻结明确 commit、需求和来源，区分 stage/final，保留未提交内容政策。一个可重放应用不证明 checkpoint 完整，终态 archive 也不等同 checkpoint。
 
@@ -142,9 +148,9 @@ I13 历史通道切换另用显式 `--override-native-transport`。旧冻结包�
 
 `hosted_monitor --targets <文件>` 接收动态 JSON 订阅，文件为数组或 `{"targets": [...]}`；每项指定 `journal`、`run_id` 和 `submission_id`。操作入口在锁内原子追加订阅；collector 在本地等待期间重读它，远端采样间隔保持不变。已有 run 的身份不能替换，移除订阅也不放弃仍活动的观察。scheduler 拥有接收事实，`monitor/accepted.json` 是统一公开查询回执，包含接收身份、首批原件、逐 run 终态及 collector 生命周期；消费者不猜内部 scheduler 文件名。首批采集和实际身份都成立后才证明观察已接入，操作按自身 run 集完成，不等待其它订阅。`monitor/completion.json` 区分 collector 的 completed、failed 与 interrupted，不能把 collector 的退出当作平台终态。
 
-监控完全由脚本执行，不唤醒审查模型。程序在 run 启动后前 10 分钟每 3 分钟、随后每 8 分钟读取状态和阶段，并下载官网模板导出取得当前 provider 证据；下载保留原 ZIP，允许 10 分钟，不把耗时当成生成停滞。只选择 `template/.factory26/<id>/braid-state/status.json`，历史嵌套状态不参与当前判断。provider_sessions 与 turns 从导出的 DB/WAL 取得一致 SQLite 读取快照，原生文件以来源身份及恢复开始时间划界；导出文件集合本身是否原子仍为未知。终态保存总分、阶段及原件后退出；终态下载失败另记 evidence_errors 并告警，不无限等待缺失的失败工作区。
+监控完全由脚本执行，不唤醒审查模型。程序在 run 启动后前 10 分钟每 3 分钟、随后每 8 分钟读取状态和阶段，并下载官网模板导出取得当前 provider 证据；下载允许 10 分钟，不把耗时当成生成停滞。只选择 `template/.factory26/<id>/braid-state/status.json`，历史嵌套状态不参与当前判断。provider_sessions 与 turns 从导出的 DB/WAL 取得一致 SQLite 读取快照，原生文件以来源身份及恢复开始时间划界；导出文件集合本身是否原子仍为未知。终态保存总分、阶段及原件后退出；终态下载失败另记 evidence_errors 并告警，不无限等待缺失的失败工作区。
 
-每批保存实际来源、观察时间、provider 身份与生命周期、native 活动元数据、阈值及未知。默认至少两次采样、30 分钟没有状态或实际活动变化才提示 suspected_stale；这是活动/存活异常提示，语义进度仍未知。已确认本轮 provider 身份后，native 证据持续不可读达到相同时间/样本门槛时报告 observation_missing 并保留原错误，不宣称 stale。sleeping、idle 与明确资源等待分别记录；idle 但 turn 仍 starting/running 不按正常闲置处理。汇总时当前会话优先于导入的历史会话，历史休眠记录不会掩盖当前活动。未配结果的历史 tool call 不证明工具仍执行，不提供无限等待豁免；仅静止一次、token 不增或导入的 running 状态不能触发 stale。状态及故障签名去重通知，原错误保持完整，通知系统接受提醒不证明人已看到。
+每批保存实际来源、观察时间、provider 身份与生命周期、native 活动元数据、阈值及未知。新 collector 保存所选 provider/turn 的原始行、原生文件头和末尾有界字节窗口，以及窗口偏移与原完整文件元数据；判定仍基于本次完整读取。终态及新故障保留完整 ZIP，持续同一故障关联已保存 ZIP；普通成功批次在证据和回执持久化后释放本批 ZIP 与提取 scratch，不清理历史批次。网络端仍需下载完整 ZIP，这一改动减少本地重复保留，不宣称减少下载量。默认至少两次采样、30 分钟没有状态或实际活动变化才提示 suspected_stale；这是活动/存活异常提示，语义进度仍未知。已确认本轮 provider 身份后，native 证据持续不可读达到相同时间/样本门槛时报告 observation_missing 并保留原错误，不宣称 stale。sleeping、idle 与明确资源等待分别记录；idle 但 turn 仍 starting/running 不按正常闲置处理。汇总时当前会话优先于导入的历史会话，历史休眠记录不会掩盖当前活动。未配结果的历史 tool call 不证明工具仍执行，不提供无限等待豁免；仅静止一次、token 不增或导入的 running 状态不能触发 stale。状态及故障签名去重通知，原错误保持完整，通知系统接受提醒不证明人已看到。
 
 短题暴露通用缺陷时，先保留全部现场并确定原因，再做有针对性的修复验证。在已授权的官网并行实验中，可按当轮规则取消同轮未终态的 Hackathon 运行；取消需要实际请求及远端状态确认。本地断点恢复应保留进度、受控暂停后续接，不机械沿用官网取消策略，也不在活动进程中无记录更换二进制。合理等待、外部故障与 Harness 缺陷分别处理，禁止无依据反复重生成。
 

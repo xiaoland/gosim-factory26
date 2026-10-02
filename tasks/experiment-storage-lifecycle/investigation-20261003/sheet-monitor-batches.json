@@ -1,0 +1,842 @@
+[
+  {
+    "batch": "20261001T144835.453745Z",
+    "zip_bytes": 155930775,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T145230.123932Z",
+    "zip_bytes": 156003279,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T145608.475605Z",
+    "zip_bytes": 156080531,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T150542.600675Z",
+    "zip_bytes": 156288495,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T151442.577557Z",
+    "zip_bytes": 156412848,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T152344.263455Z",
+    "zip_bytes": 156556354,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T153237.046788Z",
+    "zip_bytes": 156692275,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T154143.017933Z",
+    "zip_bytes": 156830512,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T155123.564669Z",
+    "zip_bytes": 156914745,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T155407.888599Z",
+    "zip_bytes": 284950662,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T155834.945862Z",
+    "zip_bytes": 285030447,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T160101.426749Z",
+    "zip_bytes": 157033541,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T160340.720411Z",
+    "zip_bytes": 285754510,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T161040.508005Z",
+    "zip_bytes": 157164130,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T161411.596421Z",
+    "zip_bytes": 287152077,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T161933.973411Z",
+    "zip_bytes": 157344711,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T162552.077384Z",
+    "zip_bytes": 289417532,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T162818.734033Z",
+    "zip_bytes": 157658406,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T163618.735808Z",
+    "zip_bytes": 287852785,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T163841.908626Z",
+    "zip_bytes": 158668419,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T164641.912246Z",
+    "zip_bytes": 289484869,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T164917.988005Z",
+    "zip_bytes": 159236892,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T165717.997527Z",
+    "zip_bytes": 289603909,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T165851.058460Z",
+    "zip_bytes": 160758048,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T170651.066561Z",
+    "zip_bytes": 289253410,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T171030.690686Z",
+    "zip_bytes": 161868115,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T171830.697868Z",
+    "zip_bytes": 289813306,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T172129.703647Z",
+    "zip_bytes": 160742751,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T172929.718048Z",
+    "zip_bytes": 290098203,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T173331.299700Z",
+    "zip_bytes": 161345939,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T174131.304096Z",
+    "zip_bytes": 290976089,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T174303.462955Z",
+    "zip_bytes": 164995785,
+    "status": "FAILED",
+    "score": 74.0,
+    "created_at": "2026-10-01T14:45:56.854412",
+    "finished_at": "2026-10-01T17:43:02.649592"
+  },
+  {
+    "batch": "20261001T175103.474785Z",
+    "zip_bytes": 290561433,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T180036.075449Z",
+    "zip_bytes": 292075570,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T181007.726944Z",
+    "zip_bytes": 292020223,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T181948.002835Z",
+    "zip_bytes": 291428208,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T182908.250863Z",
+    "zip_bytes": 290855021,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T183825.022070Z",
+    "zip_bytes": 290329631,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T184755.031376Z",
+    "zip_bytes": 292208901,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T185727.659471Z",
+    "zip_bytes": 292118172,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T190720.541572Z",
+    "zip_bytes": 292021520,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T191648.188568Z",
+    "zip_bytes": 292004123,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T192616.575447Z",
+    "zip_bytes": 293889796,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T193600.414106Z",
+    "zip_bytes": 294208921,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T194516.616471Z",
+    "zip_bytes": 294166867,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T195432.438635Z",
+    "zip_bytes": 294062441,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T200344.740394Z",
+    "zip_bytes": 296005655,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T201302.252997Z",
+    "zip_bytes": 295572887,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T202221.838235Z",
+    "zip_bytes": 295496965,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T203132.992604Z",
+    "zip_bytes": 297370150,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T204047.373716Z",
+    "zip_bytes": 297259320,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T205003.776078Z",
+    "zip_bytes": 297175046,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T205916.626631Z",
+    "zip_bytes": 299037998,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T210833.955411Z",
+    "zip_bytes": 298951345,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T211748.979406Z",
+    "zip_bytes": 298505833,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T212727.414280Z",
+    "zip_bytes": 298811481,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T213656.953725Z",
+    "zip_bytes": 300666214,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T214616.313324Z",
+    "zip_bytes": 300175682,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T215532.266009Z",
+    "zip_bytes": 302073620,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T220450.949347Z",
+    "zip_bytes": 301958050,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T221409.861920Z",
+    "zip_bytes": 301420489,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T222328.653864Z",
+    "zip_bytes": 303331937,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T223250.762762Z",
+    "zip_bytes": 303283572,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T224209.487543Z",
+    "zip_bytes": 302767189,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T225133.004987Z",
+    "zip_bytes": 304690980,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T230053.006982Z",
+    "zip_bytes": 304215944,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T231036.609455Z",
+    "zip_bytes": 304143976,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T232001.236043Z",
+    "zip_bytes": 305991425,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T232922.968290Z",
+    "zip_bytes": 305878829,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T233842.746672Z",
+    "zip_bytes": 305383818,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T234807.952587Z",
+    "zip_bytes": 307212400,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261001T235727.875533Z",
+    "zip_bytes": 306755828,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T000715.474027Z",
+    "zip_bytes": 308634144,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T001638.394483Z",
+    "zip_bytes": 308575314,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T002604.802874Z",
+    "zip_bytes": 308120814,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T003548.682341Z",
+    "zip_bytes": 310016948,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T004536.177681Z",
+    "zip_bytes": 309938250,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T005503.753442Z",
+    "zip_bytes": 309536306,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T010442.307882Z",
+    "zip_bytes": 311048402,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T011449.592959Z",
+    "zip_bytes": 310951441,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T012418.105156Z",
+    "zip_bytes": 310590809,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T013339.081992Z",
+    "zip_bytes": 312159576,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T014303.776066Z",
+    "zip_bytes": 311737975,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T015235.234183Z",
+    "zip_bytes": 313623682,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T020234.876518Z",
+    "zip_bytes": 0,
+    "status": "CANCELLED",
+    "score": null,
+    "created_at": "2026-10-01T15:50:54.107952",
+    "finished_at": "2026-10-02T02:02:19.200358"
+  },
+  {
+    "batch": "20261002T032137.302066Z",
+    "zip_bytes": 319112933,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T032614.742662Z",
+    "zip_bytes": 319250794,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T033109.152991Z",
+    "zip_bytes": 319374920,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T034112.385673Z",
+    "zip_bytes": 319773273,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T035153.994458Z",
+    "zip_bytes": 321167784,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T040153.653242Z",
+    "zip_bytes": 323580565,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T041120.615518Z",
+    "zip_bytes": 323711886,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T042105.177100Z",
+    "zip_bytes": 324087025,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T043058.618861Z",
+    "zip_bytes": 324074989,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T044035.123652Z",
+    "zip_bytes": 324169903,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T045032.844863Z",
+    "zip_bytes": 324693311,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T050035.183316Z",
+    "zip_bytes": 325277576,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T051125.111488Z",
+    "zip_bytes": 278265816,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T052119.242084Z",
+    "zip_bytes": 325547160,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T053326.013338Z",
+    "zip_bytes": 325856465,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T054336.098871Z",
+    "zip_bytes": 325939778,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T055314.935345Z",
+    "zip_bytes": 325545895,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T060305.092640Z",
+    "zip_bytes": 325132856,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T061253.707462Z",
+    "zip_bytes": 324460452,
+    "status": "RUNNING",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": null
+  },
+  {
+    "batch": "20261002T062319.728127Z",
+    "zip_bytes": 326459735,
+    "status": "CANCELLED",
+    "score": null,
+    "created_at": "2026-10-02T03:18:34.241951",
+    "finished_at": "2026-10-02T06:18:22.868237"
+  }
+]

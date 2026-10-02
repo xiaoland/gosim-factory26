@@ -6,6 +6,7 @@ from pathlib import Path
 import shutil
 import stat
 import socket
+import sys
 import time
 
 from lab.arc_bench.workspace_archive import output_inventory
@@ -16,6 +17,20 @@ def contents(path):
     if path.is_file() and not path.is_symlink():
         return {'kind': 'file', 'sha256': digest(path), 'executable': bool(path.stat().st_mode & 0o111)}
     return {'kind': 'directory', **output_inventory(path)}
+
+
+def copy_file(source, destination):
+    """Isolate file writers with APFS clones; other filesystems copy the bytes."""
+    if sys.platform == 'darwin':
+        import ctypes
+        import errno
+        library = ctypes.CDLL(None, use_errno=True)
+        if library.clonefile(os.fsencode(source), os.fsencode(destination), 0) == 0:
+            return str(destination)
+        code = ctypes.get_errno()
+        if code not in {errno.EXDEV, errno.ENOTSUP, errno.EINVAL}:
+            raise OSError(code, os.strerror(code), str(source))
+    return shutil.copy2(source, destination)
 
 
 def initialize(store, domain_identity=None):
@@ -173,13 +188,23 @@ def deletion_intent(store, ref, request_id, *, writer_closed, preservation_satis
 
 
 def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
-            request_id=None, consumer=None, purpose='producer', domain_identity=None):
-    """Publish verified content and initial retention together, including after response loss."""
+            request_id=None, consumer=None, purpose='producer', domain_identity=None, move_source=False):
+    """Publish immutable content. Explicit handover consumes a sealed same-device source.
+
+    A saved handover identity permits retry after its rename, without recopying or
+    deleting an unconfirmed payload. Ordinary publication preserves its source.
+    """
+    if move_source and Path(source).is_symlink():
+        raise ValueError('handover source cannot redirect through a link')
     source, store = Path(source).resolve(), Path(store).resolve()
+    if move_source and (source.is_relative_to(store) or store.is_relative_to(source)):
+        raise ValueError('handover source and artifact store must not overlap')
     binding = initialize(store, domain_identity)
     request_id = identifier(request_id or new_id('publish'))
     parameters = {'source': str(source), 'type': artifact_type, 'provenance': provenance or {},
                   'capabilities': capabilities or {}, 'consumer': consumer, 'purpose': purpose}
+    if move_source:
+        parameters['move_source'] = True
     action_path = store / 'requests' / (request_id + '.json')
     with locked(store / '.store.lock'):
         if action_path.exists():
@@ -206,15 +231,46 @@ def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
                type=identifier(artifact_type), started_at=time.time(), provenance=provenance or {}))
         try:
             payload = staging / 'payload'
-            if payload.exists() or payload.is_symlink():
-                raise Blocked('partial publication retained; use its error and a new explicit production request')
-            if source.is_file():
-                shutil.copy2(source, payload)
-            elif source.is_dir():
-                shutil.copytree(source, payload, symlinks=True)
+            if move_source:
+                handover = staging / 'handover.json'
+                expected = read(handover) if handover.exists() else None
+                ownership = {'request_id': request_id, 'artifact_id': artifact_id,
+                             'source': str(source), 'type': artifact_type,
+                             'parameters_sha256': canonical(parameters)}
+                source_present = source.exists() or source.is_symlink()
+                payload_present = payload.exists() or payload.is_symlink()
+                if source_present == payload_present:
+                    raise Blocked('handover requires exactly one of sealed source or transferred payload; retain both locations')
+                if expected is None:
+                    if payload_present:
+                        raise Blocked('handover payload lacks its original source identity; retain partial publication')
+                    if source.is_symlink() or not (source.is_file() or source.is_dir()):
+                        raise ValueError('handover source must be a sealed regular file or directory')
+                    if source.stat().st_dev != staging.stat().st_dev:
+                        raise Blocked('handover requires source and artifact store on the same filesystem')
+                    expected = {**ownership, 'contents': contents(source)}
+                    atomic(handover, expected)
+                    identity = expected['contents']
+                else:
+                    if any(expected.get(key) != value for key, value in ownership.items()):
+                        raise ValueError('handover identity differs from publication request')
+                    identity = contents(source if source_present else payload)
+                    if identity != expected['contents']:
+                        raise ValueError('handover payload differs from sealed source identity')
+                if source_present:
+                    source.rename(payload)
+                    _sync(source.parent)
+                    _sync(staging)
             else:
-                raise ValueError('artifact source must be a regular file or directory')
-            identity = contents(payload)
+                if payload.exists() or payload.is_symlink():
+                    raise Blocked('partial publication retained; use its error and a new explicit production request')
+                if source.is_file():
+                    copy_file(source, payload)
+                elif source.is_dir():
+                    shutil.copytree(source, payload, symlinks=True, copy_function=copy_file)
+                else:
+                    raise ValueError('artifact source must be a regular file or directory')
+                identity = contents(payload)
             _durable_tree(payload)
             value = record('artifact', artifact_id=artifact_id, type=artifact_type,
                            contents=identity, provenance=provenance or {}, capabilities=capabilities or {},
@@ -248,6 +304,39 @@ def _manifest(store, ref):
     if manifest['artifact_id'] != artifact_id or manifest['contents']['kind'] not in {'file', 'directory'}:
         raise ValueError('artifact identity or content kind differs from published manifest')
     return manifest
+
+
+def member_contents(store, ref, path='.'):
+    """Project a member's frozen identity from its authenticated immutable manifest.
+
+    This does not read current source bytes. Transfer and consumer readback still
+    verify their received bytes against this identity at the respective boundary.
+    """
+    manifest = _manifest(store, ref)
+    return contents_member(manifest['contents'], path)
+
+
+def contents_member(expected, path='.'):
+    """Select a bounded member from an already authenticated inventory."""
+    relative = member(path)
+    if relative == '.':
+        return expected
+    if expected['kind'] != 'directory':
+        raise ValueError('file artifact has no nested member')
+    entries = expected['entries']
+    for ancestor in Path(relative).parents:
+        if str(ancestor) != '.' and any(row['path'] == ancestor.as_posix() and row['type'] == 'link' for row in entries):
+            raise ValueError('artifact member redirects through an ancestor link')
+    root = next((row for row in entries if row['path'] == relative), None)
+    if root is None or root['type'] == 'link':
+        raise ValueError('artifact member is missing or redirects through a link')
+    if root['type'] == 'file':
+        return {'kind': 'file', 'sha256': root['sha256'], 'executable': root['executable']}
+    prefix = relative + '/'
+    selected = [{**row, 'path': row['path'][len(prefix):]} for row in entries if row['path'].startswith(prefix)]
+    encoded = json.dumps(selected, sort_keys=True, separators=(',', ':'), ensure_ascii=False).encode()
+    return {'kind': 'directory', 'algorithm': expected['algorithm'], 'entries': selected,
+            'sha256': hashlib.sha256(encoded).hexdigest()}
 
 
 def verify(store, ref):
@@ -320,9 +409,9 @@ def materialize(store, ref, destination, *, consumer=None, request_id=None, rete
     destination.parent.mkdir(parents=True, exist_ok=True, mode=0o700)
     staging = destination.with_name('.' + destination.name + '.' + new_id('materialize'))
     if source.is_file():
-        shutil.copy2(source, staging)
+        copy_file(source, staging)
     else:
-        shutil.copytree(source, staging, symlinks=True)
+        shutil.copytree(source, staging, symlinks=True, copy_function=copy_file)
     if contents(staging) != manifest['contents']:
         raise ValueError('artifact materialization content differs')
     staging.rename(destination)
@@ -379,9 +468,9 @@ def transfer(source_store, destination_store, ref, *, request_id=None, consumer=
                 shutil.copy2(source_store / ref['artifact_id'] / 'manifest.json', incoming / 'manifest.json')
                 source_payload = source_store / ref['artifact_id'] / 'payload'
                 if manifest['contents']['kind'] == 'file':
-                    shutil.copy2(source_payload, incoming / 'payload')
+                    copy_file(source_payload, incoming / 'payload')
                 else:
-                    shutil.copytree(source_payload, incoming / 'payload', symlinks=True)
+                    shutil.copytree(source_payload, incoming / 'payload', symlinks=True, copy_function=copy_file)
             verify(staging, ref)
             hold = _hold(consumer, 'transfer-target', request_id)
             atomic(incoming / 'location.json', _location(binding, ref, hold))

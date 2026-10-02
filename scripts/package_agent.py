@@ -173,8 +173,10 @@ def assemble(source, destination, runtime, skill_source, skills):
         if item.is_dir(): shutil.copytree(item,destination/item.name)
         else: shutil.copy2(item,destination/item.name)
     shutil.copy2(ROOT/'submission/exp_checkpoint.py',destination/'exp_checkpoint.py')
+    if source.name in I14_VARIANTS:
+        shutil.copy2(ROOT/'submission/recover_completed.py',destination/'recover_completed.py')
     support=destination/'support';support.mkdir()
-    for name in ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs','runtime_resources.py'):
+    for name in ('agent_support.py','braid_runtime.py','core.py','harness_layout.py','model_budget.mjs','runtime_resources.py'):
         shutil.copy2(ROOT/'scripts'/name,support/name)
     if source.name in I14_VARIANTS | {'pi-braid', 'pi-braid-i11', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
         shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
@@ -222,7 +224,10 @@ def material_capabilities():
     return {'braid_session_budget': {'version': 2, 'native_children_share_owner': True,
                                     'missing_identity': 'reject'},
             'resource_evidence': {'required': True, 'owner': 'runner', 'binding': 'FACTORY26_EXP_SERVICES'},
-            'checkpoint': {'schema_version': 2, 'producer': 'exp_checkpoint.py'},
+            'checkpoint': {'schema_version': 3, 'producer': 'exp_checkpoint.py',
+                           'content': 'state-and-retained-definition-relations'},
+            'layout': {'schema_version': 1, 'definition_access': 'read-only',
+                       'derived_inputs': 'run-local', 'state_access': 'read-write'},
             'application': {'schema_version': 2, 'producer': 'exp_checkpoint.py'},
             'variants': sorted(I14_VARIANTS)}
 
@@ -278,8 +283,9 @@ def selection(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=No
                     'builder': _tree_identity(Path(__file__)), 'runtime': _tree_identity(runtime),
                     'skills': {name: _tree_identity(skill_source/name) for name in skills},
                     'support': {name: _tree_identity(ROOT/'scripts'/name) for name in
-                                ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs','runtime_resources.py')},
+                                ('agent_support.py','braid_runtime.py','core.py','harness_layout.py','model_budget.mjs','runtime_resources.py')},
                     'checkpoint': _tree_identity(ROOT/'submission/exp_checkpoint.py'),
+                    'prepared_executor': _tree_identity(ROOT/'submission/recover_completed.py') if variant in I14_VARIANTS else None,
                     'collector': _tree_identity(ROOT/'lab/otlp.py'),
                     'otlp_requirements': _tree_identity(ROOT/'lab/requirements.txt'),
                     'sdk_wrapper': _tree_identity(ROOT/'lab/arc_bench/agent_runtime'),

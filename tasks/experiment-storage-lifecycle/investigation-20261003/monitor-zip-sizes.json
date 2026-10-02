@@ -1,0 +1,38 @@
+[
+  {
+    "path": "runs/iteration13/i13-2-20261001/hosted-sheet-r2/monitor",
+    "workspace_zip_count": 105,
+    "zip_logical_bytes": 28700418587,
+    "zip_min_bytes": 0,
+    "zip_max_bytes": 326459735,
+    "zip_blocks_bytes": 28700643328,
+    "batch_count": 107
+  },
+  {
+    "path": "runs/iteration13/i13-2-20261001/hosted-github-self-funded-r4/live-revised/monitor",
+    "workspace_zip_count": 13,
+    "zip_logical_bytes": 4001986958,
+    "zip_min_bytes": 19800680,
+    "zip_max_bytes": 344317234,
+    "zip_blocks_bytes": 4002013184,
+    "batch_count": 14
+  },
+  {
+    "path": "runs/iteration13/i13-2-20261001/hosted-github-self-funded-r4/live/monitor",
+    "workspace_zip_count": 1,
+    "zip_logical_bytes": 3282448,
+    "zip_min_bytes": 3282448,
+    "zip_max_bytes": 3282448,
+    "zip_blocks_bytes": 3284992,
+    "batch_count": 1
+  },
+  {
+    "path": "runs/iteration13/i13-2-20261001/revision2/observation/monitor",
+    "workspace_zip_count": 0,
+    "zip_logical_bytes": 0,
+    "zip_min_bytes": 0,
+    "zip_max_bytes": 0,
+    "zip_blocks_bytes": 0,
+    "batch_count": 84
+  }
+]

@@ -1,0 +1,115 @@
+{
+  "kind": "factory26.storage.actual-operation",
+  "reference": {
+    "artifact_id": "artifact-78f1b79a63dd0417d4f7b365",
+    "manifest_sha256": "e8058737e14baa618e3622075e6ca1cde1ede129b531d2a68775bae194dd00a5"
+  },
+  "retention": {
+    "kind": "factory26.exp.artifact-retention",
+    "schema_version": 1,
+    "retention_id": "retain-17718fbcac76fb3d7c340acc8e732289",
+    "consumer": "storage-dx-final-member-consumer",
+    "purpose": "actual-document-member-consumption",
+    "request_id": "actual-final-doc-member-retention",
+    "state": "held",
+    "retained_at": 1790960611.74683
+  },
+  "members": [
+    {
+      "member": ".",
+      "same": true,
+      "identity": {
+        "kind": "directory",
+        "algorithm": "workspace-output-sha256-v1",
+        "sha256": "8179a52fca6a9c623c0d917191d605f18fb3370bfbd9c25a46f25448ba97e7ad",
+        "entries": [
+          {
+            "path": "artifacts.py",
+            "type": "file",
+            "sha256": "7f12281424e30a42c59b9eb3305f3b4ec87f958eda181d586f7a1bc900ccb9c0",
+            "executable": false
+          },
+          {
+            "path": "index.md",
+            "type": "file",
+            "sha256": "a0a0231dc2c8bf8b298d13c05d7977f3b5daf241618b95d8577a21f59f1ada95",
+            "executable": false
+          }
+        ]
+      }
+    },
+    {
+      "member": "index.md",
+      "same": true,
+      "identity": {
+        "kind": "file",
+        "sha256": "a0a0231dc2c8bf8b298d13c05d7977f3b5daf241618b95d8577a21f59f1ada95",
+        "executable": false
+      }
+    },
+    {
+      "member": "artifacts.py",
+      "same": true,
+      "identity": {
+        "kind": "file",
+        "sha256": "7f12281424e30a42c59b9eb3305f3b4ec87f958eda181d586f7a1bc900ccb9c0",
+        "executable": false
+      }
+    }
+  ],
+  "compiled_sources": [
+    {
+      "source": "submission/exp_checkpoint.py",
+      "sha256": "a41308b41d6348a2e4205eb808a11d72514bd2dda20f52c11f02974bea265797"
+    },
+    {
+      "source": "submission/recover_completed.py",
+      "sha256": "a061f9f37969078b42d338c3150955eb056f3ba90ad0fc6b5ef97fc93350709e"
+    },
+    {
+      "source": "scripts/package_agent.py",
+      "sha256": "b7154d76c4c79f6cf4a9c3ac90e30312b24fa7d9fbd92e94972170c0599ab003"
+    },
+    {
+      "source": "lab/exp/artifacts.py",
+      "sha256": "45815dd70dbe221293b6484781053cfeff0bcd30c8d23646c66ee0a1cd87e1fd"
+    },
+    {
+      "source": "lab/exp/runner.py",
+      "sha256": "92060bd897989f828f280af6b215fa9b9063f83066ce548a2499b96cd353bcf7"
+    },
+    {
+      "source": "lab/exp/backends.py",
+      "sha256": "3c9d5f6f2f06964bd1eb28e2b2e3bc7f24a096b0a6583b739b7af0cd24b6f1ea"
+    },
+    {
+      "source": "lab/exp/controller.py",
+      "sha256": "58ba8e59b495e5e57dfbbb4929a7fedbc12313a275c08c7aef396f12f675436c"
+    },
+    {
+      "source": "lab/exp/environment.py",
+      "sha256": "a46c42a18bee446383473386cf90b62498539ea4feb4cc7323997169fe6fb95f"
+    },
+    {
+      "source": "lab/arc_bench/docker_workspace.py",
+      "sha256": "bc44ca03a45a9ad3ccd7f0942c582d3dadc0b5632fe77c08757fd6ca86889c89"
+    },
+    {
+      "source": "variants/pi-braid-i14-e2e/main.py",
+      "sha256": "d54ce5e1ab083341537cdb3ce5999f2262c6d348d5ce02d1460b4c492cfb34af"
+    },
+    {
+      "source": "variants/pi-braid-i14-reviewer/main.py",
+      "sha256": "d54ce5e1ab083341537cdb3ce5999f2262c6d348d5ce02d1460b4c492cfb34af"
+    },
+    {
+      "source": "variants/pi-braid-i14-cleaner/main.py",
+      "sha256": "d54ce5e1ab083341537cdb3ce5999f2262c6d348d5ce02d1460b4c492cfb34af"
+    },
+    {
+      "source": "variants/pi-braid-i14/main.py",
+      "sha256": "d54ce5e1ab083341537cdb3ce5999f2262c6d348d5ce02d1460b4c492cfb34af"
+    }
+  ],
+  "limits": "真实已发布文档asset消费与源码编译；无虚构Harness状态或容器回执，无SDK、Docker或完整v3 checkpoint/prepare运行。"
+}

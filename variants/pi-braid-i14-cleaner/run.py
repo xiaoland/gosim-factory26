@@ -15,13 +15,14 @@ import time
 import uuid
 
 from agent_support import (save, phase, hashes, digest, logged, cleanup_workspace,
-                           copy_application, copy_skill, deliver, browser_executable, budgeted_pi,
+                           copy_application, deliver, browser_executable, budgeted_pi,
                            start_local_telemetry, telemetry_environment, stop_local_telemetry)
 from agent_support import runtime_resource_environment, start_shared_proxy, stop_shared_proxy
 from agent_support import model_bindings, bind_native_models, native_model_route, bind_native_role
 from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
+from harness_layout import bind_layout
 
 HERE = Path(__file__).resolve().parent
 VARIANT = 'pi-braid-i14-cleaner'
@@ -159,6 +160,12 @@ def generate(args):
     run = output/'.factory26'/(time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8])
     run.mkdir(parents=True)
     work = run/'work'; work.mkdir()
+    skills_root = args.skills_root.resolve(strict=True)
+    source_braid = (args.braid or runtime/'bin/braid').resolve(strict=True)
+    bind_layout(run, variant=VARIANT, definition_root=HERE, runtime=runtime,
+                skills_root=skills_root, braid=source_braid,
+                derived_inputs=['input', 'work/capabilities', 'work/bin', 'work/skills',
+                                'braid-request.json', 'config.json', 'model-connection.json', 'prompt.txt'])
     app = work/'application'; app.mkdir()
     native = work/'home/.pi/agent'; native.mkdir(parents=True)
     (work/'tmp').mkdir()
@@ -170,14 +177,18 @@ def generate(args):
     pbb_launcher = work/'bin/pbb'
     pbb_launcher.write_text('#!/bin/sh\nexec ' + shlex.join((str(runtime/'bin/node'), str(pbb))) + ' "$@"\n')
     pbb_launcher.chmod(0o755)
-    skills = work/'skills'
+    skills = work/'skills'; skills.mkdir()
+    skill_sources = {}
     for name in MAIN_SKILLS:
         source = (runtime/'node_modules/@upstash/context7-pi/skills/context7-docs'
-                  if name == 'context7-docs' else args.skills_root.resolve(strict=True)/name)
-        copy_skill(source, skills/name)
-    source_braid = (args.braid or runtime/'bin/braid').resolve(strict=True)
-    shutil.copy2(source_braid, work/'bin/braid')
-    (work/'bin/braid').chmod(0o755)
+                  if name == 'context7-docs' else skills_root/name).resolve(strict=True)
+        declared_root = runtime if name == 'context7-docs' else skills_root
+        if not source.is_relative_to(declared_root):
+            raise ValueError(f'技能链接超出已冻结定义：{source}')
+        if not (source/'SKILL.md').is_file():
+            raise FileNotFoundError(f'冻结技能入口缺失：{source}')
+        (skills/name).symlink_to(source, target_is_directory=True)
+        skill_sources[name] = str(source)
     inputs = run/'input'; shutil.copytree(requirements, inputs)
     profiles, bindings = native_files(work, runtime, skills, base_url, visual_url)
     desired_model = os.environ.get('MODEL') or routes['factory26'].get('model')
@@ -197,7 +208,9 @@ def generate(args):
                   *(HERE/'tools').rglob('*')]
     save(run/'implementation-hashes.json', {str(p.relative_to(HERE)):hashlib.sha256(p.read_bytes()).hexdigest()
                                           for p in code_files if p.is_file()})
-    save(run/'materials.json', {'agents':hashes(HERE/'agents'), 'skills':hashes(skills),
+    save(run/'materials.json', {'agents':hashes(HERE/'agents'), 'skills':{name+'/'+relative: sha256 for name, source in skill_sources.items()
+                                         for relative, sha256 in hashes(Path(source)).items()},
+                               'skill_sources':skill_sources, 'harness_layout':str(run/'harness-layout.json'),
                                'runtime':str(runtime), 'braid':str(source_braid)})
     prompt = f'''本次任务来自 ARC Bench，需求来源是 {inputs} 中的完整允许需求包，最终交付是满足需求的 Web 应用。
 处理本次需求、设计、实现和交付时，读取独立技能 arc-bench：{skills/'arc-bench/SKILL.md'}，按当前问题读取其适用reference。
@@ -318,7 +331,7 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         history_thread = threading.Thread(target=watch_history, name='arc-history', daemon=True)
         history_thread.start()
         try:
-            code = logged([str(work/'bin/braid'), 'local', str(run/'braid-request.json')],
+            code = logged([str(source_braid), 'local', str(run/'braid-request.json')],
                           app, env, run/'braid.log', metadata.setdefault('cleanup_errors', []))
         finally:
             history_stop.set()

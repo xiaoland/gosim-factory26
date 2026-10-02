@@ -147,7 +147,10 @@ def export_telemetry(output, work, archived_manifest, env=None, *, portable=Fals
         manifest.write_text(json.dumps(dict(schema_version=1, run_id=identities[0],
                                             sessions=sessions, gaps=gaps), ensure_ascii=False, indent=2)+'\n')
         with log_path.open('a') as log:
-            command = [str(work/'bin/braid'), '--state', str(state), 'telemetry', 'export',
+            materials = output / 'materials.json'
+            braid = (json.loads(materials.read_text())['braid']
+                     if (output / 'harness-layout.json').is_file() else str(work/'bin/braid'))
+            command = [braid, '--state', str(state), 'telemetry', 'export',
                        '--native-manifest', str(manifest)]
             if portable:
                 command.append('--portable')

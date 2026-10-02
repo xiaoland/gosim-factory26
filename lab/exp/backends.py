@@ -376,6 +376,12 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
                    consumer=rid, purpose='runner-code')
     _owner_exec(target, helper, [target.get('python', 'python3'), '-c', "from pathlib import Path;[Path('/execution/payload/'+p).mkdir(parents=True,exist_ok=True) for p in ('workspace','requests','inputs')]"])
     input_refs = {'executor': code, **attempt['job']['inputs']}
+    prepared_descriptor = attempt['job'].get('prepared_descriptor')
+    if prepared_descriptor:
+        if prepared_descriptor.get('schema_version') != 3:
+            raise Blocked('Docker prepared execution requires separated v3 state and definition relations')
+        for definition in prepared_descriptor['definition_assets']:
+            input_refs['definition--' + definition['name']] = definition['artifact']
     for name, ref in input_refs.items():
         expected_location = attempt['job'].get('input_locations', {}).get(name)
         if expected_location and (expected_location.get('reference') != ref or expected_location.get('domain_identity', {}).get('daemon_id') != endpoint['daemon_id'] or expected_location.get('volume_id') != asset_volume or expected_location.get('store_root') != '/assets'):
@@ -408,25 +414,41 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
                 check=True, capture_output=True, text=True, timeout=60)
         private['credential_file'] = '/execution/credentials.json'
     atomic(directory / 'payload-deployment.json', private)
-    placements = []
+    placements, definition_placements = [], []
     if attempt['job'].get('prepared'):
-        manifest = attempt['job'].get('prepared_descriptor')
-        if not manifest:
-            output = _owner_exec(target, helper, [target.get('python', 'python3'), '-c', 'from pathlib import Path;print(Path(' + repr('/assets/' + attempt['job']['inputs']['prepared']['artifact_id'] + '/payload/harness-manifest.json') + ').read_text())'])
-            manifest = json.loads(output.stdout)
+        manifest = prepared_descriptor
+        if manifest is None:
+            raise Blocked('prepared execution requires the controller resolved definition descriptor')
+        from submission.exp_checkpoint import definition_mount_roots
         content_root = '/assets/' + attempt['job']['inputs']['prepared']['artifact_id'] + '/payload/content'
-        mappings = [{'logical_root': manifest['target_layout']['run_root'], 'member': 'run', 'subpath': 'payload/workspace'}]
-        mappings += [dict(row, subpath='payload/materials/' + str(index)) for index, row in enumerate(manifest['materials'])]
-        for mapping in mappings:
-            root = Path(mapping['logical_root'])
-            if not root.is_absolute() or root == Path('/') or root.is_relative_to('/assets') or root.is_relative_to('/execution'):
-                raise Blocked('prepared logical root conflicts with isolated executor/asset namespace')
-            source = content_root + '/' + member(mapping['member'])
-            destination = '/execution/' + mapping['subpath']
-            script = 'import shutil;from pathlib import Path;src=Path(' + repr(source) + ');dst=Path(' + repr(destination) + ');' + 'dst.parent.mkdir(parents=True,exist_ok=True);shutil.copytree(src,dst,symlinks=True,dirs_exist_ok=True)'
-            _owner_exec(target, helper, [target.get('python', 'python3'), '-c', script])
-            placements.append(mapping)
+        run_root = Path(manifest['target_layout']['run_root'])
+        if (not run_root.is_absolute() or run_root == Path('/') or run_root.is_relative_to('/assets')
+                or run_root.is_relative_to('/execution') and not run_root.is_relative_to('/execution/workspace')):
+            raise Blocked('prepared state root conflicts with isolated executor inputs or evidence namespace')
+        mapping = {'logical_root': str(run_root), 'member': 'run', 'subpath': 'state/run', 'access': 'read-write'}
+        source, destination = content_root + '/run', '/execution/' + mapping['subpath']
+        script = 'import shutil;from pathlib import Path;src=Path(' + repr(source) + ');dst=Path(' + repr(destination) + ');' + 'dst.parent.mkdir(parents=True,exist_ok=True);shutil.copytree(src,dst,symlinks=True)'
+        _owner_exec(target, helper, [target.get('python', 'python3'), '-c', script])
+        placements.append(mapping)
+        if not asset.get('Mountpoint') or not Path(asset['Mountpoint']).is_absolute():
+            raise Blocked('definition read-only bindings require the selected daemon volume mountpoint')
+        for definition in definition_mount_roots(manifest['definition_assets'], str(run_root)):
+            root = Path(definition['logical_root'])
+            if root == Path('/') or root.is_relative_to('/execution'):
+                raise Blocked('definition root conflicts with writable executor namespace')
+            remote = '/assets/' + definition['artifact']['artifact_id'] + '/payload'
+            if definition['member'] != '.':
+                remote += '/' + member(definition['member'])
+            # Check the daemon namespace through its owner, never with a control-host Path.exists().
+            if root.is_relative_to('/assets'):
+                script = 'from pathlib import Path;print("true" if Path(' + repr(str(root)) + ').exists() else "false")'
+                present = json.loads(_owner_exec(target, helper, [target.get('python', 'python3'), '-c', script]).stdout)
+                if not present:
+                    raise Blocked('definition logical mount target absent from retained daemon namespace: ' + str(root))
+            daemon_source = str(Path(asset['Mountpoint']) / remote.removeprefix('/assets/'))
+            definition_placements.append({**definition, 'access': 'read-only', 'daemon_source': daemon_source})
         private['layout_bindings'] = placements
+        private['definition_bindings'] = definition_placements
         atomic(directory / 'payload-deployment.json', private)
     for source_name, target_name in (('payload-attempt.json', 'attempt.json'), ('payload-deployment.json', 'deployment.json'), ('binding.json', 'binding.json')):
         execute(endpoint, ['cp', str(directory / source_name), helper['container_id'] + ':/execution/payload/' + target_name],
@@ -438,6 +460,8 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
         args += ['--network', 'none']
     for placement in placements:
         args += ['--mount', f"type=volume,src={volume},dst={placement['logical_root']},volume-subpath={placement['subpath']}"]
+    for definition in definition_placements:
+        args += ['--mount', f"type=bind,src={definition['daemon_source']},dst={definition['logical_root']},readonly"]
     for key, value in labels.items():
         args += ['--label', key + '=' + value]
     for field, flag in (('memory_bytes', '--memory'), ('cpus', '--cpus'), ('pids', '--pids-limit')):
@@ -451,6 +475,13 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
     return resource
 
 
+def _payload_workspace(directory):
+    """Use the same physical run-state mapping for execution, outputs and export."""
+    deployment = read(Path(directory) / 'payload-deployment.json')
+    mapping = next((row for row in deployment.get('layout_bindings', []) if row['member'] == 'run'), None)
+    return '/execution/' + member(mapping['subpath']) if mapping else '/execution/payload/workspace'
+
+
 def collect_named_outputs(directory):
     """Publish named content in the daemon store, without exporting the entire execution domain."""
     directory = Path(directory)
@@ -459,22 +490,23 @@ def collect_named_outputs(directory):
     physical = exact_resource(target, resource)
     if physical['state'].get('Status') not in ('exited', 'dead'):
         raise Blocked('output publication requires exact physical terminality')
+    workspace = _payload_workspace(directory)
     refs, missing = {}, []
     for output in attempt['job'].get('outputs', []):
-        output_path = '/execution/payload/workspace/' + member(output['path'])
-        script = 'from pathlib import Path;root=Path("/execution/payload/workspace");p=Path(' + repr(output_path) + ');\nif p.is_symlink() or not p.resolve().is_relative_to(root.resolve()):\n raise ValueError("output escapes workload workspace")\nprint("true" if p.exists() else "false")'
+        output_path = workspace + '/' + member(output['path'])
+        script = 'from pathlib import Path;root=Path(' + repr(workspace) + ');p=Path(' + repr(output_path) + ');\nif p.is_symlink() or not p.resolve().is_relative_to(root.resolve()):\n raise ValueError("output escapes workload workspace")\nprint("true" if p.exists() else "false")'
         exists = json.loads(_owner_exec(target, read(directory / 'store-helper.json'), [target.get('python', 'python3'), '-B', '-c', script]).stdout)
         if not exists:
             missing.append(output['name'])
             continue
-        ref = store_action(directory, 'publish', {'source': '/execution/payload/workspace/' + member(output['path']),
+        ref = store_action(directory, 'publish', {'source': workspace + '/' + member(output['path']),
                            'type': output['type'], 'provenance': {'attempt_id': attempt['attempt_id'], 'output': output['name']},
                            'request_id': attempt['attempt_id'] + '--output--' + canonical(output['name'])[:24], 'consumer': attempt['attempt_id'], 'purpose': 'producer-output'})
         refs[output['name']] = ref
     result = None
     if attempt['job'].get('result_path'):
-        result_path = '/execution/payload/workspace/' + member(attempt['job']['result_path'])
-        script = 'from pathlib import Path;root=Path("/execution/payload/workspace");p=Path(' + repr(result_path) + ');\nif p.is_symlink() or not p.resolve().is_relative_to(root.resolve()):\n raise ValueError("result escapes workload workspace")\nprint(p.read_text() if p.is_file() else "null")'
+        result_path = workspace + '/' + member(attempt['job']['result_path'])
+        script = 'from pathlib import Path;root=Path(' + repr(workspace) + ');p=Path(' + repr(result_path) + ');\nif p.is_symlink() or not p.resolve().is_relative_to(root.resolve()):\n raise ValueError("result escapes workload workspace")\nprint(p.read_text() if p.is_file() else "null")'
         result = json.loads(_owner_exec(target, read(directory / 'store-helper.json'), [target.get('python', 'python3'), '-B', '-c', script]).stdout)
     atomic(directory / 'outputs.json', record('named-outputs', attempt_id=attempt['attempt_id'], artifacts=refs, result=result, missing_outputs=missing,
           locations={name: {'reference': ref, 'domain_identity': {'kind': 'docker', 'daemon_id': target['endpoint']['daemon_id']},
@@ -529,9 +561,10 @@ def size(path):
    # Include archive headers and extraction allocation, including empty directories.
    total+=((value.st_size+4095)//4096)*4096+512 if stat.S_ISREG(value.st_mode) else 4096
  return total
-print(json.dumps({'T_bytes':size(root)}))
+extra=Path(sys.argv[1])
+print(json.dumps({'T_bytes':size(root)+(size(extra) if extra != root/'workspace' else 0)}))
 '''
-    measured = json.loads(_owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', script], timeout=180).stdout)
+    measured = json.loads(_owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', script, _payload_workspace(directory)], timeout=180).stdout)
     margin = attempt['job']['limits'].get('storage_reserve_bytes', attempt['job']['limits']['storage_bytes'])
     free = shutil.disk_usage(directory).free
     required = 2 * measured['T_bytes'] + margin
@@ -545,36 +578,130 @@ print(json.dumps({'T_bytes':size(root)}))
 
 
 
+def _release_export_scratch(directory, receipt):
+    """Release matching downloaded duplicates only after final paths have durable receipts."""
+    from .artifacts import contents, _sync
+    stage = Path(receipt['stage'])
+    if stage.parent.resolve() != directory.resolve() or not stage.name.startswith('payload-export-'):
+        raise Blocked('export scratch path is outside the owning attempt')
+    released = set(receipt.get('scratch_released_members', []))
+    errors = {}
+    for name, expected in receipt['installed'].items():
+        source = stage / name
+        if source.is_dir() and not source.is_symlink():
+            try:
+                if contents(source) != expected:
+                    errors[name] = {'message': 'downloaded scratch changed; retained'}
+                    continue
+                shutil.rmtree(source)
+                _sync(stage)
+            except OSError as exc:
+                errors[name] = error(exc)
+                continue
+        elif source.exists() or source.is_symlink():
+            errors[name] = {'message': 'downloaded scratch object changed type; retained'}
+            continue
+        released.add(name)
+    receipt.update(scratch_released_members=sorted(released), scratch_release_errors=errors)
+    atomic(directory / 'export.json', receipt)
+    return receipt
+
+
 def export_payload(directory):
     directory = Path(directory)
     attempt, resource = read(directory / 'attempt.json'), read(directory / 'resource.json')
     target = attempt['job']['backend']
+    from .artifacts import contents, _sync, _durable_tree
+    progress_path = directory / 'payload-export-intent.json'
+    saved = read(directory / 'export.json') if (directory / 'export.json').exists() else None
+    if saved and saved.get('installed'):
+        if saved['source'] != resource:
+            raise Blocked('saved export belongs to another execution resource')
+        for name, expected in saved['installed'].items():
+            if contents(directory / name) != expected:
+                raise Blocked('preserved terminal payload changed: ' + name)
+        return _release_export_scratch(directory, saved)
     physical = exact_resource(target, resource)
     if physical['state'].get('Status') not in ('exited', 'dead'):
         raise Blocked('execution evidence export requires physical terminality')
-    stage = directory / ('payload-export-' + str(time.time_ns()))
-    stage.mkdir()
+    progress = read(progress_path) if progress_path.exists() else None
+    if progress and progress['source'] != resource:
+        raise Blocked('pending export belongs to another execution resource')
+    stage = Path(progress['stage']) if progress else directory / ('payload-export-' + str(time.time_ns()))
+    if not progress:
+        stage.mkdir()
+        progress = record('export', status='downloading', source=resource, stage=str(stage))
+        atomic(progress_path, progress)
     try:
-        docker_export_preflight(directory, attempt, resource)
-        execute(target['endpoint'], ['cp', resource['container_id'] + ':/execution/.', str(stage)],
-                check=True, capture_output=True, text=True, timeout=1800)
-        for name in ('workspace', 'telemetry', 'telemetry-transports', 'process-evidence', 'service-errors'):
-            source = stage / name
-            if source.is_dir():
-                destination = directory / name
+        if progress['status'] == 'downloading':
+            if any(stage.iterdir()):
+                previous = str(stage)
+                stage = directory / ('payload-export-' + str(time.time_ns()))
+                stage.mkdir()
+                progress.update(stage=str(stage), retained_partials=[*progress.get('retained_partials', []), previous])
+                atomic(progress_path, progress)
+            docker_export_preflight(directory, attempt, resource)
+            helper = read(directory / 'store-helper.json')
+            execute(target['endpoint'], ['cp', helper['container_id'] + ':/execution/payload/.', str(stage)],
+                    check=True, capture_output=True, text=True, timeout=1800)
+            workspace_source = _payload_workspace(directory)
+            if workspace_source != '/execution/payload/workspace':
+                if (stage / 'workspace').exists():
+                    (stage / 'workspace').rename(stage / 'entry-workspace-parent')
+                (stage / 'workspace').mkdir()
+                execute(target['endpoint'], ['cp', helper['container_id'] + ':' + workspace_source + '/.', str(stage / 'workspace')],
+                        check=True, capture_output=True, text=True, timeout=1800)
+            progress['workspace_source'] = workspace_source
+            names = ('workspace', 'telemetry', 'telemetry-transports', 'process-evidence', 'service-errors')
+            progress.update(status='downloaded', contents={name: contents(stage / name)
+                            for name in names if (stage / name).is_dir() and not (stage / name).is_symlink()})
+            atomic(progress_path, progress)
+        for name, expected in progress['contents'].items():
+            source, destination = stage / name, directory / name
+            if source.exists():
                 if destination.exists() and any(destination.iterdir()):
-                    from .artifacts import contents
-                    if contents(source) != contents(destination):
+                    if contents(destination) != expected:
                         raise Blocked('existing export differs from terminal payload: ' + name)
+                    # Matching download scratch is released only after the final preservation receipt.
                 else:
-                    shutil.copytree(source, destination, symlinks=True, dirs_exist_ok=True)
+                    if destination.exists():
+                        destination.rmdir()
+                    source.rename(destination)
+                    _sync(directory)
+                    _sync(stage)
+            if contents(destination) != expected:
+                raise Blocked('installed terminal payload differs from completed download: ' + name)
+            _durable_tree(destination)
         for name in ('stdout.log', 'stderr.log', 'payload-terminal.json', 'services.json', 'ready.json'):
             if (stage / name).exists():
                 shutil.copy2(stage / name, directory / name)
+                _sync(directory / name)
         if (stage / 'assembly.json').exists():
             shutil.copy2(stage / 'assembly.json', directory / 'payload-assembly.json')
-        atomic(directory / 'export.json', record('export', status='preserved', source=resource, stage=str(stage), exported_at=time.time()))
-        return read(directory / 'export.json')
+            _sync(directory / 'payload-assembly.json')
+        # Unclaimed metadata and any conflicting original remain at stage; live input links are not followed.
+        _durable_tree(stage)
+        ready = read(directory / 'ready.json')
+        execution = read(directory / 'execution.json')
+        deployment = read(directory / 'payload-deployment.json')
+        assembly_path = directory / 'payload-assembly.json'
+        assembly = read(assembly_path) if assembly_path.is_file() else None
+        mapping = next((row for row in deployment.get('layout_bindings', []) if row['member'] == 'run'), None)
+        if mapping and (not assembly or assembly.get('status') != 'assembled'
+                        or assembly['workspace'] != mapping['logical_root'] or mapping.get('access') != 'read-write'):
+            raise Blocked('exported state lacks its exact completed assembly mapping')
+        state_binding = {'logical_root': mapping['logical_root'] if mapping else '/execution/workspace',
+                         'installed_root': str((directory / 'workspace').resolve()), 'installed_member': 'workspace',
+                         'contents': progress['contents']['workspace'], 'platform': ready['execution_platform'],
+                         'runtime_identity': ready['runtime'], 'mapping': mapping,
+                         'definitions': assembly['definitions'] if assembly else [],
+                         'readonly_inputs': [{'root': '/assets/' + ref['artifact_id'] + '/payload', 'artifact': ref}
+                                             for ref in attempt['job']['inputs'].values()],
+                         'source_identity': {'attempt_id': attempt['attempt_id'], 'execution_instance': execution['incarnation_id'],
+                                             'backend_identity': execution['backend_identity']}}
+        atomic(directory / 'export.json', record('export', status='preserved', source=resource,
+               stage=str(stage), installed=progress['contents'], state_binding=state_binding, exported_at=time.time()))
+        return _release_export_scratch(directory, read(directory / 'export.json'))
     except Exception as exc:
         atomic(stage / 'transport-error.json', error(exc))
         raise

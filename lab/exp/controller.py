@@ -26,7 +26,7 @@ def _source_files():
     files += [ROOT / 'arc_bench' / name for name in (
         '__init__.py', 'playground.py', 'arc_bench_adapter.py', 'arc_bench_noop.py',
         'workspace_archive.py', 'docker_workspace.py', 'docker_admission.py', 'arc_artifacts.py', 'traceability.py')]
-    files += [ROOT.parent / 'scripts' / name for name in ('__init__.py', 'agent_support.py')]
+    files += [ROOT.parent / 'scripts' / name for name in ('__init__.py', 'agent_support.py', 'harness_layout.py')]
     files += [ROOT.parent / 'submission/exp_checkpoint.py']
     return list(dict.fromkeys(files))
 
@@ -344,6 +344,21 @@ def build(spec_path, directory, *, environment=None):
                     inputs[field] = publish_input(job_id + '/' + field, (spec_path.parent / binding['source']).resolve(strict=True),
                                                      field.replace('_', '-'), binding.get('provenance', {}), binding.get('source_identity'))
                     job[field] = inputs[field]
+            if 'prepared' in job:
+                prepared_root = artifacts.resolve(store, job['prepared'])
+                descriptor = read(prepared_root / 'harness-manifest.json')
+                if descriptor.get('schema_version') != 3:
+                    raise ValueError('new execution requires separated v3 prepared content; old records keep their frozen executor')
+                locations = read(prepared_root / 'provenance/asset-bindings.json')
+                for asset in descriptor['definition_assets']:
+                    reference = asset['artifact']
+                    if not (store / reference['artifact_id'] / 'manifest.json').exists():
+                        artifacts.transfer(locations[asset['name']]['store'], store, reference,
+                                           consumer='prepared-' + descriptor['prepared_id'])
+                    artifacts.retain(store, reference, 'run-' + canonical(str(directory.resolve())),
+                                     'prepared-definition/' + asset['name'],
+                                     'retain-definition-' + canonical([str(directory.resolve()), asset])[:40])
+                job['prepared_descriptor'] = descriptor
             job['inputs'] = inputs
             jobs.append(job)
         by_id = {job['id']: job for job in jobs}
@@ -499,7 +514,7 @@ def _backend(attempt):
 
 def source_stop_binding(prepared, stop):
     """Check the saved binding; a matching record is not a current stop proof."""
-    if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 2:
+    if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 3:
         raise Blocked('prepared artifact needs the public Harness prepared contract')
     if prepared.get('status') != 'complete' or prepared.get('acquisition', {}).get('status') != 'writer-closed':
         raise Blocked('prepared input lacks complete semantics or continuous writer-closed acquisition')
@@ -522,10 +537,10 @@ def _launch_gate(attempt_dir, attempt):
     prepared_path = artifacts.resolve(store, job['prepared'])
     manifest_path = prepared_path / 'harness-manifest.json' if prepared_path.is_dir() else prepared_path
     prepared = read(manifest_path)
-    if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 2:
+    if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 3:
         raise Blocked('prepared artifact needs the public Harness prepared contract')
     from submission.exp_checkpoint import validate
-    validate(prepared_path)
+    validate(prepared_path, store)
     stop_ref = job.get('stop_evidence')
     if not stop_ref:
         raise Blocked('prepared input valid; source stop evidence missing')
