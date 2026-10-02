@@ -472,11 +472,32 @@ fn render_pull_request(output: &mut String, pull_request: &PullRequestSnapshot, 
 }
 
 fn render_context_comments(output: &mut String, comments: &[CommentSnapshot], heading_level: usize, comment_index: bool) {
+    let mut hidden_groups: Vec<(Option<&str>, Vec<&str>)> = Vec::new();
+    let mut group_indices = HashMap::new();
     let visible = comments.iter().filter(|comment| {
         !comment.folded || comment.database_id.parse::<i64>().ok() == Some(comment.thread_root)
+    }).filter(|comment| {
+        // A hidden branch has one marker, even when descendants are also
+        // independently hidden. Their own state remains in the object store.
+        if comment.hidden_by.is_some() { return false; }
+        if comment.minimized && !comment.deleted {
+            let reason = comment.minimized_reason.as_deref();
+            let index = *group_indices.entry(reason).or_insert_with(|| {
+                hidden_groups.push((reason, Vec::new()));
+                hidden_groups.len() - 1
+            });
+            hidden_groups[index].1.push(comment.database_id.as_str());
+            return false;
+        }
+        true
     }).cloned().collect::<Vec<_>>();
     if comment_index { push_line(output, "讨论仅列标题；按编号使用 braid comment view ID 读取正文。"); }
     render_comments(output, &visible, heading_level, true);
+    for (reason, ids) in hidden_groups {
+        let mut title = format!("Comments {} hidden", ids.join(","));
+        if let Some(reason) = reason { title.push_str(&format!(" ({})", one_line(reason))); }
+        heading(output, heading_level, &title);
+    }
 }
 
 /// Render a comment slice as a reply tree. Missing parents become roots, so a
