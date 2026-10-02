@@ -1,0 +1,206 @@
+{
+  "node_id": "pr:14",
+  "repository_node_id": "local",
+  "kind": "pr",
+  "number": 14,
+  "state": "MERGED",
+  "context_revision": "288a716ea50348f0e941f82a1cf7d68ca01787f01905d11d8e52304269ce059d",
+  "observed_at": "2026-09-29T07:58:40.913958112Z",
+  "title": "REQ-2-2-3 Access denied 会话态呈现 + docs/e2e 补登（小 PR）",
+  "body": "## 任务：REQ-2-2-3 \"Access denied\" 行为落地（独立小 PR）\n\n**来源裁决**：issue #4 评论 #73（advisor 审查后采纳方案 C）；背景见本 Issue（#1）thread 61 评论 #74、PR #11 评论 #76/#78/#80。\n\n### 范围（base `develop` @ `53532a0`，含已合入的 M1/PR #12 + M3/PR #11）\n\n1. **前端 RepositoryMissing 会话态区分**（`frontend/src` 中 M3 创建的页面文件）：\n   - 访客（后端会话未解析为登录）：h1 \"Not found\" + Sign in 链接（现状不变）；\n   - 已登录（后端会话解析为准；session 过期/无效 cookie 按访客态渲染）：h1 \"Access denied\"（与 notFound 同 role/level）；\n   - gate 必须在会话 loading 解析完成后渲染，避免闪现；同一会话态内不存在与无权限仓库显示同一文案（措辞纪律：只写\"每会话态内文案一致\"，不写\"API 无存在性泄露\"——写路径对登录用户已 403，读路径统一 404）。\n2. **copy 常量**：`copy.ts` 增 `errors.accessDenied = 'Access denied'`，`messages.js` 镜像（§9.4 契约）。注意：M2（PR #13）计划同增此常量，本 PR 先合入后 #13 rebase 消费即可，不产生冲突面问题。\n3. **docs 三处**：`docs/architecture.md` §9 修订记录追加本裁决 + §7.1 注记（会话态语义）；`docs/acceptance-plan.md` 补 REQ-2-2-3 登记及登录态 Access denied e2e 判据（advisor 核实该硬断言此前不在验收计划内，属缺口）；`docs/product-plan.md` 文案契约补 `errors.accessDenied`。\n4. **e2e 增量**：M3 侧补一条登录态 Access denied 断言（登录 context 访问不可见私有仓库 → `getByRole('heading', { level: 1, name: copy.errors.accessDenied })`）；访客侧既有 5 处 notFound 断言不变。\n5. **packet 刷新**：`docs/task-packets/m3-pr-11.md` 的 \"Current truth / 证据\" 段按已合入事实刷新（PR #11 评论 #80 §3 交代的陈旧点，在本 PR 内一并处理）。\n\n### 约束\n\n- **API 零改动**：不可见仓库一律 404 的防枚举语义不变（M3 模块契约，issue #5 评论 #20 §1）。\n- 可访问仓库内未知 branch/path 仍走 `pathNotFound`，不经 RepositoryMissing，不受影响。\n- **顺序约束：本 PR 合入 develop 必须先于 M2 的 PR #13 合入**（#13 的 REQ-2-2-3 e2e 依赖本行为，否则 #13 合入即红）。\n\n### 验收\n\n- Vitest + 全量 Playwright 通过（新增断言包含登录态 Access denied）；`pnpm typecheck` exit 0；`bash checks/platform-path.sh` exit 0（`PATH=/usr/local/bin:$PATH`，临时库、runner 分配端口，不占 3000）。\n- 结果报本 PR；合入前提由根负责人（@glm-1）核实后执行。\n"
+}
+
+local_comments {
+  "comment_id": 86,
+  "work_item_node_id": "pr:14",
+  "body": "## PR #14 候选就绪，报验通过，请 @glm-1 做合入核实（@deepseek-8）\n\n按 PR 正文/report 范围完成全部五项，pushed head = **`9bedf84`**（`origin/access-denied`，base `develop` = `53532a0`）。\n\n### 实现（对应裁决 issue #4 评论 #73「方案 C」）\n- `frontend/src/features/repo/RepositoryMissing.tsx`：会话解析完成前不渲染 h1（避免闪现）；访客 → h1 `Not found` + Sign in 入口；\n  已登录 → h1 `Access denied`，无 Sign in 入口。文案主体与 Home 链接两态一致，**同一会话态内不存在仓库与无权限仓库文本完全相同**。\n- `copy.ts` 增 `errors.accessDenied = 'Access denied'`（§9.4），`backend/src/contracts/messages.js` 增 `ACCESS_DENIED` 镜像（copy-contract 测试覆盖）。\n- **API 零改动**：`/api/repos/:owner/:name` 对不可见仓库仍 404（新 e2e 对登录态显式断言 404）；可访问仓库内未知 branch/path 仍走 `pathNotFound`。\n- docs：`architecture.md` §7.1 注记 + §9.14 修订条目；`acceptance-plan.md` 新增「跨模块判据登记」并补高风险名称；`product-plan.md` §3.6 文案契约。\n- e2e：`e2e/repos.spec.ts` 新增 describe `REQ-2-2-3 ungranted private repository for a signed-in viewer`（访客 `Not found` 对照 → 以 `carol-writer`（seed 中对该私有仓库无任何直接/团队授权，docs/seed-data.md）登录 → `Access denied`、无内容、无 Sign in、刷新保持）。\n- packet：`docs/task-packets/m3-pr-11.md` 的 \"Current truth / 证据\" 段已按合入事实刷新（`53532a0` / tree `5319a2b8`、`#79` 确认、`#72/#75` 两份复跑），并加「PR #14 增量」段。\n\n### 证据（均对应 `9bedf84`，`PATH=/usr/local/bin:$PATH` → node v20.19.3 / npm 10.8.2）\n\n| 检查 | 结果 |\n|---|---|\n| `pnpm typecheck` | exit 0 |\n| backend Vitest | **76/76**（7 文件；含 copy-contract 对新增常量的镜像校验） |\n| 全量 Playwright（`pnpm e2e`，工作区） | **34/34**（新增第 23 条 REQ-2-2-3 通过；既有 5 处访客 `notFound` 断言不变） |\n| `bash checks/platform-path.sh`（`git archive 9bedf84` 干净副本） | **exit 0**（root npm 3 包；frontend `npm install` 203 包 + `vite build`；backend `npm install` 154 包；`HOST`/`PORT` 注入 `npm run start` 于 `127.0.0.1:45403`；Playwright 34/34） |\n\n平台副本产物：`dist/assets/index-CHiIpO-m.js` / `index-CpsJ-Upb.css`（源变更导致 JS hash 相对 PR #11 更新）。临时库/runner 分配端口，未占 3000；无 core dump 提交。\n\n### 请求\n- @glm-1：按 `--match-head-commit 9bedf84` 核实并合入 develop；**顺序约束不变：本 PR 先于 M2 的 PR #13 合入**。\n- 复现：`git fetch origin && git checkout 9bedf84` → `PATH=/usr/local/bin:$PATH pnpm install && pnpm test && pnpm e2e`，或 `bash checks/platform-path.sh`。\n- 我这边无待办；合并后 M3/REQ-2-2-3 的行为即可被 #13 消费。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebed-a154-7870-b551-3cf8e13f066e",
+  "writer_turn": "01a0ebed-a90e-7cf1-905e-4100f503ace9",
+  "revision": 1,
+  "created_at": "2026-09-29T06:58:45.415629443Z",
+  "updated_at": "2026-09-29T06:58:45.415629443Z",
+  "reply_to": null,
+  "thread_root": 86,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 101,
+  "work_item_node_id": "pr:14",
+  "body": "复验回执（本会话在冻结 head 9bedf84 独立复跑）：pnpm test exit 0（Vitest 76/76 + typecheck）；pnpm e2e exit 0，34/34（含 REQ-2-2-3）；merge-tree(origin/develop, 9bedf84) exit 0 且 develop 仍为 53532a0。合并前提不变：--match-head-commit 9bedf84，先于 #13。",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebed-a154-7870-b551-3cf8e13f066e",
+  "writer_turn": "01a0ec02-87a1-7a10-a14f-193afc607d0f",
+  "revision": 1,
+  "created_at": "2026-09-29T07:13:06.685353362Z",
+  "updated_at": "2026-09-29T07:13:06.685353362Z",
+  "reply_to": 86,
+  "thread_root": 86,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 102,
+  "work_item_node_id": "pr:14",
+  "body": "补充冻结声明：我**冻结 head 于 `9bedf84`，不再向 `origin/access-denied` push**（包括 docs/packet 修订），以保证你的 `--match-head-commit 9bedf84` 与 #86/#101 的复跑证据继续有效。你独立复跑若发现任何问题，请在 thread 86 指出，我按结论处理；否则本 PR 交给你按顺序（先于 #13）合入。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebed-a154-7870-b551-3cf8e13f066e",
+  "writer_turn": "01a0ec02-87a1-7a10-a14f-193afc607d0f",
+  "revision": 2,
+  "created_at": "2026-09-29T07:13:16.698079846Z",
+  "updated_at": "2026-09-29T07:13:22.478206847Z",
+  "reply_to": 86,
+  "thread_root": 86,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 105,
+  "work_item_node_id": "pr:14",
+  "body": "## 合入确认，本 PR 闭环（@deepseek-8）\n\n**PR #14 已合入 `develop`：merge `d70e6ac`，head 匹配 `9bedf84`。** 合入后核实：`git diff origin/access-denied origin/develop` 为空（未引入 `9bedf84` 之外的内容变更，故 #86/#101 证据链对当前 develop 继续有效）；`copy.ts` / `messages.js` 常量、`RepositoryMissing.tsx` 会话态 gate、`e2e/repos.spec.ts:247` 的 REQ-2-2-3 断言、docs §7.1/§9.14 与 acceptance-plan 登记均在 `origin/develop`。\n\n消费侧已交接：issue #4 评论 #104 已通知 @glm-7 按 #88 在 PR #13 rebase 中消费（丢弃重复常量键），顺序前提（#14 先于 #13）已满足。\n\n我这边无待办。**本 thread 保留为 PR #14 的报验/合入证据入口**（根 Issue 正文即引用评论 #86），故不折叠；有新的实现问题仍可在此回复。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebed-a154-7870-b551-3cf8e13f066e",
+  "writer_turn": "01a0ec03-cdac-7e33-8668-c5eafb5fe94f",
+  "revision": 2,
+  "created_at": "2026-09-29T07:14:56.345321062Z",
+  "updated_at": "2026-09-29T07:15:01.586177057Z",
+  "reply_to": 86,
+  "thread_root": 86,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 106,
+  "work_item_node_id": "pr:14",
+  "body": "## 已合入（@glm-1，回复 #86）\n\nPR #14 已合入 develop，merge commit **`d70e6ac`**（`--match-head-commit 9bedf84`）。\n\n**根侧合入核实依据**：\n1. diff 审查：五项范围（RepositoryMissing 会话态区分 / copy 常量 / docs 三处 / 登录态 e2e / m3-pr-11 packet 刷新）全部对齐裁决 issue #4 评论 #73；API 零改动确认（不可见仓库仍 404）。\n2. e2e 前提核实：`carol-writer` 在 seed 中对 `acme-demo/org-private` 无任何直接/团队授权（`seed/accounts.js` + `seed-data.md`），断言前提成立。\n3. **独立复跑 PASS**（干净 `git archive 9bedf84` 副本，`PATH=/usr/local/bin:$PATH` → node v20.19.3）：`bash checks/platform-path.sh` **exit 0**——frontend npm install 203 包 + vite build、backend npm install 154 包、`HOST`/`PORT` 注入启动、全量 Playwright **34/34**（含新增 REQ-2-2-3 两会话态断言）。与你 #86 的报告互证。\n\n顺序约束已解除：develop 现含 REQ-2-2-3 行为，PR #13（M2）可 rebase/整合消费。感谢交付质量，本 PR 闭环。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb68-0ed9-7ff0-a22a-52f93596e102",
+  "writer_turn": "01a0ebf0-e902-7123-bab0-2c5f83e4c06e",
+  "revision": 1,
+  "created_at": "2026-09-29T07:15:11.939206132Z",
+  "updated_at": "2026-09-29T07:15:11.939206132Z",
+  "reply_to": null,
+  "thread_root": 106,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_activity {
+  "ordinal": 163,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T06:50:13.868735621Z",
+  "actor_login": "glm-1",
+  "action": "created",
+  "source_comment": null,
+  "detail": "REQ-2-2-3 Access denied 会话态呈现 + docs/e2e 补登（小 PR）"
+}
+
+local_activity {
+  "ordinal": 165,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T06:50:13.869867874Z",
+  "actor_login": "glm-1",
+  "action": "linked_issue",
+  "source_comment": null,
+  "detail": "Issue #4"
+}
+
+local_activity {
+  "ordinal": 167,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T06:50:13.871345844Z",
+  "actor_login": "glm-1",
+  "action": "linked_issue",
+  "source_comment": null,
+  "detail": "Issue #1"
+}
+
+local_activity {
+  "ordinal": 182,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T06:58:45.415740957Z",
+  "actor_login": "deepseek-8",
+  "action": "commented",
+  "source_comment": 86,
+  "detail": "comment #86"
+}
+
+local_activity {
+  "ordinal": 207,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T07:13:06.685427366Z",
+  "actor_login": "deepseek-8",
+  "action": "replied",
+  "source_comment": 101,
+  "detail": "comment #101"
+}
+
+local_activity {
+  "ordinal": 208,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T07:13:16.698132748Z",
+  "actor_login": "deepseek-8",
+  "action": "replied",
+  "source_comment": 102,
+  "detail": "comment #102"
+}
+
+local_activity {
+  "ordinal": 209,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T07:13:22.478265951Z",
+  "actor_login": "deepseek-8",
+  "action": "comment_edited",
+  "source_comment": 102,
+  "detail": "comment #102"
+}
+
+local_activity {
+  "ordinal": 211,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T07:14:26.281449692Z",
+  "actor_login": "glm-1",
+  "action": "merged",
+  "source_comment": null,
+  "detail": "refs/heads/develop at d70e6ac853900c016182019218554c0914874588 contains prepared merge d70e6ac853900c016182019218554c0914874588"
+}
+
+local_activity {
+  "ordinal": 215,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T07:14:56.345383666Z",
+  "actor_login": "deepseek-8",
+  "action": "replied",
+  "source_comment": 105,
+  "detail": "comment #105"
+}
+
+local_activity {
+  "ordinal": 216,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T07:15:01.586217159Z",
+  "actor_login": "deepseek-8",
+  "action": "comment_edited",
+  "source_comment": 105,
+  "detail": "comment #105"
+}
+
+local_activity {
+  "ordinal": 217,
+  "work_item_node_id": "pr:14",
+  "occurred_at": "2026-09-29T07:15:11.939299637Z",
+  "actor_login": "glm-1",
+  "action": "commented",
+  "source_comment": 106,
+  "detail": "comment #106"
+}

@@ -1,0 +1,1160 @@
+[
+  {
+    "render_block": 64,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 174,
+    "text": "先纠正 comment #69 里的一处事实：我这边**不是**只有准备件。927358f（基于 3ab688f 的准备件）已被后续实现取代，我已把 `braid-agent/issue-5/pi-deepseek-fast-g1` 强制更新到当前 HEAD（旧提交不再有可消费内容）；正式实现分支是 `issue-5-req3-editing`。"
+  },
+  {
+    "render_block": 66,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 170,
+    "text": "**PR #8**（`braid pr create --base develop --head issue-5-req3-editing`，owner @deepseek-10）：base `origin/develop` = 0539c62（已含 #2 共享基础、#6 公式写管道、CSV、检查套件加固），head = 7e65dca。"
+  },
+  {
+    "render_block": 68,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 276,
+    "text": "### 已按新基线接线\n- `PATCH /cells` 直接消费 #6 的 `runWithFormulas` 原子管线语义：raw 保真、依赖重算、`value` 回填、错误串不拒写；前端一次 batch 写入、成功后入会话 undo 栈。\n- 复制/移动的公式调整仍按 #42/#6 契约用引擎 `adjustFormulaForCopy`（`$` 绝对引用不变，相对引用按目标偏移；越界折叠为 `=#REF!`）。\n- 服务端不再需要前端传计算结果，但显示仍走同一个 `@app/formula-engine`（与回填 `value` 同源）。"
+  },
+  {
+    "render_block": 70,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L339",
+    "chars": 567,
+    "text": "### 自检证据（可重复执行）\n```\nBROWSER_EXECUTABLE_PATH=<chromium> ./checks/run.sh        # 28 passed + 1 skipped(fixme)，EXIT=0，5.4 min\nnode --test checks/unit/editing.test.ts                   # 11/11\ntsc -p {checks,frontend,backend}/tsconfig.json            # 全通过\n```\n运行提交 075b778（现 HEAD 7e65dca 只多一行 README 文档）。覆盖：编辑/行内编辑/公式栏一致性、Escape 取消、刷新持久、二维粘贴（空字段、只覆盖矩形、右键 menuitem Paste 与 Ctrl+V 同路）、拖拽选区 aria-selected 精确 + 刷新/切表恢复、复制带相对/绝对引用公式的偏移（F3 链路）、剪切源清空时序、0-100 原子拒绝（message/hint 双元素）、Undo/Redo 按钮与 Ctrl+Z/Y、undo 后新修改禁用 redo、undo 不跨工作簿。每 spec 独立 server + 空闲端口 + 运行私有临时数据目录，结束即停服。"
+  },
+  {
+    "render_block": 160,
+    "source": "continuation02-root-native/023-2026-09-28T04-50-06-734Z_01a0e659-4b0e-70ee-9264-6926aa018e11.jsonl:L168",
+    "chars": 368,
+    "text": "# Type-check the check sources first: a typo such as a missing import has to\n# fail fast instead of showing up later as a confusing browser failure.\nTSC=\"$ROOT/checks/node_modules/.bin/tsc\"\nif [[ -x \"$TSC\" ]]; then\n  \"$TSC\" -p \"$ROOT/checks/tsconfig.json\"\nelse\n  echo \"note: typescript is not installed under checks/ (cd checks && npm install); skipping type-check\"\nfi"
+  },
+  {
+    "render_block": 162,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  },
+  {
+    "render_block": 164,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L103",
+    "chars": 732,
+    "text": "# Keep everything this run owns (server logs, PID record, per-spec DATA_DIRs)\n# inside one run-private directory with a distinctive prefix. The shared\n# /tmp/wb-checks-* namespace is used by every lane running this harness, and\n# files there have been observed to disappear mid-run (foreign cleanup): one\n# server kept running while its workbook directory had been emptied, so the\n# checks failed with \"the seeded workbook is missing\" although the product was\n# fine. A private directory makes that far less likely.\nRUN_DIR=\"${CHECK_RUN_DIR:-$(mktemp -d /tmp/wbchecks-run-XXXXXX)}\"\nLOG_PREFIX=\"${SERVER_LOG_PREFIX:-$RUN_DIR/server}\"\nPID_FILE=\"$RUN_DIR/pids\"\nWATCHDOG=\"\"\necho \"run dir: $RUN_DIR (server logs: $LOG_PREFIX-<SPEC>.log)\""
+  },
+  {
+    "render_block": 166,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L103",
+    "chars": 482,
+    "text": "# Port ownership: free_port() only reports a port that was free a moment ago,\n# and the other lanes start servers at the same time. If a foreign server answers\n# on our port, its workbook list would be mistaken for ours, so verify the\n# listener is the process we started (lsof) instead of trusting the port alone.\nif command -v lsof >/dev/null 2>&1; then\n  OWNERSHIP_CHECK=true\nelse\n  echo \"note: lsof is not installed; skipping the port-ownership check\"\n  OWNERSHIP_CHECK=false\nfi"
+  },
+  {
+    "render_block": 172,
+    "source": "continuation02-root-native/125-2026-09-28T07-47-42-943Z_01a0e6fb-e4df-7644-8bc1-d2f16393b146.jsonl:L43",
+    "chars": 256,
+    "text": "# env var suffix -> spec file handled by the matching Playwright project.\n# REQ3_CORE / REQ3_INTEGRATION belong to issue #5 (REQ-3 editing and ranges).\nSUFFIXES=(CREATE EDITOR HOME CSV REQ3_CORE REQ3_INTEGRATION)\ndeclare -A PORTS URLS DATA_DIRS SERVER_PIDS"
+  },
+  {
+    "render_block": 174,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L103",
+    "chars": 473,
+    "text": "cleanup() {\n  [[ -n \"$WATCHDOG\" ]] && kill \"$WATCHDOG\" 2>/dev/null || true\n  local pid\n  # Kill the pids we remember even if the PID file was removed by something\n  # outside this run.\n  for pid in ${SERVER_PIDS[@]+\"${SERVER_PIDS[@]}\"}; do\n    kill \"$pid\" 2>/dev/null || true\n  done\n  if [[ -f \"$PID_FILE\" ]]; then\n    while read -r pid; do\n      kill \"$pid\" 2>/dev/null || true\n    done < \"$PID_FILE\"\n  fi\n  rm -f \"$PID_FILE\"\n  wait 2>/dev/null || true\n}\ntrap cleanup EXIT"
+  },
+  {
+    "render_block": 176,
+    "source": "continuation02-root-native/031-2026-09-28T05-33-22-458Z_01a0e680-e69a-72d4-9388-0b6b053d16f6.jsonl:L15",
+    "chars": 265,
+    "text": "start_server() {\n  local suffix=\"$1\"\n  DATA_DIR=\"${DATA_DIRS[$suffix]}\" HOST=127.0.0.1 PORT=\"${PORTS[$suffix]}\" \\\n    node \"$ROOT/backend/dist/server.js\" >> \"$LOG_PREFIX-$suffix.log\" 2>&1 &\n  SERVER_PIDS[$suffix]=$!\n  echo \"${SERVER_PIDS[$suffix]}\" >> \"$PID_FILE\"\n}"
+  },
+  {
+    "render_block": 178,
+    "source": "continuation02-root-native/125-2026-09-28T07-47-42-943Z_01a0e6fb-e4df-7644-8bc1-d2f16393b146.jsonl:L43",
+    "chars": 1000,
+    "text": "# Start a server that provably owns its port; retry on a new port when another\n# lane won the race for it (or when the process died right after startup).\nstart_owned_server() {\n  local suffix=\"$1\" attempt port pid owner\n  for attempt in 1 2 3 4 5; do\n    port=\"$(free_port)\"\n    PORTS[$suffix]=\"$port\"\n    start_server \"$suffix\"\n    pid=\"${SERVER_PIDS[$suffix]}\"\n    owner=\"\"\n    for _ in $(seq 1 40); do\n      kill -0 \"$pid\" 2>/dev/null || break\n      owner=\"$(listener_pid \"$port\")\"\n      [[ -n \"$owner\" ]] && break\n      sleep 0.25\n    done\n    if kill -0 \"$pid\" 2>/dev/null && { ! $OWNERSHIP_CHECK || [[ \"$owner\" == \"$pid\" ]]; }; then\n      return 0\n    fi\n    echo \"[run] port $port for $suffix is not served by our server (pid $pid, listener ${owner:-none}); retrying on another port\" \\\n      | tee -a \"$LOG_PREFIX-$suffix.log\"\n    kill \"$pid\" 2>/dev/null || true\n    wait \"$pid\" 2>/dev/null || true\n  done\n  echo \"[run] could not start a server for $suffix that owns its port\" >&2\n  return 1\n}"
+  },
+  {
+    "render_block": 180,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L125",
+    "chars": 573,
+    "text": "# Wait until this server answers with the seeded workbook.\nwait_for_ready() {\n  local port=\"$1\" pid=\"$2\" log=\"$3\"\n  local attempt\n  for attempt in $(seq 1 120); do\n    # Liveness first: a foreign server on this port must not make a dead server\n    # of ours look ready.\n    if ! kill -0 \"$pid\" 2>/dev/null; then\n      echo \"server died during startup (log: $log)\"\n      return 1\n    fi\n    if curl -sf \"http://127.0.0.1:$port/api/workbooks\" | grep -q \"Q3 Sales\"; then\n      return 0\n    fi\n    sleep 0.5\n  done\n  echo \"server was not ready in time (log: $log)\"\n  return 1\n}"
+  },
+  {
+    "render_block": 182,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L125",
+    "chars": 1313,
+    "text": "# This machine may be shared with other agents' runs. If something outside this\n# script kills one of our servers, restart it on the same port and DATA_DIR so\n# the run keeps observing the same state; the restart stays in the log.\nwatchdog() {\n  while true; do\n    sleep 2\n    local suffix pid\n    for suffix in \"${SUFFIXES[@]}\"; do\n      pid=\"${SERVER_PIDS[$suffix]:-}\"\n      if [[ -n \"$pid\" ]] && ! kill -0 \"$pid\" 2>/dev/null; then\n        echo \"[watchdog] server for $suffix (pid $pid) disappeared at $(date -Is); restarting on the same DATA_DIR\" \\\n          >> \"$LOG_PREFIX-$suffix.log\"\n        start_server \"$suffix\"\n        sleep 1\n        local new_pid listener\n        new_pid=\"${SERVER_PIDS[$suffix]}\"\n        if ! kill -0 \"$new_pid\" 2>/dev/null; then\n          echo \"[watchdog] restart of $suffix (pid $new_pid) died immediately; port ${PORTS[$suffix]} is probably taken by another process\" \\\n            >> \"$LOG_PREFIX-$suffix.log\"\n        else\n          listener=\"$(listener_pid \"${PORTS[$suffix]}\")\"\n          if $OWNERSHIP_CHECK && [[ -n \"$listener\" && \"$listener\" != \"$new_pid\" ]]; then\n            echo \"[watchdog] port ${PORTS[$suffix]} is served by pid $listener, not by our restart (pid $new_pid)\" \\\n              >> \"$LOG_PREFIX-$suffix.log\"\n          fi\n        fi\n      fi\n    done\n  done\n}"
+  },
+  {
+    "render_block": 184,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L125",
+    "chars": 439,
+    "text": "for suffix in \"${SUFFIXES[@]}\"; do\n  DATA_DIRS[$suffix]=\"$(mktemp -d \"$RUN_DIR/data-$suffix-XXXXXX\")\"\n  : > \"$LOG_PREFIX-$suffix.log\"\n  start_owned_server \"$suffix\" || exit 3\n  wait_for_ready \"${PORTS[$suffix]}\" \"${SERVER_PIDS[$suffix]}\" \"$LOG_PREFIX-$suffix.log\" || exit 3\n  URLS[$suffix]=\"http://127.0.0.1:${PORTS[$suffix]}\"\n  echo \"server for $suffix: ${URLS[$suffix]} (DATA_DIR=${DATA_DIRS[$suffix]}, log=$LOG_PREFIX-$suffix.log)\"\ndone"
+  },
+  {
+    "render_block": 190,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 192,
+    "source": "continuation02-root-native/041-2026-09-28T05-33-31-043Z_01a0e681-0823-70a7-b2c0-f9b5734222fc.jsonl:L321",
+    "chars": 712,
+    "text": "# DATA_DIR_REQ3_INTEGRATION lets the REQ-3 integration checks seed validation\n# rules into the server's data directory (REQ-5's rule UI is not part of this\n# work item).\nBASE_URL_CREATE=\"${URLS[CREATE]}\" \\\nBASE_URL_EDITOR=\"${URLS[EDITOR]}\" \\\nBASE_URL_HOME=\"${URLS[HOME]}\" \\\nBASE_URL_CSV=\"${URLS[CSV]}\" \\\nBASE_URL_REQ3_CORE=\"${URLS[REQ3_CORE]}\" \\\nBASE_URL_REQ3_INTEGRATION=\"${URLS[REQ3_INTEGRATION]}\" \\\nDATA_DIR_REQ3_INTEGRATION=\"${DATA_DIRS[REQ3_INTEGRATION]}\" \\\nBROWSER_EXECUTABLE_PATH=\"$BROWSER_EXECUTABLE_PATH\" \\\nCHECK_OUTPUT_DIR=\"${CHECK_OUTPUT_DIR:-$ROOT/checks/results/$(date +%Y%m%dT%H%M%S)}\" \\\n  \"$ROOT/checks/node_modules/.bin/playwright\" test --config \"$ROOT/checks/playwright.config.ts\" \\\n  || EXIT=$?"
+  },
+  {
+    "render_block": 194,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L127",
+    "chars": 615,
+    "text": "# If a check failed, say whether the run's own state is still intact: something\n# outside this run removing the workbook files (observed on this shared machine)\n# is one plausible cause of \"the seeded workbook is missing\" failures.\nif [[ \"$EXIT\" != 0 ]]; then\n  for suffix in \"${SUFFIXES[@]}\"; do\n    if ! grep -lq '\"Q3 Sales\"' \"${DATA_DIRS[$suffix]}\"/*.json 2>/dev/null; then\n      echo \"[run] note: the DATA_DIR for $suffix (${DATA_DIRS[$suffix]}) no longer holds a 'Q3 Sales' workbook;\" \\\n           \"      check the server log ($LOG_PREFIX-$suffix.log) for evidence of outside interference\" >&2\n    fi\n  done\nfi"
+  },
+  {
+    "render_block": 198,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 365,
+    "text": "/**\n * Every spec file runs against its own freshly seeded server instance (see\n * run.sh), so each check observes the promised initial state and mutating\n * checks cannot leak into others.\n */\nfunction required(name: string): string {\n  const value = process.env[name];\n  if (!value) throw new Error(`Set ${name} before running browser checks.`);\n  return value;\n}"
+  },
+  {
+    "render_block": 202,
+    "source": "continuation02-root-native/125-2026-09-28T07-47-42-943Z_01a0e6fb-e4df-7644-8bc1-d2f16393b146.jsonl:L45",
+    "chars": 224,
+    "text": "// The REQ-3 checks paste real clipboard content: the requirement is about\n// Ctrl+V / the context menu \"Paste\" item, not about an internal-only path.\nconst clipboard = { permissions: ['clipboard-read', 'clipboard-write'] };"
+  },
+  {
+    "render_block": 204,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L259",
+    "chars": 1110,
+    "text": "const projects: Project[] = [\n  {\n    name: 'create-workbook',\n    testMatch: '**/create-workbook.spec.ts',\n    use: { baseURL: required('BASE_URL_CREATE') },\n  },\n  {\n    name: 'editor-interactions',\n    testMatch: '**/editor-interactions.spec.ts',\n    use: { baseURL: required('BASE_URL_EDITOR') },\n  },\n  {\n    name: 'home-editor',\n    testMatch: '**/home-editor.spec.ts',\n    use: { baseURL: required('BASE_URL_HOME') },\n  },\n  {\n    name: 'csv',\n    testMatch: '**/csv.spec.ts',\n    use: { baseURL: required('BASE_URL_CSV') },\n  },\n  {\n    // REQ-3 (issue #5): editing, 2-D paste, range selection, copy/cut/paste,\n    // undo/redo. Its own server + temp DATA_DIR.\n    name: 'req3-core',\n    testMatch: '**/req3-core.spec.ts',\n    use: { baseURL: required('BASE_URL_REQ3_CORE'), ...clipboard },\n  },\n  {\n    // REQ-3 results that need the formula engine (#6) and the validation rule\n    // model (#7); row/column structure undo waits for issue #4.\n    name: 'req3-integration',\n    testMatch: '**/req3-integration.spec.ts',\n    use: { baseURL: required('BASE_URL_REQ3_INTEGRATION'), ...clipboard },\n  },\n];"
+  },
+  {
+    "render_block": 238,
+    "source": "continuation02-root-native/125-2026-09-28T07-47-42-943Z_01a0e6fb-e4df-7644-8bc1-d2f16393b146.jsonl:L4",
+    "chars": 884,
+    "text": "- **REQ-3-1-1 编辑**：网格与 formula bar（text box label `Formula bar`）都能改同一单元格；Enter 提交并离开文本框、点击其它单元格（失焦）提交、Escape 取消未提交内容；公式格网格显示引擎结果、formula bar 显示原始公式；提交失败报错且两者回到最后一次成功值。双击网格单元格出现行内文本框，可访问名 `Edit <坐标>`。\n- **REQ-3-1-2 二维粘贴**：TSV（tab 分列、换行分行）从起始单元格铺满整个矩形、保留空字段、只覆盖目标矩形；目标内公式被替换并重算；整单原子（校验拒绝时全部保留原值）；右键菜单 ARIA menuitem `Paste` 与 Ctrl+V 走同一路径。\n- **REQ-3-1-3 矩形选区**：点击=单元格、拖拽=矩形；`aria-multiselectable=\"true\"`，矩形内 gridcell `aria-selected=\"true\"`、矩形外 `\"false\"`；新选择替换旧选择；每个工作表持久化**完整矩形**（`Sheet.lastSelectionRect`），刷新/切表精确恢复且互不覆盖。\n- **REQ-3-2-1 复制/剪切/粘贴**：仅同表；复制不动源；剪切先写目标、成功后才清源（同一批写入）；值与公式保持二维布局；复制公式按目标偏移调整相对引用、`$` 绝对引用不变（公式栏显示调整后的原公式）；源/目标/受影响公式全成功并持久或全保持原状；目标 0-100 规则拒绝时报 `Please enter a number from 0 to 100`；范围外不变。\n- **REQ-3-2-2 撤销/重做**：工具栏 `Undo`/`Redo`，Ctrl+Z / Ctrl+Y 同效；覆盖单元格编辑、批量粘贴、范围移动（#4 合入后补行列结构变化）；逆序撤销、redo 重放完整操作；不跨工作簿；undo/redo 后刷新持久；undo 后新修改清空 redo 分支（按钮禁用且 Ctrl+Y 不恢复旧分支）。"
+  },
+  {
+    "render_block": 362,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 284,
+    "text": "/** 1-based column number -> letters (\"A\", \"Z\", \"AA\"). */\nfunction indexToCol(index: number): string {\n  let n = index;\n  let out = \"\";\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    out = String.fromCharCode(65 + rem) + out;\n    n = Math.floor((n - 1) / 26);\n  }\n  return out;\n}"
+  },
+  {
+    "render_block": 364,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 344,
+    "text": "/** \"B3\" -> { col: 2, row: 3 } (1-based). */\nfunction parseRef(ref: string): { col: number; row: number } {\n  const m = /^([A-Za-z]+)([0-9]+)$/.exec(ref);\n  if (!m) throw new Error(`Invalid cell ref: ${ref}`);\n  let col = 0;\n  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);\n  return { col, row: Number(m[2]) };\n}"
+  },
+  {
+    "render_block": 370,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 164,
+    "text": "/** Inclusive 1-based rectangle, same orientation as `refs.Rect`. */\nexport interface GridRect {\n  top: number;\n  left: number;\n  bottom: number;\n  right: number;\n}"
+  },
+  {
+    "render_block": 376,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 199,
+    "text": "// ---------------------------------------------------------------------------\n// Rectangle helpers (1-based, inclusive)\n// ---------------------------------------------------------------------------"
+  },
+  {
+    "render_block": 378,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 281,
+    "text": "export function normalizeRect(start: string, end: string): GridRect {\n  const a = parseRef(start);\n  const b = parseRef(end);\n  return {\n    top: Math.min(a.row, b.row),\n    bottom: Math.max(a.row, b.row),\n    left: Math.min(a.col, b.col),\n    right: Math.max(a.col, b.col),\n  };\n}"
+  },
+  {
+    "render_block": 380,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 172,
+    "text": "export function rectContains(rect: GridRect, col: number, row: number): boolean {\n  return row >= rect.top && row <= rect.bottom && col >= rect.left && col <= rect.right;\n}"
+  },
+  {
+    "render_block": 382,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 157,
+    "text": "export function rectSize(rect: GridRect): { rows: number; cols: number } {\n  return { rows: rect.bottom - rect.top + 1, cols: rect.right - rect.left + 1 };\n}"
+  },
+  {
+    "render_block": 384,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 162,
+    "text": "/** Top-left cell of a rectangle; range operations anchor here. */\nexport function rectStartRef(rect: GridRect): string {\n  return makeRef(rect.left, rect.top);\n}"
+  },
+  {
+    "render_block": 386,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 250,
+    "text": "export function rectRefs(rect: GridRect): string[] {\n  const refs: string[] = [];\n  for (let row = rect.top; row <= rect.bottom; row += 1) {\n    for (let col = rect.left; col <= rect.right; col += 1) refs.push(makeRef(col, row));\n  }\n  return refs;\n}"
+  },
+  {
+    "render_block": 388,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 492,
+    "text": "export function rectFromRefs(refs: string[]): GridRect | null {\n  if (refs.length === 0) return null;\n  let rect: GridRect | null = null;\n  for (const ref of refs) {\n    const { col, row } = parseRef(ref);\n    rect = rect\n      ? {\n          top: Math.min(rect.top, row),\n          bottom: Math.max(rect.bottom, row),\n          left: Math.min(rect.left, col),\n          right: Math.max(rect.right, col),\n        }\n      : { top: row, bottom: row, left: col, right: col };\n  }\n  return rect;\n}"
+  },
+  {
+    "render_block": 390,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 281,
+    "text": "/** Cells of `source` that `target` does not cover (used by cut). */\nexport function subtractRect(source: GridRect, target: GridRect): string[] {\n  return rectRefs(source).filter((ref) => {\n    const { col, row } = parseRef(ref);\n    return !rectContains(target, col, row);\n  });\n}"
+  },
+  {
+    "render_block": 392,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 267,
+    "text": "/** Table laid out at `start`; returns the rectangle it covers. */\nexport function rectAt(start: string, rows: number, cols: number): GridRect {\n  const { col, row } = parseRef(start);\n  return { top: row, left: col, bottom: row + rows - 1, right: col + cols - 1 };\n}"
+  },
+  {
+    "render_block": 394,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 175,
+    "text": "// ---------------------------------------------------------------------------\n// Clipboard text\n// ---------------------------------------------------------------------------"
+  },
+  {
+    "render_block": 396,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 522,
+    "text": "/**\n * Tab separated columns and newline separated rows -> 2-D raw field array.\n * Empty fields are preserved; one trailing newline is ignored.\n */\nexport function parseClipboardTable(text: string | null | undefined): string[][] {\n  if (text == null) return [];\n  const normalized = text.replace(/\\r\\n?/g, \"\\n\");\n  if (normalized === \"\") return [];\n  const body = normalized.endsWith(\"\\n\") ? normalized.slice(0, -1) : normalized;\n  if (body === \"\") return [[]];\n  return body.split(\"\\n\").map((line) => line.split(\"\\t\"));\n}"
+  },
+  {
+    "render_block": 398,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 212,
+    "text": "export function tableSpan(table: string[][]): { rows: number; cols: number } {\n  const rows = table.length;\n  let cols = 0;\n  for (const row of table) cols = Math.max(cols, row.length);\n  return { rows, cols };\n}"
+  },
+  {
+    "render_block": 402,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L28",
+    "chars": 444,
+    "text": "// ---------------------------------------------------------------------------\n// Formula references\n// ---------------------------------------------------------------------------\n// Copy-time reference adjustment is owned by the shared formula engine\n// (`adjustFormulaForCopy`, REQ-4-1-2): relative references shift with the\n// offset, `$` parts stay, and a relative reference that leaves the sheet\n// collapses the whole formula to \"=#REF!\"."
+  },
+  {
+    "render_block": 404,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 172,
+    "text": "// ---------------------------------------------------------------------------\n// Write plans\n// ---------------------------------------------------------------------------"
+  },
+  {
+    "render_block": 408,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 195,
+    "text": "export interface WritePlan {\n  /** rectangle covered by the new content */\n  rect: GridRect;\n  updates: CellUpdate[];\n  /** refs to clear (cut only); never part of `rect` */\n  clears: string[];\n}"
+  },
+  {
+    "render_block": 410,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 666,
+    "text": "/** Plan a 2-D paste starting at the active cell (REQ-3-1-2). */\nexport function planPaste(startRef: string, table: string[][]): WritePlan {\n  const span = tableSpan(table);\n  if (span.rows === 0) return { rect: rectAt(startRef, 0, 0), updates: [], clears: [] };\n  const rect = rectAt(startRef, span.rows, span.cols);\n  const start = parseRef(startRef);\n  const updates: CellUpdate[] = [];\n  for (let row = 0; row < span.rows; row += 1) {\n    for (let col = 0; col < span.cols; col += 1) {\n      updates.push({\n        ref: makeRef(start.col + col, start.row + row),\n        raw: table[row]?.[col] ?? \"\",\n      });\n    }\n  }\n  return { rect, updates, clears: [] };\n}"
+  },
+  {
+    "render_block": 412,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L28",
+    "chars": 897,
+    "text": "/**\n * Plan a range copy to `targetStartRef`: relative references shift with the\n * offset, absolute references stay, the source keeps its values (REQ-3-2-1).\n */\nexport function planRangeCopy(\n  source: RectSelection,\n  targetStartRef: string,\n  read: RawLookup,\n  bounds?: SheetBounds,\n): WritePlan {\n  const rect = normalizeRect(source.start, source.end);\n  const target = rectAt(targetStartRef, rect.bottom - rect.top + 1, rect.right - rect.left + 1);\n  const rowOffset = target.top - rect.top;\n  const colOffset = target.left - rect.left;\n  const updates: CellUpdate[] = [];\n  for (const ref of rectRefs(rect)) {\n    const { col, row } = parseRef(ref);\n    const raw = read(ref) ?? \"\";\n    updates.push({\n      ref: makeRef(col + colOffset, row + rowOffset),\n      raw: adjustFormulaForCopy(raw, { rowOffset, colOffset }, bounds),\n    });\n  }\n  return { rect: target, updates, clears: [] };\n}"
+  },
+  {
+    "render_block": 414,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 863,
+    "text": "/**\n * Plan a range cut (move) to `targetStartRef`: the moved content keeps its\n * formulas unchanged (moving is not copying, REQ-3-2-1 adjusts references of\n * copies), and source cells outside the pasted rectangle are cleared.\n */\nexport function planRangeCut(source: RectSelection, targetStartRef: string, read: RawLookup): WritePlan {\n  const rect = normalizeRect(source.start, source.end);\n  const target = rectAt(targetStartRef, rect.bottom - rect.top + 1, rect.right - rect.left + 1);\n  const rowOffset = target.top - rect.top;\n  const colOffset = target.left - rect.left;\n  const updates: CellUpdate[] = [];\n  for (const ref of rectRefs(rect)) {\n    const { col, row } = parseRef(ref);\n    updates.push({ ref: makeRef(col + colOffset, row + rowOffset), raw: read(ref) ?? \"\" });\n  }\n  return { rect: target, updates, clears: subtractRect(rect, target) };\n}"
+  },
+  {
+    "render_block": 416,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 190,
+    "text": "// ---------------------------------------------------------------------------\n// Operation history (REQ-3-2-2)\n// ---------------------------------------------------------------------------"
+  },
+  {
+    "render_block": 424,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 274,
+    "text": "export interface Operation {\n  kind: OperationKind;\n  label: string;\n  sheetId: string;\n  before: CellSnapshot[];\n  after: CellSnapshot[];\n  /** row/column structure state for REQ-2 operations */\n  structureBefore?: StructureSnapshot;\n  structureAfter?: StructureSnapshot;\n}"
+  },
+  {
+    "render_block": 426,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 244,
+    "text": "/** Snapshot the current content of `refs` (\"\" and absent cells become null). */\nexport function snapshotCells(refs: string[], read: RawLookup): CellSnapshot[] {\n  return refs.map((ref) => ({ ref, raw: read(ref) === \"\" ? null : read(ref) }));\n}"
+  },
+  {
+    "render_block": 428,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 889,
+    "text": "/**\n * Build an operation from a write plan: `before` is the pre-operation content\n * of every touched cell, `after` the content once the plan is applied.\n */\nexport function operationFromPlan(\n  kind: OperationKind,\n  label: string,\n  sheetId: string,\n  plan: WritePlan,\n  read: RawLookup,\n): Operation {\n  const writes = new Map<string, string | null>();\n  for (const u of plan.updates) writes.set(u.ref, u.raw === \"\" ? null : u.raw);\n  for (const ref of plan.clears) writes.set(ref, null);\n  const refs = [...writes.keys()].filter((ref) => read(ref) !== (writes.get(ref) ?? \"\"));\n  const before: CellSnapshot[] = [];\n  const after: CellSnapshot[] = [];\n  for (const ref of refs) {\n    const current = read(ref);\n    before.push({ ref, raw: current === \"\" ? null : current });\n    after.push({ ref, raw: writes.get(ref) ?? null });\n  }\n  return { kind, label, sheetId, before, after };\n}"
+  },
+  {
+    "render_block": 430,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 390,
+    "text": "/** Operation for a single cell edit. */\nexport function operationForCellEdit(\n  sheetId: string,\n  ref: string,\n  raw: string | null,\n  read: RawLookup,\n): Operation {\n  const current = read(ref);\n  return {\n    kind: \"cell-edit\",\n    label: `edit ${ref}`,\n    sheetId,\n    before: [{ ref, raw: current === \"\" ? null : current }],\n    after: [{ ref, raw: raw === \"\" ? null : raw }],\n  };\n}"
+  },
+  {
+    "render_block": 432,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 166,
+    "text": "/** Session undo/redo history; one instance per open workbook. */\nexport class History {\n  private undoStack: Operation[] = [];\n  private redoStack: Operation[] = [];"
+  },
+  {
+    "render_block": 440,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 211,
+    "text": "  /** Returns the operation whose `before` content must be restored. */\n  undo(): Operation | null {\n    const op = this.undoStack.pop();\n    if (!op) return null;\n    this.redoStack.push(op);\n    return op;\n  }"
+  },
+  {
+    "render_block": 442,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L21",
+    "chars": 212,
+    "text": "  /** Returns the operation whose `after` content must be re-applied. */\n  redo(): Operation | null {\n    const op = this.redoStack.pop();\n    if (!op) return null;\n    this.undoStack.push(op);\n    return op;\n  }"
+  },
+  {
+    "render_block": 448,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L227",
+    "chars": 173,
+    "text": "/** Snapshots -> API updates. */\nexport function snapshotsToUpdates(snapshots: CellSnapshot[]): CellUpdate[] {\n  return snapshots.map((s) => ({ ref: s.ref, raw: s.raw }));\n}"
+  },
+  {
+    "render_block": 462,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 183,
+    "text": "/** 1-based cell coordinates, matching the shared validation model. */\nexport interface ValidationRange {\n  start: { row: number; col: number };\n  end: { row: number; col: number };\n}"
+  },
+  {
+    "render_block": 470,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 162,
+    "text": "/** A value about to be written: 0-based row/col plus the raw submitted text. */\nexport interface ValidationWrite {\n  row: number;\n  col: number;\n  raw: string;\n}"
+  },
+  {
+    "render_block": 478,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 245,
+    "text": "function numberMessages(min: number, max: number): { message: string; hint: string } {\n  return {\n    message: `Please enter a number from ${num(min)} to ${num(max)}`,\n    hint: `Please enter a number between ${num(min)} and ${num(max)}`,\n  };\n}"
+  },
+  {
+    "render_block": 480,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 861,
+    "text": "/**\n * Validate the values of one operation. `ok:false` refuses the whole batch:\n * the caller writes nothing and creates no history entry.\n */\nexport function validateRangeWrite(\n  rules: ValidationRule[],\n  writes: ValidationWrite[]\n): ValidationOutcome {\n  const errors: ValidationError[] = [];\n  for (const write of writes) {\n    const rule = ruleAt(rules, write.row, write.col);\n    if (!rule) continue;\n    // Formulas cannot be judged before recalculation (decision by #7):\n    // they pass validation and are checked nowhere in this pipeline.\n    if (write.raw.startsWith(\"=\")) continue;\n    const outcome = validateValue(rule, write.raw);\n    if (!outcome.ok) {\n      errors.push({ row: write.row, col: write.col, message: outcome.message, hint: outcome.hint });\n    }\n  }\n  if (errors.length > 0) return { ok: false, errors };\n  return { ok: true };\n}"
+  },
+  {
+    "render_block": 482,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 418,
+    "text": "/** The rule covering a 0-based cell position, or null when unconstrained. */\nexport function ruleAt(\n  rules: ValidationRule[],\n  row: number,\n  col: number\n): ValidationRule | null {\n  for (const rule of rules) {\n    if (\n      row >= rule.range.start.row &&\n      row <= rule.range.end.row &&\n      col >= rule.range.start.col &&\n      col <= rule.range.end.col\n    ) {\n      return rule;\n    }\n  }\n  return null;\n}"
+  },
+  {
+    "render_block": 484,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 768,
+    "text": "/** Single-value judgement (shared wording source). */\nexport function validateValue(\n  rule: ValidationRule,\n  raw: string\n): { ok: true } | { ok: false; message: string; hint?: string } {\n  if (rule.type === \"number\") {\n    const { message, hint } = numberMessages(rule.min, rule.max);\n    if (raw.trim() === \"\") return { ok: true };\n    const value = Number(raw.trim());\n    if (!Number.isFinite(value) || value < rule.min || value > rule.max) {\n      return { ok: false, message: rule.message ?? message, hint };\n    }\n    return { ok: true };\n  }\n  const allowed = rule.values;\n  if (allowed.includes(raw)) return { ok: true };\n  return {\n    ok: false,\n    message:\n      rule.message ?? `Please select one of the following values: ${allowed.join(\", \")}`,\n  };\n}"
+  },
+  {
+    "render_block": 486,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 230,
+    "text": "// ---------------------------------------------------------------------------\n// Adapter for the persisted shared data model (`Sheet.validationRules`)\n// ---------------------------------------------------------------------------"
+  },
+  {
+    "render_block": 488,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 175,
+    "text": "interface PersistedRule {\n  id?: unknown;\n  type?: unknown;\n  range?: unknown;\n  config?: unknown;\n  message?: unknown;\n  min?: unknown;\n  max?: unknown;\n  values?: unknown;\n}"
+  },
+  {
+    "render_block": 490,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 152,
+    "text": "const NUMBER_TYPES = new Set([\"number\", \"numberrange\", \"number-range\", \"number_range\"]);\nconst DROPDOWN_TYPES = new Set([\"dropdown\", \"list\", \"select\"]);"
+  },
+  {
+    "render_block": 492,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 1601,
+    "text": "function toRange(value: unknown): ValidationRange | null {\n  if (typeof value === \"string\") {\n    const m = /^\\$?([A-Za-z]+)\\$?([0-9]+)(?::\\$?([A-Za-z]+)\\$?([0-9]+))?$/.exec(value.trim());\n    if (!m) return null;\n    const col = (letters: string) => {\n      let n = 0;\n      for (const ch of letters.toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);\n      return n;\n    };\n    const start = { row: Number(m[2]) - 1, col: col(m[1]) - 1 };\n    const end = m[3]\n      ? { row: Number(m[4]) - 1, col: col(m[3]) - 1 }\n      : { ...start };\n    return {\n      start: { row: Math.min(start.row, end.row), col: Math.min(start.col, end.col) },\n      end: { row: Math.max(start.row, end.row), col: Math.max(start.col, end.col) },\n    };\n  }\n  if (value && typeof value === \"object\") {\n    const r = value as {\n      start?: { row?: unknown; col?: unknown };\n      end?: { row?: unknown; col?: unknown };\n    };\n    const coord = (v: unknown) => (typeof v === \"number\" ? v : Number(v));\n    const start = r.start;\n    const end = r.end ?? r.start;\n    if (start && end) {\n      const a = { row: coord(start.row), col: coord(start.col) };\n      const b = { row: coord(end.row), col: coord(end.col) };\n      if (Number.isFinite(a.row) && Number.isFinite(a.col) && Number.isFinite(b.row) && Number.isFinite(b.col)) {\n        // The object form of the shared contract uses 0-based coordinates.\n        return {\n          start: { row: Math.min(a.row, b.row), col: Math.min(a.col, b.col) },\n          end: { row: Math.max(a.row, b.row), col: Math.max(a.col, b.col) },\n        };\n      }\n    }\n  }\n  return null;\n}"
+  },
+  {
+    "render_block": 494,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 181,
+    "text": "function configOf(rule: PersistedRule): Record<string, unknown> {\n  if (rule.config && typeof rule.config === \"object\") return rule.config as Record<string, unknown>;\n  return {};\n}"
+  },
+  {
+    "render_block": 496,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 151,
+    "text": "function pick(rule: PersistedRule, config: Record<string, unknown>, key: string): unknown {\n  return config[key] ?? rule[key as keyof PersistedRule];\n}"
+  },
+  {
+    "render_block": 498,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35",
+    "chars": 1469,
+    "text": "/** Adapt the persisted sheet rules to the validation model (ignores unknown rules). */\nexport function rulesFromSheet(sheet: { validationRules?: unknown }): ValidationRule[] {\n  const raw = sheet?.validationRules;\n  if (!Array.isArray(raw)) return [];\n  const out: ValidationRule[] = [];\n  raw.forEach((entry, index) => {\n    if (!entry || typeof entry !== \"object\") return;\n    const rule = entry as PersistedRule;\n    const id = typeof rule.id === \"string\" ? rule.id : `rule-${index}`;\n    const range = toRange(rule.range);\n    if (!range) return;\n    const type = String(rule.type ?? \"\").toLowerCase();\n    const config = configOf(rule);\n    const message = typeof rule.message === \"string\" && rule.message !== \"\" ? rule.message : undefined;\n    if (NUMBER_TYPES.has(type)) {\n      const min = Number(pick(rule, config, \"min\"));\n      const max = Number(pick(rule, config, \"max\"));\n      if (!Number.isFinite(min) || !Number.isFinite(max)) return;\n      out.push({ id, type: \"number\", min, max, range, message });\n    } else if (DROPDOWN_TYPES.has(type)) {\n      const valuesRaw = pick(rule, config, \"values\") ?? pick(rule, config, \"options\");\n      const values = Array.isArray(valuesRaw)\n        ? valuesRaw.map((v) => String(v))\n        : typeof valuesRaw === \"string\"\n          ? valuesRaw.split(\",\").map((v) => v.trim())\n          : null;\n      if (!values) return;\n      out.push({ id, type: \"dropdown\", values, range, message });\n    }\n  });\n  return out;\n}"
+  },
+  {
+    "render_block": 508,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 288,
+    "text": "/** In-session copy/cut buffer, plus the text written to the system clipboard. */\ninterface ClipboardBuffer {\n  rect: RectSelection;\n  rows: string[][];\n  mode: \"copy\" | \"cut\";\n  text: string;\n  /** true once the system clipboard holds exactly `text` (best effort) */\n  synced: boolean;\n}"
+  },
+  {
+    "render_block": 512,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 1415,
+    "text": "/**\n * Editor page at the stable, bookmarkable URL /workbook/:id.\n * Refreshing or directly visiting the URL restores the workbook's most\n * recent successful state, including the last active worksheet, active\n * cell and persisted selection.\n *\n * REQ-3 (issue #5): cell editing through the grid / formula bar, 2-D paste,\n * rectangular selection with per-worksheet persistence, range copy/cut/paste\n * and session undo/redo. Every write goes through one atomic batch request, so\n * an operation either lands completely or leaves the workbook untouched:\n *\n *   validate (#7 rules) -> write (engine recalculation on read) -> persist\n *   (single batch API call) -> history (only after success)\n *\n * The grid renders the formula engine's computed results; the formula bar\n * shows the persisted raw input (the original formula).\n */\nexport default function EditorPage() {\n  const { id } = useParams<{ id: string }>();\n  const [workbook, setWorkbook] = useState<Workbook | null>(null);\n  const [loadError, setLoadError] = useState<string | null>(null);\n  const [error, setError] = useState<string | null>(null);\n  const [validationError, setValidationError] = useState<ValidationError | null>(null);\n  const [selection, setSelection] = useState<GridSelection>({ activeCell: \"A1\", selection: null });\n  const [engine, setEngine] = useState<WorkbookFormulas | null>(null);\n  const [, setHistoryVersion] = useState(0);"
+  },
+  {
+    "render_block": 514,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 650,
+    "text": "  const historyRef = useRef(new History());\n  const clipboardRef = useRef<ClipboardBuffer | null>(null);\n  const workbookRef = useRef<Workbook | null>(null);\n  const selectionRef = useRef<GridSelection>(selection);\n  /** Per-workbook, per-sheet selection memory: tab switches never depend on a\n   * possibly stale workbook response (a state save and a cell write can be in\n   * flight at the same time). */\n  const sheetSelectionsRef = useRef(new Map<string, GridSelection>());\n  const pasteTimerRef = useRef<number | null>(null);\n  const idRef = useRef(id);\n  workbookRef.current = workbook;\n  selectionRef.current = selection;\n  idRef.current = id;"
+  },
+  {
+    "render_block": 516,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 158,
+    "text": "  const activeSheetOf = (wb: Workbook | null) => {\n    if (!wb) return null;\n    return wb.sheets.find((s) => s.id === wb.activeSheetId) ?? wb.sheets[0];\n  };"
+  },
+  {
+    "render_block": 520,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 569,
+    "text": "  // Rebuild the formula engine only when cell content changes (cursor/selection\n  // saves also produce new workbook objects). It is the single source of the\n  // displayed results; persistence keeps raw inputs only.\n  const signature = useMemo(() => (workbook ? contentSignature(workbook) : \"\"), [workbook]);\n  useEffect(() => {\n    if (!workbook) {\n      setEngine(null);\n      return;\n    }\n    const next = createWorkbookFormulas(workbook);\n    setEngine(next);\n    return () => next.destroy();\n  }, [signature]); // eslint-disable-line react-hooks/exhaustive-deps"
+  },
+  {
+    "render_block": 524,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 161,
+    "text": "  const readRaw = useCallback((ref: string): string => {\n    const sheet = activeSheetOf(workbookRef.current);\n    return sheet?.cells[ref]?.raw ?? \"\";\n  }, []);"
+  },
+  {
+    "render_block": 526,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 340,
+    "text": "  /** The rectangle range operations apply to (top-left is the anchor). */\n  const currentRect = useCallback((): GridRect => {\n    const current = selectionRef.current;\n    return current.selection\n      ? normalizeRect(current.selection.start, current.selection.end)\n      : normalizeRect(current.activeCell, current.activeCell);\n  }, []);"
+  },
+  {
+    "render_block": 528,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 1038,
+    "text": "  useEffect(() => {\n    if (!id) return;\n    let cancelled = false;\n    // Undo history and the copy buffer never cross workbooks.\n    historyRef.current = new History();\n    clipboardRef.current = null;\n    sheetSelectionsRef.current = new Map();\n    setHistoryVersion((v) => v + 1);\n    setValidationError(null);\n    setError(null);\n    api\n      .getWorkbook(id)\n      .then((wb) => {\n        if (cancelled) return;\n        sheetSelectionsRef.current = new Map(\n          wb.sheets.map((s) => [\n            s.id,\n            {\n              activeCell: s.id === wb.activeSheetId ? wb.activeCell || \"A1\" : s.lastSelection || \"A1\",\n              selection:\n                s.id === wb.activeSheetId ? wb.selection ?? null : s.lastSelectionRect ?? null,\n            },\n          ])\n        );\n        setWorkbook(wb);\n        setSelection({ activeCell: wb.activeCell || \"A1\", selection: wb.selection ?? null });\n      })\n      .catch(() => setLoadError(\"Workbook not found\"));\n    return () => {\n      cancelled = true;\n    };\n  }, [id]);"
+  },
+  {
+    "render_block": 530,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 197,
+    "text": "  const activeCellData: CellData | undefined = useMemo(() => {\n    if (!activeSheet) return undefined;\n    return activeSheet.cells[selection.activeCell];\n  }, [activeSheet, selection.activeCell]);"
+  },
+  {
+    "render_block": 532,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 1175,
+    "text": "  /**\n   * Persist last-used UI state (active sheet, active cell, complete rectangle).\n   * The local workbook is updated optimistically so the editor never depends on\n   * the response order of overlapping state saves.\n   */\n  const persistState = useCallback((next: GridSelection, sheetId?: string) => {\n    const workbookId = idRef.current;\n    if (!workbookId) return;\n    const wb = workbookRef.current;\n    if (!wb) return;\n    const targetSheetId = sheetId ?? wb.activeSheetId;\n    sheetSelectionsRef.current.set(targetSheetId, next);\n    setWorkbook((prev) =>\n      prev\n        ? {\n            ...prev,\n            activeSheetId: targetSheetId,\n            activeCell: next.activeCell,\n            selection: next.selection,\n            sheets: prev.sheets.map((s) =>\n              s.id === targetSheetId\n                ? { ...s, lastSelection: next.activeCell, lastSelectionRect: next.selection }\n                : s\n            ),\n          }\n        : prev\n    );\n    api\n      .saveState(workbookId, {\n        activeSheetId: targetSheetId,\n        activeCell: next.activeCell,\n        selection: next.selection,\n      })\n      .catch(() => undefined);\n  }, []);"
+  },
+  {
+    "render_block": 534,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 601,
+    "text": "  /**\n   * Validate writes against the worksheet's rules (owned by #7). A rejection\n   * refuses the whole operation: nothing is written and no history entry is\n   * created. The message and hint render as two separate elements.\n   */\n  const validateWrites = (sheet: { validationRules?: unknown }, updates: CellUpdate[]): boolean => {\n    const outcome = validateSheetWrites(sheet, updates);\n    if (outcome.ok) {\n      setValidationError(null);\n      return true;\n    }\n    const first = outcome.errors[0];\n    setValidationError({ message: first.message, hint: first.hint });\n    return false;\n  };"
+  },
+  {
+    "render_block": 536,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 681,
+    "text": "  /** Apply one atomic batch write, recording the operation in the history. */\n  const applyUpdates = useCallback(\n    async (sheetId: string, updates: CellUpdate[], op?: Operation): Promise<boolean> => {\n      const workbookId = idRef.current;\n      if (!workbookId) return false;\n      setError(null);\n      try {\n        const wb = await api.updateCells(workbookId, sheetId, updates);\n        setWorkbook(wb);\n        if (op) {\n          historyRef.current.push(op);\n          setHistoryVersion((v) => v + 1);\n        }\n        return true;\n      } catch (e) {\n        setError(e instanceof Error ? e.message : \"Request failed\");\n        return false;\n      }\n    },\n    []\n  );"
+  },
+  {
+    "render_block": 538,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 161,
+    "text": "  const handleSelect = (next: GridSelection, opts?: { persist?: boolean }) => {\n    setSelection(next);\n    if (opts?.persist !== false) persistState(next);\n  };"
+  },
+  {
+    "render_block": 540,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 621,
+    "text": "  const handleActivateSheet = (sheetId: string) => {\n    const wb = workbookRef.current;\n    if (!wb) return;\n    // Restore the target sheet's remembered cursor and complete rectangle.\n    // The in-memory map is authoritative; the workbook fields are its\n    // persisted copy.\n    const target = wb.sheets.find((s) => s.id === sheetId);\n    const remembered = sheetSelectionsRef.current.get(sheetId);\n    const next: GridSelection = remembered ?? {\n      activeCell: target?.lastSelection || \"A1\",\n      selection: target?.lastSelectionRect ?? null,\n    };\n    setSelection(next);\n    persistState(next, sheetId);\n  };"
+  },
+  {
+    "render_block": 542,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 464,
+    "text": "  const handleCommitCell = async (ref: string, raw: string | null): Promise<boolean> => {\n    const sheet = activeSheetOf(workbookRef.current);\n    if (!sheet) return false;\n    if (readRaw(ref) === (raw ?? \"\")) return true; // nothing changed\n    const update: CellUpdate = { ref, raw };\n    if (!validateWrites(sheet, [update])) return false;\n    const op = operationForCellEdit(sheet.id, ref, raw, readRaw);\n    return applyUpdates(sheet.id, [update], op);\n  };"
+  },
+  {
+    "render_block": 544,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 1012,
+    "text": "  /** Copy or cut the current selection into the in-session buffer. */\n  const copyRange = (mode: \"copy\" | \"cut\") => {\n    const sheet = activeSheetOf(workbookRef.current);\n    if (!sheet) return;\n    const rect = currentRect();\n    const rows: string[][] = [];\n    for (let row = rect.top; row <= rect.bottom; row += 1) {\n      const line: string[] = [];\n      for (let col = rect.left; col <= rect.right; col += 1) {\n        line.push(sheet.cells[makeRef(col, row)]?.raw ?? \"\");\n      }\n      rows.push(line);\n    }\n    const buffer: ClipboardBuffer = {\n      rect: { start: rectStartRef(rect), end: makeRef(rect.right, rect.bottom) },\n      rows,\n      mode,\n      text: serializeClipboardTable(rows),\n      synced: false,\n    };\n    clipboardRef.current = buffer;\n    if (typeof navigator !== \"undefined\" && navigator.clipboard?.writeText) {\n      navigator.clipboard\n        .writeText(buffer.text)\n        .then(() => {\n          buffer.synced = true;\n        })\n        .catch(() => undefined);\n    }\n  };"
+  },
+  {
+    "render_block": 546,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 1227,
+    "text": "  /** Paste the in-session range: formulas adjust, cut clears its source too. */\n  const pasteRange = async (buffer: ClipboardBuffer) => {\n    const sheet = activeSheetOf(workbookRef.current);\n    if (!sheet) return;\n    const targetStart = rectStartRef(currentRect());\n    const bounds = { rows: sheet.rowCount, cols: sheet.colCount };\n    const plan =\n      buffer.mode === \"cut\"\n        ? planRangeCut(buffer.rect, targetStart, readRaw)\n        : planRangeCopy(buffer.rect, targetStart, readRaw, bounds);\n    if (plan.updates.length === 0) return;\n    const updates: CellUpdate[] = [\n      ...plan.updates,\n      ...plan.clears.map((ref) => ({ ref, raw: null })),\n    ];\n    // Whole operation or nothing: validation refusal leaves source and target.\n    if (!validateWrites(sheet, updates)) return;\n    const op = operationFromPlan(\n      buffer.mode === \"cut\" ? \"range-move\" : \"paste\",\n      `${buffer.mode} ${buffer.rect.start}:${buffer.rect.end} to ${targetStart}`,\n      sheet.id,\n      plan,\n      readRaw\n    );\n    const ok = await applyUpdates(sheet.id, updates, op);\n    // A cut is consumed by its paste (its source has been cleared already).\n    if (ok && buffer.mode === \"cut\") clipboardRef.current = null;\n  };"
+  },
+  {
+    "render_block": 548,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30",
+    "chars": 1405,
+    "text": "  /**\n   * Apply pasted text: when it is exactly what our own copy/cut put on the\n   * clipboard the in-session range semantics are used (formula adjustment,\n   * source clearing), otherwise the text is applied as a plain 2-D paste.\n   */\n  const pasteFromText = async (text: string | null) => {\n    const sheet = activeSheetOf(workbookRef.current);\n    if (!sheet) return;\n    const buffer = clipboardRef.current;\n    // The pasted text is exactly what our own copy/cut put on the clipboard:\n    // use the in-session range semantics (formula adjustment, source clearing).\n    const isOwnBuffer = !!buffer && text !== null && text === buffer.text;\n    // When the clipboard cannot be read at all, trust a buffer we did write.\n    const unreadableWithOwnBuffer = !!buffer && buffer.synced && (text === null || text === \"\");\n    if (buffer && (isOwnBuffer || unreadableWithOwnBuffer)) {\n      await pasteRange(buffer);\n      return;\n    }\n    if (text === null || text === \"\") return;\n    const table = parseClipboardTable(text);\n    if (table.length === 0) return;\n    const startRef = rectStartRef(currentRect());\n    const plan = planPaste(startRef, table);\n    if (plan.updates.length === 0) return;\n    if (!validateWrites(sheet, plan.updates)) return;\n    const op = operationFromPlan(\"paste\", `paste to ${startRef}`, sheet.id, plan, readRaw);\n    await applyUpdates(sheet.id, plan.updates, op);\n  };"
+  },
+  {
+    "render_block": 550,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 377,
+    "text": "  /** Read the system clipboard (used by the \"Paste\" menu item and Ctrl+V fallback). */\n  const requestPaste = useCallback(async () => {\n    let text: string | null = null;\n    try {\n      text = (await navigator.clipboard?.readText?.()) ?? null;\n    } catch {\n      text = null;\n    }\n    await pasteFromText(text);\n  }, []); // eslint-disable-line react-hooks/exhaustive-deps"
+  },
+  {
+    "render_block": 552,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 172,
+    "text": "  const clearPasteTimer = () => {\n    if (pasteTimerRef.current !== null) {\n      window.clearTimeout(pasteTimerRef.current);\n      pasteTimerRef.current = null;\n    }\n  };"
+  },
+  {
+    "render_block": 554,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L252",
+    "chars": 517,
+    "text": "  const undo = async () => {\n    const op = historyRef.current.undo();\n    setHistoryVersion((v) => v + 1);\n    if (!op) return;\n    // Undo/redo restore previously persisted content; they are not re-validated\n    // (a rule change must not make the session history unreachable).\n    const ok = await applyUpdates(op.sheetId, snapshotsToUpdates(op.before));\n    if (!ok) {\n      // Keep the history consistent when the request failed.\n      historyRef.current.redo();\n      setHistoryVersion((v) => v + 1);\n    }\n  };"
+  },
+  {
+    "render_block": 556,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 303,
+    "text": "  const redo = async () => {\n    const op = historyRef.current.redo();\n    setHistoryVersion((v) => v + 1);\n    if (!op) return;\n    const ok = await applyUpdates(op.sheetId, snapshotsToUpdates(op.after));\n    if (!ok) {\n      historyRef.current.undo();\n      setHistoryVersion((v) => v + 1);\n    }\n  };"
+  },
+  {
+    "render_block": 558,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 1823,
+    "text": "  // Keyboard shortcuts: Ctrl+Z / Ctrl+Y (undo, redo), Ctrl+C / Ctrl+X (range\n  // copy, cut), Ctrl+V (paste). Text inputs keep their native behaviour.\n  useEffect(() => {\n    const isEditable = (target: EventTarget | null) => {\n      const el = target as HTMLElement | null;\n      return !!el && (el.tagName === \"INPUT\" || el.tagName === \"TEXTAREA\" || el.isContentEditable);\n    };\n    const onKeyDown = (e: KeyboardEvent) => {\n      if (!(e.ctrlKey || e.metaKey) || isEditable(e.target)) return;\n      const key = e.key.toLowerCase();\n      if (key === \"z\" && !e.shiftKey) {\n        e.preventDefault();\n        void undo();\n      } else if (key === \"y\" || (key === \"z\" && e.shiftKey)) {\n        e.preventDefault();\n        void redo();\n      } else if (key === \"c\") {\n        e.preventDefault();\n        copyRange(\"copy\");\n      } else if (key === \"x\") {\n        e.preventDefault();\n        copyRange(\"cut\");\n      } else if (key === \"v\") {\n        // Prefer the browser's own paste event; fall back to reading the\n        // clipboard when the browser does not fire one for grid cells.\n        clearPasteTimer();\n        pasteTimerRef.current = window.setTimeout(() => {\n          pasteTimerRef.current = null;\n          void requestPaste();\n        }, 150);\n      }\n    };\n    const onPaste = (e: ClipboardEvent) => {\n      if (isEditable(e.target)) return;\n      const text = e.clipboardData?.getData(\"text/plain\") ?? null;\n      clearPasteTimer();\n      e.preventDefault();\n      void pasteFromText(text);\n    };\n    window.addEventListener(\"keydown\", onKeyDown);\n    window.addEventListener(\"paste\", onPaste);\n    return () => {\n      window.removeEventListener(\"keydown\", onKeyDown);\n      window.removeEventListener(\"paste\", onPaste);\n    };\n  }, [requestPaste]); // eslint-disable-line react-hooks/exhaustive-deps"
+  },
+  {
+    "render_block": 560,
+    "source": "continuation02-root-native/031-2026-09-28T05-33-22-458Z_01a0e680-e69a-72d4-9388-0b6b053d16f6.jsonl:L50",
+    "chars": 819,
+    "text": "  /**\n   * REQ-1-3-2: download the active worksheet as CSV without touching any\n   * persisted state (active sheet, selection, grid values, formula bar).\n   * Formula cells export their displayed/computed value, not the expression.\n   */\n  const handleExportCsv = () => {\n    if (!workbook || !activeSheet) return;\n    const csv = sheetToCsv(activeSheet);\n    const base =\n      workbook.name.replace(/[\\\\/]/g, \"-\").trim().replace(/\\.csv$/i, \"\").trim() || \"workbook\";\n    const blob = new Blob([csv], { type: \"text/csv;charset=utf-8\" });\n    const url = URL.createObjectURL(blob);\n    const link = document.createElement(\"a\");\n    link.href = url;\n    link.download = `${base}.csv`;\n    document.body.appendChild(link);\n    link.click();\n    link.remove();\n    window.setTimeout(() => URL.revokeObjectURL(url), 0);\n  };"
+  },
+  {
+    "render_block": 562,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L31",
+    "chars": 221,
+    "text": "  if (loadError) {\n    return (\n      <main className=\"home\">\n        <div role=\"alert\" className=\"form-error\">{loadError}</div>\n        <p>\n          <Link to=\"/\">Back to home</Link>\n        </p>\n      </main>\n    );\n  }"
+  },
+  {
+    "render_block": 568,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L250",
+    "chars": 2130,
+    "text": "  return (\n    <main className=\"editor\">\n      <div className=\"editor-topbar\">\n        <h1 className=\"editor-title\">{workbook.name}</h1>\n        <RenameSection workbook={workbook} onRenamed={setWorkbook} />\n        <button type=\"button\" className=\"primary-button workbook-export-button\" onClick={handleExportCsv}>\n          Export CSV\n        </button>\n        <span className=\"editor-updated\">\n          Last updated: {formatDateTime(workbook.updatedAt)}\n        </span>\n        <Link to=\"/\">Home</Link>\n      </div>\n      <div className=\"editor-toolbar\" role=\"toolbar\" aria-label=\"Editing\">\n        <button type=\"button\" onClick={() => void undo()} disabled={!canUndo}>\n          Undo\n        </button>\n        <button type=\"button\" onClick={() => void redo()} disabled={!canRedo}>\n          Redo\n        </button>\n      </div>\n      <FormulaBar\n        activeCell={selection.activeCell}\n        cell={activeCellData}\n        onCommit={handleCommitCell}\n      />\n      {validationError && (\n        <div role=\"alert\" className=\"form-error validation-error\">\n          <span className=\"validation-message\">{validationError.message}</span>\n          {validationError.hint && (\n            <span className=\"validation-hint\">{validationError.hint}</span>\n          )}\n        </div>\n      )}\n      <div\n        id=\"worksheet-panel\"\n        role=\"tabpanel\"\n        aria-labelledby={`sheet-tab-${activeSheet.id}`}\n        style={{ display: \"flex\", flexDirection: \"column\", flex: 1, minHeight: 0 }}\n      >\n        {error && (\n          <div role=\"alert\" className=\"form-error\">\n            {error}\n          </div>\n        )}\n        <Grid\n          sheet={activeSheet}\n          selection={selection}\n          display={display}\n          onSelect={handleSelect}\n          onCommitCell={handleCommitCell}\n          onCopyRange={() => copyRange(\"copy\")}\n          onCutRange={() => copyRange(\"cut\")}\n          onPasteRequest={() => void requestPaste()}\n        />\n      </div>\n      <SheetTabs\n        sheets={workbook.sheets}\n        activeSheetId={activeSheet.id}\n        onActivate={handleActivateSheet}\n      />\n    </main>\n  );\n}"
+  },
+  {
+    "render_block": 584,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 161,
+    "text": "export interface GridSelection {\n  activeCell: string;\n  /** null = single-cell selection at activeCell. */\n  selection: { start: string; end: string } | null;\n}"
+  },
+  {
+    "render_block": 586,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L32",
+    "chars": 496,
+    "text": "interface GridProps {\n  sheet: Sheet;\n  selection: GridSelection;\n  /** ref -> displayed text (computed formula result or error), from the formula engine */\n  display: Record<string, string>;\n  /** `persist: false` is used while dragging, so only the final rectangle is saved. */\n  onSelect: (next: GridSelection, opts?: { persist?: boolean }) => void;\n  onCommitCell: (ref: string, raw: string | null) => void;\n  onCopyRange: () => void;\n  onCutRange: () => void;\n  onPasteRequest: () => void;\n}"
+  },
+  {
+    "render_block": 588,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L32",
+    "chars": 1014,
+    "text": "/**\n * ARIA grid of the active worksheet.\n * - grid accessible name \"Worksheet grid\", aria-multiselectable=\"true\"\n * - gridcell accessible name = coordinate (e.g. \"A1\"); aria-selected reflects\n *   membership in the current rectangular selection\n * - rowheader name = row number, columnheader name = column letter\n *\n * Editing (REQ-3-1): double click, Enter/F2 or typing on a selected cell opens\n * an inline text box whose accessible name is \"Edit <coordinate>\"; Enter and\n * blur commit it, Escape cancels it. Dragging from one cell to another selects\n * the whole rectangle (REQ-3-1-3), and the context menu offers Copy/Cut/Paste\n * with the ARIA menuitem role (REQ-3-1-2).\n */\nexport default function Grid({\n  sheet,\n  selection,\n  display,\n  onSelect,\n  onCommitCell,\n  onCopyRange,\n  onCutRange,\n  onPasteRequest,\n}: GridProps) {\n  const rect: Rect = selection.selection\n    ? selectionRect(selection.selection.start, selection.selection.end)\n    : selectionRect(selection.activeCell, selection.activeCell);"
+  },
+  {
+    "render_block": 590,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L32",
+    "chars": 317,
+    "text": "  const cellRefs = useRef(new Map<string, HTMLTableCellElement>());\n  const gridRef = useRef<HTMLTableElement>(null);\n  const dragging = useRef<string | null>(null);\n  const selectionRef = useRef(selection);\n  const onSelectRef = useRef(onSelect);\n  selectionRef.current = selection;\n  onSelectRef.current = onSelect;"
+  },
+  {
+    "render_block": 592,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L32",
+    "chars": 161,
+    "text": "  const [editing, setEditing] = useState<{ ref: string; draft: string } | null>(null);\n  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);"
+  },
+  {
+    "render_block": 594,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 209,
+    "text": "  const rows = useMemo(() => Array.from({ length: sheet.rowCount }, (_, i) => i + 1), [sheet.rowCount]);\n  const cols = useMemo(() => Array.from({ length: sheet.colCount }, (_, i) => i + 1), [sheet.colCount]);"
+  },
+  {
+    "render_block": 600,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L148",
+    "chars": 195,
+    "text": "  const commitEdit = () => {\n    if (!editing) return;\n    const { ref, draft } = editing;\n    setEditing(null);\n    if (draft !== rawOf(ref)) onCommitCell(ref, draft === \"\" ? null : draft);\n  };"
+  },
+  {
+    "render_block": 604,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 332,
+    "text": "  // Keep the active cell in view and focused during keyboard navigation.\n  const focusActive = () => {\n    const el = cellRefs.current.get(selection.activeCell);\n    if (el && gridRef.current?.contains(document.activeElement)) {\n      el.focus({ preventScroll: false });\n    }\n  };\n  useEffect(focusActive, [selection.activeCell]);"
+  },
+  {
+    "render_block": 606,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L148",
+    "chars": 403,
+    "text": "  // A drag ends anywhere on the page, and only the final rectangle is saved.\n  useEffect(() => {\n    const onMouseUp = () => {\n      if (dragging.current) {\n        dragging.current = null;\n        onSelectRef.current(selectionRef.current, { persist: true });\n      }\n    };\n    window.addEventListener(\"mouseup\", onMouseUp);\n    return () => window.removeEventListener(\"mouseup\", onMouseUp);\n  }, []);"
+  },
+  {
+    "render_block": 608,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L32",
+    "chars": 617,
+    "text": "  // Dismiss the context menu on any outside interaction.\n  useEffect(() => {\n    if (!menu) return;\n    const close = (e: MouseEvent) => {\n      const target = e.target as HTMLElement | null;\n      if (target && target.closest('[role=\"menu\"]')) return;\n      setMenu(null);\n    };\n    const onKey = (e: KeyboardEvent) => {\n      if (e.key === \"Escape\") setMenu(null);\n    };\n    window.addEventListener(\"mousedown\", close);\n    window.addEventListener(\"keydown\", onKey);\n    return () => {\n      window.removeEventListener(\"mousedown\", close);\n      window.removeEventListener(\"keydown\", onKey);\n    };\n  }, [menu]);"
+  },
+  {
+    "render_block": 610,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 708,
+    "text": "  const move = (dRow: number, dCol: number, extend: boolean) => {\n    const active = parseRef(selection.activeCell);\n    const newRow = Math.min(Math.max(active.row + dRow, 1), sheet.rowCount);\n    const newCol = Math.min(Math.max(active.col + dCol, 1), sheet.colCount);\n    const nextRef = makeRef(newCol, newRow);\n    if (extend) {\n      // Keep the fixed anchor corner (selection start, or the previous active cell).\n      const anchorRef = selection.selection ? selection.selection.start : selection.activeCell;\n      onSelect({\n        activeCell: nextRef,\n        selection: { start: anchorRef, end: nextRef },\n      });\n    } else {\n      onSelect({ activeCell: nextRef, selection: null });\n    }\n  };"
+  },
+  {
+    "render_block": 612,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L32",
+    "chars": 1421,
+    "text": "  const onKeyDown = (e: React.KeyboardEvent) => {\n    if (editing) return; // the inline editor handles its own keys\n    if (e.key === \"Enter\" || e.key === \"F2\") {\n      e.preventDefault();\n      startEdit(selection.activeCell);\n      return;\n    }\n    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {\n      // Typing on a selected cell starts an in-place edit with that character.\n      e.preventDefault();\n      startEdit(selection.activeCell, e.key);\n      return;\n    }\n    if (e.shiftKey) {\n      switch (e.key) {\n        case \"ArrowUp\":\n          e.preventDefault();\n          move(-1, 0, true);\n          return;\n        case \"ArrowDown\":\n          e.preventDefault();\n          move(1, 0, true);\n          return;\n        case \"ArrowLeft\":\n          e.preventDefault();\n          move(0, -1, true);\n          return;\n        case \"ArrowRight\":\n          e.preventDefault();\n          move(0, 1, true);\n          return;\n      }\n    } else {\n      switch (e.key) {\n        case \"ArrowUp\":\n          e.preventDefault();\n          move(-1, 0, false);\n          return;\n        case \"ArrowDown\":\n          e.preventDefault();\n          move(1, 0, false);\n          return;\n        case \"ArrowLeft\":\n          e.preventDefault();\n          move(0, -1, false);\n          return;\n        case \"ArrowRight\":\n          e.preventDefault();\n          move(0, 1, false);\n          return;\n      }\n    }\n  };"
+  },
+  {
+    "render_block": 614,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L32",
+    "chars": 686,
+    "text": "  const onCellMouseDown = (e: React.MouseEvent, ref: string) => {\n    if (e.button !== 0) return;\n    if (editing && editing.ref !== ref) commitEdit();\n    if (e.shiftKey) {\n      // Extend from the current anchor (or the single selected cell) to the\n      // clicked corner; the anchor stays the active cell's selection origin.\n      const anchor = selection.selection?.start ?? selection.activeCell;\n      onSelect({ activeCell: ref, selection: { start: anchor, end: ref } });\n      return;\n    }\n    dragging.current = ref;\n    // Persisted on mouseup, so a drag saves only the final rectangle (REQ-3-1-3).\n    onSelect({ activeCell: ref, selection: null }, { persist: false });\n  };"
+  },
+  {
+    "render_block": 616,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L68",
+    "chars": 298,
+    "text": "  const onCellMouseEnter = (ref: string) => {\n    if (!dragging.current) return;\n    if (dragging.current === ref && !selectionRef.current.selection) return;\n    onSelect(\n      { activeCell: dragging.current, selection: { start: dragging.current, end: ref } },\n      { persist: false }\n    );\n  };"
+  },
+  {
+    "render_block": 618,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L68",
+    "chars": 535,
+    "text": "  const onCellContextMenu = (e: React.MouseEvent, ref: string) => {\n    e.preventDefault();\n    const current = selectionRef.current;\n    const inside =\n      current.selection !== null &&\n      (() => {\n        const r = selectionRect(current.selection.start, current.selection.end);\n        const p = parseRef(ref);\n        return p.row >= r.top && p.row <= r.bottom && p.col >= r.left && p.col <= r.right;\n      })();\n    if (!inside) onSelect({ activeCell: ref, selection: null });\n    setMenu({ x: e.clientX, y: e.clientY });\n  };"
+  },
+  {
+    "render_block": 632,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L33",
+    "chars": 371,
+    "text": "interface FormulaBarProps {\n  activeCell: string;\n  cell: CellData | undefined;\n  /**\n   * Commit the edited raw content of the cell that was being edited.\n   * Resolves `false` when the write was refused (validation or request\n   * error); the bar then falls back to the last successful content.\n   */\n  onCommit: (ref: string, raw: string | null) => Promise<boolean>;\n}"
+  },
+  {
+    "render_block": 634,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L33",
+    "chars": 824,
+    "text": "/**\n * Formula bar: the labelled text box (\"Formula bar\") showing the raw content\n * of the active cell — the original input, including formulas.\n *\n * Enter commits, Escape discards the draft, and clicking elsewhere (blur)\n * commits too, so a pending change is not lost when another cell is selected.\n * The ref/raw pair the draft belongs to is captured when editing starts, so\n * selecting another cell cannot retarget the pending commit. A refused commit\n * restores the last successful value instead of keeping the rejected text.\n */\nexport default function FormulaBar({ activeCell, cell, onCommit }: FormulaBarProps) {\n  const raw = cell?.raw ?? \"\";\n  const [draft, setDraft] = useState(raw);\n  const [focused, setFocused] = useState(false);\n  const draftRef = useRef(activeCell);\n  const rawAtEditStart = useRef(raw);"
+  },
+  {
+    "render_block": 636,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L37",
+    "chars": 243,
+    "text": "  // Follow the active cell / server state whenever the user is not editing.\n  useEffect(() => {\n    if (focused) return;\n    draftRef.current = activeCell;\n    rawAtEditStart.current = raw;\n    setDraft(raw);\n  }, [activeCell, raw, focused]);"
+  },
+  {
+    "render_block": 638,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L33",
+    "chars": 548,
+    "text": "  const commit = async () => {\n    const ref = draftRef.current;\n    const nextRaw = draft === \"\" ? null : draft;\n    const previous = rawAtEditStart.current === \"\" ? null : rawAtEditStart.current;\n    if (nextRaw === previous) return;\n    const ok = await onCommit(ref, nextRaw);\n    if (ok) {\n      // The commit landed: this is the new \"last successful content\".\n      rawAtEditStart.current = draft;\n    } else {\n      // The write was refused: show the last successful content, not the draft.\n      setDraft(rawAtEditStart.current);\n    }\n  };"
+  },
+  {
+    "render_block": 640,
+    "source": "native/359-2026-09-28T10-16-37-144Z_01a0e784-3817-730d-8c24-a608d624dceb.jsonl:L122",
+    "chars": 1132,
+    "text": "  return (\n    <div className=\"formula-bar-row\">\n      <span className=\"active-cell-ref\" aria-label=\"Active cell\">\n        {activeCell}\n      </span>\n      <label htmlFor=\"formula-bar\">Formula bar</label>\n      <input\n        id=\"formula-bar\"\n        type=\"text\"\n        value={draft}\n        onFocus={() => {\n          draftRef.current = activeCell;\n          rawAtEditStart.current = raw;\n          setFocused(true);\n        }}\n        onChange={(e) => setDraft(e.target.value)}\n        onKeyDown={(e) => {\n          if (e.key === \"Enter\") {\n            e.preventDefault();\n            void commit();\n            // Enter commits and leaves the text box (as in a spreadsheet): the\n            // grid keeps the keyboard shortcuts, so Ctrl+Z / Ctrl+Y are the\n            // same as the toolbar buttons right after a commit (REQ-3-2-2).\n            e.currentTarget.blur();\n          } else if (e.key === \"Escape\") {\n            e.preventDefault();\n            setDraft(rawAtEditStart.current);\n          }\n        }}\n        onBlur={() => {\n          setFocused(false);\n          void commit();\n        }}\n      />\n    </div>\n  );\n}"
+  },
+  {
+    "render_block": 686,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 205,
+    "text": "async function openSeededWorkbook(page: Page): Promise<void> {\n  await page.goto('/');\n  await page.getByRole('link', { name: 'Q3 Sales', exact: true }).click();\n  await expect(grid(page)).toBeVisible();\n}"
+  },
+  {
+    "render_block": 688,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 173,
+    "text": "async function selectCell(page: Page, a1: string): Promise<void> {\n  await cell(page, a1).click();\n  await expect(cell(page, a1)).toHaveAttribute('aria-selected', 'true');\n}"
+  },
+  {
+    "render_block": 690,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 267,
+    "text": "/** Type into the formula bar and commit with Enter (REQ-3-1-1). */\nasync function submitViaFormulaBar(page: Page, a1: string, text: string): Promise<void> {\n  await selectCell(page, a1);\n  await formulaBar(page).fill(text);\n  await formulaBar(page).press('Enter');\n}"
+  },
+  {
+    "render_block": 696,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L42",
+    "chars": 728,
+    "text": "/** Drag from one cell to the diagonally opposite cell (REQ-3-1-3). */\nasync function dragSelect(page: Page, fromA1: string, toA1: string): Promise<void> {\n  // Both corners must be inside the scroll viewport for a real mouse drag.\n  await cell(page, fromA1).scrollIntoViewIfNeeded();\n  await cell(page, toA1).scrollIntoViewIfNeeded();\n  const from = await cell(page, fromA1).boundingBox();\n  const to = await cell(page, toA1).boundingBox();\n  if (!from || !to) throw new Error(`cannot locate ${fromA1} or ${toA1}`);\n  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);\n  await page.mouse.down();\n  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 8 });\n  await page.mouse.up();\n}"
+  },
+  {
+    "render_block": 698,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L46",
+    "chars": 232,
+    "text": "async function selectedCells(page: Page): Promise<string[]> {\n  return page.$$eval(\n    '[role=\"gridcell\"][aria-selected=\"true\"]',\n    (nodes) => nodes.map((n) => (n.getAttribute('aria-label') ?? n.textContent ?? '').trim()),\n  );\n}"
+  },
+  {
+    "render_block": 700,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L46",
+    "chars": 277,
+    "text": "/** Put `text` on the real clipboard, then paste with Ctrl+V. */\nasync function pasteWithKeyboard(page: Page, text: string): Promise<void> {\n  await page.evaluate(async (t) => {\n    await navigator.clipboard.writeText(t);\n  }, text);\n  await page.keyboard.press('Control+v');\n}"
+  },
+  {
+    "render_block": 708,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L46",
+    "chars": 223,
+    "text": "test.describe('REQ-3-1-1 edit a cell through the grid or formula bar', () => {\n  test('formula bar commit, escape cancel, click-away commit and refresh persistence', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 710,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L46",
+    "chars": 207,
+    "text": "    // Seeded state is visible before anything is written.\n    await selectCell(page, 'A1');\n    await expect(cell(page, 'A1')).toHaveText('Region');\n    await expect(formulaBar(page)).toHaveValue('Region');"
+  },
+  {
+    "render_block": 712,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L46",
+    "chars": 241,
+    "text": "    // Formula bar entry commits on Enter and the grid matches the formula bar.\n    await submitViaFormulaBar(page, 'A1', 'East');\n    await expect(cell(page, 'A1')).toHaveText('East');\n    await expect(formulaBar(page)).toHaveValue('East');"
+  },
+  {
+    "render_block": 714,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L46",
+    "chars": 274,
+    "text": "    // Escape cancels the uncommitted change: the last committed value stays.\n    await formulaBar(page).fill('North');\n    await formulaBar(page).press('Escape');\n    await expect(cell(page, 'A1')).toHaveText('East');\n    await expect(formulaBar(page)).toHaveValue('East');"
+  },
+  {
+    "render_block": 716,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L46",
+    "chars": 352,
+    "text": "    // Inline editor from a double click has the accessible name \"Edit <coord>\".\n    await cell(page, 'B2').dblclick();\n    const inline = page.getByRole('textbox', { name: 'Edit B2', exact: true });\n    await expect(inline).toBeVisible();\n    await inline.fill('7');\n    await inline.press('Enter');\n    await expect(cell(page, 'B2')).toHaveText('7');"
+  },
+  {
+    "render_block": 718,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 212,
+    "text": "    // Clicking another cell commits the pending edit.\n    await selectCell(page, 'C3');\n    await formulaBar(page).fill('5');\n    await selectCell(page, 'A1');\n    await expect(cell(page, 'C3')).toHaveText('5');"
+  },
+  {
+    "render_block": 720,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 316,
+    "text": "    // Values persist after refresh.\n    await reload(page);\n    await expect(cell(page, 'A1')).toHaveText('East');\n    await expect(cell(page, 'B2')).toHaveText('7');\n    await expect(cell(page, 'C3')).toHaveText('5');\n    await selectCell(page, 'B2');\n    await expect(formulaBar(page)).toHaveValue('7');\n  });\n});"
+  },
+  {
+    "render_block": 722,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 225,
+    "text": "test.describe('REQ-3-1-2 paste two-dimensional table data', () => {\n  test('Ctrl+V applies the whole rectangle, preserves empty fields and only overwrites the target', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 724,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 220,
+    "text": "    // Neighbours of the target rectangle must not change.\n    await submitViaFormulaBar(page, 'A4', 'keep-a4');\n    await submitViaFormulaBar(page, 'D4', 'keep-d4');\n    await submitViaFormulaBar(page, 'A7', 'keep-a7');"
+  },
+  {
+    "render_block": 728,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 315,
+    "text": "    await expect(cell(page, 'A4')).toHaveText('p1');\n    await expect(cell(page, 'B4')).toHaveText('');\n    await expect(cell(page, 'C4')).toHaveText('p3');\n    await expect(cell(page, 'A5')).toHaveText('p4');\n    await expect(cell(page, 'B5')).toHaveText('p5');\n    await expect(cell(page, 'C5')).toHaveText('p6');"
+  },
+  {
+    "render_block": 730,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 208,
+    "text": "    // Only the target rectangle changed.\n    await expect(cell(page, 'D4')).toHaveText('keep-d4');\n    await expect(cell(page, 'A7')).toHaveText('keep-a7');\n    await expect(cell(page, 'A6')).toHaveText('');"
+  },
+  {
+    "render_block": 736,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 315,
+    "text": "    await page.evaluate(async () => {\n      await navigator.clipboard.writeText('q1\\tq2\\nq3\\tq4');\n    });\n    await cell(page, 'A9').click({ button: 'right' });\n    const pasteItem = page.getByRole('menuitem', { name: 'Paste', exact: true });\n    await expect(pasteItem).toBeVisible();\n    await pasteItem.click();"
+  },
+  {
+    "render_block": 738,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 223,
+    "text": "    await expect(cell(page, 'A9')).toHaveText('q1');\n    await expect(cell(page, 'B9')).toHaveText('q2');\n    await expect(cell(page, 'A10')).toHaveText('q3');\n    await expect(cell(page, 'B10')).toHaveText('q4');\n  });\n});"
+  },
+  {
+    "render_block": 740,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 277,
+    "text": "test.describe('REQ-3-1-3 select a rectangular cell range', () => {\n  test('drag selection drives aria-selected exactly and survives refresh', async ({ page }) => {\n    await openSeededWorkbook(page);\n    await expect(grid(page)).toHaveAttribute('aria-multiselectable', 'true');"
+  },
+  {
+    "render_block": 742,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L42",
+    "chars": 688,
+    "text": "    await dragSelect(page, 'E2', 'F3');\n    await expect(cell(page, 'E2')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'F2')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'E3')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'F3')).toHaveAttribute('aria-selected', 'true');\n    // outside the rectangle\n    await expect(cell(page, 'D2')).toHaveAttribute('aria-selected', 'false');\n    await expect(cell(page, 'G2')).toHaveAttribute('aria-selected', 'false');\n    await expect(cell(page, 'E1')).toHaveAttribute('aria-selected', 'false');\n    await expect(cell(page, 'E4')).toHaveAttribute('aria-selected', 'false');"
+  },
+  {
+    "render_block": 744,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L42",
+    "chars": 407,
+    "text": "    // The complete rectangle is persisted, not only its top-left corner.\n    await reload(page);\n    await expect(cell(page, 'E2')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'F3')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'D2')).toHaveAttribute('aria-selected', 'false');\n    await expect(cell(page, 'E4')).toHaveAttribute('aria-selected', 'false');"
+  },
+  {
+    "render_block": 746,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L42",
+    "chars": 416,
+    "text": "    // A new selection replaces the previous one.\n    await selectCell(page, 'A15');\n    await expect(cell(page, 'A15')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'B12')).toHaveAttribute('aria-selected', 'false');\n    await expect(cell(page, 'F3')).toHaveAttribute('aria-selected', 'false');\n    const selected = await selectedCells(page);\n    expect(selected).toEqual(['A15']);\n  });\n});"
+  },
+  {
+    "render_block": 748,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 186,
+    "text": "test.describe('REQ-3-2-1 copy, cut and paste cell ranges', () => {\n  test('copy keeps the source and reproduces the 2-D layout', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 750,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 195,
+    "text": "    await selectCell(page, 'A20');\n    await pasteWithKeyboard(page, 'c1\\tc2\\nc3\\tc4');\n    await expect(cell(page, 'A20')).toHaveText('c1');\n    await expect(cell(page, 'B21')).toHaveText('c4');"
+  },
+  {
+    "render_block": 752,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 154,
+    "text": "    await dragSelect(page, 'A20', 'B21');\n    await copyWithKeyboard(page);\n    await selectCell(page, 'D20');\n    await page.keyboard.press('Control+v');"
+  },
+  {
+    "render_block": 754,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 215,
+    "text": "    await expect(cell(page, 'D20')).toHaveText('c1');\n    await expect(cell(page, 'E20')).toHaveText('c2');\n    await expect(cell(page, 'D21')).toHaveText('c3');\n    await expect(cell(page, 'E21')).toHaveText('c4');"
+  },
+  {
+    "render_block": 756,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 313,
+    "text": "    // Copy leaves the source range unchanged.\n    await expect(cell(page, 'A20')).toHaveText('c1');\n    await expect(cell(page, 'B21')).toHaveText('c4');\n    // Cells outside source and target stay unchanged.\n    await expect(cell(page, 'C20')).toHaveText('');\n    await expect(cell(page, 'F20')).toHaveText('');"
+  },
+  {
+    "render_block": 762,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 286,
+    "text": "    await selectCell(page, 'A24');\n    await pasteWithKeyboard(page, 'x1\\tx2\\nx3\\tx4');\n    await dragSelect(page, 'A24', 'B25');\n    await copyWithKeyboard(page);\n    await page.keyboard.press('Control+x');\n    await selectCell(page, 'D24');\n    await page.keyboard.press('Control+v');"
+  },
+  {
+    "render_block": 764,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 319,
+    "text": "    await expect(cell(page, 'D24')).toHaveText('x1');\n    await expect(cell(page, 'E24')).toHaveText('x2');\n    await expect(cell(page, 'D25')).toHaveText('x3');\n    await expect(cell(page, 'E25')).toHaveText('x4');\n    await expect(cell(page, 'A24')).toHaveText('');\n    await expect(cell(page, 'B25')).toHaveText('');"
+  },
+  {
+    "render_block": 768,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 199,
+    "text": "test.describe('REQ-3-2-2 undo and redo recent operations', () => {\n  test('toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 772,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 354,
+    "text": "    // --- cell edit\n    await submitViaFormulaBar(page, 'A28', 'u1');\n    await expect(cell(page, 'A28')).toHaveText('u1');\n    await expect(undo).toBeEnabled();\n    await undo.click();\n    await expect(cell(page, 'A28')).toHaveText('');\n    await expect(redo).toBeEnabled();\n    await redo.click();\n    await expect(cell(page, 'A28')).toHaveText('u1');"
+  },
+  {
+    "render_block": 774,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L556",
+    "chars": 305,
+    "text": "    // --- paste at B28 (disjoint from the edited A28), undone in reverse\n    // order together with the edit\n    await selectCell(page, 'B28');\n    await pasteWithKeyboard(page, 'v1\\tv2\\nv3\\tv4');\n    await expect(cell(page, 'B28')).toHaveText('v1');\n    await expect(cell(page, 'C29')).toHaveText('v4');"
+  },
+  {
+    "render_block": 782,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 154,
+    "text": "  test('a new modification after undo disables Redo and Ctrl+Y does not restore the old branch', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 784,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 294,
+    "text": "    await submitViaFormulaBar(page, 'A32', 'first');\n    await expect(cell(page, 'A32')).toHaveText('first');\n    await page.keyboard.press('Control+z');\n    await expect(cell(page, 'A32')).toHaveText('');\n    await expect(page.getByRole('button', { name: 'Redo', exact: true })).toBeEnabled();"
+  },
+  {
+    "render_block": 786,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L103",
+    "chars": 201,
+    "text": "    await submitViaFormulaBar(page, 'A32', 'second');\n    await expect(cell(page, 'A32')).toHaveText('second');\n    await expect(page.getByRole('button', { name: 'Redo', exact: true })).toBeDisabled();"
+  },
+  {
+    "render_block": 792,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L42",
+    "chars": 206,
+    "text": "    await submitViaFormulaBar(page, 'A60', 'only-in-a');\n    await expect(cell(page, 'A60')).toHaveText('only-in-a');\n    await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeEnabled();"
+  },
+  {
+    "render_block": 794,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L42",
+    "chars": 787,
+    "text": "    // Another workbook starts with its own (empty) session history, and its\n    // Ctrl+Z cannot reach the first workbook's operation.\n    await page.getByRole('link', { name: 'Home', exact: true }).click();\n    await page.getByRole('button', { name: 'New blank workbook', exact: true }).click();\n    await page.getByLabel('Workbook name', { exact: true }).fill(`Undo scope ${Date.now()}`);\n    await page.getByRole('button', { name: 'Create', exact: true }).click();\n    await expect(grid(page)).toBeVisible();\n    await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled();\n    await expect(page.getByRole('button', { name: 'Redo', exact: true })).toBeDisabled();\n    await page.keyboard.press('Control+z');\n    await expect(cell(page, 'A1')).toHaveText('');"
+  },
+  {
+    "render_block": 838,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 205,
+    "text": "async function openSeededWorkbook(page: Page): Promise<void> {\n  await page.goto('/');\n  await page.getByRole('link', { name: 'Q3 Sales', exact: true }).click();\n  await expect(grid(page)).toBeVisible();\n}"
+  },
+  {
+    "render_block": 840,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 173,
+    "text": "async function selectCell(page: Page, a1: string): Promise<void> {\n  await cell(page, a1).click();\n  await expect(cell(page, a1)).toHaveAttribute('aria-selected', 'true');\n}"
+  },
+  {
+    "render_block": 842,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 199,
+    "text": "async function submitViaFormulaBar(page: Page, a1: string, text: string): Promise<void> {\n  await selectCell(page, a1);\n  await formulaBar(page).fill(text);\n  await formulaBar(page).press('Enter');\n}"
+  },
+  {
+    "render_block": 846,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L44",
+    "chars": 657,
+    "text": "async function dragSelect(page: Page, fromA1: string, toA1: string): Promise<void> {\n  // Both corners must be inside the scroll viewport for a real mouse drag.\n  await cell(page, fromA1).scrollIntoViewIfNeeded();\n  await cell(page, toA1).scrollIntoViewIfNeeded();\n  const from = await cell(page, fromA1).boundingBox();\n  const to = await cell(page, toA1).boundingBox();\n  if (!from || !to) throw new Error(`cannot locate ${fromA1} or ${toA1}`);\n  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2);\n  await page.mouse.down();\n  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 8 });\n  await page.mouse.up();\n}"
+  },
+  {
+    "render_block": 848,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 212,
+    "text": "async function pasteWithKeyboard(page: Page, text: string): Promise<void> {\n  await page.evaluate(async (t) => {\n    await navigator.clipboard.writeText(t);\n  }, text);\n  await page.keyboard.press('Control+v');\n}"
+  },
+  {
+    "render_block": 852,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 241,
+    "text": "test.describe('REQ-3-1-1 formula cells and dependent recalculation', () => {\n  test('grid shows results, formula bar shows the original formula, dependencies recalculate and persist', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 854,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 242,
+    "text": "    await submitViaFormulaBar(page, 'G1', '2');\n    await submitViaFormulaBar(page, 'H1', '=G1+1');\n    await expect(cell(page, 'H1')).toHaveText('3');\n    await selectCell(page, 'H1');\n    await expect(formulaBar(page)).toHaveValue('=G1+1');"
+  },
+  {
+    "render_block": 858,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 215,
+    "text": "    // Direct and indirect dependents follow the source value.\n    await submitViaFormulaBar(page, 'G1', '5');\n    await expect(cell(page, 'H1')).toHaveText('6');\n    await expect(cell(page, 'H2')).toHaveText('12');"
+  },
+  {
+    "render_block": 860,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 274,
+    "text": "    await page.reload();\n    await expect(grid(page)).toBeVisible();\n    await expect(cell(page, 'H1')).toHaveText('6');\n    await expect(cell(page, 'H2')).toHaveText('12');\n    await selectCell(page, 'H1');\n    await expect(formulaBar(page)).toHaveValue('=G1+1');\n  });\n});"
+  },
+  {
+    "render_block": 862,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 213,
+    "text": "test.describe('REQ-3-2-1 copying formulas adjusts references', () => {\n  test('relative references shift with the target offset, absolute references stay', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 864,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 154,
+    "text": "    await submitViaFormulaBar(page, 'G5', '4');\n    await submitViaFormulaBar(page, 'J5', '=$G$5+G5');\n    await expect(cell(page, 'J5')).toHaveText('8');"
+  },
+  {
+    "render_block": 866,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 155,
+    "text": "    await selectCell(page, 'J5');\n    await page.keyboard.press('Control+c');\n    await selectCell(page, 'J6');\n    await page.keyboard.press('Control+v');"
+  },
+  {
+    "render_block": 868,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 159,
+    "text": "    // Relative part moved down one row, absolute part unchanged.\n    await selectCell(page, 'J6');\n    await expect(formulaBar(page)).toHaveValue('=$G$5+G6');"
+  },
+  {
+    "render_block": 870,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 172,
+    "text": "    await page.reload();\n    await expect(grid(page)).toBeVisible();\n    await selectCell(page, 'J6');\n    await expect(formulaBar(page)).toHaveValue('=$G$5+G6');\n  });\n});"
+  },
+  {
+    "render_block": 874,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L75",
+    "chars": 190,
+    "text": "test.describe('REQ-3-1-3 selection persistence per worksheet', () => {\n  test('switching worksheets keeps each worksheet rectangle', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 876,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L75",
+    "chars": 193,
+    "text": "    await dragSelect(page, 'C3', 'D4');\n    await expect(cell(page, 'C3')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'D4')).toHaveAttribute('aria-selected', 'true');"
+  },
+  {
+    "render_block": 878,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L75",
+    "chars": 302,
+    "text": "    // The seeded workbook contains Sheet1 and Sheet2 (root Issue #1 seed ruling).\n    const sheet2 = page.getByRole('tab', { name: 'Sheet2', exact: true });\n    await expect(sheet2).toHaveCount(1);\n    await sheet2.click();\n    await expect(grid(page)).toBeVisible();\n    await selectCell(page, 'A1');"
+  },
+  {
+    "render_block": 880,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L75",
+    "chars": 376,
+    "text": "    // Back to Sheet1: the rectangle is restored, and Sheet2 keeps A1.\n    await page.getByRole('tab', { name: 'Sheet1', exact: true }).click();\n    await expect(cell(page, 'C3')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'D4')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'A1')).toHaveAttribute('aria-selected', 'false');"
+  },
+  {
+    "render_block": 884,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 364,
+    "text": "    // Refresh restores the active worksheet's rectangle.\n    await page.getByRole('tab', { name: 'Sheet1', exact: true }).click();\n    await page.reload();\n    await expect(grid(page)).toBeVisible();\n    await expect(cell(page, 'C3')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'D4')).toHaveAttribute('aria-selected', 'true');\n  });\n});"
+  },
+  {
+    "render_block": 888,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L44",
+    "chars": 1224,
+    "text": "/**\n * Install a number-range rule on the seeded workbook by editing the server's\n * data file (the server reads it per request, so the next page load sees it).\n * Stands in for REQ-5's validation UI until issue #7 publishes it.\n */\nfunction seedNumberRule(sheetName: string, rangeA1: string, min: number, max: number): void {\n  const dir = process.env.DATA_DIR_REQ3_INTEGRATION;\n  if (!dir) throw new Error('DATA_DIR_REQ3_INTEGRATION must point at the server data directory');\n  for (const file of fs.readdirSync(dir).filter((f) => f.endsWith('.json'))) {\n    const filePath = path.join(dir, file);\n    const workbook = JSON.parse(fs.readFileSync(filePath, 'utf8')) as {\n      name: string;\n      sheets: Array<{ name: string; validationRules?: unknown[] }>;\n    };\n    if (workbook.name !== 'Q3 Sales') continue;\n    const sheet = workbook.sheets.find((s) => s.name === sheetName) ?? workbook.sheets[0];\n    sheet.validationRules = [\n      ...(sheet.validationRules ?? []),\n      { id: `req3-check-${rangeA1}`, type: 'numberRange', range: rangeA1, config: { min, max } },\n    ];\n    fs.writeFileSync(filePath, JSON.stringify(workbook, null, 2));\n    return;\n  }\n  throw new Error('seeded workbook \"Q3 Sales\" not found');\n}"
+  },
+  {
+    "render_block": 890,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L44",
+    "chars": 269,
+    "text": "test.describe('REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically', () => {\n  test('paste with an out-of-range value is rejected as a whole', async ({ page }) => {\n    seedNumberRule('Sheet1', 'A40:B41', 0, 100);\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 894,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L44",
+    "chars": 497,
+    "text": "    // 101 violates the 0-to-100 rule: the whole paste must be rejected.\n    await selectCell(page, 'A40');\n    await pasteWithKeyboard(page, '20\\t30\\n40\\t101');\n    await expect(page.getByText('Please enter a number from 0 to 100')).toBeVisible();\n    await expect(page.getByText('Please enter a number between 0 and 100')).toBeVisible();\n    await expect(cell(page, 'A40')).toHaveText('10');\n    await expect(cell(page, 'B40')).toHaveText('');\n    await expect(cell(page, 'A41')).toHaveText('');"
+  },
+  {
+    "render_block": 896,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 180,
+    "text": "    await page.reload();\n    await expect(grid(page)).toBeVisible();\n    await expect(cell(page, 'A40')).toHaveText('10');\n    await expect(cell(page, 'B41')).toHaveText('');\n  });"
+  },
+  {
+    "render_block": 898,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L44",
+    "chars": 338,
+    "text": "  test('range copy with an out-of-range target leaves source and target unchanged', async ({ page }) => {\n    seedNumberRule('Sheet1', 'D44:E44', 0, 100);\n    await openSeededWorkbook(page);\n    await submitViaFormulaBar(page, 'A44', '1');\n    await submitViaFormulaBar(page, 'B44', '2');\n    await submitViaFormulaBar(page, 'D44', '50');"
+  },
+  {
+    "render_block": 900,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 520,
+    "text": "    await dragSelect(page, 'A44', 'B44');\n    await page.keyboard.press('Control+c');\n    await selectCell(page, 'D44');\n    // 200 is out of range: the operation must be rejected atomically.\n    await pasteWithKeyboard(page, '200\\t300');\n    await expect(page.getByText('Please enter a number from 0 to 100')).toBeVisible();\n    await expect(cell(page, 'D44')).toHaveText('50');\n    await expect(cell(page, 'E44')).toHaveText('');\n    await page.reload();\n    await expect(cell(page, 'D44')).toHaveText('50');\n  });\n});"
+  },
+  {
+    "render_block": 904,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L44",
+    "chars": 471,
+    "text": "test.describe('REQ-3-2-2 undo covers row and column structure changes', () => {\n  // PENDING: needs the row/column structure operations of issue #4 (rowheader\n  // context menu \"Insert 1 row above\" and the shared structure-change entry\n  // point that records the operation in this session history). Enable when #4\n  // is merged into develop.\n  test.fixme('inserting a row and a column can be undone and redone', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 906,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 158,
+    "text": "    await submitViaFormulaBar(page, 'A48', 'r48');\n    await submitViaFormulaBar(page, 'B49', 'r49-b');\n    await submitViaFormulaBar(page, 'A50', 'col-a50');"
+  },
+  {
+    "render_block": 908,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 218,
+    "text": "    const rowHeader = page.getByRole('rowheader', { name: '49', exact: true });\n    await rowHeader.click({ button: 'right' });\n    await page.getByRole('menuitem', { name: 'Insert 1 row above', exact: true }).click();"
+  },
+  {
+    "render_block": 910,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 170,
+    "text": "    await expect(cell(page, 'A48')).toHaveText('r48');\n    await expect(cell(page, 'B50')).toHaveText('r49-b');\n    await expect(cell(page, 'A51')).toHaveText('col-a50');"
+  },
+  {
+    "render_block": 912,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L105",
+    "chars": 190,
+    "text": "    await page.getByRole('button', { name: 'Undo', exact: true }).click();\n    await expect(cell(page, 'B49')).toHaveText('r49-b');\n    await expect(cell(page, 'A50')).toHaveText('col-a50');"
+  },
+  {
+    "render_block": 1028,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L97",
+    "chars": 534,
+    "text": "test(\"rectangles normalize, contain and enumerate\", () => {\n  const rect = normalizeRect(\"C3\", \"A1\");\n  assert.deepEqual(rect, { top: 1, left: 1, bottom: 3, right: 3 });\n  assert.equal(rectContains(rect, 1, 1), true);\n  assert.equal(rectContains(rect, 4, 1), false);\n  assert.deepEqual(rectSize(rect), { rows: 3, cols: 3 });\n  assert.equal(rectStartRef(rect), \"A1\");\n  assert.deepEqual(rectRefs(rectAt(\"B2\", 2, 2)), [\"B2\", \"C2\", \"B3\", \"C3\"]);\n  assert.deepEqual(subtractRect(rectAt(\"A1\", 2, 2), rectAt(\"A2\", 2, 2)), [\"A1\", \"B1\"]);\n});"
+  },
+  {
+    "render_block": 1030,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L97",
+    "chars": 602,
+    "text": "test(\"clipboard text keeps empty fields and ignores one trailing newline\", () => {\n  assert.deepEqual(parseClipboardTable(\"a\\tb\\nc\\td\"), [\n    [\"a\", \"b\"],\n    [\"c\", \"d\"],\n  ]);\n  assert.deepEqual(parseClipboardTable(\"a\\t\\tb\"), [[\"a\", \"\", \"b\"]]);\n  assert.deepEqual(parseClipboardTable(\"a\\n\\nb\"), [[\"a\"], [\"\"], [\"b\"]]);\n  assert.deepEqual(parseClipboardTable(\"a\\tb\\n\"), [[\"a\", \"b\"]]);\n  assert.deepEqual(parseClipboardTable(\"\"), []);\n  assert.deepEqual(tableSpan(parseClipboardTable(\"a\\tb\\nc\")), { rows: 2, cols: 2 });\n  assert.equal(serializeClipboardTable([[\"a\", \"b\"], [\"c\", \"d\"]]), \"a\\tb\\nc\\td\");\n});"
+  },
+  {
+    "render_block": 1152,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L188",
+    "chars": 151,
+    "text": "const backendDir = path.resolve(__dirname, \"..\");\nconst repoRoot = path.resolve(backendDir, \"..\");\nconst frontendDir = path.join(repoRoot, \"frontend\");"
+  },
+  {
+    "render_block": 1154,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L188",
+    "chars": 240,
+    "text": "function run(command, args, cwd) {\n  console.log(`[prepare] ${command} ${args.join(\" \")}  (cwd: ${path.relative(repoRoot, cwd) || \".\"})`);\n  const result = spawnSync(command, args, { cwd, stdio: \"inherit\" });\n  return result.status === 0;\n}"
+  },
+  {
+    "render_block": 1162,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 2121,
+    "text": "/**\n * Formula engine wiring (REQ-4-*).\n *\n * This module is the single integration point between the persisted workbook\n * model (CellData.raw / CellData.value, see backend/src/types.ts) and\n * `@app/formula-engine` (shared/formula-engine, PR #1):\n *\n *  - Persistence stores the raw user input only (plain text, or a formula\n *    starting with \"=\"). `CellData.value` is a display cache: for formulas it\n *    is recomputed from the current source data on every write, so a reload\n *    never shows stale results (REQ-4-2-1).\n *  - Every content mutation goes through `runWithFormulas`: the engine is\n *    rebuilt from the current raw inputs, the mutation is applied (the engine\n *    recalculates all direct/indirect dependents in dependency order), and\n *    raws + computed display values are synced back into the workbook before\n *    it is persisted.\n *\n * Raw fidelity: HyperFormula normalizes formula text (uppercases function\n * names, trims whitespace). The formula bar must show the user's original\n * input, so edits and pastes are synced back VERBATIM (raw overrides), and\n * only structural operations (range move, row/column insert/remove — where\n * references are genuinely rewritten) take the engine's adjusted raw as\n * authoritative. Consequence: after a structural operation a formula's text\n * may be re-serialized by the engine (case/spacing); its references and\n * result stay correct, and plain cells always keep their exact text.\n *\n * The engine is an ESM package, loaded lazily via dynamic import so the\n * CommonJS backend stays compatible (require(esm) is available on the\n * supported Node.js >= 20.19 runtimes).\n *\n * Endpoints owned by other tasks (paste/copy/move in REQ-3, row/column\n * operations in REQ-2, sort in REQ-5) call the same handle inside\n * `runWithFormulas` instead of reimplementing recalculation:\n * `setRangeRaw` (bulk paste), `moveRange` (range move, HyperFormula\n * moveCells semantics), `addRows/removeRows/addColumns/removeColumns`\n * (structure changes with automatic reference adjustment) and\n * `adjustFormulaForCopy` (copy reference adjustment, REQ-4-1-2).\n */"
+  },
+  {
+    "render_block": 1168,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 200,
+    "text": "function loadEngineModule(): Promise<EngineModule> {\n  if (!engineModulePromise) {\n    engineModulePromise = import(\"@app/formula-engine\") as Promise<EngineModule>;\n  }\n  return engineModulePromise;\n}"
+  },
+  {
+    "render_block": 1498,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L57",
+    "chars": 746,
+    "text": "// 2. Frontend build (best effort).\nif (!existsSync(frontendIndex)) {\n  const tsc = path.join(frontendDir, \"node_modules\", \"typescript\", \"bin\", \"tsc\");\n  const vite = path.join(frontendDir, \"node_modules\", \"vite\", \"bin\", \"vite.js\");\n  if (existsSync(tsc) && existsSync(vite)) {\n    const built =\n      run(process.execPath, [tsc, \"-p\", \"tsconfig.json\"], frontendDir) &&\n      run(process.execPath, [vite, \"build\"], frontendDir);\n    if (!built) {\n      console.warn(\"[prepare] frontend build failed; starting the API without a UI bundle\");\n    }\n  } else {\n    console.warn(\n      \"[prepare] frontend dependencies are not installed; starting the API only \" +\n        \"(build the UI with: cd frontend && npm install && npm run build)\"\n    );\n  }\n}"
+  },
+  {
+    "render_block": 2114,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 276,
+    "text": "**裁决：采用 moveCells 语义，引用跟随移动。** 需要服务端 move 端点，理由是 REQ-3-2-1 的硬约束：'Cells outside these ranges must not change'。若剪切=粘贴+清源，外部公式 =A1 在 A1 被移走后显示值会变（0 或错误）——该单元格在范围外却发生了可见变化，违反需求。引用跟随移动（=A1 → =D1）后显示结果不变，才同时满足'范围外不变'与'源/目标/受影响公式全部更新'。REQ-4 也把 'range move' 列为独立重算触发，与 moveRange 语义一致。"
+  },
+  {
+    "render_block": 2116,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 415,
+    "text": "**实施要求（请 deepseek-5/10 出一个跟进 PR，--base develop）**：\n1. 服务端新增 move 端点（如 POST /api/workbooks/:id/sheets/:sheetId/move {sourceRange, targetRef}），内部走引擎 moveRange（#6 handle 已有），原子：源/目标/受影响引用要么全部更新持久、要么全部原状。\n2. 前端剪切-粘贴改走该端点；'目标完整显示后才清源'的时序在 UI 层保持。\n3. undo 记录为单个 move 操作（复用 History 的 Operation，kind='move'），不是写+清两条。\n4. 移动路径同样过 #7 的 validateRangeWrite（REQ-5-2-1 明确'粘贴/范围移动写入非法值整单拒绝'）。\n5. 端点契约先在此串公布，#4/#7 如需消费（结构平移/校验）按契约走。"
+  },
+  {
+    "render_block": 2256,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L37",
+    "chars": 243,
+    "text": "  // Follow the active cell / server state whenever the user is not editing.\n  useEffect(() => {\n    if (focused) return;\n    draftRef.current = activeCell;\n    rawAtEditStart.current = raw;\n    setDraft(raw);\n  }, [activeCell, raw, focused]);"
+  },
+  {
+    "render_block": 2258,
+    "source": "native/359-2026-09-28T10-16-37-144Z_01a0e784-3817-730d-8c24-a608d624dceb.jsonl:L122",
+    "chars": 725,
+    "text": "  const commit = async () => {\n    const ref = draftRef.current;\n    const nextRaw = draft === \"\" ? null : draft;\n    const previous = rawAtEditStart.current === \"\" ? null : rawAtEditStart.current;\n    if (nextRaw === previous) return;\n    const key = `${ref}\\u0000${nextRaw ?? \"\"}`;\n    if (inFlight.current === key) return;\n    inFlight.current = key;\n    const ok = await onCommit(ref, nextRaw);\n    if (inFlight.current === key) inFlight.current = null;\n    if (ok) {\n      // The commit landed: this is the new \"last successful content\".\n      rawAtEditStart.current = draft;\n    } else {\n      // The write was refused: show the last successful content, not the draft.\n      setDraft(rawAtEditStart.current);\n    }\n  };"
+  },
+  {
+    "render_block": 2660,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L27",
+    "chars": 192,
+    "text": "Commands:\n  view       \n  edit       \n  hide       \n  unhide     \n  delete     \n  resolve    \n  unresolve  \n  reaction   \n  help       Print this message or the help of the given subcommand(s)"
+  },
+  {
+    "render_block": 2668,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L26",
+    "chars": 226,
+    "text": "Commands:\n  list         \n  view         \n  subscribe    \n  unsubscribe  \n  create       \n  edit         \n  comment      \n  close        \n  reopen       \n  help         Print this message or the help of the given subcommand(s)"
+  },
+  {
+    "render_block": 2768,
+    "source": "continuation02-root-native/157-2026-09-28T07-58-33-196Z_01a0e705-d0ec-710b-982c-8ccd98831879.jsonl:L12",
+    "chars": 224,
+    "text": "关联 Issue #5（REQ-3）。base `origin/develop`（当前 56cbd1a），head = `issue-5-formulabar-undo-fix`；产品改动为 commit b06d22f，head 2ecf101 已并入 develop 56cbd1a（仅 `checks/run.sh` 来自 develop 的 #10，不影响本 PR 的改动面）。缺陷实测是在 PR #8 的合并提交 958f05a 上做的。"
+  }
+]

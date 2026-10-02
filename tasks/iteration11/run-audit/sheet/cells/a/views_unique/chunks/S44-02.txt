@@ -1,0 +1,186 @@
+umber, number, string]>): Map<string, string>;      // "row:col" -> 显示文本
+                  bounds: { rowCount: number; colCount: number }): string;             // bounds = 目标表结构；D 若先扩张结构须传扩张后值
+rewriteRefsOnInsertDelete(formula: string, axis: 'row' | 'column', index: number,
+[DUPLICATES: 14 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L20:C1]
+
+## S44:L21 2026-09-29T07:26:25.221Z message toolResult
+toolResult bash False
+[text]
+=== develop still transitional? ===
+385:    expect(csv).toBe('=1+1,plain');
+=== consumers ===
+      <button type="button" className="sheet-button" onClick={() => setRenaming(true)}>
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L21:C1]
+
+## S44:L22 2026-09-29T07:26:34.112Z message assistant
+[thinking]
+Facts verified:
+- develop e63efc6: transitional (grid '=1+1', csv '=1+1,plain'), cellDisplay identity.
+- C branch c340e2e: cellDisplay uses evaluate; e2e flipped ('2' / '2,plain'); PR #10 OPEN, assignee @deepseek-8.
+- Consumers unchanged; WorkbookToolbar passes displayValue.
+Comment 131's claims check out. The Issue #3 body was updated by @deepseek-3 to reflect this.
+Now, what should I do as PR #8 assignee?
+PR #8 description mentions: "**PR 侧无待办（2026-09-29 收口）**；遗留义务已转交：C（#5，负责人 @deepseek-7）替换 A-3 接缝实现 ...，整合 PR 带「公式单元格导出 = 计算结果」门禁并翻转 `e2e/workbook-lifecycle.spec.ts` 的 `PRE-C TRANSITION` 断言".
+That "并翻转" is now stale: C's PR #10 already flipped it. Per collaboration rules, I should correct it narrowly and record the correction with a link. Also note the C assignee on PR #10 is @deepseek-8 (Issue #5 assignee was @deepseek-7 per earlier; comment 131 is addressed to @deepseek-7 and @deepseek-8). Actually PR #10 assignee is @deepseek-8. My PR description says "C（#5，负责人 @deepseek-7）" — that's about Issue #5 owner. Issue #5 assignee? Let me check. Comment 131 mentions @deepseek-7 and @deepseek-8. Earlier comment 97 said "#5 已指派 @deepseek-7". But PR #10 is assigned @deepseek-8. So C's implementation is by @deepseek-8, while Issue #5 owner might be @deepseek-7. Let me verify issue #5 assignee.
+Let me check issue 5.
+Also worth checking: is there a risk of duplicate/conflicting flipping responsibility? Comment 131 resolves it. The main "action" for me: narrow-edit PR #8 description to state the flip is done in PR #10 and the integration PR re-runs it; and reply in thread noting the correction with evidence (or maybe just edit without a comment? The rule says "先在原讨论说明更正和依据... 再窄改". Posting a short correction comment in the relevant thread (PR #8 thread or Issue #3 thread 27) is appropriate).
+Hmm, but is it worth a comment? The rule: "形成新决定或发现旧判断失准时，先在原讨论说明更正和依据，并联系受影响成员". The stale statement was in PR #8 description (a description, not a discussion). @deepseek-3 already did the correction in Issue #3 body and recorded comment 131 as the review. So the "原讨论" already contains comment 131. My PR description merely needs a narrow edit consistent with it. I could note it briefly.
+Also consider: do I need to @ anyone? The integration PR gate owner isn't assigned yet (per comment 131, integration PR is a future thing). @deepseek-8 (C's PR owner) and @deepseek-3 (issue owner) are the affected. Probably no need to ping; but a brief comment in PR #8 conversation (thread 100 or new) informing that the PR description is updated to match comment 131... That might be noise. Hmm.
+The guidance says avoid duplicate progress reports; but a narrow description correction with reason is a legitimate action. I think the cleanest: 
+1. Narrow-edit PR #8 description: correct the stale "整合 PR ... 并翻转" → "C（#5，PR #10，负责人 @deepseek-8）已替换接缝并翻转该断言（待合入），整合 PR 在最终候选复跑该用例作为门禁".
+2. Post a short comment on PR #8 (or reply in thread 100?) documenting the correction and citing comment 131. Since thread 100 is resolved/folded, better a new thread on PR #8? Actually the notification was issue:3 comment 131; the description edit is on PR #8. A short comment on PR #8 referencing Issue #3 comment #131 and its verification would be useful for the integration PR handler to find the exact gate.
+Wait — but should I instead verify and reply in Issue #3 thread 27 (comment 131's thread)? Comment 131 isn't asking anything of me. Replying "confirmed" is acknowledgment noise. Better: no reply there.
+However — there's one thing I should check: comment 131 §1–4 claims about C's branch — I verified them. But is there any A-side item that comment 131 gets wrong? Let me check point about "`frontend/tsconfig.json`(+1)" etc. Not my concern.
+Point 4 of comment 131: "A 的过渡断言已由 C 翻转: ... 现断言 expectCellText(page, 'A1', '2') 与 expect(csv).toBe('2,plain')". Verified.
+So my conclusion: A-side closure stands; only PR #8 description has a stale clause about who flips. Let me do the narrow edit and a concise comment.
+Actually, let me also double-check the PR #8 description's other statement: "- 需求与讨论背景：**#3**... 契约背景：**#1**（... + **契约 v1.3：comment #51/#54/#57，以 #57 为最新增量权威**)". There's now contract v1.4 (#128). PR #8's scope is A; v1.4 concerns C. But the description says "以 #57 为最新增量权威" — now v1.4 exists (Issue #1 thread 1 comment #128). Should I update? The A-side is closed with v1.3; v1.4 is C-1 interface/reference rewrite semantics, affecting A's seam (A-3 consumer). Hmm, the Issue #3 body now includes a v1.4 bullet. For consistency, a narrow note in PR #8 body could mention v1.4 exists and A-side alignment (A 侧 #110/#121 对账). But careful about scope creep. The rule allows narrow edits that keep info accurate. I'll add a brief clause in the same bullet: "契约 v1.4（C-1 接口/引用重写语义，Issue #1 thread 1 comment #128；A 侧对账 #110/#121）不含 A 的实现改动".
+Let me check what comments #110/#121 are — they're in Issue #3? They were mentioned in comment 131 ("与 A 侧 #110/#121 对账"). Wait, "A 侧 #110/#121" — comment numbers on Issue #3? Issue #3 comments listed in working memory go up to 131. #110/#121 aren't in the working memory comment list (which showed only some). Let me check comment 110 and 121 to be accurate before citing them.
+Let me view them.
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L22:C1]
+[toolCall] bash call_00_uO1rcryN0K29ZIRgj7gI6602
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 110 2>&1 | head -40 && echo \"=====121=====\" && braid comment view 121 2>&1 | head -40"}
+[toolCall] bash call_01_zgs6iTOJ94xBDm3gb39C8675
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue view 5 2>&1 | head -25"}
+
+## S44:L23 2026-09-29T07:26:34.297Z message toolResult
+toolResult bash False
+[text]
+comment #110 [visible]
+reply-to: 109
+【A 侧兼容确认（子 Issue A 负责人）：C-1 接口与 A-3/A-4 已交付契约一致，A 侧无需改动】@glm-1 @deepseek-8
+我在 `origin/develop`（`e63efc6`，即 A 已验收合入的树）上核对了 C-1 与 A 的接缝/足迹契约，结论是**兼容、无冲突、A 侧零改动**；以下为可核实的依据，供 C 实现与整合 PR 门禁直接引用。
+1. **坐标键逐字一致**：C-1 的 `evaluate` 返回 `"row:col" -> 显示文本`；A 交付的 `frontend/src/lib/coordinates.ts` 中 `cellKey(row, col)` 即 `` `${row}:${col}` ``（同文件另有 `toCoordinate`/`parseCoordinate` 供可访问名称与 A1 解析）。C 替换 `frontend/src/lib/cellDisplay.ts` 的 `worksheetDisplayValues` 时无需新增坐标换算。
+2. **显示值语义正是接缝要承载的内容**：C-1 的「普通格=原文、公式格=结果/错误」与 A-3（Issue #3 comment #81/#82 并入的 v1.3）一致——接缝必须把**错误值**也走同一显示路径，且只服务网格渲染与 CSV 导出；`FormulaBar` 与内联编辑继续读 `raw`。两个消费者在 A 的 PR #8 已接线完成（`WorkbookEditor` memo → `Grid` 的 `text`；`WorkbookToolbar` → `worksheetToCsv(worksheet, displayValue)`），C 只换实现、不必新增接线（锚点清单：Issue #5 comment #96）。
+3. **`bounds` 的取法确认 A-4**：C-1 要求 `bounds` 取 `row_count`/`col_count`、**绝不用** `min_rows`/`min_cols` —— 与 A-4 的定义完全一致：足迹是**导出 used range 的静态下界**（`max(非空包围盒, 足迹)`）与零字节判据，不是结构事实源，也不随结构操作演化。D 的粘贴若先扩张结构，传扩张后的结构这一条对我方无影响。
+4. **翻转锚点单点可查（整合 PR 门禁）**：`e2e/workbook-lifecycle.spec.ts` 用例 `exports the formula cell value through the shared display seam` 行内注 `PRE-C TRANSITION (Issue #3 decision D-A8)`；该文件在 `e63efc6` 树上当前断言为 `'=1+1'`（网格与导出一致地显示原文）。C 合入后按同一用例翻转为 `'2'`，整合 PR 带此门禁即可，无需另造判据。C-1a/C-1b 只作用于 D/B 的复制与结构路径，不改变这条 A 用例的期望形状。
+5. **A 侧状态**：Issue #3 `CLOSED`、PR #8 `MERGED`（`e63efc6`），无待办、无代码改动需求；`backend/src/ranges.js` 的再导出迁移不触碰 A 交付文件（`backend/src/csv.js`、`frontend/src/lib/csvExport.ts` 等均不引用 `ranges`），公开名与行为不变即可。
+若 @glm-1 对 C-1a/C-1b 的裁定与我上述第 4 条的期望形状不同（例如要求网格与导出分叉），请在本 thread 指出，我在 Issue #3 原讨论记录更正并与 C/整合 PR 对齐；否则按 C-1 执行，A 侧维持现状。
+=====121=====
+reply-to: 119
+【A 侧对 #119 待裁项的可核实反例：给 `frontend/tsconfig.json` 加 `checkJs` 建不出 Node-only 方向的门（三种 program 实测）】@glm-1 @deepseek-7
+#119 §4 把「Node-only 方向是否要更硬的门（例如给 `frontend/tsconfig.json` 加 `checkJs`）」交 @glm-1 裁定。该项会改动 A 已验证过的前端构建配置，所以我在本 worktree 用一份最小探针实测了三种 program；探针与 node_modules 符号链接都在 `/tmp`，本 worktree `git status` 干净，未改任何仓库文件。
+探针 `shared-probe.js`（三份配置共用同一文件）：
+export function lie() { return 'not a number'; }   // 故意 JSDoc 冲突 → 证明 checkJs 是否生效
+| program（tsc 5.9.3） | 关键选项 | 实测结果 |
+| **前端副本** = `frontend/tsconfig.json` + `allowJs`/`checkJs: true` | `lib: ES2022, DOM, DOM.Iterable`；`types: ["vite/client","node"]` | exit 2，**只报 JSDoc 冲突 `TS2322`**；`process` / `Buffer` / `document` **一条都不报** |
+| **后端副本** = `backend/tsconfig.json` | `lib: ES2022`；`types: ["node"]` | exit 2：`TS2322` + `document` **`TS2584`**（= #118 的 DOM 方向门） |
+| **独立 shared program**（新增，最小） | `lib: ES2022`；`types: []`；`allowJs` + `checkJs` | exit 2：`TS2322` + `process` **`TS2591`** + `Buffer` **`TS2591`** + `document` **`TS2584`**（两个方向都有门） |
+结论（三条，供裁定直接取用）：
+1. **给 `frontend/tsconfig.json` 加 `checkJs: true` 拦不住 Node-only 方向**：前端 program 的 `types` 已含 `"node"`，而该 types 项**不能删**——`frontend/vite.config.ts:11-20` 真的读 `process.env.HOST/PORT/VITE_DEV_API_TARGET`，且该文件在前端 program 的 `include` 内。所以加了 `checkJs` 只是让共享 JS 体在前端 program（DOM + Node 双 types）下被检查：上表第 1 行显示 `checkJs` 确实生效（报了 JSDoc 冲突），而 `process`/`Buffer` 依旧合法。即它会扩大 PR #10 的 diff 与构建面，却**不产生** #118 想要的那道门。
+2. **能建门的最小形态是加一个独立 shared program**：`shared/tsconfig.json`（`lib: ES2022`、`types: []`、`allowJs` + `checkJs`）并入 checks 脚本即可同时拦住两个方向；完全不动 `frontend/`、`backend/` 的既有配置，diff 独立可审（例如挂在 `checks/` 下与现有 `pnpm -r typecheck` 并列）。
+3. **#119 §2 的运行时把关仍然正确且必要**，且与 A 的转交项同一条：整合 PR 的门禁用例就是 `e2e/workbook-lifecycle.spec.ts` 的 `exports the formula cell value through the shared display seam`（`PRE-C TRANSITION` 翻转），它在真实浏览器内执行接缝并同时断言网格与导出的两个消费者——正是该方向的运行时门，无需另造判据。
+A 侧影响：无论裁定取哪条，A 交付文件（TS）不变，A 不因此重跑验收；第 2 条若采纳，属 PR #10 或 `checks/` 范围。
+复现材料：`/tmp/fe-checkjs-probe/{shared-probe.js,tsconfig.frontend-copy.json,tsconfig.backend-copy.json,tsconfig.shared-only.json}`，`node_modules` 为指向 pr-8 工作区的符号链接；三条命令分别是 `tsc -p <cfg> --noEmit`，退出码与错误码如上表。
+[DUPLICATES: 39 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L23:C1]
+
+## S44:L24 2026-09-29T07:26:34.301Z message toolResult
+toolResult bash False
+[text]
+- **当前阶段**：**实现进行中**（2026-09-29）——PR #10 首个实现提交 `d9523b4` 已发布（接口先行完成，见 #124）；浏览器内 e2e 与平台路径核验待交回。
+- **负责人**：Issue 侧 @deepseek-7（需求/技术/验收方案）；实现 PR **#10** 负责人 @deepseek-8（base `develop`，head `c-issue-5-formula-engine`，消费基线 `origin/develop @ e63efc6`）。
+- **设计定稿（权威）**：**comment #107** —— 判据逐条、决定 D-C1…D-C13、公开 API、验收方案（前端纯逻辑 Vitest 10 组 + 后端结构重写回归 + `e2e/formula-engine.spec.ts`）、假设 A-C1…A-C6；advisor 独立咨询的采纳与替代读法见 packet「独立判断记录」。**本正文下方的「交付结果/接口义务/验收」是原始任务说明；接口签名已由 #107 的 D-C7 细化为 `evaluate(cells, bounds?)`（可选第二参，#126 确认）、`rewriteRefsOnCopy(formula, dRow, dCol, bounds)`、`rewriteRefsOnInsertDelete(formula, axis, index, count, isDelete?)`、`isNumericCellValue(raw)`**。
+- **接缝与翻转义务来源**：comment #96（A 的 A-3 交接：替换 `cellDisplay.ts`、FormulaBar/内联编辑继续读 `raw`、翻转 `e2e/workbook-lifecycle.spec.ts:375-386` 与 `cellDisplay.test.ts:38-43`）；指派背景 #98；交接评论 #108；**A 侧兼容确认 #110**（A 零改动：接缝键即 `cellKey(row,col)` ＝ `"row:col"`（`frontend/src/lib/coordinates.ts`）；翻转锚点在 `e63efc6` 上仍为网格与导出 `'=1+1'`；`bounds` 取 `row_count`/`col_count` 与 A-4 足迹定义无冲突）；**B 侧兼容确认 #111**（Issue #1 thread 1：C-1 对 B 零改动；`backend/src/ranges.js` 再导出必须**剥 `$`**且 `formatA1Range` 不回写 `$`、不可解析输入原样返回；结构端点重写须在**同一事务**、以**位移前坐标**读写并显式传 `{kind:'insert'|'delete', at, count}` —— 窄改 D-C7a/D-C9a，见本 Issue 最新评论；**#115** 为 B 侧独立复核确认，B 零新增工作）。
+- **契约增量 C-1（待根裁定/确认）**：Issue #1 thread 1 comment #109 —— 三个重写接口 + `bounds` 语义（目标表结构，D 若先扩张须传扩张后值）+ 两处跨任务语义：**复制越界整式塌缩为逐字 `=#REF!`**（REQ-4-1-2 的精确显示串）、**结构变更时绝对引用同样平移**（REQ-2-2-x 的 "all … formula references shift"）。**消费方已确认、零改动**：#110（A 侧）、#111/#115（B 侧复核）；@glm-1 若未提反例，PR #10 即按 #109 执行（实现已据此推进）。**接口已发布（#124，head 首个实现提交 `d9523b4`）**：`shared/formula.js`（`evaluate`/`rewriteRefsOnCopy`/`rewriteRefsOnInsertDelete`/`isNumericCellValue`）、A1 原语 `shared/a1.js`（由 `backend/src/ranges.js` 再导出）、前端出口 `frontend/src/lib/formula.ts`。
+- **task packet**：`tasks/issue-5-c/packet.md`（head 上；由 @deepseek-8 续写实现计划、预演排障、证据与偏离）。
+- **未决/依赖（保持可见）**：① D（#6）未指派 —— REQ-4-1-2 的端到端复制用例与 REQ-4-2-1 的粘贴/范围移动分支随 D 合入回归，本 PR 先以单测覆盖重写逻辑；② B 的「公式引用重写」回归由 PR #10 一并接入（B 的 PR #9 明记该点留到 C，B 零新增工作）；③ 假设 A-C1…A-C6（文本算式当 0、越界单格 `#REF!`/区间裁剪、复制塌缩、15 位有效数字、参考图函数下拉不实现、种子不含 REQ-4 场景数据）。
+- **环境前提（已核实，见 packet）**：共享实现模块 `shared/*.js`（纯 ESM + JSDoc）可被 backend `tsc --checkJs`、frontend `tsc --noEmit`（需 `allowJs: true`，JSDoc 类型生效）、vitest、vite build 与 Node 20.19.3 ESM 运行消费 —— 单实现两侧共用可行。
+- **构建形态裁定（#116 答基础层 #114）**：取 **`allowJs: true` + 显式 `.js` 导入**（PR #10 的 diff 只加这一行 `frontend/tsconfig.json` 选项）；**禁止**「显式 `.js` + 无 `.d.ts` + `allowJs` 未设置」—— 平台前端构建 `tsc -p tsconfig.json --noEmit && vite build` 会以 TS7016 打红（Issue 侧已独立复现）。`shared/*.js` 同时进入前端（ES2022+DOM）与后端（ES2022+node）两个 program，须环境中立（只能用 ES2022 内建，不得用 `Buffer`/`process`/`document` 等单侧全局）。**执行边界更正（#118 答 #116 §3.3）**：该纪律**只有 DOM 方向**有自动门（后端 `allowJs`+`checkJs`）；前端 `allowJs` 未开 `checkJs`，共享 `.js` 体内的 Node-only 全局（`process`/`Buffer`）在类型检查里**不报错**。故 PR #10 的证据必须以**浏览器内真实执行** `evaluate`/引用重写路径的 e2e 作为 Node-only 方向的把关（`e2e/formula-engine.spec.ts` 本就在验收方案内），不得以 typecheck 绿代替。**静态门补强（D-C14，#125 答 #121/#122，我侧独立复现 `/tmp/ds7-shared-gate-probe.log`）**：前端 `checkJs` 拦不住 Node-only 方向（`types` 含 `node`，`vite.config.ts` 需要），故 PR #10 追加独立 `shared/tsconfig.json`（lib ES2022、`types: []`、`allowJs`+`checkJs`、`include ["*.js","*.d.ts"]`——include 缺 `"*.d.ts"` 时无 `.js` 的提交会 `TS18003`）并把 `pnpm --dir frontend exec tsc -p shared/tsconfig.json` 并入 `checks/run-e2e.sh`；该静态门**不替代**浏览器内 e2e。
+3. **REQ-4-1-2 引用偏移**：公式单元格经复制粘贴到新位置时，相对引用按目标偏移调整、绝对引用不变；源公式与结果不变；目标公式栏显示调整后的原式；偏移越界时公式栏显示 `=#REF!`、网格显示 `#REF!`（引用重写 API 先行发布单测，子 Issue D 的复制粘贴消费）。
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L24:C1]
+
+## S44:L25 2026-09-29T07:26:42.547Z message assistant
+[thinking]
+Now I have a full picture. Note that comments 110 and 121 are mine (from a previous context), in Issue #1 thread 1. They already covered A-side compatibility.
+The latest comment 131 by @deepseek-3 is a review note confirming A-side no pending items. Issue #3 body was updated accordingly (as notified).
+What remains for me (PR #8 assignee)? PR #8 description has stale clause: "整合 PR 带「公式单元格导出 = 计算结果」门禁并翻转 `e2e/workbook-lifecycle.spec.ts` 的 `PRE-C TRANSITION` 断言". Now C's PR #10 already flipped it (still open), so integration PR only re-runs. Also the description references "C（#5，负责人 @deepseek-7）" — Issue #5 owner is @deepseek-7, PR #10 implementer is @deepseek-8. That's fine but could clarify.
+Should I also note contract v1.4? PR #8 body cites v1.3 as latest; v1.4 (#128) exists and includes C-1 which A-side confirmed zero-change (#110, #121). A narrow addition would keep readers from thinking PR #8's citation is stale. Hmm, but the rule says description holds "当前任务说明与稳定决定". PR #8 is merged/closed; its description documents the delivered scope. Minimal correction of the stale flip clause + pointer to comment 131 is the right scope. I might add one clause about v1.4 for completeness but that's arguably outside.
+Let me be judicious: The key risk is a future integration-PR handler reading PR #8's body and thinking the flip is still to be done (and possibly flipping an already-flipped assertion in a wrong way, or duplicating work). Actually no — they'd read the code. But the "门禁" description matters.
+Decision: narrow-edit the PR #8 body's close-out bullet:
+Old:
+"- **PR 侧无待办（2026-09-29 收口）**；遗留义务已转交：C（#5，负责人 @deepseek-7）替换 A-3 接缝实现 `frontend/src/lib/cellDisplay.ts`（锚点见 Issue #5 comment #96），整合 PR 带「公式单元格导出 = 计算结果」门禁并翻转 `e2e/workbook-lifecycle.spec.ts` 的 `PRE-C TRANSITION` 断言"
+"- **PR 侧无待办（2026-09-29 收口）**；遗留义务已转交：C（#5，Issue 负责人 @deepseek-7；实现 PR #10，负责人 @deepseek-8）替换 A-3 接缝实现 `frontend/src/lib/cellDisplay.ts`（锚点见 Issue #5 comment #96）。**更正（Issue #3 comment #131 + 我在 `e63efc6`/`c340e2e` 上的复核）**：过渡断言已由 C 在 PR #10（head `c340e2e`）内翻转（用例 `exports the formula cell value through the shared display seam`：网格 `2`、导出 `2,plain`），故整合 PR 的义务是**在该用例上于最终候选复跑**（浏览器内真实执行），而非再次翻转；`origin/develop`（`e63efc6`）当前仍是过渡实现 `'=1+1'`。"
+Also the first bullet mentions "契约 v1.3：comment #51/#54/#57，以 #57 为最新增量权威" — I could append "；A 侧另已对账契约 v1.4（#128，C-1 接口/引用重写）为**零改动兼容**（Issue #1 thread 1 comment #110/#121）". That's a useful, accurate pointer. I'll add it to that bullet.
+Hmm — but should I add a comment? The rules: correcting a stale description → record correction in original discussion with basis, contact affected members. Comment 131 already exists in Issue #3 thread 27 (the original discussion) and is the basis. My correction is a downstream reflection of it. I'll post a short comment on PR #8 thread (new thread or reply to thread 100?) — thread 100 is resolved and about description corrections. Actually thread 100 ("#100 两处口径已由我独立复核确认") was a description-correction thread on PR #8, resolved/folded. A reply there would be appropriate thematically ("PR 正文口径更正") — replies to resolved threads are still visible; the thread is folded though. Hmm, "问题解决后先保留仍需使用的结论和证据入口，再用 comment resolve ID 折叠已结束讨论，后续回复仍可见". Replying to a folded thread is acceptable but may be less visible. Given the correction is a new increment (comment 131 arrived), a new thread on PR #8 might be cleaner. But the notification said "issue #3 title/body 已修改; 请继续完成当前工作".
+Actually wait. Let me reconsider whether any reply is needed at all. The braid system notified me — the PR #8 assignee — of issue:3 comment 131. That's a notification, not a request. The guidance explicitly says no receipt needed. My "current work" was: verify comment 131's claims (done) and keep entry points accurate.
+I think the best value-add: post a concise comment on PR #8 documenting:
+1. I verified comment 131's A-3 claims on the actual trees (develop e63efc6 transitional; C branch c340e2e flipped; consumers unchanged; FormulaBar/inline edit read raw).
+2. PR #8 body narrowed to reflect the gate = re-run, not re-flip, with v1.4 pointer.
+3. A-side no further submissions to braid/issue-3-a.
+And @-mention @deepseek-3 (issue owner) and @deepseek-8 (PR #10 owner) so the integration gate expectation is aligned.
+Actually, do I need to @glm-1? The integration PR isn't assigned yet. The root issue owner is @glm-1. The gate note matters for whoever runs the integration PR. I'll mention @deepseek-3 and @deepseek-8.
+Hmm, but is a comment adding noise? The PR #8 is merged and every comment notifies participants. The guidance: "需要回答问题、纠正事实、交接成果或采取行动时才回复". I am correcting a fact (PR body) — the rule says describe correction in original discussion. Comment 131 already did the fact correction in Issue #3. My edit of PR #8 body is a follow-through. Posting about it is arguably a "交接/纠正" so it's justified and short.
+Let me do it: edit PR body, then post short comment on PR #8 (new thread), with --reply-to? No, new thread is fine. Actually let me check `braid pr edit --help` for description editing.
+Let me check braid pr edit options.
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L25:C1]
+[toolCall] bash call_00_UTgPTEFynMW34mBJ9evu6672
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr edit --help 2>&1 | head -40 && echo \"===comment add===\" && braid comment add --help 2>&1 | head -40"}
+
+## S44:L26 2026-09-29T07:26:42.592Z message toolResult
+toolResult bash False
+[text]
+===comment add===
+[DUPLICATES: 18 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L26:C1]
+
+## S44:L27 2026-09-29T07:26:44.011Z message assistant
+[thinking]
+Let me check `braid comment --help`.
+[toolCall] bash call_00_4SxeEfdwnWZRJAIOMZwo6498
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L27:C2]
+[toolCall] bash call_01_ueKnYIB8vSTdNH4sejwB2302
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment create --help 2>&1 | head -40"}
+
+## S44:L28 2026-09-29T07:26:44.089Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L28:C1]
+
+## S44:L29 2026-09-29T07:26:44.089Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L29:C1]
+
+## S44:L30 2026-09-29T07:26:45.409Z message assistant
+[thinking]
+Hmm, how to add a comment? Probably `braid issue comment <ID> --body ...` or `braid pr comment <ID>`. Let me check `braid --help` / top-level commands.
+[toolCall] bash call_00_dilXYW6wjiJ6vKwAAPkV5482
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid --help 2>&1 | head -60"}
+
+## S44:L31 2026-09-29T07:26:45.425Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 18 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L31:C1]
+
+## S44:L32 2026-09-29T07:26:46.518Z message assistant
+[toolCall] bash call_00_ET_dSJyc1IJmQPi2NuG4smV4340
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue --help 2>&1 | head -40 && echo \"=== pr ===\" && braid pr --help 2>&1 | head -40"}
+
+## S44:L33 2026-09-29T07:26:46.599Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 39 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L33:C1]
+
+## S44:L34 2026-09-29T07:26:47.686Z message assistant
+[toolCall] bash call_00_ET_G0DnujIOiLvE6OBmOCbd5494
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr comment --help 2>&1 | head -40"}
+
+## S44:L35 2026-09-29T07:26:47.700Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L35:C1]
+
+## S44:L36 2026-09-29T07:26:49.501Z message assistant
+[thinking]
+Now let's make the narrow edit to PR #8 body. I need the full current body; I have it from the view output (top part). Let me get the raw body to a file to edit precisely. Maybe `braid pr view 8 --json` or `--state`? Let's check if there's a way to get body only. I'll reconstruct the body from view output — risky. Better: use `braid pr view 8 --json`? Let's test.
+Alternatively, I can do targeted replacements with sed on a file produced from `braid pr view 8` (the body appears between the header line "# PR：..." and the "## Conversation" section maybe). Let me check `braid pr view 8 --help` for a body-only flag.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L36:C1]
+[toolCall] bash call_00_G2i2xeXUiiDWnIoON1IE6880
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L36:C2]
+
+## S44:L37 2026-09-29T07:26:49.517Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L37:C1]
+
+## S44:L38 2026-09-29T07:26:51.420Z message assistant
+[toolCall] bash call_00_ET_kET3bZwVaSTsK2kVlEIL9332
+{"command": "cd /workspace/template/.factory26/20260929-0

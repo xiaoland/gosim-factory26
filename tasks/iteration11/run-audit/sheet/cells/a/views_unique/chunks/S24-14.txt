@@ -1,0 +1,131 @@
+ 2026-09-29T06:36:10.909Z message toolResult
+toolResult bash False
+[text]
+frontend test: Done
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L157:C1]
+
+## S24:L158 2026-09-29T06:36:10.909Z message toolResult
+toolResult bash False
+[text]
+exec pnpm exec playwright test "$@"
+[DUPLICATES: 32 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L158:C1]
+
+## S24:L159 2026-09-29T06:36:12.671Z message assistant
+[thinking]
+Now run the e2e check via the agent-browser with-service wrapper (per skill: reuse existing wrapper to keep results). Let me read the agent-browser skill briefly for the exact command... The earlier handoff used:
+python3 <agent-browser技能>/scripts/with-service.py --check-only --cwd "$PWD" --context candidate=d536aa2 … -- bash checks/run-e2e.sh
+Let me read the SKILL.md to get the exact invocation and env vars.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L159:C1]
+[toolCall] read call_00_tvLqDGpKI9xcaL0bCPw24277
+{"path": "/workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/SKILL.md"}
+
+## S24:L160 2026-09-29T06:36:12.674Z message toolResult
+toolResult read False
+[text]
+SIGKILL or host failure may prevent cleanup and the final receipt; missing evidence is not success.
+[DUPLICATES: 56 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L160:C1]
+
+## S24:L161 2026-09-29T06:36:14.862Z message assistant
+[thinking]
+Now, before running e2e, let me commit the changes so `git_head` in the evidence corresponds to a clean candidate. Actually the wrapper records git_head and dirty status. Best practice earlier: commit then run with clean tree.
+Let me review the diff first, then commit, then run e2e.
+Also: e2e additions for the "import→清空→导出" round trip (item 7). Let me consider adding it via the formula bar: select A1, clear Formula bar, Enter; repeat for each cell. Let me check FormulaBar to see commit semantics (whether empty string commits). Let me read FormulaBar.tsx.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L161:C1]
+[toolCall] read call_00_hUMmqSLTRawWYHZcBggy8049
+{"path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/components/FormulaBar.tsx"}
+
+## S24:L162 2026-09-29T06:36:14.864Z message toolResult
+toolResult read False
+[text]
+[DUPLICATES: 56 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L162:C1]
+
+## S24:L163 2026-09-29T06:36:19.757Z message assistant
+[thinking]
+Clearing via formula bar works: select cell, fill Formula bar with '', press Enter → commit '' → deletes the cell. Good — the e2e "import → clear all → export" can be written:
+  test('exports the import footprint empty fields after every cell is cleared', async ({ page }) => {
+    await importCsv(page, 'export cleared.csv', 'a,b\nc,d,');
+    for (const coordinate of ['A1', 'B1', 'A2', 'B2']) {
+      await page.getByRole('gridcell', { name: coordinate, exact: true }).click();
+      await formulaBar.fill('');
+      await formulaBar.press('Enter');
+    // Bounding box is empty, but the 2x3 import footprint is not: the export keeps
+    // its empty fields (contract v1.3 §4: footprint wins over the empty-file branch).
+    expect((await exportCsv(page)).csv).toBe(',,\n,,');
+Wait: clicking a gridcell - does click select it? In Grid, clicking a cell selects (mouse down/up). Yes likely.
+But caution: after `click`, the anchor cell updates; the formula bar's value syncs. Then `fill('')` sets draft '' and press Enter commits. commitCell checks `previousValue === raw`; for cells with content, '' differs → PUT. Good.
+Hmm, one risk: clicking on the gridcell may start inline edit on double-click only; single click selects. Fine.
+Another risk: `page.getByRole('gridcell', {name:'A1', exact:true})` — Grid renders cells with aria-label = coordinate. Fine.
+After clearing all 4, the bbox is empty; footprint 2x3 → export ',,\n,,'. 
+This e2e makes the "footprint wins" branch end-to-end. Let's add it. But note it's extra runtime; acceptable.
+Hmm, wait: does the export read the *active worksheet* state from the server after the PUT? commitCell applies locally then PUT; local state updates immediately, and export uses local state. Fine.
+Let me add this test after the footprint round-trip test.
+Also, item 7 says round-trip cases: "导入→清空→导出" and "导入→（无结构操作）→导出". Both covered now (unit + e2e).
+Let me add the e2e test.
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L163:C1]
+[toolCall] edit call_00_TAT3b2glM0CUY0GP4dTL9499
+{"edits": [{"newText": "  test('exports the import footprint empty fields after every cell is cleared', async ({ page }) => {\n    // Contract v1.3 §4: \"no content -> empty file\" only when the bounding box\n    // and the footprint are both empty. Clearing an imported sheet leaves the\n    // footprint, so the export still writes its empty fields.\n    await importCsv(page, 'export cleared.csv', 'a,b\\nc,d,');\n    const formulaBar = page.getByRole('textbox', { name: 'Formula bar' });\n    for (const coordinate of ['A1', 'B1', 'A2', 'B2']) {\n      await page.getByRole('gridcell', { name: coordinate, exact: true }).click();\n      await formulaBar.fill('');\n      await formulaBar.press('Enter');\n    }\n    await expectCellText(page, 'A1', '');\n    expect((await exportCsv(page)).csv).toBe(',,\\n,,');\n  });\n\n  test('exports an empty file for a blank workbook', async ({ page }) => {\n    await createWorkbook(page, 'Empty export source');", "oldText": "  test('exports an empty file for a blank workbook', async ({ page }) => {\n    await createWorkbook(page, 'Empty export source');"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/e2e/workbook-lifecycle.spec.ts"}
+
+## S24:L164 2026-09-29T06:36:19.760Z message toolResult
+toolResult edit False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L164:C1]
+[details]
+{"diff": "     ...\n 349     await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');\n 350     expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n 351   });\n 352 \n+353   test('exports the import footprint empty fields after every cell is cleared', async ({ page }) => {\n+354     // Contract v1.3 §4: \"no content -> empty file\" only when the bounding box\n+355     // and the footprint are both empty. Clearing an imported sheet leaves the\n+356     // footprint, so the export still writes its empty fields.\n+357     await importCsv(page, 'export cleared.csv', 'a,b\\nc,d,');\n+358     const formulaBar = page.getByRole('textbox', { name: 'Formula bar' });\n+359     for (const coordinate of ['A1', 'B1', 'A2', 'B2']) {\n+360       await page.getByRole('gridcell', { name: coordinate, exact: true }).click();\n+361       await formulaBar.fill('');\n+362       await formulaBar.press('Enter');\n+363     }\n+364     await expectCellText(page, 'A1', '');\n+365     expect((await exportCsv(page)).csv).toBe(',,\\n,,');\n+366   });\n+367 \n 353   test('exports an empty file for a blank workbook', async ({ page }) => {\n 354     await createWorkbook(page, 'Empty export source');\n 355     const { fileName, csv } = await exportCsv(page);\n 356     expect(fileName).toMatch(/\\.csv$/);\n     ...", "firstChangedLine": 353, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/e2e/workbook-lifecycle.spec.ts\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/e2e/workbook-lifecycle.spec.ts\n@@ -349,8 +349,23 @@\n     await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');\n     expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n   });\n \n+  test('exports the import footprint empty fields after every cell is cleared', async ({ page }) => {\n+    // Contract v1.3 §4: \"no content -> empty file\" only when the bounding box\n+    // and the footprint are both empty. Clearing an imported sheet leaves the\n+    // footprint, so the export still writes its empty fields.\n+    await importCsv(page, 'export cleared.csv', 'a,b\\nc,d,');\n+    const formulaBar = page.getByRole('textbox', { name: 'Formula bar' });\n+    for (const coordinate of ['A1', 'B1', 'A2', 'B2']) {\n+      await page.getByRole('gridcell', { name: coordinate, exact: true }).click();\n+      await formulaBar.fill('');\n+      await formulaBar.press('Enter');\n+    }\n+    await expectCellText(page, 'A1', '');\n+    expect((await exportCsv(page)).csv).toBe(',,\\n,,');\n+  });\n+\n   test('exports an empty file for a blank workbook', async ({ page }) => {\n     await createWorkbook(page, 'Empty export source');\n     const { fileName, csv } = await exportCsv(page);\n     expect(fileName).toMatch(/\\.csv$/);\n"}
+
+## S24:L165 2026-09-29T06:36:21.385Z message assistant
+[thinking]
+Now update the packet with v1.3 landing + the helper switch obligation. Let me read the packet first (it may be long). Let me look at its structure.
+[toolCall] bash call_00_nGYEDqw448p6UDWPnshy3861
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && wc -l tasks/issue-3-a/packet.md && grep -n \"^#\\|^##\" tasks/issue-3-a/packet.md"}
+
+## S24:L166 2026-09-29T06:36:21.398Z message toolResult
+toolResult bash False
+[text]
+116 tasks/issue-3-a/packet.md
+1:# Task Packet — Issue #3 子 Issue A：工作簿生命周期与 CSV 交换（REQ-1-2-1/1-2-2/1-3-1/1-3-2）
+8:## 权威入口（不要另建副本）
+20:## 决定摘要（详见 comment #27）
+33:## PR 侧实现计划与落地（@deepseek-5）
+35:### 文件边界（= D-A10）
+49:### 决定落地对照
+64:### 设计增量（comment #33 v1.1 / comment #36 v1.2）的落地
+73:### 预演/排障结论（小规模真实操作）
+81:### 实现选择与独立判断（不改变需求判据，但影响逐字比对）
+94:## 验收（PR 负责人必须在候选提交上执行并留档）
+102:## 下一步
+111:## 证据
+
+## S24:L167 2026-09-29T06:36:22.581Z message assistant
+[toolCall] read call_00_ET_CnghdRbFmlVTlhfDk69B2128
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L167:C1]
+
+## S24:L168 2026-09-29T06:36:22.584Z message toolResult
+toolResult read False
+[text]
+- D-A4 导入结构 `max(csv, 6) × max(csv, 26)`；`row_count/col_count` 的变更入口 = B 结构端点 + `PUT .../state` + A 导入事务（契约增量 A-2；后两条为 comment #33 v1.1 表述）。
+- D-A7 导出：客户端 Blob、无 BOM、记录间 `\n`（**末条记录后不追加换行**，见下文独立判断）、文件名 `<工作簿名>.csv`、不更新 `updatedAt`；used range = 非空包围盒裁尾；RFC4180 转义。
+[DUPLICATES: 114 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L168:C1]
+
+## S24:L169 2026-09-29T06:36:34.461Z message assistant
+[thinking]
+I'll update the packet with a v1.3 section: authority pointers, decisions landing table for v1.3 (migration, footprint write, snapshot, state semantics, export max, footprint priority, helper switch obligation), and updated next steps. Keep it concise, replace stale claims (e.g. "A-7 定格：不实现" is now superseded).
+Let me make targeted edits:
+1. Authority entries: add v1.3 pointer (Issue #1 comment #51/#54/#57/#60/#64/#65/#69; Issue #3 comment #64).
+2. D-A4 line + D-A7 line: update to footprint semantics.
+3. Add a new subsection "契约 v1.3（A-4 Y-min）落地" table.
+4. "假设 A-7 定格：不实现导入尺寸下限" row → update to "已被 v1.3 修订：实现导入足迹下限".
+5. Next steps: add helper switch obligation.
+6. Evidence: mention e2e result dirs.
+Let me write the edits. Also update stage line.
+Careful with the exact oldText matching.
+Let me do it in one edit call with multiple entries.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L169:C1]
+[toolCall] edit call_00_jqVaaCpAa63iM9zCwDC70948
+{"edits": [{"newText": "- 阶段: design 完成 → 实现完成 → v1.3（A-4 Y-min）补齐 → 自检复跑/交接（候选提交与证据见文末「证据」节）", "oldText": "- 阶段: design 完成 → 实现完成 → 自检中/交接（候选提交与证据见文末「证据」节）"}, {"newText": "- 跨 Issue 契约增量 A-1…A-4：**Issue #1 thread 1 comment #28**；**最终裁定 = 契约 v1.3：comment #51（A-1…A-4 裁定）+ #54（B-1…B-3 与尺寸上限非全局）+ #57（落地细化：state 两字段语义、足迹优先）+ #60（helper 时序）+ #64（PR #8 补齐清单 7 项）+ #65（末换行裁定）+ #66/#69（共享 helper `assertWorksheetStateValid` 形态与消费目标）；Issue #3 侧对应要求见 comment #64**\n- 共享契约权威：Issue #1 comment #1 + thread 1 comment #12（v1.1）+ comment #15（v1.2：默认结构 6×26、gridcell 定位 `exact: true`）+ **v1.3（comment #51/#54/#57，以 #57 为最新增量权威）**", "oldText": "- 跨 Issue 契约增量 A-1…A-4：**Issue #1 thread 1 comment #28**（A-2 已由 B 负责人 comment #30 确认；A-1/A-3/A-4 待根裁定）\n- 共享契约权威：Issue #1 comment #1 + thread 1 comment #12（v1.1）+ comment #15（v1.2：默认结构 6×26、gridcell 定位 `exact: true`）"}, {"newText": "- D-A4 导入结构 `max(csv, 6) × max(csv, 26)`；`row_count/col_count` 的变更入口 = B 结构端点 + `PUT .../state` + A 导入事务（契约增量 A-2；后两条为 comment #33 v1.1 表述）。**同事务写入导入足迹 `min_rows`/`min_cols` = CSV 实际行列数（v1.3/A-4，#51）。**", "oldText": "- D-A4 导入结构 `max(csv, 6) × max(csv, 26)`；`row_count/col_count` 的变更入口 = B 结构端点 + `PUT .../state` + A 导入事务（契约增量 A-2；后两条为 comment #33 v1.1 表述）。"}, {"newText": "- D-A7 导出：客户端 Blob、无 BOM、`\\n` 记录分隔（**末条记录后不追加换行**，v1.3 #65 裁定采纳）、文件名 `<工作簿名>.csv`、不更新 `updatedAt`；**used range = max(非空包围盒, 静态导入足迹)**（v1.3/A-4）；RFC4180 转义；**“无内容 → 空文件”仅当包围盒与足迹同时为空（足迹优先，#57 §4）**。", "oldText": "- D-A7 导出：客户端 Blob、无 BOM、记录间 `\\n`（**末条记录后不追加换行**，见下文独立判断）、文件名 `<工作簿名>.csv`、不更新 `updatedAt`；used range = 非空包围盒裁尾；RFC4180 转义。"}, {"newText": "| 假设 A-7 定格：不实现导入尺寸下限 | **已被契约 v1.3 修订（#51/#54/#57/#64）**：实现导入足迹下限 `min_rows`/`min_cols`（见下表 v1.3 落地） |\n\n### 契约 v1.3（A-4 导入足迹）落地\n\n| 要求（来源） | 落地 | 检查 |\n| --- | --- | --- |\n| 迁移 worksheets 增可空 `min_rows`/`min_cols`（#57 §3） | `migrations.js` 增 `002_worksheet_import_footprint`（`ALTER TABLE ... ADD COLUMN`，可空） | `app.test.js` 迁移用例改为断言 `schema_migrations` 计数 = `MIGRATIONS.length`（新增迁移不再使其失效） |\n| 导入写入足迹 = CSV 实际行列数，裁剪后 + ragged 补齐（#51/#64） | `createWorkbookFromCsv` 写入 `min_rows = records.length`、`min_cols = csvColumnCount(records)`；`parseCsv` 输出改为稠密（短行右补空字段，#51 A-1 第 1 条） | `csv.test.js` 补 ragged 用例；`app.test.js` 导入用例断言 `minRows/minCols`（含 `a,b\\nc,d,` → 3×3 足迹） |\n| 新建空白工作簿足迹 0（#51/#64） | 快照以 `ws.min_rows ?? 0` 输出（列可空，NULL 读作 0）；空白创建路径不写这两列 | 导入「空 CSV」用例断言 `minRows: 0, minCols: 0`；`min ≤ 结构` 回滚用例断言空白表为 0 |\n| 快照输出两字段（state 返回值即它，GET 与 `PUT .../state` 同时生效，#57 §3） | `getWorksheetSnapshot` 增 `minRows`/`minCols`；`shared/types.d.ts` 的 `WorksheetSnapshot` 同步（数字，0 = 无足迹） | 导入用例经 `GET /api/workbooks/:id` 复核；state 用例断言响应带两字段 |\n| state 导入 `undefined`/`null` = 不改动，缺失不得重置（#57 §3/#66） | `importWorksheetState` 仅在字段被申报时校验并写入，未申报保留原值；`WorksheetStatePayload` 增可选两字段 | state 用例：设 2/3 → 只带 cells 回放不变 → 显式 `null` 仍不变 → 显式 0 清除 |\n| `min ≤ 所报结构`（#51/#57 §2） | 私有路径现含该校验；**文案/错误码与 B 的共享 helper 逐字对齐**（`minRows must be a non-negative integer` / `minRows must not exceed the reported structure (N)`，`INVALID_BODY`） | 用例断言 `minRows 5 > 4` 的 400 与精确文案，并断言整事务回滚 |\n| 导出 = max(包围盒, 静态足迹)；足迹优先的空表分支（#57 §4） | `worksheetToCsv` 取 `rowSpan = max(maxRow+1, minRows)`、`colSpan = max(maxCol+1, minCols)`；仅当二者皆 0 返回 `''`；足迹为静态字段，结构操作不读写 | `csvExport.test.ts` 3 例（尾部空字段往返 / 宽表 max / 清空后足迹优先）；e2e 2 例（导入→导出、导入→清空→导出，含刷新） |\n| README 登记足迹语义（#64 第 7 项） | README 增「导入足迹」段 + API 表 state 行补 `minRows`/`minCols` 说明 + 导出段改为 `max(包围盒, 足迹)` | 文档审阅 |\n| **共享校验 helper 切换义务**（#54/#57 §2/#60/#66/#69） | helper `assertWorksheetStateValid`（`store.js`，B 的 PR #9，当前在 `origin/b-issue-4-worksheets-structure`）**尚未进 develop**；PR #8 暂用私有路径，文案已逐字对齐。**develop 最终必须改为调用共享 helper**，切换完成是 #3 关闭前提（根负责人跟踪）；rebase 到含 helper 的 develop 后单点替换 `importWorksheetState` 内的尺寸/cells/足迹校验并删本地副本 | 切换后复跑三项检查 |", "oldText": "| 假设 A-7 定格：不实现导入尺寸下限 | 未实现任何“原始尺寸下限”；导出范围仍为裁尾包围盒 |"}, {"newText": "## 下一步\n\n- [x] PR 创建 + 指派 PR 负责人 + 交接\n- [x] PR 侧预演（解析规则、导入事务、导出 used range 与下载捕获）\n- [x] 实现 + 自检（后端/前端 Vitest、typecheck）\n- [x] 补齐契约 v1.3 / A-4 导入足迹（迁移、导入写入、快照、state 语义、导出 max 与足迹优先、README、round-trip 用例；清单见 Issue #3 comment #64）\n- [ ] `bash checks/run-e2e.sh` 全量通过并留档（首轮结果保留）\n- [ ] 在 Issue #3 交接候选（提交号、命令、首轮结果、证据路径与未决项）\n- [ ] Issue 负责人验收 → 根负责人合入 develop → 指派 C（#5）时把 A-3 显示值接缝写入 C 的交接材料\n- [ ] **未完成义务**：B 的共享 helper 进 develop 后，PR #8 rebase 并切换 `importWorksheetState` 的校验为 `assertWorksheetStateValid`，删本地副本，复跑三项检查", "oldText": "## 下一步\n\n- [x] PR 创建 + 指派 PR 负责人 + 交接\n- [x] PR 侧预演（解析规则、导入事务、导出 used range 与下载捕获）\n- [x] 实现 + 自检（后端/前端 Vitest、typecheck）\n- [ ] `bash checks/run-e2e.sh` 全量通过并留档（首轮结果保留）\n- [ ] 在 Issue #3 交接候选（提交号、命令、首轮结果、证据路径与未决项）\n- [ ] Issue 负责人验收 → 根负责人合入 develop → 指派 C（#5）时把 A-3 显示值接缝写入 C 的交接材料"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/tasks/issue-3-a/packet.md"}
+
+## S24:L170 2026-09-29T06:36:34.580Z message toolResult
+toolResult edit False
+[text]
+Successfully replaced 6 block(s) in /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/tasks/issue-3-a/packet.md.
+[details]
+{"diff": "     ...\n   2 \n   3 - Issue: local/run#3（parent #1）；PR: **#8**（base=`develop`，head=`braid/issue-3-a`）\n   4 - 消费基线: origin/develop @ `698afd2`（应用代码 `0a08fdd`）\n   5 - Issue 侧（设计/验收方案）: @deepseek-3；PR 侧（实现计划/预演/实现/验收）: **@deepseek-5**\n-  6 - 阶段: design 完成 → 实现完成 → 自检中/交接（候选提交与证据见文末「证据」节）\n+  6 - 阶段: design 完成 → 实现完成 → v1.3（A-4 Y-min）补齐 → 自检复跑/交接（候选提交与证据见文末「证据」节）\n   7 \n   8 ## 权威入口（不要另建副本）\n   9 \n  10 - 设计与决定 D-A1…D-A10：**Issue #3 comment #27**（`braid comment view 27 --thread`）\n  11 - 设计增量（与 #27 共同构成权威判据）：**本 Issue comment #33**（v1.1：D-A4 三条尺寸变更路径、README 窄改归 PR #8、\n  12   D-A8 接缝边界 = FormulaBar/内联编辑仍读 `raw`、A-7 定格）+ **comment #36**（v1.2：README 窄改只替换那一句括号表述，\n  13   同段另两条不变量原文保留；同 PR 登记导入端点）\n- 14 - 跨 Issue 契约增量 A-1…A-4：**Issue #1 thread 1 comment #28**（A-2 已由 B 负责人 comment #30 确认；A-1/A-3/A-4 待根裁定）\n- 15 - 共享契约权威：Issue #1 comment #1 + thread 1 comment #12（v1.1）+ comment #15（v1.2：默认结构 6×26、gridcell 定位 `exact: true`）\n+ 14 - 跨 Issue 契约增量 A-1…A-4：**Issue #1 thread 1 comment #28**；**最终裁定 = 契约 v1.3：comment #51（A-1…A-4 裁定）+ #54（B-1…B-3 与尺寸上限非全局）+ #57（落地细化：state 两字段语义、足迹优先）+ #60（helper 时序）+ #64（PR #8 补齐清单 7 项）+ #65（末换行裁定）+ #66/#69（共享 helper `assertWorksheetStateValid` 形态与消费目标）；Issue #3 侧对应要求见 comment #64**\n+ 15 - 共享契约权威：Issue #1 comment #1 + thread 1 comment #12（v1.1）+ comment #15（v1.2：默认结构 6×26、gridcell 定位 `exact: true`）+ **v1.3（comment #51/#54/#57，以 #57 为最新增量权威）**\n  16 - 需求权威：`/workspace/template/.factory26/20260929-042409-811f18d4/input/requirements.yaml`（ATOMIC description）\n  17 - 参考图视觉观察（仅布局/风格）：Issue #3 comment #27 附录 A\n  18 - 项目文档入口：`README.md`（API 面、ARIA 约定、检查入口；A 已补充导入端点与显示值接缝）\n  19 \n     ...\n  21 \n  22 - D-A1 创建页 `/new`：label `Workbook name` 预填 `Untitled spreadsheet`（= 后端默认值逐字）+ 按钮 `Create`；空名不发请求、页内精确文案；成功跳 `/workbook/:id`；失败保留输入可重试、无记录。\n  23 - D-A2 重命名：按钮 `Rename workbook` → 对话框（可访问名 `Rename workbook`）+ label `Workbook name` 预填 + `Save`；空名对话框内文案 `Workbook name cannot be empty`；失败保留原名；成功标题与首页链接同步、`updatedAt` 更新。\n  24 - D-A3 导入端点 `POST /api/workbooks/import` `{fileName, csv}` → 201 快照；单事务；失败 400 `INVALID_CSV` + 精确文案，无部分记录；允许同名。\n- 25 - D-A4 导入结构 `max(csv, 6) × max(csv, 26)`；`row_count/col_count` 的变更入口 = B 结构端点 + `PUT .../state` + A 导入事务（契约增量 A-2；后两条为 comment #33 v1.1 表述）。\n+ 25 - D-A4 导入结构 `max(csv, 6) × max(csv, 26)`；`row_count/col_count` 的变更入口 = B 结构端点 + `PUT .../state` + A 导入事务（契约增量 A-2；后两条为 comment #33 v1.1 表述）。**同事务写入导入足迹 `min_rows`/`min_cols` = CSV 实际行列数（v1.3/A-4，#51）。**\n  26 - D-A5 CSV 解析规则：宽松接受非明示非法类；**只拒绝\"以 `\"` 开头且无闭合引号\"**；BOM 剥离；字段原文保留；记录分隔 LF/CRLF/CR；尾部空行不产生记录。\n  27 - D-A6 导入 UI：对话框 `Import CSV` + `CSV file` + `Confirm import`；成功跳编辑器；失败保持对话框/文件、框内 `role=alert` 精确文案。\n- 28 - D-A7 导出：客户端 Blob、无 BOM、记录间 `\\n`（**末条记录后不追加换行**，见下文独立判断）、文件名 `<工作簿名>.csv`、不更新 `updatedAt`；used range = 非空包围盒裁尾；RFC4180 转义。\n+ 28 - D-A7 导出：客户端 Blob、无 BOM、`\\n` 记录分隔（**末条记录后不追加换行**，v1.3 #65 裁定采纳）、文件名 `<工作簿名>.csv`、不更新 `updatedAt`；**used range = max(非空包围盒, 静态导入足迹)**（v1.3/A-4）；RFC4180 转义；**“无内容 → 空文件”仅当包围盒与足迹同时为空（足迹优先，#57 §4）**。\n  29 - D-A8 显示值接缝 `frontend/src/lib/cellDisplay.ts`，Grid 与导出共用；A = 恒等（公式导出原文），**C 合入时必须替换实现**；A 的 e2e 先断言原文并标注翻转点。\n  30 - D-A9 失败语义统一 + 前端文案常量 `frontend/src/lib/copy.ts`。\n  31 - D-A10 组件边界：新建 `WorkbookToolbar.tsx`（后续子 Issue 在其中追加控件）；`WorkbookEditor.tsx` 只做一处挂载；`Grid.tsx` 只加显示值 prop。\n  32 \n     ...\n  67 | --- | --- |\n  68 | D-A4 三条尺寸变更路径（B 结构端点 + `PUT .../state` + A 导入事务） | `README.md` 那一句括号表述已改为三条路径；同段「越界整批 400 不落库」「`state` 拒绝超出所报结构」原文保留，未改扩张语义 |\n  69 | 同 PR 登记导入端点 | `README.md` API 表新增 `POST /api/workbooks/import` 行（与窄改同一提交） |\n  70 | D-A8 接缝边界：FormulaBar/内联编辑仍读 `raw` | `Grid.tsx` 新增 `text` prop 仅用于渲染，内联编辑仍以 `raw` 初始化；`FormulaBar` 继续读 `cells` 里的原文；接缝只接入 Grid 渲染与导出 |\n- 71 | 假设 A-7 定格：不实现导入尺寸下限 | 未实现任何“原始尺寸下限”；导出范围仍为裁尾包围盒 |\n+ 71 | 假设 A-7 定格：不实现导入尺寸下限 | **已被契约 v1.3 修订（#51/#54/#57/#64）**：实现导入足迹下限 `min_rows`/`min_cols`（见下表 v1.3 落地） |\n  72 \n+ 73 ### 契约 v1.3（A-4 导入足迹）落地\n+ 74 \n+ 75 | 要求（来源） | 落地 | 检查 |\n+ 76 | --- | --- | --- |\n+ 77 | 迁移 worksheets 增可空 `min_rows`/`min_cols`（#57 §3） | `migrations.js` 增 `002_worksheet_import_footprint`（`ALTER TABLE ... ADD COLUMN`，可空） | `app.test.js` 迁移用例改为断言 `schema_migrations` 计数 = `MIGRATIONS.length`（新增迁移不再使其失效） |\n+ 78 | 导入写入足迹 = CSV 实际行列数，裁剪后 + ragged 补齐（#51/#64） | `createWorkbookFromCsv` 写入 `min_rows = records.length`、`min_cols = csvColumnCount(records)`；`parseCsv` 输出改为稠密（短行右补空字段，#51 A-1 第 1 条） | `csv.test.js` 补 ragged 用例；`app.test.js` 导入用例断言 `minRows/minCols`（含 `a,b\\nc,d,` → 3×3 足迹） |\n+ 79 | 新建空白工作簿足迹 0（#51/#64） | 快照以 `ws.min_rows ?? 0` 输出（列可空，NULL 读作 0）；空白创建路径不写这两列 | 导入「空 CSV」用例断言 `minRows: 0, minCols: 0`；`min ≤ 结构` 回滚用例断言空白表为 0 |\n+ 80 | 快照输出两字段（state 返回值即它，GET 与 `PUT .../state` 同时生效，#57 §3） | `getWorksheetSnapshot` 增 `minRows`/`minCols`；`shared/types.d.ts` 的 `WorksheetSnapshot` 同步（数字，0 = 无足迹） | 导入用例经 `GET /api/workbooks/:id` 复核；state 用例断言响应带两字段 |\n+ 81 | state 导入 `undefined`/`null` = 不改动，缺失不得重置（#57 §3/#66） | `importWorksheetState` 仅在字段被申报时校验并写入，未申报保留原值；`WorksheetStatePayload` 增可选两字段 | state 用例：设 2/3 → 只带 cells 回放不变 → 显式 `null` 仍不变 → 显式 0 清除 |\n+ 82 | `min ≤ 所报结构`（#51/#57 §2） | 私有路径现含该校验；**文案/错误码与 B 的共享 helper 逐字对齐**（`minRows must be a non-negative integer` / `minRows must not exceed the reported structure (N)`，`INVALID_BODY`） | 用例断言 `minRows 5 > 4` 的 400 与精确文案，并断言整事务回滚 |\n+ 83 | 导出 = max(包围盒, 静态足迹)；足迹优先的空表分支（#57 §4） | `worksheetToCsv` 取 `rowSpan = max(maxRow+1, minRows)`、`colSpan = max(maxCol+1, minCols)`；仅当二者皆 0 返回 `''`；足迹为静态字段，结构操作不读写 | `csvExport.test.ts` 3 例（尾部空字段往返 / 宽表 max / 清空后足迹优先）；e2e 2 例（导入→导出、导入→清空→导出，含刷新） |\n+ 84 | README 登记足迹语义（#64 第 7 项） | README 增「导入足迹」段 + API 表 state 行补 `minRows`/`minCols` 说明 + 导出段改为 `max(包围盒, 足迹)` | 文档审阅 |\n+ 85 | **共享校验 helper 切换义务**（#54/#57 §2/#60/#66/#69） | helper `assertWorksheetStateValid`（`store.js`，B 的 PR #9，当前在 `origin/b-issue-4-worksheets-structure`）**尚未进 develop**；PR #8 暂用私有路径，文案已逐字对齐。**develop 最终必须改为调用共享 helper**，切换完成是 #3 关闭前提（根负责人跟踪）；rebase 到含 helper 的 develop 后单点替换 `importWorksheetState` 内的尺寸/cells/足迹校验并删本地副本 | 切换后复跑三项检查 |\n+ 86 \n  73 ### 预演/排障结论（小规模真实操作）\n  74 \n  75 - 后端 `pnpm --dir backend test`（47 例）与 `typecheck` 在实现后立即通过；解析器先以单测驱动，避免把解析规则混进端点用例。\n  76 - 前端组件测试暴露两个既有约束：仓库未引入 `@testing-library/jest-dom`（无 `toHaveTextContent`/`toHaveValue`），改用原生\n     ...\n 103 \n 104 - [x] PR 创建 + 指派 PR 负责人 + 交接\n 105 - [x] PR 侧预演（解析规则、导入事务、导出 used range 与下载捕获）\n 106 - [x] 实现 + 自检（后端/前端 Vitest、typecheck）\n+121 - [x] 补齐契约 v1.3 / A-4 导入足迹（迁移、导入写入、快照、state 语义、导出 max 与足迹优先、README、round-trip 用例；清单见 Issue #3 comment #64）\n 107 - [ ] `bash checks/run-e2e.sh` 全量通过并留档（首轮结果保留）\n 108 - [ ] 在 Issue #3 交接候选（提交号、命令、首轮结果、证据路径与未决项）\n 109 - [ ] Issue 负责人验收 → 根负责人合入 develop → 指派 C（#5）时把 A-3 显示值接缝写入 C 的交接材料\n+125 - [ ] **未完成义务**：B 的共享 helper 进 develop 后，PR #8 rebase 并切换 `importWorksheetState` 的校验为 `assertWorksheetStateValid`，删本地副本，复跑三项检查\n 110 \n 111 ## 证据\n 112 \n 113 - 设计与契约：Issue #3 comment #27；Issue #1 comment #28（A-2 确认见 #30）\n     ...", "firstChangedLine": 6, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/tasks/issue-3-a/packet.md\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/bra

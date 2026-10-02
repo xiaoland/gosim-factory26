@@ -1,0 +1,267 @@
+S28 artifact:work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl
+source=work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl
+## S28:L1 2026-09-29T06:32:37.183Z message assistant
+[thinking]
+While the advisor runs, let me prepare the increment comment draft and check a few more facts:
+- Check the candidate's README diff to confirm the three-path text (for the increment to note it's done).
+- Check e2e spec for the formula flip annotation.
+- Check what deepseek-5 is currently doing (PR #8 timeline: he started a new run at 06:31:16Z). Perhaps he's already implementing. Let me look at PR #8 timeline and any new comments (comment #63 was his candidate push).
+Let me check PR 8 timeline for recent activity.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L1:C1]
+[toolCall] bash call_00_pcwQnNxWD0D4fkOOK8jS8749
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid pr view 8 --timeline 2>&1 | tail -30"}
+[toolCall] bash call_01_rHMrnwg0xfH36JWtRAcN2435
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git diff origin/develop origin/braid/issue-3-a -- README.md | head -60 && echo \"=== shared types diff ===\" && git diff origin/develop origin/braid/issue-3-a -- shared/types.d.ts | head -60"}
+
+## S28:L2 2026-09-29T06:32:37.207Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L2:C1]
+
+## S28:L3 2026-09-29T06:32:37.207Z message toolResult
+toolResult bash False
+[text]
+=== shared types diff ===
+   | 'INTERNAL_ERROR';
+[DUPLICATES: 87 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L3:C1]
+
+## S28:L4 2026-09-29T06:32:39.377Z message assistant
+[thinking]
+README's three-path change done. Good.
+Now let me draft the increment while the advisor runs. I'll also need to plan the exact edits for Issue #3 body.
+Let me now check the worksheet state payload type and snapshot type for where min fields go, and store.js `importWorksheetState` in develop baseline (A's base). Useful for precise change面 description.
+Also check frontend WorksheetSnapshot type definition lines.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L4:C1]
+[toolCall] bash call_00_qlvmi9Cj4dtSqyjcDSfM8755
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && sed -n '100,175p' shared/types.d.ts && echo \"=== store.js base importWorksheetState ===\" && git show origin/develop:backend/src/store.js | sed -n '400,470p'"}
+
+## S28:L5 2026-09-29T06:32:39.394Z message toolResult
+toolResult bash False
+[text]
+=== store.js base importWorksheetState ===
+[DUPLICATES: 137 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L5:C1]
+
+## S28:L6 2026-09-29T06:32:48.631Z message assistant
+[thinking]
+Good, I have the exact change面. Now let me wait for the advisor and meanwhile draft the increment comment text.
+Draft increment (Issue #3 comment, reply-to thread 27):
+Title: 【设计增量 v1.3：采纳 Issue #1 契约 v1.3 裁定（A-1/A-2/A-3/A-4）——A-7 被 Y-min 取代】@deepseek-5
+- 依据: Issue #1 thread 1 comment #51（A-1…A-4 裁定）、#54（尺寸上限非全局）、#57（三点归属+Y-min 语义+"空文件"优先级）、#60（helper 消费时序）。comment #27/#33/#36 中与之冲突的部分以本条为准，其余不变。
+- A-4 取代 A-7：实现 Y-min。
+  - 迁移两列 min_rows/min_cols（可空，默认 NULL≡0）。
+  - `getWorksheetSnapshot` 输出 minRows/minCols（非导入工作簿为 0；import 后为导入 CSV 足迹）。
+  - import：min_rows = 解析后记录行数（末尾换行/尾部空行不产生记录），min_cols = 最宽记录宽度（ragged 右侧补空）。
+  - 导出：rows = max(bboxRows, minRows)、cols = max(bboxCols, minCols)；两者同时为 0 才输出空文本。
+  - `PUT .../state`：minRows/minCols 可选，undefined = 不改动；提供时校验 0 ≤ min ≤ 所报结构（reported rowCount/colCount）；`shared/types.d.ts` 的 WorksheetSnapshot + WorksheetStatePayload 同步。
+  - 静态：结构操作/内容编辑不改 min 字段（B 侧零新增工作，B 不加写；守卫断言可选）。
+- A-1 四条钉死：ragged 补空（已符合）、末尾单个换行不产生额外行（已符合）、BOM（已符合）、名字取 File.name 仅去最终 .csv（已符合）。→ 请在校验证据里逐条列出对应单测用例名（把"已符合"变成可核查证据）。
+- A-3：接缝含错误值（错误单元格导出网格显示的错误串）；A 的恒等实现天然满足"同一路径"，请补一条单测/e2e 断言显示值查找返回值（含 `#DIV/0!` 形态）原样进入导出文本，并在 packet 记录"C 替换实现时必须保留错误值"；FormulaBar/内联编辑继续读 raw（已符合）。
+- A-2 + #58/#60：私路径 + 切换义务。A 先在 store 内实现 min ≤ 结构的私有校验（或与既有两条不变量共用一处本地 helper），并在 PR 正文/packet 记录"helper 进 develop 后一处切换为调用共享校验 helper"；develop 的最终状态必须是 A 调用共享 helper（合入条件含该后续义务）。
+- 尺寸上限：已裁定"非全局不变量"（#54）→ A 不设应用层上限，实际边界 = express.json 10mb；写入 README/交接的已知边界 + #53 的渲染实测数据。
+- 对候选 d536aa2 的验收结论：不满足 v1.3 → 需要新候选（grep 确认无 min_rows/min_cols）。README 三条路径窄改已达标；解析、接缝、失败文案等按 comment #27 的项维持。
+- 交付证据要求（新候选上）：`pnpm -r test`、`pnpm -r typecheck`、`bash checks/run-e2e.sh` + 新增用例清单：Y-min 足迹单测（含 `a,b\nc,d,` → 导出 `a,b,\nc,d,`；导入 3×2 清空全部 → 三行 `,`；新建议空白工作簿无内容 → 空文件）、state undefined 语义（回放快照后 min 保留；显式 0 才清除）、min > 结构 400、导入往返 field-level 断言。e2e：REQ-1-3-2 补"导入带尾部空字段的 CSV → 导出包含尾部空字段"。
+- 之后：我按 comment #27+#33+#36+本条验收新候选。
+Also note: maybe should state exact expectation for `min_cols` when CSV has fewer cols than 26: footprint 3 → export 3 cols even though structure 26. That's essential: export width = max(bbox, min) not structure. Yes.
+One more subtlety: for the case of an imported CSV whose footprint is 1×2 and content intact: bbox=1×2, min=1×2 → export `a,b`. Fine.
+Another edge: what if imported CSV has 10×30 → row_count=10, col_count=30, min=10×30. Export max = 10×30. Good.
+Also, does the new blank workbook's min stay 0? Yes.
+Now, should `minRows/minCols` be included in the import response snapshot? Yes automatically.
+Now let's also consider: the frontend `worksheetToCsv` signature takes worksheet snapshot, so it reads minRows/minCols. Also note the used range for display seam unchanged.
+Also: is `min_rows` nullable or NOT NULL DEFAULT 0? Contract says nullable. Implementation detail: I'll say nullable with NULL ≡ 0 (comparison via `?? 0`), as #53 §3.3 said nullable.
+Now regarding #60's obligation: "若 PR #8 先于 PR #9 验收合入，合入条件包含 'helper 就绪后切换'". So the merge of PR #8 can proceed, but the switch is tracked. I'll record that as an open obligation in the Issue body and require the PR owner to record it in the PR body/packet.
+Let me also think about whether I should require the switch *before* merging PR #8 if PR #9 lands first. Simple rule: if the helper is in develop at candidate time, A must switch in the same candidate; otherwise record the follow-up obligation. That's mechanical.
+Now, wait for the advisor result. Let me check status quickly (non-blocking-ish). Actually let me just check subagent status once.
+[DUPLICATES: 14 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L6:C1]
+[toolCall] subagent call_00_wcpOw4awirUn2iRmsYXb3402
+{"action": "status", "id": "af48bea3-2eab-4072-8fb2-6f9684891a88"}
+
+## S28:L7 2026-09-29T06:32:48.674Z message toolResult
+toolResult subagent False
+[text]
+Status target: run af48bea3-2eab-4072-8fb2-6f9684891a88
+Run: af48bea3-2eab-4072-8fb2-6f9684891a88
+Mission: 4e9f099e-9fb0-457a-83b8-11701416927c
+Started: 2026-09-29T06:32:36.396Z
+Updated: 2026-09-29T06:32:48.098Z
+Dir: /workspace/template/.factory26/20260929-042409-811f18d4/work/tmp/pi-subagents-uid-1000/async-subagent-runs/af48bea3-2eab-4072-8fb2-6f9684891a88
+Output: /workspace/template/.factory26/20260929-042409-811f18d4/work/tmp/pi-subagents-uid-1000/async-subagent-runs/af48bea3-2eab-4072-8fb2-6f9684891a88/output-0.log
+  Intercom target: subagent-advisor-af48bea3-2eab-4072-8fb2-6f9684891a88-1 (if registered)
+  Steer: subagent({ action: "steer", id: "af48bea3-2eab-4072-8fb2-6f9684891a88", index: 0, message: "..." })
+Steer running child: subagent({ action: "steer", id: "af48bea3-2eab-4072-8fb2-6f9684891a88", message: "..." })
+Events: /workspace/template/.factory26/20260929-042409-811f18d4/work/tmp/pi-subagents-uid-1000/async-subagent-runs/af48bea3-2eab-4072-8fb2-6f9684891a88/events.jsonl
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L7:C1]
+[details]
+{"activeAsyncCapacity": {"limit": 0, "used": 0}, "lifecycleStatus": {"processTerminal": {"runId": "af48bea3-2eab-4072-8fb2-6f9684891a88", "runnerProcessInstanceId": "bd2236fc-2e8b-432e-af47-1e8a6494c93b", "state": "pending", "version": 1}}, "mode": "single", "results": [], "runFanoutBudget": {"limit": 64, "remaining": 63, "used": 1}, "spawnBudget": {"configuredLimit": null, "grantHistory": [], "grantRemaining": null, "granted": 0, "limit": null, "remaining": null, "used": 0}}
+
+## S28:L8 2026-09-29T06:32:50.772Z message assistant
+[thinking]
+Advisor still running. Meanwhile, let me do useful independent work: check the candidate's test files for coverage claims and whether the e2e spec has the formula flip annotation, and see the packet. Actually more valuable: independently verify some claims of the handover — e.g., run the backend csv tests quickly? That validates the current candidate partially but it will be superseded. Hmm, low value.
+Better use of time: prepare exact body edits for Issue #3 and draft the increment comment. I'll wait for advisor before posting.
+Let me also check whether `checks/run-e2e.sh` and tests exist as claimed, and see the e2e spec briefly to know its structure for the new cases. Let me check the candidate's e2e spec formula test annotation.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L8:C1]
+[toolCall] bash call_00_QZmWlAhC86l96TKikwkM2927
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show origin/braid/issue-3-a:e2e/workbook-lifecycle.spec.ts | grep -n \"test(\\|C 合入\\|formula\\|公式\" | head -40 && echo \"=== test counts ===\" && git show origin/braid/issue-3-a:backend/src/csv.test.js | grep -c \"it(\" && git show origin/braid/issue-3-a:frontend/src/lib/csvExport.test.ts | grep -c \"it(\""}
+
+## S28:L9 2026-09-29T06:32:50.795Z message toolResult
+toolResult bash False
+[text]
+227:  test('imports UTF-8 text with quotes, escaped quotes, in-field newlines and empty fields', async ({
+299:  test('downloads the used range with LF endings and leaves the editor state unchanged', async ({
+319:    // Export changes nothing: active worksheet, grid values, formula bar, last-updated.
+322:    await expect(formulaBar).toHaveValue(formulaBefore);
+331:  test('escapes commas, quotes and line breaks and keeps empty cells inside the used range', async ({
+341:  test('exports an empty file for a blank workbook', async ({ page }) => {
+348:  test('exports the formula cell value through the shared display seam', async ({ page }) => {
+349:    await importCsv(page, 'export formula.csv', ['=1+1,plain'].join('\n'));
+352:    // `frontend/src/lib/cellDisplay.ts` with the formula engine. Until then the
+353:    // grid and the export both show the raw formula text. When C lands, this
+=== test counts ===
+19
+12
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L9:C1]
+
+## S28:L10 2026-09-29T06:32:55.192Z message assistant
+[thinking]
+Good. Now, while waiting, let me check the candidate's import e2e for "first row is ordinary data" and trailing empty field handling. Not critical.
+Let me check the advisor run status again shortly. Actually, I'll prepare the body edit content now and then, after the advisor returns, publish.
+Let me think about the Issue #3 body edits:
+Current body sections:
+- "设计与交接入口（当前，随进展更新）" bullets:
+  - 设计与决定 D-A1…D-A10 + 验收方案 + 假设与未决: comment #27
+  - 设计增量 v1.1: comment #33 (includes 假设 A-7 定格 — now superseded)
+  - 设计增量 v1.2: comment #36
+  - 跨 Issue 契约增量 A-1…A-4 (... A-1…A-4 最终裁定待 @glm-1) — now ruled
+  - B 侧契约增量 ... 未决条
+  - 实现 PR: #8 ...
+  - 交接与结果 ...
+  - 未决/假设: 导入不设应用层尺寸上限 ... 请 @glm-1 裁定 ... ; CSV 解析只拒绝...; 导出不含纯尾部空字段; ...
+New edits:
+1. Add bullet: 设计增量 v1.3: comment #NN — A-4 Y-min 取代 A-7；A-1 四条解析钉死；A-2 共享校验 helper 切换义务；A-3 错误值；"空文件"仅在包围盒与足迹同时为 0；尺寸上限裁定已关闭（非全局不变量）。依据 Issue #1 thread 1 comment #51/#54/#57/#60。
+2. Update v1.1 bullet: mark 假设 A-7 定格 as superseded by v1.3 (narrow correction with link). Per instructions: "形成新决定或发现旧判断失准时，先在原讨论说明更正和依据，并联系受影响成员；再窄改仍含有效信息的旧说明并留下更正链接". So I keep the v1.1 bullet but append "（其中『假设 A-7 定格』已被 v1.3 取代，见 comment #NN）".
+3. Update the A-1…A-4 bullet: 裁定已下（Issue #1 comment #51/#54/#57/#60）。
+4. Update 未决/假设 bullet: replace the size-limit pending wording with "已裁定（comment #54）：尺寸上限非全局不变量，import/state 不设应用层上限，实际边界 = express.json 10mb + 全量渲染性能限度（Issue #1 comment #53 实测）; 假设 A-7 已由 v1.3 取代为 Y-min，不留 '导出不含纯尾部空字段'".
+5. Add 未决/交接义务 bullet: helper 切换义务（#60）: develop 最终状态必须 A 调用共享校验 helper；若 PR #8 先合入，跟踪到切换完成才算关闭前提。
+Also should update the "验收" section to include the new acceptance items? The body's 验收 section references comment #27; the increment comment carries the new items. I'll add a line pointing to v1.3.
+Now let me check the advisor status.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L10:C1]
+[toolCall] subagent call_00_DxhRoqIKdHBQl3AygZ1f4725
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L10:C2]
+
+## S28:L11 2026-09-29T06:32:55.196Z message toolResult
+toolResult subagent False
+[text]
+Updated: 2026-09-29T06:32:54.991Z
+[DUPLICATES: 19 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L11:C1]
+[details]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L11:details]
+
+## S28:L12 2026-09-29T06:32:57.401Z message assistant
+[thinking]
+Still running. I'll do the body edits now (independent of advisor's verdict on increment details? The body should reference the increment comment number, which I don't know yet). I could draft the edits and apply after publishing the comment. Alternatively, edit body after posting comment.
+Let me instead do a genuinely useful independent verification in the meantime that will be needed anyway: check whether the `checks/run-e2e.sh` works in this worktree and whether a build works on the current environment (platform conditions). Actually that's PR-owner territory and expensive; but as Issue owner I need to verify the final candidate. Let me at least confirm the platform tooling (node version at /usr/local/bin) and that pnpm/build prerequisites exist — cheap.
+Actually let me not spend much. Let me check /usr/local/bin/node & npm versions as the environment requires, useful for my final verification.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L12:C1]
+[toolCall] bash call_00_5dep4Stqi5S0vH6xROFZ2124
+{"command": "/usr/local/bin/node --version; /usr/local/bin/npm --version; which pnpm portless 2>&1; node --version"}
+
+## S28:L13 2026-09-29T06:32:57.528Z message toolResult
+toolResult bash False
+[text]
+v24.10.0
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L13:C1]
+
+## S28:L14 2026-09-29T06:32:58.894Z message assistant
+[thinking]
+Platform node is 20.19.3 as required. Good.
+Now wait for advisor. Let me check the log tail to see progress.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L14:C1]
+[toolCall] bash call_00_LoLXhip2egH0iU4BjKeU8793
+{"command": "tail -20 /workspace/template/.factory26/20260929-042409-811f18d4/work/tmp/pi-subagents-uid-1000/async-subagent-runs/af48bea3-2eab-4072-8fb2-6f9684891a88/output-0.log 2>&1 | tail -20"}
+
+## S28:L15 2026-09-29T06:32:58.905Z message toolResult
+toolResult bash False
+[text]
+bash: cd /workspace/template/.factory26/20260929-042409-811f18d...
+[DUPLICATES: 19 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L15:C1]
+
+## S28:L16 2026-09-29T06:33:01.807Z message assistant
+[thinking]
+Interesting: the advisor is exploring the repo (it seems it's inspecting). Also there's an error "fd is not available and could not be downloaded" — probably a tooling hiccup in the advisor's bash usage. Let's wait a bit more.
+Let me use the time to draft the increment comment into a file so I can post quickly after advisor feedback. I'll write to /tmp.
+Actually, let me don't over-invest; just prepare in mind.
+Let me poll once more after doing something else: verify the candidate's `PATCH /api/workbooks/:id` and rename flow e2e claims? Not needed.
+Let me instead double check one important design question I must resolve myself: the issue body's statement "导出不含纯尾部空字段" — with Y-min, that's replaced. Also the frontend export function signature `worksheetToCsv(worksheet, display)` reads min fields. Fine.
+Another: does `home page` need to display min? No.
+Another: does `GET /api/workbooks/:id` snapshot include minRows for all worksheets? Yes, 0 default.
+Let me wait for advisor with the intercom/status. I'll check status again.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L16:C1]
+[toolCall] subagent call_00_VGapKlNdZTwC5GiSGwnc3908
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L16:C2]
+
+## S28:L17 2026-09-29T06:33:01.814Z message toolResult
+toolResult subagent False
+[text]
+Updated: 2026-09-29T06:32:55.935Z
+[DUPLICATES: 19 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L17:C1]
+[details]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L17:details]
+
+## S28:L18 2026-09-29T06:33:04.569Z message assistant
+[thinking]
+Still running (2-3 min typical). The advisor is exploring the repo, which is fine (I told it not to modify). Let me not poll repeatedly. I'll wait via subagent_wait with a blocking call since this turn is run-to-completion (I need results before publishing). The instructions permit blocking when the current request is run-to-completion. It's reasonable: I need its independent judgment before publishing the increment. Actually the guidance says "In an interactive chat, do not call this merely to wait: return control to the user and let Pi wake the session". But my turn is a work item continuation; I can return control and be woken. However, if I end the turn without publishing anything, the user sees nothing. The task is to process Issue #3 updates. Hmm — ending the turn now would leave nothing done. I could publish the increment without the advisor... but I committed to consulting.
+I'll do a blocking wait with a modest timeout to keep the turn productive (this is a run-to-completion scenario: I should publish the increment and hand to PR owner in this turn).
+Let me wait with subagent_wait id, timeout 300s.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L18:C1]
+[toolCall] subagent_wait call_00_Nz0EGCZaokBsr3n0z5xG9461
+{"id": "af48bea3-2eab-4072-8fb2-6f9684891a88", "timeoutMs": 420000}
+
+## S28:L19 2026-09-29T06:40:05.298Z message toolResult
+toolResult subagent_wait True
+[text]
+Wait timed out after 7m0s with 1 async run(s) and 0 provider item(s) still active: af48bea3-2eab-4072-8fb2-6f9684891a88 (running). The work keeps going; call subagent_wait again or inspect subagent status.
+
+## S28:L20 2026-09-29T06:40:05.298Z message user
+[text]
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L20:C1]
+
+## S28:L21 2026-09-29T06:40:06.843Z message assistant
+[thinking]
+New update: Issue #3 comment 64. Let me read it. Also the advisor is still running.
+Let me check comment 64.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L21:C1]
+[toolCall] bash call_00_PyOvAxfa9oh5qULsS1d58219
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 64 --thread 2>&1 | sed -n '/^comment #64/,$p' | head -80"}
+[toolCall] bash call_01_H4SRrkU7wzRGV5hQhnHt6652
+{"command": "tail -30 /workspace/template/.factory26/20260929-042409-811f18d4/work/tmp/pi-subagents-uid-1000/async-subagent-runs/af48bea3-2eab-4072-8fb2-6f9684891a88/output-0.log 2>&1"}
+
+## S28:L22 2026-09-29T06:40:06.863Z message toolResult
+toolResult bash False
+[text]
+comment #64 [visible]
+## 1. 逐项对照 comment #64 的 7 项清单
+| # | 要求 | 落地 | 证据 |
+| --- | --- | --- | --- |
+| 1 | 迁移 worksheets 增可空 `min_rows`/`min_cols`；快照类型同步 | `backend/src/migrations.js` 新增 `002_worksheet_import_footprint`（`ALTER TABLE ... ADD COLUMN`，可空）；`shared/types.d.ts` 的 `WorksheetSnapshot` 增 `minRows`/`minCols`（数字，0 = 无足迹），`WorksheetStatePayload` 增可选两字段 | 迁移用例改断言 `schema_migrations` 计数 = `MIGRATIONS.length`；导入用例经 `GET /api/workbooks/:id` 复核两字段 |
+| 2 | 导入事务写足迹 = CSV 实际行列数（裁剪后含 ragged 补齐）；空白工作簿为 0 | `parseCsv` 输出改为稠密（短行右补空字段）；`createWorkbookFromCsv` 同事务写 `min_rows = records.length`、`min_cols = csvColumnCount(records)`；快照以 `ws.min_rows ?? 0` 输出（列可空，`NULL` 读作 0），空白创建路径不写这两列 | `csv.test.js` ragged 用例；导入 `a,b\nc,d,` → `minRows 3/minCols 3`；空 CSV → `0/0` |
+| 3 | 快照输出两字段（state 返回值即它，GET 与 `PUT .../state` 同时生效） | `getWorksheetSnapshot` 增两字段；`PUT .../state` 的响应就是它 | state 用例断言 `res.body.worksheet.minRows/minCols` |
+| 4 | state 导入 `undefined` = 不改动；缺失不得重置为 0 | `importWorksheetState` 仅在字段被申报时校验并写入，未申报/`null` 保留原值 | 用例：设 2/3 → 只带 `cells` 回放仍 2/3 → 显式 `null` 仍 2/3 → 显式 0 清除 |
+| 5 | 导出 = `max(非空包围盒, 静态足迹)`；空表分支改为足迹优先 | `worksheetToCsv` 取 `rowSpan = max(maxRow+1, minRows)`、`colSpan = max(maxCol+1, minCols)`；仅当二者皆 0 返回 `''`；足迹为静态字段，结构操作不读写 | `csvExport.test.ts` 3 例（尾部空字段往返 / 宽表 max / 清空后足迹优先）；e2e 2 例（见 §3） |
+| 6 | 共享校验 helper（`min ≤ 所报结构`）+ 时序 | 私有路径现含该校验，**文案/错误码与 `515597c`/`#66`/`#69` 的 `assertWorksheetStateValid` 逐字对齐**（`INVALID_BODY`；`minRows must be a non-negative integer`；`minRows must not exceed the reported structure (N)`），也已按 helper 的 `undefined`/`null` 跳过语义实现；helper 尚未进 develop，故本 PR 保留私有路径，packet 记下 rebase 后单点切换为调用 + 删本地副本（#60 的关闭前提） | 用例断言 `minRows 5 > 4` 的 400 与精确文案 + 整事务回滚 |
+| 7 | README 登记 + round-trip 用例 | README 新增「导入足迹」段、API 表 state 行补两字段、导出段改为 `max(包围盒, 足迹)`；单测与 e2e 各补两条往返用例 | 见 §3 |
+**另：comment #65 末换行裁定已按采纳形态实现**（`lines.join('\n')`，末条记录后无终结换行），本次无改动。
+## 2. 命令与结果（候选 `559a0bd`，工作树 clean；首轮失败保留说明）
+| `pnpm -r test` | **exit 0**：backend **51 passed**（`csv.test.js` 20 + `app.test.js` 31）、frontend **46 passed**（`csvExport.test.ts` 15、`WorkbookLifecycle.test.tsx` 12、`Grid.test.tsx` 8、`format.test.ts` 8、`cellDisplay.test.ts` 3） |
+| `pnpm -r typecheck` | **exit 0** |
+| `bash checks/run-e2e.sh`（经 agent-browser `with-service.py --check-only`） | **exit 0，15 passed**（smoke 3 + `workbook-lifecycle.spec.ts` 12），cleanup passed |
+- 证据目录（保留首轮 `result.json`）：`/tmp/f26-lzle9d69/service-check-eimrfpgg`（`git_head=559a0bd`、`dirty=false`、`check_exit=0`、`status=passed`）。单测/类型检查日志：`/tmp/f26-pr8-v13-evidence/pnpm-test.log`、`/tmp/f26-pr8-v13-evidence/pnpm-typecheck.log`。
+- **首轮失败（均为测试代码，非实现缺陷，已在同一候选内修正）**：
+  1. `backend app.test.js > migrations > are repeatable ...`：`expected 2 to be 1`——新增第 2 个迁移使「`schema_migrations` 计数 = 1」的硬编码断言过期；改为断言 `MIGRATIONS.length`（更抗未来迁移）。
+  2. `backend typecheck`：`src/app.test.js(355,20): error TS7006: Parameter 'body' implicitly has an 'any' type`——新用例里的箭头 helper 未注类型；已内联调用消除。
+## 3. e2e 新增两条足迹 round-trip（`e2e/workbook-lifecycle.spec.ts:341/353`）
+- 「导入 `a,b\nc,d,` → 导出」＝ `a,b,\nc,d,`，刷新后仍一致（足迹保留尾部空字段）。
+- 「导入 → 用公式栏清空 A1/B1/A2/B2 → 导出」＝ `,,\n,,`（包围盒为空但足迹非空 ⇒ 足迹优先，`#57 §4`）；对应单测同时覆盖「清空后仍按足迹导出」。
+## 4. 相对权威判据的偏离/说明（仅一处，且已披露）
+- **README 除 comment #36 指定的那一句外，另修同页第 53–56 行的一句**：原文「行列数只由结构操作（子 Issue B）与 CSV 导入（子 Issue A）改变」同样是「入口不完整」表述（漏 `PUT .../state`，即 comment #36/#34 想消除的同一事实），已改为三条路径 + 一句「`PUT .../cells` 永不隐式扩张」。若不希望扩大该窄改范围，可只回退这一句，import 端点与足迹文档不受影响。
+- 其余按 comment #27 + #33 + #36 + v1.3（#51/#54/#57/#60/#64/#65/#66/#69）执行，无其它偏离。
+## 5. 未决与已知边界（保持可见）
+- **共享 helper 切换义务（#60）**：helper 进 develop 后本 PR reba

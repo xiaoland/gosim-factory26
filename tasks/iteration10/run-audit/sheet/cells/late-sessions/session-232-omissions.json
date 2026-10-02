@@ -1,0 +1,26 @@
+[
+  {
+    "source": "native/457-2026-09-28T11-17-55-608Z_01a0e7bc-5918-7007-ba56-b8376edfa33f.jsonl:L198",
+    "part": 0,
+    "kind": "mechanical_write",
+    "path": "/tmp/ds23-pr25-evidence.md",
+    "field": "content",
+    "chars": 4048
+  },
+  {
+    "source": "native/457-2026-09-28T11-17-55-608Z_01a0e7bc-5918-7007-ba56-b8376edfa33f.jsonl:L206",
+    "part": 2,
+    "kind": "mechanical_write",
+    "path": "/tmp/ds23-pr25-evidence.md",
+    "field": "content",
+    "chars": 2316
+  },
+  {
+    "source": "native/457-2026-09-28T11-17-55-608Z_01a0e7bc-5918-7007-ba56-b8376edfa33f.jsonl:L246",
+    "part": 2,
+    "kind": "mechanical_write",
+    "path": "/tmp/ds23-pr26-note.md",
+    "field": "content",
+    "chars": 1936
+  }
+]

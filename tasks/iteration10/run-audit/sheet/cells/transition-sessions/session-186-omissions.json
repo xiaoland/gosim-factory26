@@ -1,0 +1,50 @@
+[
+  {
+    "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L64",
+    "part": 0,
+    "kind": "mechanical_write",
+    "path": "/tmp/deepseek-17-288.md",
+    "field": "content",
+    "chars": 1283
+  },
+  {
+    "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L86",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/deepseek-17-pr20-rowmenu.md",
+    "field": "content",
+    "chars": 1615
+  },
+  {
+    "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L112",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/deepseek-17-pr20-req5.md",
+    "field": "content",
+    "chars": 1180
+  },
+  {
+    "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L166",
+    "part": 0,
+    "kind": "mechanical_write",
+    "path": "/tmp/ds17-pr20-precheck.md",
+    "field": "content",
+    "chars": 1231
+  },
+  {
+    "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L245",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/ds17-ready-verdict.md",
+    "field": "content",
+    "chars": 2421
+  },
+  {
+    "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L300",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/ds17-unlock.md",
+    "field": "content",
+    "chars": 1068
+  }
+]

@@ -1,0 +1,85 @@
+{
+  "node_id": "issue:7",
+  "repository_node_id": "local",
+  "kind": "issue",
+  "number": 7,
+  "state": "OPEN",
+  "context_revision": null,
+  "observed_at": "2026-09-29T04:33:52.037057313Z",
+  "title": "M4b 分支、代码搜索与 Web 编辑（REQ-4-2-3、4-3-*、4-4）",
+  "body": "## 需求来源（权威）\n需求包：`/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml`\n原子需求：REQ-4-2-3（仓库内代码搜索）、REQ-4-3-1（分支列表/切换）、REQ-4-3-2（创建分支）、REQ-4-3-3（默认分支变更）、REQ-4-4（Web 文件编辑）。\n参考截图：github-branch-selector.png、github-create-branch.png（实为分支列表页）、github-default-branch-settings.png（与 branch-protection 重复；默认分支区参考 visibility-settings 截图 General 页）、github-web-file-editor.png。\n\n## 共享决定（必须遵循）\ndocs/architecture.md（权限映射：分支创建/Web 编辑 write+；默认分支 admin+；§9）、docs/product-plan.md §3、docs/ui-reference-notes.md（分支选择器 a11y：✓ 选中语义、default 徽标）。\n文案：\"Create branch: <name>\"、\"Invalid branch\"、\"Branch <name>\"、\"Find branch\"、\"Add file\"、\"Create new file\"、\"File contents\"、\"Commit changes\"、\"Invalid file path\"、\"Commit message is required\"、\"No code results\"、\"No matching branch\" —— 全部进 copy.ts。\n\n## 交付\n1. 分支选择器：按钮 accessible name = \"Branch <当前分支>\"；打开后 textbox \"Find branch\"（as-you-type 过滤）、role=option 的分支项（精确名）、当前分支标记；Escape 关闭；无匹配显示 \"No matching branch\" 并保持原分支；选择后按钮名、页面、文件列表同步切换。\n2. 创建分支：选择器内输入合法未用名即出现 option \"Create branch: <name>\"（无需回车）；invalid..branch 立即显示 \"Invalid branch\"；成功创建（指向当前分支头）并切换；重名/无权限不创建。write+ 才可用，Read/Triage 不可用。\n3. 默认分支：Settings → \"Branches\"；native select \"Default branch\"（combobox role，选项为精确分支名）+ \"Update\" + 确认对话框 \"Confirm\"；成功后新入口默认显示新默认分支，旧分支仍可选；非 Admin 不渲染该 combobox 与按钮（不是禁用）。\n4. Web 文件编辑：可写 Code 页 \"Add file\" 按钮 → menuitem \"Create new file\"；编辑器字段 \"File name\"/textbox \"File contents\"/\"Commit message\"、按钮 \"Commit changes\"；路径规则（非空、不以 / 开头、无 .. 段、不冲突）与消息 1–72 字符；成功产生单条 commit（parent=分支头、分支前移）并显示保存内容；\"Commits\" 历史含提交消息；保护分支拒绝写入。\n5. 代码搜索：仓库页 searchbox \"Search\"（与全局搜索区分）→ Enter → 结果页唯一链接 \"Code\"（与仓库导航区分，激活页只有一个 Code 链接）；匹配显示 snippet/文件路径/分支上下文；结果链接名 = 文件名；路径/语言过滤可选；无结果显示 \"No code results\" 并保留查询词；只搜当前仓库可见范围。\n6. 后端 + Vitest（分支名校验、路径校验、commit 原子性、搜索范围）+ seed（feature-search 的 main-only.md 等差异内容）。\n\n## 前置\nM4a（内容模型/树/diff API）已合入 develop。\n\n## 验收\nPlaywright 覆盖 5 条需求场景（含失败分支逐字文案）；刷新持久化；写权限档次断言（控件缺席 + API 拒绝）。\n"
+}
+
+local_comments {
+  "comment_id": 94,
+  "work_item_node_id": "issue:7",
+  "body": "## 待消费/接续契约登记（M4a，Issue #6 / PR #16）— @glm-1 可见\n\nM4a（PR #16）发布的契约见 Issue #6 正文「共享契约（M4a 登记）」与 `docs/architecture.md` §7.2/§9.14。与本任务（M4b）相关的边界：\n\n- **分支只读端点与最小切换控件由 M4a 先落地**：`GET /api/repos/:owner/:name/branches` → `{branches:[{name,isDefault,headCommitId,shortId}]}`；blob/tree/Code 页 combobox `Branch`（选项 = 精确分支名，切换后保留同 path）。REQ-4-3-1 的 `Branch <name>` 按钮 + `Find branch` as-you-type 选择器 + 创建分支仍归本任务，在本控件基础上扩展/替换（请勿另起第二套 branches 端点）。\n- **Web 编辑产生 commit 时复用事务内提交助手**：tree 更新 + `commit_files` 维护（必须与 tree diff 一致）+ 分支前移在同一事务内；不要重复实现。\n- 文件路径/分支名校验与错误文案继续按既有 `copy.ts` / `messages.js` 契约。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebee-c95e-7d40-8567-9d187be96a44",
+  "writer_turn": "01a0ebee-d1f6-7d20-8c70-0ab5edd72761",
+  "revision": 1,
+  "created_at": "2026-09-29T07:06:39.757320486Z",
+  "updated_at": "2026-09-29T07:06:39.757320486Z",
+  "reply_to": null,
+  "thread_root": 94,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 100,
+  "work_item_node_id": "issue:7",
+  "body": "## 根确认补充（Issue #6 comment #96）——#7 的 branches 边界约束\n\nM4a（PR #16）的 branches 端点与最小 `Branch` combobox 已由根 Issue #1 确认归属和形状：`GET /api/repos/:owner/:name/branches` → `{branches:[{name,isDefault,headCommitId,shortId}]}`（`shortId` = 7 位 hex），登记为共享消费契约。本任务（M4b）在此基础上扩展/替换，并追加两条约束：\n\n1. **唯一端点**：REQ-4-3-1 的 `Branch <name>` 按钮、`Find branch` as-you-type、创建分支都在该端点扩展，不得另起第二套 branches 端点。\n2. **THEN2 不得削弱**：替换控件后仍须保持 REQ-4-1 THEN2 可观察（文件页可切到不含该文件的分支）；若替换改变 M4a 的 THEN2 e2e 断言形态，按契约变更纪律在本任务 PR 内提出并同步 `docs/acceptance-plan.md`。\n3. **证人保持**：`main-only.md` 是 THEN2 的唯一种子证人，seed 调整不得移除它。\n\nM4a 契约权威入口：Issue #6 正文「共享契约（M4a 登记）」（约定 5 已含上述约束）、`docs/architecture.md` §7.2/§9.14（PR #16 合入 develop 后生效）。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebee-c95e-7d40-8567-9d187be96a44",
+  "writer_turn": "01a0ec02-0b6e-7773-87e6-b546c2c7f6c8",
+  "revision": 1,
+  "created_at": "2026-09-29T07:13:02.450162758Z",
+  "updated_at": "2026-09-29T07:13:02.450162758Z",
+  "reply_to": 94,
+  "thread_root": 94,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_activity {
+  "ordinal": 17,
+  "work_item_node_id": "issue:7",
+  "occurred_at": "2026-09-29T04:33:52.036662481Z",
+  "actor_login": "glm-1",
+  "action": "created",
+  "source_comment": null,
+  "detail": "M4b 分支、代码搜索与 Web 编辑（REQ-4-2-3、4-3-*、4-4）"
+}
+
+local_activity {
+  "ordinal": 18,
+  "work_item_node_id": "issue:7",
+  "occurred_at": "2026-09-29T04:33:52.037006109Z",
+  "actor_login": "glm-1",
+  "action": "parent_added",
+  "source_comment": null,
+  "detail": "Issue #1"
+}
+
+local_activity {
+  "ordinal": 198,
+  "work_item_node_id": "issue:7",
+  "occurred_at": "2026-09-29T07:06:39.757398491Z",
+  "actor_login": "deepseek-9",
+  "action": "commented",
+  "source_comment": 94,
+  "detail": "comment #94"
+}
+
+local_activity {
+  "ordinal": 206,
+  "work_item_node_id": "issue:7",
+  "occurred_at": "2026-09-29T07:13:02.450218461Z",
+  "actor_login": "deepseek-9",
+  "action": "replied",
+  "source_comment": 100,
+  "detail": "comment #100"
+}

@@ -1,0 +1,302 @@
+[
+  {
+    "render_block": 8,
+    "source": "continuation02-root-native/019-2026-09-28T04-50-03-261Z_01a0e659-3d7d-779d-b472-34fbf7ea2311.jsonl:L4",
+    "chars": 196,
+    "text": "State: open\nAssignees: @glm-1\nSub-issues: Local Issue: local/run#2, Local Issue: local/run#3, Local Issue: local/run#4, Local Issue: local/run#5, Local Issue: local/run#6, Local Issue: local/run#7"
+  },
+  {
+    "render_block": 62,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L6",
+    "chars": 440,
+    "text": "### 交付内容\n- 主页 \"Import CSV\" 按钮 → 对话框（名 \"Import CSV\"），file 控件 label \"CSV file\" + \"Confirm import\"。\n- 解析规则：按原始行列顺序，保留空字段；支持 UTF-8 中英文与数字文本；正确处理双引号包裹的逗号、成对转义双引号、字段内换行；以双引号开头但无闭合双引号的字段无效，报 \"Invalid CSV file format. Import failed.\"。\n- 导入成功：新建工作簿，名 = 文件名去结尾 .csv，Sheet1 打开完整 CSV 内容，首行是普通数据；刷新/重开不变；失败则主页不出现该名链接、无部分结果。\n- 编辑器工具栏 \"Export CSV\" 按钮：触发浏览器下载，建议文件名以 .csv 结尾，UTF-8 文本；按网格实际行列顺序保留空单元格；正确转义逗号/引号/换行；普通单元格导出显示值，公式单元格导出当前计算结果而非公式表达式；导出前后界面状态不变。"
+  },
+  {
+    "render_block": 68,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L4",
+    "chars": 1082,
+    "text": "### 交付内容\n- 工作表标签栏：活动工作表操作入口（按钮可访问名 \"Worksheet options for <工作表名>\" 菜单）；\"Add worksheet\" 按钮新建首个未用的 SheetN（如只有 Sheet1 则建 Sheet2）；新表空白、不继承筛选/校验/透视，创建后成为活动 tab 且 A1 选中；刷新/重开仍存在。\n- 切换工作表：点击 ARIA tab 后网格、行列结构、选中单元格、公式栏、筛选入口、校验入口、透视结果都切到目标工作表状态；不修改源工作表；重开工作簿显示最后活动 tab 并恢复各表最后确认的选中单元格（新表首次打开选 A1）。\n- 重命名工作表：菜单 \"Rename\" → 对话框 \"Rename worksheet\"，文本框 label \"Worksheet name\"（预填）+ \"Save\"；trim 后空名报 \"Worksheet name cannot be empty\"，重名报 \"Worksheet name already exists\"；成功后 tab 显示新名并持久化。\n- 删除工作表：菜单 \"Delete\" → 确认对话框 \"Delete worksheet\"（可见文本含目标表名）+ \"Delete worksheet\" 确认按钮；删除后相邻表激活、目标数据/筛选/校验/透视全部消失且刷新后不出现；若目标仍是某透视表源表，拒绝并报 \"Please delete or rebuild dependent pivot tables first\"；只剩一个表时点 Delete 不开对话框，显示 \"A workbook must contain at least one worksheet\"。\n- 行操作（行号菜单，参考 manage-rows.png）：\"Insert 1 row above\"、\"Insert 1 row below\"、\"Delete row\"；列操作（列头菜单，参考 manage-columns.png）：\"Insert 1 column left\"、\"Insert 1 column right\"、\"Delete column\"。插入/删除时完整记录、校验规则、公式引用整体平移；无法保留的引用显式报错（直接引用删除显示 #REF!）；筛选继续作用于原数据区域；透视源范围变动时旧结果保持，直到点 \"Refresh pivot table\" 重算；列被删后重开透视编辑器显示可见错误要求重选字段并保留上次成功结果。操作失败报错且网格立即与刷新后都保持操作前结构。"
+  },
+  {
+    "render_block": 74,
+    "source": "continuation02-root-native/008-2026-09-28T03-04-18-345Z_01a0e5f8-6ca9-7214-ac46-4c97f93b633f.jsonl:L20",
+    "chars": 1038,
+    "text": "### 交付内容\n- 单元格编辑：点选后可直接在网格或公式栏（text box label \"Formula bar\"）修改；支持文本、数字、布尔样值、日期文本、=开头公式；Enter 或点击其他单元格提交，Escape 取消未提交修改；普通单元格网格与公式栏一致，公式单元格网格显示计算结果、公式栏显示原始公式；源值提交后直接/间接依赖公式更新；刷新后值/公式/结果持久；提交失败报错且显示最后成功值。\n- 双击网格单元格显示行内文本框，可访问名 \"Edit <坐标>\"。\n- 粘贴二维数据：tab 分列、换行分行，从起始单元格应用整个矩形，保留空字段，只覆盖目标矩形；目标内公式被替换，相关公式重算；整体成功或整体失败报错（0-100 数值校验拒绝时报 \"Please enter a number from 0 to 100\"），不允许只落部分值；网格右键菜单有 ARIA menuitem \"Paste\"，Ctrl+V 粘贴同一剪贴板内容。\n- 矩形范围选择：点击选单元格、拖拽从一角到对角选矩形；网格可见地指示完整选区；aria-multiselectable=\"true\"，矩形内 gridcell aria-selected=\"true\"、矩形外 \"false\"；范围操作严格按所选矩形，不隐式扩展到相邻数据；新选择替换旧选择；每个工作表持久化最近一次成功的完整矩形选区（不只左上角），刷新/重开/切表后 aria-selected 状态精确恢复，切到别的表不覆盖原表选区。\n- 复制/剪切/粘贴范围（参考 copy-paste-range.png）：仅同一工作表内；复制后源不变；剪切在目标完整显示后才清空源；值与公式保持二维布局；复制公式时相对引用按目标偏移调整、绝对引用不变，公式栏显示调整后的原公式；源/目标/受影响公式要么全部更新并持久，要么全部保持原状；目标 0-100 校验拒绝时报 \"Please enter a number from 0 to 100\"；范围外单元格不变。\n- 撤销/重做：工具栏按钮 \"Undo\"、\"Redo\"；Ctrl+Z / Ctrl+Y 同效；可撤销本工作簿会话内最近的单元格编辑、批量粘贴、范围移动、行列结构变化；按逆序连续撤销，redo 重做刚撤销的完整操作；撤销不跨工作簿；每次 undo/redo 后状态刷新后持久；撤销后新修改会使 \"Redo\" 按钮禁用且 Ctrl+Y 不能恢复旧分支；历史只需会话内存在。"
+  },
+  {
+    "render_block": 78,
+    "source": "continuation02-root-native/008-2026-09-28T03-04-18-345Z_01a0e5f8-6ca9-7214-ac46-4c97f93b633f.jsonl:L4",
+    "chars": 195,
+    "text": "## 交付目标\n公式计算（REQ-4-*：基本表达式与聚合函数、相对引用复制、依赖重算、错误处理）。实现时阅读 hyperformula 技能（/workspace/template/.factory26/20260928-025746-66feadac/work/skills/hyperformula/SKILL.md），评估用 HyperFormula 承担解析、依赖重算与引用调整。"
+  },
+  {
+    "render_block": 80,
+    "source": "continuation02-root-native/008-2026-09-28T03-04-18-345Z_01a0e5f8-6ca9-7214-ac46-4c97f93b633f.jsonl:L4",
+    "chars": 601,
+    "text": "### 交付内容\n- 公式以 = 开头，经网格或公式栏输入；至少支持：数字常量、括号、+ - * /、同工作表 A1 引用、SUM/AVERAGE/COUNT/MIN/MAX 连续范围；不需跨表引用。函数名大小写不敏感；聚合忽略空单元格，COUNT 只计数字单元格，SUM/AVERAGE/MIN/MAX 只用数字单元格（空格不当 0）。\n- 网格显示按当前源数据计算的结果；选中公式单元格时公式栏显示用户输入的原始表达式；两者刷新后持久。\n- 复制公式（经 REQ-3-2-1 路径）到同表另一位置：相对行列引用按目标偏移调整，绝对引用不变；源公式与结果不变，目标按新引用显示结果并持久；相对引用移出表边界时公式栏显示 =#REF!、网格显示 #REF!。\n- 源值编辑、批量粘贴、范围移动、行列结构变化成功后，所有直接/间接依赖公式按依赖顺序更新；公式栏保持原公式、网格显示新结果或错误；刷新/重开后结果与当前源值一致，不显示旧结果；其他表中不引用这些源单元格的公式不变。\n- 错误值：除以零 #DIV/0!、无效引用 #REF!、不支持函数 #NAME?、表达式畸形 #ERROR!、直接/间接循环引用 #REF!；选中错误单元格公式栏显示原始公式；错误值与公式刷新后持久；错误单元格不阻碍其他单元格查看/编辑/重算；改成合法公式后网格显示新结果、公式栏显示新公式、相关依赖更新、刷新后错误消失。"
+  },
+  {
+    "render_block": 86,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L6",
+    "chars": 2071,
+    "text": "### 交付内容\n- 编辑器工具栏提供可访问名 \"Data\" 的菜单按钮（Data 菜单入口，容纳下列命令）。\n- 排序（REQ-5-1-1，参考 sort-range.png）：选中矩形范围后 Data 菜单 \"Sort range\" → 对话框 \"Sort range\"：combo \"Sort by\"（选项用所选范围首行表头文本作可访问名）、combo \"Order\"（\"Ascending\"/\"Descending\"）、复选框 \"Data has header row\"、\"Sort\" 按钮；声明表头时首行不参与排序；数字/可解析日期/文本按各自类型比较；相等键保持原相对顺序，整行一起移动；排序后公式栏显示与位置一致的引用和结果；筛选与校验继续作用于同一所选范围；范围外数据不变；刷新持久；失败报错且保持原顺序。\n- 筛选（REQ-5-1-2）：Data 菜单 \"Create filter\" 为带表头数据区建筛选；每个表头提供按钮 \"Filter <表头文本>\"，同名对话框支持选值与条件 \"Text contains\"/\"Greater than\"/\"Before\"/\"Is empty\"/\"Is not empty\"；值筛选对话框有 \"Clear selection\"、按去重源值生成的复选框（可访问名=显示值）、\"Apply\"；条件对话框有 combo \"Condition\"、text box \"Value\"、\"Apply\"；多列条件 AND；不匹配行仅隐藏不删除不重排；刷新/重开后可见行一致；CSV 导出与透视汇总仍包含筛选范围内隐藏行；\"Clear filter\" 恢复全部源记录原顺序原值；公式与校验行为不变。\n- 数据验证（REQ-5-2-1）：选中范围后 Data 菜单 \"Data validation\" → 对话框 \"Data validation\"：combo \"Rule type\"；\"Dropdown\" 用 text box \"Allowed values\"（逗号分隔、trim）；\"Number range\" 用 \"Minimum\"/\"Maximum\"；\"Save\" 应用闭区间。下拉单元格提供按钮 \"Open dropdown for <坐标>\"，选项为 ARIA option、可访问名=trim 后允许值。经网格/公式栏/粘贴/范围移动写入非法值时整个操作被拒绝且原值保留：非法下拉值报 \"Please select one of the following values: <逗号分隔允许值>\"，非法数字报 \"Please enter a number between <最小> and <最大>\"；持久化多单元格 0-100 边界场景中 B3 拒绝 101 显示 \"Please enter a number from 0 to 100\"；批量操作任一目标非法则全部目标保留原值。规则刷新后仍有效；重开对话框预填规则类型与参数并显示 \"Delete rule\" 按钮；保存修改立即生效、删除解除约束，成功操作关闭对话框且不改既有单元格值。\n- 透视表（REQ-5-3-1）：选中含表头源范围后 Data 菜单 \"Create pivot table\" → 对话框 \"Create pivot table\"（可见文本 \"Source range: <范围>\"、\"New worksheet\" 单选项、\"Create\" 按钮；无透视结果表时用首个未用 PivotN，即 Pivot1）。区域 \"Pivot table editor\" 提供 combo \"Rows\"/\"Columns\"/\"Values\"/\"Summarize by\"（选项 SUM/COUNT/AVERAGE）+ \"Apply\"；支持 1 个行字段、1 个可选列字段、1 个值字段。SUM/AVERAGE 只聚合可解析数字，COUNT 计值字段非空记录数。无列字段时 A1=行字段名、B1=\"<汇总方式> of <值字段>\"，行组按源数据首次出现顺序，末行 Grand Total；有列字段时 A1=行字段名、列字段值自 B1 起按首次出现顺序、末列 Grand Total，行字段值同样按首次出现顺序、末行 Grand Total；COUNT 对无记录组合显示 0。Apply 成功后刷新/重开仍显示相同透视表。结果表提供 \"Refresh pivot table\" 按钮：源数据或行列变化后点击即用当前源范围完全重算替换；所选源表头已被删除时点击显示 \"Pivot field is no longer available. Select a new field.\" 并保留上次成功结果、不改源表；其他无效源范围/字段同样可见报错且两表都不变；SUM/AVERAGE 对无可解析数字的值字段显示 \"Value field requires numeric values\"、保留旧结果、不改源表。切换回源表时原值与顺序不变。"
+  },
+  {
+    "render_block": 100,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 786,
+    "text": "### 服务端（导入，REQ-1-3-1）\n- `backend/src/csv.ts`：纯函数 `parseCsv` / `isValidCsv`。\n  - 按原始行列顺序；空字段保留（含行尾空列、整行空）；LF / CRLF / CR 均作记录分隔符；剥离开头 UTF-8 BOM。\n  - `\"...\"` 内的逗号与换行属于字段内容；`\"\"` 表示字面双引号。\n  - 字段以 `\"` 开头但未闭合 → 抛 `CsvFormatError`，整个解析失败。\n  - 全部按文本处理，不做数值/日期类型转换。\n- `backend/src/routes/csv.ts`：`POST /api/workbooks/import { fileName, csv }`\n  - 成功 201 返回 bare `Workbook`（沿用 #2 契约，无包装）；工作簿名 = 文件名去掉结尾 `.csv`（大小写不敏感、只去一次）。\n  - 解析失败/缺 csv/文件名为空 → 400 `{ error: \"Invalid CSV file format. Import failed.\" }`。\n  - **先完整校验再单次落库**（`saveWorkbook` 只在解析成功后调用），失败不留任何半成品记录。\n  - 内容全部写 `{ raw: text, value: text }`（不消费表头）；空字段不落 key（稀疏 map）；导入表命名为 `Sheet1`、`activeSheetId` 指向它、`lastSelection = \"A1\"`；行列数按需扩到内容之外不截断（`rowCount/colCount` 至少覆盖导入范围）。\n- `backend/src/server.ts`：在 `/api` 404 兜底**之前**挂载 `csvRouter`。"
+  },
+  {
+    "render_block": 102,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 1012,
+    "text": "### 前端（导入对话框 + 导出，REQ-1-3-1 / REQ-1-3-2）\n- `frontend/src/pages/HomePage.tsx`：`home-header` 区新增 accessible name 为 `Import CSV` 的按钮；打开 `role=\"dialog\"` 且 accessible name 为 `Import CSV` 的对话框，内含 label `CSV file` 的 file 控件与 `Confirm import` 按钮（含 `Cancel`）。\n  - 失败时对话框内 `role=\"alert\"` 显示服务端文案 `Invalid CSV file format. Import failed.`，不跳转、主页列表不变、可直接重试；成功才 `navigate('/workbook/<id>')`。\n- `frontend/src/domain/csv.ts`：纯函数 `usedRange` / `escapeField` / `serializeCsv` / `sheetToCsv`。\n  - 导出范围 = 该表 `cells` 数据模型的行列包围盒（**不用可见行投影**，故 REQ-5-1-2 的“筛选隐藏行仍要导出”天然成立），保留范围内的空单元格与全空行，按网格实际行列顺序。\n  - 普通单元格取 `value`（显示值）；公式单元格同样取 `value`，即当前计算结果而非 `raw` 表达式。\n  - 含 `,` `\"` `\\n` `\\r` 的字段加双引号并把 `\"` 翻倍；每条记录以 `\\n` 结尾（末行全空也能往返）。\n- `frontend/src/pages/EditorPage.tsx`：`editor-topbar` 新增 accessible name `Export CSV` 的按钮，构造 Blob（`text/csv;charset=utf-8`）触发浏览器下载，建议文件名 = 工作簿名（去掉结尾 `.csv`）+ `.csv`；**不写任何状态**（不改活动表/选区/单元格，不刷 `updatedAt`）。\n- `frontend/src/api.ts`：新增 `api.importCsv(fileName, csv)`，复用既有 `request<T>()`（`{error}` → `ApiError`）。"
+  },
+  {
+    "render_block": 108,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 338,
+    "text": "1. `cd frontend && npm test` → 6/6 通过（导出纯函数：转义/引号翻倍/换行、包围盒、空单元格与空行保留、公式取计算结果、隐藏行仍导出、空表）。\n2. `cd backend && npm test` → 8/8 通过（导入纯函数 + 真实 HTTP 端点：按序保留空字段、引号逗号/转义双引号/字段内 CRLF 与 LF、未闭合引号抛错、UTF-8 中文与数字文本、BOM、宽表扩列/长表扩行；成功导入后重新 GET 仍一致；非法 CSV 返回 400 精确文案且列表中无该名）。\n3. `checks/run.sh`（Playwright，每个 spec 独立临时 `DATA_DIR` + 空闲端口，3000 保留给评测）→ 见下方结果。"
+  },
+  {
+    "render_block": 110,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 272,
+    "text": "浏览器检查覆盖：\n- 导入含中文/引号转义/字段内换行的 CSV → 编辑器逐格核对（含精确断言 `multi\\nline`）→ **刷新后完全一致**，且首行 `Name,Note` 仍是普通数据。\n- 非法 CSV（未闭合引号）→ 对话框显示精确错误文案、主页无该名链接、listitem 数量不变、可重试成功。\n- 编辑器写入 `=1+2` → 导出 CSV，断言下载文件字节内容（含转义/中文/空 B 列）且公式列 = 网格显示值（非表达式）→ 导出前后 URL / 活动 tab / 公式栏 / 网格值快照相等，**刷新后仍相等**。"
+  },
+  {
+    "render_block": 114,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 220,
+    "text": "| 检查 | 命令 | 结果 |\n| --- | --- | --- |\n| 导出纯函数单测 | `cd frontend && npm test` | **6/6 通过** |\n| 导入纯函数 + HTTP 端点单测 | `cd backend && npm test` | **8/8 通过** |\n| 浏览器检查（4 个 spec） | `checks/run.sh` | **11 通过 / 3 失败（退出码 1，9.0m）** |"
+  },
+  {
+    "render_block": 116,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 367,
+    "text": "本 PR 相关：**CSV 三个浏览器检查全部通过**。\n```\n✓ 12 [csv] csv.spec.ts:53  imported CSV keeps quotes, embedded newlines and Chinese, and survives refresh (12.7s)\n✓ 13 [csv] csv.spec.ts:92  an invalid CSV is rejected, leaves no workbook behind, and can be retried (4.9s)\n✓ 14 [csv] csv.spec.ts:124 Export CSV downloads the used range and leaves the editor state unchanged (17.9s)\n```"
+  },
+  {
+    "render_block": 120,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 605,
+    "text": "1. `[create-workbook] spec.ts:67` —— `goHome(page)` 里点 `Home` 链接，但 `CreatePage` 本来就没有 Home 链接（`goHome` 的注释是 “Go home **from the editor**”），在创建页调用必然超时。属检查缺陷。\n2. `[editor-interactions] spec.ts:20`（断言行 46）—— `B2` 单击后再 Shift+点击 `C3`，断言 `B2/B3/C2/C3` 均 `aria-selected=true`；实际只有 `C3` 为 true。`Grid` 的 Shift+点击仅在“已存在矩形选区”时才扩展，而需求 REQ-3-1-3 只要求“单击选一格 / 从一角拖到对角选矩形”，未规定 Shift+点击语义 → 该断言超出需求；顺带说明产品侧也没有“从 activeCell 起 Shift 扩展”。建议由 #5 决定产品行为，或把该断言改为 `Shift+ArrowRight`。\n3. `[editor-interactions] spec.ts:121` —— 同一 spec 内前一条用例（行 79）已把种子工作簿 `Q3 Sales` 改名为 `Renamed …`，该用例仍按 `Q3 Sales` 打开 → 找不到。属用例隔离缺陷（需要独立工作簿或独立名字）。"
+  },
+  {
+    "render_block": 124,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 221,
+    "text": "## 备注\n- 导出取 `value` 而非 `raw`：REQ-4 公式引擎回填 `value` 后，导出自动变为计算结果，无需再改；当前基础/本 PR 未接公式求值前，网格显示值与导出值一致，检查断言的是“网格显示值”，故在 REQ-4 前后都成立。\n- 与 #7 的衔接：导出不依赖筛选视图；#7 落地后建议加一条“应用筛选后导出仍含隐藏行”的回归检查（`frontend/tests/csv.test.ts` 已有对应的纯函数用例）。"
+  },
+  {
+    "render_block": 152,
+    "source": "continuation02-root-native/031-2026-09-28T05-33-22-458Z_01a0e680-e69a-72d4-9388-0b6b053d16f6.jsonl:L80",
+    "chars": 276,
+    "text": "| 文件 | PR #3 | PR #4（本 PR） |\n| --- | --- | --- |\n| `checks/run.sh` | 类型检查、每服务独立日志、watchdog 重启 | 新增 `CSV` suffix + `BASE_URL_CSV` |\n| `checks/playwright.config.ts` | 新增 project/`required()` 等 | 新增 `csv` project |\n| `frontend/src/api.ts` | `ApiError.code` | 新增 `api.importCsv` |"
+  },
+  {
+    "render_block": 154,
+    "source": "continuation02-root-native/031-2026-09-28T05-33-22-458Z_01a0e680-e69a-72d4-9388-0b6b053d16f6.jsonl:L80",
+    "chars": 306,
+    "text": "我已在本地把本 PR 的提交 rebase 到 `origin/fix/shared-foundation-followup` 上验证过：`playwright.config.ts` 与 `api.ts` **自动合并**，只有 `checks/run.sh` 有一处冲突（新 `start_server()` 结构 vs 我旧版直接起服务的代码块），解法是把 `SUFFIXES=(CREATE EDITOR HOME)` 改成 `SUFFIXES=(CREATE EDITOR HOME CSV)` 并保留 PR #3 的 `start_server()`/日志/看门狗结构 —— 我这边已完成该解法的验证。"
+  },
+  {
+    "render_block": 158,
+    "source": "continuation02-root-native/031-2026-09-28T05-33-22-458Z_01a0e680-e69a-72d4-9388-0b6b053d16f6.jsonl:L80",
+    "chars": 208,
+    "text": "顺带一个已取得的集成证据（rebase 后的预览运行，机器同时有 4 个其他 lane 的 Playwright 在跑）：原先必失败的 `create-workbook.spec.ts:67`（空名拒绝/可重试/无残留）在 PR #3 的修复下 **通过（48.0s）**。该次预览运行因外部 SIGTERM（机器过载）在第 4 条用例被中断，未取得完整结论；等 PR #3 合入后我会在空闲时重跑并给出完整通过数。"
+  },
+  {
+    "render_block": 190,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L293",
+    "chars": 178,
+    "text": " export default defineConfig({\ndiff --git a/checks/run.sh b/checks/run.sh\nindex 01e3b98..a036829 100755\n--- a/checks/run.sh\n+++ b/checks/run.sh\n@@ -54,7 +54,8 @@ s.close()\n PY\n }"
+  },
+  {
+    "render_block": 192,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L293",
+    "chars": 185,
+    "text": "-SUFFIXES=(CREATE EDITOR HOME)\n+# env var suffix -> spec file handled by the matching Playwright project.\n+SUFFIXES=(CREATE EDITOR HOME CSV)\n declare -A PORTS URLS DATA_DIRS SERVER_PIDS"
+  },
+  {
+    "render_block": 342,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L27",
+    "chars": 192,
+    "text": "Commands:\n  view       \n  edit       \n  hide       \n  unhide     \n  delete     \n  resolve    \n  unresolve  \n  reaction   \n  help       Print this message or the help of the given subcommand(s)"
+  },
+  {
+    "render_block": 364,
+    "source": "continuation02-root-native/039-2026-09-28T05-33-27-831Z_01a0e680-fb97-768b-988d-21acddc3c468.jsonl:L16",
+    "chars": 179,
+    "text": " /**\n  * Shared REST API contract (all later feature tasks build on this):\n@@ -146,7 +147,9 @@ workbooksRouter.patch(\"/api/workbooks/:id/state\", (req: Request, res: Response)\n });"
+  },
+  {
+    "render_block": 446,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L199",
+    "chars": 1583,
+    "text": "-# A fixed log path would be truncated by any other run of this harness; keep the\n-# logs of this run together and identifiable instead.\n-LOG_PREFIX=\"${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename \"$ROOT\")-$$}\"\n-PID_FILE=\"$(mktemp /tmp/wb-checks-pids-XXXXXX)\"\n+# Keep everything this run owns (server logs, PID record, per-spec DATA_DIRs)\n+# inside one run-private directory with a distinctive prefix. The shared\n+# /tmp/wb-checks-* namespace is used by every lane running this harness, and\n+# files there have been observed to disappear mid-run (foreign cleanup): one\n+# server kept running while its workbook directory had been emptied, so the\n+# checks failed with \"the seeded workbook is missing\" although the product was\n+# fine. A private directory makes that far less likely.\n+RUN_DIR=\"${CHECK_RUN_DIR:-$(mktemp -d /tmp/wbchecks-run-XXXXXX)}\"\n+LOG_PREFIX=\"${SERVER_LOG_PREFIX:-$RUN_DIR/server}\"\n+PID_FILE=\"$RUN_DIR/pids\"\n WATCHDOG=\"\"\n+echo \"run dir: $RUN_DIR (server logs: $LOG_PREFIX-<SPEC>.log)\"\n+\n+# Port ownership: free_port() only reports a port that was free a moment ago,\n+# and the other lanes start servers at the same time. If a foreign server answers\n+# on our port, its workbook list would be mistaken for ours, so verify the\n+# listener is the process we started (lsof) instead of trusting the port alone.\n+if command -v lsof >/dev/null 2>&1; then\n+  OWNERSHIP_CHECK=true\n+else\n+  echo \"note: lsof is not installed; skipping the port-ownership check\"\n+  OWNERSHIP_CHECK=false\n+fi\n+\n+listener_pid() {\n+  lsof -nP -iTCP:\"$1\" -sTCP:LISTEN -t 2>/dev/null | head -1\n+}"
+  },
+  {
+    "render_block": 522,
+    "source": "continuation02-root-native/019-2026-09-28T04-50-03-261Z_01a0e659-3d7d-779d-b472-34fbf7ea2311.jsonl:L4",
+    "chars": 196,
+    "text": "State: open\nAssignees: @glm-1\nSub-issues: Local Issue: local/run#2, Local Issue: local/run#3, Local Issue: local/run#4, Local Issue: local/run#5, Local Issue: local/run#6, Local Issue: local/run#7"
+  },
+  {
+    "render_block": 566,
+    "source": "continuation02-root-native/047-2026-09-28T05-43-33-723Z_01a0e68a-3a5b-7209-906f-c1c240bd43ae.jsonl:L4",
+    "chars": 587,
+    "text": "## 实跑证据（commit `a012447`，Node v24.10.0，Chrome for Testing 154，临时 `DATA_DIR` + 空闲端口，3000 未占用）\n- `cd frontend && npm test` → **6/6**；`cd backend && npm test` → **8/8**。\n- `checks/node_modules/.bin/tsc -p checks/tsconfig.json` → **通过**（`run.sh` 内已前置执行）。\n- `checks/run.sh` → **14 passed，RUN_EXIT=0（1.9m）**，四个 spec 全绿：create-workbook 3/3、editor-interactions 4/4、home-editor 4/4、**csv 3/3**。你修掉的 3 条（`create-workbook:67` 空名拒绝可重试、`editor-interactions:20` shift 选区锚点、`editor-interactions:121` 用例隔离）在本基线均通过。\n- 端口 33381 / 47857 / 47627 / 44799，各自 `/tmp/wb-checks-*` 数据目录；运行结束后 4 个自启后端已全部停止（端口无监听）。"
+  },
+  {
+    "render_block": 568,
+    "source": "continuation02-root-native/047-2026-09-28T05-43-33-723Z_01a0e68a-3a5b-7209-906f-c1c240bd43ae.jsonl:L4",
+    "chars": 327,
+    "text": "一点环境提示：`checks/package.json` 已声明 `typescript`，但 `checks/node_modules` 若未装（`run.sh` 会打印 `note: ... skipping type-check` 继续跑），类型检查就被静默跳过。我在本 worktree 装了 `typescript@5.5.4`（`--no-save`，只动 `node_modules`，工作树无改动）后确认 `tsc` 与 `run.sh` 的类型检查真实执行。若希望 CI/整合验收一定做类型检查，可考虑把这条 note 升级为失败，或提交 `checks/node_modules` 之外的安装步骤说明——这条属于检查套件，交由你判断。"
+  },
+  {
+    "render_block": 638,
+    "source": "continuation02-root-native/019-2026-09-28T04-50-03-261Z_01a0e659-3d7d-779d-b472-34fbf7ea2311.jsonl:L4",
+    "chars": 196,
+    "text": "State: open\nAssignees: @glm-1\nSub-issues: Local Issue: local/run#2, Local Issue: local/run#3, Local Issue: local/run#4, Local Issue: local/run#5, Local Issue: local/run#6, Local Issue: local/run#7"
+  },
+  {
+    "render_block": 738,
+    "source": "continuation02-root-native/019-2026-09-28T04-50-03-261Z_01a0e659-3d7d-779d-b472-34fbf7ea2311.jsonl:L4",
+    "chars": 196,
+    "text": "State: open\nAssignees: @glm-1\nSub-issues: Local Issue: local/run#2, Local Issue: local/run#3, Local Issue: local/run#4, Local Issue: local/run#5, Local Issue: local/run#6, Local Issue: local/run#7"
+  },
+  {
+    "render_block": 782,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L339",
+    "chars": 567,
+    "text": "### 自检证据（可重复执行）\n```\nBROWSER_EXECUTABLE_PATH=<chromium> ./checks/run.sh        # 28 passed + 1 skipped(fixme)，EXIT=0，5.4 min\nnode --test checks/unit/editing.test.ts                   # 11/11\ntsc -p {checks,frontend,backend}/tsconfig.json            # 全通过\n```\n运行提交 075b778（现 HEAD 7e65dca 只多一行 README 文档）。覆盖：编辑/行内编辑/公式栏一致性、Escape 取消、刷新持久、二维粘贴（空字段、只覆盖矩形、右键 menuitem Paste 与 Ctrl+V 同路）、拖拽选区 aria-selected 精确 + 刷新/切表恢复、复制带相对/绝对引用公式的偏移（F3 链路）、剪切源清空时序、0-100 原子拒绝（message/hint 双元素）、Undo/Redo 按钮与 Ctrl+Z/Y、undo 后新修改禁用 redo、undo 不跨工作簿。每 spec 独立 server + 空闲端口 + 运行私有临时数据目录，结束即停服。"
+  },
+  {
+    "render_block": 784,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L339",
+    "chars": 1025,
+    "text": "### 待整合（按 Issue 依赖约定）\n1. **行列结构 undo 待 #4**：`checks/req3-integration.spec.ts` 的 `Insert 1 row above` undo 用例以 `test.fixme` 留位；`History` 已导出并预留 `Operation.kind=\"structure\"` + `structureBefore/After`，#4 的写入口接到**同一个** `History` 实例即可，不需要第二套历史。\n2. **REQ-3-2-2 还要求 undo 覆盖 rule ranges / pivot-result validity**：这两项分别随 #4（结构变更）与 #7（规则/透视）接线，属于同一 `Operation` 快照扩展。\n3. **剪切语义**：当前剪切＝同批“写目标 + 清源”（源/目标/受影响公式全成功或全原状），引用被移单元格的外部公式不跟随改写——因为现有 API 没有暴露引擎 `moveRange`（#6 的 handle 只在服务端内部）。若整合验收要求 moveCells 语义，请裁决加服务端 move 端点，我在 #5/#6 响应。\n4. **@deepseek-7 校验契约**：本分支 `frontend/src/domain/validation.ts` 是按 #5 c11 / #7 c18 定稿实现的**临时适配层**（唯一文案来源，`message=Please enter a number from {min} to {max}` / `hint=Please enter a number between {min} and {max}`，拒绝不落值不入历史）。#7 模块迁入后我改为 re-export，请在 #7 给出导入路径与字段名。\n5. **@glm-6 共享包产物**：`2305564` 把 `shared/formula-engine/dist` 纳入版本库（48K），因为 `backend`/`frontend` 用 `file:` 依赖、`prepare.cjs` 不构建 shared 包，干净克隆上 `import \"@app/formula-engine\"` 会 `ERR_MODULE_NOT_FOUND`（同一 lane 的其他 PR 也会遇到）。若 #6 侧补上构建自举，可据此替换。"
+  },
+  {
+    "render_block": 796,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 174,
+    "text": "先纠正 comment #69 里的一处事实：我这边**不是**只有准备件。927358f（基于 3ab688f 的准备件）已被后续实现取代，我已把 `braid-agent/issue-5/pi-deepseek-fast-g1` 强制更新到当前 HEAD（旧提交不再有可消费内容）；正式实现分支是 `issue-5-req3-editing`。"
+  },
+  {
+    "render_block": 798,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 170,
+    "text": "**PR #8**（`braid pr create --base develop --head issue-5-req3-editing`，owner @deepseek-10）：base `origin/develop` = 0539c62（已含 #2 共享基础、#6 公式写管道、CSV、检查套件加固），head = 7e65dca。"
+  },
+  {
+    "render_block": 800,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 276,
+    "text": "### 已按新基线接线\n- `PATCH /cells` 直接消费 #6 的 `runWithFormulas` 原子管线语义：raw 保真、依赖重算、`value` 回填、错误串不拒写；前端一次 batch 写入、成功后入会话 undo 栈。\n- 复制/移动的公式调整仍按 #42/#6 契约用引擎 `adjustFormulaForCopy`（`$` 绝对引用不变，相对引用按目标偏移；越界折叠为 `=#REF!`）。\n- 服务端不再需要前端传计算结果，但显示仍走同一个 `@app/formula-engine`（与回填 `value` 同源）。"
+  },
+  {
+    "render_block": 802,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L339",
+    "chars": 567,
+    "text": "### 自检证据（可重复执行）\n```\nBROWSER_EXECUTABLE_PATH=<chromium> ./checks/run.sh        # 28 passed + 1 skipped(fixme)，EXIT=0，5.4 min\nnode --test checks/unit/editing.test.ts                   # 11/11\ntsc -p {checks,frontend,backend}/tsconfig.json            # 全通过\n```\n运行提交 075b778（现 HEAD 7e65dca 只多一行 README 文档）。覆盖：编辑/行内编辑/公式栏一致性、Escape 取消、刷新持久、二维粘贴（空字段、只覆盖矩形、右键 menuitem Paste 与 Ctrl+V 同路）、拖拽选区 aria-selected 精确 + 刷新/切表恢复、复制带相对/绝对引用公式的偏移（F3 链路）、剪切源清空时序、0-100 原子拒绝（message/hint 双元素）、Undo/Redo 按钮与 Ctrl+Z/Y、undo 后新修改禁用 redo、undo 不跨工作簿。每 spec 独立 server + 空闲端口 + 运行私有临时数据目录，结束即停服。"
+  },
+  {
+    "render_block": 968,
+    "source": "continuation02-root-native/019-2026-09-28T04-50-03-261Z_01a0e659-3d7d-779d-b472-34fbf7ea2311.jsonl:L4",
+    "chars": 196,
+    "text": "State: open\nAssignees: @glm-1\nSub-issues: Local Issue: local/run#2, Local Issue: local/run#3, Local Issue: local/run#4, Local Issue: local/run#5, Local Issue: local/run#6, Local Issue: local/run#7"
+  },
+  {
+    "render_block": 1030,
+    "source": "local_items.json:pr:10",
+    "chars": 162,
+    "text": "## 问题（复核 PR #4 时 glm-9 实测，见 issue #2 comment #73）\n`checks/run.sh` 退出时 `cleanup` 先 `rm -f \"$PID_FILE\"`，而 watchdog 恰在此时重启某个服务：那次重启的 PID 记录写入失败，并且这个新进程逃逸了清理（需要手工停止）。"
+  },
+  {
+    "render_block": 1032,
+    "source": "local_items.json:pr:10",
+    "chars": 239,
+    "text": "## 修法\n1. **先停 watchdog 并等它退出**，再处理 PID 文件与其余服务——之后不会再有新的重启；\n2. 把「内存中记录的 pid」与「PID 文件中的 pid（含 watchdog 的重启记录）」合并后统一 kill、再统一 `wait`；\n3. 兜底：若仍有本 checkout 的 `backend/dist/server.js` 监听本次运行的端口（即竞态期间启动的那个），用 `/proc/<pid>/cmdline` 校验身份后按 pid 停止。"
+  },
+  {
+    "render_block": 1114,
+    "source": "continuation02-root-native/019-2026-09-28T04-50-03-261Z_01a0e659-3d7d-779d-b472-34fbf7ea2311.jsonl:L4",
+    "chars": 196,
+    "text": "State: open\nAssignees: @glm-1\nSub-issues: Local Issue: local/run#2, Local Issue: local/run#3, Local Issue: local/run#4, Local Issue: local/run#5, Local Issue: local/run#6, Local Issue: local/run#7"
+  },
+  {
+    "render_block": 1212,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L489",
+    "chars": 317,
+    "text": "- backend/scripts/prepare.cjs 第 0 步：引擎 node_modules 缺失 → 按入库 package-lock npm ci --omit=dev（fallback install）；dist 缺失 → 用 backend 自带 tsc 编译。之后才轮到 backend/frontend 构建。\n- README 运行顺序改为 backend npm install && npm run start 优先（先自举引擎，之后 frontend npm run build 即成功）；原 frontend-first 顺序在真干净克隆上 vite 也解析不到 hyperformula，已同步更正。"
+  },
+  {
+    "render_block": 1464,
+    "source": "continuation02-root-native/041-2026-09-28T05-33-31-043Z_01a0e681-0823-70a7-b2c0-f9b5734222fc.jsonl:L392",
+    "chars": 249,
+    "text": "可选的竞态回归脚本已留入口：分支 `braid-agent/issue-3/cleanup-race-check` @ `132f054`（基于 `fcbb114`，只多 `checks/cleanup-race-check.sh`，未接入 `run.sh`；做法：kill -9 一个服务 → 等 watchdog 重启并记录新 pid → SIGTERM 套件 → 断言无进程/端口存活）。是否收进 PR #10 由 @deepseek-8 决定，细节见 PR #10 comment #94。"
+  },
+  {
+    "render_block": 1586,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L344",
+    "chars": 341,
+    "text": "## 改动\n- **移除入库的 `shared/formula-engine/dist`**（`dist/` 进该包 .gitignore）。\n- **`backend/scripts/prepare.cjs` 第 0 步扩展**：\n  - `shared/formula-engine/node_modules` 缺失 → 按入库 package-lock `npm ci --omit=dev`（fallback `npm install`）；\n  - `dist/index.js` 缺失 → 用 backend 自带 tsc 编译。\n- **README** 运行顺序改为 backend 启动优先（先自举引擎，frontend 构建随后即成功），公式引擎章节说明同步更正。"
+  },
+  {
+    "render_block": 1588,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L344",
+    "chars": 228,
+    "text": "## 实证依据（修复的不只是 dist 缺失）\n干净克隆实验：即使 dist 存在，引擎运行时 `import 'hyperformula'` 从其**真实路径**解析（Node 默认 realpath），`file:` 符号链接不经过 `backend/node_modules` → `ERR_MODULE_NOT_FOUND`。即 develop 现状（dist 入库）在真干净环境下 backend 启动同样失败。自举必须覆盖依赖安装，故一步到位。"
+  },
+  {
+    "render_block": 1628,
+    "source": "local_items.json:pr:13",
+    "chars": 310,
+    "text": "- `frontend/src/components/FormulaBar.tsx`：对进行中的 `(cell, content)` 写入做 in-flight 去重；Enter 引起的失焦不再发起第二次写入。提交成功或失败后都会释放，正常重试不受影响。\n- `checks/req3-core.spec.ts`：新增回归用例 **“one commit records exactly one undo step (two consecutive edits undo in reverse order)”** —— 两次连续公式栏编辑后，两次 Undo 逆序回退（A71→空，A70→空）、两次 Redo 顺序重放。"
+  },
+  {
+    "render_block": 1632,
+    "source": "local_items.json:pr:13",
+    "chars": 443,
+    "text": "- **修复前**（958f05a，探针用例，同一组步骤）：第二次 Undo 后 A70 仍为 `one`，失败；error-context 记录 `<td aria-label=\"A70\">one</td>`。\n- **修复后**：`--project=req3-core` 既有 9 项全部通过；新增回归用例在整批运行中通过（24.0s）。最后一项 “undo history is per workbook” 在整批运行时因**我手工起的 server 中途退出**报 `Failed to fetch`（网络错误，error-context 页面 alert 为 `Failed to fetch`，端口已无监听），用新的 server 单独复跑该用例通过（20.8s）——与本次改动无关。\n- `node --test checks/unit/editing.test.ts` 11/11；`frontend npm run build` 与 `checks tsc` 通过。"
+  },
+  {
+    "render_block": 1636,
+    "source": "local_items.json:pr:13",
+    "chars": 281,
+    "text": "```sh\ncd frontend && npm install && npm run build\nDATA_DIR=<tmp> HOST=127.0.0.1 PORT=<free> node backend/dist/server.js\ncd checks && BASE_URL_*=<同一 URL> BROWSER_EXECUTABLE_PATH=<chromium> \\\n  ./node_modules/.bin/playwright test --config playwright.config.ts --project=req3-core\n```"
+  },
+  {
+    "render_block": 1670,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 174,
+    "text": "先纠正 comment #69 里的一处事实：我这边**不是**只有准备件。927358f（基于 3ab688f 的准备件）已被后续实现取代，我已把 `braid-agent/issue-5/pi-deepseek-fast-g1` 强制更新到当前 HEAD（旧提交不再有可消费内容）；正式实现分支是 `issue-5-req3-editing`。"
+  },
+  {
+    "render_block": 1672,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 170,
+    "text": "**PR #8**（`braid pr create --base develop --head issue-5-req3-editing`，owner @deepseek-10）：base `origin/develop` = 0539c62（已含 #2 共享基础、#6 公式写管道、CSV、检查套件加固），head = 7e65dca。"
+  },
+  {
+    "render_block": 1674,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373",
+    "chars": 276,
+    "text": "### 已按新基线接线\n- `PATCH /cells` 直接消费 #6 的 `runWithFormulas` 原子管线语义：raw 保真、依赖重算、`value` 回填、错误串不拒写；前端一次 batch 写入、成功后入会话 undo 栈。\n- 复制/移动的公式调整仍按 #42/#6 契约用引擎 `adjustFormulaForCopy`（`$` 绝对引用不变，相对引用按目标偏移；越界折叠为 `=#REF!`）。\n- 服务端不再需要前端传计算结果，但显示仍走同一个 `@app/formula-engine`（与回填 `value` 同源）。"
+  },
+  {
+    "render_block": 1676,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L339",
+    "chars": 567,
+    "text": "### 自检证据（可重复执行）\n```\nBROWSER_EXECUTABLE_PATH=<chromium> ./checks/run.sh        # 28 passed + 1 skipped(fixme)，EXIT=0，5.4 min\nnode --test checks/unit/editing.test.ts                   # 11/11\ntsc -p {checks,frontend,backend}/tsconfig.json            # 全通过\n```\n运行提交 075b778（现 HEAD 7e65dca 只多一行 README 文档）。覆盖：编辑/行内编辑/公式栏一致性、Escape 取消、刷新持久、二维粘贴（空字段、只覆盖矩形、右键 menuitem Paste 与 Ctrl+V 同路）、拖拽选区 aria-selected 精确 + 刷新/切表恢复、复制带相对/绝对引用公式的偏移（F3 链路）、剪切源清空时序、0-100 原子拒绝（message/hint 双元素）、Undo/Redo 按钮与 Ctrl+Z/Y、undo 后新修改禁用 redo、undo 不跨工作簿。每 spec 独立 server + 空闲端口 + 运行私有临时数据目录，结束即停服。"
+  },
+  {
+    "render_block": 1698,
+    "source": "native/223-2026-09-28T09-20-37-342Z_01a0e750-f3de-71e1-9c6d-a7d4aac8f334.jsonl:L4",
+    "chars": 754,
+    "text": "- **语义**：HyperFormula `moveCells`。源矩形内容移动到 `targetRef` 起的同尺寸矩形；指向块内单元格的公式（**含其它工作表**）改写为新位置；源矩形清空；目标矩形被覆盖。\n- **原子**：一次 `runWithFormulas` + 一次落库；源、目标、受影响引用要么全部更新并持久，要么全部保持原状（400/404/500 都不落库）。\n- **400**：`sourceRange`/`targetRef` 不是合法 A1 范围/坐标，或源/目标矩形超出 `sheet.rowCount/colCount`。\n- **持久化**：移动后 formula 的 `raw` 由引擎权威改写（这也是本 PR 在 `runWithFormulas` 里把 `moveRange` 纳入 “engine raw 权威” 的原因；此前外部公式 raw 会留有悬空旧引用），`value` 同步刷新；非公式单元格保持原文。\n- **已实测**：`A1=10, B1=5, C1==A1*2, Sheet2!A1==Sheet1!A1`；`move A1:B1 -> D1` 后 `D1=10, E1=5, A1/B1 清空, C1 raw='=D1*2' value=20, Sheet2!A1 raw='=Sheet1!D1' value=10`。\n- **校验挂点**：#5 前端在同一写管道里先跑 #7 的 `validateRangeWrite`（目标落点的原始文本，公式按 #7 决定放行），拒绝时不发请求、源与目标都不动。#7 的服务端 guard 可直接挂在 `routes/workbooks.ts` 的这个路由上（写集合 = 目标矩形；源清空不参与校验）。"
+  }
+]

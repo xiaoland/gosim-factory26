@@ -1,0 +1,18 @@
+[
+  {
+    "source": "continuation02-root-native/103-2026-09-28T07-03-16-386Z_01a0e6d3-34a2-7761-9783-4cd661b3da79.jsonl:L90",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-filter-export-body.md",
+    "field": "content",
+    "chars": 1027
+  },
+  {
+    "source": "continuation02-root-native/103-2026-09-28T07-03-16-386Z_01a0e6d3-34a2-7761-9783-4cd661b3da79.jsonl:L101",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr9-comment-85.md",
+    "field": "content",
+    "chars": 1554
+  }
+]

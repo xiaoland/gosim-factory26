@@ -1,0 +1,183 @@
+
+toolResult bash False
+[text]
+comment #85 [visible]
+=== pr 8 threads ===
+comment #100 [visible]
+thread: 100 [open]
+[DUPLICATES: 33 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L17:C1]
+
+## S40:L18 2026-09-29T06:56:24.138Z message user
+[text]
+- pr:8 comment 100; read `comment view 100 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L18:C1]
+
+## S40:L19 2026-09-29T06:56:25.264Z message assistant
+[thinking]
+Now there's a new comment #100 on PR #8. Let me read it.
+[toolCall] bash call_00_y76WSdv5F70VE85f8oc50099
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 100 --thread 2>&1"}
+
+## S40:L20 2026-09-29T06:56:25.279Z message toolResult
+toolResult bash False
+[text]
+thread: 100 [open]
+【收口复核（Issue #3 负责人）：新正文与 CLOSED 状态一致，两处文档口径待对齐】@deepseek-5
+我按本轮 `git fetch` 后的事实复核了收口后的正文（#181）。关键声明均成立：base `develop` @ `e63efc6`、head `a23af5a`（`merged: e63efc6`）、「PR 侧无待办」；C 义务指向 `Issue #5 comment #96`，`PRE-C TRANSITION` 标记确实在 `e63efc6` 的 `e2e/workbook-lifecycle.spec.ts:378`（我本轮独立核实，非转述）。以下两处是**文档口径**问题，不涉及 head、也不改变已合入树的验收结论（#88）。
+1. **「交付范围」第 4 条仍用 pre-v1.3 的导出范围定义**：写的是 `used range = 非空包围盒（裁尾）`。当前权威是 **`max(非空包围盒, 静态足迹 minRows/minCols)`**（Issue #3 comment #81 §1 + #82；契约 v1.3 = Issue #1 thread 1 comment #51/#54/#57）。`frontend/src/lib/csvExport.ts` 的实际实现即 `rowSpan = Math.max(maxRow + 1, worksheet.minRows ?? 0)`。同页下方「契约 v1.3 / A-4 增量」第 6 条已写 max，但两条并存时，整合 PR 门禁按第 4 条取证据会漏掉足迹。建议把第 4 条那一句改为 `max(非空包围盒, 静态足迹)`（或在该句加一行指向第 6 条）。
+2. **权威列表漏 Issue 3 侧的 v1.3 增量**：第一段的「设计与判据权威 = Issue #3 comment #27 + #33（v1.1）+ #36（v1.2）」未含 **comment #81/#82**（A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹/空文件优先级，即本 Issue 内并入的 v1.3）。补上后后继读者可从 Issue 侧一次找齐联合判据。
+两处都是一行级修改。你在本轮收口里顺手改掉即可；若你已收工，回一句由我窄改正文并在本 thread 留更正链接。其余边界（A-5 宽松解析、足迹静态、导入无应用层尺寸上限、末条记录后不加终结换行）与 C/整合 PR 的转交锚点我复核无异议。
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L20:C1]
+
+## S40:L21 2026-09-29T06:56:28.443Z message assistant
+[thinking]
+deepseek-3 asks me to fix two documentation issues in PR #8 body:
+1. "交付范围" item 4: change `used range = 非空包围盒（裁尾）` → `max(非空包围盒, 静态足迹 minRows/minCols)` or add pointer to item 6.
+2. First paragraph's authority list: add Issue #3 comment #81/#82 (v1.3 incremental).
+These are one-line edits. I own PR #8 and my run is active, so I should do them. Let me view the exact current body text to craft precise edits.
+Let me get the current PR body raw. `braid pr view 8` shows the body. I need to edit with `braid pr edit 8 --body ...`. Let me check the CLI help to see how to edit body (file input?).
+Let me check `braid pr edit --help`.
+Also note: the PR body currently in the description includes the text. I need to construct the full new body. Careful with exact text, including the item 4 line.
+The item-4 line:
+"4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\n` 行尾；used range = 非空包围盒（裁尾），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；..."
+Hmm wait, item 4 in "交付范围" — let me re-read. Actually the delivered list item 4 says "used range = 非空包围盒（裁尾），范围内空单元格保留". Yes.
+And the first paragraph's 权威 line:
+"- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（...）"
+I need to add comment #81/#82.
+Let me get the exact body via a file so I can edit precisely. Let me see how braid pr view outputs body vs comments — maybe there's a `--body` flag or JSON output. Let me check `braid pr edit --help` and perhaps `braid pr view 8 --json`.
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L21:C1]
+[toolCall] bash call_00_iX3FudOKdy4hlnTDJxaG0715
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr edit --help 2>&1 | head -50"}
+[toolCall] bash call_01_VlOendSteBttYIWToztf3926
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr view 8 --help 2>&1 | head -30"}
+
+## S40:L22 2026-09-29T06:56:28.461Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L22:C1]
+
+## S40:L23 2026-09-29T06:56:28.461Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L23:C1]
+
+## S40:L24 2026-09-29T06:56:29.864Z message assistant
+[thinking]
+I can get the body via `--json body`. Let me write it to a file, edit it, and use `--body-file`.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L24:C1]
+[toolCall] bash call_00_lKkqwb1sRlloGuc5Ynu23193
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && mkdir -p /tmp/f26-pr8-body && braid pr view 8 --json body > /tmp/f26-pr8-body/pr8.json 2>&1; python3 -c \"\nimport json\nd=json.load(open('/tmp/f26-pr8-body/pr8.json'))\nb=d['body'] if isinstance(d,dict) else d\nopen('/tmp/f26-pr8-body/body.md','w').write(b)\nprint(len(b))\n\" && grep -n \"comment #36（v1.2）\\|非空包围盒（裁尾）\" /tmp/f26-pr8-body/body.md"}
+
+## S40:L25 2026-09-29T06:56:29.917Z message toolResult
+toolResult bash False
+[text]
+4695
+6:- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）
+14:4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\n` 行尾；used range = 非空包围盒（裁尾），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。
+
+## S40:L26 2026-09-29T06:56:33.622Z message assistant
+[thinking]
+Now make the two narrow edits.
+Edit 1 (line 6): add `+ comment #81/#82（v1.3 并入本 Issue 的判据）`.
+Let me write precisely:
+`**设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）+ comment #81/#82（v1.3：A-1 解析钉死 / A-2 单点 helper / A-3 接缝含错误值 / A-4 足迹与空文件优先级）**`
+Edit 2 (line 14): change `used range = 非空包围盒（裁尾）` → `used range = max(非空包围盒, 静态足迹 minRows/minCols)（裁剪尾部空行列；足迹语义见下方 v1.3 第 6 条）`.
+Careful, the phrase "used range = 非空包围盒（裁尾）" also appears in the v1.3 section? Let me check: item 6 of v1.3 section says "导出：used range = `max(非空包围盒, 静态足迹)`；..." so no conflict since the exact string differs. But my edit tool oldText must be unique. I'll use a larger unique context.
+Let me apply with python for precision (or the edit tool). The file is /tmp/f26-pr8-body/body.md. Use edit tool.
+Note: PR body line 5 earlier said "交付范围（本 PR 完成的验收标准）" items 1-5; item 4 is the export. Then item 5 is README. Also the "## 交付范围" item 4 also says "导出前后活动工作表 ... （导出不更新 updatedAt）". I'll only change the used-range clause.
+Also should I keep the parenthetical "（裁尾）"? The v1.3 semantics: bbox trims trailing empties, footprint is static. So "max(非空包围盒, 静态足迹 minRows/minCols)" accurately describes. Good.
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L26:C1]
+[toolCall] edit call_00_lOs50A4VDxpDbrMzlOzU1126
+{"edits": [{"newText": "- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）+ comment #81/#82（v1.3：A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹与空文件优先级）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；", "oldText": "- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；"}, {"newText": "used range = `max(非空包围盒, 静态足迹 minRows/minCols)`（非空包围盒裁去尾部空行列，足迹下限见下方「契约 v1.3 / A-4 增量」第 6 条），范围内空单元格保留；", "oldText": "used range = 非空包围盒（裁尾），范围内空单元格保留；"}], "path": "/tmp/f26-pr8-body/body.md"}
+
+## S40:L27 2026-09-29T06:56:33.632Z message toolResult
+toolResult edit False
+[text]
+Successfully replaced 2 block(s) in /tmp/f26-pr8-body/body.md.
+[details]
+{"diff": "    ...\n  2 \n  3 - 需求与讨论背景：**#3**（子 Issue A）；契约背景：**#1**（共享契约 comment #1 + v1.1 thread 1 comment #12 + v1.2 comment #15 + **契约 v1.3：comment #51/#54/#57，以 #57 为最新增量权威**）\n  4 - base `develop`（消费基线 `698afd2`，应用代码 `0a08fdd`）；head `braid/issue-3-a`；候选已 rebase 到含 PR #9 的 `develop` @ `15abbf6`（候选提交 `a23af5a`）；**已验收并合入 `develop` @ `e63efc6`（合并树与 `a23af5a` 逐字节一致，详见 PR #8 comment #90 / #93）**\n  5 - **PR 侧无待办（2026-09-29 收口）**；遗留义务已转交：C（#5，负责人 @deepseek-7）替换 A-3 接缝实现 `frontend/src/lib/cellDisplay.ts`（锚点见 Issue #5 comment #96），整合 PR 带「公式单元格导出 = 计算结果」门禁并翻转 `e2e/workbook-lifecycle.spec.ts` 的 `PRE-C TRANSITION` 断言\n- 6 - **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）\n+ 6 - **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）+ comment #81/#82（v1.3：A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹与空文件优先级）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）\n  7 - 本 PR 由 PR 负责人承接：实现计划、预演排障、实现与自检，然后把候选与结果交回 Issue #3；task packet 接续 `tasks/issue-3-a/packet.md`\n  8 \n  9 ## 交付范围（本 PR 完成的验收标准）\n 10 \n 11 1. **REQ-1-2-1 新建空白工作簿**：首页按钮 `New blank workbook` → 创建页（label `Workbook name` 预填 `Untitled spreadsheet` + 按钮 `Create`）→ 201 后编辑器打开：唯一工作表 Sheet1 且 `aria-selected=\"true\"`、A1 选中、6×26 全空；刷新与「回首页→重开」一致；失败显示错误、停留可重试、首页无任何新记录。\n 12 2. **REQ-1-2-2 重命名工作簿**：标题旁按钮 `Rename workbook` → 对话框（可访问名 `Rename workbook`）+ label `Workbook name` 预填 + `Save`；trim 后空名精确文案 `Workbook name cannot be empty`；成功标题与首页链接同步（`updatedAt` 更新）；失败错误可见、原名保留；重开显示最近保存名。\n 13 3. **REQ-1-3-1 导入 CSV**：首页按钮 `Import CSV` → 对话框 `Import CSV`（label `CSV file` + 按钮 `Confirm import`）；保持行列顺序、保留空字段、UTF-8 中英文数字、引号内逗号、成对转义引号、字段内换行；**仅**「以 `\"` 开头且无闭合引号」为非法 → 精确文案 `Invalid CSV file format. Import failed.`；成功后工作簿名 = 文件名去掉末尾 `.csv`（大小写不敏感），Sheet1 打开完整内容，首行是普通数据；刷新/重开一致；失败时首页无该名链接、无部分结果（服务端单事务）。\n-14 4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\\n` 行尾；used range = 非空包围盒（裁尾），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。\n+14 4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\\n` 行尾；used range = `max(非空包围盒, 静态足迹 minRows/minCols)`（非空包围盒裁去尾部空行列，足迹下限见下方「契约 v1.3 / A-4 增量」第 6 条），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。\n 15 \n 16 5. **README 窄改（comment #33 + #36）**：`README.md:80-83` 只把括号句「`row_count`/`col_count` 的唯一变更入口是结构操作」替换为三条路径（B 结构端点 / `PUT .../state` 快照自带尺寸 / 本 PR 的导入事务），同段「越界整批 400 不落库」「`state` 拒绝超出所报结构的单元格」原文保留、不放宽扩张语义；并在同 PR 的 API 表登记 `POST /api/workbooks/import`。\n 17 \n 18 **本 PR 不含（已留接缝，归后续）**：公式求值的实现（C 合入时替换 `frontend/src/lib/cellDisplay.ts` 的实现；本 PR 的 e2e 先断言\"公式导出原文\"并标注必须翻转为计算结果）；行列结构端点（B）；筛选/排序/验证（D/E）。导入结构尺寸按契约增量 A-2 取 `max(csv,6) × max(csv,26)`。\n    ...", "firstChangedLine": 6, "patch": "--- /tmp/f26-pr8-body/body.md\n+++ /tmp/f26-pr8-body/body.md\n@@ -2,17 +2,17 @@\n \n - 需求与讨论背景：**#3**（子 Issue A）；契约背景：**#1**（共享契约 comment #1 + v1.1 thread 1 comment #12 + v1.2 comment #15 + **契约 v1.3：comment #51/#54/#57，以 #57 为最新增量权威**）\n - base `develop`（消费基线 `698afd2`，应用代码 `0a08fdd`）；head `braid/issue-3-a`；候选已 rebase 到含 PR #9 的 `develop` @ `15abbf6`（候选提交 `a23af5a`）；**已验收并合入 `develop` @ `e63efc6`（合并树与 `a23af5a` 逐字节一致，详见 PR #8 comment #90 / #93）**\n - **PR 侧无待办（2026-09-29 收口）**；遗留义务已转交：C（#5，负责人 @deepseek-7）替换 A-3 接缝实现 `frontend/src/lib/cellDisplay.ts`（锚点见 Issue #5 comment #96），整合 PR 带「公式单元格导出 = 计算结果」门禁并翻转 `e2e/workbook-lifecycle.spec.ts` 的 `PRE-C TRANSITION` 断言\n-- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）\n+- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）+ comment #81/#82（v1.3：A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹与空文件优先级）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）\n - 本 PR 由 PR 负责人承接：实现计划、预演排障、实现与自检，然后把候选与结果交回 Issue #3；task packet 接续 `tasks/issue-3-a/packet.md`\n \n ## 交付范围（本 PR 完成的验收标准）\n \n 1. **REQ-1-2-1 新建空白工作簿**：首页按钮 `New blank workbook` → 创建页（label `Workbook name` 预填 `Untitled spreadsheet` + 按钮 `Create`）→ 201 后编辑器打开：唯一工作表 Sheet1 且 `aria-selected=\"true\"`、A1 选中、6×26 全空；刷新与「回首页→重开」一致；失败显示错误、停留可重试、首页无任何新记录。\n 2. **REQ-1-2-2 重命名工作簿**：标题旁按钮 `Rename workbook` → 对话框（可访问名 `Rename workbook`）+ label `Workbook name` 预填 + `Save`；trim 后空名精确文案 `Workbook name cannot be empty`；成功标题与首页链接同步（`updatedAt` 更新）；失败错误可见、原名保留；重开显示最近保存名。\n 3. **REQ-1-3-1 导入 CSV**：首页按钮 `Import CSV` → 对话框 `Import CSV`（label `CSV file` + 按钮 `Confirm import`）；保持行列顺序、保留空字段、UTF-8 中英文数字、引号内逗号、成对转义引号、字段内换行；**仅**「以 `\"` 开头且无闭合引号」为非法 → 精确文案 `Invalid CSV file format. Import failed.`；成功后工作簿名 = 文件名去掉末尾 `.csv`（大小写不敏感），Sheet1 打开完整内容，首行是普通数据；刷新/重开一致；失败时首页无该名链接、无部分结果（服务端单事务）。\n-4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\\n` 行尾；used range = 非空包围盒（裁尾），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。\n+4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\\n` 行尾；used range = `max(非空包围盒, 静态足迹 minRows/minCols)`（非空包围盒裁去尾部空行列，足迹下限见下方「契约 v1.3 / A-4 增量」第 6 条），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。\n \n 5. **README 窄改（comment #33 + #36）**：`README.md:80-83` 只把括号句「`row_count`/`col_count` 的唯一变更入口是结构操作」替换为三条路径（B 结构端点 / `PUT .../state` 快照自带尺寸 / 本 PR 的导入事务），同段「越界整批 400 不落库」「`state` 拒绝超出所报结构的单元格」原文保留、不放宽扩张语义；并在同 PR 的 API 表登记 `POST /api/workbooks/import`。\n \n **本 PR 不含（已留接缝，归后续）**：公式求值的实现（C 合入时替换 `frontend/src/lib/cellDisplay.ts` 的实现；本 PR 的 e2e 先断言\"公式导出原文\"并标注必须翻转为计算结果）；行列结构端点（B）；筛选/排序/验证（D/E）。导入结构尺寸按契约增量 A-2 取 `max(csv,6) × max(csv,26)`。\n"}
+
+## S40:L28 2026-09-29T06:56:34.825Z message assistant
+[toolCall] bash call_00_ET_AnHe8UEuRXI5pFjalKz64026
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && diff <(python3 -c \"import json;print(json.load(open('/tmp/f26-pr8-body/pr8.json'))['body'])\") /tmp/f26-pr8-body/body.md; echo \"--- diff exit $? ---\"; grep -n \"设计与判据权威\\|用于REQ\\|used range\" /tmp/f26-pr8-body/body.md | head"}
+
+## S40:L29 2026-09-29T06:56:34.878Z message toolResult
+toolResult bash False
+[text]
+6c6
+< - **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）
+> - **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）+ comment #81/#82（v1.3：A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹与空文件优先级）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）
+14c14
+< 4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\n` 行尾；used range = 非空包围盒（裁尾），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。
+> 4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\n` 行尾；used range = `max(非空包围盒, 静态足迹 minRows/minCols)`（非空包围盒裁去尾部空行列，足迹下限见下方「契约 v1.3 / A-4 增量」第 6 条），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。
+51d50
+< 
+--- diff exit 1 ---
+6:- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）+ comment #81/#82（v1.3：A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹与空文件优先级）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）
+14:4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\n` 行尾；used range = `max(非空包围盒, 静态足迹 minRows/minCols)`（非空包围盒裁去尾部空行列，足迹下限见下方「契约 v1.3 / A-4 增量」第 6 条），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。
+22:1. `pnpm -r test`（后端：CSV 解析全矩阵、import 端点成功/原子性/结构下界/文案；前端：转义、used range、接缝、组件文案）
+43:6. 导出：used range = `max(非空包围盒, 静态足迹)`；零字节文件仅当包围盒与足迹同时为空（comment #57 §4 足迹优先）。
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L29:C1]
+
+## S40:L30 2026-09-29T06:56:38.001Z message assistant
+[thinking]
+The diff shows line 51 removed (a trailing blank line) — the original body had a trailing newline making an extra blank line? Actually `51d50 < ` means the original had a blank line at 51 that's now missing. The `--json body` output may have had trailing newline. It's cosmetic. But to keep the body identical except my two edits, I should preserve the trailing blank line. Let me check the original end: `print(json.load(...)['body'])` adds a newline; then diff sees line 51 blank in original. The saved body.md lacks it because print added newline? Hmm.
+Actually the diff `51d50` shows the original file (from process substitution) has a line 51 which is empty, and body.md has 50 lines. The process substitution output is `print(body)` which appends a newline to body; if body ended with "\n" then print gives two trailing newlines → line 51 empty. So body ended with one "\n" and print added another. So body.md (written with `open().write(b)`) preserves the original ending exactly. So no real difference; the diff artifact is from print's extra newline. Good — body.md is byte-identical except my 2 edits.
+Let me verify: compare `json body` raw bytes to body.md. I'll do it in python to be sure.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L30:C1]
+[toolCall] bash call_00_TGeSWjupj8qyvw1SF4hx6305
+{"command": "cd /tmp/f26-pr8-body && python3 -c \"\nimport json\nb=json.load(open('pr8.json'))['body']\nn=open('body.md').read()\nprint('ends with newline:', b.endswith('\\n'), n.endswith('\\n'))\nprint('len orig',len(b),'len new',len(n))\n# count differences: show only changed lines\nimport difflib\nfor l in difflib.unified_diff(b.split('\\n'), n.split('\\n'), lineterm='', n=0):\n    print(repr(l))\n\""}
+
+## S40:L31 2026-09-29T06:56:38.444Z message toolResult
+toolResult bash False
+[text]
+ends with newline: True True
+len orig 4695 len new 4838
+'--- '
+'+++ '
+'@@ -6 +6 @@'
+'-- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）'
+'+- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）+ comment #81/#82（v1.3：A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹与空文件优先级）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）'
+'@@ -14 +14 @@'
+'-4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\\n` 行尾；used range = 非空包围盒（裁尾），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。'
+'+4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\\n` 行尾；used range = `max(非空包围盒, 静态足迹 minRows/minCols)`（非空包围盒裁去尾部空行列，足迹下限见下方「契约 v1.3 / A-4 增量」第 6 条），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。'
+
+## S40:L32 2026-09-29T06:56:40.050Z message assistant
+[thinking]
+Only the two intended lines changed. Now push the body edit.
+Also, should I update the PR title? No.
+Apply: `braid pr edit 8 --body-file /tmp/f26-pr8-body/body.md`.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L32:C1]
+[toolCall] bash call_00_Olb0U5Gy89W9DEdzALUW0835
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr edit 8 --body-file /tmp/f26-pr8-body/body.md 2>&1 | head -20"}
+
+## S40:L33 2026-09-29T06:56:40.135Z message toolResult
+toolResult bash False
+[text]
+- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）+ comment #81/#82（v1.3：A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹与空文件优先级）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）
+4. **REQ-1-3-2 导出当前工作表**：工具栏按钮 `Export CSV` → 浏览器下载，文件名以 `.csv` 结尾、UTF-8、无 BOM、`\n` 行尾；used range = `max(非空包围盒, 静态足迹 minRows/minCols)`（非空包围盒裁去尾部空行列，足迹下限见下方「契约 v1.3 / A-4 增量」第 6 条），范围内空单元格保留；逗号/引号/换行按 RFC4180 转义；普通单元格导出显示值；导出前后活动工作表、筛选视图、网格值、公式栏内容不变且刷新后一致（导出不更新 `updatedAt`）。
+[DUPLICATES: 18 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L33:C1]
+
+## S40:L34 2026-09-29T06:56:41.401Z message assistant
+[thinking]
+Body updated. Now reply to comment #100 in thread 100 confirming both edits with the new wording, and note head unchanged. Use `braid comment reply` or `braid pr comment`? Let me check how to reply. There's `--reply-to` flag on comment creation. Let me check `braid comment --help` / `braid pr comment --help`.
+Guidance: "相关回复用 `--reply-to` 留在同一 thread". So reply to #100.
+Let me check the command.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L34:C1]
+[toolCall] bash call_00_B6c70hZIlFjxO2h9lYfZ1202
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr comment --help 2>&1 | head -30"}
+
+## S40:L35 2026-09-29T06:56:41.412Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L35:C1]
+
+## S40:L36 2026-09-29T06:56:41.413Z message user
+[text]
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S40:L36:C1]
+
+## S40:L37 2026-09-29T06:56:47.466Z message assistant
+[thinking]
+The body edit was applied. Now I should reply to comment #100 to confirm the two edits (per collaboration guidance: reply with --reply-to in same thread). Let me post the reply.
+Write the reply body to a file.
+Content: confirm both edits applied to PR #8 body, head unchanged (a23af5a), merged tree unchanged (e63efc6), no code/evidence changes; state that thread can be resolved by deepseek-3 or I resolve it? The comment #100 is on PR #8 thread 100, authored by deepseek-3. Since I act on it and the matter is closed, I could resolve the thread. Guidance: "问题解决后先保留仍需使用的结论和证据入口，再用 comment resolve ID 折叠已结束讨论". The thread is a doc-alignment request; after I fulfill it, it's ended. But deepseek-3 opened it and said "若你已收工，回一句由我窄改正文". Since I did it, I reply and can resolve the thread. But resolving someone else's thread... deepseek-5 resolved its own PR-side threads earlier. It's acceptable to resolve a thread when the matter is settled, with a note. But maybe 

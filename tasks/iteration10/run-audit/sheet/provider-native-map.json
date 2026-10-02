@@ -1,0 +1,2146 @@
+[
+  {
+    "db_session_id": "01a0e5f3-7fb8-7132-b24a-eb580705bf56",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e5f3-3b57-7d32-b2f7-3014d624bad1/2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl",
+    "native_sid": "01a0e5f3-7f6c-7001-b229-04dc2a2d2d57",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T02:58:55.543614677Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e5f7-6c2c-7ca2-88b2-c282e38534fe",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e5f7-39bb-7712-8f13-351fa805a7ce/2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl",
+    "native_sid": "01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef",
+    "lifecycle": "retired",
+    "started_at": "2026-09-28T03:03:12.684059357Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e5f7-bba9-7ab1-9301-a44813221d88",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl",
+    "native_sid": "01a0e5f7-90d8-77e2-964c-86b090b0a7a8",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T03:03:33.032818811Z",
+    "resume_count": 1
+  },
+  {
+    "db_session_id": "01a0e5f7-e635-7761-81ef-f781f7a0bbbe",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e5f7-d021-75f1-9882-171dca66a678/2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl",
+    "native_sid": "01a0e5f7-dd5e-7721-8d83-c01430f9872e",
+    "lifecycle": "retired",
+    "started_at": "2026-09-28T03:03:43.92440031Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e5f8-6d7e-7293-a8a0-0571c8008008",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e5f8-568e-7021-8611-3720c8a3b170/2026-09-28T03-04-18-345Z_01a0e5f8-6ca9-7214-ac46-4c97f93b633f.jsonl",
+    "native_sid": "01a0e5f8-6ca9-7214-ac46-4c97f93b633f",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T03:04:18.557774168Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e5f8-9ff3-7510-bc4d-2a333103343a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e5f8-89f5-7b72-be0f-86f933413e0a/2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl",
+    "native_sid": "01a0e5f8-94d0-72dc-b764-f0d1b81360e7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T03:04:31.474945281Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e5f9-0ae5-7113-9aec-d213622b475c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl",
+    "native_sid": "01a0e5f9-0a0c-737b-8846-17b088c51917",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T03:04:58.853085097Z",
+    "resume_count": 1
+  },
+  {
+    "db_session_id": "01a0e611-1544-7963-a2c7-0d1c636df83b",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e611-0688-7632-b098-a2f2eaf26a96/2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl",
+    "native_sid": "01a0e611-14ff-7029-a14c-b0d3d87eb0fe",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T03:31:14.371966461Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e62a-4c6f-7261-a0fa-1406a77d2b3d",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e62a-2e40-7dc1-9c15-c41a7ebc08b4/2026-09-28T03-58-46-831Z_01a0e62a-4c2e-76db-abaf-429d94fd33ec.jsonl",
+    "native_sid": null,
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T03:58:46.894877331Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e62a-50c7-7d02-a691-ac0541f91fd3",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e62a-4bc3-76b1-a005-754004ab808b/2026-09-28T03-58-47-541Z_01a0e62a-4ef5-7634-87a2-5f2a71e49635.jsonl",
+    "native_sid": null,
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T03:58:48.006806129Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e64a-1357-7393-bfba-8279d48b9944",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e64a-0691-7153-aaf3-78ded31d5ca0/2026-09-28T04-33-29-332Z_01a0e64a-12f4-715b-b24a-19440745a75f.jsonl",
+    "native_sid": null,
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T04:33:29.430520242Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e64a-1b08-7661-9c2a-269511148d9c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e64a-10d0-7dd2-aab6-4b98817ee559/2026-09-28T04-33-30-020Z_01a0e64a-15a4-77d5-b817-26515ae31e97.jsonl",
+    "native_sid": null,
+    "lifecycle": "retired",
+    "started_at": "2026-09-28T04:33:31.399583816Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e659-2875-7be3-ad1d-5fbc7fbe4fe3",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e659-1e87-7be3-829c-11df8721e867/2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl",
+    "native_sid": "01a0e659-2816-75aa-8769-f308e5e51b60",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T04:49:57.876294838Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e659-2e42-7c30-b567-19007b24e545",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e659-27f9-77d2-b1d4-814040a34e90/2026-09-28T04-49-59-062Z_01a0e659-2d16-7016-8b7c-e2779164383d.jsonl",
+    "native_sid": "01a0e659-2d16-7016-8b7c-e2779164383d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T04:49:59.361461907Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e659-3de0-7441-b31b-959bb6117123",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e659-39ae-7aa1-b774-18f80746b48b/2026-09-28T04-50-03-261Z_01a0e659-3d7d-779d-b472-34fbf7ea2311.jsonl",
+    "native_sid": "01a0e659-3d7d-779d-b472-34fbf7ea2311",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T04:50:03.360098198Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e659-46c2-76e1-9a5b-de66c4c294bf",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e659-3da0-7270-840c-858bd547264d/2026-09-28T04-50-04-255Z_01a0e659-415f-7290-a4de-4a3d28c6b806.jsonl",
+    "native_sid": "01a0e659-415f-7290-a4de-4a3d28c6b806",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T04:50:05.633674454Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e659-4ca7-7692-add2-e2782c2a9fe3",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e659-4679-7f62-bb89-f83c6240df9e/2026-09-28T04-50-06-734Z_01a0e659-4b0e-70ee-9264-6926aa018e11.jsonl",
+    "native_sid": "01a0e659-4b0e-70ee-9264-6926aa018e11",
+    "lifecycle": "retired",
+    "started_at": "2026-09-28T04:50:07.143026309Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e659-53a2-7443-881a-a15904e26206",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e659-4c43-7971-be11-b1e001b295c2/2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl",
+    "native_sid": "01a0e659-5105-72d9-9a8b-8f20baa5b4e4",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T04:50:08.929469184Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e659-630e-7b23-bd2e-6e14a44c3647",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e659-5b67-7da0-b44a-6ebd2ecf1667/2026-09-28T04-50-12-846Z_01a0e659-62ee-771f-b933-245d232da830.jsonl",
+    "native_sid": "01a0e659-62ee-771f-b933-245d232da830",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T04:50:12.878030248Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e66a-4b3b-7033-8756-be66e3c2c1d4",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e669-e401-7512-a2f9-db12d4658056/2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl",
+    "native_sid": "01a0e66a-4add-7442-93fa-0bf891944427",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:08:40.890842817Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e680-ea6e-7cb2-8ad2-1071c7b91118",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e680-db77-7811-8d38-a3d87a529214/2026-09-28T05-33-22-458Z_01a0e680-e69a-72d4-9388-0b6b053d16f6.jsonl",
+    "native_sid": "01a0e680-e69a-72d4-9388-0b6b053d16f6",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:33:23.437859833Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e680-ed00-74b3-be9d-11b1783ca222",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e680-e57e-74c0-9cbd-cc30750ae69b/2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl",
+    "native_sid": "01a0e680-ea67-758c-aaef-a94c0aef7065",
+    "lifecycle": "retired",
+    "started_at": "2026-09-28T05:33:24.095564773Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e680-f45d-75d3-be2d-2c30371c92e7",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e680-ea65-74c0-aa9c-96ac49c3f4ed/2026-09-28T05-33-24-089Z_01a0e680-ecf9-7132-b722-cc1d86a774f3.jsonl",
+    "native_sid": "01a0e680-ecf9-7132-b722-cc1d86a774f3",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:33:25.980413027Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e680-f913-7b11-ac67-04094e6b7146",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e680-f458-7c31-bb27-c7de56897ba3/2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl",
+    "native_sid": "01a0e680-f727-737a-a04f-1553c698ea7e",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:33:27.187118832Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e680-fc2d-7012-9ab1-dcfc602c17e9",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e680-f90f-75c3-b191-b7256137233f/2026-09-28T05-33-27-831Z_01a0e680-fb97-768b-988d-21acddc3c468.jsonl",
+    "native_sid": "01a0e680-fb97-768b-988d-21acddc3c468",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:33:27.980281975Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e681-09b6-75f2-85af-602cb4f72def",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e681-053c-7af0-b725-f854097574a5/2026-09-28T05-33-31-043Z_01a0e681-0823-70a7-b2c0-f9b5734222fc.jsonl",
+    "native_sid": "01a0e681-0823-70a7-b2c0-f9b5734222fc",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:33:31.445976955Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e681-0cfb-7dc1-9a4c-c51e9be9ddc5",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e681-0999-7e43-9491-d7c2e177c3c9/2026-09-28T05-33-32-149Z_01a0e681-0c75-75e1-bf54-e5412ecbbfc5.jsonl",
+    "native_sid": "01a0e681-0c75-75e1-bf54-e5412ecbbfc5",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:33:32.282683214Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e681-1053-7671-81b3-266575a69c31",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e681-0ce6-7be1-af40-f285ae1258c9/2026-09-28T05-33-33-080Z_01a0e681-1018-74f0-9518-6e284b4d77c5.jsonl",
+    "native_sid": "01a0e681-1018-74f0-9518-6e284b4d77c5",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:33:33.138652747Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e68a-432a-7131-bbe9-4165214e7ced",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e689-f374-7771-96ab-43a9a72cb573/2026-09-28T05-43-33-723Z_01a0e68a-3a5b-7209-906f-c1c240bd43ae.jsonl",
+    "native_sid": "01a0e68a-3a5b-7209-906f-c1c240bd43ae",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:43:35.977705221Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e68d-6efb-7243-9d69-c8d9af434041",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e68c-d717-70f3-bb27-3b01ed3a08b9/2026-09-28T05-46-54-199Z_01a0e68d-4977-7583-80f2-b52c20b382f5.jsonl",
+    "native_sid": "01a0e68d-4977-7583-80f2-b52c20b382f5",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:47:03.801830124Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e692-2aa8-7be1-af34-f9cd8f1f6060",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e692-1f06-7870-92ce-77f70230b5e4/2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl",
+    "native_sid": "01a0e692-2a33-7325-835d-7434fc37fd94",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:52:13.991282079Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e694-bcdc-79e3-a048-da90a0ce9a0f",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e694-9de1-7171-af36-b440875b35b1/2026-09-28T05-55-01-779Z_01a0e694-ba13-7025-921c-8eb74e0ec254.jsonl",
+    "native_sid": "01a0e694-ba13-7025-921c-8eb74e0ec254",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:55:02.491745269Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e695-5649-7230-af6f-ab72b576dc21",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e695-49de-7da0-85a0-01ea502d7e04/2026-09-28T05-55-41-560Z_01a0e695-5577-7328-8520-b3f9aa5b2154.jsonl",
+    "native_sid": "01a0e695-5577-7328-8520-b3f9aa5b2154",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:55:41.768399875Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e698-9496-7790-925f-963f55421306",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e698-372f-7eb2-9f9e-8316c1a8dc00/2026-09-28T05-59-10-157Z_01a0e698-844d-73ce-9fc9-339b12558890.jsonl",
+    "native_sid": "01a0e698-844d-73ce-9fc9-339b12558890",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:59:14.325322608Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e698-c5a2-7dc0-a6e3-61d27788085d",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e698-bbb8-7f11-ba6c-ab51060aa16f/2026-09-28T05-59-26-760Z_01a0e698-c528-724b-9c0a-4ba13f6990d9.jsonl",
+    "native_sid": "01a0e698-c528-724b-9c0a-4ba13f6990d9",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:59:26.88127126Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e699-0ef9-7740-bda7-6bf9bd3c8e2f",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e699-066e-7e40-9ee1-8910c7eec544/2026-09-28T05-59-44-557Z_01a0e699-0aad-72bf-a9be-cc4d04046a6a.jsonl",
+    "native_sid": "01a0e699-0aad-72bf-a9be-cc4d04046a6a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T05:59:45.657149502Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6a5-d3d3-7cb1-a54a-e0686d5b0142",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6a5-5670-7302-91c4-048cc611f9b7/2026-09-28T06-13-37-991Z_01a0e6a5-c247-7576-99e6-c7f4f3a3b165.jsonl",
+    "native_sid": "01a0e6a5-c247-7576-99e6-c7f4f3a3b165",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:13:42.482705611Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6a7-b2e8-7243-83ff-a36d7466dea1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6a7-4315-7f90-ac55-b00695a37ffe/2026-09-28T06-15-44-795Z_01a0e6a7-b19b-74c6-8bf5-862d72dfff28.jsonl",
+    "native_sid": "01a0e6a7-b19b-74c6-8bf5-862d72dfff28",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:15:45.128069438Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6b0-4ea0-7a43-b97b-03af8e61f0a0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6b0-1080-7912-9ee5-9b8ad368ebd8/2026-09-28T06-25-08-849Z_01a0e6b0-4cf0-7363-9afe-6d2fb4591be6.jsonl",
+    "native_sid": "01a0e6b0-4cf0-7363-9afe-6d2fb4591be6",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:25:09.279943135Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6b0-f423-7f20-a744-925059515181",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6b0-b733-7c00-abbd-df839c8a5ba2/2026-09-28T06-25-50-765Z_01a0e6b0-f0ac-7349-a063-311ab10cf017.jsonl",
+    "native_sid": "01a0e6b0-f0ac-7349-a063-311ab10cf017",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:25:51.650993318Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6c2-035e-7ab0-8f8b-59fe497b2e82",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6c1-fbc3-79e3-b290-5b4dd5fb5a6b/2026-09-28T06-44-29-555Z_01a0e6c2-02f3-7691-b2eb-6e9ba9b726f0.jsonl",
+    "native_sid": "01a0e6c2-02f3-7691-b2eb-6e9ba9b726f0",
+    "lifecycle": "retired",
+    "started_at": "2026-09-28T06:44:29.661471533Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6c2-04d0-7f83-b4e6-fd319161e923",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6c1-f5bf-7760-abee-b5b1e9d5d53d/2026-09-28T06-44-29-665Z_01a0e6c2-0361-74a9-b028-1555086e918d.jsonl",
+    "native_sid": "01a0e6c2-0361-74a9-b028-1555086e918d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:44:30.031455947Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6c2-0c9a-7cc1-b3bb-b308f01296df",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6c1-f00f-7cc1-85dd-0efa295e41de/2026-09-28T06-44-29-665Z_01a0e6c2-0361-7254-b391-9b84cfe2a710.jsonl",
+    "native_sid": "01a0e6c2-0361-7254-b391-9b84cfe2a710",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:44:32.025815765Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6c2-163d-7530-b150-a20275c6cf71",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6c2-127a-7bc0-98e0-979de46bf423/2026-09-28T06-44-34-223Z_01a0e6c2-152f-7691-a598-73912de4f57e.jsonl",
+    "native_sid": "01a0e6c2-152f-7691-a598-73912de4f57e",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:44:34.492566967Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6c2-18fd-77b2-a250-5290866197b0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6c2-152a-7711-a967-d8b7dfc448c9/2026-09-28T06-44-35-068Z_01a0e6c2-187b-710b-bf5b-71187eb36207.jsonl",
+    "native_sid": "01a0e6c2-187b-710b-bf5b-71187eb36207",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:44:35.196529254Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6c2-1c3c-7cd1-9abd-ae0d115922e7",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6c2-18fd-77b2-a250-52c12d3cb0fe/2026-09-28T06-44-35-930Z_01a0e6c2-1bda-721d-b717-114c1eb91464.jsonl",
+    "native_sid": "01a0e6c2-1bda-721d-b717-114c1eb91464",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:44:36.028280824Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6c2-1dee-7aa3-aa51-0640358a8576",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6c2-1636-7760-bd2f-6df8485c542f/2026-09-28T06-44-35-461Z_01a0e6c2-1a05-7096-a0f5-13f81db8fbf2.jsonl",
+    "native_sid": "01a0e6c2-1a05-7096-a0f5-13f81db8fbf2",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:44:36.461495868Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6c2-26ba-7553-a85f-91af0423e44e",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6c2-235c-7242-830f-c1a5f72e8d97/2026-09-28T06-44-38-677Z_01a0e6c2-2695-7043-b45f-3f741f770ccc.jsonl",
+    "native_sid": "01a0e6c2-2695-7043-b45f-3f741f770ccc",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:44:38.714148909Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6c2-3181-70f3-ac81-ad39b39d1379",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6c2-2d43-7ab0-b623-bc635c6642ba/2026-09-28T06-44-41-388Z_01a0e6c2-312c-736d-9ed2-308d3cbdcd96.jsonl",
+    "native_sid": "01a0e6c2-312c-736d-9ed2-308d3cbdcd96",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T06:44:41.472976533Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6cc-b441-7f83-9e7e-1ffe52054300",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6cc-6103-7a73-abb9-8a7bb9c9e88a/2026-09-28T06-56-10-139Z_01a0e6cc-b39b-7330-96af-7d9d1f0f8331.jsonl",
+    "native_sid": "01a0e6cc-b39b-7330-96af-7d9d1f0f8331",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:56:10.305328431Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6cd-d910-7e33-bd1d-1004ad8f9150",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6cd-a218-7212-93f0-077948b5337e/2026-09-28T06-57-24-821Z_01a0e6cd-d755-761c-b36c-7cf4a6b704df.jsonl",
+    "native_sid": "01a0e6cd-d755-761c-b36c-7cf4a6b704df",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:57:25.263896703Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6ce-17b0-7ba3-b48c-9278b48cfae9",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6ce-0552-7910-a08a-2dbe19f04f15/2026-09-28T06-57-41-110Z_01a0e6ce-16f6-76e0-b495-b64badbdabf7.jsonl",
+    "native_sid": "01a0e6ce-16f6-76e0-b495-b64badbdabf7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:57:41.296196655Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6cf-4b1c-72e2-8faa-d20e9d723f37",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6cf-3fc3-7ad3-8bde-6cd66c396b27/2026-09-28T06-58-59-894Z_01a0e6cf-4ab6-739b-af3b-ee0c81f274b3.jsonl",
+    "native_sid": "01a0e6cf-4ab6-739b-af3b-ee0c81f274b3",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:58:59.995651463Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6cf-8c06-7d41-bd80-ffb730a2a6cd",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6cf-84f0-7ed3-bb81-b8793671eb41/2026-09-28T06-59-16-435Z_01a0e6cf-8b53-700d-a754-eb1561aeb914.jsonl",
+    "native_sid": "01a0e6cf-8b53-700d-a754-eb1561aeb914",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T06:59:16.613822246Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6d0-846e-7bf1-bd93-bdf2fdfaf5c5",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6d0-7844-78e3-bc0e-260c20db5ed3/2026-09-28T07-00-20-094Z_01a0e6d0-83fe-74c2-91f8-7e3ec07b3e54.jsonl",
+    "native_sid": "01a0e6d0-83fe-74c2-91f8-7e3ec07b3e54",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:00:20.205532397Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6d3-351e-7483-9b1e-72f5ab690621",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6d2-dd93-78c1-b5e7-3fb20609c043/2026-09-28T07-03-16-385Z_01a0e6d3-34a1-76a0-a5cc-79bdae3ab40a.jsonl",
+    "native_sid": "01a0e6d3-34a1-76a0-a5cc-79bdae3ab40a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:03:16.509726389Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6d3-3ec3-7e00-b9af-d5d578fecb94",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6d2-f550-76b2-b8ec-50ab0fc9d5aa/2026-09-28T07-03-16-386Z_01a0e6d3-34a2-7761-9783-4cd661b3da79.jsonl",
+    "native_sid": "01a0e6d3-34a2-7761-9783-4cd661b3da79",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:03:18.978871525Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6d4-5ac4-77a2-8786-0c06dad870f7",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6d4-1725-71a2-a421-71eb9cf1409e/2026-09-28T07-04-31-430Z_01a0e6d4-59c6-722e-9f5c-45a296e259d6.jsonl",
+    "native_sid": "01a0e6d4-59c6-722e-9f5c-45a296e259d6",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:04:31.683623431Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6dc-5d15-70f3-8f80-c2b6d96a6371",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6db-e344-7970-812e-de5ce3d06b28/2026-09-28T07-13-14-849Z_01a0e6dc-5660-74dd-b134-25ff199d1289.jsonl",
+    "native_sid": "01a0e6dc-5660-74dd-b134-25ff199d1289",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:13:16.562852648Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6dd-6e85-7ae3-99b6-09d69f2de9f1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6dc-f49d-7a90-9fc2-ed0d8520e19b/2026-09-28T07-14-23-391Z_01a0e6dd-621f-73af-84cc-486819b3a903.jsonl",
+    "native_sid": "01a0e6dd-621f-73af-84cc-486819b3a903",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:14:26.565038827Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6de-b5d5-7d61-a7c6-d1c7e6999aeb",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6de-a4fd-78d0-bc59-4cf890d12592/2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl",
+    "native_sid": "01a0e6de-af25-74f5-86e7-3810e07f1044",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:15:50.356843549Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6de-f64c-7bf0-b152-a423ef715b44",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6de-e1c9-72d2-aa7e-2789cae029f7/2026-09-28T07-16-06-265Z_01a0e6de-f3f9-72f0-9f48-29c70c79562f.jsonl",
+    "native_sid": "01a0e6de-f3f9-72f0-9f48-29c70c79562f",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T07:16:06.859804151Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6e8-4d1a-7583-af35-20475db75651",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6e8-027f-7861-b524-a2b4fd906dc5/2026-09-28T07-26-18-406Z_01a0e6e8-4b25-7261-bf2d-b3c138da259f.jsonl",
+    "native_sid": "01a0e6e8-4b25-7261-bf2d-b3c138da259f",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:26:18.905211221Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6ee-6367-7f32-b81a-135c2ee19e0b",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6ee-0327-7222-abd2-06ee0f42f5db/2026-09-28T07-32-57-580Z_01a0e6ee-626c-75de-b585-5d546b014fe0.jsonl",
+    "native_sid": "01a0e6ee-626c-75de-b585-5d546b014fe0",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:32:57.830144852Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fa-0ea9-73e0-86d7-dd4ad3405934",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6f9-efc7-7b40-b305-e40fc4942a43/2026-09-28T07-45-42-533Z_01a0e6fa-0e85-7679-871f-47acf286736d.jsonl",
+    "native_sid": "01a0e6fa-0e85-7679-871f-47acf286736d",
+    "lifecycle": "blocked",
+    "started_at": "2026-09-28T07:45:42.569269582Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fa-a9c9-7fd2-a63f-30607e1ece0e",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6fa-a2c6-7473-bc19-2c7460e68f09/2026-09-28T07-46-22-237Z_01a0e6fa-a99d-7298-9e0f-60ab0bc7244a.jsonl",
+    "native_sid": "01a0e6fa-a99d-7298-9e0f-60ab0bc7244a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:46:22.280517089Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fb-4fe9-7701-9aa9-0bee17330421",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6fb-4945-7783-a961-08cf5d3ce175/2026-09-28T07-47-04-739Z_01a0e6fb-4fa3-72cd-a84c-c4519c9fcf15.jsonl",
+    "native_sid": "01a0e6fb-4fa3-72cd-a84c-c4519c9fcf15",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:47:04.808742731Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fb-ef5e-7cc1-88a5-49e185230430",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6fb-da45-70c0-9211-6ce46f608239/2026-09-28T07-47-42-943Z_01a0e6fb-e4df-7644-8bc1-d2f16393b146.jsonl",
+    "native_sid": "01a0e6fb-e4df-7644-8bc1-d2f16393b146",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:47:45.629786735Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fb-fddc-7110-9661-170f2ae71af0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6fb-f453-79a0-a3cb-2fe83b735afb/2026-09-28T07-47-49-147Z_01a0e6fb-fd1b-7770-8a54-0e79da05c27c.jsonl",
+    "native_sid": "01a0e6fb-fd1b-7770-8a54-0e79da05c27c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:47:49.339481601Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fc-a83b-7400-b3fc-61608e28cfc1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6fc-9ccb-7cd0-b922-457593ebc7cc/2026-09-28T07-48-32-536Z_01a0e6fc-a698-7397-b40d-29332082e92c.jsonl",
+    "native_sid": "01a0e6fc-a698-7397-b40d-29332082e92c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:48:32.954460048Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fd-56ce-7c71-ae2d-18face177d69",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6fd-45eb-70d0-8ec4-5b4f00ea5adf/2026-09-28T07-49-17-238Z_01a0e6fd-5536-745b-ab72-f45d69513d3a.jsonl",
+    "native_sid": "01a0e6fd-5536-745b-ab72-f45d69513d3a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:49:17.645283443Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fe-0314-7ef3-8509-3ad7f7d72eab",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6fd-f7af-7ea3-8f95-0222d5c7c6e7/2026-09-28T07-50-01-426Z_01a0e6fe-01d2-72fc-8a54-d398a281f958.jsonl",
+    "native_sid": "01a0e6fe-01d2-72fc-8a54-d398a281f958",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:50:01.747597508Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fe-7f04-7bc2-8dac-78a06926fbe0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e6fe-6f1e-7871-a165-c291e2aa4658/2026-09-28T07-50-33-333Z_01a0e6fe-7e75-758c-be7b-ddea3cc563b1.jsonl",
+    "native_sid": "01a0e6fe-7e75-758c-be7b-ddea3cc563b1",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:50:33.475481357Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6fe-a71a-7cb1-961e-d2bb5952cf78",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6fe-99d0-71d2-a1c0-5396fee0747d/2026-09-28T07-50-43-161Z_01a0e6fe-a4d9-7601-ad75-c774b9eb73e0.jsonl",
+    "native_sid": "01a0e6fe-a4d9-7601-ad75-c774b9eb73e0",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:50:43.737748789Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e6ff-45a3-70f0-91cc-aa7a6349e6c8",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6ff-3bdb-78d0-9aaf-376090b27961/2026-09-28T07-51-24-033Z_01a0e6ff-4481-771f-a45e-dc47553f9b15.jsonl",
+    "native_sid": "01a0e6ff-4481-771f-a45e-dc47553f9b15",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:51:24.322144118Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e700-0845-7841-806b-0df7b5b9a117",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e6ff-dc7d-7a20-bc00-90094f3a4442/2026-09-28T07-52-13-969Z_01a0e700-0791-712e-83ba-ed06b2e30d8d.jsonl",
+    "native_sid": "01a0e700-0791-712e-83ba-ed06b2e30d8d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:52:14.149156018Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e700-ac3f-7912-8b65-ddd89d727ed7",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e700-a143-7263-bd49-c27d1016418c/2026-09-28T07-52-55-831Z_01a0e700-ab17-763b-bcff-6ee4e63ebd26.jsonl",
+    "native_sid": "01a0e700-ab17-763b-bcff-6ee4e63ebd26",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:52:56.126574892Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e701-4d7b-78f2-b07f-0894400428af",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e701-41c1-7361-9543-0dda9ec845ec/2026-09-28T07-53-37-025Z_01a0e701-4c01-723c-acf5-f281e00f2ca8.jsonl",
+    "native_sid": "01a0e701-4c01-723c-acf5-f281e00f2ca8",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:53:37.332674607Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e702-38bd-7972-a13b-22152748ee96",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e701-f5d6-7663-91a7-53a69991853d/2026-09-28T07-54-37-400Z_01a0e702-37d8-71cf-996d-e02d70e671cb.jsonl",
+    "native_sid": "01a0e702-37d8-71cf-996d-e02d70e671cb",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:54:37.629046979Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e702-edf1-7ee1-996d-e9ceec8c90c5",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e702-de46-7221-a293-5d711ae15a0d/2026-09-28T07-55-23-816Z_01a0e702-ed28-72aa-a0f4-c2e656d5604b.jsonl",
+    "native_sid": "01a0e702-ed28-72aa-a0f4-c2e656d5604b",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:55:24.017032381Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e703-919c-7af0-b276-1cc7fa9ce778",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e703-86a0-7b71-8d69-0d4646302295/2026-09-28T07-56-05-718Z_01a0e703-90d6-77b2-a724-4f631c7eb8d7.jsonl",
+    "native_sid": "01a0e703-90d6-77b2-a724-4f631c7eb8d7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:56:05.915439279Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e704-3473-7750-b29d-98e3be77efba",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e704-2b9e-7433-a34c-e3424c946c00/2026-09-28T07-56-47-501Z_01a0e704-340d-766c-8336-1dc826301898.jsonl",
+    "native_sid": "01a0e704-340d-766c-8336-1dc826301898",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:56:47.602041953Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e705-0a19-7bf2-ad56-501e8adac059",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e704-d9c0-7391-998a-0ed6fde8d206/2026-09-28T07-57-42-162Z_01a0e705-0992-74ad-8a29-df55749e40d4.jsonl",
+    "native_sid": "01a0e705-0992-74ad-8a29-df55749e40d4",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:57:42.296710843Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e705-d1ac-7d80-a97b-a9c6fe291845",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e705-c2d9-7133-b76d-e744221cf2a9/2026-09-28T07-58-33-196Z_01a0e705-d0ec-710b-982c-8ccd98831879.jsonl",
+    "native_sid": "01a0e705-d0ec-710b-982c-8ccd98831879",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T07:58:33.38766605Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e707-c6f0-7d51-a146-0fa51291c097",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e707-c0d3-7490-874c-5b40252b33b5/2026-09-28T08-00-41-589Z_01a0e707-c675-7169-8b51-33dea50b017b.jsonl",
+    "native_sid": "01a0e707-c675-7169-8b51-33dea50b017b",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:00:41.711677898Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e708-7c24-7472-920f-2dd32bb222e0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e708-74d0-7713-a672-6b03ad638634/2026-09-28T08-01-27-979Z_01a0e708-7bab-745f-b8c5-879fcf31dc01.jsonl",
+    "native_sid": "01a0e708-7bab-745f-b8c5-879fcf31dc01",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:01:28.099838337Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e708-deb1-7a10-907c-a31e00e2e9c6",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e708-d2f5-7ee2-9a9e-d2a55f09f585/2026-09-28T08-01-52-698Z_01a0e708-dc3a-71cf-93fd-039710225ced.jsonl",
+    "native_sid": "01a0e708-dc3a-71cf-93fd-039710225ced",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:01:53.328926468Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e70a-58df-7e32-90e3-12c93d4bf4ff",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e70a-5561-7451-b4ea-3449f8ae5efb/2026-09-28T08-03-30-097Z_01a0e70a-58b1-76c2-97b4-f983d2cc0aa9.jsonl",
+    "native_sid": "01a0e70a-58b1-76c2-97b4-f983d2cc0aa9",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:03:30.143108842Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e70a-6b30-7030-ad27-537b7fb47f53",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e70a-672a-7083-b9eb-c159cddc03a3/2026-09-28T08-03-34-455Z_01a0e70a-69b7-74ce-8892-7b097697180f.jsonl",
+    "native_sid": "01a0e70a-69b7-74ce-8892-7b097697180f",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:03:34.832159683Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e70c-3de5-7dd1-903b-ef490c93cd22",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e70c-3ae4-7721-94fe-04e6efe3501a/2026-09-28T08-05-34-267Z_01a0e70c-3dbb-71a3-a8cc-22bd7c24940d.jsonl",
+    "native_sid": "01a0e70c-3dbb-71a3-a8cc-22bd7c24940d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:05:34.309394395Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e70c-f4bc-7d50-94d3-7fb93f9cf24e",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e70c-f1dd-71d3-bb2f-8f3f83ddcd14/2026-09-28T08-06-21-081Z_01a0e70c-f499-7058-b297-0eddd56f8fb0.jsonl",
+    "native_sid": "01a0e70c-f499-7058-b297-0eddd56f8fb0",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:06:21.115756359Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e70d-1786-7c42-a3a9-45feff5e161c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e70d-141b-7aa2-96d8-a7f939445ce1/2026-09-28T08-06-29-815Z_01a0e70d-16b7-73e7-aad9-91e22b95682e.jsonl",
+    "native_sid": "01a0e70d-16b7-73e7-aad9-91e22b95682e",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:06:30.021820529Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e711-0dd4-7b71-8399-5c03a8face20",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e711-0323-7033-bcf8-ec3f5f649eda/2026-09-28T08-10-49-575Z_01a0e711-0d66-734b-984b-97205aaebcab.jsonl",
+    "native_sid": "01a0e711-0d66-734b-984b-97205aaebcab",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:10:49.684336802Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e712-404d-7572-a1ab-f6a8b2a94030",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e712-355f-7111-a6b5-22d6d5d912bf/2026-09-28T08-12-07-957Z_01a0e712-3f95-7434-9a68-04a7840d4ab4.jsonl",
+    "native_sid": "01a0e712-3f95-7434-9a68-04a7840d4ab4",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:12:08.141065671Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e722-e5b4-74b1-818f-32e4bab21da7",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e722-9920-7632-837f-90892e353bfa/2026-09-28T08-30-18-959Z_01a0e722-e54f-717b-8820-6275c822a092.jsonl",
+    "native_sid": "01a0e722-e54f-717b-8820-6275c822a092",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:30:19.059942568Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e722-e73e-7132-93fa-7ebda8c9fccf",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e722-96ad-7902-9d6f-b08ee5c18ae8/2026-09-28T08-30-18-959Z_01a0e722-e54f-7652-9459-90a912dc646f.jsonl",
+    "native_sid": "01a0e722-e54f-7652-9459-90a912dc646f",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:30:19.453472125Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e722-ec35-7d80-a8ec-71f01c914c96",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e722-a083-7553-8812-5612fb9a362c/2026-09-28T08-30-18-958Z_01a0e722-e54e-74e5-85bb-e2504876eeb7.jsonl",
+    "native_sid": "01a0e722-e54e-74e5-85bb-e2504876eeb7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:30:20.725321514Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e722-f19f-7de2-a0a1-be827ffd6cfe",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e722-eecc-7381-837f-7b4db1fd60ed/2026-09-28T08-30-22-038Z_01a0e722-f156-7188-8c1c-3242fce120f2.jsonl",
+    "native_sid": null,
+    "lifecycle": "retired",
+    "started_at": "2026-09-28T08:30:22.111370604Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e722-f852-74f0-becb-8fa434f519c0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e722-f167-7913-941b-70731ec294f9/2026-09-28T08-30-22-848Z_01a0e722-f480-7242-871f-400a1ce72a1b.jsonl",
+    "native_sid": "01a0e722-f480-7242-871f-400a1ce72a1b",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:30:23.825586259Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e723-0643-7bf0-b34e-ccd3ef7fdb49",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e723-02db-7f01-b851-84f45ce0f738/2026-09-28T08-30-27-325Z_01a0e723-05fd-77f6-b6ee-f347c57c3581.jsonl",
+    "native_sid": "01a0e723-05fd-77f6-b6ee-f347c57c3581",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:30:27.394493809Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e723-9ea7-78b2-b843-e58c4857d4d9",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e723-9bef-7f62-b315-8728729dbef3/2026-09-28T08-31-06-367Z_01a0e723-9e7f-7201-ac07-b331226f5091.jsonl",
+    "native_sid": "01a0e723-9e7f-7201-ac07-b331226f5091",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:31:06.406895384Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e723-fa5f-7840-9922-1d1900707c2d",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e723-f031-7822-be99-e7694c6d93a8/2026-09-28T08-31-29-282Z_01a0e723-f802-728c-9f5a-f305cb80ac38.jsonl",
+    "native_sid": "01a0e723-f802-728c-9f5a-f305cb80ac38",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:31:29.886520108Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e724-0729-70a3-a23d-56c40b7521ce",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e723-fa12-7691-8b54-095543df2a06/2026-09-28T08-31-31-304Z_01a0e723-ffe7-72ef-9f4a-82e61188de26.jsonl",
+    "native_sid": "01a0e723-ffe7-72ef-9f4a-82e61188de26",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:31:33.160791181Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e724-72ed-72d0-8c09-17142c48dae6",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e724-700e-72d0-afb8-69b1c1d6352c/2026-09-28T08-32-00-714Z_01a0e724-72ca-732d-9053-a6b2a5c1b8a7.jsonl",
+    "native_sid": "01a0e724-72ca-732d-9053-a6b2a5c1b8a7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:32:00.748603661Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e724-9d86-7072-9fa8-33ae665dcca4",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e724-9ab7-73d2-a212-32d663ad039d/2026-09-28T08-32-11-575Z_01a0e724-9d37-76c2-92ab-bf69e9974faf.jsonl",
+    "native_sid": "01a0e724-9d37-76c2-92ab-bf69e9974faf",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:32:11.653690037Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e724-c270-76e3-803a-a1386ae875a7",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e724-bf9b-7702-9b6a-79aa29222116/2026-09-28T08-32-21-063Z_01a0e724-c247-77c6-9273-1d82a0647eb3.jsonl",
+    "native_sid": "01a0e724-c247-77c6-9273-1d82a0647eb3",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:32:21.103946729Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e725-7d97-7fe0-b14b-ab6abf0feab1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e725-71a1-7cb1-8d13-0d122bfb1e00/2026-09-28T08-33-08-350Z_01a0e725-7afe-7545-af94-80b6534649b3.jsonl",
+    "native_sid": "01a0e725-7afe-7545-af94-80b6534649b3",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:33:09.014692432Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e725-87a2-73f2-aaa0-773cbd25056b",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e725-8218-7e12-82d3-068a7951c1d4/2026-09-28T08-33-11-466Z_01a0e725-8729-74d8-bf7d-04a1d1004bf7.jsonl",
+    "native_sid": "01a0e725-8729-74d8-bf7d-04a1d1004bf7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:33:11.586118595Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e725-f365-7b40-bad4-37b358144bc6",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e725-eb32-76f2-bcc3-5c5002cb615e/2026-09-28T08-33-39-076Z_01a0e725-f304-716b-bee0-3426399557cd.jsonl",
+    "native_sid": "01a0e725-f304-716b-bee0-3426399557cd",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:33:39.172376423Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e726-1974-71d1-bf76-5572155e2af9",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e726-0f72-72b1-b4d1-d3c29ffa5348/2026-09-28T08-33-48-151Z_01a0e726-1677-771d-a749-52fc0292e09c.jsonl",
+    "native_sid": "01a0e726-1677-771d-a749-52fc0292e09c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:33:48.915824815Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e726-431e-7212-979b-3891d863ec3e",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e726-3c94-7823-9b81-38ad989457e1/2026-09-28T08-33-59-449Z_01a0e726-4299-742c-a701-07f41c703f3f.jsonl",
+    "native_sid": "01a0e726-4299-742c-a701-07f41c703f3f",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:33:59.581262326Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e726-69cf-7dd2-ac45-32a0a40a5a39",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e726-61d8-7792-bf61-f9acf8a8b7cd/2026-09-28T08-34-09-379Z_01a0e726-6963-735f-b8de-b787c053d55d.jsonl",
+    "native_sid": "01a0e726-6963-735f-b8de-b787c053d55d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:34:09.486623821Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e726-9142-7f81-ad80-9896006f0a47",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e726-8a7f-79c2-b61c-530f4fa9d7a7/2026-09-28T08-34-19-487Z_01a0e726-90df-7244-9e4c-ff5d314d21da.jsonl",
+    "native_sid": "01a0e726-90df-7244-9e4c-ff5d314d21da",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:34:19.585592325Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e726-c21f-7fd0-a8e6-74ef0145c4a8",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e726-bc43-7eb0-96eb-b7909fefc5d4/2026-09-28T08-34-32-054Z_01a0e726-c1f6-751e-a8d2-8aa7a79888a8.jsonl",
+    "native_sid": "01a0e726-c1f6-751e-a8d2-8aa7a79888a8",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:34:32.094580909Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e726-e8bd-70a2-8a97-bb6a4642d25a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e726-dfc6-7900-9657-e4fa7fd62821/2026-09-28T08-34-41-855Z_01a0e726-e83f-75de-a828-cc9f5506bff3.jsonl",
+    "native_sid": "01a0e726-e83f-75de-a828-cc9f5506bff3",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T08:34:41.980996271Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e726-f6bf-78e2-9cf2-4c52590335d5",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e726-e778-7302-a76a-b636bc2e6cb7/2026-09-28T08-34-43-855Z_01a0e726-f00f-751f-8de8-697998d53669.jsonl",
+    "native_sid": "01a0e726-f00f-751f-8de8-697998d53669",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:34:45.566440719Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e727-34e1-7b71-b2f4-72e93c196079",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e727-29e8-7310-984a-894a19a5e07a/2026-09-28T08-35-01-263Z_01a0e727-340f-72b9-b9df-ff204f0acb89.jsonl",
+    "native_sid": "01a0e727-340f-72b9-b9df-ff204f0acb89",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:35:01.472620139Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e727-c36a-7352-9d93-27ede294f58a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e727-b73d-7681-a78d-dea4937f3272/2026-09-28T08-35-37-553Z_01a0e727-c1d1-70c1-8811-22fdbaf20935.jsonl",
+    "native_sid": null,
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T08:35:37.961742046Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e750-f3f5-7553-ac92-b9fc064f416a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e750-a07f-71c3-8011-5811e8dc7193/2026-09-28T09-20-37-323Z_01a0e750-f3cb-7190-89fd-06143726d5b6.jsonl",
+    "native_sid": "01a0e750-f3cb-7190-89fd-06143726d5b6",
+    "lifecycle": "idle",
+    "started_at": "2026-09-28T09:20:37.365291523Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e750-f8f5-7610-ab12-3bb4f79e1eb4",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e750-9c69-7b82-ba1e-277d24a04494/2026-09-28T09-20-37-323Z_01a0e750-f3cb-7121-b4b3-1298b9426a8d.jsonl",
+    "native_sid": "01a0e750-f3cb-7121-b4b3-1298b9426a8d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:20:38.644698239Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e750-fd8b-7420-8ee5-265d9de9ca5b",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e750-992e-74a1-aad9-11e39a25a178/2026-09-28T09-20-37-342Z_01a0e750-f3de-71e1-9c6d-a7d4aac8f334.jsonl",
+    "native_sid": "01a0e750-f3de-71e1-9c6d-a7d4aac8f334",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:20:39.818462205Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e751-1ac9-7281-ba81-c4da0cd0714c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e751-0825-7df3-b100-b41d5619f714/2026-09-28T09-20-45-676Z_01a0e751-146c-7111-8394-c1592615f521.jsonl",
+    "native_sid": "01a0e751-146c-7111-8394-c1592615f521",
+    "lifecycle": "retired",
+    "started_at": "2026-09-28T09:20:47.305103521Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e751-1e7b-7b03-beff-3febcdbecf8a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e751-18ad-7af3-80eb-8e3cbf44d30c/2026-09-28T09-20-48-203Z_01a0e751-1e4b-716e-88c1-f6141270ddb4.jsonl",
+    "native_sid": "01a0e751-1e4b-716e-88c1-f6141270ddb4",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:20:48.250485513Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e751-2ede-7a61-a93f-7009b363c88c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e751-2b3c-73a1-871a-c1c0b3031ac4/2026-09-28T09-20-52-313Z_01a0e751-2e59-7647-a884-c437af4391ef.jsonl",
+    "native_sid": "01a0e751-2e59-7647-a884-c437af4391ef",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:20:52.445824602Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e751-75ff-75f0-9994-8ba7d977cbd1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e751-72df-7780-a0eb-a4da6b2fda17/2026-09-28T09-21-10-599Z_01a0e751-75c7-7668-8703-12aba8395629.jsonl",
+    "native_sid": "01a0e751-75c7-7668-8703-12aba8395629",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:21:10.654682444Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e752-16b7-7ff2-b405-c5940b7f48c3",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e752-07e3-7260-921a-0dc9619f62dd/2026-09-28T09-21-50-493Z_01a0e752-119d-73ef-a26d-6990743ff95b.jsonl",
+    "native_sid": "01a0e752-119d-73ef-a26d-6990743ff95b",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:21:51.798768932Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e752-b2f6-76d3-97bc-bddb4c55126d",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e752-a23f-79f0-a59e-a017f3268e15/2026-09-28T09-22-31-587Z_01a0e752-b223-715d-ad2b-bda4b50996cd.jsonl",
+    "native_sid": "01a0e752-b223-715d-ad2b-bda4b50996cd",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:22:31.797182315Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e754-5670-7951-9db4-13b4a24dedfd",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e754-10e4-7ad3-8f4c-38de3a2c5599/2026-09-28T09-24-18-993Z_01a0e754-55b1-752c-9b31-507f09e7f044.jsonl",
+    "native_sid": "01a0e754-55b1-752c-9b31-507f09e7f044",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:24:19.183772861Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e757-b2f1-7523-ac23-da61b7601d84",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e757-9b89-7cc1-ba43-4e77ebf02e09/2026-09-28T09-27-58-855Z_01a0e757-b087-73ae-a70c-29cf423fb9e8.jsonl",
+    "native_sid": "01a0e757-b087-73ae-a70c-29cf423fb9e8",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:27:59.47266655Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e759-cfef-7ad3-8896-731a2f770978",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e759-7bed-71f1-8327-1735c8105507/2026-09-28T09-30-17-469Z_01a0e759-cdfd-71ab-b2e7-3c8e38cac489.jsonl",
+    "native_sid": "01a0e759-cdfd-71ab-b2e7-3c8e38cac489",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:30:17.958618225Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e759-df1d-79c3-bb38-2077f1ac0835",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e759-740f-71e0-b000-d746bf69ccae/2026-09-28T09-30-17-466Z_01a0e759-cdfa-7489-8194-a7aefb3ffb28.jsonl",
+    "native_sid": "01a0e759-cdfa-7489-8194-a7aefb3ffb28",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:30:21.852937616Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75a-907e-75c1-8b41-08ae5a3dd1cd",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75a-8428-7a03-8b9c-16ef545abaf2/2026-09-28T09-31-07-058Z_01a0e75a-8fb2-73aa-b942-9cf434e26ca8.jsonl",
+    "native_sid": "01a0e75a-8fb2-73aa-b942-9cf434e26ca8",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:31:07.261566743Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75b-1861-7f10-8e38-4969a42e6838",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75b-0981-7130-bbb7-d060226ef2a8/2026-09-28T09-31-41-256Z_01a0e75b-1547-741c-810d-444bf4dce301.jsonl",
+    "native_sid": "01a0e75b-1547-741c-810d-444bf4dce301",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:31:42.048606174Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75b-37a8-7213-af57-375de9e67355",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75b-2ca5-7bc1-9c5d-2ab94f3d369f/2026-09-28T09-31-49-854Z_01a0e75b-36de-7304-a9c8-c22315c99db7.jsonl",
+    "native_sid": "01a0e75b-36de-7304-a9c8-c22315c99db7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:31:50.056177756Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75b-9d3a-7591-9aed-5bae5eb47b58",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75b-90a8-7300-8800-2561e8e4f41a/2026-09-28T09-32-15-940Z_01a0e75b-9cc4-744c-8483-c14564d67a7c.jsonl",
+    "native_sid": "01a0e75b-9cc4-744c-8483-c14564d67a7c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:32:16.057298651Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75b-bbff-77c1-9cad-b1957d3d56e1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75b-ac14-7263-b7e1-008ba14ad4d9/2026-09-28T09-32-23-642Z_01a0e75b-bada-7746-b360-f6454547a30a.jsonl",
+    "native_sid": "01a0e75b-bada-7746-b360-f6454547a30a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:32:23.934403803Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75c-2fd3-7830-9b0f-37255a00aa3e",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75c-2c8c-7052-a8f3-6419fb0b69ec/2026-09-28T09-32-53-531Z_01a0e75c-2f9a-76e5-bcd3-ae932309128c.jsonl",
+    "native_sid": "01a0e75c-2f9a-76e5-bcd3-ae932309128c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:32:53.587242937Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75c-6bd0-7780-a29a-b247c99aa750",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75c-68a6-7543-9145-488eb51d9ce5/2026-09-28T09-33-08-861Z_01a0e75c-6b7d-72f2-9be9-bba550a68418.jsonl",
+    "native_sid": "01a0e75c-6b7d-72f2-9be9-bba550a68418",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:33:08.944156415Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75c-a869-7670-878c-563e35982dd1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75c-a22a-7d43-a274-783cd9c0be83/2026-09-28T09-33-24-335Z_01a0e75c-a7ef-7003-aad9-4e60e98e6d8d.jsonl",
+    "native_sid": "01a0e75c-a7ef-7003-aad9-4e60e98e6d8d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:33:24.457136686Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75c-bc68-7103-a3c5-145db8e0518c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75c-b599-7ee2-8a44-8c8e1f4fb524/2026-09-28T09-33-29-450Z_01a0e75c-bbea-7364-bb08-6fce045b77a3.jsonl",
+    "native_sid": "01a0e75c-bbea-7364-bb08-6fce045b77a3",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:33:29.576063476Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75d-1afa-7633-9b40-b2146c0edce6",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75d-1260-7111-965e-90a1a3616275/2026-09-28T09-33-53-628Z_01a0e75d-1a5c-70f0-9fe5-3764dd28ca58.jsonl",
+    "native_sid": "01a0e75d-1a5c-70f0-9fe5-3764dd28ca58",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:33:53.786135212Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75d-7fa3-72c3-9569-f9f449e1e203",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75d-768e-79b1-9763-7a2d397f4837/2026-09-28T09-34-19-347Z_01a0e75d-7ed2-76da-8347-3f4ce8261811.jsonl",
+    "native_sid": "01a0e75d-7ed2-76da-8347-3f4ce8261811",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:34:19.555276007Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75e-1776-7612-9c9c-99bf9b7e1b72",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75e-0dd5-79b1-97c4-01877bc795b7/2026-09-28T09-34-58-158Z_01a0e75e-166e-70f8-8804-d668ecabc587.jsonl",
+    "native_sid": "01a0e75e-166e-70f8-8804-d668ecabc587",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:34:58.42143165Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75e-7870-7a80-b1e6-82a1a652e4b1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75e-6eb8-7241-acf9-a6bfec0b8342/2026-09-28T09-35-23-045Z_01a0e75e-77a4-7614-b093-d90ee956f019.jsonl",
+    "native_sid": "01a0e75e-77a4-7614-b093-d90ee956f019",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:35:23.247885323Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75e-f18b-74c1-b741-e3d1e39d0a4e",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75e-e82d-76c2-8a38-b7cc8be0c173/2026-09-28T09-35-54-035Z_01a0e75e-f0b3-7633-9095-cc14b428b805.jsonl",
+    "native_sid": "01a0e75e-f0b3-7633-9095-cc14b428b805",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:35:54.250612473Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75f-72bf-7801-8b5b-082ef56731f4",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75f-5fda-7ae2-94ba-ccb729102cfd/2026-09-28T09-36-26-633Z_01a0e75f-7009-7493-98d3-8325a02d071c.jsonl",
+    "native_sid": "01a0e75f-7009-7493-98d3-8325a02d071c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:36:27.326508265Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75f-a3ed-7760-9283-c1b991e04513",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75f-95dc-7f00-a80e-035d33f4e0c7/2026-09-28T09-36-39-049Z_01a0e75f-a089-7593-a867-60e4c60e8c7c.jsonl",
+    "native_sid": "01a0e75f-a089-7593-a867-60e4c60e8c7c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:36:39.917276925Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e75f-c598-7142-afdf-ce51c14e9b19",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e75f-bc3f-7a42-a91b-177e57846848/2026-09-28T09-36-48-351Z_01a0e75f-c4df-76c0-ae9b-8053340d2151.jsonl",
+    "native_sid": "01a0e75f-c4df-76c0-ae9b-8053340d2151",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:36:48.535859118Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e760-1c12-7ae2-9796-3fa0d70b48f7",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e760-161b-7a03-be81-a919713046cc/2026-09-28T09-37-10-610Z_01a0e760-1bd2-75ac-be23-bccc310ab6a5.jsonl",
+    "native_sid": "01a0e760-1bd2-75ac-be23-bccc310ab6a5",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:37:10.673744401Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e760-5f2e-7091-bf43-c6779fe1951d",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e760-596b-71d2-ba2c-aa8572d325c7/2026-09-28T09-37-27-752Z_01a0e760-5ec8-732f-9aea-638e30b5c5c7.jsonl",
+    "native_sid": "01a0e760-5ec8-732f-9aea-638e30b5c5c7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:37:27.853889517Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e760-6b1c-7b80-8365-9f3261d8a4e7",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e760-6451-76d0-9c26-f11cf9fe18f0/2026-09-28T09-37-30-734Z_01a0e760-6a6e-760a-9351-d480b95a2240.jsonl",
+    "native_sid": "01a0e760-6a6e-760a-9351-d480b95a2240",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:37:30.908286628Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e760-a3bc-7bf1-8dd7-c88a6fe8a08a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e760-9ac7-7281-8737-8b9e798af142/2026-09-28T09-37-45-234Z_01a0e760-a311-75d6-8c82-aac54726753a.jsonl",
+    "native_sid": "01a0e760-a311-75d6-8c82-aac54726753a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:37:45.403482166Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e760-dec7-7772-9f68-8e29348a3d1d",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e760-d712-77e0-90cb-ae99a20b2e50/2026-09-28T09-38-00-242Z_01a0e760-ddb2-736a-8c53-473c71d8a23c.jsonl",
+    "native_sid": "01a0e760-ddb2-736a-8c53-473c71d8a23c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:38:00.518865171Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e761-3eda-70b2-9294-0484ccc1d899",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e761-3beb-7d20-8d21-64965bea4628/2026-09-28T09-38-25-039Z_01a0e761-3e8f-7047-ae00-97a69fc8b422.jsonl",
+    "native_sid": "01a0e761-3e8f-7047-ae00-97a69fc8b422",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:38:25.114311979Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e762-1ccb-76a3-877b-6b7ef5fe49a5",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e762-1a13-7861-ad12-22894b185c86/2026-09-28T09-39-21-884Z_01a0e762-1c9c-7638-8fe1-b0420a03caf5.jsonl",
+    "native_sid": "01a0e762-1c9c-7638-8fe1-b0420a03caf5",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:39:21.930731158Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e762-a244-7081-a1a4-e3bdbf4f5266",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e762-9f56-7711-84cd-d62f672f3ac8/2026-09-28T09-39-56-062Z_01a0e762-a21e-75c4-b8db-be519af95851.jsonl",
+    "native_sid": "01a0e762-a21e-75c4-b8db-be519af95851",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:39:56.100406913Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e763-1b05-7c10-8620-df5fcd5b72a1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e763-13be-73f0-8c02-2cf91ddc8289/2026-09-28T09-40-26-907Z_01a0e763-1a9b-7626-a7c4-2eff6624523a.jsonl",
+    "native_sid": "01a0e763-1a9b-7626-a7c4-2eff6624523a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:40:27.013200808Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e763-275f-7822-b2fa-3ae7d17a0959",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e763-214e-7590-8939-67998f1549ba/2026-09-28T09-40-30-041Z_01a0e763-26d9-76d3-abf9-a8aa43fffd53.jsonl",
+    "native_sid": "01a0e763-26d9-76d3-abf9-a8aa43fffd53",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:40:30.175061111Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e763-9600-7c93-bfde-85f8d3ee9dee",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e763-8c3d-7ca2-867b-bff56aebb8ce/2026-09-28T09-40-58-303Z_01a0e763-953f-7493-aa2c-8dcc7e1e9150.jsonl",
+    "native_sid": "01a0e763-953f-7493-aa2c-8dcc7e1e9150",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:40:58.495702049Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e763-d357-72e2-8d78-eb39c31da0cb",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e763-c7fd-7cc1-a8bf-c02564827913/2026-09-28T09-41-14-030Z_01a0e763-d2ae-74ea-abb2-66c2658900f5.jsonl",
+    "native_sid": "01a0e763-d2ae-74ea-abb2-66c2658900f5",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:41:14.199161994Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e763-f9a0-7071-81bd-cbc3c742989d",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e763-eac7-7ac0-9849-6999f8165553/2026-09-28T09-41-23-794Z_01a0e763-f8d2-7293-bb1f-d00de35c40f3.jsonl",
+    "native_sid": "01a0e763-f8d2-7293-bb1f-d00de35c40f3",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:41:24.000020942Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e764-6d99-7a61-b07b-d2b441dd570c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e764-606b-7c30-89ef-334da7202cc1/2026-09-28T09-41-53-408Z_01a0e764-6c80-72af-baf3-ab87c11abea7.jsonl",
+    "native_sid": "01a0e764-6c80-72af-baf3-ab87c11abea7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:41:53.688116927Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e764-a31b-7b01-99e7-ec4afecab1fa",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e764-9811-7872-abd8-d96c80231ec8/2026-09-28T09-42-07-291Z_01a0e764-a2bb-764a-9f24-7313acd8751d.jsonl",
+    "native_sid": "01a0e764-a2bb-764a-9f24-7313acd8751d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:42:07.386904724Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e764-dc85-76c1-b52f-af5419e70d65",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e764-d36c-7bc0-b447-9ccea1f7184f/2026-09-28T09-42-21-906Z_01a0e764-dbd2-779b-bd4e-6e5883f2a174.jsonl",
+    "native_sid": "01a0e764-dbd2-779b-bd4e-6e5883f2a174",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:42:22.085310317Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e764-f9d0-7511-8029-4c857121777c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e764-f0dc-7a60-82c7-7a1ed5554e60/2026-09-28T09-42-29-428Z_01a0e764-f934-7799-b8d6-af507dedf539.jsonl",
+    "native_sid": "01a0e764-f934-7799-b8d6-af507dedf539",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:42:29.55758593Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e765-2601-7762-9144-59ea863433a0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e765-1daf-7900-9ecd-421de9a87f97/2026-09-28T09-42-40-784Z_01a0e765-2590-7795-baa6-5932249ebe26.jsonl",
+    "native_sid": "01a0e765-2590-7795-baa6-5932249ebe26",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:42:40.89676805Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e765-7b1e-7ed2-ab47-97f8aa5bd470",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e765-70f5-7a32-af24-e69074c180d2/2026-09-28T09-43-02-488Z_01a0e765-7a58-744f-9a22-b7c134c5194c.jsonl",
+    "native_sid": "01a0e765-7a58-744f-9a22-b7c134c5194c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:43:02.685785651Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e765-b438-7972-a7ce-7055e8c1c090",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e765-9fd9-75e2-9824-dd03458bc00a/2026-09-28T09-43-16-484Z_01a0e765-b104-760d-8ff7-4032dfb48cfb.jsonl",
+    "native_sid": "01a0e765-b104-760d-8ff7-4032dfb48cfb",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:43:17.304314927Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e766-1c0f-7a60-bef7-89307098ebc6",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e766-0a2c-7e00-8483-d1701ed3f865/2026-09-28T09-43-43-581Z_01a0e766-1add-7577-bc55-d51e99ddab2b.jsonl",
+    "native_sid": "01a0e766-1add-7577-bc55-d51e99ddab2b",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:43:43.88711333Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e766-3e71-7db0-9413-c78bcfdf6647",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e766-2a8c-79b3-8cbc-5d56794d11a4/2026-09-28T09-43-51-985Z_01a0e766-3bb1-71c9-a8dd-18f135783354.jsonl",
+    "native_sid": "01a0e766-3bb1-71c9-a8dd-18f135783354",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:43:52.688886473Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e766-78b1-7a62-987f-386f54c13708",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e766-6c23-7202-b56d-23997ae24687/2026-09-28T09-44-07-395Z_01a0e766-77e3-74fe-819c-9e2c5f261188.jsonl",
+    "native_sid": "01a0e766-77e3-74fe-819c-9e2c5f261188",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:44:07.600623268Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e767-a582-73f2-ac7f-4ee606ff52fa",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e767-8132-77d1-a2f2-2f0407f97aab/2026-09-28T09-45-24-510Z_01a0e767-a51e-74e2-a403-64c0dd0b49b8.jsonl",
+    "native_sid": "01a0e767-a51e-74e2-a403-64c0dd0b49b8",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:45:24.610280223Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e76b-1707-7d51-bc43-911e522c788b",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e76b-10e6-7ef2-929e-8886254ad8ce/2026-09-28T09-49-10-096Z_01a0e76b-1650-7003-a479-890c7e001d47.jsonl",
+    "native_sid": "01a0e76b-1650-7003-a479-890c7e001d47",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:49:10.278742351Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e76c-7fdb-7342-a74e-bda95960e852",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e76c-748b-7a90-90c8-3679b36c0395/2026-09-28T09-50-42-259Z_01a0e76c-7e53-71d1-b733-5fc22a0e2219.jsonl",
+    "native_sid": "01a0e76c-7e53-71d1-b733-5fc22a0e2219",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T09:50:42.581027901Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e776-0b8d-7830-9e4e-db12a811cb18",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e775-da0c-71c2-bcc2-f85a0137f559/2026-09-28T10-01-08-182Z_01a0e776-0b56-7326-a65c-a33db5d66bfc.jsonl",
+    "native_sid": "01a0e776-0b56-7326-a65c-a33db5d66bfc",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:01:08.236845637Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e776-1955-76c0-8dd3-d5532be16692",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e775-e07b-7a73-947f-a134578dc258/2026-09-28T10-01-08-183Z_01a0e776-0b57-76dd-a31d-0f09a1feeae1.jsonl",
+    "native_sid": "01a0e776-0b57-76dd-a31d-0f09a1feeae1",
+    "lifecycle": "idle",
+    "started_at": "2026-09-28T10:01:11.764509295Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e776-cdf8-7d93-b102-3a1d0cdc5501",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e776-c3be-7502-9d2a-61bd55fe2a40/2026-09-28T10-01-56-924Z_01a0e776-c9bb-724b-bab4-56d0d3520156.jsonl",
+    "native_sid": "01a0e776-c9bb-724b-bab4-56d0d3520156",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:01:58.007811542Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e777-a911-7f60-9588-0b53d49a4bdd",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e777-a052-7643-b4a4-86578e76c5eb/2026-09-28T10-02-53-932Z_01a0e777-a86c-76c5-993d-da5494d713bf.jsonl",
+    "native_sid": "01a0e777-a86c-76c5-993d-da5494d713bf",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:02:54.096896459Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e779-56b8-77e0-9f87-e3e45e888944",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e778-f6a0-7a92-a56c-e4cf4d1217b2/2026-09-28T10-04-43-588Z_01a0e779-54c3-76d1-835e-f5e5d0ca1e56.jsonl",
+    "native_sid": "01a0e779-54c3-76d1-835e-f5e5d0ca1e56",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T10:04:44.087145943Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e77b-b6e2-73a2-8982-9be791e2eb36",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e77b-b211-7e30-9f10-4ec335a48482/2026-09-28T10-07-19-278Z_01a0e77b-b4ee-776c-8058-42bb024d6615.jsonl",
+    "native_sid": "01a0e77b-b4ee-776c-8058-42bb024d6615",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:07:19.777861235Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e77c-080d-7a32-8d7d-1d6ae733d085",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e77c-04e7-73d1-9adb-dc5879772f07/2026-09-28T10-07-40-494Z_01a0e77c-07ce-726f-87d6-b2168e992186.jsonl",
+    "native_sid": "01a0e77c-07ce-726f-87d6-b2168e992186",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:07:40.556735272Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e77c-a9c1-7f93-8068-4a6358d08308",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e77c-a0e9-7233-8eb1-4d2fc4d228e0/2026-09-28T10-08-21-694Z_01a0e77c-a8be-755d-8bfa-4c3797bc3c09.jsonl",
+    "native_sid": "01a0e77c-a8be-755d-8bfa-4c3797bc3c09",
+    "lifecycle": "idle",
+    "started_at": "2026-09-28T10:08:21.953125821Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e77f-b900-7b71-ae04-769bd341fa57",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e77f-8760-77a3-9dfa-60bbbc691199/2026-09-28T10-11-41-474Z_01a0e77f-b522-74ba-9ac2-fc8e8e64cc25.jsonl",
+    "native_sid": "01a0e77f-b522-74ba-9ac2-fc8e8e64cc25",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:11:42.46358475Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e780-508c-73f2-be88-821b65b1b502",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e780-31ae-7aa1-bbfd-48babdb47e90/2026-09-28T10-12-20-652Z_01a0e780-4e2c-7607-b31f-7e42bb0e19e5.jsonl",
+    "native_sid": "01a0e780-4e2c-7607-b31f-7e42bb0e19e5",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:12:21.259396723Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e782-d89e-79e3-a3a0-accb2c4b8e18",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e782-c502-7d71-a566-c5aae378f995/2026-09-28T10-15-06-895Z_01a0e782-d78f-77aa-b9ef-84d9ecf5fdee.jsonl",
+    "native_sid": "01a0e782-d78f-77aa-b9ef-84d9ecf5fdee",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:15:07.165481842Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e784-195e-78e1-b45f-07fe696c83bb",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e784-0a3b-7892-8901-37842b3ebf1c/2026-09-28T10-16-29-187Z_01a0e784-1903-775d-a5cc-407d0f80c0bc.jsonl",
+    "native_sid": "01a0e784-1903-775d-a5cc-407d0f80c0bc",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:16:29.277631734Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e784-38eb-7d31-9664-91abb3cc72c0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e784-2f43-7e31-b235-501f8bd9abd5/2026-09-28T10-16-37-144Z_01a0e784-3817-730d-8c24-a608d624dceb.jsonl",
+    "native_sid": "01a0e784-3817-730d-8c24-a608d624dceb",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:16:37.354949993Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e784-c8ba-78d0-b805-b1aa9035f7eb",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e784-bdc0-7c20-94c0-520c9e05eb20/2026-09-28T10-17-14-051Z_01a0e784-c843-741d-9d50-623bd40098f8.jsonl",
+    "native_sid": "01a0e784-c843-741d-9d50-623bd40098f8",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:17:14.169521599Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e784-e20b-7700-a22b-edbb1377326e",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e784-da5a-7670-98d4-2aa36d6a3508/2026-09-28T10-17-20-558Z_01a0e784-e1ae-74f8-9775-dc3c8e15ff03.jsonl",
+    "native_sid": "01a0e784-e1ae-74f8-9775-dc3c8e15ff03",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:17:20.651418101Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e785-5ead-71f1-8c6f-5bf01f1ca580",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e785-5533-7420-bef0-7ce8e74cf8ec/2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl",
+    "native_sid": "01a0e785-5dee-7307-9f66-8a808de53b93",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:17:52.556862534Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e786-b793-7132-b82f-a2d0677f5e68",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e786-9bcf-78f0-9168-b384748c93b1/2026-09-28T10-19-20-526Z_01a0e786-b64e-7261-95da-e6ed4e0226c5.jsonl",
+    "native_sid": "01a0e786-b64e-7261-95da-e6ed4e0226c5",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:19:20.851396318Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e788-34d5-7c31-a771-33d9821eb851",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e788-14d1-7802-a5b0-cb948c5663ec/2026-09-28T10-20-58-330Z_01a0e788-345a-7418-833a-d71bc7c09113.jsonl",
+    "native_sid": "01a0e788-345a-7418-833a-d71bc7c09113",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:20:58.45288946Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e789-075c-7f32-ace7-306c2c69cb72",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e788-fa5a-7501-86f5-72ef7bd63826/2026-09-28T10-21-52-219Z_01a0e789-06db-7247-aff7-706f1a663403.jsonl",
+    "native_sid": "01a0e789-06db-7247-aff7-706f1a663403",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:21:52.347582288Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e78b-4d4b-7fc3-a8ea-f50d5e038c0a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e78b-4318-7e93-b458-3059b06851e7/2026-09-28T10-24-21-212Z_01a0e78b-4cdc-7651-b2e0-205604a9a5e6.jsonl",
+    "native_sid": "01a0e78b-4cdc-7651-b2e0-205604a9a5e6",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:24:21.322847564Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e78c-704b-79f0-94b1-07d665bb17fe",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e78c-681b-7a10-9b04-a21f2b60a437/2026-09-28T10-25-35-719Z_01a0e78c-6fe7-746f-8fd6-b5d3a5546717.jsonl",
+    "native_sid": "01a0e78c-6fe7-746f-8fd6-b5d3a5546717",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:25:35.819006222Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e78d-e92d-7642-9850-3d960d76acd8",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e78d-df00-7450-b8c0-002ff71c5653/2026-09-28T10-27-12-204Z_01a0e78d-e8cc-73cf-b440-b36125930a22.jsonl",
+    "native_sid": "01a0e78d-e8cc-73cf-b440-b36125930a22",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:27:12.300988677Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e78e-85e3-7192-95fd-31e7b46dd109",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e78e-7e49-7b73-b3e7-6576814e4415/2026-09-28T10-27-52-317Z_01a0e78e-857c-75ba-a263-1bf6b784593a.jsonl",
+    "native_sid": "01a0e78e-857c-75ba-a263-1bf6b784593a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:27:52.419229918Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e790-7e20-7333-b01f-451c1d08cf01",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e790-7653-7f71-b599-71ae10e7b09c/2026-09-28T10-30-01-310Z_01a0e790-7d5e-7643-9387-f5d77180c60e.jsonl",
+    "native_sid": "01a0e790-7d5e-7643-9387-f5d77180c60e",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:30:01.504083485Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e790-d8c5-7df0-b5dc-d4cd274453d3",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e790-cb56-7752-b9c0-f8a114e9143e/2026-09-28T10-30-24-306Z_01a0e790-d732-7212-917a-26ec258d59d4.jsonl",
+    "native_sid": "01a0e790-d732-7212-917a-26ec258d59d4",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:30:24.708621063Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e791-654e-7083-a9fa-cacd29d2c074",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e791-5682-7dc2-a658-3e9848827cbe/2026-09-28T10-31-00-404Z_01a0e791-6434-73ca-b63d-2640e414cc31.jsonl",
+    "native_sid": "01a0e791-6434-73ca-b63d-2640e414cc31",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:31:00.685676648Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e792-778c-7732-80e1-154d347ea6f6",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e792-5d57-7153-959f-7a987a7fc859/2026-09-28T10-32-09-884Z_01a0e792-739c-758d-b2b3-3521638a0d82.jsonl",
+    "native_sid": "01a0e792-739c-758d-b2b3-3521638a0d82",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:32:10.891882403Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e795-e39f-7383-bcdc-dc5d62851fa4",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e795-b13b-7152-810d-2dabb2eaa55e/2026-09-28T10-35-54-636Z_01a0e795-e18c-731a-ade6-ad14546d1556.jsonl",
+    "native_sid": "01a0e795-e18c-731a-ade6-ad14546d1556",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:35:55.166650665Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e797-3261-7621-871c-e225f1bf0349",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e796-e375-7833-ab68-cccbc1a776c6/2026-09-28T10-37-20-176Z_01a0e797-2fb0-7396-a154-a4db3a29cd3a.jsonl",
+    "native_sid": "01a0e797-2fb0-7396-a154-a4db3a29cd3a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:37:20.864183391Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e798-14ef-71f0-8113-00891118c239",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e797-fea5-7f03-9c54-a1373d4d3ae2/2026-09-28T10-38-18-069Z_01a0e798-11d5-7679-89ca-b1649e715584.jsonl",
+    "native_sid": "01a0e798-11d5-7679-89ca-b1649e715584",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:38:18.862934927Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e799-6c3f-7930-b771-7bda43f411d6",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e799-4e92-7042-b96c-a6a3b2552582/2026-09-28T10-39-45-663Z_01a0e799-67ff-73ee-86f1-4aebeeef9e07.jsonl",
+    "native_sid": "01a0e799-67ff-73ee-86f1-4aebeeef9e07",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:39:46.750786519Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e79a-ae7b-7150-9924-d7e1dbd7b462",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e79a-82b9-7c82-87ea-d64a8323b8f1/2026-09-28T10-41-08-943Z_01a0e79a-ad4f-7062-9f1d-43f4c9e6c4d9.jsonl",
+    "native_sid": "01a0e79a-ad4f-7062-9f1d-43f4c9e6c4d9",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:41:09.242629059Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e79d-5a72-7e00-8165-bd4aa30ce492",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e79d-45bc-7183-83cc-9042499b53ce/2026-09-28T10-44-04-133Z_01a0e79d-59a5-71d6-879d-87f7a0b9b307.jsonl",
+    "native_sid": "01a0e79d-59a5-71d6-879d-87f7a0b9b307",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:44:04.33778271Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e79d-80b6-7f10-a055-a78e94ae4511",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e79d-6b38-7aa3-b506-2fefd91ff48d/2026-09-28T10-44-13-440Z_01a0e79d-7dff-7062-a6f9-e15c250dd7ec.jsonl",
+    "native_sid": "01a0e79d-7dff-7062-a6f9-e15c250dd7ec",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:44:14.133658478Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a0-1cba-73c3-94fe-534f3a1a24a8",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e7a0-05b2-7143-994b-de1aeb76362f/2026-09-28T10-47-03-553Z_01a0e7a0-1681-729d-9773-d2912941e701.jsonl",
+    "native_sid": "01a0e7a0-1681-729d-9773-d2912941e701",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:47:05.145509481Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a0-50ab-7873-82a4-9a7d2ccb5a44",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a0-3e3a-7773-843e-87e260c87a56/2026-09-28T10-47-18-132Z_01a0e7a0-4f74-7430-bf9f-3ee4877fd286.jsonl",
+    "native_sid": "01a0e7a0-4f74-7430-bf9f-3ee4877fd286",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:47:18.442446011Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a0-7101-7740-b715-57c9dd00366b",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a0-6038-7e70-b099-01ecf188b0c8/2026-09-28T10-47-26-033Z_01a0e7a0-6e51-7204-bfa8-1e6b9e9df540.jsonl",
+    "native_sid": "01a0e7a0-6e51-7204-bfa8-1e6b9e9df540",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:47:26.720810184Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a2-31d4-73c0-b0ec-cc5c12d6a486",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e7a2-20a0-7550-a3d5-0e5a88cdb502/2026-09-28T10-49-20-716Z_01a0e7a2-2e4c-762a-bfbc-9629796d5452.jsonl",
+    "native_sid": "01a0e7a2-2e4c-762a-bfbc-9629796d5452",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:49:21.620197865Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a2-3c74-7ec3-a56b-2f54a05a364e",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a2-2f77-7193-9baf-f6d63a6740e0/2026-09-28T10-49-23-647Z_01a0e7a2-39bf-7351-817c-773af078c380.jsonl",
+    "native_sid": "01a0e7a2-39bf-7351-817c-773af078c380",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:49:24.339520633Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a3-8306-7182-b8f9-6f66d0372f5c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a3-794b-7df2-9872-9ff3f886d331/2026-09-28T10-50-47-751Z_01a0e7a3-8247-7223-848f-8bd2ac3cebe7.jsonl",
+    "native_sid": "01a0e7a3-8247-7223-848f-8bd2ac3cebe7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:50:47.941477679Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a4-51b1-7d30-b453-e397399f91e7",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e7a4-2c2e-7542-9a99-486893210d97/2026-09-28T10-51-39-027Z_01a0e7a4-4a93-7261-9d90-aef641486c5d.jsonl",
+    "native_sid": "01a0e7a4-4a93-7261-9d90-aef641486c5d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:51:40.849037711Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a6-0703-7e12-97fe-8abdd8d2b577",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a5-f69a-7730-937e-af84f2e668e7/2026-09-28T10-53-32-447Z_01a0e7a6-059f-706f-a32d-4a9f1e49c2d3.jsonl",
+    "native_sid": "01a0e7a6-059f-706f-a32d-4a9f1e49c2d3",
+    "lifecycle": "idle",
+    "started_at": "2026-09-28T10:53:32.802407412Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a6-17d7-7fa3-a9c6-cc0c387ba446",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a6-063f-78c1-a286-e897a6b82462/2026-09-28T10-53-36-300Z_01a0e7a6-14ab-7792-b508-e6eb374a3567.jsonl",
+    "native_sid": "01a0e7a6-14ab-7792-b508-e6eb374a3567",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:53:37.110424969Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a6-5c9a-7f63-ac2e-0c696a51c488",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e7a6-4847-7bf2-b37c-12c9006d6842/2026-09-28T10-53-54-314Z_01a0e7a6-5b0a-7591-9049-5390a31e2083.jsonl",
+    "native_sid": "01a0e7a6-5b0a-7591-9049-5390a31e2083",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:53:54.713633548Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a6-f3b4-7671-a6ce-967d757e78fa",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a6-dbe8-7b02-a801-e070128d33f1/2026-09-28T10-54-32-697Z_01a0e7a6-f0f9-70f3-a962-1458f13fc378.jsonl",
+    "native_sid": "01a0e7a6-f0f9-70f3-a962-1458f13fc378",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:54:33.396183972Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a7-b13c-72d1-8e9c-b373bebccb9a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e7a7-956e-7e33-a591-6b2896850bdf/2026-09-28T10-55-21-299Z_01a0e7a7-aed3-731f-93ff-bd1fd4eaed58.jsonl",
+    "native_sid": "01a0e7a7-aed3-731f-93ff-bd1fd4eaed58",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:55:21.915572697Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a8-7480-7ea3-b0c4-c811dfa6205c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a8-15f3-7121-b4fe-58bf0b55dd12/2026-09-28T10-56-10-746Z_01a0e7a8-6ffa-72fd-888d-5ebdd84436fb.jsonl",
+    "native_sid": "01a0e7a8-6ffa-72fd-888d-5ebdd84436fb",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:56:11.903962266Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a8-91c3-78d0-be38-896d9f96f839",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a8-8288-7252-931d-6283bd041cdc/2026-09-28T10-56-19-009Z_01a0e7a8-9041-731a-8e2b-b08892696814.jsonl",
+    "native_sid": "01a0e7a8-9041-731a-8e2b-b08892696814",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:56:19.395069912Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7a9-bf67-7fe0-83bd-e6a2b4fa6a00",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7a9-ae86-7d82-ab9d-2ad98c322d2b/2026-09-28T10-57-36-106Z_01a0e7a9-bd6a-763c-95ef-88c1039771a0.jsonl",
+    "native_sid": "01a0e7a9-bd6a-763c-95ef-88c1039771a0",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:57:36.615429082Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7ab-0aed-7bd3-8881-37ee14a79ee5",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-glm-fast-01a0e7aa-b4fa-7b90-9ad4-ca91743da481/2026-09-28T10-59-01-088Z_01a0e7ab-0960-76a0-944f-48bb158b5fe1.jsonl",
+    "native_sid": "01a0e7ab-0960-76a0-944f-48bb158b5fe1",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T10:59:01.484754265Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7ab-19c4-71c1-9ce3-928890f2182b",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7aa-bf8d-71f0-8692-2e0d1dce9774/2026-09-28T10-59-01-085Z_01a0e7ab-095d-7457-8be9-5a20784948f5.jsonl",
+    "native_sid": "01a0e7ab-095d-7457-8be9-5a20784948f5",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T10:59:05.283299776Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7ad-13a1-74b1-bd94-9396c388aa4c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7ac-def0-7280-8818-8b9d157e27d4/2026-09-28T11-01-14-073Z_01a0e7ad-10d9-7207-a258-ceebe373e674.jsonl",
+    "native_sid": "01a0e7ad-10d9-7207-a258-ceebe373e674",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T11:01:14.784391285Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7b5-d73e-7d70-856f-c0eedd0b467f",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7b5-c039-7c80-b4be-a55ecad27fa8/2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl",
+    "native_sid": "01a0e7b5-d69f-7638-b456-08673a49ee86",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:10:49.150235087Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7ba-388a-7893-b7e0-95f1aaab2b73",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7ba-2da9-7a30-bcbe-4bcb34ec5a6b/2026-09-28T11-15-35-780Z_01a0e7ba-36e4-7569-bcc2-63e372115e30.jsonl",
+    "native_sid": "01a0e7ba-36e4-7569-bcc2-63e372115e30",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:15:36.146626735Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7ba-9b09-7f10-9264-015aa4dbb9c3",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7ba-951b-7a80-b4c9-9c08d9043b43/2026-09-28T11-16-01-338Z_01a0e7ba-9aba-7336-9857-d31a88d31c86.jsonl",
+    "native_sid": "01a0e7ba-9aba-7336-9857-d31a88d31c86",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:16:01.41637773Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7ba-b14e-7fd2-b269-a017438d562c",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7ba-adfc-7781-ab6d-a668302c4d45/2026-09-28T11-16-07-042Z_01a0e7ba-b101-7499-98b4-322453f47f44.jsonl",
+    "native_sid": "01a0e7ba-b101-7499-98b4-322453f47f44",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:16:07.117977979Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bb-13da-7fb2-888a-07a3fd77dde0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bb-0d82-78f0-8735-b4c3274f3fd2/2026-09-28T11-16-32-239Z_01a0e7bb-136f-7343-8ac7-2167e3d9bfd9.jsonl",
+    "native_sid": "01a0e7bb-136f-7343-8ac7-2167e3d9bfd9",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:16:32.345868821Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bb-9bb3-76f2-b93f-9e1b46a14fab",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bb-946a-7413-9ce1-50e065966fb8/2026-09-28T11-17-07-003Z_01a0e7bb-9b3b-730f-a755-957a4beb3ef9.jsonl",
+    "native_sid": "01a0e7bb-9b3b-730f-a755-957a4beb3ef9",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:17:07.123011634Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bb-c6b8-73d2-a945-47f6fe170e01",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bb-bf36-7e30-9dde-eacf92c5662f/2026-09-28T11-17-18-036Z_01a0e7bb-c654-736b-9b12-c80ad17c4717.jsonl",
+    "native_sid": "01a0e7bb-c654-736b-9b12-c80ad17c4717",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:17:18.135979839Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bc-1abb-7c41-a0c4-6032f21d8ee1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bc-17df-70d2-9e7b-ee35ba7ab673/2026-09-28T11-17-39-603Z_01a0e7bc-1a93-743f-8825-e7060beeff01.jsonl",
+    "native_sid": "01a0e7bc-1a93-743f-8825-e7060beeff01",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:17:39.642545327Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bc-50a5-7de0-904d-939c404d215a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bc-4cfa-7e73-a9a7-c4afa2d015fb/2026-09-28T11-17-53-219Z_01a0e7bc-4fc3-74bf-936c-0247b179a580.jsonl",
+    "native_sid": "01a0e7bc-4fc3-74bf-936c-0247b179a580",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:17:53.445065559Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bc-5bca-75d2-8d5a-c8c96ce3bc51",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bc-5677-75f1-ad50-97aa5c0025b5/2026-09-28T11-17-55-608Z_01a0e7bc-5918-7007-ba56-b8376edfa33f.jsonl",
+    "native_sid": "01a0e7bc-5918-7007-ba56-b8376edfa33f",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:17:56.297693454Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bc-8373-7631-ad16-a4932bf005b9",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bc-7ef5-7b23-af8d-80975b8d9265/2026-09-28T11-18-06-027Z_01a0e7bc-81cb-728d-8dba-eef7e43bb793.jsonl",
+    "native_sid": "01a0e7bc-81cb-728d-8dba-eef7e43bb793",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:18:06.450919865Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bc-f629-7c52-b989-92ebd2975084",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bc-eba0-7682-95c5-72c276118303/2026-09-28T11-18-35-519Z_01a0e7bc-f4ff-7337-bae2-c4dd2acdf398.jsonl",
+    "native_sid": "01a0e7bc-f4ff-7337-bae2-c4dd2acdf398",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:18:35.816702181Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bd-724c-7302-bdf0-dac5a0e2ff7a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bd-6b82-7182-bf03-2ad752721ddf/2026-09-28T11-19-07-415Z_01a0e7bd-7197-7397-bf37-c0bb58e0c5bd.jsonl",
+    "native_sid": "01a0e7bd-7197-7397-bf37-c0bb58e0c5bd",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:19:07.596157129Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7bd-9449-7be0-9b3e-eb9879c5051f",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7bd-89f0-75e2-b1e4-3f04223f24e6/2026-09-28T11-19-15-993Z_01a0e7bd-9319-713a-923c-7f69ede3df40.jsonl",
+    "native_sid": "01a0e7bd-9319-713a-923c-7f69ede3df40",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:19:16.296382928Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7be-7d7b-7722-995a-154029223f8f",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7be-6211-73e1-9074-c4dfcf987982/2026-09-28T11-20-14-778Z_01a0e7be-78ba-74d8-8062-386812b5d7ca.jsonl",
+    "native_sid": "01a0e7be-78ba-74d8-8062-386812b5d7ca",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:20:15.994921839Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7be-d0af-7e61-8a2e-7508360e9839",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7be-840e-71f2-8117-0285b9e203f8/2026-09-28T11-20-22-994Z_01a0e7be-98d2-7048-8fae-4bb61ef09772.jsonl",
+    "native_sid": "01a0e7be-98d2-7048-8fae-4bb61ef09772",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T11:20:37.294550439Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7c4-1702-72d2-b3ed-e27185f6a894",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7c3-d872-74f3-ad13-09710bda0775/2026-09-28T11-26-22-660Z_01a0e7c4-15c4-7732-abbb-6d3c20650d6b.jsonl",
+    "native_sid": "01a0e7c4-15c4-7732-abbb-6d3c20650d6b",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:26:22.97807155Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7c4-b20b-7b01-9189-c8967d659f9d",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7c4-5443-7892-a0bb-42208436d549/2026-09-28T11-27-02-259Z_01a0e7c4-b073-704b-89ba-ab74e94ec51a.jsonl",
+    "native_sid": "01a0e7c4-b073-704b-89ba-ab74e94ec51a",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:27:02.656380351Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7c4-e0ef-7001-b965-5294a5b318d2",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7c4-cbdc-7ac2-a283-ca70e067944e/2026-09-28T11-27-14-170Z_01a0e7c4-def9-7516-bbe7-705785fd8aa6.jsonl",
+    "native_sid": "01a0e7c4-def9-7516-bbe7-705785fd8aa6",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:27:14.671203388Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7c5-6ec6-7750-9f17-8feb001a26c6",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7c5-59fd-7af0-ae87-513a56e6fe17/2026-09-28T11-27-50-583Z_01a0e7c5-6d37-72a7-bd36-b9aeecfd509c.jsonl",
+    "native_sid": "01a0e7c5-6d37-72a7-bd36-b9aeecfd509c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:27:50.982382387Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7c7-a25d-7da2-842f-db0ec5b53989",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7c7-6c63-7692-a3a7-fb0791aa2838/2026-09-28T11-30-14-347Z_01a0e7c7-9ecb-70a4-9c8c-6b94f4de4d98.jsonl",
+    "native_sid": "01a0e7c7-9ecb-70a4-9c8c-6b94f4de4d98",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:30:15.260251175Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7c7-c6b1-7670-8ca2-cc7bf2cafa9b",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7c7-b1ef-7f92-9a12-1f843f00ceb6/2026-09-28T11-30-23-963Z_01a0e7c7-c45b-74e1-bdf6-64edca5fadbd.jsonl",
+    "native_sid": "01a0e7c7-c45b-74e1-bdf6-64edca5fadbd",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:30:24.560746758Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7c8-96cf-74e1-a5df-813fb64356c9",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7c8-7c3f-7c92-b058-3ac9c845bbf4/2026-09-28T11-31-16-151Z_01a0e7c8-9037-7242-851b-8e6af6c9d57c.jsonl",
+    "native_sid": "01a0e7c8-9037-7242-851b-8e6af6c9d57c",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:31:17.838370004Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7c9-4c75-7943-922b-91c136f5ff9e",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7c9-2cd3-7750-94e2-66053ac8634c/2026-09-28T11-32-04-038Z_01a0e7c9-4b46-70c7-af49-ece3d84d9f3d.jsonl",
+    "native_sid": "01a0e7c9-4b46-70c7-af49-ece3d84d9f3d",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:32:04.340356968Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7ca-2fcc-7b02-a229-592074b5a24a",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7ca-1b7d-7123-8370-231362f63e76/2026-09-28T11-33-02-133Z_01a0e7ca-2e35-718c-b963-4d6c3eb221b4.jsonl",
+    "native_sid": "01a0e7ca-2e35-718c-b963-4d6c3eb221b4",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:33:02.540290733Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7ca-f38a-7160-9050-44b3e9b95acc",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7ca-dda4-73c0-a340-99f7fc76f5c7/2026-09-28T11-33-52-150Z_01a0e7ca-f196-73f4-b9b7-ac613b9411c8.jsonl",
+    "native_sid": "01a0e7ca-f196-73f4-b9b7-ac613b9411c8",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:33:52.64984509Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7cb-263f-7133-b324-8de6acbc5722",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7cb-0c7c-71d2-a120-7fda7c034ac7/2026-09-28T11-34-04-253Z_01a0e7cb-20dd-72de-93a3-4063ea32e718.jsonl",
+    "native_sid": "01a0e7cb-20dd-72de-93a3-4063ea32e718",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:34:05.630861259Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7cc-c63c-78d2-9b7e-cd1206187b00",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7cc-5c65-7712-a1da-2619bc15fcec/2026-09-28T11-35-51-137Z_01a0e7cc-c261-7480-b83d-23a8f0136930.jsonl",
+    "native_sid": "01a0e7cc-c261-7480-b83d-23a8f0136930",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:35:52.124230036Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7d1-7a7b-7d31-9e2a-d5148426409f",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7d1-22f9-7a51-a220-c8b93ad98884/2026-09-28T11-40-59-920Z_01a0e7d1-7890-7326-b143-061d3e0b84b7.jsonl",
+    "native_sid": "01a0e7d1-7890-7326-b143-061d3e0b84b7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:41:00.410846624Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7d2-fff3-7360-be0d-65e0d35ffdb0",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7d2-bde9-7812-b731-227fc23f4dc9/2026-09-28T11-42-39-708Z_01a0e7d2-fe5c-7799-ae90-9af0101893b7.jsonl",
+    "native_sid": "01a0e7d2-fe5c-7799-ae90-9af0101893b7",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:42:40.114623797Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7d3-bd61-7e20-b0d0-6471f9613074",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7d3-a7df-7bf1-9dba-60f89a7f0abb/2026-09-28T11-43-27-907Z_01a0e7d3-baa3-757d-b944-927678cdd99b.jsonl",
+    "native_sid": "01a0e7d3-baa3-757d-b944-927678cdd99b",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T11:43:28.608860871Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7d7-47ef-7521-a092-badb7c4a8301",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7d6-d5db-75f1-91f0-a43ac1c2f079/2026-09-28T11-47-14-282Z_01a0e7d7-2eea-733d-ac58-f9d4e13bc7b2.jsonl",
+    "native_sid": "01a0e7d7-2eea-733d-ac58-f9d4e13bc7b2",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T11:47:20.686327607Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7d8-494c-7242-a994-bb5a90ca6133",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7d7-dbf6-76f2-a689-71b178a606af/2026-09-28T11-48-25-169Z_01a0e7d8-43d1-7738-9fcf-56504dcf1688.jsonl",
+    "native_sid": "01a0e7d8-43d1-7738-9fcf-56504dcf1688",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:48:26.57139513Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7e1-24fa-7333-98b0-f23b8ebbea23",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7e0-efa1-7903-b7fa-e25c2db4afcf/2026-09-28T11-58-06-918Z_01a0e7e1-2446-778e-91fd-f1db657d85bb.jsonl",
+    "native_sid": "01a0e7e1-2446-778e-91fd-f1db657d85bb",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:58:07.097727277Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7e1-27c5-7403-b475-8228f6b4d054",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7e0-dd02-7c61-9985-42556cb37f50/2026-09-28T11-58-06-918Z_01a0e7e1-2446-7247-b8bf-fa136641e026.jsonl",
+    "native_sid": "01a0e7e1-2446-7247-b8bf-fa136641e026",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:58:07.812099423Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7e2-0731-7550-9baf-f46b26c47bba",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7e2-0106-7493-946a-957a693053da/2026-09-28T11-59-04-901Z_01a0e7e2-06c5-714f-bdbb-a826338b6d81.jsonl",
+    "native_sid": null,
+    "lifecycle": "idle",
+    "started_at": "2026-09-28T11:59:05.009031698Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7e2-0d75-7822-ad2c-f1bc5c43beac",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7e2-0402-7b02-8249-627030c787c8/2026-09-28T11-59-05-597Z_01a0e7e2-097c-7007-9907-232deeca1d6f.jsonl",
+    "native_sid": "01a0e7e2-097c-7007-9907-232deeca1d6f",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:59:06.613002198Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7e2-731d-70a2-9523-50a0416aa68f",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7e2-6ce0-76f2-91a8-c2ea1a5beb2c/2026-09-28T11-59-32-428Z_01a0e7e2-724c-77fb-8e5e-6d87fbe363c2.jsonl",
+    "native_sid": "01a0e7e2-724c-77fb-8e5e-6d87fbe363c2",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:59:32.637150341Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7e2-830a-74a0-b24f-3178676267d1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7e2-7da9-7f71-bdfc-9e1725618db4/2026-09-28T11-59-36-525Z_01a0e7e2-824d-75c3-b554-aa12eef31e97.jsonl",
+    "native_sid": null,
+    "lifecycle": "idle",
+    "started_at": "2026-09-28T11:59:36.714322316Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7e2-9d97-79c1-8a88-1355d8a759f1",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7e2-97c7-7ed3-983e-514ae2ce9851/2026-09-28T11-59-43-425Z_01a0e7e2-9d41-7250-8293-ae8c113549ff.jsonl",
+    "native_sid": "01a0e7e2-9d41-7250-8293-ae8c113549ff",
+    "lifecycle": "replaced",
+    "started_at": "2026-09-28T11:59:43.510618266Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7e3-1902-76d0-a134-295c4962a315",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7e3-162b-7701-8afe-0c92d4db6e4c/2026-09-28T12-00-15-058Z_01a0e7e3-18d2-7044-b98b-352a6a472234.jsonl",
+    "native_sid": "01a0e7e3-18d2-7044-b98b-352a6a472234",
+    "lifecycle": "sleeping",
+    "started_at": "2026-09-28T12:00:15.105497303Z",
+    "resume_count": 0
+  },
+  {
+    "db_session_id": "01a0e7e3-6f81-70e2-b6aa-c63cf868a904",
+    "provider_path": "/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e7e3-6ccb-71e3-837c-acc61eb29f5a/2026-09-28T12-00-37-207Z_01a0e7e3-6f57-7030-9f09-b48c2c55a01f.jsonl",
+    "native_sid": null,
+    "lifecycle": "idle",
+    "started_at": "2026-09-28T12:00:37.24867332Z",
+    "resume_count": 0
+  }
+]

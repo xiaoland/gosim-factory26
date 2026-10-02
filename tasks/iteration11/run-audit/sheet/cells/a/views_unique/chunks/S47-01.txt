@@ -1,0 +1,220 @@
+S47 01a0ec10-4c3f-7130-bbce-c852c0d29a59
+source=work/native-homes/pi-deepseek-fast-01a0ec10-47cb-7063-b87c-3091a9ce6d5d/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T07-28-06-207Z_01a0ec10-4c3f-7130-bbce-c852c0d29a59.jsonl
+## S47:L1 2026-09-29T07:28:06.207Z session 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L1:version]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L1:cwd]
+
+## S47:L2 2026-09-29T07:28:06.234Z model_change 
+[provider]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L2:provider]
+[modelId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L2:modelId]
+
+## S47:L3 2026-09-29T07:28:06.234Z thinking_level_change 
+[thinkingLevel]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L3:thinkingLevel]
+
+## S47:L4 2026-09-29T07:28:06.846Z message user
+[text]
+- **未决/假设**：**尺寸上限已裁定为非全局不变量**（Issue #1 thread 1 comment #54）：import/state 不设应用层上限，实际边界 = `express.json` 10mb，全量渲染性能限度见 Issue #1 comment #53 实测。**共享 helper 切换已在 develop 成立**（helper 已在 develop；`a23af5a` 改调 `assertWorksheetStateValid` 并删本地副本，合入 `e63efc6` 后 develop 为单点校验实现，见 comment #88 §2 与 #92 §1；#60 的 #3 关闭前提已满足）。**A-7 已被 v1.3 取代**："尾部空字段不导出"现仅对无足迹工作表（空白创建工作簿）成立。**C 未合入 → 公式单元格导出原文（e2e 过渡断言已标注必须翻转），这是本 Issue 唯一的未满足前提，已随 #167 关闭转交**（C 侧 PR #10 已替换接缝并翻转该断言（翻转首见于 `c340e2e`；后续 head `d42be13` 上复核仍成立，锚点不绑定会前进的 head，见 PR #8 comment #136/#137），待合入后由整合 PR 在最终候选复跑；履行状态与 A-3 边界复核见本 Issue comment #131）：① **C（#5）**替换 `frontend/src/lib/cellDisplay.ts:17` `worksheetDisplayValues` 实现，使网格与导出同取当前计算结果（含错误值走同一显示路径），FormulaBar（`FormulaBar`）与内联编辑（`Grid.tsx` 内联编辑以 `raw` 初始化）必须继续读 `raw`；两个消费者已接线完成（`WorkbookEditor.tsx:118-119` memo → `Grid.tsx:189` `text`；`WorkbookToolbar.tsx:34` → `worksheetToCsv`），C 只需换实现，不必新增接线。② **整合 PR**带「公式单元格导出 = 计算结果」门禁，在该用例上复跑（`e2e/workbook-lifecycle.spec.ts`，用例 `exports the formula cell value through the shared display seam`；A 交付时行内注 `PRE-C TRANSITION (Issue #3 decision D-A8)`，C 已在 PR #10 翻转为计算结果）——浏览器内 e2e 同时是 Node-only 方向的运行时把关（契约 v1.4 §5）。锚点清单见 PR #8 comment #94（原始清单）与 **Issue #5 comment #96（C 侧可执行版本）**；**C（#5）已指派 @deepseek-7**（timeline #169），A-3 接缝义务已写入其交接材料（#5 comment #96，锚点经我在 `e63efc6` 上复核可用）——更正与依据见本 Issue comment #99。A-5 宽松解析不变（只拒绝需求明示的非法引号类，`"ab"cd` 宽松接受）；导入成功即跳编辑器；导出文件名 `<工作簿名>.csv`；详见 comment #27 第 5 节。
+### Comment: local/run#issuecomment-138 by @deepseek-3
+Posted: 2026-09-29T07:27:59.293843759Z
+Reply to: comment 131
+【正文窄改：把公式导出门禁的锚点从会前进的 head 解绑（reply #131；依据 PR #8 comment #136/#137）】@deepseek-5 @deepseek-8 @glm-1
+本轮我按 @deepseek-5 在 PR #8 #136/#137 的复核事实，对正文「未决/假设」的一处**锚点表述**做窄改（其余判据、边界、关闭依据原文不动）：
+- 原：「C 侧 PR #10 分支 `c340e2e` 已替换接缝并翻转该断言，待合入后由整合 PR 在最终候选复跑」
+- 现：「C 侧 PR #10 已替换接缝并翻转该断言（翻转首见于 `c340e2e`；后续 head `d42be13` 上复核仍成立，锚点不绑定会前进的 head，见 PR #8 comment #136/#137），待合入后由整合 PR 在最终候选复跑」
+理由：#136/#137 已实证 C 的 PR #10 head 由 `c340e2e` 前进到 `d42be13` 后翻转仍成立；把锚点写成具体 head 会让整合 PR 侧误以为必须匹配旧 head。**门禁内容不变**：整合 PR 在 C 合入后的最终候选上复跑用例 `exports the formula cell value through the shared display seam`（网格 `2`、导出 `2,plain`，浏览器内真实执行），不是再次翻转。
+## 本轮独立复核（本 worktree `git fetch` 后，非转述）
+- `origin/develop` = `e63efc6`（未变）：`frontend/src/lib/cellDisplay.ts` 仍是恒等接缝；`e2e/workbook-lifecycle.spec.ts:378` 仍是 `PRE-C TRANSITION (Issue #3 decision D-A8)`，断言 `'=1+1'` / `'=1+1,plain'`（383/385 行）。
+- `origin/c-issue-5-formula-engine` = `d42be13`（PR #10 OPEN，负责人 @deepseek-8）：接缝已为 `evaluate(...)` 形态，翻转断言在 382/384 行 → #136/#137 结论成立。
+- `origin/braid/issue-3-a` = `a23af5a`（未动）；A 侧无待办、无新提交。
+契约 v1.4 的 §1（`worksheetDisplayValues` 必须始终传结构 `{rowCount, colCount}` 而非足迹）由 C 的实现承担，A 侧接缝消费者未变，无需 A 侧动作（依据 Issue #1 thread 1 comment #135 与我的 comment #131）。
+[DUPLICATES: 652 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L4:C1]
+
+## S47:L5 2026-09-29T07:28:06.869Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L5:customType]
+[content]
+Previous native subagent runs for this same worktree (verify before re-delegating a write task). Showing 6/6; full run index: /workspace/template/.factory26/20260929-042409-811f18d4/work/native-homes/pi-deepseek-fast-01a0ec10-47cb-7063-b87c-3091a9ce6d5d/.factory/previous-subagents.json. Results are re-read on recovery; completion updates are recorded while this native session is alive, without starting a new response. Inspect pending results needed for your work before declaring completion. These entries do not transfer task ownership.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L5:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L5:display]
+
+## S47:L6 2026-09-29T07:28:08.917Z message assistant
+[thinking]
+Let me look at the current state of Issue #3. The issue title/body was modified. Let me check.
+The task: handle Issue #3. Let me view the current content.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L6:C1]
+[toolCall] bash call_00_JCjvfkTK89rTEKWhgPL77827
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 2>&1 | head -80"}
+[toolCall] bash call_01_6FjNg6ETSPOb8T7qQyjz4864
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -5 && git log --oneline -3 origin/develop"}
+
+## S47:L7 2026-09-29T07:28:08.969Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 44 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L7:C1]
+
+## S47:L8 2026-09-29T07:28:08.969Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L8:C1]
+
+## S47:L9 2026-09-29T07:28:13.902Z message assistant
+[thinking]
+The issue body/title was modified (title prefixed with "子 Issue A：..."). The state is CLOSED. Let me check the recent changes: what changed in the body? The message says "issue #3 title/body 已修改". The state description now includes a state line. Hmm — the view shows "state: CLOSED reason: ..." at the top, and the body. So it appears the body has been updated to the current entry.
+Wait, the issue was already closed earlier by @glm-1, and comment #99/#131/#138 handled updates. Now the notification says title/body modified. Perhaps the title now has "子 Issue A：" prefix and body updated. Let me check the timeline to see what happened most recently, and check other issues/PRs status to see if there's something requiring my action.
+Actually, what's my task? "请处理 Issue #3。发生以下更新：issue #3 title/body 已修改". So I should check the update and respond appropriately — likely verify that the body reflects current facts, and check whether anything needs action (e.g., PR #10 for C merged? Integration PR ready?).
+Let me look at the timeline and other work items.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L9:C1]
+[toolCall] bash call_00_xAfBDAPUXUDNq9JKnxvE1895
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L9:C2]
+[toolCall] bash call_01_DzfuJLOCsl1DpVBJe3HH9245
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid pr list 2>&1 | tail -20 && echo ---- && braid issue list 2>&1 | tail -20"}
+
+## S47:L10 2026-09-29T07:28:13.931Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 30 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L10:C1]
+
+## S47:L11 2026-09-29T07:28:13.931Z message toolResult
+toolResult bash False
+[text]
+#10	OPEN	@deepseek-8	子 Issue C：公式引擎与计算（REQ-4-*）
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L11:C1]
+
+## S47:L12 2026-09-29T07:28:16.158Z message assistant
+[thinking]
+The timeline shows the last event at #167 (close) — but the notification said title/body modified. The timeline tail shows up to #167, but maybe the timeline list is truncated at tail -40 and the edits happened after? Actually the tail shows the last entries ending with #167. Hmm, but the notification says issue #3 title/body modified. Perhaps it's truncated — let me see full timeline. The tail -40 showed from #7 onwards; there may be more entries after #167.
+Wait, actually the timeline output ends at #167. So where's the body modification? Maybe the view tool's timeline excludes edits made by... hmm. Let me check the full timeline length.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L12:C1]
+[toolCall] bash call_00_KdNwad2vVq53NtRCY2iu4490
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --timeline 2>&1 | wc -l && braid issue view 3 --timeline 2>&1 | sed -n '40,200p'"}
+
+## S47:L13 2026-09-29T07:28:16.182Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L13:C1]
+
+## S47:L14 2026-09-29T07:28:20.345Z message assistant
+[thinking]
+Only 30 lines total, ending at #167. So the timeline output was fully shown (tail -40 = all). Hmm, so no title/body edit is visible after #167 in the timeline? But the notification says "issue #3 title/body 已修改". Maybe the edits are not recorded as timeline entries visible via this command, or maybe the modification was by @glm-1 changing the state/reason? Actually the "state: CLOSED reason: ..." appears in the view output — that's the close reason. The title now is "子 Issue A：工作簿生命周期与 CSV 交换（REQ-1-2-1/1-2-2/1-3-1/1-3-2）" which matches the original created title in #7.
+Hmm, the notification may be stale/system-generated. Let me check `braid issue view 3 --comments` for anything new after #138 (comment #138 was my last reply per the prompt). The comments list in the prompt ends with #138. Let me check for newer comments.
+Actually — the key question: what work remains for Issue #3? It's CLOSED. My role: Issue lead. The notification about title/body modified might mean someone (root @glm-1?) edited title/body. Let me check whether there's an updated body with new state. Comparing to what I'd expect: my last body edit was #165? Actually #165 was an edit by me. Then #167 close by @glm-1.
+But the body in the prompt includes comment #138's update ("C 侧 PR #10 已替换接缝并翻转该断言（翻转首见于 c340e2e...）"). And it includes the #131, #99 updates. So the body seems current.
+Hmm, wait. The notification at the top of this task says "issue #3 title/body 已修改". This is the trigger. Since there's no visible edit after #167 in the timeline, maybe the timeline display truncates. Let me try `braid issue view 3 --comments` and look for new comments, and check `braid` help for a way to see edit history.
+Actually, maybe the title was changed by @glm-1 to add the "子 Issue A：" prefix — that prefix is present in the current title but at creation (#7) the title was "子 Issue A：工作簿生命周期与 CSV 交换（REQ-1-2-1/1-2-2/1-3-1/1-3-2）" too. So it already had it.
+Hmm, maybe the body was modified to reflect the closed state (the "状态：CLOSED" line at the top of "设计与交接入口" and the sub-issue prefix). That would have been my edit #165.
+Alternatively, maybe there's a recent unrecorded change. Let me check file mtimes or query the braid state store directly? Better: check `braid issue view 3 --comments` full and diff against the prompt-provided comments.
+Let me just run it and count comments.
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L14:C1]
+[toolCall] bash call_00_YEYgklGBYLEulLHgfktS9392
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --comments 2>&1 | grep -E '^### Comment|^State:|^Thread:' | tail -30"}
+[toolCall] bash call_01_6wNjY4i9ccAqsbdLBniT2653
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L14:C3]
+
+## S47:L15 2026-09-29T07:28:20.367Z message toolResult
+toolResult bash False
+
+## S47:L16 2026-09-29T07:28:20.367Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 18 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L16:C1]
+
+## S47:L17 2026-09-29T07:28:21.975Z message assistant
+[thinking]
+The first command gave no output? Odd. Maybe `--comments` output format differs. Let me run plain and head.
+[toolCall] bash call_00_3VAa8NKF4tFBGYIyOrlx8622
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --comments 2>&1 | head -30"}
+
+## S47:L18 2026-09-29T07:28:21.996Z message toolResult
+toolResult bash False
+[text]
+- **状态：CLOSED（2026-09-29）** —— 根负责人 @glm-1 在 #167 关闭，理由「PR #8 已验收合入 develop（`e63efc6`，合并树与验收候选 `a23af5a` 逐字节一致）……遗留义务已转交：A-3 接缝替换归 C（#5）、公式导出门禁归整合 PR；已知边界随契约保持可见」。我在关闭后于本 worktree 独立复核 `origin/develop`（`e63efc6`）：tree `a3ae41bf` 与 `a23af5a` 一致（`git diff` 为空）、`POST /api/workbooks/import` 与 `parseCsv`/`createWorkbookFromCsv` 在树内、`cellDisplay.ts` 等 A 交付文件齐备、`assertWorksheetStateValid` 单点（定义 1 处 + 调用 1 处）。**与 Issue #4 comment #78「子 Issue 关闭待根侧整合验收」惯例的差异**：本 Issue 在整合 PR 之前关闭，把唯一未满足前提（公式单元格导出计算结果）显式转交整合 PR 门禁；该前提的精确锚点见本页「未决/假设」条与 PR #8 comment #94。Issue 侧无待办；不再向 `braid/issue-3-a` 追加提交。
+[DUPLICATES: 29 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L18:C1]
+
+## S47:L19 2026-09-29T07:28:26.260Z message assistant
+[thinking]
+grep found no lines matching '### Comment' — so the comments are rendered differently. Fine.
+Now the notification: "issue #3 title/body 已修改". Since issue #3 is CLOSED and my work is done, I need to figure out what changed. Possibly @glm-1 closed it with a close reason that also updated title/body? Or maybe the harness synthesized a state line into the body. The view shows "state: CLOSED" and "reason:" lines — which the platform seems to prepend to the body of a closed issue. That is likely the "body modified" notification: the close reason being appended/state.
+Hmm, but wait — maybe the reason field itself. Let me look at how other closed/OPen issues look. Issue #3's body starts with the state/reason, then the actual description. This might be normal for closed issues in this harness.
+So likely the modification is the close event by @glm-1 at #167 — but that happened before my comments #99, #131, #138. Actually the timeline shows #167 close, then... wait, the timeline ends at #167 but my comments #99, #131, #138 came after? Let's check: timeline shows #99 at 06:11:51 (edit), then #114, #116, #132, #142, #144, ... #167 at 06:52:54. My comment #131 (07:25:56) and #138 (07:27:59) are NOT in the timeline! The timeline ends at #167 (06:52:54).
+Hmm, that's strange — comments #131 and #138 have timestamps 07:25 and 07:27, after #167. But the issue was closed at 06:52:54. Comments can be added after close. But the timeline doesn't list them... maybe the timeline truncates to first 30 entries? wc -l said 30 lines. Hmm, the sed -n '40,200p' produced nothing, meaning total output is 30 lines. So the timeline has only 30 entries, oldest first, and it's cut off at #167? That means entries after #167 (my comments #131, #138) are missing. So timeline is limited/paginated. Let me check --timeline with more options, or maybe `braid issue view 3 --timeline --limit`.
+Actually the important thing: what does the platform want me to do now? The notification says title/body modified. Since the issue is closed and my responsibilities are largely done, maybe the action is to review the new body and confirm it's accurate — or maybe there's a new open work item.
+Let me check the latest comments beyond #138 to see whether something new arrived. Let me view all comments with thread info. Let me check comment list ordering via `braid comment view`.
+Let me try `braid issue view 3 --comments` and search for "comment #" occurrences or "Thread:".
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L19:C1]
+[toolCall] bash call_00_MaHtPSslvplKDIQshiJ65837
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --comments 2>&1 | grep -nE 'comment #|Thread:|Posted' | tail -40"}
+
+## S47:L20 2026-09-29T07:28:26.284Z message toolResult
+toolResult bash False
+[text]
+293:依据 Issue #1 thread 1 comment #51（A-1…A-4 裁定）、#54（尺寸上限非全局）、#57（Y-min 落地语义 + "空文件"优先级）、#60/#66/#69（共享 helper 形态与消费时序）、#65（导出末换行裁定）与根侧 #64 七项补齐清单。对 comment #27/#33/#36 的窄改如下；D-A1…D-A10 其余部分与 #27 第 4 节验收方案不变。
+297:- **取代 A-7**（comment #33 的"不实现导入尺寸下限"）：按 A-4 实现**导入足迹** `min_rows`/`min_cols` —— 仅 CSV 导入写入，等于解析后 CSV 实际行列数（尾部空行裁剪、ragged 行右补空）；新建空白工作簿为 0；导出 used range = `max(非空包围盒, 静态足迹)`；足迹静态，结构操作不读写。原 A-7 的"尾部空字段不导出"现仅对**无足迹**工作表成立。
+302:- **尺寸上限**：已裁定为**非全局不变量**（#54）——import/state 不设应用层上限，实际边界 = `express.json` 10mb；全量渲染性能限度见 Issue #1 comment #53 实测数据。
+320:**README 第 53–56 行的额外一句**（"行列数只由结构操作与 CSV 导入改变" → 三条路径 + "`PUT .../cells` 永不隐式扩张"）：**接受**，与 comment #36 要消除的是同一"入口不完整"事实、未放宽任何不变量；根侧 #80 亦裁定接受，不回退。
+336:【补 comment #81 §2：候选 559a0bd 的 e2e 复跑证据 + 足迹语义的已记录边界】@deepseek-5 @glm-1
+344:结论：**候选 559a0bd 按 comment #27 + #33 + #36 + v1.3（#51/#54/#57/#60/#65）的 A-1/A-3/A-4 落地与自检，经我独立复核通过**（unit 51+46、typecheck Done、e2e 15 passed）。唯一未完成项仍是我在 #81 §3 交办的共享 helper 切换。
+350:1. **尾部空行一律不产生记录**：`a,b\n\n` → 1×2（足迹 1×2），不是 2×2。这与 D-A5/comment #27 一致；#51 的钉死 (2) 只写了"文件末尾单个换行"，本条是其已批准设计的推广。尾随空行现在会经足迹在导出中可见（`a,b\n\n` 导入 → 导出 `a,b`）。**若根侧要按 (2) 的字面收紧**（只忽略单个终止换行、把多余空行当记录），改动点是 `parseCsv` 末尾清理一处，会同时改变足迹与导出；在那之前按已批准的 D-A5 保持现状。相关对照实测：前导/中间空行**保留**（`\n\na,b` → 3×2、`a\n\nb` → 3×1），只有"形状为单个空字段的尾随记录"被丢弃。
+379:按 Issue #3 comment #81 §3 交办，rebase + 共享 helper 切换已完成并推送。
+402:2. **环境**：本仓库 `pnpm` 包装器内部用 Node 24，直接 `pnpm install` 会把 `better-sqlite3` 装成 ABI 137，而平台运行 Node 20.19.3（ABI 115），Vitest 因此整片报 `NODE_MODULE_VERSION 137` / `Module did not self-register`（与 comment #81 §2 的独立复现同一现象）。按你的做法 `cd backend && PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3` 后全绿；已记入 packet 的"预演/排障结论"，供后续成员复用。
+406:- comment #82 §2 记录的五条边界（尾部空行不产生记录、`a\n""` 退化形状、`rowSpan===0` 空表分支、`min ≤ 结构` 只在写入时对申报字段检查、单列退化不幂等）**不需要实现改动**，本候选未触碰 parser 与导出逻辑。
+419:我按 comment #27 + #33 + #36 + v1.3（#81/#82）在自己的 worktree 独立执行，未复用 PR 侧证据。结论：**该候选满足子 Issue A 的判据与 #60 的关闭前提，可交根侧合入 `develop`**。
+438:- A 的判据面相对 `559a0bd` **无行为改动**：`parseCsv`（ragged 右补空、尾部空行不产生记录、BOM 剥离、只拒绝未闭合引号）与 `worksheetToCsv`（`max(包围盒, 静态足迹)`、双空才空文件、RFC4180 转义、末条记录后无终结换行）逐行未变；`Grid` 渲染走 `text`、内联编辑与 FormulaBar 仍读 `raw`（D-A8/comment #33）。e2e 的公式导出用例仍带 **「C 合入时必须翻转为计算结果」** 注释。
+490:- 详情与逐项核实见 PR #8 comment #90。子 Issue A 的实现与验收链到此闭环，本 PR 侧无待办。
+502:- **更正**：我在 #88 请 @glm-1 代办合入；实际按子 Issue 惯例（Issue #4 comment #78：子 Issue PR 由 Issue 负责人合入 develop）**由我执行合入**。@glm-1 无需再操作 PR #8，不存在重复合入。
+512:- 与 #4 同惯例（Issue #4 comment #78：「本 Issue 保持 open：关闭待根负责人整合验收后执行」）。A 侧设计与实现链已闭环，遗留的是跨 Issue 验收前提而非本 Issue 待办。
+513:- **唯一未满足的验收前提**：C（#5）替换 `frontend/src/lib/cellDisplay.ts` 实现，使网格显示与 CSV 导出同取当前计算结果（**含错误值走同一显示路径**）；FormulaBar 与内联编辑框必须继续读 `raw`（D-A8 / comment #33）；整合 PR 带「公式单元格导出 = 计算结果」门禁，翻转 `e2e/workbook-lifecycle.spec.ts` 中已标注的过渡断言。
+542:「设计与交接入口」新增**状态 CLOSED** 条（含关闭人、理由、我的复核与「早于整合 PR 关闭」这一与 Issue #4 comment #78 惯例的差异说明）；「交接与结果」补 PR 侧收口入口（PR #8 comment #93/#94）；「未决/假设」把「#3 保持 OPEN」改写为**已转交的未满足前提**，并按 PR #8 comment #94 写入精确锚点：`cellDisplay.ts:17` 换实现、`WorkbookEditor.tsx:118-119` → `Grid.tsx:189` 与 `WorkbookToolbar.tsx:34` 两处消费已接线、FormulaBar/Grid 内联编辑仍读 `raw`。
+561:2. **A-3 接缝义务已写入 C 的交接材料**：Issue #5 **comment #96**（timeline #175），内容含 —— 唯一待替换实现 `frontend/src/lib/cellDisplay.ts:17` `worksheetDisplayValues`；两个消费者已接线（`WorkbookEditor.tsx:118-119` → `Grid.tsx:189` `text`；`WorkbookToolbar.tsx:34` → `worksheetToCsv`）；不得覆盖的边界（`Grid` 内联编辑以 `raw` 初始化、`FormulaBar` 读原文）；错误值须经同一接缝（网格显示什么、导出写什么）；必须翻转的过渡断言 `e2e/workbook-lifecycle.spec.ts:375-386`（`PRE-C TRANSITION`，`=1+1,plain` → 网格与导出同为 `2`）及英文注释的检索提示。锚点原文见 PR #8 comment #94。
+563:**请 @deepseek-3 窄改本 Issue 正文（「未决/假设」末段）两处已过期表述**：①「**#5 尚未指派**，@glm-1 指派时须把该 A-3 接缝义务写入 C 的交接材料」→ C 已指派 @deepseek-7，义务已交付（#5 comment #96）；② 若仍保留「A-3 锚点清单见 PR #8 comment #94」的指路，建议并列 #5 comment #96（后者是 C 侧可执行版本）。其余判据、边界与关闭依据不变。
+575:- 删去「**#5 尚未指派**，@glm-1 指派时须把该 A-3 接缝义务写入 C 的交接材料」；改为「C（#5）已指派 @deepseek-7（timeline #169），A-3 接缝义务已写入其交接材料（Issue #5 comment #96）」。
+576:- 「锚点清单见 PR #8 comment #94」→「锚点清单见 PR #8 comment #94（原始清单）与 Issue #5 comment #96（C 侧可执行版本）」。
+581:- 在 `e63efc6` 树内逐条核对 #5 comment #96 的锚点：`frontend/src/lib/cellDisplay.ts:17` = `worksheetDisplayValues`；`WorkbookEditor.tsx:118-119` memo（并在 345/370 把 `displayValue` 传给 Grid 与工具栏）；`Grid.tsx:189` `text={displayValue ? displayValue(row, col) : raw}`；`WorkbookToolbar.tsx:34` `worksheetToCsv(worksheet, displayValue)`；过渡用例 `e2e/workbook-lifecycle.spec.ts` 的 `importCsv('export formula.csv', '=1+1,plain')` / `PRE-C TRANSITION` / 两条断言在 376/378/383/385 行，落在 #96 所写 375–386 区间内。→ **#96 的锚点清单可用，无需修正**。
+582:- 一处排版提示（不影响语义）：#5 comment #96 §1 有一处 UTF-8 乱码（「已经��在接缝上」，原意应为「已经挂在接缝上」）。C 侧按文件名 + 行号/符号检索即可，不要依赖该词。
+595:按契约 v1.4（Issue #1 thread 1 comment #128，与 A 侧 #110/#121 对账）与 C 侧已发布接口（`d9523b4`、`c340e2e`），我在本 worktree `git fetch` 后对 A-3 接缝的履行做了代码级复核（只读，未改任何分支或文件，worktree clean）：
+604:依据入口：v1.4 = Issue #1 thread 1 comment #128；C 的接口发布 = Issue #1 thread 1 comment #124（及 PR #10）；A-3 契约与边界 = 本 Issue comment #27 / #33 / #81 / #82 与 PR #8 comment #94。
+607:comment #138 [visible]
+610:【正文窄改：把公式导出门禁的锚点从会前进的 head 解绑（reply #131；依据 PR #8 comment #136/#137）】@deepseek-5 @deepseek-8 @glm-1
+615:- 现：「C 侧 PR #10 已替换接缝并翻转该断言（翻转首见于 `c340e2e`；后续 head `d42be13` 上复核仍成立，锚点不绑定会前进的 head，见 PR #8 comment #136/#137），待合入后由整合 PR 在最终候选复跑」
+625:契约 v1.4 的 §1（`worksheetDisplayValues` 必须始终传结构 `{rowCount, colCount}` 而非足迹）由 C 的实现承担，A 侧接缝消费者未变，无需 A 侧动作（依据 Issue #1 thread 1 comment #135 与我的 comment #131）。
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L20:C1]
+
+## S47:L21 2026-09-29T07:28:28.337Z message assistant
+[thinking]
+So the last comment on issue #3 is #138 (mine). No newer comment. The notification is only "title/body 已修改".
+Let me check whether the title/body differs from what I last set. Since the view output includes the state/reason header, and the title has the 子 Issue prefix. Perhaps the edit was made by... let me check the issue's raw JSON in the braid state directory to see the updated_at / modified fields.
+Let me find the state directory.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S47:L21:C1]
+[toolCall] bash call_00_o3Ik3UAa7C7Uua6gwQoK6067
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4 && ls braid-state 2>/dev/null && find braid-state -maxdepth 3 -name '*.json' 2>/dev/null | head -20"}
+[toolCall] bash call_01_1El9YfNRUAsOehQpjlrH4261
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --help 2>&1 | head -30"}
+
+## S47:L22 2026-09-29T07:28:28.354Z message toolResult
+toolResult bash False
+[text]
+backups
+braid.sqlite3
+braid.sqlite3-shm
+braid.sqlite3-wal
+braid.sqlite3.migrate.lock
+offline-resumes
+origin.git
+physical
+request.json
+runtime.lock
+sessions.json
+status.json
+turns
+worktrees
+braid-state/status.json
+braid-state/sessions.json
+braid-state/offline-resumes/1790663458257.json
+braid-state/offline-resumes/1790659291962.json
+braid-state/physical/01a0ebe8-8dcc-76d2-92a0-d4739f076434/session.json
+braid-state/physical/01a0ebe

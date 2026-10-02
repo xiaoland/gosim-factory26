@@ -1,0 +1,21 @@
+## Record 1
+Source: work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/run-history.jsonl:1
+{
+  "agent": "vision",
+  "task": "[redacted]",
+  "taskHash": "507aa2e4e8da2a755f7a10c930da92a88fb7a2ab0b1deaed6577255c1876bd3d",
+  "ts": 1790664868,
+  "status": "ok",
+  "duration": 29913
+}
+
+## Record 2
+Source: work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/run-history.jsonl:2
+{
+  "agent": "advisor",
+  "task": "[redacted]",
+  "taskHash": "6722ca742560f9053d5e87e82843016747d58baded1acf7fad08ab90f3bc22b0",
+  "ts": 1790665471,
+  "status": "ok",
+  "duration": 633044
+}

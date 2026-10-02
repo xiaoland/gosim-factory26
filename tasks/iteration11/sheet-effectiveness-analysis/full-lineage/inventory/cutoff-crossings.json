@@ -1,0 +1,29 @@
+[
+  {
+    "source_file": "work/native-homes/pi-deepseek-fast-01a0ec10-47cb-7063-b87c-3091a9ce6d5d/2026-09-29T07-28-06-207Z_01a0ec10-4c3f-7130-bbce-c852c0d29a59.jsonl",
+    "work_item": "issue:3",
+    "stage": "A",
+    "lines": 93,
+    "first_timestamp": "2026-09-29T07:31:44.279Z",
+    "last_timestamp": "2026-09-29T09:49:33.996Z",
+    "read_status": "already_read_partial",
+    "read_ranges": [
+      [
+        1,
+        34
+      ]
+    ],
+    "pre_cutoff_ranges": [
+      [
+        1,
+        34
+      ]
+    ],
+    "post_cutoff_ranges": [
+      [
+        35,
+        93
+      ]
+    ]
+  }
+]

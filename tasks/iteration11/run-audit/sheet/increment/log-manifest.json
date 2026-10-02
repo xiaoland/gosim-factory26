@@ -1,0 +1,16 @@
+[
+  {
+    "source": "/home/yyh/Development/factory26/runs/e20260928-03-check-receipts/hotfix-02/generation/runs/pi-braid--hackathon--sheet-d105b86431cdc7/stderr.log",
+    "path": "hotfix02-stderr.log",
+    "sha256": "233d21ea39af864d1f34485c64a46076ee172f94d18dd4d80b2f525499569eec",
+    "bytes": 1162,
+    "acquired_at": "2026-09-29T08:25:59.942600+00:00"
+  },
+  {
+    "source": "/home/yyh/Development/factory26/runs/e20260928-03-check-receipts/generation/runs/pi-braid--hackathon--sheet-3b5e3eeaa3b062/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/continuation-1790663455870289442-braid.log",
+    "path": "continuation-hotfix02.log",
+    "sha256": "945f998f5e989d0db5c998ce612bdfb6979ae49b643527665a85627249027681",
+    "bytes": 55700,
+    "acquired_at": "2026-09-29T08:26:00.136507+00:00"
+  }
+]

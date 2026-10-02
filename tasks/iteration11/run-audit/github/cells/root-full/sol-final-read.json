@@ -1,0 +1,254 @@
+{
+  "status": "complete_substantive_fields",
+  "assigned_index_range_inclusive": [
+    0,
+    14
+  ],
+  "authority": "snapshot-01 assignment.json units[0:15] and listed views",
+  "reader": "sol_final_reader.py",
+  "substantive_stream_total_chars": 1309713,
+  "stream_parts": 1109,
+  "stream_unique_parts": 893,
+  "actually_consumed_stream_ranges_half_open": [
+    [
+      0,
+      255000
+    ],
+    [
+      304679,
+      355187
+    ],
+    [
+      405975,
+      456445
+    ],
+    [
+      507174,
+      587174
+    ],
+    [
+      604350,
+      1309713
+    ]
+  ],
+  "reuse_ranges_half_open": [
+    {
+      "range": [
+        255000,
+        304679
+      ],
+      "basis": "U2 R17 message.details.truncation.content, 49827 chars, exact prefix of U2 R17 message.text-part-1 already read",
+      "equality_verified": true
+    },
+    {
+      "range": [
+        355187,
+        405975
+      ],
+      "basis": "U2 R19 message.details.truncation.content, 50196 chars, exact prefix of U2 R19 message.text-part-1 already read",
+      "equality_verified": true
+    },
+    {
+      "range": [
+        456445,
+        507174
+      ],
+      "basis": "U2 R21 message.details.truncation.content, 50178 chars, exact prefix of U2 R21 message.text-part-1 already read",
+      "equality_verified": true
+    },
+    {
+      "range": [
+        587174,
+        604350
+      ],
+      "basis": "U2 R40 custom_message.content embeds all 28450 chars of U0 R49 vision final already read; unique prefix and tail read",
+      "equality_verified": true
+    }
+  ],
+  "unit_receipts": [
+    {
+      "index": 0,
+      "id": "01a0eb6a-7ccc-7707-b0a3-d0ae393ba669",
+      "kind": "subagent",
+      "view": "views/01a0eb6a-7ccc-7707-b0a3-d0ae393ba669.txt",
+      "record_range_inclusive": [
+        1,
+        49
+      ],
+      "records": 49,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 1,
+      "id": "01a0eb6b-7ea1-7699-84dc-a7583b0dc40a",
+      "kind": "subagent",
+      "view": "views/01a0eb6b-7ea1-7699-84dc-a7583b0dc40a.txt",
+      "record_range_inclusive": [
+        1,
+        9
+      ],
+      "records": 9,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 2,
+      "id": "2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828",
+      "kind": "native",
+      "view": "views/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.txt",
+      "record_range_inclusive": [
+        1,
+        105
+      ],
+      "records": 105,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 3,
+      "id": "1657f14b-e00e-433e-88c2-f9ba59cc0c83_vision_transcript",
+      "kind": "transcript",
+      "view": "views/1657f14b-e00e-433e-88c2-f9ba59cc0c83_vision_transcript.txt",
+      "record_range_inclusive": [
+        1,
+        102
+      ],
+      "records": 102,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 4,
+      "id": "200cbf14-e4e8-422a-92d9-36f5b791ee15_advisor_transcript",
+      "kind": "transcript",
+      "view": "views/200cbf14-e4e8-422a-92d9-36f5b791ee15_advisor_transcript.txt",
+      "record_range_inclusive": [
+        1,
+        10
+      ],
+      "records": 10,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 5,
+      "id": "2026-09-29T04-47-45-693Z_01a0eb7d-801d-73b9-baaa-8bbf1159ff88",
+      "kind": "native",
+      "view": "views/2026-09-29T04-47-45-693Z_01a0eb7d-801d-73b9-baaa-8bbf1159ff88.txt",
+      "record_range_inclusive": [
+        1,
+        34
+      ],
+      "records": 34,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 6,
+      "id": "2026-09-29T04-49-41-160Z_01a0eb7f-4328-7205-a0f8-0ef9c9b59fdc",
+      "kind": "native",
+      "view": "views/2026-09-29T04-49-41-160Z_01a0eb7f-4328-7205-a0f8-0ef9c9b59fdc.txt",
+      "record_range_inclusive": [
+        1,
+        30
+      ],
+      "records": 30,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 7,
+      "id": "2026-09-29T04-54-15-523Z_01a0eb83-72e3-7132-b153-5c07a9738ab8",
+      "kind": "native",
+      "view": "views/2026-09-29T04-54-15-523Z_01a0eb83-72e3-7132-b153-5c07a9738ab8.txt",
+      "record_range_inclusive": [
+        1,
+        60
+      ],
+      "records": 60,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 8,
+      "id": "2026-09-29T05-07-56-427Z_01a0eb8f-f98b-7288-9605-653ca9752e3f",
+      "kind": "native",
+      "view": "views/2026-09-29T05-07-56-427Z_01a0eb8f-f98b-7288-9605-653ca9752e3f.txt",
+      "record_range_inclusive": [
+        1,
+        36
+      ],
+      "records": 36,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 9,
+      "id": "2026-09-29T05-21-56-820Z_01a0eb9c-cc54-701e-bc34-fd94ef30b748",
+      "kind": "native",
+      "view": "views/2026-09-29T05-21-56-820Z_01a0eb9c-cc54-701e-bc34-fd94ef30b748.txt",
+      "record_range_inclusive": [
+        1,
+        25
+      ],
+      "records": 25,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 10,
+      "id": "2026-09-29T05-23-47-094Z_01a0eb9e-7b16-7375-94a3-f61336be9e0b",
+      "kind": "native",
+      "view": "views/2026-09-29T05-23-47-094Z_01a0eb9e-7b16-7375-94a3-f61336be9e0b.txt",
+      "record_range_inclusive": [
+        1,
+        50
+      ],
+      "records": 50,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 11,
+      "id": "2026-09-29T05-36-08-773Z_01a0eba9-cc45-7661-bd57-27129f6b0f9b",
+      "kind": "native",
+      "view": "views/2026-09-29T05-36-08-773Z_01a0eba9-cc45-7661-bd57-27129f6b0f9b.txt",
+      "record_range_inclusive": [
+        1,
+        33
+      ],
+      "records": 33,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 12,
+      "id": "01a0ebb0-a9e4-73c8-933c-9e94d13ccbf8",
+      "kind": "subagent",
+      "view": "views/01a0ebb0-a9e4-73c8-933c-9e94d13ccbf8.txt",
+      "record_range_inclusive": [
+        1,
+        42
+      ],
+      "records": 42,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 13,
+      "id": "2026-09-29T05-38-14-129Z_01a0ebab-b5f0-7122-8721-ecfde084e908",
+      "kind": "native",
+      "view": "views/2026-09-29T05-38-14-129Z_01a0ebab-b5f0-7122-8721-ecfde084e908.txt",
+      "record_range_inclusive": [
+        1,
+        58
+      ],
+      "records": 58,
+      "status": "substantive_fields_read_or_exactly_reused"
+    },
+    {
+      "index": 14,
+      "id": "1af7af9a-821d-43f5-9432-c0bbc7f8af64_advisor_transcript",
+      "kind": "transcript",
+      "view": "views/1af7af9a-821d-43f5-9432-c0bbc7f8af64_advisor_transcript.txt",
+      "record_range_inclusive": [
+        1,
+        81
+      ],
+      "records": 81,
+      "status": "substantive_fields_read_or_exactly_reused"
+    }
+  ],
+  "display_truncation_followup": "Initial display of 35000:70000 was tool-output truncated; re-read fully as 35000:55000 and 55000:75000. Subsequent reads used at most 20000-character slices, ending at 1309713.",
+  "field_scope": "message text, thinking, toolCall, toolResult, message.details, record.details, substantive nonmessage records including custom/tool_start/tool_end/child event payloads",
+  "excluded": "Mutable wrapper metadata (IDs, timestamps, parent links, token usage), exact repeated substantive payloads named in stream, raw image bytes; upstream source truncation cannot be restored from snapshot.",
+  "unread_substantive_ranges": []
+}

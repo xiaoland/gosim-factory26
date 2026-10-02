@@ -1,0 +1,158 @@
+[
+  {
+    "render_block": 36,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 1508,
+    "text": "  '\nchildren:\n- id: REQ-1\n  name: Workbook Access and Lifecycle\n  type: FOLDER\n  dependencies: []\n  description: 'Supports viewing, opening, creating, renaming, importing, and exporting\n    workbooks within the application. The home page is the entry point for workbooks;\n    successful open, create, and import operations all enter the same editor page,\n    and subsequent operations may modify only the currently opened workbook. After\n    a workbook is opened, created, or imported, the editor state shown in the browser\n    must be a stable workbook state: visiting or refreshing that\n    exact workbook state must open the same workbook rather than another workbook or a temporary\n    blank page, and successful workbook modifications must remain available through\n    that visible workbook state. After returning to the home page or reopening, the workbook name, last-updated\n    time, worksheet order, and last active worksheet remain consistent. Worksheet\n    tabs on the same editor page use the ARIA tab role, with the active tab indicated\n    by aria-selected=\"true\"; the active worksheet grid uses the ARIA grid role, has\n    the accessible name \"Worksheet grid\", and exposes aria-multiselectable=\"true\".\n    Grid cells use the ARIA gridcell role with their cell coordinates as accessible\n    names (for example, A1); the current cell and every cell within the currently\n    selected rectangular region expose aria-selected=\"true\", while cells outside the\n    region expose aria-selected=\"false\"."
+  },
+  {
+    "render_block": 38,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 351,
+    "text": "    '\n  children:\n  - id: REQ-1-1\n    name: Workbook Navigation\n    type: FOLDER\n    dependencies: []\n    description: |\n      Supports viewing and opening available workbooks from the home page. After a workbook is successfully created, renamed, or imported from CSV, returning to or refreshing the home page must show the updated record in the list."
+  },
+  {
+    "render_block": 40,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 1117,
+    "text": "      Page reference:\n      ![image](reference/workbook-home.png)\n    children:\n    - id: REQ-1-1-1\n      name: View and Open a Workbook\n      type: ATOMIC\n      dependencies: []\n      description: |\n        Users view available workbooks on the workbook home page. Each record displays \"Last updated: <last updated value>\" and provides a link whose accessible name is the workbook name. After the user clicks the link, the editor displays the same \"Last updated: <last updated value>\", the corresponding workbook name, worksheet tabs and order, current active worksheet, row and column structure, grid values, formula bar content, filter views, validation entry points, and pivot table results; data from another workbook must not appear in the current grid. The current editor page entry in the browser must be directly accessible and continue to identify the same workbook after refresh; visiting that exact workbook state in the same or a later browser session must restore the workbook’s most recent successful state without requiring navigation through the home page. The entry format is implementation-defined."
+  },
+  {
+    "render_block": 42,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 3667,
+    "text": "        Page reference:\n        ![image](reference/workbook-home.png)\n      scenarios:\n      - name: REQ-1-1-1 -the requested workflow,the requested workflow page entry the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow,the requested workflow page entry the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow,the requested workflow\n            page entry the requested workflow\" using the same seeded names and values (the seeded workbook\n            `Q3 Sales`, worksheet `Sheet1`, and cell A1 value `Region`); validation\n            or permission failures are shown beside the named control and do not create\n            a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n      - name: REQ-1-1-1 -the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow\"\n            using the same seeded names and values (the seeded workbook `Q3 Sales`,\n            worksheet `Sheet1`, and cell A1 value `Region`); validation or permission\n            failures are shown beside the named control and do not create a partial\n            record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n  - id: REQ-1-2\n    name: Workbook Creation and Naming\n    type: FOLDER\n    dependencies: []\n    description: 'Supports creating a blank workbook and changing the workbook name;\n      both operations are initiated from visible workbook state points on the home page or\n      editor page. After success, the workbook record on the home page and the editor\n      title are updated consistently and remain so after refresh or reopening."
+  },
+  {
+    "render_block": 44,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 711,
+    "text": "      '\n    children:\n    - id: REQ-1-2-1\n      name: Create a Blank Workbook\n      type: ATOMIC\n      dependencies: []\n      description: |\n        Users create a blank workbook from the workbook home page. The home page provides a button with the accessible name \"New blank workbook\"; clicking it opens the creation page, whose submit button is named \"Create\". After creation succeeds, the editor opens and shows only a blank worksheet named Sheet1, with Sheet1 active and A1 selected; refreshing or returning to the home page and reopening produces the same state. If creation fails, an error is displayed, the user remains in a retryable state, and no incomplete workbook record may appear on the home page."
+  },
+  {
+    "render_block": 52,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e7be-840e-71f2-8117-0285b9e203f8/2026-09-28T11-20-22-994Z_01a0e7be-98d2-7048-8fae-4bb61ef09772/05304c21-07fd-4acb-beca-8474b3f94ae5/run-0/session.jsonl:L7",
+    "chars": 3628,
+    "text": "        '\n      scenarios:\n      - name: REQ-1-2-2 -the requested workflow,the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow,the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow,the requested workflow\"\n            using the same seeded names and values (the seeded workbook `Q3 Sales`,\n            worksheet `Sheet1`, and cell A1 value `Region`); validation or permission\n            failures are shown beside the named control and do not create a partial\n            record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n      - name: REQ-1-2-2 -the requested workflow,the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow,the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow,the requested workflow\"\n            using the same seeded names and values (the seeded workbook `Q3 Sales`,\n            worksheet `Sheet1`, and cell A1 value `Region`); validation or permission\n            failures are shown beside the named control and do not create a partial\n            record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n  - id: REQ-1-3\n    name: CSV Data Exchange\n    type: FOLDER\n    dependencies: []\n    description: 'Supports importing external CSV data completely as a workbook and\n      exporting the current active worksheet as CSV. After a successful import, the\n      Sheet1 editor page opens and continues to show the complete imported result\n      after refresh or reopening; export reads only the current active worksheet and\n      must not change workbook content or the current interface state."
+  },
+  {
+    "render_block": 54,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e7be-840e-71f2-8117-0285b9e203f8/2026-09-28T11-20-22-994Z_01a0e7be-98d2-7048-8fae-4bb61ef09772/05304c21-07fd-4acb-beca-8474b3f94ae5/run-0/session.jsonl:L7",
+    "chars": 1316,
+    "text": "      '\n    children:\n    - id: REQ-1-3-1\n      name: Import CSV to Create a Workbook\n      type: ATOMIC\n      dependencies: []\n      description: 'Users start an import by clicking the \"Import CSV\" button on the\n        workbook home page. A dialog named \"Import CSV\" provides a file control labeled\n        \"CSV file\" and a \"Confirm import\" button. The system parses data in the original\n        row and column order, preserves empty fields, supports UTF-8 Chinese text,\n        English text, and numeric text, and correctly handles commas enclosed in double\n        quotes, escaped pairs of double quotes, and line breaks within fields; a field\n        that begins with a double quote but has no closing double quote is invalid\n        CSV and must be rejected with \"Invalid CSV file format. Import failed.\" After\n        a successful import, a new workbook is created whose name is the file name\n        with its final .csv extension removed, and Sheet1 opens with the complete\n        CSV rows, columns, and original text; the first row remains ordinary data.\n        After refresh or reopening, grid content and row/column order remain unchanged.\n        If parsing or import fails, no workbook link with that name may appear on\n        the home page, and no partial import result may be displayed or retained."
+  },
+  {
+    "render_block": 172,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L26",
+    "chars": 381,
+    "text": "Use Playwright Test for checks that must run again with the same intended meaning.\nUse agent-browser for exploratory interaction and quick reproduction when a test is not yet useful.\nChoose the behavior and expected result from the requirements before choosing a locator or assertion.\nThe svc-verification skill provides methods for designing checks and interpreting their results."
+  },
+  {
+    "render_block": 174,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L26",
+    "chars": 410,
+    "text": "Playwright Test and its matching Chromium are already installed.\nThe `playwright` command runs the installed test runner; `BROWSER_CHECK_NODE_MODULES` points to its dependencies and `BROWSER_EXECUTABLE_PATH` to the browser.\nIf the application already has a suitable test project, use its explicit dependencies and configuration.\nOtherwise create a small test directory with ordinary Node dependency resolution:"
+  },
+  {
+    "render_block": 176,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L26",
+    "chars": 420,
+    "text": "```sh\nmkdir -p checks\n# Preserve existing ignore rules. This entry keeps the local dependency link out of Git.\nprintf '/node_modules/\\n' >> checks/.gitignore\nln -s \"$BROWSER_CHECK_NODE_MODULES\" checks/node_modules\n# Copy assets/playwright.config.ts from this skill into checks/.\nBASE_URL=http://127.0.0.1:4100 CHECK_OUTPUT_DIR=\"results/$(date +%Y%m%dT%H%M%S)\" \\\n  playwright test --config checks/playwright.config.ts\n```"
+  },
+  {
+    "render_block": 178,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L26",
+    "chars": 1128,
+    "text": "Create the link only when that directory has no node_modules; do not replace existing dependencies.\nCommit checks and the necessary config/ignore rules, not the runtime link, results, or browser state.\nStart the application's intended candidate with the required initial state and a free development port before running the checks.\nWhen checking a promised default state, observe it before adding test data.\nRun service and checks from their intended working directories with explicit environment values, including the URL the check will visit. Keep the service's job or process identity and full logs, then stop that service after use.\nWhere pi-background-bash is available, use its `background: true` for a long-running service and its completion message for a finite check; `pbb status <ID>` and `pbb tail <ID> --full` expose the recorded exit and full log. Do not poll with `sleep` or use a sub-agent wait for a PBB job. A shell pipeline ending in `tail` or `echo` can hide the check's exit status; preserve the original status (for example with Bash `set -o pipefail`) and inspect the first error before summarizing output."
+  },
+  {
+    "render_block": 180,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L26",
+    "chars": 556,
+    "text": "Read [writing checks](references/writing-checks.md) for scoped locators, meaningful waiting, setup, repeatability, and failure diagnosis.\nCopy [the standard config example](assets/playwright.config.ts) and adjust it to the application, rather than building a test framework or parsing browser snapshots in shell scripts.\nUse a new output directory for each run when retaining earlier failures: Playwright clears its selected output directory.\nKeep the original test error and process exit status; a command that launched successfully is not a passed check."
+  },
+  {
+    "render_block": 418,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L46",
+    "chars": 164,
+    "text": "if (!process.env.BASE_URL || !process.env.BROWSER_EXECUTABLE_PATH) {\n  throw new Error('Set BASE_URL and BROWSER_EXECUTABLE_PATH before running browser checks.');\n}"
+  },
+  {
+    "render_block": 420,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L88",
+    "chars": 450,
+    "text": "export default defineConfig({\n  testDir: '.',\n  testMatch: '**/*.spec.ts',\n  outputDir: process.env.CHECK_OUTPUT_DIR ?? 'test-results',\n  workers: 1,\n  retries: 0,\n  timeout: 120_000,\n  expect: { timeout: 15_000 },\n  reporter: 'list',\n  use: {\n    baseURL: process.env.BASE_URL,\n    headless: true,\n    launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH },\n    trace: 'retain-on-failure',\n    screenshot: 'only-on-failure',\n  },\n});"
+  },
+  {
+    "render_block": 428,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 238,
+    "text": "Import `test` and `expect` from `@playwright/test` in a `*.spec.ts` file.\nUse `page.getByRole`, `getByLabel`, or another locator tied to the intended user-visible object.\nScope a repeated name to its actual region or object before acting:"
+  },
+  {
+    "render_block": 430,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 318,
+    "text": "```ts\nconst preferences = page.getByRole('region', { name: 'Preferences', exact: true });\nawait preferences.getByLabel('Display name', { exact: true }).fill('New name');\nawait preferences.getByRole('button', { name: 'Save', exact: true }).click();\nawait expect(preferences.getByRole('status')).toHaveText('Saved');\n```"
+  },
+  {
+    "render_block": 432,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 491,
+    "text": "These names illustrate the API; use the real requirements and interface, not these strings.\nFinding a control and successfully clicking it only prove the action was possible.\nA success message does not prove persistence: if the requirement promises saved preferences at the next login, end the old session, authenticate again, read the value, and compare it with the expected value.\nAn internal database check may help diagnose failure without proving that the user can complete the journey."
+  },
+  {
+    "render_block": 434,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 359,
+    "text": "When a locator matches multiple elements, inspect their identity and scope.\nDo not use `.first()` merely to silence the error.\nIf uniqueness, role, wording, or navigation is explicitly required, retain it as a check; otherwise allow legitimate implementation differences.\nAvoid asserting an internal URL or DOM structure just because the current code uses it."
+  },
+  {
+    "render_block": 438,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 450,
+    "text": "Locator actions wait for actionability, while `await expect(locator)` retries its assertion until the expected condition or timeout.\nUse `toBeVisible`, `toHaveText`, `toHaveValue`, `toHaveCount`, or `expect(page).toHaveURL` when that observation represents the requirement.\nAvoid fixed sleeps and broad `networkidle` waits for applications with background traffic.\nRegister a response wait before the triggering action if the response itself matters:"
+  },
+  {
+    "render_block": 440,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 196,
+    "text": "```ts\nconst response = page.waitForResponse(r => r.url().endsWith('/api/preferences') && r.request().method() === 'POST');\nawait saveButton.click();\nexpect((await response).ok()).toBeTruthy();\n```"
+  },
+  {
+    "render_block": 442,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 213,
+    "text": "An HTTP success is not a substitute for checking the promised user-visible result.\nChoose timeout values from the operation's real latency; increasing a timeout does not repair a wrong locator or missing behavior."
+  },
+  {
+    "render_block": 446,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 448,
+    "text": "Keep a continuous user journey in one `test`, optionally with `test.step` labels.\nIf login fails, later dependent actions did not run; do not report them as passed or as separate product failures.\nFor independent tests, construct each test's necessary state through fixtures or other explicit setup.\nUse Playwright project dependencies when shared setup truly warrants them, not a chain of tests that silently requires a particular execution order."
+  },
+  {
+    "render_block": 448,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 752,
+    "text": "Each test's browser context isolates cookies and storage; it does not reset the application's database, files, or other servers.\nUse distinct data or an explicit reset procedure when those states affect repeatability.\nSeparate testing login from using an already authenticated identity as setup for another behavior.\nAPI setup is legitimate when it preserves the conditions being tested, but cannot stand in for a required UI creation flow.\nIf the requirement includes initial data or a default state, check that state before any setup that could manufacture it. A test that creates its own equivalent data can establish the later operation, but not the promised starting condition.\nUse one worker until test data can safely support parallel execution."
+  },
+  {
+    "render_block": 452,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 470,
+    "text": "Read the first relevant error: the operation, expected condition, actual observation, and candidate/application logs.\nDistinguish a product violation from a broken setup, mistaken check, or missing information using an observation that can separate the explanations.\nRevise an assertion only with a requirement-based reason; making the current implementation pass is not that reason.\nDo not catch assertion failures and print PASS, or mistake skipped tests for evidence."
+  },
+  {
+    "render_block": 454,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 585,
+    "text": "The example config retains traces and screenshots on failure with no automatic test retry.\nUse `playwright show-trace path/to/trace.zip` to inspect an available trace; `trace.zip` and the original command output can also be handed to another investigator.\nTrace data may include the application's test data and network observations; retain it with this run's evidence.\nRerun with a new output directory so the old failure remains available.\nRecord the tested candidate and service entry alongside results using the project's existing work notes; do not create another reporting system."
+  },
+  {
+    "render_block": 456,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 233,
+    "text": "References: [locators](https://playwright.dev/docs/locators), [assertions](https://playwright.dev/docs/test-assertions), [fixtures](https://playwright.dev/docs/test-fixtures), [trace viewer](https://playwright.dev/docs/trace-viewer)."
+  }
+]

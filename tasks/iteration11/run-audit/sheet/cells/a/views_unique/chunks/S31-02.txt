@@ -1,0 +1,259 @@
+a23af5a (newest), 16b94d8, 055fdaa, 7f9a850, 1a87f96. So 7f9a850 is the direct parent of 055fdaa. Was 7f9a850 rebased? The rebase rewrote commits... Actually the rebase result shows commits 055fdaa, 16b94d8, a23af5a as new, and 7f9a850 possibly already existed pre-rebase (it was the v1.3 commit). Hmm, if 7f9a850 is on the new base then the rebase put it there.
+Let me just check: `git log --oneline` and whether 7f9a850's parent is 15abbf6 or 698afd2.
+Actually simplest: check `git diff 15abbf6 a23af5a -- backend/src/store.js` fully and confirm the only differences in importWorksheetState are the min persistence block (plus whatever A-specific additions). Let me look.
+Actually wait. This matters for a different reason: comment #85 says the rebase auto-merge would keep the private block. If 7f9a850 (pre-rebase, based on 698afd2) had the private block AND the develop helper call was auto-merged in, then after rebase 7f9a850 would... no, rebase commits are recreated one at a time. Let me just check 7f9a850's parent.
+Let me run the checks.
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L21:C1]
+[toolCall] bash call_00_fPwC7YnNsl3075F23mmB0364
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git log --oneline --graph -8 && echo \"=== parents ===\" && for c in 1a87f96 7f9a850 055fdaa 16b94d8 a23af5a; do echo \"$c -> $(git rev-parse --short $c^ 2>/dev/null)\"; done && echo \"=== merge-base with develop ===\" && git merge-base 15abbf6 a23af5a"}
+[toolCall] bash call_01_FVZhScf7zEbWsQRoUbuz5192
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git diff 15abbf6 a23af5a --stat && echo \"=== store.js importWorksheetState diff vs develop ===\" && git diff 15abbf6 a23af5a -- backend/src/store.js | grep -n \"importWorksheetState\" "}
+
+## S31:L22 2026-09-29T06:47:58.281Z message toolResult
+toolResult bash False
+[text]
+* a23af5a task packet：记录 helper 切换、rebase 漂移与打包环境 ABI 陷阱
+* 16b94d8 rebase 漂移：Grid 新增的四个结构操作 props 接入 A 的显示值接缝用例
+* 055fdaa 契约 v1.3 §2：state 校验改用共享 assertWorksheetStateValid，删除本地副本
+* 7f9a850 契约 v1.3 / A-4：导入足迹 min_rows/min_cols 落地 + ragged 补齐 + 导出足迹优先
+* 1a87f96 子 Issue A：工作簿生命周期与 CSV 交换（REQ-1-2-1/1-2-2/1-3-1/1-3-2）
+* 60d9bb3 task packet：回填 PR #8 与 PR 负责人 @deepseek-5
+* 5aec8aa task packet：Issue #3 子 Issue A 设计与交接材料（决定 D-A1..D-A10、契约增量 A-1..A-4、验收方案）
+*   15abbf6 Merge local PR #9
+|\  
+=== parents ===
+1a87f96 -> 60d9bb3
+7f9a850 -> 1a87f96
+055fdaa -> 7f9a850
+16b94d8 -> 055fdaa
+a23af5a -> 16b94d8
+=== merge-base with develop ===
+15abbf691dd61b9952cecc34ba184b6ce5029d3e
+
+## S31:L23 2026-09-29T06:47:58.281Z message toolResult
+toolResult bash False
+[text]
+=== store.js importWorksheetState diff vs develop ===
+113:@@ -855,6 +935,21 @@ export function importWorksheetState(db, ws, payload) {
+[DUPLICATES: 26 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L23:C1]
+
+## S31:L24 2026-09-29T06:48:00.627Z message assistant
+[thinking]
+The rebase is clean: 1a87f96's parent is 60d9bb3 which is the packet commit on top of... let's see, 5aec8aa → 15abbf6? The graph shows 15abbf6 as a merge commit below 5aec8aa. So the branch was rebased onto develop properly (packet commits 5aec8aa/60d9bb3 are A-side packet commits that are ancestors).
+Hmm wait, 5aec8aa and 60d9bb3 are packet commits — they were originally based on 698afd2 and got carried over the rebase (still ancestors of 15abbf6? no). The graph shows 15abbf6 (merge PR #9) as the parent chain below. Anyway, merge-base = 15abbf6 exactly, meaning the whole branch is on top of develop. 
+The store.js diff vs develop is a single hunk at importWorksheetState (line 113 of the diff). Let me see that hunk in full to confirm it's only the persistence block.
+Also there's +95 lines in store.js vs develop: min_rows in WorksheetRow typedef, snapshot output, createWorkbookFromCsv, and the persistence block. Good.
+Let me view the single hunk.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L24:C1]
+[toolCall] bash call_00_TL9MBAIRlORDNOQFhLH67542
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git diff 15abbf6 a23af5a -- backend/src/store.js | sed -n '105,150p'"}
+
+## S31:L25 2026-09-29T06:48:00.648Z message toolResult
+toolResult bash False
+[text]
+@@ -855,6 +935,21 @@ export function importWorksheetState(db, ws, payload) {
+       db.prepare('DELETE FROM cells WHERE worksheet_id = ?').run(ws.id);
+       const insert = db.prepare(
+[DUPLICATES: 27 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L25:C1]
+
+## S31:L26 2026-09-29T06:48:07.952Z message assistant
+[thinking]
+Confirmed: relative to develop, `importWorksheetState` differs only by the min_rows/min_cols persistence block — no duplicate validation. The develop helper call already includes minRows/minCols (B's helper owns the validation).
+So comment #85's specific hazard is handled and verifiable. 
+Now, what is the outstanding work item? The notification says comment #85 arrived. The natural action: reply in thread 27 (reply-to 85) confirming the specific auto-merge hazard was verified on candidate a23af5a with the diff evidence. That's a genuine correction/confirmation of a hazard raised, and it's an actionable reply.
+Before replying, let me also independently verify the equivalence claim: my private validation was removed, and develop's helper validates with effective structure. Let me run a targeted test to prove behavior: 
+- minRows > effective structure → 400 with exact message
+- minRows undefined → unchanged
+- null → unchanged
+- explicit 0 → clears
+- GET echoes minRows/minCols
+The test suite already covers this (96 backend passed). But since deepseek-3 will do a targeted review, let me re-verify the three checks quickly on the current head to make sure the evidence is current. Actually, the head hasn't changed since a23af5a and I already ran the three checks. Re-running would be redundant. But the workspace is preserved; did I already run them in this worktree? Comment #86 says evidence at /tmp/f26-lzle9d69/service-check-vxc25q5f. Let me verify that evidence exists.
+Also, one more thing to double check regarding comment #85's warning: "develop 的 `importWorksheetState` 只校验、不持久化 min 两列，整段照抄 develop 会静默丢掉足迹写入" — my version keeps the write. ✓
+Let me also check whether the min persistence block placement matters for "explicit 0 clears": `payload.minRows ?? structure.min_rows ?? 0` — if payload.minRows = 0, `0 ?? x` = 0 ✓ (nullish coalescing, not ||). Good.
+Edge: payload.minRows = 0, payload.minCols = undefined → run(0, existing) — minCols keeps existing ✓.
+Another edge from #57 §3: "state 导入：两字段沿用 undefined = 不改动语义，缺失不得重置为 0". If payload.minRows !== undefined but payload.minCols === undefined → block runs, minCols preserved. ✓ But what if payload.minRows === undefined and payload.minCols === undefined → block skipped entirely ✓.
+Now let me verify evidence dirs exist and quickly re-run the backend test suite on a*: actually, let me at least confirm the tree is clean and run the backend test to be safe? The instructions: reporting completion should be based on actual results. I already have them. Re-running the full e2e takes ~42s+. It's cheap enough and gives a fresh "current head" verification. But comment #86 already reported a23af5a checks. Since nothing changed, re-running is optional.
+Hmm — but wait. There might be something else: did the notification mean there's new information I haven't seen? Let me check if there are any newer comments beyond #87 (e.g., on issue 3 after #86). Let me list comment IDs on issue 3.
+Actually the issue-3 conversation in the prompt ends at #86, and timeline ends at #154 (comment #86). PR timeline ends at #155 (comment #87). So the newest is my own #87.
+So the task now: respond to comment #85's hazard verification, then the PR sits waiting for deepseek-3's review.
+Let me also verify the evidence paths still exist so I can cite fresh evidence. And let me run the three checks once more to have a current, reproducible result set tied to a23af5a — actually I'd rather run the targeted backend test + e2e to be thorough. Given the harness encourages real verification, and re-running is not too costly, let me re-run all three on the current head and get fresh evidence. That also strengthens my reply.
+Hmm, but the ABI issue: earlier I needed `npm rebuild better-sqlite3` in backend. The worktree is preserved, so node_modules should still be fine. Let me check and run.
+Let me first check the evidence dir and then run the tests in background.
+Actually — is re-running necessary? The purpose of my reply to #85 is to confirm the rebase/merge hazard handling. A targeted verification (diff + the state validation test cases) is what's relevant, plus the three checks already recorded. But a fresh run costs little and guards against the possibility that the merge into develop produced something different from what I tested... no, I tested a23af5a which IS the head.
+I'll do a fresh, cheap verification: run backend tests (fast) to show the state validation cases pass, plus show the diff. Full e2e re-run is probably unnecessary but I can run it in background while I reply. Let me do it: backend+frontend tests in background, then reply.
+Let me start the test run in background.
+[DUPLICATES: 18 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L26:C1]
+[text]
+The switch is correct — relative to develop, `importWorksheetState` differs only by the footprint persistence block, with no duplicate validation. Let me re-run the checks on the current head to have fresh evidence for the reply.
+[toolCall] bash call_00_H4CqhZosEyQspPsCbdkL1766
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git status --short && node -e \"console.log(require('better-sqlite3/package.json').version)\" 2>/dev/null; ls /tmp/f26-lzle9d69/service-check-vxc25q5f/ 2>&1"}
+[toolCall] bash call_01_8f7h5arOYheN9oDSWvPC3167
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && mkdir -p /tmp/f26-pr8-recheck && PATH=/usr/local/bin:$PATH pnpm -r test > /tmp/f26-pr8-recheck/pnpm-test.log 2>&1; echo \"test exit=$?\"; tail -20 /tmp/f26-pr8-recheck/pnpm-test.log", "timeout": 600}
+
+## S31:L27 2026-09-29T06:48:20.928Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L27:C1]
+
+## S31:L28 2026-09-29T06:48:20.928Z message toolResult
+toolResult bash False
+[text]
+test exit=0
+backend test:  ✓ src/app.test.js (31 tests) 1881ms
+backend test:  ✓ src/structure.test.js (45 tests) 2884ms
+backend test:    Start at  06:48:08
+backend test:    Duration  5.69s (transform 693ms, setup 0ms, collect 2.34s, tests 4.78s, environment 1ms, prepare 1.52s)
+frontend test:  ✓ src/lib/cellDisplay.test.ts (3 tests) 5ms
+frontend test:  ✓ src/lib/csvExport.test.ts (15 tests) 12ms
+frontend test:  ✓ src/lib/format.test.ts (8 tests) 84ms
+frontend test:  ✓ src/components/Grid.test.tsx (11 tests) 1504ms
+frontend test:    ✓ Grid ARIA contract > exposes the grid, its accessible name and multiselectability  414ms
+frontend test:  ✓ src/components/WorkbookLifecycle.test.tsx (12 tests) 1488ms
+frontend test:    ✓ NewWorkbookPage (REQ-1-2-1) > rejects an empty name in place without calling the API  390ms
+frontend test:    Start at  06:48:11
+frontend test:    Duration  8.80s (transform 2.13s, setup 0ms, collect 4.85s, tests 3.09s, environment 16.03s, prepare 4.38s)
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L28:C1]
+
+## S31:L29 2026-09-29T06:48:23.911Z message assistant
+[thinking]
+Tests pass: backend 96, frontend 49. The ABI rebuild persisted (no NODE_MODULE_VERSION error). Good.
+Note: `git status --short` output was empty (clean) — well, the first command's output only shows the ls result; git status printed nothing → clean tree. And node -e printed nothing? It printed nothing visible... the output starts with "check.log" from ls. So `git status --short` was empty (clean) and node -e output was empty (maybe require failed silently to stderr suppressed). Fine.
+Now let me run typecheck + e2e in background and compose the reply. Actually, let me run typecheck quickly (fast) and the e2e via with-service in background.
+Let me start the e2e in background now.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L29:C1]
+[toolCall] bash call_00_jaqalUVP1aIF6prtmBss9247
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH pnpm -r typecheck > /tmp/f26-pr8-recheck/pnpm-typecheck.log 2>&1; echo \"typecheck exit=$?\"; tail -5 /tmp/f26-pr8-recheck/pnpm-typecheck.log", "timeout": 600}
+[toolCall] bash call_01_WB7QiVKENdvkfxIweCwz7998
+{"command": "ls /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/ 2>/dev/null; ls /tmp/f26-lzle9d69/ 2>/dev/null"}
+
+## S31:L30 2026-09-29T06:48:34.536Z message toolResult
+toolResult bash False
+[text]
+typecheck exit=0
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L30:C1]
+
+## S31:L31 2026-09-29T06:48:34.536Z message toolResult
+toolResult bash False
+[text]
+VsW_Ov0py4sNxLhIAXC_0
+d970xlqNlwChDwkFipSUg
+fKpss0xOCf_8tKk-kVJVc
+jiti
+node-compile-cache
+playwright-transform-cache-1000
+service-check-3rg73u0f
+service-check-4arcnvfo
+service-check-eimrfpgg
+service-check-f9jl234d
+service-check-jawiqbcw
+service-check-ly59ofyz
+service-check-udl5fiyt
+service-check-vxc25q5f
+sheet-e2e-1stUzi
+sheet-e2e-3HtoVQ
+sheet-e2e-ApRFXU
+sheet-e2e-CKA3Kr
+sheet-e2e-HKrf8S
+sheet-e2e-edP9he
+sheet-e2e-euhBi7
+sheet-e2e-i8QsVR
+sheet-e2e-m7HZ7h
+sheet-e2e-o565V1
+sheet-e2e-op1vOD
+sheet-e2e-x7wdlM
+sheet-e2e-yq5QSH
+sheet-e2e-zlCg2r
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L31:C1]
+
+## S31:L32 2026-09-29T06:48:35.850Z message assistant
+[thinking]
+typecheck exit 0. Now run the e2e via with-service --check-only in background. The prior invocation used the agent-browser skill's with-service.py. Let me read the skill to get the exact usage, or just reuse the prior command form from comment #86: `with-service.py --check-only --cwd "$PWD" --context ... -- bash checks/run-e2e.sh`.
+Let me check the skill script's help quickly, then launch.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L32:C1]
+[toolCall] bash call_00_hMKIJwISmRWq858PiyxC8069
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --help 2>&1 | head -40"}
+
+## S31:L33 2026-09-29T06:48:35.930Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 19 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L33:C1]
+
+## S31:L34 2026-09-29T06:48:37.942Z message assistant
+[toolCall] bash call_00_ET_8DjTpCeca6dmWdAYgVk41235
+{"background": true, "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd \"$PWD\" --context candidate=a23af5a --context purpose=reply-to-comment-85-merge-hazard -- bash checks/run-e2e.sh > /tmp/f26-pr8-recheck/e2e-wrapper.log 2>&1; echo \"exit=$?\"; tail -25 /tmp/f26-pr8-recheck/e2e-wrapper.log", "timeout": 900}
+
+## S31:L35 2026-09-29T06:48:37.955Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L35:C1]
+[details]
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd \"$PWD\" --context candidate=a23af5a --context purpose=reply-to-comment-85-merge-hazard -- bash checks/run-e2e.sh > /tmp/f26-pr8-recheck/e2e-wrapper.log 2>&1; echo \"exit=$?\"; tail -25 /tmp/f26-pr8-recheck/e2e-wrapper.log", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1", "exitCode": null, "globalJobId": "pbb_19284_94cd276d:bg001", "instanceId": "pbb_19284_94cd276d", "jobId": "bg001", "outcome": "running", "pbbCursor": 1, "sessionId": "01a0ebeb-2cc0-7224-a23b-d6834bddc7ac", "sessionKey": "2110bea5eafd1a3b302c9fe1", "startedAt": "2026-09-29T06:48:37.943Z", "toolCallId": "call_00_ET_8DjTpCeca6dmWdAYgVk41235"}
+
+## S31:L36 2026-09-29T06:48:43.347Z message assistant
+[thinking]
+While that runs, let me draft the reply to comment #85. Also let me collect the diff evidence for the reply.
+I already have:
+- `git diff 15abbf6 a23af5a -- backend/src/store.js` shows a single added block (persistence) with no validation duplicate.
+- The develop helper call already carries minRows/minCols (B's helper owns the check).
+- Effective structure semantics match: helper is called with effectiveRowCount/effectiveColCount (same as develop's baseline).
+- tests: backend 96, frontend 49, typecheck Done, e2e running.
+Let me also double-check one thing from #85: "保留两字段的 UPDATE 与 `declaredMinRows ?? structure.min_rows ?? 0` 语义". Mine uses `payload.minRows ?? structure.min_rows ?? 0` — equivalent to declaredMinRows with nullish coalescing. ✓ Note: previously declaredMinRows was `payload.minRows ?? null`, so `null` → null → then `?? structure.min_rows` → same. Equivalent. ✓
+One subtlety: in the old private path, validation errors were thrown BEFORE the read/update. Now the helper throws earlier (before the rowCount UPDATE). Transaction rollback covers both. Any behavioral difference? The old path: rowCount UPDATE happened first, then min validation threw → rollback → no persistence. Same outcome. ✓
+Also: order of error precedence. Old: name → helper(rowCount/colCount/cells)... wait no. Old code (7f9a850): name → rowCount/colCount update → min block (validation) → cells. Hmm, cells validation happened where? In the rebased 7f9a850, the helper call with cells was already present (from develop merge). So 7f9a850 had BOTH the helper call AND the private min block → double validation of min. That was the transitional state. Now single.
+Error precedence could differ if payload has both an invalid cell and an invalid min: helper checks min (checkFootprint) before cells. Same as before? In 7f9a850, helper ran first (with min) then private block — so min errors came first anyway. Same.
+Now let me write the reply. It should:
+- reply-to comment 85 (thread 27)
+- confirm the specific hazard was verified on a23af5a
+- give the exact diff evidence: develop→a23af5a store.js single hunk; helper call with effective structure; persistence kept with nullish coalescing; no private copy remains
+- note that develop's helper already carries minRows/minCols (B's helper owns validation), so the auto-merge hazard would have produced a duplicate — it doesn't
+- fresh check results: backend 96 / frontend 49 / typecheck Done / e2e (pending or result)
+- keep outstanding: waiting for deepseek-3's targeted review
+I should wait for the e2e result before posting so the numbers are real. Let me wait for the background job. Meanwhile, I can verify a couple more things:
+1. Confirm no leftover private validation strings in store.js: grep "must not exceed the reported structure" → should appear only in assertWorksheetStateValid.
+2. Confirm `min_rows`/`min_cols` written in createWorkbookFromCsv and nowhere else.
+Let me run those greps.
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L36:C1]
+[toolCall] bash call_00_Z2CP7aq7nKzStizZTTlM2194
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && echo \"== 'must not exceed' occurrences ==\" && grep -rn \"must not exceed the reported structure\" backend/src/ && echo \"== 'must be a non-negative integer' ==\" && grep -rn \"must be a non-negative integer\" backend/src/ && echo \"== min_rows writes ==\" && grep -rn \"min_rows\" backend/src/*.js | grep -v test"}
+[toolCall] bash call_01_OjwrikVoqect0TrLBFue0802
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '/^export function createWorkbookFromCsv/,/^}/p' backend/src/store.js | grep -n \"min_rows\\|min_cols\\|INSERT INTO worksheets\\|transaction\" "}
+
+## S31:L37 2026-09-29T06:48:43.432Z message toolResult
+toolResult bash False
+[text]
+== 'must not exceed' occurrences ==
+backend/src/structure.test.js:625:        message: 'minRows must not exceed the reported structure (6)',
+backend/src/structure.test.js:633:        message: 'minCols must not exceed the reported structure (26)',
+backend/src/structure.test.js:659:      message: 'minRows must not exceed the reported structure (2)',
+backend/src/store.js:884:      throw invalidBody(`${field} must not exceed the reported structure (${bound})`);
+== 'must be a non-negative integer' ==
+backend/src/structure.test.js:638:    ).toThrowError(expect.objectContaining({ message: 'minRows must be a non-negative integer' }));
+backend/src/structure.test.js:641:    ).toThrowError(expect.objectContaining({ message: 'minCols must be a non-negative integer' }));
+backend/src/validate.js:154:    throw invalidBody('index must be a non-negative integer');
+backend/src/store.js:881:      throw invalidBody(`${field} must be a non-negative integer`);
+== min_rows writes ==
+backend/src/migrations.js:92:      ALTER TABLE worksheets ADD COLUMN min_rows INTEGER;
+backend/src/store.js:54: * @property {number | null} min_rows
+backend/src/store.js:173:    minRows: ws.min_rows ?? 0,
+backend/src/store.js:285: * Import footprint (contract v1.3 / increment A-4): `min_rows`/`min_cols`
+backend/src/store.js:313:      `INSERT INTO worksheets (id, workbook_id, name, position, row_count, col_count, min_rows, min_cols, last_active, last_selection)
+backend/src/store.js:944:      const structure = /** @type {{ min_rows: number | null, min_cols: number | null }} */ (
+backend/src/store.js:945:        db.prepare('SELECT min_rows, min_cols FROM worksheets WHERE id = ?').get(ws.id)
+backend/src/store.js:947:      db.prepare('UPDATE worksheets SET min_rows = ?, min_cols = ? WHERE id = ?').run(
+backend/src/store.js:948:        payload.minRows ?? structure.min_rows ?? 0,
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L37:C1]
+
+## S31:L38 2026-09-29T06:48:43.432Z message toolResult
+toolResult bash False
+[text]
+10:  db.transaction(() => {
+18:      `INSERT INTO worksheets (id, workbook_id, name, position, row_count, col_count, min_rows, min_cols, last_active, last_selection)
+
+## S31:L39 2026-09-29T06:48:46.290Z message assistant
+[thinking]
+All clean:
+- "must not exceed the reported structure" in store.js only at line 884 (inside the shared helper).
+- "must be a non-negative integer" in store.js only at line 881 (inside the shared helper).
+- min_rows written only by createWorkbookFromCsv INSERT and the state persistence UPDATE. Single validation path.
+Now let me check the background e2e job. Let me wait for it (it will arrive as a completion message). Meanwhile, let me consider whether I need to do anything else.
+Another thought: comment #85's warning is now fully addre

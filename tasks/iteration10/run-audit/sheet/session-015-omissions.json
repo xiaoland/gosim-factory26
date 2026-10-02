@@ -1,0 +1,18 @@
+[
+  [
+    "continuation02-root-native/023-2026-09-28T04-50-06-734Z_01a0e659-4b0e-70ee-9264-6926aa018e11.jsonl:L105",
+    2,
+    "checks/api-req2.mjs",
+    "content",
+    11200,
+    "机械源码写入；本轮不逐字读，不据此判代码正确"
+  ],
+  [
+    "continuation02-root-native/023-2026-09-28T04-50-06-734Z_01a0e659-4b0e-70ee-9264-6926aa018e11.jsonl:L173",
+    1,
+    "checks/worksheet-lifecycle.spec.ts",
+    "content",
+    12850,
+    "机械源码写入；本轮不逐字读，不据此判代码正确"
+  ]
+]

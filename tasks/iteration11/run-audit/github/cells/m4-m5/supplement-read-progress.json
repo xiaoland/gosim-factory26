@@ -1,0 +1,22 @@
+{
+  "scope": "snapshot-01 M4/M5 supplemental thinking, message.details, nonmessage transcript metadata",
+  "status": "complete",
+  "method": "supplement.py exact-dedup stream, sequential 35,000-character chunks, displayed and actually read",
+  "stream_chars": 2065166,
+  "read_chunks_inclusive": [
+    0,
+    59
+  ],
+  "read_char_range": [
+    0,
+    2065166
+  ],
+  "unread_char_range": null,
+  "precise_duplicate_rule": "same label family and SHA-256 of unredacted field, citation to earlier stream origin",
+  "limitations": [
+    "Original message.content is covered only by earlier content-only receipts",
+    "This stream omits volatile transcript metadata id/parentId/timestamp/ts/runId/cwd/version and transcript top-level text repeats",
+    "Image bytes unavailable; views only show placeholders"
+  ],
+  "updated_utc": "2026-09-29T09:17:32.108718+00:00"
+}

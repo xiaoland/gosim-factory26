@@ -1,0 +1,169 @@
+{
+  "node_id": "pr:2",
+  "repository_node_id": "local",
+  "kind": "pr",
+  "number": 2,
+  "state": "MERGED",
+  "context_revision": "b3f5b228e4c5fdc70e36194ca212d681412674c0aa2d2b6c170ad7a03ac96f34",
+  "observed_at": "2026-09-29T07:58:40.914348222Z",
+  "title": "基础：共享架构、脚手架与开发反馈设施",
+  "body": "## 目标（根 Issue #1 的基础 PR）\n\n交付可消费的共享架构、脚手架与开发反馈设施，作为全部业务模块（M1–M6）的实施基础。合入 develop。\n\n## 交付物\n\n1. **Monorepo 脚手架**：pnpm workspace + frontend/（Vite+React18+TS+UnoCSS+lucide-react+Radix primitives）+ backend/（Express+better-sqlite3）；两包可独立 npm install/build/start；后端生产模式同时服务 frontend/dist 与 /api/*（HOST/PORT 环境变量，SPA 回退）。\n2. **平台兼容性实测（第一项工作）**：用 PATH=/usr/local/bin:$PATH 的平台 npm 做干净 npm install 实测 better-sqlite3；失败保留首轮日志、换有 prebuild 的锁定版本；结论写进本 PR。\n3. **DB 与 seed 机制**：SQLite（WAL）、事务封装、迁移；seed 注册表（幂等 upsert by 业务键）+ 账户种子（docs/seed-data.md 的 5 个账户）。\n4. **会话认证骨架**：httpOnly cookie session（SQLite 会话表，登出/改密即时失效——业务模块接入）、密码哈希、requireAuth 中间件。\n5. **共享权限模块**：effectiveRepoRole(user, repo)（§4 权限模型）+ 响应附带 viewerPermission 的约定（§9.3）。\n6. **统一错误格式**：{error:{code,message,field?}} 与 errors[] 多字段错误中间件。\n7. **共享 UI 骨架**：AppShell（未登录/登录态）、AccountMenu（触发按钮 accessible name = \"Account menu\"）、表单字段/错误组件、Dialog（Radix）；登录/注册占位页跑通会话闭环（最小真实使用结果）。\n8. **文案契约**：frontend/src/contracts/copy.ts，收录 docs/acceptance-plan.md 高风险点清单中的精确名称常量。\n9. **质量设施**：Vitest（权限/校验单测）、Playwright（e2e/，含 1 条登录闭环冒烟用例）、pnpm dev/test/e2e/build 脚本（portless 开发服务）。\n\n## 共享契约（权威）\n\ndocs/architecture.md（含 §9 修订：commit 共享不可变、三方合并语义、Checks 键、测试隔离）、docs/product-plan.md、docs/seed-data.md、docs/ui-reference-notes.md。实施中发现契约需变更：先在本 PR 评论提出，由根 Issue 决定后更新文档。\n\n## 不做\n\n业务功能（M1–M6 的页面/接口）只留占位与闭环示例，不在本 PR 实现。\n\n## 验收\n\n- pnpm install / build / test / e2e 全绿；平台 npm 安装实测记录；Node 20.19.3 兼容。\n- 平台逐目录 install/build/start + Playwright 实测（干净副本，head `a7cc9b5`）：**exit 0**，结果表见评论 #12。\n- 启动后可注册→登录→看到账户菜单→登出（冒烟闭环），数据持久化（重启保留）。\n"
+}
+
+local_comments {
+  "comment_id": 6,
+  "work_item_node_id": "pr:2",
+  "body": "## 基础 PR #2 实现已发布（`refs/heads/braid/pr-2` @ `32b6178`）\n\n### 首轮真实运行结果\n\n| 检查 | 命令 | 结果 |\n|---|---|---|\n| 后端单测（权限矩阵/校验规则/seed 幂等/会话与错误格式/文案契约） | `pnpm test` | **PASS** 38/38 用例（`backend/test`，5 个文件） |\n| 前端类型检查 | `pnpm typecheck` | **PASS** |\n| 前端生产构建 | `pnpm build` | **PASS**（`frontend/dist`，vite 5.4.11） |\n| 端到端（Playwright，临时 SQLite + 随机端口，runner 自管服务） | `pnpm e2e` | **PASS** 5/5 用例 |\n| portless 开发闭环（真实浏览器） | `pnpm dev:api` + `pnpm dev:web` | **PASS**：`/api/health` 200、Vite dev 页 200、`/api` 代理 200；浏览器注册页/登录/账户菜单/`Sign out` 对话框的 role+accessible name 与需求一致 |\n| 平台路径（平台 npm 逐目录 `install`/`build` + `HOST=0.0.0.0 PORT=3000 npm run start` + e2e） | `bash checks/platform-path.sh` | 运行中（结果随后补在本 thread） |\n\n### 平台兼容性实测（第一项工作，结论）\n`/usr/local/bin/node` v20.19.3 / npm 10.8.2 下，空目录 `npm install better-sqlite3@11.10.0` 首轮成功\n（11s，exit 0，预编译产物、未触发 node-gyp），运行期 `sqlite_version()=3.49.2` 且 WAL 正常 →\n**锁定 11.10.0**；`python3/make/g++` 齐备可回退源码编译。版本锁定表与证据：`docs/platform-compat.md`。\n\n⚠️ 环境注意（已写入 README）：本环境的工具 Node（默认 PATH，v24.10.0）与交付 Node（v20.19.3）大版本不同，\n`better-sqlite3` 只为一个 ABI 构建。因此\n1. 依赖安装须用 `PATH=/usr/local/bin:$PATH pnpm install`；\n2. `scripts/app-node.mjs` 解析 `APP_NODE`（默认 `/usr/local/bin/node`），`scripts/dev.mjs` 与 `e2e/run.mjs` 都用它启动应用进程。\n   修复前 `pnpm dev` 会因 portless 把工具 Node 放进 PATH 而以 ABI 137 启动后端并崩溃。\n\n### 交付物与入口\n1. **脚手架**：pnpm 工作区（提交 `pnpm-lock.yaml`）+ `frontend/`（Vite5/React18/TS/UnoCSS/Radix/lucide-react）+\n   `backend/`（Express4/better-sqlite3，**纯 ESM 无构建步骤**，`npm run start` 直接可用）；生产模式同源服务\n   `frontend/dist` 与 `/api/*`，SPA 回退，`HOST`/`PORT` 注入。\n2. **DB/seed**：`backend/src/db`（WAL、`foreign_keys=ON`、迁移表、`transact()`）；`backend/src/seed`\n   （注册表 + 幂等 upsert），5 个种子账户见 `docs/seed-data.md`；`ON CONFLICT DO NOTHING` 保证**重启不覆盖用户改过的密码**（有单测）。\n3. **会话骨架**：httpOnly cookie + SQLite `sessions`、`requireAuth`、`revokeSessionsForUser()`（改密/找回即时失效，供 #3）。\n4. **权限模块**：`effectiveRepoRole` / `roleAtLeast` / `maxRole` / `viewerPermissionForRepo`（§4；团队层级不传播，有矩阵单测）。\n5. **统一错误格式**：`{error:{code,message,field?}}`，多项字段错误同时返回 `errors[]`。\n6. **共享 UI**：`AppShell`、`AccountMenu`（触发按钮 accessible name = `Account menu`；面板含唯一 link `Sign out` →\n   对话框 `Sign out` + `Confirm sign out`/`Cancel`）、`TextField/TextAreaField`、`CheckboxField`、`Dialog`、`Alerts`、\n   `SegmentedNav`（计数徽标 aria-hidden）、`RequireAuth`。\n7. **文案契约**：`frontend/src/contracts/copy.ts`（含 acceptance-plan 高风险清单与 builder）；后端镜像\n   `backend/src/contracts/messages.js`，由 `backend/test/copy-contract.test.js` 防漂移；Playwright 直接引用 copy.ts。\n8. **反馈设施**：Vitest、Playwright（`e2e/`，`e2e/run.mjs` 自管服务拓扑与临时数据并打印退出码）、\n   `pnpm dev/dev:api/dev:web`（portless）、`checks/platform-path.sh`、`README.md`（接入约定）、\n   `docs/task-packets/foundation-pr-2.md`（本 PR 任务 packet）。\n\n### 请在根 Issue #1 确认的契约增量（我已按此实现；如决定不同我改实现并同步 architecture.md）\n1. `users.email_verified`：§5 未列，但 REQ-1-1-1 要求存储“已验证邮箱状态”。\n2. `commit_parents(commit_id, parent_commit_id, position)`：§9.2 的合并 commit 有**两个父提交**，单一 `commits.parent_id`\n   无法表达；保留 `parent_id` 作为第一父以兼容 §5。\n3. `issue_milestones(issue_id PRIMARY KEY, milestone_id)`：一个 issue 至多一个里程碑（§5 仅写 `issue_milestones(...)`）。\n4. **seed 默认随启动执行**（`SEED=0` 关闭），而非“仅非生产”：平台以 `npm run start` 正常启动即需具备初始数据；\n   seed 幂等且不覆盖既有数据，重放安全。\n5. 会话 cookie **不带 `Secure`**（httpOnly + SameSite=Lax）：平台以 HTTP 交付，带 `Secure` 会导致浏览器丢弃 cookie 而无法登录。\n6. `errors[]` 在存在字段错误时**始终返回**（不限于多项），便于前端统一逐字段渲染；`error` 仍为首项。\n\n### 移交 #3（M1 身份与访问）\n- 已可用：注册/登录/登出闭环、字段级多项错误、`Invalid credentials`、刷新后会话保持、登出确认对话框。\n- 待 #3 替换/补齐：`/password-reset`（现为 `PasswordResetPlaceholderPage` 占位）、`/settings/*`（`SettingsPage` 占位）、\n  REQ-1-1-3 找回密码、REQ-1-3 改密（改密后调用 `revokeSessionsForUser()`）、以及文案与 REQ 原文逐字核对。\n- 空字段文案我采用 `<Field> is required`（与 REQ-1-3 / REQ-5-2-1 的 “Current password is required” / “Title is required” 一致）；\n  若验收期望复用 “Username format is invalid” 之类文案，请在 copy.ts + messages.js 同步调整。\n\n### 复现\n```bash\nPATH=/usr/local/bin:$PATH pnpm install\nPATH=/usr/local/bin:$PATH pnpm test        # 单测 + 类型检查\nPATH=/usr/local/bin:$PATH pnpm e2e         # 端到端\nbash checks/platform-path.sh               # 平台逐目录 install/build/start + e2e\n```\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb6f-1f40-7183-9655-e7d1be8921b5",
+  "writer_turn": "01a0eb80-2f5f-7552-ade0-5e3cf86b475f",
+  "revision": 1,
+  "created_at": "2026-09-29T04:50:41.77028121Z",
+  "updated_at": "2026-09-29T04:50:41.77028121Z",
+  "reply_to": null,
+  "thread_root": 6,
+  "resolved_through": 19,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 12,
+  "work_item_node_id": "pr:2",
+  "body": "## 平台逐目录路径实测补齐：**PASS**（head `a7cc9b5`，2026-09-29T05:00Z）\n\n补上首轮表格中“运行中”的一行。方法与首轮一致：`git archive HEAD`（73 个受控文件，无 node_modules）解到干净副本，\n在副本内执行 `bash checks/platform-path.sh`（脚本内部 `PATH=/usr/local/bin:$PATH`），整体 **exit 0**，耗时 444s。\n\n| 步骤（平台 npm，`/usr/local/bin/node` v20.19.3 / npm 10.8.2） | 结果 |\n|---|---|\n| root：`npm install`（仅 Playwright runner） | PASS，3 包 / 21s |\n| `frontend/`：`npm install` | PASS，203 包 / ~4min |\n| `frontend/`：`npm run build` | PASS，vite 5.4.11，1663 modules；`dist/index.html` 0.39 kB、`index-*.css` 15.37 kB、`index-*.js` 217.97 kB |\n| `backend/`：`npm install` | PASS，154 包 / ~3min（仅 `prebuild-install@7.1.3` 弃用告警，无 node-gyp 回退） |\n| `backend/`：`npm run start`（`HOST`/`PORT` 注入） | PASS，日志 `[server] listening on http://127.0.0.1:43933`（临时库 `app.db`） |\n| Playwright（chromium） | **PASS 5/5**（注册→登录→账户菜单→登出；取消登出对话框保持会话；错误密码通用文案且无会话；注册多项字段错误同时返回；重复用户名精确文案） |\n| e2e runner 退出码 | **0**（`[server] SIGTERM received, shutting down`，自有服务已收尾） |\n\n说明：\n- 端口：e2e runner 用 `HOST=127.0.0.1 PORT=<随机>` 注入应用进程，走的是与平台 `HOST/PORT` 完全相同的代码路径；\n  3000 端口按环境约定留给评测，检查未占用。\n- 平台启动路径依赖**已构建的 `frontend/dist`**（脚本先 build 再 start），因此上表同时覆盖“生产模式同源服务前端与 `/api`”。\n- 已验证应用与平台 Node 一致（`[e2e] application node: /usr/local/bin/node (v20.19.3)`），`better-sqlite3` 走预编译产物。\n\n### 当前 head 复审（无代码变更，仅文档）\n- `5aa7fd3`/`32b6178`/`52c2944` 实现 → `a7cc9b5` 仅改 `docs/architecture.md` + 任务 packet（同步根 Issue #1 评论 #8 的 6 项裁决，已推送）；\n- 复审：`pnpm test` **PASS 38/38** + `pnpm typecheck` **exit 0**；\n- `abb6f6b`（本条结果回写任务 packet，docs-only）。因此上述实现类证据对当前 head 有效。\n\n证据留存：平台日志（本 thread 摘要即原文关键行）；任务 packet 与结论入口 `docs/task-packets/foundation-pr-2.md`、\n`docs/platform-compat.md`；复现命令 `bash checks/platform-path.sh`。\n请 @glm-1 核实可消费性后合入 develop。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb6f-1f40-7183-9655-e7d1be8921b5",
+  "writer_turn": "01a0eb90-027e-7010-a479-ca22e0d4a249",
+  "revision": 1,
+  "created_at": "2026-09-29T05:07:59.248733058Z",
+  "updated_at": "2026-09-29T05:07:59.248733058Z",
+  "reply_to": 6,
+  "thread_root": 6,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 14,
+  "work_item_node_id": "pr:2",
+  "body": "合入前再补一条事实核查（便于你直接合并，无需再问我）：\n\n- `origin/develop` 仍为 `7843edd`，本分支在其之上、develop 侧无新提交 → **fast-forward，无冲突**（`git log origin/braid/pr-2..origin/develop` 为空）。\n- head `abb6f6b` 相对你已核实的 `a7cc9b5` 只多了“把平台结果回写任务 packet”这一 docs-only 提交，实现未变；平台逐目录 install/build/start + Playwright 结果表见评论 #12。\n- PR 页面 05:08:40 的「执行尝试 failed」是本次 context reset 中断造成的瞬态噪音（执行环境，非代码/检查失败），分支与 head 未受影响。\n\n可以按 `--match-head-commit abb6f6b` 合入 develop。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb6f-1f40-7183-9655-e7d1be8921b5",
+  "writer_turn": "01a0eb90-a5cd-7430-b0ec-a1371e1cc837",
+  "revision": 1,
+  "created_at": "2026-09-29T05:08:58.642215764Z",
+  "updated_at": "2026-09-29T05:08:58.642215764Z",
+  "reply_to": 12,
+  "thread_root": 6,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 19,
+  "work_item_node_id": "pr:2",
+  "body": "## 合入后核验（PR #2 收尾，我方无剩余工作）\n\n@glm-1 已在根 Issue #1 评论 #18 将本 PR 合入 develop（merge `c338578`）。我在合入后做了最终核验：\n\n- `git diff --stat abb6f6b origin/develop` **为空** → `origin/develop` 的树与合入授权的 head `abb6f6b` 完全一致，合并没有引入额外改动；因此评论 #12 的平台逐目录实测（exit 0、Playwright 5/5）与 `pnpm test` 38/38、`pnpm typecheck` exit 0 的结论对 `origin/develop` 同样有效。`refs/heads/braid/pr-2` 仍冻结在 `abb6f6b`。\n- 交付卫生复核（`origin/develop`，73 个受控文件）：无 `node_modules` / `dist` / `*.db` / `.git` / `.arc` / `.factory26` / `requirements` 混入；`frontend/package.json`、`backend/package.json`、`pnpm-lock.yaml` 均已交付。\n- 下游基线：#3 / #5 直接以 `origin/develop`（`c338578`）为起点；共享契约权威仍是 `docs/architecture.md`（§9.10 含本批 6 项裁决），接入约定见 `README.md`。\n- 一处过期说明：`docs/task-packets/foundation-pr-2.md` 的 “Next action” 写于合入前（“等待核实后合入”），已被本 PR 的 merged 状态与根 Issue #1 评论 #18 取代；该 packet 其余内容（共享契约、平台/ABI 约束、移交 #3 的占位与文案约定）仍然有效。\n\nPR #2 至此关闭：实现、文档同步、平台实测与合入核验闭环，无待办。M1/M3 的接续问题请在其子 Issue 讨论，涉及基础代码的具体缺口我仍可响应。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb6f-1f40-7183-9655-e7d1be8921b5",
+  "writer_turn": "01a0eb9c-d823-7931-ad16-def1c552f1a8",
+  "revision": 1,
+  "created_at": "2026-09-29T05:22:37.148379249Z",
+  "updated_at": "2026-09-29T05:22:37.148379249Z",
+  "reply_to": 12,
+  "thread_root": 6,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_activity {
+  "ordinal": 2,
+  "work_item_node_id": "pr:2",
+  "occurred_at": "2026-09-29T04:32:02.606614287Z",
+  "actor_login": "glm-1",
+  "action": "created",
+  "source_comment": null,
+  "detail": "基础：共享架构、脚手架与开发反馈设施"
+}
+
+local_activity {
+  "ordinal": 4,
+  "work_item_node_id": "pr:2",
+  "occurred_at": "2026-09-29T04:32:02.607458255Z",
+  "actor_login": "glm-1",
+  "action": "linked_issue",
+  "source_comment": null,
+  "detail": "Issue #1"
+}
+
+local_activity {
+  "ordinal": 38,
+  "work_item_node_id": "pr:2",
+  "occurred_at": "2026-09-29T04:50:41.770413015Z",
+  "actor_login": "deepseek-2",
+  "action": "commented",
+  "source_comment": 6,
+  "detail": "comment #6"
+}
+
+local_activity {
+  "ordinal": 46,
+  "work_item_node_id": "pr:2",
+  "occurred_at": "2026-09-29T05:07:59.248785162Z",
+  "actor_login": "deepseek-2",
+  "action": "replied",
+  "source_comment": 12,
+  "detail": "comment #12"
+}
+
+local_activity {
+  "ordinal": 48,
+  "work_item_node_id": "pr:2",
+  "occurred_at": "2026-09-29T05:08:20.504258027Z",
+  "actor_login": "deepseek-2",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 49,
+  "work_item_node_id": "pr:2",
+  "occurred_at": "2026-09-29T05:08:54.186125939Z",
+  "actor_login": "glm-1",
+  "action": "merged",
+  "source_comment": null,
+  "detail": "refs/heads/develop at c338578dabd8234c2df6930c832d0b36be8d0c5c contains prepared merge c338578dabd8234c2df6930c832d0b36be8d0c5c"
+}
+
+local_activity {
+  "ordinal": 51,
+  "work_item_node_id": "pr:2",
+  "occurred_at": "2026-09-29T05:08:58.642270379Z",
+  "actor_login": "deepseek-2",
+  "action": "replied",
+  "source_comment": 14,
+  "detail": "comment #14"
+}
+
+local_activity {
+  "ordinal": 58,
+  "work_item_node_id": "pr:2",
+  "occurred_at": "2026-09-29T05:22:37.148429752Z",
+  "actor_login": "deepseek-2",
+  "action": "replied",
+  "source_comment": 19,
+  "detail": "comment #19"
+}
+
+local_activity {
+  "ordinal": 63,
+  "work_item_node_id": "pr:2",
+  "occurred_at": "2026-09-29T05:23:14.968366356Z",
+  "actor_login": "deepseek-2",
+  "action": "resolved",
+  "source_comment": 6,
+  "detail": "thread #6"
+}

@@ -1,0 +1,143 @@
+t(escapeCsvField('Region')).toBe('Region');\n    expect(escapeCsvField('1200')).toBe('1200');\n    expect(escapeCsvField('')).toBe('');\n    expect(escapeCsvField('华东')).toBe('华东');\n  });\n\n  it('quotes fields containing a comma, quote or line break', () => {\n    expect(escapeCsvField('a,b')).toBe('\"a,b\"');\n    expect(escapeCsvField('a\"b')).toBe('\"a\"\"b\"');\n    expect(escapeCsvField('a\\nb')).toBe('\"a\\nb\"');\n    expect(escapeCsvField('a\\rb')).toBe('\"a\\rb\"');\n  });\n\n  it('doubles every inner quote', () => {\n    expect(escapeCsvField('\"quoted\"')).toBe('\"\"\"quoted\"\"\"');\n  });\n});\n\ndescribe('worksheetToCsv', () => {\n  it('serializes the seeded A1:C4 range as LF-terminated records', () => {\n    const csv = worksheetToCsv(\n      sheet([\n        [0, 0, 'Region'],\n        [0, 1, 'Sales'],\n        [0, 2, 'Status'],\n        [1, 0, 'East'],\n        [1, 1, '1200'],\n        [1, 2, 'Open'],\n        [2, 0, 'North'],\n        [2, 1, '800'],\n        [2, 2, 'Closed'],\n        [3, 0, 'South'],\n        [3, 1, '700'],\n        [3, 2, 'Open'],\n      ]),\n    );\n    expect(csv).toBe(\n      'Region,Sales,Status\\nEast,1200,Open\\nNorth,800,Closed\\nSouth,700,Open\\n',\n    );\n    expect(csv).not.toContain('\\r');\n    expect(csv.charCodeAt(0)).not.toBe(0xfeff);\n  });\n\n  it('trims trailing all-empty rows and columns but keeps gaps inside the used range', () => {\n    // A1 and C3 are filled: the box is A1:C3, B2 stays an empty field.\n    const csv = worksheetToCsv(\n      sheet([\n        [0, 0, 'a'],\n        [2, 2, 'c'],\n      ]),\n    );\n    expect(csv).toBe('a,,\\n,,\\n,,c\\n');\n  });\n\n  it('exports an empty string for a worksheet with no content', () => {\n    expect(worksheetToCsv(sheet([]))).toBe('');\n    // Explicit empty cells (`raw === ''`) are not content.\n    expect(worksheetToCsv(sheet([[0, 0, '']]))).toBe('');\n  });\n\n  it('escapes in place without changing row/column order', () => {\n    const csv = worksheetToCsv(\n      sheet([\n        [0, 0, 'comma,value'],\n        [0, 1, 'quote\"value'],\n        [0, 2, 'line\\nbreak'],\n        [1, 0, ''],\n      ]),\n    );\n    expect(csv).toBe('\"comma,value\",\"quote\"\"value\",\"line\\nbreak\"\\n,,,\\n');\n  });\n\n  it('exports the value produced by the injected display seam', () => {\n    // D-A8: the export never reads the raw text directly. Sub-issue C replaces\n    // the seam with the formula engine, which is what makes a formula cell\n    // export its calculated result instead of its expression.\n    const worksheet = sheet([\n      [0, 0, '=1+1'],\n      [0, 1, 'plain'],\n    ]);\n    const csv = worksheetToCsv(worksheet, (row, col) => (row === 0 && col === 0 ? '2' : 'plain'));\n    expect(csv).toBe('2,plain\\n');\n  });\n});\n\ndescribe('csvFileName', () => {\n  it('suggests a name ending in .csv', () => {\n    expect(csvFileName('Q3 Sales')).toBe('Q3 Sales.csv');\n    expect(csvFileName('  预算  ')).toBe('预算.csv');\n  });\n\n  it('does not double an existing .csv extension', () => {\n    expect(csvFileName('report.csv')).toBe('report.csv');\n    expect(csvFileName('report.CSV')).toBe('report.CSV');\n  });\n\n  it('falls back to a usable base name', () => {\n    expect(csvFileName('   ')).toBe('workbook.csv');\n  });\n});\n", "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts"}
+
+## S09:L127 2026-09-29T06:04:44.227Z message toolResult
+toolResult write False
+[text]
+Successfully wrote to /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts
+
+## S09:L128 2026-09-29T06:04:45.737Z message assistant
+[toolCall] bash call_00_ET_ec9rX7qPXdke9pjbN8xJ7981
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && pnpm --dir frontend test 2>&1 | tail -30"}
+
+## S09:L129 2026-09-29T06:04:53.936Z message toolResult
+toolResult bash False
+[text]
+ FAIL  src/lib/csvExport.test.ts > worksheetToCsv > escapes in place without changing row/column order
+AssertionError: expected '"comma,value","quote""value","line\nb…' to be '"comma,value","quote""value","line\nb…' // Object.is equality
+[32m- Expected[39m
+[31m+ Received[39m
+[2m  "comma,value","quote""value","line[22m
+[32m- break"[39m
+[32m- ,,,[39m
+[31m+ break"[39m
+ ❯ src/lib/csvExport.test.ts:92:17
+     90|       ]),
+     91|     );
+     92|     expect(csv).toBe('"comma,value","quote""value","line\nbreak"\n,,,\…
+       |                 ^
+     93|   });
+     94| 
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/1]⎯
+ Test Files  1 failed | 2 passed (3)
+      Tests  1 failed | 26 passed (27)
+   Start at  06:04:47
+   Duration  5.79s (transform 177ms, setup 0ms, collect 1.65s, tests 340ms, environment 3.06s, prepare 246ms)
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L129:C1]
+
+## S09:L130 2026-09-29T06:04:53.937Z message user
+[text]
+- pr #8 title/body 已修改
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L130:C1]
+
+## S09:L131 2026-09-29T06:04:58.096Z message assistant
+[thinking]
+The test expectation is wrong: the used range is A1:C2 (max row=1, max col=2), so row 2 exists (row index 1) since cell [1,0]='' is not content... wait I put [1,0,''] which is not content. So maxRow = 0 only! Let's recompute: cells = [[0,0,'comma,value'],[0,1,'quote"value'],[0,2,'line\nbreak'],[1,0,'']]. Content cells: row 0 all three. [1,0,''] empty → excluded. So maxRow=0, maxCol=2 → single line. Expected should be `'"comma,value","quote""value","line\nbreak"\n'`.
+The received output matches that. My expectation had an extra `,,,` row. I intended a second row to exist. Let me use [1,0,'x'] to have a second row, or adjust the expectation. I'll change the expectation to the single-line result and add another case for empty gap. Actually there's already a gap test. Let me simply fix the expectation.
+Wait but received shows `"comma,value","quote""value","line\nbreak"\n`? The diff shows received = `"comma,value","quote""value","line\nbreak"\n` (with trailing newline, since expected minus lines were `break"` and `,,,`). Hmm the diff formatting: expected had `break"` and `,,,` lines that received lacked. Received = '"comma,value","quote""value","line\nbreak"\n'. Yes.
+Fix the expectation.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L131:C1]
+[toolCall] edit call_00_ah5XgtGvNMRydpVeFBAn2892
+{"edits": [{"newText": "  it('escapes in place without changing row/column order', () => {\n    const csv = worksheetToCsv(\n      sheet([\n        [0, 0, 'comma,value'],\n        [0, 1, 'quote\"value'],\n        [0, 2, 'line\\nbreak'],\n      ]),\n    );\n    expect(csv).toBe('\"comma,value\",\"quote\"\"value\",\"line\\nbreak\"\\n');\n  });\n\n  it('keeps an empty field inside the used range even when it is the last cell of a row', () => {\n    const csv = worksheetToCsv(\n      sheet([\n        [0, 0, 'a'],\n        [1, 2, 'c'],\n      ]),\n    );\n    expect(csv).toBe('a,,\\n,,\\nc\\n'.replace('c\\n', ',c\\n'));\n  });", "oldText": "  it('escapes in place without changing row/column order', () => {\n    const csv = worksheetToCsv(\n      sheet([\n        [0, 0, 'comma,value'],\n        [0, 1, 'quote\"value'],\n        [0, 2, 'line\\nbreak'],\n        [1, 0, ''],\n      ]),\n    );\n    expect(csv).toBe('\"comma,value\",\"quote\"\"value\",\"line\\nbreak\"\\n,,,\\n');\n  });"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts"}
+
+## S09:L132 2026-09-29T06:04:58.099Z message toolResult
+toolResult edit False
+[text]
+Successfully replaced 1 block(s) in /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts.
+[details]
+{"diff": "     ...\n  85       sheet([\n  86         [0, 0, 'comma,value'],\n  87         [0, 1, 'quote\"value'],\n  88         [0, 2, 'line\\nbreak'],\n- 89         [1, 0, ''],\n  90       ]),\n  91     );\n- 92     expect(csv).toBe('\"comma,value\",\"quote\"\"value\",\"line\\nbreak\"\\n,,,\\n');\n+ 91     expect(csv).toBe('\"comma,value\",\"quote\"\"value\",\"line\\nbreak\"\\n');\n  93   });\n  94 \n+ 94   it('keeps an empty field inside the used range even when it is the last cell of a row', () => {\n+ 95     const csv = worksheetToCsv(\n+ 96       sheet([\n+ 97         [0, 0, 'a'],\n+ 98         [1, 2, 'c'],\n+ 99       ]),\n+100     );\n+101     expect(csv).toBe('a,,\\n,,\\nc\\n'.replace('c\\n', ',c\\n'));\n+102   });\n+103 \n  95   it('exports the value produced by the injected display seam', () => {\n  96     // D-A8: the export never reads the raw text directly. Sub-issue C replaces\n  97     // the seam with the formula engine, which is what makes a formula cell\n  98     // export its calculated result instead of its expression.\n     ...", "firstChangedLine": 89, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts\n@@ -85,14 +85,23 @@\n       sheet([\n         [0, 0, 'comma,value'],\n         [0, 1, 'quote\"value'],\n         [0, 2, 'line\\nbreak'],\n-        [1, 0, ''],\n       ]),\n     );\n-    expect(csv).toBe('\"comma,value\",\"quote\"\"value\",\"line\\nbreak\"\\n,,,\\n');\n+    expect(csv).toBe('\"comma,value\",\"quote\"\"value\",\"line\\nbreak\"\\n');\n   });\n \n+  it('keeps an empty field inside the used range even when it is the last cell of a row', () => {\n+    const csv = worksheetToCsv(\n+      sheet([\n+        [0, 0, 'a'],\n+        [1, 2, 'c'],\n+      ]),\n+    );\n+    expect(csv).toBe('a,,\\n,,\\nc\\n'.replace('c\\n', ',c\\n'));\n+  });\n+\n   it('exports the value produced by the injected display seam', () => {\n     // D-A8: the export never reads the raw text directly. Sub-issue C replaces\n     // the seam with the formula engine, which is what makes a formula cell\n     // export its calculated result instead of its expression.\n"}
+
+## S09:L133 2026-09-29T06:05:00.088Z message assistant
+[thinking]
+Wait, that replace hack `.replace('c\n', ',c\n')` is convoluted and gives 'a,,\n,,\n,c\n'... let me compute: 'a,,\n,,\nc\n'.replace('c\n', ',c\n') → 'a,,\n,,\n,c\n'. Hmm, but expected actual output: row0 = 'a,,' ; row1 = ',,c' → 'a,,\n,,c\n'. My replace produces 'a,,\n,,\n,c\n' which is wrong. Let me write it plainly: expect(csv).toBe('a,,\n,,c\n').
+Let me fix properly.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L133:C1]
+[toolCall] edit call_00_Q9Wq33nQO7qfVfs9iAUs6380
+{"edits": [{"newText": "    expect(csv).toBe('a,,\\n,,c\\n');", "oldText": "    expect(csv).toBe('a,,\\n,,\\nc\\n'.replace('c\\n', ',c\\n'));"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts"}
+
+## S09:L134 2026-09-29T06:05:00.094Z message toolResult
+toolResult edit False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L134:C1]
+[details]
+{"diff": "     ...\n  97         [0, 0, 'a'],\n  98         [1, 2, 'c'],\n  99       ]),\n 100     );\n-101     expect(csv).toBe('a,,\\n,,\\nc\\n'.replace('c\\n', ',c\\n'));\n+101     expect(csv).toBe('a,,\\n,,c\\n');\n 102   });\n 103 \n 104   it('exports the value produced by the injected display seam', () => {\n 105     // D-A8: the export never reads the raw text directly. Sub-issue C replaces\n     ...", "firstChangedLine": 101, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts\n@@ -97,9 +97,9 @@\n         [0, 0, 'a'],\n         [1, 2, 'c'],\n       ]),\n     );\n-    expect(csv).toBe('a,,\\n,,\\nc\\n'.replace('c\\n', ',c\\n'));\n+    expect(csv).toBe('a,,\\n,,c\\n');\n   });\n \n   it('exports the value produced by the injected display seam', () => {\n     // D-A8: the export never reads the raw text directly. Sub-issue C replaces\n"}
+
+## S09:L135 2026-09-29T06:05:01.627Z message assistant
+[toolCall] bash call_00_ET_T4TScuUxnAIeyxSqXuc64409
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && pnpm --dir frontend test 2>&1 | tail -15"}
+
+## S09:L136 2026-09-29T06:05:05.854Z message toolResult
+toolResult bash False
+[text]
+> spreadsheet-frontend@1.0.0 test /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend
+ RUN  v3.2.7 /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend
+ ✓ src/lib/csvExport.test.ts (12 tests) 11ms
+ ✓ src/components/Grid.test.tsx (8 tests) 284ms
+ ✓ src/lib/format.test.ts (8 tests) 5ms
+ Test Files  3 passed (3)
+      Tests  28 passed (28)
+   Start at  06:05:02
+   Duration  2.80s (transform 141ms, setup 0ms, collect 326ms, tests 301ms, environment 1.43s, prepare 244ms)
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L136:C1]
+
+## S09:L137 2026-09-29T06:05:13.058Z message assistant
+[thinking]
+Now component tests. Let me write `frontend/src/components/WorkbookLifecycle.test.tsx` covering:
+- NewWorkbookPage: empty name → exact message and no API call; successful create navigates; server error shows message and stays.
+- ImportCsvDialog: invalid CSV → exact alert and no navigation.
+- RenameWorkbookDialog: empty name → exact message, no API call; server error → message, onRenamed not called, title unchanged (component-level: onRenamed not called).
+For "title unchanged" that's editor-level; the dialog keeps the original name in the editor since onRenamed isn't called. I'll assert onRenamed not called.
+Also a Grid display-seam test: displayValue prop changes rendered text while raw stays for editing. Add to Grid.test.tsx? Better add to my own test file to avoid touching Grid.test.tsx (which B/C may edit). Hmm, Grid.test.tsx is a frontend test that C might modify. I'll add the display seam test in a new file `WorkbookLifecycle.test.tsx`? It's a Grid test. Let me create `frontend/src/components/GridDisplay.test.tsx`? Actually simpler: include a small test in the lifecycle test file importing Grid. Hmm, mixing. I'll name the file `workbook-lifecycle.test.tsx`... Let me keep two files:
+- `frontend/src/components/WorkbookLifecycle.test.tsx` (create/import/rename dialogs)
+- `frontend/src/lib/cellDisplay.test.ts` — the seam (identity + used by Grid). Put the Grid display-value test here? It's a component test; importing Grid into a lib test is fine but odd. I'll add a Grid seam test into WorkbookLifecycle.test.tsx? Let me create `frontend/src/components/GridDisplayValue.test.tsx` for seam + grid.
+Hmm, over-fragmenting. Simplest: one new test file `frontend/src/components/workbookLifecycle.test.tsx` with describes for the three components, plus `frontend/src/lib/cellDisplay.test.ts` for the seam function including a Grid render check.
+Actually a Grid render check belongs to components. I'll put it in `GridDisplayValue.test.tsx`. Two files: cellDisplay.test.ts (identity function unit) and WorkbookLifecycle.test.tsx (components) — and include the Grid seam render assertion inside cellDisplay.test.ts? No.
+Decision: 
+1. `frontend/src/lib/cellDisplay.test.ts` — unit test of identity seam (formula raw returned as-is; empty for missing).
+2. `frontend/src/components/WorkbookLifecycle.test.tsx` — create/import/rename UI + a Grid display seam render test.
+Let me write them.
+For navigation assertions, use MemoryRouter and a route that renders a marker for /workbook/:id? Simpler: use `MemoryRouter` + `Routes` with the component and a catch-all that renders text "editor".
+For NewWorkbookPage:
+function renderNew() {
+  render(
+    <MemoryRouter initialEntries={['/new']}>
+      <Routes>
+        <Route path="/new" element={<NewWorkbookPage />} />
+        <Route path="/workbook/:id" element={<p>editor</p>} />
+      </Routes>
+    </MemoryRouter>
+For ImportCsvDialog, useNavigate → needs Router. Wrap in MemoryRouter with Routes to catch /workbook/:id.
+File upload: `fireEvent.change(screen.getByLabelText('CSV file'), { target: { files: [file] } })`. jsdom `File` from global. Then click "Confirm import" and `await waitFor(...)`.
+`file.text()` in jsdom: jsdom implements Blob.text? Let's test it. If not available, I'd need to polyfill in the test: `Object.defineProperty(file, 'text', { value: () => Promise.resolve(csv) })`. That's robust; let me just use that approach to avoid jsdom support uncertainty. But then I'm not testing real file reading. It's fine — e2e covers the real path.
+Actually better: try `new File([csv], name)` and if `.text` is undefined, define it. Simpler to always define:
+function csvFile(name: string, content: string): File {
+  const file = new File([content], name, { type: 'text/csv' });
+  if (typeof file.text !== 'function') {
+    Object.defineProperty(file, 'text', { value: () => Promise.resolve(content) });
+  return file;
+Mock api: `vi.spyOn(api, 'importWorkbookCsv')`. Need to restore: `afterEach(() => vi.restoreAllMocks())`.
+For the error path, mock rejection with `new ApiClientError(400, 'INVALID_CSV', INVALID_CSV_MESSAGE)`.
+Assert: `await screen.findByRole('alert')` has text exactly the message; and no navigation (screen has no 'editor' text).
+Also assert home list unchanged? That's HomePage level; e2e covers.
+Let me write.
+[DUPLICATES: 26 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L137:C1]
+[toolCall] write call_00_o2YOt5DW3RRYfCg4GKMx6708
+{"content": "import { describe, expect, it } from 'vitest';\nimport type { WorksheetSnapshot } from '../../../shared/types';\nimport { worksheetDisplayValues } from './cellDisplay';\n\nfunction sheet(cells: [number, number, string][]): WorksheetSnapshot {\n  return {\n    id: 'ws-1',\n    name: 'Sheet1',\n    position: 0,\n    isActive: true,\n    rowCount: 6,\n    colCount: 26,\n    cells,\n    lastSelection: null,\n    validations: [],\n    filters: [],\n    pivots: [],\n  };\n}\n\n/**\n * D-A8 / contract increment A-3: interim identity seam. Sub-issue C replaces the\n * implementation; these assertions describe the pre-C behaviour the acceptance\n * suite pins in the meantime (a formula cell shows and exports its raw text).\n */\ndescribe('worksheetDisplayValues', () => {\n  it('returns the raw text for populated cells', () => {\n    const display = worksheetDisplayValues(sheet([[0, 0, 'Region'], [1, 1, '1200']]));\n    expect(display(0, 0)).toBe('Region');\n    expect(display(1, 1)).toBe('1200');\n  });\n\n  it('returns an empty string for cells that have no stored value', () => {\n    const display = worksheetDisplayValues(sheet([[0, 0, 'Region']]));\n    expect(display(5, 25)).toBe('');\n    expect(display(0, 1)).toBe('');\n  });\n\n  it('returns the raw formula text before sub-issue C lands', () => {\n    const display = worksheetDisplayValues(sheet([[0, 0, '=1+1']]));\n    expect(display(0, 0)).toBe('=1+1');\n  });\n});\n", "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/cellDisplay.test.ts"}
+
+## S09:L138 2026-09-29T06:05:13.060Z message toolResult
+toolResult write False
+[text]
+Successfully wrote to /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/cellDisplay.test.ts
+
+## S09:L139 2026-09-29T06:05:21.482Z message assistant
+[toolCall] write call_00_ET_Tmh6rUzEXYeKMebLl1OM2641
+{"content": "import { afterEach, describe, expect, it, vi } from 'vitest';\nimport { fireEvent, render, screen, waitFor } from '@testing-library/react';\nimport { MemoryRouter, Route, Routes } from 'react-router-dom';\nimport type { WorkbookSnapshot } from '../../../shared/types';\nimport { ApiClientError, api } from '../api/client';\nimport { INVALID_CSV_MESSAGE, WORKBOOK_NAME_EMPTY_MESSAGE } from '../lib/copy';\nimport { Grid } from './Grid';\nimport { ImportCsvDialog } from './ImportCsvDialog';\nimport { NewWorkbookPage } from './NewWorkbookPage';\nimport { RenameWorkbookDialog } from './RenameWorkbookDialog';\nimport { A1_SELECTION } from '../lib/selection';\n\nconst CREATED: WorkbookSnapshot = {\n  id: 'wb-new',\n  name: 'Untitled spreadsheet',\n  updatedAt: '2026-09-29T00:00:00.000Z',\n  worksheets: [],\n};\n\n/** A file whose `.text()` resolves without depending on jsdom's Blob support. */\nfunction csvFile(name: string, content: string): File {\n  const file = new File([content], name, { type: 'text/csv' });\n  if (typeof file.text !== 'function') {\n    Object.defineProperty(file, 'text', { value: () => Promise.resolve(content) });\n  }\n  return file;\n}\n\nfunction renderAt(initialEntry: string, element: React.ReactElement) {\n  return render(\n    <MemoryRouter initialEntries={[initialEntry]}>\n      <Routes>\n        <Route path=\"/new\" element={element} />\n        <Route path=\"/\" element={element} />\n        <Route path=\"/workbook/:id\" element={<p>editor opened</p>} />\n      </Routes>\n    </MemoryRouter>,\n  );\n}\n\nafterEach(() => {\n  vi.restoreAllMocks();\n});\n\ndescribe('NewWorkbookPage (REQ-1-2-1)', () => {\n  it('prefills the backend default name', () => {\n    renderAt('/new', <NewWorkbookPage />);\n    expect(screen.getByLabelText('Workbook name')).toHaveValue('Untitled spreadsheet');\n  });\n\n  it('rejects an empty name in place without calling the API', async () => {\n    const create = vi.spyOn(api, 'createWorkbook');\n    renderAt('/new', <NewWorkbookPage />);\n    fireEvent.change(screen.getByLabelText('Workbook name'), { target: { value: '   ' } });\n    fireEvent.click(screen.getByRole('button', { name: 'Create' }));\n\n    expect(await screen.findByRole('alert')).toHaveTextContent(WORKBOOK_NAME_EMPTY_MESSAGE);\n    expect(create).not.toHaveBeenCalled();\n    // Still on the creation page, with the typed value preserved.\n    expect(screen.getByLabelText('Workbook name')).toHaveValue('   ');\n  });\n\n  it('opens the editor after a successful create', async () => {\n    vi.spyOn(api, 'createWorkbook').mockResolvedValue(CREATED);\n    renderAt('/new', <NewWorkbookPage />);\n    fireEvent.click(screen.getByRole('button', { name: 'Create' }));\n    expect(await screen.findByText('editor opened')).toBeTruthy();\n  });\n\n  it('keeps the page and input retryable when the server fails', async () => {\n    vi.spyOn(api, 'createWorkbook').mockRejectedValue(\n      new ApiClientError(500, 'INTERNAL_ERROR', 'Unexpected server error'),\n    );\n    renderAt('/new', <NewWorkbookPage />);\n    fireEvent.change(screen.getByLabelText('Workbook name'), { target: { value: 'Budget' } });\n    fireEvent.click(screen.getByRole('button', { name: 'Create' }));\n\n    expect(await screen.findByRole('alert')).toHaveTextContent('Unexpected server error');\n    expect(screen.getByLabelText('Workbook name')).toHaveValue('Budget');\n    expect(screen.queryByText('editor opened')).toBeNull();\n  });\n});\n\ndescribe('RenameWorkbookDialog (REQ-1-2-2)', () => {\n  function renderDialog(onRenamed = vi.fn()) {\n    render(\n      <MemoryRouter>\n        <RenameWorkbookDialog\n          workbookId=\"wb-1\"\n          currentName=\"Q3 Sales\"\n          onClose={() => {}}\n          onRenamed={onRenamed}\n        />\n      </MemoryRouter>,\n    );\n    return onRenamed;\n  }\n\n  it('is a dialog name

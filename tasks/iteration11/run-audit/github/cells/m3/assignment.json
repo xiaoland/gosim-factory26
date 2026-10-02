@@ -1,0 +1,467 @@
+[
+  {
+    "id": "01a0eba4-8433-71b8-9006-e3ffa1f254b4",
+    "owner": "pr:11",
+    "kind": "subagent",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb/2026-09-29T05-26-59-511Z_01a0eba1-6ab7-7751-8a0a-e84a52a71f95/7ab36782-c477-4072-a0b9-19e85128e434/run-0/session.jsonl"
+    ],
+    "records": 27,
+    "characters": 142538,
+    "view": "views/01a0eba4-8433-71b8-9006-e3ffa1f254b4.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T05-26-59-511Z_01a0eba1-6ab7-7751-8a0a-e84a52a71f95",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb/2026-09-29T05-26-59-511Z_01a0eba1-6ab7-7751-8a0a-e84a52a71f95.jsonl",
+      "work/native-homes/pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-11-pi-deepseek-fast-g1--/2026-09-29T05-26-59-511Z_01a0eba1-6ab7-7751-8a0a-e84a52a71f95.jsonl"
+    ],
+    "records": 786,
+    "characters": 2084432,
+    "view": "views/2026-09-29T05-26-59-511Z_01a0eba1-6ab7-7751-8a0a-e84a52a71f95.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb-history",
+    "owner": "pr:11",
+    "kind": "history",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb/run-history.jsonl"
+    ],
+    "records": 1,
+    "characters": 303,
+    "view": "views/pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb-history.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "7ab36782-c477-4072-a0b9-19e85128e434_advisor_0_transcript",
+    "owner": "pr:11",
+    "kind": "transcript",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb/subagent-artifacts/7ab36782-c477-4072-a0b9-19e85128e434_advisor_0_transcript.jsonl"
+    ],
+    "records": 48,
+    "characters": 236782,
+    "view": "views/7ab36782-c477-4072-a0b9-19e85128e434_advisor_0_transcript.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-09-36-626Z_01a0ebc8-6f72-747b-8693-f71d4f794338",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebc8-6c3c-77e3-9a65-4d9054cf4cf3/2026-09-29T06-09-36-626Z_01a0ebc8-6f72-747b-8693-f71d4f794338.jsonl"
+    ],
+    "records": 61,
+    "characters": 189232,
+    "view": "views/2026-09-29T06-09-36-626Z_01a0ebc8-6f72-747b-8693-f71d4f794338.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-11-36-000Z_01a0ebca-41c0-729b-8704-4f313bcd1330",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebca-2702-7fb1-8695-d1a70a91a5cc/2026-09-29T06-11-36-000Z_01a0ebca-41c0-729b-8704-4f313bcd1330.jsonl"
+    ],
+    "records": 119,
+    "characters": 289258,
+    "view": "views/2026-09-29T06-11-36-000Z_01a0ebca-41c0-729b-8704-4f313bcd1330.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-16-21-256Z_01a0ebce-9c08-7115-9418-8b9d57eaca33",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebce-992f-75c1-b228-6b1646daaf14/2026-09-29T06-16-21-256Z_01a0ebce-9c08-7115-9418-8b9d57eaca33.jsonl"
+    ],
+    "records": 49,
+    "characters": 182747,
+    "view": "views/2026-09-29T06-16-21-256Z_01a0ebce-9c08-7115-9418-8b9d57eaca33.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-31-09-557Z_01a0ebdc-29f5-7560-a973-83dc97c11242",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebdb-fe77-7641-b595-6700a0316035/2026-09-29T06-31-09-557Z_01a0ebdc-29f5-7560-a973-83dc97c11242.jsonl"
+    ],
+    "records": 83,
+    "characters": 235788,
+    "view": "views/2026-09-29T06-31-09-557Z_01a0ebdc-29f5-7560-a973-83dc97c11242.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-34-36-762Z_01a0ebdf-535a-7037-aefc-7fab369ba19b",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebdf-4eab-7a01-b2a3-ef17ac68d9c4/2026-09-29T06-34-36-762Z_01a0ebdf-535a-7037-aefc-7fab369ba19b.jsonl"
+    ],
+    "records": 59,
+    "characters": 178949,
+    "view": "views/2026-09-29T06-34-36-762Z_01a0ebdf-535a-7037-aefc-7fab369ba19b.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-37-08-214Z_01a0ebe1-a2f6-70c2-8b4c-fd64ffccea92",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebe1-9e5e-78b1-bb3b-5245e0619d45/2026-09-29T06-37-08-214Z_01a0ebe1-a2f6-70c2-8b4c-fd64ffccea92.jsonl"
+    ],
+    "records": 186,
+    "characters": 527615,
+    "view": "views/2026-09-29T06-37-08-214Z_01a0ebe1-a2f6-70c2-8b4c-fd64ffccea92.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-47-54-421Z_01a0ebeb-7f35-77fc-b47f-d7553bcf62f6",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebeb-7c54-73b0-a4a3-11579ad08c2b/2026-09-29T06-47-54-421Z_01a0ebeb-7f35-77fc-b47f-d7553bcf62f6.jsonl"
+    ],
+    "records": 33,
+    "characters": 159070,
+    "view": "views/2026-09-29T06-47-54-421Z_01a0ebeb-7f35-77fc-b47f-d7553bcf62f6.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-48-50-783Z_01a0ebec-5b5f-7067-b123-566a8f05091a",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebec-5816-7a61-b013-4e484b7586fb/2026-09-29T06-48-50-783Z_01a0ebec-5b5f-7067-b123-566a8f05091a.jsonl"
+    ],
+    "records": 50,
+    "characters": 172948,
+    "view": "views/2026-09-29T06-48-50-783Z_01a0ebec-5b5f-7067-b123-566a8f05091a.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-50-29-107Z_01a0ebed-db73-7710-a24d-aaca70d257f5",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebed-d8c3-7911-a2e7-20d8fd47e230/2026-09-29T06-50-29-107Z_01a0ebed-db73-7710-a24d-aaca70d257f5.jsonl"
+    ],
+    "records": 16,
+    "characters": 92991,
+    "view": "views/2026-09-29T06-50-29-107Z_01a0ebed-db73-7710-a24d-aaca70d257f5.txt",
+    "status": "partial",
+    "read_ranges": [
+      1,
+      2,
+      3,
+      5,
+      6,
+      7,
+      8,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16
+    ],
+    "truncation_followup": [],
+    "coverage_note": "Partial direct read: Records 1-3 and 5-16 seen; Record 4 nested issue body truncated; no full-source claim."
+  },
+  {
+    "id": "2026-09-29T06-50-51-338Z_01a0ebee-324a-720e-b0a9-c844ef815173",
+    "owner": "pr:11",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebee-2f72-7b63-905f-1682a6c80ff4/2026-09-29T06-50-51-338Z_01a0ebee-324a-720e-b0a9-c844ef815173.jsonl"
+    ],
+    "records": 24,
+    "characters": 143586,
+    "view": "views/2026-09-29T06-50-51-338Z_01a0ebee-324a-720e-b0a9-c844ef815173.txt",
+    "status": "partial",
+    "read_ranges": [
+      1,
+      2,
+      3,
+      4,
+      5,
+      6,
+      7,
+      9,
+      10,
+      11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      17,
+      18,
+      19,
+      20,
+      21,
+      22,
+      23,
+      24
+    ],
+    "truncation_followup": [
+      {
+        "reason": "sed 分段调用在 10,000-token 外层上限触发两次 Warning: truncated output；Record 8 嵌套正文未完整展开，不能记为全文。"
+      }
+    ],
+    "coverage_note": "Partial direct read: Records 1-7 and 9-24 fully seen in bounded chunks; Record 8 nested message truncated; no full-source claim."
+  },
+  {
+    "id": "2026-09-29T05-09-10-321Z_01a0eb91-1a31-75ff-a2d1-5fa50e9aa02f",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0eb91-1756-7732-9396-b3f1613b4b68/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-5-pi-glm-fast-g1--/2026-09-29T05-09-10-321Z_01a0eb91-1a31-75ff-a2d1-5fa50e9aa02f.jsonl"
+    ],
+    "records": 23,
+    "characters": 56818,
+    "view": "views/2026-09-29T05-09-10-321Z_01a0eb91-1a31-75ff-a2d1-5fa50e9aa02f.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T05-22-03-526Z_01a0eb9c-e686-7755-9009-a35387844a69",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0eb9c-e392-7b40-8a36-083634005adc/2026-09-29T05-22-03-526Z_01a0eb9c-e686-7755-9009-a35387844a69.jsonl"
+    ],
+    "records": 50,
+    "characters": 146678,
+    "view": "views/2026-09-29T05-22-03-526Z_01a0eb9c-e686-7755-9009-a35387844a69.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T05-28-33-473Z_01a0eba2-d9c1-76ea-b7ac-56434d2158c7",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0eba2-a0d7-7e63-bb38-3afeebe5479d/2026-09-29T05-28-33-473Z_01a0eba2-d9c1-76ea-b7ac-56434d2158c7.jsonl"
+    ],
+    "records": 38,
+    "characters": 69472,
+    "view": "views/2026-09-29T05-28-33-473Z_01a0eba2-d9c1-76ea-b7ac-56434d2158c7.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T05-35-26-860Z_01a0eba9-288c-764f-96c1-51dae740f661",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0eba9-258b-7e30-995e-0e1f6950930e/2026-09-29T05-35-26-860Z_01a0eba9-288c-764f-96c1-51dae740f661.jsonl"
+    ],
+    "records": 77,
+    "characters": 148452,
+    "view": "views/2026-09-29T05-35-26-860Z_01a0eba9-288c-764f-96c1-51dae740f661.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T05-46-50-933Z_01a0ebb3-98b5-70e2-a2b2-e9c0c0ab750f",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebb3-9616-7823-937d-c4a9db3994af/2026-09-29T05-46-50-933Z_01a0ebb3-98b5-70e2-a2b2-e9c0c0ab750f.jsonl"
+    ],
+    "records": 43,
+    "characters": 102278,
+    "view": "views/2026-09-29T05-46-50-933Z_01a0ebb3-98b5-70e2-a2b2-e9c0c0ab750f.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T05-50-15-004Z_01a0ebb6-b5dc-7126-9ade-3d374f47ddc2",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebb6-b2da-7c10-8b4d-070657e53c50/2026-09-29T05-50-15-004Z_01a0ebb6-b5dc-7126-9ade-3d374f47ddc2.jsonl"
+    ],
+    "records": 35,
+    "characters": 92514,
+    "view": "views/2026-09-29T05-50-15-004Z_01a0ebb6-b5dc-7126-9ade-3d374f47ddc2.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T05-53-14-108Z_01a0ebb9-717c-7767-b0f9-40597df15523",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebb9-6b60-7a92-a501-9afb4dba0599/2026-09-29T05-53-14-108Z_01a0ebb9-717c-7767-b0f9-40597df15523.jsonl"
+    ],
+    "records": 83,
+    "characters": 224283,
+    "view": "views/2026-09-29T05-53-14-108Z_01a0ebb9-717c-7767-b0f9-40597df15523.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-02-22-679Z_01a0ebc1-d057-72f8-b01b-3bc8b988314b",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebc1-c555-7ae3-95fc-ba07dbab4f0f/2026-09-29T06-02-22-679Z_01a0ebc1-d057-72f8-b01b-3bc8b988314b.jsonl"
+    ],
+    "records": 66,
+    "characters": 164856,
+    "view": "views/2026-09-29T06-02-22-679Z_01a0ebc1-d057-72f8-b01b-3bc8b988314b.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-11-38-334Z_01a0ebca-4ade-741e-b226-f2b25ab95bf4",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebca-479a-7d21-a5ca-045858e1a3b1/2026-09-29T06-11-38-334Z_01a0ebca-4ade-741e-b226-f2b25ab95bf4.jsonl"
+    ],
+    "records": 51,
+    "characters": 96112,
+    "view": "views/2026-09-29T06-11-38-334Z_01a0ebca-4ade-741e-b226-f2b25ab95bf4.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-14-50-716Z_01a0ebcd-3a5c-71ea-bf12-793ff56edfd5",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebcd-2aa5-71b2-b483-0687e9dc8102/2026-09-29T06-14-50-716Z_01a0ebcd-3a5c-71ea-bf12-793ff56edfd5.jsonl"
+    ],
+    "records": 25,
+    "characters": 74643,
+    "view": "views/2026-09-29T06-14-50-716Z_01a0ebcd-3a5c-71ea-bf12-793ff56edfd5.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-31-13-883Z_01a0ebdc-3adb-7187-818e-3c72e0b5b33a",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebdc-37c3-78e0-90a9-3aa95df26ee2/2026-09-29T06-31-13-883Z_01a0ebdc-3adb-7187-818e-3c72e0b5b33a.jsonl"
+    ],
+    "records": 56,
+    "characters": 124287,
+    "view": "views/2026-09-29T06-31-13-883Z_01a0ebdc-3adb-7187-818e-3c72e0b5b33a.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-35-38-316Z_01a0ebe0-43cc-71de-a0df-39fcffa91b2f",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebe0-4098-73c2-b951-349728ff9e81/2026-09-29T06-35-38-316Z_01a0ebe0-43cc-71de-a0df-39fcffa91b2f.jsonl"
+    ],
+    "records": 51,
+    "characters": 119327,
+    "view": "views/2026-09-29T06-35-38-316Z_01a0ebe0-43cc-71de-a0df-39fcffa91b2f.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T06-48-49-940Z_01a0ebec-5814-7099-983f-b1e37881e214",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebec-54fa-74d2-b916-fbb44de8d305/2026-09-29T06-48-49-940Z_01a0ebec-5814-7099-983f-b1e37881e214.jsonl"
+    ],
+    "records": 34,
+    "characters": 115494,
+    "view": "views/2026-09-29T06-48-49-940Z_01a0ebec-5814-7099-983f-b1e37881e214.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  },
+  {
+    "id": "2026-09-29T07-00-41-839Z_01a0ebf7-34ef-76e7-83db-63836efb47bd",
+    "owner": "issue:5",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebf7-2d8d-7ba3-b815-1ffeea678f48/2026-09-29T07-00-41-839Z_01a0ebf7-34ef-76e7-83db-63836efb47bd.jsonl"
+    ],
+    "records": 10,
+    "characters": 24500,
+    "view": "views/2026-09-29T07-00-41-839Z_01a0ebf7-34ef-76e7-83db-63836efb47bd.txt",
+    "status": "partial",
+    "read_ranges": [],
+    "truncation_followup": [],
+    "coverage_note": "Partial model read; see read-receipts.json for directly seen ranges and unverified remainder."
+  }
+]

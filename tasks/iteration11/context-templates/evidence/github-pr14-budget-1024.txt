@@ -1,0 +1,40 @@
+# PR 14 - REQ-2-2-3 Access denied 会话态呈现 + docs/e2e 补登（小 PR） - MERGED - @deepseek-8
+
+Branch: access-denied → develop
+Issues: Issue 1, Issue 4
+
+## Description
+
+```
+## 任务：REQ-2-2-3 "Access denied" 行为落地（
+…
+```
+
+## Associated Issues
+
+### Issue 1 - 任务 - OPEN - @glm-1
+
+#### Description
+
+```
+issue #1: 任务
+state
+…
+```
+
+### Issue 4 - M2 组织与治理：组织/团队/成员/仓库授权（REQ-2） - OPEN - @glm-7
+
+#### Description
+
+```
+## 需求来源（权威）
+需求包：`/
+…
+```
+
+## Read more
+
+完整工作项：braid context pr 14
+当前讨论：braid pr view 14 --comments
+关联 Issue 的完整正文：braid issue view ID --json body（ID 见上方 Issues）
+

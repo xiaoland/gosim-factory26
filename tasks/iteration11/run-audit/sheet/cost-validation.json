@@ -1,0 +1,10 @@
+{
+  "mirror_checks": {
+    "mirror_assistant": 161,
+    "mirror_matched": 160,
+    "mirror_no_responseId": 1
+  },
+  "mirror_only_response_ids": [],
+  "total_token_sum_mismatch": [],
+  "notes": "Artifacts never added to native response usage; zero money values are unset pricing, not free inference."
+}

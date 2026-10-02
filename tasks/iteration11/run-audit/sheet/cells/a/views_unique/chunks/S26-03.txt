@@ -1,0 +1,361 @@
+ines omitted; precise per-line source map in duplicate-lines.json at S26:L34:argsPayload]
+
+## S26:L35 2026-09-29T06:34:25.512Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:cwd]
+[ts]
+1790663665512
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L35:isError]
+
+## S26:L36 2026-09-29T06:34:25.513Z legacy toolResult
+toolResult bash False
+[text]
+    if (typeof patch.name !== 'string') throw invalidBody('Worksheet name must be a string');
+[DUPLICATES: 280 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L36:C1]
+
+## S26:L37 2026-09-29T06:34:35.057Z legacy assistant
+[thinking]
+Let me see importWorksheetState to check the "undefined = no change" pattern and existing inline validation (dimension positive-integer check, cells-within-reported-structure check).
+[toolCall] bash bash_9_a9f76810
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:backend/src/store.js | grep -n \"importWorksheetState\" && git show d536aa2:backend/src/store.js | sed -n \"$(git show d536aa2:backend/src/store.js | grep -n 'export function importWorksheetState' | cut -d: -f1),+130p\""}
+
+## S26:L38 2026-09-29T06:34:35.058Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:cwd]
+[ts]
+1790663675058
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:sourceEventType]
+[toolCallId]
+bash_9_a9f76810
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:backend/src/store.js | grep -n \"importWorksheetState\" && git show d536aa2:backend/src/store.js | sed -n \"$(git show d536aa2:backend/src/store.js | grep -n 'export function importWorksheetState' | cut -d: -f1),+130p\""
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L38:argsPayload]
+
+## S26:L39 2026-09-29T06:34:35.076Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:cwd]
+[ts]
+1790663675076
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L39:isError]
+
+## S26:L40 2026-09-29T06:34:35.076Z legacy toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 115 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L40:C1]
+
+## S26:L41 2026-09-29T06:34:45.976Z legacy assistant
+[thinking]
+Now let me check the design/task packet materials for sub-issue A (commit d06d85c) to see the contract increments text, and maybe the tasks directory. Also check what an undo/redo mechanism looks like — does the app even have undo/redo via state replay? The root ruling mentions "undo/redo replay of an older snapshot". Let me check frontend for undo usage of PUT state.
+[toolCall] bash bash_10_2ccc5de4
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && ls tasks && ls tasks/* 2>/dev/null | head -40"}
+[toolCall] bash bash_11_c5f92199
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && grep -rn \"min_rows\\|minRows\\|min_cols\" --include=\"*.md\" tasks README.md 2>/dev/null | head -20"}
+
+## S26:L42 2026-09-29T06:34:45.977Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:cwd]
+[ts]
+1790663685977
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:sourceEventType]
+[toolCallId]
+bash_10_2ccc5de4
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && ls tasks && ls tasks/* 2>/dev/null | head -40"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L42:argsPayload]
+
+## S26:L43 2026-09-29T06:34:45.977Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:cwd]
+[ts]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:ts]
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:sourceEventType]
+[toolCallId]
+bash_11_c5f92199
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && grep -rn \"min_rows\\|minRows\\|min_cols\" --include=\"*.md\" tasks README.md 2>/dev/null | head -20"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L43:argsPayload]
+
+## S26:L44 2026-09-29T06:34:45.990Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:cwd]
+[ts]
+1790663685990
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L44:isError]
+
+## S26:L45 2026-09-29T06:34:46.074Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:cwd]
+[ts]
+1790663686074
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L45:isError]
+
+## S26:L46 2026-09-29T06:34:46.075Z legacy toolResult
+toolResult bash False
+[text]
+tasks/pr-2-base:
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L46:C1]
+
+## S26:L47 2026-09-29T06:34:46.075Z legacy toolResult
+toolResult bash False
+
+## S26:L48 2026-09-29T06:34:53.084Z legacy assistant
+[toolCall] bash bash_12_7db12b58
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && wc -l tasks/issue-3-a/packet.md && grep -n \"A-4\\|footprint\\|minRows\\|min_rows\\|Y-min\" tasks/issue-3-a/packet.md | head -30"}
+
+## S26:L49 2026-09-29T06:34:53.084Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:cwd]
+[ts]
+1790663693084
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:sourceEventType]
+[toolCallId]
+bash_12_7db12b58
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && wc -l tasks/issue-3-a/packet.md && grep -n \"A-4\\|footprint\\|minRows\\|min_rows\\|Y-min\" tasks/issue-3-a/packet.md | head -30"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L49:argsPayload]
+
+## S26:L50 2026-09-29T06:34:53.096Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:cwd]
+[ts]
+1790663693096
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L50:isError]
+
+## S26:L51 2026-09-29T06:34:53.096Z legacy toolResult
+toolResult bash False
+[text]
+55 tasks/issue-3-a/packet.md
+11:- 跨 Issue 契约增量 A-1…A-4：**Issue #1 thread 1 comment #28**（导入端点、导入是行列数第二入口、显示值单一接缝、导出 used range/筛选）
+41:5. 交付前确认 A-1…A-4 契约增量在 Issue #1 thread 1 无异议（有异议先按裁定调整）
+
+## S26:L52 2026-09-29T06:34:59.096Z legacy assistant
+[toolCall] read read_13_4d7c967f
+{"path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/tasks/issue-3-a/packet.md"}
+
+## S26:L53 2026-09-29T06:34:59.096Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:cwd]
+[ts]
+1790663699096
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:sourceEventType]
+[toolCallId]
+read_13_4d7c967f
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:argsPreview]
+[argsPayload]
+  "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/tasks/issue-3-a/packet.md"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L53:argsPayload]
+
+## S26:L54 2026-09-29T06:34:59.099Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:cwd]
+[ts]
+1790663699099
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L54:isError]
+
+## S26:L55 2026-09-29T06:34:59.099Z legacy toolResult
+toolResult read False
+[text]
+[DUPLICATES: 55 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L55:C1]
+
+## S26:L56 2026-09-29T06:39:03.618Z legacy assistant
+[thinking]
+Interesting: D-A5 says "尾部空行不产生记录" (trailing blank lines do not produce records). So the packet already pins the trailing-blank-line drop as a decision D-A5. Good — so within the project that's pinned, though the root contract's pinned semantic (2) only says "a single trailing newline at end of file does not create an extra empty row". D-A5 generalizes. So for the advisor's answer: the footprint = parse result row/col counts is internally well-defined; the ambiguity risk is external harness disagreement on `a,b\n\n` if the harness follows only the root's literal pinned semantics. Flag it: either confirm D-A5's generalization with the root owner (it's already in D-A5, decided by Issue owner... actually D-A5 is the Issue owner's design decision, and root's A-1 pinned semantics say "(2) a single trailing newline at end of file does not create an extra empty row". Does (2) permit dropping multiple trailing blank lines? `a,b\n\n`: under a strict reading, parse produces records: 'a,b' then a record from the blank line? Let's think: text "a,b\n\n" — first \n terminates record [a,b]. Second \n terminates a record [''] — wait, but EOF follows. Parser-wise: after first \n, we're at field start of a new record. Then \n encountered → push field '' → record [''] pushed. So naive parse = [['a','b'],['']]. Pinned (2): "a single trailing newline at end of file does not create an extra empty row" — the file ends with a single trailing newline (the second \n). Under that rule, does the last record [''] survive? The "single trailing newline" is the second \n which TERMINATES the record ['']. Hmm, actually the trailing-newline rule is about: "a,b\n" should be 1 row not 2. For "a,b\n\n": row1 = "a,b", row2 = "" (an empty line = one empty field), and the final \n terminates row2 without creating row3. So strict reading gives 2 rows. The implementation drops trailing blank lines entirely → 1 row. These genuinely differ, and the footprint (and even the grid content!) differ: under strict reading, row 2 (index 1) would be an empty row but the footprint lower bound would be 2 rows. So export after clearing would differ.
+So this is exactly the kind of case where an external harness written from the requirement text + pinned semantics could disagree. The root's A-4 says footprint = "actual row/col count of the imported CSV （裁剪后、含 ragged 补齐）". "裁剪后" — after trimming. Trimming of what? Probably trailing blank lines per D-A5? If 裁剪 refers to export used-range trim... ambiguous. This deserves flagging as "confirm with root owner": does "actual row count" of `a,b\n\n` equal 1 or 2? Actually wait — the issue owner is publishing acceptance criteria; the advisor should flag this as the one case where the pinned semantics (2) and D-A5's generalization diverge observably in the footprint. Since D-A5 is already a published decision ("尾部空行不产生记录"), and root approved A-1 with the 4 pinned semantics... there might be tension. Advisor should flag: get explicit confirmation that "mult

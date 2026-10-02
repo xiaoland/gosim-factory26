@@ -1,0 +1,110 @@
+[
+  {
+    "filename": "2026-09-30T03-57-18-861Z_01a0f075-ac8c-71aa-9782-e14f4106ca2b.jsonl",
+    "parts": [
+      {
+        "path": "/home/yyh/Development/factory26/runs/iteration12/fresh/github/workspace/official-generation/template/.factory26/20260930-035653-f3702b83/work/native-homes/pi-glm-fast-01a0f075-a8d2-7112-a06a-323e8bed9259/2026-09-30T03-57-18-861Z_01a0f075-ac8c-71aa-9782-e14f4106ca2b.jsonl",
+        "lines": 57,
+        "sha256": "1fdfff3a0d2400ed10bf47d0d56e713395e1823f805c6d50f9185de10361f142",
+        "first": "2026-09-30T04:01:58.468Z",
+        "last": "2026-09-30T04:10:08.132Z",
+        "first_id": "c8cc6c79",
+        "last_id": "cd0e5ea8",
+        "first_parentId": "4a0237e7"
+      },
+      {
+        "path": "/home/yyh/Development/factory26/runs/iteration12/fresh/github/workspace/official-generation/template/.factory26/20260930-035653-f3702b83/work/native-homes/pi-glm-fast-01a0f075-a8d2-7112-a06a-323e8bed9259/sessions/--workspace-template-.factory26-20260930-035653-f3702b83-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-30T03-57-18-861Z_01a0f075-ac8c-71aa-9782-e14f4106ca2b.jsonl",
+        "lines": 45,
+        "sha256": "92cdc5acdaf10375293c3e9cfc27fefeffefacf0ff78449d4df74f126db82ecb",
+        "first": "2026-09-30T03:57:18.861Z",
+        "last": "2026-09-30T04:01:22.498Z",
+        "first_id": "01a0f075-ac8c-71aa-9782-e14f4106ca2b",
+        "last_id": "4a0237e7",
+        "first_parentId": null
+      }
+    ],
+    "unresolved_parent_ids": [],
+    "duplicated_entry_ids": []
+  },
+  {
+    "filename": "2026-09-30T04-07-52-338Z_01a0f07f-5711-74be-976e-bc383600a835.jsonl",
+    "parts": [
+      {
+        "path": "/home/yyh/Development/factory26/runs/iteration12/fresh/github/workspace/official-generation/template/.factory26/20260930-035653-f3702b83/work/native-homes/pi-deepseek-fast-01a0f07f-52b0-7ad0-8e9f-29a2df44e8fd/2026-09-30T04-07-52-338Z_01a0f07f-5711-74be-976e-bc383600a835.jsonl",
+        "lines": 247,
+        "sha256": "383bf81c881fd8f38819f679dc164615992726b5eb18e62a0d0d4650ab9cb7eb",
+        "first": "2026-09-30T04:10:37.057Z",
+        "last": "2026-09-30T04:25:37.111Z",
+        "first_id": "5fa47003",
+        "last_id": "2c692d87",
+        "first_parentId": "8c2fbf06"
+      },
+      {
+        "path": "/home/yyh/Development/factory26/runs/iteration12/fresh/github/workspace/official-generation/template/.factory26/20260930-035653-f3702b83/work/native-homes/pi-deepseek-fast-01a0f07f-52b0-7ad0-8e9f-29a2df44e8fd/sessions/--workspace-template-.factory26-20260930-035653-f3702b83-braid-state-worktrees-pr-2-pi-deepseek-fast-g1--/2026-09-30T04-07-52-338Z_01a0f07f-5711-74be-976e-bc383600a835.jsonl",
+        "lines": 57,
+        "sha256": "f88d5cacc8eb218717e0d97541c8c5ea8102741a34990082f437a246c6422086",
+        "first": "2026-09-30T04:07:52.338Z",
+        "last": "2026-09-30T04:09:57.364Z",
+        "first_id": "01a0f07f-5711-74be-976e-bc383600a835",
+        "last_id": "8c2fbf06",
+        "first_parentId": null
+      }
+    ],
+    "unresolved_parent_ids": [],
+    "duplicated_entry_ids": []
+  },
+  {
+    "filename": "2026-09-30T04-06-28-390Z_01a0f07e-0f25-7567-8768-5c4a15adb855.jsonl",
+    "parts": [
+      {
+        "path": "/home/yyh/Development/factory26/runs/iteration12/fresh/sheet/workspace/official-generation/template/.factory26/20260930-035654-b1b8ead7/work/native-homes/pi-deepseek-fast-01a0f07e-0b36-7ca3-8394-f18b65f42e13/2026-09-30T04-06-28-390Z_01a0f07e-0f25-7567-8768-5c4a15adb855.jsonl",
+        "lines": 163,
+        "sha256": "1475520d794b1e7ed1d4ccd9e3ff357e87725d141eb003e37551bd6b200ecaf8",
+        "first": "2026-09-30T04:07:59.088Z",
+        "last": "2026-09-30T04:18:23.732Z",
+        "first_id": "283e7dd4",
+        "last_id": "0143eec2",
+        "first_parentId": "d470634d"
+      },
+      {
+        "path": "/home/yyh/Development/factory26/runs/iteration12/fresh/sheet/workspace/official-generation/template/.factory26/20260930-035654-b1b8ead7/work/native-homes/pi-deepseek-fast-01a0f07e-0b36-7ca3-8394-f18b65f42e13/sessions/--workspace-template-.factory26-20260930-035654-b1b8ead7-braid-state-worktrees-pr-2-pi-deepseek-fast-g1--/2026-09-30T04-06-28-390Z_01a0f07e-0f25-7567-8768-5c4a15adb855.jsonl",
+        "lines": 38,
+        "sha256": "e05261784025c8ddcc226fa854d5d3c74f7de669ecfc8a5e84186012da61942e",
+        "first": "2026-09-30T04:06:28.390Z",
+        "last": "2026-09-30T04:07:42.781Z",
+        "first_id": "01a0f07e-0f25-7567-8768-5c4a15adb855",
+        "last_id": "d470634d",
+        "first_parentId": null
+      }
+    ],
+    "unresolved_parent_ids": [],
+    "duplicated_entry_ids": []
+  },
+  {
+    "filename": "2026-09-30T03-57-18-678Z_01a0f075-abd5-72b6-bf74-d13a7193e0c7.jsonl",
+    "parts": [
+      {
+        "path": "/home/yyh/Development/factory26/runs/iteration12/fresh/sheet/workspace/official-generation/template/.factory26/20260930-035654-b1b8ead7/work/native-homes/pi-glm-fast-01a0f075-a81e-7640-98ef-e6d5161e77f2/2026-09-30T03-57-18-678Z_01a0f075-abd5-72b6-bf74-d13a7193e0c7.jsonl",
+        "lines": 59,
+        "sha256": "854f8bd8da43d185e5c027af3c4d71fa6ac83eab6440b46aa61a140d1c404a41",
+        "first": "2026-09-30T03:59:14.105Z",
+        "last": "2026-09-30T04:07:42.678Z",
+        "first_id": "61b9b778",
+        "last_id": "1d165172",
+        "first_parentId": "d49fa805"
+      },
+      {
+        "path": "/home/yyh/Development/factory26/runs/iteration12/fresh/sheet/workspace/official-generation/template/.factory26/20260930-035654-b1b8ead7/work/native-homes/pi-glm-fast-01a0f075-a81e-7640-98ef-e6d5161e77f2/sessions/--workspace-template-.factory26-20260930-035654-b1b8ead7-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-30T03-57-18-678Z_01a0f075-abd5-72b6-bf74-d13a7193e0c7.jsonl",
+        "lines": 21,
+        "sha256": "84caca8fbf01bd87f1ef031e015d0cd9644ba6473c6c784a936dd631b9bce858",
+        "first": "2026-09-30T03:57:18.678Z",
+        "last": "2026-09-30T03:59:04.737Z",
+        "first_id": "01a0f075-abd5-72b6-bf74-d13a7193e0c7",
+        "last_id": "d49fa805",
+        "first_parentId": null
+      }
+    ],
+    "unresolved_parent_ids": [],
+    "duplicated_entry_ids": []
+  }
+]

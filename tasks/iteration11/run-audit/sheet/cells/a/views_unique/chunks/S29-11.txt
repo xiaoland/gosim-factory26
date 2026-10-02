@@ -1,0 +1,189 @@
+R #9，当前在 `origin/b-issue-4-worksheets-structure`）**尚未进 develop**；PR #8 暂用私有路径，文案已逐字对齐。**develop 最终必须改为调用共享 helper**，切换完成是 #3 关闭前提（根负责人跟踪）；rebase 到含 helper 的 develop 后单点替换 `importWorksheetState` 内的尺寸/cells/足迹校验并删本地副本 | 切换后复跑三项检查 |\n+ 85 | **共享校验 helper 切换**（#54/#57 §2/#60/#66/#69） | **已完成**：`braid/issue-3-a` rebase 到 `origin/develop` @ `15abbf6`（PR #9 已合入）后，`importWorksheetState` 的尺寸/cells/足迹校验改为调用共享 helper `assertWorksheetStateValid`（`store.js`），**本地私有副本已删除**；`undefined`/`null` = 不改动与两字段持久化仍由本 PR 负责（保写入块只做持久化） | 错误码/文案/回滚用例沿用 `app.test.js` 既有断言（helper 与私有路径逐字一致）；切换后三项检查见下方证据 |\n  86 \n+ 87 **rebase 漂移（非实现改动）**：`d536aa2`/`559a0bd` 的改动 rebase 到 `15abbf6` 时，3 个文件有冲突并按\"B 的新行为 + A 的增量\"合并：`frontend/src/lib/errors.ts`（两侧同名同义，留 B 的注释）、`backend/src/routes.js`（store 导入列表取并集）、`frontend/src/components/WorkbookEditor.tsx`（保留 B 的 `applySnapshot`/`runWorkbookAction`，再接 A 的 `displayValue` memo）。另有一处类型漂移：B 给 `Grid` 加了四个必需结构操作回调，A 的 `WorkbookLifecycle.test.tsx` 接缝用例补 no-op props（仅测试代码）。\n+ 88 \n  87 ### 预演/排障结论（小规模真实操作）\n  88 \n  89 - 后端 `pnpm --dir backend test`（47 例）与 `typecheck` 在实现后立即通过；解析器先以单测驱动，避免把解析规则混进端点用例。\n  90 - 前端组件测试暴露两个既有约束：仓库未引入 `@testing-library/jest-dom`（无 `toHaveTextContent`/`toHaveValue`），改用原生\n     ...\n 104 - 上述均是 **D-A7 契约断言而非需求断言**（末换行、转义、足迹范围）：单测与 e2e 逐字断言的是契约决定；若外部 harness 不一致，属于契约争议\n 105   而非实现 bug（已在测试注释中标注）。\n 106 - 创建页在当前工作簿列表上方渲染两个入口按钮，与参考图「新建」入口位置一致；参考图不作为控件形态依据（附录 A）。\n 107 \n+110 - 环境陷阱（本仓库打包环境）：`pnpm` 包装器内部用 Node 24，直接 `pnpm install` 会把 `better-sqlite3` 装成 ABI 137（`NODE_MODULE_VERSION 137`），而平台运行 Node 20.19.3（ABI 115），Vitest 会整片报 “was compiled against a different Node.js version / Module did not self-register”；修复：`cd backend && PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3` 后用 `PATH=/usr/local/bin:$PATH pnpm -r test`。平台按逐目录 `npm install`（Node 20 入口）不出现该错配（Issue #3 comment #81 §2 独立复现同一现象）。\n+111 \n 108 ## 验收（PR 负责人必须在候选提交上执行并留档）\n 109 \n 110 1. `pnpm -r test`（backend csv/端点/原子性；frontend 转义/used range/接缝/组件文案）\n 111 2. `pnpm -r typecheck`\n     ...\n 118 - [x] PR 创建 + 指派 PR 负责人 + 交接\n 119 - [x] PR 侧预演（解析规则、导入事务、导出 used range 与下载捕获）\n 120 - [x] 实现 + 自检（后端/前端 Vitest、typecheck）\n 121 - [x] 补齐契约 v1.3 / A-4 导入足迹（迁移、导入写入、快照、state 语义、导出 max 与足迹优先、README、round-trip 用例；清单见 Issue #3 comment #64）\n-122 - [ ] `bash checks/run-e2e.sh` 全量通过并留档（首轮结果保留）\n-123 - [ ] 在 Issue #3 交接候选（提交号、命令、首轮结果、证据路径与未决项）\n-124 - [ ] Issue 负责人验收 → 根负责人合入 develop → 指派 C（#5）时把 A-3 显示值接缝写入 C 的交接材料\n-125 - [ ] **未完成义务**：B 的共享 helper 进 develop 后，PR #8 rebase 并切换 `importWorksheetState` 的校验为 `assertWorksheetStateValid`，删本地副本，复跑三项检查\n+126 - [x] `bash checks/run-e2e.sh` 全量通过并留档（首轮结果保留）\n+127 - [x] **共享 helper 切换**：rebase 到 `origin/develop` @ `15abbf6`，`importWorksheetState` 改调 `assertWorksheetStateValid` 并删本地副本（Issue #3 comment #81 §3 交办项）\n+128 - [ ] 切换后在新候选上复跑三项检查并交回 Issue #3（提交号、首轮结果、证据路径）\n+129 - [ ] Issue 负责人针对性复核 → 根负责人合入 develop → 指派 C（#5）时把 A-3 显示值接缝写入 C 的交接材料\n 126 \n 127 ## 证据\n 128 \n-129 - 设计与契约：Issue #3 comment #27；Issue #1 comment #28（A-2 确认见 #30）\n+133 - 设计与契约：Issue #3 comment #27；Issue #1 comment #28（A-2 确认见 #30）；v1.3 = Issue #1 #51/#54/#57/#60/#65 与 Issue #3 #81/#82\n 130 - 单测/类型检查：命令与结果见 PR #8 交接评论（候选提交号 + 退出码 + 首轮输出）\n-131 - e2e：`python3 <agent-browser skill>/scripts/with-service.py --check-only ... -- bash checks/run-e2e.sh`；证据目录与 result.json 见交接评论\n+135 - e2e：`python3 <agent-browser skill>/scripts/with-service.py --check-only ... -- bash checks/run-e2e.sh`；证据目录与 result.json 见交接评论（`559a0bd` 的独立复跑见 Issue #3 comment #82）\n 132 - 视觉：`input/reference/*.png`（观察摘要见 Issue #3 comment #27 附录 A）", "firstChangedLine": 85, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/tasks/issue-3-a/packet.md\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/tasks/issue-3-a/packet.md\n@@ -81,10 +81,12 @@\n | state 导入 `undefined`/`null` = 不改动，缺失不得重置（#57 §3/#66） | `importWorksheetState` 仅在字段被申报时校验并写入，未申报保留原值；`WorksheetStatePayload` 增可选两字段 | state 用例：设 2/3 → 只带 cells 回放不变 → 显式 `null` 仍不变 → 显式 0 清除 |\n | `min ≤ 所报结构`（#51/#57 §2） | 私有路径现含该校验；**文案/错误码与 B 的共享 helper 逐字对齐**（`minRows must be a non-negative integer` / `minRows must not exceed the reported structure (N)`，`INVALID_BODY`） | 用例断言 `minRows 5 > 4` 的 400 与精确文案，并断言整事务回滚 |\n | 导出 = max(包围盒, 静态足迹)；足迹优先的空表分支（#57 §4） | `worksheetToCsv` 取 `rowSpan = max(maxRow+1, minRows)`、`colSpan = max(maxCol+1, minCols)`；仅当二者皆 0 返回 `''`；足迹为静态字段，结构操作不读写 | `csvExport.test.ts` 3 例（尾部空字段往返 / 宽表 max / 清空后足迹优先）；e2e 2 例（导入→导出、导入→清空→导出，含刷新） |\n | README 登记足迹语义（#64 第 7 项） | README 增「导入足迹」段 + API 表 state 行补 `minRows`/`minCols` 说明 + 导出段改为 `max(包围盒, 足迹)` | 文档审阅 |\n-| **共享校验 helper 切换义务**（#54/#57 §2/#60/#66/#69） | helper `assertWorksheetStateValid`（`store.js`，B 的 PR #9，当前在 `origin/b-issue-4-worksheets-structure`）**尚未进 develop**；PR #8 暂用私有路径，文案已逐字对齐。**develop 最终必须改为调用共享 helper**，切换完成是 #3 关闭前提（根负责人跟踪）；rebase 到含 helper 的 develop 后单点替换 `importWorksheetState` 内的尺寸/cells/足迹校验并删本地副本 | 切换后复跑三项检查 |\n+| **共享校验 helper 切换**（#54/#57 §2/#60/#66/#69） | **已完成**：`braid/issue-3-a` rebase 到 `origin/develop` @ `15abbf6`（PR #9 已合入）后，`importWorksheetState` 的尺寸/cells/足迹校验改为调用共享 helper `assertWorksheetStateValid`（`store.js`），**本地私有副本已删除**；`undefined`/`null` = 不改动与两字段持久化仍由本 PR 负责（保写入块只做持久化） | 错误码/文案/回滚用例沿用 `app.test.js` 既有断言（helper 与私有路径逐字一致）；切换后三项检查见下方证据 |\n \n+**rebase 漂移（非实现改动）**：`d536aa2`/`559a0bd` 的改动 rebase 到 `15abbf6` 时，3 个文件有冲突并按\"B 的新行为 + A 的增量\"合并：`frontend/src/lib/errors.ts`（两侧同名同义，留 B 的注释）、`backend/src/routes.js`（store 导入列表取并集）、`frontend/src/components/WorkbookEditor.tsx`（保留 B 的 `applySnapshot`/`runWorkbookAction`，再接 A 的 `displayValue` memo）。另有一处类型漂移：B 给 `Grid` 加了四个必需结构操作回调，A 的 `WorkbookLifecycle.test.tsx` 接缝用例补 no-op props（仅测试代码）。\n+\n ### 预演/排障结论（小规模真实操作）\n \n - 后端 `pnpm --dir backend test`（47 例）与 `typecheck` 在实现后立即通过；解析器先以单测驱动，避免把解析规则混进端点用例。\n - 前端组件测试暴露两个既有约束：仓库未引入 `@testing-library/jest-dom`（无 `toHaveTextContent`/`toHaveValue`），改用原生\n@@ -104,8 +106,10 @@\n - 上述均是 **D-A7 契约断言而非需求断言**（末换行、转义、足迹范围）：单测与 e2e 逐字断言的是契约决定；若外部 harness 不一致，属于契约争议\n   而非实现 bug（已在测试注释中标注）。\n - 创建页在当前工作簿列表上方渲染两个入口按钮，与参考图「新建」入口位置一致；参考图不作为控件形态依据（附录 A）。\n \n+- 环境陷阱（本仓库打包环境）：`pnpm` 包装器内部用 Node 24，直接 `pnpm install` 会把 `better-sqlite3` 装成 ABI 137（`NODE_MODULE_VERSION 137`），而平台运行 Node 20.19.3（ABI 115），Vitest 会整片报 “was compiled against a different Node.js version / Module did not self-register”；修复：`cd backend && PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3` 后用 `PATH=/usr/local/bin:$PATH pnpm -r test`。平台按逐目录 `npm install`（Node 20 入口）不出现该错配（Issue #3 comment #81 §2 独立复现同一现象）。\n+\n ## 验收（PR 负责人必须在候选提交上执行并留档）\n \n 1. `pnpm -r test`（backend csv/端点/原子性；frontend 转义/used range/接缝/组件文案）\n 2. `pnpm -r typecheck`\n@@ -118,15 +122,15 @@\n - [x] PR 创建 + 指派 PR 负责人 + 交接\n - [x] PR 侧预演（解析规则、导入事务、导出 used range 与下载捕获）\n - [x] 实现 + 自检（后端/前端 Vitest、typecheck）\n - [x] 补齐契约 v1.3 / A-4 导入足迹（迁移、导入写入、快照、state 语义、导出 max 与足迹优先、README、round-trip 用例；清单见 Issue #3 comment #64）\n-- [ ] `bash checks/run-e2e.sh` 全量通过并留档（首轮结果保留）\n-- [ ] 在 Issue #3 交接候选（提交号、命令、首轮结果、证据路径与未决项）\n-- [ ] Issue 负责人验收 → 根负责人合入 develop → 指派 C（#5）时把 A-3 显示值接缝写入 C 的交接材料\n-- [ ] **未完成义务**：B 的共享 helper 进 develop 后，PR #8 rebase 并切换 `importWorksheetState` 的校验为 `assertWorksheetStateValid`，删本地副本，复跑三项检查\n+- [x] `bash checks/run-e2e.sh` 全量通过并留档（首轮结果保留）\n+- [x] **共享 helper 切换**：rebase 到 `origin/develop` @ `15abbf6`，`importWorksheetState` 改调 `assertWorksheetStateValid` 并删本地副本（Issue #3 comment #81 §3 交办项）\n+- [ ] 切换后在新候选上复跑三项检查并交回 Issue #3（提交号、首轮结果、证据路径）\n+- [ ] Issue 负责人针对性复核 → 根负责人合入 develop → 指派 C（#5）时把 A-3 显示值接缝写入 C 的交接材料\n \n ## 证据\n \n-- 设计与契约：Issue #3 comment #27；Issue #1 comment #28（A-2 确认见 #30）\n+- 设计与契约：Issue #3 comment #27；Issue #1 comment #28（A-2 确认见 #30）；v1.3 = Issue #1 #51/#54/#57/#60/#65 与 Issue #3 #81/#82\n - 单测/类型检查：命令与结果见 PR #8 交接评论（候选提交号 + 退出码 + 首轮输出）\n-- e2e：`python3 <agent-browser skill>/scripts/with-service.py --check-only ... -- bash checks/run-e2e.sh`；证据目录与 result.json 见交接评论\n+- e2e：`python3 <agent-browser skill>/scripts/with-service.py --check-only ... -- bash checks/run-e2e.sh`；证据目录与 result.json 见交接评论（`559a0bd` 的独立复跑见 Issue #3 comment #82）\n - 视觉：`input/reference/*.png`（观察摘要见 Issue #3 comment #27 附录 A）\n"}
+
+## S29:L164 2026-09-29T06:45:20.031Z message assistant
+[thinking]
+Now commit in logical commits:
+1. backend/src/store.js — helper switch.
+2. frontend/src/components/WorkbookLifecycle.test.tsx — rebase drift.
+3. tasks/issue-3-a/packet.md — packet update.
+Then run the three checks on the final head.
+Note the commit style: Chinese messages as before.
+Also: should the PR base be `develop` — yes, braid pr 8 base is develop. Rebase onto develop done.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L164:C1]
+[toolCall] bash call_00_QGDCIUI6zKgEyW9wvCdT6772
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git add backend/src/store.js && git commit -q -m \"契约 v1.3 §2：state 校验改用共享 assertWorksheetStateValid，删除本地副本\n\nrebase 到含 PR #9 的 develop（15abbf6）后，importWorksheetState 的\n尺寸/cells/足迹校验单点切换为 B 发布的共享 helper；本地私有校验块删除，\n保留下来的写入块只负责 min_rows/min_cols 的持久化与 undefined/null = 不改动\n语义（#57 §3）。错误码与文案不变（helper 与私有路径逐字一致）。\" && git add frontend/src/components/WorkbookLifecycle.test.tsx && git commit -q -m \"rebase 漂移：Grid 新增的四个结构操作 props 接入 A 的显示值接缝用例\n\n仅测试代码：B 的 GridProps 现要求 onInsertRow/onDeleteRow/onInsertColumn/\nonDeleteColumn，A 的 D-A8 接缝用例补 no-op 回调，typecheck 恢复通过。\" && git add tasks/issue-3-a/packet.md && git commit -q -m \"task packet：记录 helper 切换、rebase 漂移与打包环境 ABI 陷阱\" && git log --oneline -4 && git status --short"}
+
+## S29:L165 2026-09-29T06:45:20.091Z message toolResult
+toolResult bash False
+[text]
+a23af5a task packet：记录 helper 切换、rebase 漂移与打包环境 ABI 陷阱
+16b94d8 rebase 漂移：Grid 新增的四个结构操作 props 接入 A 的显示值接缝用例
+055fdaa 契约 v1.3 §2：state 校验改用共享 assertWorksheetStateValid，删除本地副本
+7f9a850 契约 v1.3 / A-4：导入足迹 min_rows/min_cols 落地 + ragged 补齐 + 导出足迹优先
+
+## S29:L166 2026-09-29T06:45:22.839Z message assistant
+[thinking]
+Head = a23af5a. Now run the three checks:
+1. `pnpm -r test` (with evidence logs) — rerun on final head.
+2. `pnpm -r typecheck`.
+3. e2e via with-service.py --check-only.
+Let me run 1+2 and record logs, then e2e.
+For e2e, the wrapper: I need the agent-browser skill script path: /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py. Let me check the exact recommended invocation from the skill, or reuse the command from previous runs. Previous: `python3 <agent-browser技能>/scripts/with-service.py --check-only --cwd "$PWD" --context candidate=d536aa2 … -- bash checks/run-e2e.sh`. Let me check --help quickly.
+Also environment: ensure node 20 for backend start (playwright config webServer command). Let me check playwright.config.ts webServer to know how the server is launched and whether PATH matters.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L166:C1]
+[toolCall] bash call_00_jV17oAtdZfmXR8Xvu5L21344
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && (PATH=/usr/local/bin:$PATH pnpm -r test > /tmp/f26-pr8-v13-switch-evidence/pnpm-test.log 2>&1; echo \"test_exit=$?\" >> /tmp/f26-pr8-v13-switch-evidence/pnpm-test.log) && (PATH=/usr/local/bin:$PATH pnpm -r typecheck > /tmp/f26-pr8-v13-switch-evidence/pnpm-typecheck.log 2>&1; echo \"typecheck_exit=$?\" >> /tmp/f26-pr8-v13-switch-evidence/pnpm-typecheck.log); grep -E \"Tests |Test Files |test_exit|typecheck_exit\" /tmp/f26-pr8-v13-switch-evidence/pnpm-test.log | head; echo \"---tc---\"; tail -3 /tmp/f26-pr8-v13-switch-evidence/pnpm-typecheck.log", "timeout": 600}
+[toolCall] bash call_01_zlP2Z7LQlnaXXkwTCl3y3885
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && cat playwright.config.ts | head -60"}
+
+## S29:L167 2026-09-29T06:45:40.295Z message toolResult
+toolResult bash False
+[text]
+backend test:  Test Files  3 passed (3)
+backend test:       Tests  96 passed (96)
+---tc---
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L167:C1]
+
+## S29:L168 2026-09-29T06:45:40.295Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 49 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L168:C1]
+
+## S29:L169 2026-09-29T06:45:42.581Z message assistant
+[thinking]
+Tests + typecheck pass on the new head a23af5a.
+webServer command = `node backend/src/index.js`, run by Playwright. Playwright CLI runs under node from shebang. If I run `pnpm exec playwright` with PATH=/usr/local/bin first, then `node` inside the webServer shell would also be /usr/local/bin/node (node 20) → better-sqlite3 ABI 115 OK.
+Hmm, careful: playwright spawns webServer via `sh -c` inheriting PATH from the playwright process env. If playwright process was started via `bash checks/run-e2e.sh` with PATH=/usr/local/bin:$PATH, then PATH propagates. Good.
+Now run e2e with the with-service wrapper. Let me check the wrapper's usage.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L169:C1]
+[toolCall] bash call_00_3OPDqaVUL6va7UW5b6RI3205
+{"command": "ls /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/ && python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --help 2>&1 | head -40"}
+
+## S29:L170 2026-09-29T06:45:42.655Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 20 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L170:C1]
+
+## S29:L171 2026-09-29T06:45:44.078Z message assistant
+[toolCall] bash call_00_ET_xZX14qEpesG12n6om2uI1230
+{"background": true, "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd \"$PWD\" --context candidate=a23af5a --context data=\"run-e2e.sh 自带临时 DB，生产形态（后端同端口服务 dist）\" -- bash checks/run-e2e.sh 2>&1 | tail -30", "timeout": 900}
+
+## S29:L172 2026-09-29T06:45:44.117Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L172:C1]
+[details]
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd \"$PWD\" --context candidate=a23af5a --context data=\"run-e2e.sh 自带临时 DB，生产形态（后端同端口服务 dist）\" -- bash checks/run-e2e.sh 2>&1 | tail -30", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1", "exitCode": null, "globalJobId": "pbb_7491_c8c94e51:bg004", "instanceId": "pbb_7491_c8c94e51", "jobId": "bg004", "outcome": "running", "pbbCursor": 10, "sessionId": "01a0ebe3-5c81-7454-ba87-260acf4ee8b7", "sessionKey": "9aaf8416c8eb277c051eeaef", "startedAt": "2026-09-29T06:45:44.078Z", "toolCallId": "call_00_ET_xZX14qEpesG12n6om2uI1230"}
+
+## S29:L173 2026-09-29T06:45:46.208Z message assistant
+[thinking]
+While e2e runs, let me:
+1. Double-check the diff of the switch (for handing over an increment diff summary).
+2. Prepare the handover comment.
+3. Clean up the /tmp rehearsal worktree.
+Let me compute the increment diff since 559a0bd: `git diff 559a0bd a23af5a --stat` (rebased so 559a0bd is not an ancestor; diff still works by trees).
+Also I should verify the switch commit content is exactly the expected change (no accidental leftovers).
+Also the PR body needs an update: "未完成义务（并行期过渡）" section is now obsolete → must update PR body to reflect the switch completed. Per instructions, I own the PR body and should keep it current. Let me prepare the edited body.
+Let me first look at the diff.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L173:C1]
+[toolCall] bash call_00_09GIOA2UJAIEXiUHpIWG9584
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git diff --stat 559a0bd a23af5a | tail -8 && echo \"=== switch diff ===\" && git show 055fdaa --stat && git show 055fdaa -- backend/src/store.js | head -80"}
+
+## S29:L174 2026-09-29T06:45:46.331Z message toolResult
+toolResult bash False
+[text]
+ frontend/src/components/WorkbookEditor.tsx         | 105 ++-
+ frontend/src/components/WorkbookLifecycle.test.tsx |   4 +
+ frontend/src/components/WorksheetDialogs.tsx       | 135 ++++
+ frontend/src/components/WorksheetTabs.tsx          | 161 ++++-
+ frontend/src/lib/errors.ts                         |   2 +-
+ tasks/issue-3-a/packet.md                          |  18 +-
+ tasks/issue-4-b/packet.md                          |  68 ++
+ 17 files changed, 2673 insertions(+), 131 deletions(-)
+=== switch diff ===
+commit 055fdaa7c85c0f78d9060ca0479b299d4cdb2806
+Date:   Tue Sep 29 06:45:20 2026 +0000
+    契约 v1.3 §2：state 校验改用共享 assertWorksheetStateValid，删除本地副本
+    rebase 到含 PR #9 的 develop（15abbf6）后，importWorksheetState 的
+    尺寸/cells/足迹校验单点切换为 B 发布的共享 helper；本地私有校验块删除，
+    保留下来的写入块只负责 min_rows/min_cols 的持久化与 undefined/null = 不改动
+    语义（#57 §3）。错误码与文案不变（helper 与私有路径逐字一致）。
+ backend/src/store.js | 45 +++++++++------------------------------------
+ 1 file changed, 9 insertions(+), 36 deletions(-)
+index e9aa8c2..be13521 100644
+@@ -936,44 +936,17 @@ export function importWorksheetState(db, ws, payload) {
+     if (payload.minRows !== undefined || payload.minCols !== undefined) {
+-      // Import footprint (contract v1.3 / increment A-4, Issue #1 comments #51
+-      // and #57): a static lower bound for the CSV export's used range.
+-      // `undefined`/`null` means "not declared" - the same convention as
+-      // rowCount/colCount and lastSelection - so replaying an older snapshot
+-      // cannot silently erase a footprint; a declared value is persisted.
+-      //
+-      // The invariant `min <= reported structure` is implemented here for now.
+-      // Contract v1.3 §2 assigns the shared validation helper to sub-issue B's
+-      // PR #9 (`assertWorksheetStateValid`, published in Issue #1 comment #66),
+-      // and PR #8 switches to consuming it once it lands in develop. Error
+-      // messages below already match that helper verbatim so the switch is
+-      // behaviour-preserving.
+-      const structure = /** @type {{ row_count: number, col_count: number, min_rows: number | null, min_cols: number | null }} */ (
+-        db
+-          .prepare('SELECT row_count, col_count, min_rows, min_cols FROM worksheets WHERE id = ?')
+-          .get(ws.id)
++      // Persistence only: the `min <= reported structure` invariant is owned by
++      // `assertWorksheetStateValid` above (contract v1.3 §2, Issue #1 comment
++      // #66) - this PR keeps no private copy. `undefined`/`null` means "not
++      // declared", so replaying an older snapshot cannot silently erase a
++      // footprint.
++      const structure = /** @type {{ min_rows: number | null, min_cols: number | null }} */ (
++        db.prepare('SELECT min_rows, min_cols FROM worksheets WHERE id = ?').get(ws.id)
+-      const declaredMinRows = payload.minRows ?? null;
+-      const declaredMinCols = payload.minCols ?? null;
+-      if (declaredMinRows !== null && (!Number.isInteger(declaredMinRows) || declaredMinRows < 0)) {
+-        throw invalidBody('minRows must be a non-negative integer');
+-      }
+-      if (declaredMinCols !== null && (!Number.isInteger(declaredMinCols) || declaredMinCols < 0)) {
+-        throw invalidBody('minCols must be a non-negative integer');
+-      if (declaredMinRows !== null && declaredMinRows > structure.row_count) {
+-        throw invalidBody(
+-          `minRows must not exceed the reported structure (${structure.row_count})`,
+-        );
+-      if (declaredMinCols !== null && declaredMinCols > structure.col_count) {
+-          `minCols must not exceed the reported structure (${structure.col_count})`,
+       db.prepare('UPDATE worksheets SET min_rows = ?, min_cols = ? WHERE id = ?').run(
+-        declaredMinRows ?? structure.min_rows ?? 0,
+-        declaredMinCols ?? structure.min_cols ?? 0,
++        payload.minRows ?? structure.min_rows ?? 0,
++        payload.minCols ?? structure.min_cols ?? 0,
+     }
+[DUPLICATES: 28 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L174:C1]
+
+## S29:L175 2026-09-29T06:45:50.348Z message assistant
+[thinking]
+The switch is exactly as required (9 insertions, 36 deletions).
+Note the diff `559a0bd..a23af5a` includes B's rebase content (since 559a0bd was based on old develop). For the handover, the meaningful increment = the three commits above the rebased branch + the rebase drift; better to summarize relative to the pre-rebase candidate 559a0bd: "内容增量 = 3 个提交（helper 切换 / 测试漂移 / packet）+ rebase 到 develop@15abbf6 带来的 B 代码（非本 PR 作者改动）"。I can give both: `git diff --stat 559a0bd a23af5a` includes B's files; I should clarify.
+Better: report the diff against the *rebased* equivalent: `git diff 1a87f96..a23af5a` (1a87f96 = rebased d536aa2). Hmm. Let me produce a clean summary: the three commits' combined stat:
+`git diff --stat 5aec8aa a23af5a`? Hmm 5aec8aa is the rebased packet commit (= d06d85c). Then A's own code changes vs pre-rebase: the helper switch + drift + packet.
+For deepseek-3's targeted review, they asked: "切换后的候选我做一次针对性复核（diff 只应含该切换与 rebase 漂移 + 三项检查）". So I should give them a precise pointer: `git diff 559a0bd..a23af5a -- backend/src/store.js frontend/src/components/WorkbookLifecycle.test.tsx tasks/issue-3-a/packet.md` = the A-side increment, plus the note that the rest of the diff is B's code arriving via rebase onto develop@15abbf6 (visible with `git diff 15abbf6 a23af5a`).
+Best: state that `git diff 15abbf6 a23af5a` = PR #8 content (A's changes on the new base), and the relative-to-559a0bd change set = 4 commits listed. Let me compute `git diff --stat 15abbf6 a23af5a` for the handover.
+Let me also compute the per-commit list.
+Then PR body update. Let me prepare the new body text: replace the "未完成义务（并行期过渡）" paragraph with a completed statement, and add a line about the rebase.
+Let me get the stats.
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L175:C1]
+[toolCall] bash call_00_RFa0ZAq7w3Y0w7HCuqcK7482
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && echo \"=== PR content vs new base (15abbf6..a23af5a) ===\" && git diff --stat 15abbf6 a23af5a | tail -6 && echo \"=== commits vs develop ===\" && git log --oneline 15abbf6..a23af5a && echo \"=== A-side increment vs 559a0bd (3 files) ===\" && git diff --stat 559a0bd a23af5a -- backend/src/store.js frontend/src/components/WorkbookLifecycle.test.tsx tasks/issue-3-a/packet.md"}
+
+## S29:L176 2026-09-29T06:45:50.376Z message toolResult
+toolResult bash False
+[text]
+=== PR content vs new base (15abbf6..a23af5a) ===
+ tasks/issue-3-a/packet.md                          | 136 ++++++++
+ 25 files changed, 2226 insertions(+), 22 deletions(-)
+=== commits vs develop ===
+=== A-side increment vs 559a0bd (3 files) ===
+ backend/src/store.js                               | 540 ++++++++++++++++++---
+ 3 files changed, 483 insertions(+), 79 deletions(-)
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L176:C1]
+
+## S29:L177 2026-09-29T06:45:52.826Z message assistant
+[thinking]
+The `git diff 559a0bd -- backend/src/store.js` shows 540 changed lines because store.js gained B's code (since 559a0bd was the pre-rebase tree). So that's not a 

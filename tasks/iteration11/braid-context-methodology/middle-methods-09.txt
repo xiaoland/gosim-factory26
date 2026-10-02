@@ -1,0 +1,278 @@
+
+## 2026-09-29T11:13:54.491Z a7a027ea 2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b.jsonl:23
+While the advisor runs, let me continue preparing: verify environment prerequisites relevant to route-changing unknowns (the task says: "实施前核实会改变路线的版本、API、共享接口和环境前提，用小规模真实操作消除关键未知").
+
+Key unknowns I can verify cheaply:
+1. Playwright/agent-browser availability & app boot: run the existing e2e suite quickly? That's heavy (build + e2e). Maybe run just backend Vitest to confirm the baseline: `pnpm test` in backend? Let me check the test scripts. Actually the baseline was verified by the grep-fix PR (#18) with full e2e. I don't need to re-verify the whole baseline. But a small rehearsal of the *specific* unknowns for M4b would help the PR owner:
+   - Does `getByRole('textbox', {name:'Find branch'})` work with an input that has `aria-label`? Yes.
+   - Radix-free popup + role=option + aria-selected: fine.
+   - Native select option exact names: fine.
+2. Verify whether `docs/` rename would ripple — I know the sites.
+3. Check `frontend/src/features/repo/CommitsPage.tsx` for how it renders content (to avoid "Code" link duplication etc.).
+
+Actually, the most valuable small real operation: confirm the app builds and starts (so the PR owner's plan is sound) — but that's the PR owner's rehearsal.
+
+My job as Issue owner: produce the design, decisions, acceptance criteria, then create the PR and assign. The PR owner does implementation/rehearsal. So let me not over-invest in implementation-level rehearsal.
+
+Meanwhile, let me draft the Issue design/task-packet text and the PR body skeleton, pending the advisor's answers on Q1/Q2/Q4/Q5/Q6/Q7.
+
+Let me also check `braid issue edit` help (I'll need to append a design section to the Issue description or add a comment; the description is the task packet入口). Per the instructions: "description 保存当前任务说明与稳定决定，comment 承载讨论、证据和增量进展". So the Issue description should hold the design/decisions. But the description already contains the root-provided task text; I should append a "设计与决定（M4b）" section, keeping the original requirements intact. Let me check `braid issue edit --help`.
+
+Also, how do I create the PR: `braid pr create --issue 7 --title ... --body-file ... --base develop --assignee deepseek`. That creates a PR with a new head branch (created from base). Wait: "省略时新建 PR 分支" — creates a new PR branch. Then the assignee pushes to that branch. I need to tell the owner the branch name; the create response should tell me.
+
+Hmm, but the owner's workspace: the assignee gets a new worktree for the PR. Fine.
+
+Let me check `braid issue edit --help` and `braid comment create --help`.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-7/pi-deepseek-fast-g1 && braid issue edit --help 2>&1 | head -30 && echo ==== && braid comment create --help 2>&1 | head -30
+
+## 2026-09-29T11:14:00.884Z 50a33c88 2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b.jsonl:29
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-7/pi-deepseek-fast-g1 && braid issue comment --help 2>&1 | head -30 && echo ==== && braid pr comment --help 2>&1 | head -30
+
+## 2026-09-29T11:17:52.837Z cdd39216 2026-09-29T11-11-36-635Z_01a0ecdc-ecba-7573-bd75-4d1132ff1925.jsonl:16
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid issue comment view 232 --thread 2>&1
+
+## 2026-09-29T11:26:44.698Z 0031b1ee 2026-09-29T11-08-33-927Z_01a0ecda-2307-76e1-9044-d8ee02d4f010.jsonl:13
+REQ-4-2-2 (line 1716) does NOT pin exact aggregate numbers — only "the numeric additions/deletions summary described below" (the format "<N> additions, <N> deletions"). The "2 files, 5 additions, 0 deletions" was M4a's own computed value. So option C is safe on that front.
+
+Also interesting: REQ-4-2-2 (M4a's commit diff page) says "A seeded commit has ... a known changed-file path `src/search.ts`" — that's about a commit's own diff (vs first parent), unaffected by our changes ("Document search flow" modified src/search.ts already — confirmed by e2e line 154/175 showing src/search.ts on commit pages).
+
+Now execute the plan:
+
+1. Post to root Issue #1: contract change proposal (C) with fact-check result, @deepseek-9 confirm, root arbitration.
+2. Update Issue #9 with design (comments + description pointer).
+3. Create branch braid/issue-9-m6a from origin/develop, push, create PR --base develop --head braid/issue-9-m6a --assignee deepseek --issue 9.
+
+Let me check braid issue edit help and root issue 1 owner.
+REQ-4-2-2 的 THEN 只钉了格式（"<N> additions, <N> deletions"），未钉具体数字——advisor 要求的最后一项事实核查通过，方案 C 安全。现在执行：先在根 Issue #1 发起契约变更裁决，@deepseek-9 确认：
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-9/pi-glm-fast-g1 && braid issue view 1 2>&1 | head -12; braid issue edit --help 2>&1 | head -20
+
+## 2026-09-29T11:27:09.894Z 7529ef9e 2026-09-29T11-08-33-927Z_01a0ecda-2307-76e1-9044-d8ee02d4f010.jsonl:15
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-9/pi-glm-fast-g1 && cat > /tmp/root-comment.md <<'EOF'
+braid issue comment 1 -F /tmp/root-comment.md
+
+## 2026-09-29T11:28:46.464Z a19a2535 2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b.jsonl:74
+Now assemble the new Issue body and update the Issue description.
+
+The Issue body is 1920 chars; appending ~7KB. The description should hold the task说明+稳定决定, which is what I'm doing. Let me append.
+
+Then create the branch + packet + PR.
+
+Let me first update the Issue body.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-7/pi-deepseek-fast-g1 && cat /tmp/issue7-body.md /tmp/issue7-append.md > /tmp/issue7-new-body.md && wc -c /tmp/issue7-new-body.md && braid issue edit 7 -F /tmp/issue7-new-body.md 2>&1 | tail -5
+
+## 2026-09-29T11:29:20.024Z 76c93885 2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b.jsonl:85
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-7/pi-deepseek-fast-g1 && braid pr create --issue 7 --title "M4b 分支、代码搜索与 Web 编辑（REQ-4-2-3、4-3-*、4-4）" --body-file /tmp/pr-body.md --base develop --head braid/issue-7-m4b --assignee deepseek 2>&1 | tail -20
+
+## 2026-09-29T11:29:26.239Z f4d8a066 2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b.jsonl:87
+PR #19 created, head `braid/issue-7-m4b` @ 5cdc7a6, base develop @ 5b6c7d4, assignee @deepseek-17.
+
+Now:
+1. Post a comment on Issue #7 announcing the design + PR handover, addressed to @deepseek-17 (the PR owner), with the entry points.
+2. Post a comment on root Issue #1 requesting the 5 contract rulings, addressed to @glm-1 (root owner). Should I reply to a thread? The root Issue #1 has a task packet; I should open a new thread (comment) with the contract-change requests. Per guidance, the M4a precedent posted to the issue. Let me post to issue #1 and @glm-1.
+
+Also: should I reply in the existing thread 94 (M4a contract registration)? Not needed; new thread.
+
+Let me also update the Issue #7 description's "下一步" — it already mentions PR 负责人. Fine. But I should add the PR number to the Issue body's packet entry (the packet path mentions "PR 分支"). Let me update the body to include "关联 PR：#19（head braid/issue-7-m4b，负责人 @deepseek-17）" near the top. That's a small edit: I'll re-run `braid issue edit` with the updated body (prepend a line after the header). Let me do that: update the design section header line "> 本节是该任务的当前设计入口... task packet：PR 分支 docs/task-packets/m4b-issue-7.md。" to include PR #19 + owner.
+
+Then post the Issue #7 comment and the root #1 comment.
+
+Let me first update the Issue body.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-7/pi-deepseek-fast-g1 && python3 - <<'EOF'
+braid issue edit 7 -F /tmp/issue7-new-body.md 2>&1 | tail -2
+
+## 2026-09-29T11:29:29.489Z 2d0a4df8 2026-09-29T11-08-33-927Z_01a0ecda-2307-76e1-9044-d8ee02d4f010.jsonl:17
+Root arbitration posted (#234). Now write the design into Issue #9. The design comment should contain:
+
+1. 产品/技术方案：API 设计、路由、权限档次、状态机、Checks 键控、seed 塑形（指向根裁决 #234）。
+2. 验收方案。
+3. 边界（M6b 分界）。
+
+Then update the Issue description to add design entry pointer. Actually, the description currently holds the shared decisions; I'll append a short "设计入口" line via edit. Let me get the current body and append.
+
+Also create the task packet — instructions say register task packet entry in the Issue. The packet file itself (docs/task-packets/m6a-issue-9.md) would be committed by PR owner in the branch. I'll note in the PR handoff that the packet starts from my design comment.
+
+Let me draft the design comment now. Key content:
+
+**技术方案**（backend, ESM .js, module backend/src/modules/pulls/）:
+- API:
+  - GET /api/repos/:owner/:name/pulls — list, filters: state, author, review status; viewer-readable if repo viewable.
+  - GET /api/repos/:owner/:name/pulls/:number — detail incl. viewerPermission.
+  - POST /api/repos/:owner/:name/pulls — create {title, body, base, compare, draft}; write+; validations: branches distinct & exist, diff non-empty, title 1–256 trimmed, body ≤65536, no existing open/draft PR same pair; atomic transaction; number = MAX+1 per repo; activities record (pr_opened / draft marker in payload).
+  - POST /:number/ready — draft→open; author ∪ maintain ∪ admin (org Owner=admin via §4); activity.
+  - GET /:number/checks — {name:'test', status, setter, updatedAt} derived: no row → pending.
+  - PUT /:number/checks/test — admin+ only; {status}; upsert by (pr, current compare_commit_id, 'test').
+  - GET/PUT /api/repos/:owner/:name/rules/branches (branch_protections): GET list (any viewer? Branches page readable), PUT create/update admin+; branch_name must be exact existing branch; unique per (repo, branch) — upsert semantics? "每分支唯一规则" — create form for existing rule shows Save changes. Design: GET returns list; POST creates (409 if exists?) — simpler: form is per-branch; UI: "Add branch protection rule" opens blank form with Create; clicking existing rule opens it with Save changes. API: PUT /rules/:branchName upsert admin+; uniqueness by UNIQUE constraint.
+  - Compare reuse: GET /compare (M4a) with branch names — no new endpoint. PR compare page = frontend page using it.
+  - PR commits view: reuse compare endpoint data (commits[]).
+  - Files changed: compare endpoint with base=PR.base_commit_id? No — three-dot merge base semantics per §7.2: files computed from mergeBase(base branch, compare branch) → compare head. PR detail Files changed = compare(base=base_branch head or base_commit_id?, compare=current compare commit). Per §9.2/§7.2 convention: three-dot using base branch head. Hmm — PR stores base_commit_id (creation-time). GitHub uses merge-base anyway, so base branch head vs creation-time base commit yields same merge base in linear history. Keep it simple: use compare endpoint with base=<base branch>, compare=<compare branch> — matches "diff corresponds to the current source/base commits". Note: compare_commit_id on PR = compare branch head at creation; when new commits land, current compare commit updates (that update logic — is it M6a's? "When the compare branch receives a new commit, the system updates the current compare commit, marks reviews stale..." — that's REQ-6 folder; stale marking is M6b. Updating current compare commit: PR's compare_commit_id is a stored field; do we recompute on read or on push? There's no push in this app — commits created via web edit (M4b) or merge. Design decision: PR's current compare commit = compare branch head resolved at read time? But check_runs keyed by compare_commit_id and "新 compare commit → pending" requires the notion of current compare commit to change when branch advances. Simplest consistent model: current compare commit = compare branch head at all times (no stored drift); store creation-time compare_commit_id for anchoring inline comments (M6b uses lines at their commit). Hmm but the schema stores compare_commit_id on the PR row. 
+
+    Design: at creation store compare_commit_id = branch head. On any read of PR detail/checks, resolve current compare commit = compare_branch.head_commit_id; if it differs from stored, update stored row (lazy sync) — new check_runs rows default pending (no row → pending, so nothing to do). This keeps "新 compare commit 回到 pending" natural. I'll specify: current compare commit = compare branch head; PR row lazily synced; check status = row for current compare commit else pending. Lazy sync in a transaction when writing (e.g., check update) or on read? better-sqlite3 sync — read path shouldn't write ideally; but lazy write on read is acceptable in this app? Simpler: don't store "current" separately — treat compare_branch.head as authoritative current compare commit; the stored compare_commit_id column retains creation-time value (used by M6b for stale/anchoring decisions). Checks GET resolves branch head. That avoids write-on-read. I'll spec: Checks/Files changed/Commits all use compare branch head as current compare commit; PR row compare_commit_id updated lazily whenever a write path touches the PR (and by M6b's stale logic). Hmm — but refresh persistence assertions: "刷新保持且对应同一 compare commit" — trivially true.
+
+    Wait, but what about REQ-6-3-2 "the diff corresponds to the current source/base commits" — computed at read time from branch heads. Fine.
+
+  - Draft state machine: draft→open via ready-for-review; open/draft→closed, closed→open, merged terminal — close/reopen is REQ-6-6 (M6b per §9.9? M6b = 行内评论+评审+stale+合并门控; close/reopen 6-6 probably M6b/M6c). M6a scope: creation (open/draft) + ready-for-review only. I'll state boundary.
+
+- Frontend:
+  - Routes: /:owner/:repo/pulls (list), /:owner/:repo/pulls/new?compare=... hmm — GitHub uses /compare for PR creation flow. M4a already owns /:owner/:repo/compare (revision compare page with commit options, all viewers). Conflict! M6a's PR compare page needs a route. Options: /:owner/:repo/compare/pulls? Or reuse same route with different options? deepseek's comment 93: "比较页不共用：REQ-6-2-2 的 PR 比较流…由本任务自建页面，复用 §7.2 的 diff 组件与 compare 端点；M4a 只交付全 viewer 可读的 revision 比较页（选项为 commit）"。Two pages, same route family. Design: M6a PR compare page at /:owner/:repo/compare (same URL) but... can't have two pages same route. GitHub: /compare with ?base=&compare= shows branch comparison; "commits" mode shows commit comparison. Resolution: one route, mode determined by params or by "quick pull" state. Simplest: M6a takes over /:owner/:repo/compare? That breaks M4a's e2e (revision compare page with commit selects, visitor-accessible). Alternative: PR compare page at /:owner/:repo/compare/branches or /:owner/:repo/pulls/compare. Route semantics are ours ("路由名以需求文本的 URL 语义为准（无需与 GitHub 完全一致）"). I'll spec /:owner/:repo/pulls/compare?base=&compare= for the PR creation-compare flow (write+ gate), leaving M4a's /compare untouched. Entry: "New pull request" link on PR list page → /pulls/compare.
+
+  Hmm wait — M4a's e2e used `${BASE}/compare?base=main&compare=feature-search` for revision compare. If M6a uses /pulls/compare, no conflict. Good.
+
+  - PR list page: tabs/links for filters: Open/Closed + Draft/Merged? Requirement: filter by Draft/Open/Closed/Merged status + author + review status. UI: "Open" link (seeded filter), plus others. Author filter: dropdown/input; review status filter: select (e.g., No reviews/Approved/Changes requested — with reviews empty in M6a, filter works on empty set). Keep minimal: review status filter select with options mapping to reviews state; M6b populates.
+  - PR detail page: /:owner/:repo/pulls/:number with tab links Conversation / Commits / Files changed / Checks (navigation links). Title as h1 heading = exact title. Status visible text. Draft: Draft marker + disabled "Merge pull request". Ready for review button (author/maintain+/owner) + single Confirm dialog if needed.
+  - Checks area: 4th tab or section? REQ-6 folder: "Conversation, Commits, Files changed, and Checks are navigation links, even when visually styled as tabs." So Checks = link/tab too. Content: "test: pending/success" + setter + time; admin combobox "test status" + option "success" + Save.
+  - Files changed: reuse DiffView; "Changed files" summary + "<N> additions, <N> deletions" aggregate; per-file additions/deletions.
+  - Branches settings: /:owner/:repo/settings/branches; list existing rules (branch name + "1 approval" + "Require status check test" summaries); "Add branch protection rule" button (admin only, absent for others); form: "Branch name pattern" text field, "Require 1 approval" checkbox, "Require status check test" checkbox, Create/Save changes.
+  - copy.ts additions: all named strings.
+
+- Permission mapping (per §4 + requirement):
+  - View list/detail/compare results: repo view permission (read+; visitors for public).
+  - "New pull request" entry + compare flow + create PR + draft + ready-for-review: write+ (ready-for-review: author ∪ maintain ∪ admin; org owner = admin via §4; note Write-only non-author cannot ready others' drafts).
+  - Branch protection view (Branches settings page): all viewers can access page; "Add branch protection rule" absent for non-admin; API PUT admin+ (403 otherwise).
+  - Checks update: admin+ only; API rejects others.
+  - Ready-for-review set: {PR author, maintain, admin} — org Owner counts as admin (§4).
+
+- Seed (per root arbitration #234, pending confirmation):
+  - pr-onboarding branch = main + 1 commit (adds file + modifies src/search.ts; aggregate 3+/1−); PR #1 `Improve onboarding` (open, alice, pr-onboarding → main, 1 discussion comment).
+  - feature-search + 1 M6 commit modifying src/search.ts (+2/−0 recommended) — only after root裁决.
+  - PR `Fix search` (bob) own branch.
+  - Closed PR by alice own branch.
+  - Draft PR `Draft onboarding update` (draft-feature → main) — draft-feature = main + 1 commit.
+  - Checks seed: test pending (no row → pending by default; no row needed).
+  - Numbers: PR numbering MAX+1 within repo, separate from issues.
+
+**验收方案**:
+- Backend Vitest: protection rule uniqueness + permission tiers (admin ok, write 403); checks keying (default pending, update persists, new compare commit → pending, non-admin 403); compare computation reuse; PR numbering MAX+1 + duplicate pair rejection + title validation + draft state machine (ready-for-review authorization matrix); seed idempotency.
+- Playwright: 7 scenario groups per issue deliverables; permission tiers as control absence + API rejection; refresh persistence; checks ↔ compare commit assertions.
+- e2e placement: e2e/pulls.spec.ts (new file).
+
+Boundaries/未决:
+- Root arbitration #234 for seed shaping (blocking for seed + M4a assertion updates only; rest can proceed).
+- Merge button: M6a renders "Merge pull request" disabled on Draft; merge flow + unmergeable gating = M6b.
+- PR close/reopen (REQ-6-6) = later milestone; M6a only creation + ready-for-review.
+- Review-status filter operates on reviews table (empty in M6a; semantics completed in M6b).
+
+Now write this to Issue #9 as a comment, and also append a pointer to the description? The description is the shared-decision source; adding "设计与 packet 入口：评论 #XXX" would help. Let me post the design comment first, then edit description to add entry pointer... but description edit replaces whole body. I'll append a short section to the existing body. Let me fetch the current body via `braid issue view 9 --json` maybe. Simpler: `braid issue view 9` shows body text. I'll reconstruct: the body shown above. Actually editing description is optional; the comment thread is the entry. The instruction: "description 保存当前任务说明与稳定决定" — design decisions that are stable should ideally live in description. But the description already contains the shared decisions from root. My design adds implementation-level decisions which belong to the PR/implementation. I'll add one line to description pointing to design comment + PR. Let me do it carefully with body-file.
+
+First post design comment.
+根裁决请求已发出（评论 #234）。现在把完整设计方案写入 Issue #9：
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-9/pi-glm-fast-g1 && cat > /tmp/m6a-design.md <<'EOF'
+braid issue comment 9 -F /tmp/m6a-design.md
+
+## 2026-09-29T11:29:53.404Z b39cc24c 2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b.jsonl:96
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-7/pi-deepseek-fast-g1 && braid issue comment 7 -F /tmp/c7.md 2>&1 | tail -3 && echo ===== && braid issue comment 1 -F /tmp/c1.md 2>&1 | tail -3
+
+## 2026-09-29T11:29:58.925Z 72a4270d 2026-09-29T11-08-33-927Z_01a0ecda-2307-76e1-9044-d8ee02d4f010.jsonl:21
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-9/pi-glm-fast-g1 && cat > /tmp/m6a-pr-body.md <<'EOF'
+braid pr create --title "M6a: branch protection, Checks and PR lifecycle (REQ-6-1, 6-2-*, 6-3-1/2)" --base develop --head braid/issue-9-m6a --assignee deepseek --issue 9 -F /tmp/m6a-pr-body.md
+
+## 2026-09-29T11:30:23.627Z b9121dff 2026-09-29T11-08-33-927Z_01a0ecda-2307-76e1-9044-d8ee02d4f010.jsonl:23
+PR #20 created, assigned to @deepseek-18 (the concrete member name returned). Now I should:
+1. Post a handoff comment on PR #20 addressed to @deepseek-18 with the entry points and the open items (root arbitration #234, /pulls/compare URL decision).
+2. Update Issue #9 description to add entry pointers (design #235, PR #20, PR owner deepseek-18).
+
+The returned owner name is deepseek-18 — use that for @-contact on the PR. Note: earlier deepseek-9 was the M4a owner who must confirm #234. deepseek-18 is a different concrete member instance. The root arbitration needs @deepseek-9 (M4a owner) — already @'d there. On the PR, address @deepseek-18.
+
+Handoff comment on PR #20: scope, entry points, first steps (fetch develop, register packet, confirm #234 outcome before seed/M4a assertion work), acceptance requirements.
+PR #20 已创建，负责人为 @deepseek-18。现在在 PR 上交接，并更新 Issue #9 的 description 登记入口：
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-9/pi-glm-fast-g1 && cat > /tmp/m6a-handoff.md <<'EOF'
+braid pr comment 20 -F /tmp/m6a-handoff.md
+
+## 2026-09-29T11:30:37.739Z 4d4171fe 2026-09-29T11-08-33-927Z_01a0ecda-2307-76e1-9044-d8ee02d4f010.jsonl:27
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-9/pi-glm-fast-g1 && braid issue view 9 --json | python3 -c "
+braid issue edit 9 -F /tmp/issue9-body.md
+
+## 2026-09-29T11:31:06.552Z 0e1518f4 2026-09-29T11-08-33-927Z_01a0ecda-2307-76e1-9044-d8ee02d4f010.jsonl:31
+The Issue #9 title/body was modified. Let me check the current content to see what changed, and continue. Also check whether root arbitration #234 got responses, and PR #20 status.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-9/pi-glm-fast-g1 && git fetch origin -q; braid issue view 9 2>&1 | head -60
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-9/pi-glm-fast-g1 && braid issue comment view 234 --thread 2>&1 | head -80; echo ====; braid pr view 20 --comments 2>&1 | tail -40
+
+## 2026-09-29T11:31:29.619Z f862f9a7 2026-09-29T11-30-07-562Z_01a0eced-e049-714e-8669-ba797c2f79c1.jsonl:37
+Confirmed: secret-research README contains "research" → contains "search" substring. So an unauthorized visitor searching for `search flow` would, with wrong scoping, get secret-research hits. Good witness.
+
+Wait — but the search endpoint requires a repo param and returns 404 for invisible repos. The cross-repo leakage test would be: anonymous user searches on acme-docs → results must not include secret-research paths; and GET /api/repos/alice-dev/secret-research/search/code → 404. Good.
+
+Now, the design is verified. My remaining decision: post the M6a coordination note.
+
+Actually, let me reconsider once more whether the note is worth it. Key facts to convey:
+1. M4b adds `release` to acme-docs → `backend/test/content.test.js` branch-list assertion changes from `['feature-search','main']` to `['feature-search','main','release']`. If M6a's proposal lands a new branch on acme-docs (`pr-onboarding`), the same line must include it → whoever lands second resolves. Also `e2e/repos.spec.ts:339`/`content.spec.ts` combobox→button change.
+2. M4b's code search scope = default branch tree (main). M6a's feature-search commit is invisible to it → no M4b impact (confirming their item 2 is safe for us). But: if M6a ever modifies main's src/search.ts content (searching tree), M4b's expected results (`README.md` + `src/search.ts` for `search flow`) change.
+3. Ordering: M6a's acme-docs main protection rule must be created after M4b's `code-*.spec.ts` run (alphabetical). Already stated in #237 (Issue #1 thread 237) — is M6a aware? #234 shows M6a is coordinating on Issue #1. I'll repeat concisely with @glm-16.
+
+Where to post? Thread 234 on Issue #1 (that's M6a's proposal thread). Replying there keeps it in the right discussion. Use `braid comment ... --reply-to 234`? Let me check the braid comment CLI syntax.
+
+Actually the CLI: `braid issue comment 1 --body "..." --reply-to 234`? Let me check help.
+
+Let me also consider: should I ALSO update my Issue #7 body to record this cross-task boundary? The body already has the ordering constraint under D9/未决问题 3. I could add the assertion-line collision. That's a narrow, useful addition to "未决问题与风险". Yes — narrow edit adding item 5 about the shared assertion line if M6a seeds a new acme-docs branch. And it should be recorded since it's a cross-task premise.
+
+Hmm, but the body is already long; guidance says keep entry points current. A one-line addition to 未决问题 is fine.
+
+Let me check braid comment help first.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-7/pi-deepseek-fast-g1 && braid issue comment --help 2>&1 | head -40 && echo "=== pr comment help ===" && braid pr comment --help 2>&1 | head -30
+
+## 2026-09-29T11:31:41.538Z 680c1e21 2026-09-29T11-30-03-972Z_01a0eced-d244-74e4-8fc0-6cda931f6d8e.jsonl:60
+Pushed packet. Now post a PR comment registering the packet and noting dependencies, then start work. Let me also start `pnpm install` in the background.
+
+Actually, let me start pnpm install as a background bash job.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-20/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH pnpm install 2>&1 | tail -25
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-20/pi-deepseek-fast-g1 && braid pr comment 20 --body "$(cat <<'EOF'
+
+## 2026-09-29T11:31:52.623Z f7a993e2 2026-09-29T11-30-07-562Z_01a0eced-e049-714e-8669-ba797c2f79c1.jsonl:45
+Now upload the body. Then post the coordination comment on Issue #1 thread 234.
+
+Before that, verify the rest of the body is byte-identical except the added line (it is, since we only replaced the anchor with anchor+add).
+
+Let me upload.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-7/pi-deepseek-fast-g1 && braid issue edit 7 --body-file /tmp/body7.new.md 2>&1 | tail -5
+
+## 2026-09-29T11:32:01.321Z 15caa531 2026-09-29T11-30-07-562Z_01a0eced-e049-714e-8669-ba797c2f79c1.jsonl:47
+Now post the coordination comment on Issue #1 as a reply to thread 234.
+
+Let me verify the edit landed (view json revision) — later. Now the comment.
+
+Draft (concise, factual):
+
+## M4b（#7 / PR #19）对 M6a seed 提案的消费边界与共享断言（@glm-16、@glm-1）
+
+M4b 负责人 @deepseek-15 复核 #234 方案 C 对已发布 M4b 判据的影响，结论：**不冲突**，但有一行断言与两条前提需双方共享。
+
+1. **无冲突（已核实）**：M4b 的 REQ-4-2-3 代码搜索范围 = 仓库**默认分支头 tree**（acme-docs 即 `main` 的 `searching` tree：`README.md` 含 "search flow"、`src/search.ts` 含 "search"、`docs/overview.md` 不含）。M6a 只在 feature-search / `pr-onboarding` 上追加 commit，**不改 main tree**，故 M4b 的期望结果与跨仓泄露证人（`secret-research` README 的 "research" 含 "search"）都不受影响。
+2. **消费前提**：M6a 不得修改 `ACME_DOCS_TREES.searching` 的 `README.md`/`src/search.ts` 内容，也不得给 `main` 追加 commit；若某个 PR 必须这么做，请先在 Issue #7 或本 thread 告知 M4b，我们将同时更新搜索期望与 D1 语义。
+3. **共享一行断言**：`backend/test/content.test.js` 的 acme-docs 分支列表穷举现为 `['feature-search','main']`；M4b 加 `release` 后为 `['feature-search','main','release']`。若 M6a 提案 1 在 acme-docs seed 新分支（`pr-onboarding`），同一行须为四元素且按字母序。两个 PR 改同一行必然冲突，**后合入者按对方结果补齐**（M6a 的 #234 清单只列了 compare/单 commit/totals 三处，未含这一行）。
+4. **顺序约束（已在 #237 报备）**：M4b 新增 spec 以 `code-` 开头（字母序先于 `content`/`prs`）；M6a 若在 acme-docs `main` 上创建保护规则，请排在 M4b 的 `code-*.spec.ts` 之后，否则 M4b 的 Web 编辑写路径会被规则拒绝。M4b 自身的写隔离只写 `pw-branch-<suffix>`，不推进 acme-docs 的 main 头。
+5. 另请 M6a 知悉：M4b 已在 acme-docs 之外新增 `alice-dev/protected-sandbox`（public，`main` + main 保护规则）作为 REQ-4-4“受保护分支拒绝写入”的证人；M6a 的“创建前无规则”专用仓库需另选。
+
+以上为 M4b 侧登记，无需 M6a 回复；如方案 C 被根裁决采纳后与上述任一条不符，请在该 thread 指出，M4b 同步更正。
+
+Hmm, item 3 says "M6a 的 #234 清单只列了 compare/单 commit/totals 三处，未含这一行" — good, specific.
+
+Let me post it as reply-to 234 on Issue #1.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-7/pi-deepseek-fast-g1 && cat > /tmp/note.md <<'EOF'
+braid issue comment 1 --reply-to 234 -F /tmp/note.md 2>&1 | tail -8
+
+## 2026-09-29T11:32:27.521Z f040b8c2 2026-09-29T11-29-23-964Z_01a0eced-35fc-75bd-97bf-dc7ef3f0f0b3.jsonl:91
+E2E still building/running. Let me post the progress comment now and continue.
+
+Let me write the PR comment.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-19/pi-deepseek-fast-g1 && cat > /tmp/pr19-progress.md <<'EOF'
+braid pr comment 19 --body-file /tmp/pr19-progress.md 2>&1 | tail -5

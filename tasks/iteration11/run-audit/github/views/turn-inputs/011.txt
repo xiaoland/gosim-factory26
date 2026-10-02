@@ -1,0 +1,12 @@
+hash 1732c87ecce53930185f58e3759ade071967ed2dd3c8ff075aaf244c0dbf9658
+copies 1
+source snapshot-01/braid-state/turns/01a0ebed-e37a-7112-838e-4f24afe02357.md
+
+请处理 PR #11。
+
+对象：local/run#11
+
+发生以下更新：
+- pr:11 comment 82; read `comment view 82 --thread`
+
+使用 `braid pr view 11 --comments` 查看当前内容。

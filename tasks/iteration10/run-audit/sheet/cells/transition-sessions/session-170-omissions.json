@@ -1,0 +1,18 @@
+[
+  {
+    "source": "native/333-2026-09-28T09-50-42-259Z_01a0e76c-7e53-71d1-b733-5fc22a0e2219.jsonl:L166",
+    "part": 2,
+    "kind": "mechanical_write",
+    "path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/pr-20/pi-deepseek-fast-g1/checks/worksheet-lifecycle.spec.ts",
+    "field": "content",
+    "chars": 26256
+  },
+  {
+    "source": "native/333-2026-09-28T09-50-42-259Z_01a0e76c-7e53-71d1-b733-5fc22a0e2219.jsonl:L474",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr20-handoff.md",
+    "field": "content",
+    "chars": 3201
+  }
+]

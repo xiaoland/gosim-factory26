@@ -1,0 +1,112 @@
+3fb842a46362c6c676bb2e99f92453d46f8394d9
+577ecba337455e48310e7f1f150acfcdccee4657
+3fb842a46362c6c676bb2e99f92453d46f8394d9 2026-09-28T12:00:51Z Merge local PR #26
+cc5b876dfbc5faed6bba5afa592eeeb0ec82ffe7 2026-09-28T11:19:41Z Merge local PR #25
+dfcc039e6527bcaba1d23ee731c62b194ca2e9f4 2026-09-28T11:18:00Z Merge remote-tracking branch 'origin/develop' into fix/req2-pivot-editor-missing-field
+b4a4b0c75ca69a337760ebecf37e796433842adc 2026-09-28T11:08:09Z Merge local PR #23
+8826b4d7168d8d3be2369a09ee468dbcf6ebbda8 2026-09-28T11:01:29Z REQ-2-2-2 跟进检查增强：断言重开/刷新透视编辑器不改动源工作表
+a62831f4cd91a3247f9830c4336dccc82f940580 2026-09-28T10:50:22Z REQ-2-2-2 跟进修复：陈旧透视字段在重开编辑器时给出可见报错
+9063ca15357a38bd13ebc72562238de6eb86d76c 2026-09-28T10:21:53Z REQ-3 跟进：relatedStructureDiff/snapshotSheetCells 单测（结构 undo 跨表快照的纯逻辑覆盖）
+ab3772047333928317c258b2144ea1cf5f4b2d83 2026-09-28T10:02:03Z REQ-3-2-2 跟进：结构 undo 恢复跨表 inbound 引用（History 侧 relatedSheets）+ fixme 转正
+db23b1f38baffe5da130a5076b9b30b8f18bd218 2026-09-28T10:38:58Z Merge local PR #20
+779c5607e95292f74e6a7faa4f58c1386928cc51 2026-09-28T10:16:36Z Merge origin/develop (c4d5703) into feat/req2-worksheets
+b7da76faea9d7cc1c5262d792ea93acd2206ab72 2026-09-28T10:16:29Z REQ-2 收尾修复：pivot 源表删除保护、工作表菜单越界、样式表括号、浏览器检查自隔离
+c4d5703ac7b56523a933d2a15f2ba8547b5f5204 2026-09-28T10:07:50Z Merge local PR #22
+ba2811e04d1bbacd1192a9c714a3599a2c514409 2026-09-28T07:21:05Z REQ-4 检查补齐：复制偏移的越界 #REF! 整链路与源单元格不变断言 (#6 F3 收尾)
+24f24a08d60a55b7b1763a86086dcc6b8770df6c 2026-09-28T10:00:53Z Merge local PR #21
+61c8ce80a1ff7d0c2ed5e5a5e5e1b21efd8ce651 2026-09-28T09:49:51Z REQ-3-2-1：会话内复制/剪切缓冲绑定来源工作表，跨表粘贴不再套用范围语义
+80eefdd532be2c90d6040a7089a6a9eb4877f3dc 2026-09-28T09:47:04Z REQ-2 类型修复：Operation 去除非标准 sheetId 字段，结构快照内记录 sheetId（StructureSnapshot.sheetId + structureSheetId 助手），undo/redo 经快照定位被操作表
+01c5c8119a01147b7a4b3337a581d57f2e5d09bc 2026-09-28T09:45:12Z REQ-2 收敛与闭环：rebase 到 develop@a3ff57a；validations 平移消费 req5 shiftRangeSpec（filters/pivots 保留 mapRangeThroughAxis）；PUT /sheets/:sheetId 增可选 relatedSheets（cells-only upsert、原子 400、缺省行为不变，#220/#223/#238 契约）；pivot 源矩形删空置 sourceRange=null 失效（#237 方案 (i)），Refresh/editorPayload 走 FIELD_MISSING_ERROR 且保留上次结果；api-req2 增跨表 undo 探针与 pivot 失效用例（64/64 PASS）；单测 14/14
+676b3343c703a0b62e8f36b082449ca0a60d866d 2026-09-28T07:40:00Z REQ-2 检查修复：编辑器 URL 上 reload 后直接断言恢复态，重开经 home 导航仅用于 reopen 场景
+9f62d63fd42327e76d6376b11eb01b2d600dd9a1 2026-09-28T07:03:18Z REQ-2 检查修复：restore 用例快照携带完整单元格、按 raw/value 语义比较；删除探针改为行 2（此时行 1 为空、Region 在 A2）
+2b8ee6168b211b15f9dae2626fc30c3e2ef0f057 2026-09-28T06:54:32Z REQ-2 检查修复：api-req2.mjs structure 调用模板字符串闭合笔误
+ff41205d03d19403de69b54177a544f84012204e 2026-09-28T06:26:07Z REQ-2 检查补充：structure 操作 undo/redo 浏览器用例（快照恢复 + 重载持久）；API 检查补 PUT 快照恢复用例
+f80520ed5504605cfde526ca9960f21480c4f886 2026-09-28T06:21:33Z REQ-2 undo 接线：structure 操作写入共享 History（structureBefore/After 快照），undo/redo 经 PUT /sheets/:sheetId 整表快照恢复（引擎重算回填）；Grid/EditorPage 合并 REQ-3 编辑核心
+8398154aa8ad4c569243175b29992bc9eb388b21 2026-09-28T06:04:05Z REQ-2 结构端点消费共享公式引擎：runWithFormulas + addRows/removeRows/addColumns/removeColumns，公式引用跨表平移与 value 回填由引擎承担；域层保留坐标映射与 validations/filters/pivots 元数据平移；prepare.cjs 自举构建引擎；单测改为映射/元数据聚焦
+fd7b63ebdfd69c244d489408eff3b06fa36a693d 2026-09-28T05:44:06Z REQ-2 检查：worksheet-lifecycle Playwright 项目与 API 检查脚本
+a479d50d0f46f8391852b72b83b10edebfc17f46 2026-09-28T04:55:10Z REQ-2 工作表生命周期与行列结构：sheet CRUD 路由、结构平移领域逻辑、tab 菜单/对话框、行列右键菜单、单元测试
+a3ff57a07b4772d6375b3da7f76d6ec1d0affb7a 2026-09-28T09:21:41Z Merge local PR #19
+753f334356da5477a5dce9155e28c18e9601f526 2026-09-28T08:31:07Z Merge origin/develop (7f4216e) into issue-5-move-validation-guard
+b89df03c8a946f888629ffca5d5ea448070a6d00 2026-09-28T08:10:33Z REQ-5-2-1：范围移动端点也走写校验（REQ-5-2-1 的 "range move"）
+7f4216efc75f6c8fbc75d8e9667553162e46ad4d 2026-09-28T08:09:48Z Merge local PR #18
+6bb8192459b814a29ca20647f0494026b96769b8 2026-09-28T08:05:40Z Merge local PR #17
+05cffd89fb0adf911871bc9dbcbfd90fbf49d1ce 2026-09-28T08:03:24Z Merge local PR #15
+0c1082caa3e5d69c56844194c991e86a68469c05 2026-09-28T07:55:56Z REQ-3 检查修复：导出断言改用前缀匹配（同文件其它用例扩展了 used range）
+b65067b6760031cf405bc7c69cb55575cb6739fc 2026-09-28T07:47:58Z REQ-3 检查：剪切到非空目标后导出内容与移动后文本一致（端到端回归）
+08b106205b514688879291f32db9c38c0c0327b0 2026-09-28T07:02:23Z CSV 检查：筛选隐藏行仍导出（REQ-5-1-2 浏览器级回归，待 REQ-5/#7 合并后提 PR）
+450b0dcc5ec7f36acd08861224d9f95d799625ca 2026-09-28T07:22:01Z REQ-3 校验：下拉规则下空/纯空白输入放行，parity skip 转 pass（根 Issue #142 裁决）
+783ff7ecb03273e3086a70758b4e2f95b01a22fd 2026-09-28T07:36:52Z Merge remote-tracking branch 'origin/develop' into issue-5-range-move
+423181f50f4df21f90e4c686b3af381c31ad6fd1 2026-09-28T07:36:43Z REQ-3 修复：移动后持久化的 value 必须与 raw 同步（deepseek-10 复核 #161）
+83f9e38eeea0f2e1bcfaf3fc59c6a75baabcb84b 2026-09-28T07:35:30Z Merge local PR #9
+8e0b03644df3df071a2a86d7befce697bf1ea378 2026-09-28T07:18:29Z 按根裁决 #150/#153 让出 validation.ts 空值修复：从本 PR 摘除 77df566
+49505097e69f9c6df7e6995aeffeec5068f75fe5 2026-09-28T07:18:08Z Merge remote-tracking branch 'origin/develop' into issue-5-range-move
+77df566a84e647176b79ec172f97c2e323852b56 2026-09-28T07:17:50Z REQ-3：空/纯空白输入对任何规则都不判非法（根裁决 #142/#143）
+80993395b34f1308ae3e4e371b0881bf643ae3c2 2026-09-28T07:03:16Z REQ-5 检查：默认产物目录改到已忽略的 checks/results/req5（避免直接跑 config 时把 trace 入库）
+08f333b94dca044e7f5e339b515e435cc7a6c3cc 2026-09-28T06:58:21Z REQ-5 检查修正：粘贴/范围移动拒绝用例改用 .gridcell-value 与正确的初始值（East）
+78aaa8657b3c88f2f50f6f1828abf3e060b910ff 2026-09-28T06:53:16Z REQ-5 检查补强：下拉规则经粘贴与范围移动两条写路径的拒绝（#5 已接线）；req5 config 开剪贴板权限
+5074e4012acca0dcf703fbaba38106715744236a 2026-09-28T06:50:34Z REQ-5 检查入口去重：不再自行改 prepare.cjs/.gitignore（共享引擎自举归 PR #12 单一入口）；req5-all.sh 按平台顺序前端先构建并消费仓库自举脚本
+83dc8c881b7d59c49283eb2c0f455cc92820065d 2026-09-28T06:48:35Z REQ-5 检查入口：checks/req5-all.sh 一次跑通 unit/parity/CSV 回归/API/UI；README 登记入口与各步骤
+f4a722bb58b1e99757b45cfc8cebc619f1e92045 2026-09-28T06:47:47Z README：登记 REQ-5 检查入口（unit/parity/API/UI），并订正 REQ-3 集成检查直接种规则的原因
+fe6038759fcf3c4640cdca8dabec6e0915847e69 2026-09-28T06:23:27Z REQ-5 与 #5 基线整合：Data 菜单/对话框并入 #5 网格与公式引擎；透视新表激活时用持久化计算结果过渡（避免引擎未含新表导致渲染崩溃）；Data 命令回填 busy 防重复提交；下拉值按精确匹配（与 #5 前端镜像一致）并加跨模块文案/判定一致性检查
+4bc9b258756c31c3d931c694236235c13ffb96b0 2026-09-28T06:00:26Z REQ-5 接入 #6 公式写管道与 CSV 回归：排序经 runWithFormulas 回填依赖结果（S2：公式随记录移动并重指向、结果随之更新）；补 S2 API/浏览器检查与 #3 约定的'筛选隐藏行仍导出'纯函数回归
+5eacb3d58031623a5e75f62d6177ad6a739ba84d 2026-09-28T05:48:23Z REQ-5 修复与检查加固：校验规则按覆盖单元格预填/回填原范围、筛选对话框无重名可访问名、被拒写入后公式栏草稿回滚、范围平移助手 shiftRect/shiftRangeSpec、筛选 AND 与透视 COUNT/刷新错误保留的浏览器检查
+a9c427821d1f48ceec2fd1e55d3cc5e6346b71f8 2026-09-28T05:16:23Z REQ-5 API 检查：排序后筛选仍作用于同一范围且隐藏行重算；透视汇总包含被隐藏行
+b285ea53a90edc27f481e0b606d2a86e2fe189cb 2026-09-28T05:15:48Z REQ-5 检查修正：下拉单元格断言取 .gridcell-value；prepare.cjs 尽力构建 shared 包；浏览器检查超时 180s
+4500656921e27e3c3744d71fb8db52834b859990 2026-09-28T05:11:35Z REQ-5 数据组织：排序/筛选/数据验证/透视表（#7）
+1d7eca71b94fb963801df53064fde78016046896 2026-09-28T07:14:22Z Merge local PR #16
+1be21ec1f9dbf8fe8306203e8e6911a37453f7f7 2026-09-28T07:01:36Z 检查套件：run.sh 退出码返回 Playwright 结果，不再被 cleanup 污染
+21b627b8c06b2e88565aa223733e21204baf123d 2026-09-28T06:57:59Z Merge remote-tracking branch 'origin/develop' into issue-5-range-move
+266f0e4b0119cdba1bace7bcc7fc3467119e656c 2026-09-28T06:51:53Z Merge local PR #14
+0b1872622e0a410e389bd643dce8b2aeb35777e2 2026-09-28T06:50:49Z Merge local PR #12
+6b34914ce8b50c68b9179fef1c98206951559b28 2026-09-28T06:45:18Z 检查套件：新增 watchdog/cleanup 竞态回归检查（可重复）
+6043193540462c5b74e00f56bb978d402259057b 2026-09-28T06:45:35Z bootstrap 脚本补可执行位
+7a88d6f38b492f7a24067ed4cd66a9c815149377 2026-09-28T06:45:05Z Merge remote-tracking branch 'origin/develop' into issue-5-range-move
+3e55813b993cd9779cd67e8bc04b053d3ca0b160 2026-09-28T06:26:50Z Merge local PR #13
+ff1c2a25c0fd7fae9face5037b83895d1be63b28 2026-09-28T06:26:47Z Merge local PR #11
+2d9d92f9fbbba8802882c0455ffacd59457f1363 2026-09-28T06:26:07Z REQ-2 检查补充：structure 操作 undo/redo 浏览器用例（快照恢复 + 重载持久）；API 检查补 PUT 快照恢复用例
+2ecf1017d82f1bc69d63ee373f3a755083f174e4 2026-09-28T06:24:51Z Merge remote-tracking branch 'origin/develop' into issue-5-formulabar-undo-fix
+fc83165b134ad52f21ebf4525361da5bccafc570 2026-09-28T06:19:43Z REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）
+4ba6597ed908ca5763f685490bdf7fb1b38f9c96 2026-09-28T06:23:37Z Merge remote-tracking branch 'origin/develop' into issue-5-range-move
+2ecf69b929bf6d94260fbd5e09df88a1436d50c0 2026-09-28T06:05:36Z CSV 导出检查：等待网格显示计算结果后再取期望
+f6be2f0ff0f2742df3e7da4461450a22bc93270f 2026-09-28T06:21:33Z REQ-2 undo 接线：structure 操作写入共享 History（structureBefore/After 快照），undo/redo 经 PUT /sheets/:sheetId 整表快照恢复（引擎重算回填）；Grid/EditorPage 合并 REQ-3 编辑核心
+7557f60d9ccacb3c172a1e472b1eeb226c9ee9af 2026-09-28T06:04:05Z REQ-2 结构端点消费共享公式引擎：runWithFormulas + addRows/removeRows/addColumns/removeColumns，公式引用跨表平移与 value 回填由引擎承担；域层保留坐标映射与 validations/filters/pivots 元数据平移；prepare.cjs 自举构建引擎；单测改为映射/元数据聚焦
+479e2158c3b712d041e0bc7a094bf93aba5c9569 2026-09-28T05:44:06Z REQ-2 检查：worksheet-lifecycle Playwright 项目与 API 检查脚本
+cd698211b4ae27c6a344fc164628d598fc36bc25 2026-09-28T04:55:10Z REQ-2 工作表生命周期与行列结构：sheet CRUD 路由、结构平移领域逻辑、tab 菜单/对话框、行列右键菜单、单元测试
+b17ca0f201390b01b1638999535d021a28a76060 2026-09-28T06:20:01Z frontend prebuild 接入引擎自举：平台顺序（frontend 先行）下干净克隆可构建 (#6, PR #12 复核)
+b06d22f813c9cf436f377f3b47fe706ec81829a5 2026-09-28T06:19:43Z REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）
+bd1f6dfb090653f93f9b8ae38c21fcb38547ec05 2026-09-28T06:17:31Z REQ-3 跟进：剪切/范围移动改用服务端 moveCells 语义（#5，根裁决 c84）
+5159262f89daa43a0912f206a3f0fe76a677657a 2026-09-28T06:06:28Z 引擎自举补齐依赖安装：干净克隆 backend npm run start 全链路可用
+33b51b97b8f95aee9c26131835ba82c8b3f8fdbf 2026-09-28T06:02:05Z 共享公式引擎构建自举：prepare.cjs 补 dist 缺失时编译，移除入库的 dist/ (#6 后续, #81.5)
+56cbd1a7080f798363bb8197fea980d02d2ff97f 2026-09-28T06:06:22Z Merge local PR #10
+f1f244261caa27ca80a089fc5b581fee63497bee 2026-09-28T06:04:39Z Merge origin/develop into fix/check-cleanup-race
+958f05a1e48a84009086a2c10cad083971243472 2026-09-28T06:00:07Z Merge local PR #8
+7e65dca0e02676a777fcff5d0636c54364f6270e 2026-09-28T05:58:56Z README：检查表补 CSV 项目行 (#5)
+fcbb1143bd97f84dca5f877e11216fc45cee73f7 2026-09-28T05:54:41Z 检查套件：cleanup 先停并等待 watchdog，避免重启竞态与进程逃逸
+075b778ca5072881893ce205eb21e8f6cb459990 2026-09-28T05:53:02Z checks/run.sh：把 DATA_DIR_REQ3_INTEGRATION 的说明移到赋值块之前 (#5)
+3583fc1e5723f34e419f8bb77f28bbffcf30bd6c 2026-09-28T05:52:03Z Merge origin/develop into issue-5（#4/#5/#6/#7 后的新基线）(#5)
+74d241c7f2a4f395472036bedb383cb327e71a87 2026-09-28T05:45:34Z REQ-3 自检第二轮：Ctrl+Z 焦点、undo 检查判据与检查隔离（#5）
+0539c62aaed16d6e3df525f0602d1c3a258b5129 2026-09-28T05:46:52Z Merge local PR #7
+661e397c8b72500dbeec2b171e1b6b8a748d2a0b 2026-09-28T05:46:09Z Merge local PR #6
+bdac17a791ef5d71cf0d989699e8ae9c8f4e6e64 2026-09-28T05:45:19Z Merge origin/develop into fix/check-timeouts（base 已含 PR #4/#5 与超时改动）
+41b0bfeec99233373ce19b7e2fb53aab3cad4716 2026-09-28T05:42:17Z fix check script: setup teardown hook + F5 read helper + F6 sum range
+1ad7d432726edec66ca59dc98dc71ec0603e5742 2026-09-28T05:34:31Z REQ-4: wire formula engine into PATCH /cells pipeline
+3c9393fa30b7bd517b2c49cb27948c574ac55b08 2026-09-28T05:43:04Z Merge local PR #5
+cee6b47ff4ae17076daa26ac90f3578746a0203d 2026-09-28T05:43:01Z 检查套件：运行期文件移入 run 私有目录，并校验服务器确实持有自己的端口
+757e55760ae0bdfaaf4f4655e040a813b3a67436 2026-09-28T05:41:18Z Merge local PR #4
+b97c32560a2e567868ed40451cee8421fb0461d3 2026-09-28T05:34:21Z 检查套件：放宽浏览器超时上限，避免共享机器负载造成的假失败
+455dff2f94c296c1b51440d6b979dec6ff3286a0 2026-09-28T05:16:42Z 合并 origin/develop（#3 共享基础跟进 61b51ee）
+a01244732733216798bc306e2aa3a7ae75e63f2c 2026-09-28T03:40:12Z CSV 导入与导出 (REQ-1-3-*): 服务端解析+导入端点、导入对话框、导出下载、单元与浏览器检查
+17a36fa73aff4662ae7780e310440cf6fd7d7a6c 2026-09-28T05:15:51Z REQ-3 自检修复与检查加固（#5）
+61b51ee37e97a9a76be2bf53539f65f346fdcce6 2026-09-28T05:09:39Z Merge local PR #3
+23e1dd1a2a1c17a4476974ab54cdf21f212204f6 2026-09-28T04:59:37Z 共享基础跟进：修复网格 shift 选区扩展；检查套件加类型检查、日志隔离与看门狗
+746956c8f8b99543ef7a665d82feb0a0cc432415 2026-09-28T04:57:41Z 合并 origin/develop（共享基础合入 87cedb5）
+3333ac19d4dadc10b209740b077ca44a3c1e75bd 2026-09-28T04:57:39Z REQ-3 单元格编辑、范围操作与撤销重做（#5）
+2305564a3acdb3261eb82d4f9f290ea7821822d3 2026-09-28T04:57:33Z 共享公式引擎产物入库：交付构建无需额外引导步骤
+87cedb5feac0797c9955e397bb1250768e2aca79 2026-09-28T04:55:14Z Merge local PR #2
+7e38adf8be9dd5971cb098a99124f6dbf48f8e5d 2026-09-28T04:51:29Z 合并 origin/develop（公式引擎共享包 @app/formula-engine）
+011d73dcbe69a2f105178e4f18115df1349fbfa7 2026-09-28T03:39:18Z Merge local PR #1
+91b379ec5aceaba6f69f6869f2007ae5a3135f78 2026-09-28T03:39:03Z 共享基础：种子数据按裁决契约(Sheet1+Sheet2)、每表 lastSelection、启动自举构建、可重复浏览器检查
+07a3755def5db129db2b99848d7e819424f98283 2026-09-28T03:37:29Z 修复引擎细节：DetailedCellError 结构化判别、addSheet id 获取、moveCells 签名、复制调整保留字母大小写；33 项测试通过
+fdbb022dec660ea4704f98f417921dcaa6e6dd30 2026-09-28T03:25:26Z 公式引擎共享包：REQ-4 解析/求值/依赖重算/复制引用调整（HyperFormula 封装 + 单元测试）
+0edfd08268b5d90174094f0da19a9b7caf152711 2026-09-28T03:24:10Z 共享基础：前后端骨架 + 工作簿主页/创建/重命名/编辑器网格
+3ab688f2cb903ade973625065f318aaf1dd9cca7 2026-09-28T02:58:01Z 初始化本次生成的应用仓库

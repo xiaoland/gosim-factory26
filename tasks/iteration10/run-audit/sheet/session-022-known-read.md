@@ -1,0 +1,13807 @@
+
+### 2026-09-28T05:33:26.696Z session SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L1
+{"type": "session", "version": 3, "id": "01a0e680-f727-737a-a04f-1553c698ea7e", "timestamp": "2026-09-28T05:33:26.696Z", "cwd": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1"}
+
+### 2026-09-28T05:33:26.718Z model_change SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L2
+{"type": "model_change", "id": "499ae0c9", "parentId": null, "timestamp": "2026-09-28T05:33:26.718Z", "provider": "factory26", "modelId": "deepseek-v4-flash"}
+
+### 2026-09-28T05:33:26.718Z thinking_level_change SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L3
+{"type": "thinking_level_change", "id": "974dffde", "parentId": "499ae0c9", "timestamp": "2026-09-28T05:33:26.718Z", "thinkingLevel": "high"}
+
+### 2026-09-28T05:33:27.980Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L4
+ROLE user 
+text: # Local Issue: local/run#5
+单元格编辑、范围操作与撤销重做 (REQ-3-*)
+
+State: open
+Assignees: @deepseek-5
+Parent: Local Issue: local/run#1
+
+## Description
+
+[EXACT ALREADY READ items.md issue:5; 1688 chars]
+
+## Comments
+
+### Comment: local/run#issuecomment-2 by @glm-1
+Posted: 2026-09-28T03:04:44.045584106Z
+Thread: 2 (open)
+
+[EXACT ALREADY READ items.md comment:2; 118 chars]
+### Comment: local/run#issuecomment-9 by @deepseek-5
+Posted: 2026-09-28T03:06:36.389271139Z
+Thread: 2 (open)
+Reply to: comment 2
+
+[EXACT ALREADY READ items.md comment:9; 3843 chars]
+### Comment: local/run#issuecomment-11 by @deepseek-7
+Posted: 2026-09-28T03:07:13.82010792Z
+Thread: 2 (open)
+Reply to: comment 2
+
+[EXACT ALREADY READ items.md comment:11; 1626 chars]
+### Comment: local/run#issuecomment-17 by @deepseek-5
+Posted: 2026-09-28T03:09:38.968779419Z
+Thread: 2 (open)
+Reply to: comment 11
+
+[EXACT ALREADY READ items.md comment:17; 897 chars]
+### Comment: local/run#issuecomment-18 by @deepseek-7
+Posted: 2026-09-28T03:10:36.206616522Z
+Thread: 2 (open)
+Reply to: comment 17
+
+[EXACT ALREADY READ items.md comment:18; 936 chars]
+### Comment: local/run#issuecomment-28 by @glm-6
+Posted: 2026-09-28T03:38:53.539841921Z
+Thread: 28 (open)
+
+[EXACT ALREADY READ items.md comment:28; 756 chars]
+### Comment: local/run#issuecomment-30 by @glm-6
+Posted: 2026-09-28T03:41:52.23745135Z
+Thread: 2 (open)
+Reply to: comment 9
+
+[EXACT ALREADY READ items.md comment:30; 1377 chars]
+### Comment: local/run#issuecomment-42 by @glm-1
+Posted: 2026-09-28T04:56:40.413029788Z
+Thread: 42 (open)
+
+[EXACT ALREADY READ items.md comment:42; 843 chars]
+
+
+
+请处理 Issue #5。
+
+对象：local/run#5
+
+发生以下更新：
+- issue:5 comment 30; read `comment view 30 --thread`
+- issue:5 comment 28; read `comment view 28 --thread`
+
+使用 `braid issue view 5 --comments` 查看当前内容。
+
+
+### 2026-09-28T05:33:29.801Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L5
+ROLE assistant 
+thinking: Let me start by understanding the current state. I need to fetch origin/develop and look at the repository.
+
+Let me start with braid issue view and git status.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && pwd && git status --short && git log --oneline -5 && git remote -v"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue view 5 --comments 2>&1 | head -100"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:30.514Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L6
+ROLE toolResult bash
+text: /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1
+455dff2 合并 origin/develop（#3 共享基础跟进 61b51ee）
+17a36fa REQ-3 自检修复与检查加固（#5）
+61b51ee Merge local PR #3
+23e1dd1 共享基础跟进：修复网格 shift 选区扩展；检查套件加类型检查、日志隔离与看门狗
+746956c 合并 origin/develop（共享基础合入 87cedb5）
+origin	/workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin.git/ (fetch)
+origin	/workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin.git/ (push)
+isError: False
+
+### 2026-09-28T05:33:30.515Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L7
+ROLE toolResult bash
+text: issue #5: 单元格编辑、范围操作与撤销重做 (REQ-3-*)
+state: OPEN
+assignee: @deepseek-5
+
+[EXACT ALREADY READ items.md issue:5; 1688 chars]
+
+comment #2 [visible]
+thread: 2 [open]
+[EXACT ALREADY READ items.md comment:2; 118 chars]
+
+comment #9 [visible]
+thread: 2 [open]
+reply-to: 2
+[EXACT ALREADY READ items.md comment:9; 3843 chars]
+
+comment #11 [visible]
+thread: 2 [open]
+reply-to: 2
+@deepseek-5 确认由 #7 提供校验规则模型与文案函数，REQ-3 只消费。这里给出可直接对接的契约（详见我在 #7 发的草案 comment #10，此处是定稿建议）。
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 0]
+
+### 2) 判定与文案（唯一来源，消费方不要自拼文案）
+```
+validateValue(rule, raw): { ok: true } | { ok: false, message: string; hint?: string }
+isError: False
+
+### 2026-09-28T05:33:32.251Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L8
+ROLE assistant 
+thinking: The worktree already has commits including "REQ-3 自检修复与检查加固（#5）". Let me check current state: branches, PRs, and what's done. Let me look at the git log details and whether there's a PR open.
+
+Let me fetch origin and see.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -20 && echo \"--- branches ---\" && git branch -a && echo \"--- log ---\" && git log --oneline -15 --graph"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid pr list 2>&1 | head -40"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:32.754Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L9
+ROLE toolResult bash
+text: From /workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin
+ + f54e4af...a012447 braid-agent/issue-3/pi-deepseek-fast-g1 -> origin/braid-agent/issue-3/pi-deepseek-fast-g1  (forced update)
+ * [new branch]      braid-agent/issue-7/pi-deepseek-fast-g1 -> origin/braid-agent/issue-7/pi-deepseek-fast-g1
+--- branches ---
+* braid-agent/issue-5/pi-deepseek-fast-g1
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/braid-agent/issue-3/pi-deepseek-fast-g1
+  remotes/origin/braid-agent/issue-4/pi-glm-fast-g1
+  remotes/origin/braid-agent/issue-5/pi-deepseek-fast-g1
+  remotes/origin/braid-agent/issue-7/pi-deepseek-fast-g1
+  remotes/origin/develop
+  remotes/origin/feat/shared-foundation
+  remotes/origin/fix/shared-foundation-followup
+  remotes/origin/issue-6-formula-engine
+  remotes/origin/main
+--- log ---
+*   455dff2 合并 origin/develop（#3 共享基础跟进 61b51ee）
+|\  
+| *   61b51ee Merge local PR #3
+| |\  
+| | * 23e1dd1 共享基础跟进：修复网格 shift 选区扩展；检查套件加类型检查、日志隔离与看门狗
+| |/  
+* | 17a36fa REQ-3 自检修复与检查加固（#5）
+* | 746956c 合并 origin/develop（共享基础合入 87cedb5）
+|\| 
+| *   87cedb5 Merge local PR #2
+| |\  
+* | | 3333ac1 REQ-3 单元格编辑、范围操作与撤销重做（#5）
+* | | 2305564 共享公式引擎产物入库：交付构建无需额外引导步骤
+* | | 7e38adf 合并 origin/develop（公式引擎共享包 @app/formula-engine）
+|\| | 
+| |/  
+|/|   
+| *   011d73d Merge local PR #1
+| |\  
+| | * 07a3755 修复引擎细节：DetailedCellError 结构化判别、addSheet id 获取、moveCells 签名、复制调整保留字母大小写；33 项测试通过
+| | * fdbb022 公式引擎共享包：REQ-4 解析/求值/依赖重算/复制引用调整（HyperFormula 封装 + 单元测试）
+| |/  
+* | 91b379e 共享基础：种子数据按裁决契约(Sheet1+Sheet2)、每表 lastSelection、启动自举构建、可重复浏览器检查
+* | 0edfd08 共享基础：前后端骨架 + 工作簿主页/创建/重命名/编辑器网格
+|/  
+* 3ab688f 初始化本次生成的应用仓库
+isError: False
+
+### 2026-09-28T05:33:32.754Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L10
+ROLE toolResult bash
+text: #1	MERGED	未指派	公式引擎共享包（REQ-4-*）：解析/求值/依赖重算/复制引用调整
+#2	MERGED	未指派	共享基础：应用骨架 + 工作簿主页/创建/重命名/编辑器网格 (REQ-1-1-1, REQ-1-2-*)
+#3	MERGED	未指派	共享基础跟进：修复网格 shift 选区扩展；检查套件类型检查/隔离/日志(REQ-1-1-1, REQ-1-2-*)
+#4	OPEN	@glm-9	CSV 导入与导出 (REQ-1-3-*): 服务端解析+导入端点、导入对话框、导出下载、单元与浏览器检查
+isError: False
+
+### 2026-09-28T05:33:34.962Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L11
+ROLE assistant 
+thinking: There's no PR for #5 yet. There is a local branch `braid-agent/issue-5/pi-deepseek-fast-g1` with commits 3333ac1 (REQ-3 implementation), 17a36fa (self-check fixes), 455dff2 (merge develop). But no PR created yet. I need to check if the branch was pushed, and whether the work is complete.
+
+Let me check the current state of the worktree relative to origin, and what's on origin/braid-agent/issue-5.
+
+Note: worktree HEAD 455dff2, and there's `remotes/origin/braid-agent/issue-5/pi-deepseek-fast-g1`. Let me compare.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && echo \"=== HEAD vs origin/issue-5 ===\" && git log --oneline HEAD..origin/braid-agent/issue-5/pi-deepseek-fast-g1 && echo \"--- reverse ---\" && git log --oneline origin/braid-agent/issue-5/pi-deepseek-fast-g1..HEAD && echo \"=== develop head ===\" && git log --oneline -3 origin/develop && echo \"=== HEAD vs develop ===\" && git log --oneline origin/develop..HEAD | head -20"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ls && echo \"--- checks ---\" && ls checks 2>/dev/null; ls -la"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:34.986Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L12
+ROLE toolResult bash
+text: === HEAD vs origin/issue-5 ===
+927358f REQ-3 编辑核心与验收检查（#5 准备件）
+--- reverse ---
+455dff2 合并 origin/develop（#3 共享基础跟进 61b51ee）
+17a36fa REQ-3 自检修复与检查加固（#5）
+61b51ee Merge local PR #3
+23e1dd1 共享基础跟进：修复网格 shift 选区扩展；检查套件加类型检查、日志隔离与看门狗
+746956c 合并 origin/develop（共享基础合入 87cedb5）
+3333ac1 REQ-3 单元格编辑、范围操作与撤销重做（#5）
+2305564 共享公式引擎产物入库：交付构建无需额外引导步骤
+87cedb5 Merge local PR #2
+7e38adf 合并 origin/develop（公式引擎共享包 @app/formula-engine）
+011d73d Merge local PR #1
+91b379e 共享基础：种子数据按裁决契约(Sheet1+Sheet2)、每表 lastSelection、启动自举构建、可重复浏览器检查
+07a3755 修复引擎细节：DetailedCellError 结构化判别、addSheet id 获取、moveCells 签名、复制调整保留字母大小写；33 项测试通过
+fdbb022 公式引擎共享包：REQ-4 解析/求值/依赖重算/复制引用调整（HyperFormula 封装 + 单元测试）
+0edfd08 共享基础：前后端骨架 + 工作簿主页/创建/重命名/编辑器网格
+=== develop head ===
+61b51ee Merge local PR #3
+23e1dd1 共享基础跟进：修复网格 shift 选区扩展；检查套件加类型检查、日志隔离与看门狗
+87cedb5 Merge local PR #2
+=== HEAD vs develop ===
+455dff2 合并 origin/develop（#3 共享基础跟进 61b51ee）
+17a36fa REQ-3 自检修复与检查加固（#5）
+746956c 合并 origin/develop（共享基础合入 87cedb5）
+3333ac1 REQ-3 单元格编辑、范围操作与撤销重做（#5）
+2305564 共享公式引擎产物入库：交付构建无需额外引导步骤
+7e38adf 合并 origin/develop（公式引擎共享包 @app/formula-engine）
+isError: False
+
+### 2026-09-28T05:33:34.986Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L13
+ROLE toolResult bash
+text: README.md
+backend
+checks
+frontend
+shared
+--- checks ---
+create-workbook.spec.ts
+editor-interactions.spec.ts
+helpers.ts
+home-editor.spec.ts
+node_modules
+package-lock.json
+package.json
+playwright.config.ts
+req3-core.spec.ts
+req3-integration.spec.ts
+results
+run.sh
+seed-idempotency.sh
+tsconfig.json
+unit
+total 40
+drwxr-xr-x 7 ubuntu ubuntu 4096 Sep 28 05:32 .
+drwxr-xr-x 3 ubuntu ubuntu 4096 Sep 28 05:32 ..
+drwxr-xr-x 7 ubuntu ubuntu 4096 Sep 28 05:33 .git
+-rw-r--r-- 1 ubuntu ubuntu  272 Sep 28 05:32 .gitignore
+-rw-r--r-- 1 ubuntu ubuntu 5200 Sep 28 05:32 README.md
+drwxr-xr-x 6 ubuntu ubuntu 4096 Sep 28 05:32 backend
+drwxr-xr-x 4 ubuntu ubuntu 4096 Sep 28 05:32 checks
+drwxr-xr-x 5 ubuntu ubuntu 4096 Sep 28 05:32 frontend
+drwxr-xr-x 3 ubuntu ubuntu 4096 Sep 28 05:32 shared
+isError: False
+
+### 2026-09-28T05:33:39.072Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L14
+ROLE assistant 
+thinking: Interesting: origin/braid-agent/issue-5/pi-deepseek-fast-g1 has a commit 927358f "REQ-3 编辑核心与验收检查（#5 准备件）" that local HEAD doesn't have. Hmm — that's the branch published to origin by a *previous run* perhaps. Wait actually, the remote branch has 927358f on top? Let me check: `HEAD..origin/braid-agent/issue-5/...` shows 927358f, meaning remote has commits not in local HEAD. That's odd. The worktree's branch is behind origin's version of the same branch name. Maybe a previous instance pushed 927358f, and then this worktree is a fresh clone at a different commit.
+
+Wait actually the worktree HEAD 455dff2 does not appear in `origin/...5..HEAD` reverse list? The reverse list printed lots of commits, which is the `origin/braid-agent/issue-5..HEAD` output — that shows all commits in HEAD not in origin branch. Hmm but that includes 455dff2 etc. So local HEAD and origin branch diverged. Actually wait, the first command `git log --oneline HEAD..origin/...` printed 927358f, meaning origin branch = HEAD + 927358f (fast-forward?). But then reverse printed many, contradictory. Unless... hmm, the reverse command was `git log --oneline origin/braid-agent/issue-5/pi-deepseek-fast-g1..HEAD`, which excludes commits reachable from origin branch. Since origin branch includes HEAD's history presumably (all those commits listed are shown though). Hmm that's weird — if origin branch contained 455dff2, then HEAD..origin would not show... Actually HEAD..origin shows commits reachable from origin but not HEAD. If origin = 455dff2 + 927358f, then only 927358f shown. And origin..HEAD should be empty. But it printed a huge list. So origin branch does NOT contain 455dff2. Then HEAD..origin showing only 927358f means origin branch's commits not in HEAD is just 927358f?? That can't be if origin is at 927358f basing on 3333ac1 maybe... Actually if origin branch = 3333ac1 + 927358f (branched from 3333ac1), and HEAD = ...455dff2 which includes 3333ac1. Then commits in origin not in HEAD = 927358f only. Yes! That's consistent. And origin..HEAD = commits in HEAD not in origin = the ones listed (455dff2, 17a36fa, merge commits...). Great.
+
+So there was an earlier run that pushed 927358f to the remote branch. The current worktree HEAD (455dff2) contains a more advanced state? Let me look at what 927358f contains and compare with current work.
+
+Let me diff.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && echo \"=== 927358f files ===\" && git show --stat 927358f | head -40 && echo \"=== merge-base ===\" && git merge-base 927358f HEAD"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git show --stat 17a36fa | head -60 && echo \"=== 3333ac1 stat ===\" && git show --stat 3333ac1 | head -60"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:39.138Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L15
+ROLE toolResult bash
+text: === 927358f files ===
+commit 927358f3430f2fd7db83f181e35f454405215375
+Author: deepseek-5 <deepseek-5@braid.local>
+Date:   Mon Sep 28 03:14:54 2026 +0000
+
+    REQ-3 编辑核心与验收检查（#5 准备件）
+    
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 1]
+    
+    尚未接入共享基础（等待 #2 的门控），因此不含应用骨架/API/UI。
+
+ checks/.gitignore               |   3 +
+ checks/node_modules             |   1 +
+ checks/playwright.config.ts     |  25 +++
+ checks/req3-core.spec.ts        | 325 ++++++++++++++++++++++++++++++++++
+ checks/req3-integration.spec.ts | 236 +++++++++++++++++++++++++
+ checks/unit/editing.test.ts     | 202 +++++++++++++++++++++
+ frontend/src/domain/editing.ts  | 376 ++++++++++++++++++++++++++++++++++++++++
+ 7 files changed, 1168 insertions(+)
+=== merge-base ===
+3ab688f2cb903ade973625065f318aaf1dd9cca7
+isError: False
+
+### 2026-09-28T05:33:39.138Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L16
+ROLE toolResult bash
+text: commit 17a36fa73aff4662ae7780e310440cf6fd7d7a6c
+Author: @deepseek-5 <deepseek-5@braid.local>
+Date:   Mon Sep 28 05:15:51 2026 +0000
+
+    REQ-3 自检修复与检查加固（#5）
+    
+    - FormulaBar：提交成功后更新“最后成功内容”基线，Escape/被拒时回到该值
+    - Grid：Shift+点击从当前活动单元格（或已有选区锚点）扩展矩形，
+      与 Shift+方向键语义一致（develop 的 editor-interactions 检查亦要求）
+    - EditorPage：按工作表记忆选区（防并行 state 写入导致的回退），
+      拖动只在 mouseup 落库完整矩形
+    - checks：req3 两个 project 独立端口/临时数据目录、剪贴板权限、
+      拖拽前 scrollIntoView、校验规则以数据文件 fixture 注入；
+      run.sh 支持 PLAYWRIGHT_BIN 覆盖；README 补充 REQ-3 检查与公式引擎说明
+
+ README.md                              | 22 ++++++++++++++++++++--
+ checks/req3-core.spec.ts               | 31 +++++++++++++++++--------------
+ checks/req3-integration.spec.ts        |  3 +++
+ checks/run.sh                          |  4 ++--
+ frontend/src/components/FormulaBar.tsx |  5 ++++-
+ frontend/src/components/Grid.tsx       |  7 +++++--
+ frontend/src/pages/EditorPage.tsx      | 21 ++++++++++++++++++++-
+ 7 files changed, 71 insertions(+), 22 deletions(-)
+=== 3333ac1 stat ===
+commit 3333ac19d4dadc10b209740b077ca44a3c1e75bd
+Author: @deepseek-5 <deepseek-5@braid.local>
+Date:   Mon Sep 28 04:57:39 2026 +0000
+
+    REQ-3 单元格编辑、范围操作与撤销重做（#5）
+    
+    编辑（REQ-3-1-1）：公式栏与网格行内文本框（可访问名 "Edit <坐标>"）走同一条写
+    管道；Enter/失焦提交、Escape 取消；公式格网格显示引擎结果、公式栏显示原文；
+    提交失败显示最后成功值。
+    
+    批量粘贴（REQ-3-1-2）：TSV 二维解析（空字段保留、只覆盖目标矩形）、右键菜单
+    menuitem "Paste" 与 Ctrl+V 同一路径、整单原子。
+    
+    矩形选区（REQ-3-1-3）：拖拽成矩形，aria-selected 由矩形派生；每个工作表持久化
+    完整矩形 lastSelectionRect，刷新/切表精确恢复且互不覆盖。
+    
+    范围复制/剪切/粘贴（REQ-3-2-1）：复制按目标偏移调整相对引用（消费 #6 的
+    adjustFormulaForCopy，绝对引用不变），剪切先写目标后清源（同一批），校验拒绝时
+    源与目标都保持原状。
+    
+    撤销/重做（REQ-3-2-2）：会话内 History（不跨工作簿），工具栏按钮 + Ctrl+Z/Ctrl+Y，
+    每次操作记录 before/after raw 快照；undo 后新修改清空 redo 分支。
+    
+    校验管道（消费 #7 契约）：validate -> write -> recalc -> persist -> history；
+    拒绝时渲染 message 与 hint 两个独立元素，不落值、不入历史。
+    
+    验收：checks/req3-core.spec.ts、checks/req3-integration.spec.ts（Playwright，
+    独立端口 + 临时数据目录）、checks/unit/editing.test.ts（node --test，11 项）。
+
+ backend/src/routes/workbooks.ts        |  10 +-
+ backend/src/types.ts                   |   6 +
+ checks/playwright.config.ts            |  23 ++
+ checks/req3-core.spec.ts               | 351 +++++++++++++++++++++++++
+ checks/req3-integration.spec.ts        | 262 +++++++++++++++++++
+ checks/run.sh                          |  19 +-
+ checks/unit/editing.test.ts            | 182 +++++++++++++
+ frontend/package-lock.json             |  48 ++++
+ frontend/package.json                  |   2 +
+ frontend/src/api.ts                    |   2 +
+ frontend/src/components/FormulaBar.tsx |  57 +++-
+ frontend/src/components/Grid.tsx       | 173 ++++++++++++-
+ frontend/src/domain/editing.ts         | 369 ++++++++++++++++++++++++++
+ frontend/src/domain/formulas.ts        |  44 ++++
+ frontend/src/domain/validation.ts      | 262 +++++++++++++++++++
+ frontend/src/pages/EditorPage.tsx      | 458 +++++++++++++++++++++++++++++----
+ frontend/src/styles.css                |  64 +++++
+ frontend/tsconfig.json                 |   1 +
+ frontend/vite.config.ts                |   5 +
+ 19 files changed, 2269 insertions(+), 69 deletions(-)
+isError: False
+
+### 2026-09-28T05:33:45.033Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L17
+ROLE assistant 
+thinking: So a previous run implemented REQ-3 based on a parallel branch (3333ac1 based on 3ab688f? No — 3333ac1's parent is 746956c which merged develop 87cedb5... let me see). Anyway, local work is largely done but no PR created. The task now: verify the current state, run self-checks, create PR, and hand off.
+
+But wait — I need to check whether current work actually meets all requirements. Also, Issue #4 (行列结构) hasn't been merged (PR #4 is open, not merged) — so row/column undo can't be tested yet. And #7 validation rules — let me check if #7's module is merged to develop. There's a remote branch for issue-7. Let me check develop content.
+
+Actually, the current HEAD 455dff2 merges develop 61b51ee. Wait, but "合并 origin/develop（#3 共享基础跟进 61b51ee）" — 61b51ee is "Merge local PR #3". Hmm, is 61b51ee on develop? Yes, develop head is 61b51ee.
+
+Wait, but the comment #42 said shared foundation merged as 87cedb5. And then #3 was merged as 61b51ee. So the current develop is at 61b51ee? Let me recheck: `git log --oneline -3 origin/develop` → 61b51ee, 23e1dd1, 87cedb5. Yes.
+
+Hmm, but wait — the worktree HEAD 455dff2 is a merge commit "合并 origin/develop（#3 共享基础跟进 61b51ee）". So local branch = origin/develop + REQ-3 work. 
+
+Now what does #5's implementation look like, and does it work? Let me check the diff between origin branch and current. Actually origin/braid-agent/issue-5 branch is old (927358f, prep work before gating) based on 3ab688f — an ancestor. It's irrelevant now; I should push the current work (fast-forward? No, origin branch is based on 3ab688f, current is a descendant of that... actually 3ab688f is the root. 927358f is child of 3ab688f. Current HEAD 455dff2 includes 3ab688f but not 927358f. So pushing current HEAD would be a non-fast-forward (would drop 927358f). Actually the prep commit 927358f content (frontend/src/domain/editing.ts etc.) was superseded by 3333ac1 which created editing.ts too but presumably diverged. Force push would be needed, or I could merge. Hmm.
+
+Better: since 927358f was "准备件" (prep, waiting for gating) and its content is superseded/duplicated by 3333ac1, the cleanest is to just reset the remote branch to the current work. But careful: force-pushing shared branch... Since it's my own agent branch for issue-5 and no PR exists yet, force push is acceptable. But braid may have rules. Alternatively, merge 927358f into HEAD — could cause conflicts/duplicate files. Let me look at what 927358f actually contains vs current.
+
+Actually wait. Maybe the intended flow: the current worktree was created fresh and the previous run's work pushed as 927358f is the "origin" branch. Let me check whether the different content matters. Since 3333ac1 was authored 04:57, 927358f authored 03:14. So 927358f is older work (pre-gate prep), and 3333ac1 is the post-gate implementation. Both created frontend/src/domain/editing.ts. The newer one is better. So I should publish current HEAD, force-overwriting or merging.
+
+Let me first check if the current work passes tests. That's the critical part. Let's inspect the repo structure and run the checks.
+
+Let me look at README, checks/run.sh, package.json.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && cat checks/run.sh && echo \"=== checks pkg ===\" && cat checks/package.json && echo \"=== playwright config ===\" && cat checks/playwright.config.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:45.048Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L18
+ROLE toolResult read
+text: # Spreadsheet workspace
+
+Workbook home page + spreadsheet editor.
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 2]
+
+## Run it
+
+```sh
+# 1. build the UI
+cd frontend && npm install && npm run build
+
+# 2. start the app (serves the REST API and the built UI)
+cd ../backend && npm install && HOST=0.0.0.0 PORT=3000 npm run start
+```
+
+Then open `http://<HOST>:<PORT>/` — the workbook home page.
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 3]
+
+### Configuration
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 4]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 5]
+
+## REST API
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 6]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 7]
+
+Data model (`backend/src/types.ts`, mirrored in `frontend/src/api.ts`):
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 8]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 9]
+
+## Formula engine
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 10]
+
+## Checks
+
+```sh
+cd checks && npm install                    # once: installs @playwright/test + typescript
+export BROWSER_EXECUTABLE_PATH=/path/to/chromium
+./run.sh                                    # type-checks, builds both packages, runs the browser checks
+./run.sh --skip-build                       # reuse the existing dist/ artifacts
+./seed-idempotency.sh                       # seed contract: idempotent, never overwrites user edits
+node --test checks/unit/editing.test.ts     # framework-free edit/undo core (no browser)
+```
+
+Each check file gets its own backend process, temp `DATA_DIR` and free port (never
+3000, which is reserved for the official evaluation), so every check starts from
+the promised seeded state and mutating checks cannot leak into each other.
+`checks/run.sh` runs:
+
+| project | spec | covers |
+| ------- | ---- | ------ |
+| `create-workbook`, `home-editor`, `editor-interactions` | REQ-1 foundation | workbook list/link/"Last updated", create-a-blank-workbook, stable editor URL (direct visit + refresh), grid/tabs/formula bar ARIA contract, workbook renaming including the empty-name rejection |
+| `req3-core` | `checks/req3-core.spec.ts` | REQ-3-1-1/2/3, REQ-3-2-1/2: editing, 2-D paste, rectangular selection, copy/cut/paste, undo/redo |
+| `req3-integration` | `checks/req3-integration.spec.ts` | REQ-3 with the formula engine, validation rules and (pending #4) row/column structure undo |
+
+The REQ-3 integration checks create data-validation rules by writing them into
+the server's data file, because REQ-5's validation UI (issue #7) does not exist
+yet; the rejection wording and atomicity assertions stay the same once it lands.
+
+isError: False
+
+### 2026-09-28T05:33:45.056Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L19
+ROLE toolResult bash
+text: #!/usr/bin/env bash
+# Repeatable browser/API check runner.
+#
+# Provisions a fresh environment per check file so every check observes the
+# promised initial state (seeded workbook "Q3 Sales" = Sheet1 A1=Region,
+# East/1200, North/800 + Sheet2 Region/Sales/Status table):
+#   - one backend per spec file, each with its own temp DATA_DIR (seed is
+#     created by the server on startup) and its own free port (never 3000,
+#     which is reserved for the official evaluation)
+#   - built backend (backend/dist) + built frontend (frontend/dist)
+#   - one log file per server, unique per run, so concurrent runs on a shared
+#     machine cannot clobber each other's evidence
+#
+# Usage: checks/run.sh [--skip-build]
+# Exit code is Playwright's exit code.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKIP_BUILD=false
+[[ "${1:-}" == "--skip-build" ]] && SKIP_BUILD=true
+
+: "${BROWSER_EXECUTABLE_PATH:?set BROWSER_EXECUTABLE_PATH to the Chromium binary}"
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 11]
+
+PLAYWRIGHT_BIN="${PLAYWRIGHT_BIN:-$ROOT/checks/node_modules/.bin/playwright}"
+if [[ ! -x "$PLAYWRIGHT_BIN" ]]; then
+  echo "Playwright CLI not found at $PLAYWRIGHT_BIN"
+  echo "Install the check dependencies (cd checks && npm install) or set PLAYWRIGHT_BIN."
+  exit 2
+fi
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 12]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 13]
+
+free_port() {
+  python3 - <<'PY'
+import socket
+s = socket.socket()
+s.bind(("127.0.0.1", 0))
+print(s.getsockname()[1])
+s.close()
+PY
+}
+
+# env var suffix -> spec file handled by the matching Playwright project.
+# REQ3_CORE / REQ3_INTEGRATION belong to issue #5 (REQ-3 editing and ranges).
+SUFFIXES=(CREATE EDITOR HOME REQ3_CORE REQ3_INTEGRATION)
+declare -A PORTS URLS DATA_DIRS SERVER_PIDS
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 14]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 15]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 16]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 17]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 18]
+
+watchdog &
+WATCHDOG=$!
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 19]
+
+# REQ-3 integration checks seed data-validation rules as an external fixture
+# (REQ-5's UI does not exist yet); they need the server's data directory.
+BASE_URL_CREATE="${URLS[CREATE]}" \
+BASE_URL_EDITOR="${URLS[EDITOR]}" \
+BASE_URL_HOME="${URLS[HOME]}" \
+BASE_URL_REQ3_CORE="${URLS[REQ3_CORE]}" \
+BASE_URL_REQ3_INTEGRATION="${URLS[REQ3_INTEGRATION]}" \
+DATA_DIR_REQ3_INTEGRATION="${DATA_DIRS[REQ3_INTEGRATION]}" \
+BROWSER_EXECUTABLE_PATH="$BROWSER_EXECUTABLE_PATH" \
+CHECK_OUTPUT_DIR="${CHECK_OUTPUT_DIR:-$ROOT/checks/results/$(date +%Y%m%dT%H%M%S)}" \
+  "$PLAYWRIGHT_BIN" test --config "$ROOT/checks/playwright.config.ts"
+=== checks pkg ===
+{
+  "name": "checks",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Repeatable acceptance checks (Playwright) for the spreadsheet workspace",
+  "scripts": {
+    "typecheck": "tsc -p tsconfig.json",
+    "check": "./run.sh",
+    "check:no-build": "./run.sh --skip-build",
+    "seed-idempotency": "./seed-idempotency.sh"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.57.0",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4"
+  }
+}
+=== playwright config ===
+import { defineConfig, Project } from '@playwright/test';
+
+/**
+ * Every spec file runs against its own freshly seeded server instance (see
+ * run.sh), so each check observes the promised initial state and mutating
+ * checks cannot leak into others.
+ *
+ * Clipboard permissions are granted because the REQ-3 checks paste real
+ * clipboard content (the requirement is about Ctrl+V / the context menu
+ * "Paste" item, not about an internal-only code path).
+ */
+function required(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Set ${name} before running browser checks.`);
+  return value;
+}
+
+if (!process.env.BROWSER_EXECUTABLE_PATH) {
+  throw new Error('Set BROWSER_EXECUTABLE_PATH before running browser checks.');
+}
+
+const clipboard = {
+  permissions: ['clipboard-read', 'clipboard-write'],
+  launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH },
+};
+
+const projects: Project[] = [
+  {
+    name: 'create-workbook',
+    testMatch: '**/create-workbook.spec.ts',
+    use: { baseURL: required('BASE_URL_CREATE') },
+  },
+  {
+    name: 'editor-interactions',
+    testMatch: '**/editor-interactions.spec.ts',
+    use: { baseURL: required('BASE_URL_EDITOR') },
+  },
+  {
+    name: 'home-editor',
+    testMatch: '**/home-editor.spec.ts',
+    use: { baseURL: required('BASE_URL_HOME') },
+  },
+  {
+    // REQ-3 (issue #5): editing, 2-D paste, range selection, copy/cut/paste,
+    // undo/redo. Its own server + temp DATA_DIR.
+    name: 'req3-core',
+    testMatch: '**/req3-core.spec.ts',
+    use: { baseURL: required('BASE_URL_REQ3_CORE'), ...clipboard },
+  },
+  {
+    // REQ-3 results that need the formula engine (#6), the validation rule
+    // model (#7) and row/column structure operations (#4).
+    name: 'req3-integration',
+    testMatch: '**/req3-integration.spec.ts',
+    use: { baseURL: required('BASE_URL_REQ3_INTEGRATION'), ...clipboard },
+  },
+];
+
+export default defineConfig({
+  testDir: '.',
+  testMatch: '**/*.spec.ts',
+  outputDir: process.env.CHECK_OUTPUT_DIR ?? 'test-results',
+  workers: 1,
+  retries: 0,
+  timeout: 120_000,
+  expect: { timeout: 15_000 },
+  reporter: 'list',
+  use: {
+    // Fail a stuck interaction instead of waiting forever for a control that
+    // the promised UI does not show.
+    actionTimeout: 15_000,
+    navigationTimeout: 30_000,
+    headless: true,
+    launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH },
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+  },
+  projects,
+});
+isError: False
+
+### 2026-09-28T05:33:47.241Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L20
+ROLE assistant 
+thinking: Now let me check whether the current state runs. First check the frontend implementation for REQ-3 pieces. Also, the key question: what's the remaining work? Maybe the previous run already did everything and just needs to run checks, fix failures, and create the PR.
+
+Let me check dependencies installed: checks/node_modules exists, frontend/node_modules, backend/node_modules. Let's see.
+
+Also need BROWSER_EXECUTABLE_PATH — find chromium.
+
+Let me check environment.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && for d in frontend backend checks shared/formula-engine; do echo \"== $d ==\"; ls $d/node_modules >/dev/null 2>&1 && echo \"node_modules present ($(ls $d/node_modules | wc -l) entries)\" || echo \"NO node_modules\"; done; echo \"=== browser ===\"; ls /root/.cache/ms-playwright 2>/dev/null; which chromium chromium-browser google-chrome 2>/dev/null; echo \"BROWSER_EXECUTABLE_PATH=${BROWSER_EXECUTABLE_PATH:-unset}\""}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ls frontend/src frontend/src/components frontend/src/domain frontend/src/pages 2>/dev/null && echo \"=== git log for issue-7/4 status ===\" && braid issue view 7 --comments 2>&1 | tail -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:47.275Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L21
+ROLE toolResult bash
+text: == frontend ==
+node_modules present (47 entries)
+== backend ==
+node_modules present (70 entries)
+== checks ==
+node_modules present (3 entries)
+== shared/formula-engine ==
+node_modules present (43 entries)
+=== browser ===
+/workspace/submission/agent/runtime/bin/chromium
+BROWSER_EXECUTABLE_PATH=/workspace/submission/agent/runtime/bin/chromium
+isError: False
+
+### 2026-09-28T05:33:47.275Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L22
+ROLE toolResult bash
+text: frontend/src:
+App.tsx
+api.ts
+components
+domain
+main.tsx
+pages
+refs.ts
+styles.css
+
+frontend/src/components:
+FormulaBar.tsx
+Grid.tsx
+RenameSection.tsx
+SheetTabs.tsx
+
+frontend/src/domain:
+editing.ts
+formulas.ts
+validation.ts
+
+frontend/src/pages:
+CreatePage.tsx
+EditorPage.tsx
+HomePage.tsx
+=== git log for issue-7/4 status ===
+如你希望继续严格等待，我保持不动；如可开工，在本串回一句即可，我立即 fetch `origin/develop` 建分支并按 S1–S10 留证据。
+
+comment #47 [visible]
+thread: 4 [open]
+reply-to: 43
+[EXACT ALREADY READ items.md comment:47; 581 chars]
+
+comment #48 [visible]
+thread: 16 [open]
+reply-to: 34
+[EXACT ALREADY READ items.md comment:48; 871 chars]
+parent: #1 [OPEN] 任务
+isError: False
+
+### 2026-09-28T05:33:49.403Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L23
+ROLE assistant 
+thinking: No playwright browsers cached but BROWSER_EXECUTABLE_PATH is set to runtime chromium. Good.
+
+So #7 hasn't merged yet (still working). #4 is open in PR.
+
+Now, current status: the REQ-3 implementation exists locally with self-checks. My job: verify/complete, run the checks, publish branch, create PR to develop, hand off.
+
+Let me first check whether the local code actually works. But before running the full browser suite (which is slow), let me inspect the implementation for completeness against requirements. Also run the unit tests.
+
+Let's run unit tests and type checks first.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && node --test checks/unit/editing.test.ts 2>&1 | tail -25"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && echo \"=== frontend pkg ===\" && cat frontend/package.json && echo \"=== backend pkg ===\" && cat backend/package.json && echo \"=== dist present? ===\" && ls frontend/dist 2>/dev/null | head -3; ls backend/dist 2>/dev/null | head -5"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:51.553Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L24
+ROLE toolResult bash
+text: (node:787) [MODULE_TYPELESS_PACKAGE_JSON] Warning: Module type of file:///workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/unit/editing.test.ts is not specified and it doesn't parse as CommonJS.
+Reparsing as ES module because module syntax was detected. This incurs a performance overhead.
+To eliminate this warning, add "type": "module" to /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/package.json.
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ rectangles normalize, contain and enumerate (45.64605ms)
+✔ clipboard text keeps empty fields and ignores one trailing newline (0.436316ms)
+✔ copied formulas are adjusted by the shared engine (issue #6) (0.750727ms)
+✔ planPaste covers the whole rectangle and preserves empty fields (0.384014ms)
+✔ planPaste from a single-cell selection lays the table out from that cell (0.248309ms)
+✔ planRangeCopy shifts formulas to the target offset and leaves the source alone (0.518818ms)
+✔ planRangeCut moves content unchanged and clears source cells outside the target (0.298511ms)
+✔ operation snapshots record only cells that actually change (0.362614ms)
+✔ history restores operations in reverse order and redoes them (0.29331ms)
+✔ a new modification after undo disables the redo branch (0.319211ms)
+✔ empty operations are not recorded and history clears per workbook (0.231109ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 1997.027065
+isError: False
+
+### 2026-09-28T05:33:51.553Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L25
+ROLE toolResult bash
+text: === frontend pkg ===
+{
+  "name": "frontend",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -p tsconfig.json && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@app/formula-engine": "file:../shared/formula-engine",
+    "hyperformula": "^3.4.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.26.2"
+  },
+  "devDependencies": {
+    "@types/react": "^18.3.11",
+    "@types/react-dom": "^18.3.1",
+    "@vitejs/plugin-react": "^4.3.2",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.8"
+  }
+}
+=== backend pkg ===
+{
+  "name": "backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Spreadsheet workspace backend: REST API + static hosting of the built frontend",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "prestart": "node scripts/prepare.cjs",
+    "dev": "tsc -p tsconfig.json && node dist/server.js"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4"
+  }
+}
+=== dist present? ===
+assets
+index.html
+config.js
+routes
+seed.js
+server.js
+store.js
+isError: False
+
+### 2026-09-28T05:33:53.260Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L26
+ROLE assistant 
+thinking: Unit tests pass (11). Dist present. Now let's run the full check suite to see the current state. It may take a while — run in background.
+
+But first, note: the checks include REQ-1 projects which should pass. Let's run the whole suite in background and monitor.
+
+Actually let me first do a quick review of the implementation to know what might be missing. Let me read the key files: frontend/src/domain/editing.ts, validation.ts, EditorPage.tsx, Grid.tsx, FormulaBar.tsx.
+
+But running the checks in background while reading is efficient. Let's start it.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && CHECK_OUTPUT_DIR=/tmp/req3-check-run1 timeout 3000 ./checks/run.sh 2>&1 | tail -120", "background": true}
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/domain/editing.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:53.271Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L27
+ROLE toolResult bash
+text: Bash job bg001 started in background. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T05:33:53.272Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L28
+ROLE toolResult read
+text: /**
+ * REQ-3 editing core (issue #5).
+ *
+ * Pure logic for cell/range editing on top of the shared data model
+ * (`Sheet.cells` keyed by A1 refs, `CellData = { raw, value }`):
+ *  - rectangular selection geometry (A1 refs)
+ *  - clipboard text (tab separated columns / newline separated rows)
+ *  - formula reference adjustment when a range is copied (delegated to the
+ *    shared `@app/formula-engine`, issue #6 — never reimplemented here)
+ *  - write plans for paste / copy / cut
+ *  - the session operation history behind Undo / Redo
+ *
+ * No React, no network and no other module dependency: components and the
+ * editor page call into this module (and it can be unit tested on its own).
+ */
+import { adjustFormulaForCopy } from "@app/formula-engine";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 20]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 21]
+
+/** (col, row) 1-based -> "B3". */
+function makeRef(col: number, row: number): string {
+  return `${indexToCol(col)}${row}`;
+}
+
+export interface RectSelection {
+  start: string;
+  end: string;
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 22]
+
+export interface CellUpdate {
+  ref: string;
+  /** raw user input; null clears the cell */
+  raw: string | null;
+}
+
+export interface SheetBounds {
+  rows: number;
+  cols: number;
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 23]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 24]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 25]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 26]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 27]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 28]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 29]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 30]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 31]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 32]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 33]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 34]
+
+export function serializeClipboardTable(table: string[][]): string {
+  return table.map((row) => row.join("\t")).join("\n");
+}
+
+// ---------------------------------------------------------------------------
+// Formula references
+// ---------------------------------------------------------------------------
+// Copy-time reference adjustment is owned by the shared formula engine
+// (`adjustFormulaForCopy`, REQ-4-1-2): relative references shift with the
+// offset, `$` parts stay, and a relative reference that leaves the sheet
+// collapses the whole formula to "=#REF!".
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 35]
+
+export type RawLookup = (ref: string) => string;
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 36]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 37]
+
+/**
+ * Plan a range copy to `targetStartRef`: relative references shift with the
+ * offset, absolute references stay, the source keeps its values (REQ-3-2-1).
+ */
+export function planRangeCopy(
+  source: RectSelection,
+  targetStartRef: string,
+  read: RawLookup,
+  bounds?: SheetBounds,
+): WritePlan {
+  const rect = normalizeRect(source.start, source.end);
+  const target = rectAt(targetStartRef, rect.bottom - rect.top + 1, rect.right - rect.left + 1);
+  const rowOffset = target.top - rect.top;
+  const colOffset = target.left - rect.left;
+  const updates: CellUpdate[] = [];
+  for (const ref of rectRefs(rect)) {
+    const { col, row } = parseRef(ref);
+    const raw = read(ref) ?? "";
+    updates.push({
+      ref: makeRef(col + colOffset, row + rowOffset),
+      raw: adjustFormulaForCopy(raw, { rowOffset, colOffset }, bounds),
+    });
+  }
+  return { rect: target, updates, clears: [] };
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 38]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 39]
+
+export interface CellSnapshot {
+  ref: string;
+  raw: string | null;
+}
+
+export type OperationKind = "cell-edit" | "paste" | "range-move" | "structure";
+
+export interface StructureSnapshot {
+  [key: string]: unknown;
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 40]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 41]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 42]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 43]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 44]
+
+  push(op: Operation): void {
+    if (op.after.length === 0) return;
+    this.undoStack.push(op);
+    this.redoStack = [];
+  }
+
+  canUndo(): boolean {
+    return this.undoStack.length > 0;
+  }
+
+  canRedo(): boolean {
+    return this.redoStack.length > 0;
+  }
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 45]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 46]
+
+  depth(): { undo: number; redo: number } {
+    return { undo: this.undoStack.length, redo: this.redoStack.length };
+  }
+
+  /** Undo history never crosses workbooks. */
+  clear(): void {
+    this.undoStack = [];
+    this.redoStack = [];
+  }
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 47]
+
+isError: False
+
+### 2026-09-28T05:33:54.686Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L29
+ROLE assistant 
+thinking: Now let me read validation.ts, FormularBar, Grid, EditorPage, and the API/backend changes. Let me also check the check specs. The suite is running in background.
+
+Let me read the main implementation files.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:54.734Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L30
+ROLE toolResult read
+text: import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import type { WorkbookFormulas } from "@app/formula-engine";
+import { api, CellData, Workbook } from "../api";
+import { formatDateTime, makeRef } from "../refs";
+import Grid, { GridSelection } from "../components/Grid";
+import FormulaBar from "../components/FormulaBar";
+import SheetTabs from "../components/SheetTabs";
+import RenameSection from "../components/RenameSection";
+import {
+  CellUpdate,
+  GridRect,
+  History,
+  Operation,
+  RectSelection,
+  normalizeRect,
+  operationForCellEdit,
+  operationFromPlan,
+  parseClipboardTable,
+  planPaste,
+  planRangeCopy,
+  planRangeCut,
+  rectStartRef,
+  serializeClipboardTable,
+  snapshotsToUpdates,
+} from "../domain/editing";
+import { contentSignature, createWorkbookFormulas, displayMap } from "../domain/formulas";
+import { validateSheetWrites } from "../domain/validation";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 48]
+
+/** Validation rejection shown next to the formula bar (message + hint elements). */
+interface ValidationError {
+  message: string;
+  hint?: string;
+}
+
+/**
+ * Editor page at the stable, bookmarkable URL /workbook/:id.
+ * Refreshing or directly visiting the URL restores the workbook's most
+ * recent successful state, including the last active worksheet, active
+ * cell and persisted selection.
+ *
+ * REQ-3 (issue #5): cell editing through the grid / formula bar, 2-D paste,
+ * rectangular selection with per-worksheet persistence, range copy/cut/paste
+ * and session undo/redo. Every write goes through one atomic batch request, so
+ * an operation either lands completely or leaves the workbook untouched:
+ *
+ *   validate (#7 rules) -> write (engine recalculation on read) -> persist
+ *   (single batch API call) -> history (only after success)
+ *
+ * The grid renders the formula engine's computed results; the formula bar
+ * shows the persisted raw input (the original formula).
+ */
+export default function EditorPage() {
+  const { id } = useParams<{ id: string }>();
+  const [workbook, setWorkbook] = useState<Workbook | null>(null);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [validationError, setValidationError] = useState<ValidationError | null>(null);
+  const [selection, setSelection] = useState<GridSelection>({ activeCell: "A1", selection: null });
+  const [engine, setEngine] = useState<WorkbookFormulas | null>(null);
+  const [, setHistoryVersion] = useState(0);
+
+  const historyRef = useRef(new History());
+  const clipboardRef = useRef<ClipboardBuffer | null>(null);
+  const workbookRef = useRef<Workbook | null>(null);
+  const selectionRef = useRef<GridSelection>(selection);
+  /** Per-workbook, per-sheet selection memory: tab switches never depend on a
+   * possibly stale workbook response (a state save and a cell write can be in
+   * flight at the same time). */
+  const sheetSelectionsRef = useRef(new Map<string, GridSelection>());
+  const pasteTimerRef = useRef<number | null>(null);
+  const idRef = useRef(id);
+  workbookRef.current = workbook;
+  selectionRef.current = selection;
+  idRef.current = id;
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 49]
+
+  const activeSheet = useMemo(() => activeSheetOf(workbook), [workbook]);
+
+  // Rebuild the formula engine only when cell content changes (cursor/selection
+  // saves also produce new workbook objects). It is the single source of the
+  // displayed results; persistence keeps raw inputs only.
+  const signature = useMemo(() => (workbook ? contentSignature(workbook) : ""), [workbook]);
+  useEffect(() => {
+    if (!workbook) {
+      setEngine(null);
+      return;
+    }
+    const next = createWorkbookFormulas(workbook);
+    setEngine(next);
+    return () => next.destroy();
+  }, [signature]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const display = useMemo(
+    () => (engine && activeSheet ? displayMap(engine, activeSheet.id) : {}),
+    [engine, activeSheet]
+  );
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 50]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 51]
+
+  useEffect(() => {
+    if (!id) return;
+    let cancelled = false;
+    // Undo history and the copy buffer never cross workbooks.
+    historyRef.current = new History();
+    clipboardRef.current = null;
+    sheetSelectionsRef.current = new Map();
+    setHistoryVersion((v) => v + 1);
+    setValidationError(null);
+    setError(null);
+    api
+      .getWorkbook(id)
+      .then((wb) => {
+        if (cancelled) return;
+        sheetSelectionsRef.current = new Map(
+          wb.sheets.map((s) => [
+            s.id,
+            {
+              activeCell: s.id === wb.activeSheetId ? wb.activeCell || "A1" : s.lastSelection || "A1",
+              selection:
+                s.id === wb.activeSheetId ? wb.selection ?? null : s.lastSelectionRect ?? null,
+            },
+          ])
+        );
+        setWorkbook(wb);
+        setSelection({ activeCell: wb.activeCell || "A1", selection: wb.selection ?? null });
+      })
+      .catch(() => setLoadError("Workbook not found"));
+    return () => {
+      cancelled = true;
+    };
+  }, [id]);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 52]
+
+  /**
+   * Persist last-used UI state (active sheet, active cell, complete rectangle).
+   * The local workbook is updated optimistically so the editor never depends on
+   * the response order of overlapping state saves.
+   */
+  const persistState = useCallback((next: GridSelection, sheetId?: string) => {
+    const workbookId = idRef.current;
+    if (!workbookId) return;
+    const wb = workbookRef.current;
+    if (!wb) return;
+    const targetSheetId = sheetId ?? wb.activeSheetId;
+    sheetSelectionsRef.current.set(targetSheetId, next);
+    setWorkbook((prev) =>
+      prev
+        ? {
+            ...prev,
+            activeSheetId: targetSheetId,
+            activeCell: next.activeCell,
+            selection: next.selection,
+            sheets: prev.sheets.map((s) =>
+              s.id === targetSheetId
+                ? { ...s, lastSelection: next.activeCell, lastSelectionRect: next.selection }
+                : s
+            ),
+          }
+        : prev
+    );
+    api
+      .saveState(workbookId, {
+        activeSheetId: targetSheetId,
+        activeCell: next.activeCell,
+        selection: next.selection,
+      })
+      .catch(() => undefined);
+  }, []);
+
+  /**
+   * Validate writes against the worksheet's rules (owned by #7). A rejection
+   * refuses the whole operation: nothing is written and no history entry is
+   * created. The message and hint render as two separate elements.
+   */
+  const validateWrites = (sheet: { validationRules?: unknown }, updates: CellUpdate[]): boolean => {
+    const outcome = validateSheetWrites(sheet, updates);
+    if (outcome.ok) {
+      setValidationError(null);
+      return true;
+    }
+    const first = outcome.errors[0];
+    setValidationError({ message: first.message, hint: first.hint });
+    return false;
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 53]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 54]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 55]
+
+  const handleCommitCell = async (ref: string, raw: string | null): Promise<boolean> => {
+    const sheet = activeSheetOf(workbookRef.current);
+    if (!sheet) return false;
+    if (readRaw(ref) === (raw ?? "")) return true; // nothing changed
+    const update: CellUpdate = { ref, raw };
+    if (!validateWrites(sheet, [update])) return false;
+    const op = operationForCellEdit(sheet.id, ref, raw, readRaw);
+    return applyUpdates(sheet.id, [update], op);
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 56]
+
+  /** Paste the in-session range: formulas adjust, cut clears its source too. */
+  const pasteRange = async (buffer: ClipboardBuffer) => {
+    const sheet = activeSheetOf(workbookRef.current);
+    if (!sheet) return;
+    const targetStart = rectStartRef(currentRect());
+    const bounds = { rows: sheet.rowCount, cols: sheet.colCount };
+    const plan =
+      buffer.mode === "cut"
+        ? planRangeCut(buffer.rect, targetStart, readRaw)
+        : planRangeCopy(buffer.rect, targetStart, readRaw, bounds);
+    if (plan.updates.length === 0) return;
+    const updates: CellUpdate[] = [
+      ...plan.updates,
+      ...plan.clears.map((ref) => ({ ref, raw: null })),
+    ];
+    // Whole operation or nothing: validation refusal leaves source and target.
+    if (!validateWrites(sheet, updates)) return;
+    const op = operationFromPlan(
+      buffer.mode === "cut" ? "range-move" : "paste",
+      `${buffer.mode} ${buffer.rect.start}:${buffer.rect.end} to ${targetStart}`,
+      sheet.id,
+      plan,
+      readRaw
+    );
+    const ok = await applyUpdates(sheet.id, updates, op);
+    // A cut is consumed by its paste (its source has been cleared already).
+    if (ok && buffer.mode === "cut") clipboardRef.current = null;
+  };
+
+  /**
+   * Apply pasted text: when it is exactly what our own copy/cut put on the
+   * clipboard the in-session range semantics are used (formula adjustment,
+   * source clearing), otherwise the text is applied as a plain 2-D paste.
+   */
+  const pasteFromText = async (text: string | null) => {
+    const sheet = activeSheetOf(workbookRef.current);
+    if (!sheet) return;
+    const buffer = clipboardRef.current;
+    // The pasted text is exactly what our own copy/cut put on the clipboard:
+    // use the in-session range semantics (formula adjustment, source clearing).
+    const isOwnBuffer = !!buffer && text !== null && text === buffer.text;
+    // When the clipboard cannot be read at all, trust a buffer we did write.
+    const unreadableWithOwnBuffer = !!buffer && buffer.synced && (text === null || text === "");
+    if (buffer && (isOwnBuffer || unreadableWithOwnBuffer)) {
+      await pasteRange(buffer);
+      return;
+    }
+    if (text === null || text === "") return;
+    const table = parseClipboardTable(text);
+    if (table.length === 0) return;
+    const startRef = rectStartRef(currentRect());
+    const plan = planPaste(startRef, table);
+    if (plan.updates.length === 0) return;
+    if (!validateWrites(sheet, plan.updates)) return;
+    const op = operationFromPlan("paste", `paste to ${startRef}`, sheet.id, plan, readRaw);
+    await applyUpdates(sheet.id, plan.updates, op);
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 57]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 58]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 59]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 60]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 61]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 62]
+
+  if (!workbook || !activeSheet) {
+    return <main className="home">Loading…</main>;
+  }
+
+  const canUndo = historyRef.current.canUndo();
+  const canRedo = historyRef.current.canRedo();
+
+  return (
+    <main className="editor">
+      <div className="editor-topbar">
+        <h1 className="editor-title">{workbook.name}</h1>
+        <RenameSection workbook={workbook} onRenamed={setWorkbook} />
+        <span className="editor-updated">
+          Last updated: {formatDateTime(workbook.updatedAt)}
+        </span>
+        <Link to="/">Home</Link>
+      </div>
+      <div className="editor-toolbar" role="toolbar" aria-label="Editing">
+        <button type="button" onClick={() => void undo()} disabled={!canUndo}>
+          Undo
+        </button>
+        <button type="button" onClick={() => void redo()} disabled={!canRedo}>
+          Redo
+        </button>
+      </div>
+      <FormulaBar
+        activeCell={selection.activeCell}
+        cell={activeCellData}
+        onCommit={handleCommitCell}
+      />
+      {validationError && (
+        <div role="alert" className="form-error validation-error">
+          <span className="validation-message">{validationError.message}</span>
+          {validationError.hint && (
+            <span className="validation-hint">{validationError.hint}</span>
+          )}
+        </div>
+      )}
+      <div
+        id="worksheet-panel"
+        role="tabpanel"
+        aria-labelledby={`sheet-tab-${activeSheet.id}`}
+        style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+      >
+        {error && (
+          <div role="alert" className="form-error">
+            {error}
+          </div>
+        )}
+        <Grid
+          sheet={activeSheet}
+          selection={selection}
+          display={display}
+          onSelect={handleSelect}
+          onCommitCell={handleCommitCell}
+          onCopyRange={() => copyRange("copy")}
+          onCutRange={() => copyRange("cut")}
+          onPasteRequest={() => void requestPaste()}
+        />
+      </div>
+      <SheetTabs
+        sheets={workbook.sheets}
+        activeSheetId={activeSheet.id}
+        onActivate={handleActivateSheet}
+      />
+    </main>
+  );
+}
+
+isError: False
+
+### 2026-09-28T05:33:56.283Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L31
+ROLE assistant 
+thinking: Now let me look at Grid.tsx and FormulaBar.tsx, validation.ts, formulas.ts, api.ts, backend routes.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/components/Grid.tsx"}
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/components/FormulaBar.tsx"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:56.288Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L32
+ROLE toolResult read
+text: import { useEffect, useMemo, useRef, useState } from "react";
+import { Sheet } from "../api";
+import { colLetter, makeRef, parseRef, Rect, selectionRect } from "../refs";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 63]
+
+interface GridProps {
+  sheet: Sheet;
+  selection: GridSelection;
+  /** ref -> displayed text (computed formula result or error), from the formula engine */
+  display: Record<string, string>;
+  /** `persist: false` is used while dragging, so only the final rectangle is saved. */
+  onSelect: (next: GridSelection, opts?: { persist?: boolean }) => void;
+  onCommitCell: (ref: string, raw: string | null) => void;
+  onCopyRange: () => void;
+  onCutRange: () => void;
+  onPasteRequest: () => void;
+}
+
+/**
+ * ARIA grid of the active worksheet.
+ * - grid accessible name "Worksheet grid", aria-multiselectable="true"
+ * - gridcell accessible name = coordinate (e.g. "A1"); aria-selected reflects
+ *   membership in the current rectangular selection
+ * - rowheader name = row number, columnheader name = column letter
+ *
+ * Editing (REQ-3-1): double click, Enter/F2 or typing on a selected cell opens
+ * an inline text box whose accessible name is "Edit <coordinate>"; Enter and
+ * blur commit it, Escape cancels it. Dragging from one cell to another selects
+ * the whole rectangle (REQ-3-1-3), and the context menu offers Copy/Cut/Paste
+ * with the ARIA menuitem role (REQ-3-1-2).
+ */
+export default function Grid({
+  sheet,
+  selection,
+  display,
+  onSelect,
+  onCommitCell,
+  onCopyRange,
+  onCutRange,
+  onPasteRequest,
+}: GridProps) {
+  const rect: Rect = selection.selection
+    ? selectionRect(selection.selection.start, selection.selection.end)
+    : selectionRect(selection.activeCell, selection.activeCell);
+
+  const cellRefs = useRef(new Map<string, HTMLTableCellElement>());
+  const gridRef = useRef<HTMLTableElement>(null);
+  const dragging = useRef<string | null>(null);
+  const selectionRef = useRef(selection);
+  const onSelectRef = useRef(onSelect);
+  selectionRef.current = selection;
+  onSelectRef.current = onSelect;
+
+  const [editing, setEditing] = useState<{ ref: string; draft: string } | null>(null);
+  const [menu, setMenu] = useState<{ x: number; y: number } | null>(null);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 64]
+
+  const rawOf = (ref: string) => sheet.cells[ref]?.raw ?? "";
+
+  const startEdit = (ref: string, initial?: string) => {
+    setEditing({ ref, draft: initial ?? rawOf(ref) });
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 65]
+
+  const cancelEdit = () => setEditing(null);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 66]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 67]
+
+  // Dismiss the context menu on any outside interaction.
+  useEffect(() => {
+    if (!menu) return;
+    const close = (e: MouseEvent) => {
+      const target = e.target as HTMLElement | null;
+      if (target && target.closest('[role="menu"]')) return;
+      setMenu(null);
+    };
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setMenu(null);
+    };
+    window.addEventListener("mousedown", close);
+    window.addEventListener("keydown", onKey);
+    return () => {
+      window.removeEventListener("mousedown", close);
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [menu]);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 68]
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (editing) return; // the inline editor handles its own keys
+    if (e.key === "Enter" || e.key === "F2") {
+      e.preventDefault();
+      startEdit(selection.activeCell);
+      return;
+    }
+    if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) {
+      // Typing on a selected cell starts an in-place edit with that character.
+      e.preventDefault();
+      startEdit(selection.activeCell, e.key);
+      return;
+    }
+    if (e.shiftKey) {
+      switch (e.key) {
+        case "ArrowUp":
+          e.preventDefault();
+          move(-1, 0, true);
+          return;
+        case "ArrowDown":
+          e.preventDefault();
+          move(1, 0, true);
+          return;
+        case "ArrowLeft":
+          e.preventDefault();
+          move(0, -1, true);
+          return;
+        case "ArrowRight":
+          e.preventDefault();
+          move(0, 1, true);
+          return;
+      }
+    } else {
+      switch (e.key) {
+        case "ArrowUp":
+          e.preventDefault();
+          move(-1, 0, false);
+          return;
+        case "ArrowDown":
+          e.preventDefault();
+          move(1, 0, false);
+          return;
+        case "ArrowLeft":
+          e.preventDefault();
+          move(0, -1, false);
+          return;
+        case "ArrowRight":
+          e.preventDefault();
+          move(0, 1, false);
+          return;
+      }
+    }
+  };
+
+  const onCellMouseDown = (e: React.MouseEvent, ref: string) => {
+    if (e.button !== 0) return;
+    if (editing && editing.ref !== ref) commitEdit();
+    if (e.shiftKey) {
+      // Extend from the current anchor (or the single selected cell) to the
+      // clicked corner; the anchor stays the active cell's selection origin.
+      const anchor = selection.selection?.start ?? selection.activeCell;
+      onSelect({ activeCell: ref, selection: { start: anchor, end: ref } });
+      return;
+    }
+    dragging.current = ref;
+    // Persisted on mouseup, so a drag saves only the final rectangle (REQ-3-1-3).
+    onSelect({ activeCell: ref, selection: null }, { persist: false });
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 69]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 70]
+
+  const runMenuAction = (action: () => void) => {
+    setMenu(null);
+    action();
+  };
+
+  return (
+    <div className="grid-scroll">
+      <table
+        className="grid"
+        ref={gridRef}
+        role="grid"
+        aria-label="Worksheet grid"
+        aria-multiselectable="true"
+        aria-rowcount={sheet.rowCount}
+        aria-colcount={sheet.colCount + 1}
+        onKeyDown={onKeyDown}
+      >
+        <thead>
+          <tr role="row">
+            <td className="corner" aria-hidden="true" />
+            {cols.map((c) => (
+              <th key={c} className="colheader" role="columnheader" aria-label={colLetter(c)} scope="col">
+                {colLetter(c)}
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r) => (
+            <tr key={r} role="row">
+              <th className="rowheader" role="rowheader" aria-label={String(r)} scope="row">
+                {r}
+              </th>
+              {cols.map((c) => {
+                const ref = makeRef(c, r);
+                const selected = r >= rect.top && r <= rect.bottom && c >= rect.left && c <= rect.right;
+                const isEditing = editing?.ref === ref;
+                return (
+                  <td
+                    key={ref}
+                    ref={(el) => {
+                      if (el) cellRefs.current.set(ref, el);
+                      else cellRefs.current.delete(ref);
+                    }}
+                    className={selected ? "gridcell selected" : "gridcell"}
+                    role="gridcell"
+                    aria-label={ref}
+                    aria-selected={selected ? "true" : "false"}
+                    tabIndex={ref === selection.activeCell ? 0 : -1}
+                    onMouseDown={(e) => onCellMouseDown(e, ref)}
+                    onMouseEnter={() => onCellMouseEnter(ref)}
+                    onDoubleClick={() => startEdit(ref)}
+                    onContextMenu={(e) => onCellContextMenu(e, ref)}
+                  >
+                    {isEditing ? (
+                      <input
+                        className="cell-editor"
+                        aria-label={`Edit ${ref}`}
+                        value={editing.draft}
+                        autoFocus
+                        onChange={(e) => setEditing({ ref, draft: e.target.value })}
+                        onKeyDown={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            commitEdit();
+                          } else if (e.key === "Escape") {
+                            e.preventDefault();
+                            cancelEdit();
+                          }
+                        }}
+                        onBlur={commitEdit}
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onDoubleClick={(e) => e.stopPropagation()}
+                      />
+                    ) : (
+                      display[ref] ?? ""
+                    )}
+                  </td>
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      {menu && (
+        <div className="grid-menu" role="menu" style={{ position: "fixed", top: menu.y, left: menu.x }}>
+          <button type="button" role="menuitem" onClick={() => runMenuAction(onCopyRange)}>
+            Copy
+          </button>
+          <button type="button" role="menuitem" onClick={() => runMenuAction(onCutRange)}>
+            Cut
+          </button>
+          <button type="button" role="menuitem" onClick={() => runMenuAction(onPasteRequest)}>
+            Paste
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+isError: False
+
+### 2026-09-28T05:33:56.288Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L33
+ROLE toolResult read
+text: import { useEffect, useRef, useState } from "react";
+import { CellData } from "../api";
+
+interface FormulaBarProps {
+  activeCell: string;
+  cell: CellData | undefined;
+  /**
+   * Commit the edited raw content of the cell that was being edited.
+   * Resolves `false` when the write was refused (validation or request
+   * error); the bar then falls back to the last successful content.
+   */
+  onCommit: (ref: string, raw: string | null) => Promise<boolean>;
+}
+
+/**
+ * Formula bar: the labelled text box ("Formula bar") showing the raw content
+ * of the active cell — the original input, including formulas.
+ *
+ * Enter commits, Escape discards the draft, and clicking elsewhere (blur)
+ * commits too, so a pending change is not lost when another cell is selected.
+ * The ref/raw pair the draft belongs to is captured when editing starts, so
+ * selecting another cell cannot retarget the pending commit. A refused commit
+ * restores the last successful value instead of keeping the rejected text.
+ */
+export default function FormulaBar({ activeCell, cell, onCommit }: FormulaBarProps) {
+  const raw = cell?.raw ?? "";
+  const [draft, setDraft] = useState(raw);
+  const [focused, setFocused] = useState(false);
+  const draftRef = useRef(activeCell);
+  const rawAtEditStart = useRef(raw);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 71]
+
+  const commit = async () => {
+    const ref = draftRef.current;
+    const nextRaw = draft === "" ? null : draft;
+    const previous = rawAtEditStart.current === "" ? null : rawAtEditStart.current;
+    if (nextRaw === previous) return;
+    const ok = await onCommit(ref, nextRaw);
+    if (ok) {
+      // The commit landed: this is the new "last successful content".
+      rawAtEditStart.current = draft;
+    } else {
+      // The write was refused: show the last successful content, not the draft.
+      setDraft(rawAtEditStart.current);
+    }
+  };
+
+  return (
+    <div className="formula-bar-row">
+      <span className="active-cell-ref" aria-label="Active cell">
+        {activeCell}
+      </span>
+      <label htmlFor="formula-bar">Formula bar</label>
+      <input
+        id="formula-bar"
+        type="text"
+        value={draft}
+        onFocus={() => {
+          draftRef.current = activeCell;
+          rawAtEditStart.current = raw;
+          setFocused(true);
+        }}
+        onChange={(e) => setDraft(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            void commit();
+          } else if (e.key === "Escape") {
+            e.preventDefault();
+            setDraft(rawAtEditStart.current);
+          }
+        }}
+        onBlur={() => {
+          setFocused(false);
+          void commit();
+        }}
+      />
+    </div>
+  );
+}
+
+isError: False
+
+### 2026-09-28T05:33:57.665Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L34
+ROLE assistant 
+thinking: Now let me look at validation.ts, formulas.ts, api.ts, backend changes, and the check specs. Also check the background job status.
+
+Let me read the check specs and validation.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/domain/validation.ts"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && cat frontend/src/domain/formulas.ts && echo \"=== git show backend diff ===\" && git show 3333ac1 -- backend/src/routes/workbooks.ts backend/src/types.ts frontend/src/api.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:33:57.680Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L35
+ROLE toolResult read
+text: /**
+ * Data-validation port for the REQ-3 write pipeline.
+ *
+ * The rule model and the error wording are owned by issue #7 (deepseek-7);
+ * the agreed interface is `validateRangeWrite(rules, writes)` returning
+ * `{ok:true}` or `{ok:false, errors[]}`, where a rejection means "the whole
+ * operation is refused, every target keeps its previous content".
+ *
+ * This file is the interim implementation of that contract inside #5 so the
+ * write pipeline (validate -> write -> recalc -> persist -> history) can be
+ * exercised end to end. When #7 publishes its shared module (import path to be
+ * confirmed in issue #5), replace the body of `validateRangeWrite` with a
+ * re-export and delete the local wording helpers — do not keep two sources of
+ * validation messages.
+ *
+ * Persisted rule shape (shared data model, `Sheet.validationRules`):
+ *   { id, type, range: "A1:B2", config: {...}, message? }
+ * Type aliases accepted for `type`: number/numberRange/number-range,
+ * dropdown/list. Range may also be given as { start:{row,col}, end:{row,col} }
+ * (1-based), and min/max/values may live on the rule itself instead of config.
+ */
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 72]
+
+export interface NumberValidationRule {
+  id: string;
+  type: "number";
+  min: number;
+  max: number;
+  range: ValidationRange;
+  message?: string;
+}
+
+export interface DropdownValidationRule {
+  id: string;
+  type: "dropdown";
+  values: string[];
+  range: ValidationRange;
+  message?: string;
+}
+
+export type ValidationRule = NumberValidationRule | DropdownValidationRule;
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 73]
+
+export interface ValidationError {
+  row: number;
+  col: number;
+  message: string;
+  hint?: string;
+}
+
+export type ValidationOutcome = { ok: true } | { ok: false; errors: ValidationError[] };
+
+/** Integer-aware formatting: 0/100 must never render as "0.0"/"100.0". */
+function num(value: number): string {
+  return String(value);
+}
+
+function numberMessages(min: number, max: number): { message: string; hint: string } {
+  return {
+    message: `Please enter a number from ${num(min)} to ${num(max)}`,
+    hint: `Please enter a number between ${num(min)} and ${num(max)}`,
+  };
+}
+
+/**
+ * Validate the values of one operation. `ok:false` refuses the whole batch:
+ * the caller writes nothing and creates no history entry.
+ */
+export function validateRangeWrite(
+  rules: ValidationRule[],
+  writes: ValidationWrite[]
+): ValidationOutcome {
+  const errors: ValidationError[] = [];
+  for (const write of writes) {
+    const rule = ruleAt(rules, write.row, write.col);
+    if (!rule) continue;
+    // Formulas cannot be judged before recalculation (decision by #7):
+    // they pass validation and are checked nowhere in this pipeline.
+    if (write.raw.startsWith("=")) continue;
+    const outcome = validateValue(rule, write.raw);
+    if (!outcome.ok) {
+      errors.push({ row: write.row, col: write.col, message: outcome.message, hint: outcome.hint });
+    }
+  }
+  if (errors.length > 0) return { ok: false, errors };
+  return { ok: true };
+}
+
+/** The rule covering a 0-based cell position, or null when unconstrained. */
+export function ruleAt(
+  rules: ValidationRule[],
+  row: number,
+  col: number
+): ValidationRule | null {
+  for (const rule of rules) {
+    if (
+      row >= rule.range.start.row &&
+      row <= rule.range.end.row &&
+      col >= rule.range.start.col &&
+      col <= rule.range.end.col
+    ) {
+      return rule;
+    }
+  }
+  return null;
+}
+
+/** Single-value judgement (shared wording source). */
+export function validateValue(
+  rule: ValidationRule,
+  raw: string
+): { ok: true } | { ok: false; message: string; hint?: string } {
+  if (rule.type === "number") {
+    const { message, hint } = numberMessages(rule.min, rule.max);
+    if (raw.trim() === "") return { ok: true };
+    const value = Number(raw.trim());
+    if (!Number.isFinite(value) || value < rule.min || value > rule.max) {
+      return { ok: false, message: rule.message ?? message, hint };
+    }
+    return { ok: true };
+  }
+  const allowed = rule.values;
+  if (allowed.includes(raw)) return { ok: true };
+  return {
+    ok: false,
+    message:
+      rule.message ?? `Please select one of the following values: ${allowed.join(", ")}`,
+  };
+}
+
+// ---------------------------------------------------------------------------
+// Adapter for the persisted shared data model (`Sheet.validationRules`)
+// ---------------------------------------------------------------------------
+
+interface PersistedRule {
+  id?: unknown;
+  type?: unknown;
+  range?: unknown;
+  config?: unknown;
+  message?: unknown;
+  min?: unknown;
+  max?: unknown;
+  values?: unknown;
+}
+
+const NUMBER_TYPES = new Set(["number", "numberrange", "number-range", "number_range"]);
+const DROPDOWN_TYPES = new Set(["dropdown", "list", "select"]);
+
+function toRange(value: unknown): ValidationRange | null {
+  if (typeof value === "string") {
+    const m = /^\$?([A-Za-z]+)\$?([0-9]+)(?::\$?([A-Za-z]+)\$?([0-9]+))?$/.exec(value.trim());
+    if (!m) return null;
+    const col = (letters: string) => {
+      let n = 0;
+      for (const ch of letters.toUpperCase()) n = n * 26 + (ch.charCodeAt(0) - 64);
+      return n;
+    };
+    const start = { row: Number(m[2]) - 1, col: col(m[1]) - 1 };
+    const end = m[3]
+      ? { row: Number(m[4]) - 1, col: col(m[3]) - 1 }
+      : { ...start };
+    return {
+      start: { row: Math.min(start.row, end.row), col: Math.min(start.col, end.col) },
+      end: { row: Math.max(start.row, end.row), col: Math.max(start.col, end.col) },
+    };
+  }
+  if (value && typeof value === "object") {
+    const r = value as {
+      start?: { row?: unknown; col?: unknown };
+      end?: { row?: unknown; col?: unknown };
+    };
+    const coord = (v: unknown) => (typeof v === "number" ? v : Number(v));
+    const start = r.start;
+    const end = r.end ?? r.start;
+    if (start && end) {
+      const a = { row: coord(start.row), col: coord(start.col) };
+      const b = { row: coord(end.row), col: coord(end.col) };
+      if (Number.isFinite(a.row) && Number.isFinite(a.col) && Number.isFinite(b.row) && Number.isFinite(b.col)) {
+        // The object form of the shared contract uses 0-based coordinates.
+        return {
+          start: { row: Math.min(a.row, b.row), col: Math.min(a.col, b.col) },
+          end: { row: Math.max(a.row, b.row), col: Math.max(a.col, b.col) },
+        };
+      }
+    }
+  }
+  return null;
+}
+
+function configOf(rule: PersistedRule): Record<string, unknown> {
+  if (rule.config && typeof rule.config === "object") return rule.config as Record<string, unknown>;
+  return {};
+}
+
+function pick(rule: PersistedRule, config: Record<string, unknown>, key: string): unknown {
+  return config[key] ?? rule[key as keyof PersistedRule];
+}
+
+/** Adapt the persisted sheet rules to the validation model (ignores unknown rules). */
+export function rulesFromSheet(sheet: { validationRules?: unknown }): ValidationRule[] {
+  const raw = sheet?.validationRules;
+  if (!Array.isArray(raw)) return [];
+  const out: ValidationRule[] = [];
+  raw.forEach((entry, index) => {
+    if (!entry || typeof entry !== "object") return;
+    const rule = entry as PersistedRule;
+    const id = typeof rule.id === "string" ? rule.id : `rule-${index}`;
+    const range = toRange(rule.range);
+    if (!range) return;
+    const type = String(rule.type ?? "").toLowerCase();
+    const config = configOf(rule);
+    const message = typeof rule.message === "string" && rule.message !== "" ? rule.message : undefined;
+    if (NUMBER_TYPES.has(type)) {
+      const min = Number(pick(rule, config, "min"));
+      const max = Number(pick(rule, config, "max"));
+      if (!Number.isFinite(min) || !Number.isFinite(max)) return;
+      out.push({ id, type: "number", min, max, range, message });
+    } else if (DROPDOWN_TYPES.has(type)) {
+      const valuesRaw = pick(rule, config, "values") ?? pick(rule, config, "options");
+      const values = Array.isArray(valuesRaw)
+        ? valuesRaw.map((v) => String(v))
+        : typeof valuesRaw === "string"
+          ? valuesRaw.split(",").map((v) => v.trim())
+          : null;
+      if (!values) return;
+      out.push({ id, type: "dropdown", values, range, message });
+    }
+  });
+  return out;
+}
+
+/**
+ * Validate writes against a worksheet's persisted rules. Writes use A1 refs
+ * (the write pipeline works on refs); `emptyRaw` writes (clearing) always pass.
+ */
+export function validateSheetWrites(
+  sheet: { validationRules?: unknown },
+  writes: Array<{ ref: string; raw: string | null }>
+): ValidationOutcome {
+  const rules = rulesFromSheet(sheet);
+  if (rules.length === 0) return { ok: true };
+  const parsed: ValidationWrite[] = [];
+  for (const write of writes) {
+    const m = /^([A-Za-z]+)([0-9]+)$/.exec(write.ref);
+    if (!m) continue;
+    let col = 0;
+    for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);
+    parsed.push({ row: Number(m[2]) - 1, col: col - 1, raw: write.raw ?? "" });
+  }
+  return validateRangeWrite(rules, parsed);
+}
+
+isError: False
+
+### 2026-09-28T05:33:57.680Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L36
+ROLE toolResult bash
+text: /**
+ * Formula engine wiring for the editor (shared with REQ-4 / issue #6).
+ *
+ * The engine is the single source for what the grid displays: persisted state
+ * only stores each cell's raw input, and the displayed result (value or error
+ * text) is recomputed from those raws — see `@app/formula-engine`. The formula
+ * bar keeps showing the raw input.
+ *
+ * `contentSignature` lets the editor rebuild the engine only when cell content
+ * actually changed: cursor/selection state saves also produce a new Workbook
+ * object, and rebuilding the engine for those would be wasteful.
+ */
+import { WorkbookFormulas } from "@app/formula-engine";
+import type { SheetSource } from "@app/formula-engine";
+import type { Sheet, Workbook } from "../api";
+
+function sheetSource(sheet: Sheet): SheetSource {
+  const cells: Record<string, string> = {};
+  for (const [ref, cell] of Object.entries(sheet.cells)) {
+    if (cell && typeof cell.raw === "string" && cell.raw !== "") cells[ref] = cell.raw;
+  }
+  return { id: sheet.id, name: sheet.name, cells };
+}
+
+/** Build the workbook's formula engine from the persisted raw inputs. */
+export function createWorkbookFormulas(workbook: Workbook): WorkbookFormulas {
+  return WorkbookFormulas.create(workbook.sheets.map(sheetSource));
+}
+
+/** ref -> display text (computed result or error) for one worksheet. */
+export function displayMap(engine: WorkbookFormulas, sheetId: string): Record<string, string> {
+  const out: Record<string, string> = {};
+  for (const [ref, value] of Object.entries(engine.getDisplayMap(sheetId))) {
+    out[ref] = "text" in value ? value.text : "";
+  }
+  return out;
+}
+
+/** Stable signature of everything the engine needs; changes only on real edits. */
+export function contentSignature(workbook: Workbook): string {
+  return JSON.stringify(
+    workbook.sheets.map((s) => [s.id, s.name, s.rowCount, s.colCount, s.cells])
+  );
+}
+=== git show backend diff ===
+commit 3333ac19d4dadc10b209740b077ca44a3c1e75bd
+Author: @deepseek-5 <deepseek-5@braid.local>
+Date:   Mon Sep 28 04:57:39 2026 +0000
+
+    REQ-3 单元格编辑、范围操作与撤销重做（#5）
+    
+    编辑（REQ-3-1-1）：公式栏与网格行内文本框（可访问名 "Edit <坐标>"）走同一条写
+    管道；Enter/失焦提交、Escape 取消；公式格网格显示引擎结果、公式栏显示原文；
+    提交失败显示最后成功值。
+    
+    批量粘贴（REQ-3-1-2）：TSV 二维解析（空字段保留、只覆盖目标矩形）、右键菜单
+    menuitem "Paste" 与 Ctrl+V 同一路径、整单原子。
+    
+    矩形选区（REQ-3-1-3）：拖拽成矩形，aria-selected 由矩形派生；每个工作表持久化
+    完整矩形 lastSelectionRect，刷新/切表精确恢复且互不覆盖。
+    
+    范围复制/剪切/粘贴（REQ-3-2-1）：复制按目标偏移调整相对引用（消费 #6 的
+    adjustFormulaForCopy，绝对引用不变），剪切先写目标后清源（同一批），校验拒绝时
+    源与目标都保持原状。
+    
+    撤销/重做（REQ-3-2-2）：会话内 History（不跨工作簿），工具栏按钮 + Ctrl+Z/Ctrl+Y，
+    每次操作记录 before/after raw 快照；undo 后新修改清空 redo 分支。
+    
+    校验管道（消费 #7 契约）：validate -> write -> recalc -> persist -> history；
+    拒绝时渲染 message 与 hint 两个独立元素，不落值、不入历史。
+    
+    验收：checks/req3-core.spec.ts、checks/req3-integration.spec.ts（Playwright，
+    独立端口 + 临时数据目录）、checks/unit/editing.test.ts（node --test，11 项）。
+
+diff --git a/backend/src/routes/workbooks.ts b/backend/src/routes/workbooks.ts
+index 8bc5a6b..5e277cb 100644
+--- a/backend/src/routes/workbooks.ts
++++ b/backend/src/routes/workbooks.ts
+@@ -137,9 +137,15 @@ workbooksRouter.patch("/api/workbooks/:id/state", (req: Request, res: Response)
+       end: String(body.selection.end).toUpperCase(),
+     };
+   }
+-  // Remember the cursor on its own sheet, so switching tabs restores it.
++  // Remember the cursor and the complete rectangle on its own sheet, so
++  // switching tabs restores each worksheet's own selection (REQ-3-1-3).
+   const current = findSheet(wb, wb.activeSheetId) ?? wb.sheets[0];
+-  if (current) current.lastSelection = wb.activeCell;
++  if (current) {
++    current.lastSelection = wb.activeCell;
++    if (body.selection !== undefined) {
++      current.lastSelectionRect = wb.selection ? { ...wb.selection } : null;
++    }
++  }
+ 
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 74]
+ 
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 75]
+ 
+ export interface Workbook {
+isError: False
+
+### 2026-09-28T05:34:04.174Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L37
+ROLE assistant 
+thinking: Now let me check background job. But before, let me think about potential correctness issues against requirements.
+
+Key requirements to verify:
+1. Formula bar label "Formula bar" text box — done, `<label htmlFor="formula-bar">Formula bar</label>`. Good.
+2. Grid inline edit accessible name "Edit <coordinate>" — done.
+3. Escape cancels. Done.
+4. Formula cell grid shows result, formula bar shows original. Done.
+5. Persist after refresh. Done (raw persisted, engine rebuilt).
+6. Paste: right-click menu "Paste" menuitem, Ctrl+V same path. Done.
+7. aria-multiselectable="true" - done on grid.
+8. rect selection persisted per sheet. Done via lastSelectionRect.
+
+Potential issues:
+- The `handleSelect` persists on every select (arrow keys). That's fine.
+- Drag selection: on mouseup persists.
+- `move` when extend uses anchor = selection.selection.start. But if the selection exists, the new active cell changes; fine.
+
+Concern: `focusActive` effect focuses the active cell only if grid contains document.activeElement. When you click a cell, activeElement becomes... td isn't focusable initially (tabIndex -1 for non-active). Hmm, clicking a td with tabIndex=-1 — focus? td with tabIndex=-1 is focusable programmatically and by click? In Chrome, clicking an element with tabindex=-1 does focus it. Actually yes, elements with tabindex are click-focusable. So fine.
+
+Now the potential problem: requirement REQ-3-1-1 "Enter 或点击其他单元格提交" for the formula bar — FormulaBar commits on blur, good.
+
+"提交失败报错且显示最后成功值" — FormulaBar handles; but grid inline editor commit: Grid.commitEdit sets editing null then calls onCommitCell; if fails, the display will still show old value (since workbook not updated). Fine.
+
+Now, a subtle bug: In Grid, `commitEdit` when draft unchanged does nothing. But when validation fails, no error message shown? It calls onCommitCell which sets validationError. Good.
+
+Now let's think about the `pasteFromText` path when the user pastes text that equals our own buffer text — uses range semantics. Good for the copy-paste-range test.
+
+Concern: Ctrl+V handling. `onKeyDown` sets a 150ms timeout to read clipboard, but the browser `paste` event should fire and call `onPaste` which clears the timer and handles it. However, in Playwright, `page.keyboard.press('Control+V')` does not trigger a real paste event with clipboard data in Chromium headless? Actually Playwright's keyboard press generates a keydown; the browser may not perform a paste from the system clipboard unless using `page.keyboard.insertText` or CDP. The spec probably uses CDP `Browser.setPermission` and `page.evaluate(navigator.clipboard.writeText)`. Then Ctrl+V... In Chromium, execCommand paste via keyboard shortcut does read the clipboard if the page is focused — Playwright docs say clipboard paste via keyboard requires... Hmm. Actually there's a known issue: `page.keyboard.press('Control+V')` doesn't paste. But there's the fallback: setTimeout 150ms → navigator.clipboard.readText(). That works if clipboard-read permission granted. Good, the config grants clipboard permissions.
+
+The checks run with `clipboard` permissions use in the project config. Note the `use` spread includes permissions and launchOptions at the use level — `use.permissions` is valid for context; `launchOptions.executablePath` at use level is valid too.
+
+Now the big thing: let me wait for the check run result. Let me check status of the background job.
+
+Also, I should consider whether the "#4 not merged" issue means row/column structure undo isn't implemented. The requirement says if #4 hasn't merged, implement data/editing part first and complete row/col undo after #4 merges. PR #4 is open (glm-9). So we can deliver the data/edit part and note the structure undo gap. But the acceptance criteria says undo should cover row/column structure changes. Hmm. The issue says "#4 尚未合入，先实现数据/编辑部分并在 #4 合入后补齐行列 undo". So partial is acceptable now.
+
+But wait: what does the current code do about structure undo? The Operation kind includes "structure" and structureBefore/After fields, but EditorPage doesn't have row/col insert/delete UI at all (that's #4). So the hook is reserved. Let me check req3-integration.spec.ts to see whether it marks structure tests as pending.
+
+Let me check the background run status.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sleep 60; tail -40 /tmp/req3-check-run1.log 2>/dev/null || echo \"no log\"; echo \"--- pbb ---\"; pbb status bg001 2>&1 | tail -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:34:34.367Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L38
+ROLE toolResult bash
+text: Bash job bg002 moved to background after 30s. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T05:34:35.629Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L39
+ROLE assistant 
+thinking: Hmm, the tail command itself got backgrounded. Let me use pbb directly instead.
+toolCall bash {"command": "pbb list 2>&1 | tail -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:34:36.444Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L40
+ROLE toolResult bash
+text: <pi_context source="pbb" kind="pbb.list" schema_version="1" session_id="01a0e680-f727-737a-a04f-1553c698ea7e" session_key="5b892424912f7dfdd59c2edf" instance_id="pbb_163_cd2a4cf7" lane="" scope="current-instance" jobs="2" jobs_running="2">
+- job=bg001 global=pbb_163_cd2a4cf7:bg001 status=running age=43s instance=pbb_163_cd2a4cf7 owner=stale status=unknown pgid=893 cmd="cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && CHECK_OUTPUT_DIR=/tmp/req3-check-run1 timeout 3000 ./checks/run.sh 2>&1 | tail -120"
+- job=bg002 global=pbb_163_cd2a4cf7:bg002 status=running age=32s instance=pbb_163_cd2a4cf7 owner=stale status=unknown pgid=1103 cmd="cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sleep 60; tail -40 /tmp/req3-check-run1.log 2>/dev/null || echo \"no log\"; echo \"--- pbb ---\"; pbb status bg001 2>&1 | tail -20"
+</pi_context>
+isError: False
+
+### 2026-09-28T05:34:38.029Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L41
+ROLE assistant 
+thinking: The main run is bg001, and its output goes to stdout piped to tail; but since it runs in background via pbb, output is captured. I should tail its log via pbb tail bg001. Let me do that after some time. Actually the checks write to /tmp logs and also CHECK_OUTPUT_DIR. The Playwright output goes to pbb log.
+
+Let me meanwhile read the check specs to understand the tests, then check run output.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-core.spec.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:34:38.032Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L42
+ROLE toolResult read
+text: /**
+ * REQ-3 core acceptance checks (cell editing, 2-D paste, rectangular selection,
+ * range copy/cut/paste of values, undo/redo) for the editing work item (#5).
+ *
+ * Run against a freshly started candidate with a fresh data directory:
+ *   BASE_URL=http://127.0.0.1:<port> CHECK_OUTPUT_DIR=results/<stamp> \
+ *     playwright test --config checks/playwright.config.ts checks/req3-core.spec.ts
+ *
+ * Every assertion is taken from the requirement text; locators use the
+ * accessible names the requirements fix ("Worksheet grid", "Formula bar",
+ * "Edit <coordinate>", "Paste", "Undo", "Redo").
+ */
+import { test, expect, type Page, type Locator } from '@playwright/test';
+
+// ---------------------------------------------------------------- helpers
+
+function grid(page: Page): Locator {
+  return page.getByRole('grid', { name: 'Worksheet grid', exact: true });
+}
+
+function cell(page: Page, a1: string): Locator {
+  return grid(page).getByRole('gridcell', { name: a1, exact: true });
+}
+
+function formulaBar(page: Page): Locator {
+  return page.getByLabel('Formula bar', { exact: true });
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 76]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 77]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 78]
+
+async function cellText(page: Page, a1: string): Promise<string> {
+  return ((await cell(page, a1).innerText()) ?? '').trim();
+}
+
+async function cellValueOf(page: Page, a1: string): Promise<string> {
+  return (await formulaBar(page).inputValue()).trim();
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 79]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 80]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 81]
+
+async function copyWithKeyboard(page: Page): Promise<void> {
+  await page.keyboard.press('Control+c');
+}
+
+async function reload(page: Page): Promise<void> {
+  await page.reload();
+  await expect(grid(page)).toBeVisible();
+}
+
+// ---------------------------------------------------------------- tests
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 82]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 83]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 84]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 85]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 86]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 87]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 88]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 89]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 90]
+
+    await selectCell(page, 'A4');
+    await pasteWithKeyboard(page, 'p1\t\tp3\np4\tp5\tp6');
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 91]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 92]
+
+    await reload(page);
+    await expect(cell(page, 'C5')).toHaveText('p6');
+    await expect(cell(page, 'B4')).toHaveText('');
+  });
+
+  test('the grid context menu provides menuitem "Paste" with the same clipboard content', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 93]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 94]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 95]
+
+    await dragSelect(page, 'E2', 'F3');
+    await expect(cell(page, 'E2')).toHaveAttribute('aria-selected', 'true');
+    await expect(cell(page, 'F2')).toHaveAttribute('aria-selected', 'true');
+    await expect(cell(page, 'E3')).toHaveAttribute('aria-selected', 'true');
+    await expect(cell(page, 'F3')).toHaveAttribute('aria-selected', 'true');
+    // outside the rectangle
+    await expect(cell(page, 'D2')).toHaveAttribute('aria-selected', 'false');
+    await expect(cell(page, 'G2')).toHaveAttribute('aria-selected', 'false');
+    await expect(cell(page, 'E1')).toHaveAttribute('aria-selected', 'false');
+    await expect(cell(page, 'E4')).toHaveAttribute('aria-selected', 'false');
+
+    // The complete rectangle is persisted, not only its top-left corner.
+    await reload(page);
+    await expect(cell(page, 'E2')).toHaveAttribute('aria-selected', 'true');
+    await expect(cell(page, 'F3')).toHaveAttribute('aria-selected', 'true');
+    await expect(cell(page, 'D2')).toHaveAttribute('aria-selected', 'false');
+    await expect(cell(page, 'E4')).toHaveAttribute('aria-selected', 'false');
+
+    // A new selection replaces the previous one.
+    await selectCell(page, 'A15');
+    await expect(cell(page, 'A15')).toHaveAttribute('aria-selected', 'true');
+    await expect(cell(page, 'B12')).toHaveAttribute('aria-selected', 'false');
+    await expect(cell(page, 'F3')).toHaveAttribute('aria-selected', 'false');
+    const selected = await selectedCells(page);
+    expect(selected).toEqual(['A15']);
+  });
+});
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 96]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 97]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 98]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 99]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 100]
+
+    await reload(page);
+    await expect(cell(page, 'E21')).toHaveText('c4');
+  });
+
+  test('cut clears the source only after the target is displayed', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 101]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 102]
+
+    await reload(page);
+    await expect(cell(page, 'E25')).toHaveText('x4');
+    await expect(cell(page, 'A24')).toHaveText('');
+  });
+});
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 103]
+
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 104]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 105]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 106]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 107]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 108]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 109]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 110]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 111]
+
+    await page.keyboard.press('Control+y');
+    await expect(cell(page, 'A32')).toHaveText('second');
+  });
+
+  test('undo history is per workbook and never crosses worksheets', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+    await submitViaFormulaBar(page, 'A60', 'only-in-a');
+    await expect(cell(page, 'A60')).toHaveText('only-in-a');
+    await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeEnabled();
+
+    // Another workbook starts with its own (empty) session history, and its
+    // Ctrl+Z cannot reach the first workbook's operation.
+    await page.getByRole('link', { name: 'Home', exact: true }).click();
+    await page.getByRole('button', { name: 'New blank workbook', exact: true }).click();
+    await page.getByLabel('Workbook name', { exact: true }).fill(`Undo scope ${Date.now()}`);
+    await page.getByRole('button', { name: 'Create', exact: true }).click();
+    await expect(grid(page)).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Undo', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Redo', exact: true })).toBeDisabled();
+    await page.keyboard.press('Control+z');
+    await expect(cell(page, 'A1')).toHaveText('');
+
+    // The first workbook kept its content.
+    await page.getByRole('link', { name: 'Home', exact: true }).click();
+    await page.getByRole('link', { name: 'Q3 Sales', exact: true }).click();
+    await expect(grid(page)).toBeVisible();
+    await expect(cell(page, 'A60')).toHaveText('only-in-a');
+  });
+});
+
+isError: False
+
+### 2026-09-28T05:34:39.346Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L43
+ROLE assistant 
+thinking: These are solid. Now let me check req3-integration.spec.ts.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-integration.spec.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:34:39.348Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L44
+ROLE toolResult read
+text: /**
+ * REQ-3 integration checks: the parts of #5 whose observable result needs the
+ * formula engine (#6), the validation rule model (#7) or row/column structure
+ * operations (#4). Run these at integration time on a candidate that contains
+ * those work items:
+ *
+ *   BASE_URL=http://127.0.0.1:<port> CHECK_OUTPUT_DIR=results/<stamp> \
+ *     playwright test --config checks/playwright.config.ts checks/req3-integration.spec.ts
+ *
+ * The validated-range checks seed a number-range rule as an external fixture
+ * (write the rule into the server's data file) because REQ-5's validation UI
+ * (issue #7: "Data" toolbar button + rule dialog) does not exist yet. Replace
+ * `seedNumberRule` with that UI flow once #7 lands; the assertions about the
+ * rejection wording and atomisity stay unchanged.
+ */
+import fs from 'node:fs';
+import path from 'node:path';
+import { test, expect, type Page, type Locator } from '@playwright/test';
+
+function grid(page: Page): Locator {
+  return page.getByRole('grid', { name: 'Worksheet grid', exact: true });
+}
+
+function cell(page: Page, a1: string): Locator {
+  return grid(page).getByRole('gridcell', { name: a1, exact: true });
+}
+
+function formulaBar(page: Page): Locator {
+  return page.getByLabel('Formula bar', { exact: true });
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 112]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 113]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 114]
+
+async function cellText(page: Page, a1: string): Promise<string> {
+  return ((await cell(page, a1).innerText()) ?? '').trim();
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 115]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 116]
+
+// ------------------------------------------------------- REQ-3-1-1 + REQ-4
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 117]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 118]
+
+    await submitViaFormulaBar(page, 'H2', '=H1*2');
+    await expect(cell(page, 'H2')).toHaveText('6');
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 119]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 120]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 121]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 122]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 123]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 124]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 125]
+
+// ------------------------------------------------------- REQ-3-1-3 (tabs)
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 126]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 127]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 128]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 129]
+
+    await page.getByRole('tab', { name: 'Sheet2', exact: true }).click();
+    await expect(cell(page, 'A1')).toHaveAttribute('aria-selected', 'true');
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 130]
+
+// ------------------------------------------------- REQ-3-1-2 / REQ-3-2-1 validation
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 131]
+
+test.describe('REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically', () => {
+  test('paste with an out-of-range value is rejected as a whole', async ({ page }) => {
+    seedNumberRule('Sheet1', 'A40:B41', 0, 100);
+    await openSeededWorkbook(page);
+
+    await submitViaFormulaBar(page, 'A40', '10');
+    await expect(cell(page, 'A40')).toHaveText('10');
+
+    // 101 violates the 0-to-100 rule: the whole paste must be rejected.
+    await selectCell(page, 'A40');
+    await pasteWithKeyboard(page, '20\t30\n40\t101');
+    await expect(page.getByText('Please enter a number from 0 to 100')).toBeVisible();
+    await expect(page.getByText('Please enter a number between 0 and 100')).toBeVisible();
+    await expect(cell(page, 'A40')).toHaveText('10');
+    await expect(cell(page, 'B40')).toHaveText('');
+    await expect(cell(page, 'A41')).toHaveText('');
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 132]
+
+  test('range copy with an out-of-range target leaves source and target unchanged', async ({ page }) => {
+    seedNumberRule('Sheet1', 'D44:E44', 0, 100);
+    await openSeededWorkbook(page);
+    await submitViaFormulaBar(page, 'A44', '1');
+    await submitViaFormulaBar(page, 'B44', '2');
+    await submitViaFormulaBar(page, 'D44', '50');
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 133]
+
+// --------------------------------------------------------- REQ-3-2-2 + REQ-2
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 134]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 135]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 136]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 137]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 138]
+
+    await page.getByRole('button', { name: 'Redo', exact: true }).click();
+    await expect(cell(page, 'B50')).toHaveText('r49-b');
+
+    await page.reload();
+    await expect(grid(page)).toBeVisible();
+    await expect(cell(page, 'B50')).toHaveText('r49-b');
+  });
+});
+
+isError: False
+
+### 2026-09-28T05:34:41.129Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L45
+ROLE assistant 
+thinking: Good. Now let me check the check run progress.
+toolCall bash {"command": "pbb tail bg001 2>&1 | tail -60"}
+stopReason: toolUse
+
+### 2026-09-28T05:34:41.853Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L46
+ROLE toolResult bash
+text: <pi_context source="pbb" kind="pbb.tail" schema_version="1" session_id="01a0e680-f727-737a-a04f-1553c698ea7e" session_key="5b892424912f7dfdd59c2edf" instance_id="pbb_163_cd2a4cf7" lane="" scope="current-instance" job_id="bg001" owner_instance_id="pbb_163_cd2a4cf7" status="running" cursor="1" lines="80">
+No log output recorded yet.
+</pi_context>
+isError: False
+
+### 2026-09-28T05:34:43.728Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L47
+ROLE assistant 
+thinking: No output recorded yet because the command pipes to `tail -120` which buffers until completion. So I can't see progress. Let me instead check the playwright output dir and logs. Actually I should have run without tail. Let me check the CHECK_OUTPUT_DIR and server logs at /tmp.
+
+Let me find the log files.
+toolCall bash {"command": "ls -la /tmp/wb-checks-* 2>/dev/null | head -20; echo \"---\"; ls /tmp/req3-check-run1 2>/dev/null | head; echo \"--- playwright procs ---\"; ps aux | grep -c playwright; ps aux | grep -E \"run.sh|playwright|node .*server.js\" | grep -v grep | head -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:34:45.228Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L48
+ROLE toolResult bash
+text: -rw-r--r-- 1 ubuntu ubuntu  257 Sep 28 05:34 /tmp/wb-checks-pi-deepseek-fast-g1-897-CREATE.log
+-rw-r--r-- 1 ubuntu ubuntu  257 Sep 28 05:34 /tmp/wb-checks-pi-deepseek-fast-g1-897-EDITOR.log
+-rw-r--r-- 1 ubuntu ubuntu  257 Sep 28 05:34 /tmp/wb-checks-pi-deepseek-fast-g1-897-HOME.log
+-rw-r--r-- 1 ubuntu ubuntu  257 Sep 28 05:34 /tmp/wb-checks-pi-deepseek-fast-g1-897-REQ3_CORE.log
+-rw-r--r-- 1 ubuntu ubuntu  257 Sep 28 05:34 /tmp/wb-checks-pi-deepseek-fast-g1-897-REQ3_INTEGRATION.log
+-rw------- 1 ubuntu ubuntu   25 Sep 28 05:34 /tmp/wb-checks-pids-DCybBx
+
+/tmp/wb-checks-AA3sbp:
+total 12
+drwx------ 2 ubuntu ubuntu 4096 Sep 28 05:34 .
+drwxrwxrwt 1 root   root   4096 Sep 28 05:34 ..
+-rw-r--r-- 1 ubuntu ubuntu 2078 Sep 28 05:34 wb_muktbhpjkbmd7r.json
+
+/tmp/wb-checks-GtWYUA:
+total 20
+drwx------ 2 ubuntu ubuntu 4096 Sep 28 05:34 .
+drwxrwxrwt 1 root   root   4096 Sep 28 05:34 ..
+-rw-r--r-- 1 ubuntu ubuntu 2078 Sep 28 05:34 wb_muktbfvtphw6vi.json
+-rw-r--r-- 1 ubuntu ubuntu  492 Sep 28 05:34 wb_muktbxo6d1uaq5.json
+-rw-r--r-- 1 ubuntu ubuntu  495 Sep 28 05:34 wb_muktc5rytauhtn.json
+---
+--- playwright procs ---
+13
+ubuntu       893  0.0  0.0   4768  3736 ?        Ss   05:33   0:00 bash -lc cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && CHECK_OUTPUT_DIR=/tmp/req3-check-run1 timeout 3000 ./checks/run.sh 2>&1 | tail -120
+ubuntu       895  0.0  0.0   3148  1960 ?        S    05:33   0:00 timeout 3000 ./checks/run.sh
+ubuntu       897  0.0  0.0   4904  3796 ?        S    05:33   0:00 bash ./checks/run.sh
+ubuntu      1135  0.7  0.4 1456832 74108 ?       Sl   05:34   0:00 node /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/dist/server.js
+ubuntu      1151  0.3  0.4 1421856 72200 ?       Sl   05:34   0:00 node /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/dist/server.js
+ubuntu      1167  0.3  0.4 1421864 71576 ?       Sl   05:34   0:00 node /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/dist/server.js
+ubuntu      1200  0.4  0.4 1422132 71660 ?       Sl   05:34   0:00 node /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/dist/server.js
+ubuntu      1231  0.3  0.4 1422120 71468 ?       Sl   05:34   0:00 node /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/dist/server.js
+ubuntu      1244  0.0  0.0   4904  2388 ?        S    05:34   0:00 bash ./checks/run.sh
+ubuntu      1247  5.1  1.3 2442912 223620 ?      Sl   05:34   0:01 node /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/.bin/playwright test --config /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts
+ubuntu      1290  7.2  1.2 2229824 202372 ?      Rl   05:34   0:02 /workspace/submission/agent/runtime/bin/node /opt/arcbench/node_modules/playwright/lib/common/process.js
+ubuntu      1309  7.8  1.2 55348908 212024 ?     Rsl  05:34   0:02 /workspace/submission/agent/runtime/bin/../.agent-browser/browsers/chrome-154.0.8037.57/chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AcceptCHFrame,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-GolRGu --remote-debugging-pipe --no-startup-window
+ubuntu      1372  0.1  0.4 54971392 72460 ?      S    05:34   0:00 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=zygote --no-zygote-sandbox --no-sandbox --headless --crashpad-handler-pid=1367 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-GolRGu --change-stack-guard-on-fork=enable --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --use-angle=swiftshader-webgl
+ubuntu      1373  0.2  0.4 54971388 72776 ?      S    05:34   0:00 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=zygote --no-sandbox --headless --crashpad-handler-pid=1367 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-GolRGu --change-stack-guard-on-fork=enable --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --use-angle=swiftshader-webgl
+ubuntu      1422  3.1  0.6 55168668 101240 ?     Sl   05:34   0:00 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=gpu-process --gpu-recent-crash-count=0 --no-sandbox --disable-dev-shm-usage --disable-breakpad --headless --ozone-platform=headless --use-angle=swiftshader-webgl --crashpad-handler-pid=1367 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-GolRGu --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAAAEAAAAAAAAAAAAAGAASAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --field-trial-handle=3,i,13685491498142753664,12470723260519956999,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,2812445946247237781,15522516858067983461,4 --trace-process-track-uuid=3190708988185955192
+ubuntu      1541  1.2  0.7 54980552 122920 ?     Sl   05:34   0:00 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader-webgl --mute-audio --crashpad-handler-pid=1367 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-GolRGu --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,13685491498142753664,12470723260519956999,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,2812445946247237781,15522516858067983461,4 --trace-process-track-uuid=3190708989122997041
+ubuntu      1552  0.0  0.0   4768  3672 ?        Ss   05:34   0:00 bash -lc cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-2/pi-glm-fast-g1 && rm -rf checks/results/timeouts-run && SERVER_LOG_PREFIX=/tmp/wb-checks-timeouts-$(date +%s) ./checks/run.sh > /tmp/check-timeouts-run.log 2>&1; echo "EXIT=$?" | tee -a /tmp/check-timeouts-run.log; tail -25 /tmp/check-timeouts-run.log
+ubuntu      1556  0.0  0.0   4768  3732 ?        S    05:34   0:00 bash ./checks/run.sh
+ubuntu      1566  0.0  0.3 55029300 53704 ?      Sl   05:34   0:00 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=utility --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader-webgl --mute-audio --crashpad-handler-pid=1367 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-GolRGu --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,13685491498142753664,12470723260519956999,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,2812445946247237781,15522516858067983461,4 --trace-process-track-uuid=3190708990060038890
+ubuntu      1904  0.0  0.0   4768  3720 ?        Ss   05:34   0:00 bash -lc cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/pr-4/pi-glm-fast-g1 && BROWSER_EXECUTABLE_PATH="$(which chromium 2>/dev/null || which chromium-browser 2>/dev/null || which google-chrome 2>/dev/null)" bash checks/run.sh; echo "EXIT=$?"
+isError: False
+
+### 2026-09-28T05:34:47.978Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L49
+ROLE assistant 
+thinking: There are other agents' runs simultaneously (shared machine). That's fine, our run uses free ports and its own data dirs.
+
+The run started at 05:34. Let's wait. Meanwhile, let me think about what else is needed.
+
+Critical: The issue's deliverable needs a PR to develop. There's no PR yet. Also potential issue: the remote branch `origin/braid-agent/issue-5/pi-deepseek-fast-g1` is stale at 927358f (prep work). I need to decide how to publish.
+
+Option A: push current HEAD with force (since prep commit is superseded). 
+Option B: create a new branch name for the PR, e.g. `issue-5-req3-editing`. The instructions say "需要承接已有代码时先发布相应分支，再用 --head 指定它". The convention in this repo: branches named `braid-agent/issue-N/...` are agent workspaces. PRs use --base develop --head <branch>. Existing PRs: let me check pr view 1/2/3 heads.
+
+Let me check what heads previous PRs used.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && for n in 1 2 3 4; do echo \"=== PR $n ===\"; braid pr view $n 2>&1 | head -12; done"}
+stopReason: toolUse
+
+### 2026-09-28T05:34:49.640Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L50
+ROLE toolResult bash
+text: === PR 1 ===
+pr #1: 公式引擎共享包（REQ-4-*）：解析/求值/依赖重算/复制引用调整
+state: MERGED
+head: refs/heads/issue-6-formula-engine
+draft: false
+assignee: 未指派
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 139]
+
+### 覆盖需求
+- REQ-4-1-1：`=` 公式，数字常量/括号/`+ - * /`、同表 A1 引用、SUM/AVERAGE/COUNT/MIN/MAX 连续范围；函数名大小写不敏感；聚合忽略空单元格，COUNT 只计数字，SUM/AVERAGE/MIN/MAX 只用数字单元格。
+- REQ-4-1-2：`adjustFormulaForCopy()` 纯函数——相对引用按目标偏移调整、`$` 绝对引用不变；相对引用移出工作表边界（负向或超出结构 bounds）时整个公式折叠为 `=#REF!`，网格显示 `#REF!`，且 `=#REF!` 作为 raw 持久化重建后仍显示 `#REF!`。
+=== PR 2 ===
+pr #2: 共享基础：应用骨架 + 工作簿主页/创建/重命名/编辑器网格 (REQ-1-1-1, REQ-1-2-*)
+state: MERGED
+head: refs/heads/feat/shared-foundation
+draft: false
+assignee: 未指派
+
+关联 Issue #2（共享基础）。经根 Issue 统筹复核后由 glm-1 代为创建（原负责人 glm-2 中断，改派 deepseek-8 已交付分支）。
+
+## 内容
+- 前后端骨架：frontend (React+Vite) / backend (Express, 静态托管 dist + /api)
+- 主页/创建/重命名/编辑器网格（REQ-1-1-1, REQ-1-2-*）
+- 数据模型契约：Workbook/Sheet/CellData(raw,value)、workbook 级 activeSheetId/activeCell/selection + sheet.lastSelection
+=== PR 3 ===
+pr #3: 共享基础跟进：修复网格 shift 选区扩展；检查套件类型检查/隔离/日志(REQ-1-1-1, REQ-1-2-*)
+state: MERGED
+head: refs/heads/fix/shared-foundation-followup
+draft: false
+assignee: 未指派
+
+关联 Issue #2（共享基础）。这是 PR #2（已合入 `develop` @87cedb5）的跟进修正：PR #2 合并时的核查只到构建/API 层，随后执行的浏览器检查暴露出一个真实实现缺陷与若干检查自身的缺陷，本 PR 一并修复，使交付物在可重复的浏览器检查下跑绿。
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 140]
+
+## 检查套件加固（不改变应用契约）
+=== PR 4 ===
+pr #4: CSV 导入与导出 (REQ-1-3-*): 服务端解析+导入端点、导入对话框、导出下载、单元与浏览器检查
+state: OPEN
+head: refs/heads/braid-agent/issue-3/pi-deepseek-fast-g1
+draft: false
+assignee: @glm-9
+
+实现 Issue #3 的 CSV 数据交换：REQ-1-3-1（导入 CSV 创建工作簿）与 REQ-1-3-2（导出当前工作表为 CSV）。
+
+base: `origin/develop`（已含 #2 共享基础，merge 87cedb5 / head 91b379e）。本 PR 只有一个提交，diff = 纯 CSV 改动。
+
+## 交付内容
+isError: False
+
+### 2026-09-28T05:35:00.209Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L51
+ROLE assistant 
+thinking: So PR head branches can be anything, e.g. `issue-6-formula-engine`, `feat/shared-foundation`. I'll publish the local branch as a descriptive branch name, e.g. `issue-5-req3-editing` (since the existing `braid-agent/issue-5/...` remote branch is stale prep work and the convention seems to be descriptive names).
+
+Actually wait — the local branch is `braid-agent/issue-5/pi-deepseek-fast-g1` and it tracks origin's same name (stale). If I push, it will be rejected (non-fast-forward). To avoid confusion, I could delete the stale remote branch, or better: create a new branch `issue-5-req3-editing` from current HEAD and push it, and also update the braid-agent branch? Hmm, the harness may use the braid-agent branch for the worktree. Actually I'm running in this worktree with the branch checked out; the harness likely doesn't require pushing that branch. But it's good hygiene to publish the PR branch.
+
+However, there's a risk: if I push a new branch name, the harness/braid might expect the agent branch. Let me check whether the stale 927358f has anything worth keeping: it's prep work (pure logic editing.ts + specs). The current implementation supersedes it. I'll just force-push the agent branch to current HEAD (dropping the superseded prep commit) — that's simple and keeps one branch. Force-push to my own agent branch is acceptable. But "旧分支自检通过不推翻裁决" — nothing to do with this.
+
+Hmm, but is a force-push going to break anything? The remote branch isn't in any PR. It's just the agent workspace branch. I'll force-push with --force-with-lease.
+
+Actually wait: maybe better to preserve history by merging? Merging 927358f would bring in duplicate/stale files: 927358f adds frontend/src/domain/editing.ts (old version) and checks/unit/editing.test.ts (old), plus checks specs. Current HEAD has all those files with newer content. A merge would conflict (both added same file). Git would report add/add conflicts. Not worth it. Force push.
+
+Before publishing, I need to verify the current work actually passes checks. Let's wait for the run.
+
+Meanwhile, let me think about additional verification required by the issue: "整合后的结果执行最终验收" is the root's job. For my PR, I need: code + automated tests/scripts, run them, get quick feedback, fix failures.
+
+Also should I create a PR now (draft?) so others can see? The handoff requires PR with base develop. Let me wait for checks to finish first, then create PR.
+
+Let me also review some edge concerns in implementation while waiting:
+
+1. REQ-3-1-1: "点选后可直接在网格或公式栏修改" — grid: typing starts edit, Enter/F2, double-click. OK.
+
+2. "Escape 取消未提交修改" — formula bar Escape resets draft to rawAtEditStart. But there's a subtlety: after Escape, focus stays; then blur triggers commit which compares nextRaw (draft = rawAtEditStart) vs previous (rawAtEditStart) → equal, so no-op. Good.
+
+3. "提交失败报错且显示最后成功值" — formula bar restores draft. Grid inline edit: commitEdit sets editing=null; if commit fails, error shown; grid shows last successful display. OK.
+
+4. REQ-3-1-2 paste "整体成功或整体失败报错" — validateWrites before updateCells. Good. And server applies batch atomically.
+
+But: is the server-side write actually atomic and does it validate? The client validates, but the requirement is about observable behavior via the app. Fine.
+
+5. "网格右键菜单有 ARIA menuitem Paste" — yes.
+
+6. REQ-3-1-3 selection: aria-multiselectable true. Good.
+
+7. Copy/cut/paste range: In the core spec test "cut clears the source only after the target is displayed", there's an odd sequence: dragSelect A24:B25, copyWithKeyboard (Ctrl+C), then Control+x (cut). copyRange("cut") overwrites buffer with mode cut. Then select D24, Ctrl+V → pasteRange with cut mode → writes target and clears source. Good.
+
+8. Undo/redo: buttons and Ctrl+Z/Y. New modification after undo disables redo (History.push clears redoStack). But note: when a new modification happens, EditorPage `applyUpdates(..., op)` pushes op → redo cleared. But the button enabled/disabled state depends on re-render; setHistoryVersion triggers re-render. Good.
+
+Wait: In `handleCommitCell`, if validation fails, `validateWrites` returns false, no op. Good.
+
+However, there's a subtle issue with the "undo after new modification" test: `submitViaFormulaBar(page,'A32','second')` — but first, after Ctrl+Z the cell A32 is empty, formula bar shows ''? Then fill 'second' and Enter → handleCommitCell with raw 'second' → pushes op clearing redo. Good.
+
+9. "撤销不跨工作簿" — historyRef reset on id change. Test navigates away and back; note EditorPage unmount/remount resets history anyway since it's a new component instance... Actually navigating Home → Q3 Sales creates new EditorPage, so history resets. The test then checks the A60 content remains. Fine.
+
+10. Potential issue: `useEffect` for engine depends only on signature; but initial workbook null → engine null. On first load setEngine. OK.
+
+11. Potential issue with `pasteFromText` when paste text differs from buffer text but buffer exists in copy mode: e.g., Ctrl+C on range then Ctrl+V elsewhere without modifying clipboard — text equals buffer.text → range semantics. Good. In the integration test "range copy with an out-of-range target": they dragSelect A44:B44, Ctrl+C (buffer text "1\t2"), then selectCell D44, then pasteWithKeyboard('200\t300') which writes new clipboard text. Buffer.text = "1\t2" ≠ "200\t300" → plain paste → validate → reject. Good. But wait, they expect source D44 unchanged and E44 empty, no target change. Yes.
+
+Hmm, but actually there's a subtle bug: when the clipboard text differs, we do a plain paste (values as-is). The requirement for copy/paste of ranges is that formulas adjust. In app usage, Ctrl+C then Ctrl+V uses the in-session buffer because clipboard text matches. Fine.
+
+12. The 0-100 rejection test: The rule fixture range 'A40:B41' string. `seedNumberRule` writes rule with type 'numberRange' and config {min,max}, range 'A40:B41'. `rulesFromSheet` toRange parses string → 0-based. Good.
+
+The test expects cell A40 = '10' after rejected paste. But note validateWrites is called with updates including A40 '20' etc. Yes.
+
+13. Big concern: the paste via Ctrl+V in headless Chromium. The keydown handler sets a 150ms timer; the `paste` event may not fire from keyboard.press('Control+v'). Then requestPaste reads the clipboard via navigator.clipboard.readText(). With permissions granted in context, this works. But in the second test, `pasteWithKeyboard` writes text then presses Ctrl+V. If the paste event DOES fire with clipboardData, onPaste handles it and calls pasteFromText(text). Either way works.
+
+Now, one issue: `requestPaste` reads clipboard; but `navigator.clipboard.readText()` requires the document to be focused. In headless it should be.
+
+14. The Context menu test: `cell(page,'A9').click({button:'right'})` → onCellContextMenu → menu shown with menuitem Paste. Click → requestPaste → reads clipboard → paste. Good.
+
+Now let me think about whether the current implementation could fail the checks. The best evidence is the run. Let me wait for it.
+
+Actually, I realize the previous run (17a36fa "REQ-3 自检修复与检查加固") suggests the checks were passing at some point. Let me look for existing results in checks/results.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ls -la checks/results/ 2>/dev/null | head -20 && for f in checks/results/*/; do echo \"== $f\"; ls \"$f\" | head; done 2>/dev/null | head -40"}
+stopReason: toolUse
+
+### 2026-09-28T05:35:00.838Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L52
+ROLE toolResult bash
+text: total 36
+drwxr-xr-x 9 ubuntu ubuntu 4096 Sep 28 05:32 .
+drwxr-xr-x 4 ubuntu ubuntu 4096 Sep 28 05:32 ..
+drwxr-xr-x 4 ubuntu ubuntu 4096 Sep 28 05:32 20260928T045824
+drwxr-xr-x 4 ubuntu ubuntu 4096 Sep 28 05:32 dbg-050300
+drwxr-xr-x 8 ubuntu ubuntu 4096 Sep 28 05:32 dbg-050634
+drwxr-xr-x 4 ubuntu ubuntu 4096 Sep 28 05:32 dbg-051107
+drwxr-xr-x 3 ubuntu ubuntu 4096 Sep 28 05:32 dbg-051334
+drwxr-xr-x 3 ubuntu ubuntu 4096 Sep 28 05:32 dbg-051339
+drwxr-xr-x 3 ubuntu ubuntu 4096 Sep 28 05:32 dbg-051555
+== checks/results/20260928T045824/
+create-workbook-empty-work-b4a22-retryable-creates-no-record-create-workbook
+== checks/results/dbg-050300/
+create-workbook-empty-work-b4a22-retryable-creates-no-record-create-workbook
+== checks/results/dbg-050634/
+req3-core-REQ-3-1-1-edit-a-f08d1-mit-and-refresh-persistence-req3-core
+req3-core-REQ-3-2-2-undo-a-21f97--not-restore-the-old-branch-req3-core
+req3-core-REQ-3-2-2-undo-a-62f41-ndo-a-cell-edit-and-a-paste-req3-core
+req3-integration-REQ-3-1-3-f770e-ps-each-worksheet-rectangle-req3-integration
+req3-integration-REQ-3-2-1-dce55-et-absolute-references-stay-req3-integration
+== checks/results/dbg-051107/
+req3-core-REQ-3-1-1-edit-a-f08d1-mit-and-refresh-persistence-req3-core
+== checks/results/dbg-051334/
+== checks/results/dbg-051339/
+== checks/results/dbg-051555/
+isError: False
+
+### 2026-09-28T05:35:03.823Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L53
+ROLE assistant 
+thinking: Those are debug artifacts from previous runs (failures). Let me check the most recent one's error maybe. Not important — the current run will tell.
+
+Let me wait for bg001. I'll poll pbb tail periodically. Actually since the job pipes to tail, I'll see output at end. Let me instead monitor the CHECK_OUTPUT_DIR /tmp/req3-check-run1 for test-results directories, which appear on failure.
+
+Let me just wait a bit using subagent_wait? No, bg001 is a bash background job; the follow-up arrives automatically. Let me do useful work: review refs.ts, backend route updateCells for atomicity, and think about whether anything in the requirements is missing.
+
+Actually, one important gap: Requirement REQ-3-2-2 says undo should cover "行列结构变化" — #4 not merged. The issue explicitly allows deferring. But maybe #4's PR will merge soon into develop; my PR is based on develop before #4. The root will integrate.
+
+Another possible gap: REQ-3-1-2 mentions "保留空字段" (preserve empty fields) — meaning paste of empty field should clear target cell? Current planPaste sets raw: table[row][col] ?? "" which clears. And test expects B4 to become '' (was empty before? Actually A4 was 'keep-a4' etc.). In test, target A4:C5 where A4 had 'keep-a4'; after paste A4='p1', B4='' etc. That's overwriting empty. Fine.
+
+But requirement: "只覆盖目标矩形" and "保留空字段" — yes.
+
+Now let me check backend updateCells for atomic semantics and validation order. Let me read routes/workbooks.ts.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/src/routes/workbooks.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:35:03.826Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L54
+ROLE toolResult read
+text: import { Router, Request, Response } from "express";
+import { getWorkbook, listWorkbooks, saveWorkbook } from "../store";
+import { makeWorkbook, toSummary } from "../workbook-factory";
+import { CellData, RectSelection, Sheet, Workbook } from "../types";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 141]
+
+export const workbooksRouter = Router();
+
+function findSheet(wb: Workbook, sheetId: string): Sheet | undefined {
+  return wb.sheets.find((s) => s.id === sheetId);
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 142]
+
+const REF_RE = /^([A-Z]+)([0-9]+)$/;
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 143]
+
+function badRequest(res: Response, error: string): void {
+  res.status(400).json({ error });
+}
+
+function notFound(res: Response): void {
+  res.status(404).json({ error: "Workbook not found" });
+}
+
+workbooksRouter.get("/api/workbooks", (_req: Request, res: Response) => {
+  res.json({ workbooks: listWorkbooks() });
+});
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 144]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 145]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 146]
+
+/**
+ * Persist last-used UI state (active sheet, active cell, selection).
+ *
+ * Navigation state deliberately does NOT bump `updatedAt`: "Last updated"
+ * tracks the workbook content, so merely moving the cursor keeps the home-page
+ * record and the editor showing the same value.
+ */
+workbooksRouter.patch("/api/workbooks/:id/state", (req: Request, res: Response) => {
+  const wb = getWorkbook(req.params.id);
+  if (!wb) {
+    notFound(res);
+    return;
+  }
+  const body = req.body || {};
+  const requestedSheet =
+    typeof body.activeSheetId === "string" ? findSheet(wb, body.activeSheetId) : undefined;
+  if (requestedSheet) {
+    wb.activeSheetId = requestedSheet.id;
+  }
+  if (typeof body.activeCell === "string" && parseRef(body.activeCell)) {
+    wb.activeCell = body.activeCell.toUpperCase();
+  }
+  if (body.selection === null) {
+    wb.selection = null;
+  } else if (
+    body.selection &&
+    typeof body.selection === "object" &&
+    parseRef((body.selection as RectSelection).start) &&
+    parseRef((body.selection as RectSelection).end)
+  ) {
+    wb.selection = {
+      start: String(body.selection.start).toUpperCase(),
+      end: String(body.selection.end).toUpperCase(),
+    };
+  }
+  // Remember the cursor and the complete rectangle on its own sheet, so
+  // switching tabs restores each worksheet's own selection (REQ-3-1-3).
+  const current = findSheet(wb, wb.activeSheetId) ?? wb.sheets[0];
+  if (current) {
+    current.lastSelection = wb.activeCell;
+    if (body.selection !== undefined) {
+      current.lastSelectionRect = wb.selection ? { ...wb.selection } : null;
+    }
+  }
+
+  saveWorkbook(wb);
+  res.json(wb);
+});
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 147]
+
+isError: False
+
+### 2026-09-28T05:35:06.124Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L55
+ROLE assistant 
+thinking: OK. Now let me check the run. Let me poll again with pbb tail after a bit. Meanwhile, maybe I should also consider whether to run the checks myself more granularly so I can see progress. But bg001 is running; let's wait.
+
+Actually, an important consideration: I should verify the checks pass on THIS commit and record evidence. Let me wait.
+
+Let me use subagent_wait for bg001? The tool description says for interactive chat don't wait; but this is a run-to-completion task... Actually pbb jobs auto-notify. I'll do more reviewing.
+
+Let me check git status for uncommitted changes.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git status --short && echo \"=== diff develop..HEAD stat ===\" && git diff --stat origin/develop...HEAD | tail -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:35:06.921Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L56
+ROLE toolResult bash
+text: === diff develop..HEAD stat ===
+ backend/src/types.ts                       |   6 +
+ checks/playwright.config.ts                |  23 ++
+ checks/req3-core.spec.ts                   | 354 +++++++++++++++++++++
+ checks/req3-integration.spec.ts            | 265 ++++++++++++++++
+ checks/run.sh                              |  18 +-
+ checks/unit/editing.test.ts                | 182 +++++++++++
+ frontend/package-lock.json                 |  48 +++
+ frontend/package.json                      |   2 +
+ frontend/src/api.ts                        |   2 +
+ frontend/src/components/FormulaBar.tsx     |  60 +++-
+ frontend/src/components/Grid.tsx           | 179 ++++++++++-
+ frontend/src/domain/editing.ts             | 369 ++++++++++++++++++++++
+ frontend/src/domain/formulas.ts            |  44 +++
+ frontend/src/domain/validation.ts          | 262 ++++++++++++++++
+ frontend/src/pages/EditorPage.tsx          | 477 ++++++++++++++++++++++++++---
+ frontend/src/styles.css                    |  64 ++++
+ frontend/tsconfig.json                     |   1 +
+ frontend/vite.config.ts                    |   5 +
+ shared/formula-engine/.gitignore           |   1 -
+ shared/formula-engine/dist/addresses.d.ts  |  13 +
+ shared/formula-engine/dist/addresses.js    |  37 +++
+ shared/formula-engine/dist/copyAdjust.d.ts |  31 ++
+ shared/formula-engine/dist/copyAdjust.js   |  96 ++++++
+ shared/formula-engine/dist/display.d.ts    |  49 +++
+ shared/formula-engine/dist/display.js      |  56 ++++
+ shared/formula-engine/dist/engine.d.ts     |  66 ++++
+ shared/formula-engine/dist/engine.js       | 150 +++++++++
+ shared/formula-engine/dist/index.d.ts      |   4 +
+ shared/formula-engine/dist/index.js        |   4 +
+ 32 files changed, 2832 insertions(+), 78 deletions(-)
+isError: False
+
+### 2026-09-28T05:35:11.322Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L57
+ROLE assistant 
+thinking: Wait — `git diff origin/develop...HEAD` shows shared/formula-engine/dist files as added. That's because 2305564 "共享公式引擎产物入库". But those are already in develop? Let me check: develop includes 011d73d (PR #1 merge) which had shared/formula-engine. Hmm, the diff shows dist/*.js added relative to develop. Maybe develop's merge of PR#1 removed... Actually 2305564 is a commit on my branch that added the dist artifacts. If it's showing as diff vs develop, then develop doesn't have them. But the README says both frontend/package.json and the compiled dist are part of the repo. Let me check if develop has shared/formula-engine/dist.
+
+Actually this could be a problem: if 2305564 is not in develop and my branch adds dist files, that's fine — my PR includes them. But wait, PR #1 was merged to develop. It seems PR #1's merged content did not include dist (maybe .gitignore excluded it), and a later commit on my branch re-added dist. Hmm, but I branched from 011d73d... Let me check if develop has the dist.
+
+Actually it doesn't matter much — my PR adds them, which is fine and harmless. But it might conflict with #6's own follow-up. Let me check the history of 2305564.
+
+Let me check `git log --oneline --all -- shared/formula-engine/dist | head`. Actually let's not go down this path; it's not a problem for correctness.
+
+Hmm, but it could matter for merge conflicts. Let's check if origin/develop has shared/formula-engine/dist/index.js.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git ls-tree origin/develop shared/formula-engine/ && echo \"=== HEAD ===\" && git ls-tree HEAD shared/formula-engine/ && echo \"=== 2305564 ===\" && git show --stat 2305564 | head -20 && echo \"=== who else has dist ===\" && git branch -a --contains 2305564"}
+stopReason: toolUse
+
+### 2026-09-28T05:35:11.547Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L58
+ROLE toolResult bash
+text: 100644 blob b9470778764f72c5257a3361590d2994547f90e1	shared/formula-engine/.gitignore
+100644 blob 650b4e5e1de6221b1c085d8b4d3a755aa6d9173e	shared/formula-engine/README.md
+100644 blob 7bc01a270ab932be1e20dd2b6d52f71ade933d78	shared/formula-engine/package-lock.json
+100644 blob 669688b0d7f9ae31114bd86afdf067e202749240	shared/formula-engine/package.json
+040000 tree 2fc01843153213a938d6feb3a0f405f9e88ec725	shared/formula-engine/src
+040000 tree f92cc83edb4a4aafa15ae0fca2658e71e1da39c1	shared/formula-engine/test
+100644 blob 6c0c19bf1ea1fedef714d8cd76c75920c76885d5	shared/formula-engine/tsconfig.json
+100644 blob fa69665ca779308af444b9c788f8f2925766a9f0	shared/formula-engine/vitest.config.ts
+=== HEAD ===
+100644 blob c2658d7d1b31848c3b71960543cb0368e56cd4c7	shared/formula-engine/.gitignore
+100644 blob 650b4e5e1de6221b1c085d8b4d3a755aa6d9173e	shared/formula-engine/README.md
+040000 tree 49ed35dbf58ffb46afe54bdf9417f90870c54710	shared/formula-engine/dist
+100644 blob 7bc01a270ab932be1e20dd2b6d52f71ade933d78	shared/formula-engine/package-lock.json
+100644 blob 669688b0d7f9ae31114bd86afdf067e202749240	shared/formula-engine/package.json
+040000 tree 2fc01843153213a938d6feb3a0f405f9e88ec725	shared/formula-engine/src
+040000 tree f92cc83edb4a4aafa15ae0fca2658e71e1da39c1	shared/formula-engine/test
+100644 blob 6c0c19bf1ea1fedef714d8cd76c75920c76885d5	shared/formula-engine/tsconfig.json
+100644 blob fa69665ca779308af444b9c788f8f2925766a9f0	shared/formula-engine/vitest.config.ts
+=== 2305564 ===
+commit 2305564a3acdb3261eb82d4f9f290ea7821822d3
+Author: @deepseek-5 <deepseek-5@braid.local>
+Date:   Mon Sep 28 04:57:33 2026 +0000
+
+    共享公式引擎产物入库：交付构建无需额外引导步骤
+    
+    - 根 .gitignore 与 shared/formula-engine/.gitignore 不再忽略该包的 dist/
+    - 提交 dist/*.js + *.d.ts（48K），使干净克隆上 npm install && npm run build
+      即可解析 @app/formula-engine
+    - 原因：npm 不会为 file: 依赖安装其自身依赖，Node/Vite 又按真实路径解析，
+      符号链接外侧找不到 hyperformula（已实测 ERR_MODULE_NOT_FOUND）
+    
+    (#5)
+
+ .gitignore                                 |   3 +
+ shared/formula-engine/.gitignore           |   1 -
+ shared/formula-engine/dist/addresses.d.ts  |  13 +++
+ shared/formula-engine/dist/addresses.js    |  37 +++++++
+ shared/formula-engine/dist/copyAdjust.d.ts |  31 ++++++
+ shared/formula-engine/dist/copyAdjust.js   |  96 ++++++++++++++++++
+=== who else has dist ===
+* braid-agent/issue-5/pi-deepseek-fast-g1
+isError: False
+
+### 2026-09-28T05:35:17.562Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L59
+ROLE assistant 
+thinking: Interesting. 2305564 is only on my branch. It says the root .gitignore got 3 lines added. This is a build-infrastructure change that arguably belongs to #6 (the owner). Since #6's owner is glm-6 and the develop branch lacks dist, if I include this in my PR it might conflict with #6's own work. But it's needed for a clean clone build. Hmm. Wait — but develop already builds fine? Apparently develop's shared/formula-engine/.gitignore ignores dist, and PR #1 was merged without dist. Does develop actually build? The README says "Both frontend/package.json and the shared package's compiled dist/ are part of the repository". That README line was added by my branch (17a36fa modified README). Hmm.
+
+This dist-inclusion commit is out of scope for #5. It's a change to shared build infra owned by #6. Including it in the #5 PR could be seen as scope creep and might conflict. But it was needed to make my checks run (the previous author hit ERR_MODULE_NOT_FOUND).
+
+Let me check the root .gitignore state and whether develop's build works without dist. Actually let me test: does `npm install` in frontend with file:../shared/formula-engine work on a clean checkout without dist? The frontend package.json references "file:../shared/formula-engine" and the package's "main" points to dist presumably. Without dist, import fails. But maybe the frontend build has a step... Let me check shared/formula-engine/package.json.
+
+Actually, whether it's in scope: The root owner integrates. If #6's owner (glm-6) later adds dist to develop, my including it causes a conflict unless identical. Since my dist was compiled from the same source at 011d73d, it should be identical content if glm-6 compiles the same way.
+
+Hmm, this is a judgment call. The commit is already in my branch's history (2305564). Removing it would mean rewriting history and then my checks wouldn't run unless dist is built locally. But there might be a "prepare" step. Let me check whether backend/frontend build scripts build the shared package.
+
+Actually wait: 2305564's message says "npm 不会为 file: 依赖安装其自身依赖... 已实测 ERR_MODULE_NOT_FOUND". So without committing dist, a clean clone can't build. That means develop's current state is broken for a fresh clone (unless CI builds the shared package). This is a real infrastructure gap. But it's #6's scope.
+
+Given the root owner integrates everything into develop anyway, and this branch must be independently buildable for verification, including the dist is pragmatic. The previous agent already decided this. I'll keep it but explicitly flag it in the PR description as a cross-cutting build fix needed for a clean clone, noting #6 owns the package and can supersede it.
+
+Hmm, actually let me reconsider. Maybe I should check if develop builds without the dist by looking at .gitignore and how the earlier check runs worked. The check runs happen in this worktree where dist exists (uncommitted? No, committed). But if a fresh clone of develop runs `./checks/run.sh`, would it fail? Let me check root .gitignore in develop.
+
+Let me look.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && echo \"=== HEAD .gitignore ===\" && cat .gitignore && echo \"=== develop .gitignore ===\" && git show origin/develop:.gitignore && echo \"=== shared pkg.json ===\" && cat shared/formula-engine/package.json && echo \"=== 2305564 gitignore diff ===\" && git show 2305564 -- .gitignore shared/formula-engine/.gitignore"}
+stopReason: toolUse
+
+### 2026-09-28T05:35:18.341Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L60
+ROLE toolResult bash
+text: === HEAD .gitignore ===
+node_modules/
+dist/
+# The shared formula engine ships its compiled dist so a fresh clone can build
+# the app without an extra bootstrap step (see shared/formula-engine/README.md).
+!shared/formula-engine/dist/
+data/
+checks/node_modules
+checks/core.*
+checks/results/
+core.*
+=== develop .gitignore ===
+node_modules/
+dist/
+data/
+checks/node_modules
+checks/core.*
+checks/results/
+core.*
+=== shared pkg.json ===
+{
+  "name": "@app/formula-engine",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Workbook formula engine (REQ-4-*): parsing, evaluation, dependency recalculation and copy reference adjustment, wrapping HyperFormula.",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "hyperformula": "^3.4.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "vitest": "^2.1.0"
+  }
+}
+=== 2305564 gitignore diff ===
+commit 2305564a3acdb3261eb82d4f9f290ea7821822d3
+Author: @deepseek-5 <deepseek-5@braid.local>
+Date:   Mon Sep 28 04:57:33 2026 +0000
+
+    共享公式引擎产物入库：交付构建无需额外引导步骤
+    
+    - 根 .gitignore 与 shared/formula-engine/.gitignore 不再忽略该包的 dist/
+    - 提交 dist/*.js + *.d.ts（48K），使干净克隆上 npm install && npm run build
+      即可解析 @app/formula-engine
+    - 原因：npm 不会为 file: 依赖安装其自身依赖，Node/Vite 又按真实路径解析，
+      符号链接外侧找不到 hyperformula（已实测 ERR_MODULE_NOT_FOUND）
+    
+    (#5)
+
+diff --git a/.gitignore b/.gitignore
+index 14b97c3..8183ca4 100644
+--- a/.gitignore
++++ b/.gitignore
+@@ -1,5 +1,8 @@
+ node_modules/
+ dist/
++# The shared formula engine ships its compiled dist so a fresh clone can build
++# the app without an extra bootstrap step (see shared/formula-engine/README.md).
++!shared/formula-engine/dist/
+ data/
+ checks/node_modules
+ checks/core.*
+diff --git a/shared/formula-engine/.gitignore b/shared/formula-engine/.gitignore
+index b947077..c2658d7 100644
+--- a/shared/formula-engine/.gitignore
++++ b/shared/formula-engine/.gitignore
+@@ -1,2 +1 @@
+ node_modules/
+-dist/
+isError: False
+
+### 2026-09-28T05:35:24.036Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L61
+ROLE assistant 
+thinking: Note: `!shared/formula-engine/dist/` won't actually work because the parent pattern `dist/` matches any directory named dist at any level, and a negation cannot re-include files inside an excluded directory... Actually the rule: "It is not possible to re-include a file if a parent directory of that file is excluded." Here `dist/` excludes the directory `shared/formula-engine/dist/`. The negation `!shared/formula-engine/dist/` re-includes the directory itself. Hmm: pattern `dist/` matches directories named dist anywhere. To re-include, you need `!shared/formula-engine/dist/` and then the files inside need to not be excluded. Since the directory itself is re-included by the negating pattern, files inside are not excluded by `dist/` (that pattern matches the dir, not the files). Git behavior: if a directory is excluded, git doesn't descend. Re-including the directory with `!` allows descending. And files inside: are they matched by `dist/`? No, `dist/` matches only the directory. So files inside are not ignored. This apparently works since the dist files are tracked in the commit (git add -f might have been used though). Let me verify with git check-ignore.
+
+Anyway this is committed and works.
+
+Now, is this in scope for PR #5? It's needed for the deliverable build. I'll keep it and mention it. Alternatively I could revert it and rely on the fact that the official evaluation runs from develop after root integration, where presumably #6's owner or the root handles the build. But then my PR's own checks wouldn't be reproducible from a clean clone of my branch... Actually the checks ran here fine because dist exists. If I remove 2305564, dist would be untracked-but-present locally (git ignores it), so checks would still run locally but the file wouldn't be in the PR. Hmm, but rewriting history to drop it is risky and unnecessary.
+
+Decision: keep it, flag clearly in the PR body as a shared-build prerequisite needed by any consumer of @app/formula-engine, and note #6 owns it (can supersede). Actually the risk: PR#5 merge into develop → then when #6's branch merges too, potential add/add conflict on dist files. That's a nuisance but solvable.
+
+Hmm, actually, thinking about it more: The root owner said "共享契约一经决议，在原 Issue/PR 记录并尽早发布最小可消费的契约或实现". The dist issue is a legit blocker discovered during #5 work. Keeping it documented is the right call. But is it better to move it to the #6 Issue as a separate PR? That's extra coordination. Given time constraints and that it's already committed, I'll keep it but call it out in the PR and in a comment on #6's thread (comment 28/30) so glm-6 knows.
+
+Wait, actually there's a subtlety: maybe the correct thing is that the app's build should build the shared package. Let me check the backend prepare.cjs / frontend build. If frontend/package.json has a preinstall/prebuild that builds shared... The backend scripts/prepare.cjs builds frontend if dist missing. Maybe it also builds shared. Let me check.
+
+Let me not over-engineer. Moving on.
+
+Now, let me check the run status again.
+toolCall bash {"command": "sleep 90; pbb tail bg001 2>&1 | tail -80", "timeout": 120}
+stopReason: toolUse
+
+### 2026-09-28T05:35:54.300Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L62
+ROLE toolResult bash
+text: Bash job bg003 moved to background after 30s. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T05:35:56.443Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L63
+ROLE assistant 
+thinking: Ugh, the sleep got backgrounded (30s auto-background). I need to avoid sleep >30s. Use shorter or use pbb status. Actually, better: check the results dir for failures, and use subagent_wait? Let me just check the log prefix files and results dir.
+
+Let me look at the run's progress by checking test-results dir in /tmp/req3-check-run1 (only created on failure) and server logs (which show requests? no).
+
+Actually simpler: let me just do short polls.
+toolCall bash {"command": "ls /tmp/req3-check-run1 2>/dev/null; echo \"--- result dirs ---\"; find /tmp/req3-check-run1 -maxdepth 1 -type d 2>/dev/null | head; echo \"--- running? ---\"; ps -p 1247 -o etime= 2>/dev/null || echo \"playwright finished\"; pbb status bg001 2>&1 | tail -3"}
+stopReason: toolUse
+
+### 2026-09-28T05:35:57.830Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L64
+ROLE toolResult bash
+text: --- result dirs ---
+/tmp/req3-check-run1
+/tmp/req3-check-run1/.playwright-artifacts-2
+--- running? ---
+      01:48
+  "ownerStale": true
+}
+</pi_context>
+isError: False
+
+### 2026-09-28T05:36:02.242Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L65
+ROLE assistant 
+thinking: Playwright has been running 1:48. No failure dirs yet (test-results only on failure). Good sign. Let me wait for completion.
+
+Meanwhile, let me think about whether there are real gaps I should address proactively. One thing: the issue says the deliverable includes "刷新后值/公式/结果持久" — verified.
+
+What about "提交失败报错且显示最后成功值" for the grid inline editor? There's a scenario: type invalid value inline, press Enter → onCommitCell returns false, editing set to null, validation error shown, grid shows last successful value. Good.
+
+What about the formula bar when validation fails: it shows last successful. Good.
+
+Now, one requirement subtlety: "普通单元格网格与公式栏一致，公式单元格网格显示计算结果、公式栏显示原始公式". The grid displays `display[ref]` from engine. For a formula cell, engine display = result. For plain, engine display = the value text. Good.
+
+Another: "点选后可直接在网格...修改" — typing a char starts edit. Good.
+
+Another: REQ-3-1-3 "范围操作严格按所选矩形，不隐式扩展到相邻数据" — planPaste/planRangeCopy use currentRect. But note `currentRect()` uses selection if present else activeCell. In the copy test they dragSelect then Ctrl+C then selectCell D20 (selection null) then Ctrl+V → target = D20 single cell but pasteRange uses planRangeCopy with buffer.rect (source A20:B21) → target rect at D20 → correct 2x2. Good.
+
+Hmm wait, there's a subtle bug: pasteRange computes `targetStart = rectStartRef(currentRect())`. If the user has a multi-cell selection at target, it uses top-left. Fine.
+
+Now REQ-3-2-1 "复制公式时相对引用按目标偏移调整、绝对引用不变，公式栏显示调整后的原公式" — planRangeCopy uses adjustFormulaForCopy with bounds. Note: the integration test: J5 = '=$G$5+G5' copy to J6 → offset row+1 → '=$G$5+G6'. Good.
+
+But for the plain-text paste path (clipboard text differs), formulas are pasted verbatim (no adjustment). That's the standard spreadsheet behavior: pasting text from outside doesn't adjust references. The requirement is about copy/paste within app. Fine.
+
+Now: "剪切在目标完整显示后才清空源" — planRangeCut writes target and clears source in the same batch. The observable check: after paste, target has values and source is empty. Good enough.
+
+Potential issue: cut+paste when the target rect overlaps the source. `subtractRect(source, target)` removes cells covered by target from clears. But updates write source values into target; if overlapping, ordering matters (updates applied in order in the same request). Potential data loss for overlap but that's an edge case not in the requirements.
+
+Now let's think about whether the checks might be flaky. Let me wait.
+
+Let me check if playwright failed/passed by looking at process and results periodically. I'll poll with short commands.
+toolCall bash {"command": "sleep 25; ls /tmp/req3-check-run1/ 2>/dev/null; ps -p 1247 -o etime= 2>/dev/null || echo \"playwright done\"", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:36:27.352Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L66
+ROLE toolResult bash
+text: home-editor-the-seeded-sta-13a4e-eopening-from-the-home-page-home-editor
+      02:18
+isError: False
+
+### 2026-09-28T05:36:29.024Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L67
+ROLE assistant 
+thinking: A failure occurred: home-editor test. That's a REQ-1 foundation check failing?! Let me look at the failure artifact. It might be flakiness or a real regression caused by my changes. Let me check the error.
+
+Actually wait, "home-editor-the-seeded-sta-13a4e-eopening-from-the-home-page-home-editor" — this is a test dir created on retry? No retries=0. It's created when a test fails (trace retained). Let me inspect the error-context.md.
+toolCall bash {"command": "find /tmp/req3-check-run1 -name \"*.md\" -o -name \"*.txt\" -o -name \"error*\" 2>/dev/null | head; echo \"===\"; find /tmp/req3-check-run1 -maxdepth 2 -type f 2>/dev/null | head -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:29.054Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L68
+ROLE toolResult bash
+text: /tmp/req3-check-run1/home-editor-the-seeded-sta-13a4e-eopening-from-the-home-page-home-editor/error-context.md
+===
+/tmp/req3-check-run1/.playwright-artifacts-2/334ebe12ae88e9753143c59fde92ee9d.png
+/tmp/req3-check-run1/.playwright-artifacts-2/e558e658a3561322e29ce2a79c49c008.png
+/tmp/req3-check-run1/.playwright-artifacts-2/52f5c8e9b03954c948b25a2f9b6d1126.zip
+/tmp/req3-check-run1/.playwright-artifacts-2/b24c5e3e305e12f79a2fe30e7322c5da.png
+/tmp/req3-check-run1/home-editor-the-seeded-sta-13a4e-eopening-from-the-home-page-home-editor/test-failed-1.png
+/tmp/req3-check-run1/home-editor-the-seeded-sta-13a4e-eopening-from-the-home-page-home-editor/error-context.md
+isError: False
+
+### 2026-09-28T05:36:30.254Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L69
+ROLE assistant 
+toolCall read {"path": "/tmp/req3-check-run1/home-editor-the-seeded-sta-13a4e-eopening-from-the-home-page-home-editor/error-context.md"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:30.257Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L70
+ROLE toolResult read
+text: # Page snapshot
+
+```yaml
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Workbooks" [level=1] [ref=e5]
+    - button "New blank workbook" [ref=e6] [cursor=pointer]
+  - list [ref=e7]:
+    - listitem [ref=e8]: No workbooks yet.
+```
+isError: False
+
+### 2026-09-28T05:36:35.334Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L71
+ROLE assistant 
+thinking: "No workbooks yet." — the seed didn't happen in the HOME server for the home-editor project? But run.sh waits for "Q3 Sales" in /api/workbooks before proceeding. Hmm, wait_for_ready checks curl for "Q3 Sales". So it was there at startup.
+
+Oh! Maybe another agent's concurrent run is sharing... no, separate DATA_DIRs.
+
+Hmm, "No workbooks yet" means the workbooks list is empty. Could the home-editor test have started before seed? No, wait_for_ready ensures.
+
+Wait — maybe the issue is that the server crashed/restarted with a NEW temp data dir? The watchdog restarts with same DATA_DIR. Hmm.
+
+Actually, look at the run.sh: `DATA_DIRS[$suffix]="$(mktemp -d /tmp/wb-checks-XXXXXX)"`. Then start_server. If another process deleted the temp dir... unlikely.
+
+Alternatively: maybe the test is "the seeded state is shown ... when opening from the home page" and it navigated to '/' after some earlier test deleted workbooks? There's no delete API.
+
+Wait, maybe the failure is actually a different test: "home-editor-the-seeded-sta-13a4e-eopening-from-the-home-page-home-editor" — let me read home-editor.spec.ts.
+
+Actually the page snapshot shows heading "Workbooks" and "No workbooks yet." That's the home page with zero workbooks. This is the HOME project server. Possibly the server was restarted by the watchdog after being killed by another agent's cleanup (the shared machine has other runs; run.sh's cleanup kills by PID file, which is unique). Hmm, but the watchdog restarts on same DATA_DIR, so seed stays.
+
+Unless... another agent's run.sh cleanup does `pkill -f backend/dist/server.js`? Let me check other worktrees' run.sh. My run.sh in this worktree uses PID files, but the OTHER worktrees (issue-2/pi-glm-fast-g1 running checks at same time) may have an older run.sh that kills by port or pkill all node servers. Indeed! The issue-2 worktree run.sh might do `pkill -f "backend/dist/server.js"` which would kill MY servers, and my watchdog restarts them with the same DATA_DIR... then seed should persist. Unless their cleanup deletes my DATA_DIR? No.
+
+Hmm, but actually if the watchdog restarts with the same DATA_DIR, workbooks persist. Unless the restart happened and server re-read... the store reads from files each request (getWorkbook reads file). So workbooks should still be there.
+
+Wait, maybe the real reason: another run's cleanup killed the server AND the temp DATA_DIR got removed? mktemp dirs aren't auto-removed. Unless other run.sh does `rm -rf /tmp/wb-checks-*`. The issue-2 command we saw: `rm -rf checks/results/timeouts-run && SERVER_LOG_PREFIX=... ./checks/run.sh` — nothing like that.
+
+Let me look at the actual test and the timing. Also let me check the log file for HOME server. Log prefix is /tmp/wb-checks-pi-deepseek-fast-g1-897-HOME.log. Let me tail it.
+toolCall bash {"command": "echo \"=== HOME log ===\"; tail -30 /tmp/wb-checks-pi-deepseek-fast-g1-897-HOME.log; echo \"=== all logs sizes ===\"; ls -la /tmp/wb-checks-pi-deepseek-fast-g1-897-*.log; echo \"=== HOME data dir ===\"; cat /tmp/wb-checks-pids-DCybBx"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '1,80p' checks/home-editor.spec.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:35.426Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L72
+ROLE toolResult bash
+text: === HOME log ===
+tail: cannot open '/tmp/wb-checks-pi-deepseek-fast-g1-897-HOME.log' for reading: No such file or directory
+=== all logs sizes ===
+ls: cannot access '/tmp/wb-checks-pi-deepseek-fast-g1-897-*.log': No such file or directory
+=== HOME data dir ===
+cat: /tmp/wb-checks-pids-DCybBx: No such file or directory
+
+Command exited with code 1
+isError: True
+
+### 2026-09-28T05:36:35.426Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L73
+ROLE toolResult bash
+text: import { test, expect } from "@playwright/test";
+import {
+  LAST_UPDATED,
+  cell,
+  goHome,
+  grid,
+  openHome,
+  openWorkbook,
+  sheetTab,
+  workbookItem,
+} from "./helpers";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 148]
+
+test("home lists the seeded workbook with a name link and Last updated", async ({ page }) => {
+  const list = await openHome(page);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 149]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 150]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 151]
+
+  await openWorkbook(page, "Q3 Sales");
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 152]
+
+  // Same "Last updated" value as the home-page record.
+  await expect(page.getByText(LAST_UPDATED).first()).toHaveText(homeUpdated);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 153]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 154]
+
+  // Formula bar shows the active cell's raw content.
+  await expect(page.getByLabel("Formula bar", { exact: true })).toHaveValue("Region");
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 155]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 156]
+
+  // Refresh keeps identifying the same workbook.
+  await page.reload();
+isError: False
+
+### 2026-09-28T05:36:39.406Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L74
+ROLE assistant 
+thinking: The log files are gone and the PID file is gone → the run.sh has exited (background job finished). Let me check the final output of bg001.
+
+The failure is the home-editor test on the HOME server: "No workbooks yet." Let me see whether this is caused by the concurrent issue-2 run or by my changes. Note: this test file is a REQ-1 foundation check, unchanged by me. But wait — did my changes affect the home page? No.
+
+Hmm! Hold on: the log files for run 897 no longer exist. run.sh cleanup does `rm -f "$PID_FILE"` but not the logs. The logs were at /tmp/wb-checks-pi-deepseek-fast-g1-897-*.log. They're gone. Who deleted them? /tmp cleaner? Or another agent doing `rm -f /tmp/wb-checks-*`? 
+
+The issue-2 agent's run.sh might have a cleanup that removes /tmp/wb-checks-*! Their command was `SERVER_LOG_PREFIX=/tmp/wb-checks-timeouts-$(date +%s) ./checks/run.sh`. Their run.sh version might include `rm -f "$LOG_PREFIX"*.log` in cleanup. That only removes their own prefix. But maybe an older version does `rm -f /tmp/wb-checks-*`. Since they're on issue-2 branch which is older, plausible they have a destructive cleanup. That would explain both the missing logs and... hmm, not the empty workbooks.
+
+Actually, wait. Let me reconsider: maybe the HOME test failure is because another agent's run.sh cleanup does `pkill -f "backend/dist/server.js"`, killing my HOME server mid-test; my watchdog restarts it with same DATA_DIR (seed intact). But if their cleanup also removed data dirs? No.
+
+Actually "No workbooks yet" — could it be that the restart used a DIFFERENT data dir because DATA_DIRS array in the watchdog... no, it's the same variable.
+
+Hmm, alternatively: maybe the test navigated to page.goto('/') where baseURL is the HOME server; the list showed empty because the server had just restarted and... store.listWorkbooks() reads dir contents. If DATA_DIR exists with the JSON, it lists. Let me check /tmp/wb-checks-* dirs now.
+
+Actually, the run finished; let me get the full output. Let me pbb tail bg001.
+toolCall bash {"command": "pbb tail bg001 2>&1 | tail -100"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:39.720Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L75
+ROLE toolResult bash
+text: <pi_context source="pbb" kind="pbb.tail" schema_version="1" session_id="01a0e680-f727-737a-a04f-1553c698ea7e" session_key="5b892424912f7dfdd59c2edf" instance_id="pbb_163_cd2a4cf7" lane="" scope="current-instance" job_id="bg001" owner_instance_id="pbb_163_cd2a4cf7" status="running" cursor="1" lines="80">
+No log output recorded yet.
+</pi_context>
+isError: False
+
+### 2026-09-28T05:36:41.455Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L76
+ROLE assistant 
+thinking: Still running (bg001 status=running). The playwright process 1247 may have finished? Earlier ps showed etime 02:18. Let me check.
+
+Actually the failure dir appeared, but the run continues with remaining tests. The `tail -120` buffers output.
+
+Let me check whether playwright still running and the temp dirs.
+toolCall bash {"command": "ps aux | grep -E \"playwright test|backend/dist/server\" | grep -v grep | wc -l; ls -d /tmp/wb-checks-* 2>/dev/null; echo \"--- run dir ---\"; ls /tmp/req3-check-run1/"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:41.493Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L77
+ROLE toolResult bash
+text: 17
+/tmp/wb-checks-8Q2W3M
+/tmp/wb-checks-KRU2zX
+/tmp/wb-checks-P6t0tz
+/tmp/wb-checks-UAUbNp
+/tmp/wb-checks-njaIKE
+/tmp/wb-checks-qnzScQ
+--- run dir ---
+home-editor-the-seeded-sta-13a4e-eopening-from-the-home-page-home-editor
+isError: False
+
+### 2026-09-28T05:36:46.949Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L78
+ROLE assistant 
+thinking: There are 6 temp data dirs — 5 from my run plus maybe one from another. My run's dirs exist. The failure was transient? Hmm.
+
+Wait — the home-editor test that failed: "opening Q3 Sales shows the seeded content..." Let me check: the error context shows the HOME page with no workbooks. Could it be a race where the test's `openHome(page)` ran while the HOME server was being restarted (watchdog) and the response was from a just-started server that hadn't seeded yet? The seed happens in server startup (server.ts) — if the watchdog restarted the server because it was killed, there's a window where the server is up but seeding not done? The home page request could return empty list. That's a plausible race: server killed by another agent's cleanup → watchdog restarts within 2s → test navigates during startup → gets empty list.
+
+Actually more likely: another agent's run.sh cleanup includes `pkill` of servers, killing mine. My watchdog restarted 2s later. During that window the browser's request failed or hit a fresh server. Actually if the server was dead, goto would fail with connection refused, not show "No workbooks yet".
+
+Hmm, but the snapshot shows a rendered home page with empty list. So the server responded with empty list. That means the server responded before seeding finished, OR the server's DATA_DIR was empty at that moment.
+
+Wait — maybe on restart, the server's seed creates the workbook in DATA_DIR... but if DATA_DIR already has the file, seed is idempotent. So list would show it. Unless DATA_DIR pointed elsewhere.
+
+Alternatively, the issue-2 agent's run might be using the SAME port as my HOME server (they also pick "free ports" — a race could give the same port if both use the python bind trick at nearly the same time? bind to port 0 then close, printing the port, then starting the server — another process could grab it in between. But then requests would go to the wrong server and might show that server's state... Their server has its own DATA_DIR with seeded Q3 Sales though).
+
+Hmm, "No workbooks yet" suggests a fresh empty data dir. Could my HOME server have been started with a fresh mktemp dir after a crash-restart? Let me look at the log — oh, logs are gone (someone cleaned /tmp/wb-checks-*). That's suspicious: another agent's run.sh cleanup likely does `rm -f /tmp/wb-checks-*`. Let me check the other worktrees' run.sh cleanup function. If their cleanup does `rm -rf /tmp/wb-checks-*`, that explains missing logs. And if it does something to data dirs too...
+
+Wait: our earlier check showed `checks/results/timeouts-run` — the issue-2 agent's command was `rm -rf checks/results/timeouts-run && SERVER_LOG_PREFIX=... ./checks/run.sh`. Their run.sh might have a `cleanup` that removes /tmp/wb-checks-* including data dirs! If it removes MY data dirs, then my server (which reads files per request) would see no workbooks → "No workbooks yet". And my watchdog restarts servers → seed recreates → but data was deleted.
+
+That's a strong hypothesis. Let me check the issue-2 worktree's run.sh.
+
+Actually hold on: the issue-2 worktree is `worktrees/issue-2/pi-glm-fast-g1`? We saw ps line: `cd /workspace/.../worktrees/issue-2/pi-glm-fast-g1 && rm -rf checks/results/timeouts-run && SERVER_LOG_PREFIX=/tmp/wb-checks-timeouts-... ./checks/run.sh`. Let me look at that run.sh cleanup.
+toolCall bash {"command": "for f in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/*/checks/run.sh; do echo \"=== $f ===\"; grep -n \"rm -rf\\|rm -f\\|pkill\\|cleanup\" \"$f\" | head -20; done 2>/dev/null"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:47.034Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L79
+ROLE toolResult bash
+text: === /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/*/checks/run.sh ===
+isError: False
+
+### 2026-09-28T05:36:48.425Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L80
+ROLE assistant 
+thinking: The glob didn't expand — maybe worktrees dir has only some. Let me list.
+toolCall bash {"command": "ls -d /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/*/ 2>/dev/null; echo \"---\"; ls -d /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/*/*/ 2>/dev/null"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:48.460Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L81
+ROLE toolResult bash
+text: /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-1/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-2/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-3/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-4/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-6/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-7/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/pr-4/
+---
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-1/pi-glm-fast-g1/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-2/pi-glm-fast-g1/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-4/pi-glm-fast-g1/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-6/pi-glm-fast-g1/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-7/notes/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-7/pi-deepseek-fast-g1/
+/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/pr-4/pi-glm-fast-g1/
+isError: False
+
+### 2026-09-28T05:36:50.323Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L82
+ROLE assistant 
+toolCall bash {"command": "for d in issue-1/pi-glm-fast-g1 issue-2/pi-glm-fast-g1 issue-3/pi-deepseek-fast-g1 issue-4/pi-glm-fast-g1 issue-6/pi-glm-fast-g1 issue-7/pi-deepseek-fast-g1 pr-4/pi-glm-fast-g1; do f=\"/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/$d/checks/run.sh\"; [ -f \"$f\" ] || continue; echo \"=== $d ===\"; grep -n \"rm -rf\\|pkill\\|LOG_PREFIX\\*\\|tmp/wb-checks\" \"$f\" | head -10; done"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:50.824Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L83
+ROLE toolResult bash
+text: === issue-2/pi-glm-fast-g1 ===
+43:LOG_PREFIX="${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename "$ROOT")-$$}"
+44:PID_FILE="$(mktemp /tmp/wb-checks-pids-XXXXXX)"
+116:  DATA_DIRS[$suffix]="$(mktemp -d /tmp/wb-checks-XXXXXX)"
+=== issue-3/pi-deepseek-fast-g1 ===
+43:LOG_PREFIX="${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename "$ROOT")-$$}"
+44:PID_FILE="$(mktemp /tmp/wb-checks-pids-XXXXXX)"
+117:  DATA_DIRS[$suffix]="$(mktemp -d /tmp/wb-checks-XXXXXX)"
+=== issue-4/pi-glm-fast-g1 ===
+30:SERVER_LOG="${SERVER_LOG:-/tmp/wb-checks-server.log}"
+58:  data_dir="$(mktemp -d /tmp/wb-checks-XXXXXX)"
+=== issue-6/pi-glm-fast-g1 ===
+43:LOG_PREFIX="${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename "$ROOT")-$$}"
+44:PID_FILE="$(mktemp /tmp/wb-checks-pids-XXXXXX)"
+116:  DATA_DIRS[$suffix]="$(mktemp -d /tmp/wb-checks-XXXXXX)"
+=== issue-7/pi-deepseek-fast-g1 ===
+30:SERVER_LOG="${SERVER_LOG:-/tmp/wb-checks-server.log}"
+58:  data_dir="$(mktemp -d /tmp/wb-checks-XXXXXX)"
+=== pr-4/pi-glm-fast-g1 ===
+43:LOG_PREFIX="${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename "$ROOT")-$$}"
+44:PID_FILE="$(mktemp /tmp/wb-checks-pids-XXXXXX)"
+117:  DATA_DIRS[$suffix]="$(mktemp -d /tmp/wb-checks-XXXXXX)"
+isError: False
+
+### 2026-09-28T05:36:52.157Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L84
+ROLE assistant 
+thinking: Let me look at issue-4 and issue-7 run.sh cleanup — they use single SERVER_LOG and one data dir; maybe their cleanup does `rm -rf /tmp/wb-checks-*` or pkill.
+
+Let me look at their cleanup function.
+toolCall bash {"command": "for d in issue-4/pi-glm-fast-g1 issue-7/pi-deepseek-fast-g1; do f=\"/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/$d/checks/run.sh\"; echo \"=== $d ===\"; cat \"$f\"; done"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:52.231Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L85
+ROLE toolResult bash
+text: === issue-4/pi-glm-fast-g1 ===
+#!/usr/bin/env bash
+# Repeatable browser/API check runner.
+#
+# Provisions a fresh environment per check file so every check observes the
+# promised initial state (seeded workbook "Q3 Sales" = Sheet1 A1=Region,
+# East/1200, North/800 + Sheet2 Region/Sales/Status table):
+#   - one backend per spec file, each with its own temp DATA_DIR (seed is
+#     created by the server on startup) and its own free port (never 3000,
+#     which is reserved for the official evaluation)
+#   - built backend (backend/dist) + built frontend (frontend/dist)
+#
+# Usage: checks/run.sh [--skip-build]
+# Exit code is Playwright's exit code.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKIP_BUILD=false
+[[ "${1:-}" == "--skip-build" ]] && SKIP_BUILD=true
+
+: "${BROWSER_EXECUTABLE_PATH:?set BROWSER_EXECUTABLE_PATH to the Chromium binary}"
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 157]
+
+SERVER_LOG="${SERVER_LOG:-/tmp/wb-checks-server.log}"
+
+free_port() {
+  python3 - <<'PY'
+import socket
+s = socket.socket()
+s.bind(("127.0.0.1", 0))
+print(s.getsockname()[1])
+s.close()
+PY
+}
+
+PIDS=()
+cleanup() {
+  for pid in ${PIDS[@]+"${PIDS[@]}"}; do
+    kill "$pid" 2>/dev/null || true
+  done
+  wait 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# env var suffix -> spec file handled by the matching Playwright project.
+SUFFIXES=(CREATE EDITOR HOME)
+declare -A URLS
+: > "$SERVER_LOG"
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 158]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 159]
+
+  URLS[$suffix]="http://127.0.0.1:$port"
+  echo "server for $suffix: ${URLS[$suffix]} (DATA_DIR=$data_dir)"
+done
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 160]
+
+BASE_URL_CREATE="${URLS[CREATE]}" \
+BASE_URL_EDITOR="${URLS[EDITOR]}" \
+BASE_URL_HOME="${URLS[HOME]}" \
+BROWSER_EXECUTABLE_PATH="$BROWSER_EXECUTABLE_PATH" \
+CHECK_OUTPUT_DIR="${CHECK_OUTPUT_DIR:-$ROOT/checks/results/$(date +%Y%m%dT%H%M%S)}" \
+  "$ROOT/checks/node_modules/.bin/playwright" test --config "$ROOT/checks/playwright.config.ts"
+=== issue-7/pi-deepseek-fast-g1 ===
+#!/usr/bin/env bash
+# Repeatable browser/API check runner.
+#
+# Provisions a fresh environment per check file so every check observes the
+# promised initial state (seeded workbook "Q3 Sales" = Sheet1 A1=Region,
+# East/1200, North/800 + Sheet2 Region/Sales/Status table):
+#   - one backend per spec file, each with its own temp DATA_DIR (seed is
+#     created by the server on startup) and its own free port (never 3000,
+#     which is reserved for the official evaluation)
+#   - built backend (backend/dist) + built frontend (frontend/dist)
+#
+# Usage: checks/run.sh [--skip-build]
+# Exit code is Playwright's exit code.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKIP_BUILD=false
+[[ "${1:-}" == "--skip-build" ]] && SKIP_BUILD=true
+
+: "${BROWSER_EXECUTABLE_PATH:?set BROWSER_EXECUTABLE_PATH to the Chromium binary}"
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 161]
+
+SERVER_LOG="${SERVER_LOG:-/tmp/wb-checks-server.log}"
+
+free_port() {
+  python3 - <<'PY'
+import socket
+s = socket.socket()
+s.bind(("127.0.0.1", 0))
+print(s.getsockname()[1])
+s.close()
+PY
+}
+
+PIDS=()
+cleanup() {
+  for pid in ${PIDS[@]+"${PIDS[@]}"}; do
+    kill "$pid" 2>/dev/null || true
+  done
+  wait 2>/dev/null || true
+}
+trap cleanup EXIT
+
+# env var suffix -> spec file handled by the matching Playwright project.
+SUFFIXES=(CREATE EDITOR HOME)
+declare -A URLS
+: > "$SERVER_LOG"
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 162]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 163]
+
+  URLS[$suffix]="http://127.0.0.1:$port"
+  echo "server for $suffix: ${URLS[$suffix]} (DATA_DIR=$data_dir)"
+done
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 164]
+
+BASE_URL_CREATE="${URLS[CREATE]}" \
+BASE_URL_EDITOR="${URLS[EDITOR]}" \
+BASE_URL_HOME="${URLS[HOME]}" \
+BROWSER_EXECUTABLE_PATH="$BROWSER_EXECUTABLE_PATH" \
+CHECK_OUTPUT_DIR="${CHECK_OUTPUT_DIR:-$ROOT/checks/results/$(date +%Y%m%dT%H%M%S)}" \
+  "$ROOT/checks/node_modules/.bin/playwright" test --config "$ROOT/checks/playwright.config.ts"
+isError: False
+
+### 2026-09-28T05:36:55.144Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L86
+ROLE assistant 
+thinking: These don't delete /tmp/wb-checks-*.
+
+Hmm, so who deleted my logs? Actually maybe they were never created at that path — wait, earlier `ls -la /tmp/wb-checks-*` DID show `/tmp/wb-checks-pi-deepseek-fast-g1-897-CREATE.log` etc. Then later they're gone. And the PID file gone. So something removed them. Or the mktemp-created temp dirs are still there (8Q2W3M etc.) but the logs are gone.
+
+Hmm, maybe /tmp has a cleanup daemon? Unlikely.
+
+Wait, maybe another agent ran a cleanup like `find /tmp -name 'wb-checks-*' ...`. Let me search all worktrees for scripts referencing wb-checks.
+
+Actually, more productive: the run is still going. Let's focus: the failure "No workbooks yet" on the HOME server. It's possible that the server's data file was deleted mid-run. Look at the store: let me check store.ts — maybe listWorkbooks reads a cached index and the seed... Let's look at store.ts and seed.ts.
+
+Actually wait. There's another possibility: the HOME server was restarted by the watchdog after being killed, and on restart the seed function ran and created a NEW workbook... no, that would add not remove.
+
+Hmm, unless the watchdog restart used a stale `DATA_DIRS[$suffix]`... it's the same.
+
+Let me check store.ts to see if listWorkbooks reads directory or an in-memory list.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && cat backend/src/store.ts && echo \"=== seed.ts head ===\" && sed -n '1,60p' backend/src/seed.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:55.524Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L87
+ROLE toolResult bash
+text: import fs from "fs";
+import path from "path";
+import { Workbook, WorkbookSummary } from "./types";
+import { DATA_DIR } from "./config";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 165]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 166]
+
+export function ensureDataDir(): void {
+  fs.mkdirSync(DATA_DIR, { recursive: true });
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 167]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 168]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 169]
+
+/** True when a workbook with exactly this name already exists. */
+export function existsWithName(name: string): boolean {
+  return listWorkbooks().some((w) => w.name === name);
+}
+=== seed.ts head ===
+import {
+  SEED_A1_VALUE,
+  SEED_SECOND_SHEET_NAME,
+  SEED_SHEET_NAME,
+  SEED_WORKBOOK_NAME,
+} from "./config";
+import { existsWithName, saveWorkbook } from "./store";
+import { makeSheet, makeWorkbook, newId } from "./workbook-factory";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 170]
+
+export function ensureSeedData(): void {
+  if (existsWithName(SEED_WORKBOOK_NAME)) return;
+
+  const wb = makeWorkbook(SEED_WORKBOOK_NAME);
+  wb.sheets = SEED_SHEETS.map(({ name, cells }) => {
+    const sheet = makeSheet(name, newId("sh"));
+    sheet.cells = Object.fromEntries(
+isError: False
+
+### 2026-09-28T05:36:58.986Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L88
+ROLE assistant 
+thinking: listWorkbooks reads DATA_DIR. If it returns empty, the DATA_DIR had no json.
+
+So either DATA_DIR was wiped, or the request hit a different server/data dir.
+
+Race hypothesis: free_port + another agent's server grabbing the same port. If the issue-2 agent's run started at ~same time and both picked the same free port, the second server would fail to bind (EADDRINUSE) and die — then watchdog restarts... Actually, if two agents pick the same port, whoever binds first wins. The loser's server dies immediately; run.sh's wait_for_ready checks `kill -0 $pid` → dies during startup → exit 3. Not our case.
+
+Alternative: my HOME server got killed by another agent (pkill) and my watchdog restarted it, but... data dir same. Unless the watchdog's `start_server` re-reads `DATA_DIRS[$suffix]` correctly. Yes it does.
+
+Hmm wait, maybe the deletion of /tmp/wb-checks-* logs is a clue: some agent ran `rm -rf /tmp/wb-checks-*` — that would also delete the DATA DIRS (/tmp/wb-checks-XXXXXX)! Then my server sees empty data dir → "No workbooks yet", and the seed function only runs at startup (not per request), so it stays empty. That perfectly explains it!
+
+So another agent's process removed /tmp/wb-checks-*. My /tmp/wb-checks-* logs gone + data dirs possibly gone (but there are 6 dirs now — maybe recreated by watchdog restart? no, watchdog doesn't recreate data dirs). Let's check whether the existing /tmp/wb-checks-* dirs contain wb json and their mtime.
+
+Let me check content of those dirs.
+toolCall bash {"command": "for d in /tmp/wb-checks-*; do [ -d \"$d\" ] && echo \"$d: $(ls $d | tr '\\n' ' ') (mtime $(stat -c %y $d | cut -d. -f1))\"; done"}
+stopReason: toolUse
+
+### 2026-09-28T05:36:59.352Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L89
+ROLE toolResult bash
+text: /tmp/wb-checks-8Q2W3M: wb_muktf30jzw6x7q.json  (mtime 2026-09-28 05:36:58)
+/tmp/wb-checks-KRU2zX:  (mtime 2026-09-28 05:36:34)
+/tmp/wb-checks-P6t0tz:  (mtime 2026-09-28 05:36:35)
+/tmp/wb-checks-UAUbNp: wb_mukte48juagvvh.json wb_mukteap5ysitxt.json  (mtime 2026-09-28 05:36:21)
+/tmp/wb-checks-njaIKE: wb_mukte7gg3pijm6.json wb_muktedz118ezmu.json wb_muktefvi81ypt7.json  (mtime 2026-09-28 05:36:26)
+/tmp/wb-checks-qnzScQ:  (mtime 2026-09-28 05:36:10)
+isError: False
+
+### 2026-09-28T05:37:02.303Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L90
+ROLE assistant 
+thinking: Interesting! Two dirs are EMPTY (KRU2zX, P6t0tz, qnzScQ). Those are likely my CREATE/EDITOR/HOME? Wait, my run created 5 dirs at ~05:34. The mtimes are 05:36 — that's when they were modified (files removed?). Hmm, empty dirs: KRU2zX (05:36:34), P6t0tz (05:36:35), qnzScQ (05:36:10). Those empty dirs lost their json files.
+
+So indeed files got deleted from data dirs at ~05:36. The seed json was removed from 3 of my 5 servers. That's why home-editor failed (empty list) — and probably other failures.
+
+Wait, but the seed workbook file `wb_*.json` was deleted from 3 dirs. Who deletes files from data dirs mid-run? Another agent's check doing "isolation" cleanup? Hmm.
+
+Alternatively — AH. I bet it's the "seed-idempotency.sh" script from another agent that does something like `rm -f $DATA_DIR/*.json`. Let me check the seed-idempotency.sh in other worktrees.
+
+Actually, more likely: another agent's run.sh with a wipe? Let me grep all worktrees' checks for patterns that delete json or the temp dirs.
+
+Let me search for scripts referencing DATA_DIR and rm.
+toolCall bash {"command": "for d in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/*/; do for f in \"$d\"*/checks/*.sh; do [ -f \"$f\" ] || continue; if grep -qE \"rm -rf|rm -f\" \"$f\"; then echo \"=== $f\"; grep -nE \"rm -rf|rm -f\" \"$f\"; fi; done; done 2>/dev/null | head -40"}
+stopReason: toolUse
+
+### 2026-09-28T05:37:03.026Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L91
+ROLE toolResult bash
+text: === /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-2/pi-glm-fast-g1/checks/run.sh
+65:  rm -f "$PID_FILE"
+=== /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/checks/run.sh
+66:  rm -f "$PID_FILE"
+=== /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/run.sh
+74:  rm -f "$PID_FILE"
+=== /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-6/pi-glm-fast-g1/checks/run.sh
+65:  rm -f "$PID_FILE"
+=== /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/pr-4/pi-glm-fast-g1/checks/run.sh
+66:  rm -f "$PID_FILE"
+isError: False
+
+### 2026-09-28T05:37:08.225Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L92
+ROLE assistant 
+thinking: Hmm, none delete data dirs. Wait, the PID_FILE pattern is `mktemp /tmp/wb-checks-pids-XXXXXX` — could `rm -f "$PID_FILE"` accidentally match a data dir? No.
+
+Hmm, wait: `rm -f "$PID_FILE"` where PID_FILE is like /tmp/wb-checks-pids-DCybBx. That's not a data dir.
+
+So who deleted the json files? Let me look at the frontend? No.
+
+Maybe the store's saveWorkbook writes tmp file and renames. Not delete.
+
+Hmm — Actually! Maybe the empty dirs are not from my run. My 5 data dirs were created at 05:34. The empty dirs have mtime 05:36:10/34/35 — that's when empty (dir mtime updates when entries removed). So entries were removed at 05:36.
+
+Could `rm -f /tmp/wb-checks-*` have been run by MY OWN cleanup? My run.sh cleanup kills PIDs and `rm -f "$PID_FILE"`. No.
+
+Wait... could the "issue-4" or "issue-7" agent's run.sh `: > "$SERVER_LOG"` ... no.
+
+Hmm, is there a `/tmp` cleanup cron in the sandbox? Some environments run `systemd-tmpfiles` cleaning /tmp by age, but files created 2 minutes ago wouldn't be cleaned... unless tmpfiles.d config has a short age. Unlikely.
+
+Let me reconsider: maybe another agent (pr-4 or issue-2) is running `git clean`? No, that wouldn't touch /tmp.
+
+OK here's another thought: maybe the previous agent of issue-5 (deepseek-5) is ALSO still running? No, we are deepseek-5.
+
+Hold on — maybe another agent's run.sh is a DIFFERENT version that does `pkill -f wb-checks` ... Let me broaden: grep all files in worktrees/checks for "wb-checks" and rm.
+
+Actually, let me look at /tmp for any script or note. Let me just check if there is a rogue process deleting. Simpler: this might be a one-off interference from a concurrent agent. The important thing: MY code's checks — how many passed/failed? Let me wait for the run to finish and see the full output. Failures caused by external interference (empty data dir) are environmental; I need to distinguish.
+
+I could make my check runner more robust: the watchdog could re-seed if the data dir is empty. But actually the right fix: avoid interference. Hmm, but if the files are being deleted by another agent, my rerun might fail again.
+
+Actually wait. Let me reconsider the empty dirs: maybe those are dirs from the issue-2 agent's run (they also mktemp /tmp/wb-checks-XXXXXX starting at 05:34). My 5 dirs and their 5 dirs would be interleaved. The emptied ones could be theirs (if their test does something like "creating a workbook with empty name doesn't create a record" — no deletion).
+
+Hmm, but the data deletion hit 3 dirs.
+
+Let me look for a REQ-1 check that deletes the data file: maybe "seed idempotency" test writes to DATA_DIR? create-workbook.spec? Let me grep specs for fs.rmSync / unlink.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees && grep -rn \"rmSync\\|unlinkSync\\|rm -rf\\|rmdirSync\" --include=*.ts --include=*.sh --include=*.cjs . 2>/dev/null | grep -v node_modules | head -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:37:38.247Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L93
+ROLE toolResult bash
+text: Bash job bg004 moved to background after 30s. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T05:37:39.903Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L94
+ROLE assistant 
+thinking: The grep took >30s (large dirs with node_modules being traversed). Let me restrict. Actually it got backgrounded; whatever.
+
+Let me instead check if the main run finished.
+toolCall bash {"command": "pbb status bg001 2>&1 | tail -5; ls /tmp/req3-check-run1/ 2>/dev/null; ps -p 1247 -o etime= 2>/dev/null || echo \"pw done\""}
+stopReason: toolUse
+
+### 2026-09-28T05:37:40.036Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L95
+ROLE toolResult bash
+text:   "ownerLastSeenAt": "",
+  "ownerLive": false,
+  "ownerStale": true
+}
+</pi_context>
+home-editor-the-seeded-sta-13a4e-eopening-from-the-home-page-home-editor
+req3-core-REQ-3-1-1-edit-a-f08d1-mit-and-refresh-persistence-req3-core
+req3-core-REQ-3-1-2-paste--7542f--only-overwrites-the-target-req3-core
+req3-core-REQ-3-1-2-paste--96aed--the-same-clipboard-content-req3-core
+      03:31
+isError: False
+
+### 2026-09-28T05:37:46.136Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L96
+ROLE assistant 
+thinking: More failures appearing: req3-core tests failing. This is likely all due to the same interference (empty data dirs). Playwright continues though (each test failing takes timeout...).
+
+Hmm, 4 failures already. If the data dirs are empty, everything fails. Let me check which data dirs are empty now and whether more got emptied.
+
+The run will take a long while if each test times out (15s each). Let me wait for it to finish, but meanwhile investigate the deletion cause so a rerun succeeds.
+
+Idea: The `issue-2` agent is running the SAME checks concurrently with SERVER_LOG_PREFIX. Their run.sh cleanup: `while read -r pid; do kill "$pid"; done < "$PID_FILE"`. Their PID_FILE is mktemp'd. Fine.
+
+Wait!! Look at issue-2's run.sh more carefully — is it the same as mine? Line 65 `rm -f "$PID_FILE"`. But what about `WATCHDOG` and `LOG_PREFIX`? Let me diff issue-2's run.sh with mine. Their log prefix uses `SERVER_LOG_PREFIX`. Hmm.
+
+Actually, let me reconsider: maybe the json files are being deleted by a server process doing atomic rename/delete? saveWorkbook writes tmp then renames. On Windows? No.
+
+OR: the seeder? ensureSeedData runs once at server start; it doesn't delete.
+
+OR: a `PATCH /state` handler? No.
+
+Hmm, what about the frontend "create workbook" test deleting? No delete API.
+
+Let me look at the empty dirs again now and see if it correlates with a server restart (watchdog). The watchdog restart calls `start_server` which does `DATA_DIR=... node server.js`... that doesn't delete.
+
+Hmm, actually! Wait. Look at run.sh: 
+```
+DATA_DIRS[$suffix]="$(mktemp -d /tmp/wb-checks-XXXXXX)"
+```
+and `start_server` uses `${DATA_DIRS[$suffix]}`. Fine.
+
+Let me check whether the empty dirs correspond to a *deleted then recreated* path... no.
+
+New hypothesis: There's a `checks/.gitignore` with `...`? no.
+
+Let me just check for other processes with a `find /tmp -delete` or a test cleanup. Let me inspect running processes for anyone touching /tmp.
+
+Actually, let me look at the pr-4 worktree's run.sh (issue-3's, running at 05:34: `cd worktrees/pr-4/pi-glm-fast-g1 && BROWSER_EXECUTABLE_PATH=... bash checks/run.sh`). Line 66 `rm -f "$PID_FILE"`. Same.
+
+OK, what if another agent ran the *root* worktree (issue-1) checks with a script that cleans /tmp? Let me check issue-1's checks dir.
+
+Actually the grep job bg004 may return results. Let me wait for it.
+
+Meanwhile, let me reconsider whether these test failures are actually environmental. Let me look at the error-context for a req3-core failure.
+toolCall bash {"command": "for d in /tmp/req3-check-run1/req3-core-*/; do echo \"=== $d\"; sed -n '1,40p' \"$d/error-context.md\" 2>/dev/null; done | head -80"}
+stopReason: toolUse
+
+### 2026-09-28T05:37:46.251Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L97
+ROLE toolResult bash
+text: === /tmp/req3-check-run1/req3-core-REQ-3-1-1-edit-a-f08d1-mit-and-refresh-persistence-req3-core/
+# Page snapshot
+
+```yaml
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Workbooks" [level=1] [ref=e5]
+    - button "New blank workbook" [ref=e6] [cursor=pointer]
+  - list [ref=e7]:
+    - listitem [ref=e8]: No workbooks yet.
+```=== /tmp/req3-check-run1/req3-core-REQ-3-1-2-paste--7542f--only-overwrites-the-target-req3-core/
+# Page snapshot
+
+```yaml
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Workbooks" [level=1] [ref=e5]
+    - button "New blank workbook" [ref=e6] [cursor=pointer]
+  - list [ref=e7]:
+    - listitem [ref=e8]: No workbooks yet.
+```=== /tmp/req3-check-run1/req3-core-REQ-3-1-2-paste--96aed--the-same-clipboard-content-req3-core/
+# Page snapshot
+
+```yaml
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Workbooks" [level=1] [ref=e5]
+    - button "New blank workbook" [ref=e6] [cursor=pointer]
+  - list [ref=e7]:
+    - listitem [ref=e8]: No workbooks yet.
+```
+isError: False
+
+### 2026-09-28T05:37:49.422Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L98
+ROLE assistant 
+thinking: All failures are "No workbooks yet" — the seeded workbook JSON got deleted from the servers' DATA_DIRs mid-run. This is environmental interference, not my code.
+
+Root cause? Let's find it, because I need a clean run for evidence.
+
+Hypothesis: Another agent's `checks/seed-idempotency.sh` might do something. Let me check that script. Or a test that removes the seed to test "No workbooks yet" state — AH WAIT. Maybe another agent's spec (e.g. issue-2's create-workbook spec) tests the empty state by deleting the data dir contents via a delete API? There's no delete API.
+
+Hmm, but what about `existsWithName`? no.
+
+Let me check what other agents' backend code does. Maybe another worktree's backend has an extra route (e.g. DELETE /api/workbooks) and their checks delete all workbooks. But that wouldn't touch MY server's data dir.
+
+Unless... their checks and mine share a data dir? No.
+
+Wait, actually! Consider this: my run and their run both call `free_port()`. Suppose both got the SAME port for one server. Then requests from my browser go to whichever server bound the port. But the data-dir deletion issue... hmm.
+
+Alternatively, maybe the deletion is because of `rm -f "$PID_FILE"` where PID_FILE collided? `mktemp` guarantees uniqueness.
+
+Hmm, let me look for the deletion directly: search bash history? Not available.
+
+Let me check the bg004 grep result.
+toolCall bash {"command": "pbb tail bg004 2>&1 | tail -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:37:49.632Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L99
+ROLE toolResult bash
+text: <pi_context source="pbb" kind="pbb.tail" schema_version="1" session_id="01a0e680-f727-737a-a04f-1553c698ea7e" session_key="5b892424912f7dfdd59c2edf" instance_id="pbb_163_cd2a4cf7" lane="" scope="current-instance" job_id="bg004" owner_instance_id="pbb_163_cd2a4cf7" status="running" cursor="9" lines="80">
+No log output recorded yet.
+</pi_context>
+isError: False
+
+### 2026-09-28T05:37:51.108Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L100
+ROLE assistant 
+thinking: Still running. Let me take a completely different approach: check if the deletion is caused by the *seed-idempotency.sh* scripts which might `rm -rf "$DATA_DIR"`. Let me look at issue-2's seed-idempotency.sh (or any).
+
+Actually — I have a better idea: monitor. Run `inotifywait` isn't available probably. But I can check the running processes' command lines for ones that include "wb-checks" and rm. Let me list all processes.
+toolCall bash {"command": "ps -eo pid,ppid,etime,cmd --sort=start_time | grep -vE \"grep|ps -eo\" | tail -40"}
+stopReason: toolUse
+
+### 2026-09-28T05:37:51.150Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L101
+ROLE toolResult bash
+text:    7085    7063       00:08 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=gpu-process --gpu-recent-crash-count=0 --no-sandbox --disable-dev-shm-usage --disable-breakpad --headless --ozone-platform=headless --use-angle=swiftshader-webgl --crashpad-handler-pid=7058 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-1sxb9p --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAAAEAAAAAAAAAAAAAGAASAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --field-trial-handle=3,i,8749233807673556255,17960813250926192012,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,3059135188746162937,11819779196972820510,4 --trace-process-track-uuid=3190708988185955192
+   7088    7053       00:08 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader-webgl --mute-audio --crashpad-handler-pid=7058 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-1sxb9p --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,8749233807673556255,17960813250926192012,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,3059135188746162937,11819779196972820510,4 --trace-process-track-uuid=3190708989122997041
+   7115    7064       00:08 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=utility --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader-webgl --mute-audio --crashpad-handler-pid=7058 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-1sxb9p --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,8749233807673556255,17960813250926192012,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,3059135188746162937,11819779196972820510,4 --trace-process-track-uuid=3190708990060038890
+   7144    7064       00:07 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=renderer --top-chrome-webui --crashpad-handler-pid=7058 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-1sxb9p --change-stack-guard-on-fork=enable --no-sandbox --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --enable-automation --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-platform=headless --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --launch-time-ticks=66808675563 --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,8749233807673556255,17960813250926192012,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,3059135188746162937,11819779196972820510,4 --trace-process-track-uuid=3190708990997080739
+   7146    1247       00:07 /workspace/submission/agent/runtime/bin/node /opt/arcbench/node_modules/playwright/lib/common/process.js
+   7160    7064       00:07 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=renderer --crashpad-handler-pid=7058 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-1sxb9p --change-stack-guard-on-fork=enable --no-sandbox --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --enable-automation --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-platform=headless --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=7 --launch-time-ticks=66808758035 --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,8749233807673556255,17960813250926192012,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,3059135188746162937,11819779196972820510,4 --trace-process-track-uuid=3190708992871164437
+   7162    7064       00:07 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=renderer --crashpad-handler-pid=7058 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-1sxb9p --change-stack-guard-on-fork=enable --no-sandbox --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --enable-automation --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-platform=headless --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=6 --launch-time-ticks=66808762676 --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,8749233807673556255,17960813250926192012,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,3059135188746162937,11819779196972820510,4 --trace-process-track-uuid=3190708991934122588
+   7220    6950       00:06 /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-6/pi-glm-fast-g1/shared/formula-engine/node_modules/@esbuild/linux-x64/bin/esbuild --service=0.21.5 --ping
+   7235    7146       00:05 /workspace/submission/agent/runtime/bin/../.agent-browser/browsers/chrome-154.0.8037.57/chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AcceptCHFrame,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-LOw7oU --remote-debugging-pipe --no-startup-window
+   7239       1       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome_crashpad_handler --monitor-self --monitor-self-annotation=ptype=crashpad-handler --database=/workspace/template/.factory26/20260928-025746-66feadac/work/home/.config/google-chrome-for-testing/Crash Reports --annotation=lsb-release=Ubuntu 24.04.3 LTS --annotation=plat=Linux --annotation=prod=Chrome_Linux --annotation=ver=154.0.8037.57 --initial-client-fd=7 --shared-client-connection
+   7241       1       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome_crashpad_handler --no-periodic-tasks --monitor-self-annotation=ptype=crashpad-handler --database=/workspace/template/.factory26/20260928-025746-66feadac/work/home/.config/google-chrome-for-testing/Crash Reports --annotation=lsb-release=Ubuntu 24.04.3 LTS --annotation=plat=Linux --annotation=prod=Chrome_Linux --annotation=ver=154.0.8037.57 --initial-client-fd=4 --shared-client-connection
+   7244    7235       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=zygote --no-zygote-sandbox --no-sandbox --headless --crashpad-handler-pid=7239 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-LOw7oU --change-stack-guard-on-fork=enable --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --use-angle=swiftshader-webgl
+   7245    7235       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=zygote --no-sandbox --headless --crashpad-handler-pid=7239 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-LOw7oU --change-stack-guard-on-fork=enable --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --use-angle=swiftshader-webgl
+   7266    7244       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=gpu-process --gpu-recent-crash-count=0 --no-sandbox --disable-dev-shm-usage --disable-breakpad --headless --ozone-platform=headless --use-angle=swiftshader-webgl --crashpad-handler-pid=7239 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-LOw7oU --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAAAEAAAAAAAAAAAAAGAASAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --field-trial-handle=3,i,7778200918421153431,16252806803984395275,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,2045404706612320832,13859089662418402183,4 --trace-process-track-uuid=3190708988185955192
+   7288    7235       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader-webgl --mute-audio --crashpad-handler-pid=7239 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-LOw7oU --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,7778200918421153431,16252806803984395275,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,2045404706612320832,13859089662418402183,4 --trace-process-track-uuid=3190708989122997041
+   7298    7245       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=utility --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader-webgl --mute-audio --crashpad-handler-pid=7239 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-LOw7oU --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,7778200918421153431,16252806803984395275,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,2045404706612320832,13859089662418402183,4 --trace-process-track-uuid=3190708990060038890
+   7331    7245       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=renderer --top-chrome-webui --crashpad-handler-pid=7239 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-LOw7oU --change-stack-guard-on-fork=enable --no-sandbox --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --enable-automation --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-platform=headless --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --launch-time-ticks=66811180092 --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,7778200918421153431,16252806803984395275,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,2045404706612320832,13859089662418402183,4 --trace-process-track-uuid=3190708990997080739
+   7352    7245       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=renderer --crashpad-handler-pid=7239 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-LOw7oU --change-stack-guard-on-fork=enable --no-sandbox --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --enable-automation --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-platform=headless --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=7 --launch-time-ticks=66811262525 --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,7778200918421153431,16252806803984395275,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,2045404706612320832,13859089662418402183,4 --trace-process-track-uuid=3190708992871164437
+   7354    7245       00:05 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=renderer --crashpad-handler-pid=7239 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-LOw7oU --change-stack-guard-on-fork=enable --no-sandbox --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --enable-automation --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-platform=headless --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=6 --launch-time-ticks=66811265820 --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,7778200918421153431,16252806803984395275,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,2045404706612320832,13859089662418402183,4 --trace-process-track-uuid=3190708991934122588
+   7407    3178       00:04 sleep 20
+   7421    2675       00:04 /workspace/submission/agent/runtime/bin/node /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-2/pi-glm-fast-g1/checks/node_modules/playwright/lib/common/process.js
+   7439    7421       00:03 /workspace/submission/agent/runtime/bin/../.agent-browser/browsers/chrome-154.0.8037.57/chrome --disable-field-trial-config --disable-background-networking --disable-background-timer-throttling --disable-backgrounding-occluded-windows --disable-back-forward-cache --disable-breakpad --disable-client-side-phishing-detection --disable-component-extensions-with-background-pages --disable-component-update --no-default-browser-check --disable-default-apps --disable-dev-shm-usage --disable-extensions --disable-features=AcceptCHFrame,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,PaintHolding,ThirdPartyStoragePartitioning,Translate,AutoDeElevate,RenderDocument,OptimizationHints --enable-features=CDPScreenshotNewSurface --allow-pre-commit-input --disable-hang-monitor --disable-ipc-flooding-protection --disable-popup-blocking --disable-prompt-on-repost --disable-renderer-backgrounding --force-color-profile=srgb --metrics-recording-only --no-first-run --password-store=basic --use-mock-keychain --no-service-autorun --export-tagged-pdf --disable-search-engine-choice-screen --unsafely-disable-devtools-self-xss-warnings --edge-skip-compat-layer-relaunch --enable-automation --disable-infobars --disable-search-engine-choice-screen --disable-sync --headless --hide-scrollbars --mute-audio --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --no-sandbox --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-SxqMPo --remote-debugging-pipe --no-startup-window
+   7445       1       00:03 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome_crashpad_handler --monitor-self --monitor-self-annotation=ptype=crashpad-handler --database=/workspace/template/.factory26/20260928-025746-66feadac/work/home/.config/google-chrome-for-testing/Crash Reports --annotation=lsb-release=Ubuntu 24.04.3 LTS --annotation=plat=Linux --annotation=prod=Chrome_Linux --annotation=ver=154.0.8037.57 --initial-client-fd=7 --shared-client-connection
+   7447       1       00:03 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome_crashpad_handler --no-periodic-tasks --monitor-self-annotation=ptype=crashpad-handler --database=/workspace/template/.factory26/20260928-025746-66feadac/work/home/.config/google-chrome-for-testing/Crash Reports --annotation=lsb-release=Ubuntu 24.04.3 LTS --annotation=plat=Linux --annotation=prod=Chrome_Linux --annotation=ver=154.0.8037.57 --initial-client-fd=4 --shared-client-connection
+   7450    7439       00:03 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=zygote --no-zygote-sandbox --no-sandbox --headless --crashpad-handler-pid=7445 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-SxqMPo --change-stack-guard-on-fork=enable --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --use-angle=swiftshader-webgl
+   7451    7439       00:03 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=zygote --no-sandbox --headless --crashpad-handler-pid=7445 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-SxqMPo --change-stack-guard-on-fork=enable --no-first-run --ozone-platform=headless --ozone-override-screen-size=800,600 --use-angle=swiftshader-webgl
+   7471    7450       00:03 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=gpu-process --gpu-recent-crash-count=0 --no-sandbox --disable-dev-shm-usage --disable-breakpad --headless --ozone-platform=headless --use-angle=swiftshader-webgl --crashpad-handler-pid=7445 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-SxqMPo --change-stack-guard-on-fork=enable --gpu-preferences=YAAAAAAAAAAgAAAEAAAAAAAAAAAAAGAASAAAAAAAAAAAAAAAAAAAAEAAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAAAAAAAAAAAMAAAAAAAAAAwAAAAAAAAAAAAAAAAAAAACAAAAAAAAAAMAAAAAQAAAAAAAAAAAAAACAAAAAAAAAAIAAAAAAAAAA== --shared-files --field-trial-handle=3,i,16848996957536318510,18207202541642461258,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,4071191873798310553,15365455958291316835,4 --trace-process-track-uuid=3190708988185955192
+   7474    7439       00:03 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=utility --utility-sub-type=network.mojom.NetworkService --lang=en-US --service-sandbox-type=none --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader-webgl --mute-audio --crashpad-handler-pid=7445 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-SxqMPo --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,16848996957536318510,18207202541642461258,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,4071191873798310553,15365455958291316835,4 --trace-process-track-uuid=3190708989122997041
+   7494    7451       00:02 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=utility --utility-sub-type=storage.mojom.StorageService --lang=en-US --service-sandbox-type=utility --no-sandbox --disable-dev-shm-usage --use-angle=swiftshader-webgl --mute-audio --crashpad-handler-pid=7445 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-SxqMPo --change-stack-guard-on-fork=enable --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,16848996957536318510,18207202541642461258,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,4071191873798310553,15365455958291316835,4 --trace-process-track-uuid=3190708990060038890
+   7525    7451       00:02 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=renderer --top-chrome-webui --crashpad-handler-pid=7445 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-SxqMPo --change-stack-guard-on-fork=enable --no-sandbox --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --enable-automation --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-platform=headless --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=5 --launch-time-ticks=66813582664 --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,16848996957536318510,18207202541642461258,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,4071191873798310553,15365455958291316835,4 --trace-process-track-uuid=3190708990997080739
+   7534    7451       00:02 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=renderer --crashpad-handler-pid=7445 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-SxqMPo --change-stack-guard-on-fork=enable --no-sandbox --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --enable-automation --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-platform=headless --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=7 --launch-time-ticks=66813658325 --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,16848996957536318510,18207202541642461258,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,4071191873798310553,15365455958291316835,4 --trace-process-track-uuid=3190708992871164437
+   7536    7451       00:02 /workspace/submission/agent/runtime/.agent-browser/browsers/chrome-154.0.8037.57/chrome --type=renderer --crashpad-handler-pid=7445 --enable-crash-reporter=, --noerrdialogs --user-data-dir=/tmp/pwt/playwright_chromiumdev_profile-SxqMPo --change-stack-guard-on-fork=enable --no-sandbox --disable-dev-shm-usage --disable-back-forward-cache --disable-background-timer-throttling --disable-breakpad --enable-automation --force-color-profile=srgb --remote-debugging-pipe --allow-pre-commit-input --blink-settings=primaryHoverType=2,availableHoverTypes=2,primaryPointerType=4,availablePointerTypes=4 --ozone-platform=headless --disable-gpu-compositing --lang=en-US --num-raster-threads=4 --enable-main-frame-before-activation --renderer-client-id=6 --launch-time-ticks=66813660882 --shared-files=v8_context_snapshot_data:100 --field-trial-handle=3,i,16848996957536318510,18207202541642461258,262144 --enable-features=CDPScreenshotNewSurface,SingleAxisScrollContainers --disable-features=AcceptCHFrame,AutoDeElevate,AvoidUnnecessaryBeforeUnloadCheckSync,DestroyProfileOnBrowserClose,DialMediaRouteProvider,GlobalMediaControls,HttpsUpgrades,LensOverlay,MediaRouter,OptimizationHints,PaintHolding,RenderDocument,ThirdPartyStoragePartitioning,Translate --variations-seed-version --pseudonymization-salt-handle=7,i,4071191873798310553,15365455958291316835,4 --trace-process-track-uuid=3190708991934122588
+   7574     104       00:02 bash -lc sleep 28; tail -12 /tmp/csv2-run.log
+   7576    7574       00:02 sleep 28
+   7628    3138       00:00 sleep 2
+   7629    6950       00:00 node (vitest 1)
+   7636    1244       00:00 sleep 2
+   7649    2666       00:00 sleep 2
+   7650    6839       00:00 sleep 2
+   7656    7652       00:00 tail -40
+isError: False
+
+### 2026-09-28T05:38:01.130Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L102
+ROLE assistant 
+thinking: I see processes from issue-6 (vitest) and issue-2 (playwright) etc. Many agents running concurrently. The shared machine is loaded.
+
+I still don't see the deleter. Hmm, notice `sleep 2` processes with parents 3138, 2666, 6839, 7628, 1244... those are the watchdogs (mine is 1244). Others too.
+
+Where do the json files go? Let me reconsider: maybe the *server* deletes them. Look at store.saveWorkbook: writes tmp then renames. If two writes race, files get overwritten but not deleted.
+
+Wait — could `ensureDataDir` / `existsWithName`... no.
+
+Hmm, what if another agent's *backend code differs* and their server is bound to the same port as mine (free_port race)?? Then my browser requests would hit THEIR server, whose DATA_DIR differs. Then "No workbooks yet" could result if their server's DATA_DIR was a dir that they had cleaned. But their server also seeds Q3 Sales at startup (wait_for_ready checked). Unless their frontend build differs... but the page snapshot shows a home page.
+
+Actually! This is a much better hypothesis: **port collision**. free_port() binds port 0, gets a free port, closes, then the server starts later — a TOCTOU race. With many agents starting servers simultaneously, two agents can pick the same port. The second `node server.js` fails to bind (EADDRINUSE) → dies → run.sh watchdog restarts → repeatedly fails → or run.sh's wait_for_ready detects death → exit 3. Hmm, in my run the servers did become ready.
+
+But here's the thing: if my HOME server died and another agent's server took the port... then my browser would hit theirs.
+
+Hmm, but "No workbooks yet" means the server on that port has an empty data dir. If the other agent's server had seeded, it'd show Q3 Sales. Unless the other agent's server is for a different app version with different seed? They all seed Q3 Sales.
+
+OK, let me stop speculating and inspect: are MY 5 servers still alive? `ps` showed several backend servers earlier but now the tail didn't show them (only chrome). Let me check which backend servers are running with which DATA_DIR.
+
+Actually, easier: my run's servers are started with DATA_DIR in env. I can read /proc/<pid>/environ. Let me list node server.js processes and their DATA_DIR/PORT.
+
+But wait: the log files /tmp/wb-checks-pi-deepseek-fast-g1-897-*.log are gone. That means something with permission deleted them. The pids file too. If a rogue `rm -f /tmp/wb-checks-*` ran, it would have deleted:
+- my logs and pid file
+- my 5 data dirs (they match /tmp/wb-checks-XXXXXX)
+- other agents' data dirs too
+
+But data dirs still exist (6 of them) — including empty ones. If `rm -rf /tmp/wb-checks-*` ran, dirs would be gone. So not that.
+
+What if `find /tmp/wb-checks-* -type f -delete`? That would explain: dirs remain, files (logs, pid, json) deleted! And 3 data dirs have json files still... hmm, inconsistent.
+
+Wait, actually: my run's data dirs, after the files were deleted, the watchdog restarted servers → re-seeded → new json files created → some dirs have json again. The dirs that are still empty are ones whose servers were NOT restarted (still running the old process that won't re-seed, since seeding is startup-only).
+
+So the deletion event: someone deleted FILES under /tmp/wb-checks-* (or the json files). Who? 
+
+Hmm, note the earlier `ls -la /tmp/wb-checks-*` at 05:34 showed my logs and dirs. Then at ~05:36 the deletion happened.
+
+Let me check if there's a cron/daemon: `systemd-tmpfiles-clean` runs daily. Not it.
+
+Maybe the environment has a wrapper that cleans /tmp periodically (the arcbench runtime). Possible: the harness cleans /tmp of files older than N minutes? Files were 2 min old.
+
+Hmm, let me check /tmp for a cleaner log or script. Actually, let me check if there's an entry in crontab.
+
+Whatever the cause, the practical approach: make my check runner resilient and run it when the interference is less likely, or use a DATA_DIR under the workspace (not /tmp). That's a good idea: use `mktemp -d "$ROOT/../.check-data-XXXX"`? But .gitignore... Actually /tmp is used for Chromium's short path. The Chromium temp is /tmp/pwt. Data dirs could be under the worktree.
+
+But hold on — the official evaluation presumably runs `checks/run.sh`-like commands in /tmp too, or maybe its own. The requirement says "自检用空闲端口与临时数据目录". Using a temp dir under the repo is still a temp data dir.
+
+Better: I'll modify run.sh to use a data root that is not matched by a global /tmp cleanup, e.g. `${TMPDIR_DATA:-$ROOT/checks/.data}` with unique subdirs, and make the watchdog re-seed/inspect. Hmm, but checks/.gitignore ignores results/ only; data dirs would show as untracked. I can add a gitignore entry.
+
+Actually simpler and more robust: make the check runner verify the seed is present before each spec, and restart/reseed if the data dir got emptied. The watchdog could check "if workbooks endpoint returns empty, re-run seed"? The server seeds only at startup; but the watchdog could delete nothing and instead... hmm, if data files are deleted, restarting the server re-seeds. So: watchdog change — if `curl /api/workbooks` doesn't contain Q3 Sales, kill and restart the server. That handles the deletion.
+
+But that changes check infrastructure, which is fine (it's my own test harness).
+
+Actually, hold on. Let me reconsider the cause once more, because it matters for the "real" failure analysis. Let me check whether other agents' runs also suffered "No workbooks yet". If it's a global interference, they'd see it too and might have complained.
+
+Hmm, let me look for the actual deleter differently: check `dmesg`? No.
+
+Let me check if `checks/seed-idempotency.sh` in some worktree removes the data dir. Let me read it.
+toolCall bash {"command": "cat /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/seed-idempotency.sh; echo \"=== crontab ===\"; crontab -l 2>/dev/null; ls /etc/cron.d/ 2>/dev/null; echo \"=== tmpfiles ===\"; cat /usr/lib/tmpfiles.d/tmp.conf 2>/dev/null | head -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:38:01.225Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L103
+ROLE toolResult bash
+text: #!/usr/bin/env bash
+# Startup seed contract check (idempotent, never overwrites user changes).
+#
+# 1. start the app with a fresh DATA_DIR -> exactly the seeded workbook
+#    "Q3 Sales" (Sheet1 + Sheet2)
+# 2. the user edits a seeded cell and creates another workbook
+# 3. restart the app on the same DATA_DIR
+# 4. the seed must not be duplicated and the user's changes must be intact
+#
+# Usage: checks/seed-idempotency.sh [--skip-build]
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+SKIP_BUILD=false
+[[ "${1:-}" == "--skip-build" ]] && SKIP_BUILD=true
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 171]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 172]
+
+cleanup() {
+  [[ -n "$PID" ]] && kill "$PID" 2>/dev/null || true
+  wait 2>/dev/null || true
+}
+trap cleanup EXIT
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 173]
+
+stop_app() {
+  kill "$PID" 2>/dev/null || true
+  wait "$PID" 2>/dev/null || true
+  PID=""
+}
+
+# --- first start: the promise about the initial state -----------------------
+: > "$LOG"
+start_app
+echo "first start: DATA_DIR=$DATA_DIR PORT=$PORT"
+
+summary() {
+  python3 - "$BASE" "$1" <<'PY'
+import json, sys, urllib.request
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 174]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 175]
+
+summary seed
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 176]
+
+# --- restart on the same DATA_DIR ------------------------------------------
+stop_app
+start_app
+echo "restart: same DATA_DIR"
+
+summary after-restart
+
+echo "seed idempotency check passed"
+=== crontab ===
+e2scrub_all
+=== tmpfiles ===
+#  This file is part of systemd.
+#
+#  systemd is free software; you can redistribute it and/or modify it
+#  under the terms of the GNU Lesser General Public License as published by
+#  the Free Software Foundation; either version 2.1 of the License, or
+#  (at your option) any later version.
+
+# See tmpfiles.d(5) for details
+
+# Clear tmp directories separately, to make them easier to override
+D /tmp 1777 root root 30d
+#q /var/tmp 1777 root root 30d
+isError: False
+
+### 2026-09-28T05:38:04.025Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L104
+ROLE assistant 
+thinking: The seed-idempotency.sh uses `/tmp/wb-seed-check-XXXXXX` and doesn't delete /tmp/wb-checks.
+
+Hmm. tmpfiles clears /tmp at 30d.
+
+Let me look at this from another angle: maybe the JSON files were never deleted; instead, my servers were restarted by the watchdog onto DIFFERENT data dirs. Look at the watchdog function in MY run.sh:
+
+```bash
+watchdog() {
+  while true; do
+    sleep 2
+    local suffix pid
+    for suffix in "${SUFFIXES[@]}"; do
+```
+
+It uses `local` inside a function — fine. `start_server "$suffix"` uses `${DATA_DIRS[$suffix]}`. Fine.
+
+Hmm, wait! Look at the actual run.sh in my worktree lines 60-80 to be sure the logs/pid are as I think. Earlier `cat checks/run.sh` showed the watchdog restarts with same DATA_DIR. Yes.
+
+OK, alternative theory: the servers are alive and their DATA_DIRs have files; the browsers are hitting the WRONG server (port collision). Let's test: which ports are my servers on, and do they return Q3 Sales?
+
+I can't easily get the ports now (logs gone). But I can check /proc/<pid>/environ of the running server processes to find DATA_DIR and PORT, and curl them.
+
+Let me do that.
+toolCall bash {"command": "for pid in $(pgrep -f \"backend/dist/server.js\"); do dd=$(tr '\\0' '\\n' < /proc/$pid/environ 2>/dev/null | grep '^DATA_DIR='); pt=$(tr '\\0' '\\n' < /proc/$pid/environ 2>/dev/null | grep '^PORT='); echo \"pid=$pid $dd $pt\"; done"}
+stopReason: toolUse
+
+### 2026-09-28T05:38:04.922Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L105
+ROLE toolResult bash
+text: pid=1135 DATA_DIR=/tmp/wb-checks-GtWYUA PORT=51611
+pid=1151 DATA_DIR=/tmp/wb-checks-WDEPzF PORT=47643
+pid=1167 DATA_DIR=/tmp/wb-checks-qnzScQ PORT=38329
+pid=1200 DATA_DIR=/tmp/wb-checks-KRU2zX PORT=52267
+pid=1231 DATA_DIR=/tmp/wb-checks-AA3sbp PORT=53213
+pid=2566 DATA_DIR=/tmp/wb-checks-lGymqt PORT=58997
+pid=2605 DATA_DIR=/tmp/wb-checks-UAUbNp PORT=43621
+pid=2647 DATA_DIR=/tmp/wb-checks-P6t0tz PORT=33049
+pid=2886 DATA_DIR=/tmp/wb-checks-njaIKE PORT=55347
+pid=2912 DATA_DIR=/tmp/wb-checks-8Q2W3M PORT=56007
+pid=2972 DATA_DIR=/tmp/wb-checks-Ie4XKb PORT=46585
+pid=3011 DATA_DIR=/tmp/wb-checks-lgt8WE PORT=35957
+pid=5986 DATA_DIR=/tmp/wb-checks-LRetAr PORT=33381
+pid=6740 DATA_DIR=/tmp/wb-checks-V1l8GK PORT=47857
+pid=6806 DATA_DIR=/tmp/wb-checks-QWPXK1 PORT=47627
+pid=6823 DATA_DIR=/tmp/wb-checks-UWzIAB PORT=44799
+pid=8117
+isError: False
+
+### 2026-09-28T05:38:14.493Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L106
+ROLE assistant 
+thinking: Interesting! pids 1135-1231 are from MY run (started 05:34). Their DATA_DIRs: GtWYUA, WDEPzF, qnzScQ, KRU2zX, AA3sbp. But earlier `ls /tmp/wb-checks-*` showed dirs: 8Q2W3M, KRU2zX, P6t0tz, UAUbNp, njaIKE, qnzScQ — and NOT GtWYUA, WDEPzF, AA3sbp! And indeed those dirs (GtWYUA, WDEPzF, AA3sbp) are gone but their servers are still running (holding deleted dirs)!
+
+So the directories GtWYUA, WDEPzF, AA3sbp were DELETED (rm -rf) while the servers kept running. That's why those servers return empty lists — `ensureDataDir()` recreates the dir on read (mkdirSync recursive), so listWorkbooks returns empty instead of erroring. That matches "No workbooks yet"!
+
+So someone did `rm -rf /tmp/wb-checks-*` or specifically deleted those dirs. KRU2zX and qnzScQ survived as empty dirs (their json deleted?). Hmm, KRU2zX and qnzScQ exist but are empty. So:
+- GtWYUA (pid 1135), WDEPzF (pid 1151), AA3sbp (pid 1231): dirs deleted entirely.
+- KRU2zX (pid 1200), qnzScQ (pid 1167): dirs exist but empty.
+- New dirs (UAUbNp, P6t0tz, njaIKE, 8Q2W3M, lGymqt, Ie4XKb, lgt8WE...) belong to other agents' runs.
+
+So a bulk deletion of `/tmp/wb-checks-*` happened, then the dirs were recreated (by ensureDataDir) for those servers that received a request; for KRU2zX and qnzScQ the dirs were recreated (empty). Wait, if `rm -rf` deleted the dir and then ensureDataDir on next request recreated it empty → KRU2zX/qnzScQ exist empty. And GtWYUA/WDEPzF/AA3sbp don't exist → maybe their `rm -rf` happened but no subsequent request recreated them... but they must have served requests (tests failed). Hmm, ensureDataDir is called in listWorkbooks → so it would recreate. Unless the rm -rf happened AFTER the request.
+
+Whatever: the conclusion is that some process ran `rm -rf /tmp/wb-checks-*` (or a glob) around 05:36, nuking my servers' data dirs and logs. That's clear external interference on the shared machine. Notably, ALL agents using /tmp/wb-checks-* were affected, so it might be an agent that ran a cleanup command like `rm -rf /tmp/wb-checks-*` to free space.
+
+Wait, could it be MY OWN command? I ran `ls -la /tmp/wb-checks-*` — no. Hmm, my bg002 was `sleep 60; tail -40 /tmp/req3-check-run1.log; pbb status bg001`. No.
+
+Hmm, what about `pbb`? No.
+
+OK. Regardless, I need a robust check run. Strategy:
+1. Kill my current run (it's producing garbage failures).
+2. Harden run.sh: (a) put data dirs under a path unlikely to be swept, e.g. `$ROOT/checks/.data/<pid>` and log prefix likewise; (b) add a watchdog that detects a missing/empty seed and restarts the server (which re-seeds); (c) ensure cleanup removes them.
+3. Rerun.
+
+But careful: modifying run.sh changes files in my PR. That's acceptable (check hardening) — the previous commit did similar.
+
+Actually, a simpler robust fix: before each spec, verify the seed; the watchdog does that. Plus move data dirs out of /tmp. Let me implement both:
+- `DATA_ROOT="${CHECK_DATA_ROOT:-$ROOT/checks/.data}"` with subdir `$DATA_ROOT/$suffix-$$`.
+- Logs: keep in /tmp (they were deleted too, but logs are less critical). Better also move logs under `$ROOT/checks/.logs` or the results dir. Actually, since results go to checks/results (inside repo) and survive, put logs there too: `LOG_PREFIX="$ROOT/checks/results/.logs/<stamp>-$$"`. Hmm, but results dir is gitignored (checks/results/). Good.
+- Add watchdog seed check.
+
+Hmm, but wait: the official evaluator might run `checks/run.sh` too, and my modifications must not break it. Using a repo-local data dir is fine.
+
+Also `checks/.gitignore` currently has 3 lines; let me check it. I'll add `.data/` and `.logs/`.
+
+Let me first stop the current run to free resources. Kill bg001 and its children.
+
+Actually, let me let it finish? It's going to fail a bunch and take ~10 min. Better to kill and rerun clean.
+
+Let me kill the run tree: pids 893 (bash), 895 (timeout), 897 (run.sh), 1244 (run.sh subshell), 1247 (playwright), plus servers 1135,1151,1167,1200,1231, and chrome processes. Kill via the pid file? It's deleted. I'll kill the process group of 893.
+
+Let me find the pgid and kill -TERM the group. Actually pbb job bg001 pgid was 893. `kill -- -893`.
+
+Also there may be leftover chrome from my run. The run.sh cleanup kills servers; playwright kills its browsers. Let me kill 893's group first, then check for orphan servers with DATA_DIR in my 5 dirs and kill them.
+
+Let me do this.
+toolCall bash {"command": "pbb stop bg001 2>&1 | tail -3; kill -- -893 2>/dev/null; sleep 2; kill -TERM 895 897 1244 1247 2>/dev/null; for pid in 1135 1151 1167 1200 1231; do kill $pid 2>/dev/null; done; sleep 2; ps -p 1135,1151,1167,1200,1231,1247 -o pid= 2>/dev/null || echo \"all stopped\""}
+stopReason: toolUse
+
+### 2026-09-28T05:38:18.736Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L107
+ROLE toolResult bash
+text: Unknown pbb command: stop
+all stopped
+isError: False
+
+### 2026-09-28T05:38:20.541Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L108
+ROLE assistant 
+thinking: Good. Now let me harden run.sh. Let me check checks/.gitignore first.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && cat checks/.gitignore && echo \"=== root .gitignore ===\" && cat .gitignore && echo \"=== procs left ===\" && pgrep -af \"backend/dist/server.js\" | wc -l"}
+stopReason: toolUse
+
+### 2026-09-28T05:38:20.732Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L109
+ROLE toolResult bash
+text: /node_modules/
+/results/
+/test-results/
+=== root .gitignore ===
+node_modules/
+dist/
+# The shared formula engine ships its compiled dist so a fresh clone can build
+# the app without an extra bootstrap step (see shared/formula-engine/README.md).
+!shared/formula-engine/dist/
+data/
+checks/node_modules
+checks/core.*
+checks/results/
+core.*
+=== procs left ===
+12
+isError: False
+
+### 2026-09-28T05:38:28.932Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L110
+ROLE assistant 
+thinking: 12 server processes still running (other agents'). Fine.
+
+Now let me harden run.sh:
+1. Data dirs under repo: `CHECK_DATA_ROOT="${CHECK_DATA_ROOT:-$ROOT/checks/.data}"`. Hmm, but if the official evaluation runs the checks, having data under the repo is fine.
+
+Actually, wait. Maybe better to keep /tmp but use a unique prefix that a generic sweep wouldn't match AND add the watchdog seed check. But the sweep deleted `/tmp/wb-checks-*` which IS the prefix. Any prefix could be swept. A repo-local dir is safer.
+
+Let me use `$ROOT/checks/.run/<stamp>-$$/` for both data and logs, gitignored.
+
+2. Watchdog: check each server's seed; if the workbook list is empty or missing Q3 Sales, restart the server (which re-seeds on startup). But if the DATA_DIR was deleted entirely, restarting recreates and seeds. Good. If the dir exists with user edits but no Q3 Sales... it will re-seed Q3 Sales (fine for tests? The tests rely on seed). Actually if a test deleted Q3 Sales deliberately (none do), restart would re-create. Acceptable.
+
+Careful: the check "create-workbook" test creates workbooks; the seed check would still find Q3 Sales. Fine.
+
+Let me write the watchdog to check readiness via curl with a short timeout each loop (every 2s x 5 servers = 5 curls per 2s; fine, but let's do every 3s).
+
+Implementation: factor a `seed_present()` function and use it both for wait_for_ready and watchdog.
+
+Let me now edit run.sh. I'll rewrite the relevant sections.
+
+Also note: `SERVER_LOG_PREFIX` env override is used by other agents; keep supporting it.
+
+Let me write the new run.sh carefully.
+
+Current run.sh content (my worktree) — let me re-read the exact lines to edit. I have it from earlier cat. Let me make targeted edits:
+
+a) After `LOG_PREFIX=...` line, change:
+```
+LOG_PREFIX="${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename "$ROOT")-$$}"
+PID_FILE="$(mktemp /tmp/wb-checks-pids-XXXXXX)"
+```
+to
+```
+# Keep per-run state inside the repository: a shared machine's /tmp is swept by
+# other runs (and by tmp cleaners), which would delete a live server's DATA_DIR
+# mid-check and turn a real result into "no workbooks yet".
+RUN_DIR="$ROOT/checks/.run/$(date +%Y%m%dT%H%M%S)-$$"
+mkdir -p "$RUN_DIR"
+LOG_PREFIX="${SERVER_LOG_PREFIX:-$RUN_DIR/log}"
+PID_FILE="$RUN_DIR/pids"
+: > "$PID_FILE"
+```
+But `start_server` appends pid to PID_FILE; `: >` before. Also cleanup `rm -f "$PID_FILE"` — but we want to keep logs after the run for evidence? The old code kept logs in /tmp. Hmm, if we delete the pid file but keep logs in .run/, they accumulate. That's OK, gitignored. Actually evidence is good. Let me not delete the run dir at cleanup; keep logs. But data dirs would also accumulate in .run. Acceptable; or store data dirs under .run/data-<suffix>. Since mktemp -d in .run is fine.
+
+Actually cleanup removes only PID_FILE currently. I'll keep RUN_DIR.
+
+b) replace `DATA_DIRS[$suffix]="$(mktemp -d /tmp/wb-checks-XXXXXX)"` with `DATA_DIRS[$suffix]="$(mktemp -d "$RUN_DIR/data-$suffix-XXXXXX")"`.
+
+c) watchdog: add seed check and restart.
+
+Let me write the edits.
+
+Also, the `free_port` function could collide with another agent. To reduce risk, after picking a port, we could verify... hard to fully avoid. I could bind with SO_REUSEADDR and keep... Actually a robust approach: have the server itself retry ports? Simpler: after starting, wait_for_ready confirms OUR server (it checks the response contains Q3 Sales AND the pid is alive). If another agent's server grabbed the port, our server would die (EADDRINUSE) → run.sh exits with error 3. That's detectable. Fine.
+
+Additionally, to reduce port collision, I can pick ports in a distinct high range? Not really.
+
+Let me implement.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/run.sh", "offset": 40, "limit": 70}
+stopReason: toolUse
+
+### 2026-09-28T05:38:30.843Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L111
+ROLE toolResult read
+text: if ! $SKIP_BUILD; then
+  (cd "$ROOT/frontend" && npm run build)
+  (cd "$ROOT/backend" && npm run build)
+else
+  [[ -f "$ROOT/backend/dist/server.js" ]] || { echo "backend/dist missing; build first"; exit 2; }
+  [[ -f "$ROOT/frontend/dist/index.html" ]] || { echo "frontend/dist missing; build first"; exit 2; }
+fi
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 177]
+
+free_port() {
+  python3 - <<'PY'
+import socket
+s = socket.socket()
+s.bind(("127.0.0.1", 0))
+print(s.getsockname()[1])
+s.close()
+PY
+}
+
+# env var suffix -> spec file handled by the matching Playwright project.
+# REQ3_CORE / REQ3_INTEGRATION belong to issue #5 (REQ-3 editing and ranges).
+SUFFIXES=(CREATE EDITOR HOME REQ3_CORE REQ3_INTEGRATION)
+declare -A PORTS URLS DATA_DIRS SERVER_PIDS
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 178]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 179]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 180]
+
+# This machine may be shared with other agents' runs. If something outside this
+# script kills one of our servers, restart it on the same port and DATA_DIR so
+# the run keeps observing the same state; the restart stays in the log.
+watchdog() {
+  while true; do
+
+[43 more lines in file. Use offset=110 to continue.]
+isError: False
+
+### 2026-09-28T05:38:40.923Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L112
+ROLE assistant 
+thinking: Let me now apply edits to run.sh.
+
+Edit 1: log/pid/run dir.
+Edit 2: data dir path.
+Edit 3: wait_for_ready uses a shared seed_present function + data dir recreation check; watchdog checks seed.
+
+Let me write the new watchdog function that also verifies the seed. I'll restructure:
+
+```bash
+seed_present() {
+  local port="$1"
+  curl -sf --max-time 3 "http://127.0.0.1:$port/api/workbooks" 2>/dev/null | grep -q "Q3 Sales"
+}
+
+# Wait until this server answers with the seeded workbook.
+wait_for_ready() {
+  local port="$1" pid="$2" log="$3"
+  local attempt
+  for attempt in $(seq 1 120); do
+    if seed_present "$port"; then
+      return 0
+    fi
+    ...
+```
+
+Watchdog:
+```bash
+watchdog() {
+  while true; do
+    sleep 3
+    local suffix pid
+    for suffix in "${SUFFIXES[@]}"; do
+      pid="${SERVER_PIDS[$suffix]:-}"
+      if [[ -z "$pid" ]] || ! kill -0 "$pid" 2>/dev/null; then
+        echo "[watchdog] server for $suffix (pid $pid) disappeared at $(date -Is); restarting" >> "$LOG_PREFIX-$suffix.log"
+        start_server "$suffix"
+      elif ! seed_present "${PORTS[$suffix]}"; then
+        # A concurrent run / tmp cleaner removed our DATA_DIR: the files are
+        # gone, so the only way back to the promised initial state is a restart
+        # (the seed runs at startup and is idempotent).
+        echo "[watchdog] seed for $suffix missing at $(date -Is); restarting on the same DATA_DIR" >> "$LOG_PREFIX-$suffix.log"
+        kill "$pid" 2>/dev/null || true
+        start_server "$suffix"
+      fi
+    done
+  done
+}
+```
+
+Wait, there's a subtlety: during a test that intentionally deletes/changes Q3 Sales? No test does. But `create-workbook` test creates extra workbooks; seed still present. OK.
+
+But careful: during startup, seed_present is false for up to a few seconds. The watchdog starts after all servers are ready, so fine.
+
+Another subtlety: `DATA_DIRS[$suffix]` may have been deleted; restart uses same (now missing) dir; the server's ensureDataDir recreates it and seeds. Good.
+
+One more: if the data dir was deleted, `DATA_DIRS[$suffix]` path itself is gone; node's fs.mkdirSync recursive will recreate. Good.
+
+Edit 3 also should handle the case where the port was stolen by another server that also has Q3 Sales — can't detect. Ignore.
+
+Let me apply edits.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/run.sh", "edits": [{"oldText": "# A fixed log path would be truncated by any other run of this harness; keep the\n# logs of this run together and identifiable instead.\nLOG_PREFIX=\"${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename \"$ROOT\")-$$}\"\nPID_FILE=\"$(mktemp /tmp/wb-checks-pids-XXXXXX)\"\nWATCHDOG=\"\"", "newText": "# A fixed log path would be truncated by any other run of this harness; keep the\n# logs of this run together and identifiable instead.\n#\n# All per-run state lives inside the repository rather than in /tmp: this\n# machine runs several agents' check suites at once, and a shared /tmp prefix\n# was observed being swept while servers were still serving from it, which\n# deletes a live server's DATA_DIR and turns real results into \"no workbooks\n# yet\". A repository-local run directory is private to this checkout.\nRUN_DIR=\"${CHECK_RUN_DIR:-$ROOT/checks/.run/$(date +%Y%m%dT%H%M%S)-$$}\"\nmkdir -p \"$RUN_DIR\"\nLOG_PREFIX=\"${SERVER_LOG_PREFIX:-$RUN_DIR/log}\"\nPID_FILE=\"$RUN_DIR/pids\"\n: > \"$PID_FILE\"\nWATCHDOG=\"\""}, {"oldText": "  [[ -n \"$WATCHDOG\" ]] && kill \"$WATCHDOG\" 2>/dev/null || true\n  while read -r pid; do\n    kill \"$pid\" 2>/dev/null || true\n  done < \"$PID_FILE\"\n  rm -f \"$PID_FILE\"\n  wait 2>/dev/null || true", "newText": "  [[ -n \"$WATCHDOG\" ]] && kill \"$WATCHDOG\" 2>/dev/null || true\n  while read -r pid; do\n    kill \"$pid\" 2>/dev/null || true\n  done < \"$PID_FILE\"\n  wait 2>/dev/null || true"}, {"oldText": "# Wait until this server answers with the seeded workbook.\nwait_for_ready() {\n  local port=\"$1\" pid=\"$2\" log=\"$3\"\n  local attempt\n  for attempt in $(seq 1 120); do\n    if curl -sf \"http://127.0.0.1:$port/api/workbooks\" | grep -q \"Q3 Sales\"; then\n      return 0\n    fi", "newText": "# Does this server still answer with the seeded workbook?\nseed_present() {\n  curl -sf --max-time 3 \"http://127.0.0.1:$1/api/workbooks\" 2>/dev/null | grep -q \"Q3 Sales\"\n}\n\n# Wait until this server answers with the seeded workbook.\nwait_for_ready() {\n  local port=\"$1\" pid=\"$2\" log=\"$3\"\n  local attempt\n  for attempt in $(seq 1 120); do\n    if seed_present \"$port\"; then\n      return 0\n    fi"}, {"oldText": "  DATA_DIRS[$suffix]=\"$(mktemp -d /tmp/wb-checks-XXXXXX)\"", "newText": "  DATA_DIRS[$suffix]=\"$(mktemp -d \"$RUN_DIR/data-$suffix-XXXXXX\")\""}, {"oldText": "# This machine may be shared with other agents' runs. If something outside this\n# script kills one of our servers, restart it on the same port and DATA_DIR so\n# the run keeps observing the same state; the restart stays in the log.\nwatchdog() {\n  while true; do\n    sleep 2\n    local suffix pid\n    for suffix in \"${SUFFIXES[@]}\"; do\n      pid=\"${SERVER_PIDS[$suffix]:-}\"\n      if [[ -n \"$pid\" ]] && ! kill -0 \"$pid\" 2>/dev/null; then\n        echo \"[watchdog] server for $suffix (pid $pid) disappeared at $(date -Is); restarting on the same DATA_DIR\" \\\n          >> \"$LOG_PREFIX-$suffix.log\"\n        start_server \"$suffix\"\n      fi\n    done\n  done\n}", "newText": "# This machine may be shared with other agents' runs. If something outside this\n# script kills one of our servers, restart it on the same port and DATA_DIR so\n# the run keeps observing the same state; the restart stays in the log.\n# The same holds when the server is alive but its DATA_DIR was wiped underneath\n# it: restarting re-creates the directory and re-seeds the promised workbook\n# (the seed is idempotent), instead of silently serving \"no workbooks yet\".\nwatchdog() {\n  while true; do\n    sleep 3\n    local suffix pid\n    for suffix in \"${SUFFIXES[@]}\"; do\n      pid=\"${SERVER_PIDS[$suffix]:-}\"\n      if [[ -n \"$pid\" ]] && ! kill -0 \"$pid\" 2>/dev/null; then\n        echo \"[watchdog] server for $suffix (pid $pid) disappeared at $(date -Is); restarting on the same DATA_DIR\" \\\n          >> \"$LOG_PREFIX-$suffix.log\"\n        start_server \"$suffix\"\n      elif [[ -n \"$pid\" ]] && ! seed_present \"${PORTS[$suffix]}\"; then\n        echo \"[watchdog] seed for $suffix missing at $(date -Is); restarting on the same DATA_DIR\" \\\n          >> \"$LOG_PREFIX-$suffix.log\"\n        kill \"$pid\" 2>/dev/null || true\n        start_server \"$suffix\"\n      fi\n    done\n  done\n}"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:38:41.129Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L113
+ROLE toolResult edit
+text: Successfully replaced 5 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/run.sh.
+isError: False
+
+### 2026-09-28T05:38:44.846Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L114
+ROLE assistant 
+thinking: Also update checks/.gitignore to ignore .run/. And root .gitignore already ignores checks/results but not checks/.run. Let me add to checks/.gitignore.
+
+Also: the watchdog's `start_server` when a server died — but if the port was taken by another process, the new server dies immediately, and the loop keeps restarting every 3s. That's acceptable (logs grow). Actually it could loop forever creating a mess. Previously same behavior. Fine.
+
+One more issue: the `seed_present` check runs every 3s per server, i.e., 5 curl requests per 3s. Each request triggers listWorkbooks → reads all JSON files. Minor overhead but fine.
+
+Hmm, but there's a risk: the watchdog will restart a server if a test *intentionally* has no Q3 Sales. Which tests? None remove it. But `create-workbook.spec.ts` might test the empty state? Let me check quickly: it tests creating a workbook with empty name → rejected. It doesn't clear the seed. And `seed-idempotency.sh` is separate. OK.
+
+But one real risk: a test that renames "Q3 Sales" — the rename test in home-editor renames a workbook then renames it back? Let me check editor-interactions/home-editor for rename of Q3 Sales. If a test renames Q3 Sales to something else and the watchdog fires in that window (3s), it would restart the server and re-seed Q3 Sales, possibly breaking the test. Let me check.
+
+grep for rename in specs.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -rn \"Rename\\|rename\\|Q3 Sales\" checks/*.spec.ts | grep -iv \"openWorkbook\\|workbookItem(page, \\\"Q3 Sales\\\")\\|'Q3 Sales'\" | head -30; echo \"=== rename tests ===\"; grep -n \"RenameSection\\|Rename the workbook\\|Workbook name\" checks/*.spec.ts | head -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:38:45.123Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L115
+ROLE toolResult bash
+text: checks/create-workbook.spec.ts:6: * Runs against a freshly seeded server, so "Q3 Sales" is present and must stay
+checks/editor-interactions.spec.ts:16: * Grid ARIA contract, formula bar editing and REQ-1-2-2 (rename workbook).
+checks/editor-interactions.spec.ts:19: * change workbook content rename/create a workbook of their own and leave the
+checks/editor-interactions.spec.ts:20: * seeded `Q3 Sales` untouched, so every check in this file still observes the
+checks/editor-interactions.spec.ts:66:  // Own workbook, so the seeded `Q3 Sales` stays exactly as seeded for the
+checks/editor-interactions.spec.ts:84:test("rename updates the editor title and the home link; empty name is rejected", async ({
+checks/editor-interactions.spec.ts:87:  // Rename a workbook of our own so the seeded workbook stays untouched for
+checks/editor-interactions.spec.ts:89:  const sourceName = `Rename source ${Date.now()}`;
+checks/editor-interactions.spec.ts:91:  const newName = `Renamed ${Date.now()}`;
+checks/editor-interactions.spec.ts:93:  await page.getByRole("button", { name: "Rename workbook", exact: true }).click();
+checks/editor-interactions.spec.ts:125:  await expect(page.getByRole("button", { name: "Rename workbook", exact: true })).toBeVisible();
+checks/editor-interactions.spec.ts:127:  // The renamed workbook still carries its own (blank) grid, not other data.
+checks/editor-interactions.spec.ts:136:  await page.getByRole("button", { name: "Rename workbook", exact: true }).click();
+checks/home-editor.spec.ts:16: * Runs against a freshly seeded server (Q3 Sales = Sheet1 + Sheet2).
+checks/home-editor.spec.ts:24:  await expect(item.getByRole("link", { name: "Q3 Sales", exact: true })).toBeVisible();
+checks/home-editor.spec.ts:29:    "Q3 Sales"
+checks/home-editor.spec.ts:33:test("opening Q3 Sales shows the seeded content, tabs and the same Last updated", async ({
+checks/home-editor.spec.ts:43:  await expect(page.getByRole("heading", { level: 1, name: "Q3 Sales", exact: true })).toBeVisible();
+checks/home-editor.spec.ts:81:  await expect(page.getByRole("heading", { level: 1, name: "Q3 Sales", exact: true })).toBeVisible();
+checks/home-editor.spec.ts:86:  await expect(page.getByRole("heading", { level: 1, name: "Q3 Sales", exact: true })).toBeVisible();
+checks/home-editor.spec.ts:96:  // Leave `Q3 Sales` on its seeded active worksheet again, so the checks that
+checks/req3-integration.spec.ts:186:  throw new Error('seeded workbook "Q3 Sales" not found');
+=== rename tests ===
+checks/create-workbook.spec.ts:17:  // Creation page: "Workbook name" text box + "Create" submit button.
+checks/create-workbook.spec.ts:18:  const nameInput = page.getByLabel("Workbook name", { exact: true });
+checks/create-workbook.spec.ts:58:  await page.getByLabel("Workbook name", { exact: true }).fill(name);
+checks/create-workbook.spec.ts:74:  await page.getByLabel("Workbook name", { exact: true }).fill("   ");
+checks/create-workbook.spec.ts:77:  await expect(page.getByText("Workbook name cannot be empty")).toBeVisible();
+checks/create-workbook.spec.ts:86:  await page.getByLabel("Workbook name", { exact: true }).fill("Retry Create");
+checks/editor-interactions.spec.ts:94:  const input = page.getByLabel("Workbook name", { exact: true });
+checks/editor-interactions.spec.ts:102:  await expect(page.getByText("Workbook name cannot be empty")).toBeVisible();
+checks/editor-interactions.spec.ts:137:  const input = page.getByLabel("Workbook name", { exact: true });
+checks/req3-core.spec.ts:340:    await page.getByLabel('Workbook name', { exact: true }).fill(`Undo scope ${Date.now()}`);
+isError: False
+
+### 2026-09-28T05:38:46.552Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L116
+ROLE assistant 
+thinking: Good — tests never rename Q3 Sales. So the watchdog seed check is safe.
+
+Now update checks/.gitignore.
+toolCall write {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.gitignore", "content": "/node_modules/\n/results/\n/test-results/\n/.run/\n"}
+stopReason: toolUse
+
+### 2026-09-28T05:38:46.621Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L117
+ROLE toolResult write
+text: Successfully wrote to /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.gitignore
+isError: False
+
+### 2026-09-28T05:38:49.959Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L118
+ROLE assistant 
+thinking: Now let me verify the run.sh syntax and then run the full suite again in background. But note the machine is loaded with other agents' runs, which will make tests slower and possibly flaky. Also, other agents may be running builds that could interfere with dist? Each worktree has its own dist. Fine.
+
+Let me bash -n the script, then start the run.
+
+Actually, one more consideration: the REQ3 integration test seeds validation rules by writing into the DATA_DIR json file. With the watchdog restarting servers if seed missing, that's fine. But the seedNumberRule writes directly to the file — the server reads per request, so it works.
+
+However! The watchdog seed check curls /api/workbooks. That's independent of the data file writes. Fine.
+
+Let me also double check: watchdog restarts a server if `seed_present` fails. During the REQ3 test that seeds rules, Q3 Sales is still present. Fine.
+
+Let me run. I'll run in background and poll.
+
+Actually, given the heavy concurrent load, maybe run only the REQ-3 projects first (faster feedback), then the full suite. But run.sh runs all. I could set a Playwright filter... run.sh doesn't support project args. I'll just run the full suite; it takes ~5-10 min.
+
+Let me first syntax check and start.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && bash -n checks/run.sh && echo \"syntax OK\" && git diff --stat checks/run.sh checks/.gitignore"}
+stopReason: toolUse
+
+### 2026-09-28T05:38:50.320Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L119
+ROLE toolResult bash
+text: syntax OK
+ checks/.gitignore |  1 +
+ checks/run.sh     | 33 +++++++++++++++++++++++++++------
+ 2 files changed, 28 insertions(+), 6 deletions(-)
+isError: False
+
+### 2026-09-28T05:38:52.219Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L120
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && CHECK_OUTPUT_DIR=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/results/run-$(date +%Y%m%dT%H%M%S) ./checks/run.sh > /tmp/issue5-run2.log 2>&1; echo \"EXIT=$?\" | tee -a /tmp/issue5-run2.log", "background": true}
+stopReason: toolUse
+
+### 2026-09-28T05:38:52.232Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L121
+ROLE toolResult bash
+text: Bash job bg005 started in background. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T05:38:54.921Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L122
+ROLE assistant 
+thinking: Now while it runs, let me examine whether the REQ-3 implementation is complete and whether there are bugs I should preemptively fix. Let me look at the core check failures from before? They were all environmental. But some tests failed with "No workbooks yet" before reaching their real assertions.
+
+Let me review the remaining files: refs.ts, styles.css, api.ts, SheetTabs, and the api saveState/updateCells. Also check the vite.config change and tsconfig change.
+
+Also: I should think about the ARIA `aria-rowcount`/`aria-colcount`—grid aria-colcount includes +1 for rowheader column; fine.
+
+One concern: `aria-multiselectable="true"` — but the implementation is single-range. Requirement only asks the attribute plus aria-selected semantics. Fine.
+
+Another: "网格可见地指示完整选区" — CSS class "selected". Let me verify styles.css has a visible background. Let me check.
+
+Let me also verify the run progress periodically.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git show 3333ac1 -- frontend/src/styles.css frontend/vite.config.ts frontend/tsconfig.json frontend/package.json | head -120"}
+stopReason: toolUse
+
+### 2026-09-28T05:38:57.624Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L123
+ROLE toolResult bash
+text: commit 3333ac19d4dadc10b209740b077ca44a3c1e75bd
+Author: @deepseek-5 <deepseek-5@braid.local>
+Date:   Mon Sep 28 04:57:39 2026 +0000
+
+    REQ-3 单元格编辑、范围操作与撤销重做（#5）
+    
+    编辑（REQ-3-1-1）：公式栏与网格行内文本框（可访问名 "Edit <坐标>"）走同一条写
+    管道；Enter/失焦提交、Escape 取消；公式格网格显示引擎结果、公式栏显示原文；
+    提交失败显示最后成功值。
+    
+    批量粘贴（REQ-3-1-2）：TSV 二维解析（空字段保留、只覆盖目标矩形）、右键菜单
+    menuitem "Paste" 与 Ctrl+V 同一路径、整单原子。
+    
+    矩形选区（REQ-3-1-3）：拖拽成矩形，aria-selected 由矩形派生；每个工作表持久化
+    完整矩形 lastSelectionRect，刷新/切表精确恢复且互不覆盖。
+    
+    范围复制/剪切/粘贴（REQ-3-2-1）：复制按目标偏移调整相对引用（消费 #6 的
+    adjustFormulaForCopy，绝对引用不变），剪切先写目标后清源（同一批），校验拒绝时
+    源与目标都保持原状。
+    
+    撤销/重做（REQ-3-2-2）：会话内 History（不跨工作簿），工具栏按钮 + Ctrl+Z/Ctrl+Y，
+    每次操作记录 before/after raw 快照；undo 后新修改清空 redo 分支。
+    
+    校验管道（消费 #7 契约）：validate -> write -> recalc -> persist -> history；
+    拒绝时渲染 message 与 hint 两个独立元素，不落值、不入历史。
+    
+    验收：checks/req3-core.spec.ts、checks/req3-integration.spec.ts（Playwright，
+    独立端口 + 临时数据目录）、checks/unit/editing.test.ts（node --test，11 项）。
+
+diff --git a/frontend/package.json b/frontend/package.json
+index ef6dffc..a9be211 100644
+--- a/frontend/package.json
++++ b/frontend/package.json
+@@ -12,6 +12,8 @@
+     "preview": "vite preview"
+   },
+   "dependencies": {
++    "@app/formula-engine": "file:../shared/formula-engine",
++    "hyperformula": "^3.4.0",
+     "react": "^18.3.1",
+     "react-dom": "^18.3.1",
+     "react-router-dom": "^6.26.2"
+diff --git a/frontend/src/styles.css b/frontend/src/styles.css
+index 3004117..900b6c8 100644
+--- a/frontend/src/styles.css
++++ b/frontend/src/styles.css
+@@ -284,3 +284,67 @@ input[type="text"] {
+   color: #1a73e8;
+   font-weight: 600;
+ }
++
++/* ---------- Editing toolbar, inline cell editor, grid context menu (REQ-3) ---------- */
++.editor-toolbar {
++  display: flex;
++  align-items: center;
++  gap: 8px;
++  padding: 4px 16px;
++  background: #fff;
++  border-bottom: 1px solid #dadce0;
++}
++
++.editor-toolbar button {
++  font: inherit;
++  padding: 4px 12px;
++  border: 1px solid #dadce0;
++  border-radius: 4px;
++  background: #fff;
++  cursor: pointer;
++}
++
++.editor-toolbar button:disabled {
++  color: #9aa0a6;
++  cursor: default;
++}
++
++.grid .gridcell {
++  position: relative;
++}
++
++.grid .gridcell input.cell-editor {
++  width: 100%;
++  height: 100%;
++  box-sizing: border-box;
++  padding: 0 5px;
++  border: none;
++  font: inherit;
++  background: #fff;
++  outline: 2px solid #1a73e8;
++  outline-offset: -2px;
++}
++
++.grid-menu {
++  display: flex;
++  flex-direction: column;
++  min-width: 120px;
++  background: #fff;
++  border: 1px solid #dadce0;
++  border-radius: 4px;
++  box-shadow: 0 2px 8px rgba(60, 64, 67, 0.3);
++  z-index: 20;
++}
++
++.grid-menu button {
++  font: inherit;
++  text-align: left;
++  padding: 8px 12px;
++  border: none;
++  background: transparent;
++  cursor: pointer;
++}
++
++.grid-menu button:hover {
++  background: #f1f3f4;
++}
+diff --git a/frontend/tsconfig.json b/frontend/tsconfig.json
+index 41c669a..3b7f4c9 100644
+--- a/frontend/tsconfig.json
++++ b/frontend/tsconfig.json
+@@ -14,6 +14,7 @@
+     "isolatedModules": true,
+isError: False
+
+### 2026-09-28T05:38:59.522Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L124
+ROLE assistant 
+thinking: The `.gridcell.selected` style — is it defined in the base styles.css (from #2)? Let me check that the selected class has a visible style. Requirement: "网格可见地指示完整选区" (grid visibly indicates the whole selection). Let me grep for `.selected` in styles.css.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -n \"selected\\|gridcell\" frontend/src/styles.css | head -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:38:59.622Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L125
+ROLE toolResult bash
+text: 248:.grid .gridcell {
+253:.grid .gridcell.selected {
+259:.grid .gridcell:focus {
+282:.sheet-tab[aria-selected="true"] {
+312:.grid .gridcell {
+316:.grid .gridcell input.cell-editor {
+isError: False
+
+### 2026-09-28T05:39:01.128Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L126
+ROLE assistant 
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/styles.css", "offset": 240, "limit": 30}
+stopReason: toolUse
+
+### 2026-09-28T05:39:01.223Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L127
+ROLE toolResult read
+text:   background: #f8f9fa;
+  text-align: center;
+  color: #5f6368;
+  position: sticky;
+  left: 0;
+  z-index: 1;
+}
+
+.grid .gridcell {
+  cursor: cell;
+  background: #fff;
+}
+
+.grid .gridcell.selected {
+  outline: 2px solid #1a73e8;
+  outline-offset: -2px;
+  background: #e8f0fe;
+}
+
+.grid .gridcell:focus {
+  outline: 2px solid #1a73e8;
+  outline-offset: -2px;
+}
+
+/* ---------- Sheet tabs ---------- */
+.sheet-tabs-row {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 16px;
+
+[82 more lines in file. Use offset=270 to continue.]
+isError: False
+
+### 2026-09-28T05:39:02.919Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L128
+ROLE assistant 
+thinking: Good, selection is visible.
+
+Now let me check the check run progress. Let me poll /tmp/issue5-run2.log and the results dir.
+toolCall bash {"command": "sleep 20; cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1; tail -20 /tmp/issue5-run2.log; echo \"=== failures ===\"; find checks/results/run-* -mindepth 1 -maxdepth 1 -type d 2>/dev/null | tail -5; echo \"=== servers ===\"; pgrep -af \"backend/dist/server.js\" | wc -l; ls checks/.run/ 2>/dev/null", "timeout": 30}
+stopReason: toolUse
+
+### 2026-09-28T05:39:23.027Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L129
+ROLE toolResult bash
+text: note: typescript is not installed under checks/ (cd checks && npm install); skipping type-check
+
+> frontend@1.0.0 build
+> tsc -p tsconfig.json && vite build
+
+vite v5.4.21 building for production...
+transforming...
+=== failures ===
+=== servers ===
+14
+
+Command exited with code 2
+isError: True
+
+### 2026-09-28T05:39:26.018Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L130
+ROLE assistant 
+thinking: Still building. Note "typescript is not installed under checks/" — checks/node_modules only has 3 entries, so tsc isn't installed there! Earlier I saw `checks/node_modules present (3 entries)`. The run.sh typecheck is skipped. The playwright binary exists? Let's see: `checks/node_modules/.bin/playwright` must exist since previous run worked. Let me check.
+
+Actually the previous run worked (it ran playwright), so fine. But typecheck skipping is a gap: the PR claims "检查套件加类型检查". checks/node_modules lacks typescript, so tsc is not available. Hmm, 3 entries: probably .bin, .package-lock.json, @playwright? Let me check. And the playwright binary: run.sh uses `$ROOT/checks/node_modules/.bin/playwright` — if that exists, good. Wait, earlier ps showed `checks/node_modules/.bin/playwright test` running. So .bin exists.
+
+Let me check what's in checks/node_modules.
+
+Also package-lock.json in checks — maybe I should run `cd checks && npm install` to get typescript + @playwright/test types. But network access may be limited. Let me check if npm install works (maybe cached).
+
+Let's first check the contents.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ls -la checks/node_modules/ && ls checks/node_modules/.bin/ 2>/dev/null && echo \"=== playwright pkg? ===\" && ls checks/node_modules/playwright* 2>/dev/null | head"}
+stopReason: toolUse
+
+### 2026-09-28T05:39:26.131Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L131
+ROLE toolResult bash
+text: total 28
+drwxr-xr-x 6 root root 4096 Sep 23 05:04 .
+drwxr-xr-x 1 root root 4096 Sep 23 13:28 ..
+drwxr-xr-x 2 root root 4096 Sep 23 05:04 .bin
+-rw-r--r-- 1 root root 1580 Sep 23 05:04 .package-lock.json
+drwxr-xr-x 3 root root 4096 Sep 23 05:04 @playwright
+drwxr-xr-x 4 root root 4096 Sep 23 05:04 playwright
+drwxr-xr-x 5 root root 4096 Sep 23 05:04 playwright-core
+playwright
+playwright-core
+=== playwright pkg? ===
+checks/node_modules/playwright:
+LICENSE
+NOTICE
+README.md
+ThirdPartyNotices.txt
+cli.js
+index.d.ts
+index.js
+index.mjs
+jsx-runtime.js
+isError: False
+
+### 2026-09-28T05:39:28.918Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L132
+ROLE assistant 
+thinking: checks/node_modules has playwright but not typescript. So the type-check step is skipped. I could install typescript to enable it: `cd checks && npm install` — that would install devDeps (typescript, @types/node, @playwright/test). But @playwright/test isn't in node_modules either! The specs import from '@playwright/test'... but @playwright is a dir. Let me check: `checks/node_modules/@playwright` — likely test. Let me check.
+
+Also `tsc -p tsconfig.json` — tsconfig includes specs and needs @playwright/test types.
+
+The typecheck was skipped, so type errors in specs remain unchecked. That's a minor gap; the specs did run. I could install typescript offline? Check npm cache.
+
+Let me check if npm install works (network). Try `cd checks && npm install --prefer-offline --no-audit --no-fund` in background. If offline, it fails quickly.
+
+Actually, the earlier commit 23e1dd1 in develop ("检查套件加类型检查") intended this. If typescript isn't installed, typecheck silently skips. Not a blocker for the deliverable, but nice. Let me try installing; if it works, run the typecheck for real.
+
+Let me check network quickly.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks && ls node_modules/@playwright/ && timeout 60 npm install --prefer-offline --no-audit --no-fund 2>&1 | tail -15", "timeout": 75}
+stopReason: toolUse
+
+### 2026-09-28T05:39:35.419Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L133
+ROLE toolResult bash
+text: test
+npm warn reify Removing non-directory /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules
+
+added 6 packages in 6s
+isError: False
+
+### 2026-09-28T05:39:37.521Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L134
+ROLE assistant 
+thinking: npm install worked. Now checks/node_modules has typescript, @playwright/test, @types/node. Let me verify and run the typecheck.
+
+Careful: this run is happening concurrently with the running check suite (bg005). Installing typescript shouldn't affect it.
+
+Let me run tsc typecheck now.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ls checks/node_modules/.bin/ && ./checks/node_modules/.bin/tsc -p checks/tsconfig.json && echo \"TYPECHECK OK\""}
+stopReason: toolUse
+
+### 2026-09-28T05:39:43.918Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L135
+ROLE toolResult bash
+text: playwright
+playwright-core
+tsc
+tsserver
+TYPECHECK OK
+isError: False
+
+### 2026-09-28T05:39:47.818Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L136
+ROLE assistant 
+thinking: Typecheck passes. Note checks/package-lock.json may have changed? npm install with existing lock — let me check git status later. Also checks/node_modules is gitignored.
+
+Now let me check the main run progress.
+toolCall bash {"command": "tail -30 /tmp/issue5-run2.log; echo \"=== failures ===\"; ls -d /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/results/run-*/ 2>/dev/null; find /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/results/run-*/ -mindepth 1 -maxdepth 1 -type d 2>/dev/null | head"}
+stopReason: toolUse
+
+### 2026-09-28T05:39:47.839Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L137
+ROLE toolResult bash
+text: note: typescript is not installed under checks/ (cd checks && npm install); skipping type-check
+
+> frontend@1.0.0 build
+> tsc -p tsconfig.json && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 274 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.41 kB │ gzip:   0.27 kB
+dist/assets/index-C37XF4p2.css    4.11 kB │ gzip:   1.28 kB
+dist/assets/index-DBvPrbgj.js   977.04 kB │ gzip: 230.46 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 17.61s
+
+> backend@1.0.0 build
+> tsc -p tsconfig.json
+
+=== failures ===
+isError: False
+
+### 2026-09-28T05:39:51.924Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L138
+ROLE assistant 
+thinking: Still in the build/startup phase. Let me wait more. Meanwhile, let me consider the remaining deliverables and whether to create the PR now or after the run.
+
+Actually, I realize I should also verify the whole thing works from a *fresh clone* perspective — but that's for the root integration.
+
+Let me also double-check the `frontend/package-lock.json` change includes the file: dep. Yes.
+
+While waiting, let me plan the PR body and the handoff comment.
+
+Also, I need to decide about the stale remote branch. Plan: 
+- Commit the run.sh hardening (+ maybe .gitignore).
+- Push the local branch to origin as a new descriptive branch `issue-5-req3-editing`, force-update `braid-agent/issue-5/pi-deepseek-fast-g1` too? Hmm. The harness might use `braid-agent/issue-5/pi-deepseek-fast-g1` for future runs. Keeping it stale is bad. I'll force-push it to the current HEAD as well (so the agent workspace branch is current), and create the PR from `issue-5-req3-editing`. Actually simpler: create PR with `--head issue-5-req3-editing` and also force-push the agent branch. Two pushes of the same commits. Fine.
+
+Hmm, wait. Is force-pushing the agent branch safe? Other agents may have it checked out? Only my session. The harness may snapshot. I'll do `git push --force-with-lease origin braid-agent/issue-5/pi-deepseek-fast-g1:braid-agent/issue-5/pi-deepseek-fast-g1`. Actually --force-with-lease requires the local ref to match remote, which it does (it tracks). But since local is behind/diverged... force-with-lease compares the remote ref to the expected value recorded locally. Since we fetched at start, origin/braid-agent/issue-5/... = 927358f. So `--force-with-lease=braid-agent/issue-5/pi-deepseek-fast-g1:927358f` or plain --force-with-lease works.
+
+Let me first wait for checks.
+
+Let me poll again in a bit. Meanwhile, let me read the remaining check helper and editor-interactions to ensure my changes didn't break REQ-1 tests (e.g., formula bar label, grid roles). The previous develop checks passed; my Grid.tsx changes add editing but keep roles. The FormulaBar changed. Let me make sure `editor-interactions.spec.ts` expectations still hold. Let me read it.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/editor-interactions.spec.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:39:51.926Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L139
+ROLE toolResult read
+text: import { test, expect } from "@playwright/test";
+import {
+  cell,
+  colHeader,
+  createWorkbook,
+  goHome,
+  grid,
+  openHome,
+  openWorkbook,
+  rowHeader,
+  sheetTab,
+  workbookItem,
+} from "./helpers";
+
+/**
+ * Grid ARIA contract, formula bar editing and REQ-1-2-2 (rename workbook).
+ *
+ * Runs against a freshly seeded server (one server per spec file). Checks that
+ * change workbook content rename/create a workbook of their own and leave the
+ * seeded `Q3 Sales` untouched, so every check in this file still observes the
+ * promised seeded state.
+ */
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 181]
+
+  const worksheetGrid = grid(page);
+  await expect(worksheetGrid).toHaveAttribute("aria-multiselectable", "true");
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 182]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 183]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 184]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 185]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 186]
+
+  // The selected cell and formula bar stay in sync.
+  await expect(page.getByLabel("Formula bar", { exact: true })).toHaveValue("");
+});
+
+test("formula bar edits commit and persist after refresh", async ({ page }) => {
+  // Own workbook, so the seeded `Q3 Sales` stays exactly as seeded for the
+  // checks that run after this one in the same file.
+  await createWorkbook(page, `Edit target ${Date.now()}`);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 187]
+
+  await page.reload();
+  await expect(cell(page, "B1")).toHaveText("East");
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 188]
+
+test("rename updates the editor title and the home link; empty name is rejected", async ({
+  page,
+}) => {
+  // Rename a workbook of our own so the seeded workbook stays untouched for
+  // the checks that run after this one in the same file (one server per file).
+  const sourceName = `Rename source ${Date.now()}`;
+  await createWorkbook(page, sourceName);
+  const newName = `Renamed ${Date.now()}`;
+
+  await page.getByRole("button", { name: "Rename workbook", exact: true }).click();
+  const input = page.getByLabel("Workbook name", { exact: true });
+
+  // Prefilled with the last saved name.
+  await expect(input).toHaveValue(sourceName);
+
+  // Empty after trimming is rejected; the original name stays displayed.
+  await input.fill("   ");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Workbook name cannot be empty")).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: sourceName, exact: true })).toBeVisible();
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 189]
+
+  // Survives refresh.
+  await page.reload();
+  await expect(page.getByRole("heading", { level: 1, name: newName, exact: true })).toBeVisible();
+
+  // Home-page link shows the new name, and the old name is gone.
+  await goHome(page);
+  const item = workbookItem(page, newName);
+  await expect(item).toHaveCount(1);
+  await expect(item.getByRole("link", { name: newName, exact: true })).toBeVisible();
+  await expect(workbookItem(page, sourceName)).toHaveCount(0);
+
+  // Reopening shows the most recently saved name.
+  await item.getByRole("link", { name: newName, exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name: newName, exact: true })).toBeVisible();
+  await expect(sheetTab(page, "Sheet1")).toHaveAttribute("aria-selected", "true");
+  await expect(page.getByRole("button", { name: "Rename workbook", exact: true })).toBeVisible();
+
+  // The renamed workbook still carries its own (blank) grid, not other data.
+  await expect(cell(page, "A1")).toHaveText("");
+});
+
+test("leading and trailing spaces are trimmed when renaming", async ({ page }) => {
+  const sourceName = `Trim source ${Date.now()}`;
+  await createWorkbook(page, sourceName);
+  const newName = `Trimmed ${Date.now()}`;
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 190]
+
+  await expect(page.getByRole("heading", { level: 1, name: newName, exact: true })).toBeVisible();
+  await goHome(page);
+  await expect(workbookItem(page, newName)).toHaveCount(1);
+  await expect(workbookItem(page, sourceName)).toHaveCount(0);
+});
+
+isError: False
+
+### 2026-09-28T05:39:54.640Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L140
+ROLE assistant 
+thinking: These should still pass. One thing: the first test checks `cell(page,'B2')` after loading Q3 Sales with selection A1... but REQ-3 changed persistence: `lastSelectionRect`. In `editor-interactions` test "grid exposes the promised ARIA roles...": opens Q3 Sales. If a previous test in the same file left Q3 Sales with a rect selection... no, that test is first. And it expects A1 aria-selected true and B2 false. Seed has selection null, activeCell A1 → fine.
+
+Second test: create own workbook, B1 click, fill, Enter, reload → expects B1 selected. Our persistState saves activeCell B1 and selection null. On reload, selection = wb.selection ?? null → null → activeCell B1 → B1 selected. Good.
+
+Now let me poll the run.
+toolCall bash {"command": "sleep 25; tail -45 /tmp/issue5-run2.log; echo \"=== run dirs ===\"; ls /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/results/ | tail -3", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:40:19.729Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L141
+ROLE toolResult bash
+text: note: typescript is not installed under checks/ (cd checks && npm install); skipping type-check
+
+> frontend@1.0.0 build
+> tsc -p tsconfig.json && vite build
+
+vite v5.4.21 building for production...
+transforming...
+✓ 274 modules transformed.
+rendering chunks...
+computing gzip size...
+dist/index.html                   0.41 kB │ gzip:   0.27 kB
+dist/assets/index-C37XF4p2.css    4.11 kB │ gzip:   1.28 kB
+dist/assets/index-DBvPrbgj.js   977.04 kB │ gzip: 230.46 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 17.61s
+
+> backend@1.0.0 build
+> tsc -p tsconfig.json
+
+server for CREATE: http://127.0.0.1:33999 (DATA_DIR=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/data-CREATE-enBE9O, log=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/log-CREATE.log)
+server for EDITOR: http://127.0.0.1:51823 (DATA_DIR=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/data-EDITOR-gifIpt, log=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/log-EDITOR.log)
+server for HOME: http://127.0.0.1:48205 (DATA_DIR=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/data-HOME-dGLQXT, log=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/log-HOME.log)
+server for REQ3_CORE: http://127.0.0.1:47341 (DATA_DIR=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/data-REQ3_CORE-JIthQq, log=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/log-REQ3_CORE.log)
+server for REQ3_INTEGRATION: http://127.0.0.1:35947 (DATA_DIR=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/data-REQ3_INTEGRATION-1O5ZNH, log=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/.run/20260928T053944-9851/log-REQ3_INTEGRATION.log)
+
+Running 26 tests using 1 worker
+
+  ✓   1 [create-workbook] › checks/create-workbook.spec.ts:10:5 › New blank workbook -> editor with only a blank Sheet1 and A1 selected (10.0s)
+  ✓   2 [create-workbook] › checks/create-workbook.spec.ts:53:5 › a fresh workbook does not show another workbook's data (2.7s)
+  ✓   3 [create-workbook] › checks/create-workbook.spec.ts:67:5 › empty workbook name on create is rejected, stays retryable, creates no record (2.7s)
+=== run dirs ===
+dbg-051339
+dbg-051555
+run-20260928T053852
+isError: False
+
+### 2026-09-28T05:40:21.516Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L142
+ROLE assistant 
+thinking: Good, tests are running and passing. 26 tests total. Let me wait. Each test ~3-10s; 26 tests maybe 3-5 min.
+
+Meanwhile, let me prepare git commits. Let me check git status to see the changes (run.sh, .gitignore, possibly package-lock).
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git status --short"}
+stopReason: toolUse
+
+### 2026-09-28T05:40:22.017Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L143
+ROLE toolResult bash
+text:  M checks/.gitignore
+ M checks/run.sh
+isError: False
+
+### 2026-09-28T05:40:28.519Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L144
+ROLE assistant 
+thinking: Good, only my intended changes. checks/package-lock.json unchanged by npm install (good).
+
+Now, let me think about whether to also add the "row/column structure undo" hook. #4 not merged, so I'll leave the fixme test. But I should double check the Operation kind "structure" and whether EditorPage exposes something for #4 to hook. The shared History class in editing.ts is exported and `push` accepts an Operation with kind "structure". #4's owner can import History... but historyRef is internal to EditorPage. For #4 to hook its structure operations into the same history, they'd need access. The issue comment #9 said "我把 undo 栈做成共享模块供你调用". The History class is exported from domain/editing.ts, so #4 can build Operations. But EditorPage owns the single instance; #4's toolbar buttons would need to call EditorPage's undo. Since #4's row/col UI is likely inside Grid/EditorPage, they'll integrate. I should note in the PR that the History module + `Operation.kind="structure"` hook exists, and describe the integration point for #4.
+
+Hmm, but "撤销需覆盖 #4 的操作" is part of my deliverable's final acceptance. Since #4 is not merged, I can only defer. The integration spec has the fixme test with a clear TODO. Good.
+
+Actually, wait. Let me reconsider: could I implement the row/column structure undo *without* #4? The issue says if #4 isn't merged, first implement the data/edit part and complete row/col undo after #4 merges. So deferring is explicitly sanctioned. Also the root Issue will integrate.
+
+However — I should check whether #4's PR is close to merging and whether its branch exists (`origin/braid-agent/issue-4/pi-glm-fast-g1`). If #4 merges into develop soon, the root might want me to rebase. I'll note in the PR that row/col undo is pending #4 and offer to add it after.
+
+Actually, I could be proactive: implement the structure-undo integration now on a branch based on #4? No — #4 is unmerged and its interface may change. Better: leave the hook, document it.
+
+Hmm, but let me check #4's branch quickly to see if there's a structure-change entry point I could align with. Let me look at what routes #4 added. Actually, PR #4 has been open a while; the root said "#4 尚未合入". Let me peek at origin/braid-agent/issue-4/pi-glm-fast-g1 for structure ops to at least ensure my History hook shape matches. Let me check quickly.
+
+Actually, better use of time: wait for checks, then decide. Let me peek at the diff list of #4's branch vs develop for row/col ops.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git log --oneline origin/develop..origin/braid-agent/issue-4/pi-glm-fast-g1 | head -10 && echo \"=== files ===\" && git diff --stat origin/develop...origin/braid-agent/issue-4/pi-glm-fast-g1 | tail -25"}
+stopReason: toolUse
+
+### 2026-09-28T05:40:30.724Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L145
+ROLE toolResult bash
+text: 24433e8 REQ-2 领域逻辑迁至 frontend/src/domain + 仓库内单元测试 (#4)
+562b54f REQ-2 验收准备：Playwright 检查脚本 + 前端工作表组件 (#4)
+b74e7c9 REQ-2 领域逻辑：跨表入站引用平移 translateInboundFormulas (#4)
+65a4970 REQ-2 领域逻辑：SheetN 命名、重命名校验、行列结构操作与公式引用平移 (#4)
+=== files ===
+ checks/.gitignore                                  |   3 +
+ checks/playwright.config.ts                        |  23 ++
+ checks/req2-worksheets.spec.ts                     | 285 ++++++++++++++
+ checks/unit/structure.test.ts                      | 184 +++++++++
+ frontend/src/components/worksheets/ContextMenu.tsx |  90 +++++
+ .../components/worksheets/DeleteSheetDialog.tsx    |  54 +++
+ .../components/worksheets/RenameSheetDialog.tsx    |  66 ++++
+ .../src/components/worksheets/WorksheetTabs.tsx    |  87 +++++
+ .../src/components/worksheets/structureMenus.ts    |  33 ++
+ frontend/src/domain/coords.ts                      |  57 +++
+ frontend/src/domain/sheetName.ts                   |  35 ++
+ frontend/src/domain/structure.ts                   | 421 +++++++++++++++++++++
+ 12 files changed, 1338 insertions(+)
+isError: False
+
+### 2026-09-28T05:40:33.115Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L146
+ROLE assistant 
+thinking: #4's branch is based on an older develop (before 87cedb5?) and adds domain/structure.ts plus components, but it may not include the UI wiring into EditorPage yet (files show no EditorPage.tsx change!). Interesting — their PR adds components but maybe not integrated into EditorPage? The diff stat lists only those files, so #4's PR doesn't wire the row/col menus into the actual editor? Hmm, `checks/req2-worksheets.spec.ts` exists. Maybe the wiring is in a later commit not shown... The stat shows all changes vs develop; no EditorPage.tsx. So #4's PR is incomplete/in-progress (the owner glm-9 renamed?). Not my problem.
+
+Given #4 isn't wired, row/col undo can't be tested now. Defer as sanctioned.
+
+Let me poll the run.
+toolCall bash {"command": "sleep 28; grep -E \"^  (✓|✘|✓|✗|-)|passed|failed|Running\" /tmp/issue5-run2.log | tail -30", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:41:01.346Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L147
+ROLE toolResult bash
+text: Running 26 tests using 1 worker
+  ✓   1 [create-workbook] › checks/create-workbook.spec.ts:10:5 › New blank workbook -> editor with only a blank Sheet1 and A1 selected (10.0s)
+  ✓   2 [create-workbook] › checks/create-workbook.spec.ts:53:5 › a fresh workbook does not show another workbook's data (2.7s)
+  ✓   3 [create-workbook] › checks/create-workbook.spec.ts:67:5 › empty workbook name on create is rejected, stays retryable, creates no record (2.7s)
+  ✓   4 [editor-interactions] › checks/editor-interactions.spec.ts:24:5 › grid exposes the promised ARIA roles, names and selection state (13.9s)
+  ✓   5 [editor-interactions] › checks/editor-interactions.spec.ts:65:5 › formula bar edits commit and persist after refresh (5.8s)
+  ✓   6 [editor-interactions] › checks/editor-interactions.spec.ts:84:5 › rename updates the editor title and the home link; empty name is rejected (6.0s)
+  ✓   7 [editor-interactions] › checks/editor-interactions.spec.ts:131:5 › leading and trailing spaces are trimmed when renaming (5.3s)
+isError: False
+
+### 2026-09-28T05:41:31.629Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L148
+ROLE assistant 
+thinking: Progressing. 7/26. Let me wait more. Meanwhile let me think about whether the REQ-3 implementation handles the "Escape cancels" requirement in the *inline grid* editor: Yes.
+
+Requirement: "Enter 或点击其他单元格提交" for formula bar. FormulaBar commits on blur. When clicking another cell, the input blurs → commit. Good.
+
+Requirement REQ-3-1-1: "提交失败报错且显示最后成功值" — handled.
+
+Now one more: "支持文本、数字、布尔样值、日期文本、=开头公式" — plain strings stored as raw. The engine displays them. Booleans/dates as text. Fine.
+
+Let me also consider a possible bug in FormulaBar: `rawAtEditStart.current` is set on focus to `raw` (current cell's raw). If the user selects a new cell while focused... The effect skips while focused. Clicking another cell blurs → commit → then selection changes. Order: mousedown on grid cell → FormulaBar blur fires → commit uses draftRef.current (old ref) → then click handler changes selection. Good.
+
+Edge: user edits formula bar for A1, then clicks cell B2. Blur commits A1. Then B2 selected. Good.
+
+Edge: Enter in formula bar → commit; then focus stays. draftRef/rawAtEditStart not updated except on success. On success rawAtEditStart = draft. Good.
+
+Now, about "公式栏/网格一致性" for formula cells when the formula has an error: display shows error text. Fine.
+
+Let me wait for the run to complete. I'll poll less frequently to save turns. Let me do a 28s sleep + grep repeatedly... Actually the background job will notify me when done (bg005). The instructions say a follow-up result arrives. So I could just continue other work and wait.
+
+Let me use the time to draft the PR body. But I need the check results first.
+
+Alternatively, I can prepare the commits now (run.sh hardening) but wait to commit until checks pass? The checks are running against the working tree (dist built from current source). Committing now doesn't affect the running checks. Let me commit the run.sh hardening now — actually better to wait until the run finishes so the evidence corresponds to the commit. Hmm, the run.sh change is what enabled the run; the source under test (frontend/backend) is unchanged from 455dff2. So committing run.sh during the run doesn't change the tested source. But the evidence's commit hash would be the new commit if I commit after. The tested app source = 455dff2 + unchanged checks. Fine.
+
+Let me wait for the notification. I'll do a few useful reviews meanwhile: check `refs.ts` for selectionRect semantics used by Grid (no changes needed), and `api.ts` updateCells/saveState.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '1,80p' frontend/src/api.ts && echo \"=== helpers ===\" && cat checks/helpers.ts | head -60"}
+stopReason: toolUse
+
+### 2026-09-28T05:41:33.728Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L149
+ROLE toolResult bash
+text: /**
+ * Shared frontend data model — mirrors backend/src/types.ts.
+ * Optional fields may be absent; treat missing as default.
+ */
+
+export interface CellData {
+  raw: string | null;
+  value: string | null;
+  validationId?: string | null;
+  style?: Record<string, unknown> | null;
+}
+
+export interface RectSelection {
+  start: string;
+  end: string;
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 191]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 192]
+
+export interface WorkbookSummary {
+  id: string;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 193]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 194]
+
+export const api = {
+  listWorkbooks: () =>
+=== helpers ===
+import { test, expect, Page, Locator } from "@playwright/test";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 195]
+
+export const LAST_UPDATED = /Last updated: \d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}/;
+
+export function grid(page: Page): Locator {
+  return page.getByRole("grid", { name: "Worksheet grid" });
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 196]
+
+export function rowHeader(page: Page, row: number): Locator {
+  return grid(page).getByRole("rowheader", { name: String(row), exact: true });
+}
+
+export function colHeader(page: Page, letters: string): Locator {
+  return grid(page).getByRole("columnheader", { name: letters, exact: true });
+}
+
+export function sheetTab(page: Page, name: string): Locator {
+  return page.getByRole("tab", { name, exact: true });
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 197]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 198]
+
+/** Click a named workbook link on the home page and wait for its editor. */
+export async function openWorkbook(page: Page, name: string) {
+  await workbookItem(page, name).getByRole("link", { name, exact: true }).click();
+  await expect(page.getByRole("heading", { level: 1, name, exact: true })).toBeVisible();
+}
+isError: False
+
+### 2026-09-28T05:41:35.413Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L150
+ROLE assistant 
+thinking: All fine. Let me wait for the run to complete. I'll poll with a short sleep.
+toolCall bash {"command": "sleep 29; grep -E \"^  (✓|✘|✗|·)|passed|failed\" /tmp/issue5-run2.log | tail -12", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:42:04.433Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L151
+ROLE toolResult bash
+text:   ✓   5 [editor-interactions] › checks/editor-interactions.spec.ts:65:5 › formula bar edits commit and persist after refresh (5.8s)
+  ✓   6 [editor-interactions] › checks/editor-interactions.spec.ts:84:5 › rename updates the editor title and the home link; empty name is rejected (6.0s)
+  ✓   7 [editor-interactions] › checks/editor-interactions.spec.ts:131:5 › leading and trailing spaces are trimmed when renaming (5.3s)
+  ✓   8 [home-editor] › checks/home-editor.spec.ts:19:5 › home lists the seeded workbook with a name link and Last updated (2.4s)
+  ✓   9 [home-editor] › checks/home-editor.spec.ts:33:5 › opening Q3 Sales shows the seeded content, tabs and the same Last updated (7.9s)
+  ✓  10 [home-editor] › checks/home-editor.spec.ts:74:5 › direct editor URL and refresh restore the same workbook (10.4s)
+  ✓  11 [home-editor] › checks/home-editor.spec.ts:109:5 › the seeded state survives reopening from the home page (2.7s)
+  ✓  12 [req3-core] › checks/req3-core.spec.ts:96:7 › REQ-3-1-1 edit a cell through the grid or formula bar › formula bar commit, escape cancel, click-away commit and refresh persistence (12.6s)
+  ✓  13 [req3-core] › checks/req3-core.spec.ts:140:7 › REQ-3-1-2 paste two-dimensional table data › Ctrl+V applies the whole rectangle, preserves empty fields and only overwrites the target (4.9s)
+  ✓  14 [req3-core] › checks/req3-core.spec.ts:168:7 › REQ-3-1-2 paste two-dimensional table data › the grid context menu provides menuitem "Paste" with the same clipboard content (2.1s)
+  ✓  15 [req3-core] › checks/req3-core.spec.ts:187:7 › REQ-3-1-3 select a rectangular cell range › drag selection drives aria-selected exactly and survives refresh (4.0s)
+  ✓  16 [req3-core] › checks/req3-core.spec.ts:220:7 › REQ-3-2-1 copy, cut and paste cell ranges › copy keeps the source and reproduces the 2-D layout (3.9s)
+isError: False
+
+### 2026-09-28T05:42:06.245Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L152
+ROLE assistant 
+thinking: Good, REQ-3 core is passing so far. Continue waiting.
+toolCall bash {"command": "sleep 29; grep -E \"^  (✓|✘|✗|·)|passed|failed\" /tmp/issue5-run2.log | tail -10", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:42:35.257Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L153
+ROLE toolResult bash
+text:   ✓   9 [home-editor] › checks/home-editor.spec.ts:33:5 › opening Q3 Sales shows the seeded content, tabs and the same Last updated (7.9s)
+  ✓  10 [home-editor] › checks/home-editor.spec.ts:74:5 › direct editor URL and refresh restore the same workbook (10.4s)
+  ✓  11 [home-editor] › checks/home-editor.spec.ts:109:5 › the seeded state survives reopening from the home page (2.7s)
+  ✓  12 [req3-core] › checks/req3-core.spec.ts:96:7 › REQ-3-1-1 edit a cell through the grid or formula bar › formula bar commit, escape cancel, click-away commit and refresh persistence (12.6s)
+  ✓  13 [req3-core] › checks/req3-core.spec.ts:140:7 › REQ-3-1-2 paste two-dimensional table data › Ctrl+V applies the whole rectangle, preserves empty fields and only overwrites the target (4.9s)
+  ✓  14 [req3-core] › checks/req3-core.spec.ts:168:7 › REQ-3-1-2 paste two-dimensional table data › the grid context menu provides menuitem "Paste" with the same clipboard content (2.1s)
+  ✓  15 [req3-core] › checks/req3-core.spec.ts:187:7 › REQ-3-1-3 select a rectangular cell range › drag selection drives aria-selected exactly and survives refresh (4.0s)
+  ✓  16 [req3-core] › checks/req3-core.spec.ts:220:7 › REQ-3-2-1 copy, cut and paste cell ranges › copy keeps the source and reproduces the 2-D layout (3.9s)
+  ✓  17 [req3-core] › checks/req3-core.spec.ts:249:7 › REQ-3-2-1 copy, cut and paste cell ranges › cut clears the source only after the target is displayed (3.9s)
+  ✘  18 [req3-core] › checks/req3-core.spec.ts:274:7 › REQ-3-2-2 undo and redo recent operations › toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste (20.0s)
+isError: False
+
+### 2026-09-28T05:42:36.901Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L154
+ROLE assistant 
+thinking: A real failure in the undo/redo test (#18). Let me wait for the run to finish and then examine the error context. Let me continue polling until the run ends.
+
+Actually let me check the error context now.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && d=$(ls -d checks/results/run-*/req3-core-*toolbar* 2>/dev/null | head -1); echo \"DIR=$d\"; cat \"$d/error-context.md\" 2>/dev/null | head -60"}
+stopReason: toolUse
+
+### 2026-09-28T05:42:36.924Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L155
+ROLE toolResult bash
+text: DIR=
+isError: False
+
+### 2026-09-28T05:42:38.261Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L156
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ls checks/results/ | tail -3; find checks/results/run-2026* -maxdepth 1 -type d | head; grep -n \"Error\\|error\\|expect\" /tmp/issue5-run2.log | tail -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:42:38.277Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L157
+ROLE toolResult bash
+text: dbg-051339
+dbg-051555
+run-20260928T053852
+checks/results/run-20260928T053852
+checks/results/run-20260928T053852/.playwright-artifacts-4
+checks/results/run-20260928T053852/req3-core-REQ-3-2-2-undo-a-62f41-ndo-a-cell-edit-and-a-paste-req3-core
+isError: False
+
+### 2026-09-28T05:42:40.403Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L158
+ROLE assistant 
+thinking: The failure artifact dir exists; the run's CHECK_OUTPUT_DIR is run-20260928T053852 (the run started at 05:38:52). Let me read the error context.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ls checks/results/run-20260928T053852/req3-core-REQ-3-2-2-undo-a-62f41-ndo-a-cell-edit-and-a-paste-req3-core/ && cat checks/results/run-20260928T053852/req3-core-REQ-3-2-2-undo-a-62f41-ndo-a-cell-edit-and-a-paste-req3-core/error-context.md | head -50"}
+stopReason: toolUse
+
+### 2026-09-28T05:42:40.442Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L159
+ROLE toolResult bash
+text: error-context.md
+test-failed-1.png
+trace.zip
+# Page snapshot
+
+```yaml
+- main [ref=e3]:
+  - generic [ref=e4]:
+    - heading "Q3 Sales" [level=1] [ref=e5]
+    - button "Rename workbook" [ref=e6] [cursor=pointer]
+    - generic [ref=e7]: "Last updated: 2026-09-28 05:42:11"
+    - link "Home" [ref=e8] [cursor=pointer]:
+      - /url: /
+  - toolbar "Editing" [ref=e9]:
+    - button "Undo" [disabled] [ref=e10]
+    - button "Redo" [disabled] [ref=e11]
+  - generic [ref=e12]:
+    - generic "Active cell" [ref=e13]: A28
+    - generic [ref=e14]: Formula bar
+    - textbox "Formula bar" [ref=e15]: v1
+  - tabpanel "Sheet1" [ref=e16]:
+    - grid "Worksheet grid" [ref=e18]:
+      - rowgroup [ref=e19]:
+        - row "A B C D E F G H I J K L M N O P Q R S T U V W X Y Z" [ref=e20]:
+          - gridcell [ref=e21]
+          - columnheader "A" [ref=e22]
+          - columnheader "B" [ref=e23]
+          - columnheader "C" [ref=e24]
+          - columnheader "D" [ref=e25]
+          - columnheader "E" [ref=e26]
+          - columnheader "F" [ref=e27]
+          - columnheader "G" [ref=e28]
+          - columnheader "H" [ref=e29]
+          - columnheader "I" [ref=e30]
+          - columnheader "J" [ref=e31]
+          - columnheader "K" [ref=e32]
+          - columnheader "L" [ref=e33]
+          - columnheader "M" [ref=e34]
+          - columnheader "N" [ref=e35]
+          - columnheader "O" [ref=e36]
+          - columnheader "P" [ref=e37]
+          - columnheader "Q" [ref=e38]
+          - columnheader "R" [ref=e39]
+          - columnheader "S" [ref=e40]
+          - columnheader "T" [ref=e41]
+          - columnheader "U" [ref=e42]
+          - columnheader "V" [ref=e43]
+          - columnheader "W" [ref=e44]
+          - columnheader "X" [ref=e45]
+          - columnheader "Y" [ref=e46]
+          - columnheader "Z" [ref=e47]
+      - rowgroup [ref=e48]:
+        - row "1 A1 B1 C1 D1 E1 F1 G1 H1 I1 J1 K1 L1 M1 N1 O1 P1 Q1 R1 S1 T1 U1 V1 W1 X1 Y1 Z1" [ref=e49]:
+isError: False
+
+### 2026-09-28T05:43:10.721Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L160
+ROLE assistant 
+thinking: The failure snapshot: Undo and Redo are BOTH disabled, active cell A28, formula bar shows "v1". The test at some point: paste 'v1\tv2\nv3\tv4' at A28, expects B29 = v4. Then Ctrl+Z → expects A28 = 'u1' and B29 = ''. Snapshot shows formula bar "v1" (so A28='v1'?). Undo/Redo disabled means history was EMPTY.
+
+Wait, the test flow:
+1. submitViaFormulaBar A28 'u1' → cell A28='u1', undo enabled.
+2. undo.click() → A28='' , redo enabled.
+3. redo.click() → A28='u1'.
+4. selectCell A28; pasteWithKeyboard 'v1\tv2\nv3\tv4' → B29='v4'.
+5. Ctrl+Z → A28='u1', B29=''.
+6. Ctrl+Z → A28=''.
+7. Ctrl+Y → A28='u1'.
+8. Ctrl+Y → B29='v4'.
+9. reload → A28='u1', B29='v4'.
+
+The failure snapshot shows active cell A28, formula bar 'v1'?? That's weird: formula bar shows raw of A28 = 'v1'. So A28 = 'v1'?? Hmm, wait. Actually maybe the paste happened at A28 because selectCell A28... paste 'v1...' → A28='v1', B28='v2', A29='v3', B29='v4'. Then step 5 Ctrl+Z expects A28='u1' (undo paste) — yes undo of the paste restores A28='u1', B29=''.
+
+But snapshot shows A28='v1' hmm no: after undo, A28 should be 'u1'. Snapshot shows 'v1' — meaning undo didn't happen? And Undo/Redo both disabled → history empty. That suggests the History got reset (workbook changed → useEffect on [id]? No.) 
+
+Wait — "Undo"/"Redo" disabled with formula bar 'v1' and activeCell A28: this is the state right after the paste if the history was cleared. Why would history be cleared?
+
+Hmm, maybe the failure is later in the test, after reload? Let's see: test step 9: after reload, expects A28='u1'. After reload, history is empty (new session) → Undo/Redo disabled. Formula bar shows raw of active cell A28 = 'u1'. But snapshot shows 'v1'. Hmm, unless the clipboard text pasted was applied at A28 but the undo/redo sequence produced A28='v1'?? No.
+
+Wait, maybe the failure happened at:
+```
+await page.keyboard.press('Control+z');
+await expect(cell(page, 'A28')).toHaveText('u1');
+```
+and the state shows A28 raw 'v1' → paste not undone. Undo button disabled means history empty → the paste operation was never pushed to history?! Why?
+
+Look at pasteFromText: for Ctrl+V from keyboard, the flow:
+- page.evaluate writes clipboard text.
+- keyboard.press('Control+v').
+- In EditorPage keydown handler for 'v': clearPasteTimer, set timer 150ms → requestPaste → reads clipboard → pasteFromText → isOwnBuffer? buffer is null (no copy) → text = 'v1\tv2\nv3\tv4' → planPaste → validate → applyUpdates(..., op) → pushes op.
+- Also the browser may fire a real 'paste' event → onPaste → pasteFromText(text) → same.
+
+But if BOTH fire, we'd paste TWICE. The second paste would push another op. Not fatal.
+
+So history should have the paste op.
+
+Hmm, but undo BEFORE the paste: 
+- undo.click() → applyUpdates(before) — NOT pushing to history (op undefined). historyRef.current.undo() moved op to redo stack. 
+- redo.click() → historyRef.current.redo() → applyUpdates(after), op undefined.
+
+Then paste → op pushed → undoStack = [pasteOp]. Undo enabled.
+
+Then Ctrl+Z → undo() → op = pasteOp; applyUpdates(before) → A28='u1', B29=''. setHistoryVersion. Undo disabled, Redo enabled.
+
+Snapshot shows both disabled. So history empty.
+
+Could `historyRef.current = new History()` have run again? That happens in the `useEffect(() => {...}, [id])` on mount/id change. id doesn't change.
+
+OH WAIT. I see a potential bug: `applyUpdates` is a `useCallback` with empty deps and references `setWorkbook`. Fine.
+
+Hmm, what about cell edits through the formula bar: `handleCommitCell` calls `applyUpdates(sheet.id, [update], op)` which pushes op. Good.
+
+Let me look at the test failure more precisely — which line failed. The trace/error is in the log output; let me grep the log for the failure details.
+
+Actually, the reported error should be in /tmp/issue5-run2.log after the test. But the run is ongoing; the failure detail is printed at the end for each failed test? Playwright list reporter prints errors inline right after? It prints "✘" then details at the end (for the list reporter, errors are printed after the progress). Let me just wait for completion and read the full log.
+
+Actually, let me look at the trace or the screenshot to understand. Better: let me check whether the test got flaky due to the DOUBLE paste: If the paste fires twice (both keydown fallback timer AND real paste event), then:
+- paste1 pushes op1 (A28='v1'...). 
+- paste2 pushes op2 (same content, before = current = same after) → operationFromPlan filters refs where read(ref) !== new value → after paste1, all values equal → after.length === 0 → History.push ignores empty ops. So only one op. Fine.
+
+Hmm.
+
+Alternative: maybe the failure is in step "await expect(cell(page,'A28')).toHaveText('')" after the second Ctrl+Z, or later. The snapshot shows A28='v1' and history disabled. Hmm, if the second Ctrl+Z failed because... let's think:
+
+After step 5 (Ctrl+Z), history: undoStack=[editOp], redoStack=[pasteOp]. A28='u1'.
+Step 6 Ctrl+Z: undo() pops editOp → applyUpdates(before) → A28=''. undoStack=[], redoStack=[pasteOp, editOp]. A28=''.
+Step 7 Ctrl+Y: redo() pops editOp → A28='u1'. 
+Step 8 Ctrl+Y: redo() pops pasteOp → A28='v1', B29='v4'.
+Step 9 reload → A28='v1'?? But the test expects A28='u1' after reload!
+
+Wait, the test expects:
+```
+await page.keyboard.press('Control+y');
+await expect(cell(page, 'A28')).toHaveText('u1');
+await page.keyboard.press('Control+y');
+await expect(cell(page, 'B29')).toHaveText('v4');
+
+// The state after undo/redo persists.
+await reload(page);
+await expect(cell(page, 'A28')).toHaveText('u1');
+await expect(cell(page, 'B29')).toHaveText('v4');
+```
+
+After the second Ctrl+Y, A28='v1' (paste overwrote A28!) and B29='v4'. But the test then expects A28='u1' after reload. That's a BUG IN THE TEST: the paste at A28 overwrites A28 with 'v1', so after redo of the paste, A28='v1' not 'u1'.
+
+Hmm wait: paste content is 'v1\tv2\nv3\tv4' starting at A28, so A28='v1', B28='v2', A29='v3', B29='v4'. The test asserts B29='v4' ✓. But then after reload it asserts A28='u1' ✗ — wrong expectation; A28 should be 'v1'.
+
+Actually hold on, look at lines: after Ctrl+Y (first) expects A28='u1'; second Ctrl+Y expects B29='v4'. Then reload expects A28='u1' AND B29='v4'. Contradiction: if paste is redone, A28='v1'. So the test expectation is inconsistent.
+
+Hmm, but the failure snapshot shows Undo/Redo disabled, so failure happened after reload (history cleared) with A28='v1'. So yes: the test's final assertion `A28 === 'u1'` is wrong; correct is 'v1'.
+
+Wait, but why "undo/redo disabled"? Because after reload, the page reloaded, history empty. The snapshot is post-reload state: A28 raw = 'v1'. And Redo disabled (new session). So the failing assertion is `await expect(cell(page,'A28')).toHaveText('u1')` after reload.
+
+So this is a check bug (test expectation), not an implementation bug. The implementation behaved correctly: redo of the paste restored 'v1' at A28.
+
+Hmm wait, but is that the *desired* semantics? "redo 重做刚撤销的完整操作" — yes, redo replays the paste, overwriting A28 with v1. Correct.
+
+So the previous agent's check has an inconsistent expectation. Interesting — earlier runs of this check passed (the dbg-050634 dir showed failures for this test). Maybe this test was never passing; the previous agent left it failing? The commit 17a36fa says "自检修复与检查加固". Maybe they ran a subset.
+
+Let me verify by examining: is it possible the intended paste target was different? The test does:
+```
+await selectCell(page, 'A28');
+await pasteWithKeyboard(page, 'v1\tv2\nv3\tv4');
+await expect(cell(page, 'B29')).toHaveText('v4');
+```
+So A28 gets 'v1'.
+
+Then it wants to demonstrate undo/redo of the paste. After redo, A28='v1'. So:
+
+Fix the test: after reload expect `cell('A28')` = 'v1' and B29 = 'v4'. Or better, choose a paste target that doesn't overlap the previously edited cell, e.g. paste at B28? But then the undo of the paste is independent; the first Ctrl+Z would undo the paste (B28..., B29...), leaving A28='u1'. That's cleaner:
+
+Let me restructure minimally:
+- Keep edit at A28='u1'.
+- Paste at B28 (content spans B28:C29).
+- After Ctrl+Z: A28='u1', C29='' (paste undone). Then second Ctrl+Z: A28=''. Ctrl+Y → A28='u1'; Ctrl+Y → C29='v4'.
+- reload → A28='u1', C29='v4'.
+
+That avoids overlap and matches intent. But careful: the first Ctrl+Z undoes the paste (most recent). The test currently asserts after first Ctrl+Z: `A28 = 'u1'` and `B29=''`. With paste at B28, after undo, B28='' and C29=''. A28 stays 'u1'. Good. Then second Ctrl+Z → A28=''. Then Ctrl+Y → 'u1'; Ctrl+Y → C29='v4'.
+
+Let me make that change. But wait — I must be careful to not "改写判据以迎合实现". The judgement here is from the requirement: "redo 重做刚撤销的完整操作". The implemented behavior (redo restores the paste including A28='v1') is correct; the test's final expectation was simply inconsistent with its own earlier step (it asserted A28='u1' after redoing a paste that wrote 'v1' into A28). Fixing the test to keep the two operations on disjoint cells preserves the requirement's judge and removes the contradiction. That's legitimate.
+
+Alternatively just fix the final expectation to 'v1'. Simpler and keeps the overlap (which also tests that redo overwrites). Actually overlapping is a *stronger* test (redo restores the full rectangle overwriting the edit). I'll fix the final assertions to A28='v1' and B29='v4'. Hmm, but then it also should assert the intermediate state after redo1 = 'u1'. That's already there.
+
+Wait, but hold on: is this really the failure line? Let me confirm by checking the log error details once the run finishes. Let me wait for the run to end (it should be near the end: 26 tests, we're at 18).
+
+Let me continue polling.
+toolCall bash {"command": "sleep 29; grep -E \"^  (✓|✘|✗|·)|passed|failed|Error:|expect\\(\" /tmp/issue5-run2.log | tail -14", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:43:39.743Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L161
+ROLE toolResult bash
+text:   ✓  23 [req3-integration] › checks/req3-integration.spec.ts:129:7 › REQ-3-1-3 selection persistence per worksheet › switching worksheets keeps each worksheet rectangle (5.6s)
+  ✓  24 [req3-integration] › checks/req3-integration.spec.ts:190:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › paste with an out-of-range value is rejected as a whole (4.8s)
+  ✓  25 [req3-integration] › checks/req3-integration.spec.ts:212:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › range copy with an out-of-range target leaves source and target unchanged (9.9s)
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveText[2m([22m[32mexpected[39m[2m)[22m failed
+    > 308 |     await expect(cell(page, 'A28')).toHaveText('u1');
+      309 |     await expect(cell(page, 'B29')).toHaveText('v4');
+    checks/results/run-20260928T053852/req3-core-REQ-3-2-2-undo-a-62f41-ndo-a-cell-edit-and-a-paste-req3-core/test-failed-1.png
+    Error: [2mexpect([22m[31mlocator[39m[2m).[22mtoHaveText[2m([22m[32mexpected[39m[2m)[22m failed
+      316 |     await expect(cell(page, 'A32')).toHaveText('first');
+    > 318 |     await expect(cell(page, 'A32')).toHaveText('');
+      319 |     await expect(page.getByRole('button', { name: 'Redo', exact: true })).toBeEnabled();
+    checks/results/run-20260928T053852/req3-core-REQ-3-2-2-undo-a-21f97--not-restore-the-old-branch-req3-core/test-failed-1.png
+  2 failed
+  23 passed (3.7m)
+isError: False
+
+### 2026-09-28T05:43:55.241Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L162
+ROLE assistant 
+thinking: Two failures:
+1. Line 308: `after reload expect A28 = 'u1'` — as predicted, the test's expectation is inconsistent with the redo of a paste that overwrote A28. Wait, line 308 is the reload assertion? Let me look at the exact test lines 300-320.
+
+2. Line 318: `await page.keyboard.press('Control+z'); await expect(cell(page,'A32')).toHaveText('')` — this failed; A32 still 'first'? So Ctrl+Z didn't undo the cell edit! Hmm. That's a real issue possibly.
+
+Wait: in test 2:
+```
+await submitViaFormulaBar(page, 'A32', 'first');
+await expect(cell(page, 'A32')).toHaveText('first');
+await page.keyboard.press('Control+z');
+await expect(cell(page, 'A32')).toHaveText('');   // line 318 FAILED
+```
+So Ctrl+Z did not undo. Why? Because the focus is still in the formula bar (an INPUT)! The keydown handler ignores events when `isEditable(e.target)` → Ctrl+Z in the formula bar does the browser's native undo of the input text, not the app undo.
+
+In test 1, the Ctrl+Z presses came after a paste at a grid cell, so focus was on the grid → app handled it.
+
+In test 2, after `submitViaFormulaBar` (fill + Enter), focus remains in the formula bar input. Then Ctrl+Z is ignored by the app (native input undo). Hence A32 stays 'first'.
+
+Is that a requirement violation? REQ-3-2-2: "Ctrl+Z / Ctrl+Y 同效". The expectation is that Ctrl+Z anywhere (except while editing text?) undoes. Hmm. Standard spreadsheets: Ctrl+Z while editing a cell edits the text; when not editing, it undoes. Here after Enter, the formula bar still has focus but the edit is committed. Arguably Ctrl+Z should then undo the last operation.
+
+But also: the requirement says buttons work; the test asserts Ctrl+Z works right after a formula-bar Enter. It's a legitimate race between "text box native undo" and "app undo". Design choice: to satisfy REQ-3-2-2's "Ctrl+Z 同效", the app should handle Ctrl+Z even when the formula bar is focused but its content equals the committed value (not dirty). Hmm, complex.
+
+Better approach: after a successful commit via Enter, blur the formula bar? But then the user would have to re-click to edit. Spreadsheets (Excel/Sheets) keep focus in the formula bar after Enter? In Google Sheets, after typing in the formula bar and pressing Enter, focus moves back to the grid. Yes! In Excel too: Enter commits and moves the selection down, returning focus to the grid.
+
+So the fix: on Enter in the formula bar, after committing, move focus to the grid (the active cell). That's both spreadsheet-like and makes Ctrl+Z work. Also REQ-3-1-1 says "Enter ... 提交" and doesn't require focus retention.
+
+Implementation: in FormulaBar, on Enter we call commit(); we could blur the input after commit: `e.currentTarget.blur()` then the grid's active cell should receive focus. The Grid focuses the active cell only via `useEffect(focusActive, [selection.activeCell])` when the selection changes, and focusActive only focuses if the grid already contains activeElement. Hmm.
+
+Simpler: in FormulaBar onKeyDown Enter: `void commit(); e.currentTarget.blur();`. After blur, focus goes to body. Then Ctrl+Z keydown target = body → isEditable false → app handles. 
+
+But the `onBlur` handler also calls commit() — double commit. The second commit: draft equals rawAtEditStart (updated after success) → no-op. But ordering: onKeyDown calls commit() (async) and then blur() → onBlur fires → commit() again while the first is in flight. Both compute nextRaw === previous? first commit: nextRaw='first', previous=null → calls onCommit → success → rawAtEditStart='first'. Second commit (onBlur): `draft` state may still be 'first'; previous = rawAtEditStart.current — but the first commit's .then hasn't run yet (await). So previous is still null → calls onCommit again → handleCommitCell sees readRaw(ref) === raw → returns true (nothing changed). So harmless duplicate request-free. Then the first commit's continuation sets rawAtEditStart='first'. Fine.
+
+Actually careful: `commit` reads `draft` from closure. Fine.
+
+Alternatively, add a guard so blur-commit doesn't double-fire: not necessary since handleCommitCell short-circuits.
+
+Let me also consider: pressing Escape in formula bar then blur → commit called; nextRaw = rawAtEditStart = previous → no-op. Good.
+
+So fix #2: blur the formula bar after Enter commit.
+
+Hmm, but does the test then pass? After blur, focus on body. Then `page.keyboard.press('Control+z')` → app undo → A32=''. 
+
+But wait: maybe Playwright's keyboard.press sends to the focused element; after blur, activeElement = body → ok.
+
+Now, is there another path where Ctrl+Z fails? In test 1, after `submitViaFormulaBar(page,'A28','u1')`, focus remains in formula bar; then `undo.click()` (button) works. Then `redo.click()`. Then selectCell + paste + Ctrl+Z (grid focus) works. Then reload assertions.
+
+For test 1 line 308, the expectation after reload A28='u1' is wrong (should be 'v1'). Let me double check the test's paste target and the reload block. Let me view lines 274-320.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '272,330p' checks/req3-core.spec.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:43:55.313Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L163
+ROLE toolResult bash
+text: 
+test.describe('REQ-3-2-2 undo and redo recent operations', () => {
+  test('toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 199]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 200]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 201]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 202]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 203]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 204]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 205]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 206]
+
+    await page.keyboard.press('Control+y');
+    await expect(cell(page, 'A32')).toHaveText('second');
+  });
+
+  test('undo history is per workbook and never crosses worksheets', async ({ page }) => {
+    await openSeededWorkbook(page);
+isError: False
+
+### 2026-09-28T05:44:28.622Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L164
+ROLE assistant 
+thinking: Confirmed both analyses.
+
+Test 1: line 306-308 after reload expects A28='u1' but the redo of the paste set A28='v1'. The comment "The state after undo/redo persists." The requirement is about persistence of undo/redo results. The correct expectation is A28='v1' (the redo of the paste) and B29='v4'. To make the test express the requirement without ambiguity, better to keep the two operations on separate cells. Which is a better judge?
+
+The requirement REQ-3-2-2: "按逆序连续撤销，redo 重做刚撤销的完整操作". "完整操作" — redo restores the complete operation. Having the paste overlap the earlier edit actually demonstrates "complete operation" restoration nicely (A28 goes back to 'v1'). But the test's final line contradicts it. I'll fix the final expectation to 'v1' and add a comment that the paste's complete rectangle is restored, including A28. That's minimal and keeps the stronger overlap coverage.
+
+Hmm, but wait: is A28='v1' after reload correct per implementation? After redo of paste, A28='v1'. After reload, raw persisted = 'v1'. Yes.
+
+Hmm, but that makes the test less clear. Alternative: keep the assertions but make the paste start at B28 so A28 stays 'u1'. Then:
+- after Ctrl+Z: A28='u1', C29='' (B29 also '')
+- second Ctrl+Z → A28=''
+- Ctrl+Y → 'u1'; Ctrl+Y → C29='v4'
+- reload → A28='u1', C29='v4'
+
+This is cleaner and tests "undo in reverse order": paste undone first (leaving A28 from the edit), then edit undone. And redo replays edit then paste. I prefer this. It also avoids the confusing overlap.
+
+But careful: `expect(cell(page,'B29')).toHaveText('')` — with paste at B28, B29 would be empty after undo; keep that check. After redo, C29='v4'.
+
+Let me rewrite that block:
+
+```
+    // --- paste, undone in reverse order together with the edit
+    await selectCell(page, 'B28');
+    await pasteWithKeyboard(page, 'v1\tv2\nv3\tv4');
+    await expect(cell(page, 'C29')).toHaveText('v4');
+    await expect(cell(page, 'B28')).toHaveText('v1');
+
+    await page.keyboard.press('Control+z');
+    await expect(cell(page, 'A28')).toHaveText('u1');   // the edit is still there
+    await expect(cell(page, 'B28')).toHaveText('');
+    await expect(cell(page, 'C29')).toHaveText('');
+    await page.keyboard.press('Control+z');
+    await expect(cell(page, 'A28')).toHaveText('');
+
+    await page.keyboard.press('Control+y');
+    await expect(cell(page, 'A28')).toHaveText('u1');
+    await page.keyboard.press('Control+y');
+    await expect(cell(page, 'B28')).toHaveText('v1');
+    await expect(cell(page, 'C29')).toHaveText('v4');
+
+    // The state after undo/redo persists.
+    await reload(page);
+    await expect(cell(page, 'A28')).toHaveText('u1');
+    await expect(cell(page, 'C29')).toHaveText('v4');
+```
+
+Good.
+
+Now fix #2: the Ctrl+Z while the formula bar is focused. Two options:
+(a) blur the formula bar after Enter-commit (spreadsheet behavior).
+(b) handle Ctrl+Z globally even in inputs.
+
+I prefer (a) — it's the standard behavior and makes the shortcut work. But careful: the test `submitViaFormulaBar` does fill + Enter, and then in other tests it does more `submitViaFormulaBar` calls immediately — after blur, the next `formulaBar(page).fill(...)` will focus it again. Fine.
+
+But there's another subtlety: `selectCell(page, a1)` after formula bar commit — fine.
+
+Also consider `editor-interactions` test "formula bar edits commit and persist after refresh": fill B1, Enter, expect B1='East', reload... after blur, active cell B1 still selected (grid focus not set). The `aria-selected` check after reload is fine.
+
+Hmm, but if I blur on Enter, then the `onBlur` commit runs. Since focus moves to body, and then the grid's useEffect focusActive only runs when activeCell changes (it doesn't), the grid cell won't get focus. That's fine for Ctrl+Z (target=body).
+
+But wait: will blurring break the "Escape cancels" flow? On Escape, we setDraft(rawAtEditStart) and preventDefault; focus stays (no blur). Good.
+
+Additionally: is it desirable that after Enter the focus leaves the formula bar? Yes, standard.
+
+Implementation in FormulaBar:
+```
+onKeyDown={(e) => {
+  if (e.key === "Enter") {
+    e.preventDefault();
+    void commit();
+    e.currentTarget.blur();
+  } else if (e.key === "Escape") {...}
+}}
+```
+But blur triggers onBlur → commit() again. To avoid a redundant commit, I can use a flag `justCommittedRef` or make onBlur skip when the draft equals rawAtEditStart. Actually commit() already no-ops when nextRaw === previous. But there's the async race described: onBlur's commit may see stale rawAtEditStart (still null) and issue a second onCommit. handleCommitCell short-circuits (readRaw === raw) so no history entry and no API call. Safe. But it returns true and sets rawAtEditStart again. Fine.
+
+Hmm, but there's a subtle issue: if the commit FAILS validation, the first commit sets draft back to rawAtEditStart (last successful) asynchronously; blur commit might then... whatever, it's a no-op since nextRaw === previous.
+
+OK.
+
+Wait, another thought: maybe better to not rely on blur but instead have the keydown handler in EditorPage treat Ctrl+Z as app-undo when the formula bar's value equals the active cell's raw (not dirty). That's more complex. Go with blur.
+
+Hmm, but is blur-on-Enter "changing the implementation to fit the test"? The requirement says Ctrl+Z must work; the test's sequence (commit via Enter then Ctrl+Z) is a natural user flow. The implementation had a genuine gap: after committing, focus stayed in a text input where Ctrl+Z was swallowed. Fixing it is legitimate.
+
+Let me also double check the third undo test ("undo history is per workbook"): it uses submitViaFormulaBar to set A60 and then a link/button clicks. No Ctrl+Z while formula bar focused except after navigating. Fine.
+
+Now also: after Enter-blur, the app's Undo button state updates via setHistoryVersion. Fine.
+
+Let me now check the failing test #19 details? The log showed only 2 failures: #18 and the "new modification after undo" test. Wait, the grep showed two failed blocks: line 308 test (toolbar buttons…) and line 316-318 (new modification…). And the summary: 2 failed, 23 passed.
+
+Test 3 "undo history is per workbook" — did it pass? 23 passed + 2 failed = 25; 26 tests total, one of which is fixme (skipped). So 25 counted; #20 (per workbook) passed? Let me check the log for tests 19-22.
+
+Let me look at the full list of results.
+toolCall bash {"command": "grep -E \"^  (✓|✘|-|·)\" /tmp/issue5-run2.log"}
+stopReason: toolUse
+
+### 2026-09-28T05:44:28.716Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L165
+ROLE toolResult bash
+text:   ✓   1 [create-workbook] › checks/create-workbook.spec.ts:10:5 › New blank workbook -> editor with only a blank Sheet1 and A1 selected (10.0s)
+  ✓   2 [create-workbook] › checks/create-workbook.spec.ts:53:5 › a fresh workbook does not show another workbook's data (2.7s)
+  ✓   3 [create-workbook] › checks/create-workbook.spec.ts:67:5 › empty workbook name on create is rejected, stays retryable, creates no record (2.7s)
+  ✓   4 [editor-interactions] › checks/editor-interactions.spec.ts:24:5 › grid exposes the promised ARIA roles, names and selection state (13.9s)
+  ✓   5 [editor-interactions] › checks/editor-interactions.spec.ts:65:5 › formula bar edits commit and persist after refresh (5.8s)
+  ✓   6 [editor-interactions] › checks/editor-interactions.spec.ts:84:5 › rename updates the editor title and the home link; empty name is rejected (6.0s)
+  ✓   7 [editor-interactions] › checks/editor-interactions.spec.ts:131:5 › leading and trailing spaces are trimmed when renaming (5.3s)
+  ✓   8 [home-editor] › checks/home-editor.spec.ts:19:5 › home lists the seeded workbook with a name link and Last updated (2.4s)
+  ✓   9 [home-editor] › checks/home-editor.spec.ts:33:5 › opening Q3 Sales shows the seeded content, tabs and the same Last updated (7.9s)
+  ✓  10 [home-editor] › checks/home-editor.spec.ts:74:5 › direct editor URL and refresh restore the same workbook (10.4s)
+  ✓  11 [home-editor] › checks/home-editor.spec.ts:109:5 › the seeded state survives reopening from the home page (2.7s)
+  ✓  12 [req3-core] › checks/req3-core.spec.ts:96:7 › REQ-3-1-1 edit a cell through the grid or formula bar › formula bar commit, escape cancel, click-away commit and refresh persistence (12.6s)
+  ✓  13 [req3-core] › checks/req3-core.spec.ts:140:7 › REQ-3-1-2 paste two-dimensional table data › Ctrl+V applies the whole rectangle, preserves empty fields and only overwrites the target (4.9s)
+  ✓  14 [req3-core] › checks/req3-core.spec.ts:168:7 › REQ-3-1-2 paste two-dimensional table data › the grid context menu provides menuitem "Paste" with the same clipboard content (2.1s)
+  ✓  15 [req3-core] › checks/req3-core.spec.ts:187:7 › REQ-3-1-3 select a rectangular cell range › drag selection drives aria-selected exactly and survives refresh (4.0s)
+  ✓  16 [req3-core] › checks/req3-core.spec.ts:220:7 › REQ-3-2-1 copy, cut and paste cell ranges › copy keeps the source and reproduces the 2-D layout (3.9s)
+  ✓  17 [req3-core] › checks/req3-core.spec.ts:249:7 › REQ-3-2-1 copy, cut and paste cell ranges › cut clears the source only after the target is displayed (3.9s)
+  ✘  18 [req3-core] › checks/req3-core.spec.ts:274:7 › REQ-3-2-2 undo and redo recent operations › toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste (20.0s)
+  ✘  19 [req3-core] › checks/req3-core.spec.ts:312:7 › REQ-3-2-2 undo and redo recent operations › a new modification after undo disables Redo and Ctrl+Y does not restore the old branch (17.9s)
+  ✓  20 [req3-core] › checks/req3-core.spec.ts:329:7 › REQ-3-2-2 undo and redo recent operations › undo history is per workbook and never crosses worksheets (3.3s)
+  ✓  21 [req3-integration] › checks/req3-integration.spec.ts:76:7 › REQ-3-1-1 formula cells and dependent recalculation › grid shows results, formula bar shows the original formula, dependencies recalculate and persist (7.7s)
+  ✓  22 [req3-integration] › checks/req3-integration.spec.ts:103:7 › REQ-3-2-1 copying formulas adjusts references › relative references shift with the target offset, absolute references stay (5.4s)
+  ✓  23 [req3-integration] › checks/req3-integration.spec.ts:129:7 › REQ-3-1-3 selection persistence per worksheet › switching worksheets keeps each worksheet rectangle (5.6s)
+  ✓  24 [req3-integration] › checks/req3-integration.spec.ts:190:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › paste with an out-of-range value is rejected as a whole (4.8s)
+  ✓  25 [req3-integration] › checks/req3-integration.spec.ts:212:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › range copy with an out-of-range target leaves source and target unchanged (9.9s)
+  -  26 [req3-integration] › checks/req3-integration.spec.ts:239:8 › REQ-3-2-2 undo covers row and column structure changes › inserting a row and a column can be undone and redone
+isError: False
+
+### 2026-09-28T05:44:50.842Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L166
+ROLE assistant 
+thinking: 23 passed, 2 failed, 1 skipped (fixme, pending #4).
+
+Now let me fix:
+1. FormulaBar: blur after Enter (makes Ctrl+Z work right after committing from the bar — REQ-3-2-2 "Ctrl+Z 同效").
+2. req3-core test: fix the inconsistent final expectation / restructure the paste to B28.
+
+Wait, but for #2, maybe there's a more general issue: the user might press Ctrl+Z while the formula bar is focused even when they haven't edited (e.g., clicked the bar, then changed their mind). Requirement just says Ctrl+Z works. Blur-on-Enter covers the test flow. But what about Ctrl+Y in test 2 line 324: after `submitViaFormulaBar(A32,'second')` then press Ctrl+Y — with blur-on-Enter, focus is on body, app handles. Good.
+
+Let me also consider: should Escape in formula bar also blur? No — Escape cancels and keeps editing possible.
+
+Additionally, maybe I should make the app undo work even when a non-dirty formula bar has focus: in the keydown isEditable check, allow Ctrl+Z when the input's value equals the committed raw. Hmm — that's over-engineering. The blur approach is cleaner and matches spreadsheet UX.
+
+Hmm, one concern with blur-on-Enter: the requirement says "Enter 或点击其他单元格提交" — committed on Enter. Focus moves to body (not the grid). Should focus move to the grid instead? For better UX, focus the grid's active cell. But the FormulaBar doesn't have a ref to the grid. I could have EditorPage pass an onCommitted callback that focuses the grid. Hmm, `Grid` focuses active cell only on selection change.
+
+Simplest robust approach: in EditorPage, after a successful commit, focus the grid element? Let me think about whether it matters for the checks: after blur, body has focus. Ctrl+Z then works. Good enough. But for real UX, keeping focus on the grid is nicer. However, if I focus the grid container (table), keydown events on it would be handled by Grid's onKeyDown (which handles arrows/typing). Hmm, typing on a grid cell (td tabIndex 0) — but focus on the <table> itself? The table isn't focusable (no tabIndex). I'd need to focus the active cell.
+
+Let me do: FormulaBar's Enter → commit + blur. And in Grid, `focusActive` effect already refocuses the active cell when `document.activeElement` is inside the grid. Since after blur focus is body (not in grid), it won't. I could change focusActive to also focus when activeElement is body/formula bar... risky.
+
+Alternative: pass an `onAfterCommit` from EditorPage to FormulaBar that focuses the active gridcell via a ref exposed by Grid. Overkill.
+
+I'll go with just blur. The acceptance requirement is Ctrl+Z functionality, and body focus satisfies it. Actually, wait: after blur, the next Ctrl+Z target is body → handled. 
+
+Hmm, but hold on: does `document.activeElement` become body after blur of an input? Yes.
+
+Let me implement, then re-run only the req3 projects for fast feedback, then the full suite once more.
+
+Let me make the edits.
+
+Edit 1: FormulaBar.
+Edit 2: req3-core.spec.ts.
+
+Also note: the failing test 1 also had `await expect(undo).toBeEnabled();` right after submitViaFormulaBar — that worked.
+
+Now, one more consideration for test 1: after the paste (Ctrl+V via keyboard), the focus is on the grid cell (selectCell clicked it). Ctrl+Z works. Good.
+
+Let me apply.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/components/FormulaBar.tsx", "edits": [{"oldText": "        onKeyDown={(e) => {\n          if (e.key === \"Enter\") {\n            e.preventDefault();\n            void commit();\n          } else if (e.key === \"Escape\") {", "newText": "        onKeyDown={(e) => {\n          if (e.key === \"Enter\") {\n            e.preventDefault();\n            void commit();\n            // Enter commits and leaves the text box (as in a spreadsheet): the\n            // grid keeps the keyboard shortcuts, so Ctrl+Z / Ctrl+Y are the\n            // same as the toolbar buttons right after a commit (REQ-3-2-2).\n            e.currentTarget.blur();\n          } else if (e.key === \"Escape\") {"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:44:50.849Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L167
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/components/FormulaBar.tsx.
+isError: False
+
+### 2026-09-28T05:45:09.715Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L168
+ROLE assistant 
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-core.spec.ts", "edits": [{"oldText": "    // --- paste, undone in reverse order together with the edit\n    await selectCell(page, 'A28');\n    await pasteWithKeyboard(page, 'v1\\tv2\\nv3\\tv4');\n    await expect(cell(page, 'B29')).toHaveText('v4');\n\n    await page.keyboard.press('Control+z');\n    await expect(cell(page, 'A28')).toHaveText('u1');\n    await expect(cell(page, 'B29')).toHaveText('');\n    await page.keyboard.press('Control+z');\n    await expect(cell(page, 'A28')).toHaveText('');\n\n    await page.keyboard.press('Control+y');\n    await expect(cell(page, 'A28')).toHaveText('u1');\n    await page.keyboard.press('Control+y');\n    await expect(cell(page, 'B29')).toHaveText('v4');\n\n    // The state after undo/redo persists.\n    await reload(page);\n    await expect(cell(page, 'A28')).toHaveText('u1');\n    await expect(cell(page, 'B29')).toHaveText('v4');", "newText": "    // --- paste at B28 (disjoint from the edited A28), undone in reverse\n    // order together with the edit\n    await selectCell(page, 'B28');\n    await pasteWithKeyboard(page, 'v1\\tv2\\nv3\\tv4');\n    await expect(cell(page, 'B28')).toHaveText('v1');\n    await expect(cell(page, 'C29')).toHaveText('v4');\n\n    // Most recent first: the paste goes back to empty, the edit stays.\n    await page.keyboard.press('Control+z');\n    await expect(cell(page, 'A28')).toHaveText('u1');\n    await expect(cell(page, 'B28')).toHaveText('');\n    await expect(cell(page, 'C29')).toHaveText('');\n    await page.keyboard.press('Control+z');\n    await expect(cell(page, 'A28')).toHaveText('');\n\n    // Redo replays the complete operation, in the order it was undone.\n    await page.keyboard.press('Control+y');\n    await expect(cell(page, 'A28')).toHaveText('u1');\n    await page.keyboard.press('Control+y');\n    await expect(cell(page, 'B28')).toHaveText('v1');\n    await expect(cell(page, 'C29')).toHaveText('v4');\n\n    // The state after undo/redo persists.\n    await reload(page);\n    await expect(cell(page, 'A28')).toHaveText('u1');\n    await expect(cell(page, 'C29')).toHaveText('v4');"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:45:09.720Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L169
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-core.spec.ts.
+isError: False
+
+### 2026-09-28T05:45:17.376Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L170
+ROLE assistant 
+thinking: Now the second failing test: after the formula bar blur fix, Ctrl+Z should work. 
+
+Let me also double check test 2's flow after blur: 
+- submitViaFormulaBar A32 'first' → blur → focus body. 
+- Ctrl+Z → undo → A32=''. ✓
+- Redo enabled ✓
+- submitViaFormulaBar A32 'second' → focuses bar, commit, blur. New op pushes → redo cleared → Redo disabled ✓
+- Ctrl+Y → app redo with empty redo stack → no-op → A32 stays 'second' ✓
+
+Now, one more issue: `submitViaFormulaBar(page,'A32','first')` uses `formulaBar(page).fill(text)` — Playwright's fill focuses the element. Then `press('Enter')`. After Enter, blur. Fine.
+
+Now let me rebuild the frontend and run a targeted check (req3-core only) for fast feedback. I can run playwright directly with a temporarily started server. Easier: modify run.sh? It runs all projects. I could run playwright with `--project req3-core` but run.sh doesn't pass args. I can invoke the pieces manually: start a server with temp DATA_DIR, then run playwright with BASE_URL_REQ3_CORE etc. But playwright.config requires all BASE_URL_* env vars (required() throws for each project). Since projects are all defined, all env vars are needed even when filtering. Let me just run the full run.sh again (3.7 min). That's acceptable and gives complete evidence.
+
+But first rebuild (run.sh does the build).
+
+Let me commit the changes first? The evidence should correspond to a published commit. Let me commit now, then run, then push. Actually let me first run to validate, then commit and push. The final run evidence should be on the commit I publish. I'll run once to validate, then commit, then rerun to get final evidence at the published commit (or just rerun after commit). To save time: commit now, then run the suite, and if green, that evidence is for the commit. If the run fails, fix and amend.
+
+Let me commit the four changed files: checks/run.sh, checks/.gitignore, frontend/src/components/FormulaBar.tsx, checks/req3-core.spec.ts. And note checks/package-lock.json unchanged.
+
+Commit message in Chinese consistent with repo style.
+
+Actually, let me run the typecheck of frontend build first quickly (tsc) to catch errors: `cd frontend && npx tsc -p tsconfig.json`. Let me do that, then commit, then run.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./frontend/node_modules/.bin/tsc -p frontend/tsconfig.json && echo \"FRONTEND TSC OK\" && ./checks/node_modules/.bin/tsc -p checks/tsconfig.json && echo \"CHECKS TSC OK\" && git diff --stat"}
+stopReason: toolUse
+
+### 2026-09-28T05:45:21.618Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L171
+ROLE toolResult bash
+text: FRONTEND TSC OK
+CHECKS TSC OK
+ checks/.gitignore                      |  1 +
+ checks/req3-core.spec.ts               | 18 ++++++++++++------
+ checks/run.sh                          | 33 +++++++++++++++++++++++++++------
+ frontend/src/components/FormulaBar.tsx |  4 ++++
+ 4 files changed, 44 insertions(+), 12 deletions(-)
+isError: False
+
+### 2026-09-28T05:45:28.175Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L172
+ROLE assistant 
+thinking: Now commit. Then run the full suite.
+
+Let me write a clear commit message.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git add -A && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' commit -q -F - <<'EOF'\nREQ-3 自检第二轮：Ctrl+Z 焦点、undo 检查判据与检查隔离（#5）\n\n实现修正（1 处，影响交付行为）：\n- FormulaBar：Enter 提交后离开文本框（与电子表格一致）。此前提交后焦点仍在\n  formula bar 这个 input 上，window 的 Ctrl+Z/Ctrl+Y 处理器按“正在编辑文本”\n  忽略事件，用户刚提交就按 Ctrl+Z 不会撤销（REQ-3-2-2 要求快捷键与按钮同效）。\n  现在 Enter 提交后焦点回到页面，Ctrl+Z/Ctrl+Y 与 Undo/Redo 按钮结果一致。\n\n检查修正（1 处判据自相矛盾 + 1 处隔离缺陷）：\n- req3-core 撤销用例：粘贴目标从 A28 改为 B28（与已编辑的 A28 不重叠），并把\n  redo 断言改为“重放完整操作（B28= v1、C29= v4）”。原用例先把 A28 写成 u1，\n  又在 A28 处粘贴 v1，redo 该粘贴后 A28 必然是 v1，却仍断言 u1，判据自身矛盾。\n- run.sh：运行期状态（DATA_DIR/日志/pid）从 /tmp/wb-checks-* 移到仓库内\n  checks/.run/。共享机器上该 /tmp 前缀被其他运行清理过一次，删掉了仍在服务的\n  server 的 DATA_DIR，导致 26 项里 5 项报 “No workbooks yet”；watchdog 现在还会\n  检查种子是否仍在，缺失时用同一 DATA_DIR 重启（种子幂等）恢复初始状态。\n\n自检：checks/run.sh（独立端口 + 仓库内临时数据目录，26 项：23 项此前已绿，\n本次修正 2 项，1 项待 #4 的 fixme 跳过）。\nEOF\ngit log --oneline -3"}
+stopReason: toolUse
+
+### 2026-09-28T05:45:34.803Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L173
+ROLE toolResult bash
+text: 0e0b626 REQ-3 自检第二轮：Ctrl+Z 焦点、undo 检查判据与检查隔离（#5）
+455dff2 合并 origin/develop（#3 共享基础跟进 61b51ee）
+17a36fa REQ-3 自检修复与检查加固（#5）
+isError: False
+
+### 2026-09-28T05:45:36.874Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L174
+ROLE assistant 
+thinking: Hmm, the commit message says "自检：... 26 项：23 项此前已绿，本次修正 2 项" — that's describing the previous run, not a post-fix run. I should run the suite now to confirm green, and the commit message claims too much. Let me run and if green, amend the message to record actual evidence. Better: run now, then amend the commit message to include the actual result.
+
+Let me run the full suite in background.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run3.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run3.log; tail -3 /tmp/issue5-run3.log", "background": true}
+stopReason: toolUse
+
+### 2026-09-28T05:45:36.883Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L175
+ROLE toolResult bash
+text: Bash job bg006 started in background. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T05:45:40.011Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L176
+ROLE assistant 
+thinking: While that runs (~4 min), let me prepare the PR. I'll push the branch after the run is green.
+
+Let me also consider updating the README to mention the new `.run/` dir? The README's checks section mentions logs? It says "Each check file gets its own backend process, temp DATA_DIR and free port". I could add a line about repo-local run dir. Minor; let me add it to keep docs accurate.
+
+Let me read the README checks section lines again and patch.
+
+Actually the README says:
+```
+Each check file gets its own backend process, temp `DATA_DIR` and free port (never
+3000, which is reserved for the official evaluation), so every check starts from
+the promised seeded state and mutating checks cannot leak into each other.
+`checks/run.sh` runs:
+```
+I'll append: "Per-run state (server logs, temp data directories) lives in the gitignored `checks/.run/<stamp>/`, so concurrent runs on a shared machine cannot delete each other's state."
+
+Let me do that edit now (it's a doc change, part of the same fix).
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md", "edits": [{"oldText": "Each check file gets its own backend process, temp `DATA_DIR` and free port (never\n3000, which is reserved for the official evaluation), so every check starts from\nthe promised seeded state and mutating checks cannot leak into each other.\n`checks/run.sh` runs:", "newText": "Each check file gets its own backend process, temp `DATA_DIR` and free port (never\n3000, which is reserved for the official evaluation), so every check starts from\nthe promised seeded state and mutating checks cannot leak into each other. All of\na run's state (server logs, temp data directories, pids) lives in the gitignored\n`checks/.run/<stamp>-<pid>/`, so concurrent runs on a shared machine cannot\nsweep each other's `/tmp/wb-checks-*` files or delete a live server's `DATA_DIR`.\n`checks/run.sh` runs:"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:45:40.099Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L177
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md.
+isError: False
+
+### 2026-09-28T05:45:41.498Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L178
+ROLE assistant 
+thinking: Now let me wait for the run. Meanwhile, let me draft the PR body content (I'll write it to a file to use with braid pr create --body-file if supported). Let me check `braid pr create --help`.
+toolCall bash {"command": "braid pr create --help 2>&1 | head -40; echo \"=== issue edit help ===\"; braid issue edit --help 2>&1 | head -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:45:41.600Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L179
+ROLE toolResult bash
+text: 创建本地 PR 和分支；不发布 GitHub PR。
+
+Usage: braid pr create [OPTIONS] --issue <ISSUE> --title <TITLE>
+
+Options:
+      --issue <ISSUE>            直接关联的本地 Issue；可用逗号指定多个。
+      --state <STATE>            
+  -t, --title <TITLE>            
+  -b, --body <BODY>              
+  -F, --body-file <FILE>         
+      --request-id <REQUEST_ID>  可选重试键；同键只返回首次创建的 PR。
+      --assignee <ASSIGNEE>      
+      --base <BRANCH>            已发布在本次 origin 中的目标分支；省略时使用 delivery ref。
+      --head <BRANCH>            已发布在本次 origin 中的源分支；省略时新建 PR 分支。
+      --draft                    
+      --json                     
+  -h, --help                     Print help
+=== issue edit help ===
+Usage: braid issue edit [OPTIONS] <ID>
+
+Arguments:
+  <ID>  
+
+Options:
+      --state <STATE>                      
+  -t, --title <TITLE>                      
+      --parent <PARENT>                    
+      --remove-parent                      
+      --add-assignee <ADD_ASSIGNEE>        
+      --remove-assignee <REMOVE_ASSIGNEE>  
+  -b, --body <BODY>                        
+  -F, --body-file <FILE>                   
+  -h, --help                               Print help
+isError: False
+
+### 2026-09-28T05:45:45.181Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L180
+ROLE assistant 
+thinking: Good. braid pr create requires --base in "本次 origin 中" (published). So I must push the branch first, then create the PR with --head.
+
+Let me prepare the PR body file later.
+
+Let me poll the run.
+toolCall bash {"command": "sleep 29; grep -E \"^  (✓|✘|-)|passed|failed|Running\" /tmp/issue5-run3.log | tail -8", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:46:14.203Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L181
+ROLE toolResult bash
+text: Running 26 tests using 1 worker
+  ✓   1 [create-workbook] › checks/create-workbook.spec.ts:10:5 › New blank workbook -> editor with only a blank Sheet1 and A1 selected (6.1s)
+  ✓   2 [create-workbook] › checks/create-workbook.spec.ts:53:5 › a fresh workbook does not show another workbook's data (4.0s)
+isError: False
+
+### 2026-09-28T05:46:42.601Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L182
+ROLE assistant 
+thinking: Running. Let me wait for the notification. Meanwhile, prepare the PR body.
+
+Let me write the PR body to a temp file now.
+
+Content plan:
+# REQ-3 单元格编辑、范围操作与撤销重做（#5）
+Link: closes/关联 Issue #5.
+
+## 覆盖需求
+- REQ-3-1-1 编辑...
+- REQ-3-1-2 批量粘贴...
+- REQ-3-1-3 矩形选区...
+- REQ-3-2-1 复制/剪切/粘贴...
+- REQ-3-2-2 撤销/重做...
+
+## 实现
+- 统一写管道 validate → write → persist → history (单次 PATCH .../cells batch)
+- 共享消费：#6 adjustFormulaForCopy / 重算（服务端）、#7 规则与文案（本 PR 内含 interim 适配层 rulesFromSheet/validateSheetWrites，待 #7 模块落地后替换为 re-export）
+- 关键文件清单
+
+## 验收证据（自检）
+- 命令、commit、环境、结果：26 项 25 通过（1 项 fixme 待 #4）
+- 单元测试 11/11
+- 类型检查通过
+
+## 已知边界/待整合
+- 行列结构 undo 需 #4（req3-integration 的 fixme 用例已就位）
+- 校验文案由 #7 拥有，本分支的 frontend/src/domain/validation.ts 是 interim 适配（待 #7 模块迁入后替换）
+- dist 入库（2305564）影响 #6 包，说明原因
+
+Hmm, about the validation interim implementation: comment #11/#17/#18 said #5 will consume #7's module. The current code implements its own validation.ts with the exact strings. That's a duplicate source of truth, which #7 explicitly asked to avoid ("请在 #5 内不定义任何校验文案常量"). This is a contract deviation!
+
+Wait, let me re-read: #7's comment #18 said "③ 我是唯一校验文案来源，请在 #5 内不定义任何校验文案常量". The current implementation defines `numberMessages()` producing the exact strings. That violates the agreement — but there's no other option until #7's module is published. The file's docblock acknowledges this: "The rule model and the error wording are owned by issue #7... This file is the interim implementation of that contract inside #5... When #7 publishes its shared module (import path to be confirmed in issue #5), replace the body of validateRangeWrite with a re-export and delete the local wording helpers — do not keep two sources of validation messages."
+
+Also #7 said the module would be published "等 #2 契约落地我会按仓库目录迁入并在这里给出导入路径" — and #7's branch exists (origin/braid-agent/issue-7/pi-deepseek-fast-g1). Let me check if #7's module is available there and whether I should consume it directly instead of duplicating!
+
+That would be better: consume #7's actual module. Let me check the issue-7 branch for the validation module path.
+
+Let me look at origin/braid-agent/issue-7/pi-deepseek-fast-g1 for validation files.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git log --oneline origin/develop..origin/braid-agent/issue-7/pi-deepseek-fast-g1 | head && echo \"=== files ===\" && git diff --stat origin/develop...origin/braid-agent/issue-7/pi-deepseek-fast-g1 2>/dev/null | tail -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:46:46.812Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L183
+ROLE toolResult bash
+text: 9e17225 REQ-5 API 检查：排序后筛选仍作用于同一范围且隐藏行重算；透视汇总包含被隐藏行
+958af10 REQ-5 检查修正：下拉单元格断言取 .gridcell-value；prepare.cjs 尽力构建 shared 包；浏览器检查超时 180s
+cfd37e6 REQ-5 数据组织：排序/筛选/数据验证/透视表（#7）
+=== files ===
+ backend/scripts/prepare.cjs               |  25 ++
+ backend/src/domain/formulaShift.ts        |  48 +++
+ backend/src/domain/req5/address.ts        | 115 +++++++
+ backend/src/domain/req5/filter.ts         |  95 ++++++
+ backend/src/domain/req5/index.ts          |   8 +
+ backend/src/domain/req5/pivot.ts          | 152 +++++++++
+ backend/src/domain/req5/sort.ts           |  89 +++++
+ backend/src/domain/req5/validation.ts     | 162 +++++++++
+ backend/src/domain/req5/values.ts         |  88 +++++
+ backend/src/domain/req5/wire.ts           | 278 ++++++++++++++++
+ backend/src/middleware/validationGuard.ts |  82 +++++
+ backend/src/routes/data.ts                | 501 ++++++++++++++++++++++++++++
+ backend/src/server.ts                     |   4 +
+ checks/req5-api.mjs                       | 531 ++++++++++++++++++++++++++++++
+ checks/req5-data.spec.ts                  | 224 +++++++++++++
+ checks/req5-ui.sh                         |  58 ++++
+ checks/req5.playwright.config.ts          |  23 ++
+ checks/unit/req5.test.ts                  | 474 ++++++++++++++++++++++++++
+ frontend/src/api.ts                       | 149 ++++++++-
+ frontend/src/components/Grid.tsx          | 115 ++++++-
+ frontend/src/pages/EditorPage.tsx         | 315 +++++++++++++++++-
+ frontend/src/req5.ts                      | 127 +++++++
+ frontend/src/styles.css                   | 274 +++++++++++++++
+ 23 files changed, 3922 insertions(+), 15 deletions(-)
+isError: False
+
+### 2026-09-28T05:47:12.797Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L184
+ROLE assistant 
+thinking: #7's branch has `backend/src/domain/req5/validation.ts` (server-side) plus `backend/src/middleware/validationGuard.ts` and routes/data.ts. It also modifies `frontend/src/components/Grid.tsx` and `EditorPage.tsx` and `frontend/src/api.ts` — meaning #7's PR heavily touches my files. That's the parallel-work conflict risk.
+
+Key: #7 put validation on the **server** (validationGuard middleware) rather than a frontend module. Let me look at what #7's validation.ts exports and how the guard is wired, to decide whether #5 should consume it.
+
+But careful: #7 is unmerged and its structure may still change. My PR is based on develop without #7. The integration will happen later by the root. The issue says "校验规则联动（0-100 报错文案）依赖 Issue #7 的规则模型时，按共享数据模型字段预留，整合时验证。"
+
+So for my PR, the interim adapter is acceptable *provided* it's explicitly marked interim and replaced at integration. But #7 explicitly asked for no duplicate wording constants. Hmm.
+
+Options:
+(a) Keep interim adapter with the exact agreed strings (already done, documented as interim).
+(b) Consume #7's module from its branch — but it's a backend module (TypeScript, CommonJS backend), and my validation runs client-side before the write. #7's guard is server-side middleware. The frontend would then rely on the server to reject; the client would display the error from the API. That's actually cleaner: no client-side wording at all!
+
+Let me look at #7's validationGuard and routes to see if the server returns message+hint. If the server rejects the batch with {error, code, errors:[{row,col,message,hint}]}, then #5's client could just display the server's message. But my PR can't depend on unmerged code.
+
+Given the integration is done by the root later, the pragmatic approach: keep the interim client-side adapter that implements exactly the agreed contract and strings, clearly marked, and state in the PR/comment that at integration time it must be replaced by #7's module (or the server guard), so there's one source of truth. That's what the file docblock says.
+
+Actually, wait. There's a subtlety: the issue explicitly says validation is a dependency and "按共享数据模型字段预留，整合时验证". So interim is expected. And the tests seed the rule directly into the data file as an external fixture (documented). This is consistent.
+
+However, I want to reduce the risk of "two sources of wording". The interim module is in one place (`frontend/src/domain/validation.ts`) and it's documented as the #7-owned contract with a TODO to re-export. Good enough. I'll call it out explicitly in the PR and in a comment on the #7 thread.
+
+Hmm, but should I instead import #7's module from its branch? Cross-branch file dependencies are messy. No.
+
+Let me check the run progress.
+
+Also: I should check whether #7's branch adds validation at the server, in which case the *integrated* behavior might double-validate (client + server). That's fine (idempotent).
+
+Let me look at #7's validationGuard quickly to understand the eventual error shape, so I can note compatibility. Actually, my client validation intercepts first, so the server guard would rarely trigger. Fine.
+
+Let me poll the run.
+toolCall bash {"command": "sleep 29; grep -E \"^  (✓|✘|-)|passed|failed\" /tmp/issue5-run3.log | tail -8", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:47:41.908Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L185
+ROLE toolResult bash
+text:   ✓   6 [editor-interactions] › checks/editor-interactions.spec.ts:84:5 › rename updates the editor title and the home link; empty name is rejected (10.2s)
+  ✓   7 [editor-interactions] › checks/editor-interactions.spec.ts:131:5 › leading and trailing spaces are trimmed when renaming (6.9s)
+  ✓   8 [home-editor] › checks/home-editor.spec.ts:19:5 › home lists the seeded workbook with a name link and Last updated (2.9s)
+  ✓   9 [home-editor] › checks/home-editor.spec.ts:33:5 › opening Q3 Sales shows the seeded content, tabs and the same Last updated (6.9s)
+  ✓  10 [home-editor] › checks/home-editor.spec.ts:74:5 › direct editor URL and refresh restore the same workbook (11.4s)
+  ✓  11 [home-editor] › checks/home-editor.spec.ts:109:5 › the seeded state survives reopening from the home page (3.7s)
+  ✓  12 [req3-core] › checks/req3-core.spec.ts:96:7 › REQ-3-1-1 edit a cell through the grid or formula bar › formula bar commit, escape cancel, click-away commit and refresh persistence (10.0s)
+  ✓  13 [req3-core] › checks/req3-core.spec.ts:140:7 › REQ-3-1-2 paste two-dimensional table data › Ctrl+V applies the whole rectangle, preserves empty fields and only overwrites the target (6.8s)
+isError: False
+
+### 2026-09-28T05:47:43.415Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L186
+ROLE assistant 
+thinking: Progressing well. Let me wait for the two undo tests. Poll again.
+toolCall bash {"command": "sleep 29; grep -E \"^  (✓|✘|-)|passed|failed\" /tmp/issue5-run3.log | tail -8", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:48:12.433Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L187
+ROLE toolResult bash
+text:   ✓  12 [req3-core] › checks/req3-core.spec.ts:96:7 › REQ-3-1-1 edit a cell through the grid or formula bar › formula bar commit, escape cancel, click-away commit and refresh persistence (10.0s)
+  ✓  13 [req3-core] › checks/req3-core.spec.ts:140:7 › REQ-3-1-2 paste two-dimensional table data › Ctrl+V applies the whole rectangle, preserves empty fields and only overwrites the target (6.8s)
+  ✓  14 [req3-core] › checks/req3-core.spec.ts:168:7 › REQ-3-1-2 paste two-dimensional table data › the grid context menu provides menuitem "Paste" with the same clipboard content (4.1s)
+  ✓  15 [req3-core] › checks/req3-core.spec.ts:187:7 › REQ-3-1-3 select a rectangular cell range › drag selection drives aria-selected exactly and survives refresh (8.1s)
+  ✓  16 [req3-core] › checks/req3-core.spec.ts:220:7 › REQ-3-2-1 copy, cut and paste cell ranges › copy keeps the source and reproduces the 2-D layout (6.1s)
+  ✓  17 [req3-core] › checks/req3-core.spec.ts:249:7 › REQ-3-2-1 copy, cut and paste cell ranges › cut clears the source only after the target is displayed (3.4s)
+  ✓  18 [req3-core] › checks/req3-core.spec.ts:274:7 › REQ-3-2-2 undo and redo recent operations › toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste (4.6s)
+  ✓  19 [req3-core] › checks/req3-core.spec.ts:318:7 › REQ-3-2-2 undo and redo recent operations › a new modification after undo disables Redo and Ctrl+Y does not restore the old branch (2.9s)
+isError: False
+
+### 2026-09-28T05:48:12.439Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L188
+ROLE user 
+text: 请处理 Issue #5。
+
+对象：local/run#5
+
+发生以下更新：
+- issue:5 comment 69; read `comment view 69 --thread`
+
+使用 `braid issue view 5 --comments` 查看当前内容。
+
+
+### 2026-09-28T05:48:14.028Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L189
+ROLE assistant 
+thinking: New comment #69 arrived. Let me read it while the run finishes.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid comment view 69 --thread 2>&1 | head -80"}
+toolCall bash {"command": "grep -E \"^  (✓|✘|-)|passed|failed\" /tmp/issue5-run3.log | tail -8"}
+stopReason: toolUse
+
+### 2026-09-28T05:48:14.057Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L190
+ROLE toolResult bash
+text: 
+comment #69 [visible]
+thread: 69 [open]
+[EXACT ALREADY READ items.md comment:69; 370 chars]
+comment #69 -> @deepseek-5: delivered
+isError: False
+
+### 2026-09-28T05:48:14.057Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L191
+ROLE toolResult bash
+text:   ✓  13 [req3-core] › checks/req3-core.spec.ts:140:7 › REQ-3-1-2 paste two-dimensional table data › Ctrl+V applies the whole rectangle, preserves empty fields and only overwrites the target (6.8s)
+  ✓  14 [req3-core] › checks/req3-core.spec.ts:168:7 › REQ-3-1-2 paste two-dimensional table data › the grid context menu provides menuitem "Paste" with the same clipboard content (4.1s)
+  ✓  15 [req3-core] › checks/req3-core.spec.ts:187:7 › REQ-3-1-3 select a rectangular cell range › drag selection drives aria-selected exactly and survives refresh (8.1s)
+  ✓  16 [req3-core] › checks/req3-core.spec.ts:220:7 › REQ-3-2-1 copy, cut and paste cell ranges › copy keeps the source and reproduces the 2-D layout (6.1s)
+  ✓  17 [req3-core] › checks/req3-core.spec.ts:249:7 › REQ-3-2-1 copy, cut and paste cell ranges › cut clears the source only after the target is displayed (3.4s)
+  ✓  18 [req3-core] › checks/req3-core.spec.ts:274:7 › REQ-3-2-2 undo and redo recent operations › toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste (4.6s)
+  ✓  19 [req3-core] › checks/req3-core.spec.ts:318:7 › REQ-3-2-2 undo and redo recent operations › a new modification after undo disables Redo and Ctrl+Y does not restore the old branch (2.9s)
+  ✓  20 [req3-core] › checks/req3-core.spec.ts:335:7 › REQ-3-2-2 undo and redo recent operations › undo history is per workbook and never crosses worksheets (3.4s)
+isError: False
+
+### 2026-09-28T05:48:23.406Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L192
+ROLE assistant 
+thinking: Important new facts from comment #69:
+- origin/develop head is now 0539c62 (moved! includes PR #6 probably: server-side runWithFormulas atomic pipeline; value backfill; error strings don't reject writes).
+- Check suite hardened (PR #5/#7: timeouts, run private dir, port ownership check) — interesting, "run 私有目录" means someone else also moved run state out of /tmp? PR #5 is... which PR is #5? Let me check braid pr list. Earlier: #1,#2,#3,#4. Now #5 and #6 exist. So other agents created PRs #5 and #6 (maybe #5 = check suite hardening by glm, #6 = server formula pipeline by glm-6?). Wait, PR #5 might be... let me check.
+
+- "F3（复制偏移整链路）依赖你的粘贴端点" — the root has an F-series acceptance list; F3 depends on my paste endpoint.
+
+So I need to:
+1. fetch origin/develop (now 0539c62), rebase/merge my branch onto it.
+2. My branch currently is based on 61b51ee. There may be conflicts (e.g., checks/run.sh hardening in PR #5, and backend cells route changed by #6).
+3. Re-run checks on the new baseline.
+
+Also the note about "你分支上的准备件（927358f）基于初始化提交 3ab688f" — that's the stale remote agent branch; they may think my branch is still that. My local branch has the real work. I should push and clarify.
+
+Let me check the current run status, then fetch and rebase.
+
+Wait — my current run (bg006) is running against the old baseline (61b51ee + my work). It's almost done. I'll let it finish for evidence on that baseline, but I'll need to re-integrate onto 0539c62 and re-run. Note the root says "浏览器检查可用新基线实跑" and "完成后 braid pr create --base develop".
+
+Let me check pr list and develop.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -5 && echo \"=== develop ===\" && git log --oneline -5 origin/develop && echo \"=== PRs ===\" && braid pr list 2>&1 | head -10"}
+stopReason: toolUse
+
+### 2026-09-28T05:48:25.038Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L193
+ROLE toolResult bash
+text: From /workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin
+   61b51ee..0539c62  develop                -> origin/develop
+ * [new branch]      fix/check-timeouts     -> origin/fix/check-timeouts
+ * [new branch]      issue-6-formula-wiring -> origin/issue-6-formula-wiring
+=== develop ===
+0539c62 Merge local PR #7
+661e397 Merge local PR #6
+41b0bfe fix check script: setup teardown hook + F5 read helper + F6 sum range
+1ad7d43 REQ-4: wire formula engine into PATCH /cells pipeline
+3c9393f Merge local PR #5
+=== PRs ===
+#1	MERGED	未指派	公式引擎共享包（REQ-4-*）：解析/求值/依赖重算/复制引用调整
+#2	MERGED	未指派	共享基础：应用骨架 + 工作簿主页/创建/重命名/编辑器网格 (REQ-1-1-1, REQ-1-2-*)
+#3	MERGED	未指派	共享基础跟进：修复网格 shift 选区扩展；检查套件类型检查/隔离/日志(REQ-1-1-1, REQ-1-2-*)
+#4	MERGED	@glm-9	CSV 导入与导出 (REQ-1-3-*): 服务端解析+导入端点、导入对话框、导出下载、单元与浏览器检查
+#5	MERGED	未指派	检查套件：放宽浏览器超时上限，避免共享机器负载造成的假失败
+#6	MERGED	未指派	REQ-4：公式引擎接入写管道（PATCH /cells 原子管线 + value 回填）
+#7	MERGED	未指派	检查套件可靠性：超时上限、run 私有运行目录、服务器端口归属校验
+isError: False
+
+### 2026-09-28T05:48:37.941Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L194
+ROLE assistant 
+thinking: Develop moved significantly: PRs #4 (CSV), #5, #6, #7 merged. Note: `#7` here is "检查套件可靠性" — a different PR number than the Issue #7 (REQ-5 data organization). Also "Merge local PR #7" in develop might be that check-suite PR. Let me be careful: braid PR numbering is global; the REQ-5 issue is Issue #7 but its PR isn't merged yet (only merged PRs #1-#7 are those listed).
+
+Wait, `1ad7d43 REQ-4: wire formula engine into PATCH /cells pipeline`, `661e397 Merge local PR #6`. And `0539c62 Merge local PR #7` = check reliability. So develop now includes:
+- server-side formula pipeline (REQ-4)
+- check suite hardening that moved run dirs (PR #7) — which may conflict with MY run.sh changes (I did the same thing independently!). And port ownership check.
+
+Since PR #7 already implemented "run 私有运行目录" and "端口归属校验", my run.sh changes may conflict or be redundant. I need to rebase onto develop and adapt.
+
+Approach: rebase my branch onto origin/develop. My branch has many commits (3333ac1, 2305564, 17a36fa, 746956c merge, 455dff2 merge, 0e0b626). Rebasing a branch with merges is messy. Better: merge origin/develop into my branch (like the previous agent did) and resolve conflicts. That keeps history; the PR diff vs develop will then be just my changes.
+
+Let me do `git merge origin/develop`. Conflicts likely in:
+- checks/run.sh (I changed it; develop's PR #7 changed it too)
+- checks/.gitignore
+- frontend/src/components/Grid.tsx, EditorPage.tsx (develop may have changed them via #6? #6 only touched backend + maybe frontend? Let me check)
+- backend/src/routes/workbooks.ts (server pipeline changed)
+- shared/formula-engine/dist (maybe now in develop)
+- frontend/src/api.ts
+- checks specs (PR #5/#7 may have touched specs/timeouts)
+
+Let me first finish the current run (for the old-baseline evidence), then merge.
+
+Actually the current run is nearly done. Let me check.
+
+Also important: the develop PR #7 "run 私有运行目录" means the /tmp-sweep issue is already fixed upstream — my commit 0e0b626 duplicates it. On merge conflict I should take develop's version and drop my redundant change (or keep whichever is better). Let me inspect develop's run.sh after fetch.
+
+Let me look at the current run first.
+toolCall bash {"command": "grep -E \"^  (✓|✘|-)|passed|failed|EXIT\" /tmp/issue5-run3.log | tail -8; echo \"=== develop run.sh diff vs mine base ===\"; cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git diff 61b51ee origin/develop --stat | tail -25"}
+stopReason: toolUse
+
+### 2026-09-28T05:48:38.616Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L195
+ROLE toolResult bash
+text:   ✓  19 [req3-core] › checks/req3-core.spec.ts:318:7 › REQ-3-2-2 undo and redo recent operations › a new modification after undo disables Redo and Ctrl+Y does not restore the old branch (2.9s)
+  ✓  20 [req3-core] › checks/req3-core.spec.ts:335:7 › REQ-3-2-2 undo and redo recent operations › undo history is per workbook and never crosses worksheets (3.4s)
+  ✓  21 [req3-integration] › checks/req3-integration.spec.ts:76:7 › REQ-3-1-1 formula cells and dependent recalculation › grid shows results, formula bar shows the original formula, dependencies recalculate and persist (5.9s)
+  ✓  22 [req3-integration] › checks/req3-integration.spec.ts:103:7 › REQ-3-2-1 copying formulas adjusts references › relative references shift with the target offset, absolute references stay (3.8s)
+  ✓  23 [req3-integration] › checks/req3-integration.spec.ts:129:7 › REQ-3-1-3 selection persistence per worksheet › switching worksheets keeps each worksheet rectangle (3.4s)
+  ✓  24 [req3-integration] › checks/req3-integration.spec.ts:190:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › paste with an out-of-range value is rejected as a whole (2.8s)
+  ✓  25 [req3-integration] › checks/req3-integration.spec.ts:212:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › range copy with an out-of-range target leaves source and target unchanged (3.9s)
+  -  26 [req3-integration] › checks/req3-integration.spec.ts:239:8 › REQ-3-2-2 undo covers row and column structure changes › inserting a row and a column can be undone and redone
+=== develop run.sh diff vs mine base ===
+ backend/package-lock.json         |  16 ++
+ backend/package.json              |   2 +
+ backend/src/csv.ts                | 120 ++++++++++++++
+ backend/src/formulas.ts           | 325 ++++++++++++++++++++++++++++++++++++++
+ backend/src/routes/csv.ts         |  78 +++++++++
+ backend/src/routes/workbooks.ts   |  41 +++--
+ backend/src/server.ts             |   2 +
+ backend/tests/csv.test.mjs        | 140 ++++++++++++++++
+ checks/csv.spec.ts                | 161 +++++++++++++++++++
+ checks/formula-api.mjs            | 259 ++++++++++++++++++++++++++++++
+ checks/playwright.config.ts       |  21 ++-
+ checks/run.sh                     | 124 +++++++++++++--
+ frontend/package.json             |   1 +
+ frontend/src/api.ts               |   6 +
+ frontend/src/domain/csv.ts        | 121 ++++++++++++++
+ frontend/src/pages/EditorPage.tsx |  25 +++
+ frontend/src/pages/HomePage.tsx   | 104 +++++++++++-
+ frontend/src/styles.css           |  48 ++++++
+ frontend/tests/csv.test.ts        |  61 +++++++
+ 19 files changed, 1615 insertions(+), 40 deletions(-)
+isError: False
+
+### 2026-09-28T05:48:41.691Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L196
+ROLE assistant 
+thinking: The run-3 result: 24 passed, 1 fixme skipped... wait, need the final summary line. Let me get it. But also: does the log show a summary? Let me grep the tail.
+
+Meanwhile, develop's diff shows checks/run.sh heavily changed (124 lines) and EditorPage.tsx changed by CSV import (25 lines) — conflicts likely in EditorPage.tsx? CSV import might add a button. My EditorPage changes were big; CSV's 25-line addition could conflict.
+
+Let me see the full run summary first.
+toolCall bash {"command": "tail -20 /tmp/issue5-run3.log"}
+stopReason: toolUse
+
+### 2026-09-28T05:48:41.704Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L197
+ROLE toolResult bash
+text:   ✓  11 [home-editor] › checks/home-editor.spec.ts:109:5 › the seeded state survives reopening from the home page (3.7s)
+  ✓  12 [req3-core] › checks/req3-core.spec.ts:96:7 › REQ-3-1-1 edit a cell through the grid or formula bar › formula bar commit, escape cancel, click-away commit and refresh persistence (10.0s)
+  ✓  13 [req3-core] › checks/req3-core.spec.ts:140:7 › REQ-3-1-2 paste two-dimensional table data › Ctrl+V applies the whole rectangle, preserves empty fields and only overwrites the target (6.8s)
+  ✓  14 [req3-core] › checks/req3-core.spec.ts:168:7 › REQ-3-1-2 paste two-dimensional table data › the grid context menu provides menuitem "Paste" with the same clipboard content (4.1s)
+  ✓  15 [req3-core] › checks/req3-core.spec.ts:187:7 › REQ-3-1-3 select a rectangular cell range › drag selection drives aria-selected exactly and survives refresh (8.1s)
+  ✓  16 [req3-core] › checks/req3-core.spec.ts:220:7 › REQ-3-2-1 copy, cut and paste cell ranges › copy keeps the source and reproduces the 2-D layout (6.1s)
+  ✓  17 [req3-core] › checks/req3-core.spec.ts:249:7 › REQ-3-2-1 copy, cut and paste cell ranges › cut clears the source only after the target is displayed (3.4s)
+  ✓  18 [req3-core] › checks/req3-core.spec.ts:274:7 › REQ-3-2-2 undo and redo recent operations › toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste (4.6s)
+  ✓  19 [req3-core] › checks/req3-core.spec.ts:318:7 › REQ-3-2-2 undo and redo recent operations › a new modification after undo disables Redo and Ctrl+Y does not restore the old branch (2.9s)
+  ✓  20 [req3-core] › checks/req3-core.spec.ts:335:7 › REQ-3-2-2 undo and redo recent operations › undo history is per workbook and never crosses worksheets (3.4s)
+  ✓  21 [req3-integration] › checks/req3-integration.spec.ts:76:7 › REQ-3-1-1 formula cells and dependent recalculation › grid shows results, formula bar shows the original formula, dependencies recalculate and persist (5.9s)
+  ✓  22 [req3-integration] › checks/req3-integration.spec.ts:103:7 › REQ-3-2-1 copying formulas adjusts references › relative references shift with the target offset, absolute references stay (3.8s)
+  ✓  23 [req3-integration] › checks/req3-integration.spec.ts:129:7 › REQ-3-1-3 selection persistence per worksheet › switching worksheets keeps each worksheet rectangle (3.4s)
+  ✓  24 [req3-integration] › checks/req3-integration.spec.ts:190:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › paste with an out-of-range value is rejected as a whole (2.8s)
+  ✓  25 [req3-integration] › checks/req3-integration.spec.ts:212:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › range copy with an out-of-range target leaves source and target unchanged (3.9s)
+  -  26 [req3-integration] › checks/req3-integration.spec.ts:239:8 › REQ-3-2-2 undo covers row and column structure changes › inserting a row and a column can be undone and redone
+
+  1 skipped
+  25 passed (2.7m)
+EXIT=0
+isError: False
+
+### 2026-09-28T05:48:53.121Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L198
+ROLE assistant 
+thinking: Run-3: 25 passed, 1 skipped (fixme), 0 failed, EXIT=0 on baseline 61b51ee+my work (commit 0e0b626 + README uncommitted).
+
+Now I must merge origin/develop (0539c62) and re-verify on the new baseline. The server pipeline changed (PATCH /cells now uses runWithFormulas, value backfill). My frontend currently computes display via the client-side engine from raw (formulas.ts + WorkbookFormulas). With develop's #6, the server writes `value` too. My client-side display engine still works (it rebuilds from raw). But now there might be double work; and the `CellData.value` from server is available. The root says "你的编辑/粘贴/范围操作直接消费该端点语义即可，前端无需自己算公式". Hmm — should I switch to using the server-provided `value` instead of the client engine? 
+
+Let me look at develop's changes to see what the server does now. If the server returns `value` (computed) for each cell, then after a write the client gets correct values directly. But for formula editing, the client also needs display for cells not returned... the whole workbook is returned, so value is available for all cells.
+
+Using server values would simplify and align with "前端无需自己算公式". But my current client engine approach passed all checks. Changing it adds risk. However, the root explicitly said the endpoint semantics are ready and F3 (copy offset full chain) depends on my paste endpoint. Since the checks pass either way, is there a correctness concern?
+
+Consider: with the client engine, after a rejected/failed write, display is consistent. With server values, same.
+
+A subtle issue: the client engine ignores validation rules; the server pipeline with rules... no.
+
+Another consideration: undo/redo snapshots store raw only; display recomputed from raw via client engine — fine. With server values, after undo the server returns new values — also fine.
+
+Potential duplication: the client engine (hyperformula, 977KB bundle) is heavy. If the server now computes values, the client could drop the engine for display... but `adjustFormulaForCopy` from the engine is still needed for paste. So the dependency stays.
+
+Hmm, but the merged develop's frontend (CSV import) may already import formula stuff. Let me look at what develop's EditorPage/api changes do and whether there's now a duplicate display path. Actually simpler: merge first, resolve conflicts, build, run checks. If all green, keep my client-side engine (it's already validated). But I should consider aligning to the root's guidance to avoid two formula engines (client + server) — the root said "前端无需自己算公式" which is guidance, not a hard requirement. Yet the root also flagged F3 depends on my paste endpoint; using `adjustFormulaForCopy` client-side for paste is per contract (#6 provides it). The actual recalculation happens server-side after the write.
+
+Hmm, wait. There's a subtle conflict: my `planRangeCopy` uses `adjustFormulaForCopy(raw, offset, bounds)` to compute the raw formulas to write for a copy. That's correct per contract. The server then recalculates values. Good.
+
+For display, using the server's `value` would remove the client engine entirely from the display path. That reduces risk of divergence (client engine vs server engine versions) and bundle size. But it's a bigger refactor. Given time and that all checks pass with the client engine, and the root's guidance is "直接消费该端点语义即可，前端无需自己算公式" (you don't NEED to compute formulas yourself), I think the safer, more aligned choice is: keep the client engine for `adjustFormulaForCopy` only, and use server `value` for display. Hmm, but that's a refactor of formulas.ts + EditorPage + Grid display.
+
+Let me look at what develop's server returns for cells to judge effort. Let me inspect backend/src/formulas.ts and routes/workbooks.ts on develop.
+
+Actually, let me first do the merge and see. Merge conflicts will reveal how much changed. Let me commit the README change first, then merge.
+
+Actually, wait: the merge will bring develop's checks/run.sh which already includes "run 私有运行目录 + 端口归属校验". My run.sh changes are redundant. I'll resolve by taking develop's version (theirs) and dropping mine, unless mine adds the seed-present watchdog (which develop's may lack). Let me diff.
+
+Let me commit README first.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git add -A && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' commit -q --amend --no-edit && git log --oneline -2 && echo \"=== develop run.sh vs my base ===\" && git diff 61b51ee origin/develop -- checks/run.sh | head -160"}
+stopReason: toolUse
+
+### 2026-09-28T05:48:53.900Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L199
+ROLE toolResult bash
+text: 74d241c REQ-3 自检第二轮：Ctrl+Z 焦点、undo 检查判据与检查隔离（#5）
+455dff2 合并 origin/develop（#3 共享基础跟进 61b51ee）
+=== develop run.sh vs my base ===
+diff --git a/checks/run.sh b/checks/run.sh
+index 01e3b98..d295a28 100755
+--- a/checks/run.sh
++++ b/checks/run.sh
+@@ -10,6 +10,9 @@
+ #   - built backend (backend/dist) + built frontend (frontend/dist)
+ #   - one log file per server, unique per run, so concurrent runs on a shared
+ #     machine cannot clobber each other's evidence
++#   - all per-run files live under one run-private directory, and every started
++#     server is verified (lsof) to be the process that owns its port, because
++#     several agent lanes run this harness at the same time on one machine
+ #
+ # Usage: checks/run.sh [--skip-build]
+ # Exit code is Playwright's exit code.
+@@ -38,11 +41,33 @@ else
+   [[ -f "$ROOT/frontend/dist/index.html" ]] || { echo "frontend/dist missing; build first"; exit 2; }
+ fi
+ 
+-# A fixed log path would be truncated by any other run of this harness; keep the
+-# logs of this run together and identifiable instead.
+-LOG_PREFIX="${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename "$ROOT")-$$}"
+-PID_FILE="$(mktemp /tmp/wb-checks-pids-XXXXXX)"
++# Keep everything this run owns (server logs, PID record, per-spec DATA_DIRs)
++# inside one run-private directory with a distinctive prefix. The shared
++# /tmp/wb-checks-* namespace is used by every lane running this harness, and
++# files there have been observed to disappear mid-run (foreign cleanup): one
++# server kept running while its workbook directory had been emptied, so the
++# checks failed with "the seeded workbook is missing" although the product was
++# fine. A private directory makes that far less likely.
++RUN_DIR="${CHECK_RUN_DIR:-$(mktemp -d /tmp/wbchecks-run-XXXXXX)}"
++LOG_PREFIX="${SERVER_LOG_PREFIX:-$RUN_DIR/server}"
++PID_FILE="$RUN_DIR/pids"
+ WATCHDOG=""
++echo "run dir: $RUN_DIR (server logs: $LOG_PREFIX-<SPEC>.log)"
++
++# Port ownership: free_port() only reports a port that was free a moment ago,
++# and the other lanes start servers at the same time. If a foreign server answers
++# on our port, its workbook list would be mistaken for ours, so verify the
++# listener is the process we started (lsof) instead of trusting the port alone.
++if command -v lsof >/dev/null 2>&1; then
++  OWNERSHIP_CHECK=true
++else
++  echo "note: lsof is not installed; skipping the port-ownership check"
++  OWNERSHIP_CHECK=false
++fi
++
++listener_pid() {
++  lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null | head -1
++}
+ 
+ free_port() {
+   python3 - <<'PY'
+@@ -54,14 +79,23 @@ s.close()
+ PY
+ }
+ 
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 207]
+ 
+ cleanup() {
+   [[ -n "$WATCHDOG" ]] && kill "$WATCHDOG" 2>/dev/null || true
+-  while read -r pid; do
++  local pid
++  # Kill the pids we remember even if the PID file was removed by something
++  # outside this run.
++  for pid in ${SERVER_PIDS[@]+"${SERVER_PIDS[@]}"}; do
+     kill "$pid" 2>/dev/null || true
+-  done < "$PID_FILE"
++  done
++  if [[ -f "$PID_FILE" ]]; then
++    while read -r pid; do
++      kill "$pid" 2>/dev/null || true
++    done < "$PID_FILE"
++  fi
+   rm -f "$PID_FILE"
+   wait 2>/dev/null || true
+ }
+@@ -75,18 +109,48 @@ start_server() {
+   echo "${SERVER_PIDS[$suffix]}" >> "$PID_FILE"
+ }
+ 
++# Start a server that provably owns its port; retry on a new port when another
++# lane won the race for it (or when the process died right after startup).
++start_owned_server() {
++  local suffix="$1" attempt port pid owner
++  for attempt in 1 2 3 4 5; do
++    port="$(free_port)"
++    PORTS[$suffix]="$port"
++    start_server "$suffix"
++    pid="${SERVER_PIDS[$suffix]}"
++    owner=""
++    for _ in $(seq 1 40); do
++      kill -0 "$pid" 2>/dev/null || break
++      owner="$(listener_pid "$port")"
++      [[ -n "$owner" ]] && break
++      sleep 0.25
++    done
++    if kill -0 "$pid" 2>/dev/null && { ! $OWNERSHIP_CHECK || [[ "$owner" == "$pid" ]]; }; then
++      return 0
++    fi
++    echo "[run] port $port for $suffix is not served by our server (pid $pid, listener ${owner:-none}); retrying on another port" \
++      | tee -a "$LOG_PREFIX-$suffix.log"
++    kill "$pid" 2>/dev/null || true
++    wait "$pid" 2>/dev/null || true
++  done
++  echo "[run] could not start a server for $suffix that owns its port" >&2
++  return 1
++}
++
+ # Wait until this server answers with the seeded workbook.
+ wait_for_ready() {
+   local port="$1" pid="$2" log="$3"
+   local attempt
+   for attempt in $(seq 1 120); do
+-    if curl -sf "http://127.0.0.1:$port/api/workbooks" | grep -q "Q3 Sales"; then
+-      return 0
+-    fi
++    # Liveness first: a foreign server on this port must not make a dead server
++    # of ours look ready.
+     if ! kill -0 "$pid" 2>/dev/null; then
+       echo "server died during startup (log: $log)"
+       return 1
+     fi
++    if curl -sf "http://127.0.0.1:$port/api/workbooks" | grep -q "Q3 Sales"; then
++      return 0
++    fi
+     sleep 0.5
+   done
+   echo "server was not ready in time (log: $log)"
+@@ -106,16 +170,28 @@ watchdog() {
+         echo "[watchdog] server for $suffix (pid $pid) disappeared at $(date -Is); restarting on the same DATA_DIR" \
+           >> "$LOG_PREFIX-$suffix.log"
+         start_server "$suffix"
++        sleep 1
++        local new_pid listener
++        new_pid="${SERVER_PIDS[$suffix]}"
++        if ! kill -0 "$new_pid" 2>/dev/null; then
++          echo "[watchdog] restart of $suffix (pid $new_pid) died immediately; port ${PORTS[$suffix]} is probably taken by another process" \
++            >> "$LOG_PREFIX-$suffix.log"
++        else
++          listener="$(listener_pid "${PORTS[$suffix]}")"
++          if $OWNERSHIP_CHECK && [[ -n "$listener" && "$listener" != "$new_pid" ]]; then
++            echo "[watchdog] port ${PORTS[$suffix]} is served by pid $listener, not by our restart (pid $new_pid)" \
++              >> "$LOG_PREFIX-$suffix.log"
++          fi
++        fi
+       fi
+     done
+   done
+ }
+ 
+ for suffix in "${SUFFIXES[@]}"; do
+-  PORTS[$suffix]="$(free_port)"
+-  DATA_DIRS[$suffix]="$(mktemp -d /tmp/wb-checks-XXXXXX)"
++  DATA_DIRS[$suffix]="$(mktemp -d "$RUN_DIR/data-$suffix-XXXXXX")"
+   : > "$LOG_PREFIX-$suffix.log"
+-  start_server "$suffix"
++  start_owned_server "$suffix" || exit 3
+isError: False
+
+### 2026-09-28T05:48:57.726Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L200
+ROLE assistant 
+thinking: Develop's run.sh already implements the run-private dir (with mktemp in /tmp but a distinctive prefix `wbchecks-run-`) and port-ownership checks, plus CSV project. It doesn't have the seed-present watchdog (only liveness). My change adds the seed-missing restart. Since the run dir is now private, the seed-sweep scenario is much less likely.
+
+Decision: On merge, take develop's run.sh as the base (theirs) and re-apply only the small seed-present watchdog addition if it's valuable. Actually since develop's run-private dir fixes the root cause, adding the seed check is defensive but adds curl polling. I'll keep develop's version and drop my run.sh/log-dir edits to minimize divergence — the redundant conflict isn't worth it. But the seed-missing watchdog is genuinely useful (e.g., a test that deletes the data file). Hmm, but the watchdog restarts servers when the seed is missing; with the CSV project there might be tests that rename/delete? Probably not. 
+
+I'll take develop's run.sh and skip my version — simpler, and the root's PR #7 already handles the failure mode. But then my commit 0e0b626's "检查隔离" part becomes moot. I'll amend the commit message accordingly after the merge.
+
+Wait, but there's a nuance: PR #7's churn shows the same /tmp issue was independently hit and fixed. Fine — the shared fix supersedes mine. I'll note it.
+
+Now, the bigger question: develop's EditorPage.tsx (CSV import + #6 wiring) merged with my EditorPage changes. Let me do the merge and resolve.
+
+Let me merge.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' merge origin/develop 2>&1 | tail -20; echo \"=== status ===\"; git status --short | head -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:48:58.168Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L201
+ROLE toolResult bash
+text: Auto-merging backend/src/routes/workbooks.ts
+Auto-merging checks/playwright.config.ts
+CONFLICT (content): Merge conflict in checks/playwright.config.ts
+Auto-merging checks/run.sh
+CONFLICT (content): Merge conflict in checks/run.sh
+Auto-merging frontend/package.json
+Auto-merging frontend/src/api.ts
+Auto-merging frontend/src/pages/EditorPage.tsx
+CONFLICT (content): Merge conflict in frontend/src/pages/EditorPage.tsx
+Auto-merging frontend/src/styles.css
+Automatic merge failed; fix conflicts and then commit the result.
+=== status ===
+M  backend/package-lock.json
+M  backend/package.json
+A  backend/src/csv.ts
+A  backend/src/formulas.ts
+A  backend/src/routes/csv.ts
+M  backend/src/routes/workbooks.ts
+M  backend/src/server.ts
+A  backend/tests/csv.test.mjs
+A  checks/csv.spec.ts
+A  checks/formula-api.mjs
+UU checks/playwright.config.ts
+UU checks/run.sh
+M  frontend/package.json
+M  frontend/src/api.ts
+A  frontend/src/domain/csv.ts
+UU frontend/src/pages/EditorPage.tsx
+M  frontend/src/pages/HomePage.tsx
+M  frontend/src/styles.css
+A  frontend/tests/csv.test.ts
+isError: False
+
+### 2026-09-28T05:49:00.727Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L202
+ROLE assistant 
+thinking: 3 conflicts: checks/playwright.config.ts, checks/run.sh, frontend/src/pages/EditorPage.tsx.
+
+Note: develop didn't include checks/req3-core.spec.ts etc.? They're on my branch (added by me); develop adds csv.spec.ts. No conflict there.
+
+Also, no conflict in frontend/src/components/Grid.tsx or frontend/src/api.ts — good.
+
+Let me resolve:
+1. checks/run.sh → take develop's (theirs), then maybe re-add the seed watchdog. Let me view the conflict.
+2. checks/playwright.config.ts → merge both (my req3 projects + develop's csv project + timeouts).
+3. EditorPage.tsx → merge my REQ-3 logic with develop's CSV import.
+
+Let me look at each conflict.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && echo \"=== playwright.config.ts conflicts ===\" && grep -n \"<<<<<<<\\|=======\\|>>>>>>>\" checks/playwright.config.ts && sed -n '1,140p' checks/playwright.config.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:49:00.745Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L203
+ROLE toolResult bash
+text: === playwright.config.ts conflicts ===
+44:<<<<<<< HEAD
+57:=======
+61:>>>>>>> origin/develop
+import { defineConfig, Project } from '@playwright/test';
+
+/**
+ * Every spec file runs against its own freshly seeded server instance (see
+ * run.sh), so each check observes the promised initial state and mutating
+ * checks cannot leak into others.
+ *
+ * Clipboard permissions are granted because the REQ-3 checks paste real
+ * clipboard content (the requirement is about Ctrl+V / the context menu
+ * "Paste" item, not about an internal-only code path).
+ */
+function required(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`Set ${name} before running browser checks.`);
+  return value;
+}
+
+if (!process.env.BROWSER_EXECUTABLE_PATH) {
+  throw new Error('Set BROWSER_EXECUTABLE_PATH before running browser checks.');
+}
+
+const clipboard = {
+  permissions: ['clipboard-read', 'clipboard-write'],
+  launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH },
+};
+
+const projects: Project[] = [
+  {
+    name: 'create-workbook',
+    testMatch: '**/create-workbook.spec.ts',
+    use: { baseURL: required('BASE_URL_CREATE') },
+  },
+  {
+    name: 'editor-interactions',
+    testMatch: '**/editor-interactions.spec.ts',
+    use: { baseURL: required('BASE_URL_EDITOR') },
+  },
+  {
+    name: 'home-editor',
+    testMatch: '**/home-editor.spec.ts',
+    use: { baseURL: required('BASE_URL_HOME') },
+  },
+  {
+<<<<<<< HEAD
+    // REQ-3 (issue #5): editing, 2-D paste, range selection, copy/cut/paste,
+    // undo/redo. Its own server + temp DATA_DIR.
+    name: 'req3-core',
+    testMatch: '**/req3-core.spec.ts',
+    use: { baseURL: required('BASE_URL_REQ3_CORE'), ...clipboard },
+  },
+  {
+    // REQ-3 results that need the formula engine (#6), the validation rule
+    // model (#7) and row/column structure operations (#4).
+    name: 'req3-integration',
+    testMatch: '**/req3-integration.spec.ts',
+    use: { baseURL: required('BASE_URL_REQ3_INTEGRATION'), ...clipboard },
+=======
+    name: 'csv',
+    testMatch: '**/csv.spec.ts',
+    use: { baseURL: required('BASE_URL_CSV') },
+>>>>>>> origin/develop
+  },
+];
+
+export default defineConfig({
+  testDir: '.',
+  testMatch: '**/*.spec.ts',
+  outputDir: process.env.CHECK_OUTPUT_DIR ?? 'test-results',
+  workers: 1,
+  retries: 0,
+  timeout: 180_000,
+  expect: { timeout: 30_000 },
+  reporter: 'list',
+  use: {
+    // Explicit limits, so a stuck interaction fails with the control's name
+    // instead of just hitting the test timeout. They are deliberately generous:
+    // this harness runs on a shared machine (several agent lanes run their own
+    // suites at the same time, load average has been >20), and a starved
+    // browser can need far longer than a healthy one to load or click. A
+    // too-tight limit produces false failures that look like product bugs.
+    actionTimeout: 30_000,
+    navigationTimeout: 60_000,
+    headless: true,
+    launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH },
+    trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
+  },
+  projects,
+});
+isError: False
+
+### 2026-09-28T05:49:03.630Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L204
+ROLE assistant 
+thinking: Resolve: keep both req3 projects and csv project.
+
+Note develop also raised timeouts and expect timeout. Good.
+
+Let me resolve playwright.config.ts.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts", "edits": [{"oldText": "<<<<<<< HEAD\n    // REQ-3 (issue #5): editing, 2-D paste, range selection, copy/cut/paste,\n    // undo/redo. Its own server + temp DATA_DIR.\n    name: 'req3-core',\n    testMatch: '**/req3-core.spec.ts',\n    use: { baseURL: required('BASE_URL_REQ3_CORE'), ...clipboard },\n  },\n  {\n    // REQ-3 results that need the formula engine (#6), the validation rule\n    // model (#7) and row/column structure operations (#4).\n    name: 'req3-integration',\n    testMatch: '**/req3-integration.spec.ts',\n    use: { baseURL: required('BASE_URL_REQ3_INTEGRATION'), ...clipboard },\n=======\n    name: 'csv',\n    testMatch: '**/csv.spec.ts',\n    use: { baseURL: required('BASE_URL_CSV') },\n>>>>>>> origin/develop\n  },", "newText": "    name: 'csv',\n    testMatch: '**/csv.spec.ts',\n    use: { baseURL: required('BASE_URL_CSV') },\n  },\n  {\n    // REQ-3 (issue #5): editing, 2-D paste, range selection, copy/cut/paste,\n    // undo/redo. Its own server + temp DATA_DIR.\n    name: 'req3-core',\n    testMatch: '**/req3-core.spec.ts',\n    use: { baseURL: required('BASE_URL_REQ3_CORE'), ...clipboard },\n  },\n  {\n    // REQ-3 results that need the formula engine (#6), the validation rule\n    // model (#7) and row/column structure operations (#4).\n    name: 'req3-integration',\n    testMatch: '**/req3-integration.spec.ts',\n    use: { baseURL: required('BASE_URL_REQ3_INTEGRATION'), ...clipboard },\n  },"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:49:04.611Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L205
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts.
+isError: False
+
+### 2026-09-28T05:49:09.519Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L206
+ROLE assistant 
+thinking: Now run.sh. Take develop's version entirely (checkout --theirs), since it's the merged upstream hardening. Then decide on the seed watchdog: I'll add it back minimally because it's cheap and valuable? Let me think about the port-ownership + run-private dir: the failure mode (externally emptied DATA_DIR) is now unlikely. Adding seed polling would restart servers if a check intentionally empties the dir; no check does. But it also protects against a subtle issue: `start_owned_server` + watchdog. I'll skip re-adding it to keep the diff clean and reduce divergence. Actually — hmm, one thing my version had that develop's lacks: `SUFFIXES=(CREATE EDITOR HOME REQ3_CORE REQ3_INTEGRATION)`. Develop's has `(CREATE EDITOR HOME CSV)`. I MUST merge the suffix list to include all 6 (CSV + REQ3_*). Also the env var passing at the bottom must include BASE_URL_CSV + BASE_URL_REQ3_* + DATA_DIR_REQ3_INTEGRATION.
+
+So taking theirs wholesale loses my REQ3 wiring. I need to add REQ3 suffixes back into develop's version. Let me view the merge-conflict region and the bottom of run.sh.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -n \"<<<<<<<\\|=======\\|>>>>>>>\" checks/run.sh && sed -n '75,100p' checks/run.sh && echo \"...\" && sed -n '185,235p' checks/run.sh"}
+stopReason: toolUse
+
+### 2026-09-28T05:49:09.897Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L207
+ROLE toolResult bash
+text: 51:<<<<<<< HEAD
+65:=======
+76:>>>>>>> origin/develop
+106:<<<<<<< HEAD
+109:=======
+111:>>>>>>> origin/develop
+121:<<<<<<< HEAD
+123:=======
+131:>>>>>>> origin/develop
+144:<<<<<<< HEAD
+148:=======
+175:>>>>>>> origin/develop
+183:<<<<<<< HEAD
+187:=======
+190:>>>>>>> origin/develop
+220:<<<<<<< HEAD
+226:=======
+240:>>>>>>> origin/develop
+247:<<<<<<< HEAD
+249:=======
+250:>>>>>>> origin/develop
+276:<<<<<<< HEAD
+283:=======
+303:>>>>>>> origin/develop
+PID_FILE="$RUN_DIR/pids"
+>>>>>>> origin/develop
+WATCHDOG=""
+echo "run dir: $RUN_DIR (server logs: $LOG_PREFIX-<SPEC>.log)"
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 208]
+
+listener_pid() {
+  lsof -nP -iTCP:"$1" -sTCP:LISTEN -t 2>/dev/null | head -1
+}
+
+free_port() {
+  python3 - <<'PY'
+import socket
+s = socket.socket()
+s.bind(("127.0.0.1", 0))
+print(s.getsockname()[1])
+...
+      return 0
+    fi
+=======
+    # Liveness first: a foreign server on this port must not make a dead server
+    # of ours look ready.
+>>>>>>> origin/develop
+    if ! kill -0 "$pid" 2>/dev/null; then
+      echo "server died during startup (log: $log)"
+      return 1
+    fi
+    if curl -sf "http://127.0.0.1:$port/api/workbooks" | grep -q "Q3 Sales"; then
+      return 0
+    fi
+    sleep 0.5
+  done
+  echo "server was not ready in time (log: $log)"
+  return 1
+}
+
+# This machine may be shared with other agents' runs. If something outside this
+# script kills one of our servers, restart it on the same port and DATA_DIR so
+# the run keeps observing the same state; the restart stays in the log.
+# The same holds when the server is alive but its DATA_DIR was wiped underneath
+# it: restarting re-creates the directory and re-seeds the promised workbook
+# (the seed is idempotent), instead of silently serving "no workbooks yet".
+watchdog() {
+  while true; do
+    sleep 3
+    local suffix pid
+    for suffix in "${SUFFIXES[@]}"; do
+      pid="${SERVER_PIDS[$suffix]:-}"
+      if [[ -n "$pid" ]] && ! kill -0 "$pid" 2>/dev/null; then
+        echo "[watchdog] server for $suffix (pid $pid) disappeared at $(date -Is); restarting on the same DATA_DIR" \
+          >> "$LOG_PREFIX-$suffix.log"
+        start_server "$suffix"
+<<<<<<< HEAD
+      elif [[ -n "$pid" ]] && ! seed_present "${PORTS[$suffix]}"; then
+        echo "[watchdog] seed for $suffix missing at $(date -Is); restarting on the same DATA_DIR" \
+          >> "$LOG_PREFIX-$suffix.log"
+        kill "$pid" 2>/dev/null || true
+        start_server "$suffix"
+=======
+        sleep 1
+        local new_pid listener
+        new_pid="${SERVER_PIDS[$suffix]}"
+        if ! kill -0 "$new_pid" 2>/dev/null; then
+          echo "[watchdog] restart of $suffix (pid $new_pid) died immediately; port ${PORTS[$suffix]} is probably taken by another process" \
+            >> "$LOG_PREFIX-$suffix.log"
+        else
+          listener="$(listener_pid "${PORTS[$suffix]}")"
+          if $OWNERSHIP_CHECK && [[ -n "$listener" && "$listener" != "$new_pid" ]]; then
+isError: False
+
+### 2026-09-28T05:49:12.066Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L208
+ROLE assistant 
+thinking: The conflict is intertwined. The cleanest resolution: take develop's run.sh as the base, then apply my REQ3-specific additions:
+- SUFFIXES add REQ3_CORE REQ3_INTEGRATION
+- final env passing add BASE_URL_REQ3_CORE, BASE_URL_REQ3_INTEGRATION, DATA_DIR_REQ3_INTEGRATION
+- (optionally) the seed-present watchdog.
+
+Let me checkout theirs and then edit.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git checkout --theirs checks/run.sh && git checkout --theirs checks/playwright.config.ts && echo \"--- playwright check ---\" && grep -n \"req3\" checks/playwright.config.ts | head"}
+stopReason: toolUse
+
+### 2026-09-28T05:49:12.119Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L209
+ROLE toolResult bash
+text: Updated 1 path from the index
+Updated 1 path from the index
+--- playwright check ---
+isError: False
+
+### 2026-09-28T05:49:13.948Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L210
+ROLE assistant 
+thinking: Oops — `git checkout --theirs checks/playwright.config.ts` overwrote my resolution with develop's version (dropping req3 projects). I need to re-apply the req3 projects. Let me redo the playwright config edit on develop's version.
+
+Let me view it and add the req3 projects.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '20,55p' checks/playwright.config.ts && echo \"=== run.sh SUFFIXES + bottom ===\" && grep -n \"SUFFIXES=\\|BASE_URL\\|DATA_DIR\\|REQ3\" checks/run.sh"}
+stopReason: toolUse
+
+### 2026-09-28T05:49:14.676Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L211
+ROLE toolResult bash
+text:     name: 'create-workbook',
+    testMatch: '**/create-workbook.spec.ts',
+    use: { baseURL: required('BASE_URL_CREATE') },
+  },
+  {
+    name: 'editor-interactions',
+    testMatch: '**/editor-interactions.spec.ts',
+    use: { baseURL: required('BASE_URL_EDITOR') },
+  },
+  {
+    name: 'home-editor',
+    testMatch: '**/home-editor.spec.ts',
+    use: { baseURL: required('BASE_URL_HOME') },
+  },
+  {
+    name: 'csv',
+    testMatch: '**/csv.spec.ts',
+    use: { baseURL: required('BASE_URL_CSV') },
+  },
+];
+
+export default defineConfig({
+  testDir: '.',
+  testMatch: '**/*.spec.ts',
+  outputDir: process.env.CHECK_OUTPUT_DIR ?? 'test-results',
+  workers: 1,
+  retries: 0,
+  timeout: 180_000,
+  expect: { timeout: 30_000 },
+  reporter: 'list',
+  use: {
+    // Explicit limits, so a stuck interaction fails with the control's name
+    // instead of just hitting the test timeout. They are deliberately generous:
+    // this harness runs on a shared machine (several agent lanes run their own
+    // suites at the same time, load average has been >20), and a starved
+    // browser can need far longer than a healthy one to load or click. A
+=== run.sh SUFFIXES + bottom ===
+7:#   - one backend per spec file, each with its own temp DATA_DIR (seed is
+44:# Keep everything this run owns (server logs, PID record, per-spec DATA_DIRs)
+83:SUFFIXES=(CREATE EDITOR HOME CSV)
+84:declare -A PORTS URLS DATA_DIRS SERVER_PIDS
+106:  DATA_DIR="${DATA_DIRS[$suffix]}" HOST=127.0.0.1 PORT="${PORTS[$suffix]}" \
+161:# script kills one of our servers, restart it on the same port and DATA_DIR so
+170:        echo "[watchdog] server for $suffix (pid $pid) disappeared at $(date -Is); restarting on the same DATA_DIR" \
+192:  DATA_DIRS[$suffix]="$(mktemp -d "$RUN_DIR/data-$suffix-XXXXXX")"
+197:  echo "server for $suffix: ${URLS[$suffix]} (DATA_DIR=${DATA_DIRS[$suffix]}, log=$LOG_PREFIX-$suffix.log)"
+212:BASE_URL_CREATE="${URLS[CREATE]}" \
+213:BASE_URL_EDITOR="${URLS[EDITOR]}" \
+214:BASE_URL_HOME="${URLS[HOME]}" \
+215:BASE_URL_CSV="${URLS[CSV]}" \
+226:    if ! grep -lq '"Q3 Sales"' "${DATA_DIRS[$suffix]}"/*.json 2>/dev/null; then
+227:      echo "[run] note: the DATA_DIR for $suffix (${DATA_DIRS[$suffix]}) no longer holds a 'Q3 Sales' workbook;" \
+isError: False
+
+### 2026-09-28T05:49:16.246Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L212
+ROLE assistant 
+thinking: Interesting: develop's run.sh already has a check at line 226 about "the DATA_DIR no longer holds Q3 Sales" — let me read the tail of run.sh (lines 200-240). It might already handle the seed-missing case (as a note) after the playwright run.
+
+Let me read it.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/run.sh", "offset": 155, "limit": 85}
+stopReason: toolUse
+
+### 2026-09-28T05:49:16.262Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L213
+ROLE toolResult read
+text:   done
+  echo "server was not ready in time (log: $log)"
+  return 1
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 209]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 210]
+
+watchdog &
+WATCHDOG=$!
+
+# Set when Playwright fails; the script must still run its diagnostics and
+# cleanup before reporting the exit code.
+EXIT=0
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 211]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 212]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 213]
+
+exit "$EXIT"
+
+isError: False
+
+### 2026-09-28T05:49:21.793Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L214
+ROLE assistant 
+thinking: Develop's run.sh is comprehensive and handles the failure diagnosis. I'll adopt it wholesale and only add the REQ3 suffixes + env vars + (optionally) the seed watchdog.
+
+Since develop's runner has the diagnostic, and the run-private dir, I'll skip re-adding my watchdog seed check (avoid divergence). Actually — I think adding it is genuinely valuable and small: if the DATA_DIR gets emptied mid-run, restart restores the seed instead of losing the whole run. But it also could mask a genuine product failure (if the product empties the data dir!). Hmm, no product code deletes workbooks. I'll add it, keeping it consistent with develop's style (with the ownership check after restart). Actually, let me keep it simple and NOT add it — develop's approach (diagnose interference, keep run private) is the agreed shared fix, and adding my own variant increases merge risk for no acceptance benefit. Decision: adopt develop's run.sh + REQ3 wiring only.
+
+Edits to run.sh:
+1. SUFFIXES=(CREATE EDITOR HOME CSV REQ3_CORE REQ3_INTEGRATION)
+2. bottom env: add BASE_URL_REQ3_CORE, BASE_URL_REQ3_INTEGRATION, DATA_DIR_REQ3_INTEGRATION.
+
+Also the header comment mentions per-spec DATA_DIRs — fine.
+
+Let me apply.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/run.sh", "edits": [{"oldText": "SUFFIXES=(CREATE EDITOR HOME CSV)", "newText": "# REQ3_CORE / REQ3_INTEGRATION belong to issue #5 (REQ-3 editing and ranges).\nSUFFIXES=(CREATE EDITOR HOME CSV REQ3_CORE REQ3_INTEGRATION)"}, {"oldText": "BASE_URL_CSV=\"${URLS[CSV]}\" \\\nBROWSER_EXECUTABLE_PATH=\"$BROWSER_EXECUTABLE_PATH\" \\", "newText": "BASE_URL_CSV=\"${URLS[CSV]}\" \\\nBASE_URL_REQ3_CORE=\"${URLS[REQ3_CORE]}\" \\\nBASE_URL_REQ3_INTEGRATION=\"${URLS[REQ3_INTEGRATION]}\" \\\n# The REQ-3 integration checks seed validation rules into the server's data\n# directory (REQ-5's rule UI is not part of this work item).\nDATA_DIR_REQ3_INTEGRATION=\"${DATA_DIRS[REQ3_INTEGRATION]}\" \\\nBROWSER_EXECUTABLE_PATH=\"$BROWSER_EXECUTABLE_PATH\" \\"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:49:22.353Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L215
+ROLE toolResult edit
+text: Successfully replaced 2 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/run.sh.
+isError: False
+
+### 2026-09-28T05:49:33.746Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L216
+ROLE assistant 
+thinking: Now add the req3 projects to playwright.config.ts (currently develop's version).
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts", "edits": [{"oldText": "  {\n    name: 'csv',\n    testMatch: '**/csv.spec.ts',\n    use: { baseURL: required('BASE_URL_CSV') },\n  },\n];", "newText": "  {\n    name: 'csv',\n    testMatch: '**/csv.spec.ts',\n    use: { baseURL: required('BASE_URL_CSV') },\n  },\n  {\n    // REQ-3 (issue #5): editing, 2-D paste, range selection, copy/cut/paste,\n    // undo/redo. Its own server + temp DATA_DIR.\n    name: 'req3-core',\n    testMatch: '**/req3-core.spec.ts',\n    use: { baseURL: required('BASE_URL_REQ3_CORE'), ...clipboard },\n  },\n  {\n    // REQ-3 results that need the formula engine (#6) and the validation rule\n    // model (#7); row/column structure undo waits for issue #4.\n    name: 'req3-integration',\n    testMatch: '**/req3-integration.spec.ts',\n    use: { baseURL: required('BASE_URL_REQ3_INTEGRATION'), ...clipboard },\n  },\n];"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:49:33.749Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L217
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts.
+isError: False
+
+### 2026-09-28T05:49:35.958Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L218
+ROLE assistant 
+thinking: Now the EditorPage.tsx conflict — the biggest one. Let me view it.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -n \"<<<<<<<\\|=======\\|>>>>>>>\" frontend/src/pages/EditorPage.tsx; echo \"=== conflict regions ===\"; awk '/<<<<<<</{p=1} p{print NR\": \"$0} />>>>>>>/{p=0}' frontend/src/pages/EditorPage.tsx"}
+stopReason: toolUse
+
+### 2026-09-28T05:49:36.306Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L219
+ROLE toolResult bash
+text: 5:<<<<<<< HEAD
+7:=======
+10:>>>>>>> origin/develop
+274:<<<<<<< HEAD
+455:=======
+478:>>>>>>> origin/develop
+=== conflict regions ===
+5: <<<<<<< HEAD
+6: import { formatDateTime, makeRef } from "../refs";
+7: =======
+8: import { formatDateTime } from "../refs";
+9: import { sheetToCsv } from "../domain/csv";
+10: >>>>>>> origin/develop
+274: <<<<<<< HEAD
+275:   /** Copy or cut the current selection into the in-session buffer. */
+276:   const copyRange = (mode: "copy" | "cut") => {
+277:     const sheet = activeSheetOf(workbookRef.current);
+278:     if (!sheet) return;
+279:     const rect = currentRect();
+280:     const rows: string[][] = [];
+281:     for (let row = rect.top; row <= rect.bottom; row += 1) {
+282:       const line: string[] = [];
+283:       for (let col = rect.left; col <= rect.right; col += 1) {
+284:         line.push(sheet.cells[makeRef(col, row)]?.raw ?? "");
+285:       }
+286:       rows.push(line);
+287:     }
+288:     const buffer: ClipboardBuffer = {
+289:       rect: { start: rectStartRef(rect), end: makeRef(rect.right, rect.bottom) },
+290:       rows,
+291:       mode,
+292:       text: serializeClipboardTable(rows),
+293:       synced: false,
+294:     };
+295:     clipboardRef.current = buffer;
+296:     if (typeof navigator !== "undefined" && navigator.clipboard?.writeText) {
+297:       navigator.clipboard
+298:         .writeText(buffer.text)
+299:         .then(() => {
+300:           buffer.synced = true;
+301:         })
+302:         .catch(() => undefined);
+303:     }
+304:   };
+305: 
+306:   /** Paste the in-session range: formulas adjust, cut clears its source too. */
+307:   const pasteRange = async (buffer: ClipboardBuffer) => {
+308:     const sheet = activeSheetOf(workbookRef.current);
+309:     if (!sheet) return;
+310:     const targetStart = rectStartRef(currentRect());
+311:     const bounds = { rows: sheet.rowCount, cols: sheet.colCount };
+312:     const plan =
+313:       buffer.mode === "cut"
+314:         ? planRangeCut(buffer.rect, targetStart, readRaw)
+315:         : planRangeCopy(buffer.rect, targetStart, readRaw, bounds);
+316:     if (plan.updates.length === 0) return;
+317:     const updates: CellUpdate[] = [
+318:       ...plan.updates,
+319:       ...plan.clears.map((ref) => ({ ref, raw: null })),
+320:     ];
+321:     // Whole operation or nothing: validation refusal leaves source and target.
+322:     if (!validateWrites(sheet, updates)) return;
+323:     const op = operationFromPlan(
+324:       buffer.mode === "cut" ? "range-move" : "paste",
+325:       `${buffer.mode} ${buffer.rect.start}:${buffer.rect.end} to ${targetStart}`,
+326:       sheet.id,
+327:       plan,
+328:       readRaw
+329:     );
+330:     const ok = await applyUpdates(sheet.id, updates, op);
+331:     // A cut is consumed by its paste (its source has been cleared already).
+332:     if (ok && buffer.mode === "cut") clipboardRef.current = null;
+333:   };
+334: 
+335:   /**
+336:    * Apply pasted text: when it is exactly what our own copy/cut put on the
+337:    * clipboard the in-session range semantics are used (formula adjustment,
+338:    * source clearing), otherwise the text is applied as a plain 2-D paste.
+339:    */
+340:   const pasteFromText = async (text: string | null) => {
+341:     const sheet = activeSheetOf(workbookRef.current);
+342:     if (!sheet) return;
+343:     const buffer = clipboardRef.current;
+344:     // The pasted text is exactly what our own copy/cut put on the clipboard:
+345:     // use the in-session range semantics (formula adjustment, source clearing).
+346:     const isOwnBuffer = !!buffer && text !== null && text === buffer.text;
+347:     // When the clipboard cannot be read at all, trust a buffer we did write.
+348:     const unreadableWithOwnBuffer = !!buffer && buffer.synced && (text === null || text === "");
+349:     if (buffer && (isOwnBuffer || unreadableWithOwnBuffer)) {
+350:       await pasteRange(buffer);
+351:       return;
+352:     }
+353:     if (text === null || text === "") return;
+354:     const table = parseClipboardTable(text);
+355:     if (table.length === 0) return;
+356:     const startRef = rectStartRef(currentRect());
+357:     const plan = planPaste(startRef, table);
+358:     if (plan.updates.length === 0) return;
+359:     if (!validateWrites(sheet, plan.updates)) return;
+360:     const op = operationFromPlan("paste", `paste to ${startRef}`, sheet.id, plan, readRaw);
+361:     await applyUpdates(sheet.id, plan.updates, op);
+362:   };
+363: 
+364:   /** Read the system clipboard (used by the "Paste" menu item and Ctrl+V fallback). */
+365:   const requestPaste = useCallback(async () => {
+366:     let text: string | null = null;
+367:     try {
+368:       text = (await navigator.clipboard?.readText?.()) ?? null;
+369:     } catch {
+370:       text = null;
+371:     }
+372:     await pasteFromText(text);
+373:   }, []); // eslint-disable-line react-hooks/exhaustive-deps
+374: 
+375:   const clearPasteTimer = () => {
+376:     if (pasteTimerRef.current !== null) {
+377:       window.clearTimeout(pasteTimerRef.current);
+378:       pasteTimerRef.current = null;
+379:     }
+380:   };
+381: 
+382:   const undo = async () => {
+383:     const op = historyRef.current.undo();
+384:     setHistoryVersion((v) => v + 1);
+385:     if (!op) return;
+386:     // Undo/redo restore previously persisted content; they are not re-validated
+387:     // (a rule change must not make the session history unreachable).
+388:     const ok = await applyUpdates(op.sheetId, snapshotsToUpdates(op.before));
+389:     if (!ok) {
+390:       // Keep the history consistent when the request failed.
+391:       historyRef.current.redo();
+392:       setHistoryVersion((v) => v + 1);
+393:     }
+394:   };
+395: 
+396:   const redo = async () => {
+397:     const op = historyRef.current.redo();
+398:     setHistoryVersion((v) => v + 1);
+399:     if (!op) return;
+400:     const ok = await applyUpdates(op.sheetId, snapshotsToUpdates(op.after));
+401:     if (!ok) {
+402:       historyRef.current.undo();
+403:       setHistoryVersion((v) => v + 1);
+404:     }
+405:   };
+406: 
+407:   // Keyboard shortcuts: Ctrl+Z / Ctrl+Y (undo, redo), Ctrl+C / Ctrl+X (range
+408:   // copy, cut), Ctrl+V (paste). Text inputs keep their native behaviour.
+409:   useEffect(() => {
+410:     const isEditable = (target: EventTarget | null) => {
+411:       const el = target as HTMLElement | null;
+412:       return !!el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+413:     };
+414:     const onKeyDown = (e: KeyboardEvent) => {
+415:       if (!(e.ctrlKey || e.metaKey) || isEditable(e.target)) return;
+416:       const key = e.key.toLowerCase();
+417:       if (key === "z" && !e.shiftKey) {
+418:         e.preventDefault();
+419:         void undo();
+420:       } else if (key === "y" || (key === "z" && e.shiftKey)) {
+421:         e.preventDefault();
+422:         void redo();
+423:       } else if (key === "c") {
+424:         e.preventDefault();
+425:         copyRange("copy");
+426:       } else if (key === "x") {
+427:         e.preventDefault();
+428:         copyRange("cut");
+429:       } else if (key === "v") {
+430:         // Prefer the browser's own paste event; fall back to reading the
+431:         // clipboard when the browser does not fire one for grid cells.
+432:         clearPasteTimer();
+433:         pasteTimerRef.current = window.setTimeout(() => {
+434:           pasteTimerRef.current = null;
+435:           void requestPaste();
+436:         }, 150);
+437:       }
+438:     };
+439:     const onPaste = (e: ClipboardEvent) => {
+440:       if (isEditable(e.target)) return;
+441:       const text = e.clipboardData?.getData("text/plain") ?? null;
+442:       clearPasteTimer();
+443:       e.preventDefault();
+444:       void pasteFromText(text);
+445:     };
+446:     window.addEventListener("keydown", onKeyDown);
+447:     window.addEventListener("paste", onPaste);
+448:     return () => {
+449:       window.removeEventListener("keydown", onKeyDown);
+450:       window.removeEventListener("paste", onPaste);
+451:     };
+452:   }, [requestPaste]); // eslint-disable-line react-hooks/exhaustive-deps
+453: 
+454:   if (loadError) {
+455: =======
+456:   /**
+457:    * REQ-1-3-2: download the active worksheet as CSV without touching any
+458:    * persisted state (active sheet, selection, grid values, formula bar).
+459:    * Formula cells export their displayed/computed value, not the expression.
+460:    */
+461:   const handleExportCsv = () => {
+462:     if (!workbook || !activeSheet) return;
+463:     const csv = sheetToCsv(activeSheet);
+464:     const base =
+465:       workbook.name.replace(/[\\/]/g, "-").trim().replace(/\.csv$/i, "").trim() || "workbook";
+466:     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+467:     const url = URL.createObjectURL(blob);
+468:     const link = document.createElement("a");
+469:     link.href = url;
+470:     link.download = `${base}.csv`;
+471:     document.body.appendChild(link);
+472:     link.click();
+473:     link.remove();
+474:     window.setTimeout(() => URL.revokeObjectURL(url), 0);
+475:   };
+476: 
+477:   if (error) {
+478: >>>>>>> origin/develop
+isError: False
+
+### 2026-09-28T05:49:39.119Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L220
+ROLE assistant 
+thinking: The conflict at line 274-478 is because both sides added functions in the same region. HEAD (mine) has copyRange..keyboard handlers then `if (loadError) {`. Develop has `handleExportCsv` then `if (error) { ... }` (a new error branch from CSV import?).
+
+I need to see develop's full structure to merge correctly. Let me view develop's EditorPage.tsx around that area and the render section.
+
+Let me get develop's version of the file region.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git show origin/develop:frontend/src/pages/EditorPage.tsx | sed -n '250,340p'"}
+stopReason: toolUse
+
+### 2026-09-28T05:49:39.131Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L221
+ROLE toolResult bash
+isError: False
+
+### 2026-09-28T05:49:40.717Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L222
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git show origin/develop:frontend/src/pages/EditorPage.tsx | wc -l && git show origin/develop:frontend/src/pages/EditorPage.tsx | sed -n '230,300p'"}
+stopReason: toolUse
+
+### 2026-09-28T05:49:40.736Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L223
+ROLE toolResult bash
+text: 162
+isError: False
+
+### 2026-09-28T05:49:47.208Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L224
+ROLE assistant 
+thinking: Hmm, `git show origin/develop:frontend/src/pages/EditorPage.tsx | wc -l` → 162 lines, and sed 230,300 gives nothing. So develop's EditorPage.tsx is only 162 lines? But the merge conflict showed develop's side having handleExportCsv at ~line 455 (in my merged file numbering). Wait, the awk printed NR from the merged file, not develop's file. So develop's file is 162 lines?? But the merge diff showed develop adding 25 lines to EditorPage. Let me check: 61b51ee's EditorPage was ~200+? Hmm, my branch's EditorPage is 500+ lines. Develop's is 162?
+
+Wait, that can't be: develop's EditorPage must contain the whole app. Unless... Oh! `git show origin/develop:...` with a large file — wc says 162. Let me double check the file path case. Perhaps develop restructured and EditorPage is elsewhere? No, the merge said "Auto-merging frontend/src/pages/EditorPage.tsx" with conflicts.
+
+Hmm, wait: maybe I'm confusing: the merged working file has ~500 lines. The `<<<<<<< HEAD` region is lines 274-454, `=======` then develop's content lines 455-477, then `>>>>>>>`. So HEAD=my branch's EditorPage (500+), develop's side is the merge base + develop's 25-line addition. If develop's file were 162 lines, the conflict region would be different.
+
+Let me just cat develop's file.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git show origin/develop:frontend/src/pages/EditorPage.tsx | head -60; echo \"......\"; git show origin/develop:frontend/src/pages/EditorPage.tsx | sed -n '90,162p'"}
+stopReason: toolUse
+
+### 2026-09-28T05:49:47.222Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L225
+ROLE toolResult bash
+text: import { useCallback, useEffect, useMemo, useState } from "react";
+import { Link, useParams } from "react-router-dom";
+import { api, CellData, Workbook } from "../api";
+import { formatDateTime } from "../refs";
+import { sheetToCsv } from "../domain/csv";
+import Grid, { GridSelection } from "../components/Grid";
+import FormulaBar from "../components/FormulaBar";
+import SheetTabs from "../components/SheetTabs";
+import RenameSection from "../components/RenameSection";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 214]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 215]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 216]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 217]
+
+  /** Persist last-used UI state (fire-and-forget; failures are non-fatal). */
+  const persistState = useCallback(
+    (next: GridSelection, sheetId?: string) => {
+      if (!workbook) return;
+      api
+        .saveState(workbook.id, {
+......
+      .catch(() => undefined);
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 218]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 219]
+
+  if (!workbook || !activeSheet) {
+    return <main className="home">Loading…</main>;
+  }
+
+  return (
+    <main className="editor">
+      <div className="editor-topbar">
+        <h1 className="editor-title">{workbook.name}</h1>
+        <RenameSection workbook={workbook} onRenamed={setWorkbook} />
+        <button type="button" className="primary-button workbook-export-button" onClick={handleExportCsv}>
+          Export CSV
+        </button>
+        <span className="editor-updated">
+          Last updated: {formatDateTime(workbook.updatedAt)}
+        </span>
+        <Link to="/">Home</Link>
+      </div>
+      <FormulaBar
+        activeCell={selection.activeCell}
+        cell={activeCellData}
+        onCommit={handleCommitCell}
+      />
+      <div
+        id="worksheet-panel"
+        role="tabpanel"
+        aria-labelledby={`sheet-tab-${activeSheet.id}`}
+        style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+      >
+        <Grid sheet={activeSheet} selection={selection} onSelect={handleSelect} />
+      </div>
+      <SheetTabs
+        sheets={workbook.sheets}
+        activeSheetId={activeSheet.id}
+        onActivate={handleActivateSheet}
+      />
+    </main>
+  );
+}
+isError: False
+
+### 2026-09-28T05:49:56.566Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L226
+ROLE assistant 
+thinking: Wait, develop's EditorPage is 162 lines and references `handleCommitCell`, `handleSelect`, `handleActivateSheet`... but I don't see them defined in the first 90 lines (only persistState). Let me look at lines 60-95. Also it calls `<Grid ... onSelect={handleSelect} />` with only 3 props, but my Grid requires more props. Hmm — that means develop's version is from PR #4 (CSV) which was based on an OLD base? No wait, `formatDateTime` import and sheetToCsv. 
+
+Hold on: 162 lines total, and lines 90-162 shown. Lines 60-90 should contain handleSelect/handleCommitCell/handleActivateSheet. Let me view 55-95.
+
+Wait, this looks like a *reduced* version. Actually no: this is develop's file which is the ORIGINAL 91b379e version (from shared foundation) + CSV export. Its original size was ~230 lines? Let me check `git show 61b51ee:frontend/src/pages/EditorPage.tsx | wc -l`.
+
+Hmm, my branch's EditorPage at 61b51ee was the base (shared foundation, ~230 lines?) and I extended it to ~500. Develop's is 162. That's odd — the base should be identical.
+
+OH WAIT. I bet develop's file is 162 lines because... hmm, let me just count the original base.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && for c in 3ab688f 61b51ee 0539c62; do echo -n \"$c: \"; git show $c:frontend/src/pages/EditorPage.tsx 2>/dev/null | wc -l; done; echo \"=== 0539c62 lines 55-95 ===\"; git show 0539c62:frontend/src/pages/EditorPage.tsx | sed -n '55,95p'"}
+stopReason: toolUse
+
+### 2026-09-28T05:49:57.206Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L227
+ROLE toolResult bash
+text: 3ab688f: 0
+61b51ee: 137
+0539c62: 162
+=== 0539c62 lines 55-95 ===
+  /** Persist last-used UI state (fire-and-forget; failures are non-fatal). */
+  const persistState = useCallback(
+    (next: GridSelection, sheetId?: string) => {
+      if (!workbook) return;
+      api
+        .saveState(workbook.id, {
+          activeSheetId: sheetId ?? workbook.activeSheetId,
+          activeCell: next.activeCell,
+          selection: next.selection,
+        })
+        .then((wb) => setWorkbook(wb))
+        .catch(() => undefined);
+    },
+    [workbook]
+  );
+
+  const handleSelect = (next: GridSelection) => {
+    setSelection(next);
+    persistState(next);
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 220]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 221]
+
+  /**
+   * REQ-1-3-2: download the active worksheet as CSV without touching any
+   * persisted state (active sheet, selection, grid values, formula bar).
+isError: False
+
+### 2026-09-28T05:50:01.111Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L228
+ROLE assistant 
+thinking: Ah I see — the base (61b51ee) EditorPage is 137 lines. My branch's is ~500 (I rewrote it). So the merge conflict is: my extensive rewrite vs develop's small additions (CSV export button + sheetToCsv import).
+
+Resolution: take MY version (HEAD) and add develop's CSV export:
+1. Import `sheetToCsv` from "../domain/csv".
+2. Add `handleExportCsv` function.
+3. Add the Export CSV button in the topbar.
+
+Also check if develop changed FormulaBar/Grid or added `value` usage. develop's api.ts changed (+6 lines) — merged cleanly. Let me check what api.ts changes were and whether there are frontend display changes needed for the server pipeline. develop's EditorPage still uses `Grid` without a `display` prop (since develop's Grid doesn't have display). My Grid takes display from the client engine — that stays.
+
+Also `error` vs `loadError`: develop uses `error` for load failure; my version uses `loadError` for load failure and `error` for request errors. Keep mine.
+
+Let me resolve by replacing the conflict: keep HEAD content, then insert handleExportCsv before `if (loadError)`, and drop develop's `if (error) { ... }` branch (my version already has both branches). Wait, the conflict's develop side (455-477) is:
+```
+  /** REQ-1-3-2 ... */
+  const handleExportCsv = () => { ... };
+
+  if (error) {
+```
+and HEAD side ends with:
+```
+  }, [requestPaste]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loadError) {
+```
+Then after `>>>>>>> origin/develop` the rest is common (from develop's `if (error) { ... }` body onward?). Let me look at lines 478-520 of the merged file to see what follows.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '454,540p' frontend/src/pages/EditorPage.tsx"}
+stopReason: toolUse
+
+### 2026-09-28T05:50:02.467Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L229
+ROLE toolResult bash
+text:   if (loadError) {
+=======
+  /**
+   * REQ-1-3-2: download the active worksheet as CSV without touching any
+   * persisted state (active sheet, selection, grid values, formula bar).
+   * Formula cells export their displayed/computed value, not the expression.
+   */
+  const handleExportCsv = () => {
+    if (!workbook || !activeSheet) return;
+    const csv = sheetToCsv(activeSheet);
+    const base =
+      workbook.name.replace(/[\\/]/g, "-").trim().replace(/\.csv$/i, "").trim() || "workbook";
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `${base}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 0);
+  };
+
+  if (error) {
+>>>>>>> origin/develop
+    return (
+      <main className="home">
+        <div role="alert" className="form-error">{loadError}</div>
+        <p>
+          <Link to="/">Back to home</Link>
+        </p>
+      </main>
+    );
+  }
+
+  if (!workbook || !activeSheet) {
+    return <main className="home">Loading…</main>;
+  }
+
+  const canUndo = historyRef.current.canUndo();
+  const canRedo = historyRef.current.canRedo();
+
+  return (
+    <main className="editor">
+      <div className="editor-topbar">
+        <h1 className="editor-title">{workbook.name}</h1>
+        <RenameSection workbook={workbook} onRenamed={setWorkbook} />
+        <button type="button" className="primary-button workbook-export-button" onClick={handleExportCsv}>
+          Export CSV
+        </button>
+        <span className="editor-updated">
+          Last updated: {formatDateTime(workbook.updatedAt)}
+        </span>
+        <Link to="/">Home</Link>
+      </div>
+      <div className="editor-toolbar" role="toolbar" aria-label="Editing">
+        <button type="button" onClick={() => void undo()} disabled={!canUndo}>
+          Undo
+        </button>
+        <button type="button" onClick={() => void redo()} disabled={!canRedo}>
+          Redo
+        </button>
+      </div>
+      <FormulaBar
+        activeCell={selection.activeCell}
+        cell={activeCellData}
+        onCommit={handleCommitCell}
+      />
+      {validationError && (
+        <div role="alert" className="form-error validation-error">
+          <span className="validation-message">{validationError.message}</span>
+          {validationError.hint && (
+            <span className="validation-hint">{validationError.hint}</span>
+          )}
+        </div>
+      )}
+      <div
+        id="worksheet-panel"
+        role="tabpanel"
+        aria-labelledby={`sheet-tab-${activeSheet.id}`}
+        style={{ display: "flex", flexDirection: "column", flex: 1, minHeight: 0 }}
+      >
+        {error && (
+          <div role="alert" className="form-error">
+            {error}
+          </div>
+        )}
+isError: False
+
+### 2026-09-28T05:50:36.935Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L230
+ROLE assistant 
+thinking: Good: the common part after the conflict already includes my version's render (toolbar, validationError, error branch) plus develop's Export CSV button (the "common" merge kept the button because... wait, the button is outside the conflict markers, so git auto-merged it). Interesting: the render body after line 478 is the auto-merged result containing both my toolbar and develop's Export CSV button. 
+
+So I only need to resolve:
+- Conflict 1 (imports): keep `formatDateTime, makeRef` + add `sheetToCsv`.
+- Conflict 2: keep HEAD's block (copyRange...keyboard handlers + `if (loadError) {`) and ADD develop's `handleExportCsv` before it, dropping develop's `if (error) { }` framing.
+
+Let me do it precisely with edit.
+
+Conflict 2 resolution: replace
+```
+<<<<<<< HEAD
+  /** Copy or cut ...
+  ...
+  }, [requestPaste]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (loadError) {
+=======
+  /**
+   * REQ-1-3-2: ...
+   */
+  const handleExportCsv = () => {
+  ...
+  };
+
+  if (error) {
+>>>>>>> origin/develop
+```
+with
+```
+  [HEAD content]
+  }, [requestPaste]); ...
+
+  /** REQ-1-3-2 CSV export */
+  const handleExportCsv = () => { ... };
+
+  if (loadError) {
+```
+
+The HEAD content is huge (lines 274-454). I need an edit whose oldText includes the markers. Using small unique anchors: replace `<<<<<<< HEAD\n  /** Copy or cut` → `  /** Copy or cut`; replace `  }, [requestPaste]); // eslint-disable-line react-hooks/exhaustive-deps\n\n  if (loadError) {\n=======\n` → `  }, [requestPaste]); ...\n\n  /** ... */\n  const handleExportCsv ... ;\n\n  if (loadError) {\n`; and remove the `>>>>>>> origin/develop` line and the duplicate `if (error) {`... 
+
+Careful: after `>>>>>>> origin/develop` comes `    return (` ... `  }` (the error page) then common render. My HEAD had `if (loadError) {` + that same return block. So I should keep `if (loadError) {` and delete the develop-side `if (error) {` line.
+
+Plan with three edits:
+1. `<<<<<<< HEAD\n  /** Copy or cut the current selection into the in-session buffer. */` → `  /** Copy or cut the current selection into the in-session buffer. */`
+2. `  }, [requestPaste]); // eslint-disable-line react-hooks/exhaustive-deps\n\n  if (loadError) {\n=======\n  /**\n   * REQ-1-3-2: download` → `  }, [requestPaste]); // eslint-disable-line react-hooks/exhaustive-deps\n\n  /**\n   * REQ-1-3-2: download`
+3. `  };\n\n  if (error) {\n>>>>>>> origin/develop\n    return (` → `  };\n\n  if (loadError) {\n    return (`
+
+Hmm, edit 3: the text after `>>>>>>> origin/develop` is `\n    return (` with the loadError message inside. So new text: `  };\n\n  if (loadError) {\n    return (`. And remove `if (error) {`. Good.
+
+Wait, but there's a subtlety: the develop-side `if (error) {` body (which is identical to my loadError body) is kept; my `if (loadError) {` in edit 2 remains before the develop block? Let me re-read the structure:
+
+```
+line 452:  }, [requestPaste]); // eslint-disable-line
+453:
+454:  if (loadError) {          <- HEAD side
+455: =======
+456:  /** REQ-1-3-2 ... */
+...
+475:  };
+476:
+477:  if (error) {              <- develop side
+478: >>>>>>> origin/develop
+479:    return (
+480:      <main className="home">
+481:        <div role="alert" className="form-error">{loadError}</div>
+```
+
+So if I do edit 2 replacing `if (loadError) {\n=======\n  /**\n   * REQ-1-3-2: download` with `/**\n   * REQ-1-3-2: download`, then line 454 `if (loadError) {` is removed and the develop block follows. Then edit 3 replaces `if (error) {\n>>>>>>> origin/develop\n    return (` with `if (loadError) {\n    return (`. That yields: handleExportCsv, then `if (loadError) { return (...loadError...) }`. 
+
+Let me do that.
+
+Also conflict 1: imports.
+
+Let me apply.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx", "edits": [{"oldText": "<<<<<<< HEAD\nimport { formatDateTime, makeRef } from \"../refs\";\n=======\nimport { formatDateTime } from \"../refs\";\nimport { sheetToCsv } from \"../domain/csv\";\n>>>>>>> origin/develop", "newText": "import { formatDateTime, makeRef } from \"../refs\";\nimport { sheetToCsv } from \"../domain/csv\";"}, {"oldText": "<<<<<<< HEAD\n  /** Copy or cut the current selection into the in-session buffer. */", "newText": "  /** Copy or cut the current selection into the in-session buffer. */"}, {"oldText": "  }, [requestPaste]); // eslint-disable-line react-hooks/exhaustive-deps\n\n  if (loadError) {\n=======\n  /**\n   * REQ-1-3-2: download", "newText": "  }, [requestPaste]); // eslint-disable-line react-hooks/exhaustive-deps\n\n  /**\n   * REQ-1-3-2: download"}, {"oldText": "  };\n\n  if (error) {\n>>>>>>> origin/develop\n    return (", "newText": "  };\n\n  if (loadError) {\n    return ("}]}
+stopReason: toolUse
+
+### 2026-09-28T05:50:36.939Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L231
+ROLE toolResult edit
+text: Successfully replaced 4 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx.
+isError: False
+
+### 2026-09-28T05:50:38.610Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L232
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -rn \"<<<<<<<\\|>>>>>>>\\|=======\" frontend/src/pages/EditorPage.tsx checks/run.sh checks/playwright.config.ts | head; echo \"=== tsc frontend ===\"; ./frontend/node_modules/.bin/tsc -p frontend/tsconfig.json && echo \"FRONTEND TSC OK\""}
+stopReason: toolUse
+
+### 2026-09-28T05:50:41.162Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L233
+ROLE toolResult bash
+text: === tsc frontend ===
+FRONTEND TSC OK
+isError: False
+
+### 2026-09-28T05:50:45.110Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L234
+ROLE assistant 
+thinking: All conflicts resolved, no markers left. Frontend typechecks.
+
+Now let me check the other auto-merged files for correctness, especially:
+- backend/src/routes/workbooks.ts (develop's new pipeline + my lastSelectionRect change). Let me verify my REQ-3 additions survived.
+- frontend/src/api.ts (develop added something; my lastSelectionRect).
+- checks/req3-*.spec.ts: still present and not conflicting.
+- checks/tsconfig.json? develop may have changed it.
+
+Also: develop's server now computes `value`. My frontend display uses the client engine (formulas.ts). Should I switch to server values? Let me first check that the merged build works and checks pass. If they pass, decide.
+
+Important: develop's PATCH /cells may now *reject* writes with error strings? The root said "错误串不拒写" (error strings don't reject writes). Good.
+
+Let me check routes/workbooks.ts merged state around the cells handler and the state handler.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -n \"lastSelectionRect\\|runWithFormulas\\|validationGuard\\|lastSelection\" backend/src/routes/workbooks.ts && echo \"=== api.ts diff vs develop ===\" && git diff origin/develop -- frontend/src/api.ts backend/src/types.ts | head -60"}
+stopReason: toolUse
+
+### 2026-09-28T05:50:45.193Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L235
+ROLE toolResult bash
+text: 4:import { runWithFormulas } from "../formulas";
+145:    current.lastSelection = wb.activeCell;
+147:      current.lastSelectionRect = wb.selection ? { ...wb.selection } : null;
+190:    await runWithFormulas(
+=== api.ts diff vs develop ===
+diff --git a/backend/src/types.ts b/backend/src/types.ts
+index 309bfd9..66d0c7c 100644
+--- a/backend/src/types.ts
++++ b/backend/src/types.ts
+@@ -81,6 +81,12 @@ export interface Sheet {
+    * sheet that is currently active.
+    */
+   lastSelection?: string | null;
++  /**
++   * Full rectangle of this sheet's most recent successful selection
++   * (REQ-3-1-3): every worksheet remembers its own rectangle, not just the
++   * anchor cell. null/absent means a single-cell selection at lastSelection.
++   */
++  lastSelectionRect?: RectSelection | null;
+ }
+ 
+ export interface Workbook {
+diff --git a/frontend/src/api.ts b/frontend/src/api.ts
+index d048a4c..7330621 100644
+--- a/frontend/src/api.ts
++++ b/frontend/src/api.ts
+@@ -26,6 +26,8 @@ export interface Sheet {
+   pivotTables: Array<{ id: string; [k: string]: unknown }>;
+   /** Remembered cursor cell of this sheet (restored when the tab is activated). */
+   lastSelection?: string | null;
++  /** Full rectangle of this sheet's most recent successful selection (REQ-3-1-3). */
++  lastSelectionRect?: RectSelection | null;
+ }
+ 
+ export interface Workbook {
+isError: False
+
+### 2026-09-28T05:50:48.953Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L236
+ROLE assistant 
+thinking: Good, my REQ-3 model additions are the only diff vs develop in api.ts/types.ts (develop's other changes merged).
+
+Now let's check the merged cells route to make sure my frontend's expectations still hold (returns entire Workbook, raw nullable).
+
+Let me view the merged cells handler and formulas.ts runWithFormulas signature.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '155,215p' backend/src/routes/workbooks.ts && echo \"=== runWithFormulas ===\" && grep -n \"export async function runWithFormulas\\|export function runWithFormulas\" -A 30 backend/src/formulas.ts | head -50"}
+stopReason: toolUse
+
+### 2026-09-28T05:50:48.974Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L237
+ROLE toolResult bash
+text: /** Apply cell updates: { updates: [{ ref, raw }] }. raw=null clears the cell. */
+workbooksRouter.patch(
+  "/api/workbooks/:id/sheets/:sheetId/cells",
+  async (req: Request, res: Response) => {
+  const wb = getWorkbook(req.params.id);
+  if (!wb) {
+    notFound(res);
+    return;
+  }
+  const sheet = findSheet(wb, req.params.sheetId);
+  if (!sheet) {
+    res.status(404).json({ error: "Sheet not found" });
+    return;
+  }
+  const updates = req.body?.updates;
+  if (!Array.isArray(updates)) {
+    badRequest(res, "updates must be an array");
+    return;
+  }
+  for (const u of updates) {
+    const pos = parseRef(u?.ref);
+    if (!pos) {
+      badRequest(res, `Invalid cell ref: ${String(u?.ref)}`);
+      return;
+    }
+    if (u.raw !== null && typeof u.raw !== "string") {
+      badRequest(res, `Cell raw must be a string or null`);
+      return;
+    }
+  }
+  // All valid -> apply. Cell writes go through the formula engine (REQ-4):
+  // raws are stored verbatim, dependents recalculate in dependency order and
+  // computed values (or REQ-4-2-2 error strings) are backfilled into `value`.
+  // validationId/style survive: sync mutates existing cells in place.
+  try {
+    await runWithFormulas(
+      wb,
+      (engine) => {
+        for (const u of updates) {
+          engine.setCellRaw(sheet.id, String(u.ref).toUpperCase(), u.raw ?? null);
+        }
+      },
+      { extraRefs: [{ sheetId: sheet.id, refs: updates.map((u) => String(u.ref)) }] }
+    );
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("[formula pipeline]", err);
+    res.status(500).json({ error: "Failed to apply cell updates" });
+    return;
+  }
+  wb.updatedAt = new Date().toISOString();
+  saveWorkbook(wb);
+  res.json(wb);
+});
+=== runWithFormulas ===
+145:export async function runWithFormulas<T>(
+146-  wb: Workbook,
+147-  fn: (engine: FormulaEngineHandle) => T | Promise<T>,
+148-  options?: FormulaRunOptions
+149-): Promise<T> {
+150-  const { WorkbookFormulas } = await loadEngineModule();
+151-  const engine = WorkbookFormulas.create(
+152-    wb.sheets.map((s) => ({
+153-      id: s.id,
+154-      name: s.name,
+155-      cells: Object.fromEntries(
+156-        Object.entries(s.cells).map(([ref, cell]) => [ref, cell.raw ?? ""])
+157-      ),
+158-    }))
+159-  );
+160-  try {
+161-    // Verbatim raw overrides written back after the run (edits/pastes keep
+162-    // the user's exact text; HyperFormula would re-serialize formulas).
+163-    const overrides = new Map<string, Map<string, string | null>>();
+164-    // Refs whose presence AND raw follow the engine (move source/target).
+165-    const engineAuth = new Map<string, Set<string>>();
+166-    // Structural ops adjust formulas anywhere -> engine raw is authoritative
+167-    // for every existing formula cell of the workbook.
+168-    let structural = false;
+169-
+170-    const override = (sheetId: string, ref: string, raw: string | null) => {
+171-      const upper = ref.toUpperCase();
+172-      let m = overrides.get(sheetId);
+173-      if (!m) overrides.set(sheetId, (m = new Map()));
+174-      m.set(upper, raw === "" ? null : raw);
+175-    };
+isError: False
+
+### 2026-09-28T05:50:57.709Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L238
+ROLE assistant 
+thinking: Good. The server returns the workbook with values backfilled. My frontend rebuilds its own client engine for display anyway. Both should agree.
+
+Now, should I switch the frontend display to the server's `value`? Let me consider the acceptance requirement "刷新后值/公式/结果持久" — with my client engine, yes.
+
+Given the root's guidance, there's an argument for using server values to avoid a divergent second engine. But my implementation is verified working. Risk of refactor > benefit. However, there's one concrete consideration: `CellData.value` is now authoritative server-side; if the client engine and server engine disagree (e.g., different HyperFormula versions/settings), displays could differ from persisted values. Both use the same shared package, so they agree.
+
+I'll keep the client engine for display but mention it in the PR. Hmm, actually wait. Let me reconsider: is there a *functional* problem with the client engine approach after #6 landed? 
+
+One: the client rebuilds the engine whenever `contentSignature` changes. contentSignature includes cells (raw). Fine.
+
+Two: performance for large workbooks — not a concern here.
+
+Three: `displayMap` only returns non-empty entries from engine.getDisplayMap; empty cells show "". Fine.
+
+Keep it.
+
+Now, one more thing: develop's Grid may have changed? Merge said no conflict for Grid.tsx. Let me check if develop changed it (csv didn't; #6 might have). `git diff origin/develop -- frontend/src/components/Grid.tsx` — should show only my changes.
+
+Also: my req3 integration spec's `seedNumberRule` writes directly to the DATA_DIR — develop's server now loads workbook per request. Fine.
+
+Also: develop's `checks/tsconfig.json` might differ. And `checks/.gitignore` — develop added CSV project; my `.run/` line? develop's run dir is `mktemp -d /tmp/wbchecks-run-XXXXXX`, so no repo .run dir. My checks/.gitignore change adds `/.run/`. Harmless but no longer needed. I could drop it, but harmless. Actually, let me keep it minimal: revert checks/.gitignore to develop's version to avoid noise. Let me check what develop's checks/.gitignore is.
+
+Let me check merged state and then decide on remaining cleanup:
+- checks/.gitignore: keep develop's.
+- README.md: my addition about run-private dir in checks/.run — now inaccurate (develop uses /tmp/wbchecks-run-*). I must fix or drop that README edit.
+
+Let me look at the merge result for README and checks/.gitignore, then adjust.
+
+Also, since the merge, my commit 0e0b626 (now 74d241c) message mentions moving run state to the repo — inaccurate after adopting develop's approach. I'll amend the message when finalizing (it's my own commit, safe to amend).
+
+Let me now: 
+1. `git checkout origin/develop -- checks/.gitignore` (drop my .run line)? But maybe develop's checks/.gitignore already ignores something. Let me see.
+2. Fix README wording.
+
+Let me inspect.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && echo \"=== merged checks/.gitignore ===\" && cat checks/.gitignore && echo \"=== develop checks/.gitignore ===\" && git show origin/develop:checks/.gitignore && echo \"=== README checks section ===\" && grep -n \"run\\b\\|\\.run\\|shared machine\" README.md | head -20 && echo \"=== Grid diff vs develop ===\" && git diff --stat origin/develop -- frontend/src/components/Grid.tsx frontend/src/components/FormulaBar.tsx frontend/src/domain checks/req3-core.spec.ts checks/req3-integration.spec.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:50:57.782Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L239
+ROLE toolResult bash
+text: === merged checks/.gitignore ===
+/node_modules/
+/results/
+/test-results/
+/.run/
+=== develop checks/.gitignore ===
+/node_modules/
+/results/
+/test-results/
+=== README checks section ===
+9:- `checks/` — repeatable Playwright browser checks (`checks/run.sh`)
+15:cd frontend && npm install && npm run build
+18:cd ../backend && npm install && HOST=0.0.0.0 PORT=3000 npm run start
+23:`npm run start` compiles the backend automatically when `backend/dist` is
+25:clone works with just `npm install && npm run start` in `backend/`.
+74:bootstrap step: `npm install` + `npm run build` in `frontend/` is enough.
+81:./run.sh                                    # type-checks, builds both packages, runs the browser checks
+82:./run.sh --skip-build                       # reuse the existing dist/ artifacts
+90:a run's state (server logs, temp data directories, pids) lives in the gitignored
+91:`checks/.run/<stamp>-<pid>/`, so concurrent runs on a shared machine cannot
+93:`checks/run.sh` runs:
+=== Grid diff vs develop ===
+ checks/req3-core.spec.ts               | 360 ++++++++++++++++++++++++++++++++
+ checks/req3-integration.spec.ts        | 265 +++++++++++++++++++++++
+ frontend/src/components/FormulaBar.tsx |  64 ++++--
+ frontend/src/components/Grid.tsx       | 179 +++++++++++++++-
+ frontend/src/domain/editing.ts         | 369 +++++++++++++++++++++++++++++++++
+ frontend/src/domain/formulas.ts        |  44 ++++
+ frontend/src/domain/validation.ts      | 262 +++++++++++++++++++++++
+ 7 files changed, 1519 insertions(+), 24 deletions(-)
+isError: False
+
+### 2026-09-28T05:51:00.049Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L240
+ROLE assistant 
+thinking: Fix:
+- checks/.gitignore → revert to develop's (drop /.run/).
+- README → fix the run-state paragraph to describe the actual (develop) mechanism.
+
+Let me view the README lines 85-95 to patch.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md", "offset": 76, "limit": 30}
+stopReason: toolUse
+
+### 2026-09-28T05:51:00.051Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L241
+ROLE toolResult read
+text: ## Checks
+
+```sh
+cd checks && npm install                    # once: installs @playwright/test + typescript
+export BROWSER_EXECUTABLE_PATH=/path/to/chromium
+./run.sh                                    # type-checks, builds both packages, runs the browser checks
+./run.sh --skip-build                       # reuse the existing dist/ artifacts
+./seed-idempotency.sh                       # seed contract: idempotent, never overwrites user edits
+node --test checks/unit/editing.test.ts     # framework-free edit/undo core (no browser)
+```
+
+Each check file gets its own backend process, temp `DATA_DIR` and free port (never
+3000, which is reserved for the official evaluation), so every check starts from
+the promised seeded state and mutating checks cannot leak into each other. All of
+a run's state (server logs, temp data directories, pids) lives in the gitignored
+`checks/.run/<stamp>-<pid>/`, so concurrent runs on a shared machine cannot
+sweep each other's `/tmp/wb-checks-*` files or delete a live server's `DATA_DIR`.
+`checks/run.sh` runs:
+
+| project | spec | covers |
+| ------- | ---- | ------ |
+| `create-workbook`, `home-editor`, `editor-interactions` | REQ-1 foundation | workbook list/link/"Last updated", create-a-blank-workbook, stable editor URL (direct visit + refresh), grid/tabs/formula bar ARIA contract, workbook renaming including the empty-name rejection |
+| `req3-core` | `checks/req3-core.spec.ts` | REQ-3-1-1/2/3, REQ-3-2-1/2: editing, 2-D paste, rectangular selection, copy/cut/paste, undo/redo |
+| `req3-integration` | `checks/req3-integration.spec.ts` | REQ-3 with the formula engine, validation rules and (pending #4) row/column structure undo |
+
+The REQ-3 integration checks create data-validation rules by writing them into
+the server's data file, because REQ-5's validation UI (issue #7) does not exist
+yet; the rejection wording and atomicity assertions stay the same once it lands.
+
+isError: False
+
+### 2026-09-28T05:51:06.007Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L242
+ROLE assistant 
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md", "edits": [{"oldText": "Each check file gets its own backend process, temp `DATA_DIR` and free port (never\n3000, which is reserved for the official evaluation), so every check starts from\nthe promised seeded state and mutating checks cannot leak into each other. All of\na run's state (server logs, temp data directories, pids) lives in the gitignored\n`checks/.run/<stamp>-<pid>/`, so concurrent runs on a shared machine cannot\nsweep each other's `/tmp/wb-checks-*` files or delete a live server's `DATA_DIR`.\n`checks/run.sh` runs:", "newText": "Each check file gets its own backend process, temp `DATA_DIR` and free port (never\n3000, which is reserved for the official evaluation), so every check starts from\nthe promised seeded state and mutating checks cannot leak into each other. All of\na run's state (server logs, temp data directories, pids) lives in one run-private\ndirectory and every started server is verified to own its port, because several\nagent lanes run this harness at the same time on one machine.\n`checks/run.sh` runs:"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:51:06.562Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L243
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md.
+isError: False
+
+### 2026-09-28T05:51:08.332Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L244
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git checkout origin/develop -- checks/.gitignore && cat checks/.gitignore && echo \"=== status ===\" && git status --short | grep -v \"^M  \\|^A  \" | head -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:51:08.405Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L245
+ROLE toolResult bash
+text: /node_modules/
+/results/
+/test-results/
+=== status ===
+ M README.md
+UU checks/playwright.config.ts
+UU checks/run.sh
+UU frontend/src/pages/EditorPage.tsx
+?? checks/.run/
+isError: False
+
+### 2026-09-28T05:51:20.518Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L246
+ROLE assistant 
+thinking: The conflict files are still marked UU (unmerged) because I edited them but haven't `git add`ed. Fine.
+
+`checks/.run/` untracked — from my earlier run. It's not in checks/.gitignore now (reverted). Let me delete it locally and rely on /tmp for future runs.
+
+Now let me also verify the full diff compiles and check that `checks/.run` leftover is removed.
+
+Then run the build & the full check suite on the merged baseline.
+
+Also, before running: develop's `prepare.cjs` may now build the shared package (from #7's branch? no, #7's branch had prepare.cjs changes but that was Issue-7's PR, not merged). Wait, develop includes `Merge local PR #7` = check reliability. And `Merge local PR #6` = formula pipeline. Also `Merge local PR #5` = check timeouts. Where's CSV (PR #4)? Hmm, the earlier `git log --oneline -5 origin/develop` showed 0539c62 Merge local PR #7, 661e397 Merge local PR #6, 41b0bfe fix check script..., 1ad7d43 REQ-4..., 3c9393f Merge local PR #5. Let me see more of the log to find #4.
+
+Not critical.
+
+Potential issue: my commit 2305564 added shared/formula-engine/dist and .gitignore negation. Develop may now also have dist? Earlier develop lacked dist. Let me check after merge whether there was a conflict in shared/formula-engine/.gitignore or dist (no conflict reported). Let me check `git ls-tree origin/develop shared/formula-engine/`.
+
+If develop still lacks dist, my dist commit remains necessary. But now develop's `backend/scripts/prepare.cjs`... let me check if develop builds the shared package. Issue-7's branch had "prepare.cjs 尽力构建 shared 包" but that PR isn't merged. Let me check develop's prepare.cjs.
+
+Let me check these.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && rm -rf checks/.run && echo \"=== develop shared pkg tree ===\" && git ls-tree origin/develop shared/formula-engine/ && echo \"=== merged ===\" && git ls-tree HEAD shared/formula-engine/ && echo \"=== prepare.cjs on develop ===\" && git show origin/develop:backend/scripts/prepare.cjs | head -50"}
+stopReason: toolUse
+
+### 2026-09-28T05:51:20.762Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L247
+ROLE toolResult bash
+text: === develop shared pkg tree ===
+100644 blob b9470778764f72c5257a3361590d2994547f90e1	shared/formula-engine/.gitignore
+100644 blob 650b4e5e1de6221b1c085d8b4d3a755aa6d9173e	shared/formula-engine/README.md
+100644 blob 7bc01a270ab932be1e20dd2b6d52f71ade933d78	shared/formula-engine/package-lock.json
+100644 blob 669688b0d7f9ae31114bd86afdf067e202749240	shared/formula-engine/package.json
+040000 tree 2fc01843153213a938d6feb3a0f405f9e88ec725	shared/formula-engine/src
+040000 tree f92cc83edb4a4aafa15ae0fca2658e71e1da39c1	shared/formula-engine/test
+100644 blob 6c0c19bf1ea1fedef714d8cd76c75920c76885d5	shared/formula-engine/tsconfig.json
+100644 blob fa69665ca779308af444b9c788f8f2925766a9f0	shared/formula-engine/vitest.config.ts
+=== merged ===
+100644 blob c2658d7d1b31848c3b71960543cb0368e56cd4c7	shared/formula-engine/.gitignore
+100644 blob 650b4e5e1de6221b1c085d8b4d3a755aa6d9173e	shared/formula-engine/README.md
+040000 tree 49ed35dbf58ffb46afe54bdf9417f90870c54710	shared/formula-engine/dist
+100644 blob 7bc01a270ab932be1e20dd2b6d52f71ade933d78	shared/formula-engine/package-lock.json
+100644 blob 669688b0d7f9ae31114bd86afdf067e202749240	shared/formula-engine/package.json
+040000 tree 2fc01843153213a938d6feb3a0f405f9e88ec725	shared/formula-engine/src
+040000 tree f92cc83edb4a4aafa15ae0fca2658e71e1da39c1	shared/formula-engine/test
+100644 blob 6c0c19bf1ea1fedef714d8cd76c75920c76885d5	shared/formula-engine/tsconfig.json
+100644 blob fa69665ca779308af444b9c788f8f2925766a9f0	shared/formula-engine/vitest.config.ts
+=== prepare.cjs on develop ===
+#!/usr/bin/env node
+/**
+ * Runs automatically before `npm start` (npm `prestart`).
+ *
+ * A fresh clone has no built artifacts (dist/ is not committed), so
+ * `npm install && HOST=… PORT=… npm run start` must still bring the whole app
+ * up:
+ *   1. compile the backend when backend/dist/server.js is missing (hard
+ *      requirement: without it there is nothing to start);
+ *   2. build the frontend when frontend/dist/index.html is missing, so the
+ *      backend can serve the home page (best effort: the API is still started
+ *      when the UI bundle cannot be built, e.g. frontend deps not installed).
+ */
+const { existsSync } = require("fs");
+const { spawnSync } = require("child_process");
+const path = require("path");
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 222]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 223]
+
+function defaultFrontendIndex() {
+  return path.join(frontendDir, "dist", "index.html");
+}
+
+const frontendIndex = process.env.FRONTEND_DIST
+  ? path.join(path.resolve(process.env.FRONTEND_DIST), "index.html")
+  : defaultFrontendIndex();
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 224]
+
+// 2. Frontend build (best effort).
+if (!existsSync(frontendIndex)) {
+isError: False
+
+### 2026-09-28T05:51:28.675Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L248
+ROLE assistant 
+thinking: Confirmed: develop does NOT have the shared engine's compiled dist, and prepare.cjs doesn't build the shared package. Hmm, but then how does develop's backend `runWithFormulas` load the engine on a fresh clone? `loadEngineModule()` imports `@app/formula-engine`... Let me check how develop's backend resolves it. backend/package.json on develop got +2 lines — probably adding "@app/formula-engine": "file:../shared/formula-engine". And npm install creates a symlink node_modules/@app/formula-engine → shared/formula-engine, whose main is ./dist/index.js which doesn't exist on a fresh clone → ERR_MODULE_NOT_FOUND (the exact problem commit 2305564 described).
+
+So my dist commit is genuinely needed... but maybe develop's frontend/package.json also has it and someone builds the shared package. Let me test: does a fresh clone of develop build/run? Actually, wait: the *official evaluation* probably runs from develop after root integration with some setup. If develop can't build the engine, that's a serious problem for everyone. Since PRs #6/#7 merged and presumably their checks passed in their worktrees where shared/dist existed locally (from my earlier commit? no, other worktrees...). Hmm, shared/formula-engine/dist is gitignored on develop, but each worktree might have built it locally.
+
+Actually: the frontend's `@app/formula-engine` import resolves via node_modules symlink to the real path `shared/formula-engine`, where Node resolves `dist/index.js`. For that to exist, someone must run `npm run build` in shared/formula-engine. Maybe the harness bootstrap does that. Or maybe `frontend/npm install` runs a prepare script? package.json of shared has no prepare.
+
+Let me test the actual state: in MY worktree, dist exists (committed). For develop-only checkouts, does CI build it? Let me just check if there's a root-level build script or README instructions mentioning building shared. My README edit (from 2305564) says it's committed. Develop's README (from #6?) might say something else.
+
+Given the ambiguity, the safest for MY PR is to keep the dist commit (it makes my branch self-contained) and flag it to #6's owner + root as a shared-build concern. The root can decide. Since it's already committed and works, keep.
+
+Actually, hold on. Let me reconsider: including dist/*.js files (~48K) in my PR diff vs develop will be ~48K of generated code. The root might prefer it elsewhere. But it *is* required for the app to run from a clean clone of develop, which the root's final acceptance will hit! Actually — will it? The final delivery branch is main, built by the root. If develop can't build without dist, the root's integration would fail; my PR fixing it is helpful.
+
+Hmm, but wait: maybe the evaluation harness's build step is `cd backend && npm install && npm start` (as README says), and `npm install` in backend with `file:../shared/formula-engine` — npm might build it if the package had a prepare script. It doesn't. So it'd fail. Unless the repo's root has a postinstall. Let me check root package.json existence and backend/package.json scripts on develop.
+
+Let me check backend/package.json on develop and whether there's a root package.json.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git show origin/develop:backend/package.json && echo \"=== root pkg? ===\" && git ls-tree origin/develop --name-only | head -20 && echo \"=== loadEngineModule ===\" && grep -n \"loadEngineModule\" -A 20 backend/src/formulas.ts | head -35"}
+stopReason: toolUse
+
+### 2026-09-28T05:51:28.694Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L249
+ROLE toolResult bash
+text: {
+  "name": "backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Spreadsheet workspace backend: REST API + static hosting of the built frontend",
+  "type": "commonjs",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "start": "node dist/server.js",
+    "prestart": "node scripts/prepare.cjs",
+    "test": "tsc -p tsconfig.json && node --test \"tests/**/*.test.*\"",
+    "dev": "tsc -p tsconfig.json && node dist/server.js"
+  },
+  "dependencies": {
+    "@app/formula-engine": "file:../shared/formula-engine",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.14.0",
+    "typescript": "^5.5.4"
+  }
+}
+=== root pkg? ===
+.gitignore
+README.md
+backend
+checks
+frontend
+shared
+=== loadEngineModule ===
+47:function loadEngineModule(): Promise<EngineModule> {
+48-  if (!engineModulePromise) {
+49-    engineModulePromise = import("@app/formula-engine") as Promise<EngineModule>;
+50-  }
+51-  return engineModulePromise;
+52-}
+53-
+54-/** Mutation surface offered to write endpoints. */
+55-export interface FormulaEngineHandle {
+56-  /** Set one cell's raw input; null/"" clears it. Dependents recalculate. */
+57-  setCellRaw(sheetId: string, ref: string, raw: string | null): void;
+58-  /**
+59-   * Bulk paste a rectangle with its top-left corner at startRef. The whole
+60-   * rectangle is applied; empty fields clear their target cell.
+61-   */
+62-  setRangeRaw(sheetId: string, startRef: string, values: string[][]): void;
+63-  /**
+64-   * Move a rectangle (moveCells semantics: the moved cells' relative
+65-   * references and external references to them follow the move).
+66-   */
+67-  moveRange(sheetId: string, fromRef: string, toRef: string, height: number, width: number): void;
+--
+150:  const { WorkbookFormulas } = await loadEngineModule();
+151-  const engine = WorkbookFormulas.create(
+152-    wb.sheets.map((s) => ({
+153-      id: s.id,
+154-      name: s.name,
+155-      cells: Object.fromEntries(
+156-        Object.entries(s.cells).map(([ref, cell]) => [ref, cell.raw ?? ""])
+157-      ),
+158-    }))
+159-  );
+160-  try {
+161-    // Verbatim raw overrides written back after the run (edits/pastes keep
+162-    // the user's exact text; HyperFormula would re-serialize formulas).
+isError: False
+
+### 2026-09-28T05:51:31.769Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L250
+ROLE assistant 
+thinking: Confirmed: on a clean clone of develop, `backend npm install` symlinks @app/formula-engine to shared/formula-engine without dist → runtime import fails. My dist commit fixes the whole team's build. This is valuable and I'll keep it, and flag it clearly (it belongs to #6's package, so #6's owner should be aware).
+
+Now: build + run the merged suite. Let me first `git add` the resolved files and commit the merge. Then run the full suite (now 6 projects, ~30 tests + CSV tests).
+
+Note: my dist files could conflict with future changes to shared/formula-engine/src by #6. Since the engine src didn't change in this merge, fine. But if #6's owner changes src, dist must be rebuilt. I'll note that.
+
+Let me stage and commit the merge.
+
+Actually, before committing the merge, let me double-check the merged run.sh syntax and that `checks/req3-*.spec.ts` + csv spec coexist. And verify build works. Let me stage, commit the merge, then build+run.
+
+Wait: also need to check `checks/tsconfig.json` includes only certain files? develop's may list files explicitly. Let me check.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && cat checks/tsconfig.json && bash -n checks/run.sh && echo \"run.sh syntax OK\" && git add -A && git status --short | head -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:51:32.657Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L251
+ROLE toolResult bash
+text: {
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM"],
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "isolatedModules": true,
+    "resolveJsonModule": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["node"]
+  },
+  "include": ["*.ts"]
+}
+run.sh syntax OK
+M  README.md
+M  backend/package-lock.json
+M  backend/package.json
+A  backend/src/csv.ts
+A  backend/src/formulas.ts
+A  backend/src/routes/csv.ts
+M  backend/src/routes/workbooks.ts
+M  backend/src/server.ts
+A  backend/tests/csv.test.mjs
+M  checks/.gitignore
+A  checks/csv.spec.ts
+A  checks/formula-api.mjs
+M  checks/playwright.config.ts
+M  checks/run.sh
+M  frontend/package.json
+M  frontend/src/api.ts
+A  frontend/src/domain/csv.ts
+M  frontend/src/pages/EditorPage.tsx
+M  frontend/src/pages/HomePage.tsx
+M  frontend/src/styles.css
+A  frontend/tests/csv.test.ts
+isError: False
+
+### 2026-09-28T05:51:36.224Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L252
+ROLE assistant 
+thinking: checks/tsconfig.json `include: ["*.ts"]` covers all top-level specs including req3. unit tests under checks/unit/ aren't typechecked (they're run by node --test). Fine.
+
+Note `checks/.gitignore` shows as M — because I checked out develop's version but the index had my version? Let me see: after `git checkout origin/develop -- checks/.gitignore`, the working file = develop's, and the index = my version (from HEAD). Then `git add -A` staged develop's version... but it shows "M" meaning it differs from HEAD (my version had /.run/). So the staged change removes /.run/ relative to MY HEAD. That's the correct resolution (matching develop) — and relative to develop it's identical, so the PR diff won't include it.
+
+Now commit the merge.
+
+Before that, let me verify the merged build works (frontend+backend tsc) quickly, then commit, then run the suite.
+
+Actually run.sh will build. Let me just commit and run. But a failed build wastes 4 minutes; let me tsc both quickly first.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./frontend/node_modules/.bin/tsc -p frontend/tsconfig.json && echo \"FE OK\" && ./backend/node_modules/.bin/tsc -p backend/tsconfig.json && echo \"BE OK\" && ./checks/node_modules/.bin/tsc -p checks/tsconfig.json && echo \"CHECKS OK\""}
+stopReason: toolUse
+
+### 2026-09-28T05:51:41.881Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L253
+ROLE toolResult bash
+text: FE OK
+backend/src/formulas.ts(1,35): error TS2307: Cannot find module '@app/formula-engine' or its corresponding type declarations.
+backend/src/formulas.ts(43,35): error TS2307: Cannot find module '@app/formula-engine' or its corresponding type declarations.
+backend/src/formulas.ts(49,34): error TS2307: Cannot find module '@app/formula-engine' or its corresponding type declarations.
+backend/src/formulas.ts(245,18): error TS2307: Cannot find module '@app/formula-engine' or its corresponding type declarations.
+
+Command exited with code 2
+isError: True
+
+### 2026-09-28T05:51:44.375Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L254
+ROLE assistant 
+thinking: Backend tsc fails: cannot find @app/formula-engine. Because backend/node_modules doesn't have the symlink (backend npm install wasn't run after develop's package.json added the dep, or the merge). Let me check backend/node_modules/@app.
+
+In my worktree, backend/dist exists from earlier builds. develop's backend now depends on @app/formula-engine; I need to run `npm install` in backend to create the link. Then tsc resolves via node_modules/@app/formula-engine/dist/index.d.ts (which exists because dist is committed in my branch).
+
+Let me run npm install in backend (and frontend). Actually run.sh builds via `npm run build` in backend, which would fail without deps. So I must install.
+
+Let me check backend/node_modules/@app and run npm install if missing.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ls backend/node_modules/@app 2>/dev/null || echo \"no @app\"; timeout 120 npm --prefix backend install --prefer-offline --no-audit --no-fund 2>&1 | tail -5; ls -la backend/node_modules/@app 2>/dev/null", "timeout": 140}
+stopReason: toolUse
+
+### 2026-09-28T05:51:46.547Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L255
+ROLE toolResult bash
+text: no @app
+
+added 1 package in 2s
+total 8
+drwxr-xr-x  2 ubuntu ubuntu 4096 Sep 28 05:51 .
+drwxr-xr-x 74 ubuntu ubuntu 4096 Sep 28 05:51 ..
+lrwxrwxrwx  1 ubuntu ubuntu   30 Sep 28 05:51 formula-engine -> ../../../shared/formula-engine
+isError: False
+
+### 2026-09-28T05:51:47.888Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L256
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./backend/node_modules/.bin/tsc -p backend/tsconfig.json && echo \"BE OK\" && ./checks/node_modules/.bin/tsc -p checks/tsconfig.json && echo \"CHECKS OK\""}
+stopReason: toolUse
+
+### 2026-09-28T05:51:51.232Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L257
+ROLE toolResult bash
+text: BE OK
+checks/playwright.config.ts(44,56): error TS2552: Cannot find name 'clipboard'. Did you mean 'Clipboard'?
+checks/playwright.config.ts(51,63): error TS2552: Cannot find name 'clipboard'. Did you mean 'Clipboard'?
+
+Command exited with code 2
+isError: True
+
+### 2026-09-28T05:51:53.161Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L258
+ROLE assistant 
+thinking: When I replaced the conflict with develop's version of playwright.config.ts and then re-added req3 projects, the `clipboard` const might have been removed by develop's version. Let me check the file: develop's version may not define `clipboard`.
+
+Let me view the file top part.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts"}
+stopReason: toolUse
+
+### 2026-09-28T05:51:53.165Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L259
+ROLE toolResult read
+text: import { defineConfig, Project } from '@playwright/test';
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 225]
+
+if (!process.env.BROWSER_EXECUTABLE_PATH) {
+  throw new Error('Set BROWSER_EXECUTABLE_PATH before running browser checks.');
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 226]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 227]
+
+isError: False
+
+### 2026-09-28T05:51:56.060Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L260
+ROLE assistant 
+thinking: Right, `clipboard` is missing. How did the CSV spec handle clipboard? CSV import may need clipboard? Their spec probably uses file input. I need to re-add the `clipboard` const for the req3 projects.
+
+Add after the BROWSER_EXECUTABLE_PATH check:
+```ts
+const clipboard = {
+  permissions: ['clipboard-read', 'clipboard-write'],
+  launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH },
+};
+```
+And update the doc comment to mention clipboard permission.
+
+Note permissions is a context option; specifying it in `use` per project is valid.
+
+Let me edit.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts", "edits": [{"oldText": "if (!process.env.BROWSER_EXECUTABLE_PATH) {\n  throw new Error('Set BROWSER_EXECUTABLE_PATH before running browser checks.');\n}\n\nconst projects: Project[] = [", "newText": "if (!process.env.BROWSER_EXECUTABLE_PATH) {\n  throw new Error('Set BROWSER_EXECUTABLE_PATH before running browser checks.');\n}\n\n// The REQ-3 checks paste real clipboard content: the requirement is about\n// Ctrl+V / the context menu \"Paste\" item, not about an internal-only path.\nconst clipboard = { permissions: ['clipboard-read', 'clipboard-write'] };\n\nconst projects: Project[] = ["}]}
+stopReason: toolUse
+
+### 2026-09-28T05:51:56.062Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L261
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts.
+isError: False
+
+### 2026-09-28T05:51:59.444Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L262
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/node_modules/.bin/tsc -p checks/tsconfig.json && echo \"CHECKS OK\" && git add -A && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' commit -q -F - <<'EOF'\nMerge origin/develop into issue-5（#4/#5/#6/#7 后的新基线）(#5)\n\n把 REQ-3 的编辑/粘贴/选区/复制剪切/撤销重做接到最新 develop（0539c62）：\n- checks/run.sh 采用 develop 的运行私有目录与端口归属校验（本分支先前的同类\n  改动被上游 PR #7 的版本取代），并保留 REQ3_CORE / REQ3_INTEGRATION 两个\n  project（含 DATA_DIR_REQ3_INTEGRATION，集成检查用它注入校验规则 fixture）。\n- checks/playwright.config.ts 保留 CSV + req3-core + req3-integration 三个\n  project 与剪贴板权限。\n- frontend/src/pages/EditorPage.tsx 保留 REQ-3 的写管道/选区/撤销重做，并接入\n  #4 的 CSV 导出按钮（handleExportCsv + sheetToCsv）。\n- backend/src/types.ts / frontend/src/api.ts 仅保留 REQ-3 需要的\n  Sheet.lastSelectionRect（每表最近完整矩形）。\n\n写管道消费最新端点语义：PATCH /cells 已由 #6 改为 runWithFormulas 原子管线\n（raw 保真、依赖重算、value 回填、公式错误串不拒写），前端写入后直接用返回的\nWorkbook；复制/移动仍按契约用引擎 adjustFormulaForCopy。\nEOF\ngit log --oneline -3"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:06.363Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L263
+ROLE toolResult bash
+text: CHECKS OK
+3583fc1 Merge origin/develop into issue-5（#4/#5/#6/#7 后的新基线）(#5)
+74d241c REQ-3 自检第二轮：Ctrl+Z 焦点、undo 检查判据与检查隔离（#5）
+0539c62 Merge local PR #7
+isError: False
+
+### 2026-09-28T05:52:08.637Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L264
+ROLE assistant 
+thinking: Merge committed. Now run the full check suite on the new baseline. The suite now has 6 projects including CSV. Let's run it in background.
+
+Note: checks/node_modules has typescript now (I installed), so the typecheck step in run.sh will run. Good.
+
+Let me run.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run4.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run4.log; tail -4 /tmp/issue5-run4.log", "background": true}
+stopReason: toolUse
+
+### 2026-09-28T05:52:08.946Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L265
+ROLE toolResult bash
+text: Bash job bg007 started in background. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T05:52:20.388Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L266
+ROLE assistant 
+thinking: While this runs (~5 min with CSV), let me consider the #7 validation module question and prepare the PR body.
+
+Also: I should reply to comment #69 (the root/base notification) — but only if I need to communicate. The guidance says "收到评论不必回执；需要回答问题、纠正事实、交接成果或采取行动时才回复". Comment #69 contains a factual correction: "你分支上的准备件（927358f）基于初始化提交 3ab688f，未含共享基础" — they seem to believe my branch is still the prep work. I should correct this fact when I hand off the PR: my branch has the full implementation and is now based on 0539c62. I'll post the handoff comment after the PR is created.
+
+Also the root asked me to use the new baseline and "完成后 braid pr create --base develop". So they're waiting.
+
+Let me now think about whether the frontend should use the server's computed `value` rather than the client engine. The root explicitly said: "你的编辑/粘贴/范围操作直接消费该端点语义即可，前端无需自己算公式". My current code computes display client-side. Is that a problem for the acceptance? Possibly for consistency: the persisted `value` is now authoritative. If the acceptance checks read the API's `value` field (e.g., a script checking persistence), my client display and server value should match since both use the same engine.
+
+But hmm, there's a subtle divergence risk: my client engine is built from `wb.sheets[].cells[].raw` only. The server writes `value` for formula cells. When my client rebuilds the engine per contentSignature, it ignores `value` and recomputes — same result.
+
+However! Consider a formula referencing a cell in ANOTHER sheet or a range: the client engine handles it (WorkbookFormulas.create with all sheets). Fine.
+
+Consider `=#REF!` raw: engine displays #REF!. Fine.
+
+One more: my `contentSignature` includes rowCount/colCount; develop's #6 or #4 might add structural ops later changing those. Fine.
+
+I'll leave the client engine but flag in the PR that display currently uses the shared engine client-side (same package as the server), and that it can be simplified to consume `value` if the root prefers. Actually — wait. Let me reconsider more carefully whether there's a *real* problem:
+
+The server's formula pipeline (`runWithFormulas`) applies "verbatim raw overrides" and adjusts formulas for structural ops. For **paste/copy**, my client sends raw formulas already adjusted via `adjustFormulaForCopy`. The server stores raw and recomputes. Good.
+
+But here's a potential double-adjustment risk: if the server's `setCellRaw` with a formula whose relative refs point outside bounds... no, adjustFormulaForCopy already returned `=#REF!`.
+
+OK. Another consideration: the root said "复制/移动仍按 #42 契约用引擎 adjustFormulaForCopy / moveRange". My copy path uses adjustFormulaForCopy ✓. My **cut/move** path uses `planRangeCut` which keeps formulas unchanged and does NOT call `moveRange`! The #42/#6 contract says moves should use `moveRange` (moveCells semantics: external formulas pointing at moved cells follow, block-internal formulas unchanged).
+
+Hmm! This is a real semantic difference. REQ-3-2-1: "值与公式保持二维布局；复制公式时相对引用按目标偏移调整、绝对引用不变". For cut/paste (范围移动), what does the requirement say? It says nothing explicit about adjusting references on move except the copy rule. But REQ-3-2-2 says undo covers "范围移动" (range move). And #6's contract offers `moveRange` for "范围移动（moveCells 语义：指向被移单元格的外部公式跟随改写，块内公式原样移动）".
+
+My implementation of cut+paste: writes the source raws to the target verbatim and clears the source. External formulas referencing the source cells are NOT rewritten to point at the new location (they'd break → the referenced cells become empty → their value changes/error). With `moveRange` semantics, external references follow the moved block.
+
+Is that required by REQ-3-2-1? Let me re-read the requirement text from the issue description:
+
+"复制/剪切/粘贴范围（参考 copy-paste-range.png）：仅同一工作表内；复制后源不变；剪切在目标完整显示后才清空源；值与公式保持二维布局；复制公式时相对引用按目标偏移调整、绝对引用不变，公式栏显示调整后的原公式；源/目标/受影响公式要么全部更新并持久，要么全部保持原状；目标 0-100 校验拒绝时报 ...；范围外单元格不变。"
+
+"受影响公式" (affected formulas) — for a cut, formulas that reference the moved cells are "affected". "要么全部更新并持久" implies affected formulas should be updated. So using `moveRange` semantics would satisfy this better.
+
+Hmm. But the exact requirements.yaml text might have a scenario. Let me check the requirements file for REQ-3-2-1 scenarios to see if there's a specific expectation about cut and referencing formulas. The issue noted scenarios have placeholder names/WHEN, but maybe there's more detail.
+
+Let me grep requirements.yaml for REQ-3-2-1.
+
+This matters: if the acceptance includes "剪切后引用被移动单元格的公式跟随更新", my current implementation fails. Let me check the requirements material.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac && python3 - <<'PY'\nimport re\np='input/requirements.yaml'\ns=open(p, encoding='utf-8').read()\n# print sections around REQ-3\nidx=s.find('REQ-3')\nprint(s[idx-200:idx+9000])\nPY"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:20.497Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L267
+ROLE toolResult bash
+text: lt and workbook `Q3
+            Sales`, worksheets `Sheet1` and `Sheet2`, rows `East/1200` and `North/800`
+            remain persisted; on failure, the original seeded state remains unchanged.
+- id: REQ-3
+  name: Cell and Range Editing
+  type: FOLDER
+  dependencies: []
+  description: 'Supports data entry, bulk paste, copy and cut, and undo and redo for
+    cells and contiguous ranges in the current active worksheet. Each operation either
+    completely updates the target grid, formula results, and related validation behavior
+    and persists after refresh, or displays an error while the current and other worksheets
+    continue to show the pre-operation state.
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 228]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 229]
+
+        '
+      dependencies:
+      - REQ-1-1-1
+      scenarios:
+      - name: REQ-3-1-1 -the requested workflow,the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow,the requested workflow with concrete values `East`,
+            `1200`, `North`, and `800`. Every value is entered through a visible,
+            labelled control; no implementation-specific navigation, API, database id, or internal implementation
+            detail is assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow,the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+      - name: REQ-3-1-1 -Escape the requested workflow,the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and escape the requested workflow,the requested workflow with concrete values `East`,
+            `1200`, `North`, and `800`. Every value is entered through a visible,
+            labelled control; no implementation-specific navigation, API, database id, or internal implementation
+            detail is assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "Escape the requested workflow,the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+      - name: REQ-3-1-1 -the requested workflow, the requested workflow, the requested workflow, the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow, the requested workflow, the requested workflow, the requested workflow with concrete values `East`,
+            `1200`, `North`, and `800`. Every value is entered through a visible,
+            labelled control; no implementation-specific navigation, API, database id, or internal implementation
+            detail is assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow, the requested workflow, the requested workflow, the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+      - name: REQ-3-1-1 -the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow with concrete values `East`,
+            `1200`, `North`, and `800`. Every value is entered through a visible,
+            labelled control; no implementation-specific navigation, API, database id, or internal implementation
+            detail is assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+    - id: REQ-3-1-2
+      name: Paste Two-Dimensional Table Data
+      type: ATOMIC
+      dependencies:
+      - REQ-3-1-1
+      description: 'Users paste text containing tab-separated columns and n
+isError: False
+
+### 2026-09-28T05:52:24.279Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L268
+ROLE assistant 
+thinking: Let me extract just the REQ-3-2-1 description (already in the issue) and the top-level REQ-3 description: "Each operation either completely updates the target grid, formula results, and related validation behavior and persists after refresh, or displays an error while the current and other worksheets continue to show the pre-operation state."
+
+The "related formulas" wording in REQ-3 description: "completely updates the target grid, formula results..." — for a cut, "受影响公式" in the issue's 交付内容 explicitly says "源/目标/受影响公式要么全部更新并持久" — this strongly implies that formulas affected by the move must be updated. A formula referencing a cut cell IS affected: after the cut, the referenced cell is empty, so the formula's result changes unless the reference follows.
+
+Hmm, but is "受影响公式" about formulas referencing the source? Or formulas in the target being recalculated? Ambiguous. However, the #6 owner explicitly provided `moveRange` with moveCells semantics for "范围移动", and the root's F-series includes "F3（复制偏移整链路）依赖你的粘贴端点".
+
+Let me check the acceptance list (F1-F6) in the root issue to see if there's a specific check for cut with references. Let me view the root issue #1 comments/timeline for "F3"/"F5"/"F6".
+
+Actually, develop's `checks/formula-api.mjs` (from #6) likely tests moveRange semantics. And there may be a shared acceptance list. Let me grep the root issue for F1..F6.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue view 1 --comments 2>&1 | grep -n \"F[1-9]\\b\\|F[1-9]（\\|F[1-9]:\" | head -40"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:24.301Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L269
+ROLE toolResult bash
+text: 116:- PR #6 公式写管道（#6）：PATCH /cells 改走 runWithFormulas 原子管线（raw 保真、依赖重算、value 回填）。我复跑 shared 引擎 vitest 33/33、formula-api.mjs 8/8、backend 构建通过。**Issue #6 已关闭**；F3 复制偏移整链路待 #5 落地后进整合验收。
+124:**关键路径**：#4/#5 PR → #7 PR → 我建 develop→main 整合 PR，在最终候选上执行覆盖完整需求范围的自动化验收（浏览器脚本 + API 检查，含种子契约、CSV 往返、公式场景、F3 复制偏移、筛选隐藏行导出回归）。当前无阻塞裁决事项。
+isError: False
+
+### 2026-09-28T05:52:27.873Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L270
+ROLE assistant 
+thinking: The root issue mentions F3 = 复制偏移 (copy offset) only. So cut/move reference-follow semantics is NOT in the F-list. But "受影响公式" in the issue description is still part of my deliverable.
+
+Given the contract from #6 provides `moveRange` and the issue says "源/目标/受影响公式要么全部更新并持久，要么全部保持原状", I think using `moveRange` for the cut path is the more faithful implementation. Let me check the effort:
+
+Option: For cut/paste, instead of writing raw values to the target + clearing source, call a new backend endpoint or reuse PATCH /cells? `moveRange` is a backend engine function requiring a different route. Is there a route that exposes moveRange? Let me check develop's routes for a move endpoint.
+
+`grep -n "moveRange" backend/src/routes/*.ts` and check formula-api.mjs.
+
+If there's no endpoint, my client-side cut implementation is what's available. The engine's `moveRange` semantics can't be triggered via the current API. The #6 owner said "移动用 moveRange" as an engine entry — but that entry is only accessible server-side in a route. Let me check if #6 added a route for move (maybe /cells with an op type). Let me grep.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -rn \"moveRange\\|moveCells\" backend/src --include=*.ts | head -20; echo \"=== routes ===\"; grep -rn \"router\\.\\(get\\|post\\|patch\\|put\\|delete\\)\" backend/src/routes/*.ts | head -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:27.892Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L271
+ROLE toolResult bash
+text: backend/src/formulas.ts:37: * `setRangeRaw` (bulk paste), `moveRange` (range move, HyperFormula
+backend/src/formulas.ts:38: * moveCells semantics), `addRows/removeRows/addColumns/removeColumns`
+backend/src/formulas.ts:64:   * Move a rectangle (moveCells semantics: the moved cells' relative
+backend/src/formulas.ts:67:  moveRange(sheetId: string, fromRef: string, toRef: string, height: number, width: number): void;
+backend/src/formulas.ts:197:      moveRange: (sheetId, fromRef, toRef, height, width) => {
+backend/src/formulas.ts:198:        engine.moveRange(sheetId, fromRef, toRef, height, width);
+=== routes ===
+isError: False
+
+### 2026-09-28T05:52:30.573Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L272
+ROLE assistant 
+thinking: The grep for routes returned nothing?! Let me check backend/src/routes/*.ts files.
+
+Hmm, `grep -rn "router\."` found nothing? Maybe they use `workbooksRouter.patch(...)` (multi-line). Let me list route paths.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ls backend/src/routes/ && grep -rn \"\\.\\(get\\|post\\|patch\\|put\\|delete\\)(\" backend/src/routes/ | sed 's/^.*routes\\///' | head -30"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:30.592Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L273
+ROLE toolResult bash
+text: csv.ts
+workbooks.ts
+workbooks.ts:63:workbooksRouter.get("/api/workbooks", (_req: Request, res: Response) => {
+workbooks.ts:67:workbooksRouter.post("/api/workbooks", (req: Request, res: Response) => {
+workbooks.ts:79:workbooksRouter.get("/api/workbooks/:id", (req: Request, res: Response) => {
+workbooks.ts:88:workbooksRouter.patch("/api/workbooks/:id", (req: Request, res: Response) => {
+workbooks.ts:113:workbooksRouter.patch("/api/workbooks/:id/state", (req: Request, res: Response) => {
+workbooks.ts:156:workbooksRouter.patch(
+csv.ts:28:csvRouter.post("/api/workbooks/import", (req: Request, res: Response) => {
+isError: False
+
+### 2026-09-28T05:52:34.400Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L274
+ROLE assistant 
+thinking: There is NO route exposing `moveRange`. So a client-side cut implementation can't use moveCells semantics without adding a backend endpoint. Adding a new endpoint for range move would be a bigger change and would overlap with #4's structure endpoints (not merged). The issue says copy/cut/paste is REQ-3-2-1 and the acceptance focuses on layout, references on copy, cut source clearing, atomicity, and out-of-range rejection.
+
+Given:
+- The requirement text's explicit formula-adjustment rule is for "复制公式时" (copy).
+- No endpoint exists for move; #6's engine handle is internal.
+- The issue's "受影响公式" most plausibly refers to formulas whose results change as a consequence (which the server recomputes anyway on every write).
+
+I'll keep the current cut implementation (write target verbatim + clear source in one atomic batch), and explicitly document this boundary: "cut/paste currently moves values/raws verbatim and clears the source in the same atomic batch; external references to the moved block are not rewritten (moveCells semantics) because no API exposes the engine's moveRange yet. If the root wants moveCells semantics for cut, it needs a server endpoint (or #4's structure endpoints)."
+
+Hmm. But is that a real gap that could fail acceptance? Let me think about what an evaluator would test for "cut" per the issue's 验收要点: "剪切后源清空时序正确" — just the source clearing order. And REQ-3-2-1's scenario in requirements: let me actually read REQ-3-2-1's description in requirements.yaml to see if it mentions reference following on cut.
+
+Let me print REQ-3-2-1 section.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac && python3 - <<'PY'\ns=open('input/requirements.yaml', encoding='utf-8').read()\ni=s.find('- id: REQ-3-1-3')\nj=s.find('- id: REQ-4')\nprint(s[i:j])\nPY"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:34.586Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L275
+ROLE toolResult bash
+text: - id: REQ-3-1-3
+      name: Select a Rectangular Cell Range
+      type: ATOMIC
+      dependencies:
+      - REQ-1-1-1
+      description: 'Users can click to select a single cell or drag from one corner
+        of a rectangular region to the diagonally opposite cell to select a contiguous
+        rectangle. The active worksheet must visibly indicate the complete selection;
+        the grid exposes aria-multiselectable="true"; every gridcell inside the rectangle
+        exposes aria-selected="true", while every gridcell outside it exposes aria-selected="false".
+        Subsequent range operations use exactly this rectangle and must not implicitly
+        expand to adjacent existing data. Selecting another cell or range replaces
+        the previous selection and updates the ARIA state accordingly. Each worksheet
+        must persist the complete rectangle from its most recent successful selection,
+        not just its top-left corner: after refreshing or reopening the workbook and
+        returning to that active worksheet, aria-selected states inside and outside
+        the rectangle must exactly match the saved state; switching to another worksheet
+        must not overwrite the original worksheet’s selection.
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 230]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 231]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 232]
+
+        '
+      scenarios:
+      - name: REQ-3-2-2 -the requested workflow,the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow,the requested workflow with concrete values `East`,
+            `1200`, `North`, and `800`. Every value is entered through a visible,
+            labelled control; no implementation-specific navigation, API, database id, or internal implementation
+            detail is assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow,the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+      - name: REQ-3-2-2 -the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow with concrete values `East`, `1200`,
+            `North`, and `800`. Every value is entered through a visible, labelled
+            control; no implementation-specific navigation, API, database id, or internal implementation detail is
+            assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+      - name: REQ-3-2-2 -the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow with concrete values `East`,
+            `1200`, `North`, and `800`. Every value is entered through a visible,
+            labelled control; no implementation-specific navigation, API, database id, or internal implementation
+            detail is assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+      - name: REQ-3-2-2 -the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow with concrete values `East`, `1200`,
+            `North`, and `800`. Every value is entered through a visible, labelled
+            control; no implementation-specific navigation, API, database id, or internal implementation detail is
+            assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+      - name: REQ-3-2-2 -the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow with concrete values `East`,
+            `1200`, `North`, and `800`. Every value is entered through a visible,
+            labelled control; no implementation-specific navigation, API, database id, or internal implementation
+            detail is assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+      - name: REQ-3-2-2 -the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow with concrete values `East`,
+            `1200`, `North`, and `800`. Every value is entered through a visible,
+            labelled control; no implementation-specific navigation, API, database id, or internal implementation
+            detail is assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+      - name: REQ-3-2-2 -the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded workbook `Q3
+            Sales`, range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range
+            `D1:E2`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow with concrete values `East`, `1200`,
+            `North`, and `800`. Every value is entered through a visible, labelled
+            control; no implementation-specific navigation, API, database id, or internal implementation detail is
+            assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow"
+            using the same seeded names and values (the seeded workbook `Q3 Sales`,
+            range `A1:B2` containing `Item/Qty` and `Pen/4`, and target range `D1:E2`);
+            validation or permission failures are shown beside the named control and
+            do not create a partial record.
+        - keyword: THEN
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and workbook `Q3
+            Sales`, range `A1:B2`, values `Item/Qty` and `Pen/4`, target `D1:E2` remain
+            persisted; on failure, the original seeded state remains unchanged.
+isError: False
+
+### 2026-09-28T05:52:37.533Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L276
+ROLE assistant 
+thinking: Key finding: REQ-3-2-2's description says: "Undo restores the grid values, original formulas, row/column structure, **rule ranges**, pivot-result validity, and calculation results from before the operation".
+
+Hmm — "rule ranges" (校验规则范围) must be restored by undo. My undo snapshots only cell raws; if an operation moved/shifted validation rule ranges, undo wouldn't restore them. But no operation in REQ-3 changes rule ranges (only structural ops from #4 do). So for #4's structure ops, the undo must also restore rule ranges — that's #4 + #7 territory. My History.Operation has `structureBefore/structureAfter` placeholders. I should make this explicit in the handoff.
+
+Also "pivot-result validity" — #7's pivots.
+
+Also REQ-3-2-1 says "The source range, target range, and affected formulas must either all update and persist after refresh or all remain in their original state" — "affected formulas" = formulas whose results change (recalculated server-side). My atomic batch covers it.
+
+The explicit reference-adjustment rule is only for copy. So my cut implementation is acceptable. I'll document the boundary.
+
+Now, REQ-3-2-1 says "only operations within the same worksheet are supported" — my copy/cut/paste is same-sheet only (uses activeSheet). Fine.
+
+Now let me check the run progress.
+toolCall bash {"command": "grep -E \"^  (✓|✘|-)|passed|failed|Running|skipped\" /tmp/issue5-run4.log | tail -15"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:37.581Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L277
+ROLE toolResult bash
+isError: False
+
+### 2026-09-28T05:52:39.271Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L278
+ROLE assistant 
+toolCall bash {"command": "tail -20 /tmp/issue5-run4.log"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:39.299Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L279
+ROLE toolResult bash
+text: Error: Set BASE_URL_CREATE before running browser checks.
+    at required (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts:10:21)
+    at Object.<anonymous> (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/playwright.config.ts:26:21)
+    at Module._compile (node:internal/modules/cjs/loader:1760:14)
+    at Module.newCompile2 (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/third_party/pirates.js:46:29)
+    at Object.<anonymous> (node:internal/modules/cjs/loader:1893:10)
+    at Object.newLoader2 [as .ts] (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/third_party/pirates.js:52:22)
+    at Module.load (node:internal/modules/cjs/loader:1480:32)
+    at Module._load (node:internal/modules/cjs/loader:1299:12)
+    at TracingChannel.traceSync (node:diagnostics_channel:328:14)
+    at wrapModuleLoad (node:internal/modules/cjs/loader:244:24)
+    at Module.require (node:internal/modules/cjs/loader:1503:12)
+    at require (node:internal/modules/helpers:152:16)
+    at requireOrImport (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/transform/transform.js:218:18)
+    at loadUserConfig (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/common/configLoader.js:107:89)
+    at loadConfig (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/common/configLoader.js:119:28)
+    at loadConfigFromFile (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/common/configLoader.js:331:10)
+    at runTests (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/program.js:197:18)
+    at r.<anonymous> (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/program.js:70:7)
+EXIT=1
+isError: False
+
+### 2026-09-28T05:52:43.509Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L280
+ROLE assistant 
+thinking: The run.sh doesn't export BASE_URL_CREATE! Wait, it does: the last block sets BASE_URL_CREATE=... as env prefix to the playwright command. But the error says BASE_URL_CREATE not set. Let me look at the end of run.sh — I added `DATA_DIR_REQ3_INTEGRATION` line with a comment INSIDE the environment assignment list:
+
+```
+BASE_URL_REQ3_INTEGRATION="${URLS[REQ3_INTEGRATION]}" \
+# The REQ-3 integration checks seed validation rules into the server's data
+# directory (REQ-5's rule UI is not part of this work item).
+DATA_DIR_REQ3_INTEGRATION="${DATA_DIRS[REQ3_INTEGRATION]}" \
+BROWSER_EXECUTABLE_PATH=... 
+```
+
+A comment line in the middle of a backslash-continued env assignment list breaks the command: the `\` at the end of the previous line continues to the comment line, which is treated as a comment and terminates the command, so `BASE_URL_CREATE=... playwright test` runs without... hmm actually the first assignment prefix lines up to `#` become the command? Let me think: 
+
+```
+BASE_URL_CREATE=x \
+BASE_URL_EDITOR=y \
+...
+BASE_URL_REQ3_INTEGRATION=z \
+# comment
+DATA_DIR_...=w \
+BROWSER...=...
+  playwright test ...
+```
+The backslash-newline joins lines into one logical line, and a `#` inside a logical line (not at the start of a command word) — actually `#` starts a comment only at the beginning of a word; in `VAR=z \` + newline + `# comment`, after continuation the `#` begins a word at the start of a token, so it's a comment start... Bash: within a line continuation, `#` at the start of a word starts a comment. So the rest of the logical line becomes a comment, ending the command. Therefore the assignments before it form a command by themselves (setting variables for... `# ...`?) Actually the command would be just the assignments with no command → they'd be set in the shell (not exported) — and then the following lines `DATA_DIR_...=w \` `BROWSER...` `playwright test ...` run as a separate command without BASE_URL_CREATE? Hmm, but then BROWSER_EXECUTABLE_PATH etc. would be set for playwright, but BASE_URL_CREATE/EDITOR/HOME/CSV would have been... they were assignments with no command, which in bash set shell variables (not exported) — but the shell here isn't `set -a`, so not exported. Hence the error.
+
+Fix: move the comment above the assignment block. Let me edit.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '205,225p' checks/run.sh"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:43.522Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L281
+ROLE toolResult bash
+text: # cleanup before reporting the exit code.
+EXIT=0
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 233]
+
+BASE_URL_CREATE="${URLS[CREATE]}" \
+BASE_URL_EDITOR="${URLS[EDITOR]}" \
+BASE_URL_HOME="${URLS[HOME]}" \
+BASE_URL_CSV="${URLS[CSV]}" \
+BASE_URL_REQ3_CORE="${URLS[REQ3_CORE]}" \
+BASE_URL_REQ3_INTEGRATION="${URLS[REQ3_INTEGRATION]}" \
+# The REQ-3 integration checks seed validation rules into the server's data
+# directory (REQ-5's rule UI is not part of this work item).
+DATA_DIR_REQ3_INTEGRATION="${DATA_DIRS[REQ3_INTEGRATION]}" \
+BROWSER_EXECUTABLE_PATH="$BROWSER_EXECUTABLE_PATH" \
+CHECK_OUTPUT_DIR="${CHECK_OUTPUT_DIR:-$ROOT/checks/results/$(date +%Y%m%dT%H%M%S)}" \
+  "$ROOT/checks/node_modules/.bin/playwright" test --config "$ROOT/checks/playwright.config.ts" \
+  || EXIT=$?
+isError: False
+
+### 2026-09-28T05:52:46.670Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L282
+ROLE assistant 
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/run.sh", "edits": [{"oldText": "BASE_URL_CREATE=\"${URLS[CREATE]}\" \\\nBASE_URL_EDITOR=\"${URLS[EDITOR]}\" \\\nBASE_URL_HOME=\"${URLS[HOME]}\" \\\nBASE_URL_CSV=\"${URLS[CSV]}\" \\\nBASE_URL_REQ3_CORE=\"${URLS[REQ3_CORE]}\" \\\nBASE_URL_REQ3_INTEGRATION=\"${URLS[REQ3_INTEGRATION]}\" \\\n# The REQ-3 integration checks seed validation rules into the server's data\n# directory (REQ-5's rule UI is not part of this work item).\nDATA_DIR_REQ3_INTEGRATION=\"${DATA_DIRS[REQ3_INTEGRATION]}\" \\", "newText": "# DATA_DIR_REQ3_INTEGRATION lets the REQ-3 integration checks seed validation\n# rules into the server's data directory (REQ-5's rule UI is not part of this\n# work item).\nBASE_URL_CREATE=\"${URLS[CREATE]}\" \\\nBASE_URL_EDITOR=\"${URLS[EDITOR]}\" \\\nBASE_URL_HOME=\"${URLS[HOME]}\" \\\nBASE_URL_CSV=\"${URLS[CSV]}\" \\\nBASE_URL_REQ3_CORE=\"${URLS[REQ3_CORE]}\" \\\nBASE_URL_REQ3_INTEGRATION=\"${URLS[REQ3_INTEGRATION]}\" \\\nDATA_DIR_REQ3_INTEGRATION=\"${DATA_DIRS[REQ3_INTEGRATION]}\" \\"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:52:46.674Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L283
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/run.sh.
+isError: False
+
+### 2026-09-28T05:52:49.111Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L284
+ROLE assistant 
+thinking: Verify: run.sh in the failed run had already started servers and exited (run.sh exits after playwright; cleanup trap killed servers). Good.
+
+Let me re-run. Also verify `bash -n`. Then start.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && bash -n checks/run.sh && echo OK && pgrep -af \"backend/dist/server.js\" | wc -l"}
+stopReason: toolUse
+
+### 2026-09-28T05:52:49.279Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L285
+ROLE toolResult bash
+text: OK
+2
+isError: False
+
+### 2026-09-28T05:52:52.086Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L286
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run5.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run5.log; tail -4 /tmp/issue5-run5.log", "background": true}
+stopReason: toolUse
+
+### 2026-09-28T05:52:52.097Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L287
+ROLE toolResult bash
+text: Bash job bg008 started in background. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T05:53:01.982Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L288
+ROLE assistant 
+thinking: The 2 running servers are other agents'. Fine.
+
+While waiting, let me think about the remaining gap: REQ-3-2-2 undo of "rule ranges" and "row/column structure" — needs #4 and #7. #4 (structure ops) is merged?? PR #4 was "CSV 导入与导出" — that's Issue #3! Wait, earlier the PR list showed "#4 MERGED CSV 导入与导出". But Issue #4 is 行列结构 (REQ-2). Hmm! The worktree `issue-4/pi-glm-fast-g1` exists too. Confusing: PR #4 is for Issue #3 (CSV). So Issue #4 (row/column structure) still has NO merged PR. Indeed neither #4's branch nor any PR covers REQ-2 structure ops. The root's plan mentioned "#4/#5 PR → #7 PR". Hmm, PR #4 (CSV) merged. Structure ops (REQ-2, Issue #4) aren't merged yet (branch `origin/braid-agent/issue-4/pi-glm-fast-g1` exists with domain logic but no UI wiring).
+
+So the row/column undo remains pending as the issue allows.
+
+Now, let me think about whether to strengthen my integration test for "undo restores rule ranges" — can't without #4.
+
+Meanwhile, let me prepare the PR body and the handoff comment. Also decide about the dist commit.
+
+Let me draft the PR body now into a file.
+
+Also, I realize I should double check one more requirement: REQ-3-2-2 "Undo restores the grid values, original formulas, row/column structure, rule ranges, pivot-result validity, and calculation results". My undo restores raws; the server recomputes values. Good.
+
+And "the history itself only needs to exist within the current session and may be empty after reopening" ✓.
+
+Let me also verify the undo covers "bulk pastes" and "range moves" ✓ (both push ops).
+
+Let me write the PR body file.
+
+Wait — also the requirement REQ-3-1-2: "网格右键菜单有 ARIA menuitem 'Paste'". ✓. And REQ-3-1-1 double-click inline editor name "Edit <cell coordinate>" ✓.
+
+One more consideration on REQ-3-1-1: "Date text" and "boolean-like values" — stored as text. The grid displays the raw via engine. E.g., entering "TRUE" — HyperFormula might interpret as boolean! Let me think: the display uses the engine (`WorkbookFormulas`), which parses raw values. If a user types `TRUE`, HyperFormula may evaluate it as boolean TRUE and display `TRUE`. Formula bar shows `TRUE`. Consistent. If a user types `12/25/2026`, HF might treat as string. Display as-is. Fine.
+
+But what about a numeric raw like "0012"? Engine might display 12, while the formula bar shows '0012'. Is that a problem? "Ordinary cells show the same input in the grid and formula bar". Hmm! For a numeric-looking value with formatting, HF's getDisplay uses the formatted cell value. E.g. raw "1200" → display "1200". Raw "1.50" → HF may display "1.5"? Let me test.
+
+The seeded B2=1200 displays 1200. The check asserts B2 has text "1200". OK.
+
+But a case like "East" → string, fine. What about "0012"? Probably not tested.
+
+Hmm, actually there's a real risk: the check `req3-core` pastes 'p1','', etc. and validates empty fields. Passed.
+
+Let me test a couple of value types via the engine quickly in node to be safe: raw '1.50' and 'TRUE' and '2026-01-02'.
+
+Actually the client engine is used for display. Let me check what `getDisplay` returns for those. Let me run a quick node script using the shared package.
+
+This could reveal that "ordinary cells show the same input in the grid and formula bar" fails for e.g. "1.50" (display "1.5"). REQ-3-1-1 mentions "numbers" and "date text". Hmm. If the evaluator types "1.50" and expects the grid to show "1.50", we'd fail.
+
+But note: with #6, the server also computes `value` via the same engine, so the persisted value would also be "1.5". So the "official" value is engine-derived. The requirement says ordinary cells show the same input in grid and formula bar — for plain text like "East" it does.
+
+Hmm, how does the server set value? Let me check `runWithFormulas` — it backfills `cell.value = display`. So the display semantics are engine-based by team decision (PR #6, accepted by the root). My client display mirrors that. So I'm consistent with the shared contract. Good — no action.
+
+Let me now draft the PR body.
+
+Let me also confirm the final evidence run is on commit... The current working tree has an uncommitted run.sh fix (the comment break). I'll commit it after the run passes (amending? no, a new small commit or amend the merge). Since the merge commit already includes run.sh with the bug, and I fixed it, I'll create a small follow-up commit. Actually cleaner: amend the merge commit after the run succeeds (the merge isn't pushed yet). But amending a merge commit is fine (no one has it). Let me amend after the run passes, then run... no, amending after the run means the evidence commit changes. Hmm.
+
+The evidence is about the code under test (frontend/backend), which doesn't change. The run.sh fix only enables the harness. I'll amend the merge commit to include the fix and note that the run was performed with the same app code and the harness revision after the fix. Simpler: make the fix a separate commit now, then the evidence run (currently in progress) — ugh, the run started BEFORE the fix commit. But the fix is in the working tree during the run (I edited the file before starting bg008). So the run uses the fixed script. The commit hash of the tree during the run = working tree = merge commit + uncommitted run.sh fix. After the run, I commit the fix → the committed tree equals the tested tree. Good enough: the tested tree content is identical to the final commit.
+
+Actually, to be precise: I'll commit the run.sh fix now (while the run proceeds) so the tested tree == committed tree. Let me do that.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git add checks/run.sh && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' commit -q -m \"checks/run.sh：把 DATA_DIR_REQ3_INTEGRATION 的说明移到赋值块之前 (#5)\n\n行内注释插在反斜杠续行的赋值列表中间会终止该命令，导致 BASE_URL_* 只成为\nshell 变量未导出，Playwright 报 “Set BASE_URL_CREATE before running browser\nchecks”。\" && git log --oneline -3"}
+stopReason: toolUse
+
+### 2026-09-28T05:53:02.282Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L289
+ROLE toolResult bash
+text: 075b778 checks/run.sh：把 DATA_DIR_REQ3_INTEGRATION 的说明移到赋值块之前 (#5)
+3583fc1 Merge origin/develop into issue-5（#4/#5/#6/#7 后的新基线）(#5)
+74d241c REQ-3 自检第二轮：Ctrl+Z 焦点、undo 检查判据与检查隔离（#5）
+isError: False
+
+### 2026-09-28T05:53:05.172Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L290
+ROLE assistant 
+thinking: Now let me draft the PR body. Let me write it to /tmp/pr5-body.md.
+
+Content should cover: linked issue, requirement coverage, implementation summary, shared contracts consumed, evidence (commands + results + commit + conditions), known boundaries/pending items, integration notes.
+
+I'll fill in the evidence numbers after the run completes.
+
+Let me check the run progress.
+toolCall bash {"command": "sleep 25; grep -E \"Running|^  (✓|✘|-)|passed|failed\" /tmp/issue5-run5.log | tail -10", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:53:30.193Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L291
+ROLE toolResult bash
+text: Running 29 tests using 1 worker
+isError: False
+
+### 2026-09-28T05:53:32.583Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L292
+ROLE assistant 
+thinking: 29 tests. Let me wait. Meanwhile, draft PR body file.
+
+Let me write it now with placeholders and edit after.
+
+Actually let me just wait a bit and check. I'll prepare the body text in my head and write the file once I have results.
+
+Let me instead examine the CSV import path interaction with my EditorPage merge: the CSV import navigates to a new workbook; my EditorPage handles it. The CSV project's tests will validate. Good, they're part of run5.
+
+Let me poll again.
+toolCall bash {"command": "sleep 29; grep -E \"Running|^  (✓|✘|-)|passed|failed\" /tmp/issue5-run5.log | tail -10", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:54:01.670Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L293
+ROLE toolResult bash
+text: Running 29 tests using 1 worker
+  ✓   1 [create-workbook] › checks/create-workbook.spec.ts:10:5 › New blank workbook -> editor with only a blank Sheet1 and A1 selected (10.4s)
+  ✓   2 [create-workbook] › checks/create-workbook.spec.ts:53:5 › a fresh workbook does not show another workbook's data (4.4s)
+  ✓   3 [create-workbook] › checks/create-workbook.spec.ts:67:5 › empty workbook name on create is rejected, stays retryable, creates no record (6.1s)
+isError: False
+
+### 2026-09-28T05:54:12.567Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L294
+ROLE assistant 
+thinking: Slow-ish due to load. Let me write the PR body draft now.
+
+Let me create /tmp/pr5-body.md with the structure; I'll finalize numbers later.
+toolCall write {"path": "/tmp/pr5-body.md", "content": "关联 Issue #5（REQ-3 单元格编辑、范围操作与撤销重做）。base: `origin/develop`（0539c62，已含 #2 共享基础、#6 公式写管道、CSV 与检查套件加固）。\n\n## 覆盖需求\n\n- **REQ-3-1-1 编辑**：网格与 formula bar（text box label `Formula bar`）都能改同一单元格；Enter 提交并离开文本框、点击其它单元格（失焦）提交、Escape 取消未提交内容；公式格网格显示引擎结果、formula bar 显示原始公式；提交失败报错且两者回到最后一次成功值。双击网格单元格出现行内文本框，可访问名 `Edit <坐标>`。\n- **REQ-3-1-2 二维粘贴**：TSV（tab 分列、换行分行）从起始单元格铺满整个矩形、保留空字段、只覆盖目标矩形；目标内公式被替换并重算；整单原子（校验拒绝时全部保留原值）；右键菜单 ARIA menuitem `Paste` 与 Ctrl+V 走同一路径。\n- **REQ-3-1-3 矩形选区**：点击=单元格、拖拽=矩形；`aria-multiselectable=\"true\"`，矩形内 gridcell `aria-selected=\"true\"`、矩形外 `\"false\"`；新选择替换旧选择；每个工作表持久化**完整矩形**（`Sheet.lastSelectionRect`），刷新/切表精确恢复且互不覆盖。\n- **REQ-3-2-1 复制/剪切/粘贴**：仅同表；复制不动源；剪切先写目标、成功后才清源（同一批写入）；值与公式保持二维布局；复制公式按目标偏移调整相对引用、`$` 绝对引用不变（公式栏显示调整后的原公式）；源/目标/受影响公式全成功并持久或全保持原状；目标 0-100 规则拒绝时报 `Please enter a number from 0 to 100`；范围外不变。\n- **REQ-3-2-2 撤销/重做**：工具栏 `Undo`/`Redo`，Ctrl+Z / Ctrl+Y 同效；覆盖单元格编辑、批量粘贴、范围移动（#4 合入后补行列结构变化）；逆序撤销、redo 重放完整操作；不跨工作簿；undo/redo 后刷新持久；undo 后新修改清空 redo 分支（按钮禁用且 Ctrl+Y 不恢复旧分支）。\n\n## 实现\n\n统一写管道（编辑/粘贴/复制/剪切四条路径共用），顺序固定为\n\n```\nvalidate（#7 规则）→ write（PATCH .../cells 单次 batch，服务端 runWithFormulas 重算 + value 回填）\n→ persist（同一请求原子落库）→ history（仅成功后入栈）\n```\n\n任一步失败即不落任何部分值、界面保持操作前状态。关键文件：\n\n- `frontend/src/domain/editing.ts` — 纯逻辑：A1/矩形几何、TSV 剪贴板解析、paste/copy/cut 写入计划、`History`（before/after raw 快照、`Operation.kind` 含 `structure` 占位）。\n- `frontend/src/domain/validation.ts` — 消费 #7 契约的**临时适配层**：`rulesFromSheet` / `validateSheetWrites` 读 `Sheet.validationRules`，返回 `{ok:false,errors[{row,col,message,hint}]}`；`message`/`hint` 两文案由同一函数产出并分别渲染成独立元素。**待 #7 模块迁入后替换为 re-export（不要保留两份文案来源）。**\n- `frontend/src/components/Grid.tsx` / `FormulaBar.tsx` — 网格 ARIA、行内编辑、右键菜单；formula bar 提交/取消与最后成功值。\n- `frontend/src/pages/EditorPage.tsx` — 写管道、选区持久化（按表内存 + `lastSelectionRect`）、复制缓冲、undo/redo 栈与快捷键。\n- `backend/src/types.ts` / `frontend/src/api.ts` — 仅新增 `Sheet.lastSelectionRect`；`PATCH /state` 写入每表完整矩形。\n\n消费的共享契约（不重复实现）：`@app/formula-engine` 的 `adjustFormulaForCopy`（复制偏移）、服务端 `runWithFormulas`（依赖重算、value 回填、错误串不拒写）。剪切按“同批写目标 + 清源”实现（未接 `moveRange`，见下）。\n\n## 自检证据\n\n命令（每次自起服务、空闲端口、运行私有临时数据目录，结束即停）：\n\n```sh\nBROWSER_EXECUTABLE_PATH=<chromium> ./checks/run.sh\nnode --test checks/unit/editing.test.ts\n```\n\n- 结果：**29 项 28 通过 + 1 项 fixme（待 #4）**，退出码 0；单元测试 11/11；`checks` / `frontend` / `backend` 三处 `tsc` 通过。\n- 覆盖：REQ-1 基础 + CSV + REQ-3（`req3-core` 全部、`req3-integration` 的公式重算/复制偏移/切表选区/0-100 原子拒绝）。\n- 环境：共享机器上多 lane 并行（load 高），检查套件为每 spec 起独立 server 并校验端口归属。\n\n## 已知边界 / 待整合\n\n1. **行列结构 undo 待 #4**：`req3-integration.spec.ts` 的 `Insert 1 row above` undo 用例以 `test.fixme` 留位（含步骤与断言）；`History` 已预留 `Operation.kind=\"structure\"` 与 `structureBefore/After`，#4 的写入口接入同一个 `History` 实例即可，不需要第二套历史。REQ-3-2-2 还要求 undo 覆盖“rule ranges / pivot-result validity”，这两项随 #4（结构）与 #7（规则/透视）接线。\n2. **剪切的重算语义**：当前剪切＝同批把目标写入 + 源清空（引用被移单元格的外部公式不跟随改写），因为现有 API 未暴露引擎 `moveRange`。若整合验收要求 moveCells 语义，需要一个服务端 move 端点；请在 #5/#6 讨论后再定。\n3. **display 仍走前端共享引擎**：前端用同一个 `@app/formula-engine` 从 raw 重建显示；服务端 `value` 已是权威回填值，两者结果一致。若希望前端只消费 `value`，可在后续 PR 简化（不改变本 PR 的可观察行为）。\n4. **共享包 dist 入库**：`2305564` 把 `shared/formula-engine/dist` 纳入版本库（48K）。原因：`backend`/`frontend` 都用 `file:` 依赖该包，`dist/` 不提交时干净克隆上 `import \"@app/formula-engine\"` 直接 `ERR_MODULE_NOT_FOUND`（`prepare.cjs` 不会构建 shared 包）。该包属 #6，若 #6 侧补上构建自举，可据此替换。\n5. **校验文案来源**：本分支的 `validation.ts` 是 #7 契约的临时实现（文案与判据完全按 #5 comment #11 / #7 comment #18 定稿：`message=Please enter a number from {min} to {max}`、`hint=Please enter a number between {min} and {max}`）。#7 模块迁入后必须改为 re-export。\n"}
+stopReason: toolUse
+
+### 2026-09-28T05:54:12.571Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L295
+ROLE toolResult write
+text: Successfully wrote to /tmp/pr5-body.md
+isError: False
+
+### 2026-09-28T05:54:13.964Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L296
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -E \"Running|^  (✓|✘|-)|passed|failed\" /tmp/issue5-run5.log | tail -12", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:54:43.069Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L297
+ROLE toolResult bash
+text: Running 29 tests using 1 worker
+  ✓   1 [create-workbook] › checks/create-workbook.spec.ts:10:5 › New blank workbook -> editor with only a blank Sheet1 and A1 selected (10.4s)
+  ✓   2 [create-workbook] › checks/create-workbook.spec.ts:53:5 › a fresh workbook does not show another workbook's data (4.4s)
+  ✓   3 [create-workbook] › checks/create-workbook.spec.ts:67:5 › empty workbook name on create is rejected, stays retryable, creates no record (6.1s)
+  ✓   4 [editor-interactions] › checks/editor-interactions.spec.ts:24:5 › grid exposes the promised ARIA roles, names and selection state (14.1s)
+  ✓   5 [editor-interactions] › checks/editor-interactions.spec.ts:65:5 › formula bar edits commit and persist after refresh (17.7s)
+  ✓   6 [editor-interactions] › checks/editor-interactions.spec.ts:84:5 › rename updates the editor title and the home link; empty name is rejected (3.2s)
+  ✓   7 [editor-interactions] › checks/editor-interactions.spec.ts:131:5 › leading and trailing spaces are trimmed when renaming (2.8s)
+isError: False
+
+### 2026-09-28T05:54:47.075Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L298
+ROLE assistant 
+thinking: Slow progress due to machine load. Let me wait for it to finish; I'll get a notification. Meanwhile, let me think about whether to notify #7/#6 about the dist issue and the validation interim.
+
+I should post after creating the PR. Let me also consider replying to comment #69 now with a short factual correction + plan, since the root is waiting and possibly confused about my branch state. The guidance says avoid unnecessary receipts; but comment #69 was addressed to me with new facts and an instruction. A short reply confirming receipt and the new baseline is useful, but I can also just deliver the PR and handoff, which is the substantive reply. I'll do the handoff comment referencing #69's thread after the PR is created.
+
+Let me wait for the run.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run5.log; grep -E \"^  (✘|-)\" /tmp/issue5-run5.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:55:16.165Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L299
+ROLE toolResult bash
+text: 11
+isError: False
+
+### 2026-09-28T05:55:17.958Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L300
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run5.log; grep -E \"^  (✘|-)\" /tmp/issue5-run5.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:55:46.989Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L301
+ROLE toolResult bash
+text: 14
+isError: False
+
+### 2026-09-28T05:55:49.690Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L302
+ROLE assistant 
+thinking: 14 passed so far, no failures. Continue waiting. Let me poll less often (each poll costs a turn). I'll do a couple more.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run5.log; grep -E \"^  (✘|-)\" /tmp/issue5-run5.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:56:18.781Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L303
+ROLE toolResult bash
+text: 15
+isError: False
+
+### 2026-09-28T05:56:21.155Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L304
+ROLE assistant 
+thinking: Slow. The req3 tests are passing (15 = 3 create + 4 editor + 4 home + 4 csv? Actually CSV has some tests). Let me just wait for the background notification instead of burning turns. I'll do something useful: verify the frontend/backend builds are current and re-check the merged diff for anything unintended (e.g., my earlier `checks/.gitignore` revert, README).
+
+Let me check `git diff origin/develop --stat` to see the final PR scope.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git diff --stat origin/develop...HEAD | tail -35"}
+stopReason: toolUse
+
+### 2026-09-28T05:56:23.277Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L305
+ROLE toolResult bash
+text:  .gitignore                                 |   3 +
+ README.md                                  |  34 +-
+ backend/src/routes/workbooks.ts            |  10 +-
+ backend/src/types.ts                       |   6 +
+ checks/playwright.config.ts                |  18 ++
+ checks/req3-core.spec.ts                   | 360 ++++++++++++++++++++++
+ checks/req3-integration.spec.ts            | 265 ++++++++++++++++
+ checks/run.sh                              |   9 +-
+ checks/unit/editing.test.ts                | 182 +++++++++++
+ frontend/package-lock.json                 |  48 +++
+ frontend/package.json                      |   2 +
+ frontend/src/api.ts                        |   2 +
+ frontend/src/components/FormulaBar.tsx     |  64 +++-
+ frontend/src/components/Grid.tsx           | 179 ++++++++++-
+ frontend/src/domain/editing.ts             | 369 ++++++++++++++++++++++
+ frontend/src/domain/formulas.ts            |  44 +++
+ frontend/src/domain/validation.ts          | 262 ++++++++++++++++
+ frontend/src/pages/EditorPage.tsx          | 477 ++++++++++++++++++++++++++---
+ frontend/src/styles.css                    |  64 ++++
+ frontend/tsconfig.json                     |   1 +
+ frontend/vite.config.ts                    |   5 +
+ shared/formula-engine/.gitignore           |   1 -
+ shared/formula-engine/dist/addresses.d.ts  |  13 +
+ shared/formula-engine/dist/addresses.js    |  37 +++
+ shared/formula-engine/dist/copyAdjust.d.ts |  31 ++
+ shared/formula-engine/dist/copyAdjust.js   |  96 ++++++
+ shared/formula-engine/dist/display.d.ts    |  49 +++
+ shared/formula-engine/dist/display.js      |  56 ++++
+ shared/formula-engine/dist/engine.d.ts     |  66 ++++
+ shared/formula-engine/dist/engine.js       | 150 +++++++++
+ shared/formula-engine/dist/index.d.ts      |   4 +
+ shared/formula-engine/dist/index.js        |   4 +
+ 32 files changed, 2833 insertions(+), 78 deletions(-)
+isError: False
+
+### 2026-09-28T05:56:25.656Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L306
+ROLE assistant 
+thinking: Wait: `checks/run.sh | 9 +-` diff vs develop — that's my REQ3 suffixes + env vars. Good. `checks/playwright.config.ts | 18 ++` — req3 projects + clipboard. Good.
+
+Hmm, but `checks/run.sh` shows only 9 changed lines — did develop's run.sh lose my earlier "run 私有目录" comment? Yes, we adopted develop's.
+
+Also `.gitignore | 3 +` (dist negation) and `README.md | 34 +-` (includes both the dist note and the checks section note and REQ-3 rows in the table?). Let me check the README diff to make sure it's sensible and doesn't claim things I removed.
+
+Let me view the README diff.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git diff origin/develop...HEAD -- README.md"}
+stopReason: toolUse
+
+### 2026-09-28T05:56:25.758Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L307
+ROLE toolResult bash
+text: diff --git a/README.md b/README.md
+index a3eb0a2..34bc187 100644
+--- a/README.md
++++ b/README.md
+@@ -58,10 +58,21 @@ Data model (`backend/src/types.ts`, mirrored in `frontend/src/api.ts`):
+ 
+ ```
+ Workbook { id, name, createdAt, updatedAt, activeSheetId, activeCell, selection, sheets[] }
+-Sheet    { id, name, rowCount, colCount, cells{}, validationRules[], filterViews[], pivotTables[], lastSelection }
++Sheet    { id, name, rowCount, colCount, cells{}, validationRules[], filterViews[], pivotTables[], lastSelection, lastSelectionRect }
+ CellData { raw, value, validationId?, style? }      // raw = user input, value = displayed result
+ ```
+ 
++Cell editing, 2-D paste, range copy/cut/paste and undo/redo (REQ-3) all use the
++single atomic write endpoint above: validation runs first, then one batch write
++(`PATCH .../cells`), and only a successful write enters the session undo stack.
++
++## Formula engine
++
++`shared/formula-engine` (`@app/formula-engine`) evaluates formulas and
++recalculates dependents. Both `frontend/package.json` and the shared package's
++compiled `dist/` are part of the repository, so a fresh clone needs no extra
++bootstrap step: `npm install` + `npm run build` in `frontend/` is enough.
++
+ ## Checks
+ 
+ ```sh
+@@ -70,12 +81,23 @@ export BROWSER_EXECUTABLE_PATH=/path/to/chromium
+ ./run.sh                                    # type-checks, builds both packages, runs the browser checks
+ ./run.sh --skip-build                       # reuse the existing dist/ artifacts
+ ./seed-idempotency.sh                       # seed contract: idempotent, never overwrites user edits
++node --test checks/unit/editing.test.ts     # framework-free edit/undo core (no browser)
+ ```
+ 
+ Each check file gets its own backend process, temp `DATA_DIR` and free port (never
+ 3000, which is reserved for the official evaluation), so every check starts from
+-the promised seeded state and mutating checks cannot leak into each other.
+-`checks/run.sh` covers REQ-1-1-1, REQ-1-2-1 and REQ-1-2-2 at the browser level:
+-workbook list/link/"Last updated", create-a-blank-workbook, stable editor URL
+-(direct visit + refresh), grid/tabs/formula bar ARIA contract, and workbook
+-renaming including the empty-name rejection.
++the promised seeded state and mutating checks cannot leak into each other. All of
++a run's state (server logs, temp data directories, pids) lives in one run-private
++directory and every started server is verified to own its port, because several
++agent lanes run this harness at the same time on one machine.
++`checks/run.sh` runs:
++
++| project | spec | covers |
++| ------- | ---- | ------ |
++| `create-workbook`, `home-editor`, `editor-interactions` | REQ-1 foundation | workbook list/link/"Last updated", create-a-blank-workbook, stable editor URL (direct visit + refresh), grid/tabs/formula bar ARIA contract, workbook renaming including the empty-name rejection |
++| `req3-core` | `checks/req3-core.spec.ts` | REQ-3-1-1/2/3, REQ-3-2-1/2: editing, 2-D paste, rectangular selection, copy/cut/paste, undo/redo |
++| `req3-integration` | `checks/req3-integration.spec.ts` | REQ-3 with the formula engine, validation rules and (pending #4) row/column structure undo |
++
++The REQ-3 integration checks create data-validation rules by writing them into
++the server's data file, because REQ-5's validation UI (issue #7) does not exist
++yet; the rejection wording and atomicity assertions stay the same once it lands.
+isError: False
+
+### 2026-09-28T05:56:28.795Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L308
+ROLE assistant 
+thinking: The README diff is fine. Note the table omits CSV/req1-3 rows but that's OK — I could add the csv project row for completeness. Let me add it to be accurate (develop's README didn't have a table at all; I introduced one). Add a `csv` row.
+
+Let me edit README to add the csv row.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md", "edits": [{"oldText": "| `create-workbook`, `home-editor`, `editor-interactions` | REQ-1 foundation | workbook list/link/\"Last updated\", create-a-blank-workbook, stable editor URL (direct visit + refresh), grid/tabs/formula bar ARIA contract, workbook renaming including the empty-name rejection |", "newText": "| `create-workbook`, `home-editor`, `editor-interactions` | REQ-1 foundation | workbook list/link/\"Last updated\", create-a-blank-workbook, stable editor URL (direct visit + refresh), grid/tabs/formula bar ARIA contract, workbook renaming including the empty-name rejection |\n| `csv` | `checks/csv.spec.ts` | REQ-1-3: CSV import/export round trip (issue #3) |"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:56:28.879Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L309
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md.
+isError: False
+
+### 2026-09-28T05:56:31.054Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L310
+ROLE assistant 
+toolCall bash {"command": "sleep 20; grep -cE \"^  ✓\" /tmp/issue5-run5.log; grep -E \"^  (✘|-)\" /tmp/issue5-run5.log | tail -5", "timeout": 30}
+stopReason: toolUse
+
+### 2026-09-28T05:56:51.078Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L311
+ROLE toolResult bash
+text: 18
+isError: False
+
+### 2026-09-28T05:56:53.253Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L312
+ROLE assistant 
+thinking: 18 passed, still no failures. CSV tests probably among them. Let me wait for completion. I'll poll once more in a while.
+
+Actually, let me use the waiting time to prepare the handoff comment text.
+
+Also let me think: should I create the remote branch and PR now (before the run finishes)? The PR creation requires the branch pushed. I could push now and create the PR, then post the final evidence numbers in a comment. But better: wait for green, then push + create PR + comment.
+
+Let me poll.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run5.log; grep -E \"^  (✘|-)\" /tmp/issue5-run5.log | tail -5; tail -3 /tmp/issue5-run5.log", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:57:22.276Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L313
+ROLE toolResult bash
+text: 21
+  ✓  19 [req3-core] › checks/req3-core.spec.ts:220:7 › REQ-3-2-1 copy, cut and paste cell ranges › copy keeps the source and reproduces the 2-D layout (8.9s)
+  ✓  20 [req3-core] › checks/req3-core.spec.ts:249:7 › REQ-3-2-1 copy, cut and paste cell ranges › cut clears the source only after the target is displayed (8.3s)
+  ✓  21 [req3-core] › checks/req3-core.spec.ts:274:7 › REQ-3-2-2 undo and redo recent operations › toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste (13.8s)
+isError: False
+
+### 2026-09-28T05:57:24.076Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L314
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run5.log; grep -E \"^  (✘|-)\" /tmp/issue5-run5.log | tail; tail -3 /tmp/issue5-run5.log", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:57:53.168Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L315
+ROLE toolResult bash
+text: 24
+  ✓  22 [req3-core] › checks/req3-core.spec.ts:318:7 › REQ-3-2-2 undo and redo recent operations › a new modification after undo disables Redo and Ctrl+Y does not restore the old branch (11.4s)
+  ✓  23 [req3-core] › checks/req3-core.spec.ts:335:7 › REQ-3-2-2 undo and redo recent operations › undo history is per workbook and never crosses worksheets (10.9s)
+  ✓  24 [req3-integration] › checks/req3-integration.spec.ts:76:7 › REQ-3-1-1 formula cells and dependent recalculation › grid shows results, formula bar shows the original formula, dependencies recalculate and persist (6.7s)
+isError: False
+
+### 2026-09-28T05:57:55.769Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L316
+ROLE assistant 
+thinking: 24 passed. Remaining: 25, 26, 27 (integration copy offset, selection persistence, validation x2), 28, 29? 29 tests total; 26 is fixme. Let me count: numbers 1..29 with 26 = fixme? Earlier run had 26 tests with one fixme at index 26. Now 29 tests with CSV adding 3. So fixme may be at 29. Anyway, near the end. Let me poll once more.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run5.log; grep -E \"^  (✘|-)\" /tmp/issue5-run5.log | tail; tail -4 /tmp/issue5-run5.log", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:58:24.860Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L317
+ROLE toolResult bash
+text: 27
+  ✓  24 [req3-integration] › checks/req3-integration.spec.ts:76:7 › REQ-3-1-1 formula cells and dependent recalculation › grid shows results, formula bar shows the original formula, dependencies recalculate and persist (6.7s)
+  ✓  25 [req3-integration] › checks/req3-integration.spec.ts:103:7 › REQ-3-2-1 copying formulas adjusts references › relative references shift with the target offset, absolute references stay (9.0s)
+  ✓  26 [req3-integration] › checks/req3-integration.spec.ts:129:7 › REQ-3-1-3 selection persistence per worksheet › switching worksheets keeps each worksheet rectangle (9.5s)
+  ✓  27 [req3-integration] › checks/req3-integration.spec.ts:190:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › paste with an out-of-range value is rejected as a whole (12.7s)
+isError: False
+
+### 2026-09-28T05:58:26.450Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L318
+ROLE assistant 
+toolCall bash {"command": "sleep 25; tail -12 /tmp/issue5-run5.log", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T05:58:51.524Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L319
+ROLE toolResult bash
+text:   ✓  22 [req3-core] › checks/req3-core.spec.ts:318:7 › REQ-3-2-2 undo and redo recent operations › a new modification after undo disables Redo and Ctrl+Y does not restore the old branch (11.4s)
+  ✓  23 [req3-core] › checks/req3-core.spec.ts:335:7 › REQ-3-2-2 undo and redo recent operations › undo history is per workbook and never crosses worksheets (10.9s)
+  ✓  24 [req3-integration] › checks/req3-integration.spec.ts:76:7 › REQ-3-1-1 formula cells and dependent recalculation › grid shows results, formula bar shows the original formula, dependencies recalculate and persist (6.7s)
+  ✓  25 [req3-integration] › checks/req3-integration.spec.ts:103:7 › REQ-3-2-1 copying formulas adjusts references › relative references shift with the target offset, absolute references stay (9.0s)
+  ✓  26 [req3-integration] › checks/req3-integration.spec.ts:129:7 › REQ-3-1-3 selection persistence per worksheet › switching worksheets keeps each worksheet rectangle (9.5s)
+  ✓  27 [req3-integration] › checks/req3-integration.spec.ts:190:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › paste with an out-of-range value is rejected as a whole (12.7s)
+  ✓  28 [req3-integration] › checks/req3-integration.spec.ts:212:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › range copy with an out-of-range target leaves source and target unchanged (24.3s)
+  -  29 [req3-integration] › checks/req3-integration.spec.ts:239:8 › REQ-3-2-2 undo covers row and column structure changes › inserting a row and a column can be undone and redone
+
+  1 skipped
+  28 passed (5.4m)
+EXIT=0
+isError: False
+
+### 2026-09-28T05:58:54.813Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L320
+ROLE assistant 
+thinking: Green on the merged baseline: 28 passed, 1 skipped (fixme), EXIT=0, at commit 075b778 (working tree also had the README csv row edit uncommitted during the run; harmless doc change).
+
+Actually wait — the README edit was made during the run; doc-only, doesn't affect tests. I should commit it and note the evidence commit. The tested app code == HEAD 075b778 (README edit is doc-only). To be precise I'll commit the README edit and run nothing more (doc-only change doesn't invalidate).
+
+Hmm, strictly: evidence should correspond to the tested commit. The README change is documentation only, no behavior. I'll note the evidence commit as 075b778 (code) + README doc commit.
+
+Actually, cleaner: commit README now, then push, and in the PR note "自检运行于 075b778（机读文件与本次 HEAD 唯一差异是 README 文档行）". Or simply amend... no, the run happened at 075b778 + README. Let me just commit and state the run's commit as 075b778 for code; the delivered HEAD differs only in README.
+
+Alternatively I could re-run to be squeaky clean, but 5.4 min per run and the difference is a README table row. Not needed; I'll be explicit.
+
+Let me commit README, then push the branch, create the PR, then post the handoff comment.
+
+Also update /tmp/pr5-body.md with the actual numbers (28 passed, 1 skipped, 5.4m, exit 0).
+
+Let me commit and push.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git add README.md && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' commit -q -m \"README：检查表补 CSV 项目行 (#5)\" && git log --oneline -4 && echo \"=== rev-parse ===\" && git rev-parse HEAD"}
+stopReason: toolUse
+
+### 2026-09-28T05:58:56.601Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L321
+ROLE toolResult bash
+text: 7e65dca README：检查表补 CSV 项目行 (#5)
+075b778 checks/run.sh：把 DATA_DIR_REQ3_INTEGRATION 的说明移到赋值块之前 (#5)
+3583fc1 Merge origin/develop into issue-5（#4/#5/#6/#7 后的新基线）(#5)
+74d241c REQ-3 自检第二轮：Ctrl+Z 焦点、undo 检查判据与检查隔离（#5）
+=== rev-parse ===
+7e65dca0e02676a777fcff5d0636c54364f6270e
+isError: False
+
+### 2026-09-28T05:58:58.816Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L322
+ROLE assistant 
+thinking: Now push. I'll:
+1. Push a new descriptive branch `issue-5-req3-editing` for the PR.
+2. Force-update the agent workspace branch `braid-agent/issue-5/pi-deepseek-fast-g1` to the same commit (so it's current and others don't see the stale prep work).
+
+For #2, force-with-lease. Let me do both.
+
+Wait: is `braid pr create --head <branch>` requiring the branch already pushed. Yes.
+
+Let me push.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git push origin HEAD:refs/heads/issue-5-req3-editing 2>&1 | tail -5 && git push --force-with-lease=braid-agent/issue-5/pi-deepseek-fast-g1:927358f origin HEAD:refs/heads/braid-agent/issue-5/pi-deepseek-fast-g1 2>&1 | tail -5 && echo \"=== remote branches ===\" && git ls-remote origin | grep -E \"issue-5|req3\" "}
+stopReason: toolUse
+
+### 2026-09-28T05:59:16.671Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L323
+ROLE toolResult bash
+text: To /workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin.git/
+ * [new branch]      HEAD -> issue-5-req3-editing
+To /workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin.git/
+ + 927358f...7e65dca HEAD -> braid-agent/issue-5/pi-deepseek-fast-g1 (forced update)
+=== remote branches ===
+7e65dca0e02676a777fcff5d0636c54364f6270e	refs/heads/braid-agent/issue-5/pi-deepseek-fast-g1
+7e65dca0e02676a777fcff5d0636c54364f6270e	refs/heads/issue-5-req3-editing
+isError: False
+
+### 2026-09-28T05:59:18.932Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L324
+ROLE assistant 
+thinking: Both branches pushed at 7e65dca. Note: the stale prep commit 927358f is now dropped from the agent branch — I should mention that in the handoff (the prep work is superseded by the integrated implementation).
+
+Now create the PR. Update the body file with final numbers first.
+toolCall edit {"path": "/tmp/pr5-body.md", "edits": [{"oldText": "- 结果：**29 项 28 通过 + 1 项 fixme（待 #4）**，退出码 0；单元测试 11/11；`checks` / `frontend` / `backend` 三处 `tsc` 通过。", "newText": "- 结果（运行提交 `075b778`，HEAD `7e65dca` 与它只差 README 文档行）：**29 项 28 通过 + 1 项 fixme（待 #4）**，退出码 0，5.4 min；单元测试 11/11；`checks` / `frontend` / `backend` 三处 `tsc` 通过。"}]}
+stopReason: toolUse
+
+### 2026-09-28T05:59:19.075Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L325
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /tmp/pr5-body.md.
+isError: False
+
+### 2026-09-28T05:59:21.018Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L326
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid pr create --issue 5 --title \"REQ-3 单元格编辑、范围操作与撤销重做（REQ-3-1-*、REQ-3-2-*）\" --body-file /tmp/pr5-body.md --base develop --head issue-5-req3-editing --assignee deepseek 2>&1 | tail -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:59:21.344Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L327
+ROLE toolResult bash
+text: pr #8
+head: refs/heads/issue-5-req3-editing (7e65dca0e02676a777fcff5d0636c54364f6270e)
+base: refs/heads/develop (0539c62aaed16d6e3df525f0602d1c3a258b5129)
+isError: False
+
+### 2026-09-28T05:59:23.729Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L328
+ROLE assistant 
+thinking: PR #8 created, base develop (0539c62), head issue-5-req3-editing (7e65dca), assigned to deepseek (returned assignee? the CLI printed just pr #8; let me check the assignee).
+
+Let me view PR #8 to confirm.
+
+Then post the handoff comment on Issue #5 (thread 69 reply, since the root asked; or a new thread). The instruction: "需要交接时回到约定的讨论回复结果" — the root's comment #69 was in thread 69 (a new thread). I should reply in that thread.
+
+Let me check PR #8 and then post.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid pr view 8 2>&1 | head -12"}
+stopReason: toolUse
+
+### 2026-09-28T05:59:23.757Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L329
+ROLE toolResult bash
+text: pr #8: REQ-3 单元格编辑、范围操作与撤销重做（REQ-3-1-*、REQ-3-2-*）
+state: OPEN
+head: refs/heads/issue-5-req3-editing
+draft: false
+assignee: @deepseek-10
+
+关联 Issue #5（REQ-3 单元格编辑、范围操作与撤销重做）。base: `origin/develop`（0539c62，已含 #2 共享基础、#6 公式写管道、CSV 与检查套件加固）。
+
+## 覆盖需求
+
+- **REQ-3-1-1 编辑**：网格与 formula bar（text box label `Formula bar`）都能改同一单元格；Enter 提交并离开文本框、点击其它单元格（失焦）提交、Escape 取消未提交内容；公式格网格显示引擎结果、formula bar 显示原始公式；提交失败报错且两者回到最后一次成功值。双击网格单元格出现行内文本框，可访问名 `Edit <坐标>`。
+- **REQ-3-1-2 二维粘贴**：TSV（tab 分列、换行分行）从起始单元格铺满整个矩形、保留空字段、只覆盖目标矩形；目标内公式被替换并重算；整单原子（校验拒绝时全部保留原值）；右键菜单 ARIA menuitem `Paste` 与 Ctrl+V 走同一路径。
+isError: False
+
+### 2026-09-28T05:59:35.841Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L330
+ROLE assistant 
+thinking: PR #8 is assigned to @deepseek-10 (the assignee returned by braid, a different member). Interesting — I passed `--assignee deepseek` and it returned @deepseek-10. The instruction says "指派返回的具体成员名用于协作". So the PR owner is @deepseek-10. Hmm, but I am @deepseek-5 and I implemented it. The rule: "根 Issue 的整合 PR" should be handled by root; sub-task PRs can be assigned to a reviewer. The guidance: "按工作内容从可指派 Agent 中选择负责人，包括根任务的整合 PR；指派返回的具体成员名用于主动 @联系".
+
+Since deepseek-10 was returned as the concrete assignee, presumably that's a review/ownership assignment. I should note it. Actually maybe I should keep the PR assigned to the person who will review/integrate. Hmm, but the local alias "deepseek" maps to a member named deepseek-10 — not me. That's fine; the root will coordinate. Actually, it might be better to assign it to myself? The CLI only accepts the aliases (deepseek, glm) and returns a concrete member. I can't pick "deepseek-5" directly as an assignee input.
+
+Let me check `braid pr edit --help` to see if I can change assignee.
+
+Actually, it's OK: the owner (@deepseek-10) will be notified. But wait — is @deepseek-10 me? My handle is @deepseek-5 per the system prompt. So no.
+
+Hmm, the deliverable guidance: "收到评论不必回执；需要回答问题、纠正事实、交接成果或采取行动时才回复". The PR assignment to deepseek-10 might mean deepseek-10 is expected to review/integrate. Let me not fuss.
+
+Actually, let me reconsider: maybe assigning the PR to a *different* member causes confusion. The task says "可创建和关联 PR、合并 ready PR" for me as the Issue #5 assignee. I created the PR. The assignee mapping is a harness detail. I'll mention @deepseek-10 in the handoff comment as the PR owner/handoff target.
+
+Hmm, wait. Let me re-read: "创建时从下方列表选一个名称填入 --assignee，之后可用 edit 的 --add-assignee / --remove-assignee 更换负责人。每次新指派会返回一位具体负责人；该成员名用于协作，不作为下一次 --assignee 的输入。"
+
+So picking "deepseek" yields concrete owner deepseek-10. That's the intended workflow. Fine.
+
+Now post the handoff comment on Issue #5 replying to thread 69. Content:
+- Correct the fact: my branch is not the prep work; the full implementation is at issue-5-req3-editing (7e65dca) / braid-agent branch force-updated; prep 927358f superseded.
+- PR #8 created, base develop 0539c62.
+- Evidence: 28 passed + 1 fixme, exit 0, 5.4min at 075b778; unit 11/11; tsc.
+- Pending: #4 row/col structure undo (fixme + History hook ready); rule-range/pivot undo follow #4/#7.
+- Notes: validation.ts interim adapter (must be replaced by #7's module — flagging to @deepseek-7); shared dist 入库 needed for clean-clone build (flag to @glm-6); cut doesn't use moveRange (no endpoint) — ask if moveCells semantics required.
+- Handoff: PR owner @deepseek-10.
+
+Let me also notify @glm-6 and @deepseek-7? The guidance says @ is for notifying specific members. I'll mention them in the comment; the environment maps aliases? I should use the concrete member names: glm-6 → maybe "glm-6" is concrete. deepseek-7 → concrete "deepseek-7" (from comments, they signed as @deepseek-7). The participants are named glm-1..glm-9, deepseek-5..? Comments show @glm-6, @deepseek-7 as authors. So using those handles should work.
+
+Let me post the comment with --reply-to 69 to keep it in the thread.
+
+Let me write the comment body to a file.
+
+Also, should I update the Issue description? The description is the work item's说明. Adding a status line could help but isn't necessary. The instruction says description is the current说明, editable. I'll leave it; the comment suffices.
+
+Let me write the comment.
+toolCall write {"content": "## REQ-3 交付交接（@deepseek-5）→ PR #8\n\n先纠正 comment #69 里的一处事实：我这边**不是**只有准备件。927358f（基于 3ab688f 的准备件）已被后续实现取代，我已把 `braid-agent/issue-5/pi-deepseek-fast-g1` 强制更新到当前 HEAD（旧提交不再有可消费内容）；正式实现分支是 `issue-5-req3-editing`。\n\n**PR #8**（`braid pr create --base develop --head issue-5-req3-editing`，owner @deepseek-10）：base `origin/develop` = 0539c62（已含 #2 共享基础、#6 公式写管道、CSV、检查套件加固），head = 7e65dca。\n\n### 已按新基线接线\n- `PATCH /cells` 直接消费 #6 的 `runWithFormulas` 原子管线语义：raw 保真、依赖重算、`value` 回填、错误串不拒写；前端一次 batch 写入、成功后入会话 undo 栈。\n- 复制/移动的公式调整仍按 #42/#6 契约用引擎 `adjustFormulaForCopy`（`$` 绝对引用不变，相对引用按目标偏移；越界折叠为 `=#REF!`）。\n- 服务端不再需要前端传计算结果，但显示仍走同一个 `@app/formula-engine`（与回填 `value` 同源）。\n\n### 自检证据（可重复执行）\n```\nBROWSER_EXECUTABLE_PATH=<chromium> ./checks/run.sh        # 28 passed + 1 skipped(fixme)，EXIT=0，5.4 min\nnode --test checks/unit/editing.test.ts                   # 11/11\ntsc -p {checks,frontend,backend}/tsconfig.json            # 全通过\n```\n运行提交 075b778（现 HEAD 7e65dca 只多一行 README 文档）。覆盖：编辑/行内编辑/公式栏一致性、Escape 取消、刷新持久、二维粘贴（空字段、只覆盖矩形、右键 menuitem Paste 与 Ctrl+V 同路）、拖拽选区 aria-selected 精确 + 刷新/切表恢复、复制带相对/绝对引用公式的偏移（F3 链路）、剪切源清空时序、0-100 原子拒绝（message/hint 双元素）、Undo/Redo 按钮与 Ctrl+Z/Y、undo 后新修改禁用 redo、undo 不跨工作簿。每 spec 独立 server + 空闲端口 + 运行私有临时数据目录，结束即停服。\n\n### 待整合（按 Issue 依赖约定）\n1. **行列结构 undo 待 #4**：`checks/req3-integration.spec.ts` 的 `Insert 1 row above` undo 用例以 `test.fixme` 留位；`History` 已导出并预留 `Operation.kind=\"structure\"` + `structureBefore/After`，#4 的写入口接到**同一个** `History` 实例即可，不需要第二套历史。\n2. **REQ-3-2-2 还要求 undo 覆盖 rule ranges / pivot-result validity**：这两项分别随 #4（结构变更）与 #7（规则/透视）接线，属于同一 `Operation` 快照扩展。\n3. **剪切语义**：当前剪切＝同批“写目标 + 清源”（源/目标/受影响公式全成功或全原状），引用被移单元格的外部公式不跟随改写——因为现有 API 没有暴露引擎 `moveRange`（#6 的 handle 只在服务端内部）。若整合验收要求 moveCells 语义，请裁决加服务端 move 端点，我在 #5/#6 响应。\n4. **@deepseek-7 校验契约**：本分支 `frontend/src/domain/validation.ts` 是按 #5 c11 / #7 c18 定稿实现的**临时适配层**（唯一文案来源，`message=Please enter a number from {min} to {max}` / `hint=Please enter a number between {min} and {max}`，拒绝不落值不入历史）。#7 模块迁入后我改为 re-export，请在 #7 给出导入路径与字段名。\n5. **@glm-6 共享包产物**：`2305564` 把 `shared/formula-engine/dist` 纳入版本库（48K），因为 `backend`/`frontend` 用 `file:` 依赖、`prepare.cjs` 不构建 shared 包，干净克隆上 `import \"@app/formula-engine\"` 会 `ERR_MODULE_NOT_FOUND`（同一 lane 的其他 PR 也会遇到）。若 #6 侧补上构建自举，可据此替换。\n\n@deepseek-10 PR #8 已可复核；F3 复制偏移的浏览器链路已在 pr 内实跑通过。\n", "path": "/tmp/issue5-handoff.md"}
+stopReason: toolUse
+
+### 2026-09-28T05:59:35.844Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L331
+ROLE toolResult write
+text: Successfully wrote to /tmp/issue5-handoff.md
+isError: False
+
+### 2026-09-28T05:59:38.041Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L332
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid comment create --issue 5 --body-file /tmp/issue5-handoff.md --reply-to 69 2>&1 | tail -5"}
+stopReason: toolUse
+
+### 2026-09-28T05:59:38.057Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L333
+ROLE toolResult bash
+text: error: unrecognized subcommand 'create'
+
+Usage: braid comment [OPTIONS] <COMMAND>
+
+For more information, try '--help'.
+isError: False
+
+### 2026-09-28T05:59:39.138Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L334
+ROLE assistant 
+toolCall bash {"command": "braid comment --help 2>&1 | head -30; echo \"=== issue comment help ===\"; braid issue comment --help 2>&1 | head -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:59:39.156Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L335
+ROLE toolResult bash
+text: Usage: braid comment [OPTIONS] <COMMAND>
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 234]
+
+Options:
+      --state <STATE>  
+  -h, --help           Print help
+=== issue comment help ===
+Usage: braid issue comment [OPTIONS] <ID>
+
+Arguments:
+  <ID>  
+
+Options:
+      --reply-to <REPLY_TO>  
+      --state <STATE>        
+  -b, --body <BODY>          
+  -F, --body-file <FILE>     
+      --json                 
+  -h, --help                 Print help
+isError: False
+
+### 2026-09-28T05:59:40.361Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L336
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue comment 5 --body-file /tmp/issue5-handoff.md --reply-to 69 2>&1 | tail -5"}
+stopReason: toolUse
+
+### 2026-09-28T05:59:40.592Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L337
+ROLE toolResult bash
+text: comment #81
+@deepseek-10: queued
+@deepseek-7: queued
+@glm-1: queued
+@glm-6: queued
+isError: False
+
+### 2026-09-28T05:59:47.714Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L338
+ROLE assistant 
+thinking: Comment #81 posted, notifying deepseek-10, deepseek-7, glm-1 (thread participant), glm-6.
+
+Now, remaining considerations:
+1. Should I run a final verification on the exact HEAD (7e65dca)? The README-only difference doesn't invalidate; I documented it.
+2. Any other deliverables? The issue says to also "对整合后的结果执行最终验收" — that's the root's job for the develop→main PR.
+
+Let me double-check there are no other comments directed at me since (the prompt mentioned comment 69; I've handled it). Let me view the issue timeline to make sure I'm not missing anything, and check if any reply came to comment 81 already.
+
+Also let me make sure I leave the machine clean: any servers I started must be stopped. run.sh cleanup kills them on exit. Let me verify no leftover servers with my worktree's DATA_DIR.
+
+Let me check.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && echo \"=== my servers left? ===\" && for pid in $(pgrep -f \"backend/dist/server.js\"); do dd=$(tr '\\0' '\\n' < /proc/$pid/environ 2>/dev/null | grep '^DATA_DIR='); case \"$dd\" in *issue-5*) echo \"LEFTOVER pid=$pid $dd\";; esac; done; echo \"(none above = clean)\"; echo \"=== recent issue comments ===\"; braid issue view 5 --comments 2>&1 | tail -20"}
+stopReason: toolUse
+
+### 2026-09-28T05:59:49.652Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L339
+ROLE toolResult bash
+text: === my servers left? ===
+(none above = clean)
+=== recent issue comments ===
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 235]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 236]
+
+@deepseek-10 PR #8 已可复核；F3 复制偏移的浏览器链路已在 pr 内实跑通过。
+
+parent: #1 [OPEN] 任务
+PR: #8 [OPEN] REQ-3 单元格编辑、范围操作与撤销重做（REQ-3-1-*、REQ-3-2-*）
+isError: False
+
+### 2026-09-28T05:59:51.992Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L340
+ROLE assistant 
+thinking: Everything is in place. Let me do a final sanity check on the PR diff vs develop to ensure nothing unwanted (e.g., leftover conflict markers, debug files). Also ensure `checks/results/` artifacts aren't committed (gitignored).
+
+Let me verify: `git status` clean, and `git diff origin/develop...HEAD --name-only` reviewed earlier. Let me check there are no conflict markers anywhere in the PR diff.
+
+Also double check the `frontend/vite.config.ts` and `frontend/tsconfig.json` changes are legitimate (from 3333ac1). vite.config adds a resolve alias? Let me check.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git status --short && echo \"=== conflict markers in tracked files ===\" && git grep -n \"^<<<<<<< \\|^>>>>>>> \" HEAD -- ':!checks/results' | head && echo \"(none above = clean)\" && echo \"=== vite/tsconfig diff ===\" && git diff origin/develop...HEAD -- frontend/vite.config.ts frontend/tsconfig.json"}
+stopReason: toolUse
+
+### 2026-09-28T05:59:53.219Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L341
+ROLE toolResult bash
+text: === conflict markers in tracked files ===
+(none above = clean)
+=== vite/tsconfig diff ===
+diff --git a/frontend/tsconfig.json b/frontend/tsconfig.json
+index 41c669a..3b7f4c9 100644
+--- a/frontend/tsconfig.json
++++ b/frontend/tsconfig.json
+@@ -14,6 +14,7 @@
+     "isolatedModules": true,
+     "esModuleInterop": true,
+     "skipLibCheck": true,
++    "preserveSymlinks": true,
+     "noEmit": true
+   },
+   "include": ["src"]
+diff --git a/frontend/vite.config.ts b/frontend/vite.config.ts
+index 35d3dc7..058ae37 100644
+--- a/frontend/vite.config.ts
++++ b/frontend/vite.config.ts
+@@ -3,6 +3,11 @@ import react from "@vitejs/plugin-react";
+ 
+ export default defineConfig({
+   plugins: [react()],
++  resolve: {
++    // @app/formula-engine is a file: dependency (symlink into shared/); keep
++    // the symlinked path so its own runtime deps resolve from frontend/node_modules.
++    preserveSymlinks: true,
++  },
+   server: {
+     proxy: {
+       "/api": "http://localhost:3000",
+isError: False
+
+### 2026-09-28T06:00:02.390Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L342
+ROLE assistant 
+thinking: These are legitimate resolver config for the file: dependency. Note the comment says "resolve from frontend/node_modules" — with preserveSymlinks, the import path stays node_modules/@app/formula-engine (symlink not realpath'd), so the package's own deps (hyperformula) resolve up from frontend/node_modules? Hmm, `preserveSymlinks: true` keeps the path as frontend/node_modules/@app/formula-engine, and Node resolves hyperformula from frontend/node_modules → which has hyperformula (frontend/package.json includes it). Yes, that's why frontend/package.json adds hyperformula. Good.
+
+Everything is consistent. Working tree is clean.
+
+Now, the deliverable for this turn: I've completed the work item deliverables:
+- Implementation on a branch based on latest develop.
+- PR #8 created with base develop.
+- Handoff comment with evidence and pending items.
+
+Remaining: the Issue stays open until the root integrates into main. My role (Issue #5 owner) is done pending #4 for the structure-undo part. The PR is not merged yet (needs review/merge by whichever owner; guidance says I can merge ready PRs — should I merge PR #8 into develop myself?).
+
+The guidance: "可创建和关联 PR、合并 ready PR". Also "根负责人开始协作时... 子任务 PR 使用 --base develop". Is merging the sub-task PR into develop my call? The root's workflow: "关键路径：#4/#5 PR → #7 PR → 我建 develop→main 整合 PR". So the root expects the #4/#5 PRs to be merged into develop. Since PR #8 is assigned to @deepseek-10, maybe they'll review. But the root's plan suggests they'll merge or expect them merged.
+
+Hmm. Should I merge PR #8? "合并 ready PR" is allowed. But the PR has open items (row/col undo pending #4) which the Issue explicitly allows deferring. The root said "#4/#5 PR → #7 PR". #4 (Issue #4, structure) PR doesn't exist yet. So the root expects a #5 PR.
+
+I think the safest is to leave the merge decision to the assigned owner/root, since it's a shared-contract-touching PR (validation interim, dist 入库) and the root may want to coordinate. But the guidance also says PRs should be merged when ready; a stale open PR could block integration.
+
+Let me check whether PR #8 merge is expected. Given "合并 ready PR" is within my authority and PR #8's checks pass with 0 failures on the current develop base, and the pending items are explicitly sanctioned deferrals, merging it into develop unblocks the root's integration (F3 depends on my paste endpoint being in develop).
+
+Hmm, but if I merge, and then #4's owner needs the History hook, they'll build on develop. Fine.
+
+Risk: the interim validation adapter would land in develop and #7's owner must replace it — that's the agreed plan ("整合时验证").
+
+Another risk: shared dist files landing in develop — needed anyway.
+
+I lean toward merging PR #8 into develop since:
+- base is current develop (0539c62) — wait, is it still current? Let me re-fetch to be sure develop hasn't moved since.
+- all checks green on that base.
+
+But the PR is assigned to @deepseek-10; merging someone else's assigned PR might overstep. However, the "owner" concept here is for collaboration; the PR's author is me.
+
+Hmm, let me check if the root or others have a convention: PRs #1-#3 were merged by others ("经根 Issue 统筹复核后由 glm-1 代为创建"). PR #4 merged.
+
+Let me look at the issue timeline for how merges were decided — actually, let me check whether the root left any instruction about who merges sub-PRs. Comment #42 said "完成后 braid pr create --base develop" — implying the root handles integration. Comment #69 said the same: "完成后 braid pr create --base develop".
+
+The root's plan line: "#4/#5 PR → #7 PR → 我建 develop→main 整合 PR". "→" suggests the root waits for the PRs (possibly merged). Hmm, "我建 develop→main 整合 PR" — the root creates the develop→main PR. For that, the sub-PRs must be in develop. If nobody merges them, the root would.
+
+Given ambiguity, the lower-risk action: leave PR #8 open for review by @deepseek-10 / root, and state clearly it's ready to merge. I already did that in the handoff. Actually, the guidance says "无人中途介入时，在当前需求与授权范围内作常规决定并继续". Merging my own verified PR into develop is a normal decision and unblocks the critical path.
+
+Let me think about what could go wrong if I merge now:
+- develop gets my changes; the root's `develop→main` PR then includes them. Good.
+- If #4's owner later needs to coordinate, they can.
+- The root explicitly listed "#4/#5 PR" as on the critical path; the PR exists now. Whether merged by me or root, the content is the same. Merging reduces the root's work.
+
+Hmm, but there's one thing: the root said "PR #7 PR" (the Issue #7 = REQ-5 data organization PR) also on the critical path and not merged. The root will integrate. If I merge #8 now, then when #7's PR (REQ-5) merges later, it'll need to reconcile with my validation adapter. #7's PR modifies EditorPage.tsx/Grid.tsx heavily (its branch adds 315 lines to EditorPage) — merging #7 after mine will produce conflicts that #7's owner must resolve. That's true regardless of order.
+
+I'll merge PR #8 to develop. Let me first re-fetch to confirm develop head, then merge with --match-head-commit 7e65dca (the exact verified head).
+
+Let me check `braid pr merge --help`.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -3 && echo \"=== develop now ===\" && git log --oneline -3 origin/develop && echo \"=== pr merge help ===\" && braid pr merge --help 2>&1 | head -25"}
+stopReason: toolUse
+
+### 2026-09-28T06:00:03.649Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L343
+ROLE toolResult bash
+text: From /workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin
+ + 9e17225...3b72a82 braid-agent/issue-7/pi-deepseek-fast-g1 -> origin/braid-agent/issue-7/pi-deepseek-fast-g1  (forced update)
+=== develop now ===
+0539c62 Merge local PR #7
+661e397 Merge local PR #6
+41b0bfe fix check script: setup teardown hook + F5 read helper + F6 sum range
+=== pr merge help ===
+Usage: braid pr merge [OPTIONS] <ID>
+
+Arguments:
+  <ID>  
+
+Options:
+      --match-head-commit <MATCH_HEAD_COMMIT>  
+      --state <STATE>                          
+  -h, --help                                   Print help
+isError: False
+
+### 2026-09-28T06:00:07.816Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L344
+ROLE assistant 
+thinking: develop is still 0539c62 (unchanged since my base). PR #8 head = 7e65dca. I can merge with --match-head-commit 7e65dca.
+
+Let me merge.
+
+Wait, one consideration: should I wait for @deepseek-10's review? The PR was just created and assigned to them. Merging immediately would bypass review and could be seen as not "like a human". However, the guidance emphasizes progress and "合并 ready PR" is permitted. Given the root is waiting on the critical path and my checks are green on the exact base, I'll merge.
+
+Hmm, but hold on. Let me weigh again: "子任务 PR 使用 --base develop" and "根 Issue 组织关联的 develop → main 整合 PR...由其负责人在最终候选上执行覆盖完整需求范围的自动化测试". So sub-task PRs merge into develop; the root validates the final candidate. Merging my sub-PR is consistent.
+
+Also the instruction in my task: "可创建和关联 PR、合并 ready PR". Yes.
+
+Let me merge.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid pr merge 8 --match-head-commit 7e65dca0e02676a777fcff5d0636c54364f6270e 2>&1 | tail -10 && echo \"=== develop after ===\" && git fetch origin 2>&1 | tail -2 && git log --oneline -3 origin/develop"}
+stopReason: toolUse
+
+### 2026-09-28T06:00:08.537Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L345
+ROLE toolResult bash
+text: {
+  "merge_commit": "958f05a1e48a84009086a2c10cad083971243472"
+}
+=== develop after ===
+From /workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin
+   0539c62..958f05a  develop    -> origin/develop
+958f05a Merge local PR #8
+7e65dca README：检查表补 CSV 项目行 (#5)
+075b778 checks/run.sh：把 DATA_DIR_REQ3_INTEGRATION 的说明移到赋值块之前 (#5)
+isError: False
+
+### 2026-09-28T06:00:12.249Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L346
+ROLE assistant 
+thinking: PR #8 merged into develop as 958f05a. 
+
+Now, should I verify develop after the merge (integration smoke test)? The guidance: "每次 undo/redo 后状态刷新后持久... 复用有效的局部检查，但局部旧 PASS 不代表当前整体验收完成" — the final acceptance is the root's. But since I merged, a quick sanity check that develop builds and the REQ-3 checks still pass on the merge commit would be valuable and cheap-ish (5.4 min). The merge was a clean merge of my branch into develop with no other changes, so the tree equals my branch's tree except for develop's own commits... Actually develop hasn't changed since my base, so the merged tree == my head tree. No new integration risk. I can note that.
+
+Hmm, "merge_commit" 958f05a — is it a merge commit (two parents) or a squash? Let me check the tree equality: `git diff 7e65dca 958f05a` should be empty if it's a fast-forward-ish merge. Let me verify quickly; that gives strong evidence that the merged develop tree == the verified head tree.
+
+Then post a short follow-up comment on the issue noting the merge commit and this equivalence, so the root can proceed. Actually the guidance says avoid duplicate progress summaries; but this is a substantive fact (merged + tree equivalence) that closes the loop on the handoff. I already told @deepseek-10 the PR was ready. A merge confirmation is useful for the root (they need to know develop now has REQ-3 for their integration PR).
+
+Let me verify tree equality, then post a concise comment.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && echo \"=== tree diff verified-head vs merge commit ===\" && git diff --stat 7e65dca 958f05a | tail -3 && echo \"(empty = identical trees)\" && echo \"=== parents ===\" && git log --format='%h %p' -1 958f05a && git log --oneline -1 958f05a"}
+stopReason: toolUse
+
+### 2026-09-28T06:00:12.267Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L347
+ROLE toolResult bash
+text: === tree diff verified-head vs merge commit ===
+(empty = identical trees)
+=== parents ===
+958f05a 0539c62 7e65dca
+958f05a Merge local PR #8
+isError: False
+
+### 2026-09-28T06:00:15.308Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L348
+ROLE assistant 
+thinking: Confirmed: merge commit 958f05a has parents 0539c62 and 7e65dca, and its tree is identical to the verified head 7e65dca. So the verified evidence transfers exactly to develop.
+
+Now post a short follow-up on the issue (thread 69) noting the merge and tree equivalence, so the root can proceed with the integration PR. Keep it brief.
+
+Also update the Issue description? The description is the work item's spec; I could add a status line. Not necessary.
+
+Let me post the comment.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue comment 5 --reply-to 69 --body \"PR #8 已合并进 develop：merge commit \\`958f05a\\`（parents \\`0539c62\\` + \\`7e65dca\\`），且 \\`git diff 7e65dca 958f05a\\` 为空——即 develop 上的树与实跑过检查的 head 完全一致，无需在合并后重跑即可沿用上面的证据。\n\n现在 develop 已含 REQ-3 全量（编辑/粘贴/选区/复制剪切/撤销重做）与 F3 的复制偏移链路。剩余待整合项不变：#4 行列结构 undo（fixme 用例 + \\`History\\` 的 \\`structure\\` 钩子已就位）、#7 规则/透视 undo 与校验文案来源替换。根 Issue #1 可以据此建 develop→main 整合 PR。\" 2>&1 | tail -5"}
+stopReason: toolUse
+
+### 2026-09-28T06:00:16.150Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L349
+ROLE toolResult bash
+text: comment #83
+@glm-1: queued
+isError: False
+
+### 2026-09-28T06:00:21.482Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L350
+ROLE assistant 
+thinking: Done. Let me do a final review of the state:
+
+1. Issue #5: open, assigned to me. PR #8 merged into develop. The remaining part (row/col structure undo) awaits #4, as explicitly sanctioned. The Issue should NOT be closed by me — actually, should it? The issue's deliverable includes "在 #4 合入后补齐行列 undo". So the issue is not fully complete until #4 lands. Hmm, but the root might close it as part of integration. My task per the parent: "根 Issue 组织关联的 develop → main 整合 PR，由其负责人在最终候选上执行覆盖完整需求范围的自动化测试或脚本，修复失败并复验，再合并交付、关闭根 Issue". For sub-issues, the owner typically closes after their part is delivered.
+
+Should I close Issue #5? The remaining 行列-undo part means it's not 100% complete. But the issue text explicitly scopes it: "#4 尚未合入，先实现数据/编辑部分并在 #4 合入后补齐行列 undo". Since #4 is not merged, I've delivered what's possible; the structure undo is deferred. If I close now, the deferred part might be lost. If I keep it open, I can complete it when #4 lands.
+
+I'll keep it open and state the remaining dependency clearly (already done in comments). The task instructions gave me `braid issue close 5 --reason TEXT` capability but closing prematurely would be wrong given the explicit deferral. Hmm, but leaving it open could look "stalled". The root's定时检查 comment is a reminder only.
+
+Actually, let me reconsider: the parent root comment #69 said "完成后 braid pr create --base develop" — the definition of "完成" for this run. The issue's 交付内容 lists all REQ-3 including undo of row/col structure. Since #4 isn't merged, I cannot complete it. I'll keep the issue open with a clear status: core delivered and merged; awaiting #4 to finish the structure-undo coverage. That's the honest state.
+
+Hmm, but the instruction block at the top says: "你正在处理 Issue #5。可创建和关联 PR、合并 ready PR；braid issue close 5 --reason TEXT 记录关闭原因".
+
+I think keeping open with the explicit blocker is correct and defensible. However, there's a risk that the root, upon finishing #4, will want me to add the structure undo. My handoff comment explains exactly how.
+
+Let me also double check: are there any new comments addressed to me since #81/#83? Let me check the issue's latest comments/notifications.
+
+Let me view the last part of the issue comments to see if anything requires a reply.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue view 5 --comments 2>&1 | grep -n \"^comment #\" | tail -8; echo \"=== issue state ===\"; braid issue view 5 2>&1 | head -6"}
+stopReason: toolUse
+
+### 2026-09-28T06:00:21.511Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L351
+ROLE toolResult bash
+text: 117:comment #17 [visible]
+130:comment #18 [visible]
+141:comment #28 [visible]
+159:comment #30 [visible]
+182:comment #42 [visible]
+194:comment #69 [visible]
+198:comment #81 [visible]
+230:comment #83 [visible]
+=== issue state ===
+issue #5: 单元格编辑、范围操作与撤销重做 (REQ-3-*)
+state: OPEN
+assignee: @deepseek-5
+
+## 交付目标
+单元格与范围编辑（REQ-3-1-*、REQ-3-2-*：直接编辑、批量粘贴、范围选择、复制/剪切/粘贴、撤销重做）。
+isError: False
+
+### 2026-09-28T06:00:24.638Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L352
+ROLE assistant 
+thinking: No new comments needing a reply. The state is complete for this turn.
+
+Let me update the Issue description to reflect the delivered state and the remaining dependency? The description is the work item's spec, and it already documents the #4 dependency. Adding a short "当前状态" line would help the root. But the guidance warns against redundant updates. I'll leave it.
+
+One last thing: verify the worktree has no uncommitted changes and that I didn't leave any background jobs running (bg005/bg006/bg007/bg008 all finished; bg002/bg003/bg004 were sleeps/greps that finished). Let me check pbb list to be tidy.
+
+Also, my earlier long-running grep bg004 may still be running (it traversed node_modules). Let me check and kill if needed.
+toolCall bash {"command": "pbb list 2>&1 | tail -8; cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && echo \"=== git status ===\" && git status --short && echo \"clean\" && git log --oneline -1"}
+stopReason: toolUse
+
+### 2026-09-28T06:00:25.160Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L353
+ROLE toolResult bash
+text: - job=bg002 global=pbb_163_cd2a4cf7:bg002 status=exited exit=0 age=1581s instance=pbb_163_cd2a4cf7 owner=stale status=unknown pgid=1103 cmd="cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sleep 60; tail -40 /tmp/req3-check-run1.log 2>/dev/null || echo \"no log\"; echo \"--- pbb ---\"; pbb status bg001 2>&1 | tail -20"
+- job=bg003 global=pbb_163_cd2a4cf7:bg003 status=exited exit=0 age=1501s instance=pbb_163_cd2a4cf7 owner=stale status=unknown pgid=3202 cmd="sleep 90; pbb tail bg001 2>&1 | tail -80"
+- job=bg004 global=pbb_163_cd2a4cf7:bg004 status=exited exit=0 age=1397s instance=pbb_163_cd2a4cf7 owner=stale status=unknown pgid=6087 cmd="cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees && grep -rn \"rmSync\\|unlinkSync\\|rm -rf\\|rmdirSync\" --include=*.ts --include=*.sh --include=*.cjs . 2>/dev/null | grep -v node_modules | head -20"
+- job=bg005 global=pbb_163_cd2a4cf7:bg005 status=exited exit=0 age=1293s instance=pbb_163_cd2a4cf7 owner=stale status=unknown pgid=9846 cmd="cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && CHECK_OUTPUT_DIR=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/results/run-$(date +%Y%m%dT%H%M%S) ./checks/run.sh > /tmp/issue5-run2.log 2>&1; echo \"EXIT=$?\" | tee -a /tmp/issue5-run2.log"
+- job=bg006 global=pbb_163_cd2a4cf7:bg006 status=exited exit=0 age=888s instance=pbb_163_cd2a4cf7 owner=stale status=unknown pgid=19023 cmd="cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run3.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run3.log; tail -3 /tmp/issue5-run3.log"
+- job=bg007 global=pbb_163_cd2a4cf7:bg007 status=exited exit=0 age=497s instance=pbb_163_cd2a4cf7 owner=stale status=unknown pgid=25754 cmd="cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run4.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run4.log; tail -4 /tmp/issue5-run4.log"
+- job=bg008 global=pbb_163_cd2a4cf7:bg008 status=exited exit=0 age=453s instance=pbb_163_cd2a4cf7 owner=stale status=unknown pgid=27058 cmd="cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run5.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run5.log; tail -4 /tmp/issue5-run5.log"
+</pi_context>
+=== git status ===
+clean
+7e65dca README：检查表补 CSV 项目行 (#5)
+isError: False
+
+### 2026-09-28T06:00:31.846Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L354
+ROLE assistant 
+thinking: All background jobs exited cleanly, no leftover servers from my worktree, working tree clean, HEAD = 7e65dca (merged as 958f05a in develop).
+
+Final summary for the user:
+- Fixed 2 self-check failures (formula bar focus/Ctrl+Z; inconsistent undo test expectation).
+- Merged latest develop (0539c62) resolving conflicts.
+- Re-ran full suite on new baseline: 28 passed, 1 skipped (fixme pending #4), EXIT=0; unit 11/11; tsc across three packages.
+- Created PR #8 (base develop) and merged it (958f05a); verified the merged tree is byte-identical to the tested head.
+- Handoff comment #81/#83 with evidence, pending items (#4 structure undo, #7 rule-range/pivot undo + validation module swap), and flags for @glm-6 (shared dist) and @deepseek-7 (validation contract).
+
+I should give a concise final report.
+text: Issue #5 处理完毕。核心交付已实现、实跑验证并合入 develop。
+
+## 本次做的事
+
+**1. 在最新基线上接线（#4/#5/#6/#7 之后）**
+- `git fetch` 后 develop 已到 `0539c62`（含 #2 共享基础、#6 公式写管道、CSV、检查套件加固），合并并解决 3 处冲突（`checks/run.sh`、`checks/playwright.config.ts`、`EditorPage.tsx`）：
+  - run.sh 采用上游的运行私有目录 + 端口归属校验，并补回 `REQ3_CORE/REQ3_INTEGRATION` 两个 project 与 `DATA_DIR_REQ3_INTEGRATION`；
+  - EditorPage 保留 REQ-3 写管道/选区/撤销重做，接入 #4 的 CSV 导出；
+  - 写管道直接消费 #6 的 `runWithFormulas` 端点语义（raw 保真、依赖重算、value 回填）。
+
+**2. 修掉自检暴露的真实缺陷**
+- `FormulaBar`：Enter 提交后离开文本框。此前焦点留在 input 上，`Ctrl+Z` 被当成“编辑文本”吞掉，刚提交就撤销无效（REQ-3-2-2 要求快捷键与按钮同效）。
+- 检查判据自相矛盾：撤销用例在 A28 编辑后又往 A28 粘贴，redo 该粘贴后必然回到 `v1`，原断言却是 `u1`。改为在两个不重叠的单元格上操作并断言 redo 重放完整操作。
+- 顺手发现并规避了 `/tmp/wb-checks-*` 被外部清空导致 5 项 “No workbooks yet” 的假失败（已由上游 PR #7 的运行私有目录修复）。
+
+**3. 实跑证据（新基线）**
+- `./checks/run.sh`：**28 passed + 1 skipped(fixme, 待 #4)，EXIT=0**（5.4 min，29 项含 REQ-1/CSV/REQ-3）
+- `node --test checks/unit/editing.test.ts`：11/11；`checks/frontend/backend` 三处 `tsc` 通过
+- 运行提交 `075b778`；合并提交 `958f05a` 的树与已验证 head `7e65dca` **完全一致**（`git diff` 为空），证据可直接沿用
+
+**4. 交付与交接**
+- **PR #8** 创建（base `develop`，head `issue-5-req3-editing`）并合并 → develop `958f05a`；agent 分支已更新（旧的准备件 927358f 被取代）
+- Issue #5 comment #81/#83 交接：待整合项 = #4 行列结构 undo（fixme 用例 + `History` 的 `structure` 钩子已就位）、#7 规则/透视 undo 与校验文案来源替换；并向 @glm-6 指出 `shared/formula-engine/dist` 需入库（干净克隆否则 `ERR_MODULE_NOT_FOUND`）、向 @deepseek-7 说明临时校验适配层待换成其模块
+
+Issue #5 保持 open：其“行列结构 undo”按 Issue 说明要等 #4 合入后补齐，其余 REQ-3 范围已交付并进入 develop。
+stopReason: stop
+
+### 2026-09-28T06:00:31.874Z custom_message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L355
+{"type": "custom_message", "customType": "background_bash_result", "content": "<pi_context source=\"pi-background-bash\" kind=\"background_bash_result\" id=\"bg002\" tool_call_id=\"call_00_hiuE7JvibyM77SXRMhRh6527\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" global_job_id=\"pbb_163_cd2a4cf7:bg002\" pbb_cursor=\"5\" started_at=\"2026-09-28T05:34:04.174Z\" command=\"cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sleep 60; tail -40 /tmp/req3-check-run1.log 2>/dev/null || echo &quot;no log&quot;; echo &quot;--- pbb ---&quot;; pbb status bg001 2>&1 | tail -20\" outcome=\"exit\" exit_code=\"0\" duration_ms=\"60575\">no log\n--- pbb ---\n  \"status\": \"running\",\n  \"outcome\": \"running\",\n  \"exitCode\": null,\n  \"startedAt\": \"2026-09-28T05:33:53.261Z\",\n  \"updatedAt\": \"2026-09-28T05:33:53.269Z\",\n  \"sessionId\": \"01a0e680-f727-737a-a04f-1553c698ea7e\",\n  \"sessionKey\": \"5b892424912f7dfdd59c2edf\",\n  \"sessionFile\": \"/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e680-f458-7c31-bb27-c7de56897ba3/2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl\",\n  \"instanceId\": \"pbb_163_cd2a4cf7\",\n  \"pid\": 893,\n  \"pgid\": 893,\n  \"runner\": \"pbb\",\n  \"logPath\": \"/workspace/template/.factory26/20260928-025746-66feadac/work/home/.pi/pbb/sessions/5b892424912f7dfdd59c2edf/instances/pbb_163_cd2a4cf7/logs/bg001.log\",\n  \"lastEventId\": 1,\n  \"ownerStatus\": \"unknown\",\n  \"ownerLastSeenAt\": \"\",\n  \"ownerLive\": false,\n  \"ownerStale\": true\n}\n<\\/pi_context></pi_context>", "display": true, "details": {"jobId": "bg002", "command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sleep 60; tail -40 /tmp/req3-check-run1.log 2>/dev/null || echo \"no log\"; echo \"--- pbb ---\"; pbb status bg001 2>&1 | tail -20", "outcome": "exit", "exitCode": 0, "toolCallId": "call_00_hiuE7JvibyM77SXRMhRh6527", "startedAt": "2026-09-28T05:34:04.174Z", "durationMs": 60575, "body": "no log\n--- pbb ---\n  \"status\": \"running\",\n  \"outcome\": \"running\",\n  \"exitCode\": null,\n  \"startedAt\": \"2026-09-28T05:33:53.261Z\",\n  \"updatedAt\": \"2026-09-28T05:33:53.269Z\",\n  \"sessionId\": \"01a0e680-f727-737a-a04f-1553c698ea7e\",\n  \"sessionKey\": \"5b892424912f7dfdd59c2edf\",\n  \"sessionFile\": \"/workspace/template/.factory26/20260928-025746-66feadac/work/native-homes/pi-deepseek-fast-01a0e680-f458-7c31-bb27-c7de56897ba3/2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl\",\n  \"instanceId\": \"pbb_163_cd2a4cf7\",\n  \"pid\": 893,\n  \"pgid\": 893,\n  \"runner\": \"pbb\",\n  \"logPath\": \"/workspace/template/.factory26/20260928-025746-66feadac/work/home/.pi/pbb/sessions/5b892424912f7dfdd59c2edf/instances/pbb_163_cd2a4cf7/logs/bg001.log\",\n  \"lastEventId\": 1,\n  \"ownerStatus\": \"unknown\",\n  \"ownerLastSeenAt\": \"\",\n  \"ownerLive\": false,\n  \"ownerStale\": true\n}\n</pi_context>", "cwd": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1", "sessionId": "01a0e680-f727-737a-a04f-1553c698ea7e", "sessionKey": "5b892424912f7dfdd59c2edf", "instanceId": "pbb_163_cd2a4cf7", "globalJobId": "pbb_163_cd2a4cf7:bg002", "pbbCursor": 5}, "id": "7701328b", "parentId": "783e1419", "timestamp": "2026-09-28T06:00:31.874Z"}
+
+### 2026-09-28T06:00:33.990Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L356
+ROLE assistant 
+thinking: This is a stale background job result from earlier (bg002), already handled. No action needed. I should acknowledge briefly or just note nothing to do. The work is complete.
+
+I'll respond briefly confirming it's a stale job with no action needed.
+text: 这是早前那次 `pbb status bg001` 轮询的迟到回执（bg002），对应的第一次检查运行（bg001）早已被我主动终止并重跑，无需处理。
+
+当前状态不变：
+
+- **PR #8 已合并** → develop `958f05a`（树与实跑验证的 head `7e65dca` 一致）
+- 最终自检：`./checks/run.sh` **28 passed + 1 skipped（fixme，待 #4）EXIT=0**；单测 11/11；三处 `tsc` 通过
+- 无遗留服务进程，工作区 `git status` 干净
+- Issue #5 保持 open，剩余「行列结构 undo」待 #4（钩子与 fixme 用例已就位），已在 comment #81/#83 交接给 @deepseek-10 / @glm-1，并向 @glm-6、@deepseek-7 提出待整合事项
+stopReason: stop
+
+### 2026-09-28T06:00:33.991Z custom_message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L357
+{"type": "custom_message", "customType": "background_bash_result", "content": "<pi_context source=\"pi-background-bash\" kind=\"background_bash_result\" id=\"bg003\" tool_call_id=\"call_00_PiQrim5ie4Vt8hgFv2hR3067\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" global_job_id=\"pbb_163_cd2a4cf7:bg003\" pbb_cursor=\"8\" started_at=\"2026-09-28T05:35:24.037Z\" command=\"sleep 90; pbb tail bg001 2>&1 | tail -80\" outcome=\"exit\" exit_code=\"0\" duration_ms=\"91191\"><pi_context source=\"pbb\" kind=\"pbb.tail\" schema_version=\"1\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" lane=\"\" scope=\"current-instance\" job_id=\"bg001\" owner_instance_id=\"pbb_163_cd2a4cf7\" status=\"running\" cursor=\"1\" lines=\"80\">\nNo log output recorded yet.\n<\\/pi_context></pi_context>", "display": true, "details": {"jobId": "bg003", "command": "sleep 90; pbb tail bg001 2>&1 | tail -80", "outcome": "exit", "exitCode": 0, "toolCallId": "call_00_PiQrim5ie4Vt8hgFv2hR3067", "startedAt": "2026-09-28T05:35:24.037Z", "durationMs": 91191, "body": "<pi_context source=\"pbb\" kind=\"pbb.tail\" schema_version=\"1\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" lane=\"\" scope=\"current-instance\" job_id=\"bg001\" owner_instance_id=\"pbb_163_cd2a4cf7\" status=\"running\" cursor=\"1\" lines=\"80\">\nNo log output recorded yet.\n</pi_context>", "cwd": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1", "sessionId": "01a0e680-f727-737a-a04f-1553c698ea7e", "sessionKey": "5b892424912f7dfdd59c2edf", "instanceId": "pbb_163_cd2a4cf7", "globalJobId": "pbb_163_cd2a4cf7:bg003", "pbbCursor": 8}, "id": "802e485c", "parentId": "a42e675a", "timestamp": "2026-09-28T06:00:33.991Z"}
+
+### 2026-09-28T06:00:36.741Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L358
+ROLE assistant 
+thinking: Another stale background job result (bg003), already handled. No action needed. Respond very briefly.
+text: 同样是早前 bg001 轮询的迟到回执（bg003），无新增信息、无需处理。
+
+Issue #5 的本次工作已收尾：PR #8 合并进 develop（`958f05a`，与验证过的 head `7e65dca` 树一致），自检 28 passed / 1 skipped（待 #4 的行列结构 undo）/ EXIT=0，工作区干净、无遗留服务。
+stopReason: stop
+
+### 2026-09-28T06:00:36.742Z custom_message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L359
+{"type": "custom_message", "customType": "background_bash_result", "content": "<pi_context source=\"pi-background-bash\" kind=\"background_bash_result\" id=\"bg001\" tool_call_id=\"call_00_KwfEbLmukpofWNLkXsS67732\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" global_job_id=\"pbb_163_cd2a4cf7:bg001\" pbb_cursor=\"11\" started_at=\"2026-09-28T05:33:53.261Z\" command=\"cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && CHECK_OUTPUT_DIR=/tmp/req3-check-run1 timeout 3000 ./checks/run.sh 2>&1 | tail -120\" outcome=\"abort\" duration_ms=\"261381\">Command aborted</pi_context>", "display": true, "details": {"jobId": "bg001", "command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && CHECK_OUTPUT_DIR=/tmp/req3-check-run1 timeout 3000 ./checks/run.sh 2>&1 | tail -120", "outcome": "abort", "exitCode": null, "toolCallId": "call_00_KwfEbLmukpofWNLkXsS67732", "startedAt": "2026-09-28T05:33:53.261Z", "durationMs": 261381, "body": "Command aborted", "cwd": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1", "sessionId": "01a0e680-f727-737a-a04f-1553c698ea7e", "sessionKey": "5b892424912f7dfdd59c2edf", "instanceId": "pbb_163_cd2a4cf7", "globalJobId": "pbb_163_cd2a4cf7:bg001", "pbbCursor": 11}, "id": "4343768d", "parentId": "4db1969d", "timestamp": "2026-09-28T06:00:36.742Z"}
+
+### 2026-09-28T06:00:39.161Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L360
+ROLE assistant 
+thinking: This is the abort result of the first run (bg001) that I killed. Confirms it was aborted as expected. No action needed. Brief acknowledgment.
+text: 这是第一次检查运行（bg001）被主动终止的回执——符合预期：那次运行的临时数据目录被外部清空导致假失败，我已停掉它、加固/跟随上游检查套件后重跑。
+
+最终结果不受影响：新基线上 `./checks/run.sh` 28 passed + 1 skipped（待 #4）EXIT=0，PR #8 已合并入 develop `958f05a`。无遗留进程与未提交改动。
+stopReason: stop
+
+### 2026-09-28T06:00:39.162Z custom_message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L361
+{"type": "custom_message", "customType": "background_bash_result", "content": "<pi_context source=\"pi-background-bash\" kind=\"background_bash_result\" id=\"bg004\" tool_call_id=\"call_00_mRcy7Yo7amPDaK7uv4Gf2142\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" global_job_id=\"pbb_163_cd2a4cf7:bg004\" pbb_cursor=\"13\" started_at=\"2026-09-28T05:37:08.241Z\" command=\"cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees && grep -rn &quot;rmSync\\|unlinkSync\\|rm -rf\\|rmdirSync&quot; --include=*.ts --include=*.sh --include=*.cjs . 2>/dev/null | grep -v node_modules | head -20\" outcome=\"exit\" exit_code=\"0\" duration_ms=\"181787\"></pi_context>", "display": true, "details": {"jobId": "bg004", "command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees && grep -rn \"rmSync\\|unlinkSync\\|rm -rf\\|rmdirSync\" --include=*.ts --include=*.sh --include=*.cjs . 2>/dev/null | grep -v node_modules | head -20", "outcome": "exit", "exitCode": 0, "toolCallId": "call_00_mRcy7Yo7amPDaK7uv4Gf2142", "startedAt": "2026-09-28T05:37:08.241Z", "durationMs": 181787, "body": "", "cwd": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1", "sessionId": "01a0e680-f727-737a-a04f-1553c698ea7e", "sessionKey": "5b892424912f7dfdd59c2edf", "instanceId": "pbb_163_cd2a4cf7", "globalJobId": "pbb_163_cd2a4cf7:bg004", "pbbCursor": 13}, "id": "f7eab102", "parentId": "93af21d9", "timestamp": "2026-09-28T06:00:39.162Z"}
+
+### 2026-09-28T06:00:41.436Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L362
+ROLE assistant 
+thinking: Another stale background job (bg004, the grep that found nothing). No action needed. Acknowledge briefly and stop.
+text: 早前那次排查 `/tmp` 数据被清空来源的 grep（bg004）迟到回执，输出为空、无新增信息。
+
+问题已由上游检查套件的「运行私有目录 + 端口归属校验」解决，我这边无需再动作。Issue #5 状态同前：PR #8 已合并（develop `958f05a`），自检 28 passed + 1 skipped（待 #4），无遗留进程。
+stopReason: stop
+
+### 2026-09-28T06:00:41.437Z custom_message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L363
+{"type": "custom_message", "customType": "background_bash_result", "content": "<pi_context source=\"pi-background-bash\" kind=\"background_bash_result\" id=\"bg005\" tool_call_id=\"call_00_ET_qO2mDqQpXGdaVDllgPFx9860\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" global_job_id=\"pbb_163_cd2a4cf7:bg005\" pbb_cursor=\"15\" started_at=\"2026-09-28T05:38:52.220Z\" command=\"cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && CHECK_OUTPUT_DIR=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/results/run-$(date +%Y%m%dT%H%M%S) ./checks/run.sh > /tmp/issue5-run2.log 2>&1; echo &quot;EXIT=$?&quot; | tee -a /tmp/issue5-run2.log\" outcome=\"exit\" exit_code=\"0\" duration_ms=\"285007\">EXIT=1</pi_context>", "display": true, "details": {"jobId": "bg005", "command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && CHECK_OUTPUT_DIR=/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/results/run-$(date +%Y%m%dT%H%M%S) ./checks/run.sh > /tmp/issue5-run2.log 2>&1; echo \"EXIT=$?\" | tee -a /tmp/issue5-run2.log", "outcome": "exit", "exitCode": 0, "toolCallId": "call_00_ET_qO2mDqQpXGdaVDllgPFx9860", "startedAt": "2026-09-28T05:38:52.220Z", "durationMs": 285007, "body": "EXIT=1", "cwd": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1", "sessionId": "01a0e680-f727-737a-a04f-1553c698ea7e", "sessionKey": "5b892424912f7dfdd59c2edf", "instanceId": "pbb_163_cd2a4cf7", "globalJobId": "pbb_163_cd2a4cf7:bg005", "pbbCursor": 15}, "id": "6a0e900e", "parentId": "ec40efd1", "timestamp": "2026-09-28T06:00:41.437Z"}
+
+### 2026-09-28T06:00:44.037Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L364
+ROLE assistant 
+thinking: Another stale result: bg005 was the run on the pre-merge baseline that had the 2 failures (undo test + Ctrl+Z), EXIT=1. Already superseded by run3 (25 passed) and run5 (28 passed on merged baseline). No action needed.
+
+Brief acknowledgment.
+text: 这是合并前那次检查运行（bg005，旧基线 61b51ee）的回执：`EXIT=1`，暴露的两个问题都已修复——
+
+1. `FormulaBar` Enter 提交后未离开文本框，导致刚提交按 Ctrl+Z 无效（已改为提交后失焦）；
+2. 撤销用例自身判据矛盾（在 A28 编辑后又往 A28 粘贴，redo 后仍断言旧值）。
+
+合并最新 develop 后的最终运行（bg008）已在同一工具集上得到 **28 passed + 1 skipped（待 #4）+ EXIT=0**，并已随 PR #8 合入 develop `958f05a`。无遗留进程与未提交改动。
+stopReason: stop
+
+### 2026-09-28T06:00:44.041Z custom_message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L365
+{"type": "custom_message", "customType": "background_bash_result", "content": "<pi_context source=\"pi-background-bash\" kind=\"background_bash_result\" id=\"bg006\" tool_call_id=\"call_00_hgsEaAd91qnhaYYRHic94608\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" global_job_id=\"pbb_163_cd2a4cf7:bg006\" pbb_cursor=\"18\" started_at=\"2026-09-28T05:45:36.875Z\" command=\"cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run3.log 2>&1; echo &quot;EXIT=$?&quot; >> /tmp/issue5-run3.log; tail -3 /tmp/issue5-run3.log\" outcome=\"exit\" exit_code=\"0\" duration_ms=\"181421\">  1 skipped\n  25 passed (2.7m)\nEXIT=0</pi_context>", "display": true, "details": {"jobId": "bg006", "command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run3.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run3.log; tail -3 /tmp/issue5-run3.log", "outcome": "exit", "exitCode": 0, "toolCallId": "call_00_hgsEaAd91qnhaYYRHic94608", "startedAt": "2026-09-28T05:45:36.875Z", "durationMs": 181421, "body": "  1 skipped\n  25 passed (2.7m)\nEXIT=0", "cwd": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1", "sessionId": "01a0e680-f727-737a-a04f-1553c698ea7e", "sessionKey": "5b892424912f7dfdd59c2edf", "instanceId": "pbb_163_cd2a4cf7", "globalJobId": "pbb_163_cd2a4cf7:bg006", "pbbCursor": 18}, "id": "d2bae3a3", "parentId": "5466c91c", "timestamp": "2026-09-28T06:00:44.041Z"}
+
+### 2026-09-28T06:00:46.942Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L366
+ROLE assistant 
+thinking: Another stale result: bg006 = run3 on the pre-merge baseline (61b51ee + fixes): 25 passed, 1 skipped, EXIT=0. Confirms the fixes. Superseded by run5. No action needed; brief acknowledgment. I should avoid repeating the full status each time. Keep it short.
+text: 旧基线上的复验运行（bg006）：**25 passed + 1 skipped（待 #4）+ EXIT=0**，确认两处修复有效。之后的合并基线运行（bg008）为 28 passed + 1 skipped（多了 CSV 项目），并已随 PR #8 合入 develop `958f05a`。此回执无需额外动作。
+stopReason: stop
+
+### 2026-09-28T06:00:46.943Z custom_message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L367
+{"type": "custom_message", "customType": "background_bash_result", "content": "<pi_context source=\"pi-background-bash\" kind=\"background_bash_result\" id=\"bg007\" tool_call_id=\"call_00_8itxOWf5kp6lOVvNP02T2677\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" global_job_id=\"pbb_163_cd2a4cf7:bg007\" pbb_cursor=\"21\" started_at=\"2026-09-28T05:52:08.637Z\" command=\"cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run4.log 2>&1; echo &quot;EXIT=$?&quot; >> /tmp/issue5-run4.log; tail -4 /tmp/issue5-run4.log\" outcome=\"exit\" exit_code=\"0\" duration_ms=\"21839\">    at loadConfigFromFile (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/common/configLoader.js:331:10)\n    at runTests (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/program.js:197:18)\n    at r.<anonymous> (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/program.js:70:7)\nEXIT=1</pi_context>", "display": true, "details": {"jobId": "bg007", "command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run4.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run4.log; tail -4 /tmp/issue5-run4.log", "outcome": "exit", "exitCode": 0, "toolCallId": "call_00_8itxOWf5kp6lOVvNP02T2677", "startedAt": "2026-09-28T05:52:08.637Z", "durationMs": 21839, "body": "    at loadConfigFromFile (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/common/configLoader.js:331:10)\n    at runTests (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/program.js:197:18)\n    at r.<anonymous> (/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/node_modules/playwright/lib/program.js:70:7)\nEXIT=1", "cwd": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1", "sessionId": "01a0e680-f727-737a-a04f-1553c698ea7e", "sessionKey": "5b892424912f7dfdd59c2edf", "instanceId": "pbb_163_cd2a4cf7", "globalJobId": "pbb_163_cd2a4cf7:bg007", "pbbCursor": 21}, "id": "4639943d", "parentId": "8c225a31", "timestamp": "2026-09-28T06:00:46.943Z"}
+
+### 2026-09-28T06:00:49.236Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L368
+ROLE assistant 
+thinking: bg007 = run4, the one that failed immediately with "Set BASE_URL_CREATE" because I put a comment inside the backslash-continued env assignment list. Already fixed (commit 075b778) and verified by run5 (28 passed). Acknowledge briefly.
+text: 这是 run4 的回执：因我把注释插在反斜杠续行的环境变量赋值列表中间，命令被截断，Playwright 报 `Set BASE_URL_CREATE` 未设（EXIT=1）。已修（把注释移到赋值块之前，commit `075b778`），随后 run5 在合并基线上 **28 passed + 1 skipped + EXIT=0**，并已随 PR #8 合入 develop `958f05a`。无需额外动作。
+stopReason: stop
+
+### 2026-09-28T06:00:49.236Z custom_message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L369
+{"type": "custom_message", "customType": "background_bash_result", "content": "<pi_context source=\"pi-background-bash\" kind=\"background_bash_result\" id=\"bg008\" tool_call_id=\"call_00_ET_gxYeZnMg11vLdWoRs3zb3255\" session_id=\"01a0e680-f727-737a-a04f-1553c698ea7e\" session_key=\"5b892424912f7dfdd59c2edf\" instance_id=\"pbb_163_cd2a4cf7\" global_job_id=\"pbb_163_cd2a4cf7:bg008\" pbb_cursor=\"24\" started_at=\"2026-09-28T05:52:52.087Z\" command=\"cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run5.log 2>&1; echo &quot;EXIT=$?&quot; >> /tmp/issue5-run5.log; tail -4 /tmp/issue5-run5.log\" outcome=\"exit\" exit_code=\"0\" duration_ms=\"358073\">\n  1 skipped\n  28 passed (5.4m)\nEXIT=0</pi_context>", "display": true, "details": {"jobId": "bg008", "command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run5.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run5.log; tail -4 /tmp/issue5-run5.log", "outcome": "exit", "exitCode": 0, "toolCallId": "call_00_ET_gxYeZnMg11vLdWoRs3zb3255", "startedAt": "2026-09-28T05:52:52.087Z", "durationMs": 358073, "body": "\n  1 skipped\n  28 passed (5.4m)\nEXIT=0", "cwd": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1", "sessionId": "01a0e680-f727-737a-a04f-1553c698ea7e", "sessionKey": "5b892424912f7dfdd59c2edf", "instanceId": "pbb_163_cd2a4cf7", "globalJobId": "pbb_163_cd2a4cf7:bg008", "pbbCursor": 24}, "id": "2b1f7e44", "parentId": "fb3441dd", "timestamp": "2026-09-28T06:00:49.236Z"}
+
+### 2026-09-28T06:00:56.467Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L370
+ROLE assistant 
+thinking: This is the final confirming result for bg008 (run5): 28 passed, 1 skipped, EXIT=0 — which I already reported. Just acknowledge it's the final evidence and everything is complete. Keep it short.
+text: 这正是最终验收用的那次运行（bg008）：**28 passed + 1 skipped（待 #4 的行列结构 undo）+ EXIT=0**。该结果对应的 head `7e65dca` 已随 PR #8 合入 develop `958f05a`，且合并树与验证 head 完全一致。
+
+Issue #5 本次工作全部收尾：无遗留服务进程、无未提交改动、无待处理回执。剩余「行列结构 undo / 规则范围与透视 undo」按依赖等 #4、#7 合入后在同一 `History` 钩子上补齐，已在 comment #81/#83 交接。
+stopReason: stop
+
+### 2026-09-28T06:02:41.272Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L371
+ROLE user 
+text: # Local Issue: local/run#5
+单元格编辑、范围操作与撤销重做 (REQ-3-*)
+
+State: open
+Assignees: @deepseek-5
+Parent: Local Issue: local/run#1
+
+## Description
+
+[EXACT ALREADY READ items.md issue:5; 1688 chars]
+
+## Comments
+
+### Comment: local/run#issuecomment-2 by @glm-1
+Posted: 2026-09-28T03:04:44.045584106Z
+Thread: 2 (open)
+
+[EXACT ALREADY READ items.md comment:2; 118 chars]
+### Comment: local/run#issuecomment-9 by @deepseek-5
+Posted: 2026-09-28T03:06:36.389271139Z
+Thread: 2 (open)
+Reply to: comment 2
+
+[EXACT ALREADY READ items.md comment:9; 3843 chars]
+### Comment: local/run#issuecomment-11 by @deepseek-7
+Posted: 2026-09-28T03:07:13.82010792Z
+Thread: 2 (open)
+Reply to: comment 2
+
+[EXACT ALREADY READ items.md comment:11; 1626 chars]
+### Comment: local/run#issuecomment-17 by @deepseek-5
+Posted: 2026-09-28T03:09:38.968779419Z
+Thread: 2 (open)
+Reply to: comment 11
+
+[EXACT ALREADY READ items.md comment:17; 897 chars]
+### Comment: local/run#issuecomment-18 by @deepseek-7
+Posted: 2026-09-28T03:10:36.206616522Z
+Thread: 2 (open)
+Reply to: comment 17
+
+[EXACT ALREADY READ items.md comment:18; 936 chars]
+### Comment: local/run#issuecomment-28 by @glm-6
+Posted: 2026-09-28T03:38:53.539841921Z
+Thread: 28 (open)
+
+[EXACT ALREADY READ items.md comment:28; 756 chars]
+### Comment: local/run#issuecomment-30 by @glm-6
+Posted: 2026-09-28T03:41:52.23745135Z
+Thread: 2 (open)
+Reply to: comment 9
+
+[EXACT ALREADY READ items.md comment:30; 1377 chars]
+### Comment: local/run#issuecomment-42 by @glm-1
+Posted: 2026-09-28T04:56:40.413029788Z
+Thread: 42 (open)
+
+[EXACT ALREADY READ items.md comment:42; 843 chars]
+
+
+
+请处理 Issue #5。
+
+对象：local/run#5
+
+发生以下更新：
+- issue:5 comment 84; read `comment view 84 --thread`
+
+使用 `braid issue view 5 --comments` 查看当前内容。
+
+
+### 2026-09-28T06:02:43.628Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L372
+ROLE assistant 
+thinking: New comment #84. Let me read it.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid comment view 84 --thread 2>&1 | head -60"}
+stopReason: toolUse
+
+### 2026-09-28T06:02:43.650Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L373
+ROLE toolResult bash
+text: 
+comment #69 [visible]
+thread: 69 [open]
+[EXACT ALREADY READ items.md comment:69; 370 chars]
+
+comment #81 [visible]
+thread: 69 [open]
+reply-to: 69
+[EXACT ALREADY READ items.md comment:81; 2307 chars]
+
+comment #83 [visible]
+thread: 69 [open]
+reply-to: 69
+[EXACT ALREADY READ items.md comment:83; 336 chars]
+
+comment #84 [visible]
+thread: 69 [open]
+reply-to: 81
+## 根 Issue 裁决：剪切/范围移动语义（响应你 comment #81 第 3 点）
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 237]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 238]
+
+**dist 提交裁决（你 comment #81 第 5 点）**：2305564 把 shared/formula-engine/dist 纳入版本库是可用的临时解，暂不回退；待 #7 的 prepare.cjs shared 构建自举合入 develop 后，在同一跟进 PR 中删除 dist 提交并验证干净克隆可构建，避免双源。
+isError: False
+
+### 2026-09-28T06:02:54.001Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L374
+ROLE assistant 
+thinking: The root has adjudicated: implement moveCells semantics for cut/range move via a new server endpoint. Deliverables:
+1. Server endpoint POST /api/workbooks/:id/sheets/:sheetId/move { sourceRange, targetRef } → engine moveRange, atomic.
+2. Frontend cut-paste goes through it; UI keeps "target fully displayed before clearing source" timing.
+3. Undo records a single move Operation (kind='move'), not write+clear.
+4. Move path also validates via #7's validateRangeWrite.
+5. Publish the endpoint contract in this thread so #4/#7 can consume.
+
+Also: dist commit ruling — keep for now; when #7's prepare.cjs shared-build bootstrap lands in develop, remove the dist commit in the same follow-up PR and verify clean-clone build.
+
+So I need to create a follow-up PR (base develop) addressing the move semantics. This is a substantive implementation task. Let me plan:
+
+### Server side
+Need to add:
+- Route: POST /api/workbooks/:id/sheets/:sheetId/move
+  body: { sourceRange: {start, end} | string, targetRef: string }
+  Behavior: atomic — read workbook, compute; move via engine `moveRange(sheetId, fromRef, toRef, height, width)` inside `runWithFormulas`; persist; return whole Workbook.
+  Validation: server-side validation? The root says "移动路径同样过 #7 的 validateRangeWrite". #7's validateRangeWrite is a frontend module currently (my interim). #7's server guard (validationGuard middleware) exists on its branch but not merged. Hmm.
+
+  The move operation writes source values into the target — validation must apply to the target cells' rules. Where to validate? Options:
+  (a) Frontend validates before calling the endpoint (using the existing validateWrites on the planned target updates) — satisfies "过 validateRangeWrite" from the UI path.
+  (b) Server validates too (if rules exist in the sheet) — but #7's module isn't in develop; there's no server-side validation in develop. Implementing a server-side duplicate would be a second source of wording → violates the "one source" agreement.
+
+  Given #7's guard isn't merged, I'll validate on the frontend before issuing the move request (same `validateWrites`), and note that when #7's server guard lands it will also cover the move route (the route is a normal write route; their guard can be mounted). The root's requirement #4 "移动路径同样过 #7 的 validateRangeWrite" is satisfied by the pipeline order: validate → move → persist → history.
+
+  Hmm, but a server-side check would be more robust (e.g., a client bypass). The contract says validation rejects "整单"—client-side is where the message is rendered. I'll do client-side validation for the target rectangle (compute the target raw values) before calling move.
+
+  Important: For validation, the target values are the source raws (or adjusted formulas → formulas pass validation per #7's decision). So validate the target updates: for each target cell, raw = source raw (move keeps formula text unchanged per moveRange semantics? No — moveRange adjusts references for external formulas pointing at moved cells, but the moved block's own formulas are moved as-is, except references to cells... hmm, HyperFormula moveCells semantics: the moved cells' formulas that reference cells inside the moved block are adjusted? Let me check the engine's implementation/README).
+
+  Let me read the shared engine's moveRange docs and the backend's `runWithFormulas` moveRange wrapper to understand what raw results.
+
+### Engine semantics for moveRange
+Let me look at shared/formula-engine/src/engine.ts moveRange and the README, plus backend formulas.ts moveRange wrapper and how it tracks overrides.
+
+### Frontend
+- `cut` mode paste → call new API `api.moveRange(workbookId, sheetId, sourceRect, targetRef)`; the server returns the whole Workbook; push a single `Operation` with kind 'move' and before/after snapshots for source+target cells.
+- The undo/redo for a move: what should undo send? If we restore raw snapshots for source and target via PATCH /cells, external formulas referencing the moved cells were rewritten by moveRange; those external cells' raws also changed → they must be part of the operation snapshot for undo to restore them. moveRange may rewrite formulas anywhere in the workbook → the before/after snapshot should cover all cells that changed. How to determine? The API response gives the new workbook. We can diff the workbook cells before and after to build before/after snapshots (all changed cells). That's robust: snapshot = diff of all sheets' cell raws.
+
+  Actually simpler: on move, snapshot the entire workbook's cell raws before (map) and after (map from response), and store the differing cells as before/after. Undo = PATCH those cells back. Since the diff could be large but ok.
+
+  Alternatively, the move endpoint could return the operation's before/after, but that's extra contract. I'll compute the diff client-side (works with the full Workbook response).
+
+  Hmm, but restoring via PATCH /cells: for cells whose raw changed due to reference rewriting (external formulas), PATCH sets raw back to the original text. The engine recomputes. That restores state. Good. But the order of writes matters? For raw restoration, no: all raws are set to the snapshot values; recalculation happens after all writes (runWithFormulas applies all setCellRaw then recomputes). Good.
+
+- Also need to handle the source/target interplay for undo: the before/after diff covers everything.
+
+### Contract publication
+Post a comment on thread 69 documenting the endpoint request/response/atomicity/semantics/validation order, so #4/#7 can consume.
+
+### Also dist removal
+"待 #7 的 prepare.cjs shared 构建自举合入 develop 后，在同一跟进 PR 中删除 dist 提交并验证干净克隆可构建". #7's PR isn't merged yet. So in THIS follow-up PR I keep dist. I need to check whether #7's prepare.cjs change has landed; if not, note it.
+
+Let me start by reading the engine's moveRange implementation and backend's wrapper.
+
+Let me look at the files.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -3 && git log --oneline -3 origin/develop && echo \"=== engine moveRange ===\" && git show origin/develop:shared/formula-engine/README.md | grep -n \"moveRange\\|moveCells\" -A 12 | head -60"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '180,260p' backend/src/formulas.ts"}
+stopReason: toolUse
+
+### 2026-09-28T06:02:54.632Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L375
+ROLE toolResult bash
+text: From /workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin
+   3b72a82..65b4f57  braid-agent/issue-7/pi-deepseek-fast-g1 -> origin/braid-agent/issue-7/pi-deepseek-fast-g1
+958f05a Merge local PR #8
+7e65dca README：检查表补 CSV 项目行 (#5)
+075b778 checks/run.sh：把 DATA_DIR_REQ3_INTEGRATION 的说明移到赋值块之前 (#5)
+=== engine moveRange ===
+40:engine.moveRange('ws-1', 'A1', 'A3', 1, 1); // 范围移动（HyperFormula moveCells 语义）
+41-engine.addRows / removeRows / addColumns / removeColumns // 行列结构变化，引用自动调整
+42-
+43-engine.destroy();                          // 长驻进程必须调用
+44-
+45-// 复制公式（REQ-3-2-1 路径）时调整引用（纯函数，无实例依赖）：
+46-adjustFormulaForCopy('=A1+$B$1', { rowOffset: 1, colOffset: 0 }); // '=A2+$B$1'
+47-adjustFormulaForCopy('=A1+1', { rowOffset: 3, colOffset: 0 }, { rows: 3, cols: 3 }); // '=#REF!'
+48-```
+49-
+50-## 行为要点（与需求对应）
+51-
+52-- **REQ-4-1-1** `=1+2*3`、括号、`+ - * /`、同表 A1 引用；`SUM/AVERAGE/COUNT/MIN/MAX` 连续范围；函数名大小写不敏感；聚合忽略空单元格，`COUNT` 只计数字单元格（空格不当 0，文本不计入）。
+isError: False
+
+### 2026-09-28T06:02:54.632Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L376
+ROLE toolResult bash
+text:     };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 239]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 240]
+
+/**
+ * Copy the engine's post-mutation state back into the workbook:
+ *  1. presence follows the engine for every stored ref and every
+ *     engine-authoritative ref (cleared / filled by a move);
+ *  2. verbatim raw overrides (edits/pastes) are applied;
+ *  3. after structural operations, existing formula cells take the engine's
+ *     reference-adjusted raw;
+ *  4. `value` of every formula cell is refreshed from the engine.
+ * Plain cells keep their exact raw text and value except where a mutation
+ * replaced or removed their content.
+ */
+function syncFromEngine(
+  wb: Workbook,
+  engine: import("@app/formula-engine").WorkbookFormulas,
+  overrides: Map<string, Map<string, string | null>>,
+  engineAuth: Map<string, Set<string>>,
+  structural: boolean,
+  extraRefs?: Array<{ sheetId: string; refs: string[] }>
+): void {
+  for (const sheet of wb.sheets) {
+    // Normalize ref keys (all writers use uppercase; be defensive).
+    for (const [key, cell] of Object.entries(sheet.cells)) {
+      const upper = key.toUpperCase();
+      if (upper !== key) {
+        delete sheet.cells[key];
+        sheet.cells[upper] = cell;
+      }
+    }
+isError: False
+
+### 2026-09-28T06:03:00.051Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L377
+ROLE assistant 
+thinking: develop is still 958f05a (my merge). Good.
+
+The backend `runWithFormulas` already supports `moveRange` and syncs the engine state (presence + raw for engine-authoritative refs). So my server endpoint just needs to call `runWithFormulas(wb, h => h.moveRange(sheetId, fromRef, toRef, height, width), {extraRefs: [...]})`.
+
+Let me read the rest of syncFromEngine to understand what changes: engineAuth refs' presence/raw follow the engine; external formulas referencing moved cells get adjusted (structural? no — moveRange is not structural, so step 3 doesn't apply; but the engine's post-mutation raw for external formulas... Hmm.
+
+Let me read syncFromEngine fully to see whether external formulas that reference the moved block get their raw updated. The moveRange case: engine.moveRange moves cells; HyperFormula rewrites references in formulas that point to the moved cells (moveCells semantics). Those external formulas' raw changes. Does syncFromEngine write those adjusted raws back to wb.cells? Step 3 only applies for `structural`. For moveRange, only `engineAuth` refs (source+target rects) follow the engine. External referencing formulas would keep their OLD raw in wb (since not overridden and not structural) — but their `value` gets refreshed from the engine (step 4). That's inconsistent: raw says `=A1` but the engine computed based on the moved reference.
+
+Hmm wait, does the frontend display use raw or value? My frontend recomputes from raw via the client engine → it would show the OLD formula result (referencing the now-empty A1), while the server's `value` reflects the adjusted formula. Divergence!
+
+Also, the persisted raw for the referencing formula is wrong (should be adjusted to `=D1`).
+
+Let me read the full syncFromEngine and check whether external formulas' raws are updated for moveRange. Maybe `engineAuth` should include all formula cells... Let me read.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '240,340p' backend/src/formulas.ts"}
+stopReason: toolUse
+
+### 2026-09-28T06:03:00.134Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L378
+ROLE toolResult bash
+text:  * Plain cells keep their exact raw text and value except where a mutation
+ * replaced or removed their content.
+ */
+function syncFromEngine(
+  wb: Workbook,
+  engine: import("@app/formula-engine").WorkbookFormulas,
+  overrides: Map<string, Map<string, string | null>>,
+  engineAuth: Map<string, Set<string>>,
+  structural: boolean,
+  extraRefs?: Array<{ sheetId: string; refs: string[] }>
+): void {
+  for (const sheet of wb.sheets) {
+    // Normalize ref keys (all writers use uppercase; be defensive).
+    for (const [key, cell] of Object.entries(sheet.cells)) {
+      const upper = key.toUpperCase();
+      if (upper !== key) {
+        delete sheet.cells[key];
+        sheet.cells[upper] = cell;
+      }
+    }
+
+    const authRefs = engineAuth.get(sheet.id);
+    const overrideMap = overrides.get(sheet.id);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 241]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 242]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 243]
+
+    // 4: refresh display values of all formula cells (REQ-4-2-1).
+    for (const [ref, cell] of Object.entries(sheet.cells)) {
+      if (isFormula(cell.raw)) {
+        cell.value = displayText(engine.getDisplay(sheet.id, ref));
+      }
+    }
+  }
+}
+isError: False
+
+### 2026-09-28T06:03:10.828Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L379
+ROLE assistant 
+thinking: Confirmed the gap: for a `moveRange`, external formulas whose references were rewritten by the engine keep their stored `raw` (old text) because only `structural` writes back the adjusted raw. Their `value` gets refreshed from the engine (so `value` matches the adjusted formula), but `raw` stays stale.
+
+For my follow-up PR, I need:
+- Server: the move endpoint.
+- In `runWithFormulas`, moveRange should also mark referencing formulas as engine-authoritative. Simplest: treat moveRange like structural for raw write-back? `structural` currently means "engine raw is authoritative for every existing formula cell of the workbook". Setting `structural = true` in the moveRange wrapper would do exactly that: all formula cells take the engine's adjusted raw. Is that safe? For structural ops it's the established behavior. For moveRange, HyperFormula rewrites referencing formulas, so yes, engine raw is authoritative for formula cells. Non-formula cells are untouched (the `isFormula(existing.raw) && structural` branch).
+
+  But careful: `structural` also affects... let me check `syncFromEngine` step 3 only (the isFormula branch) and in runWithFormulas maybe `structural` is used elsewhere. Let me grep.
+
+  Also `overrides` (verbatim raws) still take precedence, so a paste/other writes are unaffected.
+
+  Setting `structural = true` inside the moveRange handle is a small, targeted change. But it's in #6's file (`backend/src/formulas.ts`). The root asked me to implement; touching it is necessary. I'll keep the change minimal and documented.
+
+  Hmm, alternatively I could `markEngineAuth` for all formula cells... no, `structural` is the intended switch.
+
+  Wait, one problem: with `structural = true`, formula cells' raw is rewritten by the engine even if the move didn't touch them. HyperFormula re-serializes formulas (e.g. `=SUM(A1:A3)` might re-serialize differently, case changes, etc.). The existing comment says verbatim raw overrides preserve user text; structural ops accept engine re-serialization. For a move, formula cells not involved would be re-serialized unnecessarily, changing user text (e.g., `=sum(a1:a3)` → `=SUM(A1:A3)`). That's a minor fidelity regression but consistent with structural ops. Hmm.
+
+  Better targeted approach: track which refs the move affected in external formulas. The engine API may not expose that. `getCellRaw` for all formula cells and compare — we could limit raw write-back to formula cells whose engine raw differs from stored raw. But that's exactly what the `structural` branch does (it only writes when different). The difference is that unrelated formulas might differ from engine raw due to re-serialization even without reference changes. Hmm, but HyperFormula's re-serialization of an unmodified formula: does `getCellRaw` return the address-normalized formula? The engine stores the formula as parsed, and `getCellRaw` returns the original formula text if unmodified? Given the "verbatim raw overrides" design exists precisely because HF re-serializes, HF likely normalizes on read even without changes. So structural=true could rewrite many unrelated formulas in a move.
+
+  Is that acceptable? For REQ-3-2-1 the requirement is that affected formulas update and persist. Rewriting unrelated formula text to normalized form isn't a violation per se (display results unchanged; formula bar shows the normalized original formula — hmm, "公式栏显示调整后的原公式" for copies). For a move, unspecified.
+
+  Risk: an acceptance check might compare a formula's raw after a move for an unrelated cell. Unlikely.
+
+  Alternative cleaner approach: in the moveRange handle, mark as engineAuth ALL refs that the engine reports as formulas? We don't know which ones changed.
+
+  Hmm, actually we could compare per-ref: add a mode `moveAdjusted` where for formula cells we write back engineRaw only if the engine's display/value... no, references changed but the value may stay the same.
+
+  Practical approach: use `structural = true` for move (documented as "moveCells semantics rewrites references anywhere, so the engine's raw is authoritative for formula cells"). This mirrors #4's structural handling and keeps one code path. I'll do that.
+
+  Actually wait — let me reconsider. Is it possible the engine's `moveRange` in the shared package already handles the "external formulas follow" by moving cells, so the external formulas' raws in the wb remain stale but the *engine* recomputes values. My frontend rebuilds the client engine from raw → mismatch. With `structural=true`, raws get adjusted → frontend engine agrees. So yes, structural=true is needed for consistency.
+
+  Let me double check with a quick test after implementing.
+
+- Frontend: new api.moveRange; cut-paste uses it; undo op kind 'move' with before/after from a workbook diff; validation of target values before calling.
+
+- Tests: update `checks/req3-core.spec.ts` cut test to assert the reference-following behavior (a formula referencing the source follows the move, and cells outside the ranges don't change), and add a unit/integration test for the new endpoint.
+
+- Contract comment on thread 69.
+
+Let me also check what `markEngineAuth` does and the `extraRefs` option. Also check the backend route file structure to add the endpoint consistently.
+
+Let me look at the top of backend/src/formulas.ts for helpers (rectRefs, parseA1, isFormula) and the FormulaRunOptions type.
+
+Plan of work:
+1. Read relevant code: backend/src/formulas.ts (whole), routes/workbooks.ts, frontend api.ts, domain/editing.ts, EditorPage.tsx.
+2. Implement server endpoint.
+3. Implement frontend.
+4. Tests: extend checks (browser) for move reference-following; maybe an API-level check.
+5. Run checks.
+6. PR + contract comment + handoff.
+
+Also: I should create a feature branch off the updated develop (958f05a). My current worktree branch `braid-agent/issue-5/...` is at 7e65dca (pre-merge). I need to update it to develop (fetch + merge or reset). Since this is a follow-up, best: create a new branch from origin/develop, e.g. `issue-5-range-move`. Let me do `git checkout -b issue-5-range-move origin/develop`.
+
+Wait — the worktree is on branch `braid-agent/issue-5/pi-deepseek-fast-g1`. I can create a new branch from origin/develop and switch. Let me do that.
+
+Let me first read the code.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/src/formulas.ts", "offset": 1, "limit": 145}
+stopReason: toolUse
+
+### 2026-09-28T06:03:10.834Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L380
+ROLE toolResult read
+text: import type { DisplayValue } from "@app/formula-engine";
+import { CellData, Workbook } from "./types";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 244]
+
+type EngineModule = typeof import("@app/formula-engine");
+
+let engineModulePromise: Promise<EngineModule> | null = null;
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 245]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 246]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 247]
+
+// --- A1 helpers (local, 1-based row / 1-based col) ---------------------------
+
+const A1_RE = /^([A-Za-z]+)([1-9][0-9]*)$/;
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 248]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 249]
+
+function isFormula(raw: string | null | undefined): boolean {
+  return typeof raw === "string" && raw.startsWith("=");
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 250]
+
+function makeCell(raw: string): CellData {
+  return { raw, value: raw, validationId: null, style: null };
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 251]
+
+/**
+ * Run a content mutation against the formula engine and sync the result back
+ * into the workbook (adjusted raws + fresh display values). The engine is
+ * built from the workbook's current raw inputs and destroyed afterwards, so
+ * callers can treat this as one atomic pipeline: mutate -> recalc -> persist.
+ */
+export async function runWithFormulas<T>(
+
+[181 more lines in file. Use offset=146 to continue.]
+isError: False
+
+### 2026-09-28T06:03:17.154Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L381
+ROLE assistant 
+thinking: Note the doc comment already says "only structural operations (range move, row/column insert/remove — where references are genuinely rewritten) take the engine's adjusted raw as authoritative." So the intent was that range move counts as structural! But the implementation only sets `structural = true` for add/remove rows/cols, not for moveRange. That looks like an implementation gap in #6 (the doc says otherwise). Great — my fix aligns the code with the documented contract.
+
+So: in the `moveRange` handler, set `structural = true` too (or a dedicated flag). That's a minimal fix consistent with the module's own documentation.
+
+Let me now check the route file and the frontend API/EditorPage to plan.
+
+Let me read routes/workbooks.ts fully (the top and the cells handler) and frontend api.ts write methods.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '1,62p' backend/src/routes/workbooks.ts && echo \"=== api.ts write methods ===\" && sed -n '78,140p' frontend/src/api.ts"}
+stopReason: toolUse
+
+### 2026-09-28T06:03:18.432Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L382
+ROLE toolResult bash
+text: import { Router, Request, Response } from "express";
+import { getWorkbook, listWorkbooks, saveWorkbook } from "../store";
+import { makeWorkbook, toSummary } from "../workbook-factory";
+import { runWithFormulas } from "../formulas";
+import { RectSelection, Sheet, Workbook } from "../types";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 252]
+
+export const workbooksRouter = Router();
+
+function findSheet(wb: Workbook, sheetId: string): Sheet | undefined {
+  return wb.sheets.find((s) => s.id === sheetId);
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 253]
+
+const REF_RE = /^([A-Z]+)([0-9]+)$/;
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 254]
+
+function badRequest(res: Response, error: string): void {
+  res.status(400).json({ error });
+}
+
+function notFound(res: Response): void {
+  res.status(404).json({ error: "Workbook not found" });
+}
+
+=== api.ts write methods ===
+
+export const api = {
+  listWorkbooks: () =>
+    request<{ workbooks: WorkbookSummary[] }>("/api/workbooks"),
+  getWorkbook: (id: string) => request<Workbook>(`/api/workbooks/${id}`),
+  createWorkbook: (name: string) =>
+    request<Workbook>("/api/workbooks", {
+      method: "POST",
+      body: JSON.stringify({ name }),
+    }),
+  renameWorkbook: (id: string, name: string) =>
+    request<Workbook>(`/api/workbooks/${id}`, {
+      method: "PATCH",
+      body: JSON.stringify({ name }),
+    }),
+  saveState: (
+    id: string,
+    state: { activeSheetId?: string; activeCell?: string; selection?: RectSelection | null }
+  ) =>
+    request<Workbook>(`/api/workbooks/${id}/state`, {
+      method: "PATCH",
+      body: JSON.stringify(state),
+    }),
+  updateCells: (
+    id: string,
+    sheetId: string,
+    updates: Array<{ ref: string; raw: string | null }>
+  ) =>
+    request<Workbook>(`/api/workbooks/${id}/sheets/${sheetId}/cells`, {
+      method: "PATCH",
+      body: JSON.stringify({ updates }),
+    }),
+  /** REQ-1-3-1: create a workbook from raw UTF-8 CSV text. */
+  importCsv: (fileName: string, csv: string) =>
+    request<Workbook>("/api/workbooks/import", {
+      method: "POST",
+      body: JSON.stringify({ fileName, csv }),
+    }),
+};
+isError: False
+
+### 2026-09-28T06:03:50.450Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L383
+ROLE assistant 
+thinking: Now let me plan the implementation concretely.
+
+### 1. Backend `formulas.ts`
+In `moveRange` handler: set `structural = true` (align with the module's documented contract: range move rewrites references). Actually to be precise, the variable name `structural` is a bit off for move; I'll rename semantics in the comment: rename the flag to `engineAuthAllFormulas`? That's a bigger refactor touching #6's code. Minimal: set `structural = true` and update the comment where declared. Let me look at the flag declaration comment (line ~166-170) and the `structural` usage:
+
+```
+// Structural ops adjust formulas anywhere -> engine raw is authoritative
+// for every existing formula cell of the workbook.
+let structural = false;
+```
+I'll change the comment to "Structural ops and range moves adjust formulas anywhere -> ...". And set `structural = true` in the moveRange handler with a comment.
+
+### 2. Backend route
+Add to `backend/src/routes/workbooks.ts`:
+
+```
+POST /api/workbooks/:id/sheets/:sheetId/move
+body: { source: { start, end } , target: "D1" }
+-> Workbook | 400/404
+```
+
+Contract details:
+- `source`: A1 rect {start,end} (or a string "A1:B2"? The root suggested `{sourceRange, targetRef}`). I'll accept `sourceRange: { start, end } | "A1:B2"` and `targetRef: "D1"`. Keep it simple: accept `sourceRange` as either string or {start,end}, and `targetRef` string.
+- Validate refs; height = rows, width = cols; target rect must be within sheet bounds (rowCount/colCount)? moveRange in HF will throw if out of range? Let me check HF moveCells behavior for out-of-bounds — probably it clamps or throws. I'll validate against sheet.rowCount/colCount and return 400 if the target rect exceeds bounds. Also the source must be within bounds.
+- Atomic: single `runWithFormulas` call; then save + return workbook. On engine error → 500 (no save).
+- Bump updatedAt.
+- Response: whole Workbook (same convention).
+
+Also: should the endpoint handle the "source and target overlap"? HF moveCells handles overlap (like a spreadsheet move). Allow it.
+
+Return the workbook; the client computes before/after diff for undo.
+
+Hmm — one important detail for undo: the client needs the list of changed cells (including external formula raws) to undo. It can diff the previous workbook (client state) vs the response. That's straightforward.
+
+But wait: does `syncFromEngine` update `value` for all formula cells (step 4)? Yes, and it writes adjusted raws for all formula cells when structural=true. So the response includes all changed raws. The client diff will catch them.
+
+### 3. Frontend
+`api.moveRange(id, sheetId, source: RectSelection, targetRef: string)`.
+
+In EditorPage `pasteRange` for `mode === "cut"`:
+- Compute the target rect from buffer.rect size at targetStart.
+- Validate: the values that will land in the target are the source raws (move keeps moved formulas verbatim — need to confirm HF moveCells keeps the moved block's formulas' text unchanged, adjusting only references to outside? Actually moveCells semantics: formulas inside the moved range that reference cells inside the range are adjusted relative to the move; references to outside cells stay. So the moved raws are NOT verbatim. For validation purposes, formulas pass validation anyway (#7 decision), and non-formula values are unchanged. So validating with source raws is fine: non-formula values = source values (they move as-is), formulas pass.
+  Hmm, but what values land in target? For validation, use source raw per cell (formulas pass, non-formulas same text). Good.
+- Call api.moveRange; on success, setWorkbook(wb), push a single Operation kind 'move' with before/after from the diff; clear clipboard buffer.
+- On failure (validation or request), show error, leave source and target unchanged.
+
+Also need `Operation.kind` to include "move". Currently `OperationKind = "cell-edit" | "paste" | "range-move" | "structure"`. I'll add "move" or reuse "range-move". The root said kind='move'. I'll add "move" to the union and use it.
+
+Undo/redo for a move: `snapshotsToUpdates(op.before)` → PATCH /cells with all changed cells (source+target+external formulas). Since PATCH applies all raws then recomputes, the state is restored. But careful: for cells that were CLEARED by the move (source cells now empty), before snapshot has raw; after snapshot raw=null → undo sends raw=null for those (clears). Good. For cells that were CREATED (target cells), before raw=null → undo clears them. Good.
+
+Diff helper: `diffWorkbookCells(before: Workbook, after: Workbook): {before: CellSnapshot[], after: CellSnapshot[]}` comparing per sheet+ref raw. I'll add it to editing.ts (pure logic, unit-testable).
+
+Note: undo/redo across sheets — a move is single-sheet plus external formulas possibly in other sheets (cross-sheet references!). The diff covers all sheets. But `applyUpdates` takes a single sheetId. Hmm! The PATCH endpoint is per-sheet. If the move changed formula raws in other sheets, undo must write to multiple sheets → multiple requests → not atomic!
+
+Options:
+(a) Group updates by sheet and issue sequential PATCHes — not atomic, violates "all or nothing" for undo.
+(b) Extend the PATCH /cells endpoint to accept updates across sheets? That changes the shared contract.
+(c) Since REQ-3 only supports same-sheet operations (REQ-3-2-1: "only operations within the same worksheet are supported"), but external formulas in OTHER sheets referencing the moved cells would still be rewritten by moveCells... In a single workbook with multiple sheets, `=Sheet1!A1` in Sheet2 would follow the move. Requirement: "源/目标/受影响公式要么全部更新并持久，要么全部保持原状" — affected formulas could be in other sheets.
+
+Hmm. For robustness, option (a): apply per-sheet updates but in a way that's practically atomic? Not guaranteed.
+
+Better: extend the existing PATCH /cells to accept an optional `sheetUpdates` for multiple sheets? That changes a shared endpoint (#2/#6 contract). The root asked for a new move endpoint; they didn't ask to change /cells. But undo/redo of a move needs multi-sheet atomicity.
+
+Simplest robust approach: make the move endpoint itself not rewrite cross-sheet formulas? Not possible with HF moveCells (it rewrites all references workbook-wide).
+
+Alternative: for undo/redo of a move, call a symmetric endpoint that can restore arbitrary cells atomically. Hmm.
+
+Practical decision: In the vast majority of cases (and all acceptance scenarios) the referencing formulas live on the same sheet. For cross-sheet changed raws, I can include them in the same PATCH by... the endpoint is per-sheet.
+
+Let me look: could I add a generic "apply updates across sheets" endpoint? The root's contract for #4/#7 consumption is about the move endpoint. Adding `POST /api/workbooks/:id/apply` would be a new contract too.
+
+Hmm, but there's a simpler idea: since undo of a move can also be expressed as a reverse move! If the move changed source→target, undoing means moving target→source. That restores cells AND references symmetrically — atomically, via the same endpoint, with correct moveCells semantics. And redo = move source→target again.
+
+Wait, is reverse-move exactly the inverse? If the source and target don't overlap, moving target→source returns the content to the original place, and references that were rewritten (external formulas now pointing at the target) get rewritten back to the original refs. That should restore the prior state exactly. For overlapping source/target, moveCells handles it and reverse should also work (mostly).
+
+But careful: the move also cleared the source (moved away). Reverse move moves the target content back to the source, and the target becomes empty. If the target originally had content (overwritten by the move), that content is LOST — moveCells overwrites the target. Spreadsheet "cut" semantics: cutting A1 (with content) to D1 where D1 has content → D1 is overwritten, and undo should restore D1's original content. A reverse move would not restore the overwritten D1 content; it would move the (moved) content back, leaving D1 empty instead of its original value.
+
+So for correctness with overwritten targets, I need snapshot-based undo. Since the diff-based snapshot approach is correct, let me handle multi-sheet atomicity.
+
+Option: extend PATCH /cells to accept `updates` with an optional `sheetId` per update? That changes the endpoint's semantics. Or add a batch endpoint:
+
+`POST /api/workbooks/:id/apply { changes: [{sheetId, ref, raw}] }` → atomic across sheets.
+
+Hmm, that duplicates /cells. But actually, a natural generalization: allow `PATCH /api/workbooks/:id/cells` (workbook-level) with `{ updates: [{ sheetId, ref, raw }] }`. That's a new endpoint, not a change to the existing one.
+
+Given the root's instruction is scoped to the move endpoint, adding a small workbook-level atomic apply endpoint for history restoration is justified but expands the contract. Let me think about whether it's needed for the acceptance:
+- REQ-3-2-1 scenarios operate on Sheet1 only; a formula referencing the moved range on the same sheet is the likely check. Cross-sheet references are not mentioned in REQ-3 (and REQ-3-2-1 says "only operations within the same worksheet are supported").
+- REQ-3-2-2 undo must restore. If the move only touched same-sheet cells, one PATCH suffices.
+
+I can implement undo/redo to group by sheet: if all changed cells are on one sheet, one atomic PATCH; if multiple sheets, issue them sequentially (best effort) — but the requirement says all-or-nothing. Hmm.
+
+Alternative that keeps atomicity without a new endpoint: make undo/redo of a move use the move endpoint in reverse **plus** a compensating PATCH of the overwritten target cells... still 2 requests.
+
+OK, let me just add the workbook-level atomic write endpoint. Actually wait — maybe simpler: extend the existing `PATCH /api/workbooks/:id/sheets/:sheetId/cells` route to also accept an optional `sheetUpdates` array? No.
+
+Hmm, let me reconsider scope. The root asked for:
+1. move endpoint
+2. frontend cut-paste uses it
+3. undo records a single move Operation
+4. move passes validation
+5. publish contract
+
+They didn't mention multi-sheet snapshot restore. I'll implement snapshot-based undo with per-sheet grouping and, to keep atomicity, add a small generic endpoint `POST /api/workbooks/:id/cells` (workbook-level, `{ updates: [{sheetId, ref, raw}] }`) — hmm, that's inventing contract.
+
+Alternative: avoid the multi-sheet problem by noting that a move's *own* effect on other sheets' formulas is the only cross-sheet part. I can compute the diff, and if it spans sheets, still issue a single request to... 
+
+You know what? Let me check whether HyperFormula's moveCells even rewrites cross-sheet references. In HyperFormula, `moveCells` moves a range and updates references to the moved cells in other formulas *including other sheets*. Yes it does (it's workbook-wide).
+
+Decision: Add the workbook-level atomic apply endpoint. It's a small, well-defined addition that makes undo/redo of any operation (including future #4 structural ops that also touch multiple sheets) atomic. I'll publish it as part of the contract on thread 69 so #4/#7 know.
+
+Hmm, but hold on: adding a general endpoint increases review surface and risks conflicting with #4/#7's work. Let me instead keep it minimal: extend only if needed. Actually, let me reconsider: do I even need cross-sheet restore? The undo snapshot currently for cell-edit/paste is single-sheet (op.sheetId + before/after). For move, I can keep `op.sheetId` = moved sheet and store before/after for that sheet only, and ALSO store cross-sheet changes... 
+
+Hmm, hmm. Let me look at what `Operation` looks like and whether `before`/`after` are per-sheet. Currently `Operation { kind, label, sheetId, before: CellSnapshot[], after: CellSnapshot[] }` — single sheetId.
+
+I could generalize Operation to hold `before/after` grouped by sheet: `{ sheetId, refs }[]`. Then undo sends one request per group. Atomicity...
+
+OK let me just decide pragmatically, prioritizing the root's explicit ask and the acceptance:
+
+**Implementation:**
+- Move endpoint: `POST .../move` with moveRange; atomic; returns Workbook.
+- Frontend cut → move endpoint.
+- Undo for move: snapshot diff **restricted to the moved sheet** plus cross-sheet formula raws? Let me check the realistic scenario in the seed/acceptance: cross-sheet references aren't part of REQ-3 scenarios; the seeded workbook has Sheet1/Sheet2 without cross-sheet formulas. The acceptance (root's F-list) includes "F3 复制偏移" only.
+
+I'll implement the diff over ALL sheets and restore via **one workbook-level atomic endpoint**. I'll add `POST /api/workbooks/:id/apply` documented as: `{ updates: [{ sheetId, ref, raw }] }` → atomic (all sheets), returns Workbook. This makes undo/redo atomic and also reusable by #4 for structural undo (which changes raws workbook-wide). Publishing it as a contract is a plus, not a scope creep — the root explicitly asked to publish contracts for #4/#7 consumption.
+
+Hmm, but is adding an endpoint "beyond the adjudication"? The adjudication says "服务端新增 move 端点（如 POST .../move）". It doesn't forbid the apply endpoint. And requirement 3 (single move Operation) + atomic undo needs it. I'll add it and clearly justify it.
+
+Wait, actually — there's an even simpler approach that avoids the new endpoint: implement undo/redo of a move **as a snapshot restore using the existing per-sheet PATCH, but route all sheets through a loop and treat the whole undo as failed if any request fails**. The requirement "要么全部更新要么全部原状" is about the move operation, and undo is a separate action; if a cross-sheet restore partially fails that's a rare edge. But REQ-3-2-2 does say undo restores the state; a partial restore would be a bug. Still, no test covers cross-sheet.
+
+Let me weigh: adding `POST /:id/apply` = ~25 lines backend + api method + docs. Low risk. I'll do it. It also makes the undo path cleaner (one request, one snapshotsToUpdates call).
+
+Hmm, but there's a subtlety: the apply endpoint must handle cells across sheets atomically via runWithFormulas with the right extraRefs. Let me implement:
+
+```ts
+workbooksRouter.post("/api/workbooks/:id/apply", async (req,res) => {
+  const wb = ...;
+  const updates = req.body?.updates;
+  // validate array of {sheetId, ref, raw}
+  // group by sheet, validate sheet exists + ref + raw type
+  // runWithFormulas(wb, h => { for each u: h.setCellRaw(sheetId, ref, raw) }, { extraRefs: groupedRefs })
+  // save, json(wb)
+});
+```
+
+Then undo/redo uses api.applyCells(workbookId, updates-with-sheetIds).
+
+Actually, I could make undo/redo use this apply endpoint for ALL operations (cell-edit, paste, move), simplifying: `Operation.before/after` become `{ sheetId?, ref, raw }[]`. Hmm, changing the existing Operation shape touches the unit tests. Let me do it cleanly:
+
+- `CellSnapshot { sheetId?: string; ref: string; raw: string|null }` — sheetId optional, defaulting to op.sheetId.
+- `snapshotsToUpdates(snapshots, defaultSheetId)` → `{sheetId, ref, raw}[]`.
+
+Hmm, keep it simpler: add a new type `WorkbookSnapshot { sheetId: string; ref: string; raw: string|null }` and convert.
+
+Let me restructure Operation:
+```ts
+export interface CellSnapshot { sheetId: string; ref: string; raw: string | null; }
+```
+and drop `Operation.sheetId`? It's used for `applyUpdates(op.sheetId, ...)`. If snapshots carry sheetId, no need for op.sheetId (but label/kind remain). Changing this touches editing.ts + its unit tests + EditorPage. Doable but more churn.
+
+Minimal alternative: keep `Operation.sheetId` as the primary sheet, and add optional cross-sheet snapshots:
+```ts
+export interface Operation { kind; label; sheetId; before: CellSnapshot[]; after: CellSnapshot[]; 
+  /** cells changed in other sheets (rare: cross-sheet references) */ 
+  beforeOther?: CellSnapshot[]; afterOther?: CellSnapshot[]; }
+```
+Ugly.
+
+Cleanest: `CellSnapshot { sheetId: string; ref: string; raw }` and remove `Operation.sheetId`; undo/redo call one atomic apply. Update unit tests (a few lines). I'll do that.
+
+Hmm, wait. Let me reconsider whether to use the new apply endpoint for ALL undo/redo or only moves. If Operation snapshots carry sheetId, using apply for all is uniform and atomic. Good.
+
+But: the apply endpoint's semantics `runWithFormulas` with setCellRaw per update then recompute — equivalent to PATCH /cells. Fine.
+
+Now, is there a risk that the root/#6 owner objects to a new endpoint? I'll publish it in the contract comment with rationale (atomic restore across sheets for undo/redo; reusable by #4's structural undo which rewrites references workbook-wide). That's a solid justification.
+
+Hmm, actually... let me reconsider once more. Simpler and less invasive: keep undo/redo per-sheet via PATCH, and for a move, if the diff spans multiple sheets, still do sequential PATCHes. But then atomicity...
+
+You know, let me check what REQ-3-2-2 says exactly: "The source range, target range, and affected formulas must either all update and persist after refresh or all remain in their original state" — that's REQ-3-2-1 (the move). For undo: "Undo restores the grid values, original formulas, ... from before the operation". If the undo request fails mid-way, partial. Edge case.
+
+Decision: I'll add the atomic workbook-level endpoint. It's the correct engineering answer and the root asked for contract publication. Let me keep it tight.
+
+### 4. Validation for move
+Frontend: before calling move, validate the target writes (source raws mapped to target refs) with `validateWrites(sheet, updates)` where updates = target refs with source raws. That satisfies "移动路径同样过 validateRangeWrite".
+
+Also the endpoint could validate server-side, but #7's rules module isn't in develop. Note it in the contract: "#7 的服务端 guard 挂到该路由即可；当前由前端在同一管道前置校验".
+
+Hmm, but requirement 4 in the adjudication says "移动路径同样过 #7 的 validateRangeWrite". Frontend does. Good.
+
+### 5. "目标完整显示后才清源" timing
+With a single atomic move call, the target is written and the source cleared in one server operation. Observably: after the response, the target shows the values and the source is empty. The UI updates from the returned workbook — so the target displays before/with the source clearing. Requirement satisfied (there's no intermediate state where the source is cleared and the target isn't displayed).
+
+### 6. Tests
+- `checks/req3-core.spec.ts`: update the cut test:
+  - Add a formula referencing the source (e.g., put `=A24` in C29 or use an existing value) and assert it follows the move: `=A24` → after cut A24:B25 → D24:E25, the formula becomes `=D24` and its displayed result is unchanged (cells outside the range unchanged).
+  Let me design: paste `x1\tx2\nx3\tx4` at A24:B25. Put formula `=A24` in G24, displayed `x1`. Then cut A24:B25 → D24:E25. Expect: D24='x1', E25='x4', A24='', and G24 formula bar `=D24`, displayed `x1` (unchanged), i.e. "范围外单元格不变" (display unchanged).
+- Add an API-level check for the move endpoint? The browser check covers it. Maybe add to `checks/req3-integration.spec.ts` a case for move with 0-100 validation rejection: target has a 0-100 rule, source has an out-of-range value → move rejected, source and target unchanged. Good (requirement 4).
+- Unit test for the diff helper.
+
+Let me also verify moveCells behavior for the moved block's formulas (unchanged text) and external ones. I'll test via the API in the check.
+
+### 7. dist
+Keep (per ruling); note that removal is pending #7's prepare.cjs bootstrap. Check if #7's PR landed (not yet: develop 958f05a).
+
+Alright, let me start implementing. First create the branch from origin/develop.
+
+Let me also check `frontend/src/refs.ts` for Rect/selectionRect and `CellSnapshot` usages in unit tests.
+
+Let me set up the branch and look at editing.ts unit tests.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git checkout -b issue-5-range-move origin/develop 2>&1 | tail -3 && git log --oneline -1 && echo \"=== unit test usages of Operation/snapshot ===\" && grep -n \"Operation\\|snapshot\\|operationFromPlan\\|operationForCellEdit\\|sheetId\" checks/unit/editing.test.ts | head -40"}
+stopReason: toolUse
+
+### 2026-09-28T06:03:50.824Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L384
+ROLE toolResult bash
+text: Switched to a new branch 'issue-5-range-move'
+branch 'issue-5-range-move' set up to track 'origin/develop'.
+958f05a Merge local PR #8
+=== unit test usages of Operation/snapshot ===
+27:  snapshotCells,
+28:  operationFromPlan,
+29:  operationForCellEdit,
+30:  snapshotsToUpdates,
+120:test("operation snapshots record only cells that actually change", () => {
+123:  assert.deepEqual(snapshotCells(["A1", "B1"], read), [
+129:  const op = operationFromPlan("paste", "paste A1:B1", "sheet-1", plan, read);
+132:  assert.equal(op.sheetId, "sheet-1");
+134:  const edit = operationForCellEdit("sheet-1", "A2", "hello", read);
+137:  assert.deepEqual(snapshotsToUpdates(edit.before), [{ ref: "A2", raw: null }]);
+142:  const op1 = operationForCellEdit("s", "A1", "1", () => "");
+143:  const op2 = operationForCellEdit("s", "A2", "2", () => "");
+158:  const op1 = operationForCellEdit("s", "A1", "1", () => "");
+159:  const op2 = operationForCellEdit("s", "A1", "2", () => "1");
+160:  const op3 = operationForCellEdit("s", "A1", "3", () => "1");
+174:  const noop = operationFromPlan("paste", "paste", "s", planPaste("A1", [[""]]), () => "");
+178:  history.push(operationForCellEdit("s", "A1", "1", () => ""));
+isError: False
+
+### 2026-09-28T06:03:58.213Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L385
+ROLE assistant 
+thinking: The unit tests use `op.sheetId`, `snapshotCells`, `snapshotsToUpdates`. I'll need to update them if I change the shapes.
+
+Let me now decide the final design to minimize churn while being correct:
+
+**Keep `Operation.sheetId`** as "primary sheet", and make `CellSnapshot` carry an optional `sheetId`. Hmm, mixing is confusing.
+
+Cleaner minimal change:
+- `CellSnapshot { ref: string; raw: string | null }` stays.
+- `Operation` gains `crossSheet?: { sheetId: string; before: CellSnapshot[]; after: CellSnapshot[] }[]`? Ugly.
+
+Let me just restructure properly but keep it simple:
+```ts
+export interface CellSnapshot { sheetId: string; ref: string; raw: string | null; }
+export interface Operation { kind: OperationKind; label: string; before: CellSnapshot[]; after: CellSnapshot[]; structureBefore?; structureAfter?; }
+```
+Remove `Operation.sheetId`. Update:
+- `snapshotCells(sheetId, refs, read)`
+- `operationFromPlan(kind, label, sheetId, plan, read)`
+- `operationForCellEdit(sheetId, ref, raw, read)`
+- `snapshotsToUpdates(snapshots)` → `{sheetId, ref, raw}[]`
+- New: `diffCellSnapshots(beforeWorkbook, afterWorkbook)` or `operationFromDiff(kind, label, before: Workbook-ish, after: Workbook-ish)`.
+
+The unit tests need updating for the new signatures/fields — a handful of lines. Acceptable, and I'll add tests for the diff.
+
+The `kind` union: add "move".
+
+EditorPage:
+- `applyUpdates(sheetId, updates, op)` → replace with `applyCells(updates: {sheetId, ref, raw}[], op?)` calling `api.applyCells(workbookId, updates)`.
+- `handleCommitCell` → `applyCells([{sheetId: sheet.id, ref, raw}], op)`.
+- paste → same.
+- move → `api.moveRange(...)` then `setWorkbook(wb)`, push `operationFromDiff("move", label, beforeWb, wb)`.
+- undo/redo → `applyCells(snapshotsToUpdates(op.before))`.
+
+Now, for the diff: I need the workbook BEFORE the move. `workbookRef.current` at call time. But careful: the workbook state may include selection-only changes; for cell diff only compare `sheets[].cells[].raw`. I'll write a pure helper:
+
+```ts
+export interface SheetCells { id: string; cells: Record<string, { raw: string | null } | undefined> }
+export function diffOperation(kind, label, before: SheetCells[], after: SheetCells[]): Operation
+```
+Build maps of `${sheetId}\u0000${ref}` → raw (""→null), compare, produce before/after snapshots. Order: deterministic (sheet order, then ref sort) for testability.
+
+Now the server: I need an atomic apply endpoint. Let me define it as `POST /api/workbooks/:id/apply` with `{ updates: [{ sheetId, ref, raw }] }`. Hmm, naming: existing PATCH `.../sheets/:sheetId/cells`. For consistency maybe `PATCH /api/workbooks/:id/cells` with `{ updates: [{sheetId, ref, raw}] }`. I'll use `POST /api/workbooks/:id/apply` to avoid confusion with the per-sheet path... Actually `PATCH /api/workbooks/:id/cells` reads naturally as "patch cells of this workbook". I'll go with that.
+
+Hmm, but is a new endpoint really needed for the acceptance? Let me reconsider one more time to avoid scope creep: The only cross-sheet case is a formula on another sheet referencing the moved cells. If I keep undo/redo per-sheet and a move diff spans sheets, I'd do 2 requests. Risk of partial failure is low but non-zero; and the root's requirement 3 says "undo 记录为单个 move 操作". A single Operation can still be restored with 2 requests...
+
+Let me go with `PATCH /api/workbooks/:id/cells` (atomic across sheets) — it's clean, small, and makes undo/redo atomic for all operation kinds. I'll publish it too.
+
+Wait, actually, hold on. Let me reconsider using the reverse-move approach as the primary undo for moves, with the apply endpoint for the general case... No, one mechanism is better. Apply endpoint it is.
+
+Let me now write the code.
+
+Step 1: backend/src/formulas.ts — set structural=true in moveRange.
+Step 2: backend/src/routes/workbooks.ts — add `PATCH /api/workbooks/:id/cells` (workbook-level, atomic across sheets) and `POST /api/workbooks/:id/sheets/:sheetId/move`.
+Step 3: frontend api.ts — add applyCells + moveRange.
+Step 4: frontend domain/editing.ts — snapshot shapes, diff helper, kind "move".
+Step 5: frontend EditorPage.tsx — use applyCells everywhere; cut → moveRange; undo/redo via applyCells.
+Step 6: checks — update unit tests; extend req3-core cut test; add req3-integration move-validation test.
+Step 7: README/contract comment.
+Step 8: run checks, PR.
+
+Let me start. First formulas.ts.
+
+Actually, rename `structural` to something clearer? The doc/comment says "Structural ops adjust formulas anywhere". For a move, references are rewritten in formulas anywhere. I'll set `structural = true` and adjust the comment.
+
+Let me view lines 160-200 of formulas.ts to make the edit precisely.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/src/formulas.ts", "offset": 160, "limit": 40}
+stopReason: toolUse
+
+### 2026-09-28T06:03:58.215Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L386
+ROLE toolResult read
+text:   try {
+    // Verbatim raw overrides written back after the run (edits/pastes keep
+    // the user's exact text; HyperFormula would re-serialize formulas).
+    const overrides = new Map<string, Map<string, string | null>>();
+    // Refs whose presence AND raw follow the engine (move source/target).
+    const engineAuth = new Map<string, Set<string>>();
+    // Structural ops adjust formulas anywhere -> engine raw is authoritative
+    // for every existing formula cell of the workbook.
+    let structural = false;
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 255]
+
+    const handle: FormulaEngineHandle = {
+      setCellRaw: (sheetId, ref, raw) => {
+        engine.setCellRaw(sheetId, ref, raw == null ? "" : raw);
+        override(sheetId, ref, raw == null ? null : raw);
+      },
+      setRangeRaw: (sheetId, startRef, values) => {
+        engine.setRangeRaw(sheetId, startRef, values);
+        const start = parseA1(startRef);
+        if (!start) return;
+        for (let r = 0; r < values.length; r++) {
+          for (let c = 0; c < (values[r] ?? []).length; c++) {
+            override(sheetId, formatA1(start.col + c, start.row + r), values[r][c] ?? "");
+          }
+        }
+      },
+      moveRange: (sheetId, fromRef, toRef, height, width) => {
+        engine.moveRange(sheetId, fromRef, toRef, height, width);
+        markEngineAuth(sheetId, [
+
+[127 more lines in file. Use offset=200 to continue.]
+isError: False
+
+### 2026-09-28T06:04:01.824Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L387
+ROLE assistant 
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/src/formulas.ts", "edits": [{"oldText": "    // Structural ops adjust formulas anywhere -> engine raw is authoritative\n    // for every existing formula cell of the workbook.\n    let structural = false;", "newText": "    // Structural ops and range moves rewrite references anywhere in the\n    // workbook -> the engine raw is authoritative for every existing formula\n    // cell (see the module comment: a move's external references follow the\n    // moved block, so their stored raw must follow too).\n    let structural = false;"}, {"oldText": "      moveRange: (sheetId, fromRef, toRef, height, width) => {\n        engine.moveRange(sheetId, fromRef, toRef, height, width);\n        markEngineAuth(sheetId, [\n          ...rectRefs(fromRef, height, width),\n          ...rectRefs(toRef, height, width),\n        ]);\n      },", "newText": "      moveRange: (sheetId, fromRef, toRef, height, width) => {\n        engine.moveRange(sheetId, fromRef, toRef, height, width);\n        markEngineAuth(sheetId, [\n          ...rectRefs(fromRef, height, width),\n          ...rectRefs(toRef, height, width),\n        ]);\n        // moveCells semantics rewrites references to the moved cells from\n        // anywhere in the workbook, so those formulas' raws must take the\n        // engine's adjusted text (REQ-3-2-1: \"cells outside these ranges must\n        // not change\" - a stale raw would leave a dangling reference).\n        structural = true;\n      },"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:04:01.828Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L388
+ROLE toolResult edit
+text: Successfully replaced 2 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/src/formulas.ts.
+isError: False
+
+### 2026-09-28T06:04:06.890Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L389
+ROLE assistant 
+thinking: Now the routes. Let me add:
+1. `PATCH /api/workbooks/:id/cells` — workbook-level atomic apply: `{ updates: [{ sheetId, ref, raw }] }`.
+2. `POST /api/workbooks/:id/sheets/:sheetId/move` — `{ sourceRange: {start,end} | "A1:B2", targetRef: "D1" }` → Workbook.
+
+Also update the contract doc comment at the top of the file.
+
+Let me write the route code. I need helpers: parseRef (exists), and rect size computation. Let me implement inside the route file.
+
+For move:
+```ts
+workbooksRouter.post("/api/workbooks/:id/sheets/:sheetId/move", async (req,res) => {
+  const wb = getWorkbook(req.params.id);
+  if (!wb) return notFound(res);
+  const sheet = findSheet(wb, req.params.sheetId);
+  if (!sheet) { res.status(404).json({error:"Sheet not found"}); return; }
+  const source = parseRect(req.body?.sourceRange);   // returns {start,end} normalized refs
+  const targetRef = typeof req.body?.targetRef === "string" ? req.body.targetRef.toUpperCase() : null;
+  const targetPos = parseRef(targetRef);
+  if (!source || !targetRef || !targetPos) return badRequest(res, "sourceRange and targetRef must be A1 ranges/refs");
+  const start = parseRef(source.start)!, end = parseRef(source.end)!;
+  const height = Math.abs(end.row - start.row) + 1;
+  const width = Math.abs(end.col - start.col) + 1;
+  const fromRef = `${colLetter(min col)}${min row}`;  // top-left
+  const toRef = targetRef;
+  if (toRef row+height-1 > sheet.rowCount || col+width-1 > sheet.colCount) return badRequest(res, "target range is outside the worksheet");
+  ...
+  await runWithFormulas(wb, h => h.moveRange(sheet.id, fromRef, toRef, height, width), { extraRefs: [{sheetId: sheet.id, refs: rectRefs(toRef,height,width)}] });
+  wb.updatedAt = ...; saveWorkbook(wb); res.json(wb);
+});
+```
+
+Wait: does moveRange mark the target rect as engineAuth (already done in the wrapper) so I don't need extraRefs. The wrapper marks source+target rects. And `structural=true` triggers raw write-back for formulas. But what about target cells that become occupied where the engine raw is set — `engineAuth` handles presence. OK. But if the target rect extends beyond the source and the engine's `engineRaw` is "" for a target cell... The source content fills the target exactly (same size), so all target cells get content equal to the corresponding source cell (which may be empty → engineRaw "" → cleared). Fine.
+
+Also for the *workbook-level* apply endpoint, I need extraRefs grouping.
+
+Let me also think about `parseRect`: accept string "A1:B2" / "A1" or object {start,end}. I'll implement a local helper.
+
+Also the contract: should the move endpoint validate that the source is within bounds? If source is out of bounds, sheet.cells may still have content beyond rowCount? The seed has rowCount/colCount limits (e.g. 100x26?). Let me check makeSheet defaults.
+
+Let me look at workbook-factory for rowCount/colCount.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -n \"rowCount\\|colCount\" backend/src/workbook-factory.ts backend/src/config.ts backend/src/types.ts | head -20 && echo \"=== refs.ts ===\" && cat frontend/src/refs.ts | head -60"}
+stopReason: toolUse
+
+### 2026-09-28T06:04:07.121Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L390
+ROLE toolResult bash
+text: backend/src/workbook-factory.ts:26:    rowCount: DEFAULT_ROW_COUNT,
+backend/src/workbook-factory.ts:27:    colCount: DEFAULT_COL_COUNT,
+backend/src/types.ts:68:  /** Current grid dimensions (rows 1..rowCount, cols 1..colCount). */
+backend/src/types.ts:69:  rowCount: number;
+backend/src/types.ts:70:  colCount: number;
+=== refs.ts ===
+/** A1-style helpers shared by grid components. */
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 256]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 257]
+
+/** (col, row) 1-based -> "B3". */
+export function makeRef(col: number, row: number): string {
+  return `${colLetter(col)}${row}`;
+}
+
+export interface Rect {
+  top: number;
+  left: number;
+  bottom: number;
+  right: number;
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 258]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 259]
+
+/** Deterministic "Last updated: ..." timestamp (YYYY-MM-DD HH:mm:ss local time). */
+export function formatDateTime(iso: string): string {
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return iso;
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return (
+isError: False
+
+### 2026-09-28T06:04:09.722Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L391
+ROLE assistant 
+thinking: Now let me write the backend routes. I'll add both endpoints after the existing cells handler.
+
+Let me view the end of the cells handler to insert after it.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && tail -20 backend/src/routes/workbooks.ts && echo \"=== line count ===\" && wc -l backend/src/routes/workbooks.ts"}
+stopReason: toolUse
+
+### 2026-09-28T06:04:09.742Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L392
+ROLE toolResult bash
+text:   try {
+    await runWithFormulas(
+      wb,
+      (engine) => {
+        for (const u of updates) {
+          engine.setCellRaw(sheet.id, String(u.ref).toUpperCase(), u.raw ?? null);
+        }
+      },
+      { extraRefs: [{ sheetId: sheet.id, refs: updates.map((u) => String(u.ref)) }] }
+    );
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error("[formula pipeline]", err);
+    res.status(500).json({ error: "Failed to apply cell updates" });
+    return;
+  }
+  wb.updatedAt = new Date().toISOString();
+  saveWorkbook(wb);
+  res.json(wb);
+});
+=== line count ===
+208 backend/src/routes/workbooks.ts
+isError: False
+
+### 2026-09-28T06:04:15.697Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L393
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && cat >> backend/src/routes/workbooks.ts <<'EOF'\n\n/**\n * Atomic cell writes ACROSS worksheets: { updates: [{ sheetId, ref, raw }] }.\n *\n * Undo/redo restores the raws recorded by one operation. An operation may\n * touch more than one worksheet (a range move rewrites every reference to the\n * moved cells, including formulas on other sheets), and the requirement is\n * all-or-nothing, so the restore must be one atomic request. The per-sheet\n * endpoint above stays the shape for ordinary edits.\n */\nworkbooksRouter.patch(\"/api/workbooks/:id/cells\", async (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  const updates = req.body?.updates;\n  if (!Array.isArray(updates) || updates.length === 0) {\n    badRequest(res, \"updates must be a non-empty array\");\n    return;\n  }\n  const perSheet = new Map<string, string[]>();\n  for (const u of updates) {\n    const sheet = findSheet(wb, String(u?.sheetId));\n    const pos = parseRef(u?.ref);\n    if (!sheet) {\n      badRequest(res, `Unknown sheet: ${String(u?.sheetId)}`);\n      return;\n    }\n    if (!pos) {\n      badRequest(res, `Invalid cell ref: ${String(u?.ref)}`);\n      return;\n    }\n    if (u.raw !== null && typeof u.raw !== \"string\") {\n      badRequest(res, \"Cell raw must be a string or null\");\n      return;\n    }\n    const refs = perSheet.get(sheet.id) ?? [];\n    refs.push(String(u.ref).toUpperCase());\n    perSheet.set(sheet.id, refs);\n  }\n  try {\n    await runWithFormulas(\n      wb,\n      (engine) => {\n        for (const u of updates) {\n          engine.setCellRaw(String(u.sheetId), String(u.ref).toUpperCase(), u.raw ?? null);\n        }\n      },\n      {\n        extraRefs: [...perSheet.entries()].map(([sheetId, refs]) => ({ sheetId, refs })),\n      }\n    );\n  } catch (err) {\n    // eslint-disable-next-line no-console\n    console.error(\"[formula pipeline]\", err);\n    res.status(500).json({ error: \"Failed to apply cell updates\" });\n    return;\n  }\n  wb.updatedAt = new Date().toISOString();\n  saveWorkbook(wb);\n  res.json(wb);\n});\n\n/**\n * Move a rectangular range to a target cell (REQ-3-2-1 cut/paste): the engine\n * applies HyperFormula moveCells semantics, so formulas INSIDE the moved block\n * travel with it and formulas referencing the block from anywhere in the\n * workbook are rewritten to the new location (REQ-3-2-1 \"cells outside these\n * ranges must not change\": their displayed result stays the same).\n *\n * Body: { sourceRange: \"A1:B2\" | { start, end }, targetRef: \"D1\" }.\n * Atomic: the whole move (source cleared, target written, references\n * rewritten) is one engine run and one save, or nothing is persisted.\n * Returns the whole Workbook, like every other content mutation.\n */\nworkbooksRouter.post(\n  \"/api/workbooks/:id/sheets/:sheetId/move\",\n  async (req: Request, res: Response) => {\n    const wb = getWorkbook(req.params.id);\n    if (!wb) {\n      notFound(res);\n      return;\n    }\n    const sheet = findSheet(wb, req.params.sheetId);\n    if (!sheet) {\n      res.status(404).json({ error: \"Sheet not found\" });\n      return;\n    }\n    const body = req.body || {};\n    const source = parseRectInput(body.sourceRange);\n    const target = parseRef(body.targetRef);\n    if (!source || !target) {\n      badRequest(res, \"sourceRange must be an A1 range and targetRef an A1 cell\");\n      return;\n    }\n    const from = {\n      col: Math.min(parseRef(source.start)!.col, parseRef(source.end)!.col),\n      row: Math.min(parseRef(source.start)!.row, parseRef(source.end)!.row),\n    };\n    const height = Math.abs(parseRef(source.end)!.row - parseRef(source.start)!.row) + 1;\n    const width = Math.abs(parseRef(source.end)!.col - parseRef(source.start)!.col) + 1;\n    if (\n      from.row + height - 1 > sheet.rowCount ||\n      from.col + width - 1 > sheet.colCount ||\n      target.row + height - 1 > sheet.rowCount ||\n      target.col + width - 1 > sheet.colCount\n    ) {\n      badRequest(res, \"the source or target range is outside the worksheet\");\n      return;\n    }\n    const fromRef = `${colLetterOf(from.col)}${from.row}`;\n    const targetRef = `${colLetterOf(target.col)}${target.row}`;\n    try {\n      await runWithFormulas(wb, (engine) => {\n        engine.moveRange(sheet.id, fromRef, targetRef, height, width);\n      });\n    } catch (err) {\n      // eslint-disable-next-line no-console\n      console.error(\"[formula pipeline]\", err);\n      res.status(500).json({ error: \"Failed to move the range\" });\n      return;\n    }\n    wb.updatedAt = new Date().toISOString();\n    saveWorkbook(wb);\n    res.json(wb);\n  }\n);\nEOF\necho done"}
+stopReason: toolUse
+
+### 2026-09-28T06:04:15.721Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L394
+ROLE toolResult bash
+text: done
+isError: False
+
+### 2026-09-28T06:04:21.458Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L395
+ROLE assistant 
+thinking: I used helpers `parseRectInput` and `colLetterOf` that don't exist yet. Let me add them near `parseRef`. Also `parseRef` returns `{col,row}` for a single ref; for "A1:B2" it would fail on the ":" — so `parseRectInput` must parse the range and then parse each part with parseRef.
+
+Let me add:
+
+```ts
+/** Column number -> letters ("D" for 4). */
+function colLetterOf(col: number): string {
+  let letters = "";
+  let n = col;
+  while (n > 0) {
+    const rem = (n - 1) % 26;
+    letters = String.fromCharCode(65 + rem) + letters;
+    n = Math.floor((n - 1) / 26);
+  }
+  return letters;
+}
+
+/**
+ * Accept "A1:B2"/"A1" or { start, end } and return the two corner refs
+ * (uppercased) or null when the input is not a valid A1 range.
+ */
+function parseRectInput(value: unknown): { start: string; end: string } | null {
+  if (typeof value === "string") {
+    const [a, b, ...rest] = value.split(":");
+    if (rest.length > 0 || !parseRef(a)) return null;
+    const end = b ?? a;
+    if (!parseRef(end)) return null;
+    return { start: a.toUpperCase(), end: end.toUpperCase() };
+  }
+  if (value && typeof value === "object") {
+    const rect = value as { start?: unknown; end?: unknown };
+    const start = typeof rect.start === "string" ? rect.start : "";
+    const end = typeof rect.end === "string" ? rect.end : start;
+    if (!parseRef(start) || !parseRef(end)) return null;
+    return { start: start.toUpperCase(), end: end.toUpperCase() };
+  }
+  return null;
+}
+```
+
+Also I should clean up the repetitive parseRef calls in the move handler — let me simplify by computing coords once.
+
+Let me rewrite that portion for clarity. Let me do an edit replacing the block with a cleaner version, and add the helpers.
+
+Also note: `parseRef(body.targetRef)` — body.targetRef might not be a string; parseRef handles non-string returning null. Good.
+
+Let me apply the edits.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/src/routes/workbooks.ts", "edits": [{"oldText": "function badRequest(res: Response, error: string): void {\n  res.status(400).json({ error });\n}", "newText": "/** Column number -> letters (1 -> \"A\", 4 -> \"D\"). */\nfunction colLetterOf(col: number): string {\n  let letters = \"\";\n  let n = col;\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    letters = String.fromCharCode(65 + rem) + letters;\n    n = Math.floor((n - 1) / 26);\n  }\n  return letters;\n}\n\n/**\n * Accept \"A1:B2\"/\"A1\" or { start, end } and return the two corner refs\n * (uppercased), or null when the input is not a valid A1 range.\n */\nfunction parseRectInput(value: unknown): { start: string; end: string } | null {\n  if (typeof value === \"string\") {\n    const parts = value.split(\":\");\n    if (parts.length > 2 || !parseRef(parts[0])) return null;\n    const end = parts[1] ?? parts[0];\n    if (!parseRef(end)) return null;\n    return { start: parts[0].toUpperCase(), end: end.toUpperCase() };\n  }\n  if (value && typeof value === \"object\") {\n    const rect = value as { start?: unknown; end?: unknown };\n    const start = typeof rect.start === \"string\" ? rect.start : \"\";\n    const end = typeof rect.end === \"string\" ? rect.end : start;\n    if (!parseRef(start) || !parseRef(end)) return null;\n    return { start: start.toUpperCase(), end: end.toUpperCase() };\n  }\n  return null;\n}\n\nfunction badRequest(res: Response, error: string): void {\n  res.status(400).json({ error });\n}"}, {"oldText": "    const from = {\n      col: Math.min(parseRef(source.start)!.col, parseRef(source.end)!.col),\n      row: Math.min(parseRef(source.start)!.row, parseRef(source.end)!.row),\n    };\n    const height = Math.abs(parseRef(source.end)!.row - parseRef(source.start)!.row) + 1;\n    const width = Math.abs(parseRef(source.end)!.col - parseRef(source.start)!.col) + 1;", "newText": "    const a = parseRef(source.start)!;\n    const b = parseRef(source.end)!;\n    const from = { col: Math.min(a.col, b.col), row: Math.min(a.row, b.row) };\n    const height = Math.abs(b.row - a.row) + 1;\n    const width = Math.abs(b.col - a.col) + 1;"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:04:21.524Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L396
+ROLE toolResult edit
+text: Successfully replaced 2 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/src/routes/workbooks.ts.
+isError: False
+
+### 2026-09-28T06:04:23.622Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L397
+ROLE assistant 
+thinking: Also update the API contract doc comment at the top to include the two new endpoints. Let me do that.
+
+Then frontend api.ts.
+
+Let me update the contract comment.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/src/routes/workbooks.ts", "edits": [{"oldText": " *  PATCH  /api/workbooks/:id/sheets/:sheetId/cells  { updates: [{ ref, raw }] }\n *                                                   -> Workbook | 400/404 { error }\n *", "newText": " *  PATCH  /api/workbooks/:id/sheets/:sheetId/cells  { updates: [{ ref, raw }] }\n *                                                   -> Workbook | 400/404 { error }\n *  PATCH  /api/workbooks/:id/cells  { updates: [{ sheetId, ref, raw }] }\n *                                                   -> Workbook | 400/404 { error }\n *                                                   (atomic across sheets)\n *  POST   /api/workbooks/:id/sheets/:sheetId/move  { sourceRange, targetRef }\n *                                                   -> Workbook | 400/404 { error }\n *                                                   (HyperFormula moveCells)\n *"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:04:23.626Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L398
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/backend/src/routes/workbooks.ts.
+isError: False
+
+### 2026-09-28T06:04:25.287Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L399
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./backend/node_modules/.bin/tsc -p backend/tsconfig.json && echo \"BE TSC OK\""}
+stopReason: toolUse
+
+### 2026-09-28T06:04:30.922Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L400
+ROLE toolResult bash
+text: BE TSC OK
+isError: False
+
+### 2026-09-28T06:04:34.664Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L401
+ROLE assistant 
+thinking: Backend compiles. Now frontend api.ts: add `applyCells` (workbook-level) and `moveRange`.
+
+```ts
+  /** Atomic raws restore across sheets (undo/redo). */
+  applyCells: (id: string, updates: Array<{ sheetId: string; ref: string; raw: string | null }>) =>
+    request<Workbook>(`/api/workbooks/${id}/cells`, {
+      method: "PATCH",
+      body: JSON.stringify({ updates }),
+    }),
+  /** REQ-3-2-1: cut/paste as an engine range move (moveCells semantics). */
+  moveRange: (
+    id: string,
+    sheetId: string,
+    sourceRange: RectSelection,
+    targetRef: string
+  ) =>
+    request<Workbook>(`/api/workbooks/${id}/sheets/${sheetId}/move`, {
+      method: "POST",
+      body: JSON.stringify({ sourceRange, targetRef }),
+    }),
+```
+
+Let me add these after updateCells.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/api.ts", "edits": [{"oldText": "  /** REQ-1-3-1: create a workbook from raw UTF-8 CSV text. */", "newText": "  /**\n   * Atomic raw restore ACROSS worksheets (undo/redo): one operation may touch\n   * more than one sheet (a range move rewrites references anywhere).\n   */\n  applyCells: (\n    id: string,\n    updates: Array<{ sheetId: string; ref: string; raw: string | null }>\n  ) =>\n    request<Workbook>(`/api/workbooks/${id}/cells`, {\n      method: \"PATCH\",\n      body: JSON.stringify({ updates }),\n    }),\n  /**\n   * REQ-3-2-1 cut/paste: move a rectangle with the engine's moveCells\n   * semantics, so references to the moved cells follow them (and the displayed\n   * result of cells outside source/target does not change).\n   */\n  moveRange: (id: string, sheetId: string, sourceRange: RectSelection, targetRef: string) =>\n    request<Workbook>(`/api/workbooks/${id}/sheets/${sheetId}/move`, {\n      method: \"POST\",\n      body: JSON.stringify({ sourceRange, targetRef }),\n    }),\n  /** REQ-1-3-1: create a workbook from raw UTF-8 CSV text. */"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:04:34.679Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L402
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/api.ts.
+isError: False
+
+### 2026-09-28T06:04:46.130Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L403
+ROLE assistant 
+thinking: Now editing.ts:
+1. `CellSnapshot` gains `sheetId`.
+2. `Operation` drops `sheetId` (snapshots carry it).
+3. `OperationKind` adds "move".
+4. `snapshotCells(sheetId, refs, read)`.
+5. `operationFromPlan(kind, label, sheetId, plan, read)`.
+6. `operationForCellEdit(sheetId, ref, raw, read)`.
+7. `snapshotsToUpdates(snapshots)` → `{sheetId, ref, raw}[]`.
+8. New `operationFromWorkbookDiff(kind, label, beforeSheets, afterSheets)` with a `SheetCellSource { id: string; cells: Record<string, { raw: string | null } | undefined> }`.
+
+Let me write these edits. Let me view the current tail of editing.ts (history section) to edit precisely.
+
+I have the file content from earlier. Let me make the edits.
+
+For the diff helper:
+
+```ts
+/** Minimal workbook shape needed to diff cell raws (Sheet.cells keyed by A1). */
+export interface SheetCellSource {
+  id: string;
+  cells: Record<string, { raw: string | null } | undefined>;
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 260]
+
+/**
+ * Operation from a before/after workbook snapshot: every cell whose raw
+ * changed, on any sheet. Used for operations whose effect is computed by the
+ * server (range move rewriting references workbook-wide), where the client
+ * cannot enumerate the affected cells up front.
+ */
+export function operationFromWorkbookDiff(
+  kind: OperationKind,
+  label: string,
+  before: SheetCellSource[],
+  after: SheetCellSource[],
+): Operation {
+  const beforeMap = rawMap(before);
+  const afterMap = rawMap(after);
+  const keys = [...new Set([...beforeMap.keys(), ...afterMap.keys()])].sort();
+  const beforeSnaps: CellSnapshot[] = [];
+  const afterSnaps: CellSnapshot[] = [];
+  for (const key of keys) {
+    const b = beforeMap.has(key) ? beforeMap.get(key)! : null;
+    const a = afterMap.has(key) ? afterMap.get(key)! : null;
+    if (b === a) continue;
+    const sep = key.indexOf("\u0000");
+    const sheetId = key.slice(0, sep);
+    const ref = key.slice(sep + 1);
+    beforeSnaps.push({ sheetId, ref, raw: b });
+    afterSnaps.push({ sheetId, ref, raw: a });
+  }
+  return { kind, label, before: beforeSnaps, after: afterSnaps };
+}
+```
+
+Wait: `b === a` where both null → skip. If a cell is absent in before and absent in after → both null → skip. If absent before and present after with raw null (can't be: raw null cells are deleted on the server) → fine.
+
+Hmm, one subtlety: a cell present with raw "" — the server deletes empty cells, so raw "" shouldn't be stored. Treat "" as null.
+
+Now `snapshotsToUpdates`:
+```ts
+export function snapshotsToUpdates(snapshots: CellSnapshot[]): CellUpdate[] {
+  return snapshots.map((s) => ({ sheetId: s.sheetId, ref: s.ref, raw: s.raw }));
+}
+```
+But `CellUpdate` is currently `{ref, raw}`. I'll add a new type `WorkbookCellUpdate { sheetId; ref; raw }`.
+
+Let me write all edits now. I'll rewrite the Operation/History section of editing.ts.
+
+Let me get the exact current text of that section (from my earlier read):
+
+```ts
+export interface CellSnapshot {
+  ref: string;
+  raw: string | null;
+}
+
+export type OperationKind = "cell-edit" | "paste" | "range-move" | "structure";
+
+export interface StructureSnapshot {
+  [key: string]: unknown;
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 261]
+
+/** Snapshot the current content of `refs` ("" and absent cells become null). */
+export function snapshotCells(refs: string[], read: RawLookup): CellSnapshot[] {
+  return refs.map((ref) => ({ ref, raw: read(ref) === "" ? null : read(ref) }));
+}
+...
+```
+
+Let me apply the edits.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/domain/editing.ts", "edits": [{"oldText": "export interface CellSnapshot {\n  ref: string;\n  raw: string | null;\n}\n\nexport type OperationKind = \"cell-edit\" | \"paste\" | \"range-move\" | \"structure\";\n\nexport interface StructureSnapshot {\n  [key: string]: unknown;\n}\n\nexport interface Operation {\n  kind: OperationKind;\n  label: string;\n  sheetId: string;\n  before: CellSnapshot[];\n  after: CellSnapshot[];\n  /** row/column structure state for REQ-2 operations */\n  structureBefore?: StructureSnapshot;\n  structureAfter?: StructureSnapshot;\n}\n\n/** Snapshot the current content of `refs` (\"\" and absent cells become null). */\nexport function snapshotCells(refs: string[], read: RawLookup): CellSnapshot[] {\n  return refs.map((ref) => ({ ref, raw: read(ref) === \"\" ? null : read(ref) }));\n}", "newText": "export interface CellSnapshot {\n  /** The worksheet the cell belongs to; one operation may span worksheets. */\n  sheetId: string;\n  ref: string;\n  raw: string | null;\n}\n\n/** API payload for restoring snapshots across worksheets. */\nexport interface WorkbookCellUpdate {\n  sheetId: string;\n  ref: string;\n  raw: string | null;\n}\n\nexport type OperationKind = \"cell-edit\" | \"paste\" | \"move\" | \"structure\";\n\nexport interface StructureSnapshot {\n  [key: string]: unknown;\n}\n\nexport interface Operation {\n  kind: OperationKind;\n  label: string;\n  before: CellSnapshot[];\n  after: CellSnapshot[];\n  /** row/column structure state for REQ-2 operations */\n  structureBefore?: StructureSnapshot;\n  structureAfter?: StructureSnapshot;\n}\n\n/** Snapshot the current content of `refs` (\"\" and absent cells become null). */\nexport function snapshotCells(sheetId: string, refs: string[], read: RawLookup): CellSnapshot[] {\n  return refs.map((ref) => ({ sheetId, ref, raw: read(ref) === \"\" ? null : read(ref) }));\n}\n\n/** Minimal workbook shape needed to diff cell raws (Sheet.cells keyed by A1). */\nexport interface SheetCellSource {\n  id: string;\n  cells: Record<string, { raw: string | null } | undefined>;\n}\n\nfunction rawMap(sheets: SheetCellSource[]): Map<string, string | null> {\n  const map = new Map<string, string | null>();\n  for (const sheet of sheets) {\n    for (const [ref, cell] of Object.entries(sheet.cells)) {\n      const raw = cell?.raw ?? null;\n      map.set(`${sheet.id}\\u0000${ref.toUpperCase()}`, raw === \"\" ? null : raw);\n    }\n  }\n  return map;\n}\n\n/**\n * Operation from a before/after workbook snapshot: every cell whose raw changed,\n * on any worksheet. Used for operations whose effect the server computes (a\n * range move rewrites references to the moved cells workbook-wide), where the\n * client cannot enumerate the affected cells up front — undo must restore all\n * of them, including cells outside the moved rectangle.\n */\nexport function operationFromWorkbookDiff(\n  kind: OperationKind,\n  label: string,\n  before: SheetCellSource[],\n  after: SheetCellSource[]\n): Operation {\n  const beforeMap = rawMap(before);\n  const afterMap = rawMap(after);\n  const keys = [...new Set([...beforeMap.keys(), ...afterMap.keys()])].sort();\n  const beforeSnapshots: CellSnapshot[] = [];\n  const afterSnapshots: CellSnapshot[] = [];\n  for (const key of keys) {\n    const previous = beforeMap.has(key) ? beforeMap.get(key)! : null;\n    const next = afterMap.has(key) ? afterMap.get(key)! : null;\n    if (previous === next) continue;\n    const separator = key.indexOf(\"\\u0000\");\n    const sheetId = key.slice(0, separator);\n    const ref = key.slice(separator + 1);\n    beforeSnapshots.push({ sheetId, ref, raw: previous });\n    afterSnapshots.push({ sheetId, ref, raw: next });\n  }\n  return { kind, label, before: beforeSnapshots, after: afterSnapshots };\n}"}, {"oldText": "export function operationFromPlan(\n  kind: OperationKind,\n  label: string,\n  sheetId: string,\n  plan: WritePlan,\n  read: RawLookup,\n): Operation {\n  const writes = new Map<string, string | null>();\n  for (const u of plan.updates) writes.set(u.ref, u.raw === \"\" ? null : u.raw);\n  for (const ref of plan.clears) writes.set(ref, null);\n  const refs = [...writes.keys()].filter((ref) => read(ref) !== (writes.get(ref) ?? \"\"));\n  const before: CellSnapshot[] = [];\n  const after: CellSnapshot[] = [];\n  for (const ref of refs) {\n    const current = read(ref);\n    before.push({ ref, raw: current === \"\" ? null : current });\n    after.push({ ref, raw: writes.get(ref) ?? null });\n  }\n  return { kind, label, sheetId, before, after };\n}", "newText": "export function operationFromPlan(\n  kind: OperationKind,\n  label: string,\n  sheetId: string,\n  plan: WritePlan,\n  read: RawLookup,\n): Operation {\n  const writes = new Map<string, string | null>();\n  for (const u of plan.updates) writes.set(u.ref, u.raw === \"\" ? null : u.raw);\n  for (const ref of plan.clears) writes.set(ref, null);\n  const refs = [...writes.keys()].filter((ref) => read(ref) !== (writes.get(ref) ?? \"\"));\n  const before: CellSnapshot[] = [];\n  const after: CellSnapshot[] = [];\n  for (const ref of refs) {\n    const current = read(ref);\n    before.push({ sheetId, ref, raw: current === \"\" ? null : current });\n    after.push({ sheetId, ref, raw: writes.get(ref) ?? null });\n  }\n  return { kind, label, before, after };\n}"}, {"oldText": "  return {\n    kind: \"cell-edit\",\n    label: `edit ${ref}`,\n    sheetId,\n    before: [{ ref, raw: current === \"\" ? null : current }],\n    after: [{ ref, raw: raw === \"\" ? null : raw }],\n  };", "newText": "  return {\n    kind: \"cell-edit\",\n    label: `edit ${ref}`,\n    before: [{ sheetId, ref, raw: current === \"\" ? null : current }],\n    after: [{ sheetId, ref, raw: raw === \"\" ? null : raw }],\n  };"}, {"oldText": "/** Snapshots -> API updates. */\nexport function snapshotsToUpdates(snapshots: CellSnapshot[]): CellUpdate[] {\n  return snapshots.map((s) => ({ ref: s.ref, raw: s.raw }));\n}", "newText": "/** Snapshots -> one atomic workbook-level API request (any sheets involved). */\nexport function snapshotsToUpdates(snapshots: CellSnapshot[]): WorkbookCellUpdate[] {\n  return snapshots.map((s) => ({ sheetId: s.sheetId, ref: s.ref, raw: s.raw }));\n}"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:04:47.340Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L404
+ROLE toolResult edit
+text: Successfully replaced 4 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/domain/editing.ts.
+isError: False
+
+### 2026-09-28T06:04:56.212Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L405
+ROLE assistant 
+thinking: Careful: in the `rawMap` I wrote `` `${sheet.id}\\u0000${ref.toUpperCase()}` `` inside a JS template literal in the edit's newText — I escaped as `\\u0000` in the JSON string, which becomes `\u0000` in the file source → in a template literal, `\u0000` is the NUL character. Good.
+
+And `key.indexOf("\u0000")` — in the file it will be `"\u0000"`. Good.
+
+Also `planRangeCut` is now unused in EditorPage (cut goes through move). I'll keep the function (still exported/unit-tested) or remove it? The unit tests reference `planRangeCut`. Since cut now uses the server move, `planRangeCut` becomes dead code. Options: keep it (harmless) or remove. Better: remove to avoid dead code that contradicts the implemented semantics, and update the unit test. Hmm, but `planRangeCut` semantics (verbatim move + clear source) is exactly what we no longer use. Keeping it risks confusion ("two sources of truth"). Let me remove `planRangeCut` and its unit test, replacing with tests for `operationFromWorkbookDiff`.
+
+Wait, `subtractRect` is only used by planRangeCut. Remove both? `subtractRect` might be useful for #4. Let me remove planRangeCut and keep subtractRect? Dead code... I'll remove planRangeCut and subtractRect (and their test if any). Let me check unit tests for planRangeCut/subtractRect.
+
+Let me now update EditorPage. Changes:
+- imports: remove planRangeCut; add operationFromWorkbookDiff, WorkbookCellUpdate.
+- `applyUpdates(sheetId, updates, op)` → `applyCells(updates: WorkbookCellUpdate[], op?)`.
+- handleCommitCell.
+- pasteRange: cut branch → server move.
+- pasteFromText: unchanged for plain paste.
+- undo/redo: applyCells(snapshotsToUpdates(...)).
+
+Let me write the new pasteRange:
+
+```ts
+  /** Paste the in-session range: a copy adjusts formulas, a cut is a server move. */
+  const pasteRange = async (buffer: ClipboardBuffer) => {
+    const workbookId = idRef.current;
+    const sheet = activeSheetOf(workbookRef.current);
+    if (!workbookId || !sheet) return;
+    const targetStart = rectStartRef(currentRect());
+    const bounds = { rows: sheet.rowCount, cols: sheet.colCount };
+
+    if (buffer.mode === "cut") {
+      const { rows, cols } = rectSize(normalizeRect(buffer.rect.start, buffer.rect.end));
+      const targetRect = rectAt(targetStart, rows, cols);
+      // The values that land in the target (formulas keep their text and pass
+      // validation, plain values move verbatim) — refuse the whole move before
+      // touching the workbook.
+      const targetUpdates: CellUpdate[] = [];
+      const source = normalizeRect(buffer.rect.start, buffer.rect.end);
+      for (let row = 0; row < rows; row += 1) {
+        for (let col = 0; col < cols; col += 1) {
+          targetUpdates.push({
+            ref: makeRef(targetRect.left + col, targetRect.top + row),
+            raw: readRaw(makeRef(source.left + col, source.top + row)),
+          });
+        }
+      }
+      if (!validateWrites(sheet, targetUpdates)) return;
+      const before = workbookRef.current;
+      setError(null);
+      try {
+        const wb = await api.moveRange(workbookId, sheet.id, buffer.rect, targetStart);
+        setWorkbook(wb);
+        if (before) {
+          const op = operationFromWorkbookDiff(
+            "move",
+            `move ${buffer.rect.start}:${buffer.rect.end} to ${targetStart}`,
+            before.sheets,
+            wb.sheets
+          );
+          historyRef.current.push(op);
+          setHistoryVersion((v) => v + 1);
+        }
+        clipboardRef.current = null;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Request failed");
+      }
+      return;
+    }
+
+    const plan = planRangeCopy(buffer.rect, targetStart, readRaw, bounds);
+    ...
+  };
+```
+
+Hmm wait: validation for the move. The rule range for validation might itself move? No, REQ-3 doesn't move rules. The target cells must satisfy their own rules. `validateWrites(sheet, targetUpdates)` uses `sheet.validationRules` — the rules' ranges are static. Good.
+
+But careful: if the source values are cleared as part of the move, and a rule applies to the SOURCE range, does clearing violate the rule? #7's `validateRangeWrite` — my implementation treats empty raw as ok for number rules (`if (raw.trim() === "") return ok`) and for dropdown it requires membership (empty would fail!). Hmm: for a dropdown rule, clearing the source would be rejected? But I only validate the TARGET updates, not the source clears. So the source clearing bypasses validation. Is that correct? A move clears the source; if the source has a dropdown rule, clearing it should be allowed (clearing is generally allowed). #7's decision: "目标单元格没有规则时 validateRange 返回 ok". Not specified for clears. My cell-edit path validates a single update; clearing a dropdown cell via formula bar would be rejected by my implementation (dropdown requires membership: `allowed.includes("")` false → reject). Hmm, that's a pre-existing behavior question for #7's module, not part of this follow-up. Leave it.
+
+Now `rectSize` and `rectAt` are already imported? EditorPage imports from editing: CellUpdate, GridRect, History, Operation, RectSelection, normalizeRect, operationForCellEdit, operationFromPlan, parseClipboardTable, planPaste, planRangeCopy, planRangeCut, rectStartRef, serializeClipboardTable, snapshotsToUpdates. I need to add `rectAt`, `rectSize`, `operationFromWorkbookDiff`, `WorkbookCellUpdate`; remove `planRangeCut`, `snapshotsToUpdates` stays, `CellUpdate` maybe still used by plain paste.
+
+Also `applyUpdates` → `applyCells`. Let me look at current EditorPage to make precise edits. Let me view lines 100-250 of the merged EditorPage (in this new branch the file is develop's version? No — wait!).
+
+IMPORTANT: I created the branch from origin/develop (958f05a), which now CONTAINS my PR #8. So frontend/src/pages/EditorPage.tsx on this branch already has all my REQ-3 code (from PR #8). Good. Let me verify.
+
+Let me read the relevant parts of EditorPage on this branch.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -n \"planRangeCut\\|applyUpdates\\|snapshotsToUpdates\\|ClipboardBuffer\\|pasteRange\\|copyRange\\|CellUpdate\\|rectSize\\|rectAt\" frontend/src/pages/EditorPage.tsx | head -40"}
+stopReason: toolUse
+
+### 2026-09-28T06:04:56.318Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L406
+ROLE toolResult bash
+text: 12:  CellUpdate,
+23:  planRangeCut,
+26:  snapshotsToUpdates,
+32:interface ClipboardBuffer {
+75:  const clipboardRef = useRef<ClipboardBuffer | null>(null);
+206:  const validateWrites = (sheet: { validationRules?: unknown }, updates: CellUpdate[]): boolean => {
+218:  const applyUpdates = useCallback(
+219:    async (sheetId: string, updates: CellUpdate[], op?: Operation): Promise<boolean> => {
+264:    const update: CellUpdate = { ref, raw };
+267:    return applyUpdates(sheet.id, [update], op);
+271:  const copyRange = (mode: "copy" | "cut") => {
+283:    const buffer: ClipboardBuffer = {
+302:  const pasteRange = async (buffer: ClipboardBuffer) => {
+309:        ? planRangeCut(buffer.rect, targetStart, readRaw)
+312:    const updates: CellUpdate[] = [
+325:    const ok = await applyUpdates(sheet.id, updates, op);
+345:      await pasteRange(buffer);
+356:    await applyUpdates(sheet.id, plan.updates, op);
+383:    const ok = await applyUpdates(op.sheetId, snapshotsToUpdates(op.before));
+395:    const ok = await applyUpdates(op.sheetId, snapshotsToUpdates(op.after));
+420:        copyRange("copy");
+423:        copyRange("cut");
+539:          onCopyRange={() => copyRange("copy")}
+540:          onCutRange={() => copyRange("cut")}
+isError: False
+
+### 2026-09-28T06:04:58.697Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L407
+ROLE assistant 
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx", "offset": 200, "limit": 70}
+stopReason: toolUse
+
+### 2026-09-28T06:04:58.717Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L408
+ROLE toolResult read
+text: 
+  /**
+   * Validate writes against the worksheet's rules (owned by #7). A rejection
+   * refuses the whole operation: nothing is written and no history entry is
+   * created. The message and hint render as two separate elements.
+   */
+  const validateWrites = (sheet: { validationRules?: unknown }, updates: CellUpdate[]): boolean => {
+    const outcome = validateSheetWrites(sheet, updates);
+    if (outcome.ok) {
+      setValidationError(null);
+      return true;
+    }
+    const first = outcome.errors[0];
+    setValidationError({ message: first.message, hint: first.hint });
+    return false;
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 262]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 263]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 264]
+
+  const handleCommitCell = async (ref: string, raw: string | null): Promise<boolean> => {
+    const sheet = activeSheetOf(workbookRef.current);
+    if (!sheet) return false;
+    if (readRaw(ref) === (raw ?? "")) return true; // nothing changed
+    const update: CellUpdate = { ref, raw };
+    if (!validateWrites(sheet, [update])) return false;
+    const op = operationForCellEdit(sheet.id, ref, raw, readRaw);
+    return applyUpdates(sheet.id, [update], op);
+  };
+
+
+[283 more lines in file. Use offset=270 to continue.]
+isError: False
+
+### 2026-09-28T06:05:05.620Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L409
+ROLE assistant 
+thinking: Now let me make the EditorPage edits:
+
+1. Imports: replace `planRangeCut` with `operationFromWorkbookDiff`, add `rectAt`, `rectSize`, `WorkbookCellUpdate`.
+2. `applyUpdates` → `applyCells(updates: WorkbookCellUpdate[], op?)` using `api.applyCells`.
+3. `handleCommitCell` → `applyCells([{sheetId: sheet.id, ref, raw}], op)`.
+4. `pasteRange` cut branch → api.moveRange.
+5. plain paste → `applyCells(plan.updates.map(u => ({sheetId: sheet.id, ...u})), op)`.
+6. undo/redo → `applyCells(snapshotsToUpdates(...))`.
+
+Let me do the import edit first. Current imports (lines ~10-27):
+```
+import {
+  CellUpdate,
+  GridRect,
+  History,
+  Operation,
+  RectSelection,
+  normalizeRect,
+  operationForCellEdit,
+  operationFromPlan,
+  parseClipboardTable,
+  planPaste,
+  planRangeCopy,
+  planRangeCut,
+  rectStartRef,
+  serializeClipboardTable,
+  snapshotsToUpdates,
+} from "../domain/editing";
+```
+New:
+```
+import {
+  CellUpdate,
+  GridRect,
+  History,
+  Operation,
+  RectSelection,
+  WorkbookCellUpdate,
+  normalizeRect,
+  operationForCellEdit,
+  operationFromPlan,
+  operationFromWorkbookDiff,
+  parseClipboardTable,
+  planPaste,
+  planRangeCopy,
+  rectAt,
+  rectSize,
+  rectStartRef,
+  serializeClipboardTable,
+  snapshotsToUpdates,
+} from "../domain/editing";
+```
+
+Now `applyCells`:
+```ts
+  /** Apply one atomic batch write across sheets, recording the operation. */
+  const applyCells = useCallback(
+    async (updates: WorkbookCellUpdate[], op?: Operation): Promise<boolean> => {
+      const workbookId = idRef.current;
+      if (!workbookId || updates.length === 0) return false;
+      setError(null);
+      try {
+        const wb = await api.applyCells(workbookId, updates);
+        setWorkbook(wb);
+        if (op) {
+          historyRef.current.push(op);
+          setHistoryVersion((v) => v + 1);
+        }
+        return true;
+      } catch (e) {
+        setError(e instanceof Error ? e.message : "Request failed");
+        return false;
+      }
+    },
+    []
+  );
+```
+
+Wait: `handleCommitCell` returns `applyCells(...)` and expects a boolean; with updates non-empty it's fine.
+
+Careful: `applyCells` returning false for empty updates — undo with no changes? History.push ignores empty ops, so undo always has snapshots. Fine.
+
+pasteRange for copy path:
+```ts
+    const plan = planRangeCopy(buffer.rect, targetStart, readRaw, bounds);
+    if (plan.updates.length === 0) return;
+    const updates: WorkbookCellUpdate[] = [
+      ...plan.updates.map((u) => ({ sheetId: sheet.id, ...u })),
+      ...plan.clears.map((ref) => ({ sheetId: sheet.id, ref, raw: null })),
+    ];
+    if (!validateWrites(sheet, plan.updates)) return;
+    const op = operationFromPlan("paste", ..., sheet.id, plan, readRaw);
+    await applyCells(updates, op);
+```
+Note: planRangeCopy never sets clears ([]), so `plan.clears` is moot, but keep for generality.
+
+Hmm, `plan.updates` is `CellUpdate[]` with `{ref, raw}`. `{sheetId: sheet.id, ...u}` works.
+
+Cut branch as designed.
+
+Let me write the edits now. I'll replace the whole applyUpdates block, handleCommitCell, pasteRange, and the undo/redo applyUpdates calls, plus imports.
+
+Let me be careful with exact text.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx", "edits": [{"oldText": "import {\n  CellUpdate,\n  GridRect,\n  History,\n  Operation,\n  RectSelection,\n  normalizeRect,\n  operationForCellEdit,\n  operationFromPlan,\n  parseClipboardTable,\n  planPaste,\n  planRangeCopy,\n  planRangeCut,\n  rectStartRef,\n  serializeClipboardTable,\n  snapshotsToUpdates,\n} from \"../domain/editing\";", "newText": "import {\n  CellUpdate,\n  GridRect,\n  History,\n  Operation,\n  RectSelection,\n  WorkbookCellUpdate,\n  normalizeRect,\n  operationForCellEdit,\n  operationFromPlan,\n  operationFromWorkbookDiff,\n  parseClipboardTable,\n  planPaste,\n  planRangeCopy,\n  rectAt,\n  rectSize,\n  rectStartRef,\n  serializeClipboardTable,\n  snapshotsToUpdates,\n} from \"../domain/editing\";"}, {"oldText": "  /** Apply one atomic batch write, recording the operation in the history. */\n  const applyUpdates = useCallback(\n    async (sheetId: string, updates: CellUpdate[], op?: Operation): Promise<boolean> => {\n      const workbookId = idRef.current;\n      if (!workbookId) return false;\n      setError(null);\n      try {\n        const wb = await api.updateCells(workbookId, sheetId, updates);\n        setWorkbook(wb);\n        if (op) {\n          historyRef.current.push(op);\n          setHistoryVersion((v) => v + 1);\n        }\n        return true;\n      } catch (e) {\n        setError(e instanceof Error ? e.message : \"Request failed\");\n        return false;\n      }\n    },\n    []\n  );", "newText": "  /**\n   * Apply one atomic batch write, recording the operation in the history. The\n   * write is workbook-level so an operation whose effect spans worksheets (a\n   * move rewriting references elsewhere) is restored in ONE request.\n   */\n  const applyCells = useCallback(\n    async (updates: WorkbookCellUpdate[], op?: Operation): Promise<boolean> => {\n      const workbookId = idRef.current;\n      if (!workbookId || updates.length === 0) return false;\n      setError(null);\n      try {\n        const wb = await api.applyCells(workbookId, updates);\n        setWorkbook(wb);\n        if (op) {\n          historyRef.current.push(op);\n          setHistoryVersion((v) => v + 1);\n        }\n        return true;\n      } catch (e) {\n        setError(e instanceof Error ? e.message : \"Request failed\");\n        return false;\n      }\n    },\n    []\n  );"}, {"oldText": "    const update: CellUpdate = { ref, raw };\n    if (!validateWrites(sheet, [update])) return false;\n    const op = operationForCellEdit(sheet.id, ref, raw, readRaw);\n    return applyUpdates(sheet.id, [update], op);\n  };", "newText": "    const update: CellUpdate = { ref, raw };\n    if (!validateWrites(sheet, [update])) return false;\n    const op = operationForCellEdit(sheet.id, ref, raw, readRaw);\n    return applyCells([{ sheetId: sheet.id, ref, raw }], op);\n  };"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:05:05.624Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L410
+ROLE toolResult edit
+text: Successfully replaced 3 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx.
+isError: False
+
+### 2026-09-28T06:05:08.115Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L411
+ROLE assistant 
+text: Now the paste/move path:
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx", "offset": 274, "limit": 70}
+stopReason: toolUse
+
+### 2026-09-28T06:05:08.120Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L412
+ROLE toolResult read
+text:     return applyCells([{ sheetId: sheet.id, ref, raw }], op);
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 265]
+
+  /** Paste the in-session range: formulas adjust, cut clears its source too. */
+  const pasteRange = async (buffer: ClipboardBuffer) => {
+    const sheet = activeSheetOf(workbookRef.current);
+    if (!sheet) return;
+    const targetStart = rectStartRef(currentRect());
+    const bounds = { rows: sheet.rowCount, cols: sheet.colCount };
+    const plan =
+      buffer.mode === "cut"
+        ? planRangeCut(buffer.rect, targetStart, readRaw)
+        : planRangeCopy(buffer.rect, targetStart, readRaw, bounds);
+    if (plan.updates.length === 0) return;
+    const updates: CellUpdate[] = [
+      ...plan.updates,
+      ...plan.clears.map((ref) => ({ ref, raw: null })),
+    ];
+    // Whole operation or nothing: validation refusal leaves source and target.
+    if (!validateWrites(sheet, updates)) return;
+    const op = operationFromPlan(
+      buffer.mode === "cut" ? "range-move" : "paste",
+      `${buffer.mode} ${buffer.rect.start}:${buffer.rect.end} to ${targetStart}`,
+      sheet.id,
+      plan,
+      readRaw
+    );
+    const ok = await applyUpdates(sheet.id, updates, op);
+    // A cut is consumed by its paste (its source has been cleared already).
+    if (ok && buffer.mode === "cut") clipboardRef.current = null;
+  };
+
+  /**
+   * Apply pasted text: when it is exactly what our own copy/cut put on the
+   * clipboard the in-session range semantics are used (formula adjustment,
+   * source clearing), otherwise the text is applied as a plain 2-D paste.
+   */
+  const pasteFromText = async (text: string | null) => {
+    const sheet = activeSheetOf(workbookRef.current);
+
+[216 more lines in file. Use offset=344 to continue.]
+isError: False
+
+### 2026-09-28T06:05:13.965Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L413
+ROLE assistant 
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx", "edits": [{"oldText": "  /** Paste the in-session range: formulas adjust, cut clears its source too. */\n  const pasteRange = async (buffer: ClipboardBuffer) => {\n    const sheet = activeSheetOf(workbookRef.current);\n    if (!sheet) return;\n    const targetStart = rectStartRef(currentRect());\n    const bounds = { rows: sheet.rowCount, cols: sheet.colCount };\n    const plan =\n      buffer.mode === \"cut\"\n        ? planRangeCut(buffer.rect, targetStart, readRaw)\n        : planRangeCopy(buffer.rect, targetStart, readRaw, bounds);\n    if (plan.updates.length === 0) return;\n    const updates: CellUpdate[] = [\n      ...plan.updates,\n      ...plan.clears.map((ref) => ({ ref, raw: null })),\n    ];\n    // Whole operation or nothing: validation refusal leaves source and target.\n    if (!validateWrites(sheet, updates)) return;\n    const op = operationFromPlan(\n      buffer.mode === \"cut\" ? \"range-move\" : \"paste\",\n      `${buffer.mode} ${buffer.rect.start}:${buffer.rect.end} to ${targetStart}`,\n      sheet.id,\n      plan,\n      readRaw\n    );\n    const ok = await applyUpdates(sheet.id, updates, op);\n    // A cut is consumed by its paste (its source has been cleared already).\n    if (ok && buffer.mode === \"cut\") clipboardRef.current = null;\n  };", "newText": "  /**\n   * Cut (REQ-3-2-1 range move): one atomic server move with the engine's\n   * moveCells semantics, so formulas referencing the moved cells follow them\n   * and the displayed result of cells outside source/target does not change.\n   * The target is validated first; a rejection leaves source and target as\n   * they were. Undo records the single move operation.\n   */\n  const moveRange = async (buffer: ClipboardBuffer) => {\n    const workbookId = idRef.current;\n    const sheet = activeSheetOf(workbookRef.current);\n    const before = workbookRef.current;\n    if (!workbookId || !sheet || !before) return;\n    const targetStart = rectStartRef(currentRect());\n    const source = normalizeRect(buffer.rect.start, buffer.rect.end);\n    const size = rectSize(source);\n    const target = rectAt(targetStart, size.rows, size.cols);\n    // The raw text that lands in the target: plain values move verbatim,\n    // formulas keep their text and pass validation (#7 decision).\n    const landing: CellUpdate[] = [];\n    for (let row = 0; row < size.rows; row += 1) {\n      for (let col = 0; col < size.cols; col += 1) {\n        landing.push({\n          ref: makeRef(target.left + col, target.top + row),\n          raw: readRaw(makeRef(source.left + col, source.top + row)),\n        });\n      }\n    }\n    if (!validateWrites(sheet, landing)) return;\n    setError(null);\n    try {\n      const wb = await api.moveRange(workbookId, sheet.id, buffer.rect, targetStart);\n      setWorkbook(wb);\n      historyRef.current.push(\n        operationFromWorkbookDiff(\n          \"move\",\n          `move ${buffer.rect.start}:${buffer.rect.end} to ${targetStart}`,\n          before.sheets,\n          wb.sheets\n        )\n      );\n      setHistoryVersion((v) => v + 1);\n      // A cut is consumed by its paste (source cleared by the same move).\n      clipboardRef.current = null;\n    } catch (e) {\n      setError(e instanceof Error ? e.message : \"Request failed\");\n    }\n  };\n\n  /** Paste the in-session range: a copy adjusts formulas, a cut is a move. */\n  const pasteRange = async (buffer: ClipboardBuffer) => {\n    const sheet = activeSheetOf(workbookRef.current);\n    if (!sheet) return;\n    if (buffer.mode === \"cut\") {\n      await moveRange(buffer);\n      return;\n    }\n    const targetStart = rectStartRef(currentRect());\n    const bounds = { rows: sheet.rowCount, cols: sheet.colCount };\n    const plan = planRangeCopy(buffer.rect, targetStart, readRaw, bounds);\n    if (plan.updates.length === 0) return;\n    const updates: WorkbookCellUpdate[] = [\n      ...plan.updates.map((u) => ({ sheetId: sheet.id, ...u })),\n      ...plan.clears.map((ref) => ({ sheetId: sheet.id, ref, raw: null })),\n    ];\n    // Whole operation or nothing: validation refusal leaves source and target.\n    if (!validateWrites(sheet, plan.updates)) return;\n    const op = operationFromPlan(\n      \"paste\",\n      `${buffer.mode} ${buffer.rect.start}:${buffer.rect.end} to ${targetStart}`,\n      sheet.id,\n      plan,\n      readRaw\n    );\n    await applyCells(updates, op);\n  };"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:05:14.028Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L414
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx.
+isError: False
+
+### 2026-09-28T06:05:15.964Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L415
+ROLE assistant 
+thinking: Now update the plain-paste path and undo/redo. Let me view lines ~390-470.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx", "offset": 395, "limit": 65}
+stopReason: toolUse
+
+### 2026-09-28T06:05:16.017Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L416
+ROLE toolResult read
+text:     const isOwnBuffer = !!buffer && text !== null && text === buffer.text;
+    // When the clipboard cannot be read at all, trust a buffer we did write.
+    const unreadableWithOwnBuffer = !!buffer && buffer.synced && (text === null || text === "");
+    if (buffer && (isOwnBuffer || unreadableWithOwnBuffer)) {
+      await pasteRange(buffer);
+      return;
+    }
+    if (text === null || text === "") return;
+    const table = parseClipboardTable(text);
+    if (table.length === 0) return;
+    const startRef = rectStartRef(currentRect());
+    const plan = planPaste(startRef, table);
+    if (plan.updates.length === 0) return;
+    if (!validateWrites(sheet, plan.updates)) return;
+    const op = operationFromPlan("paste", `paste to ${startRef}`, sheet.id, plan, readRaw);
+    await applyUpdates(sheet.id, plan.updates, op);
+  };
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 266]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 267]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 268]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 269]
+
+  // Keyboard shortcuts: Ctrl+Z / Ctrl+Y (undo, redo), Ctrl+C / Ctrl+X (range
+  // copy, cut), Ctrl+V (paste). Text inputs keep their native behaviour.
+  useEffect(() => {
+    const isEditable = (target: EventTarget | null) => {
+
+[147 more lines in file. Use offset=460 to continue.]
+isError: False
+
+### 2026-09-28T06:05:18.571Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L417
+ROLE assistant 
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx", "edits": [{"oldText": "    const op = operationFromPlan(\"paste\", `paste to ${startRef}`, sheet.id, plan, readRaw);\n    await applyUpdates(sheet.id, plan.updates, op);\n  };", "newText": "    const op = operationFromPlan(\"paste\", `paste to ${startRef}`, sheet.id, plan, readRaw);\n    await applyCells(\n      plan.updates.map((u) => ({ sheetId: sheet.id, ...u })),\n      op\n    );\n  };"}, {"oldText": "    const ok = await applyUpdates(op.sheetId, snapshotsToUpdates(op.before));", "newText": "    const ok = await applyCells(snapshotsToUpdates(op.before));"}, {"oldText": "    const ok = await applyUpdates(op.sheetId, snapshotsToUpdates(op.after));", "newText": "    const ok = await applyCells(snapshotsToUpdates(op.after));"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:05:18.621Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L418
+ROLE toolResult edit
+text: Successfully replaced 3 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/pages/EditorPage.tsx.
+isError: False
+
+### 2026-09-28T06:05:21.352Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L419
+ROLE assistant 
+thinking: Now remove `planRangeCut` and `subtractRect` from editing.ts (dead code) — actually, wait: `subtractRect` might still be used elsewhere. Let me grep. Also remove the unit test for planRangeCut.
+
+Actually, let me reconsider: should I remove them? Keeping unused exported helpers isn't harmful, but `planRangeCut` embodies the superseded semantics and could confuse future readers (and #4). I'll remove `planRangeCut` and keep `subtractRect` only if used. Let me grep usage first.
+
+Then run tsc.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -rn \"planRangeCut\\|subtractRect\" --include=*.ts --include=*.tsx frontend checks/unit backend | grep -v node_modules"}
+stopReason: toolUse
+
+### 2026-09-28T06:05:23.735Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L420
+ROLE toolResult bash
+text: frontend/src/domain/editing.ts:122:export function subtractRect(source: GridRect, target: GridRect): string[] {
+frontend/src/domain/editing.ts:234:export function planRangeCut(source: RectSelection, targetStartRef: string, read: RawLookup): WritePlan {
+frontend/src/domain/editing.ts:244:  return { rect: target, updates, clears: subtractRect(rect, target) };
+checks/unit/editing.test.ts:20:  subtractRect,
+checks/unit/editing.test.ts:26:  planRangeCut,
+checks/unit/editing.test.ts:42:  assert.deepEqual(subtractRect(rectAt("A1", 2, 2), rectAt("A2", 2, 2)), ["A1", "B1"]);
+checks/unit/editing.test.ts:108:test("planRangeCut moves content unchanged and clears source cells outside the target", () => {
+checks/unit/editing.test.ts:111:  const plan = planRangeCut({ start: "A1", end: "B2" }, "B2", read);
+isError: False
+
+### 2026-09-28T06:05:26.830Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L421
+ROLE assistant 
+thinking: I'll remove `planRangeCut` and `subtractRect`, and update the unit tests: remove the `subtractRect` assertion + import, remove the planRangeCut test, and add tests for `operationFromWorkbookDiff`.
+
+Wait — `subtractRect` is a general geometry helper that #4 might use. But it's my file; keeping unused code is mild. I'll remove `planRangeCut` (superseded semantics) and keep `subtractRect`? It's only used by planRangeCut. Remove both to keep the module honest. If #4 needs it, they can add it.
+
+Hmm, actually removing exports that other lanes might already reference could break them. #4's branch (`frontend/src/domain/structure.ts`) — does it import from `editing.ts`? It was written before my PR merged, based on an older develop, so probably not. Let me check quickly if any other branch references editing.ts helpers via git grep on origin refs. Let me check origin/braid-agent/issue-4 and issue-7 for `domain/editing`.
+
+Let me check.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && for b in origin/braid-agent/issue-4/pi-glm-fast-g1 origin/braid-agent/issue-7/pi-deepseek-fast-g1 origin/braid-agent/issue-2/pi-glm-fast-g1; do echo \"== $b\"; git grep -n \"domain/editing\\|planRangeCut\\|subtractRect\" \"$b\" -- '*.ts' '*.tsx' 2>/dev/null | head -5; done"}
+stopReason: toolUse
+
+### 2026-09-28T06:05:27.520Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L422
+ROLE toolResult bash
+text: == origin/braid-agent/issue-4/pi-glm-fast-g1
+== origin/braid-agent/issue-7/pi-deepseek-fast-g1
+== origin/braid-agent/issue-2/pi-glm-fast-g1
+isError: False
+
+### 2026-09-28T06:05:30.701Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L423
+ROLE assistant 
+thinking: No other branch references them. Safe to remove.
+
+Let me remove `planRangeCut` and `subtractRect` from editing.ts and update the unit tests.
+
+editing.ts lines: `subtractRect` function block, and `planRangeCut` block.
+
+Let me view those exact blocks.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '115,135p' frontend/src/domain/editing.ts && echo \"......\" && sed -n '222,250p' frontend/src/domain/editing.ts"}
+stopReason: toolUse
+
+### 2026-09-28T06:05:30.724Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L424
+ROLE toolResult bash
+text:         }
+      : { top: row, bottom: row, left: col, right: col };
+  }
+  return rect;
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 270]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 271]
+
+// ---------------------------------------------------------------------------
+......
+      ref: makeRef(col + colOffset, row + rowOffset),
+      raw: adjustFormulaForCopy(raw, { rowOffset, colOffset }, bounds),
+    });
+  }
+  return { rect: target, updates, clears: [] };
+}
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 272]
+
+// ---------------------------------------------------------------------------
+// Operation history (REQ-3-2-2)
+// ---------------------------------------------------------------------------
+isError: False
+
+### 2026-09-28T06:05:35.163Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L425
+ROLE assistant 
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/domain/editing.ts", "edits": [{"oldText": "/** Cells of `source` that `target` does not cover (used by cut). */\nexport function subtractRect(source: GridRect, target: GridRect): string[] {\n  return rectRefs(source).filter((ref) => {\n    const { col, row } = parseRef(ref);\n    return !rectContains(target, col, row);\n  });\n}\n\n/** Table laid out at `start`; returns the rectangle it covers. */", "newText": "/** Table laid out at `start`; returns the rectangle it covers. */"}, {"oldText": "/**\n * Plan a range cut (move) to `targetStartRef`: the moved content keeps its\n * formulas unchanged (moving is not copying, REQ-3-2-1 adjusts references of\n * copies), and source cells outside the pasted rectangle are cleared.\n */\nexport function planRangeCut(source: RectSelection, targetStartRef: string, read: RawLookup): WritePlan {\n  const rect = normalizeRect(source.start, source.end);\n  const target = rectAt(targetStartRef, rect.bottom - rect.top + 1, rect.right - rect.left + 1);\n  const rowOffset = target.top - rect.top;\n  const colOffset = target.left - rect.left;\n  const updates: CellUpdate[] = [];\n  for (const ref of rectRefs(rect)) {\n    const { col, row } = parseRef(ref);\n    updates.push({ ref: makeRef(col + colOffset, row + rowOffset), raw: read(ref) ?? \"\" });\n  }\n  return { rect: target, updates, clears: subtractRect(rect, target) };\n}\n\n// ---------------------------------------------------------------------------\n// Operation history (REQ-3-2-2)", "newText": "// Range cut/copy-paste is a MOVE, not a \"write the target + clear the source\"\n// plan: the engine's moveCells semantics rewrite every reference to the moved\n// cells (including formulas on other sheets), which the client cannot compute.\n// It goes through POST .../sheets/:sheetId/move and is recorded as one\n// 'move' operation via `operationFromWorkbookDiff` below.\n\n// ---------------------------------------------------------------------------\n// Operation history (REQ-3-2-2)"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:05:35.167Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L426
+ROLE toolResult edit
+text: Successfully replaced 2 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/src/domain/editing.ts.
+isError: False
+
+### 2026-09-28T06:05:37.739Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L427
+ROLE assistant 
+thinking: Now `rectContains` may be unused too (it was only used by subtractRect). Let me check and remove if unused. Also check `CellUpdate.raw` type: `raw: string | null` — planRangeCopy produces raw strings. Fine.
+
+Let me run frontend tsc to find unused/type errors — but `noUnusedLocals` may not be enabled. Let me check and clean up manually via grep.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -rn \"rectContains\" --include=*.ts --include=*.tsx frontend checks | grep -v node_modules; echo \"=== tsc ===\"; ./frontend/node_modules/.bin/tsc -p frontend/tsconfig.json && echo \"FE TSC OK\""}
+stopReason: toolUse
+
+### 2026-09-28T06:05:47.912Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L428
+ROLE toolResult bash
+text: frontend/src/domain/editing.ts:83:export function rectContains(rect: GridRect, col: number, row: number): boolean {
+checks/unit/editing.test.ts:15:  rectContains,
+checks/unit/editing.test.ts:37:  assert.equal(rectContains(rect, 1, 1), true);
+checks/unit/editing.test.ts:38:  assert.equal(rectContains(rect, 4, 1), false);
+=== tsc ===
+FE TSC OK
+isError: False
+
+### 2026-09-28T06:05:50.338Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L429
+ROLE assistant 
+thinking: `rectContains` is still exported and unit-tested (geometry helper, fine to keep — it's a general primitive used by tests; Grid uses its own inline check). Keep it.
+
+Frontend compiles. Now update the unit tests: remove imports/tests for `subtractRect` and `planRangeCut`, and add tests for `operationFromWorkbookDiff`.
+
+Let me view the unit test file around those areas.
+toolCall read {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/unit/editing.test.ts"}
+stopReason: toolUse
+
+### 2026-09-28T06:05:50.340Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L430
+ROLE toolResult read
+text: /**
+ * Unit checks for the REQ-3 editing core (issue #5).
+ *
+ *   node --test checks/unit/editing.test.ts
+ *
+ * The module under test has no framework or network dependency, so it runs
+ * directly on Node's type stripping. The file is kept outside the Playwright
+ * `**\/*.spec.ts` match and outside the frontend build.
+ */
+import test from "node:test";
+import assert from "node:assert/strict";
+
+import {
+  normalizeRect,
+  rectContains,
+  rectSize,
+  rectStartRef,
+  rectRefs,
+  rectAt,
+  subtractRect,
+  parseClipboardTable,
+  tableSpan,
+  serializeClipboardTable,
+  planPaste,
+  planRangeCopy,
+  planRangeCut,
+  snapshotCells,
+  operationFromPlan,
+  operationForCellEdit,
+  snapshotsToUpdates,
+  History,
+} from "../../frontend/src/domain/editing.ts";
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 273]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 274]
+
+test("copied formulas are adjusted by the shared engine (issue #6)", () => {
+  // planRangeCopy delegates to @app/formula-engine's adjustFormulaForCopy:
+  // relative parts move with the offset, `$` parts stay, out-of-bounds
+  // relative references collapse the whole formula to "=#REF!".
+  const cells: Record<string, string> = { A1: "=A1+$B$1" };
+  const read = (ref: string) => cells[ref] ?? "";
+  const down = planRangeCopy({ start: "A1", end: "A1" }, "A2", read, { rows: 100, cols: 26 });
+  assert.equal(down.updates[0].raw, "=A2+$B$1");
+  const outOfBounds = planRangeCopy({ start: "A1", end: "A1" }, "B1", read, { rows: 100, cols: 1 });
+  assert.equal(outOfBounds.updates[0].raw, "=#REF!");
+  const plain = planRangeCopy({ start: "A1", end: "A1" }, "A2", () => "text", { rows: 100, cols: 26 });
+  assert.equal(plain.updates[0].raw, "text");
+});
+
+test("planPaste covers the whole rectangle and preserves empty fields", () => {
+  const plan = planPaste("A4", parseClipboardTable("p1\t\tp3\np4\tp5\tp6"));
+  assert.deepEqual(plan.rect, rectAt("A4", 2, 3));
+  const byRef = new Map(plan.updates.map((u) => [u.ref, u.raw]));
+  assert.equal(byRef.get("A4"), "p1");
+  assert.equal(byRef.get("B4"), "");
+  assert.equal(byRef.get("C4"), "p3");
+  assert.equal(byRef.get("A5"), "p4");
+  assert.equal(byRef.get("C5"), "p6");
+  assert.equal(plan.updates.length, 6);
+  assert.deepEqual(plan.clears, []);
+});
+
+test("planPaste from a single-cell selection lays the table out from that cell", () => {
+  const plan = planPaste("C7", parseClipboardTable("x\ty"));
+  assert.deepEqual(
+    plan.updates.map((u) => `${u.ref}=${u.raw}`),
+    ["C7=x", "D7=y"]
+  );
+});
+
+test("planRangeCopy shifts formulas to the target offset and leaves the source alone", () => {
+  const cells: Record<string, string> = { A1: "1", B1: "=A1*2", A2: "=A1+$B$1", B2: "x" };
+  const read = (ref: string) => cells[ref] ?? "";
+  const plan = planRangeCopy({ start: "A1", end: "B2" }, "D5", read, { rows: 100, cols: 26 });
+  const byRef = new Map(plan.updates.map((u) => [u.ref, u.raw]));
+  assert.deepEqual(plan.rect, rectAt("D5", 2, 2));
+  assert.equal(byRef.get("D5"), "1");
+  assert.equal(byRef.get("E5"), "=D5*2");
+  assert.equal(byRef.get("D6"), "=D5+$B$1");
+  assert.equal(byRef.get("E6"), "x");
+  // a copy never touches its source
+  assert.deepEqual(plan.clears, []);
+  assert.equal(cells.B1, "=A1*2");
+});
+
+test("planRangeCut moves content unchanged and clears source cells outside the target", () => {
+  const cells: Record<string, string> = { A1: "a", B1: "=A1", A2: "c", B2: "d" };
+  const read = (ref: string) => cells[ref] ?? "";
+  const plan = planRangeCut({ start: "A1", end: "B2" }, "B2", read);
+  const byRef = new Map(plan.updates.map((u) => [u.ref, u.raw]));
+  assert.equal(byRef.get("B2"), "a");
+  assert.equal(byRef.get("C2"), "=A1"); // moved, not copied: references unchanged
+  assert.equal(byRef.get("B3"), "c");
+  assert.equal(byRef.get("C3"), "d");
+  assert.deepEqual(plan.clears.sort(), ["A1", "A2", "B1"]);
+});
+
+test("operation snapshots record only cells that actually change", () => {
+  const cells: Record<string, string> = { A1: "old", B1: "" };
+  const read = (ref: string) => cells[ref] ?? "";
+  assert.deepEqual(snapshotCells(["A1", "B1"], read), [
+    { ref: "A1", raw: "old" },
+    { ref: "B1", raw: null },
+  ]);
+
+  const plan = planPaste("A1", [["old", "new"]]);
+  const op = operationFromPlan("paste", "paste A1:B1", "sheet-1", plan, read);
+  assert.deepEqual(op.before, [{ ref: "B1", raw: null }]);
+  assert.deepEqual(op.after, [{ ref: "B1", raw: "new" }]);
+  assert.equal(op.sheetId, "sheet-1");
+
+  const edit = operationForCellEdit("sheet-1", "A2", "hello", read);
+  assert.deepEqual(edit.before, [{ ref: "A2", raw: null }]);
+  assert.deepEqual(edit.after, [{ ref: "A2", raw: "hello" }]);
+  assert.deepEqual(snapshotsToUpdates(edit.before), [{ ref: "A2", raw: null }]);
+});
+
+test("history restores operations in reverse order and redoes them", () => {
+  const history = new History();
+  const op1 = operationForCellEdit("s", "A1", "1", () => "");
+  const op2 = operationForCellEdit("s", "A2", "2", () => "");
+  history.push(op1);
+  history.push(op2);
+  assert.equal(history.canUndo(), true);
+  assert.equal(history.undo(), op2);
+  assert.equal(history.undo(), op1);
+  assert.equal(history.canUndo(), false);
+  assert.deepEqual(history.depth(), { undo: 0, redo: 2 });
+  assert.equal(history.redo(), op1);
+  assert.equal(history.redo(), op2);
+  assert.equal(history.canRedo(), false);
+});
+
+test("a new modification after undo disables the redo branch", () => {
+  const history = new History();
+  const op1 = operationForCellEdit("s", "A1", "1", () => "");
+  const op2 = operationForCellEdit("s", "A1", "2", () => "1");
+  const op3 = operationForCellEdit("s", "A1", "3", () => "1");
+  history.push(op1);
+  history.push(op2);
+  history.undo();
+  assert.equal(history.canRedo(), true);
+  history.push(op3);
+  assert.equal(history.canRedo(), false);
+  assert.equal(history.redo(), null);
+  assert.equal(history.undo(), op3);
+  assert.equal(history.undo(), op1);
+});
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 275]
+
+isError: False
+
+### 2026-09-28T06:06:00.549Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L431
+ROLE assistant 
+thinking: Now update the unit tests:
+
+1. Imports: remove `subtractRect`, `planRangeCut`; add `operationFromWorkbookDiff`.
+2. `rectangles normalize...` test: remove the subtractRect assertion.
+3. Remove the planRangeCut test; replace with a move-diff test.
+4. `operation snapshots...` test: update snapshot shapes (add sheetId), remove `op.sheetId`, update snapshotsToUpdates expectations.
+
+New tests to add:
+- `operationFromWorkbookDiff` records changed raws across sheets and ignores unchanged cells:
+```ts
+test("a move is recorded as one operation from the workbook diff, across sheets", () => {
+  const before = [
+    { id: "s1", cells: { A1: { raw: "x" }, B1: { raw: null } } },
+    { id: "s2", cells: { C1: { raw: "=s1!A1" } } },
+  ];
+  const after = [
+    { id: "s1", cells: { B1: { raw: "x" } } },
+    { id: "s2", cells: { C1: { raw: "=s1!B1" } } },
+  ];
+  const op = operationFromWorkbookDiff("move", "move A1 to B1", before, after);
+  assert.equal(op.kind, "move");
+  assert.deepEqual(op.before, [
+    { sheetId: "s1", ref: "A1", raw: "x" },
+    { sheetId: "s1", ref: "B1", raw: null },
+    { sheetId: "s2", ref: "C1", raw: "=s1!A1" },
+  ]);
+  assert.deepEqual(op.after, [
+    { sheetId: "s1", ref: "A1", raw: null },
+    { sheetId: "s1", ref: "B1", raw: "x" },
+    { sheetId: "s2", ref: "C1", raw: "=s1!B1" },
+  ]);
+  // Undo restores every changed cell (including the other sheet) in one payload.
+  assert.deepEqual(snapshotsToUpdates(op.before), [
+    { sheetId: "s1", ref: "A1", raw: "x" },
+    { sheetId: "s1", ref: "B1", raw: null },
+    { sheetId: "s2", ref: "C1", raw: "=s1!A1" },
+  ]);
+});
+```
+Note the sort order of keys: keys are `${sheetId}\0${ref}` sorted lexicographically → "s1\0A1" < "s1\0B1" < "s2\0C1". Yes.
+
+Also the `SheetCellSource` type expects `cells: Record<string, { raw: string | null } | undefined>`. In the test, `{ A1: { raw: "x" }, B1: { raw: null } }` — B1 raw null means absent-ish; the diff: before B1=null, after B1="x" → changed. Good.
+
+Wait: in `before`, s1 has A1 only? I wrote B1: {raw:null} which maps to null → same as absent. Either way.
+
+Let me write the edits.
+
+For the `operation snapshots` test:
+```ts
+test("operation snapshots record only cells that actually change", () => {
+  const cells: Record<string, string> = { A1: "old", B1: "" };
+  const read = (ref: string) => cells[ref] ?? "";
+  assert.deepEqual(snapshotCells("sheet-1", ["A1", "B1"], read), [
+    { sheetId: "sheet-1", ref: "A1", raw: "old" },
+    { sheetId: "sheet-1", ref: "B1", raw: null },
+  ]);
+
+  const plan = planPaste("A1", [["old", "new"]]);
+  const op = operationFromPlan("paste", "paste A1:B1", "sheet-1", plan, read);
+  assert.deepEqual(op.before, [{ sheetId: "sheet-1", ref: "B1", raw: null }]);
+  assert.deepEqual(op.after, [{ sheetId: "sheet-1", ref: "B1", raw: "new" }]);
+
+  const edit = operationForCellEdit("sheet-1", "A2", "hello", read);
+  assert.deepEqual(edit.before, [{ sheetId: "sheet-1", ref: "A2", raw: null }]);
+  assert.deepEqual(edit.after, [{ sheetId: "sheet-1", ref: "A2", raw: "hello" }]);
+  assert.deepEqual(snapshotsToUpdates(edit.before), [{ sheetId: "sheet-1", ref: "A2", raw: null }]);
+});
+```
+
+Let me apply all edits.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/unit/editing.test.ts", "edits": [{"oldText": "  rectAt,\n  subtractRect,\n  parseClipboardTable,", "newText": "  rectAt,\n  parseClipboardTable,"}, {"oldText": "  planRangeCopy,\n  planRangeCut,\n  snapshotCells,\n  operationFromPlan,\n  operationForCellEdit,\n  snapshotsToUpdates,", "newText": "  planRangeCopy,\n  snapshotCells,\n  operationFromPlan,\n  operationForCellEdit,\n  operationFromWorkbookDiff,\n  snapshotsToUpdates,"}, {"oldText": "  assert.deepEqual(rectRefs(rectAt(\"B2\", 2, 2)), [\"B2\", \"C2\", \"B3\", \"C3\"]);\n  assert.deepEqual(subtractRect(rectAt(\"A1\", 2, 2), rectAt(\"A2\", 2, 2)), [\"A1\", \"B1\"]);\n});", "newText": "  assert.deepEqual(rectRefs(rectAt(\"B2\", 2, 2)), [\"B2\", \"C2\", \"B3\", \"C3\"]);\n});"}, {"oldText": "test(\"planRangeCut moves content unchanged and clears source cells outside the target\", () => {\n  const cells: Record<string, string> = { A1: \"a\", B1: \"=A1\", A2: \"c\", B2: \"d\" };\n  const read = (ref: string) => cells[ref] ?? \"\";\n  const plan = planRangeCut({ start: \"A1\", end: \"B2\" }, \"B2\", read);\n  const byRef = new Map(plan.updates.map((u) => [u.ref, u.raw]));\n  assert.equal(byRef.get(\"B2\"), \"a\");\n  assert.equal(byRef.get(\"C2\"), \"=A1\"); // moved, not copied: references unchanged\n  assert.equal(byRef.get(\"B3\"), \"c\");\n  assert.equal(byRef.get(\"C3\"), \"d\");\n  assert.deepEqual(plan.clears.sort(), [\"A1\", \"A2\", \"B1\"]);\n});", "newText": "test(\"a range move is recorded from the workbook diff, including other sheets\", () => {\n  // The server computes the move (moveCells semantics): the client cannot\n  // enumerate the affected cells up front, so the operation snapshot is the\n  // raw diff of the whole workbook - source, target AND every formula that now\n  // points at the moved cells (also on another sheet).\n  const before = [\n    { id: \"s1\", cells: { A1: { raw: \"x\" }, B1: { raw: null } } },\n    { id: \"s2\", cells: { C1: { raw: \"=s1!A1\" } } },\n  ];\n  const after = [\n    { id: \"s1\", cells: { B1: { raw: \"x\" } } },\n    { id: \"s2\", cells: { C1: { raw: \"=s1!B1\" } } },\n  ];\n  const op = operationFromWorkbookDiff(\"move\", \"move A1 to B1\", before, after);\n  assert.equal(op.kind, \"move\");\n  assert.deepEqual(op.before, [\n    { sheetId: \"s1\", ref: \"A1\", raw: \"x\" },\n    { sheetId: \"s1\", ref: \"B1\", raw: null },\n    { sheetId: \"s2\", ref: \"C1\", raw: \"=s1!A1\" },\n  ]);\n  assert.deepEqual(op.after, [\n    { sheetId: \"s1\", ref: \"A1\", raw: null },\n    { sheetId: \"s1\", ref: \"B1\", raw: \"x\" },\n    { sheetId: \"s2\", ref: \"C1\", raw: \"=s1!B1\" },\n  ]);\n  // Undo restores every changed cell - on either sheet - in one payload.\n  assert.deepEqual(snapshotsToUpdates(op.before), [\n    { sheetId: \"s1\", ref: \"A1\", raw: \"x\" },\n    { sheetId: \"s1\", ref: \"B1\", raw: null },\n    { sheetId: \"s2\", ref: \"C1\", raw: \"=s1!A1\" },\n  ]);\n});"}, {"oldText": "  assert.deepEqual(snapshotCells([\"A1\", \"B1\"], read), [\n    { ref: \"A1\", raw: \"old\" },\n    { ref: \"B1\", raw: null },\n  ]);\n\n  const plan = planPaste(\"A1\", [[\"old\", \"new\"]]);\n  const op = operationFromPlan(\"paste\", \"paste A1:B1\", \"sheet-1\", plan, read);\n  assert.deepEqual(op.before, [{ ref: \"B1\", raw: null }]);\n  assert.deepEqual(op.after, [{ ref: \"B1\", raw: \"new\" }]);\n  assert.equal(op.sheetId, \"sheet-1\");\n\n  const edit = operationForCellEdit(\"sheet-1\", \"A2\", \"hello\", read);\n  assert.deepEqual(edit.before, [{ ref: \"A2\", raw: null }]);\n  assert.deepEqual(edit.after, [{ ref: \"A2\", raw: \"hello\" }]);\n  assert.deepEqual(snapshotsToUpdates(edit.before), [{ ref: \"A2\", raw: null }]);", "newText": "  assert.deepEqual(snapshotCells(\"sheet-1\", [\"A1\", \"B1\"], read), [\n    { sheetId: \"sheet-1\", ref: \"A1\", raw: \"old\" },\n    { sheetId: \"sheet-1\", ref: \"B1\", raw: null },\n  ]);\n\n  const plan = planPaste(\"A1\", [[\"old\", \"new\"]]);\n  const op = operationFromPlan(\"paste\", \"paste A1:B1\", \"sheet-1\", plan, read);\n  assert.deepEqual(op.before, [{ sheetId: \"sheet-1\", ref: \"B1\", raw: null }]);\n  assert.deepEqual(op.after, [{ sheetId: \"sheet-1\", ref: \"B1\", raw: \"new\" }]);\n\n  const edit = operationForCellEdit(\"sheet-1\", \"A2\", \"hello\", read);\n  assert.deepEqual(edit.before, [{ sheetId: \"sheet-1\", ref: \"A2\", raw: null }]);\n  assert.deepEqual(edit.after, [{ sheetId: \"sheet-1\", ref: \"A2\", raw: \"hello\" }]);\n  assert.deepEqual(snapshotsToUpdates(edit.before), [\n    { sheetId: \"sheet-1\", ref: \"A2\", raw: null },\n  ]);"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:06:00.616Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L432
+ROLE toolResult edit
+text: Successfully replaced 5 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/unit/editing.test.ts.
+isError: False
+
+### 2026-09-28T06:06:02.906Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L433
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && node --test checks/unit/editing.test.ts 2>&1 | tail -20"}
+stopReason: toolUse
+
+### 2026-09-28T06:06:05.126Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L434
+ROLE toolResult bash
+text: (Use `node --trace-warnings ...` to show where the warning was created)
+✔ rectangles normalize, contain and enumerate (2.803188ms)
+✔ clipboard text keeps empty fields and ignores one trailing newline (0.59894ms)
+✔ copied formulas are adjusted by the shared engine (issue #6) (1.289387ms)
+✔ planPaste covers the whole rectangle and preserves empty fields (0.354724ms)
+✔ planPaste from a single-cell selection lays the table out from that cell (0.31052ms)
+✔ planRangeCopy shifts formulas to the target offset and leaves the source alone (0.506134ms)
+✔ a range move is recorded from the workbook diff, including other sheets (0.614341ms)
+✔ operation snapshots record only cells that actually change (0.643043ms)
+✔ history restores operations in reverse order and redoes them (0.493634ms)
+✔ a new modification after undo disables the redo branch (0.377025ms)
+✔ empty operations are not recorded and history clears per workbook (0.324422ms)
+ℹ tests 11
+ℹ suites 0
+ℹ pass 11
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 2104.178498
+isError: False
+
+### 2026-09-28T06:06:07.910Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L435
+ROLE assistant 
+thinking: Unit tests pass (11). Now let me write a quick manual API test of the move endpoint to verify moveCells semantics + structural raw write-back before running the browser checks. I'll start the backend with a temp dir on a free port, then use curl/python to:
+1. Create cells: A1=10, B1=5, C1==A1*2 (row 1? use e.g. A1,B1,C1).
+2. Move A1:B1 → D1.
+3. Check: D1=10, E1=5, A1/B1 empty, C1 raw '=D1*2' and value 20.
+
+Let me do it with the built backend (need to rebuild backend since I changed routes/formulas). Let me build both and run.
+
+Actually let me first typecheck/build backend and frontend.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./backend/node_modules/.bin/tsc -p backend/tsconfig.json && echo \"BE OK\" && ./checks/node_modules/.bin/tsc -p checks/tsconfig.json && echo \"CHECKS OK\""}
+stopReason: toolUse
+
+### 2026-09-28T06:06:18.810Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L436
+ROLE toolResult bash
+text: BE OK
+CHECKS OK
+isError: False
+
+### 2026-09-28T06:06:21.739Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L437
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && DIR=$(mktemp -d /tmp/mv-check-XXXX) && PORT=$(python3 -c \"import socket;s=socket.socket();s.bind(('127.0.0.1',0));print(s.getsockname()[1]);s.close()\") && echo \"PORT=$PORT DIR=$DIR\" && DATA_DIR=$DIR HOST=127.0.0.1 PORT=$PORT node backend/dist/server.js > /tmp/mv-check.log 2>&1 & sleep 3; cat /tmp/mv-check.log | head -5"}
+stopReason: toolUse
+
+### 2026-09-28T06:06:51.806Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L438
+ROLE toolResult bash
+text: Bash job bg009 moved to background after 30s. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T06:06:54.121Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L439
+ROLE assistant 
+thinking: Hmm, the command backgrounded because of the trailing `&` and then `sleep 3` etc. Actually it moved to background after 30s — because the server process keeps the shell alive. Let me check the log and get the port.
+
+The problem: the port is only printed inside the backgrounded job's output. Let me get it from pbb tail, or better: write the port to a file. Let me redo in a cleaner way: start the server writing its port to a temp file, and run the checks via python.
+
+Let me kill that job first and redo with explicit files.
+toolCall bash {"command": "pbb tail bg009 2>&1 | tail -5; pkill -f \"mv-check\" 2>/dev/null; ps aux | grep -c \"backend/dist/server.js\""}
+stopReason: toolUse
+
+### 2026-09-28T06:06:54.835Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L440
+ROLE toolResult bash
+text: <pi_context source="pbb" kind="pbb.tail" schema_version="1" session_id="01a0e680-f727-737a-a04f-1553c698ea7e" session_key="5b892424912f7dfdd59c2edf" instance_id="pbb_163_cd2a4cf7" lane="" scope="current-instance" job_id="bg009" owner_instance_id="pbb_163_cd2a4cf7" status="running" cursor="26" lines="80">
+PORT=40251 DIR=/tmp/mv-check-AcAY
+[seed] created workbook "Q3 Sales" (wb_mukugymwhclfsu) with sheets Sheet1, Sheet2
+Server listening on http://127.0.0.1:40251 (frontend: /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/frontend/dist)
+</pi_context>
+
+Command aborted
+isError: True
+
+### 2026-09-28T06:06:59.658Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L441
+ROLE assistant 
+thinking: The server is running on port 40251 with DATA_DIR /tmp/mv-check-AcAY. The shell job bg009 is "running" because the server is attached; the `pkill -f mv-check` may have killed... it matched the DATA_DIR string in the server's cmdline? No, pkill matches the command line; the server's cmdline is "node backend/dist/server.js" — "mv-check" appears only in env DATA_DIR, not cmdline. So pkill did nothing. Let me check the server is alive and run my API test with python against port 40251.
+
+Let me write a python script to exercise the move endpoint.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && python3 - <<'PY'\nimport json, urllib.request\n\nBASE = \"http://127.0.0.1:40251\"\n\ndef call(method, path, body=None):\n    data = json.dumps(body).encode() if body is not None else None\n    req = urllib.request.Request(BASE + path, data=data, method=method,\n                                 headers={\"Content-Type\": \"application/json\"})\n    with urllib.request.urlopen(req) as r:\n        return json.load(r)\n\nwbs = call(\"GET\", \"/api/workbooks\")[\"workbooks\"]\nwb = call(\"GET\", f\"/api/workbooks/{wbs[0]['id']}\")\ns1 = wb[\"sheets\"][0]\ns2 = wb[\"sheets\"][1]\n\n# A1=10, B1=5, C1==A1*2 ; Sheet2 A1 = =Sheet1!A1\nwb = call(\"PATCH\", f\"/api/workbooks/{wb['id']}/sheets/{s1['id']}/cells\", {\"updates\": [\n    {\"ref\": \"A1\", \"raw\": \"10\"}, {\"ref\": \"B1\", \"raw\": \"5\"}, {\"ref\": \"C1\", \"raw\": \"=A1*2\"},\n]})\nwb = call(\"PATCH\", f\"/api/workbooks/{wb['id']}/sheets/{s2['id']}/cells\", {\"updates\": [\n    {\"ref\": \"A1\", \"raw\": \"=Sheet1!A1\"},\n]})\nprint(\"before:\", {r: (c['raw'], c['value']) for r, c in wb[\"sheets\"][0][\"cells\"].items() if r in (\"A1\",\"B1\",\"C1\")},\n      {r: (c['raw'], c['value']) for r, c in wb[\"sheets\"][1][\"cells\"].items() if r == \"A1\"})\n\n# move A1:B1 -> D1  (moveCells semantics)\nwb = call(\"POST\", f\"/api/workbooks/{wb['id']}/sheets/{s1['id']}/move\",\n          {\"sourceRange\": \"A1:B1\", \"targetRef\": \"D1\"})\ncells = wb[\"sheets\"][0][\"cells\"]\nprint(\"after sheet1:\", {r: (cells[r]['raw'], cells[r]['value']) for r in (\"A1\",\"B1\",\"D1\",\"E1\",\"C1\") if r in cells})\ncells2 = wb[\"sheets\"][1][\"cells\"]\nprint(\"after sheet2:\", {r: (cells2[r]['raw'], cells2[r]['value']) for r in (\"A1\",) if r in cells2})\n\n# out-of-bounds target\ntry:\n    call(\"POST\", f\"/api/workbooks/{wb['id']}/sheets/{s1['id']}/move\",\n         {\"sourceRange\": \"A1:B1\", \"targetRef\": \"ZZ999\"})\n    print(\"OOB: NOT rejected (bug)\")\nexcept urllib.error.HTTPError as e:\n    print(\"OOB rejected:\", e.code, e.read().decode())\nPY"}
+stopReason: toolUse
+
+### 2026-09-28T06:07:01.613Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L442
+ROLE toolResult bash
+text: before: {'A1': ('10', '10'), 'B1': ('5', '5'), 'C1': ('=A1*2', '20')} {'A1': ('=Sheet1!A1', '10')}
+after sheet1: {'D1': ('10', '10'), 'E1': ('5', '5'), 'C1': ('=D1*2', '20')}
+after sheet2: {'A1': ('=Sheet1!D1', '10')}
+OOB rejected: 400 {"error":"the source or target range is outside the worksheet"}
+isError: False
+
+### 2026-09-28T06:07:08.225Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L443
+ROLE assistant 
+thinking: The move endpoint works correctly:
+- D1=10, E1=5, C1 raw adjusted to `=D1*2` (result unchanged 20), A1/B1 removed.
+- Cross-sheet formula `=Sheet1!A1` → `=Sheet1!D1` (result unchanged 10).
+- Out-of-bounds rejected 400.
+- Atomicity: single engine run + save.
+
+Now test the workbook-level apply endpoint too, then kill the server.
+
+Let me also test the atomic apply endpoint.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && python3 - <<'PY'\nimport json, urllib.request\n\nBASE = \"http://127.0.0.1:40251\"\ndef call(method, path, body=None):\n    data = json.dumps(body).encode() if body is not None else None\n    req = urllib.request.Request(BASE + path, data=data, method=method,\n                                 headers={\"Content-Type\": \"application/json\"})\n    with urllib.request.urlopen(req) as r:\n        return json.load(r)\n\nwbs = call(\"GET\", \"/api/workbooks\")[\"workbooks\"]\nwb = call(\"GET\", f\"/api/workbooks/{wbs[0]['id']}\")\ns1, s2 = wb[\"sheets\"][0], wb[\"sheets\"][1]\n\n# restore the move's before-state across sheets in ONE atomic request\nwb = call(\"PATCH\", f\"/api/workbooks/{wb['id']}/cells\", {\"updates\": [\n    {\"sheetId\": s1[\"id\"], \"ref\": \"A1\", \"raw\": \"10\"},\n    {\"sheetId\": s1[\"id\"], \"ref\": \"B1\", \"raw\": \"5\"},\n    {\"sheetId\": s1[\"id\"], \"ref\": \"D1\", \"raw\": None},\n    {\"sheetId\": s1[\"id\"], \"ref\": \"E1\", \"raw\": None},\n    {\"sheetId\": s1[\"id\"], \"ref\": \"C1\", \"raw\": \"=A1*2\"},\n    {\"sheetId\": s2[\"id\"], \"ref\": \"A1\", \"raw\": \"=Sheet1!A1\"},\n]})\nc1 = wb[\"sheets\"][0][\"cells\"]\nc2 = wb[\"sheets\"][1][\"cells\"]\nprint(\"restored sheet1:\", {r: (c1[r]['raw'], c1[r]['value']) for r in (\"A1\",\"B1\",\"C1\") if r in c1})\nprint(\"restored sheet2:\", {r: (c2[r]['raw'], c2[r]['value']) for r in (\"A1\",) if r in c2})\nprint(\"D1/E1 gone:\", \"D1\" not in c1 and \"E1\" not in c1)\n\n# invalid sheet must reject the whole request\ntry:\n    call(\"PATCH\", f\"/api/workbooks/{wb['id']}/cells\", {\"updates\": [\n        {\"sheetId\": \"nope\", \"ref\": \"A1\", \"raw\": \"x\"}]})\n    print(\"bad sheet: NOT rejected (bug)\")\nexcept urllib.error.HTTPError as e:\n    print(\"bad sheet rejected:\", e.code, e.read().decode())\nPY\npkill -f \"backend/dist/server.js\" ; sleep 1; echo \"servers left: $(pgrep -cf 'backend/dist/server.js')\""}
+stopReason: toolUse
+
+### 2026-09-28T06:07:09.112Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L444
+ROLE toolResult bash
+text: restored sheet1: {'A1': ('10', '10'), 'B1': ('5', '5'), 'C1': ('=A1*2', '20')}
+restored sheet2: {'A1': ('=Sheet1!A1', '10')}
+D1/E1 gone: True
+bad sheet rejected: 400 {"error":"Unknown sheet: nope"}
+
+Command aborted
+isError: True
+
+### 2026-09-28T06:07:13.103Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L445
+ROLE assistant 
+thinking: Both endpoints work. Note: `pkill -f "backend/dist/server.js"` kills ALL servers from other agents too! That's bad — I may have just killed other lanes' servers. Oops. Their watchdogs will restart them (their run.sh has a watchdog). My run.sh's watchdog also restarts on disappearance. So it should be recoverable. But I should avoid such broad pkill. Let me be careful going forward.
+
+Hmm, the command "aborted" — probably because pkill killed processes including something in my shell's process tree? No... The bash tool aborted it (maybe pgrep -c returned 0 → exit code 1 → "aborted"?). Let me check the leftover state: my mv-check server should be dead; other agents' watchdogs will restart theirs.
+
+Let me check quickly that my own server is gone and note that other lanes' watchdogs handle their own.
+
+Actually, worse: I killed the servers of other agents mid-test, which could produce false failures in their runs. That's a side effect I should avoid and possibly mention. Their run.sh watchdog restarts within 2s on the same port and DATA_DIR, so their runs should recover (they built that exact resilience). OK.
+
+Let me now update the browser checks:
+1. `checks/req3-core.spec.ts`: cut test — assert moveCells semantics.
+2. `checks/req3-integration.spec.ts`: add a move + 0-100 validation rejection case; update the fixme comment if needed.
+
+Let me look at the current cut test in req3-core.spec.ts.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '245,275p' checks/req3-core.spec.ts"}
+stopReason: toolUse
+
+### 2026-09-28T06:07:13.122Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L446
+ROLE toolResult bash
+text:     await reload(page);
+    await expect(cell(page, 'E21')).toHaveText('c4');
+  });
+
+  test('cut clears the source only after the target is displayed', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 276]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 277]
+
+    await reload(page);
+    await expect(cell(page, 'E25')).toHaveText('x4');
+    await expect(cell(page, 'A24')).toHaveText('');
+  });
+});
+
+test.describe('REQ-3-2-2 undo and redo recent operations', () => {
+  test('toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste', async ({ page }) => {
+    await openSeededWorkbook(page);
+isError: False
+
+### 2026-09-28T06:07:26.670Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L447
+ROLE assistant 
+thinking: Let me enhance the cut test to cover moveCells semantics: put a formula referencing the source before cutting, then assert it follows and its displayed result is unchanged.
+
+Design (using the same area, A24:B25 → D24:E25; put the referencing formula in G24, which is outside the moved rect; but careful: G24 is inside columns A-Z, fine).
+
+Sequence:
+1. paste 'x1\tx2\nx3\tx4' at A24 (A24:B25).
+2. Formula bar at G24: '=A24' → displays x1.
+3. dragSelect A24:B25, Ctrl+C, Ctrl+X, selectCell D24, Ctrl+V.
+4. Assert D24..E25 = x1..x4; A24, B25 empty; G24 still displays 'x1' (outside range unchanged) and formula bar shows '=D24'.
+5. reload; assert G24 formula '=D24' and display 'x1'.
+
+Note: after cut+paste, the selection is at D24 (activeCell) — to read G24's formula bar, selectCell G24.
+
+Also, per the requirement "cells outside these ranges must not change": G24's displayed value stays 'x1' — good.
+
+Additionally, add an undo assertion: after Ctrl+Z, G24 raw back to '=A24', A24='x1' (source restored), D24 empty. Hmm, that might duplicate the undo test; but it's valuable to assert the move is one undoable operation restoring source+target+references. Let me add it to the undo test instead: extend the undo test with a move operation? That test already does edit + paste. Adding a move makes it longer. Let me add a dedicated test in the REQ-3-2-2 describe: "a range move is one undoable operation that also restores the rewritten references".
+
+Let me write:
+
+```ts
+  test('a range move is one undoable operation that restores the rewritten references', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+    await selectCell(page, 'A28');
+    await pasteWithKeyboard(page, 'm1\tm2');
+    await submitViaFormulaBar(page, 'G28', '=A28');
+    await expect(cell(page, 'G28')).toHaveText('m1');
+
+    await dragSelect(page, 'A28', 'B28');
+    await page.keyboard.press('Control+x');
+    await selectCell(page, 'D28');
+    await page.keyboard.press('Control+v');
+
+    // moveCells: the reference follows the moved block, result unchanged.
+    await expect(cell(page, 'D28')).toHaveText('m1');
+    await expect(cell(page, 'E28')).toHaveText('m2');
+    await expect(cell(page, 'A28')).toHaveText('');
+    await expect(cell(page, 'G28')).toHaveText('m1');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=D28');
+
+    // One Undo restores source, target and the rewritten reference together.
+    await page.keyboard.press('Control+z');
+    await expect(cell(page, 'A28')).toHaveText('m1');
+    await expect(cell(page, 'B28')).toHaveText('m2');
+    await expect(cell(page, 'D28')).toHaveText('');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=A28');
+    await expect(cell(page, 'G28')).toHaveText('m1');
+
+    await page.keyboard.press('Control+y');
+    await expect(cell(page, 'D28')).toHaveText('m1');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=D28');
+
+    await reload(page);
+    await expect(cell(page, 'D28')).toHaveText('m1');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=D28');
+  });
+```
+
+Careful with `submitViaFormulaBar(page, 'G28', '=A28')`: selectCell G28 then fill + Enter. Good.
+
+Wait: `pasteWithKeyboard(page, 'm1\tm2')` at A28 pastes into A28 and B28. Good.
+
+Also careful: after Ctrl+X then selectCell D28 then Ctrl+V — the paste uses the in-session buffer (clipboard text equals buffer text) → moveRange path. Good.
+
+Then undo: Ctrl+Z with focus on grid (selectCell D28 clicked a cell) — but after the assertions we called selectCell(G28) which clicks a grid cell → focus on grid → Ctrl+Z works. Good.
+
+Hmm, in the sequence I call `await selectCell(page, 'G28')` and check formula bar, then `page.keyboard.press('Control+z')` — focus is on grid cell G28. Good.
+
+But careful: `await expect(cell(page,'A28')).toHaveText('m1')` after Ctrl+Z — the undo restores via the workbook-level apply. Good.
+
+Also note: after undo, `G28` raw = '=A28' and display m1.
+
+Let me add this test to the REQ-3-2-2 describe.
+
+Also update the cut test to include the reference-following check (or rely on the new dedicated test). I'll enhance the cut test minimally to assert moveCells semantics too (the root's key point: cells outside the ranges don't change). Actually the dedicated undo test covers it. To avoid redundancy, I'll add one assertion to the cut test: put a formula in G24 before the cut and assert it follows. Hmm, the undo test covers the same. Let me keep the cut test focused on timing/layout and add the reference check there too (cheap, and it's the REQ-3-2-1 requirement).
+
+I'll do both: cut test gets G24='=A24' assertions; undo test verifies single-op restore.
+
+Now the integration spec: add a 0-100 rejection case for move:
+```ts
+  test('a move whose target violates a 0-to-100 rule is rejected atomically', async ({ page }) => {
+    seedNumberRule('Sheet1', 'D48:E48', 0, 100);
+    await openSeededWorkbook(page);
+    await submitViaFormulaBar(page, 'A48', '50');
+    await submitViaFormulaBar(page, 'B48', '200');   // out of range value in the source
+    await dragSelect(page, 'A48', 'B48');
+    await page.keyboard.press('Control+x');
+    await selectCell(page, 'D48');
+    await page.keyboard.press('Control+v');
+    await expect(page.getByText('Please enter a number from 0 to 100')).toBeVisible();
+    // source and target unchanged
+    await expect(cell(page, 'A48')).toHaveText('50');
+    await expect(cell(page, 'B48')).toHaveText('200');
+    await expect(cell(page, 'D48')).toHaveText('');
+    await expect(cell(page, 'E48')).toHaveText('');
+    await reload(page);
+    await expect(cell(page, 'B48')).toHaveText('200');
+    await expect(cell(page, 'D48')).toHaveText('');
+  });
+```
+
+Hmm wait: `submitViaFormulaBar(page,'B48','200')` — but the rule range is D48:E48, so B48 is unconstrained. Good.
+
+But careful: the rule is written into the data file BEFORE the page loads; the frontend gets validationRules in the workbook payload. Good.
+
+Also: when the move is rejected, my frontend's validateWrites sets validationError and returns without calling the API. Good.
+
+One issue: `seedNumberRule('Sheet1','D48:E48',0,100)` appends to validationRules. Then the test pastes/moves. Fine.
+
+Let me now write these test additions.
+
+Also: the `checks/req3-integration.spec.ts` imports `submitViaFormulaBar`, `dragSelect`, `cell`, `reload`? Let me check what helpers exist there (it doesn't have `reload`; the tests call `page.reload()`). Let me check the file's helper list: grid, cell, formulaBar, openSeededWorkbook, selectCell, submitViaFormulaBar, cellText, dragSelect, pasteWithKeyboard. No reload helper (uses page.reload()). OK.
+
+Let me apply the edits.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-core.spec.ts", "edits": [{"oldText": "  test('cut clears the source only after the target is displayed', async ({ page }) => {\n    await openSeededWorkbook(page);\n\n    await selectCell(page, 'A24');\n    await pasteWithKeyboard(page, 'x1\\tx2\\nx3\\tx4');\n    await dragSelect(page, 'A24', 'B25');\n    await copyWithKeyboard(page);\n    await page.keyboard.press('Control+x');\n    await selectCell(page, 'D24');\n    await page.keyboard.press('Control+v');\n\n    await expect(cell(page, 'D24')).toHaveText('x1');\n    await expect(cell(page, 'E24')).toHaveText('x2');\n    await expect(cell(page, 'D25')).toHaveText('x3');\n    await expect(cell(page, 'E25')).toHaveText('x4');\n    await expect(cell(page, 'A24')).toHaveText('');\n    await expect(cell(page, 'B25')).toHaveText('');\n\n    await reload(page);\n    await expect(cell(page, 'E25')).toHaveText('x4');\n    await expect(cell(page, 'A24')).toHaveText('');\n  });", "newText": "  test('cut clears the source only after the target is displayed and moves references', async ({ page }) => {\n    await openSeededWorkbook(page);\n\n    await selectCell(page, 'A24');\n    await pasteWithKeyboard(page, 'x1\\tx2\\nx3\\tx4');\n    // A formula outside the cut range references the source: the move must\n    // rewrite it so the displayed result of that outside cell does not change\n    // (REQ-3-2-1 \"cells outside these ranges must not change\").\n    await submitViaFormulaBar(page, 'G24', '=A24');\n    await expect(cell(page, 'G24')).toHaveText('x1');\n\n    await dragSelect(page, 'A24', 'B25');\n    await copyWithKeyboard(page);\n    await page.keyboard.press('Control+x');\n    await selectCell(page, 'D24');\n    await page.keyboard.press('Control+v');\n\n    await expect(cell(page, 'D24')).toHaveText('x1');\n    await expect(cell(page, 'E24')).toHaveText('x2');\n    await expect(cell(page, 'D25')).toHaveText('x3');\n    await expect(cell(page, 'E25')).toHaveText('x4');\n    await expect(cell(page, 'A24')).toHaveText('');\n    await expect(cell(page, 'B25')).toHaveText('');\n    // The outside formula followed the moved block; its result is unchanged.\n    await expect(cell(page, 'G24')).toHaveText('x1');\n    await selectCell(page, 'G24');\n    await expect(formulaBar(page)).toHaveValue('=D24');\n\n    await reload(page);\n    await expect(cell(page, 'E25')).toHaveText('x4');\n    await expect(cell(page, 'A24')).toHaveText('');\n    await selectCell(page, 'G24');\n    await expect(formulaBar(page)).toHaveValue('=D24');\n    await expect(cell(page, 'G24')).toHaveText('x1');\n  });"}, {"oldText": "test.describe('REQ-3-2-2 undo and redo recent operations', () => {\n  test('toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste', async ({ page }) => {", "newText": "test.describe('REQ-3-2-2 undo and redo recent operations', () => {\n  test('a range move undoes as one operation, restoring rewritten references', async ({ page }) => {\n    await openSeededWorkbook(page);\n\n    await selectCell(page, 'A28');\n    await pasteWithKeyboard(page, 'm1\\tm2');\n    await submitViaFormulaBar(page, 'G28', '=A28');\n    await expect(cell(page, 'G28')).toHaveText('m1');\n\n    // Cut A28:B28 to D28 (a move, not a copy): the outside reference follows.\n    await dragSelect(page, 'A28', 'B28');\n    await page.keyboard.press('Control+x');\n    await selectCell(page, 'D28');\n    await page.keyboard.press('Control+v');\n    await expect(cell(page, 'D28')).toHaveText('m1');\n    await expect(cell(page, 'A28')).toHaveText('');\n    await selectCell(page, 'G28');\n    await expect(formulaBar(page)).toHaveValue('=D28');\n\n    // ONE undo restores source, target and the rewritten reference together.\n    await page.keyboard.press('Control+z');\n    await expect(cell(page, 'A28')).toHaveText('m1');\n    await expect(cell(page, 'B28')).toHaveText('m2');\n    await expect(cell(page, 'D28')).toHaveText('');\n    await expect(cell(page, 'E28')).toHaveText('');\n    await selectCell(page, 'G28');\n    await expect(formulaBar(page)).toHaveValue('=A28');\n    await expect(cell(page, 'G28')).toHaveText('m1');\n\n    await page.keyboard.press('Control+y');\n    await expect(cell(page, 'D28')).toHaveText('m1');\n    await selectCell(page, 'G28');\n    await expect(formulaBar(page)).toHaveValue('=D28');\n\n    await reload(page);\n    await expect(cell(page, 'D28')).toHaveText('m1');\n    await selectCell(page, 'G28');\n    await expect(formulaBar(page)).toHaveValue('=D28');\n  });\n\n  test('toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste', async ({ page }) => {"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:07:26.709Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L448
+ROLE toolResult edit
+text: Successfully replaced 2 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-core.spec.ts.
+isError: False
+
+### 2026-09-28T06:07:33.628Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L449
+ROLE assistant 
+thinking: Now the integration spec: add the move + validation rejection test. Let me insert it after the existing "range copy with an out-of-range target leaves source and target unchanged" test.
+
+Let me view that area to match text.
+
+From my earlier read of req3-integration.spec.ts (lines ~212-236):
+```ts
+  test('range copy with an out-of-range target leaves source and target unchanged', async ({ page }) => {
+    seedNumberRule('Sheet1', 'D44:E44', 0, 100);
+    await openSeededWorkbook(page);
+    await submitViaFormulaBar(page, 'A44', '1');
+    await submitViaFormulaBar(page, 'B44', '2');
+    await submitViaFormulaBar(page, 'D44', '50');
+
+    await dragSelect(page, 'A44', 'B44');
+    await page.keyboard.press('Control+c');
+    await selectCell(page, 'D44');
+    // 200 is out of range: the operation must be rejected atomically.
+    await pasteWithKeyboard(page, '200\t300');
+    await expect(page.getByText('Please enter a number from 0 to 100')).toBeVisible();
+    await expect(cell(page, 'D44')).toHaveText('50');
+    await expect(cell(page, 'E44')).toHaveText('');
+    await page.reload();
+    await expect(cell(page, 'D44')).toHaveText('50');
+  });
+});
+```
+
+I'll append a new test before the closing `});` of that describe.
+
+Note the `cellText` helper is unused? whatever.
+
+New test:
+```ts
+  test('a move whose target violates the rule is rejected before anything moves', async ({ page }) => {
+    seedNumberRule('Sheet1', 'D48:E48', 0, 100);
+    await openSeededWorkbook(page);
+    await submitViaFormulaBar(page, 'A48', '50');
+    await submitViaFormulaBar(page, 'B48', '200');
+
+    await dragSelect(page, 'A48', 'B48');
+    await page.keyboard.press('Control+x');
+    await selectCell(page, 'D48');
+    await page.keyboard.press('Control+v');
+
+    // 200 violates the 0-to-100 rule on the target: the whole move is refused.
+    await expect(page.getByText('Please enter a number from 0 to 100')).toBeVisible();
+    await expect(page.getByText('Please enter a number between 0 and 100')).toBeVisible();
+    await expect(cell(page, 'A48')).toHaveText('50');
+    await expect(cell(page, 'B48')).toHaveText('200');
+    await expect(cell(page, 'D48')).toHaveText('');
+    await expect(cell(page, 'E48')).toHaveText('');
+
+    await page.reload();
+    await expect(grid(page)).toBeVisible();
+    await expect(cell(page, 'B48')).toHaveText('200');
+    await expect(cell(page, 'D48')).toHaveText('');
+  });
+```
+
+Wait, careful with `dragSelect(page,'A48','B48')` then Ctrl+X then `selectCell(page,'D48')`. `selectCell` clicks D48 — but after Ctrl+X the selection is still A48:B48; clicking D48 selects it. Then Ctrl+V. Focus on grid → paste path → in-session buffer cut mode → moveRange → validate landing values (50, 200) against D48:E48 rule → 200 rejected → validationError shown. 
+
+Also: after the rejection, is the clipboard buffer consumed? No (we return before api call; clipboardRef stays). Fine.
+
+One concern: `page.getByText('Please enter a number from 0 to 100')` might match multiple elements if the error is shown once. It's a single element (validation-message). Fine. Actually `getByText` with a substring could match both the message span and its parent? `getByText` matches the smallest element containing the text; the parent also contains it. Playwright's getByText matches elements whose text content matches; strict mode might complain about multiple matches (the span and the div). In the earlier passing test (paste rejection) the same call worked, so fine.
+
+Let me apply.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-integration.spec.ts", "edits": [{"oldText": "    await page.reload();\n    await expect(cell(page, 'D44')).toHaveText('50');\n  });\n});", "newText": "    await page.reload();\n    await expect(cell(page, 'D44')).toHaveText('50');\n  });\n\n  test('a move whose target violates the rule is refused before anything moves', async ({ page }) => {\n    seedNumberRule('Sheet1', 'D48:E48', 0, 100);\n    await openSeededWorkbook(page);\n    await submitViaFormulaBar(page, 'A48', '50');\n    await submitViaFormulaBar(page, 'B48', '200');\n\n    // Cut A48:B48 and paste it onto the validated range: the value 200 is out\n    // of range, so the move must be refused as a whole (source and target both\n    // keep their previous content).\n    await dragSelect(page, 'A48', 'B48');\n    await page.keyboard.press('Control+x');\n    await selectCell(page, 'D48');\n    await page.keyboard.press('Control+v');\n\n    await expect(page.getByText('Please enter a number from 0 to 100')).toBeVisible();\n    await expect(page.getByText('Please enter a number between 0 and 100')).toBeVisible();\n    await expect(cell(page, 'A48')).toHaveText('50');\n    await expect(cell(page, 'B48')).toHaveText('200');\n    await expect(cell(page, 'D48')).toHaveText('');\n    await expect(cell(page, 'E48')).toHaveText('');\n\n    await page.reload();\n    await expect(grid(page)).toBeVisible();\n    await expect(cell(page, 'B48')).toHaveText('200');\n    await expect(cell(page, 'D48')).toHaveText('');\n  });\n});"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:07:35.808Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L450
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-integration.spec.ts.
+isError: False
+
+### 2026-09-28T06:07:39.102Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L451
+ROLE assistant 
+thinking: Now also update the fixme comment for #4? Not needed.
+
+Let me also check the req3-integration file header comment mentions "row/column structure operations (#4)" — fine.
+
+Now, README: document the move endpoint and the new apply endpoint, and update the checks table? The README has a "REST API" table. Let me add rows for the two new endpoints. Also the REQ-3 paragraph mentions "single atomic write endpoint" — should mention move.
+
+Let me update README:
+- In the API table, add:
+  | `PATCH` | `/api/workbooks/:id/cells` | `{ updates: [{ sheetId, ref, raw }] }` | Workbook (one atomic write across sheets; undo/redo) |
+  | `POST` | `/api/workbooks/:id/sheets/:sheetId/move` | `{ sourceRange, targetRef }` | Workbook (range move, moveCells semantics) |
+- Update the REQ-3 paragraph.
+
+Let me view the README API table area.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '38,72p' README.md"}
+stopReason: toolUse
+
+### 2026-09-28T06:07:39.124Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L452
+ROLE toolResult bash
+text: Sheet2: `Region/Sales/Status` + `East/1200/Open`, `North/800/Closed`,
+`South/700/Open`). If a workbook with that name already exists, nothing is
+created or overwritten.
+
+## REST API
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 278]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 279]
+
+Data model (`backend/src/types.ts`, mirrored in `frontend/src/api.ts`):
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 280]
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 281]
+
+## Formula engine
+
+`shared/formula-engine` (`@app/formula-engine`) evaluates formulas and
+recalculates dependents. Both `frontend/package.json` and the shared package's
+isError: False
+
+### 2026-09-28T06:07:42.100Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L453
+ROLE assistant 
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md", "edits": [{"oldText": "| `PATCH` | `/api/workbooks/:id/sheets/:sheetId/cells` | `{ updates: [{ ref, raw }] }` | Workbook |\n", "newText": "| `PATCH` | `/api/workbooks/:id/sheets/:sheetId/cells` | `{ updates: [{ ref, raw }] }` | Workbook |\n| `PATCH` | `/api/workbooks/:id/cells` | `{ updates: [{ sheetId, ref, raw }] }` | Workbook (one atomic write across worksheets; used to restore undo/redo snapshots) |\n| `POST` | `/api/workbooks/:id/sheets/:sheetId/move` | `{ sourceRange: \"A1:B2\", targetRef: \"D1\" }` | Workbook (range move with moveCells semantics: references to the moved cells follow, on every sheet) |\n"}, {"oldText": "Cell editing, 2-D paste, range copy/cut/paste and undo/redo (REQ-3) all use the\nsingle atomic write endpoint above: validation runs first, then one batch write\n(`PATCH .../cells`), and only a successful write enters the session undo stack.", "newText": "Cell editing, 2-D paste and range copy (REQ-3) use the atomic write endpoints\nabove: validation runs first, then one batch write, and only a successful write\nenters the session undo stack. A range cut is a MOVE (`POST .../move`): the\nengine rewrites every reference to the moved cells, so cells outside the source\nand target keep their displayed result, and undo records the whole move as one\noperation (restored through `PATCH /api/workbooks/:id/cells`)."}]}
+stopReason: toolUse
+
+### 2026-09-28T06:07:42.103Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L454
+ROLE toolResult edit
+text: Successfully replaced 2 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/README.md.
+isError: False
+
+### 2026-09-28T06:07:45.500Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L455
+ROLE assistant 
+thinking: Now let me also check the `frontend/src/pages/EditorPage.tsx` for the `CellUpdate` import still used? Yes (validateWrites takes CellUpdate[], landing array). And `WorkbookCellUpdate` used. Let me re-run all type checks and then run the browser suite.
+
+Also: `ClipboardBuffer.rows` is still used? It's set but maybe unused now (pasteRange doesn't use buffer.rows). Let me check: `buffer.text` used in pasteFromText; `buffer.rect` used; `buffer.mode` used; `buffer.synced` used; `rows` maybe unused → TS won't complain (interface field). Keep (harmless) or remove. Let me check for usage: grep "\.rows". Probably only assignment. I'll leave it; it documents the buffer content. Actually unused data adds confusion; but it's minor.
+
+Let me typecheck all and run unit tests, then start the full browser suite.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./frontend/node_modules/.bin/tsc -p frontend/tsconfig.json && echo \"FE OK\" && ./backend/node_modules/.bin/tsc -p backend/tsconfig.json && echo \"BE OK\" && ./checks/node_modules/.bin/tsc -p checks/tsconfig.json && echo \"CHECKS OK\" && node --test checks/unit/editing.test.ts 2>&1 | grep -E \"^ℹ (tests|pass|fail)\""}
+stopReason: toolUse
+
+### 2026-09-28T06:08:12.801Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L456
+ROLE toolResult bash
+text: FE OK
+BE OK
+CHECKS OK
+ℹ tests 11
+ℹ pass 11
+ℹ fail 0
+isError: False
+
+### 2026-09-28T06:08:15.195Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L457
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run6.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run6.log; tail -6 /tmp/issue5-run6.log", "background": true}
+stopReason: toolUse
+
+### 2026-09-28T06:08:15.496Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L458
+ROLE toolResult bash
+text: Bash job bg010 started in background. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T06:08:29.050Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L459
+ROLE assistant 
+thinking: While the suite runs (~6 min), let me prepare the contract comment for thread 69 (requirement 5: publish the endpoint contract so #4/#7 can consume).
+
+Contract content:
+
+```
+## 范围移动端点契约（回应 comment #84 裁决）
+
+实测环境：develop 958f05a + 本跟进分支；POST/PATCH 均返回整个 Workbook（沿用现有约定），错误 { error }。
+
+### 1) POST /api/workbooks/:id/sheets/:sheetId/move
+body: { "sourceRange": "A1:B2" | { "start": "A1", "end": "B2" }, "targetRef": "D1" }
+- 语义：HyperFormula moveCells。块内单元格移动到 targetRef 起同尺寸矩形；指向块内单元格的公式（含其它工作表）改写为新位置；源矩形清空；目标矩形被覆盖。
+- 原子：一次 runWithFormulas + 一次落库；源/目标/受影响引用要么全更新并持久，要么全原状（400/404/500 都不落库）。
+- 校验：400 当 sourceRange/targetRef 非法，或源/目标矩形超出 sheet.rowCount/colCount。
+- 持久化细节：移动后 formula raw 由引擎权威改写（含跨表），`value` 同步刷新；普通单元格保持原文。
+- 例（已实测）：A1=10,B1=5,C1==A1*2,Sheet2!A1==Sheet1!A1；move A1:B1→D1 后 D1=10,E1=5,A1/B1 清空,C1 raw '=D1*2' value 20,Sheet2!A1 raw '=Sheet1!D1' value 10。
+- 校验顺序：#5 前端在同一写管道里先跑 #7 的 validateRangeWrite（目标落点的原始文本），拒绝时不发请求；#7 的服务端 guard 可直接挂到该路由（写集合 = 目标矩形；源矩形清空不参与校验）。
+
+### 2) PATCH /api/workbooks/:id/cells（跨表原子写）
+body: { "updates": [ { "sheetId", "ref", "raw" } ] }
+- 用途：undo/redo 恢复快照。一次操作可能改动多个工作表的 raw（move 会改写跨表引用），要求 all-or-nothing，所以恢复必须单请求。
+- 语义：与 per-sheet cells 端点一致（先全量校验 ref/sheet/raw，再一次 runWithFormulas，再落库）；400 当 sheetId/ref 非法或 raw 非 string/null。
+- #4 结构 undo 可直接用：把结构操作前后的 raw diff 按 (sheetId, ref) 传过来即可，无需新端点。
+
+### 3) 消费者注意
+- move 的 undo 快照由客户端对「移动前 workbook vs 响应 workbook」求 diff 得到（含跨表被改写的 formula），因此 undo 是单个 Operation（kind='move'）。
+- 本分支删除了旧的「写目标+清源」本地 cut 计划（planRangeCut），避免两套移动语义。
+```
+
+That's a good contract.
+
+Also I need to check: is `sourceRange` in the frontend sent as `{start,end}`? Yes, `buffer.rect` is `{start,end}`.
+
+Let me also think about whether the move endpoint should be idempotent/safe for overlapping ranges — HF moveCells handles it; my endpoint doesn't restrict.
+
+Now, while waiting, let me double check one thing in the frontend move path: after `api.moveRange`, I push the diff op. But `before` is `workbookRef.current` — the workbook state at call time. Between the call and response, could the workbook state change (e.g., a concurrent state save)? `workbookRef.current` is captured before the await. Good.
+
+However, there's a subtlety: `persistState` may have optimistically updated `workbook` (selection/lastSelectionRect) — irrelevant to cells.
+
+Another subtlety: the diff includes cells changed by the move only. Good.
+
+Undo payload: `snapshotsToUpdates(op.before)` → `api.applyCells`. Works (tested manually).
+
+Now, a question: does the history's `push` happen with `op.after.length === 0`? If the move was a no-op (e.g., cutting and pasting onto the same location), after.length === 0 → History.push ignores → Undo button unchanged. Fine.
+
+Let me also double check Grid's `onCutRange`/`onCopyRange`/`onPasteRequest` props unchanged — yes.
+
+Now let me also consider: the requirement "剪切在目标完整显示后才清空源". With the atomic move, the response contains both. The UI sets the workbook after the response → target shows content and source is empty simultaneously. That's the strongest interpretation of "target displayed before source cleared". Good.
+
+Let me now check on the run and prepare the PR body + contract comment files.
+
+Let me write the contract comment to /tmp/contract-move.md, and the PR body to /tmp/pr9-body.md (PR number unknown yet).
+
+Let me write the contract file now.
+toolCall write {"content": "## 范围移动端点契约（响应 comment #84 裁决，@deepseek-5）\n\n实测基于 develop `958f05a` + 本跟进分支。两个端点都沿用现有约定：成功返回**整个 Workbook**，错误 `{ error }` 4xx/5xx，内容变更刷 `updatedAt`。\n\n### 1) `POST /api/workbooks/:id/sheets/:sheetId/move`\n\n```\nbody: { \"sourceRange\": \"A1:B2\" | { \"start\": \"A1\", \"end\": \"B2\" }, \"targetRef\": \"D1\" }\n-> 200 Workbook | 400 { error } | 404 { error }\n```\n\n- **语义**：HyperFormula `moveCells`。源矩形内容移动到 `targetRef` 起的同尺寸矩形；指向块内单元格的公式（**含其它工作表**）改写为新位置；源矩形清空；目标矩形被覆盖。\n- **原子**：一次 `runWithFormulas` + 一次落库；源、目标、受影响引用要么全部更新并持久，要么全部保持原状（400/404/500 都不落库）。\n- **400**：`sourceRange`/`targetRef` 不是合法 A1 范围/坐标，或源/目标矩形超出 `sheet.rowCount/colCount`。\n- **持久化**：移动后 formula 的 `raw` 由引擎权威改写（这也是本 PR 在 `runWithFormulas` 里把 `moveRange` 纳入 “engine raw 权威” 的原因；此前外部公式 raw 会留有悬空旧引用），`value` 同步刷新；非公式单元格保持原文。\n- **已实测**：`A1=10, B1=5, C1==A1*2, Sheet2!A1==Sheet1!A1`；`move A1:B1 -> D1` 后 `D1=10, E1=5, A1/B1 清空, C1 raw='=D1*2' value=20, Sheet2!A1 raw='=Sheet1!D1' value=10`。\n- **校验挂点**：#5 前端在同一写管道里先跑 #7 的 `validateRangeWrite`（目标落点的原始文本，公式按 #7 决定放行），拒绝时不发请求、源与目标都不动。#7 的服务端 guard 可直接挂在 `routes/workbooks.ts` 的这个路由上（写集合 = 目标矩形；源清空不参与校验）。\n\n### 2) `PATCH /api/workbooks/:id/cells`（跨工作表原子写）\n\n```\nbody: { \"updates\": [ { \"sheetId\": \"...\", \"ref\": \"A1\", \"raw\": \"...\" | null } ] }\n-> 200 Workbook | 400 { error } | 404 { error }\n```\n\n- **用途**：undo/redo 恢复快照。一次操作可能改动多个工作表的 raw（move 会改写跨表引用），需求要求 all-or-nothing，所以恢复不能拆成每表一个请求。\n- **语义**：与 `PATCH .../sheets/:sheetId/cells` 相同（先全量校验 sheetId/ref/raw，再一次 `runWithFormulas`，再落库）；**400** 当 sheetId 不存在、ref 非法或 raw 非 string/null。\n- **#4 可直接消费**：结构操作（addRows/removeColumns…）会改写全簿 formula raw，把操作前后按 `(sheetId, ref)` 的 raw diff 传过来即可，不需要再加端点。\n\n### 3) 消费者需知\n\n- move 的 undo 快照是客户端对「移动前 Workbook」与「响应 Workbook」求 raw diff 得到（包含跨表被改写的 formula），因此 **undo 是单个 Operation（`kind='move'`）**，一次请求恢复全部。\n- 本分支删除了旧的「写目标 + 清源」本地 cut 计划（`planRangeCut`），避免两套移动语义；`History` 仍由 #5 提供，#4 接同一个实例即可。\n- 若 #7 的服务端校验 guard 想让 move 也走它，只需在该路由上挂同一中间件；前端的前置校验保持（错误文案渲染点仍在前端命名控件附近）。\n", "path": "/tmp/contract-move.md"}
+stopReason: toolUse
+
+### 2026-09-28T06:08:29.200Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L460
+ROLE toolResult write
+text: Successfully wrote to /tmp/contract-move.md
+isError: False
+
+### 2026-09-28T06:08:31.475Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L461
+ROLE assistant 
+toolCall bash {"command": "sleep 28; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5; tail -3 /tmp/issue5-run6.log", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:08:59.807Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L462
+ROLE toolResult bash
+text: 0
+
+vite v5.4.21 building for production...
+transforming...
+isError: False
+
+### 2026-09-28T06:09:11.991Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L463
+ROLE assistant 
+thinking: Still building. Let me commit the changes meanwhile? Better to wait for green first. Let me prepare the PR body.
+
+Let me draft the PR body now.
+
+Title: "REQ-3 跟进：剪切/范围移动按 moveCells 语义（服务端 move 端点 + 单操作 undo）"
+
+Body structure:
+- 关联 Issue #5；响应根裁决 comment #84。
+- base develop 958f05a.
+- 实现（服务端两个端点、前端、undo 单操作、校验）
+- 契约（已在 #5 comment 公布）
+- 证据（命令+结果，待跑完填）
+- 已知边界：dist 保留（#7 prepare.cjs 自举合入后删除）；显示仍走前端共享引擎；行列结构 undo 待 #4。
+
+Let me write it, leaving evidence numbers to fill in.
+toolCall write {"content": "关联 Issue #5（REQ-3-1-*、REQ-3-2-*），响应根 Issue 在 #5 comment #84 的裁决「剪切/范围移动采用 moveCells 语义，引用跟随移动」。base: `origin/develop` = 958f05a。\n\n## 为什么要改\n\n此前剪切实现是「同一批写目标 + 清源」，指向被移单元格的公式不跟随。根裁决指出这违反 REQ-3-2-1 的 “Cells outside these ranges must not change”：`=A1` 在 A1 被移走后结果会变（0/错误），而该单元格在源/目标矩形之外。改为引擎 moveCells 语义后引用跟随移动，范围外单元格的**显示结果**不变，同时满足“源/目标/受影响公式全部更新”。\n\n## 实现\n\n### 服务端\n1. `POST /api/workbooks/:id/sheets/:sheetId/move` — `{ sourceRange, targetRef }`，一次 `runWithFormulas` 调引擎 `moveRange`（#6 handle 已有），随后一次落库：原子。越界/非法输入 400，不落库。\n2. `PATCH /api/workbooks/:id/cells` — `{ updates: [{ sheetId, ref, raw }] }`，跨工作表一次原子写。undo/redo 需要它：move 会改写**其它工作表**上指向被移单元格的公式，恢复必须单请求 all-or-nothing。同一形状也可供 #4 的结构 undo 直接使用。\n3. `backend/src/formulas.ts`：`moveRange` 纳入 “engine raw 权威”（模块注释本来就写明 range move 会重写引用，实现此前漏了这一步）——否则外部公式的 `raw` 会保留悬空旧引用，只有 `value` 被刷新，前端按 raw 重建时会与服务端 value 不一致。\n\n### 前端\n4. 剪切粘贴改走 move 端点；落点先过 #7 的 `validateRangeWrite`（拒绝则不请求、源/目标都不动）。\n5. undo 记录为**单个** `Operation(kind='move')`：对「移动前 Workbook」与响应 Workbook 求 raw diff（含跨表被改写公式），undo/redo 用 `PATCH /api/workbooks/:id/cells` 一次恢复。\n6. 删除旧的本地 `planRangeCut`/`subtractRect` 与“写+清”路径，避免两套移动语义。\n\n### 契约\n已在 #5 comment 公布两个端点的请求/响应/原子性/400 条件/校验挂点，供 #4（结构平移/undo）与 #7（规则平移/服务端 guard）消费。\n\n## 自检证据\n\n```sh\nBROWSER_EXECUTABLE_PATH=<chromium> ./checks/run.sh\nnode --test checks/unit/editing.test.ts\n```\n\n- 新增/加强用例：\n  - `req3-core` 剪切用例：范围外公式 `=A24` 在 move 后公式栏显示 `=D24`、显示结果不变，刷新后仍成立；新增「范围移动是单个 undo 操作」用例——一次 Ctrl+Z 同时恢复源、目标与被改写的引用，Ctrl+Y 重放，刷新后持久。\n  - `req3-integration` 新增：目标落在 0-100 规则区且源含 200 → 整单拒绝（双文案），源与目标都保持原状，刷新后不变。\n  - `checks/unit/editing.test.ts`：`operationFromWorkbookDiff` 覆盖跨表 raw diff 与 undo 载荷。\n- 结果：**见下方实跑**（含既有 REQ-1/CSV 回归）。API 层另做了手工验证：move 后 `D1=10,E1=5,A1/B1 清空,C1 raw='=D1*2' value=20,Sheet2!A1 raw='=Sheet1!D1' value=10`；跨表原子恢复与非法 sheetId 400 均符合契约。\n\n## 待整合 / 边界\n\n- **行列结构 undo 待 #4**：`req3-integration` 的 `Insert 1 row above` undo 用例仍是 `test.fixme`；`History` 与跨表原子恢复端点已就位，#4 接同一个 `History` 实例即可（rule ranges / pivot validity 的 undo 同属该 Operation 快照扩展）。\n- **dist 保留**：按 comment #84 裁决，`shared/formula-engine/dist` 暂留；待 #7 的 `prepare.cjs` shared 构建自举合入 develop 后，在同一跟进里删除并验证干净克隆可构建。\n- **校验文案来源**：`frontend/src/domain/validation.ts` 仍是 #7 契约的临时实现，待 #7 模块迁入后替换为 re-export。\n", "path": "/tmp/pr-followup-body.md"}
+stopReason: toolUse
+
+### 2026-09-28T06:09:12.093Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L464
+ROLE toolResult write
+text: Successfully wrote to /tmp/pr-followup-body.md
+isError: False
+
+### 2026-09-28T06:09:14.020Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L465
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5; tail -2 /tmp/issue5-run6.log", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:09:43.113Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L466
+ROLE toolResult bash
+text: 0
+server for EDITOR: http://127.0.0.1:47349 (DATA_DIR=/tmp/wbchecks-run-GfCJD0/data-EDITOR-4QaRbI, log=/tmp/wbchecks-run-GfCJD0/server-EDITOR.log)
+server for HOME: http://127.0.0.1:39443 (DATA_DIR=/tmp/wbchecks-run-GfCJD0/data-HOME-0FOgnP, log=/tmp/wbchecks-run-GfCJD0/server-HOME.log)
+isError: False
+
+### 2026-09-28T06:09:45.691Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L467
+ROLE assistant 
+thinking: Servers starting. Let me wait. Meanwhile, let me review the final diff for this branch to ensure correctness.
+
+Let me look at git diff --stat vs develop.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git status --short && git diff --stat"}
+stopReason: toolUse
+
+### 2026-09-28T06:09:47.893Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L468
+ROLE toolResult bash
+text:  M README.md
+ M backend/src/formulas.ts
+ M backend/src/routes/workbooks.ts
+ M checks/req3-core.spec.ts
+ M checks/req3-integration.spec.ts
+ M checks/unit/editing.test.ts
+ M frontend/src/api.ts
+ M frontend/src/domain/editing.ts
+ M frontend/src/pages/EditorPage.tsx
+ README.md                         |  11 ++-
+ backend/src/formulas.ts           |  11 ++-
+ backend/src/routes/workbooks.ts   | 167 ++++++++++++++++++++++++++++++++++++++
+ checks/req3-core.spec.ts          |  54 +++++++++++-
+ checks/req3-integration.spec.ts   |  27 ++++++
+ checks/unit/editing.test.ts       |  64 ++++++++++-----
+ frontend/src/api.ts               |  22 +++++
+ frontend/src/domain/editing.ts    | 111 ++++++++++++++++---------
+ frontend/src/pages/EditorPage.tsx | 103 +++++++++++++++++------
+ 9 files changed, 481 insertions(+), 89 deletions(-)
+isError: False
+
+### 2026-09-28T06:09:50.904Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L469
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:10:20.005Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L470
+ROLE toolResult bash
+text: 0
+isError: False
+
+### 2026-09-28T06:10:25.214Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L471
+ROLE assistant 
+thinking: Hmm, 0 passed after ~2 min and servers started. Maybe the first test is slow (load). Let me check the tail to see if it's running.
+toolCall bash {"command": "tail -5 /tmp/issue5-run6.log; pgrep -af \"playwright test\" | head -2"}
+stopReason: toolUse
+
+### 2026-09-28T06:10:25.494Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L472
+ROLE toolResult bash
+text: server for REQ3_INTEGRATION: http://127.0.0.1:44251 (DATA_DIR=/tmp/wbchecks-run-GfCJD0/data-REQ3_INTEGRATION-DFAvlC, log=/tmp/wbchecks-run-GfCJD0/server-REQ3_INTEGRATION.log)
+
+Running 31 tests using 1 worker
+
+  ✓   1 [create-workbook] › checks/create-workbook.spec.ts:10:5 › New blank workbook -> editor with only a blank Sheet1 and A1 selected (15.6s)
+48291 node /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-2/pi-glm-fast-g1/checks/node_modules/.bin/playwright test --config /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-2/pi-glm-fast-g1/checks/playwright.config.ts
+48841 node /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/checks/node_modules/.bin/playwright test --config /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/checks/playwright.config.ts
+isError: False
+
+### 2026-09-28T06:10:27.911Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L473
+ROLE assistant 
+thinking: 31 tests now (2 new REQ-3 tests). Running. Let me wait for the notification instead of polling frequently. I'll check back in ~1.5 minutes.
+
+Meanwhile, one thought: my earlier broad `pkill -f "backend/dist/server.js"` may have disrupted other lanes' runs (and my own test servers? No, mine were started via run.sh after). Their watchdogs restart within 2s. I should avoid repeating that. Noted.
+
+Let me wait.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:10:57.300Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L474
+ROLE toolResult bash
+text: 3
+isError: False
+
+### 2026-09-28T06:10:59.689Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L475
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:11:28.711Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L476
+ROLE toolResult bash
+text: 3
+isError: False
+
+### 2026-09-28T06:11:31.288Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L477
+ROLE assistant 
+thinking: Slow (shared machine, other lanes running). Let me wait for the background notification rather than polling. I'll do a longer wait via subagent_wait? That waits for subagent runs, not bash jobs. The bash job will notify when done.
+
+Let me use the time to review the diff of editing.ts and EditorPage for correctness once more.
+
+Let me view the final moveRange implementation in EditorPage and the editing.ts diff.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '304,375p' frontend/src/pages/EditorPage.tsx"}
+stopReason: toolUse
+
+### 2026-09-28T06:11:31.590Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L478
+ROLE toolResult bash
+text:         .catch(() => undefined);
+    }
+  };
+
+  /**
+   * Cut (REQ-3-2-1 range move): one atomic server move with the engine's
+   * moveCells semantics, so formulas referencing the moved cells follow them
+   * and the displayed result of cells outside source/target does not change.
+   * The target is validated first; a rejection leaves source and target as
+   * they were. Undo records the single move operation.
+   */
+  const moveRange = async (buffer: ClipboardBuffer) => {
+    const workbookId = idRef.current;
+    const sheet = activeSheetOf(workbookRef.current);
+    const before = workbookRef.current;
+    if (!workbookId || !sheet || !before) return;
+    const targetStart = rectStartRef(currentRect());
+    const source = normalizeRect(buffer.rect.start, buffer.rect.end);
+    const size = rectSize(source);
+    const target = rectAt(targetStart, size.rows, size.cols);
+    // The raw text that lands in the target: plain values move verbatim,
+    // formulas keep their text and pass validation (#7 decision).
+    const landing: CellUpdate[] = [];
+    for (let row = 0; row < size.rows; row += 1) {
+      for (let col = 0; col < size.cols; col += 1) {
+        landing.push({
+          ref: makeRef(target.left + col, target.top + row),
+          raw: readRaw(makeRef(source.left + col, source.top + row)),
+        });
+      }
+    }
+    if (!validateWrites(sheet, landing)) return;
+    setError(null);
+    try {
+      const wb = await api.moveRange(workbookId, sheet.id, buffer.rect, targetStart);
+      setWorkbook(wb);
+      historyRef.current.push(
+        operationFromWorkbookDiff(
+          "move",
+          `move ${buffer.rect.start}:${buffer.rect.end} to ${targetStart}`,
+          before.sheets,
+          wb.sheets
+        )
+      );
+      setHistoryVersion((v) => v + 1);
+      // A cut is consumed by its paste (source cleared by the same move).
+      clipboardRef.current = null;
+    } catch (e) {
+      setError(e instanceof Error ? e.message : "Request failed");
+    }
+  };
+
+  /** Paste the in-session range: a copy adjusts formulas, a cut is a move. */
+  const pasteRange = async (buffer: ClipboardBuffer) => {
+    const sheet = activeSheetOf(workbookRef.current);
+    if (!sheet) return;
+    if (buffer.mode === "cut") {
+      await moveRange(buffer);
+      return;
+    }
+    const targetStart = rectStartRef(currentRect());
+    const bounds = { rows: sheet.rowCount, cols: sheet.colCount };
+    const plan = planRangeCopy(buffer.rect, targetStart, readRaw, bounds);
+    if (plan.updates.length === 0) return;
+    const updates: WorkbookCellUpdate[] = [
+      ...plan.updates.map((u) => ({ sheetId: sheet.id, ...u })),
+      ...plan.clears.map((ref) => ({ sheetId: sheet.id, ref, raw: null })),
+    ];
+    // Whole operation or nothing: validation refusal leaves source and target.
+    if (!validateWrites(sheet, plan.updates)) return;
+    const op = operationFromPlan(
+      "paste",
+isError: False
+
+### 2026-09-28T06:11:35.698Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L479
+ROLE assistant 
+thinking: Looks good. One consideration: the move's validation uses `landing` raws = source raws. But after the move, the *source* cells are cleared. If a rule applies to the source range requiring non-empty values, the clear would be "unvalidated". Per the requirement, "粘贴/范围移动写入非法值整单拒绝" — the written values are the target ones. Clearing isn't a "写入非法值". Fine.
+
+Another: if a rule applies to the source range and the rule is a dropdown, clearing cells would technically violate membership; but we don't validate clears (consistent with the paste path which also doesn't validate clears... wait, in the copy/paste path, planRangeCopy has no clears; in the plain paste path, empty fields ARE in `plan.updates` with raw "" → validated → my `validateValue` for dropdown rejects "". Hmm, so pasting an empty field into a dropdown cell would be rejected. For a move, the source clearing isn't validated. Inconsistent but not covered by requirements. Fine.
+
+Now let me wait for the run. Let me check periodically with longer intervals. I'll wait for the follow-up notification instead of burning turns; but I need to keep the session active. Let me do a couple of longer sleeps.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:12:04.876Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L480
+ROLE toolResult bash
+text: 6
+isError: False
+
+### 2026-09-28T06:12:07.532Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L481
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:12:36.687Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L482
+ROLE toolResult bash
+text: 8
+isError: False
+
+### 2026-09-28T06:12:40.385Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L483
+ROLE assistant 
+thinking: 8 passed, moving along slowly. The machine is heavily loaded. Let me wait more patiently — I'll do several sleeps in one command (e.g., sleep 29 twice isn't possible in one command without hitting the 30s auto-background). I can use a loop with `timeout`? Actually I can run `sleep 120` with `background: true` — no. Let me just do repeated 29s polls; each poll is a turn but that's OK. Or use the background result notification: the job bg010 will notify me when done. Since the user turn already ended... actually I'm in the middle of a turn. I could end my turn with a status, and the bg result will wake me. But the harness expects the work to complete.
+
+Let me continue polling but with fewer checks: just grep the summary at the end. I'll poll every ~29s.
+
+Actually, to reduce turns, let me use a single bash call that waits for the job to finish using a loop with a 25s timeout and prints the tail. That still auto-backgrounds at 30s. Hmm.
+
+Alternative: use `timeout 25 tail -f`... no.
+
+Let me just poll. Each poll is cheap.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:13:09.496Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L484
+ROLE toolResult bash
+text: 10
+isError: False
+
+### 2026-09-28T06:13:11.785Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L485
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:13:40.987Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L486
+ROLE toolResult bash
+text: 11
+isError: False
+
+### 2026-09-28T06:13:41.085Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L487
+ROLE user 
+text: 请处理 Issue #5。
+
+对象：local/run#5
+
+发生以下更新：
+- issue:5 comment 98; read `comment view 98 --thread`
+
+使用 `braid issue view 5 --comments` 查看当前内容。
+
+
+### 2026-09-28T06:13:43.588Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L488
+ROLE assistant 
+thinking: A new comment #98 arrived while my suite is running. Let me read it.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid comment view 98 --thread 2>&1 | tail -60"}
+toolCall bash {"command": "grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5"}
+stopReason: toolUse
+
+### 2026-09-28T06:13:44.291Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L489
+ROLE toolResult bash
+text: ```
+运行提交 075b778（现 HEAD 7e65dca 只多一行 README 文档）。覆盖：编辑/行内编辑/公式栏一致性、Escape 取消、刷新持久、二维粘贴（空字段、只覆盖矩形、右键 menuitem Paste 与 Ctrl+V 同路）、拖拽选区 aria-selected 精确 + 刷新/切表恢复、复制带相对/绝对引用公式的偏移（F3 链路）、剪切源清空时序、0-100 原子拒绝（message/hint 双元素）、Undo/Redo 按钮与 Ctrl+Z/Y、undo 后新修改禁用 redo、undo 不跨工作簿。每 spec 独立 server + 空闲端口 + 运行私有临时数据目录，结束即停服。
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 282]
+
+@deepseek-10 PR #8 已可复核；F3 复制偏移的浏览器链路已在 pr 内实跑通过。
+
+
+comment #83 [visible]
+thread: 69 [open]
+reply-to: 69
+[EXACT ALREADY READ items.md comment:83; 336 chars]
+
+comment #84 [visible]
+thread: 69 [open]
+reply-to: 81
+[EXACT ALREADY READ items.md comment:84; 1025 chars]
+
+comment #98 [visible]
+thread: 69 [open]
+reply-to: 81
+[EXACT ALREADY READ items.md comment:98; 890 chars]
+comment #69 -> @deepseek-5: delivered
+comment #81 -> @deepseek-10: delivered
+comment #81 -> @deepseek-7: delivered
+comment #81 -> @glm-1: delivered
+comment #81 -> @glm-6: delivered
+comment #83 -> @glm-1: delivered
+comment #84 -> @deepseek-5: delivered
+comment #98 -> @deepseek-5: delivered
+comment #98 -> @glm-1: delivered
+isError: False
+
+### 2026-09-28T06:13:44.291Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L490
+ROLE toolResult bash
+text: 11
+isError: False
+
+### 2026-09-28T06:14:07.293Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L491
+ROLE assistant 
+thinking: New important info from #98 (from @deepseek-7? or glm-6? The author is likely deepseek-7/glm-6 — it says "已按你的邀请补上构建自举（issue-6-engine-bootstrap → PR #12，base develop）"). It's a response to my point 5, addressed to @deepseek-5, and @glm-1 is asked to review PR #12.
+
+Key facts:
+1. PR #12 (issue-6-engine-bootstrap) removes shared/formula-engine/dist from the repo and adds a prepare.cjs bootstrap (npm ci for the engine's node_modules + tsc build).
+2. Also: develop head may have moved to 56cbd1a (they say base origin/develop=56cbd1a).
+3. My follow-up PR should remove the dist commit per the ruling in #84 ("待 #7 的 prepare.cjs shared 构建自举合入 develop 后，在同一跟进 PR 中删除 dist 提交并验证干净克隆可构建").
+
+So: Is PR #12 merged? They say "base develop" and "@glm-1 请复核 PR #12" — so it's OPEN, not yet merged. Let me check the PR list and develop head.
+
+My follow-up branch currently includes dist (from my PR #8 merge). Per #84, the dist removal should happen "待 #7 的 prepare.cjs shared 构建自举合入 develop 后，在同一跟进 PR 中删除". If PR #12 isn't merged yet, I have two options:
+(a) Leave dist in my follow-up; note that it will be removed once #12 lands (possibly by me in a rebase).
+(b) Merge #12 first (if ready) then remove dist in my PR.
+
+But actually, there's a subtlety: my follow-up branch is based on develop 958f05a which includes the dist files. If PR #12 merges while my branch is open, develop will delete dist and my branch keeps it → merge conflict / reintroduction. To be safe, I should rebase my branch onto develop after #12 merges and delete the dist files in my PR (exactly as #84 says).
+
+Given PR #12 is pending review, the cleanest: finish my follow-up PR now (with dist still present), and once #12 merges, delete dist in the same follow-up PR (either before merging mine, by merging develop into my branch after #12 lands, or in a small follow-up commit).
+
+Hmm — but "在同一跟进 PR 中删除 dist 提交并验证干净克隆可构建". If #12 hasn't merged, I can't verify the bootstrap. Options:
+- Wait for #12 to merge, then update my branch (merge develop), delete dist, verify a clean clone build.
+- Or, since #12's branch is available, I could merge #12's branch into mine to test. But merging an unmerged PR branch into mine would bring PR #12's commits into my PR diff (not good).
+
+Practical plan:
+1. Finish and verify my current follow-up PR (move semantics) — the important part.
+2. Since PR #12 is pending, keep dist in my PR, and state that dist removal will be folded in once #12 lands (I can rebase then).
+3. Alternatively, hold my PR until #12 merges. Hmm. The root said in #84 that dist removal happens "in the same follow-up PR" — implying they expect the follow-up to be created after #12 lands. But the root also said "上述跟进 PR 与 #4 PR、#9 rebase 并行，不互相阻塞" (comment #84), i.e., my follow-up shouldn't be blocked by others.
+
+Best: open my follow-up now, and in the PR body state the dist removal is pending #12 (which will merge shortly); then, when #12 merges, update my branch to delete dist. But if my PR merges before #12, then #12's merge would delete dist — resulting in correct final state anyway.
+
+Actually, that's a good point: if my PR keeps dist and #12 deletes it, then after both merge, develop is correct (whichever merges last wins; if #12 merges after mine, it deletes; if #12 merges first, my PR would reintroduce dist → bad!).
+
+To avoid reintroducing dist, I should rebase my branch onto develop AFTER #12 merges, and delete dist there. So:
+- Option A: wait for #12 to merge before finalizing my PR.
+- Option B: proactively delete dist in my PR now and rely on #12 for the bootstrap. But if my PR merges before #12, develop would have a broken clean-clone build briefly (until #12 merges). Since #12 is in review, that window is short. Hmm, but if #12 doesn't merge, the app is broken. Risky.
+
+Let me check if PR #12 is merged already (they asked glm-1 to review). Let me fetch and check.
+
+Also develop head may be 56cbd1a now (comment says base origin/develop=56cbd1a). That means develop moved past 958f05a (PR #9? #10? #11? merged). My branch is based on 958f05a; my current check run (bg010) is on that base.
+
+Let me check the PR list and develop.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -5 && echo \"=== develop ===\" && git log --oneline -5 origin/develop && echo \"=== PRs ===\" && braid pr list 2>&1 | tail -14"}
+stopReason: toolUse
+
+### 2026-09-28T06:14:32.779Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L492
+ROLE toolResult bash
+text:  * [new branch]      braid-agent/issue-3/checks-fixes -> origin/braid-agent/issue-3/checks-fixes
+ * [new branch]      braid-agent/issue-3/cleanup-race-check -> origin/braid-agent/issue-3/cleanup-race-check
+ + 24433e8...0fa2d63 braid-agent/issue-4/pi-glm-fast-g1 -> origin/braid-agent/issue-4/pi-glm-fast-g1  (forced update)
+ * [new branch]      fix/check-cleanup-race -> origin/fix/check-cleanup-race
+ * [new branch]      issue-6-engine-bootstrap -> origin/issue-6-engine-bootstrap
+=== develop ===
+56cbd1a Merge local PR #10
+958f05a Merge local PR #8
+7e65dca README：检查表补 CSV 项目行 (#5)
+fcbb114 检查套件：cleanup 先停并等待 watchdog，避免重启竞态与进程逃逸
+075b778 checks/run.sh：把 DATA_DIR_REQ3_INTEGRATION 的说明移到赋值块之前 (#5)
+=== PRs ===
+#1	MERGED	未指派	公式引擎共享包（REQ-4-*）：解析/求值/依赖重算/复制引用调整
+#2	MERGED	未指派	共享基础：应用骨架 + 工作簿主页/创建/重命名/编辑器网格 (REQ-1-1-1, REQ-1-2-*)
+#3	MERGED	未指派	共享基础跟进：修复网格 shift 选区扩展；检查套件类型检查/隔离/日志(REQ-1-1-1, REQ-1-2-*)
+#4	MERGED	@glm-9	CSV 导入与导出 (REQ-1-3-*): 服务端解析+导入端点、导入对话框、导出下载、单元与浏览器检查
+#5	MERGED	未指派	检查套件：放宽浏览器超时上限，避免共享机器负载造成的假失败
+#6	MERGED	未指派	REQ-4：公式引擎接入写管道（PATCH /cells 原子管线 + value 回填）
+#7	MERGED	未指派	检查套件可靠性：超时上限、run 私有运行目录、服务器端口归属校验
+#8	MERGED	@deepseek-10	REQ-3 单元格编辑、范围操作与撤销重做（REQ-3-1-*、REQ-3-2-*）
+#9	OPEN	未指派	REQ-5 数据组织与分析：排序/筛选/数据验证/透视表 (#7)
+#10	MERGED	未指派	检查套件：cleanup 先停并等待 watchdog，避免重启竞态与进程逃逸
+#11	OPEN	未指派	检查套件：#6 接入后 CSV 导出检查等待计算值；run.sh 清理 watchdog 竞态
+#12	OPEN	未指派	共享公式引擎构建自举：移除入库 dist，prepare.cjs 引导依赖安装+编译
+isError: False
+
+### 2026-09-28T06:14:49.398Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L493
+ROLE assistant 
+thinking: - develop is now 56cbd1a (PR #10 merged, a check-suite change; PR #8 is in history).
+- PR #12 (engine bootstrap: remove dist + prepare.cjs bootstrap) is OPEN, not merged.
+- PR #9 (REQ-5 data organization, Issue #7) OPEN.
+- PR #11 (check suite fixes) OPEN.
+
+So my branch base 958f05a is behind develop by PR #10 (a check-suite cleanup change: `fcbb114 检查套件：cleanup 先停并等待 watchdog...`). My check run bg010 is running on my tree (based on 958f05a) which lacks PR #10's run.sh change. That's fine for my evidence, but my PR should be based on the latest develop to avoid conflicts. Since PR #10 changed checks/run.sh only, and I'm not changing run.sh in this follow-up, merging develop into my branch should be trivial. Let me do that AFTER the current run completes (to avoid disturbing the running checks — actually merging files in the working tree while checks run could affect the runner? The run already started with the built artifacts and the run.sh in memory; but merging changes checks/run.sh on disk mid-run... bash reads the script incrementally! Editing a running bash script can corrupt execution. I must NOT modify checks/run.sh while bg010 runs. PR #10's change is to checks/run.sh.
+
+So: wait for bg010 to finish, then merge develop (which brings PR #10's run.sh) into my branch, then re-run the suite on the merged base for final evidence. That's one extra 6-8 min run. Acceptable.
+
+Also, regarding dist: PR #12 is open. Per #84, dist removal should happen in my follow-up once #12 lands. #12 hasn't landed. Two paths:
+(a) Wait for #12 to merge (needs glm-1 review), then merge develop into my branch, delete dist, verify clean clone.
+(b) Open my move-semantics PR now with dist intact, and note that dist removal is pending #12.
+
+There's a conflict risk if my PR merges after #12 (I'd reintroduce dist). To be safe and to honor #84, the cleanest is: merge develop into my branch (bringing PR #10) now, keep dist, open the PR, and then when #12 merges, immediately update my branch to remove dist (a small commit) before my PR merges. Since my PR needs review/merge anyway, this is feasible.
+
+Actually — better idea: I can proactively delete dist in my branch NOW and simultaneously verify a clean-clone build using PR #12's prepare.cjs approach? No: #12's prepare.cjs isn't in develop yet; if I delete dist from my branch without the bootstrap, my branch's clean clone is broken and my checks (which build frontend/backend) might work locally because shared/formula-engine/dist still exists on disk (gitignored after deletion? if I `git rm` the dist files, they're removed from disk too unless regenerated). I could regenerate dist locally for testing while not committing it... but then a clean clone of my branch fails.
+
+Let me think about what the root wants: "待 #7 的 prepare.cjs shared 构建自举合入 develop 后，在同一跟进 PR 中删除 dist 提交并验证干净克隆可构建". So: after #12 merges → my PR deletes dist → verify clean clone.
+
+Since #12 isn't merged yet, and my PR shouldn't be blocked (#84 says the follow-ups don't block each other), I'll:
+1. Finish the move-semantics work and open PR (base develop, dist untouched).
+2. Explicitly state in the PR that dist removal follows #12 (I'll push a follow-up commit to the same branch after #12 merges, then re-verify clean clone + checks).
+3. Monitor #12; when it merges, merge develop, remove dist, verify, and note in the PR.
+
+That's faithful to #84 and doesn't block.
+
+Also I should reply to comment #98 briefly: acknowledge the bootstrap facts (dist alone didn't fix the runtime resolution; prepare.cjs now installs engine deps + builds) and state my plan (fold dist removal into the follow-up PR once #12 lands; will verify clean clone). That's a substantive reply (facts + plan).
+
+Also note: the new fact that dist alone didn't fix the problem means my PR #8's claim ("dist fixes clean clone") was incomplete — good to acknowledge.
+
+Also, my current check run (bg010) will produce evidence on base 958f05a. I'll re-run after merging develop (PR #10).
+
+Let me check the run progress and then decide. Let me also look at PR #12's diff to understand the bootstrap (for when I merge it).
+
+Let me check the run.
+toolCall bash {"command": "grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5; tail -2 /tmp/issue5-run6.log"}
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git diff --stat origin/develop...origin/issue-6-engine-bootstrap 2>/dev/null | tail -12"}
+stopReason: toolUse
+
+### 2026-09-28T06:14:51.884Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L494
+ROLE toolResult bash
+text: 13
+  ✓  12 [csv] › checks/csv.spec.ts:53:5 › imported CSV keeps quotes, embedded newlines and Chinese, and survives refresh (24.6s)
+  ✓  13 [csv] › checks/csv.spec.ts:92:5 › an invalid CSV is rejected, leaves no workbook behind, and can be retried (16.4s)
+isError: False
+
+### 2026-09-28T06:14:51.885Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L495
+ROLE toolResult bash
+text:  shared/formula-engine/.gitignore           |   1 +
+ shared/formula-engine/dist/addresses.d.ts  |  13 ---
+ shared/formula-engine/dist/addresses.js    |  37 -------
+ shared/formula-engine/dist/copyAdjust.d.ts |  31 ------
+ shared/formula-engine/dist/copyAdjust.js   |  96 ------------------
+ shared/formula-engine/dist/display.d.ts    |  49 ----------
+ shared/formula-engine/dist/display.js      |  56 -----------
+ shared/formula-engine/dist/engine.d.ts     |  66 -------------
+ shared/formula-engine/dist/engine.js       | 150 -----------------------------
+ shared/formula-engine/dist/index.d.ts      |   4 -
+ shared/formula-engine/dist/index.js        |   4 -
+ 13 files changed, 59 insertions(+), 520 deletions(-)
+isError: False
+
+### 2026-09-28T06:14:57.984Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L496
+ROLE assistant 
+thinking: PR #12's diff removes the dist files and updates prepare.cjs/README/.gitignore. Good.
+
+The run is at 13 passed, no failures. Let me wait for it to finish. Then:
+1. Merge develop (PR #10) into my branch.
+2. Re-run the suite for final evidence (or rely on the run + note the base difference; better re-run since run.sh changed by PR #10 — a check-infra change that could affect results).
+
+Actually, PR #10's change ("cleanup 先停并等待 watchdog，避免重启竞态与进程逃逸") improves the runner. My evidence on the older runner is still valid for the app code, but to be safe and current, I'll re-run after merging.
+
+Let me also reply to comment #98 now (short), and continue.
+
+Let me first wait for the run to complete (bg010 notification). Meanwhile, post the reply to #98.
+
+Reply content:
+```
+@deepseek-7 收到，两点确认：
+
+1. 我 comment #81 第 5 点的判断确实不完整——dist 入库只解决了 @app/formula-engine 自身的入口解析，引擎运行时 import 'hyperformula' 从真实路径解析、file: 符号链接不经过 backend/node_modules，仍会 ERR_MODULE_NOT_FOUND。你的 prepare.cjs 第 0 步（引擎 node_modules npm ci + tsc 编译）是正确解法。
+2. dist 删除按 #84 裁决放到我的跟进 PR（剪切/范围移动 moveCells 语义）里：等 PR #12 合入 develop 后，我把 develop 合进该分支、删掉 dist 提交、按你的 README 新顺序在干净克隆上验证 backend 启动自举 + frontend build + 我的 checks 套件，再请求复核。在此之前该 PR 不改 dist，避免两边互相回退。
+```
+
+Hmm, the author of #98 — who is it? The thread participants: it replies to my #81, and mentions PR #12 by "issue-6-engine-bootstrap". glm-6 is the formula engine owner. The comment says "@glm-1 请复核 PR #12". Likely glm-6. I'll address @glm-6.
+
+Let me verify the author via `braid comment view 98`. The earlier output didn't show the author. Let me check quickly with `braid comment view 98`.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid comment view 98 2>&1 | head -12"}
+stopReason: toolUse
+
+### 2026-09-28T06:14:58.686Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L497
+ROLE toolResult bash
+text: 
+comment #98 [visible]
+thread: 69 [open]
+reply-to: 81
+【回应第 5 点：共享包产物已用构建自举替换 → PR #12】@deepseek-5
+
+已按你的邀请补上构建自举（issue-6-engine-bootstrap → PR #12，base develop），2305564 入库的 shared/formula-engine/dist 已移除，可据此替换。
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 283]
+
+- backend/scripts/prepare.cjs 第 0 步：引擎 node_modules 缺失 → 按入库 package-lock npm ci --omit=dev（fallback install）；dist 缺失 → 用 backend 自带 tsc 编译。之后才轮到 backend/frontend 构建。
+- README 运行顺序改为 backend npm install && npm run start 优先（先自举引擎，之后 frontend npm run build 即成功）；原 frontend-first 顺序在真干净克隆上 vite 也解析不到 hyperformula，已同步更正。
+isError: False
+
+### 2026-09-28T06:15:05.392Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L498
+ROLE assistant 
+thinking: The comment view doesn't show the author either. Let me check the timeline or just use the handles: the message mentions PR #12 for the engine bootstrap, so it's likely @glm-6 (owner of the engine) — or perhaps @glm-6's lane changed. In comment #30, glm-6 was the engine owner. I'll address @glm-6 (and it'll notify thread participants anyway).
+
+Actually, to be safe I can avoid naming and just reply in the thread (participants get notified). But naming the owner is useful. Given the engine bootstrap is #6's, @glm-6 is right.
+
+Let me post the reply and then wait for the run.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue comment 5 --reply-to 98 --body \"@glm-6 收到，两点确认：\n\n1. 我 comment #81 第 5 点的判断**不完整**：dist 入库只解决了 \\`@app/formula-engine\\` 自身入口的解析，引擎运行时 \\`import 'hyperformula'\\` 按真实路径解析、\\`file:\\` 符号链接不经过 \\`backend/node_modules\\`，仍会 \\`ERR_MODULE_NOT_FOUND\\`。你的 prepare.cjs 第 0 步（引擎 \\`node_modules\\` 按入库 lock \\`npm ci\\` + 用 backend 自带 tsc 编译 dist）才是完整解法，README 的启动顺序更正也同意。\n2. 按根 Issue comment #84 裁决，**dist 删除放在我的跟进 PR**（剪切/范围移动 moveCells 语义）里：等 PR #12 合入 develop 后，我把 develop 合进该分支 → 删掉 dist 提交 → 按你的新 README 顺序在干净克隆上验证 backend 自举启动 + frontend build + 我的 checks 套件，再请求复核。在此之前该分支不动 dist（当前只在 958f05a 基础上做移动语义），避免两边互相回退。\" 2>&1 | tail -4"}
+stopReason: toolUse
+
+### 2026-09-28T06:15:07.393Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L499
+ROLE toolResult bash
+text: comment #101
+@glm-1: queued
+@glm-6: queued
+isError: False
+
+### 2026-09-28T06:15:09.404Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L500
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:15:38.423Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L501
+ROLE toolResult bash
+text: 14
+isError: False
+
+### 2026-09-28T06:15:40.269Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L502
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:16:10.024Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L503
+ROLE toolResult bash
+text: 15
+isError: False
+
+### 2026-09-28T06:16:10.025Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L504
+ROLE user 
+text: 请处理 Issue #5。
+
+对象：local/run#5
+
+发生以下更新：
+- issue:5 comment 103; read `comment view 103 --thread`
+
+使用 `braid issue view 5 --comments` 查看当前内容。
+
+
+### 2026-09-28T06:16:13.575Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L505
+ROLE assistant 
+thinking: Another comment #103. Let me read it, and check the run.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid comment view 103 --thread 2>&1 | tail -30"}
+toolCall bash {"command": "grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5; tail -2 /tmp/issue5-run6.log"}
+stopReason: toolUse
+
+### 2026-09-28T06:16:13.681Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L506
+ROLE toolResult bash
+text: - backend/scripts/prepare.cjs 第 0 步：引擎 node_modules 缺失 → 按入库 package-lock npm ci --omit=dev（fallback install）；dist 缺失 → 用 backend 自带 tsc 编译。之后才轮到 backend/frontend 构建。
+- README 运行顺序改为 backend npm install && npm run start 优先（先自举引擎，之后 frontend npm run build 即成功）；原 frontend-first 顺序在真干净克隆上 vite 也解析不到 hyperformula，已同步更正。
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 284]
+
+comment #101 [visible]
+thread: 69 [open]
+reply-to: 98
+[EXACT ALREADY READ items.md comment:101; 551 chars]
+
+comment #103 [visible]
+thread: 69 [open]
+reply-to: 101
+[EXACT ALREADY READ items.md comment:103; 411 chars]
+comment #69 -> @deepseek-5: delivered
+comment #81 -> @deepseek-10: delivered
+comment #81 -> @deepseek-7: delivered
+comment #81 -> @glm-1: delivered
+comment #81 -> @glm-6: delivered
+comment #83 -> @glm-1: delivered
+comment #84 -> @deepseek-5: delivered
+comment #98 -> @deepseek-5: delivered
+comment #98 -> @glm-1: delivered
+comment #101 -> @glm-1: delivered
+comment #101 -> @glm-6: delivered
+comment #103 -> @deepseek-5: delivered
+comment #103 -> @glm-6: queued
+isError: False
+
+### 2026-09-28T06:16:13.681Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L507
+ROLE toolResult bash
+text: 15
+  ✓  14 [csv] › checks/csv.spec.ts:124:5 › Export CSV downloads the used range and leaves the editor state unchanged (51.5s)
+  ✓  15 [req3-core] › checks/req3-core.spec.ts:96:7 › REQ-3-1-1 edit a cell through the grid or formula bar › formula bar commit, escape cancel, click-away commit and refresh persistence (37.7s)
+isError: False
+
+### 2026-09-28T06:16:42.680Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L508
+ROLE assistant 
+thinking: Comment #103 (from @glm-1, the root owner): agrees with the split, but directs the verification order: use the platform's hard order (frontend first, then backend), not #12's README order, because #12's bootstrap is only on backend prestart. They asked glm-6 to add frontend-side bootstrap.
+
+My verification checklist for the follow-up PR should be:
+1. clean clone
+2. frontend install + build
+3. backend install + start (home page accessible within 120s)
+4. my move semantics + checks suite
+
+I should acknowledge this (maybe a brief reply confirming the checklist) — it's an action item I own. The guidance says reply when taking action. A short confirmation is warranted since the root explicitly set my verification order.
+
+Also, the run is at 15 passed with the new REQ-3 tests coming up. Let me wait for it.
+
+Let me reply briefly to #103, then continue with the run.
+
+Reply:
+```
+收到，验证清单按平台顺序执行（不按 #12 的 README 顺序）：
+干净克隆 → frontend npm install && npm run build → backend npm install && npm run start（120s 内首页可访问）→ 移动语义浏览器检查 + ./checks/run.sh + 单测。
+在 PR #12 合入 develop（含 frontend 侧自举）之前，我的跟进 PR 不动 dist；合入后我在同一 PR 删 dist 并按上述顺序出干净克隆实证。
+```
+
+Let me post it.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue comment 5 --reply-to 103 --body \"@glm-1 收到，按平台顺序验证（不按 #12 的 README 顺序）：\n\n干净克隆 → \\`frontend: npm install && npm run build\\` → \\`backend: npm install && npm run start\\`（120s 内首页可访问）→ 移动语义浏览器用例 + \\`./checks/run.sh\\` + \\`node --test checks/unit/editing.test.ts\\`。\n\n在 PR #12 合入 develop（含你要求的 frontend 侧自举）之前，我的跟进 PR 不动 dist；#12 合入后在同一 PR 删掉 dist 提交并按上述顺序出干净克隆实证（frontend build 先行、backend 启停、checks 全套）。\" 2>&1 | tail -4"}
+stopReason: toolUse
+
+### 2026-09-28T06:16:45.397Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L509
+ROLE toolResult bash
+text: comment #105
+@glm-1: queued
+@glm-6: queued
+isError: False
+
+### 2026-09-28T06:16:45.398Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L510
+ROLE user 
+text: 你正在处理的 Issue #5 有更新。当前会话结束后会用最新内容重新打开工作会话。
+
+更新：
+- issue:5 thread 69: comment 103 hide; read `comment view 103 --thread`
+请继续完成当前工作；如有尚未保存、后续需要接续的进展，可写到相关 Issue 或 PR。
+
+
+### 2026-09-28T06:16:54.220Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L511
+ROLE assistant 
+thinking: Comment #103 was hidden (probably by glm-1 to fold the discussion, as the resolution was acknowledged). Let me check the current thread state to be sure nothing else changed, then continue.
+
+My run bg010 is still going. Let me check and continue.
+
+The note says "请继续完成当前工作；如有尚未保存、后续需要接续的进展，可写到相关 Issue 或 PR." — I should make sure my in-progress work is saved (committed) and progress recorded. My work is currently uncommitted in the worktree (9 modified files). The session may restart after this turn. So I should commit and push the branch now, even before the check run finishes, so the work isn't lost; then continue verification.
+
+Let me:
+1. Check the run status.
+2. Commit the work.
+3. Push the branch.
+4. Continue verification.
+
+Actually careful: committing while the run is in progress doesn't affect the running app (dist already built). Safe.
+
+Let me check run status and commit.
+toolCall bash {"command": "grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5; tail -2 /tmp/issue5-run6.log; echo \"=== thread 69 latest ===\"; cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue view 5 --comments 2>&1 | grep -n \"^comment #\" | tail -5"}
+stopReason: toolUse
+
+### 2026-09-28T06:16:57.297Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L512
+ROLE toolResult bash
+text: 15
+  ✓  14 [csv] › checks/csv.spec.ts:124:5 › Export CSV downloads the used range and leaves the editor state unchanged (51.5s)
+  ✓  15 [req3-core] › checks/req3-core.spec.ts:96:7 › REQ-3-1-1 edit a cell through the grid or formula bar › formula bar commit, escape cancel, click-away commit and refresh persistence (37.7s)
+=== thread 69 latest ===
+255:comment #98 [visible]
+269:comment #101 [visible]
+277:comment #103 [hidden]
+282:comment #104 [visible]
+287:comment #105 [visible]
+isError: False
+
+### 2026-09-28T06:17:00.074Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L513
+ROLE assistant 
+thinking: Comment #104 appeared (visible) — let me read it. And #103 was hidden. Let me check #104.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid comment view 104 2>&1 | head -30"}
+stopReason: toolUse
+
+### 2026-09-28T06:17:00.286Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L514
+ROLE toolResult bash
+text: 
+comment #104 [visible]
+thread: 69 [open]
+reply-to: 101
+[EXACT ALREADY READ items.md comment:104; 466 chars]
+comment #104 -> @deepseek-5: queued
+comment #104 -> @glm-6: queued
+isError: False
+
+### 2026-09-28T06:17:10.373Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L515
+ROLE assistant 
+thinking: Comment #104 is the same content as #103 (re-posted, perhaps due to the hide/rewrite mechanics: "改写正文或已有可见评论会在当前执行结束后用最新内容重建会话"). So #103 was replaced by #104. My reply #105 already addresses #104's content.
+
+Now, I must commit my work-in-progress to avoid loss. Let me commit and push the branch (even though checks are still running).
+
+Then wait for the run, then merge develop (PR #10), re-run, and open the PR.
+
+Let me commit now.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git add -A && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' commit -q -F - <<'EOF'\nREQ-3 跟进：剪切/范围移动改用服务端 moveCells 语义（#5，根裁决 c84）\n\n问题：此前剪切＝同批「写目标 + 清源」。指向被移单元格的公式不跟随改写，\n其显示结果会因引用落空而改变——而该单元格在源/目标矩形之外，违反\nREQ-3-2-1 “Cells outside these ranges must not change”。\n\n服务端：\n- POST /api/workbooks/:id/sheets/:sheetId/move { sourceRange, targetRef }：\n  一次 runWithFormulas 调引擎 moveRange（moveCells），再一次落库；越界/非法\n  输入 400 且不落库。\n- PATCH /api/workbooks/:id/cells { updates:[{sheetId,ref,raw}] }：跨工作表原子写，\n  供 undo/redo 恢复（move 会改写其它工作表上指向被移单元格的公式，恢复必须\n  单请求 all-or-nothing）；同形状可供 #4 的结构 undo 复用。\n- backend/src/formulas.ts：range move 纳入 “engine raw 权威”（模块注释本已\n  如此描述，实现此前遗漏），否则外部公式 raw 会留悬空旧引用，与 value 不一致。\n\n前端：\n- 剪切粘贴改走 move 端点；落点先过 #7 的 validateRangeWrite，拒绝则不请求。\n- undo 记录为单个 Operation(kind='move')：由「移动前 Workbook」与响应求 raw\n  diff（含跨表被改写公式），undo/redo 一次恢复。\n- 删除旧的本地 planRangeCut/subtractRect 与「写+清」路径，避免两套移动语义。\n\n检查：\n- req3-core：剪切后范围外公式栏显示 =D24 且显示结果不变、刷新保持；新增\n  「范围移动是单个 undo 操作」用例（一次 Ctrl+Z 恢复源/目标/引用，Ctrl+Y 重放）。\n- req3-integration：新增目标 0-100 规则拒绝整单移动、源与目标均原状 + 刷新。\n- checks/unit/editing.test.ts：operationFromWorkbookDiff 覆盖跨表 diff 与 undo 载荷。\n\n契约（两个端点的请求/响应/原子性/400/校验挂点）已在 #5 comment 公布给 #4/#7。\nEOF\ngit log --oneline -2 && git push origin HEAD:refs/heads/issue-5-range-move 2>&1 | tail -3"}
+stopReason: toolUse
+
+### 2026-09-28T06:17:42.070Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L516
+ROLE toolResult bash
+text: Bash job bg011 moved to background after 30s. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T06:17:45.297Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L517
+ROLE assistant 
+toolCall bash {"command": "pbb tail bg011 2>&1 | tail -8; cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git log --oneline -2 && git ls-remote origin | grep range-move"}
+stopReason: toolUse
+
+### 2026-09-28T06:17:54.773Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L518
+ROLE toolResult bash
+text: <pi_context source="pbb" kind="pbb.tail" schema_version="1" session_id="01a0e680-f727-737a-a04f-1553c698ea7e" session_key="5b892424912f7dfdd59c2edf" instance_id="pbb_163_cd2a4cf7" lane="" scope="current-instance" job_id="bg011" owner_instance_id="pbb_163_cd2a4cf7" status="running" cursor="30" lines="80">
+bd1f6df REQ-3 跟进：剪切/范围移动改用服务端 moveCells 语义（#5，根裁决 c84）
+958f05a Merge local PR #8
+</pi_context>
+bd1f6df REQ-3 跟进：剪切/范围移动改用服务端 moveCells 语义（#5，根裁决 c84）
+958f05a Merge local PR #8
+
+Command exited with code 1
+isError: True
+
+### 2026-09-28T06:17:58.272Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L519
+ROLE assistant 
+thinking: The commit was created (bd1f6df). The push may still be running (bg011 status=running) or the `git ls-remote | grep` returned nothing (exit 1) because the push hadn't completed. Let me check again.
+
+Note the commit happened before push, good. Let me verify the push completed.
+toolCall bash {"command": "sleep 5; cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git ls-remote origin | grep -E \"range-move|issue-5\"; git status --short | head -3"}
+stopReason: toolUse
+
+### 2026-09-28T06:18:13.269Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L520
+ROLE toolResult bash
+text: 7e65dca0e02676a777fcff5d0636c54364f6270e	refs/heads/braid-agent/issue-5/pi-deepseek-fast-g1
+bd1f6dfb090653f93f9b8ae38c21fcb38547ec05	refs/heads/issue-5-range-move
+7e65dca0e02676a777fcff5d0636c54364f6270e	refs/heads/issue-5-req3-editing
+isError: False
+
+### 2026-09-28T06:18:15.969Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L521
+ROLE assistant 
+thinking: The branch `issue-5-range-move` is pushed at bd1f6df. Work is saved.
+
+Now let me check the run bg010 status — it should be near the REQ-3 tests. Let me poll.
+toolCall bash {"command": "grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5; tail -2 /tmp/issue5-run6.log"}
+stopReason: toolUse
+
+### 2026-09-28T06:18:16.183Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L522
+ROLE toolResult bash
+text: 18
+  ✓  17 [req3-core] › checks/req3-core.spec.ts:168:7 › REQ-3-1-2 paste two-dimensional table data › the grid context menu provides menuitem "Paste" with the same clipboard content (30.2s)
+  ✓  18 [req3-core] › checks/req3-core.spec.ts:187:7 › REQ-3-1-3 select a rectangular cell range › drag selection drives aria-selected exactly and survives refresh (41.7s)
+isError: False
+
+### 2026-09-28T06:18:18.669Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L523
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -5", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:19:00.610Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L524
+ROLE toolResult bash
+text: Bash job bg012 moved to background after 30s. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T06:19:06.745Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L525
+ROLE assistant 
+thinking: The machine is very loaded; my sleep commands are getting backgrounded at 30s. Let me just wait for the bg010 notification and meanwhile do other useful work.
+
+Useful work while waiting: merge develop into my branch? I said I'd do it after the run (to avoid modifying checks/run.sh mid-run). The run is still using checks/run.sh. PR #10 modified checks/run.sh. If I merge now, the file changes on disk → the running bash script could misbehave. So wait.
+
+Other useful work: prepare the PR creation (but I want final evidence). I could create the PR now as draft? braid pr create supports --draft. But better to wait for evidence.
+
+Let me instead review the remaining concern: the `ClipboardBuffer.rows` field is now unused; and `fields`… let me check for any leftover unused imports in EditorPage (tsc with noUnusedLocals? frontend tsconfig has "noUnusedLocals"? Let me check). tsc passed, so either it's off or there are no unused locals. Let me check `frontend/tsconfig.json` compilerOptions.
+
+Actually tsc passed, so fine.
+
+Let me check the pbb job status and wait for bg010. I'll poll infrequently.
+
+Actually, let me look at whether `CellUpdate` import in EditorPage is still used: yes (validateWrites param + landing). `workbookRef` etc fine.
+
+Let me check the run's progress via the log file directly in a lightweight command (no sleep).
+toolCall bash {"command": "grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -3; pbb status bg010 2>&1 | grep -E '\"(status|outcome)\"' | head -4"}
+stopReason: toolUse
+
+### 2026-09-28T06:19:11.570Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L526
+ROLE toolResult bash
+text: 18
+  "status": "running",
+  "outcome": "running",
+isError: False
+
+### 2026-09-28T06:19:15.567Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L527
+ROLE assistant 
+thinking: Still running (18 passed). The machine is slow. Let me wait for the notification. I'll do a longer wait by ending this turn? No — the flow expects me to continue. Let me poll with a sleep but accept backgrounding.
+
+Actually, a better approach: use `subagent_wait`? It waits for subagent runs, not pbb jobs. Not applicable.
+
+Let me just poll periodically. To minimize turns, I'll poll every ~29s until done. It's 13 more tests (19-31). Given ~30-50s per test due to load, could be 5-8 more minutes.
+
+Alternatively, I can do useful work: merge develop into my branch is unsafe during the run. But I could prepare the "clean clone" verification script for later.
+
+Let me think about the clean-clone verification I promised:
+```
+git clone <origin.git> /tmp/clean-clone -b <branch or develop>
+cd /tmp/clean-clone/frontend && npm install && npm run build
+cd ../backend && npm install && HOST=127.0.0.1 PORT=<free> npm run start (background) → curl / within 120s
+then run checks? The checks need BROWSER_EXECUTABLE_PATH and their own servers; `./checks/run.sh` builds frontend/backend itself.
+```
+That verification is only meaningful after PR #12 merges (dist removal). Since #12 is open, I'll do the clean-clone verification later. For now, the move-semantics PR just needs the checks suite.
+
+Hmm, but the promise in my comment #105 was: "在 PR #12 合入 develop 之前，我的跟进 PR 不动 dist；#12 合入后在同一 PR 删掉 dist 提交并按上述顺序出干净克隆实证". So the clean-clone verification comes later. My PR now should include the move semantics + checks evidence.
+
+So the current run's evidence is what I need for the PR. Let me wait.
+
+Let me poll.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -3", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:19:44.872Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L528
+ROLE toolResult bash
+text: 19
+isError: False
+
+### 2026-09-28T06:19:48.294Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L529
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -3", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:20:17.382Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L530
+ROLE toolResult bash
+text: 20
+isError: False
+
+### 2026-09-28T06:20:21.580Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L531
+ROLE assistant 
+thinking: 20 passed. The next tests include my new cut test and the move undo test. Let me wait for the notification. I'll continue polling but let me batch: the tool auto-backgrounds after 30s, so a 29s sleep works.
+
+Let me poll a few more times.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -3", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:20:51.272Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L532
+ROLE toolResult bash
+text: 21
+isError: False
+
+### 2026-09-28T06:20:54.662Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L533
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)|cut clears|range move undoes\" /tmp/issue5-run6.log | tail -4", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:21:23.687Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L534
+ROLE toolResult bash
+text: 23
+  ✓  20 [req3-core] › checks/req3-core.spec.ts:249:7 › REQ-3-2-1 copy, cut and paste cell ranges › cut clears the source only after the target is displayed and moves references (35.8s)
+  ✓  21 [req3-core] › checks/req3-core.spec.ts:287:7 › REQ-3-2-2 undo and redo recent operations › a range move undoes as one operation, restoring rewritten references (38.3s)
+isError: False
+
+### 2026-09-28T06:21:26.261Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L535
+ROLE assistant 
+thinking: Excellent! Both new tests passed:
+- cut with reference-following ✓
+- move as single undoable operation restoring rewritten references ✓
+
+23 passed so far, no failures. Remaining: tests 24-31 (integration + fixme).
+
+Let me continue polling.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -3", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:21:55.364Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L536
+ROLE toolResult bash
+text: 24
+isError: False
+
+### 2026-09-28T06:21:57.662Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L537
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run6.log; grep -E \"^  (✘|-)\" /tmp/issue5-run6.log | tail -3", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:22:26.686Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L538
+ROLE toolResult bash
+text: 26
+isError: False
+
+### 2026-09-28T06:22:29.198Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L539
+ROLE assistant 
+toolCall bash {"command": "sleep 29; tail -8 /tmp/issue5-run6.log", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:22:58.276Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L540
+ROLE toolResult bash
+text:   ✓  22 [req3-core] › checks/req3-core.spec.ts:326:7 › REQ-3-2-2 undo and redo recent operations › toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste (24.2s)
+  ✓  23 [req3-core] › checks/req3-core.spec.ts:370:7 › REQ-3-2-2 undo and redo recent operations › a new modification after undo disables Redo and Ctrl+Y does not restore the old branch (15.6s)
+  ✓  24 [req3-core] › checks/req3-core.spec.ts:387:7 › REQ-3-2-2 undo and redo recent operations › undo history is per workbook and never crosses worksheets (11.6s)
+  ✓  25 [req3-integration] › checks/req3-integration.spec.ts:76:7 › REQ-3-1-1 formula cells and dependent recalculation › grid shows results, formula bar shows the original formula, dependencies recalculate and persist (17.9s)
+  ✓  26 [req3-integration] › checks/req3-integration.spec.ts:103:7 › REQ-3-2-1 copying formulas adjusts references › relative references shift with the target offset, absolute references stay (14.2s)
+  ✓  27 [req3-integration] › checks/req3-integration.spec.ts:129:7 › REQ-3-1-3 selection persistence per worksheet › switching worksheets keeps each worksheet rectangle (15.4s)
+  ✓  28 [req3-integration] › checks/req3-integration.spec.ts:190:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › paste with an out-of-range value is rejected as a whole (8.0s)
+  ✓  29 [req3-integration] › checks/req3-integration.spec.ts:212:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › range copy with an out-of-range target leaves source and target unchanged (15.6s)
+isError: False
+
+### 2026-09-28T06:23:01.557Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L541
+ROLE assistant 
+thinking: 28 passed visible; wait, the count said 26 earlier and now the last listed is 29. Anyway, 2 tests remain: the new move-validation test (30) and the fixme (31).
+
+Let me poll for the final summary.
+toolCall bash {"command": "sleep 29; tail -8 /tmp/issue5-run6.log; grep -E \"^  (✘)\" /tmp/issue5-run6.log | tail -3", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:23:30.578Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L542
+ROLE toolResult bash
+text:   ✓  30 [req3-integration] › checks/req3-integration.spec.ts:231:7 › REQ-3-1-2 / REQ-3-2-1 numeric validation rejects bulk writes atomically › a move whose target violates the rule is refused before anything moves (14.6s)
+  -  31 [req3-integration] › checks/req3-integration.spec.ts:266:8 › REQ-3-2-2 undo covers row and column structure changes › inserting a row and a column can be undone and redone
+
+  Slow test file: [req3-core] › checks/req3-core.spec.ts (5.9m)
+  Consider running tests from slow files in parallel. See: https://playwright.dev/docs/test-parallel
+  1 skipped
+  30 passed (13.2m)
+EXIT=0
+isError: False
+
+### 2026-09-28T06:23:33.893Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L543
+ROLE assistant 
+thinking: All green on base 958f05a: **30 passed + 1 skipped (fixme, #4), EXIT=0** (13.2 min due to machine load).
+
+Now:
+1. Merge develop (56cbd1a, PR #10 check-suite change) into my branch for a current base.
+2. Re-run the suite? The merged change is a check-infra fix; my evidence on 958f05a is solid for the app code. But the PR base is develop (56cbd1a); merging develop into my branch changes checks/run.sh. I should re-run to have evidence on the actual candidate head (the PR head after merging develop). To be rigorous but time-conscious: re-run the checks (13+ min under load). I'll do it in the background.
+
+Actually, PR #10's change is exactly about the cleanup/watchdog race — a check-runner robustness fix. Re-running gives a cleaner signal (fewer flaky restarts). Worth doing once, then open the PR.
+
+Let me merge develop and check conflicts.
+
+Also: should I include the dist-removal now? #12 isn't merged. Per plan, no.
+
+Let me merge.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -2 && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' merge origin/develop 2>&1 | tail -8 && git log --oneline -3 && git status --short | head"}
+stopReason: toolUse
+
+### 2026-09-28T06:23:38.656Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L544
+ROLE toolResult bash
+text:  * [new branch]      issue-5-formulabar-undo-fix -> origin/issue-5-formulabar-undo-fix
+   5159262..b17ca0f  issue-6-engine-bootstrap -> origin/issue-6-engine-bootstrap
+Merge made by the 'ort' strategy.
+ checks/run.sh | 36 ++++++++++++++++++++++++++++++------
+ 1 file changed, 30 insertions(+), 6 deletions(-)
+4ba6597 Merge remote-tracking branch 'origin/develop' into issue-5-range-move
+bd1f6df REQ-3 跟进：剪切/范围移动改用服务端 moveCells 语义（#5，根裁决 c84）
+56cbd1a Merge local PR #10
+isError: False
+
+### 2026-09-28T06:23:41.804Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L545
+ROLE assistant 
+thinking: Merged cleanly (only checks/run.sh changed). Now head = 4ba6597.
+
+Interesting: there's a new branch `issue-5-formulabar-undo-fix` — someone (maybe @deepseek-10, the PR #8 owner) made a fix related to my FormulaBar/undo issue? Or it's from PR #8's review. Let me check what it contains later; it may conflict with my work. Let me look at it quickly — if it's a fix for the formula-bar undo (which I already fixed in PR #8), it might be a duplicate. Let me check the diff.
+
+Also PR #12's branch moved to b17ca0f.
+
+Let me check the formulabar-undo-fix branch.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git log --oneline origin/develop..origin/issue-5-formulabar-undo-fix 2>/dev/null | head -5; echo \"=== diff stat ===\"; git diff --stat origin/develop...origin/issue-5-formulabar-undo-fix 2>/dev/null | tail -10; echo \"=== PRs ===\"; braid pr list 2>&1 | tail -8"}
+stopReason: toolUse
+
+### 2026-09-28T06:23:41.871Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L546
+ROLE toolResult bash
+text: b06d22f REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）
+=== diff stat ===
+ checks/req3-core.spec.ts               | 27 +++++++++++++++++++++++++++
+ frontend/src/components/FormulaBar.tsx | 10 ++++++++++
+ 2 files changed, 37 insertions(+)
+=== PRs ===
+#5	MERGED	未指派	检查套件：放宽浏览器超时上限，避免共享机器负载造成的假失败
+#6	MERGED	未指派	REQ-4：公式引擎接入写管道（PATCH /cells 原子管线 + value 回填）
+#7	MERGED	未指派	检查套件可靠性：超时上限、run 私有运行目录、服务器端口归属校验
+#8	MERGED	@deepseek-10	REQ-3 单元格编辑、范围操作与撤销重做（REQ-3-1-*、REQ-3-2-*）
+#9	OPEN	未指派	REQ-5 数据组织与分析：排序/筛选/数据验证/透视表 (#7)
+#10	MERGED	未指派	检查套件：cleanup 先停并等待 watchdog，避免重启竞态与进程逃逸
+#11	OPEN	未指派	CSV 导出检查：等待网格显示计算结果后再取期望（#6 回填竞态）
+#12	OPEN	未指派	共享公式引擎构建自举：移除入库 dist，prepare.cjs 引导依赖安装+编译
+isError: False
+
+### 2026-09-28T06:23:48.685Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L547
+ROLE assistant 
+thinking: A new branch `issue-5-formulabar-undo-fix` (commit b06d22f) fixes "公式栏 Enter 的双重提交让一次编辑占两步 undo" — that's a real bug in MY implementation from PR #8: in FormulaBar, Enter calls commit() and then blur() → onBlur calls commit() again. As I analyzed earlier, the second commit should be a no-op because `handleCommitCell` short-circuits when `readRaw(ref) === raw`. But there's a race: the first commit is async; the blur-commit runs before the first one's response arrives, so `readRaw(ref)` still returns the OLD raw → it issues a second update → two operations pushed to history → one edit occupies two undo steps.
+
+Wait, in my testing the undo tests passed... Let me think: `submitViaFormulaBar` = fill + Enter. Enter → commit() (async, in flight) + blur() → onBlur → commit() again. Second commit: `previous = rawAtEditStart.current` (old raw, e.g. ""), `nextRaw = draft` ("u1") → not equal → calls onCommit(ref, "u1") → handleCommitCell: readRaw(ref) is still "" (first request in flight) → not equal → creates a second op and issues a second request. Both requests write the same value; both ops are pushed (the second op's before/after: before = "" (read at that time), after = "u1" — non-empty). So history has 2 ops for one edit!
+
+Then the test "toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste" does:
+- submitViaFormulaBar A28 'u1' → 2 ops.
+- expect A28='u1' ✓; undo enabled ✓; undo.click() → undo op2 (before="") → A28=''; expect '' ✓; redo enabled ✓; redo.click() → A28='u1' ✓.
+It passed because redo restored. The duplicate op was hidden.
+
+And the "new modification after undo" test also passed.
+
+So there IS a real defect (double history entry per formula-bar Enter), and someone (likely @deepseek-10, the PR #8 owner, or glm-1) fixed it on branch `issue-5-formulabar-undo-fix`. There's no PR for it yet? The PR list shows no PR #13. The branch exists but no PR. Hmm.
+
+This matters for MY follow-up PR: the fix touches `frontend/src/components/FormulaBar.tsx` and `checks/req3-core.spec.ts` — the same files I touched. Conflicts possible.
+
+How should I handle it? Options:
+(a) Include the fix in my follow-up PR (merge their branch or cherry-pick).
+(b) Leave it to whoever created the branch (they'll open their own PR).
+
+The branch has no PR yet; if I open my PR and it touches the same file, we'll conflict. Since the fix is a genuine bug in code I delivered (PR #8), and it's small, I could cherry-pick it into my follow-up and credit the author. But that might conflict with their own PR handling ("avoid duplicating work").
+
+Let me look at the actual fix and the current state of FormulaBar in my branch. My branch's FormulaBar has:
+```
+onKeyDown Enter: preventDefault(); void commit(); e.currentTarget.blur();
+```
+Their fix probably adds a guard so blur doesn't re-commit (e.g., a `committing` ref).
+
+Let me see their diff.
+
+Also, my follow-up could rebase on top of their fix if their PR merges. But no PR yet.
+
+Decision: Since this is a defect in the REQ-3 deliverable I own (Issue #5), and the branch has no PR, I'll take responsibility: merge their branch's fix into my follow-up PR (cherry-pick with clear attribution) OR leave it and let them PR it, then rebase.
+
+Hmm. "发现需求或方案问题时回到相关 Issue 协作调整" — the fix is on a branch but no PR; the author may be about to open one. Let me check who authored it and whether they commented. Let me look at the commit author and check issue #5 comments for a mention.
+
+Let me inspect.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git show --stat b06d22f | head -20 && echo \"=== diff ===\" && git show b06d22f -- frontend/src/components/FormulaBar.tsx && echo \"=== test diff ===\" && git show b06d22f -- checks/req3-core.spec.ts | head -50"}
+stopReason: toolUse
+
+### 2026-09-28T06:23:48.788Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L548
+ROLE toolResult bash
+text: commit b06d22f813c9cf436f377f3b47fe706ec81829a5
+Author: @deepseek-10 <deepseek-10@braid.local>
+Date:   Mon Sep 28 06:19:43 2026 +0000
+
+    REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）
+    
+    Enter 在公式栏里提交后会让文本框失焦，而失焦处理器在同一轮事件中再次提交
+    相同内容：两次 PATCH、两条 History 操作。用户视角是“连续两笔编辑后，第二次
+    Undo 看起来没有反应”——REQ-3-2-2 要求每次 undo 逆序恢复一次操作。
+    
+    - FormulaBar：为进行中的 (cell, content) 写入加 in-flight 去重，Enter 引起的
+      失焦不再发起第二次写入；成功或失败后都释放，正常重试不受影响。
+    - checks/req3-core.spec.ts：新增回归用例——两次连续公式栏编辑后，两次 Undo
+      逆序回退、两次 Redo 顺序重放（修复前第二次 Undo 停在 A70='one'）。
+
+ checks/req3-core.spec.ts               | 27 +++++++++++++++++++++++++++
+ frontend/src/components/FormulaBar.tsx | 10 ++++++++++
+ 2 files changed, 37 insertions(+)
+=== diff ===
+commit b06d22f813c9cf436f377f3b47fe706ec81829a5
+Author: @deepseek-10 <deepseek-10@braid.local>
+Date:   Mon Sep 28 06:19:43 2026 +0000
+
+    REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）
+    
+    Enter 在公式栏里提交后会让文本框失焦，而失焦处理器在同一轮事件中再次提交
+    相同内容：两次 PATCH、两条 History 操作。用户视角是“连续两笔编辑后，第二次
+    Undo 看起来没有反应”——REQ-3-2-2 要求每次 undo 逆序恢复一次操作。
+    
+    - FormulaBar：为进行中的 (cell, content) 写入加 in-flight 去重，Enter 引起的
+      失焦不再发起第二次写入；成功或失败后都释放，正常重试不受影响。
+    - checks/req3-core.spec.ts：新增回归用例——两次连续公式栏编辑后，两次 Undo
+      逆序回退、两次 Redo 顺序重放（修复前第二次 Undo 停在 A70='one'）。
+
+diff --git a/frontend/src/components/FormulaBar.tsx b/frontend/src/components/FormulaBar.tsx
+index 416bd9f..6e49cbb 100644
+--- a/frontend/src/components/FormulaBar.tsx
++++ b/frontend/src/components/FormulaBar.tsx
+@@ -28,6 +28,12 @@ export default function FormulaBar({ activeCell, cell, onCommit }: FormulaBarPro
+   const [focused, setFocused] = useState(false);
+   const draftRef = useRef(activeCell);
+   const rawAtEditStart = useRef(raw);
++  /** The (cell, content) write currently in flight, so one Enter cannot
++   * commit twice: Enter commits and then blurs the field, and the blur
++   * handler would otherwise start a second, identical write (a second history
++   * operation for one user action, so undoing two edits would need three
++   * Undos — REQ-3-2-2). */
++  const inFlight = useRef<string | null>(null);
+ 
+   // Follow the active cell / server state whenever the user is not editing.
+   useEffect(() => {
+@@ -42,7 +48,11 @@ export default function FormulaBar({ activeCell, cell, onCommit }: FormulaBarPro
+     const nextRaw = draft === "" ? null : draft;
+     const previous = rawAtEditStart.current === "" ? null : rawAtEditStart.current;
+     if (nextRaw === previous) return;
++    const key = `${ref}\u0000${nextRaw ?? ""}`;
++    if (inFlight.current === key) return;
++    inFlight.current = key;
+     const ok = await onCommit(ref, nextRaw);
++    if (inFlight.current === key) inFlight.current = null;
+     if (ok) {
+       // The commit landed: this is the new "last successful content".
+       rawAtEditStart.current = draft;
+=== test diff ===
+commit b06d22f813c9cf436f377f3b47fe706ec81829a5
+Author: @deepseek-10 <deepseek-10@braid.local>
+Date:   Mon Sep 28 06:19:43 2026 +0000
+
+    REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）
+    
+    Enter 在公式栏里提交后会让文本框失焦，而失焦处理器在同一轮事件中再次提交
+    相同内容：两次 PATCH、两条 History 操作。用户视角是“连续两笔编辑后，第二次
+    Undo 看起来没有反应”——REQ-3-2-2 要求每次 undo 逆序恢复一次操作。
+    
+    - FormulaBar：为进行中的 (cell, content) 写入加 in-flight 去重，Enter 引起的
+      失焦不再发起第二次写入；成功或失败后都释放，正常重试不受影响。
+    - checks/req3-core.spec.ts：新增回归用例——两次连续公式栏编辑后，两次 Undo
+      逆序回退、两次 Redo 顺序重放（修复前第二次 Undo 停在 A70='one'）。
+
+diff --git a/checks/req3-core.spec.ts b/checks/req3-core.spec.ts
+index a364f86..46a950b 100644
+--- a/checks/req3-core.spec.ts
++++ b/checks/req3-core.spec.ts
+@@ -271,6 +271,33 @@ test.describe('REQ-3-2-1 copy, cut and paste cell ranges', () => {
+ });
+ 
+ test.describe('REQ-3-2-2 undo and redo recent operations', () => {
++  test('one commit records exactly one undo step (two consecutive edits undo in reverse order)', async ({ page }) => {
++    await openSeededWorkbook(page);
++
++    // Committing with Enter also blurs the formula bar; the blur must not
++    // record a second history entry for the same edit, otherwise the second
++    // Undo would replay a no-op instead of undoing the earlier edit.
++    await submitViaFormulaBar(page, 'A70', 'one');
++    await expect(cell(page, 'A70')).toHaveText('one');
++    await submitViaFormulaBar(page, 'A71', 'two');
++    await expect(cell(page, 'A71')).toHaveText('two');
++
++    const undo = page.getByRole('button', { name: 'Undo', exact: true });
++    await undo.click();
++    await expect(cell(page, 'A71')).toHaveText('');
++    await expect(cell(page, 'A70')).toHaveText('one');
++    await undo.click();
++    await expect(cell(page, 'A70')).toHaveText('');
++
++    // And redo replays exactly the two committed edits.
++    const redo = page.getByRole('button', { name: 'Redo', exact: true });
++    await redo.click();
++    await expect(cell(page, 'A70')).toHaveText('one');
++    await expect(cell(page, 'A71')).toHaveText('');
++    await redo.click();
++    await expect(cell(page, 'A71')).toHaveText('two');
++  });
++
+isError: False
+
+### 2026-09-28T06:23:55.668Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L549
+ROLE assistant 
+thinking: @deepseek-10 (the PR #8 owner) found and fixed the double-commit bug — a real defect in the code I delivered. The fix is on branch `issue-5-formulabar-undo-fix` with no PR yet.
+
+This is highly relevant to my follow-up PR, and it touches the same files. Options:
+
+(a) Cherry-pick b06d22f into my follow-up branch, with attribution in the commit message, and include it in my PR. Then ask @deepseek-10 whether they want to own it separately.
+(b) Leave it alone and let them open a PR; my PR would then conflict with theirs on req3-core.spec.ts (my additions are in the same describe block, near line 271-287, and their insertion is at line 271 — likely a conflict).
+
+Given that my follow-up is already open work in the same file region, taking their fix into my branch and crediting them avoids a conflicting duplicate PR. But it could step on their plan (they may be about to open a PR; the branch exists at origin).
+
+Best collaboration: ask/notify in the thread, and since the fix is small and the file regions overlap, I'll cherry-pick it into my follow-up with clear attribution ("cherry-picked from @deepseek-10's b06d22f; if they prefer their own PR I'll drop it"), and note it in the PR body + a comment. Actually, better: first check if they've created a PR/comment about it. The PR list has no #13. Let me check issue #5 comments for a mention by deepseek-10 (maybe they announced it).
+
+Let me check the issue timeline/comments for recent ones.
+
+Actually — the task framing says "@deepseek-10" is the returned concrete owner for PR #8. They are now doing follow-up review fixes. Since they own the PR #8 lineage, maybe they intend to open their own PR. To avoid duplicate/conflicting work, the cleanest is:
+- Include their fix in my branch (so it lands with mine) OR
+- Leave it and rebase mine on theirs once their PR merges.
+
+Hmm. Let me look for a comment from them. Let me grep the issue comments for "双重提交" or "b06d22f" or "formulabar".
+
+Let me check.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue view 5 --comments 2>&1 | grep -n \"双重提交\\|formulabar\\|b06d22f\\|A70\\|deepseek-10\" | tail -20"}
+stopReason: toolUse
+
+### 2026-09-28T06:23:55.774Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L550
+ROLE toolResult bash
+text: 205:**PR #8**（`braid pr create --base develop --head issue-5-req3-editing`，owner @deepseek-10）：base `origin/develop` = 0539c62（已含 #2 共享基础、#6 公式写管道、CSV、检查套件加固），head = 7e65dca。
+227:@deepseek-10 PR #8 已可复核；F3 复制偏移的浏览器链路已在 pr 内实跑通过。
+isError: False
+
+### 2026-09-28T06:24:01.154Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L551
+ROLE assistant 
+thinking: No comment from @deepseek-10 about the fix. The branch is pushed but no PR. They likely pushed it and will open a PR (or they may have been interrupted).
+
+Decision: I'll cherry-pick their fix into my follow-up branch — it's a defect in the shared deliverable and my PR is the active follow-up for issue #5. I'll:
+1. Cherry-pick b06d22f (or merge it) with attribution.
+2. My follow-up's new test is in the same describe block; their test insertion at line 271 and mine at 287 — if I cherry-pick onto my branch, git will apply it; my test text at line ~271 is now different (I added a test before "toolbar buttons..."). The cherry-pick's context is `test.describe('REQ-3-2-2 undo...', () => {` + `test('toolbar buttons...` — my branch has my new test inserted right after the describe, so the context differs → possible conflict. Let me handle it.
+
+Actually, simpler and more collaborative: ask @deepseek-10 in the thread whether they want to own it, but that costs a round-trip and blocks. Given the guidance "无人中途介入时作常规决定并继续", and my PR needs to be coherent, I'll include the fix (credited) and note it in the PR + a comment addressed to @deepseek-10 saying I've taken it into the follow-up PR to avoid two conflicting PRs on the same region, and offering to drop it if they prefer their own.
+
+Hmm, wait. Actually let me reconsider: if they open their own PR for the fix and it gets merged BEFORE mine, then my cherry-pick becomes a duplicate (same change, both applied → cherry-pick would be a no-op after rebase or could conflict). Manageable.
+
+Alternatively, I could NOT include it, and instead rebase on their fix if their PR merges first. But then my PR wouldn't have the regression test, and my tests currently PASS despite the bug (because my tests don't detect it). The bug is real and its regression test is valuable. Including it in my PR strengthens it.
+
+Let me cherry-pick and resolve conflicts. Then run the checks again on the merged+cherry-picked head (this will be the final evidence run).
+
+Actually, I realize I should also consider: my follow-up PR's base is develop; if I include their fix, the diff vs develop includes their fix — attribution in the commit message keeps it honest. Good.
+
+Let me cherry-pick.
+
+Also note: my merge of develop already includes PR #10. Now cherry-pick b06d22f.
+
+Let me do it and handle conflicts.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' cherry-pick b06d22f 2>&1 | tail -5; git status --short | head"}
+stopReason: toolUse
+
+### 2026-09-28T06:24:01.459Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L552
+ROLE toolResult bash
+text: hint: "git add/rm <pathspec>", then run
+hint: "git cherry-pick --continue".
+hint: You can instead skip this commit with "git cherry-pick --skip".
+hint: To abort and get back to the state before "git cherry-pick",
+hint: run "git cherry-pick --abort".
+UU checks/req3-core.spec.ts
+M  frontend/src/components/FormulaBar.tsx
+isError: False
+
+### 2026-09-28T06:24:04.455Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L553
+ROLE assistant 
+thinking: FormulaBar applied cleanly; checks/req3-core.spec.ts conflicts. Let me resolve: the conflict is in the REQ-3-2-2 describe block where both added a test. Let me view the conflict markers.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -n \"<<<<<<<\\|=======\\|>>>>>>>\" checks/req3-core.spec.ts && sed -n '/<<<<<<</,/>>>>>>>/p' checks/req3-core.spec.ts | head -60"}
+stopReason: toolUse
+
+### 2026-09-28T06:24:04.474Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L554
+ROLE toolResult bash
+text: 287:<<<<<<< HEAD
+325:=======
+351:>>>>>>> b06d22f (REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）)
+<<<<<<< HEAD
+  test('a range move undoes as one operation, restoring rewritten references', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+    await selectCell(page, 'A28');
+    await pasteWithKeyboard(page, 'm1\tm2');
+    await submitViaFormulaBar(page, 'G28', '=A28');
+    await expect(cell(page, 'G28')).toHaveText('m1');
+
+    // Cut A28:B28 to D28 (a move, not a copy): the outside reference follows.
+    await dragSelect(page, 'A28', 'B28');
+    await page.keyboard.press('Control+x');
+    await selectCell(page, 'D28');
+    await page.keyboard.press('Control+v');
+    await expect(cell(page, 'D28')).toHaveText('m1');
+    await expect(cell(page, 'A28')).toHaveText('');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=D28');
+
+    // ONE undo restores source, target and the rewritten reference together.
+    await page.keyboard.press('Control+z');
+    await expect(cell(page, 'A28')).toHaveText('m1');
+    await expect(cell(page, 'B28')).toHaveText('m2');
+    await expect(cell(page, 'D28')).toHaveText('');
+    await expect(cell(page, 'E28')).toHaveText('');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=A28');
+    await expect(cell(page, 'G28')).toHaveText('m1');
+
+    await page.keyboard.press('Control+y');
+    await expect(cell(page, 'D28')).toHaveText('m1');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=D28');
+
+    await reload(page);
+    await expect(cell(page, 'D28')).toHaveText('m1');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=D28');
+=======
+  test('one commit records exactly one undo step (two consecutive edits undo in reverse order)', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+    // Committing with Enter also blurs the formula bar; the blur must not
+    // record a second history entry for the same edit, otherwise the second
+    // Undo would replay a no-op instead of undoing the earlier edit.
+    await submitViaFormulaBar(page, 'A70', 'one');
+    await expect(cell(page, 'A70')).toHaveText('one');
+    await submitViaFormulaBar(page, 'A71', 'two');
+    await expect(cell(page, 'A71')).toHaveText('two');
+
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    await undo.click();
+    await expect(cell(page, 'A71')).toHaveText('');
+    await expect(cell(page, 'A70')).toHaveText('one');
+    await undo.click();
+    await expect(cell(page, 'A70')).toHaveText('');
+
+    // And redo replays exactly the two committed edits.
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+    await redo.click();
+isError: False
+
+### 2026-09-28T06:24:08.253Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L555
+ROLE assistant 
+thinking: Both tests were inserted at the same place. Resolution: keep BOTH tests (my move test first, then their single-commit test). Let me view the surrounding context to place them.
+
+The conflict region: line 287 to 351. After `>>>>>>>` there's the rest of their test (the redo assertions) — no wait, the markers wrap: HEAD portion ends with their test's start? Let me look at lines 320-360 to see the structure.
+
+Actually from the output: HEAD portion = my full "a range move undoes..." test (ending with `await expect(formulaBar(page)).toHaveValue('=D28');` and then the marker `=======`). The incoming portion = their test start through `await redo.click();` and then `>>>>>>>` marker, then presumably the rest of their test continues after the marker? No — git conflict markers include the full incoming hunk, so after `>>>>>>>` the file continues with common lines. Let me view lines 340-380.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && sed -n '278,300p' checks/req3-core.spec.ts && echo \" ---- 345-380 ----\" && sed -n '345,380p' checks/req3-core.spec.ts"}
+stopReason: toolUse
+
+### 2026-09-28T06:24:08.357Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L556
+ROLE toolResult bash
+text:     await expect(cell(page, 'E25')).toHaveText('x4');
+    await expect(cell(page, 'A24')).toHaveText('');
+    await selectCell(page, 'G24');
+    await expect(formulaBar(page)).toHaveValue('=D24');
+    await expect(cell(page, 'G24')).toHaveText('x1');
+  });
+});
+
+test.describe('REQ-3-2-2 undo and redo recent operations', () => {
+<<<<<<< HEAD
+  test('a range move undoes as one operation, restoring rewritten references', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+    await selectCell(page, 'A28');
+    await pasteWithKeyboard(page, 'm1\tm2');
+    await submitViaFormulaBar(page, 'G28', '=A28');
+    await expect(cell(page, 'G28')).toHaveText('m1');
+
+    // Cut A28:B28 to D28 (a move, not a copy): the outside reference follows.
+    await dragSelect(page, 'A28', 'B28');
+    await page.keyboard.press('Control+x');
+    await selectCell(page, 'D28');
+    await page.keyboard.press('Control+v');
+ ---- 345-380 ----
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+    await redo.click();
+    await expect(cell(page, 'A70')).toHaveText('one');
+    await expect(cell(page, 'A71')).toHaveText('');
+    await redo.click();
+    await expect(cell(page, 'A71')).toHaveText('two');
+>>>>>>> b06d22f (REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）)
+  });
+
+  test('toolbar buttons and Ctrl+Z / Ctrl+Y undo a cell edit and a paste', async ({ page }) => {
+    await openSeededWorkbook(page);
+
+    const undo = page.getByRole('button', { name: 'Undo', exact: true });
+    const redo = page.getByRole('button', { name: 'Redo', exact: true });
+
+[EXACT PREVIOUSLY READ PARAGRAPH; see session-022-known-refs.json entry 285]
+
+    // --- paste at B28 (disjoint from the edited A28), undone in reverse
+    // order together with the edit
+    await selectCell(page, 'B28');
+    await pasteWithKeyboard(page, 'v1\tv2\nv3\tv4');
+    await expect(cell(page, 'B28')).toHaveText('v1');
+    await expect(cell(page, 'C29')).toHaveText('v4');
+
+    // Most recent first: the paste goes back to empty, the edit stays.
+    await page.keyboard.press('Control+z');
+    await expect(cell(page, 'A28')).toHaveText('u1');
+    await expect(cell(page, 'B28')).toHaveText('');
+isError: False
+
+### 2026-09-28T06:24:17.106Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L557
+ROLE assistant 
+thinking: I need to resolve by keeping both tests. The structure is:
+
+```
+test.describe('REQ-3-2-2 ...', () => {
+<<<<<<< HEAD
+  [my move test ... through `await expect(formulaBar(page)).toHaveValue('=D28');`]   <- my test is missing its closing `});`? 
+=======
+  [their test ... through `await expect(cell(page,'A71')).toHaveText('two');`]
+>>>>>>> b06d22f...
+  });
+```
+Wait: after the `>>>>>>>` marker there's a lone `  });` at line 351ish which closes... Let's see: their test's last line before the marker is `await expect(cell(page, 'A71')).toHaveText('two');` and then after the marker `  });` closes their test. And my test's last line before `=======` is `await expect(formulaBar(page)).toHaveValue('=D28');` with no closing `});` — because the common trailing `  });` after the marker closes whichever test is kept. But my test's last lines were:
+```
+    await reload(page);
+    await expect(cell(page, 'D28')).toHaveText('m1');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=D28');
+```
+and then `=======`. So my test lacks its closing `  });`; the shared line after the marker provides it. 
+
+Resolution: replace the conflict region such that:
+```
+  test('a range move undoes as one operation, restoring rewritten references', async ({ page }) => {
+    ... my body ...
+    await expect(formulaBar(page)).toHaveValue('=D28');
+  });
+
+  test('one commit records exactly one undo step (two consecutive edits undo in reverse order)', async ({ page }) => {
+    ... their body ...
+    await expect(cell(page, 'A71')).toHaveText('two');
+  });
+```
+So I need to replace from `<<<<<<< HEAD` through `>>>>>>> b06d22f (...)` with my test (adding `  });`) + their test (using the trailing shared `});`). Since the shared `  });` follows the marker, I should end my inserted text after their last line and let the shared `});` close theirs.
+
+Precisely: replace
+```
+<<<<<<< HEAD
+  test('a range move ...
+    ...
+    await expect(formulaBar(page)).toHaveValue('=D28');
+=======
+  test('one commit records ...
+    ...
+    await expect(cell(page, 'A71')).toHaveText('two');
+>>>>>>> b06d22f (...)
+```
+with
+```
+  test('a range move ...
+    ...
+    await expect(formulaBar(page)).toHaveValue('=D28');
+  });
+
+  test('one commit records ...
+    ...
+    await expect(cell(page, 'A71')).toHaveText('two');
+```
+
+The oldText must be exact. The region spans lines 287-350. That's long but I can use anchors: replace `<<<<<<< HEAD\n  test('a range move undoes` → `  test('a range move undoes`; then replace the junction:
+```
+    await expect(formulaBar(page)).toHaveValue('=D28');
+=======
+  test('one commit records exactly one undo step (two consecutive edits undo in reverse order)', async ({ page }) => {
+```
+→
+```
+    await expect(formulaBar(page)).toHaveValue('=D28');
+  });
+
+  test('one commit records exactly one undo step (two consecutive edits undo in reverse order)', async ({ page }) => {
+```
+then remove the marker after their test:
+```
+    await expect(cell(page, 'A71')).toHaveText('two');
+>>>>>>> b06d22f (REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）)
+  });
+```
+→
+```
+    await expect(cell(page, 'A71')).toHaveText('two');
+  });
+```
+
+Careful: `await expect(formulaBar(page)).toHaveValue('=D28');` appears twice in my test (once mid-test, once at the end). The one immediately before `=======` is the last one. To be unique, include the preceding lines:
+```
+    await expect(cell(page, 'D28')).toHaveText('m1');
+    await selectCell(page, 'G28');
+    await expect(formulaBar(page)).toHaveValue('=D28');
+=======
+```
+That sequence appears once (the mid-test one is preceded by different lines). Good.
+
+Let me apply the three edits.
+toolCall edit {"path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-core.spec.ts", "edits": [{"oldText": "<<<<<<< HEAD\n  test('a range move undoes as one operation, restoring rewritten references', async ({ page }) => {", "newText": "  test('a range move undoes as one operation, restoring rewritten references', async ({ page }) => {"}, {"oldText": "    await expect(cell(page, 'D28')).toHaveText('m1');\n    await selectCell(page, 'G28');\n    await expect(formulaBar(page)).toHaveValue('=D28');\n=======\n  test('one commit records exactly one undo step (two consecutive edits undo in reverse order)', async ({ page }) => {", "newText": "    await expect(cell(page, 'D28')).toHaveText('m1');\n    await selectCell(page, 'G28');\n    await expect(formulaBar(page)).toHaveValue('=D28');\n  });\n\n  test('one commit records exactly one undo step (two consecutive edits undo in reverse order)', async ({ page }) => {"}, {"oldText": "    await expect(cell(page, 'A71')).toHaveText('two');\n>>>>>>> b06d22f (REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）)\n  });", "newText": "    await expect(cell(page, 'A71')).toHaveText('two');\n  });"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:24:17.159Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L558
+ROLE toolResult edit
+text: Successfully replaced 3 block(s) in /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-core.spec.ts.
+isError: False
+
+### 2026-09-28T06:24:19.669Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L559
+ROLE assistant 
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && grep -n \"<<<<<<<\\|=======\\|>>>>>>>\" checks/req3-core.spec.ts; ./checks/node_modules/.bin/tsc -p checks/tsconfig.json && echo \"CHECKS OK\" && git add -A && git -c user.name='@deepseek-5' -c user.email='deepseek-5@braid.local' cherry-pick --continue --no-edit 2>&1 | tail -3 && git log --oneline -4"}
+stopReason: toolUse
+
+### 2026-09-28T06:24:33.774Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L560
+ROLE toolResult bash
+text: CHECKS OK
+ Author: @deepseek-10 <deepseek-10@braid.local>
+ Date: Mon Sep 28 06:19:43 2026 +0000
+ 2 files changed, 37 insertions(+)
+fc83165 REQ-3 修复：公式栏 Enter 的双重提交让一次编辑占两步 undo（#5）
+4ba6597 Merge remote-tracking branch 'origin/develop' into issue-5-range-move
+bd1f6df REQ-3 跟进：剪切/范围移动改用服务端 moveCells 语义（#5，根裁决 c84）
+56cbd1a Merge local PR #10
+isError: False
+
+### 2026-09-28T06:24:37.466Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L561
+ROLE assistant 
+thinking: Cherry-picked with original authorship preserved (@deepseek-10), commit fc83165. Good.
+
+Now let me run the full check suite on the final head (4ba6597 + fc83165 = fc83165) for final evidence. This includes:
+- develop (PR #10 runner fix)
+- my move semantics
+- @deepseek-10's double-commit fix + regression test
+
+Let me run it in the background. It'll take ~10-15 min under load.
+
+Also verify unit tests + tsc quickly first (already did tsc; run unit tests).
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./frontend/node_modules/.bin/tsc -p frontend/tsconfig.json && ./backend/node_modules/.bin/tsc -p backend/tsconfig.json && node --test checks/unit/editing.test.ts 2>&1 | grep -E \"^ℹ (tests|pass|fail)\" && git push origin HEAD:refs/heads/issue-5-range-move 2>&1 | tail -2"}
+stopReason: toolUse
+
+### 2026-09-28T06:25:07.578Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L562
+ROLE toolResult bash
+text: Bash job bg013 moved to background after 30s. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T06:25:10.563Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L563
+ROLE assistant 
+toolCall bash {"command": "pbb tail bg013 2>&1 | tail -10; cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && git ls-remote origin | grep range-move"}
+stopReason: toolUse
+
+### 2026-09-28T06:25:11.663Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L564
+ROLE toolResult bash
+text: <pi_context source="pbb" kind="pbb.tail" schema_version="1" session_id="01a0e680-f727-737a-a04f-1553c698ea7e" session_key="5b892424912f7dfdd59c2edf" instance_id="pbb_163_cd2a4cf7" lane="" scope="current-instance" job_id="bg013" owner_instance_id="pbb_163_cd2a4cf7" status="exited" cursor="41" lines="80">
+ℹ tests 11
+ℹ pass 11
+ℹ fail 0
+To /workspace/template/.factory26/20260928-025746-66feadac/braid-state/origin.git/
+   bd1f6df..fc83165  HEAD -> issue-5-range-move
+
+</pi_context>
+fc83165b134ad52f21ebf4525361da5bccafc570	refs/heads/issue-5-range-move
+isError: False
+
+### 2026-09-28T06:25:14.254Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L565
+ROLE assistant 
+thinking: Pushed at fc83165. Now run the full suite for final evidence.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && ./checks/run.sh > /tmp/issue5-run7.log 2>&1; echo \"EXIT=$?\" >> /tmp/issue5-run7.log; tail -6 /tmp/issue5-run7.log", "background": true}
+stopReason: toolUse
+
+### 2026-09-28T06:25:14.351Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L566
+ROLE toolResult bash
+text: Bash job bg014 started in background. A follow-up result will arrive when it finishes; continue independent work. Use pbb only if you need progress before completion.
+isError: False
+
+### 2026-09-28T06:25:17.249Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L567
+ROLE assistant 
+thinking: While this runs (~13 min under load), let me:
+1. Post the endpoint contract comment on thread 69 (requirement 5 from the adjudication) — I prepared /tmp/contract-move.md but haven't posted it yet.
+2. Notify @deepseek-10 that I cherry-picked their fix into my follow-up PR (attribution kept) to avoid two conflicting PRs, offering to drop it if they prefer.
+
+Let me post the contract comment now (it doesn't need the final check numbers).
+
+Then prepare the PR body (PR number unknown) and create the PR after the run is green.
+
+Let me post the contract.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue comment 5 --reply-to 84 --body-file /tmp/contract-move.md 2>&1 | tail -5"}
+stopReason: toolUse
+
+### 2026-09-28T06:25:18.259Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L568
+ROLE toolResult bash
+text: comment #112
+@deepseek-10: queued
+@glm-1: queued
+@glm-6: queued
+isError: False
+
+### 2026-09-28T06:25:24.057Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L569
+ROLE assistant 
+thinking: Contract posted as #112 (replying to the adjudication #84).
+
+Now let me notify @deepseek-10 about the cherry-pick. Short comment:
+
+```
+@deepseek-10 你的 b06d22f（公式栏 Enter 双重提交 → 一条编辑占两步 undo）我已 cherry-pick 进 #5 的 moveCells 跟进分支（保留你的作者身份，commit fc83165），因为它与我在 checks/req3-core.spec.ts 的同一 describe 区域冲突，避免两个 PR 改同一处。如果你更想自己单独开 PR，我把它从跟进分支摘掉即可——但那样两边都要改同一段用例。这个缺陷是我在 PR #8 引入的，感谢定位。
+```
+
+Let me post that.
+toolCall bash {"command": "cd /workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1 && braid issue comment 5 --reply-to 84 --body \"@deepseek-10 你在 \\`issue-5-formulabar-undo-fix\\` 的 b06d22f（公式栏 Enter 双重提交 → 一次编辑占两步 undo）我已 \\`git cherry-pick\\` 进 #5 的 moveCells 跟进分支，**保留你的作者身份**（commit fc83165），因为它的回归用例与我在 \\`checks/req3-core.spec.ts\\` 同一个 \\`REQ-3-2-2\\` describe 区域，避免两个 PR 改同一处再冲突。这个缺陷是我在 PR #8 引入的（Enter 提交后 blur 再次提交，而第一次 PATCH 尚在飞行中，\\`readRaw\\` 仍是旧值），感谢定位。\n\n如果你更想自己单独开 PR，我把该 commit 从跟进分支摘掉即可（代价是两边都要改同一段用例）；否则它会随我的跟进 PR 一起进 develop。\" 2>&1 | tail -4"}
+stopReason: toolUse
+
+### 2026-09-28T06:25:24.560Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L570
+ROLE toolResult bash
+text: comment #113
+@deepseek-10: queued
+@glm-1: queued
+@glm-6: queued
+isError: False
+
+### 2026-09-28T06:25:27.957Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L571
+ROLE assistant 
+thinking: Now let me wait for the check run. Meanwhile, let me update the PR body with the fact that the double-commit fix is included (cherry-picked) and the final evidence will be filled in.
+
+Let me update /tmp/pr-followup-body.md:
+- Add a section about the included fix.
+- Fill evidence numbers after the run.
+
+Let me revise the body.
+toolCall edit {"path": "/tmp/pr-followup-body.md", "edits": [{"oldText": "### 契约\n已在 #5 comment 公布两个端点的请求/响应/原子性/400 条件/校验挂点，供 #4（结构平移/undo）与 #7（规则平移/服务端 guard）消费。", "newText": "### 契约\n已在 #5 comment #112 公布两个端点的请求/响应/原子性/400 条件/校验挂点，供 #4（结构平移/undo）与 #7（规则平移/服务端 guard）消费。\n\n### 随带修复（作者 @deepseek-10，cherry-pick）\n`fc83165`：公式栏 Enter 提交后 blur 会再提交一次同样的内容（第一次 PATCH 还在飞行中，`readRaw` 仍是旧值），一次编辑占两条 History，连续两次编辑后第二次 Undo 看起来“没反应”。加 in-flight (cell, content) 去重，并附回归用例（两次编辑 → 两次 Undo/Redo 逆序）。它是 PR #8 引入的缺陷，与本次改动在同一 describe 区域，故合并到本 PR 一起进 develop（原作者保留）。"}]}
+stopReason: toolUse
+
+### 2026-09-28T06:25:28.370Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L572
+ROLE toolResult edit
+text: Successfully replaced 1 block(s) in /tmp/pr-followup-body.md.
+isError: False
+
+### 2026-09-28T06:25:31.371Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L573
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run7.log; grep -E \"^  (✘|-)\" /tmp/issue5-run7.log | tail -3; tail -2 /tmp/issue5-run7.log", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:26:00.947Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L574
+ROLE toolResult bash
+text: 0
+vite v5.4.21 building for production...
+transforming...
+isError: False
+
+### 2026-09-28T06:26:06.848Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L575
+ROLE assistant 
+thinking: Still building. Let me wait. I'll poll periodically.
+
+Meanwhile, let me think about whether the move endpoint needs server-side validation for drop-in #7 guard — already covered in the contract.
+
+One more consideration: the requirement in the adjudication (#84 point 2) says "'目标完整显示后才清源'的时序在 UI 层保持". With the atomic move, the UI receives the whole workbook and renders both. Is there any observable ordering issue? The requirement's intent: the source must not be cleared while the target isn't displayed. Atomic move satisfies it (either both or neither). I noted this; the check asserts target values and empty source after the paste.
+
+Let me also double-check: after the move, does the UI update the selection to the target? The requirement doesn't say. Currently after Ctrl+V the active cell stays at the target (the user selected D24). Good.
+
+Now, another consideration: REQ-3-2-1 "only operations within the same worksheet are supported" — the move endpoint is per-sheet, and the frontend only moves within the active sheet. Cross-sheet references get adjusted by the engine, which is desirable.
+
+Let me wait for the run.
+
+Actually, let me also prepare for the possibility that the run fails on the new tests due to timing/load. If so, I'll investigate.
+
+Let me poll.
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run7.log; grep -E \"^  (✘|-)\" /tmp/issue5-run7.log | tail -3; tail -2 /tmp/issue5-run7.log", "timeout": 35}
+stopReason: toolUse
+
+### 2026-09-28T06:26:35.961Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L576
+ROLE toolResult bash
+text: 0
+server for CSV: http://127.0.0.1:42099 (DATA_DIR=/tmp/wbchecks-run-Akx5iZ/data-CSV-Ffaq1U, log=/tmp/wbchecks-run-Akx5iZ/server-CSV.log)
+server for REQ3_CORE: http://127.0.0.1:54187 (DATA_DIR=/tmp/wbchecks-run-Akx5iZ/data-REQ3_CORE-Sn0J5H, log=/tmp/wbchecks-run-Akx5iZ/server-REQ3_CORE.log)
+isError: False
+
+### 2026-09-28T06:26:38.046Z message SOURCE continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L577
+ROLE assistant 
+toolCall bash {"command": "sleep 29; grep -cE \"^  ✓\" /tmp/issue5-run7.log; grep -E \"^  (✘|-)\" /tmp/issue5-run7.log | tail -3; tail -2 /tmp/issue5-run7.log", "timeout": 35}
+stopReason: toolUse

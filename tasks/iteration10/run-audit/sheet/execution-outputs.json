@@ -1,0 +1,292 @@
+[
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/stderr.log",
+    "bytes": 1314,
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/inputs/adapter/arc_bench_adapter.py\", line 485, in <module>\n    sys.exit(main())\n             ~~~~^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/inputs/adapter/arc_bench_adapter.py\", line 481, in main\n    return run(args)\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/inputs/adapter/arc_bench_adapter.py\", line 351, in run\n    generation_code = invoke(generation_command, \"generation\")\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/inputs/adapter/arc_bench_adapter.py\", line 271, in invoke\n    for line in iter(process.stdout.readline, b\"\"):\n                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/inputs/adapter/arc_bench_adapter.py\", line 266, in interrupt\n    raise KeyboardInterrupt\nKeyboardInterrupt\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/stdout.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/workspace/generation.stderr.log",
+    "bytes": 63,
+    "text": "Meter baseline unavailable: meter request failed with HTTP 401\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/workspace/generation.stdout.log",
+    "bytes": 313,
+    "text": "Capturing ARC Bench Meter baseline...\nWorkspace: /home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/workspace/official-generation\nContainer: arcbench-local-47104e119748\nStarting the same run_submission.py used by the platform...\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/workspace/generation.resource.json",
+    "bytes": 463,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"runner\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/inputs/input-0002/content\", \"state\": \"named\", \"container_name\": \"arcbench-local-47104e119748\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/stderr.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/stdout.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/generation.stderr.log",
+    "bytes": 63,
+    "text": "Meter baseline unavailable: meter request failed with HTTP 401\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/generation.stdout.log",
+    "bytes": 1284,
+    "text": "Capturing ARC Bench Meter baseline...\nWorkspace: /home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/official-generation\nContainer: arcbench-local-d8b5dc53ea61\nStarting the same run_submission.py used by the platform...\n{\n  \"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/official-generation\",\n  \"container_exit_code\": 1,\n  \"agent_duration_seconds\": 341.582,\n  \"evaluation_status\": \"skipped\",\n  \"score\": null,\n  \"token_count\": null,\n  \"token_cost\": null,\n  \"token_cost_usd\": null,\n  \"token_cost_currency\": null,\n  \"meter_error\": \"meter request failed with HTTP 401\",\n  \"playwright_report\": null,\n  \"stdout_log\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/official-generation/template/.arc/stdout.log\",\n  \"debug_log\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/official-generation/execution.debug.log\"\n}\nPlaywright evaluation was skipped because no --tests-dir was provided.\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/generation.resource.json",
+    "bytes": 463,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"runner\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/inputs/input-0002/content\", \"state\": \"named\", \"container_name\": \"arcbench-local-d8b5dc53ea61\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/stderr.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/stdout.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/generation.stderr.log",
+    "bytes": 63,
+    "text": "Meter baseline unavailable: meter request failed with HTTP 401\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/generation.stdout.log",
+    "bytes": 1283,
+    "text": "Capturing ARC Bench Meter baseline...\nWorkspace: /home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/official-generation\nContainer: arcbench-local-673159b5d21d\nStarting the same run_submission.py used by the platform...\n{\n  \"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/official-generation\",\n  \"container_exit_code\": 1,\n  \"agent_duration_seconds\": 98.097,\n  \"evaluation_status\": \"skipped\",\n  \"score\": null,\n  \"token_count\": null,\n  \"token_cost\": null,\n  \"token_cost_usd\": null,\n  \"token_cost_currency\": null,\n  \"meter_error\": \"meter request failed with HTTP 401\",\n  \"playwright_report\": null,\n  \"stdout_log\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/official-generation/template/.arc/stdout.log\",\n  \"debug_log\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/official-generation/execution.debug.log\"\n}\nPlaywright evaluation was skipped because no --tests-dir was provided.\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/generation.resource.json",
+    "bytes": 463,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"runner\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/inputs/input-0002/content\", \"state\": \"named\", \"container_name\": \"arcbench-local-673159b5d21d\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/stderr.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/stdout.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/generation.stderr.log",
+    "bytes": 63,
+    "text": "Meter baseline unavailable: meter request failed with HTTP 401\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/generation.stdout.log",
+    "bytes": 1283,
+    "text": "Capturing ARC Bench Meter baseline...\nWorkspace: /home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/official-generation\nContainer: arcbench-local-c1fc70fb1055\nStarting the same run_submission.py used by the platform...\n{\n  \"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/official-generation\",\n  \"container_exit_code\": 1,\n  \"agent_duration_seconds\": 123.97,\n  \"evaluation_status\": \"skipped\",\n  \"score\": null,\n  \"token_count\": null,\n  \"token_cost\": null,\n  \"token_cost_usd\": null,\n  \"token_cost_currency\": null,\n  \"meter_error\": \"meter request failed with HTTP 401\",\n  \"playwright_report\": null,\n  \"stdout_log\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/official-generation/template/.arc/stdout.log\",\n  \"debug_log\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/official-generation/execution.debug.log\"\n}\nPlaywright evaluation was skipped because no --tests-dir was provided.\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/generation.resource.json",
+    "bytes": 463,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"runner\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/inputs/input-0002/content\", \"state\": \"named\", \"container_name\": \"arcbench-local-c1fc70fb1055\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/stderr.log",
+    "bytes": 1314,
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/inputs/adapter/arc_bench_adapter.py\", line 485, in <module>\n    sys.exit(main())\n             ~~~~^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/inputs/adapter/arc_bench_adapter.py\", line 481, in main\n    return run(args)\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/inputs/adapter/arc_bench_adapter.py\", line 351, in run\n    generation_code = invoke(generation_command, \"generation\")\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/inputs/adapter/arc_bench_adapter.py\", line 271, in invoke\n    for line in iter(process.stdout.readline, b\"\"):\n                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/inputs/adapter/arc_bench_adapter.py\", line 266, in interrupt\n    raise KeyboardInterrupt\nKeyboardInterrupt\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/stdout.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/workspace/generation.stderr.log",
+    "bytes": 63,
+    "text": "Meter baseline unavailable: meter request failed with HTTP 401\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/workspace/generation.stdout.log",
+    "bytes": 313,
+    "text": "Capturing ARC Bench Meter baseline...\nWorkspace: /home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/workspace/official-generation\nContainer: arcbench-local-75195792eebc\nStarting the same run_submission.py used by the platform...\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/workspace/generation.resource.json",
+    "bytes": 463,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"runner\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/inputs/input-0002/content\", \"state\": \"named\", \"container_name\": \"arcbench-local-75195792eebc\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/stderr.log",
+    "bytes": 1314,
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/inputs/adapter/arc_bench_adapter.py\", line 490, in <module>\n    sys.exit(main())\n             ~~~~^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/inputs/adapter/arc_bench_adapter.py\", line 486, in main\n    return run(args)\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/inputs/adapter/arc_bench_adapter.py\", line 354, in run\n    generation_code = invoke(generation_command, \"generation\")\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/inputs/adapter/arc_bench_adapter.py\", line 274, in invoke\n    for line in iter(process.stdout.readline, b\"\"):\n                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/inputs/adapter/arc_bench_adapter.py\", line 269, in interrupt\n    raise KeyboardInterrupt\nKeyboardInterrupt\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/stdout.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/workspace/generation.stderr.log",
+    "bytes": 63,
+    "text": "Meter baseline unavailable: meter request failed with HTTP 401\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/workspace/generation.stdout.log",
+    "bytes": 313,
+    "text": "Capturing ARC Bench Meter baseline...\nWorkspace: /home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/workspace/official-generation\nContainer: arcbench-local-e873198e558e\nStarting the same run_submission.py used by the platform...\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/workspace/generation.resource.json",
+    "bytes": 463,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"runner\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/inputs/input-0002/content\", \"state\": \"named\", \"container_name\": \"arcbench-local-e873198e558e\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/stderr.log",
+    "bytes": 1314,
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/inputs/adapter/arc_bench_adapter.py\", line 490, in <module>\n    sys.exit(main())\n             ~~~~^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/inputs/adapter/arc_bench_adapter.py\", line 486, in main\n    return run(args)\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/inputs/adapter/arc_bench_adapter.py\", line 354, in run\n    generation_code = invoke(generation_command, \"generation\")\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/inputs/adapter/arc_bench_adapter.py\", line 274, in invoke\n    for line in iter(process.stdout.readline, b\"\"):\n                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/inputs/adapter/arc_bench_adapter.py\", line 269, in interrupt\n    raise KeyboardInterrupt\nKeyboardInterrupt\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/stdout.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/workspace/generation.stderr.log",
+    "bytes": 63,
+    "text": "Meter baseline unavailable: meter request failed with HTTP 401\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/workspace/generation.stdout.log",
+    "bytes": 313,
+    "text": "Capturing ARC Bench Meter baseline...\nWorkspace: /home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/workspace/official-generation\nContainer: arcbench-local-2c5df6b0d0c3\nStarting the same run_submission.py used by the platform...\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/workspace/generation.resource.json",
+    "bytes": 463,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"runner\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/inputs/input-0002/content\", \"state\": \"named\", \"container_name\": \"arcbench-local-2c5df6b0d0c3\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation/runs/pi-braid--hackathon--sheet-6aa15927132124/stderr.log",
+    "bytes": 445,
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation/runs/pi-braid--hackathon--sheet-6aa15927132124/inputs/launcher/continue-container.py\", line 18, in <module>\n    if code:raise RuntimeError(f'Continuation container exited {code}')\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Continuation container exited 1\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation/runs/pi-braid--hackathon--sheet-6aa15927132124/stdout.log",
+    "bytes": 142,
+    "text": "Continuation: resuming retained Braid; log=/workspace/template/.factory26/20260928-025746-66feadac/continuation-1790585222112593258-braid.log\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation/runs/pi-braid--hackathon--sheet-6aa15927132124/workspace/container-cleanup.json",
+    "bytes": 555,
+    "text": "{\n  \"resource\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation/runs/pi-braid--hackathon--sheet-6aa15927132124/workspace/generation.resource.json\",\n  \"container_name\": \"f26-continue-6aa15927132124\",\n  \"container_id\": null,\n  \"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\",\n  \"status\": \"absent\",\n  \"error\": \"[]\\nError: No such object: f26-continue-6aa15927132124\"\n}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation/runs/pi-braid--hackathon--sheet-6aa15927132124/workspace/generation.resource.json",
+    "bytes": 402,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"container_name\": \"f26-continue-6aa15927132124\", \"state\": \"launching\", \"source_run_id\": \"pi-braid--hackathon--sheet-984a08e3155e3e\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation/runs/pi-braid--hackathon--sheet-2295267a737e43/stderr.log",
+    "bytes": 445,
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation/runs/pi-braid--hackathon--sheet-2295267a737e43/inputs/launcher/continue-container.py\", line 18, in <module>\n    if code:raise RuntimeError(f'Continuation container exited {code}')\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\nRuntimeError: Continuation container exited 1\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation/runs/pi-braid--hackathon--sheet-2295267a737e43/stdout.log",
+    "bytes": 142,
+    "text": "Continuation: resuming retained Braid; log=/workspace/template/.factory26/20260928-025746-66feadac/continuation-1790585481845755109-braid.log\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation/runs/pi-braid--hackathon--sheet-2295267a737e43/workspace/container-cleanup.json",
+    "bytes": 555,
+    "text": "{\n  \"resource\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation/runs/pi-braid--hackathon--sheet-2295267a737e43/workspace/generation.resource.json\",\n  \"container_name\": \"f26-continue-2295267a737e43\",\n  \"container_id\": null,\n  \"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\",\n  \"status\": \"absent\",\n  \"error\": \"[]\\nError: No such object: f26-continue-2295267a737e43\"\n}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation/runs/pi-braid--hackathon--sheet-2295267a737e43/workspace/generation.resource.json",
+    "bytes": 402,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"container_name\": \"f26-continue-2295267a737e43\", \"state\": \"launching\", \"source_run_id\": \"pi-braid--hackathon--sheet-984a08e3155e3e\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--sheet-22730f82778f3a/stderr.log",
+    "bytes": 1236,
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--sheet-22730f82778f3a/inputs/launcher/continue-container.py\", line 17, in <module>\n    code=subprocess.call(command);result['container_exit_code']=code\n  File \"/usr/lib/python3.13/subprocess.py\", line 397, in call\n    return p.wait(timeout=timeout)\n           ~~~~~~^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 1280, in wait\n    return self._wait(timeout=timeout)\n           ~~~~~~~~~~^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 2066, in _wait\n    (pid, sts) = self._try_wait(0)\n                 ~~~~~~~~~~~~~~^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 2024, in _try_wait\n    (pid, sts) = os.waitpid(self.pid, wait_flags)\n                 ~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--sheet-22730f82778f3a/inputs/launcher/continue-container.py\", line 14, in interrupted\n    def interrupted(*_):raise KeyboardInterrupt\n                        ^^^^^^^^^^^^^^^^^^^^^^^\nKeyboardInterrupt\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--sheet-22730f82778f3a/stdout.log",
+    "bytes": 193,
+    "text": "Continuation: refreshing approved native materials\nContinuation: resuming retained Braid; log=/workspace/template/.factory26/20260928-025746-66feadac/continuation-1790587209818541166-braid.log\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--sheet-22730f82778f3a/workspace/container-cleanup.json",
+    "bytes": 724,
+    "text": "{\n  \"resource\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--sheet-22730f82778f3a/workspace/generation.resource.json\",\n  \"container_name\": \"f26-continue-22730f82778f3a\",\n  \"container_id\": \"86d77995489365cd274c309dfdbc0803d970c837338459c9b5c7f712663980c3\",\n  \"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\",\n  \"status\": \"cleanup-unconfirmed\",\n  \"error\": \"TimeoutExpired: Command '['docker', 'rm', '--force', '86d77995489365cd274c309dfdbc0803d970c837338459c9b5c7f712663980c3']' timed out after 10 seconds\"\n}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--sheet-22730f82778f3a/workspace/generation.resource.json",
+    "bytes": 402,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"container_name\": \"f26-continue-22730f82778f3a\", \"state\": \"launching\", \"source_run_id\": \"pi-braid--hackathon--sheet-984a08e3155e3e\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/stderr.log",
+    "bytes": 1314,
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/inputs/adapter/arc_bench_adapter.py\", line 490, in <module>\n    sys.exit(main())\n             ~~~~^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/inputs/adapter/arc_bench_adapter.py\", line 486, in main\n    return run(args)\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/inputs/adapter/arc_bench_adapter.py\", line 354, in run\n    generation_code = invoke(generation_command, \"generation\")\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/inputs/adapter/arc_bench_adapter.py\", line 274, in invoke\n    for line in iter(process.stdout.readline, b\"\"):\n                ~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/inputs/adapter/arc_bench_adapter.py\", line 269, in interrupt\n    raise KeyboardInterrupt\nKeyboardInterrupt\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/stdout.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/generation.stderr.log",
+    "bytes": 63,
+    "text": "Meter baseline unavailable: meter request failed with HTTP 401\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/generation.stdout.log",
+    "bytes": 313,
+    "text": "Capturing ARC Bench Meter baseline...\nWorkspace: /home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\nContainer: arcbench-local-0b82d6e7489a\nStarting the same run_submission.py used by the platform...\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/generation.resource.json",
+    "bytes": 463,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"runner\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/inputs/input-0002/content\", \"state\": \"named\", \"container_name\": \"arcbench-local-0b82d6e7489a\"}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/generation/runs/pi-braid--hackathon--sheet-640297261bdf0c/stderr.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/generation/runs/pi-braid--hackathon--sheet-640297261bdf0c/stdout.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/sheet-materialization-recovery/generation/runs/pi-braid--hackathon--sheet-130e238edd5a6a/stderr.log",
+    "bytes": 0,
+    "text": ""
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/sheet-materialization-recovery/generation/runs/pi-braid--hackathon--sheet-130e238edd5a6a/stdout.log",
+    "bytes": 206,
+    "text": "Continuation: resuming retained Braid; log=/workspace/template/.factory26/20260928-025746-66feadac/continuation-1790600888628872349-braid.log\nContinuation delivered 3fb842a46362c6c676bb2e99f92453d46f8394d9\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/sheet-materialization-recovery/generation/runs/pi-braid--hackathon--sheet-130e238edd5a6a/workspace/container-cleanup.json",
+    "bytes": 530,
+    "text": "{\n  \"resource\": \"/home/yyh/Development/factory26/runs/sheet-materialization-recovery/generation/runs/pi-braid--hackathon--sheet-130e238edd5a6a/workspace/generation.resource.json\",\n  \"container_name\": \"f26-continue-130e238edd5a6a\",\n  \"container_id\": null,\n  \"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\",\n  \"status\": \"absent\",\n  \"error\": \"[]\\nError: No such object: f26-continue-130e238edd5a6a\"\n}\n"
+  },
+  {
+    "path": "/home/yyh/Development/factory26/runs/sheet-materialization-recovery/generation/runs/pi-braid--hackathon--sheet-130e238edd5a6a/workspace/generation.resource.json",
+    "bytes": 402,
+    "text": "{\"workspace\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation\", \"image_id\": \"sha256:840105914e6e166ba1eefa4bd3af1682e795d2e515497198142010c1e79eb19d\", \"container_name\": \"f26-continue-130e238edd5a6a\", \"state\": \"launching\", \"source_run_id\": \"pi-braid--hackathon--sheet-22730f82778f3a\"}\n"
+  }
+]

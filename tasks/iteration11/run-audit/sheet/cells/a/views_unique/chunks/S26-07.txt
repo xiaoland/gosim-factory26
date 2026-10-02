@@ -1,0 +1,4 @@
+und-trip representable.
+Everything else in your candidate AC is publishable as drafted. One process note: the current PR #8 head has **zero** of the A-4 surface (confirmed by grep — no `min_rows`/`min_cols` anywhere), so the acceptance increment and the implementation delta should land together; publishing AC that describes footprint behavior against d536aa2 would fail its own first run.
+[DUPLICATES: 24 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L80:C2]
+

@@ -1,0 +1,234 @@
+136:C1]
+
+## S24:L137 2026-09-29T06:35:21.123Z message assistant
+[toolCall] edit call_00_ET_fA37wXqxbl7S3hs5WkdP0347
+{"edits": [{"newText": "    // Repeatable: running `migrate` again applies nothing new, and every\n    // migration in the list (not just the first) is recorded exactly once.\n    expect(countRows(db, 'schema_migrations')).toBe(MIGRATIONS.length);\n  });", "oldText": "    expect(countRows(db, 'schema_migrations')).toBe(1);\n  });"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js"}
+
+## S24:L138 2026-09-29T06:35:21.128Z message toolResult
+toolResult edit False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L138:C1]
+[details]
+{"diff": "     ...\n  47       'schema_migrations',\n  48     ]) {\n  49       expect(tables).toContain(table);\n  50     }\n- 51     expect(countRows(db, 'schema_migrations')).toBe(1);\n+ 51     // Repeatable: running `migrate` again applies nothing new, and every\n+ 52     // migration in the list (not just the first) is recorded exactly once.\n+ 53     expect(countRows(db, 'schema_migrations')).toBe(MIGRATIONS.length);\n  52   });\n  53 });\n  54 \n  55 describe('seed', () => {\n     ...", "firstChangedLine": 51, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n@@ -47,9 +47,11 @@\n       'schema_migrations',\n     ]) {\n       expect(tables).toContain(table);\n     }\n-    expect(countRows(db, 'schema_migrations')).toBe(1);\n+    // Repeatable: running `migrate` again applies nothing new, and every\n+    // migration in the list (not just the first) is recorded exactly once.\n+    expect(countRows(db, 'schema_migrations')).toBe(MIGRATIONS.length);\n   });\n });\n \n describe('seed', () => {\n"}
+
+## S24:L139 2026-09-29T06:35:22.443Z message assistant
+[toolCall] bash call_00_ET_KYLGvvv54hXZMOuN9eLV0563
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '1,20p' backend/src/app.test.js"}
+
+## S24:L140 2026-09-29T06:35:22.455Z message toolResult
+toolResult bash False
+[text]
+function appFor(db) {
+[DUPLICATES: 19 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L140:C1]
+
+## S24:L141 2026-09-29T06:35:24.181Z message assistant
+[toolCall] edit call_00_ET_dhuj8iccQ3rKuoECqvSJ6931
+{"edits": [{"newText": "import { migrate, openDatabase } from './db.js';\nimport { MIGRATIONS } from './migrations.js';", "oldText": "import { migrate, openDatabase } from './db.js';"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js"}
+
+## S24:L142 2026-09-29T06:35:24.185Z message toolResult
+toolResult edit False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L142:C1]
+[details]
+{"diff": "   1 import { describe, expect, it } from 'vitest';\n   2 import request from 'supertest';\n   3 import { migrate, openDatabase } from './db.js';\n+  4 import { MIGRATIONS } from './migrations.js';\n   4 import {\n   5   SEED_SHEET1_ID,\n   6   SEED_SHEET2_ID,\n   7   SEED_WORKBOOK_ID,\n     ...", "firstChangedLine": 4, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n@@ -1,7 +1,8 @@\n import { describe, expect, it } from 'vitest';\n import request from 'supertest';\n import { migrate, openDatabase } from './db.js';\n+import { MIGRATIONS } from './migrations.js';\n import {\n   SEED_SHEET1_ID,\n   SEED_SHEET2_ID,\n   SEED_WORKBOOK_ID,\n"}
+
+## S24:L143 2026-09-29T06:35:25.499Z message assistant
+[toolCall] bash call_00_ET_2pBJmVw7qYMbXyWKbUSd5128
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && pnpm -r test 2>&1 | tail -14 && pnpm -r typecheck 2>&1 | tail -12", "timeout": 420}
+
+## S24:L144 2026-09-29T06:35:42.277Z message toolResult
+toolResult bash False
+[text]
+backend test:       Tests  51 passed (51)
+backend test:    Start at  06:35:26
+backend test:    Duration  1.71s (transform 167ms, setup 0ms, collect 505ms, tests 375ms, environment 0ms, prepare 358ms)
+frontend test:  ✓ src/components/Grid.test.tsx (8 tests) 497ms
+frontend test:  ✓ src/components/WorkbookLifecycle.test.tsx (12 tests) 774ms
+frontend test:  ✓ src/lib/csvExport.test.ts (15 tests) 7ms
+frontend test:  ✓ src/lib/format.test.ts (8 tests) 6ms
+frontend test:  ✓ src/lib/cellDisplay.test.ts (3 tests) 4ms
+frontend test:       Tests  46 passed (46)
+frontend test:    Start at  06:35:27
+frontend test:    Duration  8.91s (transform 455ms, setup 0ms, collect 1.20s, tests 1.29s, environment 4.37s, prepare 845ms)
+backend typecheck: src/app.test.js(355,20): error TS7006: Parameter 'body' implicitly has an 'any' type.
+backend typecheck: Failed
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  spreadsheet-backend@1.0.0 typecheck: `tsc -p tsconfig.json`
+Exit status 2
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L144:C1]
+
+## S24:L145 2026-09-29T06:35:42.278Z message user
+[text]
+- issue:1 comment 69; read `comment view 69 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L145:C1]
+
+## S24:L146 2026-09-29T06:35:47.028Z message assistant
+[thinking]
+Fix the typecheck error: `const state = (body) => ...` needs a JSDoc type. Also read issue 1 comment 69.
+Let me fix the typing: `/** @param {Record<string, unknown>} body */ const state = (body) => ...` — but arrow function with JSDoc param annotation works in checkJs? Usually you annotate as:
+ * @param {Record<string, unknown>} body
+ * @returns {import('supertest').Test}
+const state = (body) => request(app)...;
+Simplest: write a helper function declaration instead of arrow:
+    /** @param {Record<string, unknown>} body */
+      request(app).put(...).send(body);
+JSDoc on the preceding line applies to the arrow function. tsc supports that.
+Alternatively avoid the helper and just call request three times. Simpler and no typing issue. I'll inline it.
+Let me rewrite the test to avoid the helper.
+Also read comment 69.
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L146:C1]
+[toolCall] bash call_00_R2atXeDnPrqCuuiKmgDN5502
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue view 1 --comments > /tmp/issue1c.txt 2>&1; sed -n \"$(grep -n '^comment #69' /tmp/issue1c.txt | cut -d: -f1),+35p\" /tmp/issue1c.txt"}
+[toolCall] edit call_01_J7JA2tHrTWIHm3Jd9oEa1473
+{"edits": [{"newText": "  it('treats an absent or null import footprint as unchanged', async () => {\n    const app = appFor(freshDb());\n    const stateUrl = `/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`;\n\n    const set = await request(app).put(stateUrl).send({ minRows: 2, minCols: 3 });\n    expect(set.status).toBe(200);\n    expect(set.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n\n    // `undefined`/`null` = not declared: replaying an older snapshot (or any\n    // payload that never mentions the footprint) must not erase it.\n    const replay = await request(app).put(stateUrl).send({ cells: [[0, 0, 'Only']] });\n    expect(replay.status).toBe(200);\n    expect(replay.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n\n    const explicitNull = await request(app)\n      .put(stateUrl)\n      .send({ minRows: null, minCols: null });\n    expect(explicitNull.status).toBe(200);\n    expect(explicitNull.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n\n    const snapshot = await request(app).get(`/api/workbooks/${SEED_WORKBOOK_ID}`);\n    expect(snapshot.body.worksheets[0]).toMatchObject({ minRows: 2, minCols: 3 });\n\n    // 0 = no footprint (the blank-workbook value).\n    const cleared = await request(app).put(stateUrl).send({ minRows: 0, minCols: 0 });\n    expect(cleared.status).toBe(200);\n    expect(cleared.body.worksheet).toMatchObject({ minRows: 0, minCols: 0 });\n  });", "oldText": "  it('treats an absent or null import footprint as unchanged', async () => {\n    const app = appFor(freshDb());\n    const state = (body) =>\n      request(app).put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`).send(body);\n\n    const set = await state({ minRows: 2, minCols: 3 });\n    expect(set.status).toBe(200);\n    expect(set.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n\n    // `undefined`/`null` = not declared: replaying an older snapshot (or any\n    // payload that never mentions the footprint) must not erase it.\n    const replay = await state({ cells: [[0, 0, 'Only']] });\n    expect(replay.status).toBe(200);\n    expect(replay.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n\n    const explicitNull = await state({ minRows: null, minCols: null });\n    expect(explicitNull.status).toBe(200);\n    expect(explicitNull.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n\n    const snapshot = await request(app).get(`/api/workbooks/${SEED_WORKBOOK_ID}`);\n    expect(snapshot.body.worksheets[0]).toMatchObject({ minRows: 2, minCols: 3 });\n\n    // 0 = no footprint (the blank-workbook value).\n    const cleared = await state({ minRows: 0, minCols: 0 });\n    expect(cleared.status).toBe(200);\n    expect(cleared.body.worksheet).toMatchObject({ minRows: 0, minCols: 0 });\n  });"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js"}
+
+## S24:L147 2026-09-29T06:35:47.078Z message toolResult
+toolResult bash False
+[text]
+comment #69 [visible]
+reply-to: 66
+【根侧确认：helper 形态采纳，作为 PR #8 的消费目标】@glm-4 @deepseek-3 @deepseek-5
+已在 `origin/b-issue-4-worksheets-structure` @ `515597c` 上核实 `assertWorksheetStateValid`（`backend/src/store.js:785`）与 `importWorksheetState` 的接入：rowCount/colCount 正整数、`minRows`/`minCols` `undefined`/`null` 跳过 + 非负整数 + ≤ 所报结构、cells 边界校验——**只校验不写入**，持久化与 "`undefined` = 不改动" 语义仍归 PR #8，与 #57 §3、#54 完全一致。#66 的形态描述与实现无出入，采纳为本契约点的定稿。
+两点时序确认（按 #60）：
+1. 该 helper 目前在 **B 的候选分支**，尚未进入 develop——PR #8 在此之前维持按 #64 清单实现的路径有效（含自己的 Y-min 校验），helper 进入 develop 后 rebase 切换为调用并删除本地副本，切换完成是 #3 关闭前提（我跟踪）。
+2. B 的 PR #9 合入 develop 后，A 的切换改动是单点调用替换；若 A 侧对 helper 形态有异议，在此 thread 提出，过期前不改契约。
+请 @deepseek-3 / @deepseek-5 在 PR #8 补齐 Y-min 时按 `515597c` 发布的文案与语义对齐（错误码 `INVALID_BODY`、文案逐字），使切换时错误面不变。
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L147:C1]
+
+## S24:L148 2026-09-29T06:35:47.078Z message toolResult
+toolResult edit False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L148:C1]
+[details]
+{"diff": "     ...\n 351   });\n 352 \n 353   it('treats an absent or null import footprint as unchanged', async () => {\n 354     const app = appFor(freshDb());\n-355     const state = (body) =>\n-356       request(app).put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`).send(body);\n+355     const stateUrl = `/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`;\n 357 \n-358     const set = await state({ minRows: 2, minCols: 3 });\n+357     const set = await request(app).put(stateUrl).send({ minRows: 2, minCols: 3 });\n 359     expect(set.status).toBe(200);\n 360     expect(set.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n 361 \n 362     // `undefined`/`null` = not declared: replaying an older snapshot (or any\n 363     // payload that never mentions the footprint) must not erase it.\n-364     const replay = await state({ cells: [[0, 0, 'Only']] });\n+363     const replay = await request(app).put(stateUrl).send({ cells: [[0, 0, 'Only']] });\n 365     expect(replay.status).toBe(200);\n 366     expect(replay.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n 367 \n-368     const explicitNull = await state({ minRows: null, minCols: null });\n+367     const explicitNull = await request(app)\n+368       .put(stateUrl)\n+369       .send({ minRows: null, minCols: null });\n 369     expect(explicitNull.status).toBe(200);\n 370     expect(explicitNull.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n 371 \n 372     const snapshot = await request(app).get(`/api/workbooks/${SEED_WORKBOOK_ID}`);\n 373     expect(snapshot.body.worksheets[0]).toMatchObject({ minRows: 2, minCols: 3 });\n 374 \n 375     // 0 = no footprint (the blank-workbook value).\n-376     const cleared = await state({ minRows: 0, minCols: 0 });\n+377     const cleared = await request(app).put(stateUrl).send({ minRows: 0, minCols: 0 });\n 377     expect(cleared.status).toBe(200);\n 378     expect(cleared.body.worksheet).toMatchObject({ minRows: 0, minCols: 0 });\n 379   });\n 380 \n     ...", "firstChangedLine": 355, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n@@ -351,30 +351,31 @@\n   });\n \n   it('treats an absent or null import footprint as unchanged', async () => {\n     const app = appFor(freshDb());\n-    const state = (body) =>\n-      request(app).put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`).send(body);\n+    const stateUrl = `/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`;\n \n-    const set = await state({ minRows: 2, minCols: 3 });\n+    const set = await request(app).put(stateUrl).send({ minRows: 2, minCols: 3 });\n     expect(set.status).toBe(200);\n     expect(set.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n \n     // `undefined`/`null` = not declared: replaying an older snapshot (or any\n     // payload that never mentions the footprint) must not erase it.\n-    const replay = await state({ cells: [[0, 0, 'Only']] });\n+    const replay = await request(app).put(stateUrl).send({ cells: [[0, 0, 'Only']] });\n     expect(replay.status).toBe(200);\n     expect(replay.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n \n-    const explicitNull = await state({ minRows: null, minCols: null });\n+    const explicitNull = await request(app)\n+      .put(stateUrl)\n+      .send({ minRows: null, minCols: null });\n     expect(explicitNull.status).toBe(200);\n     expect(explicitNull.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n \n     const snapshot = await request(app).get(`/api/workbooks/${SEED_WORKBOOK_ID}`);\n     expect(snapshot.body.worksheets[0]).toMatchObject({ minRows: 2, minCols: 3 });\n \n     // 0 = no footprint (the blank-workbook value).\n-    const cleared = await state({ minRows: 0, minCols: 0 });\n+    const cleared = await request(app).put(stateUrl).send({ minRows: 0, minCols: 0 });\n     expect(cleared.status).toBe(200);\n     expect(cleared.body.worksheet).toMatchObject({ minRows: 0, minCols: 0 });\n   });\n \n"}
+
+## S24:L149 2026-09-29T06:35:49.473Z message assistant
+[thinking]
+#69: helper form adopted; PR #8's private path must align with `515597c`'s messages/semantics — exactly what I did (messages aligned). Let me verify the helper's exact messages by fetching origin and looking at the branch? The contract says: `minRows must be a non-negative integer`, `minRows must not exceed the reported structure (N)`. I already matched. Let me verify against the actual branch to be safe — I can `git fetch origin` and `git show origin/b-issue-4-worksheets-structure:backend/src/store.js | grep`. That's a read of published work, fine.
+Then run typecheck + tests again, then e2e.
+Let me fetch and check.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L149:C1]
+[toolCall] bash call_00_SpEZDXYW1YFJ4UGZ6dfz6089
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -3; git show origin/b-issue-4-worksheets-structure:backend/src/store.js 2>/dev/null | grep -n \"minRows\\|minCols\\|assertWorksheetStateValid\" | head -30"}
+
+## S24:L150 2026-09-29T06:35:49.869Z message toolResult
+toolResult bash False
+[text]
+   9fe41ec..8ca51ed  b-issue-4-worksheets-structure -> origin/b-issue-4-worksheets-structure
+757: * @property {number | null} [minRows] `undefined`/`null` = no footprint reported
+758: * @property {number | null} [minCols]
+769: * - the CSV-import footprint (`minRows` / `minCols`, nullable and written by
+785:export function assertWorksheetStateValid(state) {
+807:  checkFootprint('minRows', state.minRows, rowCount);
+808:  checkFootprint('minCols', state.minCols, colCount);
+829: * @param {WorksheetStatePayload & {minRows?: number | null, minCols?: number | null}} payload
+844:    assertWorksheetStateValid({
+848:      minRows: payload.minRows,
+849:      minCols: payload.minCols,
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L150:C1]
+
+## S24:L151 2026-09-29T06:35:51.146Z message assistant
+[toolCall] bash call_00_ET_sSFuHleGDqGbLI9TlQtu4469
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git show origin/b-issue-4-worksheets-structure:backend/src/store.js | sed -n '740,830p'"}
+
+## S24:L152 2026-09-29T06:35:51.170Z message toolResult
+toolResult bash False
+[text]
+ * A worksheet state as it is about to be persisted: the reported structure plus
+ * the cell batch and (sub-issue A's) import footprint that must fit inside it.
+ * @typedef {object} WorksheetStateStructure
+ * @property {number} rowCount
+ * @property {number} colCount
+ * @property {CellEntry[]} [cells] `undefined` = this write carries no cells
+ * @property {number | null} [minRows] `undefined`/`null` = no footprint reported
+ * @property {number | null} [minCols]
+ * The single implementation of the invariants that decide whether a worksheet
+ * state is renderable and persistable:
+ * - `rowCount` / `colCount` are positive integers (the grid needs at least one
+ *   row and one column, and the sparse cell table cannot express the structure);
+ * - every cell of `cells` lies inside the reported structure, the same bound
+ *   `PUT .../cells` enforces through `assertCellWithinStructure`;
+ * - the CSV-import footprint (`minRows` / `minCols`, nullable and written by
+ *   sub-issue A's import path) never exceeds the structure the same import
+ *   reports — the footprint is a lower bound on the *used* area, so it can only
+ *   be smaller than the structure.
+ * The first two checks were extracted verbatim from `importWorksheetState`
+ * (semantics unchanged) so the state endpoint and the import writer validate
+ * through one code path instead of two drifting copies; the footprint branch was
+ * added here as the single check point (contract v1.3, Issue #1 thread 1
+ * comment #57 §2). Persisting the two footprint fields — and the "`undefined` =
+ * don't change" semantics of the same write — stay with PR #8; this helper only
+ * validates values when a caller reports them.
+ * @param {WorksheetStateStructure} state
+export function assertWorksheetStateValid(state) {
+  const { rowCount, colCount, cells } = state;
+  if (!Number.isInteger(rowCount) || rowCount < 1) {
+    throw invalidBody('rowCount must be a positive integer');
+  if (!Number.isInteger(colCount) || colCount < 1) {
+    throw invalidBody('colCount must be a positive integer');
+   * @param {string} field
+   * @param {number | null | undefined} value
+   * @param {number} bound
+  const checkFootprint = (field, value, bound) => {
+    if (value === undefined || value === null) return;
+    if (!Number.isInteger(value) || value < 0) {
+      throw invalidBody(`${field} must be a non-negative integer`);
+    if (value > bound) {
+      throw invalidBody(`${field} must not exceed the reported structure (${bound})`);
+  checkFootprint('minRows', state.minRows, rowCount);
+  checkFootprint('minCols', state.minCols, colCount);
+  if (cells === undefined) return;
+  if (!Array.isArray(cells)) throw invalidBody('cells must be an array');
+  // The structure is the single fact source: a snapshot may not carry cells the
+  // reported rowCount/colCount cannot show. Growing a worksheet is an explicit
+  // structure operation (sub-issue B), never a side effect here.
+  for (const entry of cells) {
+    const [row, col] = entry;
+    if (!Number.isInteger(row) || row < 0 || !Number.isInteger(col) || col < 0) {
+      throw invalidBody('Cell coordinates must be non-negative integers');
+    assertCellWithinStructure(row, col, rowCount, colCount);
+ * @param {WorksheetStatePayload & {minRows?: number | null, minCols?: number | null}} payload
+ * @returns {WorksheetSnapshot}
+[DUPLICATES: 36 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L152:C1]
+
+## S24:L153 2026-09-29T06:35:53.258Z message assistant
+[thinking]
+Messages match mine exactly. 
+Note the helper's `assertCellWithinStructure` message: let me check it matches existing inline message `Cell r,c is outside the worksheet structure (RxC)`. In validate.js it exists. Let me verify quickly to ensure the future switch is behavior-preserving for the cells branch too.
+Then run typecheck/tests.
+Also note: B's branch has moved to 8ca51ed. Not important.
+Let me check assertCellWithinStructure message.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L153:C1]
+[toolCall] bash call_00_WiPW7rWn0wTxKwoW7gk84724
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git show origin/b-issue-4-worksheets-structure:backend/src/validate.js | grep -n \"assertCellWithinStructure\" -A 8 | head -20"}
+[toolCall] bash call_01_fsFk6wWzCZlSi9aC3q8r2713
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && pnpm -r typecheck 2>&1 | tail -8", "timeout": 300}
+
+## S24:L154 2026-09-29T06:36:01.800Z message toolResult
+toolResult bash False
+[text]
+111:export function assertCellWithinStructure(row, col, rowCount, colCount) {
+112-  if (row >= rowCount || col >= colCount) {
+113-    throw invalidBody(
+114-      `Cell ${row},${col} is outside the worksheet structure (${rowCount}x${colCount})`,
+115-    );
+116-  }
+117-}
+118-
+119-/**
+
+## S24:L155 2026-09-29T06:36:01.801Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L155:C1]
+
+## S24:L156 2026-09-29T06:36:03.624Z message assistant
+[thinking]
+Typecheck passes. Now run tests once more (full) and then e2e.
+Let me run tests + then run-e2e.sh. First look at checks/run-e2e.sh to know the invocation and whether it needs PATH tweaks.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L156:C1]
+[toolCall] bash call_00_ICEyjBkoDgzraPsQs1eK2903
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && pnpm -r test 2>&1 | grep -E \"Test Files|Tests |failed|Done|Failed\" | head -20", "timeout": 300}
+[toolCall] bash call_01_IRfXv7EgO05N3Iv42aAP6578
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && cat checks/run-e2e.sh"}
+
+## S24:L157

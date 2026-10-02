@@ -1,14 +1,20 @@
 # I13：Braid、子Agent与协作方法改进
 
+截至 2026-10-02，本 packet 只作为 I13 运行成果与目标对账入口；当前可执行边界以 [实验记录](experiments.md)、[I13-2 packet](i13-2/packet.md)、[Flash/GitHub 内存修复热恢复](i13-2/hosted-github-memory-recovery.md) 和 [GLM 只读交接](i13-2/glm-final-recovery.md) 为准。最新实验记录显示 Flash/Sheet 已有正式 74/100，Flash/GitHub 的热恢复来源已取消且没有替代 run 身份；两项 GLM 源容器已退出并完成选择性保全。本轮整理未创建新的恢复、prepare 或模型请求；不要把 GLM 只读边界扩展为 I13 所有运行，也不要从本文件日期段落推断实时物理状态。
+
+## 当前：I13-2 改进与过程验收（2026-10-02）
+
+I13-2 的源码与过程验收材料已保存；本轮整理只读确认保全来源、运行身份和未覆盖边界，不自动恢复已停止的 GLM 两题，也不改写 I13 历史运行的供应商、费用或运行身份。I13-2 的当前决定、停止现场和下一步由 [I13-2 packet](i13-2/packet.md) 持有。
+
+## 历史阶段：官网 Flash 恢复与本地 GLM 自有通道（2026-10-01）
+
 2026-10-01：[I13-2](i13-2/packet.md) 的资源等待误判和历史GLM材料选择缺陷已修复，新Linux包已冻结。本地GLM/GitHub、GLM/Sheet已启动新物理尝试，首批原件确认两项原Pi接续、Sheet等待资源后继续，AGENTS与共享packet已有发布回执；官网Flash/Sheet已按self_funded创建 `f16834f58674`；用户追加授权的Flash/GitHub也已从保全终态创建 `e1aa595f6995`，同为self_funded，当前首批证据为平台部署阶段。原取消来源与全部失败现场保留。监控已完全由脚本执行，模型角色停用、heartbeat暂停；同一Console已切换唯一新服务。准确身份与未覆盖验收以[实验树](experiments.md)及I13-2 packet为准。
 
-## 当前：I13-2 改进与过程验收（2026-10-01）
+### 历史原段：I13-2 改进与过程验收（2026-10-01）
 
 用户此前暂停本地 GLM 两项，明确同意 OOM 防范方案，并要求根据 Sheet PR 2、Issue 1 的实际过程修正协作材料重复和根评论隐藏语义；无需等待最终评分即可验收 I13 改进。用户指示“这些改进，作为 I13-2，并且热恢复到 I13 的运行”。本轮授权、保全来源、实施分工和验收归 [I13-2 packet](i13-2/packet.md)。暂停现场、修正和本地恢复包检查已完成，当前按上方新身份接续；官网新收费范围包含用户分别追加授权的Sheet与GitHub各一次接续，模型配方不变。Console本次只做既有单实例的兼容部署与新run登记。下文其余旧身份及运行状态均为历史事实。
 
 用户随后明确：“那我们将该运行取消，然后等待 I13-2 一起热修复来恢复吧”。官网Flash/Sheet `691028015e69` 已于21:14:51 CST取消，实际POST响应及独立GET确认 `CANCELLED`；尚未评测，实际计费字段暂未返回。最新工作区已取得HTTP200并校验，来源SHA256 `0e9c2798c80ab56641f7937aed861416d164dd495a716378e702975a795fa13b`，原件与取消/下载回执归 `runs/iteration13/hosted-recovery-20261001/sheet-user-cancel/`。本次指示将该Sheet纳入I13-2完成后的恢复范围；当时等待改进及冻结来源，现已按上方新身份执行唯一获授权接续。旧快照不足以证明持续卡死，新原件实际包含21:13成功的代码编辑，先前卡死判断撤回。
-
-## 前一阶段：官网 Flash 恢复与本地 GLM 自有通道（2026-10-01）
 
 最新授权把四项分成两官网、两本地：Flash/GitHub优先从官网终态保全副本恢复到官网，Flash/Sheet从本地一致快照恢复到官网，两者非参赛、使用ARCAPI；官网SIGKILL关键证据采集成为这两项的启动硬前置，并调查有界自动恢复。GLM/GitHub留本地接续、GLM/Sheet本地干净启动，两者切到自有bigmodel/kimi/ds/qwen等API。移除DeepSeek Braid成员即可，不额外限定PR必须用GLM；内部DeepSeek sub-agent保留。原运行已保全并停止，后续四项均已启动过。官网两项曾RUNNING且诊断采集实际通过；GitHub之后生成失败，Sheet按用户指示取消并等待I13-2恢复，本地两项当时暂停。用户确认WSL重建为Debian-Rebuild，授权本地有快照即恢复、没有则重新启动。具体进展归下方实验树。
 
@@ -58,7 +64,7 @@ Flash/GitHub 使用已保全的稳定终态工作区，在副本中重建平台�
 
 证据入口：`runs/iteration13/hosted-20261001/completion.json`、`runs/iteration13/hosted-20261001/monitor/20261001T065751.899359Z/346bc3b51b09/`。用户现已明确要求“安排sub-agent保留工作区并且排查证据”，现场保全与因果调查已交给 GPT-6.1-Sol / extra-high 子Agent `/root/i13_hosted_failure_evidence`。子Agent负责独立保全目录 `runs/iteration13/hosted-20261001/failure-investigation/` 与调查文档 `tasks/iteration13/hosted-github-failure.md`，主线整合回执。授权限于保全、只读取证和诊断，先确认Git/未提交worktree、Braid数据库与原生会话的同次运行关系及可恢复边界；WSL、Sheet、GLM根组、修改冻结包与第二次收费尝试仍不启动。
 
-2026-10-01 启动经过：用户因 WSL 问题明确改为官网参赛，授权使用比赛额度先跑 GLM-5.3-Flash variant 的 GitHub，并继续3+8实际状态监控。已按[首轮实验当前范围](experiments.md#当前官网启动范围)启动官网 GitHub：submission `d0692dd35545`，run `346bc3b51b09`，13:20:59 CST开始，首批状态RUNNING；13:24:58已直接核实根会话的真实工具调用与vision委派；复用 Flash/K2.7 Code 冻结包，3+8采集和Luna内容审查已运行。WSL与其余三项运行继续暂停，不恢复 I12。监控与heartbeat现已移交独立[GPT-5.6-Luna会话](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706)，主会话不再定时跟进。此前暂停现场见 `runs/iteration13/start-20261001/pause-receipt.json`；submission保存official_evaluation，run计费字段却为self_funded；差异及原始回执保留在实验记录中。
+2026-10-01 启动经过：用户因 WSL 问题明确改为官网参赛，授权使用比赛额度先跑 GLM-5.3-Flash variant 的 GitHub，并继续3+8实际状态监控。已按[首轮实验当前范围](experiments.md#首次官网启动范围已结束)启动官网 GitHub：submission `d0692dd35545`，run `346bc3b51b09`，13:20:59 CST开始，首批状态RUNNING；13:24:58已直接核实根会话的真实工具调用与vision委派；复用 Flash/K2.7 Code 冻结包，3+8采集和Luna内容审查已运行。WSL与其余三项运行继续暂停，不恢复 I12。监控与heartbeat现已移交独立[GPT-5.6-Luna会话](codex://threads/01a0f613-082a-7251-a25f-e99acbc37706)，主会话不再定时跟进。此前暂停现场见 `runs/iteration13/start-20261001/pause-receipt.json`；submission保存official_evaluation，run计费字段却为self_funded；差异及原始回执保留在实验记录中。
 
 2026-10-01 旧本地启动授权与准备经过（现已暂停）：用户在最终检查后明确“好的，可以启动 I13 了”。此前准备[首轮实验](experiments.md)：两组 × GitHub/Sheet 共四次新生成，全部使用 ARC，独立干净 WSL 本地运行并保留 Console 人工介入，每题完成立即冻结应用并官网独立重放。启动准备包括已提出的独立 Debian-Factory26、GLM-5.3 根专用 variant 与最终私有制品；不对当时无法挂载的旧 Debian VHDX做写修复，也不恢复 I12。随后用户先要求“K2.7 code 替代 K3”，再修正“GLM-5.3 组继续使用 K3”：最终 Flash 根组 advisor 使用精确 `kimi-k2.7-code`，GLM-5.3 根组 advisor 保留 `kimi-k3`，本轮不再是纯根模型对照。当前尚未发起模型请求，实际运行与制品身份以实验记录为准。此前[最终检查](final-readiness.md)保留准备证据，其待授权描述由本次明确启动指示取代。
 
@@ -197,7 +203,7 @@ I12此前暂停后已在独立磁盘清理任务中主动终止；[清理执行�
 
 用户明确后续会持续补充新发现，默认登记到已有问题账并归入相应批次，不终止或阻塞主线；只有明确改变当前优先级/范围的指示才调整主线。最新M11为Braid system prompt与profile instruction疑似重复，已归R09及后续提示词整理，当前sub-agent批次保持原范围。
 
-CLI、上下文核心与[正文投影/根提醒整理](materials-plan.md)已落实源码；新增行为的真实运行验收边界各自保留。最新清单与源码接线的差异、方法归属和两组研究的适用边界已写入[修复方案](repair-design.md#最新范围核对2026-09-30)。
+CLI、上下文核心与[正文投影/根提醒整理](materials-plan.md)已落实源码；新增行为的真实运行验收边界各自保留。最新清单与源码接线的差异、方法归属和两组研究的适用边界已写入[修复方案](repair-design.md#最新范围核对2026-10-01)。
 用户已审查[本批具体方案](subagents-plan.md)并表示“基本没问题”；其explorer修订已同步：扩大为有明确用途的复杂调查、根因诊断与探索，允许提前向caller补信息，删除Pi已覆盖的基础工具说明。方案及独立只读预演已完成，随后用户授权实施；当前本批已提交7f8ad6e，完整材料反馈及未验边界见[实施记录](subagents-implementation.md)。executor已按[收敛方案](executor-followup.md)删除原生过宽指引并提交84344b4；保留共享cwd/worktree自主选择。之后处理SVC选择/方法、Braid协作、需求树和整体提示词入口；task-packet草案已移除growth。
 用户随后指出executor description有同类问题；已对照原始契约改为具备必要调查、局部设计与反馈修正能力的独立工程任务，强调可整合的实际成果及提前请求caller补充信息。文案修订与并发写策略分开，不作为I12采用问题已闭合的证据。
 advisor按用户要求参考当前Codex角色定位，description明确在问题定义、方案形成及重要取舍时参与，新证据或反复失败时重新判断；正文保持简短，不恢复固定输入输出或思考步骤。

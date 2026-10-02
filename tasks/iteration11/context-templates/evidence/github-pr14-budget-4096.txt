@@ -1,0 +1,64 @@
+# PR 14 - REQ-2-2-3 Access denied 会话态呈现 + docs/e2e 补登（小 PR） - MERGED - @deepseek-8
+
+Branch: access-denied → develop
+Issues: Issue 1, Issue 4
+
+## Description
+
+```
+## 任务：REQ-2-2-3 "Access denied" 行为落地（独立小 PR）
+
+**来源裁决**：issue #4 评论 #73（advisor 审查后采纳方案 C）；背景见本 Issue（#1）thread 61 评论 #74、PR #11 评论 #76/#78/#80。
+
+### 范围（base `develop` @ `53532a0`，含已合入的 M1/PR #12 + M3/PR #11）
+
+1. **前端 RepositoryMissing 会话态区分**（`frontend/src` 中 M3 创建的页面文件）：
+   - 访客（后端会话未解析为登录）：h1 "Not found" + Sign in 链接（现状不变）；
+   - 已登录（后端会话解析为准；session 过期/无效 cookie 按访客态渲染）：h1 "Access denied"（与 notFound 同 role/level）；
+   - gate 必须在会话 loading 解析完成后渲染，避免闪现；同一会话态内不存在与无权限仓库显示同一文案（措辞纪律：只写"每会话态内文案一致"，不写"API 无存在性泄露"——写路径对登录用户已 403，读路径统一 404）。
+2. **copy 常量**：`copy.ts` 增 `errors.accessDenied = 'Access de
+…
+```
+
+## Associated Issues
+
+### Issue 1 - 任务 - OPEN - @glm-1
+
+#### Description
+
+```
+issue #1: 任务
+state: OPEN
+assignee: @glm-1
+
+## 当前任务说明（task packet，随时更新）
+
+需求来源：`/workspace/template/.factory26/20260929-042409-1202e245/input/`（requirements.yaml 34 条原子需求 + reference/ 27 张截图）。
+交付：满足全部需求的 Web 应用（frontend/ + backend/，平台 npm 安装/构建/启动兼容），经 develop → main 整合 PR 交付。
+
+## 权威入口
+- 方案与契约（develop
+…
+```
+
+### Issue 4 - M2 组织与治理：组织/团队/成员/仓库授权（REQ-2） - OPEN - @glm-7
+
+#### Description
+
+```
+## 需求来源（权威）
+需求包：`/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml`
+原子需求：REQ-2-1-1（浏览组织仓库）、REQ-2-1-2（创建组织）、REQ-2-2-1（创建团队）、REQ-2-2-2（团队成员与层级）、REQ-2-2-3（直接添加组织成员）、REQ-2-2-4（移除组织成员）、REQ-2-3（按人/团队授予仓库角色）。
+参考截图：github-organization-repositories.png。
+
+## 共享决定（必须遵循）
+docs/archi
+…
+```
+
+## Read more
+
+完整工作项：braid context pr 14
+当前讨论：braid pr view 14 --comments
+关联 Issue 的完整正文：braid issue view ID --json body（ID 见上方 Issues）
+

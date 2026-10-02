@@ -1,0 +1,383 @@
+[
+  {
+    "id": "01a0ebf1-0fc5-74b9-b3bc-46486e05cad7",
+    "owner": "issue:6",
+    "kind": "subagent",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/2026-09-29T06-51-32-078Z_01a0ebee-d16e-72f4-80c5-d2fdd59e5e56/ad576d4a-8950-4c7a-937a-e415eb8ac32b/run-0/session.jsonl"
+    ],
+    "records": 35,
+    "characters": 239386,
+    "view": "views/01a0ebf1-0fc5-74b9-b3bc-46486e05cad7.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "01a0ebf1-0f39-7500-b696-15c60a58bfa2",
+    "owner": "issue:6",
+    "kind": "subagent",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/2026-09-29T06-51-32-078Z_01a0ebee-d16e-72f4-80c5-d2fdd59e5e56/e9010e09-b0bd-4c8e-8917-bfb61e192d08/run-0/session.jsonl"
+    ],
+    "records": 10,
+    "characters": 25279,
+    "view": "views/01a0ebf1-0f39-7500-b696-15c60a58bfa2.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T06-51-32-078Z_01a0ebee-d16e-72f4-80c5-d2fdd59e5e56",
+    "owner": "issue:6",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/2026-09-29T06-51-32-078Z_01a0ebee-d16e-72f4-80c5-d2fdd59e5e56.jsonl",
+      "work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-6-pi-deepseek-fast-g1--/2026-09-29T06-51-32-078Z_01a0ebee-d16e-72f4-80c5-d2fdd59e5e56.jsonl"
+    ],
+    "records": 163,
+    "characters": 644178,
+    "view": "views/2026-09-29T06-51-32-078Z_01a0ebee-d16e-72f4-80c5-d2fdd59e5e56.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a-history",
+    "owner": "issue:6",
+    "kind": "history",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/run-history.jsonl"
+    ],
+    "records": 2,
+    "characters": 605,
+    "view": "views/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a-history.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "ad576d4a-8950-4c7a-937a-e415eb8ac32b_advisor_0_transcript",
+    "owner": "issue:6",
+    "kind": "transcript",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/subagent-artifacts/ad576d4a-8950-4c7a-937a-e415eb8ac32b_advisor_0_transcript.jsonl"
+    ],
+    "records": 68,
+    "characters": 431939,
+    "view": "views/ad576d4a-8950-4c7a-937a-e415eb8ac32b_advisor_0_transcript.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "e9010e09-b0bd-4c8e-8917-bfb61e192d08_vision_0_transcript",
+    "owner": "issue:6",
+    "kind": "transcript",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a/subagent-artifacts/e9010e09-b0bd-4c8e-8917-bfb61e192d08_vision_0_transcript.jsonl"
+    ],
+    "records": 13,
+    "characters": 37140,
+    "view": "views/e9010e09-b0bd-4c8e-8917-bfb61e192d08_vision_0_transcript.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "01a0ec02-f4eb-701b-b7f4-5a6f8c2f5675",
+    "owner": "pr:15",
+    "kind": "subagent",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d/088d04b0-1a9c-43b6-9254-fd043e6d7623/run-0/session.jsonl"
+    ],
+    "records": 21,
+    "characters": 105408,
+    "view": "views/01a0ec02-f4eb-701b-b7f4-5a6f8c2f5675.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "01a0ec10-1d51-7722-8421-b88667844c0b",
+    "owner": "pr:15",
+    "kind": "subagent",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d/38367068-3731-4e48-b580-b31de57cfbf4/run-0/session.jsonl"
+    ],
+    "records": 80,
+    "characters": 616889,
+    "view": "views/01a0ec10-1d51-7722-8421-b88667844c0b.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d",
+    "owner": "pr:15",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-pr-15-pi-deepseek-fast-g1--/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl"
+    ],
+    "records": 590,
+    "characters": 1927515,
+    "view": "views/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "3114a207-27de-411d-adee-a30de1b6ddda_advisor_transcript",
+    "owner": "pr:15",
+    "kind": "transcript",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/subagent-artifacts/3114a207-27de-411d-adee-a30de1b6ddda_advisor_transcript.jsonl"
+    ],
+    "records": 38,
+    "characters": 199060,
+    "view": "views/3114a207-27de-411d-adee-a30de1b6ddda_advisor_transcript.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "fea4e493-37df-4d59-8db7-7bdd6e7593b5_explorer_transcript",
+    "owner": "pr:15",
+    "kind": "transcript",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/subagent-artifacts/fea4e493-37df-4d59-8db7-7bdd6e7593b5_explorer_transcript.jsonl"
+    ],
+    "records": 169,
+    "characters": 1019264,
+    "view": "views/fea4e493-37df-4d59-8db7-7bdd6e7593b5_explorer_transcript.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-07-02-031Z_01a0ebfd-020f-7636-8f79-e61e943fd61c",
+    "owner": "issue:6",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ebfc-ff3a-71a3-951e-b35cbcf974e5/2026-09-29T07-07-02-031Z_01a0ebfd-020f-7636-8f79-e61e943fd61c.jsonl"
+    ],
+    "records": 60,
+    "characters": 157139,
+    "view": "views/2026-09-29T07-07-02-031Z_01a0ebfd-020f-7636-8f79-e61e943fd61c.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-13-13-379Z_01a0ec02-aca3-7482-b157-3c4a03a503b7",
+    "owner": "issue:6",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ec02-a3e2-77c3-8fca-dc580620aeb9/2026-09-29T07-13-13-379Z_01a0ec02-aca3-7482-b157-3c4a03a503b7.jsonl"
+    ],
+    "records": 81,
+    "characters": 249478,
+    "view": "views/2026-09-29T07-13-13-379Z_01a0ec02-aca3-7482-b157-3c4a03a503b7.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-23-06-680Z_01a0ec0b-ba38-7764-9c90-869300b89b24",
+    "owner": "issue:6",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ec0b-b037-7b30-983c-a16bc7eb48ad/2026-09-29T07-23-06-680Z_01a0ec0b-ba38-7764-9c90-869300b89b24.jsonl"
+    ],
+    "records": 98,
+    "characters": 291839,
+    "view": "views/2026-09-29T07-23-06-680Z_01a0ec0b-ba38-7764-9c90-869300b89b24.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-50-13-929Z_01a0ec24-8ea9-7279-8be3-77f23f528ffc",
+    "owner": "issue:6",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ec24-8bdb-71a1-8027-16a5feabfffe/2026-09-29T07-50-13-929Z_01a0ec24-8ea9-7279-8be3-77f23f528ffc.jsonl"
+    ],
+    "records": 72,
+    "characters": 234979,
+    "view": "views/2026-09-29T07-50-13-929Z_01a0ec24-8ea9-7279-8be3-77f23f528ffc.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-55-32-732Z_01a0ec29-6bfc-7094-871c-2701a32e1609",
+    "owner": "issue:6",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-deepseek-fast-01a0ec29-684a-71d0-aa47-c25a4895e9d3/2026-09-29T07-55-32-732Z_01a0ec29-6bfc-7094-871c-2701a32e1609.jsonl"
+    ],
+    "records": 28,
+    "characters": 106464,
+    "view": "views/2026-09-29T07-55-32-732Z_01a0ec29-6bfc-7094-871c-2701a32e1609.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "01a0ebf2-864f-7546-93d1-b56815de471c",
+    "owner": "issue:8",
+    "kind": "subagent",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebee-ce8f-7730-9269-3864fbb38de2/2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668/d9c2373b-dae9-4c09-8eaa-7d1a7d898e5a/run-0/session.jsonl"
+    ],
+    "records": 29,
+    "characters": 57285,
+    "view": "views/01a0ebf2-864f-7546-93d1-b56815de471c.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "01a0ebf3-99bb-732e-b2b3-a5b67eb3912b",
+    "owner": "issue:8",
+    "kind": "subagent",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebee-ce8f-7730-9269-3864fbb38de2/2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668/ec4d81d6-77cf-45a2-af84-dd3484f6b662/run-0/session.jsonl"
+    ],
+    "records": 23,
+    "characters": 41140,
+    "view": "views/01a0ebf3-99bb-732e-b2b3-a5b67eb3912b.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668",
+    "owner": "issue:8",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebee-ce8f-7730-9269-3864fbb38de2/2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668.jsonl",
+      "work/native-homes/pi-glm-fast-01a0ebee-ce8f-7730-9269-3864fbb38de2/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-8-pi-glm-fast-g1--/2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668.jsonl"
+    ],
+    "records": 69,
+    "characters": 282076,
+    "view": "views/2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "304842eb-b9bc-4233-9ffe-ecc5658bdd1c_vision_transcript",
+    "owner": "issue:8",
+    "kind": "transcript",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebee-ce8f-7730-9269-3864fbb38de2/subagent-artifacts/304842eb-b9bc-4233-9ffe-ecc5658bdd1c_vision_transcript.jsonl"
+    ],
+    "records": 60,
+    "characters": 100410,
+    "view": "views/304842eb-b9bc-4233-9ffe-ecc5658bdd1c_vision_transcript.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "5bef35e9-d190-49c1-8c3d-828671730a64_advisor_transcript",
+    "owner": "issue:8",
+    "kind": "transcript",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebee-ce8f-7730-9269-3864fbb38de2/subagent-artifacts/5bef35e9-d190-49c1-8c3d-828671730a64_advisor_transcript.jsonl"
+    ],
+    "records": 42,
+    "characters": 77049,
+    "view": "views/5bef35e9-d190-49c1-8c3d-828671730a64_advisor_transcript.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-02-49-559Z_01a0ebf9-27d7-7345-87ae-adf290156e42",
+    "owner": "issue:8",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebf9-24f9-72d1-a343-94a8b728eecc/2026-09-29T07-02-49-559Z_01a0ebf9-27d7-7345-87ae-adf290156e42.jsonl"
+    ],
+    "records": 44,
+    "characters": 125972,
+    "view": "views/2026-09-29T07-02-49-559Z_01a0ebf9-27d7-7345-87ae-adf290156e42.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56",
+    "owner": "pr:16",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ebfc-42ba-7b12-83ad-ca8673f67bd4/2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56.jsonl"
+    ],
+    "records": 401,
+    "characters": 1103597,
+    "view": "views/2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-32-42-527Z_01a0ec14-839f-70e5-b1af-f2f4f66eb784",
+    "owner": "issue:8",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ec14-7a9a-7043-9c5c-d7b0c1b25682/2026-09-29T07-32-42-527Z_01a0ec14-839f-70e5-b1af-f2f4f66eb784.jsonl"
+    ],
+    "records": 31,
+    "characters": 75397,
+    "view": "views/2026-09-29T07-32-42-527Z_01a0ec14-839f-70e5-b1af-f2f4f66eb784.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-39-33-487Z_01a0ec1a-c8ef-773c-9142-bc8b7dfcd29e",
+    "owner": "issue:8",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ec1a-b30f-7ef2-a9db-6037809e24bb/2026-09-29T07-39-33-487Z_01a0ec1a-c8ef-773c-9142-bc8b7dfcd29e.jsonl"
+    ],
+    "records": 50,
+    "characters": 130650,
+    "view": "views/2026-09-29T07-39-33-487Z_01a0ec1a-c8ef-773c-9142-bc8b7dfcd29e.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T07-48-59-712Z_01a0ec23-6cc0-77b2-a072-8f96f93b3c25",
+    "owner": "issue:8",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ec23-69bb-73a0-86c9-25ec0ded06b1/2026-09-29T07-48-59-712Z_01a0ec23-6cc0-77b2-a072-8f96f93b3c25.jsonl"
+    ],
+    "records": 65,
+    "characters": 183529,
+    "view": "views/2026-09-29T07-48-59-712Z_01a0ec23-6cc0-77b2-a072-8f96f93b3c25.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  },
+  {
+    "id": "2026-09-29T08-03-42-940Z_01a0ec30-e6dc-7047-a9b3-f4f6ddabd2bd",
+    "owner": "issue:8",
+    "kind": "native",
+    "sources": [
+      "work/native-homes/pi-glm-fast-01a0ec30-e317-71f2-a24a-8b3efac64362/2026-09-29T08-03-42-940Z_01a0ec30-e6dc-7047-a9b3-f4f6ddabd2bd.jsonl"
+    ],
+    "records": 10,
+    "characters": 50956,
+    "view": "views/2026-09-29T08-03-42-940Z_01a0ec30-e6dc-7047-a9b3-f4f6ddabd2bd.txt",
+    "status": "indexed",
+    "read_ranges": [],
+    "truncation_followup": []
+  }
+]

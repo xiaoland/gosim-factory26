@@ -1,0 +1,584 @@
+[
+  {
+    "render_block": 20,
+    "source": "continuation02-root-native/047-2026-09-28T05-43-33-723Z_01a0e68a-3a5b-7209-906f-c1c240bd43ae.jsonl:L4",
+    "chars": 440,
+    "text": "### 交付内容\n- 主页 \"Import CSV\" 按钮 → 对话框（名 \"Import CSV\"），file 控件 label \"CSV file\" + \"Confirm import\"。\n- 解析规则：按原始行列顺序，保留空字段；支持 UTF-8 中英文与数字文本；正确处理双引号包裹的逗号、成对转义双引号、字段内换行；以双引号开头但无闭合双引号的字段无效，报 \"Invalid CSV file format. Import failed.\"。\n- 导入成功：新建工作簿，名 = 文件名去结尾 .csv，Sheet1 打开完整 CSV 内容，首行是普通数据；刷新/重开不变；失败则主页不出现该名链接、无部分结果。\n- 编辑器工具栏 \"Export CSV\" 按钮：触发浏览器下载，建议文件名以 .csv 结尾，UTF-8 文本；按网格实际行列顺序保留空单元格；正确转义逗号/引号/换行；普通单元格导出显示值，公式单元格导出当前计算结果而非公式表达式；导出前后界面状态不变。"
+  },
+  {
+    "render_block": 36,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L241",
+    "chars": 239,
+    "text": "comment #25 [visible]\nthread: 6 [open]\nreply-to: 6\n@deepseek-3 收到，我来接手共享基础（原负责人 @glm-2 的 WIP 已可用）。**WIP 分支已 push：`origin/feat/shared-foundation`**（当前含完整骨架，我正在按下面契约收尾并把种子改成 #14 的裁决版，随后提 PR 到 `origin/develop`）。以下即我从现在起的正式契约，请直接照此实现，不必等我发 PR。"
+  },
+  {
+    "render_block": 38,
+    "source": "local_comments.json:25",
+    "chars": 766,
+    "text": "### 1. 数据模型（`backend/src/types.ts`，前端镜像在 `frontend/src/api.ts`）\n```\nWorkbook { id, name, createdAt, updatedAt, activeSheetId, activeCell, selection, sheets[] }\nSheet    { id, name, rowCount, colCount, cells{}, validationRules[], filterViews[], pivotTables[], lastSelection }\nCellData { raw: string|null, value: string|null, validationId?, style? }\n```\n- **`raw` = 用户原始输入**（公式以 `=` 开头），**`value` = 显示/计算结果**。CSV 导入“全部按文本”即 `raw = value = 文本`（两者都写，不要只写一个）。\n- 空单元格 = `cells` 中**不存在**该 key（稀疏 map）；清空用 `raw: null`。\n- id 形态：`wb_<base36时间戳><随机>` / `sh_...`，纯 `[A-Za-z0-9_-]`，可直接进 URL 与文件名。\n- 活跃工作表：workbook 级 `activeSheetId`；各表最近选区 `sheet.lastSelection`（`\"B2\"` 或 null）。**workbook 级 `activeCell`/`selection` 也已存在**（=当前活跃表的选区），两种读法都能拿到；新代码建议写 `sheet.lastSelection`，我会保证两者一致。"
+  },
+  {
+    "render_block": 42,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L243",
+    "chars": 434,
+    "text": "### 3. CSV 导入端点：**走你的方案 3-a`POST /api/workbooks/import`**\n基础**不**提供“接受初始 sheets/cells 的创建接口”，所以不必迁就我：按你的设计 `POST /api/workbooks/import { fileName, csv }` → 201 新 Workbook（bare 对象，非包装），解析失败 400 `{ error: \"Invalid CSV file format. Import failed.\" }` 且不落库，工作簿名 = 文件名去 `.csv`。你可以直接在 `backend/src/routes/workbooks.ts` 里加路由（或新建 `routes/csv.ts` 再在 `server.ts` 挂载，注意挂在 `/api` 404 兜底之前）。导入后的首表即 Sheet1、`activeSheetId` 指向它，编辑器 URL 用返回的 `wb.id`。"
+  },
+  {
+    "render_block": 44,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L243",
+    "chars": 569,
+    "text": "### 4. 前端挂载点\n- 主页 “Import CSV” 按钮/对话框 → `frontend/src/pages/HomePage.tsx`（`home-header` 区块，紧邻 “New blank workbook”）。\n- 编辑器 “Export CSV” 按钮 → `frontend/src/pages/EditorPage.tsx` 的 `editor-topbar`；复用 `frontend/src/api.ts` 的 `request<T>()`（已处理 `{error}` → `ApiError`）。\n- 纯解析模块建议 `frontend/src/domain/csv.ts`（`src/domain/` 空着，专属你的目录，不会和我冲突）。\n- 构建/启动：`cd frontend && npm install && npm run build`；`cd backend && npm install && npm run build && HOST=127.0.0.1 PORT=3001 npm run start`（backend 静态服务 `frontend/dist`，默认 HOST=0.0.0.0 PORT=3000）。自检用空闲端口 + `DATA_DIR=$(mktemp -d)`。"
+  },
+  {
+    "render_block": 46,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L243",
+    "chars": 300,
+    "text": "### 5. 种子（按 #14 裁决，我正在改 seed.ts）\n启动幂等种子 = 一个工作簿 `Q3 Sales`：\n- **Sheet1**：`A1=Region`、`A2=East`、`B2=1200`、`A3=North`、`B3=800`；`activeSheetId` 指向 Sheet1，Sheet1 的 `lastSelection=A1`。\n- **Sheet2**：`A1:C4` = `Region/Sales/Status`, `East/1200/Open`, `North/800/Closed`, `South/700/Open`。\n已有同名工作簿时不重复创建、不覆盖。"
+  },
+  {
+    "render_block": 60,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 1508,
+    "text": "  '\nchildren:\n- id: REQ-1\n  name: Workbook Access and Lifecycle\n  type: FOLDER\n  dependencies: []\n  description: 'Supports viewing, opening, creating, renaming, importing, and exporting\n    workbooks within the application. The home page is the entry point for workbooks;\n    successful open, create, and import operations all enter the same editor page,\n    and subsequent operations may modify only the currently opened workbook. After\n    a workbook is opened, created, or imported, the editor state shown in the browser\n    must be a stable workbook state: visiting or refreshing that\n    exact workbook state must open the same workbook rather than another workbook or a temporary\n    blank page, and successful workbook modifications must remain available through\n    that visible workbook state. After returning to the home page or reopening, the workbook name, last-updated\n    time, worksheet order, and last active worksheet remain consistent. Worksheet\n    tabs on the same editor page use the ARIA tab role, with the active tab indicated\n    by aria-selected=\"true\"; the active worksheet grid uses the ARIA grid role, has\n    the accessible name \"Worksheet grid\", and exposes aria-multiselectable=\"true\".\n    Grid cells use the ARIA gridcell role with their cell coordinates as accessible\n    names (for example, A1); the current cell and every cell within the currently\n    selected rectangular region expose aria-selected=\"true\", while cells outside the\n    region expose aria-selected=\"false\"."
+  },
+  {
+    "render_block": 62,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 351,
+    "text": "    '\n  children:\n  - id: REQ-1-1\n    name: Workbook Navigation\n    type: FOLDER\n    dependencies: []\n    description: |\n      Supports viewing and opening available workbooks from the home page. After a workbook is successfully created, renamed, or imported from CSV, returning to or refreshing the home page must show the updated record in the list."
+  },
+  {
+    "render_block": 64,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 1117,
+    "text": "      Page reference:\n      ![image](reference/workbook-home.png)\n    children:\n    - id: REQ-1-1-1\n      name: View and Open a Workbook\n      type: ATOMIC\n      dependencies: []\n      description: |\n        Users view available workbooks on the workbook home page. Each record displays \"Last updated: <last updated value>\" and provides a link whose accessible name is the workbook name. After the user clicks the link, the editor displays the same \"Last updated: <last updated value>\", the corresponding workbook name, worksheet tabs and order, current active worksheet, row and column structure, grid values, formula bar content, filter views, validation entry points, and pivot table results; data from another workbook must not appear in the current grid. The current editor page entry in the browser must be directly accessible and continue to identify the same workbook after refresh; visiting that exact workbook state in the same or a later browser session must restore the workbook’s most recent successful state without requiring navigation through the home page. The entry format is implementation-defined."
+  },
+  {
+    "render_block": 120,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 447,
+    "text": "export interface CellData {\n  /** Original user input; formulas start with \"=\". null for empty cells. */\n  raw: string | null;\n  /** Displayed value: for plain input equal to raw; for formulas the cached computed result. */\n  value: string | null;\n  /** Reserved: id of a rule in sheet.validationRules. */\n  validationId?: string | null;\n  /** Reserved: display style (bold, color, number format...). */\n  style?: Record<string, unknown> | null;\n}"
+  },
+  {
+    "render_block": 122,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 184,
+    "text": "export interface RectSelection {\n  /** Top-left cell ref of the rectangular selection. */\n  start: string;\n  /** Bottom-right cell ref of the rectangular selection. */\n  end: string;\n}"
+  },
+  {
+    "render_block": 124,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 382,
+    "text": "/** Data validation rule (REQ-5). Extendable; consumers ignore unknown fields. */\nexport interface ValidationRule {\n  id: string;\n  /** e.g. \"list\" | \"numberRange\" | \"textLength\" ... */\n  type: string;\n  /** Cell range this rule applies to, e.g. \"A2:A100\". */\n  range: string;\n  /** Rule parameters, shape depends on type. */\n  config: Record<string, unknown>;\n  message?: string;\n}"
+  },
+  {
+    "render_block": 126,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 248,
+    "text": "/** Filter view (REQ-5). Extendable. */\nexport interface FilterView {\n  id: string;\n  /** Range the filter covers, e.g. \"A1:D20\". */\n  range: string;\n  /** Per-column filter criteria keyed by column letter. */\n  criteria: Record<string, unknown>;\n}"
+  },
+  {
+    "render_block": 128,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 370,
+    "text": "/** Pivot table spec (REQ-5). Extendable. */\nexport interface PivotSpec {\n  id: string;\n  /** Source data range. */\n  sourceRange: string;\n  /** Placement of the pivot result (anchor cell + target sheet). */\n  anchor: { sheetId: string; ref: string };\n  rows: string[];\n  columns: string[];\n  values: Array<{ field: string; aggregation: string }>;\n  filters: string[];\n}"
+  },
+  {
+    "render_block": 130,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 349,
+    "text": "export interface Sheet {\n  id: string;\n  name: string;\n  /** Current grid dimensions (rows 1..rowCount, cols 1..colCount). */\n  rowCount: number;\n  colCount: number;\n  /** Sparse map of non-empty cells keyed by ref. */\n  cells: Record<string, CellData>;\n  validationRules: ValidationRule[];\n  filterViews: FilterView[];\n  pivotTables: PivotSpec[];\n}"
+  },
+  {
+    "render_block": 132,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 396,
+    "text": "export interface Workbook {\n  id: string;\n  name: string;\n  createdAt: string;\n  updatedAt: string;\n  /** id of the sheet active when the workbook was last used. */\n  activeSheetId: string;\n  /** Persisted active (cursor) cell ref, e.g. \"A1\". */\n  activeCell: string;\n  /** Persisted rectangular selection; null means single active cell. */\n  selection: RectSelection | null;\n  sheets: Sheet[];\n}"
+  },
+  {
+    "render_block": 138,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 236,
+    "text": "export function colLetter(index1Based: number): string {\n  let n = index1Based;\n  let s = \"\";\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    s = String.fromCharCode(65 + rem) + s;\n    n = Math.floor((n - 1) / 26);\n  }\n  return s;\n}"
+  },
+  {
+    "render_block": 142,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 244,
+    "text": "export function makeSheet(name: string, id: string): Sheet {\n  return {\n    id,\n    name,\n    rowCount: DEFAULT_ROW_COUNT,\n    colCount: DEFAULT_COL_COUNT,\n    cells: {},\n    validationRules: [],\n    filterViews: [],\n    pivotTables: [],\n  };\n}"
+  },
+  {
+    "render_block": 144,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 363,
+    "text": "export function makeWorkbook(name: string, id?: string, now?: string): Workbook {\n  const ts = now || new Date().toISOString();\n  const sheet = makeSheet(\"Sheet1\", newId(\"sh\"));\n  return {\n    id: id || newId(\"wb\"),\n    name,\n    createdAt: ts,\n    updatedAt: ts,\n    activeSheetId: sheet.id,\n    activeCell: \"A1\",\n    selection: null,\n    sheets: [sheet],\n  };\n}"
+  },
+  {
+    "render_block": 148,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 189,
+    "text": "/**\n * JSON-file storage: one pretty-printed JSON file per workbook,\n * named `<workbookId>.json` inside DATA_DIR.\n * Writes are atomic (tmp file + rename) to survive crashes mid-write.\n */"
+  },
+  {
+    "render_block": 150,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 226,
+    "text": "function fileFor(id: string): string {\n  // ids are generated by us (wb_xxx); reject anything path-like.\n  if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new Error(\"invalid workbook id\");\n  return path.join(DATA_DIR, `${id}.json`);\n}"
+  },
+  {
+    "render_block": 154,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 643,
+    "text": "export function listWorkbooks(): WorkbookSummary[] {\n  ensureDataDir();\n  const out: WorkbookSummary[] = [];\n  for (const f of fs.readdirSync(DATA_DIR)) {\n    if (!f.endsWith(\".json\")) continue;\n    try {\n      const wb = JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), \"utf8\")) as Workbook;\n      if (wb && wb.id && wb.name) {\n        out.push({ id: wb.id, name: wb.name, createdAt: wb.createdAt, updatedAt: wb.updatedAt });\n      }\n    } catch {\n      // Skip unreadable/corrupt files rather than failing the whole list.\n    }\n  }\n  out.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : a.updatedAt > b.updatedAt ? -1 : 0));\n  return out;\n}"
+  },
+  {
+    "render_block": 156,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 236,
+    "text": "export function getWorkbook(id: string): Workbook | null {\n  const file = fileFor(id);\n  if (!fs.existsSync(file)) return null;\n  try {\n    return JSON.parse(fs.readFileSync(file, \"utf8\")) as Workbook;\n  } catch {\n    return null;\n  }\n}"
+  },
+  {
+    "render_block": 158,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 250,
+    "text": "export function saveWorkbook(wb: Workbook): void {\n  ensureDataDir();\n  const file = fileFor(wb.id);\n  const tmp = `${file}.tmp-${process.pid}-${Date.now()}`;\n  fs.writeFileSync(tmp, JSON.stringify(wb, null, 2), \"utf8\");\n  fs.renameSync(tmp, file);\n}"
+  },
+  {
+    "render_block": 162,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 172,
+    "text": "/** Host to bind. Official evaluation sets HOST/PORT explicitly. */\nexport const HOST = process.env.HOST || \"0.0.0.0\";\nexport const PORT = Number(process.env.PORT || 3000);"
+  },
+  {
+    "render_block": 164,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 295,
+    "text": "/**\n * Directory holding one JSON file per workbook.\n * Override with DATA_DIR (self-checks use a temp directory so the\n * delivered initial state stays untouched).\n */\nexport const DATA_DIR = process.env.DATA_DIR\n  ? path.resolve(process.env.DATA_DIR)\n  : path.resolve(__dirname, \"..\", \"data\");"
+  },
+  {
+    "render_block": 166,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L16",
+    "chars": 223,
+    "text": "/** Directory containing the built frontend (frontend/dist). */\nexport const FRONTEND_DIST = process.env.FRONTEND_DIST\n  ? path.resolve(process.env.FRONTEND_DIST)\n  : path.resolve(__dirname, \"..\", \"..\", \"frontend\", \"dist\");"
+  },
+  {
+    "render_block": 178,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 414,
+    "text": "  // Static hosting of the built frontend + SPA fallback.\n  const indexHtml = path.join(FRONTEND_DIST, \"index.html\");\n  app.use(express.static(FRONTEND_DIST));\n  app.get(\"*\", (req, res, next) => {\n    if (req.path.startsWith(\"/api/\")) {\n      res.status(404).json({ error: \"Not found\" });\n      return;\n    }\n    if (fs.existsSync(indexHtml)) {\n      res.sendFile(indexHtml);\n    } else {\n      next();\n    }\n  });"
+  },
+  {
+    "render_block": 180,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 348,
+    "text": "  // eslint-disable-next-line @typescript-eslint/no-unused-vars\n  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {\n    // eslint-disable-next-line no-console\n    console.error(\"[error]\", err);\n    if (!res.headersSent) {\n      res.status(500).json({ error: \"Internal server error\" });\n    }\n  });"
+  },
+  {
+    "render_block": 184,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L19",
+    "chars": 260,
+    "text": "export function startServer(): void {\n  ensureSeedData();\n  const app = createApp();\n  app.listen(PORT, HOST, () => {\n    // eslint-disable-next-line no-console\n    console.log(`Server listening on http://${HOST}:${PORT} (frontend: ${FRONTEND_DIST})`);\n  });\n}"
+  },
+  {
+    "render_block": 188,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L18",
+    "chars": 1058,
+    "text": "/**\n * Shared REST API contract (all later feature tasks build on this):\n *\n *  GET    /api/workbooks                              -> { workbooks: WorkbookSummary[] }\n *  POST   /api/workbooks            { name }          -> 201 Workbook | 400 { error }\n *  GET    /api/workbooks/:id                          -> Workbook | 404 { error }\n *  PATCH  /api/workbooks/:id        { name }          -> Workbook | 400/404 { error }\n *  PATCH  /api/workbooks/:id/state  { activeSheetId?, activeCell?, selection? }\n *                                                   -> Workbook | 404 { error }\n *  PATCH  /api/workbooks/:id/sheets/:sheetId/cells  { updates: [{ ref, raw }] }\n *                                                   -> Workbook | 400/404 { error }\n *\n * Conventions: JSON bodies; errors are `{ error: string }` with 4xx/5xx;\n * every successful mutation bumps workbook.updatedAt; ref format is A1-style.\n * Feature tasks ADD endpoints (e.g. CSV import/export, sheet CRUD, row/col ops)\n * following the same shapes instead of redefining existing ones.\n */"
+  },
+  {
+    "render_block": 194,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L18",
+    "chars": 278,
+    "text": "/** Column letters -> 1-based number (\"A\"->1, \"Z\"->26, \"AA\"->27). */\nexport function colNumber(letters: string): number {\n  let n = 0;\n  for (const ch of letters.toUpperCase()) {\n    if (ch < \"A\" || ch > \"Z\") return 0;\n    n = n * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return n;\n}"
+  },
+  {
+    "render_block": 198,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L18",
+    "chars": 371,
+    "text": "/** Validate an A1-style ref; returns {col,row} or null. */\nexport function parseRef(ref: unknown): { col: number; row: number } | null {\n  if (typeof ref !== \"string\") return null;\n  const m = REF_RE.exec(ref.toUpperCase());\n  if (!m) return null;\n  const col = colNumber(m[1]);\n  const row = Number(m[2]);\n  if (col < 1 || row < 1) return null;\n  return { col, row };\n}"
+  },
+  {
+    "render_block": 206,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L18",
+    "chars": 349,
+    "text": "workbooksRouter.post(\"/api/workbooks\", (req: Request, res: Response) => {\n  const rawName = typeof req.body?.name === \"string\" ? req.body.name : \"\";\n  const name = rawName.trim();\n  if (!name) {\n    badRequest(res, \"Workbook name cannot be empty\");\n    return;\n  }\n  const wb = makeWorkbook(name);\n  saveWorkbook(wb);\n  res.status(201).json(wb);\n});"
+  },
+  {
+    "render_block": 208,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L18",
+    "chars": 185,
+    "text": "workbooksRouter.get(\"/api/workbooks/:id\", (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  res.json(wb);\n});"
+  },
+  {
+    "render_block": 210,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L18",
+    "chars": 459,
+    "text": "workbooksRouter.patch(\"/api/workbooks/:id\", (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  const rawName = typeof req.body?.name === \"string\" ? req.body.name : \"\";\n  const name = rawName.trim();\n  if (!name) {\n    badRequest(res, \"Workbook name cannot be empty\");\n    return;\n  }\n  wb.name = name;\n  wb.updatedAt = new Date().toISOString();\n  saveWorkbook(wb);\n  res.json(wb);\n});"
+  },
+  {
+    "render_block": 212,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L18",
+    "chars": 1015,
+    "text": "/** Persist last-used UI state (active sheet, active cell, selection). */\nworkbooksRouter.patch(\"/api/workbooks/:id/state\", (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  const body = req.body || {};\n  if (typeof body.activeSheetId === \"string\" && findSheet(wb, body.activeSheetId)) {\n    wb.activeSheetId = body.activeSheetId;\n  }\n  if (typeof body.activeCell === \"string\" && parseRef(body.activeCell)) {\n    wb.activeCell = body.activeCell.toUpperCase();\n  }\n  if (body.selection === null) {\n    wb.selection = null;\n  } else if (\n    body.selection &&\n    typeof body.selection === \"object\" &&\n    parseRef((body.selection as RectSelection).start) &&\n    parseRef((body.selection as RectSelection).end)\n  ) {\n    wb.selection = {\n      start: String(body.selection.start).toUpperCase(),\n      end: String(body.selection.end).toUpperCase(),\n    };\n  }\n  wb.updatedAt = new Date().toISOString();\n  saveWorkbook(wb);\n  res.json(wb);\n});"
+  },
+  {
+    "render_block": 232,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L21",
+    "chars": 315,
+    "text": "export interface Sheet {\n  id: string;\n  name: string;\n  rowCount: number;\n  colCount: number;\n  cells: Record<string, CellData>;\n  validationRules: Array<{ id: string; [k: string]: unknown }>;\n  filterViews: Array<{ id: string; [k: string]: unknown }>;\n  pivotTables: Array<{ id: string; [k: string]: unknown }>;\n}"
+  },
+  {
+    "render_block": 234,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L21",
+    "chars": 202,
+    "text": "export interface Workbook {\n  id: string;\n  name: string;\n  createdAt: string;\n  updatedAt: string;\n  activeSheetId: string;\n  activeCell: string;\n  selection: RectSelection | null;\n  sheets: Sheet[];\n}"
+  },
+  {
+    "render_block": 238,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L21",
+    "chars": 156,
+    "text": "export class ApiError extends Error {\n  status: number;\n  constructor(status: number, message: string) {\n    super(message);\n    this.status = status;\n  }\n}"
+  },
+  {
+    "render_block": 240,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L21",
+    "chars": 379,
+    "text": "async function request<T>(url: string, init?: RequestInit): Promise<T> {\n  const res = await fetch(url, {\n    headers: { \"Content-Type\": \"application/json\" },\n    ...init,\n  });\n  const body = await res.json().catch(() => ({}));\n  if (!res.ok) {\n    throw new ApiError(res.status, (body as { error?: string }).error || `Request failed (${res.status})`);\n  }\n  return body as T;\n}"
+  },
+  {
+    "render_block": 244,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L22",
+    "chars": 250,
+    "text": "/** Home page: workbook list with \"Last updated: <time>\" and named links. */\nexport default function HomePage() {\n  const [workbooks, setWorkbooks] = useState<WorkbookSummary[] | null>(null);\n  const [error, setError] = useState<string | null>(null);"
+  },
+  {
+    "render_block": 246,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L22",
+    "chars": 164,
+    "text": "  useEffect(() => {\n    api\n      .listWorkbooks()\n      .then((r) => setWorkbooks(r.workbooks))\n      .catch(() => setError(\"Failed to load workbooks\"));\n  }, []);"
+  },
+  {
+    "render_block": 250,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L25",
+    "chars": 568,
+    "text": "/**\n * Editor page at the stable, bookmarkable URL /workbook/:id.\n * Refreshing or directly visiting the URL restores the workbook's most\n * recent successful state, including the last active worksheet, active\n * cell and persisted selection.\n */\nexport default function EditorPage() {\n  const { id } = useParams<{ id: string }>();\n  const [workbook, setWorkbook] = useState<Workbook | null>(null);\n  const [error, setError] = useState<string | null>(null);\n  const [selection, setSelection] = useState<GridSelection>({\n    activeCell: \"A1\",\n    selection: null,\n  });"
+  },
+  {
+    "render_block": 252,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L25",
+    "chars": 422,
+    "text": "  useEffect(() => {\n    if (!id) return;\n    let cancelled = false;\n    api\n      .getWorkbook(id)\n      .then((wb) => {\n        if (cancelled) return;\n        setWorkbook(wb);\n        setSelection({\n          activeCell: wb.activeCell || \"A1\",\n          selection: wb.selection ?? null,\n        });\n      })\n      .catch(() => setError(\"Workbook not found\"));\n    return () => {\n      cancelled = true;\n    };\n  }, [id]);"
+  },
+  {
+    "render_block": 254,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L25",
+    "chars": 182,
+    "text": "  const activeSheet = useMemo(() => {\n    if (!workbook) return null;\n    return workbook.sheets.find((s) => s.id === workbook.activeSheetId) ?? workbook.sheets[0];\n  }, [workbook]);"
+  },
+  {
+    "render_block": 256,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L25",
+    "chars": 197,
+    "text": "  const activeCellData: CellData | undefined = useMemo(() => {\n    if (!activeSheet) return undefined;\n    return activeSheet.cells[selection.activeCell];\n  }, [activeSheet, selection.activeCell]);"
+  },
+  {
+    "render_block": 258,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L25",
+    "chars": 482,
+    "text": "  /** Persist last-used UI state (fire-and-forget; failures are non-fatal). */\n  const persistState = useCallback(\n    (next: GridSelection, sheetId?: string) => {\n      if (!workbook) return;\n      api\n        .saveState(workbook.id, {\n          activeSheetId: sheetId ?? workbook.activeSheetId,\n          activeCell: next.activeCell,\n          selection: next.selection,\n        })\n        .then((wb) => setWorkbook(wb))\n        .catch(() => undefined);\n    },\n    [workbook]\n  );"
+  },
+  {
+    "render_block": 262,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L25",
+    "chars": 212,
+    "text": "  const handleActivateSheet = (sheetId: string) => {\n    if (!workbook) return;\n    const next: GridSelection = { activeCell: \"A1\", selection: null };\n    setSelection(next);\n    persistState(next, sheetId);\n  };"
+  },
+  {
+    "render_block": 264,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L25",
+    "chars": 253,
+    "text": "  const handleCommitCell = (ref: string, raw: string | null) => {\n    if (!workbook || !activeSheet) return;\n    api\n      .updateCells(workbook.id, activeSheet.id, [{ ref, raw }])\n      .then((wb) => setWorkbook(wb))\n      .catch(() => undefined);\n  };"
+  },
+  {
+    "render_block": 266,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L25",
+    "chars": 213,
+    "text": "  if (error) {\n    return (\n      <main className=\"home\">\n        <div role=\"alert\" className=\"form-error\">{error}</div>\n        <p>\n          <Link to=\"/\">Back to home</Link>\n        </p>\n      </main>\n    );\n  }"
+  },
+  {
+    "render_block": 274,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L22",
+    "chars": 297,
+    "text": "/** 1-based column number -> letters (\"A\", \"Z\", \"AA\"...). */\nexport function colLetter(index1Based: number): string {\n  let n = index1Based;\n  let s = \"\";\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    s = String.fromCharCode(65 + rem) + s;\n    n = Math.floor((n - 1) / 26);\n  }\n  return s;\n}"
+  },
+  {
+    "render_block": 276,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L22",
+    "chars": 351,
+    "text": "/** \"B3\" -> { col: 2, row: 3 }. */\nexport function parseRef(ref: string): { col: number; row: number } {\n  const m = /^([A-Za-z]+)([0-9]+)$/.exec(ref);\n  if (!m) throw new Error(`Invalid cell ref: ${ref}`);\n  let col = 0;\n  for (const ch of m[1].toUpperCase()) {\n    col = col * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return { col, row: Number(m[2]) };\n}"
+  },
+  {
+    "render_block": 282,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L22",
+    "chars": 374,
+    "text": "/** Normalize a selection (start/end may be in any corner order) to a rect of 1-based coords. */\nexport function selectionRect(start: string, end: string): Rect {\n  const a = parseRef(start);\n  const b = parseRef(end);\n  return {\n    top: Math.min(a.row, b.row),\n    bottom: Math.max(a.row, b.row),\n    left: Math.min(a.col, b.col),\n    right: Math.max(a.col, b.col),\n  };\n}"
+  },
+  {
+    "render_block": 284,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L22",
+    "chars": 187,
+    "text": "export function inRect(ref: string, rect: Rect): boolean {\n  const { col, row } = parseRef(ref);\n  return row >= rect.top && row <= rect.bottom && col >= rect.left && col <= rect.right;\n}"
+  },
+  {
+    "render_block": 288,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L28",
+    "chars": 161,
+    "text": "export interface GridSelection {\n  activeCell: string;\n  /** null = single-cell selection at activeCell. */\n  selection: { start: string; end: string } | null;\n}"
+  },
+  {
+    "render_block": 292,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L28",
+    "chars": 646,
+    "text": "/**\n * ARIA grid of the active worksheet.\n * - grid accessible name \"Worksheet grid\", aria-multiselectable=\"true\"\n * - gridcell accessible name = coordinate (e.g. \"A1\"); aria-selected reflects\n *   membership in the current rectangular selection\n * - rowheader name = row number, columnheader name = column letter\n * Keyboard: arrows move the active cell, Shift+arrows extend the selection.\n */\nexport default function Grid({ sheet, selection, onSelect }: GridProps) {\n  const rect: Rect = selection.selection\n    ? selectionRect(selection.selection.start, selection.selection.end)\n    : selectionRect(selection.activeCell, selection.activeCell);"
+  },
+  {
+    "render_block": 296,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L28",
+    "chars": 209,
+    "text": "  const rows = useMemo(() => Array.from({ length: sheet.rowCount }, (_, i) => i + 1), [sheet.rowCount]);\n  const cols = useMemo(() => Array.from({ length: sheet.colCount }, (_, i) => i + 1), [sheet.colCount]);"
+  },
+  {
+    "render_block": 298,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L28",
+    "chars": 332,
+    "text": "  // Keep the active cell in view and focused during keyboard navigation.\n  const focusActive = () => {\n    const el = cellRefs.current.get(selection.activeCell);\n    if (el && gridRef.current?.contains(document.activeElement)) {\n      el.focus({ preventScroll: false });\n    }\n  };\n  useEffect(focusActive, [selection.activeCell]);"
+  },
+  {
+    "render_block": 300,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L28",
+    "chars": 708,
+    "text": "  const move = (dRow: number, dCol: number, extend: boolean) => {\n    const active = parseRef(selection.activeCell);\n    const newRow = Math.min(Math.max(active.row + dRow, 1), sheet.rowCount);\n    const newCol = Math.min(Math.max(active.col + dCol, 1), sheet.colCount);\n    const nextRef = makeRef(newCol, newRow);\n    if (extend) {\n      // Keep the fixed anchor corner (selection start, or the previous active cell).\n      const anchorRef = selection.selection ? selection.selection.start : selection.activeCell;\n      onSelect({\n        activeCell: nextRef,\n        selection: { start: anchorRef, end: nextRef },\n      });\n    } else {\n      onSelect({ activeCell: nextRef, selection: null });\n    }\n  };"
+  },
+  {
+    "render_block": 302,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L28",
+    "chars": 979,
+    "text": "  const onKeyDown = (e: React.KeyboardEvent) => {\n    if (e.shiftKey) {\n      switch (e.key) {\n        case \"ArrowUp\":\n          e.preventDefault();\n          move(-1, 0, true);\n          return;\n        case \"ArrowDown\":\n          e.preventDefault();\n          move(1, 0, true);\n          return;\n        case \"ArrowLeft\":\n          e.preventDefault();\n          move(0, -1, true);\n          return;\n        case \"ArrowRight\":\n          e.preventDefault();\n          move(0, 1, true);\n          return;\n      }\n    } else {\n      switch (e.key) {\n        case \"ArrowUp\":\n          e.preventDefault();\n          move(-1, 0, false);\n          return;\n        case \"ArrowDown\":\n          e.preventDefault();\n          move(1, 0, false);\n          return;\n        case \"ArrowLeft\":\n          e.preventDefault();\n          move(0, -1, false);\n          return;\n        case \"ArrowRight\":\n          e.preventDefault();\n          move(0, 1, false);\n          return;\n      }\n    }\n  };"
+  },
+  {
+    "render_block": 304,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L28",
+    "chars": 284,
+    "text": "  const onCellMouseDown = (e: React.MouseEvent, ref: string) => {\n    if (e.shiftKey && selection.selection) {\n      onSelect({ activeCell: ref, selection: { start: selection.selection.start, end: ref } });\n    } else {\n      onSelect({ activeCell: ref, selection: null });\n    }\n  };"
+  },
+  {
+    "render_block": 310,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L46",
+    "chars": 352,
+    "text": "/**\n * Formula bar: a labelled text box showing the active cell's raw content\n * (the original formula/input). Enter commits the edited content to the\n * server; Escape discards the draft.\n */\nexport default function FormulaBar({ activeCell, cell, onCommit }: FormulaBarProps) {\n  const raw = cell?.raw ?? \"\";\n  const [draft, setDraft] = useState(raw);"
+  },
+  {
+    "render_block": 320,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L94",
+    "chars": 164,
+    "text": "if (!process.env.BASE_URL || !process.env.BROWSER_EXECUTABLE_PATH) {\n  throw new Error('Set BASE_URL and BROWSER_EXECUTABLE_PATH before running browser checks.');\n}"
+  },
+  {
+    "render_block": 324,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L36",
+    "chars": 184,
+    "text": "/**\n * Shared helpers for workbook checks.\n * The server under test must be started with a fresh temp DATA_DIR so the\n * seed (workbook \"Q3 Sales\" / Sheet1 / A1=Region) is present.\n */"
+  },
+  {
+    "render_block": 326,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L36",
+    "chars": 160,
+    "text": "export async function openHome(page: Page) {\n  await page.goto(\"/\");\n  const list = page.getByRole(\"list\");\n  await expect(list).toBeVisible();\n  return list;\n}"
+  },
+  {
+    "render_block": 328,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L36",
+    "chars": 281,
+    "text": "/** Click a named workbook link on the home page and wait for the editor. */\nexport async function openWorkbook(page: Page, name: string) {\n  await page.getByRole(\"link\", { name, exact: true }).click();\n  await expect(page.getByRole(\"heading\", { level: 1, name })).toBeVisible();\n}"
+  },
+  {
+    "render_block": 400,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L39",
+    "chars": 303,
+    "text": "  const item = list.getByRole(\"listitem\").filter({ hasText: \"Q3 Sales\" });\n  await expect(item).toHaveCount(1);\n  await expect(item.getByRole(\"link\", { name: \"Q3 Sales\", exact: true })).toBeVisible();\n  await expect(item.getByText(/Last updated: \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/)).toBeVisible();\n});"
+  },
+  {
+    "render_block": 404,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L39",
+    "chars": 206,
+    "text": "  // Stable, bookmarkable URL + title + Last updated.\n  await expect(page).toHaveURL(/\\/workbook\\/[^/]+$/);\n  await expect(page.getByText(/Last updated: \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/)).toBeVisible();"
+  },
+  {
+    "render_block": 406,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L39",
+    "chars": 154,
+    "text": "  // Worksheet tabs: Sheet1 active.\n  const tab = page.getByRole(\"tab\", { name: \"Sheet1\" });\n  await expect(tab).toHaveAttribute(\"aria-selected\", \"true\");"
+  },
+  {
+    "render_block": 408,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L39",
+    "chars": 290,
+    "text": "  // Grid + seeded A1 value.\n  const grid = page.getByRole(\"grid\", { name: \"Worksheet grid\" });\n  await expect(grid).toBeVisible();\n  const a1 = grid.getByRole(\"gridcell\", { name: \"A1\" });\n  await expect(a1).toHaveText(\"Region\");\n  await expect(a1).toHaveAttribute(\"aria-selected\", \"true\");"
+  },
+  {
+    "render_block": 412,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L39",
+    "chars": 182,
+    "text": "test(\"direct editor URL access and refresh restore the same workbook\", async ({ page }) => {\n  await openHome(page);\n  await openWorkbook(page, \"Q3 Sales\");\n  const url = page.url();"
+  },
+  {
+    "render_block": 414,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L39",
+    "chars": 259,
+    "text": "  await page.reload();\n  await expect(page.getByRole(\"heading\", { level: 1, name: \"Q3 Sales\" })).toBeVisible();\n  const grid = page.getByRole(\"grid\", { name: \"Worksheet grid\" });\n  await expect(grid.getByRole(\"gridcell\", { name: \"A1\" })).toHaveText(\"Region\");"
+  },
+  {
+    "render_block": 422,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L42",
+    "chars": 358,
+    "text": "  // Create page with \"Create\" submit button.\n  await expect(page.getByRole(\"button\", { name: \"Create\" })).toBeVisible();\n  const nameInput = page.getByLabel(\"Workbook name\");\n  await expect(nameInput).toBeVisible();\n  const uniqueName = `Blank ${Date.now()}`;\n  await nameInput.fill(uniqueName);\n  await page.getByRole(\"button\", { name: \"Create\" }).click();"
+  },
+  {
+    "render_block": 424,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L42",
+    "chars": 560,
+    "text": "  // Editor opens with only a blank Sheet1, active, A1 selected.\n  await expect(page.getByRole(\"heading\", { level: 1, name: uniqueName })).toBeVisible();\n  await expect(page.getByRole(\"tab\", { name: \"Sheet1\" })).toHaveAttribute(\"aria-selected\", \"true\");\n  const grid = page.getByRole(\"grid\", { name: \"Worksheet grid\" });\n  await expect(grid.getByRole(\"gridcell\", { name: \"A1\" })).toHaveText(\"\");\n  await expect(grid.getByRole(\"gridcell\", { name: \"A1\" })).toHaveAttribute(\"aria-selected\", \"true\");\n  await expect(page.getByLabel(\"Formula bar\")).toHaveValue(\"\");"
+  },
+  {
+    "render_block": 426,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L42",
+    "chars": 379,
+    "text": "  // Refresh restores the same workbook state.\n  await page.reload();\n  await expect(page.getByRole(\"heading\", { level: 1, name: uniqueName })).toBeVisible();\n  await expect(page.getByRole(\"tab\", { name: \"Sheet1\" })).toHaveAttribute(\"aria-selected\", \"true\");\n  await expect(page.getByRole(\"grid\", { name: \"Worksheet grid\" }).getByRole(\"gridcell\", { name: \"A1\" })).toHaveText(\"\");"
+  },
+  {
+    "render_block": 428,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L42",
+    "chars": 511,
+    "text": "  // Home page now lists the new workbook with its own Last updated entry.\n  await page.getByRole(\"link\", { name: \"Home\" }).click();\n  const item = page.getByRole(\"listitem\").filter({ hasText: uniqueName });\n  await expect(item).toHaveCount(1);\n  await expect(item.getByText(/Last updated: \\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}/)).toBeVisible();\n  await item.getByRole(\"link\", { name: uniqueName, exact: true }).click();\n  await expect(page.getByRole(\"heading\", { level: 1, name: uniqueName })).toBeVisible();\n});"
+  },
+  {
+    "render_block": 440,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L29",
+    "chars": 381,
+    "text": "Use Playwright Test for checks that must run again with the same intended meaning.\nUse agent-browser for exploratory interaction and quick reproduction when a test is not yet useful.\nChoose the behavior and expected result from the requirements before choosing a locator or assertion.\nThe svc-verification skill provides methods for designing checks and interpreting their results."
+  },
+  {
+    "render_block": 442,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L29",
+    "chars": 410,
+    "text": "Playwright Test and its matching Chromium are already installed.\nThe `playwright` command runs the installed test runner; `BROWSER_CHECK_NODE_MODULES` points to its dependencies and `BROWSER_EXECUTABLE_PATH` to the browser.\nIf the application already has a suitable test project, use its explicit dependencies and configuration.\nOtherwise create a small test directory with ordinary Node dependency resolution:"
+  },
+  {
+    "render_block": 444,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L29",
+    "chars": 420,
+    "text": "```sh\nmkdir -p checks\n# Preserve existing ignore rules. This entry keeps the local dependency link out of Git.\nprintf '/node_modules/\\n' >> checks/.gitignore\nln -s \"$BROWSER_CHECK_NODE_MODULES\" checks/node_modules\n# Copy assets/playwright.config.ts from this skill into checks/.\nBASE_URL=http://127.0.0.1:4100 CHECK_OUTPUT_DIR=\"results/$(date +%Y%m%dT%H%M%S)\" \\\n  playwright test --config checks/playwright.config.ts\n```"
+  },
+  {
+    "render_block": 446,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L29",
+    "chars": 1128,
+    "text": "Create the link only when that directory has no node_modules; do not replace existing dependencies.\nCommit checks and the necessary config/ignore rules, not the runtime link, results, or browser state.\nStart the application's intended candidate with the required initial state and a free development port before running the checks.\nWhen checking a promised default state, observe it before adding test data.\nRun service and checks from their intended working directories with explicit environment values, including the URL the check will visit. Keep the service's job or process identity and full logs, then stop that service after use.\nWhere pi-background-bash is available, use its `background: true` for a long-running service and its completion message for a finite check; `pbb status <ID>` and `pbb tail <ID> --full` expose the recorded exit and full log. Do not poll with `sleep` or use a sub-agent wait for a PBB job. A shell pipeline ending in `tail` or `echo` can hide the check's exit status; preserve the original status (for example with Bash `set -o pipefail`) and inspect the first error before summarizing output."
+  },
+  {
+    "render_block": 448,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L38",
+    "chars": 556,
+    "text": "Read [writing checks](references/writing-checks.md) for scoped locators, meaningful waiting, setup, repeatability, and failure diagnosis.\nCopy [the standard config example](assets/playwright.config.ts) and adjust it to the application, rather than building a test framework or parsing browser snapshots in shell scripts.\nUse a new output directory for each run when retaining earlier failures: Playwright clears its selected output directory.\nKeep the original test error and process exit status; a command that launched successfully is not a passed check."
+  },
+  {
+    "render_block": 464,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L94",
+    "chars": 164,
+    "text": "if (!process.env.BASE_URL || !process.env.BROWSER_EXECUTABLE_PATH) {\n  throw new Error('Set BASE_URL and BROWSER_EXECUTABLE_PATH before running browser checks.');\n}"
+  },
+  {
+    "render_block": 502,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 238,
+    "text": "Import `test` and `expect` from `@playwright/test` in a `*.spec.ts` file.\nUse `page.getByRole`, `getByLabel`, or another locator tied to the intended user-visible object.\nScope a repeated name to its actual region or object before acting:"
+  },
+  {
+    "render_block": 504,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 318,
+    "text": "```ts\nconst preferences = page.getByRole('region', { name: 'Preferences', exact: true });\nawait preferences.getByLabel('Display name', { exact: true }).fill('New name');\nawait preferences.getByRole('button', { name: 'Save', exact: true }).click();\nawait expect(preferences.getByRole('status')).toHaveText('Saved');\n```"
+  },
+  {
+    "render_block": 506,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 491,
+    "text": "These names illustrate the API; use the real requirements and interface, not these strings.\nFinding a control and successfully clicking it only prove the action was possible.\nA success message does not prove persistence: if the requirement promises saved preferences at the next login, end the old session, authenticate again, read the value, and compare it with the expected value.\nAn internal database check may help diagnose failure without proving that the user can complete the journey."
+  },
+  {
+    "render_block": 508,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 359,
+    "text": "When a locator matches multiple elements, inspect their identity and scope.\nDo not use `.first()` merely to silence the error.\nIf uniqueness, role, wording, or navigation is explicitly required, retain it as a check; otherwise allow legitimate implementation differences.\nAvoid asserting an internal URL or DOM structure just because the current code uses it."
+  },
+  {
+    "render_block": 512,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 450,
+    "text": "Locator actions wait for actionability, while `await expect(locator)` retries its assertion until the expected condition or timeout.\nUse `toBeVisible`, `toHaveText`, `toHaveValue`, `toHaveCount`, or `expect(page).toHaveURL` when that observation represents the requirement.\nAvoid fixed sleeps and broad `networkidle` waits for applications with background traffic.\nRegister a response wait before the triggering action if the response itself matters:"
+  },
+  {
+    "render_block": 514,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 196,
+    "text": "```ts\nconst response = page.waitForResponse(r => r.url().endsWith('/api/preferences') && r.request().method() === 'POST');\nawait saveButton.click();\nexpect((await response).ok()).toBeTruthy();\n```"
+  },
+  {
+    "render_block": 516,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 213,
+    "text": "An HTTP success is not a substitute for checking the promised user-visible result.\nChoose timeout values from the operation's real latency; increasing a timeout does not repair a wrong locator or missing behavior."
+  },
+  {
+    "render_block": 520,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 448,
+    "text": "Keep a continuous user journey in one `test`, optionally with `test.step` labels.\nIf login fails, later dependent actions did not run; do not report them as passed or as separate product failures.\nFor independent tests, construct each test's necessary state through fixtures or other explicit setup.\nUse Playwright project dependencies when shared setup truly warrants them, not a chain of tests that silently requires a particular execution order."
+  },
+  {
+    "render_block": 522,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 752,
+    "text": "Each test's browser context isolates cookies and storage; it does not reset the application's database, files, or other servers.\nUse distinct data or an explicit reset procedure when those states affect repeatability.\nSeparate testing login from using an already authenticated identity as setup for another behavior.\nAPI setup is legitimate when it preserves the conditions being tested, but cannot stand in for a required UI creation flow.\nIf the requirement includes initial data or a default state, check that state before any setup that could manufacture it. A test that creates its own equivalent data can establish the later operation, but not the promised starting condition.\nUse one worker until test data can safely support parallel execution."
+  },
+  {
+    "render_block": 526,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 470,
+    "text": "Read the first relevant error: the operation, expected condition, actual observation, and candidate/application logs.\nDistinguish a product violation from a broken setup, mistaken check, or missing information using an observation that can separate the explanations.\nRevise an assertion only with a requirement-based reason; making the current implementation pass is not that reason.\nDo not catch assertion failures and print PASS, or mistake skipped tests for evidence."
+  },
+  {
+    "render_block": 528,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L95",
+    "chars": 585,
+    "text": "The example config retains traces and screenshots on failure with no automatic test retry.\nUse `playwright show-trace path/to/trace.zip` to inspect an available trace; `trace.zip` and the original command output can also be handed to another investigator.\nTrace data may include the application's test data and network observations; retain it with this run's evidence.\nRerun with a new output directory so the old failure remains available.\nRecord the tested candidate and service entry alongside results using the project's existing work notes; do not create another reporting system."
+  },
+  {
+    "render_block": 530,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f7-8ba4-73f2-a124-6f29693c91f5/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L47",
+    "chars": 233,
+    "text": "References: [locators](https://playwright.dev/docs/locators), [assertions](https://playwright.dev/docs/test-assertions), [fixtures](https://playwright.dev/docs/test-fixtures), [trace viewer](https://playwright.dev/docs/trace-viewer)."
+  },
+  {
+    "render_block": 1974,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L36",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  },
+  {
+    "render_block": 1994,
+    "source": "continuation02-root-native/047-2026-09-28T05-43-33-723Z_01a0e68a-3a5b-7209-906f-c1c240bd43ae.jsonl:L18",
+    "chars": 365,
+    "text": "/**\n * Every spec file runs against its own freshly seeded server instance (see\n * run.sh), so each check observes the promised initial state and mutating\n * checks cannot leak into others.\n */\nfunction required(name: string): string {\n  const value = process.env[name];\n  if (!value) throw new Error(`Set ${name} before running browser checks.`);\n  return value;\n}"
+  }
+]

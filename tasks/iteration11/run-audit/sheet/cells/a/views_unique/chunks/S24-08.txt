@@ -1,0 +1,156 @@
+  const res = await request(app)\n+375       .put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`)\n+376       .send({ rowCount: 4, colCount: 3, minRows: 5, minCols: 3 });\n+377     expect(res.status).toBe(400);\n+378     expect(res.body.error.code).toBe('INVALID_BODY');\n+379 \n+380     const snapshot = await request(app).get(`/api/workbooks/${SEED_WORKBOOK_ID}`);\n+381     expect(snapshot.body.worksheets[0]).toMatchObject({ rowCount: 6, minRows: null });\n+382   });\n 349 });\n 350 \n 351 describe('POST /api/workbooks/import', () => {\n 352   it('creates a workbook named after the file and imports every row and column', async () => {\n     ...", "firstChangedLine": 329, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n@@ -325,9 +325,8 @@\n     expect(res.body.worksheet.lastSelection).toMatchObject({ r1: 4, c1: 1 });\n   });\n \n   it('rejects a snapshot whose cells exceed the reported structure (no silent growth)', async () => {\n-    const app = appFor(freshDb());\n     const res = await request(app)\n       .put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`)\n       .send({\n         rowCount: 4,\n@@ -345,8 +344,43 @@\n     const sheet1 = snapshot.body.worksheets[0];\n     expect(sheet1.rowCount).toBe(6);\n     expect(sheet1.cells).toContainEqual([0, 0, 'Region']);\n   });\n+\n+  it('treats an absent import footprint as unchanged and null as cleared', async () => {\n+    const app = appFor(freshDb());\n+    const state = (body) =>\n+      request(app).put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`).send(body);\n+\n+    const set = await state({ minRows: 2, minCols: 3 });\n+    expect(set.status).toBe(200);\n+    expect(set.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n+\n+    // `undefined` = keep the current value: replaying an older snapshot (or any\n+    // payload that never mentions the footprint) must not erase it.\n+    const replay = await state({ cells: [[0, 0, 'Only']] });\n+    expect(replay.status).toBe(200);\n+    expect(replay.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });\n+\n+    const snapshot = await request(app).get(`/api/workbooks/${SEED_WORKBOOK_ID}`);\n+    expect(snapshot.body.worksheets[0]).toMatchObject({ minRows: 2, minCols: 3 });\n+\n+    const cleared = await state({ minRows: null, minCols: null });\n+    expect(cleared.status).toBe(200);\n+    expect(cleared.body.worksheet).toMatchObject({ minRows: null, minCols: null });\n+  });\n+\n+  it('rejects an import footprint that exceeds the reported structure and rolls back', async () => {\n+    const app = appFor(freshDb());\n+    const res = await request(app)\n+      .put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`)\n+      .send({ rowCount: 4, colCount: 3, minRows: 5, minCols: 3 });\n+    expect(res.status).toBe(400);\n+    expect(res.body.error.code).toBe('INVALID_BODY');\n+\n+    const snapshot = await request(app).get(`/api/workbooks/${SEED_WORKBOOK_ID}`);\n+    expect(snapshot.body.worksheets[0]).toMatchObject({ rowCount: 6, minRows: null });\n+  });\n });\n \n describe('POST /api/workbooks/import', () => {\n   it('creates a workbook named after the file and imports every row and column', async () => {\n"}
+
+## S24:L86 2026-09-29T06:33:43.711Z message assistant
+[thinking]
+Oops: my first edit removed the line `const app = appFor(freshDb());` from the "rejects a snapshot whose cells exceed" test — I intended to keep it. Let me check the current state of that test.
+My first edit: oldText included `const app = appFor(freshDb());` and newText dropped it → the test now uses `app` undefined. That was a mistake (I must have intended to restructure). Let me view and fix.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L86:C1]
+[toolCall] bash call_00_vdyYnFs7smZUPvWrvMkF9587
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '306,410p' backend/src/app.test.js"}
+
+## S24:L87 2026-09-29T06:33:43.725Z message toolResult
+toolResult bash False
+[text]
+  it('treats an absent import footprint as unchanged and null as cleared', async () => {
+    const state = (body) =>
+      request(app).put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`).send(body);
+    const set = await state({ minRows: 2, minCols: 3 });
+    expect(set.status).toBe(200);
+    expect(set.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });
+    // `undefined` = keep the current value: replaying an older snapshot (or any
+    // payload that never mentions the footprint) must not erase it.
+    const replay = await state({ cells: [[0, 0, 'Only']] });
+    expect(replay.status).toBe(200);
+    expect(replay.body.worksheet).toMatchObject({ minRows: 2, minCols: 3 });
+    expect(snapshot.body.worksheets[0]).toMatchObject({ minRows: 2, minCols: 3 });
+    const cleared = await state({ minRows: null, minCols: null });
+    expect(cleared.status).toBe(200);
+    expect(cleared.body.worksheet).toMatchObject({ minRows: null, minCols: null });
+  it('rejects an import footprint that exceeds the reported structure and rolls back', async () => {
+      .send({ rowCount: 4, colCount: 3, minRows: 5, minCols: 3 });
+    expect(snapshot.body.worksheets[0]).toMatchObject({ rowCount: 6, minRows: null });
+    expect(sheet).toMatchObject({ name: 'Sheet1', isActive: true, minRows: 3, minCols: 2 });
+    expect(snapshot.body.worksheets[0].cells).toEqual(sheet.cells);
+[DUPLICATES: 85 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L87:C1]
+
+## S24:L88 2026-09-29T06:33:45.469Z message assistant
+[toolCall] edit call_00_ET_uVWl5Aus5va2A7zIo5jd6521
+{"edits": [{"newText": "  it('rejects a snapshot whose cells exceed the reported structure (no silent growth)', async () => {\n    const app = appFor(freshDb());\n    const res = await request(app)", "oldText": "  it('rejects a snapshot whose cells exceed the reported structure (no silent growth)', async () => {\n    const res = await request(app)"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js"}
+
+## S24:L89 2026-09-29T06:33:45.474Z message toolResult
+toolResult edit False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L89:C1]
+[details]
+{"diff": "     ...\n 325     expect(res.body.worksheet.lastSelection).toMatchObject({ r1: 4, c1: 1 });\n 326   });\n 327 \n 328   it('rejects a snapshot whose cells exceed the reported structure (no silent growth)', async () => {\n+329     const app = appFor(freshDb());\n 329     const res = await request(app)\n 330       .put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`)\n 331       .send({\n 332         rowCount: 4,\n     ...", "firstChangedLine": 329, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n@@ -325,8 +325,9 @@\n     expect(res.body.worksheet.lastSelection).toMatchObject({ r1: 4, c1: 1 });\n   });\n \n   it('rejects a snapshot whose cells exceed the reported structure (no silent growth)', async () => {\n+    const app = appFor(freshDb());\n     const res = await request(app)\n       .put(`/api/workbooks/${SEED_WORKBOOK_ID}/worksheets/${SEED_SHEET1_ID}/state`)\n       .send({\n         rowCount: 4,\n"}
+
+## S24:L90 2026-09-29T06:33:46.900Z message assistant
+[thinking]
+Now frontend tests: update `sheet()` fixture in csvExport.test.ts and cellDisplay.test.ts to include minRows/minCols. Let me view cellDisplay.test.ts's fixture and csvExport.test.ts remainder.
+[toolCall] bash call_00_sclsXN95tZOfdflZufu83267
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '1,25p' frontend/src/lib/cellDisplay.test.ts; echo \"=== csvExport.test 60-160 ===\"; sed -n '60,160p' frontend/src/lib/csvExport.test.ts"}
+
+## S24:L91 2026-09-29T06:33:46.917Z message toolResult
+toolResult bash False
+[text]
+=== csvExport.test 60-160 ===
+    expect(csv).toBe('Region,Sales,Status\nEast,1200,Open\nNorth,800,Closed\nSouth,700,Open');
+    expect(csv.endsWith('\n')).toBe(false);
+    expect(csv).toBe('a,,\n,,\n,,c');
+    expect(csv).toBe('"comma,value","quote""value","line\nbreak"');
+    expect(csv).toBe('a,,\n,,c');
+    expect(csv).toBe('2,plain');
+[DUPLICATES: 92 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L91:C1]
+
+## S24:L92 2026-09-29T06:33:50.979Z message assistant
+[toolCall] edit call_00_ET_NcvkkbHaP1Q4tnRGVmXv6483
+{"edits": [{"newText": "function sheet(\n  cells: CellEntry[],\n  rowCount = 6,\n  colCount = 26,\n  footprint: { minRows: number | null; minCols: number | null } = { minRows: null, minCols: null },\n): WorksheetSnapshot {\n  return {\n    id: 'ws-1',\n    name: 'Sheet1',\n    position: 0,\n    isActive: true,\n    rowCount,\n    colCount,\n    ...footprint,\n    cells,", "oldText": "function sheet(cells: CellEntry[], rowCount = 6, colCount = 26): WorksheetSnapshot {\n  return {\n    id: 'ws-1',\n    name: 'Sheet1',\n    position: 0,\n    isActive: true,\n    rowCount,\n    colCount,\n    cells,"}, {"newText": "  it('exports an empty string for a worksheet with no content and no import footprint', () => {\n    expect(worksheetToCsv(sheet([]))).toBe('');\n    // Explicit empty cells (`raw === ''`) are not content.\n    expect(worksheetToCsv(sheet([[0, 0, '']]))).toBe('');\n  });\n\n  it('honours the import footprint so trailing empty fields survive a round trip', () => {\n    // Contract v1.3 / A-4: `a,b\\nc,d,` parses to 2 x 3 (ragged padding), so the\n    // import records minRows=2/minCols=3 and the export keeps the third field\n    // even though it lies outside the non-empty bounding box (2 x 2).\n    const csv = worksheetToCsv(\n      sheet(\n        [\n          [0, 0, 'a'],\n          [0, 1, 'b'],\n          [1, 0, 'c'],\n          [1, 1, 'd'],\n        ],\n        6,\n        26,\n        { minRows: 2, minCols: 3 },\n      ),\n    );\n    expect(csv).toBe('a,b,\\nc,d,');\n  });\n\n  it('uses max(used range, footprint) and never shrinks below the footprint', () => {\n    // Content wider than the footprint: the bounding box wins on that axis.\n    const wide = worksheetToCsv(\n      sheet([[0, 0, 'a'], [0, 3, 'd']], 6, 26, { minRows: 2, minCols: 1 }),\n    );\n    expect(wide).toBe('a,,,d\\n,,,');\n  });\n\n  it('exports the footprint empty fields when every cell was cleared (footprint wins)', () => {\n    // Contract v1.3 §4: \"no content -> empty file\" only when bounding box and\n    // footprint are both empty; a live footprint still exports its empty fields.\n    expect(worksheetToCsv(sheet([], 6, 26, { minRows: 2, minCols: 3 }))).toBe(',,\\n,,');\n  });", "oldText": "  it('exports an empty string for a worksheet with no content', () => {\n    expect(worksheetToCsv(sheet([]))).toBe('');\n    // Explicit empty cells (`raw === ''`) are not content.\n    expect(worksheetToCsv(sheet([[0, 0, '']]))).toBe('');\n  });"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts"}
+
+## S24:L93 2026-09-29T06:33:50.984Z message toolResult
+toolResult edit False
+[text]
+Successfully replaced 2 block(s) in /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts.
+[details]
+{"diff": "   1 import { describe, expect, it } from 'vitest';\n   2 import type { CellEntry, WorksheetSnapshot } from '../../../shared/types';\n   3 import { csvFileName, escapeCsvField, worksheetToCsv } from './csvExport';\n   4 \n-  5 function sheet(cells: CellEntry[], rowCount = 6, colCount = 26): WorksheetSnapshot {\n+  5 function sheet(\n+  6   cells: CellEntry[],\n+  7   rowCount = 6,\n+  8   colCount = 26,\n+  9   footprint: { minRows: number | null; minCols: number | null } = { minRows: null, minCols: null },\n+ 10 ): WorksheetSnapshot {\n   6   return {\n   7     id: 'ws-1',\n   8     name: 'Sheet1',\n   9     position: 0,\n  10     isActive: true,\n  11     rowCount,\n  12     colCount,\n+ 18     ...footprint,\n  13     cells,\n  14     lastSelection: null,\n  15     validations: [],\n  16     filters: [],\n     ...\n  74     );\n  75     expect(csv).toBe('a,,\\n,,\\n,,c');\n  76   });\n  77 \n- 78   it('exports an empty string for a worksheet with no content', () => {\n+ 84   it('exports an empty string for a worksheet with no content and no import footprint', () => {\n  79     expect(worksheetToCsv(sheet([]))).toBe('');\n  80     // Explicit empty cells (`raw === ''`) are not content.\n  81     expect(worksheetToCsv(sheet([[0, 0, '']]))).toBe('');\n  82   });\n  83 \n+ 90   it('honours the import footprint so trailing empty fields survive a round trip', () => {\n+ 91     // Contract v1.3 / A-4: `a,b\\nc,d,` parses to 2 x 3 (ragged padding), so the\n+ 92     // import records minRows=2/minCols=3 and the export keeps the third field\n+ 93     // even though it lies outside the non-empty bounding box (2 x 2).\n+ 94     const csv = worksheetToCsv(\n+ 95       sheet(\n+ 96         [\n+ 97           [0, 0, 'a'],\n+ 98           [0, 1, 'b'],\n+ 99           [1, 0, 'c'],\n+100           [1, 1, 'd'],\n+101         ],\n+102         6,\n+103         26,\n+104         { minRows: 2, minCols: 3 },\n+105       ),\n+106     );\n+107     expect(csv).toBe('a,b,\\nc,d,');\n+108   });\n+109 \n+110   it('uses max(used range, footprint) and never shrinks below the footprint', () => {\n+111     // Content wider than the footprint: the bounding box wins on that axis.\n+112     const wide = worksheetToCsv(\n+113       sheet([[0, 0, 'a'], [0, 3, 'd']], 6, 26, { minRows: 2, minCols: 1 }),\n+114     );\n+115     expect(wide).toBe('a,,,d\\n,,,');\n+116   });\n+117 \n+118   it('exports the footprint empty fields when every cell was cleared (footprint wins)', () => {\n+119     // Contract v1.3 §4: \"no content -> empty file\" only when bounding box and\n+120     // footprint are both empty; a live footprint still exports its empty fields.\n+121     expect(worksheetToCsv(sheet([], 6, 26, { minRows: 2, minCols: 3 }))).toBe(',,\\n,,');\n+122   });\n+123 \n  84   it('escapes in place without changing row/column order', () => {\n  85     const csv = worksheetToCsv(\n  86       sheet([\n  87         [0, 0, 'comma,value'],\n     ...", "firstChangedLine": 5, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/csvExport.test.ts\n@@ -1,16 +1,22 @@\n import { describe, expect, it } from 'vitest';\n import type { CellEntry, WorksheetSnapshot } from '../../../shared/types';\n import { csvFileName, escapeCsvField, worksheetToCsv } from './csvExport';\n \n-function sheet(cells: CellEntry[], rowCount = 6, colCount = 26): WorksheetSnapshot {\n+function sheet(\n+  cells: CellEntry[],\n+  rowCount = 6,\n+  colCount = 26,\n+  footprint: { minRows: number | null; minCols: number | null } = { minRows: null, minCols: null },\n+): WorksheetSnapshot {\n   return {\n     id: 'ws-1',\n     name: 'Sheet1',\n     position: 0,\n     isActive: true,\n     rowCount,\n     colCount,\n+    ...footprint,\n     cells,\n     lastSelection: null,\n     validations: [],\n     filters: [],\n@@ -74,14 +80,48 @@\n     );\n     expect(csv).toBe('a,,\\n,,\\n,,c');\n   });\n \n-  it('exports an empty string for a worksheet with no content', () => {\n+  it('exports an empty string for a worksheet with no content and no import footprint', () => {\n     expect(worksheetToCsv(sheet([]))).toBe('');\n     // Explicit empty cells (`raw === ''`) are not content.\n     expect(worksheetToCsv(sheet([[0, 0, '']]))).toBe('');\n   });\n \n+  it('honours the import footprint so trailing empty fields survive a round trip', () => {\n+    // Contract v1.3 / A-4: `a,b\\nc,d,` parses to 2 x 3 (ragged padding), so the\n+    // import records minRows=2/minCols=3 and the export keeps the third field\n+    // even though it lies outside the non-empty bounding box (2 x 2).\n+    const csv = worksheetToCsv(\n+      sheet(\n+        [\n+          [0, 0, 'a'],\n+          [0, 1, 'b'],\n+          [1, 0, 'c'],\n+          [1, 1, 'd'],\n+        ],\n+        6,\n+        26,\n+        { minRows: 2, minCols: 3 },\n+      ),\n+    );\n+    expect(csv).toBe('a,b,\\nc,d,');\n+  });\n+\n+  it('uses max(used range, footprint) and never shrinks below the footprint', () => {\n+    // Content wider than the footprint: the bounding box wins on that axis.\n+    const wide = worksheetToCsv(\n+      sheet([[0, 0, 'a'], [0, 3, 'd']], 6, 26, { minRows: 2, minCols: 1 }),\n+    );\n+    expect(wide).toBe('a,,,d\\n,,,');\n+  });\n+\n+  it('exports the footprint empty fields when every cell was cleared (footprint wins)', () => {\n+    // Contract v1.3 §4: \"no content -> empty file\" only when bounding box and\n+    // footprint are both empty; a live footprint still exports its empty fields.\n+    expect(worksheetToCsv(sheet([], 6, 26, { minRows: 2, minCols: 3 }))).toBe(',,\\n,,');\n+  });\n+\n   it('escapes in place without changing row/column order', () => {\n     const csv = worksheetToCsv(\n       sheet([\n         [0, 0, 'comma,value'],\n"}
+
+## S24:L94 2026-09-29T06:33:53.649Z message assistant
+[thinking]
+Wait, the "wide" case: sheet with cells [0,0,'a'],[0,3,'d'], footprint {minRows:2, minCols:1}. rowSpan = max(0+1, 2) = 2; colSpan = max(3+1, 1) = 4. Rows: row0 = a,,,d ; row1 = ,,, . So 'a,,,d\n,,,'. My expectation wrote `'a,,,d\n,,,'` — yes 3 commas for row1? row1 has 4 empty fields → ',,' = 3 commas... wait 4 empty fields joined by ',' = ',,,' (3 commas). Yes correct.
+Now cellDisplay.test.ts fixture needs minRows/minCols.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L94:C1]
+[toolCall] edit call_00_4WqP4Ncn6PYsZPzHsuMr3639
+{"edits": [{"newText": "    rowCount: 6,\n    colCount: 26,\n    minRows: null,\n    minCols: null,\n    cells,", "oldText": "    rowCount: 6,\n    colCount: 26,\n    cells,"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/cellDisplay.test.ts"}
+
+## S24:L95 2026-09-29T06:33:53.672Z message toolResult
+toolResult edit False
+[text]
+Successfully replaced 1 block(s) in /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/cellDisplay.test.ts.
+[details]
+{"diff": "    ...\n  9     position: 0,\n 10     isActive: true,\n 11     rowCount: 6,\n 12     colCount: 26,\n+13     minRows: null,\n+14     minCols: null,\n 13     cells,\n 14     lastSelection: null,\n 15     validations: [],\n 16     filters: [],\n    ...", "firstChangedLine": 13, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/cellDisplay.test.ts\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/cellDisplay.test.ts\n@@ -9,8 +9,10 @@\n     position: 0,\n     isActive: true,\n     rowCount: 6,\n     colCount: 26,\n+    minRows: null,\n+    minCols: null,\n     cells,\n     lastSelection: null,\n     validations: [],\n     filters: [],\n"}
+
+## S24:L96 2026-09-29T06:33:56.715Z message assistant
+[thinking]
+Now check WorkbookLifecycle.test.tsx — does it construct worksheets? Earlier grep for "WorksheetSnapshot" showed no match in that file, so it probably mocks the API client. Let me check quickly for `rowCount` objects it may build... it likely uses mocked api responses typed loosely. Let me grep "minRows\|rowCount" there.
+Also check `frontend/src/api/client.ts:56` `worksheet: WorksheetSnapshot` — fine.
+Also any test that stubs a worksheet snapshot for WorkbookEditor? Let me grep for "worksheets:".
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L96:C1]
+[toolCall] bash call_00_wXwtqhh97eyXwtf5xQBr6990
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && grep -rn \"rowCount\\|worksheets:\" frontend/src/components/WorkbookLifecycle.test.tsx | head -20"}
+[toolCall] bash call_01_lscGmV3Yyi2SGdAqUmNo9777
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '1,90p' e2e/workbook-lifecycle.spec.ts"}
+
+## S24:L97 2026-09-29T06:33:56.754Z message toolResult
+toolResult bash False
+[text]
+17:  worksheets: [],
+202:        rowCount={1}
+
+## S24:L98 2026-09-29T06:33:56.754Z message toolResult
+toolResult bash False
+[text]
+import type { Page } from '@playwright/test';
+ * Sub-issue A acceptance suite (REQ-1-2-1 / 1-2-2 / 1-3-1 / 1-3-2).
+ * Runs against the production shape (built frontend served by the backend on
+ * one port, throwaway SQLite file) via `bash checks/run-e2e.sh`, and drives the
+ * UI exclusively through accessible names, per Issue #1 contract §5.
+ * Self-contained: every workbook this suite works with is created through the
+ * UI, so it never depends on edits made by `smoke.spec.ts` to the seeded
+ * `Q3 Sales` workbook.
+const SEED_LINK = { name: 'Q3 Sales', exact: true } as const;
+/** Wait until the home page has loaded its list. */
+async function gotoHome(page: Page) {
+  await page.goto('/');
+  await expect(page.getByRole('link', SEED_LINK)).toBeVisible();
+/** Create a workbook through the UI and return to its editor. */
+async function createWorkbook(page: Page, name: string) {
+  await gotoHome(page);
+  await page.getByRole('button', { name: 'New blank workbook' }).click();
+  await expect(page).toHaveURL(/\/new$/);
+  await page.getByLabel('Workbook name').fill(name);
+  await page.getByRole('button', { name: 'Create' }).click();
+  await expect(page).toHaveURL(/\/workbook\/.+/);
+/** Upload a CSV through the home-page dialog and wait for the editor. */
+async function importCsv(page: Page, fileName: string, csv: string) {
+  await page.getByRole('button', { name: 'Import CSV' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Import CSV' });
+  await expect(dialog).toBeVisible();
+  await page.getByLabel('CSV file').setInputFiles({
+    name: fileName,
+    mimeType: 'text/csv',
+    buffer: Buffer.from(csv, 'utf8'),
+  await page.getByRole('button', { name: 'Confirm import' }).click();
+/** Export the active worksheet and return the suggested name plus text content. */
+async function exportCsv(page: Page): Promise<{ fileName: string; csv: string }> {
+  const [download] = await Promise.all([
+    page.waitForEvent('download'),
+    page.getByRole('button', { name: 'Export CSV' }).click(),
+  ]);
+  const path = await download.path();
+  if (!path) throw new Error('download has no local path');
+  return { fileName: download.suggestedFilename(), csv: fs.readFileSync(path, 'utf8') };
+async function cellText(page: Page, coordinate: string): Promise<string> {
+  return (await page.getByRole('gridcell', { name: coordinate, exact: true }).textContent()) ?? '';
+ * Compare a cell's exact text content. `toHaveText` normalizes whitespace, and
+ * in-field newlines are part of what this suite must verify, so it compares the
+ * raw `textContent` instead.
+async function e

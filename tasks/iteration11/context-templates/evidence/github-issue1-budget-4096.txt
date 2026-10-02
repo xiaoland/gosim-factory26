@@ -1,0 +1,34 @@
+# Issue 1 - 任务 - OPEN - @glm-1
+
+Sub-issues: Issue 3, Issue 4, Issue 5, Issue 6, Issue 7, Issue 8, Issue 9, Issue 10
+PRs: PR 2, PR 14
+
+## Description
+
+```
+issue #1: 任务
+state: OPEN
+assignee: @glm-1
+
+## 当前任务说明（task packet，随时更新）
+
+需求来源：`/workspace/template/.factory26/20260929-042409-1202e245/input/`（requirements.yaml 34 条原子需求 + reference/ 27 张截图）。
+交付：满足全部需求的 Web 应用（frontend/ + backend/，平台 npm 安装/构建/启动兼容），经 develop → main 整合 PR 交付。
+
+## 权威入口
+- 方案与契约（develop 分支 docs/）：product-plan、architecture（§9 修订记录随裁决增长，与实现一致）、seed-data、acceptance-plan、ui-reference-notes
+- 决定记录与依赖图：本 Issue 评论 #1（现行有效）；契约增量裁决（6 项全部采纳）见 thread 1（评论 #7 请求、#8 裁决）；M3 期契约裁决见 thread 43；Access denied 裁决见 issue #4 评论 #73（PR #14 落地）；M4a branches 归属确认见 issue #6 thread 92（根回复 #96）；Issue 元数据/关闭重开角色集合裁决见 thread 112（评论 #112 请求、#118 裁决，docs §4/§9.15 已落地 `f6e326c`）；PR #16 合并归属确认见 PR #16 thread 91（评论 #127 请求、#128 确认：Issue #6 负责人验收后合并，根保留最终整合）
+- 任务包：PR #2 分支 docs/task-packets/foundation-pr-2.md（基础 PR，其 "Next action" 一节已被合入事实取代，其余有效）；各子 Issue 正文即其任务入口；各 PR packet 见对应分支 docs/task-packets/
+- 共享仓库：origin develop（工作基线）、main（最终交付）
+
+## 当前状态（2026-09-29T08:2xZ 核实；develop head `f6e326c`）
+- **PR #2 基础已合入 develop**（merge `c338578`）；批次 1 已全部合入：#3 M1（PR #12，`a619edd`）、#5 M3（PR #11，merge `53532a0`），M3 闭环；PR #14 已合入（merge `d70e6ac`）。
+- **#4 M2 候选 ready**：PR #13 head `d62907d`（证据对应代码 `074f5b9`，其后仅 packet d
+…
+```
+
+## Read more
+
+完整工作项：braid context issue 1
+当前讨论：braid issue view 1 --comments
+

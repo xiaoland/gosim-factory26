@@ -1,0 +1,149 @@
+{
+  "scope": "manifest indices 34,36,37,38,39",
+  "sessions_total": 5,
+  "records_total": 882,
+  "fully_read_this_cell": 5,
+  "fully_read_records_this_cell": 882,
+  "sessions": [
+    {
+      "index": 34,
+      "sid": "01a0e699-0aad-72bf-a9be-cc4d04046a6a",
+      "records": 124,
+      "time_start": "2026-09-28T05:59:44.557Z",
+      "time_end": "2026-09-28T06:15:10.478Z",
+      "source_ranges": [
+        {
+          "path": "continuation02-root-native/061-2026-09-28T05-59-44-557Z_01a0e699-0aad-72bf-a9be-cc4d04046a6a.jsonl",
+          "start_line": 1,
+          "end_line": 124,
+          "records": 124
+        }
+      ],
+      "status": "fully_semantically_read",
+      "render_path": "cells/main-review-tail/session-034.md",
+      "omissions": [
+        {
+          "source": "continuation02-root-native/061-2026-09-28T05-59-44-557Z_01a0e699-0aad-72bf-a9be-cc4d04046a6a.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 9541,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "semantic_read": "L1–124 complete; exact prior items/comments reused; late custom_message outcomes read; displayed truncation at rendered L1001–1272 recovered with focused reread; one items projection omitted by precise source/length",
+      "truncation_recovered": true
+    },
+    {
+      "index": 36,
+      "sid": "01a0e6a7-b19b-74c6-8bf5-862d72dfff28",
+      "records": 81,
+      "time_start": "2026-09-28T06:15:44.795Z",
+      "time_end": "2026-09-28T06:26:26.547Z",
+      "source_ranges": [
+        {
+          "path": "continuation02-root-native/065-2026-09-28T06-15-44-795Z_01a0e6a7-b19b-74c6-8bf5-862d72dfff28.jsonl",
+          "start_line": 1,
+          "end_line": 81,
+          "records": 81
+        }
+      ],
+      "status": "fully_semantically_read",
+      "render_path": "cells/main-review-tail/session-036.md",
+      "omissions": [
+        {
+          "source": "continuation02-root-native/065-2026-09-28T06-15-44-795Z_01a0e6a7-b19b-74c6-8bf5-862d72dfff28.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 10708,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "semantic_read": "L1–81 complete; exact previous items/comments reused; one items projection omitted precisely; no display truncation; ending vitest background job remains unresolved in this SID and is traced in later SID",
+      "truncation_recovered": false
+    },
+    {
+      "index": 37,
+      "sid": "01a0e6b0-4cf0-7363-9afe-6d2fb4591be6",
+      "records": 36,
+      "time_start": "2026-09-28T06:25:08.849Z",
+      "time_end": "2026-09-28T06:26:48.759Z",
+      "source_ranges": [
+        {
+          "path": "continuation02-root-native/067-2026-09-28T06-25-08-849Z_01a0e6b0-4cf0-7363-9afe-6d2fb4591be6.jsonl",
+          "start_line": 1,
+          "end_line": 36,
+          "records": 36
+        }
+      ],
+      "status": "fully_semantically_read",
+      "render_path": "cells/main-review-tail/session-037.md",
+      "omissions": [],
+      "semantic_read": "L1–36 complete; exact prior items/comments and source passages reused; no displayed truncation; session ends with verification preparation, not terminal result",
+      "truncation_recovered": false
+    },
+    {
+      "index": 38,
+      "sid": "01a0e6b0-f0ac-7349-a063-311ab10cf017",
+      "records": 27,
+      "time_start": "2026-09-28T06:25:50.765Z",
+      "time_end": "2026-09-28T06:26:46.457Z",
+      "source_ranges": [
+        {
+          "path": "continuation02-root-native/069-2026-09-28T06-25-50-765Z_01a0e6b0-f0ac-7349-a063-311ab10cf017.jsonl",
+          "start_line": 1,
+          "end_line": 27,
+          "records": 27
+        }
+      ],
+      "status": "fully_semantically_read",
+      "render_path": "cells/main-review-tail/session-038.md",
+      "omissions": [
+        {
+          "source": "continuation02-root-native/069-2026-09-28T06-25-50-765Z_01a0e6b0-f0ac-7349-a063-311ab10cf017.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 26860,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "semantic_read": "L1–27 complete; exact prior items/comments and source passages reused; no displayed truncation; session ends with verification preparation, not terminal result",
+      "truncation_recovered": false
+    },
+    {
+      "index": 39,
+      "sid": "01a0e6c2-02f3-7691-b2eb-6e9ba9b726f0",
+      "records": 614,
+      "time_start": "2026-09-28T06:44:29.555Z",
+      "time_end": "2026-09-28T08:11:51.092Z",
+      "source_ranges": [
+        {
+          "path": "continuation02-root-native/075-2026-09-28T06-44-29-555Z_01a0e6c2-02f3-7691-b2eb-6e9ba9b726f0.jsonl",
+          "start_line": 1,
+          "end_line": 614,
+          "records": 614
+        }
+      ],
+      "status": "fully_semantically_read",
+      "render_path": "cells/main-review-tail/session-039.md",
+      "omissions": [
+        {
+          "source": "continuation02-root-native/075-2026-09-28T06-44-29-555Z_01a0e6c2-02f3-7691-b2eb-6e9ba9b726f0.jsonl:L152",
+          "part": 2,
+          "kind": "mechanical_write",
+          "path": "/tmp/pr-body.md",
+          "field": "content",
+          "chars": 1916
+        }
+      ],
+      "semantic_read": "L1–614 complete in native order; exact prior items/comments and passages reused; native L152 /tmp/pr-body.md 1916-character mechanical write omitted. Display truncations recovered by targeted source L65, L126–131, L235–236 (L235 mechanical Chromium stack remainder recorded). L431–614 contains 148 identical model-429 errors, 33 background-result deliveries and three repeated issue updates; read/deduplicated by exact source lines. Session ends in unresolved rebase conflicts after model exhaustion.",
+      "truncation_recovered": true,
+      "repeated_error_dedup": {
+        "source_range": "continuation02-root-native/075-2026-09-28T06-44-29-555Z_01a0e6c2-02f3-7691-b2eb-6e9ba9b726f0.jsonl:L431-L614",
+        "count": 148,
+        "kind": "identical_model_429_resource_exhausted",
+        "non_error_records_read": 36
+      },
+      "mechanical_source_note": "L126 and L130 long debug Node command bodies read for sequence/semantics; L235 6425-character Playwright error-context contains Chromium stack frames after Socket path too long and is mechanically omitted after error cause; no assertion inferred from stack frames."
+    }
+  ]
+}

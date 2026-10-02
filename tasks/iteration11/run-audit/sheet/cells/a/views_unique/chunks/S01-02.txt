@@ -1,0 +1,299 @@
+rkflow,the requested workflow with concrete values `East`,
+            `1200`, `North`, and `800`. Every value is entered through a visible,
+            labelled control; no implementation-specific navigation, API, database id, or internal implementation
+            detail is assumed.
+        - keyword: THEN
+          content: The application exposes the observable result for "the requested workflow Sales the requested workflow,the requested workflow"
+            using the same seeded names and values (the seeded worksheet range `A1:C6`
+            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,
+            `South/700/Open`); validation or permission failures are shown beside
+            the named control and do not create a partial record.
+          content: After the user refreshes the page or reopens the visible destination
+            from the application entry point, the successful result and range `A1:C6`,
+            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,
+            `South/700/Open` remain persisted; on failure, the original seeded state
+            remains unchanged.
+      - name: REQ-5-1-1 -the requested workflow ISO the requested workflow
+        steps:
+        - keyword: GIVEN
+          content: The visitor starts at the application home page in a fresh unauthenticated
+            browser session. The evaluation seed contains the seeded worksheet range
+            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,
+            `North/800/Closed`, `South/700/Open`.
+        - keyword: WHEN
+          content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+            workbook entry, and the requested workflow iso the requested workflow with concrete values `East`,
+          content: The application exposes the observable result for "the requested workflow ISO the requested workflow"
+      - name: REQ-5-1-1 -the requested workflow
+            workbook entry, and the requested workflow with concrete values `East`,
+          content: The application exposes the observable result for "the requested workflow"
+            workbook entry, and the requested workflow with concrete values `East`, `1200`,
+            `North`, and `800`. Every value is entered through a visible, labelled
+            control; no implementation-specific navigation, API, database id, or internal implementation detail is
+            assumed.
+    - id: REQ-5-1-2
+      name: Filter Rows by Value or Condition
+      type: ATOMIC
+      dependencies:
+      - REQ-1-3-2
+      - REQ-3-1-3
+      description: 'Users create a filter for a data region with headers in the current
+        active worksheet through "Create filter" in the "Data" menu. Each header provides
+        a button with the accessible name "Filter <header text>"; the dialog with
+        the same name supports selecting specific values and condition options named
+        "Text contains", "Greater than", "Before", "Is empty", and "Is not empty".
+        The value-filter dialog provides "Clear selection", checkboxes generated from
+        distinct source values, and "Apply"; each checkbox uses the displayed source
+        value as its accessible name. The condition dialog provides a combo box labeled
+        "Condition", a text box labeled "Value", and "Apply". "Text contains", "Greater
+        than", and "Before" use the "Value" text box; "Is empty" and "Is not empty"
+        require no value. Conditions on different columns are combined with AND; nonmatching
+        rows are hidden only and are neither deleted nor reordered. After refresh
+        or reopening, the same rows remain visible. CSV export and pivot summarization
+        still include hidden rows within the filtered range. "Clear filter" restores
+        all source records in their original order and with their original values;
+        after refresh all remain visible, while formula and validation behavior are
+        unchanged.
+        '
+      scenarios:
+      - name: REQ-5-1-2 -the requested workflow Region the requested workflow Sales the requested workflow,the requested workflow
+            workbook entry, and the requested workflow region the requested workflow sales the requested workflow,the requested workflow with concrete
+            values `East`, `1200`, `North`, and `800`. Every value is entered through
+            a visible, labelled control; no implementation-specific navigation, API, database id, or internal implementation
+          content: The application exposes the observable result for "the requested workflow Region the requested workflow
+            Sales the requested workflow,the requested workflow" using the same seeded names and values (the seeded
+            worksheet range `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,
+            `North/800/Closed`, `South/700/Open`); validation or permission failures
+            are shown beside the named control and do not create a partial record.
+      - name: REQ-5-1-2 -the requested workflow, the requested workflow,the requested workflow
+            workbook entry, and the requested workflow, the requested workflow,the requested workflow with concrete values `East`,
+          content: The application exposes the observable result for "the requested workflow, the requested workflow,the requested workflow"
+      - name: REQ-5-1-2 -CSV the requested workflow
+            workbook entry, and csv the requested workflow with concrete values `East`, `1200`,
+          content: The application exposes the observable result for "CSV the requested workflow"
+      - name: REQ-5-1-2 -the requested workflow
+  - id: REQ-5-2
+    name: Data Validation
+    type: FOLDER
+    description: 'Supports configuring dropdown or numeric validation for ranges in
+      the current active worksheet. The same rules are enforced when writing through
+      the grid, formula bar, paste, or range move; after row or column changes, dropdown
+      buttons and numeric limits move with the originally constrained cells. Rules
+      remain active after refresh and existing valid values are preserved.
+      '
+    dependencies: []
+    children:
+    - id: REQ-5-2-1
+      name: Set Dropdown or Numeric Validation for a Range
+      - REQ-3-1-1
+      - REQ-3-1-2
+      - REQ-3-2-1
+      description: 'Users select a target range and click "Data validation" in the
+        "Data" menu. A dialog named "Data validation" provides a combo box labeled
+        "Rule type"; "Dropdown" uses a text box labeled "Allowed values", where comma-separated
+        items are trimmed of leading and trailing spaces; "Number range" uses text
+        boxes labeled "Minimum" and "Maximum"; the "Save" button applies an inclusive
+        rule. After a valid save succeeds, the dialog closes. A dropdown cell provides
+        a button with the accessible name "Open dropdown for <cell coordinate>"; each
+        option uses the ARIA option role and the trimmed allowed value as its accessible
+        name. If an invalid value is entered through the grid, formula bar, paste,
+        or range move, the entire operation is rejected and the original value remains;
+        an invalid dropdown value displays "Please select one of the following values:
+        <comma-separated allowed values>", while an invalid number displays "Please
+        enter a number between <minimum> and <maximum>". In the persisted multi-cell
+        0-to-100 boundary scenario, rejecting 101 in B3 displays "Please enter a number
+        from 0 to 100". If any target in a bulk operation is invalid, all targets
+        retain their original values. Rules remain active after refresh. When an existing
+        rule is reopened, the dialog is prefilled with the rule type and parameters
+        and displays a "Delete rule" button; saving a modification makes the new range
+        effective immediately, deleting removes the constraint, and either successful
+        operation closes the dialog without changing existing cell values.
+      - name: REQ-5-2-1 -the requested workflow A1:A2 the requested workflow,the requested workflow
+            workbook entry, and the requested workflow a1:a2 the requested workflow,the requested workflow with concrete values `East`,
+          content: The application exposes the observable result for "the requested workflow A1:A2 the requested workflow,the requested workflow"
+      - name: REQ-5-2-1 -the requested workflow
+  - id: REQ-5-3
+    name: Basic Pivot Summarization
+    description: 'Supports creating a basic pivot table from a data range in the current
+      worksheet. Pivot results reside in a separate worksheet and only read source
+      data; when switching back to the source worksheet, original values and order
+      remain unchanged, and pivot results persist after refresh or reopening.
+    - id: REQ-5-3-1
+      name: Create and Refresh a Basic Pivot Table
+      - REQ-2-1-1
+      - REQ-2-2-1
+      - REQ-2-2-2
+      - REQ-5-1-2
+      description: |
+        Users select a source range containing headers and click "Create pivot table" in the "Data" menu. A dialog named "Create pivot table" displays visible text in the format "Source range: <cell range>", provides a "New worksheet" radio option and a "Create" button; when no pivot-result worksheet exists, the first unused PivotN name is used, so Pivot1 is created. A region named "Pivot table editor" provides combo boxes labeled "Rows", "Columns", "Values", and "Summarize by", plus an "Apply" button. Options for "Rows", "Columns", and "Values" use source header text as accessible names; "Summarize by" provides options named SUM, COUNT, and AVERAGE. The configuration supports one row field, one optional column field, and one value field. SUM/AVERAGE aggregate only parseable numbers, while COUNT counts non-empty records in the value field and does not fail because of nonnumeric content.
+        When no column field is selected, A1 displays the row-field name and B1 displays "<summarization method> of <value field>"; row groups are ordered by first appearance in the source data, and the final row is Grand Total aggregating all qualifying source records. When a column field is selected, A1 displays the row-field name, column-field values are arranged from B1 onward in order of first appearance, and the final column is Grand Total; row-field values are likewise ordered by first appearance, with Grand Total as the final row. COUNT displays 0 when a row/column combination has no record with a non-empty value field.
+        After a successful apply, refreshing or reopening still shows the same pivot worksheet, field layout, summarization method, and results. The result worksheet provides a "Refresh pivot table" button; after source data or row/column changes, clicking refresh completely replaces the old summary using the current source range. If a selected source header has been deleted, clicking refresh displays "Pivot field is no longer available. Select a new field.", preserves the last successful result, and does not modify the source worksheet; other invalid source ranges or fields likewise display a visible error and preserve both worksheets. When SUM or AVERAGE is applied to a value field with no parseable numbers, "Value field requires numeric values" is displayed, the old result is preserved, and the source worksheet is not modified.
+      - name: REQ-5-3-1 -the requested workflow Pivot1 the requested workflow Region the requested workflow Sales,the requested workflow
+            workbook entry, and the requested workflow pivot1 the requested workflow region the requested workflow sales,the requested workflow with concrete values
+            `East`, `1200`, `North`, and `800`. Every value is entered through a visible,
+          content: The application exposes the observable result for "the requested workflow Pivot1 the requested workflow Region
+            the requested workflow Sales,the requested workflow" using the same seeded names and values (the seeded worksheet
+            range `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,
+      - name: REQ-5-3-1 -the requested workflow,the requested workflow
+            workbook entry, and the requested workflow,the requested workflow with concrete values `East`,
+          content: The application exposes the observable result for "the requested workflow,the requested workflow"
+      - name: REQ-5-3-1 -the requested workflow COUNT the requested workflow
+            workbook entry, and the requested workflow count the requested workflow with concrete values `East`,
+          content: The application exposes the observable result for "the requested workflow COUNT
+            the requested workflow" using the same seeded names and values (the seeded worksheet
+      - name: REQ-5-3-1 -AVERAGE the requested workflow
+            workbook entry, and average the requested workflow with concrete values `East`,
+          content: The application exposes the observable result for "AVERAGE the requested workflow"
+      - name: REQ-5-3-1 -the requested workflow
+[output truncated: tail kept (1022 lines, 80 KB). Full output: /workspace/template/.factory26/20260929-042409-811f18d4/work/home/.pi/pbb/truncated/2026-09-29T05-50-28-081Z-4749ef4a.log]
+[DUPLICATES: 589 exact source lines omitted; precise per-line source map in duplicate-lines.json at S01:L10:C1]
+
+## S01:L11 2026-09-29T05:50:30.278Z message assistant
+[thinking]
+Let me read the requirements file targeted at my requirements (REQ-1-2-1, 1-2-2, 1-3-1, 1-3-2).
+Let me extract those specific REQ sections.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S01:L11:C1]
+[text]
+Let me extract the specific requirements for my issue and check repo/PR state.
+[toolCall] bash call_00_1m3pa7VFfM9qFT2134Wy2164
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4 && python3 -c \"\nimport yaml,sys\nd=yaml.safe_load(open('input/requirements.yaml'))\ndef walk(n,path=''):\n    if isinstance(n,dict):\n        i=n.get('id')\n        if i in ('REQ-1-2-1','REQ-1-2-2','REQ-1-3-1','REQ-1-3-2'):\n            print('='*70)\n            print(i,'|',n.get('name'),'| deps:',n.get('dependencies'))\n            print(n.get('description'))\n            print('--- scenarios:', len(n.get('scenarios',[])))\n            for s in n.get('scenarios',[]):\n                print('  SCENARIO:',s.get('name'))\n        for k,v in n.items():\n            if k!='scenarios': walk(v)\n    elif isinstance(n,list):\n        for x in n: walk(x)\nwalk(d)\n\""}
+[toolCall] bash call_01_OfaNYKbAdABq3J4zd3cb2486
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -5 && git branch -a && echo \"--- develop tree ---\" && git ls-tree -r origin/develop --name-only | head -100"}
+
+## S01:L12 2026-09-29T05:50:30.535Z message toolResult
+toolResult bash False
+[text]
+======================================================================
+REQ-1-2-1 | Create a Blank Workbook | deps: []
+Users create a blank workbook from the workbook home page. The home page provides a button with the accessible name "New blank workbook"; clicking it opens the creation page, whose submit button is named "Create". After creation succeeds, the editor opens and shows only a blank worksheet named Sheet1, with Sheet1 active and A1 selected; refreshing or returning to the home page and reopening produces the same state. If creation fails, an error is displayed, the user remains in a retryable state, and no incomplete workbook record may appear on the home page.
+Page reference:
+![image](reference/create-workbook.png)
+--- scenarios: 1
+  SCENARIO: REQ-1-2-1 -the requested workflow,the requested workflow Sheet1 the requested workflow A1 the requested workflow
+REQ-1-2-2 | Rename a Workbook | deps: ['REQ-1-1-1']
+Users can change the workbook name on the workbook editor page. Next to the editor title is a button with the accessible name "Rename workbook"; clicking it displays a text box labeled "Workbook name", prefilled with the last saved name, and a "Save" button. After leading and trailing spaces are trimmed, the name must not be empty; an empty name must be rejected with "Workbook name cannot be empty". After a successful save, both the editor title and the home-page link display the new name; if saving fails, an error is shown and the original name remains displayed. Reopening the workbook shows the most recently saved name.
+--- scenarios: 2
+  SCENARIO: REQ-1-2-2 -the requested workflow,the requested workflow
+REQ-1-3-1 | Import CSV to Create a Workbook | deps: []
+Users start an import by clicking the "Import CSV" button on the workbook home page. A dialog named "Import CSV" provides a file control labeled "CSV file" and a "Confirm import" button. The system parses data in the original row and column order, preserves empty fields, supports UTF-8 Chinese text, English text, and numeric text, and correctly handles commas enclosed in double quotes, escaped pairs of double quotes, and line breaks within fields; a field that begins with a double quote but has no closing double quote is invalid CSV and must be rejected with "Invalid CSV file format. Import failed." After a successful import, a new workbook is created whose name is the file name with its final .csv extension removed, and Sheet1 opens with the complete CSV rows, columns, and original text; the first row remains ordinary data. After refresh or reopening, grid content and row/column order remain unchanged. If parsing or import fails, no workbook link with that name may appear on the home page, and no partial import result may be displayed or retained.
+--- scenarios: 4
+  SCENARIO: REQ-1-3-1 -the requested workflow UTF-8 CSV,the requested workflow
+  SCENARIO: REQ-1-3-1 -the requested workflow CSV the requested workflow,the requested workflow
+  SCENARIO: REQ-1-3-1 -the requested workflow CSV,the requested workflow
+REQ-1-3-2 | Export the Current Worksheet as CSV | deps: ['REQ-1-1-1', 'REQ-1-3-1']
+Users can export the current active worksheet using the button with the accessible name "Export CSV" on the workbook editor toolbar. Clicking it starts a browser download; the suggested filename ends with ".csv", and the downloaded UTF-8 text is the exported CSV. The exported CSV preserves empty cells within the used range according to the grid’s actual row and column order and correctly escapes text containing commas, quotes, or line breaks. Ordinary cells export their displayed values; formula cells export their current calculated results rather than formula expressions. Before and after export, the active worksheet, filter view, grid values, and formula bar content remain unchanged, and the same state remains after refresh.
+  SCENARIO: REQ-1-3-2 -the requested workflow,the requested workflow
+  SCENARIO: REQ-1-3-2 -the requested workflow
+  SCENARIO: REQ-1-3-2 -the requested workflow Sheet1 the requested workflow
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S01:L12:C1]
+
+## S01:L13 2026-09-29T05:50:30.535Z message toolResult
+toolResult bash False
+[text]
+* braid-agent/issue-3/pi-deepseek-fast-g1
+  main
+  remotes/origin/HEAD -> origin/main
+  remotes/origin/braid/pr-2
+  remotes/origin/develop
+  remotes/origin/main
+--- develop tree ---
+.gitignore
+README.md
+backend/package.json
+backend/src/app.js
+backend/src/app.test.js
+backend/src/config.js
+backend/src/db.js
+backend/src/errors.js
+backend/src/ids.js
+backend/src/index.js
+backend/src/migrations.js
+backend/src/routes.js
+backend/src/seed.js
+backend/src/store.js
+backend/src/validate.js
+backend/tsconfig.json
+backend/vitest.config.ts
+checks/platform-path.sh
+checks/run-e2e.sh
+e2e/smoke.spec.ts
+frontend/index.html
+frontend/package.json
+frontend/src/App.tsx
+frontend/src/api/client.ts
+frontend/src/components/ErrorBanner.tsx
+frontend/src/components/FormulaBar.tsx
+frontend/src/components/Grid.test.tsx
+frontend/src/components/Grid.tsx
+frontend/src/components/HomePage.tsx
+frontend/src/components/WorkbookEditor.tsx
+frontend/src/components/WorksheetTabs.tsx
+frontend/src/lib/coordinates.ts
+frontend/src/lib/format.test.ts
+frontend/src/lib/format.ts
+frontend/src/lib/selection.ts
+frontend/src/main.tsx
+frontend/src/styles.css
+frontend/tsconfig.json
+frontend/uno.config.ts
+frontend/vite.config.ts
+frontend/vitest.config.ts
+package.json
+playwright.config.ts
+pnpm-lock.yaml
+pnpm-workspace.yaml
+shared/types.d.ts
+tasks/pr-2-base/packet.md
+
+## S01:L14 2026-09-29T05:50:34.470Z message assistant
+[thinking]
+The base PR #2 is merged into develop. Now I (as issue #3 owner) need to:
+1. Understand requirements, form design (product requirements, technical scheme, acceptance scheme) in the Issue.
+2. Before implementation, create the associated PR and assign the owner, handing over the basis.
+3. The PR owner implements in its own workspace.
+Wait — re-read the task: "你正在处理 Issue #3，负责产品需求、技术方案与验收方案的设计，并保留原始要求、重要决定和未决问题的入口。进入实施前，创建关联 PR 并指派负责人，把这些依据交给 PR 负责人；由其在独立工作区承接实现计划、预演排障、实现与验收，再将候选和结果交回；不要先在 Issue 中完成实现再把 PR 当作补办手续。你在 Issue 中处理设计问题、协作决定和返回的结果；需要调整方案时继续在相关讨论中协作。"
+So my role on Issue #3: design (product requirements, technical scheme, acceptance scheme), create linked PR and assign owner, hand over the basis. The PR owner does implementation.
+So I need to:
+1. Read the base code (develop) to understand the scaffold, contract endpoints.
+2. Form design decisions in Issue #3 (design comment).
+3. Consult advisor before committing to consequential assumptions / shared contracts / acceptance criteria with key assumptions (per instructions). Here key design decisions: CSV parsing semantics (invalid CSV detection), export behavior before C merges, formula result export bridging, filename derivation, etc.
+4. Create PR with base develop, assign owner (deepseek or glm). Choose owner — need to pick from assignable agents: deepseek, glm. As issue owner I should pick one.
+5. Hand over the basis to the PR owner via comment.
+6. Also create/continue task packet for this task.
+Also I need to read skills: svc-design, svc-verification, svc-documentation, svc-task-packet.
+Let me be efficient but thorough. First read the base repo code to know what exists.
+Let me look at key files: backend/src/routes.js, config.js, store.js, seed.js, frontend components.
+Let me also check the PR #2 packet and README.
+Let me read several files.
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S01:L14:C1]
+[text]
+Base PR #2 is merged into develop. Let me inspect the base implementation and relevant skills.
+[toolCall] bash call_00_B1IX4A3QbSldIVVmW7C68737
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git checkout -B work-issue-3 origin/develop 2>&1 | tail -2 && wc -l README.md backend/src/*.js frontend/src/components/*.tsx frontend/src/api/client.ts shared/types.d.ts"}
+[toolCall] bash call_01_xQA5Kq9yUSx28EyheGce6385
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && cat README.md"}
+
+## S01:L15 2026-09-29T05:50:34.499Z message toolResult
+toolResult bash False
+[text]
+Switched to a new branch 'work-issue-3'
+branch 'work-issue-3' set up to track 'origin/develop'.
+   160 README.md
+   109 backend/src/app.js
+   357 backend/src/app.test.js
+    97 backend/src/config.js
+    52 backend/src/db.js
+    46 backend/src/errors.js
+    16 backend/src/ids.js
+    42 backend/src/index.js
+    84 backend/src/migrations.js
+   112 backend/src/routes.js
+    88 backend/src/seed.js
+   517 backend/src/store.js
+    84 backend/src/validate.js
+    24 frontend/src/components/ErrorBanner.tsx
+    56 frontend/src/components/FormulaBar.tsx
+   163 frontend/src/components/Grid.test.tsx
+   259 frontend/src/components/Grid.tsx
+    77 frontend/src/components/HomePage.tsx
+   287 fron

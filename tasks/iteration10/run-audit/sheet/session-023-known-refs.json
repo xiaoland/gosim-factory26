@@ -1,0 +1,158 @@
+[
+  {
+    "render_block": 84,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 2121,
+    "text": "/**\n * Formula engine wiring (REQ-4-*).\n *\n * This module is the single integration point between the persisted workbook\n * model (CellData.raw / CellData.value, see backend/src/types.ts) and\n * `@app/formula-engine` (shared/formula-engine, PR #1):\n *\n *  - Persistence stores the raw user input only (plain text, or a formula\n *    starting with \"=\"). `CellData.value` is a display cache: for formulas it\n *    is recomputed from the current source data on every write, so a reload\n *    never shows stale results (REQ-4-2-1).\n *  - Every content mutation goes through `runWithFormulas`: the engine is\n *    rebuilt from the current raw inputs, the mutation is applied (the engine\n *    recalculates all direct/indirect dependents in dependency order), and\n *    raws + computed display values are synced back into the workbook before\n *    it is persisted.\n *\n * Raw fidelity: HyperFormula normalizes formula text (uppercases function\n * names, trims whitespace). The formula bar must show the user's original\n * input, so edits and pastes are synced back VERBATIM (raw overrides), and\n * only structural operations (range move, row/column insert/remove — where\n * references are genuinely rewritten) take the engine's adjusted raw as\n * authoritative. Consequence: after a structural operation a formula's text\n * may be re-serialized by the engine (case/spacing); its references and\n * result stay correct, and plain cells always keep their exact text.\n *\n * The engine is an ESM package, loaded lazily via dynamic import so the\n * CommonJS backend stays compatible (require(esm) is available on the\n * supported Node.js >= 20.19 runtimes).\n *\n * Endpoints owned by other tasks (paste/copy/move in REQ-3, row/column\n * operations in REQ-2, sort in REQ-5) call the same handle inside\n * `runWithFormulas` instead of reimplementing recalculation:\n * `setRangeRaw` (bulk paste), `moveRange` (range move, HyperFormula\n * moveCells semantics), `addRows/removeRows/addColumns/removeColumns`\n * (structure changes with automatic reference adjustment) and\n * `adjustFormulaForCopy` (copy reference adjustment, REQ-4-1-2).\n */"
+  },
+  {
+    "render_block": 90,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 200,
+    "text": "function loadEngineModule(): Promise<EngineModule> {\n  if (!engineModulePromise) {\n    engineModulePromise = import(\"@app/formula-engine\") as Promise<EngineModule>;\n  }\n  return engineModulePromise;\n}"
+  },
+  {
+    "render_block": 92,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 1237,
+    "text": "/** Mutation surface offered to write endpoints. */\nexport interface FormulaEngineHandle {\n  /** Set one cell's raw input; null/\"\" clears it. Dependents recalculate. */\n  setCellRaw(sheetId: string, ref: string, raw: string | null): void;\n  /**\n   * Bulk paste a rectangle with its top-left corner at startRef. The whole\n   * rectangle is applied; empty fields clear their target cell.\n   */\n  setRangeRaw(sheetId: string, startRef: string, values: string[][]): void;\n  /**\n   * Move a rectangle (moveCells semantics: the moved cells' relative\n   * references and external references to them follow the move).\n   */\n  moveRange(sheetId: string, fromRef: string, toRef: string, height: number, width: number): void;\n  addRows(sheetId: string, index: number, count: number): void;\n  removeRows(sheetId: string, index: number, count: number): void;\n  addColumns(sheetId: string, index: number, count: number): void;\n  removeColumns(sheetId: string, index: number, count: number): void;\n  /** Computed display value of a cell (result or error string). */\n  getDisplay(sheetId: string, ref: string): DisplayValue;\n  /** The raw input the engine currently holds for a cell (\"\" = blank). */\n  getCellRaw(sheetId: string, ref: string): string;\n}"
+  },
+  {
+    "render_block": 94,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 327,
+    "text": "export interface FormulaRunOptions {\n  /**\n   * Extra refs to sync back even when absent from the stored sheet — e.g. the\n   * target rectangle of a paste, where previously empty cells become\n   * occupied. (Range moves register their rectangles automatically.)\n   */\n  extraRefs?: Array<{ sheetId: string; refs: string[] }>;\n}"
+  },
+  {
+    "render_block": 100,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 308,
+    "text": "function parseA1(ref: string): { row: number; col: number } | null {\n  const m = A1_RE.exec(ref);\n  if (!m) return null;\n  let col = 0;\n  for (const ch of m[1].toUpperCase()) {\n    if (ch < \"A\" || ch > \"Z\") return null;\n    col = col * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return { col, row: Number(m[2]) };\n}"
+  },
+  {
+    "render_block": 102,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 260,
+    "text": "function formatA1(col: number, row: number): string {\n  let letters = \"\";\n  let n = col;\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    letters = String.fromCharCode(65 + rem) + letters;\n    n = Math.floor((n - 1) / 26);\n  }\n  return `${letters}${row}`;\n}"
+  },
+  {
+    "render_block": 106,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 156,
+    "text": "/** Display text of any DisplayValue variant (empty renders as \"\"). */\nfunction displayText(v: DisplayValue): string {\n  return \"text\" in v ? v.text : \"\";\n}"
+  },
+  {
+    "render_block": 110,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 396,
+    "text": "/** Refs of a rectangle given its top-left corner, height and width. */\nfunction rectRefs(topLeft: string, height: number, width: number): string[] {\n  const start = parseA1(topLeft);\n  if (!start) return [];\n  const refs: string[] = [];\n  for (let r = 0; r < height; r++) {\n    for (let c = 0; c < width; c++) {\n      refs.push(formatA1(start.col + c, start.row + r));\n    }\n  }\n  return refs;\n}"
+  },
+  {
+    "render_block": 112,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 1287,
+    "text": "/**\n * Run a content mutation against the formula engine and sync the result back\n * into the workbook (adjusted raws + fresh display values). The engine is\n * built from the workbook's current raw inputs and destroyed afterwards, so\n * callers can treat this as one atomic pipeline: mutate -> recalc -> persist.\n */\nexport async function runWithFormulas<T>(\n  wb: Workbook,\n  fn: (engine: FormulaEngineHandle) => T | Promise<T>,\n  options?: FormulaRunOptions\n): Promise<T> {\n  const { WorkbookFormulas } = await loadEngineModule();\n  const engine = WorkbookFormulas.create(\n    wb.sheets.map((s) => ({\n      id: s.id,\n      name: s.name,\n      cells: Object.fromEntries(\n        Object.entries(s.cells).map(([ref, cell]) => [ref, cell.raw ?? \"\"])\n      ),\n    }))\n  );\n  try {\n    // Verbatim raw overrides written back after the run (edits/pastes keep\n    // the user's exact text; HyperFormula would re-serialize formulas).\n    const overrides = new Map<string, Map<string, string | null>>();\n    // Refs whose presence AND raw follow the engine (move source/target).\n    const engineAuth = new Map<string, Set<string>>();\n    // Structural ops adjust formulas anywhere -> engine raw is authoritative\n    // for every existing formula cell of the workbook.\n    let structural = false;"
+  },
+  {
+    "render_block": 114,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 484,
+    "text": "    const override = (sheetId: string, ref: string, raw: string | null) => {\n      const upper = ref.toUpperCase();\n      let m = overrides.get(sheetId);\n      if (!m) overrides.set(sheetId, (m = new Map()));\n      m.set(upper, raw === \"\" ? null : raw);\n    };\n    const markEngineAuth = (sheetId: string, refs: string[]) => {\n      let s = engineAuth.get(sheetId);\n      if (!s) engineAuth.set(sheetId, (s = new Set()));\n      for (const ref of refs) s.add(ref.toUpperCase());\n    };"
+  },
+  {
+    "render_block": 116,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 1580,
+    "text": "    const handle: FormulaEngineHandle = {\n      setCellRaw: (sheetId, ref, raw) => {\n        engine.setCellRaw(sheetId, ref, raw == null ? \"\" : raw);\n        override(sheetId, ref, raw == null ? null : raw);\n      },\n      setRangeRaw: (sheetId, startRef, values) => {\n        engine.setRangeRaw(sheetId, startRef, values);\n        const start = parseA1(startRef);\n        if (!start) return;\n        for (let r = 0; r < values.length; r++) {\n          for (let c = 0; c < (values[r] ?? []).length; c++) {\n            override(sheetId, formatA1(start.col + c, start.row + r), values[r][c] ?? \"\");\n          }\n        }\n      },\n      moveRange: (sheetId, fromRef, toRef, height, width) => {\n        engine.moveRange(sheetId, fromRef, toRef, height, width);\n        markEngineAuth(sheetId, [\n          ...rectRefs(fromRef, height, width),\n          ...rectRefs(toRef, height, width),\n        ]);\n      },\n      addRows: (sheetId, index, count) => {\n        engine.addRows(sheetId, index, count);\n        structural = true;\n      },\n      removeRows: (sheetId, index, count) => {\n        engine.removeRows(sheetId, index, count);\n        structural = true;\n      },\n      addColumns: (sheetId, index, count) => {\n        engine.addColumns(sheetId, index, count);\n        structural = true;\n      },\n      removeColumns: (sheetId, index, count) => {\n        engine.removeColumns(sheetId, index, count);\n        structural = true;\n      },\n      getDisplay: (sheetId, ref) => engine.getDisplay(sheetId, ref),\n      getCellRaw: (sheetId, ref) => engine.getCellRaw(sheetId, ref),\n    };"
+  },
+  {
+    "render_block": 118,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 184,
+    "text": "    const result = await fn(handle);\n    syncFromEngine(wb, engine, overrides, engineAuth, structural, options?.extraRefs);\n    return result;\n  } finally {\n    engine.destroy();\n  }\n}"
+  },
+  {
+    "render_block": 120,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 1142,
+    "text": "/**\n * Copy the engine's post-mutation state back into the workbook:\n *  1. presence follows the engine for every stored ref and every\n *     engine-authoritative ref (cleared / filled by a move);\n *  2. verbatim raw overrides (edits/pastes) are applied;\n *  3. after structural operations, existing formula cells take the engine's\n *     reference-adjusted raw;\n *  4. `value` of every formula cell is refreshed from the engine.\n * Plain cells keep their exact raw text and value except where a mutation\n * replaced or removed their content.\n */\nfunction syncFromEngine(\n  wb: Workbook,\n  engine: import(\"@app/formula-engine\").WorkbookFormulas,\n  overrides: Map<string, Map<string, string | null>>,\n  engineAuth: Map<string, Set<string>>,\n  structural: boolean,\n  extraRefs?: Array<{ sheetId: string; refs: string[] }>\n): void {\n  for (const sheet of wb.sheets) {\n    // Normalize ref keys (all writers use uppercase; be defensive).\n    for (const [key, cell] of Object.entries(sheet.cells)) {\n      const upper = key.toUpperCase();\n      if (upper !== key) {\n        delete sheet.cells[key];\n        sheet.cells[upper] = cell;\n      }\n    }"
+  },
+  {
+    "render_block": 124,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 590,
+    "text": "    // 1+2+3: apply per-ref outcomes.\n    const refs = new Set<string>([\n      ...Object.keys(sheet.cells),\n      ...(overrideMap ? overrideMap.keys() : []),\n      ...(authRefs ?? []),\n      ...((extraRefs ?? [])\n        .filter((e) => e.sheetId === sheet.id)\n        .flatMap((e) => e.refs)\n        .map((r) => r.toUpperCase())),\n    ]);\n    for (const ref of refs) {\n      const overrideRaw = overrideMap?.get(ref);\n      const isAuth = authRefs?.has(ref) ?? false;\n      const engineRaw = engine.getCellRaw(sheet.id, ref);\n      const existing = sheet.cells[ref] as CellData | undefined;"
+  },
+  {
+    "render_block": 126,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 481,
+    "text": "      // Verbatim overrides decide raw (and presence) outright.\n      if (overrideRaw !== undefined) {\n        if (overrideRaw === null) {\n          delete sheet.cells[ref];\n        } else if (existing) {\n          existing.raw = overrideRaw;\n          if (!isFormula(overrideRaw)) existing.value = overrideRaw;\n          // Formula values are refreshed from the engine below.\n        } else {\n          sheet.cells[ref] = makeCell(overrideRaw);\n        }\n        continue;\n      }"
+  },
+  {
+    "render_block": 128,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 846,
+    "text": "      if (engineRaw === \"\") {\n        // Cleared (directly or moved away / removed row/col).\n        if (existing) delete sheet.cells[ref];\n        continue;\n      }\n      if (!existing) {\n        // Filled by a move (or extraRefs paste target).\n        sheet.cells[ref] = makeCell(engineRaw);\n        continue;\n      }\n      if (isAuth) {\n        // Move target/source content replaced by the moved cells.\n        if (engineRaw !== existing.raw) existing.raw = engineRaw;\n        continue;\n      }\n      if (isFormula(existing.raw) && structural) {\n        // References were adjusted by the structural change; the engine's\n        // raw is authoritative (re-serialized form).\n        if (engineRaw !== existing.raw) existing.raw = engineRaw;\n        continue;\n      }\n      // Plain cell outside any mutation: keep the exact stored text.\n    }"
+  },
+  {
+    "render_block": 130,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L64",
+    "chars": 248,
+    "text": "    // 4: refresh display values of all formula cells (REQ-4-2-1).\n    for (const [ref, cell] of Object.entries(sheet.cells)) {\n      if (isFormula(cell.raw)) {\n        cell.value = displayText(engine.getDisplay(sheet.id, ref));\n      }\n    }\n  }\n}"
+  },
+  {
+    "render_block": 146,
+    "source": "native/231-2026-09-28T09-20-48-203Z_01a0e751-1e4b-716e-88c1-f6141270ddb4.jsonl:L21",
+    "chars": 319,
+    "text": "import { test, before, after } from \"node:test\";\nimport assert from \"node:assert/strict\";\nimport { spawn } from \"node:child_process\";\nimport { mkdtempSync, rmSync } from \"node:fs\";\nimport { createServer } from \"node:net\";\nimport os from \"node:os\";\nimport path from \"node:path\";\nimport { fileURLToPath } from \"node:url\";"
+  },
+  {
+    "render_block": 148,
+    "source": "native/231-2026-09-28T09-20-48-203Z_01a0e751-1e4b-716e-88c1-f6141270ddb4.jsonl:L21",
+    "chars": 175,
+    "text": "const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), \"..\");\nconst backendDist = process.env.BACKEND_DIST ?? path.join(root, \"backend\", \"dist\", \"server.js\");"
+  },
+  {
+    "render_block": 150,
+    "source": "native/231-2026-09-28T09-20-48-203Z_01a0e751-1e4b-716e-88c1-f6141270ddb4.jsonl:L21",
+    "chars": 257,
+    "text": "function freePort() {\n  return new Promise((resolve, reject) => {\n    const srv = createServer();\n    srv.listen(0, \"127.0.0.1\", () => {\n      const { port } = srv.address();\n      srv.close(() => resolve(port));\n    });\n    srv.on(\"error\", reject);\n  });\n}"
+  },
+  {
+    "render_block": 158,
+    "source": "native/231-2026-09-28T09-20-48-203Z_01a0e751-1e4b-716e-88c1-f6141270ddb4.jsonl:L99",
+    "chars": 303,
+    "text": "async function api(method, p, body) {\n  const res = await fetch(base + p, {\n    method,\n    headers: { \"Content-Type\": \"application/json\" },\n    body: body === undefined ? undefined : JSON.stringify(body),\n  });\n  const json = await res.json().catch(() => ({}));\n  return { status: res.status, json };\n}"
+  },
+  {
+    "render_block": 162,
+    "source": "native/231-2026-09-28T09-20-48-203Z_01a0e751-1e4b-716e-88c1-f6141270ddb4.jsonl:L99",
+    "chars": 213,
+    "text": "async function setCells(sheetId, updates) {\n  const r = await api(\"PATCH\", `/api/workbooks/${wb.id}/sheets/${sheetId}/cells`, { updates });\n  assert.equal(r.status, 200, JSON.stringify(r.json));\n  return r.json;\n}"
+  },
+  {
+    "render_block": 316,
+    "source": "continuation02-root-native/023-2026-09-28T04-50-06-734Z_01a0e659-4b0e-70ee-9264-6926aa018e11.jsonl:L168",
+    "chars": 368,
+    "text": "# Type-check the check sources first: a typo such as a missing import has to\n# fail fast instead of showing up later as a confusing browser failure.\nTSC=\"$ROOT/checks/node_modules/.bin/tsc\"\nif [[ -x \"$TSC\" ]]; then\n  \"$TSC\" -p \"$ROOT/checks/tsconfig.json\"\nelse\n  echo \"note: typescript is not installed under checks/ (cd checks && npm install); skipping type-check\"\nfi"
+  },
+  {
+    "render_block": 318,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  },
+  {
+    "render_block": 320,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L314",
+    "chars": 267,
+    "text": "# A fixed log path would be truncated by any other run of this harness; keep the\n# logs of this run together and identifiable instead.\nLOG_PREFIX=\"${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename \"$ROOT\")-$$}\"\nPID_FILE=\"$(mktemp /tmp/wb-checks-pids-XXXXXX)\"\nWATCHDOG=\"\""
+  },
+  {
+    "render_block": 464,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L62",
+    "chars": 217,
+    "text": "- 任何写端点返回后 `CellData.value` 即当前 raw 的最新计算结果（#40 时效性保证）：raw → 引擎重算 → getDisplay 回填 → saveWorkbook。\n- 引擎句柄 `setRangeRaw / moveRange / addRows... / adjustFormulaForCopy` 供 #5（粘贴/复制/移动）、#4（行列操作）、#7（排序，比较值直接读已回填的 value）消费。"
+  }
+]

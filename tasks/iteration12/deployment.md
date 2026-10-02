@@ -1,5 +1,7 @@
 # I12 从零部署与退役接续记录
 
+2026-09-30 12:25:47 CST，用户明确要求“先暂停I12”。已核对launch receipt的容器ID，暂停 `f26-fresh-715fa714f396de` 与 `f26-fresh-8559b80ecb7f15`，两者均确认Running=true、Paused=true、无OOM。只冻结当前生成，不取消或清理；原始代码、Git、数据库与会话保持现场，pi-minimal不受影响。回执位于 `runs/iteration12/fresh/pause-receipt.json`。以下“运行中”描述为暂停前部署事实，当前状态以此暂停回执为准；不自动接续。
+
 当前决定是从零生成两题。旧接续已经停止并退役，详细记录保留在后文。新运行只使用同两份官方 Hackathon requirements、当前 I12 冻结材料及自有 BigModel/Kimi/DeepSeek 网关；每题仍限制 4GiB/2CPU，以 3+8 间隔观察，不执行本地评分，不带入 I11 应用代码、Git、Braid 对象、native 会话或隐藏评分。
 
 新现场在 WSL `runs/iteration12/fresh/<case>/workspace/official-generation/template`。准备阶段该目录只含 `requirements`。`runs/iteration12/fresh/prepare.py` 通过共享只读 submission 的标准 `/workspace/submission/agent/main.py --prepare-only` 做真实准备，输出到独立 prepared-output，模型网络禁用。标准入口每次分配新的 run ID；prepare-only 不初始化 Git/Braid DB，也不将其虚构为已启动 state。正式启动仍调用标准 main.py/run.py，由其初始化空应用仓库、Braid 与 native；不复用准备目录、恢复入口或旧 run ID。

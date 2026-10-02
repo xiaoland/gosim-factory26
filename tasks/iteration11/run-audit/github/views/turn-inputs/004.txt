@@ -1,0 +1,13 @@
+hash 0db8835a6b3ff6825e27dd705f38fe0681019b029958e456d0af8ac0ba97225e
+copies 2
+source snapshot-01/braid-state/turns/01a0ec23-6df5-71c0-befd-db72ff727727.md
+
+请处理 Issue #8。
+
+对象：local/run#8
+
+发生以下更新：
+- issue:8 thread 89: comment 89 edited; read `comment view 89 --thread`
+issue #8 title/body 已修改
+
+使用 `braid issue view 8 --comments` 查看当前内容。

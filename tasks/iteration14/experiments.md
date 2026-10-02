@@ -2,6 +2,14 @@
 
 本轮为 `e20261002-01 / i14-0`。执行范围和完成判据以 [packet](packet.md) 为准；独立实现及操作反馈归 cleaner-implementation.md、reviewer-implementation.md、tester-e2e.md，配方操作与恢复归 [I14-0 README](../../experiments/i14-0/README.md)。I13 的正式结果及后续修正不阻塞这批启动，之后交 I14-1 对账。
 
+## 当前接续范围（2026-10-02）
+
+最新指示为“暂停目前现有的所有实验，因为 API 额度即将耗尽”，已核对真实userMessage。所有生成、热恢复、重放评价和后续收费派发暂停，原件保留，不自动恢复；下段仅e2e为此前范围，已被覆盖。
+
+用户明确本会话重点为让 I14 运行，并确认“baseline 继续暂停，只运行另外三个”。用户随后要求“暂停继续推进cleaner和reviewer；专注e2e”。当前仅继续已实际启动的e2e GitHub生成与既定评价，cleaner/reviewer保全现场、停止后续推进；不启动 Sheet，不解除 baseline 暂停，不等待或操作 I13。默认根仍 Flash；Flash、GLM-5.3、K3 使用普通 Qwen，内部 DeepSeek0731 使用 Token Plan。新执行身份、原来源和实际供应商请求归[接续 packet](dx-resume/packet.md)及启动证据，旧 active-matrix 仅表示此前冻结执行。
+
+下文保留首次八项 ARC 配方及启动记录，不能据此恢复旧队列或认定新供应商已经采用。
+
 四个 variant 各从干净起点生成 GitHub 与 Sheet 一次，共八项。普通成员与默认根为 GLM-5.3-Flash / high，原生 advisor Kimi K3；使用自有 ARC API，不使用比赛额度。每题生成完成后立即冻结最终应用，独立 `self_funded` 官网重放。生成与评分的时间、用量、费用分开记录；未执行验收或设施失败不计作应用零分。隐藏反馈不送回仍在生成的 Agent。
 
 2026-10-02，四份制品已冻结，共同 Braid Linux binary 为 `e002edb848395698ab83d2221ec40a13bcfa8c2e379bf7ca26f90389d02260e8`。具体文件、源码清单、私有工具key来源、允许需求清单和每项模型选择保存在 `runs/iteration14/i14-0/`，不能从当前源码替代这些身份。启动源码也已独立冻结；有限 dispatcher 逐项接入已有 operation，等待真实共享准入事实后再放出下一项。

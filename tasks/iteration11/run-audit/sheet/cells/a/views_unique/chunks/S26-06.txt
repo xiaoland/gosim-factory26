@@ -1,0 +1,140 @@
+source map in duplicate-lines.json at S26:L77:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L77:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L77:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L77:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L77:cwd]
+[ts]
+1790664054400
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L77:sourceEventType]
+[toolCallId]
+bash_19_7177b883
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L77:toolName]
+[argsPreview]
+cd /tmp && git -C /workspace/template/.factory26/20260929...
+[argsPayload]
+  "command": "cd /tmp && git -C /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 show d536aa2:backend/src/csv.js > csv.mjs && node --input-type=module -e \"\nimport { parseCsv, csvColumnCount } from './csv.mjs';\nconst cases = {\n  'trailing newline': 'a,b\\n',\n  'trailing blank line': 'a,b\\n\\n',\n  'trailing delimiter': 'a,b\\nc,d,',\n  'only newline': '\\n',\n  'empty': '',\n  'all-empty last row': 'a,b\\n,',\n  'quoted empty last field': 'a,b\\nc,\\\"\\\"',\n  'single quoted empty file': '\\\"\\\"',\n  'trailing quoted empty single-col': 'a\\n\\\"\\\"',\n  'leading blanks': '\\n\\na,b',\n  'middle blank single-col': 'a\\n\\nb',\n  'cleared-footprint reparse (a then blanks)': 'a\\n\\n',\n};\nfor (const [k, v] of Object.entries(cases)) {\n  const r = parseCsv(v);\n  console.log(JSON.stringify(k), '-> rows', r.length, 'cols', csvColumnCount(r), JSON.stringify(r));\n}\n\""
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L77:argsPayload]
+
+## S26:L78 2026-09-29T06:40:54.418Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:cwd]
+[ts]
+1790664054418
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L78:isError]
+
+## S26:L79 2026-09-29T06:40:54.419Z legacy toolResult
+toolResult bash False
+[text]
+"trailing newline" -> rows 1 cols 2 [["a","b"]]
+"trailing blank line" -> rows 1 cols 2 [["a","b"]]
+"trailing delimiter" -> rows 2 cols 3 [["a","b"],["c","d",""]]
+"only newline" -> rows 0 cols 0 []
+"empty" -> rows 0 cols 0 []
+"all-empty last row" -> rows 2 cols 2 [["a","b"],["",""]]
+"quoted empty last field" -> rows 2 cols 2 [["a","b"],["c",""]]
+"single quoted empty file" -> rows 0 cols 0 []
+"trailing quoted empty single-col" -> rows 1 cols 1 [["a"]]
+"leading blanks" -> rows 3 cols 2 [[""],[""],["a","b"]]
+"middle blank single-col" -> rows 3 cols 1 [["a"],[""],["b"]]
+"cleared-footprint reparse (a then blanks)" -> rows 1 cols 1 [["a"]]
+
+## S26:L80 2026-09-29T06:43:27.318Z legacy assistant
+[thinking]
+All confirmed. Now write the advisory response. Structure: per question 1–5, concrete and brief, with a final "do not commit without root owner" list.
+Key findings:
+**Q1 — Footprint definition edges.** Verified all six cases against d536aa2's parseCsv; all match the owner's stated expectations. The definition is reproducible ONLY if "actual row/col count" is defined as the parser's trimmed record list. Two genuine ambiguities that could produce harness failures:
+(a) `a,b\n\n` → implementation gives rows 1 (trailing blank lines dropped, D-A5). But root's pinned semantic (2) literally covers only "a single trailing newline at end of file"; a strict reading of "a,b\n\n" yields a 1-field record for the blank line → rows 2, cols 2 (ragged-padded). This is now observable in export (footprint-shaped empties) — before A-4 it was invisible. Not safe to commit without explicit root confirmation OR pin it explicitly in AC as an extension of (2). D-A5 says "尾部空行不产生记录" so the issue-side decision exists; but since root re-pinned exactly 4 semantics in A-1 and (2) is narrower, flag it.
+(b) `""` (single quoted empty field) and `a\n""` → trailing single-empty-field records are dropped indistinguishably from blank lines (verified: `""` → 0 records). REQ-1-3-1 says "preserves empty fields"; a field-level round-trip harness with an independently-written expectation (not same-parser round trip) fails on these. Either pin "a trailing record that is exactly one empty field is treated as a blank line, even when quoted" in AC, or ask root. Note: same-parser round trip `parse(export(parse(x)))` still passes; only independent-expectation harnesses fail.
+Cols = widest record: yes, obviously correct — anything else crops ragged data (`a,b,c\nd` with last-record-width would drop b,c). Not really a choice.
+Hidden asymmetries to document: leading/middle blank lines are KEPT (as 1-field records ragged-padded); only trailing dropped; the drop is defined by parsed shape (single empty field), not by source bytes, so a quoted `""` trailing record is also dropped; trailing all-empty rows of width ≥2 are kept.
+**Q2 — Y-min failure modes.** 
+- Y-min is what makes field-level round-trip work at all for trailing empty fields/rows (`a,b\n,` → export `a,b\n,` re-parses equal; without footprint the trailing `,` row is lost). 
+- Y-min cannot fix: single-column trailing empty rows. Verified: import `a\n\nb`, delete b, footprint 3×1, export = `a\n\n` (lines joined, no trailing terminator), re-parse drops trailing blanks → footprint shrinks to 1×1. Grid values unchanged (REQ-1-3-2 holds), export1≠export2 for export→import→export text idempotency. Document as a known limitation or accept; don't try to fix by emitting trailing newline (would contradict pinned (2)/no-trailing-terminator choice... actually emitting `a\n\n\n`? To represent 3 rows of single-col with trailing empties you'd need lines ['a','',''] joined = "a\n\n" — that IS the emission; re-parse drops it. Unfixable within the pinned format without a trailing terminator + keeping blanks... genuinely unrepresentable. Document it.)
+- Byte-exact harnesses fail regardless of Y-min (CRLF→LF normalization inside/outside quotes, BOM strip, quote-style normalization `"a"`→`a`, `"ab"cd`→`abcd`, no trailing terminator). Y-min never converts an exact-match pass into a fail: any trailing-empty shape that Y-min emits extra was already lost without it. So: optimize for field-level; AC must explicitly declare byte-exact comparison out of scope except on canonical inputs (LF, minimal quoting, no trailing newline, no BOM), otherwise a test author will write `expect(text).toBe(original)` and fail for reasons unrelated to Y-min.
+- Remaining harness shapes that fail despite Y-min: (i) same as Q1(b) quoted-empty-trailing; (ii) harness comparing export text idempotency for single-column sheets; (iii) harness that counts rows by newlines in original file incl. trailing blanks.
+**Q3 — Empty-file precedence.** The formula is right but state it as `rows = max(bboxRows, minRows); cols = max(bboxCols, minCols); output empty iff rows === 0 || cols === 0`. Root's phrasing "bounding box AND footprint both empty" equals `rows===0 && cols===0` only because real imports always produce (0,0) or (≥1,≥1); via `PUT state` a client can write mixed (3,0) (passes min ≤ structure), where the two phrasings diverge — `||` is the safe reading (a 3×0 export is unrepresentable; emitting 3 empty lines re-parses as 3×1, not 3×0). Alternatively validate "both zero or both positive" on the state path — that's beyond the root's stated validation, so flag as a small assumption to confirm or just document the `||` behavior. No conflict with REQ-1-3-2's "grid values unchanged" (export is pure, writes nothing) or download assertions (empty text → 0-byte file; keep the `csvFileName` sanitize behavior). Also note: `worksheetToCsv` currently early-returns on `maxRow < 0 || maxCol < 0` — the new formula replaces that, and the AC should pin the exact "import 3×2 → clear all → export" expected text (`,\n,` — wait, 3 rows × 2 cols of empties = lines [',',',',','].join('\n') = ",\n,\n," — the task said "`,\n,` + one more `,` line i.e. three lines of `,`". So ",\n,\n,". Pin the exact string with explicit char count because "three lines of `,`" with no trailing terminator is ",\n,\n," (5 chars), a classic off-by-one for test authors.
+**Q4 — State/undo.** 
+- Replay paths: import creates a new workbook, so "undo the import" = delete workbook, not a state restore — no footprint-survival surprise there. `PUT cells: []` (clear-all) intentionally keeps footprint (root's explicit rule) — that IS the case where the footprint survives something a naive user might expect to remove it; it's ruled, so pin it as a test.
+- Tests A should add: (1) PUT state without min fields leaves footprint intact; (2) PUT state with explicit minRows:0/minCols:0 resets; (3) full snapshot round-trip: GET → PUT back → footprint unchanged (requires GET to include the fields); (4) the root's example: clear all → export is footprint-shaped.
+- GET snapshot: ALWAYS include minRows/minCols, defaulting NULL→0 for non-import worksheets. Omitting-when-zero is dangerous precisely because the write semantics are "undefined = no change": a snapshot that omits zeros can never reset a footprint when replayed. Since undefined means no-change, the only way to express "0" is an explicit 0 — so GET must emit explicit 0s. This is a real consequence worth stating in the contract increment.
+- Missed consequence: validation `min ≤ reported structure` is write-time-only on provided fields. If a payload shrinks rowCount below the EXISTING min without providing min fields, or B's structural endpoints shrink structure (B doesn't read the fields — ruled), then min > structure coexists; export still emits max (beyond grid structure). So do NOT write AC asserting "min ≤ structure" as a persistent invariant — only as a write-time check on provided min fields. Recommend: when payload provides structure but not min, do not revalidate existing min (revalidating would break undo replays). Flag to root? It's a small unstated consequence; document as assumption.
+**Q5 — Transitional private validation.**
+Risks: (a) drift in error code/message text between A's private check and B's shared helper (harnesses assert exact 400 text — pin the exact message in the contract now); (b) B's helper landing without a hook for the min rule, making the "mechanical switch" a redesign; (c) the switch silently dropping the min check if the helper validates only dims/cells.
+What A should state to B as the consumption contract: a concrete signature proposal, e.g. `assertStateStructure({ rowCount?, colCount?, minRows?, minCols?, cells? }, current: {rowCount, colCount})` → throws ApiError 400 INVALID_BODY/VALIDATION_ERROR with the exact pinned messages; semantics: dims positive-integer; cells within effective structure (payload structure ?? current); each provided min is a non-negative integer ≤ effective structure. A writes its private helper to exactly this signature and these messages from day one, with the same tests; the switch is then an import-line change and the SAME tests must pass before/after (that's the merge-condition evidence). Merge condition should be tracked as a named follow-up item in A's handoff and verified on develop after B's PR #9 lands, not just "tracked".
+Also overall flags — things not to commit without root:
+1. `a,b\n\n` footprint = 1 vs 2 (pinned semantic (2) narrower than D-A5's generalization). This is the top item.
+2. Quoted trailing empty single field (`""`, `a\n""`) dropped — "preserves empty fields" tension.
+3. Mixed (0,n) footprint via state path — confirm `||`-empty rule or "both-zero-or-both-positive" validation.
+4. min > structure coexistence after structure shrink (write-time-only validation) — confirm it's intended that export can exceed grid structure. Root did rule "static; export still takes max" so this is arguably covered — just document.
+Also small notes: migration re-runnability fits existing schema_migrations pattern; better-sqlite3 already in use — no new compat risk. The 6×26 floor applies to structure only, NOT footprint (footprint = raw CSV dims; an imported 1×1 CSV exports 1×1, not 6×26) — worth one AC line because a test author could confuse the two "max" rules.
+Let me also double check the exact export string for import 3x2 clear all: rows=3, cols=2, each line fields ['',''].join(',') = ',', lines joined '\n' → ",\n,\n,". Yes.
+And for Q2: byte-exact round-trip actually succeeds for canonical inputs WITH Y-min, e.g. `a,b\n,` → export `a,b\n,`. Good example.
+One more consideration for Q1: "trailing delimiter" case `a,b\nc,d,` — export after import: footprint 2×3, bbox row0-1 col0-1 (c,d), export = `a,b,\nc,d,` — wait: fields: row0: a,b,'' → "a,b,"; row1: c,d,'' → "c,d,". Original was `a,b\nc,d,` → export differs by trailing comma on row 0! Byte-exact fails even on canonical LF input! Field-level equal. Interesting — that's a nice concrete example that field-level ≠ byte-level even with LF-only minimal input, because ragged padding adds delimiters to short rows. Worth citing in Q2 to kill any byte-exact ambition definitively.
+Now write the final answer. Keep it structured per question, brief, concrete, evidence-cited (verified against d536aa2 parser by execution). End with "do not commit without root owner" list. Response should be in the task's language — the task is in English, repo materials Chinese. I'll answer in English with Chinese terms where quoting rulings.
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L80:C1]
+[text]
+All claims verified against PR #8 head `d536aa2` (I read `csv.js`, `csvExport.ts`, `store.js`, `routes.js`, `types.d.ts`, `db.js` and executed the parser on every edge case you listed). Findings per question:
+## 1. Footprint definition edges — mostly well-defined, two cases are NOT safe to publish silently
+All six of your cases reproduce exactly as you stated against the current parser (verified by execution):
+| input | rows × cols |
+| `a,b\n` | 1×2 |
+| `a,b\n\n` | 1×2 (trailing blank dropped) |
+| `a,b\nc,d,` | 2×3 |
+| `\n` / empty | 0×0 |
+| `a,b\n,` | 2×2 |
+| `a,b\nc,""` | 2×2 |
+Cols = widest record, unambiguously — anything else crops ragged data (`a,b,c\nd` with last-record-width would silently drop `b,c`). That's not a real choice.
+But the footprint is only third-party-reproducible if defined as **"the parser's trimmed record list"**, not "rows/cols of the file". Two cases will diverge from an independently-written harness:
+- **(a) `a,b\n\n` → rows 1 or 2?** The implementation drops *all* trailing blank lines (D-A5). Root's pinned semantic (2) covers only "*a single* trailing newline at end of file". A strict reading of `a,b\n\n` yields a 1-field record for the blank line → 2×2 after ragged padding. Before A-4 this difference was invisible (empty cells aren't stored); **with the footprint it is observable in every export** (`a,b` vs `a,b\n,`). This is the single most likely external-harness failure.
+- **(b) `""` alone, or `a\n""` → the quoted empty field is dropped.** Verified: `""` parses to 0 records; `a\n""` → 1×1. The trailing-blank drop is defined by parsed *shape* (single empty field), not source bytes, so an explicitly quoted empty trailing field is indistinguishable from a blank line. REQ-1-3-1 says "preserves empty fields" — a harness with hand-written expectations fails here. Note a same-parser round-trip (`parse(export(parse(x)))`) still passes; only independent expectations fail.
+Hidden asymmetries to document in the AC: leading/middle blank lines are **kept** (verified: `\n\na,b` → 3×2, `a\n\nb` → 3×1); only trailing ones drop; trailing all-empty rows of width ≥ 2 are kept. Also pin explicitly: the 6×26 floor applies to worksheet **structure only, never to the footprint** (an imported 1×1 CSV exports 1×1) — a test author will confuse the two "max" rules.
+## 2. Y-min failure modes — optimize for field-level; byte-exact is already dead without Y-min
+- **Y-min is what makes field-level round-trip work at all** for trailing empties: `a,b\n,` → bbox-only export loses the `,` row (field-level failure); footprint export emits `a,b\n,` — even byte-equal.
+- **Y-min never converts a byte-exact pass into a fail.** Byte-exact already fails independent of Y-min: CRLF normalization, BOM strip, quote-style (`"a"`→`a`, `"ab"cd`→`abcd`), no trailing terminator — and, the killer example, **ragged padding adds delimiters**: `a,b\nc,d,` exports as `a,b,\nc,d,` (byte-different, field-equal) even on canonical LF input. So the AC must declare byte-exact comparison out of scope except on fully canonical inputs, or a test author will write `expect(text).toBe(originalCsv)` and fail for reasons unrelated to Y-min.
+- **One residual field-level failure Y-min cannot fix: single-column trailing empty rows.** Verified: import `a\n\nb`, clear `b`, footprint stays 3×1, export emits `a\n\n` (lines joined, no trailing terminator), and re-parsing drops the trailing blanks → re-import footprint shrinks to 1×1. Grid values are unchanged (REQ-1-3-2 holds), but export→import→export text is not idempotent for 1-column sheets with trailing empty footprint rows. This is unrepresentable within the pinned format (any terminator-based fix would violate pinned (2)/the no-trailing-terminator choice). Document it as a known limitation; don't try to fix it.
+- Given the root already ruled Y-min + field-level fidelity: optimize for field-level. The only harness shape Y-min "hurts" is one written against bbox-only expectations — prevent that by making footprint-shaped output the *expected* shape in every AC example.
+## 3. Empty-file precedence — your formula is right, but use `||`, not "both"
+Publish it as: `rows = max(bboxRows, minRows); cols = max(bboxCols, minCols); output is empty text iff rows === 0 || cols === 0`.
+Root's phrasing "empty only when bounding box AND footprint are both empty" is equivalent to `rows===0 && cols===0` only because real imports always yield `(0,0)` or `(≥1,≥1)`. But `PUT .../state` (owned by A, per the ruling) lets a client write a mixed `(3,0)` footprint — it passes `min ≤ structure` — where the two phrasings diverge. `||` is the only safe reading: a 3×0 export is unrepresentable (three empty lines re-parse as 3×**1**, not 3×0). Either document the `||` behavior or add "both zero or both positive" to state validation — the latter exceeds the root's stated validation, so I'd document `||` and note it.
+No conflict with REQ-1-3-2's "grid values unchanged" (export is pure client-side, writes nothing) or download assertions (empty text → 0-byte Blob; keep `csvFileName` sanitization).
+One concrete pinning: write the root's example as an exact string. Import 3×2 → clear all → export = `",\n,\n,"` (5 chars, three lines of `,`, **no trailing terminator**). "Three lines" invites an off-by-one (`",\n,\n,\n"`); pin the literal.
+## 4. State/undo interaction
+- **Undo of the import itself is not a state restore** — import creates a new workbook; undo would delete it. No footprint-survival surprise there. The one place footprint *does* survive something a naive user might expect to remove it is **clear-all (`PUT cells: []`)** — and that's the root's explicit ruling, so pin it as a test, not a surprise.
+- Tests A should add: (1) PUT state *without* min fields leaves footprint intact; (2) PUT state with explicit `minRows: 0, minCols: 0` resets it; (3) GET → PUT-back round trip preserves the footprint (requires GET to emit the fields); (4) the root's clear-all → footprint-shaped-export example.
+- **GET must always include `minRows`/`minCols` (0 for non-import worksheets, NULL→0 in the snapshot).** Omitting-when-zero is unsafe precisely because write semantics are "undefined = no change": an omitted zero can never reset a footprint on replay. Explicit 0 in every snapshot is the only representation that round-trips. State this in the contract increment.
+- **Missed consequence to document:** `min ≤ structure` is a **write-time check on provided fields only**, not a persistent invariant. A payload that shrinks `rowCount` below the *existing* footprint without providing min fields, or B's structural endpoints shrinking structure (B doesn't read the fields — ruled), leaves `min > structure` coexisting, and export then emits more rows than the grid has. Do **not** let anyone write an AC asserting the invariant globally, and do **not** revalidate existing min when only structure is provided — that would break undo replay. This follows from the root's "static; export still takes max" ruling, so document rather than re-ask.
+## 5. Transitional private validation
+Real risks: (a) error code/message drift between A's private check and B's helper (harnesses assert exact 400 text); (b) B's helper landing without a hook for the min rule, turning the "mechanical switch" into a redesign; (c) the switch silently *dropping* the min check.
+What A should hand B as the consumption contract — concrete enough to be mechanical:
+- Signature: `assertStateStructure({ rowCount?, colCount?, minRows?, minCols?, cells? }, current: { rowCount, colCount })` → throws 400 with the **exact pinned error codes/messages** (pin the message strings in the shared contract *now*, e.g. reuse the existing `'rowCount must be a positive integer'` style, plus one new message for the min rule).
+- Semantics: dims positive-integer; cells within *effective* structure (payload structure ?? current); each provided min is a non-negative integer ≤ effective structure; absent fields unchecked.
+- A writes its private helper to exactly this signature and these messages from day one, covered by the same tests. Merge-condition evidence = **the identical tests pass on develop before and after the switch**; track it as a named follow-up item in A's handoff that is verified after PR #9 lands, not just "tracked".
+## Do NOT commit without root-owner confirmation
+1. **`a,b\n\n` footprint = 1 (drop all trailing blanks) vs 2 (literal reading of pinned (2)).** D-A5 already generalizes, but root re-pinned exactly 4 semantics in A-1 and (2) is narrower; A-4 makes this observable for the first time. One-line confirmation suffices. (Top priority.)
+2. **Quoted trailing empty single field (`""`, `a\n""`) is dropped as a "blank line"** — tension with "preserves empty fields". Pin it explicitly or ask.
+3. Minor, document-don't-ask (covered by existing rulings, but state them so nobody re-litigates): mixed `(0,n)` footprint → `||` empty rule; `min > structure` after structure shrink is legal and export exceeds grid structure; single-column trailing-empty footprint is not ro

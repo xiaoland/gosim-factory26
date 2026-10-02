@@ -1,0 +1,426 @@
+{
+  "experiment": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct",
+  "execution_records": [
+    {
+      "run_id": "pi-braid--hackathon--github-87616ca3ee80f1",
+      "phase": "cancelled",
+      "started_at": 1790563011.3928416,
+      "finished_at": 1790567069.5447683,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--github-87616ca3ee80f1/run.json",
+      "task": "github",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": null,
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--github-87616ca3ee80f1/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--github-87616ca3ee80f1/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-6533a6edafdd94",
+      "phase": "cancelled",
+      "started_at": 1790563010.966845,
+      "finished_at": 1790567071.6632085,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/run.json",
+      "task": "sheet",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": null,
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation/runs/pi-braid--hackathon--sheet-6533a6edafdd94/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-48681390d16c89",
+      "phase": "finished",
+      "started_at": 1790567344.8168175,
+      "finished_at": 1790567917.4451923,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--github-48681390d16c89/run.json",
+      "task": "github",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "03-input-repair",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--github-48681390d16c89/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--github-48681390d16c89/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-8b17a98231417f",
+      "phase": "finished",
+      "started_at": 1790567344.655201,
+      "finished_at": 1790567938.844023,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/run.json",
+      "task": "sheet",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "03-input-repair",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation/runs/pi-braid--hackathon--sheet-8b17a98231417f/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-cd96acb2188357",
+      "phase": "finished",
+      "started_at": 1790569194.3856595,
+      "finished_at": 1790569473.4582598,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--github-cd96acb2188357/run.json",
+      "task": "github",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "04-native-material-hotfix",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--github-cd96acb2188357/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--github-cd96acb2188357/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-bb12af664cce56",
+      "phase": "finished",
+      "started_at": 1790569194.4954586,
+      "finished_at": 1790569474.8670447,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/run.json",
+      "task": "sheet",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "04-native-material-hotfix",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation/runs/pi-braid--hackathon--sheet-bb12af664cce56/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-470b59e7eebba8",
+      "phase": "finished",
+      "started_at": 1790569738.2495015,
+      "finished_at": 1790570018.1929107,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--github-470b59e7eebba8/run.json",
+      "task": "github",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "05-package-metadata-hotfix",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--github-470b59e7eebba8/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--github-470b59e7eebba8/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-d40c0b57bb4a78",
+      "phase": "finished",
+      "started_at": 1790569738.333357,
+      "finished_at": 1790570022.6124015,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/run.json",
+      "task": "sheet",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "05-package-metadata-hotfix",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation/runs/pi-braid--hackathon--sheet-d40c0b57bb4a78/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-0fe4e541703143",
+      "phase": "cancelled",
+      "started_at": 1790570734.4222527,
+      "finished_at": 1790572743.1376429,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--github-0fe4e541703143/run.json",
+      "task": "github",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "06-recovery-boundary-hotfix",
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--github-0fe4e541703143/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--github-0fe4e541703143/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-e1454bb0055129",
+      "phase": "cancelled",
+      "started_at": 1790570734.5018742,
+      "finished_at": 1790572749.9859948,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/run.json",
+      "task": "sheet",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "06-recovery-boundary-hotfix",
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation/runs/pi-braid--hackathon--sheet-e1454bb0055129/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-116b6cbc63dc5c",
+      "phase": "cancelled",
+      "started_at": 1790573271.480861,
+      "finished_at": 1790576812.1376867,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--github-116b6cbc63dc5c/run.json",
+      "task": "github",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "07-visual-observability-hotfix",
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--github-116b6cbc63dc5c/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--github-116b6cbc63dc5c/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-28ca9afab308e8",
+      "phase": "cancelled",
+      "started_at": 1790573271.3709483,
+      "finished_at": 1790576820.028518,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/run.json",
+      "task": "sheet",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "07-visual-observability-hotfix",
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation/runs/pi-braid--hackathon--sheet-28ca9afab308e8/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-97914b9e3158cf",
+      "phase": "cancelled",
+      "started_at": 1790577423.247027,
+      "finished_at": 1790583184.9308407,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--github-97914b9e3158cf/run.json",
+      "task": "github",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "07-visual-observability-hotfix",
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--github-97914b9e3158cf/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--github-97914b9e3158cf/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-d478f7dc8ff84f",
+      "phase": "cancelled",
+      "started_at": 1790577423.3416831,
+      "finished_at": 1790583170.8592472,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/run.json",
+      "task": "sheet",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "07-visual-observability-hotfix",
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation/runs/pi-braid--hackathon--sheet-d478f7dc8ff84f/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-35f824a03b1d18",
+      "phase": "finished",
+      "started_at": 1790585214.86674,
+      "finished_at": 1790585237.3079422,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation/runs/pi-braid--hackathon--github-35f824a03b1d18/run.json",
+      "task": "github",
+      "operation": "continue-generation",
+      "source_run_id": "pi-braid--hackathon--github-88884da4b94a0f",
+      "retained_generation": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation",
+      "recovery_attempt": "09-continuation-01",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-6aa15927132124",
+      "phase": "finished",
+      "started_at": 1790585214.7569027,
+      "finished_at": 1790585250.383127,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation/runs/pi-braid--hackathon--sheet-6aa15927132124/run.json",
+      "task": "sheet",
+      "operation": "continue-generation",
+      "source_run_id": "pi-braid--hackathon--sheet-984a08e3155e3e",
+      "retained_generation": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation",
+      "recovery_attempt": "09-continuation-01",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-87ab8b23798b19",
+      "phase": "finished",
+      "started_at": 1790585475.9140239,
+      "finished_at": 1790585497.0342011,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation/runs/pi-braid--hackathon--github-87ab8b23798b19/run.json",
+      "task": "github",
+      "operation": "continue-generation",
+      "source_run_id": "pi-braid--hackathon--github-88884da4b94a0f",
+      "retained_generation": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation",
+      "recovery_attempt": "09-continuation-02",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-2295267a737e43",
+      "phase": "finished",
+      "started_at": 1790585475.803947,
+      "finished_at": 1790585510.3198934,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation/runs/pi-braid--hackathon--sheet-2295267a737e43/run.json",
+      "task": "sheet",
+      "operation": "continue-generation",
+      "source_run_id": "pi-braid--hackathon--sheet-984a08e3155e3e",
+      "retained_generation": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation",
+      "recovery_attempt": "09-continuation-02",
+      "result_status": "failed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-3d75045c72f1d6",
+      "phase": "finished",
+      "started_at": 1790587203.6263819,
+      "finished_at": 1790590214.4980505,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--github-3d75045c72f1d6/run.json",
+      "task": "github",
+      "operation": "continue-generation",
+      "source_run_id": "pi-braid--hackathon--github-88884da4b94a0f",
+      "retained_generation": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation",
+      "recovery_attempt": "09-continuation-03",
+      "result_status": "completed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-22730f82778f3a",
+      "phase": "cancelled",
+      "started_at": 1790587203.7069578,
+      "finished_at": 1790600503.7542427,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation/runs/pi-braid--hackathon--sheet-22730f82778f3a/run.json",
+      "task": "sheet",
+      "operation": "continue-generation",
+      "source_run_id": "pi-braid--hackathon--sheet-984a08e3155e3e",
+      "retained_generation": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation",
+      "recovery_attempt": "09-continuation-03",
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-88884da4b94a0f",
+      "phase": "cancelled",
+      "started_at": 1790583648.6935117,
+      "finished_at": 1790584540.1427162,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/run.json",
+      "task": "github",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "09-feedback-delegation-hotfix",
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-984a08e3155e3e",
+      "phase": "cancelled",
+      "started_at": 1790583648.803395,
+      "finished_at": 1790584547.3984783,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/run.json",
+      "task": "sheet",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": "09-feedback-delegation-hotfix",
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    },
+    {
+      "run_id": "pi-braid--hackathon--github-3f4ccbad1e52fa",
+      "phase": "cancelled",
+      "started_at": 1790562912.2433023,
+      "finished_at": 1790562916.2982755,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/generation/runs/pi-braid--hackathon--github-3f4ccbad1e52fa/run.json",
+      "task": "github",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": null,
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/generation/runs/pi-braid--hackathon--github-3f4ccbad1e52fa/workspace/official-generation",
+      "braid_databases": []
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-640297261bdf0c",
+      "phase": "cancelled",
+      "started_at": 1790562912.5555308,
+      "finished_at": 1790562915.9515574,
+      "path": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/generation/runs/pi-braid--hackathon--sheet-640297261bdf0c/run.json",
+      "task": "sheet",
+      "operation": "generate",
+      "source_run_id": null,
+      "retained_generation": null,
+      "recovery_attempt": null,
+      "result_status": null,
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/generation/runs/pi-braid--hackathon--sheet-640297261bdf0c/workspace/official-generation",
+      "braid_databases": []
+    },
+    {
+      "run_id": "pi-braid--hackathon--sheet-130e238edd5a6a",
+      "phase": "finished",
+      "started_at": 1790600883.135395,
+      "finished_at": 1790600980.2070072,
+      "path": "/home/yyh/Development/factory26/runs/sheet-materialization-recovery/generation/runs/pi-braid--hackathon--sheet-130e238edd5a6a/run.json",
+      "task": "sheet",
+      "operation": "continue-generation",
+      "source_run_id": "pi-braid--hackathon--sheet-22730f82778f3a",
+      "retained_generation": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation",
+      "recovery_attempt": "09-sheet-materialization-recovery",
+      "result_status": "completed",
+      "generation_directory": "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation",
+      "braid_databases": [
+        "/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation/template/.factory26/20260928-025746-66feadac/braid-state/braid.sqlite3"
+      ]
+    }
+  ]
+}

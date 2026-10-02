@@ -1,0 +1,17 @@
+[
+  {
+    "source": "continuation02-root-native/117-2026-09-28T07-32-57-580Z_01a0e6ee-626c-75de-b585-5d546b014fe0.jsonl:L4",
+    "part": 0,
+    "kind": "items_projection_already_read",
+    "chars": 12565,
+    "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+  },
+  {
+    "source": "continuation02-root-native/117-2026-09-28T07-32-57-580Z_01a0e6ee-626c-75de-b585-5d546b014fe0.jsonl:L55",
+    "part": 0,
+    "kind": "mechanical_write",
+    "path": "/tmp/reply-112.md",
+    "field": "content",
+    "chars": 1355
+  }
+]

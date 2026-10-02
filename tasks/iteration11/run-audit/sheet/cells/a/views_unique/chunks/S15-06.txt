@@ -1,0 +1,119 @@
+t({ name: 'Sheet1', isActive: true });
+    expect(sheet.lastSelection).toMatchObject({ r1: 0, c1: 0, r2: 0, c2: 0 });
+    expect(sheet.cells).toEqual([
+      [0, 0, '地区'],
+      [0, 1, '销售额'],
+      [1, 0, '华东'],
+      [1, 1, '1200'],
+      [2, 0, 'North'],
+      [2, 1, '800'],
+    expect(list.body.map((/** @type {{ name: string }} */ w) => w.name)).toContain('Sales Report');
+    const snapshot = await request(app).get(`/api/workbooks/${res.body.id}`);
+    expect(snapshot.body.worksheets[0].cells).toEqual(sheet.cells);
+  it('imports quoted commas, escaped quotes, in-field newlines and empty fields', async () => {
+    const csv = 'a,"b,c","d""e","f\ng"\n1,,"","x"\n';
+    const res = await request(app).post('/api/workbooks/import').send({ fileName: 'tricky.csv', csv });
+    // `raw === ''` is not persisted (same convention as every write path).
+    expect(res.body.worksheets[0].cells).toEqual([
+      [0, 0, 'a'],
+      [0, 1, 'b,c'],
+      [0, 2, 'd"e'],
+      [0, 3, 'f\ng'],
+      [1, 0, '1'],
+      [1, 3, 'x'],
+  it('keeps the default 6x26 structure for empty and small CSVs', async () => {
+      .send({ fileName: 'empty.csv', csv: '' });
+    expect(empty.status).toBe(201);
+    expect(empty.body.worksheets[0]).toMatchObject({ rowCount: 6, colCount: 26, cells: [] });
+    const small = await request(app)
+      .send({ fileName: 'small.csv', csv: 'a,b\nc,d' });
+    expect(small.body.worksheets[0]).toMatchObject({ rowCount: 6, colCount: 26 });
+    expect(small.body.worksheets[0].cells).toEqual([
+      [0, 1, 'b'],
+      [1, 0, 'c'],
+      [1, 1, 'd'],
+  it('grows the structure when the CSV is larger than the default', async () => {
+    const rows = Array.from({ length: 10 }, (_unused, row) =>
+      Array.from({ length: 30 }, (_unusedCol, col) => `r${row}c${col}`).join(','),
+    const res = await request(app)
+[DUPLICATES: 112 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L65:C1]
+
+## S15:L66 2026-09-29T06:10:29.461Z message assistant
+[thinking]
+The implementation quality looks high and consistent with the design. Tests cover the required matrix including the seam injection and the pre-C formula note.
+Note: e2e export empty-file case: `createWorkbook` then export → expect ''. For a brand-new workbook, used range is empty → '' ✓ (D-A7 整表无内容 → 空文件).
+Now the README finding stands. Let me also double check one design detail: D-A7 says used range = "所有非空单元格的最大行/列包围盒（裁掉尾部全空行列）"; implementation uses raw !== '' as content ✓. But consider a worksheet where a cell has raw '=...' and display is ''? Not now.
+One more design detail: The e2e "imports UTF-8" expects C4 = '' — with raw '' not persisted, the grid cell C4 renders '' (displayValue returns '' since no entry) ✓.
+Another: REQ-1-3-1 "After refresh or reopening, grid content and row/column order remain unchanged" ✓ tested.
+Potential issue #2: In `ImportCsvDialog`, no `aria-label`/visible name for file input beyond label ✓. `accept=".csv,text/csv"` doesn't block other files; fine.
+Potential issue #3: NewWorkbookPage's label and Rename dialog's label both "Workbook name" — fine (different pages).
+Potential issue #4: `HomePage` fetches list on mount ✓.
+Potential issue #5: D-A2 says the rename dialog's accessible name is "Rename workbook" via aria-labelledby pointing to the visible heading ✓.
+Potential issue #6: D-A1 assumed the create page has a visible heading? Not required.
+So only one real deviation: README missing the `PUT .../state` third path (and the wording "有两个" instead of three). Let me double check the original comment #36 text to make sure it wasn't "两条路径"— re-reading: comment #33: "`row_count`/`col_count` 的变更入口 = B 的结构操作端点 + `PUT .../state`（快照自带尺寸，基线已实现）+ A 的导入事务". comment #36: "把「...唯一变更入口是结构操作」改为三条路径——**B 的结构操作端点**（唯一带插入/删除行列语义）+ **`PUT .../state`**（整表替换，快照自带尺寸）+ **A 的导入事务**（建表时设定尺寸）". Yes, three paths explicitly. Implementation says two. Clear.
+Now let me post a review comment on PR #8 to @deepseek-5. Since deepseek-5 hasn't handed over yet, the comment should be framed as a pre-handover review finding (narrow, one item), not a formal acceptance rejection. Content:
+【Issue 侧预审：一处 README 窄改偏离 comment #36，需补回第三条路径】（PR #8，@deepseek-5）
+我在 Issue #3 侧按 comment #27/#33/#36 对 035f4f1 做了设计符合性预审（读代码，不替代你的自检）。整体与我方判据一致；发现一处**必须改**的偏离：
+- `README.md:86-88` 现在写「`row_count`/`col_count` 的变更入口有两个：子 Issue B 的结构操作端点与子 Issue A 的导入事务（契约增量 A-2，B 侧已确认）」。
+- comment #36（接 #33）要求的是**三条路径**：B 结构端点 + **`PUT .../state`（整表替换，快照自带尺寸）** + A 导入事务。基线已核实 `PUT .../state` 按 payload 写 `row_count`/`col_count`（`store.js:414-427`），Issue #1 comment #31/#32/#34 已确认；写"有两个"把已核实的第三条路径从文档里删掉，正是 comment #36 想避免的"唯一/不完整入口"表述的残留。
+- 修法：把该句改为"变更入口有三个：B 的结构操作端点（唯一带插入/删除行列语义）、`PUT .../state`（整表替换，快照自带尺寸）与 A 的导入事务（建表时设定尺寸）（契约增量 A-2）"。同段"越界整批 400 不落库""`state` 拒绝超出所报结构的单元格"两条不变量保持原文（你已保留 ✓），不放宽扩张语义。
+顺带确认已核对通过的要点（无需改动）：导入端点单事务/尺寸下界/精确文案/名字派生；创建页与重命名对话框的空名精确文案且不发请求；导入对话框失败保留文件与对话框、role=alert 精确文案；导出 used range 裁尾、RFC4180、无 BOM、`\n`、空表空文件；D-A8 接缝被网格与导出共用且 `Grid` 的内联编辑仍读 raw；D-A10 单处挂载。CSV 解析矩阵（宽松接受 `"ab"cd`、只拒绝未闭合引号、BOM/CRLF/字段内换行原样）与我的 D-A5 一致。
+请把该句修正与随后的自检证据（`pnpm -r test` / `pnpm -r typecheck` / `bash checks/run-e2e.sh` 的首轮结果）一并在本 PR 与 Issue #3 交接；README 修正后我会按 comment #27 完成验收。
+Hmm, should I mention the size-cap open question (comment #46) here too? Yes, briefly: "导入当前不设应用层尺寸上限（Issue #1 thread 1 comment #46 待 @glm-1 裁定）；在你交接前若裁定为全局上限，我会在本 Issue 追一条增量要求。" Good to keep visible.
+Also note: the README deviation—should I also check whether the e2e/test claims pass? I haven't run anything. I should not claim verification of tests. My statement says "读代码预审，不替代自检" ✓.
+Should I run the e2e myself now? The PR owner should run and hand over. My acceptance comes after. But I could pre-verify in my own worktree to save a round trip... Running `bash checks/run-e2e.sh` requires the frontend build and Playwright; it's heavy but feasible. The instructions say to reuse checks and the Issue owner should verify on the actual candidate. Hmm, "验收前提" requires confirming behavior on the acceptance candidate. Since the PR owner will run the same script, me running it now duplicates but gives independent evidence (valuable: "局部旧 PASS 不代表整体验收完成"...). Actually the guidance for the Issue owner: "PR 负责人在本 Issue 交接候选提交、命令、首轮结果与证据；Issue 负责人按 comment #27 验收". So I verify after handover. But an independent verification run by me on the candidate would strengthen acceptance — the root's final integration PR does the full-range acceptance anyway.
+Given the README fix is pending, the candidate will change → my verification should happen after the fix. So: post the review comment now, wait for the fixed candidate + handover.
+Let me post to PR #8. Check `braid pr comment` syntax: probably same as issue. Use `braid pr comment 8 --body-file`.
+Also, should I hide/resolve threads? No.
+One consideration: is it appropriate for me (Issue owner) to comment on PR #8 rather than waiting for handover? Yes — "需要...纠正事实...时才回复，并留下相关工作和证据的入口". This is a correction with evidence.
+[DUPLICATES: 25 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L66:C1]
+[toolCall] write call_00_aYeGBHi62iVTlMinsOWy8776
+{"content": "【Issue 侧预审（候选 035f4f1）：一处 README 窄改必须补回第三条路径】@deepseek-5\n\n我按 Issue #3 comment #27 + #33 + #36 对 `035f4f1` 做了设计符合性预审（只读代码，不替代你的自检与运行证据）。实现整体与判据一致；发现**一处必须改**的偏离：\n\n## 必须改：`README.md:86-88` 的变更入口漏了 `PUT .../state`\n\n- 现在写的是：「`row_count`/`col_count` 的变更入口有两个：子 Issue B 的结构操作端点与子 Issue A 的导入事务（契约增量 A-2，B 侧已确认）」。\n- comment #36（接 #33）要求替换为**三条路径**：**B 的结构操作端点**（唯一带插入/删除行列语义）+ **`PUT .../state`**（整表替换，快照自带尺寸）+ **A 的导入事务**（建表时设定尺寸）。依据 Issue #1 comment #31/#32/#34 已核实：`PUT .../state` 按 payload 写 `row_count`/`col_count`（`backend/src/store.js:414-427`，42×7 用例 200）。\n- 写\"有两个\"等于把已核实的第三条路径从文档里删掉，仍是 comment #36 想消除的\"入口不完整\"表述；请改成三条路径。同段「越界整批 400 不落库」与「`state` 拒绝超出所报结构的单元格」两条不变量保持原文（你已保留 ✓），不放宽扩张语义。\n\n## 预审已核对通过的要点（无需改动，仅记录）\n\n- 后端：`POST /api/workbooks/import` 单事务、`max(行,6) × max(列,26)`、`INVALID_CSV` 400 精确文案且不落库、名字去末尾 `.csv`（大小写不敏感）、`Sheet1` 激活 + `DEFAULT_SELECTION`；`fileName`/`csv` 非字符串走统一错误体。\n- CSV 解析（`backend/src/csv.js`）与 D-A5 一致：只拒绝\"以 `\"` 开头且无闭合引号\"；`\"ab\"cd` 宽松接受；BOM 剥离；字段内 `\\r\\n` 原样保留；CR/LF/CRLF 记录分隔；末行换行与尾部空行不产生记录。\n- 前端：创建页空名不发请求 + 精确文案；重命名对话框空名精确文案且标题保持原名；导入对话框失败保持打开/文件保留 + `role=alert` 精确文案；导出 used range 裁尾、RFC4180、无 BOM、`\\n`、空表导出空文件；D-A8 接缝被网格渲染与导出共用，`Grid` 内联编辑与 FormulaBar 仍读 `raw`；D-A10 只在 `WorkbookEditor.tsx` 一处挂载 `WorkbookToolbar`；e2e 的公式导出用例已带\"**C 合入时必须翻转为计算结果**\"标注。\n\n## 交接要求（不变）\n\nREADME 修正后，请按 PR 正文给出候选提交号 + `pnpm -r test` / `pnpm -r typecheck` / `bash checks/run-e2e.sh` 的命令、退出码与首轮结果（失败保留原始输出），在 Issue #3 交接；我按 comment #27 + #33 + #36 验收。\n\n另请注意一处未决（不阻塞）：导入当前不设应用层尺寸上限，实际边界为请求体 10mb；\"尺寸上限是否全局不变量\"已请 @glm-1 裁定（Issue #1 thread 1 comment #46）。若裁定为全局上限，我会在 Issue #3 追一条增量要求给你。\n", "path": "/tmp/pr8-review.md"}
+
+## S15:L67 2026-09-29T06:10:29.464Z message toolResult
+toolResult write False
+[text]
+Successfully wrote to /tmp/pr8-review.md
+
+## S15:L68 2026-09-29T06:10:31.053Z message assistant
+[toolCall] bash call_00_ET_vVwn1LJMLkSVLR79QIos1085
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid pr comment 8 --body-file /tmp/pr8-review.md 2>&1 | head -10"}
+
+## S15:L69 2026-09-29T06:10:31.310Z message toolResult
+toolResult bash False
+[text]
+comment #47
+消息投递回执 — 评论 #47（仅表示评论输入的接收状态）
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L69:C1]
+
+## S15:L70 2026-09-29T06:10:38.145Z message assistant
+[thinking]
+Posted PR #8 comment #47 (notification to deepseek-5 and glm-1).
+Now, next steps: wait for deepseek-5's fix + handover. Meanwhile, is there anything else productive? Possibly I should verify the whole thing myself after the fix. Also, I could consider upgrading the packet entry? The packet is on the PR branch, owned by deepseek-5 — don't touch.
+I think the turn's productive work is done:
+- Reviewed and raised the one blocking deviation.
+- Documented the size-cap open question in Issue #1 thread 1 (#46) and in Issue #3 body.
+Now I should end the turn, and the system will wake me on updates. Let me write a concise summary.
+Actually, wait. Let me reconsider whether I should also start my own acceptance verification on the candidate (e.g., run e2e) so that when deepseek-5 handovers, I already have independent evidence. The candidate will change (README fix only, which doesn't affect tests). Running the e2e now in my worktree would take several minutes (install/build/Playwright). Is it worth it? Benefits: independent verification (the Issue owner's acceptance evidence), catching failures early. Cost: my worktree needs node_modules (maybe absent) and pnpm install; plus it may modify my worktree state (dist, node_modules — untracked). It's allowed (temporary workspace). The guidance encourages "复用有效的局部检查" and warns not to duplicate PR-side work but also that the Issue owner verifies. Hmm, the PR owner will provide evidence; my acceptance should ideally independently confirm at least key behaviors on the exact candidate. Given the final root integration PR runs full acceptance, and my Issue-level acceptance can consume PR evidence + design review, maybe a lighter independent check suffices: run backend+frontend unit tests and the e2e script once. The e2e is the strongest evidence.
+Given the README-only fix upcoming, I'd rather run my acceptance on the fixed candidate. Let me wait for the handover instead, to avoid running twice.
+But there is a risk: deepseek-5 might take a while, and the harness will wake me anyway. Ending the turn is right.
+Let me also double check: is there any chance the README deviation is intentional and justified (e.g., they consider `PUT .../state` not a "变更入口" because it's a restore)? Comment #32/#34 explicitly包括 state as a path. So no.
+One more: the PR body says "**README 窄改（comment #33 + #36）**：..." — consistent with three paths; implementation differs from its own PR body. Good, my finding is well-grounded.
+Let me summarize for the user.
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L70:C1]
+[text]
+已处理本轮更新。本轮动作与依据：
+**1. 处理 Issue #1 thread 1 的新增量（comment #38/#39/#40/#42/#43/#45）**
+- 内容为子 Issue B 的 B-1…B-3（结构端点/选区边界/snapshot 形状）与基础层的核对，属 B↔基础层协作。
+- 对 A 的影响判定：**无直接影响**（A 不消费 `PATCH .../worksheets/:wid`、`PUT .../state` 的响应形状；A 导入写 `DEFAULT_SELECTION` 恒在界内）。
+**2. 发现并升级一条真实交叉：B-1 尺寸上限 vs A 导入**
+- 事实（在 `698afd2` 核实）：A-2 导入无上限；基线 `PUT .../state`（`store.js:414-427`）也无上限；`Grid.tsx` 全量渲染；`express.json` 10mb。
+- 已向 @glm-1 提**具体裁定项**（Issue #1 thread 1 **comment #46**）：尺寸上限是否为全局不变量、import 与 state 是否同限额同错误形状。依据顾问意见，A 侧默认取**需求保真（不设应用层上限）**并显式记录边界，PR #8 不阻塞；若裁定全局化则改动局部可逆。
+**3. 预审 PR #8 候选 `035f4f1`（@deepseek-5 已发布实现）**
+- 已发布审阅意见：PR #8 **comment #47**。结论：实现与 comment #27/#33/#36 整体一致（导入单事务/尺寸下界/精确文案/名字派生、创建页与重命名空名不发请求、导入失败保留文件与对话框、导出 used range+RFC4180+无 BOM+`\n`、D-A8 接缝共用且 FormulaBar/内联编辑仍读 `raw`、D-A10 单处挂载、e2e 已带"C 合入必须翻转"标注）。
+- 发现**一处必须改**：`README.md:86-88` 写成"变更入口**有两个**"，漏掉 comment #36 明确要求的第三条路径 `PUT .../state`（快照自带尺寸，Issue #1 comment #31/#32/#34 已核实）→ 已要求改为三条路径。
+**4. 入口维护**
+- Issue #3 正文窄改：新增"B 侧增量对 A 无直接影响"条 + 未决条记入"导入不设应用层尺寸上限、待 @glm-1 裁定（comment #46）、裁定前 PR #8 按此推进"。
+下一步：等 @deepseek-5 修正 README 并在 Issue #3 交接（候选提交 + `pnpm -r test` / `typecheck` / `checks/run-e2e.sh` 首轮证据），我按 comment #27 + #33 + #36 验收。
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L70:C2]
+

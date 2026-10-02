@@ -1,0 +1,2870 @@
+{
+  "cutoff": "2026-09-29T08:04:43.268468+00:00",
+  "sessions": [
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4.jsonl",
+      "bytes": 1045888,
+      "lines": 414,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          414
+        ]
+      ],
+      "continuation_of": "01a0eb75-f87d-75eb-b5e5-eb3e62365df4",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0eb77-c665-7674-86fb-14b751dee721",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4/3ebac138-5bd4-42b9-8f09-5211be23f4b2/run-0/session.jsonl",
+      "bytes": 52076,
+      "lines": 24,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0eb77-c647-7511-88d6-4cf7f2905b34",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4/3fdb5aa6-1f86-4585-a6ae-d8e23c771c98/run-0/session.jsonl",
+      "bytes": 524107,
+      "lines": 10,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0eb8a-1a04-70a7-a034-0a1256ba707d",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4/575651e2-498f-45b0-9272-c25aa7cefd4e/run-0/session.jsonl",
+      "bytes": 87418,
+      "lines": 22,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/run-history.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/run-history.jsonl",
+      "bytes": 496,
+      "lines": 3,
+      "cwd": null,
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          3
+        ]
+      ],
+      "reader": "root"
+    },
+    {
+      "id": "01a0eb75-f87d-75eb-b5e5-eb3e62365df4",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-2-pi-deepseek-fast-g1--/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4.jsonl",
+      "bytes": 158956,
+      "lines": 47,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/subagent-artifacts/3ebac138-5bd4-42b9-8f09-5211be23f4b2_advisor_0_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/subagent-artifacts/3ebac138-5bd4-42b9-8f09-5211be23f4b2_advisor_0_transcript.jsonl",
+      "bytes": 93116,
+      "lines": 43,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/subagent-artifacts/3fdb5aa6-1f86-4585-a6ae-d8e23c771c98_vision_0_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/subagent-artifacts/3fdb5aa6-1f86-4585-a6ae-d8e23c771c98_vision_0_transcript.jsonl",
+      "bytes": 70754,
+      "lines": 13,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/subagent-artifacts/575651e2-498f-45b0-9272-c25aa7cefd4e_advisor_0_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/subagent-artifacts/575651e2-498f-45b0-9272-c25aa7cefd4e_advisor_0_transcript.jsonl",
+      "bytes": 133795,
+      "lines": 37,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0eb9c-a5a5-77ad-8bf6-a515439be092",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eb9c-72fd-7d60-a6bf-4b6bcf706fbe/2026-09-29T05-21-46-917Z_01a0eb9c-a5a5-77ad-8bf6-a515439be092.jsonl",
+      "bytes": 590738,
+      "lines": 205,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          205
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0eba3-0a9b-705b-bf4e-bb850fdfa71e",
+      "path": "work/native-homes/pi-deepseek-fast-01a0eba2-b586-7793-8c82-075825a0fb6a/2026-09-29T05-28-45-979Z_01a0eba3-0a9b-705b-bf4e-bb850fdfa71e.jsonl",
+      "bytes": 501591,
+      "lines": 183,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          183
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebae-1f93-7297-81ab-1c3c48106879",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebae-1cd4-7e72-8b06-44e5db2fed75/2026-09-29T05-40-52-243Z_01a0ebae-1f93-7297-81ab-1c3c48106879.jsonl",
+      "bytes": 270743,
+      "lines": 128,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          128
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebb6-18d2-7661-a1d8-3e3b51486235",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-15eb-7bd1-9fbc-4b8908764108/2026-09-29T05-49-34-802Z_01a0ebb6-18d2-7661-a1d8-3e3b51486235.jsonl",
+      "bytes": 171992,
+      "lines": 39,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc.jsonl",
+      "bytes": 335176,
+      "lines": 83,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "continuation_of": "01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebb8-d823-755b-a41e-782fea48c074",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc/a88b0965-f9b2-4540-8f95-d3823730b184/run-0/session.jsonl",
+      "bytes": 431186,
+      "lines": 9,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebb7-c386-70aa-80d1-39666c666f24",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc/e1bb6e7b-f006-42e8-8412-b20dd5954390/run-0/session.jsonl",
+      "bytes": 109075,
+      "lines": 16,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebb8-bc58-771d-a157-667fef98ee29",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc/f9ca322c-1c19-4a44-9cd6-395d12bcff18/run-0/session.jsonl",
+      "bytes": 124913,
+      "lines": 33,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc.jsonl",
+      "bytes": 201283,
+      "lines": 25,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/2253fdcb-a274-4f3c-966f-5e23ba5e9ab5_vision_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/2253fdcb-a274-4f3c-966f-5e23ba5e9ab5_vision_transcript.jsonl",
+      "bytes": 48386,
+      "lines": 27,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/5de41a2f-db32-464c-aa25-d56ec63b6fb5_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/5de41a2f-db32-464c-aa25-d56ec63b6fb5_advisor_transcript.jsonl",
+      "bytes": 237402,
+      "lines": 66,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/fa29e299-d5c8-4f87-b6cd-4e5b8249809c_vision_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/fa29e299-d5c8-4f87-b6cd-4e5b8249809c_vision_transcript.jsonl",
+      "bytes": 48793,
+      "lines": 10,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc0-446a-772a-8ad3-ff6aec125bc9",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc0-400c-7661-8bd4-d3c3af9637b6/2026-09-29T06-00-41-322Z_01a0ebc0-446a-772a-8ad3-ff6aec125bc9.jsonl",
+      "bytes": 182075,
+      "lines": 40,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69.jsonl",
+      "bytes": 267855,
+      "lines": 133,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          133
+        ]
+      ],
+      "continuation_of": "01a0ebc0-a900-7638-9aa7-4e72b02bbd69",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc7-0845-7330-8819-b48f4b3d56fc",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69/5f3cb313-ea98-4707-840b-0c53beb954da/run-0/session.jsonl",
+      "bytes": 85929,
+      "lines": 22,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc0-a900-7638-9aa7-4e72b02bbd69",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-8-pi-deepseek-fast-g1--/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69.jsonl",
+      "bytes": 674507,
+      "lines": 200,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          200
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/subagent-artifacts/a4055255-2e14-4312-b0c9-0d5ab1a34a51_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/subagent-artifacts/a4055255-2e14-4312-b0c9-0d5ab1a34a51_advisor_transcript.jsonl",
+      "bytes": 152595,
+      "lines": 37,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc1-4945-7174-bc62-3dcf37b6f00b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc1-45a2-77e2-b31c-6cf83584b9ca/2026-09-29T06-01-48-101Z_01a0ebc1-4945-7174-bc62-3dcf37b6f00b.jsonl",
+      "bytes": 212306,
+      "lines": 66,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc2-0a20-7157-bf8c-7d144a35046a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc2-06f4-7c90-a4e5-40a9e1e2f590/2026-09-29T06-02-37-472Z_01a0ebc2-0a20-7157-bf8c-7d144a35046a.jsonl",
+      "bytes": 155341,
+      "lines": 26,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          26
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc2-d744-70ba-8524-9d8d20611601",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc2-d41b-7672-a74f-07ed0f091441/2026-09-29T06-03-29-988Z_01a0ebc2-d744-70ba-8524-9d8d20611601.jsonl",
+      "bytes": 180208,
+      "lines": 56,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc3-786c-7345-ae86-81845305c138",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc3-7562-7ad0-a616-7bb1fa2b6b1c/2026-09-29T06-04-11-244Z_01a0ebc3-786c-7345-ae86-81845305c138.jsonl",
+      "bytes": 194486,
+      "lines": 56,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04.jsonl",
+      "bytes": 258176,
+      "lines": 70,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          70
+        ]
+      ],
+      "continuation_of": "01a0ebc4-1dae-7748-8714-77375af46a04",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc5-0016-745e-b240-7c73568876b2",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04/c5ad8a08-d101-46e2-860b-4e4c3b1d3788/run-0/session.jsonl",
+      "bytes": 43273,
+      "lines": 18,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc4-1dae-7748-8714-77375af46a04",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04.jsonl",
+      "bytes": 167064,
+      "lines": 29,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/subagent-artifacts/dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/subagent-artifacts/dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_transcript.jsonl",
+      "bytes": 79096,
+      "lines": 29,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc4-8814-7220-a7ab-deff6f41e246",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc4-8434-7f12-a3bf-ad9a4a5dec95/2026-09-29T06-05-20-788Z_01a0ebc4-8814-7220-a7ab-deff6f41e246.jsonl",
+      "bytes": 927850,
+      "lines": 252,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          252
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc5-3650-777f-8e4b-88a93bde301b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc5-32af-7571-9def-80b4757eec72/2026-09-29T06-06-05-393Z_01a0ebc5-3650-777f-8e4b-88a93bde301b.jsonl",
+      "bytes": 166865,
+      "lines": 42,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc7-79d3-724a-b3b9-ec08fc758577",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc7-7725-7880-9ece-44156963afa2/2026-09-29T06-08-33-747Z_01a0ebc7-79d3-724a-b3b9-ec08fc758577.jsonl",
+      "bytes": 309707,
+      "lines": 105,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc9-7b79-755e-a8b8-643b4571e1d8",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc9-7346-7dc2-9c46-8211e72035be/2026-09-29T06-10-45-241Z_01a0ebc9-7b79-755e-a8b8-643b4571e1d8.jsonl",
+      "bytes": 212600,
+      "lines": 62,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762.jsonl",
+      "bytes": 110084,
+      "lines": 23,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "continuation_of": "01a0ebcb-6846-727d-93e0-2ade1020c762",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebcc-43f5-7652-b629-66fcbf3da23d",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762/a967215e-6566-4872-bb7a-ac76bc4caecf/run-0/session.jsonl",
+      "bytes": 36185,
+      "lines": 15,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebcb-6846-727d-93e0-2ade1020c762",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762.jsonl",
+      "bytes": 203468,
+      "lines": 33,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/subagent-artifacts/0c2e9eeb-24dd-4c65-ba3f-e2faa5323224_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/subagent-artifacts/0c2e9eeb-24dd-4c65-ba3f-e2faa5323224_advisor_transcript.jsonl",
+      "bytes": 61886,
+      "lines": 22,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebcb-d9fd-75af-be83-b5b599b13a0c",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcb-d71a-7471-ba88-e518618da1ea/2026-09-29T06-13-20-509Z_01a0ebcb-d9fd-75af-be83-b5b599b13a0c.jsonl",
+      "bytes": 267577,
+      "lines": 48,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebcd-6883-7463-bba5-830ca09e23cb",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcd-5e55-7312-82d9-755c6f6c6379/2026-09-29T06-15-02-531Z_01a0ebcd-6883-7463-bba5-830ca09e23cb.jsonl",
+      "bytes": 198339,
+      "lines": 28,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl",
+      "bytes": 407282,
+      "lines": 174,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          174
+        ]
+      ],
+      "continuation_of": "01a0ebdc-3fb1-7517-ad34-eb35a3dae14a",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebdd-7ea0-7232-a9fd-ffa01b4434ac",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a/83bedfe6-4f97-4e9f-8b65-5f59342ce273/run-0/session.jsonl",
+      "bytes": 131736,
+      "lines": 43,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebdc-3fb1-7517-ad34-eb35a3dae14a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl",
+      "bytes": 212945,
+      "lines": 40,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/subagent-artifacts/af48bea3-2eab-4072-8fb2-6f9684891a88_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/subagent-artifacts/af48bea3-2eab-4072-8fb2-6f9684891a88_advisor_transcript.jsonl",
+      "bytes": 227945,
+      "lines": 80,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          80
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebdc-3fa8-735a-a6dc-4f8a1af6459a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0222-7f12-8b44-264928eabde2/2026-09-29T06-31-15-112Z_01a0ebdc-3fa8-735a-a6dc-4f8a1af6459a.jsonl",
+      "bytes": 819669,
+      "lines": 238,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          238
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebdc-4c7c-7630-ba34-911b5b01f068",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-48ff-7523-a852-0e2ddb224aad/2026-09-29T06-31-18-396Z_01a0ebdc-4c7c-7630-ba34-911b5b01f068.jsonl",
+      "bytes": 519227,
+      "lines": 201,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          201
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebdf-301a-77dc-864f-22ada65aedbb",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdf-2c40-74b3-960f-0766e032b246/2026-09-29T06-34-27-738Z_01a0ebdf-301a-77dc-864f-22ada65aedbb.jsonl",
+      "bytes": 278384,
+      "lines": 66,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe0-c374-77a7-ba3c-3ae594f7142c",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe0-bf49-7440-99cc-7279f4f0361d/2026-09-29T06-36-10-996Z_01a0ebe0-c374-77a7-ba3c-3ae594f7142c.jsonl",
+      "bytes": 236993,
+      "lines": 33,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe1-fd02-7738-8790-aad5543a0e6c",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe1-f726-71b0-b66b-5ff00ca2c0ac/2026-09-29T06-37-31-267Z_01a0ebe1-fd02-7738-8790-aad5543a0e6c.jsonl",
+      "bytes": 214558,
+      "lines": 38,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe2-54c9-74ae-b076-846b6b0916e3",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe2-522c-7510-93bb-522f4d93b8f7/2026-09-29T06-37-53-737Z_01a0ebe2-54c9-74ae-b076-846b6b0916e3.jsonl",
+      "bytes": 199501,
+      "lines": 48,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe2-de28-70a5-ba50-ce2602c9e881",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe2-db6b-7da0-94ed-78854acc9abd/2026-09-29T06-38-28-904Z_01a0ebe2-de28-70a5-ba50-ce2602c9e881.jsonl",
+      "bytes": 198525,
+      "lines": 17,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe3-5c81-7454-ba87-260acf4ee8b7",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe3-599f-7550-b3c4-851959a121da/2026-09-29T06-39-01-249Z_01a0ebe3-5c81-7454-ba87-260acf4ee8b7.jsonl",
+      "bytes": 626756,
+      "lines": 229,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          229
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe3-b491-7247-b240-eb736c6313ad",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe3-b1da-7e02-a1b9-6c446e522960/2026-09-29T06-39-23-794Z_01a0ebe3-b491-7247-b240-eb736c6313ad.jsonl",
+      "bytes": 420933,
+      "lines": 99,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          99
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe7-0a4e-732b-a247-8ac5f72690f3",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe7-0439-7670-8eeb-0245afffa385/2026-09-29T06-43-02-350Z_01a0ebe7-0a4e-732b-a247-8ac5f72690f3.jsonl",
+      "bytes": 252038,
+      "lines": 39,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe7-3e5b-71f7-9c5c-6cb4dadf5e4d",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe7-35d1-7810-9097-c1763e1a11bc/2026-09-29T06-43-15-675Z_01a0ebe7-3e5b-71f7-9c5c-6cb4dadf5e4d.jsonl",
+      "bytes": 167214,
+      "lines": 38,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe8-31f3-7466-a44f-59d633f1a90a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe8-2ea5-73a1-b1f0-e2716b41d98a/2026-09-29T06-44-18-035Z_01a0ebe8-31f3-7466-a44f-59d633f1a90a.jsonl",
+      "bytes": 219592,
+      "lines": 33,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ec04-92ad-7679-b5c7-945716ca7f10",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe8-6007-71f3-87f6-8bfbf182a7e9/2026-09-29T06-44-36-150Z_01a0ebe8-78b6-70a1-93a7-4883aa6aaa5c.jsonl",
+      "bytes": 227695,
+      "lines": 86,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          86
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe8-78b6-70a1-93a7-4883aa6aaa5c",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe8-6007-71f3-87f6-8bfbf182a7e9/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T06-44-36-150Z_01a0ebe8-78b6-70a1-93a7-4883aa6aaa5c.jsonl",
+      "bytes": 118664,
+      "lines": 23,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json",
+      "reader_duplicate_note": "01a0ec04-92ad-7679-b5c7-945716ca7f10"
+    },
+    {
+      "id": "01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe8-8dd0-7db3-9a0c-99e908aecd8d/2026-09-29T06-44-44-834Z_01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e.jsonl",
+      "bytes": 428682,
+      "lines": 159,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebeb-2cc0-7224-a23b-d6834bddc7ac",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebeb-29e8-75d3-9442-8c133ce936e5/2026-09-29T06-47-33-312Z_01a0ebeb-2cc0-7224-a23b-d6834bddc7ac.jsonl",
+      "bytes": 372796,
+      "lines": 111,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          111
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebee-0513-72fd-ba99-73c1e4581e7b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebee-022f-76c0-b615-05fbf1b1cbf5/2026-09-29T06-50-39-763Z_01a0ebee-0513-72fd-ba99-73c1e4581e7b.jsonl",
+      "bytes": 295537,
+      "lines": 76,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebee-463a-728c-a9b5-827735f7e1db",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebee-4374-7f61-8657-1c7098f7e86d/2026-09-29T06-50-56-442Z_01a0ebee-463a-728c-a9b5-827735f7e1db.jsonl",
+      "bytes": 171230,
+      "lines": 30,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebef-a095-7149-9b1f-ba6680f1fd99",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebef-9db5-7122-82a7-a1d88b6a9b67/2026-09-29T06-52-25-110Z_01a0ebef-a095-7149-9b1f-ba6680f1fd99.jsonl",
+      "bytes": 203026,
+      "lines": 31,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebef-fab2-70f4-8910-d37329381724",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebef-f7da-7d02-baf3-c3b861d04ee0/2026-09-29T06-52-48-178Z_01a0ebef-fab2-70f4-8910-d37329381724.jsonl",
+      "bytes": 256651,
+      "lines": 60,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebf0-69ec-71df-adec-cf1b43f81d46",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf0-6719-7ab1-948b-bb3f71016b64/2026-09-29T06-53-16-653Z_01a0ebf0-69ec-71df-adec-cf1b43f81d46.jsonl",
+      "bytes": 233901,
+      "lines": 48,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb.jsonl",
+      "bytes": 366671,
+      "lines": 100,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          100
+        ]
+      ],
+      "continuation_of": "01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ebf3-d3a3-728f-8b0d-11dfe5ba8e7f",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb/643e5b65-c4e1-4026-887d-66fa25b7b431/run-0/session.jsonl",
+      "bytes": 215732,
+      "lines": 45,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ebf2-8a30-76e3-8cf7-56be72931d35",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb/fedec83a-c6b0-4238-92e4-4e345aa7c42c/run-0/session.jsonl",
+      "bytes": 112049,
+      "lines": 9,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb.jsonl",
+      "bytes": 381179,
+      "lines": 66,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/subagent-artifacts/1c5d1c7c-7837-48bc-b664-54fcbce1bc5a_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/subagent-artifacts/1c5d1c7c-7837-48bc-b664-54fcbce1bc5a_advisor_transcript.jsonl",
+      "bytes": 359222,
+      "lines": 88,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          88
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/subagent-artifacts/3147b772-1b16-45a3-8e56-370843dcb4fe_vision_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/subagent-artifacts/3147b772-1b16-45a3-8e56-370843dcb4fe_vision_transcript.jsonl",
+      "bytes": 64029,
+      "lines": 10,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ebf1-3409-7194-bfeb-a8bf5fbbbfc2",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf1-316d-7290-a24a-bb5a53a077b0/2026-09-29T06-54-08-393Z_01a0ebf1-3409-7194-bfeb-a8bf5fbbbfc2.jsonl",
+      "bytes": 223330,
+      "lines": 50,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebf1-7819-72ef-8e82-02c28cd76131",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf1-7526-7062-af1e-9786d2b3a36d/2026-09-29T06-54-25-817Z_01a0ebf1-7819-72ef-8e82-02c28cd76131.jsonl",
+      "bytes": 257877,
+      "lines": 53,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebf3-874b-77d8-96af-0dfa7c289724",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf2-17bc-7491-8e1b-ca54f0fd9ba9/2026-09-29T06-55-07-355Z_01a0ebf2-1a5b-723d-a39f-49fb8a42d849.jsonl",
+      "bytes": 568862,
+      "lines": 199,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          199
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ebf2-1a5b-723d-a39f-49fb8a42d849",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf2-17bc-7491-8e1b-ca54f0fd9ba9/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-55-07-355Z_01a0ebf2-1a5b-723d-a39f-49fb8a42d849.jsonl",
+      "bytes": 207557,
+      "lines": 39,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "reader": "a_contract",
+      "reading_evidence": "cells/a/read-ranges.json"
+    },
+    {
+      "id": "01a0ebf2-d3ca-72d8-a920-73ad70676fe3",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf2-cf7c-7d83-8bb8-bec9978cd225/2026-09-29T06-55-54-826Z_01a0ebf2-d3ca-72d8-a920-73ad70676fe3.jsonl",
+      "bytes": 203672,
+      "lines": 46,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "reader": "root",
+      "reading_evidence": "cells/root/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ebf3-cb77-70c3-91c8-33f29e7086dc",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf3-c610-7420-80b8-484b163e7964/2026-09-29T06-56-58-231Z_01a0ebf3-cb77-70c3-91c8-33f29e7086dc.jsonl",
+      "bytes": 124946,
+      "lines": 14,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "reader": "root",
+      "reading_evidence": "cells/root/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ebf4-065e-7385-bc08-89dadc38a516",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf4-03a1-7063-be63-3b1574f3be1d/2026-09-29T06-57-13-310Z_01a0ebf4-065e-7385-bc08-89dadc38a516.jsonl",
+      "bytes": 120143,
+      "lines": 11,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "reader": "root",
+      "reading_evidence": "cells/root/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ec04-2a99-71a3-8a14-bd4639e35ab5",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec04-27b6-7f62-9bf9-6a6c5dfba932/2026-09-29T07-14-51-161Z_01a0ec04-2a99-71a3-8a14-bd4639e35ab5.jsonl",
+      "bytes": 1436164,
+      "lines": 540,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-10/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          540
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec04-873e-77bb-8b2f-024c05519457",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec04-8449-7743-a6a3-2c4e7dad5f8f/2026-09-29T07-15-14-879Z_01a0ec04-873e-77bb-8b2f-024c05519457.jsonl",
+      "bytes": 314042,
+      "lines": 76,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ec04-f185-77c1-af6d-2538d177cf86",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec04-ec2f-7c42-9a96-019941929281/2026-09-29T07-15-42-085Z_01a0ec04-f185-77c1-af6d-2538d177cf86.jsonl",
+      "bytes": 206645,
+      "lines": 51,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          51
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec05-e08f-704a-9053-326ff54e2dc3",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec05-dd7c-7132-b48d-8d150e08011b/2026-09-29T07-16-43-279Z_01a0ec05-e08f-704a-9053-326ff54e2dc3.jsonl",
+      "bytes": 180221,
+      "lines": 49,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          49
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec06-d414-71a2-8553-5edbad9d8ee9",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec06-d0d2-77d1-8c13-41837cc11398/2026-09-29T07-17-45-620Z_01a0ec06-d414-71a2-8553-5edbad9d8ee9.jsonl",
+      "bytes": 228423,
+      "lines": 75,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          75
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec06-e1e6-72cb-bbb1-08be5c6f7a46",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec06-decd-7bf1-9a8b-fd65fa82f1ee/2026-09-29T07-17-49-158Z_01a0ec06-e1e6-72cb-bbb1-08be5c6f7a46.jsonl",
+      "bytes": 157220,
+      "lines": 37,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec07-3ddc-77ae-a8a2-f388125b5636",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec07-37ea-7771-94f5-618d7ac96903/2026-09-29T07-18-12-700Z_01a0ec07-3ddc-77ae-a8a2-f388125b5636.jsonl",
+      "bytes": 328266,
+      "lines": 61,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          61
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ec09-7e1c-7489-a231-866bbdd4e55a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec07-cfb4-7393-a425-73d2615e1a49/2026-09-29T07-18-50-838Z_01a0ec07-d2d6-7664-a669-49784129ec88.jsonl",
+      "bytes": 239722,
+      "lines": 80,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          80
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec07-d2d6-7664-a669-49784129ec88",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec07-cfb4-7393-a425-73d2615e1a49/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T07-18-50-838Z_01a0ec07-d2d6-7664-a669-49784129ec88.jsonl",
+      "bytes": 215553,
+      "lines": 59,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json",
+      "reader_duplicate_note": "01a0ec09-7e1c-7489-a231-866bbdd4e55a"
+    },
+    {
+      "id": "01a0ec09-1506-70e0-b2d8-a2e604f4dc86",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec09-0e5d-7423-91c6-de541d090d13/2026-09-29T07-20-13-318Z_01a0ec09-1506-70e0-b2d8-a2e604f4dc86.jsonl",
+      "bytes": 221858,
+      "lines": 50,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec0a-1217-7683-bd19-063f594b849a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0a-0d4d-7f91-8168-b8348df2a088/2026-09-29T07-21-18-103Z_01a0ec0a-1217-7683-bd19-063f594b849a.jsonl",
+      "bytes": 311986,
+      "lines": 60,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb.jsonl",
+      "bytes": 107868,
+      "lines": 32,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "continuation_of": "01a0ec0a-4dae-764b-bddb-f993188c25eb",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec0d-c7c2-74a8-92b2-2fc5118d6323",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb/6c654cbb-d8ce-410c-ba0d-548d0666a228/run-0/session.jsonl",
+      "bytes": 380009,
+      "lines": 74,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          74
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec0a-4dae-764b-bddb-f993188c25eb",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb.jsonl",
+      "bytes": 371666,
+      "lines": 106,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          106
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/subagent-artifacts/9b35d066-562c-4c81-93ec-60573af0ed62_explorer_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/subagent-artifacts/9b35d066-562c-4c81-93ec-60573af0ed62_explorer_transcript.jsonl",
+      "bytes": 694287,
+      "lines": 151,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          151
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec0b-b7bb-709d-b2a6-36254f05615b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0b-b46d-7f93-a51f-5aa9633976dc/2026-09-29T07-23-06-043Z_01a0ec0b-b7bb-709d-b2a6-36254f05615b.jsonl",
+      "bytes": 307841,
+      "lines": 110,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          110
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec0c-1ad6-70d9-88c5-2ba6ed6571aa",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0c-126e-7ad0-8e8e-6cb685bfe5fe/2026-09-29T07-23-31-415Z_01a0ec0c-1ad6-70d9-88c5-2ba6ed6571aa.jsonl",
+      "bytes": 317889,
+      "lines": 62,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ec0d-df2f-73a0-b39c-0f5b65b2092a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0d-d687-7900-abcc-d8ab1e0b8a03/2026-09-29T07-25-27-215Z_01a0ec0d-df2f-73a0-b39c-0f5b65b2092a.jsonl",
+      "bytes": 386944,
+      "lines": 77,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          77
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ec0e-5e87-7692-b269-ff14128c005b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0e-54da-7713-b39b-621d17719ddd/2026-09-29T07-25-59-815Z_01a0ec0e-5e87-7692-b269-ff14128c005b.jsonl",
+      "bytes": 281548,
+      "lines": 66,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ec0e-7eb3-70ab-a623-6d9780b51f57",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0e-7afc-7b42-9a32-15a312c7d0f5/2026-09-29T07-26-08-052Z_01a0ec0e-7eb3-70ab-a623-6d9780b51f57.jsonl",
+      "bytes": 330803,
+      "lines": 105,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          105
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec0e-ed93-75a7-926a-751dadb16aa6",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0e-e4da-72e1-b9ba-45209330529f/2026-09-29T07-26-36-435Z_01a0ec0e-ed93-75a7-926a-751dadb16aa6.jsonl",
+      "bytes": 315062,
+      "lines": 65,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ec0f-f926-7087-9662-59d4d22ad329",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0f-f5c3-7950-bb87-7557cb50830a/2026-09-29T07-27-44-934Z_01a0ec0f-f926-7087-9662-59d4d22ad329.jsonl",
+      "bytes": 268324,
+      "lines": 24,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ec10-00ae-7530-aa13-4cf3f27b7179",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0f-fd91-7342-bb11-0f3a3e2f6580/2026-09-29T07-27-46-862Z_01a0ec10-00ae-7530-aa13-4cf3f27b7179.jsonl",
+      "bytes": 152584,
+      "lines": 19,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "reader": "root",
+      "reading_evidence": "cells/root/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ec13-a016-76a1-bf7a-9cee6dd3c749",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec10-47cb-7063-b87c-3091a9ce6d5d/2026-09-29T07-28-06-207Z_01a0ec10-4c3f-7130-bbce-c852c0d29a59.jsonl",
+      "bytes": 206989,
+      "lines": 34,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "reader": "root",
+      "reading_evidence": "cells/root/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ec10-4c3f-7130-bbce-c852c0d29a59",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec10-47cb-7063-b87c-3091a9ce6d5d/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T07-28-06-207Z_01a0ec10-4c3f-7130-bbce-c852c0d29a59.jsonl",
+      "bytes": 285882,
+      "lines": 55,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "reader": "root",
+      "reading_evidence": "cells/root/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ec10-61d0-726e-a3b9-ba66008bb920",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec10-5eeb-7612-913a-ed49781594fa/2026-09-29T07-28-11-728Z_01a0ec10-61d0-726e-a3b9-ba66008bb920.jsonl",
+      "bytes": 158014,
+      "lines": 18,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "reader": "root",
+      "reading_evidence": "cells/root/a-tail-read-ranges.json"
+    },
+    {
+      "id": "01a0ec10-e551-742c-ae4e-8c141e0d1851",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec10-e23f-7953-9f7f-c17bf6c43c13/2026-09-29T07-28-45-393Z_01a0ec10-e551-742c-ae4e-8c141e0d1851.jsonl",
+      "bytes": 134113,
+      "lines": 29,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec12-2a53-706c-8c38-f23c7ded5cbc",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec12-2780-7433-bdd6-a0bb9c880423/2026-09-29T07-30-08-595Z_01a0ec12-2a53-706c-8c38-f23c7ded5cbc.jsonl",
+      "bytes": 322638,
+      "lines": 59,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec13-a603-7186-bfff-870cdd104c2b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec13-9940-7dd2-887e-9f8b891340f1/2026-09-29T07-31-45-795Z_01a0ec13-a603-7186-bfff-870cdd104c2b.jsonl",
+      "bytes": 296676,
+      "lines": 45,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-2/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "reader": "base",
+      "reading_evidence": "cells/base/read-ranges.json"
+    },
+    {
+      "id": "01a0ec13-b34f-70da-ad9f-ec5b4649b5b9",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec13-aa39-7871-99ca-5d97c349c609/2026-09-29T07-31-49-199Z_01a0ec13-b34f-70da-ad9f-ec5b4649b5b9.jsonl",
+      "bytes": 221151,
+      "lines": 64,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          64
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec13-c2d7-7731-8121-1e5c6025f700",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec13-b9fc-75b3-a09b-d050a711ad41/2026-09-29T07-31-53-175Z_01a0ec13-c2d7-7731-8121-1e5c6025f700.jsonl",
+      "bytes": 207444,
+      "lines": 55,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec15-3215-72b6-a61b-5faa6f74603c",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec15-2930-78e2-9356-cc560894f73a/2026-09-29T07-33-27-189Z_01a0ec15-3215-72b6-a61b-5faa6f74603c.jsonl",
+      "bytes": 452499,
+      "lines": 138,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          138
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec15-ea76-71af-bca7-bb79205299a6",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec15-dc4c-7aa2-b84a-070d75139c62/2026-09-29T07-34-14-390Z_01a0ec15-ea76-71af-bca7-bb79205299a6.jsonl",
+      "bytes": 115017,
+      "lines": 23,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec17-423b-7533-95ca-34dc9402de9b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec17-3f10-7410-8671-aa047a0dbb2d/2026-09-29T07-35-42-395Z_01a0ec17-423b-7533-95ca-34dc9402de9b.jsonl",
+      "bytes": 170869,
+      "lines": 50,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec18-52d7-747a-bb99-4df9a8e802fc",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec18-4f80-7dc2-a876-c270ff211c06/2026-09-29T07-36-52-183Z_01a0ec18-52d7-747a-bb99-4df9a8e802fc.jsonl",
+      "bytes": 167056,
+      "lines": 44,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          44
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec19-7fc9-71fb-bc5d-de93d8db84b3",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec19-7ccf-7941-b5fb-374052274516/2026-09-29T07-38-09-225Z_01a0ec19-7fc9-71fb-bc5d-de93d8db84b3.jsonl",
+      "bytes": 165148,
+      "lines": 34,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec19-9bbf-7731-a7d7-a5b6a5949b1a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec19-9842-7ac2-a70f-7383cae47301/2026-09-29T07-38-16-383Z_01a0ec19-9bbf-7731-a7d7-a5b6a5949b1a.jsonl",
+      "bytes": 379640,
+      "lines": 166,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-10/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          166
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec1a-95f5-73db-8543-fe4206ff01ef",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec1a-931e-7d40-9698-d442d549d4db/2026-09-29T07-39-20-438Z_01a0ec1a-95f5-73db-8543-fe4206ff01ef.jsonl",
+      "bytes": 322388,
+      "lines": 76,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec2c-fdc3-7528-8382-a6e080b43b8f",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec1c-ba65-7d41-ba60-69645c973a4a/2026-09-29T07-41-47-438Z_01a0ec1c-d42e-7432-8d04-fc221771e1a1.jsonl",
+      "bytes": 290056,
+      "lines": 73,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec1c-d42e-7432-8d04-fc221771e1a1",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec1c-ba65-7d41-ba60-69645c973a4a/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T07-41-47-438Z_01a0ec1c-d42e-7432-8d04-fc221771e1a1.jsonl",
+      "bytes": 158691,
+      "lines": 23,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json",
+      "reader_duplicate_note": "01a0ec2c-fdc3-7528-8382-a6e080b43b8f"
+    },
+    {
+      "id": "01a0ec1d-ca40-75b9-9bc9-5ce83ed26076",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec1d-c372-7fe2-a496-514e3648fa12/2026-09-29T07-42-50-432Z_01a0ec1d-ca40-75b9-9bc9-5ce83ed26076.jsonl",
+      "bytes": 319389,
+      "lines": 65,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec1f-c7c2-7622-9a87-7fe11f307d18",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec1f-c531-7750-acb0-1336a7183d0b/2026-09-29T07-45-00-866Z_01a0ec1f-c7c2-7622-9a87-7fe11f307d18.jsonl",
+      "bytes": 285733,
+      "lines": 82,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-10/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          82
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec20-817f-74c7-90d2-61df804e45d1",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec20-7b23-7000-8288-0ea4fe79dd7c/2026-09-29T07-45-48-416Z_01a0ec20-817f-74c7-90d2-61df804e45d1.jsonl",
+      "bytes": 208534,
+      "lines": 44,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          44
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec21-a838-73d0-99c8-c80fbdbce2b7",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec21-a580-74a0-88e7-bec751e9f55b/2026-09-29T07-47-03-864Z_01a0ec21-a838-73d0-99c8-c80fbdbce2b7.jsonl",
+      "bytes": 574169,
+      "lines": 198,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-5/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          198
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec23-2dc1-7504-b8ea-645445ad51a9",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec23-2b00-7843-a4d1-9dfe3af773c3/2026-09-29T07-48-43-585Z_01a0ec23-2dc1-7504-b8ea-645445ad51a9.jsonl",
+      "bytes": 276348,
+      "lines": 66,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-10/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec2d-f191-76b3-86c0-dfc7ce46339c",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec2d-ede4-74b3-98ee-68385f952cf3/2026-09-29T08-00-29-073Z_01a0ec2d-f191-76b3-86c0-dfc7ce46339c.jsonl",
+      "bytes": 258245,
+      "lines": 60,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-10/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "reader": "c",
+      "reading_evidence": "cells/c/read-ranges.json"
+    },
+    {
+      "id": "01a0ec30-6737-76f7-b57e-f4263514ce49",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec30-5eaf-76b0-8559-a9c851060216/2026-09-29T08-03-10-263Z_01a0ec30-6737-76f7-b57e-f4263514ce49.jsonl",
+      "bytes": 121327,
+      "lines": 24,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-9/pi-deepseek-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          24
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9.jsonl",
+      "bytes": 213143,
+      "lines": 66,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "continuation_of": "01a0eb68-47ff-70ef-b663-1ca63677a7a9",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "root+base",
+      "notes": "initial continuation已全文读；custom_message L11/L20/L23已补读，来源见reading_evidence。",
+      "reading_evidence": "cells/root/advisor-mirror-validation.json; cells/base/initial-advisor-read-ranges.json; cells/root-late/read-ranges.json",
+      "note": "headerless custom L11 vision mirror、L20 advisor、L23 tool receipt 已单独补读；advisor 原生导出差异已补读。"
+    },
+    {
+      "id": "01a0eb6b-072e-746a-8fc8-3f1feedc15e8",
+      "path": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9/1ec2b594-a21f-41ca-a4a6-77a6a5b67fdb/run-0/session.jsonl",
+      "bytes": 247307,
+      "lines": 25,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "reader": "root+base",
+      "reading_evidence": "cells/root/advisor-mirror-validation.json; cells/base/initial-advisor-read-ranges.json; cells/root-late/read-ranges.json",
+      "note": "headerless custom L11 vision mirror、L20 advisor、L23 tool receipt 已单独补读；advisor 原生导出差异已补读。"
+    },
+    {
+      "id": "01a0eb69-f8f0-7685-a8bc-7e41d190b9fa",
+      "path": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9/83e37117-3f77-4759-be55-e3bcdce18d87/run-0/session.jsonl",
+      "bytes": 949830,
+      "lines": 18,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "reader": "root",
+      "notes": "all textual observations; 9 original images pending visual audit"
+    },
+    {
+      "id": "01a0eb68-47ff-70ef-b663-1ca63677a7a9",
+      "path": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9.jsonl",
+      "bytes": 100413,
+      "lines": 29,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "reader": "root",
+      "notes": "reading.txt 1–761; displayed truncation supplemented 462–639; images none"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/subagent-artifacts/276d0d0d-ad4c-44fa-b963-721fd6221121_vision_transcript.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/subagent-artifacts/276d0d0d-ad4c-44fa-b963-721fd6221121_vision_transcript.jsonl",
+      "bytes": 73718,
+      "lines": 33,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "reader": "root",
+      "reading_note": "assistant/user messages exact mirror of read native; tool metadata read separately; nine input reference images visually inspected"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/subagent-artifacts/afffce3b-c20f-445f-89f0-131659d04249_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/subagent-artifacts/afffce3b-c20f-445f-89f0-131659d04249_advisor_transcript.jsonl",
+      "bytes": 325042,
+      "lines": 42,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "reader": "root+base",
+      "reading_evidence": "cells/root/advisor-mirror-validation.json; cells/base/initial-advisor-read-ranges.json; cells/root-late/read-ranges.json",
+      "note": "headerless custom L11 vision mirror、L20 advisor、L23 tool receipt 已单独补读；advisor 原生导出差异已补读。"
+    },
+    {
+      "id": "01a0eb79-d6ec-779d-b5ab-66391761b848",
+      "path": "work/native-homes/pi-glm-fast-01a0eb79-d388-79a0-8f9b-462acae96992/2026-09-29T04-43-45-773Z_01a0eb79-d6ec-779d-b5ab-66391761b848.jsonl",
+      "bytes": 102171,
+      "lines": 50,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0eb86-02c7-741d-ba1f-0ce414afa3db",
+      "path": "work/native-homes/pi-glm-fast-01a0eb86-0041-7fb0-8c2f-8f065b167ae3/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T04-57-03-431Z_01a0eb86-02c7-741d-ba1f-0ce414afa3db.jsonl",
+      "bytes": 113354,
+      "lines": 65,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0eb9c-b661-7517-a8d0-e0d47e54ba6a",
+      "path": "work/native-homes/pi-glm-fast-01a0eb9c-b21b-7a43-9010-972ebb2435f4/2026-09-29T05-21-51-201Z_01a0eb9c-b661-7517-a8d0-e0d47e54ba6a.jsonl",
+      "bytes": 87163,
+      "lines": 27,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5.jsonl",
+      "bytes": 109654,
+      "lines": 59,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "continuation_of": "01a0eb9f-269c-7271-b933-eebf5a4021d5",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0eba3-3986-7128-b8ad-1f4cc05c8ce3",
+      "path": "work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5/96038de2-8094-46cf-8069-3dc15fc6c614/run-0/session.jsonl",
+      "bytes": 37939,
+      "lines": 6,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          6
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0eb9f-269c-7271-b933-eebf5a4021d5",
+      "path": "work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5.jsonl",
+      "bytes": 88728,
+      "lines": 35,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/subagent-artifacts/7fd7af52-e0c6-40f7-9759-26555a7e021c_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/subagent-artifacts/7fd7af52-e0c6-40f7-9759-26555a7e021c_advisor_transcript.jsonl",
+      "bytes": 48001,
+      "lines": 3,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          3
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebac-285d-7321-a75b-5bcfcf2ecdfd",
+      "path": "work/native-homes/pi-glm-fast-01a0ebac-24e1-74f0-91d8-a405a867bc9e/2026-09-29T05-38-43-421Z_01a0ebac-285d-7321-a75b-5bcfcf2ecdfd.jsonl",
+      "bytes": 123579,
+      "lines": 31,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebae-69fe-7272-ad97-fc95838cc478",
+      "path": "work/native-homes/pi-glm-fast-01a0ebae-66eb-7333-9ee2-d0d3cec68484/2026-09-29T05-41-11-294Z_01a0ebae-69fe-7272-ad97-fc95838cc478.jsonl",
+      "bytes": 98078,
+      "lines": 32,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebb0-27e0-74d7-bd1a-a7ee487eea1d",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb0-210d-7c81-91d9-8f06c7fcbdef/2026-09-29T05-43-05-440Z_01a0ebb0-27e0-74d7-bd1a-a7ee487eea1d.jsonl",
+      "bytes": 171737,
+      "lines": 76,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32.jsonl",
+      "bytes": 192002,
+      "lines": 91,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          91
+        ]
+      ],
+      "continuation_of": "01a0ebb6-d347-7510-b802-69db079dac32",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebbb-09b2-75cf-add4-4fc818cb9d6b",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32/19c4d54d-af07-47f6-b903-652dc5afca40/run-0/session.jsonl",
+      "bytes": 368170,
+      "lines": 10,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebba-62fb-76aa-8219-f6ef03da9646",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32/de4cca3b-d736-4c6b-b2dc-c4b3b5322ade/run-0/session.jsonl",
+      "bytes": 164324,
+      "lines": 39,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebb6-d347-7510-b802-69db079dac32",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-4-pi-glm-fast-g1--/2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32.jsonl",
+      "bytes": 194968,
+      "lines": 42,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/subagent-artifacts/5dc65496-e5c7-4f1e-8c76-208e048f8061_vision_transcript.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/subagent-artifacts/5dc65496-e5c7-4f1e-8c76-208e048f8061_vision_transcript.jsonl",
+      "bytes": 51285,
+      "lines": 13,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/subagent-artifacts/99522beb-0890-4411-ac6d-8cb821646155_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/subagent-artifacts/99522beb-0890-4411-ac6d-8cb821646155_advisor_transcript.jsonl",
+      "bytes": 286889,
+      "lines": 76,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440.jsonl",
+      "bytes": 201470,
+      "lines": 82,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          82
+        ]
+      ],
+      "continuation_of": "01a0ebb9-210c-72d1-bd2f-f24a02849440",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc2-3c6d-7335-8b05-61cb91658e58",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440/f09777f4-fff5-429e-8111-3f979689b6ef/run-0/session.jsonl",
+      "bytes": 84047,
+      "lines": 20,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          20
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebb9-210c-72d1-bd2f-f24a02849440",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440.jsonl",
+      "bytes": 142889,
+      "lines": 56,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/subagent-artifacts/f0992c6a-a8b1-4fb3-b5a5-c30abf144b42_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/subagent-artifacts/f0992c6a-a8b1-4fb3-b5a5-c30abf144b42_advisor_transcript.jsonl",
+      "bytes": 149141,
+      "lines": 35,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc6-2b0c-77ac-a268-0caa425f394f",
+      "path": "work/native-homes/pi-glm-fast-01a0ebc6-242c-7342-91a2-218b95593498/2026-09-29T06-07-08-045Z_01a0ebc6-2b0c-77ac-a268-0caa425f394f.jsonl",
+      "bytes": 129449,
+      "lines": 25,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebc8-843c-76d3-932b-df172b69c887",
+      "path": "work/native-homes/pi-glm-fast-01a0ebc8-8151-7dd0-b326-51e5b280275b/2026-09-29T06-09-41-948Z_01a0ebc8-843c-76d3-932b-df172b69c887.jsonl",
+      "bytes": 281169,
+      "lines": 61,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          61
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebcd-fa3e-70ee-afa5-fe9066a30a6c",
+      "path": "work/native-homes/pi-glm-fast-01a0ebcd-f4a5-7f23-b2e8-488ac44658c9/2026-09-29T06-15-39-838Z_01a0ebcd-fa3e-70ee-afa5-fe9066a30a6c.jsonl",
+      "bytes": 160707,
+      "lines": 19,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebce-deb0-77ca-b79a-29bc20be3ef6",
+      "path": "work/native-homes/pi-glm-fast-01a0ebce-d8da-73b2-954c-a4d8390fa8f9/2026-09-29T06-16-38-320Z_01a0ebce-deb0-77ca-b79a-29bc20be3ef6.jsonl",
+      "bytes": 106934,
+      "lines": 12,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          12
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebdc-3fa8-73ea-902b-5e92456a8ce2",
+      "path": "work/native-homes/pi-glm-fast-01a0ebdc-02d9-7ee0-abc4-44c420799a7f/2026-09-29T06-31-15-112Z_01a0ebdc-3fa8-73ea-902b-5e92456a8ce2.jsonl",
+      "bytes": 270834,
+      "lines": 96,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          96
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ebdc-4ade-716f-bb73-25919044ed27",
+      "path": "work/native-homes/pi-glm-fast-01a0ebdc-477d-7552-93d6-cb5b709018b5/2026-09-29T06-31-17-982Z_01a0ebdc-4ade-716f-bb73-25919044ed27.jsonl",
+      "bytes": 268123,
+      "lines": 48,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe0-b492-7177-b43b-0998859992e5",
+      "path": "work/native-homes/pi-glm-fast-01a0ebe0-aecc-7783-9beb-2335d6051e05/2026-09-29T06-36-07-187Z_01a0ebe0-b492-7177-b43b-0998859992e5.jsonl",
+      "bytes": 209235,
+      "lines": 28,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe3-285c-77f5-9158-8a2ec1bf9be9",
+      "path": "work/native-homes/pi-glm-fast-01a0ebe3-2572-7470-932b-2fc7ef55d8db/2026-09-29T06-38-47-900Z_01a0ebe3-285c-77f5-9158-8a2ec1bf9be9.jsonl",
+      "bytes": 401366,
+      "lines": 73,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          73
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebe8-814b-72a2-8aaf-9d8dc2ea68df",
+      "path": "work/native-homes/pi-glm-fast-01a0ebe8-7071-7703-88ad-85a623ca609a/2026-09-29T06-44-38-347Z_01a0ebe8-814b-72a2-8aaf-9d8dc2ea68df.jsonl",
+      "bytes": 223471,
+      "lines": 48,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614.jsonl",
+      "bytes": 209997,
+      "lines": 94,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          94
+        ]
+      ],
+      "continuation_of": "01a0ebf5-aa5a-749c-b621-1c160469c614",
+      "identity_note": "headerless native continuation; retain both prefix and suffix",
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ec06-323e-70b4-a110-5a7674f92319",
+      "path": "work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614/30d55537-83e6-4b2f-b7e5-e3f58351ab2d/run-0/session.jsonl",
+      "bytes": 46683,
+      "lines": 18,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ebf5-aa5a-749c-b621-1c160469c614",
+      "path": "work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614.jsonl",
+      "bytes": 333077,
+      "lines": 50,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/subagent-artifacts/258504a9-1858-4c80-b4b6-02860d1d1129_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/subagent-artifacts/258504a9-1858-4c80-b4b6-02860d1d1129_advisor_transcript.jsonl",
+      "bytes": 82115,
+      "lines": 29,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ec08-3d63-7042-b2f1-7d214043cbf6",
+      "path": "work/native-homes/pi-glm-fast-01a0ec08-38b1-71b1-998f-ee139a8d60c9/2026-09-29T07-19-18-115Z_01a0ec08-3d63-7042-b2f1-7d214043cbf6.jsonl",
+      "bytes": 248498,
+      "lines": 85,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          85
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec0f-7e75-72aa-abaf-1c6d84182727",
+      "path": "work/native-homes/pi-glm-fast-01a0ec0f-7b24-7ab0-aec2-fc3160fa3dd1/2026-09-29T07-27-13-525Z_01a0ec0f-7e75-72aa-abaf-1c6d84182727.jsonl",
+      "bytes": 122071,
+      "lines": 27,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec11-1461-7711-8347-644d981d5eb8",
+      "path": "work/native-homes/pi-glm-fast-01a0ec11-1029-76a2-b798-98cb5559630d/2026-09-29T07-28-57-441Z_01a0ec11-1461-7711-8347-644d981d5eb8.jsonl",
+      "bytes": 218581,
+      "lines": 52,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          52
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec14-ff4f-7038-8f6a-65c4323b4fb0",
+      "path": "work/native-homes/pi-glm-fast-01a0ec14-eda7-7763-8426-fa18e316176e/2026-09-29T07-33-14-191Z_01a0ec14-ff4f-7038-8f6a-65c4323b4fb0.jsonl",
+      "bytes": 355905,
+      "lines": 59,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          59
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ec18-eaab-742f-beef-c670a8c6bc1c",
+      "path": "work/native-homes/pi-glm-fast-01a0ec18-dd01-7710-8628-056a21a12e7a/2026-09-29T07-37-31-051Z_01a0ec18-eaab-742f-beef-c670a8c6bc1c.jsonl",
+      "bytes": 150928,
+      "lines": 36,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-4/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          36
+        ]
+      ],
+      "reader": "b",
+      "reading_evidence": "cells/b/read-ranges.json"
+    },
+    {
+      "id": "01a0ec21-89de-72f2-9e01-3ff74ed74d0d",
+      "path": "work/native-homes/pi-glm-fast-01a0ec21-8723-74b0-b764-f52aad5dcdac/2026-09-29T07-46-56-095Z_01a0ec21-89de-72f2-9e01-3ff74ed74d0d.jsonl",
+      "bytes": 303462,
+      "lines": 47,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          47
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ec23-e455-7300-83d8-d8e632701b47",
+      "path": "work/native-homes/pi-glm-fast-01a0ec23-e14c-7212-8f1e-6f60dc834d27/2026-09-29T07-49-30-325Z_01a0ec23-e455-7300-83d8-d8e632701b47.jsonl",
+      "bytes": 309759,
+      "lines": 45,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          45
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    },
+    {
+      "id": "01a0ec2e-fc83-71b9-9bd1-16ee3da2ee43",
+      "path": "work/native-homes/pi-glm-fast-01a0ec2e-f964-77b1-a16f-2da0f3f4e202/2026-09-29T08-01-37-411Z_01a0ec2e-fc83-71b9-9bd1-16ee3da2ee43.jsonl",
+      "bytes": 221083,
+      "lines": 17,
+      "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-1/pi-glm-fast-g1",
+      "status": "read",
+      "read_ranges": [
+        [
+          1,
+          17
+        ]
+      ],
+      "reader": "root-late",
+      "reading_evidence": "cells/root-late/read-ranges.json"
+    }
+  ],
+  "objects": {
+    "status": "read_current_bodies_and_all_comments",
+    "items": 10,
+    "initial_comments": 171,
+    "increment_comments": 8,
+    "evidence": [
+      "item-coverage.json",
+      "object-coverage.json",
+      "increment/object-coverage.json"
+    ],
+    "note": "事件/投递/turn等表用于对应因果与成本核对，不把整表索引声称为每条事件全文阅读。"
+  },
+  "initial_inventory_display": "truncated; replaced by full manifest",
+  "duplicate_validation": {
+    "method": "longest bytes.startswith(each alternative)",
+    "divergent_paths": []
+  }
+}

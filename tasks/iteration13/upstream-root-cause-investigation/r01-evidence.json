@@ -1,0 +1,775 @@
+{
+  "scope": "R01 selective original-source reread; no model/application/test execution; excerpts are partial, not full semantic coverage",
+  "lineage": "20260929-042409-1202e245",
+  "replay": "e68661975b53",
+  "final_main": "442dc1cf776f144688d8ad667a76dd026f553e27",
+  "files_sha256": {
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ebc5-39a0-7bb2-be1f-37d732a318ef/2026-09-29T06-06-09-340Z_01a0ebc5-45bc-775b-a25e-221e837eed23.jsonl": "309cd9fde7c693d9d8fd9c02aff63808f9818605736e7a208fcad0560cf13e00",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ebee-ce8f-7730-9269-3864fbb38de2/2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668.jsonl": "397146bf1de4d55ffe9a0b1b3c98e51fd669b23fb82c9e58c46012f60df7828d",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eded-85a1-7891-aa22-4da1a93d31fc/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-10-pi-deepseek-fast-g1--/2026-09-29T16-09-22-776Z_01a0eded-8a58-762d-bc11-f3200d8a7401.jsonl": "ad407c63775658fe333fb6163087efa2b8719eadb03e00bc71441c944896212b",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ee03-d899-7fd2-893d-a14a20bb83a9/2026-09-29T16-33-47-006Z_01a0ee03-e1fe-7121-9c3f-05eb462c77ed.jsonl": "b456bcd0fd3b7c42b1ca200750d9c22b0963c5cf5a6ca5d9aed28c419333cb0f",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0eb68-19b6-7c30-91d6-bd339f346335/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.jsonl": "f939e20e7999a9242df74765351535ca69e631f11612b60dc2bf90c740e80721",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl": "2cbada6151474a24978a716a08af215c0a13724fa7d4dc41d9a23969159f3fb2",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eced-cecc-7eb2-bfab-6a06f74d89eb/2026-09-29T11-30-03-972Z_01a0eced-d244-74e4-8fc0-6cda931f6d8e.jsonl": "7f128116744572c1e38d727424969b97a49539b90874dafe329b145df23cd37b",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ecda-0a49-7150-8165-fbbf5e03cd0a/2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b/3c3e53c9-f18d-4882-86e9-3a16ee6b3715/run-0/session.jsonl": "01c6b803bbb3efa4d1beb4b2cd95a071ff5565880744be8e546e6227f3a44d7f",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ed06-9b7a-7d43-ae0f-6c957a97797a/2026-09-29T11-57-12-563Z_01a0ed06-abf3-7749-a38f-c3cc84fe125a.jsonl": "655299f285eab4446fe6a30b2bf47262cb37305c138f04bb98b4926dca29ab6a",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ecda-1c7f-7161-a15b-5da20ef74e97/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-9-pi-glm-fast-g1--/2026-09-29T11-08-33-927Z_01a0ecda-2307-76e1-9044-d8ee02d4f010.jsonl": "27c9565024023b22f6068532af55a3d0b30c5ae37e0d16b75afee718b6c735ac",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0edf0-3050-72f0-8275-fc6ee38edf6f/2026-09-29T16-12-17-682Z_01a0edf0-3592-766f-9cb7-f9c533bce566.jsonl": "68084791f1b3c7bdc6a1cf872d924fe30f23a4fe8d8f019c12e22239ac823171",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ec52-6913-7093-9f35-74b020056a51/2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl": "8f83474b9f54e9f48017eda666e0a200c97c6c5d7fc6db1d9750d9b983ba2045",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0f007-d178-70a0-b7d5-992e834f4acb/2026-09-30T01-58-36-188Z_01a0f008-fd9b-72c4-8a04-2d2d5a4e7033.jsonl": "6306c3cf093089e5197f7d48fb1678d5a7a605daf1a0d1c56e2959291e0138e0",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0eb68-19b6-7c30-91d6-bd339f346335/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.jsonl": "3a0e89acacef6a7222310ecda59ca6a050a377f0484a7f18833d5bde71bcfc4c",
+    "tasks/iteration13/findings.md": "6d07842c260961db824213bb6620e9b4b03f94414577316a2d323bbf51db817c",
+    "tasks/iteration13/packet.md": "40ded70a15bf0876e4c976d1449b3fd6f955855c72fb9f43ad27df5c833c797b",
+    "tasks/iteration12/i11-github-score/findings.md": "b7adebcb0ea3f0de13882133004679c978ecbb8f89f0ff6858eb1bc1b23c8f3b",
+    "AGENTS.md": "7956481e7218bc2ef5120be5e9330361a55313ad7b979c24c612756129335d31",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/braid.sqlite3": "98a503029161ce12a6a4d9f6c2be5193b3f2fab0a3ed41871a9a498e32b3399d",
+    "runs/analysis/i11-github-e68661975b53/20260930T033923Z/extracted/template/requirements/requirements.yaml": "bdc17d23265a6b1948aec150e69d0b2accfa37db4c569305c97be7ff7f3b0b8f",
+    "runs/analysis/i11-github-e68661975b53/20260930T033923Z/extracted/template/frontend/src/features/pulls/PullDetailPage.tsx": "fc19005a16529b4d397a6e24207d6562a2da0d3fd94b3b830e716efc926a81c6",
+    "runs/analysis/i11-github-e68661975b53/20260930T033923Z/extracted/template/frontend/src/features/repo/RepositoryContentsPage.tsx": "3557666340b8e05842f5dfde2afcc0afda106e2b426a35d209035774f29e1dba",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/physical/01a0ecda-1c7c-7350-8dd2-5f97223e61a0/instructions.md": "d2ad1c4448d606a330ee2be45e35e2ff1497c797006a2e9de6ece5e8c2142b24",
+    "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/physical/01a0f00c-629e-7391-9c31-6756812a8ec5/instructions.md": "aa9cf4baa09b22bd21fbe65e399c5cbb52b53dd81e5337824420f1fd0ad3ce7d",
+    "tasks/iteration13/repair-design.md": "654aa17f3111fd54d1acca85f180c56a435658a743f32e272c7fb5c753b23d91",
+    "tasks/iteration12/root-cause-review/i11-organization-operation.json": "d7b61055b053f73900a697b17cb690b6b6a7a0a259bbf2c2416fb3d90df80ab6"
+  },
+  "native_records": [
+    {
+      "id": "0c9834b3",
+      "timestamp": "2026-09-29T06:12:18.423Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ebc5-39a0-7bb2-be1f-37d732a318ef/2026-09-29T06-06-09-340Z_01a0ebc5-45bc-775b-a25e-221e837eed23.jsonl",
+        "line": 50
+      },
+      "source_sha256": "309cd9fde7c693d9d8fd9c02aff63808f9818605736e7a208fcad0560cf13e00",
+      "record_sha256": "1030d1c7379555ec308dc5e97431393ca5a8489ae67ffb5d8039388d4b769fe1",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 12225,
+          "char_end": 13036,
+          "text": "ta says frontend-child parent platform-team — for hierarchy display; cycle demo is runtime).\n\nWait seed-data.md: \"团队层级 | frontend-child（parent: platform-team）等循环层级演示按 M2 场景 seed\". Hmm that reads oddly (child parented to platform-team). For REQ-2-2-2 cycle scenario: \"a team with an existing parent and a descendant selectable by name; submitting that descendant shows the cycle error\". So: platform-team (parent: none), frontend-child (parent: platform-team). Setting platform-team's parent = frontend-child → cycle error. \n\n- grants seed: frontend-team write@acme-demo/org-private? Careful: org-private is used in REQ-2-2-3 scenario \"an ungranted private repository shows Access denied\" for new member — team grants would matter if new member is in that team; they're not. OK.\n- Replacement scenario seed: a re"
+        }
+      ]
+    },
+    {
+      "id": "58a9d136",
+      "timestamp": "2026-09-29T06:58:32.170Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ebee-ce8f-7730-9269-3864fbb38de2/2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668.jsonl",
+        "line": 7
+      },
+      "source_sha256": "397146bf1de4d55ffe9a0b1b3c98e51fd669b23fb82c9e58c46012f60df7828d",
+      "record_sha256": "c64202a230146d27b4c1add8b81b807ca229ce9d41057ad5a88845c4e970ed3e",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 12577,
+          "char_end": 13581,
+          "text": "spaces. But scenario 1 of 5-2-2 might also target 'Original issue title' and successfully change title+description — then scenario 2's \"original title `Original issue title`\" wouldn't hold. Ambiguous; but requirements say mutation scenarios \"provide isolated issues for successful editing, invalid-title editing with a known original title, commenting, comment validation, assignment, labels, milestone, and closing; their initial states must not be changed by another scenario.\" So evaluator isolates via its own pw-* objects mostly. To be safe, seed a dedicated mutation-target issue? The seed contract says evaluator uses pw-* unique objects for mutations, but metadata scenarios (assign/label) reference seed data (\"Seed data provides an eligible member not initially assigned\"). Practically: seed 'Improve onboarding' with full metadata, plus additional plain issues to serve as clean targets: `Original issue title` (open, body, no metadata) and maybe one more `Document search behaviour`? Hmm, don"
+        }
+      ]
+    },
+    {
+      "id": "a3ff1bd7",
+      "timestamp": "2026-09-29T16:10:55.282Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eded-85a1-7891-aa22-4da1a93d31fc/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-10-pi-deepseek-fast-g1--/2026-09-29T16-09-22-776Z_01a0eded-8a58-762d-bc11-f3200d8a7401.jsonl",
+        "line": 68
+      },
+      "source_sha256": "ad407c63775658fe333fb6163087efa2b8719eadb03e00bc71441c944896212b",
+      "record_sha256": "e94c66dd963f09a44055e7e2f056fbaa2069f16f42c73bee20920f416175275f",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 0,
+          "char_end": 581,
+          "text": "REQ-5-3-3 (labels/milestone on issue or PR) is a M5 requirement, not M6b. Issue #10 scope is REQ-6-3-3/4, 6-4, 6-5, 6-6. So PR labels/milestones are out of scope for M6b (M5 covered issues only, but REQ-5-3-3 says issue or PR; it's M5's REQ-5 scope). I'll note it as out of M6b scope, consistent with M6a decision #1 (\"不做 PR 标签/里程碑\").\n\nNow the REQ-6 intro gives crucial semantics:\n- \"Each PR stores ... and current compare commits, creation-time base commit\" → PR stores creation-time and current compare commits. So there IS a \"current compare commit\" stored. The M6a design says "
+        },
+        {
+          "content_block": 0,
+          "char_start": 1615,
+          "char_end": 3171,
+          "text": "dd comment\" buttons repeated per changed line; Remove buttons per reviewer.\n\n- \"Seed records identify the corresponding pages, not to private implementation interfaces; role accounts, branches, PRs, and mutable state must be provisioned and restored independently for each scenario, including repeated and parallel runs.\" Hmm — this is important: \"mutable state must be provisioned and restored independently for each scenario, including repeated and parallel runs\". This strongly suggests seed should provide the REQ-6-5 eligible state (approval + check success), and \"restored independently before reuse\". With insert-if-absent seed, once merged it's not restored. But e2e uses a fresh DB per run, so \"repeated runs\" fine; \"parallel runs\" — each run gets its own temp DB. Within a run, the merge scenario runs once. But the requirement says \"Each seed state is restored independently before reuse\" for REQ-6-5. Perhaps the e2e test itself restores state between scenario 1 and scenario 2 by using separate PRs (success PR and refusal PR). That's the interpretation: \"separate Open PRs for success and refusal\" + \"Each seed state is restored independently before reuse\" = each scenario uses its own PR, so no state bleed.\n\nNow, \"The eligible PR targets protected main, has a current non-author approval and test: success\" — so seed must include: a protected main branch, an approval by a non-author valid for current compare commit, and test success. Since M6a says \"评审决定、Checks 更新、reviewers 请求等运行时状态由场景操作产生，不预置\" in seed-data, M6b must change that. But ro"
+        },
+        {
+          "content_block": 0,
+          "char_start": 8530,
+          "char_end": 9408,
+          "text": " protection on protection-lab, M6a's \"create rule\" test would find an existing rule. So don't share. Use a new repo.\n\n  Actually, what about `merge-lab` main protection seeded once; M6b spec merges the eligible PR (advances main), leaves blocked PR. Fresh DB per run. Fine. But if M6b spec runs twice? No.\n\n  However: within `e2e/run.mjs`, each run is fresh. But `checks/platform-path.sh` runs e2e once. Fine.\n\n  One more: REQ-6-5 says \"Each seed state is restored independently before reuse.\" If e2e has two tests in the same spec (eligible merge, blocked refusal), each uses its own PR. Fine.\n\n- Also REQ-6-6 seed: \"Seed data supplies the author and a separate Read viewer, an authored Open PR for the close/reopen cycle, and a separate Open PR readable by that viewer for permission validation.\" Author = alice-dev, Read viewer = dave-reader (read @ acme-docs). \"an authored "
+        }
+      ]
+    },
+    {
+      "id": "ae7fd895",
+      "timestamp": "2026-09-29T16:22:39.040Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl",
+        "line": 146
+      },
+      "source_sha256": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+      "record_sha256": "45bedf346fb6821c2a4de50f50beb3794299b7b1c8834e9b1323c093ff66ffb7",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 3330,
+          "char_end": 4156,
+          "text": "it for mainCommit returns existing; `ensureBranch` returns existing. `advanceBranch` not used. The protection rule stays. PR1 already exists (merged), so not recreated. reviews/check rows: hasReview true → skip. Good: idempotent and \"each seed state restored independently\" — hmm, REQ says \"Each seed state is restored independently before reuse\". But we can't restore after a merge without clobbering user data. M6a precedent: \"a merged PR stays merged, an advanced branch keeps its head\". The requirement sentence likely means scenario isolation. Our e2e will use different PRs for each scenario, and merge only once (test order). Since Playwright tests run all at once with one server, merging PR1 in REQ-6-5 test means a later run in the same session would see it merged. Our reviews.spec.ts runs once. Fine.\n\nHmm, but not"
+        }
+      ]
+    },
+    {
+      "id": "e3dffd29",
+      "timestamp": "2026-09-29T16:54:38.795Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ee03-d899-7fd2-893d-a14a20bb83a9/2026-09-29T16-33-47-006Z_01a0ee03-e1fe-7121-9c3f-05eb462c77ed.jsonl",
+        "line": 117
+      },
+      "source_sha256": "b456bcd0fd3b7c42b1ca200750d9c22b0963c5cf5a6ca5d9aed28c419333cb0f",
+      "record_sha256": "5957064c3e781eb6124a01c1f7a6f448f658f57425c6737a53de75bb5f8cb114",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 62,
+          "char_end": 976,
+          "text": "backend installed independently.\n\nNow, one more important verification: the requirement REQ-6-5 says \"Seed data supplies a Maintain account and separate Open PRs for success and refusal\" — merge-lab provides eligible+blocked. And \"Each seed state is restored independently before reuse\". Hmm — \"each seed state is restored independently before reuse\" — does the e2e suite restore merge-lab's eligible state before reuse? After the merge test merges the eligible PR, a later re-run uses a fresh DB (throwaway), so restore happens via fresh DB. Within one run, the merge test runs once. Fine.\n\nNow let me double check the actual requirements text for REQ-6-3-3/6-3-4/6-4/6-5/6-6 to ensure the implementation covers literal THEN criteria. Let me read the requirements from the input file.\n\nThat's important for my verification: verify against original requirements, not the implementation. Let me extract those lines."
+        }
+      ]
+    },
+    {
+      "id": "4d03fd07",
+      "timestamp": "2026-09-29T04:25:23.352Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0eb68-19b6-7c30-91d6-bd339f346335/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.jsonl",
+        "line": 12
+      },
+      "source_sha256": "f939e20e7999a9242df74765351535ca69e631f11612b60dc2bf90c740e80721",
+      "record_sha256": "c9bc0b914f6232acaefb799f65eed5b8d8c810746e5221f9a35f2e1253ea74b5",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 0,
+          "char_end": 550,
+          "text": "A simplified GitHub collaboration platform. This is huge. Let me read the full requirements to understand details. 292KB YAML — I should read it carefully but efficiently. Let me dump atomic requirements' details. Given the size, let me extract text of each atomic requirement.\n\nAlso I need to look at reference images. The requirement says visual interpretation should be delegated to native vision sub-agent. Let me first read all the atomic requirement descriptions, then delegate image review.\n\nLet me dump the YAML to a more readable file first."
+        },
+        {
+          "content_block": 1,
+          "char_start": 0,
+          "char_end": 656,
+          "text": "{\n  \"command\": \"cd /workspace/template/.factory26/20260929-042409-1202e245/input && python3 -c \\\"\nimport yaml\nwith open('requirements.yaml') as f:\n    data = yaml.safe_load(f)\nout = open('/tmp/reqs_flat.md','w')\ndef walk(node):\n    if node['type']=='ATOMIC':\n        out.write(f\\\\\\\"## {node['id']}: {node['name']}\\\n\\\n\\\\\\\")\n        out.write(node['description']+'\\\n\\\n')\n        sc = node.get('scenarios') or node.get('children') or []\n        for s in sc:\n            if isinstance(s, dict):\n                out.write('### Scenario: '+(s.get('name') or s.get('id',''))+'\\\n\\\n')\n                out.write((s.get('description') or '')+'\\\n\\\n')\n                f"
+        },
+        {
+          "content_block": 1,
+          "char_start": 877,
+          "char_end": 1343,
+          "text": "\nwalk(data)\nout.close()\nprint('done')\n\\\"; wc -l /tmp/reqs_flat.md; python3 -c \\\"\nimport yaml\ndata = yaml.load(open('/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml'), Loader=yaml.SafeLoader)\n# check what keys exist at atomic level\ndef walk(node):\n    if node['type']=='ATOMIC':\n        print(node['id'], sorted(node.keys()))\n        return True\n    for c in node.get('children') or []:\n        if walk(c): return True\nwalk(data)\n\\\"\"\n}"
+        }
+      ]
+    },
+    {
+      "id": "5cad06b9",
+      "timestamp": "2026-09-29T04:36:04.756Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl",
+        "line": 95
+      },
+      "source_sha256": "2cbada6151474a24978a716a08af215c0a13724fa7d4dc41d9a23969159f3fb2",
+      "record_sha256": "8a4e78fd4260c49f42a3b8b23685c47c22e46409e6554dceab1503f5effe6b1c",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 9029,
+          "char_end": 9695,
+          "text": "The user is on any page\" → include always. Fine.\n\nNew button (+): skipped (M3).\n\nNow routes and pages.\n\nHomePage: \n- heading level1: copy.home.heading? Let's use `${APP_NAME}` brand + tagline. And when signed out: links \"Sign in\" and \"Sign up\". Hmm, AppShell already renders both in the header. REQ says visitors enter the account-access page from \"Sign up\", \"Sign in\", or \"Forgot password\" on the home page — those links exist in the header of the home page. Fine.\n\nWhen signed in: show \"Signed in as <username>\".\n\nSignInPage: \n- heading \"Sign in to SimpliHub\"\n- form fields: \"Username or email\", \"Password\"\n- button \"Sign in\"\n- non-field error alert for \"Invalid c"
+        }
+      ]
+    },
+    {
+      "id": "815222fd",
+      "timestamp": "2026-09-29T04:48:40.574Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl",
+        "line": 317
+      },
+      "source_sha256": "2cbada6151474a24978a716a08af215c0a13724fa7d4dc41d9a23969159f3fb2",
+      "record_sha256": "b97de45c3062def78ad2d6177d996628e6285e45f16077491c1b988bd7134911",
+      "role": "toolResult",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 0,
+          "char_end": 439,
+          "text": "session=pr2dev-a1bc8fb395f3\n✓ SimpliHub\n  http://pr2-web-deepseek.localhost:1355/\n- generic \"SimpliHubSign inSign upSimpliHubA simplified collaboration platform: accounts, organisations, reposi\" [ref=e1] clickable [onclick]\n  - link \"SimpliHub\" [ref=e2]\n  - searchbox \"Search\" [ref=e6]\n  - link \"Sign in\" [ref=e7]\n  - link \"Sign up\" [ref=e8]\n  - heading \"SimpliHub\" [level=1, ref=e3]\n  - link \"Sign in\" [ref=e4]\n  - link \"Sign up\" [ref=e5]"
+        }
+      ]
+    },
+    {
+      "id": "c6aed31b",
+      "timestamp": "2026-09-29T11:32:20.844Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eced-cecc-7eb2-bfab-6a06f74d89eb/2026-09-29T11-30-03-972Z_01a0eced-d244-74e4-8fc0-6cda931f6d8e.jsonl",
+        "line": 72
+      },
+      "source_sha256": "7f128116744572c1e38d727424969b97a49539b90874dafe329b145df23cd37b",
+      "record_sha256": "daab097a2383fa9e583f834e477fc9957362c450fdcd87d6ba346c7150104563",
+      "role": "toolResult",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 1490,
+          "char_end": 2158,
+          "text": " base commit, title, description, author, status, and activity records. When the compare branch receives a new commit, the system updates the current compare commit, marks all existing review decisions as stale while preserving them in the timeline, recalculates merge eligibility, and retains inline comments at their original commit and line position marked Outdated. Failure does not change branches or PR state. The following REQ-6 interaction contracts use English accessible names and apply to direct navigation as well as navigation from a repository. Each named action, field, and navigation link is unique on its active page unless explicitly repeated per cha"
+        },
+        {
+          "content_block": 0,
+          "char_start": 2237,
+          "char_end": 2901,
+          "text": "the persisted title; list titles are links with that same exact name. Conversation, Commits, Files changed, and Checks are navigation links, even when visually styled as tabs. The current PR status is visible text. Signed-in scenarios begin with the unique Sign in link on the home page, labeled Username or email and Password fields, a Sign in button, and the account username visible after authentication; each role account has a username, verified email, and password. Visitor scenarios use public repositories and require no session. Seed records identify the corresponding pages, not to private implementation interfaces; role accounts, branches, PRs, and mut"
+        }
+      ]
+    },
+    {
+      "id": "2d348c5b",
+      "timestamp": "2026-09-29T11:32:52.816Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eced-cecc-7eb2-bfab-6a06f74d89eb/2026-09-29T11-30-03-972Z_01a0eced-d244-74e4-8fc0-6cda931f6d8e.jsonl",
+        "line": 73
+      },
+      "source_sha256": "7f128116744572c1e38d727424969b97a49539b90874dafe329b145df23cd37b",
+      "record_sha256": "59947180b56c58edbe7f03707cf29a67c92173ec922d4b1ebfd4bc98b68b8950",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 0,
+          "char_end": 410,
+          "text": "Confirmed: \"Conversation, Commits, Files changed, and Checks are navigation links, even when visually styled as tabs.\" And \"Checks displays check status for the PR's current compare commit\". And \"Each named action, field, and navigation link is unique on its active page.\"\n\nSo Checks is a navigation link/tab. And \"Checks area is available on arrival, displays test: pending initially\" — hmm, if Checks is a ta"
+        },
+        {
+          "content_block": 0,
+          "char_start": 3881,
+          "char_end": 4540,
+          "text": "n | Commits | Files changed | Checks. Tabs driven by `?tab=` (default conversation). Checks section rendered on conversation tab too? Let me reconsider: maybe simpler to render the Checks section beneath the conversation content on *every* tab? No.\n\nDecision: default tab = conversation. The conversation tab renders: PR description, timeline (comments/activities/reviews), and a \"Checks\" section (heading + status + admin control). The checks tab renders just the Checks section. So \"available on arrival\" is satisfied. I'll note this interpretation in the packet/PR comment.\n\nNow, \"test: pending\" text. The requirement: \"displays test: pending initially\". A"
+        },
+        {
+          "content_block": 0,
+          "char_start": 13172,
+          "char_end": 13831,
+          "text": " a heading; e2e uses seeds. Fine.\n\nHmm, wait. But also for REQ-6-1 the seed values in scenarios say \"pull requests `Improve onboarding` and `Fix search`\". These are generic seed descriptions auto-generated. The key is the flows work.\n\nSimplification decision: Use **one** M6-dedicated repo `alice-dev/protection-lab` that hosts:\n- branches: `main` (default, seeded files), `protected-changes` (main + 1 commit touching a file)\n- PR `Protect main docs` (open, protected-changes → main), compare commit → test pending\n- grants: dave-reader read (readable non-Admin), pw-maintain maintain (write+ for comparison / non-admin), alice-dev owner=admin.\n\nAnd acme-doc"
+        },
+        {
+          "content_block": 0,
+          "char_start": 24875,
+          "char_end": 25516,
+          "text": "inged, let me just implement assuming it lands, but keep it as a **separate commit** that I can drop. Actually no — if it doesn't land and I've changed M4a tests, I'd break develop. But I only merge when root approves. My PR is not merged by me.\n\nOK decision: implement seed append + M4a assertion updates as a separate commit at the end, clearly labeled, pending ruling. If ruling is negative, drop it.\n\nHmm, but then my e2e for REQ-6-2-2 depends on that commit. I'll write e2e asserting src/search.ts. If ruling negative, I adjust.\n\nLet me now check pnpm install.\n\nLet me get going on backend code. Time to write.\n\nFirst check install job."
+        }
+      ]
+    },
+    {
+      "id": "c3e65a02",
+      "timestamp": "2026-09-29T11:22:30.369Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ecda-0a49-7150-8165-fbbf5e03cd0a/2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b/3c3e53c9-f18d-4882-86e9-3a16ee6b3715/run-0/session.jsonl",
+        "line": 36
+      },
+      "source_sha256": "01c6b803bbb3efa4d1beb4b2cd95a071ff5565880744be8e546e6227f3a44d7f",
+      "record_sha256": "d3b3ee9528f57faad4a6ee1b6a5acc03cf48e7aca48d4fc4e1fd26dd149e3848",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 5368,
+          "char_end": 6142,
+          "text": "(satisfies \"private repo also contains the term\"!). docs/guide.md: \"How to browse the acme-docs repository.\" — no. So OR semantics with CURRENT seed satisfies scenario 1 exactly: 2 files on default branch, one under src/, private repo contains term. Zero seed changes, zero pin risk. And description: \"matching file README.md with that query visible as a complete text value\" ✓ (README contains literal \"search flow\"). \"no-such-token\" → single token, appears nowhere ✓ (check: \"no-such-token\" substring anywhere? No).\n\nRisks of OR: \n- Snippet display: for src/search.ts, the snippet shows \"search\" match — fine.\n- A grader might expect phrase semantics and consider src/search.ts a false positive — but the scenario itself demands a src/ match, so phrase semantics contradic"
+        },
+        {
+          "content_block": 0,
+          "char_start": 7405,
+          "char_end": 8186,
+          "text": "ch.ts with its own commit (3 additions 1 deletion) — changing base content doesn't block that but M6 owner must know the file content changed (they shape their own diff). Also docs/guide.md pin issues don't arise here.\n\nWhich to recommend? OR (B) is zero-pin-risk and matches scenario 1 exactly with existing seed. A+ is more literal to \"that query visible as a complete text value\" (but that clause only concerns README.md, which holds under both). The description says \"known query search flow\" and scenario 1 says \"unique code term\" — the evaluator will almost certainly use \"search flow\" as the query (it's the only pinned query). Under both B and A+, results = README.md + src/search.ts. \n\nDecisive consideration: which is more robust to evaluator assertions on RESULT SET? Ev"
+        }
+      ]
+    },
+    {
+      "id": "21775e48",
+      "timestamp": "2026-09-29T11:25:21.530Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ecda-0a49-7150-8165-fbbf5e03cd0a/2026-09-29T11-08-29-224Z_01a0ecda-10a8-7697-9044-a546bccdab1b/3c3e53c9-f18d-4882-86e9-3a16ee6b3715/run-0/session.jsonl",
+        "line": 40
+      },
+      "source_sha256": "01c6b803bbb3efa4d1beb4b2cd95a071ff5565880744be8e546e6227f3a44d7f",
+      "record_sha256": "1d368deb348be0b794148a746edf9654826bb850f1cefa6cf0cf9a106ffb2375",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 3340,
+          "char_end": 4010,
+          "text": "not in seed. OK.\n\nAlso: after clicking a result, \"opens the file near the match\" — blob page with branch context; \"Opening the matching file shows that text; refreshing preserves the file context, text, and a link named exactly after the file\" — the blob page for README.md on main ✓ exists (M4a).\n\nNow Q3 detailed: /search page changes:\n- Keep default type = Repositories (REQ-3-1).\n- Add type link \"Code\" (unique on the page; SearchPage is outside RepoHeader so no nav collision ✓ — verify SearchPage doesn't render RepoHeader; it renders its own page-shell with h1 + segmented nav ✓).\n- Repo scope propagation: when Enter pressed while current route is /:owner/:repo/"
+        }
+      ]
+    },
+    {
+      "id": "f24f8ddf",
+      "timestamp": "2026-09-29T11:58:59.442Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0ed06-9b7a-7d43-ae0f-6c957a97797a/2026-09-29T11-57-12-563Z_01a0ed06-abf3-7749-a38f-c3cc84fe125a.jsonl",
+        "line": 45
+      },
+      "source_sha256": "655299f285eab4446fe6a30b2bf47262cb37305c138f04bb98b4926dca29ab6a",
+      "record_sha256": "cad72ab6e3ee30cd778ad6d836991decc4dc94eda0492a37e1ebb9333b436b66",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 6498,
+          "char_end": 7366,
+          "text": "Does the app show README.md's full text including \"search flow\"? Let me check the README content in seed. The design says README.md contains \"search flow\". Let me verify the seed README content and that the blob page renders full text.\n\nActually the content.spec.ts already asserts README full text verbatim (M4a). So README contains the text and is rendered. Fine.\n\n- \"refreshing preserves the file context, text, and a link named exactly after the file\" — M4a covers.\n\n- Scenario 2: covered by #264 fix request.\n\nREQ-4-3-1:\n- \"the current branch is the branch jointly referenced by the selector, page entry, and file list\" ✓\n- \"Matching branch options or the 'No matching branch' state update as the user types in the branch textbox\" ✓\n- \"pressing Enter or activating a separate search button is not required\" ✓\n- Scenario 2: \"enters a branch query with no matching "
+        }
+      ]
+    },
+    {
+      "id": "24b163a3",
+      "timestamp": "2026-09-29T16:27:48.776Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl",
+        "line": 270
+      },
+      "source_sha256": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+      "record_sha256": "28db5ca708bb693e0d90efc3fd5eb6b5d3bf202d6142c72416075fbb5e3ad561",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 1,
+          "char_start": 16737,
+          "char_end": 17401,
+          "text": "r(thrown instanceof Error ? thrown.message : errorCopy.unknown);\n    } finally {\n      setBusy(false);\n    }\n  };\n\n  const removeReviewer = (username: string) => runAction(() => pullApi.removeReviewer(owner, name, detail.number, username));\n\n  const onCheckChanged = (check: CheckState) => setDetail((current) => (current ? { ...current, checks: check } : current));\n\n  // Inline comment entries (published) join the Conversation timeline; Outdated\n  // ones are marked there instead of being relocated in the diff.\n  const timeline = [\n    ...detail.activities.map((activity) => ({\n      key: `activity-${activity.id}`,\n      createdAt: activity.createdAt,\n      "
+        },
+        {
+          "content_block": 1,
+          "char_start": 22708,
+          "char_end": 23377,
+          "text": "={busy} onClick={ready}>\n                  {pullCopy.readyForReview}\n                </Button>\n              ) : null}\n            </>\n          ) : null}\n          {detail.state === 'open' ? (\n            <>\n              <MergeArea\n                gate={detail.merge}\n                merged={null}\n                canMerge={canMerge}\n                busy={busy}\n                onMerge={() => {\n                  setCommentTarget(null);\n                  setMergeOpen(true);\n                }}\n              />\n              {canClose ? (\n                <Button variant=\\\"danger\\\" disabled={busy} onClick={() => runAction(() => pullApi.close(owner, name, detail.numb"
+        },
+        {
+          "content_block": 1,
+          "char_start": 23601,
+          "char_end": 24270,
+          "text": "rimary\\\" disabled={busy} onClick={() => runAction(() => pullApi.reopen(owner, name, detail.number))}>\n              {pullCopy.reopenPullRequest}\n            </Button>\n          ) : null}\n        </div>\n        {detail.state === 'merged' ? <MergeArea gate={detail.merge} merged={detail.merged} canMerge={false} busy={busy} onMerge={() => {}} /> : null}\n        {actionError ? (\n          <p className=\\\"form-error\\\" role=\\\"alert\\\">\n            {actionError}\n          </p>\n        ) : null}\n      </div>\n\n      <div className=\\\"mt-3\\\">\n        <SegmentedNav\n          items={[\n            { label: pullCopy.conversation, to: pullPaths.detail(owner, name, detail.number),"
+        },
+        {
+          "content_block": 1,
+          "char_start": 26476,
+          "char_end": 27140,
+          "text": " </ul>\n            </section>\n\n            <PullChecks\n              owner={owner}\n              name={name}\n              number={detail.number}\n              check={detail.checks}\n              canAdmin={isPullAdmin(role)}\n              onChanged={onCheckChanged}\n            />\n          </div>\n\n          <aside className=\\\"flex h-fit flex-col gap-3\\\">\n            <ReviewersPanel\n              reviewers={detail.reviewers}\n              candidates={candidates}\n              canManage={canManageReviewers}\n              busy={busy}\n              onRequest={requestReviewer}\n              onRemove={removeReviewer}\n            />\n            <ReviewsSummary re"
+        },
+        {
+          "content_block": 1,
+          "char_start": 28923,
+          "char_end": 29587,
+          "text": "   </section>\n      ) : null}\n\n      {tab === 'checks' ? (\n        <PullChecks\n          owner={owner}\n          name={name}\n          number={detail.number}\n          check={detail.checks}\n          canAdmin={isPullAdmin(role)}\n          onChanged={onCheckChanged}\n        />\n      ) : null}\n\n      <Dialog\n        open={reviewOpen}\n        onOpenChange={setReviewOpen}\n        title={moduleCopy.reviewChanges}\n        footer={\n          <>\n            <Button onClick={() => setReviewOpen(false)}>{authCopy.cancel}</Button>\n            <Button variant=\\\"primary\\\" disabled={busy} onClick={submitReview}>\n              {moduleCopy.submitReview}\n            </Butt"
+        }
+      ]
+    },
+    {
+      "id": "f467370f",
+      "timestamp": "2026-09-29T16:28:07.428Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0edf6-c12d-7912-a20f-4b28078f8cb4/2026-09-29T16-19-28-010Z_01a0edf6-c68a-7397-8f67-a76528af845b.jsonl",
+        "line": 283
+      },
+      "source_sha256": "92df7a209947c854fbb0bda3a7fe6982444e1ba2b1b181ed4958d7625c5940bb",
+      "record_sha256": "eeb07ffbdec6b0f9356233a8ca94111fbae903ca439abc92817337e448dd7edd",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 0,
+          "char_end": 894,
+          "text": "Issues:\n1. Line 379: `canMerge = canMergePull(role) && detail.state === 'open' && detail.state !== 'merged'` → remove the redundant comparison.\n2. `ready` uses runAction which expects Promise<PullDetail>, but pullApi.readyForReview returns PullSummary. Need a separate handler or make readyForReview return detail by refetching. M6a behavior: ready then refetch detail. Let me implement `ready` separately:\n```tsx\nconst ready = async () => {\n  setBusy(true); setActionError(null);\n  try { await pullApi.readyForReview(...); setDetail(await pullApi.detail(...)); }\n  catch ... finally ...\n};\n```\n3. requestReviewer returns PullReviewer[]; need to setDetail with reviewers merged:\n```tsx\nconst requestReviewer = async (username) => {\n  ... const reviewers = await pullApi.requestReviewer(...); setDetail(cur => cur ? {...cur, reviewers} : cur);\n}\n```\n4. removeReviewer similar.\n\nLet me fix these."
+        },
+        {
+          "content_block": 1,
+          "char_start": 107,
+          "char_end": 1104,
+          "text": "      \"oldText\": \"  const canMerge = canMergePull(role) && detail.state === 'open' && detail.state !== 'merged';\"\n    },\n    {\n      \"newText\": \"  const ready = async () => {\n    setBusy(true);\n    setActionError(null);\n    try {\n      await pullApi.readyForReview(owner, name, detail.number);\n      setDetail(await pullApi.detail(owner, name, detail.number));\n    } catch (thrown) {\n      setActionError(thrown instanceof Error ? thrown.message : errorCopy.unknown);\n    } finally {\n      setBusy(false);\n    }\n  };\",\n      \"oldText\": \"  const ready = () => runAction(() => pullApi.readyForReview(owner, name, detail.number));\"\n    },\n    {\n      \"newText\": \"  const requestReviewer = async (username: string) => {\n    setBusy(true);\n    setActionError(null);\n    try {\n      const reviewers = await pullApi.requestReviewer(owner, name, detail.number, username);\n      setDetail((current) => (current ? { ...current, reviewers } : current));\n    } catch (thrown) {\n      setActionError(thrown ins"
+        }
+      ]
+    },
+    {
+      "id": "9bf622c6",
+      "timestamp": "2026-09-29T11:10:59.223Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ecda-1c7f-7161-a15b-5da20ef74e97/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-9-pi-glm-fast-g1--/2026-09-29T11-08-33-927Z_01a0ecda-2307-76e1-9044-d8ee02d4f010.jsonl",
+        "line": 55
+      },
+      "source_sha256": "27c9565024023b22f6068532af55a3d0b30c5ae37e0d16b75afee718b6c735ac",
+      "record_sha256": "7c5151bcad6b9046b16356b0760cdc3028eb3bce69ef0dbd7e2eb7a4c08ca77c",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 1566,
+          "char_end": 2576,
+          "text": "ll request\". Hmm, that might have been part of M5? Let me not overreach; comment 231 says \"PR 的标签/里程碑操作复用同一谓词\" — that's a premise for whoever implements PR metadata. Is that M6a's job? The issue #9 deliverables don't mention labels/milestones on PR. It's likely part of M6b or the issues module handles it generically. I'll note it as a boundary question — actually comment 231 lists it as a \"跨模块前提\" to align, meaning if M6a touches PR metadata ops, use the predicate. Since issue #9 scope doesn't include PR labels/milestones UI, I'll note that this premise applies to the issues module's existing PR-metadata endpoints if any... Let me check whether the issues module currently handles pull_requests rows for labels/milestones. Quick grep.\n\n6. REQ-6-6 (PR close/reopen) roles: {PR author ∪ maintain ∪ admin ∪ org Owner} — that's M6b/M6c scope (not issue #9 — issue #9 covers 6-1, 6-2-*, 6-3-1/2). Draft→Ready for review in 6-2-4 uses author/Maintain+/Owner.\n\nNow my role: Issue #9 owner — design product requ"
+        }
+      ]
+    },
+    {
+      "id": "fe5a9900",
+      "timestamp": "2026-09-29T16:11:54.222Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eded-85a1-7891-aa22-4da1a93d31fc/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-10-pi-deepseek-fast-g1--/2026-09-29T16-09-22-776Z_01a0eded-8a58-762d-bc11-f3200d8a7401.jsonl",
+        "line": 75
+      },
+      "source_sha256": "ad407c63775658fe333fb6163087efa2b8719eadb03e00bc71441c944896212b",
+      "record_sha256": "e47379cf30afb7f1c3ad327a448d9ed5576b3517073d857c11fb8c688a952569",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 1,
+          "char_start": 0,
+          "char_end": 507,
+          "text": "{\n  \"agent\": \"advisor\",\n  \"task\": \"你是独立复核者。我在为一个已有仓库的 Issue #10（M6b）做产品/技术/验收设计，进入实施前需要你挑战我的判断、给反例与替代方案。请只读下面的材料（无需访问文件；如需事实可让我补），最后按问题逐条给结论。\n\n## 背景（已合入 develop 的前置事实，M6a = Issue #9/PR #20）\n- 技术栈：Express + better-sqlite3（事务写入，纯 ESM）、React+Vite。既有表（migration v1）：`reviews(id, pr_id, reviewer_id, decision['comment'|'approve'|'request_changes'], summary, compare_commit_id, created_at)`；`review_comments(id, pr_id, path, compare_commit_id, line, body, author_id, published bool, created_at)`；`check_runs(pr_id"
+        },
+        {
+          "content_block": 1,
+          "char_start": 1680,
+          "char_end": 2340,
+          "text": "earch`（bob 作者）；Draft `Draft onboarding update`（alice）；Closed PR（alice）；feature-search 分支被 Closed PR 占用但 (main,feature-search) 创建对可用；空闲比较对 (main, docs-refresh) 预留给 REQ-6-2-4。seed-data.md 明记“评审决定、Checks 更新、reviewers 请求等运行时状态不预置”，且 acme-docs 不预置保护规则。\n- 根负责人（Issue #10 评论 #305）授权约束：① REQ-6-6 权限 = {PR author ∪ maintain ∪ admin ∪ 组织 Owner}，排除 Triage 与 Write，不得用梯子表达；② 合并语义 = 逐文件三方合并，双侧同文件冲突→unmergeable，merge commit 事务写入（双父，commit_parents）；③ 若需新增 seed 分支/commit/PR 或改动既有断言值，先在本 Issue 或根 Issue 提裁决；④ 已有 e2e 文件名 `code-*`/`content`/`issues`/`orgs`/`pulls`/`repos`/`identity`/`session` 要避开；⑤ 全部断言用 getByRole 精确 name；⑥ 每轮 e2e 用全新临时 SQLite 启动后端（每次 run 都是新库）。\n\n## 需求原文关键句（"
+        },
+        {
+          "content_block": 1,
+          "char_start": 12739,
+          "char_end": 13082,
+          "text": "是否合理？“drafts are not published automatically”是否应扩展为“只发布当前 compare commit 的草稿”？\nQ5 合并门控有没有我漏掉的必要条件/顺序陷阱？特别是：Request changes 的“有效”判定（同 reviewer 最新决定 vs 任何未撤回的 request_changes）、合并时 base head 已前移、保护规则两条约束的独立判定、以及“Merged 终态”在 close/reopen/merge 三个端点上的强制。\nQ6 验收判据有什么高风险的遗漏？请列出最可能隐藏验收会测、但我的清单没覆盖到的 3–5 点。\n\n请给出：逐条结论 + 依据 + 反例 + 你建议的修订（如有）。不要修改任何文件。\"\n}"
+        }
+      ]
+    },
+    {
+      "id": "c66377bd",
+      "timestamp": "2026-09-29T16:19:50.253Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0edf0-3050-72f0-8275-fc6ee38edf6f/2026-09-29T16-12-17-682Z_01a0edf0-3592-766f-9cb7-f9c533bce566.jsonl",
+        "line": 31
+      },
+      "source_sha256": "68084791f1b3c7bdc6a1cf872d924fe30f23a4fe8d8f019c12e22239ac823171",
+      "record_sha256": "ace5d01ec2572a5683dc543dc7a9d893f9b4ef3fcbea13bb96053128029bb55e",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 0,
+          "char_end": 436,
+          "text": "I need to adjudicate decision points A, B, C from #308. Let me first verify facts against the requirements text and code, since these are consequential decisions (shared contract / seed changes). Per my role: verify requirements.yaml originals, check seed facts, check pulls.test.js assertions. Also per guidance, consequential decisions should be consulted with advisor (\"原生 advisor 提供独立判断... 确定仍有关键假设的验收判据之前，先向 advisor 咨询\"). But note "
+        }
+      ]
+    },
+    {
+      "id": "fa9e3624",
+      "timestamp": "2026-09-30T02:03:59.567Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+        "line": 48
+      },
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "01da41fc0b49252a64f6669b08ef10c1d084a6f931b8e09a9d77291c06ab5171",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 77,
+          "char_end": 380,
+          "text": "leaf ids by indentation/structure. Simpler: grep all `- id:` lines and count.\n\nActually, I mainly need to know the spec coverage mapping, which the acceptance plan and existing specs already establish. The e2e suite is the mechanism. I don't need to re-derive each mapping.\n\nLet me check install status."
+        }
+      ]
+    },
+    {
+      "id": "45506478",
+      "timestamp": "2026-09-30T02:04:53.750Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+        "line": 71
+      },
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "32e02f0deb138425d2d6d69b81404baf512a2992dbd5b503fd6c7bbd2944ca1b",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 0,
+          "char_end": 542,
+          "text": "Let me just wait for messages. But I should keep working. Let me use the time to read the requirements for the modules to cross-check coverage. Actually, I already established all 34 leaves referenced.\n\nAnother useful task: verify that the platform-path.sh clean-copy approach will find a browser. `BROWSER_EXECUTABLE_PATH=/workspace/submission/agent/runtime/bin/chromium` exists. Check.\n\nAlso check that npm registry access works for the clean copy root npm install (@playwright/test). Let me test `npm view @playwright/test version` quickly"
+        }
+      ]
+    },
+    {
+      "id": "0fbaa935",
+      "timestamp": "2026-09-30T02:05:25.694Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+        "line": 74
+      },
+      "source_sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "record_sha256": "c5e9a344cacc395d06419a1c3e47941315e18359c8f0aa3afc967bff4e988196",
+      "role": "toolResult",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 136,
+          "char_end": 802,
+          "text": "ies.\nmetadata:\n  version: \"16.0.0\"\n---\n\n# Task Packet\n\nUse this skill when work needs recovery, coordination, or a durable record of current truth. A packet stores the outcome, constraints, evidence, unresolved decisions, owners, and next action; it does not replace requirements, source code, or verification evidence.\n\nKeep packet.md short enough to recover the route without reading the full history. Add a Plan, Inquiry, Design, Decision, Verification, Track, Phase, or Cell only when its distinct owner or integration return lowers recovery or coordination cost.\n\nRead the guidance that matches the current need:\n\n| Need | Read |\n| --- | --- |\n| Form an impleme"
+        },
+        {
+          "content_block": 0,
+          "char_start": 1279,
+          "char_end": 1946,
+          "text": "cide whether and how to delegate bounded work | [Delegation](../svc-sub-agents/SKILL.md) |\n\nUse [templates](assets/templates/index.md) only when a reusable shape helps; they are optional and do not define a fixed packet layout.\n\n## Core method\n\nTake intended behavior from requirements and current truth from observations.\nName the next return, its owner, dependencies, and completion evidence.\nPreserve work already in progress and its result entry point so a recovering owner can inspect it before starting overlapping work.\nUpdate the packet when a finding changes the route, a change is integrated, or evidence changes the completion judgment.\nKeep facts, inferen"
+        }
+      ]
+    },
+    {
+      "id": "dd4548e1",
+      "timestamp": "2026-09-29T16:21:39.739Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0edf0-3050-72f0-8275-fc6ee38edf6f/2026-09-29T16-12-17-682Z_01a0edf0-3592-766f-9cb7-f9c533bce566.jsonl",
+        "line": 40
+      },
+      "source_sha256": "68084791f1b3c7bdc6a1cf872d924fe30f23a4fe8d8f019c12e22239ac823171",
+      "record_sha256": "e926e6b7dcaf0e15ea5fc5c2daff52d26d6b297f2808147c8800ecffb317a666",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 735,
+          "char_end": 1389,
+          "text": "uthor and Draft PRs cannot submit reviews\"). So excluding the author is consistent and avoids a trap. The requirement is explicit; acceptance tests will check the THEN clauses. The literal reading is what the acceptance plan follows (THEN criteria + seed witnesses). Verdict: adopt literal exclusion — author's Add comment control absent + server 403. This matches REQ-6-3-3 exactly. Also REQ-6-3-4 confirms author cannot submit reviews. So A: adopt design as-is (exclude author).\n\nWait — one nuance: does the requirement require the *control* to be absent for the author, or just that they can't? It says \"A user with Write, Maintain, or Admin who is no"
+        },
+        {
+          "content_block": 0,
+          "char_start": 3571,
+          "char_end": 7280,
+          "text": "nly `line`, can't distinguish. That's real. Alternative: \"只允许 added 行评论\" would deviate from the requirement which explicitly says \"added/deleted line\". So B: adopt `side` column, migration v4, §5/§7.2 documentation updates. Approve.\n\n**裁决点 C：REQ-6-5 eligible seed**\n\nREQ-6-5 description: \"Seed data supplies a Maintain account and separate Open PRs for success and refusal. The eligible PR targets protected main, has a current non-author approval and test: success, and has no conflicts. The blocked PR targets a protected branch and lacks the required valid approval; its disabled button is accompanied by Review required by branch protection.\"\n\nSo the seed MUST supply an eligible PR state as GIVEN initial state. Scenario 1 GIVEN: \"its target main branch is protected, it has 1 valid non-author Approve for the current compare commit, test is success in Checks, and the current diff has no merge conflict.\"\n\nSo the GIVEN requires the initial seeded state to have an eligible PR. Option 2 (runtime orchestration) would fail the GIVEN — \"每个 seed 状态在复用前独立恢复\" (Each seed state is restored independently before reuse) — meaning seed must provide it. Option 1 is required: new repo `alice-dev/merge-lab` with protected main, Open PRs, preset approve + test success.\n\nWait — but REQ-6-5 Scenario 1 GIVEN also says \"Seed values: pull requests Improve onboarding and Fix search, branches main and feature-search, reviewer bob-reviewer, check test.\" Hmm — the \"Seed values\" line repeated in every scenario lists the M6a seed PRs. This is the shared boilerplate. Does REQ-6-5's eligible PR have to be `Improve onboarding` or `Fix search`? The GIVEN says \"A signed-in user ... opens an Open, non-draft PR; its target main branch is protected, it has 1 valid non-author Approve...\" — Under the current seed, Improve onboarding targets main in acme-docs (unprotected), Fix search targets main too. The M6a seed 方案 C moved Improve onboarding to pr-onboarding → main. But acme-docs main can't be protected (M4b/M6a decisions: acme-docs main must not get protection rules — actually #240/#242: M6a's protection rule scenes use protection-lab, not acme-docs). Also the纪律禁止推进 acme-docs main 头 (merging into acme-docs main would move its head — forbidden by #240 premise 2: \"不得给 acme-docs 的 main 追加 commit\"). Merging a PR into acme-docs main would create a merge commit advancing main head — breaking M4b's search expectations (search = default branch head tree). So the eligible/blocked merge PRs must be in a separate repo. Hence merge-lab. This is consistent with #239 protection-lab precedent.\n\nSo Option 1 is correct per requirement GIVEN. The narrow change to pulls.test.js three global check_runs count assertions → scoped by repo/PR: this follows the \"后合入者按对方结果补齐\"/boundary discipline — existing published assertions need updating when seed changes; the change narrows scope, doesn't weaken criteria. Approve with conditions:\n- The three assertion changes must be scoped narrowing (equivalent for existing repos), not weakening.\n- Register in docs/seed-data.md (REQ-6-5 初始状态预置) and update acceptance-plan if it references specific repos.\n- merge-lab must not touch acme-docs, protected-sandbox, protection-lab.\n- New branches/commits/PRs in merge-lab: use shared diff helper for commit_files (§7.2 convention 3), seed idempotent upsert.\n- Branch exhaustive line in content.test.js is per-repo (acme-docs) — merge-lab is a different repo so no impact there. Check: does any test enumerate repos globally? repos.test.js:154 was mentioned for guide.md. The design says only pulls.test.js three assertions need narrowing. I should trust but note that if other out-of-list failures occur, they report back per discipline ("
+        },
+        {
+          "content_block": 0,
+          "char_start": 7428,
+          "char_end": 11322,
+          "text": "re check on A: the design says \"行内评论 / 提交评审：write+ ∧ 非 PR 作者 ∧ State=Open\". REQ-6-3-3 says \"A user with Write, Maintain, or Admin who is not the PR author\" — note it doesn't explicitly say Open state for inline comments... \"an Open reviewable PR\" in seed data description: \"Seed data supplies a non-author Write reviewer, an Open reviewable PR with at least one changed line\". Reviews: REQ-6-3-4 \"may submit Comment, Approve, or Request changes on an Open PR; the author and Draft PRs cannot submit reviews\". So for reviews: Open required, author excluded, Draft excluded. For inline comments: \"Open reviewable PR\" in seed; design applies Open requirement — reasonable. What about inline comments on a Draft PR? Requirement doesn't explicitly forbid; design requires State=Open for inline comments too. Hmm, is that an over-restriction that could fail acceptance? Acceptance THEN criteria only test scenarios with Open PRs. Restricting inline comments to Open PRs is a design choice; since pending drafts on Draft PRs could never be published (reviews can't be submitted on Drafts), allowing them would create the same trap. And REQ-6-3-3's seed says \"an Open reviewable PR\". I'll accept the design's restriction, noting it as a registered interpretation (Draft PRs: inline comment controls absent; no requirement text contradicts; avoids unpublishable drafts).\n\nShould I consult advisor? Guidance: \"将有歧义的需求解释发布为共同前提、确定影响多个任务的共享契约，或确定仍有关键假设的验收判据之前，先向 advisor 咨询\". Point A is a requirement interpretation (literal vs GitHub semantics) — but the literal reading is unambiguous here (\"who is not the PR author\"), and the design's alternative was considered and rejected with reasoning. Point B is a schema increment with concrete evidence (counterexample verifiable in code). Point C is a seed design with requirement-mandated GIVEN. These are fairly clear-cut; I can independently verify B's counterexample quickly in code. Given prior sessions had advisor available, but the decision facts are checkable directly, I can verify B's claim myself by checking seed data. Let me quickly verify the deleted/added line number collision in the seed PR Improve onboarding's diff.\n\nActually let me just check quickly: acme-docs pr-onboarding diff: src/search.ts modified with 3 additions 1 deletion. Does a deleted line's oldNumber collide with an added line's newNumber? With 3 additions and 1 deletion in one hunk, plausible. deepseek-21 claims deleted oldNumber=2 and added newNumber=2. I can verify by checking seed definitions in develop. Let me do a quick check.\n\nAlso verify pulls.test.js assertion lines exist.\n\nPer guidance, before consequential decisions, consult advisor. These are shared-contract decisions (schema increment, seed change affecting other tests). Given the evidence is directly verifiable and prior precedents cover the pattern (contract increments for storage requirements, seed additions with narrow assertion updates), and the design itself already did an independent adversarial review (explorer), I could still do a quick advisor consult to be safe. But note my environment's advisor availability — previous runs used advisor successfully (3 completed advisor runs). The cost is moderate. Hmm.\n\nThe decisions: A is a pure requirements-text reading (unambiguous). B is a technical necessity with verifiable counterexample. C is required by GIVEN (\"The eligible PR targets protected main, has a current non-author approval and test: success\" as seeded GIVEN state; \"Each seed state is restored independently before reuse\"). The requirements mandate option 1 essentially. I think direct verification suffices; advisor adds little when requirement text is decisive. The guidance says consult advisor when ambiguity remains or key assumptions. Here I can resolve by reading the requirement text directly — I've done that. I'll verify the code facts (B counterexample, pulls.test"
+        },
+        {
+          "content_block": 2,
+          "char_start": 0,
+          "char_end": 345,
+          "text": "{\n  \"command\": \"cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && git fetch origin -q; git show origin/develop:backend/seed/repos.js 2>/dev/null | grep -n \\\"pr-onboarding\\\" | head; echo ===; git show origin/develop:backend/seed/repos.js | sed -n '/pr-onboarding/,/^    },/p' | head -60\"\n}"
+        }
+      ]
+    },
+    {
+      "id": "77f888b5",
+      "timestamp": "2026-09-29T16:23:59.255Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0edf0-3050-72f0-8275-fc6ee38edf6f/2026-09-29T16-12-17-682Z_01a0edf0-3592-766f-9cb7-f9c533bce566.jsonl",
+        "line": 59
+      },
+      "source_sha256": "68084791f1b3c7bdc6a1cf872d924fe30f23a4fe8d8f019c12e22239ac823171",
+      "record_sha256": "249447943dc8a8c12bbc5f7bfcd1e23d7f44b8d2e0eb28ed79162bc6adb24459",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 1421,
+          "char_end": 2314,
+          "text": "prior precedents (users.email_verified, branches.created_by). Adopt.\n\n**C**: Option 1 (merge-lab seed with preset approve + test success). Requirement REQ-6-5: \"Seed data supplies a Maintain account and separate Open PRs for success and refusal. The eligible PR targets protected main, has a current non-author approval and test: success\" and \"Each seed state is restored independently before reuse.\" The GIVEN initial state must exist in seed; runtime orchestration (option 2) fails the GIVEN. Also merging into acme-docs main is forbidden (would advance main head, breaking M4b search premise #240). So merge-lab is necessary. Approve option 1 with:\n- Narrow the three check_runs global counts in pulls.test.js (:125/:356/:402) to per-repo/PR scope — a scoping fix, not a criterion weakening.\n- Narrow docs/seed-data.md:153 global sentence per #311 item 1.\n- Boundary: merge-lab must not tou"
+        },
+        {
+          "content_block": 0,
+          "char_start": 2702,
+          "char_end": 3357,
+          "text": "? The three points are each decided by direct requirement text or verified code facts:\n- A: literal requirement text is unambiguous.\n- B: verified technical necessity; requirement forbids the fallback.\n- C: requirement mandates seeded initial state (GIVEN + \"Seed data supplies...\"), and cross-module premises forbid the alternative.\nI've independently verified all. Advisor consultation is for ambiguity/key assumptions; here the requirement text is decisive and evidence is verified. Previous advisor in #308's design was unavailable; my own verification replaces it. I'll proceed with the adjudication — but let me consider: the guidance says \"确定仍有关键假设"
+        },
+        {
+          "content_block": 0,
+          "char_start": 4163,
+          "char_end": 4818,
+          "text": "ed decisions. However, I have independently verified everything against requirement originals, and the M6b designer already ran an adversarial review (explorer, since advisor was unavailable). The decisions align with established precedent patterns. Given all three are directly decidable from requirement text + verified facts, and one prior advisor review already happened (explorer-based), I judge additional advisor consultation adds no new discriminating information. I'll issue the ruling.\n\nNow compose the ruling comment on Issue #10 (reply to #308), and also update Issue #1 body's 交付门/事实 to reflect M6b in progress (PR #22 open). Actually the bod"
+        },
+        {
+          "content_block": 0,
+          "char_start": 5916,
+          "char_end": 6844,
+          "text": " migration v4 + §5「M6b 追加列」+ §7.2 措辞追加批准；版本号 v4 由 M6b 占用（v3 已被 M4b 占用，遵守\"后合入者让号\"）。\n\n**裁决点 C：采纳方案 1——新增 `alice-dev/merge-lab` 预置 REQ-6-5 初始状态。**\n- 依据：REQ-6-5 原文 \"Seed data supplies a Maintain account and separate Open PRs for success and refusal. The eligible PR targets protected main, has a current non-author approval and test: success, and has no conflicts\" + \"Each seed state is restored independently before reuse\"——GIVEN 初始状态必须由 seed 供给，方案 2 的运行时编排直接违反 GIVEN；且 acme-docs main 受 #240/#242 前提保护（不得推进 main 头、不得加保护规则），eligible/blocked 场景不可能落在 acme-docs。\n- 批准配套窄改：① `pulls.test.js` 三条 `check_runs` 全库计数（:125 ===0、:356 ===1、:402 ===0）改为按 repo/PR 限定——根侧已核实这三处确实存在且是全库计数，窄化作用域不是削弱判据（对既有 acme-docs 行为等价）；② `docs/seed-data.md` :153 全局句按 #311 §1 窄化后再登记 merge-lab 预置段；③ packet「两条」笔误以三条为准（#312 第 1 条）。\n- 边界（并入 PR #22 检查清单）：merge-lab 不触碰 acme-docs / protected-sandbox / protection-lab；新 seed commit 经共享 diff 助手写 commit_files（三个各 1 commi"
+        },
+        {
+          "content_block": 2,
+          "char_start": 1104,
+          "char_end": 2047,
+          "text": "§7.2 约定 3 措辞追加，一并批准；**版本号 v4 由 M6b 占用**（v3 已被 M4b 占用，沿用\\\"后合入者让号\\\"纪律）。\n\n### 裁决点 C：采纳方案 1——新增 `alice-dev/merge-lab` 预置 REQ-6-5 初始状态\n- **依据（需求原文决定，非偏好）**：REQ-6-5 \\\"Seed data supplies a Maintain account and separate Open PRs for success and refusal. The eligible PR targets protected main, has a current non-author approval and test: success, and has no conflicts\\\" + \\\"Each seed state is restored independently before reuse\\\"——eligible GIVEN 初始状态必须由 seed 供给，方案 2 的运行时编排直接违反 GIVEN；且 acme-docs main 受 #240/#242 跨模块前提保护（不得推进 main 头、不得加保护规则），eligible/blocked 场景在 acme-docs 上结构不可能。merge-lab 独立仓库是必经之路。\n- **批准配套窄改**（根侧已在 origin/develop 逐一核实）：\n  1. `pulls.test.js` 三条 `check_runs` 全库计数（`:125` ===0、`:356` ===1、`:402` ===0）改为按 repo/PR 限定——三处确实存在且为全库计数，窄化作用域不是削弱判据（对既有 acme-docs 行为等价）。#311/#312 的「三条」数量订正确认。\n  2. `docs/seed-data.md` :153 全局句（\\\"评审决定、Checks 更新、reviewers 请求等运行时状态由场景操作产生，不预置\\\"）按 #311 §1 窄化后再登记 merge-lab 预置段——只加登记段会与该句矛盾，采纳。\n  3. `docs/accep"
+        }
+      ]
+    },
+    {
+      "id": "86ed25a3",
+      "timestamp": "2026-09-29T09:03:55.048Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ec52-6913-7093-9f35-74b020056a51/2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl",
+        "line": 79
+      },
+      "source_sha256": "8f83474b9f54e9f48017eda666e0a200c97c6c5d7fc6db1d9750d9b983ba2045",
+      "record_sha256": "acbde17a8cdf1e8065b755ba18889a7e536d1d431de12ea516330e1192753c97",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 0,
+          "char_end": 4500,
+          "text": "PR #15 merged (2eed74e, root independently verified). Root asks @deepseek-11 to publish the small PR. \"Issue #8 可由负责人按流程关闭\" — but per the flow, the two prerequisites still need to close via the small PR, and then develop → main integration PR. Root says \"M5 闭环：Issue #8 可由负责人按流程关闭；两条待复验前提转由小 PR 承载.\"\n\nHmm — root says Issue #8 can be closed by its owner per process. But wait: the original flow said #8 stays open until root integration (develop → main) completes, and I record integration results in thread 85. Root now says it can be closed. However the two prerequisites are still pending via the small PR. Root's statement: \"M5 闭环：Issue #8 可由负责人按流程关闭；两条待复验前提转由小 PR 承载\" — meaning the small PR carries the prerequisites (tracked elsewhere presumably), and Issue #8's main delivery is done.\n\nBut earlier plan: \"#8 保持 open 至根整合完成，届时我在本 thread 记录整合结果\" (#137) and develop → main integration PR is organized by root Issue #1. The integration PR covers full-requirement acceptance on the develop→main PR, which is not M5-specific. Root now explicitly says #8 can be closed by the owner.\n\nShould I close now? The prerequisites (Triage/Maintain browser layer + org repo) are M5 acceptance criteria — but they've been adjudicated to move to the small PR which will be merged (closing them), and final coverage in the develop→main integration PR. Root's merge receipt says Issue #8 can be closed by its owner.\n\nAlso root says \"@glm-10 知悉\" for the small PR step. As issue owner, I should:\n1. Update Issue #8 body: PR #15 merged into develop (2eed74e), merge receipt #167, prerequisites now carried by upcoming small PR.\n2. Record in thread 85 the merge result and decide on closing.\n\nOn closing: root says \"可由负责人按流程关闭\". But the two prerequisites close only when the small PR merges. The issue body previously said \"#8 保持 open，整合结果出来后我在本 thread 记录\". Now root explicitly authorizes closure. Options: (a) close #8 now with reason noting prerequisites tracked via small PR + integration PR; (b) keep open until small PR merges and I record the final result.\n\nPer my earlier commitment (#137/#140): \"#8 保持 open，整合结果出来后我在本 thread 记录整合结果\". The \"整合\" (develop → main) is organized by root at Issue #1 level. Root's #167 now says #8 can close. The prerequisites are still open items in my issue body. Prudent path: wait for the small PR to merge (closes both prerequisites), then record final result and close #8. That's a short wait and keeps the acceptance bookkeeping consistent — the issue's own acceptance criteria include the two prerequisites. Closing now while prerequisites are open would leave the issue body with open items, which contradicts \"维护你负责的 Issue/PR，让接手者能找到当前有效的要求、决定和未决问题\" — though they'd be tracked in the small PR.\n\nActually, re-reading root: \"M5 闭环：Issue #8 可由负责人按流程关闭；两条待复验前提转由小 PR 承载。\" This is an explicit instruction/authorization from the root owner that closure is appropriate; prerequisites move to the small PR. But the small PR isn't created yet. The safer, consistent-with-my-previous-commitments approach: update body now, post thread-85 note acknowledging merge receipt, and state I'll close #8 once the small PR merges and both prerequisites formally close (or close now?).\n\nHmm. Root said \"可...关闭\" (may close) — not \"must close now\". Given the issue's own body lists the two prerequisites as pending and my repeated commitment that #8 stays open until integration results are recorded, I'll:\n1. Update issue body: merge status = #15 merged into develop (2eed74e, receipt #167, root independent verification passed); next step = small PR (by deepseek-11) closes prereq 1+2 → I record final result in thread 85 → close #8. develop → main integration is organized by root (#1) — full-scope acceptance there.\n2. Post a thread-85 reply to #167: merge receipt received; #8 kept open until small PR merges (closing both prerequisites), then final record + close; unless root prefers immediate closure — no, don't ask unnecessary questions. Actually should I just close now per root's authorization? The tension: root is the root owner and explicitly said the issue can be closed. But my own final-handover trail says I'd record integration results. The small PR result will be reported to Issue #8 per #167 (\"结果回 Issue #8 记录\"). So #8 remains the recording venue for the small PR outcome. If I close #8 now, the small PR result would be recorded on a closed issue — reopenable but messy. Better keep open until small PR merges.\n\nI'll update body + reply briefly in thread 85, then end turn."
+        },
+        {
+          "content_block": 1,
+          "char_start": 0,
+          "char_end": 98,
+          "text": "PR #15 已由根合入 develop（`2eed74e`，根侧独立验证通过）。小 PR 尚未发布，两条前提将随其合并闭合。更新 Issue #8 正文合并状态，并在 thread 85 记录。"
+        },
+        {
+          "content_block": 2,
+          "char_start": 972,
+          "char_end": 1820,
+          "text": "测（Vitest 122 / 全 spec e2e 75 / 平台路径 exit 0·75，评论 #159），我完成发布事实与冲突处置独立核对并发布最终交接（评论 #164），根侧独立验证通过（platform-path exit 0 / 75 + Vitest 122/122）后合并。M5 主体交付完成。\\\"\nassert old in s; s=s.replace(old,new)\n\nold2 = \\\"- **下一步（根 @glm-1）**：合并 PR #15（锚点 `2a51605`）→ 前提小 PR（见下，一次闭合前提 1+2）→ develop → main 整合 PR（覆盖完整需求范围的自动化验收在该 PR 上执行，含 Triage/Maintain 与组织仓库断言）。\\\"\nnew2 = \\\"- **下一步**：@deepseek-11 把 `braid/m5-prereq1-tiers`（现 `4614be4`，实现与本地验证全绿见 PR #15 评论 #165：122 Vitest / 两条前提 spec 6 passed / 全量 e2e 81）rebase 到新 develop（`2eed74e`）开小 PR（base develop），先出全量证据后按 #134 §3 口径承诺 head；**合并即闭合前提 1+2**，结果回本 Issue 记录，我随后做最终记录并关闭 #8。develop → main 整合 PR 由根（Issue #1）组织，覆盖完整需求范围的自动化验收在该 PR 上执行（含 Triage/Maintain 与组织仓库断言）。\\\"\nassert old2 in s; s=s.replace(old2,new2)\nopen(p,'w').write(s)\nprint(\\\"ok\\\")\nEOF\nbraid issue edit 8 --body-file /tmp/issue8-body3.md 2>&1 | head -2\"\n}"
+        }
+      ]
+    },
+    {
+      "id": "37da0043",
+      "timestamp": "2026-09-30T02:02:03.405Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0f007-d178-70a0-b7d5-992e834f4acb/2026-09-30T01-58-36-188Z_01a0f008-fd9b-72c4-8a04-2d2d5a4e7033.jsonl",
+        "line": 26
+      },
+      "source_sha256": "6306c3cf093089e5197f7d48fb1678d5a7a605daf1a0d1c56e2959291e0138e0",
+      "record_sha256": "84720cbb23653415555b5ed30d7f1c2daadda1a3e2c5ecb72b8541b583ff1a02",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 192,
+          "char_end": 986,
+          "text": " \\\"## develop → main 整合 PR（根 Issue #1 的最终交付）\n\n本 PR 是整个项目的最终整合候选：develop 已包含全部模块（基础 PR #2、M1 #12、M2 #13、Access denied #14、M3 #11、M4a #16、M5 #15/#17、共享 grep 修复 #18、M4b #19/#21、M6a #20、M6b #22），目标是在本候选上完成覆盖完整需求范围（34 条原子需求，\\\\`input/requirements.yaml\\\\`）的最终验收，通过后合入 main 交付。\n\n### 验收范围（由 PR 负责人在最终候选 head 上执行，交付 Node 20.19.3 \\\\`/usr/local/bin/node\\\\`）\n1. **全量 e2e**（\\\\`pnpm e2e\\\\`）：全部模块 spec，含各模块既有判据与精确 accessible name 断言（\\\\`docs/acceptance-plan.md\\\\` 分层验收的整合层）。\n2. **平台启动路径**（\\\\`bash checks/platform-path.sh\\\\`）：干净副本逐目录 \\\\`npm install\\\\` / \\\\`npm run build\\\\` / \\\\`HOST\\\\`/\\\\`PORT\\\\` 注入 \\\\`npm run start\\\\`，120 秒内启动、seed 就绪。\n3. **Vitest + typecheck**：\\\\`pnpm test\\\\`、前后端 typecheck 全绿。\n4. 首轮失败保留原始输出与 trace，按需求判据区分实现/检查/环境问题；修复后复验并在评论登记证据（原始输出 + 真实退出码 + 所验 head）。\n5. 结果（含所验 head sha）回本 PR 与根 Issue #"
+        }
+      ]
+    },
+    {
+      "id": "904a0f80",
+      "timestamp": "2026-09-29T04:30:22.626Z",
+      "source": {
+        "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0eb68-19b6-7c30-91d6-bd339f346335/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.jsonl",
+        "line": 16
+      },
+      "source_sha256": "3a0e89acacef6a7222310ecda59ca6a050a377f0484a7f18833d5bde71bcfc4c",
+      "record_sha256": "73caa611e5c1c730b5947c21be6fab9800c504e4d6747326746f581d075c806d",
+      "role": "assistant",
+      "excerpts": [
+        {
+          "content_block": 0,
+          "char_start": 534,
+          "char_end": 1188,
+          "text": "库 Admin（可见性/默认分支/保护规则场景） |\n\n> 各模块如需额外账户（如 PR 作者、非成员访客对照），在模块 seed 内注册并在模块 Issue 中登记。\n\n## 组织与团队\n\n| 对象 | 值 |\n|---|---|\n| 组织 | `Acme Demo`（identifier: `acme-demo`，Owner: alice-dev） |\n| 成员 | bob-reviewer（Member） |\n| 团队 | `frontend-team`（acme-demo 下） |\n| 团队层级 | `frontend-child`（parent: `platform-team`）等循环层级演示按 M2 场景 seed |\n\n## 仓库\n\n| 仓库 | 可见性 | 说明 |\n|---|---|---|\n| alice-dev/acme-docs | public | 主演示仓库；含 main、feature-search 分支；README.md 含 \\\"search flow\\\"；src/search.ts |\n| alice-dev/secret-research | private | 私有仓库（搜索/概览/越权反例） |\n| Acme Demo 组织仓库 | public + private 各一 | 组织仓库列表浏览（公开 + 访客不可见私有） |\n\n## 仓库内容（acme-docs）\n\n| 对象 | 值 |\n|---|---|\n| 分支 | `main`（默认）、`"
+        },
+        {
+          "content_block": 0,
+          "char_start": 1941,
+          "char_end": 2398,
+          "text": "（bob 相关；合并成功/拒绝场景的专用 PR 在 M6 seed 中补齐） |\n| Closed PR | 由 alice 创建（列表过滤场景） |\n| Draft PR | `Draft onboarding update`（draft-feature → main） |\n| Check | `test`：pending（Open PR 当前 compare commit） |\n\n## 保护规则 / Checks / 评审\n\n- M6 场景 seed：main 保护规则（可按场景创建，不需要预置时保持空状态页可见）。\n- 评审决定、Checks 更新、reviewers 请求等运行时状态由场景操作产生，不预置。\n\n## 隔离规则\n\n- 跨仓库同名标签/里程碑（bug、Q3 launch 等）必须在\\\"另一仓库\\\"也存在一份，用于验证选择器不跨仓库。\n- 验收用 `pw-*` 唯一后缀对象；seed 幂等（业务键 upsert）。\n\",\n  \"path\": \"docs/seed-data.md\"\n}"
+        }
+      ]
+    }
+  ],
+  "db_read_mode": "ro&immutable=1",
+  "comments": [
+    {
+      "comment_id": 68,
+      "work_item_node_id": "issue:4",
+      "body": "## M2 技术方案与验收方案（PR 负责人 @glm-7，2026-09-29）\n\n依据 origin/develop（`a619edd`，含 PR #2 + M1/PR #12）共享契约。实施 PR 已建立（base `develop`，head `braid/issue-4-m2`）；完整方案落在 `docs/task-packets/m2-issue-4.md`（随 PR 首个提交发布），此处登记关键决定与**两个需协调点**。\n\n### 方案要点\n- **后端**：`backend/src/modules/orgs/`（组织/成员/团队）+ `backend/src/modules/repos/grants.js`（仓库授权，挂载 `/api/repos/:owner/:name/grants`，先于 M3 router，仅处理 grants 路径、其余 next()，合并无冲突）。错误格式沿用 `errors[]` 一次返回全部字段错误（REQ-2-1-2 明示\"重名 + 缺 displayName 同时报\"）。权限判定全部复用 `permissions/index.js`（org Owner→admin、直接/团队取最高、层级不传播均已内建）。\n- **前端**：`features/org/`；`Your organizations` 接管 `/settings/organizations` 占位；组织页 heading=标识符，Repositories/People/Teams 为 link role（视觉 tab）；Manage access 路由 `/:owner/:repo/settings/access`（比 M3 `/settings` 更具体，路由排序天然优先）。文案全部入 `copy.ts` + `messages.js` 镜像；需求未断言的错误文案与 5 个 UI 裁决点在 packet「UI 裁决点登记」列出（可按档次缺席实现：非 Owner 无成员菜单/Remove、非 admin 无 Manage access、唯一 Owner 行无菜单按钮）。\n- **seed**：`seed/governance.js`（'governance'）：组织/成员与 M3 同业务键 OR IGNORE 共存；组织仓库**沿用 M3 已登记命名** `acme-demo/org-handbook`（public）/`acme-demo/org-private`（private），insert-if-absent，两序合并幂等；团队 frontend-team / platform-team / frontend-child(parent=platform-team)；bob ∈ frontend-team；frontend-team write@org-handbook（REQ-2-3 替换场景既有 Write 授权）。\n- **验收**：Vitest（org Owner→admin、取最高、层级不传播、创建校验组合、成员增删/级联/last Owner、团队环、授权唯一性、seed 幂等）+ Playwright `e2e/orgs.spec.ts` 7 条场景（控件缺席 + API 拒绝 + 刷新持久化，写对象 `pw-*`）+ 平台逐目录检查。\n\n### 协调点 1（跨模块，请根负责人 @glm-1 关注）：`Access denied` 与 M3 防枚举 404 的关系\nREQ-2-2-3 断言\"已登录新成员访问未授权私有仓库显示 **Access denied**\"；M3（PR #11）对不存在/无权限仓库统一渲染 **Not found**（404 防枚举，REQ-3 原文未断言该文案）。两者对\"已登录用户\"冲突。拟议：**访客保持 404/Not found（防枚举不变）；已登录用户访问不可见仓库时页面显示 `Access denied`**（前端按会话态区分显示文案，落在 M3 的 RepositoryMissing；不改 API 状态码，不新增存在性泄露——已登录态的该提示对不存在与无权限仓库同样显示）。该改动触及 M3 页面文件，且 REQ-2-1-1 的\"点击打开 owner/repo 概览\"与 REQ-2-3 的 Settings 入口同样依赖 PR #11 的页面。**请根裁决该登记（或提出替代）；PR #11 合入后我在 rebase 中落地这三点与对应 e2e。**若 PR #11 短期不合，请协调合并顺序（M2 全量验收依赖其仓库页面）。\n\n### 协调点 2（对 @deepseek-5 / PR #11）：seed 共存确认\n我的 `governance` seed 将与 M3 `repos` seed 以相同业务键幂等共存（组织、组织仓库同名、OR IGNORE）。请确认 PR #11 的 `seed/repos.js` 对 `acme-demo` 组织、`org-handbook`/`org-private` 的写入均为 insert-if-absent（我在 pr-11 分支核对过是，但以你最终 push 为准），且两 seed 的注册顺序不影响结果。\n\n@glm-1 如方案与登记无异议，我按此推进；有裁决点请回本评论。\n",
+      "revision": 1,
+      "created_at": "2026-09-29T06:16:53.201736788Z",
+      "updated_at": "2026-09-29T06:16:53.201736788Z"
+    },
+    {
+      "comment_id": 73,
+      "work_item_node_id": "issue:4",
+      "body": "## 根裁决（@glm-1，回复 #68 两个协调点；advisor 审查后）\n\n### 协调点 1：`Access denied` vs 防枚举 404 —— **采纳拟议方案（C），但落地路径更正**\n\n**裁决内容**：\n- API 一律 404 不变；前端 `RepositoryMissing` 按会话态区分显示：**访客 → h1 \"Not found\" + Sign in 链接（现状）；已登录 → h1 \"Access denied\"**（与 notFound 同 role/level，两种判读粒度都满足）。\n- 同一会话态内，不存在仓库与无权限仓库显示同一文案，不引入新的枚举面。注意措辞纪律：只写\"每会话态内文案一致\"，**不写\"API 无存在性泄露\"**（写路径对登录用户已 403，读路径才是统一 404）。\n- \"signed-in\" 以后端会话解析为准，session 过期/无效 cookie 按访客态渲染（这是有意语义，写入修订记录）。\n- 文案常量化：`copy.ts` 增 `errors.accessDenied`（§9.4 契约），`messages.js` 镜像；可访问仓库内未知 branch/path 仍走 `pathNotFound`（不经 RepositoryMissing，不受影响）。\n\n**落地路径（更正 #68 的拟议）**：不由 M2 rebase 中改 M3 文件（所有权与双重 rebase 问题）；也**不注入 PR #11**（#11 已进入合入流程，`15c79a4` 的双复跑证据已锁定，注入将作废两份复跑）。改为：\n1. **PR #11 合入 develop 后，立即建一个独立小 PR（base develop）**落地上述行为 + docs 三处（architecture.md §9 修订记录 + §7.1 注记；acceptance-plan.md 补 REQ-2-2-3 登记——advisor 核实该硬断言目前不在验收计划内，属缺口；product-plan 文案契约）+ M3 侧补一条登录态 `Access denied` e2e。\n2. 小 PR 负责人由届时指派返回的成员承担（文件所有权在 M3：`RepositoryMissing.tsx`/`copy.ts` 均创建于 M3 提交），实施依据以本评论为准。\n3. **顺序约束：该小 PR 合入 develop 必须先于 PR #13 合入**（#13 的 REQ-2-2-3 e2e 依赖该行为，否则 #13 合入即红）。\n\n**M2（#13）侧要求**：\n- REQ-2-2-3 e2e 断言形态：`getByRole('heading', { level: 1, name: copy.errors.accessDenied })`，与访客侧 notFound 断言对称。\n- 核实并用到的\"新成员\"账号对 `acme-demo/org-private` **无任何直接或团队授权**（REQ-2-2-3 断言的前提），该前提在 seed-data.md 登记核对。\n- 事实更正：#68 引用的\"M3 现有 e2e 登录态断言需调整\"不成立——repos.spec.ts 的 5 处 notFound 断言**全部为访客/独立访客 context**（我已逐处复核），#11 合入无需改任何既有断言，M2 也不需要在 rebase 中调整它们。\n\n### 协调点 2：seed 共存 —— **确认成立**\n\n我已在 `15c79a4`（PR #11 当前 head）直接核实 `backend/src/seed/repos.js`：`organizations` 用 `ON CONFLICT DO NOTHING`，`org_members`/`repo_grants` 用 `INSERT OR IGNORE`，组织与 `org-handbook`/`org-private` 均为 insert-if-absent、按业务键幂等、两 seed 注册顺序不影响结果。M2 `governance` seed 按此共存无冲突，仓库命名沿用 `acme-demo/org-handbook` / `acme-demo/org-private`（与根 Issue 未决问题 3 一致）。\n\n@glm-7 按上述推进；对裁决有异议在原讨论提出。\n",
+      "revision": 1,
+      "created_at": "2026-09-29T06:46:17.025280615Z",
+      "updated_at": "2026-09-29T06:46:17.025280615Z"
+    },
+    {
+      "comment_id": 77,
+      "work_item_node_id": "issue:4",
+      "body": "M2 采纳根裁决（@glm-7，回复 #73）：按更正后的落地路径执行。\n\n1. **M2 侧不触碰 M3 文件**：RepositoryMissing 的会话态区分、docs 三处修订与 M3 侧登录态 e2e 全部留给裁决指定的小 PR（PR #11 合入后建立）；#13 的合并顺序前提（小 PR 先合）由根/PR 流程把关，我会在 #13 ready 交回时注明该未决前提。\n2. **copy 常量**：M2 本次 copy 增量即加入 `errors.accessDenied = 'Access denied'`（copy.ts + messages.js 镜像），REQ-2-2-3 e2e 按裁决断言 `getByRole('heading', { level: 1, name: copy.errors.accessDenied })`；小 PR 直接消费该常量实现 RepositoryMissing。\n3. **seed-data.md 登记**：M2 PR 附一条登记（governance seed 对 org-private 除 frontend-team 团队授权外不预置任何直接/团队授权；e2e 的\"新成员\"为运行时注册的 `pw-*` 账户，天然无授权），依据本裁决。\n4. 事实更正收到：M3 既有 5 处 notFound 断言均为访客 context，#13 不调整它们。\n",
+      "revision": 1,
+      "created_at": "2026-09-29T06:47:38.048941453Z",
+      "updated_at": "2026-09-29T06:47:38.048941453Z"
+    },
+    {
+      "comment_id": 235,
+      "work_item_node_id": "issue:9",
+      "body": "## M6a 设计定稿（产品/技术/验收方案，接根评论 #231 的前提清单）\n\n本评论是本任务的设计与 packet 入口；实施在关联 PR 内由 PR 负责人接续。基线 origin develop `5b6c7d4`。\n\n### 1. 边界（M6a ⇄ M6b，按 docs/architecture.md §9.9 拆分）\n- **M6a 交付**：分支保护规则 CRUD + Checks 状态区、PR 列表/比较/创建（含 Draft 与 Ready for review）、PR 三视图 + Files changed 聚合 diff、PR seed。\n- **不在 M6a**：行内评论/评审提交/决策与 stale（M6b）、合并动作与 unmergeable 门控（M6b；M6a 仅在 Draft 详情渲染禁用的 \"Merge pull request\"，Open PR 的合并 UI 随 M6b 落地）、PR 关闭/重开（REQ-6-6，后续任务）、PR 标签/里程碑（复用 §9.15 谓词的既有 issues 模块路径）。\n- 评审状态过滤（REQ-6-2-1）UI 在 M6a 落地，按 `reviews` 表当前数据求值（M6a 阶段为空集），语义由 M6b 填充。\n\n### 2. 权限映射（§4 单一实现 + 需求原文）\n- 列表/详情/三视图/Files changed/比较结果查看：仓库可见即可（访客可读公开仓库）；\"Open\" 链接过滤为纯读。\n- \"New pull request\" 入口、比较流、创建 PR/Draft：**write+**（Read/Triage 控件缺席 + API 403）。\n- Ready for review：**{PR author ∪ maintain ∪ admin}**（组织 Owner 经 §4 即 admin；Write 非作者不可）。\n- 分支保护：Branches 设置页所有可读者可进（REQ-6-1 明示），但 \"Add branch protection rule\" 按钮**仅 admin+ 渲染**（非 admin 完全缺席）；API 写路径 admin+ 拒绝其余。\n- Checks 更新：**admin+**（combobox \"test status\" + Save 仅 admin 渲染；API 403 其余）。\n\n### 3. 后端设计（backend/src/modules/pulls/，纯 ESM .js，事务写路径）\n- `GET /api/repos/:owner/:name/pulls`：state/author/review 过滤参数；行含 number/title/author/state/base→compare 分支。\n- `GET .../pulls/:number`：详情 + `viewerPermission`（§9.3 前端镜像）。\n- `POST .../pulls`：{title, body?, base, compare, draft}；校验顺序：write+ → 分支存在且不同 → 三点比较非空（复用 content 模块 `mergeBase`/`diffCommits`）→ title trim 后 1–256、body ≤65536 → 同 (source,target) 无 open/draft PR → 事务内 `MAX(number)+1`（D3：与 issues 不共享序列）→ 落 `pull_requests`（base_commit_id/compare_commit_id 记创建时分支头）+ `activities`；任何失败零残留。空白标题 → 字段错误 \"Title is required\"。\n- `POST .../pulls/:number/ready`：draft→open；授权集见上；活动记录（如 `pr_ready_for_review`）；不改 branches/commits/title/number。\n- **当前 compare commit 口径**：`compare_branch.head_commit_id` 即权威当前值（Checks、Commits、Files changed 均按它求值）；`pull_requests.compare_commit_id` 保留创建时值（M6b stale/锚定用），写路径触及 PR 时惰性同步。新 commit → 该 commit 无 check_runs 行 → **缺省即 pending**（无需种子行），天然满足 §9.5 键控。\n- `GET .../pulls/:number/checks`：{name:'test', status(缺省 pending), setter, updated_at}。\n- `PUT .../pulls/:number/checks/test`：admin+；按 `(pr_id, 当前 compare_commit_id, 'test')` upsert（UNIQUE 已建）。\n- 分支保护：`GET .../rules/branches`（可读者）、`PUT .../rules/branches/:branchName`（admin+ upsert；`branch_name` 须为已存在分支的精确名；UNIQUE(repo_id, branch_name) 保证每分支唯一）。\n- 三视图数据全部复用 M4a `GET .../compare`（三点、branch 名句柄）：Commits=commits[]、Files changed=files[]+totals；不造第二 diff 事实源（M6b 锚定消费 lines）。\n\n### 4. 前端设计（frontend/src/features/pulls/，copy.ts 全量收口）\n- 路由：`/:owner/:repo/pulls`（列表）、`/:owner/:repo/pulls/compare?base=&compare=`（PR 比较流页，write+ 门禁；**不占用** M4a 的 `/:owner/:repo/compare` revision 比较页）、`/:owner/:repo/pulls/:number`（详情，?tab=conversation|commits|files_changed|checks）、`/:owner/:repo/settings/branches`。\n- 列表页：行 = 编号/标题（链接=精确名）/作者/状态/源→目标分支；状态过滤（Open 链接 + Draft/Closed/Merged）+ 作者 + 评审状态过滤；write+ 见 \"New pull request\" 链接，其余缺席。\n- 比较流页：native select \"base\"/\"compare\"（combobox role，选项=精确分支名）+ \"Compare changes\"；base=compare 立即显示无差异说明并禁用创建（无需先点 Compare）；有效选择显示已知变更文件路径逐字、Commit 汇总（可比 commit 数）、enabled \"Create pull request\" 与 \"Create draft pull request\"；表单字段 \"Title\"/\"Description\"，提交按钮同名（\"Create pull request\"/\"Create draft pull request\"），空白标题 → \"Title is required\"。\n- 详情页：h1=持久化标题（精确）；状态可见文本；导航链接 Conversation/Commits/Files changed/**Checks**（REQ-6 总述：四者均为 navigation link）；Draft 显示 Draft 标记 + 禁用 \"Merge pull request\" + 作者/Maintain+/Owner 可见 \"Ready for review\"（如需确认仅单个 \"Confirm\"）；Checks 区显示 `test: pending|success` + 设置者 + 时间，admin 有 combobox \"test status\"（option \"success\"）+ \"Save\"。\n- Files changed：复用 `DiffView.tsx`；\"Changed files\" 汇总 + 聚合 \"<N> additions, <N> deletions\"；未变更文件不显示。\n- Branches 设置页：规则列表（分支名 + \"1 approval\" + \"Require status check test\" 摘要）；\"Add branch protection rule\"（仅 admin）；表单 \"Branch name pattern\"（精确分支名、无通配）+ checkbox \"Require 1 approval\"/\"Require status check test\" + \"Create\"（已有规则 \"Save changes\"）。\n- 文案全部进 `frontend/src/contracts/copy.ts`（正文清单 + 上述）；复用既有 `errors.accessDenied` 等键。\n\n### 5. Seed（按根裁决 #234，待 @deepseek-9 确认 + @glm-1 裁决后执行）\n- `Improve onboarding` 挂 M6 自有专用分支（pr-onboarding = main + 1 自有 commit：src/search.ts 修改 + 1 added 文件，聚合 3+/1−）；feature-search 追加单个自有 commit（只改 src/search.ts、只增行）使脚本化比较显示 src/search.ts。\n- `Fix search`（bob）、Closed PR（alice）、Draft `Draft onboarding update`（draft-feature → main）各用自有分支；`test` check 不预置行（缺省 pending）；M4a 断言三处同步更新（边界见根 #234）。\n\n### 6. 验收方案\n- **Vitest**（backend/test/pulls.test.js 等）：保护规则唯一性/权限档（admin 过、write 403）、Checks 键控（缺省 pending、保存持久、新 compare commit 回 pending、非 admin 403）、比较计算复用、PR 编号 MAX+1 与同对去重、标题校验、Draft 状态机（ready 授权矩阵）、seed 幂等。\n- **Playwright**（e2e/pulls.spec.ts 新文件）：正文 7 条交付场景；权限档 = 控件缺席 + API 拒绝双断言；刷新/重开持久化；Checks 与当前 compare commit 对应断言（保存 success → 刷新保持 → compare 分支前进 → 回 pending）；聚合与文件路径逐字断言。\n- 全部断言 `getByRole` 精确 name；场景隔离按 acceptance-plan（pw-* 唯一后缀对象）。\n\n### 7. 未决与阻塞\n- 根裁决 #234（seed 塑形 + M4a 断言更新边界）：仅阻塞 seed 与三处断言更新；其余实现可先行。\n- 比较流页 URL 定为 `/pulls/compare`（避免占用 M4a `/compare`）——如根/深seek对 URL 语义有既定裁决请指出，否则按此执行。\n",
+      "revision": 1,
+      "created_at": "2026-09-29T11:29:29.589333446Z",
+      "updated_at": "2026-09-29T11:29:29.589333446Z"
+    },
+    {
+      "comment_id": 305,
+      "work_item_node_id": "issue:10",
+      "body": "@deepseek-21 你已被指派为 Issue #10（M6b：REQ-6-3-3 行内评论、REQ-6-3-4 提交评审、REQ-6-4 Reviewers、REQ-6-5 合并、REQ-6-6 关闭/重开 PR）负责人。交接入口如下。\n\n## 基线与依赖（全部已合入 develop）\n- **develop = `e5110cb`**（PR #20 merge，父 `7a3b8ea` + `1ea64ab`；merge 树 = head 树 `bd6bea28…`）。M1–M6a 全部合入：#2 基础、#12 M1、#13 M2、#14 Access denied、#11 M3、#16 M4a、#15/#17 M5、#18 grep 修复、#19 M4b、#20 M6a；Issue #3–#9 均已 completed 关闭。\n- 直接消费的 M6a 契约（Issue #9 设计 #235，docs `§9.18`）：PR 列表/比较/创建、Draft + Ready for review、三视图 + Files changed（`lines[].oldNumber/newNumber` 行锚定）、Checks 键控 `(compareCommitId, name)`、seed 方案 C。\n- M4b 契约（`§9.17`/`§7.2`）：分支/Web 编辑/搜索；`commit_files.status` 唯一词表 `added|modified|deleted`，migration v3 已占用，追加迁移按\"后合入者让号\"。\n\n## 对 M6b 有直接约束力的既有裁决\n1. **REQ-6-6 关闭/重开 PR 的权限集合**：`{PR author ∪ maintain ∪ admin ∪ 组织 Owner}`，**排除 Triage 与 Write**（根裁决 Issue #1 #118；REQ-6-6 原文）。不得写 `roleAtLeast(role,'triage')` 或任何梯子表达。\n2. **PR 的标签/里程碑操作复用** `permissions.canManageIssueMetadata(role)` / `requireRoleIn(db, roles)`（`{triage, maintain, admin}`，REQ-5-3-3 覆盖 issue 或 pull request；同 #118）。\n3. **合并语义**：逐文件三方合并；双侧同文件冲突 → unmergeable；merge commit 事务写入（含 `commit_parents` 双父，`§9.2`）。\n4. **commit 共享不可变**：合并产生新 commit，不改写既有对象。\n\n## seed 与共享断言边界纪律（延续 #242/#245/#246/#259）\n- M6a 方案 C 已塑形的分支：`pr-onboarding`、`fix-search`、`draft-feature`、feature-search 新头 commit（只改 `src/search.ts` +2/−0）。若 M6b 需要**新增** seed 分支/commit/PR 或改动既有断言值，先在本 Issue 或根 Issue #1 提出裁决，不自行改判据；`content.test.js` 分支穷举行等共享断言按\"后合入者按对方结果补齐\"。\n- 自有 spec 命名避开已有 `code-*`、`content`、`issues`、`orgs`、`pulls`、`repos`、`identity`、`session`。\n\n## 流程\n1. 本 Issue 内完成设计（复用 docs/product-plan、architecture、acceptance-plan、seed-data 的既有判据，不重复造文档）；涉及歧义解释或共享契约变更的，发评论 @glm-1 裁决，重要决定前可用原生 advisor 独立复核。\n2. 创建关联 PR（`--base develop`），接续本 Issue task packet；先证据后承诺 head，最终 head 用交付 Node（`/usr/local/bin/node` 20.19.3）取 Vitest + typecheck + 全量 e2e + `checks/platform-path.sh` 证据。\n3. 候选交回本 Issue 核对，核对通过后根以 `--match-head-commit` 合并。\n\nM6b 合入后即建立 develop → main 整合 PR 做完整验收。",
+      "revision": 1,
+      "created_at": "2026-09-29T16:10:28.649601467Z",
+      "updated_at": "2026-09-29T16:10:28.649601467Z"
+    },
+    {
+      "comment_id": 308,
+      "work_item_node_id": "issue:10",
+      "body": "## M6b 设计定稿（产品/技术/验收）+ 需根裁决 3 项（REQ-6-3-3/6-3-4/6-4/6-5/6-6）\n\n基线 `origin/develop` = `e5110cb`（M6a PR #20 已合入）。完整设计与实施计划见关联 PR 的 `docs/task-packets/m6b-issue-10.md`；本评论是 Issue 侧入口与裁决请求。设计期已做一次独立对抗复核（原生 advisor 在本环境不可用：`kimi-k3` 限流、`gpt-5.5` key 失效；改用全新只读 explorer，结论已并入下方）。\n\n### 1. 边界\nM6b 交付 REQ-6-3-3（行内评论 + pending 草稿 + Outdated）、REQ-6-3-4（提交评审 + stale + Request changes 门控）、REQ-6-4（Reviewers）、REQ-6-5（合并门控 + 事务合并）、REQ-6-6（关闭/重开）。\n不做：PR 标签/里程碑（REQ-5-3-3，属 M5 的 REQ-5 范围，沿用 M6a 决定 1）、普通会话评论写入（M6a 已展示）、分支保护 CRUD（M6a）、PR 列表/比较/创建（M6a）。\n\n### 2. 权限（显式集合；不满足者控件缺席，服务端独立拒绝）\n- 行内评论 / 提交评审：`write+` ∧ **非 PR 作者** ∧ `State=Open`（REQ-6-3-3 “who is not the PR author”；REQ-6-3-4 “the author and Draft PRs cannot submit reviews”）。→ **裁决点 A**\n- Reviewer 请求/移除：`author(Open|Draft) ∪ {maintain,admin}`；合并：`{maintain,admin}`；关闭/重开：`author ∪ {maintain,admin}`（排除 triage/write，按根 #118/#305）。\n- 关闭/重开按 REQ-6-6 对 Read/Triage/**Write**/访客一律**缺席**；合并按钮在条件不满足时**可见且 disabled**；行内评论/评审/Reviewers 在无权限或非作者时**缺席**。\n\n### 3. 数据与语义（migration v4）\n- 新建 `pull_request_reviewers(pr_id,user_id,requested_by,created_at, PK(pr_id,user_id))`；`review_comments` 追加 `side('new'|'old')`。\n- 反例（当前 seed 即可复现）：`Improve onboarding` 的 `src/search.ts` 里 **deleted 的 oldNumber=2 与 added 的 newNumber=2 相同**，只存 `line` 无法稳定回锚，故需要 `side`；同时追加 §5「M6b 追加列」与 §7.2 约定 3 的措辞。→ **裁决点 B**\n- 当前 compare commit 恒为 `compare_branch.head_commit_id`；评审有效 = `reviews.compare_commit_id = 当前 head`，同 reviewer 取最新（复用 M6a `reviewState()`）、旧记录保留；有效 Request changes = 该 reviewer 在**当前 head**的最新决定，提交新 Comment/Approve 或 compare 分支前进即解除；行内评论 `Outdated ⇔ ≠ 当前 head`（不重定位，只在 Conversation 标注并保留原始 path/line/commit）；不改 `pull_requests.compare_commit_id`。\n\n### 4. API（详情端点纯增量扩展）\n`POST .../review-comments {path,line,side,body,pending}`（pending→published=0 仅作者可见）；`POST .../reviews {decision,summary}`（同一事务发布该 reviewer 的**全部** pending 草稿，含 stale 锚点；失败零残留）；`POST/DELETE .../reviewers[/:username]`；`POST .../merge`；`POST .../close|reopen`。详情新增 `reviewers`、`reviewComments`（他人只看 published）、`reviews[].stale`、`merge` 门控快照、`merged{commitId,merger,at}`。候选评审人复用 `GET .../assignable-users`（前端按 role≥write、排除作者与已请求者过滤，服务端 POST 再校验），不新增候选端点。\n\n### 5. 合并（REQ-6-5）\n事务内重读 PR 状态 / base head / compare head（不用创建时值）/ 保护规则 / checks / reviews。拒绝（422 零改动，前端点击前显示 disabled + 未满足条件）：state≠open、有效 Request changes、三方冲突、受保护缺有效非作者 Approve、受保护 `test` 非 success、compare head 已是 base head 祖先或相同（无可合并内容）。未受保护不施加 approval/check，但仍要求无冲突、无有效 Request changes；两条规则各自独立判定。成功：单事务建双父 merge commit（`commits.parent_id = baseHead` **且** `commit_parents` 两行 0/1）、`commit_files = diffTrees(第一父, merge tree)`、base head 前移、PR `merged` + `merged_commit_id` + 活动 `pull_request_merged`；compare 分支不动；**不走 Web 写入路径**（它对受保护分支拒写）。Merged 终态对 close/reopen/merge 全 422，且页面不渲染 close/reopen。\n\n### 6. 前端（不新增路由）\nFiles changed：每条 added/deleted 行一个 accessible name 恰为 `Add comment` 的按钮（`+` `aria-hidden`、无 hover 前提、DOM 顺序即首个可评论行）→ 编辑器 label `Comment` + `Add single comment`/`Start a review`；`Review changes` 打开唯一表单（`Summary` 可选 + radio `Comment`/`Approve`/`Request changes` + `Submit review`）；`Pending review`/`Outdated` 可见；行内编辑器与评审表单互斥挂载避免 `Comment` 名称冲突。Conversation 右侧栏：`Reviewers`（`MetadataPicker`，textbox `Search` 为普通 textbox）+ `Remove <username>` 按钮 + 评审摘要。合并区：`Merge pull request` → `Create a merge commit` + `Confirm merge`；缺有效批准逐字 `Review required by branch protection`；Draft 保留 M6a 的 disabled。状态区：`Close pull request`/`Reopen pull request`。文案全部进 `copy.ts`。\n\n### 7. 验收\nVitest 新增 `backend/test/pulls-review.test.js`（权限矩阵、空评论/无效锚点零残留、草稿可见性、最新决定覆盖 + 旧记录保留、stale、Outdated、reviewer 唯一性/权限且请求不产生评审、移除不删评审、合并四种拒绝 + 成功事务 + 冲突 + 无可合并内容、Merged 终态、`commit_files` 一致性、seed 幂等）；Playwright 新增 `e2e/reviews.spec.ts`（`repos` 之后、`session` 之前，逐条覆盖 5 条 REQ、刷新持久化、缺席 vs disabled、API 拒绝、精确 name 含 `Pending review`/`Create a merge commit`/`Remove <username>`）。最终 head 取 Vitest + typecheck + 全量 e2e + `checks/platform-path.sh` 证据。\n\n### 8. 需裁决（@glm-1）\n- **裁决点 A：行内评论的作者边界。** 我按字面排除 PR 作者（控件缺席 + 服务端 403）；不采用「作者可 Add single comment」的折中（会产生永远无法发布的 pending 草稿，且与排除读法互斥）。若根要求 GitHub 语义，请指出。\n- **裁决点 B：`review_comments.side`（migration v4 + §5/§7.2 文档追加）。** 反例见第 3 节；若不允许动 §5，退到「只允许 added 行评论」并登记字面偏差。\n- **裁决点 C：REQ-6-5 eligible 状态的 seed 形态。**\n  - 事实：现有种子**没有**“受保护 main + 非作者 Write+ 审批人 + Open PR”组合（`protection-lab` 只有 1 个 PR 且无任何非作者 Write+ 账号；`protected-sandbox` 规则 `(0,0)`；acme-docs main 未保护且纪律禁止推进其 main 头）。\n  - **方案 1（推荐）**：新增 `alice-dev/merge-lab`（public）：`main` + 保护规则（requireApproval + requireCheckTest）、3 个各 1 commit 的比较分支与 3 个 alice 作者的 Open PR——eligible（预置 bob-reviewer 的 approve + `test: success`）、blocked（无批准）、review（无初始评审，承接 6-3-3 场景 2 与 6-3-4 场景 2）；bob write + `pw-maintain` maintain。**需同时把 `pulls.test.js` 的三条 `check_runs` 全库计数改为按 repo/PR 限定**（`:125` `===0`、`:356` `===1`、`:402` `===0`），并在 `docs/seed-data.md` 登记「REQ-6-5 初始状态预置」。acme-docs 零改动。\n  - **方案 2**：merge-lab 只给结构，approve/test success 由 e2e 运行时编排；不动既有断言，但 REQ-6-5 的 GIVEN 初始状态不成立。\n  - 请裁决取 1 还是 2；取 1 请一并批准那三条断言的窄改。\n- 另：e2e 文件名取 `e2e/reviews.spec.ts`。\n\n### 9. 交接\n关联 PR **#22**（`--base develop`，head `braid/issue-10-m6b`，负责人 **@deepseek-22**）已创建并指派；packet `docs/task-packets/m6b-issue-10.md` 是本设计的权威入口，实施由其接续。裁决点 A/B/C 请 @glm-1 定夺；与 seed 无关的实现可先行。\n",
+      "revision": 1,
+      "created_at": "2026-09-29T16:19:29.694602471Z",
+      "updated_at": "2026-09-29T16:19:29.694602471Z"
+    },
+    {
+      "comment_id": 313,
+      "work_item_node_id": "issue:10",
+      "body": "## 根裁决：A/B/C 三项全部定案（回复 #308，依据已逐一独立核实；@deepseek-21、@deepseek-22）\n\n### 裁决点 A：采纳——按需求字面排除 PR 作者\n- REQ-6-3-3 原文 \"A user with Write, Maintain, or Admin **who is not the PR author**\"；REQ-6-3-4 \"the author and Draft PRs cannot submit reviews\"。排除作者不是解释选择，是需求原文，无歧义。\n- 折中方案（作者可 Add single comment）被正确排除：作者不能提交评审（REQ-6-3-4），其 pending 草稿将永远无法发布，制造不可达状态。\n- **登记解释前提**：作者与无权限者一律控件缺席 + 服务端独立 403（沿用本项目「不满足者缺席」惯例，与 REQ-5-4 隐藏先例同构）；Draft PR 上行内评论控件同样缺席（REQ-6-3-3 seed 仅供 \"Open reviewable PR\"，且 Draft 上的 pending 草稿同样不可发布）。需求未逐字规定作者视角按钮缺席，但 THEN 判据不测该视角，缺席与既有惯例一致——本条作为共同前提登记，验收判据以 THEN 为准。\n\n### 裁决点 B：采纳——`review_comments.side`（migration v4 + §5/§7.2 文档追加）\n- **反例根侧独立验证成立**：`Improve the onboarding flow`（pr-onboarding→main）对 `src/search.ts` 的 diff——父树第 2 行 `return query ? [query] : [];` 被删（oldNumber=2），子树第 2–3 行新增（newNumber=2 起），oldNumber=2 与 newNumber=2 碰撞，只存 `line` 无法稳定回锚，刷新后锚点不保。\n- REQ-6-3-3 明文锚定 \"a specific **added/deleted** line\"，退到「只允许 added 行评论」属字面偏差，排除。\n- migration v4（`review_comments.side('new'|'old')`）+ `pull_request_reviewers` 建表 + §5「M6b 追加列」+ §7.2 约定 3 措辞追加，一并批准；**版本号 v4 由 M6b 占用**（v3 已被 M4b 占用，沿用\"后合入者让号\"纪律）。\n\n### 裁决点 C：采纳方案 1——新增 `alice-dev/merge-lab` 预置 REQ-6-5 初始状态\n- **依据（需求原文决定，非偏好）**：REQ-6-5 \"Seed data supplies a Maintain account and separate Open PRs for success and refusal. The eligible PR targets protected main, has a current non-author approval and test: success, and has no conflicts\" + \"Each seed state is restored independently before reuse\"——eligible GIVEN 初始状态必须由 seed 供给，方案 2 的运行时编排直接违反 GIVEN；且 acme-docs main 受 #240/#242 跨模块前提保护（不得推进 main 头、不得加保护规则），eligible/blocked 场景在 acme-docs 上结构不可能。merge-lab 独立仓库是必经之路。\n- **批准配套窄改**（根侧已在 origin/develop 逐一核实）：\n  1. `pulls.test.js` 三条 `check_runs` 全库计数（`:125` ===0、`:356` ===1、`:402` ===0）改为按 repo/PR 限定——三处确实存在且为全库计数，窄化作用域不是削弱判据（对既有 acme-docs 行为等价）。#311/#312 的「三条」数量订正确认。\n  2. `docs/seed-data.md` :153 全局句（\"评审决定、Checks 更新、reviewers 请求等运行时状态由场景操作产生，不预置\"）按 #311 §1 窄化后再登记 merge-lab 预置段——只加登记段会与该句矛盾，采纳。\n  3. `docs/acceptance-plan.md` 相应条目（如引用具体仓库）同步；`docs/seed-data.md` 登记「REQ-6-5 初始状态预置」。\n- **边界（并入 PR #22 检查清单）**：merge-lab 不触碰 acme-docs / protected-sandbox / protection-lab；新 seed commit 经共享 diff 助手写 `commit_files`（三个各 1 commit 的比较分支天然满足全库一致性断言）；seed 幂等 upsert、不覆盖用户数据；若实施出现**清单外**失败，按 #245/#256 先例先回本 thread 报告再动，不自行扩清单。\n- e2e 文件名 `e2e/reviews.spec.ts` 批准。\n\n### 推进确认\n#312 所列未裁决期先行项（`pull_request_reviewers` 建表、merge 端点的 `state==='open'` 强制、`commit_parents` 双写、不走 Web 写入路径、无可合并内容 422）与上述裁决全部一致，继续推进无返工风险。三项裁决已生效，PR #22 按此实施；候选交回后按惯例先证据后承诺 head，根以 `--match-head-commit` 合并。\n",
+      "revision": 1,
+      "created_at": "2026-09-29T16:23:59.378618384Z",
+      "updated_at": "2026-09-29T16:23:59.378618384Z"
+    }
+  ],
+  "reused_operation_observation": {
+    "source": "tasks/iteration12/root-cause-review/i11-organization-operation.json",
+    "identity": "isolated e68661975b53 frozen app copy; fresh scratch DB; reused same package.json dependencies; no official tests",
+    "fields": {
+      "orgBeforeFilter": {
+        "url": "http://127.0.0.1:18847/orgs/acme-demo",
+        "body": "SimpliHub\nNew repository\nA\nacme-demo\n\nAcme Demo\n\nRepositories\nPeople\nTeams\nFind a repository\nVisibility filter\nAll\nPublic\nPrivate\norg-handbook\nPublic handbook of the Acme Demo organisation\nPublic\nUpdated 2026-09-30 05:14\norg-private\nPrivate notes of the Acme Demo organisation\nPrivate\nUpdated 2026-09-30 05:14"
+      },
+      "orgAfterFilter": {
+        "url": "http://127.0.0.1:18847/orgs/acme-demo",
+        "body": "SimpliHub\nNew repository\nA\nacme-demo\n\nAcme Demo\n\nRepositories\nPeople\nTeams\nFind a repository\nVisibility filter\nAll\nPublic\nPrivate\n\nNo results",
+        "acmeDocsLinks": 0
+      }
+    },
+    "reread_only": true
+  },
+  "closing_materials_sha256": {
+    "tasks/iteration13/findings.md": "6d07842c260961db824213bb6620e9b4b03f94414577316a2d323bbf51db817c",
+    "tasks/iteration13/packet.md": "40ded70a15bf0876e4c976d1449b3fd6f955855c72fb9f43ad27df5c833c797b",
+    "tasks/iteration13/repair-design.md": "654aa17f3111fd54d1acca85f180c56a435658a743f32e272c7fb5c753b23d91",
+    "tasks/iteration12/i11-github-score/findings.md": "b7adebcb0ea3f0de13882133004679c978ecbb8f89f0ff6858eb1bc1b23c8f3b"
+  }
+}

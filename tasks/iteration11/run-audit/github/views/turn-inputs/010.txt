@@ -1,0 +1,12 @@
+hash 16d2f9051a5587e9a7a785d49566aa47a30a63221a46d6945c20be157f2d583e
+copies 1
+source snapshot-01/braid-state/turns/01a0ec0b-92bd-73e3-9fc0-812f5cf7e506.md
+
+请处理 Issue #1。
+
+对象：local/run#1
+
+发生以下更新：
+- pr:16 comment 110; read `comment view 110 --thread`
+
+使用 `braid issue view 1 --comments` 查看当前内容。

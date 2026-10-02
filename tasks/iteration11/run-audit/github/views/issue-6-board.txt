@@ -1,0 +1,327 @@
+{
+  "node_id": "issue:6",
+  "repository_node_id": "local",
+  "kind": "issue",
+  "number": 6,
+  "state": "OPEN",
+  "context_revision": "1ee1061578d204fe87dba5cea9a5e1250c9cfef9f9eaf3e957d313997d2b2cde",
+  "observed_at": "2026-09-29T07:55:32.829212316Z",
+  "title": "M4a 内容模型与代码浏览：文件/历史/diff（REQ-4-1、4-2-1、4-2-2）",
+  "body": "## 需求来源（权威）\n需求包：`/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml`\n原子需求：REQ-4-1（浏览文件与目录）、REQ-4-2-1（提交历史）、REQ-4-2-2（commit 与版本差异）。\n参考截图：github-repository-overview.png、github-commit-history.png、github-commit-diff.png。\n视觉复核结论（本 Issue 三图 + 缺口）已登记 `docs/ui-reference-notes.md`；文件浏览无独立视觉参考（截图与 overview 重复），布局按需求语义实现。\n\n## 共享决定（必须遵循）\ndocs/architecture.md §5 内容模型（commit 共享不可变、branch=指针、tree_json 快照、commit_files）、**§7.2 代码浏览/历史/版本比较契约（M4a 登记）**、§9.1/9.2/§9.16（M4a 决定条目，合入时取当时最小空闲号。设计期登记为 §9.14，合入 develop 时按“后合入者让号”由 M4a 重编号——`origin/develop` 已由 PR #14 占用 §9.14（REQ-2-2-3 会话态文案）、由 PR #15/`f6e326c` 占用 §9.15（Issue 元数据/关闭重开角色集合），故 M4a 取 §9.16；后续若有 PR 先合入占号则顺延）；docs/product-plan.md §3；docs/seed-data.md（acme-docs 内容种子）。\n本模块交付的 diff/树 API 是 M6a 比较页与 Files changed 的直接依赖：API 形状（base/compare → 变更文件列表 + 每文件 additions/deletions + 行级 diff）一经发布在 Issue 评论登记为准。\n\n## 共享契约（M4a 登记，权威入口；#7/#9/#10 消费）\n\n页面路由（在 §7.1 之上扩展，不新建第二套）：\n- `/:owner/:repo`、`/:owner/:repo/tree/:branch/*`：Code 页/目录页；页面上唯一历史链接 accessible name 恰为 `Commits`（计数为 `aria-hidden` 徽标，可见 “Commits 2”）；另提供最小只读 `Branch` combobox 切换分支（REQ-4-1 THEN2 需要）。\n- `/:owner/:repo/blob/:branch/*`：文件页；`Commits` 指向该 path 的范围历史；“最近 commit” = 最后触碰该 path 的提交。\n- `/:owner/:repo/commits[/:branch][/*path]`：分支/文件范围历史，`created_at DESC, id DESC`；`/:owner/:repo/commit/:rev[/<path>]`：commit diff 页（base = 第一父）。\n- `/:owner/:repo/compare?base=&compare=`：revision 比较页（全 viewer 可读；combobox `base`/`compare`，选项为 commit 短 hash；按钮 `Compare changes`）。REQ-6-2-2 的 PR 比较流由 M6a 自建页面（Write+、分支选项），复用同一 diff 组件与 `/api/.../compare`。\n\n数据端点（`/api/repos/:owner/:name` 前缀；全部经 `loadRepo` + `requireViewable`；不可见仓库 / 未知 branch、path、rev → `404 not_found`；只读）：\n- `GET /contents?branch=&path=`（§7.1 形状；M4a 更正约定 4/5：`commit` = 最后触碰该 path 的提交；空分支 → 200 空目录）\n- `GET /branches` → `{branches:[{name,isDefault,headCommitId,shortId}]}`\n- `GET /commits?branch=&path=&limit=` → `{branch,path,count,commits:[{id,shortId,message,author,createdAt,parentId,parentShortId,changedFiles:[{path,status,additions,deletions}],url}]}`\n- `GET /commits/:rev` → `{commit:{…}}`\n- `GET /commits/:rev/diff?base=&path=` → diff 载荷\n- `GET /compare?base=&compare=&path=` → diff 载荷：\n  `{base:{rev,id,shortId,label,message,createdAt}|null, compare:{…}, mergeBase:{id,shortId}|null, commits:[{id,shortId,message,author,createdAt,url}], files:[{path,status,additions,deletions,url,lines:[{type,oldNumber,newNumber,text}]}], totals:{files,additions,deletions}, empty}`\n\n约定：\n1. `rev`/`base`/`compare` 接受 7 位 hex 短 hash（`id` 的 16 进制左补零；形如 `/^[0-9a-f]{7}$/i` 优先按 hex 解析）→ 十进制 id → 分支名；解析域 = **本仓库分支可达 commit 集**（fork 直接读共享不可变 commit，§9.1）。短 hash 由 id 派生，不新增 `sha` 列。\n2. `compare` = **merge-base(base,compare) → compare**（三点）；`commits[]` = compare 可达、merge base 不可达（M6a 的 comparable commits / 空差异判定），`lines[].oldNumber/newNumber` 供 M6b 行内评论锚定。\n3. `commit_files` 与 tree diff 必须一致（seed 用同一行 diff 助手计算 + 全量 Vitest 断言）；服务端以 tree diff 为事实来源。\n4. 渲染/文案约束（影响自动验收）：消息/作者/相对时间/文件路径各自独立文本节点；增删数为可见文本；历史页短 hash 为唯一链接、diff 页 base/compare 用文本；diff 行的代码文本、`aria-hidden` 的 `+`/`-`、视觉隐藏的 `Added`/`Deleted`/`Unchanged` 各自成节点。\n5. 跨任务边界（根 Issue #1 复核确认，本 Issue comment #96）：最小只读分支端点 + `Branch` combobox 归 M4a（REQ-4-1 THEN2 的验收场景在 M4a 范围内，不等 #7）；#7 在**唯一** branches 端点上扩展/替换为 REQ-4-3-1 的 `Branch <name>` + `Find branch`，不得另起第二套端点；替换控件须保持 THEN2 可观察，断言形态变化按契约变更纪律在 #7 PR 内提出并同步 acceptance-plan。`main-only.md` 是 REQ-4-1 THEN2 的唯一种子证人，#9 的 PR 塑形不得移除它。\n\n## 交付\n1. 文件浏览：Code 页目录列表（目录/文件条目为链接，accessible name = 各自名称）、路径面包屑（可返回父目录）、当前分支与路径；文件页显示完整存储内容（完整文本值可见）、最近 commit、文件名；刷新保持分支/路径/内容。\n2. 提交历史：仓库与文件页各一个历史链接 \"Commits\"（可带计数）；历史页按时间倒序，含 short hash、消息、作者、相对时间（含 \"ago\"）；文件范围历史只显示改动该文件的 commit；点击 commit 进详情（parent、changed files 保持可见）。\n3. commit diff：diff 页显示 base/compare 标识、变更文件列表、每文件增删行；新增/删除行可被读屏区分；\"Changed files\" 汇总与数值统计；未变更文件不出现；只读不产生写操作。\n4. 后端：树/commit/diff/compare/branches API + Vitest（快照一致性、diff 计算、权限：无 view 权限不返回内容）。\n5. seed：acme-docs 的 README.md/src/search.ts/docs/、main+feature-search 分支、\"Document search flow\" commit（幂等）；commit 显式递进 `created_at`；`commit_files` 增删数由行 diff 计算。\n6. 最小只读分支切换（`GET /branches` + `Branch` combobox）：满足 REQ-4-1 THEN2 的验收必需项，完整分支能力归 #7。\n\n## 前置\nM3（仓库概览/创建）已合入 develop（仓库对象与权限判定可用）。\n\n## 验收\nPlaywright 覆盖 3 条需求场景；种子内容断言（完整文本值、\"ago\" 时间、面包屑返回）；刷新持久化；\n必测反例：`docs/guide.md` 文件范围历史不含 `Document search flow`；`feature-search` 历史含 `Add main-only notes`（changed files = added+modified）；私有仓库短 hash 直开 diff 无内容泄露；compare 同 revision → 无差异；`feature-search` 的 `main-only.md` 切到 `main` 后不显示。\n\n## 当前状态（2026-09-29）\n分支端点归属与端点形状已由根 Issue #1 确认（本 Issue comment #96），M4a 实施边界不变；\n设计与契约已登记（本正文 + `docs/architecture.md` §7.2/§9.16（原 §9.14，合入时重编号；设计分支 `c54e304` 上仍是 §9.14 文本）+ `docs/seed-data.md` + `docs/ui-reference-notes.md`）；\n任务 packet：`docs/task-packets/m4a-issue-6.md`；实施 PR（`--base develop`）已建立并指派负责人，证据与结果在该 PR 与本次讨论中交接。\n- 基线已由 `origin/develop` @ `53532a0` 前进到 `f6e326c`（PR #14「REQ-2-2-3 Access denied 会话态」`d70e6ac` + PR #15「Issue 元数据/关闭重开角色集合」`f6e326c`）：PR #16 候选 `24a6ed7`（本 Issue comment #123）尚未包含 develop（merge-base = `53532a0`），合入前需 `git merge origin/develop`（经 `git merge-tree` 核对，唯一内容冲突 = `docs/architecture.md`），把 M4a 决定条目重编号为 **§9.16**（§9.14/§9.15 已分别被 PR #14/#15 占用）并同步 packet/PR/正文引用；PR #14 改动面为 `frontend/src/contracts/copy.ts`、`backend/src/contracts/messages.js`、`docs/acceptance-plan.md`、`RepositoryMissing.tsx`、`e2e/repos.spec.ts`，为预期冲突面。验收按整合后的新 head 重跑，不沿用旧 base（`53532a0`）的 PASS。\n\n- 合并归属已确认（PR #16 comment #128）：PR #16 由本 Issue 负责人在**整合后的新 head** 上完成 M4a 验收（三条需求场景 + 必测反例 + 权限 + 只读 + 刷新持久化）后合并并关闭本 Issue；develop → main 最终整合 PR 与全量 E2E 归根 Issue #1。@glm-1 对 `9242b6f` 的根侧独立平台验证作为佐证，不替代本 Issue 在新 head 上的验收结论。\n- 合入前还须补一条本正文「验收」原文用例（PR #16 comment #125）：私有仓库**短 hash 直开 commit diff 路由**无内容泄露——现 e2e 仅覆盖 `/commits` 与 `/compare` 的仓库级拒绝，缺直接打开 `/commit/:rev` 的用例；并入本轮整合提交后重跑 `pnpm e2e`。\n"
+}
+
+local_comments {
+  "comment_id": 33,
+  "work_item_node_id": "issue:6",
+  "body": "## 来自 M3（PR #11）的接口登记：文件/目录页面与 contents API\n\nIssue #6 尚未指派，先在这里留下 M3 已发布并正在消费的读路径契约（权威登记在 Issue #5 comment #32；M3 侧 head `8aeeed5`）。M4a 实施时请优先复用/扩展，不要另造第二套路由：\n\n- 页面：`/:owner/:repo/blob/:branch/*path`（文件页）、`/:owner/:repo/tree/:branch/*path`（目录页）\n  - M3 已实现**只读最小版**：分支徽标 + 面包屑 + 文件内容（`<pre><code>`）+ 最近 commit 的作者与消息；目录页列出直接子项，条目链接 accessible name 恰为条目名。\n  - 归属边界：REQ-3-3 的 THEN 要求\"访客点文件名进入 file-content page\"，所以 M3 提供了最小落地；**Code 页完整能力（分支选择器、Commits 入口、提交历史、文件/目录范围历史、diff、代码搜索、Web 编辑）仍属 M4a/M4b**，请在同一路由上扩展而不是替换。\n- 数据：`GET /api/repos/:owner/:name/contents?branch=<branch>&path=<path>`\n  → `{contents:{type:'file'|'directory', branch, path, name?, content?, commit?:{id,message,createdAt,author}, entries:[{name,type,path,url}]}}`\n  - 不可见仓库 / 不存在的 branch / 不存在的 path → `404 not_found`（与仓库详情同一防枚举语义）\n  - 目录条目顶层由 `tree_json`（全量 `{path: content}` 快照）按键前缀推导，直接子项含 `url`\n  - 实现位置：`backend/src/modules/repos/service.js`（`repoContents` / `groupEntries`）、`router.js`\n- 已 seed 的 M3 内容份额（docs/seed-data.md）：`main`（`Initial commit` → `Document search flow`）、`feature-search`（`Add main-only notes`，含 `main-only.md`）、`src/search.ts`、`docs/guide.md`、README 含唯一词 \"search flow\"。\n- 若 M4a 计划采用不同路由或 API 形状，请回 Issue #5 comment #32 或本 Issue 说明，我按新契约改 M3 侧（M3 的 e2e 同时断言链接 href，偏离会立即暴露）。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eba1-622e-7010-a389-c2c0bcc5d47e",
+  "writer_turn": "01a0eba1-6c2b-7af2-a6b2-cc44eb7259b3",
+  "revision": 1,
+  "created_at": "2026-09-29T05:42:41.380612267Z",
+  "updated_at": "2026-09-29T05:42:41.380612267Z",
+  "reply_to": null,
+  "thread_root": 33,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 35,
+  "work_item_node_id": "issue:6",
+  "body": "## 待消费契约：文件/目录路由与 contents API（由 M3 / PR #11 提供）\n\n@glm-1 本任务（M4a）尚未指派；M3 实施中登记了本任务将消费的共享契约，先在此留档，指派后请负责人接续确认。\n\n**来源与完整背景**：Issue #5 thread 20，comment #32 §2 与 comment #34（M3 负责人确认记录）。\n\n**契约内容**（M3 已实现，PR #11，只读最小实现）：\n- 页面路由：`/:owner/:repo/blob/:branch/*path`（文件）、`/:owner/:repo/tree/:branch/*path`（目录）\n- 数据 API：`GET /api/repos/:owner/:name/contents?branch=<branch>&path=<path>`\n  → `{contents:{type:'file'|'directory', branch, path, name?, content?, commit?:{id,message,createdAt,author}, entries:[{name,type,path,url}]}}`\n  不可见仓库与不存在的 branch/path 一律 404（防枚举，与仓库详情同语义）\n- M3 的 e2e 同时断言文件链接 accessible name 与 **href 值**；M4a 若采用不同路由会立即在 M3 套件暴露。\n\n**对 M4a 的期望**：在同一路由上扩展（分支选择器/提交历史/Commits 入口/diff/Web 编辑），不重复造第二套路由。若 M4a 侧有既定路由冲突，按契约优先原则先回 Issue #5 thread 20 裁决，再动 M3 侧。\n\n另请负责人注意 seed 协调点（Issue #5 comment #32 §4）：组织仓库命名以 docs/seed-data.md 当前登记（`acme-demo/org-handbook` / `acme-demo/org-private`）为准，M2 若 seed 组织仓库需同名。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb91-10dc-7610-84bb-d20276e09b6d",
+  "writer_turn": "01a0ebaf-7c18-7c70-99ca-064a25c7fb6c",
+  "revision": 1,
+  "created_at": "2026-09-29T05:44:04.63750869Z",
+  "updated_at": "2026-09-29T05:44:04.63750869Z",
+  "reply_to": null,
+  "thread_root": 35,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 44,
+  "work_item_node_id": "issue:6",
+  "body": "## 根 Issue #1 裁决：本契约已采纳（含 5 条补充约定，2026-09-29）\n\nblob/tree 路由 + contents API 已裁决采纳为 #6/#7 共享基线（裁决全文：issue #5 评论 #42，经 requirements 原文核实 + advisor 独立审查）。登记按下列修订版生效，**docs 契约文本由 PR #11 写入 architecture.md 后随合入发布**：\n\n1. 页面路由：`/:owner/:repo/blob/:branch/*path`（文件）、`/:owner/:repo/tree/:branch/*path`（目录）。\n2. 数据 API：`GET /api/repos/:owner/:name/contents?branch=&path=` → `{contents:{type,branch,path,name?,content?,commit?,entries:[{name,type,path,url}]}}`；不可见仓库与未知 branch/path → 404。\n3. **补充约定（裁决新增，M4a 实施时必须遵守）**：\n   - 编码规则：`:branch` 恒为单 URL 段（`encodeURIComponent(branch)`，分支名可含 `/` 如 `feature/api-v2`）；`*path` 按段编码后以 `/` 连接，禁止原始拼接；`entries[].url` 已完整编码，消费时不得二次编码。\n   - 裸路由语义：`/:owner/:repo` 恒为默认分支根列表；分支切换 = 导航到 `/tree/<branch>[/<path>]`（分支必须在 URL 中，REQ-4-3-1/4-3-2 刷新持久化判据强制）。\n   - **约定 4（归 M4a 实现）**：contents 的 `commit` 字段目标语义为\"最后触碰该 path 的提交\"（REQ-4-1 原文）；M3 现状返回分支头 commit，是已登记近似，M4a 负责更正。\n   - **约定 5（归 M4a 实现）**：存在但无提交的分支返回 `{type:'directory', entries:[]}`（200）；仅未知 branch/path → 404。M3 现状为空分支 404，M4a 负责更正。\n4. diff API 形状由 M4a 登记定义，但**必须以 commitId 为键**（§9.1，M6a/#9 硬依赖）。\n\n指派后请负责人在实施计划中确认消费本契约，并把约定 4/5 的更正纳入范围。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb68-0ed9-7ff0-a22a-52f93596e102",
+  "writer_turn": "01a0ebaf-7ad9-7161-ba18-e3f78acf0709",
+  "revision": 1,
+  "created_at": "2026-09-29T05:50:26.011048074Z",
+  "updated_at": "2026-09-29T05:50:26.011048074Z",
+  "reply_to": 35,
+  "thread_root": 35,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 84,
+  "work_item_node_id": "issue:6",
+  "body": "## 指派交接（@deepseek-9，根负责人 @glm-1）\n\nM4a 依赖已就绪：#5（M3/PR #11）已合入 develop，工作基线 **origin/develop @ `53532a0`**（含 M1/PR #12 + M3 全部实现与 docs）。请先 `git fetch origin` 取得最新 develop。\n\n**你承接的共享契约（权威入口）**：\n1. contents/blob/tree 契约 + **5 条补充约定**：issue #5 评论 #42（全文），已同步本 Issue 评论 #44。其中**约定 4/5 的实现更正归你**：`commit` 字段目标语义 = 最后触碰该 path 的提交（当前 M3 为分支头 commit，登记的已知近似）；空分支返回 `{type:'directory', entries:[]}`（200），仅未知 branch/path → 404。\n2. **diff API**：形状由你在本任务登记，预先声明**以 commitId 为键**（architecture.md §9.1，#9/M6a 硬依赖——登记后在 #9 指派前把形状入口留在本 Issue 正文）。\n3. 裸路由 `/:owner/:repo` 恒为默认分支根列表、分支切换导航 `/tree/<branch>[/<path>]`；`entries[].url` 消费者原样使用。\n\n**既有约定沿用**：权限判定复用 permissions 模块；文案入 `copy.ts`；错误格式 `errors[]`；测试隔离（业务实体模块自有 + 唯一 token、禁全局计数断言）；seed 幂等；契约变更纪律（发现 docs 需变更先在 PR 提出，根 Issue 决定后更新再合入）。\n\n实施 PR 由你建立（`--base develop`）；实施期需裁决的事项在 PR/本 Issue 提出并 @glm-1。验收按 acceptance-plan 分层，完成后在 Issue 交接结果。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb68-0ed9-7ff0-a22a-52f93596e102",
+  "writer_turn": "01a0ebec-3657-7cd3-b664-8eab50f115d5",
+  "revision": 1,
+  "created_at": "2026-09-29T06:51:57.253892869Z",
+  "updated_at": "2026-09-29T06:51:57.253892869Z",
+  "reply_to": null,
+  "thread_root": 84,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 92,
+  "work_item_node_id": "issue:6",
+  "body": "## M4a 设计与契约已登记，实施 PR #16 已建立并指派 @glm-12（@deepseek-9，2026-09-29）\n\n**入口（按权威顺序）**\n1. 本 Issue 正文「共享契约（M4a 登记）」= API/路由/语义权威登记（含 rev 解析、三点比较、渲染约束、跨任务边界）。\n2. `docs/architecture.md` §7.2（新增）+ §9.14（决定记录）+ §7.1 约定 4/5 更正；`docs/seed-data.md`、`docs/ui-reference-notes.md` 同步更新。\n3. 任务 packet：`docs/task-packets/m4a-issue-6.md`（当前判断/计划/决定/证据/下一步）。\n4. 实施：**PR #16**（`--base develop`，head `braid/issue-6-m4a` @ `c54e304`，负责人 @glm-12）。已把预演要求、契约变更纪律、验收判据与回填要求交给该负责人。\n\n**设计期实测证据（内存库 seed 实测，非推断）**：seed commit 的 `created_at` 同秒（→ 排序需 id 兜底、相对时间需对 <60s 归一仍含 \"ago\"）；`contents` 对 `docs/guide.md` 返回分支头 commit（约定 4 缺陷可观测）；空提交分支返回 `null`（约定 5 缺陷）；`commit_files` 与 tree diff 不一致（Initial 3 文件 2/0、feature commit README 1/0、main-only.md 2/0）。\n\n**关键决定（原生 advisor 独立复核后固化，全文见 PR #16 讨论）**\n- API 以 commitId 为键；`rev` = 7 位 hex 短 hash（优先）→ 十进制 id → 分支名，解析域 = 本仓库分支**可达** commit 集（§9.1 fork 直接读共享不可变 commit，否则 fork 历史/diff 全 404）。\n- `compare` = merge-base → compare（三点），`commits[]` 服务 M6a 的 comparable commits 与空差异判定；`lines[].oldNumber/newNumber` 服务 M6b 行内评论锚定。\n- **比较页拆分**：M4a 交付全 viewer 可读的 revision 比较页（选项为 commit，按钮令牌 `Compare changes`，compatible 于 REQ-4-2-2 的 “Compare” substring 与 REQ-6-2-2 的 exact）；REQ-6-2-2 的 Write+ PR 比较流由 #9 自建页面复用同一 diff 组件与 `/api/.../compare`。\n- `commit_files` 与 tree diff 必须一致：seed 改用行 diff 助手在插入时计算（不硬编码），Vitest 全量断言。\n- `Commits` 链接 accessible name 恰为 `Commits`（计数 `aria-hidden` 徽标，每页恰一个）；diff 页 base/compare 用文本、历史页短 hash 才是链接；消息/作者/时间/路径各自独立文本节点。\n- **seed 证人钉住**：`main-only.md` 是 REQ-4-1 THEN2「切到不含该文件的分支」的唯一种子证人，#9 的 PR 塑形不得移除它（已在其 Issue 留言登记）。\n\n**需根负责人确认一项（按验收必需推断，不阻塞实施）** @glm-1：\n> REQ-4-1 THEN2 要求文件页可切换到不含该文件的分支。M4a 拟交付最小只读分支列表端点 `GET /api/repos/:owner/:name/branches` + blob/tree/Code 页 combobox `Branch`（选项 = 精确分支名），M4b（#7）在此基础上扩展 REQ-4-3-1 的 `Branch <name>` 按钮 + `Find branch` 选择器。请确认归属与端点形状登记。\n\n**下一步**：@glm-12 预演 → 实现 → 自检（Vitest/Playwright/平台路径）→ 在 PR #16 回填证据 → 回本 Issue 交接结果；我在验收候选上核对后再合并与关闭。#9/#7 的消费登记已分别留言。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebee-c95e-7d40-8567-9d187be96a44",
+  "writer_turn": "01a0ebee-d1f6-7d20-8c70-0ab5edd72761",
+  "revision": 1,
+  "created_at": "2026-09-29T07:06:32.485626972Z",
+  "updated_at": "2026-09-29T07:06:32.485626972Z",
+  "reply_to": null,
+  "thread_root": 92,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 96,
+  "work_item_node_id": "issue:6",
+  "body": "## 根确认（@glm-1，回复 #92 请确认项）\n\n**采纳：branches 端点与最小切换控件归 M4a（PR #16），M4b 在其上扩展。**\n\n1. **端点形状**：`GET /api/repos/:owner/:name/branches` → `{branches:[{name,isDefault,headCommitId,shortId}]}`，随 §7.2 登记为共享消费契约（#7/#9 消费）；blob/tree/Code 页最小只读 combobox `Branch`（选项 = 精确分支名）是 REQ-4-1 THEN2 的实现载体，归 M4a 无疑义——THEN2 的验收场景在 M4a 范围内，不能等 M4b。\n2. **M4b（#7）约束**：REQ-4-3-1 的 `Branch <name>` 按钮、`Find branch` as-you-type、创建分支在唯一 branches 端点上扩展/替换，不得另起第二套端点（#94 的登记正确）。\n3. **替换时的断言纪律**：M4b 替换控件若改变 M4a 的 REQ-4-1 THEN2 e2e 断言形态，由 #7 PR 按契约变更纪律在 PR 内提出并同步 acceptance-plan；替换后的控件必须保持 THEN2 可观察（文件页能切到不含该文件的分支），不得削弱断言。\n4. **对 #9（#93 登记）确认**：PR 比较流由 #9 自建页面、复用 §7.2 diff 组件与 compare 端点，正确；seed 塑形用自有新 commit、不移除 `main-only.md`——与 seed 幂等/证人纪律一致，纳入 #9 验收前提。\n5. **D3（#8 评论 #89 登记）**：issues 与 PR 编号不共享序列，M6a（#9）任务包发布时对齐——已在本根 Issue 正文登记为跨模块前提。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb68-0ed9-7ff0-a22a-52f93596e102",
+  "writer_turn": "01a0ebf0-e902-7123-bab0-2c5f83e4c06e",
+  "revision": 1,
+  "created_at": "2026-09-29T07:12:30.852792167Z",
+  "updated_at": "2026-09-29T07:12:30.852792167Z",
+  "reply_to": 92,
+  "thread_root": 92,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 98,
+  "work_item_node_id": "issue:6",
+  "body": "## 已登记：分支端点归属与形状确认生效（@glm-1，见 #96）\n\n- 正文「共享契约」约定 5 已窄改为：端点/控件归 M4a（THEN2 验收在 M4a 范围内）、#7 在唯一 branches 端点上扩展/替换、替换须保持 THEN2 可观察且断言变化走契约变更纪律；「当前状态」同步。\n- 对 M4a 实施无范围变化：`GET /branches` → `{branches:[{name,isDefault,headCommitId,shortId}]}` + 最小只读 `Branch` combobox 仍按 §7.2 实施，PR #16 已通知负责人 @glm-12。\n- #7 约束已转达其 thread（本 Issue comment #94 的回复）。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebee-c95e-7d40-8567-9d187be96a44",
+  "writer_turn": "01a0ec02-0b6e-7773-87e6-b546c2c7f6c8",
+  "revision": 1,
+  "created_at": "2026-09-29T07:12:58.491662184Z",
+  "updated_at": "2026-09-29T07:12:58.491662184Z",
+  "reply_to": 92,
+  "thread_root": 92,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 123,
+  "work_item_node_id": "issue:6",
+  "body": "## M4a 实施完成，PR #16 候选就绪（@deepseek-9 验收）\n\n实施负责人 @glm-12：实现已 push，候选 head **`24a6ed7`**（实现 `9242b6f` + packet 证据 `24a6ed7`）。\n\n- 检查结果：`pnpm test` = Vitest 91/91 + typecheck；`pnpm e2e` = 46/46；`bash checks/platform-path.sh` = exit 0。命令与首轮/最终结果、失败分析已登记在 **PR #16 评论 #122** 与 `docs/task-packets/m4a-issue-6.md`。\n- 范围核对：约定 4/5 更正、§7.2 全部端点（commitId 键 + 7 位短 hash + 行级 diff + three-dot compare）、每页唯一 `Commits` 链接、`Branch` combobox（REQ-4-1 THEN2）、`main-only.md` 证人保留、M4b 可复用 `modules/content/{diff,history}.js` 助手。\n- M3 侧唯一联动：`e2e/repos.spec.ts` 一处断言从静态分支徽标改为 Branch combobox 值断言（§7.2 契约内变更，已在 PR 评论说明）。\n\n请按验收计划复验；发现偏离 §7.2 或需补充用例时在 PR #16 提出并可 @glm-12。",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebfc-3d14-7431-950c-5d1dd99ac90d",
+  "writer_turn": "01a0ebfc-4d9a-7112-9fa0-7760c2776afc",
+  "revision": 1,
+  "created_at": "2026-09-29T07:48:03.638341003Z",
+  "updated_at": "2026-09-29T07:48:03.638341003Z",
+  "reply_to": 84,
+  "thread_root": 84,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_activity {
+  "ordinal": 14,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T04:33:51.583968948Z",
+  "actor_login": "glm-1",
+  "action": "created",
+  "source_comment": null,
+  "detail": "M4a 内容模型与代码浏览：文件/历史/diff（REQ-4-1、4-2-1、4-2-2）"
+}
+
+local_activity {
+  "ordinal": 15,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T04:33:51.584286374Z",
+  "actor_login": "glm-1",
+  "action": "parent_added",
+  "source_comment": null,
+  "detail": "Issue #1"
+}
+
+local_activity {
+  "ordinal": 90,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T05:42:41.380781978Z",
+  "actor_login": "deepseek-5",
+  "action": "commented",
+  "source_comment": 33,
+  "detail": "comment #33"
+}
+
+local_activity {
+  "ordinal": 92,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T05:44:04.637701402Z",
+  "actor_login": "glm-4",
+  "action": "commented",
+  "source_comment": 35,
+  "detail": "comment #35"
+}
+
+local_activity {
+  "ordinal": 104,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T05:50:26.011131679Z",
+  "actor_login": "glm-1",
+  "action": "replied",
+  "source_comment": 44,
+  "detail": "comment #44"
+}
+
+local_activity {
+  "ordinal": 172,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T06:51:29.541469121Z",
+  "actor_login": "glm-1",
+  "action": "assigned",
+  "source_comment": null,
+  "detail": "@deepseek-9"
+}
+
+local_activity {
+  "ordinal": 174,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T06:51:57.253977276Z",
+  "actor_login": "glm-1",
+  "action": "commented",
+  "source_comment": 84,
+  "detail": "comment #84"
+}
+
+local_activity {
+  "ordinal": 192,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:06:11.0188002Z",
+  "actor_login": "deepseek-9",
+  "action": "linked_pr",
+  "source_comment": null,
+  "detail": "PR #16"
+}
+
+local_activity {
+  "ordinal": 194,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:06:14.821051845Z",
+  "actor_login": "deepseek-9",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 196,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:06:32.485722678Z",
+  "actor_login": "deepseek-9",
+  "action": "commented",
+  "source_comment": 92,
+  "detail": "comment #92"
+}
+
+local_activity {
+  "ordinal": 200,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:12:30.852859171Z",
+  "actor_login": "glm-1",
+  "action": "replied",
+  "source_comment": 96,
+  "detail": "comment #96"
+}
+
+local_activity {
+  "ordinal": 202,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:12:51.792344095Z",
+  "actor_login": "deepseek-9",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 203,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:12:58.491711187Z",
+  "actor_login": "deepseek-9",
+  "action": "replied",
+  "source_comment": 98,
+  "detail": "comment #98"
+}
+
+local_activity {
+  "ordinal": 225,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:22:36.962890546Z",
+  "actor_login": "deepseek-9",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 226,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:22:51.466402009Z",
+  "actor_login": "deepseek-9",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 250,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:48:03.638407307Z",
+  "actor_login": "glm-12",
+  "action": "replied",
+  "source_comment": 123,
+  "detail": "comment #123"
+}
+
+local_activity {
+  "ordinal": 252,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:48:47.984116383Z",
+  "actor_login": "deepseek-9",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 257,
+  "work_item_node_id": "issue:6",
+  "occurred_at": "2026-09-29T07:55:17.836898429Z",
+  "actor_login": "deepseek-9",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}

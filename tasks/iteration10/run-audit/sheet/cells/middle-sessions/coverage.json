@@ -1,0 +1,524 @@
+{
+  "scope": "manifest indices 113–169 inclusive",
+  "total_sessions": 57,
+  "total_records": 4238,
+  "fully_read_sessions": 57,
+  "fully_read_records": 4238,
+  "partial_sessions": 0,
+  "not_fully_read_sessions": 0,
+  "entries": [
+    {
+      "index": 113,
+      "sid": "01a0e726-f00f-751f-8de8-697998d53669",
+      "records": 12,
+      "source": "continuation02-root-native/219-2026-09-28T08-34-43-855Z_01a0e726-f00f-751f-8de8-697998d53669.jsonl",
+      "status": "已完整语义阅读",
+      "native_read_range": "continuation02-root-native/219-2026-09-28T08-34-43-855Z_01a0e726-f00f-751f-8de8-697998d53669.jsonl:L1–12",
+      "omissions_and_truncation": "初始刷新记忆与已读items.md及既读会话精确重复段引用；其余thinking/指令/工具动作、反馈、消息已顺序读；无截断待补、无机械源码省略"
+    },
+    {
+      "index": 114,
+      "sid": "01a0e727-340f-72b9-b9df-ff204f0acb89",
+      "records": 27,
+      "source": "continuation02-root-native/221-2026-09-28T08-35-01-263Z_01a0e727-340f-72b9-b9df-ff204f0acb89.jsonl",
+      "status": "已完整语义阅读",
+      "native_read_range": "continuation02-root-native/221-2026-09-28T08-35-01-263Z_01a0e727-340f-72b9-b9df-ff204f0acb89.jsonl:L1–27",
+      "omissions_and_truncation": "初始刷新记忆与已读items.md及既读会话精确重复段引用；其余thinking/指令/工具动作、反馈、消息已顺序读；无截断待补、无机械源码省略"
+    },
+    {
+      "index": 115,
+      "sid": "01a0e750-f3cb-7190-89fd-06143726d5b6",
+      "records": 651,
+      "source": "native/227-2026-09-28T09-20-37-323Z_01a0e750-f3cb-7190-89fd-06143726d5b6.jsonl",
+      "status": "已完整语义阅读",
+      "native_read_range": "native/227-2026-09-28T09-20-37-323Z_01a0e750-f3cb-7190-89fd-06143726d5b6.jsonl:L1–651",
+      "omissions_and_truncation": "原生L1–651按顺序完整语义阅读；Braid工作项刷新快照仅引用已读items.md，精确重复段引用首次已读来源（各段原始长度/行见session-115-omissions.json）；机械代码只以原始位置/长度记录；早期一次大段工具输出截断已以小块重读补齐，无待补截断"
+    },
+    {
+      "index": 116,
+      "sid": "01a0e750-f3cb-7121-b4b3-1298b9426a8d",
+      "records": 148,
+      "source": "native/225-2026-09-28T09-20-37-323Z_01a0e750-f3cb-7121-b4b3-1298b9426a8d.jsonl",
+      "status": "已完整语义阅读",
+      "native_read_range": "native/225-2026-09-28T09-20-37-323Z_01a0e750-f3cb-7121-b4b3-1298b9426a8d.jsonl:L1–148",
+      "omissions_and_truncation": "原生L1–148顺序语义阅读；初始巨大Issue/PR快照精确重复段引用已读items.md/源行；后台bash custom_message大段机械日志为精确重复，原始长度/源行见session-116-omissions.json；渲染大输出截断处已按L2700–2935补读，无待补截断"
+    },
+    {
+      "index": 117,
+      "sid": "01a0e750-f3de-71e1-9c6d-a7d4aac8f334",
+      "records": 1030,
+      "source": "native/223-2026-09-28T09-20-37-342Z_01a0e750-f3de-71e1-9c6d-a7d4aac8f334.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/223-2026-09-28T09-20-37-342Z_01a0e750-f3de-71e1-9c6d-a7d4aac8f334.jsonl:L1–1030（渲染 L1–末尾顺序读；所有显示截断段按精确行补读）",
+      "omissions_and_truncation": "全部 thinking、消息、动作与反馈顺序阅读；工具显示截断段逐处补读（含渲染 L751–1900、L2901–4200、L6101–8200、L10051–10850、L12851–13650）；机械大代码与精确重复见 session-117-omissions.json。"
+    },
+    {
+      "index": 118,
+      "sid": "01a0e751-146c-7111-8394-c1592615f521",
+      "records": 237,
+      "source": "native/229-2026-09-28T09-20-45-676Z_01a0e751-146c-7111-8394-c1592615f521.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/229-2026-09-28T09-20-45-676Z_01a0e751-146c-7111-8394-c1592615f521.jsonl:L1–237（渲染 L1–4795 全读）",
+      "omissions_and_truncation": "全部 thinking、消息、动作与反馈按原生顺序阅读；机械大代码与精确重复按渲染器标记/首次来源，见 session-118-omissions.json。各次渲染读取未发生工具输出截断。"
+    },
+    {
+      "index": 119,
+      "sid": "01a0e751-1e4b-716e-88c1-f6141270ddb4",
+      "records": 159,
+      "source": "native/231-2026-09-28T09-20-48-203Z_01a0e751-1e4b-716e-88c1-f6141270ddb4.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/231-2026-09-28T09-20-48-203Z_01a0e751-1e4b-716e-88c1-f6141270ddb4.jsonl:L1–159（渲染 L1–2960 顺序全读）",
+      "omissions_and_truncation": "全部 thinking、消息、动作与反馈顺序阅读；工具输出无未补截断。机械独立探针代码与精确重复见 session-119-omissions.json。"
+    },
+    {
+      "index": 120,
+      "sid": "01a0e751-2e59-7647-a884-c437af4391ef",
+      "records": 16,
+      "source": "native/233-2026-09-28T09-20-52-313Z_01a0e751-2e59-7647-a884-c437af4391ef.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/233-2026-09-28T09-20-52-313Z_01a0e751-2e59-7647-a884-c437af4391ef.jsonl:L1–16（渲染 L1–336 全读）",
+      "omissions_and_truncation": "全部思考、动作、反馈顺序读；精确重复见 session-120-omissions.json，无工具显示截断。"
+    },
+    {
+      "index": 121,
+      "sid": "01a0e751-75c7-7668-8703-12aba8395629",
+      "records": 29,
+      "source": "native/235-2026-09-28T09-21-10-599Z_01a0e751-75c7-7668-8703-12aba8395629.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/235-2026-09-28T09-21-10-599Z_01a0e751-75c7-7668-8703-12aba8395629.jsonl:L1–29（渲染 L1–463 全读）",
+      "omissions_and_truncation": "思考、消息、动作和反馈顺序全读；精确重复见 session-121-omissions.json，无未补工具截断。"
+    },
+    {
+      "index": 122,
+      "sid": "01a0e752-119d-73ef-a26d-6990743ff95b",
+      "records": 19,
+      "source": "native/237-2026-09-28T09-21-50-493Z_01a0e752-119d-73ef-a26d-6990743ff95b.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/237-2026-09-28T09-21-50-493Z_01a0e752-119d-73ef-a26d-6990743ff95b.jsonl:L1–19（渲染 L1–318 全读）",
+      "omissions_and_truncation": "思考、消息、动作和反馈顺序全读；精确重复见 session-122-omissions.json，无未补工具截断。"
+    },
+    {
+      "index": 123,
+      "sid": "01a0e752-b223-715d-ad2b-bda4b50996cd",
+      "records": 94,
+      "source": "native/239-2026-09-28T09-22-31-587Z_01a0e752-b223-715d-ad2b-bda4b50996cd.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/239-2026-09-28T09-22-31-587Z_01a0e752-b223-715d-ad2b-bda4b50996cd.jsonl:L1–94（渲染 L1–1243 全读）",
+      "omissions_and_truncation": "全部思考、消息、动作、反馈顺序读；机械脚本及精确重复见 session-123-omissions.json，无未补工具截断。"
+    },
+    {
+      "index": 124,
+      "sid": "01a0e754-55b1-752c-9b31-507f09e7f044",
+      "records": 49,
+      "source": "native/241-2026-09-28T09-24-18-993Z_01a0e754-55b1-752c-9b31-507f09e7f044.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/241-2026-09-28T09-24-18-993Z_01a0e754-55b1-752c-9b31-507f09e7f044.jsonl:L1–49（渲染 L1–1147 全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；机械源码与精确重复见 session-124-omissions.json；原生 L6 的工具输出本身截断，截断提示已读，无额外可恢复内容。"
+    },
+    {
+      "index": 125,
+      "sid": "01a0e757-b087-73ae-a70c-29cf423fb9e8",
+      "records": 59,
+      "source": "native/243-2026-09-28T09-27-58-855Z_01a0e757-b087-73ae-a70c-29cf423fb9e8.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/243-2026-09-28T09-27-58-855Z_01a0e757-b087-73ae-a70c-29cf423fb9e8.jsonl:L1–59（渲染 L1–1383 全读）",
+      "omissions_and_truncation": "所有独有思考、动作、反馈顺序读；L28 巨型全量评论重复打印 34634 字符，已按精确范围登记在 session-125-omissions.json；显示截断段已补读并由后续摘录核对。"
+    },
+    {
+      "index": 126,
+      "sid": "01a0e759-cdfa-7489-8194-a7aefb3ffb28",
+      "records": 340,
+      "source": "native/245-2026-09-28T09-30-17-466Z_01a0e759-cdfa-7489-8194-a7aefb3ffb28.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/245-2026-09-28T09-30-17-466Z_01a0e759-cdfa-7489-8194-a7aefb3ffb28.jsonl:L1–340（渲染 L1–3225 全读）",
+      "omissions_and_truncation": "全部独有思考、动作、反馈顺序读；长评论精确重复参见 items.md，原生L7工具输出自身截断；L295–307长背景回执显示截断后单条补读，重复轮询回执据已知结果核对。"
+    },
+    {
+      "index": 127,
+      "sid": "01a0e759-cdfd-71ab-b2e7-3c8e38cac489",
+      "records": 20,
+      "source": "native/247-2026-09-28T09-30-17-469Z_01a0e759-cdfd-71ab-b2e7-3c8e38cac489.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/247-2026-09-28T09-30-17-469Z_01a0e759-cdfd-71ab-b2e7-3c8e38cac489.jsonl:L1–20（渲染 L1–340 全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧评论精确重复见 items.md/session-127-omissions.json，无未补显示截断。"
+    },
+    {
+      "index": 128,
+      "sid": "01a0e75a-8fb2-73aa-b942-9cf434e26ca8",
+      "records": 18,
+      "source": "native/249-2026-09-28T09-31-07-058Z_01a0e75a-8fb2-73aa-b942-9cf434e26ca8.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/249-2026-09-28T09-31-07-058Z_01a0e75a-8fb2-73aa-b942-9cf434e26ca8.jsonl:L1–18（渲染 L1–385 全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧评论精确重复见 items.md/session-128-omissions.json，无未补显示截断。"
+    },
+    {
+      "index": 129,
+      "sid": "01a0e75b-1547-741c-810d-444bf4dce301",
+      "records": 12,
+      "source": "native/251-2026-09-28T09-31-41-256Z_01a0e75b-1547-741c-810d-444bf4dce301.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/251-2026-09-28T09-31-41-256Z_01a0e75b-1547-741c-810d-444bf4dce301.jsonl:L1–12（渲染 L1–176 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧评论精确重复见 items.md，无未补显示截断。"
+    },
+    {
+      "index": 130,
+      "sid": "01a0e75b-36de-7304-a9c8-c22315c99db7",
+      "records": 10,
+      "source": "native/253-2026-09-28T09-31-49-854Z_01a0e75b-36de-7304-a9c8-c22315c99db7.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/253-2026-09-28T09-31-49-854Z_01a0e75b-36de-7304-a9c8-c22315c99db7.jsonl:L1–10（渲染 L1–233 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；工作项与旧评论精确重复引用 items.md/首次原始来源，无未补显示截断。"
+    },
+    {
+      "index": 131,
+      "sid": "01a0e75b-9cc4-744c-8483-c14564d67a7c",
+      "records": 32,
+      "source": "native/255-2026-09-28T09-32-15-940Z_01a0e75b-9cc4-744c-8483-c14564d67a7c.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/255-2026-09-28T09-32-15-940Z_01a0e75b-9cc4-744c-8483-c14564d67a7c.jsonl:L1–32（渲染 L1–737 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；原生L31巨大Issue JSON中body/comments为items.md精确重复；无未补显示截断。"
+    },
+    {
+      "index": 132,
+      "sid": "01a0e75b-bada-7746-b360-f6454547a30a",
+      "records": 17,
+      "source": "native/257-2026-09-28T09-32-23-642Z_01a0e75b-bada-7746-b360-f6454547a30a.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/257-2026-09-28T09-32-23-642Z_01a0e75b-bada-7746-b360-f6454547a30a.jsonl:L1–17（渲染 L1–343 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；原生重复旧评论/工作项/PR 列表引用 items.md 和首次原始来源；无显示截断。"
+    },
+    {
+      "index": 133,
+      "sid": "01a0e75c-2f9a-76e5-bcd3-ae932309128c",
+      "records": 15,
+      "source": "native/259-2026-09-28T09-32-53-531Z_01a0e75c-2f9a-76e5-bcd3-ae932309128c.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/259-2026-09-28T09-32-53-531Z_01a0e75c-2f9a-76e5-bcd3-ae932309128c.jsonl:L1–15（渲染 L1–297 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧 PR 评论精确重复引用 items.md/首次原始来源，无显示截断。"
+    },
+    {
+      "index": 134,
+      "sid": "01a0e75c-6b7d-72f2-9be9-bba550a68418",
+      "records": 12,
+      "source": "native/261-2026-09-28T09-33-08-861Z_01a0e75c-6b7d-72f2-9be9-bba550a68418.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/261-2026-09-28T09-33-08-861Z_01a0e75c-6b7d-72f2-9be9-bba550a68418.jsonl:L1–12（渲染 L1–271 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧评论精确重复引用 items.md/首次来源，无显示截断。"
+    },
+    {
+      "index": 135,
+      "sid": "01a0e75c-a7ef-7003-aad9-4e60e98e6d8d",
+      "records": 17,
+      "source": "native/263-2026-09-28T09-33-24-335Z_01a0e75c-a7ef-7003-aad9-4e60e98e6d8d.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/263-2026-09-28T09-33-24-335Z_01a0e75c-a7ef-7003-aad9-4e60e98e6d8d.jsonl:L1–17（渲染 L1–315 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧评论精确重复引用 items.md/首次来源，无显示截断。"
+    },
+    {
+      "index": 136,
+      "sid": "01a0e75c-bbea-7364-bb08-6fce045b77a3",
+      "records": 60,
+      "source": "native/265-2026-09-28T09-33-29-450Z_01a0e75c-bbea-7364-bb08-6fce045b77a3.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/265-2026-09-28T09-33-29-450Z_01a0e75c-bbea-7364-bb08-6fce045b77a3.jsonl:L1–60（渲染 L1–1394 顺序全读，工具显示截断段按精确行重读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；L22–38 机械源码、长线程旧评论精确重复引用首次原始来源/ items.md；渲染701–1100 首次输出截断，已按701–900与901–1100补读，无待补截断。"
+    },
+    {
+      "index": 137,
+      "sid": "01a0e75d-1a5c-70f0-9fe5-3764dd28ca58",
+      "records": 15,
+      "source": "native/267-2026-09-28T09-33-53-628Z_01a0e75d-1a5c-70f0-9fe5-3764dd28ca58.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/267-2026-09-28T09-33-53-628Z_01a0e75d-1a5c-70f0-9fe5-3764dd28ca58.jsonl:L1–15（渲染 L1–248 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧PR评论与列表精确重复引用首次来源/items.md；无显示截断。"
+    },
+    {
+      "index": 138,
+      "sid": "01a0e75d-7ed2-76da-8347-3f4ce8261811",
+      "records": 27,
+      "source": "native/269-2026-09-28T09-34-19-347Z_01a0e75d-7ed2-76da-8347-3f4ce8261811.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/269-2026-09-28T09-34-19-347Z_01a0e75d-7ed2-76da-8347-3f4ce8261811.jsonl:L1–27（渲染 L1–462 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧Issue/PR评论精确重复引用items.md与首次来源，无显示截断。"
+    },
+    {
+      "index": 139,
+      "sid": "01a0e75e-166e-70f8-8804-d668ecabc587",
+      "records": 26,
+      "source": "native/271-2026-09-28T09-34-58-158Z_01a0e75e-166e-70f8-8804-d668ecabc587.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/271-2026-09-28T09-34-58-158Z_01a0e75e-166e-70f8-8804-d668ecabc587.jsonl:L1–26（渲染 L1–684 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；Issue/PR旧内容精确重复引用 items.md 与首次来源，无显示截断。"
+    },
+    {
+      "index": 140,
+      "sid": "01a0e75e-77a4-7614-b093-d90ee956f019",
+      "records": 26,
+      "source": "native/273-2026-09-28T09-35-23-045Z_01a0e75e-77a4-7614-b093-d90ee956f019.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/273-2026-09-28T09-35-23-045Z_01a0e75e-77a4-7614-b093-d90ee956f019.jsonl:L1–26（渲染 L1–768 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；长线程旧评论精确重复引用 items.md/首次来源，无显示截断。"
+    },
+    {
+      "index": 141,
+      "sid": "01a0e75e-f0b3-7633-9095-cc14b428b805",
+      "records": 23,
+      "source": "native/275-2026-09-28T09-35-54-035Z_01a0e75e-f0b3-7633-9095-cc14b428b805.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/275-2026-09-28T09-35-54-035Z_01a0e75e-f0b3-7633-9095-cc14b428b805.jsonl:L1–23（渲染 L1–442 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧PR/Issue评论精确重复引用 items.md/首次原始来源，无显示截断。"
+    },
+    {
+      "index": 142,
+      "sid": "01a0e75f-7009-7493-98d3-8325a02d071c",
+      "records": 19,
+      "source": "native/277-2026-09-28T09-36-26-633Z_01a0e75f-7009-7493-98d3-8325a02d071c.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/277-2026-09-28T09-36-26-633Z_01a0e75f-7009-7493-98d3-8325a02d071c.jsonl:L1–19（渲染 L1–745 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；旧长线程精确重复引用items.md/首次原始来源，无显示截断。"
+    },
+    {
+      "index": 143,
+      "sid": "01a0e75f-a089-7593-a867-60e4c60e8c7c",
+      "records": 149,
+      "source": "native/279-2026-09-28T09-36-39-049Z_01a0e75f-a089-7593-a867-60e4c60e8c7c.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/279-2026-09-28T09-36-39-049Z_01a0e75f-a089-7593-a867-60e4c60e8c7c.jsonl:L1–149（渲染 L1–4464 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；渲染精确重复保留原始来源/字数并引用已读段；L3901–4464 首次显示截断，已分拆 L3901–4200、L4201–4464 补读；无未补显示截断。"
+    },
+    {
+      "index": 144,
+      "sid": "01a0e75f-c4df-76c0-ae9b-8053340d2151",
+      "records": 19,
+      "source": "native/281-2026-09-28T09-36-48-351Z_01a0e75f-c4df-76c0-ae9b-8053340d2151.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/281-2026-09-28T09-36-48-351Z_01a0e75f-c4df-76c0-ae9b-8053340d2151.jsonl:L1–19（渲染 L1–459 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 145,
+      "sid": "01a0e760-1bd2-75ac-be23-bccc310ab6a5",
+      "records": 11,
+      "source": "native/283-2026-09-28T09-37-10-610Z_01a0e760-1bd2-75ac-be23-bccc310ab6a5.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/283-2026-09-28T09-37-10-610Z_01a0e760-1bd2-75ac-be23-bccc310ab6a5.jsonl:L1–11（渲染 L1–238 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 146,
+      "sid": "01a0e760-5ec8-732f-9aea-638e30b5c5c7",
+      "records": 21,
+      "source": "native/285-2026-09-28T09-37-27-752Z_01a0e760-5ec8-732f-9aea-638e30b5c5c7.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/285-2026-09-28T09-37-27-752Z_01a0e760-5ec8-732f-9aea-638e30b5c5c7.jsonl:L1–21（渲染 L1–239 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 147,
+      "sid": "01a0e760-6a6e-760a-9351-d480b95a2240",
+      "records": 10,
+      "source": "native/287-2026-09-28T09-37-30-734Z_01a0e760-6a6e-760a-9351-d480b95a2240.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/287-2026-09-28T09-37-30-734Z_01a0e760-6a6e-760a-9351-d480b95a2240.jsonl:L1–10（渲染 L1–154 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 148,
+      "sid": "01a0e760-a311-75d6-8c82-aac54726753a",
+      "records": 16,
+      "source": "native/289-2026-09-28T09-37-45-234Z_01a0e760-a311-75d6-8c82-aac54726753a.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/289-2026-09-28T09-37-45-234Z_01a0e760-a311-75d6-8c82-aac54726753a.jsonl:L1–16（渲染 L1–362 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 149,
+      "sid": "01a0e760-ddb2-736a-8c53-473c71d8a23c",
+      "records": 21,
+      "source": "native/291-2026-09-28T09-38-00-242Z_01a0e760-ddb2-736a-8c53-473c71d8a23c.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/291-2026-09-28T09-38-00-242Z_01a0e760-ddb2-736a-8c53-473c71d8a23c.jsonl:L1–21（渲染 L1–316 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 150,
+      "sid": "01a0e761-3e8f-7047-ae00-97a69fc8b422",
+      "records": 26,
+      "source": "native/293-2026-09-28T09-38-25-039Z_01a0e761-3e8f-7047-ae00-97a69fc8b422.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/293-2026-09-28T09-38-25-039Z_01a0e761-3e8f-7047-ae00-97a69fc8b422.jsonl:L1–26（渲染 L1–741 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 151,
+      "sid": "01a0e762-1c9c-7638-8fe1-b0420a03caf5",
+      "records": 19,
+      "source": "native/295-2026-09-28T09-39-21-884Z_01a0e762-1c9c-7638-8fe1-b0420a03caf5.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/295-2026-09-28T09-39-21-884Z_01a0e762-1c9c-7638-8fe1-b0420a03caf5.jsonl:L1–19（渲染 L1–325 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 152,
+      "sid": "01a0e762-a21e-75c4-b8db-be519af95851",
+      "records": 18,
+      "source": "native/297-2026-09-28T09-39-56-062Z_01a0e762-a21e-75c4-b8db-be519af95851.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/297-2026-09-28T09-39-56-062Z_01a0e762-a21e-75c4-b8db-be519af95851.jsonl:L1–18（渲染 L1–395 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 153,
+      "sid": "01a0e763-1a9b-7626-a7c4-2eff6624523a",
+      "records": 17,
+      "source": "native/299-2026-09-28T09-40-26-907Z_01a0e763-1a9b-7626-a7c4-2eff6624523a.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/299-2026-09-28T09-40-26-907Z_01a0e763-1a9b-7626-a7c4-2eff6624523a.jsonl:L1–17（渲染 L1–384 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 154,
+      "sid": "01a0e763-26d9-76d3-abf9-a8aa43fffd53",
+      "records": 23,
+      "source": "native/301-2026-09-28T09-40-30-041Z_01a0e763-26d9-76d3-abf9-a8aa43fffd53.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/301-2026-09-28T09-40-30-041Z_01a0e763-26d9-76d3-abf9-a8aa43fffd53.jsonl:L1–23（渲染 L1–335 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 155,
+      "sid": "01a0e763-953f-7493-aa2c-8dcc7e1e9150",
+      "records": 11,
+      "source": "native/303-2026-09-28T09-40-58-303Z_01a0e763-953f-7493-aa2c-8dcc7e1e9150.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/303-2026-09-28T09-40-58-303Z_01a0e763-953f-7493-aa2c-8dcc7e1e9150.jsonl:L1–11（渲染 L1–233 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 156,
+      "sid": "01a0e763-d2ae-74ea-abb2-66c2658900f5",
+      "records": 30,
+      "source": "native/305-2026-09-28T09-41-14-030Z_01a0e763-d2ae-74ea-abb2-66c2658900f5.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/305-2026-09-28T09-41-14-030Z_01a0e763-d2ae-74ea-abb2-66c2658900f5.jsonl:L1–30（渲染 L1–644 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 157,
+      "sid": "01a0e763-f8d2-7293-bb1f-d00de35c40f3",
+      "records": 16,
+      "source": "native/307-2026-09-28T09-41-23-794Z_01a0e763-f8d2-7293-bb1f-d00de35c40f3.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/307-2026-09-28T09-41-23-794Z_01a0e763-f8d2-7293-bb1f-d00de35c40f3.jsonl:L1–16（渲染 L1–419 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 158,
+      "sid": "01a0e764-6c80-72af-baf3-ab87c11abea7",
+      "records": 21,
+      "source": "native/309-2026-09-28T09-41-53-408Z_01a0e764-6c80-72af-baf3-ab87c11abea7.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/309-2026-09-28T09-41-53-408Z_01a0e764-6c80-72af-baf3-ab87c11abea7.jsonl:L1–21（渲染 L1–311 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 159,
+      "sid": "01a0e764-a2bb-764a-9f24-7313acd8751d",
+      "records": 15,
+      "source": "native/311-2026-09-28T09-42-07-291Z_01a0e764-a2bb-764a-9f24-7313acd8751d.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/311-2026-09-28T09-42-07-291Z_01a0e764-a2bb-764a-9f24-7313acd8751d.jsonl:L1–15（渲染 L1–325 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 160,
+      "sid": "01a0e764-dbd2-779b-bd4e-6e5883f2a174",
+      "records": 12,
+      "source": "native/313-2026-09-28T09-42-21-906Z_01a0e764-dbd2-779b-bd4e-6e5883f2a174.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/313-2026-09-28T09-42-21-906Z_01a0e764-dbd2-779b-bd4e-6e5883f2a174.jsonl:L1–12（渲染 L1–268 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 161,
+      "sid": "01a0e764-f934-7799-b8d6-af507dedf539",
+      "records": 26,
+      "source": "native/315-2026-09-28T09-42-29-428Z_01a0e764-f934-7799-b8d6-af507dedf539.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/315-2026-09-28T09-42-29-428Z_01a0e764-f934-7799-b8d6-af507dedf539.jsonl:L1–26（渲染 L1–588 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 162,
+      "sid": "01a0e765-2590-7795-baa6-5932249ebe26",
+      "records": 10,
+      "source": "native/317-2026-09-28T09-42-40-784Z_01a0e765-2590-7795-baa6-5932249ebe26.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/317-2026-09-28T09-42-40-784Z_01a0e765-2590-7795-baa6-5932249ebe26.jsonl:L1–10（渲染 L1–180 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 163,
+      "sid": "01a0e765-7a58-744f-9a22-b7c134c5194c",
+      "records": 25,
+      "source": "native/319-2026-09-28T09-43-02-488Z_01a0e765-7a58-744f-9a22-b7c134c5194c.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/319-2026-09-28T09-43-02-488Z_01a0e765-7a58-744f-9a22-b7c134c5194c.jsonl:L1–25（渲染 L1–697 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 164,
+      "sid": "01a0e765-b104-760d-8ff7-4032dfb48cfb",
+      "records": 14,
+      "source": "native/321-2026-09-28T09-43-16-484Z_01a0e765-b104-760d-8ff7-4032dfb48cfb.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/321-2026-09-28T09-43-16-484Z_01a0e765-b104-760d-8ff7-4032dfb48cfb.jsonl:L1–14（渲染 L1–327 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 165,
+      "sid": "01a0e766-1add-7577-bc55-d51e99ddab2b",
+      "records": 9,
+      "source": "native/323-2026-09-28T09-43-43-581Z_01a0e766-1add-7577-bc55-d51e99ddab2b.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/323-2026-09-28T09-43-43-581Z_01a0e766-1add-7577-bc55-d51e99ddab2b.jsonl:L1–9（渲染 L1–138 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 166,
+      "sid": "01a0e766-3bb1-71c9-a8dd-18f135783354",
+      "records": 11,
+      "source": "native/325-2026-09-28T09-43-51-985Z_01a0e766-3bb1-71c9-a8dd-18f135783354.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/325-2026-09-28T09-43-51-985Z_01a0e766-3bb1-71c9-a8dd-18f135783354.jsonl:L1–11（渲染 L1–217 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 167,
+      "sid": "01a0e766-77e3-74fe-819c-9e2c5f261188",
+      "records": 21,
+      "source": "native/327-2026-09-28T09-44-07-395Z_01a0e766-77e3-74fe-819c-9e2c5f261188.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/327-2026-09-28T09-44-07-395Z_01a0e766-77e3-74fe-819c-9e2c5f261188.jsonl:L1–21（渲染 L1–506 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；无显示截断。"
+    },
+    {
+      "index": 168,
+      "sid": "01a0e767-a51e-74e2-a403-64c0dd0b49b8",
+      "records": 242,
+      "source": "native/329-2026-09-28T09-45-24-510Z_01a0e767-a51e-74e2-a403-64c0dd0b49b8.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/329-2026-09-28T09-45-24-510Z_01a0e767-a51e-74e2-a403-64c0dd0b49b8.jsonl:L1–242（渲染 L1–4843 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；长输出逐段补读，无显示截断。"
+    },
+    {
+      "index": 169,
+      "sid": "01a0e76b-1650-7003-a479-890c7e001d47",
+      "records": 206,
+      "source": "native/331-2026-09-28T09-49-10-096Z_01a0e76b-1650-7003-a479-890c7e001d47.jsonl",
+      "status": "完整语义阅读",
+      "native_read_range": "native/331-2026-09-28T09-49-10-096Z_01a0e76b-1650-7003-a479-890c7e001d47.jsonl:L1–206（渲染 L1–3266 顺序全读）",
+      "omissions_and_truncation": "全部思考、消息、动作与反馈顺序读；精确重复引用已读来源；长输出逐段补读，无显示截断。"
+    }
+  ]
+}

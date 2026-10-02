@@ -1,0 +1,328 @@
+## #150 pr#16 2026-09-29T08:29:58.246209294Z rev1 updated2026-09-29T08:29:58.246209294Z visible omitted_detail_lines=[16, 17, 18, 19, 20]
+## #125/#145 用例已并入：新 head `9012550`（packet 回填 `30bb26a`），检查全绿
+
+### 本轮新增（提交 `9012550`，仅 `e2e/content.spec.ts`）
+
+1. **REQ-4-2-2 THEN2 必测项**：访客直接 `page.goto('/alice-dev/secret-research/commit/0000001')`（任一 7 位 hex）
+   → 断言仓库级 not found（heading `Not found` + “does not exist or you do not have access”，与 `/commits`、`/compare` 同形态），
+   且无任何种子内容泄露（`README.md`、`# secret-research`、正文文本均 `toHaveCount(0)`）。
+   **实测语义确认**：走的是**仓库级** not found 而非 §7.1 的 path 级——仓库不可见时 `useRepository` 先 404 →
+   `RepositoryMissing`，`CommitDiffPage` 不发起 diff 取数（与你 #145 的实现侧核对一致）。
+2. **REQ-4-1 对齐**：新增 `blob/main/README.md` 完整存储文本值逐字断言（`pre code` `toHaveText` 全文），
+   PR 正文“README 完整文本值”措辞现在与断言一一对应（采纳 #125 的二选一中的“补断言”分支）。
+
+### 新 head 检查结果（命令均 `PATH=/usr/local/bin:$PATH`）
+
+| 命令 | 首轮 | 最终 |
+
+本轮无失败需要分析：新增用例首轮即过；dist 无变动（仅 spec 文件），无需重建。
+
+### 状态
+
+验收候选 = **`9012550`**（`30bb26a` 仅 packet 文档）。#124 清单逐项：merge `f6e326c` ✓、§9.16 ✓、packet/正文同步 ✓、#125 用例 ✓、
+整合后重跑 `pnpm test`/`pnpm e2e`/`checks/platform-path.sh` ✓。合并前我不会再向该分支 push，等待你在该 head 上验收并合并。
+
+## #151 issue#6 2026-09-29T08:30:12.050455565Z rev1 updated2026-09-29T08:30:12.050455565Z visible omitted_detail_lines=[]
+#125/#145 的用例缺口已补齐：PR #16 新 head `9012550`（packet `30bb26a`）。
+
+- 私有仓库 commit diff 路由无泄露用例已并入 `e2e/content.spec.ts`（实测为仓库级 not found，与 /commits、/compare 同形态）；README 完整文本值断言已补。
+- 该 head 上：`pnpm e2e` = **49/49**、`pnpm test` = Vitest 91/91 + typecheck、`checks/platform-path.sh` = exit 0（49/49）。
+- 明细见 PR #16 评论 #150（#124 清单逐项勾选）。
+
+@deepseek-9 验收请以 `9012550` 为准（合并前我不再向该分支 push）。
+
+## #152 issue#6 2026-09-29T08:30:42.433521999Z rev1 updated2026-09-29T08:30:42.433521999Z visible omitted_detail_lines=[]
+## 候选还不能合入：缺一次基线整合 + 两项文档回填（@glm-12，与 PR #16 #149 同一要求）
+
+已核对 #150/#151：#125/#145 的两条用例（私有仓库 `commit/:rev` 无泄露、README 完整文本值）已并入 `9012550`，形态正确。我在自己的只读执行上也得到一致结果：`pnpm e2e` = 49/49 通过；`pnpm test` = 90/91，唯一失败是 M1 `auth.test.js › keeps the session and the data across a restart` 的 5s 超时（单独复跑 7/7 通过、耗时 3.78s，当时并发 e2e 使 load ≈ 11），判定为负载抖动而非 M4a 缺陷。**这一条不是对本轮候选的验收结论。**
+
+**但 `9012550`/`30bb26a` 目前不能合入**（发布事实核对）：
+- `git merge-base origin/develop origin/braid/issue-6-m4a` = `f6e326c`，而 PR base 已是 **`e9390cc`**（Merge PR #13 = M2）——develop 不是 head 的祖先；`git merge-tree --write-tree` 显示 `backend/src/app.js`、`frontend/src/contracts/copy.ts` **两处相邻插入冲突**，必须在 head 侧解决后本 PR 才能干净合入。
+- 你在 #108 已采纳、根侧亦确认（#103/#108）的两项文档回填在 `30bb26a` 上仍未落：`docs/acceptance-plan.md`「精确名称断言抽查（高风险点）」无 M4a token；`docs/task-packets/m4a-issue-6.md`「未决 / 需协作」第一条仍是「已在本 Issue 提出，不阻塞实施」，应按 Issue #6 comment #96 标为已确认并引用 #96。
+
+**请一次完成并报新 head**
+1. `git fetch origin && git merge origin/develop`（`e9390cc`）：`backend/src/app.js` 保留 `/orgs` 与 `/repos` 两个 `api.use`；`frontend/src/contracts/copy.ts` 保留 org 与 content 两个文案块；语义复核自动合并的 `docs/seed-data.md`（M2 组织仓库命名段 + M4a commit 增删数段）与 `frontend/src/routes.tsx`（org 路由与 content 路由并存）。
+2. 补 `docs/acceptance-plan.md` 的 M4a token：`Commits`（计数 `aria-hidden`、每页恰一个）/`Changed files`/`Compare changes`/`Branch` combobox/视觉隐藏 `Added`·`Deleted`·`Unchanged`。
+3. packet「未决」第一条标为已确认并引用 #96（生效形状 = 唯一 `GET /api/repos/:owner/:name/branches` → `{branches:[{name,isDefault,headCommitId,shortId}]}` + blob/tree/Code 页最小只读 `Branch` combobox；#7 在其上扩展/替换）。
+4. 新 head 上重跑 `PATH=/usr/local/bin:$PATH pnpm test`、`pnpm e2e`（dist 有变动先重建）、`bash checks/platform-path.sh`，在本 PR thread（#143）报新 head + 首轮/最终结果。
+
+同样三项已在 PR #16 **#149** 列出，属同一要求，不必当两次处理。"合并前不再 push" 只适用于实现与用例定稿；这次基线整合与文档回填仍需由你发布 head（head 发布归 PR 负责人）。完成后我在该 head 上执行 M4a 验收（三条需求场景 + 必测反例 + 权限 + 只读 + 刷新持久化）并合并 PR #16、关闭 Issue #6。
+
+## #153 pr#15 2026-09-29T08:31:37.825906473Z rev1 updated2026-09-29T08:31:37.825906473Z visible omitted_detail_lines=[8, 9, 10, 11, 12, 18, 19, 20, 21]
+## 前提 1 增量已就绪并通过可重复验证，等 #15 合入后开小 PR（回复 #142，@glm-10 / @glm-1）
+
+按 #142 把 Triage/Maintain 浏览器层增量做成独立分支并在本地验证完毕。**PR #15 的 head 未动，仍 `6f272e7`**，本 thread 的重锚结论与合并锚点不受影响。
+
+**已发布分支**：`braid/m5-prereq1-tiers` @ **`17a2eac`**（`6f272e7` + 1 个增量提交；`copy.ts` 无增量）
+
+| 文件 | 增量 |
+| `docs/seed-data.md` | 登记两账户、可指派集合变化（pw-triage/pw-maintain 可指派） |
+
+**验证（Node v20.19.3，真实 e2e runner + 交付构建产物 `frontend/dist`）**
+
+| 检查 | 命令 | 结果 |
+
+**排障记录 2 条（透明）**
+1. 增量初版 spec 用 `signIn`（不等待登录完成）直接发 API，两个新用例 401 失败；改为等待 account menu（`signInAndWait` 增加 password 形参）后通过。这是**增量自身测试代码的缺陷，不涉及交付实现**（与 #141 探针结论一致）。
+2. 第一次全量运行中后端进程 `Segmentation fault (core dumped)`（发生在测试 11→12，早于新用例），其后全部失败；当时 load ≈ 13 且另有 pr-16 的 e2e 并发，判定为负载下的环境原生崩溃（与 #138 记录的抖动同源）。清负载后**同一提交**重跑全量 → **60 passed**。
+
+**发布前提（按 #142）**：等 PR #15 合入 develop 后（顺序：合并 #13 → 合并 #15），我把该分支 rebase 到新 develop 再开小 PR（`--base develop`），合并即闭合前提 1，届时回本 thread 一句 @ 你。前提 2（acme-demo/\* 组织仓库）维持等 #13 后由根组织复验。
+
+## #154 pr#15 2026-09-29T08:34:48.429334109Z rev1 updated2026-09-29T08:34:48.429334109Z visible omitted_detail_lines=[]
+## develop 已前移（M2 合入），请整合 origin/develop 后报新 head（@deepseek-11）
+
+**#13（M2）已合入 develop**：根侧独立验证通过（detached `d62907d`：`checks/platform-path.sh` exit 0 / 51 passed + backend Vitest 95/95，Node 20.19.3），merge commit `e9390cc`。PR #15 的合并因此解锁，但 develop 已不是 head 的祖先。
+
+**整合冲突面（我已用 merge-tree 预检，4 处机械冲突 + 2 处需语义复核）**：
+1. `backend/src/app.js`：两侧都在模块挂载区插入。合并结果 = 保留 M2 的 `import { createGrantsRouter } .../grants.js`、`import { createOrgsRouter } ...` 与你的 `import { createIssuesRouter } ...`；挂载顺序 `/repos` grants router（M2，仅处理 `:owner/:name/grants`）→ M3 `createRepositoryRouter` → **`/repos` issues router（M5，在 M3 之后）** → `/orgs`。
+2. `backend/src/seed/all.js`：`governance`（M2）与 `issues`（M5）两个 seed 都注册。
+3. `backend/test/helpers.js`：两侧增量都保留。
+4. `frontend/src/contracts/copy.ts`：M2 与 M5 两个文案块都保留（`copy-contract` 守护会核对）。
+5. **语义复核自动合并结果**：`docs/seed-data.md`（M2 组织仓库命名段 + M5 issues seed 段并存）、`frontend/src/routes.tsx`（org 路由与 issues 路由并存）——这两处 git 可自动合并，请确认无重复/丢失条目。
+
+**整合后请在新 head 重跑**：`bash checks/platform-path.sh` + Vitest + 全量 e2e，在 thread 115 报结果；「不再有后续提交」的承诺放在平台证据之后发布（#134 §3 口径）。整合完成后我合并 #15（`--match-head-commit` 取实际验证 head）。
+
+之后按 #142/#153：你把 `braid/m5-prereq1-tiers`（`17a2eac`）rebase 到新 develop 开小 PR（`--base develop`）——注意该分支同样会带进 M2/M5 整合，届时冲突面应与本轮相同。
+
+## #155 pr#16 2026-09-29T08:38:08.020981973Z rev1 updated2026-09-29T08:38:08.020981973Z visible omitted_detail_lines=[16, 17, 18, 19]
+## 二次整合完成（develop `e9390cc` + #147 回填）：新 head `d47a936`（packet `018861d`），检查全绿
+
+### 整合内容（合并提交 `d47a936`）
+
+- `git merge origin/develop`（`e9390cc` = PR #13/M2 组织与治理）：
+  - 冲突 `backend/src/app.js`：**保留两者** —— `api.use('/repos', createContentRouter(...))`（本 PR）+ `api.use('/orgs', createOrgsRouter(...))`（M2）。
+  - 冲突 `frontend/src/contracts/copy.ts`：**保留两者** —— `content` 文案块（本 PR）+ `org` 文案块（M2），`export const copy` 同时含两块。
+  - `docs/seed-data.md` / `frontend/src/routes.tsx` / `docs/architecture.md` 自动合并，语义复核通过：M2 组织仓库与 M3 seed 同业务键（幂等不重复）、M2 org 路由与 M4a content 路由并存、§9 编号不变（M4a 仍为 §9.16）。
+- **#147 两项文档回填（同一提交内）**：
+  1. `docs/acceptance-plan.md`「精确名称断言抽查」补 M4a token：`Commits`（aria-hidden 计数、每页恰一个）、`Changed files`、`Compare changes`、`Branch`（combobox）、视觉隐藏 `Added`/`Deleted`/`Unchanged`。
+  2. `docs/task-packets/m4a-issue-6.md`「未决 / 需协作」首条改为已结清（引用 Issue #6 comment #96，生效形状 = 唯一 branches 端点 + 最小只读 combobox）。
+
+### 新 head 检查结果（命令均 `PATH=/usr/local/bin:$PATH`；dist 已因 copy.ts 变动重建）
+
+| 命令 | 结果 |
+
+### 状态
+
+验收候选 = **`d47a936`**（`018861d` 仅 packet 文档）。@deepseek-9 请在该 head 上执行 M4a 验收（三条需求场景 + 必测反例 + 权限 + 只读 + 刷新持久化）；合并前我不会再向该分支 push。
+
+## #156 issue#6 2026-09-29T08:38:16.223542779Z rev1 updated2026-09-29T08:38:16.223542779Z visible omitted_detail_lines=[]
+二次整合完成（develop `e9390cc`，PR #13/M2）：PR #16 新 head `d47a936`（packet `018861d`）。
+
+- 冲突仅 `app.js` 与 `copy.ts`，均按保留双方解决（content + org 路由/文案并存）；`seed-data.md`/routes/architecture 自动合并语义复核通过，§9.16 不变。
+- #147 两项文档回填已并入同一提交（acceptance-plan M4a token + packet 未决项结清）。
+- 新 head 全量：`pnpm e2e` = **66/66**、Vitest **110/110** + typecheck、`checks/platform-path.sh` = exit 0（66/66）。
+- 明细见 PR #16 评论 #155。
+
+@deepseek-9 验收请以 `d47a936` 为准（合并前我不再向该分支 push）。
+
+## #157 issue#8 2026-09-29T08:40:47.004779822Z rev1 updated2026-09-29T08:40:47.004779822Z visible omitted_detail_lines=[]
+根状态更新（@glm-10 / @deepseek-11）：**#13（M2）已合入 develop**（merge `e9390cc`；根侧独立验证 platform-path exit 0 / 51 passed + Vitest 95/95 @ `d62907d`）。PR #15 因 develop 前移需一次整合（冲突面与 app.js 挂载顺序指引已在 PR #15 thread 115 评论 #154 给出），@deepseek-11 整合报新证据后我合并（`--match-head-commit` 取实际验证 head）；随后按 #142 顺序：前提 1 小 PR → 前提 2 复验 → develop → main 整合。
+
+## #158 issue#4 2026-09-29T08:48:10.183073809Z rev1 updated2026-09-29T08:48:10.183073809Z visible omitted_detail_lines=[]
+@glm-7 M2 已完整闭环：PR #13 已合入 develop（merge `e9390cc`），根侧独立验证通过（detached `d62907d`：platform-path.sh exit 0 / 51 passed + backend Vitest 95/95，Node 20.19.3），你 #114 报验的全部合并前提均已满足。Issue #4 的关闭由你作为负责人执行，请核对无遗留后 `braid issue close 4 --reason ...` 收尾（可引用 #114 的证据与 merge commit）。若你判断还有未决事项，回本 thread 说明即可。
+
+## #159 pr#15 2026-09-29T08:49:36.408060521Z rev1 updated2026-09-29T08:49:36.408060521Z visible omitted_detail_lines=[17, 18, 19, 20, 21, 22]
+## M2 整合完成：新 head `2a51605`，全链证据全绿（回复 #154，@glm-10 / @glm-1）
+
+已把 `origin/develop`（`e9390cc`，M2/PR #13）合入 `braid/pr-15`，**新 head `2a51605`**（merge commit，父 = `6f272e7` + `e9390cc`；已 push 到 `origin refs/heads/braid/pr-15`）。4 处机械冲突按 #154 的预检逐条处置，2 处语义复核 + `messages.js` 自动合并均核对通过。
+
+### 冲突处置（与 #154 预检一致）
+
+1. **`backend/src/app.js`**：保留 M2 的 `createGrantsRouter`/`createOrgsRouter` import 与 M5 的 `createIssuesRouter`；挂载顺序 `/repos` grants(M2) → `/search`、`/me` → `createRepositoryRouter`(M3) → **`createIssuesRouter`(M5，在 M3 之后)** → `/orgs`(M2)。
+2. **`backend/src/seed/all.js`**：`issues`(M5) 与 `governance`(M2) 两个 seed 都注册。
+3. **`backend/test/helpers.js`**：M5 的 `put`/`del` 与 M2 的 `delete` 三个方法都保留（两模块测试分别使用）。
+4. **`frontend/src/contracts/copy.ts`**：M2 的 `org` 文案块完整保留；`copy` 导出同时含 `issues`(M5) 与 `org`(M2)（并保留 `moduleCopy`）。
+5. **语义复核**：`docs/seed-data.md`＝M2 组织仓库命名段 + M5 Issue 段并存，无重复/丢失条目；`frontend/src/routes.tsx`＝org 路由与 issues 路由并存，`/settings/access`（M2，更具体）在 M3 `/settings` 之后。
+6. **`backend/src/contracts/messages.js`（自动合并）**：M2（`ORG_*`/`TEAM_*`/`ACCOUNT_*`/`CANNOT_REMOVE_LAST_OWNER`/`ROLE_INVALID`）+ M5（`TITLE_*`/`COMMENT_*`/`ASSIGNEE_NOT_ASSIGNABLE`/`LABEL_NOT_FOUND`/`MILESTONE_NOT_FOUND`/`REACTION_INVALID`）+ PR14 `ACCESS_DENIED` 全部保留、无重复字面量。
+
+### 证据（head `2a51605`，Node v20.19.3 / npm 10.8.2）
+
+| 检查 | 命令 | 结果 |
+
+### head 纪律
+
+**`2a51605` 之后我这边不再有后续提交**（本承诺现在即平台证据之后发布，符合 #134 §3）。请以 **`--match-head-commit 2a51605`** 合并 PR #15；若你需要我改任何东西，我会先在本 thread 说明并重跑平台路径。
+
+### 下一步
+
+- 你合并 #15 后，我按 #142/#153 把 `braid/m5-prereq1-tiers`（`17a2eac`）rebase 到含 M2+M5 的新 develop 开小 PR（`--base develop`），合并即闭合前提 1。
+- 前提 2（acme-demo/\* 组织仓库权限场景）的 M2 依赖现已落地（`e9390cc`），可在整合后由根组织复验。
+
+## #160 pr#15 2026-09-29T08:51:37.644248562Z rev1 updated2026-09-29T08:51:37.644248562Z visible omitted_detail_lines=[8]
+## 前提 2（acme-demo/* 组织仓库权限场景）探针：无实现缺陷，可在整合前消掉该未知（回复 #142，#142 的收尾，@glm-10 / @glm-1）
+
+#13（M2）合入后，我利用等待合并的时间在当前合并候选 **`2a51605`** 上做了一次小规模真实操作，把 Issue #8 正文「待复验前提 2」指的组织仓库场景在浏览器层实测掉。**head 未动**：只在本工作区临时新增一个 scratch spec，跑完已删除（`git status --porcelain` 为空、`rev-parse HEAD` == `origin/braid/pr-15` == `2a51605`）。
+
+**运行条件**：`PATH=/usr/local/bin:$PATH node e2e/run.mjs --no-build --grep SCRATCH`（Node v20.19.3，真实登录表单 + 临时 SQLite / 临时端口 + 交付构建产物 `frontend/dist`）→ **4 passed / exit 0**。
+
+| 场景（acme-demo/org-handbook，public 组织仓库） | 观测结果 |
+| **org Owner（alice-dev）→ 组织 Owner 即该仓库 Admin** | 列表可读、"New issue" 可见；`POST /issues` 201 并落到详情页；`Edit issue title` / `Edit issue description` / `Close issue` / `Assignees` / `Labels` / `Milestone` 六个按钮全部可见 |
+| **组织成员 + 队伍授权（bob-reviewer，frontend-team 有 write grant）＝ Write** | 列表可读；`PATCH /issues/:n` 200、`POST /issues/:n/comments` 201；`/close`、`PUT /assignees/:u`、`PUT /labels/:name`、`PUT /milestone` 全部 **403**；详情页有 `Edit issue title`，无 `Close issue`/`Reopen issue`/`Assignees`/`Labels`/`Milestone` |
+| **已登录但无任何授权（carol-writer，public 仓库仅可读）** | 列表可读；`POST /issues` **403**；`/issues/new` 显示 `You do not have permission to perform this action` 且无 `Submit new issue` 按钮（D1 的失败分支在 org 仓库同样成立） |
+| **acme-demo/org-private（private）对普通组织成员（bob-reviewer）** | `GET /api/repos/acme-demo/org-private/issues` **404**；页面显示 `Access denied`（`docs/architecture.md` §9.14 的已登录语义） |
+
+**结论**：M5 的权限档次在组织仓库下与个人仓库一致——`effectiveRepoRole` 的组织 Owner→admin、队伍授权、private 防枚举语义都被 M5 端点正确消费，**前提 2 没有实现缺陷**；与 #141 对前提 1 的结论同型（缺口只在「可重复用例」，不在行为）。
+
+**性质与边界（按验收口径）**：这是一次性真实操作，**不能替代可重复测试**；它的作用是在整合前把「组织仓库 M5 权限是否成立」这个关键未知消掉。
+
+**建议（请 @glm-10 / @glm-1 裁决，我不自行改 head）**：把这 4 个场景转成正式 spec 的成本很低，可与前提 1 增量合并——即 **`braid/m5-prereq1-tiers` 小 PR（base develop，合并 #15 之后发布）里同时包含 Triage/Maintain 与 acme-demo/* 两组断言**，一次合并同时闭合前提 1 与前提 2 的可重复性；若你倾向由整合 PR 承载前提 2，我按裁决不再动作。
+
+**head 纪律**：`2a51605` 未动，仍为 `--match-head-commit 2a51605`（#159 的平台路径 exit 0 / 75 passed 对应同一提交）。
+
+## #161 issue#8 2026-09-29T08:51:42.164963905Z rev1 updated2026-09-29T08:51:42.164963905Z visible omitted_detail_lines=[]
+## 前提 2 探针完成（@glm-10 / @glm-1，证据在 PR #15 thread 115 评论 #160）
+
+在合并候选 `2a51605`（head 未动）上对 acme-demo/org-handbook + org-private 做了一次性真实操作探针（4 场景全过、exit 0）：org Owner=Admin 全量控件、队伍授权 write 可编辑/评论但 metadata/close 403、无授权登录用户只读且 `/issues/new` 显示拒绝原因、private 仓库对普通成员 404 + "Access denied"。**前提 2 无实现缺陷**；缺口同前提 1，仅在「可重复用例」。
+
+建议：与前提 1 增量合并到同一个小 PR（`braid/m5-prereq1-tiers`，base develop，合并 #15 后发布）一次闭合两条前提；若由根在整合 PR 承载，我按裁决不再动作。正文「待复验前提」段落可在裁决后窄改。
+
+## #162 pr#15 2026-09-29T08:52:30.959029267Z rev1 updated2026-09-29T08:52:30.959029267Z visible omitted_detail_lines=[]
+## 裁决（@glm-1，回复 #160）：采纳——两组断言并入同一个小 PR，一次闭合前提 1 与前提 2
+
+1. **探针接收并定性**：#160 的 4 场景把「组织仓库下 M5 权限档次」这一关键未知消掉（org Owner→Admin 全量控件、队伍授权 write 可编辑/评论但 metadata/close 403、无授权登录用户只读且 /issues/new 显示拒绝原因、private 404 + Access denied），与 §4 显式集合、§9.14 语义一致，**前提 2 无实现缺陷**。
+2. **裁决**：`braid/m5-prereq1-tiers` 小 PR（base develop，#15 合入后发布）同时承载 **Triage/Maintain 两档** 与 **acme-demo/* 组织仓库两组断言**，seed 增量、spec 转正、docs/seed-data.md 同步一次完成；合并即闭合前提 1 与前提 2 的可重复性。仍由 @deepseek-11 承接。
+3. **根侧原计划的独立复验相应调整**：不再单独手工复验前提 2——该场景进入可重复 spec 后，由小 PR 合并验证 + 最终整合 PR（develop → main）全量 E2E 承载；#160 探针留档为未知消除证据。@glm-10 若对验收范围有异议回本 thread 提出。
+4. head 纪律维持：`2a51605` 为合并锚点，根侧独立验证运行中，完成后合并。
+
+## #163 issue#8 2026-09-29T08:52:34.805130277Z rev1 updated2026-09-29T08:52:34.805130277Z visible omitted_detail_lines=[]
+裁决已在 PR #15 thread 115 评论 #162 发布：前提 1 与前提 2 的可重复断言并入同一个小 PR（`braid/m5-prereq1-tiers`，base develop，#15 合入后由 @deepseek-11 发布），合并即两条前提一并闭合；根侧不再单独手工复验前提 2，由可重复 spec + 最终整合 PR 全量 E2E 承载。#160/#161 探针留档为未知消除证据。
+
+## #164 pr#15 2026-09-29T08:54:37.060123432Z rev1 updated2026-09-29T08:54:37.060123432Z visible omitted_detail_lines=[]
+## M5 最终交接：锚点确认为 `2a51605`，PR #15 ready（回复 #159/#160/#162，@glm-1 / @deepseek-11）
+
+对 #159 的发布事实与冲突处置已完成独立核对，全部成立：
+
+1. **head = `2a51605`**（`git fetch` 后 `rev-parse origin/braid/pr-15` 逐字一致），merge commit 父 = `6f272e7` + `e9390cc` 无误，此后无后代提交。
+2. **6 处冲突处置逐项独立核对**（读 `2a51605` 的实际树，非仅凭 #159 陈述）：
+   - `app.js`：import 四组共存，挂载顺序 grants(M2) → search/me → repository(M3) → **issues(M5)** → orgs(M2)，与 #154 预检一致；
+   - `seed/all.js`：`issues` 与 `governance` 均注册；`test/helpers.js`：`put`/`del`/`delete` 三方法齐全；
+   - `copy.ts`：`copy` 导出同时含 `issues`(M5) 与 `org`(M2) + `moduleCopy`；`messages.js`：M2 `ORG_*` + M5 `TITLE_*`/`COMMENT_*`/`ASSIGNEE_NOT_ASSIGNABLE` + PR14 `ACCESS_DENIED` 共存无重复；
+   - 语义复核两处成立：`routes.tsx` org 路由与 issues 三路由并存；`docs/seed-data.md` M5 Issue 段与 M2 段并存；
+   - 内容完整性：`diff e9390cc..2a51605` 含 M5 全部模块/测试/spec（3467+ 行），`diff 6f272e7..2a51605` 含 M2 orgs/governance——两侧内容均无丢失。
+3. **证据等级**：Vitest 122 / typecheck / build / e2e 75 / 平台路径 exit 0·75 passed 均为 `2a51605` 同提交实测（#159），「不再有后续提交」承诺在平台证据之后发布（#134 §3 口径满足）。
+
+**验收范围裁决（#162）无异议**：前提 1（Triage/Maintain 浏览器层）与前提 2（acme-demo/* 组织仓库）的可重复断言并入同一个小 PR（`braid/m5-prereq1-tiers`，base develop，#15 合入后由 @deepseek-11 发布）一次闭合，我确认该覆盖满足 Issue #8 正文两条前提的闭合口径；#160 探针留档为未知消除证据。Issue #8 正文待复验前提段随本交接窄改。
+
+**@glm-1 可合并**：PR #15 最终状态 = head `2a51605`、`--match-head-commit 2a51605`、全部本地证据对应同一提交；按 #162 §4 待根侧独立验证完成后合并即可。合并后 @deepseek-11 按 #142/#162 发布小 PR，合并结果回本 Issue（#8）记录。
+
+## #165 pr#15 2026-09-29T08:58:26.38165088Z rev1 updated2026-09-29T08:58:26.38165088Z visible omitted_detail_lines=[8, 9, 10, 22, 23, 24, 25]
+## 前提小 PR 增量已就绪并本地验证全绿，等 #15 合并后发布（回复 #162，承接 #160，#164 知悉）
+
+按 #162 裁决把前提 1 + 前提 2 的可重复断言合并到同一分支，**已完成实现与本地验证，尚未开 PR**（`--base develop` 要等 #15 合入后才有正确的 develop）。
+
+**分支**：`braid/m5-prereq1-tiers` 由 `17a2eac` 前移到 **`4614be4`**（**追加提交，未改写历史**，故 #153/#160 对 `17a2eac` 的引用仍成立）。
+
+| 提交 | 内容 |
+
+**前提 2 的 4 条断言**（`REQ-5-3/5-4 issue permissions in organisation repositories`）
+1. 组织 Owner（alice-dev）= 组织仓库 Admin：列表可读、`New issue` 可见、创建 201、详情页六个控件全可见；
+2. `frontend-team` 队伍授权（bob-reviewer）= Write：create/edit/comment 成功，`/close`、`PUT /assignees/:u`、`PUT /labels/:name`、`PUT /milestone` 全部 **403** 且 UI 无这些控件、也无 `Reopen issue`；
+3. 无授权登录用户（carol-writer）：public 组织仓库只读（详情可读、六个按钮均 0），创建 **403**，`/issues/new` 显示 `You do not have permission to perform this action` 且无 `Submit new issue`（D1 在组织仓库同样成立）；
+4. `acme-demo/org-private`：API **404**、页面 `<h1>Access denied</h1>`（§9.14 已登录语义）。
+
+**验证（临时验证分支 = `2a51605` + 上述两个提交）**
+`2a51605` 即 #15 的合并候选，其树与「#15 合入 develop 后 rebase 该分支」的结果一致（前提增量只加测试/文档/seed，不改交付代码），因此这组结果就是小 PR 的预期状态：
+
+| 检查 | 命令 | 结果 |
+
+临时验证分支已删除、工作区切回 `braid/pr-15` 且干净；**#15 的 head 未动，仍 `2a51605`**。
+
+**发布计划**：#15 合入 develop 后，我把 `braid/m5-prereq1-tiers` rebase 到新 develop，在新 head 跑 `bash checks/platform-path.sh` + Vitest + 全量 e2e，按 #134 §3 的口径先出证据、后承诺不再改 head，再开小 PR（`--base develop`，packet 沿用 `docs/task-packets/m5-pr-15.md` 的同一任务叙述并新增关键判断），合并即闭合前提 1+2，结果回 Issue #8 记录。
+
+## #166 issue#1 2026-09-29T08:59:43.764538283Z rev2 updated2026-09-29T08:59:50.223965604Z hidden omitted_detail_lines=[]
+写入探针复试（稍后隐藏）
+
+## #167 pr#15 2026-09-29T09:00:08.551089336Z rev1 updated2026-09-29T09:00:08.551089336Z visible omitted_detail_lines=[]
+## 合并回执（@glm-1，回复 #159/#164）：PR #15 已合入 develop
+
+- **合并**：merge commit `2eed74e`，`--match-head-commit 2a51605df8f4c3864079b18b39c85e585b2f31fb`（合并时 head 与 #159 报验提交逐字一致）。
+- **根侧独立验证**（detached `2a51605`，Node 20.19.3）：`bash checks/platform-path.sh` **exit 0 / 75 passed** + backend Vitest **122/122**，与 #159 证据一致；glm-10 #164 的整合事实独立核对亦已确认。
+- **M5 闭环**：Issue #8 可由负责人按流程关闭；两条待复验前提转由小 PR 承载。
+
+@deepseek-11 按 #142/#162/#165 继续：把 `braid/m5-prereq1-tiers`（现 `4614be4`）rebase 到新 develop（`2eed74e`）开小 PR（`--base develop`），先出全量证据（platform-path + Vitest + 全量 e2e）后按 #134 §3 口径承诺 head，合并即闭合前提 1+2，结果回 Issue #8 记录。@glm-10 知悉。
+
+## #168 pr#17 2026-09-29T09:02:34.532004021Z rev1 updated2026-09-29T09:02:34.532004021Z visible omitted_detail_lines=[]
+## 交接点说明（@deepseek-13，创建者 @deepseek-11）
+
+本 PR 由我按 Issue #8 comment #142/#162/#165 的裁决承接：分支 `braid/m5-prereq1-tiers` 已 rebase 到含 M2+M5 的 `origin/develop`（`2eed74e`，无冲突），最终 head 已发布为 **`425b97c`**，工作区干净、我这边不再改写历史。
+
+**当前在途**：正在该 head 上跑完整证据链（backend Vitest / frontend typecheck+build / 全量 e2e / `checks/platform-path.sh` 干净副本）。结果我会紧接着回在本 thread，并按 #134 §3 的口径在证据之后承诺 head 不再前移。
+
+**请先不要重复实现或另起分支**：增量内容（seed 档位账户 + Triage/Maintain describe + 组织仓库 4 条 describe + `docs/seed-data.md` / packet 同步）都已提交在 `425b97c` 上；这几分钟内不新增提交，以保持 head 与证据对应。若你做独立核对，请用 `--match-head-commit 425b97c`。
+
+**合并**：按 Issue #8 comment #162，合并本 PR 即闭合前提 1+2（根不再单独手工复验前提 2，最终整合 PR 全量 E2E 复核）。证据齐备后即可合并——merge 前若发现任何问题，回本 thread 说明。
+
+## #169 pr#17 2026-09-29T09:03:11.33001228Z rev1 updated2026-09-29T09:03:11.33001228Z visible omitted_detail_lines=[]
+## 交接确认与接手（回复 #168，@deepseek-11）
+
+收到 #168 的交接点说明：head **`425b97c`**（与 `origin/braid/m5-prereq1-tiers` 一致）、工作区干净、增量内容已提交完毕。我按 PR 负责人接续。
+
+我的动作（不重复实现、不改写历史）：
+1. 在本工作区对 `425b97c` 跑完整证据链（backend Vitest / frontend typecheck+build / 全量 e2e）；
+2. 在干净副本跑 `checks/platform-path.sh`（逐目录 `npm install` / `frontend build` / `backend HOST/PORT npm run start` + Playwright）；
+3. 独立核对增量 diff（seed 档位账户、Triage/Maintain describe、组织仓库 4 条）与 Issue #8 前提定义一致后，回本 thread 发布结果与 `--match-head-commit` 锚点。
+
+若你的证据链已跑完，请直接回本 thread（同一提交的结果可被我消费，不重复跑）；若尚未完成或已被中断，我这份即作为本 PR 的正式证据。两边结果只要对应同一提交 `425b97c` 均可进入证据链。
+
+## #170 pr#17 2026-09-29T09:03:23.811825216Z rev1 updated2026-09-29T09:03:23.811825216Z visible omitted_detail_lines=[6, 7, 8, 9, 10]
+## 并发协调（回复 #169，@deepseek-13）
+
+我的证据链同一提交 `425b97c` 上已经跑完前两项，正在跑第三项，进度如下（09:03）：
+
+| 检查 | 状态 |
+
+**一个协调请求**：为免同机并发把计时类用例压出噪声（#138/#153 已记录过两次，均为高 load 下的环境抖动而非实现问题），建议你的 `platform-path.sh`（最重的一项，自带构建 + 全量 Playwright）**等我的完成后再启动**，或先只做增量 diff 的独立核对。两边都跑同一提交时结果可互为对照，但并行跑除了上面那份噪声没有额外信息。
+
+我完成后会把四项结果与 `--match-head-commit 425b97c` 立即贴在本 thread；若你的运行先完成，同样贴这里即可，我按同提交结果消费、不重复跑。
+
+## #171 pr#16 2026-09-29T09:03:59.66531142Z rev1 updated2026-09-29T09:03:59.66531142Z visible omitted_detail_lines=[]
+## develop 已前移至 `2eed74e`（PR #15/M5 合入）：合并前需第三次整合重锚（@glm-12；@deepseek-9 知悉）
+
+根核实：PR #15（M5）已合入 develop，merge `2eed74e`；当前 develop head 不再是 `d47a936` 的祖先（`git merge-base --is-ancestor origin/develop origin/braid/issue-6-m4a` 为否）。
+
+安排（与根 Issue 正文「下一步 2」一致）：
+
+1. **@deepseek-9 验收不受阻**：仍可在 `d47a936` 上执行 M4a 验收（三条需求场景 + 必测反例 + 权限 + 只读 + 刷新持久化）。验收针对需求行为，基线整合不改变 M4a 行为面；验收结论对新 head 仍有效（重锚若引入行为变化会另行全量报证）。
+2. **合并前 @glm-12 需第三次整合**：`git fetch origin && git merge origin/develop`（`2eed74e`）。冲突面预计 `backend/src/app.js`（M5 issues 路由 + content/org 路由并存）、`frontend/src/contracts/copy.ts`（M5 issue 文案块 + content/org）、seed（M5 种子与 M2/M3/M4a 共存，幂等键核对），处置口径同 #155：保留双方、语义复核自动合并文件。M5 引入的共享谓词 `permissions.canManageIssueMetadata` M4a 不消费，正常并存即可。
+3. 新 head 上重跑 `PATH=/usr/local/bin:/workspace/template/.factory26/20260929-042409-1202e245/work/bin:/workspace/submission/agent/runtime/bin:/workspace/submission/agent/runtime/node_modules/.bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin pnpm test`、`pnpm e2e`（dist 有变动先重建）、`bash checks/platform-path.sh`，在本 thread 报新 head + 全量结果；根核实后合并 PR #16、关闭 Issue #6。
+
+另：`braid/m5-prereq1-tiers` 前提小 PR 由 @deepseek-11 并行推进（rebase 到 `2eed74e`），与本 PR 无耦合，先后到达即可，不互相阻塞。
+
+## #172 issue#8 2026-09-29T09:04:06.833011843Z rev1 updated2026-09-29T09:04:06.833011843Z visible omitted_detail_lines=[]
+## PR #15 合并接收与 #8 收尾安排（@glm-1 / @deepseek-11，回复 #167）
+
+1. **合并回执接收**：PR #15 已合入 develop（merge `2eed74e`，`--match-head-commit 2a51605`），根侧独立验证与我 #164 的整合核对相互印证；M5 主体（REQ-5-1-1…5-4 交付 1–10）就此进入 develop。
+2. **#8 收尾安排**：正文合并状态已更新。#8 暂保持 open——两条待复验前提（Triage/Maintain 浏览器层、acme-demo/* 组织仓库）按 #162 由小 PR 闭合，且 #167 已指定「结果回 Issue #8 记录」；待 @deepseek-11 的小 PR 合并、两组前提正式闭合后，我在本 thread 做最终记录并按流程关闭 #8（关闭原因将引用本 thread 的证据入口与小 PR 编号）。
+3. **后续验收链不受影响**：develop → main 整合 PR（根组织）在该 PR 上执行覆盖完整需求范围的自动化验收，M5 侧输入 = #159/#164/#167 证据链 + 小 PR 证据；Issue #8 的验收段无需再改。
+
+## #173 pr#17 2026-09-29T09:04:07.440251339Z rev1 updated2026-09-29T09:04:07.440251339Z visible omitted_detail_lines=[7, 8, 9, 10]
+## 协调确认（回复 #170，@deepseek-11）
+
+同意你的并发建议：`checks/platform-path.sh`（最重项）我**不与你并行启动**，等你 e2e + 平台路径结果贴出后我再动。理由与你一致——同提交结果互为对照，并行只增加计时噪声（#138/#153 已两次记录）。
+
+我这边已在本工作区同一提交 `425b97c` 上完成并留存：
+| 检查 | 结果 |
+
+等待期间我做增量 diff 的独立核对（seed 账户与 `repo_grants` 行、Triage/Maintain describe 的角色断言、组织仓库 4 条消费的既有 M2/M3 seed 拓扑、packet 与 `docs/seed-data.md` 同步）。你四项跑完后直接贴本 thread；若其中任一项红，我按同提交重跑该项并定位。
+
+我的进度：**e2e 与平台路径等你的结果**；若你的运行在 30 分钟内没有回音（或收到中断信号），我立即自己启动这两项，不让 head 停在无证据状态。
+
+## #174 pr#17 2026-09-29T09:04:29.169658448Z rev1 updated2026-09-29T09:04:29.169658448Z visible omitted_detail_lines=[]
+## 增量 diff 独立核对（`425b97c` vs `2eed74e`，@deepseek-11）
+
+等待你的 e2e / 平台路径期间，我做了增量 diff 的逐项核对（不重复实现，只判「是否确实闭合 Issue #8 的两条前提」）：
+
+**1. 变更面与声明一致**：6 个文件 260+/11-，恰好为 seed（`backend/src/seed/accounts.js`、`issues.js`）、`e2e/helpers.ts`、`e2e/issues.spec.ts`、`docs/seed-data.md`、`docs/task-packets/m5-pr-15.md`。`backend/src/modules/**`、`frontend/src/**`（含 `copy.ts`）与构建配置**零变更**，与 PR 正文「只加 seed、spec 与文档」一致——前提 1/2 是「无实现缺陷、缺可重复用例」，因此回归面就是既有权谓词 + 新断言本身。
+
+**2. 前提 1 的档位确实落到浏览器层**：
+- `SEED_ACCOUNTS` 增 `pw-triage`/`pw-maintain`，走既有 `INSERT … ON CONFLICT DO NOTHING`（按 username 幂等，不覆盖改过的密码），共享 `SEED_ACCOUNT_PASSWORD`，因此能用真实登录流程进入浏览器层；
+- `seed/issues.js` 用 `ensureGrant`（`INSERT OR IGNORE`）写 `triage`/`maintain` @ acme-docs，取值落在 `repo_grants.role` 的 `CHECK (role IN ('read','triage','write','maintain','admin'))` 内；
+- Triage 断言 = metadata/close 控件可见 + 可关闭且时间线出现 "Closed issue"，同时编辑/评论按钮缺席且评论 API 403；Maintain 断言 = 编辑/评论/关闭可见 + 保存标题后 `<h1>` 更新。这正是 REQ-5-3/5-4 与 docs/architecture.md §4 的「排他集合 triage/maintain/admin，Read 与 Write 只能查看」，与 Vitest 直写 `repo_grants` 的矩阵互为不同层的证据。
+
+**3. 前提 2 消费既有拓扑、且未新增种子行**：核对 `backend/src/seed/governance.js`——alice-dev=org owner（⇒ 各仓库 Admin）、bob-reviewer=org member + `frontend-team` 对 org-handbook 的 write team grant、`org-private` 为 private、carol-writer 无授权，四条断言与 #160 探针的四个场景一一对应；`docs/seed-data.md` 明确登记「不新增种子行」。
+
+**4. 回归面扫描**：`e2e/issues.spec.ts` 既有的可指派断言是存在/缺席型（`dave-reader` 不可指派），无对 option 清单或 issue 行数的精确计数断言；`backend/test/seed.test.js` 由 `SEED_ACCOUNTS.length` 推导，新增账户不改其判据；两个新增 describe 自建唯一标题 fixture（Triage 用例由 owner 建后关闭），不动共享 seed 形状。
+
+**5. 文档同步**：`docs/seed-data.md` 登记两个档位账户、可指派集合（write/triage/maintain 可指派，read/无授权不可）与组织仓库场景；packet 增「前提增量」段并将两条前提标为闭合，与 #162 裁决一致。
+
+结论：增量与 Issue #8 前提定义对得上，无发现需要改动的地方。**我这边暂无新提交**；等你的 e2e + 平台路径结果贴出后我发布锚点与合并动作。

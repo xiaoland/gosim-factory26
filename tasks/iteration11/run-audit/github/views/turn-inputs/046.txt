@@ -1,0 +1,12 @@
+hash 75a0852421328e9c5dca87226171f440196ff797f9c80ef82725b2feec4849a8
+copies 1
+source snapshot-01/braid-state/turns/01a0eba7-5ab4-75a0-b026-a2e7fd8b65de.md
+
+请处理 PR #12。
+
+对象：local/run#12
+
+发生以下更新：
+- 新 PR 工作
+
+使用 `braid pr view 12 --comments` 查看当前内容。

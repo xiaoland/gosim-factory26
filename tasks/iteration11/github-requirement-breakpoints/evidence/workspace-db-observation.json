@@ -1,0 +1,193 @@
+{
+  "source": "runs/analysis/i11-github-e68661975b53/20260930T033923Z/extracted/template/backend/data",
+  "method": "Copied app.db, app.db-wal and app.db-shm to a temporary directory; Python sqlite3 mode=ro. No application execution. No session identifiers or password fields selected.",
+  "limit": "Downloaded workspace state after run; no guarantee of test-lifecycle snapshot or prior requests. Empty sessions do not prove no sign-in ever succeeded.",
+  "queries": {
+    "accounts": {
+      "sql": "SELECT username,email_verified,created_at FROM users ORDER BY id",
+      "rows": [
+        {
+          "username": "alice-dev",
+          "email_verified": 1,
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "username": "bob-reviewer",
+          "email_verified": 1,
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "username": "carol-writer",
+          "email_verified": 1,
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "username": "dave-reader",
+          "email_verified": 1,
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "username": "erin-admin",
+          "email_verified": 1,
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "username": "pw-triage",
+          "email_verified": 1,
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "username": "pw-maintain",
+          "email_verified": 1,
+          "created_at": "2026-09-30 03:10:37"
+        }
+      ]
+    },
+    "sessions_aggregate": {
+      "sql": "SELECT u.username,count(*) count,min(s.created_at) first_created,max(s.created_at) last_created FROM sessions s JOIN users u ON u.id=s.user_id GROUP BY u.id",
+      "rows": []
+    },
+    "repositories": {
+      "sql": "SELECT id,name,visibility,created_at FROM repos ORDER BY id",
+      "rows": [
+        {
+          "id": 1,
+          "name": "acme-docs",
+          "visibility": "public",
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "id": 2,
+          "name": "secret-research",
+          "visibility": "private",
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "id": 3,
+          "name": "acme-docs-fork",
+          "visibility": "public",
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "id": 4,
+          "name": "protected-sandbox",
+          "visibility": "public",
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "id": 5,
+          "name": "org-handbook",
+          "visibility": "public",
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "id": 6,
+          "name": "org-private",
+          "visibility": "private",
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "id": 7,
+          "name": "protection-lab",
+          "visibility": "public",
+          "created_at": "2026-09-30 03:10:37"
+        },
+        {
+          "id": 8,
+          "name": "merge-lab",
+          "visibility": "public",
+          "created_at": "2026-09-30 03:10:37"
+        }
+      ]
+    },
+    "orgs": {
+      "sql": "SELECT name,display_name,created_at FROM organizations ORDER BY id",
+      "rows": [
+        {
+          "name": "acme-demo",
+          "display_name": "Acme Demo",
+          "created_at": "2026-09-30 03:10:37"
+        }
+      ]
+    },
+    "issues": {
+      "sql": "SELECT number,title,state,created_at,updated_at FROM issues ORDER BY id",
+      "rows": [
+        {
+          "number": 1,
+          "title": "Improve onboarding",
+          "state": "open",
+          "created_at": "2024-05-01 09:00:00",
+          "updated_at": "2024-05-01 09:05:00"
+        },
+        {
+          "number": 2,
+          "title": "Legacy welcome text",
+          "state": "closed",
+          "created_at": "2024-05-02 09:00:00",
+          "updated_at": "2024-05-03 09:00:00"
+        },
+        {
+          "number": 3,
+          "title": "Original issue title",
+          "state": "open",
+          "created_at": "2024-05-04 09:00:00",
+          "updated_at": "2024-05-04 09:00:00"
+        }
+      ]
+    },
+    "pulls": {
+      "sql": "SELECT number,title,state,created_at FROM pull_requests ORDER BY id",
+      "rows": [
+        {
+          "number": 1,
+          "title": "Improve onboarding",
+          "state": "open",
+          "created_at": "2026-09-29 17:10:37"
+        },
+        {
+          "number": 2,
+          "title": "Fix search",
+          "state": "open",
+          "created_at": "2026-09-29 19:10:37"
+        },
+        {
+          "number": 3,
+          "title": "Close the legacy welcome text",
+          "state": "closed",
+          "created_at": "2026-09-29 21:10:37"
+        },
+        {
+          "number": 4,
+          "title": "Draft onboarding update",
+          "state": "draft",
+          "created_at": "2026-09-29 23:10:37"
+        },
+        {
+          "number": 1,
+          "title": "Update policy documentation",
+          "state": "open",
+          "created_at": "2026-09-30 01:10:37"
+        },
+        {
+          "number": 1,
+          "title": "Merge the onboarding notes",
+          "state": "open",
+          "created_at": "2026-09-30 01:10:37"
+        },
+        {
+          "number": 2,
+          "title": "Merge the blocked notes",
+          "state": "open",
+          "created_at": "2026-09-30 01:10:37"
+        },
+        {
+          "number": 3,
+          "title": "Merge the review notes",
+          "state": "open",
+          "created_at": "2026-09-30 01:10:37"
+        }
+      ]
+    }
+  }
+}

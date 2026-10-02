@@ -1,0 +1,25 @@
+[
+  {
+    "source": "native/401-2026-09-28T10-44-13-440Z_01a0e79d-7dff-7062-a6f9-e15c250dd7ec.jsonl:L4",
+    "part": 0,
+    "kind": "items_projection_already_read",
+    "chars": 44758,
+    "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+  },
+  {
+    "source": "native/401-2026-09-28T10-44-13-440Z_01a0e79d-7dff-7062-a6f9-e15c250dd7ec.jsonl:L55",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/req5-structure-probe-d7.mjs",
+    "field": "content",
+    "chars": 6576
+  },
+  {
+    "source": "native/401-2026-09-28T10-44-13-440Z_01a0e79d-7dff-7062-a6f9-e15c250dd7ec.jsonl:L172",
+    "part": 0,
+    "kind": "mechanical_write",
+    "path": "/tmp/req5-c-verify-db23b1f.md",
+    "field": "content",
+    "chars": 3595
+  }
+]

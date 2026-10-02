@@ -1,0 +1,12 @@
+hash 77b3cc0831c03f5ddd67586e2f93b882121fce8f74a2ca474d2f897bc8fc6580
+copies 1
+source snapshot-01/braid-state/turns/01a0ec03-cdac-7e33-8668-c5eafb5fe94f.md
+
+请处理 PR #14。
+
+对象：local/run#14
+
+发生以下更新：
+- PR #14 merged at d70e6ac853900c016182019218554c0914874588; origin refs/heads/develop at d70e6ac853900c016182019218554c0914874588 contains it. Local clones can fetch origin to receive it.
+
+使用 `braid pr view 14 --comments` 查看当前内容。

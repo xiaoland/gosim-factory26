@@ -1,0 +1,32 @@
+[
+  {
+    "session": 14,
+    "records": [
+      673,
+      700
+    ],
+    "responses": 14,
+    "usage": {
+      "input": 8633,
+      "cacheRead": 5338112,
+      "output": 2578,
+      "reasoning": 434,
+      "totalTokens": 5349323
+    }
+  },
+  {
+    "session": 36,
+    "records": [
+      210,
+      218
+    ],
+    "responses": 5,
+    "usage": {
+      "input": 5167,
+      "cacheRead": 678464,
+      "output": 519,
+      "reasoning": 95,
+      "totalTokens": 684150
+    }
+  }
+]

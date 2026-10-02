@@ -1,0 +1,18 @@
+[
+  [
+    "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L107",
+    2,
+    "backend/src/domain/structure.ts",
+    "content",
+    7768,
+    "机械源码写入；本轮不逐字读，不据此判代码正确"
+  ],
+  [
+    "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L120",
+    2,
+    "checks/unit/structure.test.ts",
+    "content",
+    7296,
+    "机械源码写入；本轮不逐字读，不据此判代码正确"
+  ]
+]

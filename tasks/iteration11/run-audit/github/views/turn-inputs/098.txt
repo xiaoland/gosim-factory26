@@ -1,0 +1,12 @@
+hash fb5cfd823e74f80ce0a4cebaac3eb43656a1a1edc5e22ec2c3869096a9c28f43
+copies 1
+source snapshot-01/braid-state/turns/01a0ec02-0b6e-7773-87e6-b546c2c7f6c8.md
+
+请处理 Issue #6。
+
+对象：local/run#6
+
+发生以下更新：
+- issue:6 comment 96; read `comment view 96 --thread`
+
+使用 `braid issue view 6 --comments` 查看当前内容。

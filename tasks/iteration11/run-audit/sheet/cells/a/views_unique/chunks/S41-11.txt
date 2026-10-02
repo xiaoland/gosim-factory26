@@ -1,0 +1,136 @@
+['database_id'],'author',c['author']['login'],'work_item',c.get('work_item_number'),'thread_root',c.get('thread_root'),'reply_to',c.get('reply_to'),'resolved',c.get('resolved'))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L161 2026-09-29T07:24:46.454Z message toolResult
+toolResult bash False
+[text]
+id 127 author deepseek-7 work_item 10 thread_root 127 reply_to None resolved False
+【PR 范围追加一项（D-C14，shared 环境中立静态门）+ 接口确认】@deepseek-8
+1. `evaluate(cells, bounds?)` 窄化：**确认采纳**，语义固化见 Issue #1 thread 1 我对 #124 的回复（不传 `bounds` 只用于纯片段求值，不得用于显示/导出路径）。
+2. **D-C14（新增，依据 Issue #1 thread 1 #125，含我侧实测日志 `/tmp/ds7-shared-gate-probe.log`）**：本 PR 追加独立 shared 静态门，单点归属本 PR：
+   - 新增 `shared/tsconfig.json`：`target`/`lib` ES2022、`module` ESNext、`moduleResolution` Bundler、`strict`、`noEmit`、`skipLibCheck`、`allowJs`+`checkJs`、`types: []`、`include: ["*.js", "*.d.ts"]`；
+   - `checks/run-e2e.sh` 在前端 build 前加一行 `pnpm --dir frontend exec tsc -p "$ROOT/shared/tsconfig.json"`；
+   - 证据清单加该命令输出；packet「环境前提」记一条（Node-only 方向 = 静态门 + 浏览器内 e2e 双把关）。
+   - 实测陷阱：`include` 只写 `["*.js"]` 时，`shared/` 无 `.js` 会 `TS18003`；带上 `"*.d.ts"` 后只有 `types.d.ts` → exit 0，含 `process`/`Buffer`/`document` 的 `.js` → `TS2591`/`TS2584`。
+3. 该门**不替代**浏览器内 e2e（前端无 `checkJs`）；建议作为独立小提交，不动引擎代码。
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L161:C1]
+
+## S41:L162 2026-09-29T07:24:52.623Z message assistant
+[thinking]
+#127 is on PR #10 (work_item 10): C-owner's PR-scope addition (D-C14). Not A.
+So this round: #125, #126, #127 — none require A action. #125 explicitly states A needs no action and asks me not to open a base-layer narrow PR (compliance = inaction).
+Should I post anything? I keep concluding "no action". Let me consider whether a reply to #125 is warranted since it contains a direct request addressed to me ("@deepseek-3 请勿并行开基础层窄 PR"). Replying "ack" would be a receipt → skip by policy. However, one might argue confirming avoids another agent waiting on me. But #125 says the ruling is C's and PR #10 owns it; nothing is blocked on my ack. Skip.
+Is there anything about A's own docs to sync? A's Issue #3 description mentions "C 未合入 → 公式单元格导出原文" — still true on develop. No change.
+So report: no action; include the A-relevant state: D-C14 adopted (A's #121 proposal), owned by PR #10, A explicitly no action; C's `evaluate(cells, bounds?)` seal confirmed with `worksheetDisplayValues` always passing structure (matches A-3/A-4); and my earlier verification of C's seam replacement on c340e2e (grid+export via seam incl. error strings, FormulaBar/inline edit still raw, A's e2e transition case flipped to '2').
+Keep it tight.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L162:C1]
+[text]
+**Updates checked**: `issue:1 comment #125`, `#126`, plus `#127` (new since the notice).
+- **#125** (@deepseek-7, reply-to #122) — independently reproduces my `#121` three-program result "逐条吻合" and rules **D-C14**: reject adding `checkJs` to `frontend/tsconfig.json` (its `types: ["node"]` can't be dropped because `frontend/vite.config.ts:11-13` reads `process.env`), adopt the **independent `shared` program** gate, single-point owned by **PR #10**, with a reproducible recipe (incl. the measured `TS18003` trap for `include: ["*.js"]` without `"*.d.ts"`). It explicitly states **A needs no action** and asks me not to open a parallel base-layer narrow PR.
+- **#126** (@deepseek-7, reply-to #124) — accepts `evaluate(cells, bounds?)` for C and fixes its semantics: with `bounds`, single-cell out-of-structure → `#REF!` and ranges clip to structure; without `bounds`, fragment evaluation only, **never for display/export/server paths**, and "唯一生产消费者 `worksheetDisplayValues` 必须始终传 `{rowCount, colCount}`（取 `row_count`/`col_count`，不用导入足迹）".
+- **#127** (on PR #10, thread 127) — carries D-C14 into PR #10's scope for @deepseek-8.
+- #125/#126 confirm the exact A-3/A-4 boundaries I transferred: the seam stays the single display source with structure passed from `row_count`/`col_count` (never the import footprint), and the browser-executed e2e remains mandatory — that is A's integration-PR flip case.
+- I also verified C's in-flight implementation on `c340e2e` (A's carry-over execution): `cellDisplay.ts` now calls `evaluate(worksheet.cells, {rowCount, colCount})` with error strings on the same path; the only consumers remain `Grid.tsx:189` (`text={displayValue ? displayValue(row, col) : raw}`), `WorkbookEditor.tsx:118/345/370` memo, and `WorkbookToolbar.tsx:34` → `worksheetToCsv`; `FormulaBar.tsx` keeps reading raw; and A's `e2e/workbook-lifecycle.spec.ts` transition case is flipped to `'2'` for both grid text and exported CSV (`'2,plain'`). No A-3 boundary violated.
+- Per #125's request I will **not** open a base-layer narrow PR; the gate belongs to PR #10.
+**Action**: none posted (a reply would be a receipt; nothing is blocked on me). Thread 1 stays open.
+**State unchanged**: Issue #3 `CLOSED`, 19 comments (last #99); `origin/develop` `e63efc6`; PR #8 `MERGED`. A's description stays accurate until C merges — its line "C 未合入 → 公式单元格导出原文" still holds for develop, and the flip becomes the integration PR's gate on the final candidate.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L162:C2]
+
+## S41:L163 2026-09-29T07:25:04.499Z message user
+[text]
+- issue:1 comment 128; read `comment view 128 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L163:C1]
+
+## S41:L164 2026-09-29T07:25:04.499Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L164:customType]
+[content]
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L164:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L164:display]
+
+## S41:L165 2026-09-29T07:25:06.399Z message assistant
+[toolCall] bash call_00_ET_Sg2Au71NHHREcvls60gY7481
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 128 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('id',c['database_id'],'author',c['author']['login'],'work_item',c.get('work_item_number'),'thread_root',c.get('thread_root'),'reply_to',c.get('reply_to'),'resolved',c.get('resolved'))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L166 2026-09-29T07:25:06.511Z message toolResult
+toolResult bash False
+[text]
+id 128 author glm-1 work_item 1 thread_root 1 reply_to 109 resolved False
+【契约 v1.4 裁定：C-1 公式引擎接口与引用重写语义】（答 #109；吸收 #110/#111/#115/#116/#118/#119/#120/#121/#122）
+advisor 独立咨询已完成（含 REQ-2-2-1/2-2-2、REQ-4-1-2、REQ-4-2-2、REQ-3-2-1 原文核对），与三方消费方确认（A #110、B #111/#115、基础层 #114/#118/#122）对账后裁定如下。
+## 1. 接口与 `bounds` 细化：批准
+四个签名（`evaluate` / `rewriteRefsOnCopy(+bounds)` / `rewriteRefsOnInsertDelete` / `isNumericCellValue`）与共享实现 `shared/formula.js` + 前端类型化出口按 #109 批准。`bounds` 取**目标工作表** `row_count`/`col_count`（结构事实源），**绝不用** `min_rows`/`min_cols`（A-4 足迹是导出静态下界，非结构事实源——A/B 两侧一致确认）；D 的粘贴若先经结构端点扩张，必须传**扩张后**的结构。发布纪律照 #109：PR #10 首个实现提交即发布签名 + 单测，位置报告回本 thread。
+## 2. C-1a 复制越界 = 整式塌缩为逐字 `=#REF!`：批准
+依据（按权重）：
+1. **ATOMIC 原文是唯一已发布的期望串**（"the target formula bar displays =#REF!"）。从文本机械导出期望值的 harness 只会断言该串；`=#REF!+B1` 这类串没有任何文本依据。
+2. **不存在可行的混合方案**：单引用种子公式 `=C1*2`（置于第 2 行复制到第 1 行）就能区分两种实现——塌缩得 `=#REF!`、按引用得 `=#REF!*2`——混合方案恰在最可能被测的用例上落入失败分支。
+3. **与 REQ-4-2-2 的张力可消解**：粘贴产生的错误格从未被用户"提交"过公式，4-2-2 的"用户提交的原始公式"不管辖此路径；REQ-4-1-2 更具体且显式依赖 4-2-2，由更具体者管辖。
+**不对称是契约义务**：复制路径整式塌缩；**结构插入/删除路径按引用替换**（REQ-2-2-x 的按引用措辞："references that cannot be preserved display an explicit error" / "direct references ... display #REF!"）。两条路径**不得**共用同一套越界处理（防止 D 的实现污染 B 的结构回归）。我方验收脚本按此写：复制端公式栏精确匹配 `=#REF!`，结构端补"删行后 `=A5+1` → `=#REF!+1` 类"按引用替换回归锁定不对称。
+落地细节：塌缩后的 `=#REF!` 作为**公式**持久化（非文本），刷新后网格仍渲染 `#REF!`；用户随后改为合法公式走 REQ-4-2-2 修复流。
+## 3. C-1b 行列结构变更时绝对引用同样平移：批准
+依据：
+1. **内部一致性论证（决定性）**：REQ-2-2-x 同一句要求 "all ... formula references shift downward/right together"（无限定词）**且** "Affected formulas display the adjusted original formulas and correct results"。若 `$A$1` 钉死，数据下移后 `=$A$1*2` 指向已清空的旧位置，结果错误——钉死解读使同一 ATOMIC 自相矛盾；平移解读使两个子句同时成立。
+2. "absolute references remain unchanged" 句法上明确限定于复制（"When a formula cell is copied..."），不能跨需求推广。
+3. 全文 grep："absolute" 仅出现于 REQ-4 文件夹/REQ-3-2-1/REQ-4-1-2 三处，REQ-2-2-x 未提绝对引用——harness 要测该组合须自行发明用例，参照主流行为（平移）概率仍占优。
+**边界语义（防 B/D 实现分叉，一并入契约）**：① 只有指向插入点及之后的引用平移；严格位于插入点之前/之上的引用（含绝对）不动（插第 3 行时 `$A$1` 保持 `$A$1`）；② 删除被直接引用的行/列 → 该引用按引用替换 `#REF!`；③ 结构菜单仅单行/列操作，契约范围限定单行/列，不预设多行语义。
+**配套回归**：种子无 `$` 公式（已 grep 核实）——PR #10 的后端结构重写回归**必须补"绝对引用 + 插/删行"用例**，否则本条无证据支撑。
+## 4. 归属确认（单点）
+- 后端结构端点的引用重写调用归 **PR #10**（B 零新增工作；#111 实测表证明 B 对 raw 是不透明搬运，C-1b 是纯新增行为）。
+- `backend/src/ranges.js` → `shared/a1.js` 再导出：按 **#111 §2 四条兼容契约**执行（`$` 剥除且 `formatA1Range` 不回写 `$`、不可解析原样返回 `{range, changed:false}`、公开名与说明符不变、前端不跟随）；**不得**把带 `$` 的共享函数直接再导出为 `parseA1Range`/`formatA1Range`（#113 D-C7a）。
+- 事务内接缝按 **#111 §3 / #113 D-C9a**：同一事务、以位移前坐标空间读 cells → 重写 → 写回；显式传入 `{kind:'insert'|'delete', at, count}`，不从库状态反推；已删行/列数据不参与重写；重写抛错整事务回滚（含尺寸 UPDATE）。
+## 5. 构建形态 (E) 采认 + #119 待裁项（Node-only 方向的门）
+- **(E) 采认**：`frontend/tsconfig.json` 只加 `"allowJs": true`（其余不动，归 PR #10，PR 说明标注有意触碰基础层脚手架文件）；前端对共享模块一律显式 `.js` 说明符；(B) 形态被 #114/#116 双端实测 TS7016 排除。
+- **环境中立纪律（#118 更正版）**：`shared/*.js` 只用 ES2022 内建。DOM 方向有后端 `checkJs` 自动门（模块经 `store.js`/`ranges.js` 可达）；**Node-only 方向无静态门时，把关 = 浏览器内真实执行的 e2e**（`e2e/formula-engine.spec.ts` + 接缝翻转用例），不以 `typecheck` 绿代替——#119/#120 已落为 PR 执行条件。
+- **#119 §4 裁定**：**不采纳** `frontend/tsconfig.json` 加 `checkJs`——#121 实测（#122 独立复现逐条吻合）证明前端 program 的 `types:["node"]` 因 `vite.config.ts` 不可删，加 `checkJs` 拦不住 Node-only 方向，只扩大 diff 与构建面。**采纳独立 shared program 门，归 PR #10 单点承担**（#122 建议的形态）：新增 `shared/tsconfig.json`（`lib: ["ES2022"]`、`types: []`、`allowJs` + `checkJs`），`tsc -p shared/tsconfig.json --noEmit` 并入 checks（与前端/后端既有配置解耦，diff 独立可审），PR #10 的证据须含该项通过；不动 `frontend/`/`backend/` 既有配置，不重开 PR #2。依据：两个独立实测消除了形态未知；C 全新编写共享模块，JSDoc 标注边际成本低；静态双向门让 Node-only 泄漏在 PR #10 内暴露而非整合期；与 6×26/Y-min 同一"廉价保险优于返工"方法论。
+## 6. 残余风险与复议条款（记录，不消除）
+1. **场景文本损坏**：本裁定基于 ATOMIC 描述 + 概率论证（场景 WHEN/THEN 不可恢复是根本风险来源）；若后续恢复场景文本且与本裁定冲突，**以场景文本为准并复议**。
+2. **静态门覆盖边界**：独立 shared program 只检查被 `shared/tsconfig.json` include 的模块；e2e 未执行到的分支若引用单侧全局仍靠该门捕获——正是采纳它的理由；残余是未入 include 的新文件，PR 审查注意。
+3. **复制出界的另一半方向**：文本只讲 "moves a relative reference outside the worksheet bounds"；裁定 `bounds` = 当前结构，超出当前结构的偏移即出界 → `#REF!`（结构可经 B 端点扩张，扩张后 bounds 随之变化），D 按此实现，不另设"可扩展方向"语义。
+4. 引擎自研（D3），不存在 HyperFormula 原生行为与塌缩语义的冲突问题。
+@deepseek-8 PR #10 按本裁定 + #107 设计继续；接口发布后在本 thread 报告位置。@deepseek-3 @deepseek-6 @deepseek-2 上述与你们各侧确认一致，无新增动作。
+[DUPLICATES: 19 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L166:C1]
+
+## S41:L167 2026-09-29T07:25:30.933Z message assistant
+[thinking]
+Comment #128 is the root owner @glm-1's ruling (契约 v1.4) answering #109, absorbing all the confirmations including my #110 and #121. It explicitly addresses me at the end: "@deepseek-3 @deepseek-6 @deepseek-2 上述与你们各侧确认一致，无新增动作."
+Key A-relevant points:
+1. §1 approves the four signatures; `bounds` = target worksheet `row_count`/`col_count`, never `min_rows`/`min_cols` (A-4 footprint is export static lower bound, not structure source) — A/B both confirmed. → consistent with A's contract.
+2. §5 Item: (E) form approved with `allowJs: true` only; #119 §4 ruling: **does not adopt** frontend `checkJs`; **adopts the independent shared program gate owned by PR #10** — this is based on my #121 measurement. Ruling cites "依据：两个独立实测消除了形态未知" — my #121 and #122/#125.
+3. §5 also: "Node-only 方向无静态门时，把关 = 浏览器内真实执行的 e2e（`e2e/formula-engine.spec.ts` + 接缝翻转用例）" — the "接缝翻转用例" is A's flipped case. Good.
+4. Final line: no new action for A/B/base.
+So: the ruling is final and A has no action. My #121 evidence was decisive for #119 §4 — good.
+Now, as A's owner, is there anything to update in Issue #3's description? The ruling doesn't change A's contract. A's description references contract v1.3 as authoritative; now there's a v1.4 ruling (approving C-1, adopting (E) + shared gate). Does A's description need a pointer to v1.4? A's description mentions contract increments A-1…A-4 and the v1.3 seven items. v1.4 doesn't change A's items; but the frontend `allowJs: true` line (option E) does change A's verified build surface, and the ruling confirms it's owned by PR #10.
+Hmm — A's description says under 未决/假设: "**C 未合入 → 公式单元格导出原文 ... ② 整合 PR 带「公式单元格导出 = 计算结果」门禁，翻转 e2e/workbook-lifecycle.spec.ts:375-386**". Given C already flipped it in branch c340e2e and v1.4 now rules on the flip semantics + the browser e2e gate, is A's description stale? It says "C 未合入" which is still true for develop.
+Is there value in a narrow update to A's description recording: (i) contract v1.4 ruling exists (Issue #1 thread 1 comment #128) and confirms A-3/A-4's bounds semantics; (ii) the A-3 flip is already implemented in C's PR #10 (`c340e2e`), so the integration PR's role is to run/verify it on the final candidate; (iii) frontend gains `allowJs: true` via PR #10 (A's verified build config changes), and the environment-neutrality gate is the shared program + browser e2e.
+This is arguably a legitimate "keep current authority discoverable" update, since a future reader of Issue #3 (integration PR owner) benefits from one place: the v1.4 ruling is a *contract* that governs A's transferred prerequisite. But the guidance also says don't pile progress into the description; the description already points to Issue #1 thread 1 as the contract thread and to Issue #5 for C's obligations.
+Hmm. Let me weigh: A's description currently says "**C 未合入 → 公式单元格导出原文（e2e 过渡断言已标注必须翻转），这是本 Issue 唯一的未满足前提，已随 #167 关闭转交**". With C's branch already flipping it and v1.4 ruling confirming the semantics, a small, precise update to that paragraph would prevent an integration PR reader from re-deriving it: add the fact that (a) v1.4 = Issue #1 thread 1 comment #128 confirms bounds=structure/never footprint and the browser e2e as the Node-only gate; (b) C's PR #10 (c340e2e) already replaced the seam and flipped A's transition assertions, so the integration gate = run the suite on the final merged candidate. That's stable information, not daily progress, and it directly serves the handoff.
+But careful: A's description says the issue is CLOSED with "遗留义务已转交" and mentions "① C（#5）替换 cellDisplay.ts ... ② 整合 PR 带门禁". Adding a line that C's branch has already done the flip is progress-ish but materially changes what the integrator must do (verify vs. implement+flip). I think it's a justified, narrow update — it keeps the handoff accurate.
+Hmm, but is it premature? C's PR #10 is open and unverified; if C's implementation changes or fails, the description statement "C 已在 c340e2e 替换接缝并翻转断言" would remain true as a fact about a commit, but could mislead. I can word it as: "C 侧已在 `origin/c-issue-5-formula-engine` 的 `c340e2e` 替换接缝并翻转该断言（我在该提交上核对了 A-3 边界：FormulaBar/内联编辑仍读 raw，网格与导出共用接缝）；整合 PR 的门禁 = 在最终候选上复跑并对齐 v1.4（Issue #1 thread 1 comment #128）."
+Since the guidance says "每个 Issue 负责人建立或接续本任务的 task packet ... 并在 Issue 中留下入口" and "交接前核对当前说明", and given I'm the Issue owner whose delivered spec file was modified by another sub-issue, recording this is reasonable and low-risk.
+Wait — but the A-side description is the Issue's stable description. Modifying it requires `braid issue edit 3`. Is there risk in editing a CLOSED issue's description? No, it's allowed. And the guidance: "description 保存当前任务说明与稳定决定，comment 承载讨论、证据和增量进展" — hmm, it says progress goes in comments, stable decisions/instructions in description. The fact that "C has flipped A's assertion in branch X, so the integration gate is a verification step" is arguably progress. But the *stable* part is: "the remaining prerequisite is C's seam replacement + the integration PR's browser gate; regardless of where the flip happens, the gate is the flipped case on the final candidate" — which is roughly what's already written.
+Given the guidance explicitly warns against piling incremental progress into the description, and A's existing text remains accurate for develop, I lean toward NOT editing. Hmm, but there's a genuine accuracy nuance: existing text says "整合 PR 带...门禁，翻转 e2e/workbook-lifecycle.spec.ts:375-386" — after C merges, the flip is already there, so "整合 PR 翻转" would be wrong; the integrator would discover the assertion already flipped and might wonder. But that's the future state; the description will then be read as "the flip must be in place by the integration gate".
+Actually, let me reconsider: I could make a small, decision-stable wording change: replace "翻转 `e2e/workbook-lifecycle.spec.ts:375-386`（用例 ...，行内注 `PRE-C TRANSITION`）" with "使该用例断言计算结果（C 侧已在其 PR 分支 `c340e2e` 完成替换与翻转；整合 PR 只需在最终候选上复跑该门禁，见契约 v1.4 = Issue #1 thread 1 comment #128）". This is a factual, stable handoff clarification.
+Is it worth the edit? The integration PR owner (likely @glm-1 or a member) reads A's description? More likely they read the integration PR's own instructions. Meh.
+Middle path: rather than editing the description, I could record the verification + v1.4 pointer as a comment on Issue #3 (which is what comments are for: evidence and incremental progress). Issue #3's thread 27 (#27/#33/#36) is the design thread; #92/#99 were closure/correction comments. Adding a short comment to Issue #3 like: "【A-3 前置履行状态（v1.4 后）】C 侧分支 c340e2e 已替换接缝并翻转 A 的过渡断言；我在该提交上核对了 A-3 边界（...）；契约 v1.4 (#128) 采纳 #121 的实测并确认 bounds/足迹边界；A 侧无待办，整合 PR 门禁 = 在最终候选复跑。" — This gives the integrator a current entry point on Issue #3. Hmm, but is it needed? Issue #3 is closed; the description's 未决/假设 section points to the obligations. The integration PR owner can check C's PR.
+The guidance: "没有新事实或新决定时，无需发布重复进度总结" — here there IS a new fact (v1.4 ruling + C's branch flip state + my verification of A-3 boundary). And it affects A's handoff accuracy. But is it "重复"? Partially.
+I think a short comment is defensible and useful. But I've been mostly silent across rounds, which is appropriate. Let me consider the risk of noise: A's issue currently has 19 comments; adding one substantive status/verification note is fine and arguably expected of the owner when the transferred prerequisite moves.
+Hmm, but careful: guidance also says "未决分歧、风险和验收前提保持可见" and "问题解决后先保留仍需使用的结论和证据入口". A's remaining prerequisite is *being fulfilled*; recording the verified state on the final candidate is the integration PR's job, not mine now (unmerged WIP).
+Let me decide: **do not post now**. Reasons: (1) v1.4 explicitly says A has no new action; (2) C's branch is unverified WIP — recording it as evidence would be premature and might mislead; (3) the flip becomes verifiable evidence only on the merged candidate; (4) Issue #3's description remains accurate for develop. My verification work stays available for the integration phase; if the integration PR needs the A-3 boundary check, I can provide it then (or the integrator re-runs the suite).
+Hmm, but the value of the A-3 boundary check I did (FormulaBar still raw, both consumers via seam) is real and cheap to lose. Recording it once, with commit and exact file lines, would preserve it across context boundaries — that's exactly the task-packet discipline: "把当前判断、证据与下一步"保存. But the task packet lives at `tasks/issue-3-a/packet.md` in the repo (on branch braid/issue-3-a, which A's PR owner owns; my description says its "下一步"两条已接管,不再更新). Writing to the packet would require a commit/push to braid/issue-3-a — A said "不再向 braid/issue-3-a 追加提交". Hmm.
+Alternative: keep the record in a comment on Issue #3 (cheap, discoverable, no branch churn). I think that's the best home if I record anything.
+Let me think about what the user/harness expects: it keeps handing me contract-thread updates and I keep replying "no action". For a ruling that credits my measurement (#121) and reaches a final v1.4 decision, a brief acknowledgment isn't needed... but recording the A-side state transition IS a legitimate owner action: A's transferred prerequisite has an implementation on C's branch, and the ruling pins the semantics; the Issue's "未决/假设" entry says "C 未合入 → ... 这是本 Issue 唯一的未满足前提". That entry is now partially superseded (implementation exists in PR #10; the gate moved to "run on final candidate"). Keeping the description honest would be a narrow edit.
+I'll take the middle route: post one concise comment on Issue #3 (thread 27, reply-to #99 or new top-level?) recording:
+- v1.4 ruling pointer (#128) and that it confirms A-3/A-4 semantics I recorded (`bounds` = structure, never footprint) and adopts the independent shared gate + browser e2e based on my #121 measurement;
+- the A-3 fulfillment state on C's branch `c340e2e`: seam replaced, error strings on the same path, FormulaBar/inline edit still raw, both consumers unchanged, A's transition assertions flipped to `'2'`/`'2,plain'`; so the integration-PR gate = re-run that flipped case on the final candidate (no further A-side edit needed);
+- A-side no action; verified facts to be re-confirmed on the merged candidate.
+Where to post: Issue #3 thread 27 (the design/decision thread) — reply-to #99? #99 is my correction comment about C assignment. Hmm, thread 27 contains #27/#33/#36/#62/#64/#74/#80/#81/#82/#85/#86/#88/#89/#91/#92/#95/#97/#99. A status comment about the transferred prerequisite fits thread 27 (the design/authority thread) and keeps discussion threaded. But comments 88/92/99 are the closure/verification ones. I'll reply-to #92 (the closure decision) or post top-level.
+Actually, simpler and cleaner: reply-to #99 (my last correction in that thread). Hmm, #99 thread root? Let me check: description says "更正与依据见本 Issue comment #99". Thread could be 27.
+Let me check comment #99's thread root before posting.
+Hmm, wait. Let me reconsider once more whether to post at all. Arguments against: the Issue is closed; the integration PR will run the suite; v1.4 says no new action; noise hurts. Arguments for: preserves my A-3 boundary verification and the accurate gate description across context boundaries; the description's "C 未合入" premise is now materially advanced (C's branch exists with the flip).
+I think a *short* comment is net positive, especially because the description's "未决/假设" currently frames C's whole obligation as pending, while the ruling (v1.4) and the branch state make the remaining obligation a verification step. But careful to not overclaim: C's PR is unmerged/未验收, so the prerequisite is NOT yet satisfied on develop. I'll say exactly that.
+Let me check comment 99's thread root and then post.
+Actually — one more consideration on the description: should I also narrow-edit the description's "未决/假设" line? The guidance: "再窄改仍含有效信息的旧说明并留下更正链接". If my new comment supersedes part of the description, a narrow edit + link is the prescribed pattern. The description line "**C 未合入 → 公式单元格导出原文（e2e 过渡断言已标注必须翻转），这是本 Issue 唯一的未满足前提，已随 #167 关闭转交**" — I could append "; 履行状态与 A-3 边界核对见 comment #N (C 的 PR #10 分支已替换接缝并翻转断言，待合入后由整合 PR 在最终候选复跑)". That's a one-line addition with a link, consistent with the pattern. And it doesn't remove valid info.
+Hmm, is that "progress in description"? It's a status entry point; the description already has similar entries ("PR #8 已合入 develop...").
+I'll do both: post the verification comment, then narrow-add a pointer line in the description's 未决/假设 A-3 sentence with a link to the comment. Keep the edit minimal.
+Wait — but the description says "不再向 `braid/issue-3-a` 追加提交" — that's about git branch, not the issue description. Editing the Issue description is fine.
+Hmm, let me reconsider the description edit once more: is it needed for "接手者能找到当前有效的要求、决定和未决问题"? A's description's A-3 paragraph already tells the integrator: C replaces

@@ -15,7 +15,19 @@ Explorer、executor、advisor 直接取得 exploration-tools 指引；SVC 组还
 
 2026-10-01 的 Debian-Rebuild 本地接续由 Mac 保存控制器、冻结输入和网关凭据，生成容器通过 `development-1` 在远端 Docker 执行。网关与每个 run 的凭据绑定目录必须在同一文件系统；使用 Mac 原生 Python 环境时须安装对应平台的 LiteLLM，不能复用 Linux 的 Python 扩展。`--listen-host` 可将网关监听限定到已验证可达的 Mac 地址，`--container-host` 只声明容器使用的地址。供应商凭据仍只由网关读取，容器取得独立临时 token；原始请求参数沿用冻结配方。远端容器的 OTLP 采用本地 loopback 收集并随 workspace 回收，不把 WSL bridge 地址当作 Mac collector。
 
-新实例可重复传入 `--model-vendor MODEL=VENDOR`，显式增加或覆盖该实例的供应商路由；供应商为 `GLM`、`KIMI`、`DEEPSEEK` 或 `QWEN`，读取同名前缀的 `*_BASE_URL` 和 `*_API_KEY`。模型ID保持原样，不自动替换别名，未覆盖项沿用历史默认。启动前只读核实供应商当前模型目录；目录存在不等于推理参数、工具或视觉能力已取得生成反馈。I13 本次自有通道显式使用 `glm-5.3=GLM` 和 `deepseek-v4-flash=QWEN`，保留原有 Flash GLM 与 K3 路由。
+新实例从 [`harness/model-gateway.json`](../../harness/model-gateway.json) 的原生 LiteLLM `model_list` 选择路由；同一稳定 alias 可以保留多个候选，但必须有且只有一个 `factory26_default`，或显式传入 `--route ALIAS=DEPLOYMENT_ID`。deployment ID 写在 `model_info.factory26_deployment_id`，上游 wire model、套餐、供应商和 endpoint 环境变量也在同一条目录记录中。`--prepare-only` 只物化配置并读回 `routing-snapshot.json`，不启动 LiteLLM；实例随后保存 catalog/config SHA，wrapper 会拒绝配置漂移。旧 `--model-vendor` 参数已拒绝，避免静默套用历史默认。当前目录不包含被排除的 Kimi HighSpeed 或 DeepSeek V4.1 Flash，也不虚构千帆未知 wire ID。
+
+schema1 runner 通过 `FACTORY26_EXP_ATTEMPT_DIR`、`FACTORY26_EXP_ATTEMPT_ID` 和 `FACTORY26_EXP_INCARNATION` 注入执行身份；网关 wrapper 优先消费这三个变量，并保留旧 `EXPERIMENT_RUN_ID/DIR` 兼容。binding 与请求日志分别记录 attempt、incarnation 及可选的 experiment/legacy run 字段，OTLP 导出按 attempt 或旧 run ID 过滤，不把 attempt 冒充 experiment。
+
+只准备方舟 Flash 路由时可执行：
+
+```sh
+python3 scripts/hackathon_gateway.py --runtime <codex-runtime> --state <new-state> \
+  --secrets .secrets/models.env \
+  --route glm-5.3-flash=ark-coding-plan-glm-5.3-flash --prepare-only
+```
+
+`--prepare-only` 只生成并读回配置；正式启动必须使用另一个全新的 `--state`，不能在已有 `gateway.json` 的 prepare 目录上启动或覆盖。
 
 本实验不另设输出长度预算。网关移除客户端的 `max_tokens`、`max_completion_tokens`、`max_output_tokens`，由供应商决定默认行为。Pi 0.85.1 即使省略 descriptor 的 `maxTokens` 仍会自动发送 16384，因此必须在 API 边界移除，单删配置无效。[hackathon_models.json](../../variants/native-hackathon/hackathon_models.json) 只供 Pi 声明上下文信息，网关不再读取参赛包的模型文件。`request-metadata.jsonl` 分别记录规范化参数和 LiteLLM 转换后的上游参数，可检查兼容层是否重新补入上限。修改运行策略时使用新网关实例和新包，保留既有实验的参数记录。
 

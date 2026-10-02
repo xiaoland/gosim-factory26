@@ -1,16 +1,16 @@
 # I13-2：内存压力、协作材料与过程验收
 
-2026-10-01开始，2026-10-02更新。I13-2处理内存压力、协作材料归属和过程验收。当前Flash/Sheet已完成评分、Flash/GitHub继续官网接续，两本地GLM已停止并完整选择性保全；新增恢复暂挂。当前范围见下节，历史部署/监控调整按日期保留；整体实验关系归[实验树](../experiments.md)。
+2026-10-01开始，2026-10-02更新。I13-2处理内存压力、协作材料归属和过程验收。当前状态只读入口归[实验记录](../experiments.md)：Flash/Sheet已有74/100正式结果，Flash/GitHub 的热恢复来源已取消且没有替代 run 身份；两项 GLM 源容器已退出并完成选择性保全。本 packet 不代表实时物理状态，也不授权新恢复、收费请求或供应商切换。全局“所有实验暂停”来自 I14 接续 packet 的最新用户指示；这里仅记录 I13 已保存事实，不据此把 GLM 只读边界扩展为 I13 所有运行。
 
 ## 当前接续边界（2026-10-02 本次整理）
 
-用户最新要求先整理实验设施重构，并指出“强制ARC”范围过大、GLM-5.3应走Qwen。新增冻结、prepare、launch及模型请求暂挂；已有Flash/GitHub和采集继续，用户的baseline暂停保持。共享恢复worker及新的GLM只读worker都已结束本阶段等待，旧启动授权不自动接续。本次只整理任务状态，没有改活动供应商、cleanup源或新增收费尝试。
+用户最新要求先整理实验设施重构，并指出“强制ARC”范围过大、GLM-5.3应走Qwen；随后全局暂停所有实验。I13-2 本轮只做只读整理，GLM 两题交接见 [GLM 交接](glm-final-recovery.md)；Flash/GitHub 的最新事实仍以实验记录为准。本次没有改活动供应商、cleanup源或新增收费尝试。
 
-Flash/Sheet已完成正式74分和独立过程分析；Flash/GitHub `7e8ec62670df` 在原collector 12:30 CST批次为RUNNING，原native续接与新工具调用已直接核对，评分未开始。保留现有自有ARC key / self_funded / 比赛额度关闭身份，不为本次方案修改活动run。
+Flash/Sheet已完成正式74分和独立过程分析；Flash/GitHub `7e8ec62670df` 的最新可用采集见 [实验记录](../experiments.md)，其热恢复来源随后已取消。原native续接与新工具调用的历史证据保留，供应商、费用和运行身份不由本 packet 改写。
 
 WSL恢复后，GLM/GitHub `a94a67b4b3d85b` 和GLM/Sheet `8046cfb0695023` 两源已实际stopped。GitHub7906项、Sheet10398项选择性完整材料核验完成；原volume/helper/source、曾超时partial和具体错误保留。source-agent.zip与可恢复workspace ZIP分别记录，不能混称。canonical为 `runs/iteration13/i13-2-20261001/arc-hot-recovery-20261002/handoff-state.json`，只读新增核对归[GLM交接](glm-final-recovery.md)。后者发现停止回执schema与packager不兼容、三个alive owner reservation仍占槽；没有修改原件、释放准入或创建新的派生恢复输入。
 
-此前全部ARC的明示授权是历史冻结依据；最新Qwen指示是GLM-5.3下一配方修正。I14四入口和共享恢复固化ARC-only的实际代码耦合归[设施重构](../../experiment-dx-review/packet.md)方案owner收回，供应商、凭据来源与官网费用模式分别配置。尚未实施这项源码修正或完整新配方，不能把旧ARC制品标为已走Qwen。后文操作日期段落保留历史事实，完整当前树归[实验记录](../experiments.md)。
+此前全部ARC的明示授权是历史冻结依据；后续模型/供应商决定归所属实验 owner，不能从 I14 指令推断 I13 的实时配方。I14四入口和共享恢复的设施耦合归[设施重构](../../experiment-dx-review/packet.md) owner；后文操作日期段落仅保留历史事实，完整当前树归[实验记录](../experiments.md)。
 
 ## 授权与目标
 
@@ -18,7 +18,7 @@ WSL恢复后，GLM/GitHub `a94a67b4b3d85b` 和GLM/Sheet `8046cfb0695023` 两源�
 
 这条指示授权落实[已讨论的 OOM 方案](../../experiment-signal-diagnostics/packet.md)、调查和修正本次协作缺陷、用已有真实过程验收 I13，并将完成的改进应用到可确认的暂停检查点。恢复继续使用对应 I13 模型与费用配方，保留 Git、Braid 与原生会话。它不改变官网新收费尝试的边界，不以自动重试消耗额度换取进展。Console 的独立改进和部署仍由原会话负责。
 
-新增官网Sheet授权原话：“那我们将该运行取消，然后等待 I13-2 一起热修复来恢复吧”。取消已实际执行并确认，后续Sheet接续纳入本次I13-2范围；该范围现已完成改进、冻结、真实prepare-only并启动唯一新执行；不重复重试，不据此恢复已失败的官网GitHub。
+历史授权原文：“那我们将该运行取消，然后等待 I13-2 一起热修复来恢复吧”。官网 Flash/Sheet `691028015e69` 已于21:14:51 CST取消，实际POST响应及独立GET确认 `CANCELLED`；尚未评测，实际计费字段暂未返回。最新工作区已取得HTTP200并校验，来源SHA256 `0e9c2798c80ab56641f7937aed861416d164dd495a716378e702975a795fa13b`，原件与取消/下载回执归 `runs/iteration13/hosted-recovery-20261001/sheet-user-cancel/`。本次指示将该Sheet纳入I13-2完成后的恢复范围；当时等待改进及冻结来源。该段仅保留历史授权与证据，不由本段自动启动新执行。
 
 用户给出的协作事实入口是 GLM/Sheet `glm-root--hackathon--sheet-a45a22ec644204` 的 PR 2 与 Issue 1。PR description 中疑似重复了应由 task packet、durable docs、AGENTS.md 承接的内容；根讨论中存在过时评论。用户明确预期：隐藏根评论时，它下面所有子评论也隐藏。调查需要区分实际材料重复、技能未被采用、提示冲突、对象语义与展示差异，不能仅凭篇幅判断协作失败。
 

@@ -19,3 +19,14 @@
 - GitHub验收方案包含分层检查、初始状态与持久化、精确角色/名称断言，并明确不以实现反改判据。基础 PR packet 有检查提交与结果记录；尚未独立复验这些应用检查，不能替代最终官方评分。
 
 [develop 完整目录快照](develop-trees-20260929.md)。增量采集脚本与部署记录由对应工作单元维护。
+
+## 2026-09-29 14:34 增量复核
+
+hotfix-02于14:31接续；以下区分旧运行补读与接续后的事实。
+
+- sub-agents：补读确认Sheet Issue #3于13:52明确委派advisor与vision，Issue #4于13:54委派vision。有图片路径、需求背景和具体观察问题，已超出仅根会话使用角色的情况。未完成所有返回结果→采用动作的逐项闭合；本批未确认explorer/executor的实际委派，不等于全程未使用。
+- Issue流程：Sheet基础PR已合，子Issue #3/#4形成设计并分别交给PR #8/#9。GitHub身份PR #12已合、Issue #3已关闭；组织模块进入Issue #4/PR #13。GitHub已有1条hidden、5条resolved；Sheet仍0/0，存在多版契约评论叠加。
+- 一般流程：Sheet PR #8发布候选d536aa2，报告backend47/frontend43、E2E13通过且记录git_head/dirty/exit；这些是Agent报告，未由主线独立重跑。14:34根comment #64直接核对候选，指出遗漏契约v1.3的min_rows/min_cols，要求PR补齐，说明局部PASS未被自动当整体完成，同时暴露旧判据/新契约不同步。继续跟踪该反馈是否被正确消费。
+- skills：已有读取svc-design/implementation/task-packet以及agent-browser与候选库技能的证据；Sheet最终选择未采用Handsontable/HyperFormula，不能算未读取。文档/packet/分层检查有实际产物，但仍不足以将每项产物归因某个技能；svc-documentation、svc-verification的显式使用证据待补齐。
+
+GitHub PR #11对根工作区47c453e/15c79a4的核对跨越本次恢复边界，旧产物已在14:17评论出现。不能据14:33的新回复就判断热修复后再次发生同一越界；需查实际写入时点与当前负责人动作。

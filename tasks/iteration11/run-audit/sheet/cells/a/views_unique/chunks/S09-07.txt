@@ -1,0 +1,198 @@
+atchObject({ rowCount: 6, colCount: 26, cells: [] });\n+402 \n+403     const small = await app\n+404       .post('/api/workbooks/import')\n+405       .send({ fileName: 'small.csv', csv: 'a,b\\nc,d' });\n+406     expect(small.body.worksheets[0]).toMatchObject({ rowCount: 6, colCount: 26 });\n+407     expect(small.body.worksheets[0].cells).toEqual([\n+408       [0, 0, 'a'],\n+409       [0, 1, 'b'],\n+410       [1, 0, 'c'],\n+411       [1, 1, 'd'],\n+412     ]);\n+413   });\n+414 \n+415   it('grows the structure when the CSV is larger than the default', async () => {\n+416     const app = appFor(freshDb());\n+417     const rows = Array.from({ length: 10 }, (_unused, row) =>\n+418       Array.from({ length: 30 }, (_unusedCol, col) => `r${row}c${col}`).join(','),\n+419     );\n+420     const res = await app\n+421       .post('/api/workbooks/import')\n+422       .send({ fileName: 'big.csv', csv: rows.join('\\n') });\n+423     expect(res.status).toBe(201);\n+424     expect(res.body.worksheets[0]).toMatchObject({ rowCount: 10, colCount: 30 });\n+425     expect(res.body.worksheets[0].cells).toHaveLength(300);\n+426   });\n+427 \n+428   it('falls back to the default name when the file name has nothing left after .csv', async () => {\n+429     const app = appFor(freshDb());\n+430     const res = await app.post('/api/workbooks/import').send({ fileName: '.csv', csv: 'a' });\n+431     expect(res.status).toBe(201);\n+432     expect(res.body.name).toBe('Untitled spreadsheet');\n+433   });\n+434 \n+435   it('allows two workbooks with the same name', async () => {\n+436     const app = appFor(freshDb());\n+437     await app.post('/api/workbooks/import').send({ fileName: 'dup.csv', csv: 'a' });\n+438     const second = await app.post('/api/workbooks/import').send({ fileName: 'dup.csv', csv: 'b' });\n+439     expect(second.status).toBe(201);\n+440     const list = await request(app).get('/api/workbooks');\n+441     expect(list.body.filter((/** @type {{ name: string }} */ w) => w.name === 'dup')).toHaveLength(2);\n+442   });\n+443 \n+444   it('rejects invalid CSV with the exact message and persists nothing', async () => {\n+445     const db = freshDb();\n+446     const app = appFor(db);\n+447     const workbooks = countRows(db, 'workbooks');\n+448     const worksheets = countRows(db, 'worksheets');\n+449     const cells = countRows(db, 'cells');\n+450 \n+451     const res = await app\n+452       .post('/api/workbooks/import')\n+453       .send({ fileName: 'broken.csv', csv: 'a,b\\n\"unterminated,c' });\n+454     expect(res.status).toBe(400);\n+455     expect(res.body).toEqual({\n+456       error: { code: 'INVALID_CSV', message: 'Invalid CSV file format. Import failed.' },\n+457     });\n+458 \n+459     expect(countRows(db, 'workbooks')).toBe(workbooks);\n+460     expect(countRows(db, 'worksheets')).toBe(worksheets);\n+461     expect(countRows(db, 'cells')).toBe(cells);\n+462     const list = await request(app).get('/api/workbooks');\n+463     expect(list.body.map((/** @type {{ name: string }} */ w) => w.name)).not.toContain('broken');\n+464   });\n+465 \n+466   it('validates the request body shape with the uniform error format', async () => {\n+467     const app = appFor(freshDb());\n+468     const missingName = await app.post('/api/workbooks/import').send({ csv: 'a' });\n+469     expect(missingName.status).toBe(400);\n+470     expect(missingName.body.error.code).toBe('INVALID_BODY');\n+471     expect(missingName.body.error.message).toBe('fileName must be a string');\n+472 \n+473     const missingCsv = await app.post('/api/workbooks/import').send({ fileName: 'a.csv' });\n+474     expect(missingCsv.status).toBe(400);\n+475     expect(missingCsv.body.error.message).toBe('csv must be a string');\n+476 \n+477     const notAnObject = await app.post('/api/workbooks/import').send([1, 2]);\n+478     expect(notAnObject.status).toBe(400);\n+479     expect(notAnObject.body.error.code).toBe('INVALID_BODY');\n+480   });\n+481 });\n+482 \n 351 describe('unknown API routes', () => {\n 352   it('use the uniform error body', async () => {\n 353     const res = await request(appFor(freshDb())).get('/api/does-not-exist');\n 354     expect(res.status).toBe(404);\n     ...", "firstChangedLine": 351, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/app.test.js\n@@ -347,8 +347,140 @@\n     expect(sheet1.cells).toContainEqual([0, 0, 'Region']);\n   });\n });\n \n+describe('POST /api/workbooks/import', () => {\n+  it('creates a workbook named after the file and imports every row and column', async () => {\n+    const app = appFor(freshDb());\n+    const res = await app\n+      .post('/api/workbooks/import')\n+      .send({ fileName: 'Sales Report.CSV', csv: '地区,销售额\\n华东,1200\\nNorth,800' });\n+    expect(res.status).toBe(201);\n+    expect(res.body.name).toBe('Sales Report');\n+    expect(res.body.worksheets).toHaveLength(1);\n+    const sheet = res.body.worksheets[0];\n+    expect(sheet).toMatchObject({ name: 'Sheet1', isActive: true });\n+    expect(sheet.lastSelection).toMatchObject({ r1: 0, c1: 0, r2: 0, c2: 0 });\n+    expect(sheet.cells).toEqual([\n+      [0, 0, '地区'],\n+      [0, 1, '销售额'],\n+      [1, 0, '华东'],\n+      [1, 1, '1200'],\n+      [2, 0, 'North'],\n+      [2, 1, '800'],\n+    ]);\n+\n+    const list = await request(app).get('/api/workbooks');\n+    expect(list.body.map((/** @type {{ name: string }} */ w) => w.name)).toContain('Sales Report');\n+\n+    const snapshot = await request(app).get(`/api/workbooks/${res.body.id}`);\n+    expect(snapshot.body.worksheets[0].cells).toEqual(sheet.cells);\n+  });\n+\n+  it('imports quoted commas, escaped quotes, in-field newlines and empty fields', async () => {\n+    const app = appFor(freshDb());\n+    const csv = 'a,\"b,c\",\"d\"\"e\",\"f\\ng\"\\n1,,\"\",\"x\"\\n';\n+    const res = await app.post('/api/workbooks/import').send({ fileName: 'tricky.csv', csv });\n+    expect(res.status).toBe(201);\n+    // `raw === ''` is not persisted (same convention as every write path).\n+    expect(res.body.worksheets[0].cells).toEqual([\n+      [0, 0, 'a'],\n+      [0, 1, 'b,c'],\n+      [0, 2, 'd\"e'],\n+      [0, 3, 'f\\ng'],\n+      [1, 0, '1'],\n+      [1, 3, 'x'],\n+    ]);\n+  });\n+\n+  it('keeps the default 6x26 structure for empty and small CSVs', async () => {\n+    const app = appFor(freshDb());\n+    const empty = await app\n+      .post('/api/workbooks/import')\n+      .send({ fileName: 'empty.csv', csv: '' });\n+    expect(empty.status).toBe(201);\n+    expect(empty.body.worksheets[0]).toMatchObject({ rowCount: 6, colCount: 26, cells: [] });\n+\n+    const small = await app\n+      .post('/api/workbooks/import')\n+      .send({ fileName: 'small.csv', csv: 'a,b\\nc,d' });\n+    expect(small.body.worksheets[0]).toMatchObject({ rowCount: 6, colCount: 26 });\n+    expect(small.body.worksheets[0].cells).toEqual([\n+      [0, 0, 'a'],\n+      [0, 1, 'b'],\n+      [1, 0, 'c'],\n+      [1, 1, 'd'],\n+    ]);\n+  });\n+\n+  it('grows the structure when the CSV is larger than the default', async () => {\n+    const app = appFor(freshDb());\n+    const rows = Array.from({ length: 10 }, (_unused, row) =>\n+      Array.from({ length: 30 }, (_unusedCol, col) => `r${row}c${col}`).join(','),\n+    );\n+    const res = await app\n+      .post('/api/workbooks/import')\n+      .send({ fileName: 'big.csv', csv: rows.join('\\n') });\n+    expect(res.status).toBe(201);\n+    expect(res.body.worksheets[0]).toMatchObject({ rowCount: 10, colCount: 30 });\n+    expect(res.body.worksheets[0].cells).toHaveLength(300);\n+  });\n+\n+  it('falls back to the default name when the file name has nothing left after .csv', async () => {\n+    const app = appFor(freshDb());\n+    const res = await app.post('/api/workbooks/import').send({ fileName: '.csv', csv: 'a' });\n+    expect(res.status).toBe(201);\n+    expect(res.body.name).toBe('Untitled spreadsheet');\n+  });\n+\n+  it('allows two workbooks with the same name', async () => {\n+    const app = appFor(freshDb());\n+    await app.post('/api/workbooks/import').send({ fileName: 'dup.csv', csv: 'a' });\n+    const second = await app.post('/api/workbooks/import').send({ fileName: 'dup.csv', csv: 'b' });\n+    expect(second.status).toBe(201);\n+    const list = await request(app).get('/api/workbooks');\n+    expect(list.body.filter((/** @type {{ name: string }} */ w) => w.name === 'dup')).toHaveLength(2);\n+  });\n+\n+  it('rejects invalid CSV with the exact message and persists nothing', async () => {\n+    const db = freshDb();\n+    const app = appFor(db);\n+    const workbooks = countRows(db, 'workbooks');\n+    const worksheets = countRows(db, 'worksheets');\n+    const cells = countRows(db, 'cells');\n+\n+    const res = await app\n+      .post('/api/workbooks/import')\n+      .send({ fileName: 'broken.csv', csv: 'a,b\\n\"unterminated,c' });\n+    expect(res.status).toBe(400);\n+    expect(res.body).toEqual({\n+      error: { code: 'INVALID_CSV', message: 'Invalid CSV file format. Import failed.' },\n+    });\n+\n+    expect(countRows(db, 'workbooks')).toBe(workbooks);\n+    expect(countRows(db, 'worksheets')).toBe(worksheets);\n+    expect(countRows(db, 'cells')).toBe(cells);\n+    const list = await request(app).get('/api/workbooks');\n+    expect(list.body.map((/** @type {{ name: string }} */ w) => w.name)).not.toContain('broken');\n+  });\n+\n+  it('validates the request body shape with the uniform error format', async () => {\n+    const app = appFor(freshDb());\n+    const missingName = await app.post('/api/workbooks/import').send({ csv: 'a' });\n+    expect(missingName.status).toBe(400);\n+    expect(missingName.body.error.code).toBe('INVALID_BODY');\n+    expect(missingName.body.error.message).toBe('fileName must be a string');\n+\n+    const missingCsv = await app.post('/api/workbooks/import').send({ fileName: 'a.csv' });\n+    expect(missingCsv.status).toBe(400);\n+    expect(missingCsv.body.error.message).toBe('csv must be a string');\n+\n+    const notAnObject = await app.post('/api/workbooks/import').send([1, 2]);\n+    expect(notAnObject.status).toBe(400);\n+    expect(notAnObject.body.error.code).toBe('INVALID_BODY');\n+  });\n+});\n+\n describe('unknown API routes', () => {\n   it('use the uniform error body', async () => {\n     const res = await request(appFor(freshDb())).get('/api/does-not-exist');\n     expect(res.status).toBe(404);\n"}
+
+## S09:L73 2026-09-29T06:02:56.760Z message assistant
+[thinking]
+Wait, in the "quoted commas..." test I need to double-check the expected cells. CSV: `a,"b,c","d""e","f\ng"\n1,,"","x"\n`
+Row 0: fields: `a` (0,0='a'), `"b,c"` → 'b,c' (0,1), `"d""e"` → 'd"e' (0,2), `"f\ng"` → 'f\ng' (0,3).
+Row 1: `1` (1,0='1'), `` (1,1 empty, not persisted), `""` → '' (1,2 empty not persisted), `"x"` → 'x' (1,3).
+So expected cells: [0,0,'a'],[0,1,'b,c'],[0,2,'d"e'],[0,3,'f\ng'],[1,0,'1'],[1,3,'x']. Yes, matches what I wrote.
+Also note in the test file `'a,\"b,c\",\"d\"\"e\",\"f\\ng\"\\n1,,\"\",\"x\"\\n'` — I wrote it with escaped quotes inside a single-quoted JS string; since I use `'...'` with `\"` which is just `"`. Fine. And `\\n` → `\n` literal backslash-n? No wait: in the test source I wrote `\\n` inside a single-quoted string → that's backslash + n? No: `'\\n'` in JS source = two chars: backslash, n. That's WRONG — I want actual newlines.
+Hmm, careful. In the write tool I provided content with `\\n`? Let me check the actual file content.
+Actually the JSON I passed had `\\n` which in the file becomes `\n` (two chars: backslash + n) inside a single-quoted JS string literal → JS interprets `\n` as newline. Wait: source text `'a,\n'` in the file → JS string with newline. Let me verify by reading the file.
+Actually in my JSON parameter I typed `csv = 'a,\"b,c\",\"d\"\"e\",\"f\\ng\"\\n1,,\"\",\"x\"\\n'`. In JSON, `\\n` decodes to `\n` (backslash + n) in the actual file. Then in JS source, `'...\n...'` is an escape → newline. Good, that's what I want.
+And `\"` in JSON decodes to `"` in the file, which inside a single-quoted JS string is just a quote. Fine.
+And for the array expectation `[0, 3, 'f\ng']` — JSON `'f\ng'`? I wrote `'f\\ng'` in JSON → file has `'f\ng'` → JS newline. Good.
+Let me read the file to confirm, then run tests.
+Also `rows.join('\\n')` → file `'\n'` → newline. Good.
+Let me run.
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L73:C1]
+[toolCall] bash call_00_neagTpis1uC0QjbcU1zj7672
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '330,345p' backend/src/app.test.js && pnpm --dir backend test 2>&1 | tail -20"}
+
+## S09:L74 2026-09-29T06:02:58.679Z message toolResult
+toolResult bash False
+[text]
+TypeError: argument handler is required
+ ❯ Route.<computed> [as post] ../node_modules/.pnpm/router@2.2.0/node_modules/router/lib/route.js:221:13
+ ❯ app.<computed> [as post] ../node_modules/.pnpm/express@5.2.1/node_modules/express/lib/application.js:479:19
+ ❯ src/app.test.js:468:35
+    466|   it('validates the request body shape with the uniform error format',…
+    467|     const app = appFor(freshDb());
+    468|     const missingName = await app.post('/api/workbooks/import').send({…
+       |                                   ^
+    469|     expect(missingName.status).toBe(400);
+    470|     expect(missingName.body.error.code).toBe('INVALID_BODY');
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[8/8]⎯
+ Test Files  1 failed | 1 passed (2)
+      Tests  8 failed | 39 passed (47)
+   Start at  06:02:57
+   Duration  863ms (transform 87ms, setup 0ms, collect 264ms, tests 153ms, environment 0ms, prepare 151ms)
+ ELIFECYCLE  Test failed. See above for more details.
+[DUPLICATES: 20 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L74:C1]
+
+## S09:L75 2026-09-29T06:03:06.710Z message assistant
+[thinking]
+"argument handler is required" — the route `router.post('/workbooks/import', (req, res) => {...})` — the error appears at app.post in test... Actually error thrown: `app.post('/api/workbooks/import')` — hmm, in supertest, `app.post(path)` should work. The error says "argument handler is required" at application.js:479 → app.post. Wait, supertest calls `app[method](url)` to check if route exists! Yes: supertest's `Test` constructor does `app[method](url)` with only the path to verify the route is registered. Express 5 requires a handler argument, so if the route doesn't exist, error.
+So the route isn't registered. Why? Order: I inserted before "// 3. Full editor snapshot." which is inside createApiRouter. Let me check the routes file.
+Oh wait — maybe my edit placed the import route AFTER... let me look. Actually I bet the issue: supertest checks route existence by calling app.post(path) on the *app*, not router — for a mounted router, express's app.post without handler still errors. Hmm, but existing tests do `app.post('/api/workbooks')` fine — because supertest's route check passes... Actually supertest does:
+function Test(app, method, path) {
+  if (typeof app === 'function') app = http.createServer(app);
+  try { this._assertFunction = ... }
+Actually supertest's Test constructor: 
+this.app = app;
+this.url = ...;
+and `Request.prototype.get/post/...` calls `new Test(this.app, method, url)`. Test constructor does:
+if (typeof app === 'function') app = http.createServer(app);
+...
+// check if the route exists
+const app = this.app;
+if (app && app._router ... )
+Hmm. In supertest 7 there's:
+  // Check if the app has the method
+  if (typeof app[method] === 'function') {
+     try { app[method](url) } catch {}
+I recall supertest does: 
+  if (!this._server) ...
+and:
+Test.prototype. ...
+Actually the known code:
+function Test(app, method, path, host) {
+  this._assertFunction = ...
+  // for an express app, add a route to determine if it's a function...
+Regardless: the error says the route isn't found. Let me just check the routes.js file content.
+[DUPLICATES: 27 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L75:C1]
+[toolCall] bash call_00_zgoztxlc43ARN5V4mmS58676
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '1,80p' backend/src/routes.js"}
+
+## S09:L76 2026-09-29T06:03:06.721Z message toolResult
+toolResult bash False
+[text]
+import { CsvParseError, parseCsv, workbookNameFromFileName } from './csv.js';
+import { ApiError, invalidBody, notFound } from './errors.js';
+  createWorkbookFromCsv,
+  // Contract increment A-1: create a workbook from an uploaded CSV
+  // (`{fileName, csv}`) in one transaction. A parse failure writes nothing.
+  router.post('/workbooks/import', (req, res) => {
+    if (typeof body.fileName !== 'string') throw invalidBody('fileName must be a string');
+    if (typeof body.csv !== 'string') throw invalidBody('csv must be a string');
+    const name = workbookNameFromFileName(body.fileName, 'Untitled spreadsheet');
+    /** @type {string[][]} */
+    let records;
+      records = parseCsv(body.csv);
+    } catch (error) {
+      if (error instanceof CsvParseError) {
+        throw new ApiError(400, 'INVALID_CSV', 'Invalid CSV file format. Import failed.');
+      throw error;
+    res.status(201).json(createWorkbookFromCsv(db, name, records));
+  });
+[DUPLICATES: 61 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L76:C1]
+
+## S09:L77 2026-09-29T06:03:12.021Z message assistant
+[thinking]
+The route is registered. But supertest's route existence check calls `app.post(path)` on the express app... Actually the error trace: `app.<computed> [as post] (express/lib/application.js:479)` from `src/app.test.js:468:35`. Line 468 is `const missingName = await app.post('/api/workbooks/import').send(...)`. Hmm no — the trace says app.test.js:468:35 is `app.post(...)`. But supertest normally calls `request(app).post(...)`. `app` here is the express app object from createApp. `app.post('/api/workbooks/import')` on an express app — express 5's app.post requires a handler. Supertest wraps: actually `request(app).post(url)` returns a Test, and Test's constructor does:
+  // for express, we need to check the route exists
+  var app = this.app;
+  if (app && typeof app[method] === 'function') { ... }
+Hmm, actually in supertest lib/test.js:
+  this.app = app;
+  // make sure the app is a server or a function
+and in `Request.prototype.get/post`:
+Request.prototype.get = function(url) { return this._new('GET', url) }
+`_new` → `new Test(this.app, method, url, this._host)`. Test constructor:
+Hmm the error shows express `app.post` was called with only a path, meaning supertest's `Test` called `this.app[method](url)` to probe. Yes! supertest's `Test` does:
+  // https://github.com/ladjs/supertest/blob/master/lib/test.js
+  Test.prototype. ...
+  function Test(app, method, path, host) {
+    ...
+    this._assertFunction = ...
+Actually there's a known snippet in supertest/lib/test.js:
+and in `_new`: 
+Request.prototype._new = function(method, url) {
+  return new Test(this.app, method, url);
+Hmm. Then how is `app.post` invoked? In supertest/lib/test.js there IS this:
+  // if the app is a function, check that it has a route for the method/url
+  // (this is used to determine if the request is a "real" request)
+Let me just check node_modules for the actual code. Better: the real issue could be that `app` in the test is not the express app but the result of... no.
+Wait — line 468 in app.test.js is inside `describe('POST /api/workbooks/import')`. Column 35. `const missingName = await app.post('/api/workbooks/import').send({`. Hmm, `app.post(...)` returns undefined → `.send` would fail with TypeError "Cannot read properties of undefined". But the error is "argument handler is required" thrown by express Route.post. So supertest called app.post(path) internally.
+Let me look at supertest's code.
+Actually simpler explanation: supertest's Test constructor does:
+  // Check if the app has the route. Express 5 removed support for
+  // `app[method](path)` without a handler...
+Let me just grep.
+[DUPLICATES: 38 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L77:C1]
+[toolCall] bash call_00_zI8iPqz5lqtKd3fEmKEG4409
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && grep -rn \"handler is required\\|_assertFunction\\|app\\[method\\]\" node_modules/.pnpm/supertest@*/node_modules/supertest/lib/test.js | head -20"}
+
+## S09:L78 2026-09-29T06:03:12.034Z message toolResult
+toolResult bash False
+[text]
+274:      errorObj = this._assertFunction(this._asserts[i], res);
+406:  _assertFunction(fn, res) {
+
+## S09:L79 2026-09-29T06:03:13.560Z message assistant
+[toolCall] bash call_00_ET_VBL20MZcpC1RF91O0liG8094
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '1,60p' node_modules/.pnpm/supertest@*/node_modules/supertest/lib/test.js"}
+
+## S09:L80 2026-09-29T06:03:13.575Z message toolResult
+toolResult bash False
+[text]
+'use strict';
+ * Module dependencies.
+const { inspect } = require('util');
+const http = require('http');
+const { STATUS_CODES } = require('http');
+const { Server } = require('tls');
+const { deepStrictEqual } = require('assert');
+const { Request } = require('superagent');
+let http2;
+try {
+  http2 = require('http2'); // eslint-disable-line global-require
+} catch (_) {
+  // eslint-disable-line no-empty
+/** @typedef {import('superagent').Response} Response */
+// Tracks only servers started by SuperTest.  WeakMap keeps the bookkeeping
+// private and lets user-owned servers remain untouched.
+const serverStates = new WeakMap();
+class Test extends Request {
+   * Initialize a new `Test` with the given `app`,
+   * request `method` and `path`.
+   *
+   * @param {Server} app
+   * @param {String} method
+   * @param {String} path
+   * @api public
+  constructor (app, method, path, optHttp2) {
+    super(method.toUpperCase(), path);
+    if (typeof app === 'function') {
+      if (optHttp2) {
+        app = http2.createServer(app); // eslint-disable-line no-param-reassign
+        app = http.createServer(app); // eslint-disable-line no-param-reassign
+    this.redirects(0);
+    this.buffer();
+    this.app = app;
+    this._asserts = [];
+    this.url = typeof app === 'string'
+      ? app + path
+      : this.serverAddress(app, path);
+   * Returns a URL, extracted from a server.
+   * @param {String} path
+[DUPLICATES: 20 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L80:C1]
+
+## S09:L81 2026-09-29T06:03:16.640Z message assistant
+[thinking]
+So supertest isn't the one calling app.post. So the error trace pointing to app.test.js:468:35 means `app.post('/api/workbooks/import')` at line 468 IS the express app call... wait no, that's what supertest... hmm.
+Hold on: `request(app).post(url)`. The test uses `request(app)` from supertest? Let's look at the test: `const missingName = await app.post('/api/workbooks/import').send({ csv: 'a' });` — I wrote `app.post(...)` instead of `request(app).post(...)`! Yes, my mistake. And supertest's Request... no, `app` is the express app; `app.post(path)` without handler → express throws "argument handler is required".
+Wait but then the error trace would point at my test line, which it does. So yes: my test bug. `appFor` returns an express app; I must wrap with `request(app)`. In some of my new tests I wrote `await app.post(...)` and `await app.get(...)`. Need to fix: use `request(app)`.
+Let me check the whole new block and fix all `app.post`/`app.get` usages.
+Wait, but "8 failed" — that's all 8 new tests? I have 8 tests in the import describe. Yes.
+Let me rewrite with a helper `function post(app, path, body)

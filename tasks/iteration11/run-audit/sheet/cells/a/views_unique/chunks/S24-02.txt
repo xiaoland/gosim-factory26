@@ -1,0 +1,283 @@
+em with `undefined` = no change semantics (consistent with rowCount/colCount, lastSelection)
+- import writes them = CSV actual rows/cols (after ragged padding, clipped? "等于导入时 CSV 的实际行列数（裁剪后、含 ragged 补齐）"). Hmm "裁剪后" — clipped. What does clipped mean? Probably trailing empty rows/columns removed? Let me re-read: "下限仅由 CSV 导入创建的工作表持有，等于导入时 CSV 的实际行列数（裁剪后、含 ragged 补齐）". Hmm "裁剪后" likely refers to the parser's treatment: trailing newline doesn't add a row, trailing empty lines dropped. So rows = number of records after parse (with trailing blank lines clipped), cols = max field count (ragged padded). Actually with ragged rows padded to the widest, cols = widest row's field count.
+Wait, careful: "裁剪后" might mean the footprint = bounding box after clipping trailing empty lines. Hmm, ambiguous. But note "含 ragged 补齐" — ragged rows padded to widest. So min_cols = max column count across rows.
+Does it include trailing empty fields? e.g. `a,b\nc,d,` → rows=2, cols=3. Since parse gives 3 fields for row 2. Yes min_cols=3 → export would output `c,d,` preserving tail empty field. That matches rationale (the whole point of Y-min is the trailing empty field round-trip).
+And "裁剪后" for trailing empty *rows*: `a,b\n\n` → the parser drops trailing blank line so rows=1... hmm actually `a,b\n\n` = records ["a,b", ""] → with trailing blank line rule ("末行换行与尾部空行不产生记录") that becomes 1 record. So rows=1.
+Also export: used range = max(non-empty bbox, footprint). But also field-level: for each row in range, need col range = max over? "导出 used range = max(非空单元格包围盒, 导入足迹下限)". Probably rows = max(bbox rows, min_rows), cols = max(bbox cols, min_cols). And "无内容 → 空文件" only if bbox and footprint both empty (min_rows/min_cols null/0 and no cells).
+Hmm, but is the footprint per-dimension max, or does the range become max over rows and max over cols independently? I'd do per-dimension: rows = max(bboxRows, minRows), cols = max(bboxCols, minCols).
+Also `min_rows/min_cols ≤ 所报结构` validation → goes into B's shared helper (PR #9). But A's `importWorksheetState` today is inlined; A implements its own path now and switches later. So A needs to add validation `min_rows ≤ rowCount`, `min_cols ≤ colCount`? The contract says helper will include it, and A's PR #8 must consume. Since helper isn't available, A implements private path with that rule. Hmm — but v1.3 says the two existing invariants should be extracted by B; A's new rule goes into the helper. For A's private path during transition, adding the min ≤ structure check would be consistent. Should I? A's change: under "undefined = no change", if min_rows provided > rowCount → 400 INVALID_BODY. Let's implement it in A's path with a comment referencing v1.3 §2 and B's PR #9 (switch later).
+Also A-1 pinned parsing semantics:
+1. ragged rows padded to widest (not error) — check parser
+2. trailing single newline doesn't produce extra row — check
+3. BOM strip — check
+4. name = final `.csv` suffix only, case-insensitive, trim, fallback `Untitled spreadsheet` — check
+Also A-2: use shared `DEFAULT_ROW_COUNT`/`DEFAULT_COL_COUNT` constants from `backend/src/config.js`, no second "default structure" — check.
+Also A-3: errors included in display seam — A's identity impl returns raw. Fine.
+Let me now inspect the current implementation.
+Also, the README narrow change must be present (done) — plus now README needs to document min_rows/min_cols? comment #57 says "A 按 §3/§4 调整 PR #8（局部：state 两字段语义 + 导出空表分支 + README）". README update: document the two new fields and export footprint semantics. Since I own the README changes for import/export, I should update.
+Let me check the repo: store.js, csv.js, config.js, routes.js, csvExport.ts, cellDisplay.ts, types.d.ts, README.
+Let me start by reading the relevant files.
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L26:C1]
+[toolCall] bash call_00_n9z631o2Al2dgaWv9Mcc2009
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && ls backend/src frontend/src frontend/src/lib frontend/src/components shared tasks/issue-3-a 2>/dev/null"}
+[toolCall] read call_01_QvXahJcv9T3UVfdbxCzJ5659
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L26:C3]
+
+## S24:L27 2026-09-29T06:31:45.221Z message toolResult
+toolResult bash False
+[text]
+csv.js
+csv.test.js
+frontend/src:
+api
+components
+lib
+styles.css
+ImportCsvDialog.tsx
+NewWorkbookPage.tsx
+RenameWorkbookDialog.tsx
+WorkbookLifecycle.test.tsx
+WorkbookToolbar.tsx
+cellDisplay.test.ts
+cellDisplay.ts
+copy.ts
+csvExport.test.ts
+csvExport.ts
+errors.ts
+tasks/issue-3-a:
+[DUPLICATES: 36 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L27:C1]
+
+## S24:L28 2026-09-29T06:31:45.221Z message toolResult
+toolResult read False
+[text]
+[DUPLICATES: 155 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L28:C1]
+
+## S24:L29 2026-09-29T06:31:47.672Z message assistant
+[thinking]
+Parser does NOT pad ragged rows. v1.3 A-1 item 1 requires ragged rows padded to widest. Need to change: after parsing, pad each record to csvColumnCount. But careful: `parseCsv` semantics — "不等长行（ragged rows）按最宽行右侧补空字段". Should padding be inside parseCsv or added at import? I think padding should be part of parseCsv output (dense rectangular), since the contract says parsing semantics. But unit tests may rely on ragged output... Let me check csv.test.js and app.test.js for expectations on ragged rows.
+Also `csvColumnCount` is used by store probably. If parseCsv pads, csvColumnCount is trivially records[0].length. Let's look at store.js import function and routes.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L29:C1]
+[toolCall] bash call_00_dhuVESciZJJflm3vbs8W8843
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && grep -n \"import\\|Csv\\|csv\" backend/src/store.js | head -60; echo ---; grep -n \"import\" backend/src/routes.js | head -40"}
+[toolCall] bash call_01_TCLwCazvtefl85QL1Wpu5604
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '1,60p' backend/src/config.js"}
+
+## S24:L30 2026-09-29T06:31:47.689Z message toolResult
+toolResult bash False
+[text]
+1:/** @typedef {import('../../shared/types.js').CellChange} CellChange */
+2:/** @typedef {import('../../shared/types.js').CellCoord} CellCoord */
+3:/** @typedef {import('../../shared/types.js').CellEntry} CellEntry */
+4:/** @typedef {import('../../shared/types.js').FilterSpec} FilterSpec */
+5:/** @typedef {import('../../shared/types.js').PivotSpec} PivotSpec */
+6:/** @typedef {import('../../shared/types.js').SelectionRect} SelectionRect */
+7:/** @typedef {import('../../shared/types.js').ValidationRule} ValidationRule */
+8:/** @typedef {import('../../shared/types.js').WorkbookSnapshot} WorkbookSnapshot */
+9:/** @typedef {import('../../shared/types.js').WorkbookSummary} WorkbookSummary */
+10:/** @typedef {import('../../shared/types.js').WorksheetSnapshot} WorksheetSnapshot */
+11:/** @typedef {import('../../shared/types.js').WorksheetStatePayload} WorksheetStatePayload */
+12:/** @typedef {import('./db.js').Db} Db */
+14:import { DEFAULT_COL_COUNT, DEFAULT_ROW_COUNT, DEFAULT_SELECTION } from './config.js';
+15:import { csvColumnCount } from './csv.js';
+16:import { ApiError, invalidBody, notFound, validationError } from './errors.js';
+17:import { newId, nowIso } from './ids.js';
+261:export function createWorkbookFromCsv(db, name, records) {
+266:  const colCount = Math.max(csvColumnCount(records), DEFAULT_COL_COUNT);
+464:export function importWorksheetState(db, ws, payload) {
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L30:C1]
+
+## S24:L31 2026-09-29T06:31:47.689Z message toolResult
+toolResult bash False
+[text]
+  const explicit = process.env.DB_PATH?.trim();
+[DUPLICATES: 59 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L31:C1]
+
+## S24:L32 2026-09-29T06:31:49.438Z message assistant
+[toolCall] bash call_00_ET_mnHQVOCacl0xs9w6p94w5954
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '240,300p' backend/src/store.js"}
+[toolCall] bash call_01_ET_jT3buxF413Rx1elJHaOO1161
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '440,520p' backend/src/store.js; echo \"=== migrations ===\"; cat backend/src/migrations.js"}
+
+## S24:L33 2026-09-29T06:31:49.459Z message toolResult
+toolResult bash False
+[text]
+ * Create a workbook from parsed CSV records in a single transaction
+ * (REQ-1-3-1 / contract increment A-1). Either the workbook, its Sheet1 and
+  })();
+[DUPLICATES: 57 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L33:C1]
+
+## S24:L34 2026-09-29T06:31:49.459Z message toolResult
+toolResult bash False
+[text]
+=== migrations ===
+        column_specs TEXT NOT NULL
+      CREATE INDEX IF NOT EXISTS idx_filters_worksheet
+        ON filters (worksheet_id);
+      CREATE TABLE IF NOT EXISTS pivots (
+        id                   TEXT PRIMARY KEY,
+        source_worksheet_id  TEXT NOT NULL REFERENCES worksheets(id) ON DELETE CASCADE,
+        source_range         TEXT NOT NULL,
+        config               TEXT NOT NULL,
+        result_worksheet_id  TEXT NOT NULL REFERENCES worksheets(id) ON DELETE CASCADE,
+        last_result          TEXT,
+        stale                INTEGER NOT NULL DEFAULT 0
+      CREATE INDEX IF NOT EXISTS idx_pivots_source_worksheet
+        ON pivots (source_worksheet_id);
+      CREATE INDEX IF NOT EXISTS idx_pivots_result_worksheet
+        ON pivots (result_worksheet_id);
+    `,
+];
+[DUPLICATES: 148 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L34:C1]
+
+## S24:L35 2026-09-29T06:32:00.269Z message assistant
+[thinking]
+Now let me look at getWorksheetSnapshot, routes.js import handler, frontend csvExport.ts, cellDisplay.ts, types.d.ts, and the packet. Also check whether there is an event/notification on PR that requires action. Let me check messages/notifications — maybe wait, the "新 PR 工作" means new PR work needed.
+Let me check if there's a pending comment on issue 3 from deepseek-3 asking for v1.3 changes. There isn't (comments up to 62, which is mine). But root issue #1 body explicitly assigns v1.3 A work. And comment #57 says A should adjust.
+Hmm, but as PR #8 owner, who tells me? The user prompt says "请处理 PR #8" with the update list. The update list includes issue:1 comment 34/37/46/49 — but not 51/54/57. That's odd. The notifications listed there may just be the diff since last run start. Comments 51/54/57 may have arrived after the notification snapshot was assembled but they exist now. Also issue #1 body modifications were notified: "issue #3 title/body 已修改" ×3... hmm those say issue #3 not #1. Wait the list:
+- issue:3 comment 29 (old, 06:01)
+- issue:3 comment 33 (06:02)
+- issue:1 comment 34
+- issue:3 comment 36 (06:04)
+- issue:1 comment 37
+- issue:1 comment 46
+- pr:8 comment 47 (06:10)
+- issue:1 comment 49
+- issue #3 title/body 已修改 ×~3
+These look like the state as of ~06:10-06:17. So this run was started right after I (previous instance) pushed d536aa2? Actually comment #63 (my handoff) is at 06:17:12 and the current time is 06:31 according to braid observation ("本轮开始于 2026-09-29T06:31:16"). Hmm, so comments #51-#60 happened between 06:17 and 06:31? Let's check timestamps... let me check the issue 1 comment timestamps.
+Actually, whether or not they were notified, the current authoritative contract includes v1.3 and PR #8 has new work assigned. As PR owner, I should do it. That's clearly the highest-value action: implement v1.3 changes to PR #8.
+But first, is it wise to consult advisor? The svc-design skill says consult advisor before establishing shared contracts / acceptance criteria with key assumptions. Here v1.3 is already ratified by root owner with advisor input. My job is implementation of specified changes. The design mostly settled. One ambiguity: "裁剪后" footprint meaning, and per-dimension max. And ragged padding location. These are small; I can decide reasonably and document.
+Given "反复失败或新证据动摇方案时再次咨询" — not needed now; v1.3 is already advisor-informed.
+However, there's a candidate implementation question: whether to keep my current "no trailing newline" decision. The root didn't object. Keep.
+Now, the plan:
+1. Migration: add `min_rows INTEGER`, `min_cols INTEGER` nullable to worksheets. Since migrations are idempotent CREATE TABLE IF NOT EXISTS, adding a new migration entry `002_worksheet_min_footprint` with `ALTER TABLE worksheets ADD COLUMN min_rows INTEGER` — but ALTER TABLE ADD COLUMN isn't idempotent by itself; migrations recorded in schema_migrations prevent re-run. Let's check db.js migration runner.
+2. `getWorksheetSnapshot` includes minRows/minCols.
+3. `importWorksheetState`: handle `payload.minRows`/`minCols` with undefined = no change; validate min ≤ reported structure (rowCount/colCount after applying rowCount/colCount changes). Also note that B will extract shared helper later; add comment referencing that.
+Wait — careful about the interplay: if payload provides rowCount and minRows, the min must be ≤ the new rowCount. And if payload provides minRows but not rowCount, compare against current.
+4. `createWorkbookFromCsv`: write min_rows = records.length, min_cols = csvColumnCount(records) (after padding: records cols uniform). Use shared DEFAULT constants (already does).
+Wait — footprint = "导入时 CSV 的实际行列数（裁剪后、含 ragged 补齐）". With ragged padding inside parseCsv, csvColumnCount(records) = widest. records.length = rows after trailing-blank trimming. Good.
+Hmm but subtle: should min_cols include the trailing empty field from `a,b\nc,d,`? Yes (that's the point). Our parser: `a,b\nc,d,` → records [['a','b'],['c','d','']] → padded row1 to 3 cols → min_cols=3. Export used range = max(bbox(2x2), 3) → 2 rows x 3 cols → `a,b,\nc,d,`. 
+5. CSV export frontend: used range = max(bbox, footprint). Need footprint from worksheet snapshot → minRows/minCols in types and API response. `worksheetToCsv(worksheet, displayValue)` currently takes worksheet; add footprint.
+6. "无内容 → 空文件" only when bbox and footprint both empty. With footprint semantics: if no cells and no footprint → ''. If footprint > 0 → output footprint-sized rows of empty fields.
+Hmm — careful: does the footprint apply when the CSV import had 2 rows but those rows' content... The footprint is static per worksheet. Blank new workbook has min_rows=null/min_cols=null → 0.
+But consider: a worksheet created from import with footprint 3x2, no cells... export should be 3 rows of `,,`. Wait footprint rows=3 means 3 records. Hmm but "裁剪后" — if CSV was `a,b\nc,d\n\n` trailing blank lines clipped → 2 rows. If CSV content later gets cleared, export gives 2 rows of `,,` (if min_cols=3? no min_cols=2 → `,`). OK.
+7. Ragged padding in parseCsv: pad all records to widest. Need to check existing tests for ragged expectations and update. Let me grep.
+8. README updates: document min_rows/min_cols fields + export footprint + state semantics.
+9. Types in shared/types.d.ts: WorksheetSnapshot gets minRows/minCols (nullable), WorksheetStatePayload gets optional minRows/minCols.
+10. Tests: backend (csv ragged padding, import footprint, state undefined semantics + min ≤ structure validation, snapshot fields), frontend (csvExport footprint ranges, empty file only when both empty).
+11. e2e: CSV import → export round trip preserving trailing empty field? Add a case for the footprint behavior. That's a good acceptance addition. Also existing e2e may assert export of imported workbook; check.
+Also A-1 item: "名字取自 File.name，仅去最终 .csv 后缀" — the regex `/\.csv$/i` after trim. Note: "仅去最终 .csv 后缀" — my implementation trims whitespace first then replaces trailing .csv. Hmm: `my csv.csv` → `my csv` fine. What about `a.csv `? trim → `a.csv` → `a`. Is trim of the whole name acceptable? The root said "trim 空回退". Fine. But what if filename has no .csv extension at all, e.g. `data.txt`? Requirement says name = file name with extension removed... hmm REQ says "new workbook name is the file name with the .csv extension removed". A-1 pins "仅去最终 `.csv` 后缀" (only the final .csv suffix). So `data.txt` stays `data.txt`. My impl keeps it. Good.
+Now let me check the migration runner and db.js.
+Let me also read the rest of store.js getWorksheetSnapshot, routes import handler, and frontend files. Let me batch reads.
+[DUPLICATES: 27 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L35:C1]
+[toolCall] bash call_00_rWpKPHv210bF9VMsCgsc9990
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && cat backend/src/db.js; echo \"=== snapshot ===\"; sed -n '60,175p' backend/src/store.js"}
+
+## S24:L36 2026-09-29T06:32:00.283Z message toolResult
+toolResult bash False
+[text]
+=== snapshot ===
+      stale: p.stale === 1,
+[DUPLICATES: 167 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L36:C1]
+
+## S24:L37 2026-09-29T06:32:02.815Z message assistant
+[thinking]
+Note: snapshot fields are camelCase (`rowCount`, `colCount`). So min fields → `minRows`/`minCols` camelCase in snapshot, DB columns snake_case `min_rows`/`min_cols`.
+Also need to check `createBlankWorkbook` inserts worksheets columns; it uses explicit column list, so new nullable columns default NULL — fine.
+Let me check the rest of importWorksheetState (after lastSelection) to see the return and touchWorkbook.
+Also routes.js handler for import; frontend files. Let me batch.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L37:C1]
+[toolCall] bash call_00_KYTpe1EdmN8byYKKgzVm6995
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '520,580p' backend/src/store.js; echo \"=== routes 50-125 ===\"; sed -n '30,125p' backend/src/routes.js"}
+[toolCall] bash call_01_IS9r4uoMRHAqy6FJ3U8i0209
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && cat frontend/src/lib/csvExport.ts; echo \"=== cellDisplay ===\"; cat frontend/src/lib/cellDisplay.ts; echo \"=== types worksheet ===\"; grep -n \"WorksheetSnapshot\\|WorksheetStatePayload\" -A 30 shared/types.d.ts | sed -n '1,80p'"}
+
+## S24:L38 2026-09-29T06:32:02.837Z message toolResult
+toolResult bash False
+[text]
+=== routes 50-125 ===
+[DUPLICATES: 153 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L38:C1]
+
+## S24:L39 2026-09-29T06:32:02.838Z message toolResult
+toolResult bash False
+[text]
+ * - records are separated by `\n` with no trailing terminator (RFC 4180 makes a
+ *   final line break optional, and a byte-exact comparison built as
+ *   `rows.map((r) => r.join(',')).join('\n')` is the most common harness shape);
+ *   the file carries no BOM;
+    // The box is measured from stored content. Cells with no stored raw text are
+    // not in the snapshot at all, and the display seam cannot widen the used
+    // range beyond what the worksheet actually holds.
+  return lines.join('\n');
+=== types worksheet ===
+117:export interface WorksheetSnapshot {
+118-  id: string;
+119-  name: string;
+120-  position: number;
+121-  isActive: boolean;
+122-  rowCount: number;
+123-  colCount: number;
+124-  cells: CellEntry[];
+125-  lastSelection: SelectionRect | null;
+126-  validations: ValidationRule[];
+127-  filters: FilterSpec[];
+128-  pivots: PivotSpec[];
+129-}
+130-
+131-/** Full editor load payload (`GET /api/workbooks/:id`). */
+132-export interface WorkbookSnapshot {
+133-  id: string;
+134-  name: string;
+135-  updatedAt: string;
+136:  worksheets: WorksheetSnapshot[];
+137-}
+138-
+139-/**
+140- * Body of `POST /api/workbooks/import` (contract increment A-1): the uploaded
+141- * file name (used to derive the workbook name) and the decoded UTF-8 text.
+142- * The response has the same `WorkbookSnapshot` shape as `POST /api/workbooks`.
+143- */
+144-export interface ImportWorkbookRequest {
+145-  fileName: string;
+146-  csv: string;
+147-}
+148-
+149-/** Body of `PUT /api/workbooks/:id/worksheets/:wid/state` (undo/redo replay). */
+150:export interface WorksheetStatePayload {
+151-  name?: string;
+152-  rowCount?: number;
+153-  colCount?: number;
+154-  cells?: CellEntry[];
+155-  lastSelection?: SelectionRect | null;
+156-  isActive?: boolean;
+157-  validations?: ValidationRule[];
+158-  filters?: FilterSpec[];
+159-  pivots?: PivotSpec[];
+160-}
+161-
+162-export type ApiErrorCode =
+163-  | 'NOT_FOUND'
+164-  | 'VALIDATION_ERROR'
+165-  | 'INVALID_BODY'
+166-  | 'INVALID_CSV'
+167-  | 'CONFLICT'
+168-  | 'INTERNAL_ERROR';
+169-
+170-/** Uniform error body for every `/api` failure. */
+171-export interface ApiErrorBody {
+172-  error: {
+173-    code: ApiErrorCode | string;
+174-    message: string;
+175-  };
+176-}
+[DUPLICATES: 93 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L39:C1]
+
+## S24:L40 2026-09-29T06:32:14.981Z message assistant
+[thinking]
+Now let me check the frontend WorkbookEditor usage of worksheetToCsv, csvExport tests, and e2e spec. Also check backend tests for import.
+Let me plan the implementation. Before that, decide whether to consult the Issue owner (@deepseek-3) — the root assigned the changes; the Issue owner should update Issue #3 body/deliverables. But as PR owner I should just implement. However, one thing: I should notify @deepseek-3 on Issue #3 that v1.3 changes are inbound (so verification criteria align). Actually root issue already says so.
+Also there's the B coordination: helper in PR #9; A consumes later. Fine.
+Now, design detail ambiguities I should decide and document:
+(a) `min_rows`/`min_cols` on blank-created worksheets: NULL (no footprint). Snapshot: `minRows: null, minCols: null`? Or 0? Contract says "新建议空白工作簿下限为 0". Snapshot shape choice: v1.3 §3.3 says "快照输出 getWorksheetSnapshot 带上两字段". I'll output numbers with null for "no footprint", or 0? Hmm. For frontend export logic simplicity, null vs 0 both work. But "undefined = 不改动" for state payload implies DB null ↔ absent semantics. To keep round-trip: snapshot null → payload minRows: null would mean...? If snapshot emits `minRows: null` and D replays the whole snapshot object as payload, then payload.minRows === null, which is not undefined → would that mean "set to 0"? That would erase footprint on replay — exactly what #57 §3 warns about ("若写成'缺失即重置为 0'，D 用旧快照回放会把导入足迹抹掉").
+So: state handling must treat `null` as "no footprint" only if the payload explicitly says null... But D replays the snapshot as-is. If snapshot emits null for a worksheet that never had a footprint, replay sets null (no change). If snapshot emits the number 3 for an imported worksheet, replay sets 3. So emitting `null` is consistent: payload.minRows = null → reset to no footprint, which is what the snapshot said. But the warning is about "缺失即重置为 0" — i.e., if minRows is *absent* in payload, don't reset. `null` explicitly present = set to null. That's fine and round-trip safe.
+But careful: if snapshot emits `minRows: null` (never imported) and someone constructs a payload without the field, no change. Good.
+Alternatively snapshot could omit the fields when null, but contract says snapshot carries the two fields; undefined in JSON is impossible (JSON.stringify drops undefined). So null it is. Hmm, but if snapshot omits them (undefined) then JSON has no key = absent = no change on replay; also round-trip safe. Which is better? The comment says "快照输出 ... 带上两字段" — carry both fields. I'll emit numbers or nul

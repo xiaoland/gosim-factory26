@@ -1,0 +1,225 @@
+ut it doesn't overturn the plan; it clarifies. Also A-4: baseline recommends dropping the lower-bound round-trip thing, which matches my "record, don't implement" stance. A-2 three paths adds a third writer — does it change A's implementation? No: A still creates tables with its own sizes in one transaction. It only changes documentation wording. So no route-changing decision for A. I'll skip the advisor re-consult and note why... Actually, hmm. There's one subtlety worth checking: does `PUT .../state` allowing arbitrary sizes create any acceptance risk for A's "6×26 全空" assertion after import? Comment 31 confirms no drift. Fine.
+However, one thing to verify myself: whether `POST /api/workbooks` default name is `Untitled spreadsheet` and D-A1's prefilled name — confirmed in comment #11 §3.
+Let me verify comment 31's code claims quickly with grep, then post the comments.
+Additionally: is there anything the Issue needs to act on? The root @glm-1 hasn't ruled yet. I shouldn't block: the deltas are factual and A/B already agree. I'll state that A proceeds on the three-path wording and will carry the README narrow edit in PR #8, and @glm-1 can redirect if the ruling differs (local change).
+Also: should I update the Issue #3 body's design entry section to include the new delta pointers? The body says "设计与决定 D-A1…D-A10、验收方案、假设与未决：本 Issue comment #27（权威）". I can add a line pointing to the delta comment. That keeps the entry discoverable. Yes, narrow body edit: add delta pointer (A-2 amendment / A-3 boundary / A-4 no-lower-bound) to the "设计与交接入口" section.
+Let me verify code facts first.
+Also check whether PR #8's head branch got new commits from deepseek-5 (branch 60f3f07 unchanged as of fetch). Let me re-fetch later.
+Let me do verification: grep store.js for rowCount handling.
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L25:C1]
+[toolCall] bash call_00_bTbh1rylRpqjom4eePtn6201
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && grep -n \"rowCount\" backend/src/store.js | head -30; echo \"=== DEFAULT_SELECTION ===\"; grep -n \"DEFAULT_SELECTION\\|DEFAULT_ROWS\\|DEFAULT_COLS\" backend/src/config.js; echo \"=== createWorkbook ===\"; sed -n '213,245p' backend/src/store.js"}
+[toolCall] bash call_01_Cab89sL4ZNLCYwJHFGeZ4142
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && grep -rn \"cellDisplay\" frontend/src/ | head; echo \"=== Grid raw render ===\"; sed -n '145,155p;203,210p' frontend/src/components/Grid.tsx"}
+
+## S10:L26 2026-09-29T06:02:13.648Z message toolResult
+toolResult bash False
+[text]
+144:    rowCount: ws.row_count,
+414:    if (payload.rowCount !== undefined || payload.colCount !== undefined) {
+415:      const rowCount = payload.rowCount ?? ws.row_count;
+417:      if (!Number.isInteger(rowCount) || rowCount < 1) {
+418:        throw invalidBody('rowCount must be a positive integer');
+424:        rowCount,
+432:      // the reported rowCount/colCount cannot show. Growing a worksheet is an
+=== DEFAULT_SELECTION ===
+44:export const DEFAULT_SELECTION = Object.freeze({
+[DUPLICATES: 33 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L26:C1]
+
+## S10:L27 2026-09-29T06:02:13.649Z message toolResult
+toolResult bash False
+[text]
+=== Grid raw render ===
+  );
+[DUPLICATES: 18 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L27:C1]
+
+## S10:L28 2026-09-29T06:02:15.981Z message assistant
+[thinking]
+Facts confirmed: state import can change size (store.js 414+); createWorkbook uses DEFAULT_ROW_COUNT/DEFAULT_COL_COUNT (6/26 presumably); no cellDisplay.ts.
+Let me check DEFAULT_ROW_COUNT values.
+Now let me post:
+1. Issue #1 thread 1 reply to comment 31 (or to 28?) — comment 31 is reply-to 28. My reply should be reply-to 31 so it lands in the same thread and notifies deepseek-2 (baseline owner?) — actually who posted comment 31? Let me check author. It said 基础层（#2）. Let me get author.
+2. Issue #3 comment replying to #27 with delta (design amendment) and @deepseek-5.
+Let me check author of 31 and 30.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L28:C1]
+[toolCall] bash call_00_yAAk5fL4fj8uFPjdHBVa2740
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && for c in 28 30 31; do echo \"== $c\"; braid comment view $c --json 2>/dev/null | head -c 400; echo; done; echo; grep -n \"DEFAULT_ROW_COUNT\\|DEFAULT_COL_COUNT\" backend/src/config.js"}
+
+## S10:L29 2026-09-29T06:02:16.010Z message toolResult
+toolResult bash False
+[text]
+== 28
+[
+  {
+    "author": {
+    "body": "【契约增量请求：子 Issue A（#3）】子 Issue A 的设计已定稿（Issue #3 comment #27）。涉及跨 Issue 的四条增量，按契约机制在本 thread 提出，请 @glm-1 裁定/确认；A 侧实现按此推进，若裁定不同，改动局部（导入端点一段、接缝�
+== 30
+      "login": "glm-4",
+      "node_id": "member:glm-4"
+    "body": "【B 侧确认 A-2】子 Issue B（#4）负责人确认接受 A-2 的表述修订：`row_count/col_count` 的变更入口 = B 的结构操作端点 + A 的导入事务。B 的实现不假设自己是唯一写入者：\n\n- B 的结构端点把当前 `row_count`/`col_count` 作为输入读取、在自�
+== 31
+      "login": "deepseek-2",
+      "node_id": "member:deepseek-2"
+    "body": "【基础层（#2）对 A-2/A-3/A-4 的事实核实与建议 — 供 @glm-1 裁定】\n\n我核对了已合入 develop 的 `698afd2`（= 我交接的 `c344b3b`，逐字节一致）。A-2 想改的那句表述在合入基线里**本来就不准确**，而且缺口比 A-2 说的多一处；建
+40:export const DEFAULT_ROW_COUNT = 6;
+41:export const DEFAULT_COL_COUNT = 26;
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L29:C1]
+
+## S10:L30 2026-09-29T06:02:21.767Z message assistant
+[thinking]
+Now compose comments.
+**Comment A (Issue #1 thread 1, reply-to 31)** — from @deepseek-3 (A owner): accept the factual correction, accept three-path wording, accept A-3 boundary, accept A-4 no-lower-bound; A's PR #8 will carry the README narrow edit unless glm-1 directs otherwise (deepseek-2 shouldn't do it); ask glm-1 to ratify the wording (or object). Also note that A's implementation is unaffected by the third path (still creates its tables with its own sizes in one transaction). And note that PR #8's base consumes 698afd2, so README edit applies there.
+**Comment B (Issue #3, reply-to 27)** — design delta v1.1 for A:
+- D-A4 amendment: row_count/col_count entry paths = B structure endpoints + PUT state + A import; A implementation unchanged; will update README lines 80-83 in PR #8 (ownership).
+- D-A8 boundary clarification: seam serves grid display + CSV export only; FormulaBar and inline edit box keep reading raw (REQ-4-1-1). C's replacement must not touch those.
+- A-7/addendum: no "import original size lower bound" — trailing empty fields outside used range not preserved, documented only, not implemented.
+- Instruction to @deepseek-5: reflect these in packet + implementation; README narrow edit must be in PR #8; evidence list unchanged; when handing back, note any deviation.
+- Also note contract increment A-2 remains pending glm-1 ratification; proceed on this basis (factual, B agrees), adjustments local.
+Then update Issue #3 body's "设计与交接入口" to reference the delta comment. Also verify whether to hide/resolve anything: comment 31 is a discussion in #1; not mine to resolve. Nothing to hide.
+Should I also update the packet? The packet is in the repo on branch braid/issue-3-a (owned by deepseek-5). To avoid concurrent writes, I'll ask deepseek-5 to update the packet. But hmm — I have no PR-level comment yet from me; I can post the delta on Issue #3 and @deepseek-5. deepseek-5 subscribes as PR assignee? Notifications: @ mention delivers. Good.
+Alternatively I could comment on PR #8 directly (thread there) so the PR owner sees it on the PR. The instruction says handover/comments should be in Issue #3 (design authority). I'll post in Issue #3 replying to comment 27, @deepseek-5, and also @glm-1 for the pending ratification. That should suffice — single comment. Actually a PR comment would be a duplicate; keep one.
+Hmm, but the PR owner might prefer PR-level. Comments on the Issue notify assignees/participants including PR-linked? PR #8 is associated with issue #3, and deepseek-5 is the PR assignee. To be safe I'll @deepseek-5 in the Issued comment (explicit mention delivers). Good enough.
+Let me write the comments now. Keep concise but complete.
+Order of operations:
+1. braid comment create on issue 1 reply-to 31.
+2. braid comment create on issue 3 reply-to 27.
+3. Edit issue 3 body to add delta pointer.
+Let me check comment create syntax: `braid issue comment create` or `braid comment create`? Let's check help.
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L30:C1]
+[toolCall] bash call_00_Rf96RuDm081WgbkISorW7323
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment create --help 2>&1 | head -30; echo \"=== issue comment ===\"; braid issue comment --help 2>&1 | head -20"}
+
+## S10:L31 2026-09-29T06:02:21.789Z message toolResult
+toolResult bash False
+[text]
+error: unrecognized subcommand 'create'
+Usage: braid comment [OPTIONS] <COMMAND>
+=== issue comment ===
+  -h, --help                 Print help
+[DUPLICATES: 14 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L31:C1]
+
+## S10:L32 2026-09-29T06:02:28.989Z message assistant
+[thinking]
+Write the two bodies to files and post.
+Comment A body (issue #1, reply-to 31):
+【A 侧回应：接受 comment #31 的事实更正与三条路径表述】子 Issue A（#3）@deepseek-3
+已按 comment #31 指出的位置复核基线 `698afd2`：`store.js:414-427` 的 `PUT .../state` 确实按 payload 设 `row_count/col_count`（正整数校验），`app.test.js:311-322` 的 42×7 导入为 200；`README.md:80-83` 的"唯一变更入口是结构操作"与实现不符。结论采纳。
+1. **A-2 表述改为三条路径**：`row_count/col_count` 的变更入口 = B 的结构操作端点（增量语义）+ `PUT .../state`（整表替换，快照自带尺寸）+ A 的导入事务（建表时设定尺寸）。不变量不变（`PUT .../cells` 永不自动扩张、state 的 cells 不得超出其申报尺寸、结构端点是唯一带插入/删除语义的入口）。对 A 的实现无影响：A 仍是尺寸感知的单事务建表（`row_count=max(csvRows,6)`、`col_count=max(csvCols,26)`），不读也不改既有工作表尺寸。@glm-4 已在 comment #30 确认 B 侧同表述。
+2. **文档窄改归属**：由 A 的 PR #8 一并改 `README.md:80-83`（该 PR 本来就要登记导入这一入口；其 base 已消费 `698afd2`）。@deepseek-2 不必另开窄 PR，除非 @glm-1 另有指定。
+3. **A-3 边界采纳**：接缝 `frontend/src/lib/cellDisplay.ts` 只服务**网格显示与 CSV 导出**；FormulaBar 与内联编辑框继续读 `raw`（REQ-4-1-1）。会写入 C 的交接材料，要求 C 替换该模块而不是自建只服务网格的求值路径。
+4. **A-4 采纳**：不做"导入原始尺寸下限"；`a,b\nc,d,` 的尾部空字段落在 used range 之外，作为已记录边界、不实现（Issue #3 comment #27 假设 A-7 保持原文即可）。
+请 @glm-1 确认/裁定以上表述（若不同意，A 侧改动局部：README 两行、导出范围一段函数）。A 侧按本回复继续推进 PR #8，不等待阻塞。
+Comment B body (issue #3, reply-to 27): design delta v1.1.
+【设计增量 v1.1（回复 comment #27，与其共同构成 A 的权威判据）】@deepseek-5 @glm-1
+依据 Issue #1 comment #31（基础层对基线 `698afd2` 的事实核实）+ comment #30（B 侧确认），对 comment #27 做三处**窄改**，其余决定 D-A1…D-A10、验收方案与第 5 节假设不变：
+- **D-A4 修订（A-2 表述）**：`row_count/col_count` 的变更入口 = B 的结构操作端点 + `PUT .../state`（快照自带尺寸，基线已实现）+ A 的导入事务。A 的实现不变（尺寸感知单事务建表，下界 `max(csvRows,6)×max(csvCols,26)`）。**追加交付项**：PR #8 一并窄改 `README.md:80-83` 的"唯一变更入口是结构操作"句为三条路径表述（已与 @deepseek-2 约定由 A 的 PR 承担，避免两处维护）；其余 README 不改。
+- **D-A8 边界澄清**：`frontend/src/lib/cellDisplay.ts` 接缝只服务**网格显示与 CSV 导出**；FormulaBar 与内联编辑框必须继续读 `raw`（REQ-4-1-1 "formula bar always displays the original formula"）。C 替换接缝实现时不得覆盖这两处读 raw 的路径。
+- **假设 A-7 定格**：不实现"导入原始尺寸下限"；尾部空字段（`a,b\nc,d,` 的末位逗号）不入导出，仅作为已记录边界。
+契约增量 A-1…A-4 仍在 Issue #1 thread 1 等 @glm-1 裁定；以上均为对已核实事实的采纳，已 @ 根负责人确认，若裁定不同按裁定调整（局部）。
+**对 PR #8（@deepseek-5）的增量要求**：实现时按本回复 + comment #27 执行；README 窄改与 `README.md` 的导入端点登记一起提交；packet `tasks/issue-3-a/packet.md` 由你在续写时补记本增量（packet 在你的分支上，我不并发写）。交接时照旧给出候选提交、`pnpm -r test`/`pnpm -r typecheck`/`bash checks/run-e2e.sh` 的首轮结果与证据路径，并明确列出与 comment #27/本回复的偏离与理由。
+Then update issue 3 body: add a bullet in "设计与交接入口" section referencing the delta. Let me get the exact current body text to edit. I'll use braid issue edit with --body-file? That rewrites whole body. Let me check `braid issue edit --help`.
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L32:C1]
+[toolCall] bash call_00_xfpQ2OHQWmDexfK0rD375234
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue edit --help 2>&1 | head -30"}
+
+## S10:L33 2026-09-29T06:02:29.004Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L33:C1]
+
+## S10:L34 2026-09-29T06:02:30.542Z message assistant
+[thinking]
+I need the current raw body to edit. Let me dump it to a file via `braid issue view 3 --json` and extract body.
+[toolCall] bash call_00_RlluMmnbAJ5O98lg12AF8340
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --json > /tmp/issue3.json 2>&1 && node -e \"const j=require('/tmp/issue3.json'); console.log(JSON.stringify(Object.keys(j))); require('fs').writeFileSync('/tmp/issue3.body.md', (Array.isArray(j)?j[0]:j).body||'')\" ; wc -l /tmp/issue3.body.md; tail -20 /tmp/issue3.body.md"}
+
+## S10:L35 2026-09-29T06:02:30.602Z message toolResult
+toolResult bash False
+[text]
+["assignees","associated_prs","base_ref","body","comments","draft","execution","execution_error","head_ref","id","kind","parent","parent_issue","ready_commit","reason","revision","state","sub_issues","subscriptions","title"]
+29 /tmp/issue3.body.md
+[DUPLICATES: 20 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L35:C1]
+
+## S10:L36 2026-09-29T06:02:34.217Z message assistant
+[thinking]
+Now post the two comments. Use --body-file.
+[toolCall] bash call_00_8n7OQPVx6t6yoNjgP4Xd4107
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && cat > /tmp/c-issue1.md <<'EOF'\n【A 侧回应 comment #31：接受事实更正与\"三条路径\"表述】子 Issue A（#3）@deepseek-3\n\n按 comment #31 的指认复核了基线 `698afd2`：`store.js:414-427` 的 `PUT .../state` 确实按 payload 写入 `row_count`/`col_count`（正整数校验），`app.test.js:311-322` 的 42×7 导入为 200；`README.md:80-83` 的\"唯一变更入口是结构操作\"与实现不符。事实采纳。\n\n1. **A-2 表述改为三条路径**：`row_count`/`col_count` 的变更入口 = B 的结构操作端点（增量语义）+ `PUT .../state`（整表替换，快照自带尺寸）+ A 的导入事务（建表时设定尺寸）。不变量不变：`PUT .../cells` 永不自动扩张（越界整批 400）、state 的 cells 不得超出其申报尺寸、结构端点是唯一带\"插入/删除行列\"语义的入口。对 A 的实现无影响——A 仍是尺寸感知的单事务建表（`max(csvRows,6) × max(csvCols,26)`），既不读也不改既有工作表尺寸。@glm-4 已在 comment #30 确认 B 侧同一表述。\n2. **文档窄改归属**：由 **A 的 PR #8** 一并改 `README.md:80-83`（该 PR 本来就要登记导入这一入口，base 已消费 `698afd2`）。@deepseek-2 不必另开窄 PR，除非 @glm-1 另指定。\n3. **A-3 边界采纳**：接缝 `frontend/src/lib/cellDisplay.ts` 只服务**网格显示与 CSV 导出**；FormulaBar 与内联编辑框继续读 `raw`（REQ-4-1-1）。此边界写入 C 的交接材料，要求 C 替换该模块实现，而不是自建只服务网格的求值路径。\n4. **A-4 采纳**：不做\"导入原始尺寸下限\"。`a,b\\nc,d,` 的尾部空字段落在 used range 之外，作为已记录边界（Issue #3 comment #27 假设 A-7 原文不变），不实现。\n\n请 @glm-1 确认或裁定以上表述；若裁定不同，A 侧改动局部（README 两行 + 导出范围一段函数）。A 侧不阻塞，按本回复推进 PR #8。\nEOF\nbraid issue comment 1 --reply-to 31 --body-file /tmp/c-issue1.md 2>&1 | tail -8"}
+
+## S10:L37 2026-09-29T06:02:34.770Z message toolResult
+toolResult bash False
+[text]
+comment #32
+消息投递回执 — 评论 #32（仅表示评论输入的接收状态）
+收件人 @glm-4: 评论等待投递 (queued)
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L37:C1]
+
+## S10:L38 2026-09-29T06:02:38.575Z message assistant
+[toolCall] bash call_00_ET_l158151WMaRF9JnY0ilH7140
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && cat > /tmp/c-issue3.md <<'EOF'\n【设计增量 v1.1：回复 comment #27，与其共同构成 A 的权威判据】@deepseek-5 @glm-1\n\n依据 Issue #1 comment #31（基础层对基线 `698afd2` 的事实核实）+ comment #30（B 侧确认），对 comment #27 做三处**窄改**；其余决定 D-A1…D-A10、验收方案与第 5 节假设全部不变。\n\n- **D-A4 修订（契约增量 A-2 表述）**：`row_count`/`col_count` 的变更入口 = B 的结构操作端点 + `PUT .../state`（快照自带尺寸，基线已实现）+ A 的导入事务。A 的实现不变（尺寸感知单事务建表，下界 `max(csvRows,6) × max(csvCols,26)`）。**追加交付项**：PR #8 一并窄改 `README.md:80-83` 的\"唯一变更入口是结构操作\"为三条路径表述（已与 @deepseek-2 约定由 A 的 PR 承担，避免同一句两处维护）；README 其余部分不动。\n- **D-A8 边界澄清**：`frontend/src/lib/cellDisplay.ts` 接缝只服务**网格显示与 CSV 导出**；FormulaBar 与内联编辑框必须继续读 `raw`（REQ-4-1-1 \"The formula bar always displays the original formula\"）。C 替换接缝实现时不得覆盖这两处读 raw 的路径。\n- **假设 A-7 定格**：不实现\"导入原始尺寸下限\"；尾部空字段（如 `a,b\\nc,d,` 的末位逗号）不入导出，仅作为已记录边界保留。\n\n契约增量 A-1…A-4 仍在 Issue #1 thread 1 等 @glm-1 裁定；以上均为对已核实事实的采纳（comment #32 已请根负责人确认），若裁定不同按裁定调整（改动局部）。\n\n**对 PR #8（@deepseek-5）的增量要求**：实现按 comment #27 + 本回复执行；README 窄改与导入端点文档登记在同一提交/同一 PR；packet `tasks/issue-3-a/packet.md` 在你续写时补记本增量（packet 位于你的分支，我不并发写）。交接时照旧给出候选提交号、改动摘要、`pnpm -r test` / `pnpm -r typecheck` / `bash checks/run-e2e.sh` 的命令与首轮结果、证据路径，并明确列出与 comment #27 + 本回复的偏离及理由。\nEOF\nbraid issue comment 3 --reply-to 27 --body-file /tmp/c-issue3.md 2>&1 | tail -8"}
+
+## S10:L39 2026-09-29T06:02:39.047Z message toolResult
+toolResult bash False
+[text]
+comment #33
+消息投递回执 — 评论 #33（仅表示评论输入的接收状态）
+收件人 @deepseek-5: 评论等待投递 (queued)
+收件人 @glm-1: 评论等待投递 (queued)
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L39:C1]
+
+## S10:L40 2026-09-29T06:02:42.378Z message assistant
+[thinking]
+Now update Issue #3 body's "设计与交接入口" to reference the delta comment (#33), and the contract increment entry (#32 in #1). Keep narrow.
+Also maybe update the "跨 Issue 契约增量" bullet to mention three paths. Let's do a narrow edit: change the bullet for A-1..A-4 to point to comment #28 + #32, and add a delta bullet for comment #33.
+Use node to modify /tmp/issue3.body.md then `braid issue edit 3 --body-file`.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L40:C1]
+[toolCall] bash call_00_edNbNDkhTQNZUVG0SYBe2177
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && node -e '\nconst fs=require(\"fs\");\nlet b=fs.readFileSync(\"/tmp/issue3.body.md\",\"utf8\");\nconst old1=\"- **设计与决定 D-A1…D-A10、验收方案、假设与未决**：本 Issue comment #27（权威；实现与验收按其执行）。\";\nconst new1=old1+\"\\n- **设计增量 v1.1（窄改，与 #27 共同构成权威判据）**：本 Issue comment #33——D-A4 的三条尺寸变更路径（B 结构端点 + `PUT .../state` + A 导入）、README `80-83` 窄改归属 PR #8、D-A8 接缝边界（FormulaBar/内联编辑框仍读 `raw`）、假设 A-7 定格（不实现导入尺寸下限）。\";\nif(!b.includes(old1)) throw new Error(\"anchor1 missing\");\nb=b.replace(old1,new1);\nconst old2=\"- **跨 Issue 契约增量 A-1…A-4**（`POST /api/workbooks/import` / 导入是 `row_count/col_count` 第二变更入口（尺寸下界 6×26）/ 显示值单一接缝 `cellDisplay.ts`（C 替换实现）/ 导出 used range 与导出无视筛选）：Issue #1 thread 1 comment #28。\";\nconst new2=\"- **跨 Issue 契约增量 A-1…A-4**（`POST /api/workbooks/import` / 导入是 `row_count/col_count` 变更入口之一（尺寸下界 6×26；三条路径表述见 comment #32）/ 显示值单一接缝 `cellDisplay.ts`（C 替换实现，不得覆盖 FormulaBar/内联编辑的 `raw`）/ 导出 used range 与导出无视筛选）：Issue #1 thread 1 comment #28 + comment #32（A 侧采纳基础层核实）。\";\nif(!b.includes(old2)) throw new Error(\"anchor2 missing\");\nb=b.replace(old2,new2);\nfs.writeFileSync(\"/tmp/issue3.body.new.md\",b);\nconsole.log(\"ok\");\n' && braid issue edit 3 --body-file /tmp/issue3.body.new.md 2>&1 | tail -5"}
+
+## S10:L41 2026-09-29T06:02:42.702Z message toolResult
+toolResult bash False
+[text]
+- **跨 Issue 契约增量 A-1…A-4**（`POST /api/workbooks/import` / 导入是 `row_count/col_count` 变更入口之一（尺寸下界 6×26；三条路径表述见 comment #32）/ 显示值单一接缝 `cellDisplay.ts`（C 替换实现，不得覆盖 FormulaBar/内联编辑的 `raw`）/ 导出 used range 与导出无视筛选）：Issue #1 thread 1 comment #28 + comment #32（A 侧采纳基础层核实）。
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L41:C1]
+
+## S10:L42 2026-09-29T06:02:46.702Z message assistant
+[thinking]
+Body updated. Now the pending state: I'm waiting on glm-1's ratification and deepseek-5's implementation. 
+Should I do anything else? The guidance says the Issue owner drives design decisions; the implementation is with PR #8. There's one more consideration: the earlier run's advisor consult and vision results are complete (already consumed into comment #27).
+One more thing: the design delta involves a shared contract (A-2 three paths) which affects C/E. Comment #32 addressed it. Also the guidance says: when a new decision is formed or an old judgment found inaccurate, first correct in the original discussion and contact affected members. Done: #32 in #1 thread 1, #33 in #3 thread 27, notifying deepseek-2/glm-1/glm-4/deepseek-5.
+Do I need to also notify C (#5) owner and E (#7) owner about A-3 boundary? The A-3 boundary change affects C's implementation. But C's task hasn't started presumably, and the A-3 handover material is scheduled for when the Issue owner hand over to C (packet next-step item). Also E is affected by A-4 (no lower bound). I mentioned E relevance in the original A-4 text. The affected member notification: C's ISSUE isn't mine; @glm-1 will assign. I could @ mention C's owner if known. Let me check who owns #5/#7. But C isn't assigned yet maybe. Let me check quickly. If assigned, mentioning them could be useful but might create noise; #32 already notified... no, #32 recipients were deepseek-2, glm-1, glm-4. #33 recipients deepseek-2, deepseek-5, glm-1. So C's owner (if any) and E's owner weren't notified. Since A-3/A-4 affect them, a brief mention is warranted per instructions ("联系受影响成员").
+Let me check assignments of #5 and #7.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L42:C1]
+[toolCall] bash call_00_GmdGWvKYTBIXsn49uFwm1302
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && for i in 4 5 6 7; do echo \"== #$i\"; braid issue view $i --json 2>/dev/null | node -e \"let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);const o=Array.isArray(j)?j[0]:j;console.log(o.title.slice(0,40),'|',(o.assignees||[]).map(a=>a.login).join(','),'|',o.state)})\"; done"}
+
+## S10:L43 2026-09-29T06:02:46.869Z message toolResult
+toolResult bash False
+[text]
+== #4
+子 Issue B：工作表与行列结构（REQ-2-*） | glm-4 | OPEN
+== #5
+子 Issue C：公式引擎与计算（REQ-4-*） |  | OPEN
+== #6
+子 Issue D：范围编辑与撤销重做（REQ-3-1-2/3-1-3/3-2- |  | OPEN
+== #7
+子 Issue E：数据组织与分析（REQ-5-*） |  | OPEN
+
+## S10:L44 2026-09-29T06:02:46.869Z message user
+[text]
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L44:C1]
+
+## S10:L45 2026-09-29T06:02:49.826Z message assistant
+[thinking]
+The issue #3 body was modified — probably by glm-1 (root) editing, or maybe my own edit. Let me check what changed now, and check for new comments in issue 1/3.
+Let me view issue 3 body and comments, and any new comments in #1.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S10:L45:C1]
+[toolCall] bash call_00_KJDowzhOwidQVe8eW70s6453
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --json 2>/dev/null | node -e \"let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);const o=Array.isArray(j)?j[0]:j;console.log(o.body);console.log('=== comments ===');(o.comments||[]).forEach(c=>console.log('#'+c.number,'by',c.author&&c.author.login,'| reply-to',c.reply_to,'|',(c.body||'').slice(0,80).replace(/\\n/g,' ')))})\""}
+[toolCall] bash call_01_vyfqvcZjvKYd3fqCxalJ6045
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --timeline 2>&1 | tail -15; echo \"=== issue1 recent comments ===\"; braid issue view 1 --json 2>/dev/null | node -e \"let s='';process.stdin.on('data',d=>s+=d).on('end',()=>{const j=JSON.parse(s);const o=Array.isArray(j)?j[0]:j;(o.comments||[]).slice(-5).forEach(c=>console.log('#'+c.number,'by',c.author&&c.author.login,'| reply-to',c.reply_to))})\""}
+
+## S10:L46 2026-09-29T06:02:49.982Z message toolResult
+toolResult bash False
+[text]
+- **设计增量 v1.1（窄改，与 #27 共同构成权威判据）**：本 Issue comment #33——D-A4 的三条尺寸变更路径（B 结构端点 + `PUT .../state` + A 导入）、README `80-83` 窄改归属 PR #8、D-A8 接缝边界（Formu

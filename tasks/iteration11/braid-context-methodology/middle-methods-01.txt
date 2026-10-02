@@ -1,0 +1,340 @@
+
+## 2026-09-29T08:28:54.830Z 0abc5fc6 2026-09-29T08-20-37-274Z_01a0ec40-611a-73c8-b7c4-1450d91616e9.jsonl:22
+All four conflicts are trivially resolvable "keep both sides" merges:
+
+1. `backend/src/app.js`: keep both import lines and both `api.use` lines (orgs + issues routers). Note ordering doesn't matter functionally.
+2. `backend/src/seed/all.js`: keep both seed imports.
+3. `backend/test/helpers.js`: keep both `delete`/`del` and `put` — merge as `delete`, `put`, `del`? Actually M5 added `put` and `del`, M2 added `delete`. Keep all three (or reconcile `del`/`delete` naming — both can coexist; tests reference whichever).
+4. `copy.ts`: keep both `org` module and add `issues` to the copy aggregate: `export const copy = { APP_NAME, auth, shell, repo, issues, errors, moduleCopy, org, VERIFICATION_CODE };`
+
+So the merge is mechanical. But per the established discipline: results must correspond to the actually checked commit. If the merge resolution is done at merge time by root, the merged develop commit is new and unverified. Options per precedent (#116 pattern and #134 process):
+
+Option A: deepseek-11 (PR #15 assignee) integrates develop into braid/pr-15 (merge commit or rebase), resolves the 4 trivial conflicts, re-runs the evidence chain on the new head, then root merges with the new anchor. This keeps "PR head is the verified candidate" discipline and hands resolution to the person with implementation context.
+
+Option B: root resolves at merge time; merged result needs re-verification (at minimum the full acceptance on develop after merge).
+
+Per the user instructions: "PR 的实现修改与 head 发布由当前 PR 负责人承接" — head changes belong to the PR assignee (deepseek-11). So Option A is correct: I should ask deepseek-11 to integrate origin/develop into braid/pr-15, resolve the conflicts, re-run evidence, publish new anchor. Then root merges.
+
+Wait — but do I have authority to direct that? I'm Issue #8 owner; PR #15 assignee is deepseek-11. Yes, coordinating this is my job. Also #142's small seed PR depends on PR #15 merging into develop, so this conflict resolution unblocks that chain too.
+
+Should I consult advisor? The conflicts are mechanical; the decision of "who resolves" follows established precedent and role definitions. Not a consequential ambiguity — no advisor needed.
+
+Also, should I verify whether the conflict resolution has any semantic subtlety? E.g., copy.ts aggregate ordering, helpers del/delete duplication. The `del` vs `delete` duplication: M2's develop added `delete`, M5 added `del`. Tests on each side use their own name. Keeping both is safest; could note it as a suggestion (keep both or unify to `delete`). The PR assignee can decide; the merge resolution just needs tests to pass.
+
+Plan:
+1. Post a comment on PR #15 (thread 115) @deepseek-11: report the conflict facts (4 files, mechanical keep-both resolutions, verified via merge-tree against origin/develop @ e9390cc), ask to integrate develop into braid/pr-15 and re-run the evidence chain per #134 §3 discipline (evidence first, then "no more commits" promise), publish new anchor.
+2. Notify @glm-1 in Issue #8 thread 85: the planned `--match-head-commit 6f272e7` merge is blocked by the M2 merge; order stays but anchor will move; seed increment PR (premise 1) follows after #15 merges.
+3. Update issue body's 当前有效入口 section to reflect: anchor will change after integration; #13 merged.
+
+Let me get the exact develop head: e9390cc. And PR #15 head: 6f272e7 (confirmed stable).
+
+Let me write the comments. First the PR comment.
+全部四个冲突都属于机械性的“保留双方”注册合并（路由/种子/测试助手/copy 聚合中的添加行）。这阻碍了根目录计划的 `--match-head-commit 6f272e7` 合并。根据 head-discipline（PR head 的变更属于其分配人），我将通知 PR 负责人 @deepseek-11 将 develop 集成到 `braid/pr-15` 中，并在新的 head 上重新运行证据链，同时告知根目录计划变更。
+[operation headings; complete args in raw source]
+braid pr comment 15 --reply-to 131 --message "## develop 前移（M2 已合入 e9390cc）引入合并冲突，请在 braid/pr-15 上整合并重锚（@deepseek-11）
+git merge-tree --write-tree origin/develop origin/braid/pr-15
+
+## 2026-09-29T08:29:44.792Z 426c34f4 2026-09-29T08-20-37-274Z_01a0ec40-611a-73c8-b7c4-1450d91616e9.jsonl:24
+[operation headings; complete args in raw source]
+braid pr comment --help 2>&1 | head -30
+
+## 2026-09-29T08:29:58.223Z a166b938 2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56.jsonl:627
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-16/pi-glm-fast-g1 && braid pr comment 16 --reply-to 143 --body "## #125/#145 用例已并入：新 head \`9012550\`（packet 回填 \`30bb26a\`），检查全绿
+
+## 2026-09-29T08:30:06.028Z e03d7475 2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56.jsonl:629
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-16/pi-glm-fast-g1 && braid issue comment 6 --reply-to 123 --body "#125/#145 的用例缺口已补齐：PR #16 新 head \`9012550\`（packet \`30bb26a\`）。
+
+## 2026-09-29T08:30:12.028Z e4175748 2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56.jsonl:631
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-16/pi-glm-fast-g1 && braid issue comment 6 --body "#125/#145 的用例缺口已补齐：PR #16 新 head \`9012550\`（packet \`30bb26a\`）。
+
+## 2026-09-29T08:30:18.127Z 64653646 2026-09-29T08-26-06-739Z_01a0ec45-6813-747f-945c-a94ed069fe7f.jsonl:79
+glm-12's comment #150 is a report responding to my #145 (it seems they replied to #143 rather than #145, but it's in thread 143). It says they consider `9012550` final and won't push more. It doesn't address #147/#149 (merge with e9390cc + 2 doc backfills + PR body §9.16).
+
+Note "#124 清单逐项" mentions merge f6e326c ✓ — they merged f6e326c but not e9390cc. My #149 asked for the e9390cc merge.
+
+So I need to reply: the merge with e9390cc still isn't done, plus the two #147 backfills. Let me verify the current facts once more (head, merge-base, files) and then post a clear, single comment.
+
+Let me check:
+- origin/braid/issue-6-m4a head (30bb26a?)
+- whether e9390cc merged
+- acceptance-plan M4a tokens
+- packet 未决 item
+
+Already verified for 30bb26a. Let me re-fetch to confirm nothing new, then post.
+
+Also I should consider: maybe glm-12 thinks the merge isn't needed? My #149 is pending delivery ("待投递"). Hmm, but comment #150 was posted at... let me check the timeline. #150 appears after #149 in the PR comment list. So glm-12 posted #150 after my #149 was created. Did they see it? The delivery of #147/#148/#149 was flagged "待投递". Since #150 references "#124 清单" and responds to #145, likely they hadn't seen #147/#149 yet.
+
+Wait, the "消息投递回执 — 评论 #150（仅表示评论输入的接收状态）收件人 @deepseek-9: 会话已接受评论输入 (delivered)" — that's a delivery receipt for comment #150 to me. OK.
+
+Now, the state: glm-12 says "合并前我不会再向该分支 push，等待你在该 head 上验收并合并" — that's a conflict: they say they won't push more, but the e9390cc merge is still needed. If I accept 9012550 as final and merge PR #16 into develop, the merge would be a merge commit from develop's side — actually merging PR #16 (base develop) when the head doesn't include develop's latest is fine: Braid/GitHub would create a merge commit... but if there are conflicts, the merge can't be done automatically. Since there ARE 2 content conflicts, Braid's merge would fail or require the head to contain the resolution.
+
+Hmm — but wait: when merging a PR into develop, git merges head into develop. Conflicts would need resolution. Braid CLI's `pr merge` may attempt and fail on conflicts. So the head must include the merged develop (or Braid can do it? no).
+
+So I must insist glm-12 merge e9390cc into the branch and resolve the 2 conflicts.
+
+Since they explicitly said they'll stop pushing, and they may not have seen #149, I should reply clearly (in thread 143) with a precise, single actionable request. This is a genuine new fact (they've handed off as "final" without the merge) → a reply is warranted.
+
+Let me first double-verify the current published facts to make the comment airtight:
+1. `git fetch`; head = 30bb26a; merge-base with develop = ?
+2. acceptance-plan lacking tokens, packet line stale.
+3. merge-tree conflicts.
+
+Then post comment via `braid pr comment 16 --reply-to 150` (reply to #150). Let me check the CLI syntax for replying/commenting. Let me check `braid pr comment --help`.
+
+Actually, usage: `braid pr comment 16 --body "..."`? Let me check help.
+
+Also I might need to be careful: my previous comments were `issuecomment-NNN` style. Let me check the CLI.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid pr comment --help 2>&1 | head -40
+
+## 2026-09-29T08:30:42.395Z ad737bc0 2026-09-29T08-26-06-739Z_01a0ec45-6813-747f-945c-a94ed069fe7f.jsonl:86
+Still "待投递" for #147/#148/#149 and glm-12's run (started 08:21:22) is still marked executing. Interesting: their #150/#151 were posted during this run. So they haven't received #147/#148/#149 yet — Braid delivers pending comments at the next safe point, likely when their current run ends.
+
+So glm-12 will receive #147/#148/#149 when this run ends. That may be enough to trigger the merge work. If I now post another comment restating it, it adds to the pending queue.
+
+Given glm-12's run is still executing and my three comments are pending delivery, the right move might be to wait for the delivery and their response, rather than piling on a fourth comment.
+
+But the turn was triggered by comment #151 (their handoff report). Expected response: acknowledge and note the remaining items. Hmm — "收到评论不必回执；需要回答问题、纠正事实、交接成果或采取行动时才回复". Here I need to correct the fact that the candidate isn't merge-ready (baseline not integrated) — that's a fact correction requiring action. My #149 already says it though, and it's pending delivery.
+
+Decision: Post ONE concise reply in the issue thread 84 (reply-to 151) that (a) confirms the #125/#145 items are verified done, (b) states the single remaining blocker with facts (develop not ancestor; 2 conflicts; 2 doc backfills), and (c) asks glm-12 to do the merge + backfills in one push — noting their "不再 push" declaration needs to be lifted for exactly this baseline merge. Also reference #149 for full detail (thread 143). This ensures delivery even if #147-#149 delivery glitches, and it's the reply they expect.
+
+Hmm, but is it noise? It duplicates #149. The instruction warns against duplicate progress summaries — but this is a *different* thing: it responds to their handoff with a correction (merge not done). I'll keep it short and point to #149.
+
+Actually, wait. Let me reconsider the alternative: could I just merge PR #16 myself despite the conflicts? Let me check what `braid pr merge` does with conflicts. If Braid performs the merge server-side and it conflicts, it fails harmlessly. But maybe Braid merges by pushing a merge commit to base computed from the PR head — if it fails, no harm, and I learn. But an attempted merge could produce a partial state? Unlikely.
+
+Actually, there's a much better consideration: the 2 conflicts are trivial "keep both" adjacent insertions. If Braid's merge uses a proper 3-way merge, it will conflict. So I can't merge until the head includes develop.
+
+So the merge must be done by someone with push rights to the head branch. That's glm-12.
+
+Alternatively, I could ask braid to... no.
+
+OK let me post the comment. First let me verify the exact remaining #147 items on 30bb26a (already done: acceptance-plan 0 M4a tokens, packet line stale). Good.
+
+Let me write it concisely and post via `braid issue comment 6 --reply-to 151`. Let me check `braid issue comment --help` for syntax.
+
+Actually since #151 is on the issue, use `braid issue comment 6 --reply-to 151 -F -`.
+
+Wait, `comment view 151` showed "thread: 84" meaning it's in issue thread 84 (the issue thread). So reply in the issue.
+
+Hmm, but should I also reply on the PR thread 143 (#150)? glm-12 replied to #143's root (#150 reply-to 143?) — "comment #150 ... reply-to: 143". And issue #151 reply-to 123. To keep one thread, I'll reply on the issue thread (84) where they just handed off, and cross-reference PR #149. Also the file backfills touch the PR branch; the PR is the right place for the work request. Hmm.
+
+I'll post on the issue thread as a reply to #151 (their handoff), with the concrete ask. Keep it tight.
+
+Let me draft:
+
+---
+## 验收入口已就绪，但候选还不能合入：缺一次基线整合 + 两项文档回填（@glm-12）
+
+已核对 #150/#151：`git diff 5228a3e..9012550` 新增用例与 README 全文断言正确；我对 `9012550` 的独立只读执行也一致（`pnpm e2e` 49/49 通过；`pnpm test` 90/91，唯一失败是 M1 `auth.test.js › keeps the session and the data across a restart` 的 5s 超时，单独复跑 7/7 通过、耗时 3.78s，判定为并发 e2e 高负载抖动，非 M4a 缺陷）。
+
+**但 `9012550`/`30bb26a` 现在不能合入**（事实核对）：
+- `git merge-base origin/develop origin/braid/issue-6-m4a` = `f6e326c`，而 base 已是 `e9390cc`（Merge PR #13 = M2）——develop 不是 head 的祖先；`git merge-tree` 显示 `backend/src/app.js`、`frontend/src/contracts/copy.ts` 两处相邻插入冲突。PR #16 的 base 冲突必须先由 head 侧解决。
+- 你在 #108 已采纳、根侧也确认（#103/#108）的两项文档回填在 `30bb26a` 上仍未落：`docs/acceptance-plan.md`「精确名称断言抽查」无 M4a token；`docs/task-packets/m4a-issue-6.md`「未决/需协作」第一条仍是「已在本 Issue 提出，不阻塞实施」（应按 Issue #6 comment #96 标为已确认）。
+
+**请一次完成并报新 head**：
+1. `git fetch origin && git merge origin/develop`（`e9390cc`）：`backend/src/app.js` 保留 `/orgs` 与 `/repos` 两个 `api.use`；`frontend/src/contracts/copy.ts` 保留 org 与 content 两个文案块；语义复核 `docs/seed-data.md`（M2 组织仓库命名段 + M4a commit 增删数段）、`frontend/src/routes.tsx`（org 路由 + content 路由并存）。
+2. 补 `docs/acceptance-plan.md` 的 M4a token（`Commits`（计数 `aria-hidden`、每页恰一个）/`Changed files`/`Compare changes`/`Branch` combobox/视觉隐藏 `Added`·`Deleted`·`Unchanged`）。
+3. packet「未决」第一条标为已确认并引用 #96。
+4. 在新 head 上重跑 `PATH=/usr/local/bin:$PATH pnpm test`、`pnpm e2e`（dist 先重建）、`bash checks/platform-path.sh`，在本 PR thread 报新 head + 首轮/最终结果。
+
+#149（PR thread 143）已列出同样三项，属同一要求，不必当两次处理。你「合并前不再 push」的前提只适用于实现与用例已定稿；这一次基线整合与文档回填仍需由你发布 head（head 发布归 PR 负责人）。完成后我在该 head 上执行 M4a 验收并合并 PR #16、关闭 Issue #6。
+---
+
+That's long but precise. Maybe trim. I'll keep the essential facts.
+
+Let me post it. Use --body-file - with heredoc.
+
+Also: should I notify root @glm-1? Not necessary. But glm-1 said in #126 they'd do root-side independent platform verification of 9242b6f. Fine.
+
+Let me post.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid issue comment 6 --reply-to 151 -F - <<'EOF' 2>&1 | tail -20
+
+## 2026-09-29T08:31:32.597Z 09de590a 2026-09-29T08-22-31-683Z_01a0ec42-2002-71b5-831c-c95c798ea2ea.jsonl:105
+Full suite: 60 passed, exit 0. So the increment adds 2 tests (58 → 60) and everything passes. The earlier segfault was indeed an environment flake under concurrent load (the second, clean run passed).
+
+Note: my first full run had the segfault; the rerun passed 60/60. Let me record both for transparency.
+
+Now let me:
+1. Confirm the worktree state (branch, clean).
+2. Post the comment on PR #15 thread 115 (reply to #142).
+3. Decide whether to switch the worktree back to braid/pr-15.
+
+About (3): The worktree currently is on braid/m5-prereq1-tiers, clean (all committed). Braid's PR #15 head is 6f272e7 on origin. Leaving the worktree on the increment branch is fine, but to be safe and predictable, let me switch back to braid/pr-15. Then the working tree is clean and matches the PR head.
+
+Hmm, but if I switch back, the local branch braid/m5-prereq1-tiers still exists and is pushed. Good.
+
+Let me do that.
+
+Then post the comment.
+
+Draft comment (reply to #142, thread 115):
+
+---
+## 前提 1 增量已就绪（可重复验证通过），等 #15 合入后开小 PR（回复 #142，@glm-10 / @glm-1）
+
+按 #142 把 Triage/Maintain 浏览器层增量做成独立分支并在本地验证完毕；**PR #15 的 head 未动，仍 `6f272e7`**，本 thread 的锚点结论不变。
+
+**已发布分支**：`braid/m5-prereq1-tiers` @ **`17a2eac`**（`6f272e7` + 1 个增量提交，无 copy.ts 增量）：
+- `backend/src/seed/accounts.js`：`pw-triage`、`pw-maintain`（共享 seed 密码，insert-if-absent）
+- `backend/src/seed/issues.js`：`repo_grants` 2 行 —— triage/maintain @ acme-docs
+- `e2e/helpers.ts`：`TIER_ACCOUNTS`
+- `e2e/issues.spec.ts`：Triage/Maintain describe 转正（Triage：Close/Assignees/Labels/Milestone 可见并可关闭，编辑/评论按钮缺席 + 评论 API 403；Maintain：编辑/评论/关闭可见且改标题后 heading 更新）
+- `docs/seed-data.md`：登记两账户与可指派集合变化（pw-triage/pw-maintain 可指派）
+
+**验证（Node v20.19.3，真实 e2e runner + 交付构建产物 frontend/dist）**
+
+| 检查 | 命令 | 结果 |
+|---|---|---|
+| 后端单测 | `pnpm --dir backend run test` | 103 passed / 8 files |
+| 新档位 e2e | `node e2e/run.mjs --no-build --grep "Triage and Maintain issue tiers"` | 2 passed |
+| 全量 e2e | `node e2e/run.mjs --no-build` | **60 passed**（#15 的 58 + 新增 2），exit 0 |
+
+**排障记录 2 条（透明）**
+1. 增量初版的 spec 用 `signIn`（不等待登录完成）直接发 API，两个新用例 401 失败；改为等待 account menu 后通过。这是增量自身测试代码的缺陷，**不涉及交付实现**（与 #141 探针结论一致）。
+2. 第一次全量运行在后端进程 `Segmentation fault (core dumped)`（测试 11→12，早于新用例），其后全部失败；判定为并发负载下的环境原生崩溃（当时 load ≈ 13，另有 pr-16 的 e2e 在跑，与 #138 记录的负载抖动同源），清负载后重跑同一提交 **60 passed**。
+
+**发布前提（按 #142）**：等 PR #15 合入 develop 后（顺序：合并 #13 → 合并 #15），我 rebase 到新 develop 再开小 PR（`--base develop`），合并即闭合前提 1，届时回本 thread 一句 @ 你。前提 2（acme-demo/\*）维持等 #13 后由根组织复验。
+---
+
+Hmm, the comment is a bit long but it's substantive (new artifact + evidence). Good.
+
+Let me be careful with the braid comment syntax. Let me check `braid comment --help` or `braid pr comment --help`.
+
+Typically: `braid pr comment 15 --body "..." --reply-to 142`. Let me check help.
+
+Let me run `braid pr comment --help` (or `braid comment --help`).
+
+Actually the prompt says "相关回复用 `--reply-to` 留在同一 thread" and "comment resolve ID". So there's likely `braid comment create` or `braid pr comment`.
+
+Let me check.
+Full suite passed: **60 passed** (58 + the 2 new tier checks). Let me confirm state and post the handoff.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && git switch braid/pr-15 2>&1 | tail -2 && git status --porcelain && echo "HEAD=$(git rev-parse HEAD)" && echo "branch=$(git rev-parse --abbrev-ref HEAD)" && echo "--- increment branch ---" && git log --oneline -1 braid/m5-prereq1-tiers && gi
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid pr comment --help 2>&1 | head -40
+
+## 2026-09-29T08:31:37.802Z dd72b6f3 2026-09-29T08-22-31-683Z_01a0ec42-2002-71b5-831c-c95c798ea2ea.jsonl:110
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid pr comment 15 --reply-to 142 --body-file /tmp/prereq1-comment.md 2>&1 | tail -20
+
+## 2026-09-29T08:32:23.711Z 28687f29 2026-09-29T08-20-37-274Z_01a0ec40-611a-73c8-b7c4-1450d91616e9.jsonl:29
+[operation headings; complete args in raw source]
+braid pr comment view 153 --thread 2>&1 | head -80
+
+## 2026-09-29T08:32:40.828Z 2758a334 2026-09-29T08-20-37-274Z_01a0ec40-611a-73c8-b7c4-1450d91616e9.jsonl:31
+[operation headings; complete args in raw source]
+braid pr comment --help 2>&1; echo ===; braid comment --help 2>&1 | head -20
+
+## 2026-09-29T08:34:48.409Z 75016074 2026-09-29T08-12-16-391Z_01a0ec38-bc87-75b0-be62-a2835c24bc22.jsonl:83
+deepseek-11 has the prereq-1 branch ready. Everything waiting on #15 merge. Now post the integration request on PR #15 thread 115 (reply to a suitable comment, e.g., reply in thread 115). Then update issue #1 body, and add brief note in issue #8 thread 85? The PR #15 comment notifies deepseek-11 and glm-10. Also per #140, glm-10 records integration results in thread 85 later.
+
+Note: #153 mentions the branch will need rebase onto new develop anyway — good, that small PR also needs integration; deepseek-11 already plans rebase.
+
+Draft the PR #15 comment (reply in thread 115). Should reply-to which comment? Use reply-to 140? Thread 115's comments: I'll reply to 137? #137 is thread 85. For PR thread 115, last comment is 153 (thread 115, reply-to 142). Reply to 153 to keep in same thread.
+
+Content:
+- 根侧 #13 独立验证通过（platform-path exit 0/51 + Vitest 95/95，detached d62907d），PR #13 已合入 develop（merge e9390cc）。
+- PR #15 现在需要一次 develop 整合：merge-tree 显示 4 处机械冲突（backend/src/app.js、backend/src/seed/all.js、backend/test/helpers.js、frontend/src/contracts/copy.ts），并语义复核自动合并的 docs/seed-data.md 与 frontend/src/routes.tsx。
+- app.js 挂载顺序给出精确指引：grants router 在 M3 repository router 之前；issues router 挂在 /repos 下、M3 router 之后（需确认 issues 挂载位置——PR #15 自己的 app.js 里是 api.use('/repos', createIssuesRouter({db})) after createRepositoryRouter）。
+- copy.ts: 保留 org(M2) 与 issues(M5) 两个文案块。seed/all.js: governance 与 issues seed 都注册。helpers.js: 两侧增量都保留。
+- 整合后新 head 重跑 platform-path + Vitest + e2e，报结果，并把「不再有后续提交」放在证据之后（#134 §3）。
+- 完成整合后根合并 #15（--match-head-commit 新 head），随后你再 rebase braid/m5-prereq1-tiers 开小 PR（per #142/#153）。
+
+Then update issue #1 body task packet. That's a big body edit; update "当前状态" section and 下一步. Let me write the comments first.
+PR #15 侧一切就绪，只差 develop 整合。现在在 PR #15 thread 115 发整合请求（含冲突面与精确解决指引）。
+[operation headings; complete args in raw source]
+braid pr comment 15 --reply-to 153 --body "## develop 已前移（M2 合入），请整合 origin/develop 后报新 head（@deepseek-11）
+
+## 2026-09-29T08:37:01.770Z 4e028738 2026-09-29T08-20-37-274Z_01a0ec40-611a-73c8-b7c4-1450d91616e9.jsonl:42
+Current state:
+- braid/pr-15 head still 6f272e7 (deepseek-11 hasn't integrated develop yet).
+- braid/m5-prereq1-tiers @ 17a2eac published.
+- Root @glm-1 posted #154 with detailed conflict resolution instructions and said "整合完成后我合并 #15".
+
+The notification asks me to process comment #154. My draft comment from the previous turn duplicates #154's request — I should discard it (or rather not post it). What remains for me as Issue #8 owner?
+
+1. Acknowledge #154 on the Issue #8 side (thread 85) — record that the merge sequencing/anchor change is now tracked: PR #15 needs integration + new anchor before merge; my issue body's "下一步" says merge with `--match-head-commit 6f272e7`, which is now stale. I should narrow-update the issue body to reflect: #13 merged (e9390cc), PR #15 merge pending integration of develop (4 mechanical conflicts, per PR #15 thread 115 #154), anchor will move to post-integration head; prereq1 increment branch published (17a2eac) awaiting #15 merge.
+
+2. Maybe reply in PR #15 thread 115 to #154? Root already gave instructions. I don't need to duplicate. But as issue owner I can add a short concurrence note... Actually guidance says: "收到评论不必回执；需要回答问题、纠正事实、交接成果或采取行动时才回复". #154 doesn't ask me anything. No reply needed on PR side.
+
+3. Update issue body: the "当前有效入口" section's 下一步 for root says "合并 #13（M2）后合并 PR #15（--match-head-commit 6f272e7）" — now #13 is merged and the anchor plan changed. Also "工作基线" mention. Also 待复验前提 1 now has a published branch (17a2eac). Narrow edits:
+   - Update the "下一步（根 @glm-1）" bullet to reflect: #13 已合入（e9390cc）；PR #15 合并待 deepseek-11 整合 origin/develop（4 处机械冲突，方案见 PR #15 thread 115 评论 #154），新锚点待定，6f272e7 证据不再用于合并；整合后依次合并 #15 → prereq1 小 PR → develop→main 整合 PR。
+   - Update 待复验前提 1: 增量分支已发布 braid/m5-prereq1-tiers @ 17a2eac（60 e2e passed 本地），待 #15 合入后 rebase 开小 PR。
+
+Also should I double check root's #154 conflict claims against my own analysis? Root's item 1 mentions mount order: `/repos` grants router (M2) → M3 createRepositoryRouter → issues router (M5, after M3) → /orgs. My merge-tree analysis showed app.js conflict with M2's grants+orgs imports vs M5's issues import. The mount ordering detail is a semantic point root addressed. Fine — root's instruction supersedes; no correction needed. Let me quickly verify the mount order claim is sensible — does M5's issues router need to be before or after M3's repository router? Issues routes are /repos/:owner/:name/issues... and M3's repository router handles /repos/:owner/:name/... — as long as they don't overlap paths. Deepseek-11 will verify with tests. No need to second-guess.
+
+One more check: does my issue body update need correction about "探针已完成" text? It's already updated with #142. I'll just narrow-edit the two spots.
+
+Let me do the edits to the issue body.
+`braid/pr-15` 的 Head 仍为 `6f272e7`（集成工作待 deepseek-11 处理），根因 #154 已向 PR 负责人传达了冲突解决计划 —— 我之前准备的重复评论已不再需要。关于 #154，我目前的工作是更新 Issue #8 的描述，其“下一步”依然显示使用 `--match-head-commit 6f272e7` 合并 #15，且前提 1 的行早于已发布的增量分支 `17a2eac`。
+[operation headings; complete args in raw source]
+braid issue edit 8 --body-file - <<'EOF' 2>&1
+
+## 2026-09-29T08:37:30.523Z 14772bd1 2026-09-29T08-12-16-391Z_01a0ec38-bc87-75b0-be62-a2835c24bc22.jsonl:89
+[operation headings; complete args in raw source]
+braid issue edit --help 2>&1 | head -20; echo ====; braid issue edit 1 --body "# 根 Issue：任务（保留原有标题结构）
+
+## 2026-09-29T08:38:07.998Z 56f570b4 2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56.jsonl:729
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-16/pi-glm-fast-g1 && braid pr comment 16 --reply-to 143 --body "## 二次整合完成（develop \`e9390cc\` + #147 回填）：新 head \`d47a936\`（packet \`018861d\`），检查全绿
+
+## 2026-09-29T08:38:16.203Z 45d3c78c 2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56.jsonl:731
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-16/pi-glm-fast-g1 && braid issue comment 6 --reply-to 123 --body "二次整合完成（develop \`e9390cc\`，PR #13/M2）：PR #16 新 head \`d47a936\`（packet \`018861d\`）。
+
+## 2026-09-29T08:40:22.404Z 6af92129 2026-09-29T08-12-16-391Z_01a0ec38-bc87-75b0-be62-a2835c24bc22.jsonl:94
+[operation headings; complete args in raw source]
+braid issue edit 1 -F /tmp/issue1-body.md 2>&1 | head -6
+
+## 2026-09-29T08:40:46.942Z 48f02179 2026-09-29T08-12-16-391Z_01a0ec38-bc87-75b0-be62-a2835c24bc22.jsonl:96
+Body restored with updates. Now also leave a brief note in issue #8 thread 85? The #140 said glm-10 will record integration results later. My #154 on PR #15 already notified deepseek-11 and glm-10. A short reply in issue #8 thread 85 (reply-to 140) noting #13 merged and #15 integration requested would keep issue #8 context current. Let me add it concisely.
+
+Also clean up temp worktrees (/tmp/sim-develop worktree registration in the main clone — I created a git worktree; should remove it to keep the clone clean).
+正文已恢复并更新。补一条 issue #8 thread 85 的状态知悉，并清理临时 worktree。
+[operation headings; complete args in raw source]
+braid issue comment 8 --reply-to 140 --body "根状态更新（@glm-10 / @deepseek-11）：**#13（M2）已合入 develop**（merge \`e9390cc\`；根侧独立验证 platform-path exit 0 / 51 passed + Vitest 95/95 @ \`d62907d\`）。PR #15 因 develop 前移需一次整合（冲突面与 app.js 挂载顺序指引已在 PR #15 thread 115 评论 #154 给出），@deepseek-11 整合报新证据后我合并（\`--match-head-commit\` 取实际验证 head）；随后按 #142 顺序：前提 1 小 PR → 前提 2
+[operation headings; complete args in raw source]
+git worktree remove --force /tmp/sim-develop 2>&1; git worktree list
+
+## 2026-09-29T08:42:37.267Z a006d2db 2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl:12
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-8/pi-glm-fast-g1 && braid issue comment view 157 --thread 2>&1
+
+## 2026-09-29T08:42:47.098Z d3c70eca 2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl:14
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-8/pi-glm-fast-g1 && braid issue comment view --comment 157 --thread 2>&1 || braid issue comment view 157 --thread --issue 8 2>&1 | head -5; braid issue comment --help 2>&1 | head -30
+
+## 2026-09-29T08:44:04.590Z b2799739 2026-09-29T08-26-06-739Z_01a0ec45-6813-747f-945c-a94ed069fe7f.jsonl:163
+The context command essentially prints the issue. Not helpful for the error.
+
+Let me think about "当前调用已失效，本次修改未写入". Perhaps this is the harness's way of saying: my write is rejected because the work item has been "reassigned"/locked to another member's active execution? Or because Braid requires the mutating call to be made within the same "invocation" that read the work item (a CAS-like check)?
+
+Hmm, another thought: maybe writes are rejected when the *caller's own run* is not registered — e.g., this turn was triggered by a background-bash completion rather than a Braid event, so the Braid "invocation" context is missing/invalid. That is: Braid CLI operations require being inside a Braid-dispatched run. My earlier successful writes (#152) happened during a turn triggered by a Braid event (comment 151). Now my turn was triggered by a background bash completion → no valid Braid invocation → writes rejected.
+
+That's a plausible explanation: "当前调用已失效" = the current invocation (run) is invalid.
+
+If so, the fix: the merge must wait until my next Braid-dispatched turn. Hmm. But that's awkward.
+
+Let me test this hypothesis cheaply: try a different write (e.g., a comment). If that also fails with the same error, it supports the hypothesis that all writes fail in this turn. But posting a stray comment is undesirable... though I could post something useful: my acceptance report! That IS useful and I need to post it anyway. If it fails with the same error, I learn the cause; if it succeeds, then the merge error is specific.
+
+Let me post the acceptance summary comment on PR #16 (useful regardless). If it succeeds, then the merge issue is specific to merging.
+
+Actually — even better: the acceptance report on the PR is required ("在 Issue 中处理...返回的结果"). Let me write it and try. If writes are globally blocked, I'll know.
+
+Hmm, but if writes are blocked, the comment is lost (no harm, I can retry).
+
+Let me try.
+
+Actually wait. Let me reconsider: maybe the merge error is because the PR's assignee is @glm-12 and Braid enforces that the *merger* must be the PR assignee or the issue owner... I am the issue owner. Hmm.
+
+Let me just test with a comment post.
+
+Actually, hold on — there's another possibility: the merge might require the PR to be "ready" and Braid rejects merging a PR assigned to another agent while... no.
+
+Let me test the comment.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid pr comment 16 --reply-to 155 -b "验收执行中（探针写入测试，后面会补充完整结果）" > /tmp/issue6-accept/c1.out 2> /tmp/issue6-accept/c1.err; echo "exit=$?"; head -c 400 /tmp/issue6-accept/c1.out; cat /tmp/issue6-accept/c1.err

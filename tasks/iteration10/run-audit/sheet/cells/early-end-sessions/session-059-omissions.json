@@ -1,0 +1,89 @@
+[
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L4",
+    "part": 0,
+    "kind": "items_projection_already_read",
+    "chars": 40542,
+    "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L74",
+    "part": 2,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-blank/checks/unit/dropdown-blank.test.ts",
+    "field": "content",
+    "chars": 2640
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L120",
+    "part": 0,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-blank/pr-body.md",
+    "field": "content",
+    "chars": 1963
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L132",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr15-comment.md",
+    "field": "content",
+    "chars": 1169
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L144",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr15-move-probe.mjs",
+    "field": "content",
+    "chars": 8728
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L241",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr15-review2.md",
+    "field": "content",
+    "chars": 3428
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L342",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr15-reply171.md",
+    "field": "content",
+    "chars": 1955
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L355",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-value/checks/unit/move-value-sync.test.ts",
+    "field": "content",
+    "chars": 2773
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L402",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-blank/pr-body.md",
+    "field": "content",
+    "chars": 2722
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L406",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/bl-comment.md",
+    "field": "content",
+    "chars": 1268
+  },
+  {
+    "source": "continuation02-root-native/111-2026-09-28T07-15-48-645Z_01a0e6de-af25-74f5-86e7-3810e07f1044.jsonl:L410",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr15-verify-report.md",
+    "field": "content",
+    "chars": 1836
+  }
+]

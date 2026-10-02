@@ -1,0 +1,98 @@
+[
+  {
+    "render_block": 36,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 1508,
+    "text": "  '\nchildren:\n- id: REQ-1\n  name: Workbook Access and Lifecycle\n  type: FOLDER\n  dependencies: []\n  description: 'Supports viewing, opening, creating, renaming, importing, and exporting\n    workbooks within the application. The home page is the entry point for workbooks;\n    successful open, create, and import operations all enter the same editor page,\n    and subsequent operations may modify only the currently opened workbook. After\n    a workbook is opened, created, or imported, the editor state shown in the browser\n    must be a stable workbook state: visiting or refreshing that\n    exact workbook state must open the same workbook rather than another workbook or a temporary\n    blank page, and successful workbook modifications must remain available through\n    that visible workbook state. After returning to the home page or reopening, the workbook name, last-updated\n    time, worksheet order, and last active worksheet remain consistent. Worksheet\n    tabs on the same editor page use the ARIA tab role, with the active tab indicated\n    by aria-selected=\"true\"; the active worksheet grid uses the ARIA grid role, has\n    the accessible name \"Worksheet grid\", and exposes aria-multiselectable=\"true\".\n    Grid cells use the ARIA gridcell role with their cell coordinates as accessible\n    names (for example, A1); the current cell and every cell within the currently\n    selected rectangular region expose aria-selected=\"true\", while cells outside the\n    region expose aria-selected=\"false\"."
+  },
+  {
+    "render_block": 38,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 351,
+    "text": "    '\n  children:\n  - id: REQ-1-1\n    name: Workbook Navigation\n    type: FOLDER\n    dependencies: []\n    description: |\n      Supports viewing and opening available workbooks from the home page. After a workbook is successfully created, renamed, or imported from CSV, returning to or refreshing the home page must show the updated record in the list."
+  },
+  {
+    "render_block": 40,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 1117,
+    "text": "      Page reference:\n      ![image](reference/workbook-home.png)\n    children:\n    - id: REQ-1-1-1\n      name: View and Open a Workbook\n      type: ATOMIC\n      dependencies: []\n      description: |\n        Users view available workbooks on the workbook home page. Each record displays \"Last updated: <last updated value>\" and provides a link whose accessible name is the workbook name. After the user clicks the link, the editor displays the same \"Last updated: <last updated value>\", the corresponding workbook name, worksheet tabs and order, current active worksheet, row and column structure, grid values, formula bar content, filter views, validation entry points, and pivot table results; data from another workbook must not appear in the current grid. The current editor page entry in the browser must be directly accessible and continue to identify the same workbook after refresh; visiting that exact workbook state in the same or a later browser session must restore the workbook’s most recent successful state without requiring navigation through the home page. The entry format is implementation-defined."
+  },
+  {
+    "render_block": 42,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 3667,
+    "text": "        Page reference:\n        ![image](reference/workbook-home.png)\n      scenarios:\n      - name: REQ-1-1-1 -the requested workflow,the requested workflow page entry the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow,the requested workflow page entry the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow,the requested workflow\n            page entry the requested workflow\" using the same seeded names and values (the seeded workbook\n            `Q3 Sales`, worksheet `Sheet1`, and cell A1 value `Region`); validation\n            or permission failures are shown beside the named control and do not create\n            a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n      - name: REQ-1-1-1 -the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow\"\n            using the same seeded names and values (the seeded workbook `Q3 Sales`,\n            worksheet `Sheet1`, and cell A1 value `Region`); validation or permission\n            failures are shown beside the named control and do not create a partial\n            record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n  - id: REQ-1-2\n    name: Workbook Creation and Naming\n    type: FOLDER\n    dependencies: []\n    description: 'Supports creating a blank workbook and changing the workbook name;\n      both operations are initiated from visible workbook state points on the home page or\n      editor page. After success, the workbook record on the home page and the editor\n      title are updated consistently and remain so after refresh or reopening."
+  },
+  {
+    "render_block": 96,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L241",
+    "chars": 1007,
+    "text": "### 交付内容\n- frontend/（Vite + React + TypeScript）与 backend/（Node.js + Express + TypeScript），交付 frontend/package.json、backend/package.json。\n- backend 通过 HOST/PORT 环境变量启动（默认 HOST=0.0.0.0 PORT=3000），静态服务 frontend 构建产物 + 提供 REST API；启动 120 秒内完成。\n- 启动时准备种子数据：工作簿 `Q3 Sales`、工作表 `Sheet1`、A1=`Region`（幂等，已有则不重复创建）。\n- 数据持久化到服务端（JSON 文件存储，目录可用环境变量覆盖；自检时用临时目录，不改交付初始状态）。\n- 主页：工作簿列表，每条显示 \"Last updated: <时间>\"，链接的可访问名为工作簿名；\"New blank workbook\" 按钮 → 创建页（提交按钮 \"Create\"）→ 编辑器。\n- 编辑器：稳定的可收藏 URL（如 /workbook/:id），刷新/直接访问恢复同一工作簿最近成功状态；显示工作簿名、\"Last updated\"、工作表标签（ARIA tab，活动 tab aria-selected=\"true\"）、网格（ARIA grid，可访问名 \"Worksheet grid\"，aria-multiselectable=\"true\"，gridcell 可访问名为坐标如 A1，选中区域 aria-selected=\"true\"，区域外 \"false\"）、公式栏（text box，label \"Formula bar\"）、行号（rowheader，可访问名为数字）、列头（columnheader，可访问名为列字母）。\n- \"Rename workbook\" 按钮（编辑器标题旁）→ 文本框 label \"Workbook name\"（预填当前名）+ \"Save\"；空名（trim 后）报 \"Workbook name cannot be empty\"；成功后编辑器标题与主页链接同步更新。\n- 共享架构约定（后续任务遵守）：REST API 形态、前端状态层、组件拆分、单元格/工作表数据模型（值+原始公式+计算结果、校验规则、筛选、透视、选区持久化字段）。"
+  },
+  {
+    "render_block": 1144,
+    "source": "local_items.json:pr:1",
+    "chars": 153,
+    "text": "## 内容\nIssue #6 的不依赖应用骨架部分：新增 `shared/formula-engine`（纯 TypeScript，封装 HyperFormula 3.4，license key `gpl-v3`），前端/后端均可通过 `file:../shared/formula-engine` 消费。"
+  },
+  {
+    "render_block": 1146,
+    "source": "local_items.json:pr:1",
+    "chars": 537,
+    "text": "### 覆盖需求\n- REQ-4-1-1：`=` 公式，数字常量/括号/`+ - * /`、同表 A1 引用、SUM/AVERAGE/COUNT/MIN/MAX 连续范围；函数名大小写不敏感；聚合忽略空单元格，COUNT 只计数字，SUM/AVERAGE/MIN/MAX 只用数字单元格。\n- REQ-4-1-2：`adjustFormulaForCopy()` 纯函数——相对引用按目标偏移调整、`$` 绝对引用不变；相对引用移出工作表边界（负向或超出结构 bounds）时整个公式折叠为 `=#REF!`，网格显示 `#REF!`，且 `=#REF!` 作为 raw 持久化重建后仍显示 `#REF!`。\n- REQ-4-2-1：编辑/批量粘贴/范围移动/行列结构变化后，直接与间接依赖按依赖图自动重算；公式栏保留原公式；持久化只存原始输入，加载时 `WorkbookFormulas.create()` 重建（不显示旧结果）。\n- REQ-4-2-2：错误映射 #DIV/0!、#REF!、#NAME?、#ERROR!；循环引用（HyperFormula #CYCLE!）映射为 **#REF!**；错误不阻碍其他单元格；改为合法公式后结果与依赖更新、重建后错误消失。"
+  },
+  {
+    "render_block": 1270,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L45",
+    "chars": 873,
+    "text": "### 一、需求语义确认（依据 requirements.yaml REQ-3-1-1/2/3、REQ-3-2-1/2 的 description）\n- REQ-3-1-1：网格与公式栏（text box label \"Formula bar\"）均可改同一单元格；Enter / 点击其它单元格提交，Escape 取消；普通值网格与公式栏一致，公式单元格网格=结果、公式栏=原始公式；提交后直接/间接依赖公式更新；刷新持久；提交失败报错且保留最后一次成功值。\n- REQ-3-1-2：TSV 二维粘贴（tab 分列、换行分行）从起始单元格铺满整个矩形，保留空字段，只覆盖目标矩形；目标内公式被替换并重算；整单原子（失败时全部保留原值）；0-100 规则拒绝时文案 \"Please enter a number from 0 to 100\"；右键菜单 ARIA menuitem \"Paste\" 与 Ctrl+V 走同一路径。\n- REQ-3-1-3：点击=单元格、拖拽=矩形；grid 可见指示整块选区；aria-multiselectable=\"true\"；矩形内 gridcell aria-selected=\"true\"、外 \"false\"；新选择替换旧选择；每个工作表持久化\"完整矩形\"（不只左上角），刷新/切表精确恢复，切表不覆盖原表选区。\n- REQ-3-2-1：同表内复制/剪切/粘贴；复制不动源；剪切在目标完整显示后才清源；值/公式保持二维布局；复制公式时相对引用按目标偏移调整、绝对引用不变，公式栏显示调整后的原公式；源/目标/受影响公式全成功并持久，或全保持原状；目标校验拒绝文案同上；范围外单元格不变。\n- REQ-3-2-2：工具栏按钮 \"Undo\"/\"Redo\"，Ctrl+Z/Ctrl+Y 同效；覆盖单元格编辑、批量粘贴、范围移动、行列结构变化；逆序撤销、redo 重放刚撤销的完整操作；不跨工作簿；undo/redo 后刷新持久；undo 后新修改使 Redo 禁用且 Ctrl+Y 不能恢复旧分支；历史仅需会话内。"
+  },
+  {
+    "render_block": 1272,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L45",
+    "chars": 195,
+    "text": "材料问题记录：requirements.yaml 中 REQ-3 的 scenario `name`/`WHEN` 文本被替换成 \"the requested workflow\" 占位（多处），我按 description 语义与具体值（`Q3 Sales`、A1:B2 = Item/Qty/Pen/4、目标 D1:E2、East/1200/North/800）解读，不视为可读判据来源。"
+  },
+  {
+    "render_block": 1274,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L45",
+    "chars": 697,
+    "text": "### 二、技术方案（待 #2 契约确认后细化落地）\n1. 统一写入口：所有写操作（单元格提交、批量粘贴、范围复制/剪切粘贴、行列结构变化）都构造成一个 Operation，走同一条管道\n   `校验(#7 规则) → 写入 cells → 重算(#6) → 整体持久化(API) → 成功后入 undo 栈`。\n   任一步失败 → 不落任何部分值，界面回到操作前状态并显示错误。这同时满足\"整单原子\"和\"要么全更新要么全原状\"。\n2. Operation 记录（undo/redo 基石）：对受影响单元格保存 before/after 快照（值/原始公式/计算结果的旧态 + 新态），结构操作保存结构前后态。undo 按逆序恢复快照，redo 重放同一 Operation；新操作入栈时清空 redo 栈（Redo 按钮禁用且 Ctrl+Y 不恢复旧分支）。历史放前端会话内（不落库），仅存值/公式快照，满足\"刷新后状态持久、历史可为空\"。\n3. 选区模型：每工作表持久化 `{ start, end }` 完整矩形 + activeCell，落在共享数据模型的选区字段上；网格 aria-selected 由该矩形派生（矩形内 true、外 false）。\n4. 公式引用调整：复制公式时按 (Δrow, Δcol) 平移相对引用，`$` 锁定的行/列不变；越界或删列导致的不可保留引用报 #REF!（与 #4 一致）。公式栏始终显示调整后的原公式。\n5. 剪切时序：先写入目标并确认目标完整显示（含重算/持久化成功），再清空源并把\"源清空 + 目标写入\"合成同一个 Operation。"
+  },
+  {
+    "render_block": 1276,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L45",
+    "chars": 647,
+    "text": "### 三、需要依赖方给出的契约（请在各自分支尽早发布最小可消费实现）\n- @glm-2：① cell 的三态字段命名（值/原始公式/计算结果）；② 批量写单元格的 API 路径与原子语义（一次请求一个矩形/一组 cell，全成功或全失败）；③ 工作表选区持久化字段位置；④ 前端是否有统一 store/action 层可供第三方挂写操作（没有的话我会按你的组件结构加一层薄封装）。\n- @glm-4：行列结构变化要被 undo 覆盖 → 请把结构变更也走同一个 Operation 记录入口（或告知你现有的结构变更入口/状态更新函数），我把 undo 栈做成共享模块供你调用，避免两套历史。\n- @glm-6：① 提交写值后触发（直接/间接）依赖重算的入口；② 复制公式的相对/绝对引用调整函数是否由你提供（若你提供我就消费，不重复实现）。\n- @deepseek-7：校验规则模型（rule type = dropdown / number range，min/max/range，多单元格规则）与错误文案函数。REQ-3 只消费规则，不重复实现。注意文案特例：0-100 数值规则拒绝时必须是 \"Please enter a number from 0 to 100\"（REQ-3-1-2 / REQ-3-2-1 明确要求），与 REQ-5-2-1 的 \"Please enter a number between <min> and <max>\" 是同一规则模型下的两种文案，请一起定。"
+  },
+  {
+    "render_block": 1286,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L6",
+    "chars": 418,
+    "text": "### 一、需求语义确认（按 REQ-5-1-1 / 5-1-2 / 5-2-1 / 5-3-1 description）\n- 排序只作用于\"用户选中的矩形范围\"，不扩展到相邻数据；声明表头时首行不参与；数字/可解析日期/文本按类型比较；相等键稳定；整行移动；范围外不变；失败报错且保持原顺序。\n- 筛选只改可见性：不删除不重排；跨列条件 AND；\"Clear filter\" 恢复原顺序原值；CSV 导出与透视汇总仍包含被隐藏行；公式与校验行为不变。\n- 校验四种写入口（网格、公式栏、粘贴、范围移动）一致；批量任一目标非法则整单拒绝、全部保留原值；规则随行列变化移动；重开对话框预填 + \"Delete rule\"。\n- 透视结果落在独立 PivotN 工作表，只读源数据；行/列按源数据首次出现顺序；Grand Total 末行/末列；COUNT 空组合显示 0；Refresh 完全重算替换；字段/源无效时可见报错且两表都不变。"
+  },
+  {
+    "render_block": 1288,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L6",
+    "chars": 1046,
+    "text": "### 二、技术方案（待 #2 契约落地后落到具体文件）\n1. 数据模型（挂在工作表上，随工作簿持久化）\n   - `validations: ValidationRule[]`（`{ type:\"dropdown\", values: string[] }` | `{ type:\"number\", min, max }` + 绑定 `Rect`）；判定与文案由 `validateValue()/validateRangeWrite()` 唯一提供（见 #7 comment #10、#5 comment #11 的定稿）。\n   - `filter: { range: Rect, columns: [{ col, mode:\"values\"|\"condition\", values?, condition?, value? }] } | null`；可见行由纯函数从源记录派生（`visibleRowIndexes`），不写入数据，因此导出/透视天然仍含隐藏行。\n   - `pivot: { sourceSheetId, sourceRange, rowField, colField|null, valueField, summarizeBy, lastResult }` 记录在 PivotN 工作表上，用于 Refresh 与错误时\"保留上次成功结果\"。\n   - 排序结果直接写成单元格新顺序（含随行平移的相对引用），因此刷新持久无需额外排序状态。\n2. UI/ARIA：工具栏按钮可访问名 `Data`（menu，命令用 menuitem）；对话框 role=dialog 且可访问名 = 标题；筛选表头按钮 `Filter <表头文本>`；校验下拉按钮 `Open dropdown for <坐标>`（选项 role=option，可访问名=trim 后允许值）；透视工作表上区域 `Pivot table editor` + `Refresh pivot table` 按钮。\n3. 计算内核（已按纯函数写好并单测通过，见下\"三\"）：`sortRange`（稳定 + 类型比较 + 公式随行平移）、`visibleRowIndexes`/`distinctValues`（筛选）、`validateValue`/`validateRangeWrite`/`shiftRules`（校验）、`computePivot`/`nextPivotSheetName`（透视）。"
+  },
+  {
+    "render_block": 1290,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L6",
+    "chars": 309,
+    "text": "### 三、当前证据（可重复执行）\n纯逻辑层已实现并通过单测（本 lane 工作区 `notes/prep`，19/19 pass，`node --test tests/req5.test.ts`，Node v24.10.0）：排序表头排除/降序稳定/类型序/公式随行平移、筛选值筛选+AND+Before/Is empty、校验 trim 与两类文案、批量原子拒绝、规则随行列 shift、透视无列字段/有列字段/COUNT 空组合 0/首次出现顺序/Grand Total/两类错误。这些模块不依赖 #2 框架，落地时按 #2 的目录与类型约定迁入（同时补 vitest/jest 配置或直接用仓库既有测试框架）。"
+  },
+  {
+    "render_block": 1304,
+    "source": "local_comments.json:30",
+    "chars": 281,
+    "text": "**② 引用调整函数由我提供，请勿重复实现**：`adjustFormulaForCopy(formula, {rowOffset,colOffset}, bounds?)` — 相对引用平移、`$` 绝对不变；相对引用越界返回 `=#REF!`（按 REQ-4-1-2 验收口径）；字符串字面量与函数名不误伤。与你方案第 4 点的差异请注意：不可保留引用不是\"报 #REF! 错误值由你处理\"，而是**整个公式折叠为 `=#REF!` 字符串**，直接作为该目标单元格的原始输入持久化（`=#REF!` 作为 raw 重建后仍显示 `#REF!`，引擎已测）。"
+  },
+  {
+    "render_block": 1306,
+    "source": "local_comments.json:30",
+    "chars": 169,
+    "text": "**持久化契约（与你的 Operation/快照方案对接）**：持久层只存 raw（用户输入原文），不存计算结果；加载时 `WorkbookFormulas.create(sheets)` 重建即得当前结果——所以你的 undo 快照只需 before/after 的 raw，无需快照计算结果；\"刷新后不显示旧结果\"由重建语义天然满足。"
+  }
+]

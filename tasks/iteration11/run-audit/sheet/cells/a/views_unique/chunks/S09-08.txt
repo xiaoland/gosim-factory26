@@ -1,0 +1,347 @@
+`? Simpler: replace `app\n      .post(` patterns. Let me just do a careful edit of the new describe block, retrieving it from the file.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L81:C1]
+[toolCall] bash call_00_fOuQdKnVbPh7ilvJs4nq7291
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && grep -n \"\" backend/src/app.test.js | sed -n '380,490p'"}
+
+## S09:L82 2026-09-29T06:03:16.652Z message toolResult
+toolResult bash False
+[text]
+380:    const app = appFor(freshDb());
+381:    const csv = 'a,"b,c","d""e","f\ng"\n1,,"","x"\n';
+382:    const res = await app.post('/api/workbooks/import').send({ fileName: 'tricky.csv', csv });
+383:    expect(res.status).toBe(201);
+384:    // `raw === ''` is not persisted (same convention as every write path).
+385:    expect(res.body.worksheets[0].cells).toEqual([
+386:      [0, 0, 'a'],
+387:      [0, 1, 'b,c'],
+388:      [0, 2, 'd"e'],
+389:      [0, 3, 'f\ng'],
+390:      [1, 0, '1'],
+391:      [1, 3, 'x'],
+392:    ]);
+393:  });
+394:
+395:  it('keeps the default 6x26 structure for empty and small CSVs', async () => {
+396:    const app = appFor(freshDb());
+397:    const empty = await app
+398:      .post('/api/workbooks/import')
+399:      .send({ fileName: 'empty.csv', csv: '' });
+400:    expect(empty.status).toBe(201);
+401:    expect(empty.body.worksheets[0]).toMatchObject({ rowCount: 6, colCount: 26, cells: [] });
+402:
+403:    const small = await app
+404:      .post('/api/workbooks/import')
+405:      .send({ fileName: 'small.csv', csv: 'a,b\nc,d' });
+406:    expect(small.body.worksheets[0]).toMatchObject({ rowCount: 6, colCount: 26 });
+407:    expect(small.body.worksheets[0].cells).toEqual([
+408:      [0, 0, 'a'],
+409:      [0, 1, 'b'],
+410:      [1, 0, 'c'],
+411:      [1, 1, 'd'],
+412:    ]);
+413:  });
+414:
+415:  it('grows the structure when the CSV is larger than the default', async () => {
+416:    const app = appFor(freshDb());
+417:    const rows = Array.from({ length: 10 }, (_unused, row) =>
+418:      Array.from({ length: 30 }, (_unusedCol, col) => `r${row}c${col}`).join(','),
+419:    );
+420:    const res = await app
+421:      .post('/api/workbooks/import')
+422:      .send({ fileName: 'big.csv', csv: rows.join('\n') });
+423:    expect(res.status).toBe(201);
+424:    expect(res.body.worksheets[0]).toMatchObject({ rowCount: 10, colCount: 30 });
+425:    expect(res.body.worksheets[0].cells).toHaveLength(300);
+426:  });
+427:
+428:  it('falls back to the default name when the file name has nothing left after .csv', async () => {
+429:    const app = appFor(freshDb());
+430:    const res = await app.post('/api/workbooks/import').send({ fileName: '.csv', csv: 'a' });
+431:    expect(res.status).toBe(201);
+432:    expect(res.body.name).toBe('Untitled spreadsheet');
+433:  });
+434:
+435:  it('allows two workbooks with the same name', async () => {
+436:    const app = appFor(freshDb());
+437:    await app.post('/api/workbooks/import').send({ fileName: 'dup.csv', csv: 'a' });
+438:    const second = await app.post('/api/workbooks/import').send({ fileName: 'dup.csv', csv: 'b' });
+439:    expect(second.status).toBe(201);
+440:    const list = await request(app).get('/api/workbooks');
+441:    expect(list.body.filter((/** @type {{ name: string }} */ w) => w.name === 'dup')).toHaveLength(2);
+442:  });
+443:
+444:  it('rejects invalid CSV with the exact message and persists nothing', async () => {
+445:    const db = freshDb();
+446:    const app = appFor(db);
+447:    const workbooks = countRows(db, 'workbooks');
+448:    const worksheets = countRows(db, 'worksheets');
+449:    const cells = countRows(db, 'cells');
+450:
+451:    const res = await app
+452:      .post('/api/workbooks/import')
+453:      .send({ fileName: 'broken.csv', csv: 'a,b\n"unterminated,c' });
+454:    expect(res.status).toBe(400);
+455:    expect(res.body).toEqual({
+456:      error: { code: 'INVALID_CSV', message: 'Invalid CSV file format. Import failed.' },
+457:    });
+458:
+459:    expect(countRows(db, 'workbooks')).toBe(workbooks);
+460:    expect(countRows(db, 'worksheets')).toBe(worksheets);
+461:    expect(countRows(db, 'cells')).toBe(cells);
+462:    const list = await request(app).get('/api/workbooks');
+463:    expect(list.body.map((/** @type {{ name: string }} */ w) => w.name)).not.toContain('broken');
+464:  });
+465:
+466:  it('validates the request body shape with the uniform error format', async () => {
+467:    const app = appFor(freshDb());
+468:    const missingName = await app.post('/api/workbooks/import').send({ csv: 'a' });
+469:    expect(missingName.status).toBe(400);
+470:    expect(missingName.body.error.code).toBe('INVALID_BODY');
+471:    expect(missingName.body.error.message).toBe('fileName must be a string');
+472:
+473:    const missingCsv = await app.post('/api/workbooks/import').send({ fileName: 'a.csv' });
+474:    expect(missingCsv.status).toBe(400);
+475:    expect(missingCsv.body.error.message).toBe('csv must be a string');
+476:
+477:    const notAnObject = await app.post('/api/workbooks/import').send([1, 2]);
+478:    expect(notAnObject.status).toBe(400);
+479:    expect(notAnObject.body.error.code).toBe('INVALID_BODY');
+480:  });
+481:});
+482:
+483:describe('unknown API routes', () => {
+484:  it('use the uniform error body', async () => {
+485:    const res = await request(appFor(freshDb())).get('/api/does-not-exist');
+486:    expect(res.status).toBe(404);
+487:    expect(res.body).toEqual({ error: { code: 'NOT_FOUND', message: 'API route not found' } });
+488:  });
+489:});
+
+## S09:L83 2026-09-29T06:03:19.336Z message assistant
+[thinking]
+I need to replace `app\n .post(` with `request(app)\n .post(` and `app.post(` with `request(app).post(`. Let me use sed carefully on lines 370-481 only... Simpler: use a small python script to replace in the range with a regex: `await app\n      .post(` → `await request(app)\n      .post(` and `await app.post(` → `await request(app).post(`.
+Careful not to affect earlier tests that use `request(app).post` (already correct) or `app = appFor`. The pattern `app\n      .post(` appears in the new block; older tests use `request(app)\n      .post(`. Let's check for occurrences of `await app\n` outside the new block.
+Let me use python with line range 370..481.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L83:C1]
+[toolCall] bash call_00_fyhZ6yY0nLwLdf1PoY1N1144
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && python3 - <<'EOF'\nimport re\np='backend/src/app.test.js'\nlines=open(p).read().split('\\n')\n# locate the import describe block\nstart=next(i for i,l in enumerate(lines) if l.startswith(\"describe('POST /api/workbooks/import'\"))\nend=next(i for i,l in enumerate(lines) if i>start and l.startswith(\"describe('unknown API routes'\"))\nseg='\\n'.join(lines[start:end])\nseg2=seg.replace('await app\\n      .post(', 'await request(app)\\n      .post(')\nseg2=seg2.replace('await app.post(', 'await request(app).post(')\nlines[start:end]=seg2.split('\\n')\nopen(p,'w').write('\\n'.join(lines))\nprint(seg2.count('request(app)'))\nEOF\ngrep -n \"await app\" backend/src/app.test.js | head"}
+
+## S09:L84 2026-09-29T06:03:19.368Z message toolResult
+toolResult bash False
+[text]
+16
+
+## S09:L85 2026-09-29T06:03:20.462Z message assistant
+[toolCall] bash call_00_ET_LpnUgj18VSr1R4QRgmCA9232
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && pnpm --dir backend test 2>&1 | tail -20"}
+
+## S09:L86 2026-09-29T06:03:22.239Z message toolResult
+toolResult bash False
+[text]
+ ✓ src/app.test.js (28 tests) 194ms
+      Tests  47 passed (47)
+   Start at  06:03:21
+   Duration  900ms (transform 79ms, setup 0ms, collect 241ms, tests 203ms, environment 0ms, prepare 141ms)
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L86:C1]
+
+## S09:L87 2026-09-29T06:03:23.487Z message assistant
+[thinking]
+Backend tests pass (47). Now typecheck backend.
+Then frontend implementation. Let me first typecheck backend quickly.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L87:C1]
+[toolCall] bash call_00_alhYdAuSkDru8LUWkaSN5797
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && pnpm --dir backend typecheck 2>&1 | tail -20"}
+
+## S09:L88 2026-09-29T06:03:27.057Z message toolResult
+toolResult bash False
+[text]
+> spreadsheet-backend@1.0.0 typecheck /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend
+> tsc -p tsconfig.json
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L88:C1]
+
+## S09:L89 2026-09-29T06:03:45.428Z message assistant
+[thinking]
+Backend typecheck passes. Now frontend.
+Files to create:
+1. `frontend/src/lib/copy.ts`
+2. `frontend/src/lib/cellDisplay.ts`
+3. `frontend/src/lib/csvExport.ts`
+4. `frontend/src/components/NewWorkbookPage.tsx`
+5. `frontend/src/components/ImportCsvDialog.tsx`
+6. `frontend/src/components/RenameWorkbookDialog.tsx`
+7. `frontend/src/components/WorkbookToolbar.tsx`
+Modify: client.ts, App.tsx, HomePage.tsx, WorkbookEditor.tsx, Grid.tsx.
+Let me write copy.ts first.
+/** Requirement-exact user-visible strings (Issue #3 decision D-A9). */
+export const WORKBOOK_NAME_EMPTY_MESSAGE = 'Workbook name cannot be empty';
+export const INVALID_CSV_MESSAGE = 'Invalid CSV file format. Import failed.';
+cellDisplay.ts:
+import { cellKey } from './coordinates';
+export type CellDisplayValue = (row: number, col: number) => string;
+export function worksheetDisplayValues(worksheet: WorksheetSnapshot): CellDisplayValue {
+  const raw = new Map<string, string>();
+  for (const [row, col, value] of worksheet.cells) raw.set(cellKey(row, col), value);
+  return (row, col) => raw.get(cellKey(row, col)) ?? '';
+csvExport.ts:
+import type { CellDisplayValue } from './cellDisplay';
+import { worksheetDisplayValues } from './cellDisplay';
+export function escapeCsvField(value: string): string {
+  if (/[",\n\r]/.test(value)) return `"${value.replace(/"/g, '""')}"`;
+export function worksheetToCsv(worksheet, display = worksheetDisplayValues(worksheet)): string {
+  let maxRow = -1, maxCol = -1;
+  for (const [row, col, raw] of worksheet.cells) {
+    if (raw === '') continue;
+    if (row > maxRow) maxRow = row;
+    if (col > maxCol) maxCol = col;
+  if (maxRow < 0 || maxCol < 0) return '';
+  const lines: string[] = [];
+  for (let row=0; row<=maxRow; row++) {
+    const fields: string[] = [];
+    for (let col=0; col<=maxCol; col++) fields.push(escapeCsvField(display(row,col)));
+    lines.push(fields.join(','));
+  return lines.join('\n') + '\n';
+Wait: used range bounding box should be based on non-empty cells. But consider a cell whose raw is '' but display is non-empty — impossible. Also consider a formula cell whose raw is '=...' → non-empty raw → included. Good.
+Hmm, but should the bounding box be based on raw or display? D-A7 says "从 A1 到所有非空单元格的最大行/列包围盒". "非空单元格" = cells with content. raw-based. Good.
+Also `exportCsvFile(name, csv)` helper to trigger download — better in the toolbar. Let me add a small helper in csvExport.ts:
+export function downloadCsv(fileName: string, csv: string): void {
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+  const url = URL.createObjectURL(blob);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = fileName;
+  document.body.appendChild(anchor);
+  anchor.click();
+  anchor.remove();
+  URL.revokeObjectURL(url);
+Also `csvFileName(workbookName)`: `${name || 'workbook'}.csv`? Requirement: filename ends with .csv. If workbook name ends with `.csv` already... then name.csv.csv? Let's do: `const base = workbookName.trim(); return base.toLowerCase().endsWith('.csv') ? base : `${base || 'workbook'}.csv`;` Hmm. D-A7 says 建议文件名 `<工作簿名>.csv`. Keep simple: `${base}.csv` but if base already ends with .csv case-insensitively, don't double. Actually simpler and safer: sanitize invalid filename chars? Keep minimal: replace `/` etc.? Not needed.
+I'll implement `csvFileName(workbookName)`:
+export function csvFileName(workbookName: string): string {
+  const base = workbookName.trim().replace(/[/\\:*?"<>|]/g, '_') || 'workbook';
+  return /\.csv$/i.test(base) ? base : `${base}.csv`;
+Now frontend components.
+**NewWorkbookPage.tsx**
+import { Link, useNavigate } from 'react-router-dom';
+import { copy } from '../lib/copy';  // or named imports
+I'll use named imports from copy.ts.
+export function NewWorkbookPage() {
+  const navigate = useNavigate();
+  const [name, setName] = useState(DEFAULT_WORKBOOK_NAME);
+  const [submitting, setSubmitting] = useState(false);
+  const handleSubmit = async (event: React.FormEvent) => {
+    event.preventDefault();
+    const trimmed = name.trim();
+    if (!trimmed) { setError(WORKBOOK_NAME_EMPTY_MESSAGE); return; }
+    setSubmitting(true);
+      const created = await api.createWorkbook(trimmed);
+      navigate(`/workbook/${encodeURIComponent(created.id)}`);
+    } catch (caught) {
+      setError(messageOf(caught));
+      setSubmitting(false);
+Structure: heading "New workbook"? The requirement only demands the submit button named "Create". Provide label "Workbook name" input and Create button. Add a heading "New blank workbook"? Careful: if the heading text is "New blank workbook" and the home page button is also "New blank workbook"... that's fine because they're on different pages. But to be safe with `getByRole('button', {name:'New blank workbook'})` — heading isn't a button. OK.
+Hmm, but consider harness flow: on home page click button "New blank workbook" → creation page. Then `getByRole('button', { name: 'Create' })`. Good.
+I'll use heading "Create workbook".
+Provide error with role="alert" and text = exact message.
+**ImportCsvDialog.tsx**
+export interface ImportCsvDialogProps { onClose: () => void; }
+export function ImportCsvDialog({ onClose }) {
+  const [file, setFile] = useState<File | null>(null);
+  const [busy, setBusy] = useState(false);
+  const fileInputId = useId();
+  const confirm = async () => {
+    if (!file) { setError('Choose a CSV file to import.'); return; }
+    setBusy(true); setError(null);
+      const text = await file.text();
+      const created = await api.importWorkbookCsv(file.name, text);
+    } catch (caught) { setError(messageOf(caught)); setBusy(false); }
+  <div role="dialog" aria-modal="true" aria-labelledby={titleId}>
+    <h2 id={titleId}>Import CSV</h2>
+    <label htmlFor={fileInputId}>CSV file</label>
+    <input id={fileInputId} type="file" accept=".csv,text/csv" onChange=... />
+    <button onClick={confirm}>Confirm import</button>
+    {error && <p role="alert">{error}</p>}
+    <button onClick={onClose}>Cancel</button>
+  </div>
+Note: a `<label>` for file input gives accessible name "CSV file". Good.
+Wait: dialog accessible name. `role="dialog"` with `aria-labelledby` to h2 "Import CSV" → name "Import CSV". Good.
+Note: the requirement says "A dialog named 'Import CSV'". Some harnesses use `getByRole('dialog', {name:'Import CSV'})`.
+Error message from server for invalid CSV = 'Invalid CSV file format. Import failed.' — client passes through server message. But if the client-side file read fails, different message. Fine.
+Should the client validate CSV format itself? Not necessary; server rejects. But what if the harness selects an invalid file and clicks confirm → server 400 → error shown, dialog stays open, no navigation. Good. Home list unchanged. Good.
+**RenameWorkbookDialog.tsx**
+Props: `workbookId`, `currentName`, `onClose`, `onRenamed(name, updatedAt)`.
+const [name, setName] = useState(currentName);
+submit: trimmed = name.trim(); if (!trimmed) { setError(WORKBOOK_NAME_EMPTY_MESSAGE); return; }
+try { const updated = await api.renameWorkbook(workbookId, trimmed); onRenamed(updated.name, updated.updatedAt); }
+catch { setError(messageOf(caught)); }
+Dialog: role=dialog aria-labelledby heading "Rename workbook"; label "Workbook name"; button "Save"; error role=alert.
+**WorkbookToolbar.tsx**
+  workbookId: string;
+  displayValue: CellDisplayValue;
+export function WorkbookToolbar({...}) {
+  const [renaming, setRenaming] = useState(false);
+  const handleExport = () => {
+    const csv = worksheetToCsv(worksheet, displayValue);
+    downloadCsv(csvFileName(workbookName), csv);
+    <div className="flex h-full items-center gap-1">
+      <button type="button" className="sheet-button" onClick={() => setRenaming(true)}>Rename workbook</button>
+      <button type="button" className="sheet-button" onClick={handleExport}>Export CSV</button>
+      {renaming ? <RenameWorkbookDialog ... /> : null}
+Note the toolbar div in WorkbookEditor already has role=toolbar and classes; I'll render `<WorkbookToolbar>` inside it.
+**HomePage changes**: add buttons + dialog state.
+<div className="mb-4 flex items-center gap-2">
+  <button type="button" className="sheet-button…" onClick={() => navigate('/new')}>New blank workbook</button>
+  <button type="button" onClick={() => setImportOpen(true)}>Import CSV</button>
+</div>
+Requirement REQ-1-2-1: "The home page provides a button with the accessible name 'New blank workbook'". Must be a button (D-A1). Good.
+Primary action styling: give the "New blank workbook" button accent style.
+**WorkbookEditor changes**:
+- import `worksheetDisplayValues` and `WorkbookToolbar`.
+- `const displayValue = useMemo(() => activeWorksheet ? worksheetDisplayValues(activeWorksheet) : () => '', [activeWorksheet]);` — careful: hooks must be called unconditionally before the early returns. Currently `activeWorksheet` may be null and there are early returns after hooks. `useMemo` is after `cells` memo which is already before early return. Good — add right after `cells` useMemo.
+Wait, but `displayValue` needs to be stable for Grid. `useMemo(() => { const lookup = new Map(...); return (r,c)=>... }, [activeWorksheet])`. But worksheetDisplayValues creates the map inside; if I wrap in useMemo it's fine.
+Hmm: `worksheetDisplayValues(activeWorksheet)` — but activeWorksheet may be null; use `activeWorksheet ?? EMPTY`. Let me write:
+const displayValue = useMemo(
+  () => (activeWorksheet ? worksheetDisplayValues(activeWorksheet) : () => ''),
+  [activeWorksheet],
+);
+Type: `CellDisplayValue`.
+Then Grid gets `displayValue={displayValue}` and toolbar gets it.
+- Header: add `<WorkbookToolbar ... />` inside the toolbar div; and handle rename success: setSnapshot name + updatedAt.
+const handleRenamed = useCallback((name: string, updatedAt: string) => {
+  setSnapshot((previous) => (previous ? { ...previous, name, updatedAt } : previous));
+}, []);
+- Pass `displayValue` to Grid for cell text.
+**Grid changes**: add optional `displayValue?: CellDisplayValue` prop; compute text.
+In the row loop:
+const raw = cells.get(cellKey(row, col)) ?? '';
+const text = displayValue ? displayValue(row, col) : raw;
+<GridCell ... raw={raw} text={text} ... />
+GridCell renders `<span className="truncate">{text}</span>`.
+Careful: `displayValue` used inside the render function body — fine.
+But note the GridCell memo: text is a string primitive. Good.
+Now client.ts additions:
+createWorkbook(name: string): Promise<WorkbookSnapshot> {
+  return request<WorkbookSnapshot>('/api/workbooks', { method: 'POST', body: JSON.stringify({ name }) });
+},
+renameWorkbook(workbookId: string, name: string): Promise<WorkbookSummary> {
+  return request<WorkbookSummary>(`/api/workbooks/${encodeURIComponent(workbookId)}`, { method: 'PATCH', body: JSON.stringify({ name }) });
+importWorkbookCsv(fileName: string, csv: string): Promise<WorkbookSnapshot> {
+  return request<WorkbookSnapshot>('/api/workbooks/import', { method: 'POST', body: JSON.stringify({ fileName, csv }) });
+App.tsx: add route `/new`.
+Note: navigation to `/workbook/:id` — the production server SPA fallback handles it. Also react-router `navigate`.
+Now, one important detail: HomePage "Import CSV" button and dialog. Where does the dialog live? In HomePage. Good.
+Another detail: after a successful import, navigate to editor. The dialog unmounts. Fine.
+Let me also think about `New blank workbook` flow: after clicking Create with the prefilled name "Untitled spreadsheet", the workbook name is "Untitled spreadsheet". Then on the home page there will be a link "Untitled spreadsheet". Good. Refresh: editor same.
+REQ-1-2-1 failure injection: "清空名字提交" → shows error 'Workbook name cannot be empty' and stays on create page; home page no new record. Note the create page must remain and input preserved. Good.
+Now let me also consider the requirement that editor "shows only a blank worksheet named Sheet1, with Sheet1 active and A1 selected". Our create API returns single Sheet1 active with A1 selection → editor shows tab Sheet1 aria-selected true, A1 aria-selected true. Good.
+Let me now write the files.
+For `messageOf`, duplicated in three places. Put it in `lib/errors.ts`? There's already a private `messageOf` in WorkbookEditor. I'll add `lib/apiError.ts`? Keep it small: add to `lib/copy.ts`? Better a tiny `lib/messages.ts`. Hmm, to avoid over-engineering, I'll define `messageOf` in `lib/copy.ts` as `describeError`. Actually copy.ts is about exact strings. I'll create `lib/errors.ts` exporting `messageOf`. And update WorkbookEditor to import it (small refactor) — or leave WorkbookEditor's local copy. D-A10 doesn't forbid. To minimize churn on files other agents touch, I'll leave WorkbookEditor's local `messageOf` and create `frontend/src/lib/errors.ts` for new components. Hmm, duplication is ugly. Actually the instruction "ponytail" says reduce unnecessary complexity. Keeping one shared helper is simpler. I'll create `lib/errors.ts` with `messageOf` and have new components use it; leave WorkbookEditor as-is to minimize merge conflicts with B/C/D/E who may also edit it... Actually B/C/D/E edit WorkbookEditor too. The fewer changes there the better. Keep local copy.
+Hmm, but Grid.test.tsx `renderGrid` passes `GridProps` without `displayValue` — optional so fine.
+Let me write the files now.
+[DUPLICATES: 136 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L89:C1]
+[text]
+Now the frontend. Starting with lib modules:
+[toolCall] write call_00_X468fd5OEUhqVBun4dxH9725
+{"content": "/**\n * Requirement-exact, user-visible copy (Issue #3 decision D-A9). Both the\n * client-side guards and the server messages must produce these exact strings;\n * keeping them in one module is what makes that checkable.\n */\nexport const WORKBOOK_NAME_EMPTY_MESSAGE = 'Workbook name cannot be empty';\nexport const INVALID_CSV_MESSAGE = 'Invalid CSV file format. Import failed.';\n\n/** Must stay identical to the backend default for `POST /api/workbooks`. */\nexport const DEFAULT_WORKBOOK_NAME = 'Untitled spreadsheet';\n", "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/copy.ts"}
+[toolCall] write call_01_Qvl9xA8v57fdKFCNQZwd5060
+{"content": "import { ApiClientError } from '../api/client';\n\n/** Extract the user-visible message from anything thrown by the API client. */\nexport function messageOf(error: unknown): string {\n  if (error instanceof ApiClientError) return error.message;\n  if (error instanceof Error) return error.message;\n  return String(error);\n}\n", "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/lib/errors.ts"}
+[toolCall] write call_02_CJd1GtnQLhSLnFsvswoJ6930
+{"content": "import type { WorksheetSnapshot } from '../../../shared/types';\nimport { cellKey } from './coordinates';\n\n/**\n * Value a cell shows on screen, looked up by 0-based coordinates.\n *\n * Issue #3 decision D-A8 (contract increment A-3): the grid renderer and the\n

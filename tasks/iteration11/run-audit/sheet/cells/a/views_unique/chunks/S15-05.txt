@@ -1,0 +1,374 @@
+, raw, selected, editing, onCommitEdit, onCancelEdit } = props;
++  const { row, col, raw, text, selected, editing, onCommitEdit, onCancelEdit } = props;
+   const coordinate = toCoordinate(row, col);
+@@ -204,7 +216,7 @@ const GridCell = memo(function GridCell(props: GridCellProps) {
+           onCancel={onCancelEdit}
+         />
+       ) : (
+-        <span className="truncate">{raw}</span>
++        <span className="truncate">{text}</span>
+       )}
+     </div>
+diff --git a/frontend/src/components/HomePage.tsx b/frontend/src/components/HomePage.tsx
+index 05e5dcb..c9cb1c0 100644
+--- a/frontend/src/components/HomePage.tsx
++++ b/frontend/src/components/HomePage.tsx
+@@ -1,19 +1,27 @@
+ import { useEffect, useState } from 'react';
+-import { Link } from 'react-router-dom';
++import { Link, useNavigate } from 'react-router-dom';
+ import type { WorkbookSummary } from '../../../shared/types';
+ import { api } from '../api/client';
++import { ImportCsvDialog } from './ImportCsvDialog';
+ /**
+- * Workbook home page: the entry point that lists available workbooks. Each
+- * record shows "Last updated: <value>" and links to the editor with an
+- * accessible name equal to the workbook name. Creating/importing workbooks is
+- * delivered by the workbook-lifecycle sub-issue.
++ * Workbook home page: the entry point that lists available workbooks and hosts
++ * the two workbook-creation entry points.
++ *
++ * - `New blank workbook` is a button (not a link) that opens `/new` (D-A1).
++ * - `Import CSV` opens the import dialog (D-A6).
++ * The list is fetched on every mount, so returning here after creating,
++ * renaming or importing always shows the persisted names — and a failed
++ * attempt shows nothing extra.
+ export function HomePage() {
++  const navigate = useNavigate();
+   const [workbooks, setWorkbooks] = useState<WorkbookSummary[] | null>(null);
+   const [error, setError] = useState<string | null>(null);
++  const [importOpen, setImportOpen] = useState(false);
+   useEffect(() => {
+     let cancelled = false;
+@@ -41,6 +49,22 @@ export function HomePage() {
+       <main className="mx-auto max-w-4xl px-6 py-8">
+         <h1 className="mb-4 text-xl font-medium text-sheet-text">Workbooks</h1>
++        <div className="mb-5 flex flex-wrap items-center gap-2">
++          <button
++            type="button"
++            onClick={() => navigate('/new')}
++            className="rounded bg-sheet-accent px-4 py-1.5 text-sm text-white hover:bg-#1765cc"
++          >
++            New blank workbook
++          </button>
++            onClick={() => setImportOpen(true)}
++            className="rounded border-1 border-sheet-border bg-white px-4 py-1.5 text-sm text-sheet-text hover:bg-#f1f3f4"
++            Import CSV
++        </div>
+         <ErrorBanner message={error} />
+         {workbooks === null && !error ? (
+           <p className="text-sm text-sheet-muted">Loading workbooks…</p>
+@@ -72,6 +96,7 @@ export function HomePage() {
+           </ul>
+         ) : null}
+       </main>
++      {importOpen ? <ImportCsvDialog onClose={() => setImportOpen(false)} /> : null}
+ }
+index 8e50d82..d982138 100644
+@@ -8,23 +8,20 @@ import type {
+   WorkbookSnapshot,
+-import { ApiClientError, api } from '../api/client';
++import { api } from '../api/client';
++import { messageOf } from '../lib/errors';
+-function messageOf(error: unknown): string {
+-  if (error instanceof ApiClientError) return error.message;
+-  if (error instanceof Error) return error.message;
+-  return String(error);
+-}
+-
+  * `/workbook/:id` editor shell: header, toolbar placeholder, name box +
+  * formula bar, ARIA grid, worksheet tab bar. Cell edits and confirmed
+@@ -84,6 +81,13 @@ export function WorkbookEditor() {
+@@ -197,6 +201,10 @@ export function WorkbookEditor() {
+@@ -239,12 +247,20 @@ export function WorkbookEditor() {
+@@ -266,6 +282,7 @@ export function WorkbookEditor() {
+[DUPLICATES: 171 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L59:C1]
+
+## S15:L60 2026-09-29T06:10:10.143Z message assistant
+[thinking]
+Review observations:
+1. Backend routes import: OK. Parse error → 400 INVALID_CSV with exact message. `fileName`/`csv` non-string → invalidBody (400 INVALID_BODY). Design said "fileName 非字符串/缺失 → 400 统一错误体" ✓.
+2. NewWorkbookPage: label `Workbook name` ✓, prefilled ✓, `Create` ✓, empty → client-side message, no request ✓, error role=alert ✓, success navigate ✓, failure keeps input ✓. Good.
+3. ImportCsvDialog: dialog role with aria-labelledby ✓, label `CSV file` ✓, button `Confirm import` ✓, error role=alert ✓, on failure keeps file & dialog ✓ ("Choose a CSV file first." extra message for no file — not in requirement, but a sensible extra; harness clicks Confirm with file set, so fine).
+4. RenameWorkbookDialog: dialog accessible name "Rename workbook" via labelled h2 ✓, label `Workbook name` prefilled ✓, `Save` ✓, empty → exact message ✓, on failure keeps original name (title unaffected) ✓.
+   One nuance: REQ-1-2-2 says after successful save, editor title and home link display new name. handleRenamed updates snapshot.name/updatedAt ✓.
+5. Grid: adds displayValue optional prop, keeps `raw` for editing ✓ (D-A8 boundary: inline editor reads raw). Note `GridCell` memo compares text prop; fine.
+6. WorkbookEditor: mounts WorkbookToolbar in role="toolbar" ✓ (single mount point), passes displayValue ✓, handleRenamed ✓.
+Potential issue: `WorkbookEditor` passes `worksheet={activeWorksheet}` — activeWorksheet type; if undefined? In the toolbar it's typed WorksheetSnapshot non-null. Let me check the guard: the editor probably renders only when snapshot & activeWorksheet exist. Line ~247 render uses `snapshot.name` and `activeWorksheet` similar to existing code (FormulaBar precedes with `activeWorksheet.`?). Actually the render section uses `activeWorksheet` directly; since Grid is rendered with activeWorksheet.rowCount, activeWorksheet must be non-null at that point (type-narrowed). Then WorkbookToolbar prop `worksheet={activeWorksheet}` is fine.
+7. HomePage: buttons ✓ (New blank workbook is a button navigating to /new ✓; Import CSV opens dialog ✓), list refetched on mount ✓.
+Now, back to the README deviation (state omitted from "变更入口有两个"). This is a finding. Let me confirm the exact original text and the required replacement once more, and check whether the README mentions the state dims anywhere else. Let me grep README at 035f4f1 for "变更入口" and "state".
+Also check the e2e spec and the tests for the seam usage & formula-export assertion; and check backend app.test for atomicity.
+Let me grep README and read the e2e spec quickly.
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L60:C1]
+[toolCall] bash call_00_iD2qk97RcpL4kYESdqvK1892
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show 035f4f1:README.md | grep -n \"变更入口\\|row_count\\|state\" | head -20; echo \"=====E2E-HIGHLIGHTS=====\"; git show 035f4f1:e2e/workbook-lifecycle.spec.ts | grep -n \"test(\\|expect(\\|C 合入\\|formula\\|=\" | head -60"}
+[toolCall] bash call_01_ORKqrGDpoNelAsWEjFtp4288
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show 035f4f1:frontend/src/lib/csvExport.test.ts | head -80; echo \"=====CELLDISPLAY TEST=====\"; git show 035f4f1:frontend/src/lib/cellDisplay.test.ts"}
+
+## S15:L61 2026-09-29T06:10:10.163Z message toolResult
+toolResult bash False
+[text]
+66:- 每工作表显式持久化 `row_count` / `col_count`（默认 6 × 26），渲染与结构操作都读这两个字段；
+81:| PUT | `/api/workbooks/:id/worksheets/:wid/state` | 整表状态导入（撤销/重做回放） |
+86:越界写入（超出 `row_count`/`col_count`）返回 400 `INVALID_BODY` 且整批不落库（契约 v1.1 裁定：
+87:基础层**不**自动扩张，粘贴越界时的扩张由子 Issue D 在粘贴路径上经结构端点显式完成）；`row_count`/`col_count` 的
+88:变更入口有两个：子 Issue B 的结构操作端点与子 Issue A 的导入事务（契约增量 A-2，B 侧已确认）。
+89:`PUT .../state` 同样拒绝超出所报结构的单元格，不允许“存在但渲染不出来”的数据。结构变更端点（插入/删除行列、新增/删除工作表）
+176:- 工作表/行列结构：`worksheets.row_count`/`col_count` 是结构事实源；插入删除时同事务迁移
+=====E2E-HIGHLIGHTS=====
+17:const SEED_LINK = { name: 'Q3 Sales', exact: true } as const;
+22:  await expect(page.getByRole('link', SEED_LINK)).toBeVisible();
+29:  await expect(page).toHaveURL(/\/new$/);
+32:  await expect(page).toHaveURL(/\/workbook\/.+/);
+39:  const dialog = page.getByRole('dialog', { name: 'Import CSV' });
+40:  await expect(dialog).toBeVisible();
+47:  await expect(page).toHaveURL(/\/workbook\/.+/);
+52:  const [download] = await Promise.all([
+56:  const path = await download.path();
+71:  const actual = await cellText(page, coordinate);
+72:  expect(
+78:test.describe('REQ-1-2-1 create a blank workbook', () => {
+79:  test('creates, opens and persists a single blank Sheet1 with A1 selected', async ({ page }) => {
+82:    await expect(page).toHaveURL(/\/new$/);
+83:    await expect(page.getByLabel('Workbook name')).toHaveValue('Untitled spreadsheet');
+85:    await expect(page).toHaveURL(/\/workbook\/.+/);
+88:    await expect(page.getByRole('tab')).toHaveCount(1);
+89:    await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');
+91:    await expect(page.getByRole('gridcell', { name: 'A1', exact: true })).toHaveAttribute(
+95:    await expect(page.getByRole('rowheader')).toHaveCount(6);
+96:    await expect(page.getByRole('columnheader')).toHaveCount(26);
+103:    await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');
+104:    await expect(page.getByRole('gridcell', { name: 'A1', exact: true })).toHaveAttribute(
+112:    await expect(page.getByRole('link', { name: 'Untitled spreadsheet', exact: true })).toBeVisible();
+114:    await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');
+115:    await expect(page.getByRole('gridcell', { name: 'A1', exact: true })).toHaveAttribute(
+121:  test('rejects an empty name in place and sends no create request', async ({ page }) => {
+122:    let creates = 0;
+123:    page.on('request', (request) => {
+124:      if (request.method() === 'POST' && new URL(request.url()).pathname === '/api/workbooks') {
+125:        creates += 1;
+134:    await expect(page.getByRole('alert')).toHaveText('Workbook name cannot be empty');
+135:    await expect(page).toHaveURL(/\/new$/);
+136:    await expect(page.getByLabel('Workbook name')).toHaveValue('   ');
+137:    expect(creates).toBe(0);
+140:  test('shows the error, stays retryable and leaves no record when creation fails', async ({
+142:  }) => {
+143:    await page.route('**/api/workbooks', async (route) => {
+144:      if (route.request().method() !== 'POST') {
+160:    await expect(page.getByRole('alert')).toHaveText('Unexpected server error');
+161:    await expect(page).toHaveURL(/\/new$/);
+162:    await expect(page.getByLabel('Workbook name')).toHaveValue('Doomed record');
+167:    await expect(page.getByRole('link', { name: 'Doomed record', exact: true })).toHaveCount(0);
+171:test.describe('REQ-1-2-2 rename a workbook', () => {
+172:  const original = 'Rename target A';
+173:  const renamed = 'Rename target A (renamed)';
+175:  test('renames, keeps the original name on failure and persists the saved name', async ({ page }) => {
+180:    const dialog = page.getByRole('dialog', { name: 'Rename workbook' });
+181:    await expect(dialog).toBeVisible();
+182:    await expect(page.getByLabel('Workbook name')).toHaveValue(original);
+185:    await expect(page.getByRole('alert')).toHaveText('Workbook name cannot be empty');
+186:    await expect(dialog).toBeVisible();
+187:    await expect(page.getByRole('heading', { name: original, exact: true })).toBeVisible();
+190:    await page.route('**/api/workbooks/*', async (route) => {
+191:      if (route.request().method() !== 'PATCH') {
+203:    await expect(page.getByRole('alert')).toHaveText('Unexpected server error');
+204:    await expect(page.getByRole('heading', { name: original, exact: true })).toBeVisible();
+210:    await expect(page.getByRole('heading', { name: renamed, exact: true })).toBeVisible();
+211:    await expect(dialog).toBeHidden();
+215:    await expect(page.getByRole('heading', { name: renamed, exact: true })).toBeVisible();
+
+## S15:L62 2026-09-29T06:10:10.164Z message toolResult
+toolResult bash False
+[text]
+import type { CellEntry, WorksheetSnapshot } from '../../../shared/types';
+function sheet(cells: CellEntry[], rowCount = 6, colCount = 26): WorksheetSnapshot {
+    id: 'ws-1',
+    name: 'Sheet1',
+    position: 0,
+    isActive: true,
+    lastSelection: null,
+    validations: [],
+    filters: [],
+    pivots: [],
+describe('escapeCsvField', () => {
+  it('leaves plain values untouched', () => {
+    expect(escapeCsvField('Region')).toBe('Region');
+    expect(escapeCsvField('1200')).toBe('1200');
+    expect(escapeCsvField('')).toBe('');
+    expect(escapeCsvField('华东')).toBe('华东');
+  it('quotes fields containing a comma, quote or line break', () => {
+    expect(escapeCsvField('a,b')).toBe('"a,b"');
+    expect(escapeCsvField('a"b')).toBe('"a""b"');
+    expect(escapeCsvField('a\nb')).toBe('"a\nb"');
+    expect(escapeCsvField('a\rb')).toBe('"a\rb"');
+  it('doubles every inner quote', () => {
+    expect(escapeCsvField('"quoted"')).toBe('"""quoted"""');
+describe('worksheetToCsv', () => {
+  it('serializes the seeded A1:C4 range as LF-terminated records', () => {
+    const csv = worksheetToCsv(
+      sheet([
+        [0, 0, 'Region'],
+        [0, 1, 'Sales'],
+        [0, 2, 'Status'],
+        [1, 0, 'East'],
+        [1, 1, '1200'],
+        [1, 2, 'Open'],
+        [2, 0, 'North'],
+        [2, 1, '800'],
+        [2, 2, 'Closed'],
+        [3, 0, 'South'],
+        [3, 1, '700'],
+        [3, 2, 'Open'],
+      ]),
+    expect(csv).toBe(
+      'Region,Sales,Status\nEast,1200,Open\nNorth,800,Closed\nSouth,700,Open\n',
+    expect(csv).not.toContain('\r');
+    expect(csv.charCodeAt(0)).not.toBe(0xfeff);
+  it('trims trailing all-empty rows and columns but keeps gaps inside the used range', () => {
+    // A1 and C3 are filled: the box is A1:C3, B2 stays an empty field.
+        [0, 0, 'a'],
+        [2, 2, 'c'],
+    expect(csv).toBe('a,,\n,,\n,,c\n');
+  it('exports an empty string for a worksheet with no content', () => {
+    expect(worksheetToCsv(sheet([]))).toBe('');
+    // Explicit empty cells (`raw === ''`) are not content.
+    expect(worksheetToCsv(sheet([[0, 0, '']]))).toBe('');
+=====CELLDISPLAY TEST=====
+function sheet(cells: [number, number, string][]): WorksheetSnapshot {
+    rowCount: 6,
+    colCount: 26,
+ * D-A8 / contract increment A-3: interim identity seam. Sub-issue C replaces the
+ * implementation; these assertions describe the pre-C behaviour the acceptance
+ * suite pins in the meantime (a formula cell shows and exports its raw text).
+describe('worksheetDisplayValues', () => {
+  it('returns the raw text for populated cells', () => {
+    const display = worksheetDisplayValues(sheet([[0, 0, 'Region'], [1, 1, '1200']]));
+    expect(display(0, 0)).toBe('Region');
+    expect(display(1, 1)).toBe('1200');
+  it('returns an empty string for cells that have no stored value', () => {
+    const display = worksheetDisplayValues(sheet([[0, 0, 'Region']]));
+    expect(display(5, 25)).toBe('');
+    expect(display(0, 1)).toBe('');
+  it('returns the raw formula text before sub-issue C lands', () => {
+    const display = worksheetDisplayValues(sheet([[0, 0, '=1+1']]));
+    expect(display(0, 0)).toBe('=1+1');
+[DUPLICATES: 52 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L62:C1]
+
+## S15:L63 2026-09-29T06:10:15.987Z message assistant
+[thinking]
+Confirmed README line 88: "变更入口有两个：子 Issue B 的结构操作端点与子 Issue A 的导入事务" — the `PUT .../state` path is missing, contradicting comment #36 (which required three paths) and verified facts (Issue #1 comment #31/#32/#34).
+Wait — maybe deepseek-5 deliberately wrote "两个" because the *paragraph* already mentions `PUT .../state` in the next sentence... but the next sentence only says state rejects out-of-structure cells, not that state sets dims. So no.
+Hmm, but hold on: could there be an argument that state doesn't "变更" dims because... no, verified: `importWorksheetState` writes row_count/col_count from payload (store.js:414-427) and app.test 42×7 → 200. So state IS a third path. README now says two. This is a documentation-fact error that comment #36 explicitly aimed to avoid (the "唯一变更入口是结构操作" sentence was already known to be wrong; replacing it with "有两个" keeps a wrong statement, just with a different count).
+So finding #1: README narrow change deviates from comment #36 — missing `PUT .../state`, states "两个".
+Now, are there other findings? Let me check the e2e formula-export assertion and the seam-usage test (csvExport.test injecting a display lookup). Let me see rest of csvExport.test and the e2e export/formula parts, plus backend app.test import cases.
+Also check `checks/run-e2e.sh` unchanged? Not needed.
+Let me look at: csvExport.test rest (injected display), e2e REQ-1-3-1/1-3-2 parts (formula assertion + "C 合入必须翻转" note), and app.test import cases.
+Then I'll write a review comment to @deepseek-5 in PR #8 (since it's an implementation-side fix) — but the PR is owned by deepseek-5 and has no comments yet. The guidance: raise issues in the relevant discussion. Since this is an implementation deviation from Issue #3's authoritative design (comment #36), and PR #8 is where the code is, I should comment on PR #8 (or in Issue #3 where the design lives). The design authority lives in Issue #3; the fix belongs to PR #8. Best: comment on PR #8 with the finding + link to comment #36, @deepseek-5. But wait — has deepseek-5 posted the handover yet? No comments on PR #8 and no Issue #3 handover comment. They may still be self-checking. Raising a review finding before their handover is fine and useful (it's a concrete correction, not a nag).
+Actually, since my role is the Issue owner and the handover will come to Issue #3, maybe better to put the finding on PR #8 (the work item that must change) so it's tracked where the fix happens, and it notifies the PR assignee. Yes: comment on PR #8.
+Before writing, let me finish the review to include all findings in one comment (avoid drip-feed). Let me check the remaining key pieces:
+- e2e export test (used range, download, filename, invariance, formula pre-C assertion with flip note)
+- e2e import test (invalid CSV exact text, no link, no navigation; valid import with Chinese/quotes/newlines)
+- backend app.test import cases (atomicity: DB record counts unchanged; structure lower bounds; name derivation; same-name allowed)
+Let me read those.
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L63:C1]
+[toolCall] bash call_00_IqbsmBZSbpUdj4qaaeMJ1837
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show 035f4f1:e2e/workbook-lifecycle.spec.ts | sed -n '215,358p'"}
+[toolCall] bash call_01_ltsVWZacxuod47PK3vPF6647
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show 035f4f1:frontend/src/lib/csvExport.test.ts | sed -n '80,131p'; echo \"=====BACKEND APP.TEST IMPORT=====\"; git show 035f4f1:backend/src/app.test.js | sed -n '/import/,/^});/p' | head -130"}
+
+## S15:L64 2026-09-29T06:10:16.009Z message toolResult
+toolResult bash False
+[text]
+    await expect(page.getByRole('heading', { name: renamed, exact: true })).toBeVisible();
+    await gotoHome(page);
+    await expect(page.getByRole('link', { name: renamed, exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: original, exact: true })).toHaveCount(0);
+    // Reopening shows the most recently saved name.
+    await page.getByRole('link', { name: renamed, exact: true }).click();
+test.describe('REQ-1-3-1 import CSV', () => {
+  test('imports UTF-8 text with quotes, escaped quotes, in-field newlines and empty fields', async ({
+    const csv = [
+      '地区,销售额,备注',
+      '华东,1200,"a,b"',
+      'North,800,"say ""hi"""',
+      '"multi',
+      'line",100,',
+    ].join('\n');
+    await importCsv(page, 'quarterly report.csv', csv);
+    // Name is the file name without its final .csv extension.
+    await expect(page.getByRole('heading', { name: 'quarterly report', exact: true })).toBeVisible();
+    await expect(page.getByRole('tab')).toHaveCount(1);
+    // Row/column order and original text, including the first row as ordinary data.
+    const expected: Record<string, string> = {
+      A1: '地区',
+      B1: '销售额',
+      C1: '备注',
+      A2: '华东',
+      B2: '1200',
+      C2: 'a,b',
+      A3: 'North',
+      B3: '800',
+      C3: 'say "hi"',
+      A4: 'multi\nline',
+      B4: '100',
+      C4: '',
+    for (const [coordinate, text] of Object.entries(expected)) {
+      await expectCellText(page, coordinate, text);
+    // Refresh keeps order and content.
+    // Home page shows the imported workbook under the derived name.
+    await expect(page.getByRole('link', { name: 'quarterly report', exact: true })).toBeVisible();
+  test('rejects an unterminated quote with the exact message and keeps nothing', async ({ page }) => {
+    await page.getByRole('button', { name: 'Import CSV' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Import CSV' });
+    await page.getByLabel('CSV file').setInputFiles({
+      name: 'broken import.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from('a,b\n"unterminated,c', 'utf8'),
+    await page.getByRole('button', { name: 'Confirm import' }).click();
+    await expect(page.getByRole('alert')).toHaveText('Invalid CSV file format. Import failed.');
+    await expect(dialog).toBeVisible();
+    const lastUpdated = page.locator('#workbook-last-updated');
+    const updatedBefore = await lastUpdated.textContent();
+    await expectCellText(page, 'B2', '1200');
+    await expect(lastUpdated).toHaveText(updatedBefore ?? '');
+    expect(exported).toBe(`plain,"with,comma",,\n"say ""hi""","line\nbreak",,tail\n`);
+    await expectCellText(page, 'A1', '=1+1');
+[DUPLICATES: 90 exact source lines omitted; precise per-line source map in duplicate-lines.json at S15:L64:C1]
+
+## S15:L65 2026-09-29T06:10:16.009Z message toolResult
+toolResult bash False
+[text]
+  it('escapes in place without changing row/column order', () => {
+        [0, 0, 'comma,value'],
+        [0, 1, 'quote"value'],
+        [0, 2, 'line\nbreak'],
+    expect(csv).toBe('"comma,value","quote""value","line\nbreak"\n');
+  it('keeps an empty field inside the used range even when it is the last cell of a row', () => {
+        [1, 2, 'c'],
+    expect(csv).toBe('a,,\n,,c\n');
+  it('exports the value produced by the injected display seam', () => {
+    // D-A8: the export never reads the raw text directly. Sub-issue C replaces
+    // the seam with the formula engine, which is what makes a formula cell
+    // export its calculated result instead of its expression.
+    const worksheet = sheet([
+      [0, 0, '=1+1'],
+      [0, 1, 'plain'],
+    const csv = worksheetToCsv(worksheet, (row, col) => (row === 0 && col === 0 ? '2' : 'plain'));
+    expect(csv).toBe('2,plain\n');
+describe('csvFileName', () => {
+  it('suggests a name ending in .csv', () => {
+    expect(csvFileName('Q3 Sales')).toBe('Q3 Sales.csv');
+    expect(csvFileName('  预算  ')).toBe('预算.csv');
+  it('does not double an existing .csv extension', () => {
+    expect(csvFileName('report.csv')).toBe('report.csv');
+    expect(csvFileName('report.CSV')).toBe('report.CSV');
+  it('falls back to a usable base name', () => {
+    expect(csvFileName('   ')).toBe('workbook.csv');
+=====BACKEND APP.TEST IMPORT=====
+describe('POST /api/workbooks/import', () => {
+  it('creates a workbook named after the file and imports every row and column', async () => {
+      .post('/api/workbooks/import')
+      .send({ fileName: 'Sales Report.CSV', csv: '地区,销售额\n华东,1200\nNorth,800' });
+    expect(res.body.name).toBe('Sales Report');
+    const sheet = res.body.worksheets[0];
+    expect(sheet).toMatchObjec

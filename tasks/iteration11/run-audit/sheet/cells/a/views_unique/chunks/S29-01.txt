@@ -1,0 +1,267 @@
+S29 01a0ebe3-5c81-7454-ba87-260acf4ee8b7
+source=work/native-homes/pi-deepseek-fast-01a0ebe3-599f-7550-b3c4-851959a121da/2026-09-29T06-39-01-249Z_01a0ebe3-5c81-7454-ba87-260acf4ee8b7.jsonl
+## S29:L1 2026-09-29T06:39:01.249Z session 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L1:version]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L1:cwd]
+
+## S29:L2 2026-09-29T06:39:01.273Z model_change 
+[provider]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L2:provider]
+[modelId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L2:modelId]
+
+## S29:L3 2026-09-29T06:39:01.273Z thinking_level_change 
+[thinkingLevel]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L3:thinkingLevel]
+
+## S29:L4 2026-09-29T06:39:01.723Z message user
+[text]
+### Comment: local/run#issuecomment-64 by @glm-1
+Posted: 2026-09-29T06:34:08.681297047Z
+Reply to: comment 62
+### Comment: local/run#issuecomment-74 by @deepseek-5
+Posted: 2026-09-29T06:38:30.184264848Z
+Reply to: comment 64
+## 契约 v1.3 / A-4 增量（本 PR 一并交付）
+按 Issue #1 thread 1 comment #51/#54/#57/#60/#64/#65/#66/#69 与 Issue #3 comment #64 的补齐清单：
+1. 迁移 `002_worksheet_import_footprint`：worksheets 增可空 `min_rows`/`min_cols`；`shared/types.d.ts` 快照类型同步。
+### Comment: local/run#issuecomment-75 by @deepseek-5
+Posted: 2026-09-29T06:38:41.156716264Z
+Reply to: comment 63
+[DUPLICATES: 420 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L4:C1]
+
+## S29:L5 2026-09-29T06:39:01.723Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L5:customType]
+[content]
+Previous native subagent runs for this same worktree (verify before re-delegating a write task). Showing 1/1; full run index: /workspace/template/.factory26/20260929-042409-811f18d4/work/native-homes/pi-deepseek-fast-01a0ebe3-599f-7550-b3c4-851959a121da/.factory/previous-subagents.json. Results are re-read on recovery; completion updates are recorded while this native session is alive, without starting a new response. Inspect pending results needed for your work before declaring completion. These entries do not transfer task ownership.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L5:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L5:display]
+
+## S29:L6 2026-09-29T06:39:03.935Z message assistant
+[thinking]
+Let me start by understanding the current state. The PR #8 title/body was modified. Let me look at the current PR content and the worktree state.
+Let me check git status, the PR view, and the issue.
+Key context: I'm @deepseek-5, the PR #8 owner. Current head candidate is `559a0bd`. There's a "未完成义务" about switching to shared helper once it lands in develop. The PR body was modified — I need to see what changed.
+Let me run commands.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L6:C1]
+[toolCall] bash call_00_rjN8Zq4Nbw5NSv7v2DOR0043
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && pwd && git status --short && git log --oneline -8 && git remote -v"}
+[toolCall] bash call_01_4imVLqXvw9NO4Ja0dSJu9669
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr view 8 --comments 2>&1 | head -200"}
+
+## S29:L7 2026-09-29T06:39:03.989Z message toolResult
+toolResult bash False
+[text]
+origin	/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/origin.git/ (fetch)
+origin	/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/origin.git/ (push)
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L7:C1]
+
+## S29:L8 2026-09-29T06:39:03.989Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 104 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L8:C1]
+
+## S29:L9 2026-09-29T06:39:06.977Z message assistant
+[thinking]
+The PR body was modified. Let me see what changed — I need to compare with the previous body. The notification says "pr #8 title/body 已修改". Presumably @glm-1 or @deepseek-3 updated the PR body to include the v1.3 requirement. The body now includes the v1.3 section. Let me check the timeline to see who modified it and when.
+Actually the body already includes "契约 v1.3 / A-4 增量（本 PR 一并交付）" section and "未完成义务" — so it was updated (probably by root/deepseek-3) to reflect the new v1.3 requirements. My job: check whether my implementation at `559a0bd` already satisfies the current PR body / v1.3, and handle the unaddressed comment #47 (README narrow change must include third path — wait, that was about candidate 035f4f1, which is older; my d536aa2 and 559a0bd presumably already addressed it).
+Wait — comment #47 says README currently says "变更入口有两个" at README.md:86-88. Then comment #64 said README three paths "精确落地（第 88–89 行）". So #47 was addressed.
+Now, the current update: PR title/body modified. Let me check the timeline to see who and what. Then check whether there's a new obligation.
+Also I should check Issue #1 thread 1 for newer comments (e.g. #66/#69 mentioned helper `assertWorksheetStateValid`), and whether the helper has landed in develop. The "未完成义务" says: helper entering develop → rebase and switch. Let me check origin/develop state now.
+Let me look at the timeline and fetch origin.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L9:C1]
+[toolCall] bash call_00_7RvsiT3lZK4iuq0DREPl6610
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git fetch origin 2>&1 | tail -5 && echo \"--- branches ---\" && git branch -r && echo \"--- develop log ---\" && git log --oneline origin/develop -6"}
+[toolCall] bash call_01_YwR6Fq7pzf00unrUiPP17404
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr view 8 --timeline 2>&1 | tail -60"}
+
+## S29:L10 2026-09-29T06:39:07.024Z message toolResult
+toolResult bash False
+[text]
+   8ca51ed..fb6c7da  b-issue-4-worksheets-structure -> origin/b-issue-4-worksheets-structure
+--- develop log ---
+[DUPLICATES: 14 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L10:C1]
+
+## S29:L11 2026-09-29T06:39:07.024Z message toolResult
+toolResult bash False
+[text]
+#133 2026-09-29T06:38:30.373457407Z @deepseek-5 edited title/body changed
+#134 2026-09-29T06:38:41.156767067Z @deepseek-5 replied comment #75
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L11:C1]
+
+## S29:L12 2026-09-29T06:39:10.654Z message assistant
+[thinking]
+Hmm, the timeline shows the last body edit was by me (@deepseek-5) at 06:38:30 — which matches my v1.3 update. But the notification says "pr #8 title/body 已修改". Maybe that's just this edit. Hmm, but the notification was triggered now... Timeline doesn't show a newer edit. Maybe the notification is about my own edit at #133? Actually the timeline shows #133 edited by deepseek-5 — that's the body update I did earlier (in the previous run). The current run prompt says "发生以下更新: pr #8 title/body 已修改". Possibly it's just re-notifying.
+Hmm, wait. Actually there may be a new comment/body change by someone else that isn't reflected. Let me check the issue #3 comments (new ones after #74) and issue #1 thread 1 for new comments (after #75). Let me view them.
+Since the notification mentions only title/body change on PR #8, and the timeline shows my edit at #133 at 06:38:30, that's likely the edit. But the notification may arrive because the root agent updated something. Let me check the full body diff — compare to what I pushed. Actually I didn't edit the PR body; the packet says PR body registered v1.3. Hmm, comment #75 says "PR 正文已登记 v1.3 增量". So the body edit #133 was by me at 06:38:30 — yes I did it in previous run (the run that produced 559a0bd... actually that run started earlier). Wait, previous run listed is advisor only. The task says "Previous native subagent runs for this same worktree" showing advisor. So I'm resuming this worktree/session context.
+OK. Let me be systematic:
+1. Check latest comments on Issue #1 thread 1 and Issue #3 to see the current authoritative requirements (v1.3 with #51/#54/#57/#60/#64/#65/#66/#69).
+2. Verify whether the shared helper has landed in develop (it hasn't — develop is at 698afd2; origin/b-issue-4-worksheets-structure advanced to fb6c7da).
+3. Determine what the PR body update means — maybe root requested something new.
+Let me view Issue #1 comments and Issue #3 comments.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L12:C1]
+[toolCall] bash call_00_m1WMY0VczqAd1bFOLvYN8567
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue view 3 --comments 2>&1 | sed -n '1,80p'"}
+[toolCall] bash call_01_uZ9uX594dfASgn8VZBFB1050
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue view 3 --timeline 2>&1 | tail -40"}
+
+## S29:L13 2026-09-29T06:39:10.674Z message toolResult
+toolResult bash False
+[text]
+- `parseCsv`：基础行列；空字段保序（`a,,c`）；引号内逗号；成对转义引号；字段内换行（含 CRLF 原样保留）；UTF-8 中文/英文/数字；CRLF 与 LF 记录分隔；末行换行不产生额外行；BOM 剥离；未加引号字段中的裸 `"` 按字面；`"ab"cd` 宽松接受；**未闭合引号 → 抛错**。
+[DUPLICATES: 79 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L13:C1]
+
+## S29:L14 2026-09-29T06:39:10.674Z message toolResult
+toolResult bash False
+[text]
+#132 2026-09-29T06:38:30.184347552Z @deepseek-5 replied comment #74
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L14:C1]
+
+## S29:L15 2026-09-29T06:39:14.111Z message assistant
+[thinking]
+So the PR #8 body edit at 06:38:30 was by me (#133 in PR timeline). Hmm wait, PR timeline #133 was "@deepseek-5 edited title/body changed" at 06:38:30.373 — same time as Issue #3 #132 (my reply comment #74 at 06:38:30.184). So in the last run I updated the PR body and posted the comment. The current notification "pr #8 title/body 已修改" is likely just re-delivery of that event or the system noting my edit.
+So: no new external requirement. But wait — the notification is the trigger for this run. Perhaps something new happened after 06:38. Let me check for newer comments on Issue #1 thread 1 (e.g., #66/#69 mentioned in my comment, and possibly newer ones about the helper landing). Let me look at Issue #1 thread 1 latest comments.
+Also check origin/b-issue-4-worksheets-structure advanced to fb6c7da — B may have landed the helper. And check whether develop has been updated (no, still 698afd2).
+Key open obligation: shared helper switch — blocked on helper entering develop. develop unchanged, so still blocked.
+But maybe there's a new development: maybe root merged PR #9 into develop? No, develop = 698afd2.
+Let me check Issue #1 thread 1 for comments after #69/#75.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L15:C1]
+[toolCall] bash call_00_exrniNtwbtKTpKFGATaW2831
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue view 1 --comments 2>&1 | grep -n \"^comment #\" | tail -30"}
+[toolCall] bash call_01_a2kC3xkfb4cF7QRUwaYH5679
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue view 1 --timeline 2>&1 | tail -40"}
+
+## S29:L16 2026-09-29T06:39:14.135Z message toolResult
+toolResult bash False
+[text]
+349:comment #25 [visible]
+353:comment #26 [visible]
+363:comment #28 [visible]
+394:comment #30 [visible]
+405:comment #31 [visible]
+447:comment #32 [visible]
+462:comment #34 [visible]
+476:comment #37 [visible]
+486:comment #38 [visible]
+510:comment #39 [visible]
+538:comment #40 [visible]
+552:comment #42 [visible]
+576:comment #43 [visible]
+590:comment #45 [visible]
+607:comment #46 [visible]
+639:comment #48 [visible]
+649:comment #49 [visible]
+659:comment #51 [visible]
+705:comment #52 [visible]
+718:comment #53 [visible]
+758:comment #54 [visible]
+791:comment #55 [visible]
+801:comment #57 [visible]
+825:comment #58 [visible]
+835:comment #60 [visible]
+848:comment #65 [visible]
+860:comment #66 [visible]
+876:comment #69 [visible]
+891:comment #70 [visible]
+932:comment #73 [visible]
+
+## S29:L17 2026-09-29T06:39:14.135Z message toolResult
+toolResult bash False
+[text]
+#1 2026-09-29T04:24:17.856677951Z @external created root issue created
+#2 2026-09-29T04:37:56.494518342Z @glm-1 edited title/body changed
+#3 2026-09-29T04:38:45.143008553Z @glm-1 commented comment #1
+#5 2026-09-29T04:39:27.754531553Z @glm-1 linked_pr PR #2
+#9 2026-09-29T04:41:40.100371896Z @glm-1 child_added Issue #3
+#12 2026-09-29T04:41:40.66223641Z @glm-1 child_added Issue #4
+#15 2026-09-29T04:41:40.861418743Z @glm-1 child_added Issue #5
+#18 2026-09-29T04:41:41.044972343Z @glm-1 child_added Issue #6
+#21 2026-09-29T04:41:41.166739967Z @glm-1 child_added Issue #7
+#22 2026-09-29T04:42:05.465852398Z @glm-1 edited title/body changed
+[DUPLICATES: 20 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L17:C1]
+
+## S29:L18 2026-09-29T06:39:15.255Z message assistant
+[thinking]
+New comments on Issue #1: #70 and #73. Let me read those (line 891 and 932 in the output). Let me view.
+[toolCall] bash call_00_TKewQ6If427SwuCFMik41942
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue view 1 --comments 2>&1 | sed -n '848,1000p'"}
+
+## S29:L19 2026-09-29T06:39:15.284Z message toolResult
+toolResult bash False
+[text]
+## 3. 措辞更正（不影响行为）
+基线 `validate.js` 只导出 `asObject` / `parseCellChanges` / `parseSelection` / `findValidationViolation` —— `assertCellWithinStructure`、`assertSelectionInBounds` 在基线里**不存在**，故 #66 的「`validate.js` 继续保留两道更窄的门」应读作「**新增**两道更窄的门」。`Cell ... outside ...` 文案与基线两处副本逐字相同；`Selection is outside the worksheet structure ({R}x{C})` 是 B-2 新行为的新文案，作为 D 与整合 PR 对齐的规范文案记录。
+## 4. 基础层侧结论与一处正文笔误
+- `braid/pr-2` 保持冻结在 `c344b3b`（与合入树 `698afd2` 逐字节一致，不追加提交）；#65（A-4 末换行裁定）与 #66 均**无基础层动作项**。
+- 正文笔误（供 @glm-1 按需修）：正文进度快照写「根侧已采纳为定稿形态（thread 1 comment #67）」，实际 #67 是 **Issue #4 thread 41** 的 B 交回帖；helper 形态的发布帖是 Issue #1 thread 1 的 **#66**。
+- 后续如出现需要基础层改动的裁定，在 thread 1 指定归属，我再接手。
+[DUPLICATES: 96 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L19:C1]
+
+## S29:L20 2026-09-29T06:39:23.162Z message assistant
+[thinking]
+No new actions for A. The state is: my candidate `559a0bd` implements the v1.3 items with local private validation; the switch to the shared helper is deferred until it lands in develop (blocked).
+So what does "pr #8 title/body 已修改" mean as the trigger? It's probably just the notification of my own earlier edit. But the instruction says "请处理 PR #8" — I need to act.
+Viable actions now:
+1. Verify the current head `559a0bd` still matches what's on origin and that the working tree is clean, all checks pass (already reported). Maybe re-verify quickly? Actually, a key possible improvement: check whether Issue #3 comment #74 got a response from @deepseek-3 (verification). Timeline of Issue #3 shows last event #132 at 06:38:30 (my comment). No response yet.
+2. There's the README narrow-change deviation I disclosed (extra sentence at README lines 53-56). I could consider whether to keep it. The root said "README 三条路径窄改精确落地（第 88–89 行）" — fine.
+3. Is there something in the current PR body that isn't satisfied? Let me re-read the "契约 v1.3 / A-4 增量" list vs my implementation — I claim all 7 done. Let me independently verify on the branch: check migration, snapshot fields, state undefined semantics, export footprint, tests, README. Good idea: do a verification pass on head to confirm the seven items. Also verify that the e2e/spec files exist.
+4. Potential proactive work: prepare the helper-switch readiness. Since develop doesn't have the helper yet, but B's branch `515597c`/fb6c7da exists. I could pre-verify that my private validation messages are byte-identical to helper's (Issue #1 #70 gives the exact strings). If aligned, the switch is trivial. Also I could prepare and test the switch locally on a scratch branch (not push) to reduce risk — but the instruction says commit and push to origin braid/issue-3-a. Rebasing onto develop-with-helper isn't possible yet.
+Hmm, but actually, is there a chance that the intended action for this run is: the PR body was modified by someone (maybe root glm-1) adding requirements? Let me diff the current body against my known body. My comment #75 says "PR 正文已登记 v1.3 增量与未完成义务" — the body I see now contains exactly that. The timeline says #133 (my edit). So the body modification event = my own edit at 06:38:30. The notification is just the delivery of that.
+Given "本次运行无人中途介入" and the task says handle PR #8, the reasonable action: verify the head candidate satisfies the current PR body (v1.3 7 items), possibly do a self-review, and then... wait for @deepseek-3's acceptance. But being idle isn't great. Let me consider whether there's meaningful work I can do now that advances the PR:
+Option A: Rebase onto origin/b-issue-4-worksheets-structure? No — PR base is develop; I shouldn't base on B's branch. But I could test the switch locally to be ready. Actually there's value: pre-verify that switching to the shared helper works (compile + tests) without pushing, then record it in the packet as prep. But the packet is on my branch and pushing an extra commit that isn't the switch might confuse. Hmm.
+Actually wait. There might be a more substantive issue: my private validation path. Let me check what's in routes/store now, and verify the messages match #70's table. Also check: does A's import path even have a minRows/minCols validation? The import computes footprint itself so validation only matters for `PUT .../state`. Fine.
+Let me also consider: The PR body now says "未完成义务（并行期过渡）... helper 进入 develop 后本 PR rebase 并单点切换". develop hasn't moved. So blocked.
+Another thing: `braid pr ready 8` — PR is already "ready" lifecycle per the view (`Lifecycle: ready`). So draft state already handled (draft: false).
+So maybe the best action is to do a verification pass (verify seven items on the pushed head, confirm clean + checks reproducible), then reply in the PR thread #63 with a concise status? But instructions warn against publishing duplicate progress summaries without new facts. Hmm. "没有新事实或新决定时，无需发布重复进度总结."
+Wait — maybe the trigger is real: perhaps @deepseek-3 edited the PR body (timeline might not show edits by others after #133 due to truncation? No, timeline ended at #134). Let me double check by viewing the PR body's content vs what I remember. The body includes "第 88–89 行" claim vs my earlier "README.md:86-88"? Not important.
+Actually — the notification could be from braid's PR-body-change hook for MY earlier edit, delivered now. Let me check if there's any newer comment in PR thread or Issue #3 after 06:38 that I haven't seen. The PR view showed comments #47, #63, #75 only. Issue #3 view showed comment #74 last in the list? Let me verify Issue #3 has no comment after #74 — the earlier `head -80` truncated. Let me grep the issue #3 comment list.
+Let me check.
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L20:C1]
+[toolCall] bash call_00_IA97VIemnKtkQWI47QIU1029
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue view 3 --comments 2>&1 | grep -n \"^comment #\" | tail -20 && echo \"=== threads ===\" && braid issue view 3 --comments 2>&1 | grep -n \"^thread:\" | tail"}
+[toolCall] bash call_01_GeqpFfeJy6EgxxdCGMkt6624
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git log --oneline origin/braid/issue-3-a -3 && echo \"--- diff vs local ---\" && git diff --stat HEAD origin/braid/issue-3-a && echo \"--- ls ---\" && ls && echo \"--- packet ---\" && ls tasks/issue-3-a/ 2>/dev/null"}
+
+## S29:L21 2026-09-29T06:39:23.192Z message toolResult
+toolResult bash False
+[text]
+218:comment #64 [visible]
+=== threads ===
+174:thread: 27 [open]
+219:thread: 27 [open]
+243:thread: 27 [open]
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L21:C1]
+
+## S29:L22 2026-09-29T06:39:23.192Z message toolResult
+toolResult bash False
+[text]
+--- diff vs local ---
+--- ls ---
+test-results
+--- packet ---
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L22:C1]
+
+## S29:L23 2026-09-29T06:39:26.856Z message assistant
+[thinking]
+No new external comments. Head matches origin, tree clean.
+So what should I do? The trigger is the PR body modification notification. Since it was my own edit, no new requirement. But the instruction "请处理 PR #8" expects action.
+Given the state, meaningful work:
+1. Independent verification of the seven v1.3 items on the pushed candidate (read code, confirm). This is useful because root's #64 said "补齐并复跑三项检查后才交根侧合入" and @deepseek-3 hasn't verified yet. If I verify and find gaps, I fix.
+2. Prepare the helper switch readiness check: compare my private validation messages with #70's canonical table (six messages). If any mismatch, fix now — because #73 says PR #8 must align with #69/#70 messages. This is a real requirement I might have missed! Let me check: my private path covers minRows/minCols and rowCount/colCount/cells? Actually my `PUT .../state` was pre-existing from base (store.js), so rowCount/colCount/cells messages come from base. I added minRows/minCols validation. Let me verify exact strings against the table:
+   - `minRows must be a non-negative integer`
+   - `minRows must not exceed the reported structure (N)`
+   - minCols symmetric.
+   Let me grep.
+3. Also there's a real potential gap: #66/#70 mention `Cell raw value must be a string` — that's base behavior, fine.
+Let me do a careful verification pass myself now. Let me look at the code: backend/src/store.js import/create, routes import endpoint, csv.js, migrations, frontend csvExport, cellDisplay, README diff.
+Also consider running the checks again to confirm 559a0bd passes (they were run before; re-running is somewhat expensive but gives current evidence). The instruction says reuse effective local checks but a stale PASS doesn't substitute for current acceptance — but the head hasn't changed, so previous evidence is valid. However, since this run is about "handle PR #8", maybe the right thing is to verify the head is unchanged (it is) and that evidence corresponds.
+Let me now inspect key code for the seven items and message alignment.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L23:C1]
+[toolCall] bash call_00_P1Lph8T8su2UJCnv0Id19436
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && grep -rn \"must be a non-negative integer\\|must not exceed the reported structure\" backend/src/ | head -20 && echo \"=== migrations ===\" && grep -n \"002\\|ADD COLUMN\\|min_rows\\|min_cols\" backend/src/migrations.js | head -30"}
+[toolCall] bash call_01_PVyyXpvep054w7BQcSqy1019
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-sta

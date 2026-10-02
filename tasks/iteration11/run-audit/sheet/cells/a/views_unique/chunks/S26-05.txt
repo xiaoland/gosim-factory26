@@ -1,0 +1,358 @@
+ror text in the shared contract so both implementations match. Also: sequencing — if B's helper lands WITHOUT the min rule, A's switch would silently drop validation; the merge condition should include a test that survives the switch (same test before/after).
+Also flag: express.json 10mb — with UTF-8 Chinese text, 10mb body ≈ maybe 3.3M CJK chars; no app-level limit; acceptance shouldn't test a limit. Fine.
+Also check: does GET snapshot worksheet include rowCount etc. — yes. For Q4 GET always including minRows/minCols 0 default — migration: nullable columns; existing rows NULL → snapshot should emit 0 (COALESCE). Also "migration must be re-runnable, restart doesn't overwrite" — standard.
+One more Q1 item: "trailing delimiter (a,b\nc,d,) → rows 2, cols 3" ✓ parser. "quoted empty last field" ✓. Case "CSV consisting only of \n or empty → 0,0" ✓. Leading blank lines asymmetry: kept → mention. Also: what about `\r\n\r\n` trailing — same drop. What about a file ending with delimiter then newline `a,\n` → records [['a','']] → kept (width 2) → footprint 1×2 → export `a,` — byte round-trips. Good.
+Another possible harness failure: the footprint is min bounded also by... import structure is max(records,6)×max(cols,26) but footprint is raw records count (not max with 6/26). So footprint ≤ structure always at import. Export of an imported tiny CSV `a` → footprint 1×1, bbox 1×1 → export `a` — good, not 6×26. Confirm AC states footprint is NOT max(·,6)×(·,26). Yes root: footprint = actual CSV rows/cols. Good.
+Now, also confirm there's no undo/redo in current frontend — grep quickly. And check shared/types for WorksheetStatePayload to see where min fields would go. Quick grep.
+[DUPLICATES: 31 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L56:C1]
+[text]
+Let me check the state payload types, routes for the state endpoint, and whether any undo/redo replay exists yet:
+[toolCall] bash bash_14_4e1cc0f8
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:shared/types.d.ts | grep -n \"WorksheetStatePayload\" -A 20 | head -30 && git show d536aa2:backend/src/routes.js | grep -n \"state\\|import\" | head"}
+[toolCall] bash bash_15_46bb0278
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git grep -ln \"undo\\|Undo\" d536aa2 -- frontend/src backend/src | head && git show d536aa2:backend/src/db.js 2>/dev/null | grep -n \"CREATE TABLE worksheets\" -A 15"}
+
+## S26:L57 2026-09-29T06:39:03.619Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:cwd]
+[ts]
+1790663943619
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:sourceEventType]
+[toolCallId]
+bash_14_4e1cc0f8
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:shared/types.d.ts | grep -n \"WorksheetStatePayload\" -A 20 | head -30 && git show d536aa2:backend/src/routes.js | grep -n \"state\\|import\" | head"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L57:argsPayload]
+
+## S26:L58 2026-09-29T06:39:03.619Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:cwd]
+[ts]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:ts]
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:sourceEventType]
+[toolCallId]
+bash_15_46bb0278
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git grep -ln \"undo\\|Undo\" d536aa2 -- frontend/src backend/src | head && git show d536aa2:backend/src/db.js 2>/dev/null | grep -n \"CREATE TABLE worksheets\" -A 15"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L58:argsPayload]
+
+## S26:L59 2026-09-29T06:39:03.631Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:cwd]
+[ts]
+1790663943631
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L59:isError]
+
+## S26:L60 2026-09-29T06:39:03.641Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:cwd]
+[ts]
+1790663943641
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L60:isError]
+
+## S26:L61 2026-09-29T06:39:03.642Z legacy toolResult
+toolResult bash False
+[text]
+109:  // 6. Whole-worksheet state import (undo/redo replay).
+[DUPLICATES: 30 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L61:C1]
+
+## S26:L62 2026-09-29T06:39:03.643Z legacy toolResult
+toolResult bash True
+[text]
+d536aa2:backend/src/routes.js
+d536aa2:backend/src/store.js
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L62:C1]
+
+## S26:L63 2026-09-29T06:39:12.445Z legacy assistant
+[toolCall] bash bash_16_03176e0c
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:backend/src/db.js | grep -n \"worksheets\" -A 14 | head -25 && git show d536aa2:backend/src/routes.js | sed -n '105,130p'"}
+
+## S26:L64 2026-09-29T06:39:12.447Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:cwd]
+[ts]
+1790663952447
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:sourceEventType]
+[toolCallId]
+bash_16_03176e0c
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:backend/src/db.js | grep -n \"worksheets\" -A 14 | head -25 && git show d536aa2:backend/src/routes.js | sed -n '105,130p'"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L64:argsPayload]
+
+## S26:L65 2026-09-29T06:39:12.458Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:cwd]
+[ts]
+1790663952458
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L65:isError]
+
+## S26:L66 2026-09-29T06:39:12.459Z legacy toolResult
+toolResult bash False
+[text]
+    res.json(patchWorksheet(db, ws, { name: body.name, isActive: body.isActive }));
+[DUPLICATES: 25 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L66:C1]
+
+## S26:L67 2026-09-29T06:39:47.145Z legacy assistant
+
+## S26:L68 2026-09-29T06:40:18.286Z legacy assistant
+[thinking]
+The db.js grep for worksheets table didn't print — maybe the schema is elsewhere. Let me check quickly.
+[toolCall] bash bash_17_41d821a4
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:backend/src/db.js | grep -n \"CREATE TABLE\" && git show d536aa2:backend/src/db.js | sed -n \"$(git show d536aa2:backend/src/db.js | grep -n 'CREATE TABLE IF NOT EXISTS worksheets' | cut -d: -f1),+14p\""}
+
+## S26:L69 2026-09-29T06:40:18.289Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:cwd]
+[ts]
+1790664018289
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:sourceEventType]
+[toolCallId]
+bash_17_41d821a4
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:backend/src/db.js | grep -n \"CREATE TABLE\" && git show d536aa2:backend/src/db.js | sed -n \"$(git show d536aa2:backend/src/db.js | grep -n 'CREATE TABLE IF NOT EXISTS worksheets' | cut -d: -f1),+14p\""
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L69:argsPayload]
+
+## S26:L70 2026-09-29T06:40:18.316Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:cwd]
+[ts]
+1790664018316
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L70:isError]
+
+## S26:L71 2026-09-29T06:40:18.321Z legacy toolResult
+toolResult bash True
+[text]
+35:    CREATE TABLE IF NOT EXISTS schema_migrations (
+sed: -e expression #1, char 1: unknown command: `,'
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L71:C1]
+
+## S26:L72 2026-09-29T06:40:26.481Z legacy assistant
+[toolCall] bash bash_18_ecb5bd36
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:backend/src/db.js | head -80 && ls backend 2>/dev/null && git show d536aa2 --stat=200 --name-only | grep -i \"migrat\\|schema\" | head"}
+
+## S26:L73 2026-09-29T06:40:26.482Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:cwd]
+[ts]
+1790664026482
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:sourceEventType]
+[toolCallId]
+bash_18_ecb5bd36
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show d536aa2:backend/src/db.js | head -80 && ls backend 2>/dev/null && git show d536aa2 --stat=200 --name-only | grep -i \"migrat\\|schema\" | head"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L73:argsPayload]
+
+## S26:L74 2026-09-29T06:40:26.484Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:cwd]
+[ts]
+1790664026484
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L74:isError]
+
+## S26:L75 2026-09-29T06:40:26.486Z legacy toolResult
+toolResult bash False
+[text]
+src
+tsconfig.json
+vitest.config.ts
+[DUPLICATES: 53 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L75:C1]
+
+## S26:L76 2026-09-29T06:40:54.399Z legacy assistant
+[thinking]
+Good — migrations are versioned, re-runnable. Adding a nullable columns migration fits.
+I have enough grounding. Note the state route comment: "Whole-worksheet state import (undo/redo replay)" — confirms the replay use case. Frontend has no undo yet (grep found only routes.js/store.js comments). So undo/redo is a future consumer.
+One more check for Q1: verify the trailing-blank-drop behavior for `a\n""` — i.e., a quoted empty single-field trailing record is dropped. From code: `""` → record [''] → popped. Yes. And verify case `a,b\n\n` → 1 row. Yes.
+Now compose the advisory answer, concrete and brief per question, flagging what not to commit without root owner. Let me also verify the claim about case 5 vs 6 quickly by actually running the parser — cheap and gives evidence. Let me run node with the csv.js from d536aa2.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L76:C1]
+[text]
+Quick behavioral verification of the parser edge cases (evidence, not assumption):
+[toolCall] bash bash_19_7177b883
+{"command": "cd /tmp && git -C /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 show d536aa2:backend/src/csv.js > csv.mjs && node --input-type=module -e \"\nimport { parseCsv, csvColumnCount } from './csv.mjs';\nconst cases = {\n  'trailing newline': 'a,b\\n',\n  'trailing blank line': 'a,b\\n\\n',\n  'trailing delimiter': 'a,b\\nc,d,',\n  'only newline': '\\n',\n  'empty': '',\n  'all-empty last row': 'a,b\\n,',\n  'quoted empty last field': 'a,b\\nc,\\\"\\\"',\n  'single quoted empty file': '\\\"\\\"',\n  'trailing quoted empty single-col': 'a\\n\\\"\\\"',\n  'leading blanks': '\\n\\na,b',\n  'middle blank single-col': 'a\\n\\nb',\n  'cleared-footprint reparse (a then blanks)': 'a\\n\\n',\n};\nfor (const [k, v] of Object.entries(cases)) {\n  const r = parseCsv(v);\n  console.log(JSON.stringify(k), '-> rows', r.length, 'cols', csvColumnCount(r), JSON.stringify(r));\n}\n\""}
+
+## S26:L77 2026-09-29T06:40:54.400Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L77:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S26:L77:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line 

@@ -1,0 +1,58 @@
+(非空包围盒, 静态足迹 minRows/minCols)`**（Issue #3 comment #81 §1 + #82、Issue #1 thread 1 comment #51/#54/#57，`frontend/src/lib/csvExport.ts` 实际实现即 max）。同页下方「契约 v1.3 / A-4 增量」第 6 条已写 max，但两条并存容易让整合 PR 门禁按旧定义取证据 —— 建议把第 4 条那一句改为 `max(非空包围盒, 静态足迹)`（或加一行指向第 6 条）。
+- 次要：第一段「设计与判据权威 = Issue #3 #27 + #33 + #36」未列 Issue 3 侧的 v1.3 增量 **#81/#82**（同段只引 Issue #1 的 v1.3）；补上可让后继读者从 Issue 侧找到联合判据。
+两处都是一行级文档修改，不影响已合入的 `e63efc6` 树与验收结论（#88）。你在本轮收口里改掉即可；若你已收工，说一声我来窄改正文并在原讨论留更正链接。
+Also maybe I should verify the claim "csvExport.ts actual implementation is max" — let me check in develop tree to be accurate. Let me grep.
+Also verify e2e marker line 378 (yes, earlier grep showed 378).
+Let me check csvExport.ts in develop.
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S39:L35:C1]
+[toolCall] bash call_00_3m1tPzIQzrqoI0bbmAr31028
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show origin/develop:frontend/src/lib/csvExport.ts | sed -n '1,80p'"}
+
+## S39:L36 2026-09-29T06:56:11.703Z message toolResult
+toolResult bash False
+[text]
+  const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
+[DUPLICATES: 79 exact source lines omitted; precise per-line source map in duplicate-lines.json at S39:L36:C1]
+
+## S39:L37 2026-09-29T06:56:16.026Z message assistant
+[thinking]
+Confirmed: implementation uses max(bbox, footprint). So my comment draft is accurate.
+Now post the comment on PR #8. Since @deepseek-5 is actively running, a comment may cause them to handle it. That's fine and appropriate.
+Let me write the body file and post.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S39:L37:C1]
+[text]
+Verified the change. Posting a precise review note on PR #8 (the owner is actively finalizing it, so I won't edit their body concurrently).
+[toolCall] bash call_00_yJtz86IFGToIz9EXcbKK5720
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && cat > /tmp/pr8-review.md <<'EOF'\n【收口复核（Issue #3 负责人）：新正文与 CLOSED 状态一致，两处文档口径待对齐】@deepseek-5\n\n我按本轮 `git fetch` 后的事实复核了收口后的正文（#181）。关键声明均成立：base `develop` @ `e63efc6`、head `a23af5a`（`merged: e63efc6`）、「PR 侧无待办」；C 义务指向 `Issue #5 comment #96`，`PRE-C TRANSITION` 标记确实在 `e63efc6` 的 `e2e/workbook-lifecycle.spec.ts:378`（我本轮独立核实，非转述）。以下两处是**文档口径**问题，不涉及 head、也不改变已合入树的验收结论（#88）。\n\n1. **「交付范围」第 4 条仍用 pre-v1.3 的导出范围定义**：写的是 `used range = 非空包围盒（裁尾）`。当前权威是 **`max(非空包围盒, 静态足迹 minRows/minCols)`**（Issue #3 comment #81 §1 + #82；契约 v1.3 = Issue #1 thread 1 comment #51/#54/#57）。`frontend/src/lib/csvExport.ts` 的实际实现即 `rowSpan = Math.max(maxRow + 1, worksheet.minRows ?? 0)`。同页下方「契约 v1.3 / A-4 增量」第 6 条已写 max，但两条并存时，整合 PR 门禁按第 4 条取证据会漏掉足迹。建议把第 4 条那一句改为 `max(非空包围盒, 静态足迹)`（或在该句加一行指向第 6 条）。\n\n2. **权威列表漏 Issue 3 侧的 v1.3 增量**：第一段的「设计与判据权威 = Issue #3 comment #27 + #33（v1.1）+ #36（v1.2）」未含 **comment #81/#82**（A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹/空文件优先级，即本 Issue 内并入的 v1.3）。补上后后继读者可从 Issue 侧一次找齐联合判据。\n\n两处都是一行级修改。你在本轮收口里顺手改掉即可；若你已收工，回一句由我窄改正文并在本 thread 留更正链接。其余边界（A-5 宽松解析、足迹静态、导入无应用层尺寸上限、末条记录后不加终结换行）与 C/整合 PR 的转交锚点我复核无异议。\nEOF\nbraid pr comment 8 --body-file /tmp/pr8-review.md 2>&1 | tail -5"}
+
+## S39:L38 2026-09-29T06:56:16.301Z message toolResult
+toolResult bash False
+[text]
+comment #100
+消息投递回执 — 评论 #100（仅表示评论输入的接收状态）
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S39:L38:C1]
+
+## S39:L39 2026-09-29T06:56:21.724Z message assistant
+[thinking]
+Posted as PR #8 comment #100. Now, should I also update Issue #3's body? The Issue #3 body's authoritative record is correct. But I could add a pointer that PR body was reviewed. The instructions say avoid duplicating progress in the body. The Issue body's "交接与结果" mentions PR #8 comment #93/#94. Adding a note about PR #8 comment #100 review... marginal. I think no body change needed — the Issue #3 body is accurate and the PR-side doc nit is not an Issue-level requirement/decision.
+Hmm, but "维护你负责的 Issue/PR，让接手者能找到当前有效的要求、决定和未决问题" — the Issue #3 body is the entry and it's correct. Good.
+Should I wait for @deepseek-5's response? They're mid-run; my comment was queued for delivery. I could wait a bit, but the instructions say don't sleep-poll; if there's no independent work, end the turn. My work here: reviewed and handed the doc fix to the PR owner.
+Actually, is there any remaining work for me? Let me double check the issue #3 body for one thing: it lists "**实现 PR：#8（已 MERGED）**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5". Fine.
+One more consideration: the state reason in the Issue header says verification records "pr 侧 thread 63/90" — consistent.
+So I'm done. Let me summarize to the user.
+Actually wait — should I verify one more thing regarding the notification: "pr #8 title/body changed" — maybe also the title changed? Title shown: "子 Issue A：工作簿生命周期与 CSV 交换（REQ-1-2-1/1-2-2/1-3-1/1-3-2）" — same as creation. Fine.
+Let me give the final report.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S39:L39:C1]
+[text]
+Reviewed PR #8's new post-merge body and posted PR #8 comment #100. Summary of what I found and did:
+**Verification (fetched current origin, not from handoff text)**
+- `origin/develop` still `e63efc6`; its tree `a3ae41bf` is byte-identical to accepted candidate `a23af5a`; `origin/main` untouched (`2914d2d`).
+- A deliverables present in the develop tree: `backend/src/csv.js`, `frontend/src/lib/{cellDisplay,csvExport}.ts`, the four new components, `e2e/workbook-lifecycle.spec.ts`; `POST /api/workbooks/import` at `backend/src/routes.js:69`; `assertWorksheetStateValid` single-point (1 definition `store.js:865` + 1 call `:924`) → the `#60` close precondition holds; `PRE-C TRANSITION` marker at `e2e/workbook-lifecycle.spec.ts:378` (handoff anchor to C is valid).
+- The PR body's key post-merge claims (base/head/merged commit, "PR side has no todos", C handoff pointing at Issue #5 comment #96) are all accurate.
+**Two stale doc statements flagged to the PR owner (@deepseek-5)** — doc-level only, no head change, no effect on the accepted tree:
+1. PR 「交付范围」§4 still defines export used range as `非空包围盒（裁尾）` (pre-v1.3); authoritative is `max(非空包围盒, 静态足迹)` (Issue #3 #81/#82, contract v1.3 = Issue #1 thread 1 #51/#54/#57), which is exactly what `frontend/src/lib/csvExport.ts` implements. The same body's later v1.3 §6 already says max, but the conflict risks the integration-PR gate taking the old definition.
+2. The authority list omits Issue-3-side v1.3 increments #81/#82.
+I did **not** edit the PR body concurrently: the PR owner is mid-run on that work item (Braid shows active execution), so one-line doc fixes stay with them to avoid conflicting body writes; I offered to apply them if they've already stopped.
+**Issue #3 state**: unchanged and accurate — CLOSED, body's authoritative judgments (`#27`/`#33`/`#36`/`#81`/`#82`), known boundaries, and the single open premise (C replacing `cellDisplay.ts` + integration-PR formula-export gate) all remain correctly recorded, so no Issue-side edit or duplicate progress comment was warranted.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S39:L39:C2]
+

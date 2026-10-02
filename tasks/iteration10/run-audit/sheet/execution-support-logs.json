@@ -1,0 +1,122 @@
+[
+  {
+    "path": "execution.log",
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/run-experiment.py\", line 50, in <module>\n    command(PYTHON, \"-m\", \"lab\", \"run\", str(ROOT / \"generation-matrix.json\"),\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            \"--experiment-root\", str(ROOT / \"generation\"), \"--listen-host\", \"0.0.0.0\",\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            log=ROOT / \"generation-controller.log\")\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/run-experiment.py\", line 17, in command\n    subprocess.run(args, cwd=ROOT / \"code\", stdout=stream, stderr=subprocess.STDOUT, check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '(PosixPath('/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/venv/bin/python'), '-m', 'lab', 'run', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/generation-matrix.json', '--experiment-root', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/generation', '--listen-host', '0.0.0.0')' returned non-zero exit status 1.\n"
+  },
+  {
+    "path": "generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/generation\"}\n"
+  },
+  {
+    "path": "attempt-02/execution.log",
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/run-experiment.py\", line 50, in <module>\n    command(PYTHON, \"-m\", \"lab\", \"run\", str(ROOT / \"generation-matrix.json\"),\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            \"--experiment-root\", str(ROOT / \"generation\"), \"--listen-host\", \"0.0.0.0\",\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            log=ROOT / \"generation-controller.log\")\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/run-experiment.py\", line 17, in command\n    subprocess.run(args, cwd=ROOT / \"code\", stdout=stream, stderr=subprocess.STDOUT, check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '(PosixPath('/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/venv/bin/python'), '-m', 'lab', 'run', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation-matrix.json', '--experiment-root', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation', '--listen-host', '0.0.0.0')' returned non-zero exit status 1.\n"
+  },
+  {
+    "path": "attempt-02/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-02/generation\"}\n"
+  },
+  {
+    "path": "attempt-03/execution.log",
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/run-experiment.py\", line 50, in <module>\n    command(PYTHON, \"-m\", \"lab\", \"run\", str(ROOT / \"generation-matrix.json\"),\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            \"--experiment-root\", str(ROOT / \"generation\"), \"--listen-host\", \"0.0.0.0\",\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            log=ROOT / \"generation-controller.log\")\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/run-experiment.py\", line 17, in command\n    subprocess.run(args, cwd=ROOT / \"code\", stdout=stream, stderr=subprocess.STDOUT, check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '(PosixPath('/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/venv/bin/python'), '-m', 'lab', 'run', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation-matrix.json', '--experiment-root', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation', '--listen-host', '0.0.0.0')' returned non-zero exit status 1.\n"
+  },
+  {
+    "path": "attempt-03/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-03/generation\"}\n"
+  },
+  {
+    "path": "attempt-04/execution.log",
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/run-experiment.py\", line 50, in <module>\n    command(PYTHON, \"-m\", \"lab\", \"run\", str(ROOT / \"generation-matrix.json\"),\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            \"--experiment-root\", str(ROOT / \"generation\"), \"--listen-host\", \"0.0.0.0\",\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            log=ROOT / \"generation-controller.log\")\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/run-experiment.py\", line 17, in command\n    subprocess.run(args, cwd=ROOT / \"code\", stdout=stream, stderr=subprocess.STDOUT, check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '(PosixPath('/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/venv/bin/python'), '-m', 'lab', 'run', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation-matrix.json', '--experiment-root', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation', '--listen-host', '0.0.0.0')' returned non-zero exit status 1.\n"
+  },
+  {
+    "path": "attempt-04/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-04/generation\"}\n"
+  },
+  {
+    "path": "attempt-05/execution.log",
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/run-experiment.py\", line 50, in <module>\n    command(PYTHON, \"-m\", \"lab\", \"run\", str(ROOT / \"generation-matrix.json\"),\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            \"--experiment-root\", str(ROOT / \"generation\"), \"--listen-host\", \"0.0.0.0\",\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            log=ROOT / \"generation-controller.log\")\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/run-experiment.py\", line 17, in command\n    subprocess.run(args, cwd=ROOT / \"code\", stdout=stream, stderr=subprocess.STDOUT, check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '(PosixPath('/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/venv/bin/python'), '-m', 'lab', 'run', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation-matrix.json', '--experiment-root', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation', '--listen-host', '0.0.0.0')' returned non-zero exit status 1.\n"
+  },
+  {
+    "path": "attempt-05/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-05/generation\"}\n"
+  },
+  {
+    "path": "attempt-06/execution.log",
+    "text": ""
+  },
+  {
+    "path": "attempt-06/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-06/generation\"}\n"
+  },
+  {
+    "path": "attempt-07/execution.log",
+    "text": ""
+  },
+  {
+    "path": "attempt-07/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-07/generation\"}\n"
+  },
+  {
+    "path": "attempt-08/execution.log",
+    "text": ""
+  },
+  {
+    "path": "attempt-08/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-08/generation\"}\n"
+  },
+  {
+    "path": "attempt-09/execution.log",
+    "text": ""
+  },
+  {
+    "path": "attempt-09/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation\"}\n"
+  },
+  {
+    "path": "attempt-09/freeze-launch.log",
+    "text": ""
+  },
+  {
+    "path": "attempt-09/freeze-workspaces.log",
+    "text": "{\"source_run_id\": \"pi-braid--hackathon--github-97914b9e3158cf\", \"sha256\": \"f117237072c78c894e49176a079d067808efb8e4875e31309b394706b82ddd50\", \"bytes\": 598421705, \"entries\": 47441, \"symlinks\": 185, \"frozen_at\": \"2026-09-28T08:15:12.094616+00:00\"}\n{\"source_run_id\": \"pi-braid--hackathon--sheet-d478f7dc8ff84f\", \"sha256\": \"4dbf2130e2b06831909b1075c14a15d4f3822d66964e0f81383396813e8a7b87\", \"bytes\": 1234419780, \"entries\": 85770, \"symlinks\": 320, \"frozen_at\": \"2026-09-28T08:17:48.470819+00:00\"}\n"
+  },
+  {
+    "path": "attempt-09/base-launch.log",
+    "text": ""
+  },
+  {
+    "path": "attempt-09/recovery-packaging.log",
+    "text": ""
+  },
+  {
+    "path": "attempt-09/recovery-packaging-launch.log",
+    "text": ""
+  },
+  {
+    "path": "attempt-09/sheet-package.log",
+    "text": "{\"package\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/sheet-agent.zip\", \"sha256\": \"b14eaee01633fa8970fa2b7a7e5a10230f5ee18781a099f13e7436129574093b\", \"source_run_id\": \"pi-braid--hackathon--sheet-d478f7dc8ff84f\", \"braid_run_id\": \"20260928-025746-66feadac\", \"workspace_sha256\": \"4dbf2130e2b06831909b1075c14a15d4f3822d66964e0f81383396813e8a7b87\", \"base_package_sha256\": \"d709087d4dbe6d274a14173903c48f95eadd3115013ebe3710b577870c2f0a43\", \"braid_sha256\": \"b9be6bc37d16187ef579380075295092cb10bcef2184d8b63bb0f93d6ed62a04\", \"braid_source_sha256\": \"bfcce2840dcf50706b7f0b958ac6c2432d9df58d95a6f1ab531865ae64df2aab\", \"requirements_sha256\": \"9cddf67be50748106289ed158648629a6c50c30a490d0eda5bd570c557440b96\", \"mode\": \"workspace-resume\", \"refresh_native_materials\": true, \"refreshed_files_sha256\": {\"support/otlp.py\": \"39b86a3b36db0242e850fb2fc60650f2eb44a7f815718a6c77bb07c5190c45cd\", \"extensions/factory-subagent-observer.ts\": \"0af7fae7ef2756aac242908ee636067d6a12842571f6b018b0ecadc0f83d4471\", \"agents/pi-deepseek-fast/instructions.md\": \"c0aef7bcdad4ced786ad7760eb5f5de8298c16e4dbdd1c49be98063bd0340ffc\", \"agents/pi-glm-fast/instructions.md\": \"c0aef7bcdad4ced786ad7760eb5f5de8298c16e4dbdd1c49be98063bd0340ffc\"}}\n"
+  },
+  {
+    "path": "attempt-09/continuation-01/execution.log",
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/run-experiment.py\", line 50, in <module>\n    command(PYTHON, \"-m\", \"lab\", \"run\", str(ROOT / \"generation-matrix.json\"),\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            \"--experiment-root\", str(ROOT / \"generation\"), \"--listen-host\", \"0.0.0.0\",\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            log=ROOT / \"generation-controller.log\")\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/run-experiment.py\", line 17, in command\n    subprocess.run(args, cwd=ROOT / \"code\", stdout=stream, stderr=subprocess.STDOUT, check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '(PosixPath('/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/venv/bin/python'), '-m', 'lab', 'run', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation-matrix.json', '--experiment-root', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation', '--listen-host', '0.0.0.0')' returned non-zero exit status 1.\n"
+  },
+  {
+    "path": "attempt-09/continuation-01/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-01/generation\"}\n"
+  },
+  {
+    "path": "attempt-09/continuation-02/execution.log",
+    "text": "Traceback (most recent call last):\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/run-experiment.py\", line 50, in <module>\n    command(PYTHON, \"-m\", \"lab\", \"run\", str(ROOT / \"generation-matrix.json\"),\n    ~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            \"--experiment-root\", str(ROOT / \"generation\"), \"--listen-host\", \"0.0.0.0\",\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n            log=ROOT / \"generation-controller.log\")\n            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/run-experiment.py\", line 17, in command\n    subprocess.run(args, cwd=ROOT / \"code\", stdout=stream, stderr=subprocess.STDOUT, check=True)\n    ~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n  File \"/usr/lib/python3.13/subprocess.py\", line 577, in run\n    raise CalledProcessError(retcode, process.args,\n                             output=stdout, stderr=stderr)\nsubprocess.CalledProcessError: Command '(PosixPath('/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/venv/bin/python'), '-m', 'lab', 'run', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation-matrix.json', '--experiment-root', '/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation', '--listen-host', '0.0.0.0')' returned non-zero exit status 1.\n"
+  },
+  {
+    "path": "attempt-09/continuation-02/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-02/generation\"}\n"
+  },
+  {
+    "path": "attempt-09/continuation-03/execution.log",
+    "text": ""
+  },
+  {
+    "path": "attempt-09/continuation-03/generation-controller.log",
+    "text": "{\"experiment\": \"/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/continuation-03/generation\"}\n{\"event\":\"otlp_request_timing\",\"started_at\":1790590213.987282,\"signal\":\"logs\",\"session_id\":\"a36cd27318f8609a272ddcac\",\"wire_bytes\":505188,\"payload_bytes\":505188,\"batch_id\":1,\"http_status\":200,\"failure_stage\":null,\"read_ms\":0.461,\"decode_ms\":0.86,\"persist_ms\":457.545,\"response_write_ms\":0.167,\"finished_at\":1790590214.446511,\"total_ms\":459.233}\n"
+  }
+]

@@ -1,0 +1,59 @@
+{
+  "purpose": "独立补充阅读：初始 root advisor、无头续段遗漏 custom message，以及 timeline 原始输出；不改全局 coverage.json",
+  "sources": [
+    {
+      "path": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9/1ec2b594-a21f-41ca-a4a6-77a6a5b67fdb/run-0/session.jsonl",
+      "line_count": 25,
+      "read_ranges": [[5, 5]],
+      "unread_or_not_reread": [[1, 4], [6, 25]],
+      "note": "完整读取 advisor 任务 prompt；最终 advisor 正文以 artifact 镜像为完整来源。其余 root 已读或不属于本补充的直接读取范围。"
+    },
+    {
+      "path": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/subagent-artifacts/afffce3b-c20f-445f-89f0-131659d04249_advisor_transcript.jsonl",
+      "line_count": 42,
+      "read_ranges": [[1, 42]],
+      "unread_or_not_reread": [],
+      "note": "全文读取；第 42 行为完整 advisor assistant 文本，其余为工具/运行记录。"
+    },
+    {
+      "path": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9.jsonl",
+      "line_count": 66,
+      "read_ranges": [[20, 20], [23, 23]],
+      "unread_or_not_reread": [[1, 19], [21, 22], [24, 66]],
+      "note": "直接补读遗漏的完整 advisor custom_message L20 与完成订阅工具回执 L23；L20 与 artifact 第 42 行逐字一致。"
+    },
+    {
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec23-2b00-7843-a4d1-9dfe3af773c3/2026-09-29T07-48-43-585Z_01a0ec23-2dc1-7504-b8ea-645445ad51a9.jsonl",
+      "line_count": 66,
+      "read_ranges": [[8, 8], [13, 14], [16, 16]],
+      "unread_or_not_reread": [[1, 7], [9, 12], [15, 17], [18, 66]],
+      "note": "按 parent 指定读取 L8、L13/L14/L16 原始命令/工具结果；L8 的 tail 属模型展示截断。"
+    },
+    {
+      "path": "work/native-homes/pi-glm-fast-01a0ec23-e14c-7212-8f1e-6f60dc834d27/2026-09-29T07-49-30-325Z_01a0ec23-e455-7300-83d8-d8e632701b47.jsonl",
+      "line_count": 45,
+      "read_ranges": [[8, 8], [13, 14], [16, 16]],
+      "unread_or_not_reread": [[1, 7], [9, 12], [15, 17], [18, 45]],
+      "note": "按 parent 指定读取 timeline 的 tail/head/help/after-limit 原始结果；L16 是未经 shell tail/head 的 81 行返回。"
+    }
+  ],
+  "repeated_material": [
+    {
+      "source": "无头续段 L20",
+      "first_read_source": "advisor artifact L42",
+      "note": "逐字重复，仅引用首次完整原处，不重复计为新判断。"
+    }
+  ],
+  "timeline_implementation_sources": [
+    {
+      "path": "sources/braid/src/objects.rs",
+      "read_ranges": [[287, 293]],
+      "note": "只读核对 SQL 的 after/order/limit 以及返回 Vec，无 has_more/next/cursor。"
+    },
+    {
+      "path": "sources/braid/src/cli/mod.rs",
+      "read_ranges": [[141, 152], [548, 554]],
+      "note": "只读核对 CLI 默认 after/limit 与文本/JSON 输出。"
+    }
+  ]
+}

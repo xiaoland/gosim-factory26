@@ -1,0 +1,219 @@
+cells show their raw text, and unpopulated cells render
++ * as `''`. Results are not persisted — `cells.raw` stays the only fact source
++ * and a reload simply recomputes.
++ * The formula bar and the inline editor keep reading the raw text (REQ-4-1-1
++ * "the formula bar always shows the submitted formula"); only this seam feeds
++ * the grid and the CSV export.
+ export type CellDisplayValue = (row: number, col: number) => string;
+-/** Identity seam: a cell shows exactly the raw text stored for it. */
++/** Display-value seam: raw text for ordinary cells, results for formulas. */
+ export function worksheetDisplayValues(worksheet: WorksheetSnapshot): CellDisplayValue {
+-  const raw = new Map<string, string>();
+-  for (const [row, col, value] of worksheet.cells) {
+-    raw.set(cellKey(row, col), value);
+-  }
+-  return (row: number, col: number) => raw.get(cellKey(row, col)) ?? '';
++  const values = evaluate(worksheet.cells, {
++    rowCount: worksheet.rowCount,
++    colCount: worksheet.colCount,
++  return (row: number, col: number) => values.get(cellKey(row, col)) ?? '';
+=== cellDisplay.test.ts diff ===
+index bcc5218..14a209d 100644
+@@ -21,12 +21,14 @@ function sheet(cells: [number, number, string][]): WorksheetSnapshot {
+- * D-A8 / contract increment A-3: interim identity seam. Sub-issue C replaces the
+- * implementation; these assertions describe the pre-C behaviour the acceptance
+- * suite pins in the meantime (a formula cell shows and exports its raw text).
++ * D-A8 / contract increment A-3: the grid and the CSV export share this seam.
++ * Sub-issue C (Issue #5 decision D-C8) replaced the interim identity
++ * implementation with the formula engine, so a formula cell now displays (and
++ * exports) its calculated result or error string while the formula bar and the
++ * inline editor keep reading `cells` raw.
+ describe('worksheetDisplayValues', () => {
+-  it('returns the raw text for populated cells', () => {
++  it('returns the raw text for populated non-formula cells', () => {
+     const display = worksheetDisplayValues(sheet([[0, 0, 'Region'], [1, 1, '1200']]));
+     expect(display(0, 0)).toBe('Region');
+     expect(display(1, 1)).toBe('1200');
+@@ -38,8 +40,27 @@ describe('worksheetDisplayValues', () => {
+     expect(display(0, 1)).toBe('');
+-  it('returns the raw formula text before sub-issue C lands', () => {
++  it('returns the calculated result for a formula cell (transition flipped by C)', () => {
+     const display = worksheetDisplayValues(sheet([[0, 0, '=1+1']]));
+-    expect(display(0, 0)).toBe('=1+1');
++    expect(display(0, 0)).toBe('2');
++  it('calculates formulas from the current source cells', () => {
++    const display = worksheetDisplayValues(
++      sheet([[0, 0, '2'], [0, 1, '3'], [0, 2, '=A1+B1'], [0, 3, '=C1*2']]),
++    expect(display(0, 2)).toBe('5');
++    expect(display(0, 3)).toBe('10');
++  it('returns the error string for an error cell, through the same seam as the export', () => {
++    const display = worksheetDisplayValues(sheet([[0, 0, '=1/0']]));
++    expect(display(0, 0)).toBe('#DIV/0!');
++  it('reads an empty referenced cell as 0 and flags an out-of-structure reference', () => {
++    const display = worksheetDisplayValues(sheet([[0, 0, '=Z1+1'], [0, 1, '=A7']]));
++    expect(display(0, 0)).toBe('1');
++    expect(display(0, 1)).toBe('#REF!');
+ });
+[DUPLICATES: 26 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L148:C1]
+
+## S41:L149 2026-09-29T07:24:21.246Z message toolResult
+toolResult bash False
+[text]
+=== e2e/workbook-lifecycle.spec.ts diff ===
+index fe98263..3819f82 100644
+@@ -375,13 +375,12 @@ test.describe('REQ-1-3-2 export the current worksheet', () => {
+   test('exports the formula cell value through the shared display seam', async ({ page }) => {
+     await importCsv(page, 'export formula.csv', ['=1+1,plain'].join('\n'));
+-    // PRE-C TRANSITION (Issue #3 decision D-A8): sub-issue C replaces
+-    // `frontend/src/lib/cellDisplay.ts` with the formula engine. Until then the
+-    // grid and the export both show the raw formula text. When C lands, this
+-    // assertion MUST flip to '2' for both the grid cell and the exported text;
+-    // the integration PR carries that flipped case as the final gate.
+-    await expectCellText(page, 'A1', '=1+1');
++    // Flipped by sub-issue C (Issue #5 decision D-C10): `cellDisplay.ts` now
++    // runs the formula engine, so the grid and the CSV export both show the
++    // calculated result instead of the raw expression. The integration PR
++    // carries this flipped case as the final gate.
++    await expectCellText(page, 'A1', '2');
+     const { csv } = await exportCsv(page);
+-    expect(csv).toBe('=1+1,plain');
++    expect(csv).toBe('2,plain');
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L149:C1]
+
+## S41:L150 2026-09-29T07:24:31.147Z message assistant
+[thinking]
+C's seam replacement looks exactly per A-3/D-A8:
+- `worksheetDisplayValues` now uses `evaluate(worksheet.cells, {rowCount, colCount})`; grid + export both consume it.
+- Error strings go through the same seam (`#DIV/0!`, `#REF!`).
+- Doc comment records FormulaBar/inline editor keep raw.
+- A's e2e transition assertion flipped to '2' for both grid text and exported CSV text — exactly what A's transferred gate required, and the comment now points to "Flipped by sub-issue C (Issue #5 decision D-C10)".
+- `cellDisplay.test.ts` flipped plus new error/out-of-structure cases.
+Let me also verify the FormulaBar and inline editing still read raw (i.e., C didn't change Grid/WorkbookEditor to feed display values there). The diff list shows only `cellDisplay.ts`, `cellDisplay.test.ts`, `frontend/tsconfig.json` (+1 line), `frontend/src/lib/formula.ts`, tests — no changes to Grid.tsx/WorkbookEditor.tsx/WorkbookToolbar.tsx/FormulaBar. Confirmed by the diff --stat: no such files. Good — the seam consumers are untouched, FormulaBar keeps raw.
+Wait: does FormulaBar exist as a component? Let me check the file list in frontend components. A's description mentions `FormulaBar`. The diff shows no changes to it. Since A's Grid passes `displayValue` only for rendering, and FormulaBar reads `raw` separately, fine.
+Now, is there anything to report/act on? As A's owner, this is the fulfillment of A's transferred obligation — good news. Should I record it? Options:
+1. Comment on Issue #3 (closed) — probably not needed; it's C's PR/Issue record.
+2. Comment on PR #10 / Issue #5 as verification feedback — but C is mid-work (Playwright running); an unsolicited "we verified" comment is unnecessary noise, and C hasn't asked.
+3. Nothing.
+Hmm. But the guidance says "交接前核对当前说明" and A's description says "整合 PR 带「公式单元格导出 = 计算结果」门禁，翻转 e2e/workbook-lifecycle.spec.ts..." — now that C flipped it in PR #10, A's description statement is still accurate as a gate requirement (the integration PR still re-runs it on the final candidate). Good; no correction needed.
+Actually, there is one subtlety worth checking: A's description says the flip is assigned to the integration PR ("整合 PR 带...门禁，翻转 ..."). C flipped it earlier. Does that make A's description inaccurate ("翻转 ... 归整合 PR")? It says the integration PR carries the gate with the flipped case. Since it's already flipped in C's branch, the integration PR merely needs to run it. Semantically fine — the obligation is "the final candidate must pass the flipped case". Not a factual error; no correction needed.
+Another consideration: A's description's "未决/假设" mentions `e2e/workbook-lifecycle.spec.ts:375-386` line anchors. C's flip shifted line numbers slightly (the case is now at ~line 374-386?). Let me check the new line range; if the anchor drifted a bit, the description's line reference would be slightly off. Minor. Let me check the new line numbers of the case in C's branch. If off by a couple lines, is it worth a narrow edit to A's description? That's a doc-accuracy detail; the case name is the stable anchor and is given too. I'd say not worth churn... but "用户指引" says keep anchors usable. The description gives both the line range and the test name; the name is stable. Skip.
+So: no action required. But should I proactively tell C/A that the seam boundary is verified as respected? Since C is about to hand over results and the integration PR will gate, a short verification note from the A-side owner in the relevant thread could be useful... but it duplicates what the integration PR will check. And C's own §3 evidence mentions the flip.
+Hmm, however: there's a genuine risk item worth flagging — C changed A's e2e file's expectation; if C's PR is merged and A's gate "integration PR carries the flip" is now satisfied early, then A's Issue #3 description's statement about the case being "PRE-C TRANSITION ... 必须翻转" is now stale in wording (it says the flip is pending). Let me re-read the exact wording in Issue #3's description:
+"**C 未合入 → 公式单元格导出原文（e2e 过渡断言已标注必须翻转），这是本 Issue 唯一的未满足前提，已随 #167 关闭转交**：① **C（#5）**替换 ... ② **整合 PR**带「公式单元格导出 = 计算结果」门禁，翻转 `e2e/workbook-lifecycle.spec.ts:375-386`（用例 ...，行内注 `PRE-C TRANSITION (Issue #3 decision D-A8)`）。"
+Now: "C 未合入 → ..." is still true today (C's PR #10 is open, not merged). C's branch has the flip, but develop hasn't. So the description's statement remains accurate for develop. Once C merges, the description would be stale — but that's the integration phase; the A owner could update then. Also, A's description is on a CLOSED issue; the integrator reads it. Is it worth updating now? The statement "C 未合入" is accurate on develop. I'd hold.
+But wait — should I note the verification (C's branch already respects the seam boundary and flips the assertion) somewhere for the integration PR? The integration PR owner will find the flipped case in develop after C merges. Fine.
+Decision: no action; report findings (with the verification detail, which is useful to the user).
+Actually, hold on. Let me consider whether there IS something A should do proactively: the A-side gate in `e2e/workbook-lifecycle.spec.ts` is now flipped by C. That means A's e2e spec file is modified by C's PR. When the integration PR runs, the case asserts '2'. Good.
+But there's a subtle interplay worth verifying: A's `csvExport.ts` default parameter `display: CellDisplayValue = worksheetDisplayValues(worksheet)` — with the seam now evaluating, the export of a formula cell uses the evaluated value. Also, A's used-range logic uses `worksheet.minRows/minCols` and non-empty bbox — unaffected.
+One more: the e2e case imports CSV `=1+1,plain` and expects csv `'2,plain'`. With C's seam, the footprint from import is 1 row × 2 cols; bbox = 1×2 → same. Fine.
+So everything checks out. No action.
+Let me also double check FormulaBar raw reading still holds in C's branch (grep for displayValue usage across frontend).
+[DUPLICATES: 17 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L150:C1]
+[toolCall] bash call_00_Ex0IAYugYUYjYFLZ4rRH1562
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && echo \"=== who consumes the seam on C's branch ===\" && git grep -n \"cellDisplay\\|displayValue\" origin/c-issue-5-formula-engine -- frontend/src | sed 's|origin/c-issue-5-formula-engine:||' && echo && echo \"=== FormulaBar / inline edit raw sources (C branch) ===\" && git grep -n \"raw\" origin/c-issue-5-formula-engine -- frontend/src/components/FormulaBar.tsx frontend/src/components/WorkbookToolbar.tsx 2>/dev/null | sed 's|origin/c-issue-5-formula-engine:||' | head -12"}
+
+## S41:L151 2026-09-29T07:24:31.180Z message toolResult
+toolResult bash False
+[text]
+=== who consumes the seam on C's branch ===
+frontend/src/components/WorkbookLifecycle.test.tsx:205:        displayValue={(row, col) => (row === 0 && col === 0 ? '2' : '')}
+frontend/src/components/WorkbookToolbar.tsx:34:    const csv = worksheetToCsv(worksheet, displayValue);
+=== FormulaBar / inline edit raw sources (C branch) ===
+frontend/src/components/FormulaBar.tsx:6:  /** Raw content of the selected cell (formula text stays raw). */
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L151:C1]
+
+## S41:L152 2026-09-29T07:24:31.181Z message user
+[text]
+- issue:1 comment 125; read `comment view 125 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L152:C1]
+
+## S41:L153 2026-09-29T07:24:34.802Z message assistant
+[thinking]
+Let me read comment 125. But first, from the previous round I was mid-verification: I confirmed C's seam replacement respects A-3 boundaries (FormulaBar reads raw via its `value` prop documented as raw; Grid renders displayValue with fallback raw; WorkbookToolbar passes displayValue to worksheetToCsv). Good.
+Now read #125.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L153:C1]
+[toolCall] bash call_00_bQdvjSivnYorvTAm2VXV4873
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 125 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('id',c['database_id'],'author',c['author']['login'],'work_item',c.get('work_item_number'),'thread_root',c.get('thread_root'),'reply_to',c.get('reply_to'),'resolved',c.get('resolved'))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L154 2026-09-29T07:24:34.839Z message toolResult
+toolResult bash False
+[text]
+id 125 author deepseek-7 work_item 1 thread_root 1 reply_to 122 resolved False
+【回 #121/#122：独立复现逐条一致 · 裁定取独立 shared program 门，单点归属 PR #10（D-C14）】@glm-1 @deepseek-3 @deepseek-8
+1. **我侧独立复现**（自有探针，`origin/develop @ e63efc6`，`tsc 5.9.3`，`/usr/local/bin/node v20.19.3`；日志 `/tmp/ds7-shared-gate-probe.log`，探针在 `/tmp`，工作树干净）：
+| 前端 program（`types: ["vite/client","node"]` + DOM lib）**加 `checkJs`**，探针 JS 内含 `process.env`/`Buffer`/`document` + 一处 JSDoc 冲突 | exit 2，**只报 JSDoc 冲突 `TS2322`**；三个全局一条不报 → 确认 `checkJs` 生效但**不产生 Node-only 门** |
+| 独立 shared program（`lib: ["ES2022"]`、`types: []`、`allowJs`+`checkJs`），同一文件 | exit 2：`TS2591`(`process`) + `TS2591`(`Buffer`) + `TS2584`(`document`) → **两个方向都有门** |
+与 #121 三条结论、#122 的复现逐条吻合，无更正。
+2. **裁定（Issue #5 范围，记为 D-C14）**：
+- **拒绝**给 `frontend/tsconfig.json` 加 `checkJs`：`frontend/vite.config.ts:11-13` 读 `process.env` 且在前端 program 的 `include` 内，`types: ["node"]` 不能删，故此改法只扩大 diff 与构建面而不产生门（#121 §1 / #122 依据成立）。
+- **采纳**独立 shared program 门，**单点归属 PR #10**（与 #122 §归属建议一致）：C 已按 #116 触碰 `frontend/tsconfig.json`，且 `shared/formula.js`、`shared/a1.js` 由本 PR 交付。**@deepseek-3 请勿并行开基础层窄 PR**，避免两处实现；**@glm-1 若要求改由基础层窄 PR 承载或暂不采纳，我在本 thread 更正并同步 PR #10**，不静默执行。
+3. **可复跑配方（我侧实测，含一个陷阱）**——已同时交给 PR #10 负责人：
+- 新增 `shared/tsconfig.json`：`target/lib: ES2022`、`module: ESNext`、`moduleResolution: Bundler`、`strict`、`noEmit`、`skipLibCheck`、`allowJs: true`、`checkJs: true`、`types: []`、**`include: ["*.js", "*.d.ts"]`**。
+- **陷阱（实测）**：`include` 只写 `["*.js"]` 时，`shared/` 尚无 `.js` 的提交会以 **`TS18003`（No inputs were found）** 红；带上 `"*.d.ts"` 后：只有 `types.d.ts` → exit 0，含 `process`/`Buffer`/`document` 的 `.js` → `TS2591`/`TS2584`。
+- 接入一行：`checks/run-e2e.sh` 前端 build 前加 `pnpm --dir frontend exec tsc -p "$ROOT/shared/tsconfig.json"`（该调用形态实测可解析到 frontend 的 `tsc`；`checks/`、`shared/` 布局均为已合入的基础层脚手架，不改其语义）。
+4. **与运行时把关的关系（不替代）**：#119 §2 / #121 §3 的**浏览器内真实执行** e2e 仍是必做证据（前端无 `checkJs`，真实代码路径与运行期全局只能在浏览器里验）；本静态门是**追加**的 Node-only 方向门，PR #10 的证据清单在原有 `pnpm -r test` / `pnpm -r typecheck` / `checks/run-e2e.sh`（含 e2e）之外增加该 shared 门命令。
+5. **影响面**：A（#121 提出，#3 已关）与 B（#120 零暴露）均无需动作；E（#7）将来新增的 `shared/*.js` 自动被该门覆盖。
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L154:C1]
+
+## S41:L155 2026-09-29T07:24:34.840Z message user
+[text]
+- issue:1 comment 126; read `comment view 126 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L155:C1]
+
+## S41:L156 2026-09-29T07:24:37.704Z message assistant
+[thinking]
+Comment #125: @deepseek-7 (C owner) ruled D-C14: adopts the independent shared program gate, owned by PR #10, and explicitly says "@deepseek-3 请勿并行开基础层窄 PR" and "A（#121 提出，#3 已关）与 B（#120 零暴露）均无需动作".
+So my #121 proposal is being adopted, ownership assigned to PR #10, and A needs no action. There's an explicit instruction to me (don't open a base-layer narrow PR) — which I wasn't going to do anyway. No reply needed (it confirms the direction I proposed; a "ack, won't do it" reply adds nothing... though it does ask me not to do something — silence implies compliance. Hmm, is a confirmation needed? The guidance: reply when needed to answer/act. An explicit request "请勿并行开基础层窄 PR" is satisfied by not acting. A terse ack would be a receipt → skip.)
+Now #126 is the new update. Let me read it.
+Also from the interrupted previous round: I had verified C's seam replacement respects A-3. I should keep that finding in mind; maybe #126 is C's results handover, possibly relevant to A's gate.
+Let me read #126.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L156:C1]
+[toolCall] bash call_00_H8mtlosvISIjJ3G5hQXT0173
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 126 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('id',c['database_id'],'author',c['author']['login'],'work_item',c.get('work_item_number'),'thread_root',c.get('thread_root'),'reply_to',c.get('reply_to'),'resolved',c.get('resolved'))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L157 2026-09-29T07:24:37.739Z message toolResult
+toolResult bash False
+[text]
+id 126 author deepseek-7 work_item 1 thread_root 1 reply_to 124 resolved False
+【回 #124：`evaluate(cells, bounds?)` 窄化确认采纳 · 语义固化 + 一条义务】@deepseek-8 @glm-1
+1. **采纳**可选第二参 `evaluate(cells, bounds?)`（向后兼容，与 D-C3 给 `rewriteRefsOnCopy` 增加 `bounds` 同一模式）。理由成立：D-C11 的单格上界 `#REF!` 与区间裁剪都需要结构事实源，而用数据推断结构被 D-C11 明确禁止。请把语义写进 packet 与单测注释：
+   - **传 `bounds`**：单格越界（行 ≥ `rowCount` 或列 ≥ `colCount`）→ `#REF!`；区间裁剪到结构内（不存在部分按空处理）。
+   - **不传**：纯片段求值，不判上界、只遍历已填充格 —— **不得**用于任何显示/导出/服务端路径。
+   - 唯一生产消费者 `worksheetDisplayValues` 必须始终传 `{rowCount, colCount}`（取 `row_count`/`col_count`，不用导入足迹）；D 消费 `rewriteRefsOnCopy` 同理传目标表结构（若先扩张再粘贴，传扩张后值）。
+2. **科学计数常量采纳**：与 D-C5 的严格数值语法一致（D-C5 明写含科学计数），否则会出现 `isNumericCellValue('1e5') === true` 而 `=1e5` 解析不了的矛盾；`=1e308*10 → Infinity` 保持 D-C6 已记录边界，不新增要求。
+3. **一条义务**：本 thread 的 **#125（D-C14）** 给 PR #10 追加独立 shared 静态门（新增 `shared/tsconfig.json` + `checks/run-e2e.sh` 一行，含 `include` 必须带 `"*.d.ts"` 否则 `TS18003` 的实测陷阱）。它与你的接口发布不冲突、不动引擎代码；**浏览器内 e2e 仍是必做证据**，不因该门放宽。
+4. `shared/a1.js` 的再导出形态（`parseA1Range`/`formatA1Range` 即剥 `$` 兼容版、`$` 标志位只存在于 `formula.js` 的 tokenizer）与 #111 §1 一致，我按此收下；验收时我会逐条比对 `backend/src/structure.test.js` 的既有断言（`$` 剥除 `:64-71`、不可解析即不动 `:73-89`）与 B 的 range 映射语义。
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L157:C1]
+
+## S41:L158 2026-09-29T07:24:44.461Z message assistant
+[thinking]
+Comment #126 is C-owner's response to C-implementer (#124), confirming `evaluate(cells, bounds?)` and giving obligations. It @-mentions @deepseek-8 @glm-1 — not A.
+A-relevant content: point 1 confirms the seam contract: "唯一生产消费者 `worksheetDisplayValues` 必须始终传 `{rowCount, colCount}`（取 `row_count`/`col_count`，不用导入足迹）" — exactly A-3/A-4. And "不传 bounds 不得用于任何显示/导出/服务端路径" aligned.
+Nothing requires A action.
+So this round: both #125 and #126 processed; neither requires A action. #125 explicitly says A needs no action and asks me not to open a base-layer narrow PR (I won't).
+Should I reply to #125's direct request to me? "@deepseek-3 请勿并行开基础层窄 PR" — I comply by not acting. Since #125 already records "A 无需动作", a reply is a receipt. Skip.
+But hmm — the harness keeps sending these notifications; each round I confirm no action. To be genuinely useful and avoid pure passivity, is there anything A-side worth doing proactively? Options:
+(a) Note in Issue #3's description that the A-3 flip and seam replacement are already implemented in C's branch (`c340e2e`) and that the gate now belongs to the integration PR on the final candidate. That's a doc update on a CLOSED issue; the description currently says "C 未合入 → 公式单元格导出原文（e2e 过渡断言已标注必须翻转）". Since C's branch has the flip but develop doesn't, the statement remains true for develop. Updating now would be premature (C's PR is open, not merged).
+(b) Verify the seam boundary on C's branch (I already did: Grid renders displayValue with raw fallback, WorkbookToolbar passes displayValue to worksheetToCsv, FormulaBar keeps raw, no A-consumer switched to display values).
+Should I record (b) somewhere? It's A's transferred obligation being implemented; recording my verification could be valuable at integration time. But C is still working (Playwright running per #124 §3), and #125/#126 show C's own verification plan. My verification would be a third-party check of an unmerged branch — its value comes at the integration gate, on the merged candidate. Posting now risks reviewing work-in-progress and duplicating C's own evidence.
+However — there is a real, non-duplicative A-side item: the A-3 boundary I transferred has two sub-claims; C's branch satisfies them, and my check found no violation. Reporting it in Issue #5 (C's issue) or PR #10 as "A-side contract check passed on c340e2e" could help. But C hasn't asked for review; PR #10 is a work-in-progress. The guidance warns against premature conclusions on unmerged work, and against noise. I'll hold, and instead note it in my response to the user (as I did last round).
+Actually, hold on. Let me reconsider the value: the integration PR owner will need to know the flip is already in C's branch and that A-3's boundary was checked. But they can verify on the merged candidate themselves. Fine.
+One thing I could legitimately do: since A's issue is CLOSED and A's last remaining prerequisite (formula export = computed result) is now being implemented by C, and C's branch flips A's e2e assertion — once C merges, A's description's "唯一未满足前提" line will be stale. But that's for merge time.
+Decision: no comment. Report to the user, including my verified findings about C's seam implementation (since that's A-relevant evidence I gathered).
+Let me quickly confirm Issue #3 state unchanged and check that no new comment exists beyond #126 directed at A. Also verify thread 1 latest.
+Actually I already have enough. Let me do a fast confirmation of issue 3 and #127 absence, then report.
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L158:C1]
+[toolCall] bash call_00_HbCq2IBsD3aV4lSoLfxJ3564
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 127 --json 2>/dev/null >/dev/null && echo \"#127 exists\" || echo \"#127 absent\"; echo \"issue3:\"; braid issue view 3 2>&1 | sed -n '2p'; braid issue view 3 --comments 2>&1 | grep -cE \"^comment #\"; echo \"develop:\"; git rev-parse --short origin/develop"}
+
+## S41:L159 2026-09-29T07:24:44.516Z message toolResult
+toolResult bash False
+[text]
+#127 exists
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L159:C1]
+
+## S41:L160 2026-09-29T07:24:46.419Z message assistant
+[thinking]
+#127 exists! Let me read it — it may be relevant. Note the notification only mentioned #126, but #127 appeared. Let me read it.
+[toolCall] bash call_00_wKtrdddMWy2NH9pkknda6875
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 127 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('id',c

@@ -1,0 +1,16 @@
+hash 3a3ff5bd71c4116f4a015cd6eb112bc743b46e66744b18660084c93789b59347
+copies 1
+source snapshot-01/braid-state/turns/01a0eb9e-5559-7520-b79e-9ec842feb6fb.md
+
+请处理 PR #2。
+
+对象：local/run#2
+
+发生以下更新：
+- pr:2 thread 6: comment 6 resolved; read `comment view 6 --thread`
+issue #1 title/body 已修改
+issue:1 thread 4: comment 4 resolved; read `comment view 4 --thread`
+issue:1 thread 9: comment 9 resolved; read `comment view 9 --thread`
+issue:1 thread 10: comment 10 resolved; read `comment view 10 --thread`
+
+使用 `braid pr view 2 --comments` 查看当前内容。

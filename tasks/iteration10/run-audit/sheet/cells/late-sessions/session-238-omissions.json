@@ -1,0 +1,26 @@
+[
+  {
+    "source": "work/native-homes/pi-deepseek-fast-01a0e7be-840e-71f2-8117-0285b9e203f8/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-pr-26-pi-deepseek-fast-g1--/2026-09-28T11-20-22-994Z_01a0e7be-98d2-7048-8fae-4bb61ef09772.jsonl:L130",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/acc26-logs/shots.mjs",
+    "field": "content",
+    "chars": 6286
+  },
+  {
+    "source": "native/469-unparsed-2026-09-28T11-20-22-994Z_01a0e7be-98d2-7048-8fae-4bb61ef09772.jsonl:L120",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr26-final.md",
+    "field": "content",
+    "chars": 4455
+  },
+  {
+    "source": "native/469-unparsed-2026-09-28T11-20-22-994Z_01a0e7be-98d2-7048-8fae-4bb61ef09772.jsonl:L126",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/root-handoff.md",
+    "field": "content",
+    "chars": 1718
+  }
+]

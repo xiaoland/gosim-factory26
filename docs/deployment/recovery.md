@@ -4,6 +4,10 @@
 
 新 Harness checkpoint/prepared/application producer 使用 schema 2。`python3 submission/exp_checkpoint.py checkpoint --source RUN --output NEW --source-identity IDENTITY_JSON --stop-evidence STOP_JSON --acquisition ACQUISITION_JSON` 保存来源材料，获取窗口需要覆盖全部 writer 的连续关闭证明。停止原件只证明观察时点，不能排除复制期间的中途写入。没有获取窗口证明或原 Git/native 历史缺失时保留 partial；历史 schema 1 只读，不补造 complete。
 
+真实 hosted 来源使用 `python3 -m lab import-source-stop --experiment EXPERIMENT --attempt ATTEMPT --birth BIRTH_GET_JSON --status TERMINAL_GET_JSON --cancel-evidence CANCEL_JSON --authorization "已获授权的恢复范围" --identity-output NEW_IDENTITY_JSON --output NEW_STOP_JSON`。`--experiment` 与 `--attempt` 必须成对提供；导入核对冻结合同、实际 attempt、execution 和派发绑定，以及来源与独立终态 GET 的 run、submission、competition、task、创建及启动时间。取消响应只作为原件保留，独立 GET 必须确认终态和结束时间。输出保留真实 attempt 和 execution incarnation，不伪装成 legacy 来源；两个输出均须为新文件。导入不执行停止，也不授予启动许可。恢复启动仍须显式提供 deployment 的私有 `cookie_file`，通过独立 GET 确认同一来源确已停止。
+
+旧 Docker 来源使用 `python3 -m lab import-docker-source-stop --birth SOURCE_IDENTITY_JSON --status SOURCE_STOP_JSON --writers WRITER_RETIREMENT_JSON --authorization "已获授权的恢复范围" --identity-output NEW_IDENTITY_JSON --output NEW_STOP_JSON`。来源保留真实旧 run ID，以 daemon、完整 container ID、创建/启动时间、image 和 owner labels 绑定 `legacy-docker` execution，不补造新 attempt ID。导入会实时读回原 daemon 的同一容器及全部来源卷使用者，要求它们已退出、Pid 为零且没有 paused/restarting 状态；旧写入与重启进程也须关闭。Darwin 的僵尸进程保留原 unknown 与新 `ps` Z 观察，不为回收僵尸解除共享 dispatcher 的暂停。启动同样重验出生身份、卷使用者和 writer；消失、连接失败、重启或新增写入入口均阻塞，不清退其它来源或整个 daemon。
+
 默认恢复入口为 `python3 -m lab recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE --directory NEW_RUN`。Intent 在普通实验字段之外声明 `recovery: {production: NAME, target: TARGET_LAYOUT, repair: REPAIR}`，相关 variant 的 prepared 使用 `{from_production: NAME}`。入口冻结原 checkpoint 身份、修复输入、生产依赖及派生关系，准备新 run；不会停止旧来源或启动模型。准备后仍在实际执行授权内调用 start。SOURCE 必须是明确 checkpoint，不从含混 run/archive 自动猜。
 
 低层 `prepare --source CHECKPOINT --output NEW --target-layout JSON --repair REPAIR_JSON` 保留，无网络或模型请求。有限修复覆盖材料刷新、已声明 provider transport、内部路径别名、已退役 transient link、外部 node-gyp 工具物化及明确兼容 runtime 替换。每项核对原 literal/目标范围，记录实际变化与损失；Git、native 历史与应用工作不由材料刷新覆盖。结构 partial 可以离线派生以解释缺口，但结果没有完整获取/语义保证仍为 partial，不能进入完整恢复执行。
@@ -12,7 +16,10 @@
 
 `application` 独立冻结明确 commit、需求和来源，区分 stage/final，保留未提交内容政策。一个可重放应用不证明 checkpoint 完整，终态 archive 也不等同 checkpoint。
 
-模型和供应商归新配方，四个 I14 入口与恢复通道不强制 ARC。Native per-model bindings 在新生成时拆分 provider，并同步 profile/角色。既有未拆分 provider 的恢复使用显式 `--override-native-transport`，保留 provider、model、profile 和历史身份，以模型级 endpoint、认证 header 与 `samplingParams.model` 指定供应商传输；不把供应商名称映射当作概念型号迁移。旧包不因源码变化取得新路由。
+Runner 装配已验证的恢复 prepared 后，使用包内 `main.py REQUIREMENTS --output-dir OUTPUT --execute-prepared` 执行同一恢复状态；它与 `--prepare-only` 互斥。该模式核对 preparation/provenance、需求 hash、Braid binary 和 run/state 路径，复用既有运行环境、通知、执行与归档交付逻辑，不再次解包、重建 Git、刷新材料或迁移需求。当前冻结 Lab recipe 的 routes 与私有 deployment 凭据是执行权威；routes 必须等于 prepared native transport 回执，变更时重新冻结并 prepare，包内取得材料时的凭据不能覆盖当前执行。临时目录重新创建，凭据不写入公开回执。材料换版通知仍复用同一工作区的 lock/pending 与 DB comment/deliveries 读回；每来源仅启动本轮明确授权的一条生成执行。最终应用来自 `recovered-application` 与 delivery commit，不能使用尚在工作的 `work/application` 充当最终产物。
+
+
+模型和供应商归新配方，四个 I14 入口与恢复通道不强制 ARC。Native per-model bindings 在新生成时拆分 provider，并同步 profile/角色。需要统一入口时，使用 `harness/model-gateway.json` 的 LiteLLM deployment 选择结果和 `routing-snapshot.json`；恢复必须保留 catalog/config SHA 及非敏感 endpoint/wire model 快照，配置漂移时重新冻结，不能从当前目录悄悄取得新路由。既有未拆分 provider 的恢复使用显式 `--override-native-transport`，保留 provider、model、profile 和历史身份，以模型级 endpoint、认证 header 与 `samplingParams.model` 指定供应商传输；不把供应商名称映射当作概念型号迁移。旧包不因源码变化取得新路由。
 
 官网表单只注入一个模型 key。需要多供应商时，恢复打包器通过 `--model-environment` 消费 mode 600 的私有 JSON，顶层只有 `environment`，其中只允许 `FACTORY26_MODEL_BINDINGS` 及各 route 声明的凭据变量。它随包保存到 `.private/model-env.json`；恢复入口先校验 manifest，再恢复私有目录与文件权限并装载，随后应用绑定。不要全量复制模型 env、把 key 写入公开配方，或把离线认证装配成功当作供应商实际受理。
 
@@ -117,7 +124,7 @@ python3 scripts/package_completed_recovery.py \
 
 同款 GLM 定义从目标 binding 的原生 template 取得，只补入受影响旧 template 和全部 `<pi-deepseek-fast>-<uuid>` native home 的 `factory26.models`，包括 sleeping/replaced home；旧 home 恢复时不会自动刷新 template。其它 provider、DeepSeek 定义与内部角色保持原样；缺文件、目标定义不唯一或 factory26 transport 不一致会拒绝迁移。`recovery-model-migration/originals/` 保存原请求和原 models.json，`recovery-model-migration.json` 保存前后哈希、profile 变更及全部 home/history 入口。执行准备或正式接续前，由主线保证旧执行已停止。
 
-二进制覆盖时，manifest 不沿用原冻结源码的 revision 或 SHA。原身份保存在 `recovery-source.frozen_braid_source`；`--braid-source` 记录新源码 tar 的容器 SHA，`--braid-source-identity` 逐项核对 tar 中 `braid/` 文件及 `sha256-json-sorted-files` 聚合 SHA，再记录新编译源码身份。辅助源码快照没有提供时，不宣称新 binary 来自原源码。
+二进制覆盖时，manifest 不沿用原冻结源码的 revision 或 SHA。原身份保存在 `recovery-source.frozen_braid_source`；`--braid-source` 记录新源码 tar 的容器 SHA，`--braid-source-identity` 逐项核对 tar 中 `braid/` 文件及 `sha256-json-sorted-files` 聚合 SHA，再记录新编译源码身份。辅助源码快照没有提供时，不宣称新 binary 来自原源码。 新包的最终 `runtime/bin/braid` 文件 SHA 必须与声明的编译 binary SHA 一致，打包器在写入 ZIP 前拒绝冲突；来源说明不能替代实际字节核对。采用新 binary 时，先核对成功编译回执、源码清单与候选文件，再一起冻结二进制和来源记录，保留旧包的原始矛盾记录。
 
 I13 历史通道切换另用显式 `--override-native-transport`。旧冻结包曾将 I14 继续生成固定到 ARC；当前源码不再固定 endpoint 或主/视觉 key，新配方通过 FACTORY26_MODEL_BINDINGS 明确各原生 provider 的供应商与凭据变量，来源及前后哈希仍归 recovery-native-transport 回执。新生成可按模型分流并拆分 provider；旧共享 provider 的 retained 会话没有自动 provider 身份迁移保证，当前 hook 拒绝需要新增 provider 的恢复。未明确获准的旧源码/ZIP、原模型请求和通道事实保留原身份。
 
@@ -179,3 +186,17 @@ python3 -m lab.arc_bench.package_arc_replay \
 重放沿用 [Competition 的 journal 与比赛锁边界](competition.md#参赛包与平台边界)。监控退出时先读日志并刷新原 run 状态；已经终结则 collect，仍在运行才接续同一 journal 的 watch，不重复创建 run。
 
 提交名称使用 `artifact-replay`，关闭“使用比赛额度评测”。回放入口不调用模型。2026-09-24 实测 API 密钥表单接受 `artifact-replay-no-model-calls` 占位值，两题 API 的 `billing_mode` 均为 `self_funded`，应用均成功交付和部署；评分是否完成需继续检查测试终态与计数。官网回放耗时和模型开销不能当作原生成性能，生成成本继续取自对应本地 run。保存官方 run 链接、测试通过数、评分和具体错误，并与回放包 SHA256 关联；不要把隐藏测试反馈传入仍在生成的 Agent。
+
+Prepared 装配会保留原生会话所需的一层材料路径别名，别名使用相对链接。`--execute-prepared` 消费当前 runner 已验证的 assembly 和 prepared 身份，不对运行时派生目录重跑原始 ZIP 的无链接校验。离线准备只移除已停止 PulseAudio 的 `work/home/.config/pulse/<32hex>-runtime` 临时链接，保留原链接字面值及原因回执，不读取或删除其目标，原完整来源快照保持。
+
+Docker entry 的资源限额由容器 cgroup 执行；runner 在同一 namespace 的监管循环复用 `ResourceEvidence` 产生基线、每两秒样本和最终样本，并将明确样本路径传给 Harness。它不启动第二个 OTLP 接收器，也不以宿主样本代替外部子容器资源。Docker 不把物理内存额度再设置为每进程虚拟地址上限；本地 Linux entry 仍保留该限制。
+
+保留工作树中 `better-sqlite3@11.10.0/build/node_gyp_bins/python3` 指向 `/usr/bin/python3` 的已观察链接，离线准备只在恢复副本中物化为显式目标镜像内的解释器文件，并保留权限。回执记录原链接、实际 resolved 路径、文件 SHA 和 image_id；此操作重建可再生构建工具，不迁移原生会话、修改数据库或放宽检查点外链门控。之后仍须完成现有 Git/native 独立读回。
+
+对于本地已经写入 `launch_pending`、但 Docker 完整 physical inspect 在 reserve 事务前超时的派发，可显式运行 `lab exp continue-pre-reserve <attempt-directory>`。这不是普通重派：管理入口验证原冻结实验、同 request/job/incarnation，取得原 dispatch 锁，并核对原 unknown/TimeoutExpired、无 create/resource/start/launch 证据。随后读取同 daemon 的完整 physical 与 authority snapshot，只有该 attempt 无任何预约，且确定性名称和 attempt label 均无执行容器或卷时，才复用原 Docker reserve/launch CAS。任意读取失败或已有预约均拒绝。该入口每个 attempt 只进入一次：已有接续记录或接续错误时，不能沿用最初 inspect 超时再次放行，必须核实该次接续自身的副作用。authority 卷可能已创建，不能把此阶段称为零副作用。原错误与 unknown 回执保留，新增接续证据绑定管理工具 SHA；容器仍采用原冻结 deployment/runtime.source，管理修复不改旧制品身份。
+
+大材料 Docker 上传及终态整域导出均采用 1800 秒的有界输运窗口。此前固定 300 秒不足以完成本轮约 5.5 GiB prepared 材料；超时仍保存具体命令、错误与已有容器身份，不能重新 create。终态导出前需核对实际源整域 T、新制品 A 与本机保留余量，顺序输运，不以降低 reserve 代替实际可用空间。
+
+若输入上传超时而已绑定容器严格处于 created、Pid0、StartedAt/FinishedAt均为零，可运行 `lab exp continue-input-upload <attempt-directory>`。它取得原 dispatch 锁，验证冻结实验、request/job/incarnation 与精确 CID/Created/image/labels/mount，要求 authority 的同一预约仍为 materialized 且从未启动，没有 start/launch/assembly 或此前接续。正常启动与接续共用原 staging、upload、start 尾段，不重新 reserve/create；上传后从 Docker archive 流逐项验证全部字节、链接及执行位，不额外落一份完整材料。随后再次核实容器 created 和 prepared 来源当前停止门控，才 start 同一 CID。start 或接续结果不确定后只观察，不能再用原上传错误重新启动。原 TimeoutExpired 与一次性接续工具身份保留。
+
+新冻结的 Docker terminal export 在大 cp 前执行一次只读空间预检：核对实际 `/attempt` 卷，只读挂载同 image，测量整域 T 和尚未在本机 store 的制品 A，并保留配置的 reserve 余量。源文件查询失败不推定为零；本机同文件系统可用空间不足 T+A+余量时，保存 `export-preflight.json` 的确切缺量和原错误，不开始大复制。stage/store 分属不同文件系统时拒绝当前预检，需显式分别核算后处理。远端封存材料仍保留，模型入口不会因输运失败重跑。

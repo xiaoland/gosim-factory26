@@ -1,0 +1,204 @@
+xpectCellText(page: Page, coordinate: string, text: string): Promise<void> {
+  expect(
+    actual,
+    `gridcell ${coordinate} should contain ${JSON.stringify(text)} but contained ${JSON.stringify(actual)}`,
+  ).toBe(text);
+test.describe('REQ-1-2-1 create a blank workbook', () => {
+  test('creates, opens and persists a single blank Sheet1 with A1 selected', async ({ page }) => {
+    await page.getByRole('button', { name: 'New blank workbook' }).click();
+    await expect(page).toHaveURL(/\/new$/);
+    await expect(page.getByLabel('Workbook name')).toHaveValue('Untitled spreadsheet');
+    await page.getByRole('button', { name: 'Create' }).click();
+    // Exactly one worksheet, named Sheet1, active.
+    // A1 is selected and the whole default 6x26 structure is blank.
+[DUPLICATES: 32 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L98:C1]
+
+## S24:L99 2026-09-29T06:34:01.370Z message assistant
+[thinking]
+Now add an e2e test for the footprint round trip. Where to add? In the REQ-1-3-2 describe. Add after the "escapes" test:
+  test('keeps a trailing empty field via the import footprint across reload', async ({ page }) => {
+    // Contract v1.3 / A-4: `a,b\nc,d,` (ragged padding) imports 2x3 and the
+    // export keeps the third, empty field even though the non-empty bounding
+    // box is only 2x2.
+    await importCsv(page, 'export footprint.csv', 'a,b\nc,d,');
+    expect(csv).toBe('a,b,\nc,d,');
+    const again = await exportCsv(page);
+    expect(again.csv).toBe('a,b,\nc,d,');
+Also maybe add a test that a blank workbook export stays empty (already exists).
+Also consider adding an e2e that clears cells of an imported workbook and export → footprint empty fields. That requires clearing 4 cells through the UI (select + Delete?). The Grid may support typing to replace but clearing needs Delete key handling — unknown. Let me not add; unit tests cover.
+Also a state-endpoint e2e is unnecessary (backend tests cover).
+Now, `importCsv` returns to editor; the export footprint test is fine. Note: the imported CSV `a,b\nc,d,` → name 'export footprint'. Home page link name will be "export footprint".
+Let me add the test.
+Also: is there an existing e2e case for the ""trailing empty field"" in import? Not currently. Good addition.
+Now update the e2e file.
+[DUPLICATES: 14 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L99:C1]
+[toolCall] edit call_00_nBc2tWMme0Zn6TTRHSlN2790
+{"edits": [{"newText": "  test('exports an empty file for a blank workbook', async ({ page }) => {", "oldText": "  test('exports an empty file for a blank workbook', async ({ page }) => {\n    await createWorkbook(page, 'Empty export source');"}, {"newText": "  test('keeps trailing empty fields through the import footprint, across reload', async ({ page }) => {\n    // Contract v1.3 / A-4: `a,b\\nc,d,` parses as 2 x 3 (ragged padding), so the\n    // import records a 2 x 3 footprint and the export keeps the third, empty\n    // field even though the non-empty bounding box is only 2 x 2.\n    await importCsv(page, 'export footprint.csv', 'a,b\\nc,d,');\n    expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n\n    await page.reload();\n    await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');\n    expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n  });\n\n  test('exports an empty file for a blank workbook', async ({ page }) => {\n    await createWorkbook(page, 'Empty export source');", "oldText": "  test('exports an empty file for a blank workbook', async ({ page }) => {"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/e2e/workbook-lifecycle.spec.ts"}
+
+## S24:L100 2026-09-29T06:34:01.373Z message toolResult
+toolResult edit True
+[text]
+edits[0] and edits[1] overlap in /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/e2e/workbook-lifecycle.spec.ts. Merge them into one edit or target disjoint regions.
+
+## S24:L101 2026-09-29T06:34:03.553Z message assistant
+[toolCall] edit call_00_ET_TowCSzyE9tqnLJTVMutj2896
+{"edits": [{"newText": "  test('keeps trailing empty fields through the import footprint, across reload', async ({ page }) => {\n    // Contract v1.3 / A-4: `a,b\\nc,d,` parses as 2 x 3 (ragged padding), so the\n    // import records a 2 x 3 footprint and the export keeps the third, empty\n    // field even though the non-empty bounding box is only 2 x 2.\n    await importCsv(page, 'export footprint.csv', 'a,b\\nc,d,');\n    expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n\n    await page.reload();\n    await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');\n    expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n  });\n\n  test('exports an empty file for a blank workbook', async ({ page }) => {\n    await createWorkbook(page, 'Empty export source');", "oldText": "  test('exports an empty file for a blank workbook', async ({ page }) => {\n    await createWorkbook(page, 'Empty export source');"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/e2e/workbook-lifecycle.spec.ts"}
+
+## S24:L102 2026-09-29T06:34:03.557Z message toolResult
+toolResult edit False
+[text]
+Successfully replaced 1 block(s) in /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/e2e/workbook-lifecycle.spec.ts.
+[details]
+{"diff": "     ...\n 337     const { csv: exported } = await exportCsv(page);\n 338     expect(exported).toBe(`plain,\"with,comma\",,\\n\"say \"\"hi\"\"\",\"line\\nbreak\",,tail`);\n 339   });\n 340 \n+341   test('keeps trailing empty fields through the import footprint, across reload', async ({ page }) => {\n+342     // Contract v1.3 / A-4: `a,b\\nc,d,` parses as 2 x 3 (ragged padding), so the\n+343     // import records a 2 x 3 footprint and the export keeps the third, empty\n+344     // field even though the non-empty bounding box is only 2 x 2.\n+345     await importCsv(page, 'export footprint.csv', 'a,b\\nc,d,');\n+346     expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n+347 \n+348     await page.reload();\n+349     await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');\n+350     expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n+351   });\n+352 \n 341   test('exports an empty file for a blank workbook', async ({ page }) => {\n 342     await createWorkbook(page, 'Empty export source');\n 343     const { fileName, csv } = await exportCsv(page);\n 344     expect(fileName).toMatch(/\\.csv$/);\n     ...", "firstChangedLine": 341, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/e2e/workbook-lifecycle.spec.ts\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/e2e/workbook-lifecycle.spec.ts\n@@ -337,8 +337,20 @@\n     const { csv: exported } = await exportCsv(page);\n     expect(exported).toBe(`plain,\"with,comma\",,\\n\"say \"\"hi\"\"\",\"line\\nbreak\",,tail`);\n   });\n \n+  test('keeps trailing empty fields through the import footprint, across reload', async ({ page }) => {\n+    // Contract v1.3 / A-4: `a,b\\nc,d,` parses as 2 x 3 (ragged padding), so the\n+    // import records a 2 x 3 footprint and the export keeps the third, empty\n+    // field even though the non-empty bounding box is only 2 x 2.\n+    await importCsv(page, 'export footprint.csv', 'a,b\\nc,d,');\n+    expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n+\n+    await page.reload();\n+    await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');\n+    expect((await exportCsv(page)).csv).toBe('a,b,\\nc,d,');\n+  });\n+\n   test('exports an empty file for a blank workbook', async ({ page }) => {\n     await createWorkbook(page, 'Empty export source');\n     const { fileName, csv } = await exportCsv(page);\n     expect(fileName).toMatch(/\\.csv$/);\n"}
+
+## S24:L103 2026-09-29T06:34:06.365Z message assistant
+[thinking]
+Also update the import API table row in README to mention footprint. Let me do it plus check the CSV import row text.
+Then run tests.
+Also: does the seed insert worksheets with explicit columns? Check seed.js — sheet2 = blank worksheet probably inserts explicit columns without min → NULL. Good.
+Also check `backend/src/seed.js` uses INSERT with explicit columns. Let me grep.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L103:C1]
+[toolCall] edit call_00_ayAy7M8TtVQNb7VrokSR2086
+{"edits": [{"newText": "| POST | `/api/workbooks/import` | 从 CSV 新建工作簿（`{fileName, csv}`）：单事务；`fileName` 去掉末尾 `.csv` 作为名字；结构 `max(行,6) × max(列,26)`（契约增量 A-1/A-2）并记录导入足迹（`min_rows`/`min_cols`，v1.3/A-4）；解析失败 400 `INVALID_CSV` + `Invalid CSV file format. Import failed.` 且不落任何记录 |", "oldText": "| POST | `/api/workbooks/import` | 从 CSV 新建工作簿（`{fileName, csv}`）：单事务；`fileName` 去掉末尾 `.csv` 作为名字；结构 `max(行,6) × max(列,26)`（契约增量 A-1/A-2）；解析失败 400 `INVALID_CSV` + `Invalid CSV file format. Import failed.` 且不落任何记录 |"}], "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/README.md"}
+
+## S24:L104 2026-09-29T06:34:06.367Z message toolResult
+toolResult edit False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L104:C1]
+[details]
+{"diff": "     ...\n  74 | 方法 | 路径 | 说明 |\n  75 | --- | --- | --- |\n  76 | GET | `/api/workbooks` | 工作簿列表 `[{id,name,updatedAt}]`（按 updatedAt 倒序） |\n  77 | POST | `/api/workbooks` | 新建空白工作簿（`{name?}`，单个活动 `Sheet1`，A1 已选中） |\n- 78 | POST | `/api/workbooks/import` | 从 CSV 新建工作簿（`{fileName, csv}`）：单事务；`fileName` 去掉末尾 `.csv` 作为名字；结构 `max(行,6) × max(列,26)`（契约增量 A-1/A-2）；解析失败 400 `INVALID_CSV` + `Invalid CSV file format. Import failed.` 且不落任何记录 |\n+ 78 | POST | `/api/workbooks/import` | 从 CSV 新建工作簿（`{fileName, csv}`）：单事务；`fileName` 去掉末尾 `.csv` 作为名字；结构 `max(行,6) × max(列,26)`（契约增量 A-1/A-2）并记录导入足迹（`min_rows`/`min_cols`，v1.3/A-4）；解析失败 400 `INVALID_CSV` + `Invalid CSV file format. Import failed.` 且不落任何记录 |\n  79 | GET | `/api/workbooks/:id` | 编辑器全量快照（含全部工作表、单元格、选区、规则/筛选/透视） |\n  80 | PATCH | `/api/workbooks/:id` | 重命名 `{name}`（trim 后非空） |\n  81 | PUT | `/api/workbooks/:id/worksheets/:wid/cells` | `{changes:[{row,col,raw}]}` 批量写入；验证拒绝时整批 409 且不落任何一格 |\n  82 | PUT | `/api/workbooks/:id/worksheets/:wid/state` | 整表状态导入（撤销/重做回放）；`minRows`/`minCols` 为导入足迹，`undefined` = 不改、`null` = 清除 |\n     ...", "firstChangedLine": 78, "patch": "--- /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/README.md\n+++ /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/README.md\n@@ -74,9 +74,9 @@\n | 方法 | 路径 | 说明 |\n | --- | --- | --- |\n | GET | `/api/workbooks` | 工作簿列表 `[{id,name,updatedAt}]`（按 updatedAt 倒序） |\n | POST | `/api/workbooks` | 新建空白工作簿（`{name?}`，单个活动 `Sheet1`，A1 已选中） |\n-| POST | `/api/workbooks/import` | 从 CSV 新建工作簿（`{fileName, csv}`）：单事务；`fileName` 去掉末尾 `.csv` 作为名字；结构 `max(行,6) × max(列,26)`（契约增量 A-1/A-2）；解析失败 400 `INVALID_CSV` + `Invalid CSV file format. Import failed.` 且不落任何记录 |\n+| POST | `/api/workbooks/import` | 从 CSV 新建工作簿（`{fileName, csv}`）：单事务；`fileName` 去掉末尾 `.csv` 作为名字；结构 `max(行,6) × max(列,26)`（契约增量 A-1/A-2）并记录导入足迹（`min_rows`/`min_cols`，v1.3/A-4）；解析失败 400 `INVALID_CSV` + `Invalid CSV file format. Import failed.` 且不落任何记录 |\n | GET | `/api/workbooks/:id` | 编辑器全量快照（含全部工作表、单元格、选区、规则/筛选/透视） |\n | PATCH | `/api/workbooks/:id` | 重命名 `{name}`（trim 后非空） |\n | PUT | `/api/workbooks/:id/worksheets/:wid/cells` | `{changes:[{row,col,raw}]}` 批量写入；验证拒绝时整批 409 且不落任何一格 |\n | PUT | `/api/workbooks/:id/worksheets/:wid/state` | 整表状态导入（撤销/重做回放）；`minRows`/`minCols` 为导入足迹，`undefined` = 不改、`null` = 清除 |\n"}
+
+## S24:L105 2026-09-29T06:34:08.407Z message assistant
+[toolCall] bash call_00_ET_V6ggk6GaGcMTyQ4jtRCb7803
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && grep -n \"INSERT INTO worksheets\" backend/src/seed.js backend/src/store.js"}
+[toolCall] bash call_01_ET_7MUVaUt5MjfKPOQkO4Fg3617
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH node --version; PATH=/usr/local/bin:$PATH npm --version; which pnpm; pnpm --version"}
+
+## S24:L106 2026-09-29T06:34:09.779Z message toolResult
+toolResult bash False
+[text]
+backend/src/seed.js:71:    `INSERT INTO worksheets (id, workbook_id, name, position, row_count, col_count, last_active, last_selection)
+backend/src/store.js:237:      `INSERT INTO worksheets (id, workbook_id, name, position, row_count, col_count, last_active, last_selection)
+backend/src/store.js:293:      `INSERT INTO worksheets (id, workbook_id, name, position, row_count, col_count, min_rows, min_cols, last_active, last_selection)
+
+## S24:L107 2026-09-29T06:34:09.779Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L107:C1]
+
+## S24:L108 2026-09-29T06:34:11.434Z message assistant
+[thinking]
+Good: seed and blank creation don't set min fields (NULL).
+Now run backend and frontend tests + typecheck. Let's run `pnpm -r test` in background maybe; it should be quick (<60s). Let me run it directly with a timeout.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L108:C1]
+[toolCall] bash call_00_yKQre650uUWz701cjoCO3652
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH pnpm -r test 2>&1 | tail -45", "timeout": 240}
+
+## S24:L109 2026-09-29T06:34:18.978Z message toolResult
+toolResult bash False
+[text]
+backend test:      17|     fs.mkdirSync(path.dirname(dbPath), { recursive: true });
+backend test:      18|   }
+backend test:      19|   const db = new Database(dbPath);
+backend test:        |              ^
+backend test:      20|   db.pragma('journal_mode = WAL');
+backend test:      21|   db.pragma('foreign_keys = ON');
+backend test:  ❯ freshDb src/app.test.js:14:26
+backend test:  ❯ src/app.test.js:502:16
+backend test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[29/31]⎯
+backend test:  FAIL  src/app.test.js > POST /api/workbooks/import > validates the request body shape with the uniform error format
+backend test: Error: Module did not self-register: '/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'.
+backend test:  ❯ bindings ../node_modules/.pnpm/bindings@1.5.0/node_modules/bindings/bindings.js:112:48
+backend test:  ❯ new Database ../node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/lib/database.js:48:64
+backend test:  ❯ openDatabase src/db.js:19:14
+backend test:  ❯ src/app.test.js:524:24
+backend test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[30/31]⎯
+backend test:  FAIL  src/app.test.js > unknown API routes > use the uniform error body
+backend test:  ❯ src/app.test.js:542:38
+backend test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[31/31]⎯
+backend test:  Test Files  1 failed | 1 passed (2)
+backend test:       Tests  31 failed | 20 passed (51)
+backend test:    Start at  06:34:13
+backend test:    Duration  3.59s (transform 879ms, setup 0ms, collect 1.81s, tests 275ms, environment 0ms, prepare 1.30s)
+backend test: Failed
+/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend:
+ ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  spreadsheet-backend@1.0.0 test: `vitest run`
+Exit status 1
+[DUPLICATES: 18 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L109:C1]
+
+## S24:L110 2026-09-29T06:34:18.980Z message user
+[text]
+- issue:3 comment 64; read `comment view 64 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L110:C1]
+
+## S24:L111 2026-09-29T06:34:22.547Z message assistant
+[thinking]
+A new comment #64 on issue 3. Also, the test failure is an environment issue: "Module did not self-register: better_sqlite3.node" — this is likely because the native module was built for a different Node ABI, and the default PATH node (used to run vitest via pnpm) differs from /usr/local/bin/node? Actually I ran with PATH=/usr/local/bin:$PATH. Hmm, "Module did not self-register" typically means ABI mismatch (module built with different Node version). The prebuilt node_modules might have been built for a different Node. Previously (d536aa2) tests passed — with what node? Possibly the default PATH node (which might be a different version) matched the built binary.
+So the fix: run tests with the node the native module was built for, or rebuild. Let me check default node version: `node --version` without PATH override.
+Earlier `which node`? Let's check. Also check the packet's recorded commands. Previously I (the earlier instance) ran `pnpm -r test` and it passed — probably with default PATH.
+So the correct approach per environment guidance: "核对平台兼容性时，先检查 /usr/local/bin/node --version... 该平台入口存在且版本符合要求时，用 PATH=/usr/local/bin:$PATH 执行上述逐目录安装、构建和启动". That's for platform-path install/build/start. For dev tests, the prebuilt native module in the shared pnpm store was built against the default tool node. Since /usr/local/bin/node is v20.19.3 and default node might be different (e.g. v22?), the native module ABI mismatch occurs.
+Let me check `node --version` with default PATH.
+Also read comment #64. Let me do both.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L111:C1]
+[toolCall] bash call_00_mwUA7OBfkwQV7GBEtXtR1028
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && which node; node --version; echo \"---\"; /usr/local/bin/node --version; echo \"--- node ABI\"; node -p \"process.versions.modules\"; /usr/local/bin/node -p \"process.versions.modules\""}
+[toolCall] bash call_01_C3YymRCbStXAhYJuT7gx5818
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 64 --thread 2>&1 | head -80"}
+
+## S24:L112 2026-09-29T06:34:22.708Z message toolResult
+toolResult bash False
+[text]
+--- node ABI
+137
+115
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L112:C1]
+
+## S24:L113 2026-09-29T06:34:22.708Z message toolResult
+toolResult bash False
+[text]
+【设计增量 v1.1：回复 comment #27，与其共同构成 A 的权威判据】@deepseek-5 @glm-1
+[DUPLICATES: 79 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L113:C1]
+
+## S24:L114 2026-09-29T06:34:25.393Z message assistant
+[thinking]
+The `braid comment view 64 --thread` prints thread 27 stuff — because comment view needs the issue context? Hmm, it printed thread 27 which is issue 3's thread. `comment view 64` printed thread for comment... it shows comments #27, #33... that's the thread containing 64? No, thread for comment 64 would be its own thread. Wait — maybe comment #64 is a reply in thread 27? Actually the output starts with comment #27, then #33... let me get the tail of that output to see #64 itself.
+Also: node ABI mismatch. Default node v24 (ABI 137) built/installed the native module; /usr/local/bin/node v20 (ABI 115) can't load it. Previously tests passed with default node (v24). So run `pnpm -r test` with default PATH, not /usr/local/bin. The platform-path checks (checks/platform-path.sh, run-e2e.sh) presumably use /usr/local/bin and do their own install in a fresh copy. Let me check what run-e2e.sh does — it probably uses `pnpm --dir frontend build` and runs playwright with default node, and backend started with... let me check.
+For now: run tests with default PATH (pnpm from runtime bin uses node v24).
+Let me see comment 64 tail first.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L114:C1]
+[toolCall] bash call_00_Bpb40Dam1A7RLuaNT0vC7564
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 64 --thread 2>&1 | tail -40"}
+
+## S24:L115 2026-09-29T06:34:25.412Z message toolResult
+toolResult bash False
+[text]
+reply-to: 62
+【根侧核查 + v1.3 增量确认：候选 d536aa2 缺 Y-min 落地项，补齐后才进入根侧验收】@deepseek-3 @deepseek-5
+我已在 `origin/braid/issue-3-a` @ `d536aa2` 上直接核实（非仅依据交接文本）：
+**已确认到位**：① README 三条路径窄改精确落地（第 88–89 行，同段两条不变量原文保留）；② 导入端点/单事务/结构下界/INVALID_CSV 文案；③ 末换行裁定（见下）已按建议形态实现。
+**关键缺口：候选未落地契约 v1.3**。本交接写于 Issue #1 #51–#60 发布的并行期，其中「A-7 已定格（不实现导入尺寸下限）」已被 thread 1 **comment #51（A-4 Y-min 裁定）+ #54 + #57（落地细化）+ #60（时序）修订**。我在候选上核实：`min_rows`/`min_cols` 全仓无匹配；`worksheetToCsv` 为 `maxRow<0 → return ''`。按 v1.3 需补（全部归 PR #8，改动局部）：
+1. **迁移**：worksheets 增可空 `min_rows`/`min_cols`；`shared/types.d.ts` 快照类型同步。
+2. **导入事务**写入足迹 = CSV 实际行列数（裁剪后、含 ragged 补齐）；新建空白工作簿足迹为 0。
+3. **快照输出**：`getWorksheetSnapshot` 带上两字段（state 导入返回值即它，GET 快照与 `PUT .../state` 同时生效）。
+4. **state 导入**：两字段沿用 `undefined` = 不改动语义（#57 §3），缺失**不得**重置为 0。
+5. **导出**：used range = max(非空包围盒, 静态足迹)；足迹下限静态、不随结构操作演化；**空表分支改为足迹优先**（#57 §4）：零字节文件仅当包围盒与足迹同时为空；足迹 > 0 时输出足迹范围内的空字段。测试注释中「零字节为契约断言」的说法相应更新。
+6. **共享校验 helper**：`min ≤ 所报结构` 规则由 B 的 PR #9 承担（#54/#57 §2）；时序按 **#60**——helper 进 develop 前 PR #8 可先用私有路径，rebase 时切换为调用，`develop` 最终状态必须是调用共享 helper；该切换完成是 #3 关闭前提之一。
+7. 配套：README 登记 min_rows/min_cols 语义（一段即可）；e2e/单测补「导入→清空→导出」与「导入→（无结构操作）→导出」round-trip 用例。
+**末换行裁定（采纳偏离）**：`worksheetToCsv` 返回 `lines.join('\n')`、末条记录后不加终结换行——**采纳**。依据：实现方 advisor 咨询的反例分析成立（JS harness 最常见构造为 `.join('\n')`），「行尾 \n」按记录分隔符解释与 v1.3 A-4 文本相容；此裁定并入契约 v1.3（Issue #1 thread 1 comment #63），一行可逆。
+@deepseek-3 验收时请以 comment #27 + #33 + #36 **+ Issue #1 契约 v1.3（#51/#54/#57/#60）**为联合判据；上表 7 项补齐并复跑三项检查后才交根侧合入。@deepseek-5 请在本 thread 给出补齐候选与增量 diff 摘要；若对 Y-min 具体语义有异议，按 #51 尾部约定在 Issue #1 thread 1 提出。
+收件人 @deepseek-5: 会话已接受评论输入 (delivered)
+消息投递回执 — 评论 #64（仅表示评论输入的接收状态）
+收件人 @deepseek-5: 会话已接受评论输入 (delivered)
+[DUPLICATES: 23 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L115:C1]
+
+## S24:L116 2026-09-29T06:34:43.720Z message assistant
+[thinking]
+Comment #64 confirms exactly the 7 items I'm implementing. Good. It also says: "新建空白工作簿足迹为 0" — item 2 says blank workbook footprint is 0 (not null!). Hmm. That conflicts with my choice of NULL for blank. Let me re-read:
+"2. **导入事务**写入足迹 = CSV 实际行列数（裁剪后、含 ragged 补齐）；新建空白工作簿足迹为 0。"
+And #51 said: "下限仅由 CSV 导入创建的工作表持有，等于导入时 CSV 的实际行列数...；新建议空白工作簿下限为 0，导出即包围盒。"
+So the root's phrasing is "0". The question is the representation: DB NULL vs 0. Functionally equivalent for export (max with 0). For the snapshot/state round trip, NULL vs 0 matters a bit:
+- If blank = 0 stored (min_rows=0, min_cols=0), then state replay with explicit 0 = no footprint, fine. And `undefined = 不改动` still works.
+- NULL = "no footprint" is a representation choice; the observable behavior is identical.
+The root wrote "足迹为 0". A verifier could check the DB/snapshot for `min_rows = 0` and find NULL → flag it. Hmm. That's a real risk of a false "缺口" report. But item 3 says snapshot carries both fields; item 4 says undefined = 不改动.
+Which to pick? Consider #53 §3.3: "迁移 worksheets 增可空 min_rows/min_cols" — explicitly nullable. So the root's own precise change list (via deepseek-2's §3.3, adopted by #57 §3) says columns are nullable. And #57 §3 says undefined = no change (not reset to 0). So NULL for blank is consistent with "可空".
+But "新建空白工作簿足迹为 0" — with nullable columns, 0 and NULL are both "0-like". To minimize risk, maybe emit `0` in the snapshot for blank worksheets (i.e.

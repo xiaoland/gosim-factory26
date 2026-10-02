@@ -1,0 +1,210 @@
+? Per guidance: "没有新事实或新决定时，无需发布重复进度总结." There IS a new fact (B's response). But do I need to reply? "收到评论不必回执". Comment #49 doesn't ask A anything new — it confirms A's position. So no reply needed to #49 per se.
+However, there's a real question: should the Issue #3 body's 未决 item be updated to reflect that B agreed? The body is the "current requirements/decisions/unresolved" entry point. The unresolved item could be narrowed: "B 侧已同意（Issue #1 comment #49）；仅待 @glm-1 形式裁定". That's a legitimate body update since it changes the state of an unresolved item.
+Also, importantly: is there anything actionable for me right now? Let me check whether PR #8 owner has updated. Last commit 035f4f1 at 06:09:05. My pre-review at 06:10:31. Now 06:11. Very recent. So @deepseek-5 may be working.
+Hmm. This session is being re-invoked on each notification. The volume of notifications is high (this is an active world). I should be judicious.
+Given that:
+1. B agreed with A (comment #49) — this narrows an A-side unresolved item. Worth a brief body update to keep the entry point accurate? The body currently says "已请 @glm-1 裁定尺寸上限是否全局不变量（Issue #1 thread 1 comment #46）；裁定前 PR #8 按'不设限'推进。" This is still accurate (ruling still pending). But adding "B 侧已同意不设全局上限（comment #49），B-1 文本将显式排除 state/import" makes it more precise and reduces @deepseek-5's uncertainty. It's a narrow, information-adding edit.
+Actually the body is quite long already. A narrow update to that one bullet is fine.
+2. Should I reply in Issue #1 thread 1 to comment #49? It's a direct confirmation to my comment #46. Replying would notify B and root. It's arguably not needed ("收到评论不必回执"). But there's value: comment #49 leaves the ruling to @glm-1. Both A and B agree. A brief acknowledgment consolidating "A 与 B 立场一致，待 @glm-1 形式裁定；A 按不设限推进，PR #8 已知边界已写明" could be useful to root for the ruling. Hmm, but that risks being noise.
+Actually — think about what the root @glm-1 needs: a concrete ruling item. My #46 already gave it. B's #49 narrows it. The root may rule "不全局化". No action needed from me.
+Let me consider whether to reply. The guidance says reply "需要回答问题、纠正事实、交接成果或采取行动时才回复". #49 confirms A's position; there's a mild action: record that A's known-boundary doc item (import has no app-level limit) is now jointly agreed, so no further A-side change. This is arguably unnecessary.
+I think the best actions now:
+1. Update the Issue #3 body's 未决 bullet to reflect comment #49 (narrow edit, keeps entry point accurate).
+2. Possibly post a very short note in Issue #1 thread 1 confirming A/B alignment so @glm-1's ruling can be a formality... but that's arguably noise. Hmm. Actually there IS a reason to post: @glm-1 is the one who must rule; my #46 asked; B's #49 answered B's part. A's part remains: "A 按不设限推进". Also A should confirm that A's known-boundary will record it. But I already said that in #46.
+Let me weigh: the guidance explicitly says no receipt needed. I'll skip a reply to #49 in Issue #1 unless there's new substance. The body update in Issue #3 is the substantive record.
+Hmm, but wait. Let me reconsider the whole picture. Is there something more valuable I should do? Let me check the PR #8 state more: @deepseek-5 pushed 035f4f1 at 06:09:05 — that came AFTER my Issue-side pre-review? No: my pre-review was at 06:10:31 (after), and referenced 035f4f1. So the candidate is the one I reviewed.
+So @deepseek-5 needs to fix README and hand over. Nothing I can do but wait. But maybe I could also independently verify the candidate so that acceptance isn't just blind trust? That's actually my job: "由其在独立工作区承接...再将候选和结果交回" and "Issue 负责人按 comment #27 验收". Acceptance requires the PR owner's handover + my verification.
+But wait — there's an important consideration: the PR owner hasn't handed back, and my acceptance would happen then. However, given the workflow "由其在独立工作区承接实现计划、预演排障、实现与验收" — the PR owner does the verification. I accept based on their evidence + my design-conformance review (already done).
+Given the current re-invocation triggered by Issue #1 comments #48/#49, the minimal-but-correct action is:
+- Update Issue #3 body's unresolved bullet with comment #49 fact (narrow).
+- Confirm no design change needed.
+Actually, let me reconsider whether to also proactively reply to #49 with a short A-side confirmation that closes the loop for @glm-1. I lean to adding a brief reply because the root needs to know both consumers agree, and because comment #49 asked nothing... hmm, it replied to #46. It says "B 同意 A 侧第 3 点的后一分支". A one-line acknowledgment that A adopts it and will record the boundary in PR #8's handover adds little.
+Let me instead consider: the guidance also says "相关回复用 --reply-to 留在同一 thread". And "未决分歧、风险和验收前提保持可见". The size-limit item is now aligned, so it's no longer a divergence — just awaiting formal ruling.
+Decision: narrow body update on Issue #3 + a short reply in Issue #1 thread 1 to #49 that records A/B alignment for the root's ruling and states no further A-side action (this is the "采取行动"/coordination kind of reply, one line). Hmm... Actually I worry about noise inflation. The instruction: "收到评论不必回执". #49 is a reply to my #46 — it needs no answer because it agrees with me. I'll skip it.
+Hmm, but let me double check #48 too — that's B responding to base layer about state snapshot, not A's business. No action.
+OK so: Is a body edit alone enough for this turn? It seems thin but correct.
+Wait — actually let me reconsider something bigger. Let me re-read the notification: "issue:1 comment 48; read `comment view 48 --thread`; issue:1 comment 49". The system wants me to check them. #46 was mine, asking @glm-1 to rule. Is there a risk that @glm-1's ruling, if it comes as "全局化", changes A? Yes but pending.
+Another thought: maybe I should check whether the root @glm-1 has already ruled elsewhere (e.g., in Issue #4 thread or a new comment). Let me grep Issue #1 for recent comments after #49 and check the whole picture. Also check if there are newer comments I haven't seen. Let me get the comment list IDs on Issue #1.
+Let me do that quickly, then make the body edit.
+Also worth checking: has @deepseek-5 replied anywhere new (Issue #3 or PR #8)? Let me check comment timestamps. From the last fetch: Issue #3 comments 27,29,33,36; PR #8 comment 47. No new.
+Let me run a quick check for newest comments across issue 1/3 and PR 8.
+[DUPLICATES: 29 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L25:C1]
+[toolCall] bash call_00_M0rGFf410MNxriIlmoAJ3590
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && for t in \"issue 1\" \"issue 3\" \"pr 8\"; do echo \"=== $t ===\"; braid $t view --timeline 2>&1 | tail -6; done"}
+[toolCall] bash call_01_WYoey7HEps1rBFX4AZvs6668
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 49 --thread 2>&1 | tail -50"}
+
+## S19:L26 2026-09-29T06:11:27.191Z message toolResult
+toolResult bash False
+[text]
+=== issue 1 ===
+error: unrecognized subcommand '1'
+Usage: braid issue [OPTIONS] <COMMAND>
+=== issue 3 ===
+error: unrecognized subcommand '3'
+=== pr 8 ===
+error: unrecognized subcommand '8'
+Usage: braid pr [OPTIONS] <COMMAND>
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L26:C1]
+
+## S19:L27 2026-09-29T06:11:27.191Z message toolResult
+toolResult bash False
+[text]
+消息投递回执 — 评论 #45（仅表示评论输入的接收状态）
+消息投递回执 — 评论 #48（仅表示评论输入的接收状态）
+消息投递回执 — 评论 #49（仅表示评论输入的接收状态）
+[DUPLICATES: 47 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L27:C1]
+
+## S19:L28 2026-09-29T06:11:28.626Z message assistant
+[thinking]
+Delivery receipts: comment #46 was queued to @deepseek-5 (waiting), comment #49 also queued to @deepseek-5. Interesting: @deepseek-5's session may be busy.
+Let me check the timeline correctly: `braid issue view 1 --timeline`.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L28:C1]
+[toolCall] bash call_00_FOeNUqKr6Qb0Ld1zz29Q3908
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && echo \"=== issue 1 ===\" && braid issue view 1 --timeline 2>&1 | tail -8 && echo \"=== issue 3 ===\" && braid issue view 3 --timeline 2>&1 | tail -5 && echo \"=== pr 8 ===\" && braid pr view 8 --timeline 2>&1 | tail -5"}
+
+## S19:L29 2026-09-29T06:11:28.726Z message toolResult
+toolResult bash False
+[text]
+#44 2026-09-29T05:40:55.070800268Z @glm-1 replied comment #18
+#93 2026-09-29T06:09:32.541943687Z @deepseek-3 edited title/body changed
+#94 2026-09-29T06:10:31.072906982Z @deepseek-3 commented comment #47
+[DUPLICATES: 17 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L29:C1]
+
+## S19:L30 2026-09-29T06:11:33.926Z message assistant
+[thinking]
+Nothing new from @deepseek-5 since 035f4f1. The only new facts are Issue #1 comments #48 and #49.
+Action plan for this turn:
+1. Narrow-update Issue #3 body's 未决 bullet: record that B side (Issue #1 comment #49) agrees the size limit is not a global invariant and will explicitly exclude state/import from B-1; therefore A's "no app-level limit" stands as the shared cross-issue understanding, pending only @glm-1's formal ruling. This keeps the entry point accurate for @deepseek-5 and root.
+Should I also do a substantive check on the candidate so my acceptance is ready? Maybe verify one high-risk item myself while waiting, e.g., run the test suites on the candidate? That would be "duplicate work" of the PR owner's verification... The guidance says "复用有效的局部检查" and the PR owner must supply test evidence. My acceptance should be based on their handover. But since the PR owner hasn't handed over, and the notification came from Issue #1 (not a handover), I should not run the full suite now — that's the PR owner's job and would be duplicate.
+Hmm, but is there value in me independently verifying something that the PR owner can't see? My acceptance role: "Issue 负责人按 comment #27 验收后交根负责人合入 develop". Verification of the candidate on the actual commit — I could do a targeted run to confirm the README fix and the key REQ paths. But at this point the PR owner hasn't handed over, so it's premature.
+Let me be efficient: make the narrow body edit recording comment #49, and post a short reply in Issue #1 thread 1? Let me decide.
+Reason to reply to #49: B's #49 says "B 无立场推动全局化...若 @glm-1 将来裁定全局化，按当时裁定的常数执行即可". It replies to my #46. A useful A-side reply: confirm A/B alignment and that the ruling item is now narrowed to a yes/no for the root, so the root can rule by reference; plus note that A's PR #8 known-boundary text will record the 10mb boundary. But this adds little; my #46 already stated A will record it and A's default.
+I'll skip the #1 reply — no new question posed to A. The body edit is the substantive record.
+Hmm, wait. Actually, hold on. Let me reconsider whether the body edit itself is warranted or "noise". The body's unresolved bullet says the ruling is pending @glm-1. After #49, B agrees. Is that "new decision"? It's B's stance, not a ruling. But it materially changes: it removes the risk of B/A divergence and pins the only remaining change point. The body currently says "B-1 的结构端点上限是未裁定假设" — accurate. Adding one clause is a legitimate precision improvement. I'll do it.
+Also worth considering: should I nudge @deepseek-5 about the README fix? The delivery receipt shows comment #47 — was it delivered to @deepseek-5? Let me check: the receipt list showed up through #49... For #47, the receipts list — let me look. The tail showed receipts for #38..49 but I didn't see #47. Let me check whether comment #47 was delivered to @deepseek-5. If it's still queued, that's fine (queued means will be delivered). Let me check via `braid comment view 47 --thread`.
+That's worth verifying: if #47 wasn't delivered, my required fix might be sitting unseen. Let me check.
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L30:C1]
+[toolCall] bash call_00_ddYjDkg8DdCXjTEulvea8296
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 47 --thread 2>&1 | grep -A6 \"投递回执\" | tail -30"}
+
+## S19:L31 2026-09-29T06:11:33.946Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L31:C1]
+
+## S19:L32 2026-09-29T06:11:35.975Z message assistant
+[thinking]
+#47 is queued for @deepseek-5 — will be delivered when their session picks it up. Fine, no need to re-nudge.
+Now make the narrow body edit. Let me look at the exact body text to edit. I'll use `braid issue edit 3 --body` with the full body? That's risky. Better: use braid's edit with body replacement. I need the exact current body. Let me get it via `braid issue view 3 --comments` (already got the heading portion). I need the full body text to construct the new body.
+Actually there might be a way to do a targeted body edit — check `braid issue edit --help`.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L32:C1]
+[toolCall] bash call_00_zFfomEydOjXLPMj5IiPL3516
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue edit --help 2>&1 | head -40 && echo \"=== comment add help ===\" && braid comment add --help 2>&1 | head -40"}
+
+## S19:L33 2026-09-29T06:11:35.990Z message toolResult
+toolResult bash False
+[text]
+=== comment add help ===
+error: unrecognized subcommand 'add'
+[DUPLICATES: 19 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L33:C1]
+
+## S19:L34 2026-09-29T06:11:37.598Z message assistant
+[thinking]
+Body edit requires full body replacement via file. Let me get the current body verbatim into a file, then apply the narrow change and update.
+Approach: `braid issue view 3 --comments` includes the body but mixed with comments. Better: is there `braid issue view 3 --body`? Let me check help. Or use the API: maybe `braid issue view 3` prints body only. Let's check `braid issue view --help`.
+Actually from earlier output, `braid issue view 3 --comments` printed title/state/assignee then body then comments. Without --comments it prints just the body presumably. Let me capture that.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L34:C1]
+[toolCall] bash call_00_4r6Jog9ZiyxMXja6S6M32189
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 2>&1 | head -60 && echo \"=====HELP=====\" && braid issue view --help 2>&1 | head -30"}
+
+## S19:L35 2026-09-29T06:11:39.608Z message toolResult
+toolResult bash False
+[text]
+PR: #8 [OPEN] 子 Issue A：工作簿生命周期与 CSV 交换（REQ-1-2-1/1-2-2/1-3-1/1-3-2）
+=====HELP=====
+Usage: braid issue view [OPTIONS] <ID>
+      --comments         
+      --state <STATE>    
+      --timeline         
+      --after <AFTER>    [default: 0]
+      --limit <LIMIT>    [default: 30]
+      --json [<FIELDS>]  输出全部字段，或以逗号选择字段，例如 --json id,title。
+  -h, --help             Print help
+[DUPLICATES: 44 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L35:C1]
+
+## S19:L36 2026-09-29T06:11:47.582Z message assistant
+[thinking]
+I can get the body via `--json body`. Let me fetch it, then apply a narrow edit with python (replace the unresolved bullet text), and post via `--body-file`.
+The change: replace the last bullet's beginning portion.
+Current:
+"- **未决/假设**：**导入不设应用层尺寸上限**（实际边界 = `express.json` 10mb；需求只冻结非法引号一种失败文案，B-1 的结构端点上限是未裁定假设），已请 @glm-1 裁定尺寸上限是否全局不变量（Issue #1 thread 1 comment #46）；裁定前 PR #8 按"不设限"推进。"
+New (narrow): add "B 侧已同意不全局化、B-1 文本将显式排除 state/import（Issue #1 thread 1 comment #49）；A 侧无需改动" ... something like:
+"- **未决/假设**：**导入不设应用层尺寸上限**（实际边界 = `express.json` 10mb；需求只冻结非法引号一种失败文案，B-1 的结构端点上限是未裁定假设），已请 @glm-1 裁定尺寸上限是否全局不变量（Issue #1 thread 1 comment #46）；**B 侧已回应同意不全局化、并将「state/import 不在限额范围」写入 B-1 文本（Issue #1 thread 1 comment #49），A 侧结论不变、实现零改动**；@glm-1 形式裁定前 PR #8 按"不设限"推进。"
+Also maybe update the "B 侧契约增量" bullet's last sentence to reference comment #49. Narrow: "...唯一交叉是 B-1 的尺寸上限与 A 导入的限额关系，见下方未决条（Issue #1 thread 1 comment #46/#49）。" That's a small change; I'll include it.
+Let me do it via a script to avoid shell quoting issues.
+Note: `braid issue edit --body-file` — I'll write to a temp file.
+Also I should consider whether posting a comment is needed for this turn. The body edit at 06:09:32 was already mine, triggered the notification... Actually wait: the notification for THIS invocation was about Issue #1 comments #48/#49. My response: body update. Should I also leave a short comment on Issue #3 noting the #48/#49 impact on A (so @deepseek-5 and root see it)? The body edit addresses it. Adding a comment that says "no change needed" is close to noise, but the guidance says the body holds stable requirements/decisions; comments hold discussion. A one-line comment that "Issue #1 #48/#49 对 A 无影响；未决条已窄化" is arguably a useful signal that I processed it and A doesn't change — and it notifies @deepseek-5 who is implementing.
+Hmm. I think a brief comment is justified here because it tells @deepseek-5 explicitly: "no incremental requirement from #46/#49; keep going; the README fix in PR #8 comment #47 is still the only must-fix". That's an actionable coordination message (preventing them from waiting on my #46 ruling). Actually I already told them in #46/#47 that the ruling doesn't block. But #49 is new (B agreed). A short note: "尺寸上限未决已窄化：B 同意不全局化（#49），A 零改动；你无需等待裁定" — that's actionable (avoid blocking).
+I'll post it as a reply in thread 46? Thread 46 is on Issue #1. On Issue #3, the relevant thread is 27 (design). Hmm, the #48/#49 discussion is in Issue #1 thread 1. Reply should stay in that thread per "相关回复用 --reply-to 留在同一 thread". So replying to #49 in Issue #1 thread would be the right place. But is a reply needed there? B's #49 didn't ask A anything.
+Decision: post a brief reply to #49 in Issue #1 thread 1 — content: A 侧确认结论不变（导入不设应用层上限，实际边界 10mb；PR #8 交接会写明），B 的立场与 A 一致，故待 @glm-1 的形式裁定只剩"是/否全局化"这一形状，A 侧零改动、不阻塞。同时说明 A 的未决条已窄化。This is a genuine conclusion-recording + coordinates root's ruling. It's short. I think that's acceptable and valuable (it's the A-side reply to B's response to A's escalation, and it tells root the escalation can be resolved by reference).
+Hmm, but "收到评论不必回执" — I keep going back and forth. Let me apply the test: does the comment carry new information or request action? Yes: it converts an open question into a narrowed, jointly-agreed item, and it tells @glm-1 the ruling can be a simple declaration. Marginal but positive. Still... #49 already says B agrees and states the ruling shape.
+I'll lean toward posting a very short A-side confirmation because the root needs a clear "A 与 B 已一致，只需形式裁定" statement to close the escalation — and it's the A owner's job to state A's final position. Keep it to a few lines.
+Hmm, actually — risk: contributing to message noise. But given the environment rewards proper collaboration with clear entries, a concise 3-line reply is fine.
+Now, is there anything else substantive for Issue #3 this turn? Let me double check the PR candidate for the README issue and consider whether I should also verify something else in the candidate that would change my acceptance judgement... I already did a design-conformance pre-review. I could also spot-check the e2e spec for the "must flip" annotation etc. I already noted it exists.
+Actually, one more valuable thing: my pre-review comment #47 said the README says "有两个". Let me verify that claim against the actual candidate to be sure my required fix is accurate (it's already posted; if wrong I'd need to correct). Let me read the README diff in the candidate.
+Let me check README.md:80-95 in the candidate.
+[DUPLICATES: 17 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L36:C1]
+[toolCall] bash call_00_LlpnMyIRj4cgqwxBya694165
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show origin/braid/issue-3-a:README.md | sed -n '70,100p' | cat -n"}
+
+## S19:L37 2026-09-29T06:11:48.057Z message toolResult
+toolResult bash False
+[text]
+     1	
+     2	## API 面（基础 PR 已交付）
+     3	
+     4	| 方法 | 路径 | 说明 |
+     5	| --- | --- | --- |
+     6	| GET | `/api/workbooks` | 工作簿列表 `[{id,name,updatedAt}]`（按 updatedAt 倒序） |
+     7	| POST | `/api/workbooks` | 新建空白工作簿（`{name?}`，单个活动 `Sheet1`，A1 已选中） |
+     8	| POST | `/api/workbooks/import` | 从 CSV 新建工作簿（`{fileName, csv}`）：单事务；`fileName` 去掉末尾 `.csv` 作为名字；结构 `max(行,6) × max(列,26)`（契约增量 A-1/A-2）；解析失败 400 `INVALID_CSV` + `Invalid CSV file format. Import failed.` 且不落任何记录 |
+     9	| GET | `/api/workbooks/:id` | 编辑器全量快照（含全部工作表、单元格、选区、规则/筛选/透视） |
+    10	| PATCH | `/api/workbooks/:id` | 重命名 `{name}`（trim 后非空） |
+    11	| PUT | `/api/workbooks/:id/worksheets/:wid/cells` | `{changes:[{row,col,raw}]}` 批量写入；验证拒绝时整批 409 且不落任何一格 |
+    12	| PUT | `/api/workbooks/:id/worksheets/:wid/state` | 整表状态导入（撤销/重做回放） |
+    13	| PUT | `/api/workbooks/:id/worksheets/:wid/selection` | `{r1,c1,r2,c2,anchor}` 选区持久化 |
+    14	| PATCH | `/api/workbooks/:id/worksheets/:wid` | `{name?,isActive?}` 重命名 / 切换活动工作表 |
+    15	| GET | `/api/health` | 就绪探针 |
+    16	
+    17	越界写入（超出 `row_count`/`col_count`）返回 400 `INVALID_BODY` 且整批不落库（契约 v1.1 裁定：
+    18	基础层**不**自动扩张，粘贴越界时的扩张由子 Issue D 在粘贴路径上经结构端点显式完成）；`row_count`/`col_count` 的
+    19	变更入口有两个：子 Issue B 的结构操作端点与子 Issue A 的导入事务（契约增量 A-2，B 侧已确认）。
+    20	`PUT .../state` 同样拒绝超出所报结构的单元格，不允许“存在但渲染不出来”的数据。结构变更端点（插入/删除行列、新增/删除工作表）
+    21	由后续子 Issue 按同一错误格式补齐。
+    22	
+    23	**显示值接缝（契约增量 A-3）**：`frontend/src/lib/cellDisplay.ts` 的 `worksheetDisplayValues(worksheet)` 是唯一的显示值来源，
+    24	网格渲染与 CSV 导出共用它；当前实现为恒等（公式单元格显示/导出原文），**子 Issue C 负责替换为公式引擎实现**，
+    25	从而在结构上排除“网格显示计算结果、导出输出表达式”的分叉。
+    26	
+    27	**CSV 导出（子 Issue A）**：工具栏 `Export CSV` 为纯客户端下载（无新端点、不改 `updatedAt`），建议文件名
+    28	`<工作簿名>.csv`，无 BOM、`\n` 行尾、RFC 4180 转义；导出范围为 A1 到最远非空单元格的包围盒（裁掉尾部全空行列），
+    29	范围内的空单元格导出为空字段；**导出无视筛选、始终覆盖完整 used range**（与契约 §4 一致）。
+    30	
+    31	## ARIA 约定（验收密集区，已实现）
+
+## S19:L38 2026-09-29T06:11:50.502Z message assistant
+[thinking]
+Confirmed: README line 88-89 (relative) says "变更入口有两个：子 Issue B 的结构操作端点与子 Issue A 的导入事务". My pre-review #47 is accurate. It needs to be three paths including `PUT .../state`.
+Now do the body edit and the Issue #1 reply.
+Let me get the body via --json body and edit with python.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L38:C1]
+[toolCall] bash call_00_ONh1jFpjpUS5JEY5dyaI0479
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --json body > /tmp/i3body.json && python3 - <<'PY'\nimport json\nb=json.load(open('/tmp/i3body.json'))['body']\nold1='唯一交叉是 B-1 的尺寸上限与 A 导入的限额关系，见下方未决条（Issue #1 thread 1 comment #46）。'\nnew1='唯一交叉是 B-1 的尺寸上限与 A 导入的限额关系，见下方未决条（Issue #1 thread 1 comment #46；B 侧回应 comment #49）。'\nold2='已请 @glm-1 裁定尺寸上限是否全局不变量（Issue #1 thread 1 comment #46）；裁定前 PR #8 按\"不设限\"推进。'\nnew2='已请 @glm-1 裁定尺寸上限是否全局不变量（Issue #1 thread 1 comment #46）；**B 侧已回应同意不全局化，并将在 B-1 文本显式写明「state/import 不在限额范围」（Issue #1 thread 1 comment #49）→ A 侧结论不变、实现零改动**；@glm-1 形式裁定前 PR #8 按\"不设限\"推进。'\nassert old1 in b and old2 in b\nb=b.replace(old1,new1).replace(old2,new2)\nopen('/tmp/i3body_new.md','w').write(b)\nprint('ok')\nPY"}
+
+## S19:L39 2026-09-29T06:11:50.555Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L39:C1]
+
+#

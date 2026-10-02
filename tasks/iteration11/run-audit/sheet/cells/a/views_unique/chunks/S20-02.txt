@@ -1,0 +1,190 @@
+.d.ts worksheet type sync.
+7. PR #8 also needs README narrow edit fixed to three paths (from my PR #47 pre-review) — root #51 A-2 approved the three-path wording.
+8. A-1 residual risk: duplicate workbook names + "no such-name link on failure" assertion could misfire across cases; e2e must use distinct file names.
+So now: I need to produce a design increment v2 comment on Issue #3 (reply to thread 27), hand the delta to @deepseek-5 on PR #8, and update the Issue #3 body.
+Before that, should I consult the advisor per the instructions ("原生 advisor 提供独立判断... 确定仍有关键假设的验收判据之前，先向 advisor 咨询")? The ruling #51 introduces Y-min which changes acceptance criteria. There's a genuine open question in #53 §4 (empty-table precedence) with @glm-1. Also there's a question of whether the min footprint should be exposed via `PUT .../state` optional fields — that touches D's replay path and cross-PR contract. The root already ruled Y-min and assigned ownership to A. So the key remaining ambiguity: precedence of "empty file" vs footprint; and export behavior with only footprint.
+Given the guidance to consult advisor before committing acceptance criteria with key assumptions, I think a targeted advisor consult is warranted: ask about Y-min export semantics edge cases (footprint-only export, empty-file precedence, interaction with ragged padding, and whether "static floor" via PUT state optional fields is the right shape) plus whether A should pad ragged rows affect footprint. That's a consequential acceptance-criteria decision. Let me do one advisor consult, focused.
+Also should verify facts locally: check csv.js for ragged-row padding, config constants usage, store.js snapshot/import function shape. Let me read the relevant code from the PR branch. I can check out the branch files or use git show.
+Let me look at the code: backend/src/csv.js (155 lines) on origin/braid/issue-3-a.
+Let me do this efficiently: git show origin/braid/issue-3-a:backend/src/csv.js, and grep store.js relevant parts, and the export lib.
+Then advisor consult in parallel? The advisor needs materials. Let me first gather facts, then advisor.
+Let me run the reads.
+[DUPLICATES: 23 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L17:C1]
+[text]
+The root's ruling (#51) and base-layer landing notes (#53) change A's design — notably A-4 becomes "Y-min import footprint". Let me verify the current implementation against those rulings before writing the increment.
+[toolCall] bash call_00_9mR5WrKBOZygdemCKLls9586
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show origin/braid/issue-3-a:backend/src/csv.js"}
+[toolCall] bash call_01_v5RdHVWUYoRIbDYM8Udx8436
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show origin/braid/issue-3-a:frontend/src/lib/csvExport.ts; echo \"=== cellDisplay ===\"; git show origin/braid/issue-3-a:frontend/src/lib/cellDisplay.ts; echo \"=== import route ===\"; git show origin/braid/issue-3-a:backend/src/routes.js | grep -n \"import\" "}
+
+## S20:L18 2026-09-29T06:13:19.799Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 155 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L18:C1]
+
+## S20:L19 2026-09-29T06:13:19.799Z message toolResult
+toolResult bash False
+[text]
+=== cellDisplay ===
+=== import route ===
+1:/** @typedef {import('./db.js').Db} Db */
+3:import { Router } from 'express';
+4:import { CsvParseError, parseCsv, workbookNameFromFileName } from './csv.js';
+5:import { ApiError, invalidBody, notFound } from './errors.js';
+6:import {
+12:  importWorksheetState,
+19:import { asObject, findValidationViolation, parseCellChanges, parseSelection } from './validate.js';
+27: * @returns {import('express').Router}
+56:  router.post('/workbooks/import', (req, res) => {
+109:  // 6. Whole-worksheet state import (undo/redo replay).
+113:    const worksheet = importWorksheetState(db, ws, payload);
+[DUPLICATES: 94 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L19:C1]
+
+## S20:L20 2026-09-29T06:13:23.080Z message assistant
+[thinking]
+Confirmed gaps vs #51:
+1. **Ragged rows**: `parseCsv` returns records of differing lengths; no right-padding. #51 A-1.1 requires padding to widest row. Currently `csvColumnCount` computes widest; the import route probably builds cells with record[c] ?? undefined. Let me check routes.js import handler and store.js to see how cells are built. Need padding to be explicit (rows shorter than widest get empty fields) — functionally equivalent if cells with '' aren't stored, but the "preserves empty fields" observable is via export footprint + used range. Actually with Y-min footprint = actual CSV rows/cols "裁剪后、含 ragged 补齐", padding matters only for the footprint. Still need to state behavior and test.
+2. **Footprint (Y-min)** not implemented at all — no min_rows/min_cols migration, no export floor.
+3. **Empty-file precedence** with footprint.
+4. A-3 error values: identity seam returns raw; fine for now, but the invariant says "including error values" — with identity, error values can't exist (no evaluation). Note.
+5. A-2 single constant source: check routes.js import handler uses DEFAULT_ROW_COUNT/DEFAULT_COL_COUNT from config.js. Let me check.
+6. README three-path fix (from PR #47).
+Let me check routes.js import handler + store.js changes.
+Also check whether PR #8 has comment replies from @deepseek-5. The PR view showed comments up to #47 (mine). Let me list all PR comments and check for new ones after.
+Let me look at those.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L20:C1]
+[toolCall] bash call_00_Lbp9LpnO2oipBHKNiyK79293
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show origin/braid/issue-3-a:backend/src/routes.js | sed -n '40,110p'; echo \"=== store diff ===\"; git diff origin/develop...origin/braid/issue-3-a -- backend/src/store.js | head -90"}
+[toolCall] bash call_01_UmzntKveq2DK4kndYorf9026
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid pr view 8 --comments 2>&1 | grep -n \"^comment #\" ; echo \"=== README diff ===\"; git diff origin/develop...origin/braid/issue-3-a -- README.md"}
+
+## S20:L21 2026-09-29T06:13:23.121Z message toolResult
+toolResult bash False
+[text]
+=== store diff ===
+  * @param {string} workbookId
+[DUPLICATES: 148 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L21:C1]
+
+## S20:L22 2026-09-29T06:13:23.121Z message toolResult
+toolResult bash False
+[text]
+41:comment #47 [visible]
+=== README diff ===
+[DUPLICATES: 77 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L22:C1]
+
+## S20:L23 2026-09-29T06:13:23.122Z message user
+[text]
+- issue:1 comment 54; read `comment view 54 --thread`
+- issue:1 comment 55; read `comment view 55 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L23:C1]
+
+## S20:L24 2026-09-29T06:13:24.152Z message assistant
+[thinking]
+New comments 54 and 55 in issue #1. Let me read them.
+[toolCall] bash call_00_e8dRlNLkc8YnBLUdTs9x6631
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 1 --comments 2>&1 | sed -n '/^comment #54 /,$p'"}
+
+## S20:L25 2026-09-29T06:13:24.174Z message toolResult
+toolResult bash False
+[text]
+comment #54 [visible]
+reply-to: 38
+【裁定：B-1…B-3 + 尺寸上限归属（与 #43/#45/#46/#48/#49/#52 对账后）】各待裁项三方已收敛，本裁定为形式确认；与收敛不一致处已标注。
+## B-1 结构端点与快照返回：批准
+- `insertAt` 语义、`0 ≤ index < dim` 校验、count 正整数、DELETE 单行/列、保留完整形状（D 粘贴扩张单事务插 N 行）——按提案批准。
+- 防御项（拒绝删至 <1 行/列、`row_count ≤ 10000`、`col_count ≤ 256`、超限 400 `INVALID_BODY`）批准为**端点特有防御假设**并记录，非需求判据。
+- **worksheet 级变更统一返回完整 workbook snapshot**：批准。消费点完整改动面以 #42 清单为准（routes.js handler、store.patchWorksheet 返回值并保留 v1.1 的 `touchWorkbook` 语义——切 tab 不产生虚变更、client.ts 两处、WorkbookEditor 调用点），全部归 PR #9（#40 已认领）；补一条断言新形状（= `GET /api/workbooks/:id` 同形状）的后端用例。
+- **`PUT .../worksheets/:wid/state` 显式不含于快照集合**：裁定采纳 #43 立案、#45 补充事实、#48 接受方案。规则表述为：**「worksheet 生命周期与结构端点返回整快照；state 保持单表回显 `{updatedAt, worksheet}`；其载荷可影响兄弟表活动态，需同步该状态的调用方应重取快照」**（#45 第 3 点措辞采纳）。理由：调用方已持有完整新状态，改形状收益不抵对 D 消费契约的波及；B 侧零改动。
+## B-2 选区边界校验：批准（按 #40 认领范围）
+两道门一次补全、折入 PR #9：① `PUT .../selection` 校验**四角 + anchor**，越界 400；② `PUT .../state` 的 `lastSelection` 同口径校验。删除后矩形为空 → 重置 `DEFAULT_SELECTION`（A1）。#39 的事实修正采纳（基线前端无 clamp；收紧定位为纵深防御，价值在 D 的 undo 回放与直连客户端），相关叙述不再引用"前端 clamp"。
+## B-3 A1 range 位移单一 helper 与 pivot 失效：批准
+同一坐标映射 helper 服务 `validation_rules.range` / `filters.range` / `pivots.source_range`（C 的引用重写将复用坐标映射层）；内部插入扩张、边界外不动（既有裁定）；删除相交收缩 `r2 -= 1`、"rules on the target row are removed" 读作"**完全位于被删行/列的规则移除**"（按 Issue #4 comment #35 反例口径，验收判据按此写）；结构变更与 pivot `source_range` 相交 → 同事务位移并置 `stale=1`（旧结果保持到 Refresh，E 合入后回归）。
+## 尺寸上限裁定：**不是全局不变量**（回复 #46/#49/#52）
+- **上限仅在 B 的结构端点生效**（理由采纳 #49：结构端点的 `count` 会持久固化进结构，import 尺寸由 CSV 内容界定、state 受 cells 不超申报结构约束，不存在同形态风险）；**state 与 import 不设应用层尺寸上限**，B-1 文本显式写明排除。
+- A 按 #46 §2 执行：导入不设上限、实际边界 = 请求体 10mb、写入 PR #8 已知边界（连同全量渲染架构的性能限度）。"三条尺寸写入路径各自明确"即为契约状态；将来若证据要求全局化，按当时裁定常数单点调整。
+- 本项就此关闭，#52 的形状二选一答案是"否"。
+## 与契约 v1.3（comment #51）的接驳确认
+A-4 的导入足迹下限（`min_rows`/`min_cols`）为**静态字段、归 A 的 PR #8 全部**（迁移、快照/state 可选字段、导入写入、导出消费）；**B 结构端点零新增工作**，PR #9 交付范围不变。PR #8 预审（PR 8 侧 comment #47）指出的 README 三条路径表述修正，请 A 在候选中落实后按交接要求交回。
+B 按上述推进 PR #9；如对本裁定有具体反例（尤其是会挂的 harness 用例构造），在本 thread 提出，我方重开对应点。
+comment #55 [visible]
+reply-to: 51
+【B 侧对 v1.3 的确认：B 结构端点零新增工作成立，一条配套不变式纳入 B 的实现注意】@glm-1
+1. **A-2 三条路径批准**：与 B 已确认的表述（comment #30）一致，B 侧无调整。
+2. **A-4 Y-min 的"下限静态"不变式对 B 是约束而非工作**：B 的结构端点（worksheets 增删、rows/cols 插删）**不得读写 `min_rows`/`min_cols`**——结构操作不改变导入足迹下限，导出取 max 由 A 的导出逻辑独自承担。该字段归 A 的 PR #8 所有；B 的位移 helper 只作用于 cells/rules/filters/pivots.range/selection，天然不触及。若 B 的单测中顺手加一条"结构操作后 min_rows/min_cols 不变"的守卫断言，属廉价回归保险，不作为 A 侧实现的判据。
+3. **B-1…B-3（comment #38）的形式裁定仍待 @glm-1**：state 端点是否纳入快照集合（#45/#48）、尺寸上限是否全局化（#46/#49，@deepseek-3 在 #52 已确认 A/B 无分歧）两项仍开放。B 侧继续按默认实现推进（不纳入、上限仅结构端点生效），裁定不同则按 #48/#49 已列的改动面局部调整。
+[DUPLICATES: 23 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L25:C1]
+
+## S20:L26 2026-09-29T06:13:30.657Z message assistant
+[thinking]
+Now I have the full picture:
+**Comment #54** (root, @glm-1) rulings:
+- Size cap: NOT a global invariant. Only B's structure endpoints. state and import have no app-layer caps. A proceeds per #46 §2: import no cap, actual boundary = request body 10mb, write into PR #8's known boundaries (plus full-render performance limit). This item closed.
+- A-4 import footprint floor: static fields, all owned by A's PR #8 (migration, snapshot/state optional fields, import write, export consumption). B structure endpoints zero new work, PR #9 scope unchanged.
+- PR #8 pre-review (#47) README three-path fix: A to implement in candidate and hand back.
+**Comment #55** (B side, @glm-4): confirms A-4 static floor; B's structure endpoints must not read/write min_rows/min_cols.
+So my job as Issue #3 owner:
+1. Form design increment v1.3 (comment on Issue #3, reply to thread 27) incorporating #51 (A-1..A-4 rulings) + #53 (base-layer landing points + open precedence question) + #54 (size cap closed; A-4 ownership; README fix) + #55 (B constraint).
+2. Address the open question from #53 §4 (empty-file vs footprint precedence) — decide/state it, and note @glm-1 was asked; since #54 doesn't mention it, I decide as Issue owner: used range = max(bbox, footprint); empty file only when the resulting used range has 0 rows or 0 cols. This is the consistent reading. Record as decision D-A11 with rationale, and flag it back to @glm-1 for confirmation (per rule: "确定仍有关键假设的验收判据之前，先向 advisor 咨询").
+Should I consult advisor? The guidance says consult advisor before establishing acceptance criteria that still have key assumptions, especially when rulings change the design. The Y-min decision changes acceptance criteria for export/import (field-level round trip). I already have a root ruling; my incremental decisions are: (a) empty-file precedence, (b) ragged-row padding's effect on footprint, (c) state optional fields semantics (undefined = no change), (d) export of footprint-only (no content) rows/cols → output empty fields. Also whether export footprint applies to the "used range" when cells were deleted after import (static).
+These are consequential acceptance criteria for A (and consumed by integration PR). I think one advisor consult is justified and cheap. But the previous run already consulted an advisor (dfe188ff) — at 06:09, before #51. Its question was probably about X vs Y. Now the ruling is Y-min. Hmm, the advisor artifact exists; the earlier consult resulted in... let me check the advisor artifact briefly to see what it said, since #51 references "advisor 独立判断". Actually #51 says root consulted advisor. My own advisor dfe188ff may have been about the same X/Y question for my Issue. Let me read its output to avoid duplicate consulting and to reuse observations.
+Let me check the advisor artifact.
+Actually, let me first check if there are pending subagent results I need (the prompt says results are re-read on recovery). The advisor dfe188ff completed. Let me read its meta/output.
+Let me look at the artifact paths.
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L26:C1]
+[text]
+New rulings (#54/#55) close the size-cap item and confirm A-4 ownership. Let me check my earlier advisor consult to avoid duplicate work, then verify a couple of facts in code.
+[toolCall] bash call_00_na3LmX2N8eCySTCZKBdC3416
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8 2>/dev/null; ls /workspace/template/.factory26/20260929-042409-811f18d4/work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/subagent-artifacts/ 2>/dev/null | head; echo \"=== meta ===\"; cat /workspace/template/.factory26/20260929-042409-811f18d4/work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/subagent-artifacts/dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_meta.json 2>/dev/null | head -c 2000"}
+[toolCall] bash call_01_4Caj4k6WsZSZUJWD7Yo45444
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show origin/develop:backend/src/store.js | sed -n '100,175p'"}
+
+## S20:L27 2026-09-29T06:13:30.677Z message toolResult
+toolResult bash False
+[text]
+dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_input.md
+dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_meta.json
+dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_output.md
+dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_transcript.jsonl
+=== meta ===
+[DUPLICATES: 76 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L27:C1]
+
+## S20:L28 2026-09-29T06:13:30.678Z message toolResult
+toolResult bash False
+[text]
+    })),
+[DUPLICATES: 75 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L28:C1]
+
+## S20:L29 2026-09-29T06:13:32.342Z message assistant
+[thinking]
+Let me read my earlier advisor output to see whether it's relevant (X vs Y). Then decide whether another consult is needed.
+[toolCall] bash call_00_Q6ZQX3GjsEPyiaMku2584054
+{"command": "cat /workspace/template/.factory26/20260929-042409-811f18d4/work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/subagent-artifacts/dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_output.md 2>/dev/null | head -120"}
+
+## S20:L30 2026-09-29T06:13:32.412Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 38 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L30:C1]
+
+## S20:L31 2026-09-29T06:13:45.989Z message assistant
+[thinking]
+My prior advisor consult was exactly the size-cap question — now resolved by #54 ("not a global invariant"). Base layer's #53 provided measured render budget. So no need to re-consult on that.
+Now the remaining consequential acceptance-criteria question is the Y-min export/empty-file precedence and footprint edge cases. That's a genuine open item flagged in #53 §4 to @glm-1, unresolved by #54. As Issue owner I should decide it and record, but the guidance says: "确定仍有关键假设的验收判据之前，先向 advisor 咨询". Is this a key assumption? The precedence of "empty table → empty file" vs "footprint floor" affects export acceptance criteria and integration test expectations. It's a real fork. But it's arguably determined by max() semantics — the root approved both statements and #53 flags they can conflict. I'll decide: used range = max(bbox, footprint); empty file iff resulting used range is 0×0. I could propose and flag to @glm-1 for confirmation.
+Given the instruction, a targeted advisor consult is warranted for the Y-min edge-case acceptance criteria (footprint-only export, deleted-content, ragged padding effect, state field semantics). Let me do one advisor consult with concrete questions, while I also prepare the increment draft. That's a good use.
+Actually let me consider: is the advisor consult going to change my decision? Possibly it surfaces a risk: e.g., a footprint-static floor could break a harness assertion like "delete all rows then export → empty file"? #53 already flagged. Or: export of footprint-only rows produces `,\n,\n,` — is that "preserving empty cells within used range"? The requirement says export preserves empty cells within the used range. If the used range is the footprint, then yes, those empty cells are within used range and should be exported as empty fields. The alternative ("empty file") contradicts Y-min's purpose (round-trip fidelity): for round trip `a,b\nc,d,` → import → export should give back 3 fields in row 2. So footprint-only export must produce empty fields. For clearing content of an imported 3×2 → export yields footprint 3×2 of empty fields; that's consistent with "used range includes footprint" and round-trip semantics preserved (though content gone). It's not contradicted by any requirement text. So decision is clear.
+I'll still consult advisor once — it's cheap and the guidance explicitly asks for independent judgment before finalizing acceptance criteria with key assumptions. I'll ask specifically about: (1) footprint-only export vs empty-file precedence; (2) whether the static floor should apply on the `PUT .../state` path (D replay) and how "undefined = no change" interacts; (3) ragged-row padding and footprint; (4) whether the floor belongs to the worksheet as a field vs derivable; plus ask for counterexamples that would make the acceptance criteria wrong.
+Meanwhile, I can also relay the increment to PR #8 owner. But the increment depends partly on the advisor's input. Better: run advisor consult first (it takes a couple minutes), and in the meantime verify implementation facts.
+Actually, per instructions: "需要并行时，为子角色提供可单独推进的切口...把等待期间自己的下一步也安排清楚". I can:
+- Launch advisor consult (async subagent) 
+- While waiting: verify facts (config.js exists at 698afd2 with constants, store.js importWorksheetState undefined-pattern, check e2e/spec for existing acceptance assertions, README lines). And draft increment.
+Let me check config.js and importWorksheetState.
+Let me do that now, and then launch the advisor.
+Actually to save turns, I can launch advisor in the same block as fact-check commands? The advisor task needs the materials I want to give — mostly from #51/#53, which I have. Let me launch it now (async) and run fact checks in the same block.
+Wait — the subagent tool: for a single child, use {agent, task}. Default async? "async: Run in background unless asyncByDefault:false". The prior advisor ran in background and result was recorded. Let me use the plain single-child form; I think by default it runs as async/background with a wake message. Actually for a single child, `{agent:'advisor', task:'...'}` — per docs, without async it may run foreground. Let me just use it and continue; if foreground it blocks. Hmm. The tool description: "For execution, omit action and use {agent, task?} for one child". And "async: Run in background unless asyncByDefault:false." So passing async:true explicitly gives background. Let me do that so I can continue working.
+Let me write a focused advisor prompt.
+Then do fact checks.
+Let me proceed.
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S20:L31:C1]
+[text]
+My earlier advisor consult already answered the size-cap question (now closed by #54 as "not global"). The remaining new acceptance-criteria fork is the Y-min footprint semantics. Let me get independent judgment on that while I verify implementation facts.
+[toolCall] subagent call_00_ObXEPF4KuVkF2cGc7Swq0246
+{"agent": "advisor", "async": true, "task": "You are advising on acceptance criteria for a spreadsheet web app sub-issue (Issue #3 \"workbook lifecycle & CSV exchange\", REQ-1-3-1 import CSV, REQ-1-3-2 export CSV). I need an independent check BEFORE I write these criteria into the authoritative design comment that implementers and the final integration test will follow.\n\n## Hard facts (already ruled by the root owner; do not re-litigate)\n\nRoot ruling \"contract v1.3\" (Issue #1 thread 1 comment #51), verbatim points:\n- A-1 import endpoint `POST /api/workbooks/import` {fileName,csv}, single transaction, 201, failure only for unclosed quote → 400 exact text \"Invalid CSV file format. Import failed.\". Pinned: (1) ragged rows are padded with empty fields on the right, no error; (2) a single trailing newline produces no extra empty record; (3) strip UTF-8 BOM; (4) name = File.name minus a final `.csv` suffix (case-insensitive), trim-empty falls back to \"Untitled spreadsheet\".\n- A-4 was RULED as \"Y-min\": export used range = **max(non-empty-cell bounding box, import footprint floor)**. The floor is held ONLY by worksheets created via CSV import and equals the imported CSV's actual row/col counts (after trimming, including ragged padding). A newly created blank workbook has floor 0, so export = bounding box. Fidelity is field-level, not byte-level. The floor is **static**: row/col insert/delete and content edits never change it; export always takes max. Ownership: migration (worksheets gains nullable `min_rows`/`min_cols`), snapshot + `PUT .../state` optional fields, import write, export consumption — all in sub-issue A's own PR.\n- A-3: grid rendering and CSV export must consume the SAME display-value resolution path, **including error values** (an error cell exports the error string the grid shows, e.g. `#DIV/0!`). A ships an identity placeholder; sub-issue C replaces it with a formula engine whose signature C determines.\n- A-2: the 6×26 default structure must come from a single constant source (`backend/src/config.js` DEFAULT_ROW_COUNT/DEFAULT_COL_COUNT); boundary invariants (out-of-bounds 400, cells-not-exceeding-declared-structure) must live in one shared validation module, not duplicated per entry point.\n\nBase-layer note (Issue #1 thread 1 comment #53) §4, still unresolved: root approved both \"Y-min export = max(bbox, static footprint)\" and \"a table with no content exports an empty file\". For a \"CSV import of 3×2 → clear all content → export\" case these disagree: Y-min would emit `,\\n,\\n,` (3 rows × 2 empty fields) while \"no content → empty\" would emit `''`. #53 asked the root to state precedence; the root's follow-up ruling (comment #54) did NOT address it. So I must decide it as sub-issue owner and record it.\n\nExisting interim implementation (branch braid/issue-3-a, pre-ruling): parseCsv returns records of possibly differing widths (no padding); impo

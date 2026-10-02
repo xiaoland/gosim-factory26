@@ -1,0 +1,609 @@
+{
+  "schema": "iteration11-cell-read-receipts/v1",
+  "cell": "root-full",
+  "scope": [
+    "owner=issue:1; 25 units"
+  ],
+  "authority": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/github/snapshot-01",
+  "canonical_views": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/github/views/",
+  "sop": "/Volumes/WorkSSD/Development/factory26/agents/run-analysis.md",
+  "source_materials": [
+    {
+      "id": "01a0eb6a-7ccc-7707-b0a3-d0ae393ba669",
+      "owner": "issue:1",
+      "kind": "subagent",
+      "view": "views/01a0eb6a-7ccc-7707-b0a3-d0ae393ba669.txt",
+      "record_total": 49,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 49
+        }
+      ],
+      "read_status": "complete_wrapper_sequence_runtime_answer_truncated",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [
+        {
+          "record": 49,
+          "reason": "vision wrapper final response stopReason=length"
+        }
+      ],
+      "missing": [],
+      "bytes_observed": 123621,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "01a0eb6b-7ea1-7699-84dc-a7583b0dc40a",
+      "owner": "issue:1",
+      "kind": "subagent",
+      "view": "views/01a0eb6b-7ea1-7699-84dc-a7583b0dc40a.txt",
+      "record_total": 9,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 9
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 28951,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.txt",
+      "record_total": 105,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 105
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 748629,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "1657f14b-e00e-433e-88c2-f9ba59cc0c83_vision_transcript",
+      "owner": "issue:1",
+      "kind": "transcript",
+      "view": "views/1657f14b-e00e-433e-88c2-f9ba59cc0c83_vision_transcript.txt",
+      "record_total": 102,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 102
+        }
+      ],
+      "read_status": "complete_visible_fields_runtime_tail_not_generated",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [
+        {
+          "record": 102,
+          "reason": "vision structured response stopReason=length；图片读取记录1..101已保留，尾部结构化回答未生成"
+        }
+      ],
+      "missing": [
+        "native structured-answer tail after stopReason=length (not present in frozen material)",
+        "image binary bytes omitted from canonical view"
+      ],
+      "bytes_observed": 225115,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..102；其中 raw session 发起 28 次 Read image file，github-code-file-browser.png 精确重复 1 次，实际 27 个唯一 PNG；二进制在 raw session 保留、canonical view 省略。record 102 的最终结构化回答 stopReason=length，尾部未生成。",
+      "unique_image_reads": 27,
+      "read_operations": 28,
+      "duplicate_image_paths": [
+        "github-code-file-browser.png"
+      ],
+      "runtime_stop_reason": "length",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "runtime_truncation_interpretation": "not an unread canonical field; only ungenerated native tail",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "200cbf14-e4e8-422a-92d9-36f5b791ee15_advisor_transcript",
+      "owner": "issue:1",
+      "kind": "transcript",
+      "view": "views/200cbf14-e4e8-422a-92d9-36f5b791ee15_advisor_transcript.txt",
+      "record_total": 10,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 10
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 44460,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T04-47-45-693Z_01a0eb7d-801d-73b9-baaa-8bbf1159ff88",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T04-47-45-693Z_01a0eb7d-801d-73b9-baaa-8bbf1159ff88.txt",
+      "record_total": 34,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 34
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 73927,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T04-49-41-160Z_01a0eb7f-4328-7205-a0f8-0ef9c9b59fdc",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T04-49-41-160Z_01a0eb7f-4328-7205-a0f8-0ef9c9b59fdc.txt",
+      "record_total": 30,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 30
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 98064,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T04-54-15-523Z_01a0eb83-72e3-7132-b153-5c07a9738ab8",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T04-54-15-523Z_01a0eb83-72e3-7132-b153-5c07a9738ab8.txt",
+      "record_total": 60,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 60
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 121315,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T05-07-56-427Z_01a0eb8f-f98b-7288-9605-653ca9752e3f",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T05-07-56-427Z_01a0eb8f-f98b-7288-9605-653ca9752e3f.txt",
+      "record_total": 36,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 36
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 82288,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T05-21-56-820Z_01a0eb9c-cc54-701e-bc34-fd94ef30b748",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T05-21-56-820Z_01a0eb9c-cc54-701e-bc34-fd94ef30b748.txt",
+      "record_total": 25,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 25
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 70658,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T05-23-47-094Z_01a0eb9e-7b16-7375-94a3-f61336be9e0b",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T05-23-47-094Z_01a0eb9e-7b16-7375-94a3-f61336be9e0b.txt",
+      "record_total": 50,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 50
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 135866,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T05-36-08-773Z_01a0eba9-cc45-7661-bd57-27129f6b0f9b",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T05-36-08-773Z_01a0eba9-cc45-7661-bd57-27129f6b0f9b.txt",
+      "record_total": 33,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 33
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 90489,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "01a0ebb0-a9e4-73c8-933c-9e94d13ccbf8",
+      "owner": "issue:1",
+      "kind": "subagent",
+      "view": "views/01a0ebb0-a9e4-73c8-933c-9e94d13ccbf8.txt",
+      "record_total": 42,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 42
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 140421,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T05-38-14-129Z_01a0ebab-b5f0-7122-8721-ecfde084e908",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T05-38-14-129Z_01a0ebab-b5f0-7122-8721-ecfde084e908.txt",
+      "record_total": 58,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 58
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 214503,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "1af7af9a-821d-43f5-9432-c0bbc7f8af64_advisor_transcript",
+      "owner": "issue:1",
+      "kind": "transcript",
+      "view": "views/1af7af9a-821d-43f5-9432-c0bbc7f8af64_advisor_transcript.txt",
+      "record_total": 81,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 81
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 267213,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "sol-final-read.json"
+    },
+    {
+      "id": "2026-09-29T05-52-04-176Z_01a0ebb8-6050-769f-ba45-65466d58a674",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T05-52-04-176Z_01a0ebb8-6050-769f-ba45-65466d58a674.txt",
+      "record_total": 182,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 182
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 427997,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    },
+    {
+      "id": "01a0ebe1-aa88-738f-9a08-b6d3897f45fe",
+      "owner": "issue:1",
+      "kind": "subagent",
+      "view": "views/01a0ebe1-aa88-738f-9a08-b6d3897f45fe.txt",
+      "record_total": 53,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 53
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 151501,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    },
+    {
+      "id": "2026-09-29T06-31-12-293Z_01a0ebdc-34a5-73b7-b9f7-58fcd8d82f4e",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T06-31-12-293Z_01a0ebdc-34a5-73b7-b9f7-58fcd8d82f4e.txt",
+      "record_total": 129,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 129
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 331637,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    },
+    {
+      "id": "06c0c378-ada9-4b82-b694-9a5843f25506_advisor_transcript",
+      "owner": "issue:1",
+      "kind": "transcript",
+      "view": "views/06c0c378-ada9-4b82-b694-9a5843f25506_advisor_transcript.txt",
+      "record_total": 102,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 102
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 286836,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    },
+    {
+      "id": "2026-09-29T06-48-40-883Z_01a0ebec-34b3-7789-8167-679157d7fb26",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T06-48-40-883Z_01a0ebec-34b3-7789-8167-679157d7fb26.txt",
+      "record_total": 66,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 66
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 184461,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    },
+    {
+      "id": "2026-09-29T06-53-48-969Z_01a0ebf0-e829-71f1-9e49-7d550ef19805",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T06-53-48-969Z_01a0ebf0-e829-71f1-9e49-7d550ef19805.txt",
+      "record_total": 111,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 111
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 286463,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    },
+    {
+      "id": "2026-09-29T07-20-07-958Z_01a0ec09-0016-71bd-83f2-81e30309ed45",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T07-20-07-958Z_01a0ec09-0016-71bd-83f2-81e30309ed45.txt",
+      "record_total": 38,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 38
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 90739,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    },
+    {
+      "id": "2026-09-29T07-24-07-088Z_01a0ec0c-a630-73db-a1a0-6351dbab5db3",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T07-24-07-088Z_01a0ec0c-a630-73db-a1a0-6351dbab5db3.txt",
+      "record_total": 78,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 78
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 188296,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    },
+    {
+      "id": "2026-09-29T07-40-16-998Z_01a0ec1b-72e5-70f7-a944-01b68deb0580",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T07-40-16-998Z_01a0ec1b-72e5-70f7-a944-01b68deb0580.txt",
+      "record_total": 85,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 85
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 268719,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    },
+    {
+      "id": "2026-09-29T08-02-31-246Z_01a0ec2f-cecd-7053-b20d-3a73a7305cf4",
+      "owner": "issue:1",
+      "kind": "native",
+      "view": "views/2026-09-29T08-02-31-246Z_01a0ec2f-cecd-7053-b20d-3a73a7305cf4.txt",
+      "record_total": 16,
+      "read_ranges": [
+        {
+          "start": 1,
+          "end": 16
+        }
+      ],
+      "read_status": "complete_record_sequence_with_runtime_limits",
+      "display_truncation_followup": "completed_bounded_record_reads",
+      "runtime_truncation": [],
+      "missing": [],
+      "bytes_observed": 68045,
+      "read_method": "按有界 record 分块读取；逐单元覆盖 record 1..N；显示层没有跳过未读 record。",
+      "field_semantic_status": "complete by consolidated actual-read receipts",
+      "authoritative_completion_receipt": "luna-final-read.json + primary-luna-validation.json + primary-args-supplement.json + sol-tail-read.json"
+    }
+  ],
+  "board_materials": [
+    {
+      "view": "views/issue-1-board.txt",
+      "purpose": "shared root issue board; exact comments reused",
+      "read_status": "complete_shared_read"
+    },
+    {
+      "view": "views/issue-5-board.txt",
+      "purpose": "M3 issue board; route contract evidence reused",
+      "read_status": "complete_shared_read"
+    },
+    {
+      "view": "views/pr-11-board.txt",
+      "purpose": "M3 PR board; candidate/merge evidence reused",
+      "read_status": "complete_shared_read"
+    }
+  ],
+  "supplementary_materials": [
+    {
+      "path": "cells/root/background-reset.md",
+      "read_status": "complete",
+      "purpose": "PBB reset/new-run lifecycle evidence"
+    }
+  ],
+  "image_materials": {
+    "vision_image_count": 27,
+    "binary_status": "raw session retains image binary; canonical views retain read-path/text metadata and omit binary",
+    "structured_answer_status": "runtime_truncated_and_reported_above"
+  },
+  "summary": {
+    "assigned_views": 25,
+    "total_records": 1584,
+    "total_characters": 4072705,
+    "complete_record_sequence_views": 25,
+    "runtime_truncated_views": 2,
+    "missing_views": 0,
+    "main_coverage_updated": false,
+    "source_or_test_files_modified": false,
+    "requirements_atomic_count": 47,
+    "note": "record范围覆盖与运行产物本身的 stopReason=length / tail 丢失分开记录；不把 runtime 截断写成审查显示截断。",
+    "field_semantic_audit": {
+      "status": "complete_frozen_readable_substantive_fields",
+      "basis": "Supersedes earlier unverified record-sequence and projection-count assertions. Actual bounded streams plus independently checked supplementary fields.",
+      "index_0_14": "sol-final-read.json",
+      "index_15_23_prefix": "luna-final-read.json actual [0,1600000); captured stream luna_stream.txt",
+      "prefix_validation": "primary-luna-validation.json; source-retained values all present; no >60000 strings in this scope",
+      "missing_args_payload_supplement": "primary-args-supplement.json (primary fully read 26 omitted transcript argument records)",
+      "index_23_tail_and_24": "sol-tail-read.json",
+      "error_fields": "../root/error-field-receipt.json"
+    },
+    "runtime_truncation_interpretation": "native stopReason=length is an evidence-generation tail gap; all visible canonical substantive fields through record 102 were consumed. Image bytes and ungenerated native tail remain explicit material limits."
+  }
+}

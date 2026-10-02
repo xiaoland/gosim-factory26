@@ -1,0 +1,200 @@
+=1` 调用（README 推荐用法、A/C 证据流程在用）会**静默跳过门**。要求：**任何 `checks/run-e2e.sh` 调用都必须过该门**；PR #10 的证据清单含该门在 `SKIP_FRONTEND_BUILD=1` 与非跳过两种调用下的执行记录（或独立条目 + run-e2e 内各一次），防止"门存在但可被跳过"的假配置。
+## 3. 反向陷阱入守卫：#129 §3 采纳
+`shared/tsconfig.json` 的 `include` **必须同时含 `"*.js"` 与 `"*.d.ts"`**：只写 `"*.d.ts"` 会在真实 `.js` 在场时静默排除、exit 0 假绿（#129 实测）；只写 `"*.js"` 会在尚无 `.js` 的提交上 `TS18003` 红（#125 已记）。两条都写进 PR #10 的守卫注释与说明；PR #10 证据须含"含 `process`/`Buffer` 的探针 `.js` 在 `shared/` 下被该门拦下（TS2591/TS2584）"的正向证明与移除探针后 exit 0 的干净证明。
+## 4. 状态对账
+- #125（D-C14）与 v1.4 §5 裁定一致（独立 shared program、单点归 PR #10、拒绝 frontend checkJs），无出入；#126 的语义固化与义务清单照单生效。
+- #130 §1 的撤回正确：不存在"类型门放宽运行时 e2e"的路径，未决回归点 ① 的执行条件**无条件成立**，静态门与浏览器内 e2e 并存、互不替代。
+- 基础层（#129 §5）与 B（#130 §3）均无动作项，与其各侧状态一致。
+@deepseek-8 PR #10 按 §1–§3 落地（门放置、include 双项、两条守卫证明）；@deepseek-7 D-C14 按本条补记放置更正与反向陷阱；@deepseek-2 @deepseek-6 无新增动作。
+[DUPLICATES: 62 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L28:C1]
+
+## S45:L29 2026-09-29T07:27:12.316Z message assistant
+[thinking]
+Comment #135 is a contract v1.4 confirmation about C's `evaluate` interface and shared gate placement. It doesn't require A-side action: "@deepseek-8 PR #10 按 §1–§3 落地（门放置、include 双项、两条守卫证明）；@deepseek-7 D-C14 按本条补记放置更正与反向陷阱；@deepseek-2 @deepseek-6 无新增动作。"
+It doesn't mention @deepseek-3 (me) as an action owner. However, §1 says "唯一生产消费者 `worksheetDisplayValues` 必须始终传 `{rowCount, colCount}`（结构事实源，非导入足迹）". This is the A-3 seam consumer (implemented by C). A side already wired the seam; C replaces the implementation. The v1.4 §1 note that bounds must use structure row_count/col_count and never footprint — this matches my earlier #131 note.
+So does #3 need anything? A is closed. The notification is likely just informational (comment#135 relates to contract thread 1 which I'm subscribed to). But per my role, I should check: does comment #135 change anything about A's deliverables? The seam consumer `worksheetDisplayValues` is on A's side (created in A, replaced by C). §1 says the unique production consumer must always pass `{rowCount, colCount}`. In A's implementation, the memo passes the worksheet; C's implementation reads worksheet.rowCount/colCount. That's consistent.
+Also #128 (v1.4) mentioned "前端 allowJs + 显式 .js 形态". A side: cellDisplay.ts consumption... A's `worksheetToCsv` uses displayValue. Nothing to do.
+Hmm, but there might be an issue: A's `WorkbookEditor.tsx` memo calls `worksheetDisplayValues(worksheet)`. C's implementation now takes worksheet. Fine.
+So probably no action needed for #3. But wait — the notification said "issue:1 comment 135; read comment view 135 --thread" and "请处理 Issue #3". These come as a batch of updates. Perhaps the harness is telling me there are updates and I should process them. Since comment #135 doesn't mention me and requires no A-side action, I should decide whether to respond.
+But let's also check PR #8 comments #100/#101/#102 and the PR body edit at 07:26:59 by @deepseek-5. There might be something directed at me. Let me check PR #8 comments. Also check the issue #3 comments (only up to #131). Also check whether #100/#102 on PR #8 mention me.
+Actually the previous notification said "pr #8 title/body changed" — deepseek-5 edited the PR body at 07:26:59 to update the C-status correction. That body already reads with corrected wording ("口径更正... 整合 PR 的义务是在最终候选上复跑该用例，不是再次翻转"). That's fine, not requiring A action.
+Let me check PR #8 comments #100/#101/#102, which were addressed to me maybe.
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L29:C1]
+[toolCall] bash call_00_hK5I8TQVY4nq3fWJi7YJ4738
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && for c in 100 101 102; do echo \"===== PR#8 comment $c =====\"; braid comment view $c --thread 2>&1 | sed -n '1,60p'; done"}
+
+## S45:L30 2026-09-29T07:27:12.719Z message toolResult
+toolResult bash False
+[text]
+===== PR#8 comment 100 =====
+===== PR#8 comment 101 =====
+===== PR#8 comment 102 =====
+[DUPLICATES: 93 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L30:C1]
+
+## S45:L31 2026-09-29T07:27:12.721Z message user
+[text]
+- pr:8 comment 136; read `comment view 136 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L31:C1]
+
+## S45:L32 2026-09-29T07:27:14.512Z message assistant
+[thinking]
+New update: pr:8 comment 136. Let me read it.
+[toolCall] bash call_00_CEkhZBXE2gJoCzDPT9WJ9812
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 136 --thread 2>&1 | sed -n '1,120p'"}
+
+## S45:L33 2026-09-29T07:27:14.528Z message toolResult
+toolResult bash False
+[text]
+comment #136 [visible]
+【PR 正文口径更正 + Issue #3 comment #131 的 A-3 复核：A 侧无待办】@deepseek-3 @deepseek-8 @glm-1
+## 1. 独立复核 issue#3 comment #131（本 worktree `git fetch` 后在树内实测，非转述）
+- `origin/develop` = `e63efc6`：`frontend/src/lib/cellDisplay.ts` 仍是恒等接缝；`e2e/workbook-lifecycle.spec.ts` 仍是 `PRE-C TRANSITION`（378 行注），断言网格 `'=1+1'`（383 行）、导出 `'=1+1,plain'`（385 行）。
+- `origin/c-issue-5-formula-engine` = `c340e2e`（PR #10，OPEN，负责人 @deepseek-8）：`cellDisplay.ts` 已改为 `evaluate(worksheet.cells, { rowCount, colCount })`；该用例已翻转（382 行 `expectCellText(page, 'A1', '2')`、384 行 `expect(csv).toBe('2,plain')`），行内注为 `Flipped by sub-issue C (Issue #5 decision D-C10)`。
+- 两个消费者仍只经接缝、A 未新增接线：`frontend/src/components/WorkbookToolbar.tsx:34` → `worksheetToCsv(worksheet, displayValue)`；`Grid` 内联编辑与 `FormulaBar` 继续读 `raw`（与 #131 §3、Issue #1 thread 1 comment #110 §2 一致）。
+[DUPLICATES: 21 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L33:C1]
+
+## S45:L34 2026-09-29T07:27:20.801Z message assistant
+[thinking]
+Comment #136 by @deepseek-5 on PR #8: PR body correction + independent verification of issue#3 comment #131 (A-3 review). It says A side has no pending work.
+Do I need to respond? It's addressed to me (@deepseek-3). It confirms #131. It doesn't ask anything. Per guidance: "收到评论不必回执；需要回答问题、纠正事实、交接成果或采取行动时才回复". No action needed. But maybe I should verify the claim that A-3 seam follows v1.4 §1 (`evaluate(cells, bounds)` must always pass `{rowCount, colCount}`)? Comment #131 already covered it and #135 confirmed.
+Hmm, but there is a subtlety: comment #136 says "`cellDisplay.ts` 已改为 `evaluate(worksheet.cells, { rowCount, colCount })`". Wait, `evaluate` signature per v1.4 is `evaluate(cells, bounds?)`. In C's implementation it's `evaluate(worksheet.cells, { rowCount, colCount })`. OK.
+Now: is there anything in Issue #3 that needs updating? The issue is CLOSED. The only potential stale item: issue body says "C 侧 PR #10 分支 `c340e2e` 已替换接缝并翻转该断言，待合入后由整合 PR 在最终候选复跑" — that's accurate. And "C（#5）已指派 @deepseek-7（timeline #169）" — but PR #10's assignee is @deepseek-8, and Issue #5's implementer... Let's check: comment #135 says "@deepseek-8 PR #10 按 §1–§3 落地...；@deepseek-7 D-C14 按本条补记". And PR #10 assignee = @deepseek-8. So Issue #5 might have @deepseek-7 as Issue owner and PR #10 owner @deepseek-8. Actually earlier: "#5 comment #96" was A's handoff to C, and at that time #5 was assigned to @deepseek-7. Then per #98 there was a "批次 2 指派" and PR #10 head/PR owner is @deepseek-8. The issue body says "C（#5）已指派 @deepseek-7（timeline #169），A-3 接缝义务已写入其交接材料". Is #5 still assigned to @deepseek-7? PR #10's body says "接缝与翻转义务来源：Issue #5 comment #96（A 的交接口）、#98（批次 2 指派）". Let me check #5 state and assignee.
+If #5 is still assigned @deepseek-7 (Issue owner) with PR #10 owned by @deepseek-8, the body statement is fine but could be enriched. This is a minor thing. The notification flow suggests the harness wants me to process these updates. My correct behavior: verify current state, decide no action needed, and (maybe) not post a redundant comment. Per instructions: "没有新事实或新决定时，无需发布重复进度总结."
+But there might be a genuinely stale statement in the Issue #3 body: it says "**C（#5）已指派 @deepseek-7**（timeline #169）" while the implementation PR #10 is owned by @deepseek-8. In comment #131 I already @-ed @deepseek-7 and @deepseek-8. Let me check issue #5's current assignee to see if it changed to @deepseek-8.
+Also I should check whether the Issue #3 body needs a small update to reflect that the gate obligation is now precisely "复跑" (already stated). It already states that in the ① ② block: "② **整合 PR**带「公式单元格导出 = 计算结果」门禁，在该用例上复跑". Good.
+Let me check #5.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L34:C1]
+[toolCall] bash call_00_gbRHffu7kycf3Ejpix1c7137
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 5 --timeline 2>&1 | tail -12; echo ===; braid issue view 5 2>&1 | head -8"}
+[toolCall] bash call_01_yF4lFCMDcZNbmuszyfsW5003
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --timeline 2>&1 | tail -6; echo \"=== linked prs ===\"; braid issue view 3 2>&1 | tail -5"}
+
+## S45:L35 2026-09-29T07:27:21.094Z message toolResult
+toolResult bash False
+[text]
+#192 2026-09-29T07:14:37.940245389Z @deepseek-7 commented comment #107
+#194 2026-09-29T07:14:49.200019154Z @deepseek-7 linked_pr PR #10
+#196 2026-09-29T07:15:12.288851463Z @deepseek-7 replied comment #108
+#198 2026-09-29T07:15:23.321041838Z @deepseek-7 edited title/body changed
+#200 2026-09-29T07:16:22.827158123Z @deepseek-7 edited title/body changed
+#203 2026-09-29T07:17:31.828791858Z @deepseek-7 edited title/body changed
+#204 2026-09-29T07:17:36.757010222Z @deepseek-7 replied comment #113
+#209 2026-09-29T07:19:53.60571149Z @deepseek-7 edited title/body changed
+#210 2026-09-29T07:19:59.815678382Z @deepseek-7 replied comment #117
+#213 2026-09-29T07:21:17.119852718Z @deepseek-7 edited title/body changed
+#214 2026-09-29T07:21:22.733962437Z @deepseek-7 edited title/body changed
+#227 2026-09-29T07:24:45.213634828Z @deepseek-7 edited title/body changed
+- **负责人**：Issue 侧 @deepseek-7（需求/技术/验收方案）；实现 PR **#10** 负责人 @deepseek-8（base `develop`，head `c-issue-5-formula-engine`，消费基线 `origin/develop @ e63efc6`）。
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L35:C1]
+
+## S45:L36 2026-09-29T07:27:21.095Z message toolResult
+toolResult bash False
+[text]
+=== linked prs ===
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L36:C1]
+
+## S45:L37 2026-09-29T07:27:32.986Z message assistant
+[thinking]
+#5 assignee is @deepseek-7 (Issue owner), and PR #10 owner is @deepseek-8. The Issue #3 body's statement "C（#5）已指派 @deepseek-7（timeline #169），A-3 接缝义务已写入其交接材料" is still accurate. Could add that the implementation PR is #10 owned by @deepseek-8 — but that's a minor enrichment, and it's already mentioned elsewhere? The body's 未决 section mentions "C 侧 PR #10 分支 `c340e2e` 已替换接缝并翻转该断言". So it's covered.
+So there's no substantive action required. The updates are:
+1. issue #3 title/body modified (mine or harness sync)
+2. pr #8 title/body changed (deepseek-5's correction)
+3. issue #1 comment #135 (contract v1.4 confirmation; no A action required)
+4. pr #8 comment #136 (verification of my #131; A side no pending)
+My job: confirm nothing needs doing. But should I post anything? Guidance says don't post redundant progress. However, comment #136 was addressed to me and is a "handoff/结果" confirmation. There's nothing to answer.
+Wait — but there could be one thing: The Issue #3 body says "C（#5）已指派 @deepseek-7（timeline #169）" — but per PR #10 body, PR #10's owner is @deepseek-8, and comment #135 addresses @deepseek-8 for PR #10. The body's phrasing could mislead the integration PR owner about who implements. But the body's ① ② block assigns the replacement to "C（#5）" generically, and mentions PR #10. I think it's fine. Still, to keep the current entry accurate for the integration PR, a tiny clarification could help: "C（#5）Issue 侧 @deepseek-7、实现 PR #10 @deepseek-8". That's a narrow improvement and aligns with my duty to keep the entry discoverable. But is it worth editing a closed issue's body? The guidance: "维护你负责的 Issue/PR，让接手者能找到当前有效的要求、决定和未决问题". Since the integration PR will rely on this entry, ensuring the C owner/PR mapping is correct is valuable. It's a one-clause narrow edit. But also "无需把日常进度反复复制到正文" — this is not progress, it's a stable ownership fact... Actually ownership facts are ephemeral-ish. Hmm.
+Let me weigh: The notification chain suggests the harness is nudging me about updates. The correct minimal response: verify, and if all accurate, do nothing (or a brief acknowledgment only if needed). Given @deepseek-5's #136 confirms A side no pending, and #135 requires no A action, I think no comment is needed.
+But wait — is there a risk I'm missing an actual request? Let me re-read #136: it's addressed to @deepseek-3 @deepseek-8 @glm-1, part 1 is "独立复核 issue#3 comment #131" reaching conclusion A no pending; part 2 is PR body correction; part 3 status. Nothing asked of me. So no reply needed.
+#135: "@deepseek-8 PR #10 按 §1–§3 落地；@deepseek-7 D-C14 按本条补记...；@deepseek-2 @deepseek-6 无新增动作." Not addressed to me; it's a contract confirmation. But it's in thread 1 which I follow. Does §1 affect A? The seam consumer `worksheetDisplayValues` is implemented on A's side (now C-owned). §1 says it must always pass `{rowCount, colCount}` (structure, not footprint). A's original implementation didn't call evaluate. C's does. So no A action.
+Hmm, but one consideration: v1.4 §1 says "唯一生产消费者 `worksheetDisplayValues` 必须始终传 `{rowCount, colCount}`（结构事实源，非导入足迹）". Is there any chance the A-side `worksheetToCsv` or the memo uses footprint? No: `worksheetDisplayValues(worksheet)` uses worksheet.rowCount/colCount within C's impl. Fine.
+Therefore: no action; but the task prompt says "请处理 Issue #3". I should at least do a proper verification pass and then report to the user (in chat) that everything is up to date, with maybe a light touch: perhaps not post a comment.
+However, there is a real consideration: the issue body's 未决 section still states "C（#5）已指派 @deepseek-7（timeline #169）" — I could argue that PR #10 owner @deepseek-8 is now the actor for the A-3 seam replacement. To prevent the integration PR owner getting confused, adding "实现 PR #10 负责人 @deepseek-8" is a narrow accurate improvement. The PR #10 body already documents this. I think adding it is a good, small maintenance action without posting a redundant comment. But editing the body after close with only ownership info... The instruction says description saves "当前任务说明与稳定决定"; ownership mapping is useful for handoff. I'll make that one narrow edit, since it helps the integration PR.
+Actually, careful: modifying the body triggers notifications again (title/body changed) and could cause churn loops. Each edit notifies subscribers. Given the issue is closed and no pending action, an edit for an ownership nicety may generate noise. The guidance says avoid redundant progress but keep entries current. Hmm.
+I lean toward NOT editing: the ownership info is already derivable and the body already names PR #10 with branch/commit. Also #131 already @-ed both. Editing would be low value and cause notification churn.
+Instead, I'll verify the key facts and then simply report in chat that no action is needed. But the harness may treat "no output" as incomplete... The user prompt is an automated update. I should decide and act.
+Actually, wait. Let me reconsider whether there IS something to do: The first update in this batch was "issue #3 title/body 已修改". That means someone edited it — possibly the harness or another agent. The body I see matches what my prompt showed. If another agent edited it and it's identical... maybe the modification was by me in the previous session (the last edit at 06:54:50 after #99, which produced the #131 update). Hmm no, #131 says "A 侧无待办". The body includes #131 references, which means I edited the body after #131. Then the notification "issue #3 title/body 已修改" reflects my own last edit. Fine.
+So overall: no new action items for me. I'll do a final verification of develop tree seam anchors (to be responsible) — but I already did in #131. Let me at least verify quickly that origin/develop is still e63efc6 and PR #10 not merged (i.e., the transferred premise still holds). Then conclude.
+Actually — one thing worth checking: has the integration PR been created yet? The root issue may now have an integration PR that I could support. But that's not my task. Let me check quickly if there's an integration PR (base main head develop). Not necessary.
+Let me quickly verify the current state to be accurate, then decide. If everything is consistent, I'll conclude without posting (to avoid redundant churn). But the system prompt says "维护你负责的 Issue/PR" and the user asked "请处理 Issue #3" — I should at least state my handling. Since these are automated update prompts, ending my turn with a brief chat summary is acceptable.
+Hmm, but maybe I should post a short comment on PR #8 thread #136 acknowledging? No — explicit guidance: "收到评论不必回执". deepseek-5's #136 doesn't ask anything.
+Let me do a quick verification: fetch, check develop == e63efc6, check PR #10 state, check the e2e assertion in develop. Then finish.
+Actually, one more: is there a possibility that comment #136's thread is on PR #8 and it's a "交接" that expects me to confirm? It says "A 侧无待办、无待改项". It's a status confirmation. No response required.
+I'll do the verification and end. But hold on: maybe I should double check the PR #8 body edit at 07:26:59 — deepseek-5 edited it. It includes corrected wording. Should I verify the corrected wording is accurate (since I'm the one who established the anchors)? #136 §2 states the two narrow edits. The PR body now says the integration PR's obligation is to re-run (not flip). That's consistent with my #131 §5. I already verified #131 facts. Good.
+Let me run the verification commands.
+[DUPLICATES: 21 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L37:C1]
+[toolCall] bash call_00_RAFqrHuIsisOnpaAQtmU1972
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git fetch origin --quiet && echo \"develop=$(git rev-parse --short origin/develop)\" && echo \"A head=$(git rev-parse --short origin/braid/issue-3-a)\" && echo \"C head=$(git rev-parse --short origin/c-issue-5-formula-engine)\" && echo \"--- develop seam ---\" && git show origin/develop:frontend/src/lib/cellDisplay.ts | sed -n '1,25p' && echo \"--- develop transition assertion ---\" && git show origin/develop:e2e/workbook-lifecycle.spec.ts | grep -n \"display seam\" -A 12 | head -30"}
+[toolCall] bash call_01_d97tMXOwRyP7Kza5coQa5936
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid pr view 10 2>&1 | grep -E \"^(state|head|assignee|base):\"; echo ===; braid issue list 2>&1 | head -20"}
+
+## S45:L38 2026-09-29T07:27:33.037Z message toolResult
+toolResult bash False
+[text]
+develop=e63efc6
+A head=a23af5a
+C head=d42be13
+--- develop seam ---
+--- develop transition assertion ---
+376-    await importCsv(page, 'export formula.csv', ['=1+1,plain'].join('\n'));
+377-
+378-    // PRE-C TRANSITION (Issue #3 decision D-A8): sub-issue C replaces
+379-    // `frontend/src/lib/cellDisplay.ts` with the formula engine. Until then the
+380-    // grid and the export both show the raw formula text. When C lands, this
+381-    // assertion MUST flip to '2' for both the grid cell and the exported text;
+382-    // the integration PR carries that flipped case as the final gate.
+383-    await expectCellText(page, 'A1', '=1+1');
+384-    const { csv } = await exportCsv(page);
+385-    expect(csv).toBe('=1+1,plain');
+386-  });
+387-});
+[DUPLICATES: 24 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L38:C1]
+
+## S45:L39 2026-09-29T07:27:33.037Z message toolResult
+toolResult bash False
+[text]
+head: refs/heads/c-issue-5-formula-engine (d42be13ae264d80413132d4548afb94d22b801bf)
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L39:C1]
+
+## S45:L40 2026-09-29T07:27:33.039Z message user
+[text]
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L40:C1]
+
+## S45:L41 2026-09-29T07:27:35.154Z message assistant
+[thinking]
+Another PR #8 body change. Let me check PR #8's current body and timeline for new edits, and see if anything needs my action. Also C head has advanced from c340e2e to d42be13 — that's new (C's PR head moved). My Issue #3 body mentions "C 侧 PR #10 分支 `c340e2e` 已替换接缝并翻转该断言" — now the head is d42be13, so that reference is stale-ish. Hmm. But the body's anchor is about the flip being present; C head advanced. Not a big deal but could be updated.
+Let me look at PR #8 timeline last events and its body for what changed.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L41:C1]
+[toolCall] bash call_00_Q8AjYY4RHp2Vj3LNQyJe7295
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid pr view 8 --timeline 2>&1 | tail -8; echo \"==== body head ====\"; braid pr view 8 2>&1 | sed -n '1,12p'"}
+
+## S45:L42 2026-09-29T07:27:35.184Z message toolResult
+toolResult bash False
+[text]
+#245 2026-09-29T07:27:30.20732021Z @deepseek-5 replied comment #137
+==== body head ====
+- **PR 侧无待办（2026-09-29 收口）**；遗留义务已转交：C（#5，Issue 负责人 @deepseek-7；实现 PR #10，负责人 @deepseek-8）替换 A-3 接缝实现 `frontend/src/lib/cellDisplay.ts`（锚点见 Issue #5 comment #96）。**口径更正（依据 Issue #3 comment #131 + 我在 `origin/develop` / `origin/c-issue-5-formula-engine` 上的复核）**：过渡断言已由 C 在 PR #10 内翻转为计算结果（翻转首见于 `c340e2e`；我在 PR #10 后续 head `d42be13` 上复核该用例仍为网格 `2`、导出 `2,plain`），而 `origin/develop`（`e63efc6`）仍是过渡实现 `'=1+1'`；故**整合 PR 的义务是在最终候选上复跑该用例（浏览器内真实执行），不是再次翻转**
+- **设计与判据权威 = Issue #3 comment #27 + 增量 comment #33（v1.1）+ comment #36（v1.2）+ comment #81/#82（v1.3：A-1 四条解析钉死、A-2 单点 helper、A-3 接缝含错误值、A-4 足迹与空文件优先级）**（决定 D-A1…D-A10、验收方案、假设与未决、接缝边界与 README 窄改范围）；**契约增量 A-1…A-4 = Issue #1 thread 1 comment #28**（导入端点、导入是行列数变更入口之一、显示值单一接缝、导出 used range/筛选；最终裁定 = 契约 v1.3 comment #51/#54/#57/#64/#65/#66/#69，含 A-4 导入足迹 `min_rows`/`min_cols`）
+[DUPLICATES: 17 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L42:C1]
+
+## S45:L43 2026-09-29T07:27:35.185Z message user
+[text]
+- pr:8 comment 137; read `comment view 137 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L43:C1]
+
+## S45:L44 2026-09-29T07:27:36.741Z message assistant
+[thinking]
+deepseek-5 is iterating on the PR #8 body and posted #137. Let me read #137 — maybe it asks me something.
+Actually, they're being very active. Let me check #137.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L44:C1]
+[toolCall] bash call_00_9Zxrjcpy2WZJY8dMhrzn6448
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 137 --thread 2>&1 | sed -n '1,80p'"}
+
+## S45:L45 2026-09-29T07:27:36.757Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 41 exact source lines omitted; precise per-line source map in duplicate-lines.json at S45:L45:C1]
+
+## S45:L46 2026-09-29T07:27:39.434Z message assistant
+[thinking]
+Again informational. @deepseek-5 is documenting. No action requested from me in #137.
+Now, the flow of repeated notifications suggests the harness waits for me to "handle" each update. But per instructions, I shouldn't reply to informational comments. However, there's one legitimate A-side mainten

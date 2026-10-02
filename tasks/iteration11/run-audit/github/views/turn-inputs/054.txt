@@ -1,0 +1,13 @@
+hash 810178b3dbede4a5c82aed4d91a632cd706ca2444d733fc190fa6efa8e73559a
+copies 1
+source snapshot-01/braid-state/turns/01a0ebba-b91f-75f0-a5d2-caa741c233d7.md
+
+请处理 Issue #3。
+
+对象：local/run#3
+
+发生以下更新：
+- pr:11 comment 47; read `comment view 47 --thread`
+- issue:3 thread 38: comment 40 edited; read `comment view 40 --thread`
+
+使用 `braid issue view 3 --comments` 查看当前内容。

@@ -1,0 +1,18 @@
+{
+  "asset": "https://arc-bench.com/assets/index-DCT-RiaL.js",
+  "excerpts": {
+    "credentialMode:O?": "f(!M.trim()){Bt.error(\"Model name is required.\");return}try{q(!0),await at.createSubmission({competitionId:e,runtime:g,file:v,agentSource:\"upload\",displayName:x,baseUrl:C,apiKey:_,credentialMode:O?\"official_evaluation\":\"self_funded\",model:M,visualModel:j,catalog:\"competition\"}),b(null),E(\"\"),T(\"\"),F(!1),P(jp),Q(Up),je(\"history\"),Bt.success(\"Agent submission saved. Open a task to run it.\"),await He()}catch(xe){Bt.error(xe.message)}finally{q(!1)}},ye=async()=>{if(z.length===0)return;const xe=z.length;if(window.confirm(`Delete ${xe} selected submission${xe===1?\"\":\"s\"}? The sto",
+    "运行任务时平台将创建": "\",{type:\"checkbox\",checked:O,onChange:xe=>{F(xe.target.checked),xe.target.checked&&T(\"\")}}),y.jsxs(\"span\",{children:[y.jsx(\"strong\",{children:\"使用比赛额度评测\"}),y.jsx(\"small\",{children:\"运行任务时平台将创建仅用于该次运行的临时 Key，实际开销从队伍共享的 ￥500 预算中扣除；只有此类运行可进入排行榜。\"})]})]}):null,O?null:y.jsxs(\"label\",{className:\"field-stack\",children:[y.jsx(\"span\",{children:\"API Key\"}),y.jsx(\"input\",{className:\"text-input\",type:\"password\",autoComplete:\"off\",value:_,onChange:xe=>T(xe.target.value),placeholder:\"Required\"})]}),y.jsxs(\"label\",{className:\"field-stack\",children:[y.jsx(\"span\",{children:\"Model\"}),y.jsx(\"in",
+    "cancelSubmission(e)": "ons/read-all\",{method:\"POST\"})},deleteNotification(e){return Qt(`/notifications/${e}`,{method:\"DELETE\"})},clearNotifications(){return Qt(\"/notifications/clear\",{method:\"DELETE\"})},cancelSubmission(e){return Qt(`/runs/${e}/cancel`,{method:\"POST\"})},getSubmissionTraceability(e,t){return Qt(`/runs/${e}/traceability?node_id=${encodeURIComponent(t)}`)},getSubmissionAllTraceability(e){return Qt(`/runs/${e}/traceability?node_id=__all__`)},getSubmissionCommitHistory(e){return Qt(`/runs/${e}/commit-history`)},getSubmissionSource(e,t){const n=new URLSearchParams({file_path:t.filePath",
+    "Cancel this run?": "tosave failed\":\"草稿自动保存失败\",\"Manual save mode\":\"手动保存模式\",\"Sign in to enable autosave\":\"登录后启用自动保存\",\"Delete submission\":\"删除提交\",\"Delete this submission?\":\"删除此提交？\",\"Deleting...\":\"正在删除…\",\"Cancel this run? It cannot be resumed, but its logs and generated artifacts will remain available.\":\"取消此运行？它无法恢复，但日志和生成的产物仍会保留。\",\"Pausing current run\":\"正在暂停当前运行\",\"May be stuck\":\"可能已卡住\",\"Still working\":\"仍在工作\",\"Waiting for the first update\":\"正在等待首次更新\",\"Agent execution started\":\"智能体执行已开始\",\"Agent execution finished\":\"智能体执行已完成\",\"Smoke test passed\":\"冒烟测试已通过\",\"Run not found.\":\"未找到运行记录。\",\"Submission not f"
+  },
+  "competition_budgets": [
+    {
+      "competition_id": "hackathon",
+      "initial_amount_cny": 500.0,
+      "remaining_amount_cny": 285.862202,
+      "currency": "CNY"
+    }
+  ],
+  "finding": "official_evaluation checkbox deducts team budget and alone qualifies for leaderboard; self_funded uses own key; no per-run hard spending cap found in form; cancellation irreversible but retains logs/artifacts"
+}

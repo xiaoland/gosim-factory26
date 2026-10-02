@@ -56,3 +56,97 @@ PR #19 新会话确实使用 Pi 的后台作业：`bash` 启动 `bg001`/`bg003`/
 根 Issue #1 的 reset 若 `continuation=false`，应用时会消费 description invalidation，不会立即注入新的 work prompt。现有主循环在 root OPEN 且其新 session 可执行、没有待处理输入时调用 `root_idle_tick`，从该时点重计约五分钟后产生并定向发送 root progress check 评论；这条既有路径负责唤醒 root。冷接续验证需分别确认 reset applied、新物理 Pi 身份、该评论送达，以及其后真实模型响应，不能只凭新 session 文件宣称恢复成功。
 
 已冻结当前含未提交改动的 Braid 源码并在 WSL 的缓存 Rust 1.93.1 容器中执行 `cargo build --release --locked --offline`，编译成功，未执行测试、模型或官网任务。交付物位于 `runs/iteration11/20260929-cold-resume/build/`（WSL 仓库）：`braid-source.tar.gz` SHA256 为 `24957f29608de36b00ce59a92a66dfd29503d8e52e18aab75132d7dccfcc9e9a`，Linux `braid` SHA256 为 `5c802c32e452ebe8c0de9182bfa4a5298c7cabcf1097d1dccf95ae6a031f17eb`；`build-identity.json` 记录 git HEAD、dirty diff 与构建身份。此处仅证明新 binary 来自该源码快照，实际恢复成效仍待冷接续日志和 DB 核验。
+
+## 冷接续实际核验
+
+新单题 run `pi-braid-i11--hackathon--github-f402061b5bc88f` 由已核 SHA256 为 `4b54da87d1b7f29b297a0bd23db5a1a72c3ddc43831b2c0e8c99067e1d19131b` 的包启动。Braid 于 2026-09-29 16:02:43 UTC 开始 `--offline-resume`。同一根 Issue #1 的原 blocked reset `01a0eda0-5776-71d1-8d08-6fb9420cf057` 在 16:03:02 UTC 成为 `applied`，错误清空、新 provider session `01a0ede7-baa2-7ca3-bc2b-090b54f118bd` 建立；16:04 UTC 只读 SQLite 显示其为 `running`，对应新 Pi JSONL 有 8 条 assistant 消息、最近为 toolUse、无 `errorMessage`。根成员已经有真实模型响应，不只是进程或文件存在。
+
+这次 root 的直接触发是 14:45 已保留的 wake batch `01a0eda0-578b-7372-9539-12315d09e23a`，包含既有 reset continuation 与评论 #276–#290；新 turn 于 16:03:03 UTC 以 `wake_batch` 开始。16:04:38 UTC root 自编辑又产生 continuation=true 的 Context reset。当前没有新 root progress check 评论，故本次只能证明已有 wake 正常续接；五分钟 idle check 的回退代码路径仍未在这次运行中实际触发。
+
+PR #20 旧 Pi session 在恢复时报告 `Session file is not a valid pi session` 和 `provider disconnected`。该旧 JSONL 文件存在（208115 bytes），但第一行是 `type=message` 而非 Pi session header；这是文件格式原始证据，尚未证明缺 header 发生在哪个归档步骤。Braid 随后于 16:03:01 UTC 为 PR #20 应用另一条 Context reset 并建立新 session；不能把旧文件恢复报错误记为该新 session 的模型执行成功，也没有改写运行中的旧文件。
+
+16:05:30 UTC，root 的自编辑 reset `01a0ede9-34f5-79e1-a6ee-2e4773af6b5d` 也成为 `applied`（`continuation=true`），16:05:31 UTC 新 `wake_batch` turn 开始。第二个新 Pi JSONL 在随后的只读观察中已有 6 条 assistant，最近为 toolUse；首个冷接续 turn 已记为 `completed`。因此不只是最初身份less reset 被解封，后续自编辑重建与实际续接也走通；本观察仍不代表整个应用或所有成员完成。
+
+四条原失败 reset 的只读对照显示：仅 Issue #1 的原 reset 由 blocked 变为 applied；Issue #6 仍 blocked 且工作项 CLOSED，PR #16 仍 blocked 且 MERGED，PR #20 的原 reset 仍 blocked、旧 assignment 已 retired、工作项现为 MERGED。后面三条未被此次 offline-resume 误重放。
+
+
+## 当前只读快照：2026-09-30 08:43–08:46 CST
+
+本段来自当时 WSL 的 run.json、SQLite `mode=ro` 查询、最新原生 JSONL 和 Git refs，替代把上面的首次恢复观察当作当前状态。未重启、改 DB、修改应用或执行验收。
+
+`github-f402061b5bc88f` / 容器 `arcbench-local-f495d20d0a75` 仍为 running / Up，但 **没有 running turn**。最新原生 assistant 响应为 2026-09-29 17:09:53.980 UTC（北京时间 9 月 30 日 01:09:53），DeepSeek 正常 stop、无 errorMessage；此后逾七小时未见新的模型响应。因此当前是容器存活而生成停滞，不能称为继续推进。
+
+实际进展已超过首次冷恢复：PR #19/#20/#21 均 MERGED，Issue #3–#9 均 CLOSED。当前只剩 root Issue #1、M6b Issue #10 和 PR #22 OPEN。M6b 分支候选已到 `42b2f64a2389a4d80f70c9cbded6096e766c9ce4`；Issue #10 评论 #332（17:08:57Z）记录独立核对后交根合并，列出 194 单测、152 E2E 与平台路径通过，并保留负载相关失败和重跑。这里记录的是运行成员的持久验收报告，本次没有重跑验证。Git refs 确认候选尚未合入：develop 仍为 `e5110cbba3560412b5a81163aee3e100c1803c7c`。
+
+三个 OPEN 工作项的当前 active agent 全部 blocked，context_error 均为 `session is unavailable`：root 的 reset `01a0ee12-480e-7273-a8a2-2adac39001c9` 于 16:50:56Z blocked；PR #22 的 `01a0edf7-0a3b-7731-be53-2eaefd2a3798` 于 16:52:14Z blocked；Issue #10 的 `01a0ee24-4c3d-7151-92be-1c60fdb88c78` 于 17:10:26Z blocked。恢复日志保留 `Pi new_session RPC failed: provider request pi_rpc timed out`，最新一条为 17:10:25Z。root 早先成功恢复的事实仍成立，但后续 Context 重建再次失败，当前不能工作。
+
+**尚未生成交付**：`local_run.lifecycle=running`、`delivery_commit=null`，main 仍 `2914d2ddf2a9cc5723619fd2cef53f5b21b8c3ac`，未见恢复完成或 runner 生成结果。下一决策是有界恢复这些现行 OPEN assignment 的 Pi 身份创建故障；本次只读任务未实施恢复。
+
+
+## 当前 Pi 超时与最小恢复边界（2026-09-30 08:50 CST，只读）
+
+本次五个现行失败（GitHub root/Issue #10/PR #22，Sheet root/PR #13）原始日志均为 `Pi new_session RPC failed: provider request pi_rpc timed out`。冻结构建源码 `20260929-cold-resume/build/source/braid/src/provider/mod.rs` 的 `REQUEST_TIMEOUT` 是 30 秒；`provider/pi.rs` 在 spawn 子进程后立刻发送 `new_session`，等待响应后才 `get_state` 取得 native identity，之后才注入工作提示。故这是同一 **Pi 本地启动握手边界**，不是模型 API 超时，也不是已知的旧 JSONL header 格式错误。五个最新 `physical/session.json` 均 failed，session/native ID/path 全为空。stderr 没有对应故障细节；不能把 I/O/CPU 压力推断为已证根因，也不能断言延长等待必然修复。
+
+此前 GitHub root 冷恢复成功说明同一现有身份less恢复路径可重建 Pi 并收到模型响应，但不保证后续重建不再超时。当前故障发生在该成功之后，不能沿用首次成功结论。最小方案应先修正恢复选择的具体遗漏，再在完整保留现场、确认旧进程停止后做一次冷接续；不刷新全体指令，不重新安装 runtime，不全量重跑任务，也不改 live DB 或建立无限自动重试。
+
+
+恢复选择的具体遗漏已证：对冻结源码 `prepare_offline_resume` 中原 SELECT 以 SQLite `mode=ro` 查询，GitHub 返回 0 候选。三个 reset 的 `active_turn_id` 非 NULL，但对应旧 turn **全部 completed，且在新物理尝试失败前已经结束**。现有筛选 `cr.active_turn_id IS NULL` 误把“保存过去已完成 turn 的关联”当成“仍有在途 turn”。只读把这一条改为 NULL **或该 turn 属于 cr.old_session_id 且 lifecycle=completed**，其余原守卫不变，恰好选中现行 root/Issue #10/PR #22；三个候选的后续 physical 也都满足 failed + session is unavailable + 无任何 native identity，未发现更晚成功身份。
+
+建议最小源码改动仅放在这条 offline-resume 候选条件：接受上述已完成旧 turn，保留原字段和 continuation，不伪造 NULL；仍排除 starting/running/unknown/failed，保留 OPEN、active assignment、owner/Profile/revision 一致、无更新 session/reset、所有 reset event blocked、失败物理记录等现有条件。这是恢复范围补齐，尚未实施。30 秒握手超时的底层成因仍待真实接续反馈；不把扩大全局 RPC 超时混入此修复。
+
+
+## 已授权最小筛选修复与离线构建（2026-09-30）
+
+主线依据用户已有 I11 恢复缺陷修复授权，要求落地上述已证筛选修复并准备 Linux binary，暂不动 live DB、停止容器或启动接续。已在 `sources/braid/src/store/mod.rs` 的 identityless reset 查询中，将 `active_turn_id IS NULL` 扩为 NULL 或存在属于 `old_session_id` 且 lifecycle 为 completed 的 turn。其余条件与任何历史字段均未改；没有扩展到 unknown/failed/running turn，没有更改全局 RPC 超时，没有新增测试。
+
+为了不把其它工作树脏改动带入制品，构建基于此前运行过的 WSL `20260929-cold-resume/build/braid-source.tar.gz`（SHA256 `24957f29608de36b00ce59a92a66dfd29503d8e52e18aab75132d7dccfcc9e9a`），只加入相同 SQL 增量。新输出目录为 WSL `runs/iteration11/20260930-completed-turn-resume/build/`，含 `completed-turn.patch`、完整源码 tar、构建日志和身份材料。复用 `rust:1.93-bookworm` 镜像、`factory26-cargo-registry` / `factory26-braid-target` 缓存卷；网络关闭，2 CPU / 3 GiB，`RUSTUP_TOOLCHAIN=1.93.1 cargo build --release --locked --offline`。首轮未指定工具链覆盖，源码指定 1.93.0 导致离线下载失败，已原样保存为 `build-initial-toolchain.log`；随后显式使用前次成功构建的已安装 1.93.1，不改源码工具链文件。
+
+
+构建已完成：release exit 0，耗时 2m31s，13 条 warning；未运行测试或模型。WSL 新 binary 为 `/home/yyh/Development/factory26/runs/iteration11/20260930-completed-turn-resume/build/braid`，SHA256 `3056feb7a599addeb82e0250d6a0cc1e055d9e8e78f0151ca12ea75582605bf4`。同目录完整源码 tar SHA256 `fa7e91a01c8a6b09ecdb3b2730babebc271cc9f5a4ab3afdbf09b2278675fc28`；增量 patch SHA256 `87485f575db41e7f559eb3594f39ef70f15198336337dd86726a691817d53a7e`，详见 `build-identity.json`。运行中的旧 binary 和两容器均未改。
+
+下一步接续仍使用现有 `scripts/package_completed_recovery.py`：先停相应旧执行并保存包含 Git/未提交/native/SQLite/physical 的一致现场，再用该现场 ZIP、现有 `20260929-cold-resume/prepared/base-agent.zip`、新 binary/source tar 打包，传 `--continue-generation`，**不传** `--refresh-native-materials`。`--source-run-id` 分别使用当前 `github-f402061b5bc88f` 或 `sheet-db75cf2c3b82be` 的完整 run ID，不能回退到更早 I10 快照。复用对应已记录 launch.py 的单题、自有 API、4GiB/2CPU参数，新实验目录与新 agent.zip 必须匹配。
+
+恢复入口最终调用的容器内命令为：
+
+```sh
+/workspace/template/.factory26/20260929-042409-1202e245/work/bin/braid local /workspace/template/.factory26/20260929-042409-1202e245/braid-request.json --offline-resume
+/workspace/template/.factory26/20260929-042409-811f18d4/work/bin/braid local /workspace/template/.factory26/20260929-042409-811f18d4/braid-request.json --offline-resume
+```
+
+以上分别属 GitHub/Sheet，须由现有 recovery 入口在保留环境与已替换新 binary 的新执行环境运行；不是授权在仍存活旧容器内并发执行。当前只完成编译材料交付，尚未冻结新的停止现场或启动这些命令。
+
+
+## 本轮实际恢复部署已开始（2026-09-30 08:57 CST）
+
+主线已明确授权对当前 GitHub `f402061b5bc88f` 与 Sheet `db75cf2c3b82be` 做一次受控冷接续，并要求新版 `3056feb7…` binary、单题自有 API / 4GiB / 2CPU、不刷新原生材料、不改应用或模型。已核 Docker `/workspace` 挂载与两个 run 路径一致，记录 pre-stop identity 后，只停止 `arcbench-local-f495d20d0a75`、`arcbench-local-cd5c76728316`。原两暂停 I10 和官网任务均未触碰。
+
+完整 template 直接流式归档至 Mac `runs/iteration11/20260930-completed-turn-resume/{github,sheet}/source/template.tar`；保留未提交代码、Git、SQLite/WAL、native、physical、权限与链接。停止前/后的 run 和容器身份另存于同名 WSL 新目录的 source。当前 WSL 仅余约 5GiB；主线已授权在归档可读取并确认含 template/DB/native/Git 后，仅删除两个停止 run 的 `workspace/observed-agent` 与 `workspace/official-generation/submission` 这两类可重建载荷，以及已封包 workspace.zip 中间材料；原位 template/DB/native/Git 保留。不把人工停止后的 failed 状态当应用交付失败或评分。
+
+
+### 停止现场迁离 WSL（已追加授权）
+
+两份完整归档已可读并核对 DB/native/Git；新双 run 空间不足，主线允许将**这两份停止现场**从 WSL 迁离，Mac 唯一归档永久保留，原暂停 I10 不动。逐项映射、完整 SHA 和恢复命令保存在 `runs/iteration11/20260930-completed-turn-resume/migration-record.json`。恢复用 `tar -xpf <archive> -C <new-workspace-parent>`，保留 template 根路径。
+
+- github：`/home/yyh/Development/factory26/runs/iteration11/20260929-cold-resume/generation/runs/pi-braid-i11--hackathon--github-f402061b5bc88f/workspace/official-generation/template` → `/Volumes/WorkSSD/Development/factory26/runs/iteration11/20260930-completed-turn-resume/github/source/template.tar`；SHA256 `7754fff84824fc9b27bb3f2180de8a36ce98135f0f3db6351dd264e0f085cd92`。
+
+- sheet：`/home/yyh/Development/factory26/runs/iteration11/20260930-sheet/generation/runs/pi-braid-i11--hackathon--sheet-db75cf2c3b82be/workspace/official-generation/template` → `/Volumes/WorkSSD/Development/factory26/runs/iteration11/20260930-completed-turn-resume/sheet/source/template.tar`；SHA256 `ed9165029deeade35822b231b65e2ebd2a0d005ff5e2025c01e35786b2897e92`。
+
+
+### 本次 GitHub 接续结果：失败，未重试
+
+新 run `pi-braid-i11--hackathon--github-5c52a331ef0d5c`，容器 `arcbench-local-4811f5cd77f2`；恢复包 SHA256 `0b16156fdfc751dc359786dc76c742c372cd290bf65498ea9f72b3b903162c43`，workspace ZIP SHA256 `e435778486b78612e0fd8a54c44485cbff39c8f1a66588475739c52b97aba8a1`，binary `3056feb7…`，refresh=false。01:31:37 UTC 开始 Braid。
+
+01:32:15–20 UTC 原三个 reset 均产生新 physical 后再次 blocked：root `01a0eff0-68b2-7483-9573-6ac04329241f`，PR #22 `01a0eff0-5c87-7403-a003-0720f558a73a`，Issue #10 `01a0eff0-5a4c-77b0-a7a3-b398dc082731`，全部 failed、无 native identity；原错仍为 `Pi new_session RPC failed: provider request pi_rpc timed out`。筛选遗漏已在真实调用中补齐，但本地 Pi 初始化超时并未解决，不能宣布恢复成功。没有新 assistant 响应，也没有交付。
+
+原始 recovery-braid.log、只读 SQLite online backup 和三个 physical 的 session/context/instructions 已保存于 Mac 与 WSL `runs/iteration11/20260930-completed-turn-resume/github/evidence/first-resume-failure/`。按本次每题一次边界，不重启、不调大超时、不改 live DB。仅删除已完成复制用途的此新 run `workspace/observed-agent` 重复载荷以为 Sheet 留空间，运行中 `official-generation/submission` 和 `template` 保留。
+
+
+## 2026-09-30 10:03 CST 原位修复实际验证
+
+新 attempt `pi-braid-i11--hackathon--github-0d0cb6e9982fc1` 经既有lab continuation入口启动，run.json=running，container=`f26-continue-0d0cb6e9982fc1`，4GiB/2CPU、自有供应商不变。generation.resource.json明确关联保留的 `github-5c52a331ef0d5c/workspace/official-generation`。只换Braid binary与启动诊断，不refresh材料/应用/模型，不覆盖旧失败结论。容器内SHA256实测为 `d76d65f133979a9f310b39e73fc254f727b564734ee1513c4febe6fbecb083be`。
+
+三项握手成功：PR22 122763ms、root 124012ms、Issue10 129190ms，reset均applied。新native ID依次为 `01a0f008-fda5-715f-89bb-205f06b895ae`、`01a0f008-fd9b-72c4-8a04-2d2d5a4e7033`、`01a0f008-fda6-704a-886c-255bfc94913f`。首次assistant分别09:59:43.022、09:59:44.216、09:59:44.629 CST；root首个bash实际读取评论331和332，工具结果包含原评论正文，DB中332对glm-1/deepseek-22均delivered。不是仅凭running状态判恢复。
+
+原始证据在Mac和WSL同一repo相对目录 `runs/iteration11/runtime-stalls/github/evidence/first-response/`：SQLite backup、三个原生JSONL、完整continuation日志、runtime-snapshot.json。10:02:57样本：cgroup oom/oom_kill=0；容器IO full avg60=11.09%，host24.73%，磁盘余10GiB。说明真实首启在资源压力下耗时较长；不将main分段timing相加，也不声称冗余new_session单独解释所有旧失败。
+
+后台watch已用持久observer代码启动，PID1698832；首条已通过resource契约找到retained DB，2 active turns/6 pending/无blocked owners，stderr为空。输出 `runs/iteration11/runtime-stalls/watches/github/watch.jsonl`，退出码另存exit-code。Sheet watcher PID1698834，首条1 active/21 pending/无blocked owner。运行继续，不再重启。Sheet保持3056旧binary，避免打断有效生成。

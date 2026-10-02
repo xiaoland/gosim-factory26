@@ -1,0 +1,83 @@
+ "jobId": "bg004", "outcome": "exit", "pbbCursor": 17, "sessionId": "01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e", "sessionKey": "7f802f5a469276dc9a2ced9e", "startedAt": "2026-09-29T06:47:54.639Z", "toolCallId": "call_00_mImEA7knsBXcHIHYes3t4371"}
+
+## S30:L149 2026-09-29T06:50:28.960Z message assistant
+[thinking]
+Another stale background result (bg004 = the environment-failure first round, already preserved and documented in #88).
+No action. Check quickly for merge/comments again? It's been ~1 minute. I'll check once and if nothing, end quietly with minimal words. Actually repeatedly checking produces little value; but each wake costs a turn. Let me check for new events and end.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L149:C1]
+[toolCall] bash call_00_heK1oH2cUlUwelPnPGQY0932
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git fetch origin --quiet && git log --oneline -1 origin/develop && braid issue view 3 --timeline 2>&1 | tail -1 && date -u"}
+
+## S30:L150 2026-09-29T06:50:28.989Z message toolResult
+toolResult bash False
+[text]
+Tue Sep 29 06:50:28 UTC 2026
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L150:C1]
+
+## S30:L151 2026-09-29T06:50:30.644Z message assistant
+[text]
+这也是滞后回执（`bg004`＝首轮环境性失败的复跑，其结果已按原样留档在 `/tmp/f26-lzle9d69/service-check-jawiqbcw` 并写入 #88），无需处理。
+无新事实：`develop` 仍 `15abbf6`，PR #8 head `a23af5a`，等待合入。所有验收证据与入口均已落盘于 Issue #3（#27/#33/#36/v1.3 + #88），不再重复发布进度。
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L151:C1]
+
+## S30:L152 2026-09-29T06:50:30.650Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L152:customType]
+[content]
+<pi_context source="pi-background-bash" kind="background_bash_result" id="bg005" tool_call_id="call_00_l0FcuK7OaSFo3bvZh4Kq4042" session_id="01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e" session_key="7f802f5a469276dc9a2ced9e" instance_id="pbb_16124_7cc75346" global_job_id="pbb_16124_7cc75346:bg005" pbb_cursor="22" started_at="2026-09-29T06:48:11.919Z" command="cd /tmp/f26-issue3-verify && (PATH=/usr/local/bin:$PATH python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd &quot;$PWD&quot; --context &quot;candidate=$(git rev-parse --short HEAD)&quot; --context &quot;deps=node_modules reused; PATH pinned to /usr/local/bin node v20.19.3 (ABI 115)&quot; --context &quot;verifier=deepseek-3 independent re-run for issue-3&quot; -- bash checks/run-e2e.sh 2>&1 | tail -45; echo &quot;WRAPPER_DONE&quot;)" outcome="exit" exit_code="0" duration_ms="61518">Evidence: /tmp/f26-lzle9d69/service-check-f9jl234d
+passed; logs and exit receipt: /tmp/f26-lzle9d69/service-check-f9jl234d
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L152:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L152:display]
+[details]
+{"body": "Evidence: /tmp/f26-lzle9d69/service-check-f9jl234d\npassed; logs and exit receipt: /tmp/f26-lzle9d69/service-check-f9jl234d\nWRAPPER_DONE", "command": "cd /tmp/f26-issue3-verify && (PATH=/usr/local/bin:$PATH python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd \"$PWD\" --context \"candidate=$(git rev-parse --short HEAD)\" --context \"deps=node_modules reused; PATH pinned to /usr/local/bin node v20.19.3 (ABI 115)\" --context \"verifier=deepseek-3 independent re-run for issue-3\" -- bash checks/run-e2e.sh 2>&1 | tail -45; echo \"WRAPPER_DONE\")", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1", "durationMs": 61518, "exitCode": 0, "globalJobId": "pbb_16124_7cc75346:bg005", "instanceId": "pbb_16124_7cc75346", "jobId": "bg005", "outcome": "exit", "pbbCursor": 22, "sessionId": "01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e", "sessionKey": "7f802f5a469276dc9a2ced9e", "startedAt": "2026-09-29T06:48:11.919Z", "toolCallId": "call_00_l0FcuK7OaSFo3bvZh4Kq4042"}
+
+## S30:L153 2026-09-29T06:50:32.865Z message assistant
+[thinking]
+This is the delayed receipt of bg005 (my successful e2e, already consumed and reported in #88). No action.
+I'll check for new events; if none, end. To reduce noise, keep it short.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L153:C1]
+[toolCall] bash call_00_ennZ918NmJybVs9iXAo16017
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git fetch origin --quiet && git log --oneline -1 origin/develop && braid issue view 3 --timeline 2>&1 | tail -1"}
+
+## S30:L154 2026-09-29T06:50:32.895Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L154:C1]
+
+## S30:L155 2026-09-29T06:50:34.087Z message assistant
+[text]
+`bg005` 的完成回执（`service-check-f9jl234d`，25 passed / exit 0）是其正常收尾，已作为 #88 的正式证据引用。
+仍无新事实：`develop` = `15abbf6`、PR #8 head = `a23af5a`。继续等待合入带来的下一步。
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L155:C1]
+
+## S30:L156 2026-09-29T06:50:34.088Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L156:customType]
+[content]
+<pi_context source="pi-background-bash" kind="background_bash_result" id="bg006" tool_call_id="call_00_GFWncW506qr2H8lQqaeW7799" session_id="01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e" session_key="7f802f5a469276dc9a2ced9e" instance_id="pbb_16124_7cc75346" global_job_id="pbb_16124_7cc75346:bg006" pbb_cursor="25" started_at="2026-09-29T06:48:19.321Z" command="sleep 60; pbb status bg005 2>&1 | grep -E '&quot;status&quot;|exit_code' | head -4; tail -c 600 /workspace/template/.factory26/20260929-042409-811f18d4/work/home/.pi/pbb/sessions/7f802f5a469276dc9a2ced9e/instances/pbb_16124_7cc75346/logs/bg005.log 2>/dev/null" outcome="exit" exit_code="0" duration_ms="60126"><pi_context source="pbb" kind="pbb.status" schema_version="1" session_id="01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e" session_key="7f802f5a469276dc9a2ced9e" instance_id="pbb_16124_7cc75346" lane="" scope="current-instance" job_id="bg005" owner_instance_id="pbb_16124_7cc75346" status="exited" exit_code="0" cursor="22">
+Evidence: /tmp/f26-lzle9d69/service-check-f9jl234d
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L156:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L156:display]
+[details]
+{"body": "<pi_context source=\"pbb\" kind=\"pbb.status\" schema_version=\"1\" session_id=\"01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e\" session_key=\"7f802f5a469276dc9a2ced9e\" instance_id=\"pbb_16124_7cc75346\" lane=\"\" scope=\"current-instance\" job_id=\"bg005\" owner_instance_id=\"pbb_16124_7cc75346\" status=\"exited\" exit_code=\"0\" cursor=\"22\">\n  \"status\": \"exited\",\nEvidence: /tmp/f26-lzle9d69/service-check-f9jl234d\npassed; logs and exit receipt: /tmp/f26-lzle9d69/service-check-f9jl234d\nWRAPPER_DONE", "command": "sleep 60; pbb status bg005 2>&1 | grep -E '\"status\"|exit_code' | head -4; tail -c 600 /workspace/template/.factory26/20260929-042409-811f18d4/work/home/.pi/pbb/sessions/7f802f5a469276dc9a2ced9e/instances/pbb_16124_7cc75346/logs/bg005.log 2>/dev/null", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1", "durationMs": 60126, "exitCode": 0, "globalJobId": "pbb_16124_7cc75346:bg006", "instanceId": "pbb_16124_7cc75346", "jobId": "bg006", "outcome": "exit", "pbbCursor": 25, "sessionId": "01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e", "sessionKey": "7f802f5a469276dc9a2ced9e", "startedAt": "2026-09-29T06:48:19.321Z", "toolCallId": "call_00_GFWncW506qr2H8lQqaeW7799"}
+
+## S30:L157 2026-09-29T06:50:36.111Z message assistant
+[thinking]
+Stale bg006 (the sleep poll). No action. Check for new events once more, then end.
+Time now ~06:51. Let me check whether root merged.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L157:C1]
+[toolCall] bash call_00_MyzjlIiFAt54pvSPfTVd4354
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L157:C2]
+
+## S30:L158 2026-09-29T06:50:36.140Z message toolResult
+toolResult bash False
+[text]
+Tue Sep 29 06:50:36 UTC 2026
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S30:L158:C1]
+
+## S30:L159 2026-09-29T06:50:37.396Z message assistant
+[text]
+滞后回执（`bg006` 只是先前 `sleep` 轮询），无需处理。无新事实：`develop` 仍 `15abbf6`，PR #8 head `a23af5a`，等待合入。
+

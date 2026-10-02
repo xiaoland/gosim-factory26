@@ -1,0 +1,41 @@
+[
+  {
+    "turn_id": "01a0ec10-4d6e-7cd0-98ea-2b371d857fd2",
+    "start": "2026-09-29T07:28:06.678243451Z",
+    "end": "2026-09-29T07:29:47.961528042Z",
+    "seconds": 101.283285,
+    "responses": 23,
+    "usage": {
+      "input": 62214,
+      "cacheRead": 1364096,
+      "output": 15731,
+      "reasoning": 12407
+    }
+  },
+  {
+    "turn_id": "01a0ec13-ad10-7620-b880-808eaf10beb7",
+    "start": "2026-09-29T07:31:47.987410929Z",
+    "end": "2026-09-29T07:32:28.369132201Z",
+    "seconds": 40.381722,
+    "responses": 8,
+    "usage": {
+      "input": 43878,
+      "cacheRead": 318592,
+      "output": 5919,
+      "reasoning": 4089
+    }
+  },
+  {
+    "turn_id": "01a0ec15-1eed-7c31-b79a-9825f5691af0",
+    "start": "2026-09-29T07:33:22.808651373Z",
+    "end": "2026-09-29T07:33:40.272939358Z",
+    "seconds": 17.464288,
+    "responses": 4,
+    "usage": {
+      "input": 7737,
+      "cacheRead": 259328,
+      "output": 1756,
+      "reasoning": 591
+    }
+  }
+]

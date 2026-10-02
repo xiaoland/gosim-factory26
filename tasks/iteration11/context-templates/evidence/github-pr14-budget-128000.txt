@@ -1,0 +1,205 @@
+# PR 14 - REQ-2-2-3 Access denied 会话态呈现 + docs/e2e 补登（小 PR） - MERGED - @deepseek-8
+
+Branch: access-denied → develop
+Issues: Issue 1, Issue 4
+
+## Description
+
+```
+## 任务：REQ-2-2-3 "Access denied" 行为落地（独立小 PR）
+
+**来源裁决**：issue #4 评论 #73（advisor 审查后采纳方案 C）；背景见本 Issue（#1）thread 61 评论 #74、PR #11 评论 #76/#78/#80。
+
+### 范围（base `develop` @ `53532a0`，含已合入的 M1/PR #12 + M3/PR #11）
+
+1. **前端 RepositoryMissing 会话态区分**（`frontend/src` 中 M3 创建的页面文件）：
+   - 访客（后端会话未解析为登录）：h1 "Not found" + Sign in 链接（现状不变）；
+   - 已登录（后端会话解析为准；session 过期/无效 cookie 按访客态渲染）：h1 "Access denied"（与 notFound 同 role/level）；
+   - gate 必须在会话 loading 解析完成后渲染，避免闪现；同一会话态内不存在与无权限仓库显示同一文案（措辞纪律：只写"每会话态内文案一致"，不写"API 无存在性泄露"——写路径对登录用户已 403，读路径统一 404）。
+2. **copy 常量**：`copy.ts` 增 `errors.accessDenied = 'Access denied'`，`messages.js` 镜像（§9.4 契约）。注意：M2（PR #13）计划同增此常量，本 PR 先合入后 #13 rebase 消费即可，不产生冲突面问题。
+3. **docs 三处**：`docs/architecture.md` §9 修订记录追加本裁决 + §7.1 注记（会话态语义）；`docs/acceptance-plan.md` 补 REQ-2-2-3 登记及登录态 Access denied e2e 判据（advisor 核实该硬断言此前不在验收计划内，属缺口）；`docs/product-plan.md` 文案契约补 `errors.accessDenied`。
+4. **e2e 增量**：M3 侧补一条登录态 Access denied 断言（登录 context 访问不可见私有仓库 → `getByRole('heading', { level: 1, name: copy.errors.accessDenied })`）；访客侧既有 5 处 notFound 断言不变。
+5. **packet 刷新**：`docs/task-packets/m3-pr-11.md` 的 "Current truth / 证据" 段按已合入事实刷新（PR #11 评论 #80 §3 交代的陈旧点，在本 PR 内一并处理）。
+
+### 约束
+
+- **API 零改动**：不可见仓库一律 404 的防枚举语义不变（M3 模块契约，issue #5 评论 #20 §1）。
+- 可访问仓库内未知 branch/path 仍走 `pathNotFound`，不经 RepositoryMissing，不受影响。
+- **顺序约束：本 PR 合入 develop 必须先于 M2 的 PR #13 合入**（#13 的 REQ-2-2-3 e2e 依赖本行为，否则 #13 合入即红）。
+
+### 验收
+
+- Vitest + 全量 Playwright 通过（新增断言包含登录态 Access denied）；`pnpm typecheck` exit 0；`bash checks/platform-path.sh` exit 0（`PATH=/usr/local/bin:$PATH`，临时库、runner 分配端口，不占 3000）。
+- 结果报本 PR；合入前提由根负责人（@glm-1）核实后执行。
+```
+
+## Discussion
+
+### Comment 86 - @deepseek-8
+
+```
+## PR #14 候选就绪，报验通过，请 @glm-1 做合入核实（@deepseek-8）
+
+按 PR 正文/report 范围完成全部五项，pushed head = **`9bedf84`**（`origin/access-denied`，base `develop` = `53532a0`）。
+
+### 实现（对应裁决 issue #4 评论 #73「方案 C」）
+- `frontend/src/features/repo/RepositoryMissing.tsx`：会话解析完成前不渲染 h1（避免闪现）；访客 → h1 `Not found` + Sign in 入口；
+  已登录 → h1 `Access denied`，无 Sign in 入口。文案主体与 Home 链接两态一致，**同一会话态内不存在仓库与无权限仓库文本完全相同**。
+- `copy.ts` 增 `errors.accessDenied = 'Access denied'`（§9.4），`backend/src/contracts/messages.js` 增 `ACCESS_DENIED` 镜像（copy-contract 测试覆盖）。
+- **API 零改动**：`/api/repos/:owner/:name` 对不可见仓库仍 404（新 e2e 对登录态显式断言 404）；可访问仓库内未知 branch/path 仍走 `pathNotFound`。
+- docs：`architecture.md` §7.1 注记 + §9.14 修订条目；`acceptance-plan.md` 新增「跨模块判据登记」并补高风险名称；`product-plan.md` §3.6 文案契约。
+- e2e：`e2e/repos.spec.ts` 新增 describe `REQ-2-2-3 ungranted private repository for a signed-in viewer`（访客 `Not found` 对照 → 以 `carol-writer`（seed 中对该私有仓库无任何直接/团队授权，docs/seed-data.md）登录 → `Access denied`、无内容、无 Sign in、刷新保持）。
+- packet：`docs/task-packets/m3-pr-11.md` 的 "Current truth / 证据" 段已按合入事实刷新（`53532a0` / tree `5319a2b8`、`#79` 确认、`#72/#75` 两份复跑），并加「PR #14 增量」段。
+
+### 证据（均对应 `9bedf84`，`PATH=/usr/local/bin:$PATH` → node v20.19.3 / npm 10.8.2）
+
+| 检查 | 结果 |
+|---|---|
+| `pnpm typecheck` | exit 0 |
+| backend Vitest | **76/76**（7 文件；含 copy-contract 对新增常量的镜像校验） |
+| 全量 Playwright（`pnpm e2e`，工作区） | **34/34**（新增第 23 条 REQ-2-2-3 通过；既有 5 处访客 `notFound` 断言不变） |
+| `bash checks/platform-path.sh`（`git archive 9bedf84` 干净副本） | **exit 0**（root npm 3 包；frontend `npm install` 203 包 + `vite build`；backend `npm install` 154 包；`HOST`/`PORT` 注入 `npm run start` 于 `127.0.0.1:45403`；Playwright 34/34） |
+
+平台副本产物：`dist/assets/index-CHiIpO-m.js` / `index-CpsJ-Upb.css`（源变更导致 JS hash 相对 PR #11 更新）。临时库/runner 分配端口，未占 3000；无 core dump 提交。
+
+### 请求
+- @glm-1：按 `--match-head-commit 9bedf84` 核实并合入 develop；**顺序约束不变：本 PR 先于 M2 的 PR #13 合入**。
+- 复现：`git fetch origin && git checkout 9bedf84` → `PATH=/usr/local/bin:$PATH pnpm install && pnpm test && pnpm e2e`，或 `bash checks/platform-path.sh`。
+- 我这边无待办；合并后 M3/REQ-2-2-3 的行为即可被 #13 消费。
+```
+
+#### Comment 101 - @deepseek-8
+
+```
+复验回执（本会话在冻结 head 9bedf84 独立复跑）：pnpm test exit 0（Vitest 76/76 + typecheck）；pnpm e2e exit 0，34/34（含 REQ-2-2-3）；merge-tree(origin/develop, 9bedf84) exit 0 且 develop 仍为 53532a0。合并前提不变：--match-head-commit 9bedf84，先于 #13。
+```
+
+#### Comment 102 - @deepseek-8
+
+```
+补充冻结声明：我**冻结 head 于 `9bedf84`，不再向 `origin/access-denied` push**（包括 docs/packet 修订），以保证你的 `--match-head-commit 9bedf84` 与 #86/#101 的复跑证据继续有效。你独立复跑若发现任何问题，请在 thread 86 指出，我按结论处理；否则本 PR 交给你按顺序（先于 #13）合入。
+```
+
+#### Comment 105 - @deepseek-8
+
+```
+## 合入确认，本 PR 闭环（@deepseek-8）
+
+**PR #14 已合入 `develop`：merge `d70e6ac`，head 匹配 `9bedf84`。** 合入后核实：`git diff origin/access-denied origin/develop` 为空（未引入 `9bedf84` 之外的内容变更，故 #86/#101 证据链对当前 develop 继续有效）；`copy.ts` / `messages.js` 常量、`RepositoryMissing.tsx` 会话态 gate、`e2e/repos.spec.ts:247` 的 REQ-2-2-3 断言、docs §7.1/§9.14 与 acceptance-plan 登记均在 `origin/develop`。
+
+消费侧已交接：issue #4 评论 #104 已通知 @glm-7 按 #88 在 PR #13 rebase 中消费（丢弃重复常量键），顺序前提（#14 先于 #13）已满足。
+
+我这边无待办。**本 thread 保留为 PR #14 的报验/合入证据入口**（根 Issue 正文即引用评论 #86），故不折叠；有新的实现问题仍可在此回复。
+```
+
+### Comment 106 - @glm-1
+
+```
+## 已合入（@glm-1，回复 #86）
+
+PR #14 已合入 develop，merge commit **`d70e6ac`**（`--match-head-commit 9bedf84`）。
+
+**根侧合入核实依据**：
+1. diff 审查：五项范围（RepositoryMissing 会话态区分 / copy 常量 / docs 三处 / 登录态 e2e / m3-pr-11 packet 刷新）全部对齐裁决 issue #4 评论 #73；API 零改动确认（不可见仓库仍 404）。
+2. e2e 前提核实：`carol-writer` 在 seed 中对 `acme-demo/org-private` 无任何直接/团队授权（`seed/accounts.js` + `seed-data.md`），断言前提成立。
+3. **独立复跑 PASS**（干净 `git archive 9bedf84` 副本，`PATH=/usr/local/bin:$PATH` → node v20.19.3）：`bash checks/platform-path.sh` **exit 0**——frontend npm install 203 包 + vite build、backend npm install 154 包、`HOST`/`PORT` 注入启动、全量 Playwright **34/34**（含新增 REQ-2-2-3 两会话态断言）。与你 #86 的报告互证。
+
+顺序约束已解除：develop 现含 REQ-2-2-3 行为，PR #13（M2）可 rebase/整合消费。感谢交付质量，本 PR 闭环。
+```
+
+## Associated Issues
+
+### Issue 1 - 任务 - OPEN - @glm-1
+
+#### Description
+
+```
+issue #1: 任务
+state: OPEN
+assignee: @glm-1
+
+## 当前任务说明（task packet，随时更新）
+
+需求来源：`/workspace/template/.factory26/20260929-042409-1202e245/input/`（requirements.yaml 34 条原子需求 + reference/ 27 张截图）。
+交付：满足全部需求的 Web 应用（frontend/ + backend/，平台 npm 安装/构建/启动兼容），经 develop → main 整合 PR 交付。
+
+## 权威入口
+- 方案与契约（develop 分支 docs/）：product-plan、architecture（§9 修订记录随裁决增长，与实现一致）、seed-data、acceptance-plan、ui-reference-notes
+- 决定记录与依赖图：本 Issue 评论 #1（现行有效）；契约增量裁决（6 项全部采纳）见 thread 1（评论 #7 请求、#8 裁决）；M3 期契约裁决见 thread 43；Access denied 裁决见 issue #4 评论 #73（PR #14 落地）；M4a branches 归属确认见 issue #6 thread 92（根回复 #96）；Issue 元数据/关闭重开角色集合裁决见 thread 112（评论 #112 请求、#118 裁决，docs §4/§9.15 已落地 `f6e326c`）；PR #16 合并归属确认见 PR #16 thread 91（评论 #127 请求、#128 确认：Issue #6 负责人验收后合并，根保留最终整合）
+- 任务包：PR #2 分支 docs/task-packets/foundation-pr-2.md（基础 PR，其 "Next action" 一节已被合入事实取代，其余有效）；各子 Issue 正文即其任务入口；各 PR packet 见对应分支 docs/task-packets/
+- 共享仓库：origin develop（工作基线）、main（最终交付）
+
+## 当前状态（2026-09-29T08:2xZ 核实；develop head `f6e326c`）
+- **PR #2 基础已合入 develop**（merge `c338578`）；批次 1 已全部合入：#3 M1（PR #12，`a619edd`）、#5 M3（PR #11，merge `53532a0`），M3 闭环；PR #14 已合入（merge `d70e6ac`）。
+- **#4 M2 候选 ready**：PR #13 head `d62907d`（证据对应代码 `074f5b9`，其后仅 packet docs），报验见 PR #13 评论 #113 / issue #4 评论 #114（Vitest 95/95、Playwright 51/51、platform-path.sh exit 0）；根侧独立验证（detached `d62907d`：platform-path.sh + backend Vitest，08:03Z 于本工作区重启）运行中，通过后由根合并（`--match-head-commit d62907d`）。
+- **#8 M5 证据齐备但锚点待重锚**：`bab2b11` 上 platform-path.sh **exit 0 / 58 passed** + Vitest 103 + Playwright 58（PR #15 评论 #129、issue #8 评论 #130），但 head 其后前移到 **`6f272e7`**（docs-only packet，07:56）——按 issue #8 评论 #133 更正，`bab2b11` 证据不对应当前 head。@deepseek-11 已被请在 PR #15 thread 115（评论 #132）于 `6f272e7` 重跑 platform-path 并确认不再前移；**根在重锚完成前不合并 #15、不启动 develop → main 整合**（issue #8 评论 #134）。合并顺序在 #13 之后（M5 两条待复验前提依赖 M2：Triage/Maintain 浏览器层场景、acme-demo/* 组织仓库场景），`--match-head-commit` 以重锚后实际验证 head 为准。
+- **#6 M4a 候选 ready，待整合**：PR #16 实现完成 head `24a6ed7`（实现 `9242b6f` + packet 证据；报验 PR #16 评论 #122、验收交接 issue #6 评论 #123；Vitest 91/91、e2e 46/46、platform-path exit 0）。合入前缺口（PR #16 thread 91 #124/#126/#127 三方一致）：① merge origin/develop（≥ `f6e326c`，分支仍基于 `53532a0`，预期冲突面 = PR #14 改动文件）；② M4a §9 条目按「后合入者让号」取当时最小空闲号（现为 **§9.16**，预留的 §9.15 已被根裁决占用）并同步 packet/正文 3 处引用；③ 并入 issue #6 #125 的必测缺口（私有仓库短 hash 直开 commit diff 路由无泄露用例）。**合并归属已确认（#128）**：@deepseek-9 在新 head 完成验收后合并并关闭 Issue #6；根对 `9242b6f` 的独立平台验证作佐证（运行中）。#9/#7 的消费登记见 issue #9 评论 #93、issue #7 评论 #94。
+- #7/#9/#10 未指派，按依赖图等待触发。
+
+## 负责人
+- 根统筹与最终整合：@glm-1；基础 PR：@deepseek-2（已闭环）；#3 → deepseek-3（PR #12，已合入）；#5 → glm-4（PR #11，已合入）；Access denied 小 PR → deepseek-8（PR #14，已合入）；#4 → glm-7（PR #13 候选 ready）；#6 → deepseek-9（设计 + 验收与 PR #16 合并）+ glm-12（PR #16 实施）；#8 → glm-10（设计）+ deepseek-11（PR #15 证据齐备）；#7/#9/#10 待指派。
+
+## 跨模块前提（下游任务包发布时对齐）
+1. **D3 编号序列**（issue #8 评论 #89）：issues 与 PR 编号**不共享序列**（各表内 MAX+1）；M6a（#9）任务包发布时对齐，若发现必须共享序列的需求依据先回 issue #8 thread 85 裁决。
+2. **branches 端点唯一**（issue #6 thread 92 根确认 #96）：`GET /branches` + 最小 combobox `Branch` 归 M4a；#7 扩展 REQ-4-3-1 不得另起第二套端点；替换控件须保持 REQ-4-1 THEN2 可观察，断言变更按契约纪律同步。
+3. **seed 证人钉住**：`main-only.md` 是 REQ-4-1 THEN2 唯一种子证人，#9 的 PR 塑形不得移除（issue #6 评论 #92）。
+4. **copy 键不重复定义**：`errors.accessDenied` 由 PR #14 引入，#13/#15 已消费（PR #14 评论 #87）。
+5. **Issue 元数据谓词**（thread 112/#118，docs §4/§9.15）：指派/标签/里程碑/关闭重开 Issue 用显式集合 `{triage, maintain, admin}`（共享谓词 `permissions.canManageIssueMetadata`/`requireRoleIn`，禁止 roleAtLeast(role,'triage')）；M6a 的 **PR 标签/里程碑复用同一谓词**（REQ-5-3-3 覆盖 PR），**PR 关闭/重开按 REQ-6-6 另立集合** `{PR author ∪ maintain ∪ admin ∪ 组织 Owner}`；D9「可被指派 = ≥ triage」不变。
+
+## 未决问题
+1. Read/Triage 的 UI 可见性个别裁决点 —— 由模块负责人在子 Issue 评论登记后实现（#5 已闭环 3 条；#3 的 D1/D2/D3 条件性裁定保留；#8 的 D1–D9 已含 advisor 复核）。
+2. 契约变更纪律：实施中发现 docs/ 契约需变更 → 先在对应 PR/子 Issue 提出，根 Issue 决定后更新文档再合入。
+
+已解决：~~验收是否重放 seed~~（seed 默认随启动、幂等）；~~契约增量裁决~~（6 项采纳）；~~M3 登录态依赖 M1~~；~~§7 访客搜索 / contents 契约~~（issue #5 评论 #42）；~~Access denied vs 防枚举 404~~（issue #4 评论 #73，PR #14 落地）；~~#4 seed 命名~~（评论 #73 §2）；~~PR #11 合入前提~~（`53532a0`）；~~M4a branches 归属~~（thread 92 #96）；~~Issue 元数据 triage+ 速记~~（thread 112/#118，§9.15）；~~PR #16 合并归属~~（thread 91 #127/#128，deepseek-9 验收后合并）。
+
+## 下一步
+1. PR #13 根侧验证（运行中）通过后合并（`--match-head-commit d62907d`），随后组织 M5 待复验前提（Triage/Maintain 浏览器层、组织仓库场景）复验。
+2. PR #15：等 @deepseek-11 在 `6f272e7` 完成重锚（platform-path 重跑 + head 稳定确认，PR #15 thread 115 #132）并在 issue #8 thread 85 最终交接后，在 #13 之后合并（`--match-head-commit` 取实际验证 head）。
+3. PR #16（M4a）：@glm-12 完成 develop 整合 + §9.16 让号 + #125 用例后报新 head；@deepseek-9 验收后合并并关闭 #6；根侧佐证结果回填 PR #16 thread 91。
+4. 批次 3：#7（← #6）、#9（← #6，消费 §7.2 compare/diff 契约 + §9.15 谓词）；批次 4：#10（← #9）。
+5. 全部业务模块合入后：创建 develop → main 整合 PR，在最终候选上执行全量 E2E 与平台启动验收，交付并用中文说明结果。
+
+sub-issue: #3 [CLOSED] M1 身份与访问：注册/登录/找回密码/登出/改密码（REQ-1）
+sub-issue: #4 [OPEN] M2 组织与治理：组织/团队/成员/仓库授权（REQ-2）
+sub-issue: #5 [CLOSED] M3 仓库资产：搜索/创建/fork/克隆值/概览/可见性（REQ-3）
+sub-issue: #6 [OPEN] M4a 内容模型与代码浏览：文件/历史/diff（REQ-4-1、4-2-1、4-2-2）
+sub-issue: #7 [OPEN] M4b 分支、代码搜索与 Web 编辑（REQ-4-2-3、4-3-*、4-4）
+sub-issue: #8 [OPEN] M5 Issue 管理：列表/详情/创建/编辑/评论/元数据/关闭（REQ-5）
+sub-issue: #9 [OPEN] M6a 分支保护、Checks 与 PR 生命周期（REQ-6-1、6-2-*、6-3-1/2）
+sub-issue: #10 [OPEN] M6b 评审、行内评论与合并门控（REQ-6-3-3/4、6-4、6-5、6-6）
+PR: #2 [MERGED] 基础：共享架构、脚手架与开发反馈设施
+PR: #14 [MERGED] REQ-2-2-3 Access denied 会话态呈现 + docs/e2e 补登（小 PR）
+```
+
+### Issue 4 - M2 组织与治理：组织/团队/成员/仓库授权（REQ-2） - OPEN - @glm-7
+
+#### Description
+
+```
+## 需求来源（权威）
+需求包：`/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml`
+原子需求：REQ-2-1-1（浏览组织仓库）、REQ-2-1-2（创建组织）、REQ-2-2-1（创建团队）、REQ-2-2-2（团队成员与层级）、REQ-2-2-3（直接添加组织成员）、REQ-2-2-4（移除组织成员）、REQ-2-3（按人/团队授予仓库角色）。
+参考截图：github-organization-repositories.png。
+
+## 共享决定（必须遵循）
+docs/architecture.md（权限模型 §4：org Owner→Admin、直接/团队授权取最高、团队层级不传播；§9 测试隔离）、docs/product-plan.md §3、docs/seed-data.md、docs/ui-reference-notes.md。
+UI 权限档次按各需求原文（如非 Owner 看不到 "Add branch protection rule" 类比：本模块为成员菜单/Remove 控件缺席而非禁用）。如需求未写明的 UI 可见性裁决点，在本 Issue 评论登记决定后实现。
+
+## 交付
+1. 组织页：导航链接 "Repositories"（tab 语义）、过滤框 "Find a repository"（as-you-type）、结果仅含当前用户可见仓库（名称/描述/可见性/更新时间），访客不可见私有仓库；点击打开 owner/repo 概览（与 M3 仓库页衔接）。
+2. 创建组织：账户菜单 "Your organizations" → "New organization"；字段 "Organization name"/"Display name"、按钮 "Create organization"；规则与错误（"Organization name already exists"/"Organization name format is invalid"/"Display name is required"）；成功后创建者为 Owner+成员并跳转组织页。
+3. 团队：组织页 "Teams" → "New team"（字段 "Team name"、按钮 "Create team"，可选描述/父团队）；名称规则 1–50 小写/数字/连字符；错误 "Team name format is invalid"；团队页标题 "org/team"，Members/Settings 链接。
+4. 团队成员与层级：仅 org Owner；"Add member" 搜索添加组织成员、按钮 "Remove <username>" 立即移除；Settings 的 "Parent team"（native select，role combobox）+ "Save"；环检测错误 "Cyclic team hierarchy is not allowed"；拒绝后保持原父。
+5. 直接添加成员：组织 "People" 页 "Add member"（字段 "Username or email"、combobox "Role" 默认 Member、选项 Member/Owner、提交按钮 "Add member"）；成功立即显示、无 Pending；错误 "Account is already a member"/"Account not found"；失败保持表单打开可改。
+6. 移除成员：每成员按钮 "Member menu <username>" → menuitem "Remove from organization" → 确认 "Remove"；级联删除该组织内团队成员关系与直接仓库授权（不删账户/个人仓库/团队本身）；last Owner 不可移除；非 Owner 无该菜单控件。
+7. 仓库授权（REQ-2-3）：仓库 Settings → "Manage access" → "Add people or teams"（激活时隐藏触发按钮）；搜索框 "Search"、团队选项、combobox "Role"（含 Write）、按钮 "Add"；现有授权行有 "Role" select 与 "Save"；改角色替换唯一记录（Read/Write）；私有仓库访问 = Owner 或直接/团队授权。
+8. 后端模块 + Vitest（权限计算、层级环、级联删除、last Owner、授权唯一性）+ seed（Acme Demo、frontend-team、层级演示团队等，见 docs/seed-data.md）。
+
+## 前置
+M1（#身份与访问）已合入 develop；基础 PR #2 已合入。
+
+## 验收
+Playwright 覆盖 7 条需求场景；权限可见性按档次断言（控件缺席 + API 拒绝）；刷新持久化。
+```
+
+

@@ -1,0 +1,14 @@
+[
+  [
+    "evidence/native/243-2026-09-28T09-27-58-855Z_01a0e757-b087-73ae-a70c-29cf423fb9e8.jsonl:L4",
+    0,
+    "Issue/PR snapshot already read in items.md",
+    33831
+  ],
+  [
+    "evidence/native/243-2026-09-28T09-27-58-855Z_01a0e757-b087-73ae-a70c-29cf423fb9e8.jsonl:L28",
+    34634,
+    "工具将 Issue #3 全量评论再打印；内容与前次 items.md/本会话 L6 等精确重复，已读元数据首尾及后续代理提取；中部仅重复评论原文",
+    34634
+  ]
+]

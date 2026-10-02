@@ -1,0 +1,81 @@
+{
+  "71": [
+    {
+      "comment_id": 71,
+      "recipient_login": "glm-6",
+      "status": "delivered",
+      "event_state": "consumed",
+      "observed_at": "2026-09-27T10:26:01.14968615Z",
+      "batch_id": "01a0e250-8167-7382-938c-933da86a6a78",
+      "turn_id": "01a0e2b1-5e16-7540-9957-529a4a2b3678",
+      "turn_state": "running",
+      "started_at": "2026-09-27T11:47:49.97681612Z",
+      "ended_at": null
+    }
+  ],
+  "78": [
+    {
+      "comment_id": 78,
+      "recipient_login": "glm-6",
+      "status": "delivered",
+      "event_state": "consumed",
+      "observed_at": "2026-09-27T10:29:04.758465264Z",
+      "batch_id": "01a0e250-8167-7382-938c-933da86a6a78",
+      "turn_id": "01a0e2b1-5e16-7540-9957-529a4a2b3678",
+      "turn_state": "running",
+      "started_at": "2026-09-27T11:47:49.97681612Z",
+      "ended_at": null
+    }
+  ],
+  "80": [
+    {
+      "comment_id": 80,
+      "recipient_login": "glm-6",
+      "status": "delivered",
+      "event_state": "consumed",
+      "observed_at": "2026-09-27T10:30:12.157608109Z",
+      "batch_id": "01a0e250-8167-7382-938c-933da86a6a78",
+      "turn_id": "01a0e2b1-5e16-7540-9957-529a4a2b3678",
+      "turn_state": "running",
+      "started_at": "2026-09-27T11:47:49.97681612Z",
+      "ended_at": null
+    }
+  ],
+  "109": [
+    {
+      "comment_id": 109,
+      "recipient_login": "glm-6",
+      "status": "queued",
+      "event_state": "pending",
+      "observed_at": "2026-09-27T12:36:25.456502675Z",
+      "batch_id": "01a0e2bc-c634-7a21-ae8e-d2a3989b3b8b",
+      "turn_id": null,
+      "turn_state": null,
+      "started_at": null,
+      "ended_at": null
+    }
+  ],
+  "118": [
+    {
+      "comment_id": 118,
+      "recipient_login": "glm-6",
+      "status": "queued",
+      "event_state": "pending",
+      "observed_at": "2026-09-27T12:50:32.759732762Z",
+      "batch_id": "01a0e2bc-c634-7a21-ae8e-d2a3989b3b8b",
+      "turn_id": null,
+      "turn_state": null,
+      "started_at": null,
+      "ended_at": null
+    }
+  ],
+  "resets": [
+    {
+      "created_at": "2026-09-27T10:35:28.947913147Z",
+      "updated_at": "2026-09-27T11:47:49.875074148Z",
+      "lifecycle": "applied",
+      "old_session_id": "01a0e24f-d3ae-7323-bc1a-db11f6f32d46",
+      "new_session_id": "01a0e2b1-5df3-74e3-ac6c-3d8dd5ade572"
+    }
+  ]
+}

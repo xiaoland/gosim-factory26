@@ -1,0 +1,662 @@
+{
+  "snapshot_cutoff_utc": "2026-09-29T08:04:30Z–2026-09-29T08:04:36Z",
+  "method": "完整覆盖：原正文逐记录阅读；随后 supplement.py 以字段级 SHA-256 精确去重，分 60 段（35,000 字符）补读全部 thinking、message.details 与非 message 事件的实质内容，流总长 2,065,166 字符。无原始图像像素；仅文本占位。",
+  "boards": [
+    {
+      "view": "views/issue-6-board.txt",
+      "read": "full"
+    },
+    {
+      "view": "views/issue-8-board.txt",
+      "read": "full"
+    },
+    {
+      "view": "views/pr-15-board.txt",
+      "read": "full"
+    },
+    {
+      "view": "views/pr-16-board.txt",
+      "read": "full"
+    }
+  ],
+  "units": [
+    {
+      "owner": "issue:6",
+      "id": "01a0ebf1-0fc5-74b9-b3bc-46486e05cad7",
+      "kind": "subagent",
+      "view": "views/01a0ebf1-0fc5-74b9-b3bc-46486e05cad7.txt",
+      "records_expected": 35,
+      "read_ranges": [
+        [
+          1,
+          35
+        ]
+      ],
+      "truncation_followup": "全文逐段补读；同源代码/需求长输出分段显示，没有保留工具截断。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          35
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "01a0ebf1-0f39-7500-b696-15c60a58bfa2",
+      "kind": "subagent",
+      "view": "views/01a0ebf1-0f39-7500-b696-15c60a58bfa2.txt",
+      "records_expected": 10,
+      "read_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "truncation_followup": "全记录正文已逐段显示并审阅；图像 toolResult 只含 [image] 占位，截图像素未由本审查重复读取。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          10
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "2026-09-29T06-51-32-078Z_01a0ebee-d16e-72f4-80c5-d2fdd59e5e56",
+      "kind": "native",
+      "view": "views/2026-09-29T06-51-32-078Z_01a0ebee-d16e-72f4-80c5-d2fdd59e5e56.txt",
+      "records_expected": 163,
+      "read_ranges": [
+        [
+          1,
+          163
+        ]
+      ],
+      "truncation_followup": "按记录顺序分段显示并完整审阅 1–163；长记录 61/87/93/97/109/112/126/128/130 均单独补读；记录 27/29 与先前已全文读单元的原文精确重复。显示时仅遮盖测试口令与密钥形态子串；图像像素未在文本视图中提供。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          163
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a-history",
+      "kind": "history",
+      "view": "views/pi-deepseek-fast-01a0ebee-cd5f-7913-92c2-e908ddedc83a-history.txt",
+      "records_expected": 2,
+      "read_ranges": [
+        [
+          1,
+          2
+        ]
+      ],
+      "truncation_followup": "逐 record 阅读 1–2；原生内容与此前已读来源重复处引用原处。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          2
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "ad576d4a-8950-4c7a-937a-e415eb8ac32b_advisor_0_transcript",
+      "kind": "transcript",
+      "view": "views/ad576d4a-8950-4c7a-937a-e415eb8ac32b_advisor_0_transcript.txt",
+      "records_expected": 68,
+      "read_ranges": [
+        [
+          1,
+          68
+        ]
+      ],
+      "truncation_followup": "逐记录核对 1–68；实质内容均与已全文读的 advisor 子单元或 issue6 首会话精确相同，原处引用；record1 提示已由源视图遮盖，other 记录无文本。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          68
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "e9010e09-b0bd-4c8e-8917-bfb61e192d08_vision_0_transcript",
+      "kind": "transcript",
+      "view": "views/e9010e09-b0bd-4c8e-8917-bfb61e192d08_vision_0_transcript.txt",
+      "records_expected": 13,
+      "read_ranges": [
+        [
+          1,
+          13
+        ]
+      ],
+      "truncation_followup": "逐记录核对 1–13；实质文字与已全文读 vision 子单元精确相同；三个图像记录在文本快照仅有 image/png 占位，未提供像素，已记录缺口。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          13
+        ]
+      ]
+    },
+    {
+      "owner": "pr:15",
+      "id": "01a0ec02-f4eb-701b-b7f4-5a6f8c2f5675",
+      "kind": "subagent",
+      "view": "views/01a0ec02-f4eb-701b-b7f4-5a6f8c2f5675.txt",
+      "records_expected": 21,
+      "read_ranges": [
+        [
+          1,
+          21
+        ]
+      ],
+      "truncation_followup": "逐记录全文读 1–21；record10 原生 read 工具仅显示所请求的 requirements.yaml 分段并提示文件其余1024行未读，这是源命令范围，不是本快照截断；issue8 board 在对应全文视图已审阅。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          21
+        ]
+      ]
+    },
+    {
+      "owner": "pr:15",
+      "id": "01a0ec10-1d51-7722-8421-b88667844c0b",
+      "kind": "subagent",
+      "view": "views/01a0ec10-1d51-7722-8421-b88667844c0b.txt",
+      "records_expected": 80,
+      "read_ranges": [
+        [
+          1,
+          80
+        ]
+      ],
+      "truncation_followup": "逐记录全文读 1–80，含 requirements 提取、源码和测试长 toolResult、最终审计；record14 与已读 issue8 board 精确重复。图像仅在需求引用，原生本单元未给像素。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          80
+        ]
+      ]
+    },
+    {
+      "owner": "pr:15",
+      "id": "2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d",
+      "kind": "native",
+      "view": "views/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.txt",
+      "records_expected": 590,
+      "read_ranges": [
+        [
+          1,
+          590
+        ]
+      ],
+      "truncation_followup": "逐 record 阅读 1–590；长工具结果按有界段补读，精确重复处引用已读原处。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          590
+        ]
+      ]
+    },
+    {
+      "owner": "pr:15",
+      "id": "3114a207-27de-411d-adee-a30de1b6ddda_advisor_transcript",
+      "kind": "transcript",
+      "view": "views/3114a207-27de-411d-adee-a30de1b6ddda_advisor_transcript.txt",
+      "records_expected": 38,
+      "read_ranges": [
+        [
+          1,
+          38
+        ]
+      ],
+      "truncation_followup": "逐 record 全文核读；非空正文均由 read_unique.py 精确内容比对归于此前已读 subagent/native 原处，其余 wrapper 无正文。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          38
+        ]
+      ]
+    },
+    {
+      "owner": "pr:15",
+      "id": "fea4e493-37df-4d59-8db7-7bdd6e7593b5_explorer_transcript",
+      "kind": "transcript",
+      "view": "views/fea4e493-37df-4d59-8db7-7bdd6e7593b5_explorer_transcript.txt",
+      "records_expected": 169,
+      "read_ranges": [
+        [
+          1,
+          169
+        ]
+      ],
+      "truncation_followup": "逐 record 全文核读；record 17 原生查询返回 32,584 字符，已按 [0,18000)、[18000,26000)、[26000,32584) 补读；该原生工具正文末尾自带「… payload truncated」，超出原始回包部分不可恢复。其余非空正文精确内容重复于已读 subagent 原处。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          169
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "2026-09-29T07-07-02-031Z_01a0ebfd-020f-7636-8f79-e61e943fd61c",
+      "kind": "native",
+      "view": "views/2026-09-29T07-07-02-031Z_01a0ebfd-020f-7636-8f79-e61e943fd61c.txt",
+      "records_expected": 60,
+      "read_ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；本单元无额外输出截断。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          60
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "2026-09-29T07-13-13-379Z_01a0ec02-aca3-7482-b157-3c4a03a503b7",
+      "kind": "native",
+      "view": "views/2026-09-29T07-13-13-379Z_01a0ec02-aca3-7482-b157-3c4a03a503b7.txt",
+      "records_expected": 81,
+      "read_ranges": [
+        [
+          1,
+          81
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；本单元无额外输出截断。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          81
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "2026-09-29T07-23-06-680Z_01a0ec0b-ba38-7764-9c90-869300b89b24",
+      "kind": "native",
+      "view": "views/2026-09-29T07-23-06-680Z_01a0ec0b-ba38-7764-9c90-869300b89b24.txt",
+      "records_expected": 98,
+      "read_ranges": [
+        [
+          1,
+          98
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；原生 read 工具对 docs/architecture.md record 29 自身提示后续 76 行，但同单元其他读取和前序原处已覆盖相关契约；快照原生返回即此边界。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          98
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "2026-09-29T07-50-13-929Z_01a0ec24-8ea9-7279-8be3-77f23f528ffc",
+      "kind": "native",
+      "view": "views/2026-09-29T07-50-13-929Z_01a0ec24-8ea9-7279-8be3-77f23f528ffc.txt",
+      "records_expected": 72,
+      "read_ranges": [
+        [
+          1,
+          72
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；精确重复按原已读记录引用。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          72
+        ]
+      ]
+    },
+    {
+      "owner": "issue:6",
+      "id": "2026-09-29T07-55-32-732Z_01a0ec29-6bfc-7094-871c-2701a32e1609",
+      "kind": "native",
+      "view": "views/2026-09-29T07-55-32-732Z_01a0ec29-6bfc-7094-871c-2701a32e1609.txt",
+      "records_expected": 28,
+      "read_ranges": [
+        [
+          1,
+          28
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；精确重复按原已读记录引用。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          28
+        ]
+      ]
+    },
+    {
+      "owner": "issue:8",
+      "id": "01a0ebf2-864f-7546-93d1-b56815de471c",
+      "kind": "subagent",
+      "view": "views/01a0ebf2-864f-7546-93d1-b56815de471c.txt",
+      "records_expected": 29,
+      "read_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；图片在文本快照中为占位，未直接取得像素。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          29
+        ]
+      ]
+    },
+    {
+      "owner": "issue:8",
+      "id": "01a0ebf3-99bb-732e-b2b3-a5b67eb3912b",
+      "kind": "subagent",
+      "view": "views/01a0ebf3-99bb-732e-b2b3-a5b67eb3912b.txt",
+      "records_expected": 23,
+      "read_ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；精确重复按原已读记录引用。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          23
+        ]
+      ]
+    },
+    {
+      "owner": "issue:8",
+      "id": "2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668",
+      "kind": "native",
+      "view": "views/2026-09-29T06-51-32-373Z_01a0ebee-d295-71da-bcb3-f758d6d5f668.txt",
+      "records_expected": 69,
+      "read_ranges": [
+        [
+          1,
+          69
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；record 14 原始命令含 head 限制，记录的是原生输出截断。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          69
+        ]
+      ]
+    },
+    {
+      "owner": "issue:8",
+      "id": "304842eb-b9bc-4233-9ffe-ecc5658bdd1c_vision_transcript",
+      "kind": "transcript",
+      "view": "views/304842eb-b9bc-4233-9ffe-ecc5658bdd1c_vision_transcript.txt",
+      "records_expected": 60,
+      "read_ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；均为空协议记录或与此前已读记录精确重复；图片像素未在文本快照中提供。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          60
+        ]
+      ]
+    },
+    {
+      "owner": "issue:8",
+      "id": "5bef35e9-d190-49c1-8c3d-828671730a64_advisor_transcript",
+      "kind": "transcript",
+      "view": "views/5bef35e9-d190-49c1-8c3d-828671730a64_advisor_transcript.txt",
+      "records_expected": 42,
+      "read_ranges": [
+        [
+          1,
+          42
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；均为空协议记录或与此前已读记录精确重复。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          42
+        ]
+      ]
+    },
+    {
+      "owner": "issue:8",
+      "id": "2026-09-29T07-02-49-559Z_01a0ebf9-27d7-7345-87ae-adf290156e42",
+      "kind": "native",
+      "view": "views/2026-09-29T07-02-49-559Z_01a0ebf9-27d7-7345-87ae-adf290156e42.txt",
+      "records_expected": 44,
+      "read_ranges": [
+        [
+          1,
+          44
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；精确重复按原已读记录引用。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          44
+        ]
+      ]
+    },
+    {
+      "owner": "pr:16",
+      "id": "2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56",
+      "kind": "native",
+      "view": "views/2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56.txt",
+      "records_expected": 401,
+      "read_ranges": [
+        [
+          1,
+          401
+        ]
+      ],
+      "truncation_followup": "逐 record 全文阅读；精确重复按原已读记录引用。record 209 原生工具输出自身为 181 KB 截断，后续 record 210-213 补读相关失败上下文。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          401
+        ]
+      ]
+    },
+    {
+      "owner": "issue:8",
+      "id": "2026-09-29T07-32-42-527Z_01a0ec14-839f-70e5-b1af-f2f4f66eb784",
+      "kind": "native",
+      "view": "views/2026-09-29T07-32-42-527Z_01a0ec14-839f-70e5-b1af-f2f4f66eb784.txt",
+      "records_expected": 31,
+      "read_ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "truncation_followup": "逐 record 阅读；长 issue/PR 正文与板块原件重复处引用已读原处。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          31
+        ]
+      ]
+    },
+    {
+      "owner": "issue:8",
+      "id": "2026-09-29T07-39-33-487Z_01a0ec1a-c8ef-773c-9142-bc8b7dfcd29e",
+      "kind": "native",
+      "view": "views/2026-09-29T07-39-33-487Z_01a0ec1a-c8ef-773c-9142-bc8b7dfcd29e.txt",
+      "records_expected": 50,
+      "read_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "truncation_followup": "逐 record 阅读；长 issue/PR 正文与板块原件重复处引用已读原处。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "partial_reviewed_ranges": []
+    },
+    {
+      "owner": "issue:8",
+      "id": "2026-09-29T07-48-59-712Z_01a0ec23-6cc0-77b2-a072-8f96f93b3c25",
+      "kind": "native",
+      "view": "views/2026-09-29T07-48-59-712Z_01a0ec23-6cc0-77b2-a072-8f96f93b3c25.txt",
+      "records_expected": 65,
+      "read_ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "truncation_followup": "逐 record 阅读；长 issue/PR 正文与板块原件重复处引用已读原处。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "partial_reviewed_ranges": [
+        [
+          1,
+          65
+        ]
+      ]
+    },
+    {
+      "owner": "issue:8",
+      "id": "2026-09-29T08-03-42-940Z_01a0ec30-e6dc-7047-a9b3-f4f6ddabd2bd",
+      "kind": "native",
+      "view": "views/2026-09-29T08-03-42-940Z_01a0ec30-e6dc-7047-a9b3-f4f6ddabd2bd.txt",
+      "records_expected": 10,
+      "read_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "truncation_followup": "逐 record 阅读 1–10；长 issue/PR 正文与板块原件重复处引用已读原处。",
+      "missing": false,
+      "unread": null,
+      "record_index_scanned_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "partial_reviewed_ranges": [
+        [
+          1,
+          10
+        ]
+      ]
+    }
+  ],
+  "coverage_summary": {
+    "units_assigned": 27,
+    "units_fully_read": 27,
+    "records_assigned": 2352,
+    "characters_assigned": 8514623,
+    "boards_assigned": 4,
+    "boards_fully_read": 4,
+    "unread_units": [],
+    "missing_units": [],
+    "source_native_truncation": "unit10 record17 原始 toolResult 自带 payload truncated；unit22 record209 原始工具输出自身截断。"
+  },
+  "scope": "content, thinking, message.details, and substantive nonmessage events complete across assigned 27 units; mutable packaging metadata not read byte-for-byte",
+  "supplemental_read": {
+    "script": "supplement.py",
+    "stream_chars": 2065166,
+    "chunks_read": [
+      0,
+      59
+    ],
+    "char_range_read": [
+      0,
+      2065166
+    ],
+    "unread": null,
+    "exact_duplicate_rule": "same label family and unredacted SHA-256; earlier stream origin cited"
+  },
+  "limitations": [
+    "原生材料本身经 grep/head/tail 过滤的输出不可恢复",
+    "图像像素未包含于 views",
+    "不以未读的易变元数据字段 id/parentId/timestamp/ts/runId/cwd/version 作行为结论"
+  ]
+}

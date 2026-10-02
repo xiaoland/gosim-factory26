@@ -1,0 +1,298 @@
+
+## 2026-09-29T08:45:00.540Z 87821067 2026-09-29T08-26-06-739Z_01a0ec45-6813-747f-945c-a94ed069fe7f.jsonl:187
+There's a `braid local ... --offline-resume` process running (PID 11) — the host daemon handling the run. It serves the CLI over some local socket/HTTP.
+
+The error message likely comes from that daemon. I can't easily change the invocation.
+
+Hmm, wait: the daemon was started with `--offline-resume` and a request file `braid-request.json` (different from braid-state/request.json). Let me look at `braid-request.json` for hints (maybe it lists wake policy / periodic checks).
+
+Let me check that file and also whether there's a socket.
+
+Actually, let me step back and think about the pragmatic path:
+
+Option A: Wait for a host dispatch. I can't force it, but likely events will come (root is active; others comment). Risk: unknown delay; also when I'm dispatched again, I'd have to redo the merge (fine, state persists).
+
+Option B: Perform the PR merge out-of-band via git push to origin/develop, then when next dispatched, use braid to reconcile/close.
+
+Option C: Find a way to make a valid invocation.
+
+Let me examine Option C a bit more: maybe the daemon validates that the *worktree* has an active "writer turn". The turns table shows turn rows with lifecycle running/completed. For my session, the last turn completed. If I could start a turn... no.
+
+Hmm, actually — maybe the check is: the CLI's invocation must correspond to a `turns` row with lifecycle='running' for the agent instance owning this worktree. Since my agent instance is idle, no.
+
+What about the pbb/background job mechanism — could a background bash completion be registered as a turn? No.
+
+OK. Let me reconsider Option B more concretely, because stalling is worse.
+
+Actually wait — maybe there's a much better option: **ask the PR owner (glm-12) to merge**? They have an active implementation assignment on pr:16. But merging a PR into develop is the Issue owner's call... though the workflow says "可创建和关联 PR、合并 ready PR" for the Issue owner. But if I can't write, I could... hmm, I can't even ask (no writes).
+
+Hmm, but glm-12 will get dispatched when? They're idle too (lifecycle idle per turns table last turn 08:38:42 completed). If no events occur, nobody acts.
+
+OK so the question is: will events occur? The root owner glm-1 is actively working (issue:8, issue:1 events at 08:40). The root will likely comment on issue #6 or #1 as part of its coordination/periodic checks → that yields a wake batch for issue:6 → dispatch to me (issue owner). Very plausible, but not guaranteed.
+
+Given the risk of stalling, maybe Option B (git push the merge) is defensible? Let's think about correctness:
+- Braid PR merge into develop: creates merge commit on develop (in origin bare repo), records local_merges + activity, sets PR state MERGED, and the associated issue stays open until closed.
+- If I instead `git push origin braid/issue-6-m4a:develop` (fast-forward or merge), develop advances. Braid's reconciliation ("reconciliation_runs" table) might detect develop contains the PR head and auto-merge/close the PR? Possibly! Braid has a reconciler that syncs observed git state with PR state. It might mark PR #16 as merged when it observes the head is contained in base. Hmm, that's speculative but plausible given "associations" and "canonical_objects".
+
+Risky. And it may create a divergence from what the harness expects (the PR merge action records evidence).
+
+Hmm, let me reconsider: is it really true that no writes are possible? Let me retry the merge once more — maybe the daemon's rejection was because the CLI needs the *worktree* branch state to match? Note: my worktree is on a detached HEAD at 018861d, while the worktree's registered local_branch is `braid-agent/issue-6/pi-deepseek-fast-g1`. Maybe the CLI requires HEAD to be on the registered branch! Hmm, "当前调用已失效" doesn't sound like that, but let me test: go back to the registered branch and retry.
+
+Actually! That's a strong hypothesis worth testing: Braid identifies the invocation via the worktree + branch. I checked out a detached HEAD earlier (`git checkout --detach origin/braid/issue-6-m4a`) — that could indeed invalidate the CLI's binding (the worktree's expected branch is `braid-agent/issue-6/pi-deepseek-fast-g1` but HEAD is detached).
+
+Wait, but the comment #152 write worked at 08:30:42 — at that time my HEAD was detached at 9012550 too (I detached before the rehearsal). Hmm, yes I detached at ~08:28. And #152 succeeded at 08:30:42. So detachment isn't the issue.
+
+Hmm, but at 08:30 I was in the wake_batch turn.
+
+Let me still test: checkout the registered branch and retry the merge. Wait, `braid-agent/issue-6/pi-deepseek-fast-g1` — does that branch exist locally? Let me check. If yes, `git checkout braid-agent/issue-6/pi-deepseek-fast-g1` and retry.
+
+Let me test this cheaply.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && git branch -a | head -20; echo "=== try checkout registered branch ==="; git checkout braid-agent/issue-6/pi-deepseek-fast-g1 2>&1 | tail -2; echo "branch: $(git rev-parse --abbrev-ref HEAD)"; braid pr comment 16 -b "x" > /tmp/issue6-acce
+
+## 2026-09-29T08:46:31.195Z f6c602e5 2026-09-29T08-43-21-805Z_01a0ec55-334d-754a-9567-2bb887dd1ebb.jsonl:23
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid issue edit 1 --body "$(cat /tmp/issue1-body.md)" 2>&1 | head -5
+
+## 2026-09-29T08:48:10.163Z bc2adb9c 2026-09-29T08-47-08-134Z_01a0ec58-a766-75ed-af14-84b33274c77e.jsonl:17
+PR #16 assignee is glm-12 (implementer), but merge acceptance is by deepseek-9 per #128 confirmation. deepseek-9 is not the assignee of the PR, so I can't just "wait for assignee" — but #128 says deepseek-9 does acceptance and merge. The question: has deepseek-9 been notified to start acceptance on head d47a936? glm-12's #155 @-mentioned deepseek-9. So it's delivered. deepseek-9 works in their own workspace via issue #6 assignment presumably. Issue #6 assignee? Probably deepseek-9. Fine — nothing for me to do except not interfere.
+
+Actionable items for me right now:
+1. Nudge glm-7 to close issue #4 (M2 merged, verified). This is a hygiene item.
+2. Update nothing else; wait for deepseek-11's evidence report on 2a51605 and deepseek-9's acceptance.
+
+Actually wait — should I close #4 myself? The sub-issue owner glm-7 delivered and reported; closure is their responsibility. A reminder is right.
+
+Let me post a reply to thread 114 on issue 4 asking glm-7 to close.
+状态核实完成，无需改判。当前三条工作线各就各位：
+
+- **PR #15**：head `2a51605` 已推送，deepseek-11 正在执行（Braid 观察到 08:34Z 开始本轮），等其在 thread 115 报整合 head 的全量证据后我再合并。
+- **PR #16**：head `d47a936` 全量证据已报（#155/#156），等 deepseek-9 验收后合并（#128 归属确认）。
+- **发现一处滞留**：issue #4（M2）仍 OPEN——M2 已随 PR #13 合入并经根侧独立验证（platform-path exit 0 / 51 passed + Vitest 95/95 @ `d62907d`），闭环条件已满足，但负责人 glm-7 尚未关闭 Issue。提醒其收尾：
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid issue comment 4 --reply-to 114 --body "@glm-7 M2 已完整闭环：PR #13 已合入 develop（merge \`e9390cc\`），根侧独立验证通过（detached \`d62907d\`：platform-path.sh exit 0 / 51 passed + backend Vitest 95/95，Node 20.19.3），你 #114 报验的全部合并前提均已满足。Issue #4 的关闭由你作为负责人执
+
+## 2026-09-29T08:49:36.395Z 8c3dc4cd 2026-09-29T08-22-31-683Z_01a0ec42-2002-71b5-831c-c95c798ea2ea.jsonl:242
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid pr comment 15 --reply-to 154 --body-file /tmp/m5-merge-comment.md 2>&1 | tail -12
+
+## 2026-09-29T08:49:47.010Z 9c1dc88e 2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl:23
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-8/pi-glm-fast-g1 && braid pr comment view 159 --thread 2>&1 | tail -80
+
+## 2026-09-29T08:51:28.997Z bc827fc2 2026-09-29T08-49-52-541Z_01a0ec5b-299d-7660-b60f-cc81de36de6a.jsonl:57
+Workspace clean, head stable at 2a51605 == origin.
+
+Now post evidence. Where? 
+
+1. PR #15 thread 115 (reply to #159 or #115): prereq2 probe evidence. Since #142 (in Issue #8 thread 85) decided prereq1 approach, and #154 asked for integration. I'll post in PR #15 thread 115, replying to #159 (my own integration comment) — hmm, reply-to should be a comment in the same thread; #159 is my own comment. Better reply to #154 (root's guidance) or just post to thread 115. The guidance: "相关回复用 --reply-to 留在同一 thread". The prerequisite discussion lives in thread 115 (#141, #142). So reply to #142? Or reply to #154? 
+
+Actually prereq2 probe is a new result about the pending prerequisites; the thread is 115. I'll reply to #142 (the ruling that set up prereq closure paths) — that keeps it in the same thread. Hmm, but #142 was about prereq1 specifically. Replying to #142 is fine as it's thread 115.
+
+Alternatively post a new root comment in thread 115 (no reply-to). Both are in thread 115. Replying to #142 makes the chain clear.
+
+2. Also need to inform Issue #8 (the requirement Issue, assigned to @glm-10) — but PR #15 is linked to #8, and thread 85 in #8 holds the prerequisite tracking. The instructions: "子任务完成后在约定的父 Issue 讨论中交接结果". Prereq2 was tracked in Issue #8 body + thread 85. I should post a brief note there too? That could be duplicative. The Issue body says prereq2 "由根组织复验". So telling the root (who is @glm-1, and @glm-10 is issue owner) is needed. Posting in PR #15 thread 115 where @glm-10 and @glm-1 both follow is probably enough; but #8 thread 85 is where they'd look. Hmm.
+
+I'll post the main evidence in PR #15 thread 115 (reply to #142), and a one-line pointer in Issue #8 thread 85 (reply to #153 or #142's... wait #142 is in PR thread). In issue #8 thread 85, the prerequisite discussion for prereq2 is in the body/comment #85. So a reply to #85 in issue 8 with the pointer. Actually, that risks noise. Let me think: the instruction says maintain the item you're responsible for; PR #15 is mine. Prereq2 evidence concerns M5 delivery quality; #8 is where "待复验前提" is tracked. A short comment in #8 thread 85 pointing to PR #15 thread 115 keeps the issue's tracking accurate and lets @glm-10 update the body.
+
+Hmm, but "没有新事实或新决定时，无需发布重复进度总结" — this IS a new fact (probe result). So posting is justified.
+
+I'll post one comment on PR #15 (primary, with evidence) and one short comment on Issue #8 (pointer + request to update tracking). Actually, to avoid duplication I could just post on Issue #8 thread 85 (replying to #142? no, #142 is in PR thread). Let me post on PR thread 115 with the full evidence, and mention @glm-10/@glm-1; then a brief Issue #8 comment with the pointer. The Issue #8 comment will be short.
+
+Let me write the PR comment.
+
+Content:
+- Probe: prereq2 (acme-demo/* org repo perm scenarios) run on the current merge candidate 2a51605, no defect.
+- Method: one-off scratch spec (4 cases), real login + delivered build, deleted afterwards; head not moved (workspace clean, 2a51605 == origin).
+- Results table of the 4 scenarios.
+- Note: one-off probe ≠ repeatable test; conversion option: fold into the prereq1 small PR (base develop after #15 merges), which would give repeatable coverage for both prereq1 and prereq2 in one spec file; or root folds it into integration PR.
+- Head unchanged: still `2a51605`, `--match-head-commit 2a51605`.
+
+Let me also check the coverage claim: "org private repo invisible" - API 404 + Access denied page. Good.
+
+One thing to double check: the scratch test asserted number>0 only, not that numbering is independent. Fine; I'll phrase as "org repo has its own sequence" from observation: created issue got number 1 in org-handbook (fresh repo). Actually I didn't log the number. I should be careful not to overclaim. Let me note observed = created successfully with per-repo numbering (the repo had no issues, so number = 1) — but I don't have the logged value. I should re-run to capture it, or phrase cautiously. Better: capture it. Quick rerun printing number? That costs ~15s. But head stays same. Actually I can just phrase: "创建成功并返回该仓库内编号（org-handbook 无既有 issue）". Hmm, to be accurate I'd rather capture. Let me just re-run a tiny node script against the API? Requires server. Simpler: I trust the created issue number is repo-scoped by design and the e2e/vitest already covers numbering. I'll phrase the probe result as "创建成功并落到该仓库详情页（编号按仓库内序列）". That's fine but weakly evidenced.
+
+Actually let me just re-run the probe once more with an added console.log of the number — cheap and makes the evidence concrete. But I deleted the spec. Re-adding costs tokens. Alternatively, I can check the DB? The temp db is removed. Hmm.
+
+I'll be honest: state that creation returned 201 and the detail page resolved (number from the repo's own sequence — the seed has no issues in org-handbook, so the created issue is #1). I can assert that from the test passing: detail URL used the returned number, and the heading showed. The fact it's #1 isn't proven. I'll write "编号由仓库内序列生成（org-handbook 无既有 issue）" and mark the number value as not separately recorded. Better: avoid the claim entirely; numbering semantics are covered by Vitest. Keep the probe focused on permissions.
+
+Now the Issue #8 comment: short pointer + suggest updating the "待复验前提" section to reflect probe evidence, and note the consolidation proposal.
+
+Let me also consider whether to notify @glm-1 (root). The root owns prereq2 organization. Yes, @glm-1 and @glm-10.
+
+Write comments with braid comment create. Let me check command syntax.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid comment create --help 2>&1 | head -40
+
+## 2026-09-29T08:51:31.433Z 620fb137 2026-09-29T08-49-52-541Z_01a0ec5b-299d-7660-b60f-cc81de36de6a.jsonl:61
+Comments are created via `braid pr comment 15 --body ...` or `braid issue comment 8`. Let me check.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid pr comment --help 2>&1 | head -30
+
+## 2026-09-29T08:51:37.632Z f94f306b 2026-09-29T08-49-52-541Z_01a0ec5b-299d-7660-b60f-cc81de36de6a.jsonl:65
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid pr comment 15 --reply-to 142 -F /tmp/pr15-prereq2.md 2>&1 | tail -20
+
+## 2026-09-29T08:51:42.151Z 0bd0db31 2026-09-29T08-49-52-541Z_01a0ec5b-299d-7660-b60f-cc81de36de6a.jsonl:67
+Now a short comment on Issue #8 thread 85 pointing to it. Reply to #85 (the assignment) or to #153 (my prereq1 comment)? The prerequisite tracking is in the issue body. I'll reply to #85? Hmm, #85 is root's assignment; a reply there is a bit odd but it's the thread. Actually, better: reply to #153 (my own prereq1 readiness comment) — keeps prerequisite closure thread together. Hmm, #153 is mine. Replying to my own comment in thread 85 is acceptable as continuation.
+
+Actually the cleanest: reply to #142 would be in PR thread (wrong item). In Issue #8, the thread is 85. I'll reply to #85 with a brief note. Hmm, but #85 is the "指派交接" from root. Alternatively post without reply-to (still thread 85 root). Replying to #154? #154 is in PR #15. 
+
+I think posting in Issue #8 as a reply to #85 is fine — it's the thread holding the prerequisite ledger, and the root's comment #157/#133 are replies to #85 chain.
+
+Keep it short: probe result + pointer to PR #15 #160 + suggest updating the body's prerequisite section.
+
+Actually — is this needed? The Issue body prerequisite 2 says "由根组织复验". The root will see the PR comment. A pointer in Issue #8 helps the issue body owner (@glm-10) update the ledger. Yes, worth it, keep it 3 lines.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && cat > /tmp/issue8-prereq2.md <<'EOF'
+braid issue comment 8 --reply-to 85 -F /tmp/issue8-prereq2.md 2>&1 | tail -10
+
+## 2026-09-29T08:52:30.940Z 191269ad 2026-09-29T08-47-08-134Z_01a0ec58-a766-75ed-af14-84b33274c77e.jsonl:40
+deepseek-11 has completed probe for prerequisite 2 (prerequisite 2) too, and proposes combining both prerequisite-1 and prerequisite-2 repeatability assertions into the same small PR (braid/m5-prereq1-tiers, base develop, after #15 merge). This is a decision for me (root) — deepseek-11 asked @glm-10 / @glm-1 to rule. glm-10 is the M5 designer; per issue flow, design decisions on #8 belong to glm-10, but this affects acceptance scope which root coordinates. The decision seems low-risk and sensible: same small PR carries both groups of assertions, closing prerequisite 1 and prerequisite 2 repeatability in one merge.
+
+Per my guidelines: "the existence of an independent advisor" for consequential decisions; this is a fairly routine acceptance-scope decision. The change: prerequisite 2 was originally "re-verified by the root after #15 is merged" — now the probe shows no defect; making it a repeatable spec in the small PR is strictly better than a one-off root re-verification. I can rule on this. But #8's owner glm-10 should be consulted? The thread #142 ruling was mine (via deepseek-11's #142... wait #142 was posted by whom? Looking at the thread: #141 by deepseek-11, #142 "Ruling (@deepseek-11...)" — actually #142 says "Ruling (@deepseek-11, replying to #141)" — hmm, that's odd. It seems #142 was posted by deepseek-11? No wait — #142 header says "## Ruling (@deepseek-11, replying to #141)" — that reads like the ruling addressed to deepseek-11. The receipts for #142 show recipients deepseek-11 AND glm-1. And the packet says "M5 prerequisite 1 closure method ruling see PR #15 thread 115 (comment #142: independent small PR, deepseek-11 to undertake)" and thread 115 ruling... The body says "prerequisite 1 closure path has been ruled (PR #15 thread 115 #141/#142/#153)". Who posted #142? It addresses deepseek-11 in the title, so probably posted by glm-10 (M5 designer) or... Actually receipts list both deepseek-11 and glm-1 as recipients, and the author is likely glm-10. Hmm, but the root issue body says the ruling is at #142 and I (root) recognized it. Either way, this is M5-scope acceptance work; the natural ruling authority now is me (root) together with glm-10.
+
+The proposal is sensible. I'll rule: adopt — the small PR carries both Triage/Maintain tiers and acme-demo/* org scenarios; root (me) still does an independent spot re-verification of prerequisite 2? The original plan said "re-verified by the root after #15 is merged" — with a repeatable spec merged, the integration PR will run it. I can keep a light root-side confirmation: the probe (#160) plus merged repeatable spec + final integration e2e covers it. I'll rule adoption and note that root's separate manual re-verification is superseded by the repeatable spec running in the small PR and final integration acceptance.
+
+Since deepseek-11 asked both glm-10 and me, and glm-10 hasn't responded yet (comment just delivered), I could wait for glm-10's concurrence. But as root I hold acceptance-scope authority; I can rule and note glm-10 may object. To be safe and timely, I'll post my ruling in thread 115 (reply to #160) and mirror briefly on issue #8 thread 85 (reply to #161). Actually one ruling in thread 115 with @glm-10 @deepseek-11 suffices; issue #8 #161 asked for the ruling too — I'll reply there referencing the ruling. Simpler: post ruling in PR #15 thread 115 reply to #160, @-mentioning glm-10 and deepseek-11. And reply on issue 8 #161 pointing to it? That might be redundant; but deepseek-11 explicitly asked in both places. A short reply on issue 8 referencing the ruling keeps threads tidy.
+
+Also, my bg001 platform check is still running. After it completes I'll run backend Vitest and then merge PR #15.
+
+Also note: prerequisite 2 probe shows no defect, so the packet in the issue body needs updating: prerequisite 2 closure path changed from "re-verified by the root after #15 is merged" to "small PR carries repeatable spec". I'll update the issue body accordingly when I next edit (after merging #15). For now, post the ruling.
+
+Let me write the ruling comment.
+deepseek-11 完成了前提 2（acme-demo/* 组织仓库）探针：无实现缺陷，缺口同前提 1 只在可重复用例，并提议两组断言并入同一个小 PR。这是我此前裁决（#142）范围内的合理扩展，作裁决：
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid comment 160 --thread 2>/dev/null; braid pr comment 15 --reply-to 160 --body "## 裁决（@glm-1，回复 #160）：采纳——两组断言并入同一个小 PR，一次闭合前提 1 与前提 2
+
+## 2026-09-29T08:52:34.793Z 83194bb1 2026-09-29T08-47-08-134Z_01a0ec58-a766-75ed-af14-84b33274c77e.jsonl:42
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid issue comment 8 --reply-to 161 --body "裁决已在 PR #15 thread 115 评论 #162 发布：前提 1 与前提 2 的可重复断言并入同一个小 PR（\`braid/m5-prereq1-tiers\`，base develop，#15 合入后由 @deepseek-11 发布），合并即两条前提一并闭合；根侧不再单独手工复验前提 2，由可重复 spec + 最终整合 PR 全量 E2E 承载。#160/#161 探针留档
+
+## 2026-09-29T08:54:37.039Z 9367e918 2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl:53
+Current state:
+- PR #15 head `2a51605`, deepseek-11 reported full evidence (#159), head discipline promise posted after evidence. I've independently verified: head matches, parents correct, all 6 conflict points resolved correctly (app.js mount order, seed/all.js, helpers.js, copy.ts, messages.js, seed-data.md, routes.tsx).
+- deepseek-11 also did prerequisite-2 probe (#160), root adjudicated (#162): both prerequisites closed via one small PR after #15 merges.
+- Root (#162 §4): "根侧独立验证运行中，完成后合并" — root is doing independent verification and will merge.
+
+My pending duty: post final handover confirmation (per #137/#140 pattern) on PR #15 thread 115 replying to #159, since I'm the Issue owner and previous handovers went through me. Also update Issue #8 body: new anchor `2a51605`, merge status, prerequisite 1+2 closure route (root's #162 adjudication).
+
+Note root says root-side independent verification running; merge done by root. My handover confirms the anchor is ready.
+
+I should now:
+1. Post final handover comment in PR #15 thread 115 (reply-to #159): my independent verification of #159's publish facts and conflict resolution; confirm anchor `2a51605`; acknowledge #160 probe and #162 adjudication (scope: small PR carries both prerequisite groups); state #15 ready, root can merge.
+2. Narrow-update Issue #8 body: merge status section — new anchor `2a51605`, evidence at #159, conflict resolution verified, prereq 1+2 now both to be closed by the small PR (per #162), root independent verification in progress then merge.
+3. Possibly reply in Issue #8 thread 85 to #163? #163 is root's cross-post of adjudication to me. No action needed beyond body update — but I might briefly confirm acceptance of the adjudication for the record. The adjudication asked "@glm-10 若对验收范围有异议回本 thread 提出" (in #162). I have no objection — the coverage is fine: browser-layer assertions for Triage/Maintain + org repo scenarios will be in the small PR, and full e2e in the integration PR. I should explicitly state no objection, since it was explicitly requested. Reply to #162 in PR thread or to #161/#163 in issue thread? #162 asked in PR thread. I'll include the no-objection in my final handover comment on the PR thread (reply-to #159 covering both, or reply-to #162). Better: one handover comment replying to #159, mentioning #160/#162 acceptance.
+
+Then update issue body.
+当前待办明确：完成对 `2a51605` 锚点的最终交接确认（我的独立核对已完成），并回应根 #162 中明确征询的验收范围意见。先发布 PR thread 115 的最终交接。
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-8/pi-glm-fast-g1 && cat > /tmp/handover-2a51605.md <<'EOF'
+braid pr comment 15 --reply-to 159 --body-file /tmp/handover-2a51605.md 2>&1
+
+## 2026-09-29T08:55:21.536Z 1baa43f2 2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl:55
+Now narrow-update Issue #8 body: merge status section + prerequisite section. Current body sections to edit:
+
+1. "## 当前有效入口" — update merge status bullet: new anchor `2a51605`, evidence #159/#164 verified.
+2. "## 下一步" — root merges #15, then small PR closes both prerequisites.
+3. "## 待复验前提" section — prereq 1 and 2 both now closed via one small PR per #162.
+
+Let me fetch current body text precisely (I have it from the earlier view). Edit via braid issue edit. Check command help for edit.
+PR thread 交接已发布（评论 #164）。现在窄改 Issue #8 正文，更新合并锚点与两条前提的闭合口径。
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-8/pi-glm-fast-g1 && braid issue edit --help 2>&1 | head -25
+
+## 2026-09-29T08:57:43.628Z 803f6240 2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl:61
+Now edit the body. I'll write the full new body with three narrow changes:
+
+1. Line 13 (合并状态): update to new anchor `2a51605`, evidence #159, my verification #164.
+2. Line 14 (下一步): merge #15 → 小 PR (closes both prereq 1+2) → develop → main integration PR.
+3. 待复验前提 section: both prerequisites closed via one small PR per #162.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-8/pi-glm-fast-g1 && python3 - <<'EOF'
+braid issue edit 8 --body-file /tmp/issue8-body.md 2>&1 | head -3
+
+## 2026-09-29T08:58:25.609Z fc74db5a 2026-09-29T08-47-08-134Z_01a0ec58-a766-75ed-af14-84b33274c77e.jsonl:64
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid issue comment 1 --body "合并调用探针（可删除）" 2>&1 | tail -3
+
+## 2026-09-29T08:58:26.365Z 0c816a0a 2026-09-29T08-49-52-541Z_01a0ec5b-299d-7660-b60f-cc81de36de6a.jsonl:133
+Now post the progress comment in thread 115 (reply-to #162).
+
+Then also update the task packet? The packet `docs/task-packets/m5-pr-15.md` is on the pr-15 branch — modifying it would move the head and invalidate the anchor. Don't touch it. The small PR will have its own packet or reference. Actually, per the guidance, the associated PR should continue the same task packet. The prereq1 branch currently doesn't create a packet. Since publication is pending, I could add a packet in the small PR at publication time (per convention "建 docs/task-packets/m5-prereq1.md"). Hmm, the packet for the small PR can reference the same m5 packet. I'll handle at publication; but to be safe against context loss, I'll record the plan in the comment.
+
+Let me write the comment.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && cat > /tmp/pr15-165.md <<'EOF'
+braid pr comment 15 --reply-to 162 -F /tmp/pr15-165.md 2>&1 | tail -6
+
+## 2026-09-29T08:58:43.755Z ac0519f8 2026-09-29T08-47-08-134Z_01a0ec58-a766-75ed-af14-84b33274c77e.jsonl:68
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && sleep 60 && braid issue comment 1 --body "写入探针复试（稍后隐藏）" 2>&1 | tail -3
+
+## 2026-09-29T08:59:43.929Z bada8b11 2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl:69
+The `braid/m5-prereq1-tiers` branch advanced with one new commit `4614be4` (org-repo permission checks made repeatable), on top of `17a2eac`. This is deepseek-11 preparing the combined small PR per #162. No PR created yet for it (correct per #142/#162: after #15 merges).
+
+The issue body modification notification was likely just my own edit (viewing shows my updates present). Nothing new from root.
+
+Current state: everything on my side is done for this round:
+- Final handover #164 posted.
+- Issue body updated with anchor 2a51605 and closure route.
+- Waiting on: root's independent verification → merge #15 → deepseek-11 publishes small PR.
+
+The branch movement is informational — deepseek-11 is preparing the prereq increment. I should perhaps record this observation? The issue body says "增量分支已发布 @ 17a2eac" in prereq section — actually my rewrite changed the prereq section; let me check what it says now about the branch. In my new_pre I wrote: "增量分支已发布：`braid/m5-prereq1-tiers` @ `17a2eac`". Now the branch is at 4614be4 (includes org-repo repeatable checks). Should I narrow-update the body to reflect `4614be4`? The branch is work-in-progress by deepseek-11 until PR is published; head may move again. Recording a WIP commit in the issue body could churn. But keeping stale anchor `17a2eac` with specific verification numbers could mislead too.
+
+Better: leave it — the small PR will carry its own evidence when published; the body's entry is about the closure route. But to keep it accurate, a minimal tweak noting the branch now also carries the org-repo repeatable assertions (commit 4614be4, WIP by deepseek-11) would keep the packet current. However, "无需把日常进度反复复制到正文". The PR for the small change will be the authoritative entry when created. I'll do a minimal narrow edit: update the branch reference to note it's being extended per #162 (head may advance until PR published). Actually simpler: change "@ `17a2eac`（本地验证...见评论 #153）" to mention 17a2eac base and that org-repo assertions are being added on top (4614be4, WIP, per #162). Hmm.
+
+Minimal and accurate: edit the one parenthetical to "增量分支 `braid/m5-prereq1-tiers`（base `17a2eac`；org 仓库重复断言增量 `4614be4` 已发布，PR 尚未开，见 #162）". That's useful for continuity since the next session reopens.
+
+I'll do that one narrow edit and end turn.
+Issue 正文的修改是我自己上一轮的更新（内容已确认生效）。有一个新事实需要登记：`braid/m5-prereq1-tiers` 分支已从 `17a2eac` 前移到 `4614be4`（新增 org 仓库可重复断言的增量提交，@deepseek-11 按 #162 准备小 PR，PR 尚未创建，符合「#15 合入后再发布」的顺序）。窄改正文中的分支锚点，避免下个会话拿到过时引用。
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-8/pi-glm-fast-g1 && braid issue view 8 > /tmp/issue8-body2.md 2>/dev/null && python3 - <<'EOF'
+braid issue edit 8 --body-file /tmp/issue8-body2.md 2>&1 | head -2
+
+## 2026-09-29T08:59:50.212Z 9882e66d 2026-09-29T08-47-08-134Z_01a0ec58-a766-75ed-af14-84b33274c77e.jsonl:76
+The write probe succeeded now — comment #166 created ("write probe retrial (hide later)"). So the write failure was transient. Retry the merge now, then hide the probe comment.
+写入已恢复（探针 #166 成功），故障是暂时性的。隐藏探针并重试合并：
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid comment hide 166 --reason "写入故障探针，非讨论内容" 2>&1 | tail -2 && braid pr merge 15 --match-head-commit 2a51605 2>&1 | tail -6
+
+## 2026-09-29T09:00:08.534Z 769f28ff 2026-09-29T08-47-08-134Z_01a0ec58-a766-75ed-af14-84b33274c77e.jsonl:81
+PR #15 merged: develop now at 2eed74e. Probe comment #166 hidden. Now:
+1. Post merge confirmation in PR #15 thread 115 (reply to #159/#164), @deepseek-11 + @glm-10 — unlocking the small PR.
+2. Update issue #1 body task packet: M5 merged (2eed74e), prerequisite 1+2 closure via small PR braid/m5-prereq1-tiers (4614be4), next steps.
+
+Let me do the PR comment first, then update issue body.
+PR #15 已合入 develop（merge `2eed74e`）。在 thread 115 回执并解锁小 PR：
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid pr comment 15 --reply-to 159 --body "## 合并回执（@glm-1，回复 #159/#164）：PR #15 已合入 develop
+
+## 2026-09-29T09:00:19.470Z 41dd69bc 2026-09-29T08-47-08-134Z_01a0ec58-a766-75ed-af14-84b33274c77e.jsonl:83
+Now update issue #1 body task packet to reflect: M5 merged (2eed74e), prerequisites 1+2 closure path (small PR 4614be4 by deepseek-11), next steps. Use braid issue edit 1 --body or edit the body. Let me construct the updated body based on the current one. Key changes:
+
+- 当前状态: add PR #15 merged (2eed74e, 2026-09-29T09:0xZ), with evidence: deepseek-11 #159 (platform-path exit 0/75, Vitest 122, e2e 75) + glm-10 #164 独立核对 + 根侧独立验证 (platform-path exit 0/75 + Vitest 122/122 @ detached 2a51605).
+- 前提 1+2 闭合: deepseek-11 #165 已备好分支 braid/m5-prereq1-tiers @ 4614be4（前提 1 17a2eac + 前提 2 4614be4，本地 122/122 + 6 前提 spec + 全量 81 passed），等 rebase 新 develop 开小 PR；裁决 #162（根侧不再单独手工复验前提 2，探针 #160 留档）。
+- 下一步更新。
+
+I need the exact current body to edit. I have it from earlier `braid issue view 1`. I'll rewrite the whole body via `braid issue edit 1 --body "..."`. Need to check edit syntax: braid issue edit --help.
+更新 Issue #1 task packet 正文。先确认 edit 语法：
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid issue edit --help 2>&1 | head -20
+
+## 2026-09-29T09:01:01.445Z e0dfa110 2026-09-29T08-47-08-134Z_01a0ec58-a766-75ed-af14-84b33274c77e.jsonl:87
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-1/pi-glm-fast-g1 && braid issue edit 1 --body-file /tmp/issue1-body.md 2>&1 | tail -3
+
+## 2026-09-29T09:02:15.580Z 88f4dd48 2026-09-29T09-00-43-797Z_01a0ec65-1995-724f-8fe7-036c1d3299d4.jsonl:43
+Now push the branch to origin refs/heads/braid/m5-prereq1-tiers. But wait — the PR will be created with `--head braid/m5-prereq1-tiers`? The prior branch name was used for PR #15 head. For the new PR, I publish this branch to origin. Let me push with force since rebase rewrote history (origin has 4614be4 which is now rewritten).
+
+Then create the PR with base develop, head braid/m5-prereq1-tiers.
+
+Let me check `braid pr create --help`.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && git push --force-with-lease origin braid/m5-prereq1-tiers 2>&1 | tail -5; echo "---"; braid pr create --help 2>&1 | head -40
+
+## 2026-09-29T09:02:25.180Z c33b1f73 2026-09-29T09-00-43-797Z_01a0ec65-1995-724f-8fe7-036c1d3299d4.jsonl:47
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid pr create --issue 8 --title "M5 前提闭合：Triage/Maintain 浏览器层 + acme-demo/* 组织仓库权限可重复断言（REQ-5）" --body-file /tmp/prereq-evidence/pr-body.md --base develop --head braid/m5-prereq1-tiers --assignee deepseek 2>&1 | tail -20

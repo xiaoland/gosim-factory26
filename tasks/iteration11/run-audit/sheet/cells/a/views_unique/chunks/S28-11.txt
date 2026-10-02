@@ -1,0 +1,27 @@
+source lines omitted; precise per-line source map in duplicate-lines.json at S28:L171:display]
+[details]
+{"body": "\n RUN  v3.2.7 /tmp/f26-issue3-verify/frontend\n\n ✓ src/lib/cellDisplay.test.ts (3 tests) 81ms\n ✓ src/lib/csvExport.test.ts (15 tests) 89ms\n ✓ src/lib/format.test.ts (8 tests) 8ms\n ✓ src/components/Grid.test.tsx (8 tests) 1122ms\n   ✓ Grid ARIA contract > exposes the grid, its accessible name and multiselectability  303ms\n ✓ src/components/WorkbookLifecycle.test.tsx (12 tests) 1688ms\n   ✓ NewWorkbookPage (REQ-1-2-1) > rejects an empty name in place without calling the API  390ms\n\n Test Files  5 passed (5)\n      Tests  46 passed (46)\n   Start at  06:42:22\n   Duration  9.47s (transform 1.36s, setup 0ms, collect 4.41s, tests 2.99s, environment 18.72s, prepare 4.78s)\n\nFE_TEST_EXIT=0", "command": "cd /tmp/f26-issue3-verify/frontend && { PATH=/usr/local/bin:$PATH pnpm exec vitest run; echo \"FE_TEST_EXIT=$?\"; } > /tmp/f26-fe-test.log 2>&1; tail -20 /tmp/f26-fe-test.log", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1", "durationMs": 17080, "exitCode": 0, "globalJobId": "pbb_25_7d585061:bg006", "instanceId": "pbb_25_7d585061", "jobId": "bg006", "outcome": "exit", "pbbCursor": 19, "sessionId": "01a0ebdc-3fb1-7517-ad34-eb35a3dae14a", "sessionKey": "549d4960415449696635e466", "startedAt": "2026-09-29T06:42:17.666Z", "toolCallId": "call_00_y7xqqQaGVhpJSW3PXAT19706"}
+
+## S28:L172 2026-09-29T06:44:38.854Z message assistant
+[text]
+bg006 回执亦一致：frontend 46 passed、`FE_TEST_EXIT=0`（同一候选 `559a0bd`，已并入 comment #81 的验收结论）。无需动作。
+仍等待 PR #8 的 rebase + 共享 helper 切换候选。
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L172:C1]
+
+## S28:L173 2026-09-29T06:44:38.855Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L173:customType]
+[content]
+<pi_context source="pi-background-bash" kind="background_bash_result" id="bg007" tool_call_id="call_00_ppFyw4jsmK6tAUdilLb22519" session_id="01a0ebdc-3fb1-7517-ad34-eb35a3dae14a" session_key="549d4960415449696635e466" instance_id="pbb_25_7d585061" global_job_id="pbb_25_7d585061:bg007" pbb_cursor="22" started_at="2026-09-29T06:42:52.712Z" command="cd /tmp/f26-issue3-verify && export PATH=/usr/local/bin:$PATH && python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd &quot;$PWD&quot; --context &quot;candidate=$(git rev-parse HEAD)&quot; --context &quot;base=698afd2&quot; --context &quot;node=$(node --version)&quot; --context &quot;native_module=better-sqlite3 rebuilt for ABI 115 via npm rebuild&quot; -- bash checks/run-e2e.sh 2>&1 | tail -40" outcome="exit" exit_code="0" duration_ms="42546">Evidence: /tmp/f26-lzle9d69/service-check-r0wohzsu
+passed; logs and exit receipt: /tmp/f26-lzle9d69/service-check-r0wohzsu</pi_context>
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L173:display]
+[details]
+{"body": "Evidence: /tmp/f26-lzle9d69/service-check-r0wohzsu\npassed; logs and exit receipt: /tmp/f26-lzle9d69/service-check-r0wohzsu", "command": "cd /tmp/f26-issue3-verify && export PATH=/usr/local/bin:$PATH && python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd \"$PWD\" --context \"candidate=$(git rev-parse HEAD)\" --context \"base=698afd2\" --context \"node=$(node --version)\" --context \"native_module=better-sqlite3 rebuilt for ABI 115 via npm rebuild\" -- bash checks/run-e2e.sh 2>&1 | tail -40", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1", "durationMs": 42546, "exitCode": 0, "globalJobId": "pbb_25_7d585061:bg007", "instanceId": "pbb_25_7d585061", "jobId": "bg007", "outcome": "exit", "pbbCursor": 22, "sessionId": "01a0ebdc-3fb1-7517-ad34-eb35a3dae14a", "sessionKey": "549d4960415449696635e466", "startedAt": "2026-09-29T06:42:52.712Z", "toolCallId": "call_00_ppFyw4jsmK6tAUdilLb22519"}
+
+## S28:L174 2026-09-29T06:44:40.544Z message assistant
+[text]
+bg007 回执与已发布证据一致：e2e **15 passed / exit 0 / cleanup passed**，证据目录 `/tmp/f26-lzle9d69/service-check-r0wohzsu`（`candidate=559a0bd`、`dirty=false`）。这条已记入 comment #82，无需动作。
+至此本轮的独立验收证据齐全（unit 51+46、typecheck Done、e2e 15 passed），Issue #3 只待 @deepseek-5 的 rebase + `assertWorksheetStateValid` 切换候选；到位后我做针对性复核（切换 diff + 三项检查）再交根负责人 @glm-1 合入 develop。
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L174:C1]
+

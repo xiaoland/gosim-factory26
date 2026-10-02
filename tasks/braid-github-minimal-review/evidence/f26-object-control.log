@@ -1,0 +1,279 @@
+warning: unused variable: `tx`
+    --> src/objects.rs:1620:37
+     |
+1620 |     fn close_merge_issues_in(&self, tx: &Transaction<'_>, pr: i64, writer: Option<&Writer>) -> Result<()> {
+     |                                     ^^ help: if this is intentional, prefix it with an underscore: `_tx`
+     |
+     = note: `#[warn(unused_variables)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused variable: `pr`
+    --> src/objects.rs:1620:59
+     |
+1620 |     fn close_merge_issues_in(&self, tx: &Transaction<'_>, pr: i64, writer: Option<&Writer>) -> Result<()> {
+     |                                                           ^^ help: if this is intentional, prefix it with an underscore: `_pr`
+
+warning: unused variable: `writer`
+    --> src/objects.rs:1620:68
+     |
+1620 |     fn close_merge_issues_in(&self, tx: &Transaction<'_>, pr: i64, writer: Option<&Writer>) -> Result<()> {
+     |                                                                    ^^^^^^ help: if this is intentional, prefix it with an underscore: `_writer`
+
+warning: method `profile` is never used
+  --> src/config.rs:25:12
+   |
+24 | impl Config {
+   | ----------- method in this implementation
+25 |     pub fn profile(&self, id: &str) -> Result<&Profile, ConfigError> {
+   |            ^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: method `has_tag` is never used
+   --> src/config.rs:164:12
+    |
+160 | impl Profile {
+    | ------------ method in this implementation
+...
+164 |     pub fn has_tag(&self, tag: &str) -> bool {
+    |            ^^^^^^^
+
+warning: method `profile_id` is never used
+  --> src/group/worker.rs:50:19
+   |
+49 | impl GroupSpec {
+   | -------------- method in this implementation
+50 |     pub(crate) fn profile_id(&self) -> &str {
+   |                   ^^^^^^^^^^
+
+warning: field `id` is never read
+   --> src/local.rs:749:9
+    |
+748 |     struct ProductSession {
+    |            -------------- field in this struct
+749 |         id: String,
+    |         ^^
+
+warning: field `assignment_revision` is never read
+  --> src/objects.rs:74:9
+   |
+57 | pub struct Item {
+   |            ---- field in this struct
+...
+74 |     pub assignment_revision: i64,
+   |         ^^^^^^^^^^^^^^^^^^^
+   |
+   = note: `Item` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: fields `node_id`, `repository`, `kind`, `number`, and `state` are never read
+   --> src/store/mod.rs:305:9
+    |
+304 | pub struct TrackedWorkItem {
+    |            --------------- fields in this struct
+305 |     pub node_id: String,
+    |         ^^^^^^^
+306 |     pub repository: String,
+    |         ^^^^^^^^^^
+307 |     pub kind: String,
+    |         ^^^^
+308 |     pub number: u64,
+    |         ^^^^^^
+309 |     pub state: String,
+    |         ^^^^^
+    |
+    = note: `TrackedWorkItem` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: multiple fields are never read
+   --> src/store/mod.rs:314:9
+    |
+313 | pub struct CanonicalObjectState {
+    |            -------------------- fields in this struct
+314 |     pub node_id: String,
+    |         ^^^^^^^
+315 |     pub database_id: Option<String>,
+    |         ^^^^^^^^^^^
+316 |     pub object_kind: String,
+    |         ^^^^^^^^^^^
+317 |     pub version: String,
+    |         ^^^^^^^
+318 |     pub digest: String,
+    |         ^^^^^^
+319 |     pub lifecycle: String,
+    |         ^^^^^^^^^
+320 |     pub author_node_id: Option<String>,
+    |         ^^^^^^^^^^^^^^
+321 |     pub author_login: Option<String>,
+    |         ^^^^^^^^^^^^
+    |
+    = note: `CanonicalObjectState` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: field `member_login` is never read
+   --> src/store/mod.rs:354:9
+    |
+346 | pub struct AssignmentCandidate {
+    |            ------------------- field in this struct
+...
+354 |     pub member_login: Option<String>,
+    |         ^^^^^^^^^^^^
+    |
+    = note: `AssignmentCandidate` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: multiple fields are never read
+   --> src/store/mod.rs:527:9
+    |
+526 | pub struct DeletedComment {
+    |            -------------- fields in this struct
+527 |     pub node_id: String,
+    |         ^^^^^^^
+528 |     pub database_id: String,
+    |         ^^^^^^^^^^^
+529 |     pub author_node_id: Option<String>,
+    |         ^^^^^^^^^^^^^^
+530 |     pub author_login: Option<String>,
+    |         ^^^^^^^^^^^^
+531 |     pub created_at: String,
+    |         ^^^^^^^^^^
+532 |     pub updated_at: String,
+    |         ^^^^^^^^^^
+533 |     pub pinned: bool,
+    |         ^^^^^^
+    |
+    = note: `DeletedComment` has derived impls for the traits `Clone` and `Debug`, but these are intentionally ignored during dead code analysis
+
+warning: multiple methods are never used
+   --> src/store/mod.rs:551:12
+    |
+541 | impl StoreActor {
+    | --------------- methods in this implementation
+...
+551 |     pub fn plan(&self) -> Result<MigrationPlan, StoreError> {
+    |            ^^^^
+...
+563 |     pub fn status(&self) -> Result<StoreStatus, StoreError> {
+    |            ^^^^^^
+...
+569 |     pub fn reconcile_comments(
+    |            ^^^^^^^^^^^^^^^^^^
+...
+592 |     pub fn operational_status_comment_ids(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+...
+603 |     pub fn reconcile_associations(&self, update: AssociationSet) -> Result<(), StoreError> {
+    |            ^^^^^^^^^^^^^^^^^^^^^^
+...
+611 |     pub fn ingest_event(
+    |            ^^^^^^^^^^^^
+...
+631 |     pub fn runtime_status(&self) -> Result<RuntimeStoreStatus, StoreError> {
+    |            ^^^^^^^^^^^^^^
+...
+639 |     pub fn tracked_work_items(&self) -> Result<Vec<TrackedWorkItem>, StoreError> {
+    |            ^^^^^^^^^^^^^^^^^^
+...
+647 |     pub fn canonical_objects(
+    |            ^^^^^^^^^^^^^^^^^
+...
+658 |     pub fn begin_reconciliation(
+    |            ^^^^^^^^^^^^^^^^^^^^
+...
+669 |     pub fn finish_reconciliation(
+    |            ^^^^^^^^^^^^^^^^^^^^^
+...
+866 |     pub fn has_lifecycle_observation(
+    |            ^^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: multiple variants are never constructed
+    --> src/store/mod.rs:1216:5
+     |
+1215 | enum Command {
+     |      ------- variants in this enum
+1216 |     Plan(Sender<Result<MigrationPlan, StoreError>>),
+     |     ^^^^
+1217 |     Apply(Sender<Result<MigrationResult, StoreError>>),
+1218 |     Status(Sender<Result<StoreStatus, StoreError>>),
+     |     ^^^^^^
+1219 |     ReconcileComments(CanonicalCommentSet, Sender<Result<Vec<DeletedComment>, StoreError>>),
+     |     ^^^^^^^^^^^^^^^^^
+1220 |     SetContextRevision(String, String, Sender<Result<(), StoreError>>),
+1221 |     OperationalStatusCommentIds(String, Sender<Result<BTreeSet<String>, StoreError>>),
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+1222 |     ReconcileAssociations(AssociationSet, Sender<Result<(), StoreError>>),
+     |     ^^^^^^^^^^^^^^^^^^^^^
+1223 |     IngestEvent(Box<IngressEvent>, SchedulerPolicy, Sender<Result<IngestResult, StoreError>>),
+     |     ^^^^^^^^^^^
+1224 |     AdvanceScheduler(Sender<Result<u64, StoreError>>),
+1225 |     RuntimeStatus(Sender<Result<RuntimeStoreStatus, StoreError>>),
+     |     ^^^^^^^^^^^^^
+1226 |     TrackedWorkItems(Sender<Result<Vec<TrackedWorkItem>, StoreError>>),
+     |     ^^^^^^^^^^^^^^^^
+1227 |     CanonicalObjects(String, Sender<Result<Vec<CanonicalObjectState>, StoreError>>),
+     |     ^^^^^^^^^^^^^^^^
+1228 |     BeginReconciliation(String, Sender<Result<ReconciliationRun, StoreError>>),
+     |     ^^^^^^^^^^^^^^^^^^^
+1229 |     FinishReconciliation(
+     |     ^^^^^^^^^^^^^^^^^^^^
+...
+1269 |     HasLifecycleObservation(String, String, String, Sender<Result<bool, StoreError>>),
+     |     ^^^^^^^^^^^^^^^^^^^^^^^
+
+
+running 12 tests
+objects::tests::public_assignee_projection_is_atomic_and_symmetric --- FAILED
+objects::tests::pr_create_can_adopt_a_published_head_without_using_the_issue_worktree --- FAILED
+objects::tests::pr_create_is_idempotent_only_by_request_id_and_handles_residual_branches_safely --- FAILED
+..... 8/12
+objects::tests::merge_conflict_disposal_and_git_applied_database_recovery --- FAILED
+objects::tests::writer_identity_fences_atomically_and_preserves_nm_comment_lifecycle --- FAILED
+objects::tests::threads_fold_only_existing_replies_and_keep_relations_and_reactions --- FAILED
+.
+failures:
+
+---- objects::tests::public_assignee_projection_is_atomic_and_symmetric stdout ----
+
+thread 'objects::tests::public_assignee_projection_is_atomic_and_symmetric' (38300936) panicked at src/objects.rs:1962:9:
+assertion `left == right` failed
+  left: "glm-2"
+ right: "glm"
+note: run with `RUST_BACKTRACE=1` environment variable to display a backtrace
+
+---- objects::tests::pr_create_can_adopt_a_published_head_without_using_the_issue_worktree stdout ----
+
+thread 'objects::tests::pr_create_can_adopt_a_published_head_without_using_the_issue_worktree' (38300934) panicked at src/objects.rs:2449:14:
+called `Result::unwrap()` on an `Err` value: published head "refs/heads/39ffb6268950466197eb7258072128c79147dc2e" is not present in origin
+
+Caused by:
+    reference 'refs/heads/39ffb6268950466197eb7258072128c79147dc2e' not found; class=Reference (4); code=NotFound (-3)
+
+---- objects::tests::pr_create_is_idempotent_only_by_request_id_and_handles_residual_branches_safely stdout ----
+
+thread 'objects::tests::pr_create_is_idempotent_only_by_request_id_and_handles_residual_branches_safely' (38300935) panicked at src/objects.rs:2353:9:
+assertion `left == right` failed
+  left: 0
+ right: 1
+
+---- objects::tests::merge_conflict_disposal_and_git_applied_database_recovery stdout ----
+
+thread 'objects::tests::merge_conflict_disposal_and_git_applied_database_recovery' (38300933) panicked at src/objects.rs:2549:9:
+assertion failed: o.merge(None, p2).unwrap_err().to_string().contains("conflict")
+
+---- objects::tests::writer_identity_fences_atomically_and_preserves_nm_comment_lifecycle stdout ----
+
+thread 'objects::tests::writer_identity_fences_atomically_and_preserves_nm_comment_lifecycle' (38301519) panicked at src/objects.rs:2129:10:
+called `Result::unwrap()` on an `Err` value: cannot remove @alternate; current assignee is @alternate-2
+
+---- objects::tests::threads_fold_only_existing_replies_and_keep_relations_and_reactions stdout ----
+
+thread 'objects::tests::threads_fold_only_existing_replies_and_keep_relations_and_reactions' (38301470) panicked at src/objects.rs:2269:9:
+discussion state cannot seal delivery
+
+
+failures:
+    objects::tests::merge_conflict_disposal_and_git_applied_database_recovery
+    objects::tests::pr_create_can_adopt_a_published_head_without_using_the_issue_worktree
+    objects::tests::pr_create_is_idempotent_only_by_request_id_and_handles_residual_branches_safely
+    objects::tests::public_assignee_projection_is_atomic_and_symmetric
+    objects::tests::threads_fold_only_existing_replies_and_keep_relations_and_reactions
+    objects::tests::writer_identity_fences_atomically_and_preserves_nm_comment_lifecycle
+
+test result: FAILED. 6 passed; 6 failed; 0 ignored; 0 measured; 45 filtered out; finished in 1.33s
+
+error: test failed, to rerun pass `--bin braid`

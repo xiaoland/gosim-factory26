@@ -1,0 +1,734 @@
+[
+  {
+    "render_block": 104,
+    "source": "continuation02-root-native/008-2026-09-28T03-04-18-345Z_01a0e5f8-6ca9-7214-ac46-4c97f93b633f.jsonl:L4",
+    "chars": 195,
+    "text": "## 交付目标\n公式计算（REQ-4-*：基本表达式与聚合函数、相对引用复制、依赖重算、错误处理）。实现时阅读 hyperformula 技能（/workspace/template/.factory26/20260928-025746-66feadac/work/skills/hyperformula/SKILL.md），评估用 HyperFormula 承担解析、依赖重算与引用调整。"
+  },
+  {
+    "render_block": 134,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L33",
+    "chars": 189,
+    "text": "export interface SheetBounds {\n  /** number of rows currently in the worksheet structure */\n  rows: number;\n  /** number of columns currently in the worksheet structure */\n  cols: number;\n}"
+  },
+  {
+    "render_block": 136,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L33",
+    "chars": 196,
+    "text": "interface RefToken {\n  colAbs: boolean;\n  rowAbs: boolean;\n  col: number; // 0-based\n  row: number; // 0-based\n  letters: string; // original letter case as typed\n  start: number;\n  end: number;\n}"
+  },
+  {
+    "render_block": 138,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L33",
+    "chars": 339,
+    "text": "// Matches A1-style references outside quoted strings. Guards:\n// - not preceded by [A-Za-z0-9_$.] (avoid matching inside longer tokens)\n// - not followed by [A-Za-z0-9_(] (avoid function names like LOG10( and\n//   trailing identifier characters)\nconst REF_RE = /(?<![A-Za-z0-9_$.])(\\$?)([A-Za-z]{1,3})(\\$?)([0-9]{1,7})(?![A-Za-z0-9_(])/g;"
+  },
+  {
+    "render_block": 140,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L33",
+    "chars": 182,
+    "text": "function lettersToIndex(letters: string): number {\n  let n = 0;\n  for (const ch of letters.toUpperCase()) {\n    n = n * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return n - 1; // 0-based\n}"
+  },
+  {
+    "render_block": 142,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L33",
+    "chars": 200,
+    "text": "function colLettersName(col: number): string {\n  let n = col;\n  let out = '';\n  while (n >= 0) {\n    out = String.fromCharCode(65 + (n % 26)) + out;\n    n = Math.floor(n / 26) - 1;\n  }\n  return out;\n}"
+  },
+  {
+    "render_block": 144,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L105",
+    "chars": 539,
+    "text": "function findRefTokens(formula: string): RefToken[] {\n  // Mask double-quoted string literals so refs inside \"...\" are untouched.\n  const masked = formula.replace(/\"(?:[^\"]|\"\")*\"/g, (s) => '#'.repeat(s.length));\n  const tokens: RefToken[] = [];\n  for (const m of masked.matchAll(REF_RE)) {\n    tokens.push({\n      colAbs: m[1] === '$',\n      col: lettersToIndex(m[2]),\n      rowAbs: m[3] === '$',\n      row: parseInt(m[4], 10) - 1,\n      letters: m[2],\n      start: m.index,\n      end: m.index + m[0].length,\n    });\n  }\n  return tokens;\n}"
+  },
+  {
+    "render_block": 146,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L105",
+    "chars": 1054,
+    "text": "/**\n * Adjust a formula for a copy operation.\n *\n * @param formula the raw user formula, e.g. \"=A1+$B$1\"\n * @param offset  the target offset (target - source), in rows and columns\n * @param bounds  optional current worksheet structure bounds; a relative\n *                reference shifted outside them (or to a negative row/col)\n *                makes the result collapse to \"=#REF!\"\n * @returns the adjusted formula, or \"=#REF!\" when a relative reference\n *          lands outside the worksheet bounds\n */\nexport function adjustFormulaForCopy(\n  formula: string,\n  offset: CopyOffset,\n  bounds?: SheetBounds\n): string {\n  if (!formula.startsWith('=')) return formula;\n  const tokens = findRefTokens(formula);\n  const oob = tokens.some((t) => {\n    const newRow = t.rowAbs ? t.row : t.row + offset.rowOffset;\n    const newCol = t.colAbs ? t.col : t.col + offset.colOffset;\n    if (newRow < 0 || newCol < 0) return true;\n    if (bounds && (newRow >= bounds.rows || newCol >= bounds.cols)) return true;\n    return false;\n  });\n  if (oob) return '=#REF!';"
+  },
+  {
+    "render_block": 148,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L105",
+    "chars": 606,
+    "text": "  // Rebuild the formula with shifted references, keeping all other\n  // characters (operators, whitespace, strings, function names) as-is;\n  // reference letters keep the case the user typed.\n  let result = '';\n  let pos = 0;\n  for (const t of tokens) {\n    result += formula.slice(pos, t.start);\n    const col = t.colAbs ? t.col : t.col + offset.colOffset;\n    const row = t.rowAbs ? t.row : t.row + offset.rowOffset;\n    result += `${t.colAbs ? '$' : ''}${withCase(colLettersName(col), t.letters)}${t.rowAbs ? '$' : ''}${row + 1}`;\n    pos = t.end;\n  }\n  result += formula.slice(pos);\n  return result;\n}"
+  },
+  {
+    "render_block": 158,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L25",
+    "chars": 438,
+    "text": "## Outcome (what must be true)\nData 菜单 + 四组能力，全部经可访问控件，刷新后持久，其他工作表不受影响。\n- REQ-5-1-1 排序（Sort range 对话框、类型比较、稳定、表头排除、行整体移动、范围外不变、失败保序）\n- REQ-5-1-2 筛选（Create filter、每表头 \"Filter <header>\"、值/条件筛选、AND、只隐藏、导出与透视含隐藏行、Clear filter 复原）\n- REQ-5-2-1 数据验证（Dropdown / Number range、四写入路径拒绝非法值且保留原值、精确错误文案、重开预填 + Delete rule）\n- REQ-5-3-1 透视表（Create pivot table → PivotN 工作表、Pivot table editor、首次出现顺序、Grand Total、COUNT 空组合 0、Refresh pivot table + 错误保留旧结果）"
+  },
+  {
+    "render_block": 160,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L25",
+    "chars": 228,
+    "text": "## Constraints / gate\n- 批次门控（issue #7 comment #4, @glm-1）：须等本 Issue 出现「可以开始」通知后再 fetch origin/develop 开工。\n- 基线：origin/develop（当前 3ab688f，仅初始提交；#2–#6 未合入）。\n- PR: --base develop --head <branch>；自检用空闲端口 + 临时数据目录；结束前停服务；3000 端口留给评测。"
+  },
+  {
+    "render_block": 162,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L25",
+    "chars": 224,
+    "text": "## Known requirement tension (must resolve in discussion)\n- 数字范围非法值文案：REQ-5-2-1 正文 = \"Please enter a number between <min> and <max>\"\n  而持久化 0-100 场景 = \"Please enter a number from 0 to 100\"。两者需同时满足，整合时与 #5 负责人共同确认（issue 已注明）。"
+  },
+  {
+    "render_block": 164,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L25",
+    "chars": 288,
+    "text": "## Interfaces needed from upstream (to confirm after #2–#6 merge)\n- #2: 编辑器页面、Worksheet grid (role=grid, aria-multiselectable)、gridcell 坐标名、toolbar 结构、API/持久化形态、种子数据位置。\n- #4: 工作表创建（PivotN）、行/列增删与范围移动。\n- #5: 选区矩形、单元格/范围写入路径（网格、公式栏、粘贴、范围移动）、错误提示位置。\n- #6: 公式与重算（排序后公式栏引用/结果一致；CSV 导出、透视读取源值）。"
+  },
+  {
+    "render_block": 168,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L25",
+    "chars": 498,
+    "text": "## Evidence / status\n- 2026-09-28: gate 未解除，develop=3ab688f（初始提交），后台 watcher（pbb bg001）监控 develop 变化。\n- 评论：#7 c10 校验契约草案；#5 c11 定稿裁决；#7 c16 方案+S1–S10；#5 c17 接受（接口点确认）；#5 c18 我的回复（`raw` 字段、整数格式、公式默认放行、模块承诺）。\n- 纯逻辑准备（`notes/prep`）：src/{cellref,values,sort,filter,validation,pivot}.ts，tests/req5.test.ts 19/19 PASS（`node --test tests/req5.test.ts`，Node v24.10.0）；已含 `playwright.config.ts`（browser-checks 资产）待迁入 checks/。落地时迁入 #2 目录并改用仓库测试框架。\n- 材料问题：本 lane 模型不能读图，sort-range.png 等仅按文字需求建模（已在 #7 c16 记录）。"
+  },
+  {
+    "render_block": 178,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L31",
+    "chars": 411,
+    "text": "function makeEngine() {\n  return WorkbookFormulas.create([\n    {\n      id: 'ws-1',\n      name: 'Sheet1',\n      cells: {\n        A1: 'Region', B1: 'Sales', C1: 'Status', D1: 'Double',\n        A2: 'East', B2: '1200', C2: 'Open', D2: '=B2*2',\n        A3: 'North', B3: '800', C3: 'Closed', D3: '=B3*2',\n        A4: 'South', B4: '700', C4: 'Open', D4: '=B4*2',\n        F1: 'outside',\n      },\n    },\n  ] as never);\n}"
+  },
+  {
+    "render_block": 180,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L31",
+    "chars": 677,
+    "text": "describe('REQ-5-1-1 sort + formula engine', () => {\n  it('sorts by Sales ascending, keeps header, moves whole rows and fixes references', () => {\n    const engine = makeEngine();\n    const matrix = [\n      ['Region', 'Sales', 'Status', 'Double'],\n      ['East', '1200', 'Open', '=B2*2'],\n      ['North', '800', 'Closed', '=B3*2'],\n      ['South', '700', 'Open', '=B4*2'],\n    ];\n    const res = sortRange({\n      matrix,\n      keyIndex: 1,\n      order: 'Ascending',\n      hasHeaderRow: true,\n      translateFormula: translate,\n    });\n    expect(res.ok).toBe(true);\n    if (!res.ok) return;\n    expect(res.matrix.map((r) => r[0])).toEqual(['Region', 'South', 'North', 'East']);"
+  },
+  {
+    "render_block": 184,
+    "source": "continuation02-root-native/011-2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L31",
+    "chars": 891,
+    "text": "    // values landed with their rows\n    expect(engine.getDisplay('ws-1', 'B2')).toMatchObject({ kind: 'number', value: 700 });\n    expect(engine.getDisplay('ws-1', 'B4')).toMatchObject({ kind: 'number', value: 1200 });\n    // formula bar (raw) is consistent with the new position and recalculated\n    expect(engine.getCellRaw('ws-1', 'D2')).toBe('=B2*2');\n    expect(engine.getDisplay('ws-1', 'D2')).toMatchObject({ kind: 'number', value: 1400 });\n    expect(engine.getCellRaw('ws-1', 'D3')).toBe('=B3*2');\n    expect(engine.getDisplay('ws-1', 'D3')).toMatchObject({ kind: 'number', value: 1600 });\n    expect(engine.getCellRaw('ws-1', 'D4')).toBe('=B4*2');\n    expect(engine.getDisplay('ws-1', 'D4')).toMatchObject({ kind: 'number', value: 2400 });\n    // data outside the selected range is untouched\n    expect(engine.getCellRaw('ws-1', 'F1')).toBe('outside');\n    engine.destroy();\n  });"
+  },
+  {
+    "render_block": 354,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L27",
+    "chars": 192,
+    "text": "Commands:\n  view       \n  edit       \n  hide       \n  unhide     \n  delete     \n  resolve    \n  unresolve  \n  reaction   \n  help       Print this message or the help of the given subcommand(s)"
+  },
+  {
+    "render_block": 440,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 447,
+    "text": "export interface CellData {\n  /** Original user input; formulas start with \"=\". null for empty cells. */\n  raw: string | null;\n  /** Displayed value: for plain input equal to raw; for formulas the cached computed result. */\n  value: string | null;\n  /** Reserved: id of a rule in sheet.validationRules. */\n  validationId?: string | null;\n  /** Reserved: display style (bold, color, number format...). */\n  style?: Record<string, unknown> | null;\n}"
+  },
+  {
+    "render_block": 442,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 184,
+    "text": "export interface RectSelection {\n  /** Top-left cell ref of the rectangular selection. */\n  start: string;\n  /** Bottom-right cell ref of the rectangular selection. */\n  end: string;\n}"
+  },
+  {
+    "render_block": 444,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 382,
+    "text": "/** Data validation rule (REQ-5). Extendable; consumers ignore unknown fields. */\nexport interface ValidationRule {\n  id: string;\n  /** e.g. \"list\" | \"numberRange\" | \"textLength\" ... */\n  type: string;\n  /** Cell range this rule applies to, e.g. \"A2:A100\". */\n  range: string;\n  /** Rule parameters, shape depends on type. */\n  config: Record<string, unknown>;\n  message?: string;\n}"
+  },
+  {
+    "render_block": 446,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 248,
+    "text": "/** Filter view (REQ-5). Extendable. */\nexport interface FilterView {\n  id: string;\n  /** Range the filter covers, e.g. \"A1:D20\". */\n  range: string;\n  /** Per-column filter criteria keyed by column letter. */\n  criteria: Record<string, unknown>;\n}"
+  },
+  {
+    "render_block": 448,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 370,
+    "text": "/** Pivot table spec (REQ-5). Extendable. */\nexport interface PivotSpec {\n  id: string;\n  /** Source data range. */\n  sourceRange: string;\n  /** Placement of the pivot result (anchor cell + target sheet). */\n  anchor: { sheetId: string; ref: string };\n  rows: string[];\n  columns: string[];\n  values: Array<{ field: string; aggregation: string }>;\n  filters: string[];\n}"
+  },
+  {
+    "render_block": 450,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L152",
+    "chars": 729,
+    "text": "export interface Sheet {\n  id: string;\n  name: string;\n  /** Current grid dimensions (rows 1..rowCount, cols 1..colCount). */\n  rowCount: number;\n  colCount: number;\n  /** Sparse map of non-empty cells keyed by ref. */\n  cells: Record<string, CellData>;\n  validationRules: ValidationRule[];\n  filterViews: FilterView[];\n  pivotTables: PivotSpec[];\n  /**\n   * Last selection (anchor cell ref, e.g. \"B2\") used on this sheet, so that\n   * switching tabs and reopening the workbook restores the cursor here.\n   * null/absent means \"no remembered selection\" (first open selects A1).\n   * Kept consistent with the workbook-level activeCell/selection for the\n   * sheet that is currently active.\n   */\n  lastSelection?: string | null;\n}"
+  },
+  {
+    "render_block": 452,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 396,
+    "text": "export interface Workbook {\n  id: string;\n  name: string;\n  createdAt: string;\n  updatedAt: string;\n  /** id of the sheet active when the workbook was last used. */\n  activeSheetId: string;\n  /** Persisted active (cursor) cell ref, e.g. \"A1\". */\n  activeCell: string;\n  /** Persisted rectangular selection; null means single active cell. */\n  selection: RectSelection | null;\n  sheets: Sheet[];\n}"
+  },
+  {
+    "render_block": 456,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 189,
+    "text": "/**\n * JSON-file storage: one pretty-printed JSON file per workbook,\n * named `<workbookId>.json` inside DATA_DIR.\n * Writes are atomic (tmp file + rename) to survive crashes mid-write.\n */"
+  },
+  {
+    "render_block": 458,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 226,
+    "text": "function fileFor(id: string): string {\n  // ids are generated by us (wb_xxx); reject anything path-like.\n  if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new Error(\"invalid workbook id\");\n  return path.join(DATA_DIR, `${id}.json`);\n}"
+  },
+  {
+    "render_block": 462,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 643,
+    "text": "export function listWorkbooks(): WorkbookSummary[] {\n  ensureDataDir();\n  const out: WorkbookSummary[] = [];\n  for (const f of fs.readdirSync(DATA_DIR)) {\n    if (!f.endsWith(\".json\")) continue;\n    try {\n      const wb = JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), \"utf8\")) as Workbook;\n      if (wb && wb.id && wb.name) {\n        out.push({ id: wb.id, name: wb.name, createdAt: wb.createdAt, updatedAt: wb.updatedAt });\n      }\n    } catch {\n      // Skip unreadable/corrupt files rather than failing the whole list.\n    }\n  }\n  out.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : a.updatedAt > b.updatedAt ? -1 : 0));\n  return out;\n}"
+  },
+  {
+    "render_block": 464,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 236,
+    "text": "export function getWorkbook(id: string): Workbook | null {\n  const file = fileFor(id);\n  if (!fs.existsSync(file)) return null;\n  try {\n    return JSON.parse(fs.readFileSync(file, \"utf8\")) as Workbook;\n  } catch {\n    return null;\n  }\n}"
+  },
+  {
+    "render_block": 466,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 250,
+    "text": "export function saveWorkbook(wb: Workbook): void {\n  ensureDataDir();\n  const file = fileFor(wb.id);\n  const tmp = `${file}.tmp-${process.pid}-${Date.now()}`;\n  fs.writeFileSync(tmp, JSON.stringify(wb, null, 2), \"utf8\");\n  fs.renameSync(tmp, file);\n}"
+  },
+  {
+    "render_block": 472,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 161,
+    "text": "export interface GridSelection {\n  activeCell: string;\n  /** null = single-cell selection at activeCell. */\n  selection: { start: string; end: string } | null;\n}"
+  },
+  {
+    "render_block": 476,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 646,
+    "text": "/**\n * ARIA grid of the active worksheet.\n * - grid accessible name \"Worksheet grid\", aria-multiselectable=\"true\"\n * - gridcell accessible name = coordinate (e.g. \"A1\"); aria-selected reflects\n *   membership in the current rectangular selection\n * - rowheader name = row number, columnheader name = column letter\n * Keyboard: arrows move the active cell, Shift+arrows extend the selection.\n */\nexport default function Grid({ sheet, selection, onSelect }: GridProps) {\n  const rect: Rect = selection.selection\n    ? selectionRect(selection.selection.start, selection.selection.end)\n    : selectionRect(selection.activeCell, selection.activeCell);"
+  },
+  {
+    "render_block": 480,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 209,
+    "text": "  const rows = useMemo(() => Array.from({ length: sheet.rowCount }, (_, i) => i + 1), [sheet.rowCount]);\n  const cols = useMemo(() => Array.from({ length: sheet.colCount }, (_, i) => i + 1), [sheet.colCount]);"
+  },
+  {
+    "render_block": 482,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 332,
+    "text": "  // Keep the active cell in view and focused during keyboard navigation.\n  const focusActive = () => {\n    const el = cellRefs.current.get(selection.activeCell);\n    if (el && gridRef.current?.contains(document.activeElement)) {\n      el.focus({ preventScroll: false });\n    }\n  };\n  useEffect(focusActive, [selection.activeCell]);"
+  },
+  {
+    "render_block": 484,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 708,
+    "text": "  const move = (dRow: number, dCol: number, extend: boolean) => {\n    const active = parseRef(selection.activeCell);\n    const newRow = Math.min(Math.max(active.row + dRow, 1), sheet.rowCount);\n    const newCol = Math.min(Math.max(active.col + dCol, 1), sheet.colCount);\n    const nextRef = makeRef(newCol, newRow);\n    if (extend) {\n      // Keep the fixed anchor corner (selection start, or the previous active cell).\n      const anchorRef = selection.selection ? selection.selection.start : selection.activeCell;\n      onSelect({\n        activeCell: nextRef,\n        selection: { start: anchorRef, end: nextRef },\n      });\n    } else {\n      onSelect({ activeCell: nextRef, selection: null });\n    }\n  };"
+  },
+  {
+    "render_block": 486,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 979,
+    "text": "  const onKeyDown = (e: React.KeyboardEvent) => {\n    if (e.shiftKey) {\n      switch (e.key) {\n        case \"ArrowUp\":\n          e.preventDefault();\n          move(-1, 0, true);\n          return;\n        case \"ArrowDown\":\n          e.preventDefault();\n          move(1, 0, true);\n          return;\n        case \"ArrowLeft\":\n          e.preventDefault();\n          move(0, -1, true);\n          return;\n        case \"ArrowRight\":\n          e.preventDefault();\n          move(0, 1, true);\n          return;\n      }\n    } else {\n      switch (e.key) {\n        case \"ArrowUp\":\n          e.preventDefault();\n          move(-1, 0, false);\n          return;\n        case \"ArrowDown\":\n          e.preventDefault();\n          move(1, 0, false);\n          return;\n        case \"ArrowLeft\":\n          e.preventDefault();\n          move(0, -1, false);\n          return;\n        case \"ArrowRight\":\n          e.preventDefault();\n          move(0, 1, false);\n          return;\n      }\n    }\n  };"
+  },
+  {
+    "render_block": 488,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 284,
+    "text": "  const onCellMouseDown = (e: React.MouseEvent, ref: string) => {\n    if (e.shiftKey && selection.selection) {\n      onSelect({ activeCell: ref, selection: { start: selection.selection.start, end: ref } });\n    } else {\n      onSelect({ activeCell: ref, selection: null });\n    }\n  };"
+  },
+  {
+    "render_block": 496,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L158",
+    "chars": 432,
+    "text": "export interface Sheet {\n  id: string;\n  name: string;\n  rowCount: number;\n  colCount: number;\n  cells: Record<string, CellData>;\n  validationRules: Array<{ id: string; [k: string]: unknown }>;\n  filterViews: Array<{ id: string; [k: string]: unknown }>;\n  pivotTables: Array<{ id: string; [k: string]: unknown }>;\n  /** Remembered cursor cell of this sheet (restored when the tab is activated). */\n  lastSelection?: string | null;\n}"
+  },
+  {
+    "render_block": 498,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 202,
+    "text": "export interface Workbook {\n  id: string;\n  name: string;\n  createdAt: string;\n  updatedAt: string;\n  activeSheetId: string;\n  activeCell: string;\n  selection: RectSelection | null;\n  sheets: Sheet[];\n}"
+  },
+  {
+    "render_block": 502,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 156,
+    "text": "export class ApiError extends Error {\n  status: number;\n  constructor(status: number, message: string) {\n    super(message);\n    this.status = status;\n  }\n}"
+  },
+  {
+    "render_block": 504,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 379,
+    "text": "async function request<T>(url: string, init?: RequestInit): Promise<T> {\n  const res = await fetch(url, {\n    headers: { \"Content-Type\": \"application/json\" },\n    ...init,\n  });\n  const body = await res.json().catch(() => ({}));\n  if (!res.ok) {\n    throw new ApiError(res.status, (body as { error?: string }).error || `Request failed (${res.status})`);\n  }\n  return body as T;\n}"
+  },
+  {
+    "render_block": 520,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 568,
+    "text": "/**\n * Editor page at the stable, bookmarkable URL /workbook/:id.\n * Refreshing or directly visiting the URL restores the workbook's most\n * recent successful state, including the last active worksheet, active\n * cell and persisted selection.\n */\nexport default function EditorPage() {\n  const { id } = useParams<{ id: string }>();\n  const [workbook, setWorkbook] = useState<Workbook | null>(null);\n  const [error, setError] = useState<string | null>(null);\n  const [selection, setSelection] = useState<GridSelection>({\n    activeCell: \"A1\",\n    selection: null,\n  });"
+  },
+  {
+    "render_block": 522,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 422,
+    "text": "  useEffect(() => {\n    if (!id) return;\n    let cancelled = false;\n    api\n      .getWorkbook(id)\n      .then((wb) => {\n        if (cancelled) return;\n        setWorkbook(wb);\n        setSelection({\n          activeCell: wb.activeCell || \"A1\",\n          selection: wb.selection ?? null,\n        });\n      })\n      .catch(() => setError(\"Workbook not found\"));\n    return () => {\n      cancelled = true;\n    };\n  }, [id]);"
+  },
+  {
+    "render_block": 524,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 182,
+    "text": "  const activeSheet = useMemo(() => {\n    if (!workbook) return null;\n    return workbook.sheets.find((s) => s.id === workbook.activeSheetId) ?? workbook.sheets[0];\n  }, [workbook]);"
+  },
+  {
+    "render_block": 526,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 197,
+    "text": "  const activeCellData: CellData | undefined = useMemo(() => {\n    if (!activeSheet) return undefined;\n    return activeSheet.cells[selection.activeCell];\n  }, [activeSheet, selection.activeCell]);"
+  },
+  {
+    "render_block": 528,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 482,
+    "text": "  /** Persist last-used UI state (fire-and-forget; failures are non-fatal). */\n  const persistState = useCallback(\n    (next: GridSelection, sheetId?: string) => {\n      if (!workbook) return;\n      api\n        .saveState(workbook.id, {\n          activeSheetId: sheetId ?? workbook.activeSheetId,\n          activeCell: next.activeCell,\n          selection: next.selection,\n        })\n        .then((wb) => setWorkbook(wb))\n        .catch(() => undefined);\n    },\n    [workbook]\n  );"
+  },
+  {
+    "render_block": 542,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L153",
+    "chars": 1127,
+    "text": "/**\n * Shared REST API contract (all later feature tasks build on this):\n *\n *  GET    /api/workbooks                              -> { workbooks: WorkbookSummary[] }\n *  POST   /api/workbooks            { name }          -> 201 Workbook | 400 { error }\n *  GET    /api/workbooks/:id                          -> Workbook | 404 { error }\n *  PATCH  /api/workbooks/:id        { name }          -> Workbook | 400/404 { error }\n *  PATCH  /api/workbooks/:id/state  { activeSheetId?, activeCell?, selection? }\n *                                                   -> Workbook | 404 { error }\n *  PATCH  /api/workbooks/:id/sheets/:sheetId/cells  { updates: [{ ref, raw }] }\n *                                                   -> Workbook | 400/404 { error }\n *\n * Conventions: JSON bodies; errors are `{ error: string }` with 4xx/5xx;\n * successful content mutations bump workbook.updatedAt (= the \"Last updated\"\n * shown on the home page and in the editor); ref format is A1-style.\n * Feature tasks ADD endpoints (e.g. CSV import/export, sheet CRUD, row/col ops)\n * following the same shapes instead of redefining existing ones.\n */"
+  },
+  {
+    "render_block": 818,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L4",
+    "chars": 1082,
+    "text": "### 交付内容\n- 工作表标签栏：活动工作表操作入口（按钮可访问名 \"Worksheet options for <工作表名>\" 菜单）；\"Add worksheet\" 按钮新建首个未用的 SheetN（如只有 Sheet1 则建 Sheet2）；新表空白、不继承筛选/校验/透视，创建后成为活动 tab 且 A1 选中；刷新/重开仍存在。\n- 切换工作表：点击 ARIA tab 后网格、行列结构、选中单元格、公式栏、筛选入口、校验入口、透视结果都切到目标工作表状态；不修改源工作表；重开工作簿显示最后活动 tab 并恢复各表最后确认的选中单元格（新表首次打开选 A1）。\n- 重命名工作表：菜单 \"Rename\" → 对话框 \"Rename worksheet\"，文本框 label \"Worksheet name\"（预填）+ \"Save\"；trim 后空名报 \"Worksheet name cannot be empty\"，重名报 \"Worksheet name already exists\"；成功后 tab 显示新名并持久化。\n- 删除工作表：菜单 \"Delete\" → 确认对话框 \"Delete worksheet\"（可见文本含目标表名）+ \"Delete worksheet\" 确认按钮；删除后相邻表激活、目标数据/筛选/校验/透视全部消失且刷新后不出现；若目标仍是某透视表源表，拒绝并报 \"Please delete or rebuild dependent pivot tables first\"；只剩一个表时点 Delete 不开对话框，显示 \"A workbook must contain at least one worksheet\"。\n- 行操作（行号菜单，参考 manage-rows.png）：\"Insert 1 row above\"、\"Insert 1 row below\"、\"Delete row\"；列操作（列头菜单，参考 manage-columns.png）：\"Insert 1 column left\"、\"Insert 1 column right\"、\"Delete column\"。插入/删除时完整记录、校验规则、公式引用整体平移；无法保留的引用显式报错（直接引用删除显示 #REF!）；筛选继续作用于原数据区域；透视源范围变动时旧结果保持，直到点 \"Refresh pivot table\" 重算；列被删后重开透视编辑器显示可见错误要求重选字段并保留上次成功结果。操作失败报错且网格立即与刷新后都保持操作前结构。"
+  },
+  {
+    "render_block": 822,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L4",
+    "chars": 203,
+    "text": "### 需求入口\n/workspace/template/.factory26/20260928-025746-66feadac/input/requirements.yaml（REQ-2 全部 ATOMIC 及 scenarios；参考图 worksheet-lifecycle.png、worksheet-overview.png、manage-rows.png、manage-columns.png）"
+  },
+  {
+    "render_block": 832,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L241",
+    "chars": 156,
+    "text": "requirements.yaml 各场景 GIVEN 中出现 5 种互不一致的“evaluation seed”表述（场景 WHEN/THEN 存在明显模板损坏，GIVEN 亦不全可信）。按“能同时满足最多表述且互不矛盾”原则，裁决应用启动时的幂等种子为**一个工作簿 `Q3 Sales`，含两个工作表**："
+  },
+  {
+    "render_block": 1066,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L131",
+    "chars": 193,
+    "text": "function mapCoordOnAxis(c: Coord, v: number | null, m: AxisMapping): Coord | null {\n  if (v === null) return null;\n  return m.axis === 'row' ? { row: v, col: c.col } : { row: c.row, col: v };\n}"
+  },
+  {
+    "render_block": 1068,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L72",
+    "chars": 957,
+    "text": "function mapRangeThroughAxis(start: Coord, end: Coord | null, m: AxisMapping): MapResult {\n  const mapCoord = (c: Coord): Coord | null => {\n    const v = m.axis === 'row' ? c.row : c.col;\n    return mapCoordOnAxis(c, m.map(v), m);\n  };\n  const s = mapCoord(start);\n  const e = end ? mapCoord(end) : null;\n  if (end === null) {\n    // single-cell reference\n    if (s === null) return 'deleted';\n    return { start: s, end: null };\n  }\n  if (s === null && e === null) return 'deleted';\n  // start deleted but the range survives: first surviving old index is\n  // m.index+1, which maps to m.index.\n  if (s === null) return { start: mapCoordOnAxis(start, m.index, m) as Coord, end: e };\n  // end deleted: last surviving index is m.index-1, keeping end's other axis.\n  if (e === null) {\n    const v = m.axis === 'row' ? { row: m.index - 1, col: end.col } : { row: end.row, col: m.index - 1 };\n    return { start: s, end: v };\n  }\n  return { start: s, end: e };\n}"
+  },
+  {
+    "render_block": 1070,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L131",
+    "chars": 200,
+    "text": "// ---------------------------------------------------------------------------\n// Cross-sheet inbound reference rewriting\n// ---------------------------------------------------------------------------"
+  },
+  {
+    "render_block": 1108,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L129",
+    "chars": 177,
+    "text": "export function colToIndex(col: string): number {\n  let n = 0;\n  for (const ch of col.toUpperCase()) {\n    n = n * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return n - 1; // 0-based\n}"
+  },
+  {
+    "render_block": 1110,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L129",
+    "chars": 229,
+    "text": "export function indexToCol(index: number): string {\n  let n = index + 1;\n  let s = '';\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    s = String.fromCharCode(65 + rem) + s;\n    n = Math.floor((n - 1) / 26);\n  }\n  return s;\n}"
+  },
+  {
+    "render_block": 1114,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L129",
+    "chars": 233,
+    "text": "export function parseCoord(coord: string): Coord {\n  const m = /^([A-Za-z]{1,3})(\\d+)$/.exec(coord.trim());\n  if (!m) throw new Error(`Invalid coordinate: ${coord}`);\n  return { row: parseInt(m[2], 10) - 1, col: colToIndex(m[1]) };\n}"
+  },
+  {
+    "render_block": 1120,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L129",
+    "chars": 442,
+    "text": "/** Parses \"A1\" or \"A1:B3\" (or \"A1\" style single cell) into a normalized Range. */\nexport function parseRange(ref: string): Range {\n  const parts = ref.split(':');\n  const start = parseCoord(parts[0]);\n  const end = parts[1] ? parseCoord(parts[1]) : start;\n  return {\n    start: { row: Math.min(start.row, end.row), col: Math.min(start.col, end.col) },\n    end: { row: Math.max(start.row, end.row), col: Math.max(start.col, end.col) },\n  };\n}"
+  },
+  {
+    "render_block": 1532,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L91",
+    "chars": 329,
+    "text": "### 四、待各依赖方确认（不阻塞，落地前对齐即可）\n- @deepseek-5（#5）：粘贴/复制/移动端点落地时调用上述引擎入口（③④），空字段=整矩形清空语义请确认；批量原子性（任一非法整单拒绝）与引擎重算顺序由端点先校验后 setRangeRaw 保证。\n- @glm-4（#4）：行列增删端点调用 `addRows/removeRows/addColumns/removeColumns`（⑤）；\"行列变化后 `rowCount/colCount` 与引擎尺寸同步\"的归属请定（建议端点内先改尺寸再调引擎）。\n- @deepseek-7（#7）：排序引用平移消费 `adjustFormulaForCopy`（已按 #31/#33 对齐，不重复）。"
+  },
+  {
+    "render_block": 1788,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 331,
+    "text": "- `frontend/` — Vite + React + TypeScript UI (pages: workbook home, create\n  workbook, workbook editor at the bookmarkable URL `/workbook/<id>`)\n- `backend/` — Node.js + Express + TypeScript REST API, JSON-file persistence,\n  static hosting of the built frontend\n- `checks/` — repeatable Playwright browser checks (`checks/run.sh`)"
+  },
+  {
+    "render_block": 1798,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 217,
+    "text": "`npm run start` compiles the backend automatically when `backend/dist` is\nmissing and builds the frontend when `frontend/dist` is missing, so a fresh\nclone works with just `npm install && npm run start` in `backend/`."
+  },
+  {
+    "render_block": 1802,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 569,
+    "text": "| Env var          | Default                | Meaning                                        |\n| ---------------- | ---------------------- | ---------------------------------------------- |\n| `HOST`           | `0.0.0.0`              | interface to bind                              |\n| `PORT`           | `3000`                 | HTTP port                                      |\n| `DATA_DIR`       | `backend/data`         | directory with one JSON file per workbook      |\n| `FRONTEND_DIST`  | `frontend/dist`        | built UI served to the browser                 |"
+  },
+  {
+    "render_block": 1804,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 299,
+    "text": "Startup is idempotent: the first start seeds workbook `Q3 Sales`\n(Sheet1: `A1=Region`, `A2=East`, `B2=1200`, `A3=North`, `B3=800`;\nSheet2: `Region/Sales/Status` + `East/1200/Open`, `North/800/Closed`,\n`South/700/Open`). If a workbook with that name already exists, nothing is\ncreated or overwritten."
+  },
+  {
+    "render_block": 1808,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 224,
+    "text": "Errors are `{ \"error\": string }` with a 4xx/5xx status; successful calls return\nthe workbook object itself (no wrapper). Content changes bump `updatedAt`, which\nis what the home page and the editor display as “Last updated”."
+  },
+  {
+    "render_block": 1810,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 528,
+    "text": "| Method | Path | Body | Result |\n| ------ | ---- | ---- | ------ |\n| `GET` | `/api/workbooks` | | `{ workbooks: WorkbookSummary[] }` |\n| `POST` | `/api/workbooks` | `{ name }` | `201` Workbook |\n| `GET` | `/api/workbooks/:id` | | Workbook |\n| `PATCH` | `/api/workbooks/:id` | `{ name }` | Workbook |\n| `PATCH` | `/api/workbooks/:id/state` | `{ activeSheetId?, activeCell?, selection? }` | Workbook (does not bump `updatedAt`) |\n| `PATCH` | `/api/workbooks/:id/sheets/:sheetId/cells` | `{ updates: [{ ref, raw }] }` | Workbook |"
+  },
+  {
+    "render_block": 1814,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 312,
+    "text": "```\nWorkbook { id, name, createdAt, updatedAt, activeSheetId, activeCell, selection, sheets[] }\nSheet    { id, name, rowCount, colCount, cells{}, validationRules[], filterViews[], pivotTables[], lastSelection }\nCellData { raw, value, validationId?, style? }      // raw = user input, value = displayed result\n```"
+  },
+  {
+    "render_block": 1828,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 414,
+    "text": "  // Static hosting of the built frontend + SPA fallback.\n  const indexHtml = path.join(FRONTEND_DIST, \"index.html\");\n  app.use(express.static(FRONTEND_DIST));\n  app.get(\"*\", (req, res, next) => {\n    if (req.path.startsWith(\"/api/\")) {\n      res.status(404).json({ error: \"Not found\" });\n      return;\n    }\n    if (fs.existsSync(indexHtml)) {\n      res.sendFile(indexHtml);\n    } else {\n      next();\n    }\n  });"
+  },
+  {
+    "render_block": 1830,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 348,
+    "text": "  // eslint-disable-next-line @typescript-eslint/no-unused-vars\n  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {\n    // eslint-disable-next-line no-console\n    console.error(\"[error]\", err);\n    if (!res.headersSent) {\n      res.status(500).json({ error: \"Internal server error\" });\n    }\n  });"
+  },
+  {
+    "render_block": 1834,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 260,
+    "text": "export function startServer(): void {\n  ensureSeedData();\n  const app = createApp();\n  app.listen(PORT, HOST, () => {\n    // eslint-disable-next-line no-console\n    console.log(`Server listening on http://${HOST}:${PORT} (frontend: ${FRONTEND_DIST})`);\n  });\n}"
+  },
+  {
+    "render_block": 1838,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 172,
+    "text": "/** Host to bind. Official evaluation sets HOST/PORT explicitly. */\nexport const HOST = process.env.HOST || \"0.0.0.0\";\nexport const PORT = Number(process.env.PORT || 3000);"
+  },
+  {
+    "render_block": 1840,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 295,
+    "text": "/**\n * Directory holding one JSON file per workbook.\n * Override with DATA_DIR (self-checks use a temp directory so the\n * delivered initial state stays untouched).\n */\nexport const DATA_DIR = process.env.DATA_DIR\n  ? path.resolve(process.env.DATA_DIR)\n  : path.resolve(__dirname, \"..\", \"data\");"
+  },
+  {
+    "render_block": 1842,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 223,
+    "text": "/** Directory containing the built frontend (frontend/dist). */\nexport const FRONTEND_DIST = process.env.FRONTEND_DIST\n  ? path.resolve(process.env.FRONTEND_DIST)\n  : path.resolve(__dirname, \"..\", \"..\", \"frontend\", \"dist\");"
+  },
+  {
+    "render_block": 1856,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 236,
+    "text": "export function colLetter(index1Based: number): string {\n  let n = index1Based;\n  let s = \"\";\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    s = String.fromCharCode(65 + rem) + s;\n    n = Math.floor((n - 1) / 26);\n  }\n  return s;\n}"
+  },
+  {
+    "render_block": 1860,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 269,
+    "text": "export function makeSheet(name: string, id: string): Sheet {\n  return {\n    id,\n    name,\n    rowCount: DEFAULT_ROW_COUNT,\n    colCount: DEFAULT_COL_COUNT,\n    cells: {},\n    validationRules: [],\n    filterViews: [],\n    pivotTables: [],\n    lastSelection: null,\n  };\n}"
+  },
+  {
+    "render_block": 1862,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 363,
+    "text": "export function makeWorkbook(name: string, id?: string, now?: string): Workbook {\n  const ts = now || new Date().toISOString();\n  const sheet = makeSheet(\"Sheet1\", newId(\"sh\"));\n  return {\n    id: id || newId(\"wb\"),\n    name,\n    createdAt: ts,\n    updatedAt: ts,\n    activeSheetId: sheet.id,\n    activeCell: \"A1\",\n    selection: null,\n    sheets: [sheet],\n  };\n}"
+  },
+  {
+    "render_block": 1866,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L190",
+    "chars": 1119,
+    "text": "/**\n * Startup seed (idempotent).\n *\n * Seed contract for the whole application (adjudicated on root issue #1):\n * one workbook `Q3 Sales` with two worksheets:\n *   - Sheet1: A1=Region, A2=East, B2=1200, A3=North, B3=800\n *   - Sheet2: A1:C4 = Region/Sales/Status + East/1200/Open, North/800/Closed,\n *             South/700/Open\n * Sheet1 is the active worksheet and A1 the remembered selection.\n *\n * Idempotency: when a workbook with that name already exists, nothing is\n * created or overwritten, so restarts and restarts-after-user-edits keep the\n * workbook's most recent successful state.\n */\nconst SEED_SHEETS: Array<{ name: string; cells: Record<string, string> }> = [\n  {\n    name: SEED_SHEET_NAME,\n    cells: {\n      A1: SEED_A1_VALUE,\n      A2: \"East\",\n      B2: \"1200\",\n      A3: \"North\",\n      B3: \"800\",\n    },\n  },\n  {\n    name: SEED_SECOND_SHEET_NAME,\n    cells: {\n      A1: \"Region\",\n      B1: \"Sales\",\n      C1: \"Status\",\n      A2: \"East\",\n      B2: \"1200\",\n      C2: \"Open\",\n      A3: \"North\",\n      B3: \"800\",\n      C3: \"Closed\",\n      A4: \"South\",\n      B4: \"700\",\n      C4: \"Open\",\n    },\n  },\n];"
+  },
+  {
+    "render_block": 1870,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L190",
+    "chars": 417,
+    "text": "  const wb = makeWorkbook(SEED_WORKBOOK_NAME);\n  wb.sheets = SEED_SHEETS.map(({ name, cells }) => {\n    const sheet = makeSheet(name, newId(\"sh\"));\n    sheet.cells = Object.fromEntries(\n      Object.entries(cells).map(([ref, text]) => [ref, { raw: text, value: text }])\n    );\n    sheet.lastSelection = \"A1\";\n    return sheet;\n  });\n  wb.activeSheetId = wb.sheets[0].id;\n  wb.activeCell = \"A1\";\n  wb.selection = null;"
+  },
+  {
+    "render_block": 1874,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L188",
+    "chars": 151,
+    "text": "const backendDir = path.resolve(__dirname, \"..\");\nconst repoRoot = path.resolve(backendDir, \"..\");\nconst frontendDir = path.join(repoRoot, \"frontend\");"
+  },
+  {
+    "render_block": 1876,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L188",
+    "chars": 240,
+    "text": "function run(command, args, cwd) {\n  console.log(`[prepare] ${command} ${args.join(\" \")}  (cwd: ${path.relative(repoRoot, cwd) || \".\"})`);\n  const result = spawnSync(command, args, { cwd, stdio: \"inherit\" });\n  return result.status === 0;\n}"
+  },
+  {
+    "render_block": 1882,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L57",
+    "chars": 473,
+    "text": "// 1. Backend build.\nif (!existsSync(path.join(backendDir, \"dist\", \"server.js\"))) {\n  const tsc = path.join(backendDir, \"node_modules\", \"typescript\", \"bin\", \"tsc\");\n  if (!existsSync(tsc)) {\n    console.error(\"[prepare] backend is not built and typescript is missing: run `npm install` first\");\n    process.exit(1);\n  }\n  if (!run(process.execPath, [tsc, \"-p\", \"tsconfig.json\"], backendDir)) {\n    console.error(\"[prepare] backend build failed\");\n    process.exit(1);\n  }\n}"
+  },
+  {
+    "render_block": 1890,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 371,
+    "text": "/** Validate an A1-style ref; returns {col,row} or null. */\nexport function parseRef(ref: unknown): { col: number; row: number } | null {\n  if (typeof ref !== \"string\") return null;\n  const m = REF_RE.exec(ref.toUpperCase());\n  if (!m) return null;\n  const col = colNumber(m[1]);\n  const row = Number(m[2]);\n  if (col < 1 || row < 1) return null;\n  return { col, row };\n}"
+  },
+  {
+    "render_block": 1898,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 349,
+    "text": "workbooksRouter.post(\"/api/workbooks\", (req: Request, res: Response) => {\n  const rawName = typeof req.body?.name === \"string\" ? req.body.name : \"\";\n  const name = rawName.trim();\n  if (!name) {\n    badRequest(res, \"Workbook name cannot be empty\");\n    return;\n  }\n  const wb = makeWorkbook(name);\n  saveWorkbook(wb);\n  res.status(201).json(wb);\n});"
+  },
+  {
+    "render_block": 1900,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 185,
+    "text": "workbooksRouter.get(\"/api/workbooks/:id\", (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  res.json(wb);\n});"
+  },
+  {
+    "render_block": 1902,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 459,
+    "text": "workbooksRouter.patch(\"/api/workbooks/:id\", (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  const rawName = typeof req.body?.name === \"string\" ? req.body.name : \"\";\n  const name = rawName.trim();\n  if (!name) {\n    badRequest(res, \"Workbook name cannot be empty\");\n    return;\n  }\n  wb.name = name;\n  wb.updatedAt = new Date().toISOString();\n  saveWorkbook(wb);\n  res.json(wb);\n});"
+  },
+  {
+    "render_block": 1904,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L153",
+    "chars": 1393,
+    "text": "/**\n * Persist last-used UI state (active sheet, active cell, selection).\n *\n * Navigation state deliberately does NOT bump `updatedAt`: \"Last updated\"\n * tracks the workbook content, so merely moving the cursor keeps the home-page\n * record and the editor showing the same value.\n */\nworkbooksRouter.patch(\"/api/workbooks/:id/state\", (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  const body = req.body || {};\n  const requestedSheet =\n    typeof body.activeSheetId === \"string\" ? findSheet(wb, body.activeSheetId) : undefined;\n  if (requestedSheet) {\n    wb.activeSheetId = requestedSheet.id;\n  }\n  if (typeof body.activeCell === \"string\" && parseRef(body.activeCell)) {\n    wb.activeCell = body.activeCell.toUpperCase();\n  }\n  if (body.selection === null) {\n    wb.selection = null;\n  } else if (\n    body.selection &&\n    typeof body.selection === \"object\" &&\n    parseRef((body.selection as RectSelection).start) &&\n    parseRef((body.selection as RectSelection).end)\n  ) {\n    wb.selection = {\n      start: String(body.selection.start).toUpperCase(),\n      end: String(body.selection.end).toUpperCase(),\n    };\n  }\n  // Remember the cursor on its own sheet, so switching tabs restores it.\n  const current = findSheet(wb, wb.activeSheetId) ?? wb.sheets[0];\n  if (current) current.lastSelection = wb.activeCell;"
+  },
+  {
+    "render_block": 1910,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 297,
+    "text": "/** 1-based column number -> letters (\"A\", \"Z\", \"AA\"...). */\nexport function colLetter(index1Based: number): string {\n  let n = index1Based;\n  let s = \"\";\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    s = String.fromCharCode(65 + rem) + s;\n    n = Math.floor((n - 1) / 26);\n  }\n  return s;\n}"
+  },
+  {
+    "render_block": 1912,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 351,
+    "text": "/** \"B3\" -> { col: 2, row: 3 }. */\nexport function parseRef(ref: string): { col: number; row: number } {\n  const m = /^([A-Za-z]+)([0-9]+)$/.exec(ref);\n  if (!m) throw new Error(`Invalid cell ref: ${ref}`);\n  let col = 0;\n  for (const ch of m[1].toUpperCase()) {\n    col = col * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return { col, row: Number(m[2]) };\n}"
+  },
+  {
+    "render_block": 1918,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 374,
+    "text": "/** Normalize a selection (start/end may be in any corner order) to a rect of 1-based coords. */\nexport function selectionRect(start: string, end: string): Rect {\n  const a = parseRef(start);\n  const b = parseRef(end);\n  return {\n    top: Math.min(a.row, b.row),\n    bottom: Math.max(a.row, b.row),\n    left: Math.min(a.col, b.col),\n    right: Math.max(a.col, b.col),\n  };\n}"
+  },
+  {
+    "render_block": 1920,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 187,
+    "text": "export function inRect(ref: string, rect: Rect): boolean {\n  const { col, row } = parseRef(ref);\n  return row >= rect.top && row <= rect.bottom && col >= rect.left && col <= rect.right;\n}"
+  },
+  {
+    "render_block": 2036,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 568,
+    "text": "/**\n * Editor page at the stable, bookmarkable URL /workbook/:id.\n * Refreshing or directly visiting the URL restores the workbook's most\n * recent successful state, including the last active worksheet, active\n * cell and persisted selection.\n */\nexport default function EditorPage() {\n  const { id } = useParams<{ id: string }>();\n  const [workbook, setWorkbook] = useState<Workbook | null>(null);\n  const [error, setError] = useState<string | null>(null);\n  const [selection, setSelection] = useState<GridSelection>({\n    activeCell: \"A1\",\n    selection: null,\n  });"
+  },
+  {
+    "render_block": 2038,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 422,
+    "text": "  useEffect(() => {\n    if (!id) return;\n    let cancelled = false;\n    api\n      .getWorkbook(id)\n      .then((wb) => {\n        if (cancelled) return;\n        setWorkbook(wb);\n        setSelection({\n          activeCell: wb.activeCell || \"A1\",\n          selection: wb.selection ?? null,\n        });\n      })\n      .catch(() => setError(\"Workbook not found\"));\n    return () => {\n      cancelled = true;\n    };\n  }, [id]);"
+  },
+  {
+    "render_block": 2040,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 182,
+    "text": "  const activeSheet = useMemo(() => {\n    if (!workbook) return null;\n    return workbook.sheets.find((s) => s.id === workbook.activeSheetId) ?? workbook.sheets[0];\n  }, [workbook]);"
+  },
+  {
+    "render_block": 2042,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 197,
+    "text": "  const activeCellData: CellData | undefined = useMemo(() => {\n    if (!activeSheet) return undefined;\n    return activeSheet.cells[selection.activeCell];\n  }, [activeSheet, selection.activeCell]);"
+  },
+  {
+    "render_block": 2044,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 482,
+    "text": "  /** Persist last-used UI state (fire-and-forget; failures are non-fatal). */\n  const persistState = useCallback(\n    (next: GridSelection, sheetId?: string) => {\n      if (!workbook) return;\n      api\n        .saveState(workbook.id, {\n          activeSheetId: sheetId ?? workbook.activeSheetId,\n          activeCell: next.activeCell,\n          selection: next.selection,\n        })\n        .then((wb) => setWorkbook(wb))\n        .catch(() => undefined);\n    },\n    [workbook]\n  );"
+  },
+  {
+    "render_block": 2050,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 253,
+    "text": "  const handleCommitCell = (ref: string, raw: string | null) => {\n    if (!workbook || !activeSheet) return;\n    api\n      .updateCells(workbook.id, activeSheet.id, [{ ref, raw }])\n      .then((wb) => setWorkbook(wb))\n      .catch(() => undefined);\n  };"
+  },
+  {
+    "render_block": 2052,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 213,
+    "text": "  if (error) {\n    return (\n      <main className=\"home\">\n        <div role=\"alert\" className=\"form-error\">{error}</div>\n        <p>\n          <Link to=\"/\">Back to home</Link>\n        </p>\n      </main>\n    );\n  }"
+  },
+  {
+    "render_block": 2062,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L18",
+    "chars": 438,
+    "text": "    '\n  children:\n  - id: REQ-5-1\n    name: Sorting and Filtering\n    type: FOLDER\n    dependencies: []\n    description: 'Supports sorting a selected rectangular range in the current worksheet\n      by column and filtering it by value or condition. Sorting and filtering apply\n      only to the range selected by the user and do not expand to adjacent data or\n      other worksheets; the same order and visible rows persist after refresh."
+  },
+  {
+    "render_block": 2064,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L18",
+    "chars": 1229,
+    "text": "      '\n    children:\n    - id: REQ-5-1-1\n      name: Sort a Data Range by a Specified Column\n      type: ATOMIC\n      dependencies:\n      - REQ-3-1-3\n      - REQ-4-2-1\n      - REQ-5-1-2\n      - REQ-5-2-1\n      description: |\n        Users select a rectangular data range in the current active worksheet and choose \"Sort range\" from the \"Data\" menu. A dialog named \"Sort range\" provides combo boxes labeled \"Sort by\" and \"Order\", a \"Data has header row\" checkbox, and a \"Sort\" button. Options in \"Sort by\" use the header text of the selected range as accessible names; \"Order\" provides options named \"Ascending\" and \"Descending\". When the first row is declared a header, it does not participate in sorting. Numbers, parseable dates, and text are compared according to their respective types; equal sort keys preserve their original relative order, and entire records move together by row. After sorting, the formula bar displays references and results consistent with the new positions, filtering and validation continue to apply to the same selected range, and data outside the selection remains unchanged; order and results persist after refresh. If sorting fails, an error is displayed and the grid retains its original order."
+  },
+  {
+    "render_block": 2066,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L18",
+    "chars": 11873,
+    "text": "        Page reference:\n        ![image](reference/sort-range.png)\n      scenarios:\n      - name: REQ-5-1-1 -the requested workflow Sales the requested workflow,the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow sales the requested workflow,the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow Sales the requested workflow,the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n      - name: REQ-5-1-1 -the requested workflow ISO the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow iso the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow ISO the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n      - name: REQ-5-1-1 -the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n      - name: REQ-5-1-1 -the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow with concrete values `East`, `1200`,\n            `North`, and `800`. Every value is entered through a visible, labelled\n            control; no implementation-specific navigation, API, database id, or internal implementation detail is\n            assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n      - name: REQ-5-1-1 -the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow with concrete values `East`, `1200`,\n            `North`, and `800`. Every value is entered through a visible, labelled\n            control; no implementation-specific navigation, API, database id, or internal implementation detail is\n            assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n      - name: REQ-5-1-1 -the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow with concrete values `East`, `1200`,\n            `North`, and `800`. Every value is entered through a visible, labelled\n            control; no implementation-specific navigation, API, database id, or internal implementation detail is\n            assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n    - id: REQ-5-1-2\n      name: Filter Rows by Value or Condition\n      type: ATOMIC\n      dependencies:\n      - REQ-1-3-2\n      - REQ-3-1-3\n      description: 'Users create a filter for a data region with headers in the current\n        active worksheet through \"Create filter\" in the \"Data\" menu. Each header provides\n        a button with the accessible name \"Filter <header text>\"; the dialog with\n        the same name supports selecting specific values and condition options named\n        \"Text contains\", \"Greater than\", \"Before\", \"Is empty\", and \"Is not empty\".\n        The value-filter dialog provides \"Clear selection\", checkboxes generated from\n        distinct source values, and \"Apply\"; each checkbox uses the displayed source\n        value as its accessible name. The condition dialog provides a combo box labeled\n        \"Condition\", a text box labeled \"Value\", and \"Apply\". \"Text contains\", \"Greater\n        than\", and \"Before\" use the \"Value\" text box; \"Is empty\" and \"Is not empty\"\n        require no value. Conditions on different columns are combined with AND; nonmatching\n        rows are hidden only and are neither deleted nor reordered. After refresh\n        or reopening, the same rows remain visible. CSV export and pivot summarization\n        still include hidden rows within the filtered range. \"Clear filter\" restores\n        all source records in their original order and with their original values;\n        after refresh all remain visible, while formula and validation behavior are\n        unchanged."
+  },
+  {
+    "render_block": 2068,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L18",
+    "chars": 9250,
+    "text": "        '\n      scenarios:\n      - name: REQ-5-1-2 -the requested workflow Region the requested workflow Sales the requested workflow,the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow region the requested workflow sales the requested workflow,the requested workflow with concrete\n            values `East`, `1200`, `North`, and `800`. Every value is entered through\n            a visible, labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow Region the requested workflow\n            Sales the requested workflow,the requested workflow\" using the same seeded names and values (the seeded\n            worksheet range `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`); validation or permission failures\n            are shown beside the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n      - name: REQ-5-1-2 -the requested workflow, the requested workflow,the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow, the requested workflow,the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow, the requested workflow,the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n      - name: REQ-5-1-2 -CSV the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and csv the requested workflow with concrete values `East`, `1200`,\n            `North`, and `800`. Every value is entered through a visible, labelled\n            control; no implementation-specific navigation, API, database id, or internal implementation detail is\n            assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"CSV the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n      - name: REQ-5-1-2 -the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n      - name: REQ-5-1-2 -the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded worksheet range\n            `A1:C6` with headers `Region/Sales/Status` and rows `East/1200/Open`,\n            `North/800/Closed`, `South/700/Open`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow with concrete values `East`, `1200`,\n            `North`, and `800`. Every value is entered through a visible, labelled\n            control; no implementation-specific navigation, API, database id, or internal implementation detail is\n            assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow\"\n            using the same seeded names and values (the seeded worksheet range `A1:C6`\n            with headers `Region/Sales/Status` and rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open`); validation or permission failures are shown beside\n            the named control and do not create a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and range `A1:C6`,\n            headers `Region/Sales/Status`, rows `East/1200/Open`, `North/800/Closed`,\n            `South/700/Open` remain persisted; on failure, the original seeded state\n            remains unchanged.\n  - id: REQ-5-2\n    name: Data Validation\n    type: FOLDER\n    description: 'Supports configuring dropdown or numeric validation for ranges in\n      the current active worksheet. The same rules are enforced when writing through\n      the grid, formula bar, paste, or range move; after row or column changes, dropdown\n      buttons and numeric limits move with the originally constrained cells. Rules\n      remain active after refresh and existing valid values are preserved."
+  },
+  {
+    "render_block": 2080,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-89f5-7b72-be0f-86f933413e0a/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L28",
+    "chars": 1944,
+    "text": "      '\n    dependencies: []\n    children:\n    - id: REQ-5-2-1\n      name: Set Dropdown or Numeric Validation for a Range\n      type: ATOMIC\n      dependencies:\n      - REQ-3-1-1\n      - REQ-3-1-2\n      - REQ-3-1-3\n      - REQ-3-2-1\n      description: 'Users select a target range and click \"Data validation\" in the\n        \"Data\" menu. A dialog named \"Data validation\" provides a combo box labeled\n        \"Rule type\"; \"Dropdown\" uses a text box labeled \"Allowed values\", where comma-separated\n        items are trimmed of leading and trailing spaces; \"Number range\" uses text\n        boxes labeled \"Minimum\" and \"Maximum\"; the \"Save\" button applies an inclusive\n        rule. After a valid save succeeds, the dialog closes. A dropdown cell provides\n        a button with the accessible name \"Open dropdown for <cell coordinate>\"; each\n        option uses the ARIA option role and the trimmed allowed value as its accessible\n        name. If an invalid value is entered through the grid, formula bar, paste,\n        or range move, the entire operation is rejected and the original value remains;\n        an invalid dropdown value displays \"Please select one of the following values:\n        <comma-separated allowed values>\", while an invalid number displays \"Please\n        enter a number between <minimum> and <maximum>\". In the persisted multi-cell\n        0-to-100 boundary scenario, rejecting 101 in B3 displays \"Please enter a number\n        from 0 to 100\". If any target in a bulk operation is invalid, all targets\n        retain their original values. Rules remain active after refresh. When an existing\n        rule is reopened, the dialog is prefilled with the rule type and parameters\n        and displays a \"Delete rule\" button; saving a modification makes the new range\n        effective immediately, deleting removes the constraint, and either successful\n        operation closes the dialog without changing existing cell values."
+  },
+  {
+    "render_block": 2654,
+    "source": "continuation02-root-native/017-2026-09-28T04-49-59-062Z_01a0e659-2d16-7016-8b7c-e2779164383d.jsonl:L15",
+    "chars": 668,
+    "text": "- `Sheet.validationRules: ValidationRule[]` = `{id, type, range, config}`。#7 用 `type:\"dropdown\"`（`config.values: string[]`）与 `type:\"number\"`（`config.min/max`），`range` = 规则矩形（如 `B1:B3`）；单元格已有 `validationId` 预留位。\n- `Sheet.filterViews: FilterView[]` = `{id, range, criteria}`。我的多列 AND 条件按列字母放进 `criteria`（values 模式存所选值集合，condition 模式存 `{condition, value}`）。\n- `Sheet.pivotTables: PivotSpec[]` = `{id, sourceRange, anchor:{sheetId,ref}, rows, columns, values:[{field,aggregation}], filters}`。透视落在新建 `PivotN` 表，`anchor` 指向该表 A1；\"上次成功结果\"快照按扩展字段附加（消费方忽略未知字段）。\n- 单元格 `raw`（公式文本）/`value`（缓存结果）与 #6 引擎一致；`updateCells` 已经是\"先全量校验、再应用\"的批量原子写，正好承载 REQ-5-2-1 的整单拒绝语义（我在其校验前插入规则判定即可）。"
+  },
+  {
+    "render_block": 2656,
+    "source": "continuation02-root-native/017-2026-09-28T04-49-59-062Z_01a0e659-2d16-7016-8b7c-e2779164383d.jsonl:L15",
+    "chars": 343,
+    "text": "两点请求/告知（不阻塞，只需 @deepseek-8 在改字段名/语义前说一声）：\n1. 上述三处 `type` 取值与 `config` 形状由 #7 定义；#7 会按既有约定新增自己的 REST 端点（validation rules / filter / pivot refresh），沿用 `{error}` + 4xx 与 `updates` 式批量体。\n2. #2 WIP 的 `Grid.tsx` 目前没有筛选/校验渲染入口，#7 会扩展它（每表头 `Filter <header>` 按钮、`Open dropdown for <坐标>` 按钮）——请避免在 #2 内重命名 `Worksheet grid` / gridcell 坐标可访问名，S1–S10 依赖它们。"
+  },
+  {
+    "render_block": 2824,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 352,
+    "text": "/**\n * Formula bar: a labelled text box showing the active cell's raw content\n * (the original formula/input). Enter commits the edited content to the\n * server; Escape discards the draft.\n */\nexport default function FormulaBar({ activeCell, cell, onCommit }: FormulaBarProps) {\n  const raw = cell?.raw ?? \"\";\n  const [draft, setDraft] = useState(raw);"
+  },
+  {
+    "render_block": 3342,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  },
+  {
+    "render_block": 3352,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 246,
+    "text": "for suffix in \"${SUFFIXES[@]}\"; do\n  port=\"$(free_port)\"\n  data_dir=\"$(mktemp -d /tmp/wb-checks-XXXXXX)\"\n  DATA_DIR=\"$data_dir\" HOST=127.0.0.1 PORT=\"$port\" \\\n    node \"$ROOT/backend/dist/server.js\" >>\"$SERVER_LOG\" 2>&1 &\n  pid=$!\n  PIDS+=(\"$pid\")"
+  },
+  {
+    "render_block": 3354,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 434,
+    "text": "  ready=false\n  for _ in $(seq 1 120); do\n    if curl -sf \"http://127.0.0.1:$port/api/workbooks\" | grep -q \"Q3 Sales\"; then\n      ready=true\n      break\n    fi\n    if ! kill -0 \"$pid\" 2>/dev/null; then\n      echo \"server for $suffix died during startup (log: $SERVER_LOG)\"\n      exit 3\n    fi\n    sleep 0.5\n  done\n  if [[ \"$ready\" != true ]]; then\n    echo \"server for $suffix was not ready in time (log: $SERVER_LOG)\"\n    exit 3\n  fi"
+  },
+  {
+    "render_block": 3358,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 3362,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 469,
+    "text": "/**\n * Shared helpers for workbook checks.\n *\n * Every check file runs against its own freshly seeded server (see run.sh and\n * playwright.config.ts projects), so each check observes the promised initial\n * state: workbook `Q3 Sales` = Sheet1 (A1=Region, East/1200, North/800) +\n * Sheet2 (Region/Sales/Status table).\n *\n * Accessible names of grid cells ARE the coordinates (\"A1\"). Locators must use\n * `exact: true`, otherwise \"A1\" would also match \"A10\"..\"A199\".\n */"
+  },
+  {
+    "render_block": 3368,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 199,
+    "text": "/** The gridcell whose accessible name is exactly this coordinate. */\nexport function cell(page: Page, ref: string): Locator {\n  return grid(page).getByRole(\"gridcell\", { name: ref, exact: true });\n}"
+  },
+  {
+    "render_block": 3376,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 174,
+    "text": "export function workbookItem(page: Page, name: string): Locator {\n  return page.getByRole(\"listitem\").filter({\n    has: page.getByRole(\"link\", { name, exact: true }),\n  });\n}"
+  },
+  {
+    "render_block": 3378,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 260,
+    "text": "/** Home page is loaded and lists at least the seeded workbook. */\nexport async function openHome(page: Page) {\n  await page.goto(\"/\");\n  await expect(page.getByRole(\"heading\", { level: 1, name: \"Workbooks\" })).toBeVisible();\n  return page.getByRole(\"list\");\n}"
+  },
+  {
+    "render_block": 3380,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 314,
+    "text": "/** Click a named workbook link on the home page and wait for its editor. */\nexport async function openWorkbook(page: Page, name: string) {\n  await workbookItem(page, name).getByRole(\"link\", { name, exact: true }).click();\n  await expect(page.getByRole(\"heading\", { level: 1, name, exact: true })).toBeVisible();\n}"
+  },
+  {
+    "render_block": 3382,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 237,
+    "text": "/** Go home from the editor. */\nexport async function goHome(page: Page) {\n  await page.getByRole(\"link\", { name: \"Home\", exact: true }).click();\n  await expect(page.getByRole(\"heading\", { level: 1, name: \"Workbooks\" })).toBeVisible();\n}"
+  },
+  {
+    "render_block": 3386,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 365,
+    "text": "/**\n * Every spec file runs against its own freshly seeded server instance (see\n * run.sh), so each check observes the promised initial state and mutating\n * checks cannot leak into others.\n */\nfunction required(name: string): string {\n  const value = process.env[name];\n  if (!value) throw new Error(`Set ${name} before running browser checks.`);\n  return value;\n}"
+  },
+  {
+    "render_block": 3390,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 432,
+    "text": "const projects: Project[] = [\n  {\n    name: 'create-workbook',\n    testMatch: '**/create-workbook.spec.ts',\n    use: { baseURL: required('BASE_URL_CREATE') },\n  },\n  {\n    name: 'editor-interactions',\n    testMatch: '**/editor-interactions.spec.ts',\n    use: { baseURL: required('BASE_URL_EDITOR') },\n  },\n  {\n    name: 'home-editor',\n    testMatch: '**/home-editor.spec.ts',\n    use: { baseURL: required('BASE_URL_HOME') },\n  },\n];"
+  },
+  {
+    "render_block": 3732,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L42",
+    "chars": 224,
+    "text": "/**\n * Grid ARIA contract, formula bar editing and REQ-1-2-2 (rename workbook).\n * Runs against a freshly seeded server; this file is the only one that mutates\n * the seeded workbook, and it owns its own server instance.\n */"
+  },
+  {
+    "render_block": 3734,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L42",
+    "chars": 157,
+    "text": "test(\"grid exposes the promised ARIA roles, names and selection state\", async ({ page }) => {\n  await openHome(page);\n  await openWorkbook(page, \"Q3 Sales\");"
+  },
+  {
+    "render_block": 3738,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L42",
+    "chars": 332,
+    "text": "  // Row and column header accessible names are the number / column letters.\n  await expect(rowHeader(page, 1)).toBeVisible();\n  await expect(rowHeader(page, 5)).toBeVisible();\n  await expect(colHeader(page, \"A\")).toBeVisible();\n  await expect(colHeader(page, \"B\")).toBeVisible();\n  await expect(colHeader(page, \"Z\")).toBeVisible();"
+  },
+  {
+    "render_block": 3740,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L42",
+    "chars": 221,
+    "text": "  // Cell accessible names are coordinates; A1 is selected, B2 is not.\n  await expect(cell(page, \"A1\")).toHaveAttribute(\"aria-selected\", \"true\");\n  await expect(cell(page, \"B2\")).toHaveAttribute(\"aria-selected\", \"false\");"
+  },
+  {
+    "render_block": 3742,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L42",
+    "chars": 218,
+    "text": "  // Click selects a single cell.\n  await cell(page, \"B2\").click();\n  await expect(cell(page, \"B2\")).toHaveAttribute(\"aria-selected\", \"true\");\n  await expect(cell(page, \"A1\")).toHaveAttribute(\"aria-selected\", \"false\");"
+  },
+  {
+    "render_block": 3744,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L42",
+    "chars": 386,
+    "text": "  // Shift+click extends to a rectangular range.\n  await cell(page, \"C3\").click({ modifiers: [\"Shift\"] });\n  for (const ref of [\"B2\", \"B3\", \"C2\", \"C3\"]) {\n    await expect(cell(page, ref)).toHaveAttribute(\"aria-selected\", \"true\");\n  }\n  await expect(cell(page, \"A1\")).toHaveAttribute(\"aria-selected\", \"false\");\n  await expect(cell(page, \"D4\")).toHaveAttribute(\"aria-selected\", \"false\");"
+  },
+  {
+    "render_block": 3746,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L42",
+    "chars": 265,
+    "text": "  // Arrow keys move the active cell.\n  await cell(page, \"B2\").click();\n  await page.keyboard.press(\"ArrowRight\");\n  await expect(cell(page, \"C2\")).toHaveAttribute(\"aria-selected\", \"true\");\n  await expect(cell(page, \"B2\")).toHaveAttribute(\"aria-selected\", \"false\");"
+  }
+]

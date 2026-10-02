@@ -1,0 +1,309 @@
+
+## 2026-09-29T09:02:34.506Z b5d2f40b 2026-09-29T09-00-43-797Z_01a0ec65-1995-724f-8fe7-036c1d3299d4.jsonl:49
+PR #17 created, assigned to @deepseek-13 (a different member, not me). Hmm — "指派即交给独立成员在自己的工作区推进" — but I (deepseek-11) am the one who承接 per根 instructions ("仍由 @deepseek-11 承接"). The assignee returned is @deepseek-13, a different instance. That means the work is delegated to another member who will pick it up in their own workspace. That's the harness behavior: assigning deepseek spawns/assigns a member.
+
+But #162/#165 said @deepseek-11 承接. Hmm. This creates a risk: another member (@deepseek-13) may now start work on the same branch. But my instructions say the assignment returns a concrete owner who takes it over; since I created the PR, the new assignee will handle it independently. That could conflict with my ongoing evidence work.
+
+Alternative: the intended flow might be that I should NOT assign to deepseek but rather keep myself... but the guidance says creation with --assignee picks a member; "创建 Issue 或 PR 只建立工作项，指派即交给独立成员在自己的工作区推进，无需再替该成员启动执行".
+
+So now @deepseek-13 owns PR #17. Per the collaboration rules: "收到明确交接确认...". Since the PI instruction says I'm handling the work (this session), and the PR is now assigned to another member... I should probably contact @deepseek-13 to hand over, or reassign to myself? Hmm.
+
+Actually, wait. Let me reconsider: In this run, my identity is @deepseek-11. The PR I created got assigned to @deepseek-13 (a fresh member of the deepseek agent pool). The rules say when I want to keep the work myself... There's no "--assignee self" option. Prior PR #15 was assigned @deepseek-11 — maybe created by glm-10 with --assignee deepseek and it returned deepseek-11.
+
+The correct behavior per the harness: assignment = handoff. So @deepseek-13 will take over PR #17. My role then: I should leave the evidence I'm producing for them? Or should I just complete the work since I already have the branch and evidence plan?
+
+Hmm, but "已有代码需要承接和核验，不因接手而重复实现" — that's about Issue. Here, I'm mid-flight on the small PR. The cleanest: I finish my evidence run and post it as a comment, then contact @deepseek-13 to confirm the handoff point (evidence posted, head stable, nothing pending). Then @deepseek-13 merges? Or root merges.
+
+Actually, hold on. Maybe I should not have created the PR with an assignee at all... but --assignee has no "none" option?  `--assignee <AGENT>` is optional. If omitted, maybe the PR has no assignee and I'd handle it. But the PR is created; I can use `pr edit --remove-assignee @deepseek-13 --add-assignee ...`? Adding would again spawn a new member.
+
+Given I'm the one with the branch and evidence, and the work item now belongs to @deepseek-13, I think the best move:
+1. Finish evidence on the final head (I own the branch; @deepseek-13's workspace is separate and may not have pushed anything).
+2. Post evidence comment + head stability promise.
+3. Notify @deepseek-13 with the handoff point and ask/leave merge to them (or root).
+
+But there's a risk @deepseek-13 starts doing the same evidence work in parallel, wasting cycles and possibly pushing different commits. To coordinate, I should comment early on PR #17 @-mentioning @deepseek-13 stating: I (deepseek-11) already have the final head 425b97c pushed and am running the evidence chain; please wait for my evidence comment before acting; the branch and PR are ready for you to verify/merge.
+
+Actually more precisely — rules say "接手已有 PR 时，先用 pr view ... 联系其确认交接点、保存或发布在途成果". Symmetrically, when transferring a PR with in-flight work, I should tell the new owner where things stand. Since I'm the one creating the in-flight state, I'll comment immediately with the status (head published, evidence running) and @deepseek-13 so they don't duplicate.
+
+Let me post that comment now, then continue the evidence runs.
+
+Actually, does `braid pr comment` notify the assignee automatically? Yes, "回复通知负责人". Good.
+
+Let me post a brief status comment. Then run the e2e and platform-path.
+
+Order: run e2e (bg) while writing comment. Then platform-path in clean copy after e2e (to avoid load flakiness).
+
+Hmm, but time: e2e ~4 min, platform-path ~2-3 min (its own full suite 81 tests? Actually platform-path runs full spec = 81 tests, ~3.5 min plus installs). Total ~10 min. Acceptable.
+
+Let me start e2e in background now and post the comment in parallel.
+PR #17 created (`braid/m5-prereq1-tiers`, base develop). Starting the evidence runs and notifying the new owner of the in-flight state.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH node e2e/run.mjs --no-build > /tmp/prereq-evidence/e2e.log 2>&1; echo "E2E_EXIT=$?" >> /tmp/prereq-evidence/e2e.log; tail -12 /tmp/prereq-evidence/e2e.log
+[operation headings; complete args in raw source]
+cat > /tmp/prereq-evidence/status-comment.md <<'EOF'
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid pr comment 17 --body-file /tmp/prereq-evidence/status-comment.md 2>&1 | tail -5
+
+## 2026-09-29T09:02:51.026Z 66a67af5 2026-09-29T09-02-28-456Z_01a0ec66-b268-70e9-be22-9747657be194.jsonl:27
+No node_modules yet in this worktree. I need to install with pnpm. Let me start the install in background, then run tests.
+
+Plan:
+1. pnpm install at root (workspace) — installs frontend/backend deps.
+2. backend Vitest.
+3. frontend typecheck + build.
+4. e2e full.
+5. platform-path via clean copy.
+
+Let me first check if there's a shared store / offline. Start with `PATH=/usr/local/bin:$PATH pnpm install`.
+
+Also, send an acknowledgment reply to #168 to claim the handoff, so deepseek-11 knows I'm taking over and to coordinate (they're running evidence; avoid duplicate). Actually — deepseek-11 said they're running the evidence chain and will post results. If I run the same, that's duplication. But as the PR owner, I must have evidence for the actual head. Best: reply to #168 asking them to post results and confirming I'll independently verify; meanwhile start my own runs since they may be interrupted. Hmm, "请先不要重复实现或另起分支" — they only ask not to re-implement.
+
+Since evidence must come from a real run by the PR owner, and deepseek-11's run may be interrupted, I'll run my own evidence chain. But to reduce waste, I could wait briefly for their results. However there's no strong signal they will complete. Braid says their execution is in progress. Let me do this: start my own full evidence chain (install + tests) — it's the safest path to a verified merge. Also post an ack.
+
+Actually, an important consideration: the ack should be concise, note that I'm taking over as owner per #168, and that I'll run the evidence chain. Let me post it first.
+
+Actually per guidance "收到评论不必回执" but here I need to coordinate: "交接前核对当前说明" and "联系其确认交接点". deepseek-11 already gave an explicit handoff note #168 with head and intent, so handoff is clear. I'll post a short ack stating I take over and will run the independent evidence, and ask them to post their results if already collected (to consume rather than duplicate)—but note I'll still run my own.
+
+Let me post the ack and start the install simultaneously.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH pnpm install --prefer-offline 2>&1 | tail -25
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && braid comment create 17 --body "$(cat <<'EOF'
+
+## 2026-09-29T09:03:09.151Z c6c0aa9c 2026-09-29T09-02-28-456Z_01a0ec66-b268-70e9-be22-9747657be194.jsonl:32
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && braid pr comment --help 2>&1 | head -30
+
+## 2026-09-29T09:03:11.287Z a37659fd 2026-09-29T09-02-28-456Z_01a0ec66-b268-70e9-be22-9747657be194.jsonl:34
+Post the ack comment via `braid pr comment 17 -F -`. Then run tests. Let me use a heredoc via stdin. Careful with backticks — using stdin avoids shell expansion issues if quoted heredoc.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && braid pr comment 17 --reply-to 168 -F - <<'EOF' 2>&1 | tail -5
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH pnpm --dir backend run test 2>&1 | tail -30
+
+## 2026-09-29T09:03:23.610Z 1a7f9e7c 2026-09-29T09-00-43-797Z_01a0ec65-1995-724f-8fe7-036c1d3299d4.jsonl:63
+@deepseek-13 acknowledges and is now running their own evidence chain in their own workspace, on the same head 425b97c. They say if my chain already finished, post it; results on the same commit can be consumed.
+
+My e2e is still running (test 13 of 81). Since @deepseek-13 is running the same checks in parallel, load will increase → potential flakiness in both. Hmm, risk. But both are on the same commit; results should be consistent. To reduce duplicate compute and load-induced flakiness, I should reply to @deepseek-13: my e2e is in progress (started ~09:02), please coordinate — either wait for mine or proceed; and importantly, avoid running platform-path simultaneously with mine.
+
+Actually the more valuable thing: reply concisely stating the exact plan/timing so we don't double-run the platform check at the same time. Let me reply: "我的 e2e 正在 425b97c 上运行（09:02 起，进度 ~13/81），完成后立即跑 platform-path（干净副本 /tmp/platform-check-prereq）；为避免同机并发导致计时抖动（#138/#153 已记录该噪声），建议你的 platform-path 等我的完成后再启动，或者你只做 diff 独立核对。我的结果会贴在本 thread；若你已开始跑并完成，也可直接贴，两者同提交，可互为对照。"
+
+That's helpful coordination. Let me post it.
+
+Then wait for e2e completion.
+
+Also, PR #15 is merged; the update message says "请处理 PR #15" with pr:17 comment 169. Ok.
+
+Let me post the coordination reply.
+[operation headings; complete args in raw source]
+cat > /tmp/prereq-evidence/coord-comment.md <<'EOF'
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid pr comment 17 --body-file /tmp/prereq-evidence/coord-comment.md --reply-to 169 2>&1 | tail -4
+
+## 2026-09-29T09:03:43.739Z 52ae1756 2026-09-29T09-01-38-154Z_01a0ec65-edea-74ca-a390-860b1eaed526.jsonl:16
+State is consistent with packet. Active threads:
+- PR #15 merged (2eed74e); #167 merge receipt posted. Issue #8 open, waiting to be closed by its owner (glm-10) after prereq small PR? Actually #167 says "Issue #8 可由负责人按流程关闭" — but the prereq small PR is part of #8's closure? #162 said merge of small PR closes prerequisites 1+2. Issue #8 owner will decide.
+- deepseek-11 is "正在执行" on PR #15 context — likely working on the prereq small PR now. No need to ping.
+- PR #16: waiting on deepseek-9 acceptance at d47a936; develop moved so glm-12 must re-anchor before merge. The packet already documents this. Should I notify deepseek-9/glm-12 about the develop move? The packet next-step #2 says it, but participants may not have seen. #156 (from glm-12) said "验收请以 d47a936 为准" — that was before M5 merged? #156 posted... PR #15 merged at 09:0x. Comment #156's content doesn't mention M5. The root should notify PR #16 participants that develop moved to 2eed74e and a third re-anchor is required before merging, per packet. That's a real coordination action worth doing now.
+
+- Issue #4 closed ✓ (next step 3 done — update packet to remove it).
+
+Actions:
+1. Post comment on PR #16 (thread 143 or reply to #156) notifying @deepseek-9 and @glm-12: develop moved to 2eed74e (PR #15/M5 merged); acceptance of d47a936 can proceed for requirement scenarios, but before merging glm-12 must integrate develop again (expected conflicts app.js/copy.ts/seed, handle like #155) and report new head full evidence; root verifies then merges.
+2. Update issue #1 packet: remove #4 close-out from 下一步 (done), note it.
+
+Let me do both.
+当前状态核实完毕：PR #15 已合并（develop `2eed74e`），deepseek-11 正在推进前提小 PR（Braid 显示“正在执行”），#4 已关闭。需要我处理的两件事：
+
+1. **PR #16 的参与者可能还不知道 develop 已前移** —— glm-12 在 #156 报候选 `d47a936` 时 M5 尚未合并，现在合并前需要第三次整合重锚。需要在 PR #16 通知双方。
+2. **更新根 Issue packet**：#4 关闭收尾已完成，从“下一步”移除。
+[operation headings; complete args in raw source]
+braid pr comment 16 --reply-to 156 --body "## develop 已前移至 \`2eed74e\`（PR #15/M5 合入）：合并前需第三次整合重锚（@glm-12；@deepseek-9 知悉）
+
+## 2026-09-29T09:03:55.048Z 86ed25a3 2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl:79
+PR #15 merged (2eed74e, root independently verified). Root asks @deepseek-11 to publish the small PR. "Issue #8 可由负责人按流程关闭" — but per the flow, the two prerequisites still need to close via the small PR, and then develop → main integration PR. Root says "M5 闭环：Issue #8 可由负责人按流程关闭；两条待复验前提转由小 PR 承载."
+
+Hmm — root says Issue #8 can be closed by its owner per process. But wait: the original flow said #8 stays open until root integration (develop → main) completes, and I record integration results in thread 85. Root now says it can be closed. However the two prerequisites are still pending via the small PR. Root's statement: "M5 闭环：Issue #8 可由负责人按流程关闭；两条待复验前提转由小 PR 承载" — meaning the small PR carries the prerequisites (tracked elsewhere presumably), and Issue #8's main delivery is done.
+
+But earlier plan: "#8 保持 open 至根整合完成，届时我在本 thread 记录整合结果" (#137) and develop → main integration PR is organized by root Issue #1. The integration PR covers full-requirement acceptance on the develop→main PR, which is not M5-specific. Root now explicitly says #8 can be closed by the owner.
+
+Should I close now? The prerequisites (Triage/Maintain browser layer + org repo) are M5 acceptance criteria — but they've been adjudicated to move to the small PR which will be merged (closing them), and final coverage in the develop→main integration PR. Root's merge receipt says Issue #8 can be closed by its owner.
+
+Also root says "@glm-10 知悉" for the small PR step. As issue owner, I should:
+1. Update Issue #8 body: PR #15 merged into develop (2eed74e), merge receipt #167, prerequisites now carried by upcoming small PR.
+2. Record in thread 85 the merge result and decide on closing.
+
+On closing: root says "可由负责人按流程关闭". But the two prerequisites close only when the small PR merges. The issue body previously said "#8 保持 open，整合结果出来后我在本 thread 记录". Now root explicitly authorizes closure. Options: (a) close #8 now with reason noting prerequisites tracked via small PR + integration PR; (b) keep open until small PR merges and I record the final result.
+
+Per my earlier commitment (#137/#140): "#8 保持 open，整合结果出来后我在本 thread 记录整合结果". The "整合" (develop → main) is organized by root at Issue #1 level. Root's #167 now says #8 can close. The prerequisites are still open items in my issue body. Prudent path: wait for the small PR to merge (closes both prerequisites), then record final result and close #8. That's a short wait and keeps the acceptance bookkeeping consistent — the issue's own acceptance criteria include the two prerequisites. Closing now while prerequisites are open would leave the issue body with open items, which contradicts "维护你负责的 Issue/PR，让接手者能找到当前有效的要求、决定和未决问题" — though they'd be tracked in the small PR.
+
+Actually, re-reading root: "M5 闭环：Issue #8 可由负责人按流程关闭；两条待复验前提转由小 PR 承载。" This is an explicit instruction/authorization from the root owner that closure is appropriate; prerequisites move to the small PR. But the small PR isn't created yet. The safer, consistent-with-my-previous-commitments approach: update body now, post thread-85 note acknowledging merge receipt, and state I'll close #8 once the small PR merges and both prerequisites formally close (or close now?).
+
+Hmm. Root said "可...关闭" (may close) — not "must close now". Given the issue's own body lists the two prerequisites as pending and my repeated commitment that #8 stays open until integration results are recorded, I'll:
+1. Update issue body: merge status = #15 merged into develop (2eed74e, receipt #167, root independent verification passed); next step = small PR (by deepseek-11) closes prereq 1+2 → I record final result in thread 85 → close #8. develop → main integration is organized by root (#1) — full-scope acceptance there.
+2. Post a thread-85 reply to #167: merge receipt received; #8 kept open until small PR merges (closing both prerequisites), then final record + close; unless root prefers immediate closure — no, don't ask unnecessary questions. Actually should I just close now per root's authorization? The tension: root is the root owner and explicitly said the issue can be closed. But my own final-handover trail says I'd record integration results. The small PR result will be reported to Issue #8 per #167 ("结果回 Issue #8 记录"). So #8 remains the recording venue for the small PR outcome. If I close #8 now, the small PR result would be recorded on a closed issue — reopenable but messy. Better keep open until small PR merges.
+
+I'll update body + reply briefly in thread 85, then end turn.
+PR #15 已由根合入 develop（`2eed74e`，根侧独立验证通过）。小 PR 尚未发布，两条前提将随其合并闭合。更新 Issue #8 正文合并状态，并在 thread 85 记录。
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-8/pi-glm-fast-g1 && braid issue view 8 > /tmp/issue8-body3.md 2>/dev/null && python3 - <<'EOF'
+braid issue edit 8 --body-file /tmp/issue8-body3.md 2>&1 | head -2
+
+## 2026-09-29T09:03:59.651Z 8db7c0d7 2026-09-29T09-01-38-154Z_01a0ec65-edea-74ca-a390-860b1eaed526.jsonl:18
+Comment 156 belongs to issue #6 thread 84, not PR #16 thread 143. Let me reply in PR #16 thread 143 (where #155 lives), or on issue #6 thread 84. #155 is in PR #16 thread 143. I'll reply to #155 on PR #16.
+[operation headings; complete args in raw source]
+braid pr comment 16 --reply-to 155 --body "## develop 已前移至 \`2eed74e\`（PR #15/M5 合入）：合并前需第三次整合重锚（@glm-12；@deepseek-9 知悉）
+
+## 2026-09-29T09:04:06.819Z 40731c1c 2026-09-29T08-40-21-388Z_01a0ec52-728c-75c9-98c5-403e72cdabf8.jsonl:81
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-8/pi-glm-fast-g1 && cat > /tmp/t85-merge-note.md <<'EOF'
+braid issue comment 8 --reply-to 161 --body-file /tmp/t85-merge-note.md 2>&1 | head -2
+
+## 2026-09-29T09:04:07.420Z 2cd7f248 2026-09-29T09-02-28-456Z_01a0ec66-b268-70e9-be22-9747657be194.jsonl:48
+Issue #8 body updated: PR #15 merged (merge `2eed74e`), next step is this small PR. Everything consistent.
+
+deepseek-11 is running their evidence chain. They asked me not to run platform-path concurrently. I'll respect that: do the diff verification now, and I did Vitest/typecheck/build already (my own runs, done concurrently but they passed).
+
+Wait — my Vitest run at 09:03 overlapped their e2e, which could have caused noise in their run. But their run was at 13/81 already. Hmm, load spike risk. I ran Vitest 09:03:14–09:03:38ish. Their e2e started 09:02. It could have added load. If their e2e fails due to timing, they may rerun.
+
+For the record, my Vitest = 122/122 passed at 425b97c.
+
+Now let me reply to #170 accepting the coordination: I'll wait for their e2e + platform-path, do the diff verification meanwhile. Then after their results, I'll decide whether to run platform-path myself too (maybe yes if machines are quiet, since as owner I want my own evidence; but they said duplicate gives no extra info). Given #134 §3 and evidence practice, consuming a peer's same-commit evidence is established in this project (#137/#140). So I can consume theirs.
+
+Actually, wait. Consider the resource/time budget: platform-path takes a while (clean copy npm install + build + full Playwright). Their run is already going. Duplicating costs a lot. I'll consume theirs if green, and possibly do a lightweight independent check on the org-repo/tier specs only (grep-run the two new describes) to independently confirm — but even that adds load. Hmm, running only the new describes is a small subset (6 tests) — cheap and independent. But playwright runs the whole file matching grep; that's fine.
+
+Plan: reply to #170 agreeing; do diff verification; wait for their results. Then run just the new describes (grep) as an independent spot check after their heavy run finishes (to avoid load overlap). Then merge.
+
+Actually, as the responsible owner, it would be more robust for me to run the full e2e in the workspace myself after their runs complete — it's the authoritative evidence I publish. But that's ~several minutes. It's worth it: I'm the owner and my evidence chain must be real. Yet my Vitest+typecheck+build already are real. For e2e + platform-path, if theirs is the same commit and green, consumption is fine and established practice in this project.
+
+Let me be pragmatic: wait for their results; then run the full e2e myself once (workspace, cheap-ish, uses local build, since frontend/dist is built at this commit — note I already built it). And consume their platform-path (heaviest). That gives one independent full e2e on the same commit plus a peer platform-path. Good balance.
+
+But careful: my frontend build is already done → `node e2e/run.mjs --no-build` works.
+
+Let me now do the diff verification (read e2e file sections and verify they meaningfully assert browser-level role visibility), and reply to #170.
+
+Let me also verify the org repo seed topology exists (bob-reviewer write grant on org-handbook via team, org-private private).
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && sed -n '1,120p' backend/src/seed/governance.js
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && braid pr comment 17 --reply-to 170 -F - <<'EOF' 2>&1 | tail -3
+
+## 2026-09-29T09:04:16.570Z b6a2953f 2026-09-29T09-01-38-154Z_01a0ec65-edea-74ca-a390-860b1eaed526.jsonl:20
+Hmm, it notified deepseek-11 too because they're a thread participant (they commented in PR #16 thread? maybe). Fine.
+
+Now update issue #1 packet: remove "3. #4 关闭收尾" from 下一步 (done — issue #4 closed), and note #4 closure in resolved list / status. Also update 下一步 numbering. Keep minimal edits.
+
+Edits to body:
+- In 当前状态, #6 line is fine.
+- In 下一步: remove item 3 about #4; renumber.
+- In 已解决 list: add ~~#4 关闭收尾~~（Issue #4 已关闭，评论 #158/#167 一线）. Actually the close reason is recorded in issue #4 itself. Add brief mention.
+
+Let me fetch current body and edit via braid issue edit 1 --body. I'll construct new body from the one I saw. Easier: use bash to get body, apply sed-like edits, then set. Actually I have the body text from view. Let me just do targeted replacements with a small script.
+PR #16 通知已发出（评论 #171）。现在更新根 Issue 正文：#4 已关闭，从“下一步”移除并记录。
+[operation headings; complete args in raw source]
+cd /tmp && braid issue view 1 > issue1.txt 2>&1 && python3 - <<'EOF'
+braid issue edit 1 --body-file /tmp/issue1-new.md 2>&1
+
+## 2026-09-29T09:04:23.584Z 8a16077a 2026-09-29T08-26-06-739Z_01a0ec45-6813-747f-945c-a94ed069fe7f.jsonl:242
+Confirmed: develop = 2eed74e; PR head = 018861d; conflicts now in app.js, copy.ts, routes.tsx.
+
+Now, I have a valid turn. Let me use it:
+
+1. Post acceptance report on PR #16 (thread 143, reply to 155 — the head report; or reply to 171). I'll reply to #171 since it's about the re-anchor, but include the acceptance results. Actually better: two comments?
+   - PR #16 comment: acceptance results for 018861d + scope validity for the re-anchored head (reply-to 155 or 171).
+   - Issue #6 comment: brief confirmation + body update.
+   
+   To keep it minimal: 
+   - PR #16: acceptance report (reply to 171, thread 143) — evidence + re-anchor plan + merge ownership.
+   - Issue #6 body: update 当前状态.
+   - Maybe a short issue comment (reply to 171 in issue thread 84)? #171 is on PR #16. The issue thread has #152 (my ask). I could skip an issue comment since the PR comment covers it; but the issue is my primary work item and the root's #171 was delivered to me. Hmm, the root's #171 is on PR #16 thread 143, so replying there suffices. I'll also note in the body.
+
+Actually — I want to also record my acceptance conclusion and evidence entrance in the Issue (since the Issue is the authoritative record). The body update covers it.
+
+2. Should I attempt to prepare/merge now? No — must wait for glm-12's third integration.
+
+Let me write the PR comment. Content:
+
+## 验收结论（M4a，`018861d` = 二次整合 `d47a936` + packet）：全部通过；重锚后在新 head 复验
+
+Facts:
+- 我自己的执行（`PATH=/usr/local/bin:$PATH`，日志 /tmp/issue6-accept/accept-018861d.log）: `pnpm test` Vitest 110/110 + typecheck exit 0；`pnpm e2e` 66/66 exit 0；`checks/platform-path.sh` exit 0（真实 npm install/build/start，66/66，1.6m）。
+- 独立 HTTP/契约探针（自写 26 项，/tmp/issue6-accept/api-contract-check.mjs）：26/26 PASS。覆盖 commit=最后触碰 path 的提交、空分支 200 空目录、branches 形状、历史倒序+文件范围过滤、feature commit added+modified、7 位短 hash 与十进制 id 等价、commit diff base=第一父+行级编号、三点 compare（mergeBase/commits/totals 2/5/0）、同 revision 空差异、私有/组织私有仓库全端点 404 无泄露、跨仓库短 hash 404、只读（分支 head 不变）。
+- 必测反例与三条需求场景均 e2e 覆盖并通过；合并语义（保留双方）与 §7.2 无漂移；#147 两项回填已落。
+- 一处与本 PR 无关的环境观察：预演时 M1 `auth.test.js › keeps the session and the data across a restart` 在高负载下 5s 超时，单独复跑 7/7 通过（3.78s）——非 M4a 缺陷，供根侧全量验收参考。
+
+Re-anchor:
+- 收到 #171：develop 已到 `2eed74e`；`git merge-tree` 复核冲突面为 `backend/src/app.js`、`frontend/src/contracts/copy.ts`、`frontend/src/routes.tsx`（比 #171 预估多一处 routes.tsx），处置口径同前：保留双方、语义复核。
+- 我接受「验收结论对新 head 仍有效」的前提，但按纪律会在**新 head** 上重跑三项检查与探针（不改判据）；若重锚引入 M4a 行为变化，以新证据为准。
+- @glm-12 完成第三次整合并报新 head 后，我在该 head 上复验并合并 PR #16（`--match-head-commit`）并关闭 Issue #6（#128 分工）；若根要亲自合并，请在该 head 上取我的复验结论。
+
+Then the issue body update.
+
+Let me write these. Use --body-file - to avoid shell issues.
+
+Let me first update the body. I need to edit the "当前状态（2026-09-29）" section. Let me construct the new section text.
+
+Current section (from the earlier view):
+```
+## 当前状态（2026-09-29）
+分支端点归属与端点形状已由根 Issue #1 确认（本 Issue comment #96），M4a 实施边界不变；
+设计与契约已登记（本正文 + `docs/architecture.md` §7.2/§9.16（原 §9.14，合入时重编号；设计分支 `c54e304` 上仍是 §9.14 文本）+ `docs/seed-data.md` + `docs/ui-reference-notes.md`）；
+任务 packet：`docs/task-packets/m4a-issue-6.md`；实施 PR（`--base develop`）已建立并指派负责人，证据与结果在该 PR 与本次讨论中交接。
+- **PR #16 候选最新 head `9012550`**（...）。此前 `5228a3e`（...）在负责人自检下 ...；验收在最终 head 上重跑，不沿用旧 base（`53532a0`）的 PASS。
+- **合入前仍未落的两项文档回填 + 一次基线前进**（PR #16 comment #147/#149）：①...②...③...
+- 合并归属已确认（PR #16 comment #128）：...
+```
+
+I'll replace from "- **PR #16 候选最新 head `9012550`**" through the end with a new concise state:
+
+```
+- **验收已通过（M4a 范围）**：候选 `018861d`（= 二次整合 `d47a936` + packet）。我在该 head 上首轮执行：`pnpm test` = Vitest 110/110 + typecheck、`pnpm e2e` = 66/66、`bash checks/platform-path.sh` = exit 0（真实 npm install/build/start，66/66）；另有自写独立 HTTP/契约探针 26/26（`/tmp/issue6-accept/api-contract-check.mjs`，覆盖 rev 解析/约定 4·5/三点 compare/权限 404/只读）。三条需求场景、必测反例（含私有仓库 `commit/:rev` 无泄露）、刷新持久化均通过；#147 两项文档回填已落；§7.2 与正文契约无漂移。证据入口：PR #16 comment（见本 Issue 讨论 thread 84/143）。
+- **合入前仍需第三次基线整合**：`origin/develop` 已前移到 **`2eed74e`**（Merge PR #15 = M5），不再是 head 的祖先；`git merge-tree` 冲突面 = `backend/src/app.js`、`frontend/src/contracts/copy.ts`、`frontend/src/routes.tsx`（保留双方、语义复核）。@glm-12 负责在该 head 上完成第三次整合并报新 head（PR #16 comment #171）。
+- **验收/合并归属**：新 head 上我重跑三项检查 + 探针后以 `--match-head-commit` 合并 PR #16 并关闭本 Issue（PR #16 comment #128 的分工）；根侧独立平台验证为佐证，不替代本 Issue 的验收结论。develop → main 最终整合 PR 与全量 E2E 归根 Issue #1。
+```
+
+Good. Let me apply the edit with braid issue edit. Check `braid issue edit --help` for the body flag.
+
+Let me be efficient: run `braid issue edit --help` then post.
+
+Actually I know the pattern: `braid issue edit 6 --body-file -`. Let me check help quickly to be safe (I have limited write-validity time; a failed call is fine but let me not waste).
+
+Let me do: `braid issue edit --help`.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid issue edit --help 2>&1 | head -20
+
+## 2026-09-29T09:04:29.156Z d58b6d35 2026-09-29T09-02-28-456Z_01a0ec66-b268-70e9-be22-9747657be194.jsonl:61
+No results yet from deepseek-11. I'll record my independent verification result in the thread (durable), then end my turn and wait for their update.
+
+Actually, wait. Let me reconsider whether to just run the e2e myself now. Their e2e has been running since 09:02; it's now ~09:05+. Full e2e normally takes several minutes (58 tests took a while; now 81 tests). If I run concurrently, the load doubles and both could see timing noise. Their statement was explicit. I'll respect it.
+
+Let me post my diff verification (a substantive evidence item) and end the turn. The harness will wake me when their comment lands.
+
+Actually — one more consideration: the instruction in the task says the work should be pushed to origin and PR ready/merged. Since evidence isn't complete, I'll wait. Let me post the diff-verification comment now (concise), then end the response.
+
+Let me compose it: independent diff review findings:
+- Only 6 files, seed+spec+docs, zero changes to backend/src/modules, frontend/src (verify: git diff --stat shows exactly those). Confirm no copy.ts change.
+- Seed accounts: pw-triage/pw-maintain via SEED_ACCOUNTS with shared password hash, insert-if-absent by username; repo_grants rows via ensureGrant (INSERT OR IGNORE), role values legal per CHECK constraint.
+- Tier assertions: Triage = metadata+close visible, edit/comment absent + comment API 403, close lands "Closed issue"; Maintain = edit/comment/close visible + title save updates h1. Matches REQ-5-3/5-4 + docs/architecture.md §4 explicit set.
+- Org tests consume existing M2/M3 seed topology (alice org owner→Admin, bob org member + frontend-team write grant on org-handbook, org-private private, carol no grant) — verified in backend/src/seed/governance.js; no new seed rows.
+- Regression risk scan: no exact-list/count assertions on issue lists or assignable options; existing assignable assertions are presence/absence (dave-reader absent) — new assignable accounts pw-triage/pw-maintain don't invalidate; seed.test.js derives length from SEED_ACCOUNTS dynamically.
+- Fixtures own their issues (owner creates then closes; unique tokens) so shared seed shape untouched.
+- Docs: docs/seed-data.md registers tiers & assignable set; packet updated with closure.
+
+Then: "waiting for your e2e + platform-path; will then publish anchor + merge".
+
+Let me post it. Then end turn.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && braid pr comment 17 --reply-to 168 -F - <<'EOF' 2>&1 | tail -3
+
+## 2026-09-29T09:04:31.343Z fa8eb895 2026-09-29T08-26-06-739Z_01a0ec45-6813-747f-945c-a94ed069fe7f.jsonl:248
+Now update the issue body.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid issue edit 6 -F /tmp/issue6-accept/issue6-body.md 2>&1 | tail -3
+
+## 2026-09-29T09:04:36.620Z 2c1f2540 2026-09-29T08-26-06-739Z_01a0ec45-6813-747f-945c-a94ed069fe7f.jsonl:250
+The body edit succeeded (writes work now!).
+
+Now post the acceptance report comment on PR #16 in thread 143, replying to #171.
+
+Let me write it.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid pr comment 16 --reply-to 171 -F - <<'EOF' 2>&1 | tail -6

@@ -1,0 +1,159 @@
+d check help in parallel.
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L22:C1]
+[toolCall] bash call_00_gseoz5VFrDLPX7Gah7jo0421
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git rev-parse origin/develop && git ls-tree -r --name-only origin/develop | grep -E 'csv|cellDisplay|WorkbookToolbar|ImportCsvDialog|NewWorkbookPage|RenameWorkbookDialog' ; echo \"=== import endpoint + footprint ===\"; git show origin/develop:backend/src/routes.js | grep -n \"import\" | head; git show origin/develop:backend/src/store.js | grep -n \"min_rows\\|assertWorksheetStateValid\" | head -20"}
+[toolCall] bash call_01_pRVKlU5q0H5DFBrIkDHk1713
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment resolve --help 2>&1 | head -30; echo ===; braid issue comment --help 2>&1 | head -40"}
+
+## S35:L23 2026-09-29T06:53:17.802Z message toolResult
+toolResult bash False
+[text]
+e63efc692d77ff1d8c0142308e9932ef1851fef3
+frontend/src/components/ImportCsvDialog.tsx
+frontend/src/components/NewWorkbookPage.tsx
+frontend/src/components/RenameWorkbookDialog.tsx
+frontend/src/components/WorkbookToolbar.tsx
+frontend/src/lib/cellDisplay.test.ts
+frontend/src/lib/cellDisplay.ts
+frontend/src/lib/csvExport.test.ts
+frontend/src/lib/csvExport.ts
+=== import endpoint + footprint ===
+15:  importWorksheetState,
+23:import {
+40: * @returns {import('express').Router}
+69:  router.post('/workbooks/import', (req, res) => {
+118:  // 6. Whole-worksheet state import (undo/redo replay).
+944:      const structure = /** @type {{ min_rows: number | null, min_cols: number | null }} */ (
+945:        db.prepare('SELECT min_rows, min_cols FROM worksheets WHERE id = ?').get(ws.id)
+947:      db.prepare('UPDATE worksheets SET min_rows = ?, min_cols = ? WHERE id = ?').run(
+948:        payload.minRows ?? structure.min_rows ?? 0,
+[DUPLICATES: 14 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L23:C1]
+
+## S35:L24 2026-09-29T06:53:17.802Z message toolResult
+toolResult bash False
+[text]
+Usage: braid comment resolve [OPTIONS] <IDS>...
+  <IDS>...  评论 ID；可一次提供多个，例如 resolve 4 7。
+[DUPLICATES: 19 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L24:C1]
+
+## S35:L25 2026-09-29T06:53:17.803Z message user
+[text]
+- pr:8 comment 94; read `comment view 94 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L25:C1]
+
+## S35:L26 2026-09-29T06:53:19.147Z message assistant
+[thinking]
+New: PR #8 comment 94. Let me read it.
+[toolCall] bash call_00_SZLQQdYacTLusyUZfDHV3764
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 94 --thread 2>&1 | head -60"}
+
+## S35:L27 2026-09-29T06:53:19.164Z message toolResult
+toolResult bash False
+[text]
+comment #94 [visible]
+【PR #8 侧收口补充（reply #90）：A-3 接缝与过渡断言的精确锚点，供指派 C（#5）时直接引用】@deepseek-3 @glm-1
+PR #8 已 merged，我不再向 `braid/issue-3-a` 追加提交。合入事实（刚 `git fetch` 复核，未变）：`origin/develop` tip = `e63efc6`，`git diff a23af5a origin/develop` 为空（tree `a3ae41bf` 一致）。本回复只补**尚未在任何地方成文的一条实证**：#92 §3 要求的「把 A-3 接缝义务写入 C 的交接材料」，其精确落点在 develop 当前树上是这些（均已在 `e63efc6` 上逐条 `grep` 核实，非转述）：
+## 1. C 必须替换的唯一实现（A-3 单一接缝）
+- 定义：`frontend/src/lib/cellDisplay.ts:17` `worksheetDisplayValues(worksheet): CellDisplayValue`（现为恒等：`raw.get(cellKey(row,col)) ?? ''`）。文件头注释已写明「C replaces the implementation ... this module's identity is the interim, pre-C behaviour」。
+- 两个消费者**已经都在接缝上**（C 只需换这一处实现，不必再接线）：
+  - 网格：`frontend/src/components/WorkbookEditor.tsx:118-119` memo → `Grid.tsx:189` `text={displayValue ? displayValue(row, col) : raw}`；
+  - 导出：`frontend/src/components/WorkbookToolbar.tsx:34` `worksheetToCsv(worksheet, displayValue)`（`lib/csvExport.ts:40` 的默认参数是同一函数）。
+- **不得被接缝覆盖的两处（D-A8 边界）**：`Grid.tsx` 内联编辑仍以 `raw` 初始化、`FormulaBar` 继续读 cells 原文。C 换实现时不要顺手把这两处改成显示值，否则打破 REQ-4-1-1「公式栏永远显示原始公式」。
+- **错误值（v1.3 A-3）**：A 侧恒等实现下"网格显示什么、导出就写什么"由构造保证；C 换成引擎后，错误串（如 `#DIV/0!`）同样只能经这一条 seam 产出——即 `Grid` 的 `text` 与 `csvExport` 的取值不得分叉。C 的用例应同时断言"网格出现错误串"与"导出写入同一错误串"。
+## 2. 必须翻转的过渡断言（整合 PR 的最终门禁）
+- 位置：`e2e/workbook-lifecycle.spec.ts:375-386`，用例名 `exports the formula cell value through the shared display seam`（`=1+1,plain` 经导入建表）。
+- 现状断言：网格 A1 `=1+1`、导出 `=1+1,plain`；行内注释为 **PRE-C TRANSITION (Issue #3 decision D-A8)**，明写 "this assertion MUST flip to `2` for both the grid cell and the exported text; the integration PR carries that flipped case as the final gate"。
+- **检索提示（我实际踩到）**：该注释是英文，`grep "C 合入"` 之类的中文检索在 develop 上**查不到**，会误判成"标注缺失"；按文件名 + `PRE-C TRANSITION` 检索才命中。
+## 3. 其它
+- `tasks/issue-3-a/packet.md`「下一步」末两条 checkbox 的实测状态是**均已完成**（helper 切换已合入、合入已由 Issue 负责人执行）；按 #92 §5，该两行以本 Issue 正文「交接与结果」为准，我不为此另开分支/PR（不向已合并分支追加提交）。
+- 除上述 C 接线外，PR #8 侧无待办；公式单元格导出原文的过渡行为、A-5 宽松解析、足迹静态、导入无应用层尺寸上限（#54）四条边界保持 #90 §后续义务所载。
+[DUPLICATES: 43 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L27:C1]
+
+## S35:L28 2026-09-29T06:53:24.782Z message assistant
+[thinking]
+Comment 94 gives the precise anchors for the A-3 seam obligation. Now the tasks for me:
+1. Update issue #3 body: reflect CLOSED by root @glm-1, correct stale "保持 OPEN" statements, record transferred obligations with exact anchors (cellDisplay.ts:17, WorkbookEditor.tsx:118-119, Grid.tsx:189, WorkbookToolbar.tsx:34, e2e/workbook-lifecycle.spec.ts:375-386 PRE-C TRANSITION), and note A-3 seam obligation must go into C's handover.
+2. Post a closure comment in Issue #3 (thread 27) — acknowledging root closure, my own independent re-verification on develop e63efc6 (I just did: files present, endpoint, single helper), and recording the transferred obligations in the Issue body (entry point). Also note thread 29 (PR #8 handover) resolved.
+3. Resolve finished discussion thread 29 (handover completed). Keep thread 27 open? Hmm. Maybe resolve thread 29 only.
+Wait — also should the issue be re-owned? It's closed; no further action. But should I verify the closure claim (e.g. that develop actually contains everything)? I did the file/endpoint checks. I could run the full test suite on develop as a final independent verification... but that's re-doing acceptance already done at #88 on the identical tree (develop tree == a23af5a tree, verified by my own `git diff` — let me verify that myself too, cheap). Let me run `git rev-parse origin/develop^{tree}` and compare to a23af5a tree.
+Let me do that, then edit the body.
+Also, one consideration: the body currently says "#3 与 #4 同惯例保持 OPEN、关闭待根负责人整合验收". Now closed at root's decision before integration PR. Should I note any disagreement? The root closed it with the transfer of the formula export gate to the integration PR. Is that acceptable per the rules? "根负责人据此判断完整交付并关闭根项" — that's about root item. For sub-issues: "子 Issue 保持 OPEN、关闭待根负责人整合验收（Issue #4 comment #78）". So the convention was to keep sub-issues open until root integration acceptance. Now root decided to close early with the formula-export premise transferred to the integration PR. Is that a problem? It's a scope decision by the root owner. #3's own remaining premise (formula export = computed result) will be gated by the integration PR. I should record this as a noted deviation from the Issue #4 convention: closure before the formula export terminal state exists, with the obligation explicitly transferred. Should I flag any risk? The risk: if C never lands, the integration PR gate catches it. That's acceptable — the premise is recorded in the integration PR requirement. I can note it factually in the body without reopening.
+Hmm, should I reopen? No — closing/reopening judgment belongs to root here; I as issue owner could reopen, but there is no new fact requiring it. The remaining premise is transferred to the integration PR which is the final gate. Actually careful: is there a risk that the integration PR owner never sees the requirement? It is now recorded in the #3 body and thread — and the root's close reason. I'll make sure the body records it as an entry.
+Also #5 unassigned: I should @glm-1 noting the seam obligation material is now anchored in PR #8 #94 and that #5 needs the assignee to receive it. That's a genuine outstanding action item.
+Let's compute the develop tree hash compare, then write the body update.
+Let me view the current body raw to edit precisely. The body is the description in the prompt plus... I need the exact current text to use `braid issue edit --body-file`. Let me dump it: `braid issue view 3 --json`? Let's check options.
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L28:C1]
+[toolCall] bash call_00_FNwWvM5IraFCj74qraXb5851
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git rev-parse origin/develop^{tree} a23af5a^{tree} 2>&1; echo \"=== diff ===\"; git diff --stat a23af5a origin/develop | tail -3; echo \"=== edit help ===\"; braid issue edit --help 2>&1 | head -30"}
+[toolCall] bash call_01_IzUJjxhE7PJsd4FpTe9c6498
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --json 2>/dev/null | head -c 600; echo; echo \"=== check json opt ===\"; braid issue view --help 2>&1 | head -20"}
+
+## S35:L29 2026-09-29T06:53:24.816Z message toolResult
+toolResult bash False
+[text]
+a3ae41bf44a004cc34a16d7cd55be854707120fa
+=== diff ===
+=== edit help ===
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L29:C1]
+
+## S35:L30 2026-09-29T06:53:24.816Z message toolResult
+toolResult bash False
+[text]
+      "state": "MERGED",
+  "base_ref": null,
+  "body": "# 子 Issue A：工作簿生命周期与 CSV 交换（REQ-1-2-1、REQ-1-2-2、REQ-1-3-1、REQ-1-3-2）\n\n需求来源：`/workspac
+=== check json opt ===
+[DUPLICATES: 31 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L30:C1]
+
+## S35:L31 2026-09-29T06:53:26.489Z message assistant
+[thinking]
+Confirmed: develop tree == a23af5a tree (my own check). Now let me get the body into a file and edit the relevant bullets.
+Let me extract the body to a file.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L31:C1]
+[toolCall] bash call_00_2Tc8waJePovUiF0ONeh93190
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && mkdir -p /tmp/f26-issue3-body && braid issue view 3 --json body > /tmp/f26-issue3-body/raw.json && python3 -c \"\nimport json\nd=json.load(open('/tmp/f26-issue3-body/raw.json'))\nopen('/tmp/f26-issue3-body/body.md','w').write(d['body'])\nprint(len(d['body']))\n\" && grep -n \"实现 PR\\|交接与结果\\|未决/假设\" /tmp/f26-issue3-body/body.md"}
+
+## S35:L32 2026-09-29T06:53:26.531Z message toolResult
+toolResult bash False
+[text]
+4764
+31:- **实现 PR：#8**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5；task packet `tasks/issue-3-a/packet.md`（由 PR 接续同一 packet）。
+32:- **交接与结果**：PR 负责人在本 Issue 交接候选提交、命令、首轮结果与证据；Issue 负责人按 comment #27 + #33 + #36 + v1.3（#81/#82）在独立 worktree 复跑后**由 Issue 负责人合入 develop**（子 Issue PR 合入惯例见 Issue #4 comment #78；我在 #88 曾请 @glm-1 代办，已更正为本人合入）。**候选 `a23af5a` 已验收通过**（rebase 到 develop `15abbf6` + helper 切换）：独立复跑证据见 comment #88（unit backend 96 + frontend 49、typecheck Done、e2e 25 passed；首轮环境性 ABI 失败已留档），针对性复核见 #88 §2；先前候选 `559a0bd` 的证据见 #81 与 #82。**PR #8 已合入 develop @ `e63efc6`（"Merge local PR #8"，parents `15abbf6`+`a23af5a`，合入树与 `a23af5a` 逐字节一致）**；A 的实现与验收链闭环，收口决定与状态见 comment #92。
+33:- **未决/假设**：**尺寸上限已裁定为非全局不变量**（Issue #1 thread 1 comment #54）：import/state 不设应用层上限，实际边界 = `express.json` 10mb，全量渲染性能限度见 Issue #1 comment #53 实测。**共享 helper 切换已在 develop 成立**（helper 已在 develop；`a23af5a` 改调 `assertWorksheetStateValid` 并删本地副本，合入 `e63efc6` 后 develop 为单点校验实现，见 comment #88 §2 与 #92 §1；#60 的 #3 关闭前提已满足）。**A-7 已被 v1.3 取代**："尾部空字段不导出"现仅对无足迹工作表（空白创建工作簿）成立。**C 未合入 → 公式单元格导出原文（e2e 已标注必须翻转为计算结果），这是 #3 保持 OPEN 的唯一验收前提**：C（#5）替换 `frontend/src/lib/cellDisplay.ts` 实现（网格与导出同取当前计算结果、含错误值；FormulaBar/内联编辑仍读 `raw`），整合 PR 带翻转后的公式导出门禁；**#5 尚未指派**，指派时须把 A-3 接缝义务写入其交接材料；#3 与 #4 同惯例保持 OPEN、关闭待根负责人整合验收（Issue #4 comment #78）。A-5 宽松解析不变（只拒绝需求明示的非法引号类，`"ab"cd` 宽松接受）；导入成功即跳编辑器；导出文件名 `<工作簿名>.csv`；详见 comment #27 第 5 节。
+
+## S35:L33 2026-09-29T06:53:28.778Z message assistant
+[thinking]
+Now edit lines 31-33 in /tmp/f26-issue3-body/body.md. I'll rewrite those three bullets:
+- 实现 PR #8: mark MERGED.
+- 交接与结果: keep evidence, add closure by root @glm-1 at #167 with reason, and my independent re-verification (tree hash + files).
+- 未决/假设: mark issue CLOSED; state remaining premise transferred: A-3 seam replacement → C#5, formula export gate → integration PR; anchors from PR #8 comment #94 (cellDisplay.ts:17, WorkbookEditor.tsx:118-119, Grid.tsx:189, WorkbookToolbar.tsx:34, e2e/workbook-lifecycle.spec.ts:375-386 PRE-C TRANSITION); #5 unassigned → seam obligation must be in its handover material; known boundaries.
+Let me view the exact text of those lines to edit with `edit` tool on /tmp file. I'll do targeted replacements using unique substrings.
+Also verify line 31 content exactly.
+Let me read lines 25-35.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L33:C1]
+[toolCall] read call_00_IfW0FyfLktgpcG5i2Xle7157
+{"limit": 12, "offset": 25, "path": "/tmp/f26-issue3-body/body.md"}
+
+## S35:L34 2026-09-29T06:53:28.782Z message toolResult
+toolResult read False
+[text]
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L34:C1]
+
+## S35:L35 2026-09-29T06:53:34.908Z message assistant
+[thinking]
+Now make the edits. Also add a top-level "状态" line near the top? There's no explicit status header. The "设计与交接入口（当前，随进展更新）" heading. I'll add a status line at the start of that section (or modify the bullet about 实现 PR). Better: add a bullet at the top of the section: "**状态（2026-09-29）：CLOSED** — 由根负责人 @glm-1 于 #167 关闭，理由 ...；我的独立复核 ...；遗留义务...".
+Let me write the edits.
+Edit 1: add closure status bullet right after the section heading line "## 设计与交接入口（当前，随进展更新）".
+Edit 2: modify 实现 PR bullet to note MERGED.
+Edit 3: modify 交接与结果 bullet — add closure.
+Edit 4: modify 未决/假设 bullet — replace the "#3 保持 OPEN" sentence with closed + transferred obligations + anchors.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L35:C1]
+[toolCall] edit call_00_YlDocccH3TWGR2Kuo5vN8195
+{"edits": [{"newText": "## 设计与交接入口（当前，随进展更新）\n\n- **状态：CLOSED（2026-09-29）** —— 根负责人 @glm-1 在 #167 关闭，理由「PR #8 已验收合入 develop（`e63efc6`，合并树与验收候选 `a23af5a` 逐字节一致）……遗留义务已转交：A-3 接缝替换归 C（#5）、公式导出门禁归整合 PR；已知边界随契约保持可见」。我在关闭后于本 worktree 独立复核 `origin/develop`（`e63efc6`）：tree `a3ae41bf` 与 `a23af5a` 一致（`git diff` 为空）、`POST /api/workbooks/import` 与 `parseCsv`/`createWorkbookFromCsv` 在树内、`cellDisplay.ts` 等 A 交付文件齐备、`assertWorksheetStateValid` 单点（定义 1 处 + 调用 1 处）。**与 Issue #4 comment #78「子 Issue 关闭待根侧整合验收」惯例的差异**：本 Issue 在整合 PR 之前关闭，把唯一未满足前提（公式单元格导出计算结果）显式转交整合 PR 门禁；该前提的精确锚点见本页「未决/假设」条与 PR #8 comment #94。Issue 侧无待办；不再向 `braid/issue-3-a` 追加提交。\n", "oldText": "## 设计与交接入口（当前，随进展更新）\n"}, {"newText": "- **实现 PR：#8（已 MERGED）**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5；task packet `tasks/issue-3-a/packet.md`（由 PR 接续同一 packet；其「下一步」两条已由 #92 §5 与本页接管，不再更新）。", "newText_note": "", "oldText": "- **实现 PR：#8**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5；task packet `tasks/issue-3-a/packet.md`（由 PR 接续同一 packet）。"}, {"newText": "**PR #8 已合入 develop @ `e63efc6`（\"Merge local PR #8\"，parents `15abbf6`+`a23af5a`，合入树与 `a23af5a` 逐字节一致）**；A 的实现与验收链闭环，收口决定与状态见 comment #92，PR 侧收口补充（A-3 锚点清单）见 PR #8 comment #94，根侧收讫与关闭见 PR #8 comment #93 与 #167。", "oldText": "**PR #8 已合入 develop @ `e63efc6`（\"Merge local PR #8\"，parents `15abbf6`+`a23af5a`，合入树与 `a23af5a` 逐字节一致）**；A 的实现与验收链闭环，收口决定与状态见 comment #92。"}, {"newText": "**C 未合入 → 公式单元格导出原文（e2e 过渡断言已标注必须翻转），这是本 Issue 唯一的未满足前提，已随 #167 关闭转交**：① **C（#5）**替换 `frontend/src/lib/cellDisplay.ts:17` `worksheetDisplayValues` 实现，使网格与导出同取当前计算结果（含错误值走同一显示路径），FormulaBar（`FormulaBar`）与内联编辑（`Grid.tsx` 内联编辑以 `raw` 初始化）必须继续读 `raw`；两个消费者已接线完成（`WorkbookEditor.tsx:118-119` memo → `Grid.tsx:189` `text`；`WorkbookToolbar.tsx:34` → `worksheetToCsv`），C 只需换实现，不必新增接线。② **整合 PR**带「公式单元格导出 = 计算结果」门禁，翻转 `e2e/workbook-lifecycle.spec.ts:375-386`（用例 `exports the formula cell value through the shared display seam`，行内注 `PRE-C TRANSITION (Issue #3 decision D-A8)`）。锚点清单见 PR #8 comment #94；**#5 尚未指派**，@glm-1 指派时须把该 A-3 接缝义务写入 C 的交接材料。", "oldText": "**C 未合入 → 公式单元格导出原文（e2e 已标注必须翻转为计算结果），这是 #3 保持 OPEN 的唯一验收前提**：C（#5）替换 `frontend/src/lib/cellDisplay.ts` 实现（网格与导出同取当前计算结果、含错误值；FormulaBar/内联编辑仍读 `raw`），整合 PR 带翻转后的公式导出门禁；**#5 尚未指派**，指派时须把 A-3 接缝义务写入其交接材料；#3 与 #4 同惯例保持 OPEN、关闭待根负责人整合验收（Issue #4 comment #78）。"}], "path": "/tmp/f26-issue3-body/body.md"}
+
+## S35:L36 2026-09-29T06:53:34.917Z message toolResult
+toolResult edit False
+[text]
+Successfully replaced 4 block(s) in /tmp/f26-issue3-body/body.md.
+[details]
+{"diff": "    ...\n 21 - Playwright/浏览器检查按契约第 5 节：以可访问名称驱动，覆盖成功与失败路径（错误文案精确）、失败不留部分记录、刷新/重开持久。\n 22 \n 23 ## 设计与交接入口（当前，随进展更新）\n 24 \n+25 - **状态：CLOSED（2026-09-29）** —— 根负责人 @glm-1 在 #167 关闭，理由「PR #8 已验收合入 develop（`e63efc6`，合并树与验收候选 `a23af5a` 逐字节一致）……遗留义务已转交：A-3 接缝替换归 C（#5）、公式导出门禁归整合 PR；已知边界随契约保持可见」。我在关闭后于本 worktree 独立复核 `origin/develop`（`e63efc6`）：tree `a3ae41bf` 与 `a23af5a` 一致（`git diff` 为空）、`POST /api/workbooks/import` 与 `parseCsv`/`createWorkbookFromCsv` 在树内、`cellDisplay.ts` 等 A 交付文件齐备、`assertWorksheetStateValid` 单点（定义 1 处 + 调用 1 处）。**与 Issue #4 comment #78「子 Issue 关闭待根侧整合验收」惯例的差异**：本 Issue 在整合 PR 之前关闭，把唯一未满足前提（公式单元格导出计算结果）显式转交整合 PR 门禁；该前提的精确锚点见本页「未决/假设」条与 PR #8 comment #94。Issue 侧无待办；不再向 `braid/issue-3-a` 追加提交。\n+26 \n 25 - **设计与决定 D-A1…D-A10、验收方案、假设与未决**：本 Issue comment #27（权威；实现与验收按其执行）。\n 26 - **设计增量 v1.1（窄改，与 #27 共同构成权威判据）**：本 Issue comment #33——D-A4 的三条尺寸变更路径（B 结构端点 + `PUT .../state` + A 导入）、README `80-83` 窄改归属 PR #8、D-A8 接缝边界（FormulaBar/内联编辑框仍读 `raw`）、假设 A-7 定格（不实现导入尺寸下限）。**更正**：其中「假设 A-7 定格」已被 v1.3 取代——现按 A-4 实现导入足迹，见下条。\n 27 - **设计增量 v1.2（README 窄改范围精确化）**：本 Issue comment #36（接 comment #33）——`README.md:80-83` 窄改只替换括号句「`row_count`/`col_count` 的唯一变更入口是结构操作」为三条路径（B 结构端点 / `PUT .../state` 快照自带尺寸 / A 导入事务），同段「越界整批 400 不落库」「`state` 拒绝超出所报结构的单元格」原文保留、不放宽扩张语义；同 PR 登记导入端点。依据 Issue #1 thread 1 comment #34（基础层单点归属，`braid/pr-2` 冻结）。\n 28 - **设计增量 v1.3（契约 v1.3 并入，权威判据之一）**：本 Issue comment #81 + #82（接 #27）——**A-4 Y-min 导入足迹**（`min_rows`/`min_cols`：仅 CSV 导入写入、等于解析后 CSV 实际行列数（尾部空行裁剪 + ragged 右补空）、空白工作簿为 0、导出 used range = `max(非空包围盒, 静态足迹)`、零字节文件仅当包围盒与足迹同时为空、足迹静态不随结构操作演化）；**A-1 四条解析钉死**（ragged 右补空、文件末尾换行不产生额外记录、剥离 UTF-8 BOM、名字取 `File.name` 仅去最终 `.csv`）；**A-2 共享校验 `assertWorksheetStateValid`**（PR #9 已合入 develop `15abbf6`；PR #8 rebase 后切换消费、删本地副本，**切换完成是 #3 关闭前提**）；**A-3 接缝含错误值**（错误单元格导出网格显示的错误串）、FormulaBar/内联编辑仍读 `raw`；**A-4 末条记录后不加终结换行**。依据 Issue #1 thread 1 comment #51/#54/#57/#60/#65 与根侧 #64 七项清单。已记录边界（不要求改，见 #82 §2）：尾部空行一律不产生记录、末行单独引号空字段与空行不可区分、空文件判据为 `rowSpan === 0 || colSpan === 0`、`min ≤ 结构` 只是写入时对申报字段的检查而非常驻不变量。\n 29 - **跨 Issue 契约增量 A-1…A-4**（`POST /api/workbooks/import` / 导入是 `row_count/col_count` 变更入口之一（尺寸下界 6×26；三条路径表述见 comment #32）/ 显示值单一接缝 `cellDisplay.ts`（C 替换实现，不得覆盖 FormulaBar/内联编辑的 `raw`）/ 导出 used range 与导出无视筛选）：Issue #1 thread 1 comment #28 + comment #32（A 侧采纳基础层核实）+ comment #34（基础层收口确认）——**最终裁定已下**：Issue #1 thread 1 comment #51/#54/#57/#60（+ 根侧 #64/#77 收口）。\n 30 - **B 侧契约增量（B-1…B-3；Issue #1 thread 1 comment #38/#43/#45）对 A 的影响**：无直接影响——A 不消费 `PATCH .../worksheets/:wid` 与 `PUT .../state` 的响应形状；A 导入写 `DEFAULT_SELECTION`，恒在边界内。唯一交叉是 B-1 的尺寸上限与 A 导入的限额关系，见下方未决条（Issue #1 thread 1 comment #46；B 侧回应 comment #49）。\n-31 - **实现 PR：#8**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5；task packet `tasks/issue-3-a/packet.md`（由 PR 接续同一 packet）。\n-32 - **交接与结果**：PR 负责人在本 Issue 交接候选提交、命令、首轮结果与证据；Issue 负责人按 comment #27 + #33 + #36 + v1.3（#81/#82）在独立 worktree 复跑后**由 Issue 负责人合入 develop**（子 Issue PR 合入惯例见 Issue #4 comment #78；我在 #88 曾请 @glm-1 代办，已更正为本人合入）。**候选 `a23af5a` 已验收通过**（rebase 到 develop `15abbf6` + helper 切换）：独立复跑证据见 comment #88（unit backend 96 + frontend 49、typecheck Done、e2e 25 passed；首轮环境性 ABI 失败已留档），针对性复核见 #88 §2；先前候选 `559a0bd` 的证据见 #81 与 #82。**PR #8 已合入 develop @ `e63efc6`（\"Merge local PR #8\"，parents `15abbf6`+`a23af5a`，合入树与 `a23af5a` 逐字节一致）**；A 的实现与验收链闭环，收口决定与状态见 comment #92。\n-33 - **未决/假设**：**尺寸上限已裁定为非全局不变量**（Issue #1 thread 1 comment #54）：import/state 不设应用层上限，实际边界 = `express.json` 10mb，全量渲染性能限度见 Issue #1 comment #53 实测。**共享 helper 切换已在 develop 成立**（helper 已在 develop；`a23af5a` 改调 `assertWorksheetStateValid` 并删本地副本，合入 `e63efc6` 后 develop 为单点校验实现，见 comment #88 §2 与 #92 §1；#60 的 #3 关闭前提已满足）。**A-7 已被 v1.3 取代**：\"尾部空字段不导出\"现仅对无足迹工作表（空白创建工作簿）成立。**C 未合入 → 公式单元格导出原文（e2e 已标注必须翻转为计算结果），这是 #3 保持 OPEN 的唯一验收前提**：C（#5）替换 `frontend/src/lib/cellDisplay.ts` 实现（网格与导出同取当前计算结果、含错误值；FormulaBar/内联编辑仍读 `raw`），整合 PR 带翻转后的公式导出门禁；**#5 尚未指派**，指派时须把 A-3 接缝义务写入其交接材料；#3 与 #4 同惯例保持 OPEN、关闭待根负责人整合验收（Issue #4 comment #78）。A-5 宽松解析不变（只拒绝需求明示的非法引号类，`\"ab\"cd` 宽松接受）；导入成功即跳编辑器；导出文件名 `<工作簿名>.csv`；详见 comment #27 第 5 节。\n+33 - **实现 PR：#8（已 MERGED）**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5；task packet `tasks/issue-3-a/packet.md`（由 PR 接续同一 packet；其「下一步」两条已由 #92 §5 与本页接管，不再更新）。\n+34 - **交接与结果**：PR 负责人在本 Issue 交接候选提交、命令、首轮结果与证据；Issue 负责人按 comment #27 + #33 + #36 + v1.3（#81/#82）在独立 worktree 复跑后**由 Issue 负责人合入 develop**（子 Issue PR 合入惯例见 Issue #4 comment #78；我在 #88 曾请 @glm-1 代办，已更正为本人合入）。**候选 `a23af5a` 已验收通过**（rebase 到 develop `15abbf6` + helper 切换）：独立复跑证据见 comment #88（unit backend 96 + frontend 49、typecheck Done、e2e 25 passed；首轮环境性 ABI 失败已留档），针对性复核见 #88 §2；先前候选 `559a0bd` 的证据见 #81 与 #82。**PR #8 已合入 develop @ `e63efc6`（\"Merge local PR #8\"，parents `15abbf6`+`a23af5a`，合入树与 `a23af5a` 逐字节一致）**；A 的实现与验收链闭环，收口决定与状态见 comment #92，PR 侧收口补充（A-3 锚点清单）见 PR #8 comment #94，根侧收讫与关闭见 PR #8 comment #93 与 #167。\n+35 - **未决/假设**：**尺寸上限已裁定为非全局不变量**（Issue #1 thread 1 comment #54）：import/state 不设应用层上限，实际边界 = `express.json` 10mb，全量渲染性能限度见 Issue #1 comment #53 实测。**共享 helper 切换已在 develop 成立**（helper 已在 develop；`a23af5a` 改调 `assertWorksheetStateValid` 并删本地副本，合入 `e63efc6` 后 develop 为单点校验实现，见 comment #88 §2 与 #92 §1；#60 的 #3 关闭前提已满足）。**A-7 已被 v1.3 取代**：\"尾部空字段不导出\"现仅对无足迹工作表（空白创建工作簿）成立。**C 未合入 → 公式单元格导出原文（e2e 过渡断言已标注必须翻转），这是本 Issue 唯一的未满足前提，已随 #167 关闭转交**：① **C（#5）**替换 `frontend/src/lib/cellDisplay.ts:17` `worksheetDisplayValues` 实现，使网格与导出同取当前计算结果（含错误值走同一显示路径），FormulaBar（`FormulaBar`）与内联编辑（`Grid.tsx` 内联编辑以 `raw` 初始化）必须继续读 `raw`；两个消费者已接线完成（`WorkbookEditor.tsx:118-119` memo → `Grid.tsx:189` `text`；`WorkbookToolbar.tsx:34` → `worksheetToCsv`），C 只需换实现，不必新增接线。② **整合 PR**带「公式单元格导出 = 计算结果」门禁，翻转 `e2e/workbook-lifecycle.spec.ts:375-386`（用例 `exports the formula cell value through the shared display seam`，行内注 `PRE-C TRANSITION (Issue #3 decision D-A8)`）。锚点清单见 PR #8 comment #94；**#5 尚未指派**，@glm-1 指派时须把该 A-3 接缝义务写入 C 的交接材料。A-5 宽松解析不变（只拒绝需求明示的非法引号类，`\"ab\"cd` 宽松接受）；导入成功即跳编辑器；导出文件名 `<工作簿名>.csv`；详见 comment #27 第 5 节。\n 34 ", "firstChangedLine": 25, "patch": "--- /tmp/f26-issue3-body/body.md\n+++ /tmp/f26-issue3-body/body.md\n@@ -21,14 +21,16 @@\n - Playwright/浏览器检查按契约第 5 节：以可访问名称驱动，覆盖成功与失败路径（错误文案精确）、失败不留部分记录、刷新/重开持久。\n \n ## 设计与交接入口（当前，随进展更新）\n \n+- **状态：CLOSED（2026-09-29）** —— 根负责人 @glm-1 在 #167 关闭，理由「PR #8 已验收合入 develop（`e63efc6`，合并树与验收候选 `a23af5a` 逐字节一致）……遗留义务已转交：A-3 接缝替换归 C（#5）、公式导出门禁归整合 PR；已知边界随契约保持可见」。我在关闭后于本 worktree 独立复核 `origin/develop`（`e63efc6`）：tree `a3ae41bf` 与 `a23af5a` 一致（`git diff` 为空）、`POST /api/workbooks/import` 与 `parseCsv`/`createWorkbookFromCsv` 在树内、`cellDisplay.ts` 等 A 交付文件齐备、`assertWorksheetStateValid` 单点（定义 1 处 + 调用 1 处）。**与 Issue #4 comment #78「子 Issue 关闭待根侧整合验收」惯例的差异**：本 Issue 在整合 PR 之前关闭，把唯一未满足前提（公式单元格导出计算结果）显式转交整合 PR 门禁；该前提的精确锚点见本页「未决/假设」条与 PR #8 comment #94。Issue 侧无待办；不再向 `braid/issue-3-a` 追加提交。\n+\n 

@@ -1,0 +1,212 @@
+n| **前端副本** = `frontend/tsconfig.json` + `allowJs`/`checkJs: true` | `lib: ES2022, DOM, DOM.Iterable`；`types: [\"vite/client\",\"node\"]` | exit 2，**只报 JSDoc 冲突 `TS2322`**；`process` / `Buffer` / `document` **一条都不报** |\n| **后端副本** = `backend/tsconfig.json` | `lib: ES2022`；`types: [\"node\"]` | exit 2：`TS2322` + `document` **`TS2584`**（= #118 的 DOM 方向门） |\n| **独立 shared program**（新增，最小） | `lib: ES2022`；`types: []`；`allowJs` + `checkJs` | exit 2：`TS2322` + `process` **`TS2591`** + `Buffer` **`TS2591`** + `document` **`TS2584`**（两个方向都有门） |\n\n结论（三条，供裁定直接取用）：\n\n1. **给 `frontend/tsconfig.json` 加 `checkJs: true` 拦不住 Node-only 方向**：前端 program 的 `types` 已含 `\"node\"`，而该 types 项**不能删**——`frontend/vite.config.ts:11-20` 真的读 `process.env.HOST/PORT/VITE_DEV_API_TARGET`，且该文件在前端 program 的 `include` 内。所以加了 `checkJs` 只是让共享 JS 体在前端 program（DOM + Node 双 types）下被检查：上表第 1 行显示 `checkJs` 确实生效（报了 JSDoc 冲突），而 `process`/`Buffer` 依旧合法。即它会扩大 PR #10 的 diff 与构建面，却**不产生** #118 想要的那道门。\n2. **能建门的最小形态是加一个独立 shared program**：`shared/tsconfig.json`（`lib: ES2022`、`types: []`、`allowJs` + `checkJs`）并入 checks 脚本即可同时拦住两个方向；完全不动 `frontend/`、`backend/` 的既有配置，diff 独立可审（例如挂在 `checks/` 下与现有 `pnpm -r typecheck` 并列）。\n3. **#119 §2 的运行时把关仍然正确且必要**，且与 A 的转交项同一条：整合 PR 的门禁用例就是 `e2e/workbook-lifecycle.spec.ts` 的 `exports the formula cell value through the shared display seam`（`PRE-C TRANSITION` 翻转），它在真实浏览器内执行接缝并同时断言网格与导出的两个消费者——正是该方向的运行时门，无需另造判据。\n\nA 侧影响：无论裁定取哪条，A 交付文件（TS）不变，A 不因此重跑验收；第 2 条若采纳，属 PR #10 或 `checks/` 范围。\n\n复现材料：`/tmp/fe-checkjs-probe/{shared-probe.js,tsconfig.frontend-copy.json,tsconfig.backend-copy.json,tsconfig.shared-only.json}`，`node_modules` 为指向 pr-8 工作区的符号链接；三条命令分别是 `tsc -p <cfg> --noEmit`，退出码与错误码如上表。\n", "path": "/tmp/issue1-reply-119.md"}
+
+## S41:L110 2026-09-29T07:22:16.714Z message toolResult
+toolResult write False
+[text]
+Successfully wrote to /tmp/issue1-reply-119.md
+
+## S41:L111 2026-09-29T07:22:18.934Z message assistant
+[toolCall] bash call_00_ET_G0eazCQ6K0iZAzIndE1w9004
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue comment 1 --reply-to 119 --body-file /tmp/issue1-reply-119.md 2>&1 | tail -8; echo \"=== worktree still clean? ===\"; git status --porcelain; echo \"(empty = clean)\""}
+
+## S41:L112 2026-09-29T07:22:20.145Z message toolResult
+toolResult bash False
+[text]
+comment #121
+消息投递回执 — 评论 #121（仅表示评论输入的接收状态）
+收件人 @glm-4: 评论等待投递 (queued)
+=== worktree still clean? ===
+(empty = clean)
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L112:C1]
+
+## S41:L113 2026-09-29T07:22:22.157Z message assistant
+[thinking]
+Posted comment #121. Worktree clean.
+Let me confirm issue #3 remains CLOSED and the thread 1 stays open. Also I should double-check there's no comment #120 that I skipped which might address A. Let me check #120.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L113:C1]
+[toolCall] bash call_00_bb4gDWnZVLiz12Q7yJeE2146
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 120 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d: print('#%s by @%s reply_to=%s thread=%s\\n%s' % (c['database_id'], c['author']['login'], c.get('reply_to'), c.get('thread_root'), (c.get('body') or '')[:900]))\n\" 2>/dev/null || echo \"(120 absent)\"; echo \"=== issue3 ===\"; braid issue view 3 2>&1 | sed -n '2p'; braid issue view 3 --comments 2>&1 | grep -cE \"^comment #\""}
+
+## S41:L114 2026-09-29T07:22:22.221Z message toolResult
+toolResult bash False
+[text]
+#120 by @deepseek-6 reply_to=119 thread=1
+【B 侧处置：#118/#119 的更正在 B 上零暴露，回归点补一条执行条件】@glm-1 @deepseek-3 @deepseek-8
+1. 核实结论：**B（#4 / PR #9）对「`shared/` 环境中立」这条边界没有任何既有暴露**，与 #118 §4 / #119 §4 的「无 B 侧动作」一致。依据（`origin/develop` @ `e63efc6`，逐条可复跑）：
+   - `git ls-tree -r --name-only origin/develop -- shared/` → 只有 `shared/types.d.ts`：B 未交付任何 `shared/*.js` 运行时模块（develop 当前树也没有；`git grep -n "process\.\|Buffer\." origin/develop -- shared/` 无命中——当然 `.d.ts` 无运行时体）。
+   - `git grep -n "shared/" origin/develop -- frontend/src` → 13 处引用全部是 `import type ... from '../../../shared/types'`（`WorkbookEditor.tsx:10` 那条是多行 `import type {` 的续行），即前端从不加载 `shared/` 的运行时模块，`allowJs` 那一行对 B 无影响。
+   - 唯一进入 C 路径的 B 交付文件是 `backend/src/ranges.js`（B 创建于 `087032c`；消费方 `store.js` / `structure.test.js`，均在 Node 侧）：其四条再导出兼容契约与 `$` 剥除语义已在 #111 §2 记录并经 #115 确认，B 侧不改。
+   - 因此「前端 program 不检查共享 `.js` 体内错误」这一更正不推翻 B 的任何已验证据：B 交回的检查本就含浏览器内运行的结构 e2e（`bash checks/run-e2e.sh` 13 
+=== issue3 ===
+19
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L114:C1]
+
+## S41:L115 2026-09-29T07:22:22.222Z message user
+[text]
+- issue:1 comment 120; read `comment view 120 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L115:C1]
+
+## S41:L116 2026-09-29T07:22:24.648Z message assistant
+[thinking]
+The new update is comment #120 (B's response) — which I just read partially. It @-mentions @deepseek-3 (me). Let me read it fully to check for A impact and whether a reply is needed.
+Wait, #120 was posted before #121 (mine, in reply to 119). So #120 replies to #119 too. Let me read fully.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L116:C1]
+[toolCall] bash call_00_e4kvbK8rAcV3YAoTH9F79180
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 120 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('#%s by @%s reply_to=%s thread=%s resolved=%s' % (c['database_id'], c['author']['login'], c.get('reply_to'), c.get('thread_root'), c.get('resolved')))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L117 2026-09-29T07:22:24.688Z message toolResult
+toolResult bash False
+[text]
+#120 by @deepseek-6 reply_to=119 thread=1 resolved=False
+   - 因此「前端 program 不检查共享 `.js` 体内错误」这一更正不推翻 B 的任何已验证据：B 交回的检查本就含浏览器内运行的结构 e2e（`bash checks/run-e2e.sh` 13 passed）。
+2. 已把该边界对 B 的**唯一实质影响**窄改进 PR #9 正文（未决回归点 ①/② 一节，编辑记录见 PR #9 timeline）：C 合入后的「结构位移 + `ranges.js`→`shared/a1.js` 再导出」回归，须由**浏览器内真实执行**的 e2e 覆盖（宿主 `e2e/worksheets-structure.spec.ts`，经 `bash checks/run-e2e.sh` 运行），不以 `pnpm -r typecheck` 绿代替——与 #119 §2 给 PR #10 定的把关位置同向，两者不冲突。若 @glm-1 裁定给 `frontend/tsconfig.json` 加 `checkJs`（#119 §4 的待裁项），该条件可放宽为纯类型门 + 既有 e2e，我按裁定更新此条。
+3. PR #9 状态不变：MERGED（merge commit `15abbf6`），head `543b6a7`（仅 task packet 文档提交）；B 侧无待办，剩余两处回归点按正文条件随 C（#5）/E（#7）合入执行。
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L117:C1]
+
+## S41:L118 2026-09-29T07:22:31.321Z message assistant
+[thinking]
+Comment #120 @-mentions me but its content is B's own处置: no B exposure, PR #9 body narrowed to require browser e2e for the C-landed structure-shift regression, and note that if @glm-1 rules to add frontend checkJs, that condition can be relaxed.
+Relevance to A: none, except point 2 parallels A's gate. Nothing asks A.
+Interesting: #120 point 2 says if @glm-1 adds `checkJs` to frontend tsconfig, the B condition could be relaxed to a pure type gate + existing e2e. But my #121 (posted after #120, in reply to 119) shows empirically that frontend `checkJs` cannot gate the Node-only direction — and B's relaxation statement would be based on a wrong premise. Hmm: B says "若 @glm-1 裁定给 frontend/tsconfig.json 加 checkJs（#119 §4 的待裁项），该条件可放宽为纯类型门 + 既有 e2e". My #121 already addresses that the frontend checkJs doesn't provide a Node-only gate. B's structure-shift regression concern is about B's own `ranges.js` re-export — the DOM direction gate (backend checkJs) covers `document`; the Node-only direction is about frontend runtime. For B's case, `shared/a1.js` is consumed by backend `ranges.js` (Node side) and by C's frontend formula engine? Per #119 §2: `shared/a1.js` reachable via backend `ranges.js` → DOM direction caught by backend checkJs. And Node-only globals in `a1.js` would break the browser (since frontend also loads it via C's formula engine). So B's relaxation to "pure type gate" would be unsound for the Node-only direction — but my #121 already made that point generally (frontend checkJs can't gate it), and B's statement is conditioned on @glm-1's ruling.
+Should I reply to #120 to make sure B doesn't relax the runtime gate on a false premise? My #121 (posted before I saw #120? No — #121 was posted by me at a time after #120 existed? Timeline: #120 is B's, #121 is mine. Comment numbering suggests #120 came first, then #121.) So my #121 is already in the thread and directly answers the #119 §4 question with evidence. B's #120 point 2's conditional relaxation is now answered by #121: the premise (frontend checkJs as the gate) doesn't hold.
+Do I need to explicitly point that out to B? The thread has my #121 quantifying it. B will see it (B is a participant and my comment was delivered to @deepseek-6 per the delivery list — yes, recipient @deepseek-6 queued). So B has the evidence in the same thread. No separate reply needed; a duplicate would be noise.
+Hmm, but is there a risk B reads only #119 and relaxes? The delivery list shows my #121 went to @deepseek-2, @deepseek-6, @deepseek-7, @glm-1, @glm-4. So B received it. Fine.
+Also, does A need to do anything? No. A's obligation (browser-executed flip case) remains, and #121 reinforced its role.
+So this round: no action. But wait — the harness asked me to process comment #120, and I already posted #121 partly in response to #119 (the same待裁项 that #120 references). Since #121 already covers #120's conditional, nothing more.
+Let me double-check that #121 indeed covers it: #121 conclusion 1 states frontend checkJs cannot gate Node-only direction, with the measured table; conclusion 3 states the runtime browser gate (#119 §2) is correct and necessary. Yes, directly covers #120 §2's conditional.
+Let me confirm Issue #3 state unchanged and report. Also confirm thread 1 open.
+Report: no action, with reasoning; note that #121 already addresses #120 §2's premise.
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L118:C1]
+[toolCall] bash call_00_4H6FFI1LRv2abqWasoW06043
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && echo \"issue3 state/comments:\" && braid issue view 3 2>&1 | sed -n '2p' && braid issue view 3 --comments 2>&1 | grep -cE \"^comment #\" && echo \"=== my #121 delivered to B? ===\" && braid comment view 121 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d: print('#%s recipients:' % c['database_id'], [x['recipient'] for x in c.get('deliveries',[])])\n\""}
+
+## S41:L119 2026-09-29T07:22:31.381Z message toolResult
+toolResult bash False
+[text]
+issue3 state/comments:
+=== my #121 delivered to B? ===
+#121 recipients: ['deepseek-2', 'deepseek-6', 'deepseek-7', 'glm-1', 'glm-4']
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L119:C1]
+
+## S41:L120 2026-09-29T07:22:36.264Z message assistant
+[thinking]
+My #121 (which answers the same #119 §4 question #120 depends on) was delivered to @deepseek-6 (B). So B's conditional in #120 §2 is already annotated by evidence in-thread.
+No A action needed. Report.
+Let me write a concise report noting:
+- #120 content summary.
+- A impact: none; B confirms no B exposure; the one conditional in #120 §2 rests on the "frontend checkJs as a hard gate" option, which my #121 (already delivered to B) empirically refutes; the A-transferred runtime browser gate stays.
+- No comment posted (would duplicate #121).
+- State unchanged.
+Actually, should I consider one small thing: B's #120 §2 says the C regression "须由浏览器内真实执行的 e2e 覆盖" — that's consistent with A's flip gate. Fine.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L120:C1]
+[text]
+**Update read**: `issue:1 comment #120` (@deepseek-6, B owner, thread 1, reply-to #119) — B verifies it has **zero exposure** to the `shared/` environment-neutrality boundary (`shared/` holds only `types.d.ts` on `origin/develop` @ `e63efc6`; all 13 frontend `shared/` references are `import type`; the only B file entering C's path, `backend/src/ranges.js`, is Node-side), narrows PR #9's body so the post-C structure-shift + `ranges.js` re-export regression must be covered by a **browser-executed** e2e rather than a green `typecheck`, and adds a conditional: if @glm-1 were to add `checkJs` to `frontend/tsconfig.json`, that condition could be relaxed to a pure type gate.
+**A-impact check**:
+- Nothing in #120 changes A's contract, files, or the integration-PR gate; A's build surface is untouched (`frontend/tsconfig.json` unchanged on `e63efc6`, `shared/` free of runtime modules).
+- The one premise worth caring about is #120 §2's conditional relaxation, which assumes frontend `checkJs` can serve as the hard gate for the Node-only direction. My `comment #121` — posted in the same thread and already delivered to @deepseek-6 — refutes that empirically: a copy of the frontend tsconfig **with** `allowJs`+`checkJs: true` reports `checkJs` is active (TS2322 on a JSDoc mismatch) yet reports nothing for `process`/`Buffer`/`document`, because the frontend program already carries `types: ["vite/client","node"]` (and `vite.config.ts:11-20` genuinely needs it). Only a dedicated `shared` program (`lib: ES2022`, `types: []`, `checkJs`) gates both directions (TS2591 ×2 + TS2584). So no further A comment is needed — the evidence B's conditional depends on is already in the thread.
+**Action**: none posted (a reply would duplicate #121, whose recipient list includes @deepseek-6 and @glm-1). Thread 1 stays open.
+**State unchanged**: Issue #3 `CLOSED`, 19 comments (last #99); PR #8 `MERGED` @ `e63efc6`; A's carry-over obligations (A-3 seam → C #5; browser-executed `PRE-C TRANSITION` flip → integration PR) unchanged. My probe artifacts remain outside the repo in `/tmp/fe-checkjs-probe`, and the worktree is clean.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L120:C2]
+
+## S41:L121 2026-09-29T07:22:36.265Z message user
+[text]
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L121:C1]
+
+## S41:L122 2026-09-29T07:22:38.978Z message assistant
+[thinking]
+Same update as before: issue:1 comment 120. I already processed it. Perhaps the harness re-notified. Let me check whether thread 120 is now resolved or if there's anything new (e.g., a reply in thread 120). Actually the update references comment 120 again — maybe there's a new reply in thread 120 (like #122) that the harness attributes to comment 120's thread.
+Let me check thread 120 and recent comments 122+.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L122:C1]
+[toolCall] bash call_00_DrZACxny2YUZCRMrsBwY6969
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && for id in 122 123 124; do echo \"--- $id ---\"; braid comment view $id --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d: print('#%s by @%s reply_to=%s thread=%s resolved=%s\\n%s' % (c['database_id'], c['author']['login'], c.get('reply_to'), c.get('thread_root'), c.get('resolved'), (c.get('body') or '')[:1200]))\n\" 2>/dev/null || echo \"(absent)\"; done"}
+
+## S41:L123 2026-09-29T07:22:39.055Z message toolResult
+toolResult bash False
+[text]
+--- 122 ---
+(absent)
+--- 123 ---
+--- 124 ---
+(absent)
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L123:C1]
+
+## S41:L124 2026-09-29T07:22:41.114Z message assistant
+[thinking]
+No new comments. So the notification is a repeat of #120 (which I already processed last round). Possibly the harness re-delivered because #120 was delivered to me and I didn't reply in that thread? Or it's just a duplicate trigger.
+Let me verify the current state of thread 120 — is it resolved? And check the full comment list on thread 1 to see if anything new arrived (e.g., #120 was resolved by B).
+Let me check `comment view 120 --thread` to see the thread state, and also confirm my #121 is in that thread.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L124:C1]
+[toolCall] bash call_00_Dbd67t9Jzlz413hdDkTr8255
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && echo \"=== thread of #120: which root? ===\" && braid comment view 120 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d: print('id',c['database_id'],'thread_root',c.get('thread_root'),'reply_to',c.get('reply_to'),'resolved',c.get('resolved'),'folded',c.get('folded'))\n\" && echo \"=== all thread-1 comments (latest) ===\" && braid issue view 1 --comments 2>&1 | grep -E \"^comment #1(1[0-9]|2[0-9])\" | tail -8 && echo \"=== issue3 ===\" && braid issue view 3 2>&1 | sed -n '2p' && braid issue view 3 --comments 2>&1 | grep -cE \"^comment #\""}
+
+## S41:L125 2026-09-29T07:22:41.199Z message toolResult
+toolResult bash False
+[text]
+=== thread of #120: which root? ===
+id 120 thread_root 1 reply_to 119 resolved False folded False
+=== all thread-1 comments (latest) ===
+comment #111 [visible]
+comment #114 [visible]
+comment #115 [visible]
+comment #116 [visible]
+comment #118 [visible]
+comment #119 [visible]
+comment #120 [visible]
+comment #121 [visible]
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L125:C1]
+
+## S41:L126 2026-09-29T07:22:45.393Z message assistant
+[thinking]
+Nothing new: thread 1's latest comment is still #121 (mine), #120 is unresolved (it's part of the open contract thread), Issue #3 unchanged.
+So this round is a duplicate notification for #120, which I already fully processed. No action.
+I should double check there's no pending question directed at me in #120 — I read it: it @-mentions @glm-1 @deepseek-3 @deepseek-8, but the content is B's own处置 and no question to A. And #121 covers the conditional.
+Therefore: report no action, do not post.
+I might consider whether, given the repeated notification, posting a one-liner in thread 120 would help (e.g., confirming A's zero-impact and pointing to #121). But that adds noise; the guidance explicitly says receipts aren't needed. The repeat is a harness artifact.
+Let me just double-check that #120's @-mention of me isn't asking for anything: "本文… @glm-1 @deepseek-3 @deepseek-8" — recipients. Body: B's verification, PR #9 body narrowing, and the conditional on @glm-1's ruling. No request to A. Confirmed.
+Final answer: no action; explain.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L126:C1]
+[text]
+Processed — repeat notification for `issue:1 comment #120`, which I already handled last round; nothing new arrived.
+**State check** (no changes):
+- Thread 1's latest comment is still my `#121`; `#120` is unresolved because thread 1 is the living contract thread (it was delivered to me for visibility, not as a question).
+- No new comments (#122+) exist; Issue #3 remains `CLOSED` with 19 comments (last #99).
+- `origin/develop` unchanged at `e63efc6`.
+**Why no action**: `#120` (@deepseek-6) verifies B has zero exposure to the `shared/` environment-neutrality boundary and narrows PR #9's body to require a browser-executed e2e for the post-C structure-shift regression. It asks nothing of A. Its only premise that touches my area — that adding `checkJs` to `frontend/tsconfig.json` could replace the runtime gate with a pure type gate — is already refuted in the same thread by my `#121` (measured: frontend-with-`checkJs` reports the JSDoc mismatch TS2322 but nothing for `process`/`Buffer`/`document`, since that program carries `types: ["vite/client","node"]`; only a dedicated `shared` program with `types: []` gates both directions). `#121` was delivered to @deepseek-6 and @glm-1, so no follow-up comment is warranted — a reply would only repeat it.
+**A-side status unchanged**: Issue #3 `CLOSED` (reason intact), PR #8 `MERGED` @ `e63efc6`; carry-over obligations (A-3 seam → C #5; browser-executed `PRE-C TRANSITION` flip → integration PR) remain traceable via Issue #5 comment #96 and PR #8 comments #94/#100/#102. Worktree clean; probe artifacts stay outside the repo under `/tmp/fe-checkjs-probe`.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L126:C2]
+
+## S41:L127 2026-09-29T07:22:55.732Z message user
+[text]
+- issue:1 comment 122; read `comment view 122 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L127:C1]
+
+## S41:L128 2026-09-29T07:22:55.733Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L128:customType]
+[content]
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L128:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L128:display]
+
+## S41:L129 2026-09-29T07:22:57.727Z message assistant
+[toolCall] bash call_00_ET_jzFfhoJgWl3PTZO6TVBE7524
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 122 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('#%s by @%s reply_to=%s thread=%s resolved=%s' % (c['database_id'], c['author']['login'], c.get('reply_to'), c.get('thread_root'), c.get('resolved')))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L130 2026-09-29T07:22:57.771Z message toolResult
+toolResult bash False
+[text]
+#122 by @deepseek-2 reply_to=121 thread=1 resolved=False
+【基础层（#2）独立复现确认 #121 + 该门若采纳的单点归属】@glm-1 @deepseek-7 @deepseek-8
+#121 的三 program 结论我侧独立复现为**逐条吻合**（不同探针、独立日志 `/tmp/pr2-env-neutral-gate-probe.log`；`origin/develop` @ `e63efc6`，平台入口 `/usr/local/bin` node v20.19.3）：
+| 探针 | 结果 |
+| 前端 program（`types: ["vite/client","node"]` + DOM lib）加 `--checkJs`，共享 JS 内含 `process.env`/`Buffer`/`document` | **exit 0**，三个全局一条都不报 |
+| 独立 shared program（`lib: ["ES2022"]`、`types: []`、`allowJs`+`checkJs`），同一文件 | exit 2：`TS2591`（`process`）+ `TS2591`（`Buffer`）+ `TS2584`（`document`） |
+即 `checkJs` 在前端 program 里确实生效（我的探针用 JSDoc 冲突验证，与 #121 表第 1 行同法），但对 Node-only 方向**不产生门**；能建门的最小形态就是 #121 结论 2 的独立 shared program。同意 #121 结论 1/2/3，无需更正。
+补充一条基础层事实，#121 结论 1 的依据我已复核为真：`frontend/vite.config.ts:11-13`（PR #2 交付）确实读 `process.env.HOST/PORT/VITE_DEV_API_TARGET`，且该文件在前端 program 的 `include` 内——故 `types: ["node"]` 不能删，加 `checkJs` 只扩大 diff 与构建面。
+**归属（单点，避免两处并行）**：`frontend/tsconfig.json`、`checks/`、`shared/` 布局均为 PR #2 交付的基础层脚手架，但 `braid/pr-2` 已合入并冻结在 `c344b3b`（与合入树 `698afd2` 逐字节一致），我不重开、不追加提交。若 @glm-1 裁定采纳独立 shared program 门，我的建议是**由 PR #10 单点承担**：C 已按 #116 触碰该 tsconfig 且拥有 `shared/formula.js`、`shared/a1.js`，新增 `shared/tsconfig.json`（`lib: ["ES2022"]`、`types: []`、`allowJs`+`checkJs`）并把 `tsc -p shared/tsconfig.json` 并入一条 checks 脚本即可，与前端/后端既有配置解耦、diff 独立可审；若你更希望以**基础层窄 PR**（新建 PR，不改 PR #2）承载，我可以接——请只指定其一。
+本轮基础层无应用代码改动；探针文件已删除，工作树干净。无论裁定否/取 PR #10/取基础层窄 PR，均不需要重开 PR #2。
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L130:C1]
+
+## S41:L131 2026-09-29T07:23:01.662Z message assistant
+[thinking]
+Comment #122 is @deepseek-2's independent reproduction of my #121 conclusions, agreeing with all three, plus an ownership suggestion (PR #10 single-point or a base-layer narrow PR), aw

@@ -1,0 +1,76 @@
+# PR 14 - REQ-2-2-3 Access denied 会话态呈现 + docs/e2e 补登（小 PR） - MERGED - @deepseek-8
+
+Branch: access-denied → develop
+Issues: Issue 1, Issue 4
+
+## Description
+
+```
+## 任务：REQ-2-2-3 "Access denied" 行为落地（独立小 PR）
+
+**来源裁决**：issue #4 评论 #73（advisor 审查后采纳方案 C）；背景见本 Issue（#1）thread 61 评论 #74、PR #11 评论 #76/#78/#80。
+
+### 范围（base `develop` @ `53532a0`，含已合入的 M1/PR #12 + M3/PR #11）
+
+1. **前端 RepositoryMissing 会话态区分**（`frontend/src` 中 M3 创建的页面文件）：
+   - 访客（后端会话未解析为登录）：h1 "Not found" + Sign in 链接（现状不变）；
+   - 已登录（后端会话解析为准；session 过期/无效 cookie 按访客态渲染）：h1 "Access denied"（与 notFound 同 role/level）；
+   - gate 必须在会话 loading 解析完成后渲染，避免闪现；同一会话态内不存在与无权限仓库显示同一文案（措辞纪律：只写"每会话态内文案一致"，不写"API 无存在性泄露"——写路径对登录用户已 403，读路径统一 404）。
+2. **copy 常量**：`copy.ts` 增 `errors.accessDenied = 'Access denied'`，`messages.js` 镜像（§9.4 契约）。注意：M2（PR #13）计划同增此常量，本 PR 先合入后 #13 rebase 消费即可，不产生冲突面问题。
+3. **docs 三处**：`docs/architecture.md` §9 修订记录追加本裁决 + §7.1 注记（会话态语义）；`docs/acceptance-plan.md` 补 REQ-2-2-3 登记及登录态 Access denied e2e 判据（advisor 核实该硬断言此前不在验收计划内，属缺口）；`docs/product-plan.md` 文案契约补 `errors.accessDenied`。
+4. **e2e 增量**：M3 侧补一条登录态 Access denied 断言（登录 context 访问不可见私有仓库 → `getByRole('heading', { level: 1, name: copy.errors.accessDenied })`）；访客侧既有 5 处 notFound 断言不变。
+5. **packet 刷新**：`docs/task-packets/m3-pr-11.md` 的 "Current truth / 证据" 段按已合入事实刷新（PR #11 评论 #80 §3 交代的陈旧点，在本 PR 内一并处理）。
+
+### 约束
+
+- **AP
+…
+```
+
+## Associated Issues
+
+### Issue 1 - 任务 - OPEN - @glm-1
+
+#### Description
+
+```
+issue #1: 任务
+state: OPEN
+assignee: @glm-1
+
+## 当前任务说明（task packet，随时更新）
+
+需求来源：`/workspace/template/.factory26/20260929-042409-1202e245/input/`（requirements.yaml 34 条原子需求 + reference/ 27 张截图）。
+交付：满足全部需求的 Web 应用（frontend/ + backend/，平台 npm 安装/构建/启动兼容），经 develop → main 整合 PR 交付。
+
+## 权威入口
+- 方案与契约（develop 分支 docs/）：product-plan、architecture（§9 修订记录随裁决增长，与实现一致）、seed-data、acceptance-plan、ui-reference-notes
+- 决定记录与依赖图：本 Issue 评论 #1（现行有效）；契约增量裁决（6 项全部采纳）见 thread 1（评论 #7 请求、#8 裁决）；M3 期契约裁决见 thread 43；Access denied 裁决见 issue #4 评论 #73（PR #14 落地）；M4a branches 归属确认见 issue #6 thread 92（根回复 #96）；Issue 元数据/关闭重
+…
+```
+
+### Issue 4 - M2 组织与治理：组织/团队/成员/仓库授权（REQ-2） - OPEN - @glm-7
+
+#### Description
+
+```
+## 需求来源（权威）
+需求包：`/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml`
+原子需求：REQ-2-1-1（浏览组织仓库）、REQ-2-1-2（创建组织）、REQ-2-2-1（创建团队）、REQ-2-2-2（团队成员与层级）、REQ-2-2-3（直接添加组织成员）、REQ-2-2-4（移除组织成员）、REQ-2-3（按人/团队授予仓库角色）。
+参考截图：github-organization-repositories.png。
+
+## 共享决定（必须遵循）
+docs/architecture.md（权限模型 §4：org Owner→Admin、直接/团队授权取最高、团队层级不传播；§9 测试隔离）、docs/product-plan.md §3、docs/seed-data.md、docs/ui-reference-notes.md。
+UI 权限档次按各需求原文（如非 Owner 看不到 "Add branch protection rule" 类比：本模块为成员菜单/Remove 控件缺席而非禁用）。如需求未写明的 UI 可见性裁决点，在本 Issue 评论登记决定后实现。
+
+## 交付
+1. 组织页：导航链接 "Repositories"（tab 语义）、过滤
+…
+```
+
+## Read more
+
+完整工作项：braid context pr 14
+当前讨论：braid pr view 14 --comments
+关联 Issue 的完整正文：braid issue view ID --json body（ID 见上方 Issues）
+

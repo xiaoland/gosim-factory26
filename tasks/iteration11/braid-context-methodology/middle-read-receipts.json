@@ -1,0 +1,146 @@
+{
+  "scope": "08:26:13–14:45:00, direct lineage. Structural index plus thematic upstream/downstream reading, not every application implementation field.",
+  "structural": {
+    "native_record_index": "final-message-index.json",
+    "all_activities": "final-activity-index.json",
+    "terminal_objects": "final-collaboration-objects.json",
+    "file_ownership": "final-native-file-map.json"
+  },
+  "semantic_read": {
+    "decision_projection": {
+      "file": "middle-edit-decisions.txt",
+      "line_ranges": [
+        [
+          1,
+          245
+        ],
+        [
+          246,
+          510
+        ],
+        [
+          511,
+          790
+        ],
+        [
+          791,
+          1060
+        ],
+        [
+          1061,
+          1340
+        ],
+        [
+          1341,
+          1620
+        ],
+        [
+          1621,
+          1814
+        ]
+      ],
+      "candidate_records": 116,
+      "boundary": "all thinking/text of these candidates reviewed; candidates include help/read/mentions and are not actual mutation count; tool call arguments and results selectively returned to originals"
+    },
+    "comments": {
+      "file": "middle-comments-semantic.txt",
+      "ids_projection_read": [
+        150,
+        151,
+        152,
+        153,
+        154,
+        155,
+        156,
+        157,
+        158,
+        159,
+        160,
+        161,
+        162,
+        163,
+        164,
+        165,
+        166,
+        167,
+        168,
+        169,
+        170,
+        171,
+        172,
+        173,
+        174,
+        175,
+        176,
+        177,
+        178,
+        179,
+        180,
+        181,
+        182,
+        183,
+        184,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        191,
+        192,
+        193,
+        194,
+        195,
+        196,
+        197,
+        198,
+        199
+      ],
+      "additional_db_full_read_ids": [
+        1,
+        3,
+        185,
+        186,
+        187,
+        188,
+        189,
+        190,
+        206,
+        207,
+        209,
+        211,
+        219,
+        220,
+        221,
+        256,
+        257,
+        281,
+        282,
+        283,
+        284,
+        313,
+        322,
+        324,
+        325,
+        326,
+        327
+      ],
+      "boundary": "150–199 reviewed in projection omitting explicitly listed repeated test tables/code details;185–190 also full read. Other comments selectively read in raw sessions/earlier audit. All124 middle comment bodies indexed, not a claim all124 fully reread. Later revisions are explicitly marked."
+    },
+    "key_raw_sources": "middle-key-messages.json",
+    "key_raw_records_extracted": 63,
+    "key_raw_boundary": "Important thought/call/result chains read as described in middle-content-evidence.md; extraction does not independently mean full raw JSON metadata review."
+  },
+  "skipped_or_not_claimed": [
+    "Implementation algorithm/source blocks unrelated to context or collaboration decisions were not reread end to end.",
+    "The 7207 middle unique records,308 candidate-operation records,16 method projections and77 large-block pointers are indexes, not full-text review receipts.",
+    "All terminal comment bodies may include revisions after their creation; historical claims use original message or activity time.",
+    "This subagent does not re-audit final PR23/root path or late14:45–17:09 delegated to other agents.",
+    "No official failure score attributed causally to context size or any isolated curation event."
+  ],
+  "known_evidence_gaps": [
+    "No new raw-source absence currently blocks this middle segment. Earlier ec45 capture gap has a source in final archive.",
+    "Repeated/self wake costs are observable, but token/time savings under hypothetical rules are not measured.",
+    "No observed downstream decision is demonstrated during the ~64-second temporary Issue9 entry loss or14-second thread308 resolve."
+  ]
+}

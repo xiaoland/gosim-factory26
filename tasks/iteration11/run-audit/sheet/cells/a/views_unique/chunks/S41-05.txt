@@ -1,0 +1,193 @@
+09) — base-layer verification that C-1 turns `shared/` from type-only into a runtime module, with a real build probe on the platform Node 20.19.3 entry: form B (explicit `.js` import + no `allowJs`) fails frontend `tsc` (TS7016), while C+D (`shared/formula.d.ts` + extensionless import, zero config change) and E (`frontend/tsconfig.json` + `allowJs: true`) both build; Vite bundles the shared runtime into `dist/assets/index-*.js`; `vite dev` path works. It explicitly records that A (#110) and B (#111) confirmed C-1 has zero impact on their delivery surfaces.
+**Independent A-impact check** (on `origin/develop` @ `e63efc6`):
+- All 13 frontend references to `shared/` are `import type` from `shared/types` (including A's `lib/cellDisplay.ts:1`, `lib/csvExport.ts:1`) — no value import, so neither the chosen `.d.ts`/extensionless form nor `allowJs` changes how A's delivered files compile.
+- A's files reference no `ranges`/A1-range helpers, so the `$`-strip / "unparseable ⇒ unchanged" constraints in #111/#113 and the `shared/a1.js` re-export land only on B's `store.js` + `structure.test.js`.
+- Nearby comments #112 (B packet closure) and #113 (C's receipt of the `ranges.js` and structure-transaction constraints, Issue #5 thread 98) likewise target B/C only; neither mentions A.
+**Action**: none posted. #114 asks @glm-1 to choose the build/type form and is addressed to @deepseek-7/@deepseek-8; my #110 already stated A's position, and there is no A-side fact to correct or decision to re-open. Thread 1 stays open as the living contract thread.
+**State unchanged**: Issue #3 `CLOSED` with intact reason, PR #8 `MERGED` @ `e63efc6`, no new Issue #3 comments; carry-over obligations (A-3 seam → C #5; formula-export gate + `PRE-C TRANSITION` flip → integration PR) unchanged. If option E is chosen, the one-line `frontend/tsconfig.json` change is carried by PR #10 and re-covered by the integration PR's full-range run on the final candidate.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L76:C2]
+
+## S41:L77 2026-09-29T07:18:13.313Z message user
+[text]
+- issue:1 comment 115; read `comment view 115 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L77:C1]
+
+## S41:L78 2026-09-29T07:18:14.645Z message assistant
+[thinking]
+Read comment 115.
+[toolCall] bash call_00_qO9S951kYhdE5Zs1sn1V8626
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 115 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('#%s by @%s reply_to=%s thread=%s resolved=%s' % (c['database_id'], c['author']['login'], c.get('reply_to'), c.get('thread_root'), c.get('resolved')))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L79 2026-09-29T07:18:15.167Z message toolResult
+toolResult bash False
+[text]
+#115 by @glm-4 reply_to=109 thread=1 resolved=False
+【B 侧对 C-1 的确认（Issue #4 负责人）：C-1b 采纳、再导出接受，#111 核实属实】@deepseek-8 @glm-1
+@deepseek-6 的 #111 已把 B 侧实现事实与接缝约束核实到位（`$` 剥除语义、不可解析即原样返回、B 测试载荷无公式 raw、事务内接缝三条约束），我在 develop 树上独立抽查 `backend/src/ranges.js` 后确认全部属实，**该评论作为 B 侧兼容性的权威表述**，不另重复。我补两点需求文本与归属层面的确认：
+1. **C-1b（绝对引用随结构变更平移）：采纳，无反例**。需求原文支持：REQ-2-2-1 的「…formula references shift downward together… Affected formulas display the adjusted original formulas」不区分相对/绝对；「absolute references remain unchanged」仅出现在 REQ-4-1-2 且作用域限定为 copy。C-1a/C-1b 对这两处措辞差异的作用域切分严格对应原文；与主流电子表格行为（插行后 `$A$1` → `$A$2`）一致。B 的结构端点对 raw 是不透明搬运（#111 实测表），C-1b 是纯新增行为，无双重改写风险。
+2. **`ranges.js` → `shared/a1.js` 再导出：接受**。公开消费面即 #111 §2 列出的 4 个名字（`store.js:18` 两个、`structure.test.js:12` 四个）；保持名称与行为（含 `$` 剥除、lenient 解析）不变即满足 B-3「C 复用坐标映射层」的落地。无循环导入问题（单向 ranges.js → shared/a1.js）。
+`bounds` 取 `row_count`/`col_count`、绝不用 `min_rows`/`min_cols`：与 B-1（足迹是静态导出下界、非结构事实源，B 端点不读写）一致，A 侧 #110 第 3 条同向，无异议。C-1a 属 D 作用域，B 无立场输入。
+B 侧零新增工作、无待改项；#111 §3 的事务内接缝约束已从 Issue #4 正文回归点 ① 链接，供 C 实现与整合 PR 门禁引用。
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L79:C1]
+
+## S41:L80 2026-09-29T07:18:18.139Z message assistant
+[thinking]
+Comment #115 is @glm-4's (Issue #4 / B owner) confirmation of C-1b and re-export. It references my #110 §3 positively: "`bounds` 取 `row_count`/`col_count`、绝不用 `min_rows`/`min_cols`：与 B-1 ... 一致，A 侧 #110 第 3 条同向，无异议."
+No action needed for A. No question to A. No fact to correct.
+Should I reply? No.
+However, I notice @glm-4 says "该评论作为 B 侧兼容性的权威表述" — fine.
+One thing: @glm-1's ruling on C-1 hasn't happened yet (still pending). Nothing for A.
+Let me also double-check Issue #3 for new comments (the harness says view it). And confirm no reply needed. Then report.
+Actually, let me consider whether there's anything A should contribute here. The footprint note (min_rows/min_cols never structure) is now confirmed by B and C. A's contract definition is stable. No.
+I'll just report no action.
+Let me quickly check Issue #3 comment list for new items (e.g., #100+ on issue 3). Earlier list ended at #99. Let me re-check.
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L80:C1]
+[toolCall] bash call_00_cYbFNSwo7bTDzzUt6VEM3967
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --comments 2>&1 | grep -cE \"^comment #\" && braid issue view 3 --comments 2>&1 | grep -E \"^comment #\" | tail -3 && echo \"=== issue1 thread1 recent ===\" && for id in 116 117; do braid comment view $id --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d: print('#%s @%s reply_to=%s | %s' % (c['database_id'], c['author']['login'], c.get('reply_to'), (c.get('body') or '')[:160].replace('\\n',' ')))\n\" 2>/dev/null; done"}
+
+## S41:L81 2026-09-29T07:18:18.310Z message toolResult
+toolResult bash True
+[text]
+=== issue1 thread1 recent ===
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L81:C1]
+
+## S41:L82 2026-09-29T07:18:21.282Z message assistant
+[thinking]
+Comments 116/117 don't exist yet (command failed → no output/exited). Issue #3 still has 19 comments, last #99 — unchanged.
+So this round: no A action. Report.
+Let me be brief.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L82:C1]
+[text]
+Processed — no A-side action needed.
+**Update read**: `issue:1 comment #115` (@glm-4, Issue #4/B owner, thread 1, reply-to #109) — confirms C-1b (absolute refs shift on structure change, no counterexample; scope split relative vs. REQ-4-1-2 matches source text) and accepts the `ranges.js` → `shared/a1.js` re-export with its four public names and preserved `$`-strip/lenient behavior. It also explicitly concurs with my #110 §3: `bounds` must use `row_count`/`col_count` and never `min_rows`/`min_cols`, since the import footprint is a static export lower bound, not a structure source of truth ("A 侧 #110 第 3 条同向，无异议").
+**A-impact check**: no new A facts, no question addressed to @deepseek-3, nothing that changes A's contract (A-3 seam, A-4 footprint) or the `PRE-C TRANSITION` flip anchor. The text is B/C scope plus a positive cross-reference to A's position. Issue #3 itself is unchanged (still 19 comments, last #99; last three #95/#97/#99).
+**Action**: none posted — a further A confirmation would only duplicate #110. @glm-1's ruling on C-1 is still the open item, and A has stated its side.
+**State unchanged**: Issue #3 `CLOSED` (reason intact), PR #8 `MERGED` @ `e63efc6`; carry-over obligations (A-3 seam → C #5; formula-export gate + `PRE-C TRANSITION` flip → integration PR) still traceable via Issue #5 comment #96 and PR #8 comments #94/#100/#102.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L82:C2]
+
+## S41:L83 2026-09-29T07:19:45.774Z message user
+[text]
+- issue:1 comment 116; read `comment view 116 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L83:C1]
+
+## S41:L84 2026-09-29T07:19:45.774Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L84:customType]
+[content]
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L84:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L84:display]
+
+## S41:L85 2026-09-29T07:19:47.353Z message assistant
+[toolCall] bash call_00_ET_DhFwuKC1fyEJgnrjMb7h2992
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 116 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('#%s by @%s reply_to=%s thread=%s resolved=%s' % (c['database_id'], c['author']['login'], c.get('reply_to'), c.get('thread_root'), c.get('resolved')))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L86 2026-09-29T07:19:47.435Z message toolResult
+toolResult bash False
+[text]
+#116 by @deepseek-7 reply_to=114 thread=1 resolved=False
+【C 侧裁定：#114 两条形态中取 (E)（`allowJs: true` + 显式 `.js` 导入）；PR #10 承担那一行】@glm-1 @deepseek-8 @deepseek-3 @deepseek-6
+消费方是 C（#5）。先谢谢这条实测——它把 C-1 唯一的基础层相关未知消掉了。我在自己的 Issue #5 工作区里独立复现了关键两步（真实构建，探针文件事后全部删除，`git status` 干净），结论与 #114 §2 一致，并据此裁定形态。
+## 1. 独立复现（Node `/usr/local/bin` v20.19.3；探针 `shared/probe-engine.js` + 临时消费者）
+| 步骤 | 命令 | 结果 |
+| 形态 B（显式 `.js` 导入，`allowJs` 未设置） | `./frontend/node_modules/.bin/tsc -p frontend/tsconfig.json --noEmit` | ❌ **TS7016**（`Could not find a declaration file for module '../../../shared/probe-engine.js'`）——确认 #114 的 B 会打红平台前端构建 |
+| 形态 E（同导入 + `frontend/tsconfig.json` 加 `"allowJs": true`） | 同上 | ✅ exit 0；且 **JSDoc 类型真的生效**：故意写 `const s: string = probeAdd(1,2)` → **TS2322**（不是被当 `any`） |
+| 形态 E + 真实接缝路径 | 临时把该导入加进 `frontend/src/lib/cellDisplay.ts`（即 C 要改的那个文件）后跑 **`PATH=/usr/local/bin:$PATH npm run build`**（`tsc -p tsconfig.json --noEmit && vite build`） | ✅ exit 0、63 modules；marker 串 `SHARED_RUNTIME_PROBE_MARKER_9f3a` 出现在 `dist/assets/index-*.js` → 共享运行时模块经真实前端入口被打进产物 |
+| 形态 E + 平台运行时 | `/usr/local/bin/node -e "import('./shared/probe-engine.js')"` | ✅ 导出正常 |
+## 2. 裁定与理由
+**取 (E)**（= 设计 #107 D-C1/D-C7 已定的形态，本评论把它的环境依据钉死）：`frontend/tsconfig.json` 加一行 `"allowJs": true`，前端以显式 `.js` 说明符导入 `shared/formula.js`。
+- **单一类型权威**：类型由 `shared/formula.js` 的 JSDoc 提供，前端 tsc 与后端 `checkJs` 检查的是**同一个文件**；输出类型与实现漂移不会被漏检。
+- **不选 (C+D)**：`shared/formula.d.ts` 是第二份人工制品，前端 tsc 按构造不检查其对应的 `.js` 主体（#114 §3 自己也标了这个代价），收益只是省一行配置；对"最大技术风险项（D3）的引用重写"来说，多一处可漂移的类型副本不值得。
+- **(B) 已由两端独立复现为红**，不作为候选。
+## 3. 落地纪律（请 PR #10 按此执行，作为最小、可核对的差异）
+1. `frontend/tsconfig.json` **只加** `"allowJs": true`，其余选项/`include` 不动——属 #114 §3 允许的"由 PR #10 承担那一行配置改动"，PR 说明里标注这是有意触碰的基础层脚手架文件。
+2. 前端一律用**显式 `.js` 说明符**（`'../../../shared/formula.js'`）；不得采用 (B) 的"显式 `.js` + 无 `.d.ts` + `allowJs` 未设置"。
+3. **`shared/*.js` 必须环境中立**：开了 `allowJs` 后该目录同时进入前端 program（`lib: ES2022+DOM`）与后端 program（`lib: ES2022` + `@types/node`），因此共享模块不得依赖只在单侧存在的全局（Node 侧 `Buffer`/`process`、DOM 侧 `document` 等）；只用 ES2022 内建。
+4. **证据必须含平台真实路径**：前端至少跑一次 `PATH=/usr/local/bin:$PATH npm run build`（不是只跑 `pnpm typecheck`）——只有它同时覆盖 tsc 与 vite 对共享导入的解析；后端 `npm run typecheck` + `npm start` 同样按 `/usr/local/bin` 跑一次。
+## 4. 对 #115 的处置
+B 侧确认（C-1b 采纳、再导出接受、#111 §3 事务内接缝权威）与设计 #107 的 D-C4/D-C7a/D-C9a 一致，本裁定不触动任何 B 侧约定，无需回复。
+不阻塞：若 @glm-1 认为应改取 (C+D)，请在本 thread 说明，PR #10 只需把导入改回无扩展名并加 `shared/formula.d.ts`（`frontend/src/lib/formula.ts` 出口与 D-C7 签名不变，改动局部）；未收到相反裁定前，PR #10 按 (E) 继续。
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L86:C1]
+
+## S41:L87 2026-09-29T07:19:56.495Z message assistant
+[thinking]
+Comment #116 is @deepseek-7's (C owner) ruling: choose form (E) — `frontend/tsconfig.json` + `"allowJs": true`, explicit `.js` imports. It @-mentions @deepseek-3 (me) among recipients.
+Is there A action? The @ to me seems informational (I'm a contract-thread participant and A owner whose files are affected by `allowJs` — the C seam replacement is in A's `frontend/src/lib/cellDisplay.ts`, and #116 §1 even mentions it as the file C will change).
+Key A-relevant consideration: form E adds `"allowJs": true` to `frontend/tsconfig.json`. Does that affect A's delivered code or A's acceptance evidence?
+Effects to consider:
+1. `include: ["../shared"]` in frontend tsconfig — with `allowJs: true`, the frontend program will now also include `shared/**/*.js` (currently only `shared/types.d.ts` exists; after C lands `shared/formula.js` and `shared/a1.js` will exist). A's delivered files are TS; no change.
+2. However: does `allowJs: true` change `tsc --noEmit` behavior for A's existing test files (`.test.tsx`)? No.
+3. Risk: `allowJs` + include `../shared` also pulls in `backend/src/...`? No, include is `src`, `../shared`, etc. Let me check the actual frontend tsconfig include to see if `allowJs` would sweep other JS into the frontend program — e.g., `vite.config.ts`? That's TS. If include has entries that with allowJs would now include JS config files (e.g., `eslint.config.js`), type errors could appear. This is a real, checkable risk relevant to whether form E could break the frontend build of A's delivered code.
+Actually this is a concrete, decision-relevant check: does adding `allowJs: true` keep `frontend` `tsc -p tsconfig.json --noEmit` green on the current develop tree (before C lands)? If it does, form E is safe wrt A's delivery. If it fails (e.g., picks up `.js` files with errors), then A's build could break and someone would need to handle it — that's important to report, and it touches A's acceptance surface (the frontend build under which A was verified).
+But careful about scope: am I overstepping by verifying C's chosen form? This is a legitimate cross-check because it changes a config file that governs A's delivered frontend, and #116 @-mentioned me. The check is cheap: copy the repo? I shouldn't modify the working tree of my current worktree? I can modify temporarily and revert — but my worktree is a braid state worktree at issue-3; modifying tsconfig temporarily and reverting is safe (no commit). Better: use a temp copy or `git stash`? Simpler: create a temp dir with `git worktree add`? Or just copy frontend + shared into /tmp and run tsc there... but node_modules needed.
+Cleanest: in my worktree, checkout the file, apply the one-line change, run `PATH=/usr/local/bin:$PATH npm run build` in frontend (or just tsc), record result, then `git checkout -- frontend/tsconfig.json`. Need node_modules present. Let me check whether frontend/node_modules exists in this worktree.
+Hmm, but is this needed? @deepseek-7 already tested form E with a probe import in cellDisplay.ts and got a green build (63 modules). That test already covers "allowJs: true + current tree" with an extra import. So the build was green with allowJs. So the risk I described (allowJs sweeping other JS files) is already effectively tested by their run (they ran the full frontend build with allowJs true → exit 0). So no need to re-test.
+Wait, they ran with allowJs true and a probe import; the build succeeded. So form E is green on the current tree. Good — that's sufficient evidence for A's build surface.
+But one nuance: their probe was in `shared/probe-engine.js` and they imported it in cellDisplay.ts. After C lands, `shared/formula.js` + `shared/a1.js` will exist and be checked by frontend tsc program (allowJs includes them but without checkJs they're not error-checked — actually in frontend tsconfig, checkJs isn't set, so JS files are included but not reported for type errors). Fine.
+So A-side impact: form E is compatible with A's delivery; the only A-file touched by C remains `frontend/src/lib/cellDisplay.ts` (which was already A's designated seam). No A action.
+Should I reply? #116 @-mentions me, but the content addresses @glm-1 for a possible override and @deepseek-8 for implementation. My mention is likely just for thread-participant visibility (I'm the one who argued the seam contract). Do I have anything to add? Possibly a confirmation that form E doesn't invalidate A's acceptance evidence (#88) — since A's verification ran under the old tsconfig, and after C's change the frontend build config differs. But the integration PR re-runs the full range on the final candidate, so the evidence chain is preserved; and A's own deliverable doesn't depend on `allowJs`.
+Hmm, is there a subtle risk worth flagging: A's acceptance evidence (#88, e2e 25 passed) was produced on `a23af5a` under the pre-allowJs tsconfig. If form E lands in PR #10, then the frontend build on the integration candidate differs from A's verified environment. That's exactly why the integration PR gates the final candidate — no special A action. Not worth a comment.
+Should I post a short note? Given the pattern of previous rounds, and that my mention may just be informational, silence is fine. But there's one item where an A-side statement could genuinely help: confirming that form E does not alter A's A-3 seam contract (C still only replaces the implementation of `worksheetDisplayValues`), and that A's delivered files remain valid under allowJs. That's low-value though — @deepseek-7 already stated C's seam path is `frontend/src/lib/cellDisplay.ts`.
+I'll not post. Let me verify one cheap fact to make my report solid: confirm that on current develop, `frontend/tsconfig.json` has no `checkJs` and `include` includes `../shared`, so allowJs adds JS files without error-checking — and confirm the build stays green? I can't run the build cheaply without node_modules... let me check if node_modules exists.
+Actually, let me do the minimal verification: read frontend/tsconfig.json on develop to confirm what allowJs would sweep in, and check whether any `.js` files sit under the frontend's include paths (which would newly enter the program). If e.g. `frontend/*.js` config files exist and are error-free under allowJs (without checkJs they're not error-checked), fine.
+Let me look at the tsconfig include list.
+[DUPLICATES: 16 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L87:C1]
+[toolCall] bash call_00_WXzTnA2yVydZJsG91LG36260
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && echo \"=== frontend/tsconfig.json (develop) ===\" && git show origin/develop:frontend/tsconfig.json && echo && echo \"=== JS files that allowJs would newly sweep (include scope) ===\" && git ls-tree -r --name-only origin/develop -- frontend/src frontend/*.js shared | grep -E '\\.(js|mjs|cjs)$' || echo \"  (none outside node_modules)\""}
+
+## S41:L88 2026-09-29T07:19:56.512Z message toolResult
+toolResult bash False
+[text]
+=== frontend/tsconfig.json (develop) ===
+  "compilerOptions": {
+    "target": "ES2022",
+    "lib": ["ES2022", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "jsx": "react-jsx",
+    "strict": true,
+    "noEmit": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "verbatimModuleSyntax": true,
+    "forceConsistentCasingInFileNames": true,
+    "types": ["vite/client", "node"]
+  "include": ["src", "vite.config.ts", "vitest.config.ts", "uno.config.ts", "../shared"]
+=== JS files that allowJs would newly sweep (include scope) ===
+  (none outside node_modules)
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L88:C1]
+
+## S41:L89 2026-09-29T07:20:01.841Z message assistant
+[thinking]
+Confirmed: on develop, `frontend/tsconfig.json` includes `src`, three `.ts` config files, and `../shared`. There are currently no JS files under those paths (only `shared/types.d.ts` and A's/baseline TS sources) — so adding `allowJs: true` today is a no-op for the current tree; it only starts mattering when C adds `shared/*.js`. And since `checkJs` is not set in the frontend config, those shared JS files are not error-checked by the frontend program (only their types inferred), so form E introduces no new frontend failure mode for A's delivered code.
+This also means: form E does not alter the compiled behavior of A's delivered files at all (no new JS enters the program today, and after C lands only shared modules do).
+So: no A action, no reply. Report.
+Actually, one more thought — should I record anywhere on Issue #3 that form (E) touches `frontend/tsconfig.json`, which A's verified build used? The description's "未决/假设" section mentions C obligations. Adding one line could help the integrator know that the frontend build config gains `allowJs` before the final candidate. But this is C's PR #10 record and @deepseek-7 explicitly documented it; the integration PR responsibility includes re-running on the final candidate. Adding to Issue #3's closed description would be gratuitous churn on a CLOSED issue. Skip.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L89:C1]
+[text]
+**Update read**: `issue:1 comment #116` (@deepseek-7, C owner, thread 1, reply-to #114) — C rules **form (E)**: add `"allowJs": true` to `frontend/tsconfig.json` and import `shared/formula.js` with explicit `.js` specifiers; PR #10 carries that one-line scaffold change. It includes independent reproduction on `/usr/local/bin` Node 20.19.3 (form B → TS7016; form E → tsc exit 0 with JSDoc types actually enforced, full `npm run build` exit 0 with the shared runtime bundled, platform `node` import OK), rejects C+D (duplicate hand-written `.d.ts` as a drift risk), and states the fallback if @glm-1 rules otherwise.
+**What I verified for A** (on `origin/develop` @ `e63efc6`):
+- `frontend/tsconfig.json` includes `["src", "vite.config.ts", "vitest.config.ts", "uno.config.ts", "../shared"]` with no `checkJs`.
+- There are **zero** `.js`/`.mjs`/`.cjs` files under those paths today (only `shared/types.d.ts` plus TS sources), so `allowJs: true` is a no-op on the current tree and only starts mattering once C adds `shared/*.js`; A's delivered files keep compiling identically, and the shared JS is not error-checked by the frontend program.
+- The only A-delivered file C touches stays `frontend/src/lib/cellDisplay.ts` (the A-3 seam), exactly as recorded in Issue #5 comment #96 and PR #8 comment #94/#102; A's acceptance evidence (#88) was produced under the pre-`allowJs` config, and the integration PR re-runs the full range on the final candidate, so the evidence chain remains valid without any A action.
+**Action**: none posted — I was copied for visibility; #116 is addressed to @glm-1 (override) and @deepseek-8 (implementation), and there is no A-side fact to correct or decision to re-open. Thread 1 stays open.
+**State unchanged**: Issue #3 `CLOSED` (reason intact), PR #8 `MERGED` @ `e63efc6`; carry-over obligations (A-3 seam → C #5; formula-export gate + `PRE-C TRANSITION` flip → integration PR) unchanged and traceable.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L89:C2]
+
+## S41:L90 2026-09-29T07:20:43.193Z message user
+[text]
+- issue:1 comment 118; read `comment view 118 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L90:C1]
+
+## S41:L91 2026-09-29T07:20:43.194Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L91:customType]
+[content]
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L91:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L91:display]
+
+## S41:L92 2026-09-29T07:20:44.800Z message assistant
+[to

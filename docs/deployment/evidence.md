@@ -158,11 +158,11 @@ trace 返回关联调用的标准化上下文；只有需要精确原文或原�
 
 ## 存储回收候选
 
-历史冻结 CLI 的 `python3 -m lab gc-plan --root <记录域> --asset-root <稳定资产父目录> --protect <活动现场>` 只读已有记录并输出计划。先选择完整的消费记录域和明确保护路径；本命令不扫描运行进程来补造所有权，不应仅因旧目录或 `completed` 判定可删。
+当前 Lab CLI 不暴露 gc-plan，也没有 GC apply。历史冻结 CLI 的 `python3 -m lab gc-plan --root <记录域> --asset-root <稳定资产父目录> --protect <活动现场>` 只读已有记录并输出计划；须使用保存该接口的原冻结程序，不在当前工作树执行。先选择其支持的消费记录域和明确保护路径；该命令不扫描运行进程来补造所有权，不应仅因旧目录或 `completed` 判定可删。
 
 首版只将有效 v1 `archive.json` 精确声明的 `work` 列为候选，核对 archive ID、持久对象身份、原文保存状态及恢复/保护引用。I12/I13 活跃或未确认状态受保护；缺件、摘要变化、旧回执缺少原文保存确认、扫描错误和恢复承诺都会阻塞。报告区分 `candidate`、`blocked` 和 `already_absent`，所有条目的 `reclaim_authorized` 都是 false。稳定资产的 `unreferenced_in_scope` 仅表示扫描范围内未见消费者，不构成删除权限。当前没有 GC apply；历史迁移、I12 现场处置和 WSL/VHDX 停机须另行授权。
 
-Console registry（如历史 I12 的 `console-runs.json`）尚未接入引用扫描。它可以引用 run 内 host binary、shared submission、state/native 原路径及长期访问容器的 mounts；停止 server 不会移除访问容器，也不解除这些依赖。扫描 `complete` 只覆盖支持的记录格式，操作前须按实际 registry 和容器事实对这些路径添加 `--protect`。Console 生命周期整理归独立设施任务，本入口不迁移其原文读取或 I12 现场。
+该历史扫描未接入 Console registry（如旧 I12 的 `console-runs.json`）；当前 Console 的 manifest 引用也不能由旧格式扫描推导。它们可能引用 run 内 host binary、shared submission、state/native 原路径及长期访问容器的 mounts；停止 server 不解除这些依赖。扫描 `complete` 只覆盖支持的记录格式，查询前须按实际配置、原 owner 回执和容器事实保护这些路径。Console 生命周期整理归独立设施任务，本入口不迁移其原文读取或 I12 现场。
 
 ## 实验模型、连接与配置漂移
 

@@ -1,0 +1,9 @@
+[
+  {
+    "source": "native/343-2026-09-28T10-04-43-588Z_01a0e779-54c3-76d1-835e-f5e5d0ca1e56.jsonl:L4",
+    "part": 0,
+    "kind": "items_projection_already_read",
+    "chars": 81943,
+    "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+  }
+]

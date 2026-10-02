@@ -41,3 +41,18 @@ AGENTS.local.md
 /tasks/iteration11/run-audit/sheet/evidence/
 /tasks/iteration11/sheet-effectiveness-analysis/evidence/
 /tasks/iteration11/braid-context-methodology/evidence/
+
+# Local audit snapshot and rebuildable lineage index remain at their evidence paths.
+/tasks/iteration11/run-audit/sheet/increment/snapshot.tar
+/tasks/iteration11/sheet-effectiveness-analysis/full-lineage/inventory/records.jsonl
+
+# Preserved local audit originals and downloaded runtime sources.
+/tasks/braid-product-reaudit/cells/token-deep-03/snapshot.json.gz
+/tasks/braid-product-reaudit/cells/token-final-review/snapshot.json.gz
+/tasks/iteration10/instruction-audit/current-runtime-sources.tar.gz
+/tasks/iteration10/instruction-audit/current-runtime/node_modules/
+/tasks/iteration10/run-audit/sheet/record-sources.json
+/tasks/iteration11/braid-context-methodology/final-message-index.json
+/tasks/iteration11/braid-context-methodology/middle-chronology.txt
+/tasks/iteration11/run-audit/sheet/increment/braid.sqlite3
+/tasks/acceptance-integrity/source/official-billing/index-DCT-RiaL.js

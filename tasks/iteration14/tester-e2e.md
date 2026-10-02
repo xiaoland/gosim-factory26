@@ -1,6 +1,10 @@
 # I14 tester.army/e2e 接入核对
 
-2026-10-02，I14 接入材料与实施证据。用户已授权 I14-0 实现、基础验收及冻结实验启动，要求增加独立 variant，让 tester.army/e2e 承担默认浏览器工具职责，同时保留 agent-browser。最新费用决定为 ARC 运行绑定；内层 e2e 仅使用 glm-5.3-flash，不能绕过 Braid session 保护使用受限昂贵模型。本文保留正式发布包的来源核对，并记录独立 addon、接线和真实操作反馈；I13 冻结包与公共 runtime 锁文件没有修改。
+2026-10-02，I14 接入材料与实施证据。用户已授权 I14-0 实现、基础验收及冻结实验启动，要求增加独立 variant，让 tester.army/e2e 承担默认浏览器工具职责，同时保留 agent-browser。既有操作与冻结使用 ARC 运行绑定，保留其历史身份；供应商选择属于实验配方。内层 e2e 仅使用 glm-5.3-flash，不能绕过 Braid session 保护使用受限昂贵模型。本文保留正式发布包的来源核对，并记录独立 addon、接线和真实操作反馈；I13 冻结包与公共 runtime 锁文件没有修改。
+
+本次侧会话用户明确要求“请你处理该耦合”，授权修正 e2e 配置固定 ARC 地址的限制。`tools/e2e.config.ts` 现读取实验注入的 `FACTORY26_BASE_URL` 与 `FACTORY26_API_KEY`，保留缺失配置的明确错误、末尾斜线规范化和 Flash 模型选择；技能说明同步修正。没有修改四个 variant 入口或共享恢复的 ARC-only 行为，这些仍归主线设施重构。没有修改旧冻结包、运行现场或启动实验；非 ARC 渠道的实际模型兼容性未在本次验证。
+
+本次 `node --experimental-strip-types --check variants/pi-braid-i14-e2e/tools/e2e.config.ts` 与所改三文件的 `git diff --check` 均退出0。仅取得配置语法与补丁格式反馈，没有发模型请求或运行基础设施测试；改动留在工作区，未提交。
 
 ## 发布与实际入口
 

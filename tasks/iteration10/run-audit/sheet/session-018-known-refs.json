@@ -1,0 +1,134 @@
+[
+  {
+    "render_block": 14,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L6",
+    "chars": 440,
+    "text": "### 交付内容\n- 主页 \"Import CSV\" 按钮 → 对话框（名 \"Import CSV\"），file 控件 label \"CSV file\" + \"Confirm import\"。\n- 解析规则：按原始行列顺序，保留空字段；支持 UTF-8 中英文与数字文本；正确处理双引号包裹的逗号、成对转义双引号、字段内换行；以双引号开头但无闭合双引号的字段无效，报 \"Invalid CSV file format. Import failed.\"。\n- 导入成功：新建工作簿，名 = 文件名去结尾 .csv，Sheet1 打开完整 CSV 内容，首行是普通数据；刷新/重开不变；失败则主页不出现该名链接、无部分结果。\n- 编辑器工具栏 \"Export CSV\" 按钮：触发浏览器下载，建议文件名以 .csv 结尾，UTF-8 文本；按网格实际行列顺序保留空单元格；正确转义逗号/引号/换行；普通单元格导出显示值，公式单元格导出当前计算结果而非公式表达式；导出前后界面状态不变。"
+  },
+  {
+    "render_block": 48,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 786,
+    "text": "### 服务端（导入，REQ-1-3-1）\n- `backend/src/csv.ts`：纯函数 `parseCsv` / `isValidCsv`。\n  - 按原始行列顺序；空字段保留（含行尾空列、整行空）；LF / CRLF / CR 均作记录分隔符；剥离开头 UTF-8 BOM。\n  - `\"...\"` 内的逗号与换行属于字段内容；`\"\"` 表示字面双引号。\n  - 字段以 `\"` 开头但未闭合 → 抛 `CsvFormatError`，整个解析失败。\n  - 全部按文本处理，不做数值/日期类型转换。\n- `backend/src/routes/csv.ts`：`POST /api/workbooks/import { fileName, csv }`\n  - 成功 201 返回 bare `Workbook`（沿用 #2 契约，无包装）；工作簿名 = 文件名去掉结尾 `.csv`（大小写不敏感、只去一次）。\n  - 解析失败/缺 csv/文件名为空 → 400 `{ error: \"Invalid CSV file format. Import failed.\" }`。\n  - **先完整校验再单次落库**（`saveWorkbook` 只在解析成功后调用），失败不留任何半成品记录。\n  - 内容全部写 `{ raw: text, value: text }`（不消费表头）；空字段不落 key（稀疏 map）；导入表命名为 `Sheet1`、`activeSheetId` 指向它、`lastSelection = \"A1\"`；行列数按需扩到内容之外不截断（`rowCount/colCount` 至少覆盖导入范围）。\n- `backend/src/server.ts`：在 `/api` 404 兜底**之前**挂载 `csvRouter`。"
+  },
+  {
+    "render_block": 50,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 1012,
+    "text": "### 前端（导入对话框 + 导出，REQ-1-3-1 / REQ-1-3-2）\n- `frontend/src/pages/HomePage.tsx`：`home-header` 区新增 accessible name 为 `Import CSV` 的按钮；打开 `role=\"dialog\"` 且 accessible name 为 `Import CSV` 的对话框，内含 label `CSV file` 的 file 控件与 `Confirm import` 按钮（含 `Cancel`）。\n  - 失败时对话框内 `role=\"alert\"` 显示服务端文案 `Invalid CSV file format. Import failed.`，不跳转、主页列表不变、可直接重试；成功才 `navigate('/workbook/<id>')`。\n- `frontend/src/domain/csv.ts`：纯函数 `usedRange` / `escapeField` / `serializeCsv` / `sheetToCsv`。\n  - 导出范围 = 该表 `cells` 数据模型的行列包围盒（**不用可见行投影**，故 REQ-5-1-2 的“筛选隐藏行仍要导出”天然成立），保留范围内的空单元格与全空行，按网格实际行列顺序。\n  - 普通单元格取 `value`（显示值）；公式单元格同样取 `value`，即当前计算结果而非 `raw` 表达式。\n  - 含 `,` `\"` `\\n` `\\r` 的字段加双引号并把 `\"` 翻倍；每条记录以 `\\n` 结尾（末行全空也能往返）。\n- `frontend/src/pages/EditorPage.tsx`：`editor-topbar` 新增 accessible name `Export CSV` 的按钮，构造 Blob（`text/csv;charset=utf-8`）触发浏览器下载，建议文件名 = 工作簿名（去掉结尾 `.csv`）+ `.csv`；**不写任何状态**（不改活动表/选区/单元格，不刷 `updatedAt`）。\n- `frontend/src/api.ts`：新增 `api.importCsv(fileName, csv)`，复用既有 `request<T>()`（`{error}` → `ApiError`）。"
+  },
+  {
+    "render_block": 56,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 338,
+    "text": "1. `cd frontend && npm test` → 6/6 通过（导出纯函数：转义/引号翻倍/换行、包围盒、空单元格与空行保留、公式取计算结果、隐藏行仍导出、空表）。\n2. `cd backend && npm test` → 8/8 通过（导入纯函数 + 真实 HTTP 端点：按序保留空字段、引号逗号/转义双引号/字段内 CRLF 与 LF、未闭合引号抛错、UTF-8 中文与数字文本、BOM、宽表扩列/长表扩行；成功导入后重新 GET 仍一致；非法 CSV 返回 400 精确文案且列表中无该名）。\n3. `checks/run.sh`（Playwright，每个 spec 独立临时 `DATA_DIR` + 空闲端口，3000 保留给评测）→ 见下方结果。"
+  },
+  {
+    "render_block": 58,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 272,
+    "text": "浏览器检查覆盖：\n- 导入含中文/引号转义/字段内换行的 CSV → 编辑器逐格核对（含精确断言 `multi\\nline`）→ **刷新后完全一致**，且首行 `Name,Note` 仍是普通数据。\n- 非法 CSV（未闭合引号）→ 对话框显示精确错误文案、主页无该名链接、listitem 数量不变、可重试成功。\n- 编辑器写入 `=1+2` → 导出 CSV，断言下载文件字节内容（含转义/中文/空 B 列）且公式列 = 网格显示值（非表达式）→ 导出前后 URL / 活动 tab / 公式栏 / 网格值快照相等，**刷新后仍相等**。"
+  },
+  {
+    "render_block": 72,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 221,
+    "text": "## 备注\n- 导出取 `value` 而非 `raw`：REQ-4 公式引擎回填 `value` 后，导出自动变为计算结果，无需再改；当前基础/本 PR 未接公式求值前，网格显示值与导出值一致，检查断言的是“网格显示值”，故在 REQ-4 前后都成立。\n- 与 #7 的衔接：导出不依赖筛选视图；#7 落地后建议加一条“应用筛选后导出仍含隐藏行”的回归检查（`frontend/tests/csv.test.ts` 已有对应的纯函数用例）。"
+  },
+  {
+    "render_block": 100,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 786,
+    "text": "### 服务端（导入，REQ-1-3-1）\n- `backend/src/csv.ts`：纯函数 `parseCsv` / `isValidCsv`。\n  - 按原始行列顺序；空字段保留（含行尾空列、整行空）；LF / CRLF / CR 均作记录分隔符；剥离开头 UTF-8 BOM。\n  - `\"...\"` 内的逗号与换行属于字段内容；`\"\"` 表示字面双引号。\n  - 字段以 `\"` 开头但未闭合 → 抛 `CsvFormatError`，整个解析失败。\n  - 全部按文本处理，不做数值/日期类型转换。\n- `backend/src/routes/csv.ts`：`POST /api/workbooks/import { fileName, csv }`\n  - 成功 201 返回 bare `Workbook`（沿用 #2 契约，无包装）；工作簿名 = 文件名去掉结尾 `.csv`（大小写不敏感、只去一次）。\n  - 解析失败/缺 csv/文件名为空 → 400 `{ error: \"Invalid CSV file format. Import failed.\" }`。\n  - **先完整校验再单次落库**（`saveWorkbook` 只在解析成功后调用），失败不留任何半成品记录。\n  - 内容全部写 `{ raw: text, value: text }`（不消费表头）；空字段不落 key（稀疏 map）；导入表命名为 `Sheet1`、`activeSheetId` 指向它、`lastSelection = \"A1\"`；行列数按需扩到内容之外不截断（`rowCount/colCount` 至少覆盖导入范围）。\n- `backend/src/server.ts`：在 `/api` 404 兜底**之前**挂载 `csvRouter`。"
+  },
+  {
+    "render_block": 102,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 1012,
+    "text": "### 前端（导入对话框 + 导出，REQ-1-3-1 / REQ-1-3-2）\n- `frontend/src/pages/HomePage.tsx`：`home-header` 区新增 accessible name 为 `Import CSV` 的按钮；打开 `role=\"dialog\"` 且 accessible name 为 `Import CSV` 的对话框，内含 label `CSV file` 的 file 控件与 `Confirm import` 按钮（含 `Cancel`）。\n  - 失败时对话框内 `role=\"alert\"` 显示服务端文案 `Invalid CSV file format. Import failed.`，不跳转、主页列表不变、可直接重试；成功才 `navigate('/workbook/<id>')`。\n- `frontend/src/domain/csv.ts`：纯函数 `usedRange` / `escapeField` / `serializeCsv` / `sheetToCsv`。\n  - 导出范围 = 该表 `cells` 数据模型的行列包围盒（**不用可见行投影**，故 REQ-5-1-2 的“筛选隐藏行仍要导出”天然成立），保留范围内的空单元格与全空行，按网格实际行列顺序。\n  - 普通单元格取 `value`（显示值）；公式单元格同样取 `value`，即当前计算结果而非 `raw` 表达式。\n  - 含 `,` `\"` `\\n` `\\r` 的字段加双引号并把 `\"` 翻倍；每条记录以 `\\n` 结尾（末行全空也能往返）。\n- `frontend/src/pages/EditorPage.tsx`：`editor-topbar` 新增 accessible name `Export CSV` 的按钮，构造 Blob（`text/csv;charset=utf-8`）触发浏览器下载，建议文件名 = 工作簿名（去掉结尾 `.csv`）+ `.csv`；**不写任何状态**（不改活动表/选区/单元格，不刷 `updatedAt`）。\n- `frontend/src/api.ts`：新增 `api.importCsv(fileName, csv)`，复用既有 `request<T>()`（`{error}` → `ApiError`）。"
+  },
+  {
+    "render_block": 108,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 338,
+    "text": "1. `cd frontend && npm test` → 6/6 通过（导出纯函数：转义/引号翻倍/换行、包围盒、空单元格与空行保留、公式取计算结果、隐藏行仍导出、空表）。\n2. `cd backend && npm test` → 8/8 通过（导入纯函数 + 真实 HTTP 端点：按序保留空字段、引号逗号/转义双引号/字段内 CRLF 与 LF、未闭合引号抛错、UTF-8 中文与数字文本、BOM、宽表扩列/长表扩行；成功导入后重新 GET 仍一致；非法 CSV 返回 400 精确文案且列表中无该名）。\n3. `checks/run.sh`（Playwright，每个 spec 独立临时 `DATA_DIR` + 空闲端口，3000 保留给评测）→ 见下方结果。"
+  },
+  {
+    "render_block": 110,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 272,
+    "text": "浏览器检查覆盖：\n- 导入含中文/引号转义/字段内换行的 CSV → 编辑器逐格核对（含精确断言 `multi\\nline`）→ **刷新后完全一致**，且首行 `Name,Note` 仍是普通数据。\n- 非法 CSV（未闭合引号）→ 对话框显示精确错误文案、主页无该名链接、listitem 数量不变、可重试成功。\n- 编辑器写入 `=1+2` → 导出 CSV，断言下载文件字节内容（含转义/中文/空 B 列）且公式列 = 网格显示值（非表达式）→ 导出前后 URL / 活动 tab / 公式栏 / 网格值快照相等，**刷新后仍相等**。"
+  },
+  {
+    "render_block": 124,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 221,
+    "text": "## 备注\n- 导出取 `value` 而非 `raw`：REQ-4 公式引擎回填 `value` 后，导出自动变为计算结果，无需再改；当前基础/本 PR 未接公式求值前，网格显示值与导出值一致，检查断言的是“网格显示值”，故在 REQ-4 前后都成立。\n- 与 #7 的衔接：导出不依赖筛选视图；#7 落地后建议加一条“应用筛选后导出仍含隐藏行”的回归检查（`frontend/tests/csv.test.ts` 已有对应的纯函数用例）。"
+  },
+  {
+    "render_block": 136,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L6",
+    "chars": 313,
+    "text": "- 服务端：工作簿创建/读取沿用 #2 的 REST 形态；导入新增 `POST /api/workbooks/import`，body `{ fileName, csv }`（csv 为 UTF-8 原文），成功 201 `{ workbook }`，解析/校验失败 400 `{ error: \"Invalid CSV file format. Import failed.\" }`，失败不落库。\n- 前端：主页按钮/对话框挂到主页组件；导出按钮挂到编辑器工具栏；两者复用 #2 的工作簿数据模型与路由。\n- 若 #2 已有等价形态（如 multipart 上传或 rows 数组），以 #2 契约为准，我不新增并行约定。"
+  },
+  {
+    "render_block": 140,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L6",
+    "chars": 301,
+    "text": "- 单元测试：CSV 解析/序列化纯函数（引号逗号、转义双引号、字段内 CRLF/LF、未闭合引号报错、空字段/末尾空列、中文与数字）。\n- Playwright（browser-checks）：主页 → 上传构造好的 CSV（含中文/引号/换行）→ 编辑器网格逐格核对 → 刷新一致；未闭合引号 CSV → 错误文案 + 主页无该名链接 + 列表无变化；编辑器输入公式并计算 → Export CSV → 断言下载文件字节内容与公式结果，且导出前后活动 tab、网格值、公式栏一致。\n- 环境：基于 `origin/develop`；自检用空闲端口（非 3000）与临时数据目录；结束前停止自启服务。"
+  },
+  {
+    "render_block": 160,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L6",
+    "chars": 440,
+    "text": "### 交付内容\n- 主页 \"Import CSV\" 按钮 → 对话框（名 \"Import CSV\"），file 控件 label \"CSV file\" + \"Confirm import\"。\n- 解析规则：按原始行列顺序，保留空字段；支持 UTF-8 中英文与数字文本；正确处理双引号包裹的逗号、成对转义双引号、字段内换行；以双引号开头但无闭合双引号的字段无效，报 \"Invalid CSV file format. Import failed.\"。\n- 导入成功：新建工作簿，名 = 文件名去结尾 .csv，Sheet1 打开完整 CSV 内容，首行是普通数据；刷新/重开不变；失败则主页不出现该名链接、无部分结果。\n- 编辑器工具栏 \"Export CSV\" 按钮：触发浏览器下载，建议文件名以 .csv 结尾，UTF-8 文本；按网格实际行列顺序保留空单元格；正确转义逗号/引号/换行；普通单元格导出显示值，公式单元格导出当前计算结果而非公式表达式；导出前后界面状态不变。"
+  },
+  {
+    "render_block": 170,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L221",
+    "chars": 614,
+    "text": "## 当前状态（2026-09-28）\n- 已基于 `origin/develop`（`87cedb5`，含 #2 共享基础）完成实现并提 **PR #4**（head `braid-agent/issue-3/pi-deepseek-fast-g1` @ `f54e4af`）。\n- 证据：`frontend` 单测 6/6、`backend` 单测 8/8、`checks/run.sh` 中 CSV 3/3 全绿（11 通过 / 3 失败，3 条失败为 develop 自带检查缺陷，已报 #2）。\n- 契约（#2 comment #25/#29 已裁决并沿用）：`POST /api/workbooks/import { fileName, csv }` → 201 bare Workbook，失败 400 `{ error: \"Invalid CSV file format. Import failed.\" }` 且不落库；解析模块 `frontend/src/domain/csv.ts`（导出）与 `backend/src/csv.ts`（导入）；挂载点 `HomePage` home-header / `EditorPage` editor-topbar。\n- 导出直接读工作表数据模型的包围盒（不使用可见行投影），因此 REQ-5-1-2 的“筛选隐藏行仍导出”天然成立；#7 落地后补一条回归检查即可。"
+  },
+  {
+    "render_block": 234,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L314",
+    "chars": 222,
+    "text": "cleanup() {\n  [[ -n \"$WATCHDOG\" ]] && kill \"$WATCHDOG\" 2>/dev/null || true\n  while read -r pid; do\n    kill \"$pid\" 2>/dev/null || true\n  done < \"$PID_FILE\"\n  rm -f \"$PID_FILE\"\n  wait 2>/dev/null || true\n}\ntrap cleanup EXIT"
+  },
+  {
+    "render_block": 236,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L235",
+    "chars": 500,
+    "text": "<<<<<<< HEAD\nstart_server() {\n  local suffix=\"$1\"\n  DATA_DIR=\"${DATA_DIRS[$suffix]}\" HOST=127.0.0.1 PORT=\"${PORTS[$suffix]}\" \\\n    node \"$ROOT/backend/dist/server.js\" >> \"$LOG_PREFIX-$suffix.log\" 2>&1 &\n  SERVER_PIDS[$suffix]=$!\n  echo \"${SERVER_PIDS[$suffix]}\" >> \"$PID_FILE\"\n}\n=======\n# env var suffix -> spec file handled by the matching Playwright project.\nSUFFIXES=(CREATE EDITOR HOME CSV)\ndeclare -A URLS\n: > \"$SERVER_LOG\"\n>>>>>>> f54e4af (CSV 导入与导出 (REQ-1-3-*): 服务端解析+导入端点、导入对话框、导出下载、单元与浏览器检查)"
+  },
+  {
+    "render_block": 244,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L314",
+    "chars": 446,
+    "text": "for suffix in \"${SUFFIXES[@]}\"; do\n  PORTS[$suffix]=\"$(free_port)\"\n  DATA_DIRS[$suffix]=\"$(mktemp -d /tmp/wb-checks-XXXXXX)\"\n  : > \"$LOG_PREFIX-$suffix.log\"\n  start_server \"$suffix\"\n  wait_for_ready \"${PORTS[$suffix]}\" \"${SERVER_PIDS[$suffix]}\" \"$LOG_PREFIX-$suffix.log\" || exit 3\n  URLS[$suffix]=\"http://127.0.0.1:${PORTS[$suffix]}\"\n  echo \"server for $suffix: ${URLS[$suffix]} (DATA_DIR=${DATA_DIRS[$suffix]}, log=$LOG_PREFIX-$suffix.log)\"\ndone"
+  },
+  {
+    "render_block": 248,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 256,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 434,
+    "text": "  ready=false\n  for _ in $(seq 1 120); do\n    if curl -sf \"http://127.0.0.1:$port/api/workbooks\" | grep -q \"Q3 Sales\"; then\n      ready=true\n      break\n    fi\n    if ! kill -0 \"$pid\" 2>/dev/null; then\n      echo \"server for $suffix died during startup (log: $SERVER_LOG)\"\n      exit 3\n    fi\n    sleep 0.5\n  done\n  if [[ \"$ready\" != true ]]; then\n    echo \"server for $suffix was not ready in time (log: $SERVER_LOG)\"\n    exit 3\n  fi"
+  },
+  {
+    "render_block": 260,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 276,
+    "source": "continuation02-root-native/023-2026-09-28T04-50-06-734Z_01a0e659-4b0e-70ee-9264-6926aa018e11.jsonl:L168",
+    "chars": 368,
+    "text": "# Type-check the check sources first: a typo such as a missing import has to\n# fail fast instead of showing up later as a confusing browser failure.\nTSC=\"$ROOT/checks/node_modules/.bin/tsc\"\nif [[ -x \"$TSC\" ]]; then\n  \"$TSC\" -p \"$ROOT/checks/tsconfig.json\"\nelse\n  echo \"note: typescript is not installed under checks/ (cd checks && npm install); skipping type-check\"\nfi"
+  }
+]

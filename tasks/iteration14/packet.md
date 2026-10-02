@@ -1,6 +1,6 @@
 # I14：协作职责与独立验收实验
 
-2026-10-01开始，2026-10-02更新。I14-0机制源码与基础反馈已完成，实际采用和收益待运行对账；后续问题改进移至I14-1。本轮收窄为GitHub-only，所有生成模型改用Qwen Token Plan。当前新增冻结与启动等待设施干净基线完成及模型配方就绪，见下方当前树。既有采集与独立GPT-5.6-Luna / low十分钟监控继续消费已保存摘要与告警。
+截至 2026-10-02，I14 当前用户决定为暂停所有实验；实际运行状态以对应原执行回执为准。暂停前的范围、baseline 保留和供应商配方见 [接续 packet](dx-resume/packet.md)；这些记录不构成恢复任一 variant 的授权。DX 已交付，但实际准备、恢复、供应商请求和启动身份仍由 owner 回执决定；未经用户新指示不得恢复任何实验或评价。下文按日期保留此前实施与决定，不能把历史授权或旧制品当作当前启动依据。
 
 ## 用户目标与授权
 
@@ -10,55 +10,68 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 
 用户还要求在root issue提示使用现代TypeScript、避免JavaScript，但若I13应用本已自然使用TS则忽略。已检查保全工作树与发布origin：GLM/Sheet的backend/src仍有六个JavaScript业务源文件，因此I14保留TypeScript偏好；GitHub已有TS，官网Sheet当前导出的src缺失不作语言事实。只在未来I14根Issue约定落地，不改当前I13。
 
-## 当前事实与下一步
+## 当前暂停边界
+
+当前用户决定为暂停所有实验；实际物理状态以对应原执行回执为准。未经用户新指示，不恢复 I14 任一 variant、Sheet/GitHub 生成、prepare、输运、模型请求或评价；现场、配方草稿和历史回执继续由 [接续 packet](dx-resume/packet.md) 持有。
+
+当前最终配方只作为未来恢复时的输入记录：`glm-5.3-flash`、`glm-5.3` 与 `kimi-k3` 使用普通 Qwen，内部 `deepseek-v4-flash-0731` 使用 Qwen Token Plan。I13 当前 K2.7-Code advisor 的原厂路由保持。实际 endpoint、凭据装配和恢复身份仍须等待 owner 回执。
+
+供应商凭据未输出；未来冻结只注入实际需要的三组凭据，不回退 ARC 或 BigModel。开发侧 Codex 与既定 Luna 监控不属于 I14 生成配方。
+
+| I14模型 | 渠道 | endpoint / key变量 |
+| --- | --- | --- |
+| glm-5.3-flash（成员、视觉、cleaner及实际采用它的e2e） | 普通Qwen API | QWEN_BASE_URL / QWEN_API_KEY |
+| kimi-k3（advisor） | 普通 Qwen API，wire ID `kimi-k3` | QWEN_BASE_URL / QWEN_API_KEY |
+| glm-5.3（采用时的根模型） | 普通Qwen API，wire ID `glm-5.3` | QWEN_BASE_URL / QWEN_API_KEY |
+| 内部DeepSeek，wire ID `deepseek-v4-flash-0731` | Qwen Token Plan | QWEN_TOKEN_PLAN_BASE_URL / QWEN_TOKEN_PLAN_API_KEY |
+
+`.secrets/models.env`保持权限0600、Git忽略，未输出或更换凭据值；Token Plan endpoint为用户指定的独立地址。未来冻结只注入实际需要的三组凭据，不回退ARC或BigModel。当前暂停后的新配方未发模型请求；此前 e2e 等历史运行事实另按回执记录，非空检查不等于服务端可用性验收。模型ID按本套餐真实能力核对，DeepSeek版本ID不默认视为别名；不采用先前提出的替换模型选项。
+
+生产端的多供应商绑定已由 DX 交付显式 `FACTORY26_MODEL_BINDINGS` 接口；每个角色/模型的实际 endpoint 与 credential 仍须由 [接续 packet](dx-resume/packet.md) 的离线准备和读回证据确认。纸面配方、包内配置和原生实际采用分别记录。
+
+供应商耦合、停止回执契约及 owner/资源生命周期的实现边界归实验 DX；旧包中的强制逻辑保持历史身份，只有重新冻结的新包可以纳入已交付修复。实际准备、恢复和运行是否通过仍以接续 packet 的回执为准。
+
+2026-10-02，本次整理覆盖用户最新三项修正：“‘强制 ARC’听起来像是过度处置”；“让 GLM-5.3 用 qwen AI”；“实验基础设施即将进行较大的重构和改进；我们整理一下情况”。随后 canonical 接续 packet 记录“所有实验暂停”，新增冻结、prepare、launch、模型请求和评价均停止；GLM、cleaner、reviewer、e2e 与 baseline 的现场和回执保留，以下日期段落不构成自动启动依据。
+
+## 历史决定与范围（保全原文）
+
+2026-10-01开始，2026-10-02更新。I14-0机制源码与基础反馈已完成，实际采用和收益待运行对账；后续问题改进移至I14-1。本轮收窄为GitHub-only，所有生成模型改用Qwen Token Plan。当前新增冻结与启动等待设施干净基线完成及模型配方就绪，见下方当前树。既有采集与独立GPT-5.6-Luna / low十分钟监控继续消费已保存摘要与告警。
 
 DX交付后接续（2026-10-02）：用户明确“实验DX改进完成了。现在我们继续推进”，新增准备阶段的暂挂已解除，按最新GitHub-only与三渠道配方接续。DX提交eef231b1完成新controller/runner、逐模型供应商绑定及旧writer退役；实际Docker/Harness恢复、供应商请求仍需本轮取得反馈。主线与两个有界worker已并行处理恢复接线和host交接，当前入口归[接续packet](dx-resume/packet.md)。baseline既有用户暂停保持，先保全/准备；Sheet不派发。
 
 最新范围修正（2026-10-02）：用户要求“I14暂停运行sheet题目，只运行github”，并指定所有I14生成模型使用Qwen Token Plan，Base URL为 `https://token-plan.maas.qianwenaiapi.com/compatible-mode/v1`，配套独立key；等待实验DX收尾后配置供应商。本轮待执行范围收窄为四variant各GitHub，四Sheet保留历史记录但不派发。只更新未来实验配方，不原地修改既有冻结输入、历史运行或I13。模型请求、恢复与新启动继续等待DX完成和实际配方就绪。
 
-供应商最终修正（用户原话：“已经配置。好的，那么glm-5.3-flash就使用普通qwen API；而kimi-k3继续使用自有kimi api”）：Token Plan key、普通Qwen key和自有Kimi key均已只读确认非空。沿用模型职责，`glm-5.3-flash`的所有角色走普通Qwen、`kimi-k3`走自有Kimi，其余I14模型继续Token Plan。此指示覆盖上一条“所有模型Token Plan”的两项例外，没有授权静默替换模型。开发侧Codex与既定Luna监控不属于I14生成配方。
-
-| I14模型 | 渠道 | endpoint / key变量 |
-| --- | --- | --- |
-| glm-5.3-flash（成员、视觉、cleaner及实际采用它的e2e） | 普通Qwen API | QWEN_BASE_URL / QWEN_API_KEY |
-| kimi-k3（advisor） | 自有Kimi API | KIMI_BASE_URL / KIMI_API_KEY |
-| 其它模型（包括采用时的glm-5.3、内部DeepSeek） | Qwen Token Plan | QWEN_TOKEN_PLAN_BASE_URL / QWEN_TOKEN_PLAN_API_KEY |
-
-`.secrets/models.env`保持权限0600、Git忽略，未输出或更换凭据值；Token Plan endpoint为用户指定的独立地址。未来冻结只注入实际需要的三组凭据，不回退ARC或BigModel。当前未发模型请求，非空检查不等于服务端可用性验收；模型ID按本套餐真实能力核对，DeepSeek版本ID不默认视为别名。官方支持表缺少Flash/K3的问题通过明确供应商例外解决；不采用先前提出的替换模型选项。
-
-生产端尚有一个实际接线边界需DX确认：原native的 `factory26` provider同时容纳GLM-Flash/K3/DeepSeek，而当前 `bind_native_models` 按provider统一改URL/key。这不能仅凭一条factory26绑定落实三个不同供应商。已将用户最终配方及此代码事实交给DX owner收敛有效绑定合同；主线不并行改其源码。供应商配方先保存为未冻结草稿，待DX交付入口后装配并实际读回每个角色/模型的endpoint与credential变量。纸面路由、包内配置和原生实际采用分别记录。
-
-供应商耦合、停止回执契约及owner/资源生命周期归实验DX改进，不另立修补任务。当前工作树四I14入口与共享恢复已移除ARC-only，采用 `scripts/agent_support.py` 的显式 `FACTORY26_MODEL_BINDINGS`（provider/base_url/credential_env），不选择供应商；DX正在真实离线验收，尚未以源码阅读宣称完整收尾。实验入口仍有固定八目标和GLM `qwen-ai`标签校验，运行说明也仍写固定ARC恢复，已交DX owner收敛为显式目标/模型配方并同步文档；未与其并行编辑。同一旧包包含的强制逻辑保持历史身份，只有重新冻结的新包可以纳入已修源码。
-
-2026-10-02，本次整理覆盖用户最新三项修正：“‘强制 ARC’听起来像是过度处置”；“让 GLM-5.3 用 qwen AI”；“实验基础设施即将进行较大的重构和改进；我们整理一下情况”。据此，新增冻结、prepare、launch 和模型请求已暂挂，GLM 与 cleaner 执行者完成交接并结束活跃等待。原官网 Flash/GitHub 及唯一采集器继续；baseline 的用户暂停、旧 dispatcher 和源适配器的 SIGSTOP 保持。以下是当前事实，后续日期段落保留当时操作记录，不构成自动启动依据。
-
 ```text
-当前实验与改进
+暂停前保存的实验与改进快照（2026-10-02 15:12 CST）
 ├─ I13：四个逻辑运行
-│  ├─ Flash/Sheet：正式74/100，通过74/失败26；独立过程分析完成
-│  ├─ Flash/GitHub：官网7e8ec62670df继续，12:30 CST原采集器读回RUNNING
-│  │  └─ 原native历史完整接续及新工具调用已直接观察；尚无最终评分
-│  └─ GLM/GitHub、GLM/Sheet：两源实际stopped，完整选择性保全已核验
-│     └─ 未完成生成或上传评分；本次未新冻结、prepare或恢复模型
-├─ I14-0：当前仅四variant各GitHub；原八项作为历史矩阵保留
-│  ├─ baseline/GitHub：用户暂停，当前物理容器paused
-│  ├─ reviewer/GitHub：当前物理容器paused；此前Console适配已部署
-│  ├─ cleaner/GitHub：旧源实际stopped；最终恢复包完成，未prepare/launch
-│  ├─ e2e/GitHub：未派发，等待DX和新配方
-│  └─ 四项Sheet：本轮暂停，不派发
-├─ I14材料与机制
-│  ├─ draft、cleaner、reviewer、e2e：源码及既有实际操作反馈完成，收益待实验
-│  ├─ 隐藏评论聚合：77个同理由隐藏根压为一行，实际投影读回通过
-│  │  └─ 新binary进入cleaner候选；该现场没有隐藏thread后代实例，未覆盖此实景
-│  ├─ 协作/需求技能：What/Why改写a31eb888完成；Hook暂缓
-│  └─ cleaner成员入口：b13f4290完成，已有快照起步、按具体信息缺口查询
-│     └─ 最终材料已进入cleaner候选；部署、通知送达、方法采用与收益尚未验证
-└─ 实验设施
-   ├─ 已有能力：共用Braid内存修复、实际资源采集、输运reentry、模型事实查询
-   ├─ DX收尾：ARC约束源码已移除；回执契约与资源生命周期由DX负责
-   ├─ 宿主：WSL已恢复；development-2仅备用，未发生迁移或新生成
-   ├─ Console：唯一WSL/8765服务可访问；旧cleaner访问器停，未登记新physical run
-   └─ 新基线：独立controller/runner与hard-cutoff已开工，真实离线验收中
+│  ├─ Flash/GitHub【第一优先级】
+│  │  ├─ 7e8ec62670df：ARC额度耗尽，已取消并保全最终工作区/18份native
+│  │  ├─ 原恢复会话：端到端负责修复、准备、官网提交/启动与监控交接
+│  │  ├─ 离线准备已派发；替代官网run尚未启动，未取得最终评分
+│  │  └─ 配方：Flash普通Qwen；保留K2.7-Code/自有Kimi；DS0731/Token Plan
+│  ├─ Flash/Sheet：正式74/100，通过74/失败26；过程分析完成
+│  ├─ GLM/GitHub：源已停止、完整选择性保全；待恢复与最终评分
+│  └─ GLM/Sheet：源已停止、完整选择性保全；待恢复与最终评分
+├─ I14-0：仅GitHub，新生成让位于I13官网恢复
+│  ├─ baseline：用户暂停保持
+│  ├─ reviewer：旧现场paused，待保全/恢复；Console reviewer适配已部署
+│  ├─ cleaner：旧现场stopped且完整保全；热修候选已完成，待准备/恢复
+│  ├─ e2e：未派发
+│  └─ 四项Sheet：暂停，不派发
+├─ I14方法与机制
+│  ├─ draft、cleaner、reviewer、e2e：源码与基础操作反馈完成，收益待实验
+│  ├─ 隐藏评论聚合：77个同理由根评论压为一行，候选读回通过
+│  │  └─ 运行部署效果与隐藏thread后代实景覆盖仍待验证
+│  ├─ braid-collaboration＋arc-bench：What/Why改写完成，采用与收益待运行
+│  └─ cleaner成员入口简化：完成并进入候选，实际效果待恢复
+├─ I14-1：I13结果/目标对账，未达项与后续优化在此收敛
+└─ 共同设施
+   ├─ DX新controller/runner与旧writer退役：已交付，实际恢复验证正在进行
+   ├─ 多供应商接线：旧native身份保留、wire ID和私有凭据装配已完成
+   ├─ 恢复实战缺陷：空Pi home与进程监督竞态已修复，等待完整准备反馈
+   ├─ development-2：首次域准入已交接，承担断网准备；WSL旧现场保持
+   ├─ Console：沿用唯一实例，不增设服务
+   └─ 监控：程序负责采集；Luna/low每十分钟消费，新run启动后绑定新身份
 ```
 
 I13正式结果、费用字段与来源归[实验记录](../iteration13/experiments.md)。两GLM当前恢复边界归[只读交接](../iteration13/i13-2/glm-final-recovery.md)，canonical全保全回执为 `runs/iteration13/i13-2-20261001/arc-hot-recovery-20261002/handoff-state.json`。GitHub 7906项、Sheet 10398项选定进度材料均已逐项核验，含应用/Git、Braid DB/WAL及native历史；这是有明确排除依据的完整选择性保全，不是全volume字节备份。此前Sheet超时的partial与原错误独立保留，不能替代后来成功归档。

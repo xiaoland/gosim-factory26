@@ -1,0 +1,290 @@
+{
+  "node_id": "issue:3",
+  "repository_node_id": "local",
+  "kind": "issue",
+  "number": 3,
+  "state": "CLOSED",
+  "context_revision": "e7e6936a9d8aa0196fa1227831b71ccf45223fd72c738345a2c12610066f5831",
+  "observed_at": "2026-09-29T06:13:15.623662392Z",
+  "title": "M1 身份与访问：注册/登录/找回密码/登出/改密码（REQ-1）",
+  "body": "## 需求来源（权威）\n需求包：`/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml`\n原子需求：REQ-1-1-1（注册）、REQ-1-1-2（登录）、REQ-1-1-3（找回密码）、REQ-1-2（登出）、REQ-1-3（改密码）。\n参考截图：github-sign-up.png、github-sign-in.png、github-password-reset(-1).png、github-account-menu-sign-out.png、github-password-settings.png（视觉解读见 docs/ui-reference-notes.md）。\n\n## 共享决定（必须遵循）\ndocs/architecture.md（API 约定/会话/文案契约/§9）、docs/product-plan.md §3 全局规则、docs/seed-data.md、docs/acceptance-plan.md。\n文案常量一律引用 frontend/src/contracts/copy.ts；不得自行发明文案。\n\n## 设计与决定入口（2026-09-29）\n- 实施依据：`docs/task-packets/identity-m1-issue-3.md`（API 表/前端结构/验收方案/D1–D14 决定与依据），随实现 PR 发布。\n- 实现 PR：**#12**（head `braid/issue-3-m1`，base `develop`，负责人 @glm-6）——实现计划、预演排障、实现与模块验收在此承接。\n- 设计与决定讨论：本 Issue 评论 **#25**（D1–D14 摘要、参考图缺口与可推翻条件）。\n- 根 Issue #1 裁决（评论 **#27**，2026-09-29）：D4 端点名更正采纳；D1/D1b 会话语义与 D2 非泄露写入 `docs/architecture.md` §3 并追加 §9 修订记录，由 PR #12 一并更新（含 packet「未决问题」回填）。\n- 参考图缺口（登出对话框/验证码 UI/改密表单无图像证据）见评论 #25 与 `docs/ui-reference-notes.md`。\n\n## 交付\n1. 注册页（从登录页 \"Create an account\" 链接进入）：字段 Username/Email/Password/Confirm password、复选框 \"Agree to the terms\"、按钮 \"Create account\"；规则与错误消息逐字按 REQ-1-1-1（含多项错误同时显示、保留 username/email 输入）；成功即视为邮箱已验证并进入登录页。\n2. 登录页：字段 \"Username or email\"/\"Password\"、按钮 \"Sign in\"；失败一律显示 \"Invalid credentials\"（不泄露存在性）；成功建会话（cookie），账户菜单显示用户名，刷新会话保持。\n3. 找回密码（\"Forgot password\" 链接）：Email + \"Send reset link\" 直接切换到下一步并显示固定验证码文本 \"123456\"、Verification code/New password/Confirm password 与 \"Reset password\"；错误 \"Verification code is invalid\" 等；成功显示 \"Password updated\"；已知/未知邮箱行为一致（不泄露）。\n4. 登出：按钮 \"Account menu\" → 菜单项 \"Sign out\" → 对话框 \"Sign out\"（按钮 \"Confirm sign out\"/\"Cancel\"）；确认后立即失效会话，刷新/后退/直达受保护页都要求重新认证；Cancel/关闭保留会话。\n5. 改密码（Settings → \"Password and authentication\"）：字段 Current password/New password/Confirm password、按钮 \"Update password\"；空 current 显示 \"Current password is required\"；错误文案按 REQ-1-3；成功显示 \"Password updated\"，旧密码立即失效。\n6. 后端：/api/auth/register|sign-in|sign-out|forgot-password|reset-password|change-password + Vitest 单测（用户名/邮箱/密码规则、错误分支、会话失效）。\n   > 更正（评论 #25 D4；根 Issue #1 采纳见评论 #27）：原文 `login|logout` 按笔误处理。需求原文不规定 API 路径；`sign-in`/`sign-out` 已由 PR #2 发布并被前端 client、单测与 e2e 使用，故保持 canonical、不加别名。\n7. 种子：docs/seed-data.md 账户表写入 seed 注册表（PR #2 已满足，本任务仅核实）。\n\n## 前置\n基础 PR #2 已合入 develop（脚手架、会话骨架、copy.ts、seed 注册表）。\n\n## 验收\nPlaywright 用例覆盖上述 5 条需求的 GIVEN/WHEN/THEN（docs/acceptance-plan.md 分层与隔离规则）；刷新持久化断言；密码不回显断言。\n模块级检查与高风险断言清单见 `docs/task-packets/identity-m1-issue-3.md`；整合验收（develop → main）由根 Issue #1 组织。\n"
+}
+
+local_comments {
+  "comment_id": 16,
+  "work_item_node_id": "issue:3",
+  "body": "@deepseek-3 基础 PR #2 已合入 develop（merge commit `c338578`），你的前置已满足，可以开始 M1。工作基线 `origin/develop`，分支 `--base develop`。\n\n接手要点（来自 PR #2 移交，详见 PR #2 评论 #6 thread 与 docs/task-packets/foundation-pr-2.md）：\n- 可复用：注册/登录/登出闭环、字段级多项错误（errors[] 始终返回）、`Invalid credentials`、`revokeSessionsForUser()`（改密/找回即时失效）、文案常量 `frontend/src/contracts/copy.ts`（后端镜像 `backend/src/contracts/messages.js`）。\n- 需替换：`/password-reset`（PasswordResetPlaceholderPage 占位）、`/settings/*`（SettingsPage 占位）。\n- 已裁决契约：空字段文案 `<Field> is required`；cookie 不带 `Secure`；seed 默认随启动。详见 docs/architecture.md §9.10。\n- 测试隔离规则（唯一 token、禁全局计数断言）见 docs/acceptance-plan.md。\n\n如实施中发现 docs/ 契约需变更，先在本 Issue 提出，由根 Issue #1 裁决后更新文档再合入。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb68-0ed9-7ff0-a22a-52f93596e102",
+  "writer_turn": "01a0eb8f-fcec-7b41-8da1-c9dd4988f17a",
+  "revision": 1,
+  "created_at": "2026-09-29T05:09:35.374074377Z",
+  "updated_at": "2026-09-29T05:09:35.374074377Z",
+  "reply_to": null,
+  "thread_root": 16,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 25,
+  "work_item_node_id": "issue:3",
+  "body": "## M1 设计与决定（Issue #3）\n\n设计依据已形成并随 PR #12（head `braid/issue-3-m1` @ `07980ef`，base `develop`，负责人 @glm-6）发布。\n\n**实施依据入口**：`docs/task-packets/identity-m1-issue-3.md`（API 表、前端结构、验收方案、D1–D14 决定、依据与未决问题）。\n参见 PR #12 正文与交接评论。\n\n### 需求边界（本轮不变）\n- PR #2 已交付注册/登录/登出闭环；M1 补齐 **REQ-1-1-3 找回密码**、**REQ-1-3 改密码**，替换 `/password-reset`、`/settings/*` 占位，\n  并把 5 条需求纳入可重复验收。交付项 7（seed 注册表）已满足，仅核实。\n\n### 技术方案要点\n- 新增 `POST /api/auth/forgot-password`（仅邮箱格式校验，已注册/未注册响应完全相同）、\n  `POST /api/auth/reset-password`、`POST /api/auth/change-password`（需登录）；错误体遵循 §3，一次返回全部字段错误。\n- 找回密码无服务端待处理状态：恢复上下文 = 提交的 `email` + `code`，`reset-password` 重新校验后在事务内改密并吊销会话。\n- 前端：`/password-reset` 两步（步骤由 URL 驱动：`?step=2&email=…` → `?step=done`）；\n  `/settings/*` 改嵌套路由，`/settings/password` 渲染安全表单。\n\n### 关键决定（完整条目与反例见 packet D1–D14）\n- **D1/D1b 会话**：改密保留调用者当前会话、吊销该用户其它会话；找回密码吊销该用户全部会话、不自动登录。\n- **D2 未知邮箱**：与错误验证码完全相同的表现（`Verification code is invalid`，字段 `code`），不泄露存在性，任何路径不改账户。\n- **D3 恢复流程步骤状态**：URL 驱动；`123456` 是独立可见文本（来自 `copy.ts` 的 `VERIFICATION_CODE`），\n  mount 时不发任何请求 → 刷新零副作用且结果仍可见。\n- **D4 接口命名**：canonical 为已发布的 `sign-in`/`sign-out`（不加 `login`/`logout` 别名），新端点沿用既有命名风格。\n  **本 Issue 交付项 6 原文的 `login|logout` 按此更正**（需求原文不规定 API 路径；基础契约、前端 client、单测与 e2e 均已使用 sign-in/sign-out）。\n- **D5–D14**：文案只取 `copy.ts`；成功后原地显示不跳转；密码不回显；多项错误同显；不做需求外校验；\n  邮箱归一化一致；不加额外控件（需求写 “exactly one”）；登出后刷新/后退/直达受保护页均要求重新认证。\n\n### 验收方案\n- **模块自检（本任务的完成条件）**：后端 Vitest（新端点校验/错误分支/会话失效/非泄露）+ `pnpm typecheck`；\n  新增 `e2e/identity.spec.ts` 按 5 条需求的 GIVEN/WHEN/THEN 逐条覆盖（精确 accessible name、逐字文案、多项错误、\n  刷新持久化、密码不回显、`123456` 精确文本、已知/未知邮箱一致）；`bash checks/platform-path.sh` 平台路径 exit 0。\n- **隔离**：每条用例新 context；唯一后缀对象；改密/找回用例先注册 `pw-*` 新账户，不改 seed 账户密码。\n- **整合验收（不在本任务）**：develop → main 整合 PR 由根负责人执行全量 `pnpm e2e` 与平台启动路径冒烟。\n\n### 参考图视觉复核（原生 vision，2026-09-29）\n`github-account-menu-sign-out.png` 实际是登录后 Dashboard（无账户菜单/登出对话框图像证据）；两张找回密码图都没有\n验证码 UI；`github-password-settings.png` 是 “Sign in methods” 列表而非改密表单。→ 登出确认 UI、验证码展示、\n改密表单形态**只按需求文本实现**；截图仅作风格参考（单列居中、宽主按钮、字段用 label）。缺口已补进 `docs/ui-reference-notes.md`。\n\n### 待根 Issue #1 裁决（不阻塞实现）\n@glm-1 两项请确认（未确认前以 packet 为准）：\n1. D4 的端点名更正（交付项 6 记作 `sign-in`/`sign-out`）；\n2. 是否把 D1/D1b（改密保留当前会话、找回吊销全部会话）与 D2（未知邮箱非泄露）作为澄清写进\n   `docs/architecture.md` §3 或 §9 追加条目；若同意，由 PR #12 一并更新文档。\n\n已记录的可推翻条件（若隐藏验收做出相反断言，届时按证据回本 Issue 重裁）：D1 被断言“改密后当前浏览器也登出”、\nD2 被断言“正确码 + 未知邮箱不得出现 Verification code is invalid”、D3 被断言“刷新第 2 步回到 Email 步”。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb91-14ba-7ff1-873a-5c52ae9e40d9",
+  "writer_turn": "01a0eb9c-d7cd-7d42-a1d3-9dc370f6236e",
+  "revision": 1,
+  "created_at": "2026-09-29T05:33:33.073279268Z",
+  "updated_at": "2026-09-29T05:33:33.073279268Z",
+  "reply_to": null,
+  "thread_root": 25,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 27,
+  "work_item_node_id": "issue:3",
+  "body": "@deepseek-3 根 Issue 两项裁决，均已核实、均同意：\n\n1. **D4 端点名更正采纳**：已核实 origin/develop 基础契约统一使用 `/api/auth/sign-in`、`/sign-out`（backend router、单测、frontend client、e2e 全一致；`/login` 仅是前端页面路由，与 API 命名无关）。需求原文不规定 API 路径，交付项 6 原文按 D4 更正为 `sign-in`/`sign-out`，以基础契约为准，不加别名。\n\n2. **D1/D1b + D2 写入架构文档同意**：改密保留当前会话并吊销其它会话、找回密码吊销全部会话不自动登录、未知邮箱与错误验证码表现一致（不泄露存在性）——这三点是跨任务会话/安全语义，属 architecture.md §3 应记载的澄清，符合契约变更纪律（根裁决 → PR 内更新文档 → 合入）。请 PR #12 一并更新：§3 会话语义增补，§9 追加修订记录条目。\n\n同时知悉：视觉复核发现的三处截图-需求缺口（登出对话框、验证码 UI、改密表单形态无图像证据）已补进 `docs/ui-reference-notes.md`，该更新随 PR #12 发布即可，无需额外裁决。三项已登记的可推翻条件（D1/D2/D3 反向断言）同意保留为条件性裁定，若整合验收出现相反断言，凭证据回本 Issue 重裁。\n\n实现与验收按 packet D1–D14 继续，两项裁决不改变已发布的实现方向。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb68-0ed9-7ff0-a22a-52f93596e102",
+  "writer_turn": "01a0eba7-8a43-7ad0-810f-652a971c479c",
+  "revision": 1,
+  "created_at": "2026-09-29T05:34:23.009701257Z",
+  "updated_at": "2026-09-29T05:34:23.009701257Z",
+  "reply_to": 25,
+  "thread_root": 25,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 38,
+  "work_item_node_id": "issue:3",
+  "body": "## M1 实现完成交接（PR #12，head `9d30be4`）\n\n@deepseek-3 PR #12 已完成实现与模块级验收，自检全绿：\n\n- `pnpm test`：后端 Vitest 6 文件 48 用例全绿（新增 `identity-recovery.test.js` 10 用例）+ `pnpm typecheck` exit 0\n- `pnpm e2e`：16 用例全绿（新增 `e2e/identity.spec.ts` 11 用例，按 5 条需求 GIVEN/WHEN/THEN 覆盖；D6 隔离，seed 密码未动）\n- `bash checks/platform-path.sh`：exit 0（逐目录 npm install/build/start + Playwright）\n- 详见 PR #12 评论 #37；head `9d30be469c31504f1b0b0c776e00cb8fd7940be9`（base `develop` @ `c338578`）\n\n### 交付状态（对照 Issue 交付项）\n1–5 前端五条需求：已实现/补齐断言（找回密码与改密为新增页面，注册/登录/登出沿用 PR #2 并纳入 e2e）。\n6 后端端点 + Vitest：已交付，端点名按 D4 更正为 `sign-in`/`sign-out`（Issue 正文已更正）+ 新增 `forgot-password`/`reset-password`/`change-password`。\n7 seed：核实 5 账户已在 seed 注册表，未改动。\n\n### 新判断 / 风险\n- **D2 收紧实现**：未知邮箱响应与错误验证码逐字节一致 → 错误码提交时不附带密码字段错误（避免组合泄露存在性）。可推翻条件不变（见 packet）。\n- 首轮 e2e 1 处用例设计错误（登出后落在公共首页误断言 URL），已修正；实现代码未因此改动，首轮证据保留在 PR #12。\n- 待根 Issue #1 裁决两项不变（D4 确认；D1/D1b/D2 是否写入 architecture.md）。\n\npacket（`docs/task-packets/identity-m1-issue-3.md`，随 head 发布）已更新当前判断与完成证据。PR #12 状态 ready，可进入整合流程。",
+  "lifecycle": "visible",
+  "writer_group": "01a0eba7-2e61-7ae0-8542-08f2d7556dfd",
+  "writer_turn": "01a0eba7-5ab4-75a0-b026-a2e7fd8b65de",
+  "revision": 1,
+  "created_at": "2026-09-29T05:47:53.079304979Z",
+  "updated_at": "2026-09-29T05:47:53.079304979Z",
+  "reply_to": null,
+  "thread_root": 38,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 40,
+  "work_item_node_id": "issue:3",
+  "body": "## Issue #3 对返回结果的判断（head `9d30be4`）\n\n@glm-6 交接已收到并核对。记录如下，供后续整合使用。\n\n**已核实（模块级满足验收判据）**\n- 实现与 packet D1–D14 基本一致：`forgot-password` 不查库、已注册/未注册响应逐字节一致；`reset-password` 错误码 ≡ 未知邮箱 ≡ 正确码+未知邮箱（Vitest 逐字节比对）；重置吊销该用户全部会话、改密保留调用者当前会话并吊销其它（双会话验证）；任何响应不含密码。\n- 前端：`/password-reset` 步骤由 URL 驱动、`123456` 为独立可见文本、mount 零请求（刷新零副作用）；`/settings/password` 三个密码字段 + `Update password`，文案全部取自 `frontend/src/contracts/copy.ts`；失败后密码字段清空。\n- e2e 16 用例（新增 `identity.spec.ts` 11 条）覆盖 5 条需求主路径；空字段多项错误、格式错误多项错误、重复用户名、`Cancel` 保留会话在既有 `session.spec.ts` 内。\n\n> **更正（2026-09-29，本 Issue 负责人）**：本条原写\"D2 收紧（错误码时不叠加密码字段错误）予以认可\"，经逐组合推演**已改判**——该收紧未换来额外的不泄露（code 错时已知/未知邮箱本就响应相同；存在性差异只来自需求自身要求的\"正确码 + 合规密码\"成功路径），却偏离 packet D7\"新端点一次返回全部字段错误\"。裁定与本 Issue 一致：`reset-password` 恢复全部字段错误且仍对未知邮箱逐字节一致，见 PR #12 评论 #41（thread 37）的推演表与改法。\n\n**未满足的合并前提（需补 docs 提交）**\nIssue #3 评论 #27 的裁决不是\"待裁决\"，且明确要求由 PR #12 一并更新文档；`head 9d30be4` 上 `docs/architecture.md` 未改动（§9 仍 10 条），packet「未决问题」仍是旧表述。精确编辑要求发在 PR #12 评论 #39（thread 37，含 §3 窄改文本、§9 第 11 条、packet 回填与三处旧表述）。\n\n**两处小对齐（不阻塞）**：REQ-1-3 原文的种子场景密码值未被 e2e 采用；重复用户名用例未断言两个输入均保留。\n\n**结论与下一步**：候选在模块级满足判据，但按契约变更纪律（根裁决 → PR 内更新文档 → 合入），在 A–C 与 #41 的 D2 改判落地前不具备进入整合的前提。@glm-6 补齐后请在 PR #12/本 Issue 留一句新 head 与检查结果：docs-only 提交请说明 `git diff 9d30be4..<new head> --stat` 仅含 docs/，以便沿用 9d30be4 的代码检查证据；`reset-password` 的改判需重跑 `pnpm test`（Vitest）。随后我按 `--match-head-commit <new head>` 合并 PR #12 到 develop。若你本轮已不再运行，回一句即可，我按 #39 + #41 接手，避免同一分支双写。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb91-14ba-7ff1-873a-5c52ae9e40d9",
+  "writer_turn": "01a0ebb3-76ce-71c1-8b42-7e63a3b456ff",
+  "revision": 2,
+  "created_at": "2026-09-29T05:49:25.411567838Z",
+  "updated_at": "2026-09-29T05:50:18.07446994Z",
+  "reply_to": 38,
+  "thread_root": 38,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 51,
+  "work_item_node_id": "issue:3",
+  "body": "@deepseek-3 关于 #40 的接手安排确认：你已按 #46 接手并发布新 head **`a194fee`**（PR #12），我已核对——`reset-password` 按 #41 裁定恢复 D7 合并收集（错误集合只由 `(code, 密码输入)` 决定）、docs §3 窄改 + 非泄露条目、§9 第 11 条、packet「未决问题」回填、REQ-1-3 原文种子密码值与重复用户名双输入保留断言均落实，与 #39/#41 要求一致，head 仍是 `9d30be4` + 一个提交、未引入其它改动。\n\n透明说明：你的 #46 发布时我有一组未提交的在途编辑（同范围），你不可见；为不占用分支，我已将其验证后发布到独立参考 ref `braid/issue-3-m1-wip-glm6`（`d262e52`），与 `a194fee` 语义逐字等价，仅作交叉验证锚点、不再演进。我在 `d262e52` 上的独立结果：后端 Vitest 6 文件 49 用例全绿（含 #41 建议的三条同显 + 未注册邮箱逐字节一致回归用例）、`pnpm typecheck` exit 0、`pnpm e2e` 16 用例全绿。\n\n`a194fee` 的正式检查结果与合并决定按 PR #12 评论 #46 的分工由你执行；PR #12 thread 37 有我的核对详情。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eba7-2e61-7ae0-8542-08f2d7556dfd",
+  "writer_turn": "01a0ebbc-0c31-7752-8e90-a41f2ddd6e65",
+  "revision": 1,
+  "created_at": "2026-09-29T06:01:01.031109885Z",
+  "updated_at": "2026-09-29T06:01:01.031109885Z",
+  "reply_to": 40,
+  "thread_root": 38,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 57,
+  "work_item_node_id": "issue:3",
+  "body": "## Issue #3 模块交付完成交接（PR #12 已合入 develop）\n\n### 合并\n- PR #12 以 `--match-head-commit af2d06da4310bdf4dc6be9d92460d61e6d939a13` 合入 `develop`，merge commit **`a619edd`**；`origin/develop` 已含 `af2d06d`（`git merge-base --is-ancestor` 验证通过）。\n- 最终 head 相对基础 `develop` @ `c338578` 只有三个提交：`07980ef`（设计/packet）→ `9d30be4`（@glm-6 实现）→ `a194fee`（D7 重裁 + docs 同步）→ `af2d06d`（advisor 边界固化 + 回归用例）。\n\n### 交付项对照\n| # | 交付 | 状态 |\n|---|---|---|\n| 1 | 注册页（字段/复选框/按钮/逐字错误/多项同显/保留 username+email/成功即视为已验证） | ✅ PR #2 实现，本轮纳入 e2e（`identity.spec.ts` 2 条 + `session.spec.ts` 2 条，含重复用户名双输入保留） |\n| 2 | 登录页（`Username or email`/`Password`/`Sign in`；失败一律 `Invalid credentials`；会话 cookie + 账户菜单 + 刷新保持） | ✅ PR #2 实现，e2e 2 条 |\n| 3 | 找回密码（`Forgot password` → Email + `Send reset link` → 固定 `123456` 独立文本 + 三字段 + `Reset password`；错误/成功文案；已知/未知一致） | ✅ 本轮新增（`/password-reset` 两步，URL 驱动），e2e 5 条 |\n| 4 | 登出（`Account menu` → `Sign out` → 对话框 + `Confirm sign out`/`Cancel`；确认后立即失效，刷新/后退/直达受保护页都要重认证） | ✅ PR #2 实现，e2e 2 条（含 Cancel 保留会话） |\n| 5 | 改密码（Settings → `Password and authentication`；三字段 + `Update password`；错误/成功文案；旧密码立即失效） | ✅ 本轮新增（`/settings/password`），e2e 2 条 + 后端多项错误用例 |\n| 6 | 后端 6 端点 + Vitest | ✅ `register/sign-in/sign-out`（PR #2，按 D4 更正命名）+ `forgot-password/reset-password/change-password`；`identity-recovery.test.js` 12 用例 |\n| 7 | seed 注册表 | ✅ 核实 5 账户已在 seed（`docs/seed-data.md`），未改动 |\n\n### 验收结果（对应 head `af2d06d`，应用 Node `/usr/local/bin/node` v20.19.3）\n- `pnpm test`：6 文件 **50** 用例全绿 + `pnpm typecheck` exit 0\n- `pnpm e2e`：**17 passed**（5 条需求逐步覆盖：精确 accessible name、逐字文案、多项错误同显、刷新持久化、密码不回显、`123456` 精确文本、未知邮箱同表现、登出后刷新/后退/直达均要求重认证）\n- `bash checks/platform-path.sh`：exit 0（逐目录 npm install / build / `backend npm run start` + Playwright 17 passed）\n- 交叉印证：@glm-6 在独立 ref `braid/issue-3-m1-wip-glm6`（`d262e52`，语义逐字等价）上独立得到 49 用例 + typecheck + e2e 全绿\n\n### 合并前新增的独立判断（原生 advisor 复核）\n复核裁定**维持** `reset-password` 合并收集（#41），并指出一处需要更正的表述与一处需固化的边界：\n- **更正**：残留存在性差异覆盖**整列“验证码正确”**（密码不合规时 `[密码错误...]` vs `[code, 密码错误...]`，合规时 成功 vs `[code]`），不只是“成功 vs `[code]`”一行。这正是它是**需求内生**（公开常量验证码 + 无服务端待处理状态 + 恢复须对已注册邮箱生效）的证据。\n- 已固化：`docs/architecture.md` §3“有意保留的残留差异”+ §9.12（含禁止用“错误码提前返回”去消除、成功响应不得携带会话/账户数据），packet D2 与风险条目同步；Vitest 新增用例同时钉住“code 错逐字节一致”与“code 对按设计可区分”，防止将来被当成泄露 bug 修回提前返回。\n\n### 仍未解除的前提（保持可见，供整合与后续任务）\n1. 翻转条件：若平台隐藏验收对未注册邮箱另有断言、`/register` 不再明文 `Email already exists`、或成功响应将来需携带会话/账户数据，则重议是否切换“假装成功”的零泄露方案。\n2. 三项条件性裁定（已在 packet 记录）：改密后当前浏览器是否登出（D1）、正确码 + 未知邮箱是否可报该文案（D2）、恢复第 2 步刷新是否回 Email 步（D3）。\n3. packet 的「待办」条目（结果回填 + 合并）已由本条与 PR #12 评论 #56 满足；packet 正文的“待办”措辞不再另有 docs 提交，后续如需更新随整合流程进行。\n\n### 下一步（不属本 Issue）\n整合验收（`develop` → `main` 全量 `pnpm e2e` + 平台启动路径）由根 Issue #1 组织；本模块在 `develop` 上已可消费（`/api/auth/forgot-password|reset-password|change-password` 与 §9.11/§9.12 语义）。@glm-1 若整合验收发现 M1 缺陷，请在本 Issue 留证据，我按原始判据重裁并 reopen。\n\n据此本 Issue 的模块交付与验收完成，予以关闭。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb91-14ba-7ff1-873a-5c52ae9e40d9",
+  "writer_turn": "01a0ebc0-9d68-7e63-b651-3bc70ac96c17",
+  "revision": 1,
+  "created_at": "2026-09-29T06:05:24.643147364Z",
+  "updated_at": "2026-09-29T06:05:24.643147364Z",
+  "reply_to": 51,
+  "thread_root": 38,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_activity {
+  "ordinal": 5,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T04:33:07.102927017Z",
+  "actor_login": "glm-1",
+  "action": "created",
+  "source_comment": null,
+  "detail": "M1 身份与访问：注册/登录/找回密码/登出/改密码（REQ-1）"
+}
+
+local_activity {
+  "ordinal": 6,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T04:33:07.103256743Z",
+  "actor_login": "glm-1",
+  "action": "parent_added",
+  "source_comment": null,
+  "detail": "Issue #1"
+}
+
+local_activity {
+  "ordinal": 52,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:09:07.2628575Z",
+  "actor_login": "glm-1",
+  "action": "assigned",
+  "source_comment": null,
+  "detail": "@deepseek-3"
+}
+
+local_activity {
+  "ordinal": 55,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:09:35.374216509Z",
+  "actor_login": "glm-1",
+  "action": "commented",
+  "source_comment": 16,
+  "detail": "comment #16"
+}
+
+local_activity {
+  "ordinal": 73,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:33:13.269140498Z",
+  "actor_login": "deepseek-3",
+  "action": "linked_pr",
+  "source_comment": null,
+  "detail": "PR #12"
+}
+
+local_activity {
+  "ordinal": 76,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:33:33.073434277Z",
+  "actor_login": "deepseek-3",
+  "action": "commented",
+  "source_comment": 25,
+  "detail": "comment #25"
+}
+
+local_activity {
+  "ordinal": 78,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:33:53.044381504Z",
+  "actor_login": "deepseek-3",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 79,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:34:23.009785068Z",
+  "actor_login": "glm-1",
+  "action": "replied",
+  "source_comment": 27,
+  "detail": "comment #27"
+}
+
+local_activity {
+  "ordinal": 82,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:34:53.881155658Z",
+  "actor_login": "deepseek-3",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 96,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:47:53.079501191Z",
+  "actor_login": "glm-6",
+  "action": "commented",
+  "source_comment": 38,
+  "detail": "comment #38"
+}
+
+local_activity {
+  "ordinal": 99,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:49:25.411638043Z",
+  "actor_login": "deepseek-3",
+  "action": "replied",
+  "source_comment": 40,
+  "detail": "comment #40"
+}
+
+local_activity {
+  "ordinal": 103,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T05:50:18.074520343Z",
+  "actor_login": "deepseek-3",
+  "action": "comment_edited",
+  "source_comment": 40,
+  "detail": "comment #40"
+}
+
+local_activity {
+  "ordinal": 114,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T06:01:01.031243493Z",
+  "actor_login": "glm-6",
+  "action": "replied",
+  "source_comment": 51,
+  "detail": "comment #51"
+}
+
+local_activity {
+  "ordinal": 122,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T06:05:08.602522102Z",
+  "actor_login": "deepseek-3",
+  "action": "associated_pr_merged",
+  "source_comment": null,
+  "detail": "PR #12 merged at a619edd0444d7fb8ad5174c36f4d85dc8d7841ea"
+}
+
+local_activity {
+  "ordinal": 123,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T06:05:24.643265975Z",
+  "actor_login": "deepseek-3",
+  "action": "replied",
+  "source_comment": 57,
+  "detail": "comment #57"
+}
+
+local_activity {
+  "ordinal": 124,
+  "work_item_node_id": "issue:3",
+  "occurred_at": "2026-09-29T06:05:28.643962271Z",
+  "actor_login": "deepseek-3",
+  "action": "closed",
+  "source_comment": null,
+  "detail": "M1 模块交付与验收完成：PR #12 以 --match-head-commit af2d06d 合入 develop（merge commit a619edd），交付项 1-7 全部落实（找回密码/改密码新增，注册/登录/登出沿用 PR #2 并纳入 e2e）；最终 head af2d06d 上 pnpm test 50 用例 + typecheck exit 0、pnpm e2e 17 passed、平台逐目录 npm install/build/start + Playwright exit 0；D7 重裁与 advisor 复核边界已写入 docs/architecture.md §3/§9.11-9.12 与 packet。整合验收（develop→main）由根 Issue #1 组织；若整合发现 M1 缺陷，凭证据在本 Issue reopen。详见评论 #57。"
+}

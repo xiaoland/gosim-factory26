@@ -1,0 +1,12 @@
+hash 9c9d05a28ea93ee950fa025b5a482fca14d027a20b146a4b2dadfe6b4cc07157
+copies 1
+source snapshot-01/braid-state/turns/01a0ebaf-7c18-7c70-99ca-064a25c7fb6c.md
+
+请处理 Issue #5。
+
+对象：local/run#5
+
+发生以下更新：
+- issue:5 comment 32; read `comment view 32 --thread`
+
+使用 `braid issue view 5 --comments` 查看当前内容。

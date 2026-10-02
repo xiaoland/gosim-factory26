@@ -1,0 +1,200 @@
+{
+  "snapshot_cutoff_utc": "2026-09-29T08:26:07.983932+00:00",
+  "scope": "content plus supplemental thinking/details/nonmessage substantive fields complete",
+  "method": "snapshot-02 固定 10 文件全部新增 738 记录正文已分段阅读；increment_supplement.py 按字段级精确去重再读全部 thinking、details、非 message 实质内容，18 段共 606,625 字符。",
+  "total_files": 10,
+  "total_new_records": 738,
+  "all_prefixes_identical": true,
+  "source_truncation_or_nontext": "增量中记录为日志文本；会话命令本身有 head/tail/grep 过滤，原始完整失败堆栈不可恢复（PR15 #138、PR16 #143）。此为原生记录源限制，不等于本审查未读。",
+  "display_followups": [
+    "index 11 records 556–564 单独重读，修复首次显示截断",
+    "index 8 record 4 分为 0–12000/12000–21686；records 12–17 单独重读",
+    "index 6 record 4 分为 0–12000/12000–23194；record 13 分为 0–9000/9000–16438",
+    "index 9 record 4 分为 0–11000/11000–22000/22000–33000/33000–41140",
+    "index 1 record 4 分为 0–12000/12000–23553",
+    "index 2 record 4 分为四段 0–12000/12000–24000/24000–36000/36000–43648；record 11 单独重读",
+    "index 7 record 4 分为 0–12000/12000–16043；records 7、9–14 单独重读"
+  ],
+  "files": [
+    {
+      "increment_index": 4,
+      "native_path": "work/native-homes/pi-glm-fast-01a0ec30-e317-71f2-a24a-8b3efac64362/2026-09-29T08-03-42-940Z_01a0ec30-e6dc-7047-a9b3-f4f6ddabd2bd.jsonl",
+      "snapshot01_records": 10,
+      "snapshot02_records": 47,
+      "read_record_ranges": [
+        [
+          11,
+          47
+        ]
+      ],
+      "new_records": 37,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "6d47cdda31547b915181ba4816443ea0db96b75af392de8fb02bb3bd2c653a45",
+      "missing_or_unread_record_ranges": []
+    },
+    {
+      "increment_index": 5,
+      "native_path": "work/native-homes/pi-deepseek-fast-01a0ebf8-5cf2-73a1-ade8-6d82357844a5/2026-09-29T07-01-58-325Z_01a0ebf8-5fb5-70da-a773-18a0d10a7f4d.jsonl",
+      "snapshot01_records": 367,
+      "snapshot02_records": 468,
+      "read_record_ranges": [
+        [
+          368,
+          468
+        ]
+      ],
+      "new_records": 101,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "7f2e7addfab9b8a8f9b6f71b118709f15e2a31c9e79fe34a2acc1afce7d0fbf3",
+      "missing_or_unread_record_ranges": []
+    },
+    {
+      "increment_index": 11,
+      "native_path": "work/native-homes/pi-glm-fast-01a0ebfc-42ba-7b12-83ad-ca8673f67bd4/2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56.jsonl",
+      "snapshot01_records": 401,
+      "snapshot02_records": 599,
+      "read_record_ranges": [
+        [
+          402,
+          599
+        ]
+      ],
+      "new_records": 198,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "58177c8d0c5b4dc7f644d2895ec80c85ac179f954669c823d776bc9c2ec3859c",
+      "missing_or_unread_record_ranges": []
+    },
+    {
+      "increment_index": 0,
+      "native_path": "work/native-homes/pi-deepseek-fast-01a0ec29-684a-71d0-aa47-c25a4895e9d3/2026-09-29T07-55-32-732Z_01a0ec29-6bfc-7094-871c-2701a32e1609.jsonl",
+      "snapshot01_records": 28,
+      "snapshot02_records": 126,
+      "read_record_ranges": [
+        [
+          29,
+          126
+        ]
+      ],
+      "new_records": 98,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "eab49f84d31bded3c54515cd01b64d350bb9cca205be0e00ebdbc3b3df69b490",
+      "missing_or_unread_record_ranges": []
+    },
+    {
+      "increment_index": 8,
+      "native_path": "work/native-homes/pi-glm-fast-01a0ec39-4809-7fb3-bc5b-099675e684e7/2026-09-29T08-12-53-718Z_01a0ec39-4e56-7387-bc6d-16925c7082fe.jsonl",
+      "snapshot01_records": 0,
+      "snapshot02_records": 29,
+      "read_record_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "new_records": 29,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "b6970d0b85e771886f5c19794826ee4cdffa1fab18bed25c4acba880c39b3206",
+      "missing_or_unread_record_ranges": []
+    },
+    {
+      "increment_index": 6,
+      "native_path": "work/native-homes/pi-glm-fast-01a0ec3c-3199-7603-b965-fa87d364cd3b/2026-09-29T08-16-04-008Z_01a0ec3c-35a8-7774-bd41-57a88f64414c.jsonl",
+      "snapshot01_records": 0,
+      "snapshot02_records": 32,
+      "read_record_ranges": [
+        [
+          1,
+          32
+        ]
+      ],
+      "new_records": 32,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "66a3155c640abff5ed5c6e3eb586075cc9e47e6e3fea3f0f00a7f4632c853f7a",
+      "missing_or_unread_record_ranges": []
+    },
+    {
+      "increment_index": 9,
+      "native_path": "work/native-homes/pi-deepseek-fast-01a0ec3c-7977-7aa0-88d5-3f72d5f85f7d/2026-09-29T08-16-23-509Z_01a0ec3c-81d5-7493-896a-742607591170.jsonl",
+      "snapshot01_records": 0,
+      "snapshot02_records": 124,
+      "read_record_ranges": [
+        [
+          1,
+          124
+        ]
+      ],
+      "new_records": 124,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "67f77a4e95d7cc70fd15fc3cf0275d889ddb36e9c6b3fb9a0453ecbced8d6c04",
+      "missing_or_unread_record_ranges": []
+    },
+    {
+      "increment_index": 1,
+      "native_path": "work/native-homes/pi-glm-fast-01a0ec40-5e2b-7491-ac97-6f332da3a645/2026-09-29T08-20-37-274Z_01a0ec40-611a-73c8-b7c4-1450d91616e9.jsonl",
+      "snapshot01_records": 0,
+      "snapshot02_records": 15,
+      "read_record_ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "new_records": 15,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "8be816507223ab301ab8efa860d347f9d3e02184cdd45e6b6074b9b6f559dd56",
+      "missing_or_unread_record_ranges": []
+    },
+    {
+      "increment_index": 2,
+      "native_path": "work/native-homes/pi-deepseek-fast-01a0ec42-1d6c-7b33-af2f-e83dbcfc2c5d/2026-09-29T08-22-31-683Z_01a0ec42-2002-71b5-831c-c95c798ea2ea.jsonl",
+      "snapshot01_records": 0,
+      "snapshot02_records": 48,
+      "read_record_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "new_records": 48,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "ff4cb1165f3787cfb335230f80f42b424a9cfe51186c024e325a0a58f2d77f86",
+      "missing_or_unread_record_ranges": []
+    },
+    {
+      "increment_index": 7,
+      "native_path": "work/native-homes/pi-deepseek-fast-01a0ec44-38ad-7500-a796-fb98cad8aeca/2026-09-29T08-24-53-144Z_01a0ec44-4898-7121-ad70-1956c4600081.jsonl",
+      "snapshot01_records": 0,
+      "snapshot02_records": 56,
+      "read_record_ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "new_records": 56,
+      "snapshot01_prefix_identical": true,
+      "sha256_snapshot02": "9c646f794a4250889cdc4d88f453f3555dc9566366017b4dfaef0db189ed2651",
+      "missing_or_unread_record_ranges": []
+    }
+  ],
+  "unread_files_or_records": [],
+  "correction": "此前仅正文回执不足以支持全量声明；现补读全部 thinking、message.details 与实质非 message 事件，10 个增量文件的实质内容覆盖完成。易变包装元数据未逐字阅读。",
+  "supplemental_read": {
+    "script": "increment_supplement.py",
+    "stream_chars": 606625,
+    "chunks_read": [
+      0,
+      17
+    ],
+    "char_range_read": [
+      0,
+      606625
+    ],
+    "unread": null
+  },
+  "limitations": [
+    "原生 grep/head/tail 过滤导致首轮错误全文不可回放",
+    "只覆盖冻结 snapshot-02 的指定新增记录",
+    "非文本图像及易变元数据字段不在审阅范围"
+  ]
+}

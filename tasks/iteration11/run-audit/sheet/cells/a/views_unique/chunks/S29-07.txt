@@ -1,0 +1,175 @@
+tu 4096 Sep 29 06:40 projects
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L101:C1]
+
+## S29:L102 2026-09-29T06:42:56.245Z message toolResult
+toolResult bash False
+[text]
+== /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1
+6748231 /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node
+dc326a796c6a3511cbe468bd90edf975  /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node
+== /tmp/pr8-helper-rehearsal
+6770798 /tmp/pr8-helper-rehearsal/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node
+dc326a796c6a3511cbe468bd90edf975  /tmp/pr8-helper-rehearsal/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node
+=== try load under node24 ===
+abi137 load ok
+abi137 load ok
+
+## S29:L103 2026-09-29T06:43:00.981Z message assistant
+[thinking]
+Now interesting: the binary loads fine under node 24 in both (`abi137 load ok`)! So the native module is fine (built for ABI 137? or ABI 115 — either way it loads now).
+So why did vitest fail? The failure happens under vitest. Wait — maybe the vitest failure is due to **file handle/inode**? No — the error is "Module did not self-register", which is thrown when `bindings` finds the .node file but the addon's `NODE_MODULE_INIT`... Hmm.
+Actually "Module did not self-register" in better-sqlite3 arises when the module is loaded from a path that is a **symlink/hardlink to a copy loaded twice**? Specifically, better-sqlite3's index uses `bindings('better_sqlite3.node')` and bindings.js tries multiple paths; "did not self-register" comes from bindings.js when `module.exports` is empty after require — this happens for **ABI mismatch** in some Node versions, or when the .node is for a different platform.
+But we just loaded it successfully with both node binaries from backend dir. So vitest must be loading a **different file** — e.g., vitest resolves from a different path (the failing path in the error was `/tmp/pr8-helper-rehearsal/node_modules/.pnpm/better-sqlite3@12.6.2/.../better_sqlite3.node` — same file!). And it loaded fine standalone. Confusing.
+Hmm! Maybe the difference: at the time of the vitest run, the binary was ABI 115 (or being rewritten) and the install finished later... No: install finished at 06:41:10, tests started 06:41:36.
+Wait, maybe timing: my rehearsal `pnpm install` **hardlinked/copied** the binary and later the main worktree's binary got... Let me test again now: run the main worktree backend tests. If they pass now, then the earlier failure was transient (e.g., the shared store's binary was mid-replacement by my install, or the `pni` install changed the store and vitest cached a partially-written file).
+Let me re-run now.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L103:C1]
+[toolCall] bash call_00_uI6VPZCtiCfzQwrocmaB6228
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend && PATH=/usr/local/bin:$PATH timeout 120 pnpm test 2>&1 | tail -8; echo \"=== rehearsal ===\"; cd /tmp/pr8-helper-rehearsal/backend && PATH=/usr/local/bin:$PATH timeout 120 pnpm test 2>&1 | tail -8", "timeout": 300}
+
+## S29:L104 2026-09-29T06:43:09.364Z message toolResult
+toolResult bash False
+[text]
+   Start at  06:43:02
+   Duration  2.08s (transform 323ms, setup 0ms, collect 791ms, tests 53ms, environment 0ms, prepare 538ms)
+ ELIFECYCLE  Test failed. See above for more details.
+=== rehearsal ===
+ Test Files  2 failed | 1 passed (3)
+      Tests  69 failed | 27 passed (96)
+   Start at  06:43:05
+   Duration  3.00s (transform 745ms, setup 0ms, collect 2.51s, tests 470ms, environment 1ms, prepare 1.88s)
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L104:C1]
+
+## S29:L105 2026-09-29T06:43:09.366Z message user
+[text]
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L105:C1]
+
+## S29:L106 2026-09-29T06:43:11.531Z message assistant
+[thinking]
+New comments arrived. But first, my environment issue is a real blocker: the shared test path now fails. Note: this may be caused by my rehearsal install mutating the shared store (projects dir mtime 06:40). I must diagnose and fix, because it affects all members (other agents' `pnpm -r test` would now fail too!). That's serious. Let me first read the new comments (they may be about this), then fix.
+Let me read comment 79 (Issue #1) and 80 (Issue #3).
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L106:C1]
+[toolCall] bash call_00_lBt7rhRQQQaDhOED2lxB6911
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 79 --thread 2>&1 | head -120"}
+[toolCall] bash call_01_5zFJ5nWSTlgHkqEaGwC57696
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 80 --thread 2>&1 | head -160"}
+
+## S29:L107 2026-09-29T06:43:11.560Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 120 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L107:C1]
+
+## S29:L108 2026-09-29T06:43:11.561Z message toolResult
+toolResult bash False
+[text]
+**关键缺口：候选未落地契约 v1.3**。本交接写于 Issue #1 #51–#60 发布的并行期，其中「A-7 已定格（不实现导入尺寸下限）」已被 thread 1 **comment #51（A-4 Y-min 裁定）+ #54 + #57（落地细化）+ #60（时序）修订**。我在候选上核实：`min_rows`/`min_cols` 全仓无匹配；`worksheetToCsv` 为 `maxRow<0 → return ''`。按 v1.3 需补（全部归 PR #8，改动局部）：
+[DUPLICATES: 159 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L108:C1]
+
+## S29:L109 2026-09-29T06:43:13.354Z message assistant
+[thinking]
+The new comments 79 (Issue #1) and 80 (Issue #3) are what I need. Let me read them specifically (they're at the end of the threads, likely new). Let me fetch just those comments.
+[toolCall] bash call_00_nI63s7fygvCagUNQOguJ4202
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 79 2>&1 | head -80"}
+[toolCall] bash call_01_xG5Rb29ndxUyaR3vScDI3189
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 80 2>&1 | head -100"}
+
+## S29:L110 2026-09-29T06:43:13.387Z message toolResult
+toolResult bash False
+[text]
+- B 的未决回归点随合入带入 develop：公式引用重写随 C（#5）、pivot 约束/Refresh 回归随 E（#7）；pivot source_range 收缩至空删除 pivot 行已记录为 E 合入时的核对点（Issue #4 thread 41 验收帖偏离项 1）。
+消息投递回执 — 评论 #79（仅表示评论输入的接收状态）
+收件人 @deepseek-6: 评论等待投递 (queued)
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L110:C1]
+
+## S29:L111 2026-09-29T06:43:13.387Z message toolResult
+toolResult bash False
+[text]
+根侧对 559a0bd 无阻塞发现；待 @deepseek-3 验收结论。
+消息投递回执 — 评论 #80（仅表示评论输入的接收状态）
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L111:C1]
+
+## S29:L112 2026-09-29T06:43:18.735Z message assistant
+[thinking]
+Now the situation is clear:
+1. PR #9 (B) was merged into develop (merge commit `15abbf6`). So `assertWorksheetStateValid` is now on develop. **My PR #8 must now rebase onto develop and switch to the shared helper, deleting the local copy.**
+2. Root accepted 559a0bd findings; awaiting deepseek-3 acceptance.
+So the action for this run: rebase PR #8 onto origin/develop (which now includes B's work), resolve conflicts, switch validation to `assertWorksheetStateValid`, delete local copy, re-run the three checks, push, and hand over.
+Great — my rehearsal already did exactly this against B's branch (fb6c7da). Now develop has the merge commit 15abbf6. Let me fetch and rebase for real in the main worktree, reusing the resolutions.
+But first, the environment issue: `pnpm -r test` now fails with "Module did not self-register" for better-sqlite3 under vitest. This affects everything. I need to fix this. Let me diagnose properly.
+Observations:
+- `node -e "require('better-sqlite3')"` works with both /usr/local/bin/node (v20, ABI 115) and runtime node (v24, ABI 137)?? Wait, that's impossible for a single ABI-specific .node file... unless better-sqlite3's binary is a "universal"/N-API build! better-sqlite3 12.x uses N-API? Hmm, better-sqlite3 v12 might use Node-API (napi) which is ABI-stable across versions. Yes! better-sqlite3 v12 might have switched to NAPI? Actually better-sqlite3 has always been NAN/ABI-specific... but newer versions moved to Node-API? Let me not speculate.
+The error "Module did not self-register" occurred in vitest for both worktrees. Since standalone loading works, the difference is vitest's module loading (worker threads or vite-node). Note that vitest runs via `pnpm test` → node 24. Maybe the issue is **vitest's module runner + worker threads + native module**... but it worked at 06:38.
+Hmm wait, maybe the key difference is the **`node_modules/.pnpm` inode/hardlink situation**: vitest might load the module through a **different resolved path** (e.g., the project dir's `node_modules/better-sqlite3/build/Release/better_sqlite3.node`), and bindings.js tries paths in order; `MODULE_NOT_FOUND`... no, the error says the exact path.
+Let me look at the actual current full error output for one failing test to see. And check `node_modules/better-sqlite3` symlink target.
+Another thought: maybe the binary at the path is a **hardlink to the store** and the store file got replaced (so the inode is stale/truncated?) — but md5 matched between rehearsal and main and it loads fine.
+Hmm, let me just try to reproduce minimal: write a tiny vitest test in the main worktree backend that requires better-sqlite3 and see the error. Also run vitest with `--pool=forks` vs `threads`.
+Actually — wait. Critical clue: at 06:38 the tests passed. At 06:41 they failed. What else changed at ~06:40? My `pnpm install` in the rehearsal created projects dir (store/projects mtime 06:40). Also... hmm, the runtime node could have been **updated** by something? v24.10.0.
+Let me check the full error text now for one case. Also check if the failing module load under vitest happens with a **different cwd** — vitest runs with root=backend.
+Let me get the full error.
+[DUPLICATES: 14 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L112:C1]
+[toolCall] bash call_00_rMOBMwBZb3zL6jkwAVq48961
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend && PATH=/usr/local/bin:$PATH timeout 120 pnpm test 2>&1 | head -40", "timeout": 180}
+
+## S29:L113 2026-09-29T06:43:24.654Z message toolResult
+toolResult bash False
+[text]
+ ✓ src/csv.test.js (20 tests) 12ms
+ ❯ src/app.test.js (31 tests | 31 failed) 120ms
+   × migrations > are repeatable and create the contract tables 15ms
+     → The module '/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+   × seed > is idempotent across restarts 1ms
+     → Module did not self-register: '/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'.
+   × seed > never overwrites existing user data 1ms
+   × seed > creates the Q3 Sales workbook with the documented cells 1ms
+   × GET /api/workbooks > lists the seeded workbook with its last-updated value 1ms
+   × GET /api/workbooks/:id > returns the full editor snapshot 1ms
+   × GET /api/workbooks/:id > answers with the uniform error body for unknown ids 1ms
+   × POST /api/workbooks > creates a blank workbook with one active Sheet1 and A1 selected 1ms
+   × POST /api/workbooks > rejects an empty name without creating a record 1ms
+   × PATCH /api/workbooks/:id > renames and trims the workbook name 1ms
+   × PATCH /api/workbooks/:id > rejects an empty name 1ms
+   × PUT /api/workbooks/:id/worksheets/:wid/cells > writes, persists and clears cells and bumps last-updated 1ms
+   × PUT /api/workbooks/:id/worksheets/:wid/cells > rejects the whole batch when one target is out of range 1ms
+   × PUT /api/workbooks/:id/worksheets/:wid/cells > rejects an empty changes array 1ms
+[DUPLICATES: 22 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L113:C1]
+
+## S29:L114 2026-09-29T06:43:41.377Z message assistant
+[thinking]
+Now the truth: the currently installed binary in the worktree was compiled for **NODE_MODULE_VERSION 137 (node 24)** and vitest runs under **node 20 (115)**!
+So: at 06:38, the binary was ABI 115 (node 20) and vitest passed. Then at 06:40 my `pnpm install` in the rehearsal **replaced the shared store copy** with the ABI 137 build (because pnpm ran under node 24 runtime shim), and since the main worktree's node_modules files are **hardlinks** to the store (or the store's files dir was updated and the worktree relinked), the main worktree now has the ABI 137 binary.
+Wait, but the main worktree's file was listed with link count 3 and mtime 04:55 while store files mtime... The md5 matched the rehearsal's. Hmm, and now the error says main worktree binary is NODE_MODULE_VERSION 137. Earlier I loaded it successfully with /usr/local/bin/node (node 20, ABI 115)! Contradiction... unless the binary changed between those two commands (my rehearsal install finished at 06:41:10; my standalone load test ran at ~06:42:50 and printed "ok" — hmm, that was after install).
+Actually wait: in the load test I ran `cd .../backend && /usr/local/bin/node -e "require('better-sqlite3'); console.log('ok')"` → printed "ok". That would have failed with ABI mismatch. Unless... that ran in the rehearsal path? The output shows:
+Hmm, both ok. And earlier `node -e` in main failed with truncated error, then later passed. Very confusing. Unless there are **two different better-sqlite3 installations**: pnpm installs may create both `node_modules/.pnpm/better-sqlite3@12.6.2/...` and the error path is the same...
+OK, regardless of history: **now** the situation is that the shared pnpm store holds a node-24 (ABI 137) build of better-sqlite3, which broke the node-20 test runs. The root cause is that `pnpm` (runtime shim) runs under node 24, so `prebuild-install` fetched/built the ABI 137 binary into the shared store.
+The platform guidance in the prompt: "预打包环境通过 PATH 提供 pnpm... 使用已有...包缓存" and "核对平台兼容性时，先检查 /usr/local/bin/node --version 与 /usr/local/bin/npm --version；该平台入口存在且版本符合要求时，用 PATH=/usr/local/bin:$PATH 执行上述逐目录安装、构建和启动，避免默认 PATH 中的工具 Node 遮蔽应用环境。" — i.e., to run install/build with node 20, I should invoke `/usr/local/bin/npm` (which uses node 20) rather than the tool pnpm. Hmm, but the guidance says to use pnpm for dev... yet the pnpm shim uses node 24.
+Practical fix options:
+(a) Rebuild better-sqlite3 for node 20: `cd <worktree> && npm rebuild better-sqlite3` using /usr/local/bin/npm? But node_modules layout is pnpm-style; `npm rebuild` might work on the package location. Or `prebuild-install` manually.
+(b) Since better-sqlite3 is better-sqlite3 12.6.2 which supports node 24 too per contract, I could run vitest under node 24 (the tool node) — but the failing part is that the binary in node_modules is ABI 137 while vitest ran under node 20? Wait, no: the error says the binary is ABI 137 and "This version of Node.js requires NODE_MODULE_VERSION 115" → vitest ran under node 20?! But pnpm execs node 24... 
+Hmm! Unless vitest's default pool spawns workers using `node` from PATH: vitest uses `process.execPath` normally... The error indicates the *test process* is node 20 (115). Interesting — maybe vitest v3 with `pool: 'forks'` uses `process.execPath` = node 24 (137), which would match. So the test process must be node 20. Which means pnpm ran under node 20!
+Hold on: is the pnpm shim used, or is there a pnpm on PATH earlier? PATH starts with `/workspace/.../work/bin` — maybe that contains a `pnpm` wrapper that uses node 20! `type -a pnpm` said `/workspace/submission/agent/runtime/bin/pnpm`, and the work/bin dir may not have pnpm. Let me check `ls /workspace/.../work/bin`.
+Hmm, `type -a pnpm` prints all matches; it printed only one. So pnpm = runtime shim → node 24. But then test process = node 24? Then the error would be binary compiled for 115 needed by... it says binary is 137, node requires 115 → test process node 20.
+Unless the vitest config sets something. OR the binary path is loaded by a *worker* spawned via `node` resolved from PATH... no, the message is about the binary.
+Wait, maybe I have it backwards: maybe there are two node_modules trees and vitest runs node 20 because the `vitest` bin shebang is `#!/usr/bin/env node` → node from PATH = /usr/local/bin/node when I prefix PATH! Yes! When I ran `PATH=/usr/local/bin:$PATH pnpm test`, pnpm's script runs `vitest run` via a shell; the `.bin/vitest` shebang uses `/usr/bin/env node` → resolves to `/usr/local/bin/node` (node 20)! So the test process = node 20 (ABI 115), while the binary now in node_modules is ABI 137 (built by pnpm under node 24).
+And at 06:38, the binary was ABI 115 → passed.
+So the fix: rebuild better-sqlite3 for node 20 (ABI 115). Which build does the platform expect? The contract (#11 §5) says better-sqlite3 12.6.2 works under both node 20 and node 24... but a single binary can't serve both. The delivered app runs under node 20 (platform PATH /usr/local/bin/node). So the binary should be ABI 115.
+How to rebuild: `cd <worktree> && /usr/local/bin/npm rebuild better-sqlite3`? With pnpm layout, `npm rebuild` in root may not traverse into .pnpm. Alternative: use `prebuild-install` inside the package dir with node 20: 
+cd node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3
+/usr/local/bin/node ./build/... 
+better-sqlite3 has a `prebuild-install` dependency? Its install script is `prebuild-install || node-gyp rebuild --release`. Running `PATH=/usr/local/bin:$PATH npm_config_... npx prebuild-install` hmm.
+Cleanest: run pnpm's install with node 20 as the executor: `/usr/local/bin/node /workspace/submission/agent/runtime/node_modules/pnpm/bin/pnpm.cjs rebuild better-sqlite3` — pnpm CLI run under node 20, so prebuild-install (child process) runs under node 20 (child inherits process.execPath? pnpm runs lifecycle scripts via shell with `node` from PATH; PATH prefixed with /usr/local/bin → node 20). That would download/build ABI 115.
+But careful: this mutates the shared store again (which now holds ABI 137). If I rebuild for node 20, other agents running pnpm installs under node 24 might flip it back. That's the environment's nature.
+Wait — but the ORIGINAL state (before my rehearsal install) had store binary ABI 115 in the store, from the platform's pre-provisioned install. My install flipped it to 137. So restoring 115 is the right fix, and I should not run pnpm install under node 24 again.
+Also important: does the delivered app at evaluation time install with `npm install` in frontend/backend (platform does `npm install` per directory)? Yes — platform runs `npm install` in frontend then backend, using presumably /usr/local/bin/npm (node 20) → prebuild for ABI 115. Fine.
+So my priority: fix the environment (restore ABI 115 for node_modules in all worktrees that hardlink... actually rebuilding in one worktree rebuilds in the store; hardlinked worktrees may share the inode or have separate copies).
+1. Rebuild better-sqlite3 for node 20 in the shared store (via pnpm rebuild under node 20) from the main worktree (pr-8).
+2. Verify `pnpm -r test` passes under node 20 in the main worktree (restoring evidence reproducibility).
+3. Also fix the rehearsal worktree? I could delete it after use (it's in /tmp). Since its node_modules are its own copies, and I'll remove the worktree anyway.
+4. Then do the real rebase onto origin/develop (which now has B merged) + helper switch + three checks + push.
+Actually, order: do the rebase first? The rebase will change package.json? No. node_modules persist across rebase. But B's merge into develop may add frontend deps (e.g., none new?). B's diffstat showed no package.json changes. Good.
+Also, hmm: the rehearsal install may have left the /tmp worktree with ABI 137 while the store now 137; after I rebuild for node 20 in the main worktree, the store goes to 115; but the /tmp worktree's copy was hardlinked — rebuilding in main worktree only affects the store file(s) and files hardlinked to that inode. The /tmp copy might remain 137 (its inode). Doesn't matter; I'll delete /tmp rehearsal worktree.
+Wait, but careful: will a `pnpm rebuild` actually rebuild in the *worktree's* node_modules? Yes, for that project. But the store's `files` dir keeps the 137 copy; new installs would fetch 137 again. To restore the global state, I should also fix the store copy. Hmm — actually, better-sqlite3's prebuilds are fetched by `prebuild-install` at install time; the pnpm store has one file per package version (content-addressed), so the store's better-sqlite3 package directory includes the built .node? The store `files` dir stores package contents; the build/Release/*.node is generated in the store package dir? pnpm 10 stores packages without running postinstall in a side-effects cache... The binary lives in `node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/` which IS the store location for pnpm's "hardlink to store" model? No, the store has its own content; the virtual store `.pnpm` is inside the project's node_modules but for node-linker=isolated, pnpm **hardlinks** files from the store to the virtual store... Actually pnpm builds packages in the store at `<store>/v10/...`? Let me check the store's structure for better-sqlite3 build dir. Earlier `ls "$(pnpm store path)"/../*/node_modules/better-sqlite3/...` printed nothing (glob mismatch).
+To keep it simple and contained: rebuild better-sqlite3 in each affected worktree's node_modules. But other agents' worktrees (issue-4, pr-9, issue-1, etc.) may still have 137 and fail... Hmm. But do they? Each worktree has its own node_modules dirs with hardlinks to the store's files. If the store's file is ABI 137 now, the hardlinks point... hardlinks share inodes: if the install *rewrote the store file in place*... pnpm doesn't rewrite in place typically; it adds new content. Hmm, then why did the main worktree binary become ABI 137?
+Possibility: my `pnpm install --prefer-offline` in the rehearsal ran postinstall scripts for better-sqlite3 (build from source → node 24 output) and stored the result... and the main worktree's node_modules/better-sqlite3 symlinks to the *same* `.pnpm` virtual-store dir? No — virtual store is per-project.
+But md5 matched between main and rehearsal. If the store's file is the same inode for both, then the virtual stores hardlink to the same store file. When pnpm ran postinstall in the *rehearsal*, it may have built in the store location (pnpm runs install scripts in the store dir path? Actually pnpm runs them in the virtual store dir path). Hmm, but then main's file wouldn't change md5... unless main's virtual store path IS the same dir (shared?) — no.
+Alternative explanation: the main worktree's node_modules were ALSO installed by my earlier commands? In the previous run I ran `pnpm install`? The evidence log shows `pnpm -r test` only. Hmm.
+Let me stop theorizing and just look: compare inode of the main worktree's better_sqlite3.node with the store's c

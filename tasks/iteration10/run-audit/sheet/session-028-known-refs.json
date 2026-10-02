@@ -1,0 +1,482 @@
+[
+  {
+    "render_block": 8,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 342,
+    "text": "State: closed (csv 导入导出已通过 pr #4 合入 origin/develop（merge 757e557，head a012447）。复核：rebase 后 merge-tree 0 冲突；我独立验证 backend 8/8、frontend 6/6、前端构建、backend tsc；负责人在 a012447 上实跑 checks/run.sh 14/14 全绿（csv 3/3）。遗留一项整合验收期回归：#7 落地后补'筛选隐藏行仍导出'检查（记录于 pr #4）。)\nAssignees: @deepseek-3\nParent: Local Issue: local/run#1\nAssociated PRs: Local PR: local/run#4"
+  },
+  {
+    "render_block": 14,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L6",
+    "chars": 440,
+    "text": "### 交付内容\n- 主页 \"Import CSV\" 按钮 → 对话框（名 \"Import CSV\"），file 控件 label \"CSV file\" + \"Confirm import\"。\n- 解析规则：按原始行列顺序，保留空字段；支持 UTF-8 中英文与数字文本；正确处理双引号包裹的逗号、成对转义双引号、字段内换行；以双引号开头但无闭合双引号的字段无效，报 \"Invalid CSV file format. Import failed.\"。\n- 导入成功：新建工作簿，名 = 文件名去结尾 .csv，Sheet1 打开完整 CSV 内容，首行是普通数据；刷新/重开不变；失败则主页不出现该名链接、无部分结果。\n- 编辑器工具栏 \"Export CSV\" 按钮：触发浏览器下载，建议文件名以 .csv 结尾，UTF-8 文本；按网格实际行列顺序保留空单元格；正确转义逗号/引号/换行；普通单元格导出显示值，公式单元格导出当前计算结果而非公式表达式；导出前后界面状态不变。"
+  },
+  {
+    "render_block": 24,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 1354,
+    "text": "## 当前状态（已交付，Issue 已关闭；2026-09-28）\n- **PR #4 已合入 `origin/develop`**（merge `757e557`，parents `61b51ee` + head `a012447`）；head 分支 `braid-agent/issue-3/pi-deepseek-fast-g1` 保留为记录。合并后核对：`757e557` 的树与 `a012447` 完全一致（零冲突解决）；其后 develop 仅由 PR #5 放宽检查超时（`checks/playwright.config.ts`，timeout 120s→180s 等），**未触及任何 CSV 文件**（`git diff a012447 origin/develop -- backend/src/csv.ts backend/src/routes/csv.ts backend/tests/csv.test.mjs frontend/src/domain/csv.ts frontend/tests/csv.test.ts checks/csv.spec.ts checks/run.sh frontend/src/api.ts` 为空）。\n- 交付证据（commit `a012447`，Node v24.10.0，Chrome for Testing 154，临时 `DATA_DIR` + 空闲端口，3000 未占用）：`frontend` 单测 6/6、`backend` 单测 8/8、`tsc -p checks/tsconfig.json` 通过、`checks/run.sh` **14 passed / RUN_EXIT=0（1.9m）**（create-workbook 3/3、editor-interactions 4/4、home-editor 4/4、csv 3/3）；自启服务已全部停止。\n- 契约（#2 comment #25/#29 裁决，已按此实现）：`POST /api/workbooks/import { fileName, csv }` → 201 bare Workbook，失败 400 `{ error: \"Invalid CSV file format. Import failed.\" }` 且不落库（先校验后单次落库）；解析模块 `backend/src/csv.ts`（导入）、`frontend/src/domain/csv.ts`（导出）；挂载点 `HomePage` home-header / `EditorPage` editor-topbar。\n- 导出读取工作表数据模型的包围盒（不使用可见行投影），故 REQ-5-1-2 的“筛选隐藏行仍导出”在实现层成立；REQ-4 公式引擎回填 `value` 后导出自动为计算结果（纯函数单测断言 raw≠value 时取 value），导出侧无需改动。\n- **遗留（阻塞于 #7，非本 Issue 未完成项）**：`#7` 的 `Create filter` 落地后补一条“应用筛选后导出仍含隐藏行”的浏览器回归检查；导出侧预期不改动，触发方式已记于 #7 讨论串。"
+  },
+  {
+    "render_block": 66,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L6",
+    "chars": 440,
+    "text": "### 交付内容\n- 主页 \"Import CSV\" 按钮 → 对话框（名 \"Import CSV\"），file 控件 label \"CSV file\" + \"Confirm import\"。\n- 解析规则：按原始行列顺序，保留空字段；支持 UTF-8 中英文与数字文本；正确处理双引号包裹的逗号、成对转义双引号、字段内换行；以双引号开头但无闭合双引号的字段无效，报 \"Invalid CSV file format. Import failed.\"。\n- 导入成功：新建工作簿，名 = 文件名去结尾 .csv，Sheet1 打开完整 CSV 内容，首行是普通数据；刷新/重开不变；失败则主页不出现该名链接、无部分结果。\n- 编辑器工具栏 \"Export CSV\" 按钮：触发浏览器下载，建议文件名以 .csv 结尾，UTF-8 文本；按网格实际行列顺序保留空单元格；正确转义逗号/引号/换行；普通单元格导出显示值，公式单元格导出当前计算结果而非公式表达式；导出前后界面状态不变。"
+  },
+  {
+    "render_block": 178,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L23",
+    "chars": 290,
+    "text": "/** 1-based column number -> letters (\"A\", \"Z\", \"AA\"...). */\nfunction colLetter(index1Based: number): string {\n  let n = index1Based;\n  let s = \"\";\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    s = String.fromCharCode(65 + rem) + s;\n    n = Math.floor((n - 1) / 26);\n  }\n  return s;\n}"
+  },
+  {
+    "render_block": 180,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L23",
+    "chars": 415,
+    "text": "/** \"B3\" -> { col: 2, row: 3 }; null for anything that is not an A1-style ref. */\nfunction parseRefColRow(ref: string): { col: number; row: number } | null {\n  const m = /^([A-Za-z]+)([0-9]+)$/.exec(ref);\n  if (!m) return null;\n  let col = 0;\n  for (const ch of m[1].toUpperCase()) col = col * 26 + (ch.charCodeAt(0) - 64);\n  const row = Number(m[2]);\n  if (col < 1 || row < 1) return null;\n  return { col, row };\n}"
+  },
+  {
+    "render_block": 184,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L23",
+    "chars": 857,
+    "text": "/**\n * Bounding box of cells that hold content, in grid row/column order.\n * Reads the worksheet data model, so rows hidden by a filter view are still\n * part of the export (REQ-5-1-2). Returns null for a fully empty sheet.\n */\nexport function usedRange(sheet: CsvSheetView): CsvRange | null {\n  let top = Number.POSITIVE_INFINITY;\n  let left = Number.POSITIVE_INFINITY;\n  let bottom = 0;\n  let right = 0;\n  let found = false;\n  for (const [ref, cell] of Object.entries(sheet.cells)) {\n    if (!cell) continue;\n    if (cell.raw === null && cell.value === null) continue;\n    const pos = parseRefColRow(ref);\n    if (!pos) continue;\n    found = true;\n    top = Math.min(top, pos.row);\n    bottom = Math.max(bottom, pos.row);\n    left = Math.min(left, pos.col);\n    right = Math.max(right, pos.col);\n  }\n  return found ? { top, left, bottom, right } : null;\n}"
+  },
+  {
+    "render_block": 186,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L23",
+    "chars": 226,
+    "text": "/** Quote a single field when it contains a comma, quote or line break. */\nexport function escapeField(value: string): string {\n  if (/[\",\\n\\r]/.test(value)) {\n    return `\"${value.replace(/\"/g, '\"\"')}\"`;\n  }\n  return value;\n}"
+  },
+  {
+    "render_block": 188,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L23",
+    "chars": 251,
+    "text": "/** Serialize rows to CSV text; every record is terminated by \"\\n\". */\nexport function serializeCsv(rows: string[][]): string {\n  let out = \"\";\n  for (const row of rows) {\n    out += row.map(escapeField).join(\",\");\n    out += \"\\n\";\n  }\n  return out;\n}"
+  },
+  {
+    "render_block": 192,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 264,
+    "text": "/**\n * REQ-1-3-1 (Import CSV to Create a Workbook) and REQ-1-3-2 (Export the\n * Current Worksheet as CSV).\n *\n * Runs against its own freshly seeded server (see run.sh / playwright.config.ts\n * project `csv`), so each test starts from the seeded initial state.\n */"
+  },
+  {
+    "render_block": 194,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 157,
+    "text": "/** CSV with quoted commas, escaped quotes, an embedded line break and Chinese. */\nconst CANONICAL_CSV = 'Name,Note\\n\"a,b\",\"say \"\"hi\"\"\"\\n\"multi\\nline\",中文\\n';"
+  },
+  {
+    "render_block": 200,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 586,
+    "text": "/** Home page -> Import CSV dialog -> choose a file -> Confirm import. */\nasync function importCsv(page: Page, fileName: string, csv: string) {\n  await openHome(page);\n  await page.getByRole(\"button\", { name: \"Import CSV\", exact: true }).click();\n  const dialog = importDialog(page);\n  await expect(dialog).toBeVisible();\n  await dialog.getByLabel(\"CSV file\", { exact: true }).setInputFiles({\n    name: fileName,\n    mimeType: \"text/csv\",\n    buffer: Buffer.from(csv, \"utf8\"),\n  });\n  await dialog.getByRole(\"button\", { name: \"Confirm import\", exact: true }).click();\n  return dialog;\n}"
+  },
+  {
+    "render_block": 202,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 491,
+    "text": "/** UI state that exporting must not disturb. */\nasync function editorSnapshot(page: Page) {\n  const values: Record<string, string> = {};\n  for (const ref of [\"A1\", \"B1\", \"A2\", \"B2\", \"A3\", \"B3\", \"A4\"]) {\n    values[ref] = (await cell(page, ref).textContent()) ?? \"\";\n  }\n  return {\n    url: page.url(),\n    activeTab: (await page.getByRole(\"tab\", { selected: true }).textContent()) ?? \"\",\n    formulaBar: await page.getByLabel(\"Formula bar\", { exact: true }).inputValue(),\n    values,\n  };\n}"
+  },
+  {
+    "render_block": 204,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 207,
+    "text": "test(\"imported CSV keeps quotes, embedded newlines and Chinese, and survives refresh\", async ({\n  page,\n}) => {\n  const name = uniqueName(\"csv-quotes\");\n  await importCsv(page, `${name}.csv`, CANONICAL_CSV);"
+  },
+  {
+    "render_block": 206,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 242,
+    "text": "  // Success opens the new workbook in the editor with Sheet1 active.\n  await expect(page.getByRole(\"heading\", { level: 1, name, exact: true })).toBeVisible();\n  await expect(sheetTab(page, \"Sheet1\")).toHaveAttribute(\"aria-selected\", \"true\");"
+  },
+  {
+    "render_block": 208,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 517,
+    "text": "  // The first row is ordinary data, not a consumed header.\n  await expect(cell(page, \"A1\")).toHaveText(\"Name\");\n  await expect(cell(page, \"B1\")).toHaveText(\"Note\");\n  // Quoted comma and escaped double quotes.\n  await expect(cell(page, \"A2\")).toHaveText(\"a,b\");\n  await expect(cell(page, \"B2\")).toHaveText('say \"hi\"');\n  // Line break inside a quoted field (exact text, not whitespace-normalized).\n  expect(await cell(page, \"A3\").textContent()).toBe(\"multi\\nline\");\n  await expect(cell(page, \"B3\")).toHaveText(\"中文\");"
+  },
+  {
+    "render_block": 210,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 177,
+    "text": "  // Formula bar exposes the raw text of the selected cell.\n  await cell(page, \"A2\").click();\n  await expect(page.getByLabel(\"Formula bar\", { exact: true })).toHaveValue(\"a,b\");"
+  },
+  {
+    "render_block": 212,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 536,
+    "text": "  // Refresh keeps content, order and the active worksheet.\n  await page.reload();\n  await expect(page.getByRole(\"heading\", { level: 1, name, exact: true })).toBeVisible();\n  await expect(sheetTab(page, \"Sheet1\")).toHaveAttribute(\"aria-selected\", \"true\");\n  await expect(cell(page, \"A1\")).toHaveText(\"Name\");\n  await expect(cell(page, \"A2\")).toHaveText(\"a,b\");\n  await expect(cell(page, \"B2\")).toHaveText('say \"hi\"');\n  expect(await cell(page, \"A3\").textContent()).toBe(\"multi\\nline\");\n  await expect(cell(page, \"B3\")).toHaveText(\"中文\");"
+  },
+  {
+    "render_block": 214,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 230,
+    "text": "  // The workbook is listed on the home page under the file name without .csv.\n  await page.getByRole(\"link\", { name: \"Home\", exact: true }).click();\n  await expect(page.getByRole(\"link\", { name, exact: true })).toBeVisible();\n});"
+  },
+  {
+    "render_block": 216,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 243,
+    "text": "test(\"an invalid CSV is rejected, leaves no workbook behind, and can be retried\", async ({\n  page,\n}) => {\n  const name = uniqueName(\"csv-broken\");\n  const list = await openHome(page);\n  const before = await list.getByRole(\"listitem\").count();"
+  },
+  {
+    "render_block": 218,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 211,
+    "text": "  const dialog = await importCsv(page, `${name}.csv`, 'a,b\\n\"unclosed,2\\n');\n  await expect(dialog.getByRole(\"alert\")).toHaveText(\"Invalid CSV file format. Import failed.\");\n  await expect(dialog).toBeVisible();"
+  },
+  {
+    "render_block": 220,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 422,
+    "text": "  // No navigation happened and no link with that name exists.\n  await expect(page.getByRole(\"heading\", { level: 1, name: \"Workbooks\" })).toBeVisible();\n  await dialog.getByRole(\"button\", { name: \"Cancel\", exact: true }).click();\n  await expect(importDialog(page)).toHaveCount(0);\n  await expect(page.getByRole(\"link\", { name, exact: true })).toHaveCount(0);\n  await expect(list.getByRole(\"listitem\")).toHaveCount(before);"
+  },
+  {
+    "render_block": 222,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 676,
+    "text": "  // The same name imports fine once the file is valid (no residue, retryable).\n  await page.getByRole(\"button\", { name: \"Import CSV\", exact: true }).click();\n  const retry = importDialog(page);\n  await retry.getByLabel(\"CSV file\", { exact: true }).setInputFiles({\n    name: `${name}.csv`,\n    mimeType: \"text/csv\",\n    buffer: Buffer.from(\"ok,1\\n\", \"utf8\"),\n  });\n  await retry.getByRole(\"button\", { name: \"Confirm import\", exact: true }).click();\n  await expect(page.getByRole(\"heading\", { level: 1, name, exact: true })).toBeVisible();\n  await expect(sheetTab(page, \"Sheet1\")).toHaveAttribute(\"aria-selected\", \"true\");\n  await expect(cell(page, \"A1\")).toHaveText(\"ok\");\n});"
+  },
+  {
+    "render_block": 224,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 292,
+    "text": "test(\"Export CSV downloads the used range and leaves the editor state unchanged\", async ({\n  page,\n}) => {\n  const name = uniqueName(\"csv-export\");\n  await importCsv(page, `${name}.csv`, CANONICAL_CSV);\n  await expect(page.getByRole(\"heading\", { level: 1, name, exact: true })).toBeVisible();"
+  },
+  {
+    "render_block": 226,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 437,
+    "text": "  // Add a formula cell below the imported data, so the export must decide\n  // between the expression and the value the grid actually displays.\n  await cell(page, \"A4\").click();\n  const formulaBar = page.getByLabel(\"Formula bar\", { exact: true });\n  await formulaBar.fill(\"=1+2\");\n  await formulaBar.press(\"Enter\");\n  await expect(formulaBar).toHaveValue(\"=1+2\");\n  const displayedFormula = (await cell(page, \"A4\").textContent()) ?? \"\";"
+  },
+  {
+    "render_block": 230,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 236,
+    "text": "  const downloadPromise = page.waitForEvent(\"download\");\n  await page.getByRole(\"button\", { name: \"Export CSV\", exact: true }).click();\n  const download = await downloadPromise;\n  expect(download.suggestedFilename()).toMatch(/\\.csv$/i);"
+  },
+  {
+    "render_block": 232,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 510,
+    "text": "  const downloaded = fs.readFileSync((await download.path()) as string, \"utf8\");\n  // Plain cells round-trip exactly: order, empties, quoting and UTF-8 text.\n  expect(downloaded).toContain('Name,Note\\n\"a,b\",\"say \"\"hi\"\"\"\\n\"multi\\nline\",中文\\n');\n  // The formula cell carries the displayed value, never the raw expression\n  // (the computed result once REQ-4 is integrated; today grid and export agree).\n  expect(downloaded).toBe(\n    `Name,Note\\n\"a,b\",\"say \"\"hi\"\"\"\\n\"multi\\nline\",中文\\n${displayedFormula},\\n`\n  );"
+  },
+  {
+    "render_block": 270,
+    "source": "continuation02-root-native/039-2026-09-28T05-33-27-831Z_01a0e680-fb97-768b-988d-21acddc3c468.jsonl:L16",
+    "chars": 179,
+    "text": " /**\n  * Shared REST API contract (all later feature tasks build on this):\n@@ -146,7 +147,9 @@ workbooksRouter.patch(\"/api/workbooks/:id/state\", (req: Request, res: Response)\n });"
+  },
+  {
+    "render_block": 316,
+    "source": "continuation02-root-native/023-2026-09-28T04-50-06-734Z_01a0e659-4b0e-70ee-9264-6926aa018e11.jsonl:L168",
+    "chars": 368,
+    "text": "# Type-check the check sources first: a typo such as a missing import has to\n# fail fast instead of showing up later as a confusing browser failure.\nTSC=\"$ROOT/checks/node_modules/.bin/tsc\"\nif [[ -x \"$TSC\" ]]; then\n  \"$TSC\" -p \"$ROOT/checks/tsconfig.json\"\nelse\n  echo \"note: typescript is not installed under checks/ (cd checks && npm install); skipping type-check\"\nfi"
+  },
+  {
+    "render_block": 318,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  },
+  {
+    "render_block": 320,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L314",
+    "chars": 267,
+    "text": "# A fixed log path would be truncated by any other run of this harness; keep the\n# logs of this run together and identifiable instead.\nLOG_PREFIX=\"${SERVER_LOG_PREFIX:-/tmp/wb-checks-$(basename \"$ROOT\")-$$}\"\nPID_FILE=\"$(mktemp /tmp/wb-checks-pids-XXXXXX)\"\nWATCHDOG=\"\""
+  },
+  {
+    "render_block": 324,
+    "source": "continuation02-root-native/031-2026-09-28T05-33-22-458Z_01a0e680-e69a-72d4-9388-0b6b053d16f6.jsonl:L15",
+    "chars": 151,
+    "text": "# env var suffix -> spec file handled by the matching Playwright project.\nSUFFIXES=(CREATE EDITOR HOME CSV)\ndeclare -A PORTS URLS DATA_DIRS SERVER_PIDS"
+  },
+  {
+    "render_block": 326,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L314",
+    "chars": 222,
+    "text": "cleanup() {\n  [[ -n \"$WATCHDOG\" ]] && kill \"$WATCHDOG\" 2>/dev/null || true\n  while read -r pid; do\n    kill \"$pid\" 2>/dev/null || true\n  done < \"$PID_FILE\"\n  rm -f \"$PID_FILE\"\n  wait 2>/dev/null || true\n}\ntrap cleanup EXIT"
+  },
+  {
+    "render_block": 328,
+    "source": "continuation02-root-native/031-2026-09-28T05-33-22-458Z_01a0e680-e69a-72d4-9388-0b6b053d16f6.jsonl:L15",
+    "chars": 265,
+    "text": "start_server() {\n  local suffix=\"$1\"\n  DATA_DIR=\"${DATA_DIRS[$suffix]}\" HOST=127.0.0.1 PORT=\"${PORTS[$suffix]}\" \\\n    node \"$ROOT/backend/dist/server.js\" >> \"$LOG_PREFIX-$suffix.log\" 2>&1 &\n  SERVER_PIDS[$suffix]=$!\n  echo \"${SERVER_PIDS[$suffix]}\" >> \"$PID_FILE\"\n}"
+  },
+  {
+    "render_block": 380,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L314",
+    "chars": 648,
+    "text": "# This machine may be shared with other agents' runs. If something outside this\n# script kills one of our servers, restart it on the same port and DATA_DIR so\n# the run keeps observing the same state; the restart stays in the log.\nwatchdog() {\n  while true; do\n    sleep 2\n    local suffix pid\n    for suffix in \"${SUFFIXES[@]}\"; do\n      pid=\"${SERVER_PIDS[$suffix]:-}\"\n      if [[ -n \"$pid\" ]] && ! kill -0 \"$pid\" 2>/dev/null; then\n        echo \"[watchdog] server for $suffix (pid $pid) disappeared at $(date -Is); restarting on the same DATA_DIR\" \\\n          >> \"$LOG_PREFIX-$suffix.log\"\n        start_server \"$suffix\"\n      fi\n    done\n  done\n}"
+  },
+  {
+    "render_block": 382,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L314",
+    "chars": 446,
+    "text": "for suffix in \"${SUFFIXES[@]}\"; do\n  PORTS[$suffix]=\"$(free_port)\"\n  DATA_DIRS[$suffix]=\"$(mktemp -d /tmp/wb-checks-XXXXXX)\"\n  : > \"$LOG_PREFIX-$suffix.log\"\n  start_server \"$suffix\"\n  wait_for_ready \"${PORTS[$suffix]}\" \"${SERVER_PIDS[$suffix]}\" \"$LOG_PREFIX-$suffix.log\" || exit 3\n  URLS[$suffix]=\"http://127.0.0.1:${PORTS[$suffix]}\"\n  echo \"server for $suffix: ${URLS[$suffix]} (DATA_DIR=${DATA_DIRS[$suffix]}, log=$LOG_PREFIX-$suffix.log)\"\ndone"
+  },
+  {
+    "render_block": 386,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 398,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 331,
+    "text": "- `frontend/` — Vite + React + TypeScript UI (pages: workbook home, create\n  workbook, workbook editor at the bookmarkable URL `/workbook/<id>`)\n- `backend/` — Node.js + Express + TypeScript REST API, JSON-file persistence,\n  static hosting of the built frontend\n- `checks/` — repeatable Playwright browser checks (`checks/run.sh`)"
+  },
+  {
+    "render_block": 408,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 217,
+    "text": "`npm run start` compiles the backend automatically when `backend/dist` is\nmissing and builds the frontend when `frontend/dist` is missing, so a fresh\nclone works with just `npm install && npm run start` in `backend/`."
+  },
+  {
+    "render_block": 412,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 569,
+    "text": "| Env var          | Default                | Meaning                                        |\n| ---------------- | ---------------------- | ---------------------------------------------- |\n| `HOST`           | `0.0.0.0`              | interface to bind                              |\n| `PORT`           | `3000`                 | HTTP port                                      |\n| `DATA_DIR`       | `backend/data`         | directory with one JSON file per workbook      |\n| `FRONTEND_DIST`  | `frontend/dist`        | built UI served to the browser                 |"
+  },
+  {
+    "render_block": 414,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 299,
+    "text": "Startup is idempotent: the first start seeds workbook `Q3 Sales`\n(Sheet1: `A1=Region`, `A2=East`, `B2=1200`, `A3=North`, `B3=800`;\nSheet2: `Region/Sales/Status` + `East/1200/Open`, `North/800/Closed`,\n`South/700/Open`). If a workbook with that name already exists, nothing is\ncreated or overwritten."
+  },
+  {
+    "render_block": 418,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 224,
+    "text": "Errors are `{ \"error\": string }` with a 4xx/5xx status; successful calls return\nthe workbook object itself (no wrapper). Content changes bump `updatedAt`, which\nis what the home page and the editor display as “Last updated”."
+  },
+  {
+    "render_block": 420,
+    "source": "continuation02-root-native/015-2026-09-28T04-49-57-782Z_01a0e659-2816-75aa-8769-f308e5e51b60.jsonl:L55",
+    "chars": 528,
+    "text": "| Method | Path | Body | Result |\n| ------ | ---- | ---- | ------ |\n| `GET` | `/api/workbooks` | | `{ workbooks: WorkbookSummary[] }` |\n| `POST` | `/api/workbooks` | `{ name }` | `201` Workbook |\n| `GET` | `/api/workbooks/:id` | | Workbook |\n| `PATCH` | `/api/workbooks/:id` | `{ name }` | Workbook |\n| `PATCH` | `/api/workbooks/:id/state` | `{ activeSheetId?, activeCell?, selection? }` | Workbook (does not bump `updatedAt`) |\n| `PATCH` | `/api/workbooks/:id/sheets/:sheetId/cells` | `{ updates: [{ ref, raw }] }` | Workbook |"
+  },
+  {
+    "render_block": 456,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 338,
+    "text": "1. `cd frontend && npm test` → 6/6 通过（导出纯函数：转义/引号翻倍/换行、包围盒、空单元格与空行保留、公式取计算结果、隐藏行仍导出、空表）。\n2. `cd backend && npm test` → 8/8 通过（导入纯函数 + 真实 HTTP 端点：按序保留空字段、引号逗号/转义双引号/字段内 CRLF 与 LF、未闭合引号抛错、UTF-8 中文与数字文本、BOM、宽表扩列/长表扩行；成功导入后重新 GET 仍一致；非法 CSV 返回 400 精确文案且列表中无该名）。\n3. `checks/run.sh`（Playwright，每个 spec 独立临时 `DATA_DIR` + 空闲端口，3000 保留给评测）→ 见下方结果。"
+  },
+  {
+    "render_block": 458,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 272,
+    "text": "浏览器检查覆盖：\n- 导入含中文/引号转义/字段内换行的 CSV → 编辑器逐格核对（含精确断言 `multi\\nline`）→ **刷新后完全一致**，且首行 `Name,Note` 仍是普通数据。\n- 非法 CSV（未闭合引号）→ 对话框显示精确错误文案、主页无该名链接、listitem 数量不变、可重试成功。\n- 编辑器写入 `=1+2` → 导出 CSV，断言下载文件字节内容（含转义/中文/空 B 列）且公式列 = 网格显示值（非表达式）→ 导出前后 URL / 活动 tab / 公式栏 / 网格值快照相等，**刷新后仍相等**。"
+  },
+  {
+    "render_block": 462,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 326,
+    "text": "| 检查 | 命令 | 结果 |\n| --- | --- | --- |\n| 导出纯函数单测 | `cd frontend && npm test` | **6/6 通过** |\n| 导入纯函数 + HTTP 端点单测 | `cd backend && npm test` | **8/8 通过** |\n| 检查源类型检查（#3 加固项） | `checks/node_modules/.bin/tsc -p checks/tsconfig.json` | **通过**（run.sh 内已前置执行） |\n| 浏览器检查（4 个 spec，14 条） | `checks/run.sh` | **14 通过 / 0 失败（退出码 0，1.9m）** |"
+  },
+  {
+    "render_block": 464,
+    "source": "continuation02-root-native/051-2026-09-28T05-52-13-875Z_01a0e692-2a33-7325-835d-7434fc37fd94.jsonl:L4",
+    "chars": 1726,
+    "text": "```\n✓   1 [create-workbook]     create-workbook.spec.ts:10  New blank workbook -> editor with only a blank Sheet1 and A1 selected (5.0s)\n✓   2 [create-workbook]     create-workbook.spec.ts:53  a fresh workbook does not show another workbook's data (1.5s)\n✓   3 [create-workbook]     create-workbook.spec.ts:67  empty workbook name on create is rejected, stays retryable, creates no record (2.8s)\n✓   4 [editor-interactions] editor-interactions.spec.ts:24  grid exposes the promised ARIA roles, names and selection state (6.6s)\n✓   5 [editor-interactions] editor-interactions.spec.ts:65  formula bar edits commit and persist after refresh (3.2s)\n✓   6 [editor-interactions] editor-interactions.spec.ts:84  rename updates the editor title and the home link; empty name is rejected (12.8s)\n✓   7 [editor-interactions] editor-interactions.spec.ts:131 leading and trailing spaces are trimmed when renaming (4.5s)\n✓   8 [home-editor]         home-editor.spec.ts:19  home lists the seeded workbook with a name link and Last updated (1.8s)\n✓   9 [home-editor]         home-editor.spec.ts:33  opening Q3 Sales shows the seeded content, tabs and the same Last updated (7.0s)\n✓  10 [home-editor]         home-editor.spec.ts:74  direct editor URL and refresh restore the same workbook (9.8s)\n✓  11 [home-editor]         home-editor.spec.ts:109 the seeded state survives reopening from the home page (5.6s)\n✓  12 [csv] csv.spec.ts:53  imported CSV keeps quotes, embedded newlines and Chinese, and survives refresh (9.5s)\n✓  13 [csv] csv.spec.ts:92  an invalid CSV is rejected, leaves no workbook behind, and can be retried (5.1s)\n✓  14 [csv] csv.spec.ts:124 Export CSV downloads the used range and leaves the editor state unchanged (14.9s)"
+  },
+  {
+    "render_block": 468,
+    "source": "continuation02-root-native/031-2026-09-28T05-33-22-458Z_01a0e680-e69a-72d4-9388-0b6b053d16f6.jsonl:L100",
+    "chars": 409,
+    "text": "- 先前 `origin/develop` 上必失败的 3 条（`create-workbook:67`、`editor-interactions:20`、`editor-interactions:121`）已由 #3（`61b51ee`）修复，本条基线全部通过，退出码 0，CSV 3/3 仍全绿。\n- 本次运行时机器上同时有其他 lane 的 Playwright 在跑；每个 spec 仍使用自己的空闲端口（33381 / 47857 / 47627 / 44799）与临时 `DATA_DIR`（`/tmp/wb-checks-*`），运行结束后自启的 4 个后端已全部停止（端口无监听）。\n- 环境细节：`checks/package.json` 声明的 `typescript` 需已安装，否则 `run.sh` 会打印 `skipping type-check` 并继续；本机已安装，故类型检查确实执行。"
+  },
+  {
+    "render_block": 470,
+    "source": "continuation02-root-native/029-2026-09-28T05-08-40-797Z_01a0e66a-4add-7442-93fa-0bf891944427.jsonl:L4",
+    "chars": 221,
+    "text": "## 备注\n- 导出取 `value` 而非 `raw`：REQ-4 公式引擎回填 `value` 后，导出自动变为计算结果，无需再改；当前基础/本 PR 未接公式求值前，网格显示值与导出值一致，检查断言的是“网格显示值”，故在 REQ-4 前后都成立。\n- 与 #7 的衔接：导出不依赖筛选视图；#7 落地后建议加一条“应用筛选后导出仍含隐藏行”的回归检查（`frontend/tests/csv.test.ts` 已有对应的纯函数用例）。"
+  },
+  {
+    "render_block": 510,
+    "source": "continuation02-root-native/041-2026-09-28T05-33-31-043Z_01a0e681-0823-70a7-b2c0-f9b5734222fc.jsonl:L92",
+    "chars": 212,
+    "text": "```\ncleanup() {\n  [[ -n \"$WATCHDOG\" ]] && kill \"$WATCHDOG\" 2>/dev/null || true\n  while read -r pid; do\n    kill \"$pid\" 2>/dev/null || true\n  done < \"$PID_FILE\"\n  rm -f \"$PID_FILE\"\n  wait 2>/dev/null || true\n}\n```"
+  },
+  {
+    "render_block": 546,
+    "source": "continuation02-root-native/023-2026-09-28T04-50-06-734Z_01a0e659-4b0e-70ee-9264-6926aa018e11.jsonl:L168",
+    "chars": 368,
+    "text": "# Type-check the check sources first: a typo such as a missing import has to\n# fail fast instead of showing up later as a confusing browser failure.\nTSC=\"$ROOT/checks/node_modules/.bin/tsc\"\nif [[ -x \"$TSC\" ]]; then\n  \"$TSC\" -p \"$ROOT/checks/tsconfig.json\"\nelse\n  echo \"note: typescript is not installed under checks/ (cd checks && npm install); skipping type-check\"\nfi"
+  },
+  {
+    "render_block": 548,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  },
+  {
+    "render_block": 550,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L103",
+    "chars": 732,
+    "text": "# Keep everything this run owns (server logs, PID record, per-spec DATA_DIRs)\n# inside one run-private directory with a distinctive prefix. The shared\n# /tmp/wb-checks-* namespace is used by every lane running this harness, and\n# files there have been observed to disappear mid-run (foreign cleanup): one\n# server kept running while its workbook directory had been emptied, so the\n# checks failed with \"the seeded workbook is missing\" although the product was\n# fine. A private directory makes that far less likely.\nRUN_DIR=\"${CHECK_RUN_DIR:-$(mktemp -d /tmp/wbchecks-run-XXXXXX)}\"\nLOG_PREFIX=\"${SERVER_LOG_PREFIX:-$RUN_DIR/server}\"\nPID_FILE=\"$RUN_DIR/pids\"\nWATCHDOG=\"\"\necho \"run dir: $RUN_DIR (server logs: $LOG_PREFIX-<SPEC>.log)\""
+  },
+  {
+    "render_block": 552,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L103",
+    "chars": 482,
+    "text": "# Port ownership: free_port() only reports a port that was free a moment ago,\n# and the other lanes start servers at the same time. If a foreign server answers\n# on our port, its workbook list would be mistaken for ours, so verify the\n# listener is the process we started (lsof) instead of trusting the port alone.\nif command -v lsof >/dev/null 2>&1; then\n  OWNERSHIP_CHECK=true\nelse\n  echo \"note: lsof is not installed; skipping the port-ownership check\"\n  OWNERSHIP_CHECK=false\nfi"
+  },
+  {
+    "render_block": 564,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L103",
+    "chars": 473,
+    "text": "cleanup() {\n  [[ -n \"$WATCHDOG\" ]] && kill \"$WATCHDOG\" 2>/dev/null || true\n  local pid\n  # Kill the pids we remember even if the PID file was removed by something\n  # outside this run.\n  for pid in ${SERVER_PIDS[@]+\"${SERVER_PIDS[@]}\"}; do\n    kill \"$pid\" 2>/dev/null || true\n  done\n  if [[ -f \"$PID_FILE\" ]]; then\n    while read -r pid; do\n      kill \"$pid\" 2>/dev/null || true\n    done < \"$PID_FILE\"\n  fi\n  rm -f \"$PID_FILE\"\n  wait 2>/dev/null || true\n}\ntrap cleanup EXIT"
+  },
+  {
+    "render_block": 568,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L125",
+    "chars": 1313,
+    "text": "# This machine may be shared with other agents' runs. If something outside this\n# script kills one of our servers, restart it on the same port and DATA_DIR so\n# the run keeps observing the same state; the restart stays in the log.\nwatchdog() {\n  while true; do\n    sleep 2\n    local suffix pid\n    for suffix in \"${SUFFIXES[@]}\"; do\n      pid=\"${SERVER_PIDS[$suffix]:-}\"\n      if [[ -n \"$pid\" ]] && ! kill -0 \"$pid\" 2>/dev/null; then\n        echo \"[watchdog] server for $suffix (pid $pid) disappeared at $(date -Is); restarting on the same DATA_DIR\" \\\n          >> \"$LOG_PREFIX-$suffix.log\"\n        start_server \"$suffix\"\n        sleep 1\n        local new_pid listener\n        new_pid=\"${SERVER_PIDS[$suffix]}\"\n        if ! kill -0 \"$new_pid\" 2>/dev/null; then\n          echo \"[watchdog] restart of $suffix (pid $new_pid) died immediately; port ${PORTS[$suffix]} is probably taken by another process\" \\\n            >> \"$LOG_PREFIX-$suffix.log\"\n        else\n          listener=\"$(listener_pid \"${PORTS[$suffix]}\")\"\n          if $OWNERSHIP_CHECK && [[ -n \"$listener\" && \"$listener\" != \"$new_pid\" ]]; then\n            echo \"[watchdog] port ${PORTS[$suffix]} is served by pid $listener, not by our restart (pid $new_pid)\" \\\n              >> \"$LOG_PREFIX-$suffix.log\"\n          fi\n        fi\n      fi\n    done\n  done\n}"
+  },
+  {
+    "render_block": 570,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L125",
+    "chars": 439,
+    "text": "for suffix in \"${SUFFIXES[@]}\"; do\n  DATA_DIRS[$suffix]=\"$(mktemp -d \"$RUN_DIR/data-$suffix-XXXXXX\")\"\n  : > \"$LOG_PREFIX-$suffix.log\"\n  start_owned_server \"$suffix\" || exit 3\n  wait_for_ready \"${PORTS[$suffix]}\" \"${SERVER_PIDS[$suffix]}\" \"$LOG_PREFIX-$suffix.log\" || exit 3\n  URLS[$suffix]=\"http://127.0.0.1:${PORTS[$suffix]}\"\n  echo \"server for $suffix: ${URLS[$suffix]} (DATA_DIR=${DATA_DIRS[$suffix]}, log=$LOG_PREFIX-$suffix.log)\"\ndone"
+  },
+  {
+    "render_block": 576,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 764,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L188",
+    "chars": 151,
+    "text": "const backendDir = path.resolve(__dirname, \"..\");\nconst repoRoot = path.resolve(backendDir, \"..\");\nconst frontendDir = path.join(repoRoot, \"frontend\");"
+  },
+  {
+    "render_block": 766,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L188",
+    "chars": 240,
+    "text": "function run(command, args, cwd) {\n  console.log(`[prepare] ${command} ${args.join(\" \")}  (cwd: ${path.relative(repoRoot, cwd) || \".\"})`);\n  const result = spawnSync(command, args, { cwd, stdio: \"inherit\" });\n  return result.status === 0;\n}"
+  },
+  {
+    "render_block": 874,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 876,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L127",
+    "chars": 383,
+    "text": "BASE_URL_CREATE=\"${URLS[CREATE]}\" \\\nBASE_URL_EDITOR=\"${URLS[EDITOR]}\" \\\nBASE_URL_HOME=\"${URLS[HOME]}\" \\\nBASE_URL_CSV=\"${URLS[CSV]}\" \\\nBROWSER_EXECUTABLE_PATH=\"$BROWSER_EXECUTABLE_PATH\" \\\nCHECK_OUTPUT_DIR=\"${CHECK_OUTPUT_DIR:-$ROOT/checks/results/$(date +%Y%m%dT%H%M%S)}\" \\\n  \"$ROOT/checks/node_modules/.bin/playwright\" test --config \"$ROOT/checks/playwright.config.ts\" \\\n  || EXIT=$?"
+  },
+  {
+    "render_block": 878,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L127",
+    "chars": 615,
+    "text": "# If a check failed, say whether the run's own state is still intact: something\n# outside this run removing the workbook files (observed on this shared machine)\n# is one plausible cause of \"the seeded workbook is missing\" failures.\nif [[ \"$EXIT\" != 0 ]]; then\n  for suffix in \"${SUFFIXES[@]}\"; do\n    if ! grep -lq '\"Q3 Sales\"' \"${DATA_DIRS[$suffix]}\"/*.json 2>/dev/null; then\n      echo \"[run] note: the DATA_DIR for $suffix (${DATA_DIRS[$suffix]}) no longer holds a 'Q3 Sales' workbook;\" \\\n           \"      check the server log ($LOG_PREFIX-$suffix.log) for evidence of outside interference\" >&2\n    fi\n  done\nfi"
+  },
+  {
+    "render_block": 922,
+    "source": "continuation02-root-native/033-2026-09-28T05-33-23-431Z_01a0e680-ea67-758c-aaef-a94c0aef7065.jsonl:L103",
+    "chars": 473,
+    "text": "cleanup() {\n  [[ -n \"$WATCHDOG\" ]] && kill \"$WATCHDOG\" 2>/dev/null || true\n  local pid\n  # Kill the pids we remember even if the PID file was removed by something\n  # outside this run.\n  for pid in ${SERVER_PIDS[@]+\"${SERVER_PIDS[@]}\"}; do\n    kill \"$pid\" 2>/dev/null || true\n  done\n  if [[ -f \"$PID_FILE\" ]]; then\n    while read -r pid; do\n      kill \"$pid\" 2>/dev/null || true\n    done < \"$PID_FILE\"\n  fi\n  rm -f \"$PID_FILE\"\n  wait 2>/dev/null || true\n}\ntrap cleanup EXIT"
+  },
+  {
+    "render_block": 1194,
+    "source": "native/245-2026-09-28T09-30-17-466Z_01a0e759-cdfa-7489-8194-a7aefb3ffb28.jsonl:L72",
+    "chars": 190,
+    "text": "    Locator:  getByRole('grid', { name: 'Worksheet grid' }).getByRole('gridcell', { name: 'B1', exact: true })\n    Expected: \u001b[32m\"East\"\u001b[39m\n    Received: \u001b[31m\"\"\u001b[39m\n    Timeout:  30000ms"
+  },
+  {
+    "render_block": 1216,
+    "source": "continuation02-root-native/041-2026-09-28T05-33-31-043Z_01a0e681-0823-70a7-b2c0-f9b5734222fc.jsonl:L241",
+    "chars": 165,
+    "text": "    \u001b[2m  Name,Note\u001b[22m\n    \u001b[2m  \"a,b\",\"say \"\"hi\"\"\"\u001b[22m\n    \u001b[2m  \"multi\u001b[22m\n    \u001b[32m- line\",中文\u001b[39m\n    \u001b[32m- ,\u001b[39m\n    \u001b[31m+ line\",中文\u001b[39m\n    \u001b[2m  ↵\u001b[22m"
+  },
+  {
+    "render_block": 1544,
+    "source": "continuation02-root-native/045-2026-09-28T05-33-33-080Z_01a0e681-1018-74f0-9518-6e284b4d77c5.jsonl:L341",
+    "chars": 167,
+    "text": "    \u001b[2m  Name,Note\u001b[22m\n    \u001b[2m  \"a,b\",\"say \"\"hi\"\"\"\u001b[22m\n    \u001b[2m  \"multi\u001b[22m\n    \u001b[2m  line\",中文\u001b[22m\n    \u001b[32m- ,\u001b[39m\n    \u001b[31m+ \u001b[7m3\u001b[27m,\u001b[39m\n    \u001b[2m  ↵\u001b[22m"
+  },
+  {
+    "render_block": 1600,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 264,
+    "text": "/**\n * REQ-1-3-1 (Import CSV to Create a Workbook) and REQ-1-3-2 (Export the\n * Current Worksheet as CSV).\n *\n * Runs against its own freshly seeded server (see run.sh / playwright.config.ts\n * project `csv`), so each test starts from the seeded initial state.\n */"
+  },
+  {
+    "render_block": 1602,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 157,
+    "text": "/** CSV with quoted commas, escaped quotes, an embedded line break and Chinese. */\nconst CANONICAL_CSV = 'Name,Note\\n\"a,b\",\"say \"\"hi\"\"\"\\n\"multi\\nline\",中文\\n';"
+  },
+  {
+    "render_block": 1630,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 365,
+    "text": "/**\n * Every spec file runs against its own freshly seeded server instance (see\n * run.sh), so each check observes the promised initial state and mutating\n * checks cannot leak into others.\n */\nfunction required(name: string): string {\n  const value = process.env[name];\n  if (!value) throw new Error(`Set ${name} before running browser checks.`);\n  return value;\n}"
+  },
+  {
+    "render_block": 1634,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L33",
+    "chars": 539,
+    "text": "const projects: Project[] = [\n  {\n    name: 'create-workbook',\n    testMatch: '**/create-workbook.spec.ts',\n    use: { baseURL: required('BASE_URL_CREATE') },\n  },\n  {\n    name: 'editor-interactions',\n    testMatch: '**/editor-interactions.spec.ts',\n    use: { baseURL: required('BASE_URL_EDITOR') },\n  },\n  {\n    name: 'home-editor',\n    testMatch: '**/home-editor.spec.ts',\n    use: { baseURL: required('BASE_URL_HOME') },\n  },\n  {\n    name: 'csv',\n    testMatch: '**/csv.spec.ts',\n    use: { baseURL: required('BASE_URL_CSV') },\n  },\n];"
+  },
+  {
+    "render_block": 1636,
+    "source": "continuation02-root-native/037-2026-09-28T05-33-26-696Z_01a0e680-f727-737a-a04f-1553c698ea7e.jsonl:L203",
+    "chars": 947,
+    "text": "export default defineConfig({\n  testDir: '.',\n  testMatch: '**/*.spec.ts',\n  outputDir: process.env.CHECK_OUTPUT_DIR ?? 'test-results',\n  workers: 1,\n  retries: 0,\n  timeout: 180_000,\n  expect: { timeout: 30_000 },\n  reporter: 'list',\n  use: {\n    // Explicit limits, so a stuck interaction fails with the control's name\n    // instead of just hitting the test timeout. They are deliberately generous:\n    // this harness runs on a shared machine (several agent lanes run their own\n    // suites at the same time, load average has been >20), and a starved\n    // browser can need far longer than a healthy one to load or click. A\n    // too-tight limit produces false failures that look like product bugs.\n    actionTimeout: 30_000,\n    navigationTimeout: 60_000,\n    headless: true,\n    launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH },\n    trace: 'retain-on-failure',\n    screenshot: 'only-on-failure',\n  },\n  projects,\n});"
+  },
+  {
+    "render_block": 1650,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 437,
+    "text": "  // Add a formula cell below the imported data, so the export must decide\n  // between the expression and the value the grid actually displays.\n  await cell(page, \"A4\").click();\n  const formulaBar = page.getByLabel(\"Formula bar\", { exact: true });\n  await formulaBar.fill(\"=1+2\");\n  await formulaBar.press(\"Enter\");\n  await expect(formulaBar).toHaveValue(\"=1+2\");\n  const displayedFormula = (await cell(page, \"A4\").textContent()) ?? \"\";"
+  },
+  {
+    "render_block": 1654,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 236,
+    "text": "  const downloadPromise = page.waitForEvent(\"download\");\n  await page.getByRole(\"button\", { name: \"Export CSV\", exact: true }).click();\n  const download = await downloadPromise;\n  expect(download.suggestedFilename()).toMatch(/\\.csv$/i);"
+  },
+  {
+    "render_block": 1656,
+    "source": "continuation02-root-native/025-2026-09-28T04-50-08-261Z_01a0e659-5105-72d9-9a8b-8f20baa5b4e4.jsonl:L36",
+    "chars": 510,
+    "text": "  const downloaded = fs.readFileSync((await download.path()) as string, \"utf8\");\n  // Plain cells round-trip exactly: order, empties, quoting and UTF-8 text.\n  expect(downloaded).toContain('Name,Note\\n\"a,b\",\"say \"\"hi\"\"\"\\n\"multi\\nline\",中文\\n');\n  // The formula cell carries the displayed value, never the raw expression\n  // (the computed result once REQ-4 is integrated; today grid and export agree).\n  expect(downloaded).toBe(\n    `Name,Note\\n\"a,b\",\"say \"\"hi\"\"\"\\n\"multi\\nline\",中文\\n${displayedFormula},\\n`\n  );"
+  },
+  {
+    "render_block": 1658,
+    "source": "continuation02-root-native/041-2026-09-28T05-33-31-043Z_01a0e681-0823-70a7-b2c0-f9b5734222fc.jsonl:L243",
+    "chars": 305,
+    "text": "  // Nothing changed: same URL, sheet, grid and formula bar; also after refresh.\n  expect(await editorSnapshot(page)).toEqual(before);\n  await page.reload();\n  await expect(page.getByRole(\"heading\", { level: 1, name, exact: true })).toBeVisible();\n  expect(await editorSnapshot(page)).toEqual(before);\n});"
+  },
+  {
+    "render_block": 1856,
+    "source": "local_items.json:pr:7",
+    "chars": 273,
+    "text": "> **base 已前进后的复核**：PR 创建时 base `origin/develop` 已从 `61b51ee` 前进到 `3c9393f`（PR #4/#5 已合入，且本 PR 的第一个提交 `b97c325` 已由根负责人直接并入 develop）。已把 `origin/develop` 合并进本分支（无冲突），当前 head `bdac17a` 现在只剩 `checks/run.sh` 的加固；全量套件在**合并后的候选**上重新跑过：**14 passed（1.7m），EXIT=0**（含 #4 的 3 个 CSV 用例）。"
+  },
+  {
+    "render_block": 2428,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L27",
+    "chars": 192,
+    "text": "Commands:\n  view       \n  edit       \n  hide       \n  unhide     \n  delete     \n  resolve    \n  unresolve  \n  reaction   \n  help       Print this message or the help of the given subcommand(s)"
+  },
+  {
+    "render_block": 2718,
+    "source": "native/237-2026-09-28T09-21-50-493Z_01a0e752-119d-73ef-a26d-6990743ff95b.jsonl:L6",
+    "chars": 284,
+    "text": "- **保留** `checks/csv.spec.ts` 的等待（提交后先断言 A4 显示 `3` 再读取/导出）——这是本次回归的正解；\n- **保留** `checks/cleanup-race-check.sh`——可重复的竞态回归比一次性复现脚本好，欢迎留在 `checks/` 里；\n- **删掉** `checks/run.sh` 的 hunk（develop 已有等价实现），避免两套并存。若你认为你的 DATA_DIR 前缀兜底更稳，也可以用它替换 develop 版本，但请在 PR 里说明；我这边不再另提 run.sh 的 cleanup 改动。"
+  },
+  {
+    "render_block": 2720,
+    "source": "native/237-2026-09-28T09-21-50-493Z_01a0e752-119d-73ef-a26d-6990743ff95b.jsonl:L6",
+    "chars": 280,
+    "text": "另外两点：\n- 你的基线写的是 `0539c62`，而 develop 已到 `56cbd1a`（含 #5 的 `REQ3_CORE`/`REQ3_INTEGRATION` project 与我的 cleanup 修复）。rebase 后请把证据重跑到新基线上——`checks/run.sh` 现在是 **6 个 spec / 29 个用例**，不是 4 个 spec / 14 条。\n- 顺带确认：我在 `56cbd1a` 内容等价的分支上跑完整套件时，csv 的导出用例这次是**通过**的（18.5s），与「竞态」的判断一致；你那版等待会让它稳定通过。"
+  }
+]

@@ -1,0 +1,212 @@
+{
+  "scope": "Final PR23 implementer plus three continuation homes; direct GitHub lineage 20260929-042409-1202e245 only",
+  "reader": "i11_roles_forward",
+  "read_on": "2026-09-30",
+  "method": "Sequential substantive reading of all distinct records in bounded outputs, with truncation gaps supplemented; metadata indices were navigational and not counted as full reading. No execution of archived content, tests, evaluation, model calls, or application code edits.",
+  "files": [
+    {
+      "alias": "A",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f00c-62a1-7a52-b09f-ab388478ad9a/2026-09-30T02-02-19-572Z_01a0f00c-6633-73a0-b172-22973d227056.jsonl",
+      "bytes": 665200,
+      "sha256": "cb235d5b5d00e7476a60bde063ed7b34917f4243f647a4466018e371c63840f6",
+      "records": 328,
+      "first_timestamp": "2026-09-30T02:02:19.572Z",
+      "last_timestamp": "2026-09-30T02:35:53.862Z",
+      "record_types": {
+        "session": 1,
+        "model_change": 1,
+        "thinking_level_change": 1,
+        "message": 310,
+        "custom_message": 15
+      },
+      "tool_calls": {
+        "bash": 137,
+        "read": 5,
+        "write": 6,
+        "edit": 3
+      },
+      "substantive_read_record_range": [
+        1,
+        328
+      ],
+      "read_fields": [
+        "user visible inputs",
+        "assistant thinking and final/text",
+        "tool calls: names, paths, arguments",
+        "tool results except explicit mechanical source-body skips",
+        "custom background results"
+      ],
+      "mechanical_source_body_skips": [
+        {
+          "line": 32,
+          "chars": 6387,
+          "description": "e2e runner source"
+        },
+        {
+          "line": 34,
+          "chars": 2130,
+          "description": "app-node/package source"
+        },
+        {
+          "line": 37,
+          "chars": 2000,
+          "description": "Playwright config and list"
+        },
+        {
+          "line": 222,
+          "chars": 4345,
+          "description": "test helper and repeated auth test source"
+        }
+      ],
+      "supplemented_after_display_truncation": [
+        [
+          14,
+          24
+        ],
+        [
+          56,
+          57
+        ],
+        [
+          219,
+          223
+        ],
+        [
+          234,
+          235
+        ],
+        [
+          233,
+          233
+        ]
+      ],
+      "dedup_policy": "Only repeated display of the same record/body was not treated as new evidence. All distinct decision/field/comment/result records covered. A:L317 repeated packet body is covered in A:L297. No home-prefix conflation; exact home paths used."
+    },
+    {
+      "alias": "B",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f02b-2742-7ce3-9fd4-f681396d7c15/2026-09-30T02-35-56-168Z_01a0f02b-2b86-75e8-81b5-2ae38e9a3abc.jsonl",
+      "bytes": 153988,
+      "sha256": "ccf85acc2624aa686d233ab196df37ee8a68d7a8ac5c41e5800bd820866774e7",
+      "records": 56,
+      "first_timestamp": "2026-09-30T02:35:56.168Z",
+      "last_timestamp": "2026-09-30T02:37:35.465Z",
+      "record_types": {
+        "session": 1,
+        "model_change": 1,
+        "thinking_level_change": 1,
+        "message": 53
+      },
+      "tool_calls": {
+        "bash": 28
+      },
+      "substantive_read_record_range": [
+        1,
+        56
+      ],
+      "read_fields": [
+        "user visible inputs",
+        "assistant thinking and final/text",
+        "tool calls: names, paths, arguments",
+        "tool results except explicit mechanical source-body skips",
+        "custom background results"
+      ],
+      "mechanical_source_body_skips": [],
+      "supplemented_after_display_truncation": [
+        [
+          4,
+          4
+        ],
+        [
+          5,
+          13
+        ],
+        [
+          14,
+          14
+        ]
+      ],
+      "dedup_policy": "Only repeated display of the same record/body was not treated as new evidence. All distinct decision/field/comment/result records covered. A:L317 repeated packet body is covered in A:L297. No home-prefix conflation; exact home paths used."
+    },
+    {
+      "alias": "C",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f02c-b44b-7e62-9784-89ec2591541d/2026-09-30T02-37-37-782Z_01a0f02c-b875-75b6-8799-f89f99846e80.jsonl",
+      "bytes": 60270,
+      "sha256": "cc516668e4527b8dd755d12376ceb858da77f44862b4202ec4e67dfbf0e72346",
+      "records": 37,
+      "first_timestamp": "2026-09-30T02:37:37.782Z",
+      "last_timestamp": "2026-09-30T02:38:16.260Z",
+      "record_types": {
+        "session": 1,
+        "model_change": 1,
+        "thinking_level_change": 1,
+        "message": 34
+      },
+      "tool_calls": {
+        "bash": 17
+      },
+      "substantive_read_record_range": [
+        1,
+        37
+      ],
+      "read_fields": [
+        "user visible inputs",
+        "assistant thinking and final/text",
+        "tool calls: names, paths, arguments",
+        "tool results except explicit mechanical source-body skips",
+        "custom background results"
+      ],
+      "mechanical_source_body_skips": [],
+      "supplemented_after_display_truncation": [],
+      "dedup_policy": "Only repeated display of the same record/body was not treated as new evidence. All distinct decision/field/comment/result records covered. A:L317 repeated packet body is covered in A:L297. No home-prefix conflation; exact home paths used."
+    },
+    {
+      "alias": "D",
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0f02d-5600-7352-8b15-41cad6b6af6e/2026-09-30T02-38-19-020Z_01a0f02d-598b-725d-b028-aa3686f696f8.jsonl",
+      "bytes": 22491,
+      "sha256": "c9d4b03a832d71999b8890343783de480e9ab87d5a32be43350a39965b130a3a",
+      "records": 15,
+      "first_timestamp": "2026-09-30T02:38:19.020Z",
+      "last_timestamp": "2026-09-30T02:38:30.829Z",
+      "record_types": {
+        "session": 1,
+        "model_change": 1,
+        "thinking_level_change": 1,
+        "message": 12
+      },
+      "tool_calls": {
+        "bash": 6
+      },
+      "substantive_read_record_range": [
+        1,
+        15
+      ],
+      "read_fields": [
+        "user visible inputs",
+        "assistant thinking and final/text",
+        "tool calls: names, paths, arguments",
+        "tool results except explicit mechanical source-body skips",
+        "custom background results"
+      ],
+      "mechanical_source_body_skips": [],
+      "supplemented_after_display_truncation": [],
+      "dedup_policy": "Only repeated display of the same record/body was not treated as new evidence. All distinct decision/field/comment/result records covered. A:L317 repeated packet body is covered in A:L297. No home-prefix conflation; exact home paths used."
+    }
+  ],
+  "total_records": 436,
+  "duplicate_type_id_records_across_target_files": 0,
+  "jsonl_inventory": "One JSONL per exact target home in extracted evidence; no other nested sessions/subagent JSONL found in these four homes. This is not a claim about earlier lineage homes.",
+  "database": {
+    "source": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/braid.sqlite3",
+    "sha256": "98a503029161ce12a6a4d9f6c2be5193b3f2fab0a3ed41871a9a498e32b3399d",
+    "mode": "ro",
+    "metadata_read": "local_comments 337–352; local_activity 680–724",
+    "body_read": "337,341,343–348,350–352 covered in actual session tool/input renderings; 338–340,342,349 read directly from DB. Immutable full DB excerpt preserved beside report.",
+    "source_excerpt": "final-pr23-db-excerpts.json"
+  },
+  "remaining_limits": [
+    "Four mechanical source bodies intentionally not read character by character; this report is not an app-code audit.",
+    "Raw usage/signature/provider bookkeeping fields indexed but not substantively analyzed.",
+    "Final root session belongs to parent reader. This report quotes root comments visible to PR23; parent independently verifies root tool consumption.",
+    "No claim that official 4/100 detailed failures are explained by this final acceptance segment."
+  ]
+}

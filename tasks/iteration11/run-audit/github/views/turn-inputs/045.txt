@@ -1,0 +1,14 @@
+hash 74769875c5909694021e77d8deba46dfbc456dac0c47d704819f49657a975c76
+copies 1
+source snapshot-01/braid-state/turns/01a0ebbc-0c31-7752-8e90-a41f2ddd6e65.md
+
+请处理 PR #12。
+
+对象：local/run#12
+
+发生以下更新：
+- issue:3 comment 40; read `comment view 40 --thread`
+- pr:12 comment 46; read `comment view 46 --thread`
+- issue:3 thread 38: comment 40 edited; read `comment view 40 --thread`
+
+使用 `braid pr view 12 --comments` 查看当前内容。

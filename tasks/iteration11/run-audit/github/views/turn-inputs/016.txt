@@ -1,0 +1,17 @@
+hash 21303d2be869947a6886dae9b13cad9f0a32c2508291278a34be9ef0f089ccc5
+copies 1
+source snapshot-01/braid-state/turns/01a0ec09-00ec-7a82-afba-102d87b9385e.md
+
+请处理 Issue #1。
+
+对象：local/run#1
+
+发生以下更新：
+- pr:16 comment 103; read `comment view 103 --thread`
+- issue:4 comment 104; read `comment view 104 --thread`
+- issue #1 title/body 已修改
+issue #1 title/body 已修改
+issue:1 thread 48: comment 48 resolved; read `comment view 48 --thread`
+issue:1 thread 43: comment 43 resolved; read `comment view 43 --thread`
+
+使用 `braid issue view 1 --comments` 查看当前内容。

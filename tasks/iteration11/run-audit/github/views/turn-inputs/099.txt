@@ -1,0 +1,30 @@
+hash fba1c1c38e23a5a0d319f97ca7f64029d05aaba5001a359716568e2a9a07f742
+copies 1
+source snapshot-01/braid-state/turns/01a0ebc8-7199-7ed2-a638-73a123ce6f9a.md
+
+请处理 PR #11。
+
+对象：local/run#11
+
+发生以下更新：
+- pr:11 comment 26; read `comment view 26 --thread`
+- pr:11 comment 28; read `comment view 28 --thread`
+- issue:5 comment 34; read `comment view 34 --thread`
+- pr:11 comment 36; read `comment view 36 --thread`
+- issue:5 comment 42; read `comment view 42 --thread`
+- issue:1 comment 45; read `comment view 45 --thread`
+- pr:11 comment 47; read `comment view 47 --thread`
+- pr:11 comment 49; read `comment view 49 --thread`
+- pr:11 comment 53; read `comment view 53 --thread`
+- pr:11 comment 55; read `comment view 55 --thread`
+- PR #11 合并未发生：源分支 refs/heads/braid/pr-11 与目标分支 refs/heads/develop 存在冲突。
+- issue #5 title/body 已修改
+issue:5 thread 20: comment 20 edited; read `comment view 20 --thread`
+issue #5 title/body 已修改
+issue #5 title/body 已修改
+issue #5 title/body 已修改
+issue #5 title/body 已修改
+issue #5 title/body 已修改
+issue #5 title/body 已修改
+
+使用 `braid pr view 11 --comments` 查看当前内容。

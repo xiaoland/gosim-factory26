@@ -1,0 +1,17 @@
+{
+  "status": "partial",
+  "view": "cells/m1-m2-rest/visible.txt",
+  "characters": 2183119,
+  "read_character_ranges_half_open": [
+    [
+      0,
+      1240000
+    ]
+  ],
+  "note": "主Agent已读所有字段递归展开[0,1240000)；精确重复按首次来源引用。1170000:1210000的r52显示截断已单独完整补读；此前0:36000显示截断亦已补齐。ebc5余段转交m3，ebdc转交m1_m2。",
+  "complete_units": [
+    "2026-09-29T06-50-15-901Z_01a0ebed-a7dd-7202-811c-bef46d7431ba",
+    "2026-09-29T06-59-04-172Z_01a0ebf5-b76c-715b-978b-ee07e02b9ed9",
+    "2026-09-29T05-33-27-670Z_01a0eba7-56f6-754f-8ecb-752e8af84bd8"
+  ]
+}

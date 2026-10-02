@@ -1,0 +1,39 @@
+[
+  {
+    "unit": "2026-09-29T06-53-48-969Z_01a0ebf0-e829-71f1-9e49-7d550ef19805",
+    "record": 12,
+    "errorMessage": "Provider finish_reason: network_error",
+    "timestamp": "2026-09-29T06:56:03.029Z",
+    "status": "full-error-record-read"
+  },
+  {
+    "unit": "2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56",
+    "record": 286,
+    "errorMessage": "terminated",
+    "timestamp": "2026-09-29T07:46:56.811Z",
+    "status": "full-error-record-read"
+  },
+  {
+    "unit": "2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56",
+    "record": 379,
+    "errorMessage": "terminated",
+    "timestamp": "2026-09-29T07:59:02.334Z",
+    "status": "full-error-record-read"
+  },
+  {
+    "unit": "2026-09-29T07-39-33-487Z_01a0ec1a-c8ef-773c-9142-bc8b7dfcd29e",
+    "record": 14,
+    "errorMessage": "Provider finish_reason: network_error",
+    "timestamp": "2026-09-29T07:41:12.479Z",
+    "status": "full-error-record-read"
+  },
+  {
+    "snapshot": "snapshot-02 increment",
+    "unit": "2026-09-29T07-06-14-819Z_01a0ebfc-49a3-754d-8636-ff1a11344c56",
+    "record": 402,
+    "errorMessage": "terminated",
+    "timestamp": "2026-09-29T08:07:00.914Z",
+    "status": "full-error-record-read",
+    "note": "partial thinking and zero usage; not added to snapshot-01 cost"
+  }
+]

@@ -1,0 +1,336 @@
+
+import { defineConfig } from 'vitest/config';
+  test: {
+    environment: 'jsdom',
+    globals: true,
+    include: ['src/**/*.test.{ts,tsx}'],
+    environment: 'node',
+    include: ['src/**/*.test.js'],
+    hookTimeout: 20000,
+});
+[DUPLICATES: 180 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L38:C1]
+
+## S09:L39 2026-09-29T06:01:29.390Z message toolResult
+toolResult bash False
+[text]
+ * Global baseline. Visual tokens live in `uno.config.ts`; this file only sets
+ * page-level defaults and the few primitives that UnoCSS utilities cannot
+ * express on the grid (sticky header stacking, focus rings).
+:root {
+  --sheet-cell-height: 24px;
+  --sheet-font: 'Google Sans', Roboto, 'Helvetica Neue', Arial, 'Noto Sans SC', sans-serif;
+  color-scheme: light;
+html,
+body,
+#root {
+  height: 100%;
+body {
+  margin: 0;
+  font-family: var(--sheet-font);
+  font-size: 14px;
+  color: #202124;
+  background: #f8f9fa;
+*:focus-visible {
+  outline: 2px solid #1a73e8;
+  outline-offset: -2px;
+import { defineConfig, presetWind3 } from 'unocss';
+ * Minimal UnoCSS setup: Wind3 utilities plus a few named design tokens so that
+ * later worksheet/formatting work reuses the same visual variables instead of
+ * hard-coding colors and sizes per component.
+  presets: [presetWind3()],
+  theme: {
+    colors: {
+      sheet: {
+        bg: '#f8f9fa',
+        surface: '#ffffff',
+        border: '#dadce0',
+        header: '#f8f9fa',
+        'header-text': '#5f6368',
+        accent: '#1a73e8',
+        'accent-soft': '#e8f0fe',
+        text: '#202124',
+        muted: '#5f6368',
+        danger: '#d93025',
+      },
+  shortcuts: {
+    'sheet-button':
+      'inline-flex items-center gap-1.5 rounded px-2.5 py-1.5 text-sm text-sheet-text hover:bg-#f1f3f4',
+    'sheet-dialog': 'rounded-lg bg-white p-6 shadow-xl',
+import type { WorksheetSnapshot } from '../../../shared/types';
+export interface WorksheetTabsProps {
+  activeWorksheetId: string;
+  onSelect: (worksheetId: string) => void;
+ * Bottom worksheet tab bar. Tabs use the ARIA `tab` role with an exact
+ * `aria-selected` state driven by the persisted `last_active` flag. Adding,
+ * renaming and deleting worksheets belongs to the worksheet sub-issue.
+export function WorksheetTabs({ worksheets, activeWorksheetId, onSelect }: WorksheetTabsProps) {
+      role="tablist"
+      aria-label="Worksheets"
+      className="flex items-center gap-1 border-t-1 border-sheet-border bg-sheet-header px-2 py-1"
+      {worksheets.map((worksheet) => {
+        const active = worksheet.id === activeWorksheetId;
+        return (
+          <button
+            key={worksheet.id}
+            type="button"
+            role="tab"
+            id={`worksheet-tab-${worksheet.id}`}
+            aria-selected={active}
+            aria-controls="worksheet-grid-panel"
+            onClick={() => onSelect(worksheet.id)}
+            className={
+              'rounded-t px-3 py-1 text-sm ' +
+              (active
+                ? 'bg-white font-medium text-sheet-accent shadow-sm'
+                : 'text-sheet-muted hover:bg-#e8eaed')
+            }
+          >
+            {worksheet.name}
+          </button>
+      })}
+import type { ReactNode } from 'react';
+export interface ErrorBannerProps {
+  message: string | null;
+  onDismiss?: () => void;
+/** Visible, announced error surface for failed commits and load errors. */
+export function ErrorBanner({ message, onDismiss }: ErrorBannerProps): ReactNode {
+  if (!message) return null;
+      role="alert"
+      className="flex items-center justify-between gap-4 border-b-1 border-#f5c6c2 bg-#fce8e6 px-3 py-2 text-sm text-sheet-danger"
+      <span>{message}</span>
+      {onDismiss ? (
+        <button type="button" onClick={onDismiss} className="text-sheet-danger underline">
+          Dismiss
+        </button>
+      ) : null}
+[DUPLICATES: 95 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L39:C1]
+
+## S09:L40 2026-09-29T06:01:32.035Z message assistant
+[thinking]
+Now I have a good understanding. Let me check the environment for pnpm/portless/node availability and whether node_modules are installed.
+Also I need to check whether origin/develop has new commits (fetch). I already fetched; let me check if develop moved. And whether there are other agents' branches I should be aware of (b-issue-4-worksheets-structure). Let me check.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L40:C1]
+[toolCall] bash call_00_shb4TRUnOHCcok5vMtmT7806
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git log --oneline origin/develop -3 && echo \"--- diff pr head vs develop ---\" && git log --oneline origin/develop..HEAD && echo \"--- node ---\" && which node npm pnpm portless && node --version && pnpm --version && ls node_modules 2>/dev/null | head -3 && ls frontend/node_modules 2>/dev/null | head -3"}
+[toolCall] bash call_01_TmbzMPgfb6jmdmO0nzuZ4387
+{"command": "braid issue view 1 --comments 2>&1 | grep -n \"A-1\\|A-2\\|A-3\\|A-4\\|comment #28\\|裁定\" | head -40"}
+
+## S09:L41 2026-09-29T06:01:33.393Z message toolResult
+toolResult bash False
+[text]
+--- diff pr head vs develop ---
+--- node ---
+/workspace/submission/agent/runtime/bin/node
+/usr/local/bin/npm
+/workspace/submission/agent/runtime/bin/pnpm
+/workspace/submission/agent/runtime/bin/portless
+v24.10.0
+10.34.5
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L41:C1]
+
+## S09:L42 2026-09-29T06:01:33.393Z message toolResult
+toolResult bash False
+[text]
+13:- 共享契约：v1 正文见 comment #1；**v1.1 增量裁定（索引 0 基、updatedAt 语义、定位纪律、粘贴扩张归 D、better-sqlite3 锁 12.6.2）见 thread 1 comment #12；v1.2 修订（默认结构 9×26 → 6×26，含事实核实与两轮独立 advisor 收敛依据）见 thread 1 comment #15**，以 #15 为最新增量权威。
+63:- 筛选 range 内部插入行时 range 是否扩张：按 Sheets 惯例裁定"内部插入扩张、边界外插入不扩"，已写入契约。
+160:【packet 整理完成】本轮未重复检查已在 comment #5 核实过的结果（期间 origin 无变化）。已把「状态与导航（task packet 入口）」节写入 Issue 正文：权威决定与当前判断（正文原处更新）、负责人与协调结构（comment #2 / thread 2）、共享契约 v1（comment #1）、环境证据（comment #3，/tmp/sqlite-probe）、进度快照（随核查更新，历史核查不堆积）。过期状态与历史材料已移出当前入口，证据链接保留；未决问题（种子重置机制未知、筛选 range 扩张裁定、参考图与文本权威级）仍在正文未决问题节保持可见。
+193:- 理由：REQ-1-1-1 要求首页与编辑器显示同一个 `Last updated: <值>`；若"打开/点选"也刷新 `updated_at`，编辑器读到的值会晚于首页，两侧文本可能不一致。若根负责人认为切换活动表也应算变更，请在此 thread 裁定，我按裁定调整。
+218:【契约裁定与 v1.1 修订】感谢细化与证据。以下裁定按 comment #1 同一 thread 生效，作为契约 v1.1，各消费方按此继续；契约正文评论保持 v1 原文，以本回复为增量权威。
+223:2. **updatedAt 语义**：核准"写类操作更新、选区持久化与切换活动表不更新"。补充完整清单：更新 = 单元格写入、整表状态导入、工作簿重命名、工作表重命名/新建/删除、行列插入删除、排序（物理变更）、筛选/验证/透视配置变更（随 E 交付时同样按此语义）；不更新 = 选区写入、切换活动表。REQ-1-1-1 只要求首页与编辑器显示同一字段同一值，此裁定保证"打开/点选"不产生虚变更，与需求一致。
+227:## 裁定项（待裁两条）
+240:【v1.1 回执】已按 comment #12 全部裁定实施（提交 `ae1c956`），基础层不改扩张语义、默认结构不动：
+243:- **默认结构 9×26 保持**：`backend/src/config.js` 仍为 9×26，并记录裁定来源（comment #12 第 6 条）与配套定位纪律。
+248:**一条残余风险，按流程在此保持可见（不阻塞交接）**：在裁定前我对"默认行数取几"做过一次独立 advisor 咨询，其反例主张 **6 行严格优于 9 行**：凡"插入行之后仍用朴素 `getByRole(name)` 定位 `A1`"的隐藏用例，其参考实现 post-op 行数必须 ≤9 才能自洽，故参考实现初始行数落在 [6,9]；初始 6 行的实现能存活"参考实现初始 6 行 + 最多 3 次净插入"的用例，而初始 9 行的实现在插入 1 行后即出现 `A1`/`A10` 歧义。该风险只在"外部 harness 不用 exact 匹配、且存在插入行用例"时成立；comment #12 已要求本项目验收脚本一律用 `exact: true`，因此风险限于我们不可控的外部 harness。若要收紧，基础 PR 侧改动仅是 `backend/src/config.js` 一个常量（冒烟守卫会同步给出回归反馈）；保留此判断供最终整合阶段权衡，我按裁定继续。
+260:【契约 v1.2 裁定：默认结构修订为 6 行 × 26 列】感谢 comment #13 的回执与残余风险披露。我已就 6 vs 9 做了独立 advisor 咨询，并自行核实了其依赖的三项事实，现修订 comment #12 第 6 条的"9 行"，其它 v1.1 裁定不变。
+262:## 事实核实（本次裁定的依据）
+268:## 裁定与理由
+279:1. `backend/src/config.js` 默认行数 9 → 6（列 26 不动），README 记录裁定来源（本评论 + comment #12 第 6 条的修订）。
+292:- 已在 thread 1 发布契约 v1.2 裁定（comment #15）：默认结构 9×26 → **6×26**，���保持 26；越界 400 与结构端点唯一事实源不变；@deepseek-2 收到落地清单（常量 + 守卫补结构总量精确断言）。
+303:**剩余待办只有一项**：你的交接 packet（3f2e5c1）写于 comment #15 发布之前，其"下一步"仍列 9 行为待裁——该裁定已在 comment #15 生效（默认结构 9×26 → 6×26，列不动），不再是待裁项。请落地：
+304:1. backend/src/config.js 默认行数 9 → 6，注释与 README 更新裁定来源（comment #15 + comment #12 第 6 条修订）；
+352:comment #28 [visible]
+355:【契约增量请求：子 Issue A（#3）】子 Issue A 的设计已定稿（Issue #3 comment #27）。涉及跨 Issue 的四条增量，按契约机制在本 thread 提出，请 @glm-1 裁定/确认；A 侧实现按此推进，若裁定不同，改动局部（导入端点一段、接缝一个模块、导出范围一段函数）。
+357:## A-1 新增端点 `POST /api/workbooks/import`（A 交付）
+364:## A-2 导入是 `row_count/col_count` 的第二变更入口（影响 B 与"结构唯一事实源"表述）
+366:- 契约 v1.1 裁定"结构端点是行列数唯一事实源"。A 的导入必须在同一事务里设定尺寸：`row_count = max(csvRows, 6)`、`col_count = max(csvCols, 26)`。
+370:## A-3 显示值单一接缝 `frontend/src/lib/cellDisplay.ts`（影响 C 与整合 PR）
+376:## A-4 导出 used range 与筛选（影响 E）
+380:- 已知边界（记录、暂不实现）：纯粹位于末行/末列之外的空字段（如 `a,b\nc,d,` 的尾部逗号）不在"已用范围"内，导出不保留。若你们要求导入→导出的字节级 round trip，代价是记录"导入原始尺寸下限"（导出范围取包围盒与该下限的较大者），A 可增量实现——请裁定是否需要。
+
+## S09:L43 2026-09-29T06:01:34.940Z message assistant
+[thinking]
+Let me check whether the root owner (glm-1) has responded to comment #28 (contract increments A-1..A-4). Let me view thread 28.
+[toolCall] bash call_00_YZzmKozke7dTgQ0Qeo9z7737
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 28 --thread 2>&1 | tail -80"}
+
+## S09:L44 2026-09-29T06:01:34.960Z message toolResult
+toolResult bash False
+[text]
+comment #28 [visible]
+【契约增量请求：子 Issue A（#3）】子 Issue A 的设计已定稿（Issue #3 comment #27）。涉及跨 Issue 的四条增量，按契约机制在本 thread 提出，请 @glm-1 裁定/确认；A 侧实现按此推进，若裁定不同，改动局部（导入端点一段、接缝一个模块、导出范围一段函数）。
+## A-1 新增端点 `POST /api/workbooks/import`（A 交付）
+- 请求 `{fileName: string, csv: string}`；响应 201 + 与 `POST /api/workbooks` **相同形状**的工作簿快照（`{id,name,updatedAt,worksheets:[…]}`）。
+- 服务端单事务：解析 CSV → 名字 = `fileName` 去掉末尾 `.csv`（大小写不敏感，trim 后为空回退 `Untitled spreadsheet`）→ 建 workbook + Sheet1（`last_active=1`、`last_selection=DEFAULT_SELECTION`）+ cells。
+- 解析失败 → 400 `{error:{code:'INVALID_CSV',message:'Invalid CSV file format. Import failed.'}}`，事务不落任何行（首页无该名链接、无部分结果）。
+- 允许同名工作簿；`POST /api/workbooks` 形状**不变**。
+## A-2 导入是 `row_count/col_count` 的第二变更入口（影响 B 与"结构唯一事实源"表述）
+- 契约 v1.1 裁定"结构端点是行列数唯一事实源"。A 的导入必须在同一事务里设定尺寸：`row_count = max(csvRows, 6)`、`col_count = max(csvCols, 26)`。
+comment #30 [visible]
+reply-to: 28
+【B 侧确认 A-2】子 Issue B（#4）负责人确认接受 A-2 的表述修订：`row_count/col_count` 的变更入口 = B 的结构操作端点 + A 的导入事务。B 的实现不假设自己是唯一写入者：
+- B 的结构端点把当前 `row_count`/`col_count` 作为输入读取、在自己的事务内位移与增减，不做任何"默认 6×26"或"自己是唯一来源"的假设；导入建出任意尺寸的工作表后，插入/删除/规则 range 迁移/selection 位移都按当前尺寸工作（已在 B 的单测计划中包含非默认尺寸用例）。
+- 越界 400 与 `PUT .../state` 的结构校验等其余不变量按原裁定不变。
+待 @glm-1 裁定后在 B 的设计定稿中引用该表述。advisor 咨询中的 B 设计裁定不受此影响（端点语义/selection 位移等均为 B 内部语义）。
+消息投递回执 — 评论 #11（仅表示评论输入的接收状态）
+消息投递回执 — 评论 #12（仅表示评论输入的接收状态）
+消息投递回执 — 评论 #13（仅表示评论输入的接收状态）
+消息投递回执 — 评论 #15（仅表示评论输入的接收状态）
+消息投递回执 — 评论 #18（仅表示评论输入的接收状态）
+消息投递回执 — 评论 #21（仅表示评论输入的接收状态）
+收件人 @glm-4: 会话已接受评论输入 (delivered)
+消息投递回执 — 评论 #30（仅表示评论输入的接收状态）
+收件人 @deepseek-2: 评论等待投递 (queued)
+收件人 @deepseek-3: 评论等待投递 (queued)
+收件人 @glm-1: 会话已接受评论输入 (delivered)
+[DUPLICATES: 54 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L44:C1]
+
+## S09:L45 2026-09-29T06:02:01.942Z message assistant
+[thinking]
+B (deepseek-4? Actually @deepseek-4) confirmed A-2. Root owner @glm-1 hasn't yet ruled but B confirmed. A-1, A-3, A-4 pending root ruling. Per PR instructions: "契约增量 A-1…A-4 已在 Issue #1 thread 1 提出；若根负责人裁定不同，先按裁定调整再交接（改动是局部的）". So I can proceed with implementation while awaiting the ruling.
+Now, plan. Let me write the packet update and then implement.
+Let me first set up the task packet structure. Check tasks/ dir naming.
+Let me approach implementation:
+### Backend
+**backend/src/csv.js** — `parseCsv(text)` returning `string[][]`.
+Rules (D-A5):
+- BOM strip at start.
+- Delimiter `,`.
+- Record separators LF, CRLF, CR.
+- Field content preserved verbatim (quoted `\r\n` not normalized).
+- Quote mode only when field's first char is `"`.
+- `""` inside quoted → literal `"`.
+- Closing quote followed by remaining chars → appended literally (`"ab"cd` → `abcd`), no error.
+- Bare `"` in unquoted field is literal.
+- Only invalid: field starts with `"` and no closing quote until end of input → throw.
+- Trailing newline / trailing empty lines don't produce records.
+- Empty input / pure BOM → 0 records.
+Let me design parser carefully.
+```js
+export class CsvParseError extends Error { ... }
+export function parseCsv(text) {
+  if (typeof text !== 'string') throw new CsvParseError(...);
+  let input = text;
+  if (input.charCodeAt(0) === 0xfeff) input = input.slice(1);
+  const rows = [];
+  let row = [];
+  let field = '';
+  let i = 0;
+  let inQuotes = false;
+  let fieldStarted = false;  // whether current field has begun (for quote detection)
+  ...
+Hmm, need to handle: "引号仅在字段第一个字符时进入引号模式". So when at start of a field, if char is `"` → enter quoted mode. In quoted mode, `""` → literal `"`; `"` followed by something else → close quote, then subsequent chars appended literally until delimiter/newline (they may include quotes literally? `"ab"cd` → `abcd`. But what about `"ab"c"d`? Per "宽松接受" — after closing quote, remaining chars appended literally. So `"ab"c"d` → `abc"d`? Let's just append literally until delimiter/newline. But careful: if after closing quote comes another `"`, like `"ab""cd"` → that's inside quotes (not closed yet) → `ab"cd`. Right: `""` is handled within quotes before treating `"` as closing.
+Simplest state machine:
+let i = 0;
+let row = [];
+let field = '';
+let state = 'fieldStart';
+Actually let's implement with explicit functions:
+  if (typeof text !== 'string') throw new CsvParseError('CSV content must be a string');
+  if (input.startsWith('\uFEFF')) input = input.slice(1);
+  const records = [];
+  let record = [];
+  const n = input.length;
+  let atFieldStart = true;
+  let quoted = false;     // currently inside a quoted section
+  let sawQuoteStart = false; // field began with a quote
+  while (i < n) {
+    const ch = input[i];
+    if (quoted) {
+      if (ch === '"') {
+        if (i + 1 < n && input[i+1] === '"') { field += '"'; i += 2; continue; }
+        quoted = false;
+        i += 1;
+        continue;
+      field += ch; i += 1; continue;
+    if (atFieldStart && ch === '"') {
+      quoted = true; sawQuoteStart = true; atFieldStart = false; i += 1; continue;
+    if (ch === ',') { record.push(field); field=''; atFieldStart = true; sawQuoteStart=false; i+=1; continue; }
+    if (ch === '\r' || ch === '\n') {
+      // end record
+      if (ch === '\r' && input[i+1] === '\n') i += 1;
+      i += 1;
+      record.push(field);
+      records.push(record);
+      record = []; field=''; atFieldStart=true; sawQuoteStart=false;
+      continue;
+    field += ch; atFieldStart = false; i += 1;
+  if (quoted) throw new CsvParseError('unterminated quoted field');
+  // handle final field/record: if input ends with newline, we already pushed; if field or record non-empty push
+  if (!atFieldStart || field !== '' || record.length > 0) {
+    record.push(field);
+    records.push(record);
+Wait: after a record separator, we reset atFieldStart=true, field='', record=[]. So at end of input if input ended right after newline → atFieldStart true, field '', record [] → don't push. Good.
+If input is empty → n=0 → loop doesn't run; atFieldStart true, field '', record [] → no push → 0 records. Good (empty file → 0 records).
+If input is "a" → field='a', atFieldStart=false → push ['a']. Good.
+If input is "a," → after comma: record=['a'], field='', atFieldStart=true. End: atFieldStart true && field '' && record.length>0 (1) → push ['a',''] → 2 fields. Good (preserves trailing empty field).
+If input is "," → record=[''], atFieldStart true, field ''; record.length>0 → push ['',''] . Good.
+Hmm but ",,"? → record=['',''], then push → ['','','']. Good.
+Trailing empty lines: "a\n\n" → after first newline push ['a']; then second newline: record=[], field='' at start... wait when we see second '\n' at i where atFieldStart=true, field='', record=[] — we push record.push(field) → [''] and records.push(['']). That's a trailing empty line producing a record with one empty field. Requirement D-A5: "末行换行与尾部空行不产生记录". Hmm. So "a\n\n" should produce just [['a']]? "尾部空行不产生记录" — yes.
+But "a\n\nb"? → [['a'], [''], ['b']]? Hmm, the empty line in the middle should probably produce an empty record... Let's think. Actually this matters for import: rows count. Hmm.
+Wait, careful. What does "a,b\n" produce? ['a','b'] then final newline → no additional. Good.
+"a\n\n" — trailing blank line. Should we drop it? D-A5 says yes, trailing blank lines produce no records.
+Implementation: when encountering a record separator while the current record is "empty in progress" AND record has length 0 and field === '' and atFieldStart → this is a blank line. If it's a trailing blank line it's dropped. But middle blank lines? A blank line in the middle — e.g. "a\n\nb" — arguably an empty record. Google Sheets import would create an empty row. Requirement doesn't mention. Simplest: treat blank lines as records except trailing ones. But how to know trailing? We could buffer: collect records, then trim trailing records that are "empty" (single empty field) — but that would drop genuinely empty last row from "a\n," ... hmm "," is ['',''] not ['']. Actually a genuinely empty final record can only come from a blank line. So trimming trailing blank lines is safe: any trailing record that is exactly `['']` came from a blank line (or from the whole input being empty → no records). Wait, what if input is "\n"? Then first char '\n': record push [''] → records=[['']]; then end atFieldStart → no push. So records = [['']]. That's a file with a single empty line → should it be 0 records? Per "空文件/纯 BOM → 0 记录" and "尾部空行不产生记录", "\n" is a blank line at end → 0 records. Let me implement as: skip blank-line records entirely (a record that consists of a single empty field created by a bare newline). i.e. when we hit a record separator and `record.length === 0 && field === '' && atFieldStart` → it's a blank line; skip it (don't push). That handles mid-file blank lines too (skips them). Is that right? For a CSV with a blank line in the middle, CSV spec (RFC4180) says a blank line is a record with one empty field. But Google Sheets import of "a\n\nb" gives rows a, (empty), b. Hmm.
+Trade-off: requirements only demand that trailing blank lines / final newline don't create records, and that empty fields are preserved. Skipping blank lines entirely could lose a genuinely empty middle row from a third-party CSV. But with `max(csvRows,6)`, most small cases are fine.
+Better: keep blank-line records in the middle, drop trailing ones. Implementation: push blank records too, then at the end strip trailing records that are exactly `['']` (blank line). Let's do that: compute records, then `while (records.length && isBlankLine(records[records.length-1])) records.pop()`. But careful: this would also strip a legitimately-authored trailing empty row encoded as `\n` at end — which per D-A5 is exactly "末行换行/尾部空行不产生记录". Fine.
+Hmm, but what about "a,\n"? That's ['a',''] — not blank → kept. Good.
+And a file "a\n\nb\n" → records [['a'],[''],['b']] — trailing newline gives nothing extra. Good.
+Now, D-A5 says "空文件/纯 BOM → 0 记录". And parseCsv returns rows. The import route computes rows = parsed.length, cols = max over rows of row.length.
+Also the "唯一非法类": field starts with `"` and no closing quote. My loop throws when `quoted` still true at end. But what about `"ab` → quoted=true, field='ab', end → throw. Good. What about `"ab"cd"ef` — after closing quote, `cd` appended, then `"` at non-field-start: atFieldStart is false so the `"` falls to the default append branch → literal. So `"ab"cd"ef` → `abcd"ef`. Hmm — is that OK? The field started with `"` and has a closing quote, so it's "valid" per D-A5 (loose). Yes.
+What about `a,"b` → at second field, atFieldStart true, ch '"' → quoted mode; then 'b'; end → quoted → throw. Good.
+What about a field starting with `"` where the quote is never closed but there IS a closing quote later after a newline? e.g. `"a\nb` → quoted mode consumes newline as literal, then end → throw. Good.
+Edge: `"` alone → quoted=true, end → throw. Good (field begins with a quote, no closing quote).
+Now `\r` inside quoted → preserved verbatim since we append ch. Good.
+Now the ambiguity: unquoted field containing `"` mid-field, e.g. `ab"cd` → literal, no throw. Good.
+Also: what about `""` alone → at field start `"` enters quoted, then next `"` → i+1 is end so not doubled → closing quote. quoted=false, field=''. End: atFieldStart=false → push ['']  → one row, one empty field. Fine.
+Now CR handling: `\r` alone as record separator. In quoted mode `\r` preserved.
+Now the record separator inside unquoted field: `\r\n` → one separator.
+Good.
+Should parseCsv throw for non-string? Route validates types first.
+### Import route
+`POST /api/workbooks/import`:
+router.post('/workbooks/import', (req, res) => {
+  const body = asObject(req.body ?? {});
+  if (typeof body.fileName !== 'string') throw invalidBody('fileName must be a string');
+  if (typeof body.csv !== 'string') throw invalidBody('csv must be a string');
+  const { name, rows } = ...
+  res.status(201).json(createWorkbookFromCsv(db, name, rows));
+Careful: route ordering — `/workbooks/import` must be registered before `/workbooks/:id`? Express matches by path pattern; `POST /workbooks/import` vs `POST /workbooks` (exact) and GET `/workbooks/:id`. Since import is POST, and `/workbooks/:id` is GET, no conflict. But PATCH `/workbooks/:id` is different method. So fine. Still, I'll place it right after POST /workbooks.
+`createWorkbookFromCsv(db, name, rows)` in store.js:
+- compute rowCount = max(rows.length, DEFAULT_ROW_COUNT), colCount = max(maxCols, DEFAULT_COL_COUNT)
+- transaction: insert workbook, worksheet with those counts, cells for raw !== '' (skip empty).
+  - Note: cells beyond colCount? colCount >= maxCols so fine.
+- return snapshot.
+Name derivation: helper `workbookNameFromFileName(fileName)`:
+const trimmed = fileName.trim();
+const withoutExt = trimmed.replace(/\.csv$/i, '');
+const name = withoutExt.trim() || 'Untitled spreadsheet';
+Wait: "fileName 去掉末尾 .csv，大小写不敏感；trim 后为空回退 Untitled spreadsheet". Should we trim fileName before or after removing extension? Let's do: `const base = fileName.trim(); const stripped = base.replace(/\.csv$/i, ''); const name = stripped.trim() || 'Untitled spreadsheet';` Hmm but if fileName = "a.csv " trailing space, base = "a.csv", stripped="a" good. If fileName = "  .csv", base=".csv" → stripped="" → fallback. Fine.
+Should the extension strip occur only once? "report.csv.csv" → "report.csv". Fine.
+### Error code for invalid CSV
+`new ApiError(400, 'INVALID_CSV', 'Invalid CSV file format. Import failed.')`. Need to add 'INVALID_CSV' to ApiErrorCode union? The union has `| string` fallback in ApiErrorBody, so it's fine, but let's add 'INVALID_CSV' to the union for clarity. That's shared/types.d.ts — a shared contract file. Adding a new code is part of A-1. I'll add it.
+### Frontend
+`lib/copy.ts`:
+export const WORKBOOK_NAME_EMPTY = 'Workbook name cannot be empty';
+export const INVALID_CSV = 'Invalid CSV file format. Import failed.';
+export const DEFAULT_WORKBOOK_NAME = 'Untitled spreadsheet';
+`lib/csvExport.ts`:
+export function escapeCsvField(value: string): string
+export function worksheetToCsv(worksheet, displayValue?): string
+Design: used range = bounding box from A1 to max non-empty cell (based on raw cells, trimmed). Which cells count as "non-empty"? Raw !== ''. But with the display seam, a formula cell `=` could display... hmm. For used range determinism, use raw non-empty. Also need to consider display value could be non-empty for a cell whose raw is empty? No — identity now; in C, formula cells have non-empty raw. Fine.
+Signature per D-A8: `worksheetDisplayValues(worksheet): (row, col) => string`. And `worksheetToCsv(worksheet, display)` where display is `(row,col)=>string` default identity.
+Let me define:
+export type DisplayValues = (row: number, col: number) => string;
+export function worksheetToCsv(worksheet: WorksheetSnapshot, display: DisplayValues = rawValue(worksheet)): string {
+  const maxRow/maxCol from worksheet.cells where raw !== ''
+  if none → ''
+  lines = for each row 0..maxRow: fields col 0..maxCol: esc

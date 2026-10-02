@@ -1,0 +1,176 @@
+- **设计与决定 D-A1…D-A10、验收方案、假设与未决**：本 Issue comment #27（权威；实现与验收按其执行）。\n - **设计增量 v1.1（窄改，与 #27 共同构成权威判据）**：本 Issue comment #33——D-A4 的三条尺寸变更路径（B 结构端点 + `PUT .../state` + A 导入）、README `80-83` 窄改归属 PR #8、D-A8 接缝边界（FormulaBar/内联编辑框仍读 `raw`）、假设 A-7 定格（不实现导入尺寸下限）。**更正**：其中「假设 A-7 定格」已被 v1.3 取代——现按 A-4 实现导入足迹，见下条。\n - **设计增量 v1.2（README 窄改范围精确化）**：本 Issue comment #36（接 comment #33）——`README.md:80-83` 窄改只替换括号句「`row_count`/`col_count` 的唯一变更入口是结构操作」为三条路径（B 结构端点 / `PUT .../state` 快照自带尺寸 / A 导入事务），同段「越界整批 400 不落库」「`state` 拒绝超出所报结构的单元格」原文保留、不放宽扩张语义；同 PR 登记导入端点。依据 Issue #1 thread 1 comment #34（基础层单点归属，`braid/pr-2` 冻结）。\n - **设计增量 v1.3（契约 v1.3 并入，权威判据之一）**：本 Issue comment #81 + #82（接 #27）——**A-4 Y-min 导入足迹**（`min_rows`/`min_cols`：仅 CSV 导入写入、等于解析后 CSV 实际行列数（尾部空行裁剪 + ragged 右补空）、空白工作簿为 0、导出 used range = `max(非空包围盒, 静态足迹)`、零字节文件仅当包围盒与足迹同时为空、足迹静态不随结构操作演化）；**A-1 四条解析钉死**（ragged 右补空、文件末尾换行不产生额外记录、剥离 UTF-8 BOM、名字取 `File.name` 仅去最终 `.csv`）；**A-2 共享校验 `assertWorksheetStateValid`**（PR #9 已合入 develop `15abbf6`；PR #8 rebase 后切换消费、删本地副本，**切换完成是 #3 关闭前提**）；**A-3 接缝含错误值**（错误单元格导出网格显示的错误串）、FormulaBar/内联编辑仍读 `raw`；**A-4 末条记录后不加终结换行**。依据 Issue #1 thread 1 comment #51/#54/#57/#60/#65 与根侧 #64 七项清单。已记录边界（不要求改，见 #82 §2）：尾部空行一律不产生记录、末行单独引号空字段与空行不可区分、空文件判据为 `rowSpan === 0 || colSpan === 0`、`min ≤ 结构` 只是写入时对申报字段的检查而非常驻不变量。\n - **跨 Issue 契约增量 A-1…A-4**（`POST /api/workbooks/import` / 导入是 `row_count/col_count` 变更入口之一（尺寸下界 6×26；三条路径表述见 comment #32）/ 显示值单一接缝 `cellDisplay.ts`（C 替换实现，不得覆盖 FormulaBar/内联编辑的 `raw`）/ 导出 used range 与导出无视筛选）：Issue #1 thread 1 comment #28 + comment #32（A 侧采纳基础层核实）+ comment #34（基础层收口确认）——**最终裁定已下**：Issue #1 thread 1 comment #51/#54/#57/#60（+ 根侧 #64/#77 收口）。\n - **B 侧契约增量（B-1…B-3；Issue #1 thread 1 comment #38/#43/#45）对 A 的影响**：无直接影响——A 不消费 `PATCH .../worksheets/:wid` 与 `PUT .../state` 的响应形状；A 导入写 `DEFAULT_SELECTION`，恒在边界内。唯一交叉是 B-1 的尺寸上限与 A 导入的限额关系，见下方未决条（Issue #1 thread 1 comment #46；B 侧回应 comment #49）。\n-- **实现 PR：#8**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5；task packet `tasks/issue-3-a/packet.md`（由 PR 接续同一 packet）。\n-- **交接与结果**：PR 负责人在本 Issue 交接候选提交、命令、首轮结果与证据；Issue 负责人按 comment #27 + #33 + #36 + v1.3（#81/#82）在独立 worktree 复跑后**由 Issue 负责人合入 develop**（子 Issue PR 合入惯例见 Issue #4 comment #78；我在 #88 曾请 @glm-1 代办，已更正为本人合入）。**候选 `a23af5a` 已验收通过**（rebase 到 develop `15abbf6` + helper 切换）：独立复跑证据见 comment #88（unit backend 96 + frontend 49、typecheck Done、e2e 25 passed；首轮环境性 ABI 失败已留档），针对性复核见 #88 §2；先前候选 `559a0bd` 的证据见 #81 与 #82。**PR #8 已合入 develop @ `e63efc6`（\"Merge local PR #8\"，parents `15abbf6`+`a23af5a`，合入树与 `a23af5a` 逐字节一致）**；A 的实现与验收链闭环，收口决定与状态见 comment #92。\n-- **未决/假设**：**尺寸上限已裁定为非全局不变量**（Issue #1 thread 1 comment #54）：import/state 不设应用层上限，实际边界 = `express.json` 10mb，全量渲染性能限度见 Issue #1 comment #53 实测。**共享 helper 切换已在 develop 成立**（helper 已在 develop；`a23af5a` 改调 `assertWorksheetStateValid` 并删本地副本，合入 `e63efc6` 后 develop 为单点校验实现，见 comment #88 §2 与 #92 §1；#60 的 #3 关闭前提已满足）。**A-7 已被 v1.3 取代**：\"尾部空字段不导出\"现仅对无足迹工作表（空白创建工作簿）成立。**C 未合入 → 公式单元格导出原文（e2e 已标注必须翻转为计算结果），这是 #3 保持 OPEN 的唯一验收前提**：C（#5）替换 `frontend/src/lib/cellDisplay.ts` 实现（网格与导出同取当前计算结果、含错误值；FormulaBar/内联编辑仍读 `raw`），整合 PR 带翻转后的公式导出门禁；**#5 尚未指派**，指派时须把 A-3 接缝义务写入其交接材料；#3 与 #4 同惯例保持 OPEN、关闭待根负责人整合验收（Issue #4 comment #78）。A-5 宽松解析不变（只拒绝需求明示的非法引号类，`\"ab\"cd` 宽松接受）；导入成功即跳编辑器；导出文件名 `<工作簿名>.csv`；详见 comment #27 第 5 节。\n+- **实现 PR：#8（已 MERGED）**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5；task packet `tasks/issue-3-a/packet.md`（由 PR 接续同一 packet；其「下一步」两条已由 #92 §5 与本页接管，不再更新）。\n+- **交接与结果**：PR 负责人在本 Issue 交接候选提交、命令、首轮结果与证据；Issue 负责人按 comment #27 + #33 + #36 + v1.3（#81/#82）在独立 worktree 复跑后**由 Issue 负责人合入 develop**（子 Issue PR 合入惯例见 Issue #4 comment #78；我在 #88 曾请 @glm-1 代办，已更正为本人合入）。**候选 `a23af5a` 已验收通过**（rebase 到 develop `15abbf6` + helper 切换）：独立复跑证据见 comment #88（unit backend 96 + frontend 49、typecheck Done、e2e 25 passed；首轮环境性 ABI 失败已留档），针对性复核见 #88 §2；先前候选 `559a0bd` 的证据见 #81 与 #82。**PR #8 已合入 develop @ `e63efc6`（\"Merge local PR #8\"，parents `15abbf6`+`a23af5a`，合入树与 `a23af5a` 逐字节一致）**；A 的实现与验收链闭环，收口决定与状态见 comment #92，PR 侧收口补充（A-3 锚点清单）见 PR #8 comment #94，根侧收讫与关闭见 PR #8 comment #93 与 #167。\n+- **未决/假设**：**尺寸上限已裁定为非全局不变量**（Issue #1 thread 1 comment #54）：import/state 不设应用层上限，实际边界 = `express.json` 10mb，全量渲染性能限度见 Issue #1 comment #53 实测。**共享 helper 切换已在 develop 成立**（helper 已在 develop；`a23af5a` 改调 `assertWorksheetStateValid` 并删本地副本，合入 `e63efc6` 后 develop 为单点校验实现，见 comment #88 §2 与 #92 §1；#60 的 #3 关闭前提已满足）。**A-7 已被 v1.3 取代**：\"尾部空字段不导出\"现仅对无足迹工作表（空白创建工作簿）成立。**C 未合入 → 公式单元格导出原文（e2e 过渡断言已标注必须翻转），这是本 Issue 唯一的未满足前提，已随 #167 关闭转交**：① **C（#5）**替换 `frontend/src/lib/cellDisplay.ts:17` `worksheetDisplayValues` 实现，使网格与导出同取当前计算结果（含错误值走同一显示路径），FormulaBar（`FormulaBar`）与内联编辑（`Grid.tsx` 内联编辑以 `raw` 初始化）必须继续读 `raw`；两个消费者已接线完成（`WorkbookEditor.tsx:118-119` memo → `Grid.tsx:189` `text`；`WorkbookToolbar.tsx:34` → `worksheetToCsv`），C 只需换实现，不必新增接线。② **整合 PR**带「公式单元格导出 = 计算结果」门禁，翻转 `e2e/workbook-lifecycle.spec.ts:375-386`（用例 `exports the formula cell value through the shared display seam`，行内注 `PRE-C TRANSITION (Issue #3 decision D-A8)`）。锚点清单见 PR #8 comment #94；**#5 尚未指派**，@glm-1 指派时须把该 A-3 接缝义务写入 C 的交接材料。A-5 宽松解析不变（只拒绝需求明示的非法引号类，`\"ab\"cd` 宽松接受）；导入成功即跳编辑器；导出文件名 `<工作簿名>.csv`；详见 comment #27 第 5 节。\n \n"}
+
+## S35:L37 2026-09-29T06:53:36.428Z message assistant
+[thinking]
+Also should I fix the reference "A-7 已被 v1.3 取代" phrasing? It says "「尾部空字段不导出」现仅对无足迹工作表成立" - fine.
+Now check the resulting file and apply the body edit. Note: braid issue edit for a closed issue — is editing allowed on closed issues? Let's try.
+Also need to consider: does body edit trigger notifying? Probably fine.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L37:C1]
+[toolCall] bash call_00_bXxctQFhUZQesOLEpJhK1200
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && sed -n '23,36p' /tmp/f26-issue3-body/body.md | cut -c1-160"}
+
+## S35:L38 2026-09-29T06:53:36.439Z message toolResult
+toolResult bash False
+[text]
+- **状态：CLOSED（2026-09-29）** —— 根负责人 @glm-1 在 #167 关闭，理由「PR #8 已验收合入 develop（`e63efc6`，合并树与验收候选
+- **设计增量 v1.1（窄改，与 #27 共同构成权威判据）**：本 Issue comment #33——D-A4 的三条尺寸变更路径（B 结构端点 + `PUT ...
+- **设计增量 v1.2（README 窄改范围精确化）**：本 Issue comment #36（接 comment #33）——`README.md:80-83` 窄改只替换括号句「`row_co
+- **设计增量 v1.3（契约 v1.3 并入，权威判据之一）**：本 Issue comment #81 + #82（接 #27）——**A-4 Y-min 导入足迹**（`min_rows`/`mi
+- **跨 Issue 契约增量 A-1…A-4**（`POST /api/workbooks/import` / 导入是 `row_count/col_count` 变更入口之一（尺寸下界 6×26；三条路径�
+- **B 侧契约增量（B-1…B-3；Issue #1 thread 1 comment #38/#43/#45）对 A 的影响**：无直接影响——A 不消费 `PATCH .../worksheets/:wid` 与
+- **实现 PR：#8（已 MERGED）**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5；task packet `tasks/issue-3-a/packet.md`（由 PR 接
+- **交接与结果**：PR 负责人在本 Issue 交接候选提交、命令、首轮结果与证据；Issue 负责人按 comment #27 + #33 + #36 + v1.3（#81/#
+- **未决/假设**：**尺寸上限已裁定为非全局不变量**（Issue #1 thread 1 comment #54）：import/state 不设应用层上限，实际边界 = `e
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L38:C1]
+
+## S35:L39 2026-09-29T06:53:37.496Z message assistant
+[toolCall] bash call_00_ET_65WXeW6adsfIoX6Cbb7g3940
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue edit 3 --body-file /tmp/f26-issue3-body/body.md 2>&1 | tail -5"}
+
+## S35:L40 2026-09-29T06:53:37.719Z message toolResult
+toolResult bash False
+[text]
+- **实现 PR：#8（已 MERGED）**（base `develop`，head `braid/issue-3-a`），负责人 @deepseek-5；task packet `tasks/issue-3-a/packet.md`（由 PR 接续同一 packet；其「下一步」两条已由 #92 §5 与本页接管，不再更新）。
+- **交接与结果**：PR 负责人在本 Issue 交接候选提交、命令、首轮结果与证据；Issue 负责人按 comment #27 + #33 + #36 + v1.3（#81/#82）在独立 worktree 复跑后**由 Issue 负责人合入 develop**（子 Issue PR 合入惯例见 Issue #4 comment #78；我在 #88 曾请 @glm-1 代办，已更正为本人合入）。**候选 `a23af5a` 已验收通过**（rebase 到 develop `15abbf6` + helper 切换）：独立复跑证据见 comment #88（unit backend 96 + frontend 49、typecheck Done、e2e 25 passed；首轮环境性 ABI 失败已留档），针对性复核见 #88 §2；先前候选 `559a0bd` 的证据见 #81 与 #82。**PR #8 已合入 develop @ `e63efc6`（"Merge local PR #8"，parents `15abbf6`+`a23af5a`，合入树与 `a23af5a` 逐字节一致）**；A 的实现与验收链闭环，收口决定与状态见 comment #92，PR 侧收口补充（A-3 锚点清单）见 PR #8 comment #94，根侧收讫与关闭见 PR #8 comment #93 与 #167。
+- **未决/假设**：**尺寸上限已裁定为非全局不变量**（Issue #1 thread 1 comment #54）：import/state 不设应用层上限，实际边界 = `express.json` 10mb，全量渲染性能限度见 Issue #1 comment #53 实测。**共享 helper 切换已在 develop 成立**（helper 已在 develop；`a23af5a` 改调 `assertWorksheetStateValid` 并删本地副本，合入 `e63efc6` 后 develop 为单点校验实现，见 comment #88 §2 与 #92 §1；#60 的 #3 关闭前提已满足）。**A-7 已被 v1.3 取代**："尾部空字段不导出"现仅对无足迹工作表（空白创建工作簿）成立。**C 未合入 → 公式单元格导出原文（e2e 过渡断言已标注必须翻转），这是本 Issue 唯一的未满足前提，已随 #167 关闭转交**：① **C（#5）**替换 `frontend/src/lib/cellDisplay.ts:17` `worksheetDisplayValues` 实现，使网格与导出同取当前计算结果（含错误值走同一显示路径），FormulaBar（`FormulaBar`）与内联编辑（`Grid.tsx` 内联编辑以 `raw` 初始化）必须继续读 `raw`；两个消费者已接线完成（`WorkbookEditor.tsx:118-119` memo → `Grid.tsx:189` `text`；`WorkbookToolbar.tsx:34` → `worksheetToCsv`），C 只需换实现，不必新增接线。② **整合 PR**带「公式单元格导出 = 计算结果」门禁，翻转 `e2e/workbook-lifecycle.spec.ts:375-386`（用例 `exports the formula cell value through the shared display seam`，行内注 `PRE-C TRANSITION (Issue #3 decision D-A8)`）。锚点清单见 PR #8 comment #94；**#5 尚未指派**，@glm-1 指派时须把该 A-3 接缝义务写入 C 的交接材料。A-5 宽松解析不变（只拒绝需求明示的非法引号类，`"ab"cd` 宽松接受）；导入成功即跳编辑器；导出文件名 `<工作簿名>.csv`；详见 comment #27 第 5 节。
+
+## S35:L41 2026-09-29T06:53:39.396Z message assistant
+[thinking]
+Body updated (it echoed the body). Wait — I included a stray edit artifact: in my edits I had a `"newText_note"` key inside one edit object, which the edit tool may have ignored (it appears it did - the output body looks correct). Actually the file content: let me check whether "newText_note" text leaked into the file. My edit call was JSON with an extra key; the tool replaced with newText only. The output shows correct content. Let me verify no stray text.
+Also there's a blank line after the status bullet (I added trailing \n\n). Minor.
+Let me grep for "newText_note" in the applied body.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L41:C1]
+[toolCall] bash call_00_y5DG7pqgvvoHKVJda8tZ1609
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --json body | python3 -c \"\nimport json,sys\nb=json.load(sys.stdin)['body']\nprint('stray:', 'newText_note' in b)\nprint('len:', len(b))\nprint(b[:1200])\n\""}
+
+## S35:L42 2026-09-29T06:53:39.426Z message toolResult
+toolResult bash False
+[text]
+stray: False
+len: 5845
+   - 依赖前置：REQ-1-3-2 依赖 REQ-1-1-1
+[DUPLICATES: 10 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L42:C1]
+
+## S35:L43 2026-09-29T06:53:39.426Z message user
+[text]
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L43:C1]
+
+## S35:L44 2026-09-29T06:53:47.684Z message assistant
+[thinking]
+The issue body update I just made is the title/body modification notification. Now continue: post a closure comment on Issue #3 recording the handover, and resolve the finished handover thread (thread 29). Also consider whether to notify @glm-1 about the C (#5) seam obligation.
+Let me check thread 29 state and decide. Also, should I close/resolve anything else? Thread 27 stays open (contains the still-relevant design + premise).
+1. Post comment on Issue #3, reply-to 92 (thread 27), acknowledging root closure #167, my independent re-verification of develop e63efc6, body updated as the current entry, and the transferred obligations (@deepseek-5 PR side done; @glm-1 must include A-3 seam obligation when assigning #5). Keep concise.
+2. Resolve thread 29 (handover to PR #8 — finished) with reason. Hmm, `braid comment resolve` has `--state <STATE>`; default presumably resolved. Does resolve accept a reason? Only --state. Hmm, "再用 `comment resolve ID` 折叠已结束讨论" and hide takes --reason. So resolve may not take a reason... Let's check if there's a way to record why. I can mention in the closure comment that thread 29 is folded as finished work.
+Actually, is resolving thread 29 desirable? The thread content is the handover to PR #8 which is complete and merged. Folding keeps the surface clean. But per "编辑、隐藏、折叠会影响后续重建的上下文" — folding reduces visibility; the successors (C owner) don't need thread 29. I'll resolve it.
+Should I also resolve thread 27? No — it's the authoritative design record and the A-3 premise remains visible there. Keep open.
+Let me write the comment. Body file for multi-line.
+Concise comment:
+【关闭确认与 A 侧收口闭环（reply #92）】@glm-1 @deepseek-5
+1. 关闭事实：@glm-1 在 #167 关闭本 Issue（reason 见上）。我作为 Issue 负责人确认无异议：唯一未满足前提（公式单元格导出计算结果）已显式转交整合 PR 门禁，其余交付（REQ-1-2-1/1-2-2/1-3-1/1-3-2 + A-1…A-4 + v1.3 七项 + #60 helper 切换）已在 develop。
+2. 我的关闭后独立复核（本 worktree，`git fetch` 后）：origin/develop = e63efc6；`git rev-parse origin/develop^{tree}` == `a23af5a^{tree}` == a3ae41bf（`git diff a23af5a origin/develop` 为空）；A 交付文件齐备（backend/src/csv.js、frontend/src/lib/cellDisplay.ts、WorkbookToolbar.tsx、ImportCsvDialog.tsx、NewWorkbookPage.tsx、RenameWorkbookDialog.tsx）；`POST /api/workbooks/import` 在 routes.js、`createWorkbookFromCsv` 与 min_rows/min_cols 写入在 store.js、`assertWorksheetStateValid` 定义 1 处 + 调用 1 处（store.js:865/924）。
+3. 正文已更新为当前有效入口（状态 CLOSED；「交接与结果」「未决/假设」两节改为转交义务与精确锚点，引用 PR #8 comment #94 的锚点清单）。
+4. 转交义务（#167 已载，此处给执行锚点）：C(#5) 换 cellDisplay.ts:17 实现；整合 PR 翻转 e2e/workbook-lifecycle.spec.ts:375-386（PRE-C TRANSITION）。@glm-1 指派 #5 时请把该 A-3 接缝义务写入其交接材料；若希望由我在 C 合入后翻转 e2e 断言（而非整合 PR），请在指派时说明。
+5. 已折叠 thread #29（PR #8 交接，工作已完成并合入）；thread #27 保持可见（权威设计与 A-3 前提）。本 Issue 侧无待办，我不再向 braid/issue-3-a 追加提交。
+Hmm, item about "若希望由我...翻转" — but issue is closed and I'm no longer owner of A's code. Actually the e2e flip belongs to whoever changes the seam. If C's PR changes cellDisplay, the flip could naturally happen in C's PR (the transition assertion in workbook-lifecycle.spec.ts would then fail unless flipped!). Wait — important: if C replaces the seam implementation, the existing e2e assertion in develop asserting exported `=1+1` would FAIL. So C's PR must flip it (or integration PR). That's a real coupling: C's PR cannot merge without flipping that assertion, otherwise develop's e2e breaks. Worth stating explicitly: "C 的 PR 必须同时翻转该断言（否则 C 合入后 develop e2e 会红）；若整合 PR 承担，则需在 C 之后立即处理". That's a valuable clarification for the successor. Actually the root's transfer says "公式导出门禁归整合 PR". But mechanically, flipping the assertion in the same PR as C's seam change is the safest. Both acceptable; note the coupling.
+Let me be careful not to overstate: the e2e assertion lives in e2e/workbook-lifecycle.spec.ts and asserts grid A1 text `=1+1` and export `=1+1,plain`. After C, grid shows `2`. So yes, the assertion fails. So whoever merges C must flip. I'll state it as a fact worth noting (with the anchor) and that ownership of the flip is either C's PR or the integration PR per #167 — but definitively must land with C's seam change.
+Hmm, is that "new evidence"? It's a factual coupling derived from the anchor. Useful. But careful — I should verify the assertion content to be accurate. Let me read that e2e section from origin/develop.
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L44:C1]
+[toolCall] bash call_00_2j9D5tNhTp37io10Z1FQ3815
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show origin/develop:e2e/workbook-lifecycle.spec.ts | sed -n '360,395p'"}
+[toolCall] bash call_01_1aEFjaYcLufCxmzIe4yQ8510
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git show origin/develop:frontend/src/lib/cellDisplay.ts | head -30"}
+
+## S35:L45 2026-09-29T06:53:47.701Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 28 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L45:C1]
+
+## S35:L46 2026-09-29T06:53:47.701Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 23 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L46:C1]
+
+## S35:L47 2026-09-29T06:53:53.366Z message assistant
+[thinking]
+Confirmed. Now write the comment. Also, note the existing e2e also has a test asserting grid shows `=1+1` — after C, `expectCellText(page, 'A1', '=1+1')` fails. So C's PR must flip this test, otherwise develop e2e breaks. This is a fact worth flagging in the closure comment.
+Let me write the comment file and post with --reply-to 92, then resolve thread 29.
+Wait: should I reply in thread 27 with reply-to 92? #92 is comment in thread 27. Yes reply-to 92.
+Also should I resolve thread 29 first or after? Order doesn't matter much; I'll post comment then resolve 29.
+Let me write the body file.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L47:C1]
+[toolCall] write call_00_RLqqZcRVj9yeqrHq6r2u0001
+{"content": "【关闭确认与 A 侧收口闭环：正文已改为当前入口，转交义务落锚（reply #92）】@glm-1 @deepseek-5\n\n## 1. 关闭事实（确认无异议）\n\n@glm-1 在 #167 关闭本 Issue。我作为负责人确认：唯一未满足前提（公式单元格导出计算结果）已随关闭**显式转交整合 PR 门禁**，其余交付（REQ-1-2-1/1-2-2/1-3-1/1-3-2 + 契约增量 A-1…A-4 + v1.3 七项 + #60 helper 切换）已在 develop；Issue 侧无待办，我不再向 `braid/issue-3-a` 追加提交。\n\n## 2. 关闭后独立复核（本 worktree，`git fetch` 后实测）\n\n- `origin/develop` = `e63efc6`；`git rev-parse origin/develop^{tree}` == `a23af5a^{tree}` == `a3ae41bf44a004cc34a16d7cd55be854707120fa`，`git diff a23af5a origin/develop` 为空 → #86/#88/#89 的证据直接对应 develop 当前树（与根侧 #93 一致）。\n- A 交付文件齐备：`backend/src/csv.js`、`frontend/src/lib/{cellDisplay,csvExport}.ts`、`frontend/src/components/{NewWorkbookPage,ImportCsvDialog,RenameWorkbookDialog,WorkbookToolbar}.tsx`、`e2e/workbook-lifecycle.spec.ts`。\n- 端点与落库：`backend/src/routes.js:69` `POST /api/workbooks/import`；`store.js` 内 `createWorkbookFromCsv`、`min_rows`/`min_cols` 写入与 `getWorksheetSnapshot` 回显；`assertWorksheetStateValid` 定义 1 处（`store.js:865`）+ 调用 1 处（`store.js:924`）→ #60 单点校验成立。\n\n## 3. 正文已更新为当前入口\n\n「设计与交接入口」新增**状态 CLOSED** 条（含关闭人、理由、我的复核与「早于整合 PR 关闭」这一与 Issue #4 comment #78 惯例的差异说明）；「交接与结果」补 PR 侧收口入口（PR #8 comment #93/#94）；「未决/假设」把「#3 保持 OPEN」改写为**已转交的未满足前提**，并按 PR #8 comment #94 写入精确锚点：`cellDisplay.ts:17` 换实现、`WorkbookEditor.tsx:118-119` → `Grid.tsx:189` 与 `WorkbookToolbar.tsx:34` 两处消费已接线、FormulaBar/Grid 内联编辑仍读 `raw`。\n\n## 4. 给 C（#5）与整合 PR 的一条机械耦合（执行时必须处理）\n\n过渡断言 `e2e/workbook-lifecycle.spec.ts:375-386`（`exports the formula cell value through the shared display seam`）**同时断言网格 `A1 = '=1+1'` 与导出 `'=1+1,plain'`**。因此 C 的 PR 一旦替换 `cellDisplay.ts` 实现，该用例会立即变红：**翻转必须与接缝替换同批落地**（C 的 PR 内翻转最稳妥；若按 #167 由整合 PR 承担，也须在 C 合入后立即处理，不能留在 develop 上红着）。翻转后断言网格 `2`、导出 `2,plain`。\n\n## 5. 讨论折叠\n\nthread #29（PR #8 交接）工作已完成并合入，已折叠；thread #27 保持可见（权威设计与 A-3 前提仍在其中）。请 @glm-1 指派 #5 时把第 4 条的接缝义务与锚点写入其交接材料。\n", "path": "/tmp/f26-issue3-body/close-comment.md"}
+
+## S35:L48 2026-09-29T06:53:53.369Z message toolResult
+toolResult write False
+[text]
+Successfully wrote to /tmp/f26-issue3-body/close-comment.md
+
+## S35:L49 2026-09-29T06:53:54.392Z message assistant
+[toolCall] bash call_00_ET_nB0Me4DKQE2MyB7zxWr57494
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue comment 3 --reply-to 92 --body-file /tmp/f26-issue3-body/close-comment.md 2>&1 | tail -8"}
+
+## S35:L50 2026-09-29T06:53:54.562Z message toolResult
+toolResult bash False
+[text]
+comment #95
+消息投递回执 — 评论 #95（仅表示评论输入的接收状态）
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L50:C1]
+
+## S35:L51 2026-09-29T06:53:55.796Z message assistant
+[thinking]
+Comment #95 posted. Now resolve thread 29.
+`braid comment resolve 29` — check if it needs --state. Default state? Let's try without, or with --state resolved. Let me check `braid comment resolve 29 --help`? Already saw options: --state <STATE>. Just run `braid comment resolve 29`.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L51:C1]
+[toolCall] bash call_00_3GwyfNkX6h8mdFIwz9vc7389
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment resolve 29 2>&1 | tail -5; echo ===; braid comment view 29 --thread 2>&1 | head -5"}
+
+## S35:L52 2026-09-29T06:53:55.965Z message toolResult
+toolResult bash False
+[text]
+thread: 29 [resolved]
+folded: resolved history
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L52:C1]
+
+## S35:L53 2026-09-29T06:53:58.479Z message assistant
+[thinking]
+Thread 29 resolved. Now verify the issue body and comment state; also perhaps re-read the issue view --comments to confirm final state. Also check whether any reply/new update arrives.
+Also should I check whether the resolved thread 29 resolution needs a reason entry — the comment #95 documents it. Fine.
+Now, is there anything else needed? The prompt update said title/body modified → the body I edited. My work is essentially done: issue closed, body current, comment posted, thread folded.
+One more consideration: the guidance says the Issue owner should also verify the issue's current body is findable by successors — done.
+Should I also verify the issue is closed and not reopened by my actions? Let me check state.
+Also, should I notify #5 directly? The root owns assignment. My comment @'d @glm-1. Good.
+Let me do a final check of issue state and body rendering.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L53:C1]
+[toolCall] bash call_00_3Ajho2p0Lc6hHxTVkotE9772
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 2>&1 | head -3; echo \"=== thread states ===\"; braid issue view 3 --comments 2>&1 | grep -E \"^thread:\" | tail -8; echo \"=== last comment ===\"; braid comment view 95 --thread 2>&1 | tail -25"}
+
+## S35:L54 2026-09-29T06:53:58.526Z message toolResult
+toolResult bash False
+[text]
+=== thread states ===
+=== last comment ===
+[DUPLICATES: 36 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L54:C1]
+
+## S35:L55 2026-09-29T06:53:58.526Z message user
+[text]
+- issue:3 thread 29: comment 29 resolved; read `comment view 29 --thread`
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L55:C1]
+
+## S35:L56 2026-09-29T06:54:00.647Z message assistant
+[thinking]
+These updates are the results of my own actions (body edit, thread 29 resolve). Nothing new to respond to. Let me do a final verification that the body is correct and no other agent's new input exists (e.g., new comments on #3 or #1). Let me check the latest timeline for #3 to confirm only my actions, and check if anything new from others.
+Then I should conclude: work is complete. Maybe check no uncommitted local changes need saving... My worktree is clean (packet unchanged). Packet update not needed per #92 §5 (Issue body takes precedence) — I already noted that in the body.
+Let me verify timeline tail and git status.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L56:C1]
+[toolCall] bash call_00_cKyeBUR77CcUHWyfLiHq4408
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --timeline 2>&1 | tail -6; echo \"=== git ===\"; git status --porcelain; git log --oneline -1"}
+
+## S35:L57 2026-09-29T06:54:00.671Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S35:L57:C1]
+
+## S35:L58 2026-09-29T06:54:02.433Z message assistant
+[thinking]
+Hmm — the timeline tail doesn't show my body edit (should be #168) nor comment #95 or the thread 29 resolve. Maybe timeline entri

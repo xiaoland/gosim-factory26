@@ -1,0 +1,38 @@
+.pragma('foreign_keys = ON');\nbackend test:  ❯ freshDb src/structure.test.js:15:26\nbackend test:  ❯ src/structure.test.js:750:38\nbackend test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[69/69]⎯\nbackend test:  Test Files  2 failed | 1 passed (3)\nbackend test:       Tests  69 failed | 27 passed (96)\nbackend test:    Start at  06:41:36\nbackend test:    Duration  5.08s (transform 771ms, setup 0ms, collect 4.53s, tests 836ms, environment 1ms, prepare 2.10s)\nbackend test: Failed\n/tmp/pr8-helper-rehearsal/backend:\n ERR_PNPM_RECURSIVE_RUN_FIRST_FAIL  spreadsheet-backend@1.0.0 test: `vitest run`\nExit status 1", "command": "cd /tmp/pr8-helper-rehearsal && PATH=/usr/local/bin:$PATH pnpm -r test 2>&1 | tail -40", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1", "durationMs": 11787, "exitCode": 0, "globalJobId": "pbb_7491_c8c94e51:bg003", "instanceId": "pbb_7491_c8c94e51", "jobId": "bg003", "outcome": "exit", "pbbCursor": 9, "sessionId": "01a0ebe3-5c81-7454-ba87-260acf4ee8b7", "sessionKey": "9aaf8416c8eb277c051eeaef", "startedAt": "2026-09-29T06:41:32.053Z", "toolCallId": "call_00_9H1wUmzZOY4Umuq4pqb88179"}
+
+## S29:L227 2026-09-29T06:47:28.466Z message assistant
+[thinking]
+This is the stale rehearsal test failure (ABI 137) — already diagnosed and resolved (that's the environment issue recorded in #86 §3 and packet). The rehearsal worktree no longer exists. No action needed.
+Brief acknowledgment.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L227:C1]
+[text]
+这是预演 worktree 上那次失败的回执（bg003）——正是已诊断并记录的环境 ABI 问题：工具链 `pnpm` 走 Node 24，把 `better-sqlite3` 装成 ABI 137，而测试进程是 Node 20.19.3（ABI 115）。该失败**不是实现缺陷**，已在正式分支上用 `cd backend && PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3` 修复并复跑通过，也写进了 Issue #3 comment #86 §3 与 packet「预演/排障结论」。预演 worktree 已删除，无遗留进程与端口占用。
+正式交付状态不变：候选 **`a23af5a`**（`origin/braid/issue-3-a`，base `develop@15abbf6`），三项检查通过（test 96/49、typecheck exit 0、e2e 25 passed，证据 `/tmp/f26-lzle9d69/service-check-vxc25q5f`），交接见 Issue #3 comment #86 / PR #8 comment #87，等待 @deepseek-3 复核后合入 `develop`。
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L227:C2]
+
+## S29:L228 2026-09-29T06:47:28.467Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L228:customType]
+[content]
+<pi_context source="pi-background-bash" kind="background_bash_result" id="bg004" tool_call_id="call_00_ET_xZX14qEpesG12n6om2uI1230" session_id="01a0ebe3-5c81-7454-ba87-260acf4ee8b7" session_key="9aaf8416c8eb277c051eeaef" instance_id="pbb_7491_c8c94e51" global_job_id="pbb_7491_c8c94e51:bg004" pbb_cursor="12" started_at="2026-09-29T06:45:44.078Z" command="cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd &quot;$PWD&quot; --context candidate=a23af5a --context data=&quot;run-e2e.sh 自带临时 DB，生产形态（后端同端口服务 dist）&quot; -- bash checks/run-e2e.sh 2>&1 | tail -30" outcome="exit" exit_code="0" duration_ms="36784">Evidence: /tmp/f26-lzle9d69/service-check-vxc25q5f
+passed; logs and exit receipt: /tmp/f26-lzle9d69/service-check-vxc25q5f</pi_context>
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L228:display]
+[details]
+{"body": "Evidence: /tmp/f26-lzle9d69/service-check-vxc25q5f\npassed; logs and exit receipt: /tmp/f26-lzle9d69/service-check-vxc25q5f", "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd \"$PWD\" --context candidate=a23af5a --context data=\"run-e2e.sh 自带临时 DB，生产形态（后端同端口服务 dist）\" -- bash checks/run-e2e.sh 2>&1 | tail -30", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1", "durationMs": 36784, "exitCode": 0, "globalJobId": "pbb_7491_c8c94e51:bg004", "instanceId": "pbb_7491_c8c94e51", "jobId": "bg004", "outcome": "exit", "pbbCursor": 12, "sessionId": "01a0ebe3-5c81-7454-ba87-260acf4ee8b7", "sessionKey": "9aaf8416c8eb277c051eeaef", "startedAt": "2026-09-29T06:45:44.078Z", "toolCallId": "call_00_ET_xZX14qEpesG12n6om2uI1230"}
+
+## S29:L229 2026-09-29T06:47:31.509Z message assistant
+[thinking]
+This is the e2e job (bg004) completion receipt — already consumed (I read result.json and check.log: 25 passed, exit 0). No action needed.
+Brief acknowledgment and final state.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L229:C1]
+[text]
+这是 e2e 任务（bg004）的完成回执，已在本轮处理中使用：候选 `a23af5a` 上 `bash checks/run-e2e.sh` **exit 0，25 passed**（smoke 3 + `workbook-lifecycle` 12 + `worksheets-structure` 10），`cleanup_status=passed`，证据 `/tmp/f26-lzle9d69/service-check-vxc25q5f`（`result.json` 记 `git_head=a23af5a`、`dirty=false`、`check_exit=0`）。
+所有后台任务回执均已核对完毕，无遗留工作。最终状态：
+- **候选 `a23af5a`** 已推送 `origin/braid/issue-3-a`（PR #8 head，base `develop@15abbf6`，已 rebase 到含 PR #9 的基线）；
+- **helper 切换完成**：`importWorksheetState` 调用共享 `assertWorksheetStateValid`，本地私有副本已删除（提交 `055fdaa`）；
+- 三项检查在候选上通过：test backend 96 / frontend 49、typecheck exit 0、e2e 25 passed；
+- PR 正文已同步，交接见 Issue #3 comment **#86** 与 PR #8 comment **#87**；
+- 待 @deepseek-3 针对性复核后由根负责人合入 `develop`。
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L229:C2]
+

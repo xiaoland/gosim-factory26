@@ -1,0 +1,416 @@
+[
+  {
+    "render_block": 46,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L55",
+    "chars": 1226,
+    "text": "### 四、验收方案（可重复执行的自动化检查；显式空闲端口 + 临时数据目录）\n前提：启动交付入口（backend 用 HOST/PORT，自检用非 3000 端口，数据用临时目录），浏览器自动化走可见控件；外部剪贴板内容通过 CDP/ClipboardEvent 注入，不改应用。\n- A 编辑一致性：选 A1 → 公式栏输入 `East` + Enter → 网格与公式栏都显示 `East`；输入 `=1+2` → 网格 `3`、公式栏 `=1+2`；编辑中按 Escape → 网格/公式栏仍是最后成功值；编辑后点其他单元格提交；刷新后值/公式/结果不变。\n- B 行内编辑：双击单元格出现行内文本框，可访问名 `Edit <坐标>`（如 `Edit B2`），提交后生效。\n- C 依赖更新：改 A1 → 引用它的 B1（直接）与 C1=B1*2（间接）结果更新（与 #6 联合验证）。\n- D 批量粘贴：在起始单元格粘贴 `a\\tb\\nc\\td` → 恰好覆盖目标矩形、空字段保留、矩形外不变；目标内公式被替换并重算；用 0-100 规则覆盖含非法值的矩形 → 报 \"Please enter a number from 0 to 100\" 且所有目标单元格保留原值（无部分落值）；右键菜单存在 ARIA menuitem \"Paste\"；Ctrl+V 粘贴同一内容。\n- E 选区：拖拽 A1:C2 → grid `aria-multiselectable=\"true\"`，矩形内每个 gridcell `aria-selected=\"true\"`、矩形外 `\"false\"`；改为单点选择后旧高亮消失；刷新后精确恢复该矩形；切到 Sheet2 再切回 Sheet1 仍恢复，且 Sheet2 不被 Sheet1 的选区覆盖。\n- F 范围复制/剪切：A1:B2 复制 → 源不变；粘到 D1:E2 → 二维布局保持、D1:E2 外不变；带相对/绝对引用的公式（如 `=A1+$B$1`）粘到偏移位置后公式栏显示按偏移调整后的原公式（相对部分变、绝对部分不变）；剪切 A1:B2 → D1:E2 完整显示后才清空 A1:B2；目标含 0-100 非法值 → 报错且源与目标都保持原状；刷新后结果持久。\n- G 撤销/重做：工具栏 \"Undo\"/\"Redo\" 可访问名正确；单元格编辑、批量粘贴、范围移动、（#4 合入后）行列结构变化各做一次 → 连续 Ctrl+Z 逆序回退到操作前，Ctrl+Y 逐个重放完整操作；按钮与快捷键效果一致；undo/redo 后刷新状态一致；undo 后做新修改 → Redo 按钮 disabled 且 Ctrl+Y 不恢复旧分支；在 A 工作簿 undo 不影响 B 工作簿。\n- 记录实际检查的 commit 与运行条件；#4 合入后补行列 undo 用例；#7 合入后校验文案用例按其规则模型复验。"
+  },
+  {
+    "render_block": 48,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L55",
+    "chars": 161,
+    "text": "### 五、当前状态\n已收到 #2 的批次门控，不重复搭建共享基础。我在等待「可以开始」通知期间准备与框架无关的纯逻辑模块（A1 引用解析与相对/绝对引用平移、TSV 剪贴板解析、矩形选区模型、Operation/undo 栈）与单元测试，`origin/develop` 一有 #2 的共享基础就接入并跑上述自动化自检。"
+  },
+  {
+    "render_block": 130,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L241",
+    "chars": 1007,
+    "text": "### 交付内容\n- frontend/（Vite + React + TypeScript）与 backend/（Node.js + Express + TypeScript），交付 frontend/package.json、backend/package.json。\n- backend 通过 HOST/PORT 环境变量启动（默认 HOST=0.0.0.0 PORT=3000），静态服务 frontend 构建产物 + 提供 REST API；启动 120 秒内完成。\n- 启动时准备种子数据：工作簿 `Q3 Sales`、工作表 `Sheet1`、A1=`Region`（幂等，已有则不重复创建）。\n- 数据持久化到服务端（JSON 文件存储，目录可用环境变量覆盖；自检时用临时目录，不改交付初始状态）。\n- 主页：工作簿列表，每条显示 \"Last updated: <时间>\"，链接的可访问名为工作簿名；\"New blank workbook\" 按钮 → 创建页（提交按钮 \"Create\"）→ 编辑器。\n- 编辑器：稳定的可收藏 URL（如 /workbook/:id），刷新/直接访问恢复同一工作簿最近成功状态；显示工作簿名、\"Last updated\"、工作表标签（ARIA tab，活动 tab aria-selected=\"true\"）、网格（ARIA grid，可访问名 \"Worksheet grid\"，aria-multiselectable=\"true\"，gridcell 可访问名为坐标如 A1，选中区域 aria-selected=\"true\"，区域外 \"false\"）、公式栏（text box，label \"Formula bar\"）、行号（rowheader，可访问名为数字）、列头（columnheader，可访问名为列字母）。\n- \"Rename workbook\" 按钮（编辑器标题旁）→ 文本框 label \"Workbook name\"（预填当前名）+ \"Save\"；空名（trim 后）报 \"Workbook name cannot be empty\"；成功后编辑器标题与主页链接同步更新。\n- 共享架构约定（后续任务遵守）：REST API 形态、前端状态层、组件拆分、单元格/工作表数据模型（值+原始公式+计算结果、校验规则、筛选、透视、选区持久化字段）。"
+  },
+  {
+    "render_block": 280,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  },
+  {
+    "render_block": 290,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 246,
+    "text": "for suffix in \"${SUFFIXES[@]}\"; do\n  port=\"$(free_port)\"\n  data_dir=\"$(mktemp -d /tmp/wb-checks-XXXXXX)\"\n  DATA_DIR=\"$data_dir\" HOST=127.0.0.1 PORT=\"$port\" \\\n    node \"$ROOT/backend/dist/server.js\" >>\"$SERVER_LOG\" 2>&1 &\n  pid=$!\n  PIDS+=(\"$pid\")"
+  },
+  {
+    "render_block": 292,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 434,
+    "text": "  ready=false\n  for _ in $(seq 1 120); do\n    if curl -sf \"http://127.0.0.1:$port/api/workbooks\" | grep -q \"Q3 Sales\"; then\n      ready=true\n      break\n    fi\n    if ! kill -0 \"$pid\" 2>/dev/null; then\n      echo \"server for $suffix died during startup (log: $SERVER_LOG)\"\n      exit 3\n    fi\n    sleep 0.5\n  done\n  if [[ \"$ready\" != true ]]; then\n    echo \"server for $suffix was not ready in time (log: $SERVER_LOG)\"\n    exit 3\n  fi"
+  },
+  {
+    "render_block": 296,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 300,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 365,
+    "text": "/**\n * Every spec file runs against its own freshly seeded server instance (see\n * run.sh), so each check observes the promised initial state and mutating\n * checks cannot leak into others.\n */\nfunction required(name: string): string {\n  const value = process.env[name];\n  if (!value) throw new Error(`Set ${name} before running browser checks.`);\n  return value;\n}"
+  },
+  {
+    "render_block": 304,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 432,
+    "text": "const projects: Project[] = [\n  {\n    name: 'create-workbook',\n    testMatch: '**/create-workbook.spec.ts',\n    use: { baseURL: required('BASE_URL_CREATE') },\n  },\n  {\n    name: 'editor-interactions',\n    testMatch: '**/editor-interactions.spec.ts',\n    use: { baseURL: required('BASE_URL_EDITOR') },\n  },\n  {\n    name: 'home-editor',\n    testMatch: '**/home-editor.spec.ts',\n    use: { baseURL: required('BASE_URL_HOME') },\n  },\n];"
+  },
+  {
+    "render_block": 320,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L103",
+    "chars": 164,
+    "text": "基于 [HyperFormula](https://hyperformula.handsontable.com)（license key `gpl-v3`，GPLv3）封装的工作簿公式引擎，为应用提供 REQ-4 全部能力：\n基本表达式与聚合函数、同表 A1 引用、复制时相对/绝对引用调整、源数据变化后的依赖重算、错误值映射。"
+  },
+  {
+    "render_block": 332,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L103",
+    "chars": 162,
+    "text": "每个单元格持久化 **raw**（用户输入原文）：普通值如 `1200`、`hello`；公式以 `=` 开头如 `=A1+1`。\n**不持久化计算结果**。加载时用 `WorkbookFormulas.create(...)` 从 raw 重建引擎，结果总是由当前源值算出\n（REQ-4-2-1：刷新/重开不显示旧结果）。"
+  },
+  {
+    "render_block": 334,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L103",
+    "chars": 268,
+    "text": "- 网格显示：`engine.getDisplay(sheetId, 'B3')` → `{kind:'number'|'text'|'boolean'|'error'|'empty', text, ...}`；错误 `text` 恒为 `#DIV/0!` / `#REF!` / `#NAME?` / `#ERROR!`。\n- 公式栏：选中单元格显示 `engine.getCellRaw(sheetId, 'B3')`（用户输入原文，包括错误单元格）。\n- 整表渲染：`engine.getDisplayMap(sheetId)`。"
+  },
+  {
+    "render_block": 344,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L103",
+    "chars": 287,
+    "text": "engine.setCellRaw('ws-1', 'A1', '5');     // 编辑源值 → 依赖链自动按序重算\nengine.setRangeRaw('ws-1', 'A1', [['1','2'],['3','4']]); // 批量粘贴（含空字段清空）\nengine.moveRange('ws-1', 'A1', 'A3', 1, 1); // 范围移动（HyperFormula moveCells 语义）\nengine.addRows / removeRows / addColumns / removeColumns // 行列结构变化，引用自动调整"
+  },
+  {
+    "render_block": 348,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L103",
+    "chars": 219,
+    "text": "// 复制公式（REQ-3-2-1 路径）时调整引用（纯函数，无实例依赖）：\nadjustFormulaForCopy('=A1+$B$1', { rowOffset: 1, colOffset: 0 }); // '=A2+$B$1'\nadjustFormulaForCopy('=A1+1', { rowOffset: 3, colOffset: 0 }, { rows: 3, cols: 3 }); // '=#REF!'\n```"
+  },
+  {
+    "render_block": 352,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L103",
+    "chars": 486,
+    "text": "- **REQ-4-1-1** `=1+2*3`、括号、`+ - * /`、同表 A1 引用；`SUM/AVERAGE/COUNT/MIN/MAX` 连续范围；函数名大小写不敏感；聚合忽略空单元格，`COUNT` 只计数字单元格（空格不当 0，文本不计入）。\n- **REQ-4-1-2** 复制时相对引用按目标偏移调整、`$` 绝对引用不变；相对引用移出工作表边界时，**整个公式折叠为 `=#REF!`**，网格显示 `#REF!`（`=#REF!` 作为 raw 持久化后重建仍显示 `#REF!`）。\n- **REQ-4-2-1** 所有写操作（编辑/粘贴/移动/行列变化）触发依赖图重算；公式栏保留原公式。\n- **REQ-4-2-2** 错误映射：除零 `#DIV/0!`、无效引用 `#REF!`、未知函数 `#NAME?`、畸形表达式 `#ERROR!`、直接/间接循环引用 **`#REF!`**（HyperFormula 原生 `#CYCLE!` 在此处覆盖为 `#REF!`）。错误不阻碍其他单元格查看/编辑/重算；改为合法公式后结果与依赖全部更新。"
+  },
+  {
+    "render_block": 410,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 197,
+    "text": "  const activeCellData: CellData | undefined = useMemo(() => {\n    if (!activeSheet) return undefined;\n    return activeSheet.cells[selection.activeCell];\n  }, [activeSheet, selection.activeCell]);"
+  },
+  {
+    "render_block": 460,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L153",
+    "chars": 1127,
+    "text": "/**\n * Shared REST API contract (all later feature tasks build on this):\n *\n *  GET    /api/workbooks                              -> { workbooks: WorkbookSummary[] }\n *  POST   /api/workbooks            { name }          -> 201 Workbook | 400 { error }\n *  GET    /api/workbooks/:id                          -> Workbook | 404 { error }\n *  PATCH  /api/workbooks/:id        { name }          -> Workbook | 400/404 { error }\n *  PATCH  /api/workbooks/:id/state  { activeSheetId?, activeCell?, selection? }\n *                                                   -> Workbook | 404 { error }\n *  PATCH  /api/workbooks/:id/sheets/:sheetId/cells  { updates: [{ ref, raw }] }\n *                                                   -> Workbook | 400/404 { error }\n *\n * Conventions: JSON bodies; errors are `{ error: string }` with 4xx/5xx;\n * successful content mutations bump workbook.updatedAt (= the \"Last updated\"\n * shown on the home page and in the editor); ref format is A1-style.\n * Feature tasks ADD endpoints (e.g. CSV import/export, sheet CRUD, row/col ops)\n * following the same shapes instead of redefining existing ones.\n */"
+  },
+  {
+    "render_block": 466,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 278,
+    "text": "/** Column letters -> 1-based number (\"A\"->1, \"Z\"->26, \"AA\"->27). */\nexport function colNumber(letters: string): number {\n  let n = 0;\n  for (const ch of letters.toUpperCase()) {\n    if (ch < \"A\" || ch > \"Z\") return 0;\n    n = n * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return n;\n}"
+  },
+  {
+    "render_block": 470,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 371,
+    "text": "/** Validate an A1-style ref; returns {col,row} or null. */\nexport function parseRef(ref: unknown): { col: number; row: number } | null {\n  if (typeof ref !== \"string\") return null;\n  const m = REF_RE.exec(ref.toUpperCase());\n  if (!m) return null;\n  const col = colNumber(m[1]);\n  const row = Number(m[2]);\n  if (col < 1 || row < 1) return null;\n  return { col, row };\n}"
+  },
+  {
+    "render_block": 478,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 349,
+    "text": "workbooksRouter.post(\"/api/workbooks\", (req: Request, res: Response) => {\n  const rawName = typeof req.body?.name === \"string\" ? req.body.name : \"\";\n  const name = rawName.trim();\n  if (!name) {\n    badRequest(res, \"Workbook name cannot be empty\");\n    return;\n  }\n  const wb = makeWorkbook(name);\n  saveWorkbook(wb);\n  res.status(201).json(wb);\n});"
+  },
+  {
+    "render_block": 480,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 185,
+    "text": "workbooksRouter.get(\"/api/workbooks/:id\", (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  res.json(wb);\n});"
+  },
+  {
+    "render_block": 482,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L21",
+    "chars": 459,
+    "text": "workbooksRouter.patch(\"/api/workbooks/:id\", (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  const rawName = typeof req.body?.name === \"string\" ? req.body.name : \"\";\n  const name = rawName.trim();\n  if (!name) {\n    badRequest(res, \"Workbook name cannot be empty\");\n    return;\n  }\n  wb.name = name;\n  wb.updatedAt = new Date().toISOString();\n  saveWorkbook(wb);\n  res.json(wb);\n});"
+  },
+  {
+    "render_block": 564,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 447,
+    "text": "export interface CellData {\n  /** Original user input; formulas start with \"=\". null for empty cells. */\n  raw: string | null;\n  /** Displayed value: for plain input equal to raw; for formulas the cached computed result. */\n  value: string | null;\n  /** Reserved: id of a rule in sheet.validationRules. */\n  validationId?: string | null;\n  /** Reserved: display style (bold, color, number format...). */\n  style?: Record<string, unknown> | null;\n}"
+  },
+  {
+    "render_block": 566,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 184,
+    "text": "export interface RectSelection {\n  /** Top-left cell ref of the rectangular selection. */\n  start: string;\n  /** Bottom-right cell ref of the rectangular selection. */\n  end: string;\n}"
+  },
+  {
+    "render_block": 568,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 382,
+    "text": "/** Data validation rule (REQ-5). Extendable; consumers ignore unknown fields. */\nexport interface ValidationRule {\n  id: string;\n  /** e.g. \"list\" | \"numberRange\" | \"textLength\" ... */\n  type: string;\n  /** Cell range this rule applies to, e.g. \"A2:A100\". */\n  range: string;\n  /** Rule parameters, shape depends on type. */\n  config: Record<string, unknown>;\n  message?: string;\n}"
+  },
+  {
+    "render_block": 570,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 248,
+    "text": "/** Filter view (REQ-5). Extendable. */\nexport interface FilterView {\n  id: string;\n  /** Range the filter covers, e.g. \"A1:D20\". */\n  range: string;\n  /** Per-column filter criteria keyed by column letter. */\n  criteria: Record<string, unknown>;\n}"
+  },
+  {
+    "render_block": 572,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 370,
+    "text": "/** Pivot table spec (REQ-5). Extendable. */\nexport interface PivotSpec {\n  id: string;\n  /** Source data range. */\n  sourceRange: string;\n  /** Placement of the pivot result (anchor cell + target sheet). */\n  anchor: { sheetId: string; ref: string };\n  rows: string[];\n  columns: string[];\n  values: Array<{ field: string; aggregation: string }>;\n  filters: string[];\n}"
+  },
+  {
+    "render_block": 576,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 396,
+    "text": "export interface Workbook {\n  id: string;\n  name: string;\n  createdAt: string;\n  updatedAt: string;\n  /** id of the sheet active when the workbook was last used. */\n  activeSheetId: string;\n  /** Persisted active (cursor) cell ref, e.g. \"A1\". */\n  activeCell: string;\n  /** Persisted rectangular selection; null means single active cell. */\n  selection: RectSelection | null;\n  sheets: Sheet[];\n}"
+  },
+  {
+    "render_block": 580,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 189,
+    "text": "/**\n * JSON-file storage: one pretty-printed JSON file per workbook,\n * named `<workbookId>.json` inside DATA_DIR.\n * Writes are atomic (tmp file + rename) to survive crashes mid-write.\n */"
+  },
+  {
+    "render_block": 582,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 226,
+    "text": "function fileFor(id: string): string {\n  // ids are generated by us (wb_xxx); reject anything path-like.\n  if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new Error(\"invalid workbook id\");\n  return path.join(DATA_DIR, `${id}.json`);\n}"
+  },
+  {
+    "render_block": 586,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 643,
+    "text": "export function listWorkbooks(): WorkbookSummary[] {\n  ensureDataDir();\n  const out: WorkbookSummary[] = [];\n  for (const f of fs.readdirSync(DATA_DIR)) {\n    if (!f.endsWith(\".json\")) continue;\n    try {\n      const wb = JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), \"utf8\")) as Workbook;\n      if (wb && wb.id && wb.name) {\n        out.push({ id: wb.id, name: wb.name, createdAt: wb.createdAt, updatedAt: wb.updatedAt });\n      }\n    } catch {\n      // Skip unreadable/corrupt files rather than failing the whole list.\n    }\n  }\n  out.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : a.updatedAt > b.updatedAt ? -1 : 0));\n  return out;\n}"
+  },
+  {
+    "render_block": 588,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 236,
+    "text": "export function getWorkbook(id: string): Workbook | null {\n  const file = fileFor(id);\n  if (!fs.existsSync(file)) return null;\n  try {\n    return JSON.parse(fs.readFileSync(file, \"utf8\")) as Workbook;\n  } catch {\n    return null;\n  }\n}"
+  },
+  {
+    "render_block": 590,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L20",
+    "chars": 250,
+    "text": "export function saveWorkbook(wb: Workbook): void {\n  ensureDataDir();\n  const file = fileFor(wb.id);\n  const tmp = `${file}.tmp-${process.pid}-${Date.now()}`;\n  fs.writeFileSync(tmp, JSON.stringify(wb, null, 2), \"utf8\");\n  fs.renameSync(tmp, file);\n}"
+  },
+  {
+    "render_block": 616,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 297,
+    "text": "/** 1-based column number -> letters (\"A\", \"Z\", \"AA\"...). */\nexport function colLetter(index1Based: number): string {\n  let n = index1Based;\n  let s = \"\";\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    s = String.fromCharCode(65 + rem) + s;\n    n = Math.floor((n - 1) / 26);\n  }\n  return s;\n}"
+  },
+  {
+    "render_block": 618,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 351,
+    "text": "/** \"B3\" -> { col: 2, row: 3 }. */\nexport function parseRef(ref: string): { col: number; row: number } {\n  const m = /^([A-Za-z]+)([0-9]+)$/.exec(ref);\n  if (!m) throw new Error(`Invalid cell ref: ${ref}`);\n  let col = 0;\n  for (const ch of m[1].toUpperCase()) {\n    col = col * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return { col, row: Number(m[2]) };\n}"
+  },
+  {
+    "render_block": 624,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 374,
+    "text": "/** Normalize a selection (start/end may be in any corner order) to a rect of 1-based coords. */\nexport function selectionRect(start: string, end: string): Rect {\n  const a = parseRef(start);\n  const b = parseRef(end);\n  return {\n    top: Math.min(a.row, b.row),\n    bottom: Math.max(a.row, b.row),\n    left: Math.min(a.col, b.col),\n    right: Math.max(a.col, b.col),\n  };\n}"
+  },
+  {
+    "render_block": 626,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 187,
+    "text": "export function inRect(ref: string, rect: Rect): boolean {\n  const { col, row } = parseRef(ref);\n  return row >= rect.top && row <= rect.bottom && col >= rect.left && col <= rect.right;\n}"
+  },
+  {
+    "render_block": 644,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 469,
+    "text": "/**\n * Shared helpers for workbook checks.\n *\n * Every check file runs against its own freshly seeded server (see run.sh and\n * playwright.config.ts projects), so each check observes the promised initial\n * state: workbook `Q3 Sales` = Sheet1 (A1=Region, East/1200, North/800) +\n * Sheet2 (Region/Sales/Status table).\n *\n * Accessible names of grid cells ARE the coordinates (\"A1\"). Locators must use\n * `exact: true`, otherwise \"A1\" would also match \"A10\"..\"A199\".\n */"
+  },
+  {
+    "render_block": 650,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 199,
+    "text": "/** The gridcell whose accessible name is exactly this coordinate. */\nexport function cell(page: Page, ref: string): Locator {\n  return grid(page).getByRole(\"gridcell\", { name: ref, exact: true });\n}"
+  },
+  {
+    "render_block": 658,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 174,
+    "text": "export function workbookItem(page: Page, name: string): Locator {\n  return page.getByRole(\"listitem\").filter({\n    has: page.getByRole(\"link\", { name, exact: true }),\n  });\n}"
+  },
+  {
+    "render_block": 660,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 260,
+    "text": "/** Home page is loaded and lists at least the seeded workbook. */\nexport async function openHome(page: Page) {\n  await page.goto(\"/\");\n  await expect(page.getByRole(\"heading\", { level: 1, name: \"Workbooks\" })).toBeVisible();\n  return page.getByRole(\"list\");\n}"
+  },
+  {
+    "render_block": 662,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 314,
+    "text": "/** Click a named workbook link on the home page and wait for its editor. */\nexport async function openWorkbook(page: Page, name: string) {\n  await workbookItem(page, name).getByRole(\"link\", { name, exact: true }).click();\n  await expect(page.getByRole(\"heading\", { level: 1, name, exact: true })).toBeVisible();\n}"
+  },
+  {
+    "render_block": 718,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 205,
+    "text": "async function openSeededWorkbook(page: Page): Promise<void> {\n  await page.goto('/');\n  await page.getByRole('link', { name: 'Q3 Sales', exact: true }).click();\n  await expect(grid(page)).toBeVisible();\n}"
+  },
+  {
+    "render_block": 720,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 173,
+    "text": "async function selectCell(page: Page, a1: string): Promise<void> {\n  await cell(page, a1).click();\n  await expect(cell(page, a1)).toHaveAttribute('aria-selected', 'true');\n}"
+  },
+  {
+    "render_block": 722,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 267,
+    "text": "/** Type into the formula bar and commit with Enter (REQ-3-1-1). */\nasync function submitViaFormulaBar(page: Page, a1: string, text: string): Promise<void> {\n  await selectCell(page, a1);\n  await formulaBar(page).fill(text);\n  await formulaBar(page).press('Enter');\n}"
+  },
+  {
+    "render_block": 872,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L188",
+    "chars": 151,
+    "text": "const backendDir = path.resolve(__dirname, \"..\");\nconst repoRoot = path.resolve(backendDir, \"..\");\nconst frontendDir = path.join(repoRoot, \"frontend\");"
+  },
+  {
+    "render_block": 874,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L188",
+    "chars": 240,
+    "text": "function run(command, args, cwd) {\n  console.log(`[prepare] ${command} ${args.join(\" \")}  (cwd: ${path.relative(repoRoot, cwd) || \".\"})`);\n  const result = spawnSync(command, args, { cwd, stdio: \"inherit\" });\n  return result.status === 0;\n}"
+  },
+  {
+    "render_block": 1078,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 202,
+    "text": "export interface Workbook {\n  id: string;\n  name: string;\n  createdAt: string;\n  updatedAt: string;\n  activeSheetId: string;\n  activeCell: string;\n  selection: RectSelection | null;\n  sheets: Sheet[];\n}"
+  },
+  {
+    "render_block": 1082,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 156,
+    "text": "export class ApiError extends Error {\n  status: number;\n  constructor(status: number, message: string) {\n    super(message);\n    this.status = status;\n  }\n}"
+  },
+  {
+    "render_block": 1084,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L23",
+    "chars": 379,
+    "text": "async function request<T>(url: string, init?: RequestInit): Promise<T> {\n  const res = await fetch(url, {\n    headers: { \"Content-Type\": \"application/json\" },\n    ...init,\n  });\n  const body = await res.json().catch(() => ({}));\n  if (!res.ok) {\n    throw new ApiError(res.status, (body as { error?: string }).error || `Request failed (${res.status})`);\n  }\n  return body as T;\n}"
+  },
+  {
+    "render_block": 1356,
+    "source": "continuation02-root-native/121-2026-09-28T07-46-22-237Z_01a0e6fa-a99d-7298-9e0f-60ab0bc7244a.jsonl:L4",
+    "chars": 498,
+    "text": "1. **数据契约完全一致**：`CellData.raw`（原文，公式以 `=` 开头）= 引擎的 raw；`CellData.value`（\"displayed/computed result\"）= 引擎 `getDisplay().text`（整数原样、小数 10 位有效数字、错误串 `#DIV/0!/#REF!/#NAME?/#ERROR!`）。持久化仍以 raw 为准，value 是回填的显示缓存——加载时引擎从 raw 重建，天然满足\"刷新/重开不显示旧结果\"。\n2. **前端几乎免费**：`Grid.tsx` 已渲染 `cell?.value`（网格显示计算结果）；`FormulaBar.tsx` 已显示 `cell?.raw` 且 Enter 提交/Escape 丢弃（公式栏显示原始表达式，含错误单元格）。REQ-4 显示语义无需改这两个组件的契约。\n3. **写入口唯一**：`PATCH /cells { updates:[{ref, raw}] }` 是批量原子写；#5 的粘贴/范围移动、#4 的行列操作按 #2 约定新增端点。接线点全部在后端写管道，前端不动。"
+  },
+  {
+    "render_block": 1358,
+    "source": "continuation02-root-native/121-2026-09-28T07-46-22-237Z_01a0e6fa-a99d-7298-9e0f-60ab0bc7244a.jsonl:L4",
+    "chars": 839,
+    "text": "### 二、接线技术方案（后端为主）\n1. **引擎生命周期**：后端每工作簿常驻一个 `WorkbookFormulas` 实例（模块级 Map，惰性 create 于首次访问，载入各 sheet 的 raw），进程内复用；`saveWorkbook` 前只需写 raw+回填 value。数据目录直改/多进程场景以加载重建兜底。\n2. **PATCH /cells**：校验通过后把 updates 逐条 `setCellRaw`（含 `null` 清空），再从引擎 `getDisplay` 回填本表受影响单元格的 `value`（直接依赖按图重算已由引擎承担），返回更新后的 Workbook。错误值照常回填错误串，不拒写。\n3. **批量粘贴（#5）**：`setRangeRaw`（整矩形应用、空字段清空目标位——与 #27 决策 1 一致，请 #5 落地时对齐）。**复制粘贴**：先对源矩形逐格取 raw，公式格经 `adjustFormulaForCopy(raw, {rowOffset, colOffset}, {rows, cols})` 调整（相对越界折叠 `=#REF!`），再 `setRangeRaw`；纯值格原样。\n4. **范围移动（#5）**：`moveRange`（moveCells 语义：外部指向被移格的引用跟随改写）。\n5. **行列结构变化（#4）**：`addRows/removeRows/addColumns/removeColumns`（引用自动调整；超出 `rowCount/colCount` 的部分由 #4 语义决定是否扩表）。\n6. **显示数字格式**：`value` 统一用引擎 `display.text`，前端不做二次格式化，避免双份实现。\n7. **#34 对齐确认**：`raw/value` 与引擎契约一致，无需 #2 加字段；`getDisplayMap` 不消费 #2 的任何预留字段，互不干扰。"
+  },
+  {
+    "render_block": 1364,
+    "source": "continuation02-root-native/121-2026-09-28T07-46-22-237Z_01a0e6fa-a99d-7298-9e0f-60ab0bc7244a.jsonl:L4",
+    "chars": 329,
+    "text": "### 四、待各依赖方确认（不阻塞，落地前对齐即可）\n- @deepseek-5（#5）：粘贴/复制/移动端点落地时调用上述引擎入口（③④），空字段=整矩形清空语义请确认；批量原子性（任一非法整单拒绝）与引擎重算顺序由端点先校验后 setRangeRaw 保证。\n- @glm-4（#4）：行列增删端点调用 `addRows/removeRows/addColumns/removeColumns`（⑤）；\"行列变化后 `rowCount/colCount` 与引擎尺寸同步\"的归属请定（建议端点内先改尺寸再调引擎）。\n- @deepseek-7（#7）：排序引用平移消费 `adjustFormulaForCopy`（已按 #31/#33 对齐，不重复）。"
+  },
+  {
+    "render_block": 1668,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 205,
+    "text": "async function openSeededWorkbook(page: Page): Promise<void> {\n  await page.goto('/');\n  await page.getByRole('link', { name: 'Q3 Sales', exact: true }).click();\n  await expect(grid(page)).toBeVisible();\n}"
+  },
+  {
+    "render_block": 1670,
+    "source": "continuation02-root-native/006-2026-09-28T03-03-41-662Z_01a0e5f7-dd5e-7721-8d83-c01430f9872e.jsonl:L177",
+    "chars": 173,
+    "text": "async function selectCell(page: Page, a1: string): Promise<void> {\n  await cell(page, a1).click();\n  await expect(cell(page, a1)).toHaveAttribute('aria-selected', 'true');\n}"
+  },
+  {
+    "render_block": 1704,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L75",
+    "chars": 190,
+    "text": "test.describe('REQ-3-1-3 selection persistence per worksheet', () => {\n  test('switching worksheets keeps each worksheet rectangle', async ({ page }) => {\n    await openSeededWorkbook(page);"
+  },
+  {
+    "render_block": 1706,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L75",
+    "chars": 193,
+    "text": "    await dragSelect(page, 'C3', 'D4');\n    await expect(cell(page, 'C3')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'D4')).toHaveAttribute('aria-selected', 'true');"
+  },
+  {
+    "render_block": 1708,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L75",
+    "chars": 302,
+    "text": "    // The seeded workbook contains Sheet1 and Sheet2 (root Issue #1 seed ruling).\n    const sheet2 = page.getByRole('tab', { name: 'Sheet2', exact: true });\n    await expect(sheet2).toHaveCount(1);\n    await sheet2.click();\n    await expect(grid(page)).toBeVisible();\n    await selectCell(page, 'A1');"
+  },
+  {
+    "render_block": 1710,
+    "source": "continuation02-root-native/010-unparsed-2026-09-28T03-04-28-625Z_01a0e5f8-94d0-72dc-b764-f0d1b81360e7.jsonl:L75",
+    "chars": 376,
+    "text": "    // Back to Sheet1: the rectangle is restored, and Sheet2 keeps A1.\n    await page.getByRole('tab', { name: 'Sheet1', exact: true }).click();\n    await expect(cell(page, 'C3')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'D4')).toHaveAttribute('aria-selected', 'true');\n    await expect(cell(page, 'A1')).toHaveAttribute('aria-selected', 'false');"
+  },
+  {
+    "render_block": 1822,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L22",
+    "chars": 310,
+    "text": "/** Create page: \"Workbook name\" text box + \"Create\" submit button. */\nexport default function CreatePage() {\n  const navigate = useNavigate();\n  const [name, setName] = useState(\"Untitled workbook\");\n  const [error, setError] = useState<string | null>(null);\n  const [creating, setCreating] = useState(false);"
+  },
+  {
+    "render_block": 1824,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L22",
+    "chars": 461,
+    "text": "  const submit = async (e: FormEvent) => {\n    e.preventDefault();\n    const trimmed = name.trim();\n    if (!trimmed) {\n      setError(\"Workbook name cannot be empty\");\n      return;\n    }\n    setCreating(true);\n    setError(null);\n    try {\n      const wb = await api.createWorkbook(trimmed);\n      navigate(`/workbook/${wb.id}`);\n    } catch (err) {\n      setError(err instanceof ApiError ? err.message : \"Create failed\");\n      setCreating(false);\n    }\n  };"
+  },
+  {
+    "render_block": 2100,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L24",
+    "chars": 332,
+    "text": "  // Keep the active cell in view and focused during keyboard navigation.\n  const focusActive = () => {\n    const el = cellRefs.current.get(selection.activeCell);\n    if (el && gridRef.current?.contains(document.activeElement)) {\n      el.focus({ preventScroll: false });\n    }\n  };\n  useEffect(focusActive, [selection.activeCell]);"
+  },
+  {
+    "render_block": 2974,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  },
+  {
+    "render_block": 3000,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 3018,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 181,
+    "text": "# Chromium needs a short temp path (SingletonSocket has a 108-char limit),\n# so always use a short TMPDIR instead of the workspace default.\nexport TMPDIR=/tmp/pwt\nmkdir -p \"$TMPDIR\""
+  },
+  {
+    "render_block": 3022,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 365,
+    "text": "/**\n * Every spec file runs against its own freshly seeded server instance (see\n * run.sh), so each check observes the promised initial state and mutating\n * checks cannot leak into others.\n */\nfunction required(name: string): string {\n  const value = process.env[name];\n  if (!value) throw new Error(`Set ${name} before running browser checks.`);\n  return value;\n}"
+  },
+  {
+    "render_block": 3026,
+    "source": "continuation02-root-native/004-2026-09-28T03-03-22-072Z_01a0e5f7-90d8-77e2-964c-86b090b0a7a8.jsonl:L171",
+    "chars": 432,
+    "text": "const projects: Project[] = [\n  {\n    name: 'create-workbook',\n    testMatch: '**/create-workbook.spec.ts',\n    use: { baseURL: required('BASE_URL_CREATE') },\n  },\n  {\n    name: 'editor-interactions',\n    testMatch: '**/editor-interactions.spec.ts',\n    use: { baseURL: required('BASE_URL_EDITOR') },\n  },\n  {\n    name: 'home-editor',\n    testMatch: '**/home-editor.spec.ts',\n    use: { baseURL: required('BASE_URL_HOME') },\n  },\n];"
+  },
+  {
+    "render_block": 3170,
+    "source": "continuation02-root-native/013-2026-09-28T03-31-14-303Z_01a0e611-14ff-7029-a14c-b0d3d87eb0fe.jsonl:L27",
+    "chars": 192,
+    "text": "Commands:\n  view       \n  edit       \n  hide       \n  unhide     \n  delete     \n  resolve    \n  unresolve  \n  reaction   \n  help       Print this message or the help of the given subcommand(s)"
+  },
+  {
+    "render_block": 3182,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L26",
+    "chars": 226,
+    "text": "Commands:\n  list         \n  view         \n  subscribe    \n  unsubscribe  \n  create       \n  edit         \n  comment      \n  close        \n  reopen       \n  help         Print this message or the help of the given subcommand(s)"
+  }
+]

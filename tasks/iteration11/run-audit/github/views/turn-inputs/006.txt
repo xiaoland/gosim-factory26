@@ -1,0 +1,12 @@
+hash 107af6935a174d22e0594405fd8784bde2e3f68f9e3c33ff06fa4d2f3aaf068a
+copies 1
+source snapshot-01/braid-state/turns/01a0eb6f-290f-7983-949d-ee03c6f95116.md
+
+请处理 PR #2。
+
+对象：local/run#2
+
+发生以下更新：
+- 新 PR 工作
+
+使用 `braid pr view 2 --comments` 查看当前内容。

@@ -1,0 +1,12 @@
+hash 36d808f26604d4f17ee2da70e142ba8e284c47ea160119e23acbef81e32e091c
+copies 1
+source snapshot-01/braid-state/turns/01a0ebed-a90e-7cf1-905e-4100f503ace9.md
+
+请处理 PR #14。
+
+对象：local/run#14
+
+发生以下更新：
+- 新 PR 工作
+
+使用 `braid pr view 14 --comments` 查看当前内容。

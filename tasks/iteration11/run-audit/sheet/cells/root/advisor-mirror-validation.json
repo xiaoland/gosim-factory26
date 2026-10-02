@@ -1,0 +1,170 @@
+{
+  "sources": [
+    {
+      "native_line": 1,
+      "artifact_lines": [],
+      "read_method": "direct metadata / supplemented original"
+    },
+    {
+      "native_line": 2,
+      "artifact_lines": [],
+      "read_method": "direct metadata / supplemented original"
+    },
+    {
+      "native_line": 3,
+      "artifact_lines": [],
+      "read_method": "direct metadata / supplemented original"
+    },
+    {
+      "native_line": 4,
+      "artifact_lines": [],
+      "read_method": "direct metadata / supplemented original"
+    },
+    {
+      "native_line": 5,
+      "artifact_lines": [
+        2
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 6,
+      "artifact_lines": [
+        3
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 7,
+      "artifact_lines": [],
+      "read_method": "direct metadata / supplemented original"
+    },
+    {
+      "native_line": 8,
+      "artifact_lines": [
+        7
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 9,
+      "artifact_lines": [
+        10
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 10,
+      "artifact_lines": [
+        11
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 11,
+      "artifact_lines": [
+        14
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 12,
+      "artifact_lines": [
+        15
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 13,
+      "artifact_lines": [
+        18
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 14,
+      "artifact_lines": [
+        19
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 15,
+      "artifact_lines": [
+        22
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 16,
+      "artifact_lines": [
+        23
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 17,
+      "artifact_lines": [
+        28
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 18,
+      "artifact_lines": [
+        29
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 19,
+      "artifact_lines": [
+        30
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 20,
+      "artifact_lines": [
+        33
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 21,
+      "artifact_lines": [
+        34
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 22,
+      "artifact_lines": [
+        37
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 23,
+      "artifact_lines": [
+        38
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 24,
+      "artifact_lines": [
+        41
+      ],
+      "read_method": "exact_mirror"
+    },
+    {
+      "native_line": 25,
+      "artifact_lines": [
+        42
+      ],
+      "read_method": "exact_mirror"
+    }
+  ],
+  "note": "原生与已经全文阅读的 artifact 按 message 或 content 精确比对；L7 artifact 被截断，主审补读原生 text[32700:42500] 与 [42500:]，details.truncation.content 是已读 text 的前缀。"
+}

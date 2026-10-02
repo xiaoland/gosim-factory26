@@ -1,0 +1,282 @@
+l. Let's think about what's least surprising to consumers (E's export? no, export is A). D replays snapshot: null → clears. Consider: worksheet imported (footprint 3x2), then... snapshot says minRows: 3, replay sets 3. Fine.
+For a blank worksheet: minRows: null, replay sets null explicitly, which is same state. Fine.
+So use `null` for "no footprint". Frontend: `const minRows = worksheet.minRows ?? 0`.
+Hmm, but actually there's a subtlety about `null` meaning "clear". Per #57: "缺失不得重置为 0". Explicit null = clear to none is a reasonable reading and preserves round trip. I'll document.
+(b) Validation: `min ≤ 所报结构` — which structure? The structure after applying payload rowCount/colCount (if provided) else current. Also minRows/minCols must be non-negative integers? Yes: non-negative integers, and minRows ≤ rowCount, minCols ≤ colCount. Error INVALID_BODY (400) consistent with other body errors.
+Order matters in importWorksheetState: currently the rowCount/colCount block updates DB, then cells block reads structure from DB. For min validation I need the effective structure. I'll restructure minimally: compute effective structure (from payload or ws) in the min block by reading the current DB row (since rowCount block already ran, DB reflects it). Using the same pattern as the cells block (SELECT row_count, col_count FROM worksheets). Also, if payload only gives minRows without rowCount, DB row_count is unchanged. Good — read from DB.
+But here's a wrinkle: if payload gives `minRows` but rowCount is absent, and we want validation min ≤ current — fine.
+Also for `min_cols`: consistent.
+(c) Should `PUT .../state` accept `minRows: null` to clear? Yes.
+(d) Export semantics: used range rows = max(bboxMaxRow+1, minRows), cols = max(bboxMaxCol+1, minCols). If both 0 → ''. Also empty worksheet with footprint → rows of empty fields.
+Wait: "无内容 → 空文件 仅指包围盒与足迹同时为空". So if minRows=0 but minCols=0 → empty. If minRows>0 or minCols>0 → output.
+Note: footprint could be minRows=2,minCols=3 with no cells → 2 lines of `,,`.
+(e) Ragged padding: where to apply? I'll apply inside parseCsv so `parseCsv` returns a dense rectangle. But wait — D-A5 and the parser's unit tests may assert ragged output. Also the parser is documented as pure. Changing parseCsv output to padded is a semantic change to a function that's tested. Alternatively pad in `createWorkbookFromCsv` only (add a `padRecords` helper), keeping parseCsv faithful to input. But contract A-1 pins "不等长行按最宽行右侧补空字段" as a parsing semantic — the observable behavior is the import result. Both produce identical import results. Hmm.
+Which is better for the "single parse module" and for tests? I think padding in parseCsv makes the module's output canonical (dense), simpler downstream, and lets `csvColumnCount` be unnecessary... but `csvColumnCount` is used for footprint. Actually padding inside parseCsv is cleaner: then records are all equal length, and min_cols = records[0].length. And the export footprint uses min_cols. I'll pad inside parseCsv and keep csvColumnCount as a helper (still valid; returns records[0]?.length ?? 0).
+Hmm, but there's risk: existing test expectations of ragged rows? Let me grep the tests.
+Also: should empty records be padded? e.g. `a,b\n\nc` — trailing blank lines are stripped only at the end; a middle empty line becomes a record with one empty field → padded to `['', '']`. Fine.
+(f) Also need to double check: "文件末尾单个换行不产生额外空行" — parser handles.
+Now, e2e additions for footprint: 
+- Import CSV with trailing empty field via file: e.g. `a,b\nc,d,` → workbook 6x26; export → `a,b,\nc,d,` (2 rows, 3 cols, footprint). Hmm wait used range = max(bbox=2x2, footprint=2x3) → 2 rows, 3 cols → "a,b,\nc,d,". Good.
+- Also empty-cleared worksheet? Not in e2e necessarily; unit test suffices.
+Also unit tests for footprint export in csvExport.test.ts: need a worksheet snapshot with minRows/minCols. Type change will break existing test fixtures (object literals typed as WorksheetSnapshot). Need to update them (add minRows: null, minCols: null). Let me check how tests build worksheets.
+Let me read the frontend tests and e2e spec and backend tests relevant parts.
+[DUPLICATES: 26 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L40:C1]
+[toolCall] bash call_00_q3YDQQD7pGWUQNf4Qb181299
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && grep -n \"ragged\\|records\\b\" backend/src/csv.test.js | head -40; echo \"=== e2e export/import tests ===\"; grep -n \"Export CSV\\|Import CSV\\|download\\|footprint\\|min\" e2e/workbook-lifecycle.spec.ts | head -40"}
+[toolCall] bash call_01_YgkcSKCSHF9WrGLGTWYN2037
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '1,60p' frontend/src/lib/csvExport.test.ts; echo \"...\"; grep -rn \"rowCount:\" frontend/src/lib/csvExport.test.ts | head"}
+
+## S24:L41 2026-09-29T06:32:15.000Z message toolResult
+toolResult bash False
+[text]
+65:  it('returns no records for an empty file or a BOM-only file', () => {
+97:  it('keeps blank lines in the middle as empty records', () => {
+=== e2e export/import tests ===
+38:  await page.getByRole('button', { name: 'Import CSV' }).click();
+53:    page.waitForEvent('download'),
+54:    page.getByRole('button', { name: 'Export CSV' }).click(),
+57:  if (!path) throw new Error('download has no local path');
+58:  return { fileName: download.suggestedFilename(), csv: fs.readFileSync(path, 'utf8') };
+275:  test('rejects an unterminated quote with the exact message and keeps nothing', async ({ page }) => {
+277:    await page.getByRole('button', { name: 'Import CSV' }).click();
+278:    const dialog = page.getByRole('dialog', { name: 'Import CSV' });
+282:      buffer: Buffer.from('a,b\n"unterminated,c', 'utf8'),
+299:  test('downloads the used range with LF endings and leaves the editor state unchanged', async ({
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L41:C1]
+
+## S24:L42 2026-09-29T06:32:15.000Z message toolResult
+toolResult bash False
+[text]
+    // Byte-exact assertion of the D-A7 contract (not of requirement wording):
+    // records are separated by `\n` and no terminator is appended after the last one.
+...
+[DUPLICATES: 58 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L42:C1]
+
+## S24:L43 2026-09-29T06:32:16.580Z message assistant
+[toolCall] bash call_00_ET_4SQRXq7AdOJvfuBKFgKk3131
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '85,115p' backend/src/csv.test.js; echo \"=== 290,420 e2e ===\"; sed -n '295,400p' e2e/workbook-lifecycle.spec.ts"}
+
+## S24:L44 2026-09-29T06:32:16.592Z message toolResult
+toolResult bash False
+[text]
+    expect(() => parseCsv('a,"b')).toThrow(CsvParseError);
+    expect(() => parseCsv('"')).toThrow(CsvParseError);
+    expect(() => parseCsv('"unterminated\nnext,row')).toThrow(CsvParseError);
+    expect(() => parseCsv('a,"b\n')).toThrow(CsvParseError);
+    expect(() => parseCsv('a,b\n"x')).toThrow(/Invalid CSV file format/);
+  it('accepts a quoted field that is closed at the very end of the input', () => {
+    expect(parseCsv('"a,b"')).toEqual([['a,b']]);
+    expect(parseCsv('"a\nb"')).toEqual([['a\nb']]);
+  it('keeps blank lines in the middle as empty records', () => {
+    expect(parseCsv('a\n\nb')).toEqual([['a'], [''], ['b']]);
+describe('csvColumnCount', () => {
+  it('reports the widest record, or 0 for empty input', () => {
+    expect(csvColumnCount([])).toBe(0);
+    expect(csvColumnCount([['a'], ['a', 'b', 'c'], ['a', 'b']])).toBe(3);
+describe('workbookNameFromFileName', () => {
+  it('drops a trailing .csv case-insensitively', () => {
+    expect(workbookNameFromFileName('report.csv', 'Untitled spreadsheet')).toBe('report');
+    expect(workbookNameFromFileName('Report.CSV', 'Untitled spreadsheet')).toBe('Report');
+    expect(workbookNameFromFileName('  data.csv  ', 'Untitled spreadsheet')).toBe('data');
+=== 290,420 e2e ===
+    // Byte-exact D-A7 contract: `\n` between records, nothing after the last one,
+    // no BOM, no CR. This pins the export format, not requirement wording.
+    expect(csv).toBe('Region,Sales\nEast,1200\nNorth,800');
+    expect(exported).toBe(`plain,"with,comma",,\n"say ""hi""","line\nbreak",,tail`);
+    expect(csv).toBe('=1+1,plain');
+[DUPLICATES: 73 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L44:C1]
+
+## S24:L45 2026-09-29T06:32:20.566Z message assistant
+[thinking]
+Note the e2e "escapes commas..." case: csv = `plain,"with,comma"\n"say ""hi""","line\nbreak",,tail` → 2 records, second has 4 fields → with padding, records become [['plain','with,comma','',''], ['say "hi"','line\nbreak','','tail']] → 2x4. Footprint = 2x4 same as bbox. Export unchanged. Good.
+The import of `'Region,Sales', 'East,1200', 'North,800'` → 3x2 footprint; bbox 3x2 → same.
+Existing backend test `parseCsv('a\n\nb')` → [['a'], [''], ['b']]. With padding → [['a'], [''], ['b']] (widest 1). Fine.
+`parseCsv('a,b\n\nc')`? none.
+Now check csv.test.js more broadly for ragged expectations: `csvColumnCount([['a'], ['a','b','c'], ['a','b']])` — that's a direct call on hand-made records, unaffected if padding happens in parseCsv.
+Now: does any test call parseCsv with ragged input and assert ragged output? Let me grep the whole file for `parseCsv(` with unequal rows. Let me just read csv.test.js fully — it's ~120 lines.
+Let me also read the packet to update it. And the README section 80-100 already seen.
+Let me read csv.test.js and the backend import tests in app.test.js.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L45:C1]
+[toolCall] read call_00_Nj8s0czcLyEMXKM7yUgT6799
+{"path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/backend/src/csv.test.js"}
+[toolCall] bash call_01_bNxWozLdPr1oR2kkw3UN7841
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && grep -n \"import\" backend/src/app.test.js | head -40"}
+
+## S24:L46 2026-09-29T06:32:20.580Z message toolResult
+toolResult read False
+[text]
+import { CsvParseError, csvColumnCount, parseCsv, workbookNameFromFileName } from './csv.js';
+ * REQ-1-3-1 / Issue #3 decision D-A5: the parser accepts everything except the
+ * one invalid class the requirement names (a field opening a quote that never
+ * closes). These cases are the acceptance matrix for that rule.
+describe('parseCsv', () => {
+  it('parses plain rows and columns in order', () => {
+    expect(parseCsv('a,b,c\n1,2,3')).toEqual([
+      ['a', 'b', 'c'],
+      ['1', '2', '3'],
+  it('preserves empty fields, including trailing ones', () => {
+    expect(parseCsv('a,,c')).toEqual([['a', '', 'c']]);
+    expect(parseCsv('a,b\nc,d,')).toEqual([
+      ['a', 'b'],
+      ['c', 'd', ''],
+    expect(parseCsv(',,')).toEqual([['', '', '']]);
+  it('handles commas inside double quotes', () => {
+    expect(parseCsv('"a,b",c')).toEqual([['a,b', 'c']]);
+  it('collapses escaped quote pairs', () => {
+    expect(parseCsv('"he said ""hi""",x')).toEqual([['he said "hi"', 'x']]);
+    expect(parseCsv('""""')).toEqual([['"']]);
+  it('keeps line breaks inside quoted fields verbatim', () => {
+    expect(parseCsv('"line1\nline2",b')).toEqual([['line1\nline2', 'b']]);
+    expect(parseCsv('"line1\r\nline2",b')).toEqual([['line1\r\nline2', 'b']]);
+  it('accepts UTF-8 Chinese, English and numeric text', () => {
+    expect(parseCsv('地区,销售额,状态\n华东,1200,完成')).toEqual([
+      ['地区', '销售额', '状态'],
+      ['华东', '1200', '完成'],
+  it('treats LF, CRLF and lone CR as record separators', () => {
+    const expected = [
+      ['c', 'd'],
+    ];
+    expect(parseCsv('a,b\nc,d')).toEqual(expected);
+    expect(parseCsv('a,b\r\nc,d')).toEqual(expected);
+    expect(parseCsv('a,b\rc,d')).toEqual(expected);
+  it('does not create a record for a trailing newline or trailing blank lines', () => {
+    expect(parseCsv('a,b\n')).toEqual([['a', 'b']]);
+    expect(parseCsv('a,b\r\n')).toEqual([['a', 'b']]);
+    expect(parseCsv('a,b\n\n')).toEqual([['a', 'b']]);
+    expect(parseCsv('\n')).toEqual([]);
+    expect(parseCsv('\n\n')).toEqual([]);
+  it('returns no records for an empty file or a BOM-only file', () => {
+    expect(parseCsv('')).toEqual([]);
+    expect(parseCsv('\ufeff')).toEqual([]);
+  it('strips a leading BOM and keeps the first field intact', () => {
+    expect(parseCsv('\ufeff地区,销售额')).toEqual([['地区', '销售额']]);
+  it('treats a bare quote inside an unquoted field as a literal character', () => {
+    expect(parseCsv('ab"cd,e')).toEqual([['ab"cd', 'e']]);
+    expect(parseCsv('a"b"c')).toEqual([['a"b"c']]);
+  it('accepts a quoted field with trailing text after the closing quote', () => {
+    // Documented assumption A-5: only the requirement's invalid class is rejected.
+    expect(parseCsv('"ab"cd,e')).toEqual([['abcd', 'e']]);
+  it('rejects a field that opens a quote and never closes it', () => {
+  it('falls back when nothing usable remains', () => {
+    expect(workbookNameFromFileName('.csv', 'Untitled spreadsheet')).toBe('Untitled spreadsheet');
+    expect(workbookNameFromFileName('   ', 'Untitled spreadsheet')).toBe('Untitled spreadsheet');
+  it('keeps inner dots and only strips the final extension', () => {
+    expect(workbookNameFromFileName('q3.sales.csv', 'Untitled spreadsheet')).toBe('q3.sales');
+[DUPLICATES: 67 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L46:C1]
+
+## S24:L47 2026-09-29T06:32:20.580Z message toolResult
+toolResult bash False
+[text]
+1:import { describe, expect, it } from 'vitest';
+2:import request from 'supertest';
+3:import { migrate, openDatabase } from './db.js';
+4:import {
+11:import { createApp } from './app.js';
+19:/** @param {import('./db.js').Db} db */
+25: * @param {import('./db.js').Db} db
+343:    // The whole import rolled back: cell values and structure are untouched.
+351:describe('POST /api/workbooks/import', () => {
+352:  it('creates a workbook named after the file and imports every row and column', async () => {
+355:      .post('/api/workbooks/import')
+379:  it('imports quoted commas, escaped quotes, in-field newlines and empty fields', async () => {
+382:    const res = await request(app).post('/api/workbooks/import').send({ fileName: 'tricky.csv', csv });
+430:    const res = await request(app).post('/api/workbooks/import').send({ fileName: '.csv', csv: 'a' });
+437:    await request(app).post('/api/workbooks/import').send({ fileName: 'dup.csv', csv: 'a' });
+438:    const second = await request(app).post('/api/workbooks/import').send({ fileName: 'dup.csv', csv: 'b' });
+468:    const missingName = await request(app).post('/api/workbooks/import').send({ csv: 'a' });
+473:    const missingCsv = await request(app).post('/api/workbooks/import').send({ fileName: 'a.csv' });
+477:    const notAnObject = await request(app).post('/api/workbooks/import').send([1, 2]);
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L47:C1]
+
+## S24:L48 2026-09-29T06:32:27.526Z message assistant
+[thinking]
+The test at line 11-16 in csv.test.js: `expect(parseCsv('a,b\nc,d,')).toEqual([['a','b'],['c','d','']])` — with padding this becomes [['a','b',''],['c','d','']]. That test documents "preserves empty fields, including trailing ones". I'll update it to the padded form (and note the v1.3 ragged padding rule).
+Also `parseCsv('a\n\nb')` stays same.
+Line 11 in the imports of app.test.js — let me read that import block plus the import test section.
+Now let me plan concretely and think about how much to do vs. delegate. The work is moderate: backend migration+store+routes+tests, frontend export+types+tests, e2e case, README, packet. I can do it myself efficiently; delegation to executor subagents is possible but coordination overhead with a single file set is high. However the guidance says "应用实施由关联 PR 负责人组织其 executor 和代码工作" — the PR owner organizes executors and code work; it doesn't mandate delegation. I'll do the implementation directly (I'm the PR owner and it's coherent, ~1 file set), possibly delegating one independent piece (e.g. e2e case + frontend tests) — but conflicts. I'll just do it.
+Before implementing, per svc-implementation: resolve route-changing unknowns. Key unknowns:
+- Does the migration ALTER TABLE approach work with the seed and existing DB? Idempotent via schema_migrations. Fine.
+- Does the frontend snapshot type/usage break? I'll update.
+- Does e2e harness handle footprint export? I'll add a case.
+Also should I verify the platform path? The changes are small; existing checks (pnpm -r test/typecheck + run-e2e.sh) suffice.
+One more thing: the root issue says PR #8 must also flip the README to mention footprint and state fields. And also v1.3 §2: "共享校验 helper 折入 B 的 PR #9... A 的 PR #8 消费之" — A can't consume until PR #9 lands. So implement private path now with a comment noting the future switch. Also mention in handoff.
+Now also — critical — should I ask @deepseek-3 (Issue owner) whether v1.3 changes go into PR #8 now, given the Issue #3 body doesn't yet record v1.3? The root owner (#1) already ruled and Issue #1 body lists "#3 ... v1.3 落地：state 两字段 undefined 语义 + 导出足迹分支". And #57 explicitly says "A 按 §3/§4 调整 PR #8". So yes. But I should notify @deepseek-3 on Issue #3 with a comment (in thread 27) that I'm implementing v1.3 and note the README fix already done in d536aa2 — because their pre-review comment #47 referred to 035f4f1 and they may not have seen d536aa2. Actually my handoff #62 says README fixed. Then a new candidate will follow. I'll post a progress comment after implementing (the handoff), not now.
+Wait — should I check whether @deepseek-3 has responded to #62 with acceptance? Issue 3 comments end at 62. So no. Implementing v1.3 is the right next step.
+Also: the previous run's advisor consult is available (advisor a4055255...). The prompt earlier mentions the last comment part: "请处理 PR #8。" and the final lines list update items. Hmm, actually there's an odd trailing fragment in the system prompt — "Your previous native subagent runs..." and "Inspect pending results needed for your work before declaring completion." Note the notification list also included "issue:1 comment 37" — which is about... let me check #37 quickly; it's part of the A-1..A-4 convergence (deepseek-2's verification maybe). And #34 (base layer confirmation). Fine.
+Let me read issue 1 comments 34-50 quickly to ensure nothing else required of A (e.g. 42/43/45 relate to B).
+Actually comment #51 covers everything. But let me quickly scan 28-50 for A-relevant items I might have missed (e.g. "导出足迹" discussion in #31/#32). Let me read 28-50.
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L48:C1]
+[toolCall] bash call_00_tIIFYZ2KXC3Z7vcnK30D7787
+{"command": "sed -n '352,650p' /tmp/issue1.txt"}
+
+## S24:L49 2026-09-29T06:32:27.538Z message toolResult
+toolResult bash False
+[text]
+comment #39 [visible]
+【基础层（#2）对 B-1/B-2 的基线事实核对与归属建议 — 供 @glm-1 裁定】@glm-4
+在合入基线 `698afd2` 上逐条核对：B-2 的指认成立，且还有第二道同源的门；B-1 的返回形状变更会波及基线已交付端点的前端消费点。两点都是"裁定后归谁改"的问题，基础层侧都能承接，但请单点归属以免并行竞争。
+2. **不反驳"若全局化应按可渲染预算定真值"**：同意 #46 的风险不对称分析（列维度 256 会误伤可满足 "complete columns" 的导入）。B 无立场推动全局化——那会改变 A 与 state 的验收面��超出 B 的需求范围；若 @glm-1 将来裁定全局化，按当时裁定的常数执行即可，B 侧改动仍是单点。
+reply-to: 28
+[DUPLICATES: 294 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L49:C1]
+
+## S24:L50 2026-09-29T06:32:31.668Z message assistant
+[thinking]
+Clear. Now implement v1.3 for PR #8:
+1. Migration 002: add `min_rows`, `min_cols` columns.
+2. store.js:
+   - `createWorkbookFromCsv`: insert min_rows/min_cols = records.length / csvColumnCount (footprint). Note "下限 = 导入时 CSV 的实际行列数（裁剪后、含 ragged 补齐）".
+   - `getWorksheetSnapshot`: minRows/minCols (null when null).
+   - `importWorksheetState`: minRows/minCols with undefined = no change; null = clear; validate non-negative integers and ≤ reported structure (INVALID_BODY).
+3. csv.js: pad ragged rows to widest; update JSDoc.
+4. routes.js: unchanged (import handler fine).
+5. shared/types.d.ts: WorksheetSnapshot minRows/minCols: number|null; WorksheetStatePayload minRows?/minCols?.
+6. frontend csvExport.ts: used range = max(bbox, footprint); empty output only when both empty.
+7. README: document min_rows/min_cols + footprint + state undefined semantics; keep the three-path sentence (already) — maybe refine to mention footprint.
+8. Tests: backend csv.test.js (padding), app.test.js (import footprint fields, state undefined semantics, validation), frontend csvExport.test.ts (fixture + footprint cases), e2e (footprint preservation case + maybe state).
+9. packet update.
+Wait: does anything else read WorksheetSnapshot and construct it? frontend tests fixtures. Let's grep for WorksheetSnapshot object constructions and for `rowCount` in frontend code (Grid, WorkbookEditor). Also check whether Grid gets rowCount from snapshot.
+Also `WorksheetRow` typedef in store.js — need to add min_rows/min_cols typing.
+One important subtlety: the frontend `WorkbookEditor` may hold a worksheet object and pass to worksheetToCsv; rowCount/colCount used for grid rendering. minRows/minCols will be extra fields; no issue.
+Also: does the editor snapshot rebuild the worksheet object locally (e.g., after rename or cell edits) — if it constructs a new object it must preserve minRows/minCols. Let me check WorkbookEditor.
+Let me read WorkbookEditor.tsx and Grid.tsx relevant parts.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L50:C1]
+[toolCall] read call_00_VC6cNOtQSChk0H3byczy7743
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L50:C2]
+
+## S24:L51 2026-09-29T06:32:31.671Z message toolResult
+toolResult read False
+[text]
+import { worksheetDisplayValues } from '../lib/cellDisplay';
+import { WorkbookToolbar } from './WorkbookToolbar';
+  // Single display-value seam (D-A8): the grid and the CSV export read the same
+  // function, so sub-issue C only has to replace `worksheetDisplayValues`.
+  const displayValue = useMemo(
+    () => (activeWorksheet ? worksheetDisplayValues(activeWorksheet) : () => ''),
+    [activeWorksheet],
+  const handleRenamed = useCallback((name: string, updatedAt: string) => {
+    setSnapshot((previous) => (previous ? { ...previous, name, updatedAt } : previous));
+      {/* Toolbar: workbook lifecycle controls; follow-up sub-issues append here. */}
+        <WorkbookToolbar
+          workbookId={id}
+          workbookName={snapshot.name}
+          worksheet={activeWorksheet}
+          displayValue={displayValue}
+          onRenamed={handleRenamed}
+[DUPLICATES: 288 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L51:C1]
+
+## S24:L52 2026-09-29T06:32:34.615Z message assistant
+[thinking]
+Good: spread objects preserve extra fields, so minRows/minCols survive.
+Now let's check the WorkbookToolbar (export call).
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L52:C1]
+[toolCall] read call_00_md4yaSfqTUfpzOcjGkDF0273
+{"path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/components/WorkbookToolbar.tsx"}
+[toolCall] bash call_01_KsFLw1e6BxCltorxNIjz2736
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && sed -n '351,485p' backend/src/app.test.js"}
+
+## S24:L53 2026-09-29T06:32:34.626Z message toolResult
+toolResult read False
+[text]
+[DUPLICATES: 56 exact source lines omitted; precise per-line source map in duplicate-lines.json at S24:L53:C1]
+
+## S24:L54 2026-09-29T06:32:34.626Z message toolResul

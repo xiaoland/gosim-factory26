@@ -1,0 +1,58 @@
+{
+  "node_id": "issue:9",
+  "repository_node_id": "local",
+  "kind": "issue",
+  "number": 9,
+  "state": "OPEN",
+  "context_revision": null,
+  "observed_at": "2026-09-29T04:34:35.256641084Z",
+  "title": "M6a 分支保护、Checks 与 PR 生命周期（REQ-6-1、6-2-*、6-3-1/2）",
+  "body": "## 需求来源（权威）\n需求包：`/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml`\n原子需求：REQ-6-1（分支保护与 Checks）、REQ-6-2-1（PR 列表）、REQ-6-2-2（比较分支）、REQ-6-2-3（从比较创建 PR）、REQ-6-2-4（Draft PR 与 Ready for review）、REQ-6-3-1（PR 三视图）、REQ-6-3-2（Files changed 聚合 diff）。\n参考截图：github-branch-protection.png、github-pull-requests-list.png、github-compare-branches.png、github-repository-overview.png。\n\n## 共享决定（必须遵循）\ndocs/architecture.md §5（pull_requests/reviews/check_runs/branch_protections 表）、§9.2（合并语义与 merge base）、§9.5（Checks 按 (compareCommitId, name) 存储与展示；新 compare commit → pending）、权限映射（比较/创建 write+；保护规则与 Checks 状态更新 admin+）。\n文案：\"Add branch protection rule\"、\"Branch name pattern\"、\"Require 1 approval\"、\"Require status check test\"、\"Create\"/\"Save changes\"、\"test status\"/\"success\"/\"Save\"、\"New pull request\"、\"base\"/\"compare\"（native select，combobox role）、\"Compare changes\"、\"Create pull request\"、\"Create draft pull request\"、\"Title is required\"、\"Ready for review\"、\"Conversation\"/\"Commits\"/\"Files changed\"、\"Changed files\"、\"<N> additions, <N> deletions\" —— 进 copy.ts。\n\n## 交付\n1. 分支保护：Settings → \"Branches\" → 按钮 \"Add branch protection rule\"；表单字段 \"Branch name pattern\"（精确分支名，无通配）、checkbox \"Require 1 approval\" 与 \"Require status check test\"、按钮 \"Create\"（已有规则为 \"Save changes\"）；保存后规则行显示分支名与两条摘要（\"1 approval\"、\"Require status check test\"）；非 Admin 完全看不到 \"Add branch protection rule\"（即使可进 Branches 页）；每分支唯一规则。\n2. Checks：PR 详情 Checks 区随页可用，初始显示 \"test: pending\"；Admin 有 combobox \"test status\"（option \"success\"）+ \"Save\"；保存后显示 test: success + 设置者 + 时间；刷新保持且对应同一 compare commit；compare 分支新 commit 后新 compare commit 回到 pending；仅 Admin 可改。\n3. PR 列表：行显示编号/标题/作者/状态/源分支/目标分支；状态过滤 Draft/Open/Closed/Merged + 作者/评审状态；访客可直接访问公开列表；\"Open\" 链接过滤；标题链接精确名。\n4. 比较页：链接 \"New pull request\"（write+ 可用；Read/Triage 不可进入创建比较流）→ native select \"base\"/\"compare\"（选项为精确分支名）+ 按钮 \"Compare changes\"；有效选择显示已知变更文件路径（逐字）、Commit 汇总（可比 commit 数）、enabled 的 \"Create pull request\"；base=compare 立即显示无差异说明并禁用创建（无需先点 Compare）；比较只读。\n5. 创建 PR：比较页 \"Create pull request\" 打开表单（字段 \"Title\"、可选 \"Description\"、同一 \"Create pull request\" 提交按钮）；成功建 Open PR（仓库内唯一编号、base/compare 分支、base/compare commit、活动记录）并跳详情；空白标题 → \"Title is required\"；同源/目标已存在 Open 或 Draft 时不建。\n6. Draft：比较页可见 \"Create draft pull request\"；成功显示 Draft 标记与禁用的 \"Merge pull request\"；Draft 不能提交评审、不能合并；作者/Maintain+/Owner 可用 \"Ready for review\"（如需确认则为单个 \"Confirm\"）转 Open 并记录活动。\n7. 三视图与聚合 diff：Conversation（描述/评论/评审摘要/状态事件时间线）、Commits（相对 base 的 compare 分支 commit，含 Commit 汇总）、Files changed（含 Changed files 汇总）；三视图同一 PR 编号；访客可读公开 Open PR；diff 显示文件路径逐字与每文件增删行、聚合 \"<N> additions, <N> deletions\"；未变更文件不显示。\n8. 后端 + Vitest（保护规则唯一性/权限、Checks 键控、比较计算、PR 编号、Draft 状态机）+ seed（PR 种子与 Fix search/Closed PR/Draft PR，见 docs/seed-data.md）。\n\n## 前置\nM4a（树/diff API 与 merge base 计算）已合入 develop；M3（仓库页入口）已合入。\n\n## 验收\nPlaywright 覆盖 7 条需求场景；权限档次（控件缺席 + API 拒绝）；刷新持久化；Checks 与 compare commit 对应断言。\n"
+}
+
+local_comments {
+  "comment_id": 93,
+  "work_item_node_id": "issue:9",
+  "body": "## 待消费契约登记（M4a，Issue #6 / PR #16）— @glm-1 可见\n\nM4a 已发布代码浏览/历史/diff 契约，本任务（M6a）按它消费；权威入口：Issue #6 正文「共享契约（M4a 登记）」、`docs/architecture.md` §7.2（PR #16 合入 develop 后生效）、§9.14。\n\n要点（与 REQ-6-2-2/6-2-3/6-3-2 直接相关）：\n- `GET /api/repos/:owner/:name/compare?base=<rev>&compare=<rev>`（base/compare 可用**分支名**或 commit 标识）→ `{base, compare, mergeBase, commits[], files[{path,status,additions,deletions,url,lines[]}], totals{files,additions,deletions}, empty}`。\n  - `commits[]` = compare 可达、merge base 不可达 → 直接服务 “comparable commits / Commit 汇总” 与 “No changes / empty”。\n  - `files[].lines[].oldNumber/newNumber` 供 M6b 行内评论按 compare commit 锚定。\n- **比较页不共用**：REQ-6-2-2 的 PR 比较流（仅 Write+、`New pull request` 入口、选项为分支名、`Compare changes`、`Create pull request`、`No changes`）由本任务自建页面，复用 §7.2 的 diff 组件与 compare 端点；M4a 只交付全 viewer 可读的 revision 比较页（选项为 commit）。\n- **seed 塑形注意**：更正后 `feature-search → main` 的实际 diff = `main-only.md`(+3) + `README.md`(+2/−0)、2 文件（**不含 `src/search.ts`**），与 `docs/seed-data.md` 里 PR `Improve onboarding` 的 “src/search.ts 3 additions 1 deletions / 1 added + 1 modified” 不符。请用**自有新 commit** 塑形 PR 数据，且**不得移除 `main-only.md`**（它是 REQ-4-1 THEN2 的唯一种子证人）。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebee-c95e-7d40-8567-9d187be96a44",
+  "writer_turn": "01a0ebee-d1f6-7d20-8c70-0ab5edd72761",
+  "revision": 1,
+  "created_at": "2026-09-29T07:06:39.52145263Z",
+  "updated_at": "2026-09-29T07:06:39.52145263Z",
+  "reply_to": null,
+  "thread_root": 93,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_activity {
+  "ordinal": 23,
+  "work_item_node_id": "issue:9",
+  "occurred_at": "2026-09-29T04:34:35.256276394Z",
+  "actor_login": "glm-1",
+  "action": "created",
+  "source_comment": null,
+  "detail": "M6a 分支保护、Checks 与 PR 生命周期（REQ-6-1、6-2-*、6-3-1/2）"
+}
+
+local_activity {
+  "ordinal": 24,
+  "work_item_node_id": "issue:9",
+  "occurred_at": "2026-09-29T04:34:35.256594586Z",
+  "actor_login": "glm-1",
+  "action": "parent_added",
+  "source_comment": null,
+  "detail": "Issue #1"
+}
+
+local_activity {
+  "ordinal": 197,
+  "work_item_node_id": "issue:9",
+  "occurred_at": "2026-09-29T07:06:39.521554136Z",
+  "actor_login": "deepseek-9",
+  "action": "commented",
+  "source_comment": 93,
+  "detail": "comment #93"
+}

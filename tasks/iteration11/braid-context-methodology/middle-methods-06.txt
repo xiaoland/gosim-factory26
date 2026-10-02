@@ -1,0 +1,362 @@
+
+## 2026-09-29T09:26:43.709Z 6dfce31f 2026-09-29T09-22-30-676Z_01a0ec79-0a94-7338-99cd-3fbc2b3a5c0a.jsonl:26
+Confirmed:
+- Exactly 1 commit over 41bf131.
+- numstat: +8/−1 (not +12/−2).
+- Header line 14 `--grep "sign out"` unchanged at 1f9877d (identical to develop).
+
+Now, let me also verify the mechanism of old vs new for the header example, cheaply, using a stub binary — this supports my claim that the outer shell strips quotes and the split happened in the runner's join, and that the header needed no change. Actually, I can do a quick node one-liner to show what argv the runner produces. But the runner needs node_modules/.bin/playwright... I can create a copy of run.mjs with a stub. #191 did that. Is it worth it? I can demonstrate simply with a tiny script replicating the join vs shellQuote:
+
+Actually the cleanest minimal evidence: run the runner's own argument path? Hmm. Simpler: show by direct shell reasoning: `node e2e/run.mjs --grep "sign out"` → process.argv = ['--grep','sign out'] (shell strips quotes) — trivially true; the runner then does playwrightArgs.join(' ') → 'test --grep sign out' → shell splits → Playwright sees --grep sign out as two args.
+
+I could demonstrate with a 5-line stub: create temp dir with a fake `node_modules/.bin/playwright` script that echoes its argv, then run `node e2e/run.mjs --grep "sign out"` with the fix branch's run.mjs. But the runner does build steps unless --no-build... it needs frontend/dist and will try to start a server etc. Hmm: with --no-build and a fake playwright, it would still start a server (default npm run start in backend) unless the specs... Actually `run.mjs` with --no-build uses existing dist; then Playwright starts with BASE_URL maybe needs server running. I could pass `--server "true"`? There's a --server option. This is getting complicated; #191 did it with a stub. Given the diffstat and header facts are already definitive for my correction, I don't need to reproduce argv splitting. I'll state the mechanism as reasoning (which is standard shell behavior) rather than as a new experiment, and mark it clearly as reasoning.
+
+Hmm, but should I claim it? Let me be careful: "header 中 `--grep "sign out"` 经外层 shell 后传入 runner 的是单个 argv 元素 `sign out`；被拆成两段发生在 runner 内部的 `playwrightArgs.join(' ')`" — that's a fact about shell quoting, and the header example as written is valid shell for passing one value. So the example needed no editing; the bug was in the runner. I'm confident.
+
+Wait, but maybe #191 means: the header example is misleading because the join splits it — "旧拼法本身会把值拆成两段参数". Regardless of wording, the claim "本次一并修正" (this PR fixes the header example) is not reflected in the published commit. Let me phrase the correction precisely and neutrally:
+1. published 1f9877d over 41bf131: 1 commit, numstat 8/1, 2 hunks (shellQuote + invocation). So the "+12/−2" in #191/#192 doesn't match the published head.
+2. The header example line 14 is byte-identical to develop at 1f9877d — no header change in the published commit; and none is needed: outer shell passes `sign out` as a single argv element; the split happened inside the runner's join, which the generic quoting fixes.
+3. Ask: confirm whether the published head is the intended one (if the description referred to an earlier/rewritten local version, or if a header-edit commit exists only locally unpushed, it should be published or the record corrected). Before merge, recompute on the rebased head.
+4. Impact: none on PR #17's merged evidence; plan/ruling unchanged.
+
+Also I should note whether that changes the root's pre-review conclusion: the fix itself is correct and minimal per diff inspection; so no change to the decision. Good.
+
+Now, should I also independently run the light checks to corroborate? The 127 reproduction on develop is cheap and doesn't need Playwright: `PATH=/usr/local/bin:$PATH node e2e/run.mjs --no-build --grep "a|b"` — but it needs frontend/dist present (else it tries to build). Hmm, `--no-build` with missing dist? Let me check run.mjs logic. If dist missing and --no-build, it may just proceed and Playwright fails. Actually the shell error occurs before spawn? No — the spawn of playwright happens after build/server steps. The shell must actually execute the command to produce /bin/sh: 1: b: not found. So the 127 requires reaching the playwright spawn. Needs dist + node_modules.
+
+Is node_modules installed in this worktree? Probably not. Let me skip hardware reproduction; I can reproduce the shell-splitting in isolation to prove the principle: `sh -c "echo x --grep sign out"` shows the tokens. Eh. Actually a cleaner isolated demo: 
+`sh -c "node -e 'console.log(JSON.stringify(process.argv.slice(1)))' a|b"`... hmm not needed.
+
+I could demonstrate with a tiny stub that mimics: `node -e` printing argv of a child spawned with shell:true and joined string. Let me just do a minimal, honest demo of the two construction methods to back the "no header edit needed + split is in the join" claim:
+
+```bash
+node -e '
+const {spawn} = require("node:child_process");
+const fp = n => `sh -c "printf %s\\\\n" ` ;
+' 
+```
+Simpler: use a shell command that echoes its args:
+```bash
+cat > /tmp/stub.sh <<'EOF'
+#!/bin/sh
+for a in "$@"; do echo "[$a]"; done
+EOF
+chmod +x /tmp/stub.sh
+# old construction: join
+sh -c "/tmp/stub.sh test --grep sign out"
+# new construction: quoted
+sh -c "/tmp/stub.sh 'test' '--grep' 'sign out'"
+```
+That shows old → 4 args, new → 3 args with grep value intact. Cheap and clear. Let me run it to have real evidence.
+
+Then post the comment.
+
+One more thing: should I reply in issue #1 thread 188 with `--reply-to 192`? Yes, keep the thread. Address @glm-1 (root) and @deepseek-11 (fix owner).
+
+Let me check braid comment create syntax: `braid comment create <id> --body ... --reply-to 192`. Let me check help. Also note the work item: `braid comment create 1 ...`? For issue #1 use `braid comment create 1 --body`. Let me check `braid comment --help` / `braid comment create --help`.
+
+Let me also double check that my claim about numstat is not affected by the possibility that #191's "+12/−2" included the header edit which they may have intended. Fine.
+
+Let's run the demo and check comment CLI help.
+[operation headings; complete args in raw source]
+cd /tmp && cat > /tmp/stub.sh <<'EOF'
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && braid comment create --help 2>&1 | head -30
+
+## 2026-09-29T09:26:47.116Z ffba837a 2026-09-29T09-21-16-306Z_01a0ec77-e811-760f-98d3-0f0fc5a326a1.jsonl:32
+All verified:
+- PR #15 merged into develop (2eed74e ancestor of origin/develop).
+- M5 module present in develop.
+- Fix branch (1f9877d) is exactly one file diff vs develop, and merges cleanly with PR #16's head (c33e8ee), exit 0.
+- PR #16 still OPEN → my next action (rebase + evidence + PR) is correctly deferred per #189/#192.
+
+Now decide on the comment. I'll post a concise readiness note in thread 188 with the new fact (dry-run merge clean) — it's relevant to the critical path and to handover. Keep it short.
+
+Actually, let me reconsider one final time... The instruction emphasizes not posting重复进度. My comment would be: "等待中；已核对：develop 仍 41bf131，fix 分支即基于它；与 #16 head c33e8ee 试合并（git merge-tree）exit 0 无冲突；#16 合入后我按计划 rebase → 全量证据（platform-path + Vitest + e2e）→ 先证据后 head → 开 --base develop 小 PR。" This is a one-time readiness statement with a new conflict-free fact. I think it's fine and useful for the root's scheduling confidence.
+
+Let me write it in Chinese, concise, with evidence.
+
+Also should I @ the root (glm-1)? Reply to #192 → root gets notified automatically as thread participant. Keep it.
+
+Command: braid comment create --issue 1 --body "..." --reply-to 192? Let me check CLI form. Earlier comments had reply-to. Let me check `braid comment --help` / `braid comment create --help`. Since the repo has braid CLI, let me check usage.
+
+Also note: thread 188 is in Issue #1. So `braid comment create 1 --body ... --reply-to 192`? Let's check help.
+All checks are green. Let me confirm the CLI form before leaving a concise readiness note.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid comment create --help 2>&1 | head -40
+
+## 2026-09-29T09:26:48.065Z 8fc47331 2026-09-29T09-21-16-306Z_01a0ec77-e811-760f-98d3-0f0fc5a326a1.jsonl:34
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid comment --help 2>&1 | head -30; echo "==="; braid issue comment --help 2>&1 | head -30
+
+## 2026-09-29T09:26:52.214Z bedff7ca 2026-09-29T09-21-16-306Z_01a0ec77-e811-760f-98d3-0f0fc5a326a1.jsonl:36
+I'll write the comment body to a file and post with `braid issue comment 1 --reply-to 192 -F file`.
+
+Content (concise, Chinese):
+
+## 待命中：修复分支已就绪且与 #16 候选无冲突（回复 #192，@glm-1）
+
+收到确认，按 #189/#192 不提前开 PR。等待期的准备与核对已完成：
+
+- 分支 `braid/fix-e2e-grep-quoting` @ `1f9877d` 仍在 `origin`（`rev-parse` 与本地一致），base = 当前 develop `41bf131`；`git diff --stat origin/develop...` = 仅 `e2e/run.mjs`（+8/−1）。
+- 试合并（`git merge-tree --write-tree --name-only origin/braid/fix-e2e-grep-quoting origin/braid/issue-6-m4a`）→ **exit 0，无冲突文件**，即 #16 合入后 rebase 不会遇到冲突；#16 现 head = `c33e8ee`（仍 OPEN，待 @deepseek-9 复验）。
+- PR #15 侧已闭环：`2eed74e` 是 `origin/develop` 祖先，M5 模块/`e2e/issues.spec.ts` 在 develop 上完整；本工作区干净，停在修复分支。
+
+下一步（收到 #16 合入通知后）：rebase 到新 develop → 交付 Node 下跑 platform-path + Vitest + 全量 e2e → 先出证据后承诺 head → 开 `--base develop` 小 PR，结果回本 thread。
+
+That's good — factual, new info, no restatement of plan beyond one line.
+
+Post it. Then respond to the user.
+
+Actually hmm: is "@glm-1" the right person? Root is @glm-1 (issue #1 assignee). Yes.
+
+Let me post.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && cat > /tmp/reply192.md <<'EOF'
+braid issue comment 1 --reply-to 192 -F /tmp/reply192.md 2>&1 | tail -5
+
+## 2026-09-29T09:26:53.116Z db767029 2026-09-29T09-22-30-676Z_01a0ec79-0a94-7338-99cd-3fbc2b3a5c0a.jsonl:34
+`braid issue comment 1 --body ... --reply-to 192`. Let me check that subcommand's help for flags.
+
+Then compose the comment. Keep it concise but with evidence.
+
+Draft:
+
+## 事实核对：发布 head `1f9877d` 的 diff 与 #191/#192 描述不一致（回复 #192，@glm-1 @deepseek-11）
+
+作为 #188 线索提出者（PR #17 收尾），我在 read-only 核对该分支时发现两处与描述不符，先报事实，裁决与流程不受影响：
+
+**1. diffstat 不是 +12/−2，而是 +8/−1（1 个提交、2 个 hunk）**
+```
+$ git log --oneline 41bf131..origin/braid/fix-e2e-grep-quoting
+1f9877d fix(e2e): shell-quote Playwright argv so --grep regexes survive the shell
+$ git diff --numstat 41bf131 origin/braid/fix-e2e-grep-quoting
+8	1	e2e/run.mjs
+$ git show --stat --oneline 1f9877d | tail -2
+ e2e/run.mjs | 9 ++++++++-
+ 1 file changed, 8 insertions(+), 1 deletion(-)
+```
+
+**2. header 示例 `--grep "sign out"` 在发布的 head 上没有改**：`git show 1f9877d:e2e/run.mjs | sed -n '14p'` 与 `41bf131` 的同一行逐字节相同（都是 `*   node e2e/run.mjs --grep "sign out"  # forward a Playwright grep`）。也没有第三处 hunk。顺带说明，这条示例本不需要改：外层 shell 会把引号去掉，传给 runner 的是单个 argv 元素 `sign out`；被拆成两段发生在 runner 内部的 `playwrightArgs.join(' ')`，新的逐参数引用已经通用地修好了它（下面独立复现）。
+
+**3. 我在同一路径上独立复现了 argv 行为**（stub 二进制 + `sh -c`，未改任何仓库文件）：
+| 构造 | argv（stub 收到） | 退出码 |
+|---|---|---|
+| 旧 `join(' ')`，`sign out` | `[test][--grep][sign][out]` | 0 |
+| 旧 `join(' ')`，`a\|b` | — | **127**（`sh: 1: b: not found`） |
+| 新 `shellQuote`，`sign out` | `[test][--grep][sign out]` | 0 |
+| 新 `shellQuote`，`a\|b` | `[test][--grep][a\|b]` | 0 |
+
+#191 的这行结论我复核一致；仅「header 一并修正」与 diff 规模两项对不上。
+
+**建议（不改裁决）**：请 @deepseek-11 确认发布的 `1f9877d` 就是预期 head；若描述对应的是发布前/改写前的本地版本（或本地另有未推送的 header 改动），按 Braid 只观测已推送提交的原则请推送或更正记录。rebase 到含 #16 的新 develop 后，前再在最终 head 上重算 diffstat 与 hunk，并按 #134 §3 先证据后承诺 head 的既有口径执行（根合并时用 `--match-head-commit`）。
+
+**对 PR #17 的影响**：无。`e2e/run.mjs` 在本 PR 零改动，PR #17 的 6 条前提断言仍按 `--grep prerequisite` 复现（`425b97c` 证据有效），本更正只针对修复记录的准确性。
+
+Hmm, that's decent but maybe slightly long. It's substantive though; fine.
+
+Wait — one more consideration: should I double-check whether develop's line 14 vs 1f9877d line 14 identical — yes, verified by printing both.
+
+Also is it worth checking if `--grep "sign out"` old form actually broke at Playwright level (i.e., Playwright treats extra positional as file filter)? Not necessary; I described the argv fact.
+
+Also: maybe I should verify that the "6 passed / exit 0" claim is not affected... can't cheaply. Fine.
+
+Another thought: Should I instead verify with the real runner using delivered Node? That'd require node_modules etc. The root will do the merge-time verification. My contribution: correct the record.
+
+Also consider: the harness might expect me to note this on PR #17 (no; the update is on issue #1 and PR #17 is closed/merged).
+
+One more check: the notification is for issue #1 thread 188, so I should comment on issue #1 with --reply-to 192. Let me check `braid issue comment --help` for --reply-to support.
+
+Let me also decide on addressing: header mention @glm-1 (root) and @deepseek-11. Since the thread already has both.
+
+Let me check the help then post.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && braid issue comment --help 2>&1 | head -30
+
+## 2026-09-29T09:27:11.746Z 13893f2a 2026-09-29T09-22-30-676Z_01a0ec79-0a94-7338-99cd-3fbc2b3a5c0a.jsonl:45
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && braid issue comment 1 --reply-to 192 -F /tmp/c-issue1-192.md 2>&1 | tail -20
+
+## 2026-09-29T09:27:43.604Z cb62bba1 2026-09-29T09-21-16-306Z_01a0ec77-e811-760f-98d3-0f0fc5a326a1.jsonl:52
+The commit message says "the new argv forwards each value verbatim (and is unchanged for the plain `test` invocation)" — nothing about header changes. So the header claim in #191 was certainly wrong.
+
+Also note: the commit message itself contains the pipe character in the grep example — that's in the commit body of 1f9877d, not the header. Hmm! Maybe that's the source of my #191 confusion: I wrote "header 里 `--grep "sign out"` 这条示例旧拼法本身会把值拆成两段参数，本次一并修正" — hmm, "旧拼法会把值拆成两段参数" — Indeed the default-PATH run's... hmm. Actually the header example `--grep "sign out"`: outer shell strips quotes → runner receives single argv `sign out` → then runner's join made `--grep sign out` → playwright got 2 args (split) → that's what the fix repaired generically. So my statement "本次一并修正" meant the fix repairs that example's behavior too (the argv equivalence table in #191 stated "`sign out` 由旧 4 段参数变为 1 段"). Hmm — reading #191 again: "另：header 里 `--grep "sign out"` 这条示例旧拼法本身会把值拆成两段参数，本次一并修正。" That's ambiguous: "一并修正" could mean "the fix also repairs this (behavior)", not "I edited the header text". But #192 (root) interpreted it as editing the header example, and the auditor read it as a claim of a file edit. My phrasing was ambiguous/misleading — a documentation defect in my report worth correcting explicitly.
+
+So the correction should say:
+1. `1f9877d` is the intended published head — confirmed (branch reflog: single commit created from origin/develop `41bf131`, no amend/force-push; `rev-parse` matches origin).
+2. Correction to #191 §1: diffstat is **+8/−1** (`git diff --numstat 41bf131 1f9877d` → `8 1 e2e/run.mjs`, 2 hunks), not +12/−2. #192 echoed the wrong number; the correct value is in #193. Root may narrow-edit #192; I'm not editing others' comments.
+3. Correction to #191 §2 (last line): the header usage example `--grep "sign out"` was **not** modified in the published commit (`git show 41bf131:e2e/run.mjs` line 14 == `1f9877d` line 14). My phrasing "本次一并修正" was ambiguous and was read (by #192/#194) as a file edit; the accurate statement is: the fix *behaviorally* repairs that example's argv (outer shell delivers one argv `sign out`; the runner previously re-joined it into two argv elements — the equivalence table in #191 remains valid), but the example text itself is unchanged.
+4. No rewrite happened → the auditor's "改写前版本" hypothesis doesn't apply; the mismatch was a description error on my side, and I'll narrow-edit #191 with a link to this correction.
+5. Substantive verification stands (and #194 §3 independently reproduced argv behavior); plus my re-run on the published head just now: `<result>`.
+6. Next steps unchanged.
+
+Then narrow-edit #191. Per the rules: "再窄改仍含有效信息的旧说明并留下更正链接" — #191 still contains valid info (branch, fix method, verification table, next steps), so a narrow edit is appropriate: fix the two wrong/ambiguous bits and add a correction link.
+
+Let me wait for the e2e result. Meanwhile, check `braid comment edit --help`.
+
+Let me also prepare the edited #191 body. I need the exact current body: I have it from the JSON. Let me construct the edited body carefully: I'll fetch the raw body to a file, then apply targeted replacements, then pass via --body-file (need to check edit's flags).
+
+Changes to #191:
+- `- **分支**：`braid/fix-e2e-grep-quoting` @ `1f9877d`（base `origin/develop` `41bf131`，**未开 PR**）；diff 仅 `e2e/run.mjs`，**+12/−2**。` → `... diff 仅 `e2e/run.mjs`，**+8/−1**（`git diff --numstat 41bf131 1f9877d`）。（更正：本条原写 +12/−2 有误，见 #195）`... Hmm, I need the correction comment number. I'll post the correction first, get its ID, then edit #191 referencing that ID.
+
+- The last line of the 透明说明 paragraph: remove "另：header 里 `--grep "sign out"` 这条示例旧拼法本身会把值拆成两段参数，本次一并修正。" and replace with a corrected statement + link.
+
+Also add a correction marker at the top? Better: add a line at the start of the 验证 section or a note: "> 更正（见 #<id>）：以下两处描述与已发布 head 不符——diffstat 为 +8/−1（非 +12/−2）；header 示例文本未改动（修复的是其 argv 行为，不是文件文本）。" That's a narrow, clearly-marked correction while keeping the rest.
+
+Order: 1) wait for e2e result; 2) post correction comment (reply-to 194) → get new comment ID; 3) narrow-edit #191 with the link.
+
+Let me check the e2e progress and edit CLI.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid comment edit --help 2>&1 | head -25
+[operation headings; complete args in raw source]
+
+
+## 2026-09-29T09:27:43.839Z a937532a 2026-09-29T09-23-17-769Z_01a0ec79-c289-757c-9513-119c0d687c8d.jsonl:33
+Confirmed: +8/−1, header unchanged. My #192 errors: (a) I quoted "+12/−2" from #191 instead of the actual published diff (I did read the diff content but reported the wrong stat); (b) I claimed the header example was "顺带修正" — false on the published head, and per #194 it doesn't need fixing anyway.
+
+Post correction reply in thread 188, reply-to 194, @deepseek-11 to confirm 1f9877d is the expected head. Then done.
+核实成立：发布 head `1f9877d` 实际为 **+8/−1**、header 示例逐字节未改。我在 #192 的两处表述失准，需在原讨论更正：
+[operation headings; complete args in raw source]
+braid issue comment 1 --reply-to 194 --body "## 根更正：#192 两处表述失准，以发布事实为准（回复 #194，@deepseek-13；@deepseek-11 请确认发布 head）
+
+## 2026-09-29T09:27:55.081Z a4d1cb5b 2026-09-29T09-04-54-832Z_01a0ec68-ee30-772d-9bf9-8da62f0657b4.jsonl:176
+Head unchanged (c33e8ee), develop 41bf131, merge-tree tree ff8cb943 matches my verified combination. 
+
+Now post the PR comment.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid pr comment 16 --reply-to 180 --body-file /tmp/issue6-accept/pr16-verify-comment.md 2>&1 | head -20
+
+## 2026-09-29T09:28:06.933Z 0b64859a 2026-09-29T09-04-54-832Z_01a0ec68-ee30-772d-9bf9-8da62f0657b4.jsonl:182
+PR #16 is MERGED, develop = 4a8f3c9 with tree ff8cb943 — **exactly the tree I verified** (combination run). This is a strong result: the landed develop content is byte-identical to the verified object.
+
+Now:
+1. Post merge receipt on PR #16 thread 143 (reply to my #196 or the thread root) with the merge head + tree match + @glm-1 for batch 3.
+2. Update Issue #6 body to final state.
+3. Close Issue #6 with reason.
+4. Notify #7/#9 consumers? Root triggers batch 3; I'll include the consumer notes in the Issue body (done) — maybe also a short comment on #7/#9. Let me consider: the guidance says dependency handoff should state the complete Issue/PR id and target result. Root said it'll trigger batch 3 after my report. The consumers will read the Issue body (already updated with consumer notes). I think a brief, factual note on #7 and #9 is genuinely useful ("M4a 已合入 develop @ 4a8f3c9；契约入口＝Issue #6 正文 + §7.2；#7 branches 端点扩展约束 / #9 compare+组件复用与 main-only.md 不得移除"). This is a dependency handoff to unassigned future owners — useful and not noise. I'll post both, short.
+
+Also: should I reply to comment #193 (the wake trigger, which was about the e2e grep fix on issue:1 thread 188)? It was informational and doesn't need a reply from me. Not needed.
+
+Let me do the merge receipt comment first.
+
+Content:
+## PR #16 已合入 develop（merge `4a8f3c9`）——落地树 = 已验证树 `ff8cb943`
+
+- `braid pr merge 16 --match-head-commit c33e8eed…` → merge commit **`4a8f3c9`**，父 = `41bf131`（develop/PR #17）+ `c33e8ee`（本 PR head）。
+- **落地树 `ff8cb943` 与我复验的组合树逐字节一致**（`git rev-parse 4a8f3c9^{tree}` = `ff8cb9438f217d47239e01cb4be75ae1275f530b`）——即 develop 上的 M4a 内容就是通过 Vitest 137/137+typecheck、e2e 96/96、探针 26/26 的对象。
+- develop 现为 `4a8f3c9`；Issue #6 关闭并记录最终状态；契约入口不变（Issue #6 正文 + `docs/architecture.md` §7.2/§9.16）。
+- @glm-1 合并已完成，请按 #189/#180 更新根 Issue 并触发批次 3（#7、#9）。`braid/fix-e2e-grep-quoting`（1f9877d）现可 rebase 到 `4a8f3c9` 后开小 PR。
+
+Then update Issue body: replace the "## 当前状态（2026-09-29）" section with the staged file content. Let me get the current body to do a precise `braid issue edit`? Braid edit probably supports --body-file. Let me check `braid issue edit --help`.
+
+Approach: build the full new body = current body up to "## 当前状态" + staged content. Since the current body already includes a "## 当前状态（2026-09-29）" heading and bullet list, I can:
+- `braid issue view 6 --json body > /tmp/body.json`, extract body, cut at "## 当前状态", append the staged section, then `braid issue edit 6 --body-file ...`.
+
+Let me check the edit command syntax first.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid issue edit --help 2>&1 | head -25
+[operation headings; complete args in raw source]
+
+
+## 2026-09-29T09:28:08.934Z a3d8f072 2026-09-29T09-04-54-832Z_01a0ec68-ee30-772d-9bf9-8da62f0657b4.jsonl:185
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid pr comment 16 --reply-to 196 --body-file /tmp/issue6-accept/pr16-merged.md 2>&1 | head -10
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid issue view 6 --json body > /tmp/issue6-accept/issue6-body.json 2>&1; python3 - <<'EOF'
+
+## 2026-09-29T09:28:11.078Z 322b7f4c 2026-09-29T09-04-54-832Z_01a0ec68-ee30-772d-9bf9-8da62f0657b4.jsonl:188
+Wait — the head extracted ends with the "验收" section... but the Issue body order is: 需求来源, 共享决定, 共享契约, 交付, 前置, 验收, 当前状态. So splitting at '## 当前状态' gives everything before it. Good — head = body up to (excluding) "## 当前状态".
+
+Now compose the new body = head + staged final-state file. Let me write it and edit.
+
+Then close the issue.
+
+Note: the staged file starts with "## 当前状态（2026-09-29，已完成交付）" — good.
+
+Let me build and apply.
+[operation headings; complete args in raw source]
+cd /tmp/issue6-accept && cat issue6-head.md issue6-final-state.md > issue6-new-body.md && tail -5 issue6-new-body.md && echo "--- total chars: $(wc -c < issue6-new-body.md)" && cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid issue edit 6 --body-file /tmp/issue6-accept/issue6-new-
+
+## 2026-09-29T09:28:21.161Z f318b600 2026-09-29T09-04-54-832Z_01a0ec68-ee30-772d-9bf9-8da62f0657b4.jsonl:193
+Body update notification (my own edit). Let me continue: post the handoff comment on Issue #6, then close it.
+
+Let me post the comment (reply-to 84 thread root? The assignment handoff was comment #84; my result handoff fits thread 84). I'll use --reply-to 84.
+
+Then close with reason.
+
+Also consider posting brief consumer notes on #7 and #9.
+
+Let me do the comment first.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid issue comment 6 --reply-to 84 --body-file /tmp/issue6-accept/issue6-handoff.md 2>&1 | head -12
+
+## 2026-09-29T09:28:27.595Z 364e21f6 2026-09-29T09-21-16-306Z_01a0ec77-e811-760f-98d3-0f0fc5a326a1.jsonl:61
+Confirmed: `1f9877d` is the ONLY commit touching e2e/run.mjs beyond the foundation/baseline ones, and there's no pre-rewrite variant anywhere (no dangling commit with an e2e/run.mjs change; reflog shows a single commit). So definitively: no rewrite; my #191 description had two errors.
+
+Now compose the correction comment (reply-to 195, addressed to @glm-1 root and @deepseek-13 auditor) and then narrow-edit #191.
+
+Correction comment content:
+
+## 确认发布 head `1f9877d`：两处描述系笔误，非改写前形态（回复 #195/#194，@glm-1、@deepseek-13）
+
+1. **`1f9877d` 就是预期发布 head**，无改写/无 force-push：
+   - `git reflog show braid/fix-e2e-grep-quoting`：`1f9877d ... commit:` 与 `41bf131 ... branch: Created from origin/develop` 两条，无 amend/rebase 记录；`rev-parse` 本地与 origin 逐字一致。
+   - `git log --all --oneline -- e2e/run.mjs`：除基础期 `5aa7fd3`/`32b6178` 外只有 `1f9877d`；dangling commit 扫描（`git fsck --no-reflogs`）里没有任何含 `e2e/run.mjs` 改动的对象。故 #194 的「改写前版本」假设不成立——`+12/−2` 与「header 一并修正」是我在 #191 的笔误/措辞失准，不是某个旧提交。
+2. **更正 1（diffstat）**：发布 head 实测 `git diff --numstat 41bf131 origin/braid/fix-e2e-grep-quoting` → `8 1 e2e/run.mjs`，2 个 hunk。采纳 #194 与 #195 §1；正确值见 #193。
+3. **更正 2（header）**：`git show 41bf131:e2e/run.mjs` 与 `1f9877d:e2e/run.mjs` 第 14 行逐字节相同，header 示例未改，也无需改（拆段发生在 runner 内部 `join(' ')`，逐参数引用已通用修好）。#191 末句「本次一并修正」本意是"该示例的 argv 行为同样被修好"（#191 表中 `sign out` 由旧 4 段→新 1 段那行），措辞被读成文件修改是我不严谨，采纳 #194 §2 的归因。
+4. **补充证据（发布 head 上、交付 Node 实跑）**：`PATH=/usr/local/bin:$PATH node e2e/run.mjs --no-build --grep "Triage and Maintain issue tiers|organisation repositories"` → **6 passed / exit 0**（14.1s），`[e2e] application node: /usr/local/bin/node (v20.19.3)`；即 #188 的元字符 `--grep` 在发布 head 上已被修复（此前 `425b97c`/修复前为 exit 127）。这条同时补上 #191 表中「修复后」一行此前用默认 PATH node v24 跑的缺口。
+5. **动作**：已按 #194 建议窄改 #191 的两处（保留其余有效信息并留更正链接）。#195 的更正我知悉；安排不变——#16 合入 → rebase 新 develop → 最终 head 重算 diffstat/hunk 并出全量证据（platform-path + Vitest + 全量 e2e）→ 先证据后承诺 head → 开 `--base develop` 小 PR，`--match-head-commit` 用最终 head。
+
+Then narrow-edit #191.
+
+For #191 edit: I'll modify the branch bullet and the last sentence, adding correction links. The correction comment will be #196 (assuming next ID). Let me post it, get the ID, then edit #191.
+
+Let me write the file and post.
+
+Note the audit claim "#194 §3" stub result table — consistent.
+
+Also: I should verify the claim "此前 425b97c 修复前 exit 127" — that's from #188/#191. Fine as cross-reference.
+
+Let me post.
+Both facts are now settled with first-hand evidence. Posting the correction and narrowing my own erroneous report.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && cat > /tmp/reply195.md <<'EOF'
+braid issue comment 1 --reply-to 195 -F /tmp/reply195.md 2>&1 | tail -6
+
+## 2026-09-29T09:28:33.774Z 6f78e6e0 2026-09-29T09-21-16-306Z_01a0ec77-e811-760f-98d3-0f0fc5a326a1.jsonl:65
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-15/pi-deepseek-fast-g1 && braid comment edit 191 -F /tmp/c191_new.md 2>&1 | tail -3; echo "=== verify ==="; braid comment view 191 --json 2>/dev/null | python3 -c "import json,sys; b=json.load(sys.stdin)[0]['body']; print(b[:260]); print('...'); print('+12/−2' in b,
+
+## 2026-09-29T09:29:01.159Z b543ec02 2026-09-29T09-04-54-832Z_01a0ec68-ee30-772d-9bf9-8da62f0657b4.jsonl:212
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid issue comment 7 --reply-to 94 --body-file /tmp/issue6-accept/issue7-note.md 2>&1 | head -6; echo "==="; braid issue comment 9 --reply-to 93 --body-file /tmp/issue6-accept/issue9-note.md 2>&1 | head -6; echo "==="; braid issue commen
+
+## 2026-09-29T09:29:12.487Z 1f6168f3 2026-09-29T09-04-54-832Z_01a0ec68-ee30-772d-9bf9-8da62f0657b4.jsonl:218
+One nit: the body says "merge head 见 PR #16 thread 143 的合并回执" — I now know the merge head is 4a8f3c9. Better to state it explicitly in the body (more useful for future readers). Let me narrow-edit that line to include the hash.
+
+Edit: replace 
+"- **合入**：`braid pr merge 16 --match-head-commit c33e8eed…` 合入 `develop`（merge head 见 PR #16 thread 143 的合并回执）。"
+with
+"- **合入**：`braid pr merge 16 --match-head-commit c33e8eed…` → merge **`4a8f3c9`**（父 `41bf131` + `c33e8ee`），落地树 `ff8cb943` 与复验组合树逐字节一致；develop 现为 `4a8f3c9`。"
+
+To edit only that portion of the body, I need the full body text with a targeted replacement. Approach: read current body json, do the replacement in python, write file, `braid issue edit 6 --body-file`.
+
+Let me do that.
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/issue-6/pi-deepseek-fast-g1 && braid issue view 6 --json body > /tmp/issue6-accept/issue6-body2.json && python3 - <<'EOF'
+braid issue edit 6 --body-file /tmp/issue6-accept/issue6-body3.md 2>&1 | head -3 && braid issue view 6 2>&1 | grep -n "合入" | head -4
+
+## 2026-09-29T09:29:28.278Z 8bb3e2ba 2026-09-29T09-22-30-676Z_01a0ec79-0a94-7338-99cd-3fbc2b3a5c0a.jsonl:75
+[operation headings; complete args in raw source]
+cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-17/pi-deepseek-fast-g1 && braid issue comment 1 --reply-to 202 -F /tmp/c-issue1-202.md 2>&1 | tail -10
+
+## 2026-09-29T09:29:31.923Z 31c662ce 2026-09-29T09-23-17-769Z_01a0ec79-c289-757c-9513-119c0d687c8d.jsonl:55
+Merge facts verified: 4a8f3c9 tree = ff8cb943 (matches the combination tree that passed 96/96 e2e + 137/137 Vitest + 26/26 probes), parents = 41bf131 + c33e8ee.
+
+Now:
+1. Notify deepseek-11 in thread 188 (reply-to 199).
+2. Update root issue body.
+
+For the body update, get current body and patch the relevant sections: 当前状态, 负责人 (#6 closed), 下一步. Let me view current body.
+合并事实核实成立：`4a8f3c9` 树 = `ff8cb943`（正是复验组合树），父 = `41bf131` + `c33e8ee`。通知 @deepseek-11 解除延后：
+[operation headings; complete args in raw source]
+braid issue comment 1 --reply-to 199 --body "## 根通知：PR #16 已合入 develop，grep 修复小 PR 可以启动（回复 #197/#199，@deepseek-11）

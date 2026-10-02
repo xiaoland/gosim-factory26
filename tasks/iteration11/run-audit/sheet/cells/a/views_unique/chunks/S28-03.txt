@@ -1,0 +1,249 @@
+Span=0 → return ''. Hmm: footprint 3 rows × 0 cols is impossible from import (import always has ≥1 col if any records? Actually a CSV `\n` → 0 records → 0 cols; a CSV `a\n` → 1 record, 1 col). Could a footprint be (rows>0, cols=0)? Only if `records.length>0` but csvColumnCount=0, impossible since each record has ≥1 field. Via state payload, minRows=3, minCols=0 could be set explicitly — then export yields '' even though footprint rows=3. Edge case; the contract said empty file iff bbox and footprint both empty; footprint (3,0) is "not both empty" in one dimension... Slight deviation: `rowSpan===0 || colSpan===0` returns '' when either span is 0. Per contract text "仅当二者皆 0 返回 ''" where 二者 = rowSpan and colSpan? Root's wording: 「"无内容 → 空文件"仅指包围盒与足迹同时为空」. The implementation of "empty" as rowSpan==0 || colSpan==0 vs both==0 differs only in the degenerate (3,0) case. Realistically unreachable via import (minCols=0 ⇒ no records ⇒ minRows=0). Via state payload with minRows=3,minCols=0 — a synthetic payload; contract says state validates min ≤ reported structure; 3 ≤ rowCount ok, 0 ≤ colCount ok. So an API client could set (3,0). Then export of trailing 3 empty rows... arguably '' is right (0 columns means nothing to write; each row would be an empty line — actually a CSV with 3 empty rows and 0 columns could be "3 empty lines"?). This is a degenerate corner; I could note it as a recorded boundary, not a blocker. Actually, let me think about which is more defensible: with colSpan=0, emitting rows would produce empty lines (`''`, `''`, `''`) joined = `\n\n` which is ambiguous. Returning '' is safer. I'll record it.
+3. **`minRows`/`minCols` migration**: check migrations.js.
+4. **parseCsv dense padding**: adds `""` fields to short records. But careful: this changes `csvColumnCount` semantics? It's computed before padding, fine. Also affects `createWorkbookFromCsv` cells loop: `if (raw !== '') insert` — padded empty fields aren't inserted. Fine. But does dense padding break the "trailing blank lines" logic? It runs after. Fine.
+   One issue: the cell count in the snapshot: for a ragged row padded with '', cells aren't stored — so the "preserves empty fields" is via structure/footprint. Fine.
+   Another: `parseCsv` now returns dense rows — does any test assert the non-dense shape? Tests updated (16 lines changed in csv.test.js).
+5. **Export footprint "static"**: `worksheetToCsv` uses `worksheet.minRows ?? 0`; when the structure shrinks below footprint, output includes cells beyond structure — handled by display seam returning '' (identity returns '' for missing). Fine.
+6. **README extra change** (lines 53-56): need to review the actual text.
+7. Missing: helper switch obligation — private path retained; messages match helper verbatim. Also the candidate's local validation duplicates cells/structure checks? It uses its own inline checks for cells (the pre-existing inline code) — same as before. Fine.
+8. The `min` validation in the private path: note that it's only inside the `if (payload.minRows !== undefined || payload.minCols !== undefined)` branch, consistent with helper semantics.
+Now let me check migrations.js and the app.test.js additions, plus README diff, then run verification.
+Also I must read the e2e additions for the round-trip cases to verify they truly assert the required behavior (e.g., "导入 → 清空 → 导出" = `,,\n,,` — wait, PR says `,,\n,,`: footprint 2×3? They said import `a,b\nc,d,` → footprint rows 2 cols 3 → after clearing all contents, export = `,,\n,,` (2 lines × 3 cols) ✓. And the other case: import `a,b\nc,d,` → export `a,b,\nc,d,` ✓ (bbox 2×2, footprint 2×3 → 2 rows × 3 cols).
+Good. Now decide the verification workload. I'll run the three checks myself on 559a0bd. To keep my worktree clean and avoid interfering, use a separate worktree + copy node_modules? pnpm install is needed. Cost: maybe a few minutes. Let me delegate to an executor subagent to run in an isolated dir and report raw evidence — that's mechanical and bounded. Meanwhile I review code and draft comments. But the instruction says "已交给其他成员的成果通过 Issue/PR 协作取得，不再另启原生子任务重复实现" — verification of a delivered candidate by the Issue owner is my duty; delegating the mechanical execution to my own executor is acceptable ("executor 可以承担你获授权实施范围内的局部改动"). But hmm: "应用实施由关联 PR 负责人组织其 executor 和代码工作" — implementation is the PR owner's. Verification of the final candidate is mine; I can run it directly. Running it directly gives me first-hand evidence. Let me use background bash tasks (not subagent) for the mechanical run: set up worktree in /tmp, pnpm install, run tests; then run e2e.
+Note: e2e requires Playwright + browser env vars (BROWSER_EXECUTABLE_PATH, BROWSER_CHECK_NODE_MODULES) and agent-browser's with-service wrapper. The PR owner used `python3 <agent-browser技能>/scripts/with-service.py --check-only --cwd "$PWD" --context candidate=... -- bash checks/run-e2e.sh`.
+Let me read the agent-browser skill to use it correctly.
+A. Create /tmp/f26-issue3-verify worktree from origin/braid/issue-3-a (559a0bd).
+B. pnpm install --frozen-lockfile (node_modules needed in root + workspaces).
+C. Run `pnpm -r test` and `pnpm -r typecheck` (background).
+D. Run e2e with with-service wrapper (background, heavy ~ minutes).
+E. Meanwhile review code details.
+F. Publish increment + body update + acceptance result.
+Let me start A/B/C now, and read the skill concurrently.
+[DUPLICATES: 20 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L36:C1]
+[text]
+I'll set up an independent verification run on the new candidate while I review the code.
+[toolCall] bash call_00_8Xr1FRGRBNhfcmgv0igZ6828
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && rm -rf /tmp/f26-issue3-verify && git worktree add --detach /tmp/f26-issue3-verify 559a0bd 2>&1 | tail -2 && cd /tmp/f26-issue3-verify && git log --oneline -1 && ls"}
+[toolCall] read call_01_kM0HD5Dnr4j684WJVmC47136
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L36:C4]
+
+## S28:L37 2026-09-29T06:40:30.676Z message toolResult
+toolResult bash False
+[text]
+Preparing worktree (detached HEAD 559a0bd)
+HEAD is now at 559a0bd 契约 v1.3 / A-4：导入足迹 min_rows/min_cols 落地 + ragged 补齐 + 导出足迹优先
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L37:C1]
+
+## S28:L38 2026-09-29T06:40:30.676Z message toolResult
+toolResult read False
+[text]
+[DUPLICATES: 57 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L38:C1]
+
+## S28:L39 2026-09-29T06:40:30.677Z message user
+[text]
+- issue:1 comment 70; read `comment view 70 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L39:C1]
+
+## S28:L40 2026-09-29T06:40:32.775Z message assistant
+[thinking]
+Let me stop reading new comments and just do the work; I'll batch-read the latest Issue #1 comments (#70, #73) later if relevant.
+Now start the verification install in background, and simultaneously read code details (migrations, README, e2e additions, tests).
+Install command: cd /tmp/f26-issue3-verify && PATH=/usr/local/bin:$PATH pnpm install --frozen-lockfile. Wait: pnpm is at /workspace/submission/agent/runtime/bin/pnpm; PATH already includes it. Using pnpm for install is the dev instruction. Node from /usr/local/bin (20.19.3) — platform compat. Let's set PATH=/usr/local/bin:$PATH.
+Let me run in background.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L40:C1]
+[toolCall] bash call_00_FZmMCz2lNIgCdCRwXk5Z5427
+{"background": true, "command": "cd /tmp/f26-issue3-verify && PATH=/usr/local/bin:$PATH pnpm install --frozen-lockfile > /tmp/f26-issue3-verify-install.log 2>&1; echo \"install exit=$?\"; tail -5 /tmp/f26-issue3-verify-install.log"}
+[toolCall] bash call_01_5vT5tA5lWxqSdOWyCsY26751
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && echo \"=== migrations diff ===\" && git diff d536aa2 origin/braid/issue-3-a -- backend/src/migrations.js && echo \"=== README diff (v1.3) ===\" && git diff d536aa2 origin/braid/issue-3-a -- README.md"}
+
+## S28:L41 2026-09-29T06:40:32.803Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L41:C1]
+[details]
+{"command": "cd /tmp/f26-issue3-verify && PATH=/usr/local/bin:$PATH pnpm install --frozen-lockfile > /tmp/f26-issue3-verify-install.log 2>&1; echo \"install exit=$?\"; tail -5 /tmp/f26-issue3-verify-install.log", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1", "exitCode": null, "globalJobId": "pbb_25_7d585061:bg001", "instanceId": "pbb_25_7d585061", "jobId": "bg001", "outcome": "running", "pbbCursor": 1, "sessionId": "01a0ebdc-3fb1-7517-ad34-eb35a3dae14a", "sessionKey": "549d4960415449696635e466", "startedAt": "2026-09-29T06:40:32.776Z", "toolCallId": "call_00_FZmMCz2lNIgCdCRwXk5Z5427"}
+
+## S28:L42 2026-09-29T06:40:32.804Z message toolResult
+toolResult bash False
+[text]
+=== migrations diff ===
+diff --git a/backend/src/migrations.js b/backend/src/migrations.js
+index bd170c1..f7d24a6 100644
+--- a/backend/src/migrations.js
++++ b/backend/src/migrations.js
+@@ -81,4 +81,16 @@ export const MIGRATIONS = [
+         ON pivots (result_worksheet_id);
+     `,
+   },
++  {
++    // Contract v1.3 / increment A-4 (Issue #1 comments #51, #54, #57): a CSV
++    // import records the footprint it came in with, so the CSV export can keep
++    // trailing empty fields inside that footprint (field-level round trip).
++    // The fields are nullable: blank workbooks and worksheets that never came
++    // from an import carry no footprint (NULL = none, not 0 x 0).
++    id: '002_worksheet_import_footprint',
++    sql: `
++      ALTER TABLE worksheets ADD COLUMN min_rows INTEGER;
++      ALTER TABLE worksheets ADD COLUMN min_cols INTEGER;
++    `,
++  },
+ ];
+=== README diff (v1.3) ===
+ ## ARIA 约定（验收密集区，已实现）
+[DUPLICATES: 55 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L42:C1]
+
+## S28:L43 2026-09-29T06:40:32.805Z message user
+[text]
+- issue:1 comment 73; read `comment view 73 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L43:C1]
+
+## S28:L44 2026-09-29T06:40:35.315Z message assistant
+[thinking]
+Code review looks good. Now let me check the install and read Issue #1 #70/#73 briefly (they may be about other issues but could affect A, e.g., #70 might be about helper or C).
+Let me batch: check install log status, read #70 and #73 (thread tails).
+Also I need to review the e2e additions and app.test additions. And decide about the extra README line 53-56 change.
+Actually the extra README change: it modifies line 55-56 "行列数只由结构操作（子 Issue B）与 CSV 导入（子 Issue A）改变。" → three paths + `PUT .../cells` 永不隐式扩张. Comment #36's restriction was about the 80-83 paragraph. This is a different paragraph. Is the change correct? Yes: row_count/col_count change via three paths. It's consistent with #36's intent (eliminate incomplete-entry statements). I'll accept it, recording the reason. Fine — no churn.
+Let me check install and read the two comments.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L44:C1]
+[toolCall] bash call_00_0HtV1zXKJfCJqwMoo6TN2354
+{"command": "tail -3 /tmp/f26-issue3-verify-install.log 2>/dev/null; ls /tmp/f26-issue3-verify/node_modules 2>/dev/null | head -3; cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 70 --thread > /tmp/c70.txt 2>&1; sed -n '/^comment #70/,$p' /tmp/c70.txt | grep -v \"^消息投递回执\" | head -30; echo \"#####73#####\"; braid comment view 73 --thread > /tmp/c73.txt 2>&1; sed -n '/^comment #73/,$p' /tmp/c73.txt | grep -v \"^消息投递回执\" | head -40"}
+
+## S28:L45 2026-09-29T06:40:35.394Z message toolResult
+toolResult bash False
+[text]
+Packages: +360
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Progress: resolved 360, reused 360, downloaded 0, added 0
+comment #70 [visible]
+【基础层（#2）核实：共享 helper 与合入基线逐字等价 · 一处多缺陷优先级微差（记录，不要求改动）】@glm-4 @glm-1 @deepseek-3
+在 `origin/b-issue-4-worksheets-structure` @ `515597c`（app 代码）上，对照合入基线 `698afd2` 逐条核实 #66 的「抽前抽后一致」断言。结论：**成立**；附一处需要记录到位的微差、一处措辞更正，及一处正文导航笔误。
+## 1. 状态路径文案：逐字一致（含 #66 枚举遗漏的一条）
+| B 分支位置 | 文案 | 基线出处 |
+| `store.js:788` | `rowCount must be a positive integer` | `store.js:418` |
+| `store.js:791` | `colCount must be a positive integer` | `store.js:421` |
+| `store.js:810` | `cells must be an array` | `store.js:430` |
+| `store.js:817` | `Cell coordinates must be non-negative integers` | `store.js:444` |
+| `validate.js:111-118` | `Cell {row},{col} is outside the worksheet structure ({R}x{C})` | `store.js:448` + `routes.js:73` |
+| **#66 未列但分支保留**：`Cell raw value must be a string`（`store.js:865`，写入循环内） | 同文本 | `store.js:451` |
+- 「cells 不超申报结构」在基线里有**两份副本**（`store.js:448` 状态导入、`routes.js:73` `PUT .../cells`）；B 已把两处都改走 `validate.js` 的单一门（`store.js:819`、`routes.js:84`），文本与两份副本逐字相同 —— 符合 v1.3 A-2「边界不变量集中在共享校验模块」。raw 类型检查留在写入循环内属正常（只有那里有值可查），消费方按上表六条文案对齐即可。
+- 有效结构取值等价：helper 以 `payload.rowCount ?? ws.row_count`（`store.js:842-850`）的 effective 值、且在尺寸 UPDATE **之前**调用；基线是「先 UPDATE 再从库里重读 `structure`」——结果相同，`store.js:430-450` 的语义未被改变。
+## 2. 一处微差：多缺陷载荷的错误优先级（记录，不要求改动）
+基线在**同一循环内按条**依次做 坐标 → 结构 → raw 检查；helper 先对**全部**条目做 坐标 + 结构，再由写入循环查 raw。因此：
+- 单缺陷载荷：路径与文案完全不变。
+- **同时含两类缺陷**的载荷会换一条消息。例（6×26）：`cells: [[0,0,42],[99,99,"x"]]` —— 基线报 `Cell raw value must be a string`，helper 报 `Cell 99,99 is outside the worksheet structure (6x26)`。
+错误码（400 `INVALID_BODY`）、整事务回滚、单缺陷文案均不变；A 的导入路径与 D 的回放载荷都不会构造多缺陷输入，我方判断**可接受**，仅作为「严格逐字等价」的边界记录。@glm-4 若想把顺序也对齐基线（raw 检查并入 helper 循环）属局部改动，你定；不改也可以。
+#####73#####
+comment #73 [visible]
+reply-to: 70
+【根侧裁定：多缺陷优先级微差按记录接受，不改；六条规范文案收为对齐目标】@deepseek-2 @glm-4
+1. **多缺陷载荷错误优先级微差：接受为已记录边界，不要求对齐**。理由：需求与验收判据均不构造多缺陷载荷（A 的导入路径与 D 的回放载荷都是单缺陷域）；单缺陷文案、错误码 `INVALID_BODY`、整事务回滚三项有效不变量全部不变。@glm-4 无需把 raw 检查并入 helper 循环；整合 PR 的错误文案断言只覆盖单缺陷输入，不把该微差写成判据。
+2. **六条规范文案收为契约对齐目标**（#70 §1 表格为准，含 #66 未枚举的 `Cell raw value must be a string`）：PR #8 补齐 Y-min 时按 #69 对齐；`Selection is outside the worksheet structure ({R}x{C})`（B-2 新文案）与 `minRows/minCols must not exceed the reported structure (N)` 记录为 D 与整合 PR 的规范错误面。
+3. **措辞更正收讫**：#66 的「validate.js 继续保留两道更窄的门」按 #70 §3 读作「新增」；`assertCellWithinStructure` / `assertSelectionInBounds` 是 B 的 PR #9 新增，基线不存在——语义无变化，仅更正导航表述，不再另发对 #66 的隐藏/更正处理（#70 已在同一 thread 完成事实更正，后续读者以 #70 为准）。
+4. 正文导航笔误已按 #70 §4 修正（helper 定稿采纳出处 #67 → #66，并补 #70 核实指针）。
+基础层无待改项确认；本项就此关闭，无新动作。
+[DUPLICATES: 44 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L45:C1]
+
+## S28:L46 2026-09-29T06:40:35.395Z message user
+[text]
+- issue:3 comment 74; read `comment view 74 --thread`
+- pr #8 title/body changed
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L46:C1]
+
+## S28:L47 2026-09-29T06:40:36.368Z message assistant
+[thinking]
+I've already read #74. Now, let's proceed with the actual work. Install seems to have completed ("Packages: +360", plus progress). Let me verify install exit and run tests+typecheck in background; then e2e.
+Let me check install log fully and start tests.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L47:C1]
+[toolCall] bash call_00_YSTmcDLaMrmO6bHDnYwn7116
+{"command": "tail -6 /tmp/f26-issue3-verify-install.log; ls -d /tmp/f26-issue3-verify/node_modules/.bin 2>/dev/null && echo OK"}
+
+## S28:L48 2026-09-29T06:40:36.382Z message toolResult
+toolResult bash True
+[text]
+Progress: resolved 1, reused 0, downloaded 0, added 0
+Progress: resolved 360, reused 360, downloaded 0, added 3
+Progress: resolved 360, reused 360, downloaded 0, added 9
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L48:C1]
+
+## S28:L49 2026-09-29T06:40:36.383Z message user
+[text]
+- pr:8 comment 75; read `comment view 75 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L49:C1]
+
+## S28:L50 2026-09-29T06:40:37.959Z message assistant
+[thinking]
+Install exited code 2? Let me inspect the log for the error. Also the background job result may have arrived. Let me look at the whole log.
+[toolCall] bash call_00_sjP3wFg9jtBvvfjKnE3h6983
+{"command": "grep -n -i \"error\\|ERR_\\|failed\\|WARN\" /tmp/f26-issue3-verify-install.log | head -20; echo \"---- head ----\"; head -20 /tmp/f26-issue3-verify-install.log; echo \"---- tail 25 ----\"; tail -25 /tmp/f26-issue3-verify-install.log"}
+[toolCall] bash call_01_BYkzftkkeCmXWepDYCnf2870
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid pr view 8 --comments 2>&1 | sed -n '/^comment #75/,$p' | head -30"}
+
+## S28:L51 2026-09-29T06:40:37.997Z message toolResult
+toolResult bash False
+[text]
+---- head ----
+Scope: all 3 workspace projects
+Lockfile is up to date, resolution step is skipped
+Progress: resolved 360, reused 360, downloaded 0, added 13
+---- tail 25 ----
+Progress: resolved 360, reused 360, downloaded 0, added 13
+[DUPLICATES: 14 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L51:C1]
+
+## S28:L52 2026-09-29T06:40:37.997Z message toolResult
+toolResult bash False
+[text]
+comment #75 [visible]
+reply-to: 63
+【PR #8 候选更新：`559a0bd`（补齐契约 v1.3 / A-4）】交接详见 **Issue #3 comment #74**（reply comment #64）。
+- 增量：迁移 `002_worksheet_import_footprint`（可空 `min_rows`/`min_cols`）、`parseCsv` ragged 补齐、导入事务写足迹、快照输出两字段、`PUT .../state` 未申报/`null` = 不改动且 `min ≤ 所报结构`（文案与 B 的 `assertWorksheetStateValid` 逐字对齐）、导出 `max(包围盒, 静态足迹)` + 足迹优先空表分支、README 登记。
+- `pnpm -r test` exit 0（backend 51 / frontend 46）；`pnpm -r typecheck` exit 0；`bash checks/run-e2e.sh` **15 passed** exit 0（smoke 3 + `workbook-lifecycle.spec.ts` 12，含两条足迹往返用例），证据 `/tmp/f26-lzle9d69/service-check-eimrfpgg`（`git_head=559a0bd`、`dirty=false`、`check_exit=0`）；单测/类型日志 `/tmp/f26-pr8-v13-evidence/`。
+- 首轮失败仅测试代码两处（迁移计数硬编码断言、测试 helper 未注类型），已在同一候选修正；详见交接评论 §2。
+- PR 正文已登记 v1.3 增量与**未完成义务**：helper 进 develop 后 rebase 并切换为 `assertWorksheetStateValid`、删本地副本（Issue #1 comment #60 的 #3 关闭前提）。
+head: refs/heads/braid/issue-3-a (559a0bdf042e534bc58c7380970d1b4a6b0c1a38)
+Braid 观察到的负责人执行状态：正在执行（本轮开始于 2026-09-29T06:39:01.723242454Z）
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L52:C1]
+
+## S28:L53 2026-09-29T06:40:41.239Z message assistant
+[thinking]
+The install log ends mid-progress with exit code 2 and no error text... Possibly the pnpm install failed due to a build script (better-sqlite3 compile?) or it was interrupted. Let me re-run the install in foreground-ish with more verbosity to see the error, capturing stderr. Maybe the "Command exited with code 2" is from the background bash wrapper (the echo print_passed). Actually the command was `pnpm install ... > log 2>&1; echo "install exit=$?"; tail -5 ...`. But the log shows no "install exit=" line! So my echo output went to stdout of the job, and the job result said "Command exited with code 2". Hmm, the background bash output (stdout) may have been truncated/verbose-suppressed. The log file only has stdout of pnpm (which got redirected). So pnpm itself exited 2 presumably (log truncated mid-progress line because the process died?). The "install exit=" echo would be in the job's stdout, which we don't see.
+Wait — the pnpm output ends with "added 13" progress lines, no error. pnpm exit code 2 usually means "An error occurred" (maybe a lifecycle script failure like postinstall for better-sqlite3 or playwright download). Odd that the log has no error message. Maybe the process got killed (OOM?) — signal would give code 137.
+Let me just re-run install in foreground with a timeout, capturing both streams, and see.
+Actually — maybe the issue: pnpm reached the "link" stage and tried to run `pnpm approve-builds`-like blocking? Exit 2 could be from pnpm's "Ignored build scripts" error? pnpm 10 by default does not run dependency build scripts and warns, not exits 2.
+Let me run `pnpm install --frozen-lockfile --reporter=append-only 2>&1 | tail -30; echo exit=$?` in background again with the pipeline writing to a file including stderr.
+Careful about disk/time. Let me check if node_modules exists and whether better-sqlite3 built.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L53:C1]
+[toolCall] bash call_00_ZCLrMzeR78RkBjN1kCE77950
+{"command": "cd /tmp/f26-issue3-verify && ls node_modules/.bin | head -5; echo \"---\"; ls node_modules/better-sqlite3/build/Release/ 2>&1 | head -5; echo \"--- frontend ---\"; ls frontend/node_modules 2>/dev/null | head -3; echo \"--- backend ---\"; ls backend/node_modules 2>/dev/null | head -3; df -h /tmp | tail -1"}
+
+## S28:L54 2026-09-29T06:40:41.261Z message toolResult
+toolResult bash False
+[text]
+ls: cannot access 'node_modules/.bin': No such file or directory
+ls: cannot access 'node_modules/better-sqlite3/build/Release/': No such file or directory
+--- frontend ---
+--- backend ---
+overlay         503G  394G   85G  83% /
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L54:C1]
+
+## S28:L55 2026-09-29T06:40:42.906Z message assistant
+[thinking]
+Install didn't complete — no node_modules. Exit 2 with no error message in the log. Possibly it was killed. Let me re-run with the store reused (cache) and see the error. Use `pnpm install --frozen-lockfile --reporter=append-only` and capture.
+Note: maybe the pnpm from the runtime path writes progress to stderr and the error to stdout... whatever. Let's rerun in background with `set -x`-ish and print exit code into the log.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L55:C1]
+[toolCall] bash call_00_2QNASZ6muH5ngfIFVbZG0115
+{"background": true, "command": "cd /tmp/f26-issue3-verify && { PATH=/usr/local/bin:$PATH pnpm install --frozen-lockfile --reporter=append-only; echo \"INSTALL_EXIT=$?\"; } > /tmp/f26-issue3-verify-install2.log 2>&1; tail -25 /tmp/f26-issue3-verify-install2.log"}
+
+## S28:L56 2026-09-29T06:40:42.918Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L56:C1]
+[details]
+{"command": "cd /tmp/f26-issue3-verify && { PATH=/usr/local/bin:$PATH pnpm install --frozen-lockfile --reporter=append-only; echo \"INSTALL_EXIT=$?\"; } > /tmp/f26-issue3-verify-install2.log 2>&1; tail -25 /tmp/f26-issue3-verify-install2.log", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1", "exitCode": null, "globalJobId": "pbb_25_7d585061:bg002", "instanceId": "pbb_25_7d585061", "jobId": "bg002", "outcome": "running", "pbbCursor": 2, "sessionId": "01a0ebdc-3fb1-7517-ad34-eb35a3dae14a", "sessionKey": "549d4960415449696635e466", "startedAt": "2026-09-29T06:40:42.907Z", "toolCallId": "call_00_2QNASZ6muH5ngfIFVbZG0115"}
+
+## S28:L57 2026-09-29T06:40:44.306Z message assistant
+[thinking]
+While that runs, let me review the e2e additions and app.test additions in the candidate, plus think about acceptance.
+Let me look at the e2e diff and csv.test/app.test diffs.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L57:C1]
+[toolCall] bash call_00_p9lmm7wRpv6cIiOBxtN63886
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && git diff d536aa2 origin/braid/issue-3-a -- e2e/workbook-lifecy

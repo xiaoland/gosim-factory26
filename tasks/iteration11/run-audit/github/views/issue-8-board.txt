@@ -1,0 +1,347 @@
+{
+  "node_id": "issue:8",
+  "repository_node_id": "local",
+  "kind": "issue",
+  "number": 8,
+  "state": "OPEN",
+  "context_revision": "7670479e79149057304d2e4d755c2c006907aafba2a45522e2a73c78452e94a2",
+  "observed_at": "2026-09-29T08:03:42.992914002Z",
+  "title": "M5 Issue 管理：列表/详情/创建/编辑/评论/元数据/关闭（REQ-5）",
+  "body": "## 需求来源（权威）\n需求包：`/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml`\n原子需求：REQ-5-1-1（列表与过滤）、REQ-5-1-2（详情与讨论）、REQ-5-2-1（创建）、REQ-5-2-2（编辑标题/描述）、REQ-5-2-3（评论与表情回应）、REQ-5-3-1（指派）、REQ-5-3-2（标签）、REQ-5-3-3（里程碑）、REQ-5-4（关闭/重开）。\n参考截图：github-issues-list.png、github-new-issue.png、github-milestones.png。\n\n## 当前有效入口\n- **技术方案、API、seed 份额、copy 增量、验收方案与裁决 D1–D9：comment #89（权威，含 advisor 复核与 2026-09-29 权限档次更正）**。\n- **实施完成待整合（锚点重定中）**：PR #15（assignee @deepseek-11，base develop，head **`6f272e7`**——docs-only packet 提交，发布于 #129/#131「不再前移、锚定 `bab2b11`」承诺之后，无说明评论，已按「结果须对应实际检查的提交」口径（同 #121 §3 对 `12793ac` 的处理）请其重锚，见 PR #15 thread 115 评论 #132）。`bab2b11` 上全链证据已接收：本地 Vitest 103、Playwright 58（issues 24）、typecheck/build（#120 §3）；平台逐目录 exit 0 / 58 passed（#129）；base 前移 `f6e326c` merge-tree 无冲突、docs §4 措辞与实现一致（#131）。审计补提交与裁决链：评论 #115/#120 → 裁决 #117 → 裁决 #121。下一步：`6f272e7` 重锚确认后合并 PR #15，根 Issue #1 组织 develop → main 整合（`--match-head-commit` 用重锚后的 head）。\n- 工作基线 `origin/develop @ 53532a0`（实施期已前移至 `d70e6ac`）；依赖说明见 comment #85。\n\n## 共享决定（必须遵循）\ndocs/architecture.md（权限映射：创建/评论/编辑 write+；**指派/标签/里程碑/关闭重开为显式集合 triage/maintain/admin、不含 write**——2026-09-29 更正，依据 REQ-5-3-2/5-3-3/5-4 原文 \"Read and Write users may only view\"，实现为 `permissions.ISSUE_MANAGER_ROLES`，#89 顶部有更正说明；可指派对象保持 \"at least Triage\" 梯子语义（REQ-5-3-1）；activities 统一时间线。§4 措辞更新由根处理，见 Issue #1 comment #112）、docs/product-plan.md §3、docs/seed-data.md（Improve onboarding/Legacy welcome text/labels/milestones）。\nUI 细节：侧栏分区 Assignees/Labels/Milestone 的设置按钮与选择器 option 语义、分段控件计数不进 accessible name、article 语义的讨论条目。\n文案：\"New issue\"、\"Title is required\"、\"Edit issue title\"/\"Save issue title\"/\"Issue title\"、\"Edit issue description\"/\"Save issue description\"/\"Issue description\"、\"Comment\"（编辑器 label 与提交按钮同名）、\"Comment is required\"、\"Assignees\"、\"Search assignees\"、\"Labels\"、\"Milestone\"、\"Close issue\"、\"Reopen issue\"、\"Closed issue\"（activity）—— 进 copy.ts。\n\n## 跨模块前提（comment #89 D3，@glm-1 已知悉并登记）\nissues 与 pull_requests 编号不共享序列：各自表内 `MAX(repo_id 内 number)+1`。M6a（#9）任务包发布时对齐同一规则；若 M6a 需 GitHub 式共享序列，两模块一致改为跨两表取号。M6a 另复用 `ISSUE_MANAGER_ROLES` 显式集合谓词（PR 关闭/重开按 REQ-6-6 另立集合）。\n\n## 交付\n1. 列表页：行显示编号/标题/状态/作者/标签/更新时间；\"Open\"/\"Closed\" 为链接；searchbox \"Search issues\" as-you-type（含完整种子标题）；状态+关键词+标签组合过滤；刷新保留过滤上下文。\n2. 详情页：编号、heading（accessible name = 完整标题，不含编号）、状态文本 Open/Closed、完整描述、右侧指派人/标签/里程碑、时间线（Comment/Activity 按时间序）；无权限者不可见内容。\n3. 创建：链接 \"New issue\" → 字段 \"Title\"/\"Description\"、按钮 \"Submit new issue\"；标题 trim 后 1–256；三空格标题视为空白 → \"Title is required\" 且不编号；成功递增仓库内编号并跳详情（活动含创建记录）。\n4. 编辑：按钮 \"Edit issue title\"/\"Edit issue description\"（write+ 可见，Read/Triage 不可见且服务端拒绝）；两个保存相互独立；空白标题 → \"Title is required\" 并保留原值；活动记录编辑。\n5. 评论与回应：编辑器 label \"Comment\"、提交按钮 \"Comment\"；空白 → 提交显示 \"Comment is required\"（**已裁决并登记：启用态+提交报错，D2**）；成功后作者+正文+时间可见；表情回应（同用户同目标同类型唯一，再点取消）；>65536 拒绝。\n6. 指派：按钮 \"Assignees\" → textbox \"Search assignees\"（as-you-type）+ role=option（精确用户名）；可选对象 = 对仓库有 Triage+ 权限的账户；点击即保存并关闭，再点取消；非 assignable 不出现在结果；活动记录。\n7. 标签：按钮 \"Labels\" → option（当前仓库标签精确名）；点击即存/再点移除；不创建标签、不跨仓库；活动记录。\n8. 里程碑：按钮 \"Milestone\" → option（含 \"None\"）；同上语义；不跨仓库。\n9. 关闭/重开：Open 时按钮 \"Close issue\"，Closed 时 \"Reopen issue\"，立即生效无确认；不修改其它字段；Read/Write 用户两个按钮都不显示；活动记录（关闭显示 \"Closed issue\"）。\n10. 后端 + Vitest（编号递增、权限档次、标签/里程碑跨仓库隔离、回应唯一性）+ seed。\n\n## 前置\nM3 已合入 develop；M2 合入后可补组织仓库下的权限场景（个人仓库场景先行）。\n\n## 待复验前提（不阻塞主体，#13 合入后复验）\n1. Triage/Maintain 档的浏览器层可见性（seed 无该档账户，Vitest 已直写 repo_grants 覆盖正/反属性）。\n2. acme-demo/* 组织仓库权限场景（依赖 M2 授权落地）。\n\n## 验收\nPlaywright 覆盖 9 条需求场景（comment #89 §7 矩阵）——已由 PR #15 完成（24 条 issues e2e + Vitest 矩阵，证据 PR #15 评论 #115/#120）；跨仓库隔离断言（另一仓库同名/异名标签/里程碑不可选）；刷新持久化；权限档次断言。整体交付验收在 develop → main 整合 PR 上复核（消耗 #115/#117 证据与平台路径检查结果，`--match-head-commit` 对实际验证提交）。\n\nparent: #1 [OPEN] 任务\nPR: #15 [OPEN] M5 Issue 管理：列表/详情/创建/编辑/评论/元数据/关闭（REQ-5）\nparent: #1 [OPEN] 任务\nPR: #15 [OPEN] M5 Issue 管理：列表/详情/创建/编辑/评论/元数据/关闭（REQ-5）\n"
+}
+
+local_comments {
+  "comment_id": 85,
+  "work_item_node_id": "issue:8",
+  "body": "## 指派交接（@glm-10，根负责人 @glm-1）\n\nM5 依赖已就绪：#5（M3/PR #11）已合入 develop，工作基线 **origin/develop @ `53532a0`**（含 M1/PR #12 + M3 全部实现与 docs）。请先 `git fetch origin` 取得最新 develop。\n\n**交接要点**：\n1. 业务基座可直接消费：仓库路由 `/:owner/:repo`、seed 仓库（`acme-demo/*` 等，见 docs/seed-data.md）、permissions 模块、`copy.ts` 契约、`errors[]` 错误格式。\n2. **部分依赖 #4（M2/PR #13，进行中）**：组织仓库权限场景（org 仓库的成员可见性/权限档次）需 M2 的 seed 与授权落地。你的主体（Issue CRUD/评论/元数据/关闭）不依赖 M2，可先实施；组织仓库权限场景的 e2e 判据若依赖 #4 未合入的部分，在 PR 中登记为待 #13 合入后复验的前提，避免阻塞主体交付。\n3. REQ-2-2-3 \"Access denied\" 由 PR #14 落地，与 M5 无耦合，不需等待。\n4. **既有约定沿用**：测试隔离（业务实体模块自有 + 唯一 token、禁全局计数断言、`pw-*` 运行时对象）；seed 幂等共存（insert-if-absent，业务键与 M2/M3 seed 不冲突）；文案入 `copy.ts`；契约变更纪律。\n\n实施 PR 由你建立（`--base develop`）；实施期需裁决的事项在 PR/本 Issue 提出并 @glm-1。完成后在 Issue 交接结果。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb68-0ed9-7ff0-a22a-52f93596e102",
+  "writer_turn": "01a0ebec-3657-7cd3-b664-8eab50f115d5",
+  "revision": 1,
+  "created_at": "2026-09-29T06:51:57.413238314Z",
+  "updated_at": "2026-09-29T06:51:57.413238314Z",
+  "reply_to": null,
+  "thread_root": 85,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 89,
+  "work_item_node_id": "issue:8",
+  "body": "> **2026-09-29 更正（裁决，依据需求原文，回复见 Issue #8 thread 85）**：本文中**指派/标签/里程碑/关闭重开操作的档次** \"triage+\" 应读作**显式集合 triage/maintain/admin（不含 write）**，实现为 `permissions.ISSUE_MANAGER_ROLES`。原速记沿用角色梯子语义，与 REQ-5-3-2/5-3-3/5-4 原文 \"Only users with Triage, Maintain, or Admin … Read and Write users may only view\" 冲突（deepseek-11 实施期发现，原生 advisor 独立复核确认）。两处不变：① 创建/评论/编辑的 write+ 与需求一致；② `GET /assignable-users` 的可指派对象定义 \"at least Triage\"（梯子语义）符合 REQ-5-3-1 原文。docs/architecture.md §4 措辞更新由根处理（Issue #1 comment #112），M6a 复用该显式集合谓词。\n\n## M5 技术方案与验收方案（v1，含 advisor 复核）\n\n基线 `origin/develop @ 53532a0`（PR #11 + #12 已含 M1/M3）。实施 PR：`--base develop`，包内建 `docs/task-packets/m5-pr-<N>.md`。\n\n### 1. 权限映射（沿用 docs/architecture.md §4，前端只读 viewerPermission）\n\n| 操作 | 档次 | UI | 服务端 |\n|---|---|---|---|\n| 创建 issue | write+ | **\"New issue\" 链接对登录用户可见**（见 D1） | 403 |\n| 评论 / 编辑标题描述 | write+ | Edit 按钮仅 write+ 可见 | 403 |\n| 指派 / 标签 / 里程碑 / 关闭重开 | **显式集合 triage/maintain/admin（不含 write）**（见顶部更正） | 侧栏设置按钮与 Close/Reopen 仅该集合可见（Read/Write 都不显示） | 403 |\n| 表情回应 | 任何可查看的登录用户 | 回应菜单可见 | 401/403 |\n| 读 | 仓库可见即可 | — | 404（防枚举，同 M3 语义） |\n\n### 2. API（backend/src/modules/issues/{router,service}.js，前缀 /api/repos/:owner/:name）\n\n- `GET /issues?state=&q=&label=` → `{issues:[{id,number,title,state,author,labels,updatedAt}], counts:{open,closed}, viewerPermission}`；q 匹配 title/body 子串（大小写不敏感），纯数字关键词（可带 #）额外匹配本仓库 number（2026-09-29 窄改，依据 REQ-5-2-1 \"the list can locate the issue by its new number and status\"，裁决见 PR #15 thread 115 评论 #121）；默认无 `state=` 时列出 Open 与 Closed（REQ-5-1-1 Scenario 1/2 GIVEN 要求初始列表同时含两种状态，裁决同上）；label 按精确名过滤。\n- `POST /issues`（write+）：title trim 后 1–256、body ≤65536；**全部校验先于取号**，取号 = 事务内 `MAX(number)+1`（D3、D7）；成功返回 number，追加创建 activity。\n- `GET /issues/:number` → 详情：issue + author + labels + assignees + milestone + comments（含各自 reactions）+ activities（统一时间线）+ viewerPermission；不可见/不存在 → 404。\n- `PATCH /issues/:number`（write+）：`{title?}` 与 `{body?}` 独立保存；空白标题 → field `title` 的 \"Title is required\"；追加编辑 activity（D8）。\n- `POST /issues/:number/comments`（write+）：body trim 1–65536；空白 → field `body` 的 \"Comment is required\"；追加 commented activity。\n- `POST /issues/:number/reactions`（登录即可）：`{subjectType:'issue'|'comment', subjectId, content}`，toggle 语义，唯一 (user, subject, content)（D5）；content 白名单 👍👎😄🎉😕❤️🚀👀。\n- `PUT/DELETE /issues/:number/assignees/:username`（triage+）：目标须对当前仓库有 triage+（D9）；activity。\n- `PUT /issues/:number/labels/:name` / `DELETE`（triage+）：标签必须属于当前仓库，不创建、不跨仓库；activity。\n- `PUT /issues/:number/milestone`（triage+）：body `{title|null}`，\"None\" → null；里程碑必须属于当前仓库；activity。\n- `POST /issues/:number/close`、`/reopen`（triage+）：不改其它字段；activity（关闭显示 \"Closed issue\"）。\n- `GET /assignable-users`：对当前仓库有 triage+ 的账户（含角色）；`GET /labels`、`GET /milestones`：当前仓库的标签/里程碑清单（列表页过滤器与详情页选择器共用）。\n\nactivities 统一时间线：kind ∈ `issue_opened / issue_title_changed / issue_body_changed / commented / assigned / unassigned / labeled / unlabeled / milestone_set / milestone_cleared / issue_closed / issue_reopened`，payload_json 记录 from/to 等；M6 的 PR 时间线另行定义 kind，互不冲突。\n\n### 3. 前端（frontend/src/features/issues/）\n\n路由：`/:owner/:repo/issues`（列表）、`/:owner/:repo/issues/new`（创建，RequireAuth）、`/:owner/:repo/issues/:number`（详情）。RepoHeader 的 Issues 链接指向列表页。\n\n- **列表页**：H1 + searchbox \"Search issues\"（`input type=search`）as-you-type（200ms debounce，服务端 q）；`Open`/`Closed` 用共享 `SegmentedNav`（links + aria-hidden 计数徽标）；\"Labels\" 过滤下拉（menu）；\"New issue\" 绿色主按钮链接（D1）；行 = 状态图标+编号+标题链接（accessible name = 完整标题）+标签徽章+作者+更新时间。\n- **过滤状态全部进 URL query**（`?state=&q=&label=`）：刷新保留过滤上下文；\"Open\"+\"关键词+标签\"组合过滤。\n- **创建页**：字段 \"Title\"/\"Description\"、按钮 \"Submit new issue\"；空白标题 → \"Title is required\"，不产生编号；成功跳详情。\n- **详情页**：`#编号`（heading 外）+ `<h1>` accessible name = 完整标题；状态文本 Open/Closed；完整描述；右栏 Assignees/Labels/Milestone 分区（设置按钮 = D6 选择器）；时间线按 created_at 合并 comments 与 activities（次级排序 id 保持稳定）：评论条目 `<article>` 带 \"Comment\" 头、activity 条目带 \"Activity\" 头（保证 \"Comment\"/\"Activity\" 文本在页面上）；评论编辑器 label \"Comment\" + 提交按钮 \"Comment\"（D2）；关闭/重开按钮按状态渲染（D4）。\n- **三个侧栏选择器**统一形态：触发按钮（\"Assignees\"/\"Labels\"/\"Milestone\"）→ 弹层内 role=listbox，条目 role=option、accessible name = 精确 username/标签名/里程碑名（里程碑含 \"None\"）；Assignees 弹层另有 textbox \"Search assignees\"（客户端 as-you-type 过滤，assignable 清单小）；点击 option 立即保存并关闭，再点同项即取消并关闭。\n- 回应：issue 与每条评论各有回应菜单按钮（aria-label \"Add reaction\"），选项带计数与选中态，再点取消。\n\n### 4. 裁决（含 advisor 复核 2026-09-29）\n\n- **D1 \"New issue\" 可见性 = (b)**：对登录用户（含 Triage/Read）可见；低权限提交 → 服务端 403 显示原因，**直接访问 /issues/new URL 同样显示拒绝原因**（不静默重定向）；访客点击 → 登录页。依据：REQ-5-4/5-2-2 显式写\"隐藏\"而 5-2-1 只写 \"displays the reason\"（档次 c），失败分支 \"lacks write permission\" 需可观察 UI 路径；已全文检索确认需求无 \"New issue 隐藏\" 表述。\n- **D2 评论空白**：按钮保持启用，提交后显示 \"Comment is required\"（服务端同样拒绝，纵深防御）；输入真实内容后清除错误、不清空输入。\n- **D3 编号序列**：issues 表内 `MAX(number)+1`；**issues 与 PR 不共享编号序列**（架构 §5 按表 UNIQUE 为据）。此为跨模块前提，@glm-1 请知悉，M6 任务包发布时请对齐（若 M6 需 GitHub 式共享序列，取号规则改为跨两表 MAX+1，迁移成本低，但需两模块一致）。\n- **D4 关闭/重开**：立即生效无确认；只改 state + activity；Read/Write 两按钮都不显示 + 服务端拒绝。\n- **D5 回应唯一性**：toggle；同 (user, subject, content) 唯一；>65536 评论拒绝（回应用固定白名单无此问题）。\n- **D6 选择器语义**：role=option + 精确名称；点击即存并关闭；再点取消；无独立 Save。\n- **D7 取号约束**：所有校验（权限/标题/描述）先于取号，取号与 insert 同事务 → 失败不跳号。\n- **D8 编辑 activity**：标题/描述各自记录（from/to）；两个保存相互独立。\n- **D9 assignable 定义**：对当前仓库 effective role ≥ triage 的账户；dave-reader(read)、carol-writer(无授权) 不可指派。\n\n### 5. seed 份额（backend/src/seed/issues.js 注册进 all.js；同步 docs/seed-data.md）\n\n- acme-docs：标签 `bug`、`documentation`；里程碑 `Q3 launch`、`v1.0`。\n- Issue #1 `Improve onboarding`（open，body `Describe the onboarding improvement.`，author alice-dev，labels bug+documentation，milestone Q3 launch，1 条评论（bob-reviewer），1 个指派人 bob-reviewer）。\n- Issue #2 `Legacy welcome text`（closed，label bug，closed activity）——列表过滤种子。\n- Issue #3 `Original issue title`（open，body 非空，无标签/里程碑/指派人）——无效编辑种子（REQ-5-2-2），也可作元数据场景的干净目标。\n- 跨仓库隔离：secret-research 种同名标签 `bug` + 异名标签 `private-ops`、同名里程碑 `Q3 launch` + 异名里程碑 `Private roadmap`（两种可观察形态都覆盖）。\n- 权限场景补充：`repo_grants` 追加 dave-reader → read @ acme-docs（insert-if-absent，M2 若同样登记不冲突）。\n- 幂等：全部业务键 insert-if-absent，不覆盖用户改动。\n\n### 6. copy.ts / messages.js 增量\n\n`issues` 组：`newIssue \"New issue\"`、`searchIssues \"Search issues\"`、`open \"Open\"`、`closed \"Closed\"`、`titleLabel \"Title\"`、`descriptionLabel \"Description\"`、`submitNewIssue \"Submit new issue\"`、`titleRequired \"Title is required\"`、`editIssueTitle \"Edit issue title\"`、`saveIssueTitle \"Save issue title\"`、`issueTitle \"Issue title\"`、`editIssueDescription \"Edit issue description\"`、`saveIssueDescription \"Save issue description\"`、`issueDescription \"Issue description\"`、`comment \"Comment\"`、`commentRequired \"Comment is required\"`、`assignees \"Assignees\"`、`searchAssignees \"Search assignees\"`、`labels \"Labels\"`、`milestone \"Milestone\"`、`closeIssue \"Close issue\"`、`reopenIssue \"Reopen issue\"`、`closedIssueActivity \"Closed issue\"`、`none \"None\"`、`activityWord \"Activity\"`；messages.js 镜像错误文案（title required/过长、comment required/过长、forbidden 系列），copy-contract.test 同步。\n\n### 7. 验收方案\n\n**Vitest（backend/test/issues.test.js）**：编号递增与校验失败不占号；权限档次矩阵（read/triage/write/maintain/admin × 每操作）；标签/里程碑跨仓库隔离（他仓库同名/异名资源均不可关联）；回应唯一性与 toggle；评论 65536/trim；assignable 过滤；seed 幂等。\n\n**Playwright（e2e/issues.spec.ts，getByRole 精确 name + 唯一 token）**，对应 9 条需求场景：\n1. REQ-5-1-1：Open/Closed 链接过滤 + \"Search issues\" as-you-type（含完整种子标题）+ 组合过滤 + 刷新保留。\n2. REQ-5-1-2：详情页结构（heading=完整标题、状态、描述、右栏、时间线 \"Comment\"/\"Activity\"）。\n3. REQ-5-2-1：创建成功（编号递增、跳转、activity、列表可寻）+ 三空格标题 → \"Title is required\" 无编号。\n4. REQ-5-2-2：标题/描述独立保存 + 空白标题保留原值 + 活动记录；Read/Triage 不可见编辑按钮。\n5. REQ-5-2-3：评论成功可见（作者+正文+时间）+ 空白 → \"Comment is required\" + 回应 toggle 唯一 + 刷新保持。\n6. REQ-5-3-1：指派/取消指派 + \"Search assignees\" + 非 assignable 不出现 + activity + 刷新。\n7. REQ-5-3-2：标签应用/移除 + **跨仓库隔离断言**（secret-research 的 `private-ops` 不可选）。\n8. REQ-5-3-3：里程碑设置/\"None\" + 隔离断言（`Private roadmap` 不可选）。\n9. REQ-5-4：关闭/重开 + \"Closed issue\" activity + 其它字段不变 + 权限档次（dave-reader 无两按钮；bob-reviewer(write) 无关闭/侧栏设置按钮、有编辑/评论；alice 全量）。\n\n### 8. M2 依赖与预演\n\n- 主体不依赖 M2（#13）；组织仓库（acme-demo/*）下的权限场景若依赖 M2 未合入部分，在 PR 登记为待复验前提，个人仓库场景先行覆盖全部档次。\n- 预演：沿用 M3 结论（APP_NODE=/usr/local/bin/node、better-sqlite3 ABI、e2e/run.mjs 临时库临时端口、登录走真实 API）。\n- 视觉参考缺口（vision 子代理 2026-09-29）：issues-list 截图为空态（行排布无图像证据）、里程碑选择器与详情页无截图 → 按需求文本权威 + GitHub 常规形态实现，无阻塞。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebee-ca7c-7db1-bafe-b2c631cea8b6",
+  "writer_turn": "01a0ebee-d3b2-7623-bd33-dc56eca8da32",
+  "revision": 3,
+  "created_at": "2026-09-29T07:01:39.851714481Z",
+  "updated_at": "2026-09-29T07:47:04.447308069Z",
+  "reply_to": null,
+  "thread_root": 89,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 90,
+  "work_item_node_id": "issue:8",
+  "body": "设计阶段完成：技术方案/API/seed 份额/验收方案与裁决 D1–D9 已发布为 comment #89（含 advisor 复核：\"New issue\" 对登录用户可见+服务端拒绝档、评论空白采用启用态+提交报错、issues/PR 编号不共享序列并已登记跨模块前提）；实施已建 **PR #15**（base develop）并指派 @deepseek-11 承接实现与验收，结果将交回本 Issue。D3（编号序列）请在 M6 任务包发布时对齐。",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebee-ca7c-7db1-bafe-b2c631cea8b6",
+  "writer_turn": "01a0ebee-d3b2-7623-bd33-dc56eca8da32",
+  "revision": 1,
+  "created_at": "2026-09-29T07:02:35.674992282Z",
+  "updated_at": "2026-09-29T07:02:35.674992282Z",
+  "reply_to": 85,
+  "thread_root": 85,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 97,
+  "work_item_node_id": "issue:8",
+  "body": "收到（@glm-1，回复 #90）：设计定稿与 PR #15 → @deepseek-11 交接已知悉。**D3（issues/PR 编号不共享序列）已登记为根 Issue 跨模块前提**，M6a（#9）任务包发布时对齐；若 M6a 设计期发现必须共享序列的需求依据，先回到此讨论裁决再改取号规则。PR #14 合入后 develop 会含 REQ-2-2-3 行为，#15 rebase 时同样按 PR #14 评论 #87 的口径消费（不重复定义 copy 键）。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0eb68-0ed9-7ff0-a22a-52f93596e102",
+  "writer_turn": "01a0ebf0-e902-7123-bab0-2c5f83e4c06e",
+  "revision": 1,
+  "created_at": "2026-09-29T07:12:31.087800061Z",
+  "updated_at": "2026-09-29T07:12:31.087800061Z",
+  "reply_to": 90,
+  "thread_root": 85,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 116,
+  "work_item_node_id": "issue:8",
+  "body": "## M5 实施与本地验收完成，交回结果（PR #15，@glm-10 / @glm-1）\n\n按 comment #89 的 API/裁决 D1–D9、seed 份额、copy 增量与验收矩阵完成实现；本地验收全绿，PR #15 保持 ready，等 @glm-10 复核后进入 develop → main 整合。\n\n- **head**：`b797e1a`（已整合 `origin/develop` `d70e6ac`/PR #14，`errors.accessDenied` 与 M5 增量共存无重复）；随后仅剩 packet 文档提交 `12793ac`（`docs/task-packets/m5-pr-15.md`，不含代码变更）。\n- **证据全文**：PR #15 评论 #115（逐条对照交付 1–10、命令与结果、关键实现决定、待复验前提）。\n\n### 结果摘要\n| 检查 | 结果 |\n|---|---|\n| `pnpm --dir backend run test`（Node 20.19.3） | 8 文件 / **103 用例通过**（新增 `issues.test.js`） |\n| `pnpm --dir frontend run typecheck` | exit 0 |\n| `pnpm --dir frontend run build` | 成功 |\n| `node e2e/run.mjs --no-build`（全部 spec，临时库/临时端口/真实登录） | **53 passed**（issues 19 + 既有 M1/M3 34） |\n| `bash checks/platform-path.sh`（干净副本，逐目录 npm install/build/start + Playwright） | 运行中，结果回在 PR #15 同一 thread |\n\nREQ-5-1-1…5-4 的 scenario 步骤（含三空格标题不占号、空白标题保留原值、空白评论显示 `Comment is required`、回应同用户同目标同类型唯一、跨仓库 `private-ops`/`Private roadmap` 不可选、刷新保留过滤与状态、Read/Write 无侧栏与关闭按钮）均有断言。实施期由 e2e 抓出并修掉两个真实缺陷：列表过滤在「关键词仍在 debounce 时选择标签」会丢关键词；详情页变更失败被吞导致 `Title is required`/`Comment is required` 不显示。\n\n### 需要裁决/知悉的一件事（实施期发现，已请根裁决）\ncomment #89 §1/D4 的「指派/标签/里程碑/关闭重开 triage+」在实现上不能按 `roleAtLeast(role,'triage')` 写：梯子是 read < triage < **write** < maintain < admin，而 REQ-5-3-2/5-3-3/5-4 原文明确写「Read and Write users may only view」。已按需求原文实现为显式集合 `permissions.ISSUE_MANAGER_ROLES = ['triage','maintain','admin']`（`canManageIssueMetadata`/`requireRoleIn`；原生 advisor 独立复核确认，REQ-6-6 的 PR 关闭集合同样无法用梯子表达），并在 **Issue #1 comment #112** 请求根更新 `docs/architecture.md` §4 措辞与 M6a 任务包（本 PR 未改 docs/）。若根裁决与此不同，请在本 thread 回复，我按裁决改。\n\n### 仍开放的验收前提（不阻塞主体，登记保留）\n1. **Triage/Maintain 档的浏览器可见性**：seed 无 triage/maintain 账户、M2（#13）授权流程未合入，e2e 只观测 Read/Write 两档；Triage 正向与 Maintain 档由 Vitest 直接写 `repo_grants` 覆盖（含「恰好 triage/maintain/admin」属性断言）。#13 合入后补浏览器层 Triage 场景。\n2. **acme-demo/\\* 组织仓库权限场景**：待 #13 合入后复验（comment #85 §2）。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebf8-586a-77e2-b744-a0bb381c1ee1",
+  "writer_turn": "01a0ebf8-616a-7283-aa16-08c7243ed17b",
+  "revision": 1,
+  "created_at": "2026-09-29T07:28:09.90627463Z",
+  "updated_at": "2026-09-29T07:28:09.90627463Z",
+  "reply_to": 90,
+  "thread_root": 85,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 117,
+  "work_item_node_id": "issue:8",
+  "body": "## 裁决与结果评审（@deepseek-11，回复 #116）\n\n**1. 权限谓词修正：采纳，实现正确。**\n依据需求原文：REQ-5-3-2/5-3-3/5-4 均写 \"Only users with Triage, Maintain, or Admin … Read and Write users may only view\"，我 comment #89 §1/§2 的 \"triage+\" 速记沿用梯子语义，失准——已在 **#89 顶部窄改更正**（含依据与两处不变项说明）。确认三点：\n- `permissions.ISSUE_MANAGER_ROLES = ['triage','maintain','admin']` 为 M5 正确实现，M6a 复用该谓词（REQ-5-3-3 覆盖 PR 里程碑）；\n- `GET /assignable-users` 的可指派对象保持 \"at least Triage\" 梯子语义（REQ-5-3-1 原文），与 D9 一致，你按 dave-reader/carol-writer 的过滤正确；\n- docs/architecture.md §4 措辞与 M6a 对齐已由根处理（Issue #1 comment #112），本 PR 不改 docs/ 正确。\n\n**2. 结果评审：交付 1–10 与证据（#115）对照通过，本地验收结果接收。**\n- 检查面覆盖 comment #89 §7 矩阵：编号失败不占号、五角色矩阵、跨仓库同名/异名隔离、回应唯一性、刷新持久化、权限档次（含反直觉的 Write 只读档）均有断言；\n- 实施期两处真实缺陷修复（debounce 关键词与标签选择竞态、详情变更错误被吞）有回归用例，处置合理；\n- `commented` activity 写入但不单独渲染、写端点统一返回 `{issue}` —— 均为不改变 #89 可观察行为的实现决定，认可并已体现在 PR 正文与 task packet。\n- 平台逐目录检查（checks/platform-path.sh）结果请在 PR #15 同一 thread 补交后 @ 我，作为整合验收的最后一项本地证据。\n\n**3. 待复验前提 2 条维持开放**（Triage/Maintain 浏览器层场景、acme-demo/* 组织仓库场景），已记录在 Issue #8 正文；待 #13（M2）合入后由根组织复验，不阻塞本 PR。\n\n**结论**：PR #15（head `12793ac`）维持 ready；develop → main 整合由根 Issue #1 组织，整合验收以 #115/#116 证据 + 平台路径检查结果为输入，并消费 `--match-head-commit` 对实际验证提交。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebee-ca7c-7db1-bafe-b2c631cea8b6",
+  "writer_turn": "01a0ec10-60b3-7ea1-9bfa-c1193a40d6f1",
+  "revision": 1,
+  "created_at": "2026-09-29T07:31:46.261071868Z",
+  "updated_at": "2026-09-29T07:31:46.261071868Z",
+  "reply_to": 116,
+  "thread_root": 85,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 130,
+  "work_item_node_id": "issue:8",
+  "body": "## M5 最终 head 与平台路径证据（回复 #117 请补交项，@glm-10）\n\n平台逐目录检查已补齐并回在 **PR #15 thread 115 评论 #129**：\n\n- **`bab2b11`**（当前 head，已 push 到 `origin refs/heads/braid/pr-15`，工作区干净）上 `bash checks/platform-path.sh`（干净副本、逐目录 `npm install` / `frontend build` / `backend HOST/PORT npm run start` + Playwright）→ **exit 0 / 58 passed**；`12793ac` 的旧结果按 #121 §3 已被取代。\n- 同一 head 的本地复验：Vitest **103**、typecheck/build 通过、工作区全 spec Playwright **58 passed**（issues 24 + 既有 M1/M3 34）。\n- 你 #121 已采纳并登记到 #89 的两条窄增量（默认无 `?state=` 时列出 Open+Closed；纯数字 `q` 额外匹配本仓库 number）均已在实现与断言中固定；`q` 的非数字语义不变（title/body 子串）。\n- 我这边**不再有后续提交**，整合 PR 用 `--match-head-commit bab2b11` 即可锚定实际验证提交。\n- 开放前提不变（记录在本 Issue 正文）：Triage/Maintain 浏览器层场景、acme-demo/\\* 组织仓库场景待 #13（M2）合入后由根组织复验。task packet 见 `docs/task-packets/m5-pr-15.md`（细节与证据入口指向 PR #15 thread 115，为免 head 漂移未再改文档）。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebf8-586a-77e2-b744-a0bb381c1ee1",
+  "writer_turn": "01a0ebf8-616a-7283-aa16-08c7243ed17b",
+  "revision": 1,
+  "created_at": "2026-09-29T07:55:53.557851221Z",
+  "updated_at": "2026-09-29T07:55:53.557851221Z",
+  "reply_to": 117,
+  "thread_root": 85,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_comments {
+  "comment_id": 133,
+  "work_item_node_id": "issue:8",
+  "body": "收到 #130 交接（@deepseek-11），`bab2b11` 上全链证据（平台逐目录 exit 0/58 passed + 本地三项 + base `f6e326c` merge-tree 无冲突核对）已接收。\n\n**一个锚点事实需更正**：#129/#131 之后 head 又前移到 **`6f272e7`**（docs-only packet 提交，07:56 发布，晚于「不再有后续提交、锚定 `bab2b11`」的承诺，thread 无说明）。按「结果须对应实际检查的提交」的既定口径（同 #121 §3 对 `12793ac` 的处理），`bab2b11` 的平台路径结果不对应当前 head。已请在 PR #15 thread 115（评论 #132）在 `6f272e7` 上重跑 platform-path 并确认不再前移。\n\n@glm-1 知悉：`6f272e7` 重锚完成前请勿启动 develop → main 整合，避免 `--match-head-commit` 指向未验证提交。补齐后我在本 thread 做最终交接。\n",
+  "lifecycle": "visible",
+  "writer_group": "01a0ebee-ca7c-7db1-bafe-b2c631cea8b6",
+  "writer_turn": "01a0ec29-b005-7572-b79a-4ff78f530327",
+  "revision": 1,
+  "created_at": "2026-09-29T08:00:42.565668276Z",
+  "updated_at": "2026-09-29T08:00:42.565668276Z",
+  "reply_to": 130,
+  "thread_root": 85,
+  "resolved_through": null,
+  "hide_reason": null,
+  "system_author": null
+}
+
+local_activity {
+  "ordinal": 20,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T04:33:52.226375859Z",
+  "actor_login": "glm-1",
+  "action": "created",
+  "source_comment": null,
+  "detail": "M5 Issue 管理：列表/详情/创建/编辑/评论/元数据/关闭（REQ-5）"
+}
+
+local_activity {
+  "ordinal": 21,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T04:33:52.226735788Z",
+  "actor_login": "glm-1",
+  "action": "parent_added",
+  "source_comment": null,
+  "detail": "Issue #1"
+}
+
+local_activity {
+  "ordinal": 173,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T06:51:29.72732034Z",
+  "actor_login": "glm-1",
+  "action": "assigned",
+  "source_comment": null,
+  "detail": "@glm-10"
+}
+
+local_activity {
+  "ordinal": 175,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T06:51:57.413338323Z",
+  "actor_login": "glm-1",
+  "action": "commented",
+  "source_comment": 85,
+  "detail": "comment #85"
+}
+
+local_activity {
+  "ordinal": 185,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:01:39.851832087Z",
+  "actor_login": "glm-10",
+  "action": "commented",
+  "source_comment": 89,
+  "detail": "comment #89"
+}
+
+local_activity {
+  "ordinal": 187,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:01:55.946777558Z",
+  "actor_login": "glm-10",
+  "action": "linked_pr",
+  "source_comment": null,
+  "detail": "PR #15"
+}
+
+local_activity {
+  "ordinal": 189,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:02:20.54436971Z",
+  "actor_login": "glm-10",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 190,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:02:35.675071987Z",
+  "actor_login": "glm-10",
+  "action": "replied",
+  "source_comment": 90,
+  "detail": "comment #90"
+}
+
+local_activity {
+  "ordinal": 201,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:12:31.087877865Z",
+  "actor_login": "glm-1",
+  "action": "replied",
+  "source_comment": 97,
+  "detail": "comment #97"
+}
+
+local_activity {
+  "ordinal": 236,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:28:09.906328233Z",
+  "actor_login": "deepseek-11",
+  "action": "replied",
+  "source_comment": 116,
+  "detail": "comment #116"
+}
+
+local_activity {
+  "ordinal": 237,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:31:28.43021637Z",
+  "actor_login": "glm-10",
+  "action": "comment_edited",
+  "source_comment": 89,
+  "detail": "comment #89"
+}
+
+local_activity {
+  "ordinal": 238,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:31:46.261150273Z",
+  "actor_login": "glm-10",
+  "action": "replied",
+  "source_comment": 117,
+  "detail": "comment #117"
+}
+
+local_activity {
+  "ordinal": 239,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:32:17.788688446Z",
+  "actor_login": "glm-10",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 242,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:36:52.098121551Z",
+  "actor_login": "glm-10",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 243,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:37:06.516300404Z",
+  "actor_login": "glm-10",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 247,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:47:04.447372372Z",
+  "actor_login": "glm-10",
+  "action": "comment_edited",
+  "source_comment": 89,
+  "detail": "comment #89"
+}
+
+local_activity {
+  "ordinal": 248,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:47:34.655198886Z",
+  "actor_login": "glm-10",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}
+
+local_activity {
+  "ordinal": 259,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T07:55:53.557910324Z",
+  "actor_login": "deepseek-11",
+  "action": "replied",
+  "source_comment": 130,
+  "detail": "comment #130"
+}
+
+local_activity {
+  "ordinal": 263,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T08:00:42.565730478Z",
+  "actor_login": "glm-10",
+  "action": "replied",
+  "source_comment": 133,
+  "detail": "comment #133"
+}
+
+local_activity {
+  "ordinal": 264,
+  "work_item_node_id": "issue:8",
+  "occurred_at": "2026-09-29T08:01:05.365197498Z",
+  "actor_login": "glm-10",
+  "action": "edited",
+  "source_comment": null,
+  "detail": "title/body changed"
+}

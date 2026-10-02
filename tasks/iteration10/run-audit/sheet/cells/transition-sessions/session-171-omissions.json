@@ -1,0 +1,17 @@
+[
+  {
+    "source": "native/335-2026-09-28T10-01-08-182Z_01a0e776-0b56-7326-a65c-a33db5d66bfc.jsonl:L4",
+    "part": 0,
+    "kind": "items_projection_already_read",
+    "chars": 38286,
+    "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+  },
+  {
+    "source": "native/335-2026-09-28T10-01-08-182Z_01a0e776-0b56-7326-a65c-a33db5d66bfc.jsonl:L74",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/c7-reverify.md",
+    "field": "content",
+    "chars": 2093
+  }
+]

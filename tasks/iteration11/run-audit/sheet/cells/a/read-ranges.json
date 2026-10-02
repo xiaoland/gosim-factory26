@@ -1,0 +1,1085 @@
+{
+  "scope": "Issue #3 / PR #8 cwd 与相关原生子代理；截至 coverage.json cutoff",
+  "coverage_json_read_only": "/Volumes/WorkSSD/Development/factory26/tasks/iteration11/run-audit/sheet/coverage.json",
+  "selection_count": 49,
+  "selection_bytes": 11776068,
+  "selection_lines": 3072,
+  "method": "views_unique/S01–S39 按原生 JSONL 行顺序分块全文阅读（含决定、动作、工具参数/反馈、失败、推理、子代理）；S40–S49 由主审在 cells/root/a-tail* 独立全读并并账。精确重复行使用 views_unique/duplicate-lines.json 映射第一次出现处；工具显示截断均补读。",
+  "sources": [
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc.jsonl",
+      "lines_total": 83,
+      "bytes": 335176,
+      "continuation_of": "01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc",
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          83
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [
+        "native tool result at L33: 3612 tokens truncated in original subagent_wait display; separate subagent source selected",
+        "native assistant/tool body at L45: 4987 tokens truncated in original rendered source"
+      ],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebb8-d823-755b-a41e-782fea48c074",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc/a88b0965-f9b2-4540-8f95-d3823730b184/run-0/session.jsonl",
+      "lines_total": 9,
+      "bytes": 431186,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          9
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebb7-c386-70aa-80d1-39666c666f24",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc/e1bb6e7b-f006-42e8-8412-b20dd5954390/run-0/session.jsonl",
+      "lines_total": 16,
+      "bytes": 109075,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          16
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "内容与 S02 子代理 artifact 逐字重复部分按 cells/a/views_unique/duplicate-lines.json 映射，图像占位见 S03:L7",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebb8-bc58-771d-a157-667fef98ee29",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc/f9ca322c-1c19-4a44-9cd6-395d12bcff18/run-0/session.jsonl",
+      "lines_total": 33,
+      "bytes": 124913,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc.jsonl",
+      "lines_total": 25,
+      "bytes": 201283,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          25
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [
+        {
+          "range": [
+            10,
+            10
+          ],
+          "kind": "原生工具执行自身截断，agent 随后对本题需求定向补读；本审查 S01-01..06 完整显示且无审查输出截断"
+        }
+      ],
+      "duplicate_reference": "逐字重复物理行见 cells/a/views_unique/duplicate-lines.json 的 S01:* 映射",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/2253fdcb-a274-4f3c-966f-5e23ba5e9ab5_vision_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/2253fdcb-a274-4f3c-966f-5e23ba5e9ab5_vision_transcript.jsonl",
+      "lines_total": 27,
+      "bytes": 48386,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          27
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "逐字重复物理行见 cells/a/views_unique/duplicate-lines.json 的 S02:* 映射",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/5de41a2f-db32-464c-aa25-d56ec63b6fb5_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/5de41a2f-db32-464c-aa25-d56ec63b6fb5_advisor_transcript.jsonl",
+      "lines_total": 66,
+      "bytes": 237402,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/fa29e299-d5c8-4f87-b6cd-4e5b8249809c_vision_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/fa29e299-d5c8-4f87-b6cd-4e5b8249809c_vision_transcript.jsonl",
+      "lines_total": 10,
+      "bytes": 48793,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          10
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69.jsonl",
+      "lines_total": 133,
+      "bytes": 267855,
+      "continuation_of": "01a0ebc0-a900-7638-9aa7-4e72b02bbd69",
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          133
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [
+        {
+          "range": [
+            71,
+            100
+          ],
+          "resolution": "补读 71–90、91–110；并补读 111–133"
+        }
+      ],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance; S18 is headerless continuation of S09",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebc7-0845-7330-8819-b48f4b3d56fc",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69/5f3cb313-ea98-4707-840b-0c53beb954da/run-0/session.jsonl",
+      "lines_total": 22,
+      "bytes": 85929,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance; native duplicate of S16",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebc0-a900-7638-9aa7-4e72b02bbd69",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-8-pi-deepseek-fast-g1--/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69.jsonl",
+      "lines_total": 200,
+      "bytes": 674507,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          200
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance; session has separate native continuation",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/subagent-artifacts/a4055255-2e14-4312-b0c9-0d5ab1a34a51_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/subagent-artifacts/a4055255-2e14-4312-b0c9-0d5ab1a34a51_advisor_transcript.jsonl",
+      "lines_total": 37,
+      "bytes": 152595,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          37
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebc1-4945-7174-bc62-3dcf37b6f00b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc1-45a2-77e2-b31c-6cf83584b9ca/2026-09-29T06-01-48-101Z_01a0ebc1-4945-7174-bc62-3dcf37b6f00b.jsonl",
+      "lines_total": 66,
+      "bytes": 212306,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebc2-d744-70ba-8524-9d8d20611601",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc2-d41b-7672-a74f-07ed0f091441/2026-09-29T06-03-29-988Z_01a0ebc2-d744-70ba-8524-9d8d20611601.jsonl",
+      "lines_total": 56,
+      "bytes": 180208,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          56
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04.jsonl",
+      "lines_total": 70,
+      "bytes": 258176,
+      "continuation_of": "01a0ebc4-1dae-7748-8714-77375af46a04",
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          70
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance; S15 native continuation of S12",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebc5-0016-745e-b240-7c73568876b2",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04/c5ad8a08-d101-46e2-860b-4e4c3b1d3788/run-0/session.jsonl",
+      "lines_total": 18,
+      "bytes": 43273,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance; S14 is native duplicate of S13",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebc4-1dae-7748-8714-77375af46a04",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04.jsonl",
+      "lines_total": 29,
+      "bytes": 167064,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/subagent-artifacts/dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/subagent-artifacts/dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_transcript.jsonl",
+      "lines_total": 29,
+      "bytes": 79096,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          29
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json, exact source lines omitted after first appearance; S14 is native duplicate of S13",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebc9-7b79-755e-a8b8-643b4571e1d8",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebc9-7346-7dc2-9c46-8211e72035be/2026-09-29T06-10-45-241Z_01a0ebc9-7b79-755e-a8b8-643b4571e1d8.jsonl",
+      "lines_total": 62,
+      "bytes": 212600,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          62
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762.jsonl",
+      "lines_total": 23,
+      "bytes": 110084,
+      "continuation_of": "01a0ebcb-6846-727d-93e0-2ade1020c762",
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          23
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [
+        {
+          "range": [
+            1,
+            23
+          ],
+          "resolution": "整批显示截断；11–20、22–23 已补读，1–10 与 21 仅局部摘录"
+        }
+      ],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebcc-43f5-7652-b629-66fcbf3da23d",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762/a967215e-6566-4872-bb7a-ac76bc4caecf/run-0/session.jsonl",
+      "lines_total": 15,
+      "bytes": 36185,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          15
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebcb-6846-727d-93e0-2ade1020c762",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762.jsonl",
+      "lines_total": 33,
+      "bytes": 203468,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          33
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/subagent-artifacts/0c2e9eeb-24dd-4c65-ba3f-e2faa5323224_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/subagent-artifacts/0c2e9eeb-24dd-4c65-ba3f-e2faa5323224_advisor_transcript.jsonl",
+      "lines_total": 22,
+      "bytes": 61886,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          22
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl",
+      "lines_total": 174,
+      "bytes": 407282,
+      "continuation_of": "01a0ebdc-3fb1-7517-ad34-eb35a3dae14a",
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          174
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebdd-7ea0-7232-a9fd-ffa01b4434ac",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a/83bedfe6-4f97-4e9f-8b65-5f59342ce273/run-0/session.jsonl",
+      "lines_total": 43,
+      "bytes": 131736,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          43
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "S26 advisor transcript; views_unique/duplicate-lines.json exact-line map",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebdc-3fb1-7517-ad34-eb35a3dae14a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl",
+      "lines_total": 40,
+      "bytes": 212945,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          40
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "artifact:work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/subagent-artifacts/af48bea3-2eab-4072-8fb2-6f9684891a88_advisor_transcript.jsonl",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/subagent-artifacts/af48bea3-2eab-4072-8fb2-6f9684891a88_advisor_transcript.jsonl",
+      "lines_total": 80,
+      "bytes": 227945,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          80
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebdc-3fa8-735a-a6dc-4f8a1af6459a",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebdc-0222-7f12-8b44-264928eabde2/2026-09-29T06-31-15-112Z_01a0ebdc-3fa8-735a-a6dc-4f8a1af6459a.jsonl",
+      "lines_total": 238,
+      "bytes": 819669,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          238
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [
+        {
+          "range": [
+            108,
+            118
+          ],
+          "resolution": "整批显示截断；#64 在 L113 的工具 head 截断，但 L115 tail 已补读；其余该段仅局部观察，不计连续全读"
+        }
+      ],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebe3-5c81-7454-ba87-260acf4ee8b7",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe3-599f-7550-b3c4-851959a121da/2026-09-29T06-39-01-249Z_01a0ebe3-5c81-7454-ba87-260acf4ee8b7.jsonl",
+      "lines_total": 229,
+      "bytes": 626756,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          229
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebe8-8dd0-7db3-9a0c-99e908aecd8d/2026-09-29T06-44-44-834Z_01a0ebe8-9aa2-716d-bf89-5bfbe1b8213e.jsonl",
+      "lines_total": 159,
+      "bytes": 428682,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          159
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebeb-2cc0-7224-a23b-d6834bddc7ac",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebeb-29e8-75d3-9442-8c133ce936e5/2026-09-29T06-47-33-312Z_01a0ebeb-2cc0-7224-a23b-d6834bddc7ac.jsonl",
+      "lines_total": 111,
+      "bytes": 372796,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          111
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebee-0513-72fd-ba99-73c1e4581e7b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebee-022f-76c0-b615-05fbf1b1cbf5/2026-09-29T06-50-39-763Z_01a0ebee-0513-72fd-ba99-73c1e4581e7b.jsonl",
+      "lines_total": 76,
+      "bytes": 295537,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          76
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebee-463a-728c-a9b5-827735f7e1db",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebee-4374-7f61-8657-1c7098f7e86d/2026-09-29T06-50-56-442Z_01a0ebee-463a-728c-a9b5-827735f7e1db.jsonl",
+      "lines_total": 30,
+      "bytes": 171230,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          30
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebef-a095-7149-9b1f-ba6680f1fd99",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebef-9db5-7122-82a7-a1d88b6a9b67/2026-09-29T06-52-25-110Z_01a0ebef-a095-7149-9b1f-ba6680f1fd99.jsonl",
+      "lines_total": 31,
+      "bytes": 203026,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          31
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebef-fab2-70f4-8910-d37329381724",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebef-f7da-7d02-baf3-c3b861d04ee0/2026-09-29T06-52-48-178Z_01a0ebef-fab2-70f4-8910-d37329381724.jsonl",
+      "lines_total": 60,
+      "bytes": 256651,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          60
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebf0-69ec-71df-adec-cf1b43f81d46",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf0-6719-7ab1-948b-bb3f71016b64/2026-09-29T06-53-16-653Z_01a0ebf0-69ec-71df-adec-cf1b43f81d46.jsonl",
+      "lines_total": 48,
+      "bytes": 233901,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          48
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebf1-3409-7194-bfeb-a8bf5fbbbfc2",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf1-316d-7290-a24a-bb5a53a077b0/2026-09-29T06-54-08-393Z_01a0ebf1-3409-7194-bfeb-a8bf5fbbbfc2.jsonl",
+      "lines_total": 50,
+      "bytes": 223330,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          50
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebf1-7819-72ef-8e82-02c28cd76131",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf1-7526-7062-af1e-9786d2b3a36d/2026-09-29T06-54-25-817Z_01a0ebf1-7819-72ef-8e82-02c28cd76131.jsonl",
+      "lines_total": 53,
+      "bytes": 257877,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          53
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebf3-874b-77d8-96af-0dfa7c289724",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf2-17bc-7491-8e1b-ca54f0fd9ba9/2026-09-29T06-55-07-355Z_01a0ebf2-1a5b-723d-a39f-49fb8a42d849.jsonl",
+      "lines_total": 199,
+      "bytes": 568862,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          199
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    },
+    {
+      "id": "01a0ebf2-1a5b-723d-a39f-49fb8a42d849",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf2-17bc-7491-8e1b-ca54f0fd9ba9/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-55-07-355Z_01a0ebf2-1a5b-723d-a39f-49fb8a42d849.jsonl",
+      "lines_total": 39,
+      "bytes": 207557,
+      "continuation_of": null,
+      "navigation_only": false,
+      "complete_read_ranges": [
+        [
+          1,
+          39
+        ]
+      ],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [],
+      "truncated_displays": [],
+      "duplicate_reference": "views_unique/duplicate-lines.json; exact source lines omitted after first appearance",
+      "read_owner": "cells/a",
+      "read_status": "full_read"
+    },
+    {
+      "id": "01a0ebf2-d3ca-72d8-a920-73ad70676fe3",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf2-cf7c-7d83-8bb8-bec9978cd225/2026-09-29T06-55-54-826Z_01a0ebf2-d3ca-72d8-a920-73ad70676fe3.jsonl",
+      "lines_total": 46,
+      "bytes": 203672,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          46
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    },
+    {
+      "id": "01a0ebf3-cb77-70c3-91c8-33f29e7086dc",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf3-c610-7420-80b8-484b163e7964/2026-09-29T06-56-58-231Z_01a0ebf3-cb77-70c3-91c8-33f29e7086dc.jsonl",
+      "lines_total": 14,
+      "bytes": 124946,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          14
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    },
+    {
+      "id": "01a0ebf4-065e-7385-bc08-89dadc38a516",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ebf4-03a1-7063-be63-3b1574f3be1d/2026-09-29T06-57-13-310Z_01a0ebf4-065e-7385-bc08-89dadc38a516.jsonl",
+      "lines_total": 11,
+      "bytes": 120143,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          11
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    },
+    {
+      "id": "01a0ec0e-5e87-7692-b269-ff14128c005b",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0e-54da-7713-b39b-621d17719ddd/2026-09-29T07-25-59-815Z_01a0ec0e-5e87-7692-b269-ff14128c005b.jsonl",
+      "lines_total": 66,
+      "bytes": 281548,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          66
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    },
+    {
+      "id": "01a0ec0e-ed93-75a7-926a-751dadb16aa6",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0e-e4da-72e1-b9ba-45209330529f/2026-09-29T07-26-36-435Z_01a0ec0e-ed93-75a7-926a-751dadb16aa6.jsonl",
+      "lines_total": 65,
+      "bytes": 315062,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          65
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    },
+    {
+      "id": "01a0ec10-00ae-7530-aa13-4cf3f27b7179",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec0f-fd91-7342-bb11-0f3a3e2f6580/2026-09-29T07-27-46-862Z_01a0ec10-00ae-7530-aa13-4cf3f27b7179.jsonl",
+      "lines_total": 19,
+      "bytes": 152584,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          19
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    },
+    {
+      "id": "01a0ec13-a016-76a1-bf7a-9cee6dd3c749",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec10-47cb-7063-b87c-3091a9ce6d5d/2026-09-29T07-28-06-207Z_01a0ec10-4c3f-7130-bbce-c852c0d29a59.jsonl",
+      "lines_total": 34,
+      "bytes": 206989,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          34
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    },
+    {
+      "id": "01a0ec10-4c3f-7130-bbce-c852c0d29a59",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec10-47cb-7063-b87c-3091a9ce6d5d/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T07-28-06-207Z_01a0ec10-4c3f-7130-bbce-c852c0d29a59.jsonl",
+      "lines_total": 55,
+      "bytes": 285882,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          55
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    },
+    {
+      "id": "01a0ec10-61d0-726e-a3b9-ba66008bb920",
+      "path": "work/native-homes/pi-deepseek-fast-01a0ec10-5eeb-7612-913a-ed49781594fa/2026-09-29T07-28-11-728Z_01a0ec10-61d0-726e-a3b9-ba66008bb920.jsonl",
+      "lines_total": 18,
+      "bytes": 158014,
+      "continuation_of": null,
+      "navigation_only": true,
+      "complete_read_ranges": [],
+      "targeted_evidence_lines": [],
+      "unread_ranges": [
+        [
+          1,
+          18
+        ]
+      ],
+      "truncated_displays": [],
+      "duplicate_reference": null,
+      "read_owner": "cells/root/a-tail*",
+      "read_status": "root_owned_pending_merge"
+    }
+  ],
+  "non_json_sources": [
+    {
+      "path": "evidence/braid.sqlite3",
+      "tables_read": [
+        "local_comments",
+        "local_comment_delivery",
+        "events",
+        "wake_batch_events",
+        "turns",
+        "context_resets"
+      ],
+      "scope": "按 comment_id 51,57,60,64 及后续关键评论定向查询；未扫完整 SQLite 历史",
+      "line_ranges": "SQLite 无 JSONL 行号；以 table 与 primary key 定位",
+      "comment_bodies_fully_read": [
+        27,
+        28,
+        29,
+        33,
+        36,
+        51,
+        57,
+        60,
+        64
+      ],
+      "comment_bodies_targeted_excerpt": [
+        62,
+        63,
+        65,
+        66,
+        69,
+        73,
+        74,
+        75,
+        81,
+        82,
+        86,
+        88,
+        89,
+        95,
+        100,
+        101,
+        102
+      ]
+    },
+    {
+      "path": "/Volumes/WorkSSD/Development/factory26/agents/run-analysis.md",
+      "scope": "全文已读"
+    }
+  ],
+  "duplicate_policy": "coverage.json continuation_of 和 duplicate_validation 为权威映射；headerless 续段不可省略，带头副本若逐字节前缀相同只计一次响应",
+  "completeness": "本 cell 负责的 S01–S39 共 39 源 / 2545 原生 JSONL 行已全部逐条读完；S40–S49 共 10 源 / 527 行由主审独立全读，非本 cell 声称。原生工具自身的 head/tail/超长截断保持原样，不能补出未采集内容；本轮阅读工具输出截断已补读。",
+  "division_of_labor": {
+    "self_aliases": "S01–S39",
+    "self_source_count": 39,
+    "self_jsonl_lines": 2545,
+    "root_aliases": "S40–S49",
+    "root_source_count": 10,
+    "root_jsonl_lines": 527,
+    "root_ledger": "cells/root/a-tail*；由主审合并总账"
+  }
+}

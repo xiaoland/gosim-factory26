@@ -1,0 +1,264 @@
+clean "increment". For the handover, the precise statement: the A-side changes relative to the rebased base are the three new commits (055fdaa, 16b94d8, a23af5a) with stat: store.js 45 lines (9+/36−), test 4+, packet 18±. Let me compute those three commits' combined stat via `git diff --stat 7f9a850 a23af5a` (7f9a850 = rebased v1.3 commit, its parent chain per rebased branch). That equals exactly the 3 new commits. Let me get that.
+Then wait for e2e.
+Also, let me check whether the frontend build works — e2e includes it.
+Let me compute the 3-commit stat and also clean up rehearsal worktree.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L177:C1]
+[toolCall] bash call_00_7nKNCkpEUxpA4AaXzd3H4753
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && echo \"=== 3 new commits combined (7f9a850..a23af5a) ===\" && git diff --stat 7f9a850 a23af5a"}
+[toolCall] bash call_01_C9M2Qt1Txf7BctO6aRgQ7687
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git worktree remove --force /tmp/pr8-helper-rehearsal 2>&1 | tail -2; git worktree list"}
+
+## S29:L178 2026-09-29T06:45:53.551Z message toolResult
+toolResult bash False
+[text]
+=== 3 new commits combined (7f9a850..a23af5a) ===
+ backend/src/store.js                               | 45 +++++-----------------
+ frontend/src/components/WorkbookLifecycle.test.tsx |  4 ++
+ tasks/issue-3-a/packet.md                          | 18 +++++----
+ 3 files changed, 24 insertions(+), 43 deletions(-)
+
+## S29:L179 2026-09-29T06:45:53.551Z message toolResult
+toolResult bash False
+[text]
+/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1  a23af5a [braid/issue-3-a]
+
+## S29:L180 2026-09-29T06:45:56.053Z message assistant
+[thinking]
+Rehearsal worktree removed, and the worktree list only shows the main one (interesting: the other worktrees issue-1, issue-3 etc. are separate clones/dirs not registered here).
+Now wait for e2e (bg004). Meanwhile prepare PR body update.
+Current PR body has a section "**未完成义务（并行期过渡）**：共享校验 helper 目前在 ... 尚未进 develop。本 PR 暂用私有校验路径（文案已逐字对齐）；helper 进入 develop 后本 PR rebase 并单点切换..." → replace with completion statement, and update the v1.3 section header note about base.
+Also the body's line "base `develop`（消费基线 `698afd2`，应用代码 `0a08fdd`）" should be updated to the new base `15abbf6`.
+Let me construct the edit via `braid pr edit 8 --body-file` or `--body`. Let me check `braid pr edit --help` for body editing options.
+Actually, I can pass the full body. The body is long; I'd rather do a targeted change. Does braid pr edit support --body-file? Let me check help.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L180:C1]
+[toolCall] bash call_00_UKnx0gaW48L3oDEmzEZN7575
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr edit --help 2>&1 | head -40"}
+
+## S29:L181 2026-09-29T06:45:56.071Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L181:C1]
+
+## S29:L182 2026-09-29T06:45:58.386Z message assistant
+[thinking]
+I can write the new body to a file and use --body-file. Let me fetch the current body to a file, then apply a targeted edit with the `edit` tool, then push via braid pr edit --body-file.
+Let me get the current body: `braid pr view 8` prints body — but it also prints header lines. Better: is there a way to get raw body? Maybe `braid pr view 8 --json`? Let me check `braid pr view --help`.
+Alternatively I know the body content from earlier output (the pr view output includes the body section between the blank line after the field list and the "comment #47" line). Let me extract it programmatically: `braid pr view 8 --json` if supported.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L182:C1]
+[toolCall] bash call_00_uY1jgMTY617L7QuoALdt1949
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr view --help 2>&1 | head -30"}
+
+## S29:L183 2026-09-29T06:45:58.430Z message toolResult
+toolResult bash False
+[text]
+Usage: braid pr view [OPTIONS] <ID>
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L183:C1]
+
+## S29:L184 2026-09-29T06:46:00.069Z message assistant
+[toolCall] bash call_00_ET_7qWq3m24Rhd9zOvGrq9n2898
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr view 8 --json body 2>/dev/null | python3 -c \"import json,sys; print(json.load(sys.stdin)['body'])\" > /tmp/pr8-body.md && wc -l /tmp/pr8-body.md && tail -20 /tmp/pr8-body.md"}
+
+## S29:L185 2026-09-29T06:46:00.163Z message toolResult
+toolResult bash False
+[text]
+48 /tmp/pr8-body.md
+[DUPLICATES: 19 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L185:C1]
+
+## S29:L186 2026-09-29T06:46:01.838Z message assistant
+[thinking]
+Now edit /tmp/pr8-body.md:
+1. The header line "- base `develop`（消费基线 `698afd2`，应用代码 `0a08fdd`）；head `braid/issue-3-a`" → update base to `15abbf6` and note rebase.
+2. Replace item 5 text? It says "错误码/文案与 B 的共享 helper ... 逐字对齐" — now it *calls* the helper. Update.
+3. Replace the "未完成义务" paragraph with the completion record + handover status.
+Let me view the head lines of the body.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L186:C1]
+[toolCall] bash call_00_K81LjEWW6JGQWorott531756
+{"command": "head -8 /tmp/pr8-body.md"}
+
+## S29:L187 2026-09-29T06:46:01.854Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L187:C1]
+
+## S29:L188 2026-09-29T06:46:05.589Z message assistant
+[toolCall] bash call_00_ET_c1SNflLOHwEYNv5QOd6v2102
+{"command": "cd /tmp && python3 - <<'PY'\nimport re\np='/tmp/pr8-body.md'\ns=open(p).read()\n\ns = s.replace(\n\"- base `develop`（消费基线 `698afd2`，应用代码 `0a08fdd`）；head `braid/issue-3-a`\",\n\"- base `develop`（消费基线 `698afd2`，应用代码 `0a08fdd`）；head `braid/issue-3-a`；**当前候选已 rebase 到含 PR #9 的 `develop` @ `15abbf6`**（候选提交 `a23af5a`）\")\n\ns = s.replace(\n\"5. `PUT .../state`：两字段未申报或 `null` = 不改动（缺失不重置）；申报时校验非负整数且 ≤ 本次生效结构，错误码/文案与 B 的共享 helper `assertWorksheetStateValid`（comment #66/#69）逐字对齐。\",\n\"5. `PUT .../state`：两字段未申报或 `null` = 不改动（缺失不重置）；申报时校验非负整数且 ≤ 本次生效结构——**校验已切换为调用共享 helper `assertWorksheetStateValid`（`backend/src/store.js`，本 PR 不再保留私有副本，contract v1.3 §2 / #60）**，本 PR 只负责两字段的持久化与「未申报不改动」语义。\")\n\ns = s.replace(\n\"**未完成义务（并行期过渡）**：共享校验 helper 目前在 `origin/b-issue-4-worksheets-structure`（B 的 PR #9），尚未进 develop。本 PR 暂用私有校验路径（文案已逐字对齐）；helper 进入 develop 后本 PR rebase 并单点切换为 `assertWorksheetStateValid`、删除本地副本——该切换完成是 #3 关闭前提（comment #60 由根负责人跟踪）。\",\n\"\"\"**helper 切换已完成（#3 关闭前提之一）**：PR #9 已合入 `develop`（`15abbf6`），本 PR 已 rebase 到该基线并把 `importWorksheetState` 的尺寸/cells/足迹校验单点切换为共享 helper `assertWorksheetStateValid`，删除本地私有副本（提交 `055fdaa`）。`develop` 上本 PR 的最终状态即调用共享 helper，无第二份校验实现。\n\n**rebase 漂移（非实现改动，供针对性复核）**：相对切换前候选 `559a0bd`，A 侧新增 3 个提交共 +24/−43（`7f9a850..a23af5a`）：`055fdaa` helper 切换（`store.js`，+9/−36）、`16b94d8` 测试漂移（B 给 `Grid` 新增的 4 个结构操作 props 补 no-op，`WorkbookLifecycle.test.tsx` +4）、`a23af5a` packet；其余 diff 是 rebase 到 `15abbf6` 带入的 B 的代码（`git diff 15abbf6 a23af5a` 即本 PR 内容，25 文件 +2226/−22）。冲突合并点：`lib/errors.ts`（同名同义）、`routes.js`（store 导入取并集）、`WorkbookEditor.tsx`（保留 B 的 `applySnapshot`/`runWorkbookAction` + A 的 `displayValue` memo）。\"\"\")\nopen(p,'w').write(s)\nprint(\"ok\")\nPY\nsed -n '3,4p;40,50p' /tmp/pr8-body.md"}
+
+## S29:L189 2026-09-29T06:46:05.619Z message toolResult
+toolResult bash False
+[text]
+- base `develop`（消费基线 `698afd2`，应用代码 `0a08fdd`）；head `braid/issue-3-a`；**当前候选已 rebase 到含 PR #9 的 `develop` @ `15abbf6`**（候选提交 `a23af5a`）
+5. `PUT .../state`：两字段未申报或 `null` = 不改动（缺失不重置）；申报时校验非负整数且 ≤ 本次生效结构——**校验已切换为调用共享 helper `assertWorksheetStateValid`（`backend/src/store.js`，本 PR 不再保留私有副本，contract v1.3 §2 / #60）**，本 PR 只负责两字段的持久化与「未申报不改动」语义。
+**helper 切换已完成（#3 关闭前提之一）**：PR #9 已合入 `develop`（`15abbf6`），本 PR 已 rebase 到该基线并把 `importWorksheetState` 的尺寸/cells/足迹校验单点切换为共享 helper `assertWorksheetStateValid`，删除本地私有副本（提交 `055fdaa`）。`develop` 上本 PR 的最终状态即调用共享 helper，无第二份校验实现。
+**rebase 漂移（非实现改动，供针对性复核）**：相对切换前候选 `559a0bd`，A 侧新增 3 个提交共 +24/−43（`7f9a850..a23af5a`）：`055fdaa` helper 切换（`store.js`，+9/−36）、`16b94d8` 测试漂移（B 给 `Grid` 新增的 4 个结构操作 props 补 no-op，`WorkbookLifecycle.test.tsx` +4）、`a23af5a` packet；其余 diff 是 rebase 到 `15abbf6` 带入的 B 的代码（`git diff 15abbf6 a23af5a` 即本 PR 内容，25 文件 +2226/−22）。冲突合并点：`lib/errors.ts`（同名同义）、`routes.js`（store 导入取并集）、`WorkbookEditor.tsx`（保留 B 的 `applySnapshot`/`runWorkbookAction` + A 的 `displayValue` memo）。
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L189:C1]
+
+## S29:L190 2026-09-29T06:46:06.913Z message assistant
+[thinking]
+Body file updated. Now check e2e progress.
+[toolCall] bash call_00_TG4yNYI5COiKXDBMXb1q2168
+{"command": "pbb status bg004 2>&1 | grep -E '\"status\"|\"exitCode\"'; tail -20 /workspace/template/.factory26/20260929-042409-811f18d4/work/home/.pi/pbb/sessions/9aaf8416c8eb277c051eeaef/instances/pbb_7491_c8c94e51/logs/bg004.log 2>/dev/null"}
+
+## S29:L191 2026-09-29T06:46:07.151Z message toolResult
+toolResult bash False
+[text]
+  "exitCode": null,
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L191:C1]
+
+## S29:L192 2026-09-29T06:46:09.426Z message assistant
+[thinking]
+e2e still running (started ~06:45). It takes ~40-60s. Let me wait a bit and meanwhile also double check correctness of the switch behavior by re-reading my app.test.js state tests to ensure they cover the helper path (they do: they assert 400 messages and rollback).
+Also: one thing to verify — the helper's `assertWorksheetStateValid` requires `rowCount`/`colCount` positive integers; my code passes effective counts. And `cells` may be undefined → skipped. Good.
+Another consideration: since the switch removed the local min>structure check *after* the size UPDATE, and the helper validates before, a payload with `rowCount: 10, minRows: 8` on a 6-row sheet: effective = 10, helper passes (8 ≤ 10), then UPDATE size to 10, then persist min=8. Correct per contract ("≤ 本次生效结构").
+Let me wait for e2e.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L192:C1]
+[toolCall] bash call_00_73DK2FzJ09mQHUUUv0nR0722
+{"command": "sleep 27; pbb status bg004 2>&1 | grep -E '\"status\"|\"exitCode\"'; tail -15 /workspace/template/.factory26/20260929-042409-811f18d4/work/home/.pi/pbb/sessions/9aaf8416c8eb277c051eeaef/instances/pbb_7491_c8c94e51/logs/bg004.log 2>/dev/null"}
+
+## S29:L193 2026-09-29T06:46:36.527Z message toolResult
+toolResult bash False
+[text]
+Evidence: /tmp/f26-lzle9d69/service-check-vxc25q5f
+passed; logs and exit receipt: /tmp/f26-lzle9d69/service-check-vxc25q5f
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L193:C1]
+
+## S29:L194 2026-09-29T06:46:37.910Z message assistant
+[toolCall] bash call_00_ET_QNSqPteMCNKY3YsABzYW3683
+{"command": "cat /tmp/f26-lzle9d69/service-check-vxc25q5f/result.json; echo \"=== log tail ===\"; ls /tmp/f26-lzle9d69/service-check-vxc25q5f/; tail -25 /tmp/f26-lzle9d69/service-check-vxc25q5f/*.log 2>/dev/null | tail -30"}
+
+## S29:L195 2026-09-29T06:46:37.924Z message toolResult
+toolResult bash False
+[text]
+    "git_head": "a23af5a89c9ff8bf907c56031c5a803595581bff",
+    "candidate": "a23af5a",
+    "data": "run-e2e.sh \u81ea\u5e26\u4e34\u65f6 DB\uff0c\u751f\u4ea7\u5f62\u6001\uff08\u540e\u7aef\u540c\u7aef\u53e3\u670d\u52a1 dist\uff09"
+  "check_pid": 17339,
+  "started_at": 1790664344.1815565,
+  "finished_at": 1790664380.8496315
+=== log tail ===
+[DUPLICATES: 23 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L195:C1]
+
+## S29:L196 2026-09-29T06:46:39.576Z message assistant
+[toolCall] bash call_00_ET_E4VtWdRqK2xMa70GDJRa2619
+{"command": "grep -E \"passed|failed|✓|✘|passed \\(|failed\" /tmp/f26-lzle9d69/service-check-vxc25q5f/check.log | tail -12"}
+
+## S29:L197 2026-09-29T06:46:39.589Z message toolResult
+toolResult bash False
+[text]
+  ✓  15 [chromium] › e2e/workbook-lifecycle.spec.ts:375:3 › REQ-1-3-2 export the current worksheet › exports the formula cell value through the shared display seam (1.0s)
+  ✓  16 [chromium] › e2e/worksheets-structure.spec.ts:60:3 › worksheet lifecycle › adds a worksheet named SheetN, activates it with A1 selected and keeps it after refresh (758ms)
+  ✓  17 [chromium] › e2e/worksheets-structure.spec.ts:98:3 › worksheet lifecycle › adds Sheet3 to the seeded Sheet1+Sheet2 workbook and restores the seed (695ms)
+  ✓  18 [chromium] › e2e/worksheets-structure.spec.ts:140:3 › worksheet lifecycle › shows the server error and adds no tab when worksheet creation fails (710ms)
+  ✓  19 [chromium] › e2e/worksheets-structure.spec.ts:179:3 › worksheet lifecycle › switching restores each worksheet state and reopening keeps the last active tab (1.1s)
+  ✓  20 [chromium] › e2e/worksheets-structure.spec.ts:239:3 › worksheet lifecycle › renames through the tab menu, persists, and shows the exact empty/duplicate messages (1.4s)
+  ✓  21 [chromium] › e2e/worksheets-structure.spec.ts:282:3 › worksheet lifecycle › deletes through the named dialog, activates the neighbour and removes the data (1.0s)
+  ✓  22 [chromium] › e2e/worksheets-structure.spec.ts:320:3 › worksheet lifecycle › refuses to delete the last worksheet without opening a dialog (546ms)
+  ✓  23 [chromium] › e2e/worksheets-structure.spec.ts:338:3 › row and column structure › row header menu inserts rows, shifts data, persists and leaves other worksheets alone (1.1s)
+  ✓  24 [chromium] › e2e/worksheets-structure.spec.ts:388:3 › row and column structure › column header menu inserts and deletes columns symmetrically (892ms)
+  ✓  25 [chromium] › e2e/worksheets-structure.spec.ts:419:3 › row and column structure › structure changes are scoped to the active worksheet and persist after refresh (840ms)
+  25 passed (28.8s)
+
+## S29:L198 2026-09-29T06:46:42.186Z message assistant
+[thinking]
+e2e on the new head a23af5a: **25 passed** (smoke 3 + workbook-lifecycle 12 + worksheets-structure 10) — B's specs now included via rebase. 
+Evidence: /tmp/f26-lzle9d69/service-check-vxc25q5f (git_head=a23af5a, dirty=false, check_exit=0, cleanup passed).
+1. Push the branch: `git push origin braid/issue-3-a`. Since I rebased, this is a force push (the remote head 559a0bd is not an ancestor). PR relies on force push - acceptable for a rebase. Use `--force-with-lease`.
+2. Update PR body via braid pr edit 8 --body-file /tmp/pr8-body.md.
+3. Hand over in Issue #3 (comment thread 27, reply to #81 or #82).
+Wait — before pushing, double-check the working tree is clean and head is a23af5a (yes, e2e result says dirty=false).
+Let me push.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L198:C1]
+[toolCall] bash call_00_vxsphEOLBqQZJLhOmNjW5576
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git status --short && git push --force-with-lease origin braid/issue-3-a 2>&1 | tail -5 && git log --oneline -1 origin/braid/issue-3-a"}
+
+## S29:L199 2026-09-29T06:46:42.283Z message toolResult
+toolResult bash False
+[text]
+ + 559a0bd...a23af5a braid/issue-3-a -> braid/issue-3-a (forced update)
+a23af5a task packet：记录 helper 切换、rebase 漂移与打包环境 ABI 陷阱
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L199:C1]
+
+## S29:L200 2026-09-29T06:46:43.708Z message assistant
+[toolCall] bash call_00_ET_Y6bDtHaIXkJttlWj3VJE8966
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr edit 8 --body-file /tmp/pr8-body.md 2>&1 | tail -5"}
+
+## S29:L201 2026-09-29T06:46:43.909Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L201:C1]
+
+## S29:L202 2026-09-29T06:46:46.261Z message assistant
+[thinking]
+PR body updated. Let me verify quickly that the body change took effect (the output echoed the body, seems like it printed the body — good).
+Now handover comment on Issue #3, thread 27, reply to #81 (the comment that asked me to do this). Content:
+- Candidate a23af5a pushed (head of PR #8), base develop @15abbf6.
+- What changed: rebase + helper switch (delete local copy) + test drift + packet.
+- Commands and results with evidence paths.
+- Environment note (ABI issue) and how it was fixed.
+- Unresolved/known boundaries unchanged.
+Keep it concise but complete. Use `braid comment create` — need the right syntax. Let me check `braid comment --help` / `braid issue comment` usage.
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L202:C1]
+[toolCall] bash call_00_3IdUZCRzz1IzVW6uDUOn3399
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment --help 2>&1 | head -30; echo \"===\"; braid comment create --help 2>&1 | head -30"}
+
+## S29:L203 2026-09-29T06:46:46.278Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 22 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L203:C1]
+
+## S29:L204 2026-09-29T06:46:46.279Z message user
+[text]
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L204:C1]
+
+## S29:L205 2026-09-29T06:46:47.707Z message assistant
+[thinking]
+Notifications about body edits (mine). Continue: I need to post the handover comment. Comments are created via `braid issue comment`? Let me check `braid issue --help`.
+[toolCall] bash call_00_l1TmmP9gfsS0oWTmu4bf6055
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue --help 2>&1 | head -30"}
+
+## S29:L206 2026-09-29T06:46:47.720Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 17 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L206:C1]
+
+## S29:L207 2026-09-29T06:46:48.956Z message assistant
+[toolCall] bash call_00_ET_Gvk8Mld1G1wnVR9Ty2yZ0823
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L207:C1]
+
+## S29:L208 2026-09-29T06:46:48.972Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L208:C1]
+
+## S29:L209 2026-09-29T06:46:58.072Z message assistant
+[thinking]
+Now write the handover comment to a file and post with `braid issue comment 3 --reply-to 81 --body-file ...`.
+Note: Should I reply to #81 (the one that assigned the switch) in thread 27? Yes, keep the thread. `--reply-to 81`.
+【PR #8 helper 切换完成：候选 a23af5a，请针对性复核】@deepseek-3 @glm-1
+1. 候选与内容
+- a23af5a 已推送 origin/braid/issue-3-a（PR #8 head）；base = develop @15abbf6（含 PR #9）。
+- A 侧相对 559a0bd 新增 3 提交：055fdaa helper 切换（store.js +9/−36：删私有 minRows/minCols 校验，保留持久化与 undefined/null=不改动）、16b94d8 测试漂移（Grid 4 个新必需 props 的 no-op）、a23af5a packet。
+- rebase 冲突合并：errors.ts（同名同义）、routes.js（导入列表并集）、WorkbookEditor.tsx（B 的 applySnapshot/runWorkbookAction + A 的 displayValue memo）。
+- 复核入口：`git diff 15abbf6 a23af5a` = 本 PR 内容（25 文件 +2226/−22）；`git diff 7f9a850 a23af5a` = 仅本次 3 提交（+24/−43）。
+2. 三项检查（a23af5a，clean）
+pnpm -r test: exit 0，backend 96 passed（csv 20 + app 31 + structure 45）、frontend 49 passed
+pnpm -r typecheck: exit 0
+with-service --check-only -- bash checks/run-e2e.sh: exit 0，25 passed（smoke 3 + workbook-lifecycle 12 + worksheets-structure 10），cleanup passed。证据 /tmp/f26-lzle9d69/service-check-vxc25q5f（result.json: git_head=a23af5a、dirty=false、check_exit=0）
+日志：/tmp/f26-pr8-v13-switch-evidence/{pnpm-test.log,pnpm-typecheck.log}
+3. 首轮失败（保留）
+- 第一次 typecheck 失败 1 例：WorkbookLifecycle.test.tsx 的 Grid 用例缺 B 新增的四个必需 props（TS2739）——rebase 漂移，非实现缺陷；已用 16b94d8 补 no-op props。
+- 环境：pnpm 包装器内部 Node 24 会把 better-sqlite3 装成 ABI 137，Node 20 下 vitest 整片失败（你 #81 §2 已独立复现）；按你的做法 `cd backend && PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3` 后复跑全绿。已记入 packet。
+4. 判据与边界不变
+- 你 #82 §2 记录的五条边界（尾部空行、`a\n""`、rowSpan===0 空表分支、min≤结构非常驻不变量、单列退化不幂等）不需要实现改动；本候选未触碰 parser/导出。
+- C 未合入 → 公式单元格导出原文（e2e 已标注 C 合入时必须翻转）；A-5 宽松解析；足迹静态。
+- helper 切换后错误码/文案/回滚断言沿用原有用例（app.test.js 断言精确文案），无行为变化。
+请复核后交根负责人合入；PR 正文已同步（helper 切换完成、rebase 影响面）。
+Keep it reasonably concise. Let me write it.
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S29:L209:C1]
+[toolCall] write call_00_b0fIoJq8GsEN3DpjkxIH2803
+{"content": "【PR #8 helper 切换完成：候选 `a23af5a`，请针对性复核】@deepseek-3 @glm-1\n\n按 Issue #3 comment #81 §3 交办，rebase + 共享 helper 切换已完成并推送。\n\n## 1. 候选与改动\n\n- **`a23af5a`**（已推送 `origin/braid/issue-3-a`，即 PR #8 head）；base = `origin/develop` @ **`15abbf6`**（含 PR #9）。\n- A 侧相对切换前候选 `559a0bd` 新增 **3 个提交（+24/−43）**：`055fdaa` helper 切换（`backend/src/store.js` +9/−36：`importWorksheetState` 的尺寸/cells/足迹校验改为调用 `assertWorksheetStateValid`，删除本地私有副本，保留下来的写入块只做 `min_rows`/`min_cols` 持久化与 `undefined`/`null` = 不改动）；`16b94d8` rebase 漂移（B 给 `Grid` 新增的 4 个必需结构操作 props 在 A 的 D-A8 接缝用例里补 no-op，仅测试代码）；`a23af5a` packet。\n- rebase 冲突合并点（3 处）：`frontend/src/lib/errors.ts`（两侧同名同义，留 B 的注释）、`backend/src/routes.js`（store 导入列表取并集）、`frontend/src/components/WorkbookEditor.tsx`（保留 B 的 `applySnapshot`/`runWorkbookAction`，再接 A 的 `displayValue` memo）。\n- 针对性复核入口：`git diff 7f9a850 a23af5a` = 本次仅 3 提交；`git diff 15abbf6 a23af5a` = 本 PR 在新 base 上的全部内容（25 文件 +2226/−22）。\n\n## 2. 三项检查（候选 `a23af5a`，工作树 clean）\n\n| 命令 | 结果 |\n| --- | --- |\n| `PATH=/usr/local/bin:$PATH pnpm -r test` | **exit 0**：backend **96 passed**（`csv` 20 + `app` 31 + `structure` 45）、frontend **49 passed**（csvExport 15、WorkbookLifecycle 12、Grid 11、format 8、cellDisplay 3） |\n| `PATH=/usr/local/bin:$PATH pnpm -r typecheck` | **exit 0**（backend `tsc --checkJs` / frontend `tsc --noEmit`） |\n| `with-service.py --check-only … -- bash checks/run-e2e.sh` | **exit 0，25 passed**（smoke 3 + `workbook-lifecycle` 12 + `worksheets-structure` 10），cleanup passed |\n\n- e2e 证据：`/tmp/f26-lzle9d69/service-check-vxc25q5f`（`result.json`：`git_head=a23af5a`、`dirty=false`、`check_exit=0`、`status=passed`）。\n- 单测/类型日志：`/tmp/f26-pr8-v13-switch-evidence/pnpm-test.log`、`pnpm-typecheck.log`。\n\n## 3. 首轮失败（保留原始结果）\n\n1. **typecheck 首轮失败 1 例**（rebase 漂移，非实现缺陷）：`WorkbookLifecycle.test.tsx(201,8) TS2739` —— B 的 `GridProps` 现要求 `onInsertRow/onDeleteRow/onInsertColumn/onDeleteColumn`，A 的接缝用例未提供；已用 `16b94d8` 补 no-op 后复跑 exit 0。\n2. **环境**：本仓库 `pnpm` 包装器内部用 Node 24，直接 `pnpm install` 会把 `better-sqlite3` 装成 ABI 137，而平台运行 Node 20.19.3（ABI 115），Vitest 因此整片报 `NODE_MODULE_VERSION 137` / `Module did not self-register`（与 comment #81 §2 的独立复现同一现象）。按你的做法 `cd backend && PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3` 后全绿；已记入 packet 的\"预演/排障结论\"，供后续成员复用。\n\n## 4. 判据与边界不变\n\n- comment #82 §2 记录的五条边界（尾部空行不产生记录、`a\\n\"\"` 退化形状、`rowSpan===0` 空表分支、`min ≤ 结构` 只在写入时对申报字段检查、单列退化不幂等）**不需要实现改动**，本候选未触碰 parser 与导出逻辑。\n- helper 切换是单点替换：`app.test.js` 原有的精确文案、整事务回滚与 `undefined`/`null` = 不改动用例全部沿用并通过，行为面不变。\n- 仍保持可见：C 未合入 → 公式单元格导出原文（e2e 已标注 C 合入时必须翻转为计算结果）；A-5 宽松解析；足迹静态（删除足迹内部行列后导出范围可能大于当前结构，#51 已记录）。\n- PR 正文已同步（base 改为 `15abbf6`、helper 切换完成、rebase 影响面与复核入口）。\n\n请做针对性复核；通过后交根负责人合入 `develop`。\n", "path": "/tmp/pr8-handover-comment.md"}
+
+## S29:L210 2026-09-29T06:46:58.077Z message toolResult
+toolResult write False
+[text]
+Successfully wrote to /tmp/pr8-handover-comment.md

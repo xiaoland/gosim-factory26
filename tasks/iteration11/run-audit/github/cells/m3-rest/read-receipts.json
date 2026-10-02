@@ -1,0 +1,407 @@
+{
+  "status": "substantive_complete",
+  "as_of_utc": "2026-09-29T09:34:39.341244+00:00",
+  "source": "snapshot-01 only; main native excluded and owned by m3 main reader",
+  "assigned_units": 27,
+  "records_assigned": 1398,
+  "units": [
+    {
+      "index": 0,
+      "id": "01a0eba4-8433-71b8-9006-e3ffa1f254b4",
+      "owner": "pr:11",
+      "kind": "subagent",
+      "view": "views/01a0eba4-8433-71b8-9006-e3ffa1f254b4.txt",
+      "records_declared": 27,
+      "records_read": [
+        1,
+        27
+      ],
+      "coverage": "substantive_full",
+      "note": "U0–U4 content/toolCall 原逐段阅读，压缩流补 thinking/details/nonmessage；其余单元均在压缩流中逐段阅读"
+    },
+    {
+      "index": 1,
+      "id": "pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb-history",
+      "owner": "pr:11",
+      "kind": "history",
+      "view": "views/pi-deepseek-fast-01a0eba1-673f-78d0-9459-7b47a59f88eb-history.txt",
+      "records_declared": 1,
+      "records_read": [
+        1,
+        1
+      ],
+      "coverage": "substantive_full",
+      "note": "U0–U4 content/toolCall 原逐段阅读，压缩流补 thinking/details/nonmessage；其余单元均在压缩流中逐段阅读"
+    },
+    {
+      "index": 2,
+      "id": "7ab36782-c477-4072-a0b9-19e85128e434_advisor_0_transcript",
+      "owner": "pr:11",
+      "kind": "transcript",
+      "view": "views/7ab36782-c477-4072-a0b9-19e85128e434_advisor_0_transcript.txt",
+      "records_declared": 48,
+      "records_read": [
+        1,
+        48
+      ],
+      "coverage": "substantive_full",
+      "note": "U0–U4 content/toolCall 原逐段阅读，压缩流补 thinking/details/nonmessage；其余单元均在压缩流中逐段阅读"
+    },
+    {
+      "index": 3,
+      "id": "2026-09-29T06-09-36-626Z_01a0ebc8-6f72-747b-8693-f71d4f794338",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-09-36-626Z_01a0ebc8-6f72-747b-8693-f71d4f794338.txt",
+      "records_declared": 61,
+      "records_read": [
+        1,
+        61
+      ],
+      "coverage": "substantive_full",
+      "note": "U0–U4 content/toolCall 原逐段阅读，压缩流补 thinking/details/nonmessage；其余单元均在压缩流中逐段阅读"
+    },
+    {
+      "index": 4,
+      "id": "2026-09-29T06-11-36-000Z_01a0ebca-41c0-729b-8704-4f313bcd1330",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-11-36-000Z_01a0ebca-41c0-729b-8704-4f313bcd1330.txt",
+      "records_declared": 119,
+      "records_read": [
+        1,
+        119
+      ],
+      "coverage": "substantive_full",
+      "note": "U0–U4 content/toolCall 原逐段阅读，压缩流补 thinking/details/nonmessage；其余单元均在压缩流中逐段阅读"
+    },
+    {
+      "index": 5,
+      "id": "2026-09-29T06-16-21-256Z_01a0ebce-9c08-7115-9418-8b9d57eaca33",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-16-21-256Z_01a0ebce-9c08-7115-9418-8b9d57eaca33.txt",
+      "records_declared": 49,
+      "records_read": [
+        1,
+        49
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 6,
+      "id": "2026-09-29T06-31-09-557Z_01a0ebdc-29f5-7560-a973-83dc97c11242",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-31-09-557Z_01a0ebdc-29f5-7560-a973-83dc97c11242.txt",
+      "records_declared": 83,
+      "records_read": [
+        1,
+        83
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 7,
+      "id": "2026-09-29T06-34-36-762Z_01a0ebdf-535a-7037-aefc-7fab369ba19b",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-34-36-762Z_01a0ebdf-535a-7037-aefc-7fab369ba19b.txt",
+      "records_declared": 59,
+      "records_read": [
+        1,
+        59
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 8,
+      "id": "2026-09-29T06-37-08-214Z_01a0ebe1-a2f6-70c2-8b4c-fd64ffccea92",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-37-08-214Z_01a0ebe1-a2f6-70c2-8b4c-fd64ffccea92.txt",
+      "records_declared": 186,
+      "records_read": [
+        1,
+        186
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 9,
+      "id": "2026-09-29T06-47-54-421Z_01a0ebeb-7f35-77fc-b47f-d7553bcf62f6",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-47-54-421Z_01a0ebeb-7f35-77fc-b47f-d7553bcf62f6.txt",
+      "records_declared": 33,
+      "records_read": [
+        1,
+        33
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 10,
+      "id": "2026-09-29T06-48-50-783Z_01a0ebec-5b5f-7067-b123-566a8f05091a",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-48-50-783Z_01a0ebec-5b5f-7067-b123-566a8f05091a.txt",
+      "records_declared": 50,
+      "records_read": [
+        1,
+        50
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 11,
+      "id": "2026-09-29T06-50-29-107Z_01a0ebed-db73-7710-a24d-aaca70d257f5",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-50-29-107Z_01a0ebed-db73-7710-a24d-aaca70d257f5.txt",
+      "records_declared": 16,
+      "records_read": [
+        1,
+        16
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 12,
+      "id": "2026-09-29T06-50-51-338Z_01a0ebee-324a-720e-b0a9-c844ef815173",
+      "owner": "pr:11",
+      "kind": "native",
+      "view": "views/2026-09-29T06-50-51-338Z_01a0ebee-324a-720e-b0a9-c844ef815173.txt",
+      "records_declared": 24,
+      "records_read": [
+        1,
+        24
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 13,
+      "id": "2026-09-29T05-09-10-321Z_01a0eb91-1a31-75ff-a2d1-5fa50e9aa02f",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T05-09-10-321Z_01a0eb91-1a31-75ff-a2d1-5fa50e9aa02f.txt",
+      "records_declared": 23,
+      "records_read": [
+        1,
+        23
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 14,
+      "id": "2026-09-29T05-22-03-526Z_01a0eb9c-e686-7755-9009-a35387844a69",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T05-22-03-526Z_01a0eb9c-e686-7755-9009-a35387844a69.txt",
+      "records_declared": 50,
+      "records_read": [
+        1,
+        50
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 15,
+      "id": "2026-09-29T05-28-33-473Z_01a0eba2-d9c1-76ea-b7ac-56434d2158c7",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T05-28-33-473Z_01a0eba2-d9c1-76ea-b7ac-56434d2158c7.txt",
+      "records_declared": 38,
+      "records_read": [
+        1,
+        38
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 16,
+      "id": "2026-09-29T05-35-26-860Z_01a0eba9-288c-764f-96c1-51dae740f661",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T05-35-26-860Z_01a0eba9-288c-764f-96c1-51dae740f661.txt",
+      "records_declared": 77,
+      "records_read": [
+        1,
+        77
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 17,
+      "id": "2026-09-29T05-46-50-933Z_01a0ebb3-98b5-70e2-a2b2-e9c0c0ab750f",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T05-46-50-933Z_01a0ebb3-98b5-70e2-a2b2-e9c0c0ab750f.txt",
+      "records_declared": 43,
+      "records_read": [
+        1,
+        43
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 18,
+      "id": "2026-09-29T05-50-15-004Z_01a0ebb6-b5dc-7126-9ade-3d374f47ddc2",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T05-50-15-004Z_01a0ebb6-b5dc-7126-9ade-3d374f47ddc2.txt",
+      "records_declared": 35,
+      "records_read": [
+        1,
+        35
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 19,
+      "id": "2026-09-29T05-53-14-108Z_01a0ebb9-717c-7767-b0f9-40597df15523",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T05-53-14-108Z_01a0ebb9-717c-7767-b0f9-40597df15523.txt",
+      "records_declared": 83,
+      "records_read": [
+        1,
+        83
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 20,
+      "id": "2026-09-29T06-02-22-679Z_01a0ebc1-d057-72f8-b01b-3bc8b988314b",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T06-02-22-679Z_01a0ebc1-d057-72f8-b01b-3bc8b988314b.txt",
+      "records_declared": 66,
+      "records_read": [
+        1,
+        66
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 21,
+      "id": "2026-09-29T06-11-38-334Z_01a0ebca-4ade-741e-b226-f2b25ab95bf4",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T06-11-38-334Z_01a0ebca-4ade-741e-b226-f2b25ab95bf4.txt",
+      "records_declared": 51,
+      "records_read": [
+        1,
+        51
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 22,
+      "id": "2026-09-29T06-14-50-716Z_01a0ebcd-3a5c-71ea-bf12-793ff56edfd5",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T06-14-50-716Z_01a0ebcd-3a5c-71ea-bf12-793ff56edfd5.txt",
+      "records_declared": 25,
+      "records_read": [
+        1,
+        25
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 23,
+      "id": "2026-09-29T06-31-13-883Z_01a0ebdc-3adb-7187-818e-3c72e0b5b33a",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T06-31-13-883Z_01a0ebdc-3adb-7187-818e-3c72e0b5b33a.txt",
+      "records_declared": 56,
+      "records_read": [
+        1,
+        56
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 24,
+      "id": "2026-09-29T06-35-38-316Z_01a0ebe0-43cc-71de-a0df-39fcffa91b2f",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T06-35-38-316Z_01a0ebe0-43cc-71de-a0df-39fcffa91b2f.txt",
+      "records_declared": 51,
+      "records_read": [
+        1,
+        51
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 25,
+      "id": "2026-09-29T06-48-49-940Z_01a0ebec-5814-7099-983f-b1e37881e214",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T06-48-49-940Z_01a0ebec-5814-7099-983f-b1e37881e214.txt",
+      "records_declared": 34,
+      "records_read": [
+        1,
+        34
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    },
+    {
+      "index": 26,
+      "id": "2026-09-29T07-00-41-839Z_01a0ebf7-34ef-76e7-83db-63836efb47bd",
+      "owner": "issue:5",
+      "kind": "native",
+      "view": "views/2026-09-29T07-00-41-839Z_01a0ebf7-34ef-76e7-83db-63836efb47bd.txt",
+      "records_declared": 10,
+      "records_read": [
+        1,
+        10
+      ],
+      "coverage": "substantive_full",
+      "note": "压缩流逐段阅读所有实质字段；精确重复回引已读原处"
+    }
+  ],
+  "coverage_method": "U0–U4 original content/toolCall bounded reading plus compressed_reader.py complete bounded stream for missing fields and U5–U26; exact SHA/prefix/line reuse only to already-emitted original source",
+  "original_full_reader_partial_chars": [
+    0,
+    288274
+  ],
+  "original_full_reader_stream_total_chars": 2841432,
+  "compressed_stream_read_chars": [
+    0,
+    1982373
+  ],
+  "compressed_stream_total_chars": 1982373,
+  "compressed_stream_chunks_read": "continuous bounded slices, no display truncation left unrecovered",
+  "unread_substantive_units": [],
+  "missing_units": [],
+  "source_truncation_followup": "native grep/head/tail-filtered outputs cannot be reconstructed from view; text/image placeholders do not include image pixels",
+  "limitations": [
+    "mutable packaging metadata (id, parentId, timestamp, ts, runId, cwd, version and provider/model/usage wrappers) was not read byte-for-byte",
+    "non-text image bytes unavailable in view",
+    "main PR #11 native unit is outside this cell"
+  ]
+}

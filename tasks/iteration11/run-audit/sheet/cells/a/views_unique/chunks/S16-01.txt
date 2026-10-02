@@ -1,0 +1,323 @@
+S16 artifact:work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/subagent-artifacts/a4055255-2e14-4312-b0c9-0d5ab1a34a51_advisor_transcript.jsonl
+source=work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/subagent-artifacts/a4055255-2e14-4312-b0c9-0d5ab1a34a51_advisor_transcript.jsonl
+## S16:L1 2026-09-29T06:08:03.633Z legacy user
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L1:C1]
+
+## S16:L2 2026-09-29T06:08:05.232Z legacy user
+[text]
+Task: 你在独立判断一个已实现的验收判据。请只依据我给出的材料，找反例、替代解释与能改变结论的缺失事实，不要读代码以外的东西（可以读给出的文件路径）。
+## 目标与约束
+在线表格应用（Vite+React 前端 / Express+SQLite 后端），交付路径为平台 `npm install/build/start`，Node 20.19.3。需求权威是 `input/requirements.yaml` 的 ATOMIC description；共享契约见 Issue #1（我可读的文件：`/workspace/template/.factory26/20260929-042409-811f18d4/input/requirements.yaml` 的 REQ-1-3-1/REQ-1-3-2/REQ-1-2-1/REQ-1-2-2）。设计与决定在 Issue #3 comment #27（要点见下）。
+## REQ-1-3-2 原文要点
+"Users can export the current active worksheet using the button with the accessible name "Export CSV" on the workbook editor toolbar. Clicking it starts a browser download; the suggested filename ends with ".csv", and the downloaded UTF-8 text is the exported CSV. The exported CSV preserves empty cells within the used range according to the grid's actual row and column order and correctly escapes text containing commas, quotes, or line breaks. Ordinary cells export their displayed values; formula cells export their current calculated results rather than formula expressions. Before and after export, the active worksheet, filter view, grid values, and formula bar content remain unchanged, and the same state remains after refresh."
+设计决定 D-A7：客户端 Blob 下载、无 BOM、**行尾 `\n`**、建议文件名 `<工作簿名>.csv`、不更新 updatedAt；used range = 从 A1 到所有非空单元格的最大行/列包围盒（裁掉尾部全空行列）；范围内空单元格导出为空字段；整表无内容 → 空文件；转义按 RFC4180（含 `,` `"` `\n` `\r` 的字段双引号包裹、内部 `"` 双写）。已知边界 A-7：纯尾部空字段（如 `a,b\nc,d,` 的尾逗号）不保留。
+## 我的实现选择（待独立审视）
+1. 序列化时**每条记录后都写 `\n`**，包括最后一条（即导出文本以 `\n` 结束）。单测与 e2e 按此逐字断言（e.g. 种子 A1:C4 → `Region,Sales,Status\nEast,1200,Open\nNorth,800,Closed\nSouth,700,Open\n`）。
+2. used range 的包围盒由**原始非空单元格**（raw !== ''）决定；公式单元格 raw 非空，因此计入包围盒；显示值（接缝）只决定字段文本，不决定范围。
+3. 空表导出空字符串 `''`（零字节）。
+4. 转义只对 `, " \n \r` 触发双引号包裹；**不**因子段含前导/尾随空格而包裹；字段内容原样保留（`" a "` 导出为 `" a "`，导入后 raw 为 ` a `）。
+## 待决问题
+- Q1：导出文本是否应包含末条记录后的 `\n`？哪一种是更可辩护的阅读（需求只写了"downloaded UTF-8 text is the exported CSV"与"preserves empty cells within the used range according to the grid's actual row and column order"）？外部 harness 若逐字比对，哪一种更可能被接受/拒绝？是否存在能同时满足两种读法的行为？
+- Q2：以"原始非空单元格"而非"显示值非空"决定 used range 是否会在子 Issue C（公式求值）落地后产生不一致？举例说明是否存在"显示值非空但 raw 为空"或反之的真实情形。
+- Q3：转义策略（不因前导/尾随空格包裹）与 RFC4180 / 常见实现（Google Sheets 导出）是否一致？如果 harness 用"解析回二维数组再比较"而不是逐字比较，这四种情况（含空格、含 `\r`、含 `\n`、末尾换行）里哪些会导致不一致？
+## 我要的返回
+1. 每个问题的直接结论与理由；
+2. 支持结论的最强反例；
+3. 能改变选择的缺失事实（如果存在）；
+4. 若建议修改，给出最小改动点（我可以说出改动落在 `frontend/src/lib/csvExport.ts` 的哪个函数）。
+不要客套，不要复述我的材料。
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L2:C1]
+
+## S16:L3 2026-09-29T06:08:12.467Z legacy assistant
+[thinking]
+The user asks me to act as advisor on CSV export acceptance criteria. I should read the requirements.yaml and possibly the csvExport.ts file to verify claims. Let me read the given file paths.
+[toolCall] grep grep_0_b2a7891a
+{"context": 8, "path": "/workspace/template/.factory26/20260929-042409-811f18d4/input/requirements.yaml", "pattern": "REQ-1-3-2|REQ-1-3-1|REQ-1-2-1|REQ-1-2-2"}
+[toolCall] find find_1_5b8a4e32
+{"path": "/workspace/template/.factory26/20260929-042409-811f18d4", "pattern": "**/csvExport.ts"}
+
+## S16:L4 2026-09-29T06:08:12.468Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L4:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L4:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L4:source]
+[runId]
+a4055255-2e14-4312-b0c9-0d5ab1a34a51
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L4:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L4:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L4:cwd]
+[ts]
+1790662092468
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L4:sourceEventType]
+[toolCallId]
+grep_0_b2a7891a
+[toolName]
+grep
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L4:argsPreview]
+[argsPayload]
+  "pattern": "REQ-1-3-2|REQ-1-3-1|REQ-1-2-1|REQ-1-2-2",
+  "path": "/workspace/template/.factory26/20260929-042409-811f18d4/input/requirements.yaml",
+  "context": 8
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L4:argsPayload]
+
+## S16:L5 2026-09-29T06:08:12.471Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:cwd]
+[ts]
+1790662092471
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:sourceEventType]
+[toolCallId]
+find_1_5b8a4e32
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:argsPreview]
+[argsPayload]
+  "pattern": "**/csvExport.ts",
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L5:argsPayload]
+
+## S16:L6 2026-09-29T06:08:12.542Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:cwd]
+[ts]
+1790662092542
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L6:isError]
+
+## S16:L7 2026-09-29T06:08:12.557Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:cwd]
+[ts]
+1790662092557
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S16:L7:isError]
+
+## S16:L8 2026-09-29T06:08:12.558Z legacy toolResult
+toolResult grep False
+[text]
+requirements.yaml-107-     dependencies: []
+requirements.yaml-108-     description: 'Supports creating a blank workbook and changing the workbook name;
+requirements.yaml-109-       both operations are initiated from visible workbook state points on the home page or
+requirements.yaml-110-       editor page. After success, the workbook record on the home page and the editor
+requirements.yaml-111-       title are updated consistently and remain so after refresh or reopening.
+requirements.yaml-112- 
+requirements.yaml-113-       '
+requirements.yaml-114-     children:
+requirements.yaml:115:     - id: REQ-1-2-1
+requirements.yaml-116-       name: Create a Blank Workbook
+requirements.yaml-117-       type: ATOMIC
+requirements.yaml-118-       dependencies: []
+requirements.yaml-119-       description: |
+requirements.yaml-120-         Users create a blank workbook from the workbook home page. The home page provides a button with the accessible name "New blank workbook"; clicking it opens the creation page, whose submit button is named "Create". After creation succeeds, the editor opens and shows only a blank worksheet named Sheet1, with Sheet1 active and A1 selected; refreshing or returning to the home page and reopening produces the same state. If creation fails, an error is displayed, the user remains in a retryable... [truncated]
+requirements.yaml-121- 
+requirements.yaml-122-         Page reference:
+requirements.yaml-123-         ![image](reference/create-workbook.png)
+requirements.yaml-124-       scenarios:
+requirements.yaml:125:       - name: REQ-1-2-1 -the requested workflow,the requested workflow Sheet1 the requested workflow A1 the requested workflow
+requirements.yaml-126-         steps:
+requirements.yaml-127-         - keyword: GIVEN
+requirements.yaml-128-           content: The visitor starts at the application home page in a fresh unauthenticated
+requirements.yaml-129-             browser session. The evaluation seed contains the seeded workbook `Q3
+requirements.yaml-130-             Sales`, worksheet `Sheet1`, and cell A1 value `Region`.
+requirements.yaml-131-         - keyword: WHEN
+requirements.yaml-132-           content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+requirements.yaml-133-             workbook entry, and the requested workflow,the requested workflow sheet1 the requested workflow a1 the requested workflow with concrete values
+requirements.yaml-140-             `Q3 Sales`, worksheet `Sheet1`, and cell A1 value `Region`); validation
+requirements.yaml-141-             or permission failures are shown beside the named control and do not create
+requirements.yaml-142-             a partial record.
+requirements.yaml-143-         - keyword: THEN
+requirements.yaml-144-           content: After the user refreshes the page or reopens the visible destination
+requirements.yaml-145-             from the application entry point, the successful result and workbook `Q3
+requirements.yaml-146-             Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,
+requirements.yaml-147-             the original seeded state remains unchanged.
+requirements.yaml:148:     - id: REQ-1-2-2
+requirements.yaml-149-       name: Rename a Workbook
+requirements.yaml-150-       type: ATOMIC
+requirements.yaml-151-       dependencies:
+requirements.yaml-152-       - REQ-1-1-1
+requirements.yaml-153-       description: 'Users can change the workbook name on the workbook editor page.
+requirements.yaml-154-         Next to the editor title is a button with the accessible name "Rename workbook";
+requirements.yaml-155-         clicking it displays a text box labeled "Workbook name", prefilled with the
+requirements.yaml-156-         last saved name, and a "Save" button. After leading and trailing spaces are
+requirements.yaml-157-         trimmed, the name must not be empty; an empty name must be rejected with "Workbook
+requirements.yaml-158-         name cannot be empty". After a successful save, both the editor title and
+requirements.yaml-159-         the home-page link display the new name; if saving fails, an error is shown
+requirements.yaml-160-         and the original name remains displayed. Reopening the workbook shows the
+requirements.yaml-161-         most recently saved name.
+requirements.yaml-162- 
+requirements.yaml-163-         '
+requirements.yaml-164-       scenarios:
+requirements.yaml:165:       - name: REQ-1-2-2 -the requested workflow,the requested workflow
+requirements.yaml-166-         steps:
+requirements.yaml-167-         - keyword: GIVEN
+requirements.yaml-168-           content: The visitor starts at the application home page in a fresh unauthenticated
+requirements.yaml-169-             browser session. The evaluation seed contains the seeded workbook `Q3
+requirements.yaml-170-             Sales`, worksheet `Sheet1`, and cell A1 value `Region`.
+requirements.yaml-171-         - keyword: WHEN
+requirements.yaml-172-           content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+requirements.yaml-173-             workbook entry, and the requested workflow,the requested workflow with concrete values `East`,
+requirements.yaml-180-             worksheet `Sheet1`, and cell A1 value `Region`); validation or permission
+requirements.yaml-181-             failures are shown beside the named control and do not create a partial
+requirements.yaml-182-             record.
+requirements.yaml-183-         - keyword: THEN
+requirements.yaml-184-           content: After the user refreshes the page or reopens the visible destination
+requirements.yaml-185-             from the application entry point, the successful result and workbook `Q3
+requirements.yaml-186-             Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,
+requirements.yaml-187-             the original seeded state remains unchanged.
+requirements.yaml:188:       - name: REQ-1-2-2 -the requested workflow,the requested workflow
+requirements.yaml-189-         steps:
+requirements.yaml-190-         - keyword: GIVEN
+requirements.yaml-191-           content: The visitor starts at the application home page in a fresh unauthenticated
+requirements.yaml-192-             browser session. The evaluation seed contains the seeded workbook `Q3
+requirements.yaml-193-             Sales`, worksheet `Sheet1`, and cell A1 value `Region`.
+requirements.yaml-194-         - keyword: WHEN
+requirements.yaml-195-           content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+requirements.yaml-196-             workbook entry, and the requested workflow,the requested workflow with concrete values `East`,
+requirements.yaml-215-     description: 'Supports importing external CSV data completely as a workbook and
+requirements.yaml-216-       exporting the current active worksheet as CSV. After a successful import, the
+requirements.yaml-217-       Sheet1 editor page opens and continues to show the complete imported result
+requirements.yaml-218-       after refresh or reopening; export reads only the current active worksheet and
+requirements.yaml-219-       must not change workbook content or the current interface state.
+requirements.yaml-220- 
+requirements.yaml-221-       '
+requirements.yaml-222-     children:
+requirements.yaml:223:     - id: REQ-1-3-1
+requirements.yaml-224-       name: Import CSV to Create a Workbook
+requirements.yaml-225-       type: ATOMIC
+requirements.yaml-226-       dependencies: []
+requirements.yaml-227-       description: 'Users start an import by clicking the "Import CSV" button on the
+requirements.yaml-228-         workbook home page. A dialog named "Import CSV" provides a file control labeled
+requirements.yaml-229-         "CSV file" and a "Confirm import" button. The system parses data in the original
+requirements.yaml-230-         row and column order, preserves empty fields, supports UTF-8 Chinese text,
+requirements.yaml-231-         English text, and numeric text, and correctly handles commas enclosed in double
+requirements.yaml-236-         with its final .csv extension removed, and Sheet1 opens with the complete
+requirements.yaml-237-         CSV rows, columns, and original text; the first row remains ordinary data.
+requirements.yaml-238-         After refresh or reopening, grid content and row/column order remain unchanged.
+requirements.yaml-239-         If parsing or import fails, no workbook link with that name may appear on
+requirements.yaml-240-         the home page, and no partial import result may be displayed or retained.
+requirements.yaml-241- 
+requirements.yaml-242-         '
+requirements.yaml-243-       scenarios:
+requirements.yaml:244:       - name: REQ-1-3-1 -the requested workflow UTF-8 CSV,the requested workflow
+requirements.yaml-245-         steps:
+requirements.yaml-246-         - keyword: GIVEN
+requirements.yaml-247-           content: The visitor starts at the application home page in a fresh unauthenticated
+requirements.yaml-248-             browser session. The evaluation seed contains the seeded workbook `Q3
+requirements.yaml-249-             Sales`, worksheet `Sheet1`, and cell A1 value `Region`.
+requirements.yaml-250-         - keyword: WHEN
+requirements.yaml-251-           content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+requirements.yaml-252-             workbook entry, and the requested workflow utf-8 csv,the requested workflow with concrete values
+requirements.yaml-259-             worksheet `Sheet1`, and cell A1 value `Region`); validation or permission
+requirements.yaml-260-             failures are shown beside the named control and do not create a partial
+requirements.yaml-261-             record.
+requirements.yaml-262-         - keyword: THEN
+requirements.yaml-263-           content: After the user refreshes the page or reopens the visible destination
+requirements.yaml-264-             from the application entry point, the successful result and workbook `Q3
+requirements.yaml-265-             Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,
+requirements.yaml-266-             the original seeded state remains unchanged.
+requirements.yaml:267:       - name: REQ-1-3-1 -the requested workflow CSV the requested workflow,the requested workflow
+requirements.yaml-268-         steps:
+requirements.yaml-269-         - keyword: GIVEN
+requirements.yaml-270-           content: The visitor starts at the application home page in a fresh unauthenticated
+requirements.yaml-271-             browser session. The evaluation seed contains the seeded workbook `Q3
+requirements.yaml-272-             Sales`, worksheet `Sheet1`, and cell A1 value `Region`.
+requirements.yaml-273-         - keyword: WHEN
+requirements.yaml-274-           content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+requirements.yaml-275-             workbook entry, and the requested workflow csv the requested workflow,the requested workflow with concrete values `East`,
+requirements.yaml-282-             worksheet `Sheet1`, and cell A1 value `Region`); validation or permission
+requirements.yaml-283-             failures are shown beside the named control and do not create a partial
+requirements.yaml-284-             record.
+requirements.yaml-285-         - keyword: THEN
+requirements.yaml-286-           content: After the user refreshes the page or reopens the visible destination
+requirements.yaml-287-             from the application entry point, the successful result and workbook `Q3
+requirements.yaml-288-             Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,
+requirements.yaml-289-             the original seeded state remains unchanged.
+requirements.yaml:290:       - name: REQ-1-3-1 -the requested workflow CSV,the requested workflow
+requirements.yaml-291-         steps:
+requirements.yaml-292-         - keyword: GIVEN
+requirements.yaml-293-           content: The visitor starts at the application home page in a fresh unauthenticated
+requirements.yaml-294-             browser session. The evaluation seed contains the seeded workbook `Q3
+requirements.yaml-295-             Sales`, worksheet `Sheet1`, and cell A1 value `Region`.
+requirements.yaml-296-         - keyword: WHEN
+requirements.yaml-297-           content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+requirements.yaml-298-             workbook entry, and the requested workflow csv,the requested workflow with concrete values `East`,
+requirements.yaml-305-             worksheet `Sheet1`, and cell A1 value `Region`); validation or permission
+requirements.yaml-306-             failures are shown beside the named control and do not create a partial
+requirements.yaml-307-             record.
+requirements.yaml-308-         - keyword: THEN
+requirements.yaml-309-           content: After the user refreshes the page or reopens the visible destination
+requirements.yaml-310-             from the application entry point, the successful result and workbook `Q3
+requirements.yaml-311-             Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,
+requirements.yaml-312-             the original seeded state remains unchanged.
+requirements.yaml:313:       - name: REQ-1-3-1 -the requested workflow CSV,the requested workflow
+requirements.yaml-314-         steps:
+requirements.yaml-315-         - keyword: GIVEN
+requirements.yaml-316-           content: The visitor starts at the application home page in a fresh unauthenticated
+requirements.yaml-317-             browser session. The evaluation seed contains the seeded workbook `Q3
+requirements.yaml-318-             Sales`, worksheet `Sheet1`, and cell A1 value `Region`.
+requirements.yaml-319-         - keyword: WHEN
+requirements.yaml-320-           content: The user opens the workbook home page, clicks the visible `Q3 Sales`
+requirements.yaml-321-             workbook entry, and the requested workflow csv,the requested workflow with concrete values `East`,
+requirements.yaml-328-             worksheet `Sheet1`, and cell A1 value `Region`); validation or permission
+requirements.yaml-329-             failures are shown beside the named control and do not create a partial
+requirements.yaml-330-             record.
+requirements.yaml-331-         - keyword: THEN
+requirements.yaml-332-           content: After the user refreshes the page or reopens the visible destination
+requirem

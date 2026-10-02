@@ -1,0 +1,290 @@
+[
+  {
+    "render_block": 108,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 447,
+    "text": "export interface CellData {\n  /** Original user input; formulas start with \"=\". null for empty cells. */\n  raw: string | null;\n  /** Displayed value: for plain input equal to raw; for formulas the cached computed result. */\n  value: string | null;\n  /** Reserved: id of a rule in sheet.validationRules. */\n  validationId?: string | null;\n  /** Reserved: display style (bold, color, number format...). */\n  style?: Record<string, unknown> | null;\n}"
+  },
+  {
+    "render_block": 110,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 184,
+    "text": "export interface RectSelection {\n  /** Top-left cell ref of the rectangular selection. */\n  start: string;\n  /** Bottom-right cell ref of the rectangular selection. */\n  end: string;\n}"
+  },
+  {
+    "render_block": 112,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 382,
+    "text": "/** Data validation rule (REQ-5). Extendable; consumers ignore unknown fields. */\nexport interface ValidationRule {\n  id: string;\n  /** e.g. \"list\" | \"numberRange\" | \"textLength\" ... */\n  type: string;\n  /** Cell range this rule applies to, e.g. \"A2:A100\". */\n  range: string;\n  /** Rule parameters, shape depends on type. */\n  config: Record<string, unknown>;\n  message?: string;\n}"
+  },
+  {
+    "render_block": 114,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 248,
+    "text": "/** Filter view (REQ-5). Extendable. */\nexport interface FilterView {\n  id: string;\n  /** Range the filter covers, e.g. \"A1:D20\". */\n  range: string;\n  /** Per-column filter criteria keyed by column letter. */\n  criteria: Record<string, unknown>;\n}"
+  },
+  {
+    "render_block": 116,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 370,
+    "text": "/** Pivot table spec (REQ-5). Extendable. */\nexport interface PivotSpec {\n  id: string;\n  /** Source data range. */\n  sourceRange: string;\n  /** Placement of the pivot result (anchor cell + target sheet). */\n  anchor: { sheetId: string; ref: string };\n  rows: string[];\n  columns: string[];\n  values: Array<{ field: string; aggregation: string }>;\n  filters: string[];\n}"
+  },
+  {
+    "render_block": 120,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 396,
+    "text": "export interface Workbook {\n  id: string;\n  name: string;\n  createdAt: string;\n  updatedAt: string;\n  /** id of the sheet active when the workbook was last used. */\n  activeSheetId: string;\n  /** Persisted active (cursor) cell ref, e.g. \"A1\". */\n  activeCell: string;\n  /** Persisted rectangular selection; null means single active cell. */\n  selection: RectSelection | null;\n  sheets: Sheet[];\n}"
+  },
+  {
+    "render_block": 146,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 278,
+    "text": "/** Column letters -> 1-based number (\"A\"->1, \"Z\"->26, \"AA\"->27). */\nexport function colNumber(letters: string): number {\n  let n = 0;\n  for (const ch of letters.toUpperCase()) {\n    if (ch < \"A\" || ch > \"Z\") return 0;\n    n = n * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return n;\n}"
+  },
+  {
+    "render_block": 150,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 371,
+    "text": "/** Validate an A1-style ref; returns {col,row} or null. */\nexport function parseRef(ref: unknown): { col: number; row: number } | null {\n  if (typeof ref !== \"string\") return null;\n  const m = REF_RE.exec(ref.toUpperCase());\n  if (!m) return null;\n  const col = colNumber(m[1]);\n  const row = Number(m[2]);\n  if (col < 1 || row < 1) return null;\n  return { col, row };\n}"
+  },
+  {
+    "render_block": 158,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 349,
+    "text": "workbooksRouter.post(\"/api/workbooks\", (req: Request, res: Response) => {\n  const rawName = typeof req.body?.name === \"string\" ? req.body.name : \"\";\n  const name = rawName.trim();\n  if (!name) {\n    badRequest(res, \"Workbook name cannot be empty\");\n    return;\n  }\n  const wb = makeWorkbook(name);\n  saveWorkbook(wb);\n  res.status(201).json(wb);\n});"
+  },
+  {
+    "render_block": 160,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 185,
+    "text": "workbooksRouter.get(\"/api/workbooks/:id\", (req: Request, res: Response) => {\n  const wb = getWorkbook(req.params.id);\n  if (!wb) {\n    notFound(res);\n    return;\n  }\n  res.json(wb);\n});"
+  },
+  {
+    "render_block": 172,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 189,
+    "text": "/**\n * JSON-file storage: one pretty-printed JSON file per workbook,\n * named `<workbookId>.json` inside DATA_DIR.\n * Writes are atomic (tmp file + rename) to survive crashes mid-write.\n */"
+  },
+  {
+    "render_block": 174,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 226,
+    "text": "function fileFor(id: string): string {\n  // ids are generated by us (wb_xxx); reject anything path-like.\n  if (!/^[A-Za-z0-9_-]+$/.test(id)) throw new Error(\"invalid workbook id\");\n  return path.join(DATA_DIR, `${id}.json`);\n}"
+  },
+  {
+    "render_block": 178,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 643,
+    "text": "export function listWorkbooks(): WorkbookSummary[] {\n  ensureDataDir();\n  const out: WorkbookSummary[] = [];\n  for (const f of fs.readdirSync(DATA_DIR)) {\n    if (!f.endsWith(\".json\")) continue;\n    try {\n      const wb = JSON.parse(fs.readFileSync(path.join(DATA_DIR, f), \"utf8\")) as Workbook;\n      if (wb && wb.id && wb.name) {\n        out.push({ id: wb.id, name: wb.name, createdAt: wb.createdAt, updatedAt: wb.updatedAt });\n      }\n    } catch {\n      // Skip unreadable/corrupt files rather than failing the whole list.\n    }\n  }\n  out.sort((a, b) => (a.updatedAt < b.updatedAt ? 1 : a.updatedAt > b.updatedAt ? -1 : 0));\n  return out;\n}"
+  },
+  {
+    "render_block": 180,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 236,
+    "text": "export function getWorkbook(id: string): Workbook | null {\n  const file = fileFor(id);\n  if (!fs.existsSync(file)) return null;\n  try {\n    return JSON.parse(fs.readFileSync(file, \"utf8\")) as Workbook;\n  } catch {\n    return null;\n  }\n}"
+  },
+  {
+    "render_block": 182,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L135",
+    "chars": 250,
+    "text": "export function saveWorkbook(wb: Workbook): void {\n  ensureDataDir();\n  const file = fileFor(wb.id);\n  const tmp = `${file}.tmp-${process.pid}-${Date.now()}`;\n  fs.writeFileSync(tmp, JSON.stringify(wb, null, 2), \"utf8\");\n  fs.renameSync(tmp, file);\n}"
+  },
+  {
+    "render_block": 188,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 236,
+    "text": "export function colLetter(index1Based: number): string {\n  let n = index1Based;\n  let s = \"\";\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    s = String.fromCharCode(65 + rem) + s;\n    n = Math.floor((n - 1) / 26);\n  }\n  return s;\n}"
+  },
+  {
+    "render_block": 194,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 363,
+    "text": "export function makeWorkbook(name: string, id?: string, now?: string): Workbook {\n  const ts = now || new Date().toISOString();\n  const sheet = makeSheet(\"Sheet1\", newId(\"sh\"));\n  return {\n    id: id || newId(\"wb\"),\n    name,\n    createdAt: ts,\n    updatedAt: ts,\n    activeSheetId: sheet.id,\n    activeCell: \"A1\",\n    selection: null,\n    sheets: [sheet],\n  };\n}"
+  },
+  {
+    "render_block": 204,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L141",
+    "chars": 414,
+    "text": "  // Static hosting of the built frontend + SPA fallback.\n  const indexHtml = path.join(FRONTEND_DIST, \"index.html\");\n  app.use(express.static(FRONTEND_DIST));\n  app.get(\"*\", (req, res, next) => {\n    if (req.path.startsWith(\"/api/\")) {\n      res.status(404).json({ error: \"Not found\" });\n      return;\n    }\n    if (fs.existsSync(indexHtml)) {\n      res.sendFile(indexHtml);\n    } else {\n      next();\n    }\n  });"
+  },
+  {
+    "render_block": 206,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L141",
+    "chars": 348,
+    "text": "  // eslint-disable-next-line @typescript-eslint/no-unused-vars\n  app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {\n    // eslint-disable-next-line no-console\n    console.error(\"[error]\", err);\n    if (!res.headersSent) {\n      res.status(500).json({ error: \"Internal server error\" });\n    }\n  });"
+  },
+  {
+    "render_block": 210,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L141",
+    "chars": 260,
+    "text": "export function startServer(): void {\n  ensureSeedData();\n  const app = createApp();\n  app.listen(PORT, HOST, () => {\n    // eslint-disable-next-line no-console\n    console.log(`Server listening on http://${HOST}:${PORT} (frontend: ${FRONTEND_DIST})`);\n  });\n}"
+  },
+  {
+    "render_block": 230,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 202,
+    "text": "export interface Workbook {\n  id: string;\n  name: string;\n  createdAt: string;\n  updatedAt: string;\n  activeSheetId: string;\n  activeCell: string;\n  selection: RectSelection | null;\n  sheets: Sheet[];\n}"
+  },
+  {
+    "render_block": 234,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 156,
+    "text": "export class ApiError extends Error {\n  status: number;\n  constructor(status: number, message: string) {\n    super(message);\n    this.status = status;\n  }\n}"
+  },
+  {
+    "render_block": 236,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 379,
+    "text": "async function request<T>(url: string, init?: RequestInit): Promise<T> {\n  const res = await fetch(url, {\n    headers: { \"Content-Type\": \"application/json\" },\n    ...init,\n  });\n  const body = await res.json().catch(() => ({}));\n  if (!res.ok) {\n    throw new ApiError(res.status, (body as { error?: string }).error || `Request failed (${res.status})`);\n  }\n  return body as T;\n}"
+  },
+  {
+    "render_block": 256,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 297,
+    "text": "/** 1-based column number -> letters (\"A\", \"Z\", \"AA\"...). */\nexport function colLetter(index1Based: number): string {\n  let n = index1Based;\n  let s = \"\";\n  while (n > 0) {\n    const rem = (n - 1) % 26;\n    s = String.fromCharCode(65 + rem) + s;\n    n = Math.floor((n - 1) / 26);\n  }\n  return s;\n}"
+  },
+  {
+    "render_block": 258,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 351,
+    "text": "/** \"B3\" -> { col: 2, row: 3 }. */\nexport function parseRef(ref: string): { col: number; row: number } {\n  const m = /^([A-Za-z]+)([0-9]+)$/.exec(ref);\n  if (!m) throw new Error(`Invalid cell ref: ${ref}`);\n  let col = 0;\n  for (const ch of m[1].toUpperCase()) {\n    col = col * 26 + (ch.charCodeAt(0) - 64);\n  }\n  return { col, row: Number(m[2]) };\n}"
+  },
+  {
+    "render_block": 264,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 374,
+    "text": "/** Normalize a selection (start/end may be in any corner order) to a rect of 1-based coords. */\nexport function selectionRect(start: string, end: string): Rect {\n  const a = parseRef(start);\n  const b = parseRef(end);\n  return {\n    top: Math.min(a.row, b.row),\n    bottom: Math.max(a.row, b.row),\n    left: Math.min(a.col, b.col),\n    right: Math.max(a.col, b.col),\n  };\n}"
+  },
+  {
+    "render_block": 266,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 187,
+    "text": "export function inRect(ref: string, rect: Rect): boolean {\n  const { col, row } = parseRef(ref);\n  return row >= rect.top && row <= rect.bottom && col >= rect.left && col <= rect.right;\n}"
+  },
+  {
+    "render_block": 284,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 568,
+    "text": "/**\n * Editor page at the stable, bookmarkable URL /workbook/:id.\n * Refreshing or directly visiting the URL restores the workbook's most\n * recent successful state, including the last active worksheet, active\n * cell and persisted selection.\n */\nexport default function EditorPage() {\n  const { id } = useParams<{ id: string }>();\n  const [workbook, setWorkbook] = useState<Workbook | null>(null);\n  const [error, setError] = useState<string | null>(null);\n  const [selection, setSelection] = useState<GridSelection>({\n    activeCell: \"A1\",\n    selection: null,\n  });"
+  },
+  {
+    "render_block": 286,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 422,
+    "text": "  useEffect(() => {\n    if (!id) return;\n    let cancelled = false;\n    api\n      .getWorkbook(id)\n      .then((wb) => {\n        if (cancelled) return;\n        setWorkbook(wb);\n        setSelection({\n          activeCell: wb.activeCell || \"A1\",\n          selection: wb.selection ?? null,\n        });\n      })\n      .catch(() => setError(\"Workbook not found\"));\n    return () => {\n      cancelled = true;\n    };\n  }, [id]);"
+  },
+  {
+    "render_block": 288,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 182,
+    "text": "  const activeSheet = useMemo(() => {\n    if (!workbook) return null;\n    return workbook.sheets.find((s) => s.id === workbook.activeSheetId) ?? workbook.sheets[0];\n  }, [workbook]);"
+  },
+  {
+    "render_block": 290,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 197,
+    "text": "  const activeCellData: CellData | undefined = useMemo(() => {\n    if (!activeSheet) return undefined;\n    return activeSheet.cells[selection.activeCell];\n  }, [activeSheet, selection.activeCell]);"
+  },
+  {
+    "render_block": 292,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 482,
+    "text": "  /** Persist last-used UI state (fire-and-forget; failures are non-fatal). */\n  const persistState = useCallback(\n    (next: GridSelection, sheetId?: string) => {\n      if (!workbook) return;\n      api\n        .saveState(workbook.id, {\n          activeSheetId: sheetId ?? workbook.activeSheetId,\n          activeCell: next.activeCell,\n          selection: next.selection,\n        })\n        .then((wb) => setWorkbook(wb))\n        .catch(() => undefined);\n    },\n    [workbook]\n  );"
+  },
+  {
+    "render_block": 298,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 253,
+    "text": "  const handleCommitCell = (ref: string, raw: string | null) => {\n    if (!workbook || !activeSheet) return;\n    api\n      .updateCells(workbook.id, activeSheet.id, [{ ref, raw }])\n      .then((wb) => setWorkbook(wb))\n      .catch(() => undefined);\n  };"
+  },
+  {
+    "render_block": 300,
+    "source": "work/native-homes/pi-deepseek-fast-01a0e5f8-ff9f-72b0-83ef-79822e63d630/sessions/--workspace-template-.factory26-20260928-025746-66feadac-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-28T03-04-58-636Z_01a0e5f9-0a0c-737b-8846-17b088c51917.jsonl:L139",
+    "chars": 213,
+    "text": "  if (error) {\n    return (\n      <main className=\"home\">\n        <div role=\"alert\" className=\"form-error\">{error}</div>\n        <p>\n          <Link to=\"/\">Back to home</Link>\n        </p>\n      </main>\n    );\n  }"
+  },
+  {
+    "render_block": 364,
+    "source": "continuation02-root-native/047-2026-09-28T05-43-33-723Z_01a0e68a-3a5b-7209-906f-c1c240bd43ae.jsonl:L22",
+    "chars": 192,
+    "text": "Commands:\n  view       \n  edit       \n  hide       \n  unhide     \n  delete     \n  resolve    \n  unresolve  \n  reaction   \n  help       Print this message or the help of the given subcommand(s)"
+  },
+  {
+    "render_block": 408,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L26",
+    "chars": 226,
+    "text": "Commands:\n  list         \n  view         \n  subscribe    \n  unsubscribe  \n  create       \n  edit         \n  comment      \n  close        \n  reopen       \n  help         Print this message or the help of the given subcommand(s)"
+  },
+  {
+    "render_block": 422,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 1117,
+    "text": "      Page reference:\n      ![image](reference/workbook-home.png)\n    children:\n    - id: REQ-1-1-1\n      name: View and Open a Workbook\n      type: ATOMIC\n      dependencies: []\n      description: |\n        Users view available workbooks on the workbook home page. Each record displays \"Last updated: <last updated value>\" and provides a link whose accessible name is the workbook name. After the user clicks the link, the editor displays the same \"Last updated: <last updated value>\", the corresponding workbook name, worksheet tabs and order, current active worksheet, row and column structure, grid values, formula bar content, filter views, validation entry points, and pivot table results; data from another workbook must not appear in the current grid. The current editor page entry in the browser must be directly accessible and continue to identify the same workbook after refresh; visiting that exact workbook state in the same or a later browser session must restore the workbook’s most recent successful state without requiring navigation through the home page. The entry format is implementation-defined."
+  },
+  {
+    "render_block": 424,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 3667,
+    "text": "        Page reference:\n        ![image](reference/workbook-home.png)\n      scenarios:\n      - name: REQ-1-1-1 -the requested workflow,the requested workflow page entry the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow,the requested workflow page entry the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow,the requested workflow\n            page entry the requested workflow\" using the same seeded names and values (the seeded workbook\n            `Q3 Sales`, worksheet `Sheet1`, and cell A1 value `Region`); validation\n            or permission failures are shown beside the named control and do not create\n            a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n      - name: REQ-1-1-1 -the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow\"\n            using the same seeded names and values (the seeded workbook `Q3 Sales`,\n            worksheet `Sheet1`, and cell A1 value `Region`); validation or permission\n            failures are shown beside the named control and do not create a partial\n            record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n  - id: REQ-1-2\n    name: Workbook Creation and Naming\n    type: FOLDER\n    dependencies: []\n    description: 'Supports creating a blank workbook and changing the workbook name;\n      both operations are initiated from visible workbook state points on the home page or\n      editor page. After success, the workbook record on the home page and the editor\n      title are updated consistently and remain so after refresh or reopening."
+  },
+  {
+    "render_block": 426,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 711,
+    "text": "      '\n    children:\n    - id: REQ-1-2-1\n      name: Create a Blank Workbook\n      type: ATOMIC\n      dependencies: []\n      description: |\n        Users create a blank workbook from the workbook home page. The home page provides a button with the accessible name \"New blank workbook\"; clicking it opens the creation page, whose submit button is named \"Create\". After creation succeeds, the editor opens and shows only a blank worksheet named Sheet1, with Sheet1 active and A1 selected; refreshing or returning to the home page and reopening produces the same state. If creation fails, an error is displayed, the user remains in a retryable state, and no incomplete workbook record may appear on the home page."
+  },
+  {
+    "render_block": 428,
+    "source": "continuation02-root-native/000-2026-09-28T02-58-55-469Z_01a0e5f3-7f6c-7001-b229-04dc2a2d2d57.jsonl:L11",
+    "chars": 2634,
+    "text": "        Page reference:\n        ![image](reference/create-workbook.png)\n      scenarios:\n      - name: REQ-1-2-1 -the requested workflow,the requested workflow Sheet1 the requested workflow A1 the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow,the requested workflow sheet1 the requested workflow a1 the requested workflow with concrete values\n            `East`, `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow,the requested workflow\n            Sheet1 the requested workflow A1 the requested workflow\" using the same seeded names and values (the seeded workbook\n            `Q3 Sales`, worksheet `Sheet1`, and cell A1 value `Region`); validation\n            or permission failures are shown beside the named control and do not create\n            a partial record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n    - id: REQ-1-2-2\n      name: Rename a Workbook\n      type: ATOMIC\n      dependencies:\n      - REQ-1-1-1\n      description: 'Users can change the workbook name on the workbook editor page.\n        Next to the editor title is a button with the accessible name \"Rename workbook\";\n        clicking it displays a text box labeled \"Workbook name\", prefilled with the\n        last saved name, and a \"Save\" button. After leading and trailing spaces are\n        trimmed, the name must not be empty; an empty name must be rejected with \"Workbook\n        name cannot be empty\". After a successful save, both the editor title and\n        the home-page link display the new name; if saving fails, an error is shown\n        and the original name remains displayed. Reopening the workbook shows the\n        most recently saved name."
+  },
+  {
+    "render_block": 430,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L12",
+    "chars": 3628,
+    "text": "        '\n      scenarios:\n      - name: REQ-1-2-2 -the requested workflow,the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow,the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow,the requested workflow\"\n            using the same seeded names and values (the seeded workbook `Q3 Sales`,\n            worksheet `Sheet1`, and cell A1 value `Region`); validation or permission\n            failures are shown beside the named control and do not create a partial\n            record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n      - name: REQ-1-2-2 -the requested workflow,the requested workflow\n        steps:\n        - keyword: GIVEN\n          content: The visitor starts at the application home page in a fresh unauthenticated\n            browser session. The evaluation seed contains the seeded workbook `Q3\n            Sales`, worksheet `Sheet1`, and cell A1 value `Region`.\n        - keyword: WHEN\n          content: The user opens the workbook home page, clicks the visible `Q3 Sales`\n            workbook entry, and the requested workflow,the requested workflow with concrete values `East`,\n            `1200`, `North`, and `800`. Every value is entered through a visible,\n            labelled control; no implementation-specific navigation, API, database id, or internal implementation\n            detail is assumed.\n        - keyword: THEN\n          content: The application exposes the observable result for \"the requested workflow,the requested workflow\"\n            using the same seeded names and values (the seeded workbook `Q3 Sales`,\n            worksheet `Sheet1`, and cell A1 value `Region`); validation or permission\n            failures are shown beside the named control and do not create a partial\n            record.\n        - keyword: THEN\n          content: After the user refreshes the page or reopens the visible destination\n            from the application entry point, the successful result and workbook `Q3\n            Sales`, worksheet `Sheet1`, cell `A1=Region` remain persisted; on failure,\n            the original seeded state remains unchanged.\n  - id: REQ-1-3\n    name: CSV Data Exchange\n    type: FOLDER\n    dependencies: []\n    description: 'Supports importing external CSV data completely as a workbook and\n      exporting the current active worksheet as CSV. After a successful import, the\n      Sheet1 editor page opens and continues to show the complete imported result\n      after refresh or reopening; export reads only the current active worksheet and\n      must not change workbook content or the current interface state."
+  },
+  {
+    "render_block": 466,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L94",
+    "chars": 164,
+    "text": "if (!process.env.BASE_URL || !process.env.BROWSER_EXECUTABLE_PATH) {\n  throw new Error('Set BASE_URL and BROWSER_EXECUTABLE_PATH before running browser checks.');\n}"
+  },
+  {
+    "render_block": 480,
+    "source": "native/453-2026-09-28T11-17-39-603Z_01a0e7bc-1a93-743f-8825-e7060beeff01.jsonl:L23",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  },
+  {
+    "render_block": 516,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L29",
+    "chars": 381,
+    "text": "Use Playwright Test for checks that must run again with the same intended meaning.\nUse agent-browser for exploratory interaction and quick reproduction when a test is not yet useful.\nChoose the behavior and expected result from the requirements before choosing a locator or assertion.\nThe svc-verification skill provides methods for designing checks and interpreting their results."
+  },
+  {
+    "render_block": 518,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L29",
+    "chars": 410,
+    "text": "Playwright Test and its matching Chromium are already installed.\nThe `playwright` command runs the installed test runner; `BROWSER_CHECK_NODE_MODULES` points to its dependencies and `BROWSER_EXECUTABLE_PATH` to the browser.\nIf the application already has a suitable test project, use its explicit dependencies and configuration.\nOtherwise create a small test directory with ordinary Node dependency resolution:"
+  },
+  {
+    "render_block": 520,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L29",
+    "chars": 420,
+    "text": "```sh\nmkdir -p checks\n# Preserve existing ignore rules. This entry keeps the local dependency link out of Git.\nprintf '/node_modules/\\n' >> checks/.gitignore\nln -s \"$BROWSER_CHECK_NODE_MODULES\" checks/node_modules\n# Copy assets/playwright.config.ts from this skill into checks/.\nBASE_URL=http://127.0.0.1:4100 CHECK_OUTPUT_DIR=\"results/$(date +%Y%m%dT%H%M%S)\" \\\n  playwright test --config checks/playwright.config.ts\n```"
+  },
+  {
+    "render_block": 522,
+    "source": "continuation02-root-native/002-2026-09-28T03-03-12-551Z_01a0e5f7-6ba7-739e-aaf3-3e8d230c17ef.jsonl:L29",
+    "chars": 1128,
+    "text": "Create the link only when that directory has no node_modules; do not replace existing dependencies.\nCommit checks and the necessary config/ignore rules, not the runtime link, results, or browser state.\nStart the application's intended candidate with the required initial state and a free development port before running the checks.\nWhen checking a promised default state, observe it before adding test data.\nRun service and checks from their intended working directories with explicit environment values, including the URL the check will visit. Keep the service's job or process identity and full logs, then stop that service after use.\nWhere pi-background-bash is available, use its `background: true` for a long-running service and its completion message for a finite check; `pbb status <ID>` and `pbb tail <ID> --full` expose the recorded exit and full log. Do not poll with `sleep` or use a sub-agent wait for a PBB job. A shell pipeline ending in `tail` or `echo` can hide the check's exit status; preserve the original status (for example with Bash `set -o pipefail`) and inspect the first error before summarizing output."
+  },
+  {
+    "render_block": 1412,
+    "source": "native/453-2026-09-28T11-17-39-603Z_01a0e7bc-1a93-743f-8825-e7060beeff01.jsonl:L23",
+    "chars": 312,
+    "text": "if ! $SKIP_BUILD; then\n  (cd \"$ROOT/frontend\" && npm run build)\n  (cd \"$ROOT/backend\" && npm run build)\nelse\n  [[ -f \"$ROOT/backend/dist/server.js\" ]] || { echo \"backend/dist missing; build first\"; exit 2; }\n  [[ -f \"$ROOT/frontend/dist/index.html\" ]] || { echo \"frontend/dist missing; build first\"; exit 2; }\nfi"
+  }
+]

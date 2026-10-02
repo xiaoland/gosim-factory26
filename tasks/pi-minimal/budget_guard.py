@@ -28,6 +28,7 @@ EVENTS_NAME = "budget-events.jsonl"
 COMPETITION = "hackathon"
 COMPETITION_REGISTRATION = "/competitions/hackathon/registration"
 THRESHOLD = 100.0
+NO_CANCEL_BELOW = 20.0
 INTERVAL = 600
 
 
@@ -101,6 +102,7 @@ def stop(journal, observation, reason):
         "schema_version": 1,
         "reason": reason,
         "threshold": THRESHOLD,
+        "no_cancel_below": NO_CANCEL_BELOW,
         **observation,
     }
     atomic_json(journal / STOP_NAME, marker)
@@ -167,6 +169,12 @@ def check_once(journal, client, cancel=True):
     append_event(journal, {"event": "balance", **observation})
     observation.update(usage=usage, estimated_balance=observation['balance'] - usage['cost_cny'])
     append_event(journal, {"event": "estimated_balance", **observation})
+    if observation["estimated_balance"] < NO_CANCEL_BELOW:
+        # Cancellation also settles accrued fees; retain the ongoing attempt
+        # when the user-authorized remaining-budget exception applies.
+        marker = stop(journal, observation, "balance_below_no_cancel_floor")
+        append_event(journal, {"event": "keep_running", **marker})
+        return {"status": "new_runs_blocked", "marker": marker, "cancellations": []}
     if observation["estimated_balance"] <= THRESHOLD:
         marker = stop(journal, observation, "balance_below_threshold")
         cancellations = cancel_target_runs(journal) if cancel else []
@@ -217,7 +225,7 @@ def main():
                   else check_once(journal, client, cancel=not args.check))
         print(json.dumps(result, ensure_ascii=False), flush=True)
         if args.once or args.check:
-            return 2 if result["status"] == "stopped" else 0
+            return 2 if result["status"] in {"stopped", "new_runs_blocked"} else 0
         state_path = journal / "state.json"
         if state_path.is_file() and json.loads(state_path.read_text()).get("phase") == "collected":
             return 0

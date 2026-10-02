@@ -1,0 +1,37 @@
+1,plain` → 网格与导出同为 `2`）及英文注释的检索提示。锚点原文见 PR #8 comment #94。\n\n**请 @deepseek-3 窄改本 Issue 正文（「未决/假设」末段）两处已过期表述**：①「**#5 尚未指派**，@glm-1 指派时须把该 A-3 接缝义务写入 C 的交接材料」→ C 已指派 @deepseek-7，义务已交付（#5 comment #96）；② 若仍保留「A-3 锚点清单见 PR #8 comment #94」的指路，建议并列 #5 comment #96（后者是 C 侧可执行版本）。其余判据、边界与关闭依据不变。\n\nA 侧状态：PR #8 无新提交（`origin/braid/issue-3-a` 仍为 `a23af5a`），已把 PR 侧三条已结束 thread（#47/#63/#90）折叠，本 Issue 侧无待办；仅上述正文口径待你更新。\n", "path": "/tmp/issue3-stale-fix.md"}
+
+## S36:L45 2026-09-29T06:54:20.386Z message toolResult
+toolResult write False
+[text]
+Successfully wrote to /tmp/issue3-stale-fix.md
+
+## S36:L46 2026-09-29T06:54:21.723Z message assistant
+[toolCall] bash call_00_ET_7SmvkgyuU5yo5qF5SN9s9108
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid issue comment 3 --reply-to 92 --body-file /tmp/issue3-stale-fix.md 2>&1 | tail -10"}
+
+## S36:L47 2026-09-29T06:54:21.817Z message toolResult
+toolResult bash False
+[text]
+comment #97
+消息投递回执 — 评论 #97（仅表示评论输入的接收状态）
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S36:L47:C1]
+
+## S36:L48 2026-09-29T06:54:24.524Z message assistant
+[thinking]
+Done. Final state:
+- PR #8 merged; threads resolved; no new commits.
+- Issue #3 body correction requested (#97).
+- C handoff delivered (#5 #96).
+Anything else? Perhaps I should consider whether I'm still subscribed to things. Not necessary.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S36:L48:C1]
+[text]
+本轮无代码/分支变化，只做了交接确认与正文口径修正。
+**核验（fetch 后）**
+- `origin/develop` = `e63efc6`，`origin/braid/issue-3-a` = `a23af5a`（未追加提交，且 `git diff a23af5a origin/develop` 为空）。
+- PR #8 三条已结束 thread 均折叠：#47、#63、#90；根侧收讫 #93 与关闭动作（Issue #3 timeline #167）均已在案。
+**本轮动作**
+1. 确认 #92 §3 交办已落地并留证：`#5` 已指派 @deepseek-7（timeline #169）；A-3 接缝义务已写入 **Issue #5 comment #96**（接缝唯一替换点、两处已完成接线、FormulaBar/内联编辑读 `raw` 的不可覆盖边界、错误值同接缝、`e2e/workbook-lifecycle.spec.ts:375-386` 的 `PRE-C TRANSITION` 翻转点与检索提示）。
+2. Issue #3 **comment #97**（reply #92）请 @deepseek-3 窄改正文两处过期表述：①「#5 尚未指派」→ 已指派 @deepseek-7 且义务已交付（#5 #96）；② 指路处并列 #5 #96（C 侧可执行版本），其余判据、边界、关闭依据不动。
+A 侧无待办：PR #8 已合并、无待补证据、不再向 `braid/issue-3-a` 追加提交；公式导出原文的过渡行为、A-5 宽松解析、足迹静态、导入无应用层尺寸上限四条边界随契约保持可见。
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S36:L48:C2]
+

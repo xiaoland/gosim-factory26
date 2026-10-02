@@ -1,0 +1,209 @@
+ICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L73:C1]
+[toolCall] bash call_00_4OMFR3CkIHepMEbSYLsu4508
+{"command": "env | grep -i \"BROWSER\\|PLAYWRIGHT\" ; echo \"---\"; python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --help 2>&1 | head -40"}
+
+## S28:L74 2026-09-29T06:41:30.656Z message toolResult
+toolResult bash False
+[text]
+AGENT_BROWSER_EXECUTABLE_PATH=/workspace/submission/agent/runtime/bin/chromium
+BROWSER_CHECK_NODE_MODULES=/workspace/submission/agent/runtime/node_modules
+PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+AGENT_BROWSER_SOCKET_DIR=/workspace/template/.factory26/20260929-042409-811f18d4/work/b
+Run a check with an owned temporary service, or wrap a self-managed check.
+positional arguments:
+  check                 -- command [arguments]
+options:
+  -h, --help            show this help message and exit
+  --cwd CWD
+  --start START         foreground service command; bash with pipefail
+  --check-only          wrap a check that manages its own services
+  --port PORT
+  --ready-path READY_PATH
+  --ready-timeout READY_TIMEOUT
+  --context KEY=VALUE   record an explicit candidate or runtime precondition
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L74:C1]
+
+## S28:L75 2026-09-29T06:41:37.052Z message assistant
+[thinking]
+Good. I'll run e2e after tests finish (to avoid resource contention) — actually the e2e builds the frontend and starts a service; running concurrently with vitest is fine resource-wise but could be heavy. Let me wait for the test result first (background message).
+Meanwhile, let me draft the increment comment text now.
+Draft:
+【设计增量 v1.3：契约 v1.3（A-1/A-2/A-3/A-4）并入本 Issue 判据 + 候选 559a0bd 验收结果】@deepseek-5 @glm-1
+依据：Issue #1 thread 1 comment #51（A-1…A-4 裁定）、#54（尺寸上限非全局）、#57（Y-min 落地语义 + "空文件"优先级）、#60/#66/#69（共享 helper 形态与消费时序）、#65（末换行采纳）、#64（根侧 7 项补齐清单）。对 comment #27/#33/#36 的窄改如下（其余 D-A1…D-A10 与 #27 的验收方案不变）：
+1. 取代：v1.1 的「假设 A-7 定格（不实现导入尺寸下限）」→ 按 A-4 Y-min 实现导入足迹（#64 的 7 项已由 PR #8 候选 559a0bd 落地，逐项对照见 comment #74）。A-7 现在只对"无足迹"工作表成立（空白工作簿尾部空字段仍不导出）。
+2. A-1 四条解析钉死（#51）：ragged 右补空、末尾单个换行不产生额外行、剥离 BOM、名字取 File.name 仅去最终 `.csv`（大小写不敏感）。
+3. A-2：`min_rows/min_cols` 等边界不变量集中在 store 层共享 helper —— 本 Issue 侧最终必须消费 B 的 `assertWorksheetStateValid`（#66/#69）；helper 未进 develop 前允许私有路径，切换完成是 #3 关闭前提（#60）。
+4. A-3：显示值接缝含错误值（错误单元格导出网格显示的错误串）；FormulaBar/内联编辑继续读 `raw` 不变。
+5. A-4 导出：used range = max(非空包围盒, 静态足迹)；足迹仅由导入写入，结构操作不读写；零字节文件仅当包围盒与足迹同时为空（#57 §4 足迹优先）；末条记录后不加终结换行（#65 采纳，一行可逆）。
+6. 尺寸上限：已裁定非全局不变量（#54）——import/state 无应用层上限，实际边界 = express.json 10mb；全量渲染性能限度见 Issue #1 comment #53。
+验收结果（我独立执行，证据留档）：
+- 候选 559a0bd；工作树 clean；`pnpm -r test` / `pnpm -r typecheck` / `bash checks/run-e2e.sh`（with-service 包装，生产形态 + 临时 DB）结果 + 证据目录。
+- 代码核对（Y-min 语义逐条）：...（migration, import write, snapshot, state undefined semantics, export max/footprint, README）
+- 记录的边界：rowSpan/colSpan 任一方为 0 → 空文件（含合成 payload minRows>0,minCols=0 的退化输入；导入路径不可产生）。
+- 接受 README 第 53-56 行的额外一句（同一"入口不完整"事实的修正，范围窄、语义不变）——不要求回退。
+- 遗留义务（不阻塞合入，但为 #3 关闭前提）：helper 切换。
+- 其他未决：C 未合入 → 公式导出原文（e2e 已标注必须翻转）；A-5 宽松解析保持。
+Then acceptance decision: PR #8 candidate 559a0bd 通过本 Issue 判据 → 交根负责人合入 develop（@glm-1）。But careful: root's comment #64 says "上表 7 项补齐并复跑三项检查后才交根侧合入" — done. My job: verify and then hand over to root. So my comment should conclude: 通过 → 请 @glm-1 按候选 559a0bd 合入 develop。
+Also should I add the "空文件 vs 足迹" and helper switch items to the issue body.
+Now: about root's #64 item 7 e2e/单测 round-trip cases: delivered.
+Let me wait for test results. Meanwhile, let me write the increment text to a file to post later (I'll write the final version after verification).
+Actually — an important thing: should I also use `braid pr review` or merge? No, root merges. My role: 验收 then hand to root. PR #8 assignee is deepseek-5; after acceptance, root (glm-1) merges. I don't merge PR #8.
+Let me now check the test job.
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L75:C1]
+[toolCall] bash call_00_tkyoOynhxngd6y4JgGG61613
+{"command": "tail -5 /tmp/f26-issue3-verify-tests.log 2>/dev/null; grep -c \"\" /tmp/f26-issue3-verify-tests.log 2>/dev/null"}
+
+## S28:L76 2026-09-29T06:41:37.254Z message toolResult
+toolResult bash False
+[text]
+Exit status 1
+TEST_EXIT=1
+523
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L76:C1]
+
+## S28:L77 2026-09-29T06:41:39.045Z message assistant
+[thinking]
+TEST_EXIT=1! Let me inspect the test log for failures. This is significant: my independent run shows failing tests, whereas PR owner reported exit 0. Could be environment difference (Node version 20.19.3 vs their run) or a real ordering issue. Let me examine.
+[toolCall] bash call_00_KQFd8fl27WUtg3OKqEIp9016
+{"command": "grep -n \"FAIL\\|✗\\|×\\|failed\\|AssertionError\\|Error:\" /tmp/f26-issue3-verify-tests.log | head -40"}
+
+## S28:L78 2026-09-29T06:41:39.149Z message toolResult
+toolResult bash False
+[text]
+6:backend test:  ❯ src/app.test.js (31 tests | 31 failed) 86ms
+7:backend test:    × migrations > are repeatable and create the contract tables 63ms
+13:backend test:    × seed > is idempotent across restarts 1ms
+15:backend test:    × seed > never overwrites existing user data 1ms
+17:backend test:    × seed > creates the Q3 Sales workbook with the documented cells 1ms
+19:backend test:    × GET /api/workbooks > lists the seeded workbook with its last-updated value 1ms
+21:backend test:    × GET /api/workbooks/:id > returns the full editor snapshot 1ms
+23:backend test:    × GET /api/workbooks/:id > answers with the uniform error body for unknown ids 1ms
+25:backend test:    × POST /api/workbooks > creates a blank workbook with one active Sheet1 and A1 selected 1ms
+27:backend test:    × POST /api/workbooks > rejects an empty name without creating a record 1ms
+29:backend test:    × PATCH /api/workbooks/:id > renames and trims the workbook name 1ms
+31:backend test:    × PATCH /api/workbooks/:id > rejects an empty name 1ms
+33:backend test:    × PUT /api/workbooks/:id/worksheets/:wid/cells > writes, persists and clears cells and bumps last-updated 1ms
+35:backend test:    × PUT /api/workbooks/:id/worksheets/:wid/cells > rejects the whole batch when one target is out of range 1ms
+37:backend test:    × PUT /api/workbooks/:id/worksheets/:wid/cells > rejects an empty changes array 1ms
+39:backend test:    × selection persistence > stores the full rectangle without touching last-updated 1ms
+41:backend test:    × PATCH /api/workbooks/:id/worksheets/:wid > activates a worksheet and reports the active one after reload 1ms
+43:backend test:    × PATCH /api/workbooks/:id/worksheets/:wid > rejects duplicate and empty worksheet names 1ms
+45:backend test:    × PUT /api/workbooks/:id/worksheets/:wid/state > replaces the worksheet state atomically 1ms
+47:backend test:    × PUT /api/workbooks/:id/worksheets/:wid/state > rejects a snapshot whose cells exceed the reported structure (no silent growth) 1ms
+49:backend test:    × PUT /api/workbooks/:id/worksheets/:wid/state > treats an absent or null import footprint as unchanged 1ms
+51:backend test:    × PUT /api/workbooks/:id/worksheets/:wid/state > rejects an import footprint that exceeds the reported structure and rolls back 1ms
+53:backend test:    × POST /api/workbooks/import > creates a workbook named after the file and imports every row and column 1ms
+55:backend test:    × POST /api/workbooks/import > pads ragged rows and keeps the trailing empty field inside the import footprint 1ms
+57:backend test:    × POST /api/workbooks/import > imports quoted commas, escaped quotes, in-field newlines and empty fields 1ms
+59:backend test:    × POST /api/workbooks/import > keeps the default 6x26 structure for empty and small CSVs 1ms
+61:backend test:    × POST /api/workbooks/import > grows the structure when the CSV is larger than the default 1ms
+63:backend test:    × POST /api/workbooks/import > falls back to the default name when the file name has nothing left after .csv 1ms
+65:backend test:    × POST /api/workbooks/import > allows two workbooks with the same name 0ms
+67:backend test:    × POST /api/workbooks/import > rejects invalid CSV with the exact message and persists nothing 1ms
+69:backend test:    × POST /api/workbooks/import > validates the request body shape with the uniform error format 1ms
+71:backend test:    × unknown API routes > use the uniform error body 1ms
+74:backend test:  FAIL  src/app.test.js > migrations > are repeatable and create the contract tables
+75:backend test: Error: The module '/tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+91:backend test:  FAIL  src/app.test.js > seed > is idempotent across restarts
+92:backend test: Error: Module did not self-register: '/tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'.
+105:backend test:  FAIL  src/app.test.js > seed > never overwrites existing user data
+106:backend test: Error: Module did not self-register: '/tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'.
+119:backend test:  FAIL  src/app.test.js > seed > creates the Q3 Sales workbook with the documented cells
+120:backend test: Error: Module did not self-register: '/tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'.
+
+## S28:L79 2026-09-29T06:41:44.887Z message assistant
+[thinking]
+"Module did not self-register" for better_sqlite3.node — this is a Node ABI mismatch: the prebuilt binary was compiled for a different Node ABI. Why? Because pnpm install ran `pnpm` from the runtime (which uses Node 24.10.0 via its shebang?) — I set PATH=/usr/local/bin:$PATH, but `pnpm` is a JS script executed with... let me check: /workspace/submission/agent/runtime/bin/pnpm — probably a shell wrapper calling node from the runtime (Node 24). pnpm's "reused 360" — the store had better-sqlite3 prebuilt binary, but the build script (node-gyp / prebuild-install) may not have run (pnpm 10 blocks build scripts by default) — and the reused store copy may be from a Node 24 install... Actually "Module did not self-register" typically means the .node was built for a different NODE_MODULE_VERSION.
+better-sqlite3 12.6.2 ships prebuilt binaries via `prebuild-install` in its install script. pnpm 10 by default ignores build scripts unless approved (onlyBuiltDependencies). If the store had the package with build artifacts from another Node version, the binary mismatches.
+Hmm, but the PR owner ran the same pnpm and got 51 passed. Maybe their run had `pnpm install` executed with Node 24 too but the prebuild downloads match Node 24 (v24 ABI 137) while running tests under Node 20 (ABI 115) → mismatch. Wait, but they passed... Perhaps their earlier install (in the same run, different worktree) used Node 20.19.3 as the pnpm interpreter. Let me check what node the pnpm wrapper uses: `head -3 /workspace/submission/agent/runtime/bin/pnpm`.
+Also the earlier baseline worktree (my current one at /workspace/.../issue-3/pi-deepseek-fast-g1) presumably has node_modules with a correct binary — the PR owner ran tests successfully there with... hmm.
+Key: my install used PATH=/usr/local/bin:$PATH so `node` = 20.19.3, but pnpm's shebang may be `#!/usr/bin/env node` → 20.19.3. Then prebuild-install would download the Node 20 (ABI 115) prebuilt. Yet the error suggests mismatch. Unless the store's better-sqlite3 build was already present from another install (pnpm reuses the store including built artifacts, and does NOT rebuild per node version) — pnpm's store is content-addressed and side-effect-free; side effects go to node_modules. But with "reused 360, downloaded 0", packages came from the shared store cache including build outputs? pnpm's global store does keep node_modules/.pnpm content including built artifacts? Actually pnpm does not run build scripts of dependencies by default (v10), so `better_sqlite3.node` must have come from... the package tarball? better-sqlite3 npm tarball includes a prebuilt binary? No, better-sqlite3 uses prebuild-install in install script; the tarball has build/Release? Hmm, some versions ship prebuilds directory (better-sqlite3 ships prebuilds in the npm package? It has `prebuilds/` maybe not).
+Wait — error message "The module ... was compiled against a different Node.js version" usually. Here it's "Module did not self-register" which occurs when a NODE_MODULE_VERSION mismatch OR when the module is loaded twice from different paths... Actually "Module did not self-register" is the classic error for a native module built for a different Node version? Let me look at the full error text in the log.
+Let me inspect the log around line 74-90.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L79:C1]
+[toolCall] bash call_00_icNVN8ISz8V7rlTLQ8RI5475
+{"command": "sed -n '74,95p' /tmp/f26-issue3-verify-tests.log; echo \"=== pnpm wrapper ===\"; head -3 /workspace/submission/agent/runtime/bin/pnpm; echo \"=== which node via pnpm? ===\"; cd /tmp/f26-issue3-verify && PATH=/usr/local/bin:$PATH node -e \"console.log(process.version, process.versions.modules)\"; /workspace/submission/agent/runtime/bin/pnpm exec node -e \"console.log(process.version, process.versions.modules)\" 2>&1 | tail -2"}
+
+## S28:L80 2026-09-29T06:41:45.898Z message toolResult
+toolResult bash False
+[text]
+backend test: Error: The module '/tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+backend test: was compiled against a different Node.js version using
+backend test: NODE_MODULE_VERSION 137. This version of Node.js requires
+backend test: NODE_MODULE_VERSION 115. Please try re-compiling or re-installing
+backend test: the module (for instance, using `npm rebuild` or `npm install`).
+backend test:  ❯ src/app.test.js:35:28
+backend test: ⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[1/31]⎯
+backend test:  FAIL  src/app.test.js > seed > is idempotent across restarts
+backend test: Error: Module did not self-register: '/tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'.
+=== pnpm wrapper ===
+#!/bin/sh
+HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
+exec "$HERE/node" "$HERE/../node_modules/pnpm/bin/pnpm.cjs" "$@"
+=== which node via pnpm? ===
+v20.19.3 115
+v24.10.0 137
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L80:C1]
+
+## S28:L81 2026-09-29T06:41:51.707Z message assistant
+[thinking]
+Confirmed: the pnpm binary wrapper uses the runtime's Node 24 (`$HERE/node`), so `pnpm install` ran under Node 24 → better-sqlite3 prebuild for ABI 137 was fetched/built into the store; then tests ran under Node 20 (because `pnpm -r test`... wait, `pnpm -r test` also uses the wrapper's Node 24 for pnpm itself, but the test script `vitest` is executed via node from PATH? Vitest runs `node` from PATH (which I prepended /usr/local/bin → Node 20). So mismatch.
+The platform requirement says: use PATH=/usr/local/bin:$PATH for the platform install/build/start to validate delivery. But pnpm wrapper hardcodes its own node (24) for pnpm itself, yet child scripts resolve `node` via PATH — with /usr/local/bin first, that's Node 20. So `pnpm install` runs the postinstall script under whatever node the wrapper... hmm, the install script (prebuild-install) is executed by pnpm spawning a shell → `node` resolved via PATH, which I set to /usr/local/bin first → Node 20.19.3 → should have downloaded ABI 115 prebuild. But we got ABI 137, meaning install script either didn't run (so the binary came from the store, previously built under Node 24) or ran with Node 24.
+Since pnpm v10 blocks build scripts by default, better-sqlite3's install script probably was NOT run; and the store copy contains build/Release/better_sqlite3.node from an earlier Node 24 build (pnpm store does cache the package's files including build outputs after build... actually pnpm's "reused" means it hardlinked from the store; side-effect builds are stored in the store's node_modules dir? pnpm does store built artifacts? I believe pnpm re-runs build scripts per project unless the package is in `onlyBuiltDependencies`. Hmm.)
+Regardless: this is an environment/install-path issue, not a candidate defect. The PR owner's passing run must have had the correct ABI because their install was done differently (perhaps `npm install` or a previous environment where the store had ABI 115).
+How to fix my verification: rebuild better-sqlite3 under Node 20: `PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3` in the worktree, or run install with Node 20 as the pnpm interpreter: use `node /workspace/submission/agent/runtime/node_modules/pnpm/bin/pnpm.cjs install` with /usr/local/bin/node. Or simply `pnpm rebuild better-sqlite3` (which spawns node from PATH → Node 20 → node-gyp/prebuild-install ABI 115).
+Simplest: `cd /tmp/f26-issue3-verify && PATH=/usr/local/bin:$PATH pnpm rebuild better-sqlite3` — but pnpm's own runtime is Node 24; the rebuild script runs with node from PATH? The lifecycle scripts are executed by pnpm via child process with PATH inherited → node = /usr/local/bin/node (20) ✓. But pnpm 10 might block build scripts unless approved... `pnpm rebuild` explicitly forces.
+Alternatively run `npm rebuild` from /usr/local/bin (npm 10.8.2) — that's the platform tooling (`npm install` per platform). The platform itself runs `npm install` in backend, which would trigger better-sqlite3's install script under Node 20 → ABI 115 ✓. So a better verification setup: do the platform-style install: `cd backend && npm install`. But the dev instruction says use pnpm for dev install. For my verification, rebuilding under Node 20 is what matters.
+Actually more robust and closer to the platform: use `PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3 --build-from-source=false`? Let me do `PATH=/usr/local/bin:$PATH node /workspace/submission/agent/runtime/node_modules/pnpm/bin/pnpm.cjs rebuild better-sqlite3`? Hmm, pnpm rebuild with the wrapper's node 24 — but the build script's node choice comes from PATH. Let me just try `pnpm rebuild better-sqlite3` with PATH prefixed and check the resulting ABI by loading it under node 20.
+Note: important to record this as an environment/install-path finding in my verification (and it may matter for the platform: platform runs `npm install` in backend under Node 20 → fine).
+Let me do it.
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L81:C1]
+[toolCall] bash call_00_e1OsBUhoGhnZXTp2ujFd8607
+{"command": "cd /tmp/f26-issue3-verify && PATH=/usr/local/bin:$PATH pnpm rebuild better-sqlite3 > /tmp/f26-rebuild.log 2>&1; echo \"rebuild_exit=$?\"; tail -5 /tmp/f26-rebuild.log; PATH=/usr/local/bin:$PATH node -e \"const D=require('/tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3'); const db=new D(':memory:'); console.log('abi-ok', process.version, db.prepare('select 1 as x').get())\""}
+
+## S28:L82 2026-09-29T06:41:52.189Z message toolResult
+toolResult bash True
+[text]
+rebuild_exit=0
+/tmp/f26-issue3-verify/node_modules/.pnpm/bindings@1.5.0/node_modules/bindings/bindings.js:121
+        throw e;
+        ^
+Error: The module '/tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/build/Release/better_sqlite3.node'
+was compiled against a different Node.js version using
+NODE_MODULE_VERSION 137. This version of Node.js requires
+NODE_MODULE_VERSION 115. Please try re-compiling or re-installing
+the module (for instance, using `npm rebuild` or `npm install`).
+    at Module._extensions..node (node:internal/modules/cjs/loader:1651:18)
+    at Module.load (node:internal/modules/cjs/loader:1275:32)
+    at Module._load (node:internal/modules/cjs/loader:1096:12)
+    at Module.require (node:internal/modules/cjs/loader:1298:19)
+    at require (node:internal/modules/helpers:182:18)
+    at bindings (/tmp/f26-issue3-verify/node_modules/.pnpm/bindings@1.5.0/node_modules/bindings/bindings.js:112:48)
+    at new Database (/tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3/lib/database.js:48:64)
+    at [eval]:1:122
+    at runScriptInThisContext (node:internal/vm:209:10)
+    at node:internal/process/execution:118:14 {
+  code: 'ERR_DLOPEN_FAILED'
+Node.js v20.19.3
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L82:C1]
+
+## S28:L83 2026-09-29T06:41:52.190Z message user
+[text]
+- issue:4 comment 76; read `comment view 76 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S28:L83:C1]
+
+## S28:L84 2026-09-29T06:41:57.452Z message assistant
+[thinking]
+pnpm rebuild didn't actually rebuild (exit 0 but binary unchanged) — likely build scripts blocked/ignored. Let me check the rebuild log.
+1. `PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3` inside backend dir (npm from /usr/local/bin, Node 20). npm rebuild runs node-gyp/prebuild-install with Node 20. Let me check backend/package.json's node_modules layout — better-sqlite3 is in backend/node_modules (symlink to .pnpm store). npm rebuild would need to run in backend dir.
+2. Or force prebuild-install: `cd node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3 && PATH=/usr/local/bin:$PATH node ./node_modules/prebuild-install/bin.js -r napi ...` — better-sqlite3 uses prebuild-install with `--runtime napi`? Actually better-sqlite3 12.x uses prebuild-install with node-abi; it has build/Release in the tarball? The presence of build/Release/better_sqlite3.node with ABI 137 means it was built/copied at some point by the Node 24 toolchain.
+Simplest: use npm (platform-compatible path) to rebuild in backend:
+`cd /tmp/f26-issue3-verify/backend && PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3`
+But npm may fail on workspace symlink structure. Let's try. If npm rebuild fails, do a from-source build: `npm rebuild better-sqlite3 --build-from-source` (needs node-gyp toolchain, python3, make, g++ — likely present).
+Note the PR owner's version was fine, so the store has an ABI 115 binary elsewhere? The store path is shared; they may have used a worktree whose install ran under Node 20 fully (e.g. with `pnpm` invoked via `node20 .../pnpm.cjs`). Since pnpm's wrapper uses Node 24 for pnpm itself, but lifecycle scripts inherit PATH... but pnpm 10 might set the script's node to its own executable (pnpm sets `npm_node_execpath`/prepends its own node dir to PATH for lifecycle scripts!). Indeed pnpm adds the node that's running pnpm to PATH for scripts. Hence scripts ran under Node 24 → ABI 137.
+So the PR owner's environment likely had the same issue unless they had a pre-existing ABI-115 build in the store/lockfile. Their evidence claims 51 passed... maybe they ran with a different install (e.g. `npm install` per platform in frontend/backend). Anyway, my run must be fixed for verification.
+Approach: force prebuild-install under Node 20:
+cd /tmp/f26-issue3-verify/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3
+PATH=/usr/local/bin:$PATH npm run build-release   # or prebuild-install
+better-sqlite3 package.json scripts: `install: prebuild-install || node-gyp rebuild --release`. Let me check if prebuild-install is available (dependency). Then run `PATH=/usr/local/bin:$PATH node node_modules/.bin/prebuild-install -r node -t 20.19.3 ...`. Hmm, better-sqlite3 12 uses `prebuild-install` with `--runtime napi`? Let me inspect package.json.
+Simplest robust: `PATH=/usr/local/bin:$PATH npm rebuild better-sqlite3 --build-from-source` from the 

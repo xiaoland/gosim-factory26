@@ -1,0 +1,183 @@
+d \"Rename workbook\" with a prefilled name box and Save', () => {\n    renderDialog();\n    expect(screen.getByRole('dialog', { name: 'Rename workbook' })).toBeTruthy();\n    expect(screen.getByLabelText('Workbook name')).toHaveValue('Q3 Sales');\n    expect(screen.getByRole('button', { name: 'Save' })).toBeTruthy();\n  });\n\n  it('rejects an empty name with the exact message and never calls the API', async () => {\n    const rename = vi.spyOn(api, 'renameWorkbook');\n    const onRenamed = renderDialog();\n    fireEvent.change(screen.getByLabelText('Workbook name'), { target: { value: '  ' } });\n    fireEvent.click(screen.getByRole('button', { name: 'Save' }));\n\n    expect(await screen.findByRole('alert')).toHaveTextContent(WORKBOOK_NAME_EMPTY_MESSAGE);\n    expect(rename).not.toHaveBeenCalled();\n    expect(onRenamed).not.toHaveBeenCalled();\n  });\n\n  it('reports the persisted name and updatedAt on success', async () => {\n    vi.spyOn(api, 'renameWorkbook').mockResolvedValue({\n      id: 'wb-1',\n      name: 'Q3 Revenue',\n      updatedAt: '2026-09-29T01:00:00.000Z',\n    });\n    const onRenamed = renderDialog();\n    fireEvent.change(screen.getByLabelText('Workbook name'), { target: { value: '  Q3 Revenue  ' } });\n    fireEvent.click(screen.getByRole('button', { name: 'Save' }));\n\n    await waitFor(() => expect(onRenamed).toHaveBeenCalledWith('Q3 Revenue', '2026-09-29T01:00:00.000Z'));\n    expect(api.renameWorkbook).toHaveBeenCalledWith('wb-1', 'Q3 Revenue');\n  });\n\n  it('shows the server message and keeps the original name when saving fails', async () => {\n    vi.spyOn(api, 'renameWorkbook').mockRejectedValue(\n      new ApiClientError(500, 'INTERNAL_ERROR', 'Unexpected server error'),\n    );\n    const onRenamed = renderDialog();\n    fireEvent.change(screen.getByLabelText('Workbook name'), { target: { value: 'New name' } });\n    fireEvent.click(screen.getByRole('button', { name: 'Save' }));\n\n    expect(await screen.findByRole('alert')).toHaveTextContent('Unexpected server error');\n    expect(onRenamed).not.toHaveBeenCalled();\n    expect(screen.getByRole('dialog', { name: 'Rename workbook' })).toBeTruthy();\n  });\n});\n\ndescribe('ImportCsvDialog (REQ-1-3-1)', () => {\n  function renderImport() {\n    render(\n      <MemoryRouter initialEntries={['/']}>\n        <Routes>\n          <Route path=\"/\" element={<ImportCsvDialog onClose={() => {}} />} />\n          <Route path=\"/workbook/:id\" element={<p>editor opened</p>} />\n        </Routes>\n      </MemoryRouter>,\n    );\n  }\n\n  it('is a dialog named \"Import CSV\" with a labelled file control and Confirm import', () => {\n    renderImport();\n    expect(screen.getByRole('dialog', { name: 'Import CSV' })).toBeTruthy();\n    expect(screen.getByLabelText('CSV file')).toBeTruthy();\n    expect(screen.getByRole('button', { name: 'Confirm import' })).toBeTruthy();\n  });\n\n  it('posts the file name and UTF-8 text, then opens the editor', async () => {\n    const importCsv = vi.spyOn(api, 'importWorkbookCsv').mockResolvedValue(CREATED);\n    renderImport();\n    fireEvent.change(screen.getByLabelText('CSV file'), {\n      target: { files: [csvFile('地区数据.csv', '地区,销售额\\n华东,1200')] },\n    });\n    fireEvent.click(screen.getByRole('button', { name: 'Confirm import' }));\n\n    await waitFor(() =>\n      expect(importCsv).toHaveBeenCalledWith('地区数据.csv', '地区,销售额\\n华东,1200'),\n    );\n    expect(await screen.findByText('editor opened')).toBeTruthy();\n  });\n\n  it('shows the exact invalid-CSV message and stays open without navigating', async () => {\n    vi.spyOn(api, 'importWorkbookCsv').mockRejectedValue(\n      new ApiClientError(400, 'INVALID_CSV', INVALID_CSV_MESSAGE),\n    );\n    renderImport();\n    fireEvent.change(screen.getByLabelText('CSV file'), {\n      target: { files: [csvFile('broken.csv', 'a,\"unterminated')] },\n    });\n    fireEvent.click(screen.getByRole('button', { name: 'Confirm import' }));\n\n    expect(await screen.findByRole('alert')).toHaveTextContent(INVALID_CSV_MESSAGE);\n    expect(screen.queryByText('editor opened')).toBeNull();\n    // The dialog and the chosen file stay in place, so the user can retry.\n    expect(screen.getByRole('dialog', { name: 'Import CSV' })).toBeTruthy();\n    expect((screen.getByLabelText('CSV file') as HTMLInputElement).files).toHaveLength(1);\n  });\n});\n\ndescribe('Grid display-value seam (D-A8)', () => {\n  it('renders display values while keeping the raw text for editing', () => {\n    render(\n      <Grid\n        rowCount={1}\n        colCount={2}\n        cells={new Map([['0:0', '=1+1']])}\n        displayValue={(row, col) => (row === 0 && col === 0 ? '2' : '')}\n        selection={A1_SELECTION}\n        editing={null}\n        onSelectionChange={() => {}}\n        onStartEdit={() => {}}\n        onCommitEdit={() => {}}\n        onCancelEdit={() => {}}\n      />,\n    );\n    expect(screen.getByRole('gridcell', { name: 'A1' }).textContent).toBe('2');\n    expect(screen.getByRole('gridcell', { name: 'B1' }).textContent).toBe('');\n  });\n});\n", "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/components/WorkbookLifecycle.test.tsx"}
+
+## S09:L140 2026-09-29T06:05:21.485Z message toolResult
+toolResult write False
+[text]
+Successfully wrote to /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/frontend/src/components/WorkbookLifecycle.test.tsx
+
+## S09:L141 2026-09-29T06:05:23.286Z message assistant
+[toolCall] bash call_00_ET_ao43e7qRCHzpxdLVxoad7512
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && pnpm --dir frontend test 2>&1 | tail -40"}
+
+## S09:L142 2026-09-29T06:05:30.112Z message toolResult
+toolResult bash False
+[text]
+    110|     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    111| 
+    112|     expect(await screen.findByRole('alert')).toHaveTextContent(WORKBOO…
+       |                                            ^
+    113|     expect(rename).not.toHaveBeenCalled();
+    114|     expect(onRenamed).not.toHaveBeenCalled();
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[5/7]⎯
+ FAIL  src/components/WorkbookLifecycle.test.tsx > RenameWorkbookDialog (REQ-1-2-2) > shows the server message and keeps the original name when saving fails
+Error: Invalid Chai property: toHaveTextContent
+ ❯ src/components/WorkbookLifecycle.test.tsx:139:44
+    137|     fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+    138| 
+    139|     expect(await screen.findByRole('alert')).toHaveTextContent('Unexpe…
+    140|     expect(onRenamed).not.toHaveBeenCalled();
+    141|     expect(screen.getByRole('dialog', { name: 'Rename workbook' })).to…
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[6/7]⎯
+ FAIL  src/components/WorkbookLifecycle.test.tsx > ImportCsvDialog (REQ-1-3-1) > shows the exact invalid-CSV message and stays open without navigating
+ ❯ src/components/WorkbookLifecycle.test.tsx:188:44
+    186|     fireEvent.click(screen.getByRole('button', { name: 'Confirm import…
+    187| 
+    188|     expect(await screen.findByRole('alert')).toHaveTextContent(INVALID…
+    189|     expect(screen.queryByText('editor opened')).toBeNull();
+    190|     // The dialog and the chosen file stay in place, so the user can r…
+⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯⎯[7/7]⎯
+ Test Files  1 failed | 4 passed (5)
+      Tests  7 failed | 36 passed (43)
+   Start at  06:05:24
+   Duration  5.36s (transform 202ms, setup 0ms, collect 1.19s, tests 634ms, environment 2.30s, prepare 422ms)
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L142:C1]
+
+## S09:L143 2026-09-29T06:05:33.458Z message assistant
+[thinking]
+`toHaveTextContent` is from @testing-library/jest-dom which isn't set up. Checking existing tests: Grid.test.tsx uses `expect(...).toBeTruthy()` etc. No jest-dom. So I should use `.textContent` assertions.
+Replace `toHaveTextContent(X)` with `.textContent` toBe(X) — careful with exact text; role=alert <p> contains only the message. Use `expect(alert.textContent).toBe(MESSAGE)`.
+Also `toHaveValue` — did that fail too? 7 tests failed; the first failures are truncated. `toHaveValue` is also jest-dom. Let me check: failure output shows errors for toHaveTextContent. Likely toHaveValue also invalid. Let me replace both:
+- `expect(screen.getByLabelText('Workbook name')).toHaveValue('X')` → `expect((input as HTMLInputElement).value).toBe('X')`.
+Let me rewrite those assertions.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L143:C1]
+[toolCall] bash call_00_hzNu185AaKG2xJgyVuSb3965
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && python3 - <<'PY'\nimport re\np='frontend/src/components/WorkbookLifecycle.test.tsx'\ns=open(p).read()\ns=s.replace(\"expect(screen.getByLabelText('Workbook name')).toHaveValue('Untitled spreadsheet');\",\n            \"expect((screen.getByLabelText('Workbook name') as HTMLInputElement).value).toBe(\\n      'Untitled spreadsheet',\\n    );\")\ns=s.replace(\"expect(screen.getByLabelText('Workbook name')).toHaveValue('   ');\",\n            \"expect((screen.getByLabelText('Workbook name') as HTMLInputElement).value).toBe('   ');\")\ns=s.replace(\"expect(screen.getByLabelText('Workbook name')).toHaveValue('Budget');\",\n            \"expect((screen.getByLabelText('Workbook name') as HTMLInputElement).value).toBe('Budget');\")\ns=s.replace(\"expect(screen.getByLabelText('Workbook name')).toHaveValue('Q3 Sales');\",\n            \"expect((screen.getByLabelText('Workbook name') as HTMLInputElement).value).toBe('Q3 Sales');\")\ns=re.sub(r\"expect\\(await screen\\.findByRole\\('alert'\\)\\)\\.toHaveTextContent\\(([^;]+?)\\);\",\n         r\"expect((await screen.findByRole('alert')).textContent).toBe(\\1);\", s)\nopen(p,'w').write(s)\nPY\ngrep -n \"toHave\" frontend/src/components/WorkbookLifecycle.test.tsx"}
+
+## S09:L144 2026-09-29T06:05:33.499Z message toolResult
+toolResult bash False
+[text]
+60:    expect(create).not.toHaveBeenCalled();
+115:    expect(rename).not.toHaveBeenCalled();
+116:    expect(onRenamed).not.toHaveBeenCalled();
+129:    await waitFor(() => expect(onRenamed).toHaveBeenCalledWith('Q3 Revenue', '2026-09-29T01:00:00.000Z'));
+130:    expect(api.renameWorkbook).toHaveBeenCalledWith('wb-1', 'Q3 Revenue');
+142:    expect(onRenamed).not.toHaveBeenCalled();
+175:      expect(importCsv).toHaveBeenCalledWith('地区数据.csv', '地区,销售额\n华东,1200'),
+194:    expect((screen.getByLabelText('CSV file') as HTMLInputElement).files).toHaveLength(1);
+
+## S09:L145 2026-09-29T06:05:35.008Z message assistant
+[toolCall] bash call_00_ET_DrVbiPJZ8vq0louH1ULT0521
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L145:C1]
+
+## S09:L146 2026-09-29T06:05:41.427Z message toolResult
+toolResult bash False
+[text]
+ ✓ src/components/WorkbookLifecycle.test.tsx (12 tests) 406ms
+ ✓ src/components/Grid.test.tsx (8 tests) 290ms
+ ✓ src/lib/csvExport.test.ts (12 tests) 8ms
+ ✓ src/lib/cellDisplay.test.ts (3 tests) 3ms
+ Test Files  5 passed (5)
+      Tests  43 passed (43)
+   Start at  06:05:36
+   Duration  5.02s (transform 207ms, setup 0ms, collect 686ms, tests 711ms, environment 2.40s, prepare 429ms)
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S09:L146:C1]
+
+## S09:L147 2026-09-29T06:06:10.379Z message assistant
+[thinking]
+All 43 frontend tests pass. Now the e2e spec. Let me write `e2e/workbook-lifecycle.spec.ts`.
+Key considerations:
+- Production shape: backend serves the built frontend; DB is a fresh temp DB with the seed (Q3 Sales only).
+- Run order matters: tests in this file share the same DB and run serially (workers:1, fullyParallel:false). Careful about naming collisions with the pre-existing seed workbook 'Q3 Sales'. Use unique names.
+**REQ-1-2-1**:
+1. Home → click "New blank workbook" → creation page → click "Create" (with prefilled name) → editor: URL /workbook/, tab Sheet1 aria-selected true, only one tab, A1 aria-selected true, 6 rowheaders/26 columnheaders, grid empty.
+   - Then reload → same state.
+   - Then go home → link "Untitled spreadsheet" visible → click → editor same.
+   - Note: multiple workbooks named "Untitled spreadsheet" may exist after reloads? Only created once. But the second test creating another with a different name is fine.
+2. Failure paths:
+   - clear name → click Create → alert exact message, still on /new, no new record: check home list count before/after.
+   - `page.route('**/api/workbooks', ...)` 500 → error visible, stays, home no record.
+   Actually REQ says "If creation fails, an error is displayed, the user remains in a retryable state, and no incomplete workbook record may appear on the home page."
+   Implement: fill unique name 'Doomed', route intercept POST /api/workbooks → 500, click Create → alert shows; go home (or check home list) → no 'Doomed' link.
+Wait: after a failed creation, we're still on /new. To check the home page, navigate to '/' and assert no link named 'Doomed'.
+**REQ-1-2-2 rename**: open the created workbook (or seed Q3 Sales). Use a dedicated workbook created via UI with a unique name to avoid polluting the seed. Actually renaming 'Q3 Sales' would affect the smoke test... but e2e runs the whole e2e dir; smoke.spec.ts expects 'Q3 Sales' with seed values. Playwright with workers:1 runs files sequentially; alphabetical order: smoke.spec.ts, workbook-lifecycle.spec.ts. Actually alphabetically 'smoke' < 'workbook', so smoke runs first. But relying on order is fragile. Better: create a new workbook for the rename test (via the API directly with page.request? or via UI). Using `page.request.post('/api/workbooks', {data:{name:'Rename Target'}})` is an implementation-specific shortcut. The design says tests drive via accessible names; but setup through the API is acceptable for fixtures? The requirement is about the observable workflow. I'll create the workbook through the UI (New blank workbook → change name to 'Rename Target' → Create) — that also re-verifies the create flow. Hmm, but then home page has 'Rename Target'.
+Simpler: use the CSV import to create a workbook for rename. Overkill.
+I'll create via UI: click New blank workbook, set name 'Rename Target', Create.
+Then in the editor: click "Rename workbook" → dialog → prefilled 'Rename Target' → clear → Save → alert exact 'Workbook name cannot be empty', title stays 'Rename Target'. Then set name 'Renamed Target' → Save → title updates. Then reload → title persists. Then home → link 'Renamed Target' visible (and 'Rename Target' gone).
+Also failure: route PATCH → 500 → error shown and title unchanged.
+Careful: heading vs h1. The editor title is `<h1>{snapshot.name}</h1>`. Use `page.getByRole('heading', {name: 'Renamed Target'})`. But the workbook link on home is a link. In the editor, after rename the h1 changes.
+Note: on the home page, the link name is the workbook name. If a workbook named 'Renamed Target' exists, `getByRole('link', {name: 'Renamed Target'})` — but our editor h1 is on a different page. Fine.
+**REQ-1-3-1 import**: on home click "Import CSV" → dialog → set input files with a CSV containing Chinese, quotes, comma, newline, empty field → click "Confirm import" → editor opens: name = file name minus .csv; cells assert exact; only Sheet1; refresh → same. Then home → link with that name.
+Invalid: click Import CSV → set file with unterminated quote → Confirm → alert exact message, dialog still open, no navigation (URL still '/'), home no link with that name.
+- Use `setInputFiles` with `{ name, mimeType, buffer }`.
+Content example:
+地区,销售额,"备注"
+华东,1200,"a,b"
+North,800,"say ""hi"""
+"multi
+line",100,
+That's a good matrix: quoted comma, escaped quotes, newline in field, empty trailing field.
+Rows: 4 rows, 3 cols.
+Cell assertions:
+- A1 '地区', B1 '销售额', C1 '备注'
+- A2 '华东', B2 '1200', C2 'a,b'
+- A3 'North', B3 '800', C3 'say "hi"'
+- A4 'multi\nline', B4 '100', C4 empty
+Note gridcell text with a newline inside a span with `truncate` — `toHaveText` normalizes whitespace? Playwright's `toHaveText` trims and normalizes whitespace by default. So 'multi\nline' would normalize to 'multi line'. Use `toContainText(['multi','line'])`? Hmm. Better use `page.getByRole('gridcell', {name:'A4', exact:true}).textContent()` and compare with a regex or use `toHaveText('multi line')`? Since the span contains "multi\nline", textContent = "multi\nline". Playwright `toHaveText` with a string normalizes whitespace in both. Safer: `expect(await cell.evaluate(el => el.textContent)).toBe('multi\nline')`.
+Actually simpler: assert via `toHaveText(/multi\s+line/)`. Hmm, I want strict verification of the preserved newline. Since the DOM span preserves "\n" (CSS truncate doesn't remove it), textContent should be exactly 'multi\nline'. I'll use evaluate.
+But careful: my CSV string in the test file — writing a multi-line CSV. Use an array join with '\n'.
+- Import name: file name `地区数据.csv` → workbook name '地区数据'. And a second file for the "removes final .csv" check.
+Wait: keep it simpler: name the file `quarterly report.csv` → workbook 'quarterly report'.
+**REQ-1-3-2 export**: 
+Use the seed workbook? The seed has A1:C4 filled. Export from Q3 Sales: expected content:
+Region,Sales,Status
+East,1200,Open
+South,700,Open
+But smoke.spec.ts edits B2 to 1500! Since smoke runs before and shares the DB (webServer per run, DB shared across the run), the seed workbook may be modified by smoke tests. Indeed smoke edits B2 → '1500'. That would break my expected export if I rely on the seed.
+So: create my own workbook via import for the export test, with known content — self-contained and independent of other specs. Good: import a CSV then export and compare.
+Export test:
+1. Import CSV with known content (e.g. `a,b\nc,"d,e"` → used range A1:B2).
+2. In editor click "Export CSV" → capture download:
+const [download] = await Promise.all([
+  page.waitForEvent('download'),
+  page.getByRole('button', {name:'Export CSV'}).click(),
+expect(download.suggestedFilename()).toMatch(/\.csv$/);
+const stream = await download.createReadStream(); // or path
+Read content: `const path = await download.path(); const content = fs.readFileSync(path, 'utf8');`
+Playwright: `download.path()` returns the path. Good.
+Then assert content equals expected, and that the download has no BOM, uses '\n'.
+3. State unchanged: before export, check active tab aria-selected, grid values, formula bar content, and updatedAt text? "导出前后活动工作表、筛选视图、网格值、公式栏内容不变" — assert: active worksheet tab, grid cell values, formula bar value; after reload still same. Since we can't easily check updatedAt unchanged... we can check the home page "Last updated" text before and after? The requirement says filter view, grid values, formula bar content unchanged. Design says "导出不更新 updatedAt" as a property; e2e could capture the header "Last updated: ..." text before and after and assert equal. That's a good check. Let me do that: capture `page.locator('#workbook-last-updated').textContent()`... the p has id `workbook-last-updated`. Use that (implementation detail but it's our own test). Or use getByText(/Last updated:/). I'll use the id via locator.
+Hmm, the e2e should preferably use accessible names, but for this one a data locator is acceptable. I'll use `page.getByText(/^Last updated:/)`.
+4. Escaping test: CSV with comma/quote/newline → export → exact text.
+   E.g. import CSV: `plain,"with,comma"\n"say ""hi""","line\nbreak"`. Hmm, importing a field with a newline then exporting it should round-trip.
+   Let me do: file content lines: 
+   `plain,"a,b"` and `"say ""hi""","x\ny"`.
+   Exported: `plain,"a,b"\n"say ""hi""","x\ny"\n`.
+5. Formula cell: pre-C assertion — import CSV with `=1+1` and assert export contains `=1+1` (raw), marked with a comment that C must flip this to `2`. Also assert the grid shows `=1+1` (pre-C). I'll add this as a clearly marked test with a comment.
+Hmm — careful: C will replace cellDisplay; then grid shows 2 and export shows 2. The e2e must be flipped then. I'll write the assertion to accept the current behavior with an explicit TODO comment referencing the flip.
+Also, one risk: the export test uses import; if import is broken the export test fails too. Acceptable (both are this PR's scope).
+Also add REQ-1-2-1 checks: "only blank worksheet named Sheet1" — assert tab count is 1 and name Sheet1 active.
+Let me now think about how the tests find the newly created workbook on the home page. Names must be unique across the whole e2e run. I'll use distinct names per test.
+Now the "no incomplete record" assertion: count links before and after? Use `page.getByRole('link', {name: X, exact: true})` toHaveCount(0).
+Let me write the spec.
+One more consideration: the import dialog's file input — `page.getByLabel('CSV file').setInputFiles({name, mimeType, buffer})`. Label association via htmlFor/id works.
+Also the dialog is rendered inside HomePage; there might be two dialogs if both import and rename dialogs are in the DOM simultaneously — no.
+Playwright strictness: `getByRole('button', {name: 'Create'})` — on the /new page there's also a "Cancel" link; fine.
+On the editor page, `getByRole('button', {name:'Export CSV'})` unique. `getByRole('button', {name:'Rename workbook'})` unique. But the dialog opened by rename has heading 'Rename workbook' (h2) — `getByRole('button', {name:'Rename workbook'})` still unique (h2 isn't a button).
+Careful: dialog named 'Rename workbook' and button named 'Rename workbook' — `getByRole('dialog', {name:'Rename workbook'})` fine.
+Rename dialog's "Workbook name" input: the editor page also has FormulaBar with label 'Formula bar' and 'Name box'. No conflict.
+However! On the /new page and rename dialog, both have label 'Workbook name' — but they're on different pages/flows.
+Now, about `page.getByLabel('Workbook name')` in the rename dialog: the editor page doesn't have another 'Workbook name'. OK.
+Now write the spec. Also handle: after clicking Create on /new with the default name, the workbook is named 'Untitled spreadsheet'. Later home page link lookup 'Untitled spreadsheet' exact — need `exact: true`, since there might be multiple if the test creates two. I'll create only one with that default name.
+Let me also verify A1 is selected: `getByRole('gridcell', {name:'A1', exact:true})` aria-selected true. And empty: textContent ''.
+Grid counts: 6 rowheaders, 26 columnheaders.
+Let me write it.
+For the "创建失败 → 首页无记录" test with route interception:
+await page.route('**/api/workbooks', async (route) => {
+  if (route.request().method() === 'POST') {
+    await route.fulfill({ status: 500, contentType: 'application/json', body: JSON.stringify({error:{code:'INTERNAL_ERROR',message:'Unexpected server error'}}) });
+    await route.continue();
+Careful: route pattern '**/api/workbooks' also matches '/api/workbooks/import'? No — '**/api/workbooks' matches exact path ending. Playwright glob: '**/api/workbooks' — matches URLs whose path ends with /api/workbooks. `/api/workbooks/wb-1` wouldn't match (no trailing wildcard). Good.
+Also, GET /api/workbooks (list) must pass through.
+After the test, unroute: `await page.unroute('**/api/workbooks')`.
+Now: the create page with the 500 — the test fills 'Doomed Record' then Create → alert 'Unexpected server error'. Then `page.goto('/')` → assert no link 'Doomed Record'. But HEAD would have... fine.
+Also empty-name case: clear input, click Create → alert exact 'Workbook name cannot be empty', still on /new; then goto '/' → assert link count 0 for that name? The name is empty so nothing to look for; assert the workbooks list count is unchanged. Simpler: check that we stayed on /new and the API was never called... in e2e we can't easily count requests; we could count via page.on('request'). Let me do that: record POST requests to /api/workbooks during the empty-name

@@ -1,0 +1,16 @@
+hash ccf92321f4e4b99f7a83ee7cad16032842915e68702339ea80eeda5b873e720b
+copies 1
+source snapshot-01/braid-state/turns/01a0ebf7-3682-70e3-8c5a-c366e950f785.md
+
+请处理 Issue #5。
+
+对象：local/run#5
+
+发生以下更新：
+- issue #5 CLOSED: M3 交付闭环：PR #11 已以 --match-head-commit 15c79a4 合入 develop（merge 53532a0）。验收前提由两份独立复跑互证（根侧 #72、干净副本 #75：平台检查 exit 0、Vitest 76/76、e2e 33/33、typecheck PASS，同一交付树）+ 模块负责人 @glm-4 最终确认（评论 #79）。实施期契约裁决已完成并落 docs（issue #5 评论 #42、#1 thread 43 #45）。遗留增量（约定 4/5 实现更正）归 M4a/Issue #6；REQ-2-2-3 Access denied 前端呈现归 PR #14，均不属 M3 验收范围。
+- issue #5 title/body 已修改
+issue #5 title/body 已修改
+issue:5 thread 17: comment 17 resolved; read `comment view 17 --thread`
+issue:5 thread 20: comment 20 resolved; read `comment view 20 --thread`
+
+使用 `braid issue view 5 --comments` 查看当前内容。

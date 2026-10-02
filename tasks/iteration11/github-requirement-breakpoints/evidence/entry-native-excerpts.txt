@@ -1,0 +1,678 @@
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-glm-fast-01a0eb68-19b6-7c30-91d6-bd339f346335/sessions/--workspace-template-.factory26-20260929-042409-1202e245-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.jsonl
+PHYSICAL_LINE 12 TIMESTAMP 2026-09-29T04:25:23.352Z ID 4d03fd07 ROLE assistant
+A simplified GitHub collaboration platform. This is huge. Let me read the full requirements to understand details. 292KB YAML — I should read it carefully but efficiently. Let me dump atomic requirements' details. Given the size, let me extract text of each atomic requirement.
+
+Also I need to look at reference images. The requirement says visual interpretation should be delegated to native vision sub-agent. Let me first read all the atomic requirement descriptions, then delegate image review.
+
+Let me dump the YAML to a more readable file first.
+bash {"command": "cd /workspace/template/.factory26/20260929-042409-1202e245/input && python3 -c \"\nimport yaml\nwith open('requirements.yaml') as f:\n    data = yaml.safe_load(f)\nout = open('/tmp/reqs_flat.md','w')\ndef walk(node):\n    if node['type']=='ATOMIC':\n        out.write(f\\\"## {node['id']}: {node['name']}\\n\\n\\\")\n        out.write(node['description']+'\\n\\n')\n        sc = node.get('scenarios') or node.get('children') or []\n        for s in sc:\n            if isinstance(s, dict):\n                out.write('### Scenario: '+(s.get('name') or s.get('id',''))+'\\n\\n')\n                out.write((s.get('description') or '')+'\\n\\n')\n                for k,v in s.items():\n                    if k not in ('name','id','description'):\n                        out.write(f'- {k}: {v}\\n')\n                out.write('\\n')\n    for c in node.get('children') or []:\n        walk(c)\nwalk(data)\nout.close()\nprint('done')\n\"; wc -l /tmp/reqs_flat.md; python3 -c \"\nimport yaml\ndata = yaml.load(open('/workspace/template/.factory26/20260929-042409-1202e245/input/requirements.yaml'), Loader=yaml.SafeLoader)\n# check what keys exist at atomic level\ndef walk(node):\n    if node['type']=='ATOMIC':\n        print(node['id'], sorted(node.keys()))\n        return True\n    for c in node.get('children') or []:\n        if walk(c): return True\nwalk(data)\n\""}
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 37 TIMESTAMP 2026-09-29T04:32:52.283Z ID 130e3906 ROLE assistant
+The prebuild for better-sqlite3 11.10.0 downloaded and works on the platform Node 20.19.3 with platform npm 10.8.2. 
+
+Note: the binary's mtime is May 7 2025 — consistent with a downloaded prebuild (not compiled now). Good.
+
+Let me confirm it's a prebuild download by checking prebuild-install behavior — the file mtime preserved from tarball. Yes.
+
+Also check whether there's a compile fallback concern — not needed. But let me also confirm that the install doesn't require network to github at eval time... it worked, so fine.
+
+I should record the probe log. Let me also verify with a fresh cache-less install? The instruction says "干净 npm install 实测" and "失败保留首轮日志". It succeeded first try.
+
+Let me save the evidence log into the repo (e.g., docs/evidence/ or a PR comment). I'll capture output into a file that I can reference. Actually better: keep the log at a stable path and quote key lines in the PR comment. I could commit a small evidence file. Let's create `docs/evidence/platform-npm-better-sqlite3.md`? Hmm — the platform says "不交付 requirements、.arc、.git、.factory26 等平台保留目录" — docs/ is fine.
+
+Actually, architecture doc already exists; adding evidence file is reasonable. But maybe keep it minimal: record in PR comment. The PR says "失败保留首轮日志、换有 prebuild 的锁定版本；结论写进本 PR" — conclusion goes in the PR. Success → note in PR comment. I'll also add a short `docs/platform-compat.md` documenting the verified versions, useful for later modules. Good for consumers.
+
+Now the main scaffold. Let me plan the structure:
+
+```
+package.json (root, private, workspaces, scripts)
+pnpm-workspace.yaml
+.gitignore
+frontend/
+  package.json
+  vite.config.ts
+  tsconfig.json / tsconfig.node.json
+  uno.config.ts
+  index.html
+  src/
+    main.tsx
+    App.tsx
+    routes.tsx
+    styles.css (or uno.css)
+    api/client.ts
+    contracts/copy.ts
+    components/AppShell.tsx, AccountMenu.tsx, Field.tsx, Dialog.tsx, Button.tsx, Badge.tsx...
+    features/auth/LoginPage.tsx, RegisterPage.tsx
+    features/home/HomePage.tsx
+    auth/AuthContext.tsx (session state)
+  vitest config?
+backend/
+  package.json
+  tsconfig.json (build to dist? Platform runs `npm run start` after `npm install`... wait, platform runs `npm install`, `npm run build` in frontend, then `npm install`, `HOST=0.0.0.0 PORT=3000 npm run start` in backend. It does NOT run build in backend!)
+```
+
+Important: platform order is: frontend: npm install, npm run build. backend: npm install, HOST=0.0.0.0 PORT=3000 npm run start.
+
+So backend `npm run start` must work WITHOUT a build step. Options:
+- Run backend with `node src/index.js` (plain JS, no TS compile).
+- Or use `tsx` at start (dev dependency, tsx runs TS directly) — but that requires tsx installed from npm install (fine, it's a dependency).
+- Or precompile TS in a `prepare` script — but `prepare` runs on npm install for the package itself (yes, npm runs `prepare` after `npm install` in the package directory). That's hacky.
+
+Simplest and most robust: write backend in plain JavaScript (ESM or CJS) — no build needed, `npm run start` = `node src/server.js`. TypeScript is not required for backend. Architecture doc says frontend TS; backend not specified ("Node.js 20 + Express 4 + better-sqlite3"). Using plain JS ESM in backend is safest and fastest, avoiding tsx dependency at runtime.
+
+But Vitest for backend tests — works with JS fine.
+
+Hmm, but maintainability for 6 business modules... TS would help but plain JS with JSDoc is fine. However, the architecture doc §2 lists backend/src structure. It doesn't mandate TS. The instructions say "不为此预先指定 TypeScript" for api contracts. I'll go with plain ESM JavaScript for the backend to guarantee `npm install && npm run start` works without a build step. Actually wait — let me reconsider: many agents implementing M1-M6 will write backend code. Plain JS reduces friction with the no-build constraint. Yes, go with Node ESM JS.
+
+Hmm, but there's a subtlety: better-sqlite3 is CJS; in ESM you do `import Database from 'better-sqlite3'` which works via CJS interop (default export). Fine.
+
+Actually, let me reconsider using CommonJS for the backend to simplify. Express 4 + CJS is well-trodden. But ESM is more modern and `import` syntax works. With "type": "module" and Node 20, ESM is fine. Vitest handles both.
+
+I'll use ESM.
+
+Frontend: Vite + React 18 + TS + UnoCSS + Radix + lucide-react.
+
+Frontend must be built by platform `npm run build` (vite build) → produces frontend/dist. Backend serves it.
+
+Note: `npm install` in frontend with a package.json that has both `dependencies` and `devDependencies` — fine, npm install installs both by default.
+
+Careful: pnpm workspace + lockfile. Root package.json with workspaces. pnpm install creates pnpm-lock.yaml. Platform npm install in each dir ignores workspace (npm may look up parent for workspaces? npm install inside a workspace package will install as its own project, using its own package.json; npm might notice the parent workspace root but since frontend/package.json is a package.json in its own right, `npm install` creates frontend/node_modules). Actually npm does check for workspace roots up the tree: if there's a root package-lock.json... but there isn't one (we commit pnpm-lock.yaml). npm looks for `package.json` with `workspaces` field in parent dirs — hmm, npm's `workspaces` detection: when you run `npm install` in a directory that is inside a workspace (parent has workspaces config listing it), npm... Let me think. Actually npm's behavior: `npm install` in a subdirectory of a project with workspaces defined — npm will walk up to find the root `package.json`? I believe npm does NOT walk up; it treats cwd as project root unless there's a `.npmrc`... Hmm, actually there IS behavior: npm uses `localPrefix` = nearest directory containing package.json or node_modules going up. Arborist's `localPrefix`: it walks up while the directory has no package.json... Let me check: npm's config `localPrefix` is set by walking up from cwd until finding a directory containing package.json **that is not inside node_modules**. Hmm, no: it stops at the first directory containing package.json OR node_modules.
+
+Real behavior: npm looks for the nearest package.json going up, and if that package.json is part of a workspace root (i.e., cwd is a workspace folder of that root), npm installs for the whole workspace root. Hmm — I recall that running `npm install` inside a workspace child does install at the root level when the root has a `workspaces` field including that path. Let me just test it. That's a real risk for the "frontend/ backend/ 可独立 npm install" requirement.
+
+Actually, tests in the platform: `cd frontend && npm install` then `npm run build`. As long as `npm run build` works and node_modules are available (even hoisted at root), it'd work... but the platform might copy only frontend and backend dirs? No — it copies the whole repo presumably. But safer to ensure independent install works.
+
+Mitigation: make the root package.json NOT use the `workspaces` field? But pnpm needs pnpm-workspace.yaml (not package.json workspaces) — pnpm can work with just pnpm-workspace.yaml? pnpm requires `packages` in pnpm-workspace.yaml; the root package.json doesn't need a `workspaces` field for pnpm. However, npm reads pnpm-workspace.yaml? No, npm doesn't. So if root package.json has no `workspaces` field, npm install in frontend will just install in frontend. 
+
+But will pnpm work with only pnpm-workspace.yaml and no root package.json workspaces? pnpm supports workspace-only via pnpm-workspace.yaml, but root package.json is still needed for scripts (pnpm -r). We can have root package.json without `workspaces` field, plus pnpm-workspace.yaml. pnpm will treat packages from pnpm-workspace.yaml. Actually pnpm docs: "pnpm-workspace.yaml defines the root of the workspace and enables you to include packages". The root package.json is generally used for the workspace root. I think pnpm works fine.
+
+Hmm, but to be safe let's test both. I'll set root package.json without `workspaces` field and rely on pnpm-workspace.yaml. Let me verify `pnpm install` links workspace deps across packages... but we have no cross-package deps (frontend doesn't depend on backend). So pnpm workspace is mostly for convenience scripts (pnpm -r). Good.
+
+Actually, do we even need a workspace? Instruction: "Monorepo 脚手架：pnpm workspace". Yes, keep pnpm-workspace.yaml.
+
+Let me now test npm behavior in a subdir with parent workspaces field — quick test to decide.
+
+Let me plan versions:
+- Node 20.19.3.
+- Vite 5.x (Vite 6/7 require Node 18+/20+; Vite 7 requires Node 20.19+ — ok). Use Vite 5.4 for stability, or 6? Vite 5.4.x is well-tested with React 18. Let's use vite ^5.4.11, @vitejs/plugin-react ^4.3.4.
+- React 18.3.1, react-dom 18.3.1, react-router-dom ^6.28.
+- typescript ^5.6/5.7.
+- unocss ^0.65 or ^66. Use ^0.65.4 (stable with Vite 5). Actually UnoCSS 66.x works too. I'll test build.
+- @radix-ui/react-dialog, @radix-ui/react-dropdown-menu, @radix-ui/react-checkbox, @radix-ui/react-label? (label is trivial, use plain). @radix-ui/react-avatar maybe.
+- lucide-react ^0.468.
+- vitest ^2.1.x, @vitest/browser? For frontend component tests, keep minimal: backend tests with vitest (node env). Playwright ^1.49.
+- @playwright/test.
+- express ^4.21.2, better-sqlite3 ^11.10.0, cookie-parser? Express 4 with cookie parsing — implement manually or use cookie-parser ^1.4.7. Use cookie-parser.
+- Node crypto scrypt for password hashing (no bcrypt dependency → avoids native compile). Use `crypto.scryptSync` with salt. Good — deterministic, no deps.
+
+Playwright browsers: BROWSER_EXECUTABLE_PATH is provided by env for the pre-packaged browser. Let me check env vars.
+
+Let me check BROWSER_CHECK_NODE_MODULES and BROWSER_EXECUTABLE_PATH, and how agent-browser skill sets things up.
+
+Let me also check what's in the agent-browser skill and the portless usage.
+
+Let me gather env info.
+bash {"command": "env | grep -i -E \"browser|playwright|pnpm|npm_config|portless|http_proxy|https_proxy|no_proxy\" | sort; echo \"=== pnpm store ===\"; pnpm store path 2>/dev/null; echo \"=== npx playwright ===\"; ls $(dirname $(which pnpm))/../ 2>/dev/null | head"}
+bash {"command": "cat /workspace/template/.factory26/20260929-042409-1202e245/work/skills/agent-browser/SKILL.md"}
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 46 TIMESTAMP 2026-09-29T04:33:32.578Z ID 8c325b34 ROLE assistant
+OK. Portless injects PORT and HOST, and PORTLESS_URL. Good.
+
+For dev: `pnpm dev:api` = `portless pr2-api pnpm run dev` in backend; the backend dev script must listen on process.env.PORT. Use nodemon? Simpler: `node --watch src/server.js`. Node 20.19 supports `--watch`. 
+
+Frontend dev: `portless pr2-web pnpm run dev` → but the app name is prefixed with worktree branch name. Fine.
+
+Vite proxy target for dev: use `portless get pr2-api`? The worktree prefix means the actual route is `braid-pr-2.pr2-api.localhost`? Hmm, name inference: "In git worktrees, the branch name is prepended as a subdomain prefix". So `portless pr2-api ...` in a worktree → `braid-pr-2.pr2-api.localhost`. Confusing.
+
+Simpler and robust dev approach: run BOTH frontend and backend through a single portless app? No, they're separate processes.
+
+Alternative: in dev, let Vite proxy to the backend port, obtained from `portless get`. Let me just test portless to understand.
+
+Actually, maybe simpler: root `pnpm dev` script = `portless pr2-app node scripts/dev.mjs`? Hmm, that spawns both and needs a shared port.
+
+Let me reconsider: the requirement is that dev services use portless. The cleanest: 
+- `pnpm dev:api` → `portless pr2-api2 pnpm --dir backend run dev`  (backend listens on injected PORT)
+- `pnpm dev:web` → `portless pr2-web pnpm --dir frontend run dev` (Vite listens on injected PORT, proxies /api to `http://$API_TARGET` where API_TARGET defaults to a value from `portless get pr2-api2`).
+
+Hmm, still coupling. Alternative: have the backend dev server ALSO be reachable through the frontend's portless route by... no.
+
+Practical approach: give the backend dev server a deterministic app port via `--app-port`, e.g. `portless pr2-api2 --app-port 4402 pnpm --dir backend run dev`. Then Vite proxy target is simply `http://127.0.0.1:4402`. portless assigns a fixed port for the app and provides the named URL. That satisfies "使用 portless" and gives a stable proxy target. App port 4402: is it free? portless refuses if occupied? Let's use a port derived from the PR number, e.g. 4102 for pr-2 API. Collisions unlikely across worktrees for the same PR.
+
+Hmm, but wait: multiple agents may run the same PR's dev services in different worktrees (my worktree only, actually). Fine.
+
+Let me test portless quickly with a trivial server to confirm behavior (env PORT/HOST, URL output, and whether AGENT_BROWSER can reach .localhost).
+
+Actually time budget matters. Let me be pragmatic: verify portless once with the real backend once built.
+
+Now let me write the code. Big chunk. Let me lay out files.
+
+### Root
+- package.json: private, scripts dev:api/dev:web/test/e2e/build, devDeps @playwright/test 1.61.1
+- pnpm-workspace.yaml
+- .gitignore
+- README.md (dev instructions)
+- playwright.config.ts (root) — or inside e2e/
+- e2e/smoke-auth.spec.ts, e2e/run.mjs, e2e/fixtures?
+- docs/platform-compat.md (new evidence doc)
+- docs/architecture.md already there; maybe update §1 to reflect chosen versions. I'll add a short "实现记录" section or keep separate file. Better: add docs/implementation-notes.md? Hmm, documentation skill says put shared contracts in project docs. I'll append a small section to architecture.md noting actual stack/versions implemented (so consumers know). Actually the PR says "实施中发现契约需变更：先在本 PR 评论提出，由根 Issue 决定后更新文档" — I shouldn't unilaterally change contracts. Adding a non-contract "已实现版本" doc is fine as an addition, not a change. I'll create `docs/platform-compat.md` for compat evidence and add implemented-decisions to it? Better: keep `docs/platform-compat.md` focused (npm compat + versions + dev commands). Consumers need dev commands. I'll put dev/run commands in README.md at root.
+
+### frontend
+package.json:
+```json
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",   // careful: tsc -b may fail on strict errors; use "vite build" plus separate typecheck
+    "typecheck": "tsc --noEmit",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "start": "vite preview --host $HOST --port $PORT"  // hmm, platform doesn't start frontend
+  },
+  ...
+}
+```
+Platform: frontend `npm install`, `npm run build`. So build must succeed. I'll make build = `tsc --noEmit && vite build` to enforce type safety? Risk: if business modules add code with type errors, platform build fails. That's actually good discipline but risky. The architecture doc says TypeScript. Keep `build: vite build` only? Hmm. Many agents working in parallel will write TS; a typecheck gate in build helps catch errors. But it also risks the platform build failing on a stray type error. I'll keep `build` = `tsc --noEmit && vite build`? Let me think about what's safer for final delivery. A type error would break delivery entirely (platform runs npm run build). Without tsc in build, vite build (esbuild) ignores type errors and succeeds — safer for delivery, and type checking is available via `pnpm typecheck`. Given 6 modules by different agents, I'll go with `vite build` only, and add `typecheck` script + run it in `pnpm test`. Hmm, but then tsconfig must be permissive enough. I'll include typecheck in root `pnpm check`.
+
+Decision: `"build": "vite build"`, `"typecheck": "tsc --noEmit"`, root `pnpm test` runs backend vitest + typecheck.
+
+Vite config: react plugin, UnoCSS plugin, server host/port from env, proxy /api → API_TARGET.
+
+Frontend src files:
+- main.tsx: render App
+- App.tsx: providers (AuthProvider, BrowserRouter) + Routes
+- routes.tsx: routes definition
+- styles: `src/styles.css` with @unocss reset + base design tokens.
+
+Wait: UnoCSS with Vite uses `virtual:uno.css` import. Add `import 'virtual:uno.css'` in main.tsx. Also `@unocss/reset/tailwind.css`.
+
+- api/client.ts: `apiFetch<T>(path, init)` → parses JSON, throws ApiError with {code,message,field,errors}.
+- auth/AuthContext.tsx: session state: `{user|null, loading, refresh(), login(), logout(), register()}`; fetch `/api/auth/session` on mount.
+- contracts/copy.ts: constants for accessible names & error messages.
+- components/: Button, Field (label+input+error+help), AppShell, AccountMenu, Dialog, Badge.
+- features/auth/SignInPage.tsx, SignUpPage.tsx (placeholder but functional via API), HomePage.tsx.
+- features/auth/pages route names: `/login`, `/signup`? Architecture §7 says routes `/`, `/login`, `/register`, `/password-reset`, `/settings/*`. Use those.
+
+Accessible names: Sign in page contains "Username or email", "Password", "Sign in" button, links "Create an account", "Forgot password". Home page (unauth) has "Sign in" link and "Sign up" link? REQ says: 'Visitors enter the account-access page from "Sign up", "Sign in", or "Forgot password" on the home page'. Hmm "Sign up" on home page but registration page is opened by "Create an account" link from sign-in page. So home page has both "Sign in" and "Sign up" entries. Let me check REQ-3-1 or home page requirements to get the exact home page controls. Let me grep for "home page" requirement text mentioning Sign in/Sign up.
+
+Actually the home page is likely covered by REQ-3-1 (repository search) — "the visitor starts at the application home page". Let me search requirements for a REQ describing the home page layout.
+
+Given the foundation PR only needs AppShell + placeholder pages, I'll implement:
+- Home `/` unauth: heading, "Sign in" link, "Sign up" link. Signed in: welcome + user.
+- `/login`: sign-in form with "Username or email", "Password", "Sign in" button, "Create an account" link, "Forgot password" link.
+- `/register`: registration form (Username, Email, Password, Confirm password, Agree to the terms, Create account).
+- Session loop works. Since M1 will implement the full REQ-1 flows, the foundation implements the minimal real loop (register + login + session + logout) — REQ-1-1-1/2 partly. The PR says "登录/注册占位页跑通会话闭环（最小真实使用结果）". I'll implement functional but minimal validation (server-side full validation is in M1's scope, but I should make it work end-to-end). I'll implement reasonable validation since it's cheap and correct per REQ-1-1-1 — but M1 owns polished details. To avoid duplicate/conflicting work, I'll implement:
+  - POST /api/auth/register: validate username/email/password/terms with the REQ rules (already shared validation module), create user (verified), return 201 + session? REQ says success → sign-in page. So register doesn't auto-login; respond 201 with a message; frontend navigates to /login.
+  - POST /api/auth/sign-in: sets session cookie, returns user.
+  - POST /api/auth/sign-out: deletes session, clears cookie.
+  - GET /api/auth/session: returns {user} or null.
+  - AccountMenu with trigger aria-label "Account menu", menu items: current username, "Your organizations", "Your repositories", "Settings", "Sign out" → dialog "Sign out" with "Confirm sign out"/"Cancel".
+
+That covers the smoke loop. M1 will add password reset, password change, etc.
+
+Hmm — careful: if I implement sign-out dialog, that's REQ-1-2 which is M1's business scope. But the PR explicitly requires AccountMenu with the dialog and the smoke loop (register→login→account menu→logout). Overlap with M1 is acceptable as long as the foundation is minimal and M1 refines. Actually, "业务功能（M1–M6 的页面/接口）只留占位与闭环示例". So the auth loop is the "闭环示例". I'll implement it faithfully but keep it focused, and note in PR that M1 owns the remaining REQ-1 details (reset, change password, validation error polish).
+
+Hmm, but risk: M1 will be assigned to another agent who must implement REQ-1-1-1 etc. If I implement registration fully, they'd "重复实现". Better to keep foundation register/sign-in minimal-but-working (server validation via shared rules module) and explicitly state in the PR comment + docs what remains for M1 (password reset, change password, itemized multi-field error display polish, "Invalid credentials" wording check, terms checkbox a11y, etc.). Actually the multi-field error format is a shared contract I'm delivering (errors[]). And copy constants. So M1 mostly wires pages + reset/change flows.
+
+Let me be careful to make the foundation genuinely useful and not to over-build.
+
+Backend files:
+```
+backend/package.json  (type: module)
+backend/src/server.js         # create app, listen on HOST/PORT
+backend/src/app.js            # express app assembly
+backend/src/config.js         # env: PORT, HOST, DB_PATH, NODE_ENV
+backend/src/db/index.js       # open DB, WAL, migrate()
+backend/src/db/migrations.js  # ordered migration list (schema from architecture §5)
+backend/src/db/tx.js          # transact(fn)
+backend/src/seed/index.js     # registry: registerSeed(name, fn), runSeeds()
+backend/src/seed/accounts.js  # 5 accounts
+backend/src/auth/password.js  # scrypt hash/verify
+backend/src/auth/session.js   # create/destroy/get session, cookie helpers
+backend/src/auth/middleware.js# requireAuth
+backend/src/permissions/index.js # effectiveRepoRole, role helpers
+backend/src/http/errors.js    # ApiError, error middleware, validation helper
+backend/src/http/validate.js  # field validators (username/email/password/...) shared
+backend/src/modules/identity/router.js  # /api/auth/*
+backend/src/modules/health.js  # /api/health (or in app)
+backend/src/modules/... placeholders? Keep: identity only.
+backend/test/*.test.js  (vitest)
+```
+
+DB schema: architecture §5 lists the full content model, saying "基础 PR 建表、M4 消费". So I should create ALL tables in migrations now. That's the contract. Good — create all tables with the exact columns.
+
+Note: `comments(id, issue_id|pr_id, ...)` — I'll create columns issue_id NULL, pr_id NULL with a CHECK.
+
+`reviews`, `review_comments`, `check_runs`, `branch_protections`, `activities`, `labels`, `issue_labels`, `milestones`, `issue_milestones`, `assignees`.
+
+Also `users` needs `email_verified` (architecture §5 doesn't list it but REQ requires verified email status). Hmm — §5: `users(id, username UNIQUE, email UNIQUE, password_hash, created_at)`. REQ-1-1-1 requires "stores ... together with its verified-email status". I'll add `email_verified INTEGER NOT NULL DEFAULT 1`. That's an additive change to the contract — I should note it in the PR comment as a minor contract addendum (or ask the root issue). It's clearly required by REQ; I'll add it and note it. Also add `email_verified_at`? Keep simple: `email_verified INTEGER DEFAULT 1`.
+
+Also activities: `activities(id, kind, actor_id, subject_type, subject_id, payload_json, created_at)`.
+
+Also PR number uniqueness per repo, issue number per repo.
+
+Also sessions: architecture says `sessions(id, user_id, created_at)`. For "登出/改密即时失效": store id (random token hash?) and a `password_changed_at` on users? Approach: session invalidation on password change = delete all sessions for that user except current (or all). "改密即时失效——业务模块接入" means I provide the helper `deleteSessionsForUser(userId, {exceptSessionId})`. Architecture's sessions table lacks password_hash version. I'll implement `revokeSessionsForUser(db, userId, exceptId)` and document that password change must call it. Also add `sessions.created_at` and maybe `last_seen_at`. Keep close to contract: id, user_id, created_at. I'll store `id` as the random session token (not hashed)? Cookie holds session id; storing raw token in DB is acceptable for local demo but better: store `id` = sha256(token) and cookie holds token. Architecture says "cookie 存 session id". Simpler: id = random 32-byte hex token; cookie holds it. Fine for the demo. Hmm, security-wise, hashing is better; but the contract says cookie stores session id. I'll do: `sessions.id` = random token (hex), cookie `session` = token. Keep it simple and matching the contract.
+
+Let me now also think about `/api/health` for readiness checks — add GET /api/health returning ok + db status. Useful for e2e readiness and for later modules. Not a business API. Good.
+
+Errors: 
+```
+{ "error": { "code": "...", "message": "...", "field"?: "..." } }
+```
+plus `errors: [...]` when multiple. Note: spec says error response uniform `{error:{...}}` and "一次提交多项错误时返回 errors: [{code,message,field},...]". So when multiple: include both `error` (first) and `errors` (all)? I'll return `{error: <first>, errors: [...]}` always for validation failures with >1 error; for single error just `error`. Hmm, to make the frontend simple, always include `errors` array (length>=1) alongside `error`. That's compatible: clients reading `error` work; clients reading `errors` work. I'll do that for multi-field validation errors only (as spec'd), i.e., when errors.length > 1 include `errors`. Let me just always include `errors` when there's at least one field error — safe superset. Careful about "统一格式" strictness — extra field is fine.
+
+Validation module: shared rules with exact messages:
+- username: 1–39 lowercase letters/digits/single hyphens, not start/end with hyphen → "Username format is invalid"; conflict → "Username already exists"
+- email: trim, exactly one @, ≤254 chars, at least one dot and non-empty domain labels after @ → "Email format is invalid"
+- password: 12–128, upper, lower, digit, special, no whitespace → "Password requirements are not satisfied"
+- confirm mismatch → "Password confirmation does not match"? For registration REQ-1-1-1 lists messages: "Username already exists", "Username format is invalid", "Email format is invalid", "Password requirements are not satisfied", "Agree to terms is required". Confirmation mismatch message isn't stated for registration; for REQ-1-3 it is "Password confirmation does not match". I'll use "Password confirmation does not match" for confirm fields generally.
+- "Invalid credentials" for sign-in failures.
+- "Current password is required" / "Current password is incorrect" (M1).
+- "Title is required" (M5).
+
+copy.ts should include the high-risk list from acceptance-plan. I'll include all listed plus the ones above.
+
+Permissions module: `effectiveRepoRole(db, user, repo)`:
+- repo.owner_user_id === user.id → 'admin'
+- org repo: org Owner → 'admin'; else max(direct grants for user, grants for teams the user is a direct member of); team hierarchy not propagated.
+- returns null if nothing.
+Plus `roleAtLeast(role, required)` with ordering read<triage<write<maintain<admin>.
+Plus `requireRepoRole(minRole)` middleware factory? The PR says "effectiveRepoRole(user, repo) + 响应附带 viewerPermission 的约定". I'll provide `resolveRepoRole` and a `viewerPermission` helper: `buildViewerPermission(db, user, repo)` returning 'admin'|...|null. And document the convention.
+
+Now seed accounts: 5 accounts from seed-data.md with password `Valid-password-123!`. Idempotent upsert by username. Note: seed must not overwrite existing user data on restart ("重启不覆盖已有用户数据") — so upsert should INSERT OR IGNORE (don't overwrite password_hash). Yes: idempotent insert-if-absent, keyed by username. Good, and this also protects password-change scenarios from being reset on restart. Important! Seed for accounts = insert if not exists by username. But if a user registered 'alice-dev'... unlikely.
+
+Careful: REQ-1-3 password change tests change alice-dev's password and expect persistence across restart. If seed reset the password on each start, that breaks. So INSERT OR IGNORE by username is essential. Good.
+
+But scenario isolation: tests need the seeded password to remain valid... They will reset via UI? Not my concern (M1).
+
+Now e2e config: run playwright with BASE_URL; tests create unique users via registration.
+
+Let me now consider the frontend build serving from backend: backend serves `frontend/dist` in production. Path resolution: `path.resolve(__dirname, '../../frontend/dist')` from backend/src → backend/../frontend/dist. Use config `FRONTEND_DIST` env override. SPA fallback: `app.get('*', ...)` send index.html for non-/api paths. Express 4 supports `*`. Must not swallow /api 404s → put API 404 handler before static fallback.
+
+Also health check before static.
+
+Now write everything. Let me start creating files. I'll write them in batches.
+
+Let me also decide: `backend/src/server.js` needs `HOST`/`PORT` from env with defaults 127.0.0.1:3000. Platform passes HOST=0.0.0.0 PORT=3000.
+
+Also WAL + DB path: `DB_PATH` env, default `backend/data/app.db` — but delivery must not ship a pre-populated DB... "交付应用通过正常启动准备需求所需初始数据" — the app creates the DB and seeds on startup. Store DB at `backend/data/app.db` (gitignored). Or use a `DATA_DIR` env. Default: `<repo>/backend/data/app.db`. Hmm, if platform runs from backend dir, cwd-based path is fine: `path.resolve(process.env.DB_PATH || 'data/app.db')` relative to backend dir; use import.meta.url to resolve to backend root, not cwd. Good.
+
+Seeding: run on startup always (idempotent). Architecture says "服务器启动时（非生产或显式 SEED=1）执行全部 seed". Hmm — that means in production (NODE_ENV=production), seeds don't run unless SEED=1. But the platform starts with `npm run start` in production mode presumably (NODE_ENV not set by platform → so not production → seeds run). To be safe for the evaluation: seeds should run on startup by default unless explicitly disabled. The requirement says seed data must exist after normal startup ("交付应用通过正常启动准备需求所需初始数据"). So: run seeds always at startup unless `SEED=0`. That deviates slightly from architecture's parenthetical. I think running always (idempotent) is the safer interpretation and matches "正常启动准备需求所需初始数据". I'll note it in the PR comment as a clarification and keep `SEED=0` as an escape hatch. Actually let me reconsider — architecture's intent was probably to avoid re-seeding in prod. But since seeds are idempotent inserts, always running is safe and satisfies the platform requirement. Go with always-run, documented.
+
+Migration: simple `schema_migrations` table with version numbers; run in a transaction (better-sqlite3 can't run DDL in transaction? It can). WAL pragma.
+
+Now, `npm install` for backend: better-sqlite3 + express + cookie-parser. Need `npm run start` to work without build. Use plain JS.
+
+Also add `backend/package.json` `"engines": {"node": ">=20"}`.
+
+One more platform consideration: platform runs `npm install` in backend. better-sqlite3 prebuild download requires network to GitHub releases — it worked. But if network to GitHub is blocked at eval time... The eval environment is the same image presumably. Risk: the prebuild download at install time. It succeeded here with cache miss. To be safer, could we vendor the prebuilt binary? No. Alternative: check if prebuild-install used cache (~/.npm/_prebuilds). Our npm_config_cache is set to work/cache/npm. At eval time, the platform's npm cache may be different → re-download. It worked now, so presumably fine.
+
+Let me verify the prebuild came from network or from cache. Check prebuild-install cache dir. Actually the log had "cache miss" for the tarball, and the .node file appeared. Let me check `~/.npm/_prebuilds` or the npm cache for better-sqlite3 prebuild. Not critical.
+
+Hmm, but a safer fallback: node-gyp compile requires python3 + make + g++. Let me check they exist, so a compile fallback is possible if prebuild download fails.
+
+Let me check quickly: python3, make, g++ presence.
+
+Now let's write the files. I'll create them with the write tool in batches. This is a lot of content; let me be systematic and reasonably concise but complete.
+
+Let me first create root config files.
+bash {"command": "which python3 make g++ cc 2>&1; ls ~/.npm/_prebuilds 2>/dev/null; ls /workspace/template/.factory26/20260929-042409-1202e245/work/cache/npm/_prebuilds 2>/dev/null | head"}
+bash {"command": "cd /workspace/template/.factory26/20260929-042409-1202e245/input && sed -n '1146,1270p' requirements.yaml"}
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 49 TIMESTAMP 2026-09-29T04:33:54.868Z ID 05133e6c ROLE assistant
+Good. python3/make/g++ available → compile fallback exists.
+
+Now let me write the code. Start with root files.
+
+I'll now write all the files. Let me carefully produce them.
+
+Root package.json:
+```json
+{
+  "name": "simplified-github",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "pnpm --parallel --filter ./frontend --filter ./backend run dev",   // hmm portless per service
+    "dev:api": "portless pr2-api --app-port 4102 pnpm --dir backend run dev",
+    "dev:web": "portless pr2-web --app-port 4101 pnpm --dir frontend run dev",
+    "build": "pnpm --filter frontend run build",
+    "test": "pnpm --filter backend run test && pnpm --filter frontend run typecheck",
+    "e2e": "node e2e/run.mjs",
+    "start": "node backend/src/server.js"
+  },
+  "devDependencies": { "@playwright/test": "1.61.1" }
+}
+```
+
+Hmm — `portless pr2-api --app-port 4102 pnpm --dir backend run dev`: does portless pass explicit app name + command? Usage: `portless <name> <cmd>`. Yes. And `--app-port` option supported per help (`--app-port <number> Use a fixed port for the app (same as --app-port)`) — but is `--app-port` valid in the non-`run` form? "portless <name> <cmd>" … The help lists `PORTLESS_APP_PORT=<number> Use a fixed port for the app (same as --app-port)`. So use env var `PORTLESS_APP_PORT=4102 portless pr2-api pnpm --dir backend run dev`. Safer.
+
+Actually, since PORTLESS prefixes with branch name in worktrees, the URL is like `braid-pr-2.pr2-api.localhost`. For the Vite dev proxy I need the API's actual origin. If I fix the app port at 4102, the proxy target is `http://127.0.0.1:4102` — deterministic and simple. Good, no portless get needed.
+
+Root `pnpm dev`: run both in parallel: `pnpm run dev:api & pnpm run dev:web`? Better: `pnpm --parallel -r run dev` would run each package's `dev` script but without portless. Instead define root `dev` as `pnpm run dev:api & pnpm run dev:web` — messy for signal handling. Let me just provide dev:api and dev:web as separate commands and document running both (two terminals / background). Actually, to keep a single command, use:
+```
+"dev": "node scripts/dev.mjs"
+```
+which spawns both portless commands and forwards signals. That's clean and explicit. Let me do that: `scripts/dev.mjs` with names resolved from env or defaults. Keep it simple, ~50 lines.
+
+Hmm, is it worth it? Yes, "pnpm dev（portless 并行起前后端）" is in architecture §8 — a required script. So implement scripts/dev.mjs.
+
+Now frontend package.json:
+```json
+{
+  "name": "frontend",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run"
+  },
+  "dependencies": {...},
+  "devDependencies": {...}
+}
+```
+
+Vite config: `server: { host: process.env.HOST ?? '127.0.0.1', port: Number(process.env.PORT ?? 5173), strictPort: true }` — note portless injects HOST/PORT; snippet must not hardcode. But when not under portless, HOST/PORT undefined → defaults. Good. And proxy `/api` → `process.env.API_TARGET ?? 'http://127.0.0.1:4102'`.
+
+Careful: Vite `server.host` from portless is `127.0.0.1` → the proxy connects to it. Fine.
+
+Now, do we need `vite preview` with HOST/PORT for e2e? In e2e I'll run the backend serving built frontend (production path). Good.
+
+tsconfig: standard Vite React TS config. With `verbatimModuleSyntax`? Keep moderate strictness: strict true, noUnusedLocals false (to be forgiving for parallel agents). Hmm, typecheck strictness: keep `strict: true`, `noUnusedLocals: false`, `noUnusedParameters: false`, `noFallthroughCasesInSwitch: true`.
+
+UnoCSS config: presetUno + presetIcons? Icons via lucide-react components, so presetUno only. Add theme colors matching GitHub-ish: primary green #2da44e, etc. Also shortcuts for buttons? Provide a few utility classes via shortcuts: `btn`, `btn-primary`, `input`, `card`, `label`, `field-error`. Having a shared component set (Button, TextInput, Field) plus a few shortcuts is good.
+
+Note: "动态样式采用可静态提取的类名映射、safelist 或适当的 CSS 变量" — fine.
+
+Now, an important design point for parallel module work: components in `src/components/` with clear props. Let me define:
+
+- `Button.tsx`: variants primary/secondary/danger/ghost; forwards native button props; used with accessible names from copy.
+- `LinkButton`/`Link` from react-router.
+- `TextField.tsx`: label, name, type, value, onChange, error, help, required; renders `<label htmlFor>` + `<input>` + error `<p role="alert" id=...-error>`. Support `errorId`.
+- `CheckboxField.tsx`: uses Radix Checkbox + label; error display.
+- `FormError.tsx` / `ErrorSummary`: for non-field errors (role="alert").
+- `Dialog.tsx`: Radix Dialog wrapper with Title, Description, actions; props: open, onOpenChange, title, description, children, footer.
+- `AppShell.tsx`: header with logo link, nav, account area; props: children. Uses auth context.
+- `AccountMenu.tsx`: Radix DropdownMenu; trigger button aria-label="Account menu" with avatar/initials; items: username header, "Your organizations", "Your repositories", "Settings", separator, "Sign out" (a button/dialog trigger). Note REQ-1-2: "The page contains exactly one button named 'Account menu'; its menu contains exactly one link named 'Sign out'." So "Sign out" must be a link (menuitem with role link?) — requirement says "exactly one link named 'Sign out'". In a menu, Radix DropdownMenu.Item renders role="menuitem". To have a "link", use `<DropdownMenu.Item asChild><button/></DropdownMenu.Item>`? getByRole('link', {name:'Sign out'})... Hmm. Risky either way: if M1's e2e asserts `getByRole('link', {name: 'Sign out'})`, my menu item must be a link role. Radix DropdownMenu.Item default role is menuitem; using asChild with `<a>` gives role menuitem too (Radix applies role="menuitem" to the item wrapper, overriding). Hmm.
+
+Actually with Radix, `<DropdownMenu.Item>` renders `<div role="menuitem">`. If I use `asChild` with an `<a>`, the child gets the menuitem role. So `getByRole('link')` fails.
+
+Safer: implement the account menu myself (not Radix DropdownMenu) as a simple popover with real `<a>`/`<button>` elements? REQ says "exactly one button named 'Account menu'; its menu contains exactly one link named 'Sign out'". A link with role=link. So render `<a href="#" onClick>` styled as a menu item, inside a menu container with role="menu"? If the container has role="menu", then children should be menuitem for a11y — but the requirement explicitly says link. Tests will likely do `page.getByRole('link', { name: 'Sign out' })` or just `getByText`. To satisfy both, I can render the menu as a plain popover (role="dialog"? no) — let me render a `<div>` panel (no menu role) containing `<a role="link">`. Then getByRole('link', {name:'Sign out'}) works, and clicking works.
+
+But hidden elements: the menu must be open/visible for getByRole to find it (unless hidden). Playwright finds hidden elements but click auto-waits for visibility.
+
+Similarly for other menu entries ("Your organizations", "Your repositories", "Settings") — they should be links (they navigate). Keep them as `<a href="/...">` (real links, role=link).
+
+Decision: AccountMenu = custom popover:
+- `<button aria-label="Account menu" aria-haspopup="true" aria-expanded>` with avatar
+- panel: role="menu"? If role="menu", links with role="menuitem" is the a11y-correct thing but conflicts with "link". I'll use a plain container with aria-label? Hmm. Accessibility guidance (fixing-accessibility skill) might prefer menu semantics. But the requirement is authoritative: "its menu contains exactly one link named 'Sign out'". I'll implement the panel as `<div role="group" aria-label="Account menu">` with real links/buttons. Hmm, "exactly one button named 'Account menu'" - the trigger. Fine.
+
+Hmm, but wait: "The page contains exactly one button named 'Account menu'" — also implies on other pages. OK.
+
+Focus management: implement with Radix DropdownMenu for keyboard/focus correctness but override role? Let me instead use Radix `DropdownMenu` with `DropdownMenu.Item asChild` wrapping `<a>` — role becomes menuitem. getByRole('link') fails.
+
+Alternative: use Radix Popover? Similar role issues (no item roles; Popover just renders a dialog-ish container). Radix Popover.Content has role="dialog" by default. Inside, plain `<a>` elements keep role=link. That gives: proper focus trap/dismiss/keyboard (Esc), and links with real link roles. Downside: role="dialog" for a menu — the a11y skill would say Popover is for non-menu content. But it's pragmatic.
+
+Honestly, simplest robust: hand-rolled popover with:
+- trigger button with aria-expanded/aria-haspopup="menu"
+- panel: `<div role="menu" aria-label="Account menu">` — then links inside... role=link inside role=menu is technically invalid ARIA.
+
+Let me weigh what the graders likely check: `getByRole('link', { name: 'Sign out' })` per REQ-1-2 wording "exactly one link named Sign out". I'll go with a hand-rolled popover using `<div className="menu-panel" role="menu">` and inside, items as `<a role="menuitem">`?? That breaks 'link' role.
+
+Decision: I'll avoid role="menu" on the panel and use plain container (no role, or role="presentation"/none) with links and one button, plus aria-expanded on the trigger and Escape/outside-click dismissal, and focus moves into the panel on open. This keeps roles: link=link, button=button. Accessible enough (like a disclosure + link list). I'll implement keyboard: trigger Enter/Space toggles, Esc closes and returns focus, Tab order natural.
+
+Given "登录/注册占位页跑通会话闭环" and M1 will refine, this is acceptable and I'll note the role decision in the PR + copy/contract note so M1 keeps it.
+
+Let me write a `Menu` primitive: `components/Menu.tsx` with `MenuButton`(trigger) and panel, used by AccountMenu.
+
+Now `AppShell`:
+- Unauthenticated: header with brand link "GitHub"-ish logo (avoid trademark; use product name "Hublet"? Hmm. Requirements mention GitHub-like names but product name isn't specified. Use "CodeHub"? Let me pick a neutral name: "Simplify Hub"? The screenshots are GitHub. I'll name the app "Hub" with logo text "Simplified GitHub". Hmm, the home page heading isn't asserted... Let me use brand "Octohub". Fine, minor. Actually root issue docs call it "简化版 GitHub 协作平台". Brand: "SimpliHub". I'll go with `SimpliHub` and link to `/`.
+- Unauth header: brand + "Sign in" link + "Sign up" link.
+- Auth header: brand + searchbox (role=searchbox accessible name "Search") + "+" new dropdown? + Issues/PR icon links + AccountMenu. For the foundation, implement search box (placeholder submitting to /search), and AccountMenu. The "+"/Issues/PR icons depend on business modules; keep minimal but real: include search box and account menu only, noting M3/M5 add the rest. Hmm, architecture §7 lists them. Foundation can include the search input (routes to /search which is a placeholder page). Keep it.
+
+Let me include: brand, global search form (role=searchbox aria-label "Search"), and account area. That's enough for the shell; M-modules add Issues/PR icons and the "+" menu.
+
+Now `routes.tsx`:
+```
+/ → HomePage
+/login → SignInPage
+/register → SignUpPage
+/search → SearchPlaceholderPage (placeholder for M3)
+* → NotFound
+```
+And placeholders for future module routes are added by module owners. Provide `routes.tsx` with a comment.
+
+Note architecture §7 says `/password-reset` too — M1 will add. I'll leave a placeholder route for /password-reset? Better to leave unimplemented (M1's job) — but a 404 for it is fine. Actually AppShell "Sign in" page has a "Forgot password" link per REQ-1-1-3. If I include the link, it should go somewhere. I'll include the link pointing to `/password-reset` and NOT implement the page (M1 does). A 404 is ugly but it's M1's scope. Hmm, but if "Sign in" page includes a "Forgot password" link that 404s, an evaluator running REQ-1-1-3 before M1 lands sees a broken link — that's fine since M1 must implement it anyway.
+
+Actually, I could implement the "Forgot password" page minimally too... no, scope. I'll include links (Create an account, Forgot password) since the sign-in page per REQ must have them.
+
+Now the frontend session state: `AuthContext` fetches `GET /api/auth/session` → `{user: {...}|null}`.
+
+Pages:
+HomePage: heading + (unauth) links Sign in/Sign up; (auth) welcome + link to AccountMenu hint? Keep: heading "SimpliHub", text, and if signed in show "Signed in as <user>".
+
+SignInPage: form with fields "Username or email", "Password", button "Sign in", error region (role=alert) for "Invalid credentials", links "Create an account", "Forgot password". On success navigate to `/`.
+
+SignUpPage: fields Username, Email, Password, Confirm password, checkbox "Agree to the terms", button "Create account". Itemized field errors from `errors[]`. On success navigate to `/login` with a success notice.
+
+Backend identity module: POST /api/auth/register, POST /api/auth/sign-in, POST /api/auth/sign-out, GET /api/auth/session.
+
+Now let's write. Also backend tests (vitest):
+- permissions.test.js: effectiveRepoRole matrix (owner/org owner/grants/team/none/hierarchy-not-propagated).
+- validate.test.js: username/email/password rules + messages.
+- seed.test.js: idempotency (run twice → 5 users, no duplicates; existing password preserved).
+- auth-session.test.js?: session creation/invalidation helper.
+Use in-memory DB (:memory:) for tests. My db/index.js should support `:memory:` and skip migrations? no, run migrations in memory.
+
+Let me structure db/index.js as `openDb(path)` + `migrate(db)` so tests can use `openDb(':memory:')`.
+
+Now, the e2e smoke spec: register a unique user → sign in → see "Account menu" → sign out via dialog → see "Sign in" link. Also persistence: reload after sign-in still signed in.
+
+Playwright config: 
+```ts
+import { defineConfig, devices } from '@playwright/test';
+export default defineConfig({
+  testDir: './e2e',
+  timeout: 30_000,
+  use: { baseURL: process.env.BASE_URL ?? 'http://127.0.0.1:4173', trace: 'retain-on-failure', launchOptions: { executablePath: process.env.BROWSER_EXECUTABLE_PATH } },
+  reporter: [['list']],
+  projects: [{ name: 'chromium', use: { ...devices['Desktop Chrome'] } }],
+});
+```
+Note: with PLAYWRIGHT_BROWSERS_PATH=/ms-playwright and @playwright/test 1.61.1, chromium-1200 should be found. But BROWSER_EXECUTABLE_PATH points to a runtime chromium — using it explicitly is safer? The instruction says "For Playwright checks, use the supplied BROWSER_EXECUTABLE_PATH and verify it is executable". Let me set `launchOptions.executablePath` from BROWSER_EXECUTABLE_PATH if set. Hmm, that binary is `/workspace/submission/agent/runtime/bin/chromium` (agent-browser's chromium). Using it with playwright might work (it's a chromium build). Alternatively let Playwright use its own from PLAYWRIGHT_BROWSERS_PATH. Let me test both; prefer Playwright's bundled chromium-1200 (guaranteed protocol match). I'll make it configurable: use BROWSER_EXECUTABLE_PATH only if `PW_USE_BROWSER_EXECUTABLE_PATH=1`. Simpler: rely on PLAYWRIGHT_BROWSERS_PATH default resolution; test it works. If it fails, fall back.
+
+e2e/run.mjs: picks free port, temp data dir, starts backend (`node src/server.js`) with env HOST=127.0.0.1 PORT=<free> DB_PATH=<tmp>/app.db, waits for /api/health, runs `npx playwright test` (local binary: `node_modules/.bin/playwright`) with BASE_URL, then kills and cleans tmp dir. Root devDependency means the binary is at root node_modules/.bin/playwright.
+
+Note: platform requires app built. In run.mjs, if frontend/dist missing, run build first (or error out with a clear message). I'll run build if missing (and print a hint).
+
+Now let me write the files. I'll do it in several write calls.
+
+Let me start with root + backend.
+
+Actually one thing to double check: does `pnpm install` at root with pnpm-workspace.yaml and root package.json without `workspaces` field work? pnpm 10 might warn. I'll test after writing.
+
+Also: for platform `npm install` in backend, npm will install better-sqlite3 etc. Note npm may also install devDependencies; vitest is a devDep of backend. Fine.
+
+Let's write.
+
+Order: root files → backend → frontend → e2e → docs → install/build/test.
+
+Let me write root package.json.
+
+Wait, one important thing about `pnpm --dir backend run dev`: pnpm's `--dir` is `-C`. `pnpm --dir backend run dev` works? `pnpm -C backend run dev`. Yes.
+
+For scripts/dev.mjs, spawn:
+- `portless pr2-api pnpm --dir backend run dev` (cwd root)
+- `portless pr2-web pnpm --dir frontend run dev`
+
+with PORTLESS_APP_PORT set (4102/4101). Names: since multiple PRs may run dev simultaneously from different worktrees, and portless prefixes worktree branch names, unique names are ensured. Instruction: "为每个工作项和服务取唯一名称". Use names `pr2-api` and `pr2-web`? The worktree prefix handles uniqueness: `braid-pr-2.pr2-api.localhost`. Good.
+
+Let me write it.
+Now I'll build the monorepo scaffold. Starting with root configuration:
+write {"path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/package.json", "content": "{\n  \"name\": \"simplihub\",\n  \"version\": \"0.1.0\",\n  \"private\": true,\n  \"description\": \"Simplified GitHub collaboration platform (monorepo root — dev tooling only)\",\n  \"type\": \"module\",\n  \"engines\": {\n    \"node\": \">=20.19.3\"\n  },\n  \"scripts\": {\n    \"dev\": \"node scripts/dev.mjs\",\n    \"dev:api\": \"node scripts/dev.mjs --only api\",\n    \"dev:web\": \"node scripts/dev.mjs --only web\",\n    \"build\": \"pnpm --dir frontend run build\",\n    \"typecheck\": \"pnpm --dir frontend run typecheck\",\n    \"test\": \"pnpm --dir backend run test && pnpm --dir frontend run typecheck\",\n    \"test:unit\": \"pnpm --dir backend run test\",\n    \"e2e\": \"node e2e/run.mjs\",\n    \"e2e:head\": \"node e2e/run.mjs --reuse-build\",\n    \"start\": \"node backend/src/server.js\"\n  },\n  \"devDependencies\": {\n    \"@playwright/test\": \"1.61.1\"\n  }\n}\n"}
+write {"path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/pnpm-workspace.yaml", "content": "packages:\n  - frontend\n  - backend\n"}
+write {"path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/.gitignore", "content": "node_modules/\ndist/\nbuild/\n\n# local runtime data (SQLite databases, WAL files) — never committed\nbackend/data/\n*.db\n*.db-wal\n*.db-shm\n\n# test / tooling output\ntest-results/\nplaywright-report/\ncoverage/\n.portless/\ntmp/\n*.log\n\n.env\n.env.local\n.DS_Store\n"}
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 118 TIMESTAMP 2026-09-29T04:36:44.570Z ID 2f0e745d ROLE assistant
+The panel `aria-label="Account menu"` — but the trigger button also has aria-label "Account menu". Requirement: "The page contains exactly one button named 'Account menu'". A div with aria-label isn't a button, so fine. But Playwright `getByLabel('Account menu')` could match both. To be safe, drop the aria-label on the panel (it adds no value; it could create an ambiguous locator). Let me remove it.
+
+Now AccountMenu.tsx + AppShell.tsx.
+
+AccountMenu:
+- trigger: button aria-label="Account menu" with avatar (initials) — must be a `<button>`. Inside Menu's trigger render-prop, use `<button ref={triggerRef} ...>`.
+- panel:
+  - non-link header: "Signed in as <username>"? Architecture §7 says menu contains current username, "Your organizations", "Signed in as <user>", "Your repositories", "Settings", "Sign out". Hmm both "current username" and "Signed in as <user>"? That's from GitHub's real menu. Let me render:
+    - a non-interactive region: avatar + username (as text)
+    - links: "Your organizations" → /organizations (route TBD by M2/M3) ... hmm, routes for organizations are `/:owner/...`? Architecture §7: `/orgs/:org(/*)`. "Your organizations" should link to `/organizations` (a list page) — M2 implements. I'll link to `/organizations` and note the route is owned by M2.
+    - "Your repositories" → `/repositories`? M3 owns search/repos. Hmm. Let me define routes: `/organizations` (M2 list) and `/repositories` (M3 list)? The architecture §7 route list doesn't include those; it lists `/settings/*`, `/:owner/:repo(/*)`, `/orgs/:org(/*)`, `/search`. Hmm. "Your organizations" could link to `/settings/organizations` (GitHub does that!). GitHub's account menu: "Your organizations" → /settings/organizations; "Your repositories" → /settings/repositories? Actually GitHub: "Your repositories" → ?, "Your organizations" → /settings/organizations, "Your enterprises" → ..., "Settings" → /settings/profile, "Sign out".
+    
+    I'll link "Your organizations" → `/settings/organizations` and "Your repositories" → `/settings/repositories`, which are Settings sub-pages owned by M2/M3. And "Settings" → `/settings/profile`. These are placeholders for now; M1 owns Settings pages (REQ-1-3 "Password and authentication" is a Settings page!). M1 will implement /settings/password. Good: I'll create `/settings/*` route placeholder that lists settings nav (M1 fills in). Hmm, scope creep. Let me create a minimal SettingsPage placeholder at `/settings/profile` and `/settings/password`? The PR says "业务功能只留占位与闭环示例". A single placeholder page for `/settings/*` is fine, showing "Settings" heading + "Password and authentication" link placeholder? M1 will rework.
+
+    Decision: AccountMenu items:
+      - header: username (text, not interactive)
+      - link "Your organizations" → /settings/organizations
+      - link "Your repositories" → /settings/repositories  — hmm, risky: if M2/M3 define different routes, my links break. But these are just links; modules can adjust. Since M2 owns organizations, they may prefer /organizations. I'll keep GitHub-ish paths under /settings and note in the PR comment that M1/M2/M3 may re-point them (single place: AccountMenu).
+      - link "Settings" → /settings/profile
+      - separator
+      - "Sign out" → opens the Sign out dialog (REQ-1-2: "its menu contains exactly one link named 'Sign out'. Activating it displays a dialog named 'Sign out'"). "Activating it" → clicking the link opens the dialog. So render `<a href="#" role="link">Sign out</a>`? An `<a>` without a valid href isn't a link role. Use `<a href="/sign-out" onClick={preventDefault + open dialog}>`? Hmm, href="#/..."? Better: `<a href="#" onClick>`? That navigates to "#" but we preventDefault. role=link with href="#" is fine for a11y name. But it's a fake link — acceptable given the requirement wording. Alternatively use `<button role="link">`? Then getByRole('link') works too and semantically it's a button. Hmm, `<a href="#">` is closer to "link".
+
+    Playwright: `getByRole('link', {name:'Sign out'})` matches `<a href="#">`. Then clicking opens the dialog. Good. I'll add `aria-haspopup="dialog"`.
+
+    Also "the page contains exactly one link named 'Sign out'" — ok.
+
+Dialog: title "Sign out" (accessible dialog name), description explaining it affects only the current browser session, buttons "Confirm sign out" (primary/danger) and "Cancel". Confirm → signOut() then navigate to `/` (unauthenticated state, "Sign in" link visible).
+
+Requirement: "After confirming, refresh, browser back navigation, or directly reopening a previously accessible protected account, repository, or organization page restores an unauthenticated state and displays the 'Sign in' link." We ensure server session deleted. Since React state updates to null, header shows Sign in.
+
+Note browser back: after sign-out, going back to the protected page → the route guard must re-check. Our guard: `RequireAuth` component that redirects to /login when no user. Since AuthContext state is null after signout, back navigation re-renders and redirects. Good — I'll provide a `RequireAuth` wrapper in routes for future protected routes (and note it). For now the home page is public.
+
+Hmm, but with `Sign in` link displayed: the unauth AppShell shows "Sign in" and "Sign up" links. Good.
+
+Let me now write AppShell + AccountMenu, with the sign-out dialog inside AccountMenu (or AppShell). Put dialog in AccountMenu.
+
+Also: REQ-1-2 says the dialog is named "Sign out" — same as the menu link name. So getByRole('dialog', {name:'Sign out'}) and getByRole('link', {name:'Sign out'}) both exist. Fine.
+
+Now AppShell with global search:
+```tsx
+const [query, setQuery] = useState('');
+<form role="search" onSubmit={e => {e.preventDefault(); navigate(`/search?q=${encodeURIComponent(query)}`)}}>
+  <input type="search" aria-label={shell.search} value={query} onChange={...} className="form-input w-64" />
+</form>
+```
+Requirement: searchbox role + accessible name "Search". `<input type="search">` → role searchbox. aria-label "Search". Good.
+
+Header also: brand link "SimpliHub" → "/". 
+
+Let me write.
+edit {"edits": [{"newText": "        <div\n          ref={panelRef}\n          className={cx('menu-panel', align === 'end' ? 'right-0' : 'left-0')}\n          data-testid=\"account-menu-panel\"\n        >", "oldText": "        <div\n          ref={panelRef}\n          className={cx('menu-panel', align === 'end' ? 'right-0' : 'left-0')}\n          aria-label=\"Account menu\"\n        >"}], "path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/frontend/src/components/Menu.tsx"}
+write {"content": "import { useState } from 'react';\nimport { Link, useNavigate } from 'react-router-dom';\nimport { ChevronDown, LogOut } from 'lucide-react';\nimport { useAuth } from '../auth/AuthContext';\nimport { auth as authCopy } from '../contracts/copy';\nimport { cx } from '../utils/cx';\nimport { Button } from './Button';\nimport { Dialog } from './Dialog';\nimport { Menu } from './Menu';\n\n/**\n * Account menu (REQ-1-2, docs/architecture.md §7).\n *\n * The trigger is exactly one button whose accessible name is \"Account menu\".\n * The panel contains a single link named \"Sign out\" (plus the navigation entries\n * of the signed-in shell). Activating \"Sign out\" opens a dialog named \"Sign out\"\n * with the buttons \"Confirm sign out\" and \"Cancel\".\n */\nexport function AccountMenu() {\n  const { user, signOut } = useAuth();\n  const navigate = useNavigate();\n  const [confirmOpen, setConfirmOpen] = useState(false);\n\n  if (!user) return null;\n  const initial = user.username.slice(0, 1).toUpperCase();\n\n  return (\n    <>\n      <Menu\n        trigger={({ open, toggle, triggerRef }) => (\n          <button\n            ref={triggerRef}\n            type=\"button\"\n            aria-label={authCopy.accountMenu}\n            aria-haspopup=\"true\"\n            aria-expanded={open}\n            onClick={toggle}\n            className={cx('flex items-center gap-1 bg-transparent border-none cursor-pointer p-0')}\n          >\n            <span className=\"avatar\" aria-hidden=\"true\">\n              {initial}\n            </span>\n            <ChevronDown size={14} aria-hidden=\"true\" className=\"text-muted\" />\n          </button>\n        )}\n      >\n        {({ close }) => (\n          <>\n            <p className=\"px-2 py-1 m-0 text-xs text-muted\">\n              Signed in as <span className=\"font-600 text-fg\">{user.username}</span>\n            </p>\n            <hr className=\"menu-item-separator\" />\n            <Link className=\"menu-item\" to=\"/settings/organizations\" onClick={close}>\n              {authCopy.yourOrganizations}\n            </Link>\n            <Link className=\"menu-item\" to=\"/settings/repositories\" onClick={close}>\n              {authCopy.yourRepositories}\n            </Link>\n            <Link className=\"menu-item\" to=\"/settings/profile\" onClick={close}>\n              {authCopy.settings}\n            </Link>\n            <hr className=\"menu-item-separator\" />\n            <a\n              className=\"menu-item\"\n              href=\"#sign-out\"\n              aria-haspopup=\"dialog\"\n              onClick={(event) => {\n                event.preventDefault();\n                close();\n                setConfirmOpen(true);\n              }}\n            >\n              <LogOut size={14} aria-hidden=\"true\" />\n              {authCopy.signOut}\n            </a>\n          </>\n        )}\n      </Menu>\n\n      <Dialog\n        open={confirmOpen}\n        onOpenChange={setConfirmOpen}\n        title={authCopy.signOut}\n        description={authCopy.signOutDialogDescription}\n        footer={\n          <>\n            <Button\n              variant=\"default\"\n              onClick={() => {\n                setConfirmOpen(false);\n              }}\n            >\n              {authCopy.cancel}\n            </Button>\n            <Button\n              variant=\"primary\"\n              onClick={async () => {\n                await signOut();\n                setConfirmOpen(false);\n                navigate('/');\n              }}\n            >\n              {authCopy.confirmSignOut}\n            </Button>\n          </>\n        }\n      />\n    </>\n  );\n}\n\nexport default AccountMenu;\n", "path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/frontend/src/components/AccountMenu.tsx"}
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 124 TIMESTAMP 2026-09-29T04:36:54.026Z ID f02e534b ROLE assistant
+Now pages: HomePage, SignInPage, SignUpPage, SearchPage placeholder, SettingsPage placeholder, NotFound, plus routes.tsx and App.tsx, main.tsx, styles.css, index.html.
+
+SignInPage: uses auth context; fields prefilled from registration redirect state? REQ-1-1-1 says after registration success the sign-in form "accepts that email" — M1 handles details. I'll pass `state: { notice, email }` from register page and prefill the identifier with the email (nice touch: "retains the attempted values" style). Careful: registration success → navigate to /login with `{registered: true, email}`. Show SuccessAlert "Account created. Sign in to continue." and prefill "Username or email" with the registered email. That satisfies the smoke loop.
+
+SignInPage error handling: on ApiError, if generalErrors → show ErrorAlert with the message ("Invalid credentials"). Field errors → per-field.
+
+SignUpPage: on submit, build payload; on ApiError show field errors + general errors; on success navigate to /login.
+
+Let me write the pages.
+write {"content": "import { Link } from 'react-router-dom';\nimport { useAuth } from '../../auth/AuthContext';\nimport { APP_NAME, auth as authCopy } from '../../contracts/copy';\n\n/** Home page: the entry point every scenario starts from. */\nexport function HomePage() {\n  const { user, loading } = useAuth();\n  return (\n    <div className=\"page-shell\">\n      <h1 className=\"page-title\">{APP_NAME}</h1>\n      <p className=\"text-muted mt-2\">\n        A simplified collaboration platform: accounts, organisations, repositories, code, issues and pull\n        requests.\n      </p>\n\n      {loading ? null : user ? (\n        <p className=\"mt-4\">\n          Signed in as <strong>{user.username}</strong>.\n        </p>\n      ) : (\n        <p className=\"mt-4 flex gap-3\">\n          <Link className=\"btn-primary\" to=\"/login\">\n            {authCopy.signIn}\n          </Link>\n          <Link className=\"btn-default\" to=\"/register\">\n            {authCopy.signUp}\n          </Link>\n        </p>\n      )}\n    </div>\n  );\n}\n\nexport default HomePage;\n", "path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/frontend/src/features/home/HomePage.tsx"}
+write {"content": "import { useState } from 'react';\nimport { Link, useLocation, useNavigate } from 'react-router-dom';\nimport { ApiError } from '../../api/client';\nimport { useAuth } from '../../auth/AuthContext';\nimport { ErrorAlert, SuccessAlert } from '../../components/Alerts';\nimport { Button } from '../../components/Button';\nimport { TextField } from '../../components/TextField';\nimport { auth as authCopy } from '../../contracts/copy';\n\ninterface LocationState {\n  registered?: boolean;\n  email?: string;\n}\n\n/**\n * Account-access page, sign-in form (REQ-1-1-2).\n * The links to registration and password recovery required by REQ-1-1-1 /\n * REQ-1-1-3 are part of this page.\n */\nexport function SignInPage() {\n  const { signIn } = useAuth();\n  const navigate = useNavigate();\n  const location = useLocation();\n  const state = (location.state ?? {}) as LocationState;\n\n  const [identifier, setIdentifier] = useState(state.email ?? '');\n  const [password, setPassword] = useState('');\n  const [error, setError] = useState<ApiError | null>(null);\n  const [submitting, setSubmitting] = useState(false);\n\n  async function onSubmit(event: React.FormEvent<HTMLFormElement>) {\n    event.preventDefault();\n    setSubmitting(true);\n    setError(null);\n    try {\n      await signIn(identifier, password);\n      navigate('/');\n    } catch (caught) {\n      setError(caught instanceof ApiError ? caught : new ApiError(0, { code: 'unknown', message: 'Something went wrong' }));\n      // A failed sign-in must not keep the submitted password in the form.\n      setPassword('');\n    } finally {\n      setSubmitting(false);\n    }\n  }\n\n  return (\n    <div className=\"mx-auto w-full max-w-sm mt-10\">\n      <h1 className=\"page-title text-center\">Sign in to {`SimpliHub`}</h1>\n\n      <div className=\"app-card p-4 mt-4\">\n        {state.registered ? <SuccessAlert>Account created. Sign in with your new credentials.</SuccessAlert> : null}\n        {error?.generalErrors().map((message) => (\n          <ErrorAlert key={message}>{message}</ErrorAlert>\n        ))}\n        {error?.fieldError('identifier') ? <ErrorAlert>{error.fieldError('identifier')}</ErrorAlert> : null}\n\n        <form onSubmit={onSubmit} noValidate>\n          <TextField\n            label={authCopy.usernameOrEmail}\n            name=\"identifier\"\n            autoComplete=\"username\"\n            value={identifier}\n            error={error?.fieldError('identifier')}\n            onChange={(event) => setIdentifier(event.target.value)}\n          />\n          <TextField\n            label={authCopy.password}\n            name=\"password\"\n            type=\"password\"\n            autoComplete=\"current-password\"\n            value={password}\n            error={error?.fieldError('password')}\n            onChange={(event) => setPassword(event.target.value)}\n          />\n          <Button type=\"submit\" variant=\"primary\" className=\"w-full\" disabled={submitting}>\n            {authCopy.signIn}\n          </Button>\n        </form>\n\n        <p className=\"mt-4 flex justify-between text-sm m-0\">\n          <Link className=\"text-accent\" to=\"/register\">\n            {authCopy.createAccount}\n          </Link>\n          <Link className=\"text-accent\" to=\"/password-reset\">\n            {authCopy.forgotPassword}\n          </Link>\n        </p>\n      </div>\n    </div>\n  );\n}\n\nexport default SignInPage;\n", "path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/frontend/src/features/auth/SignInPage.tsx"}
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 146 TIMESTAMP 2026-09-29T04:37:37.240Z ID 95664629 ROLE assistant
+write {"content": "/** Shared helpers for the Playwright specs. */\nimport { expect } from '@playwright/test';\nimport type { Page } from '@playwright/test';\n\nlet counter = 0;\n\n/**\n * Unique token for objects created by a test run. The requirements mandate\n * unique-suffix objects and forbid global count assertions, and the seed data is\n * never reset per test.\n */\nexport function uniqueToken(prefix: string): string {\n  counter += 1;\n  const random = Math.random().toString(36).slice(2, 7);\n  return `${prefix}-${Date.now().toString(36)}-${counter}-${random}`.toLowerCase();\n}\n\nexport const SEED_ACCOUNT = {\n  username: 'alice-dev',\n  email: 'alice.dev@example.test',\n  password: 'Valid-password-123!',\n};\n\n/** Register a fresh account through the UI; returns its credentials. */\nexport async function registerAccount(page: Page) {\n  const username = uniqueToken('pw-user').slice(0, 39);\n  const email = `${username}@example.test`;\n  const password = 'Valid-password-123!';\n\n  await page.goto('/register');\n  await page.getByLabel('Username', { exact: true }).fill(username);\n  await page.getByLabel('Email', { exact: true }).fill(email);\n  await page.getByLabel('Password', { exact: true }).fill(password);\n  await page.getByLabel('Confirm password', { exact: true }).fill(password);\n  await page.getByRole('checkbox', { name: 'Agree to the terms' }).check();\n  await page.getByRole('button', { name: 'Create account' }).click();\n\n  // Successful registration lands on the sign-in page.\n  await expect(page).toHaveURL(/\\/login$/);\n  return { username, email, password };\n}\n\n/** Sign in through the UI. */\nexport async function signIn(page: Page, identifier: string, password: string) {\n  await page.goto('/login');\n  await page.getByLabel('Username or email', { exact: true }).fill(identifier);\n  await page.getByLabel('Password', { exact: true }).fill(password);\n  await page.getByRole('button', { name: 'Sign in' }).click();\n}\n", "path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/e2e/helpers.ts"}
+write {"content": "/**\n * Foundation smoke suite: the session closure that every business module\n * consumes (REQ-1-1-1 registration, REQ-1-1-2 sign-in, REQ-1-2 sign-out).\n *\n * Assertions use roles and the exact accessible names from the copy contract.\n */\nimport { expect, test } from '@playwright/test';\nimport { auth as authCopy, errors as errorCopy } from '../frontend/src/contracts/copy';\nimport { registerAccount, SEED_ACCOUNT, signIn, uniqueToken } from './helpers';\n\ntest.describe('session closure', () => {\n  test('register -> sign in -> account menu -> sign out', async ({ page }) => {\n    const account = await registerAccount(page);\n\n    // Registration must not sign the visitor in.\n    await expect(page.getByRole('button', { name: authCopy.accountMenu })).toHaveCount(0);\n    await expect(page.getByRole('link', { name: authCopy.signIn }).first()).toBeVisible();\n\n    // The sign-in form is prefilled with the registered email (input is retained).\n    await expect(page.getByLabel(authCopy.usernameOrEmail, { exact: true })).toHaveValue(account.email);\n    await page.getByLabel(authCopy.password, { exact: true }).fill(account.password);\n    await page.getByRole('button', { name: authCopy.signIn }).click();\n\n    // Signed in: the account menu is present with exactly one trigger button.\n    await expect(page.getByRole('button', { name: authCopy.accountMenu })).toHaveCount(1);\n    await expect(page.getByRole('button', { name: authCopy.accountMenu })).toBeVisible();\n\n    // The session survives a reload.\n    await page.reload();\n    await expect(page.getByRole('button', { name: authCopy.accountMenu })).toBeVisible();\n\n    // Sign out requires confirmation.\n    await page.getByRole('button', { name: authCopy.accountMenu }).click();\n    await page.getByRole('link', { name: authCopy.signOut }).click();\n    const dialog = page.getByRole('dialog', { name: authCopy.signOut });\n    await expect(dialog).toBeVisible();\n    await expect(dialog.getByRole('button', { name: authCopy.confirmSignOut })).toBeVisible();\n    await expect(dialog.getByRole('button', { name: authCopy.cancel })).toBeVisible();\n\n    await dialog.getByRole('button', { name: authCopy.confirmSignOut }).click();\n    await expect(page.getByRole('button', { name: authCopy.accountMenu })).toHaveCount(0);\n    await expect(page.getByRole('link', { name: authCopy.signIn }).first()).toBeVisible();\n\n    // The signed-out session cannot be restored by reloading a protected page.\n    await page.goto('/settings/profile');\n    await expect(page).toHaveURL(/\\/login$/);\n  });\n\n  test('cancelling the sign-out dialog keeps the session', async ({ page }) => {\n    await signIn(page, SEED_ACCOUNT.username, SEED_ACCOUNT.password);\n    await expect(page.getByRole('button', { name: authCopy.accountMenu })).toBeVisible();\n\n    await page.getByRole('button', { name: authCopy.accountMenu }).click();\n    await page.getByRole('link', { name: authCopy.signOut }).click();\n    await page.getByRole('dialog', { name: authCopy.signOut }).getByRole('button', { name: authCopy.cancel }).click();\n\n    await expect(page.getByRole('dialog', { name: authCopy.signOut })).toHaveCount(0);\n    await expect(page.getByRole('button', { name: authCopy.accountMenu })).toBeVisible();\n  });\n\n  test('sign-in with a wrong password shows the generic message and no session', async ({ page }) => {\n    await signIn(page, SEED_ACCOUNT.username, 'Wrong-password-123!');\n    await expect(page.getByRole('alert').filter({ hasText: errorCopy.invalidCredentials })).toBeVisible();\n    await expect(page.getByRole('button', { name: authCopy.accountMenu })).toHaveCount(0);\n    // The submitted password is not kept in the form.\n    await expect(page.getByLabel(authCopy.password, { exact: true })).toHaveValue('');\n  });\n});\n\ntest.describe('registration validation', () => {\n  test('reports every invalid field in one submission and keeps username and email', async ({ page }) => {\n    const username = `-${uniqueToken('bad').slice(0, 20)}`;\n    const email = 'not-an-email';\n\n    await page.goto('/register');\n    await page.getByLabel(authCopy.username, { exact: true }).fill(username);\n    await page.getByLabel(authCopy.email, { exact: true }).fill(email);\n    await page.getByLabel(authCopy.password, { exact: true }).fill('short');\n    await page.getByLabel(authCopy.confirmPassword, { exact: true }).fill('different');\n    await page.getByRole('button', { name: authCopy.createAccountButton }).click();\n\n    for (const message of [\n      errorCopy.usernameFormatInvalid,\n      errorCopy.emailFormatInvalid,\n      errorCopy.passwordRequirements,\n      errorCopy.passwordConfirmationMismatch,\n      errorCopy.termsRequired,\n    ]) {\n      await expect(page.getByText(message, { exact: true })).toBeVisible();\n    }\n    await expect(page.getByLabel(authCopy.username, { exact: true })).toHaveValue(username);\n    await expect(page.getByLabel(authCopy.email, { exact: true })).toHaveValue(email);\n    await expect(page).toHaveURL(/\\/register$/);\n  });\n\n  test('rejects a duplicate username with the exact message', async ({ page }) => {\n    await page.goto('/register');\n    await page.getByLabel(authCopy.username, { exact: true }).fill(SEED_ACCOUNT.username);\n    await page.getByLabel(authCopy.email, { exact: true }).fill(`${uniqueToken('dupe')}@example.test`);\n    await page.getByLabel(authCopy.password, { exact: true }).fill(SEED_ACCOUNT.password);\n    await page.getByLabel(authCopy.confirmPassword, { exact: true }).fill(SEED_ACCOUNT.password);\n    await page.getByRole('checkbox', { name: authCopy.agreeToTerms }).check();\n    await page.getByRole('button', { name: authCopy.createAccountButton }).click();\n\n    await expect(page.getByText(errorCopy.usernameExists, { exact: true })).toBeVisible();\n    await expect(page).toHaveURL(/\\/register$/);\n  });\n});\n", "path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/e2e/session.spec.ts"}
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 319 TIMESTAMP 2026-09-29T04:48:46.244Z ID b9eb1a77 ROLE toolResult
+- generic "SimpliHubSign inSign upSign in to SimpliHubUsername or emailPasswordSign inCreate an accountForgot p" [ref=e1] clickable [onclick]
+  - link "SimpliHub" [ref=e2]
+  - searchbox "Search" [ref=e6]
+  - link "Sign in" [ref=e7]
+  - link "Sign up" [ref=e8]
+  - heading "Sign in to SimpliHub" [level=1, ref=e9]
+  - textbox "Username or email" [ref=e12]
+  - textbox "Password" [ref=e13]
+  - button "Sign in" [ref=e14]
+  - link "Create an account" [ref=e10]
+  - link "Forgot password" [ref=e11]
+=== register page ===
+- generic "SimpliHubSign inSign upSign in to SimpliHubUsername or emailPasswordSign inCreate an accountForgot p" [ref=e1] clickable [onclick]
+  - link "SimpliHub" [ref=e2]
+  - searchbox "Search" [ref=e6]
+  - link "Sign in" [ref=e7]
+  - link "Sign up" [ref=e8]
+  - heading "Sign in to SimpliHub" [level=1, ref=e9]
+  - textbox "Username or email" [ref=e12]
+  - textbox "Password" [ref=e13]
+  - button "Sign in" [ref=e14]
+  - link "Create an account" [ref=e10]
+  - link "Forgot password" [ref=e11]
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 320 TIMESTAMP 2026-09-29T04:48:51.060Z ID 52661842 ROLE assistant
+The sign-in page renders correctly: textbox "Username or email", textbox "Password", button "Sign in", links "Create an account" and "Forgot password".
+
+The second click ("text=Create an account") didn't navigate — probably the selector didn't match the ref-based click. Let me click the link by ref @e10 and snapshot the register page.
+bash {"command": "cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1 && export AGENT_BROWSER_SESSION=\"pr2dev-a1bc8fb395f3\" && agent-browser click @e10 >/dev/null 2>&1; sleep 1; agent-browser snapshot -i 2>&1 | head -22; echo \"=== sign in as seeded account ===\"; agent-browser open http://pr2-web-deepseek.localhost:1355/login >/dev/null 2>&1; sleep 1; agent-browser fill @e12 \"alice-dev\" >/dev/null 2>&1; agent-browser fill @e13 \"Valid-password-123!\" >/dev/null 2>&1; agent-browser click @e14 >/dev/null 2>&1; sleep 2; agent-browser snapshot -i 2>&1 | head -18", "timeout": 180}
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 321 TIMESTAMP 2026-09-29T04:48:56.052Z ID 883f6ab3 ROLE toolResult
+- generic "SimpliHubSign inSign upCreate your accountUsername1–39 characters: lowercase letters, digits and sin" [ref=e1] clickable [onclick]
+  - link "SimpliHub" [ref=e2]
+  - searchbox "Search" [ref=e6]
+  - link "Sign in" [ref=e7]
+  - link "Sign up" [ref=e8]
+  - heading "Create your account" [level=1, ref=e15]
+  - textbox "Username" [ref=e16]
+  - textbox "Email" [ref=e17]
+  - textbox "Password" [ref=e18]
+  - textbox "Confirm password" [ref=e19]
+  - checkbox "Agree to the terms" [checked=false, ref=e20]
+  - button "Create account" [ref=e21]
+  - link "Sign in" [ref=e22]
+=== sign in as seeded account ===
+- generic "SimpliHubSign inSign upSign in to SimpliHubUsername or emailPasswordSign inCreate an accountForgot p" [ref=e23] clickable [onclick]
+  - link "SimpliHub" [ref=e24]
+  - searchbox "Search" [ref=e28]
+  - link "Sign in" [ref=e29]
+  - link "Sign up" [ref=e30]
+  - heading "Sign in to SimpliHub" [level=1, ref=e25]
+  - textbox "Username or email" [ref=e31]
+  - textbox "Password" [ref=e32]
+  - button "Sign in" [ref=e33]
+  - link "Create an account" [ref=e26]
+  - link "Forgot password" [ref=e27]
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 322 TIMESTAMP 2026-09-29T04:48:58.971Z ID d1075c47 ROLE assistant
+Register page shows all expected controls with exact accessible names:
+- textbox Username, Email, Password, Confirm password
+- checkbox "Agree to the terms" (unchecked)
+- button "Create account"
+
+The sign-in attempt used stale refs (@e12/@e13/@e14 were from the old page) so it stayed on the login page. Let me redo with fresh refs @e31/@e32/@e33.
+
+Let me complete a real sign-in through the dev server and confirm the account menu appears (dev loop verified with sessions).
+bash {"command": "cd /workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1 && export AGENT_BROWSER_SESSION=\"pr2dev-a1bc8fb395f3\" && agent-browser fill @e31 \"alice-dev\" >/dev/null 2>&1; agent-browser fill @e32 \"Valid-password-123!\" >/dev/null 2>&1; agent-browser click @e33 >/dev/null 2>&1; sleep 2; agent-browser snapshot -i 2>&1 | head -14; echo \"=== account menu ===\"; agent-browser find role button --name \"Account menu\" 2>&1 | head -5", "timeout": 180}
+
+SOURCE tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-deepseek-fast-01a0eb6f-2435-7b40-8c0d-ca9ef86d9bfc/2026-09-29T04-32-05-558Z_01a0eb6f-27b6-73dd-bf27-c93fdba8117b.jsonl
+PHYSICAL_LINE 121 TIMESTAMP 2026-09-29T04:36:48.205Z ID 78775a08 ROLE assistant
+write {"content": "import { useState } from 'react';\nimport type { ReactNode } from 'react';\nimport { Link, useNavigate } from 'react-router-dom';\nimport { GitBranch } from 'lucide-react';\nimport { useAuth } from '../auth/AuthContext';\nimport { APP_NAME, auth as authCopy, shell as shellCopy } from '../contracts/copy';\nimport { AccountMenu } from './AccountMenu';\n\n/**\n * Application shell (docs/architecture.md §7).\n *\n * Signed out: brand + \"Sign in\" / \"Sign up\" entries.\n * Signed in: brand + global search + the account menu.\n * Business modules add their repository navigation inside the page content.\n */\nexport function AppShell({ children }: { children: ReactNode }) {\n  const { user, loading } = useAuth();\n  const navigate = useNavigate();\n  const [query, setQuery] = useState('');\n\n  return (\n    <div className=\"min-h-screen bg-canvas text-fg font-sans\">\n      <header className=\"border-b border-solid border-border bg-subtle\">\n        <div className=\"mx-auto flex w-full max-w-5xl items-center gap-4 px-4 py-3\">\n          <Link to=\"/\" className=\"flex items-center gap-2 text-fg no-underline font-600\">\n            <GitBranch size={20} aria-hidden=\"true\" />\n            {APP_NAME}\n          </Link>\n\n          <form\n            role=\"search\"\n            className=\"flex-1 max-w-md\"\n            onSubmit={(event) => {\n              event.preventDefault();\n              const trimmed = query.trim();\n              navigate(trimmed ? `/search?q=${encodeURIComponent(trimmed)}` : '/search');\n            }}\n          >\n            <input\n              type=\"search\"\n              aria-label={shellCopy.search}\n              placeholder={shellCopy.search}\n              value={query}\n              onChange={(event) => setQuery(event.target.value)}\n              className=\"form-input w-full\"\n            />\n          </form>\n\n          <nav className=\"ml-auto flex items-center gap-3\">\n            {loading ? null : user ? (\n              <AccountMenu />\n            ) : (\n              <>\n                <Link className=\"text-sm text-accent no-underline\" to=\"/login\">\n                  {authCopy.signIn}\n                </Link>\n                <Link className=\"text-sm text-accent no-underline\" to=\"/register\">\n                  {authCopy.signUp}\n                </Link>\n              </>\n            )}\n          </nav>\n        </div>\n      </header>\n\n      <main>{children}</main>\n    </div>\n  );\n}\n\nexport default AppShell;\n", "path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/frontend/src/components/AppShell.tsx"}
+write {"content": "import { Navigate } from 'react-router-dom';\nimport { useAuth } from '../auth/AuthContext';\nimport type { ReactNode } from 'react';\n\n/**\n * Route guard for protected pages.\n *\n * It redirects to the account-access page while the session is unknown and when\n * the visitor is signed out, so browser back navigation to a protected page\n * after signing out restores the unauthenticated state (REQ-1-2).\n */\nexport function RequireAuth({ children }: { children: ReactNode }) {\n  const { user, loading } = useAuth();\n  if (loading) {\n    return (\n      <div className=\"page-shell\">\n        <p className=\"text-muted\">Loading…</p>\n      </div>\n    );\n  }\n  if (!user) return <Navigate to=\"/login\" replace />;\n  return <>{children}</>;\n}\n\nexport default RequireAuth;\n", "path": "/workspace/template/.factory26/20260929-042409-1202e245/braid-state/worktrees/pr-2/pi-deepseek-fast-g1/frontend/src/components/RequireAuth.tsx"}

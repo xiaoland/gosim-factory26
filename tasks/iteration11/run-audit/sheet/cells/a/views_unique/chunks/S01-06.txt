@@ -1,0 +1,65 @@
+nsensitive substring
+    // match, so a spreadsheet that renders >= 10 rows makes `name: 'A1'`
+    // ambiguous (A1 vs A10/A100...). The default worksheet structure (contract
+    // v1.2 = Issue #1 comment #15: 6 x 26) is chosen so that every coordinate of
+    // the referenced seed range `A1:C6` resolves to exactly one gridcell. This is
+    // the regression guard for that invariant: growing the default structure past
+    // 9 rows (or 26 columns) fails here, and the exact totals below fail on any
+    // other drift too.
+    await page.getByRole('link', { name: 'Q3 Sales', exact: true }).click();
+    for (const column of ['A', 'B', 'C']) {
+      for (const row of [1, 2, 3, 4, 5, 6]) {
+        await expect(page.getByRole('gridcell', { name: `${column}${row}` })).toHaveCount(1);
+    for (const row of [1, 2, 3, 4, 5, 6]) {
+      await expect(page.getByRole('rowheader', { name: String(row) })).toHaveCount(1);
+      await expect(page.getByRole('columnheader', { name: column })).toHaveCount(1);
+    // Exact structure totals: the default worksheet is exactly 6 rows x 26
+    // columns, so the guard fails on drift in either direction.
+    await expect(page.getByRole('rowheader')).toHaveCount(6);
+    await expect(page.getByRole('columnheader')).toHaveCount(26);
+  test('grid, editing, refresh persistence and ARIA state', async ({ page }) => {
+    await expect(page).toHaveURL(/\/workbook\/.+/);
+    const grid = page.getByRole('grid', { name: 'Worksheet grid' });
+    await expect(grid).toBeVisible();
+    await expect(grid).toHaveAttribute('aria-multiselectable', 'true');
+    // Seeded content is rendered, including numbers and text.
+    await expect(page.getByRole('gridcell', { name: 'A1', exact: true })).toHaveText('Region');
+    await expect(page.getByRole('gridcell', { name: 'B2', exact: true })).toHaveText('1200');
+    await expect(page.getByRole('gridcell', { name: 'C4', exact: true })).toHaveText('Open');
+    // Empty seed cells still exist with an exact aria-selected state.
+    await expect(page.getByRole('gridcell', { name: 'A5', exact: true })).toBeEmpty();
+    await expect(page.getByRole('gridcell', { name: 'A5', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'false',
+    // Worksheet tabs follow last_active.
+    await expect(page.getByRole('tab', { name: 'Sheet1' })).toHaveAttribute('aria-selected', 'true');
+    await expect(page.getByRole('tab', { name: 'Sheet2' })).toHaveAttribute('aria-selected', 'false');
+    // Single-cell selection toggles aria-selected exactly.
+    await expect(page.getByRole('gridcell', { name: 'A1', exact: true })).toHaveAttribute(
+      'true',
+    await page.getByRole('gridcell', { name: 'B2', exact: true }).click();
+    await expect(page.getByRole('gridcell', { name: 'B2', exact: true })).toHaveAttribute(
+    // Formula bar mirrors the selected cell and writes back.
+    const formulaBar = page.getByRole('textbox', { name: 'Formula bar' });
+    await expect(formulaBar).toHaveValue('1200');
+    // Inline editing: double click, type, Enter.
+    await page.getByRole('gridcell', { name: 'B2', exact: true }).dblclick();
+    const inlineEditor = page.getByRole('textbox', { name: 'Edit B2' });
+    await inlineEditor.fill('1500');
+    await inlineEditor.press('Enter');
+    await expect(page.getByRole('gridcell', { name: 'B2', exact: true })).toHaveText('1500');
+    await expect(formulaBar).toHaveValue('1500');
+    // Escape cancels an uncommitted inline edit.
+    await page.getByRole('gridcell', { name: 'C2', exact: true }).dblclick();
+    const cancelEditor = page.getByRole('textbox', { name: 'Edit C2' });
+    await cancelEditor.fill('discarded');
+    await cancelEditor.press('Escape');
+    await expect(page.getByRole('gridcell', { name: 'C2', exact: true })).toHaveText('Open');
+    // Confirmed selection is persisted for the worksheet.
+    await page.getByRole('gridcell', { name: 'A4', exact: true }).click();
+    await expect(page.getByRole('gridcell', { name: 'A4', exact: true })).toHaveAttribute(
+    // Refresh: edited value and stored selection survive, seed rows are intact.
+    await page.reload();
+    );
+[DUPLICATES: 45 exact source lines omitted; precise per-line source map in duplicate-lines.json at S01:L25:C1]
+

@@ -1,0 +1,357 @@
+S21 artifact:work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/subagent-artifacts/0c2e9eeb-24dd-4c65-ba3f-e2faa5323224_advisor_transcript.jsonl
+source=work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/subagent-artifacts/0c2e9eeb-24dd-4c65-ba3f-e2faa5323224_advisor_transcript.jsonl
+## S21:L1 2026-09-29T06:13:46.988Z legacy user
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L1:C1]
+
+## S21:L2 2026-09-29T06:13:48.040Z legacy user
+[text]
+Task: You are advising on acceptance criteria for a spreadsheet web app sub-issue (Issue #3 "workbook lifecycle & CSV exchange", REQ-1-3-1 import CSV, REQ-1-3-2 export CSV). I need an independent check BEFORE I write these criteria into the authoritative design comment that implementers and the final integration test will follow.
+## Hard facts (already ruled by the root owner; do not re-litigate)
+Root ruling "contract v1.3" (Issue #1 thread 1 comment #51), verbatim points:
+- A-1 import endpoint `POST /api/workbooks/import` {fileName,csv}, single transaction, 201, failure only for unclosed quote → 400 exact text "Invalid CSV file format. Import failed.". Pinned: (1) ragged rows are padded with empty fields on the right, no error; (2) a single trailing newline produces no extra empty record; (3) strip UTF-8 BOM; (4) name = File.name minus a final `.csv` suffix (case-insensitive), trim-empty falls back to "Untitled spreadsheet".
+- A-4 was RULED as "Y-min": export used range = **max(non-empty-cell bounding box, import footprint floor)**. The floor is held ONLY by worksheets created via CSV import and equals the imported CSV's actual row/col counts (after trimming, including ragged padding). A newly created blank workbook has floor 0, so export = bounding box. Fidelity is field-level, not byte-level. The floor is **static**: row/col insert/delete and content edits never change it; export always takes max. Ownership: migration (worksheets gains nullable `min_rows`/`min_cols`), snapshot + `PUT .../state` optional fields, import write, export consumption — all in sub-issue A's own PR.
+- A-3: grid rendering and CSV export must consume the SAME display-value resolution path, **including error values** (an error cell exports the error string the grid shows, e.g. `#DIV/0!`). A ships an identity placeholder; sub-issue C replaces it with a formula engine whose signature C determines.
+- A-2: the 6×26 default structure must come from a single constant source (`backend/src/config.js` DEFAULT_ROW_COUNT/DEFAULT_COL_COUNT); boundary invariants (out-of-bounds 400, cells-not-exceeding-declared-structure) must live in one shared validation module, not duplicated per entry point.
+Base-layer note (Issue #1 thread 1 comment #53) §4, still unresolved: root approved both "Y-min export = max(bbox, static footprint)" and "a table with no content exports an empty file". For a "CSV import of 3×2 → clear all content → export" case these disagree: Y-min would emit `,\n,\n,` (3 rows × 2 empty fields) while "no content → empty" would emit `''`. #53 asked the root to state precedence; the root's follow-up ruling (comment #54) did NOT address it. So I must decide it as sub-issue owner and record it.
+Existing interim implementation (branch braid/issue-3-a, pre-ruling): parseCsv returns records of possibly differing widths (no padding); import writes cells (raw!=='' only) with row_count=max(records.length,6), col_count=max(widest,26); export computes bbox from non-empty cells and returns '' when bbox is empty; export emits rows of `,`-joined escaped fields with trailing `\n`.
+## Questions I need independent judgment on
+1. Precedence rule. Give the exact rule you'd write for "when does export produce an empty file vs a footprint-sized file of empty fields", and the exact expected byte output for: (a) brand-new blank workbook, no edits; (b) CSV import `a,b\nc,d,` (row2 has a trailing empty field), then export unchanged; (c) CSV import 3×2, then delete all cell content, then export; (d) CSV import 3×2, then export after a row inserted by the structure endpoint (floor static). State any assumption that, if wrong, would make these criteria wrong.
+2. Footprint definition details. Should the floor be recorded as the raw parsed record count and max field count *before* the 6×26 lower bound is applied, or after (i.e. max(parsed,6) × max(widest,26))? Which choice keeps `a,b\nc,d,` round-trip (import→export→parse) equal at field level, and which creates surprising exports for tiny CSVs? Recommend one and give the counterexample for the other.
+3. Should the trailing-newline rule and "trailing blank lines are not records" interact with the floor (e.g. `a,b\n\n` → how many footprint rows)? Give the exact expected floor and export.
+4. `PUT .../state` optional fields: the base-layer note recommends the two floor fields follow the existing "undefined = do not change" pattern (as rowCount/colCount/lastSelection do) rather than "missing = reset to 0", so that an old client snapshot replay does not wipe the floor and lose trailing empty fields on export. Do you agree, and what validation is needed (floor ≤ declared structure)? Any counterexample where "undefined = no change" would let a state replay produce a floor the UI can't render or a bbox/floor inconsistency?
+5. Anything in the ATOMIC requirement text (REQ-1-3-1/1-3-2 as quoted above) that you think these criteria violate or over-fit? Name the single riskiest acceptance assertion and how to phrase it so it cannot be satisfied by a plausible-but-wrong implementation (e.g. an implementation that exports the declared 6×26 structure, or one that exports only non-empty cells).
+Answer concisely with concrete rules and byte-level examples. Flag explicitly any place where you think I should escalate rather than decide.
+[DUPLICATES: 11 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L2:C1]
+
+## S21:L3 2026-09-29T06:13:57.720Z legacy assistant
+[thinking]
+The user wants advisory on acceptance criteria. I should possibly check the workflow reference and maybe existing code for context, but primarily provide judgment. Let me read the referenced workflow and maybe glance at the interim implementation to ground recommendations. The user said keep read-only. Let me look at the worktree briefly to check the existing implementation facts (parseCsv behavior), which helps answer Q2/Q3 with evidence.
+Let me quickly look at files.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L3:C1]
+[toolCall] ls ls_0_ad723436
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L3:C2]
+[toolCall] find find_1_e8224b90
+{"path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1", "pattern": "backend/src/**/*.js"}
+
+## S21:L4 2026-09-29T06:13:57.721Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:source]
+[runId]
+0c2e9eeb-24dd-4c65-ba3f-e2faa5323224
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:cwd]
+[ts]
+1790662437721
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:sourceEventType]
+[toolCallId]
+ls_0_ad723436
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:argsPreview]
+[argsPayload]
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L4:argsPayload]
+
+## S21:L5 2026-09-29T06:13:57.724Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:cwd]
+[ts]
+1790662437724
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:sourceEventType]
+[toolCallId]
+find_1_e8224b90
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:argsPreview]
+[argsPayload]
+  "pattern": "backend/src/**/*.js",
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L5:argsPayload]
+
+## S21:L6 2026-09-29T06:13:57.736Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:cwd]
+[ts]
+1790662437736
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L6:isError]
+
+## S21:L7 2026-09-29T06:13:57.740Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:cwd]
+[ts]
+1790662437740
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L7:isError]
+
+## S21:L8 2026-09-29T06:13:57.740Z legacy toolResult
+toolResult ls False
+[text]
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L8:C1]
+
+## S21:L9 2026-09-29T06:13:57.741Z legacy toolResult
+toolResult find True
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L9:C1]
+
+## S21:L10 2026-09-29T06:14:09.005Z legacy assistant
+[toolCall] bash bash_2_a4a0ec76
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && ls backend/src shared tasks checks 2>/dev/null"}
+
+## S21:L11 2026-09-29T06:14:09.005Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:cwd]
+[ts]
+1790662449005
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:sourceEventType]
+[toolCallId]
+bash_2_a4a0ec76
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && ls backend/src shared tasks checks 2>/dev/null"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L11:argsPayload]
+
+## S21:L12 2026-09-29T06:14:09.030Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:cwd]
+[ts]
+1790662449030
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L12:isError]
+
+## S21:L13 2026-09-29T06:14:09.032Z legacy toolResult
+toolResult bash False
+[text]
+backend/src:
+validate.js
+[DUPLICATES: 22 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L13:C1]
+
+## S21:L14 2026-09-29T06:14:28.108Z legacy assistant
+[toolCall] grep grep_3_e3908e98
+{"context": 4, "limit": 80, "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/backend/src/routes.js", "pattern": "parseCsv|csv|import|export"}
+
+## S21:L15 2026-09-29T06:14:28.112Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:cwd]
+[ts]
+1790662468112
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:sourceEventType]
+[toolCallId]
+grep_3_e3908e98
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:argsPreview]
+[argsPayload]
+  "pattern": "parseCsv|csv|import|export",
+  "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/backend/src/routes.js",
+  "context": 4,
+  "limit": 80
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L15:argsPayload]
+
+## S21:L16 2026-09-29T06:14:28.600Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:cwd]
+[ts]
+1790662468600
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L16:isError]
+
+## S21:L17 2026-09-29T06:14:28.601Z legacy toolResult
+toolResult grep False
+[text]
+routes.js:1: /** @typedef {import('./db.js').Db} Db */
+routes.js-2- 
+routes.js-3- import { Router } from 'express';
+routes.js-4- import { invalidBody, notFound } from './errors.js';
+routes.js-5- import {
+routes.js-1- /** @typedef {import('./db.js').Db} Db */
+routes.js:3: import { Router } from 'express';
+routes.js-6-   applyCellChanges,
+routes.js-7-   createWorkbook,
+routes.js:4: import { invalidBody, notFound } from './errors.js';
+routes.js-8-   getWorkbookSnapshot,
+routes.js:5: import {
+routes.js-9-   getWorkbookRow,
+routes.js:10:   importWorksheetState,
+routes.js-11-   listWorkbooks,
+routes.js-12-   patchWorksheet,
+routes.js-13-   renameWorkbook,
+routes.js-14-   requireWorksheet,
+routes.js-15-   setSelection,
+routes.js-16- } from './store.js';
+routes.js:17: import { asObject, findValidationViolation, parseCellChanges, parseSelection } from './validate.js';
+routes.js-18- 
+routes.js-19- /**
+routes.js-20-  * The `/api` surface. Endpoints 1-6 of the shared contract (Issue #1, comment 1)
+routes.js-21-  * plus the selection endpoint and worksheet rename/activation used by the
+routes.js-22-  * editor shell.
+routes.js-23-  *
+routes.js-24-  * @param {Db} db
+routes.js:25:  * @returns {import('express').Router}
+routes.js-26-  */
+routes.js-27- export function createApiRouter(db) {
+routes.js-28-   const router = Router();
+routes.js-29- 
+routes.js-25-  * @returns {import('express').Router}
+routes.js:27: export function createApiRouter(db) {
+routes.js-30-   // 1. Workbook list (home page).
+routes.js-31-   router.get('/workbooks', (_req, res) => {
+routes.js-83- 
+routes.js-84-     res.json(applyCellChanges(db, ws, changes));
+routes.js-85-   });
+routes.js-86- 
+routes.js:87:   // 6. Whole-worksheet state import (undo/redo replay).
+routes.js-88-   router.put('/workbooks/:id/worksheets/:wid/state', (req, res) => {
+routes.js-89-     const ws = requireWorksheet(db, req.params.id, req.params.wid);
+routes.js-90-     const payload = asObject(req.body ?? {});
+routes.js-91-     const worksheet = importWorksheetState(db, ws, payload);
+routes.js-87-   // 6. Whole-worksheet state import (undo/redo replay).
+routes.js:91:     const worksheet = importWorksheetState(db, ws, payload);
+routes.js-92-     const workbook = getWorkbookRow(db, ws.workbook_id);
+routes.js-93-     res.json({ updatedAt: workbook?.updated_at ?? new Date().toISOString(), worksheet });
+routes.js-94-   });
+routes.js-95- 
+[DUPLICATES: 31 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L17:C1]
+
+## S21:L18 2026-09-29T06:14:36.130Z legacy assistant
+[thinking]
+The branch is the pre-ruling interim implementation; the import/export endpoints may not exist yet in this worktree. Let me check for csv in store.js or validate.js quickly — but actually I have enough from the user's description. A quick grep for "export" CSV endpoint.
+[toolCall] bash bash_4_61b3d0b8
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && grep -rn \"csv\\|export\" backend/src/*.js | grep -iv \"export function\\|export const\\|export default\\|import {\" | head -30; echo ---; ls tasks/issue-3-a"}
+
+## S21:L19 2026-09-29T06:14:36.130Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L19:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L19:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L19:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S21:L19:runId]
+[agent]
+[

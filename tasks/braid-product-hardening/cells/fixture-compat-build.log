@@ -1,0 +1,529 @@
+   Compiling braid v0.3.2 (/Volumes/WorkSSD/Development/factory26/sources/braid)
+error[E0422]: cannot find struct, variant or union type `ProfileDefaults` in this scope
+   --> src/local.rs:601:27
+    |
+601 |                 defaults: ProfileDefaults { issue: id.clone(), pr: id.clone() },
+    |                           ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0050]: method `start` has 4 parameters but the declaration in trait `agent_session::SessionFactory::start` has 5
+   --> src/local.rs:639:13
+    |
+639 | /             &self,
+640 | |             _: Profile,
+641 | |             _: String,
+642 | |             context: String,
+    | |___________________________^ expected 5 parameters, found 4
+    |
+   ::: src/agent_session.rs:147:9
+    |
+147 | /         &self,
+148 | |         profile: crate::config::Profile,
+149 | |         instructions: String,
+150 | |         context: String,
+151 | |         cli: CliContext,
+    | |_______________________- trait requires 5 parameters
+
+error[E0050]: method `resume` has 4 parameters but the declaration in trait `agent_session::SessionFactory::resume` has 5
+   --> src/local.rs:657:13
+    |
+657 | /             &self,
+658 | |             _: &str,
+659 | |             _: Profile,
+660 | |             _: String,
+    | |_____________________^ expected 5 parameters, found 4
+    |
+   ::: src/agent_session.rs:154:9
+    |
+154 | /         &self,
+155 | |         id: &str,
+156 | |         profile: crate::config::Profile,
+157 | |         instructions: String,
+158 | |         cli: CliContext,
+    | |_______________________- trait requires 5 parameters
+
+error[E0050]: method `start` has 4 parameters but the declaration in trait `agent_session::SessionFactory::start` has 5
+   --> src/local.rs:730:13
+    |
+730 | /             &self,
+731 | |             profile: Profile,
+732 | |             _instructions: String,
+733 | |             context: String,
+    | |___________________________^ expected 5 parameters, found 4
+    |
+   ::: src/agent_session.rs:147:9
+    |
+147 | /         &self,
+148 | |         profile: crate::config::Profile,
+149 | |         instructions: String,
+150 | |         context: String,
+151 | |         cli: CliContext,
+    | |_______________________- trait requires 5 parameters
+
+error[E0050]: method `resume` has 4 parameters but the declaration in trait `agent_session::SessionFactory::resume` has 5
+   --> src/local.rs:758:13
+    |
+758 | /             &self,
+759 | |             _id: &str,
+760 | |             _profile: Profile,
+761 | |             _instructions: String,
+    | |_________________________________^ expected 5 parameters, found 4
+    |
+   ::: src/agent_session.rs:154:9
+    |
+154 | /         &self,
+155 | |         id: &str,
+156 | |         profile: crate::config::Profile,
+157 | |         instructions: String,
+158 | |         cli: CliContext,
+    | |_______________________- trait requires 5 parameters
+
+error[E0050]: method `start` has 4 parameters but the declaration in trait `agent_session::SessionFactory::start` has 5
+   --> src/local.rs:989:13
+    |
+989 | /             &self,
+990 | |             profile: Profile,
+991 | |             _: String,
+992 | |             context: String,
+    | |___________________________^ expected 5 parameters, found 4
+    |
+   ::: src/agent_session.rs:147:9
+    |
+147 | /         &self,
+148 | |         profile: crate::config::Profile,
+149 | |         instructions: String,
+150 | |         context: String,
+151 | |         cli: CliContext,
+    | |_______________________- trait requires 5 parameters
+
+error[E0050]: method `resume` has 4 parameters but the declaration in trait `agent_session::SessionFactory::resume` has 5
+    --> src/local.rs:1015:13
+     |
+1015 | /             &self,
+1016 | |             _: &str,
+1017 | |             _: Profile,
+1018 | |             _: String,
+     | |_____________________^ expected 5 parameters, found 4
+     |
+    ::: src/agent_session.rs:154:9
+     |
+ 154 | /         &self,
+ 155 | |         id: &str,
+ 156 | |         profile: crate::config::Profile,
+ 157 | |         instructions: String,
+ 158 | |         cli: CliContext,
+     | |_______________________- trait requires 5 parameters
+
+error[E0560]: struct `local::Request` has no field named `defaults`
+   --> src/local.rs:601:17
+    |
+601 |                 defaults: ProfileDefaults { issue: id.clone(), pr: id.clone() },
+    |                 ^^^^^^^^ `local::Request` does not have this field
+    |
+    = note: available fields are: `root_profile_id`
+
+error[E0061]: this method takes 4 arguments but 3 arguments were supplied
+   --> src/local.rs:682:22
+    |
+682 |                       .start(
+    |  ______________________^^^^^-
+683 | |                         request.profiles[0].clone(),
+684 | |                         "actual instructions".into(),
+685 | |                         context.into()
+686 | |                     )
+    | |_____________________- argument #4 of type `CliContext` is missing
+    |
+note: method defined here
+   --> src/agent_session.rs:146:14
+    |
+146 |     async fn start(
+    |              ^^^^^
+...
+151 |         cli: CliContext,
+    |         ---
+help: provide the argument
+    |
+682 |                     .start(
+683 |                         request.profiles[0].clone(),
+684 |                         "actual instructions".into(),
+685 ~                         context.into(),
+686 +                         /* CliContext */,
+    |
+
+error[E0061]: this method takes 5 arguments but 4 arguments were supplied
+    --> src/local.rs:1104:14
+     |
+1104 |               .initialize(
+     |  ______________^^^^^^^^^^-
+1105 | |                 &fixture.0.join("repo"),
+1106 | |                 &request.run_id,
+1107 | |                 "refs/heads/delivery",
+1108 | |                 "OLD_REQUIREMENT",
+1109 | |             )
+     | |_____________- argument #5 of type `&str` is missing
+     |
+note: method defined here
+    --> src/objects.rs:163:12
+     |
+ 163 |     pub fn initialize(
+     |            ^^^^^^^^^^
+...
+ 169 |         root_profile_id: &str,
+     |         ---------------------
+help: provide the argument
+     |
+1104 |             .initialize(
+ ...
+1108 |                 "OLD_REQUIREMENT",
+1109 ~                 /* &str */,
+1110 ~             )
+     |
+
+error[E0599]: no method named `set_profile_defaults` found for struct `std::sync::Arc<objects::LocalObjects>` in the current scope
+    --> src/local.rs:1111:17
+     |
+1111 |         objects.set_profile_defaults(&request.defaults.issue, &request.defaults.pr).unwrap();
+     |                 ^^^^^^^^^^^^^^^^^^^^ method not found in `std::sync::Arc<objects::LocalObjects>`
+
+error[E0609]: no field `defaults` on type `local::Request`
+    --> src/local.rs:1111:47
+     |
+1111 |         objects.set_profile_defaults(&request.defaults.issue, &request.defaults.pr).unwrap();
+     |                                               ^^^^^^^^ unknown field
+     |
+     = note: available fields are: `profiles`, `root_profile_id`, `bindings`, `codex`, `pi` ... and 4 others
+
+error[E0609]: no field `defaults` on type `local::Request`
+    --> src/local.rs:1111:72
+     |
+1111 |         objects.set_profile_defaults(&request.defaults.issue, &request.defaults.pr).unwrap();
+     |                                                                        ^^^^^^^^ unknown field
+     |
+     = note: available fields are: `profiles`, `root_profile_id`, `bindings`, `codex`, `pi` ... and 4 others
+
+error[E0061]: this method takes 5 arguments but 4 arguments were supplied
+    --> src/local.rs:1238:14
+     |
+1238 |               .initialize(
+     |  ______________^^^^^^^^^^-
+1239 | |                 &fixture.0.join("repo"),
+1240 | |                 &request.run_id,
+1241 | |                 "refs/heads/delivery",
+1242 | |                 "OLD_REQUIREMENT",
+1243 | |             )
+     | |_____________- argument #5 of type `&str` is missing
+     |
+note: method defined here
+    --> src/objects.rs:163:12
+     |
+ 163 |     pub fn initialize(
+     |            ^^^^^^^^^^
+...
+ 169 |         root_profile_id: &str,
+     |         ---------------------
+help: provide the argument
+     |
+1238 |             .initialize(
+ ...
+1242 |                 "OLD_REQUIREMENT",
+1243 ~                 /* &str */,
+1244 ~             )
+     |
+
+error[E0599]: no method named `set_profile_defaults` found for struct `std::sync::Arc<objects::LocalObjects>` in the current scope
+    --> src/local.rs:1245:17
+     |
+1245 |         objects.set_profile_defaults(&request.defaults.issue, &request.defaults.pr).unwrap();
+     |                 ^^^^^^^^^^^^^^^^^^^^ method not found in `std::sync::Arc<objects::LocalObjects>`
+
+error[E0609]: no field `defaults` on type `local::Request`
+    --> src/local.rs:1245:47
+     |
+1245 |         objects.set_profile_defaults(&request.defaults.issue, &request.defaults.pr).unwrap();
+     |                                               ^^^^^^^^ unknown field
+     |
+     = note: available fields are: `profiles`, `root_profile_id`, `bindings`, `codex`, `pi` ... and 4 others
+
+error[E0609]: no field `defaults` on type `local::Request`
+    --> src/local.rs:1245:72
+     |
+1245 |         objects.set_profile_defaults(&request.defaults.issue, &request.defaults.pr).unwrap();
+     |                                                                        ^^^^^^^^ unknown field
+     |
+     = note: available fields are: `profiles`, `root_profile_id`, `bindings`, `codex`, `pi` ... and 4 others
+
+error[E0061]: this method takes 5 arguments but 4 arguments were supplied
+    --> src/local.rs:1393:18
+     |
+1393 |                   .initialize(
+     |  __________________^^^^^^^^^^-
+1394 | |                     &fixture.0.join("repo"),
+1395 | |                     &request.run_id,
+1396 | |                     "refs/heads/delivery",
+1397 | |                     "OLD_REQUIREMENT",
+1398 | |                 )
+     | |_________________- argument #5 of type `&str` is missing
+     |
+note: method defined here
+    --> src/objects.rs:163:12
+     |
+ 163 |     pub fn initialize(
+     |            ^^^^^^^^^^
+...
+ 169 |         root_profile_id: &str,
+     |         ---------------------
+help: provide the argument
+     |
+1393 |                 .initialize(
+ ...
+1397 |                     "OLD_REQUIREMENT",
+1398 ~                     /* &str */,
+1399 ~                 )
+     |
+
+error[E0599]: no method named `set_profile_defaults` found for struct `std::sync::Arc<objects::LocalObjects>` in the current scope
+    --> src/local.rs:1400:21
+     |
+1400 |             objects.set_profile_defaults(&request.defaults.issue, &request.defaults.pr).unwrap();
+     |                     ^^^^^^^^^^^^^^^^^^^^ method not found in `std::sync::Arc<objects::LocalObjects>`
+
+error[E0609]: no field `defaults` on type `local::Request`
+    --> src/local.rs:1400:51
+     |
+1400 |             objects.set_profile_defaults(&request.defaults.issue, &request.defaults.pr).unwrap();
+     |                                                   ^^^^^^^^ unknown field
+     |
+     = note: available fields are: `profiles`, `root_profile_id`, `bindings`, `codex`, `pi` ... and 4 others
+
+error[E0609]: no field `defaults` on type `local::Request`
+    --> src/local.rs:1400:76
+     |
+1400 |             objects.set_profile_defaults(&request.defaults.issue, &request.defaults.pr).unwrap();
+     |                                                                            ^^^^^^^^ unknown field
+     |
+     = note: available fields are: `profiles`, `root_profile_id`, `bindings`, `codex`, `pi` ... and 4 others
+
+error[E0061]: this method takes 5 arguments but 4 arguments were supplied
+    --> src/objects.rs:1792:21
+     |
+1792 |             objects.initialize(&repo, "test", "refs/heads/delivery", "ROOT_BODY").unwrap();
+     |                     ^^^^^^^^^^--------------------------------------------------- argument #5 of type `&str` is missing
+     |
+note: method defined here
+    --> src/objects.rs:163:12
+     |
+ 163 |     pub fn initialize(
+     |            ^^^^^^^^^^
+...
+ 169 |         root_profile_id: &str,
+     |         ---------------------
+help: provide the argument
+     |
+1792 |             objects.initialize(&repo, "test", "refs/heads/delivery", "ROOT_BODY", /* &str */).unwrap();
+     |                                                                                 ++++++++++++
+
+error[E0599]: no method named `set_profile_defaults` found for reference `&objects::LocalObjects` in the current scope
+    --> src/objects.rs:1828:11
+     |
+1828 |         o.set_profile_defaults("pi-glm-fast", "pi-deepseek-fast").unwrap();
+     |           ^^^^^^^^^^^^^^^^^^^^ method not found in `&objects::LocalObjects`
+
+error[E0061]: this method takes 4 arguments but 3 arguments were supplied
+   --> src/provider/factory.rs:480:22
+    |
+480 |                     .resume("retained-thread", profile.clone(), "instructions".into())
+    |                      ^^^^^^----------------------------------------------------------- argument #4 of type `CliContext` is missing
+    |
+note: method defined here
+   --> src/agent_session.rs:153:14
+    |
+153 |     async fn resume(
+    |              ^^^^^^
+...
+158 |         cli: CliContext,
+    |         ---
+help: provide the argument
+    |
+480 |                     .resume("retained-thread", profile.clone(), "instructions".into(), /* CliContext */)
+    |                                                                                      ++++++++++++++++++
+
+error[E0061]: this method takes 4 arguments but 3 arguments were supplied
+   --> src/provider/factory.rs:485:22
+    |
+485 |                     .start(profile.clone(), "instructions".into(), "context".into())
+    |                      ^^^^^---------------------------------------------------------- argument #4 of type `CliContext` is missing
+    |
+note: method defined here
+   --> src/agent_session.rs:146:14
+    |
+146 |     async fn start(
+    |              ^^^^^
+...
+151 |         cli: CliContext,
+    |         ---
+help: provide the argument
+    |
+485 |                     .start(profile.clone(), "instructions".into(), "context".into(), /* CliContext */)
+    |                                                                                    ++++++++++++++++++
+
+error[E0061]: this function takes 2 arguments but 1 argument was supplied
+   --> src/provider/factory.rs:567:24
+    |
+567 |         let provider = CodexProvider::connect(&config).await.unwrap();
+    |                        ^^^^^^^^^^^^^^^^^^^^^^--------- argument #2 of type `&CliContext` is missing
+    |
+note: associated function defined here
+   --> src/provider/codex.rs:203:18
+    |
+203 |     pub async fn connect(config: &CodexConfig, cli: &crate::agent_session::CliContext) -> Result<Self, ProviderError> {
+    |                  ^^^^^^^                       --------------------------------------
+help: provide the argument
+    |
+567 |         let provider = CodexProvider::connect(&config, /* &CliContext */).await.unwrap();
+    |                                                      +++++++++++++++++++
+
+error[E0061]: this method takes 4 arguments but 3 arguments were supplied
+   --> src/provider/factory.rs:648:14
+    |
+648 |             .start(first_profile.clone(), "first instructions".into(), first_context.into())
+    |              ^^^^^-------------------------------------------------------------------------- argument #4 of type `CliContext` is missing
+    |
+note: method defined here
+   --> src/agent_session.rs:146:14
+    |
+146 |     async fn start(
+    |              ^^^^^
+...
+151 |         cli: CliContext,
+    |         ---
+help: provide the argument
+    |
+648 |             .start(first_profile.clone(), "first instructions".into(), first_context.into(), /* CliContext */)
+    |                                                                                            ++++++++++++++++++
+
+error[E0061]: this method takes 4 arguments but 3 arguments were supplied
+   --> src/provider/factory.rs:653:14
+    |
+653 |             .start(second_profile.clone(), "second instructions".into(), "second context".into())
+    |              ^^^^^------------------------------------------------------------------------------- argument #4 of type `CliContext` is missing
+    |
+note: method defined here
+   --> src/agent_session.rs:146:14
+    |
+146 |     async fn start(
+    |              ^^^^^
+...
+151 |         cli: CliContext,
+    |         ---
+help: provide the argument
+    |
+653 |             .start(second_profile.clone(), "second instructions".into(), "second context".into(), /* CliContext */)
+    |                                                                                                 ++++++++++++++++++
+
+error[E0061]: this method takes 4 arguments but 3 arguments were supplied
+   --> src/provider/factory.rs:712:21
+    |
+712 |             factory.start(first_profile.clone(), String::new(), String::new()).await.unwrap();
+    |                     ^^^^^----------------------------------------------------- argument #4 of type `CliContext` is missing
+    |
+note: method defined here
+   --> src/agent_session.rs:146:14
+    |
+146 |     async fn start(
+    |              ^^^^^
+...
+151 |         cli: CliContext,
+    |         ---
+help: provide the argument
+    |
+712 |             factory.start(first_profile.clone(), String::new(), String::new(), /* CliContext */).await.unwrap();
+    |                                                                              ++++++++++++++++++
+
+error[E0061]: this method takes 4 arguments but 3 arguments were supplied
+   --> src/provider/factory.rs:735:21
+    |
+735 |             factory.start(first_profile.clone(), String::new(), String::new()).await.unwrap();
+    |                     ^^^^^----------------------------------------------------- argument #4 of type `CliContext` is missing
+    |
+note: method defined here
+   --> src/agent_session.rs:146:14
+    |
+146 |     async fn start(
+    |              ^^^^^
+...
+151 |         cli: CliContext,
+    |         ---
+help: provide the argument
+    |
+735 |             factory.start(first_profile.clone(), String::new(), String::new(), /* CliContext */).await.unwrap();
+    |                                                                              ++++++++++++++++++
+
+error[E0061]: this method takes 4 arguments but 3 arguments were supplied
+   --> src/provider/factory.rs:758:14
+    |
+758 |             .resume("retained-session", first_profile.clone(), "resumed instructions".into())
+    |              ^^^^^^-------------------------------------------------------------------------- argument #4 of type `CliContext` is missing
+    |
+note: method defined here
+   --> src/agent_session.rs:153:14
+    |
+153 |     async fn resume(
+    |              ^^^^^^
+...
+158 |         cli: CliContext,
+    |         ---
+help: provide the argument
+    |
+758 |             .resume("retained-session", first_profile.clone(), "resumed instructions".into(), /* CliContext */)
+    |                                                                                             ++++++++++++++++++
+
+error[E0061]: this method takes 5 arguments but 4 arguments were supplied
+    --> src/store/mod.rs:5894:18
+     |
+5894 |                   .complete_context_reset(
+     |  __________________^^^^^^^^^^^^^^^^^^^^^^-
+5895 | |                     reset.reset_id,
+5896 | |                     "native-new".into(),
+5897 | |                     "new-context".into(),
+5898 | |                     "instructions".into(),
+5899 | |                 )
+     | |_________________- argument #5 of type `std::string::String` is missing
+     |
+note: method defined here
+    --> src/store/mod.rs:1146:12
+     |
+1146 |     pub fn complete_context_reset(
+     |            ^^^^^^^^^^^^^^^^^^^^^^
+...
+1152 |         instruction_revision: String,
+     |         ----------------------------
+help: provide the argument
+     |
+5894 |                 .complete_context_reset(
+ ...
+5898 |                     "instructions".into(),
+5899 ~                     /* std::string::String */,
+5900 ~                 )
+     |
+
+error[E0061]: this function takes 6 arguments but 5 arguments were supplied
+    --> src/store/mod.rs:6251:9
+     |
+6251 |         complete_context_reset(&database, "reset", "replacement", "new-context", "instructions")
+     |         ^^^^^^^^^^^^^^^^^^^^^^------------------------------------------------------------------ argument #6 of type `&str` is missing
+     |
+note: function defined here
+    --> src/store/mod.rs:4682:4
+     |
+4682 | fn complete_context_reset(
+     |    ^^^^^^^^^^^^^^^^^^^^^^
+...
+4688 |     instruction_revision: &str,
+     |     --------------------------
+help: provide the argument
+     |
+6251 |         complete_context_reset(&database, "reset", "replacement", "new-context", "instructions", /* &str */)
+     |                                                                                                ++++++++++++
+
+Some errors have detailed explanations: E0050, E0061, E0422, E0560, E0599, E0609.
+For more information about an error, try `rustc --explain E0050`.
+error: could not compile `braid` (bin "braid" test) due to 33 previous errors

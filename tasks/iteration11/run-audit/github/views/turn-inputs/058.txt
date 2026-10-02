@@ -1,0 +1,13 @@
+hash 9246003501a9f2acdfc1d3727ea0b75a174865ac4c5c8ba1a510e52a296d2809
+copies 1
+source snapshot-01/braid-state/turns/01a0ebee-d1f6-7d20-8c70-0ab5edd72761.md
+
+请处理 Issue #6。
+
+对象：local/run#6
+
+发生以下更新：
+- 新 Issue 需求
+- 负责人已变更。
+
+使用 `braid issue view 6 --comments` 查看当前内容。

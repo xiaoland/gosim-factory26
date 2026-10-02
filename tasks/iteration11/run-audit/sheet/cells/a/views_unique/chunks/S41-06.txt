@@ -1,0 +1,142 @@
+olCall] bash call_00_ET_lBDwAjHXVOVlNvvDTFMQ3229
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 118 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('#%s by @%s reply_to=%s thread=%s resolved=%s' % (c['database_id'], c['author']['login'], c.get('reply_to'), c.get('thread_root'), c.get('resolved')))\n    print('---')\n    print(c.get('body'))\n\"; echo \"=== also check 117 ===\"; braid comment view 117 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d: print('#%s by @%s reply_to=%s | %s' % (c['database_id'], c['author']['login'], c.get('reply_to'), (c.get('body') or '')[:600].replace('\\n',' ')))\n\" 2>/dev/null || echo \"(117 absent)\""}
+
+## S41:L93 2026-09-29T07:20:44.859Z message toolResult
+toolResult bash False
+[text]
+#118 by @deepseek-2 reply_to=116 thread=1 resolved=False
+【基础层（#2）对 #116 的落地核对：形态 (E) 平台路径已确认 · 一处「环境中立」纪律的强制边界更正】@deepseek-7 @deepseek-8 @glm-1
+1. **(E) 与归属采纳**：`frontend/tsconfig.json` 只加 `"allowJs": true`、前端一律显式 `.js` 说明符，这一行由 PR #10 承担（= #114 §3 归属建议），基础层无动作；`braid/pr-2` 保持冻结 `c344b3b`。
+2. **独立复现，与 #116 §1 一致**（同一 develop `e63efc6`、`/usr/local/bin` v20.19.3、探针事后删除、`git status` 干净；日志 `/tmp/pr2-shared-env-neutrality-probe.log`）：`allowJs` + 显式 `.js` 导入下 `npm run build`（`tsc --noEmit && vite build`）**exit 0**，模块数 52→54，marker 串出现在 `dist/assets/index-*.js`；负向类型探针（把返回 `string` 赋给 `number`）→ **TS2322**，即 JSDoc 类型确实生效。
+3. **需要更正的是 #116 §3.3 的「被谁强制」，纪律本身不变**。实测：让共享模块同时引用 `document.title` 与 `process.env.HOME`，然后把 `shared/*.js` 分别拉入前端与后端 program——
+   | program | 配置 | 结果 |
+   |---|---|---|
+   | 前端 | `allowJs: true`（**未设 `checkJs`**） | `npm run typecheck` **exit 0**：共享 JS 体内错误**一条都不报** |
+   | 后端 | `allowJs` + **`checkJs: true`**（lib ES2022 + `@types/node`） | exit 2：`../shared/probe-engine.js(27,10): error TS2584: Cannot find name 'document'` |
+   → 该纪律只有 **DOM 方向**有自动门（后端 `checkJs`，前提是模块被 `backend/src` 可达——`formula.js` 经 `store.js`、`a1.js` 经 `ranges.js`，成立）；**Node-only 方向（`process`/`Buffer` 等）没有任何构建门**：前端构建全绿，只在浏览器运行时才炸。落地建议（都属 PR #10 范围内，不改基础层）：① 共享模块严格限制在 ES2022 内建；② 把「浏览器内真实执行 `evaluate`/重写路径」的 e2e（REQ-4 用例本就要跑）作为 Node-only 方向的**实际把关**，别依赖 `typecheck` 绿；③ 若 `shared/` 将来出现只被前端消费的模块，其 JSDoc 体**两侧都不检查**（前端无 `checkJs`、后端 program 不进），需格外小心或补前端测试覆盖。
+4. **#115（B 侧 C-1 确认）与基础层无交互**：C-1b、`ranges.js → shared/a1.js` 再导出、`#111 §3` 事务内接缝与基础层不变量一致，不需要基础层或 B 侧动作，也无更正。
+=== also check 117 ===
+#117 by @deepseek-7 reply_to=113 | 【给 PR #10 的一条实现约束更新：共享模块构建形态已裁定】@deepseek-8  新事实来自基础层在 Issue #1 thread 1 的实测 #114（`shared/` 首次从"纯类型"变为运行时模块，撞上平台"逐目录 build"）：**平台前端构建是 `tsc -p tsconfig.json --noEmit && vite build`，`allowJs` 当前未设置**。  我的裁定与独立复现记录在 **Issue #1 thread 1 comment #116**（答 #114），落到本 PR 的差异只有一行 + 两条纪律：  1. `frontend/tsconfig.json` **只加 `"allowJs": true`**，其余不动；前端对共享模块一律用**显式 `.js` 说明符**（`'../../../shared/formula.js'`）。 2. **禁止**「显式 `.js` + 无 `.d.ts` + `allowJs` 未设置」：我在本 Issue 工作区实测该形态下前端 `tsc` 报 **TS7016** —— 平台前端构建会直接红（基线 `tsc` 与 `vite build` 本身是绿的，不是既有问题）。 3. **`shared/*.js` 须环境中立**：开了 `allowJs` 后同一份文件同时进入前端（`lib:
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L93:C1]
+
+## S41:L94 2026-09-29T07:20:53.014Z message assistant
+[thinking]
+Comment #118 is @deepseek-2's base-layer cross-check of #116: adopts form E, independently reproduces, and corrects one claim: the "environment neutrality" discipline only has an automatic gate in the DOM direction (backend `checkJs` catches `document`), while Node-only globals (`process`/`Buffer`) have **no build gate** — the frontend build stays green and it only explodes at browser runtime. Recommendation: keep shared modules to ES2022 built-ins; use the REQ-4 browser e2e as the real gate for the Node-only direction.
+Does this affect A (Issue #3)? Let's think:
+- A's deliverable includes `frontend/src/lib/csvExport.ts` (export), `cellDisplay.ts` (seam), `backend/src/csv.js`. A doesn't add shared runtime modules.
+- After C lands, the seam `frontend/src/lib/cellDisplay.ts` will import the shared runtime formula engine. If that shared module accidentally uses a Node-only global, the frontend build would be green but the browser runtime would break — affecting A's grid rendering and CSV export paths (the seam is consumed by both). So #118's point 3③/#118's recommendation is relevant to A's surface: the integration PR's browser e2e must actually execute the seam.
+But A's already-documented gate says exactly that: the integration PR carries the flipped `PRE-C TRANSITION` case ("exports the formula cell value through the shared display seam") executed in a real browser via Playwright. So #118's recommended real gate already exists in A's transferred obligation. That's a genuinely useful cross-link: A's flip case is the browser-executed gate for the Node-only direction, and it covers both grid and export (the seam's two consumers).
+Is it worth posting? This is an A-owned gate (I defined the flip anchor and the integration gate obligation). #118 makes a new observation that "typecheck green is not enough; the browser e2e is the real gate for Node-only globals" and notes that modules consumed only by the frontend are checked by neither side. A's seam is precisely the frontend-only consumer of the shared runtime — so A's `PRE-C TRANSITION` flip case is the concrete browser gate that catches this class of failure.
+Also #118 point 3③ says "若 `shared/` 将来出现只被前端消费的模块，其 JSDoc 体两侧都不检查" — the shared runtime module `formula.js` is consumed by both (backend via store.js). But the seam wrapper `frontend/src/lib/formula.ts` is frontend-only TS — that's checked by frontend tsc. Fine.
+So the valuable A contribution: confirm that A's transferred gate (the flipped e2e case, browser-executed, asserting both grid text and exported CSV text) is exactly the runtime gate for the Node-only direction on the seam path, and that it must be run in the integration PR on the final candidate — plus note that the gate covers both seam consumers (grid + export) so a Node-only global in the shared engine cannot slip through the A-3 surface.
+Is this duplicative of what I already recorded? A's docs say the integration PR carries the flipped formula-export case. #118's point is about *why* typecheck isn't sufficient. Adding a short, concrete A-side pointer that closes that gap explicitly is useful for the integrator (they may otherwise treat the flip as a mere feature check rather than the runtime gate for shared-module environment neutrality).
+Hmm, but is it needed? The integration PR will run the whole e2e suite anyway (all specs), so any Node-only global in the shared engine would blow up the browser tests regardless. The extra value of my comment is marginal.
+Let me weigh noise vs. value. Guidance: reply when answering a question, correcting a fact, handing over results, or taking action. Here, no question to A; nothing wrong in A's docs. Comment #118 doesn't @ me (it addresses @deepseek-7 @deepseek-8 @glm-1). So silence is the default correct behavior.
+But there is one small thing: #118 point 3③ notes frontend-only shared modules are unchecked by both programs. A's `cellDisplay.ts` is frontend TS — checked. Not an issue.
+Decision: no reply. Report.
+Actually, let me double check one A-specific risk that #118 surfaces: A's `frontend/src/lib/cellDisplay.ts` will import the shared engine. Is `cellDisplay.ts` in the frontend program (checked by frontend tsc)? Yes. So C's wiring there is type-checked. Good.
+And A's `csvExport.ts` consumes `CellDisplayValue` type from `cellDisplay.ts`. Fine.
+One more: does the browser e2e cover the export path through the seam? Yes — A's e2e case uses `exportCsv(page)` after import and asserts the exported CSV text, and asserts grid cell text. Both consumers. Good.
+No action. Report.
+I might also verify the current develop tree still has no shared runtime js, and Issue #3 unchanged. Quick check of Issue #3 comment count as instructed.
+Also the harness instructs to read `comment view 118 --thread`. Done (JSON view includes body). Let me also confirm Issue #3 view unchanged — earlier 19 comments; check again briefly.
+Let me run one command combining: issue 3 comment count + develop head + shared js presence.
+[DUPLICATES: 17 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L94:C1]
+[toolCall] bash call_00_dA1B2pLIBVUPD7eyfQkv9916
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && echo \"issue3 comments:\" && braid issue view 3 --comments 2>&1 | grep -cE \"^comment #\" && echo \"issue3 state:\" && braid issue view 3 2>&1 | sed -n '2p' && echo \"develop:\" && git rev-parse origin/develop && echo \"shared/ tree on develop:\" && git ls-tree -r --name-only origin/develop -- shared && echo \"seam consumers (A) on develop:\" && git grep -n \"worksheetDisplayValues\\|CellDisplayValue\" origin/develop -- frontend/src | sed 's|origin/develop:||'"}
+
+## S41:L95 2026-09-29T07:20:53.128Z message toolResult
+toolResult bash False
+[text]
+issue3 comments:
+issue3 state:
+shared/ tree on develop:
+seam consumers (A) on develop:
+frontend/src/components/Grid.tsx:3:import type { CellDisplayValue } from '../lib/cellDisplay';
+frontend/src/components/WorkbookToolbar.tsx:3:import type { CellDisplayValue } from '../lib/cellDisplay';
+frontend/src/lib/cellDisplay.test.ts:3:import { worksheetDisplayValues } from './cellDisplay';
+frontend/src/lib/cellDisplay.test.ts:28:describe('worksheetDisplayValues', () => {
+frontend/src/lib/cellDisplay.test.ts:30:    const display = worksheetDisplayValues(sheet([[0, 0, 'Region'], [1, 1, '1200']]));
+frontend/src/lib/cellDisplay.test.ts:36:    const display = worksheetDisplayValues(sheet([[0, 0, 'Region']]));
+frontend/src/lib/cellDisplay.test.ts:42:    const display = worksheetDisplayValues(sheet([[0, 0, '=1+1']]));
+frontend/src/lib/cellDisplay.ts:14:export type CellDisplayValue = (row: number, col: number) => string;
+frontend/src/lib/csvExport.ts:2:import type { CellDisplayValue } from './cellDisplay';
+frontend/src/lib/csvExport.ts:40:  display: CellDisplayValue = worksheetDisplayValues(worksheet),
+[DUPLICATES: 13 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L95:C1]
+
+## S41:L96 2026-09-29T07:20:58.517Z message assistant
+[thinking]
+All consistent. Issue #3 unchanged (19 comments, CLOSED), develop `e63efc6`, `shared/` has only `types.d.ts`, seam consumers intact (Grid via `displayValue`, WorkbookToolbar → csvExport with display, WorkbookEditor memo).
+No A action needed. Comment #118 doesn't mention me and requires no correction on A's side. Its point 3 (Node-only globals have no build gate; the browser e2e is the real gate) is relevant context for the integration PR: A's flipped seam case is browser-executed and covers both seam consumers (grid + export) — already part of A's transferred obligation.
+I'll report and not post. But hmm — should I add one line to Issue #3's description to make the "browser-executed gate is the real runtime check for shared-module environment neutrality" explicit for the integrator? The description already says the integration PR carries the flip as the final gate. Adding a sentence may be over-churn on a fresh CLOSED issue... but the guidance states: "交接前核对当前说明" and "缺少... 时更新原定义及受影响的任务状态". There's no change to A's requirements.
+Actually, there's an argument in favor: the integration PR reader will rely on Issue #3's description/C obligations. A tiny addition clarifying that the flipped case is also the runtime gate for C-1's shared module neutrality would be a real improvement to the handoff. But it's a doc line whose value is moderate; the integration PR runs all e2e anyway.
+I'll skip: no churn, report clearly. If the integrator asks, the answer is discoverable.
+Report.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L96:C1]
+[text]
+**Update read**: `issue:1 comment #118` (@deepseek-2, base layer, thread 1, reply-to #116) — adopts form (E) and its ownership (one-line `frontend/tsconfig.json` change carried by PR #10, `braid/pr-2` stays frozen), independently reproduces the build/marker/TS2322 results, and **corrects the enforcement boundary** in #116 §3.3: the "environment neutrality" rule only has an automatic gate in the DOM direction (backend `checkJs` → `TS2584: Cannot find name 'document'`), while Node-only globals (`process`/`Buffer`) pass every build (frontend has no `checkJs`) and only fail in the browser. Its recommendation: keep `shared/*.js` to ES2022 built-ins and treat real browser execution of the `evaluate`/rewrite paths as the actual gate rather than a green `typecheck`. It also notes #115 has no base-layer interaction.
+**A-impact check** (verified on `origin/develop` @ `e63efc6`):
+- `shared/` still contains only `types.d.ts`; A adds no shared runtime module, so the new gate question is entirely C's.
+- A's seam wiring is intact and frontend-program-checked: `WorkbookEditor.tsx:119` memo → `Grid.tsx:17 displayValue`; `WorkbookToolbar.tsx:13 displayValue` → `csvExport.ts:40` default `worksheetDisplayValues(worksheet)`; `CellDisplayValue` type exported at `cellDisplay.ts:14`.
+- Consequence of #118 for A is already covered by A's transferred obligation: the integration-PR gate I recorded is the **browser-executed** flip of `exports the formula cell value through the shared display seam`, asserting both the grid text and the exported CSV text — i.e. both seam consumers run in a real browser, which is precisely the runtime check #118 says `typecheck` cannot substitute for.
+- #118 does not @-mention A and proposes no change to A's contract (A-3 seam, A-4 footprint, `PRE-C TRANSITION` anchor) or to A's files.
+**Action**: none posted — no question to A, no A-side fact to correct, and a reply would only restate #118's own conclusion. Thread 1 stays open.
+**State unchanged**: Issue #3 `CLOSED`, still 19 comments (last #99); PR #8 `MERGED` @ `e63efc6`; carry-over obligations (A-3 seam → C #5; browser-executed formula-export flip → integration PR) unchanged and traceable via Issue #5 comment #96 and PR #8 comments #94/#100/#102.
+[DUPLICATES: 5 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L96:C2]
+
+## S41:L97 2026-09-29T07:21:20.026Z message user
+[text]
+- issue:1 comment 119; read `comment view 119 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L97:C1]
+
+## S41:L98 2026-09-29T07:21:20.027Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L98:customType]
+[content]
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L98:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L98:display]
+
+## S41:L99 2026-09-29T07:21:21.253Z message assistant
+[toolCall] bash call_00_ET_GauNYeZMXSqUwa6bS7B25010
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 119 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('#%s by @%s reply_to=%s thread=%s resolved=%s' % (c['database_id'], c['author']['login'], c.get('reply_to'), c.get('thread_root'), c.get('resolved')))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L100 2026-09-29T07:21:21.299Z message toolResult
+toolResult bash False
+[text]
+#119 by @deepseek-7 reply_to=118 thread=1 resolved=False
+【回 #118：采纳更正并已窄改 Issue #5 正文 · 纪律不变，把关位置写实】@deepseek-3 @glm-1
+1. **更正确认采纳**（我在 `e63efc6` 上复核了配置事实，与你一致）：`frontend/tsconfig.json` 无 `checkJs`（`allowJs` 才由 PR #10 加），`backend/tsconfig.json` 为 `allowJs`+`checkJs`。故「环境中立」这条纪律：DOM 方向有后端 `checkJs` 自动门；**Node-only 方向（`process`/`Buffer`）没有构建门**——前端 program 不报共享 `.js` 体内的错误。#116 §3.3 把它写成「两个 program 共同强制」不准确，以此更正为准。
+2. **纪律本身不变**：`shared/*.js` 只用 ES2022 内建。对 PR #10 的落地：`shared/formula.js`（经 `backend/src/store.js` 与前端 `cellDisplay.ts`）、`shared/a1.js`（经 `backend/src/ranges.js`）两侧都可达 → DOM 方向落在后端 `checkJs`；Node-only 方向没有类型门，所以**把关放到运行时**——PR #10 的证据必须含浏览器内真实执行 `evaluate`/引用重写的 e2e（`e2e/formula-engine.spec.ts` 本就在我 Issue #5 验收方案内），不以 `typecheck` 绿代替。
+3. **已窄改 Issue #5 正文**「构建形态裁定」：保留 `allowJs: true` + 显式 `.js` 导入的裁定与 TS7016 反例，追加上述更正与把关位置（正文内引 #118）。你第 ③ 条「只被前端消费的 `shared/` 模块两侧都不检查」对本 PR 不成立（`shared/a1.js`、`shared/formula.js` 两侧都可达），记录备查。
+4. @deepseek-8 在 #118 收件人内，本条不新增影响面。@glm-1 若认为 Node-only 方向还需更硬的门（例如给 `frontend/tsconfig.json` 加 `checkJs`），请裁定——那会扩大 PR #10 的 diff 范围，我按裁定更新 Issue #5 正文与 PR 说明。
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L100:C1]
+
+## S41:L101 2026-09-29T07:21:31.273Z message assistant
+[thinking]
+Comment #119 by @deepseek-7, reply-to #118, @-mentions @deepseek-3 (me) and @glm-1. Content: accepts the correction, keeps the discipline, moves the gate to runtime browser e2e in PR #10, already narrowed Issue #5's body. Also leaves open a possible @glm-1 ruling: whether to add `checkJs` to `frontend/tsconfig.json` (which would expand PR #10's diff).
+Does this need an A response? Let's consider the open question: @glm-1 might rule that `frontend/tsconfig.json` gets `checkJs: true`. What would that do to A's delivered code?
+If `checkJs: true` is added to the frontend program with `include: ["src", ..., "../shared"]` and `allowJs: true`:
+- The frontend program would then type-check `.js` files under those includes. Today there are **no** JS files under frontend's include paths (I verified: zero `.js` under frontend/src, frontend/*.js, shared except... wait, I checked `frontend/src frontend/*.js shared` and found none). Actually let me re-verify: `git ls-tree -r --name-only origin/develop -- frontend/src frontend/*.js shared | grep -E '\.(js|mjs|cjs)$'` returned none. But are there JS files under `frontend/` outside those globs that are in the include list? include = `["src", "vite.config.ts", "vitest.config.ts", "uno.config.ts", "../shared"]` — so only those. So after adding `checkJs`, only `shared/*.js` (i.e., C's new `formula.js`, `a1.js`) would be newly checked by the frontend program. A's delivered files are TS, unaffected.
+- Important nuance: with `checkJs: true` and frontend `lib: ES2022+DOM` + `types: ["vite/client", "node"]` — note frontend already includes `"node"` types! So `process`/`Buffer` would NOT be flagged by the frontend program even with `checkJs: true`, because `types: ["vite/client", "node"]` brings in Node globals. That's a genuinely important fact for the @glm-1 decision: adding `checkJs` to the frontend tsconfig would NOT create the Node-only-direction gate that #118 identified, because the frontend tsconfig already declares `types: ["vite/client", "node"]`.
+That's a concrete, decision-changing fact! @deepseek-7 asked @glm-1 whether adding `checkJs` to frontend tsconfig would give a harder gate. Answer: it would not catch Node-only globals, because `types: ["vite/client", "node"]` already injects Node ambient declarations into the frontend program. So the proposal as stated wouldn't achieve its goal; the DOM direction would still be caught (DOM lib present, `document` is fine in frontend), and Node-only globals would still pass.
+Wait — careful. Let's reason precisely:
+- `document` in backend program (lib ES2022, types node) → error TS2584 (as observed).
+- `process` in frontend program: frontend lib includes DOM and types include "node" → `process` resolves from @types/node → no error. So even with `checkJs: true` in frontend, `process.env.HOME` would type-check fine. Hence no Node-only gate.
+- Conversely, `document` in frontend program → DOM lib → fine.
+So adding `checkJs` to frontend catches JS *type errors* in shared modules (a general benefit) but does not gate Node-only globals. This is a fact I can verify concretely: frontend tsconfig has `"types": ["vite/client", "node"]` (I already read it: yes, `"types": ["vite/client", "node"]`). And `@types/node` presence in frontend deps? `types: ["node"]` requires @types/node installed in frontend's node_modules — it must be, since baseline build passes. Hmm, actually if @types/node weren't available, tsc would error "Cannot find type definition file for 'node'". Baseline build passes → @types/node is present in frontend deps/devDeps.
+So my contribution: a verified counterexample to the proposed "harder gate" option, which @glm-1 is being asked to decide. This is exactly the "回答问题时带上改变选择的依据" case. It prevents a wrong ruling that would expand PR #10's diff while not achieving the goal (or, if the goal is to gate Node-only globals, the correct minimal measure is different: e.g., a separate tsconfig/lib without node types for shared, or a lint rule, or the browser e2e as #118 said).
+1. frontend tsconfig `types: ["vite/client", "node"]` — confirmed from earlier read.
+2. @types/node installed for frontend (check package.json devDeps).
+3. Optionally empirically confirm: in a temp check, add `checkJs: true` to a copy of frontend tsconfig and typecheck a probe shared JS using `process` → expect exit 0. That would be a real probe. But it requires running tsc against the frontend project with an extra shared JS file. Doable: I can create `shared/probe-node-global.js` in the worktree (temporarily), copy frontend/tsconfig.json → temp variant with checkJs, run tsc, then clean up. Need node_modules in frontend. Let me check if frontend/node_modules exists.
+Is it worth the empirical probe? The reasoning is solid from config facts, but an empirical result is stronger and cheap. Since the decision affects the integration candidate's build config (and A's verified build surface), verifying is warranted. But careful: I must not leave the worktree dirty, and must not push anything.
+Actually, note: I should be careful about whether it's my place to weigh in on PR #10's config. But the question is explicitly open, addressed partly by @deepseek-3 (me, as A owner whose build surface is affected), and the answer changes the ruling. That's valuable.
+Let me check node_modules and @types/node availability first.
+Also, I should verify one more relevant fact: does the *backend* program catch `process` misuse? Backend has types node too, so `process` is fine there; backend checkJs catches `document`. Right, as #118 showed.
+So the "Node-only direction has no gate anywhere" conclusion stands, and frontend `checkJs` cannot fix it because both programs include Node types. The only way is: shared module type-checked under a config without node types (i.e., a dedicated tsconfig for shared with lib ES2022 only, or a browser-only lib), or a runtime browser e2e. This is a concrete alternative that @glm-1 could adopt.
+Hmm — also possible: `frontend/tsconfig.json` could remove `"node"` from `types` — but frontend `vite.config.ts`/`vitest.config.ts` need node types (config files use `process`? vitest config may). That's a bigger change and out of PR #10's minimal scope.
+So the recommendation: keep #116/#119's ruling (browser e2e as the runtime gate), and do NOT add `checkJs` to frontend tsconfig expecting a Node-only gate — it can't produce one because frontend already has `types: [... "node"]`. If a harder automatic gate is wanted, the minimal correct shape is a dedicated `shared/tsconfig.json` with `lib: ["ES2022"]` + `types: []` + `checkJs: true`, run in the checks script (or as a third tsconfig), not `frontend/tsconfig.json`'s checkJs.
+Let me verify empirically to be safe, then post a concise comment in thread 1 (reply-to 119), @glm-1 (the decider) and @deepseek-7 (C owner).
+Let me check environment.
+[DUPLICATES: 17 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L101:C1]
+[toolCall] bash call_00_ehYEKXa1wcigO93NdEO95

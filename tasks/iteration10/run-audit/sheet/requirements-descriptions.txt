@@ -1,0 +1,625 @@
+1: id: ROOT
+2: name: Core Requirements for an Online Spreadsheet Data Workspace
+3: type: FOLDER
+4: dependencies: []
+5: description: 'A streamlined online spreadsheet application with an interface modeled
+6:   after Google Sheets, covering workbook and worksheet management, spreadsheet data
+7:   editing, formula calculation, sorting and filtering, data validation, and basic
+8:   pivot analysis. Sharing and collaboration, version-history restoration, advanced
+9:   visual styling, charts, macros, real-time collaborative cursors, and integrations
+10:   with external office suites are outside the core scope.
+11: 
+12:   '
+13: children:
+14: - id: REQ-1
+15:   name: Workbook Access and Lifecycle
+16:   type: FOLDER
+17:   dependencies: []
+18:   description: 'Supports viewing, opening, creating, renaming, importing, and exporting
+19:     workbooks within the application. The home page is the entry point for workbooks;
+20:     successful open, create, and import operations all enter the same editor page,
+21:     and subsequent operations may modify only the currently opened workbook. After
+22:     a workbook is opened, created, or imported, the editor state shown in the browser
+23:     must be a stable workbook state: visiting or refreshing that
+24:     exact workbook state must open the same workbook rather than another workbook or a temporary
+25:     blank page, and successful workbook modifications must remain available through
+26:     that visible workbook state. After returning to the home page or reopening, the workbook name, last-updated
+27:     time, worksheet order, and last active worksheet remain consistent. Worksheet
+28:     tabs on the same editor page use the ARIA tab role, with the active tab indicated
+29:     by aria-selected="true"; the active worksheet grid uses the ARIA grid role, has
+30:     the accessible name "Worksheet grid", and exposes aria-multiselectable="true".
+31:     Grid cells use the ARIA gridcell role with their cell coordinates as accessible
+32:     names (for example, A1); the current cell and every cell within the currently
+33:     selected rectangular region expose aria-selected="true", while cells outside the
+34:     region expose aria-selected="false".
+35: 
+36:     '
+37:   children:
+38:   - id: REQ-1-1
+39:     name: Workbook Navigation
+40:     type: FOLDER
+41:     dependencies: []
+42:     description: |
+43:       Supports viewing and opening available workbooks from the home page. After a workbook is successfully created, renamed, or imported from CSV, returning to or refreshing the home page must show the updated record in the list.
+44: 
+45:       Page reference:
+46:       ![image](reference/workbook-home.png)
+47:     children:
+48:     - id: REQ-1-1-1
+49:       name: View and Open a Workbook
+50:       type: ATOMIC
+51:       dependencies: []
+52:       description: |
+53:         Users view available workbooks on the workbook home page. Each record displays "Last updated: <last updated value>" and provides a link whose accessible name is the workbook name. After the user clicks the link, the editor displays the same "Last updated: <last updated value>", the corresponding workbook name, worksheet tabs and order, current active worksheet, row and column structure, grid values, formula bar content, filter views, validation entry points, and pivot table results; data from another workbook must not appear in the current grid. The current editor page entry in the browser must be directly accessible and continue to identify the same workbook after refresh; visiting that exact workbook state in the same or a later browser session must restore the workbook’s most recent successful state without requiring navigation through the home page. The entry format is implementation-defined.
+54: 
+55:         Page reference:
+56:         ![image](reference/workbook-home.png)
+104:   - id: REQ-1-2
+105:     name: Workbook Creation and Naming
+106:     type: FOLDER
+107:     dependencies: []
+108:     description: 'Supports creating a blank workbook and changing the workbook name;
+109:       both operations are initiated from visible workbook state points on the home page or
+110:       editor page. After success, the workbook record on the home page and the editor
+111:       title are updated consistently and remain so after refresh or reopening.
+112: 
+113:       '
+114:     children:
+115:     - id: REQ-1-2-1
+116:       name: Create a Blank Workbook
+117:       type: ATOMIC
+118:       dependencies: []
+119:       description: |
+120:         Users create a blank workbook from the workbook home page. The home page provides a button with the accessible name "New blank workbook"; clicking it opens the creation page, whose submit button is named "Create". After creation succeeds, the editor opens and shows only a blank worksheet named Sheet1, with Sheet1 active and A1 selected; refreshing or returning to the home page and reopening produces the same state. If creation fails, an error is displayed, the user remains in a retryable state, and no incomplete workbook record may appear on the home page.
+121: 
+122:         Page reference:
+123:         ![image](reference/create-workbook.png)
+148:     - id: REQ-1-2-2
+149:       name: Rename a Workbook
+150:       type: ATOMIC
+151:       dependencies:
+152:       - REQ-1-1-1
+153:       description: 'Users can change the workbook name on the workbook editor page.
+154:         Next to the editor title is a button with the accessible name "Rename workbook";
+155:         clicking it displays a text box labeled "Workbook name", prefilled with the
+156:         last saved name, and a "Save" button. After leading and trailing spaces are
+157:         trimmed, the name must not be empty; an empty name must be rejected with "Workbook
+158:         name cannot be empty". After a successful save, both the editor title and
+159:         the home-page link display the new name; if saving fails, an error is shown
+160:         and the original name remains displayed. Reopening the workbook shows the
+161:         most recently saved name.
+162: 
+163:         '
+211:   - id: REQ-1-3
+212:     name: CSV Data Exchange
+213:     type: FOLDER
+214:     dependencies: []
+215:     description: 'Supports importing external CSV data completely as a workbook and
+216:       exporting the current active worksheet as CSV. After a successful import, the
+217:       Sheet1 editor page opens and continues to show the complete imported result
+218:       after refresh or reopening; export reads only the current active worksheet and
+219:       must not change workbook content or the current interface state.
+220: 
+221:       '
+222:     children:
+223:     - id: REQ-1-3-1
+224:       name: Import CSV to Create a Workbook
+225:       type: ATOMIC
+226:       dependencies: []
+227:       description: 'Users start an import by clicking the "Import CSV" button on the
+228:         workbook home page. A dialog named "Import CSV" provides a file control labeled
+229:         "CSV file" and a "Confirm import" button. The system parses data in the original
+230:         row and column order, preserves empty fields, supports UTF-8 Chinese text,
+231:         English text, and numeric text, and correctly handles commas enclosed in double
+232:         quotes, escaped pairs of double quotes, and line breaks within fields; a field
+233:         that begins with a double quote but has no closing double quote is invalid
+234:         CSV and must be rejected with "Invalid CSV file format. Import failed." After
+235:         a successful import, a new workbook is created whose name is the file name
+236:         with its final .csv extension removed, and Sheet1 opens with the complete
+237:         CSV rows, columns, and original text; the first row remains ordinary data.
+238:         After refresh or reopening, grid content and row/column order remain unchanged.
+239:         If parsing or import fails, no workbook link with that name may appear on
+240:         the home page, and no partial import result may be displayed or retained.
+241: 
+242:         '
+336:     - id: REQ-1-3-2
+337:       name: Export the Current Worksheet as CSV
+338:       type: ATOMIC
+339:       dependencies:
+340:       - REQ-1-1-1
+341:       - REQ-1-3-1
+342:       description: 'Users can export the current active worksheet using the button
+343:         with the accessible name "Export CSV" on the workbook editor toolbar. Clicking
+344:         it starts a browser download; the suggested filename ends with ".csv", and
+345:         the downloaded UTF-8 text is the exported CSV. The exported CSV preserves
+346:         empty cells within the used range according to the grid’s actual row and column
+347:         order and correctly escapes text containing commas, quotes, or line breaks.
+348:         Ordinary cells export their displayed values; formula cells export their current
+349:         calculated results rather than formula expressions. Before and after export,
+350:         the active worksheet, filter view, grid values, and formula bar content remain
+351:         unchanged, and the same state remains after refresh.
+352: 
+353:         '
+447: - id: REQ-2
+448:   name: Worksheets and Table Structure
+449:   type: FOLDER
+450:   dependencies: []
+451:   description: |
+452:     Supports managing multiple worksheets within one workbook and adjusting row and column structure. Each worksheet’s name, order, grid values, formulas, validation rules, filter views, and pivot table results are independent; switching worksheets or reopening the workbook must not display data from another worksheet.
+453:     Page reference:
+454:     ![image](reference/worksheet-overview.png)
+455:   children:
+456:   - id: REQ-2-1
+457:     name: Worksheet Lifecycle
+458:     type: FOLDER
+459:     dependencies: []
+460:     description: |
+461:       Supports creating, switching, renaming, and deleting worksheets while ensuring that each worksheet’s grid, formulas, validation behavior, filter views, pivot-table field selections, and results remain independent and persist after reopening. The worksheet tab bar displays worksheet order and active state after the most recent successful operation and provides a button with the accessible name "Add worksheet". Each worksheet tab provides a button with the accessible name "Worksheet options for <worksheet name>"; clicking it opens a menu whose commands use the ARIA menuitem role.
+462: 
+463:       Page reference:
+464:       ![image](reference/worksheet-lifecycle.png)
+465:     children:
+466:     - id: REQ-2-1-1
+467:       name: Add a Worksheet
+468:       type: ATOMIC
+469:       dependencies:
+470:       - REQ-1-1-1
+471:       - REQ-2-1-3
+472:       description: 'Users add a worksheet using the button with the accessible name
+473:         "Add worksheet" in the tab bar of the workbook editor page. The new tab uses
+474:         the first unused SheetN name in positive-integer order; when only Sheet1 exists,
+475:         Sheet2 is created. The new worksheet is blank and does not inherit filters,
+476:         validation, or pivot results from other worksheets; after creation it becomes
+477:         the active tab and A1 is selected. Existing worksheets and their data remain
+478:         unchanged. The new tab still exists after refresh or reopening. If addition
+479:         fails, an error is shown, no new tab appears, and existing worksheets remain
+480:         unchanged.
+481: 
+482:         '
+530:     - id: REQ-2-1-2
+531:       name: Switch Worksheets
+532:       type: ATOMIC
+533:       dependencies:
+534:       - REQ-2-1-1
+535:       - REQ-5-1-2
+536:       - REQ-5-2-1
+537:       description: 'After the user clicks another ARIA tab, the grid, row and column
+538:         structure, selected cell, text box labeled "Formula bar", filter buttons,
+539:         validation entry points, and pivot table results all switch to the state of
+540:         the target worksheet; the formula bar displays either the ordinary value or
+541:         the original formula of the selected cell. A worksheet opened for the first
+542:         time with no selection history selects A1. Switching must not modify the source
+543:         worksheet; returning to it restores its most recent successful state. Reopening
+544:         the workbook directly displays the last active tab and restores the last confirmed
+545:         selected cell for each worksheet.
+546: 
+547:         '
+664:     - id: REQ-2-1-3
+665:       name: Rename a Worksheet
+666:       type: ATOMIC
+667:       dependencies:
+668:       - REQ-1-1-1
+669:       description: 'Users change a worksheet name from the worksheet tab menu. The
+670:         "Rename" menu item opens a dialog named "Rename worksheet", containing a text
+671:         box labeled "Worksheet name" prefilled with the current name and a "Save"
+672:         button. After trimming leading and trailing spaces, the new name must not
+673:         be empty and must be unique within the same workbook; an empty name displays
+674:         "Worksheet name cannot be empty", and a duplicate name displays "Worksheet
+675:         name already exists". After a successful save, the tab displays the new name;
+676:         if saving fails, the name is duplicate, or the name is empty, an error is
+677:         displayed and the original name remains. Refreshing or reopening shows the
+678:         most recently saved successful name.
+679: 
+680:         '
+751:     - id: REQ-2-1-4
+752:       name: Delete a Worksheet
+753:       type: ATOMIC
+754:       dependencies:
+755:       - REQ-2-1-1
+756:       - REQ-5-3-1
+757:       description: 'Users delete a worksheet through the "Delete" command in the worksheet
+758:         tab menu. When deletion is allowed, the system displays a dialog named "Delete
+759:         worksheet" describing the target worksheet, whose visible text includes "<target
+760:         worksheet name>", and providing a "Delete worksheet" confirmation button.
+761:         After a successful deletion, the target tab and its data, formulas, filters,
+762:         validation, and pivot results no longer appear, and an adjacent worksheet
+763:         becomes active; the target tab remains absent after refresh. After a pivot-result
+764:         worksheet is deleted, its corresponding source worksheet is no longer constrained
+765:         by that pivot table. If the target is still a pivot table source worksheet,
+766:         confirmation is rejected with "Please delete or rebuild dependent pivot tables
+767:         first"; the dialog closes and both source data and pivot results remain unchanged.
+768:         If only one worksheet remains, clicking "Delete" does not open a confirmation
+769:         dialog and instead displays "A workbook must contain at least one worksheet".
+770:         Other deletion failures display an error; the target tab and grid remain visible
+771:         and unchanged after refresh.
+772: 
+773:         '
+867:   - id: REQ-2-2
+868:     name: Row and Column Structure Management
+869:     type: FOLDER
+870:     dependencies: []
+871:     description: 'Supports inserting and deleting rows and columns in the current
+872:       active worksheet. After an operation, grid values, formula bar, filter views,
+873:       validation behavior, and pivot refresh results remain consistent while other
+874:       worksheets remain unchanged; the structure persists after refresh or reopening.
+875:       Row numbers use the ARIA rowheader role with the decimal row number as the accessible
+876:       name; column headers use the ARIA columnheader role with the column letter as
+877:       the accessible name. Right-clicking a row number or column header opens a menu
+878:       whose commands use the ARIA menuitem role.
+879: 
+880:       '
+881:     children:
+882:     - id: REQ-2-2-1
+883:       name: Insert and Delete Rows
+884:       type: ATOMIC
+885:       dependencies:
+886:       - REQ-1-1-1
+887:       description: |
+888:         Users insert blank rows above or below a target row, or delete the target row, through the row-number menu in the current active worksheet. The row-number menu provides "Insert 1 row above", "Insert 1 row below", and "Delete row". On insertion, the target row and all subsequent complete records, validation rules, and formula references shift downward together; on deletion, subsequent rows shift upward and rules on the target row are removed. Affected formulas display the adjusted original formulas and correct results, and references that cannot be preserved display an explicit error; filters continue to apply to the original data region. If a shifted 0-to-100 numeric validation rule rejects an out-of-range value, the page displays "Please enter a number from 0 to 100". If the change overlaps a pivot-table source range, the existing pivot result remains unchanged until "Refresh pivot table" is clicked, after which it is recomputed using the adjusted range. If the operation fails, an error is displayed and the grid immediately and after refresh retains the pre-operation structure; partial row movement is not allowed.
+889: 
+890:         Page reference:
+891:         ![image](reference/manage-rows.png)
+1008:     - id: REQ-2-2-2
+1009:       name: Insert and Delete Columns
+1010:       type: ATOMIC
+1011:       dependencies:
+1012:       - REQ-1-1-1
+1013:       description: |
+1014:         Users insert a blank column to the left or right of a target column, or delete the target column, through the column-header menu in the current active worksheet. The column-header menu provides "Insert 1 column left", "Insert 1 column right", and "Delete column". On insertion, all complete data, validation rules, and formula references in the target column and subsequent columns shift right together; on deletion, subsequent columns shift left and rules on the target column are removed. Data outside the deleted column is preserved; affected formulas display the adjusted original formulas and correct results, while direct references that cannot be preserved display #REF!; filters continue to apply to the adjusted region. If a shifted 0-to-100 numeric validation rule rejects an out-of-range value, the page displays "Please enter a number from 0 to 100". After pivot-table source columns move, existing results remain unchanged until "Refresh pivot table" is clicked, after which the moved fields are used. If a selected header is deleted, refreshing or opening the pivot table editor displays a visible error requiring the field to be reselected and preserves the last successful result. If the operation fails, an error is shown and the grid retains the pre-operation structure immediately and after refresh.
+1015: 
+1016:         Page reference:
+1017:         ![image](reference/manage-columns.png)
+1134: - id: REQ-3
+1135:   name: Cell and Range Editing
+1136:   type: FOLDER
+1137:   dependencies: []
+1138:   description: 'Supports data entry, bulk paste, copy and cut, and undo and redo for
+1139:     cells and contiguous ranges in the current active worksheet. Each operation either
+1140:     completely updates the target grid, formula results, and related validation behavior
+1141:     and persists after refresh, or displays an error while the current and other worksheets
+1142:     continue to show the pre-operation state.
+1143: 
+1144:     '
+1145:   children:
+1146:   - id: REQ-3-1
+1147:     name: Direct Data Entry
+1148:     type: FOLDER
+1149:     dependencies: []
+1150:     description: 'Supports entering data through the current worksheet grid, the text
+1151:       box labeled "Formula bar", or the external clipboard. The grid, formula bar,
+1152:       and selection state must show consistent content for the same cell; ordinary
+1153:       values and original formulas persist after refresh. Double-clicking a grid cell
+1154:       displays an inline text box with the accessible name "Edit <cell coordinate>".
+1155: 
+1156:       '
+1157:     children:
+1158:     - id: REQ-3-1-1
+1159:       name: Edit a Cell Through the Grid or Formula Bar
+1160:       type: ATOMIC
+1161:       description: 'After selecting a cell in the current active worksheet, users
+1162:         can modify its content directly in the grid or formula bar. Cells support
+1163:         text, numbers, boolean-like values, date text, and formulas beginning with
+1164:         an equals sign. Pressing Enter or clicking another cell commits the change;
+1165:         pressing Escape cancels an uncommitted change. Ordinary cells show the same
+1166:         input in the grid and formula bar; formula cells show the calculated result
+1167:         in the grid and the original submitted formula in the formula bar. After a
+1168:         source value is committed, directly and indirectly dependent formulas update
+1169:         their results. Values, original formulas, and results persist after refresh.
+1170:         If a commit fails, an error is displayed, the grid and formula bar continue
+1171:         to show the last successful value or formula, and dependent results remain
+1172:         unchanged.
+1173: 
+1174:         '
+1175:       dependencies:
+1176:       - REQ-1-1-1
+1274:     - id: REQ-3-1-2
+1275:       name: Paste Two-Dimensional Table Data
+1276:       type: ATOMIC
+1277:       dependencies:
+1278:       - REQ-3-1-1
+1279:       description: 'Users paste text containing tab-separated columns and newline-separated
+1280:         rows into a starting cell in the current active worksheet. The system applies
+1281:         the entire rectangle, preserves empty fields, and overwrites only the target
+1282:         rectangle; formulas within the target are replaced by the new content and
+1283:         related formulas display recalculated results. The full paste either updates
+1284:         every cell in the rectangle and persists after refresh, or displays an error
+1285:         while all target cells retain their original values; when a 0-to-100 numeric
+1286:         validation rule rejects the paste, that error is "Please enter a number from
+1287:         0 to 100". Silently dropping only some values is not allowed. The grid context
+1288:         menu provides a command using the ARIA menuitem role with the accessible name
+1289:         "Paste", and Ctrl+V pastes the same external clipboard content.
+1290: 
+1291:         '
+1413:     - id: REQ-3-1-3
+1414:       name: Select a Rectangular Cell Range
+1415:       type: ATOMIC
+1416:       dependencies:
+1417:       - REQ-1-1-1
+1418:       description: 'Users can click to select a single cell or drag from one corner
+1419:         of a rectangular region to the diagonally opposite cell to select a contiguous
+1420:         rectangle. The active worksheet must visibly indicate the complete selection;
+1421:         the grid exposes aria-multiselectable="true"; every gridcell inside the rectangle
+1422:         exposes aria-selected="true", while every gridcell outside it exposes aria-selected="false".
+1423:         Subsequent range operations use exactly this rectangle and must not implicitly
+1424:         expand to adjacent existing data. Selecting another cell or range replaces
+1425:         the previous selection and updates the ARIA state accordingly. Each worksheet
+1426:         must persist the complete rectangle from its most recent successful selection,
+1427:         not just its top-left corner: after refreshing or reopening the workbook and
+1428:         returning to that active worksheet, aria-selected states inside and outside
+1429:         the rectangle must exactly match the saved state; switching to another worksheet
+1430:         must not overwrite the original worksheet’s selection.
+1431: 
+1432:         '
+1481:   - id: REQ-3-2
+1482:     name: Range Transfer and Operation Recovery
+1483:     type: FOLDER
+1484:     dependencies: []
+1485:     description: 'Supports transferring data between ranges in the current active
+1486:       worksheet and using undo and redo to restore grid values, formulas, rule ranges,
+1487:       and row/column structure. The visible state after each undo or redo persists
+1488:       after refresh.
+1489: 
+1490:       '
+1491:     children:
+1492:     - id: REQ-3-2-1
+1493:       name: Copy, Cut, and Paste Cell Ranges
+1494:       type: ATOMIC
+1495:       dependencies:
+1496:       - REQ-3-1-1
+1497:       - REQ-3-1-3
+1498:       description: |
+1499:         Users select a rectangular range by dragging from one corner to another in the current active worksheet, then copy or cut it and select a target location to paste; only operations within the same worksheet are supported. After copy, the source range remains unchanged; after cut, the source range is cleared only after the target range has been displayed completely. Values and formulas preserve their two-dimensional layout; when formulas are copied, relative references adjust according to the target offset while absolute references remain unchanged, and the formula bar displays the adjusted original formula. The source range, target range, and affected formulas must either all update and persist after refresh or all remain in their original state; when a target 0-to-100 numeric validation rule rejects the operation, the page displays "Please enter a number from 0 to 100". Cells outside these ranges must not change.
+1500: 
+1501:         Page reference:
+1502:         ![image](reference/copy-paste-range.png)
+1600:     - id: REQ-3-2-2
+1601:       name: Undo and Redo Recent Operations
+1602:       type: ATOMIC
+1603:       dependencies:
+1604:       - REQ-2-2-1
+1605:       - REQ-2-2-2
+1606:       - REQ-3-1-1
+1607:       - REQ-3-1-2
+1608:       - REQ-3-2-1
+1609:       description: 'Users can undo recent cell edits, bulk pastes, range moves, and
+1610:         row/column structure changes in the current workbook session. The toolbar
+1611:         provides buttons with the accessible names "Undo" and "Redo"; Ctrl+Z and Ctrl+Y
+1612:         perform the same operations. Undo restores the grid values, original formulas,
+1613:         row/column structure, rule ranges, pivot-result validity, and calculation
+1614:         results from before the operation; consecutive undo operations restore changes
+1615:         in reverse order, and redo reapplies the complete operation that was just
+1616:         undone. Undo in one workbook must not modify another workbook. The state after
+1617:         each undo or redo persists after refresh; the history itself only needs to
+1618:         exist within the current session and may be empty after reopening. If a new
+1619:         modification is made after an undo, the "Redo" button becomes disabled and
+1620:         Ctrl+Y cannot restore the old branch.
+1621: 
+1622:         '
+1792: - id: REQ-4
+1793:   name: Formula Calculation
+1794:   type: FOLDER
+1795:   dependencies: []
+1796:   description: 'Supports basic formula calculation, relative and absolute references,
+1797:     dependency recalculation, and error handling within the current active worksheet.
+1798:     The grid displays formula results or errors, while the formula bar displays the
+1799:     expression submitted by the user; copy, paste, row/column changes, and source-value
+1800:     edits follow the same reference-adjustment and recalculation rules. After reopening
+1801:     the workbook, formula expressions and correct results calculated from the current
+1802:     source values remain visible.
+1803: 
+1804:     '
+1805:   children:
+1806:   - id: REQ-4-1
+1807:     name: Formula Input and Functions
+1808:     type: FOLDER
+1809:     description: 'Supports entering basic expressions and aggregate functions through
+1810:       the grid and "Formula bar" from REQ-3-1-1 and copying formulas through REQ-3-2-1.
+1811:       The formula bar always displays the original formula, the grid displays results
+1812:       consistent with the current source data, and both persist after refresh.
+1813: 
+1814:       '
+1815:     dependencies: []
+1816:     children:
+1817:     - id: REQ-4-1-1
+1818:       name: Calculate Basic Expressions and Aggregate Functions
+1819:       type: ATOMIC
+1820:       description: |
+1821:         Users enter formulas beginning with an equals sign through the grid or formula bar in REQ-3-1-1. Formulas must support at least numeric constants, parentheses, addition, subtraction, multiplication, division, A1-style references within the same worksheet, and SUM, AVERAGE, COUNT, MIN, and MAX over contiguous ranges; cross-worksheet references are not required. The grid displays results calculated from the current source data, and when a formula cell is selected the formula bar displays the original expression entered by the user; both persist after refresh. Function names are case-insensitive; aggregate functions ignore empty cells, COUNT counts only numeric cells, and SUM/AVERAGE/MIN/MAX use only numeric cells and do not treat blanks as zero.
+1822:         Page reference:
+1823:         ![image](reference/basic-formulas.png)
+1824:       dependencies:
+1825:       - REQ-3-1-1
+1942:     - id: REQ-4-1-2
+1943:       name: Copy Formulas and Adjust Relative References
+1944:       type: ATOMIC
+1945:       description: 'When a formula cell is copied through REQ-3-2-1 to another location
+1946:         in the same worksheet, relative row and column references in the target formula
+1947:         bar change according to the target offset while absolute references remain
+1948:         unchanged; the source formula and result remain unchanged, the target grid
+1949:         displays the result based on the new references, and the state persists after
+1950:         refresh. If the offset moves a relative reference outside the worksheet bounds,
+1951:         the target formula bar displays =#REF! and the grid displays #REF!.
+1952: 
+1953:         '
+1954:       dependencies:
+1955:       - REQ-4-1-1
+1956:       - REQ-3-2-1
+1957:       - REQ-4-2-2
+2005:   - id: REQ-4-2
+2006:     name: Dependency Updates and Error Handling
+2007:     type: FOLDER
+2008:     description: 'Supports dependency recalculation after source data changes and
+2009:       isolation of formula errors. After REQ-3 value edits, pastes, and moves or REQ-2
+2010:       row/column changes, all affected formulas display results consistent with the
+2011:       current source data; one erroneous formula does not affect unrelated cells.
+2012: 
+2013:       '
+2014:     dependencies: []
+2015:     children:
+2016:     - id: REQ-4-2-1
+2017:       name: Recalculate Dependent Formulas After Source Data Changes
+2018:       type: ATOMIC
+2019:       description: 'After a source-value edit, bulk paste, range move, or row/column
+2020:         structure change succeeds, all directly and indirectly dependent formulas
+2021:         update in dependency order; each formula bar continues to display its original
+2022:         formula while the grid displays the new result or error. After refresh or
+2023:         reopening, results remain consistent with the current source values and must
+2024:         not show pre-change results; formulas in other worksheets that do not reference
+2025:         these source cells remain unchanged.
+2026: 
+2027:         '
+2028:       dependencies:
+2029:       - REQ-2-2-1
+2030:       - REQ-2-2-2
+2031:       - REQ-3-1-1
+2032:       - REQ-3-1-2
+2033:       - REQ-3-2-1
+2034:       - REQ-4-1-1
+2105:     - id: REQ-4-2-2
+2106:       name: Display and Fix Formula Errors
+2107:       type: ATOMIC
+2108:       description: 'Formula errors use stable visible values: division by zero displays
+2109:         #DIV/0!, an invalid reference displays #REF!, an unsupported function displays
+2110:         #NAME?, a malformed expression displays #ERROR!, and a direct or indirect
+2111:         circular reference displays #REF!. When an error cell is selected, the formula
+2112:         bar displays the original formula submitted by the user; after refresh, both
+2113:         the error value and original formula persist. An error cell does not block
+2114:         viewing, editing, or recalculating other cells. After the user changes it
+2115:         to a valid formula through REQ-3-1-1, the grid displays the new result, the
+2116:         formula bar displays the new formula, related dependent results update, and
+2117:         the error no longer appears after refresh.
+2118: 
+2119:         '
+2120:       dependencies:
+2121:       - REQ-4-1-1
+2238: - id: REQ-5
+2239:   name: Data Organization and Analysis
+2240:   type: FOLDER
+2241:   dependencies: []
+2242:   description: 'Supports sorting, filtering, validation, and pivot-table summarization
+2243:     for data in the current active worksheet. After refresh or reopening, sort order,
+2244:     filter views, validation behavior, and pivot results persist; other worksheets
+2245:     are unaffected. Sorting changes the row order in the grid, filtering changes only
+2246:     visibility, validation constrains subsequent input, and pivot tables read source
+2247:     ranges without modifying source data. The editor toolbar provides a button with
+2248:     the accessible name "Data"; clicking it opens a menu whose commands use the ARIA
+2249:     menuitem role. Options in named combo boxes use the ARIA option role and their
+2250:     visible names.
+2251: 
+2252:     '
+2253:   children:
+2254:   - id: REQ-5-1
+2255:     name: Sorting and Filtering
+2256:     type: FOLDER
+2257:     dependencies: []
+2258:     description: 'Supports sorting a selected rectangular range in the current worksheet
+2259:       by column and filtering it by value or condition. Sorting and filtering apply
+2260:       only to the range selected by the user and do not expand to adjacent data or
+2261:       other worksheets; the same order and visible rows persist after refresh.
+2262: 
+2263:       '
+2264:     children:
+2265:     - id: REQ-5-1-1
+2266:       name: Sort a Data Range by a Specified Column
+2267:       type: ATOMIC
+2268:       dependencies:
+2269:       - REQ-3-1-3
+2270:       - REQ-4-2-1
+2271:       - REQ-5-1-2
+2272:       - REQ-5-2-1
+2273:       description: |
+2274:         Users select a rectangular data range in the current active worksheet and choose "Sort range" from the "Data" menu. A dialog named "Sort range" provides combo boxes labeled "Sort by" and "Order", a "Data has header row" checkbox, and a "Sort" button. Options in "Sort by" use the header text of the selected range as accessible names; "Order" provides options named "Ascending" and "Descending". When the first row is declared a header, it does not participate in sorting. Numbers, parseable dates, and text are compared according to their respective types; equal sort keys preserve their original relative order, and entire records move together by row. After sorting, the formula bar displays references and results consistent with the new positions, filtering and validation continue to apply to the same selected range, and data outside the selection remains unchanged; order and results persist after refresh. If sorting fails, an error is displayed and the grid retains its original order.
+2275: 
+2276:         Page reference:
+2277:         ![image](reference/sort-range.png)
+2429:     - id: REQ-5-1-2
+2430:       name: Filter Rows by Value or Condition
+2431:       type: ATOMIC
+2432:       dependencies:
+2433:       - REQ-1-3-2
+2434:       - REQ-3-1-3
+2435:       description: 'Users create a filter for a data region with headers in the current
+2436:         active worksheet through "Create filter" in the "Data" menu. Each header provides
+2437:         a button with the accessible name "Filter <header text>"; the dialog with
+2438:         the same name supports selecting specific values and condition options named
+2439:         "Text contains", "Greater than", "Before", "Is empty", and "Is not empty".
+2440:         The value-filter dialog provides "Clear selection", checkboxes generated from
+2441:         distinct source values, and "Apply"; each checkbox uses the displayed source
+2442:         value as its accessible name. The condition dialog provides a combo box labeled
+2443:         "Condition", a text box labeled "Value", and "Apply". "Text contains", "Greater
+2444:         than", and "Before" use the "Value" text box; "Is empty" and "Is not empty"
+2445:         require no value. Conditions on different columns are combined with AND; nonmatching
+2446:         rows are hidden only and are neither deleted nor reordered. After refresh
+2447:         or reopening, the same rows remain visible. CSV export and pivot summarization
+2448:         still include hidden rows within the filtered range. "Clear filter" restores
+2449:         all source records in their original order and with their original values;
+2450:         after refresh all remain visible, while formula and validation behavior are
+2451:         unchanged.
+2452: 
+2453:         '
+2580:   - id: REQ-5-2
+2581:     name: Data Validation
+2582:     type: FOLDER
+2583:     description: 'Supports configuring dropdown or numeric validation for ranges in
+2584:       the current active worksheet. The same rules are enforced when writing through
+2585:       the grid, formula bar, paste, or range move; after row or column changes, dropdown
+2586:       buttons and numeric limits move with the originally constrained cells. Rules
+2587:       remain active after refresh and existing valid values are preserved.
+2588: 
+2589:       '
+2590:     dependencies: []
+2591:     children:
+2592:     - id: REQ-5-2-1
+2593:       name: Set Dropdown or Numeric Validation for a Range
+2594:       type: ATOMIC
+2595:       dependencies:
+2596:       - REQ-3-1-1
+2597:       - REQ-3-1-2
+2598:       - REQ-3-1-3
+2599:       - REQ-3-2-1
+2600:       description: 'Users select a target range and click "Data validation" in the
+2601:         "Data" menu. A dialog named "Data validation" provides a combo box labeled
+2602:         "Rule type"; "Dropdown" uses a text box labeled "Allowed values", where comma-separated
+2603:         items are trimmed of leading and trailing spaces; "Number range" uses text
+2604:         boxes labeled "Minimum" and "Maximum"; the "Save" button applies an inclusive
+2605:         rule. After a valid save succeeds, the dialog closes. A dropdown cell provides
+2606:         a button with the accessible name "Open dropdown for <cell coordinate>"; each
+2607:         option uses the ARIA option role and the trimmed allowed value as its accessible
+2608:         name. If an invalid value is entered through the grid, formula bar, paste,
+2609:         or range move, the entire operation is rejected and the original value remains;
+2610:         an invalid dropdown value displays "Please select one of the following values:
+2611:         <comma-separated allowed values>", while an invalid number displays "Please
+2612:         enter a number between <minimum> and <maximum>". In the persisted multi-cell
+2613:         0-to-100 boundary scenario, rejecting 101 in B3 displays "Please enter a number
+2614:         from 0 to 100". If any target in a bulk operation is invalid, all targets
+2615:         retain their original values. Rules remain active after refresh. When an existing
+2616:         rule is reopened, the dialog is prefilled with the rule type and parameters
+2617:         and displays a "Delete rule" button; saving a modification makes the new range
+2618:         effective immediately, deleting removes the constraint, and either successful
+2619:         operation closes the dialog without changing existing cell values.
+2620: 
+2621:         '
+2773:   - id: REQ-5-3
+2774:     name: Basic Pivot Summarization
+2775:     type: FOLDER
+2776:     description: 'Supports creating a basic pivot table from a data range in the current
+2777:       worksheet. Pivot results reside in a separate worksheet and only read source
+2778:       data; when switching back to the source worksheet, original values and order
+2779:       remain unchanged, and pivot results persist after refresh or reopening.
+2780: 
+2781:       '
+2782:     dependencies: []
+2783:     children:
+2784:     - id: REQ-5-3-1
+2785:       name: Create and Refresh a Basic Pivot Table
+2786:       type: ATOMIC
+2787:       dependencies:
+2788:       - REQ-2-1-1
+2789:       - REQ-2-2-1
+2790:       - REQ-2-2-2
+2791:       - REQ-3-1-3
+2792:       - REQ-5-1-2
+2793:       description: |
+2794:         Users select a source range containing headers and click "Create pivot table" in the "Data" menu. A dialog named "Create pivot table" displays visible text in the format "Source range: <cell range>", provides a "New worksheet" radio option and a "Create" button; when no pivot-result worksheet exists, the first unused PivotN name is used, so Pivot1 is created. A region named "Pivot table editor" provides combo boxes labeled "Rows", "Columns", "Values", and "Summarize by", plus an "Apply" button. Options for "Rows", "Columns", and "Values" use source header text as accessible names; "Summarize by" provides options named SUM, COUNT, and AVERAGE. The configuration supports one row field, one optional column field, and one value field. SUM/AVERAGE aggregate only parseable numbers, while COUNT counts non-empty records in the value field and does not fail because of nonnumeric content.
+2795:         When no column field is selected, A1 displays the row-field name and B1 displays "<summarization method> of <value field>"; row groups are ordered by first appearance in the source data, and the final row is Grand Total aggregating all qualifying source records. When a column field is selected, A1 displays the row-field name, column-field values are arranged from B1 onward in order of first appearance, and the final column is Grand Total; row-field values are likewise ordered by first appearance, with Grand Total as the final row. COUNT displays 0 when a row/column combination has no record with a non-empty value field.
+2796:         After a successful apply, refreshing or reopening still shows the same pivot worksheet, field layout, summarization method, and results. The result worksheet provides a "Refresh pivot table" button; after source data or row/column changes, clicking refresh completely replaces the old summary using the current source range. If a selected source header has been deleted, clicking refresh displays "Pivot field is no longer available. Select a new field.", preserves the last successful result, and does not modify the source worksheet; other invalid source ranges or fields likewise display a visible error and preserve both worksheets. When SUM or AVERAGE is applied to a value field with no parseable numbers, "Value field requires numeric values" is displayed, the old result is preserved, and the source worksheet is not modified.

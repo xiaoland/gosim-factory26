@@ -1,0 +1,58 @@
+[
+  {
+    "source": "continuation02-root-native/087-2026-09-28T06-44-41-388Z_01a0e6c2-312c-736d-9ed2-308d3cbdcd96.jsonl:L53",
+    "part": 0,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-body-cleanup-race.md",
+    "field": "content",
+    "chars": 1321
+  },
+  {
+    "source": "continuation02-root-native/087-2026-09-28T06-44-41-388Z_01a0e6c2-312c-736d-9ed2-308d3cbdcd96.jsonl:L81",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/review-pr14.md",
+    "field": "content",
+    "chars": 1707
+  },
+  {
+    "source": "continuation02-root-native/087-2026-09-28T06-44-41-388Z_01a0e6c2-312c-736d-9ed2-308d3cbdcd96.jsonl:L85",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/reply-92.md",
+    "field": "content",
+    "chars": 1160
+  },
+  {
+    "source": "continuation02-root-native/087-2026-09-28T06-44-41-388Z_01a0e6c2-312c-736d-9ed2-308d3cbdcd96.jsonl:L207",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/issue2-fresh-0b18726.md",
+    "field": "content",
+    "chars": 1320
+  },
+  {
+    "source": "continuation02-root-native/087-2026-09-28T06-44-41-388Z_01a0e6c2-312c-736d-9ed2-308d3cbdcd96.jsonl:L237",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-exitcode-body.md",
+    "field": "content",
+    "chars": 1677
+  },
+  {
+    "source": "continuation02-root-native/087-2026-09-28T06-44-41-388Z_01a0e6c2-312c-736d-9ed2-308d3cbdcd96.jsonl:L295",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/issue2-comment-final.md",
+    "field": "content",
+    "chars": 2408
+  },
+  {
+    "source": "continuation02-root-native/087-2026-09-28T06-44-41-388Z_01a0e6c2-312c-736d-9ed2-308d3cbdcd96.jsonl:L299",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr16-verify.md",
+    "field": "content",
+    "chars": 1446
+  }
+]

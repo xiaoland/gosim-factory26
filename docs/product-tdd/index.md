@@ -1,6 +1,6 @@
 # Factory26 跨组件技术说明
 
-本文解释当前主线中多个组件共同依赖的职责、生命周期、交付和证据语义。当前开发入口是 `pi-braid-i13`；旧 variant 与冻结包按自身材料解释。已完成源码和材料核对的能力不等于取得完整生成与模型行为验收。
+本文解释当前主线中多个组件共同依赖的职责、生命周期、交付和证据语义。Harness 材料以 `pi-braid-i13` 基线为例，I14 的职责对照独立维护；用途与任务入口见 [Variant 索引](../../variants/README.md)。旧 variant 与冻结包按自身材料解释。已完成源码和材料核对的能力不等于取得完整生成与模型行为验收。
 产品目标与实验规则归 [PRD](../prd/index.md)，操作命令归 [开发说明](../../CONTRIBUTING.md)和[运行说明](../deployment/index.md)。
 实际模型、字段和工具版本以对应源码与原生材料为准；历史 ZIP 具有自己的身份，不会随工作树更新。
 
@@ -50,7 +50,7 @@ raw 基线由 [raw_main.py](../../variants/raw/raw_main.py)独立执行，可直
 [lab](../../lab/README.md)将外部 argv 与共享输入冻结为实验，controller 分配 attempt，独立 runner 保存执行、操作和原始 OTLP 事实；`lab.exp.projection` 统一呈现保存的阶段与依赖，不解释 Agent 内部协作。不同 Harness 可直接作为外部命令运行，不需要实现设施内部接口；历史 Lab 状态读取与新实验投影分开。
 Docker 是容器执行边界，Mac 控制器和 run 记录仍持有源码及实验事实。声明 Docker 的 attempt 冻结标准 CLI 选中的 endpoint 和 daemon ID，资源操作复用该身份。本地 bind 路径保留；ARC 远程接入使用带所有权标签的 named volume、阶段子目录及 helper 传输，官方 Runner 在本地装配和解释结果。输出清单核验并发布到原 run 后才允许释放远端副本；不可达或回收失败保持 unconfirmed 并支持显式 cleanup 补采。Console 访问容器仍只支持本宿主 Unix socket context。远程 OTLP 默认在执行容器 loopback 收集并随文件回收，网络 collector 入口必须显式选择和验证。操作与限制见[本地实验](../deployment/local-experiments.md)。
 
-新 schema v3 冻结 storage policy 和稳定宿主 controller Python 依赖；attempt 分配及增加并发前核对目标文件系统 available bytes/inodes、host reserve、workspace/telemetry/finalization 及构建峰值。运行中异步观测占块，软阈值暂停派发，硬阈值受控停止进程组；外部资源仍须独立核实。历史 v1/v2 保持 legacy-unbudgeted。
+新实验使用 `factory26.exp.experiment` schema 2，环境配置使用 `factory26.exp.environment` schema 1；实验定义、编译、执行、预算与资源门禁、资产发布、归档和输运的当前合同及命令以 [Lab 入口](../../lab/README.md) 为准，本说明只保留跨组件约束，不复制字段表。Controller、独立 runner 和托管 adapter 分别持有编排、单次 attempt 执行与平台身份；保存的事实按入口结果、执行、归档、输运和平台反馈分别判断，不能互相替代。旧 schema v3 的异步占块、80% 软阈值和 `asset.json` 合同保留为历史解释，不能据其推导新执行的保障。
 [arc_matrix.py](../../lab/arc_bench/arc_matrix.py)选择实验组合；[arc_bench_adapter.py](../../lab/arc_bench/arc_bench_adapter.py)调用官方 Runner；[ARC 结果解释](../../lab/arc_bench/results.py)与[原生过程证据](../../lab/analysis/native_evidence.py)只用于可选分析。
 替换 Harness 不应要求实验控制器识别另一种私有会话格式。
 
@@ -72,7 +72,7 @@ Factory 通过技能来源目录取得完整材料；公共文件操作只负责
 | Pi/Codex 原生接入 | 单个工作项内的原生会话、工具与内部子代理。 | 内部 explorer/executor 不是可指派的 Braid 成员。 |
 | SVC skill | 按需提供文档、任务包、工作方法与 V&V 指引。 | 不拥有 Braid 对象或实验调度。 |
 
-对运行时 Agent，成员通过 GitHub 式 assignee 显示；指派时选择的是能力配置别名，操作会返回新 Agent 的具体成员名。内部 profile ID、原生会话 ID 只用于宿主调度和证据关联。
+对运行时 Agent，指派直接选择具体成员名；`braid assignee list` 显示各配方的下一位虚拟 assignee 和能力说明。查询不创建成员或占用序号；成功指派才认领该名字，并将对应配方的下一位候选递增，其它配方不受影响。所选名字就是对象负责人、评论作者和通知地址，重建和恢复保持它；历史名字不回收或重编号。配方及内部 profile ID、原生会话 ID 留在宿主调度和证据关联中。
 variant 通过 `root_profile_id` 明确指派根 Issue，后续对象未指定 assignee 时保持未指派，不自动挑选成员。
 创建 PR 本身不会启动 PR 成员。Braid 的成员指引要求在实施前创建并指派关联 PR，由独立 PR 负责人承接计划、排障、实现与验收；Issue 负责人维护需求、方案、验收依据及协作决定。此分工不限制成员讨论或合并其他人的成果，也不由 Braid 自动挑选模型。
 
@@ -150,7 +150,8 @@ variant 随后按平台布局交付，记录生成与交付结果；真实运行
 | 标准 Agent 入口成功 | Harness 报告其生成流程完成；适配器另外要求交付布局存在。 | 应用满足全部需求。 |
 | Factory 冻结的集成 commit | 此次提供给 Runner 的确切应用版本。 | 工作项全部关闭、Braid 无执行错误，或应用满足全部需求。 |
 | 官方完整评测结果 | 此任务、制品和环境下的有效评分，低分也属于结果。 | 另一版本或另一评测环境具有相同效果。 |
-| 外层 local experiment completed | 适配器结果报告完成；具体评分在 result 中。 | 所有用例通过，或所有原生会话已完整归档。 |
+| 新 controller completed | 声明的执行与证据流程结束；入口结果、归档、输运和平台评分仍分别读取。 | Harness 正常交付、所有用例通过，或全部原生会话已完整归档。 |
+| 旧外层 local experiment completed | 旧适配器结果报告完成；具体评分在 result 中。 | 所有用例通过，或所有原生会话已完整归档。 |
 | OTLP received | 接收器保存了批次。 | 标准消费者已成功解码，或 Agent 过程记录完整。 |
 | 原生 manifest partial/unknown | 会话关联或归档的诊断覆盖有限。 | 应用生成必然失败。 |
 
@@ -170,7 +171,7 @@ Braid run_id 来自其 request/result，不能用外层实验 ID 覆盖。
 未解析原文仍可导出，但 missing/partial/unknown 只说明诊断限制；历史文件导出不伪造实时 span 或累加生成计数。
 Collector 继续只保存原始 OTLP 批次。默认摘要不能重建原文；portable export 才能通过 Braid CLI 读取 protobuf 并按源清单核对完整性。操作入口见[Braid 诊断手册](../deployment/braid-diagnostics.md)。
 I13 finalizer 写 archive.json，分别记录执行、交付、评测、诊断覆盖、原文保存、恢复承诺及回收状态。归档复制/读取失败或声明原文未保存会阻止删除 work，应用结果独立保留；关联覆盖不全本身不等于原文丢失。只有 eligible 回执且无恢复承诺才释放 work；冻结 I12 材料不变。
-当前可执行归档级仅为 decision，其它级别尚未实现且在配方边界拒绝。schema v3 用稳定宿主 asset.json 同时绑定 controller、job 与 inspect/cleanup Python launcher，计划和启动核对环境树身份。只读 GC 按冻结实验、run、recovery 和归档回执建立引用视图，仅精确 work 可成为候选；资产未见引用不等于删除授权，当前没有 apply。
+I13 的归档级为 decision，不能从这个内层回执推导外层新 experiment 的 archive/export 完整性。旧 schema v3 曾用稳定宿主 asset.json 绑定 controller、job 与 inspect/cleanup launcher；历史只读 GC 根据支持的实验、run、recovery 和归档回执建立引用视图，仅精确 work 可成为候选，资产未见引用不等于删除授权。新 Lab CLI 不暴露该 GC 命令，也没有 GC apply；使用旧冻结查询必须先确认其记录覆盖及保护关系，操作边界见[存储回收候选](../deployment/evidence.md#存储回收候选)。
 这些说明描述当前代码接线，不能代替实时模型链路验收，也不赋予历史 ZIP 新能力。
 
 `braid_telemetry_viewer.py` 以实验 run 为入口，通过 OTLP Backend 查询原始批次，再调用 Braid 的官方类型解码与证据重建接口，生成离线静态网站。
@@ -182,15 +183,15 @@ Viewer 从外层实验链接原生会话和原始错误，不读取生成器配�
 
 ## 实现、实验与执行身份
 
-ARC 的 operation 是一次已批准范围的持久接续入口，不拥有另一套生成状态。prepare 冻结实际 experiment 或 Competition inputs 以及操作源码；run 消费该冻结结果，status 从原 run、journal 和 scheduler 读回。启动、终态重放、观察与完成判断使用同一份实验/job 作用域，不能从共享目录里发现的其它 run 扩大执行范围。恢复准备显式绑定实际输入，准备成功与来源停止各自成立后才允许恢复启动。组件原始记录继续是事实来源，跨组件回执只证明交接效果。
+新执行以冻结 experiment、job、attempt、execution instance 和发布制品建立关系，当前控制与恢复合同见本文的组件说明及 [Lab](../../lab/README.md)。旧 ARC operation 曾作为一次已批准范围的持久接续入口，prepare 冻结 experiment 或 Competition inputs 及操作源码，run 消费其冻结结果，status 从原 run、journal 和 scheduler 读回；这是旧冻结协议，不是工作树的新启动入口。历史记录通过专用 reader 或 history 读取，不扩大原作用域，也不把旧来源伪装为新 attempt。组件原件继续是事实来源，跨组件回执只证明交接效果。
 
-controller、collector 和 Docker 准入共享完整进程身份语义：同机且确认为不存在是 lost，存在但缺少出生依据是 unknown，只有非空出生依据匹配才是 alive。旧记录不回填猜测身份；unknown 阻断接管、重试和破坏性清理。collector 的确定失败终止当前自动接续，显式重入才接管原 scheduler；正常终态后的新订阅可重新启动观察。输出归档保留链接字面值且不跟随外链；严格输入冻结与执行输出保全是不同契约，归档失败保留远端唯一副本，不改判为模型生成失败。
+controller、runner 和共享支持模块核对完整进程身份：同机且确认为不存在是 lost，存在但缺少出生依据是 unknown，只有非空出生依据匹配才是 alive。旧记录不回填猜测身份；unknown 不允许按失联放行接管、重试或破坏性清理。旧 collector/scheduler 的自动接续合同只解释对应历史程序，新托管执行由冻结 controller 的 adapter 唯一采集。输出归档保留链接字面值且不跟随外链；严格输入冻结与执行输出保全是不同契约，归档失败保留远端唯一副本，不改判为模型生成失败。
 
-跨本地 controller 的执行容量由冻结 Docker daemon 上的共享准入控制，矩阵 workers 仍只控制本矩阵。准入同时计真实活动执行容器与尚未物化的 reservation，完整身份未知的 reservation 保留容量；物理退出与进程失联确认共同决定释放。当前 registry 只保证同宿主、同用户的参与者，不提供跨宿主分布式锁，所有共享消费者须选择相同容量和 registry。
+新 Docker 执行容量由实际 daemon 上显式冻结的共享 slots 和 admission volume 管理；本实验 max_parallel 只限制自身派发，不替代共享准入。未知预约、尚未关闭的派发窗口及未退役旧 writer 会阻塞权威交接。旧矩阵的宿主目录 registry 和文件锁只覆盖同宿主、同用户或共享锁目录的参与者，与新 daemon volume 合同不同；不能把旧 registry 的空闲读回当作新执行权或跨宿主容量保证。
 
 variant 标识独立维护的 Harness，实验 case 标识该问题中的配置行，run ID 标识一次实际执行。人类实验编号与运行名都不能替代包、应用和机器身份。命名登记见 [实验导航](../../experiments/README.md)。
 
-通用 lab 的 `labels` 是字符串元信息。稳定值随 job 冻结，本次执行标签随 operation request 和 run 保存；执行标签不能覆盖冻结值，retry 不继承上次执行标签。通用调度不理解 g/r、ARC task 或 Harness。状态查询和可选分析展示 run 中的保存值。
+新实验的比较目标通过显式 case/variant 及依赖关系表达，labels 只作字符串元信息，不用名字解析授权或重试关系。旧标签合同中的稳定值随 job 冻结，本次执行标签随 operation request 和 run 保存，执行标签不覆盖冻结值、retry 不继承上次执行标签；这些字段继续按原记录解释。
 
 ARC 团队包身份以 `package-manifest.json` 的 `capabilities.variant` 为准，旧顶层 variant 兼容读取，两者冲突时报错。`arc_matrix --candidate CASE=ZIP` 将配置行与真实包身份分开；旧 `--variant NAME=ZIP` 是身份声明，不能用于覆盖一个已知的包身份。缺失身份保持未知，声明和已验证来源分别保存。Competition 保留顶层 variant 的原调用声明以兼容续接，真实包身份在 `package_identity`，新逐题 labels 只标注已有来源证明的 variant。
 
@@ -198,4 +199,4 @@ ARC 团队包身份以 `package-manifest.json` 的 `capabilities.variant` 为准
 
 本地 Hackathon 报告先明确选择冻结实验/job 集或显式 run 集，再按 case、赛题、应用、suite、镜像及其他冻结执行输入隔离。替代关系只来自同一实验/job 的显式 retry 链；独立重复分别呈现。缺来源的记录保留可观察结果与缺失原因，不拼接总分。分组键只在本报告内使用，真实关联字段独立保存。
 
-存储生命周期成果已按来源提交增量整合至当前开发主线和 I13；来源、合入身份、实际反馈及未验边界见[存储任务](../../tasks/experiment-storage-lifecycle/packet.md)与[I13 合入回执](../../tasks/iteration13/storage-lifecycle-integration.md)。源码接线不代表宿主资产已建立、预算停止/归档删除已实测或历史材料已迁移。
+存储生命周期成果曾按来源提交增量合入 I13，内层归档与历史 schema v3 各有合同；来源、合入身份、实际反馈及未验边界见[存储任务](../../tasks/experiment-storage-lifecycle/packet.md)与[I13 合入回执](../../tasks/iteration13/storage-lifecycle-integration.md)。新实验执行协议的后继归[实验 DX](../../tasks/experiment-dx-review/packet.md)。源码接线不代表宿主资产已建立、预算停止/归档删除已实测或历史材料已迁移。

@@ -1,0 +1,1912 @@
+{
+  "2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4/3ebac138-5bd4-42b9-8f09-5211be23f4b2/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 24,
+      "bytes": 52076,
+      "work_item": "pr:2",
+      "stage": "base",
+      "read_status": "already_read_full",
+      "session_id": "01a0eb77-c665-7674-86fb-14b751dee721"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4/3fdb5aa6-1f86-4585-a6ae-d8e23c771c98/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 10,
+      "bytes": 524107,
+      "work_item": "pr:2",
+      "stage": "base",
+      "read_status": "already_read_full",
+      "session_id": "01a0eb77-c647-7511-88d6-4cf7f2905b34"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4/575651e2-498f-45b0-9272-c25aa7cefd4e/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 22,
+      "bytes": 87418,
+      "work_item": "pr:2",
+      "stage": "base",
+      "read_status": "already_read_full",
+      "session_id": "01a0eb8a-1a04-70a7-a034-0a1256ba707d"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4.jsonl",
+      "category": "native_or_continuation",
+      "lines": 414,
+      "bytes": 1045888,
+      "work_item": "pr:2",
+      "stage": "base",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/run-history.jsonl",
+      "category": "run_history",
+      "lines": 3,
+      "bytes": 496,
+      "work_item": "pr:2",
+      "stage": "base",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-2-pi-deepseek-fast-g1--/2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4.jsonl",
+      "category": "native_session_copy",
+      "lines": 47,
+      "bytes": 158956,
+      "work_item": "pr:2",
+      "stage": "base",
+      "read_status": "already_read_full",
+      "session_id": "01a0eb75-f87d-75eb-b5e5-eb3e62365df4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/subagent-artifacts/3ebac138-5bd4-42b9-8f09-5211be23f4b2_advisor_0_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 43,
+      "bytes": 93116,
+      "work_item": "pr:2",
+      "stage": "base",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/subagent-artifacts/3fdb5aa6-1f86-4585-a6ae-d8e23c771c98_vision_0_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 13,
+      "bytes": 70754,
+      "work_item": "pr:2",
+      "stage": "base",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eb75-efdb-7ab3-ba32-c1064cbf3023/subagent-artifacts/575651e2-498f-45b0-9272-c25aa7cefd4e_advisor_0_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 37,
+      "bytes": 133795,
+      "work_item": "pr:2",
+      "stage": "base",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T04-39-32-221Z_01a0eb75-f87d-75eb-b5e5-eb3e62365df4"
+    }
+  ],
+  "2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc/a88b0965-f9b2-4540-8f95-d3823730b184/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 9,
+      "bytes": 431186,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebb8-d823-755b-a41e-782fea48c074"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc/e1bb6e7b-f006-42e8-8412-b20dd5954390/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 16,
+      "bytes": 109075,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebb7-c386-70aa-80d1-39666c666f24"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc/f9ca322c-1c19-4a44-9cd6-395d12bcff18/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 33,
+      "bytes": 124913,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebb8-bc58-771d-a157-667fef98ee29"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc.jsonl",
+      "category": "native_or_continuation",
+      "lines": 83,
+      "bytes": 335176,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc.jsonl",
+      "category": "native_session_copy",
+      "lines": 25,
+      "bytes": 201283,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/2253fdcb-a274-4f3c-966f-5e23ba5e9ab5_vision_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 27,
+      "bytes": 48386,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/5de41a2f-db32-464c-aa25-d56ec63b6fb5_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 66,
+      "bytes": 237402,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebb6-cf1c-7771-99f6-cdf8b3222680/subagent-artifacts/fa29e299-d5c8-4f87-b6cd-4e5b8249809c_vision_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 10,
+      "bytes": 48793,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-50-22-420Z_01a0ebb6-d2d4-702e-8aea-05a1a4a6dffc"
+    }
+  ],
+  "2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69/5f3cb313-ea98-4707-840b-0c53beb954da/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 22,
+      "bytes": 85929,
+      "work_item": "pr:8",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebc7-0845-7330-8819-b48f4b3d56fc"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69.jsonl",
+      "category": "native_or_continuation",
+      "lines": 133,
+      "bytes": 267855,
+      "work_item": "pr:8",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-8-pi-deepseek-fast-g1--/2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69.jsonl",
+      "category": "native_session_copy",
+      "lines": 200,
+      "bytes": 674507,
+      "work_item": "pr:8",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebc0-a900-7638-9aa7-4e72b02bbd69"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebc0-a567-7fa0-9aed-526d805d464d/subagent-artifacts/a4055255-2e14-4312-b0c9-0d5ab1a34a51_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 37,
+      "bytes": 152595,
+      "work_item": "pr:8",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-01-07-072Z_01a0ebc0-a900-7638-9aa7-4e72b02bbd69"
+    }
+  ],
+  "2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04/c5ad8a08-d101-46e2-860b-4e4c3b1d3788/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 18,
+      "bytes": 43273,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebc5-0016-745e-b240-7c73568876b2"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04.jsonl",
+      "category": "native_or_continuation",
+      "lines": 70,
+      "bytes": 258176,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04.jsonl",
+      "category": "native_session_copy",
+      "lines": 29,
+      "bytes": 167064,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebc4-1dae-7748-8714-77375af46a04"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebc4-199c-75d3-8fb2-c661e1ce8c18/subagent-artifacts/dfe188ff-b4e1-4e34-a267-f6a773534197_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 29,
+      "bytes": 79096,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-04-53-550Z_01a0ebc4-1dae-7748-8714-77375af46a04"
+    }
+  ],
+  "2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762/a967215e-6566-4872-bb7a-ac76bc4caecf/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 15,
+      "bytes": 36185,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebcc-43f5-7652-b629-66fcbf3da23d"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762.jsonl",
+      "category": "native_or_continuation",
+      "lines": 23,
+      "bytes": 110084,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762.jsonl",
+      "category": "native_session_copy",
+      "lines": 33,
+      "bytes": 203468,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebcb-6846-727d-93e0-2ade1020c762"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebcb-1c00-7f72-b702-0e44eb854fe8/subagent-artifacts/0c2e9eeb-24dd-4c65-ba3f-e2faa5323224_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 22,
+      "bytes": 61886,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-12-51-398Z_01a0ebcb-6846-727d-93e0-2ade1020c762"
+    }
+  ],
+  "2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a/83bedfe6-4f97-4e9f-8b65-5f59342ce273/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 43,
+      "bytes": 131736,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebdd-7ea0-7232-a9fd-ffa01b4434ac"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl",
+      "category": "native_or_continuation",
+      "lines": 174,
+      "bytes": 407282,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a.jsonl",
+      "category": "native_session_copy",
+      "lines": 40,
+      "bytes": 212945,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebdc-3fb1-7517-ad34-eb35a3dae14a"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebdc-0115-7fb1-87e0-78ac6ca484df/subagent-artifacts/af48bea3-2eab-4072-8fb2-6f9684891a88_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 80,
+      "bytes": 227945,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-31-15-121Z_01a0ebdc-3fb1-7517-ad34-eb35a3dae14a"
+    }
+  ],
+  "2026-09-29T06-44-36-150Z_01a0ebe8-78b6-70a1-93a7-4883aa6aaa5c": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebe8-6007-71f3-87f6-8bfbf182a7e9/2026-09-29T06-44-36-150Z_01a0ebe8-78b6-70a1-93a7-4883aa6aaa5c.jsonl",
+      "category": "native_or_continuation",
+      "lines": 86,
+      "bytes": 227695,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec04-92ad-7679-b5c7-945716ca7f10"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebe8-6007-71f3-87f6-8bfbf182a7e9/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T06-44-36-150Z_01a0ebe8-78b6-70a1-93a7-4883aa6aaa5c.jsonl",
+      "category": "native_session_copy",
+      "lines": 23,
+      "bytes": 118664,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebe8-78b6-70a1-93a7-4883aa6aaa5c"
+    }
+  ],
+  "2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb/643e5b65-c4e1-4026-887d-66fa25b7b431/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 45,
+      "bytes": 215732,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebf3-d3a3-728f-8b0d-11dfe5ba8e7f"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb/fedec83a-c6b0-4238-92e4-4e345aa7c42c/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 9,
+      "bytes": 112049,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebf2-8a30-76e3-8cf7-56be72931d35"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb.jsonl",
+      "category": "native_or_continuation",
+      "lines": 100,
+      "bytes": 366671,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb.jsonl",
+      "category": "native_session_copy",
+      "lines": 66,
+      "bytes": 381179,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/subagent-artifacts/1c5d1c7c-7837-48bc-b664-54fcbce1bc5a_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 88,
+      "bytes": 359222,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebf0-a76c-7db3-8e35-c4d23fb014ed/subagent-artifacts/3147b772-1b16-45a3-8e56-370843dcb4fe_vision_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 10,
+      "bytes": 64029,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-53-33-062Z_01a0ebf0-aa06-70bd-a9ef-488bcbbbbcdb"
+    }
+  ],
+  "2026-09-29T06-55-07-355Z_01a0ebf2-1a5b-723d-a39f-49fb8a42d849": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebf2-17bc-7491-8e1b-ca54f0fd9ba9/2026-09-29T06-55-07-355Z_01a0ebf2-1a5b-723d-a39f-49fb8a42d849.jsonl",
+      "category": "native_or_continuation",
+      "lines": 199,
+      "bytes": 568862,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebf3-874b-77d8-96af-0dfa7c289724"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ebf2-17bc-7491-8e1b-ca54f0fd9ba9/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T06-55-07-355Z_01a0ebf2-1a5b-723d-a39f-49fb8a42d849.jsonl",
+      "category": "native_session_copy",
+      "lines": 39,
+      "bytes": 207557,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebf2-1a5b-723d-a39f-49fb8a42d849"
+    }
+  ],
+  "2026-09-29T07-18-50-838Z_01a0ec07-d2d6-7664-a669-49784129ec88": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec07-cfb4-7393-a425-73d2615e1a49/2026-09-29T07-18-50-838Z_01a0ec07-d2d6-7664-a669-49784129ec88.jsonl",
+      "category": "native_or_continuation",
+      "lines": 80,
+      "bytes": 239722,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec09-7e1c-7489-a231-866bbdd4e55a"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec07-cfb4-7393-a425-73d2615e1a49/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T07-18-50-838Z_01a0ec07-d2d6-7664-a669-49784129ec88.jsonl",
+      "category": "native_session_copy",
+      "lines": 59,
+      "bytes": 215553,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec07-d2d6-7664-a669-49784129ec88"
+    }
+  ],
+  "2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb/6c654cbb-d8ce-410c-ba0d-548d0666a228/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 74,
+      "bytes": 380009,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec0d-c7c2-74a8-92b2-2fc5118d6323"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb.jsonl",
+      "category": "native_or_continuation",
+      "lines": 32,
+      "bytes": 107868,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb.jsonl",
+      "category": "native_session_copy",
+      "lines": 106,
+      "bytes": 371666,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec0a-4dae-764b-bddb-f993188c25eb"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec0a-49b8-7662-9741-83d1d4060bd2/subagent-artifacts/9b35d066-562c-4c81-93ec-60573af0ed62_explorer_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 151,
+      "bytes": 694287,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T07-21-33-358Z_01a0ec0a-4dae-764b-bddb-f993188c25eb"
+    }
+  ],
+  "2026-09-29T07-28-06-207Z_01a0ec10-4c3f-7130-bbce-c852c0d29a59": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec10-47cb-7063-b87c-3091a9ce6d5d/2026-09-29T07-28-06-207Z_01a0ec10-4c3f-7130-bbce-c852c0d29a59.jsonl",
+      "category": "native_or_continuation",
+      "lines": 93,
+      "bytes": 361532,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_partial",
+      "session_id": "01a0ec13-a016-76a1-bf7a-9cee6dd3c749"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec10-47cb-7063-b87c-3091a9ce6d5d/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T07-28-06-207Z_01a0ec10-4c3f-7130-bbce-c852c0d29a59.jsonl",
+      "category": "native_session_copy",
+      "lines": 55,
+      "bytes": 285882,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec10-4c3f-7130-bbce-c852c0d29a59"
+    }
+  ],
+  "2026-09-29T07-41-47-438Z_01a0ec1c-d42e-7432-8d04-fc221771e1a1": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec1c-ba65-7d41-ba60-69645c973a4a/2026-09-29T07-41-47-438Z_01a0ec1c-d42e-7432-8d04-fc221771e1a1.jsonl",
+      "category": "native_or_continuation",
+      "lines": 73,
+      "bytes": 290056,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec2c-fdc3-7528-8382-a6e080b43b8f"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec1c-ba65-7d41-ba60-69645c973a4a/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T07-41-47-438Z_01a0ec1c-d42e-7432-8d04-fc221771e1a1.jsonl",
+      "category": "native_session_copy",
+      "lines": 23,
+      "bytes": 158691,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec1c-d42e-7432-8d04-fc221771e1a1"
+    }
+  ],
+  "2026-09-29T08-03-10-263Z_01a0ec30-6737-76f7-b57e-f4263514ce49": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec30-5eaf-76b0-8559-a9c851060216/2026-09-29T08-03-10-263Z_01a0ec30-6737-76f7-b57e-f4263514ce49.jsonl",
+      "category": "native_or_continuation",
+      "lines": 61,
+      "bytes": 174759,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec36-aa58-7115-b902-149e290c267e"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec30-5eaf-76b0-8559-a9c851060216/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T08-03-10-263Z_01a0ec30-6737-76f7-b57e-f4263514ce49.jsonl",
+      "category": "native_session_copy",
+      "lines": 24,
+      "bytes": 121327,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec30-6737-76f7-b57e-f4263514ce49"
+    }
+  ],
+  "2026-09-29T08-36-04-589Z_01a0ec4e-876c-71e7-8850-c4b31bf269b7": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec4e-7b22-7663-8848-d159fbeab339/2026-09-29T08-36-04-589Z_01a0ec4e-876c-71e7-8850-c4b31bf269b7.jsonl",
+      "category": "native_or_continuation",
+      "lines": 53,
+      "bytes": 220563,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec4f-7900-71cf-8c6c-6f97c2e126b6"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec4e-7b22-7663-8848-d159fbeab339/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-10-pi-deepseek-fast-g1--/2026-09-29T08-36-04-589Z_01a0ec4e-876c-71e7-8850-c4b31bf269b7.jsonl",
+      "category": "native_session_copy",
+      "lines": 18,
+      "bytes": 163479,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec4e-876c-71e7-8850-c4b31bf269b7"
+    }
+  ],
+  "2026-09-29T08-44-06-387Z_01a0ec55-e173-732e-8519-99756fcd0ef1": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec55-d94f-7692-b7d3-59af6f75fc94/2026-09-29T08-44-06-387Z_01a0ec55-e173-732e-8519-99756fcd0ef1.jsonl",
+      "category": "native_or_continuation",
+      "lines": 48,
+      "bytes": 144102,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec58-ebdf-76fa-84c4-166b58590200"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec55-d94f-7692-b7d3-59af6f75fc94/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T08-44-06-387Z_01a0ec55-e173-732e-8519-99756fcd0ef1.jsonl",
+      "category": "native_session_copy",
+      "lines": 24,
+      "bytes": 159592,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec55-e173-732e-8519-99756fcd0ef1"
+    }
+  ],
+  "2026-09-29T08-55-25-259Z_01a0ec60-3d4b-71b6-a647-c9c35f3c4663": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec60-3a2c-7152-ad47-4e868032fa2e/2026-09-29T08-55-25-259Z_01a0ec60-3d4b-71b6-a647-c9c35f3c4663.jsonl",
+      "category": "native_or_continuation",
+      "lines": 182,
+      "bytes": 579656,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec63-162a-74e7-844c-e7546f6c9f63"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec60-3a2c-7152-ad47-4e868032fa2e/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T08-55-25-259Z_01a0ec60-3d4b-71b6-a647-c9c35f3c4663.jsonl",
+      "category": "native_session_copy",
+      "lines": 50,
+      "bytes": 263128,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec60-3d4b-71b6-a647-c9c35f3c4663"
+    }
+  ],
+  "2026-09-29T08-56-49-452Z_01a0ec61-862b-76e3-a9dc-8972c95dd8a0": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec61-832f-7312-b888-dda83bdcc9b3/2026-09-29T08-56-49-452Z_01a0ec61-862b-76e3-a9dc-8972c95dd8a0.jsonl",
+      "category": "native_or_continuation",
+      "lines": 70,
+      "bytes": 266630,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec7c-0b4f-764c-96df-d85c832f072a"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec61-832f-7312-b888-dda83bdcc9b3/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-29T08-56-49-452Z_01a0ec61-862b-76e3-a9dc-8972c95dd8a0.jsonl",
+      "category": "native_session_copy",
+      "lines": 80,
+      "bytes": 314473,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec61-862b-76e3-a9dc-8972c95dd8a0"
+    }
+  ],
+  "2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec8e-37ae-7b63-9278-6357cf71c4a9/2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4/07799702-21cb-4f3e-8533-98fb258f1ba2/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 9,
+      "bytes": 303194,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec9e-9ae7-7063-9800-e2f4d730066a"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec8e-37ae-7b63-9278-6357cf71c4a9/2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4/0d1b4558-5eba-4ebc-8f4e-8199f9a47322/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 9,
+      "bytes": 78872,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0eca7-07ed-74fe-b42d-fa10d545d720"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec8e-37ae-7b63-9278-6357cf71c4a9/2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4/77d9812d-c4f9-4ac1-a25c-8b7c421d487a/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 15,
+      "bytes": 236387,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0eca1-f28f-700c-85fa-ef6a2194807a"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec8e-37ae-7b63-9278-6357cf71c4a9/2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4.jsonl",
+      "category": "native_or_continuation",
+      "lines": 246,
+      "bytes": 506064,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec8e-37ae-7b63-9278-6357cf71c4a9/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-11-pi-deepseek-fast-g1--/2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4.jsonl",
+      "category": "native_session_copy",
+      "lines": 299,
+      "bytes": 1230824,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec8e-3bc3-779d-ada2-a6fe776b72c4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec8e-37ae-7b63-9278-6357cf71c4a9/subagent-artifacts/028ec617-6331-49f3-82cc-a185acfaa314_vision_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 10,
+      "bytes": 36743,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec8e-37ae-7b63-9278-6357cf71c4a9/subagent-artifacts/7db5161f-e3ca-4ac3-ab6a-fdaaddb0fba4_vision_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 10,
+      "bytes": 47038,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec8e-37ae-7b63-9278-6357cf71c4a9/subagent-artifacts/88719c66-dcf4-4308-926f-e2904ec4e28c_vision_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 22,
+      "bytes": 115107,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T09-45-39-523Z_01a0ec8e-3bc3-779d-ada2-a6fe776b72c4"
+    }
+  ],
+  "2026-09-29T09-57-42-797Z_01a0ec99-450d-706d-851a-0d99718b5a93": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec99-3f28-7812-adfb-f5b04d9c302b/2026-09-29T09-57-42-797Z_01a0ec99-450d-706d-851a-0d99718b5a93.jsonl",
+      "category": "native_or_continuation",
+      "lines": 77,
+      "bytes": 192096,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec9a-734b-739b-911b-85b9da49694b"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec99-3f28-7812-adfb-f5b04d9c302b/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-10-pi-deepseek-fast-g1--/2026-09-29T09-57-42-797Z_01a0ec99-450d-706d-851a-0d99718b5a93.jsonl",
+      "category": "native_session_copy",
+      "lines": 30,
+      "bytes": 265629,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec99-450d-706d-851a-0d99718b5a93"
+    }
+  ],
+  "2026-09-29T09-58-35-163Z_01a0ec9a-119b-7698-9968-1a4eca98c726": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec9a-0e99-7bd3-a11b-3e163ffe9f5f/2026-09-29T09-58-35-163Z_01a0ec9a-119b-7698-9968-1a4eca98c726.jsonl",
+      "category": "native_or_continuation",
+      "lines": 147,
+      "bytes": 523534,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec9b-b8ed-700e-b187-de6dab552ea5"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec9a-0e99-7bd3-a11b-3e163ffe9f5f/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T09-58-35-163Z_01a0ec9a-119b-7698-9968-1a4eca98c726.jsonl",
+      "category": "native_session_copy",
+      "lines": 56,
+      "bytes": 336671,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec9a-119b-7698-9968-1a4eca98c726"
+    }
+  ],
+  "2026-09-29T10-01-57-398Z_01a0ec9d-2796-763e-b6b8-0ae6342efe87": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec9d-2498-7092-94ec-72330511ea64/2026-09-29T10-01-57-398Z_01a0ec9d-2796-763e-b6b8-0ae6342efe87.jsonl",
+      "category": "native_or_continuation",
+      "lines": 40,
+      "bytes": 207243,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec9e-4737-7741-aa1b-ddecf0e103fb"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ec9d-2498-7092-94ec-72330511ea64/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-10-pi-deepseek-fast-g1--/2026-09-29T10-01-57-398Z_01a0ec9d-2796-763e-b6b8-0ae6342efe87.jsonl",
+      "category": "native_session_copy",
+      "lines": 49,
+      "bytes": 322506,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec9d-2796-763e-b6b8-0ae6342efe87"
+    }
+  ],
+  "2026-09-29T10-09-56-497Z_01a0eca4-7711-7444-a053-e74509f4d42e": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eca4-7425-78b1-a62b-5d71077579b0/2026-09-29T10-09-56-497Z_01a0eca4-7711-7444-a053-e74509f4d42e.jsonl",
+      "category": "native_or_continuation",
+      "lines": 102,
+      "bytes": 364865,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecb0-ef87-7644-a561-52d1ed6920b2"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eca4-7425-78b1-a62b-5d71077579b0/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T10-09-56-497Z_01a0eca4-7711-7444-a053-e74509f4d42e.jsonl",
+      "category": "native_session_copy",
+      "lines": 27,
+      "bytes": 184191,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0eca4-7711-7444-a053-e74509f4d42e"
+    }
+  ],
+  "2026-09-29T10-15-09-859Z_01a0eca9-3f23-70a8-b589-592fc31fa058": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eca9-3c82-7863-ae75-25991b044fc3/2026-09-29T10-15-09-859Z_01a0eca9-3f23-70a8-b589-592fc31fa058.jsonl",
+      "category": "native_or_continuation",
+      "lines": 90,
+      "bytes": 450562,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecae-8b02-70f1-9984-ba110768989c"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eca9-3c82-7863-ae75-25991b044fc3/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-10-pi-deepseek-fast-g1--/2026-09-29T10-15-09-859Z_01a0eca9-3f23-70a8-b589-592fc31fa058.jsonl",
+      "category": "native_session_copy",
+      "lines": 129,
+      "bytes": 465356,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0eca9-3f23-70a8-b589-592fc31fa058"
+    }
+  ],
+  "2026-09-29T10-35-26-785Z_01a0ecbb-d0c0-738f-9115-41f83cd608b7": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecbb-ccb6-77e1-b369-df370111d350/2026-09-29T10-35-26-785Z_01a0ecbb-d0c0-738f-9115-41f83cd608b7/45923385-24e6-49ab-83fc-dfdf0f5c1bcf/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 25,
+      "bytes": 111601,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecbd-940f-77e4-932a-2051b4f9abfd"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecbb-ccb6-77e1-b369-df370111d350/2026-09-29T10-35-26-785Z_01a0ecbb-d0c0-738f-9115-41f83cd608b7/e0982353-778a-4482-867d-1226caa96f08/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 16,
+      "bytes": 879266,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecbd-9364-776f-ab6a-f01da5d890c6"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecbb-ccb6-77e1-b369-df370111d350/2026-09-29T10-35-26-785Z_01a0ecbb-d0c0-738f-9115-41f83cd608b7.jsonl",
+      "category": "native_or_continuation",
+      "lines": 139,
+      "bytes": 473285,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-35-26-785Z_01a0ecbb-d0c0-738f-9115-41f83cd608b7"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecbb-ccb6-77e1-b369-df370111d350/run-history.jsonl",
+      "category": "run_history",
+      "lines": 2,
+      "bytes": 330,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-35-26-785Z_01a0ecbb-d0c0-738f-9115-41f83cd608b7"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecbb-ccb6-77e1-b369-df370111d350/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-29T10-35-26-785Z_01a0ecbb-d0c0-738f-9115-41f83cd608b7.jsonl",
+      "category": "native_session_copy",
+      "lines": 62,
+      "bytes": 374904,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecbb-d0c0-738f-9115-41f83cd608b7"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecbb-ccb6-77e1-b369-df370111d350/subagent-artifacts/45923385-24e6-49ab-83fc-dfdf0f5c1bcf_advisor_0_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 44,
+      "bytes": 175589,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-35-26-785Z_01a0ecbb-d0c0-738f-9115-41f83cd608b7"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecbb-ccb6-77e1-b369-df370111d350/subagent-artifacts/e0982353-778a-4482-867d-1226caa96f08_vision_0_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 25,
+      "bytes": 60848,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-35-26-785Z_01a0ecbb-d0c0-738f-9115-41f83cd608b7"
+    }
+  ],
+  "2026-09-29T10-35-31-459Z_01a0ecbb-e303-7153-a129-c832d9fe1177": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecbb-dfc2-7291-a3a2-7276441b0b13/2026-09-29T10-35-31-459Z_01a0ecbb-e303-7153-a129-c832d9fe1177.jsonl",
+      "category": "native_or_continuation",
+      "lines": 152,
+      "bytes": 538837,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecc0-22d4-73c1-b376-bc9ded94063c"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecbb-dfc2-7291-a3a2-7276441b0b13/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-11-pi-deepseek-fast-g1--/2026-09-29T10-35-31-459Z_01a0ecbb-e303-7153-a129-c832d9fe1177.jsonl",
+      "category": "native_session_copy",
+      "lines": 69,
+      "bytes": 238938,
+      "work_item": "pr:11",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecbb-e303-7153-a129-c832d9fe1177"
+    }
+  ],
+  "2026-09-29T10-41-21-621Z_01a0ecc1-3ad5-71b1-bc11-5cfe5e27c0eb": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc1-37fd-7b31-ac2c-9732c75fa8f2/2026-09-29T10-41-21-621Z_01a0ecc1-3ad5-71b1-bc11-5cfe5e27c0eb.jsonl",
+      "category": "native_or_continuation",
+      "lines": 92,
+      "bytes": 352432,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecc2-7b13-7471-8297-983685a50552"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc1-37fd-7b31-ac2c-9732c75fa8f2/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-10-pi-deepseek-fast-g1--/2026-09-29T10-41-21-621Z_01a0ecc1-3ad5-71b1-bc11-5cfe5e27c0eb.jsonl",
+      "category": "native_session_copy",
+      "lines": 42,
+      "bytes": 347283,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecc1-3ad5-71b1-bc11-5cfe5e27c0eb"
+    }
+  ],
+  "2026-09-29T10-42-15-699Z_01a0ecc2-0e12-7790-808a-383fd2b808be": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc2-0b5b-7823-9147-364d6605021e/2026-09-29T10-42-15-699Z_01a0ecc2-0e12-7790-808a-383fd2b808be/782fd5ec-66ee-41e3-a72c-ed4a99e7277f/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 29,
+      "bytes": 168707,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecca-c4e5-7548-9428-fd12fc071f4e"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc2-0b5b-7823-9147-364d6605021e/2026-09-29T10-42-15-699Z_01a0ecc2-0e12-7790-808a-383fd2b808be.jsonl",
+      "category": "native_or_continuation",
+      "lines": 198,
+      "bytes": 754418,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecc8-6a29-7229-b9d3-8553c5f06ba7"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc2-0b5b-7823-9147-364d6605021e/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-29T10-42-15-699Z_01a0ecc2-0e12-7790-808a-383fd2b808be.jsonl",
+      "category": "native_session_copy",
+      "lines": 39,
+      "bytes": 192781,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecc2-0e12-7790-808a-383fd2b808be"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc2-0b5b-7823-9147-364d6605021e/subagent-artifacts/3e3ffd9f-f46d-44ca-b53d-0707aa981862_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 54,
+      "bytes": 265854,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-42-15-699Z_01a0ecc2-0e12-7790-808a-383fd2b808be"
+    }
+  ],
+  "2026-09-29T10-48-59-924Z_01a0ecc8-3914-7457-977f-620975747071": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc8-366f-7d80-8193-cb9459c19ebc/2026-09-29T10-48-59-924Z_01a0ecc8-3914-7457-977f-620975747071/2f6adc89-4a5f-4a31-aa2d-9d94fb6aa5f3/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 27,
+      "bytes": 58971,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecc9-4050-75ab-8fdb-c2aa981a35a8"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc8-366f-7d80-8193-cb9459c19ebc/2026-09-29T10-48-59-924Z_01a0ecc8-3914-7457-977f-620975747071.jsonl",
+      "category": "native_or_continuation",
+      "lines": 113,
+      "bytes": 366424,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-48-59-924Z_01a0ecc8-3914-7457-977f-620975747071"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc8-366f-7d80-8193-cb9459c19ebc/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T10-48-59-924Z_01a0ecc8-3914-7457-977f-620975747071.jsonl",
+      "category": "native_session_copy",
+      "lines": 35,
+      "bytes": 273047,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecc8-3914-7457-977f-620975747071"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecc8-366f-7d80-8193-cb9459c19ebc/subagent-artifacts/524072e5-dd14-4555-b679-74f4ea407e52_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 48,
+      "bytes": 109471,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-48-59-924Z_01a0ecc8-3914-7457-977f-620975747071"
+    }
+  ],
+  "2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-0119-7532-a2c3-6b0a196170ed/2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa/5517993e-a5b8-4f88-a217-bfc6318788d9/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 14,
+      "bytes": 42664,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecce-95f0-72c3-84c3-b55b452b7238"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-0119-7532-a2c3-6b0a196170ed/2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa/56a9be4b-38fa-4e8e-8a61-60cdebc86d10/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 26,
+      "bytes": 95580,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecd0-f77d-70c4-a88e-44eb191c5278"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-0119-7532-a2c3-6b0a196170ed/2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa/7ab10c1d-986e-4910-913f-3cf95dc5ccde/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 25,
+      "bytes": 81428,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "01a0eccb-15fe-7686-834f-cdb82c5a4caf"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-0119-7532-a2c3-6b0a196170ed/2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa.jsonl",
+      "category": "native_or_continuation",
+      "lines": 172,
+      "bytes": 525835,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-0119-7532-a2c3-6b0a196170ed/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa.jsonl",
+      "category": "native_session_copy",
+      "lines": 43,
+      "bytes": 219206,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecca-047c-7304-bcde-835de7d457aa"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-0119-7532-a2c3-6b0a196170ed/subagent-artifacts/744ec1d7-fe82-4f37-b1f9-9a9ad33da3da_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 21,
+      "bytes": 79205,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-0119-7532-a2c3-6b0a196170ed/subagent-artifacts/94df6b1c-a492-4405-8a90-41533676e1c0_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 47,
+      "bytes": 170587,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-0119-7532-a2c3-6b0a196170ed/subagent-artifacts/9ba8b682-0440-4c52-8d35-e4781a35e855_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 44,
+      "bytes": 145992,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T10-50-57-532Z_01a0ecca-047c-7304-bcde-835de7d457aa"
+    }
+  ],
+  "2026-09-29T10-51-41-775Z_01a0ecca-b14f-707f-9ee6-191742a791d7": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-ae5d-7d92-8204-3144f456c210/2026-09-29T10-51-41-775Z_01a0ecca-b14f-707f-9ee6-191742a791d7.jsonl",
+      "category": "native_or_continuation",
+      "lines": 122,
+      "bytes": 484774,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0eccc-2dcf-735f-a4e4-c0c45715c0b5"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecca-ae5d-7d92-8204-3144f456c210/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-10-pi-deepseek-fast-g1--/2026-09-29T10-51-41-775Z_01a0ecca-b14f-707f-9ee6-191742a791d7.jsonl",
+      "category": "native_session_copy",
+      "lines": 47,
+      "bytes": 343744,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecca-b14f-707f-9ee6-191742a791d7"
+    }
+  ],
+  "2026-09-29T11-01-46-556Z_01a0ecd3-ebbc-77a8-92d6-e518db7ba9c9": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd3-d5dc-72f0-80fb-d8f005dc12a8/2026-09-29T11-01-46-556Z_01a0ecd3-ebbc-77a8-92d6-e518db7ba9c9.jsonl",
+      "category": "native_or_continuation",
+      "lines": 53,
+      "bytes": 189448,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecd4-a9bb-711f-8957-fe38d7bafd9b"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd3-d5dc-72f0-80fb-d8f005dc12a8/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T11-01-46-556Z_01a0ecd3-ebbc-77a8-92d6-e518db7ba9c9.jsonl",
+      "category": "native_session_copy",
+      "lines": 21,
+      "bytes": 241346,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecd3-ebbc-77a8-92d6-e518db7ba9c9"
+    }
+  ],
+  "2026-09-29T11-03-39-243Z_01a0ecd5-a3eb-76ce-92cc-8b43e0989423": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd5-9dc0-7bb0-bfbd-3be34dba4a2e/2026-09-29T11-03-39-243Z_01a0ecd5-a3eb-76ce-92cc-8b43e0989423.jsonl",
+      "category": "native_or_continuation",
+      "lines": 70,
+      "bytes": 256112,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecd8-0639-72a4-9ffd-7ef3dfac113e"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd5-9dc0-7bb0-bfbd-3be34dba4a2e/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T11-03-39-243Z_01a0ecd5-a3eb-76ce-92cc-8b43e0989423.jsonl",
+      "category": "native_session_copy",
+      "lines": 52,
+      "bytes": 344889,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecd5-a3eb-76ce-92cc-8b43e0989423"
+    }
+  ],
+  "2026-09-29T11-03-41-057Z_01a0ecd5-ab01-770f-8af0-5f9f9ab6dff4": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd5-a18e-7421-8501-168f2841e634/2026-09-29T11-03-41-057Z_01a0ecd5-ab01-770f-8af0-5f9f9ab6dff4.jsonl",
+      "category": "native_or_continuation",
+      "lines": 71,
+      "bytes": 404456,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecd6-c1a1-717a-bee9-983fd414427c"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd5-a18e-7421-8501-168f2841e634/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T11-03-41-057Z_01a0ecd5-ab01-770f-8af0-5f9f9ab6dff4.jsonl",
+      "category": "native_session_copy",
+      "lines": 28,
+      "bytes": 336119,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecd5-ab01-770f-8af0-5f9f9ab6dff4"
+    }
+  ],
+  "2026-09-29T11-04-36-758Z_01a0ecd6-8496-7701-a89f-eeb229293121": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd6-7bde-7c80-879e-90ac9854be86/2026-09-29T11-04-36-758Z_01a0ecd6-8496-7701-a89f-eeb229293121/5bb25c62-a593-4fe0-a273-247199d7a061/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 34,
+      "bytes": 175991,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecda-29ab-718c-8020-ec227f590fcb"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd6-7bde-7c80-879e-90ac9854be86/2026-09-29T11-04-36-758Z_01a0ecd6-8496-7701-a89f-eeb229293121.jsonl",
+      "category": "native_or_continuation",
+      "lines": 227,
+      "bytes": 847352,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecd7-b7c5-77c3-a462-38900f7ebadd"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd6-7bde-7c80-879e-90ac9854be86/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-29T11-04-36-758Z_01a0ecd6-8496-7701-a89f-eeb229293121.jsonl",
+      "category": "native_session_copy",
+      "lines": 35,
+      "bytes": 324937,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecd6-8496-7701-a89f-eeb229293121"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecd6-7bde-7c80-879e-90ac9854be86/subagent-artifacts/8edc714c-725d-43a5-bd41-15c23b2c783a_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 63,
+      "bytes": 301372,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T11-04-36-758Z_01a0ecd6-8496-7701-a89f-eeb229293121"
+    }
+  ],
+  "2026-09-29T11-08-40-924Z_01a0ecda-3e5c-7616-9cfc-5d38f38077fa": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecda-3772-78d0-bfd3-48785316ff99/2026-09-29T11-08-40-924Z_01a0ecda-3e5c-7616-9cfc-5d38f38077fa/28af6fc3-e853-4f45-bbc7-adee01b89a49/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 27,
+      "bytes": 98899,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecdc-7221-74d2-a4fd-72bed5d0c244"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecda-3772-78d0-bfd3-48785316ff99/2026-09-29T11-08-40-924Z_01a0ecda-3e5c-7616-9cfc-5d38f38077fa.jsonl",
+      "category": "native_or_continuation",
+      "lines": 57,
+      "bytes": 147710,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T11-08-40-924Z_01a0ecda-3e5c-7616-9cfc-5d38f38077fa"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecda-3772-78d0-bfd3-48785316ff99/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-7-pi-deepseek-fast-g1--/2026-09-29T11-08-40-924Z_01a0ecda-3e5c-7616-9cfc-5d38f38077fa.jsonl",
+      "category": "native_session_copy",
+      "lines": 55,
+      "bytes": 289936,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecda-3e5c-7616-9cfc-5d38f38077fa"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecda-3772-78d0-bfd3-48785316ff99/subagent-artifacts/e18461ab-b661-4459-beb9-437e7d3fe23a_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 50,
+      "bytes": 174498,
+      "work_item": "issue:7",
+      "stage": "E",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T11-08-40-924Z_01a0ecda-3e5c-7616-9cfc-5d38f38077fa"
+    }
+  ],
+  "2026-09-29T11-13-31-226Z_01a0ecde-ac5a-755e-b24d-c2ef35148a15": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecde-9990-7c71-813c-bce9f4162a00/2026-09-29T11-13-31-226Z_01a0ecde-ac5a-755e-b24d-c2ef35148a15.jsonl",
+      "category": "native_or_continuation",
+      "lines": 82,
+      "bytes": 325760,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ece1-e80b-7677-b7cc-ed4d519f1b0f"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecde-9990-7c71-813c-bce9f4162a00/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T11-13-31-226Z_01a0ecde-ac5a-755e-b24d-c2ef35148a15.jsonl",
+      "category": "native_session_copy",
+      "lines": 59,
+      "bytes": 365444,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecde-ac5a-755e-b24d-c2ef35148a15"
+    }
+  ],
+  "2026-09-29T11-14-10-823Z_01a0ecdf-4707-74b6-af4c-d0c30acfa28c": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecdf-3ba7-7de0-8aa9-b1c1c46f1ded/2026-09-29T11-14-10-823Z_01a0ecdf-4707-74b6-af4c-d0c30acfa28c.jsonl",
+      "category": "native_or_continuation",
+      "lines": 139,
+      "bytes": 390142,
+      "work_item": "pr:8",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ece2-030d-73c4-8e6a-0c126642e0b2"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecdf-3ba7-7de0-8aa9-b1c1c46f1ded/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-8-pi-deepseek-fast-g1--/2026-09-29T11-14-10-823Z_01a0ecdf-4707-74b6-af4c-d0c30acfa28c.jsonl",
+      "category": "native_session_copy",
+      "lines": 31,
+      "bytes": 330096,
+      "work_item": "pr:8",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecdf-4707-74b6-af4c-d0c30acfa28c"
+    }
+  ],
+  "2026-09-29T11-29-54-681Z_01a0eced-adf9-73c7-949a-c872204d5f30": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eced-9b29-7f63-9f46-89ed88a5c51f/2026-09-29T11-29-54-681Z_01a0eced-adf9-73c7-949a-c872204d5f30.jsonl",
+      "category": "native_or_continuation",
+      "lines": 70,
+      "bytes": 237081,
+      "work_item": "pr:8",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecef-3bee-7581-b528-ca23a64a7e56"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0eced-9b29-7f63-9f46-89ed88a5c51f/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-8-pi-deepseek-fast-g1--/2026-09-29T11-29-54-681Z_01a0eced-adf9-73c7-949a-c872204d5f30.jsonl",
+      "category": "native_session_copy",
+      "lines": 22,
+      "bytes": 325677,
+      "work_item": "pr:8",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0eced-adf9-73c7-949a-c872204d5f30"
+    }
+  ],
+  "2026-09-29T11-31-51-554Z_01a0ecef-7682-7729-ba09-dba055ba3590": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecef-66e5-7ff3-81ab-996206a3f0de/2026-09-29T11-31-51-554Z_01a0ecef-7682-7729-ba09-dba055ba3590.jsonl",
+      "category": "native_or_continuation",
+      "lines": 165,
+      "bytes": 558054,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecf4-22f3-727c-a9cf-a8f7ed6ea8d4"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecef-66e5-7ff3-81ab-996206a3f0de/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-29T11-31-51-554Z_01a0ecef-7682-7729-ba09-dba055ba3590.jsonl",
+      "category": "native_session_copy",
+      "lines": 111,
+      "bytes": 478632,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecef-7682-7729-ba09-dba055ba3590"
+    }
+  ],
+  "2026-09-29T11-44-29-026Z_01a0ecfb-0562-7793-b3af-0c3a323eeae2": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecfa-fb32-7fd2-be15-4acba974ca0b/2026-09-29T11-44-29-026Z_01a0ecfb-0562-7793-b3af-0c3a323eeae2.jsonl",
+      "category": "native_or_continuation",
+      "lines": 45,
+      "bytes": 206314,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecfe-e38d-7561-a384-3f367601feac"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecfa-fb32-7fd2-be15-4acba974ca0b/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-3-pi-deepseek-fast-g1--/2026-09-29T11-44-29-026Z_01a0ecfb-0562-7793-b3af-0c3a323eeae2.jsonl",
+      "category": "native_session_copy",
+      "lines": 33,
+      "bytes": 343810,
+      "work_item": "issue:3",
+      "stage": "A",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecfb-0562-7793-b3af-0c3a323eeae2"
+    }
+  ],
+  "2026-09-29T11-45-56-610Z_01a0ecfc-5b82-749f-9a4e-26c863617b8f": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecfc-5708-72d3-951c-4a3ce268d6cf/2026-09-29T11-45-56-610Z_01a0ecfc-5b82-749f-9a4e-26c863617b8f.jsonl",
+      "category": "native_or_continuation",
+      "lines": 272,
+      "bytes": 727877,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecfe-e5ba-714a-b9b3-b97163015fb2"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecfc-5708-72d3-951c-4a3ce268d6cf/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-9-pi-deepseek-fast-g1--/2026-09-29T11-45-56-610Z_01a0ecfc-5b82-749f-9a4e-26c863617b8f.jsonl",
+      "category": "native_session_copy",
+      "lines": 82,
+      "bytes": 598141,
+      "work_item": "pr:9",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecfc-5b82-749f-9a4e-26c863617b8f"
+    }
+  ],
+  "2026-09-29T11-46-14-351Z_01a0ecfc-a0cf-7354-9be5-31891e532147": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecfc-9d5a-7253-a156-491a90e4dc6e/2026-09-29T11-46-14-351Z_01a0ecfc-a0cf-7354-9be5-31891e532147.jsonl",
+      "category": "native_or_continuation",
+      "lines": 104,
+      "bytes": 506860,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecfe-3edd-77af-9763-56805e31f578"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ecfc-9d5a-7253-a156-491a90e4dc6e/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-10-pi-deepseek-fast-g1--/2026-09-29T11-46-14-351Z_01a0ecfc-a0cf-7354-9be5-31891e532147.jsonl",
+      "category": "native_session_copy",
+      "lines": 48,
+      "bytes": 529829,
+      "work_item": "pr:10",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecfc-a0cf-7354-9be5-31891e532147"
+    }
+  ],
+  "2026-09-29T11-58-55-992Z_01a0ed08-3ff7-73c6-95dd-b39bf9cc8e7e": [
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ed08-3560-70b3-871a-e744e97429b4/2026-09-29T11-58-55-992Z_01a0ed08-3ff7-73c6-95dd-b39bf9cc8e7e.jsonl",
+      "category": "native_or_continuation",
+      "lines": 88,
+      "bytes": 424876,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ed0a-9601-7198-8604-6e3d04ac0a53"
+    },
+    {
+      "source_file": "work/native-homes/pi-deepseek-fast-01a0ed08-3560-70b3-871a-e744e97429b4/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-5-pi-deepseek-fast-g1--/2026-09-29T11-58-55-992Z_01a0ed08-3ff7-73c6-95dd-b39bf9cc8e7e.jsonl",
+      "category": "native_session_copy",
+      "lines": 38,
+      "bytes": 242447,
+      "work_item": "issue:5",
+      "stage": "C",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ed08-3ff7-73c6-95dd-b39bf9cc8e7e"
+    }
+  ],
+  "2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9/1ec2b594-a21f-41ca-a4a6-77a6a5b67fdb/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 25,
+      "bytes": 247307,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "01a0eb6b-072e-746a-8fc8-3f1feedc15e8"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9/83e37117-3f77-4759-be55-e3bcdce18d87/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 18,
+      "bytes": 949830,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "01a0eb69-f8f0-7685-a8bc-7e41d190b9fa"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9.jsonl",
+      "category": "native_or_continuation",
+      "lines": 66,
+      "bytes": 213143,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9.jsonl",
+      "category": "native_session_copy",
+      "lines": 29,
+      "bytes": 100413,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "01a0eb68-47ff-70ef-b663-1ca63677a7a9"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/subagent-artifacts/276d0d0d-ad4c-44fa-b963-721fd6221121_vision_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 33,
+      "bytes": 73718,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb68-1a42-7c32-9b49-6b5ddde379b0/subagent-artifacts/afffce3b-c20f-445f-89f0-131659d04249_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 42,
+      "bytes": 325042,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T04-24-35-071Z_01a0eb68-47ff-70ef-b663-1ca63677a7a9"
+    }
+  ],
+  "2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5/96038de2-8094-46cf-8069-3dc15fc6c614/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 6,
+      "bytes": 37939,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "01a0eba3-3986-7128-b8ad-1f4cc05c8ce3"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5.jsonl",
+      "category": "native_or_continuation",
+      "lines": 59,
+      "bytes": 109654,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5.jsonl",
+      "category": "native_session_copy",
+      "lines": 35,
+      "bytes": 88728,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "01a0eb9f-269c-7271-b933-eebf5a4021d5"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0eb9f-2324-7ac1-8820-24dbe2c743dc/subagent-artifacts/7fd7af52-e0c6-40f7-9759-26555a7e021c_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 3,
+      "bytes": 48001,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-24-31-004Z_01a0eb9f-269c-7271-b933-eebf5a4021d5"
+    }
+  ],
+  "2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32/19c4d54d-af07-47f6-b903-652dc5afca40/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 10,
+      "bytes": 368170,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebbb-09b2-75cf-add4-4fc818cb9d6b"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32/de4cca3b-d736-4c6b-b2dc-c4b3b5322ade/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 39,
+      "bytes": 164324,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebba-62fb-76aa-8219-f6ef03da9646"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32.jsonl",
+      "category": "native_or_continuation",
+      "lines": 91,
+      "bytes": 192002,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-4-pi-glm-fast-g1--/2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32.jsonl",
+      "category": "native_session_copy",
+      "lines": 42,
+      "bytes": 194968,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebb6-d347-7510-b802-69db079dac32"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/subagent-artifacts/5dc65496-e5c7-4f1e-8c76-208e048f8061_vision_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 13,
+      "bytes": 51285,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb6-cf99-7541-bb12-30e188ee8c09/subagent-artifacts/99522beb-0890-4411-ac6d-8cb821646155_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 76,
+      "bytes": 286889,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-50-22-535Z_01a0ebb6-d347-7510-b802-69db079dac32"
+    }
+  ],
+  "2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440/f09777f4-fff5-429e-8111-3f979689b6ef/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 20,
+      "bytes": 84047,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebc2-3c6d-7335-8b05-61cb91658e58"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440.jsonl",
+      "category": "native_or_continuation",
+      "lines": 82,
+      "bytes": 201470,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440.jsonl",
+      "category": "native_session_copy",
+      "lines": 56,
+      "bytes": 142889,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebb9-210c-72d1-bd2f-f24a02849440"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebb9-1e34-7cd0-bcc4-202d8f18e24a/subagent-artifacts/f0992c6a-a8b1-4fb3-b5a5-c30abf144b42_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 35,
+      "bytes": 149141,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T05-52-53-516Z_01a0ebb9-210c-72d1-bd2f-f24a02849440"
+    }
+  ],
+  "2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614/30d55537-83e6-4b2f-b7e5-e3f58351ab2d/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 18,
+      "bytes": 46683,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "01a0ec06-323e-70b4-a110-5a7674f92319"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614.jsonl",
+      "category": "native_or_continuation",
+      "lines": 94,
+      "bytes": 209997,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614.jsonl",
+      "category": "native_session_copy",
+      "lines": 50,
+      "bytes": 333077,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "01a0ebf5-aa5a-749c-b621-1c160469c614"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ebf5-a7b9-7633-8a6c-820dacd3d7ac/subagent-artifacts/258504a9-1858-4c80-b4b6-02860d1d1129_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 29,
+      "bytes": 82115,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "already_read_full",
+      "session_id": "2026-09-29T06-59-00-826Z_01a0ebf5-aa5a-749c-b621-1c160469c614"
+    }
+  ],
+  "2026-09-29T07-37-31-051Z_01a0ec18-eaab-742f-beef-c670a8c6bc1c": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec18-dd01-7710-8628-056a21a12e7a/2026-09-29T07-37-31-051Z_01a0ec18-eaab-742f-beef-c670a8c6bc1c.jsonl",
+      "category": "native_or_continuation",
+      "lines": 78,
+      "bytes": 289174,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec4c-2ac8-7621-906a-33783d25bb3d"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec18-dd01-7710-8628-056a21a12e7a/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-4-pi-glm-fast-g1--/2026-09-29T07-37-31-051Z_01a0ec18-eaab-742f-beef-c670a8c6bc1c.jsonl",
+      "category": "native_session_copy",
+      "lines": 36,
+      "bytes": 150928,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec18-eaab-742f-beef-c670a8c6bc1c"
+    }
+  ],
+  "2026-09-29T08-54-36-976Z_01a0ec5f-80b0-76b5-a7b6-17e11c32eae3": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec5f-7cc2-7bc0-9d33-2a697c24ef42/2026-09-29T08-54-36-976Z_01a0ec5f-80b0-76b5-a7b6-17e11c32eae3.jsonl",
+      "category": "native_or_continuation",
+      "lines": 100,
+      "bytes": 353815,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec7c-0b7b-7666-b95a-44aa9509b1e8"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec5f-7cc2-7bc0-9d33-2a697c24ef42/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-4-pi-glm-fast-g1--/2026-09-29T08-54-36-976Z_01a0ec5f-80b0-76b5-a7b6-17e11c32eae3.jsonl",
+      "category": "native_session_copy",
+      "lines": 28,
+      "bytes": 131022,
+      "work_item": "issue:4",
+      "stage": "B",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec5f-80b0-76b5-a7b6-17e11c32eae3"
+    }
+  ],
+  "2026-09-29T09-26-06-713Z_01a0ec7c-5679-76bb-8f0c-16ee96829f11": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec7c-532c-7cb3-8b89-f580a8ee0c64/2026-09-29T09-26-06-713Z_01a0ec7c-5679-76bb-8f0c-16ee96829f11/3cdaedc5-d83f-41b9-8bd2-c125f74c3a28/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 27,
+      "bytes": 94656,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec84-bc9f-771d-9b84-d329d71bf1e9"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec7c-532c-7cb3-8b89-f580a8ee0c64/2026-09-29T09-26-06-713Z_01a0ec7c-5679-76bb-8f0c-16ee96829f11.jsonl",
+      "category": "native_or_continuation",
+      "lines": 33,
+      "bytes": 68733,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T09-26-06-713Z_01a0ec7c-5679-76bb-8f0c-16ee96829f11"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec7c-532c-7cb3-8b89-f580a8ee0c64/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-1-pi-glm-fast-g1--/2026-09-29T09-26-06-713Z_01a0ec7c-5679-76bb-8f0c-16ee96829f11.jsonl",
+      "category": "native_session_copy",
+      "lines": 53,
+      "bytes": 340397,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec7c-5679-76bb-8f0c-16ee96829f11"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec7c-532c-7cb3-8b89-f580a8ee0c64/subagent-artifacts/675dd312-878f-49ee-bd39-48ac81912dc8_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 48,
+      "bytes": 121756,
+      "work_item": "issue:1",
+      "stage": "coordination",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T09-26-06-713Z_01a0ec7c-5679-76bb-8f0c-16ee96829f11"
+    }
+  ],
+  "2026-09-29T09-27-19-643Z_01a0ec7d-735b-7378-9f87-bd99f2f922bd": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec7d-7062-7913-82da-2f5f9fa60d71/2026-09-29T09-27-19-643Z_01a0ec7d-735b-7378-9f87-bd99f2f922bd/1a7f57b6-7739-48f2-bf21-bd21535de876/run-0/session.jsonl",
+      "category": "subagent_run_session",
+      "lines": 34,
+      "bytes": 86240,
+      "work_item": "issue:6",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec83-9e2c-76e4-8561-c7ff602d33f3"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec7d-7062-7913-82da-2f5f9fa60d71/2026-09-29T09-27-19-643Z_01a0ec7d-735b-7378-9f87-bd99f2f922bd.jsonl",
+      "category": "native_or_continuation",
+      "lines": 98,
+      "bytes": 151109,
+      "work_item": "issue:6",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T09-27-19-643Z_01a0ec7d-735b-7378-9f87-bd99f2f922bd"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec7d-7062-7913-82da-2f5f9fa60d71/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-6-pi-glm-fast-g1--/2026-09-29T09-27-19-643Z_01a0ec7d-735b-7378-9f87-bd99f2f922bd.jsonl",
+      "category": "native_session_copy",
+      "lines": 53,
+      "bytes": 287378,
+      "work_item": "issue:6",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ec7d-735b-7378-9f87-bd99f2f922bd"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ec7d-7062-7913-82da-2f5f9fa60d71/subagent-artifacts/b06382e6-058c-41d4-b47b-792e9c028955_advisor_transcript.jsonl",
+      "category": "subagent_artifact",
+      "lines": 59,
+      "bytes": 160609,
+      "work_item": "issue:6",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "2026-09-29T09-27-19-643Z_01a0ec7d-735b-7378-9f87-bd99f2f922bd"
+    }
+  ],
+  "2026-09-29T10-34-41-750Z_01a0ecbb-20d6-7167-8eb0-d38865750ac1": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ecbb-18b9-79c3-bb99-723f5c502853/2026-09-29T10-34-41-750Z_01a0ecbb-20d6-7167-8eb0-d38865750ac1.jsonl",
+      "category": "native_or_continuation",
+      "lines": 279,
+      "bytes": 780472,
+      "work_item": "issue:6",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecbe-4126-746c-b1d0-d52cb0d3b9ad"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ecbb-18b9-79c3-bb99-723f5c502853/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-issue-6-pi-glm-fast-g1--/2026-09-29T10-34-41-750Z_01a0ecbb-20d6-7167-8eb0-d38865750ac1.jsonl",
+      "category": "native_session_copy",
+      "lines": 21,
+      "bytes": 101736,
+      "work_item": "issue:6",
+      "stage": "D",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ecbb-20d6-7167-8eb0-d38865750ac1"
+    }
+  ],
+  "2026-09-29T17-29-08-681Z_01a0ee36-9149-7107-8f5a-9184ef7fb294": [
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ee36-8c27-7073-a754-4e5eec50accd/2026-09-29T17-29-08-681Z_01a0ee36-9149-7107-8f5a-9184ef7fb294.jsonl",
+      "category": "native_or_continuation",
+      "lines": 12,
+      "bytes": 27873,
+      "work_item": "pr:14",
+      "stage": "D-stability",
+      "read_status": "needs_new_read",
+      "session_id": "01a0f003-6a59-7655-99bb-35aaa40c61dd"
+    },
+    {
+      "source_file": "work/native-homes/pi-glm-fast-01a0ee36-8c27-7073-a754-4e5eec50accd/sessions/--workspace-template-.factory26-20260929-042409-811f18d4-braid-state-worktrees-pr-14-pi-glm-fast-g1--/2026-09-29T17-29-08-681Z_01a0ee36-9149-7107-8f5a-9184ef7fb294.jsonl",
+      "category": "native_session_copy",
+      "lines": 8,
+      "bytes": 15944,
+      "work_item": "pr:14",
+      "stage": "D-stability",
+      "read_status": "needs_new_read",
+      "session_id": "01a0ee36-9149-7107-8f5a-9184ef7fb294"
+    }
+  ]
+}

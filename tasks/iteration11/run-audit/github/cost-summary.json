@@ -1,0 +1,123 @@
+{
+  "cutoff": "2026-09-29T08:04:30.462358Z",
+  "unique_responses": 3507,
+  "request_starts": 3518,
+  "complete_timing_requests": 3507,
+  "requests_without_message_end": 11,
+  "http_status_counts": {
+    "200": 3517
+  },
+  "model_wall_union_seconds": 10831.806,
+  "model_cumulative_seconds": 32884.97,
+  "by_owner": {
+    "issue:1": {
+      "responses": 533,
+      "input": 3944312,
+      "output": 223568,
+      "cacheRead": 18168960,
+      "cacheWrite": 58877,
+      "reasoning": 92577,
+      "totalTokens": 22395717
+    },
+    "pr:11": {
+      "responses": 667,
+      "input": 734948,
+      "output": 393823,
+      "cacheRead": 115688576,
+      "cacheWrite": 21248,
+      "reasoning": 217704,
+      "totalTokens": 116838595
+    },
+    "pr:14": {
+      "responses": 159,
+      "input": 218497,
+      "output": 90896,
+      "cacheRead": 9626880,
+      "cacheWrite": 0,
+      "reasoning": 56411,
+      "totalTokens": 9936273
+    },
+    "issue:8": {
+      "responses": 121,
+      "input": 1291460,
+      "output": 76729,
+      "cacheRead": 3088192,
+      "cacheWrite": 5888,
+      "reasoning": 42844,
+      "totalTokens": 4462269
+    },
+    "issue:5": {
+      "responses": 271,
+      "input": 1257590,
+      "output": 95933,
+      "cacheRead": 8056576,
+      "cacheWrite": 0,
+      "reasoning": 42647,
+      "totalTokens": 9410099
+    },
+    "issue:6": {
+      "responses": 223,
+      "input": 300693,
+      "output": 193008,
+      "cacheRead": 14364800,
+      "cacheWrite": 55552,
+      "reasoning": 121003,
+      "totalTokens": 14914053
+    },
+    "issue:4": {
+      "responses": 247,
+      "input": 411268,
+      "output": 130685,
+      "cacheRead": 28694592,
+      "cacheWrite": 0,
+      "reasoning": 52652,
+      "totalTokens": 29236545
+    },
+    "issue:3": {
+      "responses": 334,
+      "input": 387839,
+      "output": 243052,
+      "cacheRead": 22625920,
+      "cacheWrite": 44800,
+      "reasoning": 148390,
+      "totalTokens": 23301611
+    },
+    "pr:2": {
+      "responses": 319,
+      "input": 256454,
+      "output": 208541,
+      "cacheRead": 37723776,
+      "cacheWrite": 0,
+      "reasoning": 105225,
+      "totalTokens": 38188771
+    },
+    "pr:12": {
+      "responses": 126,
+      "input": 291183,
+      "output": 48704,
+      "cacheRead": 5545792,
+      "cacheWrite": 0,
+      "reasoning": 18233,
+      "totalTokens": 5885679
+    },
+    "pr:16": {
+      "responses": 190,
+      "input": 276447,
+      "output": 84133,
+      "cacheRead": 23549440,
+      "cacheWrite": 0,
+      "reasoning": 32826,
+      "totalTokens": 23910020
+    },
+    "pr:15": {
+      "responses": 317,
+      "input": 265440,
+      "output": 287066,
+      "cacheRead": 67156864,
+      "cacheWrite": 25600,
+      "reasoning": 162283,
+      "totalTokens": 67734970
+    }
+  },
+  "timing_tail_excluded": "采集窗口后段有一条08:04:31.554 message_end，无首轮native正文，按逻辑截点排除。"
+}

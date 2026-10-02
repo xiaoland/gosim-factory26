@@ -1,0 +1,183 @@
+e case worked under Node 24, so it must have loaded something else... Confusing. Let me check files and their ABI by grepping the binary's NODE_MODULE_VERSION string, or simply load each candidate explicitly under both nodes.
+Let me enumerate candidate .node files.
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L66:C1]
+[toolCall] bash call_00_6w29nYpC6Dkblk7B08yw7016
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1/node_modules/.pnpm/better-sqlite3@12.6.2/node_modules/better-sqlite3 && find . -name \"*.node\" -exec ls -la {} \\; && echo \"=== explicit load tests ===\" && for f in $(find $PWD -name \"*.node\"); do for n in /workspace/submission/agent/runtime/bin/node /usr/local/bin/node; do printf \"%s | %s -> \" \"$(basename $f)\" \"$($n -v)\"; $n -e \"require('$f'); console.log('OK')\" 2>&1 | grep -E \"OK|NODE_MODULE_VERSION\" | head -1; done; done"}
+
+## S31:L67 2026-09-29T06:49:39.778Z message toolResult
+toolResult bash False
+[text]
+-rwxr-xr-x 3 ubuntu ubuntu 2090824 Jan 16  2026 ./build/Release/better_sqlite3.node
+=== explicit load tests ===
+better_sqlite3.node | v24.10.0 -> NODE_MODULE_VERSION 115. This version of Node.js requires
+better_sqlite3.node | v20.19.3 -> OK
+
+## S31:L68 2026-09-29T06:49:44.836Z message assistant
+[thinking]
+So the single .node file is ABI 115 (works under Node 20, fails under Node 24). So how did `node -e "require('better-sqlite3')"` from backend/ succeed under Node 24?! 
+Maybe better-sqlite3 12.x has a JS fallback / lazy loading: requiring the package doesn't load the native binding until `new Database()` is constructed. Indeed! In better-sqlite3, `lib/index.js` may lazily require the addon inside the Database constructor or via a getter. So `require('better-sqlite3')` succeeds but `new Database()` throws. That explains everything: my load test was insufficient.
+And the e2e failure is genuinely the ABI mismatch: file is ABI 115 (built for Node 20), the e2e backend runs under Node 24.
+So the state: my earlier `npm rebuild` (Node 20) left the shared binary at ABI 115. Therefore:
+- `PATH=/usr/local/bin:$PATH pnpm -r test` → Node 20 → OK ✓ (matches my fresh run)
+- e2e run via pnpm wrapper → webServer `node backend/src/index.js` uses ambient `node` (Node 24) → fails.
+Earlier at vxc25q5f, the e2e passed — so at that moment the binary was ABI 137. Which means the sequence in #86 was: e2e run first (ABI 137, passed), then the ABI 137→115 rebuild for Vitest. That's consistent with #86 §3 describing the ABI issue as encountered during the tests.
+Now: how should I run the e2e to give valid evidence? Two options:
+**Option A**: Run the e2e under the platform Node 20.19.3 by setting `PATH=/usr/local/bin:$PATH` so the webServer's `node` is Node 20 and the ABI 115 binary matches. This additionally validates the delivery runtime. `pnpm` still resolves via work/bin (Node 24) for the playwright CLI itself — playwright's own driver runs under the pnpm/node 24 process; that's fine, playwright doesn't need better-sqlite3.
+Hmm, but wait: does `pnpm exec playwright test` spawn the webServer with the modified PATH? The webServer command is run by the Playwright test runner process, inheriting its env. I'd export PATH=/usr/local/bin:$PATH for the whole wrapper → the playwright process gets it → webServer `node` → /usr/local/bin/node (Node 20) ✓.
+But careful: with /usr/local/bin first, `pnpm` is still found later in PATH (work/bin) ✓. And `pnpm --dir frontend build` will still use the Node 24 wrapper. Fine.
+**Option B**: rebuild for Node 24 (pnpm install / npm rebuild with ambient node), run the e2e as before, then rebuild back to 115.
+Option A is better: it verifies the app on the platform's Node version (20.19.3) — precisely the compat claim the task cares about — and keeps the binary consistent with the platform's `npm install` output.
+Risk with Option A: if the e2e passes under Node 20, great. If something in checks/run-e2e.sh (e.g. `node -e` port pick) also resolves fine, ok.
+Let me do Option A now, and record it clearly. Also note: the same PATH trick should be used for the platform-shape verification per instructions ("用 PATH=/usr/local/bin:$PATH 执行上述逐目录安装、构建和启动").
+[DUPLICATES: 14 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L68:C1]
+[text]
+`better-sqlite3` is ABI 115 (Node 20), so the e2e's `webServer` fails only because ambient `node` is v24. Running the check under the platform Node entry (which is also the compat-relevant runtime):
+[toolCall] bash call_00_G1r39DTqXzDBxF3OoJQZ5853
+{"background": true, "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd \"$PWD\" --context candidate=a23af5a --context node=v20.19.3 --context purpose=reply-to-comment-85-merge-hazard -- bash checks/run-e2e.sh > /tmp/f26-pr8-recheck/e2e-wrapper-node20.log 2>&1; echo \"exit=$?\"; tail -30 /tmp/f26-pr8-recheck/e2e-wrapper-node20.log", "timeout": 900}
+
+## S31:L69 2026-09-29T06:49:44.844Z message toolResult
+toolResult bash False
+[text]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L69:C1]
+[details]
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && PATH=/usr/local/bin:$PATH python3 /workspace/template/.factory26/20260929-042409-811f18d4/work/skills/agent-browser/scripts/with-service.py --check-only --cwd \"$PWD\" --context candidate=a23af5a --context node=v20.19.3 --context purpose=reply-to-comment-85-merge-hazard -- bash checks/run-e2e.sh > /tmp/f26-pr8-recheck/e2e-wrapper-node20.log 2>&1; echo \"exit=$?\"; tail -30 /tmp/f26-pr8-recheck/e2e-wrapper-node20.log", "cwd": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1", "exitCode": null, "globalJobId": "pbb_19284_94cd276d:bg002", "instanceId": "pbb_19284_94cd276d", "jobId": "bg002", "outcome": "running", "pbbCursor": 5, "sessionId": "01a0ebeb-2cc0-7224-a23b-d6834bddc7ac", "sessionKey": "2110bea5eafd1a3b302c9fe1", "startedAt": "2026-09-29T06:49:44.836Z", "toolCallId": "call_00_G1r39DTqXzDBxF3OoJQZ5853"}
+
+## S31:L70 2026-09-29T06:49:46.117Z message assistant
+[thinking]
+While this runs, let me prepare the reply content and check the previous passing evidence for vxc25q5f to describe the ABI sequencing accurately in my reply.
+Let me look at the earlier evidence result.json for vxc25q5f to see if it recorded node version.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L70:C1]
+[toolCall] bash call_00_Q6JGH3F1seOLB1ReOKop1974
+{"command": "cat /tmp/f26-lzle9d69/service-check-vxc25q5f/result.json 2>/dev/null; echo \"=== check.log head ===\"; head -5 /tmp/f26-lzle9d69/service-check-vxc25q5f/check.log 2>/dev/null"}
+
+## S31:L71 2026-09-29T06:49:46.138Z message toolResult
+toolResult bash False
+[text]
+=== check.log head ===
+> tsc -p tsconfig.json --noEmit && vite build
+[DUPLICATES: 29 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L71:C1]
+
+## S31:L72 2026-09-29T06:49:50.625Z message assistant
+[thinking]
+vxc25q5f: started_at 1790664344 = ? The failing one started 1790664518. Difference = 174s. The failing run was at 06:48:38 UTC. So vxc25q5f started at 06:45:44 — 3 min earlier, and passed with 25 tests. So at 06:45:44 the binary was ABI 137 (Node 24 e2e worked). Then I ran `pnpm -r test` (Node 20) which failed ABI → rebuild → ABI 115 → tests passed; and typecheck. Then this re-run failed.
+Hmm wait, but #86's e2e passing at 06:45:44 while the Vitest ABI failure/rebuild happened... The rebuild happened at ~06:47-06:48 (after starting the reply). Anyway consistent.
+So: the earlier 25-passed e2e was on a23af5a with ABI 137 (Node 24 backend). The new run under Node 20 will also be a23af5a but with the platform Node. Both are legitimate; the new one is stronger for platform compat.
+Now, one concern: could the ABI-137 (Node 24) e2e pass but Node 20 e2e fail due to app code? Unlikely but the new run will tell. Node 20 is the platform version, so it's the better signal.
+Let me wait for the result. Meanwhile, I could also consider: should I make the e2e robust to this environment trap (e.g., pin `node` in playwright webServer)? That would be a change to checks/run-e2e.sh or playwright.config.ts — files owned by the base PR (#2 in the design). It's not in PR #8's scope, and modifying shared check infrastructure could conflict with other members. Better: report the environment trap in the reply and note the exact command that reproduces a passing run. deepseek-3 hit the same trap in reverse (#81 §2), so documenting it is valuable.
+Let me wait for the run. I'll end the turn if it takes long... but I have work: drafting. Actually the reply needs the number. Let me check the job once more shortly — no, avoid polling. I'll end the turn and respond when the completion arrives.
+Hmm, but I keep ending turns without producing the deliverable. The reply to comment #85 is the deliverable; it needs the e2e number. The completion message will arrive. I'll end the turn concisely.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L72:C1]
+[text]
+Waiting on the Node 20 e2e re-run (`bg002`); I'll post the thread-27 reply to comment #85 with the full evidence once it completes. Meanwhile the picture is now clear:
+- The failed first re-run was **not** a code defect: the worktree's `better-sqlite3` is ABI 115 (built for Node 20.19.3 by the earlier `npm rebuild`), while `checks/run-e2e.sh` starts its `webServer` with the **ambient** `node` (v24, ABI 137). Evidence kept: `/tmp/f26-lzle9d69/service-check-6uoucebd` (`check_exit=1`, `ERR_DLOPEN_FAILED`).
+- The re-run is now executed with `PATH=/usr/local/bin:$PATH`, i.e. under the platform's Node 20.19.3 — the same runtime the delivery uses, which also makes the e2e result more relevant than the earlier ABI-137 pass (`/tmp/f26-lzle9d69/service-check-vxc25q5f`).
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L72:C2]
+
+## S31:L73 2026-09-29T06:49:52.649Z message user
+[text]
+- issue:3 comment 88; read `comment view 88 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L73:C1]
+
+## S31:L74 2026-09-29T06:49:54.096Z message assistant
+[thinking]
+New comment #88 on issue 3. Let me read it and check the e2e background job.
+[toolCall] bash call_00_YNVi3A4H3b33m8Sq36mB6018
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 88 --thread 2>&1 | tail -60"}
+[toolCall] bash call_01_pVi8cRM9iyf44MUBdAqp4189
+{"command": "cat /tmp/f26-pr8-recheck/e2e-wrapper-node20.log 2>/dev/null | tail -30; echo \"=== job ===\"; pbb status bg002 2>&1 | grep -o '\"status\": \"[a-z]*\"' | head -3"}
+
+## S31:L75 2026-09-29T06:49:54.215Z message toolResult
+toolResult bash False
+[text]
+- A 的判据面相对 `559a0bd` **无行为改动**：`parseCsv`（ragged 右补空、尾部空行不产生记录、BOM 剥离、只拒绝未闭合引号）与 `worksheetToCsv`（`max(包围盒, 静态足迹)`、双空才空文件、RFC4180 转义、末条记录后无终结换行）逐行未变；`Grid` 渲染走 `text`、内联编辑与 FormulaBar 仍读 `raw`（D-A8/comment #33）。e2e 的公式导出用例仍带 **「C 合入时必须翻转为计算结果」** 注释。
+## 3. #60 关闭前提
+「`develop` 最终状态必须是 A 调用共享 helper」在候选上成立：本 PR 在新 base `15abbf6` 上**不再含第二份校验实现**；合入后 develop 即为调用共享 helper 的单一实现。合入时建议 `--match-head-commit a23af5a`（我验收的正是该 head）。
+## 4. 仍需保持可见（不阻塞合入）
+- **C 未合入** → 公式单元格导出原文是过渡行为，C 合入后 `frontend/src/lib/cellDisplay.ts` 换实现，网格与导出同时取计算结果；整合 PR 带翻转后的公式导出门禁。**指派 C（#5）时需把 A-3 接缝（含错误值走同一显示路径、FormulaBar/内联编辑不得改读显示值）写入其交接材料。**
+- A-5 宽松解析不变；足迹静态（结构操作删行列后导出范围可能大于当前结构，#51 已记录）；`#82 §2` 五条边界不要求实现改动。
+- 导入不设应用层尺寸上限（#54 裁定），实际边界 = `express.json` 10mb。
+**请 @glm-1 将 PR #8（head `a23af5a`，base `develop`）合入 `develop`**；合入后我在本 Issue 更新入口并把 A 的成果与接缝义务在父 Issue/后续子 Issue 交接。
+[DUPLICATES: 52 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L75:C1]
+
+## S31:L76 2026-09-29T06:49:54.215Z message toolResult
+toolResult bash False
+[text]
+Evidence: /tmp/f26-lzle9d69/service-check-7sf6bxoq
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L76:C1]
+
+## S31:L77 2026-09-29T06:49:59.208Z message assistant
+[thinking]
+Comment #88 is deepseek-3's verification PASS for a23af5a: targeted review passed, they request @glm-1 to merge PR #8 into develop, recommending `--match-head-commit a23af5a`. They also note the "C 接缝义务" for C (#5) handoff.
+Let me read the beginning of #88 to get the full content (I only saw the tail).
+Also the e2e re-run (bg002) is still running — it will produce Evidence /tmp/f26-lzle9d69/service-check-7sf6bxoq.
+So the situation: my PR has passed independent verification; the root owner (glm-1) has been asked to merge. My remaining action: confirm the merge-request state; verify whether the merge already happened. Also, the ABI finding from my re-run is relevant evidence to report (it's an environment trap; deepseek-3 hit the reverse).
+Should I post a comment? Per guidance: "收到评论不必回执；需要回答问题、纠正事实、交接成果或采取行动时才回复". Comment #88 is a verification result + merge request to glm-1. A reply from me isn't strictly needed... BUT:
+1. My re-run of the e2e first failed (ABI trap) and then passed under Node 20. If I report nothing, deepseek-3's evidence claim ("e2e 15/25 passed") stands; but the fact that a re-run failed in an environment-specific way is a notable fact for the merge gate. Reporting the environment trap is useful for future members (packet already records it in the reverse direction). Since #88 recommends merging with `--match-head-commit a23af5a`, and my independent re-run on that exact head just failed the first attempt due to the native ABI (not code), documenting this is genuinely valuable: it prevents someone concluding "e2e fails on a23af5a".
+2. Also, if the merge to develop happens with `--match-head-commit a23af5a`, fine.
+So plan:
+- Wait for bg002 to complete; if it passes under Node 20, post one concise reply in thread 27 (reply-to 88) recording: PASS confirmed independently on a23af5a under the platform Node 20.19.3; the first re-run failure was the ABI trap (evidence path), with the exact reproduction/fix; nothing changed in the head (still a23af5a), so their `--match-head-commit` recommendation holds.
+- Then check whether PR #8 got merged; if merged, nothing else for me (Issue #3 owner handles closure). Actually if merged into develop, PR #8 is done.
+Also: does the harness expect me to do anything about the merge? I'm the PR assignee; the merge is requested from glm-1 (root owner). I shouldn't merge myself. But `braid pr merge` exists... The design says: root owner merges into develop (子任务 PR 使用 --base develop, 由 Issue 负责人验收后交根负责人合入). deepseek-3 has asked glm-1. So I wait.
+Let me read the full comment #88 first, then wait for bg002.
+Actually, the notification says "请处理 PR #8" with issue comment 88. Maybe the expectation is that I acknowledge/act on the verification. Since #88 concluded PASS and requested merge from glm-1, my action is: ensure everything is in place for merge (head pushed, PR body accurate, ready state) and record my final evidence. The PR lifecycle is already "ready".
+One question: does the PR need `braid pr ready 8`? It already shows Lifecycle: ready.
+Let me read #88 fully.
+[DUPLICATES: 12 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L77:C1]
+[toolCall] bash call_00_7jmVAkb9wx1FuKoK5SvM2912
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 88 --thread 2>&1 | head -60"}
+
+## S31:L78 2026-09-29T06:49:59.230Z message toolResult
+toolResult bash False
+[text]
+- **A-7**：纯粹位于末行/末列之外的空字段（如 `a,b\nc,d,` 的尾部逗号）不在"已用范围"内，导出不保留；若根负责人要求导入→导出字节级 round trip，代价是记录"导入原始尺寸下限"（导出范围取包围盒与下限较大者），可增量实现。
+[DUPLICATES: 59 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L78:C1]
+
+## S31:L79 2026-09-29T06:50:00.856Z message assistant
+[thinking]
+The `comment view 88 --thread` prints the whole thread; I need the specific comment 88 text. Let me use a different approach — the earlier tail showed the end of #88. Let me get it precisely, e.g. `braid issue view 3 --comments` and grep, or scroll. Let me try `braid comment view 88 --thread | grep -n "comment #88" -A 40`.
+[toolCall] bash call_00_MvHBLigqAnNrr7CvBQAY5152
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 88 --thread 2>&1 | sed -n '/^comment #88/,$p' | head -60; echo \"=== status bg002 ===\"; pbb status bg002 2>&1 | grep -o '\"status\": \"[a-z]*\"' | head -2"}
+
+## S31:L80 2026-09-29T06:50:01.144Z message toolResult
+toolResult bash False
+[text]
+comment #88 [visible]
+reply-to: 86
+【验收通过：候选 `a23af5a`（reply #86）——请 @glm-1 合入 develop】@deepseek-5 @glm-1
+我按 comment #27 + #33 + #36 + v1.3（#81/#82）在自己的 worktree 独立执行，未复用 PR 侧证据。结论：**该候选满足子 Issue A 的判据与 #60 的关闭前提，可交根侧合入 `develop`**。
+## 1. 绑定与独立执行结果
+绑定：`/tmp/f26-issue3-verify`（detached `a23af5a`，`dirty=false`）；Node `/usr/local/bin/node v20.19.3`（ABI 115）；依赖复用切换前候选的 `node_modules`（本增量不触碰 `package.json`/`pnpm-lock.yaml`，已用 `git diff --numstat` 核实）。
+| 检查 | 结果 | 证据 |
+| `PATH=/usr/local/bin:$PATH pnpm -r test` | **exit 0**：backend **96 passed**（csv 20 + app 31 + structure 45）、frontend **49 passed**（csvExport 15、WorkbookLifecycle 12、Grid 11、format 8、cellDisplay 3） | `/tmp/f26-issue3-verify2-evidence/pnpm-test.log` |
+| `PATH=/usr/local/bin:$PATH pnpm -r typecheck` | **exit 0**（backend/frontend Done） | 同上目录 `pnpm-typecheck.log` |
+| `with-service.py --check-only … -- bash checks/run-e2e.sh` | **exit 0，25 passed**（smoke 3 + workbook-lifecycle 12 + worksheets-structure 10），cleanup passed | `/tmp/f26-lzle9d69/service-check-f9jl234d`（`result.json`：`git_head=a23af5a`、`dirty=false`、`check_exit=0`、`status=passed`） |
+**首轮失败保留（环境问题，非候选缺陷）**：`/tmp/f26-lzle9d69/service-check-jawiqbcw`（`check_exit=1`）——默认 PATH 的 Node 24 启动 Playwright webServer，`better-sqlite3` 为 ABI 115 构建，报 `NODE_MODULE_VERSION 115 vs 137`；按同一现象的正确做法（`PATH=/usr/local/bin:$PATH`）复跑即 25 passed。与 PR 侧 #86 §3 及我 #81 §2 的记录一致。顺带记录：@deepseek-5 就 #85 在 `pr-8` worktree 的复跑（`/tmp/f26-lzle9d69/service-check-6uoucebd`）撞到同一陷阱，同样可按该做法复现通过——不影响本结论。
+## 2. 针对性复核（#81 §3 交办项的实证，不只比对文本）
+- **单点切换到位**：`git diff origin/develop a23af5a -- backend/src/store.js` ＝ **+95 / −0**（develop 的 helper 实现未被删改）；候选内 `assertWorksheetStateValid` 仅 **1 处定义**（`store.js:865`）+ **1 处调用**（`importWorksheetState`），本地私有副本已删除。我在 #85 预告的「rebase 自动合并会把私有校验块一起留着」**没有发生**。
+- 保留的 `minRows`/`minCols` 写入块只做持久化（`payload.minRows ?? structure.min_rows ?? 0`，只 `SELECT min_rows, min_cols`），`undefined`/`null` = 不改动、显式 0 可清除的语义未变；`min ≤ 结构` 归共享 helper（`app.test.js` 的精确文案与整事务回滚用例沿用通过）。
+- 冲突解决正确：`routes.js`＝导入并集（新增 `POST /api/workbooks/import`，`INVALID_CSV` 精确文案与单事务）；`WorkbookEditor.tsx`＝保留 B 的 `applySnapshot`/`runWorkbookAction` + A 的 `displayValue` memo 与 toolbar 单点挂载；`lib/errors.ts`＝同名同义取 B 注释；`shared/types.d.ts` 增 `minRows`/`minCols`/`INVALID_CSV`/`ImportWorkbookRequest`。
+- **C 未合入** → 公式单元���导出原文是过渡行为，C 合入后 `frontend/src/lib/cellDisplay.ts` 换实现，网格与导出同时取计算结果；整合 PR 带翻转后的公式导出门禁。**指派 C（#5）时需把 A-3 接缝（含错误值走同一显示路径、FormulaBar/内联编辑不得改读显示值）写入其交接材料。**
+=== status bg002 ===
+[DUPLICATES: 45 exact source lines omitted; precise per-line source map in duplicate-lines.json at S31:L80:C1]
+
+## S31:L81 2026-09-29T06:50:12.266Z message assistant
+[thinking]
+Excellent. deepseek-3's #88:
+- Verification PASSED on a23af5a (their independent run: tests 96/49, typecheck, e2e 25 passed with PATH=/usr/local/bin).
+- They also observed MY re-run failure (check-6uoucebd) and correctly attributed it to the same ABI trap.
+- They recommend `--match-head-commit a23af5a`.
+- They asked glm-1 to merge.
+So no reply from me is strictly necessary — they already resolved the ABI question and attributed it correctly. But my bg002 run under Node 20 is still running and will confirm.
+What's left for me as PR owner?
+1. Wait for the e2e re-run result (bg002) — it passes or fails; either way it's information. If it passes, the ABI matter is fully closed with my own evidence; no need to post another comment (deepseek-3 already documented it and asked for merge). If it fails, that's new information and I'd need to investigate urgently.
+2. Once merged by glm-1, the PR is complete.
+Given "收到评论不必回执" — comment #88 needs no reply from me; it's a verification result addressed to glm-1 with a merge request. deepseek-3 already covered the ABI trap from my re-run. Posting a duplicate "I confirm + ABI note" would be a redundant progress summary, which the guidance discourages ("没有新事实或新决定时，无需发布重复进度总结").
+However, one thing IS my obligation: my reply to comment #85 was promised ("I'll post the thread-27 reply to comment #85 with the full evidence once it returns"). But #88 already covers it: deepseek-3 cited my 6uoucebd run and explained it. So a #85 reply is now redundant... unless my bg002 result adds value.
+Let me think about whether there's any actionable item for me:
+- The ABI trap: worth recording durably somewhere reusable. The packet records the reverse direction (pin down: "pnpm 包装器内部 Node 24 → ABI 137; 用 npm rebuild 修"). The new fact: after rebuilding for Node 20 (ABI 115), the e2e must be run with PATH=/usr/local/bin:$PATH, otherwise the webServer (ambient Node 24) fails. That's a genuinely useful, reusable operating note — and it belongs in a place others read: the packet (my PR artifact) or README checks section. But README changes are scoped by comment #36 (narrow). The packet's "预演/排障结论" is the right place, and it's PR-owned.
+Cost/benefit of pushing a packet-only commit: it changes PR head → invalidates `--match-head-commit a23af5a` recommendation, forcing glm-1 to re-verify or drop the match. That's harmful now that verification passed. So: do NOT push now. If the merge lands, then a packet note can be irrelevant. Better: record the operating note in a comment (thread 27 reply to #85/#88), which doesn't change the head. But is a comment needed? The guidance says avoid redundant progress posts, but an operating/environment note that prevents a future member from misdiagnosing an e2e failure is real content.
+Given deepseek-3 already wrote it in #88 ("按同一现象的正确做法（PATH=/usr/local/bin:$PATH）复跑即 25 passed"), the knowledge is captured in the Issue. So a further comment from me would duplicate. I'll skip it, unless my bg002 run produces something divergent (e.g., failure under Node 20 → new, serious fact).
+So my action: wait for bg002. If pass → no comment needed; the merge request stands. If fail → investigate and report.
+Hmm, but there's a subtlety: if bg002 passes, should I confirm to the merge gate? glm-1 will merge with `--match-head-commit a23af5a`. My head is a23af5a (unchanged). Nothing needed.
+Also: should I do anything else to help the merge? Check that the PR is "ready" (it is), that CI/label states are fine. Maybe I should ensure the PR body mentions the ABI operating note? PR body edits don't change the head — safe and useful. But again, #88 covers it in the Issue.
+Let me consider ONE more potentially valuable thing: verifying the **platform delivery path** (npm install/build/start per directory under Node 20) for this branch, since that's the ultimate acceptance the platform runs. The task instructions emphasize verifying platform compat with /usr/local/bin/node+npm. Has anyone verified `frontend/ npm install && npm run build` and `backend/ npm install && HOST=0.0.0.0 PORT=3000 npm run start` on this branch? That's the integration PR's job (develop → main), and there's likely a separate base PR/整合 PR f

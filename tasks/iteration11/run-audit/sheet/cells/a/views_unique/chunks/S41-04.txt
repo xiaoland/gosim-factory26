@@ -1,0 +1,198 @@
+ded. C's `frontend/src/lib/formula.ts` might import from `shared/a1.js`. That's C's business; A's `parseCoordinate` (returns null for malformed) is used for raw formula handling? Actually A's `parseCoordinate` is used where? Probably in the Grid/WorkbookEditor for reference display. Not conflicting.
+So: no action for Issue #3. I'll conclude this round with a report, no comment posted (avoid noise). But is it acceptable to skip posting? The guidance says: "没有新事实或新决定时，无需发布重复进度总结" — yes, skip.
+Let me just double-check the Issue #3 view for anything new (the harness told me to view it) — the description and comments haven't changed since my last read; let me confirm no new comments on Issue #3.
+Actually earlier I looked at Issue #3's tail via `issue view 1` (which lists sub-issue). Let me quickly check Issue #3 comments for anything new addressing me.
+Let me run `braid issue view 3 --comments | grep '^comment #'` to see comment list.
+[DUPLICATES: 8 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L63:C1]
+[toolCall] bash call_00_7vCj6k8UjUi8TmaMNmeH6792
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid issue view 3 --comments 2>&1 | grep -E \"^comment #|^state:|^reason:\" | head -30"}
+
+## S41:L64 2026-09-29T07:17:17.679Z message toolResult
+toolResult bash False
+[text]
+comment #99 [visible]
+[DUPLICATES: 20 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L64:C1]
+
+## S41:L65 2026-09-29T07:17:21.294Z message assistant
+[thinking]
+No new comments on Issue #3 itself. Issue #3 unchanged.
+Conclusion: comment #111 (B's confirmation) requires no A-side action. One verified detail worth noting in my report: B's §2 constraint about `$` stripping in `ranges.js` re-export does not reach A (A's files don't reference ranges; only B's `store.js` shift path and `structure.test.js` do) — so A's delivered behavior is untouched.
+No comment posted (avoid noise; my #110 already stated A's position, and B's message asked @glm-1/@deepseek-8/@glm-4, not A).
+I'll report this. Also should I consider whether thread 1 should stay open — yes, it's the living contract thread.
+Done.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L65:C1]
+[text]
+Processed — no action required for Issue #3 this round.
+**Update read**: `issue:1 comment #111` (thread 1, reply-to #109) — B's @deepseek-6 compatibility confirmation for C-1, paralleling my #110: B asserts zero change to its merged endpoints, lists four must-preserve properties of the `ranges.js` → `shared/a1.js` re-export, and adds a transaction-seam constraint for C.
+**A-impact check (verified on `origin/develop` @ `e63efc6`, not assumed)**:
+- `ranges.js` consumers are only B's `store.js` shift path (`shiftRangeOnDelete`/`shiftRangeOnInsert`) and B's `structure.test.js`; A's delivered files (`backend/src/csv.js`, `frontend/src/lib/csvExport.ts`, `cellDisplay.ts`, `coordinates.ts`) reference `ranges`/A1-range helpers nowhere. So the `$`-stripping and "unparseable ⇒ unchanged" constraints in §2 cannot reach A's behavior.
+- B's §2 note that `columnLabel` lives in A's `frontend/src/lib/coordinates.ts` independently and needs no follow-up for `shared/a1.js` is accurate — confirmed.
+- Nothing in #111 touches A's footprint semantics (`min_rows`/`min_cols`), the A-3 seam, or the `PRE-C TRANSITION` flip anchor; #111 also wasn't addressed to A (it @-mentions @glm-1/@deepseek-8/@glm-4).
+**Action**: none posted. My `#110` already recorded A's position; B's message asks nothing of A and there is no fact to correct, so a further confirmation would be noise. Thread 1 remains open (living contract thread).
+**State unchanged**: Issue #3 `CLOSED` (reason intact), PR #8 `MERGED` @ `e63efc6`, no new Issue #3 comments, transferred obligations (`A-3` seam → C #5; formula-export gate + `PRE-C TRANSITION` flip → integration PR) still traceable.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L65:C2]
+
+## S41:L66 2026-09-29T07:17:51.723Z message user
+[text]
+- issue:1 comment 114; read `comment view 114 --thread`
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L66:C1]
+
+## S41:L67 2026-09-29T07:17:51.723Z custom_message 
+[customType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L67:customType]
+[content]
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L67:content]
+[display]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L67:display]
+
+## S41:L68 2026-09-29T07:17:53.147Z message assistant
+[thinking]
+Read comment 114.
+[toolCall] bash call_00_zXmLsQEXielem7BUZCD44799
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 114 --json 2>&1 | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    print('id', c['database_id'], 'author', c['author']['login'], 'reply_to', c.get('reply_to'), 'thread', c.get('thread_root'), 'resolved', c.get('resolved'))\n    print('---')\n    print(c.get('body'))\n\""}
+
+## S41:L69 2026-09-29T07:17:53.198Z message toolResult
+toolResult bash False
+[text]
+id 114 author deepseek-2 reply_to 109 thread 1 resolved False
+【基础层（#2）对 C-1 的交付环境核实：`shared/formula.js` 运行时模块在平台逐目录构建下的两条可行形态】@glm-1 @deepseek-7 @deepseek-8
+C-1 的接口语义与归属我侧无异议（`shared/a1.js` 再导出归 PR #10、`ranges.js` 的 `$` 剥除细节见 #111 §2）。**但 C-1 首次把 `shared/` 从"纯类型"变为"运行时模块"**，这正好撞上平台"逐目录 npm install/build/start"的一条硬约束；我在当前工作区用真实构建实测了它，结论可直接用于 PR #10 实施（不改 develop、不改基础层代码）。
+## 1. 事实：前端构建会先跑严格 tsc，`shared/` 目前只在类型层被消费
+- `frontend/package.json` 的 `build` = `tsc -p tsconfig.json --noEmit && vite build`（平台路径执行的就是它）。
+- `frontend/tsconfig.json`：`strict: true`、**`allowJs` 未设置**、`include` 已含 `"../shared"`（PR #2 交付，正是为 `shared/types.d.ts` 准备的）；`verbatimModuleSyntax`/`isolatedModules` 开启。
+- 基线里前端对 `shared/` 的 13 处引用**全是 `import type`**（如 `cellDisplay.ts`、`csvExport.ts`），tsc 解析类型即可，Vite 从不打包它。C 的 `evaluate`/`rewriteRefs*` 是值导入，vite 这一步是新的。
+- 后端 `tsconfig.json`：`module/moduleResolution: NodeNext`、`allowJs: true`、`checkJs: true`、`include: ["src/**/*.js"]`；`npm start` 是 `node src/index.js`（原生 ESM）。
+## 2. 实测（Node v20.19.3 `/usr/local/bin`，真实探针模块 `shared/probe-engine.js` + 一个前端/后端引用点，探测后已全部删除，工作树干净）
+| # | 形态 | 结果 |
+| A | 基线前端 `npm run build`（无探针） | ✅ exit 0（52 modules，2.84s） |
+| B | 前端 `import ... from '../../../shared/probe-engine.js'`，`allowJs` 未设置 | ❌ **tsc exit 2 / TS7016**：`Could not find a declaration file for module ... implicitly has an 'any' type` —— 平台前端构建会直接红 |
+| C | 改为**无扩展名**导入 `'../../../shared/probe-engine'` + 同目录 `shared/probe-engine.d.ts` | ✅ tsc exit 0 |
+| D | 在 C 的基础上跑完整 `npm run build` | ✅ exit 0；**Vite 把 shared 运行时打进了 `dist/assets/index-*.js`**（marker 字符串在产物中出现 1 次），即运行时打包路径成立 |
+| E | 备选形态：前端 tsconfig 加 `"allowJs": true` + 显式 `.js` 导入 | ✅ tsc exit 0 |
+| F | 后端 `npm run typecheck`（NodeNext，显式 `'../../shared/probe-engine.js'`） | ✅ exit 0 —— 显式 `.js` 说明符能解析到同目录 `.d.ts` |
+| G | `node -e "import('./shared/probe-engine.js')"`（平台 Node 运行时） | ✅ 正常导出 |
+| H | `vite dev`（portless 开发路径）：`shared/` 模块经 `/@fs/<abs>/shared/...` 提供，200 + 内容正确 | ✅ 开发路径无需 `server.fs.allow` 改动 |
+证据汇总：`/tmp/pr2-c1-shared-runtime-probe.log`（各步原始输出；探针文件已删除）。
+## 3. 建议（择一，两者我都实测通过）
+- **首选 (C+D)：`shared/formula.js` 旁放 `shared/formula.d.ts`，前端用无扩展名说明符 `'../../../shared/formula'`。** 零配置改动，不动任何基础层文件；`include: ["../shared"]` 已把该 `.d.ts` 纳入前端 program。代价：类型权威在 `.d.ts`，`.js` 主体不会被 tsc 检查（需靠单测保证与 `.d.ts` 同步）。
+- **备选 (E)：`frontend/tsconfig.json` 加 `"allowJs": true`，前端显式 `.js` 导入。** 类型从 JSDoc 推断、无重复声明；且后端 `checkJs: true` 会真正检查 `shared/formula.js` 主体。代价：这是一行**基础层脚手架文件**的改动，需写在 PR #10 的 diff 里（PR #2 已合入冻结，我不重开它，也不在 develop 上抢先改）。
+两条都请**不要**用"显式 `.js` 导入 + 无 `.d.ts` + `allowJs` 未设置"的形态（即 B，平台前端构建直接失败）。
+## 4. 附：与 B/A 确认的对账
+A（#110）与 B（#111）已确认 C-1 对其交付面零改动，我侧核对一致：`ranges.js` 由 `store.js`/`structure.test.js` 两个 importer 使用，`shared/a1.js` 的引入不触碰前端（前端 `columnLabel` 是 A 的独立实现）。因此 C-1 的**唯一基础层相关新增项就是上面这条 `shared/` 运行时模块的构建/类型形态**，其余无基础层动作。
+## 5. 本 PR（#2）状态
+已合入（`698afd2`，应用代码 `0a08fdd`），head 保持冻结 `c344b3b`，树与合入树逐字节一致，无追加提交。C-1 不产生基础层改动；若 @glm-1 裁定采用备选形态 (E)，由 PR #10 承担那一行配置改动。若后续出现需要基础层出面的契约点，请在本 thread 指定归属并 @ 我。
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L69:C1]
+
+## S41:L70 2026-09-29T07:18:01.545Z message assistant
+[thinking]
+Comment #114 is from @deepseek-2 (base layer, PR #2 owner): verification confirmations about `shared/formula.js` becoming a runtime module, two viable forms, and confirms A/B zero impact.
+Relevance to Issue #3 (A): The comment explicitly notes that the frontend's 13 references to `shared/` are currently all `import type` (e.g., `cellDisplay.ts`, `csvExport.ts`) — those are A's files. And the recommended form (C+D: `shared/formula.d.ts` + extensionless import) or (E: `allowJs: true` in frontend tsconfig) affects how C imports the runtime module.
+Potential A-side impact to consider: Option E would change `frontend/tsconfig.json` — a base scaffold file that touches A's files' compilation (A's `cellDisplay.ts`/`csvExport.ts` type imports would then allow JS). But does it break anything A delivered? `allowJs: true` in frontend tsconfig: it would then include `../shared` JS files in the frontend program and check them... Actually include already has `../shared`; with allowJs true, tsc would type-check `shared/*.js` under frontend's stricter config. That could surface errors in `shared/` JS (e.g., JSDoc issues), but that's C's concern for its new file. Could it affect A's files? A's files are TS; allowJs just adds JS files to the program. Risk is low but there's one real risk: `allowJs: true` + `include: ["../shared"]` means the frontend tsc will compile `shared/` JS; if any shared JS has type errors under frontend's tsconfig, build fails. Currently `shared/` has only `types.d.ts`, so no impact today. After C adds `shared/formula.js`, frontend build would check it — with `checkJs` not set for frontend, JS is not checked for errors... Actually `allowJs: true` without `checkJs` means JS files are included but not error-checked (only inferred). So fine.
+Does comment #114 ask anything of A? It asks @glm-1 to rule, and mentions @deepseek-7/@deepseek-8. It confirms "A（#110）与 B（#111）已确认 C-1 对其交付面零改动，我侧核对一致". So no action for A.
+Is there anything I should verify as A owner? Option E involves `frontend/tsconfig.json`, which was delivered by base PR #2 — not A. A's `frontend/package.json` build script `tsc --noEmit && vite build` — A didn't author that.
+Wait — one thing worth checking: is there any risk that the recommended form (C+D) breaks A's delivered files, e.g., `cellDisplay.ts` importing `shared/types`? No: type-only imports unchanged.
+Hmm, but there's a subtle A-relevant point: comment #114 §1 says "基线里前端对 `shared/` 的 13 处引用全是 `import type`（如 `cellDisplay.ts`、`csvExport.ts`）". A's `csvExport.ts` imports `worksheetDisplayValues` from `./cellDisplay` and `WorksheetSnapshot` type from shared. Fine.
+Another consideration: C's seam replacement will import the runtime formula engine into `frontend/src/lib/cellDisplay.ts` implicitly (via `frontend/src/lib/formula.ts` typed export). So C's import form affects A's seam file indirectly — but C owns that.
+So: no A action. Should I reply? No — this comment isn't addressed to A and confirms A zero-impact. My #110 stands. No new decision needed from A.
+But wait: is there a decision here that could affect the integration PR gate / A's acceptance? Option E changes a scaffold config file that A's acceptance ran under. If E is chosen, the frontend build config changes — and A's verified evidence (#88) was under the old config. But the integration PR will re-run everything on the final candidate, so that's covered. Also #114 notes if E is chosen, PR #10 carries that one-line change; it would be a change to a base-layer file post-A-acceptance. This is worth noting for whoever runs the integration PR — but it's already stated by @deepseek-2 and the integration PR gate covers full-range tests on the final candidate.
+Hmm, but as A's owner, one could argue I should confirm that either form keeps A's delivered files compiling — I already verified facts (the 13 type-only imports, A's files don't import runtime shared). Actually let me verify that claim myself: are all frontend `shared/` references type-only, including anything A delivered? Let me grep frontend for `shared/` imports and confirm no value imports. If A delivered something importing a value from shared, then option B (broken) or E would matter. Let me check quickly — this is a cheap, decision-relevant verification of a claim in #114 that concerns A's files.
+Actually @deepseek-2 already tested. But independent verification is cheap and consistent with my practice. Let me check:
+- grep frontend/src for `from '.*shared` and see whether all are `import type`.
+If all type-only, then no A action; the only A-relevant consequence is that whichever form C chooses, A's files keep compiling (type-only imports are unaffected by allowJs/extensionless changes).
+Let me verify. Also verify #114's claim "A's files don't import runtime shared" — already did partially.
+Then decide whether to post. I lean toward not posting — no question to A, no correction needed, no decision changing A. The guidance discourages noise. However, is there a risk of a "silent A"? The thread participants include @glm-1 who will rule; my #110 already gave A's position and #114 explicitly cross-references it as confirmed. So skipping is right.
+Let me do the verification and then report to the user.
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L70:C1]
+[toolCall] bash call_00_DQWwQauj3loY4o1JXruW4137
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && echo \"=== all frontend imports from shared/ on develop ===\" && git grep -n \"from '.*shared/\" origin/develop -- frontend/src frontend/*.json frontend/*.ts 2>/dev/null | sed 's|origin/develop:||' && echo && echo \"=== non-type (value) imports? ===\" && git grep -nE \"^import \\{|^import [A-Za-z]\" origin/develop -- frontend/src | grep \"shared/\" | sed 's|origin/develop:||' || echo \"  (none: all shared/ references are import type)\""}
+
+## S41:L71 2026-09-29T07:18:01.575Z message toolResult
+toolResult bash False
+[text]
+=== all frontend imports from shared/ on develop ===
+frontend/src/api/client.ts:1:import type { ApiErrorBody, CellChange, SelectionRect, WorkbookSnapshot, WorkbookSummary } from '../../../shared/types';
+frontend/src/components/Grid.test.tsx:6:import type { CellCoord, SelectionRect } from '../../../shared/types';
+frontend/src/components/Grid.tsx:2:import type { CellCoord, SelectionRect } from '../../../shared/types';
+frontend/src/components/HomePage.tsx:3:import type { WorkbookSummary } from '../../../shared/types';
+frontend/src/components/WorkbookEditor.tsx:10:} from '../../../shared/types';
+frontend/src/components/WorkbookLifecycle.test.tsx:4:import type { WorkbookSnapshot } from '../../../shared/types';
+frontend/src/components/WorkbookToolbar.tsx:2:import type { WorksheetSnapshot } from '../../../shared/types';
+frontend/src/components/WorksheetTabs.tsx:2:import type { WorksheetSnapshot } from '../../../shared/types';
+frontend/src/lib/csvExport.ts:1:import type { WorksheetSnapshot } from '../../../shared/types';
+frontend/src/lib/selection.ts:1:import type { CellCoord, SelectionRect } from '../../../shared/types';
+=== non-type (value) imports? ===
+frontend/src/lib/selection.ts:1:import type { CellCoord, SelectionRect } from '../../../shared/types';
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L71:C1]
+
+## S41:L72 2026-09-29T07:18:05.349Z message assistant
+[thinking]
+My grep for value imports returned the same lines (the regex `^import \{` matched `import type {`? No... `import \{` wouldn't match "import type {". Hmm, `^import [A-Za-z]` matches "import type { ..." → yes "import type..." starts with `import t`. So the second grep is a false positive due to my regex. All 13 are `import type`. Good — and they're all from `shared/types` (.d.ts), none from runtime JS.
+So @deepseek-2's claim verified: all 13 frontend `shared/` references are type-only, from `shared/types`. Nothing A delivered imports runtime shared code.
+Conclusion: no A-side action. No reply needed.
+Actually — wait. Let me reconsider whether I should reply given that #114 raises a possible change to `frontend/tsconfig.json` (option E) which is a scaffold file. Does A need to care? No. C/A zero impact confirmed.
+One more consideration: The task harness keeps nudging me about Issue #3 with these Issue #1 contract-thread updates. Each round, the correct behavior is to check relevance and act only if needed. This round: no action.
+I'll report concisely, noting the verification.
+Also, I should double check whether thread 1 has become long and whether anything addressed to @deepseek-3 (me) sits unanswered in recent comments. Let me check comment #112/#113 quickly to make sure I'm not missing a question to A. The notification only mentioned #114 but there may be intervening comments. Let me list comments 110-114 with authors and reply-to to be safe.
+[DUPLICATES: 6 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L72:C1]
+[toolCall] bash call_00_mBpDSn6zTkHZ3k50CtyC0727
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && for id in 112 113 114; do braid comment view $id --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d:\n    b=(c.get('body') or '')\n    print('#%s by @%s reply_to=%s thread=%s' % (c['database_id'], c['author']['login'], c.get('reply_to'), c.get('thread_root')))\n    print(b[:300].replace('\\n',' | '))\n    print('mentions deepseek-3:', 'deepseek-3' in b)\n    print('----')\n\"; done"}
+
+## S41:L73 2026-09-29T07:18:05.433Z message toolResult
+toolResult bash False
+[text]
+#112 by @deepseek-6 reply_to=None thread=112
+【合入后的文档收口（无代码改动）】branch head `fb6c7da` → `543b6a7`，仅 `tasks/issue-4-b/packet.md`：交付状态收口（合入 `15abbf6` / 验收 #76 / 保全 #77/#83），并记录 C-1 接缝兼容确认（Issue #1 thread 1 comment #111）。 |  | C-1 对我的影响已核实为**零改动**：结构端点函数体在 develop 上无 diff，实测 `raw` 逐字节搬运（`/tmp/b-c1-probe.mjs`），B 测试载荷无 formula；`ranges.js` 再导出的兼容契约与事务内接入约
+mentions deepseek-3: False
+----
+#113 by @deepseek-7 reply_to=108 thread=98
+【回执 Issue #1 #111（B 侧兼容确认）+ 两条实现约束（窄改 D-C7a/D-C9a）】@deepseek-8 @glm-1 |  | B 侧已在 `e63efc6` 上核实 C-1：**兼容、B 零改动**，C-1a（复制越界整式塌缩）与 C-1b（结构变更时绝对引用同样平移）维持不变。原文见 Issue #1 thread 1 comment #111，其中三条会直接影响本 PR 实现的事实必须落到代码里，否则会打挂 B 已合入的 45 个结构用例或产出双重改写。设计 #107 的判据与 API 签名不变，只补充接缝细节： |  | ## 1. D-C7a `backend/src/rang
+#114 by @deepseek-2 reply_to=109 thread=1
+【基础层（#2）对 C-1 的交付环境核实：`shared/formula.js` 运行时模块在平台逐目录构建下的两条可行形态】@glm-1 @deepseek-7 @deepseek-8 |  | C-1 的接口语义与归属我侧无异议（`shared/a1.js` 再导出归 PR #10、`ranges.js` 的 `$` 剥除细节见 #111 §2）。**但 C-1 首次把 `shared/` 从"纯类型"变为"运行时模块"**，这正好撞上平台"逐目录 npm install/build/start"的一条硬约束；我在当前工作区用真实构建实测了它，结论可直接用于 PR #10 实施（不改 devel
+----
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L73:C1]
+
+## S41:L74 2026-09-29T07:18:07.465Z message assistant
+[thinking]
+No new comment mentions A or @deepseek-3 with a question. #113 is C's response to B's confirmations (in Issue #5 thread 98), narrowing D-C7a/D-C9a implementation constraints.
+Hmm — #113 mentions "D-C7a `backend/src/ranges.js`..." and references three facts from #111 that affect C's implementation. Does any of them affect A? Let me read #113 fully to be safe — it's about `ranges.js` and transaction seams, both B/C. But it might touch something A-relevant (e.g., `store.js` changes). Let me read it fully. It's cheap.
+Also #112 is B's packet doc closure — no A impact.
+Let me read #113 body fully.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L74:C1]
+[toolCall] bash call_00_ZNGfAsC0Xx27ppFqDvEj7186
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && braid comment view 113 --json 2>/dev/null | python3 -c \"\nimport json,sys\nd=json.load(sys.stdin)\nfor c in d: print(c.get('body'))\n\""}
+
+## S41:L75 2026-09-29T07:18:07.507Z message toolResult
+toolResult bash False
+[text]
+【回执 Issue #1 #111（B 侧兼容确认）+ 两条实现约束（窄改 D-C7a/D-C9a）】@deepseek-8 @glm-1
+B 侧已在 `e63efc6` 上核实 C-1：**兼容、B 零改动**，C-1a（复制越界整式塌缩）与 C-1b（结构变更时绝对引用同样平移）维持不变。原文见 Issue #1 thread 1 comment #111，其中三条会直接影响本 PR 实现的事实必须落到代码里，否则会打挂 B 已合入的 45 个结构用例或产出双重改写。设计 #107 的判据与 API 签名不变，只补充接缝细节：
+## 1. D-C7a `backend/src/ranges.js` 再导出层逐字保持 B 的旧行为（#111 §2）
+- `parseA1Range('$B$2:$D$10')` → `{r1:1,c1:1,r2:9,c2:3}`（**剥 `$`**）；`formatA1Range` **不回写 `$`**（输出 `B2:D10`）。
+- `parseA1Range('not a range') === null`；`shiftRangeOnInsert/Delete` 对不可解析输入返回 `{range: 原文, changed:false}`（未知存储格式不被结构操作破坏）。
+- 公式侧重写需要 `$` 标志位（D-C4 要求保留 `$`），所以 `shared/a1.js` 的带 `$` 原语与 `ranges.js` 的兼容名**不能是同一个函数**：或由 `shared/a1.js` 另导出剥 `$` 的兼容版，或 `ranges.js` 内薄包装。**不得**把带 `$` 的共享函数直接再导出为 `parseA1Range`/`formatA1Range`。
+- 门禁：`backend/src/structure.test.js:64-71`（`$` 剥除）与 `:73-89`（不可解析即不动）；后端仅两个 importer（`store.js` 用 `shiftRangeOnDelete/shiftRangeOnInsert`；`structure.test.js` 另用 `parseA1Range/formatA1Range`），说明符不需变更。
+## 2. D-C9a 结构端点重写的事务内接缝（#111 §3）
+`insertStructure`/`deleteStructure` 单事务内已按 `shiftCells`（两阶段 `SHIFT_OFFSET`：先 `+1e6` 再落目标坐标）→ 尺寸 UPDATE → `shiftStoredRanges` → `shiftSelection` 顺序执行，因此公式重写必须：
+1. 在**同一事务**、以**位移前坐标空间**读 cells → 重写 → 写回（两阶段 UPDATE 之后库里坐标已变）；
+2. **显式传入** `{kind:'insert'|'delete', at, count}`（`at` 由 B 已算好），**不要**从库状态反推位移方向；
+3. `deleteStructure` 先删该行/列再位移 —— 已删数据不参与重写，剩余 cells 中指向被删行列的引用按 C-1a 的结构删除规则产出 `#REF!` token；
+4. 重写抛错必须让整事务回滚（含尺寸 UPDATE），与 B 的 `raw` 检查、边界门同级。
+## 3. 可选追加锚点（不替代后端回归）
+`e2e/worksheets-structure.spec.ts:11-13` 已标注公式引用重写归属（C, #5），可在该文件追加结构位移的公式断言（网格结果 + 公式栏调整后原式）；但**不替代** `backend/src/structure.test.js` 的重写回归，B 不再改动该文件。
+请把上述两条并入 packet 并在实现中落实；实现中若发现 #111 与设计 #107 有实质冲突，先在讨论提出并说明依据。若 @glm-1 对 C-1a/C-1b 的裁定与此不同，我在本 thread 更正。
+[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L75:C1]
+
+## S41:L76 2026-09-29T07:18:13.311Z message assistant
+[thinking]
+#113 is C-owner @deepseek-7's receipt of B's constraints. All about C's implementation (`ranges.js` re-export, structure transaction seam). No A impact.
+So for this round: comment #114 (and the nearby #112/#113) require no A-side action. Nothing mentions @deepseek-3 or asks A.
+I verified independently:
+- All 13 frontend `shared/` references on develop are `import type` from `shared/types` (the .d.ts) — so A's delivered files (cellDisplay.ts, csvExport.ts) are unaffected by whichever runtime-module form C picks (C+D `.d.ts` + extensionless, or E `allowJs: true`).
+- A's repo references no `ranges`/A1-range helpers; the re-export constraints in #111/#113 touch only B's `store.js`/`structure.test.js`.
+No reply posted — nothing addressed to A, no fact to correct, no decision of A's that changes.
+Report concisely.
+One consideration: should I note anything for the integration PR about option E altering `frontend/tsconfig.json` (a scaffold file) after A's acceptance? The integration PR re-runs the full range on the final candidate, so it's covered; @deepseek-2 already said PR #10 carries it. No A action.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L76:C1]
+[text]
+Processed — no A-side action needed this round.
+**Update read**: `issue:1 comment #114` (@deepseek-2, thread 1, reply-to #1

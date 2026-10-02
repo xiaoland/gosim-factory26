@@ -1,0 +1,460 @@
+at S05:L33:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L33:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L33:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L33:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L33:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L33:cwd]
+[ts]
+1790661211660
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L33:sourceEventType]
+[toolCallId]
+read_9_0386588b
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L33:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L33:argsPreview]
+[argsPayload]
+  "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/frontend/src/components/WorkbookEditor.tsx"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L33:argsPayload]
+
+## S05:L34 2026-09-29T05:53:31.660Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:cwd]
+[ts]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:ts]
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:sourceEventType]
+[toolCallId]
+bash_10_58654e58
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && ls tasks/pr-2-base && cat backend/src/config.js backend/src/seed.js"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L34:argsPayload]
+
+## S05:L35 2026-09-29T05:53:31.667Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:cwd]
+[ts]
+1790661211667
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L35:isError]
+
+## S05:L36 2026-09-29T05:53:31.667Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:cwd]
+[ts]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:ts]
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L36:isError]
+
+## S05:L37 2026-09-29T05:53:31.672Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:cwd]
+[ts]
+1790661211672
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L37:isError]
+
+## S05:L38 2026-09-29T05:53:31.672Z legacy toolResult
+toolResult read False
+[text]
+[DUPLICATES: 77 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L38:C1]
+
+## S05:L39 2026-09-29T05:53:31.673Z legacy toolResult
+toolResult read False
+[text]
+[DUPLICATES: 287 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L39:C1]
+
+## S05:L40 2026-09-29T05:53:31.674Z legacy toolResult
+toolResult bash False
+[text]
+packet.md
+import { nowIso } from './ids.js';
+ * Idempotent evaluation seed (Issue #1, decision D2).
+ * Workbook `Q3 Sales` with `Sheet1` (A1:C4 filled, A5:C6 empty) and an empty
+ * `Sheet2`. Seeding only fills gaps: an existing workbook/worksheet/cell is
+ * never re-created or overwritten, so user edits and restarts are safe.
+export const SEED_WORKBOOK_ID = 'seed-q3-sales';
+export const SEED_WORKBOOK_NAME = 'Q3 Sales';
+export const SEED_SHEET1_ID = 'seed-q3-sales-sheet1';
+export const SEED_SHEET2_ID = 'seed-q3-sales-sheet2';
+/** @type {CellEntry[]} */
+export const SEED_CELLS = [
+  [0, 0, 'Region'],
+  [0, 1, 'Sales'],
+  [0, 2, 'Status'],
+  [1, 0, 'East'],
+  [1, 1, '1200'],
+  [1, 2, 'Open'],
+  [2, 0, 'North'],
+  [2, 1, '800'],
+  [2, 2, 'Closed'],
+  [3, 0, 'South'],
+  [3, 1, '700'],
+  [3, 2, 'Open'],
+];
+export function seedDatabase(db) {
+    const workbook = db.prepare('SELECT id FROM workbooks WHERE id = ?').get(SEED_WORKBOOK_ID);
+    if (!workbook) {
+      db.prepare('INSERT INTO workbooks (id, name, created_at, updated_at) VALUES (?, ?, ?, ?)').run(
+        SEED_WORKBOOK_ID,
+        SEED_WORKBOOK_NAME,
+        at,
+    ensureWorksheet(db, SEED_SHEET1_ID, 'Sheet1', 0, 1, SEED_CELLS);
+    ensureWorksheet(db, SEED_SHEET2_ID, 'Sheet2', 1, 0, []);
+ * @param {number} position
+ * @param {0 | 1} lastActive
+ * @param {CellEntry[]} cells
+function ensureWorksheet(db, id, name, position, lastActive, cells) {
+  const existing = db.prepare('SELECT id FROM worksheets WHERE id = ?').get(id);
+  if (existing) return; // never touch existing user data
+  db.prepare(
+    `INSERT INTO worksheets (id, workbook_id, name, position, row_count, col_count, last_active, last_selection)
+     VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+  ).run(
+    id,
+    SEED_WORKBOOK_ID,
+    name,
+    position,
+    DEFAULT_ROW_COUNT,
+    DEFAULT_COL_COUNT,
+    lastActive,
+    JSON.stringify(DEFAULT_SELECTION),
+  const insert = db.prepare('INSERT INTO cells (worksheet_id, row, col, raw) VALUES (?, ?, ?, ?)');
+  for (const [row, col, raw] of cells) {
+    insert.run(id, row, col, raw);
+[DUPLICATES: 131 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L40:C1]
+
+## S05:L41 2026-09-29T05:53:43.220Z legacy assistant
+[thinking]
+Very useful. Let me check the tasks/pr-2-base packet.md (contract notes), shared/types.d.ts, FormulaBar, and maybe requirements.yaml location. Let me check tasks/pr-2-base/packet.md and look for requirements.yaml.
+[toolCall] bash bash_11_43307284_f9c201f4
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && wc -l tasks/pr-2-base/packet.md shared/types.d.ts frontend/src/components/FormulaBar.tsx frontend/src/components/Grid.tsx && find . -name 'requirements*.yaml' -not -path './node_modules/*' 2>/dev/null; ls input 2>/dev/null"}
+
+## S05:L42 2026-09-29T05:53:43.220Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:cwd]
+[ts]
+1790661223220
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:sourceEventType]
+[toolCallId]
+bash_11_43307284_f9c201f4
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:argsPreview]
+[argsPayload]
+  "command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1 && wc -l tasks/pr-2-base/packet.md shared/types.d.ts frontend/src/components/FormulaBar.tsx frontend/src/components/Grid.tsx && find . -name 'requirements*.yaml' -not -path './node_modules/*' 2>/dev/null; ls input 2>/dev/null"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L42:argsPayload]
+
+## S05:L43 2026-09-29T05:53:43.234Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:cwd]
+[ts]
+1790661223234
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L43:isError]
+
+## S05:L44 2026-09-29T05:53:43.234Z legacy toolResult
+toolResult bash True
+[text]
+   76 tasks/pr-2-base/packet.md
+  165 shared/types.d.ts
+   56 frontend/src/components/FormulaBar.tsx
+  259 frontend/src/components/Grid.tsx
+  556 total
+Command exited with code 2
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L44:C1]
+
+## S05:L45 2026-09-29T05:53:52.415Z legacy assistant
+[toolCall] read read_12_58d4fabd
+{"path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/tasks/pr-2-base/packet.md"}
+[toolCall] read read_13_fee6be2a
+{"path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/shared/types.d.ts"}
+
+## S05:L46 2026-09-29T05:53:52.415Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:cwd]
+[ts]
+1790661232415
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:sourceEventType]
+[toolCallId]
+read_12_58d4fabd
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:argsPreview]
+[argsPayload]
+  "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/tasks/pr-2-base/packet.md"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L46:argsPayload]
+
+## S05:L47 2026-09-29T05:53:52.415Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:cwd]
+[ts]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:ts]
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:sourceEventType]
+[toolCallId]
+read_13_fee6be2a
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:toolName]
+[argsPreview]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:argsPreview]
+[argsPayload]
+  "path": "/workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/issue-3/pi-deepseek-fast-g1/shared/types.d.ts"
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L47:argsPayload]
+
+## S05:L48 2026-09-29T05:53:52.416Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:cwd]
+[ts]
+1790661232416
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L48:isError]
+
+## S05:L49 2026-09-29T05:53:52.417Z legacy 
+[version]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:version]
+[recordType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:recordType]
+[source]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:source]
+[runId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:runId]
+[agent]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:agent]
+[childIndex]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:childIndex]
+[cwd]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:cwd]
+[ts]
+1790661232417
+[sourceEventType]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:sourceEventType]
+[toolCallId]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:toolCallId]
+[toolName]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:toolName]
+[isError]
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L49:isError]
+
+## S05:L50 2026-09-29T05:53:52.417Z legacy toolResult
+toolResult read False
+[text]
+  复现：`REUSE_WORK=/tmp/pr2-platform-path-fresh2 PORT=4399 bash checks/platform-path.sh`（先删除 `data/app.db`；目录不存在时全新展开）。
+- 开发路径全新副本（验收项 1）：`pnpm install --frozen-lockfile` **exit 0（9.3s）** → `pnpm -r test`
+  **backend 20 passed / frontend 16 passed** → `pnpm --dir frontend run build` 成功；日志 `/tmp/pr2-pnpm-fresh.log`、`/tmp/pr2-pnpm-fresh-tests.log`。
+- Playwright 冒烟：3 passed（见上）；Vitest：backend 20 / frontend 16 passed。
+## 未决 / 风险
+- 评测 harness 是否重置种子未知 → 种子幂等、不提供重置端点（Issue #1 已记录）。
+- 原生模块 ABI：开发（Node 24）与平台（Node 20.19.3）的 `node_modules` 不可复用，核验必须重新安装。
+- 默认行数 6 曾是待裁项，**已由契约 v1.2（Issue #1 comment #15）裁定并落地**；冒烟断言 6 rowheader / 26 columnheader，
+  常量向任一方向漂移都会失败。共同前提中的定位纪律（验收脚本用 `exact: true`）仍然有效。
+1. 根负责人 @glm-1 按 PR #2 正文验收后合入 develop（PR 侧交接见 thread 10）。
+2. 合入后按 Issue #1 comment #2 批次计划指派 #3/#4；本 PR 不再改基础层，除非验收提出具体不通过项。
+[DUPLICATES: 65 exact source lines omitted; precise per-line source map in duplicate-lines.json at S05:L50:C1]
+
+## S05:L51 2026-09-29T05:53:52.418Z legacy toolResult
+toolResult read False
+[text]
+  value?: string;
+export interface FilterSpec {
+  /** A1-style range expression of the filtered region (header row included). */
+  columnSpecs: FilterColumnSpec[];
+export type PivotSummarize = 'SUM' | 'COUNT' | 'AVERAGE';
+export interface PivotConfig {
+  rowField: string | null;
+  columnField: string | null;
+  valueField: string | null;
+  summarize: PivotSummarize;
+export interface PivotResultSnapshot {
+  cells: CellEntry[];
+  rowCount: number;
+  colCount: number;
+export interface PivotSpec {
+  sourceWorksheetId: string;
+  /** A1-style source range (header row included). */
+  sourceRange: string;
+  config: PivotConfig;
+  resultWorksheetId: string;
+  lastResult: PivotResultSnapshot | null;
+  stale: boolean;
+export interface WorksheetSnapshot {
+  position: number;
+  isActive: boolean;
+  lastSelection: SelectionRect | null;
+  validations: ValidationRule[];
+  filters: FilterSpec[];
+  pivots: PivotSpec[];
+/** Full editor load payload (`GET /api/workbooks/:id`). */
+export interface WorkbookSnapshot {
+  worksheets: WorksheetSnapshot[];
+/** Body of `PUT /api/workbooks/:id/worksheets/:wid/state` (undo/redo replay). */
+export interface WorksheetStatePayload {
+  name?: string;
+  rowCount?: number;
+  colCount?: number;
+  cells?: CellEntry[];
+  lastSelection?: SelectionRect | null;
+  isActive?: boolean;
+  validations?: ValidationRule[];
+  filters?: FilterSpec[];
+  pivots?: PivotSpec[];
+export type ApiErrorCode =
+  | 'NOT_FOUND'
+  | 'VALIDATION_ERROR'
+  | 'INVALID_BODY'
+  | 'CONFLICT'
+  | 'INTERNAL_ERROR';
+/** Uniform error body for every `/api` failure. */
+expor

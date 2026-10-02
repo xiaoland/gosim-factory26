@@ -1,0 +1,33 @@
+[
+  {
+    "source": "native/439-2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl:L4",
+    "part": 0,
+    "kind": "items_projection_already_read",
+    "chars": 49660,
+    "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+  },
+  {
+    "source": "native/439-2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl:L44",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/req5-undo-meta-probe-d7.mjs",
+    "field": "content",
+    "chars": 9221
+  },
+  {
+    "source": "native/439-2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl:L80",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/c7-b4a4b0c.md",
+    "field": "content",
+    "chars": 2973
+  },
+  {
+    "source": "native/439-2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl:L84",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/c5-268-reply.md",
+    "field": "content",
+    "chars": 1089
+  }
+]

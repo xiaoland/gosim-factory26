@@ -1,0 +1,17 @@
+{
+  "status": "validated_partial_stream_plus_supplement",
+  "stream": "cells/root-full/luna_stream.txt",
+  "captured_source_script": "cells/root-full/luna_stream_source.py",
+  "stream_sha256": "543bbb46c971852475ef0155e25c84f4fa7ddb22f4f53b941dba7c873fc1321a",
+  "reported_actual_read": [
+    0,
+    1600000
+  ],
+  "actual_boundary": "U23 record84 begins at boundary; U23 not complete, U24 unread",
+  "retained_script_values_missing_from_stream": 0,
+  "strings_over_60000_in_assigned_units": 0,
+  "omitted_substantive_fields_found": "U18 argsPreview/argsPayload were omitted by helper whitelist; primary read all 26 payload records in one untruncated output",
+  "supplement": "cells/root-full/primary-args-supplement.json",
+  "remaining": "U23 r84–85 and U24 r1–16 assigned to Sol",
+  "wrapper_metadata": "thinkingLevel and identity/timestamps are not claimed byte-for-byte semantic reading; lifecycle facts separately anchored by DB/receipts"
+}

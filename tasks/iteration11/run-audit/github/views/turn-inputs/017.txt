@@ -1,0 +1,12 @@
+hash 24559491db97023c31ae1df3a131bd35be05f72bcb4b8306532357ea235f9e0e
+copies 2
+source snapshot-01/braid-state/turns/01a0eb9d-7ec7-7343-8199-81a12078502b.md
+
+请处理 PR #2。
+
+对象：local/run#2
+
+发生以下更新：
+- PR #2 merged at c338578dabd8234c2df6930c832d0b36be8d0c5c; origin refs/heads/develop at c338578dabd8234c2df6930c832d0b36be8d0c5c contains it. Local clones can fetch origin to receive it.
+
+使用 `braid pr view 2 --comments` 查看当前内容。

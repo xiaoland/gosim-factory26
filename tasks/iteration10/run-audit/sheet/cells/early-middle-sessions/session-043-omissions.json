@@ -1,0 +1,42 @@
+[
+  {
+    "source": "continuation02-root-native/079-2026-09-28T06-44-35-068Z_01a0e6c2-187b-710b-bf5b-71187eb36207.jsonl:L97",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-issue5-range-move-body.md",
+    "field": "content",
+    "chars": 2807
+  },
+  {
+    "source": "continuation02-root-native/079-2026-09-28T06-44-35-068Z_01a0e6c2-187b-710b-bf5b-71187eb36207.jsonl:L243",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-issue5-range-move-body.md",
+    "field": "content",
+    "chars": 4024
+  },
+  {
+    "source": "continuation02-root-native/079-2026-09-28T06-44-35-068Z_01a0e6c2-187b-710b-bf5b-71187eb36207.jsonl:L353",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-issue5-range-move-body.md",
+    "field": "content",
+    "chars": 3950
+  },
+  {
+    "source": "continuation02-root-native/079-2026-09-28T06-44-35-068Z_01a0e6c2-187b-710b-bf5b-71187eb36207.jsonl:L428",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-5/pi-deepseek-fast-g1/checks/req3-move-api.mjs",
+    "field": "content",
+    "chars": 12415
+  },
+  {
+    "source": "continuation02-root-native/079-2026-09-28T06-44-35-068Z_01a0e6c2-187b-710b-bf5b-71187eb36207.jsonl:L537",
+    "part": 1,
+    "kind": "mechanical_write",
+    "path": "/tmp/pr-issue5-range-move-body.md",
+    "field": "content",
+    "chars": 4285
+  }
+]

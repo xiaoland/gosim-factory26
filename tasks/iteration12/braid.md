@@ -16,7 +16,7 @@ resolve/unresolve 仍通过任意评论 ID 选整条 thread；resolve 折叠到�
 - 新评论与 invalidate 混批：reset 只消费绑定的失效事件；独立评论保留在 wake batch，继续投递。仅因 Context 更新不制造工作结论。
 - Issue/PR 正文只维护本项当前任务、交付与证据入口；当前集成状态由整合任务维护并链接历史成果。
 
-`cargo check` 与 `cargo build` 成功；实际编译后的 `braid comment resolve --help` 和 `unresolve --help` 显示讨论级参数说明；`git diff --check` 通过。仓库现有代码整体不符合 rustfmt，`cargo fmt --check` 会对多处未触及文件提出大量格式变更，本次没有批量格式化。依据仓库约束未编写或运行 Braid 测试；尚无获授权的模型实验与真实运行数据，因此端到端 reset/讨论操作效果仍待后续正式运行观察。
+`cargo check` 与 `cargo build` 成功；实际编译后的 `braid comment resolve --help` 和 `unresolve --help` 显示讨论级参数说明；`git diff --check` 通过。仓库现有代码整体不符合 rustfmt，`cargo fmt --check` 会对多处未触及文件提出大量格式变更，本次没有批量格式化。依据仓库约束未编写或运行 Braid 测试。后续获授权的实际I12运行已有四次根自编辑reset自然完成、continuation=0，真实新评论仍被消费，并有一次正确hide采用；真正中断接续、提交瞬间的新输入交错及新版resolve实际采用尚未取得完整证据。具体原生/DB链见 [根因报告](root-cause-review/report.md)。当前新从零冻结版本与身份另见 [restart](restart.md)，不覆盖下面旧构建记录。
 
 ## I12 Linux 构建材料
 

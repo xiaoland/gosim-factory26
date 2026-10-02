@@ -1,0 +1,166 @@
+见于 `c340e2e`，其后 head 前进不影响该用例）". Or reference by PR number only and note the verification at a specific commit. Let me verify at d42be13 and then phrase: "C 已在 PR #10 内翻转（我在 `d42be13` 上复核仍为 `2`/`2,plain`；该翻转首见于 `c340e2e`）".
+Hmm, but head may keep advancing, so embedding a specific head again goes stale. Better phrase: "C 已在 PR #10 内翻转（翻转首见于 `c340e2e`，我在 PR #10 当时 head `d42be13` 上复核仍成立）". Still an absolute pointer as evidence anchor = fine, evidence anchors are expected to be commit-pinned.
+Wait — but also my comment #136 cited c340e2e as "PR #10 head". That comment is now partially stale (head moved). Should I correct it? The comment says "`origin/c-issue-5-formula-engine` = `c340e2e`（PR #10，OPEN，负责人 @deepseek-8）". It's a statement of observed fact at time of posting. Since head advanced, a narrow follow-up seems unnecessary noise... but accuracy matters for whoever reads it. I could post one short comment updating the pointer, which also serves as the correction record. But that's arguably over-communicating.
+Alternative: post a very short comment updating only the pointer + confirming the flip still holds at d42be13 + PR body refreshed. Both targets were already notified; another comment notifies again. Hmm.
+Given the guidance "没有新事实或新决定时，无需发布重复进度总结" — there IS a new fact (C's head advanced to d42be13) but it doesn't change any conclusion. The pragmatic approach: update PR #8 body's commit reference to be robust, and skip another comment (the body edit itself is visible and the readers were already notified). Actually, an edit won't notify... Braid edits may or may not notify. The earlier notification I received was triggered by body edits. So editing likely notifies watchers anyway.
+Let me first verify at d42be13.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L52:C1]
+[toolCall] bash call_00_CUUXJktWFwKfTLB7Pc2q6311
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && echo \"=== C head d42be13 e2e ===\" && git show d42be13:e2e/workbook-lifecycle.spec.ts 2>/dev/null | grep -n \"Flipped by\\|expectCellText(page, 'A1', '2')\\|toBe('2,plain')\" | head && echo \"=== C head cellDisplay ===\" && git show d42be13:frontend/src/lib/cellDisplay.ts 2>/dev/null | grep -n \"evaluate(\" | head && echo \"=== develop ===\" && git rev-parse --short origin/develop && git diff --stat e63efc6 origin/develop 2>/dev/null | tail -2"}
+
+## S44:L53 2026-09-29T07:27:21.490Z message toolResult
+toolResult bash False
+[text]
+=== C head d42be13 e2e ===
+384:    expect(csv).toBe('2,plain');
+=== C head cellDisplay ===
+28:  const values = evaluate(worksheet.cells, {
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L53:C1]
+
+## S44:L54 2026-09-29T07:27:26.004Z message assistant
+[thinking]
+Verified: flip holds at d42be13; develop unchanged.
+Now narrow-edit PR #8 body: replace "C 已在 PR #10（head `c340e2e`）内翻转为计算结果" with a robust phrasing.
+Current text in body:
+"**口径更正（依据 Issue #3 comment #131 + 我在 `origin/develop` / `origin/c-issue-5-formula-engine` 上的复核）**：过渡断言已由 C 在 PR #10（head `c340e2e`）内翻转为计算结果（用例 ... ：网格 `2`、导出 `2,plain`），而 `origin/develop`（`e63efc6`）仍是过渡实现 `'=1+1'`；故**整合 PR 的义务是在最终候选上复跑该用例（浏览器内真实执行），不是再次翻转**"
+New: replace "（head `c340e2e`）" with "内（翻转首见于 `c340e2e`；我在 07:2x 的 PR 侧 head `d42be13` 上复核仍为 `2` / `2,plain`）". Keep concise.
+Let me do it programmatically with a single replacement.
+Then decide on comment. I'll add a one-liner? Let me think about the overall goal: "让接手者能找到当前有效的要求、决定和未决问题". The body now pins evidence commits. Good enough. I'll skip an extra comment to avoid noise — but wait: my comment #136 explicitly stated "`origin/c-issue-5-formula-engine` = `c340e2e`" as current, and now it's stale in a discussion that others may read. The rules emphasize correcting stale statements in the original discussion rather than leaving them. Since it's a factual pointer, I'll add a very brief reply to my own comment #136 (same thread) noting head advanced and the flip still holds + body refreshed. That keeps the thread coherent and low-noise (one short comment on the same thread, no new thread).
+Actually, hmm: comment #136 is a new thread (thread 136). A reply to it with `--reply-to 136` works. Keep it to 3 lines.
+Let me do the body edit then the short reply.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L54:C1]
+[toolCall] bash call_00_YKmmfBAiwM1NIJHDQPsZ2172
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid pr view 8 --json body > /tmp/pr8-body2.json && python3 - <<'PY'\nimport json\nbody = json.load(open('/tmp/pr8-body2.json'))['body']\nold = \"过渡断言已由 C 在 PR #10（head `c340e2e`）内翻转为计算结果（用例 `exports the formula cell value through the shared display seam`：网格 `2`、导出 `2,plain`），而 `origin/develop`（`e63efc6`）仍是过渡实现 `'=1+1'`\"\nnew = \"过渡断言已由 C 在 PR #10 内翻转为计算结果（翻转首见于 `c340e2e`；我在 PR #10 后续 head `d42be13` 上复核该用例仍为网格 `2`、导出 `2,plain`），而 `origin/develop`（`e63efc6`）仍是过渡实现 `'=1+1'`\"\nassert body.count(old) == 1\nopen('/tmp/pr8-body-new2.md','w').write(body.replace(old,new))\nprint(\"OK\")\nPY\nbraid pr edit 8 --body-file /tmp/pr8-body-new2.md 2>&1 | head -6"}
+
+## S44:L55 2026-09-29T07:27:26.896Z message toolResult
+toolResult bash False
+[text]
+OK
+assignee: @deepseek-5
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L55:C1]
+
+## S44:L56 2026-09-29T07:27:30.194Z message assistant
+[thinking]
+Now post a brief reply to comment #136 noting the head advance + flip still holds + body refreshed. Keep it short.
+【补 #136：C 分支 head 已前进到 `d42be13`，翻转仍成立】@deepseek-8 @deepseek-3
+- `origin/c-issue-5-formula-engine` 已由 `c340e2e` 前进到 **`d42be13`**（PR #10 仍 OPEN）：我复核该树上 `frontend/src/lib/cellDisplay.ts` 仍调 `evaluate(...)`，`e2e/workbook-lifecycle.spec.ts:382/384` 仍为 `'2'` / `'2,plain'`，结论不变（develop `e63efc6` 仍过渡 `'=1+1'`）。
+- PR #8 正文的该句已窄改为「翻转首见于 `c340e2e`；我在后续 head `d42be13` 上复核仍成立」，避免绑定一个会继续前进的 head。
+- A 侧仍无待办、无新提交（`braid/issue-3-a` = `a23af5a`）。
+Good. Post it.
+[DUPLICATES: 4 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L56:C1]
+[toolCall] bash call_00_4OcWoWRVfRWa2J6Vncr91770
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && cat > /tmp/pr8-reply.md <<'EOF'\n【补 #136：C 分支 head 已前进到 `d42be13`，翻转仍成立；正文已窄改为不绑定会前进的 head】@deepseek-8 @deepseek-3\n\n- `origin/c-issue-5-formula-engine` 已由 `c340e2e` 前进到 **`d42be13`**（PR #10 仍 OPEN）：我在该树上复核 `frontend/src/lib/cellDisplay.ts` 仍调用 `evaluate(...)`，`e2e/workbook-lifecycle.spec.ts:382/384` 仍为网格 `2` / 导出 `2,plain` → #136 的结论不变（`origin/develop` `e63efc6` 仍是过渡实现 `'=1+1'`）。\n- 因此 PR #8 正文该句已窄改为「翻转首见于 `c340e2e`；我在 PR #10 后续 head `d42be13` 上复核仍成立」，证据锚点稳定、不随 head 前进失效。\n- A 侧仍无待办、无新提交（`braid/issue-3-a` = `a23af5a`）；整合 PR 的门禁仍是同一用例的复跑。\nEOF\nbraid pr comment 8 --reply-to 136 --body-file /tmp/pr8-reply.md 2>&1 | tail -8"}
+
+## S44:L57 2026-09-29T07:27:30.334Z message toolResult
+toolResult bash False
+[text]
+comment #137
+消息投递回执 — 评论 #137（仅表示评论输入的接收状态）
+收件人 @deepseek-8: 评论等待投递 (queued)
+[DUPLICATES: 2 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L57:C1]
+
+## S44:L58 2026-09-29T07:27:30.334Z message user
+[text]
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L58:C1]
+
+## S44:L59 2026-09-29T07:27:32.589Z message assistant
+[thinking]
+Again notifications: issue #3 body modified, pr #8 body modified twice (likely my own two edits). Let me check what changed on issue #3 and pr #8 now — maybe @deepseek-3 updated issue #3 body referencing my comment #136/#137, or maybe someone else changed PR #8 body.
+Let me check PR #8 timeline tail and Issue #3 latest body edits. Since timeline default limit shows first 30, I should use --after to get later entries. Let me try `braid pr view 8 --timeline --after 240` and issue `--after 160`.
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L59:C1]
+[toolCall] bash call_00_TAAC9BzQpfFiYmTfjqrF5631
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && echo \"=== pr8 timeline after 180 ===\" && braid pr view 8 --timeline --after 180 2>&1 | tail -30"}
+[toolCall] bash call_01_TKCJZD8vCNJ9zzbKgZpi3767
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && echo \"=== issue3 timeline after 150 ===\" && braid issue view 3 --timeline --after 150 2>&1 | tail -30"}
+
+## S44:L60 2026-09-29T07:27:32.619Z message toolResult
+toolResult bash False
+[text]
+=== pr8 timeline after 180 ===
+#242 2026-09-29T07:27:06.955479815Z @deepseek-5 commented comment #136
+#244 2026-09-29T07:27:26.690221587Z @deepseek-5 edited title/body changed
+#245 2026-09-29T07:27:30.20732021Z @deepseek-5 replied comment #137
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L60:C1]
+
+## S44:L61 2026-09-29T07:27:32.619Z message toolResult
+toolResult bash False
+[text]
+=== issue3 timeline after 150 ===
+#180 2026-09-29T06:54:54.151437295Z @deepseek-3 edited title/body changed
+#234 2026-09-29T07:25:56.314691735Z @deepseek-3 replied comment #131
+#236 2026-09-29T07:26:09.908550626Z @deepseek-3 edited title/body changed
+[DUPLICATES: 15 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L61:C1]
+
+## S44:L62 2026-09-29T07:27:35.560Z message assistant
+[thinking]
+So the issue #3 body modification at #236 is @deepseek-3's update incorporating comment 131 — which I already read. PR #8 body edits #240 (mine) and #244 (mine). All accounted for. No new external edits requiring action.
+Is there anything else to do? Current state:
+- PR #8: merged, body updated with correct gate semantics.
+- Issue #3: closed, body updated by owner with #131.
+- Comment #136/#137 posted by me notifying @deepseek-3, @deepseek-8, @glm-1.
+The notification loop is just reflecting my own edits. Should I do anything more? The task instruction was "请处理 PR #8" — done: verified claims, corrected body, recorded correction.
+One consideration: my comment #136 was posted before the body edit #244, causing a second round of notifications. That's fine.
+Should I also verify no reply from others yet? Let me check for new comments after 137 in thread 136 (e.g., @deepseek-8 replying). Let me check `braid comment view 136 --thread`. Cheap.
+If nothing new, I'm done: report summary.
+Also consider whether I should update the task packet `tasks/issue-3-a/packet.md`? It's on the branch braid/issue-3-a which is merged; Issue #3 body says packet's 下一步 superseded by #92 §5 and the Issue page. My earlier comments said no further commits to braid/issue-3-a. Correct: no new commits.
+Let me check for replies and then finish.
+[DUPLICATES: 7 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L62:C1]
+[toolCall] bash call_00_RvG00owNMFoE1TQzafeq2075
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && braid comment view 136 --thread 2>&1 | tail -30 && echo \"=== pr8 comments after 130 ===\" && braid pr view 8 --comments --after 130 2>&1 | tail -20"}
+
+## S44:L63 2026-09-29T07:27:35.581Z message toolResult
+toolResult bash False
+[text]
+结论：#131 的 A-3 复核成立——A 侧无待办、无待改项。
+## 2. PR #8 正文已窄改两处（其余判据/证据/边界原文不动）
+- **关闭前提的遗留义务**：原「整合 PR 带门禁**并翻转**该断言」→ 更正为「C 已在 PR #10（`c340e2e`）内翻转为计算结果；`origin/develop`（`e63efc6`）仍是过渡实现 `'=1+1'`；**整合 PR 的义务是在最终候选上复跑该用例（浏览器内真实执行），不是再次翻转**」。
+- **契约引用**：顶部补一句「A 侧已对账契约 v1.4（#128）为**零改动兼容**」（依据 Issue #1 thread 1 comment #110 / #121）。
+A 侧（Issue #3 / PR #8 / `braid/issue-3-a` @ `a23af5a`）无新提交、无待办。公式导出门禁的事实锚点：develop `e63efc6` = 过渡 `'=1+1'`；C 分支 `c340e2e` = 翻转 `'2'`；整合 PR 在 C 合入后的候选上复跑同一用例。
+comment #137 [visible]
+thread: 136 [open]
+reply-to: 136
+【补 #136：C 分支 head 已前进到 `d42be13`，翻转仍成立；正文已窄改为不绑定会前进的 head】@deepseek-8 @deepseek-3
+- `origin/c-issue-5-formula-engine` 已由 `c340e2e` 前进到 **`d42be13`**（PR #10 仍 OPEN）：我在该树上复核 `frontend/src/lib/cellDisplay.ts` 仍调用 `evaluate(...)`，`e2e/workbook-lifecycle.spec.ts:382/384` 仍为网格 `2` / 导出 `2,plain` → #136 的结论不变（`origin/develop` `e63efc6` 仍是过渡实现 `'=1+1'`）。
+- 因此 PR #8 正文该句已窄改为「翻转首见于 `c340e2e`；我在 PR #10 后续 head `d42be13` 上复核仍成立」，证据锚点稳定、不随 head 前进失效。
+- A 侧仍无待办、无新提交（`braid/issue-3-a` = `a23af5a`）；整合 PR 的门禁仍是同一用例的复跑。
+=== pr8 comments after 130 ===
+error: the following required arguments were not provided:
+  --timeline
+Usage: braid pr view --timeline --comments --after <AFTER> <ID>
+[DUPLICATES: 21 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L63:C1]
+
+## S44:L64 2026-09-29T07:27:39.061Z message assistant
+[thinking]
+No replies from others yet. Everything is consistent. My work is complete:
+- Verified Issue #3 comment #131's A-3 claims against actual trees.
+- Narrow-edited PR #8 body: gate = re-run (not re-flip), v1.4 zero-change note, robust commit anchors.
+- Posted comments #136/#137 with evidence and notified @deepseek-3, @deepseek-8, @glm-1.
+- No new commits to braid/issue-3-a; A side has no pending items.
+I should report a concise summary to the user. Note the working memory asked me to handle PR #8; done.
+One last sanity check: worktree clean, nothing to push. Confirmed earlier (`git status --short` empty). Let me just double-check now quickly and then summarize.
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L64:C1]
+[toolCall] bash call_00_RUMkruGkzMR6GbulFWW36182
+{"command": "cd /workspace/template/.factory26/20260929-042409-811f18d4/braid-state/worktrees/pr-8/pi-deepseek-fast-g1 && git status --short --branch | head -3 && echo \"local=$(git rev-parse --short HEAD) origin-head=$(git rev-parse --short origin/braid/issue-3-a)\""}
+
+## S44:L65 2026-09-29T07:27:39.079Z message toolResult
+toolResult bash False
+[text]
+local=a23af5a origin-head=a23af5a
+[DUPLICATES: 1 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L65:C1]
+
+## S44:L66 2026-09-29T07:27:43.960Z message assistant
+[text]
+PR #8 处理完成。要点：
+**核实（本 worktree，`git fetch` 后在树内实测）**
+- `origin/develop` = `e63efc6`：`cellDisplay.ts` 仍是恒等接缝，`e2e/workbook-lifecycle.spec.ts:378/383/385` 仍是过渡断言（网格 `=1+1`、导出 `=1+1,plain`）。
+- `origin/c-issue-5-formula-engine` = `d42be13`（原 `c340e2e`，PR #10 仍 OPEN）：接缝已换 `evaluate(...)`，同一用例已翻转为 `2` / `2,plain`（382/384 行，`Flipped by sub-issue C (Issue #5 decision D-C10)`）。
+- 消费者未变：`WorkbookToolbar.tsx:34` → `worksheetToCsv(worksheet, displayValue)`；FormulaBar/内联编辑仍读 `raw`。
+→ Issue #3 comment #131 的 A-3 复核结论成立：A 侧无待办、无待改项。
+**行动**
+- 窄改 PR #8 正文两处（其余判据/证据/边界原文不动）：
+  1. 关闭前提的遗留义务由「整合 PR 并翻转断言」更正为「**C 已在 PR #10 内翻转；整合 PR 的义务是在最终候选上复跑该用例（浏览器内真实执行），不是再次翻转**」；并把 commit 锚点写成「翻转首见于 `c340e2e`，在后续 head `d42be13` 上复核仍成立」，避免绑定会前进的 head。
+  2. 顶部补「A 侧已对账契约 v1.4（#128）为**零改动兼容**（Issue #1 thread 1 comment #110/#121）」。
+- PR #8 讨论区留下更正与证据：comment #136（#131 逐条复核 + 正文更正说明）与 #137（C head 前进后的复证），通知 @deepseek-3、@deepseek-8、@glm-1。
+**状态**：`braid/issue-3-a` 仍为 `a23af5a`（无新提交、worktree clean），Issue #3 保持 CLOSED；公式导出门禁的事实锚点链（develop 过渡 → C 分支翻转 → 整合 PR 复跑）已在 PR #8 正文与 comment #136/#137 中可追溯。
+[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S44:L66:C1]
+

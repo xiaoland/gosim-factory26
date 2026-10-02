@@ -1,0 +1,1858 @@
+{
+  "scope": "manifest indices 170–230 inclusive",
+  "records_total": 4793,
+  "sessions_total": 61,
+  "fully_read_this_cell": 30,
+  "previously_fully_read": 1,
+  "partial_semantic_read": 0,
+  "rendered_not_semantically_read": 30,
+  "source_index": "../../record-sources.json",
+  "sessions": [
+    {
+      "index": 170,
+      "sid": "01a0e76c-7e53-71d1-b733-5fc22a0e2219",
+      "records": 506,
+      "time_start": "2026-09-28T09:50:42.259Z",
+      "time_end": "2026-09-28T10:30:20.485Z",
+      "source_ranges": [
+        {
+          "path": "native/333-2026-09-28T09-50-42-259Z_01a0e76c-7e53-71d1-b733-5fc22a0e2219.jsonl",
+          "start_line": 1,
+          "end_line": 506,
+          "records": 506
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "渲染 session-170.md L1–11396 全部顺序语义已读；曾截断L6201–6600与L11251–11420，均分块补读。原生native/333 L1–506全部覆盖；机械写入原生L166 content 26256字符与L474 content 3201字符省略，来源/长度见omissions；重复内容依渲染器精确来源引用。",
+      "omissions": [
+        {
+          "source": "native/333-2026-09-28T09-50-42-259Z_01a0e76c-7e53-71d1-b733-5fc22a0e2219.jsonl:L166",
+          "part": 2,
+          "kind": "mechanical_write",
+          "path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/pr-20/pi-deepseek-fast-g1/checks/worksheet-lifecycle.spec.ts",
+          "field": "content",
+          "chars": 26256
+        },
+        {
+          "source": "native/333-2026-09-28T09-50-42-259Z_01a0e76c-7e53-71d1-b733-5fc22a0e2219.jsonl:L474",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/pr20-handoff.md",
+          "field": "content",
+          "chars": 3201
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-170.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 171,
+      "sid": "01a0e776-0b56-7326-a65c-a33db5d66bfc",
+      "records": 124,
+      "time_start": "2026-09-28T10:01:08.182Z",
+      "time_end": "2026-09-28T10:07:37.137Z",
+      "source_ranges": [
+        {
+          "path": "native/335-2026-09-28T10-01-08-182Z_01a0e776-0b56-7326-a65c-a33db5d66bfc.jsonl",
+          "start_line": 1,
+          "end_line": 124,
+          "records": 124
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "渲染 session-171.md L1–1738 顺序语义全读；原生native/335 L1–124全部覆盖。前次L1–430及本次L431–1738衔接；尾段一次工具显示截断于原生L111，已用渲染L1666–1680补读。原生L4 items投影与L74 2093字符机械写入按已登记省略。",
+      "omissions": [
+        {
+          "source": "native/335-2026-09-28T10-01-08-182Z_01a0e776-0b56-7326-a65c-a33db5d66bfc.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 38286,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        },
+        {
+          "source": "native/335-2026-09-28T10-01-08-182Z_01a0e776-0b56-7326-a65c-a33db5d66bfc.jsonl:L74",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/c7-reverify.md",
+          "field": "content",
+          "chars": 2093
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-171.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 172,
+      "sid": "01a0e776-0b57-76dd-a31d-0f09a1feeae1",
+      "records": 18,
+      "time_start": "2026-09-28T10:01:08.183Z",
+      "time_end": "2026-09-28T10:02:23.694Z",
+      "source_ranges": [
+        {
+          "path": "native/337-2026-09-28T10-01-08-183Z_01a0e776-0b57-76dd-a31d-0f09a1feeae1.jsonl",
+          "start_line": 1,
+          "end_line": 18,
+          "records": 18
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "渲染 session-172.md L1–末尾顺序语义全读，原生native/337 L1–18全部覆盖；Issue #5/PR #21大段旧快照按精确已读body引用。无显示截断。",
+      "omissions": [],
+      "render_path": "cells/transition-sessions/session-172.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 173,
+      "sid": "01a0e776-c9bb-724b-bab4-56d0d3520156",
+      "records": 55,
+      "time_start": "2026-09-28T10:01:56.924Z",
+      "time_end": "2026-09-28T10:04:15.784Z",
+      "source_ranges": [
+        {
+          "path": "native/339-2026-09-28T10-01-56-924Z_01a0e776-c9bb-724b-bab4-56d0d3520156.jsonl",
+          "start_line": 1,
+          "end_line": 55,
+          "records": 55
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "session-173.md L1–1863 顺序语义全读；native/339 L1–55；L4 已读 items 投影精确复用；无显示截断",
+      "omissions": [
+        {
+          "source": "native/339-2026-09-28T10-01-56-924Z_01a0e776-c9bb-724b-bab4-56d0d3520156.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 74989,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-173.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 174,
+      "sid": "01a0e777-a86c-76c5-993d-da5494d713bf",
+      "records": 15,
+      "time_start": "2026-09-28T10:02:53.932Z",
+      "time_end": "2026-09-28T10:08:17.368Z",
+      "source_ranges": [
+        {
+          "path": "native/341-2026-09-28T10-02-53-932Z_01a0e777-a86c-76c5-993d-da5494d713bf.jsonl",
+          "start_line": 1,
+          "end_line": 15,
+          "records": 15
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "session-174.md L1–290 顺序语义全读；native/341 L1–15；重复items投影按精确索引复用；无显示截断",
+      "omissions": [],
+      "render_path": "cells/transition-sessions/session-174.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 175,
+      "sid": "01a0e779-54c3-76d1-835e-f5e5d0ca1e56",
+      "records": 22,
+      "time_start": "2026-09-28T10:04:43.588Z",
+      "time_end": "2026-09-28T10:05:30.686Z",
+      "source_ranges": [
+        {
+          "path": "native/343-2026-09-28T10-04-43-588Z_01a0e779-54c3-76d1-835e-f5e5d0ca1e56.jsonl",
+          "start_line": 1,
+          "end_line": 22,
+          "records": 22
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "session-175.md L1–538 顺序语义全读；native/343 L1–22；L4 81593字符已读items投影精确复用；无显示截断",
+      "omissions": [
+        {
+          "source": "native/343-2026-09-28T10-04-43-588Z_01a0e779-54c3-76d1-835e-f5e5d0ca1e56.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 81943,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-175.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 176,
+      "sid": "01a0e77b-b4ee-776c-8058-42bb024d6615",
+      "records": 119,
+      "time_start": "2026-09-28T10:07:19.278Z",
+      "time_end": "2026-09-28T10:14:58.942Z",
+      "source_ranges": [
+        {
+          "path": "native/345-2026-09-28T10-07-19-278Z_01a0e77b-b4ee-776c-8058-42bb024d6615.jsonl",
+          "start_line": 1,
+          "end_line": 119,
+          "records": 119
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "session-176.md L1–1670顺序语义全读；native/345 L1–119；显示截断 L641–1000、L1321–1670 已用 L700–820、L1510–1590、L1591–1670 补读；精确重复按原source索引复用",
+      "omissions": [
+        {
+          "source": "native/345-2026-09-28T10-07-19-278Z_01a0e77b-b4ee-776c-8058-42bb024d6615.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 38721,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-176.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 177,
+      "sid": "01a0e77c-07ce-726f-87d6-b2168e992186",
+      "records": 118,
+      "time_start": "2026-09-28T10:07:40.494Z",
+      "time_end": "2026-09-28T10:16:33.286Z",
+      "source_ranges": [
+        {
+          "path": "native/347-2026-09-28T10-07-40-494Z_01a0e77c-07ce-726f-87d6-b2168e992186.jsonl",
+          "start_line": 1,
+          "end_line": 118,
+          "records": 118
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "session-177.md L1–1952顺序语义全读；native/347 L1–118；巨大重复线程投影/通知回执按精确 source 复用，L98机械2555字符评论写入按source长度登记；无显示截断",
+      "omissions": [
+        {
+          "source": "native/347-2026-09-28T10-07-40-494Z_01a0e77c-07ce-726f-87d6-b2168e992186.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 39167,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        },
+        {
+          "source": "native/347-2026-09-28T10-07-40-494Z_01a0e77c-07ce-726f-87d6-b2168e992186.jsonl:L98",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/c7-comment.md",
+          "field": "content",
+          "chars": 2555
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-177.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 178,
+      "sid": "01a0e77c-a8be-755d-8bfa-4c3797bc3c09",
+      "records": 162,
+      "time_start": "2026-09-28T10:08:21.694Z",
+      "time_end": "2026-09-28T10:55:14.328Z",
+      "source_ranges": [
+        {
+          "path": "native/349-2026-09-28T10-08-21-694Z_01a0e77c-a8be-755d-8bfa-4c3797bc3c09.jsonl",
+          "start_line": 1,
+          "end_line": 162,
+          "records": 162
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/349 L1–162; rendered session-178.md L1–1947, sequential semantic read; display truncation around L1021–1360 backfilled in smaller spans",
+      "omissions": [
+        {
+          "source": "native/349:L105",
+          "reason": "status.json tool result is itself source-truncated at 427 KB, with full log at /workspace/template/.factory26/20260928-025746-66feadac/pbb/truncated/2026-09-28T10-24-45-515Z-9d4011b7.log; repetitive status projection, no unique assistant reasoning omitted"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-178.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 179,
+      "sid": "01a0e77f-b522-74ba-9ac2-fc8e8e64cc25",
+      "records": 7,
+      "time_start": "2026-09-28T10:11:41.474Z",
+      "time_end": "2026-09-28T10:12:10.950Z",
+      "source_ranges": [
+        {
+          "path": "native/351-2026-09-28T10-11-41-474Z_01a0e77f-b522-74ba-9ac2-fc8e8e64cc25.jsonl",
+          "start_line": 1,
+          "end_line": 7,
+          "records": 7
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/351 L1–7, rendered session-179.md L1–112 sequential semantic read",
+      "omissions": [
+        {
+          "source": "native/351:L4",
+          "reason": "13,646-character existing issue projection already read in items.md"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-179.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 180,
+      "sid": "01a0e780-4e2c-7607-b31f-7e42bb0e19e5",
+      "records": 37,
+      "time_start": "2026-09-28T10:12:20.652Z",
+      "time_end": "2026-09-28T10:17:17.465Z",
+      "source_ranges": [
+        {
+          "path": "native/353-2026-09-28T10-12-20-652Z_01a0e780-4e2c-7607-b31f-7e42bb0e19e5.jsonl",
+          "start_line": 1,
+          "end_line": 37,
+          "records": 37
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/353 L1–37; rendered session-180.md L1–760 sequential semantic read",
+      "omissions": [
+        {
+          "source": "native/353:L4",
+          "reason": "13,646-character existing issue projection already read in items.md"
+        },
+        {
+          "source": "native/353:L12–18",
+          "reason": "exact previously read formulas.ts code projection with source handles shown in render"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-180.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 181,
+      "sid": "01a0e782-d78f-77aa-b9ef-84d9ecf5fdee",
+      "records": 34,
+      "time_start": "2026-09-28T10:15:06.895Z",
+      "time_end": "2026-09-28T10:16:23.882Z",
+      "source_ranges": [
+        {
+          "path": "native/355-2026-09-28T10-15-06-895Z_01a0e782-d78f-77aa-b9ef-84d9ecf5fdee.jsonl",
+          "start_line": 1,
+          "end_line": 34,
+          "records": 34
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/355 L1–34; rendered session-181.md L1–866 sequential semantic read",
+      "omissions": [
+        {
+          "source": "native/355:L4",
+          "reason": "existing issue/comment projection already read in items.md and source handles in render"
+        },
+        {
+          "source": "native/355:L27",
+          "reason": "10,334-character Issue body mechanically reconstructed; changed section and result read, preexisting body exact repeat"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-181.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 182,
+      "sid": "01a0e784-1903-775d-a5cc-407d0f80c0bc",
+      "records": 25,
+      "time_start": "2026-09-28T10:16:29.187Z",
+      "time_end": "2026-09-28T10:17:09.403Z",
+      "source_ranges": [
+        {
+          "path": "native/357-2026-09-28T10-16-29-187Z_01a0e784-1903-775d-a5cc-407d0f80c0bc.jsonl",
+          "start_line": 1,
+          "end_line": 25,
+          "records": 25
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/357 L1–25; rendered session-182.md L1–723 sequential semantic read",
+      "omissions": [
+        {
+          "source": "native/357:L4,L7",
+          "reason": "exact previously read Issue body/comment projection; new c4d5703 section from prior session181 retained and read"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-182.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 183,
+      "sid": "01a0e784-3817-730d-8c24-a608d624dceb",
+      "records": 330,
+      "time_start": "2026-09-28T10:16:37.144Z",
+      "time_end": "2026-09-28T10:43:55.585Z",
+      "source_ranges": [
+        {
+          "path": "native/359-2026-09-28T10-16-37-144Z_01a0e784-3817-730d-8c24-a608d624dceb.jsonl",
+          "start_line": 1,
+          "end_line": 330,
+          "records": 330
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/359 L1–330; rendered session-183.md L1–6104 sequential semantic read. Native L273–330 stale PBB result and duplicate acknowledgments were read by causal group; large duplicated JSON fields resolved against earlier log/tool results.",
+      "omissions": [
+        {
+          "source": "native/359-2026-09-28T10-16-37-144Z_01a0e784-3817-730d-8c24-a608d624dceb.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 41859,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        },
+        {
+          "source": "native/359-2026-09-28T10-16-37-144Z_01a0e784-3817-730d-8c24-a608d624dceb.jsonl:L135",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/workspace/template/.factory26/20260928-025746-66feadac/braid-state/worktrees/issue-7/pi-deepseek-fast-g1/checks/req5-probe.spec.ts",
+          "field": "content",
+          "chars": 3535
+        },
+        {
+          "source": "native/359-2026-09-28T10-16-37-144Z_01a0e784-3817-730d-8c24-a608d624dceb.jsonl:L263",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/pr20-reply.md",
+          "field": "content",
+          "chars": 1758
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-183.md",
+      "truncation_recovered": true,
+      "truncation_note": "Displayed chunk L5601–5880 and L5881–6104 truncated on long duplicate PBB JSON lines; recovered missed portions in smaller L5750–5880, L5935–5960, L5960–6020 and initial/ending spans. Remaining omitted duplicate JSON echoes are exact repeats of earlier result bodies, with unique envelope/agent reasoning read."
+    },
+    {
+      "index": 184,
+      "sid": "01a0e784-c843-741d-9d50-623bd40098f8",
+      "records": 78,
+      "time_start": "2026-09-28T10:17:14.051Z",
+      "time_end": "2026-09-28T10:21:28.140Z",
+      "source_ranges": [
+        {
+          "path": "native/361-2026-09-28T10-17-14-051Z_01a0e784-c843-741d-9d50-623bd40098f8.jsonl",
+          "start_line": 1,
+          "end_line": 78,
+          "records": 78
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/361 L1–78; rendered session-184.md L1–906 sequential semantic read; prior item projection reused exactly",
+      "omissions": [
+        {
+          "source": "native/361-2026-09-28T10-17-14-051Z_01a0e784-c843-741d-9d50-623bd40098f8.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 42689,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-184.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 185,
+      "sid": "01a0e784-e1ae-74f8-9775-dc3c8e15ff03",
+      "records": 25,
+      "time_start": "2026-09-28T10:17:20.558Z",
+      "time_end": "2026-09-28T10:19:11.328Z",
+      "source_ranges": [
+        {
+          "path": "native/363-2026-09-28T10-17-20-558Z_01a0e784-e1ae-74f8-9775-dc3c8e15ff03.jsonl",
+          "start_line": 1,
+          "end_line": 25,
+          "records": 25
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/363 L1–25; rendered session-185.md L1–575 sequential semantic read; L6 long comment-thread and delivery-state dump read, exact prior item bodies reused",
+      "omissions": [
+        {
+          "source": "native/363-2026-09-28T10-17-20-558Z_01a0e784-e1ae-74f8-9775-dc3c8e15ff03.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 13996,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-185.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 186,
+      "sid": "01a0e785-5dee-7307-9f66-8a808de53b93",
+      "records": 340,
+      "time_start": "2026-09-28T10:17:52.366Z",
+      "time_end": "2026-09-28T10:40:55.543Z",
+      "source_ranges": [
+        {
+          "path": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl",
+          "start_line": 1,
+          "end_line": 340,
+          "records": 340
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/365 L1–340; rendered session-186.md L1–6995 sequential semantic read; display truncation L6841–6995 backfilled L6900–6935 and L6930–6995, remaining duplicates of prior background progress",
+      "omissions": [
+        {
+          "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L64",
+          "part": 0,
+          "kind": "mechanical_write",
+          "path": "/tmp/deepseek-17-288.md",
+          "field": "content",
+          "chars": 1283
+        },
+        {
+          "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L86",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/deepseek-17-pr20-rowmenu.md",
+          "field": "content",
+          "chars": 1615
+        },
+        {
+          "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L112",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/deepseek-17-pr20-req5.md",
+          "field": "content",
+          "chars": 1180
+        },
+        {
+          "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L166",
+          "part": 0,
+          "kind": "mechanical_write",
+          "path": "/tmp/ds17-pr20-precheck.md",
+          "field": "content",
+          "chars": 1231
+        },
+        {
+          "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L245",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/ds17-ready-verdict.md",
+          "field": "content",
+          "chars": 2421
+        },
+        {
+          "source": "native/365-2026-09-28T10-17-52-366Z_01a0e785-5dee-7307-9f66-8a808de53b93.jsonl:L300",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/ds17-unlock.md",
+          "field": "content",
+          "chars": 1068
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-186.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 187,
+      "sid": "01a0e786-b64e-7261-95da-e6ed4e0226c5",
+      "records": 8,
+      "time_start": "2026-09-28T10:19:20.526Z",
+      "time_end": "2026-09-28T10:20:46.643Z",
+      "source_ranges": [
+        {
+          "path": "native/367-2026-09-28T10-19-20-526Z_01a0e786-b64e-7261-95da-e6ed4e0226c5.jsonl",
+          "start_line": 1,
+          "end_line": 8,
+          "records": 8
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/367 L1–8; rendered session-187.md L1–463 sequential semantic read; exact prior items projection reused; native L6 tool output truncated 49KB but comment bodies exact previously read and no distinct action hidden",
+      "omissions": [
+        {
+          "source": "native/367-2026-09-28T10-19-20-526Z_01a0e786-b64e-7261-95da-e6ed4e0226c5.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-187.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 188,
+      "sid": "01a0e788-345a-7418-833a-d71bc7c09113",
+      "records": 7,
+      "time_start": "2026-09-28T10:20:58.330Z",
+      "time_end": "2026-09-28T10:21:46.990Z",
+      "source_ranges": [
+        {
+          "path": "native/369-2026-09-28T10-20-58-330Z_01a0e788-345a-7418-833a-d71bc7c09113.jsonl",
+          "start_line": 1,
+          "end_line": 7,
+          "records": 7
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/369 L1–7; rendered session-188.md L1–422 sequential semantic read; exact prior item bodies reused; native L6 tool output truncated 53KB but only pre-read comment projections/notification ledger",
+      "omissions": [
+        {
+          "source": "native/369-2026-09-28T10-20-58-330Z_01a0e788-345a-7418-833a-d71bc7c09113.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-188.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 189,
+      "sid": "01a0e789-06db-7247-aff7-706f1a663403",
+      "records": 23,
+      "time_start": "2026-09-28T10:21:52.219Z",
+      "time_end": "2026-09-28T10:24:15.609Z",
+      "source_ranges": [
+        {
+          "path": "native/371-2026-09-28T10-21-52-219Z_01a0e789-06db-7247-aff7-706f1a663403.jsonl",
+          "start_line": 1,
+          "end_line": 23,
+          "records": 23
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/371 L1–23; rendered session-189.md L1–713 sequential semantic read; exact prior item/code projections reused; native L6 truncated 53KB is repeat comments/ledger; failed --message then successful --body-file comment #296",
+      "omissions": [
+        {
+          "source": "native/371-2026-09-28T10-21-52-219Z_01a0e789-06db-7247-aff7-706f1a663403.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-189.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 190,
+      "sid": "01a0e78b-4cdc-7651-b2e0-205604a9a5e6",
+      "records": 7,
+      "time_start": "2026-09-28T10:24:21.212Z",
+      "time_end": "2026-09-28T10:25:31.954Z",
+      "source_ranges": [
+        {
+          "path": "native/373-2026-09-28T10-24-21-212Z_01a0e78b-4cdc-7651-b2e0-205604a9a5e6.jsonl",
+          "start_line": 1,
+          "end_line": 7,
+          "records": 7
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/373 L1–7; rendered session-190.md L1–462 sequential semantic read; exact prior item/comment projections reused, native L6 56KB truncation limited to repeated comment ledger",
+      "omissions": [
+        {
+          "source": "native/373-2026-09-28T10-24-21-212Z_01a0e78b-4cdc-7651-b2e0-205604a9a5e6.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-190.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 191,
+      "sid": "01a0e78c-6fe7-746f-8fd6-b5d3a5546717",
+      "records": 10,
+      "time_start": "2026-09-28T10:25:35.719Z",
+      "time_end": "2026-09-28T10:27:07.795Z",
+      "source_ranges": [
+        {
+          "path": "native/375-2026-09-28T10-25-35-719Z_01a0e78c-6fe7-746f-8fd6-b5d3a5546717.jsonl",
+          "start_line": 1,
+          "end_line": 10,
+          "records": 10
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/375 L1–10; rendered session-191.md L1–538 sequential semantic read; exact prior bodies reused; native L6 61KB truncated only duplicate comment/ledger",
+      "omissions": [
+        {
+          "source": "native/375-2026-09-28T10-25-35-719Z_01a0e78c-6fe7-746f-8fd6-b5d3a5546717.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-191.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 192,
+      "sid": "01a0e78d-e8cc-73cf-b440-b36125930a22",
+      "records": 12,
+      "time_start": "2026-09-28T10:27:12.204Z",
+      "time_end": "2026-09-28T10:27:49.483Z",
+      "source_ranges": [
+        {
+          "path": "native/377-2026-09-28T10-27-12-204Z_01a0e78d-e8cc-73cf-b440-b36125930a22.jsonl",
+          "start_line": 1,
+          "end_line": 12,
+          "records": 12
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/377 L1–12; rendered session-192.md L1–278 sequential semantic read; exact prior item projections reused",
+      "omissions": [
+        {
+          "source": "native/377-2026-09-28T10-27-12-204Z_01a0e78d-e8cc-73cf-b440-b36125930a22.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-192.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 193,
+      "sid": "01a0e78e-857c-75ba-a263-1bf6b784593a",
+      "records": 16,
+      "time_start": "2026-09-28T10:27:52.317Z",
+      "time_end": "2026-09-28T10:29:57.552Z",
+      "source_ranges": [
+        {
+          "path": "native/379-2026-09-28T10-27-52-317Z_01a0e78e-857c-75ba-a263-1bf6b784593a.jsonl",
+          "start_line": 1,
+          "end_line": 16,
+          "records": 16
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/379 L1–16; rendered session-193.md L1–650 sequential semantic read; exact prior comments reused; comment tool L6 61KB truncation duplicates ledger",
+      "omissions": [
+        {
+          "source": "native/379-2026-09-28T10-27-52-317Z_01a0e78e-857c-75ba-a263-1bf6b784593a.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-193.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 194,
+      "sid": "01a0e790-7d5e-7643-9387-f5d77180c60e",
+      "records": 8,
+      "time_start": "2026-09-28T10:30:01.310Z",
+      "time_end": "2026-09-28T10:30:53.236Z",
+      "source_ranges": [
+        {
+          "path": "native/381-2026-09-28T10-30-01-310Z_01a0e790-7d5e-7643-9387-f5d77180c60e.jsonl",
+          "start_line": 1,
+          "end_line": 8,
+          "records": 8
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/381 L1–8; rendered session-194.md L1–488 sequential semantic read; exact prior comments reused; L6 truncated 61KB duplicate ledger",
+      "omissions": [
+        {
+          "source": "native/381-2026-09-28T10-30-01-310Z_01a0e790-7d5e-7643-9387-f5d77180c60e.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-194.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 195,
+      "sid": "01a0e790-d732-7212-917a-26ec258d59d4",
+      "records": 278,
+      "time_start": "2026-09-28T10:30:24.306Z",
+      "time_end": "2026-09-28T10:56:10.495Z",
+      "source_ranges": [
+        {
+          "path": "native/383-2026-09-28T10-30-24-306Z_01a0e790-d732-7212-917a-26ec258d59d4.jsonl",
+          "start_line": 1,
+          "end_line": 278,
+          "records": 278
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/383 L1–278; rendered session-195.md L1–7995 sequential semantic read; exact prior comment/code projections reused; mechanical writes at native L100 (5594 chars) and L228 (3880 chars) omitted with source provenance; long background receipt display backfilled via rendered L6721–6960 and L7801–7995",
+      "omissions": [
+        {
+          "source": "native/383-2026-09-28T10-30-24-306Z_01a0e790-d732-7212-917a-26ec258d59d4.jsonl:L100",
+          "part": 3,
+          "kind": "mechanical_write",
+          "path": "/tmp/ds18-wb/probe/pivot-open.spec.ts",
+          "field": "content",
+          "chars": 5594
+        },
+        {
+          "source": "native/383-2026-09-28T10-30-24-306Z_01a0e790-d732-7212-917a-26ec258d59d4.jsonl:L228",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/ds18-fix/pr-body.md",
+          "field": "content",
+          "chars": 3880
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-195.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 196,
+      "sid": "01a0e791-6434-73ca-b63d-2640e414cc31",
+      "records": 10,
+      "time_start": "2026-09-28T10:31:00.404Z",
+      "time_end": "2026-09-28T10:32:01.091Z",
+      "source_ranges": [
+        {
+          "path": "native/385-2026-09-28T10-31-00-404Z_01a0e791-6434-73ca-b63d-2640e414cc31.jsonl",
+          "start_line": 1,
+          "end_line": 10,
+          "records": 10
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/385-2026-09-28T10-31-00-404Z_01a0e791-6434-73ca-b63d-2640e414cc31.jsonl L1–10; rendered session-196.md L1–513 sequential semantic read; exact prior items/code reused; repeated delivery ledger read as structured receipt, source tool output truncation not used for new inference",
+      "omissions": [
+        {
+          "source": "native/385-2026-09-28T10-31-00-404Z_01a0e791-6434-73ca-b63d-2640e414cc31.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-196.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 197,
+      "sid": "01a0e792-739c-758d-b2b3-3521638a0d82",
+      "records": 24,
+      "time_start": "2026-09-28T10:32:09.884Z",
+      "time_end": "2026-09-28T10:35:38.338Z",
+      "source_ranges": [
+        {
+          "path": "native/387-2026-09-28T10-32-09-884Z_01a0e792-739c-758d-b2b3-3521638a0d82.jsonl",
+          "start_line": 1,
+          "end_line": 24,
+          "records": 24
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/387-2026-09-28T10-32-09-884Z_01a0e792-739c-758d-b2b3-3521638a0d82.jsonl L1–24; rendered session-197.md L1–799 sequential semantic read; exact prior items/code reused; repeated delivery ledger read as structured receipt, source tool output truncation not used for new inference",
+      "omissions": [
+        {
+          "source": "native/387-2026-09-28T10-32-09-884Z_01a0e792-739c-758d-b2b3-3521638a0d82.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-197.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 198,
+      "sid": "01a0e795-e18c-731a-ade6-ad14546d1556",
+      "records": 8,
+      "time_start": "2026-09-28T10:35:54.636Z",
+      "time_end": "2026-09-28T10:36:58.055Z",
+      "source_ranges": [
+        {
+          "path": "native/389-2026-09-28T10-35-54-636Z_01a0e795-e18c-731a-ade6-ad14546d1556.jsonl",
+          "start_line": 1,
+          "end_line": 8,
+          "records": 8
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/389-2026-09-28T10-35-54-636Z_01a0e795-e18c-731a-ade6-ad14546d1556.jsonl L1–8; rendered session-198.md L1–521 sequential semantic read; exact prior items/code reused; repeated delivery ledger read as structured receipt, source tool output truncation not used for new inference",
+      "omissions": [
+        {
+          "source": "native/389-2026-09-28T10-35-54-636Z_01a0e795-e18c-731a-ade6-ad14546d1556.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-198.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 199,
+      "sid": "01a0e797-2fb0-7396-a154-a4db3a29cd3a",
+      "records": 9,
+      "time_start": "2026-09-28T10:37:20.176Z",
+      "time_end": "2026-09-28T10:38:11.485Z",
+      "source_ranges": [
+        {
+          "path": "native/391-2026-09-28T10-37-20-176Z_01a0e797-2fb0-7396-a154-a4db3a29cd3a.jsonl",
+          "start_line": 1,
+          "end_line": 9,
+          "records": 9
+        }
+      ],
+      "status": "fully_read",
+      "semantic_read": "native/391-2026-09-28T10-37-20-176Z_01a0e797-2fb0-7396-a154-a4db3a29cd3a.jsonl L1–9; rendered session-199.md L1–478 sequential semantic read; exact prior items/code reused; repeated delivery ledger read as structured receipt, source tool output truncation not used for new inference",
+      "omissions": [
+        {
+          "source": "native/391-2026-09-28T10-37-20-176Z_01a0e797-2fb0-7396-a154-a4db3a29cd3a.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-199.md",
+      "truncation_recovered": true
+    },
+    {
+      "index": 200,
+      "sid": "01a0e798-11d5-7679-89ca-b1649e715584",
+      "records": 78,
+      "time_start": "2026-09-28T10:38:18.069Z",
+      "time_end": "2026-09-28T10:46:49.533Z",
+      "source_ranges": [
+        {
+          "path": "native/393-2026-09-28T10-38-18-069Z_01a0e798-11d5-7679-89ca-b1649e715584.jsonl",
+          "start_line": 1,
+          "end_line": 78,
+          "records": 78
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/393-2026-09-28T10-38-18-069Z_01a0e798-11d5-7679-89ca-b1649e715584.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 14470,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        },
+        {
+          "source": "native/393-2026-09-28T10-38-18-069Z_01a0e798-11d5-7679-89ca-b1649e715584.jsonl:L34",
+          "part": 0,
+          "kind": "mechanical_write",
+          "path": "/tmp/issue6-structure-probe.mjs",
+          "field": "content",
+          "chars": 5238
+        },
+        {
+          "source": "native/393-2026-09-28T10-38-18-069Z_01a0e798-11d5-7679-89ca-b1649e715584.jsonl:L56",
+          "part": 2,
+          "kind": "mechanical_write",
+          "path": "/tmp/issue6-structure-probe.mjs",
+          "field": "content",
+          "chars": 6903
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-200.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 201,
+      "sid": "01a0e799-67ff-73ee-86f1-4aebeeef9e07",
+      "records": 103,
+      "time_start": "2026-09-28T10:39:45.663Z",
+      "time_end": "2026-09-28T10:47:13.320Z",
+      "source_ranges": [
+        {
+          "path": "native/395-2026-09-28T10-39-45-663Z_01a0e799-67ff-73ee-86f1-4aebeeef9e07.jsonl",
+          "start_line": 1,
+          "end_line": 103,
+          "records": 103
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/395-2026-09-28T10-39-45-663Z_01a0e799-67ff-73ee-86f1-4aebeeef9e07.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 42689,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-201.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 202,
+      "sid": "01a0e79a-ad4f-7062-9f1d-43f4c9e6c4d9",
+      "records": 50,
+      "time_start": "2026-09-28T10:41:08.943Z",
+      "time_end": "2026-09-28T10:43:55.246Z",
+      "source_ranges": [
+        {
+          "path": "native/397-2026-09-28T10-41-08-943Z_01a0e79a-ad4f-7062-9f1d-43f4c9e6c4d9.jsonl",
+          "start_line": 1,
+          "end_line": 50,
+          "records": 50
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/397-2026-09-28T10-41-08-943Z_01a0e79a-ad4f-7062-9f1d-43f4c9e6c4d9.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 39562,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-202.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 203,
+      "sid": "01a0e79d-59a5-71d6-879d-87f7a0b9b307",
+      "records": 70,
+      "time_start": "2026-09-28T10:44:04.133Z",
+      "time_end": "2026-09-28T10:47:11.320Z",
+      "source_ranges": [
+        {
+          "path": "native/399-2026-09-28T10-44-04-133Z_01a0e79d-59a5-71d6-879d-87f7a0b9b307.jsonl",
+          "start_line": 1,
+          "end_line": 70,
+          "records": 70
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/399-2026-09-28T10-44-04-133Z_01a0e79d-59a5-71d6-879d-87f7a0b9b307.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 40360,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-203.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 204,
+      "sid": "01a0e79d-7dff-7062-a6f9-e15c250dd7ec",
+      "records": 190,
+      "time_start": "2026-09-28T10:44:13.440Z",
+      "time_end": "2026-09-28T11:10:25.848Z",
+      "source_ranges": [
+        {
+          "path": "native/401-2026-09-28T10-44-13-440Z_01a0e79d-7dff-7062-a6f9-e15c250dd7ec.jsonl",
+          "start_line": 1,
+          "end_line": 190,
+          "records": 190
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/401-2026-09-28T10-44-13-440Z_01a0e79d-7dff-7062-a6f9-e15c250dd7ec.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 44758,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        },
+        {
+          "source": "native/401-2026-09-28T10-44-13-440Z_01a0e79d-7dff-7062-a6f9-e15c250dd7ec.jsonl:L55",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/req5-structure-probe-d7.mjs",
+          "field": "content",
+          "chars": 6576
+        },
+        {
+          "source": "native/401-2026-09-28T10-44-13-440Z_01a0e79d-7dff-7062-a6f9-e15c250dd7ec.jsonl:L172",
+          "part": 0,
+          "kind": "mechanical_write",
+          "path": "/tmp/req5-c-verify-db23b1f.md",
+          "field": "content",
+          "chars": 3595
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-204.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 205,
+      "sid": "01a0e7a0-1681-729d-9773-d2912941e701",
+      "records": 16,
+      "time_start": "2026-09-28T10:47:03.553Z",
+      "time_end": "2026-09-28T10:49:12.622Z",
+      "source_ranges": [
+        {
+          "path": "native/403-2026-09-28T10-47-03-553Z_01a0e7a0-1681-729d-9773-d2912941e701.jsonl",
+          "start_line": 1,
+          "end_line": 16,
+          "records": 16
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/403-2026-09-28T10-47-03-553Z_01a0e7a0-1681-729d-9773-d2912941e701.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 15783,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-205.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 206,
+      "sid": "01a0e7a0-4f74-7430-bf9f-3ee4877fd286",
+      "records": 454,
+      "time_start": "2026-09-28T10:47:18.132Z",
+      "time_end": "2026-09-28T11:57:40.994Z",
+      "source_ranges": [
+        {
+          "path": "native/405-2026-09-28T10-47-18-132Z_01a0e7a0-4f74-7430-bf9f-3ee4877fd286.jsonl",
+          "start_line": 1,
+          "end_line": 454,
+          "records": 454
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [],
+      "render_path": "cells/transition-sessions/session-206.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 207,
+      "sid": "01a0e7a0-6e51-7204-bfa8-1e6b9e9df540",
+      "records": 40,
+      "time_start": "2026-09-28T10:47:26.033Z",
+      "time_end": "2026-09-28T10:49:18.136Z",
+      "source_ranges": [
+        {
+          "path": "native/407-2026-09-28T10-47-26-033Z_01a0e7a0-6e51-7204-bfa8-1e6b9e9df540.jsonl",
+          "start_line": 1,
+          "end_line": 40,
+          "records": 40
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/407-2026-09-28T10-47-26-033Z_01a0e7a0-6e51-7204-bfa8-1e6b9e9df540.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 43666,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-207.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 208,
+      "sid": "01a0e7a2-2e4c-762a-bfbc-9629796d5452",
+      "records": 18,
+      "time_start": "2026-09-28T10:49:20.716Z",
+      "time_end": "2026-09-28T10:51:23.108Z",
+      "source_ranges": [
+        {
+          "path": "native/409-2026-09-28T10-49-20-716Z_01a0e7a2-2e4c-762a-bfbc-9629796d5452.jsonl",
+          "start_line": 1,
+          "end_line": 18,
+          "records": 18
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/409-2026-09-28T10-49-20-716Z_01a0e7a2-2e4c-762a-bfbc-9629796d5452.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 15783,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-208.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 209,
+      "sid": "01a0e7a2-39bf-7351-817c-773af078c380",
+      "records": 37,
+      "time_start": "2026-09-28T10:49:23.647Z",
+      "time_end": "2026-09-28T10:50:40.013Z",
+      "source_ranges": [
+        {
+          "path": "native/411-2026-09-28T10-49-23-647Z_01a0e7a2-39bf-7351-817c-773af078c380.jsonl",
+          "start_line": 1,
+          "end_line": 37,
+          "records": 37
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/411-2026-09-28T10-49-23-647Z_01a0e7a2-39bf-7351-817c-773af078c380.jsonl:L29",
+          "part": 2,
+          "kind": "mechanical_write",
+          "path": "/tmp/i3-body.md",
+          "field": "content",
+          "chars": 2919
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-209.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 210,
+      "sid": "01a0e7a3-8247-7223-848f-8bd2ac3cebe7",
+      "records": 47,
+      "time_start": "2026-09-28T10:50:47.751Z",
+      "time_end": "2026-09-28T10:53:30.102Z",
+      "source_ranges": [
+        {
+          "path": "native/413-2026-09-28T10-50-47-751Z_01a0e7a3-8247-7223-848f-8bd2ac3cebe7.jsonl",
+          "start_line": 1,
+          "end_line": 47,
+          "records": 47
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [],
+      "render_path": "cells/transition-sessions/session-210.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 211,
+      "sid": "01a0e7a4-4a93-7261-9d90-aef641486c5d",
+      "records": 19,
+      "time_start": "2026-09-28T10:51:39.027Z",
+      "time_end": "2026-09-28T10:53:44.161Z",
+      "source_ranges": [
+        {
+          "path": "native/415-2026-09-28T10-51-39-027Z_01a0e7a4-4a93-7261-9d90-aef641486c5d.jsonl",
+          "start_line": 1,
+          "end_line": 19,
+          "records": 19
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/415-2026-09-28T10-51-39-027Z_01a0e7a4-4a93-7261-9d90-aef641486c5d.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 15783,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-211.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 212,
+      "sid": "01a0e7a6-059f-706f-a32d-4a9f1e49c2d3",
+      "records": 210,
+      "time_start": "2026-09-28T10:53:32.447Z",
+      "time_end": "2026-09-28T11:09:15.445Z",
+      "source_ranges": [
+        {
+          "path": "native/417-2026-09-28T10-53-32-447Z_01a0e7a6-059f-706f-a32d-4a9f1e49c2d3.jsonl",
+          "start_line": 1,
+          "end_line": 210,
+          "records": 210
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/417-2026-09-28T10-53-32-447Z_01a0e7a6-059f-706f-a32d-4a9f1e49c2d3.jsonl:L144",
+          "part": 0,
+          "kind": "mechanical_write",
+          "path": "/tmp/pr23-owner-comment.md",
+          "field": "content",
+          "chars": 2661
+        },
+        {
+          "source": "native/417-2026-09-28T10-53-32-447Z_01a0e7a6-059f-706f-a32d-4a9f1e49c2d3.jsonl:L180",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/pr23-merge-comment.md",
+          "field": "content",
+          "chars": 1524
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-212.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 213,
+      "sid": "01a0e7a6-14ab-7792-b508-e6eb374a3567",
+      "records": 23,
+      "time_start": "2026-09-28T10:53:36.300Z",
+      "time_end": "2026-09-28T10:54:23.897Z",
+      "source_ranges": [
+        {
+          "path": "native/419-2026-09-28T10-53-36-300Z_01a0e7a6-14ab-7792-b508-e6eb374a3567.jsonl",
+          "start_line": 1,
+          "end_line": 23,
+          "records": 23
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/419-2026-09-28T10-53-36-300Z_01a0e7a6-14ab-7792-b508-e6eb374a3567.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 36251,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-213.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 214,
+      "sid": "01a0e7a6-5b0a-7591-9049-5390a31e2083",
+      "records": 9,
+      "time_start": "2026-09-28T10:53:54.314Z",
+      "time_end": "2026-09-28T10:55:10.266Z",
+      "source_ranges": [
+        {
+          "path": "native/421-2026-09-28T10-53-54-314Z_01a0e7a6-5b0a-7591-9049-5390a31e2083.jsonl",
+          "start_line": 1,
+          "end_line": 9,
+          "records": 9
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/421-2026-09-28T10-53-54-314Z_01a0e7a6-5b0a-7591-9049-5390a31e2083.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 15783,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-214.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 215,
+      "sid": "01a0e7a6-f0f9-70f3-a962-1458f13fc378",
+      "records": 32,
+      "time_start": "2026-09-28T10:54:32.697Z",
+      "time_end": "2026-09-28T10:55:39.608Z",
+      "source_ranges": [
+        {
+          "path": "native/423-2026-09-28T10-54-32-697Z_01a0e7a6-f0f9-70f3-a962-1458f13fc378.jsonl",
+          "start_line": 1,
+          "end_line": 32,
+          "records": 32
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/423-2026-09-28T10-54-32-697Z_01a0e7a6-f0f9-70f3-a962-1458f13fc378.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 36251,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-215.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 216,
+      "sid": "01a0e7a7-aed3-731f-93ff-bd1fd4eaed58",
+      "records": 29,
+      "time_start": "2026-09-28T10:55:21.299Z",
+      "time_end": "2026-09-28T10:58:33.403Z",
+      "source_ranges": [
+        {
+          "path": "native/425-2026-09-28T10-55-21-299Z_01a0e7a7-aed3-731f-93ff-bd1fd4eaed58.jsonl",
+          "start_line": 1,
+          "end_line": 29,
+          "records": 29
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/425-2026-09-28T10-55-21-299Z_01a0e7a7-aed3-731f-93ff-bd1fd4eaed58.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 16623,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-216.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 217,
+      "sid": "01a0e7a8-6ffa-72fd-888d-5ebdd84436fb",
+      "records": 32,
+      "time_start": "2026-09-28T10:56:10.746Z",
+      "time_end": "2026-09-28T10:57:24.688Z",
+      "source_ranges": [
+        {
+          "path": "native/427-2026-09-28T10-56-10-746Z_01a0e7a8-6ffa-72fd-888d-5ebdd84436fb.jsonl",
+          "start_line": 1,
+          "end_line": 32,
+          "records": 32
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/427-2026-09-28T10-56-10-746Z_01a0e7a8-6ffa-72fd-888d-5ebdd84436fb.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 37635,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-217.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 218,
+      "sid": "01a0e7a8-9041-731a-8e2b-b08892696814",
+      "records": 381,
+      "time_start": "2026-09-28T10:56:19.009Z",
+      "time_end": "2026-09-28T11:47:42.484Z",
+      "source_ranges": [
+        {
+          "path": "native/429-2026-09-28T10-56-19-009Z_01a0e7a8-9041-731a-8e2b-b08892696814.jsonl",
+          "start_line": 1,
+          "end_line": 381,
+          "records": 381
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/429-2026-09-28T10-56-19-009Z_01a0e7a8-9041-731a-8e2b-b08892696814.jsonl:L91",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/ds18-pr-body.md",
+          "field": "content",
+          "chars": 3601
+        },
+        {
+          "source": "native/429-2026-09-28T10-56-19-009Z_01a0e7a8-9041-731a-8e2b-b08892696814.jsonl:L335",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/ds18-pr25-comment.md",
+          "field": "content",
+          "chars": 2855
+        },
+        {
+          "source": "native/429-2026-09-28T10-56-19-009Z_01a0e7a8-9041-731a-8e2b-b08892696814.jsonl:L351",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/ds18-issue4-comment.md",
+          "field": "content",
+          "chars": 1980
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-218.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 219,
+      "sid": "01a0e7a9-bd6a-763c-95ef-88c1039771a0",
+      "records": 27,
+      "time_start": "2026-09-28T10:57:36.106Z",
+      "time_end": "2026-09-28T10:58:32.810Z",
+      "source_ranges": [
+        {
+          "path": "native/431-2026-09-28T10-57-36-106Z_01a0e7a9-bd6a-763c-95ef-88c1039771a0.jsonl",
+          "start_line": 1,
+          "end_line": 27,
+          "records": 27
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/431-2026-09-28T10-57-36-106Z_01a0e7a9-bd6a-763c-95ef-88c1039771a0.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 37635,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-219.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 220,
+      "sid": "01a0e7ab-095d-7457-8be9-5a20784948f5",
+      "records": 32,
+      "time_start": "2026-09-28T10:59:01.085Z",
+      "time_end": "2026-09-28T11:00:13.476Z",
+      "source_ranges": [
+        {
+          "path": "native/435-2026-09-28T10-59-01-085Z_01a0e7ab-095d-7457-8be9-5a20784948f5.jsonl",
+          "start_line": 1,
+          "end_line": 32,
+          "records": 32
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/435-2026-09-28T10-59-01-085Z_01a0e7ab-095d-7457-8be9-5a20784948f5.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 37635,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-220.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 221,
+      "sid": "01a0e7ab-0960-76a0-944f-48bb158b5fe1",
+      "records": 9,
+      "time_start": "2026-09-28T10:59:01.088Z",
+      "time_end": "2026-09-28T11:00:06.578Z",
+      "source_ranges": [
+        {
+          "path": "native/433-2026-09-28T10-59-01-088Z_01a0e7ab-0960-76a0-944f-48bb158b5fe1.jsonl",
+          "start_line": 1,
+          "end_line": 9,
+          "records": 9
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/433-2026-09-28T10-59-01-088Z_01a0e7ab-0960-76a0-944f-48bb158b5fe1.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 16623,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-221.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 222,
+      "sid": "01a0e7ad-10d9-7207-a258-ceebe373e674",
+      "records": 25,
+      "time_start": "2026-09-28T11:01:14.073Z",
+      "time_end": "2026-09-28T11:02:43.165Z",
+      "source_ranges": [
+        {
+          "path": "native/437-2026-09-28T11-01-14-073Z_01a0e7ad-10d9-7207-a258-ceebe373e674.jsonl",
+          "start_line": 1,
+          "end_line": 25,
+          "records": 25
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/437-2026-09-28T11-01-14-073Z_01a0e7ad-10d9-7207-a258-ceebe373e674.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 37635,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-222.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 223,
+      "sid": "01a0e7b5-d69f-7638-b456-08673a49ee86",
+      "records": 103,
+      "time_start": "2026-09-28T11:10:48.991Z",
+      "time_end": "2026-09-28T11:15:59.002Z",
+      "source_ranges": [
+        {
+          "path": "native/439-2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl",
+          "start_line": 1,
+          "end_line": 103,
+          "records": 103
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/439-2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 49660,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        },
+        {
+          "source": "native/439-2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl:L44",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/req5-undo-meta-probe-d7.mjs",
+          "field": "content",
+          "chars": 9221
+        },
+        {
+          "source": "native/439-2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl:L80",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/c7-b4a4b0c.md",
+          "field": "content",
+          "chars": 2973
+        },
+        {
+          "source": "native/439-2026-09-28T11-10-48-991Z_01a0e7b5-d69f-7638-b456-08673a49ee86.jsonl:L84",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/c5-268-reply.md",
+          "field": "content",
+          "chars": 1089
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-223.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 224,
+      "sid": "01a0e7ba-36e4-7569-bcc2-63e372115e30",
+      "records": 18,
+      "time_start": "2026-09-28T11:15:35.780Z",
+      "time_end": "2026-09-28T11:16:04.231Z",
+      "source_ranges": [
+        {
+          "path": "native/441-2026-09-28T11-15-35-780Z_01a0e7ba-36e4-7569-bcc2-63e372115e30.jsonl",
+          "start_line": 1,
+          "end_line": 18,
+          "records": 18
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/441-2026-09-28T11-15-35-780Z_01a0e7ba-36e4-7569-bcc2-63e372115e30.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 97305,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-224.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 225,
+      "sid": "01a0e7ba-9aba-7336-9857-d31a88d31c86",
+      "records": 38,
+      "time_start": "2026-09-28T11:16:01.338Z",
+      "time_end": "2026-09-28T11:17:04.009Z",
+      "source_ranges": [
+        {
+          "path": "native/443-2026-09-28T11-16-01-338Z_01a0e7ba-9aba-7336-9857-d31a88d31c86.jsonl",
+          "start_line": 1,
+          "end_line": 38,
+          "records": 38
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/443-2026-09-28T11-16-01-338Z_01a0e7ba-9aba-7336-9857-d31a88d31c86.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 52770,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-225.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 226,
+      "sid": "01a0e7ba-b101-7499-98b4-322453f47f44",
+      "records": 18,
+      "time_start": "2026-09-28T11:16:07.042Z",
+      "time_end": "2026-09-28T11:16:29.558Z",
+      "source_ranges": [
+        {
+          "path": "native/445-2026-09-28T11-16-07-042Z_01a0e7ba-b101-7499-98b4-322453f47f44.jsonl",
+          "start_line": 1,
+          "end_line": 18,
+          "records": 18
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/445-2026-09-28T11-16-07-042Z_01a0e7ba-b101-7499-98b4-322453f47f44.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 98530,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-226.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 227,
+      "sid": "01a0e7bb-136f-7343-8ac7-2167e3d9bfd9",
+      "records": 28,
+      "time_start": "2026-09-28T11:16:32.239Z",
+      "time_end": "2026-09-28T11:17:15.121Z",
+      "source_ranges": [
+        {
+          "path": "native/447-2026-09-28T11-16-32-239Z_01a0e7bb-136f-7343-8ac7-2167e3d9bfd9.jsonl",
+          "start_line": 1,
+          "end_line": 28,
+          "records": 28
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/447-2026-09-28T11-16-32-239Z_01a0e7bb-136f-7343-8ac7-2167e3d9bfd9.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 99703,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-227.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 228,
+      "sid": "01a0e7bb-9b3b-730f-a755-957a4beb3ef9",
+      "records": 34,
+      "time_start": "2026-09-28T11:17:07.003Z",
+      "time_end": "2026-09-28T11:18:03.830Z",
+      "source_ranges": [
+        {
+          "path": "native/449-2026-09-28T11-17-07-003Z_01a0e7bb-9b3b-730f-a755-957a4beb3ef9.jsonl",
+          "start_line": 1,
+          "end_line": 34,
+          "records": 34
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/449-2026-09-28T11-17-07-003Z_01a0e7bb-9b3b-730f-a755-957a4beb3ef9.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 54799,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-228.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 229,
+      "sid": "01a0e7bb-c654-736b-9b12-c80ad17c4717",
+      "records": 25,
+      "time_start": "2026-09-28T11:17:18.036Z",
+      "time_end": "2026-09-28T11:17:51.032Z",
+      "source_ranges": [
+        {
+          "path": "native/451-2026-09-28T11-17-18-036Z_01a0e7bb-c654-736b-9b12-c80ad17c4717.jsonl",
+          "start_line": 1,
+          "end_line": 25,
+          "records": 25
+        }
+      ],
+      "status": "rendered_not_semantically_read",
+      "semantic_read": "indexed and rendered only; no completion credit",
+      "omissions": [
+        {
+          "source": "native/451-2026-09-28T11-17-18-036Z_01a0e7bb-c654-736b-9b12-c80ad17c4717.jsonl:L4",
+          "part": 0,
+          "kind": "items_projection_already_read",
+          "chars": 99703,
+          "note": "Issue/PR/comment body previously fully read in items.md; trailing new update retained"
+        },
+        {
+          "source": "native/451-2026-09-28T11-17-18-036Z_01a0e7bb-c654-736b-9b12-c80ad17c4717.jsonl:L21",
+          "part": 1,
+          "kind": "mechanical_write",
+          "path": "/tmp/reply-360.md",
+          "field": "content",
+          "chars": 1376
+        }
+      ],
+      "render_path": "cells/transition-sessions/session-229.md",
+      "truncation_recovered": false
+    },
+    {
+      "index": 230,
+      "sid": "01a0e7bc-1a93-743f-8825-e7060beeff01",
+      "records": 163,
+      "time_start": "2026-09-28T11:17:39.603Z",
+      "time_end": "2026-09-28T11:59:00.106Z",
+      "source_ranges": [
+        {
+          "path": "native/453-2026-09-28T11-17-39-603Z_01a0e7bc-1a93-743f-8825-e7060beeff01.jsonl",
+          "start_line": 1,
+          "end_line": 163,
+          "records": 163
+        }
+      ],
+      "status": "previously_fully_read",
+      "semantic_read": "父审已完整语义阅读；详 coverage.md 的 session-230-decisions.md 与原生补读",
+      "omissions": [],
+      "render_path": "session-230-decisions.md",
+      "truncation_recovered": false
+    }
+  ],
+  "fully_read_records_this_cell": 2435,
+  "fully_read_records_including_prior": 2598
+}
