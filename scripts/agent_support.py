@@ -115,7 +115,7 @@ class ResourceEvidence:
                     'memory.max', 'memory.oom.group', 'memory.swap.current', 'memory.swap.peak',
                     'memory.swap.max', 'pids.current', 'pids.max', 'pids.events')
 
-    def __init__(self, run):
+    def __init__(self, run, *, root_pid=None):
         self.run = Path(run)
         self.cgroup = None
         self.errors = {}
@@ -126,7 +126,7 @@ class ResourceEvidence:
         self.rotations = 0
         self.segment_started = None
         self.previous_started = None
-        self.root_pid = os.getppid()
+        self.root_pid = os.getppid() if root_pid is None else root_pid
         self.last_memory_detail_ns = 0
         root_process = process_identity(self.root_pid)
         self.root_starttime = root_process.get('starttime')
@@ -475,7 +475,7 @@ def runtime_resource_environment(runtime, run):
             raise ValueError('Harness 入口需要 runner 已就绪的 ResourceEvidence 与明确样本路径')
         sample_path = Path(resource['sample_path'])
     else:
-        sample_path = Path(run)/'process-evidence/resource-latest.json'
+        sample_path = Path(os.environ.get('FACTORY26_EXP_RESOURCE_SAMPLE', str(Path(run)/'process-evidence/resource-latest.json')))
     subprocess.run([sys.executable, str(helper), 'configure', '--directory', str(directory),
                     '--sample-path', str(sample_path)], check=True, stdout=subprocess.DEVNULL)
     return {'FACTORY_RESOURCE_HELPER': str(helper), 'FACTORY_RESOURCE_PYTHON': sys.executable,
@@ -759,6 +759,8 @@ def model_bindings(base_url=None, visual_url=None, *, require_key=True):
             raise ValueError(f'模型绑定缺少显式 provider/base_url：{name}')
         if set(route) - {'provider', 'base_url', 'credential_env', 'model', 'model_id'}:
             raise ValueError(f'模型绑定包含未知字段：{name}')
+        if 'model_id' in route and (not isinstance(route['model_id'], str) or not route['model_id'].strip()):
+            raise ValueError(f'模型绑定 model_id 必须为非空字符串：{name}')
         from urllib.parse import urlsplit
         endpoint = urlsplit(route['base_url'])
         if endpoint.scheme not in {'http', 'https'} or not endpoint.hostname or endpoint.username or endpoint.password or endpoint.query or endpoint.fragment:
@@ -807,6 +809,55 @@ def bind_native_models(value, bindings):
                 raise ValueError(f'模型绑定产生重复原生ID：{alias}/{model_id}')
             providers[alias]['models'].append(model)
     value['providers'] = providers
+    return value
+
+
+def bind_native_model_scope(settings, bindings):
+    """Keep each allow rule on the same models after provider transport aliases change."""
+    import re
+    scope = settings.get('subagents', {}).get('modelScope')
+    if not scope:
+        return settings
+    for rule in [scope, *scope.get('agents', {}).values()]:
+        allowed = rule.get('allow')
+        if not allowed:
+            continue
+        patterns = [re.compile('^' + re.escape(pattern).replace(r'\*', '.*') + '$', re.I)
+                    for pattern in allowed]
+        additions = []
+        for selector in bindings:
+            if '/' not in selector or not any(pattern.fullmatch(selector) for pattern in patterns):
+                continue
+            provider, model = selector.split('/', 1)
+            alias, model_id, _ = native_model_route(provider, model, bindings)
+            resolved = alias + '/' + model_id
+            if resolved not in allowed and resolved not in additions:
+                additions.append(resolved)
+        rule['allow'] = [*allowed, *additions]
+    return settings
+
+
+def bind_retained_native_models(value, bindings):
+    """Route retained models through Pi's per-model headers, preserving identities."""
+    for name, provider in value['providers'].items():
+        for definition in provider['models']:
+            _, model_id, route = native_model_route(name, definition['id'], bindings)
+            api = definition.get('api', provider.get('api'))
+            if api not in {'openai-completions', 'openai-responses'}:
+                raise ValueError(f'恢复逐模型传输不支持原生API：{name}/{definition["id"]}/{api}')
+            definition['baseUrl'] = route['base_url']
+            # Pi keeps the native model ID in history and budgets; OpenAI APIs
+            # apply these request fields last, including a declared supplier ID.
+            definition['samplingParams'] = dict(definition.get('samplingParams', {}), model=model_id)
+            # Pi expands this template and merges model headers after provider auth.
+            # No credential value is persisted in models.json or recovery receipts.
+            definition['headers'] = {key: value for key, value in definition.get('headers', {}).items()
+                                     if key.lower() != 'authorization'}
+            definition['headers']['Authorization'] = 'Bearer ${' + route['credential_env'] + '}'
+        first = native_model_route(name, provider['models'][0]['id'], bindings)[2]
+        provider.update(baseUrl=first['base_url'], apiKey='$' + first['credential_env'])
+        provider['headers'] = {key: value for key, value in provider.get('headers', {}).items()
+                               if key.lower() != 'authorization'}
     return value
 
 

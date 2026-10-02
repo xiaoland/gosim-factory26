@@ -5,9 +5,10 @@ from pathlib import Path
 import subprocess
 import os
 import socket
+import sys
 import time
 
-from .core import Blocked, atomic, canonical, digest, identifier, read, record, require, process_state
+from .core import Blocked, atomic, canonical, digest, identifier, read, record, require, process_state, error
 from lab.docker_endpoint import confirm, execute
 
 # The helper runs in the selected daemon, with the same volume on every control host.
@@ -152,8 +153,16 @@ def physical(target):
     if not ids:
         return []
     template = '{"container_id":{{json .Id}},"created":{{json .Created}},"state":{{json .State}},"labels":{{json .Config.Labels}}}'
-    output = execute(endpoint, ['inspect', '--format', template, *ids], check=True, capture_output=True, text=True, timeout=30)
-    return [json.loads(line) for line in output.stdout.splitlines()]
+    for timeout in (30, 60):
+        try:
+            output = execute(endpoint, ['inspect', '--format', template, *ids],
+                             check=True, capture_output=True, text=True, timeout=timeout)
+            return [json.loads(line) for line in output.stdout.splitlines()]
+        except subprocess.TimeoutExpired as exc:
+            if timeout == 60:
+                raise
+            # This GET precedes the authority mutation; retrying cannot dispatch a container.
+            print(json.dumps({'admission_physical_read_retry': error(exc)}), file=sys.stderr, flush=True)
 
 
 def volume_name(endpoint):

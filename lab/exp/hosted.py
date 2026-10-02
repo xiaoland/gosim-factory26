@@ -1,5 +1,6 @@
 """Single-attempt ARC platform adapter; durable uncertain writes are query-only."""
 from pathlib import Path
+from datetime import datetime, timezone
 import time
 import hashlib
 import json
@@ -252,6 +253,26 @@ def _package(directory, attempt):
     return package
 
 
+def _latest_submission(history):
+    if not isinstance(history, list) or not history:
+        raise Blocked('platform submission history is empty or unrecognized')
+    if any('is_latest' in row for row in history):
+        latest = [row for row in history if row.get('is_latest') is True]
+    else:
+        # The live competition API exposes created_at, not is_latest. Deletion
+        # eligibility also depends on active runs and cannot establish recency.
+        try:
+            dated = [(datetime.fromisoformat(row['created_at']).replace(tzinfo=timezone.utc), row) for row in history]
+        except (KeyError, TypeError, ValueError) as exc:
+            raise Blocked('submission history lacks valid creation identities') from exc
+        newest = max(date for date, _ in dated)
+        latest = [row for date, row in dated if date == newest]
+    if len(latest) != 1:
+        raise Blocked('platform submission history has no unique latest identity')
+    return latest[0]
+
+
+
 def freeze_replay(attempt_dir):
     """Offline package production from explicitly bound inputs; no platform access."""
     directory = Path(attempt_dir).resolve(strict=True)
@@ -296,8 +317,8 @@ def dispatch(attempt_dir):
                 if not isinstance(history, list):
                     raise Blocked('unrecognized platform history')
                 # A new latest snapshot can invalidate another attempt's creation rights.
-                for row in history:
-                    if row.get('is_latest'):
+                for row in ([_latest_submission(history)] if history else []):
+                    if row:
                         for score in row.get('task_scores', []):
                             if score.get('run_id'):
                                 value = _get(directory, client, run_path(score['run_id']))
@@ -320,10 +341,10 @@ def dispatch(attempt_dir):
                       package=package, prior_ids=[row['id'] for row in history])
             if not state['run_id']:
                 history = _get(directory, client, '/competitions/' + backend['competition_id'] + '/submissions')
-                latest = [row for row in history if row.get('is_latest') is True]
-                if len(latest) != 1 or latest[0]['id'] != state['submission_id']:
+                latest = _latest_submission(history)
+                if latest['id'] != state['submission_id']:
                     raise Blocked('snapshot is no longer uniquely latest; do not create')
-                if any(score.get('task_id') == backend['task'] and score.get('run_id') for score in latest[0].get('task_scores', [])):
+                if any(score.get('task_id') == backend['task'] and score.get('run_id') for score in latest.get('task_scores', [])):
                     raise Blocked('snapshot already has a task run; reconcile identity instead of creating')
                 _post(directory, client, state, 'create', '/runs', request['request_id'],
                       fields={'submission_id': state['submission_id'], 'requirement_id': backend['task']})

@@ -32,6 +32,12 @@ def main(argv=None):
     start = commands.add_parser('start')
     start.add_argument('experiment', type=Path)
     start.add_argument('--deployment', type=Path)
+    continuation = commands.add_parser('continue-pre-reserve', help='严格核实无预约及执行资源后，同 attempt 接续 reserve 前 inspect 超时；保留冻结来源')
+    continuation.add_argument('attempt_directory', type=Path)
+    upload = commands.add_parser('continue-input-upload', help='严格核实原创建容器从未启动后，接续同 attempt 上传及启动')
+    upload.add_argument('attempt_directory', type=Path)
+    confirm_start = commands.add_parser('confirm-start-binding', help='仅闭合已启动且等待marker的原容器绑定，不调用start')
+    confirm_start.add_argument('attempt_directory', type=Path)
     for name in ('status', 'monitor', 'wait'):
         item = commands.add_parser(name)
         item.add_argument('experiment', type=Path)
@@ -48,13 +54,22 @@ def main(argv=None):
     stopped.add_argument('experiment', type=Path)
     stopped.add_argument('attempt')
     stopped.add_argument('--output', type=Path, required=True)
-    imported_stop = commands.add_parser('import-source-stop', help='导入旧官网独立 GET 原件，不伪装新 attempt 或授予启动许可')
+    imported_stop = commands.add_parser('import-source-stop', help='导入官网独立 GET 原件，旧来源或绑定实际 experiment/attempt；不授予启动许可')
+    imported_stop.add_argument('--experiment', type=Path)
+    imported_stop.add_argument('--attempt')
     imported_stop.add_argument('--birth', type=Path, required=True)
     imported_stop.add_argument('--status', type=Path, required=True)
     imported_stop.add_argument('--cancel-evidence', type=Path)
     imported_stop.add_argument('--authorization', required=True)
     imported_stop.add_argument('--identity-output', type=Path, required=True)
     imported_stop.add_argument('--output', type=Path, required=True)
+    docker_stop = commands.add_parser('import-docker-source-stop', help='核对旧 Docker 停止与 writer 原件，保留 legacy 来源身份')
+    docker_stop.add_argument('--birth', type=Path, required=True)
+    docker_stop.add_argument('--status', type=Path, required=True)
+    docker_stop.add_argument('--writers', type=Path, required=True)
+    docker_stop.add_argument('--authorization', required=True)
+    docker_stop.add_argument('--identity-output', type=Path, required=True)
+    docker_stop.add_argument('--output', type=Path, required=True)
     retry = commands.add_parser('retry')
     retry.add_argument('experiment', type=Path)
     retry.add_argument('attempt')
@@ -126,6 +141,15 @@ def main(argv=None):
         value = controller.recover(args.source, args.intent, args.directory, environment=args.environment)
     elif args.action == 'start':
         value = controller.start(args.experiment, deployment=args.deployment)
+    elif args.action == 'continue-pre-reserve':
+        from .runner import continue_pre_reserve
+        value = continue_pre_reserve(args.attempt_directory)
+    elif args.action == 'continue-input-upload':
+        from .runner import continue_input_upload
+        value = continue_input_upload(args.attempt_directory)
+    elif args.action == 'confirm-start-binding':
+        from .runner import confirm_start_binding
+        value = confirm_start_binding(args.attempt_directory)
     elif args.action in {'status', 'monitor', 'wait'}:
         value = controller.status(args.experiment)
         if args.action == 'wait':
@@ -146,7 +170,11 @@ def main(argv=None):
     elif args.action == 'import-source-stop':
         from .backends import import_source_stop
         value = import_source_stop(args.birth, args.status, args.output, args.identity_output,
-                                   args.authorization, args.cancel_evidence)
+                                   args.authorization, args.cancel_evidence,
+                                   experiment=args.experiment, attempt_id=args.attempt)
+    elif args.action == 'import-docker-source-stop':
+        from .backends import import_docker_source_stop
+        value = import_docker_source_stop(args.birth, args.status, args.writers, args.output, args.identity_output, args.authorization)
     elif args.action == 'retry':
         value = controller.retry(args.experiment, args.attempt, args.authorization, request_id=args.request_id)
     elif args.action == 'authority-handoff':

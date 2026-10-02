@@ -1,15 +1,16 @@
 # Variant 索引
 
-当前开发基线为 [pi-braid-i13](pi-braid-i13/)，I12冻结运行及I10运行基线保留，采用 Pi、Braid 与 SVC。每个 variant 独立维护流程、原生角色与材料；目录相似不表示它们只差一个开关。选择或创建实验先看 [实验导航](../experiments/README.md)，实际输入和运行授权归所属 task packet。
+实现按迭代与职责隔离：I10 基线为 [pi-braid](pi-braid/)，I11、I12 分别保留 [pi-braid-i11](pi-braid-i11/) 和 [pi-braid-i12](pi-braid-i12/)，I13 基线与恢复实现为 [pi-braid-i13](pi-braid-i13/)，I14 在共同基线及 cleaner、reviewer、e2e 对照中继续演化，均采用 Pi、Braid 与 SVC。每个 variant 独立维护流程、原生角色与材料；目录相似不表示它们只差一个开关。源码入口不代表已有运行授权，选择或创建实验先看 [实验导航](../experiments/README.md)，实际输入、授权和状态归所属 task packet。
 
 ## 活动与实验实现
 
 | 实现 | 状态 | 维护职责 |
 | --- | --- | --- |
+| [pi-minimal](pi-minimal/) | 独立原生 Pi 参赛实现 | GLM 主会话与 Kimi advisor，后台任务；无 Braid/SVC。授权与余额保护见 [任务包](../tasks/pi-minimal/packet.md)。 |
 | [pi-braid](pi-braid/) | 保留的 I10 基线 | 原运行使用的冻结包与逐次恢复来源见 [I10 packet](../tasks/iteration10/packet.md)，目录源码不能替代旧制品身份。 |
 | [pi-braid-i11](pi-braid-i11/) | 保留的 I11 实现 | 原生成、交付及评分来源见 [I11 packet](../tasks/iteration11/packet.md)。 |
 | [pi-braid-i12](pi-braid-i12/) | 保留的 I12 人工介入实现 | 原冻结运行及暂停现场见 [I12 packet](../tasks/iteration12/packet.md)；Console 在开发侧，不装入制品。 |
-| [pi-braid-i13](pi-braid-i13/) | 当前开发入口 | 独立维护当前生成、角色、工具与方法材料；已实现范围、待验边界和后续方案见 [I13 packet](../tasks/iteration13/packet.md)。 |
+| [pi-braid-i13](pi-braid-i13/) | I13 基线与恢复实现 | 独立维护生成、角色、工具与方法材料；成果、恢复来源及待验边界见 [I13 packet](../tasks/iteration13/packet.md)。 |
 | [pi-braid-i13-glm-root](pi-braid-i13-glm-root/) | I13 根模型对照 | 增设 root-only GLM-5.3 根；两个 Flash 可指派成员保持基线。该组 advisor 保留 K3，基线 advisor 使用 K2.7 Code；冻结与解释边界见 [对照收据](../tasks/iteration13/root-comparison.md)。 |
 | [pi-braid-i14](pi-braid-i14/) | I14-0 共同基线 | PR 默认 draft，显式固定候选 review，由 Issue 现有负责人验收；模型、矩阵和实际启动身份见 [I14 packet](../tasks/iteration14/packet.md)。 |
 | [pi-braid-i14-cleaner](pi-braid-i14-cleaner/) | I14-0 维护职责对照 | 在共同基线上增加按需 cleaner，继承当前原生历史，推理结束后原子提交维护批次。 |
@@ -49,4 +50,4 @@ I11–I13 是用户明确要求的迭代隔离副本，保留迭代后缀，不�
 
 家族是导航分类，不是可执行别名。历史实现的技能、分支、导出与清理流程可能不同，不代表当前基线的等价配置。
 
-当前实验使用自带 key 的 `self_funded`；旧 pi-minimal 正式参赛记录保留历史身份，不恢复其自动接续授权。正式参赛须针对具体冻结产物取得新授权。新制品须符合按 Braid session 的预算保护，现行边界见 [AGENTS.md](../AGENTS.md#实验边界)与[预算与交付](../tasks/competition-budget/packet.md)。索引不记录某次成绩或“正在构建”等运行瞬态；历史结果与来源关系见 [官网运行总览](../tasks/competition-budget/packet.md#官网-hackathon-运行总览2026-09-26-核对)。
+新实验的费用模式、模型通道和凭据来源由本轮配方显式冻结；旧 pi-minimal 正式参赛记录保留历史身份，不恢复其自动接续授权。正式参赛须针对具体冻结产物取得新授权。新制品须符合按 Braid session 的预算保护，现行边界见 [AGENTS.md](../AGENTS.md#实验边界)；历史实施依据见[预算与交付](../tasks/competition-budget/packet.md)。索引不记录某次成绩或“正在构建”等运行瞬态；历史结果与来源关系见 [官网运行总览](../tasks/competition-budget/packet.md#官网-hackathon-运行总览2026-09-26-核对)。

@@ -1,4 +1,8 @@
-"""Local controller ownership, operation socket and durable change feed."""
+"""向现行实验运行时提供进程出生身份。
+
+其余 ownership、操作 socket 和 change feed 函数保留给旧控制器及其记录使用。
+当前派发实现位于 lab.exp，不通过旧控制器执行。
+"""
 
 from contextlib import contextmanager
 import ctypes

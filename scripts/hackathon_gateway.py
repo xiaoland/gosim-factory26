@@ -11,36 +11,12 @@ import shutil
 import subprocess
 import sys
 import time
+from urllib.parse import urlsplit
 from urllib.request import Request, urlopen
 
 
 ROOT = Path(__file__).resolve().parents[1]
-MODELS = {
-    "glm-5.3-flash": "GLM",
-    "kimi-k3": "KIMI",
-    "kimi-k2.7-code": "KIMI",
-    "deepseek-v4-flash": "DEEPSEEK",
-    "deepseek-v4-flash-vision-exp": "DEEPSEEK",
-}
-
-
-def read_secrets(path, models):
-    path = path.resolve(strict=True)
-    if path.stat().st_mode & 0o077:
-        raise ValueError("model secrets must have mode 600")
-    values = {}
-    for line in path.read_text().splitlines():
-        if not line.strip() or line.lstrip().startswith("#"):
-            continue
-        name, separator, value = line.partition("=")
-        if not separator:
-            raise ValueError(f"invalid secret assignment: {name}")
-        values[name.strip()] = value.strip().strip('"').strip("'")
-    for vendor in set(models.values()):
-        for suffix in ("API_KEY", "BASE_URL"):
-            if not values.get(f"{vendor}_{suffix}"):
-                raise ValueError(f"missing {vendor}_{suffix}")
-    return values
+DEFAULT_CATALOG = ROOT / "harness/model-gateway.json"
 
 
 def read_assignments(path):
@@ -66,6 +42,62 @@ def write_private(path, content):
     path.chmod(0o600)
 
 
+def digest(path):
+    return hashlib.sha256(Path(path).read_bytes()).hexdigest()
+
+
+def prepare_catalog(path, routes):
+    """Select exactly one native LiteLLM deployment for every stable alias."""
+    catalog = json.loads(Path(path).read_text())
+    entries = catalog.get("model_list")
+    if not isinstance(entries, list) or not entries:
+        raise ValueError("gateway catalog needs a non-empty native LiteLLM model_list")
+    grouped = {}
+    for entry in entries:
+        if not isinstance(entry, dict) or not isinstance(entry.get("model_name"), str):
+            raise ValueError("gateway catalog contains an invalid model entry")
+        info = entry.get("model_info", {})
+        deployment = info.get("factory26_deployment_id") if isinstance(info, dict) else None
+        if not deployment:
+            raise ValueError(f"gateway catalog entry lacks factory26_deployment_id: {entry.get('model_name')}")
+        params = entry.get("litellm_params", {})
+        for field in ("api_base", "api_key"):
+            value = params.get(field, "")
+            if not isinstance(value, str) or not value.startswith("os.environ/"):
+                raise ValueError(f"gateway catalog {field} must reference an environment variable")
+            if not value.removeprefix("os.environ/").isidentifier():
+                raise ValueError(f"gateway catalog {field} has an invalid environment reference")
+        grouped.setdefault(entry["model_name"], []).append((deployment, entry))
+    selected = {}
+    for alias, candidates in grouped.items():
+        wanted = routes.get(alias)
+        if wanted:
+            matches = [entry for deployment, entry in candidates if deployment == wanted]
+            if len(matches) != 1:
+                raise ValueError(f"route {alias}={wanted!r} does not select exactly one catalog deployment")
+            selected[alias] = matches[0]
+            continue
+        defaults = [entry for deployment, entry in candidates
+                    if entry.get("model_info", {}).get("factory26_default") is True]
+        if len(defaults) != 1:
+            raise ValueError(f"alias {alias!r} needs one explicit default or --route ALIAS=DEPLOYMENT_ID")
+        selected[alias] = defaults[0]
+    unknown = set(routes) - set(grouped)
+    if unknown:
+        raise ValueError(f"route selects unknown catalog alias: {sorted(unknown)}")
+    config = {key: value for key, value in catalog.items() if key != "model_list"}
+    config["model_list"] = selected.values()
+    snapshot = []
+    for alias, entry in selected.items():
+        info = entry["model_info"]
+        params = entry["litellm_params"]
+        snapshot.append({"alias": alias, "deployment_id": info["factory26_deployment_id"],
+                         "provider": info["factory26_provider"], "plan": info["factory26_plan"],
+                         "wire_model": params["model"].removeprefix("openai/"),
+                         "base_url_env": params["api_base"].removeprefix("os.environ/")})
+    return config, sorted(snapshot, key=lambda row: row["alias"])
+
+
 def binding_resource(service_state, run_dir, run_id, action):
     state = Path(service_state).resolve(strict=True)
     marker = Path(run_dir) / ".private/gateway-binding.json"
@@ -73,6 +105,9 @@ def binding_resource(service_state, run_dir, run_id, action):
         return {"status": "not-registered"}
     binding = json.loads(marker.read_text())
     service = json.loads((state / "service.json").read_text())
+    gateway_path = state / "gateway.json"
+    if service.get("config_sha256") and service["config_sha256"] != digest(gateway_path):
+        raise ValueError("gateway configuration changed after service preparation")
     if binding.get("run_id") != run_id or binding.get("service_id") != service["service_id"]:
         return {"status": "ownership-mismatch"}
     path = state / "bindings" / f"{binding['binding_id']}.json"
@@ -113,7 +148,7 @@ def export_otlp(service_state, run_id, run_dir):
                 row = json.loads(line)
             except ValueError as exc:
                 return {"status": "failed", "error": f"invalid gateway row at byte {end}: {exc}"}
-            if row.get("run_id") == run_id:
+            if row.get("run_id") == run_id or row.get("attempt_id") == run_id:
                 rows.append(row)
             end = stream.tell()
     if not rows:
@@ -162,12 +197,18 @@ def wrap(argv):
     command = args.command[1:] if args.command[:1] == ["--"] else args.command
     if not command:
         raise ValueError("wrapper needs an external argv after --")
-    run_id = os.environ.get("EXPERIMENT_RUN_ID")
-    run_dir = os.environ.get("EXPERIMENT_RUN_DIR")
-    if not run_id or not run_dir:
-        raise ValueError("wrapper needs EXPERIMENT_RUN_ID and EXPERIMENT_RUN_DIR")
+    legacy_run_id = os.environ.get("EXPERIMENT_RUN_ID")
+    attempt_id = os.environ.get("FACTORY26_EXP_ATTEMPT_ID") or legacy_run_id
+    run_dir = os.environ.get("FACTORY26_EXP_ATTEMPT_DIR") or os.environ.get("EXPERIMENT_RUN_DIR")
+    experiment_id = os.environ.get("FACTORY26_EXP_EXPERIMENT_ID") or os.environ.get("EXPERIMENT_ID")
+    incarnation = os.environ.get("FACTORY26_EXP_INCARNATION")
+    if not attempt_id or not run_dir:
+        raise ValueError("wrapper needs FACTORY26_EXP_ATTEMPT_ID/DIR or legacy EXPERIMENT_RUN_ID/DIR")
+    run_id = legacy_run_id or attempt_id
     state = args.service_state.expanduser().resolve(strict=True)
     service = json.loads((state / "service.json").read_text())
+    if service.get("config_sha256") != digest(state / "gateway.json"):
+        raise ValueError("gateway configuration changed after service preparation")
     service_env = read_assignments(state / "gateway.env")
     bindings = state / "bindings"
     token = secrets.token_urlsafe(32)
@@ -182,18 +223,24 @@ def wrap(argv):
     if any("\n" in value or "\r" in value for value in selected.values()):
         raise ValueError("client environment values must be single-line")
     temporary = private / f"gateway-{binding_id[:16]}.env"
-    write_private(binding, json.dumps({"run_id": run_id, "service_id": service["service_id"],
+    write_private(binding, json.dumps({"run_id": run_id, "legacy_run_id": legacy_run_id,
+                                        "attempt_id": attempt_id, "experiment_id": experiment_id,
+                                        "incarnation": incarnation, "service_id": service["service_id"],
+                                        "config_sha256": service["config_sha256"],
                                         "created_at": time.time()}, ensure_ascii=False) + "\n")
     try:
         write_private(private / "gateway-binding.json", json.dumps({
-            "run_id": run_id, "service_id": service["service_id"], "binding_id": binding_id},
+            "run_id": run_id, "legacy_run_id": legacy_run_id,
+            "attempt_id": attempt_id, "experiment_id": experiment_id,
+            "incarnation": incarnation, "config_sha256": service["config_sha256"],
+            "service_id": service["service_id"], "binding_id": binding_id},
             ensure_ascii=False) + "\n")
         write_private(temporary, "".join(f"{name}={value}\n" for name, value in selected.items()))
         env = dict(os.environ)
         env[args.env_file_var] = str(temporary)
         code = subprocess.call(command, env=env)
         try:
-            exported = export_otlp(state, run_id, run_dir)
+            exported = export_otlp(state, attempt_id, run_dir)
             (Path(run_dir) / "artifacts/gateway-export-result.json").write_text(
                 json.dumps(exported, ensure_ascii=False) + "\n")
         except Exception as exc:
@@ -239,17 +286,26 @@ def main():
                         help="网关监听地址；远端容器可使用明确可达的宿主地址")
     parser.add_argument("--preserve-parameters", action="store_true",
                         help="保留客户端推理、采样和输出参数，用于按现有配方运行")
+    parser.add_argument("--gateway-config", type=Path, default=DEFAULT_CATALOG,
+                        help="原生 LiteLLM model_list catalog")
+    parser.add_argument("--route", action="append", default=[], metavar="ALIAS=DEPLOYMENT_ID",
+                        help="从 catalog 为一个稳定 alias 选择唯一 deployment")
     parser.add_argument("--model-vendor", action="append", default=[], metavar="MODEL=VENDOR",
-                        help="显式增加或覆盖本次模型路由；VENDOR 为 GLM/KIMI/DEEPSEEK/QWEN")
+                        help=argparse.SUPPRESS)
+    parser.add_argument("--prepare-only", action="store_true",
+                        help="只生成并读回网关配置，不启动 LiteLLM")
     parser.add_argument("--container-host", default="172.17.0.1",
                         help="Docker bridge address of the WSL host")
     args = parser.parse_args()
-    models = dict(MODELS)
-    for route in args.model_vendor:
-        model, separator, vendor = route.partition("=")
-        if not separator or not model or vendor not in {"GLM", "KIMI", "DEEPSEEK", "QWEN"}:
-            raise ValueError(f"invalid model route {route!r}; expected MODEL=GLM/KIMI/DEEPSEEK/QWEN")
-        models[model] = vendor
+    if args.model_vendor:
+        raise ValueError("--model-vendor 已移除；请使用 --gateway-config 与 --route ALIAS=DEPLOYMENT_ID")
+    routes = {}
+    for route in args.route:
+        alias, separator, deployment = route.partition("=")
+        if not separator or not alias or not deployment or alias in routes:
+            raise ValueError(f"invalid route {route!r}; expected unique ALIAS=DEPLOYMENT_ID")
+        routes[alias] = deployment
+    config, snapshot = prepare_catalog(args.gateway_config.resolve(strict=True), routes)
     state = args.state.resolve()
     state.mkdir(parents=True, exist_ok=True)
     state.chmod(0o700)
@@ -262,40 +318,64 @@ def main():
     for name in ("hackathon_gateway_compat.py", "responses_compat.py"):
         shutil.copy2(Path(__file__).with_name(name), source / name)
     token = secrets.token_urlsafe(32)
-    config = {
-        "model_list": [{
-            "model_name": model,
-            "litellm_params": {
-                "model": "openai/" + model,
-                "api_base": "os.environ/" + vendor + "_BASE_URL",
-                "api_key": "os.environ/" + vendor + "_API_KEY",
-                "use_chat_completions_api": True,
-            },
-            "model_info": {"mode": "chat"},
-        } for model, vendor in models.items()],
-        "general_settings": {"master_key": "os.environ/LITELLM_MASTER_KEY",
-                             "custom_auth": "hackathon_gateway_compat.user_api_key_auth"},
-        "litellm_settings": {
-            "telemetry": False,
-            "callbacks": ["hackathon_gateway_compat.proxy_handler_instance"],
-        },
-    }
+    config.setdefault("general_settings", {}).update(
+        master_key="os.environ/LITELLM_MASTER_KEY",
+        custom_auth="hackathon_gateway_compat.user_api_key_auth")
+    config.setdefault("litellm_settings", {}).update(
+        telemetry=False, callbacks=["hackathon_gateway_compat.proxy_handler_instance"])
+    config["model_list"] = [dict(entry, litellm_params=dict(entry["litellm_params"],
+        use_chat_completions_api=True)) for entry in config["model_list"]]
     (state / "gateway.json").write_text(json.dumps(config, indent=2) + "\n")
     (state / "gateway.env").write_text(
         f"GATEWAY_URL=http://{args.container_host}:{args.port}/v1\nGATEWAY_TOKEN={token}\n"
     )
     (state / "gateway.env").chmod(0o600)
+    config_sha256 = digest(state / "gateway.json")
     (state / "service.json").write_text(json.dumps({"service_id": secrets.token_hex(12),
         "port": args.port, "listen_host": args.listen_host,
         "preserve_parameters": args.preserve_parameters,
+        "config_sha256": config_sha256,
         "callback_sha256": hashlib.sha256((source / "hackathon_gateway_compat.py").read_bytes()).hexdigest()}, indent=2) + "\n")
     runtime = args.runtime.resolve(strict=True)
-    env = dict(os.environ, **read_secrets(args.secrets, models), LITELLM_MASTER_KEY=token,
+    secret_values = read_assignments(args.secrets)
+    selected_refs = set()
+    for entry in config["model_list"]:
+        for field in ("api_base", "api_key"):
+            selected_refs.add(entry["litellm_params"][field].removeprefix("os.environ/"))
+    missing = sorted(name for name in selected_refs if not secret_values.get(name))
+    if missing:
+        raise ValueError(f"selected gateway deployment references missing environment variables: {missing}")
+    for entry in config["model_list"]:
+        reference = entry["litellm_params"]["api_base"]
+        prefix = "os.environ/"
+        if not reference.startswith(prefix):
+            raise ValueError("gateway catalog api_base must use an environment reference")
+        entry["litellm_params"]["api_base"] = secret_values[reference.removeprefix(prefix)]
+    (state / "gateway.json").write_text(json.dumps(config, indent=2) + "\n")
+    config_sha256 = digest(state / "gateway.json")
+    service_record = json.loads((state / "service.json").read_text())
+    service_record["config_sha256"] = config_sha256
+    (state / "service.json").write_text(json.dumps(service_record, indent=2) + "\n")
+    for row in snapshot:
+        row["endpoint"] = secret_values[row["base_url_env"]]
+        endpoint = urlsplit(row["endpoint"])
+        if endpoint.scheme not in {"http", "https"} or not endpoint.hostname or endpoint.username or endpoint.password or endpoint.query or endpoint.fragment:
+            raise ValueError(f"gateway endpoint is not a public HTTP URL: {row['alias']}")
+    snapshot_record = {"catalog_sha256": digest(args.gateway_config),
+                       "config_sha256": digest(state / "gateway.json"), "routes": snapshot}
+    (state / "routing-snapshot.json").write_text(json.dumps(snapshot_record, indent=2) + "\n")
+    env = dict(os.environ, **secret_values, LITELLM_MASTER_KEY=token,
                GATEWAY_REQUEST_LOG=str(state / "request-metadata.jsonl"),
                GATEWAY_BINDINGS_DIR=str(state / "bindings"),
                GATEWAY_PRESERVE_PARAMETERS="1" if args.preserve_parameters else "0")
     env["PYTHONPATH"] = ":".join((str(source), str(ROOT / "submission"),
                                     str(runtime / "python")))
+    if args.prepare_only:
+        loaded = json.loads((state / "routing-snapshot.json").read_text())
+        if loaded["config_sha256"] != digest(state / "gateway.json"):
+            raise ValueError("prepared gateway routing snapshot failed readback")
+        print(json.dumps(loaded, ensure_ascii=False))
+        return 0
     command = [args.python, str(runtime / "bin/litellm"), "--config", str(state / "gateway.json"),
                "--host", args.listen_host, "--port", str(args.port)]
     with (state / "gateway.log").open("a") as log:

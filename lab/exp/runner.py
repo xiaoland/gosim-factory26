@@ -103,6 +103,41 @@ def dispatch(attempt_dir):
     return observe(directory)
 
 
+def _legacy_continuation(attempt_dir, function_name):
+    """Continue historical execution only through its unchanged frozen producer."""
+    import ast
+    directory = Path(attempt_dir).resolve(strict=True)
+    from .controller import _control_manifest
+    experiment = directory.parent.parent
+    manifest = _control_manifest(experiment)
+    if manifest.get('schema_version') != 1:
+        raise Blocked('legacy /attempt continuation is unavailable for domain protocol 2; reconcile its accepted domain action')
+    source = experiment / 'source'
+    frozen = source / 'lab/exp/runner.py'
+    if frozen.resolve() == Path(__file__).resolve():
+        raise Blocked('historical continuation must be supported by its original frozen executor')
+    names = {node.name for node in ast.parse(frozen.read_text()).body if isinstance(node, ast.FunctionDef)}
+    if function_name not in names:
+        raise Blocked('original frozen executor does not support ' + function_name + '; historical source will not be patched')
+    environment = dict(os.environ, PYTHONPATH=str(source), PYTHONDONTWRITEBYTECODE='1')
+    command = 'import json,sys;from lab.exp import runner;print(json.dumps(getattr(runner,sys.argv[1])(sys.argv[2])))'
+    result = subprocess.run([manifest['controller_runtime']['launcher'], '-B', '-c', command, function_name, str(directory)],
+                            cwd=source, env=environment, check=True, capture_output=True, text=True)
+    return json.loads(result.stdout)
+
+
+def continue_pre_reserve(attempt_dir):
+    return _legacy_continuation(attempt_dir, 'continue_pre_reserve')
+
+
+def continue_input_upload(attempt_dir):
+    return _legacy_continuation(attempt_dir, 'continue_input_upload')
+
+
+def confirm_start_binding(attempt_dir):
+    return _legacy_continuation(attempt_dir, 'confirm_start_binding')
+
+
 def observe(attempt_dir, live=False):
     directory = Path(attempt_dir)
     attempt = _attempt(directory)
@@ -542,7 +577,7 @@ def _archive(directory, attempt, receipt):
     import shutil
     job = attempt['job']
     workspace = Path(read(directory / 'assembly.json')['workspace']) if (directory / 'assembly.json').exists() else directory / 'workspace'
-    evidence_size = _size(workspace) + _size(directory / 'telemetry')
+    evidence_size = _size(workspace) + _size(directory / 'telemetry') + _size(directory / 'process-evidence')
     output_size = sum(_size(workspace / member(row['path'])) if (workspace / member(row['path'])).is_dir()
                       else (workspace / member(row['path'])).stat().st_size
                       for row in job.get('outputs', []) if (workspace / member(row['path'])).exists())
@@ -704,6 +739,7 @@ def worker(attempt_dir):
             evidence, collector, service_states = _ready_services(directory, attempt, binding, deadline, stop_signal, receipt)
             enabled = job.get('telemetry', {}).get('enabled', True)
             environment = _environment(job, deployment)
+            environment['FACTORY26_EXP_RESOURCE_SAMPLE'] = str(directory / 'process-evidence/resource-latest.json')
             if job.get('prepared'):
                 manifest_path = directory / 'inputs/prepared/harness-manifest.json'
                 from .core import digest
@@ -786,7 +822,7 @@ def worker(attempt_dir):
                         except Exception as exc:
                             _effect(effect, request, 'unknown', error=error(exc))
                     reason = stop_signal[0] if stop_signal else ('wall_limit' if time.monotonic() >= deadline else None)
-                    if reason is None and _size(workspace) + sum((directory / name).stat().st_size for name in ('stdout.log', 'stderr.log')) > limits['storage_bytes']:
+                    if reason is None and _size(workspace) + _size(directory / 'process-evidence') + sum((directory / name).stat().st_size for name in ('stdout.log', 'stderr.log')) > limits['storage_bytes']:
                         reason = 'workspace_storage_limit'
                     if reason is None and _telemetry_size(directory) > limits['telemetry_bytes']:
                         reason = 'aggregate_telemetry_storage_limit'
@@ -965,7 +1001,7 @@ def payload_worker(directory):
         atomic(directory / 'entry-command.json', record('entry-command', attempt_id=attempt['attempt_id'], command=command))
         environment = _environment(job, deployment)
         environment.update(FACTORY26_EXP_ATTEMPT_DIR=str(directory), FACTORY26_EXP_ATTEMPT_ID=attempt['attempt_id'],
-                           FACTORY26_EXP_INCARNATION=binding['incarnation_id'], FACTORY26_EXP_SERVICES=json.dumps(services), PYTHONPATH=deployment['runtime']['source'])
+                           FACTORY26_EXP_INCARNATION=binding['incarnation_id'], FACTORY26_EXP_RESOURCE_SAMPLE=str(directory / 'process-evidence/resource-latest.json'), FACTORY26_EXP_SERVICES=json.dumps(services), PYTHONPATH=deployment['runtime']['source'])
         if job.get('prepared'):
             environment['FACTORY26_EXP_ASSEMBLY'] = str(directory / 'assembly.json')
             from .core import digest
@@ -982,7 +1018,7 @@ def payload_worker(directory):
             atomic(directory / 'entry-started.json', record('entry-started', attempt_id=attempt['attempt_id'], request_id=permit['request_id'], process=identity, started_at=time.time()))
             while process.poll() is None:
                 evidence.sample()
-                if stop_requested or time.monotonic() >= deadline or _size(workspace) + _telemetry_size(directory) > limits['storage_bytes']:
+                if stop_requested or time.monotonic() >= deadline or _size(workspace) + _size(directory / 'process-evidence') + _telemetry_size(directory) + sum((directory / name).stat().st_size for name in ('stdout.log', 'stderr.log')) > limits['storage_bytes']:
                     _terminate(process, identity, limits.get('stop_grace_seconds', 10))
                 time.sleep(2)
             exit_code = process.wait()
@@ -1009,10 +1045,10 @@ def main():
         resource.setrlimit(resource.RLIMIT_FSIZE, (int(limits['storage_bytes']), int(limits['storage_bytes'])))
         if limits.get('cpu_seconds'):
             resource.setrlimit(resource.RLIMIT_CPU, (int(limits['cpu_seconds']), int(limits['cpu_seconds'])))
-        if limits.get('memory_bytes') and sys.platform.startswith('linux'):
+        if limits.get('memory_bytes') and sys.platform.startswith('linux') and attempt['job']['backend']['kind'] == 'local':
             resource.setrlimit(resource.RLIMIT_AS, (int(limits['memory_bytes']), int(limits['memory_bytes'])))
         environment = _environment(attempt['job'], read(args.attempt_dir / 'deployment.json'))
-        for name in ('FACTORY26_EXP_ATTEMPT_DIR','FACTORY26_EXP_ATTEMPT_ID','FACTORY26_EXP_INCARNATION','FACTORY26_EXP_TELEMETRY_BINDING','FACTORY26_EXP_ASSEMBLY','FACTORY26_EXP_PREPARED_BINDING','FACTORY26_EXP_SERVICES','FACTORY26_EXP_TELEMETRY_CAP_BYTES','OTEL_EXPORTER_OTLP_ENDPOINT','OTEL_EXPORTER_OTLP_PROTOCOL','OTEL_EXPORTER_OTLP_HEADERS','EXPERIMENT_DOCKER_ENDPOINT','EXP_ADMISSION_VOLUME','EXP_ADMISSION_SLOTS'):
+        for name in ('FACTORY26_EXP_ATTEMPT_DIR','FACTORY26_EXP_ATTEMPT_ID','FACTORY26_EXP_INCARNATION','FACTORY26_EXP_RESOURCE_SAMPLE','FACTORY26_EXP_TELEMETRY_BINDING','FACTORY26_EXP_ASSEMBLY','FACTORY26_EXP_PREPARED_BINDING','FACTORY26_EXP_SERVICES','FACTORY26_EXP_TELEMETRY_CAP_BYTES','OTEL_EXPORTER_OTLP_ENDPOINT','OTEL_EXPORTER_OTLP_PROTOCOL','OTEL_EXPORTER_OTLP_HEADERS','EXPERIMENT_DOCKER_ENDPOINT','EXP_ADMISSION_VOLUME','EXP_ADMISSION_SLOTS'):
             if name in os.environ:
                 environment[name] = os.environ[name]
         command_path = args.attempt_dir / 'entry-command.json'

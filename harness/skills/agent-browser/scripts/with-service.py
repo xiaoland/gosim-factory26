@@ -241,7 +241,10 @@ def main():
             if code == 0:
                 code = 1
         record()
-        print(f'{result["status"]}; logs and exit receipt: {evidence}', flush=True)
+        print(f'status={result["status"]}; check_exit={result["check_exit"]}; '
+              f'cleanup_status={result["cleanup_status"]}\n'
+              f'check_log={evidence / "check.log"}\n'
+              f'receipt={evidence / "result.json"}', flush=True)
     return code
 
 

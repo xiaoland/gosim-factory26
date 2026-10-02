@@ -221,6 +221,34 @@ def semantic_readback(payload, logical_root, materials=None):
     return {'gaps': gaps, 'git': git, 'native': native}
 
 
+def source_identity_fields(identity, *, legacy_read=False):
+    if not isinstance(identity, dict):
+        raise ValueError('检查点来源执行身份必须为对象')
+    if identity.get('kind') == 'factory26.exp.legacy-source':
+        if identity.get('schema_version') != 1 or 'attempt_id' in identity:
+            raise ValueError('旧来源必须保持 schema 1 source_id，不得补造 attempt_id')
+        fields = ('source_id', 'execution_instance', 'backend_identity')
+    elif identity.get('kind') is None:
+        if legacy_read and identity.get('source_id') and not identity.get('attempt_id'):
+            fields = ('source_id', 'execution_instance', 'backend_identity')
+        else:
+            fields = ('attempt_id', 'execution_instance', 'backend_identity')
+    else:
+        raise ValueError('不支持的检查点来源执行身份合同')
+    if not all(identity.get(name) for name in fields):
+        raise ValueError('检查点缺少来源执行身份')
+    return fields
+
+
+def validate_stop_identity(identity, observed, *, legacy_read=False):
+    fields = source_identity_fields(identity, legacy_read=legacy_read)
+    if any(observed.get(name) != identity[name] for name in fields):
+        raise ValueError('停止来源 instance 不一致')
+    if ('source_identity' in observed or identity.get('kind') == 'factory26.exp.legacy-source') and observed.get('source_identity') != identity:
+        raise ValueError('停止来源嵌套执行身份不一致')
+    if observed.get('effect') != 'stopped' or not observed.get('observation'):
+        raise ValueError('检查点必须有真实停止观察，受理不等于已停止')
+
 
 def validator_identity():
     return {'hook': HOOK, 'source_sha256': PRODUCER_SOURCE_SHA256,
@@ -402,16 +430,14 @@ def validate(root):
     if actual != manifest['files']:
         raise ValueError('检查点内容清单与读回不一致')
     identity = manifest['source_identity']
-    if not (identity.get('attempt_id') or identity.get('source_id')) or not all(identity.get(name) for name in ('execution_instance','backend_identity')):
-        raise ValueError('检查点缺少来源执行身份')
+    source_identity_fields(identity, legacy_read=manifest['schema_version'] == 1)
     if manifest['kind'] == KIND:
         stop = manifest['stop_provenance']
         original = path_at(root, stop['member'])
         if digest(original) != stop['sha256']:
             raise ValueError('停止来源原件发生变化')
         observed = json.loads(original.read_text())
-        if any(observed.get(name) != identity.get(name) for name in ('attempt_id','source_id','execution_instance','backend_identity')):
-            raise ValueError('停止来源 instance 不一致')
+        validate_stop_identity(identity, observed, legacy_read=manifest['schema_version'] == 1)
     if manifest['schema_version'] == 2 and manifest.get('validator',{}).get('hook') != HOOK:
         raise ValueError('Harness validator hook不支持此证明覆盖')
     readback = semantic_readback(root / 'content/run', manifest['layout']['run_root'], manifest['materials'])
@@ -433,12 +459,7 @@ def checkpoint(source, output, identity, stop, materials, acquisition=None):
     source = source.resolve(strict=True)
     identity_value = json.loads(identity.read_text())
     stop_value = json.loads(stop.read_text())
-    identity_field = 'attempt_id' if identity_value.get('attempt_id') else 'source_id'
-    for field in (identity_field, 'execution_instance', 'backend_identity'):
-        if not identity_value.get(field) or stop_value.get(field) != identity_value[field]:
-            raise ValueError(f'停止原件与来源执行身份不一致：{field}')
-    if stop_value.get('effect') != 'stopped' or not stop_value.get('observation'):
-        raise ValueError('检查点必须有真实停止观察，受理不等于已停止')
+    validate_stop_identity(identity_value, stop_value)
     acquisition_value = _acquisition(acquisition, identity_value)
     output = output.absolute()
     if output.exists() or output.is_relative_to(source):

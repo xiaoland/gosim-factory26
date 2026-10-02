@@ -137,6 +137,7 @@ def generate(args):
     """
     visual_url = os.environ.get('VISUAL_BASE_URL')
     routes, model_env = model_bindings(args.base_url, visual_url, require_key=not args.prepare_only)
+    _, e2e_model, e2e_route = native_model_route('factory26', 'glm-5.3-flash', routes)
     base_url = routes['factory26']['base_url']
     requirements = args.requirements_dir.resolve(strict=True)
     if not requirements.is_dir():
@@ -237,6 +238,8 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                E2E_RUNTIME=str(e2e_runtime),
                E2E_NODE_MODULES=str(e2e_runtime/'node_modules'),
                E2E_CONFIG_TEMPLATE=str(HERE/'tools/e2e.config.ts'),
+               E2E_MODEL=e2e_model, E2E_BASE_URL=e2e_route['base_url'],
+               E2E_API_KEY=model_env[e2e_route['credential_env']],
                E2E_TELEMETRY_DISABLED='1',
                FACTORY26_TOOL_NODE=str(runtime/'bin/node'),
                FACTORY26_BASE_URL=base_url,

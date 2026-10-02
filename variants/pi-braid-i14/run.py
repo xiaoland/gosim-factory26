@@ -18,7 +18,7 @@ from agent_support import (save, phase, hashes, digest, logged, cleanup_workspac
                            copy_application, copy_skill, deliver, browser_executable, budgeted_pi,
                            start_local_telemetry, telemetry_environment, stop_local_telemetry)
 from agent_support import runtime_resource_environment, start_shared_proxy, stop_shared_proxy
-from agent_support import model_bindings, bind_native_models, native_model_route, bind_native_role
+from agent_support import model_bindings, bind_native_models, native_model_route, bind_native_role, bind_native_model_scope
 from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
@@ -84,6 +84,7 @@ def native_files(work, runtime, skills, base_url, visual_url):
         profile['provider'], profile['model'], profile_route = native_model_route(profile['provider'], profile['model'], routes)
         bind_native_models(providers, routes)
         save(template/'models.json', providers)
+        save(template/'settings.json', bind_native_model_scope(json.loads((template/'settings.json').read_text()), routes))
         save(template/'pi-fff.json', {'mode':'tools-only'})
         for role in (template/'agents').glob('*.md'):
             instruction = bind_native_role(role.read_text(), routes).replace('@SKILLS@', json.dumps(str(skills))[1:-1])

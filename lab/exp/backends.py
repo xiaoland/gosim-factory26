@@ -23,26 +23,65 @@ def _legacy_birth(value):
     return {key: value[key] for key in fields}
 
 
-def import_source_stop(birth, status, output, identity_output, authorization, cancel_evidence=None):
+def import_source_stop(birth, status, output, identity_output, authorization, cancel_evidence=None,
+                       *, experiment=None, attempt_id=None):
     """Read saved ARC GET originals; cancellation intent alone grants no effect."""
     from lab.arc_bench.playground import API
+    if (experiment is None) != (attempt_id is None):
+        raise ValueError('hosted stop import requires experiment and attempt together')
     if not authorization.strip() or Path(output).exists() or Path(identity_output).exists() or Path(output).resolve() == Path(identity_output).resolve():
-        raise ValueError('legacy stop import needs explicit scope and two fresh output files')
+        raise ValueError('stop import needs explicit scope and two fresh output files')
     initial, terminal = read(birth), read(status)
     identity = _legacy_birth(initial)
     if _legacy_birth(terminal) != identity:
-        raise Blocked('legacy terminal observation differs from original source birth')
+        raise Blocked('terminal observation differs from original source birth')
     if terminal.get('status') not in {'PASSED', 'FAILED', 'CANCELLED'} or not terminal.get('finished_at'):
-        raise Blocked('legacy source needs an independent terminal GET with finished_at; cancel acceptance is insufficient')
-    source = record('legacy-source', source_id='arc-run-' + identity['id'],
-                    execution_instance=canonical(identity),
-                    backend_identity={'kind': 'legacy-hosted', 'platform': 'arc', 'api': API, **identity})
+        raise Blocked('source needs an independent terminal GET with finished_at; cancel acceptance is insufficient')
     originals = {name: {'source': str(Path(path).resolve(strict=True)), 'sha256': digest(path)}
                  for name, path in [('birth', birth), ('terminal_get', status)]}
+    if experiment is None:
+        source = record('legacy-source', source_id='arc-run-' + identity['id'],
+                        execution_instance=canonical(identity),
+                        backend_identity={'kind': 'legacy-hosted', 'platform': 'arc', 'api': API, **identity})
+    else:
+        from .controller import verify
+        directory = Path(experiment).resolve(strict=True)
+        manifest = verify(directory)
+        attempt_path = directory / 'attempts' / identifier(attempt_id)
+        attempt = require(read(attempt_path / 'attempt.json'), 'attempt')
+        execution = require(read(attempt_path / 'execution.json'), 'execution')
+        request = require(read(attempt_path / 'request.json'), 'request')
+        job = next((item for item in manifest['jobs'] if item['id'] == attempt.get('job_id')), None)
+        backend = attempt['job']['backend']
+        if (attempt.get('attempt_id') != attempt_id or attempt.get('experiment_id') != manifest['experiment_id'] or
+                job != attempt['job'] or backend.get('kind') != 'hosted' or
+                execution.get('attempt_id') != attempt_id or execution.get('backend') != 'hosted' or
+                not execution.get('incarnation_id') or request.get('attempt_id') != attempt_id or
+                request.get('action') != 'dispatch' or request.get('parameters_sha256') != canonical(request['parameters']) or
+                attempt.get('dispatch_request_id') != request.get('request_id') or
+                execution.get('dispatch_request_id') != request.get('request_id')):
+            raise Blocked('hosted source experiment/attempt/job/dispatch binding differs')
+        identifier(execution['incarnation_id'])
+        package = attempt_path / 'inputs' / 'agent'
+        frozen_agent = read(directory / 'artifacts' / identifier(job['inputs']['agent']['artifact_id']) / 'manifest.json')
+        package_sha256 = digest(package) if package.is_file() else None
+        if (not package_sha256 or frozen_agent['contents'].get('kind') != 'file' or
+                frozen_agent['contents'].get('sha256') != package_sha256 or execution.get('dispatch_sha256') !=
+                canonical({'backend': backend, 'package_sha256': package_sha256, 'request': request})):
+            raise Blocked('hosted source dispatch differs from its frozen package and request')
+        if (_legacy_birth(execution.get('platform_result')) != identity or
+                execution.get('run_id') != identity['id'] or execution.get('submission_id') != identity['submission_id'] or
+                backend.get('competition_id') != identity['competition_id'] or backend.get('task') != identity['requirement_id']):
+            raise Blocked('hosted source saved execution birth differs from independent GET originals')
+        source = {'attempt_id': attempt_id, 'execution_instance': execution['incarnation_id'],
+                  'backend_identity': {'kind': 'hosted', 'platform': 'arc', 'api': API, **identity}}
+        for name, path in [('experiment', directory / 'experiment.json'), ('attempt', attempt_path / 'attempt.json'),
+                           ('execution', attempt_path / 'execution.json'), ('dispatch_request', attempt_path / 'request.json')]:
+            originals[name] = {'source': str(path), 'sha256': digest(path)}
     if cancel_evidence is not None:
         originals['cancel'] = {'source': str(Path(cancel_evidence).resolve(strict=True)), 'sha256': digest(cancel_evidence)}
-    value = record('stop-evidence', source_identity=source, source_id=source['source_id'],
-                   execution_instance=source['execution_instance'], backend_identity=source['backend_identity'],
+    value = record('stop-evidence', source_identity=source, **{key: value for key, value in source.items()
+                                                           if key not in {'kind', 'schema_version'}},
                    effect='stopped', observation={'status': terminal['status'], 'finished_at': terminal['finished_at'],
                                                 'basis': 'saved-independent-platform-get', 'value': _legacy_birth(terminal)},
                    authorization=authorization, originals=originals, captured_at=time.time(),
@@ -53,23 +92,52 @@ def import_source_stop(birth, status, output, identity_output, authorization, ca
 
 
 def observe_source(source, deployment=None):
-    if source.get('kind') != 'factory26.exp.legacy-source':
+    backend = source.get('backend_identity', {})
+    if backend.get('kind') == 'legacy-docker':
+        require(source, 'legacy-source')
+        identity = {key: backend[key] for key in ('source_run_id', 'daemon_id', 'container_id', 'created', 'started_at', 'image_id', 'labels')}
+        if source.get('source_id') != identity['source_run_id'] or source.get('execution_instance') != canonical(identity):
+            raise Blocked('legacy Docker source birth differs from its frozen identity')
+        if backend['endpoint'].get('daemon_id') != identity['daemon_id']:
+            raise Blocked('legacy Docker source endpoint differs from its daemon')
+        _closed_legacy_writers(backend['writers'])
+        users = execute(backend['endpoint'], ['ps', '-aq', '--no-trunc', '--filter', 'volume=' + backend['volume']],
+                        check=True, capture_output=True, text=True, timeout=30).stdout.split()
+        if set(users) != {item['container_id'] for item in backend['volume_users']}:
+            raise Blocked('legacy Docker source volume users changed after writer closure')
+        for item in backend['volume_users']:
+            user = exact_resource({'kind': 'docker', 'endpoint': backend['endpoint'], 'image_id': item['image_id']}, item)
+            if not _docker_stopped(user['state']):
+                raise Blocked('legacy Docker source volume still has an active writer/accessor')
+        physical = exact_resource({'kind': 'docker', 'endpoint': backend['endpoint'], 'image_id': identity['image_id']}, backend)
+        state = physical['state']
+        stopped = _docker_stopped(state)
+        return record('source_observation', source_identity=source, effect='stopped' if stopped else 'unknown',
+                      physical=physical, observed_at=time.time())
+    hosted = backend.get('kind') == 'hosted'
+    if source.get('kind') != 'factory26.exp.legacy-source' and not hosted:
         from .runner import observe_source as observe_runner_source
         return observe_runner_source(source)
-    require(source, 'legacy-source')
+    if not hosted:
+        require(source, 'legacy-source')
+    else:
+        if 'kind' in source or 'schema_version' in source:
+            raise Blocked('hosted source must retain the actual attempt execution identity without a legacy producer kind')
+        identifier(source['attempt_id'])
+        identifier(source['execution_instance'])
     from lab.arc_bench.playground import API, Client, run_path
-    backend = source['backend_identity']
     identity = _legacy_birth(backend)
-    if (backend.get('kind') != 'legacy-hosted' or backend.get('platform') != 'arc' or backend.get('api') != API or
-            source.get('source_id') != 'arc-run-' + identity['id'] or source.get('execution_instance') != canonical(identity)):
-        raise Blocked('unsupported or inconsistent legacy source producer identity')
+    if (backend.get('platform') != 'arc' or backend.get('api') != API or
+            (not hosted and (backend.get('kind') != 'legacy-hosted' or
+             source.get('source_id') != 'arc-run-' + identity['id'] or source.get('execution_instance') != canonical(identity)))):
+        raise Blocked('unsupported or inconsistent platform source producer identity')
     cookie = (deployment or {}).get('cookie_file')
     if not cookie:
-        raise Blocked('legacy source current observation requires explicit private cookie_file; no ambient credential fallback')
+        raise Blocked('platform source current observation requires explicit private cookie_file; no ambient credential fallback')
     # This adapter only GETs the original run; it never cancels or resumes it.
     value = Client(cookie).request(run_path(identity['id']))
     if _legacy_birth(value) != identity:
-        raise Blocked('legacy source actual execution birth changed')
+        raise Blocked('platform source actual execution birth changed')
     status = value.get('status')
     stopped = status in {'PASSED', 'FAILED', 'CANCELLED'} and bool(value.get('finished_at'))
     return record('source_observation', source_identity=source, effect='stopped' if stopped else 'unknown',
@@ -244,7 +312,7 @@ def domain_observation(target, binding):
     return value
 
 
-def _owner_exec(target, helper, argv, *, timeout=300):
+def _owner_exec(target, helper, argv, *, timeout=1800):
     exact_resource(target, helper)
     return execute(target['endpoint'], ['exec', helper['container_id'], *argv],
                    check=True, capture_output=True, text=True, timeout=timeout)
@@ -298,7 +366,7 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
     atomic(directory / 'store-helper.json', helper)
     managed(target, helper, 'writer-open', request['request_id'] + '--owner-writer-open')
     execute(endpoint, ['cp', deployment['runtime']['source'], helper['container_id'] + ':/execution/owner-runtime'],
-            check=True, capture_output=True, text=True, timeout=300)
+            check=True, capture_output=True, text=True, timeout=1800)
     _owner_exec(target, helper, [target.get('python', 'python3'), '-c',
                                "from pathlib import Path;[Path('/execution/'+p).mkdir(exist_ok=True) for p in ('payload','staging')]"])
     store_action(directory, 'initialize', {'domain_identity': {'kind': 'docker', 'daemon_id': endpoint['daemon_id'], 'volume_id': asset_volume}})
@@ -322,7 +390,7 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
         if not present:
             source = Path(attempt['artifact_store']) / ref['artifact_id']
             execute(endpoint, ['cp', str(source), helper['container_id'] + ':/execution/staging/' + ref['artifact_id']],
-                    check=True, capture_output=True, text=True, timeout=300)
+                    check=True, capture_output=True, text=True, timeout=1800)
             _owner_exec(target, helper, [target.get('python', 'python3'), '-c', 'from pathlib import Path;Path(' + repr('/execution/staging/' + ref['artifact_id'] + '/location.json') + ').unlink(missing_ok=True)'])
             store_action(directory, 'transfer', {'source_store': '/execution/staging', 'reference': ref,
                          'request_id': rid + '--input--' + name, 'consumer': rid})
@@ -444,6 +512,39 @@ def payload_send(directory, filename, value):
     managed(target, helper, 'writer-close', transport_id + '--writer-close')
 
 
+def docker_export_preflight(directory, attempt, resource):
+    """Account for terminal reception and host evidence assembly before copying."""
+    target = attempt['job']['backend']
+    helper = read(Path(directory) / 'store-helper.json')
+    script = '''import json,os,stat,sys
+from pathlib import Path
+root=Path('/execution/payload')
+def failure(exc):raise exc
+def size(path):
+ if not path.is_dir() or path.is_symlink():raise ValueError('missing or redirected export source: '+str(path))
+ total=4096
+ for current,dirs,files in os.walk(path,followlinks=False,onerror=failure):
+  for name in dirs+files:
+   value=(Path(current)/name).lstat()
+   # Include archive headers and extraction allocation, including empty directories.
+   total+=((value.st_size+4095)//4096)*4096+512 if stat.S_ISREG(value.st_mode) else 4096
+ return total
+print(json.dumps({'T_bytes':size(root)}))
+'''
+    measured = json.loads(_owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', script], timeout=180).stdout)
+    margin = attempt['job']['limits'].get('storage_reserve_bytes', attempt['job']['limits']['storage_bytes'])
+    free = shutil.disk_usage(directory).free
+    required = 2 * measured['T_bytes'] + margin
+    value = record('export-preflight', source=resource, **measured,
+                   margin_bytes=margin, required_bytes=required, host_free_bytes=free,
+                   missing_bytes=max(0, required-free), observed_at=time.time())
+    atomic(Path(directory) / 'export-preflight.json', value)
+    if free < required:
+        raise Blocked('terminal export storage unavailable: required=' + str(required) + ', free=' + str(free) + ', missing=' + str(required-free))
+    return value
+
+
+
 def export_payload(directory):
     directory = Path(directory)
     attempt, resource = read(directory / 'attempt.json'), read(directory / 'resource.json')
@@ -454,8 +555,9 @@ def export_payload(directory):
     stage = directory / ('payload-export-' + str(time.time_ns()))
     stage.mkdir()
     try:
+        docker_export_preflight(directory, attempt, resource)
         execute(target['endpoint'], ['cp', resource['container_id'] + ':/execution/.', str(stage)],
-                check=True, capture_output=True, text=True, timeout=300)
+                check=True, capture_output=True, text=True, timeout=1800)
         for name in ('workspace', 'telemetry', 'telemetry-transports', 'process-evidence', 'service-errors'):
             source = stage / name
             if source.is_dir():
@@ -532,7 +634,7 @@ def export_named(source_attempt_dir, reference, location, target_store):
     atomic(receipt_path, record('named-transfer', request_id=request_id, reference=reference, source=location, status='receiving', stage=str(stage)))
     try:
         execute(target['endpoint'], ['cp', helper['container_id'] + ':/assets/' + reference['artifact_id'], str(stage)],
-                check=True, capture_output=True, text=True, timeout=300)
+                check=True, capture_output=True, text=True, timeout=1800)
         # The transport staging is raw reception, not a cloned managed-store authority.
         (stage / reference['artifact_id'] / 'location.json').unlink(missing_ok=True)
         verify(stage, reference)
@@ -548,3 +650,75 @@ def export_named(source_attempt_dir, reference, location, target_store):
         atomic(receipt_path, record('named-transfer', request_id=request_id, reference=reference, source=location,
               status='unknown', stage=str(stage), error=error(exc)))
         raise
+
+
+def _docker_stopped(state):
+    return (state.get('Status') in {'exited', 'dead'} and state.get('Running') is False and
+            state.get('Paused') is False and state.get('Restarting') is False and state.get('Pid') == 0)
+
+
+
+def _closed_legacy_writers(writers):
+    if not isinstance(writers, list) or not writers:
+        raise Blocked('legacy Docker source requires its closed restart/writer identities')
+    current = process_identity()
+    for writer in writers:
+        state = process_state(writer)
+        if state == 'lost':
+            continue
+        # Darwin withholds proc_pidinfo birth for zombies. A current zombie cannot
+        # execute; the shared dispatcher need not be resumed merely to reap it.
+        if state == 'unknown' and writer.get('host') == current['host'] and writer.get('boot_id') == current['boot_id']:
+            if type(writer.get('pid')) is not int or writer['pid'] <= 0:
+                raise Blocked('legacy Docker writer PID is invalid')
+            result = subprocess.run(['ps', '-o', 'stat=', '-p', str(writer['pid'])], capture_output=True, text=True, timeout=10)
+            if result.returncode == 0 and result.stdout.strip().startswith('Z'):
+                continue
+        raise Blocked(f'legacy Docker source writer is not closed: pid={writer.get("pid")}, state={state}')
+
+
+
+def import_docker_source_stop(birth, status, writers, output, identity_output, authorization):
+    """Bind retained legacy Docker originals to a fresh exact physical observation."""
+    if not authorization.strip() or Path(output).exists() or Path(identity_output).exists() or Path(output).resolve() == Path(identity_output).resolve():
+        raise ValueError('legacy Docker import needs explicit scope and two fresh output files')
+    initial, terminal, retirement = read(birth), read(status), read(writers)
+    original, endpoint = initial['source_container'], initial['endpoint']
+    if (initial['source_run_id'] != terminal.get('source_run_id') or initial['daemon_id'] != terminal.get('daemon_id') or
+            original['id'] != terminal.get('container_id') or original['state']['StartedAt'] != terminal['after'].get('StartedAt')):
+        raise Blocked('legacy Docker stop original differs from its source birth')
+    identities = [row['identity'] for row in retirement['writers']]
+    _closed_legacy_writers(identities)
+    physical = inspect({'kind': 'docker', 'endpoint': endpoint}, original['id'])
+    if (physical['image_id'] != original['image'] or physical['state']['StartedAt'] != original['state']['StartedAt'] or
+            any(physical['labels'].get(k) != v for k, v in original['labels'].items())):
+        raise Blocked('legacy Docker current container differs from original source execution')
+    identity = dict(source_run_id=initial['source_run_id'], daemon_id=initial['daemon_id'],
+                    container_id=physical['container_id'], created=physical['created'],
+                    started_at=physical['state']['StartedAt'], image_id=physical['image_id'], labels=physical['labels'])
+    if not identity['started_at'] or identity['started_at'].startswith('0001-'):
+        raise Blocked('legacy Docker source lacks actual execution start')
+    volume = initial['volume']
+    users = execute(endpoint, ['ps', '-aq', '--no-trunc', '--filter', 'volume=' + volume], check=True, capture_output=True, text=True, timeout=30).stdout.split()
+    volume_users = []
+    for container_id in users:
+        value = inspect({'kind': 'docker', 'endpoint': endpoint}, container_id)
+        if not _docker_stopped(value['state']):
+            raise Blocked('legacy Docker volume writer/accessor closure is incomplete')
+        volume_users.append({**{key: value[key] for key in ('container_id', 'created', 'image_id', 'labels')},
+                             'started_at': value['state']['StartedAt']})
+    source = record('legacy-source', source_id=identifier(identity['source_run_id']), execution_instance=canonical(identity),
+                    backend_identity={'kind': 'legacy-docker', 'endpoint': endpoint, **identity, 'writers': identities,
+                                      'volume': volume, 'volume_users': volume_users})
+    observation = observe_source(source)
+    if observation['effect'] != 'stopped':
+        raise Blocked('legacy Docker current source is not physically stopped')
+    originals = {name: {'source': str(Path(path).resolve(strict=True)), 'sha256': digest(path)}
+                 for name, path in [('birth', birth), ('stop', status), ('writer_retirement', writers)]}
+    value = record('stop-evidence', source_identity=source, source_id=source['source_id'],
+                   execution_instance=source['execution_instance'], backend_identity=source['backend_identity'],
+                   effect='stopped', observation=observation, authorization=authorization, originals=originals,
+                   captured_at=time.time(), launch_permission=False)
+    atomic(identity_output, source)
+    atomic(output, value)
+    return value

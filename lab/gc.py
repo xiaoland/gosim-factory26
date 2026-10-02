@@ -1,4 +1,8 @@
-"""Build a read-only, failure-closed storage reclamation plan."""
+"""生成只读存储回收规划，保留归档与依赖关系。
+
+历史证据按原合同解释；artifact-store 规划由 lab.exp.artifacts 提供。
+现行 lab.exp CLI 没有直接接入本模块的 gc-plan 命令。
+"""
 
 import hashlib
 import json

@@ -158,8 +158,14 @@ def main():
                         help="Overlay current collector/support/archive modules; requires explicit combined Braid binary")
     parser.add_argument("--override-native-transport", action="store_true",
                         help="Explicitly bind retained native factory26 transports to this run's model URLs and key variables")
+    parser.add_argument("--model-environment", type=Path,
+                        help="Private JSON environment containing explicit model bindings and their credential variables")
     parser.add_argument("--refresh-native-materials", action="store_true",
                         help="Refresh owned native materials; I13/I14 use the complete frozen managed base package")
+    parser.add_argument("--migrate-requirements", type=Path, help="Explicitly authorized replacement public requirements directory")
+    parser.add_argument("--requirements-migration-authorization", help="User decision authorizing the public input change")
+    parser.add_argument("--material-notice-plan", type=Path,
+                        help="Explicit I14 refreshed-skill comment plan; prepared offline, sent once before resume")
     args = parser.parse_args()
     if args.refresh_native_materials and not args.continue_generation:
         parser.error("--refresh-native-materials requires --continue-generation")
@@ -167,8 +173,10 @@ def main():
         parser.error("--replace-braid-deepseek-with-glm requires --continue-generation and unchanged native materials")
     if args.with_official_signal_evidence and not args.braid:
         parser.error("--with-official-signal-evidence requires --braid with the combined signal/catalog implementation")
-    if args.override_native_transport and (not args.continue_generation or args.refresh_native_materials):
-        parser.error("--override-native-transport requires --continue-generation and unchanged native materials")
+    if args.override_native_transport and not args.continue_generation:
+        parser.error("--override-native-transport requires --continue-generation")
+    if args.model_environment and not args.override_native_transport:
+        parser.error("--model-environment requires --override-native-transport")
     if args.braid_source_identity and (not args.braid or not args.braid_source):
         parser.error("--braid-source-identity requires both --braid and --braid-source")
     if not args.journal and (not args.source_run_id or not args.base_package):
@@ -219,6 +227,12 @@ def main():
     with ZipFile(base) as archive:
         frozen_manifest = json.loads(archive.read("package-manifest.json"))
     variant = frozen_manifest.get("capabilities", {}).get("variant")
+    if bool(args.migrate_requirements) != bool(args.requirements_migration_authorization):
+        raise ValueError("requirements migration needs both explicit directory and user authorization")
+    if args.migrate_requirements and not args.continue_generation:
+        raise ValueError("requirements migration requires retained generation continuation")
+    if args.material_notice_plan and (variant not in I14_VARIANTS or not args.refresh_native_materials):
+        raise ValueError("material notice requires an explicitly refreshed I14 recovery")
     if args.replace_braid_deepseek_with_glm and frozen_manifest.get("capabilities", {}).get("variant") not in {
             "pi-braid-i13", "pi-braid-i13-glm-root"}:
         raise ValueError("DeepSeek Braid migration supports only the two I13 variants")
@@ -359,15 +373,72 @@ def main():
     if git_reconstruction is not None:
         source["git_reconstruction"] = git_reconstruction
         source["git_reconstruction_sha256"] = digest(git_path)
+    if args.material_notice_plan:
+        notice_path = args.material_notice_plan.resolve(strict=True)
+        notice = json.loads(notice_path.read_text())
+        if (notice.get("schema_version") != 1 or not notice.get("request_id")
+                or notice.get("source_run_id") != source["source_run_id"]
+                or notice.get("braid_run_id") != source["braid_run_id"]
+                or hashlib.sha256(notice["body"].encode()).hexdigest() != notice.get("body_sha256")):
+            raise ValueError("material notice plan differs from selected recovery source or body")
+        with ZipFile(workspace) as retained:
+            raw_database = retained.read("template/.factory26/" + source["braid_run_id"] + "/braid-state/braid.sqlite3")
+        if hashlib.sha256(raw_database).hexdigest() != notice["source_state_evidence"]["raw_sqlite_sha256"]:
+            raise ValueError("material notice source database differs from frozen workspace")
+        if {row["name"] for row in notice["skills"]} != {"braid-collaboration", "arc-bench"} or len(notice["skills"]) != 2:
+            raise ValueError("material notice must identify exactly the two authorized skills")
+        for skill in notice["skills"]:
+            name = "skills/" + skill["name"] + "/SKILL.md"
+            if frozen_manifest["files"].get(name, {}).get("sha256") != skill["sha256"]:
+                raise ValueError(f"material notice skill differs from frozen base: {name}")
+        source["material_notice_plan"] = {"member": "recovery-material-notice-plan.json",
+                                          "sha256": digest(notice_path), "request_id": notice["request_id"]}
     main_file = ROOT / "submission/recover_completed.py"
     replacements = {"main.py": main_file, "runtime/bin/braid": braid,
                     "recovery-workspace.zip": workspace,
                     "support/agent_support.py": ROOT / "scripts/agent_support.py",
                     "exp_checkpoint.py": ROOT / "submission/exp_checkpoint.py"}
+    if args.model_environment:
+        private_path = args.model_environment.resolve(strict=True)
+        if private_path.stat().st_mode & 0o077:
+            raise ValueError("model environment must be mode 600")
+        private = json.loads(private_path.read_text())
+        if not isinstance(private, dict) or set(private) != {"environment"}:
+            raise ValueError("model environment requires exactly an environment mapping")
+        values = private["environment"]
+        if not isinstance(values, dict) or any(not isinstance(value, str) or not value for value in values.values()):
+            raise ValueError("model environment must contain nonempty string values")
+        routes = json.loads(values.get("FACTORY26_MODEL_BINDINGS", "null"))
+        if not isinstance(routes, dict) or not routes or any(not isinstance(route, dict) for route in routes.values()):
+            raise ValueError("model environment requires explicit model bindings")
+        credentials = {route.get("credential_env") for route in routes.values()}
+        if any(not isinstance(name, str) or not name.isidentifier() or name == "FACTORY26_MODEL_BINDINGS" for name in credentials):
+            raise ValueError("model environment contains an invalid credential variable")
+        if set(values) != {"FACTORY26_MODEL_BINDINGS", *credentials}:
+            raise ValueError("model environment must contain only bindings and exactly their credentials")
+        replacements[".private/model-env.json"] = private_path
+        source["model_environment"] = {"member": ".private/model-env.json", "credential_variables": sorted(credentials)}
+    if args.migrate_requirements:
+        new_input = args.migrate_requirements.resolve(strict=True)
+        new_yaml = new_input / "requirements.yaml"
+        if not new_yaml.is_file():
+            raise ValueError("requirements migration directory lacks requirements.yaml")
+        for path in sorted(new_input.rglob("*")):
+            if path.is_symlink():
+                raise ValueError("requirements migration cannot transport symbolic links")
+            if path.is_file():
+                replacements["recovery-requirements/" + path.relative_to(new_input).as_posix()] = path
+        source["requirements_migration"] = {"original_sha256": requirements_sha256,
+            "current_sha256": digest(new_yaml), "member": "recovery-requirements",
+            "authorization": args.requirements_migration_authorization,
+            "result_identity": "I13 retained progress continued under revised public requirements"}
+        source["requirements_sha256"] = digest(new_yaml)
     source["producer_contract"] = {"kind": "factory26.harness.checkpoint", "schema_version": 2,
                                    "coverage": "legacy transport; acquisition window unproved",
                                    "checkpoint_source_sha256": digest(replacements["exp_checkpoint.py"]),
                                    "support_source_sha256": digest(replacements["support/agent_support.py"])}
+    if args.material_notice_plan:
+        replacements["recovery-material-notice-plan.json"] = notice_path
     if binding:
         replacements.update({name: evidence / name for name in (
             "recovery-journal-inputs.json", "recovery-journal-state.json")})

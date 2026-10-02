@@ -10,6 +10,7 @@ import stat
 import time
 import uuid
 import tempfile
+import re
 from pathlib import Path
 import shutil
 import shlex
@@ -28,7 +29,7 @@ from core import archive_sessions
 
 I14_VARIANTS = frozenset({"pi-braid-i14", "pi-braid-i14-cleaner",
                           "pi-braid-i14-reviewer", "pi-braid-i14-e2e"})
-from agent_support import model_bindings, bind_native_models
+from agent_support import model_bindings, bind_retained_native_models
 
 
 def diagnostic_receipt(path, value, errors):
@@ -67,7 +68,7 @@ def restore_launch_paths(run, request):
                 if alias.resolve() != target.resolve():
                     raise ValueError(f"recovery package path is already occupied: {alias}")
             else:
-                alias.symlink_to(target, target_is_directory=True)
+                alias.symlink_to(os.path.relpath(target, alias.parent), target_is_directory=True)
             aliases.append({"path": str(alias), "target": str(target)})
     paths = {Path(request["pi"]["executable"]), run / "work/bin/pbb"}
     paths.update(Path(binding["executable"]) for binding in request["bindings"].values())
@@ -94,9 +95,23 @@ def refresh_native_materials(run, request, runtime, variant):
     for name in ("skills", "capabilities"):
         (work / name).rename(backup / name)
     shutil.copytree(ROOT / "skills", work / "skills")
-    profiles, bindings = variant.native_files(
-        work, runtime, work / "skills", os.environ.get("OPENAI_BASE_URL") or os.environ.get("FACTORY26_BASE_URL"),
-        os.environ.get("VISUAL_BASE_URL"))
+    # Material generation must keep original role/profile identities. Its temporary
+    # transport is discarded below; the explicit per-model override is applied last.
+    declared_routes = os.environ.get("FACTORY26_MODEL_BINDINGS")
+    if declared_routes and not any('-route-' in profile.get('provider', '') for profile in old_profiles.values()):
+        routes, _ = model_bindings(require_key=False)
+        material_routes = {}
+        for selector, route in routes.items():
+            material_routes.setdefault(selector.split('/', 1)[0],
+                                       {key: value for key, value in route.items() if key != 'model_id'})
+        os.environ["FACTORY26_MODEL_BINDINGS"] = json.dumps(material_routes)
+    try:
+        profiles, bindings = variant.native_files(
+            work, runtime, work / "skills", os.environ.get("OPENAI_BASE_URL") or os.environ.get("FACTORY26_BASE_URL"),
+            os.environ.get("VISUAL_BASE_URL"))
+    finally:
+        if declared_routes is not None:
+            os.environ["FACTORY26_MODEL_BINDINGS"] = declared_routes
     current = {profile["id"]: profile for profile in profiles}
     if set(current) - set(old_profiles):
         raise ValueError("native material refresh cannot introduce assigned profiles")
@@ -322,17 +337,21 @@ def override_native_transport(run, request):
         configurations.update(home / "models.json" for home in homes)
         native_roots.update([template, *homes])
     if request.get("pi", {}).get("home"):
-        native_roots.add(Path(request["pi"]["home"]).resolve(strict=True))
+        # Hosted ZIP exports omit empty global homes; session homes above remain mandatory.
+        global_home = Path(request["pi"]["home"]).resolve()
+        if not global_home.is_relative_to(run):
+            raise ValueError("global native home escapes Braid run")
+        if global_home.exists():
+            if not global_home.is_dir():
+                raise ValueError("global native home is not a directory")
+            native_roots.add(global_home)
     changes = {}
     rebound_providers = set()
     for path in sorted(configurations):
         if not path.resolve(strict=True).is_relative_to(run):
             raise ValueError(f"native models path escapes Braid run: {path}")
         value = json.loads(path.read_text())
-        providers = value["providers"]
-        bind_native_models(value, routes)
-        if set(value['providers']) != set(providers):
-            raise ValueError('此 retained native 配置尚未拆分供应商身份；按模型分流会改变已有 profile/会话 provider，当前恢复 hook 不支持该迁移。新生成须先使用明确的 per-model bindings 冻结材料。')
+        bind_retained_native_models(value, routes)
         rebound_providers.update(value['providers'])
         changes[path] = value
     # Stored provider credentials take precedence over the selected environment.
@@ -342,8 +361,11 @@ def override_native_transport(run, request):
         if auth.is_file():
             value = json.loads(auth.read_text())
             changes[auth] = {name: credential for name, credential in value.items() if name not in rebound_providers}
-    originals = run / "recovery-native-transport/originals"
+    originals = run / f"recovery-native-transport-{time.time_ns()}" / "originals"
     originals.mkdir(parents=True, exist_ok=False)
+    previous_receipt = run / "recovery-native-transport.json"
+    if previous_receipt.exists():
+        shutil.copy2(previous_receipt, originals.parent / "previous-receipt.json")
     records = []
     for path, value in changes.items():
         backup = originals / path.relative_to(run)
@@ -363,9 +385,395 @@ def override_native_transport(run, request):
         "providers": sorted({name for value in changes.values() if isinstance(value, dict)
                              for name in value.get('providers', {})}),
         "bindings": routes,
+        "model_transports": sorted({(name, model['id'], model['samplingParams']['model'],
+                                     model['baseUrl'])
+                                    for path, value in changes.items() if path.name == 'models.json'
+                                    for name, provider in value['providers'].items()
+                                    for model in provider['models']}),
         "preserved": ["provider identities", "profiles", "roles", "recipe", "history"],
     }, indent=2) + "\n")
 
+
+def material_notice_plan(run, source, manifest):
+    """Freeze the explicit notice and verify live object routes without mutating Braid."""
+    binding = source.get("material_notice_plan")
+    if not binding:
+        return None
+    if (manifest.get("capabilities", {}).get("variant") not in I14_VARIANTS
+            or not source.get("refresh_native_materials") or source["mode"] != "workspace-resume"):
+        raise ValueError("material notice is only supported for explicitly refreshed I14 recovery")
+    path = ROOT / binding["member"]
+    if hashlib.sha256(path.read_bytes()).hexdigest() != binding["sha256"]:
+        raise ValueError("frozen material notice plan SHA changed")
+    plan = json.loads(path.read_text())
+    if (plan["request_id"] != binding["request_id"] or plan["source_run_id"] != source["source_run_id"]
+            or plan["braid_run_id"] != source["braid_run_id"]
+            or Path(plan["retained_state"]) != run / "braid-state"
+            or hashlib.sha256(plan["body"].encode()).hexdigest() != plan["body_sha256"]):
+        raise ValueError("material notice source, state or body identity changed")
+    for skill in plan["skills"]:
+        expected = run / "work/skills" / skill["name"] / "SKILL.md"
+        if Path(skill["path"]) != expected or hashlib.sha256(expected.read_bytes()).hexdigest() != skill["sha256"]:
+            raise ValueError(f"prepared material notice skill path/SHA differs: {skill['name']}")
+    target = plan["target"]
+    if target["kind"] not in {"issue", "pr"} or target["node"] != f"{target['kind']}:{target['id']}":
+        raise ValueError("material notice target node identity differs")
+    members = {row["login"] for row in plan["recipients"]}
+    mentions = set(re.findall(r"@([A-Za-z][A-Za-z0-9-]*)", plan["body"]))
+    if mentions != set(plan["explicit_mentions"]) or len(members) != len(plan["recipients"]):
+        raise ValueError("material notice mentions or recipients are ambiguous")
+    with sqlite3.connect(f"file:{run / 'braid-state/braid.sqlite3'}?mode=ro", uri=True) as db:
+        identity = db.execute("SELECT w.state,l.title,l.revision,l.body,l.desired_member_login FROM work_items w JOIN local_items l ON l.node_id=w.node_id WHERE w.node_id=?", (target["node"],)).fetchone()
+        if not identity or (identity[0], identity[1], identity[2], hashlib.sha256(identity[3].encode()).hexdigest(), identity[4]) != (
+                target["state"], target["title"], target["revision"], target["body_sha256"], target["owner"]):
+            raise ValueError("material notice current target differs from frozen object identity")
+        audience = {target["owner"], *mentions, *(row[0] for row in db.execute(
+            "SELECT member_login FROM local_subscriptions WHERE work_item_node_id=? AND active=1 AND source='explicit'", (target["node"],)))}
+        if audience != members:
+            raise ValueError("normal comment would notify members outside the frozen recipient plan")
+        for recipient in plan["recipients"]:
+            route = db.execute("SELECT w.state,l.desired_member_login FROM work_items w JOIN local_items l ON l.node_id=w.node_id WHERE w.node_id=?", (recipient["node"],)).fetchone()
+            active = db.execute("SELECT count(*) FROM assignments WHERE work_item_node_id=? AND member_login=? AND lifecycle='active'", (recipient["node"], recipient["login"])).fetchone()[0]
+            if route != ("OPEN", recipient["login"]) or active != 1:
+                raise ValueError(f"material notice recipient is no longer an active open-work owner: {recipient['login']}")
+    frozen = run / "recovery-material-notice-plan.json"
+    if frozen.exists() and frozen.read_bytes() != path.read_bytes():
+        raise ValueError("retained recovery is already bound to a different material notice")
+    if not frozen.exists():
+        shutil.copy2(path, frozen)
+    return plan
+
+
+def send_material_notice(run, source, manifest, plan, braid, env, *, folder_name="recovery-material-notice", plan_sha256=None):
+    """Use one normal comment; an ambiguous pending mutation is never resent."""
+    import fcntl
+    folder = run / folder_name
+    folder.mkdir(exist_ok=True)
+    identity = {name: source[name] for name in ("source_run_id", "braid_run_id", "workspace_sha256", "base_package_sha256", "braid_sha256")}
+    identity.update(request_id=plan["request_id"], plan_sha256=plan_sha256 or source["material_notice_plan"]["sha256"],
+                    recovery_source_sha256=manifest["files"]["recovery-source.json"]["sha256"],
+                    main_sha256=manifest["files"]["main.py"]["sha256"])
+    pending = folder / "pending.json"
+    completed = folder / "receipt.json"
+    def save(path, value):
+        temporary = path.with_name(path.name + ".tmp")
+        temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + "\n")
+        temporary.chmod(0o600)
+        temporary.replace(path)
+    def matches():
+        with sqlite3.connect(f"file:{run / 'braid-state/braid.sqlite3'}?mode=ro", uri=True) as db:
+            return [row[0] for row in db.execute("SELECT comment_id,body FROM local_comments WHERE work_item_node_id=? AND writer_group IS NULL AND writer_turn IS NULL AND system_author IS NULL", (plan["target"]["node"],))
+                    if row[1] is not None and hashlib.sha256(row[1].encode()).hexdigest() == plan["body_sha256"]]
+    with (folder / 'notice.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        prior = json.loads(pending.read_text()) if pending.exists() else None
+        if prior and prior["identity"] != identity:
+            raise ValueError("pending material notice belongs to different source/material/recovery inputs")
+        existing = matches()
+        if len(existing) > 1 or prior and not existing:
+            raise ValueError("pending material notice has no unique unchanged comment; do not resend; inspect retained pending/CLI evidence")
+        if completed.exists():
+            receipt = json.loads(completed.read_text())
+            if receipt["identity"] != identity or existing != [receipt["comment_id"]]:
+                raise ValueError("completed material notice comment identity changed; do not resend")
+            return receipt
+        body = folder / "body.md"
+        if not body.exists():
+            body.write_text(plan["body"])
+            body.chmod(0o600)
+        if hashlib.sha256(body.read_bytes()).hexdigest() != plan["body_sha256"]:
+            raise ValueError("material notice frozen body changed")
+        command = [str(braid), "--state", str(run / "braid-state"), "--external", plan["target"]["kind"],
+                   "comment", str(plan["target"]["id"]), "--body-file", str(body), "--json"]
+        if not existing:
+            record = {"identity": identity, "phase": "pending", "command": command, "body_sha256": plan["body_sha256"], "started_at": time.time()}
+            save(pending, record)
+            try:
+                with (folder / "comment.stdout.json").open('xb') as stdout, (folder / "comment.stderr.log").open('xb') as stderr:
+                    result = subprocess.run(command, env=env, stdout=stdout, stderr=stderr, timeout=60)
+                record.update(exit_code=result.returncode, finished_at=time.time())
+                save(pending, record)
+                if result.returncode:
+                    raise RuntimeError(f"material notice comment exited {result.returncode}; original stdout/stderr retained; do not resend")
+                mutation = json.loads((folder / "comment.stdout.json").read_text())
+                existing = matches()
+                if existing != [mutation["id"]] or mutation.get("kind") != "comment" or mutation.get("action") != "created":
+                    raise ValueError("material notice comment result differs from committed identity; do not resend")
+            except BaseException as error:
+                record.update(error={"type": type(error).__name__, "message": str(error)}, finished_at=time.time())
+                save(pending, record)
+                raise
+        identifier = existing[0]
+        readback = [str(braid), "--state", str(run / "braid-state"), "--external", "comment", "view", str(identifier),
+                    "--include-hidden", "--json", "database_id,body,deliveries,lifecycle,thread_root"]
+        token = uuid.uuid4().hex
+        stdout_path, stderr_path = folder / f"readback-{token}.stdout.json", folder / f"readback-{token}.stderr.log"
+        with stdout_path.open('xb') as stdout, stderr_path.open('xb') as stderr:
+            result = subprocess.run(readback, env=env, stdout=stdout, stderr=stderr, timeout=60)
+        if result.returncode:
+            raise RuntimeError(f"material notice readback exited {result.returncode}; evidence retained; do not resend")
+        rows = json.loads(stdout_path.read_text())
+        recipients = {row["login"] for row in plan["recipients"]}
+        if (len(rows) != 1 or str(rows[0]["database_id"]) != str(identifier)
+                or rows[0]["body"] != plan["body"] or rows[0]["lifecycle"] == "deleted"
+                or {row["recipient"] for row in rows[0]["deliveries"]} != recipients
+                or any(row["status"] not in {"queued", "delivered"} for row in rows[0]["deliveries"])):
+            raise ValueError("material notice comment/delivery differs from frozen plan; do not resend")
+        receipt = {"identity": identity, "comment_id": identifier, "phase": "recorded",
+                   "existing_comment_consumed": bool(prior or not (folder / 'comment.stdout.json').exists()),
+                   "raw_readback": str(stdout_path), "raw_stderr": str(stderr_path), "readback_command": readback,
+                   "deliveries": rows[0]["deliveries"], "recorded_at": time.time(),
+                   "adoption": "not established; normal queued comment reference must be read by recipients"}
+        save(completed, receipt)
+        return receipt
+
+
+def migrate_requirements(run, source, manifest, braid, env):
+    migration = source.get("requirements_migration")
+    if not migration:
+        return
+    payload = ROOT / migration["member"]
+    if hashlib.sha256((payload / "requirements.yaml").read_bytes()).hexdigest() != migration["current_sha256"]:
+        raise ValueError("frozen migrated requirements identity changed")
+    retained = run / "input"
+    if hashlib.sha256((retained / "requirements.yaml").read_bytes()).hexdigest() != migration["original_sha256"]:
+        raise ValueError("retained requirements differ from authorized migration source")
+    backup = run / "recovery-source-input-before-migration"
+    shutil.copytree(retained, backup)
+    database_backup = run / "recovery-source-database-before-requirements-migration"
+    database_backup.mkdir()
+    for name in ("braid.sqlite3", "braid.sqlite3-wal", "braid.sqlite3-shm"):
+        path = run / "braid-state" / name
+        if path.exists():
+            shutil.copy2(path, database_backup / name)
+    shutil.copytree(payload, retained, dirs_exist_ok=True)
+    with sqlite3.connect(f"file:{run / 'braid-state/braid.sqlite3'}?mode=ro", uri=True) as db:
+        owner = db.execute("SELECT desired_member_login FROM local_items WHERE node_id='issue:1'").fetchone()
+        if not owner or not owner[0]:
+            raise ValueError("requirements migration needs the existing root owner")
+        recipients = {owner[0], *(row[0] for row in db.execute(
+            "SELECT member_login FROM local_subscriptions WHERE work_item_node_id='issue:1' AND active=1 AND source='explicit'")),
+            *(row[0] for row in db.execute("SELECT DISTINCT member_login FROM assignments WHERE lifecycle='active'"))}
+    body = (" ".join("@" + login for login in sorted(recipients)) +
+        "\n用户已明确选择：保留进度，迁移新版需求继续。现有应用、Git、Braid 工作项和原生会话历史均保留。" +
+        f"需求来源仍为 {retained}，已替换为平台新版公开需求，SHA256={migration['current_sha256']}。" +
+        f"旧需求 SHA256={migration['original_sha256']}，原件保存在 {backup}。" +
+        "请立即读取新版 requirements.yaml，重新核对已实现与未实现需求，更新现有设计、工作项和交付计划；" +
+        "沿用当前分工并协调必要修正，不重新从零生成。已有完成状态不自动证明满足新版需求。" +
+        "本次结果单列为 I13 进度在新版需求下接续，不与旧版分数直接比较。此通知仅依据公开需求，不包含隐藏评测反馈。")
+    plan = {"request_id": "requirements-migration-" + migration["current_sha256"][:16],
+            "target": {"kind": "issue", "id": 1, "node": "issue:1"},
+            "recipients": [{"login": login} for login in sorted(recipients)],
+            "body": body, "body_sha256": hashlib.sha256(body.encode()).hexdigest(),
+            "requirements_migration": migration}
+    plan_path = run / "recovery-requirements-migration.json"
+    plan_path.write_text(json.dumps(plan, ensure_ascii=False, indent=2) + "\n")
+    send_material_notice(run, source, manifest, plan, braid, env,
+                         folder_name="recovery-requirements-notice", plan_sha256=hashlib.sha256(plan_path.read_bytes()).hexdigest())
+
+
+def load_packaged_model_environment(source, manifest):
+    """Load only declared route credentials from the manifest-verified private file."""
+    path = ROOT / '.private/model-env.json'
+    if not path.exists():
+        return
+    if '.private/model-env.json' not in manifest['files']:
+        raise ValueError('packaged model environment is not bound to the package manifest')
+    if not source.get('override_native_transport'):
+        raise ValueError('packaged model environment requires explicit native transport override')
+    if (path.is_symlink() or path.parent.is_symlink()
+            or not path.resolve(strict=True).is_relative_to(ROOT.resolve())):
+        raise ValueError('packaged model environment must remain inside the package without links')
+    # Platform ZIP extraction can discard stored modes. The caller has already
+    # verified the manifest bytes, so restore privacy before reading credentials.
+    path.parent.chmod(0o700)
+    path.chmod(0o600)
+    payload = json.loads(path.read_text())
+    if not isinstance(payload, dict) or set(payload) != {'environment'}:
+        raise ValueError('packaged model environment requires exactly an environment mapping')
+    values = payload['environment']
+    if (not isinstance(values, dict) or not values.get('FACTORY26_MODEL_BINDINGS')
+            or any(not isinstance(key, str) or not isinstance(value, str) for key, value in values.items())):
+        raise ValueError('packaged model environment requires string names and values plus explicit bindings')
+    previous = os.environ.get('FACTORY26_MODEL_BINDINGS')
+    os.environ['FACTORY26_MODEL_BINDINGS'] = values['FACTORY26_MODEL_BINDINGS']
+    try:
+        routes, _ = model_bindings(require_key=False)
+    finally:
+        if previous is None:
+            os.environ.pop('FACTORY26_MODEL_BINDINGS', None)
+        else:
+            os.environ['FACTORY26_MODEL_BINDINGS'] = previous
+    credentials = {route['credential_env'] for route in routes.values()}
+    if 'FACTORY26_MODEL_BINDINGS' in credentials or set(values) != {'FACTORY26_MODEL_BINDINGS', *credentials}:
+        raise ValueError('packaged model environment must contain only bindings and their credential variables')
+    if any(not values[name] for name in credentials):
+        raise ValueError('packaged model environment lacks a declared credential')
+    os.environ.update(values)
+
+
+def recovery_execution_environment(source, variant_name, runtime, run, model_env, prepare_only, evidence_errors):
+    work = run / "work"
+    continuing = source["mode"] == "workspace-resume"
+    resource_sources = {"helper": ROOT / "support/runtime_resources.py",
+                        "native_module": runtime / "native-managed.mjs"}
+    resource_capability = {name: path.is_file() for name, path in resource_sources.items()}
+    managed_resource_enabled = continuing and (
+        source.get("resource_admission") == "i13-2-v1" or all(resource_capability.values()))
+    resource_environment = {}
+    env = model_env
+    if continuing:
+        key = env.get("FACTORY26_API_KEY") or env.get("OPENAI_API_KEY")
+        if not prepare_only and not key and not os.environ.get("FACTORY26_MODEL_BINDINGS"):
+            raise ValueError("generation recovery requires the current run API key")
+        # Workspace ZIP extraction above preserves stored modes; packaged tools
+        # get executable bits from verify_package, and new launchers set theirs.
+        browser = str(browser_executable(runtime))
+        # Keep old async records discoverable while giving browser sockets a short path.
+        env.update(PORTLESS_PORT="1355", PORTLESS_HTTPS="0", PORTLESS_SYNC_HOSTS="0",
+                   PORTLESS_STATE_DIR=str(work / "tmp/portless"),
+                   npm_config_cache=str(work / "cache/npm"),
+                   npm_config_store_dir=str(work / "cache/pnpm"),
+                   HOME=str(work / "home"), TMPDIR=tempfile.mkdtemp(prefix="f26-", dir="/tmp"),
+                   PI_SUBAGENTS_TEMP_ROOT=str(work / "tmp" / f"pi-subagents-uid-{os.getuid()}"),
+                   XDG_CONFIG_HOME=str(work / "home/.config"),
+                   PI_CODING_AGENT_DIR=str(work / "home/.pi/agent"),
+                   PI_TELEMETRY="0", PI_OFFLINE="1", FACTORY26_API_KEY=key or "",
+                   PBB_PIL_BIN=str(runtime / "node_modules/pi-lane/bin/pil.js"),
+                   AGENT_BROWSER_EXECUTABLE_PATH=browser, BROWSER_EXECUTABLE_PATH=browser,
+                   BROWSER_CHECK_NODE_MODULES=str(runtime / "node_modules"),
+                   AGENT_BROWSER_SOCKET_DIR=str(work / "b"),
+                   MCPORTER_CONFIG=str(ROOT / "tools/mcporter.json"),
+                   FACTORY26_PI_TIMING_EXTENSION=str(ROOT / "extensions/factory-pi-timing.ts"),
+                   FACTORY26_PI_TIMING_FILE=str(run / "pi-timing.jsonl"),
+                   PATH=os.pathsep.join((str(work / "bin"), str(runtime / "bin"),
+                                         str(runtime / "node_modules/.bin"), env.get("PATH", ""))))
+        if os.environ.get("VISUAL_API_KEY"):
+            env["FACTORY26_VISUAL_API_KEY"] = os.environ["VISUAL_API_KEY"]
+        if variant_name in {"pi-braid-i13", "pi-braid-i13-glm-root"} | I14_VARIANTS:
+            import run as variant
+            # These process settings are not retained in the native session files.
+            env.update(variant.tool_environment(), PI_FFF_MODE="tools-only", PI_FFF_MULTIGREP="0",
+                       PI_SUBAGENT_MAX_DEPTH="3")
+        if managed_resource_enabled:
+            from agent_support import runtime_resource_environment
+            resource_environment = runtime_resource_environment(runtime, run)
+            env.update(resource_environment)
+        diagnostic_receipt(run / "recovery-resource-environment.json", {
+            "source_resource_admission": source.get("resource_admission"),
+            "capability": {name: {"path": str(resource_sources[name]), "present": present}
+                           for name, present in resource_capability.items()},
+            "enabled": managed_resource_enabled,
+            "environment": resource_environment,
+        }, evidence_errors)
+    return env, managed_resource_enabled
+
+
+def execute_recovery(run, source, manifest, request, env, braid, notice,
+                     managed_resource_enabled, evidence_errors, output):
+    work, runtime = run / "work", ROOT / "runtime"
+    app, origin = work / "application", run / "braid-state/origin.git"
+    continuing = source["mode"] == "workspace-resume"
+    if notice:
+        send_material_notice(run, source, manifest, notice, braid, env)
+    # A source archive is historical; live readers must see the resumed sessions.
+    old_native = run / "native"
+    if old_native.exists() or old_native.is_symlink():
+        old_native.rename(run / f"recovery-source-native-{time.time_ns()}")
+    diagnostics = {}
+    if evidence_errors:
+        diagnostics["process_evidence_errors"] = evidence_errors
+    collector = None
+    shared_proxy = None
+    execution_error = None
+    cleanup_error = None
+    try:
+        try:
+            collector, binding = start_local_telemetry(run)
+            env.update(telemetry_environment(binding))
+        except Exception as exc:
+            if os.environ.get("FACTORY26_EXP_TELEMETRY_BINDING"):
+                raise
+            diagnostics["telemetry_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
+        if managed_resource_enabled:
+            from agent_support import start_shared_proxy, stop_shared_proxy
+            shared_proxy = start_shared_proxy(runtime, run, env)
+        with (run / "recovery-braid.log").open("w") as log:
+            command = [str(braid), "local", str(run / "braid-request.json")]
+            if continuing:
+                command.append("--offline-resume")
+            print(f"Recovery: resuming Braid; log={run / 'recovery-braid.log'}", flush=True)
+            execute_braid(command, run=run, app=app, env=env, log=log,
+                          evidence=source.get("with_official_signal_evidence", False))
+    except BaseException as exc:
+        execution_error = exc
+    finally:
+        if shared_proxy is not None:
+            try:
+                stop_shared_proxy(shared_proxy, run)
+            except Exception as exc:
+                diagnostics['shared_proxy_cleanup_error'] = f'{type(exc).__name__}: {exc}'
+        if continuing:
+            try:
+                cleanup_workspace(run)
+            except Exception as exc:
+                cleanup_error = exc
+                diagnostics["cleanup_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
+        try:
+            entries = archive_state(run / "braid-state", run)
+            archive_sessions(run, work / "home/.pi/agent", work, entries, telemetry_env=env)
+        except Exception as exc:
+            diagnostics["native_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
+        if collector is not None:
+            try:
+                stop_local_telemetry(collector)
+            except Exception as exc:
+                diagnostics["telemetry_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
+        (run / "recovery-diagnostics.json").write_text(json.dumps(diagnostics, indent=2) + "\n")
+    if execution_error is not None:
+        raise execution_error
+    if cleanup_error is not None:
+        raise cleanup_error
+    result = json.loads((run / "braid-state/result.json").read_text())
+    if result.get("status") != "quiescent" or result.get("root_issue", {}).get("state") != "CLOSED":
+        raise RuntimeError(f"retained Braid did not finish: {result}")
+    delivery = load_delivery(origin, request)
+    application = run / "recovered-application"
+    export_delivery(origin, delivery["delivery_commit"], application)
+    deliver(application, output)
+    (run / "recovery-provenance.json").write_text(json.dumps({**source, **delivery}, indent=2) + "\n")
+    print(f"Recovered {source['source_run_id']} at {delivery['delivery_commit']}", flush=True)
+
+
+
+def execute_verified_preparation(args, source, manifest):
+    """Execute the already assembled public prepared payload without restoring it again."""
+    output = args.output_dir.resolve(strict=True)
+    run = output / ".factory26" / source["braid_run_id"]
+    preparation = json.loads((run / "recovery-preparation.json").read_text())
+    provenance = json.loads((run / "recovery-provenance.json").read_text())
+    if preparation.get("mode") != "prepare-only" or preparation.get("models_started") is not False or provenance != source:
+        raise ValueError("prepared recovery provenance differs from its frozen package")
+    requirement = args.requirements_dir / "requirements.yaml"
+    if hashlib.sha256(requirement.read_bytes()).hexdigest() != source["requirements_sha256"]:
+        raise ValueError("current requirements differ from prepared recovery")
+    request = json.loads((run / "braid-request.json").read_text())
+    if request["run_id"] != source["braid_run_id"] or Path(request["state"]) != run / "braid-state":
+        raise ValueError("prepared Braid request namespace or state path differs")
+    braid = run / "work/bin/braid"
+    if hashlib.sha256(braid.read_bytes()).hexdigest() != source["braid_sha256"]:
+        raise ValueError("prepared Braid binary differs from its frozen package")
+    # Lab's frozen recipe and current private deployment own execution routes and keys.
+    # Packaged credentials belong to acquisition; they cannot replace this deployment.
+    routes, model_env = model_bindings(require_key=True)
+    transport = json.loads((run / "recovery-native-transport.json").read_text())
+    if transport["bindings"] != routes:
+        raise ValueError("current routes differ from prepared native transports; prepare again")
+    evidence_errors = []
+    env, managed = recovery_execution_environment(source, manifest.get("capabilities", {}).get("variant"),
+                                                  ROOT / "runtime", run, model_env, False, evidence_errors)
+    notice = material_notice_plan(run, source, manifest)
+    execute_recovery(run, source, manifest, request, env, braid, notice, managed, evidence_errors, output)
 
 
 def execute_prepared(args):
@@ -430,9 +838,10 @@ def main():
     parser.add_argument("requirements_dir", type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--type", default="web")
-    parser.add_argument("--execute-prepared",action="store_true")
     parser.add_argument("--prepare-only", action="store_true",
                         help="Restore and verify the workspace without starting Braid or calling models")
+    parser.add_argument("--execute-prepared", action="store_true",
+                        help="Execute an already assembled verified preparation without restoring or migrating it")
     args = parser.parse_args()
     if args.execute_prepared:
         if args.prepare_only: parser.error("execute-prepared不能重新prepare")
@@ -440,6 +849,7 @@ def main():
     print("Recovery: verifying packaged runtime and workspace", flush=True)
     manifest = verify_package(ROOT)
     source = json.loads((ROOT / "recovery-source.json").read_text())
+    load_packaged_model_environment(source, manifest)
     variant_name = manifest.get("capabilities", {}).get("variant")
     model_env = dict(os.environ)
     if source.get("override_native_transport"):
@@ -526,8 +936,6 @@ def main():
     if source.get("override_native_transport"):
         if not continuing:
             raise ValueError("native transport override requires explicit generation recovery")
-        if variant_name not in I14_VARIANTS:
-            override_native_transport(run, request)
     origin = run / "braid-state/origin.git"
     app = run / "work/application"
     seed = json.loads((run / "braid-state/request.json").read_text())["seed_commit"]
@@ -639,7 +1047,7 @@ def main():
             str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in code_files if path.is_file()
         }, indent=2) + "\n")
-    if variant_name in I14_VARIANTS and continuing and source.get("override_native_transport"):
+    if continuing and source.get("override_native_transport"):
         override_native_transport(run, request)
     braid = work / "bin/braid"
     shutil.copy2(runtime / "bin/braid", braid)
@@ -652,64 +1060,54 @@ def main():
         "sha256": actual_braid_sha256,
         "source_sha256": source["braid_sha256"],
     }, evidence_errors)
-    resource_sources = {"helper": ROOT / "support/runtime_resources.py",
-                        "native_module": runtime / "native-managed.mjs"}
-    resource_capability = {name: path.is_file() for name, path in resource_sources.items()}
-    managed_resource_enabled = continuing and (
-        source.get("resource_admission") == "i13-2-v1" or all(resource_capability.values()))
-    resource_environment = {}
-    env = model_env
-    if continuing:
-        key = env.get("FACTORY26_API_KEY") or env.get("OPENAI_API_KEY")
-        if not args.prepare_only and not key and not os.environ.get("FACTORY26_MODEL_BINDINGS"):
-            raise ValueError("generation recovery requires the current run API key")
-        # Workspace ZIP extraction above preserves stored modes; packaged tools
-        # get executable bits from verify_package, and new launchers set theirs.
-        browser = str(browser_executable(runtime))
-        # Keep old async records discoverable while giving browser sockets a short path.
-        env.update(PORTLESS_PORT="1355", PORTLESS_HTTPS="0", PORTLESS_SYNC_HOSTS="0",
-                   PORTLESS_STATE_DIR=str(work / "tmp/portless"),
-                   npm_config_cache=str(work / "cache/npm"),
-                   npm_config_store_dir=str(work / "cache/pnpm"),
-                   HOME=str(work / "home"), TMPDIR=tempfile.mkdtemp(prefix="f26-", dir="/tmp"),
-                   PI_SUBAGENTS_TEMP_ROOT=str(work / "tmp" / f"pi-subagents-uid-{os.getuid()}"),
-                   XDG_CONFIG_HOME=str(work / "home/.config"),
-                   PI_CODING_AGENT_DIR=str(work / "home/.pi/agent"),
-                   PI_TELEMETRY="0", PI_OFFLINE="1", FACTORY26_API_KEY=key or "",
-                   PBB_PIL_BIN=str(runtime / "node_modules/pi-lane/bin/pil.js"),
-                   AGENT_BROWSER_EXECUTABLE_PATH=browser, BROWSER_EXECUTABLE_PATH=browser,
-                   BROWSER_CHECK_NODE_MODULES=str(runtime / "node_modules"),
-                   AGENT_BROWSER_SOCKET_DIR=str(work / "b"),
-                   MCPORTER_CONFIG=str(ROOT / "tools/mcporter.json"),
-                   FACTORY26_PI_TIMING_EXTENSION=str(ROOT / "extensions/factory-pi-timing.ts"),
-                   FACTORY26_PI_TIMING_FILE=str(run / "pi-timing.jsonl"),
-                   PATH=os.pathsep.join((str(work / "bin"), str(runtime / "bin"),
-                                         str(runtime / "node_modules/.bin"), env.get("PATH", ""))))
-        if os.environ.get("VISUAL_API_KEY"):
-            env["FACTORY26_VISUAL_API_KEY"] = os.environ["VISUAL_API_KEY"]
-        if variant_name in {"pi-braid-i13", "pi-braid-i13-glm-root"} | I14_VARIANTS:
-            import run as variant
-            # These process settings are not retained in the native session files.
-            env.update(variant.tool_environment(), PI_FFF_MODE="tools-only", PI_FFF_MULTIGREP="0",
-                       PI_SUBAGENT_MAX_DEPTH="3")
-        if managed_resource_enabled:
-            from agent_support import runtime_resource_environment
-            resource_environment = runtime_resource_environment(runtime, run)
-            env.update(resource_environment)
-        diagnostic_receipt(run / "recovery-resource-environment.json", {
-            "source_resource_admission": source.get("resource_admission"),
-            "capability": {name: {"path": str(resource_sources[name]), "present": present}
-                           for name, present in resource_capability.items()},
-            "enabled": managed_resource_enabled,
-            "environment": resource_environment,
-        }, evidence_errors)
+    env, managed_resource_enabled = recovery_execution_environment(
+        source, variant_name, runtime, run, model_env, args.prepare_only, evidence_errors)
     (run / "recovery-provenance.json").write_text(json.dumps(source, indent=2) + "\n")
     attempt.update(phase="prepared", prepared_at=time.time(), evidence_errors=evidence_errors,
                    source_process_evidence=str(prior_process_evidence) if prior_process_evidence.exists() else None)
     diagnostic_receipt(run / "recovery-attempt.json", attempt, evidence_errors)
     if source.get("with_official_signal_evidence"):
         diagnostic_receipt(run / "process-evidence/attempt.json", attempt, evidence_errors)
+    migrate_requirements(run, source, manifest, braid, env)
+    notice = material_notice_plan(run, source, manifest)
     if args.prepare_only:
+        # This is a stopped daemon's transient socket namespace, not native
+        # session history. Preserve its literal target before preparing anew.
+        retired_links = []
+        pulse = run / "work/home/.config/pulse"
+        if pulse.is_dir() and not pulse.is_symlink():
+            for link in pulse.iterdir():
+                if re.fullmatch(r"[0-9a-f]{32}-runtime", link.name) and link.is_symlink():
+                    target = os.readlink(link)
+                    if re.fullmatch(r"/tmp/f26-[^/]+/pulse-[^/]+", target):
+                        retired_links.append({"path": str(link), "target": target,
+                                              "reason": "stopped PulseAudio transient runtime; original snapshot retained"})
+                        link.unlink()
+        diagnostic_receipt(run / "recovery-transient-links.json", {"retired_links": retired_links}, evidence_errors)
+        build_links = []
+        locations = [run / "work/application/backend/node_modules/.pnpm/better-sqlite3@11.10.0/node_modules/better-sqlite3/build/node_gyp_bins/python3"]
+        locations.extend((run / "braid-state/worktrees").glob("*/*/backend/node_modules/.pnpm/better-sqlite3@11.10.0/node_modules/better-sqlite3/build/node_gyp_bins/python3"))
+        for link in locations:
+            if not link.is_symlink() or os.readlink(link) != "/usr/bin/python3":
+                continue
+            if not link.parent.resolve().is_relative_to(run.resolve()):
+                raise ValueError("node-gyp build tool parent escapes the restored run")
+            if not os.environ.get("FACTORY26_EXP_ATTEMPT_DIR"):
+                raise ValueError("node-gyp tool materialization requires the explicitly frozen Lab target image")
+            interpreter = Path("/usr/bin/python3").resolve(strict=True)
+            if not interpreter.is_file() or not os.access(interpreter, os.X_OK):
+                raise ValueError("target image node-gyp Python is not an executable regular file")
+            temporary = link.with_name(".python3." + uuid.uuid4().hex)
+            try:
+                shutil.copy2(interpreter, temporary)
+                temporary.replace(link)
+            finally:
+                temporary.unlink(missing_ok=True)
+            image_id = json.loads((Path(os.environ["FACTORY26_EXP_ATTEMPT_DIR"]) / "attempt.json").read_text())["job"]["backend"]["image_id"]
+            build_links.append({"path": str(link), "raw_link": "/usr/bin/python3", "resolved_target": str(interpreter),
+                                "sha256": hashlib.file_digest(interpreter.open("rb"), "sha256").hexdigest(),
+                                "image_id": image_id, "reason": "rebuild stopped node-gyp tool under explicitly frozen target image"})
+        diagnostic_receipt(run / "recovery-build-tools.json", {"materialized_links": build_links}, evidence_errors)
         save_environment = {name: env[name] for name in (
             "HOME", "TMPDIR", "PATH", "PI_CODING_AGENT_DIR", "PI_OFFLINE",
             "PI_SUBAGENT_MAX_DEPTH", "PI_FFF_MODE", "PI_FFF_MULTIGREP",
@@ -724,76 +1122,13 @@ def main():
                                        if source.get("replace_braid_deepseek_with_glm") else None,
             "native_transport_receipt": str(run / "recovery-native-transport.json")
                                         if source.get("override_native_transport") else None,
+            "material_notice_plan": str(run / "recovery-material-notice-plan.json") if notice else None,
+            "material_notice_sent": False,
         }, indent=2) + "\n")
         print(f"Recovery: prepared without starting Braid; run={run}", flush=True)
         return
-    # A source archive is historical; live readers must see the resumed sessions.
-    old_native = run / "native"
-    if old_native.exists() or old_native.is_symlink():
-        old_native.rename(run / f"recovery-source-native-{time.time_ns()}")
-    diagnostics = {}
-    if evidence_errors:
-        diagnostics["process_evidence_errors"] = evidence_errors
-    collector = None
-    shared_proxy = None
-    execution_error = None
-    cleanup_error = None
-    try:
-        try:
-            collector, binding = start_local_telemetry(run)
-            env.update(telemetry_environment(binding))
-        except Exception as exc:
-            if os.environ.get("FACTORY26_EXP_TELEMETRY_BINDING"):
-                raise
-            diagnostics["telemetry_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
-        if managed_resource_enabled:
-            from agent_support import start_shared_proxy, stop_shared_proxy
-            shared_proxy = start_shared_proxy(runtime, run, env)
-        with (run / "recovery-braid.log").open("w") as log:
-            command = [str(braid), "local", str(run / "braid-request.json")]
-            if continuing:
-                command.append("--offline-resume")
-            print(f"Recovery: resuming Braid; log={run / 'recovery-braid.log'}", flush=True)
-            execute_braid(command, run=run, app=app, env=env, log=log,
-                          evidence=source.get("with_official_signal_evidence", False))
-    except BaseException as exc:
-        execution_error = exc
-    finally:
-        if shared_proxy is not None:
-            try:
-                stop_shared_proxy(shared_proxy, run)
-            except Exception as exc:
-                diagnostics['shared_proxy_cleanup_error'] = f'{type(exc).__name__}: {exc}'
-        if continuing:
-            try:
-                cleanup_workspace(run)
-            except Exception as exc:
-                cleanup_error = exc
-                diagnostics["cleanup_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
-        try:
-            entries = archive_state(run / "braid-state", run)
-            archive_sessions(run, work / "home/.pi/agent", work, entries, telemetry_env=env)
-        except Exception as exc:
-            diagnostics["native_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
-        if collector is not None:
-            try:
-                stop_local_telemetry(collector)
-            except Exception as exc:
-                diagnostics["telemetry_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
-        (run / "recovery-diagnostics.json").write_text(json.dumps(diagnostics, indent=2) + "\n")
-    if execution_error is not None:
-        raise execution_error
-    if cleanup_error is not None:
-        raise cleanup_error
-    result = json.loads((run / "braid-state/result.json").read_text())
-    if result.get("status") != "quiescent" or result.get("root_issue", {}).get("state") != "CLOSED":
-        raise RuntimeError(f"retained Braid did not finish: {result}")
-    delivery = load_delivery(origin, request)
-    application = run / "recovered-application"
-    export_delivery(origin, delivery["delivery_commit"], application)
-    deliver(application, output)
-    (run / "recovery-provenance.json").write_text(json.dumps({**source, **delivery}, indent=2) + "\n")
-    print(f"Recovered {source['source_run_id']} at {delivery['delivery_commit']}", flush=True)
+    execute_recovery(run, source, manifest, request, env, braid, notice,
+                     managed_resource_enabled, evidence_errors, output)
 
 
 if __name__ == "__main__":

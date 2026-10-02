@@ -163,6 +163,7 @@ export default function factoryCleaner(pi: ExtensionAPI): void {
           systemPrompt, messages: [...messages, { role: "user", timestamp: Date.now(),
             content: `执行此次维护。以下快照晚于继承历史，原始正文与需求背景优先。只返回完整维护 JSON。\n${JSON.stringify(snapshot.material)}` }],
         }, { signal: abort, sessionId: snapshot.writer.session_id, maxRetries: 0, maxRetryDelayMs: 0,
+          samplingParams: model.samplingParams,
           reasoningEffort: config.thinking_level,
           onResponse: (http) => { record(directory, "http-response.json", { status: http.status }); } });
         record(directory, "response.json", response);

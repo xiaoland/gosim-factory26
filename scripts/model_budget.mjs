@@ -29,7 +29,8 @@ export function claimModelSession(slot, session, model) {
 export default function modelBudget(pi) {
   let owner;
   pi.on("before_provider_request", (event, context) => {
-    // Native children inherit the parent binding and share its Braid owner.
+    // Native children inherit their parent's Braid binding and claim that same owner.
+    // Skipping children would let different Flash members each spend on K3.
     try {
       const model = event.payload?.model ?? context.model?.id;
       if (typeof model !== "string") throw new Error("无法辨认请求模型，已拒绝调用");

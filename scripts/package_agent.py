@@ -132,6 +132,11 @@ def write_zip(bundle, output, backend, records, capabilities=None, *, persist_ma
                             outgoing.write(chunk)
                     manifest['files'][path.relative_to(bundle).as_posix()] = {
                         'sha256': content_hash.hexdigest(), 'executable': bool(path.stat().st_mode & 0o111)}
+                declared_braid = records.get('braid', {}).get('binary_sha256')
+                if declared_braid is not None:
+                    bundled_braid = manifest['files'].get('runtime/bin/braid', {}).get('sha256')
+                    if bundled_braid != declared_braid:
+                        raise ValueError(f'Braid 编译来源与最终包字节不一致：声明 {declared_braid}，实际 {bundled_braid}')
                 encoded = (json.dumps(manifest, indent=2) + '\n').encode()
                 info = zipfile.ZipInfo('package-manifest.json')
                 info.create_system = 3
@@ -171,7 +176,7 @@ def assemble(source, destination, runtime, skill_source, skills):
     support=destination/'support';support.mkdir()
     for name in ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs','runtime_resources.py'):
         shutil.copy2(ROOT/'scripts'/name,support/name)
-    if source.name in I14_VARIANTS | {'pi-braid', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
+    if source.name in I14_VARIANTS | {'pi-braid', 'pi-braid-i11', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
         shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
         dependency = os.environ.get('FACTORY26_BUILD_OTLP_DEPENDENCIES')
         if not dependency:

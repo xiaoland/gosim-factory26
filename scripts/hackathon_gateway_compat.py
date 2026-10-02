@@ -37,12 +37,17 @@ async def user_api_key_auth(request, api_key):
         raise HTTPException(status_code=503, detail=f"local gateway binding unavailable: {exc}") from exc
     return UserAPIKeyAuth(api_key=api_key, metadata={
         "binding_id": binding_id, "run_id": binding["run_id"],
+        "legacy_run_id": binding.get("legacy_run_id"),
+        "attempt_id": binding.get("attempt_id"),
+        "experiment_id": binding.get("experiment_id"),
+        "incarnation": binding.get("incarnation"),
+        "config_sha256": binding.get("config_sha256"),
         "request_id": secrets.token_hex(16)})
 
 
 def _context(user_api_key_dict):
     value = getattr(user_api_key_dict, "metadata", None)
-    return {key: value[key] for key in ("binding_id", "run_id", "request_id")
+    return {key: value[key] for key in ("binding_id", "run_id", "legacy_run_id", "attempt_id", "experiment_id", "incarnation", "config_sha256", "request_id")
             if isinstance(value, dict) and key in value}
 
 

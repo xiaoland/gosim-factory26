@@ -1,4 +1,8 @@
-"""Read lab records and show execution facts without interpreting Agent sessions."""
+"""为离线分析读取历史 lab.run 记录。
+
+inspect_runs 和 run_feedback 仍消费这些记录合同。现行 experiment/attempt
+状态由 lab.exp 处理，不改写旧记录。
+"""
 
 from pathlib import Path
 

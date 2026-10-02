@@ -82,7 +82,7 @@ class Client:
         """No automatic retry of writes: an uncertain POST may already have succeeded."""
         with tempfile.TemporaryDirectory(prefix='factory26-http-') as temp:
             response = Path(temp)/'response'
-            command = ['curl', '-q', '--silent', '--show-error', '--proto', '=https',
+            command = ['curl', '-q', '--http1.1', '--silent', '--show-error', '--proto', '=https',
                        '--connect-timeout', '30', '--max-time', '1200' if package is not None else '180',
                        '--request', method, '--cookie', str(self.cookie),
                        '--output', str(response), '--write-out', '%{http_code}', API+path]

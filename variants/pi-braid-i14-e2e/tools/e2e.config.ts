@@ -5,16 +5,16 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 const url = process.env.E2E_APP_URL;
 if (!url) throw new Error('E2E_APP_URL must name the owned application service');
 
-const arcBaseURL = 'https://api.arc-bench.com/v1';
-if (process.env.FACTORY26_BASE_URL?.replace(/\/+$/, '') !== arcBaseURL) {
-  throw new Error('I14 e2e 模型 API 只允许 https://api.arc-bench.com/v1');
-}
-if (!process.env.FACTORY26_API_KEY) throw new Error('I14 e2e 需要选定 ARC API key');
+const baseURL = process.env.E2E_BASE_URL?.trim().replace(/\/+$/, '');
+if (!baseURL) throw new Error('E2E_BASE_URL must name the selected model API');
+if (!process.env.E2E_API_KEY) throw new Error('E2E_API_KEY must provide the selected model API key');
+const model = process.env.E2E_MODEL;
+if (!model) throw new Error('E2E_MODEL must name the selected wire model');
 
 const provider = createOpenAICompatible({
   name: 'factory26',
-  baseURL: arcBaseURL,
-  apiKey: process.env.FACTORY26_API_KEY,
+  baseURL,
+  apiKey: process.env.E2E_API_KEY,
 });
 
 export default {
@@ -26,7 +26,7 @@ export default {
   cache: 'off',
   agents: {
     default: {
-      model: provider.chatModel('glm-5.3-flash'),
+      model: provider.chatModel(model),
       providerOptions: { factory26: { reasoningEffort: 'high' } },
       maxModelCalls: 12,
       maxSteps: 12,
