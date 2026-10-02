@@ -20,10 +20,10 @@ from lab.docker_endpoint import confirm, environment, execute, freeze
 from lab.records import inventory, read_json, write_json
 if __package__:
     from .workspace_archive import output_inventory, extract_output
-    from .docker_admission import admit, target, create, create_volume, control, writer, bind, register
+    from .docker_admission import admit, target, create, create_volume, control, writer, release, bind, register
 else:
     from workspace_archive import output_inventory, extract_output
-    from docker_admission import admit, target, create, create_volume, control, writer, bind, register
+    from docker_admission import admit, target, create, create_volume, control, writer, release, bind, register
 
 # Use the same inventory implementation on both hosts, without platform metadata.
 REMOTE_INVENTORY = Path(sys.modules[inventory.__module__].__file__).read_text() + '\nprint(json.dumps(inventory(Path(sys.argv[1]))))'
@@ -144,6 +144,7 @@ def observe(path, *, cleanup=False):
             physical = {'container_id': value['Id'], 'created': value['Created'],
                         'labels': value['Config']['Labels'], 'started_at': resource.get('started_at')}
             writer(resource, physical, 'writer-close', resource['exp_request_id'] + '-writer-close')
+            record['admission_release'] = release(resource, physical)
             record['status'] = 'stopped'
             record['stop_evidence'] = {'container_id': value['Id'], 'created': value['Created'], 'state': value['State'], 'labels': value['Config']['Labels']}
         return record
@@ -224,7 +225,7 @@ class Workspace:
     def save(self):
         write_json(self.path, self.value)
 
-    def helper(self):
+    def helper(self, *, allow_stopped=False):
         if volume_owned(self.value) is None:
             raise ValueError('workspace volume is absent before output recovery')
         value = inspect(self.endpoint, 'container', self.value.get('helper_id') or self.value['helper_name'])
@@ -238,7 +239,7 @@ class Workspace:
             raise ValueError('copy helper ownership mismatch')
         self.value['helper_id'] = value['Id']
         self.save()
-        if not value['State']['Running']:
+        if not value['State']['Running'] and not allow_stopped:
             raise ValueError('copy helper is stopped; restarting would change its execution instance')
         return value['Id']
 
@@ -383,11 +384,13 @@ class Workspace:
                 raise ValueError('workspace outputs have not been verified locally')
             helper = inspect(self.endpoint, 'container', self.value.get('helper_id') or self.value['helper_name'])
             if helper is not None:
-                identifier = self.helper()
+                self.helper(allow_stopped=True)
                 resource = self.value['helper_resource']
                 physical = {'container_id': helper['Id'], 'created': helper['Created'],
                             'started_at': resource['started_at'], 'labels': helper['Config']['Labels']}
-                control(resource, physical, 'stop')
+                if helper['State']['Running'] or helper['State'].get('Paused'):
+                    control(resource, physical, 'stop')
+                release(resource, physical)
             volume_owned(self.value)
             self.value['state'] = 'retained-verified'
             self.save()
@@ -481,6 +484,8 @@ def runner_main(resource_path, runner_path, argv):
             raise ValueError('Docker CLI exited without a confirmed stopped execution container')
         writer(resource, {'container_id': value['Id'], 'created': value['Created'], 'labels': value['Config']['Labels'],
                           'started_at': resource['started_at']}, 'writer-close', resource['exp_request_id'] + '-writer-close')
+        release(resource, {'container_id': value['Id'], 'created': value['Created'],
+                           'labels': value['Config']['Labels'], 'started_at': resource['started_at']})
         resource.update(container_id=value['Id'], state='exited', container_exit_code=value['State']['ExitCode'])
         write_json(resource_path, resource)
         resource['attach_exit_code'] = code

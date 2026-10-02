@@ -42,6 +42,17 @@ def control(resource, physical, action):
                             {'grace': 10} if action == 'stop' else {})
 
 
+def release(resource, physical):
+    """Release capacity only after fresh exact terminal evidence and closed writers."""
+    selected = target(resource)
+    owned = binding(resource, physical)
+    observed = backends.domain_observation(selected, owned)
+    value = admission.reconcile(selected, resource['exp_attempt_id'],
+                                resource['exp_request_id'] + '-release', observed)
+    atomic(Path(resource['resource_path']).with_suffix('.release.json'), value)
+    return value
+
+
 def writer(resource, physical, action, request_id):
     return backends.managed(target(resource), binding(resource, physical), action, request_id,
                             {'workspace': resource.get('authority_workspace', resource['workspace'])})
