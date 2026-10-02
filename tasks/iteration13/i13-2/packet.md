@@ -157,3 +157,17 @@ I14 的 ARC 通道切换没有修改上述两项已冻结的自有 API 配方。
 主线10:40 CST宿主只读观察：直接 SSH 正常，Docker Unix socket 的 /_ping 与 /version 均 HTTP200、低于6ms；宿主可用内存约11.5GiB，I/O PSI some/full avg10 约56%/54%。这不支持“整台 daemon 已挂”的判断，也不能据个别 CLI 超时判断磁盘损坏。保留原操作及失败回执，先处理大体积文件传输，不重启影响其它运行的 daemon、不重复生成或提交。
 
 本地源停写后保全运输同样受远端文件 I/O 拖慢。主线已授权仅排除 Factory npm/pnpm 缓存，以及由实际 Git ignore 和 tracked=0 证明可再生成的 node_modules/.next；发现手工依赖修改的候选目录仍保留。原 volume、helper 与 partial archives 保留，逐项记录排除路径和依据，不能称为全 volume 字节级保全。应用脏文件/未跟踪源码、私有 Git、Braid DB/WAL、任务文档、原生历史与异步现场必须完整纳入。两项旧 adapter/runner 已按实际进程 birth 与 argv 停住，避免停止容器后自动清理原 volume；继续由 worker 完成选择性归档及恢复。
+
+用户随后报告WSL不可用，授权尝试 sfp7/development-2，并明确“以恢复 I13 flash/github 为第一优先级事项”。官网同一停止prepare容器的完整压缩导出已经到Mac，`hosted-github-memory-r3/stopped-attempt-export/workspace.tar.gz` SHA256 `cab38f64135d29936ac907df5182d0ee170ce9fd5294b171546262a6fdb83b49`，331030054 bytes，实际导出exit0；既有安全extract_output已核对974份保留文件无差异，没有restart、重跑main或模型请求。共享owner优先实现从这些实际证据接续同一失败attempt的派生prepare回执，保留原failed/partial，再沿现有verify_launch门控；官网owner保持shared源码只读，接口就绪后按既有ARC/self_funded/比赛额度关闭配方唯一启动。不在证据未通过时手工把status改成prepared。
+
+development-2已真实确认可用，身份与资源归I14 packet；仅在上述本地证据接续出现具体缺口时，才用新宿主完成必要断网准备，不改旧operation的冻结endpoint、不并行重复准备或收费提交。两项本地GLM保全仍由原worker继续，其中Github选择性完整进度保全已核验通过；未完成Sheet不迁移，paused不等于实际停止。旧WSL保全资料、volume和partial不清理。
+
+Flash/GitHub第一优先级闭环已取得官网新身份：共享reentry修复提交 `7d679fbe`，同一停止prepare现场的52610项完整导出逐项一致，原main/974保留文件/DB/配方/binary读回不变，models_started/container_restarted/main_reexecuted均为false。原failed receipt和partial保留，派生prepared receipt及独立verify_inputs/verify_launch均通过。唯一snapshot/create/start已完成，submission `44201056bfbe` / run `7e8ec62670df`，journal pending=null；官网首个观察QUEUED，billing_mode=self_funded、冻结allow_competition_credit=false。操作为 `hosted-github-memory-r3/operation-r2`，新journal为其 `hosted/flash-github-memory-r3`，未覆盖旧来源或失败记录。
+
+官网原唯一monitor输出目录实际已接收新target，collector PID77062、出生身份1790911116.382793，首批20261002T031836.502983Z，accepted绑定submission/run/journal一致。旧scheduler.done的Sheet f16834f58674和GitHub e1aa595f6995保留，没有第二collector。
+
+03:21:37 UTC采集独立确认run 7e8ec62670df为RUNNING，原根native 01a0f5f5-6f4c-716c-ba69-3270a25ea73d从884000增至890990 bytes，完整旧内容作为前缀保留，03:20:27至03:21:15已有三次新的assistant toolCall及对应toolResult。Braid原session生命周期running、resume_count=3、无resume_error；原get_state保存的实际execution与预期一致。证据为 `hosted-github-memory-r3/operation-r2/runtime-first-evidence.json`，不是仅凭启动请求、token或provider自报判断接续。
+
+新内存明细已有8份；最新cgroup current=1943109632、peak/limit=2147483648，file=1288318976、anon=522674176，events max=223、oom=0、oom_kill=0，PSI avg10=0。这只说明此观察时点尚无OOM，不证明所有历史根因或长期资源问题已消除。Braid capture耗时1840ms、RSS从272864降至255584kB；其error字段原文为“evidence flush: 1 records, 6 ms”，保留待共用owner核对分类，不凭该字符串宣称capture失败或已解决。后续继续由同一采集器记录。
+
+本地GLM保全的最新边界：GitHub 7906项选择性完整进度已保全；可恢复workspace ZIP为111263241 bytes，源source-agent.zip另约796MiB，不能混称同一原件。Sheet唯一Docker exec压缩输运1800秒后exit1，partial为73758720 bytes、SHA256 `537a4969753448cf437c8023eb988ce011d157ab2af337475b409a9bb0795a04`，无完整workspace ZIP或receipt，不能作为恢复来源。具体原始TimeoutExpired、stderr和精确本地输运进程退出/孤儿回收记录在 `arc-hot-recovery-20261002/sheet-transport-failure.json`；未重发远端请求，原source/volume/helper保留。两源此前仅确认paused，当前WSL不可用，实际stop门槛尚未满足；不启动新GLM模型或解除dispatcher暂停。

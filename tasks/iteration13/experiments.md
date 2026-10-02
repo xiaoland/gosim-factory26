@@ -1,6 +1,8 @@
 # e20261001-01：I13 首轮实验
 
-当前状态（2026-10-01，I13-2 修正后恢复）：新本地 experiment `exp-20261001-223204-4b68eb` 已启动 GLM/GitHub `a94a67b4b3d85b` 与GLM/Sheet `8046cfb0695023`；首批原件确认两项原Pi接续，Sheet等待资源后继续；两项均已发布共享packet。官网Flash/Sheet已创建submission `e69e9764310c` / run `f16834f58674`，准确读回self_funded、关闭比赛额度、pending=null；原取消来源691028015e69保留。用户随后追加“flash/github 也请恢复”，现已从失败 run `377afa346c92` 的保全终态创建 submission `8fad2a412927` / run `e1aa595f6995`；真实prepare通过，self_funded、关闭比赛额度、pending=null。首批脚本采集为RUNNING/deploy_agent，尚未取得新Pi接续证据。两项首次I13-2入口失败及其原卷保全，资源等待误判和历史GLM材料选择均已修复。监控已完全改为脚本，本地和官网分别接线，不唤醒模型；Console同一入口已切换唯一新服务。详见[I13-2当前状态](i13-2/packet.md)，本轮仍无有效应用评分。下方保留各历史阶段的原始身份与事实，不能用旧PID或旧监控授权覆盖本段。
+当前状态（2026-10-02）：官网Flash/Sheet `f16834f58674` 已完成生成和正式评测，74/100、通过74/失败26；独立过程分析归 I13-2 packet。Flash/GitHub 旧 `e1aa595f6995` 已取消并保全，共用 Braid 资源等待/快照内存修复已纳入派生包 `ce504eb6…`。一次准备的 main/独立读回通过，后续完整回传超时；同一停止prepare现场完成完整压缩导出后，共享reentry以52610项逐项核对和现有verify_launch门控接续，保留原failed/partial。唯一官网新submission为 `44201056bfbe`、run为 `7e8ec62670df`，snapshot/create/start完成、pending=null；03:21:37 UTC已观察RUNNING，原native完整旧前缀保留并产生三次新工具调用及结果。self_funded、比赛额度关闭，原模型与自有ARC key保持。新增8份内存明细，当前oom/oom_kill均零；运行和资源观察原件为 `hosted-github-memory-r3/operation-r2/runtime-first-evidence.json`，后续沿用唯一采集器。
+
+本地GLM/GitHub `a94a67b4b3d85b` 与GLM/Sheet `8046cfb0695023` 尚未完成生成或上传正式评分。两项源此前仅核对paused，实际stop尚未确认，新恢复要求全部模型走ARC；Github7906项完整选择性进度保全通过，Sheet唯一输运1800秒超时，partial保留但不作为完整快照，原volume/helper不清理。WSL当前不可用，用户授权尝试development-2，其资源与身份已实读，但新宿主不能替代旧源停止门控。采集继续唯一脚本，GPT-5.6-Luna/low每十分钟消费保存证据；普通进展保持安静。准确来源、身份与后续进展见[I13-2当前状态](i13-2/packet.md)。下方历史阶段保留原件和当时事实，不据旧PID/旧授权恢复执行。
 
 ## 启动以来的工作树
 
@@ -8,20 +10,20 @@
 I13 / e20261001-01
 ├─ I13主体改造［源码与材料完成；整体收益待本轮实验］
 │  └─ CLI、上下文、sub-agent、SVC、协作/需求树、提示词、工具、存储生命周期
-├─ I13-2［两处部署缺陷已修；四项恢复执行已启动］
-│  └─ OOM 防范、协作材料归属、根评论隐藏后代；Flash/GitHub尚在平台部署
+├─ I13-2［部署及资源等待/快照内存缺陷已修；恢复状态逐项记录］
+│  └─ OOM防范、协作材料归属、根评论隐藏后代；当前优先Flash/GitHub官网接续
 ├─ 四个逻辑运行［本地GLM两项＋官网Flash两项］
-│  ├─ Flash/GitHub → 官网I13-2接续［RUNNING/deploy_agent；e1aa595f6995］
-│  │  └─ 来源377afa346c92终态；保留进度、纳入I13-2，self_funded、比赛额度关闭
-│  ├─ Flash/Sheet → 官网I13-2接续［RUNNING；f16834f58674］
+│  ├─ Flash/GitHub → 官网内存修复接续［RUNNING；旧native完整接续及新工具调用已观察；7e8ec62670df］
+│  │  └─ 来源e1aa595f6995已取消保全，新增诊断；self_funded、比赛额度关闭
+│  ├─ Flash/Sheet → 官网I13-2接续［正式74分；f16834f58674］
 │  │  └─ 从21:14取消工作区重建接续；self_funded、自有ARC key，不上榜
-│  ├─ GLM/GitHub → Debian-Rebuild接续［原Pi已接续；a94a67b4b3d85b］
+│  ├─ GLM/GitHub → 原Debian-Rebuild接续［完整选择性保全；源stop待确认，ARC恢复未启动；a94a67b4b3d85b］
 │  │  └─ 来源暂停现场f9e…；完整Git/Braid/native，更新原生材料
-│  └─ GLM/Sheet → Debian-Rebuild接续［等待资源后已接续；8046cfb0695023］
-│     └─ 来源暂停现场a45…；完整Git/Braid/native，保留未提交实现
+│  └─ GLM/Sheet → 原Debian-Rebuild接续［输运超时，尚无完整保全；8046cfb0695023］
+│     └─ 原source、volume及partial保留；不能以partial恢复生成
 ├─ 模型与费用［配置确定］
 │  ├─ 官网：不勾选使用比赛额度评测、不上榜；官方ARC地址 + 自有key
-│  ├─ 本地：自有API；GLM→Bigmodel，K3→Kimi，内部DS Flash→Qwen
+│  ├─ 本地：旧尝试曾使用自有供应商；新增恢复全部模型改走ARC，旧记录保留
 │  └─ DeepSeek Braid成员已移除；旧在途工作保留身份、显式迁至GLM
 ├─ PR描述重复读取修正［828a3da已完成；两项新包已纳入］
 │  ├─ 根因：首轮已覆盖的关联事件仍命令重读；无重复全文注入，技能不改
@@ -34,11 +36,11 @@ I13 / e20261001-01
 │  ├─ 自动恢复［方案完成，未实现/未开启收费重试；建议每来源至多1次］
 │  └─ 本次OOM已证/Pi死亡强关联；历史SIGKILL来源仍未知，无WSL同类事实
 └─ 配套设施与知识
-   ├─ Exp Console［同一8765入口已切换唯一新服务；旧两归档、新两live］
-   ├─ 自有API网关［Mac4020已运行；两项真实请求已成功］
-   ├─ 纯脚本3+8监控［已接管本地/官网；Luna停用，heartbeat暂停］
+   ├─ Exp Console［保持唯一服务；WSL不可用后当前可访问性未确认］
+   ├─ 自有API网关［仅历史尝试使用；新恢复全ARC］
+   ├─ 脚本3+8采集＋Luna/low每十分钟监控［唯一采集器接入新官网target］
    ├─ 参赛须知durable docs［完成，PDF/规则/PRD/索引已提交］
-   └─ 原失败/暂停现场［已保全］；本轮尚无有效应用评分
+   └─ 原失败/暂停现场［保全程度逐项记录］；Flash/Sheet已取得正式74分
 ```
 
 本地最新授权：“我们重新开始处理吧；console那边有另外一个 agent 在改进和部署它，我们继续启动 I13-GLM，不受 console 阻塞”；“有快照就恢复，没有就重新启动吧”。GitHub恢复来源为 `runs/iteration13/local-20261001/model-cutover/glm-root--hackathon--github-00bf489759b139-workspace.zip`，SHA256 `e207e502f10203e98abff1aa78dc9cb2479ac3358cc0a232e286b8704d4215a4`。其后e057…现场已不在，不以失败请求记录代替完整工作区。Sheet原45bf…现场同样未完整保全，按新尝试干净生成。Mac持有控制器/输入/最终记录，复用远程Docker workspace传输在Debian-Rebuild执行；本任务不修改另一会话拥有的传输适配或Console实现。
