@@ -47,3 +47,7 @@ Docker 实际标签、daemon、StartedAt 与原 operation/run 对齐后，来源
 候选恢复包 `cleaner-resume-skills-ready.zip` 已成功装配并逐项核对，971,029,396 bytes，SHA256 `91118e8e9f084acac1e9ea564bc298a865729b57ea7433b36c4c05b5dfb2a16e`；manifest中的main、binary、nested完整workspace ZIP及9份技能文件均与实际字节一致。候选仍使用main `0eb29b59…`，不含待整合的一次恢复通知，不能作为最终部署包。独立计划为 `skills-refresh-recovery-plan.json`（稳定request_id、来源/Issue身份、实际消费者、路径/hash与通知文字），已交主线；原normal CLI方案保持，不临时改原DB/native。下一步等新通知接口hash及development-2 Runner身份后重新冻结最终恢复包，再prepare/launch与实际输入取证。
 
 主线已提供development-2 Runner：image `sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681`，endpoint `ssh://sfp7-ws.localhost`，daemon `e316f857-fe3d-4e7b-8236-9376f063fedc`，Linux/amd64、CPython3.12.3/glibc2.39，UID:GID501:20断网实际metadata执行成功。原件为 `runs/iteration14/development2-runner-20261002/`。private `target-runner-identity.json`及独立dev2 recipe/spec已冻结该身份、2GiB/2CPU/五槽，新operation为 `operation-dev2`；实际prepare/run须显式DOCKER_CONTEXT=development-2并核对实际daemon/image，不改旧operation。CLI comment无request-id参数；一次通知幂等需在稳定恢复计划与正常评论回执边界由shared owner实现，不能误用PR接口参数。当前等待shared新hash，尚未prepare/launch。
+
+## 新职责入口要求
+
+主线转达用户补充：work-item agent不必例行以“Let me start by reading the braid-collaboration skill and viewing the PR”开始。方法独立会话负责诊断例行维护、必要协作判断与已投影PR的重读边界，先方案，不改现场。本会话不重复方法调查、不改skills/role；保留当前强制重读notice为原候选，最终计划和role材料等职责入口方案明确后再冻结。通用一次通知接口仍由shared owner实现。原件、candidate和dev2spec/image保持不变，未prepare/launch。
