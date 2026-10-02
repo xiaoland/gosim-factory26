@@ -155,6 +155,40 @@ def control(attempt_dir, request):
         binding = read(directory / 'binding.json')
         if request.get('expected_incarnation') != binding['incarnation_id']:
             return _effect(effect, request, 'rejected', error={'message': 'expected execution incarnation differs or is absent'}, actual_incarnation_id=binding['incarnation_id'])
+        if request['action'] == 'repair-ready':
+            if effect.exists():
+                saved = read(effect)
+                if _attempt(directory)['job']['backend']['kind'] == 'docker' and saved['status'] in ('pending', 'unknown'):
+                    try:
+                        observed = backends.payload_record(directory, 'requests/' + request['request_id'] + '.effect.json', optional=True)
+                        if observed is not None:
+                            atomic(effect, observed)
+                            return observed
+                    except Exception as exc:
+                        return {**saved, 'observation_error': error(exc)}
+                return saved
+            receipt = read(directory / 'execution.json')
+            service = request['parameters'].get('service')
+            if service not in ('collector', 'resource_evidence'):
+                return _effect(effect, request, 'rejected', error={'message': 'explicit collector or resource_evidence service required'})
+            if process_state(binding.get('runner_process')) != 'alive':
+                return _effect(effect, request, 'rejected', error={'message': 'same-attempt repair requires the original live supervisor; new attempt needs explicit retry budget/authorization'})
+            if receipt.get('entry_status') != 'not_requested' or receipt['execution'] != 'readiness_failed' or receipt.get('services', {}).get(service, {}).get('status') != 'failed':
+                return _effect(effect, request, 'rejected', error={'message': 'repair requires explicitly failed service and owner-proven entry not requested'})
+            if time.time() >= binding['accepted_at'] + _attempt(directory)['job']['limits']['wall_seconds']:
+                return _effect(effect, request, 'rejected', error={'message': 'original attempt wall budget exhausted'})
+            if _attempt(directory)['job']['backend']['kind'] == 'docker':
+                target = _attempt(directory)['job']['backend']
+                try:
+                    if not backends.exact_resource(target, read(directory / 'resource.json'))['state'].get('Running'):
+                        return _effect(effect, request, 'rejected', error={'message': 'same-attempt repair requires original live workload namespace'})
+                    _effect(effect, request, 'pending', service=service, incarnation_id=binding['incarnation_id'])
+                    backends.payload_send(directory, 'requests/' + request['request_id'] + '.json', request)
+                    return read(effect)
+                except Exception as exc:
+                    return _effect(effect, request, 'unknown', error=error(exc))
+            return record('effect', request_id=request['request_id'], attempt_id=request['attempt_id'],
+                          action=request['action'], status='queued', incarnation_id=binding['incarnation_id'])
         if request['action'] == 'export':
             _effect(effect, request, 'accepted', incarnation_id=binding['incarnation_id'])
             try:
@@ -521,11 +555,11 @@ def _archive(directory, attempt, receipt):
     sealed = directory / 'archive-staging.json'
     if not sealed.exists():
         archive.mkdir(exist_ok=True)
-        for name in ('stdout.log', 'stderr.log', 'binding.json', 'execution.json', 'external-resources.json', 'resource-evidence-seal.json'):
+        for name in ('stdout.log', 'stderr.log', 'binding.json', 'execution.json', 'external-resources.json', 'resource-evidence-seal.json', 'services.json', 'ready.json'):
             if (directory / name).exists():
                 shutil.copy2(directory / name, archive / name)
         shutil.copytree(workspace, archive / 'workspace', symlinks=True, dirs_exist_ok=True)
-        for name in ('telemetry', 'process-evidence'):
+        for name in ('telemetry', 'process-evidence', 'service-errors'):
             if (directory / name).exists():
                 shutil.copytree(directory / name, archive / name, ignore=shutil.ignore_patterns('credential.json'), dirs_exist_ok=True)
         atomic(archive / 'telemetry-cutoff.json', telemetry.snapshot(directory))
@@ -537,6 +571,110 @@ def _archive(directory, attempt, receipt):
                                           {'checkpoint': False, 'workspace_preserved_in_execution_domain': True},
                                           request_id=attempt['attempt_id'] + '--archive')
     return artifacts
+
+
+def _wall_deadline(binding, limits):
+    return time.monotonic() + max(0, binding['accepted_at'] + limits['wall_seconds'] - time.time())
+
+
+def _ready_services(directory, attempt, binding, deadline, stop_requested, receipt=None):
+    """The live service owner repairs one failed component without reopening entry."""
+    from scripts.agent_support import ResourceEvidence, process_identity as resource_process_identity
+    objects = {'resource_evidence': None, 'collector': None}
+    states = {'resource_evidence': {'status': 'pending'},
+              'collector': {'status': 'pending' if attempt['job'].get('telemetry', {}).get('enabled', True) else 'disabled'}}
+
+    def start(service):
+        try:
+            if service == 'resource_evidence':
+                evidence = objects[service]
+                if evidence is None:
+                    evidence = ResourceEvidence(directory)
+                    objects[service] = evidence
+                    evidence.root_pid = os.getpid()
+                    evidence.root_starttime = resource_process_identity(os.getpid()).get('starttime')
+                if attempt['job']['backend']['kind'] == 'docker' and evidence.cgroup is None:
+                    raise Blocked('required namespace cgroup resource evidence is unavailable')
+                evidence.sample('runner-ready')
+                if not (directory / 'process-evidence/resource-latest.json').is_file():
+                    raise Blocked('required resource latest sample was not persisted')
+                states[service] = {'owner': 'runner', 'status': 'ready',
+                    'sample_path': str(directory / 'process-evidence/resource-latest.json'),
+                    'archive_path': str(directory / 'process-evidence/resources.jsonl'),
+                    'scope': 'cgroup-v2' if evidence.cgroup else 'host-visible',
+                    'cgroup': str(evidence.cgroup) if evidence.cgroup else None, 'gaps': evidence.errors}
+            else:
+                if (directory / 'telemetry/binding.json').exists():
+                    raise Blocked('failed collector has a published epoch; startup effect is unresolved and cannot be repeated')
+                objects[service] = telemetry.Collector(directory, attempt['attempt_id'], cap_bytes=attempt['job']['limits']['telemetry_bytes'])
+                states[service] = {'owner': 'runner', 'status': 'ready'}
+            return True
+        except Exception as exc:
+            states[service] = {'status': 'failed', 'error': error(exc),
+                               'startup_effect': 'unknown' if service == 'collector' and (directory / 'telemetry/binding.json').exists() else 'failed'}
+            atomic(directory / 'service-errors' / (new_id(service) + '.json'), record('service-error',
+                attempt_id=attempt['attempt_id'], incarnation_id=binding['incarnation_id'], service=service, **states[service]))
+            return False
+
+    def publish():
+        value = record('service-state', attempt_id=attempt['attempt_id'], incarnation_id=binding['incarnation_id'],
+                       entry_status='not_requested', services=states, observed_at=time.time(), wall_deadline=binding['accepted_at'] + attempt['job']['limits']['wall_seconds'])
+        atomic(directory / 'services.json', value)
+        if receipt is not None:
+            _save(directory, receipt, execution='readiness_failed', entry_status='not_requested', services=states)
+
+    next_sample = time.monotonic()
+    for service in states:
+        if states[service]['status'] == 'pending':
+            start(service)
+    try:
+        while any(value['status'] == 'failed' for value in states.values()):
+            publish()
+            if stop_requested or time.monotonic() >= deadline:
+                raise Blocked('service readiness stopped or original wall budget exhausted; entry not requested')
+            for path in sorted((directory / 'requests').glob('*.json')):
+                request = require(read(path), 'request')
+                if request['attempt_id'] != attempt['attempt_id'] or canonical(request['parameters']) != request['parameters_sha256']:
+                    raise ValueError('readiness control target/parameters differ from durable request')
+                effect = path.with_suffix('.effect.json')
+                if effect.exists() or request['action'] not in ('repair-ready', 'stop'):
+                    continue
+                if request.get('expected_incarnation') != binding['incarnation_id']:
+                    _effect(effect, request, 'rejected', error={'message': 'service repair incarnation differs'})
+                    continue
+                if request['action'] == 'stop':
+                    stop_requested.append('control_request')
+                    _effect(effect, request, 'applied', entry_status='not_requested')
+                    continue
+                service = request['parameters'].get('service')
+                if service not in states or states[service]['status'] != 'failed':
+                    _effect(effect, request, 'rejected', error={'message': 'repair requires one explicitly failed service'})
+                    continue
+                if states[service].get('startup_effect') == 'unknown':
+                    _effect(effect, request, 'unknown', error=states[service]['error'])
+                    continue
+                _effect(effect, request, 'pending', service=service, incarnation_id=binding['incarnation_id'])
+                succeeded = start(service)
+                publish()
+                _effect(effect, request, 'applied' if succeeded else 'unknown' if states[service].get('startup_effect') == 'unknown' else 'failed',
+                        service=service, incarnation_id=binding['incarnation_id'], service_state=states[service])
+            if objects['resource_evidence'] is not None and states['resource_evidence']['status'] == 'ready' and time.monotonic() >= next_sample:
+                next_sample = time.monotonic() + 2
+                try:
+                    objects['resource_evidence'].sample('awaiting-ready-repair')
+                except Exception as exc:
+                    states['resource_evidence'] = {'status': 'failed', 'startup_effect': 'failed', 'error': error(exc)}
+                    atomic(directory / 'service-errors' / (new_id('resource-evidence') + '.json'), record('service-error', service='resource_evidence', **states['resource_evidence']))
+            time.sleep(.25)
+        if stop_requested or time.monotonic() >= deadline:
+            raise Blocked('original wall budget exhausted before entry readiness')
+        return objects['resource_evidence'], objects['collector'], states
+    except BaseException:
+        if objects['collector'] is not None:
+            objects['collector'].close(producer_flush='unknown')
+        if objects['resource_evidence'] is not None:
+            objects['resource_evidence'].sample('readiness-stopped')
+        raise
 
 
 def worker(attempt_dir):
@@ -562,16 +700,9 @@ def worker(attempt_dir):
         signal.signal(signal.SIGINT, lambda *_: stop_signal.append('supervisor_sigint'))
         try:
             workspace = _assemble(directory, attempt, deployment)
-            from scripts.agent_support import ResourceEvidence, process_identity as resource_process_identity
-            evidence = ResourceEvidence(directory)
-            evidence.root_pid = os.getpid()
-            evidence.root_starttime = resource_process_identity(os.getpid()).get('starttime')
-            evidence.sample('runner-ready')
-            if job['backend']['kind'] == 'docker' and evidence.cgroup is None:
-                raise Blocked('Docker required cgroup resource evidence is unavailable')
+            deadline = _wall_deadline(binding, limits)
+            evidence, collector, service_states = _ready_services(directory, attempt, binding, deadline, stop_signal, receipt)
             enabled = job.get('telemetry', {}).get('enabled', True)
-            if enabled:
-                collector = telemetry.Collector(directory, attempt['attempt_id'], cap_bytes=limits['telemetry_bytes'])
             environment = _environment(job, deployment)
             if job.get('prepared'):
                 manifest_path = directory / 'inputs/prepared/harness-manifest.json'
@@ -590,18 +721,13 @@ def worker(attempt_dir):
             if collector:
                 environment.update(collector.environment())
                 environment['FACTORY26_EXP_TELEMETRY_BINDING'] = json.dumps({'endpoint': collector.binding['receiver_endpoint'], 'token': collector.token, **{k: collector.binding[k] for k in ('attempt_id', 'stream_id', 'collector_epoch')}})
-            services = {'resource_evidence': {'owner': 'runner', 'status': 'ready',
-                         'sample_path': str(directory / 'process-evidence/resource-latest.json'), 'archive_path': str(directory / 'process-evidence/resources.jsonl'),
-                         'scope': 'cgroup-v2' if evidence.cgroup else 'host-visible', 'cgroup': str(evidence.cgroup) if evidence.cgroup else None,
-                         'gaps': evidence.errors},
-                        'telemetry': {'owner': 'runner', 'status': 'ready' if collector else 'disabled'},
-                        'control': {'status': 'ready', 'inbox': str(directory / 'requests')}}
+            services = {**service_states, 'telemetry': service_states['collector'], 'control': {'status': 'ready', 'inbox': str(directory / 'requests')}}
             environment['FACTORY26_EXP_SERVICES'] = json.dumps(services)
             atomic(directory / 'ready.json', record('runner-ready', attempt_id=attempt['attempt_id'], incarnation_id=binding['incarnation_id'],
                   services=services, runtime=deployment['runtime'].get('identity'), assembly=read(directory / 'assembly.json') if (directory / 'assembly.json').exists() else None, ready_at=time.time()))
-            _save(directory, receipt, ready=read(directory / 'ready.json'), execution='ready')
+            _save(directory, receipt, ready=read(directory / 'ready.json'), execution='ready', services=service_states, entry_status='not_requested')
             command = [_expand(value, directory, job) for value in job['command']]
-            _save(directory, receipt, execution='entry_launch_pending', entry_launch_intent_at=time.time(), command=command,
+            _save(directory, receipt, execution='entry_launch_pending', entry_status='requested', entry_launch_intent_at=time.time(), command=command,
                   runner_process=binding['runner_process'], telemetry='active' if collector else 'disabled')
             with (directory / 'stdout.log').open('ab', buffering=0) as stdout, (directory / 'stderr.log').open('ab', buffering=0) as stderr:
                 entry_environment = dict(environment)
@@ -616,7 +742,7 @@ def worker(attempt_dir):
                 _save(directory, receipt, execution='running', entry_process=identity, backend_identity=backend_identity, started_at=time.time())
                 _effect(directory / 'requests' / (receipt['dispatch_request_id'] + '.effect.json'), read(directory / 'request.json'),
                         'applied', incarnation_id=binding['incarnation_id'], entry_process=identity)
-                deadline = time.monotonic() + limits['wall_seconds']
+                # Readiness and entry share the original accepted wall budget.
                 next_sample = 0
                 known_descendants = {}
                 while True:
@@ -737,11 +863,22 @@ def docker_worker(directory, attempt, deployment, binding, receipt):
         resource.update(state=started['state'], started_at=started['state']['StartedAt'])
         atomic(directory / 'resource.json', resource)
         _save(directory, receipt, execution='awaiting_ready', backend_identity={**resource, 'kind': 'docker', 'endpoint': target['endpoint']})
-        deadline = time.monotonic() + limits['wall_seconds']
+        deadline = _wall_deadline(binding, limits)
         ready = None
         while ready is None:
             physical = backends.exact_resource(target, resource)
             ready = backends.payload_record(directory, 'ready.json', optional=True)
+            service_state = backends.payload_record(directory, 'services.json', optional=True)
+            if ready is None and service_state is not None:
+                require(service_state, 'service-state')
+                if service_state['incarnation_id'] != binding['incarnation_id'] or service_state['attempt_id'] != attempt['attempt_id']:
+                    raise Blocked('service state belongs to another namespace incarnation')
+                _save(directory, receipt, execution='readiness_failed', entry_status='not_requested', services=service_state['services'])
+            for path in (directory / 'requests').glob('*.json'):
+                if read(path)['action'] == 'repair-ready':
+                    effect = backends.payload_record(directory, 'requests/' + path.stem + '.effect.json', optional=True)
+                    if effect is not None:
+                        atomic(path.with_suffix('.effect.json'), effect)
             if ready is None and physical['state'].get('Status') in ('exited', 'dead'):
                 raise Blocked('payload exited before required services ready; entry was not permitted')
             if time.monotonic() >= deadline or stop_requested:
@@ -750,10 +887,10 @@ def docker_worker(directory, attempt, deployment, binding, receipt):
             time.sleep(.25)
         require(ready, 'runner-ready')
         atomic(directory / 'ready.json', ready)
-        _save(directory, receipt, execution='ready', ready=ready)
+        _save(directory, receipt, execution='ready', ready=ready, services=ready['services'], entry_status='not_requested')
         permit = record('entry-permit', attempt_id=attempt['attempt_id'], incarnation_id=binding['incarnation_id'], request_id=request['request_id'] + '--entry', ready_sha256=canonical(ready))
         atomic(directory / 'entry-intent.json', permit)
-        _save(directory, receipt, execution='entry_launch_pending', entry_launch_intent_at=time.time())
+        _save(directory, receipt, execution='entry_launch_pending', entry_status='requested', entry_launch_intent_at=time.time())
         backends.payload_send(directory, 'entry-permit.json', permit)
         while True:
             physical = backends.exact_resource(target, resource)
@@ -789,7 +926,7 @@ def docker_worker(directory, attempt, deployment, binding, receipt):
         atomic(directory / 'docker-supervision-error.json', record('error', **error(exc)))
         if receipt.get('execution') not in ('exited', 'stopped', 'failed'):
             no_entry = not (directory / 'entry-intent.json').exists()
-            _save(directory, receipt, execution='failed' if no_entry and receipt.get('execution') == 'awaiting_ready' else 'unknown',
+            _save(directory, receipt, execution='failed' if no_entry and receipt.get('execution') in ('awaiting_ready', 'readiness_failed') else 'unknown',
                   entry='not_requested' if no_entry else 'unknown', stage=receipt.get('execution'), error=error(exc))
         else:
             _save(directory, receipt, archive='failed', archive_error=error(exc))
@@ -804,22 +941,15 @@ def payload_worker(directory):
     stop_requested = []
     signal.signal(signal.SIGTERM, lambda *_: stop_requested.append(True))
     signal.signal(signal.SIGINT, lambda *_: stop_requested.append(True))
-    from scripts.agent_support import ResourceEvidence, process_identity as resource_process_identity
-    evidence = ResourceEvidence(directory)
-    evidence.root_pid = os.getpid()
-    evidence.root_starttime = resource_process_identity(os.getpid()).get('starttime')
+    evidence = None
     try:
-        if evidence.cgroup is None:
-            raise Blocked('required workload cgroup resource evidence is unavailable')
         workspace = _assemble(directory, attempt, deployment)
-        if job.get('telemetry', {}).get('enabled', True):
-            collector = telemetry.Collector(directory, attempt['attempt_id'], cap_bytes=limits['telemetry_bytes'])
-        evidence.sample('ready')
-        services = {'resource_evidence': {'owner': 'runner-payload', 'status': 'ready', 'sample_path': str(directory / 'process-evidence/resource-latest.json'), 'archive_path': str(directory / 'process-evidence/resources.jsonl'),
-                    'scope': 'cgroup-v2', 'cgroup': str(evidence.cgroup)}, 'telemetry': {'owner': 'runner-payload', 'status': 'ready' if collector else 'disabled'}}
+        deadline = _wall_deadline(binding, limits)
+        evidence, collector, services = _ready_services(directory, attempt, binding, deadline, stop_requested)
+        services['telemetry'] = services['collector']
         ready = record('runner-ready', attempt_id=attempt['attempt_id'], incarnation_id=binding['incarnation_id'], services=services, ready_at=time.time())
         atomic(directory / 'ready.json', ready)
-        deadline = time.monotonic() + limits['wall_seconds']
+        deadline = _wall_deadline(binding, limits)
         while not (directory / 'entry-permit.json').exists():
             evidence.sample('awaiting-entry')
             if time.monotonic() >= deadline or stop_requested:
@@ -858,7 +988,8 @@ def payload_worker(directory):
             exit_code = process.wait()
         atomic(directory / 'payload-terminal.json', record('payload-terminal', entry_exit_code=exit_code, finished_at=time.time(), telemetry='pending'))
     finally:
-        evidence.sample('final')
+        if evidence is not None:
+            evidence.sample('final')
         if collector:
             seal = collector.close(producer_flush='unknown')
             if (directory / 'payload-terminal.json').exists():

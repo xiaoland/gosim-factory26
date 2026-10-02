@@ -431,12 +431,17 @@ def payload_send(directory, filename, value):
     directory = Path(directory)
     target = read(directory / 'attempt.json')['job']['backend']
     helper = read(directory / 'store-helper.json')
+    transport_id = read(directory / 'attempt.json')['attempt_id'] + '--payload-' + canonical([filename, value])[:24]
+    managed(target, helper, 'writer-open', transport_id + '--writer-open')
     path = directory / ('payload-send-' + member(filename))
     atomic(path, value)
-    remote = '/execution/payload/.' + filename
+    filename = member(filename)
+    remote = '/execution/payload/' + str(Path(filename).parent / ('.' + Path(filename).name))
     execute(target['endpoint'], ['cp', str(path), helper['container_id'] + ':' + remote], check=True, capture_output=True, text=True, timeout=60)
     _owner_exec(target, helper, [target.get('python', 'python3'), '-c',
                               'import os;os.replace(' + repr(remote) + ',' + repr('/execution/payload/' + filename) + ')'])
+
+    managed(target, helper, 'writer-close', transport_id + '--writer-close')
 
 
 def export_payload(directory):
@@ -451,7 +456,7 @@ def export_payload(directory):
     try:
         execute(target['endpoint'], ['cp', resource['container_id'] + ':/execution/.', str(stage)],
                 check=True, capture_output=True, text=True, timeout=300)
-        for name in ('workspace', 'telemetry', 'telemetry-transports', 'process-evidence'):
+        for name in ('workspace', 'telemetry', 'telemetry-transports', 'process-evidence', 'service-errors'):
             source = stage / name
             if source.is_dir():
                 destination = directory / name
@@ -461,7 +466,7 @@ def export_payload(directory):
                         raise Blocked('existing export differs from terminal payload: ' + name)
                 else:
                     shutil.copytree(source, destination, symlinks=True, dirs_exist_ok=True)
-        for name in ('stdout.log', 'stderr.log', 'payload-terminal.json'):
+        for name in ('stdout.log', 'stderr.log', 'payload-terminal.json', 'services.json', 'ready.json'):
             if (stage / name).exists():
                 shutil.copy2(stage / name, directory / name)
         if (stage / 'assembly.json').exists():
