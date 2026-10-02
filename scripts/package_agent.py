@@ -208,6 +208,11 @@ def _key(value):
     return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
 
 
+def material_identity(dependencies):
+    """Return the producer's stable public material identifier."""
+    return 'material-' + _key(dependencies)
+
+
 def material_capabilities():
     return {'braid_session_budget': {'version': 2, 'native_children_share_owner': True,
                                     'missing_identity': 'reject'},
@@ -300,7 +305,8 @@ def produce(variant, output_store, runtime, skill_source=None, tool_env=None,
         if expected_dependencies is not None and dependencies != expected_dependencies:
             raise ValueError('producer dependencies 与冻结选择不一致；必须重新编译')
         otlp = _otlp_dependencies(cache, otlp_dependencies)
-        identity = _key(dependencies)
+        material_id = material_identity(dependencies)
+        identity = material_id.removeprefix('material-')
         target = cache/'materials'/identity
         receipt = target/'material.json'
         if receipt.exists():
@@ -321,7 +327,7 @@ def produce(variant, output_store, runtime, skill_source=None, tool_env=None,
             if plan_material(variant, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies) != dependencies:
                 raise ValueError('生产期间材料来源发生变化')
             value = {'kind': 'factory26.harness.material', 'schema_version': 2,
-                     'material_id': 'material-' + identity, 'root': str(target/'payload'),
+                     'material_id': material_id, 'root': str(target/'payload'),
                      'dependencies': dependencies, 'capabilities': material_capabilities(),
                      'contents': _tree_identity(stage/'payload')}
             (stage/'material.json').write_text(json.dumps(value, ensure_ascii=False, sort_keys=True)+'\n')
