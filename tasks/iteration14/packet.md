@@ -42,6 +42,10 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 
 保留四个root prompt源码：Pi原生技能发现已提供名称、description和路径，根Issue不再重复description。恢复输入须携带完整新技能目录，并向实际接续消费者传一次技能名称、实际文件路径、新主文件hash及继续当前工作前重新读取的通知；不内联正文、不要求全员ACK。部署读回、通知送达及相关决定中的实际采用分别取证。完整旧新hash和方法复核归独立任务包。
 
+development-2所需Runner已编译并交cleaner独立恢复owner：镜像 `sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681`，daemon身份仍为 `e316f857-fe3d-4e7b-8236-9376f063fedc`。冻结Runner来自I13已使用的control/runner，官方base固定为 `gyataro/arcbench-runner@sha256:40e003ed470dbd4c120b9019876ba77303d38dc8b34be7f6e313fe0563dd14de`；断网、501:20直接读取运行metadata为CPython3.12.3、glibc2.39、Linux/x86_64，退出0，无模型或原source重启。构建与读回原件归 `runs/iteration14/development2-runner-20261002/`。新image只能进入新操作冻结输入，不能改写旧endpoint或冒充旧image；同一宿主原Redis服务未修改。
+
+cleaner已保存 `cleaner-hidden-context-20261002/skills-refresh-recovery-plan.json`，明确Issue1/root glm-1与仍实施PR3的glm-3是实际消费者，不唤醒完成的glm-2。共享owner正在补显式恢复通知输入：prepare-only只核对/冻结计划，runtime在材料刷新与ARC保护之后、首次launch前，通过现有normal comment与request-id发送一次并留回执；不临时修改DB或native历史。旧3ce599fb保留其材料刷新/ARC身份，新接口需新hash/最终ZIP后方可实际prepare/恢复。
+
 技能改进的判断依据是分析报告已经区分的义务交接、原文与新增约定冲突、真实跨层调用及合并证据充分性；不是单纯增加读取次数、篇幅或模板。改进保持通用Harness边界，ARC特定方法仍归独立技能与根Issue入口。热修复须记录各run的旧/新技能身份与实际采用时点，避免把混合版本的过程视为从启动起统一使用新方法；不将隐藏评分或具体失分答案送入仍生成的Agent。
 
 新PR创建默认draft已完成并提交e7d88e7，保留--draft兼容，继续用pr ready/--undo；不改旧PR、迁移或request-id重试状态。主线独立读取前后SQLite、具体merge错误、实际Git效果和编译原件；原生session数量为零，准备阶段真实blocked不当成功运行。[draft记录](draft.md)保存命令、错误和覆盖边界。
