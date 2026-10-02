@@ -26,7 +26,7 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 │  ├─ cleaner/GitHub：旧source已物理停止，聚合修复读回通过，保全/热恢复继续
 │  ├─ reviewer/GitHub：此前running、Console修复已部署；WSL不可用后当前状态未确认
 │  ├─ e2e/GitHub及四项Sheet：五项仍待派发
-│  └─ 各组共有技能改进：独立会话已实现及提交，待冻结/热部署；保留各variant机制差异
+│  └─ 各组共有技能改进：首轮材料已提交；What/Why及cleaner职责入口再迭代，待最终冻结/热部署
 └─ 共同设施
    ├─ Braid资源等待/快照内存与新增证据：共用源码已编译，旧运行不自动更新
    ├─ ARC-only与模型DX：源码已完成，具体部署以各恢复/新冻结回执为准
@@ -45,6 +45,10 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 development-2所需Runner已编译并交cleaner独立恢复owner：镜像 `sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681`，daemon身份仍为 `e316f857-fe3d-4e7b-8236-9376f063fedc`。冻结Runner来自I13已使用的control/runner，官方base固定为 `gyataro/arcbench-runner@sha256:40e003ed470dbd4c120b9019876ba77303d38dc8b34be7f6e313fe0563dd14de`；断网、501:20直接读取运行metadata为CPython3.12.3、glibc2.39、Linux/x86_64，退出0，无模型或原source重启。构建与读回原件归 `runs/iteration14/development2-runner-20261002/`。新image只能进入新操作冻结输入，不能改写旧endpoint或冒充旧image；同一宿主原Redis服务未修改。
 
 cleaner已保存 `cleaner-hidden-context-20261002/skills-refresh-recovery-plan.json`，明确Issue1/root glm-1与仍实施PR3的glm-3是实际消费者，不唤醒完成的glm-2。共享owner正在补显式恢复通知输入：prepare-only只核对/冻结计划，runtime在材料刷新与ARC保护之后、首次launch前，通过现有normal comment与request-id发送一次并留回执；不临时修改DB或native历史。旧3ce599fb保留其材料刷新/ARC身份，新接口需新hash/最终ZIP后方可实际prepare/恢复。
+
+用户随后补充cleaner目标：“让 work-item agent 不必 'Let me start by reading the braid-collaboration skill and viewing the PR.'”。两成员instructions首段确实无条件要求开始/接续时读取该技能；具体原生句与PR投影内容仍由方法会话定向核对。改进要区分例行对象整理与实施、交接、需求裁决和验收的判断责任；同时确认初始PR快照覆盖了什么，不能仅把必要查询一律关闭。方法会话还收到用户直接授权：Skill主体应围绕足以区分选择的What/Why，暂缓Hook，同意其下一步。这些新决定纳入同一材料线，首轮ed9a97bb/60ba2e01保留历史身份；当前候选冻结和强制重读两主文件的通知不当最终部署，cleaner首次launch待职责方案与最终新材料收敛。
+
+恢复通知接口首轮已ready，packager `7ea9f02f…`、main `a12ae58d…`，仅增加显式 `--material-notice-plan`，lab unchanged。CLI的comment实际没有request-id；计划request_id只是本次冻结输入身份，不是CLI原生幂等键。发送前保存pending，成功或重入以正常comment id、目标、external作者、bodySHA及实际delivery唯一核对；pending后零/多条或结果不明不重发并阻断launch。prepare-only不发送通知，不写DB/native。接口及旧候选保留供最终材料接续，尚未实际prepare/launch，不据源码就绪宣称通知或材料采用已经发生。
 
 技能改进的判断依据是分析报告已经区分的义务交接、原文与新增约定冲突、真实跨层调用及合并证据充分性；不是单纯增加读取次数、篇幅或模板。改进保持通用Harness边界，ARC特定方法仍归独立技能与根Issue入口。热修复须记录各run的旧/新技能身份与实际采用时点，避免把混合版本的过程视为从启动起统一使用新方法；不将隐藏评分或具体失分答案送入仍生成的Agent。
 
