@@ -12,6 +12,19 @@
 
 恢复准备请求引用已有 `package`，或提供 `recovery` 的来源 workspace/base package、允许材料变更和必要 Git 重建依据，并指定 `docker_image` 与 Docker endpoint/context。准备在独占、无网络、无模型凭据的 Linux 容器执行原包 `--prepare-only`，保留实际镜像、UID/GID、原日志和独立读回。准备成功只证明文件准备完成；恢复启动还必须核验同一来源已停止及实际执行 ZIP 与准备回执一致。缺少私有 clone Git 时需逐 clone 的明确 commit、branch 和证据，不能用数据库登记 branch 推断最后 checkout。
 
+完整准备工作区通过容器内压缩 tar 回传，再由 `extract_output` 安全解压到原 `prepared-workspace` 路径。此输运不排除任何文件；`prepared-workspace.tar.gz`、独立 stderr 和回执中的命令、退出码、超时、字节数及 SHA 保留具体失败依据。主程序和独立读回已经成功，但最后输运失败时，原 attempt 仍记为失败，不能直接把状态改成 `prepared`。
+
+同一已停止准备容器的完整导出和本地解压都已另行取得时，可以只接续输运。导出回执须绑定 `container_id`、`image_id`、`package_sha256` 和 `source_attempt`，记录成功退出、起止时间、归档字节数与 `sha256`，并明确 `container_restarted=false`、`models_started=false`。`source_attempt` 使用绝对路径，或相对导出回执上两级目录的路径。解压校验回执引用实际 `archive`、`archive_sha256`、`destination` 和原读回的 `preserved_files` 数量，要求 `mismatches=[]` 及相同的无重启、无模型事实。沿用实际导出及安全解压留下的回执，不补写成功观察来代替缺失原件。
+
+```sh
+python3 -m lab.arc_bench.recovery --complete-prepared-transport \
+  runs/<实验>/<操作>/preparations/<准备ID> \
+  runs/<实验>/<完整导出>/receipt.json \
+  runs/<实验>/<完整导出>/validation.json
+```
+
+这个纯本地入口核对原失败 attempt 的规格、输入、包和 runner SHA，保存的独占断网隔离与停止身份，以及原 `--prepare-only` 和数据库、配方、Git、二进制读回。它再比较归档与解压工作区的全部目录、文件字节、执行位和链接，调用现有 `verify_launch` 后才原子发布派生准备回执。原 attempt 的失败回执和输运半成品保持，`transport-reentry-*/` 保存失败回执副本、证据哈希及派生回执。入口不访问 Docker，也不重新执行主程序。完成后重新执行同一 `operation prepare`，消费已准备回执完成冻结，再由 `operation run` 的现有启动门控接续；准备接续没有扩大模型、费用或运行范围。
+
 本地自动官网重放须另在规格中冻结 `replay.defaults` 或 `replay.jobs` 的 Competition 参数。跟随者仅消费本次 manifest 的实验和 job，保留每个来源 run 的重放包、同一官网 journal 与结果回执；普通本地操作省略 replay 就不会评分。重入继续同一 journal，不把不确定 POST 当作未执行。collector 的确定失败保留已启动 run 和原错误，停止当前自动接续；修复前提后显式再次 `operation run`，不会每五秒自动重启。
 
 选择执行方式时，先区分三类运行：

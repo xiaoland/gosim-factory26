@@ -395,6 +395,145 @@ def prepare(spec, directory):
         return _prepare(spec, directory, docker, inspect, error_text, freeze)
 
 
+def complete_prepared_transport(directory, export_receipt, validation_receipt):
+    """Complete only a failed workspace transfer from a saved, stopped prepare container.
+
+    The export and its existing extraction must belong to the same attempt. This
+    boundary makes no Docker calls and never executes the package's main again.
+    """
+    import fcntl
+    import tarfile
+    from .workspace_archive import output_inventory
+
+    directory = Path(directory).resolve(strict=True)
+    export_path = Path(export_receipt).resolve(strict=True)
+    validation_path = Path(validation_receipt).resolve(strict=True)
+    with (directory / '.prepare.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        final = directory / 'receipt.json'
+        original = json.loads(final.read_text())
+        if original.get('status') == 'prepared':
+            binding = original.get('transport_reentry', {})
+            if (binding.get('export_receipt_sha256') != digest(export_path)
+                    or binding.get('validation_receipt_sha256') != digest(validation_path)):
+                raise ValueError('prepared transport is already bound to different export evidence')
+            verify_launch(original['package'], final)
+            return original
+        attempt = Path(original['attempt_directory']).resolve(strict=True)
+        spec = json.loads((directory / 'spec.json').read_text())
+        spec_hash = hashlib.sha256(json.dumps(spec, sort_keys=True).encode()).hexdigest()
+        if (original.get('status') != 'failed' or original.get('spec_sha256') != spec_hash
+                or attempt.parent != directory or json.loads((attempt / 'receipt.json').read_text()) != original):
+            raise ValueError('transport reentry requires the unchanged failed attempt and specification')
+        for name, expected in json.loads((directory / 'input-hashes.json').read_text()).items():
+            if digest(name) != expected:
+                raise ValueError(f'recovery input content changed: {name}')
+        package = Path(original['package']).resolve(strict=True)
+        if (package != attempt / 'agent.zip' or digest(package) != original['package_sha256']
+                or digest(attempt / 'recovery-runner.py') != original['runner_sha256']):
+            raise ValueError('failed attempt package or runner identity changed')
+        isolation = json.loads((attempt / 'container-isolation.json').read_text())
+        stopped = json.loads((attempt / 'container-final.json').read_text())
+        environment = json.loads((directory / 'environment.json').read_text())
+        state = stopped.get('State', {})
+        if (any(row.get('Id') != original['container_id'] or row.get('Image') != original['image_id']
+                or row.get('HostConfig', {}).get('NetworkMode') != 'none' or row.get('Mounts')
+                for row in (isolation, stopped))
+                or environment.get('endpoint') != original['docker_endpoint']
+                or environment.get('image_id') != original['image_id']
+                or state != original.get('container_final_state')
+                or state.get('Running') is not False or state.get('Paused') is not False
+                or state.get('Restarting') is not False or state.get('Pid') != 0
+                or not state.get('FinishedAt') or state.get('StartedAt') != isolation['State'].get('StartedAt')):
+            raise ValueError('saved prepare isolation or stopped container identity differs')
+        export = json.loads(export_path.read_text())
+        validation = json.loads(validation_path.read_text())
+        export_attempt = Path(export['source_attempt'])
+        if not export_attempt.is_absolute():
+            export_attempt = export_path.parent.parent / export_attempt
+        archive = Path(validation['archive']).resolve(strict=True)
+        workspace = Path(validation['destination']).resolve(strict=True)
+        if (export_attempt.resolve() != attempt or export.get('container_id') != original['container_id']
+                or export.get('image_id') != original['image_id'] or export.get('package_sha256') != original['package_sha256']
+                or export.get('exit_code') != 0 or export.get('container_restarted') is not False
+                or export.get('models_started') is not False or validation.get('models_started') is not False
+                or validation.get('container_restarted') is not False or validation.get('mismatches') != []
+                or export.get('started_at', 0) < original.get('finished_at', 0)
+                or export.get('finished_at', 0) < export.get('started_at', 0)
+                or digest(archive) != export.get('sha256') or export.get('sha256') != validation.get('archive_sha256')
+                or archive.stat().st_size != export.get('bytes')):
+            raise ValueError('completed workspace export does not match the stopped failed attempt')
+        readback_path = attempt / 'readback/readback.json'
+        observed = json.loads(readback_path.read_text())
+        execution = json.loads((readback_path.parent / 'execution.json').read_text())
+        if (execution.get('exit_code') != 0 or execution.get('models_started') is not False
+                or observed.get('verified_files') != validation.get('preserved_files')
+                or any(observed.get(name) is not True for name in (
+                    'database_unchanged', 'worktree_paths_unchanged', 'profiles_recipe_unchanged', 'root_profile_unchanged'))
+                or any(observed.get(name) for name in ('preserved_file_mismatches', 'material_mismatches', 'git_errors'))):
+            raise ValueError('the original offline prepare or independent readback did not succeed')
+        # Bind every extracted file, including generated preparation metadata, to
+        # the complete archive; the preserved-file subset alone cannot do this.
+        inventory = output_inventory(workspace)
+        actual = {row['path']: row for row in inventory['entries']}
+        names = set()
+        with tarfile.open(archive) as stream:
+            for member in stream:
+                path = PurePosixPath(member.name)
+                if path.is_absolute() or '..' in path.parts or '\\' in member.name:
+                    raise ValueError(f'unsafe exported workspace path: {member.name}')
+                name = str(path)
+                if name == '.' and member.isdir():
+                    continue
+                if name in names:
+                    raise ValueError(f'duplicate exported workspace path: {name}')
+                names.add(name)
+                expected = {'path': name}
+                if member.isdir():
+                    expected['type'] = 'directory'
+                elif member.issym():
+                    expected.update(type='link', target=member.linkname)
+                elif member.isfile() or member.islnk():
+                    with stream.extractfile(member) as data:
+                        expected.update(type='file', sha256=hashlib.file_digest(data, 'sha256').hexdigest(),
+                                        executable=bool(member.mode & 0o111))
+                else:
+                    raise ValueError(f'unsupported exported workspace member: {name}')
+                if actual.get(name) != expected:
+                    raise ValueError(f'extracted workspace differs from completed export: {name}')
+        if names != actual.keys():
+            raise ValueError('extracted workspace contains files outside the completed export')
+        run = workspace / '.factory26' / original['source_binding']['braid_run_id']
+        if digest(run / 'work/bin/braid') != original['source_binding']['braid_sha256']:
+            raise ValueError('exported prepared workspace binary differs from frozen source')
+        reentry = attempt / ('transport-reentry-' + secrets.token_hex(8))
+        reentry.mkdir(mode=0o700)
+        failed_copy = reentry / 'failed-receipt.json'
+        shutil.copy2(final, failed_copy)
+        candidate = {**original, 'status': 'prepared', 'receipt': str(final), 'readback': str(readback_path),
+                     'readback_sha256': digest(readback_path), 'prepared_workspace': str(workspace),
+                     'docker_exec_exit_code': execution['exit_code'], 'finished_at': time.time(),
+                     'prepared_identity': {'container_id': original['container_id'], 'image_id': original['image_id'],
+                                           'endpoint': original['docker_endpoint'], 'attempt': observed['attempt']},
+                     'transport_reentry': {'failed_receipt': str(failed_copy), 'failed_receipt_sha256': digest(failed_copy),
+                         'export_receipt': str(export_path), 'export_receipt_sha256': digest(export_path),
+                         'validation_receipt': str(validation_path), 'validation_receipt_sha256': digest(validation_path),
+                         'archive': str(archive), 'archive_sha256': digest(archive),
+                         'workspace_inventory_sha256': inventory['sha256'], 'workspace_entries': len(actual),
+                         'models_started': False, 'container_restarted': False, 'main_reexecuted': False}}
+        candidate.pop('error', None)
+        candidate_path = reentry / 'receipt.json'
+        save(candidate_path, candidate)
+        candidate['launch_verification'] = verify_launch(package, candidate_path)
+        save(candidate_path, candidate)
+        # The original attempt receipt and incomplete workspace remain untouched.
+        # Publish only after the existing launch gate accepts the derived receipt.
+        pending = directory / 'receipt.transport-completed.json'
+        save(pending, candidate)
+        pending.replace(final)
+        return candidate
+
+
 def _prepare(spec, directory, docker, inspect, error_text, freeze):
     spec = json.loads(json.dumps(spec))
     final = directory / 'receipt.json'
@@ -504,8 +643,27 @@ def _prepare(spec, directory, docker, inspect, error_text, freeze):
         readback = attempt / 'readback/readback.json'
         observed = json.loads(readback.read_text())
         prepared_workspace = attempt / 'prepared-workspace'
-        docker(endpoint, ['cp', identifier + ':/workspace/template/.', str(prepared_workspace)],
-               capture_output=True, timeout=600)
+        archive = attempt / 'prepared-workspace.tar.gz'
+        export_stderr = attempt / 'prepared-workspace-export.stderr.log'
+        export_command = ['exec', identifier, 'tar', '--numeric-owner', '-czf', '-',
+                          '-C', '/workspace/template', '.']
+        export = {'archive': str(archive), 'stderr': str(export_stderr),
+                  'command': export_command, 'started_at': time.time()}
+        receipt['prepared_workspace_export'] = export
+        try:
+            with archive.open('xb') as stdout, export_stderr.open('xb') as stderr:
+                result = docker(endpoint, export_command, stdout=stdout, stderr=stderr, timeout=600)
+            export['exit_code'] = result.returncode
+        except BaseException as error:
+            export.update(exit_code=getattr(error, 'returncode', None),
+                          timed_out=isinstance(error, subprocess.TimeoutExpired), error=error_text(error))
+            raise
+        finally:
+            export['finished_at'] = time.time()
+            if archive.exists():
+                export.update(bytes=archive.stat().st_size, sha256=digest(archive))
+        from .workspace_archive import extract_output
+        extract_output(archive, prepared_workspace)
         receipt['prepared_workspace'] = str(prepared_workspace)
         if observed['package_sha256'] != receipt['package_sha256']:
             raise ValueError('container package differs from frozen host package')
@@ -536,7 +694,10 @@ def _prepare(spec, directory, docker, inspect, error_text, freeze):
 
 
 if __name__ == '__main__':
-    if len(sys.argv) == 4 and sys.argv[1] == '--container-prepare':
+    if len(sys.argv) == 5 and sys.argv[1] == '--complete-prepared-transport':
+        receipt = complete_prepared_transport(*sys.argv[2:])
+        print(json.dumps({key: receipt[key] for key in ('status', 'receipt', 'package_sha256', 'container_id')}, ensure_ascii=False))
+    elif len(sys.argv) == 4 and sys.argv[1] == '--container-prepare':
         try:
             container_prepare(Path(sys.argv[2]), Path(sys.argv[3]))
         except BaseException as error:
