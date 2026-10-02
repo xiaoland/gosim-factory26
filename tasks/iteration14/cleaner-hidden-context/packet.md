@@ -51,3 +51,11 @@ Docker 实际标签、daemon、StartedAt 与原 operation/run 对齐后，来源
 ## 新职责入口要求
 
 主线转达用户补充：work-item agent不必例行以“Let me start by reading the braid-collaboration skill and viewing the PR”开始。方法独立会话负责诊断例行维护、必要协作判断与已投影PR的重读边界，先方案，不改现场。本会话不重复方法调查、不改skills/role；保留当前强制重读notice为原候选，最终计划和role材料等职责入口方案明确后再冻结。通用一次通知接口仍由shared owner实现。原件、candidate和dev2spec/image保持不变，未prepare/launch。
+
+共享一次通知接口已ready：packager SHA256 `7ea9f02fb02e1a36dcc86bb5356457097ed3bd75bbe1570e1341d975c89425f3`，main `a12ae58d81da57d9df5a736697a4f557ec3305c442f9aa9eea001925848952d5`，lab仍 `135bd8fd…`；新增 `--material-notice-plan <private JSON>`，等待实际prepare反馈后由owner提交。最终材料和通知仍等职责方法与用户已授权的技能What/Why方案，不使用旧“一律读两个技能”候选启动。原件、候选、dev2 image/spec保持，尚未prepare/launch。
+
+## Console 恢复后的只读核对
+
+用户确认WSL恢复后，只读核对原服务 `/home/yyh/.local/share/factory26/exp-console/20261002-review-sessions`：service `8cc80cad-d873-49ed-ab49-e958ba8852a3`、instance `8ccaaf92-02f0-4a60-904e-5564ba6957c3`、PID1676167 running、8765端口、7条registry；`/api/runs` HTTP200。旧cleaner仍指原container/volume及已停止的专属CLI accessor，`read_check=unavailable`，`/api/runtime` HTTP400保留具体“CLI访问容器需要运行且未暂停”。未启停Console或任何生成/accessor，不解除baseline暂停。读回为 `console-{runs,service,runtime-source}-readback.json`。
+
+恢复后的新physical run仍按dev2冻结输入，不能因WSL恢复换回旧宿主。登记接口由现有唯一服务owner执行 `binary`/`register`，须HTTP停止后登记新的run身份及明确来源，不能覆盖旧ID。实际源码 `braid-console/docker_runtime.py:108`拒绝非unix://context；原服务位于WSL，new runtime位于另一dev2 daemon，所以直接live登记有明确跨宿主边界缺口，已报主线，不为此新建Console。`console-registration-handoff.json`保存实际接口和待填newrun/container/StartedAt/volume挂载/state/managed binary/accessor所有权等输入；当前未生成新物理身份，不能将模板当已登记。最终材料仍待职责方法方案，未prepare/launch。
