@@ -12,6 +12,8 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 
 ## 当前事实与下一步
 
+DX交付后接续（2026-10-02）：用户明确“实验DX改进完成了。现在我们继续推进”，新增准备阶段的暂挂已解除，按最新GitHub-only与三渠道配方接续。DX提交eef231b1完成新controller/runner、逐模型供应商绑定及旧writer退役；实际Docker/Harness恢复、供应商请求仍需本轮取得反馈。主线与两个有界worker已并行处理恢复接线和host交接，当前入口归[接续packet](dx-resume/packet.md)。baseline既有用户暂停保持，先保全/准备；Sheet不派发。
+
 最新范围修正（2026-10-02）：用户要求“I14暂停运行sheet题目，只运行github”，并指定所有I14生成模型使用Qwen Token Plan，Base URL为 `https://token-plan.maas.qianwenaiapi.com/compatible-mode/v1`，配套独立key；等待实验DX收尾后配置供应商。本轮待执行范围收窄为四variant各GitHub，四Sheet保留历史记录但不派发。只更新未来实验配方，不原地修改既有冻结输入、历史运行或I13。模型请求、恢复与新启动继续等待DX完成和实际配方就绪。
 
 供应商最终修正（用户原话：“已经配置。好的，那么glm-5.3-flash就使用普通qwen API；而kimi-k3继续使用自有kimi api”）：Token Plan key、普通Qwen key和自有Kimi key均已只读确认非空。沿用模型职责，`glm-5.3-flash`的所有角色走普通Qwen、`kimi-k3`走自有Kimi，其余I14模型继续Token Plan。此指示覆盖上一条“所有模型Token Plan”的两项例外，没有授权静默替换模型。开发侧Codex与既定Luna监控不属于I14生成配方。

@@ -6,7 +6,9 @@
 
 `prepare --source CHECKPOINT --output NEW --target-layout JSON` 无网络及模型请求，生产 harness-manifest.json 并独立读回。当前 hook 只支持相同 OS、architecture、logical run_root 与明确 runtime_identity；Docker 可在另一 daemon 的隔离路径空间保持同根，跨 OS/根路径迁移明确不支持。Prepared 不携带来源停止许可，启动另外核验同 instance 的停止证据和目标实际装配。终态 archive 不是 checkpoint，应用 artifact 也不是恢复材料。
 
-模型和供应商归新配方，四个 I14 入口与恢复通道不强制 ARC。Native per-model bindings 在新生成时拆分 provider，并同步 profile/角色；既有未拆分 provider 的 retained 会话不支持隐式改 provider 身份，恢复 hook 明确拒绝此迁移。相同已拆分 provider 的通道更新仍须明确恢复授权。旧包不因源码变化取得新路由，现有 Flash/GitHub 不改动。
+模型和供应商归新配方，四个 I14 入口与恢复通道不强制 ARC。Native per-model bindings 在新生成时拆分 provider，并同步 profile/角色。既有未拆分 provider 的恢复使用显式 `--override-native-transport`，保留 provider、model、profile 和历史身份，以模型级 endpoint、认证 header 与 `samplingParams.model` 指定供应商传输；不把供应商名称映射当作概念型号迁移。旧包不因源码变化取得新路由。
+
+官网表单只注入一个模型 key。需要多供应商时，恢复打包器通过 `--model-environment` 消费 mode 600 的私有 JSON，顶层只有 `environment`，其中只允许 `FACTORY26_MODEL_BINDINGS` 及各 route 声明的凭据变量。它随包保存到 `.private/model-env.json`；恢复入口先校验 manifest，再恢复私有目录与文件权限并装载，随后应用绑定。不要全量复制模型 env、把 key 写入公开配方，或把离线认证装配成功当作供应商实际受理。
 
 ## 历史恢复与旧冻结合同
 
