@@ -332,19 +332,18 @@ def main():
                                    else "auxiliary snapshot; executing frozen binary",
               "frozen_braid_source": frozen_manifest.get("sources", {}).get("braid"),
               "requirements_sha256": requirements_sha256,
-              "source_stop_confirmation": "saved terminal journal" if binding else "caller-confirmed; not independently verified",
+              "source_stop_confirmation": "historical terminal journal" if binding else "historical caller statement; no launch permission",
               "workspace_material_differences": material_mismatches,
               "mode": "workspace-resume" if args.continue_generation else "completed-workspace-recovery",
               "replace_braid_deepseek_with_glm": args.replace_braid_deepseek_with_glm,
               "with_official_signal_evidence": args.with_official_signal_evidence,
-              "override_native_transport": args.override_native_transport or (
-                  args.continue_generation and variant in I14_VARIANTS),
+              "override_native_transport": args.override_native_transport,
               "refresh_native_materials": args.refresh_native_materials}
     if binding:
         source["journal_binding"] = binding
     if stop_binding:
         source["stop_binding"] = stop_binding
-        source["source_stop_confirmation"] = "saved container stop observation; see run_binding limitation"
+        source["source_stop_confirmation"] = "historical stop observation; no launch permission; see run_binding limitation"
     if args.source_identity:
         identity_path = args.source_identity.resolve(strict=True)
         source["source_identity_binding"] = {"path": str(identity_path), "sha256": digest(identity_path)}
@@ -353,16 +352,18 @@ def main():
             stop_identity_path = args.stop_identity.resolve(strict=True)
             source["source_identity_binding"]["stop_identity"] = {"path": str(stop_identity_path), "sha256": digest(stop_identity_path)}
             shutil.copy2(stop_identity_path, evidence / "stop-identity.json")
-        sys.path.insert(0, str(ROOT))
-        from lab.arc_bench.recovery import container_stop_basis
-        source["source_stop_basis"] = container_stop_basis(source)
-        source["source_stop_confirmation"] = "saved container stop linked to source identity; not a fresh observation"
+        source["source_stop_confirmation"] = "historical observation only; launch requires controller source-instance verification"
     if git_reconstruction is not None:
         source["git_reconstruction"] = git_reconstruction
         source["git_reconstruction_sha256"] = digest(git_path)
     main_file = ROOT / "submission/recover_completed.py"
     replacements = {"main.py": main_file, "runtime/bin/braid": braid,
-                    "recovery-workspace.zip": workspace}
+                    "recovery-workspace.zip": workspace,
+                    "support/agent_support.py": ROOT / "scripts/agent_support.py",
+                    "exp_checkpoint.py": ROOT / "submission/exp_checkpoint.py"}
+    source["producer_contract"] = {"kind": "factory26.harness.checkpoint", "schema_version": 1,
+                                   "checkpoint_source_sha256": digest(replacements["exp_checkpoint.py"]),
+                                   "support_source_sha256": digest(replacements["support/agent_support.py"])}
     if binding:
         replacements.update({name: evidence / name for name in (
             "recovery-journal-inputs.json", "recovery-journal-state.json")})

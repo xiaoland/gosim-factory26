@@ -26,41 +26,9 @@ from braid_runtime import archive_state, export_delivery, load_delivery
 from core import archive_sessions
 
 
-ARC_BASE_URL = "https://api.arc-bench.com/v1"
 I14_VARIANTS = frozenset({"pi-braid-i14", "pi-braid-i14-cleaner",
                           "pi-braid-i14-reviewer", "pi-braid-i14-e2e"})
-NON_ARC_MODEL_AUTH = frozenset("""
-OPENAI_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_OAUTH_TOKEN ANTHROPIC_API_KEY
-COPILOT_GITHUB_TOKEN ANT_LING_API_KEY QWEN_TOKEN_PLAN_API_KEY QWEN_TOKEN_PLAN_CN_API_KEY
-AZURE_OPENAI_API_KEY NVIDIA_API_KEY DEEPSEEK_API_KEY GEMINI_API_KEY GOOGLE_CLOUD_API_KEY
-GROQ_API_KEY CEREBRAS_API_KEY XAI_API_KEY RADIUS_API_KEY OPENROUTER_API_KEY AI_GATEWAY_API_KEY
-ZAI_API_KEY ZAI_CODING_CN_API_KEY MISTRAL_API_KEY MINIMAX_API_KEY MINIMAX_CN_API_KEY
-MOONSHOT_API_KEY HF_TOKEN FIREWORKS_API_KEY TOGETHER_API_KEY BASETEN_API_KEY OPENCODE_API_KEY
-KIMI_API_KEY CLOUDFLARE_API_KEY XIAOMI_API_KEY XIAOMI_TOKEN_PLAN_CN_API_KEY
-XIAOMI_TOKEN_PLAN_AMS_API_KEY XIAOMI_TOKEN_PLAN_SGP_API_KEY GOOGLE_APPLICATION_CREDENTIALS
-AWS_PROFILE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_BEARER_TOKEN_BEDROCK
-AWS_CONTAINER_CREDENTIALS_RELATIVE_URI AWS_CONTAINER_CREDENTIALS_FULL_URI AWS_WEB_IDENTITY_TOKEN_FILE
-AWS_SHARED_CREDENTIALS_FILE AWS_CONFIG_FILE GLM_API_KEY QWEN_API_KEY
-VISUAL_API_KEY FACTORY26_VISUAL_API_KEY
-""".split())
-
-
-def arc_recovery_environment(*, prepare_only):
-    """显式 ARC 热恢复只保留选定模型凭据；断网准备不需要 key。"""
-    urls = [os.environ.get(name) for name in ("OPENAI_BASE_URL", "FACTORY26_BASE_URL", "VISUAL_BASE_URL")]
-    if not prepare_only and (not any(urls) or any(url and url.strip().rstrip("/") != ARC_BASE_URL for url in urls)):
-        raise ValueError("ARC 热恢复只允许 https://api.arc-bench.com/v1")
-    keys = [os.environ.get(name) for name in ("OPENAI_API_KEY", "FACTORY26_API_KEY")]
-    key = next((value for value in keys if value), None)
-    if not prepare_only and not key:
-        raise ValueError("ARC 热恢复需要选定 ARC API key")
-    if any(value and value != key for value in
-           [*keys, *(os.environ.get(name) for name in ("VISUAL_API_KEY", "FACTORY26_VISUAL_API_KEY"))]):
-        raise ValueError("ARC 热恢复全部模型必须使用同一个选定 API key")
-    env = {name: value for name, value in os.environ.items()
-           if name not in NON_ARC_MODEL_AUTH and name not in {"OPENAI_BASE_URL", "VISUAL_BASE_URL"}}
-    env.update(FACTORY26_API_KEY=key or "", FACTORY26_BASE_URL=ARC_BASE_URL)
-    return env
+from agent_support import model_bindings, bind_native_models
 
 
 def diagnostic_receipt(path, value, errors):
@@ -116,7 +84,7 @@ def restore_launch_paths(run, request):
     }, indent=2) + "\n")
 
 
-def refresh_native_materials(run, request, runtime, variant, *, arc_only=False):
+def refresh_native_materials(run, request, runtime, variant):
     """Refresh owned materials in templates and retained homes, preserving native memory."""
     work = run / "work"
     old_profiles = {profile["id"]: profile for profile in request["profiles"]}
@@ -127,8 +95,8 @@ def refresh_native_materials(run, request, runtime, variant, *, arc_only=False):
         (work / name).rename(backup / name)
     shutil.copytree(ROOT / "skills", work / "skills")
     profiles, bindings = variant.native_files(
-        work, runtime, work / "skills", ARC_BASE_URL if arc_only else os.environ["OPENAI_BASE_URL"],
-        None if arc_only else os.environ.get("VISUAL_BASE_URL"))
+        work, runtime, work / "skills", os.environ.get("OPENAI_BASE_URL") or os.environ.get("FACTORY26_BASE_URL"),
+        os.environ.get("VISUAL_BASE_URL"))
     current = {profile["id"]: profile for profile in profiles}
     if set(current) - set(old_profiles):
         raise ValueError("native material refresh cannot introduce assigned profiles")
@@ -339,12 +307,9 @@ def execute_braid(command, *, run, app, env, log, evidence):
         raise subprocess.CalledProcessError(code, command)
 
 
-def override_native_transport(run, request, *, arc_only=False):
+def override_native_transport(run, request):
     """Apply an explicitly selected run transport without changing native models."""
-    base_url = ARC_BASE_URL if arc_only else os.environ.get("OPENAI_BASE_URL")
-    if not base_url:
-        raise ValueError("native transport override requires OPENAI_BASE_URL")
-    visual_url = None if arc_only else os.environ.get("VISUAL_BASE_URL")
+    routes, _ = model_bindings(require_key=False)
     configurations = set()
     native_roots = set()
     for profile_id, binding in request["bindings"].items():
@@ -356,36 +321,27 @@ def override_native_transport(run, request, *, arc_only=False):
         homes = [home for home in native_root.glob(profile_id + "-*") if home.is_dir()]
         configurations.update(home / "models.json" for home in homes)
         native_roots.update([template, *homes])
-    if arc_only and request.get("pi", {}).get("home"):
+    if request.get("pi", {}).get("home"):
         native_roots.add(Path(request["pi"]["home"]).resolve(strict=True))
     changes = {}
+    rebound_providers = set()
     for path in sorted(configurations):
         if not path.resolve(strict=True).is_relative_to(run):
             raise ValueError(f"native models path escapes Braid run: {path}")
         value = json.loads(path.read_text())
         providers = value["providers"]
-        if arc_only and set(providers) - {"factory26", "factory26-visual"}:
-            raise ValueError(f"ARC 热恢复包含未授权模型 provider：{path}")
-        providers["factory26"].update(baseUrl=base_url, apiKey="$FACTORY26_API_KEY")
-        if "factory26-visual" in providers:
-            providers["factory26-visual"].update(
-                baseUrl=visual_url or base_url,
-                apiKey="$FACTORY26_VISUAL_API_KEY" if visual_url else "$FACTORY26_API_KEY")
+        bind_native_models(value, routes)
+        if set(value['providers']) != set(providers):
+            raise ValueError('此 retained native 配置尚未拆分供应商身份；按模型分流会改变已有 profile/会话 provider，当前恢复 hook 不支持该迁移。新生成须先使用明确的 per-model bindings 冻结材料。')
+        rebound_providers.update(value['providers'])
         changes[path] = value
-    if arc_only:
-        for folder in sorted(native_roots):
-            if not folder.is_relative_to(run):
-                raise ValueError(f"ARC 原生配置目录超出恢复范围：{folder}")
-            settings = folder / "settings.json"
-            if settings.is_file():
-                value = json.loads(settings.read_text())
-                value.setdefault("subagents", {})["modelScope"] = {
-                    "enforce": True, "strict": True, "allow": ["factory26/*", "factory26-visual/*"]}
-                changes[settings] = value
-            auth = folder / "auth.json"
-            if auth.is_file():
-                # 已存储 credential 优先于 models.json 的环境 key；保留原件后移除以落实本次选定 key。
-                changes[auth] = {}
+    # Stored provider credentials take precedence over the selected environment.
+    # Preserve all auth entries except those explicitly rebound by this recipe.
+    for folder in sorted(native_roots):
+        auth = folder / "auth.json"
+        if auth.is_file():
+            value = json.loads(auth.read_text())
+            changes[auth] = {name: credential for name, credential in value.items() if name not in rebound_providers}
     originals = run / "recovery-native-transport/originals"
     originals.mkdir(parents=True, exist_ok=False)
     records = []
@@ -404,12 +360,10 @@ def override_native_transport(run, request, *, arc_only=False):
         temporary.replace(path)
     (run / "recovery-native-transport.json").write_text(json.dumps({
         "operation": "override-native-transport", "applied_at": time.time(), "files": records,
-        "providers": ["factory26", "factory26-visual"],
-        "base_url_source": "固定 ARC API" if arc_only else "OPENAI_BASE_URL",
-        "visual_url_source": "同一个 ARC API" if arc_only else "VISUAL_BASE_URL or OPENAI_BASE_URL",
-        "key_variables": (["FACTORY26_API_KEY"] if arc_only else
-                          ["FACTORY26_API_KEY", "FACTORY26_VISUAL_API_KEY when VISUAL_BASE_URL is set"]),
-        "preserved": ["provider IDs", "model definitions", "profiles", "roles", "recipe", "history"],
+        "providers": sorted({name for value in changes.values() if isinstance(value, dict)
+                             for name in value.get('providers', {})}),
+        "bindings": routes,
+        "preserved": ["provider identities", "profiles", "roles", "recipe", "history"],
     }, indent=2) + "\n")
 
 
@@ -425,10 +379,9 @@ def main():
     manifest = verify_package(ROOT)
     source = json.loads((ROOT / "recovery-source.json").read_text())
     variant_name = manifest.get("capabilities", {}).get("variant")
-    arc_only = ((variant_name in I14_VARIANTS and source["mode"] == "workspace-resume") or
-                (source.get("override_native_transport") and
-                 variant_name in {"pi-braid-i13", "pi-braid-i13-glm-root"}))
-    model_env = arc_recovery_environment(prepare_only=args.prepare_only) if arc_only else dict(os.environ)
+    model_env = dict(os.environ)
+    if source.get("override_native_transport"):
+        _, model_env = model_bindings(require_key=not args.prepare_only)
     workspace = ROOT / "recovery-workspace.zip"
     if manifest["files"]["recovery-workspace.zip"]["sha256"] != source["workspace_sha256"]:
         raise ValueError("recovery workspace hash changed")
@@ -512,7 +465,7 @@ def main():
         if not continuing:
             raise ValueError("native transport override requires explicit generation recovery")
         if variant_name not in I14_VARIANTS:
-            override_native_transport(run, request, arc_only=arc_only)
+            override_native_transport(run, request)
     origin = run / "braid-state/origin.git"
     app = run / "work/application"
     seed = json.loads((run / "braid-state/request.json").read_text())["seed_commit"]
@@ -567,7 +520,7 @@ def main():
         # Retain the prior files so this hotfix has an inspectable before/after.
         import run as variant
         if source.get("resource_admission") == "i13-2-v1" or variant_name in I14_VARIANTS:
-            profiles, bindings = refresh_native_materials(run, request, runtime, variant, arc_only=arc_only)
+            profiles, bindings = refresh_native_materials(run, request, runtime, variant)
         else:
             old_profiles = {profile["id"]: profile for profile in request["profiles"]}
             for name in ("skills", "capabilities"):
@@ -624,10 +577,8 @@ def main():
             str(path.relative_to(ROOT)): hashlib.sha256(path.read_bytes()).hexdigest()
             for path in code_files if path.is_file()
         }, indent=2) + "\n")
-    if variant_name in I14_VARIANTS and continuing:
-        # Apply the selected route after refresh has restored retained model
-        # definitions, so new materials cannot undo the mandatory ARC connection.
-        override_native_transport(run, request, arc_only=True)
+    if variant_name in I14_VARIANTS and continuing and source.get("override_native_transport"):
+        override_native_transport(run, request)
     braid = work / "bin/braid"
     shutil.copy2(runtime / "bin/braid", braid)
     braid.chmod(0o755)
@@ -647,8 +598,8 @@ def main():
     resource_environment = {}
     env = model_env
     if continuing:
-        key = env.get("FACTORY26_API_KEY") if arc_only else os.environ.get("OPENAI_API_KEY") or os.environ.get("FACTORY26_API_KEY")
-        if not key and not args.prepare_only:
+        key = env.get("FACTORY26_API_KEY") or env.get("OPENAI_API_KEY")
+        if not args.prepare_only and not key and not os.environ.get("FACTORY26_MODEL_BINDINGS"):
             raise ValueError("generation recovery requires the current run API key")
         # Workspace ZIP extraction above preserves stored modes; packaged tools
         # get executable bits from verify_package, and new launchers set theirs.
@@ -672,7 +623,7 @@ def main():
                    FACTORY26_PI_TIMING_FILE=str(run / "pi-timing.jsonl"),
                    PATH=os.pathsep.join((str(work / "bin"), str(runtime / "bin"),
                                          str(runtime / "node_modules/.bin"), env.get("PATH", ""))))
-        if not arc_only and os.environ.get("VISUAL_API_KEY"):
+        if os.environ.get("VISUAL_API_KEY"):
             env["FACTORY26_VISUAL_API_KEY"] = os.environ["VISUAL_API_KEY"]
         if variant_name in {"pi-braid-i13", "pi-braid-i13-glm-root"} | I14_VARIANTS:
             import run as variant
@@ -710,7 +661,7 @@ def main():
             "model_migration_receipt": str(run / "recovery-model-migration.json")
                                        if source.get("replace_braid_deepseek_with_glm") else None,
             "native_transport_receipt": str(run / "recovery-native-transport.json")
-                                        if source.get("override_native_transport") or arc_only else None,
+                                        if source.get("override_native_transport") else None,
         }, indent=2) + "\n")
         print(f"Recovery: prepared without starting Braid; run={run}", flush=True)
         return
@@ -730,6 +681,8 @@ def main():
             collector, binding = start_local_telemetry(run)
             env.update(telemetry_environment(binding))
         except Exception as exc:
+            if os.environ.get("FACTORY26_EXP_TELEMETRY_BINDING"):
+                raise
             diagnostics["telemetry_diagnostic_error"] = f"{type(exc).__name__}: {exc}"
         if managed_resource_enabled:
             from agent_support import start_shared_proxy, stop_shared_proxy

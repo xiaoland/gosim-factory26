@@ -372,6 +372,8 @@ def main():
             command.add_argument('--after-event', help='已处理的终态通知 ID；相同结果保持静默')
         if action == 'status': command.add_argument('--saved', action='store_true', help='只读本地已采集证据，不联网')
     args = parser.parse_args()
+    if args.command in {'submit', 'run', 'start', 'cancel'}:
+        raise SystemExit('旧平台 writer 已退役；执行使用冻结的 lab build/start/control 合同。')
     if args.command == 'login':
         login(args.credentials); return
     if args.command == 'status' and args.saved:

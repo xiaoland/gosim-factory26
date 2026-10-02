@@ -184,8 +184,8 @@ def dev_svc(source):
     return target
 
 
-def host_lab(output, base_python):
-    """Build one immutable host Python environment for lab controllers and jobs."""
+def host_lab(output, base_python, purpose):
+    """Build one explicitly identified controller or runner Python runtime."""
     output = output.expanduser().absolute()
     base_python = base_python.expanduser().absolute()
     if output.exists():
@@ -201,9 +201,10 @@ def host_lab(output, base_python):
         ['uv', 'pip', 'freeze', '--python', str(launcher)], text=True).splitlines())
     version = subprocess.check_output(
         [str(launcher), '-c', 'import platform; print(platform.python_version())'], text=True).strip()
-    receipt = {'schema_version': 1, 'record_type': 'factory26.host-runtime',
+    receipt = {'schema_version': 1, 'kind': 'factory26.exp.runtime', 'purpose': purpose,
                'root': str(output), 'launcher': str(launcher), 'base_python': str(base_python),
                'python_version': version, 'host_platform': platform.platform(),
+               'interpreter_sha256': hashlib.sha256(launcher.resolve(strict=True).read_bytes()).hexdigest(),
                'requirements': str(requirements),
                'requirements_sha256': hashlib.sha256(requirements.read_bytes()).hexdigest(),
                'packages': packages, 'identity': asset_inventory(output)}
@@ -213,23 +214,24 @@ def host_lab(output, base_python):
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command',choices=['path','prepare','linux','dev-svc','host-lab'])
+    p.add_argument('command',choices=['path','prepare','linux','dev-svc','host-exp'])
     p.add_argument('--lock-dir',type=Path,default=ROOT/'harness/npm')
     p.add_argument('--output',type=Path)
     p.add_argument('--backend',choices=['pi','codex'],default='pi')
     p.add_argument('--docker-context')
     p.add_argument('--braid-source',type=Path,help='Optional team dependency; raw runtimes do not require Braid')
     p.add_argument('--svc-source',type=Path,help='完整开发 SVC checkout；不是参赛 Corpus')
-    p.add_argument('--python',type=Path,help='host-lab 使用的明确基础 Python')
+    p.add_argument('--python',type=Path,help='host-exp 使用的明确基础 Python')
+    p.add_argument('--purpose',choices=['controller','runner'],help='明确 runtime 制品职责')
     a=p.parse_args()
     if a.command=='path': result=cache_path(a.lock_dir)
     elif a.command=='prepare': result=prepare(a.lock_dir)
     elif a.command=='dev-svc':
         if a.svc_source is None: p.error('dev-svc requires --svc-source')
         result=dev_svc(a.svc_source)
-    elif a.command=='host-lab':
-        if a.output is None or a.python is None: p.error('host-lab requires --output and --python')
-        result=host_lab(a.output,a.python)
+    elif a.command=='host-exp':
+        if a.output is None or a.python is None or a.purpose is None: p.error('host-exp requires --output/--python/--purpose')
+        result=host_lab(a.output,a.python,a.purpose)
     else:
         if a.output is None: p.error('linux requires --output')
         result=linux(a.output,a.backend,a.lock_dir,a.docker_context,a.braid_source)

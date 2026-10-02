@@ -13,7 +13,7 @@ from .assets import host_runtime
 
 PIN_PURPOSES = {"execution", "cleanup", "recovery", "execution_cleanup"}
 DEPENDENCY_PURPOSES = PIN_PURPOSES | {"provenance"}
-RECORD_NAMES = {"active.json", "archive.json", "manifest.json", "recovery-workspace.json", "run.json"}
+RECORD_NAMES = {"active.json", "archive.json", "manifest.json", "recovery-workspace.json", "run.json", "experiment.json", "attempt.json", "execution.json", "asset.json"}
 
 
 def _raise(error):
@@ -305,7 +305,16 @@ def plan(roots, asset_roots=(), protected=()):
         record = _read(path, errors)
         if record is None:
             continue
-        if path.name == "manifest.json" and record.get("record_type") == "factory26.exp-console-service":
+        if record.get('kind') in {'factory26.exp.experiment', 'factory26.exp.attempt', 'factory26.exp.execution'}:
+            protections.append({'path': str(path.parent.absolute()), 'source': str(path),
+                                'purpose': 'exp-evidence-and-execution', 'pins': True})
+            runtime = record.get('controller_runtime') or {}
+            if runtime.get('root'):
+                protections.append({'path': runtime['root'], 'source': str(path), 'purpose': 'exp-runtime', 'pins': True})
+            runner_runtime = record.get('runner_runtime') or {}
+            if runner_runtime.get('root'):
+                protections.append({'path': runner_runtime['root'], 'source': str(path), 'purpose': 'exp-runner-runtime', 'pins': True})
+        elif path.name == "manifest.json" and record.get("record_type") == "factory26.exp-console-service":
             _console_references(record, path, references, errors)
         elif path.name == "manifest.json" and record.get("record_type") == "factory26.console-service":
             errors.append({"path": str(path), "error": "obsolete Console service format; retire or explicitly protect before planning cleanup"})

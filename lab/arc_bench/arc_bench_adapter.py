@@ -76,22 +76,29 @@ def instrument_entry(agent, destination, *, file_telemetry=False):
         import opentelemetry.proto
         support = destination / 'collector-support'
         support.mkdir()
-        shutil.copy2(otlp.__file__, support / 'otlp.py')
-        (support / 'collector.py').write_text('''import json, secrets, signal, sys
+        from lab.exp import core, telemetry
+        lab_root = Path(otlp.__file__).parent
+        for name in ('__init__.py', 'otlp.py', 'control.py', 'records.py',
+                     'exp/__init__.py', 'exp/core.py', 'exp/telemetry.py'):
+            target = support / 'lab' / name
+            target.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(lab_root / name, target)
+        attempt = core.read(Path(os.environ['FACTORY26_EXP_ATTEMPT_DIR']) / 'attempt.json')
+        core.atomic(support / 'collector-config.json', {'attempt_id': attempt['attempt_id'],
+                    'cap_bytes': attempt['job']['limits']['telemetry_bytes']})
+        (support / 'collector.py').write_text('''import json, signal, sys
 from pathlib import Path
 from threading import Event
-from otlp import connect, initialize, new_session, receiver
-database=Path(sys.argv[1])/'telemetry.sqlite'
-initialize(database)
-session=new_session(database,'arc-adapter')
-token=secrets.token_urlsafe(24)
+from lab.exp.telemetry import Collector
+config=json.loads(Path(__file__).with_name('collector-config.json').read_text())
+collector=Collector(Path(sys.argv[1]), config['attempt_id'], cap_bytes=config['cap_bytes'])
+(collector.root/'credential.json').unlink()
 stopped=Event()
 signal.signal(signal.SIGTERM,lambda *_: stopped.set())
-with receiver() as server:
-    server.register(token,database,session)
-    print(json.dumps({'endpoint':f'http://127.0.0.1:{server.server_port}','token':token}),flush=True)
-    stopped.wait()
-with connect(database) as db: db.execute('PRAGMA wal_checkpoint(TRUNCATE)')
+binding=dict(collector.binding, endpoint=collector.binding['receiver_endpoint'],token=collector.token)
+print(json.dumps(binding),flush=True)
+stopped.wait()
+collector.close(producer_flush='unknown')
 ''')
         for module in (google.protobuf, google.rpc, opentelemetry.proto):
             source = Path(next(iter(module.__path__)))
@@ -125,6 +132,8 @@ if support.is_dir():
         raise RuntimeError('workspace collector did not announce its binding')
     binding=json.loads(collector.stdout.readline())
     collector.stdout.close()
+    environment['FACTORY26_EXP_ATTEMPT_ID']=binding['attempt_id']
+    environment['FACTORY26_EXP_TELEMETRY_BINDING']=json.dumps(binding)
     endpoint=binding['endpoint']
     headers='x-experiment-token='+binding['token']
     for name in tuple(environment):
@@ -233,6 +242,20 @@ def model_environment(base, output, host):
         for line in Path(base).read_text().splitlines():
             if line.split("=", 1)[0].strip() not in OTEL_NAMES:
                 lines.append(line)
+    if base is None:
+        from lab.exp.core import read
+        root = Path(os.environ['FACTORY26_EXP_ATTEMPT_DIR'])
+        deployment = read(root / 'deployment.json')
+        declared = set(read(root / 'attempt.json')['job'].get('environment', {}))
+        if deployment.get('credential_file'):
+            private = read(deployment['credential_file'])
+            declared.update(private.get('environment', private))
+        for name in sorted(declared):
+            value = os.environ.get(name)
+            if value is not None:
+                if '\n' in value or '\r' in value:
+                    raise ValueError('model environment values cannot contain line breaks')
+                lines.append(f'{name}={value}')
     for name in OTEL_NAMES:
         value = os.environ.get(name, "")
         if host is None:
@@ -295,7 +318,7 @@ def execute_run(args, endpoint, owner_token):
         if image.get("Architecture") != "amd64":
             raise ValueError("the published ARC-Bench Runner requires linux/amd64")
     transport = Workspace.create(workspace, endpoint, image_id, owner_token=owner_token) if image_id and endpoint['remote'] else None
-    file_telemetry = bool(endpoint and endpoint['remote'] and not args.container_otlp_host)
+    file_telemetry = bool(endpoint)
     ownership = transport.value['labels'] if transport else {
         'io.factory26.experiment': os.environ.get('EXPERIMENT_ID', 'standalone'),
         'io.factory26.run': os.environ.get('EXPERIMENT_RUN_ID', workspace.parent.name),
@@ -311,12 +334,30 @@ def execute_run(args, endpoint, owner_token):
         resource = workspace / f"{name}.resource.json"
         facts = {"workspace": str(owned_workspace), "image_id": image_id,
                  "runner": str(args.runner.resolve()), "state": "not-started", "endpoint": endpoint,
-                 "labels": {**ownership, 'io.factory26.stage': name}}
+                 "labels": {**ownership}}
+        parent = os.environ['FACTORY26_EXP_ATTEMPT_ID']
+        incarnation = os.environ['FACTORY26_EXP_INCARNATION']
+        stage_id = parent + '--' + name
+        external_backend = read_json(Path(os.environ['FACTORY26_EXP_ATTEMPT_DIR']) / 'attempt.json')['job']['backend']['external_docker']
+        facts['authority_handoff'] = external_backend['authority_handoff']
+        facts.update(exp_attempt_id=stage_id, exp_incarnation=incarnation + '--' + name,
+                     exp_request_id=stage_id + '--dispatch', exp_attempt_dir=os.environ['FACTORY26_EXP_ATTEMPT_DIR'],
+                     admission_volume=args.admission_volume, container_name='exp-' + stage_id,
+                     resource_path=str(resource))
+        facts['labels'].update({'io.factory26.exp.attempt': stage_id, 'io.factory26.exp.incarnation': facts['exp_incarnation']})
         if args.shared_docker_slots is not None:
             facts['shared_docker_slots'] = args.shared_docker_slots
         if transport:
             facts['transport'] = str(transport.path)
         write_resource(resource, facts)
+        if name in {'generation', 'runner'} and file_telemetry:
+            from lab.exp.core import atomic, read, record
+            root = Path(os.environ['FACTORY26_EXP_ATTEMPT_DIR'])
+            sources_path = root / 'telemetry-sources.json'
+            sources = read(sources_path) if sources_path.exists() else record('telemetry_sources', sources=[])
+            relative = str((owned_workspace / 'template/.arc/adapter-telemetry').relative_to(root))
+            sources['sources'].append({'name': name, 'relative_path': relative})
+            atomic(sources_path, sources)
         emit("stage-started", stage=name, resource=str(resource))
         if image_id:
             command = [sys.executable, str(Path(__file__).with_name('docker_workspace.py')),
@@ -524,6 +565,15 @@ def run(args):
     workspace.mkdir(parents=True, exist_ok=True)
     if (workspace / 'docker-workspace.json').exists():
         raise ValueError('workspace already has a transport receipt; use reconcile/cleanup instead of rerunning')
+    if not os.environ.get('FACTORY26_EXP_ATTEMPT_DIR'):
+        raise ValueError('ARC execution must be dispatched by the exp runner')
+    if not args.prepare_only and (not args.shared_docker_slots or not args.admission_volume):
+        raise ValueError('ARC SDK child requires explicit daemon capacity')
+    from lab.exp.core import read
+    attempt = read(Path(os.environ['FACTORY26_EXP_ATTEMPT_DIR']) / 'attempt.json')
+    if not args.prepare_only:
+        args.memory = str(attempt['job']['limits']['memory_bytes'])
+        args.cpus = str(attempt['job']['limits']['cpus'])
     endpoint = None if args.prepare_only else selected_endpoint()
     owner_token = secrets.token_hex(16)
     if endpoint:
@@ -568,6 +618,7 @@ def main():
     parser.add_argument("--memory", help="pass the Docker memory limit to the official local runner")
     parser.add_argument("--cpus", help="pass the Docker CPU quota to the official local runner")
     parser.add_argument("--shared-docker-slots", type=int, help="shared execution-container capacity on the frozen Docker daemon")
+    parser.add_argument("--admission-volume", help="frozen shared daemon admission asset")
     parser.add_argument("--expected-tests", type=int)
     parser.add_argument("--expected-scenario")
     parser.add_argument("--env-file", type=Path)

@@ -136,6 +136,7 @@ def assemble(source, destination, runtime, skill_source, skills):
         if item.name in {'__pycache__','variant.json','build.py'}: continue
         if item.is_dir(): shutil.copytree(item,destination/item.name)
         else: shutil.copy2(item,destination/item.name)
+    shutil.copy2(ROOT/'submission/exp_checkpoint.py',destination/'exp_checkpoint.py')
     support=destination/'support';support.mkdir()
     for name in ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs','runtime_resources.py'):
         shutil.copy2(ROOT/'scripts'/name,support/name)

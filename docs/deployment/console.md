@@ -1,5 +1,15 @@
 # Factory26 Exp Console 开发接入
 
+## 新执行合同接入
+
+新 Docker 登记除访问容器、binary/state/mounts 外，还要求 docker.exp 的 experiment 绝对路径和 attempt_id。登记和物理控制通过该实验冻结 runtime/source 查询实际资源，核对完整容器 ID、StartedAt 和 labels，避免显示一个现场却控制另一个。Console 服务制品不依赖工作树 import lab。resume/stop 返回执行器的实际效果；尚无 Harness 公共静止协调合同时拒绝 Console pause，避免冻结持有写事务的 Agent。对象读写仍通过 Braid 公共 CLI，归档只读。
+
+本轮只修改接入代码，没有部署、重启唯一 WSL Console 或迁移其旧登记。旧现场继续使用已冻结服务及限定退役控制。当前受管理访问仅支持可核实同宿主 Unix context；跨宿主访问空间不能冒充已支持。
+
+## 已有服务与历史操作说明
+
+以下描述既有冻结 Console，包括其旧暂停门闩；它不是新接入保证。新登记以本节合同为准。
+
 [Factory26 Exp Console](../../braid-console/README.md)是独立目录中的实验基础设施，没有独立Git仓库，不进入参赛包或Harness迭代范围。
 前端使用React、TypeScript、Vite、shadcn/ui、Tailwind CSS、Radix和Lucide及TanStack Query和React Router；对象HTTP桥调用配套Braid CLI，修改沿用对象事务和消息投递。物理运行控制归Docker适配层；Braid不依赖Console或实验平台。
 通用构建、启动、registry与操作语义见其README，不在本页维护第二份API说明。

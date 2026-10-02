@@ -2,7 +2,7 @@
 
 from contextlib import contextmanager
 import json
-from pathlib import PurePosixPath
+from pathlib import Path, PurePosixPath
 import re
 import select
 import subprocess
@@ -10,30 +10,6 @@ import subprocess
 
 AGENT_ENV = ("BRAID_AGENT_RUNTIME", "BRAID_STATE", "BRAID_CLI_BINDING_ID")
 INSPECT_FORMAT = '{"id":{{json .Id}},"state":{{json .State}},"mounts":{{json .Mounts}},"mount_options":{{json .HostConfig.Mounts}},"labels":{{json .Config.Labels}}}'
-WRITER_GATE = """
-import json, pathlib, select, sqlite3, sys
-connection = None
-try:
-    database = pathlib.Path(sys.argv[1])
-    connection = sqlite3.connect(database.as_uri() + "?mode=rw", uri=True, timeout=5)
-    mode = connection.execute("PRAGMA journal_mode").fetchone()[0]
-    if mode != "wal":
-        raise RuntimeError("暂停门闩要求现有数据库使用 WAL，实际为 " + str(mode))
-    connection.execute("BEGIN IMMEDIATE")
-    print(json.dumps({"acquired": True}), flush=True)
-    if not select.select([sys.stdin], [], [], 30)[0]:
-        raise TimeoutError("暂停控制方未在 30 秒内释放写者门闩")
-    sys.stdin.readline()
-    connection.rollback()
-    print(json.dumps({"released": True}), flush=True)
-except Exception as error:
-    print(json.dumps({"error": type(error).__name__ + ": " + str(error)},
-                     ensure_ascii=False), flush=True)
-    sys.exit(1)
-finally:
-    if connection is not None:
-        connection.close()
-"""
 
 
 class ControlError(RuntimeError):
@@ -76,6 +52,14 @@ def configuration(value):
         if value["access_owner"] != "console":
             raise ValueError("docker.access_owner 仅接受 console")
         result["access_owner"] = "console"
+    if value.get("exp") is not None:
+        binding = value["exp"]
+        if (not isinstance(binding, dict) or set(binding) != {"experiment", "attempt_id"}
+                or not isinstance(binding["experiment"], str) or not Path(binding["experiment"]).is_absolute()
+                or not isinstance(binding["attempt_id"], str)
+                or not re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", binding["attempt_id"])):
+            raise ValueError("docker.exp 需要绝对 experiment 路径及固定 attempt_id")
+        result["exp"] = dict(binding)
     return result
 
 
@@ -159,73 +143,45 @@ def mounted_database(value, database):
     return str(PurePosixPath(mount_source(value, mount)) / path.relative_to(mount["Destination"]))
 
 
-@contextmanager
-def writer_gate(config):
-    # The lock must share the runtime's Linux kernel and WAL file namespace.
-    command = base_command(config) + ["exec", "-i", config["cli_container"], "python3", "-u", "-c",
-               WRITER_GATE, config["state"] + "/braid.sqlite3"]
-    try:
-        process = subprocess.Popen(command, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                   stderr=subprocess.STDOUT, text=True)
-    except OSError as error:
-        raise RuntimeError(f"无法启动暂停门闩：{error}") from error
-    acquired = False
-    failure = None
-    first = ""
-    try:
-        if not select.select([process.stdout], [], [], 10)[0]:
-            raise RuntimeError("暂停门闩未在 10 秒内返回取得回执")
-        first = process.stdout.readline()
-        if first.strip() != '{"acquired": true}':
-            raise RuntimeError(f"暂停门闩未取得：{first.strip()}")
-        acquired = True
-        yield process
-        if process.poll() is not None:
-            raise RuntimeError("确认暂停前，写者门闩已提前退出")
-    except Exception as error:
-        failure = error
-    try:
-        output, _ = process.communicate(input="\n", timeout=10)
-        if process.returncode or (acquired and output.strip() != '{"released": true}'):
-            raise RuntimeError(f"暂停门闩退出码 {process.returncode}：{first.strip()}\n{output.strip()}")
-    except (OSError, subprocess.TimeoutExpired, RuntimeError) as error:
-        process.kill()
-        output, _ = process.communicate()
-        detail = f"写者门闩释放未确认：{error}\n{output.strip()}"
-        failure = RuntimeError(f"{failure}\n{detail}" if failure else detail)
-    if failure:
-        raise failure
+def execution_binding(config):
+    binding = config.get("exp")
+    if not binding:
+        raise ValueError("缺少新 exp attempt 绑定；旧现场保留原冻结服务")
+    root = Path(binding["experiment"])
+    manifest = json.loads((root / "experiment.json").read_text())
+    if manifest.get("kind") != "factory26.exp.experiment" or manifest.get("schema_version") != 1:
+        raise ValueError("Console 需要新 experiment 合同")
+    command = [manifest["controller_runtime"]["launcher"], "-B", "-m", "lab.exp.controller"]
+    import os
+    environment = dict(os.environ, PYTHONPATH=str(root / "source"), PYTHONDONTWRITEBYTECODE="1")
+    result = subprocess.run(command + ["internal_observe", str(root), binding["attempt_id"]],
+                            cwd=root / "source", env=environment, capture_output=True, text=True, check=True)
+    observed = json.loads(result.stdout)
+    identity = observed.get("backend_identity") or {}
+    resources = [identity] + identity.get("external_resources", [])
+    matches = [row for row in resources if row.get("container_id") == config["runtime_container"]]
+    if len(matches) != 1:
+        raise ValueError("Console 显示容器与 exp attempt 实际资源不同")
+    physical = inspect(config["runtime_container"], config)
+    match = matches[0]
+    if physical["state"].get("StartedAt") != match.get("started_at") or any(
+            physical["labels"].get(key) != value for key, value in match.get("labels", {}).items()):
+        raise ValueError("Console 容器出生身份或 owner 与执行回执不同")
+    return command, environment, root, observed
 
 
 def control(config, action):
-    attempted = False
+    if action == "pause":
+        raise ControlError("当前 Harness 尚无公开静止协调合同，Console 不暂停可能持有写事务的进程", uncertain=False)
     try:
-        before = inspect(config["runtime_container"], config)
-        current = state_view(before)
-        if not current["running"] or before["state"]["Restarting"]:
-            raise RuntimeError(f"当前容器状态为 {current['status']}，不能暂停或恢复；不会启动或重建容器")
-        if action == "resume":
-            if current["paused"]:
-                attempted = True
-                docker(["unpause", config["runtime_container"]], config)
-            after = status(config)
-            if not after["running"] or after["paused"]:
-                raise RuntimeError(f"恢复后实际状态未确认：{after}")
-            return {"runtime": after, "changed": attempted}
-        access = inspect(config["cli_container"], config)
-        confirm_mounts(config, access)
-        if not access["state"]["Running"] or access["state"]["Paused"]:
-            raise RuntimeError("CLI 访问容器需要运行且未暂停")
-        database = config["state"] + "/braid.sqlite3"
-        if mounted_database(before, database) != mounted_database(access, database):
-            raise RuntimeError("生成与 CLI 容器未共享同一数据库挂载，不能建立暂停门闩")
-        with writer_gate(config):
-            if not current["paused"]:
-                attempted = True
-                docker(["pause", config["runtime_container"]], config)
-            after = status(config)
-            if not after["running"] or not after["paused"]:
-                raise RuntimeError(f"暂停后实际状态未确认：{after}")
-        return {"runtime": after, "changed": attempted, "writer_lock": "available"}
-    except (RuntimeError, OSError, ValueError, KeyError) as error:
-        raise ControlError(str(error), uncertain=attempted) from error
+        command, environment, root, observed = execution_binding(config)
+        binding = config["exp"]
+        result = subprocess.run(command + ["internal_control", str(root), binding["attempt_id"], action,
+                            json.dumps({"parameters": {"consumer": "console", "expected_incarnation": observed["incarnation_id"]}})],
+                            cwd=root / "source", env=environment, capture_output=True, text=True, check=True)
+        value = json.loads(result.stdout)
+        if value.get("status") != "applied":
+            raise ControlError("执行器尚未确认物理效果：" + json.dumps(value, ensure_ascii=False), uncertain=True)
+        return {"runtime": status(config), "effect": value, "changed": True}
+    except (RuntimeError, OSError, ValueError, KeyError, subprocess.SubprocessError) as error:
+        raise ControlError(str(error), uncertain=True) from error

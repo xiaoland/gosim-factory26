@@ -282,7 +282,7 @@ def compare(frozen, actual, desired):
 
 
 def operation_snapshot(directory, *, live=False):
-    from .operations import selected_runs
+    from lab.exp.history import selected_runs
     directory = Path(directory).resolve()
     inputs = json.loads((directory / 'inputs.json').read_text())
     result = {'operation': str(directory), 'venue': inputs['venue'], 'observed_at': time.time(), 'jobs': []}

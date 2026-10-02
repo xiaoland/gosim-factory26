@@ -144,6 +144,8 @@ def registrations(destination, entries, service_id):
             if type(entry.get("writable")) is not bool or entry.get("cli_command"):
                 raise ValueError("live 需要明确 writable；受管理服务不接受自由 cli_command")
             config = docker_runtime.configuration(entry["docker"]) if entry.get("docker") else None
+            if config and not config.get("exp"):
+                raise ValueError("新 Docker 现场登记需要 exp experiment/attempt_id；旧登记只保留原冻结服务")
             state, workspace = Path(entry["state"]), Path(entry["workspace"])
             if config:
                 for path in (state, workspace):
@@ -174,6 +176,7 @@ def registrations(destination, entries, service_id):
                 config["mounts"].append({"source": str(managed), "destination": config["binary"]})
                 config["access_owner"] = "console"
                 run["docker"] = config
+                docker_runtime.execution_binding(config)
                 docker_paths(run, service_id)
         else:
             raise ValueError("每项 mode 必须是 live 或 archive")

@@ -20,10 +20,10 @@ from lab.docker_endpoint import confirm, environment, execute, freeze
 from lab.records import inventory, read_json, write_json
 if __package__:
     from .workspace_archive import output_inventory, extract_output
-    from .docker_admission import admit
+    from .docker_admission import admit, target, launch, bind, register
 else:
     from workspace_archive import output_inventory, extract_output
-    from docker_admission import admit
+    from docker_admission import admit, target, launch, bind, register
 
 # Use the same inventory implementation on both hosts, without platform metadata.
 REMOTE_INVENTORY = Path(sys.modules[inventory.__module__].__file__).read_text() + '\nprint(json.dumps(inventory(Path(sys.argv[1]))))'
@@ -128,11 +128,22 @@ def observe(path, *, cleanup=False):
         write_json(path, resource)
         record.update(container_id=value['Id'], status='owned', running=value['State']['Running'])
         if cleanup:
+            if resource.get('exp_attempt_id') and not value['State']['Running']:
+                from lab.exp.admission import authority
+                authority(target(resource))
             with path.with_suffix('.container.stdout.log').open('wb') as out, path.with_suffix('.container.stderr.log').open('wb') as err:
                 logged = execute(resource['endpoint'], ['logs', value['Id']], stdout=out, stderr=err, timeout=10)
                 record['logs_exit_code'] = logged.returncode
-            docker(resource['endpoint'], ['rm', '--force', value['Id']], capture_output=True, timeout=10)
-            record['status'] = 'removed'
+            if value['State']['Running'] or value['State'].get('Paused'):
+                docker(resource['endpoint'], ['stop', '--time', '10', value['Id']], capture_output=True, timeout=20)
+                value = container_owned(resource)
+            if value is None or value['State']['Running'] or value['State'].get('Paused'):
+                raise ValueError('SDK child stop effect unknown; preserve resource')
+            if resource.get('exp_attempt_id'):
+                from lab.exp.admission import authority
+                authority(target(resource))
+            record['status'] = 'stopped'
+            record['stop_evidence'] = {'container_id': value['Id'], 'created': value['Created'], 'state': value['State'], 'labels': value['Config']['Labels']}
         return record
     except Exception as error:
         return {**record, 'status': 'unconfirmed', 'error': error_text(error)}
@@ -172,13 +183,32 @@ class Workspace:
             volume = volume_owned(current.value)
             current.value.update(mountpoint=volume['Mountpoint'], state='allocated')
             current.save()
-            result = docker(endpoint, ['create', '--name', current.value['helper_name'], *options,
+            limits = read_json(Path(os.environ['FACTORY26_EXP_ATTEMPT_DIR']) / 'attempt.json')['job']['limits']
+            result = docker(endpoint, ['create', '--memory', str(limits['memory_bytes']), '--cpus', str(limits['cpus']),
+                            '--pids-limit', str(limits['pids']), '--name', current.value['helper_name'], *options,
                             '--user', '0', '--mount', f'type=volume,source={name},target=/transfer',
                             '--entrypoint', 'python3', image_id, '-u', '-c', 'import time; time.sleep(2147483647)'],
                             text=True, capture_output=True)
             current.value['helper_id'] = result.stdout.strip()
             current.save()
+            parent = os.environ['FACTORY26_EXP_ATTEMPT_ID']
+            attempt_root = Path(os.environ['FACTORY26_EXP_ATTEMPT_DIR'])
+            external_target = read_json(attempt_root / 'attempt.json')['job']['backend']['external_docker']
+            helper = inspect(endpoint, 'container', current.value['helper_id'])
+            register({'role': 'transport-helper', 'exp_attempt_dir': str(attempt_root), 'exp_attempt_id': parent + '--copy-helper',
+                      'exp_incarnation': os.environ['FACTORY26_EXP_INCARNATION'] + '--copy-helper',
+                      'endpoint': endpoint, 'image_id': image_id,
+                      'shared_docker_slots': external_target['slots'], 'admission_volume': external_target['admission_volume'],
+                      'resource_path': str(path), 'authority_handoff': external_target['authority_handoff']},
+                     {'container_id': helper['Id'], 'created': helper['Created'], 'state': helper['State'], 'started_at': helper['State'].get('StartedAt'), 'labels': helper['Config']['Labels']})
             docker(endpoint, ['start', current.value['helper_id']], capture_output=True)
+            helper = inspect(endpoint, 'container', current.value['helper_id'])
+            external_path = attempt_root / 'external-resources.json'
+            external = read_json(external_path)
+            for entry in external['resources']:
+                if entry['container_id'] == helper['Id']:
+                    entry.update(started_at=helper['State'].get('StartedAt'), state=helper['State'])
+            write_json(external_path, external)
             current.value.update(state='ready', recovery='pending')
             current.save()
             return current
@@ -205,7 +235,7 @@ class Workspace:
         self.value['helper_id'] = value['Id']
         self.save()
         if not value['State']['Running']:
-            docker(self.endpoint, ['start', value['Id']], capture_output=True)
+            raise ValueError('copy helper is stopped; restarting would change its execution instance')
         return value['Id']
 
     def send(self, local, resource_path, user):
@@ -317,7 +347,7 @@ class Workspace:
                 return {'status': 'owned', 'volume': self.value['volume'], 'recovery': self.value['recovery']}
             for stage, entry in self.value['stages'].items():
                 observed = observe(Path(entry['resource']), cleanup=True)
-                if observed['status'] not in {'absent', 'removed'}:
+                if observed['status'] not in {'absent', 'removed', 'stopped'}:
                     raise ValueError(json.dumps(observed))
                 if entry['recovery'] != 'verified':
                     if not retry_recovery:
@@ -333,12 +363,11 @@ class Workspace:
             helper = inspect(self.endpoint, 'container', self.value.get('helper_id') or self.value['helper_name'])
             if helper is not None:
                 identifier = self.helper()
-                docker(self.endpoint, ['rm', '--force', identifier], capture_output=True, timeout=10)
+                docker(self.endpoint, ['stop', '--time', '10', identifier], capture_output=True, timeout=20)
             volume_owned(self.value)
-            docker(self.endpoint, ['volume', 'rm', self.value['volume']], capture_output=True, timeout=10)
-            self.value['state'] = 'removed'
+            self.value['state'] = 'retained-verified'
             self.save()
-            return {'status': 'removed', 'volume': self.value['volume'], 'recovery': 'verified'}
+            return {'status': 'retained-verified', 'volume': self.value['volume'], 'recovery': 'verified'}
         except Exception as error:
             self.value.update(state='unconfirmed', error=error_text(error))
             self.save()
@@ -348,6 +377,7 @@ class Workspace:
 
 def runner_main(resource_path, runner_path, argv):
     resource = read_json(resource_path)
+    resource['resource_path'] = str(resource_path)
     workspace = Path(resource['workspace'])
     transport = Workspace(Path(resource['transport'])) if resource.get('transport') else None
     endpoint = resource['endpoint']
@@ -374,12 +404,15 @@ def runner_main(resource_path, runner_path, argv):
         if command[index] != f'type=bind,source={workspace},target=/workspace':
             raise ValueError('official Runner mount differs from registered workspace')
         name = command[command.index('--name') + 1]
-        resource.update(container_name=name, state='sending')
+        name = resource['container_name']
+        command[command.index('--name') + 1] = name
+        resource.update(state='sending')
         write_json(resource_path, resource)
         command = command[1:]
         command.remove('--rm')
         cidfile = resource_path.with_suffix('.cid')
-        options = ['--cidfile', str(cidfile)]
+        limits = read_json(Path(resource['exp_attempt_dir']) / 'attempt.json')['job']['limits']
+        options = ['--cidfile', str(cidfile), '--pids-limit', str(limits['pids'])]
         if transport:
             user = command[command.index('--user') + 1] if '--user' in command else '0:0'
             stage = transport.send(workspace, resource_path, user)
@@ -391,12 +424,28 @@ def runner_main(resource_path, runner_path, argv):
         resource['state'] = 'launching'
         write_json(resource_path, resource)
         launching = True
-        child = subprocess.Popen(endpoint['argv'] + [command[0], *options, *command[1:]], env=environment(endpoint))
-        code = child.wait()
-        if cidfile.is_file():
-            resource['container_id'] = cidfile.read_text().strip()
-            write_json(resource_path, resource)
+        launch(resource)
+        created = docker(endpoint, ['create', *options, *command[1:]], text=True, capture_output=True, timeout=600)
+        resource['container_id'] = created.stdout.strip()
+        write_json(resource_path, resource)
         value = container_owned(resource)
+        if value is None:
+            raise ValueError('created SDK container cannot be independently observed')
+        bind(resource, value)
+        child = subprocess.Popen(endpoint['argv'] + ['start', '--attach', value['Id']], env=environment(endpoint))
+        for _ in range(100):
+            value = container_owned(resource)
+            started = value and value['State'].get('StartedAt')
+            if started and not started.startswith('0001-'):
+                bind(resource, value)
+                break
+            time.sleep(.1)
+        else:
+            raise ValueError('SDK child start effect unknown; preserve container and reservation')
+        code = child.wait()
+        value = container_owned(resource)
+        if value is not None:
+            bind(resource, value)
         if value is None or value['State']['Running']:
             raise ValueError('Docker CLI exited without a confirmed stopped execution container')
         resource.update(container_id=value['Id'], state='exited', container_exit_code=value['State']['ExitCode'])

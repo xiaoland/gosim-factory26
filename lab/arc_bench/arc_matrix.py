@@ -8,7 +8,8 @@ from pathlib import Path
 import re
 import sys
 
-from ..assets import host_runtime
+from lab.exp.core import read, require
+from lab.exp.core import record
 from .arc_artifacts import package_metadata
 
 
@@ -55,7 +56,16 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
           prepare_only=False, container_otlp_host=None, separate_evaluation=False,
           requirements_only=False, gateway_state=None, gateway_include_vars=(), *, candidates=None,
           experiment_key=None, storage=None, host_runtime_receipt=None, shared_docker_slots=None,
-          memory=None, cpus=None):
+          memory=None, cpus=None, endpoint=None, admission_volume=None, budget=None, runner_runtime_receipt=None, authorization=None, model_config=None, pids=None, replay_policy=None, authority_handoff=None):
+    if env_file or gateway_state:
+        raise ValueError("new exp uses private deployment credential_file; old env/gateway writer wiring is retired")
+    if separate_evaluation:
+        if prepare_only or not replay_policy:
+            raise ValueError("independent hosted evaluation needs explicit replay_policy")
+        for key in ("model_config", "credential_mode", "allow_competition_credit"):
+            if key not in replay_policy:
+                raise ValueError("replay_policy lacks frozen " + key)
+        requirements_only = True
     if shared_docker_slots is not None and (type(shared_docker_slots) is not int or shared_docker_slots <= 0):
         raise ValueError("shared Docker slots must be a positive integer")
     if memory is not None and (not isinstance(memory, str) or not memory.strip()):
@@ -64,15 +74,24 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
         raise ValueError("Docker CPU quota must be positive and finite")
     if not prepare_only and not image:
         raise ValueError("--image is required for a Runner run")
-    if storage and host_runtime_receipt is None:
-        raise ValueError("schema v3 requires --host-runtime")
-    runtime = host_runtime(host_runtime_receipt) if host_runtime_receipt else None
+    if host_runtime_receipt is None or runner_runtime_receipt is None or storage is None or budget is None:
+        raise ValueError("new exp requires explicit controller runtime, storage and budget")
+    if not prepare_only and (memory is None or cpus is None or pids is None):
+        raise ValueError("ARC SDK requires explicit memory, CPU and PID limits")
+    memory_bytes = None
+    if memory is not None:
+        match = re.fullmatch(r"([0-9]+)([kmgKMG]?)", memory)
+        if not match:
+            raise ValueError("Docker memory must be integer bytes or K/M/G")
+        memory_bytes = int(match[1]) * (1024 ** {"": 0, "k": 1, "m": 2, "g": 3}[match[2].lower()])
+    if not prepare_only and (endpoint is None or not admission_volume or shared_docker_slots is None):
+        raise ValueError("ARC execution requires frozen endpoint, admission volume and shared capacity")
+    if not prepare_only and authority_handoff is None:
+        raise ValueError('ARC execution requires explicit daemon retirement handoff')
+    if not authorization:
+        raise ValueError("explicit authorization scope is required")
+    runtime = require(read(runner_runtime_receipt), "runtime") if host_runtime_receipt else None
     python = runtime["launcher"] if runtime else sys.executable
-    runtime_dependency = ({"purpose": "execution_cleanup", "kind": "host-lab-runtime",
-                           "location": runtime["root"], "launcher": runtime["launcher"],
-                           "receipt": runtime["receipt"], "identity": runtime["identity"]}
-                          if runtime else {"purpose": "execution_cleanup", "kind": "python",
-                                           "location": str(Path(sys.executable).absolute())})
     adapter = Path(__file__).resolve().parent
     noop = Path(__file__).with_name("arc_bench_noop.py").resolve()
     jobs = []
@@ -98,6 +117,11 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
             if base not in checked:
                 verify_case(base, competition, task, requirements_only)
                 checked.add(base)
+            if metadata["operation"] != "replay" and not prepare_only:
+                if not requirements_only:
+                    raise ValueError("new generation jobs consume requirements only; frozen application evaluation is a separate job")
+                if not model_config or any(not model_config.get(k) for k in ("model", "visual_model", "base_url", "provider")):
+                    raise ValueError("generation recipe must explicitly freeze models/provider/endpoint")
             labels = {"operation": metadata["operation"]}
             if experiment_key:
                 labels["experiment_key"] = experiment_key
@@ -115,7 +139,7 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
                     raise ValueError(f"replay package has no unique application for {competition}/{task}")
                 origin = matches[0]
                 variant = origin.get("variant")
-            inputs = {"adapter": str(adapter), "runner": str(Path(runner).expanduser().resolve(strict=True)),
+            inputs = {"runner": str(Path(runner).expanduser().resolve(strict=True)),
                       "agent": str(agent), "requirements": str(base / "requirements")}
             if not requirements_only:
                 inputs["tests"] = str(base / "tests")
@@ -128,7 +152,7 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
             for key in (("requirements",) if requirements_only else ("requirements", "tests")):
                 if not Path(inputs[key]).is_dir():
                     raise ValueError(f"missing {key}: {inputs[key]}")
-            command = [python, "{adapter}/arc_bench_adapter.py", "--runner", "{runner}",
+            command = [python, "-m", "lab.arc_bench.arc_bench_adapter", "--runner", "{runner}",
                        "--agent", "{agent}", "--requirements", "{requirements}",
                        "--workspace", "{workspace}",
                        "--competition", competition, "--task", task]
@@ -138,44 +162,17 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
                 command.append("--prepare-only")
             else:
                 command += ["--image", image]
-            if separate_evaluation:
-                command += ["--separate-evaluation"]
-                if not requirements_only:
-                    command += ["--noop-script", "{noop}"]
             if requirements_only:
                 command += ["--requirements-only"]
-            if env_file and not gateway_state:
-                command += ["--env-file", str(Path(env_file).expanduser().resolve(strict=True))]
-            if gateway_state:
-                gateway = Path(__file__).resolve().parents[2] / "scripts/hackathon_gateway.py"
-                inputs["gateway"] = str(gateway)
-                inputs["gateway_service"] = str(Path(gateway_state).expanduser().resolve(strict=True) / "service.json")
-                inputs["gateway_callback"] = str(Path(gateway_state).expanduser().resolve(strict=True) /
-                                                  "code/hackathon_gateway_compat.py")
-                wrapper = [python, "{gateway}", "wrap", "--service-state",
-                           str(Path(gateway_state).expanduser().resolve(strict=True)),
-                           "--url-env", "OPENAI_BASE_URL", "--key-env", "OPENAI_API_KEY",
-                           "--env-file-var", "ARC_MODEL_ENV_FILE"]
-                if env_file:
-                    wrapper += ["--client-env", str(Path(env_file).expanduser().resolve(strict=True))]
-                for variable in gateway_include_vars:
-                    wrapper += ["--include-var", variable]
-                command = wrapper + ["--"] + command
             for flag, value in (("--memory", memory), ("--cpus", cpus)):
                 if value is not None:
                     command += [flag, str(value)]
             if shared_docker_slots is not None:
                 command += ["--shared-docker-slots", str(shared_docker_slots)]
+            if not prepare_only:
+                command += ["--admission-volume", admission_volume]
             if container_otlp_host:
                 command += ["--container-otlp-host", container_otlp_host]
-            handlers = {action: [[python, "{adapter}/arc_bench_adapter.py",
-                                   "resource", action, "--workspace", "{workspace}"]]
-                        for action in ("inspect", "cleanup")}
-            if gateway_state:
-                for action in handlers:
-                    handlers[action].append([python, "{gateway}", "resource", action,
-                                             "--service-state", str(Path(gateway_state).expanduser().resolve(strict=True)),
-                                             "--run-dir", "{run_dir}", "--run-id", "{run_id}"])
             arc_root = ("workspace/official-generation/template/.arc" if separate_evaluation or requirements_only
                         else "workspace/official/template/.arc")
             arc_artifacts = [f"{arc_root}/traceability", f"{arc_root}/runner-events.jsonl",
@@ -183,21 +180,50 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
             if separate_evaluation and not requirements_only:
                 arc_artifacts.extend(("workspace/official-evaluation/template/.arc/traceability",
                                       "workspace/official-evaluation/template/.arc/runner-events.jsonl"))
-            jobs.append({"id": f"{name}--{competition}--{task}",
-                         **({"variant": variant} if variant else {}), "competition": competition, "task": task,
-                         "labels": labels, **({"source_application": origin} if origin else {}),
-                         "adapter_kind": "arc-bench", "result_path": "workspace/experiment-result.json",
-                         "docker": not prepare_only,
-                         "artifact_paths": arc_artifacts,
-                         "resource_handlers": handlers,
-                         "dependencies": [runtime_dependency],
-                         "venue": "official-local-prepare" if prepare_only else
-                                  "official-local-generation" if requirements_only else "official-local-simulation",
-                         "inputs": inputs, "command": command})
-    result = {"schema_version": 3 if storage else 2, "max_parallel": workers, "jobs": jobs}
-    if storage:
-        result["storage"] = storage
-        result["controller_runtime"] = runtime_dependency
+            outputs = [{'name': 'workspace', 'type': 'terminal-archive', 'path': '.'},
+                       {'name': 'result', 'type': 'result', 'path': 'experiment-result.json'}]
+            if metadata['operation'] != 'replay' and not prepare_only:
+                outputs.append({'name': 'application', 'type': 'application',
+                                'path': 'official-generation/.lab-artifacts/application'})
+                outputs.append({'name': 'application_receipt', 'type': 'application-receipt',
+                                'path': 'official-generation/.lab-artifacts/receipt.json'})
+            jobs.append({'id': f'{name}--{competition}--{task}',
+                         'purpose': 'prepare' if prepare_only else 'evaluate' if metadata['operation'] == 'replay' else 'generate',
+                         'inputs': {key: {'source': value} for key, value in inputs.items()},
+                         'command': command, 'outputs': outputs,
+                         'backend': {'kind': 'local', 'capabilities_required': ['arc-sdk-host-docker'],
+                                     'external_docker': {'endpoint': endpoint, 'image_id': image,
+                                                         'slots': shared_docker_slots, 'admission_volume': admission_volume, 'authority_handoff': authority_handoff}},
+                         'limits': {'wall_seconds': budget['wall_seconds_per_attempt'],
+                                    'storage_bytes': storage['workspace_bytes_per_run'],
+                                    'telemetry_bytes': storage['telemetry_bytes_per_run'],
+                                    **({'memory_bytes': memory_bytes, 'cpus': float(cpus), 'pids': pids} if not prepare_only else {})},
+                         'labels': labels, 'competition': competition, 'task': task,
+                         **({'model_config': model_config, 'environment': {
+                             'MODEL': model_config['model'], 'VISUAL_MODEL': model_config['visual_model'],
+                             'OPENAI_BASE_URL': model_config['base_url']}} if model_config else {}),
+                         **({'variant': variant} if variant else {}),
+                         **({'source_application': origin} if origin else {})})
+            if separate_evaluation and metadata['operation'] != 'replay':
+                source_job = jobs[-1]['id']
+                jobs.append({'id': source_job + '--evaluation', 'purpose': 'evaluate', 'source_job': source_job,
+                             'inputs': {'application': {'from_job': source_job, 'output': 'application'},
+                                        'application_receipt': {'from_job': source_job, 'output': 'application_receipt'},
+                                        'requirements': {'source': str(base / 'requirements')}},
+                             'outputs': [], 'limits': {
+                                 'wall_seconds': budget['wall_seconds_per_attempt'],
+                                 'storage_bytes': storage['workspace_bytes_per_run'],
+                                 'telemetry_bytes': storage['telemetry_bytes_per_run']},
+                             'backend': {'kind': 'hosted', 'competition_id': competition,
+                                         'variant': variant or name, 'task': competition + '--' + task,
+                                         'model_config': replay_policy['model_config'],
+                                         'credential_mode': replay_policy['credential_mode'],
+                                         'allow_competition_credit': replay_policy['allow_competition_credit']}})
+    result = record('experiment', experiment_id=experiment_key or 'arc-matrix', max_parallel=workers,
+                    jobs=jobs, storage=storage, budget=budget, authorization=authorization,
+                    controller_runtime=str(Path(host_runtime_receipt).resolve()),
+                    runner_runtime=str(Path(runner_runtime_receipt).resolve()))
+
     return result
 
 
@@ -206,18 +232,24 @@ def main():
     entries = parser.add_mutually_exclusive_group(required=True)
     entries.add_argument("--variant", action="append", help="declared VARIANT=AGENT_ZIP; repeatable; must agree with package")
     entries.add_argument("--candidate", action="append", help="experiment CASE=AGENT_ZIP; repeatable; variant comes from package")
+    parser.add_argument("--replay-policy", type=Path)
+    parser.add_argument('--authority-handoff', type=Path)
+    parser.add_argument("--model-config", type=Path)
+    parser.add_argument("--authorization", required=True)
     parser.add_argument("--experiment-key")
     parser.add_argument("--case", action="append", required=True, help="COMPETITION/TASK; repeatable")
     parser.add_argument("--inputs-root", type=Path, required=True)
     parser.add_argument("--runner", type=Path, required=True)
     parser.add_argument("--host-runtime", type=Path, required=True,
-                        help="asset.json from scripts/runtime.py host-lab")
+                        help="new controller runtime receipt")
+    parser.add_argument("--runner-runtime", type=Path, required=True)
     parser.add_argument("--image")
-    parser.add_argument("--env-file", type=Path)
-    parser.add_argument("--gateway-state", type=Path, help="running local gateway state with per-run binding")
-    parser.add_argument("--gateway-include-var", action="append", default=[],
-                        help="copy one additional name from --env-file into the run client env")
+    parser.add_argument("--docker-endpoint", type=Path, required=True)
+    parser.add_argument("--admission-volume", required=True)
+    parser.add_argument("--wall-seconds", type=positive_float, required=True)
+    parser.add_argument("--max-attempts", type=int, required=True)
     parser.add_argument("--workers", type=int, default=2)
+    parser.add_argument("--pids", type=int)
     parser.add_argument("--memory", help="explicit Docker memory limit for each run, e.g. 2g")
     parser.add_argument("--cpus", type=positive_float, help="explicit Docker CPU quota for each run")
     parser.add_argument("--shared-docker-slots", type=int,
@@ -249,12 +281,15 @@ def main():
                "build_bytes": math.ceil(args.build_cap_gib * gib),
                "archive_level": args.archive_level, "inode_reserve_percent": 10}
     result = build(args.variant, args.case, args.inputs_root, args.runner, args.image,
-                   args.env_file, args.workers, args.prepare_only, args.container_otlp_host,
+                   None, args.workers, args.prepare_only, args.container_otlp_host,
                    args.separate_evaluation, args.requirements_only,
-                   args.gateway_state, args.gateway_include_var, candidates=args.candidate,
+                   None, (), candidates=args.candidate,
                    experiment_key=args.experiment_key, storage=storage,
                    host_runtime_receipt=args.host_runtime, shared_docker_slots=args.shared_docker_slots,
-                   memory=args.memory, cpus=args.cpus)
+                   memory=args.memory, cpus=args.cpus, endpoint=json.loads(args.docker_endpoint.read_text()),
+                   admission_volume=args.admission_volume,
+                   budget={"wall_seconds_per_attempt": math.ceil(args.wall_seconds), "max_attempts": args.max_attempts},
+                   runner_runtime_receipt=args.runner_runtime, authorization=args.authorization, model_config=json.loads(args.model_config.read_text()) if args.model_config else None, pids=args.pids, replay_policy=json.loads(args.replay_policy.read_text()) if args.replay_policy else None, authority_handoff=json.loads(args.authority_handoff.read_text()) if args.authority_handoff else None)
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
     print(args.output.resolve())

@@ -34,8 +34,7 @@ def export_runtime(argv):
 
 def main():
     if sys.argv[1:2] == ["operation"]:
-        from .operations import main as operation
-        return operation(sys.argv[2:])
+        raise SystemExit("旧 operation writer 已退役；新运行使用 python -m lab build/start，历史材料使用 lab history。")
     if sys.argv[1:2] == ["evaluate"]:
         from .evaluate import main as evaluate
         return evaluate(sys.argv[2:])

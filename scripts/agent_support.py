@@ -361,7 +361,21 @@ def _wait_process(proc, run, reason, *, timeout=None):
     return code
 
 def start_local_telemetry(run):
-    """Start the existing SQLite OTLP receiver without placing its token on disk."""
+    """Use the runner-owned receiver, or start the package's standalone collector."""
+    external = os.environ.get('FACTORY26_EXP_TELEMETRY_BINDING')
+    if external:
+        binding = json.loads(external)
+        for name in ('endpoint', 'token', 'attempt_id', 'stream_id', 'collector_epoch'):
+            if not binding.get(name):
+                raise ValueError(f'runner telemetry binding 缺少 {name}')
+        expected = os.environ.get('FACTORY26_EXP_ATTEMPT_ID')
+        if not expected or binding['attempt_id'] != expected:
+            raise ValueError('runner telemetry binding 与当前 attempt 不一致')
+        for field in ('stream_id', 'collector_epoch'):
+            expected = os.environ.get('FACTORY26_EXP_' + field.upper())
+            if expected and binding[field] != expected:
+                raise ValueError(f'runner telemetry binding 与当前 {field} 不一致')
+        return None, binding
     module = Path(__file__).resolve().with_name('otlp.py')
     if not module.is_file():
         module = Path(__file__).resolve().parents[1]/'lab/otlp.py'
@@ -696,3 +710,92 @@ def verify_package(root):
             if mode & 0o111 != 0o111:
                 path.chmod(mode | 0o111)
     return manifest
+
+
+def model_bindings(base_url=None, visual_url=None, *, require_key=True):
+    """Consume recipe-owned native provider routes without choosing a supplier."""
+    raw = os.environ.get('FACTORY26_MODEL_BINDINGS')
+    if raw:
+        bindings = json.loads(raw)
+    else:
+        endpoint = base_url or os.environ.get('OPENAI_BASE_URL') or os.environ.get('FACTORY26_BASE_URL')
+        if not endpoint:
+            raise ValueError('模型配方必须提供 FACTORY26_MODEL_BINDINGS 或明确 base URL')
+        bindings = {
+            'factory26': {'provider': os.environ.get('FACTORY26_MODEL_PROVIDER'),
+                          'base_url': endpoint, 'credential_env': 'FACTORY26_API_KEY'},
+            'factory26-visual': {'provider': os.environ.get('FACTORY26_VISUAL_PROVIDER'),
+                                 'base_url': visual_url or endpoint,
+                                 'credential_env': 'FACTORY26_VISUAL_API_KEY' if visual_url else 'FACTORY26_API_KEY'},
+        }
+    if not isinstance(bindings, dict) or not bindings:
+        raise ValueError('模型绑定需要非空 provider 映射')
+    environment = dict(os.environ)
+    if not raw:
+        if os.environ.get('OPENAI_API_KEY'):
+            environment['FACTORY26_API_KEY'] = os.environ['OPENAI_API_KEY']
+        if visual_url and os.environ.get('VISUAL_API_KEY'):
+            environment['FACTORY26_VISUAL_API_KEY'] = os.environ['VISUAL_API_KEY']
+    for name, route in bindings.items():
+        if not isinstance(route, dict) or not route.get('provider') or not route.get('base_url'):
+            raise ValueError(f'模型绑定缺少显式 provider/base_url：{name}')
+        if set(route) - {'provider', 'base_url', 'credential_env', 'model', 'model_id'}:
+            raise ValueError(f'模型绑定包含未知字段：{name}')
+        from urllib.parse import urlsplit
+        endpoint = urlsplit(route['base_url'])
+        if endpoint.scheme not in {'http', 'https'} or not endpoint.hostname or endpoint.username or endpoint.password or endpoint.query or endpoint.fragment:
+            raise ValueError(f'模型绑定 base_url 必须为不含凭据的 HTTP endpoint：{name}')
+        variable = route.get('credential_env', '')
+        if not variable or not variable.isidentifier():
+            raise ValueError(f'模型绑定 credential_env 无效：{name}')
+        if require_key and not environment.get(variable):
+            raise ValueError(f'模型绑定缺少凭据环境变量：{name}/{variable}')
+    return bindings, environment
+
+
+def native_model_route(provider, model, bindings):
+    """Resolve an explicit provider/model override to one native transport identity."""
+    selector = provider + '/' + model
+    if selector in bindings:
+        alias = provider + '-route-' + hashlib.sha256(selector.encode()).hexdigest()[:12]
+        route = bindings[selector]
+        return alias, route.get('model_id', model), route
+    for key, route in bindings.items():
+        if '/' in key:
+            original_provider, original_model = key.split('/', 1)
+            alias = original_provider + '-route-' + hashlib.sha256(key.encode()).hexdigest()[:12]
+            if provider == alias:
+                return alias, route.get('model_id', original_model), route
+    if provider not in bindings:
+        raise ValueError(f'原生模型未绑定：{selector}')
+    return provider, model, bindings[provider]
+
+
+def bind_native_models(value, bindings):
+    """Split model-specific transports so each provider owns exactly one credential."""
+    import copy
+    providers = {}
+    for name, provider in value['providers'].items():
+        for definition in provider['models']:
+            alias, model_id, route = native_model_route(name, definition['id'], bindings)
+            if alias not in providers:
+                providers[alias] = {k: copy.deepcopy(v) for k, v in provider.items() if k != 'models'}
+                providers[alias].update(baseUrl=route['base_url'], apiKey='$' + route['credential_env'], models=[])
+            model = copy.deepcopy(definition)
+            model['id'] = model_id
+            if 'baseUrl' in model:
+                model['baseUrl'] = route['base_url']
+            if any(row['id'] == model_id for row in providers[alias]['models']):
+                raise ValueError(f'模型绑定产生重复原生ID：{alias}/{model_id}')
+            providers[alias]['models'].append(model)
+    value['providers'] = providers
+    return value
+
+
+def bind_native_role(text, bindings):
+    """Rewrite only native role model frontmatter, preserving role instructions."""
+    import re
+    def replace(match):
+        provider, model, _ = native_model_route(match[2], match[3], bindings)
+        return match[1] + '"' + provider + '/' + model + '"'
+    return re.sub(r'(?m)^(model:\s*)["\']?([^/\s"\']+)/([^\s"\']+)["\']?$', replace, text)

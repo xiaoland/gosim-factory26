@@ -9,7 +9,8 @@
 
 | 记录类型 | 从哪里开始 | 下一层证据与限制 |
 | --- | --- | --- |
-| 实验外层 run | `python3 -m lab show <run目录>` | 连接实际尝试、适配器结果与证据；`lab status` 读取原始记录，不推断评分。 |
+| 新实验/attempt | `python3 -m lab status <experiment目录> --json` | saved execution、archive、telemetry、平台观察及原错；completed 不推断评分。 |
+| 旧实验外层 run | `python3 -m lab history <run目录>` | 旧 producer 原件，只读且不补新执行保证。 |
 | ARC/Factory 分析 | `python3 -m lab.analysis.factory show --run <run目录>` | 分别解释生成、部署、评分及已归档过程证据。 |
 | Factory 团队生成 | `python3 -m lab.analysis.factory show --run <输出/.factory26/id>` | braid.log、delivery.json、braid-state、native/manifest.json；使用显式路径，不依赖根 runs 的自动发现。 |
 | raw 生成 | 官方 workspace 的 `template/.arc/raw/` | 原生事件、stderr、身份与入口结果；外部评分在外层 Runner 结果中。 |
@@ -153,11 +154,11 @@ printf '%s\n' '{"version":3,"intent":"trace","event":<match返回的ref对象>}'
 
 trace 返回关联调用的标准化上下文；只有需要精确原文或原生审计时才用 read。外部评测发生于生成之后，错误未必存在于生成 transcript；先判断用例暴露的应用缺口，再定向回看当时实现和自验，不能把用例编号强行关联到工具调用。
 
-新主线的只读跨链查询也可使用 `lab trace <生成run> --work-item issue:6` 或 `--session <native_id>`。它依据保存的身份字段列出来源，不按时间邻近推断因果；缺失和多义结果保留。原文分页和参数以 [Lab](../../lab/README.md)为准。
+历史冻结执行器的只读跨链查询使用 `lab trace <生成run> --work-item issue:6` 或 `--session <native_id>`。它依据保存的身份字段列出来源，不按时间邻近推断因果；缺失和多义结果保留。原文分页和参数以 [Lab](../../lab/README.md)为准。
 
 ## 存储回收候选
 
-`python3 -m lab gc-plan --root <记录域> --asset-root <稳定资产父目录> --protect <活动现场>` 只读已有记录并输出计划。先选择完整的消费记录域和明确保护路径；本命令不扫描运行进程来补造所有权，不应仅因旧目录或 `completed` 判定可删。
+历史冻结 CLI 的 `python3 -m lab gc-plan --root <记录域> --asset-root <稳定资产父目录> --protect <活动现场>` 只读已有记录并输出计划。先选择完整的消费记录域和明确保护路径；本命令不扫描运行进程来补造所有权，不应仅因旧目录或 `completed` 判定可删。
 
 首版只将有效 v1 `archive.json` 精确声明的 `work` 列为候选，核对 archive ID、持久对象身份、原文保存状态及恢复/保护引用。I12/I13 活跃或未确认状态受保护；缺件、摘要变化、旧回执缺少原文保存确认、扫描错误和恢复承诺都会阻塞。报告区分 `candidate`、`blocked` 和 `already_absent`，所有条目的 `reclaim_authorized` 都是 false。稳定资产的 `unreferenced_in_scope` 仅表示扫描范围内未见消费者，不构成删除权限。当前没有 GC apply；历史迁移、I12 现场处置和 WSL/VHDX 停机须另行授权。
 
@@ -165,7 +166,7 @@ Console registry（如历史 I12 的 `console-runs.json`）尚未接入引用扫
 
 ## 实验模型、连接与配置漂移
 
-直接查询同一 operation 或已有 active-matrix，不必委派 Agent audit。默认输出可读表格；`--json` 返回供 Console/monitor 消费的完整投影。
+新实验模型事实使用 `python3 -m lab status EXPERIMENT --json`，分别保留 desired/bindings、runtime_selected 与 observed 的未知范围。以下 operation models 是历史冻结执行器的只读合同；工作树 operation 入口已经退役，只能从 `lab history` 读取保存原件或使用明确的旧冻结程序，不能作为当前 CLI 执行。
 
 ```sh
 python3 -B -m lab.arc_bench operation models /absolute/operation

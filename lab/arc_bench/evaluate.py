@@ -1,164 +1,66 @@
-"""Evaluate an existing ARC application without running its generating Agent."""
-
+"""Build an independent evaluation of an explicitly frozen application artifact."""
 import argparse
 import json
-import math
 from pathlib import Path
-import shutil
-import sys
 
-from .arc_artifacts import application_source as application_origin, copy_snapshot, verify as verify_application
-from .arc_matrix import positive_float, nonnegative_float
-from lab.assets import host_runtime
-from lab.plan import create, storage_policy
-from lab.records import read_json
-from lab.run import start
-from lab.status import read_status
+from lab.exp.core import record, require, read
 
 
-def source_application(run):
-    for relative in ("workspace/official-generation/.lab-artifacts/application",
-                     "workspace/official/.lab-artifacts/application",
-                     "workspace/official-generation/template", "workspace/official/template"):
-        app = run / relative
-        if all((app / part / "package.json").is_file() for part in ("frontend", "backend")):
-            if ".lab-artifacts" in relative:
-                receipt = app.parent / "receipt.json"
-                if not receipt.is_file():
-                    continue
-                verify_application(app, receipt)
-            return app
-    raise ValueError(f"no delivered application found in {run}")
-
-
-def source_input(run, state, name):
-    frozen = state.get("inputs", {}).get(name)
-    if frozen is None:
-        return None
-    if state.get("schema_version") == 2:
-        path = run / frozen["path"]
-    else:
-        path = run / "inputs" / name
-        if frozen.get("kind") == "file":
-            path /= Path(frozen["source"]).name
-    return path if path.exists() else None
-
-
-def _argument(command, flag):
-    return command[command.index(flag) + 1] if flag in command else None
-
-
-def prepare(run, output, *, host_runtime_receipt, storage, tests=None, selection=None,
-            image=None, runner=None, experiment_key=None, case=None):
-    run = Path(run).expanduser().resolve(strict=True)
-    output = Path(output).expanduser().resolve()
-    storage = storage_policy({"storage": storage}, 3)
-    runtime = host_runtime(host_runtime_receipt)
-    python = runtime["launcher"]
-    runtime_dependency = {"purpose": "execution_cleanup", "kind": "host-lab-runtime",
-                          "location": runtime["root"], "launcher": python,
-                          "receipt": runtime["receipt"], "identity": runtime["identity"]}
-    state = read_status(run)
-    app = source_application(run)
-    tests = Path(tests).expanduser().resolve(strict=True) if tests else source_input(run, state, "tests")
-    selection = Path(selection).expanduser().resolve(strict=True) if selection else (
-        source_input(run, state, "selection") or (tests / "selection.json" if tests else None))
-    requirement = source_input(run, state, "requirements")
-    runner = Path(runner).expanduser().resolve(strict=True) if runner else source_input(run, state, "runner")
-    image = image or (state.get("result") or {}).get("image_id")
-    missing = [name for name, value in (("requirements", requirement), ("tests", tests),
-                                         ("runner", runner), ("image", image)) if value is None]
-    if missing:
-        raise ValueError("frozen evaluation conditions are missing: " + ", ".join(missing))
-    if selection is not None and not selection.is_file():
-        raise ValueError(f"selection snapshot does not exist: {selection}")
-    command = state.get("command") or []
-    competition = _argument(command, "--competition") or state.get("competition")
-    task = _argument(command, "--task") or state.get("task")
-    if not competition or not task:
-        raise ValueError("source run does not identify its ARC competition and task")
-    staging = output.with_name(output.name + ".preparation")
-    staging.mkdir(parents=True, exist_ok=False)
-    try:
-        receipt = copy_snapshot(app, staging / "source")
-        source = staging / "source"
-        adapter = Path(__file__).resolve().parent
-        frozen_inputs = {"adapter": str(adapter), "noop": str(adapter / "arc_bench_noop.py"),
-                         "application": str(source / "application"),
-                         "application_receipt": str(source / "receipt.json"),
-                         "requirements": str(requirement), "tests": str(tests), "runner": str(runner)}
-        argv = [python, "{adapter}/arc_bench_adapter.py", "--runner", "{runner}",
-                "--application", "{application}", "--application-receipt", "{application_receipt}",
-                "--noop-script", "{noop}", "--requirements", "{requirements}",
-                "--tests", "{tests}", "--workspace", "{workspace}",
-                "--competition", competition, "--task", task, "--image", image,
-                "--source-run-id", state["run_id"]]
-        if selection is not None:
-            frozen_inputs["selection"] = str(selection)
-            argv += ["--selection", "{selection}"]
-            case = read_json(selection).get("scenario_id")
-            if case:
-                argv += ["--expected-scenario", case, "--expected-tests", "1"]
-        job = {"id": "evaluation", "adapter_kind": "arc-bench", "docker": True,
-               "result_path": "workspace/experiment-result.json",
-               "competition": competition,
-               **({"variant": state["variant"]} if state.get("variant") else {}),
-               "task": state.get("task") or task, "venue": "frozen-application-evaluation",
-               "labels": {"operation": "replay", **({"experiment_key": experiment_key} if experiment_key else {}),
-                          **({"case": case} if case else {})},
-               "source_application": application_origin(state, run, receipt,
-                   "published" if ".lab-artifacts" in app.parts else "imported-now"),
-               "inputs": frozen_inputs, "command": argv,
-               "dependencies": [runtime_dependency],
-               "resource_handlers": {action: [python, "{adapter}/arc_bench_adapter.py",
-                                             "resource", action, "--workspace", "{workspace}"]
-                                     for action in ("inspect", "cleanup")},
-               "artifact_paths": ["workspace/official/local-result.json",
-                                  "workspace/official/template/.arc/playwright-report.json",
-                                  "workspace/evaluation.stdout.log", "workspace/evaluation.stderr.log"]}
-        recipe = staging / "recipe.json"
-        recipe.write_text(json.dumps({"schema_version": 3, "max_parallel": 1, "jobs": [job],
-                                      "storage": storage, "controller_runtime": runtime_dependency},
-                                     indent=2) + "\n")
-        return create(recipe, experiment_root=output)
-    finally:
-        shutil.rmtree(staging)
+def prepare(application, output, *, host_runtime_receipt, runner_runtime_receipt,
+            storage, budget, resource_limits, requirements, tests, runner, image, endpoint, admission_volume,
+            competition, task, application_receipt, source_attempt, selection=None,
+            experiment_key='arc-evaluation', slots=1, authorization=None, authority_handoff=None):
+    """No source-run path inference or inherited model/fee permission is performed."""
+    from lab.exp.controller import build
+    adapter = Path(__file__).resolve().parent
+    inputs = {'application': application,
+              'application_receipt': application_receipt, 'requirements': requirements,
+              'tests': tests, 'runner': runner, 'noop': {'source': str(adapter / 'arc_bench_noop.py')}}
+    command = [require(read(runner_runtime_receipt), 'runtime')['launcher'], '-m', 'lab.arc_bench.arc_bench_adapter', '--runner', '{runner}',
+               '--application', '{application}', '--application-receipt', '{application_receipt}',
+               '--noop-script', '{noop}', '--requirements', '{requirements}', '--tests', '{tests}',
+               '--workspace', '{workspace}', '--competition', competition, '--task', task,
+               '--image', image, '--source-run-id', source_attempt,
+               '--admission-volume', admission_volume, '--shared-docker-slots', str(slots)]
+    if selection:
+        inputs['selection'] = selection
+        command += ['--selection', '{selection}']
+    spec = record('experiment', experiment_id=experiment_key, max_parallel=1, storage=storage, budget=budget, authorization=authorization,
+                  controller_runtime=str(Path(host_runtime_receipt).resolve()),
+                  runner_runtime=str(Path(runner_runtime_receipt).resolve()),
+                  jobs=[{'id': 'evaluation', 'purpose': 'evaluate', 'inputs': inputs, 'command': command,
+                         'source_attempt': source_attempt,
+                         'backend': {'kind': 'local', 'capabilities_required': ['arc-sdk-host-docker'],
+                                     'external_docker': {'endpoint': endpoint, 'image_id': image, 'slots': slots,
+                                                         'admission_volume': admission_volume, 'authority_handoff': authority_handoff}},
+                         'outputs': [{'name': 'workspace', 'type': 'terminal-archive', 'path': '.'},
+                                     {'name': 'score', 'type': 'evaluation-result', 'path': 'experiment-result.json'}],
+                         'limits': {'wall_seconds': budget['wall_seconds_per_attempt'],
+                                    'storage_bytes': storage['workspace_bytes_per_run'],
+                                    'telemetry_bytes': storage['telemetry_bytes_per_run'], **resource_limits}}])
+    recipe = Path(output).with_name(Path(output).name + '.recipe.json')
+    recipe.write_text(json.dumps(spec, ensure_ascii=False, indent=2) + '\n')
+    build(recipe, output)
+    return Path(output).resolve()
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("run", type=Path, help="run that contains the application")
-    parser.add_argument("--output", type=Path, required=True, help="new experiment root")
-    parser.add_argument("--tests", type=Path, help="explicit frozen test directory if source run has none")
-    parser.add_argument("--selection", type=Path)
-    parser.add_argument("--runner", type=Path)
-    parser.add_argument("--host-runtime", type=Path, required=True,
-                        help="asset.json from scripts/runtime.py host-lab")
-    parser.add_argument("--workspace-cap-gib", type=positive_float, required=True)
-    parser.add_argument("--telemetry-cap-gib", type=positive_float, required=True)
-    parser.add_argument("--finalization-scratch-gib", type=positive_float, required=True)
-    parser.add_argument("--host-reserve-gib", type=positive_float, default=50)
-    parser.add_argument("--build-cap-gib", type=nonnegative_float, default=0)
-    parser.add_argument("--archive-level", choices=("decision",), default="decision")
-    parser.add_argument("--image", help="image ID; changing it creates a different evaluation condition")
-    parser.add_argument("--plan-only", action="store_true")
-    parser.add_argument("--experiment-key")
-    parser.add_argument("--case", help="experiment configuration row, independent of source variant")
-    parser.add_argument("--run-labels", type=Path, help="execution labels for job evaluation")
+    parser.add_argument('--spec', type=Path, required=True, help='new exp evaluation recipe with explicit artifact inputs')
+    parser.add_argument('--output', type=Path, required=True)
+    parser.add_argument('--build-only', action='store_true')
     args = parser.parse_args(argv)
-    gib = 1024 ** 3
-    storage = {"host_reserve_bytes": math.ceil(args.host_reserve_gib * gib),
-               "workspace_bytes_per_run": math.ceil(args.workspace_cap_gib * gib),
-               "telemetry_bytes_per_run": math.ceil(args.telemetry_cap_gib * gib),
-               "finalization_scratch_bytes_per_run": math.ceil(args.finalization_scratch_gib * gib),
-               "build_bytes": math.ceil(args.build_cap_gib * gib),
-               "archive_level": args.archive_level, "inode_reserve_percent": 10}
-    experiment = prepare(args.run, args.output, tests=args.tests, selection=args.selection,
-                         runner=args.runner, image=args.image, experiment_key=args.experiment_key, case=args.case,
-                         host_runtime_receipt=args.host_runtime, storage=storage)
-    print(json.dumps({"experiment": str(experiment), "source_run": str(args.run)}, ensure_ascii=False), flush=True)
-    return 0 if args.plan_only else start(experiment, run_labels=read_json(args.run_labels) if args.run_labels else None)
+    spec = require(json.loads(args.spec.read_text()), 'experiment')
+    if any(job['purpose'] != 'evaluate' for job in spec['jobs']):
+        raise ValueError('evaluation recipe may contain only evaluate jobs')
+    from lab.exp.controller import build, start
+    build(args.spec, args.output)
+    root = args.output.resolve()
+    print(root)
+    if not args.build_only:
+        print(json.dumps(start(root), ensure_ascii=False))
+    return 0
 
 
-if __name__ == "__main__":
-    sys.exit(main())
+if __name__ == '__main__':
+    raise SystemExit(main())

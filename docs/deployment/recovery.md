@@ -1,5 +1,17 @@
 # 工作区恢复、应用重放与监控
 
+## 当前 checkpoint、prepare 与停止门控
+
+新 Harness producer 使用 `python3 submission/exp_checkpoint.py checkpoint --source RUN --output NEW --source-identity IDENTITY_JSON --stop-evidence STOP_JSON`，可显式追加 materials-root。停止原件由 `python3 -m lab stop-evidence EXPERIMENT ATTEMPT --output NEW_JSON` 从实际执行身份与当前停止观察产生；它不会执行 stop。Checkpoint 保存 Git/未提交内容、Braid DB/WAL、native 和材料及语义缺口，partial 不得 prepare。
+
+`prepare --source CHECKPOINT --output NEW --target-layout JSON` 无网络及模型请求，生产 harness-manifest.json 并独立读回。当前 hook 只支持相同 OS、architecture、logical run_root 与明确 runtime_identity；Docker 可在另一 daemon 的隔离路径空间保持同根，跨 OS/根路径迁移明确不支持。Prepared 不携带来源停止许可，启动另外核验同 instance 的停止证据和目标实际装配。终态 archive 不是 checkpoint，应用 artifact 也不是恢复材料。
+
+模型和供应商归新配方，四个 I14 入口与恢复通道不强制 ARC。Native per-model bindings 在新生成时拆分 provider，并同步 profile/角色；既有未拆分 provider 的 retained 会话不支持隐式改 provider 身份，恢复 hook 明确拒绝此迁移。相同已拆分 provider 的通道更新仍须明确恢复授权。旧包不因源码变化取得新路由，现有 Flash/GitHub 不改动。
+
+## 历史恢复与旧冻结合同
+
+以下旧 operation/Competition 和准备回执用于原件追溯及限定退役通道。工作树不再产生旧格式新执行；不将历史 ARC 政策当作当前新实验默认值。
+
 本文说明已授权实验中如何保留进度、接续工作区或对冻结应用评分。改变设施与运行模型是不同授权范围；新一次执行须有明确输入、来源和完成条件。产品边界见 [PRD](../prd/index.md)，具体历史恢复与实测范围见[实验设施 packet](../../tasks/experiment-infrastructure/packet.md)。
 
 ## 实验恢复与反馈循环
@@ -63,7 +75,7 @@ I13 的归档回执将恢复承诺和原文保存分别记录；即使应用已�
 
 需要把新的技能和原生指令应用于半成品时，使用包含新 variant 材料的 `--base-package`，并同时指定 `--continue-generation --refresh-native-materials`。恢复入口重建宿主拥有的 skills、capabilities 和成员指令，保留旧材料副本、应用工作区、协作记录和原模型配方；Braid 在离线恢复边界重建受影响的原生会话。仅替换二进制而不刷新材料，不代表新技能或提示词已生效。原执行须先停止，每次接续使用新的包和运行目录。
 
-I13 和四个 I14 variant 的刷新使用完整冻结 base 内的 runtime、角色和独立 skills，要求同时包含 managed native 模块、资源 helper 和三项 managed process patch。入口逐项核对原 profile 的 provider、model、reasoning 和上下文参数，保留根成员选择、旧模型定义、native home 和原生 session 文件，仅刷新所属材料。四个 I14 的继续生成始终使用 ARC；因此只传 `--refresh-native-materials` 即可刷新新材料并落实 ARC，无需同时传 `--override-native-transport`。两项 CLI 标志仍互斥，历史非 I14 的显式 transport 边界沿用。
+I13 和四个 I14 variant 的刷新使用完整冻结 base 内的 runtime、角色和独立 skills，要求同时包含 managed native 模块、资源 helper 和三项 managed process patch。入口逐项核对原 profile 的 provider、model、reasoning 和上下文参数，保留根成员选择、旧模型定义、native home 和原生 session 文件，仅刷新所属材料。旧冻结 I14 曾在刷新时强制 ARC；当前生产端已移除该供应商约束，材料刷新不代替配方显式通道绑定。两项 CLI 标志仍互斥，历史非 I14 的显式 transport 边界沿用。
 
 
 接续入口从工作区 ZIP 还原 Unix 文件权限和符号链接。官网导出会把执行文件降为 `0600` 时，冻结包执行位按 manifest 恢复；保留的 `request.pi.executable`、各 binding 的 executable 和 `work/bin/pbb` 按声明恢复 `0755`，要求解析后仍在同一 Braid run 内。原生会话使用旧 `/workspace/submission/runtime` 路径、本地 ARC wrapper 把包放在 `/workspace/submission/agent` 时，入口仅为包内存在的 runtime、support、extensions、tools、agents、skills 建立兼容链接；已占用且指向不同位置的路径会拒绝恢复。修复列表写入 `recovery-launch-paths.json`，不会批量 chmod 文件或改写历史技能、指令和配置。
@@ -99,7 +111,7 @@ python3 scripts/package_completed_recovery.py \
 
 二进制覆盖时，manifest 不沿用原冻结源码的 revision 或 SHA。原身份保存在 `recovery-source.frozen_braid_source`；`--braid-source` 记录新源码 tar 的容器 SHA，`--braid-source-identity` 逐项核对 tar 中 `braid/` 文件及 `sha256-json-sorted-files` 聚合 SHA，再记录新编译源码身份。辅助源码快照没有提供时，不宣称新 binary 来自原源码。
 
-I13 本地通道切换另用显式 `--override-native-transport`，其官网恢复默认关闭。I13 的显式切换和所有 I14 的继续生成固定到 ARC：所有声明的 template 和保留 home 中，两个 provider 都使用 `https://api.arc-bench.com/v1` 与 `$FACTORY26_API_KEY`，其它供应商 URL、不同视觉 key 和不同主 key 会被拒绝。I14 打包自动在 `recovery-source.json` 声明有效 transport 覆盖，供既有独立读回核对允许的文件变更；恢复在材料刷新完成后应用 ARC，避免回填旧模型定义时覆盖本次连接。恢复先保全原 models/settings/auth；清空有更高优先级的 stored auth，并用原生严格 provider scope 避免子 Agent 落入其它供应商。模型名称、profile 和对话历史保持，当前 key 不进入回执。其它历史 variant 的显式 transport 选项保持原主/视觉通道行为。来源及前后哈希归 `recovery-native-transport/` 与 `recovery-native-transport.json`。
+I13 历史通道切换另用显式 `--override-native-transport`。旧冻结包曾将 I14 继续生成固定到 ARC；当前源码不再固定 endpoint 或主/视觉 key，新配方通过 FACTORY26_MODEL_BINDINGS 明确各原生 provider 的供应商与凭据变量，来源及前后哈希仍归 recovery-native-transport 回执。新生成可按模型分流并拆分 provider；旧共享 provider 的 retained 会话没有自动 provider 身份迁移保证，当前 hook 拒绝需要新增 provider 的恢复。未明确获准的旧源码/ZIP、原模型请求和通道事实保留原身份。
 
 未完成生成接续按实际完整 runtime 能力恢复共用资源环境，不只依赖旧 recovery-source 的声明 flag；`native-managed.mjs` 与 `support/runtime_resources.py` 必须同时存在。已有明确资源声明仍按原约束校验。`recovery-resource-environment.json` 记录能力、启用结果和无 key 的路径环境；这使显式模型切换或仅更新 binary 的恢复也能继续使用资源准入保护，缺少能力的旧包不冒充已启用。
 

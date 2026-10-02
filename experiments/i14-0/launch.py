@@ -1,67 +1,13 @@
-"""Dispatch the eight authorized I14-0 targets through immutable ARC operations."""
+"""Freeze the I14 policy once, then dispatch solely through the exp controller."""
 import argparse
 import math
-import os
+import json
 from pathlib import Path
-import re
 import sys
 import time
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[2]))
-from lab.arc_bench.arc_matrix import build
-from lab.arc_bench.competition import atomic_json
-from lab.arc_bench.docker_admission import snapshot
-from lab.arc_bench.operations import prepare, run, selected_runs, lock, error_record, worker_owner, TERMINAL
-from lab.control import process_identity, process_state
-from lab.docker_endpoint import environment, SELECTION_ENV, confirm
-from lab.records import read_json, file_hash
-
-
-ARC_BASE_URL = 'https://api.arc-bench.com/v1'
-NON_ARC_MODEL_AUTH = frozenset('''
-OPENAI_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_OAUTH_TOKEN ANTHROPIC_API_KEY
-COPILOT_GITHUB_TOKEN ANT_LING_API_KEY QWEN_TOKEN_PLAN_API_KEY QWEN_TOKEN_PLAN_CN_API_KEY
-AZURE_OPENAI_API_KEY NVIDIA_API_KEY DEEPSEEK_API_KEY GEMINI_API_KEY GOOGLE_CLOUD_API_KEY
-GROQ_API_KEY CEREBRAS_API_KEY XAI_API_KEY RADIUS_API_KEY OPENROUTER_API_KEY AI_GATEWAY_API_KEY
-ZAI_API_KEY ZAI_CODING_CN_API_KEY MISTRAL_API_KEY MINIMAX_API_KEY MINIMAX_CN_API_KEY
-MOONSHOT_API_KEY HF_TOKEN FIREWORKS_API_KEY TOGETHER_API_KEY BASETEN_API_KEY OPENCODE_API_KEY
-KIMI_API_KEY CLOUDFLARE_API_KEY XIAOMI_API_KEY XIAOMI_TOKEN_PLAN_CN_API_KEY
-XIAOMI_TOKEN_PLAN_AMS_API_KEY XIAOMI_TOKEN_PLAN_SGP_API_KEY GOOGLE_APPLICATION_CREDENTIALS
-AWS_PROFILE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_BEARER_TOKEN_BEDROCK
-AWS_CONTAINER_CREDENTIALS_RELATIVE_URI AWS_CONTAINER_CREDENTIALS_FULL_URI AWS_WEB_IDENTITY_TOKEN_FILE
-AWS_SHARED_CREDENTIALS_FILE AWS_CONFIG_FILE GLM_API_KEY QWEN_API_KEY
-VISUAL_API_KEY FACTORY26_VISUAL_API_KEY
-'''.split())
-
-
-def arc_environment(path, *, selected=False):
-    """校验选定 ARC 连接，再为模型容器移除其它供应商认证。"""
-    if path.stat().st_mode & 0o077:
-        raise ValueError('模型连接凭据文件必须为 mode 600')
-    values = {}
-    for line in path.read_text().splitlines():
-        if not line.strip() or line.lstrip().startswith('#'):
-            continue
-        name, separator, value = line.strip().removeprefix('export ').partition('=')
-        name = name.strip()
-        if not separator or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', name) or name in values:
-            raise ValueError('模型连接变量无效或重复：' + name)
-        values[name] = value.strip().strip('\"\'')
-    urls = [values.get(name) for name in ('OPENAI_BASE_URL', 'FACTORY26_BASE_URL', 'VISUAL_BASE_URL')]
-    if not any(urls) or any(url and url.rstrip('/') != ARC_BASE_URL for url in urls):
-        raise ValueError('I14 模型连接只允许 https://api.arc-bench.com/v1')
-    key = values.get('OPENAI_API_KEY') or values.get('FACTORY26_API_KEY')
-    if not key or any(value and value != key for value in
-                      (values.get(name) for name in ('OPENAI_API_KEY', 'FACTORY26_API_KEY',
-                                                   'VISUAL_API_KEY', 'FACTORY26_VISUAL_API_KEY'))):
-        raise ValueError('I14 全部模型必须使用同一个选定 ARC API key')
-    if selected and any(values.get(name) for name in NON_ARC_MODEL_AUTH - {'OPENAI_API_KEY'}):
-        raise ValueError('已冻结的 I14 模型连接包含其它供应商认证，拒绝启动')
-    env = {name: value for name, value in values.items()
-           if name not in NON_ARC_MODEL_AUTH and name not in
-           {'FACTORY26_API_KEY', 'FACTORY26_BASE_URL', 'VISUAL_BASE_URL'}}
-    return dict(env, OPENAI_BASE_URL=ARC_BASE_URL, OPENAI_API_KEY=key)
-
+from lab.exp.core import atomic, digest as file_hash, read as read_json, require
 
 def final_score(binding):
     """Consume saved platform observations, never collect or query the platform."""
@@ -106,158 +52,49 @@ def choose_root(config):
             'evidence': evidence, 'decided_at': time.time()}
 
 
-def bindings(directory, targets):
-    result = []
-    for target in targets:
-        op = directory / 'operations' / target['id']
-        if not (op / 'inputs.json').is_file():
-            continue
-        inputs = read_json(op / 'inputs.json')
-        runs = selected_runs(inputs)
-        result.append({'target': target['id'], 'operation': str(op), 'experiment': inputs['experiment'],
-                       'monitor': inputs['monitor_output'], 'runs': [str(p) for p in runs]})
-    return result
-
-
-def write_index(directory, config, state):
-    rows = bindings(directory, config['targets'])
-    atomic_json(directory / 'active-matrix.json', {
-        'schema_version': 1, 'kind': 'operation-index', 'experiment_key': config['experiment_key'],
-        'operations': rows, 'runs': [p for row in rows for p in row['runs']],
-        'queued': [t['id'] for t in config['targets'] if t['id'] not in state['dispatched']],
-        'model_channel': 'arc-self-funded', 'docker_context': config['endpoint']['context'],
-        'selection_receipts': {name: str(directory / 'operations' / name / 'selection.json')
-                               for name in state['dispatched']}, 'observed_at': time.time()})
-    return rows
-
-
-def dispatch(directory, config, target):
-    selected_environment = arc_environment(Path(config['arc_env']))
-    op = directory / 'operations' / target['id']
-    op.mkdir(parents=True, exist_ok=True)
-    selection_path = op / 'selection.json'
-    if selection_path.exists():
-        selection = read_json(selection_path)
-    else:
-        selection = {**choose_root(config), 'target': target,
-                     'config_sha256': file_hash(directory / 'config.json')}
-        atomic_json(selection_path, selection)
-    if selection['target'] != target or selection['config_sha256'] != file_hash(directory / 'config.json'):
-        raise ValueError('pending operation belongs to a different selection')
-    if file_hash(target['package']) != target['package_sha256']:
-        raise ValueError('frozen package changed')
-    model = selection['root_model']
-    private_env = op / 'model.env'
-    if not private_env.exists():
-        selected_environment.update(MODEL=model, VISUAL_MODEL='glm-5.3-flash')
-        temporary = private_env.with_suffix('.env.pending')
-        with temporary.open('w') as stream:
-            stream.write('\n'.join(name + '=' + value for name, value in selected_environment.items()) + '\n')
-            stream.flush()
-            os.fsync(stream.fileno())
-        temporary.chmod(0o600)
-        temporary.replace(private_env)
-    values = arc_environment(private_env, selected=True)
-    if (values.get('MODEL') != model or values.get('VISUAL_MODEL') != 'glm-5.3-flash' or
-            values['OPENAI_API_KEY'] != selected_environment['OPENAI_API_KEY']):
-        raise ValueError('private model connection does not match the selected root')
-    recipe_path = op / 'matrix.json'
-    if not recipe_path.exists():
-        recipe = build([target['variant'] + '=' + target['package']], [target['case']],
-                       config['inputs_root'], config['runner'], image=config['image'],
-                       env_file=str(private_env), workers=1, separate_evaluation=True, requirements_only=True,
-                       experiment_key=config['experiment_key'], storage=config['storage'],
-                       host_runtime_receipt=config['host_runtime'], shared_docker_slots=5, memory='2g', cpus=2)
-        recipe['jobs'][0]['inputs']['model_env'] = str(private_env)
-        recipe['jobs'][0]['command'] = ['{model_env}' if part == str(private_env) else part
-                                       for part in recipe['jobs'][0]['command']]
-        recipe['jobs'][0]['labels'].update(batch='i14-0', root_model=model, model_channel='arc-self-funded',
-                                          execution_kind='clean-generation', target=target['id'])
-        atomic_json(recipe_path, recipe)
-    job_id = read_json(recipe_path)['jobs'][0]['id']
-    spec_path = op / 'operation-spec.json'
-    if not spec_path.exists():
-        task = target['case'].split('/')[1]
-        atomic_json(spec_path, {'authorization': config['authorization'], 'venue': 'local',
-            'recipe': str(recipe_path), 'monitor_output': str(op / 'observation'),
-            'credential_file': config['arc_env'],
-            'replay': {'jobs': {job_id: {
-                'competition_id': 'hackathon', 'variant': target['variant'], 'tasks': ['hackathon--' + task],
-                'model_config': {'base_url': 'https://api.arc-bench.com/v1', 'model': model,
-                                 'visual_model': 'glm-5.3-flash'},
-                'credential_mode': 'self_funded', 'allow_competition_credit': False,
-                'experiment_key': config['experiment_key'], 'case': target['variant'],
-                'name': config['experiment_key'] + '--' + target['id'] + '--artifact-replay',
-                'run_names': {'hackathon--' + task: config['experiment_key'] + '--' + target['id'] + '--r01'}}}}})
-    prepare(spec_path, op)
-    receipt = run(op)
-    atomic_json(op / 'dispatch-receipt.json', receipt)
-
-
-def work(directory):
-    os.umask(0o077)
+def work(directory, *, build_only=False):
+    directory = Path(directory).resolve(strict=True)
     config = read_json(directory / 'config.json')
-    arc_environment(Path(config['arc_env']))
-    for name in (*SELECTION_ENV, 'DOCKER_API_VERSION'):
-        os.environ.pop(name, None)
-    os.environ.update(environment(config['endpoint']))
-    confirm(config['endpoint'])
-    expected = {(v, 'hackathon/' + c) for v in ('pi-braid-i14', 'pi-braid-i14-cleaner',
-                'pi-braid-i14-reviewer', 'pi-braid-i14-e2e') for c in ('github', 'sheet')}
-    if (len(config['targets']) != 8 or len({t['id'] for t in config['targets']}) != 8 or
-            {(t['variant'], t['case']) for t in config['targets']} != expected or
-            set(config['i13_scores']) != {'glm', 'flash'} or
-            any(set(cases) != {'github', 'sheet'} for cases in config['i13_scores'].values())):
-        raise ValueError('I14-0 requires eight distinct authorized targets')
-    with lock(directory / 'dispatcher.lock'):
-        state_path = directory / 'dispatcher.json'
-        previous = read_json(state_path) if state_path.exists() else {}
-        if previous and previous['config_sha256'] != file_hash(directory / 'config.json'):
-            raise ValueError('queue configuration changed')
-        state = {**process_identity(), 'phase': 'running', 'config_sha256': file_hash(directory / 'config.json'),
-                 'dispatched': previous.get('dispatched', []), 'started_at': time.time()}
-        atomic_json(state_path, state)
-        try:
-            while True:
-                # A crash after dispatch but before queue acknowledgment resumes that same immutable operation.
-                pending = [t for t in config['targets'] if t['id'] not in state['dispatched']]
-                if pending and (directory / 'operations' / pending[0]['id'] / 'selection.json').exists():
-                    dispatch(directory, config, pending[0])
-                    state['dispatched'].append(pending[0]['id'])
-                    atomic_json(state_path, state)
-                rows = write_index(directory, config, state)
-                capacity = snapshot(config['endpoint'], 5)
-                state['capacity'] = capacity
-                represented = {p['labels']['io.factory26.run'] for p in capacity['physical']}
-                represented.update(r['labels']['io.factory26.run'] for r in capacity['reservations'])
-                # A snapshot does not reserve capacity. Wait for each actual admission before dispatching another.
-                admitting = False
-                for row in rows:
-                    op = Path(row['operation'])
-                    worker = worker_owner(op)
-                    if worker.get('phase') in {'failed', 'interrupted'} or process_state(worker) == 'lost' and worker.get('phase') != 'completed':
-                        raise RuntimeError('operation needs recovery: ' + str(op))
-                    admitting |= not row['runs'] or any(read_json(Path(p) / 'run.json')['phase'] not in TERMINAL
-                                                       and Path(p).name not in represented for p in row['runs'])
-                pending = [t for t in config['targets'] if t['id'] not in state['dispatched']]
-                if not pending and not admitting:
-                    state.update(phase='dispatched', finished_at=time.time())
-                    atomic_json(state_path, state)
-                    return
-                if pending and not admitting and capacity['available']:
-                    target = pending[0]
-                    dispatch(directory, config, target)
-                    state['dispatched'].append(target['id'])
-                    state['last_dispatch_at'] = time.time()
-                atomic_json(state_path, state)
-                time.sleep(10)
-        except BaseException as error:
-            state.update(phase='failed', error=error_record(error), finished_at=time.time())
-            atomic_json(state_path, state)
-            raise
+    recipe = require(read_json(directory / 'recipe.json'), 'experiment')
+    targets = config['targets']
+    target_ids = {target['job_id'] for target in targets}
+    if not targets or len(target_ids) != len(targets):
+        raise ValueError('I14 requires a nonempty unique explicitly declared target set')
+    primary = [job for job in recipe['jobs'] if job['purpose'] in {'generate', 'prepare'}]
+    if {job['id'] for job in primary} != target_ids:
+        raise ValueError('recipe primary jobs differ from the declared targets')
+    selected = {job['id']: job.get('model_config', job['backend'].get('model_config')) for job in primary}
+    for job_id, model in selected.items():
+        if not model or any(not model.get(key) for key in ('model', 'visual_model', 'provider', 'base_url')):
+            raise ValueError('target must explicitly freeze model/provider/endpoint: ' + job_id)
+    selection = {'models': selected, 'targets': targets, 'config_sha256': file_hash(directory / 'config.json'),
+                 'recipe_sha256': file_hash(directory / 'recipe.json'), 'policy': 'explicit-recipe'}
+    if config.get('root_selection') == 'i13-final-two-task-margin':
+        decision = choose_root(config)
+        if any(model['model'] != decision['root_model'] for model in selected.values()):
+            raise ValueError('explicit recipe differs from the requested research selection policy')
+        selection['research_decision'] = decision
+    selection_path = directory / 'selection.json'
+    if selection_path.exists():
+        if read_json(selection_path) != selection:
+            raise ValueError('frozen selection differs; choose a new experiment directory')
+    else:
+        atomic(selection_path, selection)
+    deployment = directory / 'deployment.json'
+    if not deployment.exists() or not read_json(deployment).get('credential_file'):
+        raise ValueError('I14 requires an explicit private deployment credential binding')
+    from lab.exp.controller import build, start
+    build(directory / 'recipe.json', directory / 'experiment')
+    root = directory / 'experiment'
+    atomic(directory / 'launch-receipt.json', {'selection': selection, 'experiment': str(root), 'build_only': build_only})
+    if not build_only:
+        print(json.dumps(start(root, deployment=deployment), ensure_ascii=False))
+    return 0
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('directory', type=Path)
-    work(parser.parse_args().directory.resolve(strict=True))
+    parser.add_argument('--build-only', action='store_true')
+    args = parser.parse_args()
+    raise SystemExit(work(args.directory, build_only=args.build_only))

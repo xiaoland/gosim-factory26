@@ -6,6 +6,14 @@
 
 ## 组件与调用关系
 
+开发侧新实验由 `lab.exp.controller` 组织 build、派发、控制、监控和分析。Local/Docker 的每个 attempt 由独立冻结 runner 持有实际执行、资源限额、collector 与归档；托管平台由独立 adapter 持有远端身份和 pending 请求。Controller 退出不撤销已受理执行，重入同一请求不能重跑入口。工作树旧 plan/run/operation writer 已退役，历史输入只能只读查询或显式导入，新执行不翻译旧 schema。
+
+执行终态、归档、遥测封口、传输和评分分别成立。Docker 在执行侧完成归档后，controller 取得并核验制品再派发依赖该应用的独立评分；设施失败保留原错及未完成阶段，不解释为有效零分。费用模式、模型、供应商与凭据来源冻结在配方，运行凭据通过私有部署引用提供。通用层不读 Braid 私有 SQL，Harness 的公开 checkpoint producer 持有恢复语义核验。
+
+Prepared 内容与来源停止证明分别发布；启动核对同一执行 instance 的当前物理停止观察和实际目标 OS、架构、runtime、logical root。当前 producer 只支持保持这些原生路径约束的装配，跨 OS/根路径迁移没有隐式文本替换。Docker 准入权威属于实际 daemon，共同卷冻结实现和容量；旧 dispatcher、预留和在途启动未明确交接时禁止新域接管。Console 工作项操作继续使用 Braid 公共 CLI，物理控制使用该 experiment 的冻结执行协议；尚无公开静止协调能力时拒绝 Console 暂停。
+
+本轮实际离线材料反馈与尚未取得的模型/跨环境生命周期验收见[实验设施 packet](../../tasks/experiment-dx-review/packet.md)。源码及合同的存在不证明那些现场效果。
+
 ```text
 源码开发                         冻结打包
 variants/<name>/main.py          variant/build.py + 指定工具与技能材料
