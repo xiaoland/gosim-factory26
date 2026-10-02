@@ -127,3 +127,33 @@ SVC 强制要求的发布验收按实际协作阶段解释：根共享文档、�
 ## 2026-10-02 监控恢复
 
 用户纠正此前完全取消监控会话的安排，明确要求 GPT-5.6-Luna / low 每十分钟监控各run并复用脚本。现有采集器保持唯一，新增模型层仅消费已保存的provider状态、outcome和alerts；普通进展保持安静。原监控聊天已解除归档。旧i13-wsl已被删除，故同会话启用唯一i13-i14 heartbeat。I14新运行索引在 runs/iteration14/i14-0/active-matrix.json；不改变本packet中I13的包、来源、费用或尝试身份。
+
+## 2026-10-02 当前结果与阻塞
+
+09:22 CST 现有本地 collector 记录：GLM/GitHub `glm-root--hackathon--github-a94a67b4b3d85b` 仍为 running，根原生最后活动为前日 23:53:25，分类 suspected_stale，尚不能凭分类判断根因；GLM/Sheet `glm-root--hackathon--sheet-8046cfb0695023` 仍为 running，但 GLM-5.3/Flash 已有 HTTP429 原文“余额不足或无可用资源包,请充值”，分类 provider_unavailable。两项均 result=null、artifacts 为空、revision2/replays 不存在，没有完成生成或上传官方评测。原成功后跟随继续保留，不把这些状态记为应用零分。
+
+I14 的 ARC 通道切换没有修改上述两项已冻结的自有 API 配方。用户表示知道这一点即可，并明确停止余额消耗来源调查。没有改网关、凭据或运行供应商，也没有新 API 探测请求。
+
+官网 Flash/GitHub 已确认持续资源准入等待，原因和证据缺口归[恢复记录](hosted-github-recovery.md#2026-10-02-资源等待调查)。官网 Flash/Sheet `f16834f58674` 已完成生成与正式评测，74分、通过74/失败26；平台 FAILED 对应测试失分，不能归为生成故障。原件归 `hosted-sheet-r2/monitor/20261001T174303.462955Z/f16834f58674/status.json`，耗时10115秒，token_count=197385915；实际费用字段 token_cost_usd=49.087573、token_cost_currency=CNY，保留原字段而不称为美元。
+
+用户要求独立 GPT-6.1-Sol / Medium 会话从失分假设回查运行原因，已创建并实际开始分析：[I13 Flash/Sheet：失分点与运行原因分析](codex://threads/01a0fa36-ec48-7e10-8cdc-44ee6d71f94c)。该会话只消费已完成结果及现有证据，不启动新实验、不修改生成应用、不把隐藏反馈送回运行中 Agent；可执行改进归 I14-1。
+
+## 2026-10-02 ARC 接线与内存修复恢复
+
+用户明确授权“将本地 I13 GLM 的全部模型切换到 ARC API，然后尽快开始热恢复”，随后要求由 sub-agent 完成；不再追查 BigModel 余额消耗来源。两本地旧 run 尚未完成、也未上传正式应用评测，保留原 4GiB/2CPU 和实际工作进度。新恢复必须将 Braid 成员、Pi 子 Agent、advisor、vision 的实际 URL/key 来源全部切到自有 ARC key，保留原模型配方；旧冻结包和历史自有供应商身份保持原件。
+
+用户追加：“如果 OOM 有排查出具体的问题，有相应的证据，那么请先修复，再恢复”，并要求“应用到所有的 braid 的 variant，而不只是 I13”。当前已证实 Flash/GitHub 的资源拒绝不断形成新 turn/event/输入文件，约 1.5 万条拒绝历史与 Braid RSS 持续上涨相伴；修复放在 sources/braid 的共用输入就绪路径，claim 之前保留资源等待，不修改压力阈值。全量对象快照的重复 JSON 排序缓存同时移除。仍保留发送前资源检查，检查到发送之间的竞争窗口沿既有 Deferred 处理；不宣称已消除所有原因的 Deferred 历史增长。
+
+剩余内存来源与 PR5/6 无法卸载的原因尚未证实。按用户要求，在现有 collector/get_state/capture 周期内补充存活进程优先、匿名/文件/共享内存、PSS、I/O、fd 类别、实际 managed_state 原因与 capture 前后 RSS；不新增采集器、内核权限或模型审查。新增证据不能追溯历史信号发送者。已知修复编译及真实材料准备完成后即恢复官网收集数据，不等所有未知原因闭合。
+
+本地两项由当前 worker i14_arc_only_implementation 接续，拥有 arc-hot-recovery-20261002 私有操作及必要 shared submission/recover_completed.py ARC/资源接线；主线拥有 Braid/公共 collector/全局 packet。因为新子 Agent 创建持续被 thread limit 拒绝，用户授权改用独立会话，官网恢复由 GPT-6.1-Sol/medium 会话 01a0fa57-5cd1-7f20-9a18-5360ca8b21f4 负责 hosted-github-memory-r3。官网来源 e1aa595f6995 停止后保全，原 Flash/K2.7-Code/ARC/self_funded 配方保持、比赛额度关闭；来源停止和新身份以该会话的实际回执为准。修复编译交接目录为 github-resource-stall-20261002/linux-fix，只有成功 build receipt 与 handoff 才允许冻结和启动新 generation。
+
+源码修复适用于所有使用共用 Braid 的 variant；运行中的进程与已冻结 ZIP 不会自动更新。每次恢复或新制品必须明确绑定修复 binary/source SHA 及公共 collector hash，不在活动现场无记录替换二进制。I14 的 canonical ARC-only 保护已完成四入口实际 prepare-only 和非 ARC 输入拒绝反馈，冻结制品的部署状态另记 I14 packet。后续 GPT-6.1-Sol 统一 medium。
+
+共用修复已完成冻结交接：`github-resource-stall-20261002/linux-fix/handoff.json` 状态 ready，Linux build 退出0，binary SHA256 `e209d754d89fe1d972ab0acbda020356e56121501b0756183d88857be7e03d22`，source SHA256 `db590aefd9d6ac308aeb576b31182acb9e4b8c8039e1dde76a18079609f203c7`。共享 `submission/recover_completed.py` ARC-only 和 continuing 实际资源能力接线也已完成，可用于本地与官网新包；恢复执行者可以据该 handoff 冻结、实际准备并按已授权范围启动，不需要另一次确认。公共 collector 的当前 hash 一并记录；不使用旧冻结包冒充已应用修复。主线 Braid/collector 源码编辑已结束，新 cleaner 会话可冻结包含共用修复及其自身 context 修改的新源码，而不能把本 binary 当作已经包含之后的 context 修改。
+
+内存共用修复提交为 `f2d3220`；ARC-only 与共享资源恢复接线提交为 `c77d8fca`，均未 push。官网恢复执行者已消费 ready handoff，源 `e1aa595f6995` 实际 CANCELLED，最终 workspace ZIP SHA256 `beda01ec104caeeebb8728299f7c2ae9ff3fe7e9341705b71dfe418792559a82`；修复派生包 `ce504eb6edf0bbaa8ad672bb7df9e82e7964fe39cba97ed4cb4d1a25cf580a8a` 已冻结。首轮独立准备因所选编译镜像 Python 不满足 CPython3.12 明确失败，原件保留。第二轮使用此前真实成功的准备镜像，main prepare-only 实际 exit0，独立 readback 核对974份文件、数据库七表、工作树路径、模型配方与 binary 均一致。但控制器最终在把全部 template 复制回 Mac 时超过600秒，正式 prepare receipt 为 failed；不能以 main 成功替代完整 operation 成功，也不能启动官网收费执行。具体回执归 hosted-github-memory-r3/operation-r2 和执行者 packet/journal，尚无新 generation 或收费提交。
+
+主线10:40 CST宿主只读观察：直接 SSH 正常，Docker Unix socket 的 /_ping 与 /version 均 HTTP200、低于6ms；宿主可用内存约11.5GiB，I/O PSI some/full avg10 约56%/54%。这不支持“整台 daemon 已挂”的判断，也不能据个别 CLI 超时判断磁盘损坏。保留原操作及失败回执，先处理大体积文件传输，不重启影响其它运行的 daemon、不重复生成或提交。
+
+本地源停写后保全运输同样受远端文件 I/O 拖慢。主线已授权仅排除 Factory npm/pnpm 缓存，以及由实际 Git ignore 和 tracked=0 证明可再生成的 node_modules/.next；发现手工依赖修改的候选目录仍保留。原 volume、helper 与 partial archives 保留，逐项记录排除路径和依据，不能称为全 volume 字节级保全。应用脏文件/未跟踪源码、私有 Git、Braid DB/WAL、任务文档、原生历史与异步现场必须完整纳入。两项旧 adapter/runner 已按实际进程 birth 与 argv 停住，避免停止容器后自动清理原 volume；继续由 worker 完成选择性归档及恢复。

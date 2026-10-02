@@ -29,3 +29,13 @@ PR2、PR3 为 MERGED，PR4、PR5、PR6 为 OPEN，develop 发布 ref 为 `4e4860
 主线重新计算原/派生ZIP SHA，并独立比对15份原生对话JSONL；与来源一致。23:50:55 CST唯一snapshot/create/start流程完成，新submission为 `8fad2a412927`，run为 [e1aa595f6995](https://arc-bench.com/runs/e1aa595f6995)。冻结journal为 `runs/iteration13/i13-2-20261001/hosted-github-r2`，独立读回billing_mode与submission credential_mode均为self_funded，输入allow_competition_credit=false，pending=null。没有重新发送任一写请求。原恢复范围与私有Git缺口保持上述解释。
 
 同一官网纯脚本collector已追加该journal，进程身份核验后48187→245，保留Sheet原scheduler与去重历史；未启动第二条官网collector或审查模型。接线回执为 `script-monitor/github-attach-receipt.json`，现行PID/命令归 `hosted-sheet-r2/monitor-launch.json`。23:51:07 CST首批采集 `hosted-sheet-r2/monitor/20261001T155107.297047Z/` 读回RUNNING、deploy_agent=running、start_agent=pending；classification=preparing、errors=[]。该证据说明平台部署已开始，尚不证明新Pi恢复或应用进展。后续3+8采集、provider状态判断和终态保全由现有脚本持续完成。
+
+## 2026-10-02 资源等待调查
+
+用户报告 Flash/GitHub 似乎卡住。现有 collector 的 `20261002T011449.592959Z/e1aa595f6995` 批次确认官网仍为 RUNNING、评测 pending；根原生 turn 最后于 02:57:09 CST 完成，此后超过六小时没有新的原生活动。Braid 当前 active_turns=0、pending_batches=2、queued_comment_deliveries=4、unresolved_merges=1，根成员因资源等待不能取得输入；最后原生记录中，发布 PR4 评论也被 resource_deferred 拒绝。没有新增 collector、远端写操作或收费尝试。
+
+同批资源原件显示上限 2GiB、占用约 2.13GB，anon 931631104、file 833249280、kernel 366604288 bytes；oom_kill=0、当前 PSI avg10=0。三个 idle Pi 仍存活，各约 269、198、210MiB RSS；有限作业减载重复返回 no_exact_owned_finite_job。取证采样有进程数量上限，捕获的 248 个 zombie 不代表全部进程均已死亡，也不能把 zombie 直接认作当前匿名内存占用。只读摘要及原件 hash 保存于 `runs/iteration13/i13-2-20261001/github-resource-stall-20261002/observation-summary.json`。
+
+实际冻结包中的资源 helper 与原生扩展已和源码逐字核对。策略在调整后用量达到 80% 时进入压力状态，但历史压力要降至 70% 以下并取得两个不同采样才恢复；当前约 72.8% 的样本因此反复保持 good_samples=0。waiting_for_two_recovered_samples 不是有限倒计时。缓存信用已经计入当前 inactive_file，普通 turn 和工具启动先被状态门槛拒绝，尚未进入启动余量判断。这证明持续的资源准入阻塞，不证明下一次启动一定安全。
+
+卸载还要求原生 managed_state=quiescent 和没有待投递输入。根成员确有待投递输入，存在待办与释放互相等待的风险；PR5/6 没有对应 pending/reset 却仍驻留，完整卸载原因尚不明确。历史 terminal unknown 会在实际原生状态查询时重新检查，不能仅据旧记录认定永久阻塞。下一判别应取得同 execution identity 的实际 get_state.managed_state/status/reason；官网没有可访问的 live RPC，当前导出缺少此状态，不能宣称已证实整条死锁或用调高阈值代替根因修复。源码和冻结包保持原样。

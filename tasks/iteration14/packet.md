@@ -12,6 +12,32 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 
 ## 当前事实与下一步
 
+2026-10-02 10:48 CST，用户要求先停下来用树整理，主线暂停新的技能改造和额外启动；在途保全继续。用户明确说明 baseline 是其主动暂停，并授权将下一项改进集中在 braid-collaboration 与 ARC 需求方法，热修复到 I14 系列。当前独立分析报告实际对应官网 Flash/Sheet，arc-requirements 的现行技能名称是 arc-bench；不把它记作尚未取得正式结果的本地 GLM/Sheet。
+
+```text
+当前实验与改进
+├─ I13
+│  ├─ Flash/Sheet：正式74分，独立过程分析完成
+│  ├─ Flash/GitHub：旧run取消保全；main/readback通过，完整operation回传超时；新生成未启动
+│  ├─ GLM/GitHub：旧source停写保全，ARC恢复材料与共用修复就绪；接续尚未启动
+│  └─ GLM/Sheet：同上；尚未完成生成或取得正式评分
+├─ I14-0：四variant×两题；dispatcher暂挂，不新增实验矩阵
+│  ├─ baseline/GitHub：用户主动暂停，保持暂停
+│  ├─ cleaner/GitHub：旧source已物理停止，聚合修复读回通过，保全/热恢复继续
+│  ├─ reviewer/GitHub：实际容器仍running，Console展示修复已部署
+│  ├─ e2e/GitHub及四项Sheet：五项仍待派发
+│  └─ 各组共有技能改进：新授权，尚未实现或热部署；保留各variant机制差异
+└─ 共同设施
+   ├─ Braid资源等待/快照内存与新增证据：共用源码已编译，旧运行不自动更新
+   ├─ ARC-only与模型DX：源码已完成，具体部署以各恢复/新冻结回执为准
+   ├─ prepared-workspace输运：共享owner已改压缩tar回传，实际成功准备仍待反馈
+   └─ WSL/SSH/Docker/存储：homelab独立会话诊断，主线不重启daemon或WSL
+```
+
+用户指定的 homelab / GPT-5.6-Sol / medium 会话已创建并实际开始：[WSL 实验基础设施：恢复传输阻塞排查与修复](codex://threads/01a0fa82-8883-7cc0-942b-8cf8cb1a16c3)。它负责宿主设施，Factory26 lab/arc_bench/recovery.py 仍由 i14_arc_only_implementation 单独负责，官网恢复会话只读该共享文件。主线保留整体协调及启动门控。修复只针对有证据的原因，不由Docker CLI超时认定daemon全挂、OOM或磁盘损坏。
+
+技能改进的判断依据是分析报告已经区分的义务交接、原文与新增约定冲突、真实跨层调用及合并证据充分性；不是单纯增加读取次数、篇幅或模板。改进保持通用Harness边界，ARC特定方法仍归独立技能与根Issue入口。热修复须记录各run的旧/新技能身份与实际采用时点，避免把混合版本的过程视为从启动起统一使用新方法；不将隐藏评分或具体失分答案送入仍生成的Agent。
+
 新PR创建默认draft已完成并提交e7d88e7，保留--draft兼容，继续用pr ready/--undo；不改旧PR、迁移或request-id重试状态。主线独立读取前后SQLite、具体merge错误、实际Git效果和编译原件；原生session数量为零，准备阶段真实blocked不当成功运行。[draft记录](draft.md)保存命令、错误和覆盖边界。
 
 review接缝已查明：ready不是请求验收，PR单负责人改派会停止实施者；需要独立的review请求与执行责任。cleaner的原生继承能力已核对Pi0.85.1实际源码，不能直接用会切换主runtime的fork/clone。advisor已独立建议按需维护操作、结束后一次提交、固定候选review和三个独立variant方向。产品边界、提交竞争与实验判据归[机制方案](mechanisms.md)；I13承接与语言依据归[证据对账](evidence.md)。原始观察归runs/iteration14；确定的Braid产品契约回归其PRD/TDD，Factory实验安排回归对应variant/配方。
@@ -53,3 +79,25 @@ I13目标与当前过程验收分别归 tasks/iteration13/packet.md、tasks/iter
 四份Linux ZIP已冻结在 runs/iteration14/i14-0/packages，共同Braid二进制SHA256为 e002edb848395698ab83d2221ec40a13bcfa8c2e379bf7ca26f90389d02260e8，源码清单和包身份归同目录 linux-braid/source-identity.json、packages.json。根目录.env.i13key已不存在，工具key复用I13-2冻结私有tool-env.json，不在聊天或仓库正文中记录值。
 
 已采用 [有限实验dispatcher](../../experiments/i14-0/README.md)，复用独立设施会话的operation prepare/run、shared admission、采集和自动应用重放。每目标稳定一个operation目录；逐项选择root、保存selection、冻结私有MODELenv及recipe，再等实际admission事实才放出下一项。snapshot不能预约槽，真正五槽限制由admit实现。模型承诺点是该项派发冻结，未来未派发目标可采用新结果；冻结到实际准入存在短暂窗口，不能宣称所有尚未实际执行项都可原地切换。发生失联或明确失败时安全停止队列并保留原operation，身份核查后恢复同一记录，不新增尝试。唯一active-matrix是聚合引用，各operation保留自己的采集目录，Luna每十分钟消费已有证据。
+
+## 2026-10-02 ARC-only 与共用 Braid 修复
+
+用户要求后续 I14 不在任何地方使用自有模型 API；Context7/Exa 工具凭据不属于模型供应商切换。本次 canonical 四入口、子 Agent 原生 modelScope、e2e 和 dispatcher 已拒绝非 ARC endpoint/分离 key，并移除继承的供应商认证。实际四次 prepare-only 完成，九模板均 ARC，同一 FACTORY26_API_KEY；四个非 ARC URL 在创建输出目录前被拒绝。详细边界和证据归 [arc-only.md](arc-only.md)。运行/排队的旧冻结制品没有现场修改，不能声称已经部署新保护。
+
+用户要求明确 OOM 缺陷的修复覆盖全部 Braid variant。共用 sources/braid 已实施 claim 前的资源就绪保护、对象快照排序内存改进以及原生状态/capture 内存证据；公共 collector 补充存活进程内存归因。新制品和热恢复须绑定修复编译身份，旧冻结原件保留。当前三个 I14 运行不因开发源码更新自动改变；I13 正在优先停写保全并使用修复包恢复。I14 dispatcher 为保护本地 I13 两个替换槽位已暂挂；各生成容器的实际状态见下方读回，恢复调度以对应 operation/admission 回执为准。
+
+用户已授权独立 GPT-6.1-Sol/medium 会话 01a0fa4f-471a-7963-a4e5-bc4a6071113e 改进实验 DX，直接暴露 desired/frozen/actual 模型、endpoint 与配置来源，避免依赖专门审计才能核对正常运行事实。该会话不启动或改动实际实验。后续 GPT-6.1-Sol 统一 medium。
+
+## 2026-10-02 隐藏评论与 reviewer 展示
+
+用户明确授权将同一隐藏理由的评论压成一行，例如 `# Comments 759,756,892 hidden (reason)`，隐藏 thread 仅保留 hidden 的根评论参与新上下文，并立即至少热修复 I14 cleaner。独立 GPT-6.1-Sol/medium 会话 `01a0fa5d-2c5e-7963-b2a5-3a29bb5e74df` 拥有 context renderer 与 cleaner-hidden-context 的私有恢复操作；它编译的新 source 应包含已完成的共用 Braid 资源修复。旧原生历史不会因 hide 自动删除，新投影与恢复后实际发送需分别核验。
+
+用户另要求调查已合并 reviewer run 的 PR2 为何在 Exp Console 看不到 reviewer。独立同模型/effort 会话 `01a0fa5e-eb26-7f23-bca6-2949d9d3416a` 负责核对真实 review/session 记录及修复 Console 展示，沿用唯一现有服务；不据 UI 缺失宣称底层 reviewer 未运行，也不伪造历史。两会话不恢复 I14 dispatcher、不占 I13 替换槽、不停止其它生成。
+
+主线 Braid/collector 源码已完成，可冻结共同修复；具体编译身份与共享 recovery 接线就绪见 I13-2 packet 的 `linux-fix/handoff.json`。新 cleaner 自身代码必须另行编译及绑定新身份。
+
+截至10:48 CST独立读取实际Docker Unix API，baseline 容器9a780621…为 paused，用户已确认这是其主动暂停；cleaner72d333b8…已为本任务物理停止，Pid0/Exit137，属于主动切换；reviewer b32fc9ef…仍running，三者均OOMKilled=false。不能笼统称三个都在生成。cleaner独立会话已提交聚合修复 `33b9e382`，同一真实root投影从10696减至4833 bytes，77个同reason隐藏根聚合一行；该现场没有隐藏thread实例，thread规则尚缺真实运行实例验收。新Linux binary `63fdabce…` 含共用内存修复；当前完整保全/热恢复仍在继续，未据编译声称已热部署。
+
+Console 展示修复已完成并提交 `226449f8`，部署到唯一现有 service `8cc80cad-d873-49ed-ab49-e958ba8852a3`，沿用 http://127.0.0.1:8765。真实 PR2 存在 reviewer-1 的 review #1、Approved 结论及对应 agent/provider/native session；已通过实际浏览器操作核对 PR 到 review、会话、原生对话和工具内容的导航。证据与历史离线展示限制归 [Console reviewer packet](../console-reviewer/packet.md)。这证明 reviewer 的执行及展示关系，不单独证明应用验收结论正确。
+
+cleaner 切换还须处理 Console 访问入口。独立恢复会话已停止仅属于旧 cleaner 的 accessor，避免切换期间发生外部 CLI 写入；共享 HTTP 服务及其它运行入口保留。原 run 登记不能改指向另一个现场。恢复会话负责提供新 physical run、volume/container、Braid namespace 与 binary SHA；主会话负责通过原唯一服务登记接续运行并保留旧运行与恢复来源关系。新 accessor 须使用 `63fdabce…` binary，不能使用仍带旧 context renderer 的 CLI。不因等待 Console 登记阻塞恢复操作自身的保全、准备及生成。
