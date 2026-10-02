@@ -14,13 +14,21 @@ def main(argv=None):
     compiled = commands.add_parser('compile', help='将显式 intent 编译为冻结 recipe，不安装或运行')
     compiled.add_argument('intent', type=Path)
     compiled.add_argument('--directory', type=Path, required=True)
+    compiled.add_argument('--environment', type=Path)
     doctor = commands.add_parser('doctor', help='只读检查声明资产和宿主，不安装或预约')
     doctor.add_argument('recipe', type=Path)
     doctor.add_argument('--deployment', type=Path)
     doctor.add_argument('--json', action='store_true')
+    doctor.add_argument('--environment', type=Path)
     build = commands.add_parser('build')
     build.add_argument('recipe', type=Path)
     build.add_argument('--directory', type=Path, required=True)
+    build.add_argument('--environment', type=Path)
+    recover = commands.add_parser('recover', help='离线派生恢复材料及新run，不停止来源或启动模型')
+    recover.add_argument('source', type=Path)
+    recover.add_argument('--intent', type=Path, required=True)
+    recover.add_argument('--environment', type=Path, required=True)
+    recover.add_argument('--directory', type=Path, required=True)
     start = commands.add_parser('start')
     start.add_argument('experiment', type=Path)
     start.add_argument('--deployment', type=Path)
@@ -33,8 +41,9 @@ def main(argv=None):
     control = commands.add_parser('control')
     control.add_argument('experiment', type=Path)
     control.add_argument('attempt')
-    control.add_argument('command', choices=['stop', 'pause', 'resume', 'export'])
+    control.add_argument('command', choices=['stop', 'pause', 'resume', 'export', 'repair-ready'])
     control.add_argument('--request-id')
+    control.add_argument('--service', choices=['collector', 'resource_evidence'])
     stopped = commands.add_parser('stop-evidence')
     stopped.add_argument('experiment', type=Path)
     stopped.add_argument('attempt')
@@ -104,15 +113,17 @@ def main(argv=None):
     args = parser.parse_args(argv)
     if args.action == 'compile':
         from .compiler import compile_intent
-        value = compile_intent(args.intent, args.directory)
+        value = compile_intent(args.intent, args.directory, environment=args.environment)
     elif args.action == 'doctor':
         from . import readiness
-        value = readiness.inspect(args.recipe, args.deployment)
+        value = readiness.inspect(args.recipe, args.deployment, environment=args.environment)
         if not args.json:
             print(readiness.render(value))
             return 0
     elif args.action == 'build':
-        value = controller.build(args.recipe, args.directory)
+        value = controller.build(args.recipe, args.directory, environment=args.environment)
+    elif args.action == 'recover':
+        value = controller.recover(args.source, args.intent, args.directory, environment=args.environment)
     elif args.action == 'start':
         value = controller.start(args.experiment, deployment=args.deployment)
     elif args.action in {'status', 'monitor', 'wait'}:
@@ -126,7 +137,10 @@ def main(argv=None):
             print(controller.render(value))
             return 0
     elif args.action == 'control':
-        value = controller.control(args.experiment, args.attempt, args.command, request_id=args.request_id)
+        if (args.command == 'repair-ready') != (args.service is not None):
+            parser.error('repair-ready requires --service; other controls do not accept it')
+        value = controller.control(args.experiment, args.attempt, args.command, request_id=args.request_id,
+                                   parameters={'service': args.service} if args.service else None)
     elif args.action == 'stop-evidence':
         value = controller.stop_evidence(args.experiment, args.attempt, args.output)
     elif args.action == 'import-source-stop':

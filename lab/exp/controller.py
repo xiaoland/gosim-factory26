@@ -18,9 +18,7 @@ ROOT = Path(__file__).resolve().parents[1]
 FINISHED = {'exited', 'stopped', 'failed'}
 
 
-def _source(destination):
-    """Freeze explicit modules, not a mutable directory-wide controller snapshot."""
-    destination.mkdir(parents=True)
+def _source_files():
     files = [ROOT / 'exp' / '__init__.py', ROOT / '__init__.py', ROOT / '__main__.py', ROOT / 'control.py',
              ROOT / 'records.py', ROOT / 'assets.py', ROOT / 'otlp.py', ROOT / 'docker_endpoint.py']
     files += list((ROOT / 'exp').glob('*.py'))
@@ -28,15 +26,70 @@ def _source(destination):
     files += [ROOT / 'arc_bench' / name for name in (
         '__init__.py', 'playground.py', 'arc_bench_adapter.py', 'arc_bench_noop.py',
         'workspace_archive.py', 'docker_workspace.py', 'docker_admission.py', 'arc_artifacts.py', 'traceability.py')]
+    files += [ROOT.parent / 'scripts' / name for name in ('__init__.py', 'agent_support.py')]
+    files += [ROOT.parent / 'submission/exp_checkpoint.py']
+    return list(dict.fromkeys(files))
+
+
+def _source(destination):
+    """Freeze explicit modules, not a mutable directory-wide controller snapshot."""
+    destination.mkdir(parents=True)
+    files = _source_files()
     for source in dict.fromkeys(files):
-        target = destination / 'lab' / source.relative_to(ROOT)
+        target = destination / source.relative_to(ROOT.parent)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
     submission = destination / 'submission'
-    submission.mkdir()
+    submission.mkdir(exist_ok=True)
     (submission / '__init__.py').write_text('')
     shutil.copy2(ROOT.parent / 'submission/exp_checkpoint.py', submission / 'exp_checkpoint.py')
     return files
+
+
+def _executor(directory, store, runtime, selection):
+    """Reuse one frozen source/dependency assembly and runner archive across runs."""
+    files = {str(path.relative_to(ROOT.parent)): digest(path) for path in _source_files()}
+    dependency = {'files': files, 'runtime': canonical(runtime['identity']),
+                  'packages': runtime.get('packages'), 'python': runtime.get('python_version')}
+    key = canonical(dependency)
+    cache = Path(selection['selection']['cache_root']) / 'executors' / key
+    index = cache / 'production.json'
+    with locked(cache.parent / (key + '.lock')):
+        if index.exists():
+            value = read(index)
+            if value['dependencies'] != dependency:
+                raise ValueError('executor production selection changed')
+            artifacts.verify(store, value['code'])
+            if digest(cache / 'runner.pyz') != value['runner_sha256']:
+                raise ValueError('cached runner archive changed')
+        else:
+            cache.mkdir(parents=True, exist_ok=True)
+            source = cache / 'source'
+            if source.exists():
+                source.rename(cache / new_id('incomplete-source'))
+            _source(source)
+            _dependency_tree(source, runtime)
+            if {str(path.relative_to(ROOT.parent)): digest(path) for path in _source_files()} != files:
+                raise ValueError('execution sources changed during production')
+            code = artifacts.publish(store, source, 'executor-code',
+                provenance={'producer': 'exp.executor', 'production_key': key, 'dependencies': dependency},
+                consumer='executor-' + key, purpose='frozen-code', request_id='executor-' + key)
+            zipapp.create_archive(source, cache / 'runner.pyz', main='lab.exp.runner:main',
+                                  interpreter='/usr/bin/env python3', compressed=True)
+            value = {'dependencies': dependency, 'code': code, 'runner_sha256': digest(cache / 'runner.pyz')}
+            atomic(index, value)
+        consumer = 'run-' + canonical(str(directory))
+        artifacts.retain(store, value['code'], consumer=consumer, purpose='executor',
+                         request_id='retain-' + canonical([consumer, value['code']]))
+        payload = artifacts.resolve(store, value['code'])
+        for name, target in (('source', payload), ('runner.pyz', cache / 'runner.pyz')):
+            path = directory / name
+            if path.is_symlink() and path.resolve() == target.resolve():
+                continue
+            if path.exists() or path.is_symlink():
+                raise ValueError('run frozen code path already occupied: ' + name)
+            path.symlink_to(target.resolve(), target_is_directory=name == 'source')
+    return value['code']
 
 
 def _runtime(path, purpose='controller'):
@@ -132,8 +185,10 @@ def validate_recipe(spec):
                 continue
             if not isinstance(binding, dict) or not (
                     isinstance(binding.get('source'), str) or 'artifact_id' in binding and 'manifest_sha256' in binding or
-                    set(binding) == {'from_job', 'output'}):
+                    set(binding) == {'from_job', 'output'} or set(binding) == {'from_production'}):
                 raise ValueError('input must explicitly reference a source or artifact')
+            if 'from_production' in binding and binding['from_production'] not in spec.get('productions', {}):
+                raise ValueError('input names an undeclared material production')
             if 'from_job' in binding and job['purpose'] != 'evaluate':
                 raise ValueError('published job outputs are only consumed by independent evaluation')
         for output in job.get('outputs', []):
@@ -150,11 +205,23 @@ def validate_recipe(spec):
     return spec
 
 
-def build(spec_path, directory):
+def build(spec_path, directory, *, environment=None):
     spec_path, directory = Path(spec_path).resolve(strict=True), Path(directory).resolve()
+    raw = read(spec_path)
+    if raw.get('kind') == 'factory26.exp.intent':
+        from .compiler import compile_intent
+        bundle = directory.parent / (directory.name + '.definition')
+        compiled = compile_intent(spec_path, bundle, environment=environment)
+        spec_path = Path(compiled['recipe'])
+    elif environment is not None:
+        from .environment import resolve
+        raw = resolve(raw, environment)
     definition_bytes = spec_path.read_bytes()
     recipe_sha256 = hashlib.sha256(definition_bytes).hexdigest()
     spec = require(json.loads(definition_bytes), 'experiment')
+    for field in ('environment_resolution', 'resolved_productions'):
+        if field in raw:
+            spec[field] = raw[field]
     validate_recipe(spec)
     if (directory / 'experiment.json').exists():
         manifest = require(read(directory / 'experiment.json'), 'experiment')
@@ -178,6 +245,17 @@ def build(spec_path, directory):
     atomic(directory / 'build-intent.json', record('build', recipe_sha256=recipe_sha256,
                                                   started_at=time.time(), phase='building'))
     store = directory / 'artifacts'
+    if spec.get('environment_selection'):
+        binding = spec.get('environment_resolution', spec['environment_selection'])
+        shared = Path(binding['selection']['cache_root']) / 'artifacts'
+        shared.mkdir(parents=True, exist_ok=True)
+        if store.is_symlink():
+            if store.resolve() != shared.resolve():
+                raise ValueError('run artifact store differs from frozen environment')
+        elif store.exists():
+            raise ValueError('new environment run cannot replace an existing private artifact store')
+        else:
+            store.symlink_to(shared.resolve(), target_is_directory=True)
     bindings_path = directory / 'build-bindings.json'
     bindings = read(bindings_path) if bindings_path.exists() else {}
     def publish_input(key, origin, kind, provenance, expected=None):
@@ -202,11 +280,19 @@ def build(spec_path, directory):
             compilation_evidence[source] = publish_input('compile-input/' + canonical(source), origin, 'compiler-input',
                 {'component': 'exp.compiler', 'source': source, 'source_sha256': expected_sha256},
                 {'kind': 'file', 'sha256': expected_sha256, 'executable': bool(origin.stat().st_mode & 0o111)})
-        runtime_path = (spec_path.parent / spec['controller_runtime']).resolve(strict=True)
+        runtime_paths = {}
+        if spec.get('environment_selection'):
+            from .environment import produce_runtimes
+            runtime_paths = produce_runtimes(spec['environment_selection'],
+                ('controller', 'runner') if any(job['backend']['kind'] != 'hosted' for job in spec['jobs']) else ('controller',),
+                resolution=spec.get('environment_resolution'))
+        runtime_path = (spec_path.parent / spec.get('controller_runtime', runtime_paths.get('controller', ''))).resolve(strict=True)
         runtime = _runtime(runtime_path)
         runner_runtime = None
-        if any(job.get('backend', {}).get('kind') == 'local' for job in spec['jobs']):
-            runner_runtime = _runtime((spec_path.parent / spec['runner_runtime']).resolve(strict=True), 'runner')
+        if any(job.get('backend', {}).get('kind') != 'hosted' for job in spec['jobs']):
+            runner_runtime = _runtime((spec_path.parent / spec.get('runner_runtime', runtime_paths.get('runner', ''))).resolve(strict=True), 'runner')
+        from .environment import produce_materials
+        productions = produce_materials(spec, directory, store) if spec.get('productions') else {}
         jobs = []
         for raw in spec['jobs']:
             job = dict(raw)
@@ -230,6 +316,9 @@ def build(spec_path, directory):
                     else:
                         artifacts.verify(store, ref)
                     inputs[name] = ref
+                elif isinstance(value, dict) and set(value) == {'from_production'}:
+                    produced = productions[value['from_production']]
+                    inputs[name] = produced['package'] if kind == 'hosted' and name == 'agent' else produced['artifact']
                 elif isinstance(value, dict) and set(value) == {'from_job', 'output'}:
                     identifier(value['from_job']); identifier(value['output'])
                     if job['purpose'] != 'evaluate':
@@ -243,6 +332,11 @@ def build(spec_path, directory):
             for field in ('checkpoint', 'prepared', 'stop_evidence'):
                 if field in job:
                     binding = job[field]
+                    if isinstance(binding, dict) and set(binding) == {'from_production'}:
+                        ref = productions[binding['from_production']]['artifact']
+                        inputs[field] = ref
+                        job[field] = ref
+                        continue
                     if not isinstance(binding, dict) or 'source' not in binding:
                         raise ValueError(f'{field} must reference explicit producer evidence source')
                     if 'source_identity' in binding and artifacts.contents((spec_path.parent / binding['source']).resolve(strict=True)) != binding['source_identity']:
@@ -261,7 +355,9 @@ def build(spec_path, directory):
                             row['name'] == binding['output'] for row in source_job.get('outputs', [])):
                         raise ValueError('evaluation input must name a declared generation output')
         source = directory / 'source'
-        if 'executor-code' in bindings:
+        if spec.get('environment_selection'):
+            code = _executor(directory, store, runtime, spec.get('environment_resolution', spec['environment_selection']))
+        elif 'executor-code' in bindings:
             artifacts.materialize(store, bindings['executor-code'], source)
             code = bindings['executor-code']
         else:
@@ -270,8 +366,9 @@ def build(spec_path, directory):
             _source(source)
             _dependency_tree(source, runtime)
             code = publish_input('executor-code', source, 'executor-code', {'source': 'explicit exp module set'})
-        zipapp.create_archive(source, directory / 'runner.pyz', main='lab.exp.runner:main',
-                              interpreter='/usr/bin/env python3', compressed=True)
+        if not spec.get('environment_selection'):
+            zipapp.create_archive(source, directory / 'runner.pyz', main='lab.exp.runner:main',
+                                  interpreter='/usr/bin/env python3', compressed=True)
         experiment_id = identifier(spec.get('experiment_id') or new_id('experiment'))
         value = record('experiment', experiment_id=experiment_id, authorization=spec['authorization'],
                        jobs=jobs, budget=spec['budget'], storage=spec['storage'], max_parallel=spec['max_parallel'],
@@ -284,6 +381,10 @@ def build(spec_path, directory):
         if 'compilation' in spec:
             value['compilation'] = spec['compilation']
             value['compilation_evidence'] = compilation_evidence
+        for field in ('environment_selection', 'environment_resolution', 'derivation'):
+            if field in spec:
+                value[field] = spec[field]
+        value['productions'] = productions
         atomic(directory / 'experiment.json', value)
         atomic(directory / 'build-intent.json', record('build', phase='published',
               experiment_id=experiment_id, recipe_sha256=recipe_sha256, finished_at=time.time()))
@@ -315,7 +416,8 @@ def verify(directory):
         if snapshot['contents']['kind'] != 'file' or snapshot['contents']['sha256'] != definition['sha256'] or definition['sha256'] != value['recipe_sha256']:
             raise ValueError('consumed definition snapshot differs from the recorded recipe identity')
     code_manifest = artifacts.verify(store, value['code'])
-    if artifacts.contents(directory / 'source') != code_manifest['contents']:
+    if ((directory / 'source').resolve() != (store / value['code']['artifact_id'] / 'payload').resolve() and
+            artifacts.contents(directory / 'source') != code_manifest['contents']):
         raise ValueError('installed executor code differs from frozen artifact')
     if digest(directory / 'runner.pyz') != value['runner_sha256']:
         raise ValueError('frozen runner code changed')
@@ -324,6 +426,67 @@ def verify(directory):
             if 'from_job' not in ref:
                 artifacts.verify(store, ref)
     return value
+
+
+def recover(source, intent_path, directory, *, environment):
+    """Derive offline prepared inputs; neither stop the source nor dispatch models."""
+    source = Path(source).resolve(strict=True)
+    intent_path = Path(intent_path).resolve(strict=True)
+    directory = Path(directory).resolve()
+    intent = require(read(intent_path), 'intent')
+    recovery = intent.pop('recovery', None)
+    if not isinstance(recovery, dict) or set(recovery) != {'production', 'target', 'repair'}:
+        raise ValueError('recover intent needs recovery {production, target, repair}')
+    name = identifier(recovery['production'])
+    productions = intent.setdefault('productions', {})
+    if name in productions:
+        raise ValueError('recovery production is already declared')
+    checkpoint = read(source / 'harness-manifest.json')
+    if checkpoint.get('kind') != 'factory26.harness.checkpoint':
+        raise ValueError('recover SOURCE must be an explicit Harness checkpoint')
+    productions[name] = {'producer': 'prepare', 'source': str(source),
+                         'target': recovery['target'], 'repair': recovery['repair']}
+    intent['derivation'] = {'kind': 'recovery', 'source': str(source),
+        'source_identity': checkpoint['source_identity'], 'checkpoint_id': checkpoint['checkpoint_id'],
+        'manifest_sha256': digest(source / 'harness-manifest.json'),
+        'intent_sha256': digest(intent_path), 'execution_permission': False}
+    # Resolve original relative paths before moving the immutable definition outside run data.
+    from .environment import resolve
+    intent = resolve(intent, environment, base=intent_path.parent)
+    def paths(job):
+        for name, binding in list(job.get('inputs', {}).items()):
+            if isinstance(binding, str):
+                job['inputs'][name] = str((intent_path.parent / binding).resolve(strict=True))
+            elif isinstance(binding, dict):
+                for field in ('source', 'store'):
+                    if field in binding:
+                        binding[field] = str((intent_path.parent / binding[field]).resolve(strict=True))
+        for field in ('checkpoint', 'prepared', 'stop_evidence'):
+            if field in job and 'source' in job[field]:
+                job[field]['source'] = str((intent_path.parent / job[field]['source']).resolve(strict=True))
+        backend = job.get('backend', {})
+        for target in (backend, backend.get('external_docker', {})):
+            handoff = target.get('authority_handoff', {})
+            if set(handoff) == {'source'}:
+                handoff['source'] = str((intent_path.parent / handoff['source']).resolve(strict=True))
+    for case in intent['cases'].values():
+        paths(case)
+    for variant in intent['variants'].values():
+        paths(variant['generate'])
+    if 'job' in intent['evaluation_policy']:
+        paths(intent['evaluation_policy']['job'])
+    for field in ('controller_runtime', 'runner_runtime'):
+        if field in intent['execution']:
+            intent['execution'][field] = str((intent_path.parent / intent['execution'][field]).resolve(strict=True))
+    for cases in intent['selection_policy'].get('scores', {}).values():
+        for binding in cases.values():
+            binding['source'] = str((intent_path.parent / binding['source']).resolve(strict=True))
+    definition = directory.parent / (directory.name + '.recovery-intent.json')
+    with locked(definition.with_suffix('.lock')):
+        if definition.exists() and read(definition) != intent:
+            raise ValueError('recovery definition belongs to different inputs; choose a new run')
+        atomic(definition, intent)
+    return build(definition, directory, environment=environment)
 
 
 def _backend(attempt):
@@ -336,8 +499,10 @@ def _backend(attempt):
 
 def source_stop_binding(prepared, stop):
     """Check the saved binding; a matching record is not a current stop proof."""
-    if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 1:
+    if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 2:
         raise Blocked('prepared artifact needs the public Harness prepared contract')
+    if prepared.get('status') != 'complete' or prepared.get('acquisition', {}).get('status') != 'writer-closed':
+        raise Blocked('prepared input lacks complete semantics or continuous writer-closed acquisition')
     if not stop:
         raise Blocked('prepared input valid; source stop evidence missing')
     if stop.get('kind') != 'factory26.exp.stop-evidence' or stop.get('schema_version') != 1:
@@ -357,7 +522,7 @@ def _launch_gate(attempt_dir, attempt):
     prepared_path = artifacts.resolve(store, job['prepared'])
     manifest_path = prepared_path / 'harness-manifest.json' if prepared_path.is_dir() else prepared_path
     prepared = read(manifest_path)
-    if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 1:
+    if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 2:
         raise Blocked('prepared artifact needs the public Harness prepared contract')
     from submission.exp_checkpoint import validate
     validate(prepared_path)
@@ -390,10 +555,12 @@ def _allocate(directory, manifest, job, *, retry_of=None, deployment=None, retry
     execution_runtime = manifest.get('runner_runtime') or manifest['controller_runtime']
     atomic(path / 'deployment.json', {'runtime': {'python': execution_runtime['launcher'],
            'source': str(directory / 'source'), 'identity': execution_runtime['identity'], 'asset': execution_runtime}, 'runner_path': str(directory / 'runner.pyz'),
+           'executor_code': manifest['code'],
            **(deployment or {})})
     try:
-        for name, ref in job['inputs'].items():
-            artifacts.materialize(directory / 'artifacts', ref, path / 'inputs' / name)
+        if job['backend']['kind'] != 'docker':
+            for name, ref in job['inputs'].items():
+                artifacts.materialize(directory / 'artifacts', ref, path / 'inputs' / name)
         _launch_gate(path, value)
         return path, value
     except BaseException as exc:
@@ -462,14 +629,6 @@ def work(directory):
                     executor = _backend(attempt)
                     try:
                         observation = executor.observe(path, live=True)
-                        if attempt['job']['backend']['kind'] == 'docker' and observation.get('phase') in FINISHED and observation.get('archive') == 'preserved':
-                            if not (path / 'export.json').exists():
-                                export_request = request(attempt['attempt_id'], 'export', {},
-                                    request_id='terminal-export-' + attempt['attempt_id'], incarnation=observation['incarnation_id'])
-                                exported = executor.control(path, export_request)
-                                if exported.get('status') != 'applied':
-                                    raise Blocked('terminal artifact transport unconfirmed: ' + json.dumps(exported))
-                            observation = executor.observe(path, live=True)
                         if observation.get('phase') in FINISHED:
                             if attempt['job']['backend']['kind'] == 'hosted' and observation.get('archive', {}).get('status') == 'not-exported':
                                 observation = executor.export(path)
@@ -477,8 +636,9 @@ def work(directory):
                                 _ingest_telemetry(path)
                         if observation.get('phase') in {'unaccepted', 'not-dispatched', 'accepted', 'snapshot-saved', 'run-created'} or observation.get('execution') == 'unaccepted':
                             if (path / 'allocation-error.json').exists():
-                                for name, ref in attempt['job']['inputs'].items():
-                                    artifacts.materialize(directory / 'artifacts', ref, path / 'inputs' / name)
+                                if attempt['job']['backend']['kind'] != 'docker':
+                                    for name, ref in attempt['job']['inputs'].items():
+                                        artifacts.materialize(directory / 'artifacts', ref, path / 'inputs' / name)
                                 _launch_gate(path, attempt)
                                 (path / 'allocation-error.json').rename(path / (new_id('allocation-error') + '.json'))
                             observation = executor.dispatch(path)
@@ -511,28 +671,42 @@ def work(directory):
                     atomic(path / 'dispatch-observation.json', observation)
                     attempts.append((path, attempt, observation))
                 assigned = {row[1]['job_id'] for row in attempts}
-                active = [row for row in attempts if row[2].get('phase') not in FINISHED or
-                          (row[1]['job']['backend']['kind'] != 'hosted' and row[2].get('archive') == 'pending')]
+                active = [row for row in attempts if row[2].get('phase') not in FINISHED]
                 if any(row[2].get('phase') == 'unknown' or row[2].get('pending') or
-                       row[2].get('archive') == 'failed' or (row[0] / 'allocation-error.json').exists() for row in attempts):
+                       (row[0] / 'allocation-error.json').exists() for row in attempts):
                     raise Blocked('an attempt has unknown effects or preparation failure; retain its identity and inspect')
                 for job in manifest['jobs']:
                     if job['id'] in assigned or len(active) >= manifest['max_parallel']:
                         continue
-                    resolved = dict(job, inputs=dict(job['inputs']))
+                    resolved = dict(job, inputs=dict(job['inputs']), input_locations={})
                     unavailable = False
                     for name, binding in job['inputs'].items():
                         if 'from_job' not in binding:
                             continue
                         producers = [row for row in attempts if row[1]['job_id'] == binding['from_job']]
-                        if not producers or producers[-1][2].get('phase') not in FINISHED or producers[-1][2].get('archive') == 'pending':
+                        if not producers or producers[-1][2].get('phase') not in FINISHED:
                             unavailable = True
                             break
                         production = producers[-1][2]
                         ref = production.get('artifacts', {}).get(binding['output'])
-                        if production.get('exit_code') != 0 or not ref:
+                        if production.get('exit_code') != 0:
                             raise Blocked('generation has no successful frozen output for evaluation: ' + binding['from_job'])
-                        artifacts.verify(directory / 'artifacts', ref)
+                        if not ref:
+                            if production.get('outputs') == 'sealed':
+                                raise Blocked('producer sealed without required named output: ' + binding['from_job'] + '/' + binding['output'])
+                            unavailable = True
+                            break
+                        location = production.get('output_locations', {}).get(binding['output'])
+                        if location:
+                            target = job['backend']
+                            if target['kind'] == 'docker' and location['domain_identity'].get('daemon_id') == target['endpoint']['daemon_id']:
+                                resolved['input_locations'][name] = location
+                            else:
+                                from .backends import export_named
+                                export_named(producers[-1][0], ref, location, directory / 'artifacts')
+                                artifacts.verify(directory / 'artifacts', ref)
+                        else:
+                            artifacts.verify(directory / 'artifacts', ref)
                         resolved['inputs'][name] = ref
                     if unavailable:
                         continue
@@ -551,6 +725,11 @@ def work(directory):
                     active.append((path, attempt, result)); attempts.append((path, attempt, result))
                     assigned.add(job['id'])
                 if len(assigned) == len(manifest['jobs']) and not active:
+                    if any(row[2].get('archive') == 'pending' for row in attempts):
+                        time.sleep(2)
+                        continue
+                    if any(row[2].get('archive') == 'failed' for row in attempts):
+                        raise Blocked('executions finished; terminal archive needs its legal continuation')
                     owner.update(phase='completed', finished_at=time.time(),
                                  outcome='failed' if any(row[2].get('exit_code') not in (None, 0) or
                                                         row[2].get('phase') == 'failed' for row in attempts) else 'finished',
@@ -619,8 +798,7 @@ def available_actions(job, attempt, stage, value):
                     'evidence': stage['inputs']['stop_evidence']['evidence'], 'current_observation': 'required-on-launch'}
         if len(value['attempts']) + len(value.get('pending_retries', [])) >= value['budget']['max_attempts']:
             stage['blockers'].append({'component': 'budget', 'reason': '冻结 attempt 预算已使用或预约，不能新增执行'})
-        active = [row for row in value['attempts'] if row['execution'].get('phase', row['execution'].get('execution')) not in FINISHED or
-                  row['backend'] != 'hosted' and row['execution'].get('archive') == 'pending']
+        active = [row for row in value['attempts'] if row['execution'].get('phase', row['execution'].get('execution')) not in FINISHED]
         if any(row['execution'].get('phase', row['execution'].get('execution')) == 'unknown' or row['execution'].get('pending') for row in active):
             stage['blockers'].append({'component': 'execution', 'reason': '其它 attempt 的副作用尚未确认，controller 不继续派发'})
         if len(active) >= value['max_parallel']:
@@ -640,6 +818,14 @@ def available_actions(job, attempt, stage, value):
         return [action('inspect', '保存记录身份不一致，先核对原件；不发出控制')]
     if phase == 'unknown' or observed.get('pending') or attempt.get('allocation-error.json') or attempt.get('launch-error.json'):
         return [action('inspect', '保留当前 attempt，先核对原始错误和缺失证明；不重跑入口')]
+    if phase == 'readiness_failed' and observed.get('entry_status') == 'not_requested':
+        services = observed.get('services', {})
+        repairs = [action('repair-ready', '修复失败服务 ' + name + '；保留同一入口与已就绪服务',
+                          prefix + ['control', directory, attempt['attempt_id'], 'repair-ready', '--service', name],
+                          ('先解决原始服务错误；调用时核对原 supervisor 出生身份、未请求入口及剩余 wall 预算',))
+                   for name, service in services.items()
+                   if name in ('collector', 'resource_evidence') and service.get('status') == 'failed']
+        return repairs or [action('inspect', 'ready 服务失败但缺少公开服务身份，先核对原件')]
     if phase not in FINISHED:
         if alive:
             return [action('wait', '等待当前 attempt；不新增入口', prefix + ['wait', directory, '--timeout', '60'])]
@@ -648,20 +834,26 @@ def available_actions(job, attempt, stage, value):
         return [action('start', '重连接续原 attempt 的 controller', prefix + ['start', directory],
                        ('原 runner/平台身份保持；启动操作重新核对并按原请求接续',))]
     archive = observed.get('archive')
+    sealed = (observed.get('exit_code') == 0 and job.get('outputs') and
+              all(stage['outputs'].get(output['name'], {}).get('status') == 'published'
+                  for output in job['outputs']))
+    consumption = ([action('consume', '封口产物可按其位置消费；完整归档由原 owner 继续保全',
+                          requires=('消费端重新核对位置、保留、字节及语义；归档状态不是消费证明',))]
+                   if sealed else [])
     needs_export = (archive == 'failed' or attempt['backend'] == 'docker' and
                     attempt.get('export.json', {}).get('status') != 'preserved' or
                     isinstance(archive, dict) and archive.get('status') == 'not-exported')
     if needs_export:
         if alive:
-            return [action('wait', '等待当前 controller 收尾；不重跑入口', prefix + ['wait', directory, '--timeout', '60'])]
+            return consumption + [action('wait', '等待当前 controller 收尾；不重跑入口', prefix + ['wait', directory, '--timeout', '60'])]
         if not observed.get('incarnation_id'):
             return [action('inspect', '执行 incarnation 缺失，不能发出 export 控制')]
-        return [action('export', '接续保全或输运同一 attempt，保留原入口结果',
+        return consumption + [action('export', '接续保全或输运同一 attempt，保留原入口结果',
                        prefix + ['control', directory, attempt['attempt_id'], 'export'],
                        ('执行时核对同一 incarnation 和物理终态；不会重新运行 main',
                         '修复已报告的存储/输运条件；导出成功不代表 Harness prepared 完整'))]
     if archive == 'pending':
-        return [action('wait' if alive else 'inspect', '等待或核对 runner 收尾；不能按入口退出推断保全完成')]
+        return consumption + [action('wait' if alive else 'inspect', '等待或核对 runner 收尾；不能按入口退出推断保全完成')]
     if stage['status'] == 'failed':
         return [action('inspect', '先诊断入口失败；若确需新 attempt，另行明确 retry 授权和剩余预算')]
     if stage['blockers']:
@@ -696,9 +888,28 @@ def _ingest_telemetry(path):
     atomic(path / 'telemetry-ingestion.json', record('telemetry-ingestion', sources=receipts, captured_at=time.time()))
 
 
+def _control_manifest(directory):
+    """Route historical control through its exact frozen executor before new schema checks."""
+    value = read(directory / 'experiment.json')
+    frozen_module = directory / 'source/lab/exp/controller.py'
+    if Path(__file__).resolve() == frozen_module.resolve():
+        return verify(directory)
+    if value.get('kind') != 'factory26.exp.experiment' or value.get('schema_version') not in (1, 2):
+        raise ValueError('unsupported frozen execution producer')
+    _runtime(value['controller_runtime'])
+    ref = value['code']
+    manifest_path = directory / 'artifacts' / identifier(ref['artifact_id']) / 'manifest.json'
+    if digest(manifest_path) != ref['manifest_sha256']:
+        raise ValueError('frozen executor manifest changed')
+    manifest = require(read(manifest_path), 'artifact')
+    if manifest['artifact_id'] != ref['artifact_id'] or artifacts.contents(directory / 'source') != manifest['contents']:
+        raise ValueError('frozen executor source changed')
+    return value
+
+
 def control(directory, attempt_id, action, *, request_id=None, parameters=None):
     directory = Path(directory).resolve(strict=True)
-    manifest = verify(directory)
+    manifest = _control_manifest(directory)
     frozen_module = directory / 'source/lab/exp/controller.py'
     if Path(__file__).resolve() != frozen_module.resolve():
         env = dict(os.environ, PYTHONPATH=str(directory / 'source'), PYTHONDONTWRITEBYTECODE='1')
@@ -734,7 +945,7 @@ def control(directory, attempt_id, action, *, request_id=None, parameters=None):
 def stop_evidence(directory, attempt_id, output):
     """Publish a separate current stopped observation, never infer it from a request."""
     directory = Path(directory).resolve(strict=True)
-    manifest = verify(directory)
+    manifest = _control_manifest(directory)
     frozen_module = directory / 'source/lab/exp/controller.py'
     if Path(__file__).resolve() != frozen_module.resolve():
         result = subprocess.run([manifest['controller_runtime']['launcher'], '-B', '-m', 'lab.exp.controller',
@@ -759,6 +970,40 @@ def stop_evidence(directory, attempt_id, output):
                    captured_at=time.time())
     atomic(output, value)
     return public(value)
+
+
+def access_control(directory, attempt_id, action, *, access_resource_id, container_id, request_id):
+    """Console access participates in the same workspace writer/capture ordering."""
+    directory = Path(directory).resolve(strict=True)
+    manifest = verify(directory)
+    path = directory / 'attempts' / identifier(attempt_id)
+    attempt = require(read(path / 'attempt.json'), 'attempt')
+    target = attempt['job']['backend']
+    if target['kind'] != 'docker':
+        target = target.get('external_docker')
+    if not target:
+        raise Blocked('attempt has no managed Docker accessor domain')
+    from . import admission, backends
+    saved = admission.query(target, identifier(access_resource_id))
+    resource = saved.get('resource')
+    if not resource or resource['role'] != 'accessor' or resource.get('workspace') != attempt_id:
+        raise Blocked('accessor is outside the attempt workspace authority')
+    identity = resource.get('identity') or {}
+    if identity.get('container_id') != container_id:
+        raise Blocked('Console accessor differs from domain-owned physical birth')
+    binding = {**identity, 'authority_resource_id': access_resource_id}
+    if action == 'start':
+        backends.managed(target, binding, 'writer-open', request_id + '--writer-open')
+        return backends.managed(target, binding, 'start', request_id + '--start')
+    if action == 'stop':
+        physical = backends.managed(target, binding, 'stop', request_id + '--stop')
+        backends.managed(target, binding, 'writer-close', request_id + '--writer-close')
+        return physical
+    if action == 'query':
+        if access_resource_id not in (saved.get('workspace') or {}).get('writers', []):
+            raise Blocked('running accessor has no domain workspace writer coverage')
+        return saved
+    raise ValueError('unsupported accessor action')
 
 
 def retry(directory, attempt_id, authorization, *, request_id=None):
@@ -803,5 +1048,7 @@ if __name__ == '__main__':
         attempt_path = directory / 'attempts' / identifier(sys.argv[3])
         attempt = require(read(attempt_path / 'attempt.json'), 'attempt')
         print(json.dumps(public(_backend(attempt).observe(attempt_path, live=True))))
+    elif sys.argv[1:2] == ['internal_access'] and len(sys.argv) == 6:
+        print(json.dumps(public(access_control(sys.argv[2], sys.argv[3], sys.argv[4], **json.loads(sys.argv[5])))))
     else:
         raise SystemExit('internal controller invocation required')

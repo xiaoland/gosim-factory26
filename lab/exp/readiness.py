@@ -11,11 +11,17 @@ from . import artifacts, controller
 from .core import canonical, digest, error, public, read, record, require
 
 
-def inspect(recipe_path, deployment=None):
+def inspect(recipe_path, deployment=None, *, environment=None):
     recipe_path = Path(recipe_path).resolve(strict=True)
     if recipe_path.is_dir():
         recipe_path = recipe_path / 'experiment.json'
-    spec = require(read(recipe_path), 'experiment')
+    spec = read(recipe_path)
+    if environment is not None:
+        from .environment import resolve
+        spec = resolve(spec, environment, base=recipe_path.parent)
+    if spec.get('kind') == 'factory26.exp.intent':
+        return _intent_plan(recipe_path, require(spec, 'intent'))
+    require(spec, 'experiment')
     controller.validate_recipe(spec)
     base = recipe_path.parent
     result = record('readiness', experiment_id=spec.get('experiment_id'), observed_at=time.time(),
@@ -38,9 +44,16 @@ def inspect(recipe_path, deployment=None):
     for purpose in ('controller', 'runner'):
         field = purpose + '_runtime'
         value = spec.get(field)
-        if value is None and purpose == 'runner' and not any(job['backend']['kind'] == 'local' for job in spec['jobs']):
+        if value is None and purpose == 'runner' and not any(job['backend']['kind'] != 'hosted' for job in spec['jobs']):
             continue
         try:
+            if value is None and spec.get('environment_selection'):
+                from scripts.runtime import plan_host_runtime
+                binding = spec['environment_selection']
+                plan = plan_host_runtime(Path(binding['selection']['python']))
+                if plan['dependencies'] != binding['runtime_dependencies']:
+                    raise ValueError('runtime dependencies differ from frozen selection')
+                value = str(Path(binding['selection']['cache_root']) / plan['key'] / (purpose + '.json'))
             if value is None:
                 raise ValueError('local execution needs an explicit runner runtime')
             asset = controller._runtime(value if isinstance(value, dict) else (base / value).resolve(strict=True), purpose)
@@ -142,6 +155,47 @@ def inspect(recipe_path, deployment=None):
     return public(result)
 
 
+def _intent_plan(path, spec):
+    """Explain declared production before build; do not initialize caches or domains."""
+    from .compiler import select
+    binding = spec.get('environment_selection')
+    if not binding:
+        raise ValueError('doctor on intent requires --environment or a frozen environment selection')
+    from scripts.runtime import plan_host_runtime
+    selection = binding['selection']
+    plan = plan_host_runtime(Path(selection['python']))
+    cache = Path(selection['cache_root'])
+    result = record('readiness', experiment_id=spec['experiment_id'], source=str(path),
+        source_sha256=digest(path), observed_at=time.time(), dispatch_permission=False,
+        host={'hostname': socket.gethostname(), 'os': platform.system(), 'architecture': platform.machine(),
+              'free_bytes': shutil.disk_usage(path.parent).free}, runtimes={}, jobs=[], blockers=[],
+        environment={'id': selection['id'], 'profile_sha256': binding['profile_sha256']}, productions=[])
+    result['selection'] = select(spec['selection_policy'], spec['models'], path.parent)
+    for purpose in ('controller', 'runner'):
+        receipt = cache / plan['key'] / (purpose + '.json')
+        result['runtimes'][purpose] = {'status': 'present' if receipt.is_file() else 'build-required',
+                                      'python': str(receipt), 'dependencies': plan['dependencies'],
+                                      'integrity': 'checked at build/consumption'}
+    for name, production in spec.get('productions', {}).items():
+        dependencies = binding['material_dependencies'][name]
+        if production['producer'] == 'harness':
+            from scripts.package_agent import material_identity
+            identity = material_identity(dependencies)
+            receipt = cache / 'harness/materials' / identity.removeprefix('material-') / 'material.json'
+        else:
+            identity = canonical(dependencies)
+            receipt = cache / 'production-index' / ('prepared-' + identity + '.json')
+        result['productions'].append({'name': name, 'producer': production['producer'],
+            'dependencies_sha256': canonical(dependencies), 'components': list(dependencies),
+            'status': 'present' if receipt.is_file() else 'build-required', 'identity': identity,
+            'action': 'verify cached production' if receipt.is_file() else 'produce missing material'})
+    for target in spec['targets']:
+        template = spec['variants'][target['variant']]['generate']
+        result['jobs'].append({'job_id': target['id'], 'purpose': template['purpose'],
+            'asset_readiness': 'planned', 'assets': [], 'blockers': [], 'target': target})
+    return public(result)
+
+
 def _docker(target):
     from lab.docker_endpoint import execute
     from .admission import HELPER, volume_name
@@ -202,6 +256,8 @@ def render(value):
              f"host: {value['host']['hostname']} / {value['host']['os']} {value['host']['architecture']} / free {value['host']['free_bytes']} bytes"]
     for name, runtime in value['runtimes'].items():
         lines.append(f"{name} runtime: {runtime['status']} / {runtime.get('python', runtime.get('error', {}).get('message', '?'))}")
+    for production in value.get('productions', []):
+        lines.append(f"material {production['name']} / {production['producer']}: {production['action']}")
     for issue in value['blockers']:
         lines.append('blocked by ' + issue['component'] + ': ' + str(issue.get('reason', issue.get('error', {}).get('message'))))
     for job in value['jobs']:

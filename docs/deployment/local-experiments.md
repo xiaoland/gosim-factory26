@@ -2,7 +2,7 @@
 
 ## 当前新实验入口
 
-使用 `python3 -m lab build RECIPE --directory EXPERIMENT` 与 `start EXPERIMENT --deployment PRIVATE_JSON`。新 recipe 显式冻结 controller/runner runtime、资源预算、Docker endpoint/image/共享权威及模型通道。ARC matrix 生产新 recipe，SDK 子容器也归同一 attempt 资源合同；生成只读允许需求，冻结应用后独立 evaluate。每题评分的费用/耗时和生成分开。具体字段与当前命令归 [Lab](../../lab/README.md)。现有旧预留和派发者未退役时 authority_handoff 不成立，新资源域不能启动；不删除旧现场以绕过门控。
+使用 `python3 -m lab build INPUT --environment PROFILE --directory EXPERIMENT` 与 `start EXPERIMENT --deployment PRIVATE_JSON`。新 recipe 显式冻结 runtime 生产依赖、资源预算、Docker endpoint/image/共享权威及模型通道。ARC matrix 生产新 recipe，SDK 子容器也归同一 attempt 资源合同；生成只读允许需求，冻结应用后独立 evaluate。每题评分的费用/耗时和生成分开。具体字段与当前命令归 [Lab](../../lab/README.md)。现有旧预留和派发者未退役时 authority_handoff 不成立，新资源域不能启动；不删除旧现场以绕过门控。
 
 ## 历史运行合同与取证参考
 

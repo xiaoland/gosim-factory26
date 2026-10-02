@@ -133,6 +133,8 @@ def _paths(job, base, files):
             binding['store'] = str((base / binding['store']).resolve(strict=True))
     for name in ('checkpoint', 'prepared', 'stop_evidence'):
         if name in job:
+            if set(job[name]) == {'from_production'}:
+                continue
             source = (base / job[name]['source']).resolve(strict=True)
             job[name]['source'] = str(source)
             job[name]['source_identity'] = artifacts.contents(source)
@@ -147,7 +149,7 @@ def _paths(job, base, files):
                 require(handoff, 'authority-handoff')
 
 
-def compile_intent(intent_path, directory):
+def compile_intent(intent_path, directory, *, environment=None):
     """Publish one immutable compile bundle; changed inputs require a new bundle."""
     intent_path, directory = Path(intent_path).resolve(strict=True), Path(directory).resolve()
     if intent_path.is_relative_to(directory):
@@ -155,8 +157,12 @@ def compile_intent(intent_path, directory):
     intent_bytes = intent_path.read_bytes()
     intent_sha256 = hashlib.sha256(intent_bytes).hexdigest()
     intent = require(json.loads(intent_bytes), 'intent')
+    if environment is not None:
+        from .environment import resolve
+        intent = resolve(intent, environment, base=intent_path.parent)
     _fields(intent, ('kind', 'schema_version', 'experiment_id', 'authorization', 'execution',
-                     'cases', 'variants', 'models', 'targets', 'selection_policy', 'evaluation_policy', 'labels'),
+                     'cases', 'variants', 'models', 'targets', 'selection_policy', 'evaluation_policy', 'labels',
+                     'productions', 'environment_selection', 'environment_resolution', 'resolved_productions', 'derivation'),
             ('experiment_id', 'authorization', 'execution', 'cases', 'variants', 'models', 'targets', 'selection_policy', 'evaluation_policy'))
     base = intent_path.parent
     directory.mkdir(parents=True, exist_ok=True, mode=0o700)
@@ -164,9 +170,14 @@ def compile_intent(intent_path, directory):
         try:
             decision = select(intent['selection_policy'], intent['models'], base)
             execution = _fields(intent['execution'], ('controller_runtime', 'runner_runtime', 'max_parallel', 'budget', 'storage'),
-                                ('controller_runtime', 'max_parallel', 'budget', 'storage'))
+                                ('max_parallel', 'budget', 'storage'))
+            if not execution.get('controller_runtime') and not intent.get('environment_selection'):
+                raise ValueError('execution needs a maintained environment or an explicit controller runtime')
             recipe = record('experiment', experiment_id=identifier(intent['experiment_id']),
                             authorization=intent['authorization'], **deepcopy(execution), jobs=[], labels=intent.get('labels', {}))
+            for field in ('productions', 'environment_selection', 'environment_resolution', 'resolved_productions', 'derivation'):
+                if field in intent:
+                    recipe[field] = deepcopy(intent[field])
             files = {}
             for cases in decision['evidence'].values() if isinstance(decision['evidence'], dict) else ():
                 for row in cases.values():

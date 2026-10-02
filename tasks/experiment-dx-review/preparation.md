@@ -1,6 +1,6 @@
 # 实验与开发基础设施 DX 开工说明
 
-2026-10-02，用户认可继续架构方案，并问“好的，可以准备开工了吗”。本轮已完成实施面核对与独立advisor复核，当前为待开工复核。本文取代前轮基线的旧实施准备；历史切换依据保留在packet及Git历史。尚未修改设施源码、部署服务或启动实验。
+2026-10-02，用户认可继续架构方案，并问“好的，可以准备开工了吗”。本轮已完成实施面核对与独立advisor复核，用户随后明确“开工”，当前进入实现与验收。本文取代前轮基线的旧实施准备；历史切换依据保留在packet及Git历史。实施准备阶段未修改设施源码；开工后按本文范围实现，部署与模型实验仍按各自授权安排。
 
 工作分支为 `feat/infrastructure-dx`，唯一实施worktree为 `/Users/lanzhijiang/Development/.worktrees/infrastructure-dx/factory26`，准备基于 `9f9eab9c`。职责归[design](design.md)，接口与失败合同归[technical](technical.md)，原件及授权归[packet](packet.md)。自由提交授权继续用于当前任务；原工作区其他owner的未提交代码与运行仍由原owner持有。
 
@@ -18,15 +18,15 @@ Hosted仍按真实平台协议提交完整ZIP；平台费用、排队与完整�
 
 ## 默认工作流与支持边界
 
-公共CLI继续使用 `python -m lab`。以下是拟实施合同；代码开工后更新Lab操作文档，不把它当作当前已可调用命令。
+公共CLI继续使用 `python -m lab`。以下入口已实现，具体参数与当前支持范围见Lab操作文档；源码存在不代表实际启动和恢复已验收。
 
-- `build INPUT --environment PROFILE --directory RUN` 接受新intent或新冻结recipe。Intent由同一compiler编译，controller只生产缺失材料并冻结实际选择；run主要保存配方、引用、动作及证据索引。维护的profile给出Python/平台、存储、backend与工具来源，不要求每次填写hash或制作两套物理runtime。对冻结recipe，profile只解析已经声明的目标约束、资产位置与部署条件，不能覆盖冻结选择；目标、runtime或生产条件改变须新recipe及派生关系。未来产物按原producer/output合同绑定。
+- `build INPUT --environment PROFILE --directory RUN` 接受新intent或新冻结recipe。Intent由同一compiler编译，controller只生产缺失材料并冻结实际选择；run主要保存配方、引用、动作及证据索引。维护的profile给出Python、缓存位置与工具来源，不要求每次填写hash或制作两套物理runtime。对冻结recipe，profile只解析已经声明的目标约束、资产位置与部署条件，不能覆盖冻结选择；目标、runtime或生产条件改变须新recipe及派生关系。未来产物按原producer/output合同绑定。
 - `compile INTENT --environment PROFILE --directory BUNDLE` 保留仅编译入口。输出冻结政策、目标约束和生产计划；尚未产生的输入引用明确producer/output合同，不构建材料或执行运行。
 - `doctor INPUT --environment PROFILE` 可在build前解释复用、缺失及预计工作。默认status/monitor消费保存事实；需要当前权威查询时明确观察范围和成本。
 - `start RUN --deployment PRIVATE` 沿已授权配方派发。每次执行消费冻结代码资产；代码资产在缺失或实际依赖变化时构建，不能继续依赖可变工作树。
 - `recover SOURCE --intent INTENT --environment PROFILE --directory NEW_RUN` 组织明确的恢复派生与材料准备，建立来源关系；不隐式停止旧来源或启动模型。准备后仍由start进入运行，pause/resume继续属于原执行控制。
 
-Profile与producer能力共同解析最终物理绑定；实验定义仍显式拥有目标、需求、模型/费用、预算及允许恢复变更。高层定义不编写私有driver；通用外部argv能力保留，不新增任意工作流DSL。
+首版profile只声明Python、cache_root及Harness材料默认来源；backend目标仍由实验定义明确声明，不通过环境配置覆盖。Profile与producer能力共同解析最终物理绑定；实验定义仍显式拥有需求、模型/费用、预算及允许恢复变更。高层定义不编写私有driver；通用外部argv能力保留，不新增任意工作流DSL。
 
 首版支持Local及现有Linux Docker目标、明确停写的完整来源、相同OS/架构/logical layout、同内容跨daemon输运、独立可写workspace和四个I14 variant。修复Hook仅覆盖已有问题需要的材料类别：指令/技能/扩展/launcher刷新、已声明provider transport、路径别名及外部工具物化、明确兼容的runtime替换；每类有前置条件和实际变更记录。模型/需求改变消费对应授权，原Git/native历史与应用工作不得被材料刷新覆盖。活动源一致快照、跨OS/native根迁移、自动Git重建及任意补丁不进入完整恢复能力。
 
@@ -86,4 +86,4 @@ Profile与producer能力共同解析最终物理绑定；实验定义仍显式�
 
 本轮独立advisor支持进入开工复核，建议限制辅助状态和采用单一查询挂载策略；对本说明再次复核后，补清冻结recipe的环境解析边界及编译写BUNDLE的措辞。三个实施owner已经返回可执行的文件/责任/验收范围；实际操作前核对材料可用性和环境属于正常执行门控，不再扩大架构调查。
 
-当前开工复核对象就是本文的源码、文档、编译与真实离线生产范围。待用户针对该范围明确同意开工后实施；继续保留自由提交和本任务worktree隔离。未知效果不重发入口，具体风险/错误留原件；运行中证据明确的范围内设施缺陷由owner完成修复闭环。
+当前开工复核对象就是本文的源码、文档、编译与真实离线生产范围。用户已针对该范围明确同意开工；继续保留自由提交和本任务worktree隔离。未知效果不重发入口，具体风险/错误留原件；运行中证据明确的范围内设施缺陷由owner完成修复闭环。

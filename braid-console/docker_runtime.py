@@ -31,6 +31,10 @@ def configuration(value):
         if not isinstance(path, str) or not PurePosixPath(path).is_absolute() or ".." in PurePosixPath(path).parts:
             raise ValueError(f"docker.{key} 需要容器内绝对路径")
     result = {key: value[key] for key in ("runtime_container", "cli_container", "binary", "state")}
+    access_id = value.get('access_resource_id')
+    if not isinstance(access_id, str) or not re.fullmatch(r'[A-Za-z0-9][A-Za-z0-9_.-]{0,127}', access_id):
+        raise ValueError('docker.access_resource_id 需要域权威中已创建的 Console accessor 身份')
+    result['access_resource_id'] = access_id
     if value.get("context") is not None:
         if not isinstance(value["context"], str) or not value["context"]:
             raise ValueError("docker.context 必须是固定非空名称")
@@ -149,7 +153,7 @@ def execution_binding(config):
         raise ValueError("缺少新 exp attempt 绑定；旧现场保留原冻结服务")
     root = Path(binding["experiment"])
     manifest = json.loads((root / "experiment.json").read_text())
-    if manifest.get("kind") != "factory26.exp.experiment" or manifest.get("schema_version") != 1:
+    if manifest.get("kind") != "factory26.exp.experiment" or manifest.get("schema_version") != 2:
         raise ValueError("Console 需要新 experiment 合同")
     command = [manifest["controller_runtime"]["launcher"], "-B", "-m", "lab.exp.controller"]
     import os
@@ -168,6 +172,16 @@ def execution_binding(config):
             physical["labels"].get(key) != value for key, value in match.get("labels", {}).items()):
         raise ValueError("Console 容器出生身份或 owner 与执行回执不同")
     return command, environment, root, observed
+
+
+def access_control(config, action, request_id):
+    command, environment, root, _ = execution_binding(config)
+    parameters = {'access_resource_id': config['access_resource_id'],
+                  'container_id': config['cli_container'], 'request_id': request_id}
+    result = subprocess.run(command + ['internal_access', str(root), config['exp']['attempt_id'], action,
+                                      json.dumps(parameters)], cwd=root / 'source', env=environment,
+                            capture_output=True, text=True, check=True)
+    return json.loads(result.stdout)
 
 
 def control(config, action):

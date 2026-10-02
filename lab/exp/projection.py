@@ -58,9 +58,14 @@ def _producer_record(root, manifest, name=None):
     return read(path)
 
 
-def artifact(store, reference):
+def artifact(store, reference, location=None):
     """Bind metadata cheaply; consumption still verifies all payload bytes."""
     result = {'reference': reference, 'status': 'unavailable'}
+    if location is not None:
+        if location.get('reference') != reference or location.get('domain_identity', {}).get('kind') != 'docker':
+            return {**result, 'error': {'message': 'saved asset location differs from producer reference'}}
+        return {**result, 'status': 'published', 'location': location,
+                'integrity': 'producer sealed location; domain revalidates retention and bytes on consumption'}
     try:
         root = store / identifier(reference['artifact_id'])
         path = root / 'manifest.json'
@@ -157,8 +162,10 @@ def attempt(path, store):
                 row['errors'].append({'component': 'transport', 'evidence': str(location), 'error': value})
         except (OSError, ValueError) as exc:
             row['errors'].append({'component': 'transport', 'evidence': str(location), 'error': error(exc)})
-    row['outputs'] = {name: artifact(store, ref) for name, ref in observed.get('artifacts', {}).items()}
-    row['inputs'] = {name: artifact(store, ref) for name, ref in saved['job'].get('inputs', {}).items()
+    row['outputs'] = {name: artifact(store, ref, observed.get('output_locations', {}).get(name))
+                      for name, ref in observed.get('artifacts', {}).items()}
+    row['inputs'] = {name: artifact(store, ref, saved['job'].get('input_locations', {}).get(name))
+                     for name, ref in saved['job'].get('inputs', {}).items()
                      if 'from_job' not in ref}
     archived = observed.get('archive')
     if isinstance(archived, dict) and archived.get('artifact'):
@@ -277,12 +284,10 @@ def stages(value, action_policy):
                 dependency['reason'] = '等待生成 attempt 发布制品'
             elif produced.get('phase', produced.get('execution')) not in ('exited', 'stopped', 'failed'):
                 dependency['reason'] = '生成执行终态尚未确认'
-            elif produced.get('archive') == 'pending':
-                dependency['reason'] = '等待生成证据收尾'
             elif produced.get('exit_code') != 0:
                 dependency['reason'] = '生成入口未确认成功，不能派发评价'
             elif not output or output['status'] != 'published':
-                dependency['reason'] = '生成制品尚未在本地发布或输运'
+                dependency['reason'] = '声明生成制品尚未封口并保留'
             else:
                 stage['inputs'][name] = dict(output, from_job=binding['from_job'], output=binding['output'])
                 continue
@@ -291,7 +296,7 @@ def stages(value, action_policy):
             stage['blockers'].append(dependency)
         for name, item in stage['inputs'].items():
             if item['status'] != 'published':
-                stage['blockers'].append({'component': 'input', 'input': name, 'reason': '冻结输入在本地不可读', 'evidence': item.get('evidence'), 'error': item.get('error')})
+                stage['blockers'].append({'component': 'input', 'input': name, 'reason': '冻结输入缺少可消费位置', 'evidence': item.get('evidence'), 'error': item.get('error')})
         owner = value.get('controller', {})
         if (not row or phase not in ('exited', 'stopped', 'failed')) and owner.get('error'):
             stage['blockers'].append({'component': 'controller', 'reason': owner['error'].get('message', 'controller 故障'),
@@ -308,6 +313,9 @@ def stages(value, action_policy):
             stage['facts']['main'] = _facet(main, row, exit_code=entry_code)
             stage['facts']['execution'] = _facet(phase, row, incarnation_id=observation.get('incarnation_id'),
                                                 physical=observation.get('physical'), gap=observation.get('execution_observation_gap'))
+            stage['facts']['services'] = _facet('failed' if phase == 'readiness_failed' else
+                'ready' if observation.get('ready') else 'unknown', row,
+                entry_status=observation.get('entry_status', 'unknown'), services=observation.get('services', {}))
             archive = observation.get('archive', 'unknown')
             stage['facts']['archive'] = _facet(archive.get('status', 'unknown') if isinstance(archive, dict) else archive, row)
             if row['backend'] == 'docker':
@@ -349,7 +357,7 @@ def stages(value, action_policy):
             for output in job.get('outputs', []):
                 published = stage['outputs'].get(output['name'])
                 if phase in ('exited', 'stopped', 'failed', 'unknown') and (not published or published['status'] != 'published'):
-                    stage['blockers'].append({'component': 'artifact', 'reason': '声明输出尚未在本地发布：' + output['name'],
+                    stage['blockers'].append({'component': 'artifact', 'reason': '声明输出尚未封口发布：' + output['name'],
                                                'evidence': row['evidence'], 'error': published.get('error') if published else None})
             for name, published in stage['outputs'].items():
                 if published.get('harness', {}).get('status') == 'partial':

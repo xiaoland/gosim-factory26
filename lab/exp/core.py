@@ -12,6 +12,12 @@ import time
 from lab.control import process_identity, process_state
 
 SCHEMA = 1
+# Execution contracts change independently of immutable producer identities.
+VERSIONS = dict.fromkeys(('intent', 'compilation', 'experiment', 'attempt', 'execution'), 2)
+
+
+def schema_version(kind):
+    return VERSIONS.get(kind, SCHEMA)
 TERMINAL = {'exited', 'stopped', 'failed', 'unknown'}
 
 
@@ -43,11 +49,11 @@ def canonical(value):
 
 
 def record(kind, **fields):
-    return {'kind': 'factory26.exp.' + kind, 'schema_version': SCHEMA, **fields}
+    return {'kind': 'factory26.exp.' + kind, 'schema_version': schema_version(kind), **fields}
 
 
 def require(value, kind):
-    if not isinstance(value, dict) or value.get('kind') != 'factory26.exp.' + kind or value.get('schema_version') != SCHEMA:
+    if not isinstance(value, dict) or value.get('kind') != 'factory26.exp.' + kind or value.get('schema_version') != schema_version(kind):
         raise ValueError(f'new exp {kind} schema required; legacy evidence is read-only via history/import')
     return value
 

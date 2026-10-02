@@ -6,7 +6,8 @@ from .core import error, public, read, record
 
 def inspect(path):
     path = Path(path).resolve(strict=True)
-    names = ('manifest.json', 'spec.json', 'inputs.json', 'prepare-receipt.json', 'receipt.json',
+    names = ('experiment.json', 'attempt.json', 'execution.json', 'compilation.json', 'harness-manifest.json',
+             'manifest.json', 'spec.json', 'inputs.json', 'prepare-receipt.json', 'receipt.json',
              'run.json', 'state.json', 'worker.json', 'handoff.json', 'completion.json')
     paths = [path] if path.is_file() else [path / name for name in names if (path / name).is_file()]
     facts = []

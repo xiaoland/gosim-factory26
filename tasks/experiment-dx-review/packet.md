@@ -274,3 +274,26 @@ Compiler/readiness 已实施。公共 compile 输出 intent/recipe/compilation�
 开工复核范围为preparation中的源码、文档、编译及既有真实材料在新隔离输出目录的离线生产/封装/接收/读回，原件只读。本轮不运行模型/平台、不停止旧来源、不创建接管共享域、不部署Console、不迁移旧run或应用GC；具体Docker/生成/恢复验收须冻结实际输入、profile、预算与动作范围。三类端到端验收继续为最终标准，局部历史计时和源码存在都不提升为已通过。
 
 当前准备已完成，无需新的架构选择即可针对本文范围开工复核。尚未修改设施源码或执行生产操作；文档差异检查通过，只纳入当前任务提交，自由提交授权保留。按AGENTS的阶段约定，待用户针对该具体实施范围明确同意开工后进入实现与验收。
+
+## 实现与验收开工（2026-10-02）
+
+用户针对已呈现的 preparation.md 明确授权：“开工”。进入本轮完整源码、受影响文档、编译和真实已有材料离线生产/封装/接收/读回范围。沿用三类端到端耗时验收及原件只读限制，不扩大到模型、平台写入、共享域接管、旧来源控制、Console部署或GC apply。自由提交继续有效。稳定owner分别持有材料、存储平台和执行责任，主Agent持有按kind版本、公共入口/环境/生产计划、冻结执行代码与Console接缝整合。下一步先收敛跨owner ABI，随后并行实现并取得范围内实际反馈。
+
+## 本轮实现与离线反馈（2026-10-03）
+
+三owner完成材料生产/恢复合同、域存储/保留/输运和执行域/独立监督实现；主Agent接通公共compile/build/doctor/recover、按kind切换、冻结代码复用、产物关系投影及Console writer控制接缝。旧recipe不自动进入新writer，旧控制委派原冻结executor，artifact/runtime/telemetry身份未合并或重写。定义、生产选择、实际环境解析与运行事实分别保存。Hosted仍消费真实完整ZIP，材料目录与封装产物保留各自身份。
+
+独立supervision_review advisor支持固定宿主独立runner，要求容器内collector/限额继续存在；发现监督容器exit0可能覆盖业务失败，执行owner已修复。Owner另完成repair-ready：保留原实例和健康服务，只修复入口尚未请求、原监督者存活、原预算内的指定失败服务；未知效果不重发收费入口。这些是源码判断与编译反馈，没有实际Docker故障验收。
+
+| 真实操作 | 单次观察 | 原件与条件 |
+| --- | --- | --- |
+| 1.4GiB reviewer材料首次生产/无变化复用 | 29.28s / 14.55s，同material identity与manifest | material-production-20261003/current-contract-production.json；后续依赖筛选和公开identity函数提交不冒充这次测量版本。 |
+| 既有prepared向新store接收/同请求重入/独立workspace装配 | 50.03s / 18.04s / 44.34s | domain-store-20261003/receipt.json；来源manifest前后未变，没有实际丢响应或daemon操作。 |
+| 公共build首次缺runtime / 已有环境的新run / 重入 | 2.57s / 0.55s / 0.28s | public-build-20261003/receipt.json；真实旧交接材料，新离线定义，未派发job。 |
+| 最终整合源码公共build A / B / A重入 | 0.64s / 0.40s / 0.31s | public-build-20261003/final-public-feedback.json及final-readback.json；缓存环境已存在，跨run冻结代码引用相同，controller/runner物理环境共用且用途回执独立。 |
+| 新恢复prepared生产/语义读回 | 148.94s / 46.90s，partial | material-production-20261003/final-validation.json；八个Git目录历史重建、获取窗口未知，实际材料变更数为0，不宣称已验证热修复Hook或完整恢复。 |
+| 阶段application冻结 | 指定develop commit的195文件应用 | material-production-20261003/application-production.json；不是最终交付或外部评分，空main提交拒绝原件保留。 |
+
+原件统一位于本worktree `runs/infrastructure-dx/`，被Git忽略且继续保留。单次顺序操作没有控制OS缓存，不能宣称稳定倍率；离线build耗时不是启动入口耗时。当前源码编译、嵌入helper编译、Node语法检查及真实材料读回完成，没有新增或运行Factory/Braid测试、fixture、probe、smoke。
+
+本轮源码及离线范围完成；三类端到端验收尚未完成。实际Docker装配/ready/入口、controller断开、child预算/cgroup、材料变更后的完整热恢复，需要明确实际输入、环境profile、预算及控制范围。当前不启动模型或平台、不接管共享daemon、不停止来源、不部署Console、不迁移旧run、不应用GC。下一步为冻结上述真实操作范围后取得完整打包、启动入口、热修复恢复入口三个区间，不将局部计时提升为验收通过。

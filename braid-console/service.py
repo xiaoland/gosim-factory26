@@ -240,6 +240,7 @@ def docker_paths(run, service_id):
     config, value = access({"service_id": service_id}, run)
     if not value["state"]["Running"] or value["state"]["Paused"]:
         raise ValueError("CLI 访问容器需要运行且未暂停")
+    docker_runtime.access_control(config, 'query', 'console-query-' + uuid.uuid4().hex)
     workspaces = [mount["destination"] for mount in config["mounts"] if mount["source"] == run["workspace"]]
     if not workspaces:
         raise ValueError("Docker mounts 未声明 workspace 宿主根")
@@ -332,7 +333,8 @@ def main():
                         result = {"released": args.run, "removed_registration": run, "forward_confirmed_absent": True}
                     else:
                         config, _ = access(record, run)
-                        output = docker_runtime.docker(["start" if args.command == "access-start" else "stop", config["cli_container"]], config)
+                        output = docker_runtime.access_control(config,
+                            'start' if args.command == 'access-start' else 'stop', 'console-' + uuid.uuid4().hex)
                         value = docker_runtime.inspect(config["cli_container"], config)
                         expected = args.command == "access-start"
                         if value["state"]["Running"] != expected:

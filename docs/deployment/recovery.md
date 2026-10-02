@@ -2,9 +2,15 @@
 
 ## 当前 checkpoint、prepare 与停止门控
 
-新 Harness producer 使用 `python3 submission/exp_checkpoint.py checkpoint --source RUN --output NEW --source-identity IDENTITY_JSON --stop-evidence STOP_JSON`，可显式追加 materials-root。停止原件由 `python3 -m lab stop-evidence EXPERIMENT ATTEMPT --output NEW_JSON` 从实际执行身份与当前停止观察产生；它不会执行 stop。Checkpoint 保存 Git/未提交内容、Braid DB/WAL、native 和材料及语义缺口，partial 不得 prepare。
+新 Harness checkpoint/prepared/application producer 使用 schema 2。`python3 submission/exp_checkpoint.py checkpoint --source RUN --output NEW --source-identity IDENTITY_JSON --stop-evidence STOP_JSON --acquisition ACQUISITION_JSON` 保存来源材料，获取窗口需要覆盖全部 writer 的连续关闭证明。停止原件只证明观察时点，不能排除复制期间的中途写入。没有获取窗口证明或原 Git/native 历史缺失时保留 partial；历史 schema 1 只读，不补造 complete。
 
-`prepare --source CHECKPOINT --output NEW --target-layout JSON` 无网络及模型请求，生产 harness-manifest.json 并独立读回。当前 hook 只支持相同 OS、architecture、logical run_root 与明确 runtime_identity；Docker 可在另一 daemon 的隔离路径空间保持同根，跨 OS/根路径迁移明确不支持。Prepared 不携带来源停止许可，启动另外核验同 instance 的停止证据和目标实际装配。终态 archive 不是 checkpoint，应用 artifact 也不是恢复材料。
+默认恢复入口为 `python3 -m lab recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE --directory NEW_RUN`。Intent 在普通实验字段之外声明 `recovery: {production: NAME, target: TARGET_LAYOUT, repair: REPAIR}`，相关 variant 的 prepared 使用 `{from_production: NAME}`。入口冻结原 checkpoint 身份、修复输入、生产依赖及派生关系，准备新 run；不会停止旧来源或启动模型。准备后仍在实际执行授权内调用 start。SOURCE 必须是明确 checkpoint，不从含混 run/archive 自动猜。
+
+低层 `prepare --source CHECKPOINT --output NEW --target-layout JSON --repair REPAIR_JSON` 保留，无网络或模型请求。有限修复覆盖材料刷新、已声明 provider transport、内部路径别名、已退役 transient link、外部 node-gyp 工具物化及明确兼容 runtime 替换。每项核对原 literal/目标范围，记录实际变化与损失；Git、native 历史与应用工作不由材料刷新覆盖。结构 partial 可以离线派生以解释缺口，但结果没有完整获取/语义保证仍为 partial，不能进入完整恢复执行。
+
+当前 hook 仅支持同 OS、architecture、logical run_root 和明确 runtime_identity。Docker 可在另一 daemon 的独立路径空间保持同根；跨 OS、架构/native 根迁移、任意 patch 及 Git 历史重建不进入完整恢复能力。Prepared 不携带停止许可；launch 重新核对同一来源 instance 的当前停止和实际目标装配。入口消费已经装配的 prepared workspace，不再解压重建整包。
+
+`application` 独立冻结明确 commit、需求和来源，区分 stage/final，保留未提交内容政策。一个可重放应用不证明 checkpoint 完整，终态 archive 也不等同 checkpoint。
 
 模型和供应商归新配方，四个 I14 入口与恢复通道不强制 ARC。Native per-model bindings 在新生成时拆分 provider，并同步 profile/角色。既有未拆分 provider 的恢复使用显式 `--override-native-transport`，保留 provider、model、profile 和历史身份，以模型级 endpoint、认证 header 与 `samplingParams.model` 指定供应商传输；不把供应商名称映射当作概念型号迁移。旧包不因源码变化取得新路由。
 
