@@ -40,13 +40,17 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 
 两项技能工作已并行交给 [I14：协作与 ARC 需求方法改进](codex://threads/01a0fa92-eb8e-7143-81fa-21eb002790f7)，GPT-6.1-Sol/medium。它独占 harness/skills/braid-collaboration/ 与 harness/skills/arc-bench/ 及[任务包](collaboration-requirements/packet.md)，已提交材料 ed9a97bb、部署接口复核 60ba2e01；主线负责新材料冻结和实际热恢复。该会话不操作run/Console，不修改Braid、shared recovery或packager，不阻塞Flash/GitHub。完成材料不等于现场已部署或产生改进效果。
 
-保留四个root prompt源码：Pi原生技能发现已提供名称、description和路径，根Issue不再重复description。恢复输入须携带完整新技能目录，并向实际接续消费者传一次技能名称、实际文件路径、新主文件hash及继续当前工作前重新读取的通知；不内联正文、不要求全员ACK。部署读回、通知送达及相关决定中的实际采用分别取证。完整旧新hash和方法复核归独立任务包。
+保留四个root prompt源码：Pi原生技能发现已提供名称、description和路径，根Issue不再重复description。恢复输入携带完整新技能目录，并向实际接续消费者传一次技能名称、实际文件路径与新主文件hash；加载范围由本次职责与判断决定，不因恢复就统一立即复读两技能。不内联正文、不要求全员ACK。部署读回、通知送达及相关决定中的实际采用分别取证。完整旧新hash和方法复核归独立任务包。
 
 development-2所需Runner已编译并交cleaner独立恢复owner：镜像 `sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681`，daemon身份仍为 `e316f857-fe3d-4e7b-8236-9376f063fedc`。冻结Runner来自I13已使用的control/runner，官方base固定为 `gyataro/arcbench-runner@sha256:40e003ed470dbd4c120b9019876ba77303d38dc8b34be7f6e313fe0563dd14de`；断网、501:20直接读取运行metadata为CPython3.12.3、glibc2.39、Linux/x86_64，退出0，无模型或原source重启。构建与读回原件归 `runs/iteration14/development2-runner-20261002/`。新image只能进入新操作冻结输入，不能改写旧endpoint或冒充旧image；同一宿主原Redis服务未修改。
 
-cleaner已保存 `cleaner-hidden-context-20261002/skills-refresh-recovery-plan.json`，明确Issue1/root glm-1与仍实施PR3的glm-3是实际消费者，不唤醒完成的glm-2。共享owner正在补显式恢复通知输入：prepare-only只核对/冻结计划，runtime在材料刷新与ARC保护之后、首次launch前，通过现有normal comment与request-id发送一次并留回执；不临时修改DB或native历史。旧3ce599fb保留其材料刷新/ARC身份，新接口需新hash/最终ZIP后方可实际prepare/恢复。
+cleaner已保存 `cleaner-hidden-context-20261002/skills-refresh-recovery-plan.json`，明确Issue1/root glm-1与仍实施PR3的glm-3是实际消费者，不唤醒完成的glm-2。共享owner已完成显式恢复通知输入：prepare-only只核对/冻结计划，runtime在材料刷新与ARC保护之后、首次launch前，通过现有normal comment发送一次并留回执；计划request_id绑定此次恢复输入，不是CLI幂等参数。不临时修改DB或native历史。旧3ce599fb保留其材料刷新/ARC身份，新接口需最终通知计划/hash/ZIP后方可实际prepare/恢复。
 
 用户随后补充cleaner目标：“让 work-item agent 不必 'Let me start by reading the braid-collaboration skill and viewing the PR.'”。两成员instructions首段确实无条件要求开始/接续时读取该技能；具体原生句与PR投影内容仍由方法会话定向核对。改进要区分例行对象整理与实施、交接、需求裁决和验收的判断责任；同时确认初始PR快照覆盖了什么，不能仅把必要查询一律关闭。方法会话还收到用户直接授权：Skill主体应围绕足以区分选择的What/Why，暂缓Hook，同意其下一步。这些新决定纳入同一材料线，首轮ed9a97bb/60ba2e01保留历史身份；当前候选冻结和强制重读两主文件的通知不当最终部署，cleaner首次launch待职责方案与最终新材料收敛。
+
+定向原生核对与独立advisor的方案已收敛，主线据用户这项明确目标及既有I14实现授权修改cleaner两份成员instructions首段：以已有工作项快照/需求/任务材料为起点，补充查询服务于影响判断的具体缺口、折叠、新变化或冲突，协作方法按实际问题取得。PR2/PR3开场确实重复查询了投影已有字段，但PR3评论29的交接正文当时未在投影中，读取它有具体价值；不将所有查询归为浪费。例行description/讨论维护仍交cleaner，SVC知识与packet、原承诺/交接采用/验收判断仍归有能力的负责人。MAIN_SKILLS发现、Braid core和cleaner无工具一轮机制保持；未内联技能正文。部署及运行采用待最终包/真实接续取证，完整依据归方法任务包。
+
+用户最新报告WSL已恢复。GLM唯一owner获授权按冻结endpoint及实际container身份重新核对两源、完成实际stop与保全门控；旧dispatcher和baseline暂停保持，完整Sheet快照以前不恢复生成。cleaner已具备独立development-2操作输入，不因WSL恢复修改旧spec或并行换宿主；唯一Console重新核对可访问性，不新建实例。
 
 恢复通知接口首轮已ready，packager `7ea9f02f…`、main `a12ae58d…`，仅增加显式 `--material-notice-plan`，lab unchanged。CLI的comment实际没有request-id；计划request_id只是本次冻结输入身份，不是CLI原生幂等键。发送前保存pending，成功或重入以正常comment id、目标、external作者、bodySHA及实际delivery唯一核对；pending后零/多条或结果不明不重发并阻断launch。prepare-only不发送通知，不写DB/native。接口及旧候选保留供最终材料接续，尚未实际prepare/launch，不据源码就绪宣称通知或材料采用已经发生。
 
