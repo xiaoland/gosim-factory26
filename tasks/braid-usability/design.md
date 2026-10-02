@@ -1,7 +1,8 @@
 # 工作项、讨论与上下文的产品设计
 
-状态：用户已复核通过并在独立预演后批准开工。
+状态：设计已复核通过；当前推进状态与授权纠正见 [packet](packet.md)。
 技术边界见 [技术方案](technical.md)，验收沿用真实任务与完整 benchmark，见 [验收方案](verification.md)。
+本页保留此前易用性设计；“保持既有最终完成条件”和根 Issue 交付职责已被用户批准的 [职责边界](run-boundary.md) 替代。自主工作流程仅用于 [Braid Factory](factory-workflow.md)。
 
 ## 要解决的问题
 

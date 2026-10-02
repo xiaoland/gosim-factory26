@@ -1,0 +1,51 @@
+{
+  "observed_at": "2026-09-28T00:57:20.188224+00:00",
+  "head": "89212933c976b889f27de1b8cfe863baf8f6042e",
+  "uncommitted_changes_present": true,
+  "parallel_implementation_in_progress": true,
+  "sha256": {
+    "docs/10-prd/README.md": "149773776b826ffe96e8f3a4ea2d0d6c0fcc4863104a63242c9812f95ec7c069",
+    "docs/10-prd/purpose.md": "8854e691e55ee487144613c2efecd13a27c041e9166c50b146640f4067703c99",
+    "docs/10-prd/objects.md": "bbf430f688611c679c3c3193bc47641466a5308e03e4f998b7a4995d04cc2c74",
+    "docs/10-prd/workflow.md": "93b5147748b643782859b26178ad8fc7c3271537869a3ef93db2eea5ad8d8e53",
+    "docs/10-prd/publication.md": "53a584b3cff1c2b05db1ee3296ce78d841eac15fc029d81986bc0ccc3c657acd",
+    "docs/10-prd/scheduling.md": "5914dcc69cc86da0978304c2a83fe86ed8a994241ec0adaab336843a3051b9a5",
+    "docs/20-product-tdd/local.md": "c57b5a3af31dcf267904f5499812c0af9617d64f2a8dcc8088b6bab19a556915",
+    "docs/20-product-tdd/lifecycle.md": "f81a3c1e62eedc712d8f353f20b5f59d51beb82e0a7a7f979afb24658bf31c75",
+    "docs/20-product-tdd/context.md": "98fb69c042afb90d82c9c3cfb6a9fe37bd8b75295e7a74c71b768cef6e5949ab",
+    "src/local.rs": "e5eab223e7bdd4d834a749ebc45c47f62ea4d1da4171f50417c3b7e53e55268f",
+    "src/objects.rs": "e0dcbbe07d8d08284b3719eb230e67300aaed5adbb1b9623ab98f05833578571",
+    "src/context.rs": "5cad1b506519b96b6aa2c9a2e0a35d64b222831bfc05374325658b56ae853b3f",
+    "src/group/provider.rs": "8dcf3ddd6b47142274efa161e1fb0e263809e88a5d14b6af671e285a88f6753c",
+    "src/group/worker.rs": "b8f450c1dd36687606de62ab955ba7a0eb6e0bb4b915e8cb7fd316dccab7dca1",
+    "src/group/dispatch.rs": "e737265cea9f971fe709f2a2e7630137a81b8de069825e601b2c0b59070fb344",
+    "src/store/mod.rs": "ac481c3067474fa365f305c0cf8b1e07241a2076491797a26435f00140c42e34"
+  },
+  "close_observation": {
+    "observed_at": "2026-09-28T01:17:27.068234+00:00",
+    "head": "89212933c976b889f27de1b8cfe863baf8f6042e",
+    "sha256": {
+      "docs/10-prd/README.md": "149773776b826ffe96e8f3a4ea2d0d6c0fcc4863104a63242c9812f95ec7c069",
+      "docs/10-prd/purpose.md": "8854e691e55ee487144613c2efecd13a27c041e9166c50b146640f4067703c99",
+      "docs/10-prd/objects.md": "bbf430f688611c679c3c3193bc47641466a5308e03e4f998b7a4995d04cc2c74",
+      "docs/10-prd/workflow.md": "93b5147748b643782859b26178ad8fc7c3271537869a3ef93db2eea5ad8d8e53",
+      "docs/10-prd/publication.md": "53a584b3cff1c2b05db1ee3296ce78d841eac15fc029d81986bc0ccc3c657acd",
+      "docs/10-prd/scheduling.md": "5914dcc69cc86da0978304c2a83fe86ed8a994241ec0adaab336843a3051b9a5",
+      "docs/20-product-tdd/local.md": "c57b5a3af31dcf267904f5499812c0af9617d64f2a8dcc8088b6bab19a556915",
+      "docs/20-product-tdd/lifecycle.md": "f81a3c1e62eedc712d8f353f20b5f59d51beb82e0a7a7f979afb24658bf31c75",
+      "docs/20-product-tdd/context.md": "98fb69c042afb90d82c9c3cfb6a9fe37bd8b75295e7a74c71b768cef6e5949ab",
+      "src/local.rs": "e5eab223e7bdd4d834a749ebc45c47f62ea4d1da4171f50417c3b7e53e55268f",
+      "src/objects.rs": "e0dcbbe07d8d08284b3719eb230e67300aaed5adbb1b9623ab98f05833578571",
+      "src/context.rs": "5cad1b506519b96b6aa2c9a2e0a35d64b222831bfc05374325658b56ae853b3f",
+      "src/group/provider.rs": "8dcf3ddd6b47142274efa161e1fb0e263809e88a5d14b6af671e285a88f6753c",
+      "src/group/worker.rs": "f91346dc9736caca8149281aba45d8d9fa55f5b881fa346c22bb06c654fa3edb",
+      "src/group/dispatch.rs": "e737265cea9f971fe709f2a2e7630137a81b8de069825e601b2c0b59070fb344",
+      "src/store/mod.rs": "79cee30290b5304ebacf99229267054be211178ad7b3b75aa368962a10162ebc"
+    },
+    "files_changed_during_review": [
+      "src/group/worker.rs",
+      "src/store/mod.rs"
+    ],
+    "note": "Parallel authorized implementation; findings cite named control-flow functions read in this interval. No implementation edits made by this audit."
+  }
+}

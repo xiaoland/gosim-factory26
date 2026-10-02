@@ -47,3 +47,9 @@ API 文档的聊天请求示例使用 `https://your-onr.example.com/v1/chat/comp
 ## 最新 API 实测：额度门槛已恢复
 
 同一文件内的 key 在稍后一次最小 curl 请求中返回 HTTP 200：`deepseek-v4-flash`，prompt 86 tokens、completion 19 tokens、合计 105；`runs/qualification/quota-recheck.json` 保留时间与 usage。该证据足以撤销“当前额度仍拒绝”的运行阻塞，无需等待用户更新 key；它不证明账户归属，也不代替工具调用/视觉资格。此前 urllib 尝试在本机传输层失败，没有取得 HTTP 响应，随后用既有 curl 路径完成这一次服务端重验。
+
+## 2026-09-23 WSL DNS 中断与临时修复
+
+V&V/BookStack 两次、GLM/Keep 一次本地生成均在末尾连续出现 Pi `Connection error.`，没有交付或分数。2026-09-23 10:02 左右，WSL 的 `/etc/resolv.conf` 自动生成 `nameserver 172.29.144.1`；对它的 DNS 查询超时，WSL 对 `api.arc-bench.com` 的模型请求报 `Temporary failure in name resolution`。与此同时本机模型请求返回 HTTP 200，WSL 直接向 `1.1.1.1`、`8.8.8.8` 的 DNS 查询可即时收到响应，且对 API 真实 IP 连接返回 HTTP 401，故证据指向 WSL 解析路径，而非比赛 key 失效或模型整体停服。
+
+通过 Windows 主机的 `wsl.exe -u root`，将当次 `/etc/resolv.conf` 备份至 WSL `/tmp/factory26-resolv.conf.before-20260923`，仅把当前 nameserver 临时改为 `1.1.1.1`、`8.8.8.8`；未改 `/etc/wsl.conf`、未重启 WSL。修改后 WSL `getent` 能解析，curl 流式 `glm-5.3-flash` 最小请求 HTTP 200、首字节约 4.7 秒。WSL 重新启动时自动生成配置仍可能覆盖临时文件，因此每次新本地生成前应先验证 DNS 和一条最小流式请求，不把当前健康推断为永久健康。

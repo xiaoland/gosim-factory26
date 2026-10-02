@@ -1,0 +1,5 @@
+{
+  "base_url": "https://api.arc-bench.com/v1",
+  "model": "glm-5.3-flash",
+  "visual_model": "deepseek-v4-flash-vision-exp"
+}

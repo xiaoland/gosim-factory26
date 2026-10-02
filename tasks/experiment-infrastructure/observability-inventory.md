@@ -1,0 +1,29 @@
+# 实验设施可观测性清单（只读调查）
+
+结论：本地实验已有独立于 ARC traceability 的 OTLP/HTTP protobuf 接收、按 run 隔离的 SQLite 原始批次和 Braid 静态诊断页。`pi-braid` 与 `pi-braid-flash-team` 打包了同一条 Braid/Factory 接线；**本地 Runner**会注入接收端配置，**官网**上传路径没有这一步。官网容器能否出站访问自管接收端、能否取得官网认可的环境配置，现有代码和文档均未证明；不能把本地链路通过等同于官网链路通过。
+
+## 已有链路与字段
+
+| 层 | 已实现 | 边界 |
+| --- | --- | --- |
+| Collector/Backend | [`lab/otlp.py`](../../lab/otlp.py) 的 `receiver` 接受 `/v1/traces`、`/v1/logs`、`/v1/metrics`，要求 `x-experiment-token`、`application/x-protobuf`，接受 identity/gzip，验证 protobuf envelope 后将解压原文存入 `batches`；`batch_meta` 保留实验接收 session、SHA256、wire 字节数和编码，`receive_errors` 保留已识别 run 的 HTTP 错误。`new_session`、`list_batches`、`read_batch`、`export_batches` 可按信号、时间、批次 ID 查询或导出。 | 接收端不解释 Agent 语义、不计算 token/cost/duration；`receiver` 端口临时分配，注册 token 只在进程内有效，默认仅绑定 `127.0.0.1`。SQLite 是查询后端；OTLP HTTP 路径只是写入端点。 |
+| 本地实验接线 | [`lab/run.py`](../../lab/run.py) 每个 attempt 初始化 `telemetry.sqlite`、分配 token/session、注入通用及分信号 `OTEL_EXPORTER_OTLP_*`，结束后报告批次数和三信号数。[`lab/arc_bench/arc_bench_adapter.py`](../../lab/arc_bench/arc_bench_adapter.py) 把宿主 endpoint 主机名改为容器可达地址，并通过临时 env file 交给 Runner。 | `telemetry.status=absent` 只说明未收到批次；不说明生产者没有尝试。WSL 容器需要 controller `--listen-host 0.0.0.0` 和实际可达的 bridge 地址，默认 `host.docker.internal` 可由 `--container-otlp-host` 覆盖，见 [`docs/deployment/index.md`](../../docs/deployment/index.md)。2026-09-23 的本地容器到 Collector 探针见 [`reports/2026-09-23-local-experiment-infrastructure.md`](../../reports/2026-09-23-local-experiment-infrastructure.md)，它没有验证真实 Braid 实时信号。 |
+| Braid 生产者 | [`sources/braid/src/telemetry.rs`](../../sources/braid/src/telemetry.rs) 在存在标准 OTEL endpoint 时启用三信号 HTTP protobuf exporter。resource 带 `service.name=braid`、`service.version`、`service.instance.id`、`braid.run.id`。trace/span 记录 run、session、turn、create/resume、export 的生命周期及身份属性；metrics 有 `braid.operations`、`braid.operation.duration`（秒）、`braid.operations.active`、`braid.sessions.observed`、`braid.tokens.observed`、`braid.token_usage.messages`。普通 logs 与证据 logs 分队列，传输失败的原始 HTTP 状态/正文或网络错误落在 `braid-state/telemetry-errors.jsonl`。 | `braid.run` 耗时与 session/turn span 是 Braid 操作墙钟，不是纯模型推理。离线 `telemetry export` 的 span 只表示补采操作，不能补造历史实时 span。SDK 路径要求 HTTP protobuf、无压缩；不能直接推定任意 HTTPS/gRPC 后端兼容。 |
+| 原生证据与身份 | [`sources/braid/src/evidence.rs`](../../sources/braid/src/evidence.rs) 每五秒采集已持久化对象和根会话，结束时收尾；证据作为 OTLP logs 的 `braid.evidence` 分片、摘要和清单，可重建原生 JSONL、对象、结果及缺口。[`scripts/core.py`](../../scripts/core.py) 归档后统一调用 [`scripts/braid_runtime.py`](../../scripts/braid_runtime.py) 的 `export_telemetry`，将 Pi 内部子代理的归档路径、原生 ID、父子关系、profile/group/work item 等交给 Braid。两个 variant 的 [`factory-subagent-observer.ts`](../../variants/pi-braid/extensions/factory-subagent-observer.ts)（flash-team 同构）被动记录子代理 `run_id`、父/子 session ID、session file、role、status、关联完整度。 | Pi 的 provider `session_id` 可能是文件路径，不能代替 Braid 数据库 session UUID。清单中的 `partial/unknown` 必须保留；无完整归档不能声称子代理全文齐全。原生 JSONL 是可核验数据源，不等于每种语义都已有指标。 |
+| 查询/站点 | [`lab/analysis/braid_telemetry_viewer.py`](../../lab/analysis/braid_telemetry_viewer.py) 固定批次截止点，从外层 run 的 `telemetry.sqlite` 读数据，调用 Braid `decode/reconstruct/render-markdown`；按 `service.name=braid` 和 `braid.run.id` 选运行，对重复 span 去重，输出静态网站、原始 protobuf、解码数据、重建证据和缺口。页面展示 Issue/PR、会话消息与工具调用、trace 时间轴、metrics 和 logs。 | 当前界面展示原始 metrics/跨度，没有独立的 per-model token/cost/tool-wait 剖面；它也不从应用工作区偷偷补资料。详见 [`docs/deployment/braid-diagnostics.md`](../../docs/deployment/braid-diagnostics.md)。 |
+
+Pi token 的现有精确来源是**原生 assistant JSONL 的 `message.usage`**。`evidence.rs` 按消息 ID 去重，只对 `provider=pi` 汇总 `input`、`output`、`cacheRead`、`cacheWrite`、`reasoning` 的存在值，并记录各字段的 `known_messages`；`telemetry.rs` 将其按 provider/model/token.type 暴露为 gauge。这是已知用量，不应把缺失字段当 0，也不能跨周期或 SDK resource 实例简单相加。其他 provider 的 usage 在这里保持未知。原始证据保留模型名、消息和工具记录；子代理能否计入取决于归档清单和实际原生文件。当前 Braid 汇总没有 cost 字段或每条消息的 duration 指标，`PI_TELEMETRY='0'` 表明 Pi 自身遥测关闭，不能假设另有 Pi exporter。
+
+官网控制器 [`lab/arc_bench/competition.py`](../../lab/arc_bench/competition.py) 从平台 run 响应保存 `run_duration_seconds`、`token_count`、`token_cost`/`token_cost_usd`、起止时间和状态；这是**平台官网聚合**，不是每个 Pi/Braid session 或模型调用的明细。平台身份与 Braid 身份也不同。原生 Pi JSONL 有消息/工具时间戳，可作动作窗口取证；它不提供完整的模型排队、首 token、推理起止或后台进程资源计量。现有 Braid span 把模型响应、工具执行和等待包含在 turn/session 墙钟里。没有可信的 `tool_wait` 指标；仅用相邻消息间隔反推模型耗时会混入工具、并发、轮询和空闲，已保存实证见 [`run-time-profile-20260927.md`](../acceptance-integrity/results/run-time-profile-20260927.md)。
+
+## 官网与 WSL 接线断点
+
+[`scripts/package_agent.py`](../../scripts/package_agent.py)、两个 variant 的 `build.py` 把 Linux Braid、`scripts/braid_runtime.py`、`scripts/core.py` 和原生扩展打入 ZIP；[`variants/pi-braid/run.py`](../../variants/pi-braid/run.py) 启动 Braid 时继承环境并在归档后触发补采。`pi-braid-flash-team/run.py` 使用相同路径。**包内没有固定 Collector URL 或 token**；Braid 只有读取到 `OTEL_EXPORTER_OTLP_ENDPOINT` 或分信号 endpoint 才启用。官网 [`competition.py`](../../lab/arc_bench/competition.py) 的 snapshot/create 只上传冻结 ZIP、模型配置及自费凭据并查询平台状态，未见 OTEL 环境注入、Collector 生命周期或 OTLP 数据回传。官网已保存的 workspace/traceability 不是这个 SQLite Backend。官网能否传任意环境变量、容器能否出站访问指定域名/端口、是否允许公网自管 Collector，均需官网能力证据或经授权的最小网络实测；当前为**未知**，不能承诺可用。
+
+WSL 本地路径已设计且有容器到 Collector 的独立验证：controller 在 WSL 监听可达接口，Runner adapter 改写容器 endpoint 并传 token；自管 collector 若置于 WSL 宿主，可复用此链路。`lab/run.py` 的 run token 生命周期绑定本地 controller，不能直接把该进程的临时端口和内存注册表当成跨官网长期公共服务。对官网若确认可出站，需独立解决稳定地址、TLS/访问控制、run 身份注册与安全回收；若不通，则先保留包内原生证据和平台官网汇总，不能声称实时 OTLP 可观测。
+
+## 最小可复用方案与判别点
+
+1. 继续复用 `lab/otlp.py` 的三信号 protobuf 原始存储和查询、Braid exporter/证据重建、静态 viewer；不引入 ARC traceability 作为诊断数据源。官网与 WSL 共用解释器和字段口径，但官网接收通路须先查明。
+2. 先在已支持的 WSL 本地链路用真实 Braid run 核对三信号、Pi usage、父子会话清单、接收错误和站点完整性；历史报告中的离线补采不能代替实时耗时验证。官网只在确认可配置 endpoint 且容器网络可达后接入同一协议；若不可达，显式标记 `not_collected` 与原因。
+3. profiling 从**可证来源**逐步加：Pi assistant 原生 usage 做每会话/模型 token 覆盖率；Braid operation span 做调度/turn 墙钟；平台 run 响应做总时长和总费用。要拆模型调用与工具等待，必须找到原生 provider/工具自身的起止事件或在实际调用边界计时并关联 session/turn；没有该边界就保持 `unknown`。不要让 LLM 填 trace、改生成应用或从消息间隔制造模型耗时。

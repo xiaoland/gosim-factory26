@@ -1,0 +1,25 @@
+# 有效输入与来源矩阵
+
+审查快照为 2026-09-28 当前源码与上一轮两题保留材料。`sources.json` 保存路径、SHA-256 和大小；`session-matrix.md` 列出全部 44 个 GitHub、268 个 Sheet Braid session 与各自 instructions/context，`native-role-matrix.md` 列出 1,610 份 native-home role 文件的不同版本。所有 hash 都针对实际读取的文件，不把同目录最终文件当作历史上始终不变的输入。
+
+证据等级：A 为历史实际生成或工具输入/反馈；B 为当前装配与锁定依赖源码明确决定的行为；C 为尚未发生但由 B 可触发的场景。旧轮多次接续，两题各有 6 种 user-instructions 后缀，故不能用一个 braid-request/profile 文本概括整轮。完整模型 HTTP 请求没有在本任务中重建，基础 system 和 schema 的字节顺序由加载代码核对；不宣称取得逐轮完整 wire payload。
+
+| 消费者 / 层 | 来源与装配 | 注入时机与实际范围 | 旧版 / 当前证据 |
+|---|---|---|---|
+| 所有 Pi 会话：基础 system | `@earendil-works/pi-coding-agent/dist/core/system-prompt.js`，`buildSystemPrompt` | 按真实可用 tools 生成基础 coding assistant、tool snippets/guidelines；append role 后，追加可选 project context、skills 元数据、cwd。不是把父 Pi 的 system 原样继承 | 旧冻结末态源码与当前预热镜像该文件 SHA 相同：`4a57f022a27f2ae22d7d0c0d8f0ef4a63f869b878483699d4102055239bdea0a`。历史 mid-run 改动另以工具记录判定 |
+| Braid 成员：Issue / PR 身份与本地对象操作 | `sources/braid/src/group/provider.rs:61` 的 `local_instructions`、`:74` Issue、`:84` PR；`provider/pi.rs:195` 使用 append-system-prompt | 每次创建/恢复对应原生进程。包含本地身份、CLI、description/comment、指派、发布 Git 和 profile instructions；不是新 user message 每轮重复追加 | 旧：各 physical instructions 为 A；当前：源码 B，尚无团队制品运行采用 |
+| Braid 成员：profile 与动态尾部 | `variants/pi-braid/run.py:53`；两个 `agents/*/instructions.md`；BACKGROUND_COMPLETION_RULE `:31` | root 与其它成员均按 profile 获得。两 profile instructions 当前逐字相同；每位成员只取得自己的一个副本，不是同时两个副本 | 旧各 session 不同阶段 6 类后缀，当前 2678 字符 profile + 运行尾部 |
+| Braid 成员：需求与工作项数据 | `run.py` 的根 prompt；`context.rs:260` Issue / `:289` PR renderer；`provider/pi.rs:383` | root prompt 保存为根 Issue 需求；子 Issue 只带自身正文/评论与 Parent 引用；PR 带关联 Issue 快照与 PR 信息。canonical 作为首条 user 的 working data，任务由身份与事件消息要求处理 | 旧 first-user 与 context 证明 A；当前逻辑 B。父 Issue 全文不会自动进入子 Issue，运行约束也不因此自动继承 |
+| Braid 成员：后续更新、reset | `provider.rs:106` event references、`:133` reset notice；`provider/pi.rs:413` | 首次 prompt 接受后清 context 副本；后续正常 turn 仅带更新引用，新会话/确需重建才带完整 Context；reset 提醒保存相关工作，不要求另写完整档案 | 当前 B；旧 history 已出现反复完整 Context 的问题，已由上轮审计独立归因，本报告不重复数量收益 |
+| Braid 成员：技能 | `run.py:84–89` 显式 14 个 `--skill`；Pi `skills.js::formatSkillsForPrompt` | 常驻是 name/description/path；skill 正文仅在 read 或运行时其它明确拼接发生后进入上下文。`--no-skills` 禁 ambient 后仍使用显式参数 | 旧 launcher 与 work/skills A，当前 B。领域 skills 并非每轮全部正文注入 |
+| Braid 成员：原生工具与扩展 | `run.py:84–87` 的 pi-subagents、PBB、observer；原生工具 schema | subagent 的 full description/schema 可用，默认 builtins 禁用；Braid 的 `braid` 是 bash CLI，不是另一个原生 subagent 角色目录。observer 对恢复/错误按事件追加提示 | 旧冻结末态 pi-subagents 0.56.0；当前同版本且选取源码 SHA 相同。PBB 当前新增 service 与 pending-work 机制，未以旧轮推断已生效 |
+| 所有原生子角色：上下文基础 | agents frontmatter `append / fresh / inheritProjectContext:false / inheritSkills:false`；pi-subagents `runs/shared/pi-args.ts:671` | 默认 fresh，无父历史，无父 Braid/profile append，没有项目 AGENTS；仍有 Pi 基础 system。父 task 为子首条 user。显式 fork 可覆盖默认，故 fresh 是默认不是不可更改权限 | 配置和历史 vision first-user A；当前 B。fresh 不意味着文件系统/进程隔离，默认 cwd 继承父工作区，worktree 是另一个选项 |
+| advisor | 两 profile `agents/advisor.md`；run.py 追加 svc-design/references/workflow.md | kimi-k3 / high；read grep find ls bash；无 edit/write，行为只读；completionGuard:false；8 个 skill 的元数据；设计 workflow 正文常驻；非 vision 的 PBB 与尾部规则常驻 | 旧本次定向 trace 未发现实际 advisor launch，不因此判缺陷；当前可用契约 B。bash 提供查询能力，不等于强制文件系统只读 |
+| explorer | 两 profile `agents/explorer.md` + svc-investigation workflow | deepseek-v4-flash / high；read grep find ls bash；completionGuard:false；8 skills 元数据；当前 rg/ast-grep/Context7/Exa CLI 知识直接写角色。mcporter 通过 bash 和运行环境接线 | 旧角色版本有差别，见 native-role-matrix；当前 B。无需为已有入口查询强制委派 |
+| executor | 两 profile `agents/executor.md` + svc-implementation workflow | deepseek-v4-flash / high；read bash edit write grep find ls；12 skills 元数据；guard 未显式关闭，默认 legacy 路径启用；PBB；局部变更与反馈。父必须提供自己已获授权范围和共享工作区边界 | 当前 B，未在本次提取的旧子角色 launch 中观察 executor 执行；不将缺少调用当能力缺失 |
+| browser-operator | 两 profile `agents/browser-operator.md` + agent-browser/SKILL.md 全文 | visual deepseek-v4-flash-vision-exp / high；read bash；3 skills 元数据；completionGuard:false；原生子角色普通 shell 可运行 agent-browser；浏览器探索/复现，不负责用一次手工报告取代整体验收 | 工具/角色当前匹配 B。注入的 skill 当前 5345 字符，包含更多验收 helper 说明；不是只有 browser metadata |
+| vision | 两 profile `agents/vision.md` | visual deepseek-v4-flash-vision-exp / high；仅 read；skills 为空；无 PBB；当前 completionGuard:false。只读提供材料，输出带来源观察；不会因目录存在得到浏览器能力或父需求全文 | 两题实际成功 vision meta 与首条 task A；GitHub Issue #6 早期 native-home role 没有 false，而最终模板已有，不能混用 |
+| 子角色技能、SOP、guard | pi-subagents `agents/skills.ts:681`、`api/preflight.ts:370`、`runs/shared/acceptance.ts:77`、`completion-guard.ts:92` | role 技能字段变成 available_skills 元数据；run.py 明确拼入的 workflow 才是固定正文。completionGuard 与 acceptance 自动推断是两套机制；一个 false 不关闭另一套 | 当前预热 acceptance 与旧末态 SHA 同为 `13a53447f5047c1ba1a47ef98745070c33cedbd02bb24aebb05d517a925efcee` |
+| 子角色返回与后续 | toolResult、native meta、completion message、observer 恢复提示 | 父看到启动回执、状态/完成、可选 acceptance；启动回执不代表完成。恢复索引传递旧 ID 与产物入口，不自动重放其全部原始材料 | 本任务收集两题共 65 条 subagent/subagent_wait toolResult，见 feedback.json；未作全量行为归因 |
+
+两套 Braid profile 的主要差别是主模型与指派描述（glm-5.3-flash / deepseek-v4-flash），原生五角色当前文件一致。模型目录存在只说明可解析配置，实际成功仅由对应 meta/工具记录确认；advisor 新运行可达性和父会话是否采纳不在本次只读审查中证明。

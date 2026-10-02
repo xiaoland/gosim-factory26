@@ -2,7 +2,7 @@
 
 2026-10-01 当前状态纠正：[WSL清理执行记录](../../runs/wsl-retained-20260930/README.md)在最终步骤明确记载，I12已被主动终止，随后WSL干净关闭、VHDX从480.62GiB压缩至71.17GiB，Debian保持停止。以下9月30日暂停/恢复记录属于历史阶段，不能继续当作当前仍存活的现场。项目内 `runs/wsl-retained-20260930/i12-current/` 保存约19:39捕获的文件快照及control在线一致DB备份、Git bundles、worktree映射和dirty patches；该采集点不等于最终终止点，也不是完整机器备份。现阶段以归档取证，不自动复活旧I12；WSL环境修复另按用户修正后的目标讨论。
 
-2026-09-30。当前阶段：两题已按用户“可以暂停 I12 了，内容已经太多，我已经看到很多问题”整体暂停。15:59:13 CST确认两个容器Running=true、Paused=true，冻结全部容器内Agent会话与Braid定期检查，不取消、清理或自动恢复。代码、Git、对象及原生会话保留，暂停状态的数据库文件另存；部署身份与暂停回执以 [从零重启](restart.md) 为准。两题此前15:14:51/52 CST分别取得真实GLM响应及成功工具结果；原12:25:47 CST现场保留为退役证据。核心修复及新版Console已落地，Console整体暂停/恢复能力已登记到I13、尚未实现。
+2026-09-30。当前阶段：两题曾按用户“可以暂停 I12 了，内容已经太多，我已经看到很多问题”整体暂停，15:59:13 CST确认两个容器Running=true、Paused=true。19:25:33 CST的Console控制journal记录GitHub通过页面控制恢复；20:18/20:21 CST实际读取确认GitHub Running=true、Paused=false，Sheet Running=true、Paused=true，原容器PID与StartedAt未变。用户随后确认19:25恢复是其手动通过Console操作，现已再次暂停；以该最新说明记录两题暂停，Console支线已于20:52 CST通过实际API确认两题均Running=true、Paused=true，PID/StartedAt保持不变，原文见 `runs/braid-console-control/20260930-session-navigation/http.before.json`。本会话不自动改变运行状态。代码、Git、对象及原生会话保留，暂停时的数据库文件另存；部署身份、暂停及恢复记录以 [从零重启](restart.md) 为准。两题此前15:14:51/52 CST分别取得真实GLM响应及成功工具结果；原12:25:47 CST现场保留为退役证据。Console整体暂停/恢复及暂停后读取已独立实现和部署，状态归[设施任务](../braid-console-control/packet.md)；I13源码没有部署到当前冻结运行。
 授权原话：“其它的各项处置我都同意，请你应用它们为 I12 并且从 I11 的运行状态中再次进行摘剪……另外 I12 还实现一个实时的可交互的 web console”。
 
 ## 目标与边界

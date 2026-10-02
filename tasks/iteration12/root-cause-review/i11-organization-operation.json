@@ -1,0 +1,81 @@
+{
+  "identity": "isolated e68661975b53 frozen app copy; fresh scratch DB; reused same package.json dependencies; no official tests",
+  "runtime": "v20.19.3",
+  "observed": "2026-09-30T05:17:43.315Z",
+  "requests": [
+    {
+      "url": "http://127.0.0.1:18847/api/auth/session",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:18847/api/auth/sign-in",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:18847/api/auth/session",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:18847/api/search/repositories?q=acme-docs",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:18847/api/repos/alice-dev/acme-docs",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:18847/api/repos/alice-dev/acme-docs/branches",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:18847/api/repos/alice-dev/acme-docs/commits?branch=main&limit=1",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:18847/api/orgs",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:18847/api/orgs/acme-demo",
+      "status": 200
+    },
+    {
+      "url": "http://127.0.0.1:18847/api/orgs/acme-demo/repositories",
+      "status": 200
+    }
+  ],
+  "browserErrors": [],
+  "home": {
+    "signInLinks": 2,
+    "signUpLinks": 2,
+    "text": "SimpliHub\nSign in\nSign up\nSimpliHub\n\nA simplified collaboration platform: accounts, organisations, repositories, code, issues and pull requests.\n\nSign in\nSign up"
+  },
+  "strictSignInClick": "locator.click: Error: strict mode violation: getByRole('link', { name: 'Sign in', exact: true }) resolved to 2 elements:\n    1) <a href=\"/login\" class=\"text-sm text-accent no-underline\">Sign in</a> aka getByRole('navigation').getByRole('link', { name: 'Sign in' })\n    2) <a href=\"/login\" class=\"btn-primary\">Sign in</a> aka getByRole('main').getByRole('link', { name: 'Sign in' })\n\nCall log:\n  - waiting for getByRole('link', { name: 'Sign in', exact: true })\n",
+  "login": {
+    "url": "http://127.0.0.1:18847/",
+    "body": "SimpliHub\nNew repository\nA\nSimpliHub\n\nA simplified collaboration platform: accounts, organisations, repositories, code, issues and pull requests.\n\nSigned in as alice-dev."
+  },
+  "refreshSessionPersists": true,
+  "search": {
+    "url": "http://127.0.0.1:18847/search?q=acme-docs",
+    "body": "SimpliHub\nNew repository\nA\nSearch results for “acme-docs”\nRepositories\nacme-docs\nPublic\n\nalice-dev/acme-docs · Updated 9/30/2026, 1:14:03 AM\n\nDocumentation for the Acme demo project\n\nacme-docs-fork\nPublic\n\nalice-dev/acme-docs-fork · Updated 9/30/2026, 1:14:03 PM\n\nFork sandbox used by the fork conflict scenario"
+  },
+  "repo": {
+    "url": "http://127.0.0.1:18847/alice-dev/acme-docs",
+    "body": "SimpliHub\nNew repository\nA\nalice-dev/acme-docs\nPublic\n\nDocumentation for the Acme demo project\n\nCode\nFork\nCode\nIssues\nPull requests\nSettings\nmain\nCommits\n2\nAdd file\nUpdated 9/30/2026, 1:14:03 AM\ndocs\nsrc\nREADME.md\nAbout\nVisibility\nPublic\nDefault branch\nmain"
+  },
+  "organizations": {
+    "url": "http://127.0.0.1:18847/settings/organizations",
+    "body": "SimpliHub\nNew repository\nA\nSettings\nPublic profile\nPassword and authentication\nYour organizations\nacme-demoAcme Demo\nOwner\n\nNew organization"
+  },
+  "orgBeforeFilter": {
+    "url": "http://127.0.0.1:18847/orgs/acme-demo",
+    "body": "SimpliHub\nNew repository\nA\nacme-demo\n\nAcme Demo\n\nRepositories\nPeople\nTeams\nFind a repository\nVisibility filter\nAll\nPublic\nPrivate\norg-handbook\nPublic handbook of the Acme Demo organisation\nPublic\nUpdated 2026-09-30 05:14\norg-private\nPrivate notes of the Acme Demo organisation\nPrivate\nUpdated 2026-09-30 05:14"
+  },
+  "orgAfterFilter": {
+    "url": "http://127.0.0.1:18847/orgs/acme-demo",
+    "body": "SimpliHub\nNew repository\nA\nacme-demo\n\nAcme Demo\n\nRepositories\nPeople\nTeams\nFind a repository\nVisibility filter\nAll\nPublic\nPrivate\n\nNo results",
+    "acmeDocsLinks": 0
+  },
+  "serverLog": "[server] listening on http://127.0.0.1:18847 (db: /tmp/factory26-i11-root-review/observation.db)\n[server] SIGTERM received, shutting down\n"
+}

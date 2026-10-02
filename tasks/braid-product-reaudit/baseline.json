@@ -1,0 +1,26 @@
+{
+  "observed_at": "2026-09-28T03:09:29.817664+00:00",
+  "head": "89212933c976b889f27de1b8cfe863baf8f6042e",
+  "note": "工作树包含既有未提交改动；本任务仅写 tasks/braid-product-reaudit",
+  "files": {
+    "src/objects.rs": "ad70fc523bafe59e3594f8c199c3832ff71330b34fbb14d74ad7de277de44690",
+    "src/store/mod.rs": "75f556322e355908dc97357230c5f11888c0e0d2cc1f1ea6324de3331b9a6a64",
+    "src/local.rs": "8d97cb9004d88b9e51bed769f93acd0bb8dbc7bc6accb20ad461654505dbf641",
+    "src/context.rs": "0a28e19098a28412013f919dc61f57490f3bd9914852613a55c1d93834d7c156",
+    "src/group/dispatch.rs": "a3c0655120d5c2a4433b33d8f032589919fdfbd3201f86fa0f1baa34c0b76b84",
+    "src/group/worker.rs": "f91346dc9736caca8149281aba45d8d9fa55f5b881fa346c22bb06c654fa3edb",
+    "src/group/provider.rs": "8dcf3ddd6b47142274efa161e1fb0e263809e88a5d14b6af671e285a88f6753c",
+    "src/cli/mod.rs": "8c7ad15ec080fa2a69ab8197815c706ea0d2a36f0ad041fff9e4094e62e733d6",
+    "migrations/0009_member_identity.sql": "f71bcc04de23421f210ad43c7e009fd713aa87695cd66ae8487333d6fa766bbd",
+    "docs/20-product-tdd/local.md": "3bfd166c5dfdc1e6082731b92981ab29c28c79ad50de7ea673f888cfd96186f2",
+    "docs/20-product-tdd/context.md": "3cd3dc1623079a87f17fde722d5e965200c85aa93c5c2fdd73bdeeb100e2f314",
+    "docs/20-product-tdd/lifecycle.md": "ce6b73ae581d51cfd314f37d794b04ac2e60aec231bf716381ad99807114e0ac"
+  },
+  "end_observed_at": "2026-09-28T03:15:19.086341+00:00",
+  "changed_during_review": [],
+  "additional_files_at_end": {
+    "src/provider/pi.rs": "146d09068b2fcf64ea88a6b31e733c4d5efaf4d5347fda1e51f5f81ebb038dd6",
+    "src/provider/session.rs": "de9ee28d08bcb171ab4a36dbfdb05bfe49302f33fbf630bb56bb16f2840344d4",
+    "src/agent_session.rs": "7812194e0d1b6c045a1cbc5b7132f9ae5fa420aebfe92a834e0ac657f5e7d7cb"
+  }
+}

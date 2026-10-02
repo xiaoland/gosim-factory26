@@ -1,0 +1,518 @@
+{
+  "created_at_utc": "2026-09-30T09:45:10.811113+00:00",
+  "scope": "R06 targeted read-only original-source investigation; no logged commands executed",
+  "files": {
+    "G19": {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-deepseek-fast-01a0eda1-19a5-7dc2-b4da-966d3d9f6427/2026-09-29T14-46-17-412Z_01a0eda1-7844-737b-a333-776771c4cf0e.jsonl",
+      "sha256": "16cb13935b6faed014bc8e38d915cbdc4b96e2a6e2b4c4a4f16631c5c7e2d747"
+    },
+    "G20": {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ede7-c373-7652-bdb8-2b2d5f53e1c7/2026-09-29T16-03-05-477Z_01a0ede7-c885-7154-afc8-14c84d474152.jsonl",
+      "sha256": "faa5cede7853a695c39ee3ef0bb4943ae13809b79554c04179bb7770262d37be"
+    },
+    "GM": {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/work/native-homes/pi-glm-fast-01a0ecff-7bc8-75f3-ae03-c4d92e8e6561/2026-09-29T11-49-25-679Z_01a0ecff-8c2f-7379-8857-a3ff01afd017.jsonl",
+      "sha256": "2373c1086aae7e4231b76b95f7785c713c6022180694d0392661fe1e637147de"
+    },
+    "S13": {
+      "path": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/work/native-homes/pi-deepseek-fast-01a0efff-7173-7ff0-967a-9e619f01d259/2026-09-30T01-48-34-507Z_01a0efff-cf4b-7018-9b07-4dae29085d1b.jsonl",
+      "sha256": "9dee812738a183980a8179337bf178d9fdac379bb25c66150de9ddf475ffb24c"
+    },
+    "SR": {
+      "path": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/work/native-homes/pi-glm-fast-01a0f00a-75ce-7b31-9b98-8284bd9b36e1/2026-09-30T02-00-14-000Z_01a0f00a-7bb0-7263-bfff-449d74b72eea.jsonl",
+      "sha256": "4da386dc9b322d06b8beef8a6a89a3df38f7b4e10d95ac3e566689c66e543c44"
+    }
+  },
+  "records": [
+    {
+      "source_alias": "G19",
+      "line": 9,
+      "id": "4d88a366",
+      "timestamp": "2026-09-29T14:46:31.231Z",
+      "role": "assistant",
+      "record_sha256": "fcdd9ce2c9ebfba5f55d953ad3d70baa3a60bb9c097c911f182bd88617bfcf13"
+    },
+    {
+      "source_alias": "G19",
+      "line": 85,
+      "id": "7e2dbe09",
+      "timestamp": "2026-09-29T14:51:01.427Z",
+      "role": "toolResult",
+      "record_sha256": "40cf8ad72bd4ee1be2bd40cb48e75ea98a2fb763cfd9ef30803a618e785414a4"
+    },
+    {
+      "source_alias": "G19",
+      "line": 86,
+      "id": "fc006dcf",
+      "timestamp": "2026-09-29T14:51:08.846Z",
+      "role": "assistant",
+      "record_sha256": "9d3e3418248be7aae0746b61424f1c8397ebe1693d502a59504e20a7abc7442c"
+    },
+    {
+      "source_alias": "G19",
+      "line": 88,
+      "id": "d01666cf",
+      "timestamp": "2026-09-29T14:51:10.930Z",
+      "role": "assistant",
+      "record_sha256": "f43c52e44dda9bc5c8d25bbc46e9a4c01da279bde4f1800c292ede3e9412924a"
+    },
+    {
+      "source_alias": "G19",
+      "line": 95,
+      "id": "cd417b65",
+      "timestamp": "2026-09-29T14:54:30.802Z",
+      "role": "toolResult",
+      "record_sha256": "7eb4902f35211545fbc64eed35b35d2eccf5d503a650887f556ae7c6a4dadca2"
+    },
+    {
+      "source_alias": "G19",
+      "line": 100,
+      "id": "01b86c82",
+      "timestamp": "2026-09-29T14:54:45.927Z",
+      "role": "assistant",
+      "record_sha256": "afab59fa33983c08d0b22f521ebd4942b2d64ee975afaae83b060f15a3884d72"
+    },
+    {
+      "source_alias": "G19",
+      "line": 102,
+      "id": "2a3434fa",
+      "timestamp": "2026-09-29T14:54:51.942Z",
+      "role": "assistant",
+      "record_sha256": "87f784de9e7b5beede28b47227cbe4aa14b68dd336c6f2320cf4f7575cfc1197"
+    },
+    {
+      "source_alias": "G19",
+      "line": 108,
+      "id": "4d88df5a",
+      "timestamp": "2026-09-29T14:54:56.529Z",
+      "role": "assistant",
+      "record_sha256": "8fafcec48056bdee054e597687f46d2b1889762744f38d8a1885c415091f79ee"
+    },
+    {
+      "source_alias": "G19",
+      "line": 117,
+      "id": "698ce7c8",
+      "timestamp": "2026-09-29T14:57:56.754Z",
+      "role": "toolResult",
+      "record_sha256": "e82c3b6a60ccaa87dae59d56b45e5a467e5d13345f6414612d71ba02847f60c9"
+    },
+    {
+      "source_alias": "G19",
+      "line": 118,
+      "id": "6b429d59",
+      "timestamp": "2026-09-29T14:58:02.341Z",
+      "role": "assistant",
+      "record_sha256": "0aa42e4f327994e83a897e610f213aeab8adccbf771b8af4273bab6d9b46c2fe"
+    },
+    {
+      "source_alias": "G19",
+      "line": 120,
+      "id": "869f4e6a",
+      "timestamp": "2026-09-29T14:58:06.503Z",
+      "role": "assistant",
+      "record_sha256": "1233eb73dbb503a963b27aee54a18ff1cfae500c049cffdd2b64162157e9130c"
+    },
+    {
+      "source_alias": "G19",
+      "line": 121,
+      "id": "4f98f63b",
+      "timestamp": "2026-09-29T14:58:06.667Z",
+      "role": "toolResult",
+      "record_sha256": "47f2f2cf33e340a7f08954ddd611c78c6ff218fd926417a5471dea955e418fd1"
+    },
+    {
+      "source_alias": "G19",
+      "line": 124,
+      "id": "0266d6ce",
+      "timestamp": "2026-09-29T14:58:10.291Z",
+      "role": "assistant",
+      "record_sha256": "0d7ee06d3343934ac945917d7405d0c369e3eb6313804304de0f05362df4734a"
+    },
+    {
+      "source_alias": "G19",
+      "line": 125,
+      "id": "8f8ac93f",
+      "timestamp": "2026-09-29T14:58:10.298Z",
+      "role": "toolResult",
+      "record_sha256": "d136bcd0d16b42b2bb4ffbd8b6befe95cef5d637c4bee6cf67ad254fc4b2b85e"
+    },
+    {
+      "source_alias": "G19",
+      "line": 138,
+      "id": "666f1484",
+      "timestamp": "2026-09-29T15:03:25.099Z",
+      "role": "toolResult",
+      "record_sha256": "b75e1454e20288cf1d108de3e945e5e1037784ca523e2f425a2a7f11722d915f"
+    },
+    {
+      "source_alias": "G19",
+      "line": 140,
+      "id": "bf6973b1",
+      "timestamp": "2026-09-29T15:03:26.931Z",
+      "role": "toolResult",
+      "record_sha256": "08b40ff23fc70f6f9bb4ab0ce17f504cbe1a280929c6b0532db04e7a468b2306"
+    },
+    {
+      "source_alias": "G20",
+      "line": 15,
+      "id": "adacbd5b",
+      "timestamp": "2026-09-29T16:04:11.329Z",
+      "role": "toolResult",
+      "record_sha256": "5515493453076fbf8d74ccc01c9bcd3c1c6d1638f6244ab8c05ccfd9f363f216"
+    },
+    {
+      "source_alias": "G20",
+      "line": 16,
+      "id": "5221a5a4",
+      "timestamp": "2026-09-29T16:04:45.840Z",
+      "role": "assistant",
+      "record_sha256": "83c8fe3179d3d54419f173d1c6e9346fb2679466b00169662988b495c96a2ab8"
+    },
+    {
+      "source_alias": "G20",
+      "line": 19,
+      "id": "fcf26f04",
+      "timestamp": "2026-09-29T16:04:52.419Z",
+      "role": "assistant",
+      "record_sha256": "00891dd46ca098b535908c32d4908fdf4ecbcec82e0df914ca5a8a0f5e994c1b"
+    },
+    {
+      "source_alias": "G20",
+      "line": 20,
+      "id": "04c7774d",
+      "timestamp": "2026-09-29T16:04:52.834Z",
+      "role": "toolResult",
+      "record_sha256": "184035734c8ca183513cd621e5652076db226a67ba91d57166b5935217e1d8cb"
+    },
+    {
+      "source_alias": "G20",
+      "line": 21,
+      "id": "e52d66cc",
+      "timestamp": "2026-09-29T16:05:11.012Z",
+      "role": "assistant",
+      "record_sha256": "a592609ef0a52b70486480b8272f361d2a34433902be328d2c786a2afac17250"
+    },
+    {
+      "source_alias": "G20",
+      "line": 29,
+      "id": "eba3634a",
+      "timestamp": "2026-09-29T16:06:07.328Z",
+      "role": "assistant",
+      "record_sha256": "a8cc6eedac4e6b7316fa7cdb2072838ee520f14ebcad0856be6e2d765d5f6ca7"
+    },
+    {
+      "source_alias": "GM",
+      "line": 36,
+      "id": "9c3a4129",
+      "timestamp": "2026-09-29T11:56:04.850Z",
+      "role": "assistant",
+      "record_sha256": "9f512188528da19061c87965118c04cfad1a4602ec5a472527f57e32c281a22f"
+    },
+    {
+      "source_alias": "GM",
+      "line": 53,
+      "id": "d93a62f9",
+      "timestamp": "2026-09-29T11:58:34.427Z",
+      "role": "assistant",
+      "record_sha256": "f4fd25f17dba471961719be4884a65c0060f2a5b5ace090802f2bf8151899202"
+    },
+    {
+      "source_alias": "GM",
+      "line": 69,
+      "id": "2a22f1a7",
+      "timestamp": "2026-09-29T12:01:48.634Z",
+      "role": "assistant",
+      "record_sha256": "6c6790b52c571b88619b38315698a43fb66e231c9a831994b29cc62e039ae432"
+    },
+    {
+      "source_alias": "S13",
+      "line": 9,
+      "id": "07edb810",
+      "timestamp": "2026-09-30T01:48:58.528Z",
+      "role": "assistant",
+      "record_sha256": "2deba2e2cd45bc54f4ffc305587a4043f9cdd7ce6392d6e99c5cf36467998bd2"
+    },
+    {
+      "source_alias": "S13",
+      "line": 10,
+      "id": "aea38437",
+      "timestamp": "2026-09-30T01:49:02.647Z",
+      "role": "toolResult",
+      "record_sha256": "dc4d8b6b4714381142aa46f4b9a0ebbb7f253faa601ab2e5ce2630216914e5e9"
+    },
+    {
+      "source_alias": "S13",
+      "line": 11,
+      "id": "890a8445",
+      "timestamp": "2026-09-30T01:49:02.647Z",
+      "role": "toolResult",
+      "record_sha256": "d67ebf81255d0d2efa5d166a1fcbf17f92549200ebc0aaceea1ce0307123ba59"
+    },
+    {
+      "source_alias": "S13",
+      "line": 12,
+      "id": "b8b333b0",
+      "timestamp": "2026-09-30T01:49:13.068Z",
+      "role": "assistant",
+      "record_sha256": "57754180fa0fd2dd0f55704450fbffde28c98f73e313553189252bd6f8780174"
+    },
+    {
+      "source_alias": "S13",
+      "line": 13,
+      "id": "7552b9ee",
+      "timestamp": "2026-09-30T01:49:13.222Z",
+      "role": "toolResult",
+      "record_sha256": "af56b58a8942f3d6519fda9438fb7900f2524c422e7ee48eb680a27f1ca3415f"
+    },
+    {
+      "source_alias": "S13",
+      "line": 42,
+      "id": "f5731270",
+      "timestamp": "2026-09-30T01:50:12.370Z",
+      "role": "assistant",
+      "record_sha256": "651095e38542bd6703e87c111a98920c7d671939d2711241f9bce9ede4569259"
+    },
+    {
+      "source_alias": "S13",
+      "line": 54,
+      "id": "170be1db",
+      "timestamp": "2026-09-30T01:50:32.028Z",
+      "role": "assistant",
+      "record_sha256": "3e95f6634a88807d6cfd5dfd16789f0a491a189cbf2c2884fdc1c46e6b2b8562"
+    },
+    {
+      "source_alias": "S13",
+      "line": 55,
+      "id": "47e72a63",
+      "timestamp": "2026-09-30T01:50:32.078Z",
+      "role": "toolResult",
+      "record_sha256": "269c40ac966711cec9d62980d097424cf394862c567c31aef547dc53b4da089e"
+    },
+    {
+      "source_alias": "S13",
+      "line": 78,
+      "id": "7ff00aa0",
+      "timestamp": "2026-09-30T01:51:59.002Z",
+      "role": "assistant",
+      "record_sha256": "ce14d128cd5e9478056e6460b72f50d0c31b79c21fe1b29e123b0440e9d21d43"
+    },
+    {
+      "source_alias": "S13",
+      "line": 79,
+      "id": "63729b2e",
+      "timestamp": "2026-09-30T01:52:00.576Z",
+      "role": "toolResult",
+      "record_sha256": "9eda85c78bb3197b08e9632b844511643291f1345d0305c246782a884903c7dc"
+    },
+    {
+      "source_alias": "SR",
+      "line": 35,
+      "id": "893fcf23",
+      "timestamp": "2026-09-30T02:08:07.925Z",
+      "role": "assistant",
+      "record_sha256": "c5251ee60a2bde3e2cf044939a673c9127302308b023d42b99b407e76b4d22ae"
+    },
+    {
+      "source_alias": "SR",
+      "line": 44,
+      "id": "ceb7b383",
+      "timestamp": "2026-09-30T02:08:42.558Z",
+      "role": "assistant",
+      "record_sha256": "22199bd76f1026bdb0e360ecc87678d65b2cc7ba4e07c0f3330b66261ae80762"
+    },
+    {
+      "source_alias": "SR",
+      "line": 46,
+      "id": "4b1e2c02",
+      "timestamp": "2026-09-30T02:09:00.041Z",
+      "role": "assistant",
+      "record_sha256": "435b167a93567d65819a887d5a164f9abe3d07880edec607b0d84fa2423bd74e"
+    },
+    {
+      "source_alias": "SR",
+      "line": 70,
+      "id": "4dc9ca1a",
+      "timestamp": "2026-09-30T02:10:44.063Z",
+      "role": "assistant",
+      "record_sha256": "4835999155535ee58cca0ece7d249b0669fbe70b38a9e4f79ecfe1de199271bb"
+    },
+    {
+      "source_alias": "SR",
+      "line": 72,
+      "id": "c16460ea",
+      "timestamp": "2026-09-30T02:10:49.610Z",
+      "role": "assistant",
+      "record_sha256": "e506b32dc121fa50c8ddee78fe9deecd53a1169d77d3ad08658d3f2e6c6ddbef"
+    }
+  ],
+  "comments": [
+    {
+      "source_db": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/braid.sqlite3",
+      "table": "local_comments",
+      "comment_id": 273,
+      "created_at": "2026-09-29T12:04:38.420884271Z",
+      "updated_at": "2026-09-29T12:04:38.420884271Z",
+      "revision": 1,
+      "writer_group": "01a0ecda-0035-7c93-8bea-553f52de149e",
+      "writer_turn": "01a0ed09-e552-78d2-970d-9baa0d62e9c3",
+      "body_sha256": "343438a8799dd5cebce9c2f9d86b7d84db99f636403d25fd1b4d2a5ee58dfd5a"
+    },
+    {
+      "source_db": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/braid.sqlite3",
+      "table": "local_comments",
+      "comment_id": 274,
+      "created_at": "2026-09-29T15:03:36.061317101Z",
+      "updated_at": "2026-09-29T15:03:36.061317101Z",
+      "revision": 1,
+      "writer_group": "01a0eced-2a8d-7b20-9b65-1af7e9685ede",
+      "writer_turn": "01a0eda1-7e8f-7830-a25f-3150ced94375",
+      "body_sha256": "c3b885359345cd719e99f63029a54c41d957c1c050734fa9ff551e467ae37177"
+    },
+    {
+      "source_db": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/braid.sqlite3",
+      "table": "local_comments",
+      "comment_id": 299,
+      "created_at": "2026-09-29T16:06:27.81919451Z",
+      "updated_at": "2026-09-29T16:06:27.81919451Z",
+      "revision": 1,
+      "writer_group": "01a0ecda-1362-7ff0-b9a3-d5828862d221",
+      "writer_turn": "01a0ede7-caa0-79d1-82f3-288dc9bcbb4a",
+      "body_sha256": "cfe91028bf9cca88341bf1f2980a766f1ea6f2d49bb8c2be1741cccc8604762b"
+    },
+    {
+      "source_db": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/braid.sqlite3",
+      "table": "local_comments",
+      "comment_id": 571,
+      "created_at": "2026-09-29T17:26:06.404608898Z",
+      "updated_at": "2026-09-29T17:26:06.404608898Z",
+      "revision": 1,
+      "writer_group": "01a0ec8e-3367-7061-87b6-5b38c1195d12",
+      "writer_turn": "01a0ee2a-b79d-73b0-a54b-96da11e55831",
+      "body_sha256": "d2045ab00fd2740af044241ba58ad9d7654d5ebfa656a2bfacd7a182cbb270d5"
+    },
+    {
+      "source_db": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/braid.sqlite3",
+      "table": "local_comments",
+      "comment_id": 574,
+      "created_at": "2026-09-29T17:28:13.367447186Z",
+      "updated_at": "2026-09-29T17:28:13.367447186Z",
+      "revision": 1,
+      "writer_group": "01a0ee33-10a9-7171-9abe-c0e2c6f44e1e",
+      "writer_turn": "01a0ee33-a663-7573-a2b7-d1e92df17b5a",
+      "body_sha256": "7a9de94478e0044e301f8aa34c17615179bf5c16e9e00ce0a057406b98458475"
+    },
+    {
+      "source_db": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/braid.sqlite3",
+      "table": "local_comments",
+      "comment_id": 578,
+      "created_at": "2026-09-30T01:51:58.309631869Z",
+      "updated_at": "2026-09-30T01:51:58.309631869Z",
+      "revision": 1,
+      "writer_group": "01a0ec7c-4f21-79f3-a4c9-e202a7140a89",
+      "writer_turn": "01a0efff-d852-7831-8c5a-5709a76b1e60",
+      "body_sha256": "9d990a37549b4a1dc3d9c4d9a0518a5e0c4caef64f642c18aaa123a8982cdf50"
+    },
+    {
+      "source_db": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/braid.sqlite3",
+      "table": "local_comments",
+      "comment_id": 582,
+      "created_at": "2026-09-30T02:06:30.725316851Z",
+      "updated_at": "2026-09-30T02:06:30.725316851Z",
+      "revision": 1,
+      "writer_group": "01a0ed04-7743-7712-98e3-8677c019c89d",
+      "writer_turn": "01a0efff-df58-7c22-8961-b46896fdec34",
+      "body_sha256": "f3bed71d9b3d782f8341a504c20d3d7750908f1e32a0c24435dbe9c7e7cb92c2"
+    },
+    {
+      "source_db": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/braid.sqlite3",
+      "table": "local_comments",
+      "comment_id": 588,
+      "created_at": "2026-09-30T02:10:44.082235696Z",
+      "updated_at": "2026-09-30T02:10:44.082235696Z",
+      "revision": 1,
+      "writer_group": "01a0ec7c-4f21-79f3-a4c9-e202a7140a89",
+      "writer_turn": "01a0f00f-9063-7681-a5d4-0f3a1744888f",
+      "body_sha256": "b9fccecb610f063c65c8846da44eca0ee05933b5fd1de151f76025604ad60b7d"
+    },
+    {
+      "source_db": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/braid.sqlite3",
+      "table": "local_comments",
+      "comment_id": 589,
+      "created_at": "2026-09-30T02:10:50.554969673Z",
+      "updated_at": "2026-09-30T02:10:50.554969673Z",
+      "revision": 1,
+      "writer_group": "01a0ec7c-4f21-79f3-a4c9-e202a7140a89",
+      "writer_turn": "01a0f00f-9063-7681-a5d4-0f3a1744888f",
+      "body_sha256": "bb40a1ed16f24685ff5a9456e0c8deef4023850b8dd7c852f1cac1074698138f"
+    }
+  ],
+  "material_snapshots_at_close": [
+    {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/physical/01a0eda1-19a2-72e3-ad35-0626804fcd5c/instructions.md",
+      "sha256": "e38e05a2e81ee8ec100d104b380fa15e27a94d744e684e105099a6e7ec1a3feb"
+    },
+    {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/physical/01a0eda1-19a2-72e3-ad35-0626804fcd5c/session.json",
+      "sha256": "a2118eb6ba04c22176720f14c699c10c974edf8033772cf8a92887459a29094e"
+    },
+    {
+      "path": "runs/analysis/braid-context-methodology/github-final-20260930/extracted/evidence/braid-state/physical/01a0ede7-c371-7722-8ceb-34c02f1abcce/instructions.md",
+      "sha256": "962c4f22a4bd31fe332b2ea065f2c92daf507eb385f36d5f8223812147201732"
+    },
+    {
+      "path": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/physical/01a0efff-7171-7460-9518-66a53c21d3b9/instructions.md",
+      "sha256": "fc483bbd75fa8d37873c5c1a7f030f8387634a6d65022982acc99de118c19545"
+    },
+    {
+      "path": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/evidence/issue-6-d/undo-shortcut-stability/full-e2e-18cfeab-result.json",
+      "sha256": "f148c0166b3a600a2840df6e1e799125b42daf0ebaa4d9016aea03a69e970503"
+    },
+    {
+      "path": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/evidence/pr-13-integration/final-5926059-full-e2e-nonskip/result.json",
+      "sha256": "feb45b0df5d27669c98134450b81bb5a7973f5fdf70d0ed3e1cc6b274f274bb7"
+    },
+    {
+      "path": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/evidence/pr-13-integration/final-5926059-full-e2e-skipbuild/result.json",
+      "sha256": "a7e05b43ccd132803fb64e19b4cdee46474f5e920389046dd638418216b19f47"
+    },
+    {
+      "path": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/evidence/pr-13-integration/final-5926059-platform-path/result.json",
+      "sha256": "21d4e7094271a0fa8f621107713cb17cff8b4593c3f2509862232940417d86b8"
+    },
+    {
+      "path": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/evidence/pr-13-integration/final-5926059-unit-typecheck/result.json",
+      "sha256": "64733f4739b9d4b862d7ea7d99987e9a706cd41c618ab2b82719db6d37cd0da7"
+    },
+    {
+      "path": "tasks/iteration13/findings.md",
+      "sha256": "6d07842c260961db824213bb6620e9b4b03f94414577316a2d323bbf51db817c"
+    },
+    {
+      "path": "tasks/iteration13/packet.md",
+      "sha256": "40ded70a15bf0876e4c976d1449b3fd6f955855c72fb9f43ad27df5c833c797b"
+    },
+    {
+      "path": "tasks/iteration13/repair-design.md",
+      "sha256": "654aa17f3111fd54d1acca85f180c56a435658a743f32e272c7fb5c753b23d91"
+    },
+    {
+      "path": "tasks/iteration12/i11-github-score/findings.md",
+      "sha256": "b7adebcb0ea3f0de13882133004679c978ecbb8f89f0ff6858eb1bc1b23c8f3b"
+    },
+    {
+      "path": "tasks/iteration12/root-cause-review/report.md",
+      "sha256": "400318afbd8da8ebfcc19a11a9ff58be70167efd64b72c8c0e4ace88b4c1afa3"
+    }
+  ],
+  "read_only_git_observation": {
+    "git_dir": "tasks/iteration11/sheet-effectiveness-analysis/evidence/final-source/workspace/official-generation/template/.factory26/20260929-042409-811f18d4/braid-state/origin.git",
+    "18cfeab_tree": "0c61a1ce9f67a2ef4246f0c48ba52908b5c19e68",
+    "2dc4b9f_tree": "0c61a1ce9f67a2ef4246f0c48ba52908b5c19e68",
+    "5926059_tree": "1a18466bd63e2702b91663033a3e5d62d228de65",
+    "18cfeab_to_5926059_files": [
+      "tasks/issue-6-d/packet.md",
+      "tasks/pr-13-integration/packet.md"
+    ],
+    "diff_stat": "2 files changed, 16 insertions(+), 6 deletions(-)"
+  }
+}

@@ -1,0 +1,193 @@
+{
+  "method": "temporary Rust test invoked current StoreActor::advance_scheduler twice on isolated snapshot copy; original archive unchanged",
+  "after_database": "/var/folders/rk/8_krr0y14p9g5plk8n77lgyr0000gn/T/braid-contact-snapshot-01a0e60f-81b0-7f51-b8b6-b84ba6752f46/braid.sqlite3",
+  "queries": {
+    "assignments": {
+      "sql": "SELECT assignment_id,member_login,lifecycle FROM assignments ORDER BY assignment_id",
+      "before": [
+        [
+          "01a0e1e2-c3df-76d2-aefa-d277a7ba3137",
+          "glm-1",
+          "active"
+        ],
+        [
+          "01a0e1f3-5885-7780-8c06-5872d58b0cb9",
+          "deepseek-2",
+          "retired"
+        ],
+        [
+          "01a0e1fc-d4a7-7752-acd8-b432d6ecb0bb",
+          "glm-3",
+          "blocked"
+        ],
+        [
+          "01a0e214-ebfb-7180-91df-b2489431fa2a",
+          "glm-4",
+          "retired"
+        ],
+        [
+          "01a0e214-ec65-7a13-839c-be42f6fd221f",
+          "deepseek-5",
+          "retired"
+        ],
+        [
+          "01a0e214-f626-7521-a54e-adf691f9e63a",
+          "glm-6",
+          "retired"
+        ],
+        [
+          "01a0e24c-e418-7840-a141-e90745100b7c",
+          "glm-7",
+          "active"
+        ],
+        [
+          "01a0e24c-e48e-7f23-b99e-08d057214cfc",
+          "deepseek-8",
+          "active"
+        ],
+        [
+          "01a0e24c-eddf-7ec2-8e32-20b23676f4cc",
+          "deepseek-9",
+          "active"
+        ],
+        [
+          "01a0e27d-5efe-7d42-95cc-c6153e4012e2",
+          "deepseek-10",
+          "active"
+        ],
+        [
+          "01a0e27e-40d2-7af3-9a08-335bfc499d13",
+          "deepseek-11",
+          "active"
+        ],
+        [
+          "01a0e294-896c-7c01-abd7-5a89c23fe73f",
+          "deepseek-12",
+          "active"
+        ]
+      ],
+      "after": [
+        [
+          "01a0e1e2-c3df-76d2-aefa-d277a7ba3137",
+          "glm-1",
+          "active"
+        ],
+        [
+          "01a0e1f3-5885-7780-8c06-5872d58b0cb9",
+          "deepseek-2",
+          "retired"
+        ],
+        [
+          "01a0e1fc-d4a7-7752-acd8-b432d6ecb0bb",
+          "glm-3",
+          "blocked"
+        ],
+        [
+          "01a0e214-ebfb-7180-91df-b2489431fa2a",
+          "glm-4",
+          "retired"
+        ],
+        [
+          "01a0e214-ec65-7a13-839c-be42f6fd221f",
+          "deepseek-5",
+          "retired"
+        ],
+        [
+          "01a0e214-f626-7521-a54e-adf691f9e63a",
+          "glm-6",
+          "retired"
+        ],
+        [
+          "01a0e24c-e418-7840-a141-e90745100b7c",
+          "glm-7",
+          "active"
+        ],
+        [
+          "01a0e24c-e48e-7f23-b99e-08d057214cfc",
+          "deepseek-8",
+          "active"
+        ],
+        [
+          "01a0e24c-eddf-7ec2-8e32-20b23676f4cc",
+          "deepseek-9",
+          "active"
+        ],
+        [
+          "01a0e27d-5efe-7d42-95cc-c6153e4012e2",
+          "deepseek-10",
+          "active"
+        ],
+        [
+          "01a0e27e-40d2-7af3-9a08-335bfc499d13",
+          "deepseek-11",
+          "active"
+        ],
+        [
+          "01a0e294-896c-7c01-abd7-5a89c23fe73f",
+          "deepseek-12",
+          "active"
+        ]
+      ]
+    },
+    "contacts": {
+      "sql": "SELECT lifecycle,count(*) FROM events WHERE recipient_login='glm-3' AND kind='mention' AND detail='direct_contact' GROUP BY lifecycle",
+      "before": [
+        [
+          "consumed",
+          19
+        ],
+        [
+          "pending",
+          27
+        ]
+      ],
+      "after": [
+        [
+          "blocked",
+          27
+        ],
+        [
+          "consumed",
+          19
+        ]
+      ]
+    },
+    "receipts": {
+      "sql": "SELECT status,reason,count(*) FROM local_comment_delivery WHERE recipient_login='glm-3' GROUP BY status,reason",
+      "before": [
+        [
+          "delivered",
+          null,
+          19
+        ],
+        [
+          "queued",
+          null,
+          25
+        ],
+        [
+          "unreachable",
+          "@glm-3 has no resumable session",
+          11
+        ]
+      ],
+      "after": [
+        [
+          "delivered",
+          null,
+          19
+        ],
+        [
+          "unreachable",
+          "@glm-3 has no resumable session",
+          11
+        ],
+        [
+          "unreachable",
+          "@glm-3 has no resumable session (blocked)",
+          25
+        ]
+      ]
+    }
+  }
+}

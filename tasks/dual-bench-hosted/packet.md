@@ -4,7 +4,7 @@
 
 用户将本轮目标改为：四个既有冻结 variant ZIP 各在官网 ARC-Bench-Lite（Keep、BookStack）与 ARC-Bench-Web（12306、BookStack、Ctrip、Keep、PrestaShop、Stack Overflow）取得完整评分。variant 之间仍依次上传；同一 variant 的两个 Competition 尽可能同时运行。用户允许真实模型调用，但没有主办方生产 Runner 镜像或源码。本任务不把本地复现设为官网评分前提；本地公开部分按 [隔离环境 packet](../local-official-bench/packet.md) 改进并标出差异。
 
-控制状态：只读诊断、HLD/LLD、验收设计和独立 Agent 方案预演已完成；**新范围的 impact handshake 尚未完成，不能修改调度源码或启动 Web 的新官网实验**。既有 Lite 与 WSL 本地进程不因本方案停止或改变。`scripts/official_matrix.py` PID 35711 仍持有旧矩阵；其 `matrix.json` 的 hosted 错误是旧观测，不等于当前远端停机。最近一次 journal 只读检查显示 GLM/Keep `cc4afd58c444` 已收集，BookStack `23cf3569040f` 已启动且 `pending=null`；mixed 与 DeepSeek 的 Lite 两题均已收集。Web 最近一次平台只读查询显示当前账号无 submission。实施前重新核对现场。
+控制状态：用户已批准开工，设计、验收、独立预演与实现均已完成；新双比赛矩阵正在官网运行，尚未取得 32 项完整评分。旧 Lite 控制器 PID 35711 已退出，新矩阵复用其三个已有 journal。移交前 GLM/Keep `cc4afd58c444` 已收集，BookStack `23cf3569040f` 已启动且 `pending=null`；mixed 与 DeepSeek 的 Lite 两题均已收集。运行状态以当前每比赛 journal 和平台只读观测为准，不以旧 `matrix.json` 推断远端终态。
 
 ## HLD：权威与所有权
 
@@ -31,8 +31,14 @@
 
 独立 Agent 的隔离预演已完成：现有 `test_competition.py` 18 项、`test_official_matrix.py` 4 项均通过；临时 fake 证实不同 `competition_id` 的 controller 可同时进入、相同比赛的不同状态目录被同一比赛锁互斥、符号链接指向旧 Lite journal 时 `prepare()` 复用原输入。现有矩阵测试只覆盖本地 slots，不覆盖 hosted 双比赛屏障。实施后的最小回归须模拟两个比赛同时进入、任一侧 PAUSED、缺题、缺分或测试数不符均阻止下一 variant，以及一侧完成而另一侧 POST 不确定时重启不重发成功侧。旧 GLM journal 必须保持相同 ZIP SHA、模型配置、任务顺序和 display name；旧控制器释放锁且重读 `pending` 后方可接管。
 
+## 已实施与运行移交（2026-09-23）
+
+用户已明确开工，实施前提交 `b65e95b` 只包含两个任务包。旧 Lite 控制器 PID 35711 已在确认 GLM/BookStack run `23cf3569040f` 启动、journal `pending=null` 后本地停止，远端 run 未取消。新矩阵 `runs/competition/iteration-throughput-dual-bench-20260923/manifest.json` 与旧四个 ZIP 的 SHA256、模型配置、顺序完全一致；八个 task ID 与当前平台官网公开 detail 的测试数一致。三个已有 Lite journal 通过符号链接在新矩阵复用，`competition.prepare()` 已逐一核验身份。
+
+矩阵实现复用 `competition.Controller`，每个 variant 的 Lite/Web 两侧并行，双方都完整评分后才进入下一个 variant；旧单比赛 manifest 仍可恢复。`make test` 132 项通过，本地链接与 `.venv/bin/svc status --json` 检查通过。新矩阵官网执行由长任务 Agent 持有，终态以每比赛 journal 为准；尚未取得本轮完整 32 项评分。 本轮 mixed/Web snapshot `44f172b6390b` 已保存，12306 run `46465ac9c58d` 已启动；同一次平台只读查询显示其与 Lite/GLM BookStack `23cf3569040f` 均为 `RUNNING`，证明两个比赛可实际同时执行（这两个是不同 variant，不能把该事实写成同 variant 同步开始）。
+
 ## 实施影响与开工门槛
 
-预计修改 `scripts/official_matrix.py`、其直接行为测试，以及 `docs/deployment/index.md` 的矩阵运行说明；优先复用现有 `competition.py`，不新增调度服务、全站锁或第二套评分实现。官网最多为四个 ZIP 各保存 Lite/Web 两份 snapshot、创建总计 32 个 task run（扣除已有 Lite 结果），会实际使用模型额度并占用平台队列；同一 variant 两场比赛可能重叠调用共享模型 key，不能把 Meter 总量差额伪装成逐 run 精确成本。当前 Lite 运行和用户未提交改动保持原样。
+已修改 `scripts/official_matrix.py`、其直接行为测试，以及 `docs/deployment/index.md` 的矩阵运行说明；复用现有 `competition.py`，没有新增调度服务、全站锁或第二套评分实现。官网最多为四个 ZIP 各保存 Lite/Web 两份 snapshot、创建总计 32 个 task run（扣除已有 Lite 结果），会实际使用模型额度并占用平台队列；同一 variant 两场比赛可能重叠调用共享模型 key，不能把 Meter 总量差额伪装成逐 run 精确成本。原 Lite 本地控制器已按接管方案退出，远端 run 保留；用户其他未提交改动保持原样。
 
-项目 AGENTS.md 对非简单开发设施改动要求诊断与方案、验收、实施计划与独立 Agent 预演、具体影响和明确开工同意、实现前提交、实现验收。前三项和影响已在此包给出；在用户复核并明确同意新范围开工前，暂停源码修改、新 Web 上传及旧控制器移交。通用 AGENTS.md 另规定仅在用户明确指示时提交，因此实现前提交也需在握手时明确授权，不能擅自执行。
+项目 AGENTS.md 对非简单开发设施改动要求诊断与方案、验收、实施计划与独立 Agent 预演、具体影响和明确开工同意、实现前提交、实现验收。各门槛已依次完成；用户回复“开工”后，已执行实现前提交和上述实施。正式运行仍遵守终态评分屏障；出现不确定写入时先只读恢复，不重发 POST。
