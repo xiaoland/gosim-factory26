@@ -17,3 +17,21 @@
 同一暂停现场 root Issue 1 的旧/新投影分别为 10,696 / 4,833 bytes，估算 token 为 2,892 / 1,427；77 条完整同理由隐藏评论汇成一行。Linux 新 binary 与本机投影逐字一致，77 条隐藏评论原正文仍在 SQLite。证据见私有目录 `context-readback/{before-issue-1,after-issue-1,linux-after-issue-1}.md` 和 `comparison.json`。来源没有隐藏回复，隐藏 thread、嵌套 hide 和 resolved/hidden 重叠尚无该 run 实例，不把编译或源码复核当运行验收。
 
 Docker 实际标签、daemon、StartedAt 与原 operation/run 对齐后，来源容器已 pause；完整现场通过原 helper 导出，尚未启动接续。原生历史不删除，不人为修改 description 触发重建。ARC-only cleaner 新 base 已装配，恢复规格仍使用原模型配方、2GiB/2CPU、五槽共享准入及原 self_funded 完成后应用重放。
+
+## 保全顺序调整
+
+原 I13 导出脚本对全部运行依赖先逐文件哈希，在远端冷 I/O 上持续等待；已确认终止本会话的只读扫描后，改为通过原 helper 一次完整 tar，不排除任何持久文件。归档包括 PR2 的 `core.35086`（1,046,609,920 bytes）和 `core.36760`（1,061,806,080 bytes），不从路径猜测崩溃原因。辅助全树双重哈希不作为保全门槛，完整复制、成功解包、关键身份和原 volume 保留作为恢复前提。
+
+已核实原 volume 的三个消费者：生成容器、原 helper、cleaner 专属 Console 访问容器。为封住外部 CLI 写入，只停止访问容器 `f3a6eabbad722015cc5a8747a52829ce45ec1964beab6e3c6fa1aea0c17c1d3e`，不停止共享 Console HTTP 或其它入口。Console 的登记规则禁止用旧运行 ID 重新指向另一现场，恢复登记交由主线/Console owner 协调新物理 run 与来源关系，不能现场改写旧登记。
+
+独立 advisor 复核后，将来源物理停止提前到同一次 tar 传输期间，以释放冻结来源已观察到的 871MiB 内存，不宣称必然提高 I/O 或证明 OOM。旧 Mac adapter 按 host/boot/PID/birth/PGID 核对后 SIGSTOP，阻断自动清理；原 volume/helper 保留。2026-10-02 10:36（上海）来源直接 KILL，未 unpause，已读取 `Running=false`、`Pid=0`、`ExitCode=137`、`OOMKilled=false`。这是主动热切换，不是新增不明 OOM。停止原件为 `source-stop.json`，访问入口和旧 adapter 的停止原件另存。
+
+原导出程序的“结束时仍须 paused”检查会拒绝本次已明确停止的来源，不能将这条预期拒绝当复制失败。复制退出0并完整可解包后，再以独立停止回执完成归档认证；原始归档和原错误均保留。新 writer 仍需完整归档与离线 prepare/readback，通过后才启动。实际来源 UID/GID 为501:20，prepare 显式冻结相同值，镜像也使用原 image ID。
+
+完整原始归档 4,771,814,912 bytes / 90,504成员，SHA256 `feec5156ee400ffb1f3c04fd71e0134fa7576c16e5155b21a7173c9e08ccb564`；完整解包成功，SQLite原始SHA256仍为 `b18a5584590a07322c32fc0b59cb575b409beef60174fee28d8896ef5cf8cdaf`。保留 PulseAudio 外部 `/tmp` symlink 原文，目标临时数据不在归档内。完整 template ZIP 另有身份回执。恢复打包发现旧工具将原生刷新与ARC传输覆盖互斥，且未支持I14原生刷新；已向共同设施owner提交具体阻塞，尚未启动新writer。
+
+## 当前等待条件（2026-10-02 11:14）
+
+主线转达用户将 I13 Flash/GitHub 恢复列为第一优先级，并授权两项技能热修。cleaner不启动旧技能writer；等待技能会话 `01a0fa92-eb8e-7143-81fa-21eb002790f7` ready及共同恢复设施接线后，一次冻结新base。上下文binary保留不重编，完整原始现场已保存。WSL当前不可用，主线已核对development-2可用并统一准备glibc Runner；新prepare需独立冻结该endpoint/image实际身份，原operation不改。旧host adapter PGID54142仍SIGSTOP用于阻断cleanup，来源已停止、原卷与helper保留，尚未lab stop。
+
+完整template ZIP为577,161,410 bytes / 63,825成员，SHA256 `abf6ae90c0fc3c8e1b63cca648847777400db808df7c919aa30304fd3b41c82f`。三份原生会话header/文件SHA与四个Git tree的HEAD/status另存 `source-native-identity.json` / `source-git-identity.json`。这些证据说明持久文件现场保全，不代表进程内存或外部`/tmp`数据恢复。
