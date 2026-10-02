@@ -1,6 +1,6 @@
 # I14：协作职责与独立验收实验
 
-2026-10-01开始，2026-10-02更新。I14-0机制源码与基础反馈已完成，实际采用和收益待运行对账；后续问题改进移至I14-1。当前新增冻结与启动暂挂，设施干净基线方案正在重做，见下方当前树。既有采集与独立GPT-5.6-Luna / low十分钟监控继续消费已保存摘要与告警。
+2026-10-01开始，2026-10-02更新。I14-0机制源码与基础反馈已完成，实际采用和收益待运行对账；后续问题改进移至I14-1。本轮收窄为GitHub-only，所有生成模型改用Qwen Token Plan。当前新增冻结与启动等待设施干净基线完成及模型配方就绪，见下方当前树。既有采集与独立GPT-5.6-Luna / low十分钟监控继续消费已保存摘要与告警。
 
 ## 用户目标与授权
 
@@ -12,6 +12,14 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 
 ## 当前事实与下一步
 
+最新范围修正（2026-10-02）：用户要求“I14暂停运行sheet题目，只运行github”，并指定所有I14生成模型使用Qwen Token Plan，Base URL为 `https://token-plan.maas.qianwenaiapi.com/compatible-mode/v1`，配套独立key；等待实验DX收尾后配置供应商。本轮待执行范围收窄为四variant各GitHub，四Sheet保留历史记录但不派发。只更新未来实验配方，不原地修改既有冻结输入、历史运行或I13。模型请求、恢复与新启动继续等待DX完成和实际配方就绪。
+
+私有 `.secrets/models.env` 已追加 `QWEN_TOKEN_PLAN_BASE_URL` 与空的 `QWEN_TOKEN_PLAN_API_KEY`，保留已有按量Qwen及其他供应商值，权限0600且Git忽略；用户填入套餐专用key后，才可冻结私有deployment。不会回退原Qwen/ARC/key或以默认endpoint绕过缺项。I14“所有模型”覆盖Braid成员、内部角色、cleaner推理、reviewer、视觉及e2e中会调用模型的路径；开发侧Codex与既定Luna监控不属于本次生成模型配方。
+
+模型可用性仍需决定：[Token Plan个人版](https://platform.qianwenai.com/docs/token-plan/personal/token-plan-personal-overview)及[团队版](https://platform.qianwenai.com/docs/token-plan/team/token-plan-team-overview)的公开支持表未列出现有 `glm-5.3-flash` 或 `kimi-k3`。团队表列 `kimi-k2.7-code` 和 `deepseek-v4-flash`，个人表列带版本的DeepSeek ID；不能仅更换URL声称原模型配方可用。主线已异步询问是先核对key实际可用模型再决定，还是采用显式替换配方；未擅自换根或其它角色模型，原两题均分切根判据不据此冒充已满足。
+
+供应商耦合、停止回执契约及owner/资源生命周期归实验DX改进，不另立修补任务。当前工作树四I14入口与共享恢复已移除ARC-only，采用 `scripts/agent_support.py` 的显式 `FACTORY26_MODEL_BINDINGS`（provider/base_url/credential_env），不选择供应商；DX正在真实离线验收，尚未以源码阅读宣称完整收尾。实验入口仍有固定八目标和GLM `qwen-ai`标签校验，运行说明也仍写固定ARC恢复，已交DX owner收敛为显式目标/模型配方并同步文档；未与其并行编辑。同一旧包包含的强制逻辑保持历史身份，只有重新冻结的新包可以纳入已修源码。
+
 2026-10-02，本次整理覆盖用户最新三项修正：“‘强制 ARC’听起来像是过度处置”；“让 GLM-5.3 用 qwen AI”；“实验基础设施即将进行较大的重构和改进；我们整理一下情况”。据此，新增冻结、prepare、launch 和模型请求已暂挂，GLM 与 cleaner 执行者完成交接并结束活跃等待。原官网 Flash/GitHub 及唯一采集器继续；baseline 的用户暂停、旧 dispatcher 和源适配器的 SIGSTOP 保持。以下是当前事实，后续日期段落保留当时操作记录，不构成自动启动依据。
 
 ```text
@@ -22,11 +30,12 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 │  │  └─ 原native历史完整接续及新工具调用已直接观察；尚无最终评分
 │  └─ GLM/GitHub、GLM/Sheet：两源实际stopped，完整选择性保全已核验
 │     └─ 未完成生成或上传评分；本次未新冻结、prepare或恢复模型
-├─ I14-0：四variant×两题，仍为八个逻辑目标
+├─ I14-0：当前仅四variant各GitHub；原八项作为历史矩阵保留
 │  ├─ baseline/GitHub：用户暂停，当前物理容器paused
 │  ├─ reviewer/GitHub：当前物理容器paused；此前Console适配已部署
 │  ├─ cleaner/GitHub：旧源实际stopped；最终恢复包完成，未prepare/launch
-│  └─ e2e/GitHub及四项Sheet：五项未派发，dispatcher保持暂挂
+│  ├─ e2e/GitHub：未派发，等待DX和新配方
+│  └─ 四项Sheet：本轮暂停，不派发
 ├─ I14材料与机制
 │  ├─ draft、cleaner、reviewer、e2e：源码及既有实际操作反馈完成，收益待实验
 │  ├─ 隐藏评论聚合：77个同理由隐藏根压为一行，实际投影读回通过
@@ -36,10 +45,10 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 │     └─ 最终材料已进入cleaner候选；部署、通知送达、方法采用与收益尚未验证
 └─ 实验设施
    ├─ 已有能力：共用Braid内存修复、实际资源采集、输运reentry、模型事实查询
-   ├─ 当前耦合：Harness/恢复固化ARC、停止回执schema不匹配、owner存活占槽
+   ├─ DX收尾：ARC约束源码已移除；回执契约与资源生命周期由DX负责
    ├─ 宿主：WSL已恢复；development-2仅备用，未发生迁移或新生成
    ├─ Console：唯一WSL/8765服务可访问；旧cleaner访问器停，未登记新physical run
-   └─ 新基线：独立controller/runner与hard-cutoff方案重做中，尚未实施
+   └─ 新基线：独立controller/runner与hard-cutoff已开工，真实离线验收中
 ```
 
 I13正式结果、费用字段与来源归[实验记录](../iteration13/experiments.md)。两GLM当前恢复边界归[只读交接](../iteration13/i13-2/glm-final-recovery.md)，canonical全保全回执为 `runs/iteration13/i13-2-20261001/arc-hot-recovery-20261002/handoff-state.json`。GitHub 7906项、Sheet 10398项选定进度材料均已逐项核验，含应用/Git、Braid DB/WAL及native历史；这是有明确排除依据的完整选择性保全，不是全volume字节备份。此前Sheet超时的partial与原错误独立保留，不能替代后来成功归档。
@@ -48,7 +57,7 @@ cleaner的[恢复packet](cleaner-hidden-context/packet.md)及 `runs/iteration14/
 
 两技能独立会话 [I14：协作与 ARC 需求方法改进](codex://threads/01a0fa92-eb8e-7143-81fa-21eb002790f7) 已完成材料、职责方案与交接，详情归[方法packet](collaboration-requirements/packet.md)。技能保持独立文件，Pi发现入口保留名称、description和路径；四root prompt不重复description。换版通知不统一强制复读，实际职责决定取材。PR2/PR3开场确有对已投影字段的重复读取，但PR3评论29的交接正文未投影，有具体查询价值，因此成员入口改为从已有材料推进、围绕未知定向补充。SVC知识/packet、语义裁决与验收仍由负责人承担，例行description和讨论维护交cleaner。
 
-供应商选择收回到实验配方。历史“全部切回ARC，包括GLM-5.3”和“I14继续ARC”解释现有冻结身份；最新Qwen指示作为GLM-5.3下一次配方修正，尚未改运行现场。四个I14 run.py及共享恢复入口当前确有ARC-only拒绝或覆盖，属于待收回的源码耦合，不是通用Harness的产品规则。其他模型路由、凭据来源和官网费用模式分别冻结，不能把模型渠道变化解释成启用比赛额度。DeepSeek不可成为Braid可指派成员、每run高价模型合计仅一个Braid session、技能不得内联仍是独立约束。下一次启动需冻结修正后的完整模型配方。
+历史供应商修正记录（最新Token Plan决定见本节开头）：供应商选择收回到实验配方。历史“全部切回ARC，包括GLM-5.3”和“I14继续ARC”解释现有冻结身份；最新Qwen指示作为GLM-5.3下一次配方修正，尚未改运行现场。此前四个I14 run.py及共享恢复入口存在ARC-only拒绝或覆盖；本次DX工作树已移除，实际收尾及新包部署仍待完成。这不是通用Harness的产品规则。其他模型路由、凭据来源和官网费用模式分别冻结，不能把模型渠道变化解释成启用比赛额度。DeepSeek不可成为Braid可指派成员、每run高价模型合计仅一个Braid session、技能不得内联仍是独立约束。下一次启动需冻结修正后的完整模型配方。
 
 WSL本次独立读回仍为 daemon `0c1d4a2e-b921-49be-a075-1e30571f0995`、boot `0569f94d-32fc-4b45-8a89-ba4df70f94c3`，资源与镜像归 `runs/iteration14/wsl-capacity-return-20261002.json`。五槽registry实际保留三个alive owner reservation：baseline/reviewer容器paused、cleaner容器stopped但owner alive；未释放或接管。另一个已编译Runner的development-2候选只作保留资产，不能修改旧operation endpoint或并行重复准备。Console唯一WSL服务 `8cc80cad-d873-49ed-ab49-e958ba8852a3` / port8765，最新GET /api/runs为HTTP200；旧cleaner accessor停止导致具体runtime读取400，新physical run不存在。当前Console Docker接线只支持unix endpoint，不能宣称已支持development-2的SSH context。
 
@@ -56,7 +65,7 @@ WSL本次独立读回仍为 daemon `0c1d4a2e-b921-49be-a075-1e30571f0995`、boot
 
 ## 独立实验设施会话
 
-原 [Factory26 实验启动、热恢复与监控自动化](codex://threads/01a0f82f-23db-74d3-85b4-901b3b23fff0) 已完成并提交897f307，提供已有operation/admission/采集等能力；其上一轮实现已结束，不是当前大重构的活跃执行者。当前大重构的方案owner为 [实验 DX：模型路由与运行配置可见性](codex://threads/01a0fa4f-471a-7963-a4e5-bc4a6071113e)，权威任务为 [设施DX复核](../experiment-dx-review/packet.md)。用户在该会话明确支持hard-cutoff、干净基线、长期正确优先；owner正在重做完整controller/独立runner方案，旧P0兼容准备已撤回，新的具体实施范围尚未开工。
+原 [Factory26 实验启动、热恢复与监控自动化](codex://threads/01a0f82f-23db-74d3-85b4-901b3b23fff0) 已完成并提交897f307，提供已有operation/admission/采集等能力；其上一轮实现已结束，不是当前大重构的活跃执行者。当前大重构的方案owner为 [实验 DX：模型路由与运行配置可见性](codex://threads/01a0fa4f-471a-7963-a4e5-bc4a6071113e)，权威任务为 [设施DX复核](../experiment-dx-review/packet.md)。用户在该会话明确支持hard-cutoff、干净基线、长期正确优先，随后授权“开工；你可以自由提交”；owner已进入完整controller/独立runner实现及真实离线验收，尚未交完整收尾。旧P0兼容准备已撤回。本轮不启动模型、不停止/迁移活动实验、不部署或重启Console。
 
 主线已将最新Qwen/ARC边界、两源完整保全、停止回执schema不匹配、三个保留reservation、cleaner未启动候选及唯一采集/Console事实交给该owner，不另建竞争的重构线。新基线需要区分controller意图与runner执行效果、检查点语义与输运、原件身份与portable引用、独立执行/采集生命周期，并覆盖新旧切换与活动旧run交接。已有功能不冒充新基线完成；本次整理不自动授权停止或迁移活动官网run。
 
