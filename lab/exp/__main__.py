@@ -11,6 +11,13 @@ from .core import atomic, public, read, record
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
     commands = parser.add_subparsers(dest='action', required=True)
+    compiled = commands.add_parser('compile', help='将显式 intent 编译为冻结 recipe，不安装或运行')
+    compiled.add_argument('intent', type=Path)
+    compiled.add_argument('--directory', type=Path, required=True)
+    doctor = commands.add_parser('doctor', help='只读检查声明资产和宿主，不安装或预约')
+    doctor.add_argument('recipe', type=Path)
+    doctor.add_argument('--deployment', type=Path)
+    doctor.add_argument('--json', action='store_true')
     build = commands.add_parser('build')
     build.add_argument('recipe', type=Path)
     build.add_argument('--directory', type=Path, required=True)
@@ -95,7 +102,16 @@ def main(argv=None):
     evidence.add_argument('--offset', type=int, default=0)
     evidence.add_argument('--bytes', type=int, default=4096)
     args = parser.parse_args(argv)
-    if args.action == 'build':
+    if args.action == 'compile':
+        from .compiler import compile_intent
+        value = compile_intent(args.intent, args.directory)
+    elif args.action == 'doctor':
+        from . import readiness
+        value = readiness.inspect(args.recipe, args.deployment)
+        if not args.json:
+            print(readiness.render(value))
+            return 0
+    elif args.action == 'build':
         value = controller.build(args.recipe, args.directory)
     elif args.action == 'start':
         value = controller.start(args.experiment, deployment=args.deployment)

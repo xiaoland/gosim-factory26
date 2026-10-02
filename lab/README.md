@@ -5,13 +5,35 @@
 ```sh
 python3 scripts/runtime.py host-exp --python /absolute/python --purpose controller --output /absolute/controller-runtime
 python3 scripts/runtime.py host-exp --python /absolute/python --purpose runner --output /absolute/runner-runtime
-python3 -m lab build /absolute/recipe.json --directory /absolute/experiment
+python3 -m lab compile /absolute/intent.json --directory /absolute/compiled
+python3 -m lab doctor /absolute/compiled/recipe.json --deployment /absolute/private-deployment.json
+python3 -m lab build /absolute/compiled/recipe.json --directory /absolute/experiment
 python3 -m lab start /absolute/experiment --deployment /absolute/private-deployment.json
 python3 -m lab status /absolute/experiment --json
 python3 -m lab control /absolute/experiment ATTEMPT stop --request-id REQUEST
 python3 -m lab stop-evidence /absolute/experiment ATTEMPT --output /absolute/stop.json
 python3 -m lab analyze /absolute/experiment --output /absolute/new-analysis.json
 ```
+
+## 从实验意图到冻结配方
+
+`compile INTENT --directory BUNDLE` 消费 `factory26.exp.intent` schema 1，输出 intent.json、recipe.json 和 compilation.json。低层 recipe 仍可直接 build；复杂实验应把比较和选择政策交给公共 compiler，不再自行写 launch script。Compile 只读取显式本地材料，不安装 runtime、请求平台、调用模型或启动任务。
+
+Intent 必需字段为 experiment_id、authorization、execution、cases、variants、models、targets、selection_policy、evaluation_policy；labels 可选。execution 使用低层 controller_runtime、可选 runner_runtime、max_parallel、budget 和 storage。cases 是命名对象，每项声明 inputs 和可选 backend 的 competition_id/task；variants 每项的 generate 是现有低层 generate/prepare job 模板，省略 id/target/model_config。models 每项声明 config（model、visual_model、provider、base_url 四项）及可选 native bindings；bindings 使用已有 provider/base_url/credential_env/model_id 合同，只有变量名进入公开配方。
+
+Targets 是显式列表，每项为 `{id, case, variant, model}`。Compiler 不自动展开笛卡尔积，也不从名字推断授权。模板与 case 的重复配置须一致；冲突拒绝编译。选定模型写入 job.model_config，托管同时写入 backend.model_config。模型、费用与 endpoint 不从 ambient environment 补全。
+
+selection_policy 支持 `{"kind":"explicit"}`，此时 target.model 是 models 中的名字；或 `final-score-margin`，明确 baseline、candidate、minimum_margin（百分点评分差）、scores 和 on_incomplete。scores 以两个模型名和相同非空 case 集合组织，每项 `{source, run_id}` 引用保存的 GET；旧 journal state 另声明 task。必须绑定实际 run ID、终态 PASSED/FAILED、有效百分数及完整测试数量。完整时按声明 case 数量求均值，candidate 达到分差才被选择；缺失原件/未终态时仅按显式 on_incomplete=block 或 baseline 处理。身份冲突和损坏 JSON 是错误，不降为 baseline。采用政策的 target.model 显式写 `{"selection":true}`。
+
+evaluation_policy 为 `{"kind":"none"}`，或 `per-application`，声明 job（purpose=evaluate 的低层模板）、from_generation（评价输入名到生成 output 名的映射）及可选独立 model。每个生成目标获得同 target 的 `.evaluate` job，通过 from_job/output 消费其实际发布制品；Hosted 评价须明确模型及费用，不能继承生成的收费许可。某题产物发布后，controller 按其依赖派发，不等待其它题。
+
+Compiler 冻结源输入内容身份、runtime/handoff 描述摘要、评分原件快照与决定依据。authority_handoff 可使用现有冻结记录，或 intent 中的 `{source: PATH}`。Build 再核对实际字节，并将小型编译依据发布为独立制品；输入在编译与发布之间改变会被拒绝。相同输入、政策与 compiler 版本可重入同一 bundle；改变任一项须换目录。失败保存具体 compile-error 原件。Compilation receipt 不授予派发许可，旧实验和旧 launcher 的历史产物不被改写。
+
+## 只读 readiness
+
+`doctor RECIPE_OR_EXPERIMENT [--deployment PRIVATE_JSON] [--json]` 聚合本机容量、冻结 controller/runner runtime 身份、输入制品与 producer 原件、模型凭据变量覆盖，以及声明 Docker daemon/image/slots/handoff 的现场读回。查询原配方使用源材料，查询已 build 的目录使用其发布制品。Prepared 和 stop 原件核对保存的来源绑定，启动仍独立重验当前来源。工具缓存没有独立声明时保持 unknown，不通过扫描任意目录猜可用。
+
+Doctor 只执行 Docker info/image inspect/ps/volume ls/inspect；不调用会修改状态的 authority helper，不创建容器、初始化卷、释放预约、安装工具或请求官网。首次域的卷尚未初始化可显示 not-initialized，但仅由实际 dispatch 重验后创建。Declared slots 与当前可用 slots 分开：后者缺少只读预约合同，明确 unknown。Runner 镜像内 Python 和供应商实际能力未被执行验证；报告 observed/blocked 不等于可以启动。Start 继续核对物理准入、预算、凭据、来源与授权。
 
 配方显式冻结 authorization、controller_runtime、Local runner_runtime、jobs、max_parallel、budget.max_attempts 和 storage.host_reserve_bytes。job 声明 purpose（build/prepare/generate/evaluate）、backend、argv（托管无需 argv）、inputs、outputs 与 wall_seconds/storage_bytes/telemetry_bytes。字符串授权只记录已经取得的许可，不授予执行。`inputs` 接受显式 source，或 artifact_id/manifest_sha256 和可选源 store；独立评价还可消费 `{from_job, output}` 的已发布生成制品。命令中的 `{workspace}`、`{inputs}`、`{attempt_dir}` 和输入名由实际执行环境展开。
 

@@ -94,3 +94,10 @@ Console登记从实际executor接入manifest取得state/binary/access能力引�
 新CLI拒绝旧格式写入并指向history或明确import；没有执行参数自动翻译。旧冻结执行器/runtime只在登记的退役通道保留，不修改source/ZIP/journal。活动旧dispatcher如依赖工作树，需要切换清单明确保全或停派交接；不能删除import后让它随机失败，也不能授权它继续无边界创建旧格式新实验。
 
 本合同已完成独立预演和源码实施；当前具体 CLI/schema 以 lab/README.md 与公开 producer 为准。Console 自动发现/登记和跨 OS/native 根迁移仍不受支持。实际反馈及尚未验证的生命周期范围见 packet，不能凭字段定义声称现场能力已完成。
+
+
+## Intent compilation 与 readiness
+
+公共 compiler 消费 schema 1 intent，生成当前严格 experiment recipe；操作及字段合同归 [Lab](../../lab/README.md)。显式目标和命名政策承担高层选择，低层模板继续承担执行细节。模型与评价费用独立，from_generation 编译为 from_job/output，不建立任意 DAG。输入字节身份在 compile 冻结，在 build 前与实际发布后均核对；评分快照、runtime/handoff 描述发布成 compilation_evidence 制品。Compiler 源码摘要参与 bundle 重入身份，变化须新 bundle，不改已有实验。
+
+Readiness 查询原 recipe 或已 build manifest，复用冻结 runtime、artifact 和来源停止绑定验证，读取声明 Docker endpoint 的白名单字段。它不调用 admission.authority：该函数会建立 helper 并调和预约，不能包装成只读查询。当前可用 slots 无只读合同，保持 unknown；声明容量和观察到的 workload 分别保存。首次域缺失卷显示尚未初始化，创建只能由实际 dispatch 重验后进行。Doctor 的资产事实不替代 start 的当前来源、预算、平台、凭据及物理准入门控。

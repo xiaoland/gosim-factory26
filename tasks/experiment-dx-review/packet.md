@@ -139,3 +139,29 @@ runner定向修正ps快照到birth读取之间的竞态：仅在新ps查询无�
 真实只读反馈保存于 `runs/experiment-dx-review/projection-20261002/`：existing-experiments.json、status.txt/status.json、monitor.json 和 readback.json。六个实际目录包括 r4 offline-ready、r2、final、home-fix、hosted-own 及本任务 offline-evidence-final2。实际 offline-ready 的 entry exit 0 与 archive preserved 保持，同时 Docker cp 的 300 秒原超时和缺少本地输出导致阶段 blocked，下一操作是同 attempt export，附 incarnation/物理终态/输运条件重验要求；没有执行该命令。r2/final 的 entry exit 1 不被 controller completed 提升成功，home-fix 仍 unknown；实际成功归档则可读取发布产物。平台状态沿绑定 run 的成功 GET 原件呈现；没有新的平台采集。
 
 所有 lab.exp 源码内存编译及差异检查通过；查询前后列明的冻结 experiment.json 摘要未变。真实现存配方没有 case/variant 元数据或 from_job 评价关系，这两条路径尚无真实运行反馈，不能宣称生命周期验收完成。状态解释覆盖与实际物理执行效果分开；本轮未启动模型、控制旧现场、改原件、运行设施测试/探针或部署 Console。原恢复 owner 的 hosted latest 修复与 requirements 迁移独立进行，本提交不包含其源码。
+
+
+## Compiler 与 readiness 接续开工（2026-10-02）
+
+用户在第一阶段提交后明确“继续推进，你可以自由提交”。本轮接续公共 intent compiler，随后实现只读 readiness：编译显式 targets/cases/variants/models、命名选择政策和逐应用评价政策到严格 recipe，保留不可变输入及决定来源；取消 I14 的策略 launcher。Readiness 聚合声明资产、runtime、Docker endpoint/image 与容量证据，不隐式安装/创建资源或取得派发许可。原恢复 owner 的 hosted adapter 与恢复生产者仍独占，本任务不改这些文件或运行模型/官网/Console。
+
+已读取个人 delegation 指引并尝试独立 advisor，当前 agent thread limit reached，无可用 advisor；没有以另一执行 owner 代替独立判断。沿用前轮已审阅的两层设计，实施边界由本会话持有：不自动展开 targets，不做通用表达式/DAG，不猜模型或费用，缺失选择证据只有显式政策才可降为 baseline。反馈继续来自现有真实配方/材料/平台原件的离线编译和只读宿主观察，不建立设施测试或 synthetic fixture。
+
+
+Compiler/readiness 已实施。公共 compile 输出 intent/recipe/compilation，模型选择支持显式配置与 final-score-margin，评价支持 none/per-application；目标不自动展开，费用和凭据变量独立声明。源字节身份、runtime/handoff 描述及评分原件快照冻结；build 核对后发布 compilation_evidence。I14 launch.py 已退役，原件保全。Doctor 读取原配方或已构建实验，报告 runtime、资产、保存的来源门控、私有变量覆盖及 Docker 白名单事实，不调用准入 helper、不安装、不查询官网。当前 slots、工具缓存及镜像内 interpreter 缺少独立证明时保持 unknown。
+
+实际操作原件位于 `runs/experiment-dx-review/compiler-20261002/`。最终现存 r4 配方的离线重表达为 existing-r4-intent.json，compile-final3/build-final3 及各自 reentry 均成功且回执完全相同；existing-r4-experiment-final3 未创建 attempt。Doctor 在新实验上显示已发布输入/完整来源绑定与缺少明确私有 deployment 的阻塞，status 呈现显式 github/pi-braid-i13 目标和未派发 generate。原先拆分校验导致 budget 变量引用遗漏的真实 build 失败已保全并修复；早期 bundle 与半成品保留，不改原件。最终 readback.json 保存代码摘要、操作及回执一致性。
+
+对实际 r4 offline-ready 的 doctor-docker.stdout 成功确认 development-2 daemon、不可变镜像、准入卷标签和声明五槽，保存容器原件；可用 slots 仍 unknown，没有创建 helper 或调和预约。读取真实 I14 config 的历史 I13 评分：Flash 两题缺少完整终态评分条件，GLM 两份 journal 路径不存在；具体错误及原件摘要保存于 i13-score-readback.json，不补造 run ID 或运行政策选择。条件选择的完整评分路径、逐应用评价尚无完整真实材料反馈，不能宣称效果验收。所有 lab.exp 源码编译与本任务差异检查通过，未运行设施测试/fixture/probe、模型、官网写入或 Console 部署。
+
+## 流程成本与重复证明（用户追加，2026-10-02）
+
+用户指出热恢复的主要 DX 摩擦是重复全量校验、完整复制和上传，要求保留来源停止、需求身份、进度保全与传输边界，复用未变化内容的证明并减少往返。该判断调整后续优先级：compiler/readiness 只能收敛意图与发现，不能宣称已解决执行路径成本。当前 compiler 的输入 pinning/build 发布验证也有额外全量读取，本轮没有将这些成本隐藏成免费的安全保证。
+
+源码定向核对确认：exp_checkpoint.validate 对 content 做完整 inventory，semantic_readback 两次逐 mount 调用 inventory 主要用于链接判断，仍读取普通文件 SHA；同一次 semantic readback 还复制 SQLite/WAL 到临时位置后 integrity_check，并对各 Git 仓库 fsck --full。Checkpoint 先完整 copy、semantic readback、manifest inventory，再 validate；prepare 验源后 copy 全量内容再 validate。Controller.verify 对冻结制品全量核验，code 制品还重复 verify；分配时 materialize 再验证和复制，launch gate 经 artifact.resolve 再完整 validate；runner._assemble 再 validate，随后逐 mount inventory/source copy/inventory target。Artifact resolve 每次自身 verify，materialize 另 verify 源并核验复制目标，未复用上层刚取得的核验结果；transfer 在源与目标边界均核验。具体源码版本归本轮 readback.json，当前恢复 owner 仍独占 Harness/recovery producer 修改。
+
+这些是静态确认的调用链，不是各项耗时或累计字节的实测。真实本轮输入 ZIP 为720307829字节，prepared manifest 有82086个目录/文件/链接条目；未为汇报重新遍历内容统计总字节。用户报告的769个文件逐字节比较和上传566MB进度尚未独立核对，不据此生成比例或性能结论。没有再次启动原恢复或访问官网来做计时。
+
+后续改动应围绕“同一内容、同一 validator、同一 policy 的证明只生产一次，变化或跨真实传输边界才新增工作”。先移除同一操作内部的重复哈希：链接遍历不读取文件内容，semantic readback 可消费刚取得的 inventory；共享 artifact 操作复用本次已核验 manifest，避免 resolve/materialize/verify 层叠。跨阶段语义回执绑定完整内容摘要、validator 版本和所检政策，不把 mtime 当内容证明；在发布 store 尚无实际不可变保障时，不能凭历史 receipt 跳过目标字节核验。来源当前停止与需求授权仍每次 launch 重验，语义证明不能替代现场效果。
+
+减少复制需先明确哪一副本是保存原件、哪一副本供运行写入：不对会写 Git/SQLite 的恢复 workspace 使用共享 hardlink。同宿主具备实际 reflink/COW 能力可用其保持独立写入，跨宿主继续校验接收字节；公开凭据边界不扩大。包的实际必需内容与平台增量上传能力先核实，不猜可跳过重传。下一真实恢复应由原 owner 在正常操作中记录阶段耗时、哈希读取与复制/发送字节，区分必要边界和重复证明；不建立 synthetic benchmark 或另一个 collector。本节为调查和拟议改动，尚未修改恢复 producer、运输或校验复用接口。

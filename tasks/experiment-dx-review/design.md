@@ -91,10 +91,13 @@ Analyze固定artifact与批次截止点、分析器版本、规则与缺口，�
 
 用户进一步指出底层生产者 identity 与显式 relation 是正确基础，但开发者仍需在 task、业务实验编号、目录、job/attempt、Harness 会话、平台 submission/run 和重放之间切换。新 status/index 已能聚合保存的实验与 attempt，但不等于贯通恢复、材料、评分及 Console 的统一投影。下一轮不能继续让“先判断生产者”成为人的常规操作前提。
 
-拟承认两层定义：Experiment intent 经 compile 产生 Frozen execution recipe，后者执行产生 attempts/artifacts/evidence。Intent 声明问题、比较维度、目标、允许材料/模型/费用、资源与次数、评分及恢复政策；compiler 消费显式冻结的输入和命名政策，输出严格 recipe、选择依据、输入来源及未满足条件。Compiler 不执行模型、控制源、安装 runtime 或在线查询来隐藏缺项，不引入任意表达式/通用 DAG。I14 launch.py 的策略选择是迁入此层的具体起点；同一 frozen recipe 的运行接续仍属于 controller。
+当前定义采用两层：Experiment intent 经 compile 产生 Frozen execution recipe，后者执行产生 attempts/artifacts/evidence。Intent 声明问题、比较维度、目标、允许材料/模型/费用、资源与次数、评分及恢复政策；compiler 消费显式冻结的输入和命名政策，输出严格 recipe、选择依据、输入来源及未满足条件。Compiler 不执行模型、控制源、安装 runtime 或在线查询来隐藏缺项，不引入任意表达式/通用 DAG。I14 的逐实验 launch.py 已退役，策略选择迁入公共 compiler；同一 frozen recipe 的运行接续仍属于 controller。
 
 人的默认入口以实验为中心，呈现目标行和阶段、产物及观察事实，保留 case/variant 比较条件和各生产者标识。2026-10-02 用户明确“你可以开工”后，本轮实施统一 projection：status/monitor 共用读模型，未派发的阶段也可见；明确展示入口、执行、归档、输运、遥测、平台观察、产物覆盖与阻塞，controller 给出操作建议及重新核验条件。原件时点不被本次查询时间替代，已有评价保持原冻结输入，unknown 不因归档存在而变成成功。Braid/Console 尚无绑定 attempt 的公开接入观察时保持 unknown，本轮不实施这些消费者的自动登记。查询可聚合显式 index 中多个实际实验，但不从目录或 job 命名猜跨实验逻辑关系。
 
 统一工作流先复用现有 Lab CLI；Makefile 可做发现入口，但新增别名本身不能解决状态和策略碎片。Controller/runner runtime 继续独立冻结；日常准备可按明确指纹复用资产，缺资产时报告并进入显式准备动作，不退回随手选当前 Python。Console 首次服务、权限与访问环境的安装仍属于 operator，之后订阅实验公开接入 manifest 并保存接收回执；state/binary/container/mount mapping 由生产者提供和消费者核验，开发者不逐项手工交接。部署、支持宿主和读取权限仍须具体定义。
 
-当前授权和实施覆盖 projection 第一阶段，compiler、readiness 与自动 Console 接入仍是后续方案。真实恢复路径用于核对“已发生事实、未取得证明、合法操作条件”能否由同一查询解释；没有通过写入旧冻结记录、新建采集器或启动模型取得验收。下一轮从新增 I14 到可比较结果的路径再收敛 intent 字段与命名策略，不把本轮 projection 交付宣称为整个 experiment UX 已完成。
+用户随后明确“继续推进，你可以自由提交”，实施接续公共 compiler 与只读 doctor。Compiler 使用显式 targets、命名模型选择和逐应用评价政策，冻结源输入身份和决定依据；doctor 聚合已声明资产与宿主读回，不安装、预约或授予派发许可。可用 slots、工具缓存及镜像内 interpreter 缺少独立只读合同或现场证明时保持 unknown；自动 Console 接入仍是后续方案。真实恢复路径用于核对“已发生事实、未取得证明、合法操作条件”能否由同一查询解释；没有通过写入旧冻结记录、新建采集器或启动模型取得验收。下一轮从新增 I14 到可比较结果的路径再收敛 intent 字段与命名策略，不把本轮 projection 交付宣称为整个 experiment UX 已完成。
+
+
+用户随后基于真实热恢复指出，统一入口之外，重复全量校验和复制是当前最主要的体验成本。后续优先级调整为证明复用及减少物理搬运，再考虑 Console 自动接入。校验必须说明新增风险：来源停止与需求授权属于当前现场，内容及语义属于指定不可变版本，传输属于新的目标字节。相同内容、validator 版本和政策的语义回执可复用；同一操作内已取得的 inventory/manifest 不应层叠重算。链接判断独立于文件 SHA，运输目标仍核验实际字节，运行 workspace 与保存原件保持独立写入。发布 store 的不可变保障未建立前，不以 mtime 或旧回执代替字节证明。具体静态调用链、证据缺口和原 owner 边界归 packet，此优化尚未实施。

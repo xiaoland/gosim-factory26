@@ -1,9 +1,9 @@
-# I14 显式配方入口
+# I14 显式实验入口
 
-`launch.py DIRECTORY --build-only` 消费该目录的 config.json 和新 schema 的 recipe.json，冻结选择回执并构建 experiment；去掉 build-only 才派发。它不创建第二套 operation/dispatcher，不按 variant 数量推导运行授权。
+新定义使用公共 `factory26.exp.intent` schema 1，由 `python3 -m lab compile INTENT --directory COMPILED` 生成严格 recipe；随后执行 `lab doctor COMPILED/recipe.json --deployment PRIVATE_JSON`、`lab build COMPILED/recipe.json --directory EXPERIMENT`，最后在该实验实际授权内 `lab start EXPERIMENT --deployment PRIVATE_JSON`。字段及操作合同归 [Lab](../../lab/README.md)。本目录不再提供逐实验策略 launcher，旧 launch.py 原件保全于 `runs/experiment-dx-review/compiler-20261002/retired-i14-launch.py`；旧 config/recipe 只读保存，不隐式转换或恢复。
 
-config.targets 逐项声明 job_id、variant、case，job_id 必须唯一且与 recipe 的 generate/prepare 主任务集合相同。评价任务在 recipe 中独立声明，引用该题的生成输出及明确费用模式；某题应用可用后立即派发其评分，不等待其它题。供应商、实际模型 ID、endpoint、凭据变量和目标集全部由配方显式冻结。只有 config.root_selection 明确选用 i13-final-two-task-margin 时，才消费历史两题最终分差政策；默认按明确配方，不自动选择模型。
+Intent.targets 逐项声明 id、variant、case、model，不固定八项矩阵。models 显式冻结实际模型、provider、endpoint 和可选凭据变量映射。只有明确选择 final-score-margin 政策才读取绑定 run ID 的历史最终分数；不默认选择模型或供应商。逐应用评价声明独立模板、from_generation 与明确费用模式，每题产物可用后按依赖派发。Compile/build 记录已有授权，不新增模型或评分许可。
 
-当前讨论范围为四个 I14 variant 的 GitHub，Sheet 历史只读保留；本目录不自行恢复 Sheet。模型可按 native provider/model 分流，不固定 ARC 或某一 Qwen 标签。私有 deployment.json 引用 JSON credential_file 与必要 cookie_file。普通 Qwen、Token Plan、Kimi 可各有独立凭据变量；实际供应商是否支持冻结模型由实验负责人确认，设施不回落到其它渠道。
+当前讨论范围为四个 I14 variant 的 GitHub，Sheet 历史只读保留；本目录不自行恢复 Sheet。私有 deployment.json 引用 JSON credential_file 与必要 cookie_file。普通 Qwen、Token Plan、Kimi 可各有独立凭据变量，实际供应商是否支持冻结模型由实验负责人确认，设施不回落到其它渠道。
 
-运行方法及 authority_handoff、资源预算和独立 runner 合同归[Lab](../../lab/README.md)。旧 I14 SIGSTOP dispatcher、活动 Flash/GitHub、GLM 保全和旧 owner reservation 均保留原身份；旧源码保全见实验设施 packet。新 Docker 资源域接管和新模型执行仍须对应实验范围授权，本次源码切换未运行 I14。
+Controller/runner runtime、authority_handoff 和资源预算继续显式冻结。旧 I14 SIGSTOP dispatcher、活动 Flash/GitHub、GLM 保全和旧 owner reservation 保留原身份；新 Docker 资源域接管及模型执行仍须对应实验范围授权。本次 compiler/readiness 交付没有运行 I14。

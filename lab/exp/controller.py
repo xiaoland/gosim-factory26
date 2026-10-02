@@ -39,7 +39,7 @@ def _source(destination):
 
 
 def _runtime(path, purpose='controller'):
-    value = require(read(path), 'runtime')
+    value = require(path if isinstance(path, dict) else read(path), 'runtime')
     if value.get('purpose') != purpose:
         raise ValueError(f'runtime must declare {purpose} purpose')
     from lab.assets import asset_inventory
@@ -65,9 +65,9 @@ def _dependency_tree(source, runtime):
         (source / namespace / '__init__.py').touch(exist_ok=True)
 
 
-def build(spec_path, directory):
-    spec_path, directory = Path(spec_path).resolve(strict=True), Path(directory).resolve()
-    spec = require(read(spec_path), 'experiment')
+def validate_recipe(spec):
+    """Validate execution shape without installing assets or publishing inputs."""
+    require(spec, 'experiment')
     if not isinstance(spec.get('authorization'), str) or not spec['authorization'].strip():
         raise ValueError('experiment needs explicit authorized scope; the string grants no execution permission')
     if not spec.get('jobs') or not isinstance(spec['jobs'], list):
@@ -80,12 +80,88 @@ def build(spec_path, directory):
     storage = spec.get('storage', {})
     if type(storage.get('host_reserve_bytes')) is not int or storage['host_reserve_bytes'] < 1:
         raise ValueError('storage.host_reserve_bytes must be explicit and positive')
+    ids = set()
+    for raw in spec['jobs']:
+        job = dict(raw)
+        job_id = identifier(job['id'])
+        if job_id in ids:
+            raise ValueError('duplicate job identifier')
+        ids.add(job_id)
+        if job.get('purpose') not in {'build', 'prepare', 'generate', 'evaluate'}:
+            raise ValueError('job purpose must be build/prepare/generate/evaluate')
+        if 'target' in job:
+            projection.validate_target(job['target'])
+        kind = job.get('backend', {}).get('kind')
+        if kind not in {'local', 'docker', 'hosted'}:
+            raise ValueError('backend must be explicitly local/docker/hosted')
+        if kind == 'docker' and 'network' in job['backend'] and job['backend']['network'] != 'none':
+            raise ValueError('explicit Docker network currently supports only none; omit to retain default networking')
+        if kind == 'hosted':
+            from urllib.parse import urlsplit
+            backend = job['backend']
+            for field in ('competition_id', 'variant', 'task'):
+                identifier(backend[field])
+            if backend.get('credential_mode') not in {'self_funded', 'official_evaluation'}:
+                raise ValueError('hosted backend requires explicit credential_mode')
+            if backend['credential_mode'] == 'official_evaluation' and backend.get('allow_competition_credit') is not True:
+                raise ValueError('official evaluation requires frozen competition-credit authorization')
+            config = backend.get('model_config', {})
+            if any(not isinstance(config.get(field), str) or not config[field].strip()
+                   for field in ('model', 'visual_model', 'base_url', 'provider')):
+                raise ValueError('hosted model_config must freeze model, visual_model, base_url and provider')
+            url = urlsplit(config['base_url'])
+            if url.scheme != 'https' or not url.hostname or url.username or url.password or url.query or url.fragment:
+                raise ValueError('hosted model endpoint must be HTTPS without credentials')
+        command = job.get('command')
+        if kind != 'hosted' and (not isinstance(command, list) or not command or
+                                any(not isinstance(arg, str) for arg in command)):
+            raise ValueError('local/Docker job must supply argv')
+        limits = job.get('limits', {})
+        for field in ('storage_bytes', 'telemetry_bytes', 'wall_seconds'):
+            if type(limits.get(field)) is not int or limits[field] < 1:
+                raise ValueError(f'job {job_id} needs positive limit {field}')
+        if not isinstance(job.get('environment', {}), dict) or any(
+                not isinstance(k, str) or not isinstance(v, str) or
+                re.search(r'api.?key|token|cookie|password|secret', k, re.I)
+                for k, v in job.get('environment', {}).items()):
+            raise ValueError('public environment must contain strings without credential values')
+        for name, binding in job.get('inputs', {}).items():
+            identifier(name)
+            if isinstance(binding, str):
+                continue
+            if not isinstance(binding, dict) or not (
+                    isinstance(binding.get('source'), str) or 'artifact_id' in binding and 'manifest_sha256' in binding or
+                    set(binding) == {'from_job', 'output'}):
+                raise ValueError('input must explicitly reference a source or artifact')
+            if 'from_job' in binding and job['purpose'] != 'evaluate':
+                raise ValueError('published job outputs are only consumed by independent evaluation')
+        for output in job.get('outputs', []):
+            from .core import member
+            identifier(output['name']); identifier(output['type']); member(output['path'])
+    by_id = {job['id']: job for job in spec['jobs']}
+    for job in spec['jobs']:
+        for binding in job.get('inputs', {}).values():
+            if isinstance(binding, dict) and 'from_job' in binding:
+                source = by_id.get(binding['from_job'])
+                if not source or source['purpose'] != 'generate' or not any(
+                        output['name'] == binding['output'] for output in source.get('outputs', [])):
+                    raise ValueError('evaluation input must name a declared generation output')
+    return spec
+
+
+def build(spec_path, directory):
+    spec_path, directory = Path(spec_path).resolve(strict=True), Path(directory).resolve()
+    spec = require(read(spec_path), 'experiment')
+    validate_recipe(spec)
     if (directory / 'experiment.json').exists():
         manifest = require(read(directory / 'experiment.json'), 'experiment')
         if manifest['recipe_sha256'] != digest(spec_path):
             raise ValueError('experiment specification changed; build a new experiment')
         verify(directory)
         return manifest
+    for source, expected in spec.get('compilation', {}).get('files', {}).items():
+        if digest(source) != expected:
+            raise ValueError('compiled input descriptor changed: ' + source)
     directory.mkdir(parents=True, mode=0o700, exist_ok=True)
     os.chmod(directory, 0o700)
     if (directory / 'build-intent.json').exists() and read(directory / 'build-intent.json')['recipe_sha256'] != digest(spec_path):
@@ -97,59 +173,46 @@ def build(spec_path, directory):
     store = directory / 'artifacts'
     bindings_path = directory / 'build-bindings.json'
     bindings = read(bindings_path) if bindings_path.exists() else {}
-    def publish_input(key, origin, kind, provenance):
+    def publish_input(key, origin, kind, provenance, expected=None):
         if key in bindings:
             ref = bindings[key]
             if artifacts.contents(origin) != artifacts.verify(store, ref)['contents']:
                 raise ValueError('build source changed after publication: ' + key)
             return ref
         ref = artifacts.publish(store, origin, kind, provenance=provenance)
+        if expected is not None and artifacts.verify(store, ref)['contents'] != expected:
+            raise ValueError('source changed during compiled input publication: ' + key)
         bindings[key] = ref
         atomic(bindings_path, bindings)
         return ref
     try:
+        compilation_evidence = {}
+        for source, expected_sha256 in spec.get('compilation', {}).get('files', {}).items():
+            origin = Path(source)
+            compilation_evidence[source] = publish_input('compile-input/' + canonical(source), origin, 'compiler-input',
+                {'component': 'exp.compiler', 'source': source, 'source_sha256': expected_sha256},
+                {'kind': 'file', 'sha256': expected_sha256, 'executable': bool(origin.stat().st_mode & 0o111)})
         runtime_path = (spec_path.parent / spec['controller_runtime']).resolve(strict=True)
         runtime = _runtime(runtime_path)
         runner_runtime = None
         if any(job.get('backend', {}).get('kind') == 'local' for job in spec['jobs']):
             runner_runtime = _runtime((spec_path.parent / spec['runner_runtime']).resolve(strict=True), 'runner')
-        jobs, ids = [], set()
+        jobs = []
         for raw in spec['jobs']:
             job = dict(raw)
             job_id = identifier(job['id'])
-            if job_id in ids:
-                raise ValueError('duplicate job identifier')
-            ids.add(job_id)
-            if job.get('purpose') not in {'build', 'prepare', 'generate', 'evaluate'}:
-                raise ValueError('job purpose must be build/prepare/generate/evaluate')
-            if 'target' in job:
-                projection.validate_target(job['target'])
-            kind = job.get('backend', {}).get('kind')
-            if kind not in {'local', 'docker', 'hosted'}:
-                raise ValueError('backend must be explicitly local/docker/hosted')
-            if kind == 'docker' and 'network' in job['backend'] and job['backend']['network'] != 'none':
-                raise ValueError('explicit Docker network currently supports only none; omit to retain default networking')
-            command = job.get('command')
-            if kind != 'hosted' and (not isinstance(command, list) or not command or
-                                    any(not isinstance(arg, str) for arg in command)):
-                raise ValueError('local/Docker job must supply argv')
-            limits = job.get('limits', {})
-            for field in ('storage_bytes', 'telemetry_bytes', 'wall_seconds'):
-                if type(limits.get(field)) is not int or limits[field] < 1:
-                    raise ValueError(f'job {job_id} needs positive limit {field}')
-            if not isinstance(job.get('environment', {}), dict) or any(
-                    not isinstance(k, str) or not isinstance(v, str) or
-                    re.search(r'api.?key|token|cookie|password|secret', k, re.I)
-                    for k, v in job.get('environment', {}).items()):
-                raise ValueError('public environment must contain strings without credential values')
+            kind = job['backend']['kind']
             inputs = {}
             for name, value in job.get('inputs', {}).items():
                 identifier(name)
                 if isinstance(value, str) or isinstance(value, dict) and 'source' in value:
                     origin = value if isinstance(value, str) else value['source']
                     origin = (spec_path.parent / origin).resolve(strict=True)
+                    if isinstance(value, dict) and 'source_identity' in value and artifacts.contents(origin) != value['source_identity']:
+                        raise ValueError('compiled source input changed: ' + job_id + '/' + name)
                     inputs[name] = publish_input(job_id + '/input/' + name, origin, 'input',
-                        {'recipe_sha256': digest(spec_path), 'job_id': job_id, 'name': name})
+                        {'recipe_sha256': digest(spec_path), 'job_id': job_id, 'name': name},
+                        value.get('source_identity') if isinstance(value, dict) else None)
                 elif isinstance(value, dict) and 'artifact_id' in value:
                     ref = {key: value[key] for key in ('artifact_id', 'manifest_sha256')}
                     if value.get('store'):
@@ -172,8 +235,10 @@ def build(spec_path, directory):
                     binding = job[field]
                     if not isinstance(binding, dict) or 'source' not in binding:
                         raise ValueError(f'{field} must reference explicit producer evidence source')
+                    if 'source_identity' in binding and artifacts.contents((spec_path.parent / binding['source']).resolve(strict=True)) != binding['source_identity']:
+                        raise ValueError('compiled producer input changed: ' + job_id + '/' + field)
                     inputs[field] = publish_input(job_id + '/' + field, (spec_path.parent / binding['source']).resolve(strict=True),
-                                                     field.replace('_', '-'), binding.get('provenance', {}))
+                                                     field.replace('_', '-'), binding.get('provenance', {}), binding.get('source_identity'))
                     job[field] = inputs[field]
             job['inputs'] = inputs
             jobs.append(job)
@@ -199,11 +264,14 @@ def build(spec_path, directory):
                               interpreter='/usr/bin/env python3', compressed=True)
         experiment_id = identifier(spec.get('experiment_id') or new_id('experiment'))
         value = record('experiment', experiment_id=experiment_id, authorization=spec['authorization'],
-                       jobs=jobs, budget=budget, storage=storage, max_parallel=spec['max_parallel'],
+                       jobs=jobs, budget=spec['budget'], storage=spec['storage'], max_parallel=spec['max_parallel'],
                        recipe_sha256=digest(spec_path), controller_runtime=runtime,
                        runner_runtime=runner_runtime,
                        code=code, runner_sha256=digest(directory / 'runner.pyz'), created_at=time.time(),
                        labels=spec.get('labels', {}))
+        if 'compilation' in spec:
+            value['compilation'] = spec['compilation']
+            value['compilation_evidence'] = compilation_evidence
         atomic(directory / 'experiment.json', value)
         atomic(directory / 'build-intent.json', record('build', phase='published',
               experiment_id=experiment_id, recipe_sha256=digest(spec_path), finished_at=time.time()))

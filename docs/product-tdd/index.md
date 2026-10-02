@@ -8,6 +8,8 @@
 
 开发侧新实验由 `lab.exp.controller` 组织 build、派发、控制、监控和分析。Local/Docker 的每个 attempt 由独立冻结 runner 持有实际执行、资源限额、collector 与归档；托管平台由独立 adapter 持有远端身份和 pending 请求。Controller 退出不撤销已受理执行，重入同一请求不能重跑入口。工作树旧 plan/run/operation writer 已退役，历史输入只能只读查询或显式导入，新执行不翻译旧 schema。
 
+`lab.exp.compiler` 将显式 intent 的目标、模型选择和逐应用评价政策编译为严格冻结 recipe；选择原件、输入内容身份与 compiler 摘要保留在 compilation 及发布制品中。同一编译 bundle 只接受相同输入/政策/版本，变化须新 bundle。Compiler 不请求平台、执行模型或隐式准备环境；I14 的逐实验策略 launcher 已退役。`lab.exp.readiness` 只读聚合声明 runtime/材料、模型凭据变量覆盖与 Docker 宿主事实，不安装或预约；当前可用 slots 没有只读权威合同，明确 unknown，查询不能替代 start 的当前门控。
+
 `lab.exp.projection` 从保存的公开生产者事实构建统一实验视图，status 与 monitor 共用目标、阶段、输入依赖、当前 attempt、历史关系、产物覆盖、阻塞及操作建议。比较目标通过配方的 case/variant 显式声明；已经分配的评价不因后来生成重试而改绑。投影保留生产者身份、证据时点和原错，不保存另一份可手改的成功状态或启动采集器。Controller 提供操作建议，实际执行仍核对原冻结执行器及当前物理门控；旧停止证据、完整归档和入口成功不能互相替代。操作方法与覆盖限制见 [Lab 入口](../../lab/README.md)。
 
 执行终态、归档、遥测封口、传输和评分分别成立。Docker 在执行侧完成归档后，controller 取得并核验制品再派发依赖该应用的独立评分；设施失败保留原错及未完成阶段，不解释为有效零分。费用模式、模型、供应商与凭据来源冻结在配方，运行凭据通过私有部署引用提供。通用层不读 Braid 私有 SQL，Harness 的公开 checkpoint producer 持有恢复语义核验。
