@@ -165,12 +165,21 @@ def _reconcile(directory, client, state, backend):
 def _package(directory, attempt):
     path = directory / 'inputs' / 'agent'
     if path.is_file():
+        from .artifacts import contents, retain, verify
+        reference = attempt['job']['inputs']['agent']
+        retain(attempt['artifact_store'], reference, attempt['attempt_id'],
+               'platform-submission', attempt['attempt_id'] + '--retain--agent')
+        if contents(path) != verify(attempt['artifact_store'], reference)['contents']:
+            raise Blocked('hosted submission ZIP differs from frozen artifact')
         return path
     job = attempt['job']
     if job['purpose'] != 'evaluate' or 'application' not in job['inputs']:
         raise Blocked('hosted dispatch needs frozen agent ZIP or explicit application evaluation input')
     from lab.arc_bench.arc_artifacts import verify as verify_application
-    from .artifacts import publish
+    from .artifacts import publish, retain, verify
+    for name in ('application', 'application_receipt', 'requirements'):
+        retain(attempt['artifact_store'], job['inputs'][name], attempt['attempt_id'],
+               'hosted-replay-' + name, attempt['attempt_id'] + '--retain--' + name)
     application = directory / 'inputs' / 'application'
     receipt = directory / 'inputs' / 'application_receipt'
     requirements = directory / 'inputs' / 'requirements' / 'requirements.yaml'
@@ -204,6 +213,9 @@ def _package(directory, attempt):
         previous = read(package_receipt)
         if previous['source_sha256'] != frozen or digest(package) != previous['package_sha256']:
             raise Blocked('hosted replay production identity changed')
+        verify(attempt['artifact_store'], previous['artifact'])
+        retain(attempt['artifact_store'], previous['artifact'], attempt['attempt_id'], 'platform-submission',
+               attempt['attempt_id'] + '--retain--replay-package')
         return package
     scripts = Path(__file__).resolve().parents[1] / 'arc_bench'
     if not package.exists():
@@ -232,10 +244,20 @@ def _package(directory, attempt):
             if hashlib.sha256(archive.read(name)).hexdigest() != digest(source_path):
                 raise Blocked('hosted replay producer runtime differs')
     artifact = publish(attempt['artifact_store'], package, 'evaluation-input', provenance=source,
-                       capabilities={'model_generation': False, 'source_application_sha256': identity['sha256']})
+                       capabilities={'model_generation': False, 'source_application_sha256': identity['sha256']},
+                       request_id=attempt['attempt_id'] + '--replay-package', consumer=attempt['attempt_id'],
+                       purpose='platform-submission')
     atomic(package_receipt, record('production', source_sha256=frozen, source=source,
                                  package_sha256=digest(package), artifact=artifact, completed_at=time.time()))
     return package
+
+
+def freeze_replay(attempt_dir):
+    """Offline package production from explicitly bound inputs; no platform access."""
+    directory = Path(attempt_dir).resolve(strict=True)
+    attempt = require(read(directory / 'attempt.json'), 'attempt')
+    with locked(directory / 'hosted.lock'):
+        return _package(directory, attempt)
 
 
 def dispatch(attempt_dir):
@@ -345,7 +367,7 @@ def control(attempt_dir, request):
     if request['attempt_id'] != attempt['attempt_id']:
         raise ValueError('control request does not bind attempt')
     if request['action'] == 'export':
-        return export(directory)
+        return export(directory, request_id=request['request_id'])
     if request['action'] != 'stop':
         raise Blocked('hosted supports stop; pause, resume and checkpoint are unsupported')
     with locked(directory / 'hosted.lock'):
@@ -368,8 +390,15 @@ def control(attempt_dir, request):
         return state
 
 
-def export(attempt_dir):
+def export(attempt_dir, request_id=None):
     directory, attempt, backend, deployment, client = _context(attempt_dir)
+    request_id = identifier(request_id or (attempt['attempt_id'] + '--platform-export'))
+    receipt_path = directory / 'exports' / (request_id + '.json')
+    if receipt_path.exists():
+        from .artifacts import verify
+        previous = read(receipt_path)
+        verify(attempt['artifact_store'], previous['archive']['artifact'])
+        return previous
     state = observe(directory, live=True)
     if not state.get('run_id'):
         raise Blocked('remote run identity unknown; cannot export evidence')
@@ -386,11 +415,22 @@ def export(attempt_dir):
             raise Blocked('invalid log cursor; source observation preserved')
         atomic(cursor_file, {'log_offset': chunk['log_offset']})
         from .artifacts import publish
-        reference = publish(attempt['artifact_store'], folder, artifact_type='terminal-archive',
+        snapshot = directory / 'export-snapshots' / request_id
+        if not snapshot.exists():
+            import shutil
+            snapshot.parent.mkdir(exist_ok=True)
+            staging = snapshot.with_name(snapshot.name + '.partial')
+            if staging.exists():
+                raise Blocked('platform export snapshot copy incomplete; preserve partial and use a new export request')
+            shutil.copytree(folder, staging)
+            staging.replace(snapshot)
+        reference = publish(attempt['artifact_store'], snapshot, artifact_type='terminal-archive',
                             provenance={'component': 'exp-hosted', 'attempt_id': attempt['attempt_id'],
                                         'submission_id': state['submission_id'], 'run_id': state['run_id'],
                                         'gaps': ['platform JSON export does not prove complete application, Git/native history or telemetry drain']},
-                            capabilities={'checkpoint': False, 'coverage': 'platform-json-only'})
+                            capabilities={'checkpoint': False, 'coverage': 'platform-json-only'},
+                            request_id=request_id, consumer=attempt['attempt_id'], purpose='platform-evidence')
         state['archive'] = {'status': 'partial', 'artifact': reference}
+        atomic(receipt_path, state)
         _save(directory, state)
         return state

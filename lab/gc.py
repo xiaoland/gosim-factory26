@@ -13,7 +13,7 @@ from .assets import host_runtime
 
 PIN_PURPOSES = {"execution", "cleanup", "recovery", "execution_cleanup"}
 DEPENDENCY_PURPOSES = PIN_PURPOSES | {"provenance"}
-RECORD_NAMES = {"active.json", "archive.json", "manifest.json", "recovery-workspace.json", "run.json", "experiment.json", "attempt.json", "execution.json", "asset.json"}
+RECORD_NAMES = {"active.json", "archive.json", "manifest.json", "recovery-workspace.json", "run.json", "experiment.json", "attempt.json", "execution.json", "asset.json", "store.json"}
 
 
 def _raise(error):
@@ -301,11 +301,24 @@ def plan(roots, asset_roots=(), protected=()):
         protections.append({"path": str(original), "canonical_path": str(canonical),
                             "source": "--protect", "purpose": "explicit", "pins": True})
     archives = []
+    artifact_stores = []
     for path in _records(roots, errors):
         record = _read(path, errors)
         if record is None:
             continue
-        if record.get('kind') in {'factory26.exp.experiment', 'factory26.exp.attempt', 'factory26.exp.execution'}:
+        if record.get('kind') == 'factory26.exp.artifact-store':
+            try:
+                from .exp.artifacts import gc_plan
+                domain_plan = gc_plan(path.parent)
+                artifact_stores.append(domain_plan)
+                if domain_plan['carrier_retained']:
+                    protections.append({'path': str(path.parent.absolute()), 'source': str(path),
+                                        'purpose': 'artifact-carrier-retained', 'pins': True})
+            except (OSError, ValueError, RuntimeError, KeyError) as exc:
+                errors.append({'path': str(path), 'error': f'{type(exc).__name__}: {exc}'})
+                protections.append({'path': str(path.parent.absolute()), 'source': str(path),
+                                    'purpose': 'artifact-store-unknown', 'pins': True})
+        elif record.get('kind') in {'factory26.exp.experiment', 'factory26.exp.attempt', 'factory26.exp.execution'}:
             protections.append({'path': str(path.parent.absolute()), 'source': str(path),
                                 'purpose': 'exp-evidence-and-execution', 'pins': True})
             runtime = record.get('controller_runtime') or {}
@@ -397,4 +410,5 @@ def plan(roots, asset_roots=(), protected=()):
             "host": socket.gethostname(), "read_only": True, "complete": not errors,
             "roots": [str(root) for root in roots], "protections": protections,
             "references": references, "candidates": candidates, "assets": assets,
+            "artifact_stores": artifact_stores,
             "errors": errors}
