@@ -109,15 +109,24 @@ scenario('github-req-1-3', 'Change Account Password', async ({ page, prepare, ve
 
 async function signed(page: any) { await signIn(page); }
 async function repository(page: any) { await openRepository(page); }
-async function signedRepository(page: any) { await signIn(page); await page.getByRole('link', { name: /acme-docs/i }).first().click(); }
+async function signedRepository(page: any) { await signIn(page); await openRepository(page); }
 
 scenario('github-req-2-1-1', 'Browse Organization Repositories', async ({ page, prepare, verify }) => {
-  await prepare('open public organization', () => start(page));
+  await prepare('open organization as a member', async () => {
+    await signIn(page);
+    await page.getByRole('button', { name: 'Account menu', exact: true }).click();
+    await page.getByRole('link', { name: 'Your organizations', exact: true }).click();
+    await page.getByRole('link', { name: /Acme Demo/i }).click();
+    await page.getByRole('link', { name: 'Repositories', exact: true }).click();
+  });
   await verify('filter public repositories', async () => {
-    await page.getByRole('link', { name: /Acme Demo/i }).first().click();
-    await page.getByRole('link', { name: 'Repositories' }).click();
-    await page.getByRole('textbox', { name: 'Find a repository' }).fill('acme-docs');
-    await expect(page.getByRole('link', { name: /acme-docs/i })).toBeVisible();
+    const filter = page.getByRole('textbox', { name: 'Find a repository', exact: true });
+    await expect(filter).toBeVisible();
+    await filter.fill('acme-docs');
+    await page.getByRole('link', { name: 'acme-docs', exact: true }).click();
+    await expect(page.getByRole('heading', { name: /acme-demo\/acme-docs/ })).toBeVisible();
+    await page.goBack();
+    await expect(page.getByRole('link', { name: 'acme-docs', exact: true })).toBeVisible();
   });
 });
 
@@ -164,7 +173,7 @@ scenario('github-req-2-3', 'Grant Repository Access to People and Teams', async 
 
 scenario('github-req-3-1', 'Search for and Locate Repositories', async ({ page, prepare, verify }) => {
   await prepare('open search', () => start(page));
-  await verify('find seeded repository and report no results', async () => { const search = page.getByRole('searchbox', { name: 'Search', exact: true }); await search.fill('acme-docs'); await search.press('Enter'); await expect(page.getByRole('link', { name: /acme-docs/i })).toBeVisible(); await search.fill(`missing-${unique()}`); await search.press('Enter'); await expect(page.getByText('No results')).toBeVisible(); });
+  await verify('find seeded repository and report no results', async () => { const search = page.getByRole('searchbox', { name: 'Search', exact: true }); await search.fill('acme-docs'); await search.press('Enter'); await expect(page.getByRole('link', { name: 'acme-docs', exact: true })).toBeVisible(); await search.fill(`missing-${unique()}`); await search.press('Enter'); await expect(page.getByText('No results')).toBeVisible(); });
 });
 
 scenario('github-req-3-2-1', 'Create a Repository with Owner, Visibility, and Initialization Options', async ({ page, prepare, verify }) => {
@@ -174,8 +183,20 @@ scenario('github-req-3-2-1', 'Create a Repository with Owner, Visibility, and In
 });
 
 scenario('github-req-3-2-2', 'Fork a Repository into Another Namespace', async ({ page, prepare, verify }) => {
-  await prepare('open public repository', () => repository(page));
-  await verify('create fork with lineage', async () => { await page.getByRole('button', { name: 'Fork' }).click(); const name = `fork-${unique()}`; await page.getByLabel('Repository name').fill(name); await page.getByRole('button', { name: 'Create fork' }).click(); await expect(page.getByText(/Forked from .*acme-docs/i)).toBeVisible(); });
+  await prepare('open public repository as a fork creator', () => signedRepository(page));
+  await verify('create fork with persistent lineage', async () => {
+    const fork = page.getByRole('button', { name: 'Fork', exact: true });
+    await expect(fork).toBeVisible();
+    await fork.click();
+    const name = `fork-${unique()}`;
+    await page.getByLabel('Repository name', { exact: true }).fill(name);
+    await page.getByRole('button', { name: 'Create fork', exact: true }).click();
+    await expect(page.getByRole('heading', { name: new RegExp(name) })).toBeVisible();
+    await expect(page.getByText(/Forked from .*acme-docs/)).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole('heading', { name: new RegExp(name) })).toBeVisible();
+    await expect(page.getByText(/Forked from .*acme-docs/)).toBeVisible();
+  });
 });
 
 scenario('github-req-3-2-3', 'Copy a Repository Clone Value', async ({ page, prepare, verify }) => {
@@ -185,7 +206,13 @@ scenario('github-req-3-2-3', 'Copy a Repository Clone Value', async ({ page, pre
 
 scenario('github-req-3-3', 'View a Public Repository Overview', async ({ page, prepare, verify }) => {
   await prepare('open public repository', () => repository(page));
-  await verify('show repository identity and code', async () => { await expect(page.getByText('Public', { exact: true })).toBeVisible(); await expect(page.getByRole('link', { name: 'Code', exact: true })).toBeVisible(); });
+  await verify('show contiguous owner/name identity and code after reload', async () => {
+    await expect(page.getByRole('heading', { name: /\S+\/acme-docs\b/ })).toBeVisible();
+    await expect(page.getByText('Public', { exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Code', exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByRole('heading', { name: /\S+\/acme-docs\b/ })).toBeVisible();
+  });
 });
 
 scenario('github-req-3-4', 'Change Repository Visibility with Permission Checks', async ({ page, prepare, verify }) => {
@@ -194,7 +221,7 @@ scenario('github-req-3-4', 'Change Repository Visibility with Permission Checks'
 });
 
 scenario('github-req-4-1', 'Browse Repository Files and Directories', async ({ page, prepare, verify }) => { await prepare('open repository', () => repository(page)); await verify('browse seeded file tree without signing in', async () => { await expect(page.getByRole('link', { name: /README/i }).first()).toBeVisible(); await page.getByRole('link', { name: /README/i }).first().click(); await expect(page.locator('main')).toContainText(/README|Acme/i); }); });
-scenario('github-req-4-2-1', 'View Repository Commit History', async ({ page, prepare, verify }) => { await prepare('open repository', () => repository(page)); await verify('show reverse chronological commits', async () => { await page.getByRole('link', { name: 'Commits' }).click(); await expect(page.getByText(/ago/).first()).toBeVisible(); }); });
+scenario('github-req-4-2-1', 'View Repository Commit History', async ({ page, prepare, verify }) => { await prepare('open repository', () => repository(page)); await verify('open the exact Commits link and read history', async () => { const commits = page.getByRole('link', { name: 'Commits', exact: true }); await expect(commits).toBeVisible(); await commits.click(); await expect(page.getByText(/ago/).first()).toBeVisible(); }); });
 scenario('github-req-4-2-2', 'Inspect Commit and Revision Differences', async ({ page, prepare, verify }) => { await prepare('open commit history', async () => { await repository(page); await page.getByRole('link', { name: 'Commits' }).click(); }); await verify('show changed files', async () => { await page.getByRole('link').filter({ hasText: /[0-9a-f]{7}/ }).first().click(); await expect(page.getByText('Changed files')).toBeVisible(); }); });
 scenario('github-req-4-2-3', 'Search Code Within a Repository', async ({ page, prepare, verify }) => { await prepare('open repository', () => repository(page)); await verify('search only readable code', async () => { await page.getByRole('button', { name: 'Search' }).click(); await page.getByRole('textbox', { name: 'Search' }).fill('onboarding'); await page.getByRole('textbox', { name: 'Search' }).press('Enter'); await expect(page.locator('main')).toContainText(/onboarding|No code results/i); }); });
 scenario('github-req-4-3-1', 'List and Switch Repository Branches', async ({ page, prepare, verify }) => { await prepare('open repository', () => repository(page)); await verify('filter and switch branch', async () => { await page.getByRole('button', { name: /Branch / }).click(); await page.getByLabel('Find branch').fill('main'); await expect(page.getByRole('option', { name: 'main' })).toBeVisible(); await page.getByRole('option', { name: 'main' }).click(); await expect(page.getByRole('button', { name: 'Branch main' })).toBeVisible(); }); });
@@ -203,17 +230,62 @@ scenario('github-req-4-3-3', 'Change the Repository Default Branch', async ({ pa
 scenario('github-req-4-4', 'Manage Repository Files Through the Web Interface', async ({ page, prepare, verify }) => { await prepare('open writable repository', () => signedRepository(page)); await verify('create a file as a commit', async () => { await page.getByRole('button', { name: 'Add file' }).click(); await page.getByRole('menuitem', { name: 'Create new file' }).click(); const name = `notes-${unique()}.md`; await page.getByLabel('File name').fill(name); await page.getByLabel('File contents').fill('created through visible UI'); await page.getByLabel('Commit message').fill(`Add ${name}`); await page.getByRole('button', { name: 'Commit changes' }).click(); await expect(page.getByText(name, { exact: true })).toBeVisible(); }); });
 
 scenario('github-req-5-1-1', 'List and Filter Repository Issues', async ({ page, prepare, verify }) => { await prepare('open issue list', async () => { await repository(page); await page.getByRole('link', { name: 'Issues' }).click(); }); await verify('filter open and closed issues', async () => { await expect(page.getByText('Open', { exact: true }).first()).toBeVisible(); await page.getByRole('link', { name: 'Closed' }).click(); await expect(page.getByText('Closed', { exact: true }).first()).toBeVisible(); }); });
-scenario('github-req-5-1-2', 'View an Issue and Its Discussion', async ({ page, prepare, verify }) => { await prepare('open issue list', async () => { await repository(page); await page.getByRole('link', { name: 'Issues' }).click(); }); await verify('show seeded issue discussion and activity', async () => { await page.getByRole('link', { name: /Improve onboarding/i }).click(); await expect(page.getByText(/Improve onboarding/i)).toBeVisible(); await expect(page.getByText('Activity')).toBeVisible(); }); });
+scenario('github-req-5-1-2', 'View an Issue and Its Discussion', async ({ page, prepare, verify }) => { await prepare('open issue list', async () => { await repository(page); await page.getByRole('link', { name: 'Issues', exact: true }).click(); }); await verify('show seeded issue discussion and activity after reload', async () => { await page.getByRole('link', { name: 'Improve onboarding', exact: true }).click(); await expect(page.getByRole('heading', { name: 'Improve onboarding', exact: true })).toBeVisible(); await expect(page.getByRole('heading', { name: 'Activity', exact: true })).toBeVisible(); await page.reload(); await expect(page.getByRole('heading', { name: 'Improve onboarding', exact: true })).toBeVisible(); }); });
 scenario('github-req-5-2-1', 'Create a Repository Issue', async ({ page, prepare, verify }) => { await prepare('open new issue', async () => { await signedRepository(page); await page.getByRole('link', { name: 'Issues' }).click(); await page.getByRole('link', { name: 'New issue' }).click(); }); await verify('reject empty then create issue', async () => { await page.getByRole('button', { name: 'Submit new issue' }).click(); await expect(page.getByText('Title is required')).toBeVisible(); const title = `Issue ${unique()}`; await page.getByLabel('Title').fill(title); await page.getByLabel('Description').fill('Created from the public workflow'); await page.getByRole('button', { name: 'Submit new issue' }).click(); await expect(page.getByText(title, { exact: true })).toBeVisible(); await page.reload(); await expect(page.getByText(title, { exact: true })).toBeVisible(); }); });
 scenario('github-req-5-2-2', 'Edit an Issue Title and Description', async ({ page, prepare, verify }) => { await prepare('open seeded issue', async () => { await signedRepository(page); await page.getByRole('link', { name: 'Issues' }).click(); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('edit title and persist', async () => { await page.getByRole('button', { name: 'Edit issue title' }).click(); const title = `Onboarding ${unique()}`; await page.getByLabel('Issue title').fill(title); await page.getByRole('button', { name: 'Save issue title' }).click(); await expect(page.getByText(title, { exact: true })).toBeVisible(); await page.reload(); await expect(page.getByText(title, { exact: true })).toBeVisible(); }); });
 scenario('github-req-5-2-3', 'Comment on an Issue Discussion', async ({ page, prepare, verify }) => { await prepare('open seeded issue', async () => { await signedRepository(page); await page.getByRole('link', { name: 'Issues' }).click(); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('reject empty and append comment', async () => { await page.getByRole('button', { name: 'Comment' }).click(); await expect(page.getByText('Comment is required')).toBeVisible(); const body = `Comment ${unique()}`; await page.getByLabel('Comment').fill(body); await page.getByRole('button', { name: 'Comment' }).click(); await expect(page.getByText(body, { exact: true })).toBeVisible(); }); });
-scenario('github-req-5-3-1', 'Assign or Unassign Issue Participants', async ({ page, prepare, verify }) => { await prepare('open maintainable issue', async () => { await signedRepository(page); await page.getByRole('link', { name: 'Issues' }).click(); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('assign and unassign seeded member', async () => { await page.getByRole('button', { name: 'Assignees' }).click(); await page.getByLabel('Search assignees').fill('bob-reviewer'); await page.getByRole('option', { name: 'bob-reviewer' }).click(); await expect(page.getByText('bob-reviewer', { exact: true })).toBeVisible(); await page.getByRole('button', { name: 'Assignees' }).click(); await page.getByRole('option', { name: 'bob-reviewer' }).click(); await expect(page.getByText('bob-reviewer', { exact: true })).toHaveCount(0); }); });
+scenario('github-req-5-3-1', 'Assign or Unassign Issue Participants', async ({ page, prepare, verify }) => {
+  await prepare('open maintainable issue', async () => {
+    await signedRepository(page);
+    await page.getByRole('link', { name: 'Issues', exact: true }).click();
+    await page.getByRole('link', { name: 'Improve onboarding', exact: true }).click();
+  });
+  await verify('search an unassigned member and preserve its exact option name', async () => {
+    const toggle = page.getByRole('button', { name: 'Assignees', exact: true });
+    const search = page.getByRole('textbox', { name: 'Search assignees', exact: true });
+    await toggle.click();
+    await expect(search).toBeVisible();
+    const candidate = page.getByRole('option', { selected: false }).first();
+    await expect(candidate).toBeVisible();
+    const username = (await candidate.innerText()).trim();
+    await search.fill(username);
+    await page.getByRole('option', { name: username, exact: true }).click();
+    await expect(search).toBeHidden();
+    await expect(page.getByText(username, { exact: true }).first()).toBeVisible();
+    await page.reload();
+    await toggle.click();
+    await page.getByRole('option', { name: username, exact: true, selected: true }).click();
+    await expect(search).toBeHidden();
+    await page.reload();
+    await toggle.click();
+    await expect(page.getByRole('option', { name: username, exact: true, selected: false })).toBeVisible();
+  });
+});
 scenario('github-req-5-3-2', 'Apply Labels to an Issue', async ({ page, prepare, verify, blocked }) => { await prepare('open maintainable issue with seeded labels', async () => { await signedRepository(page); await page.getByRole('link', { name: 'Issues' }).click(); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('apply seeded bug label', async () => { await page.getByRole('button', { name: 'Labels' }).click(); const option = page.getByRole('option', { name: 'bug' }); if (!await option.count()) blocked('the public contract requires a seeded bug label but no public creation workflow exists'); await option.click(); await expect(page.getByText('bug', { exact: true })).toBeVisible(); }); });
 scenario('github-req-5-3-3', 'Assign Issues and Pull Requests to a Milestone', async ({ page, prepare, verify, blocked }) => { await prepare('open maintainable issue with seeded milestone', async () => { await signedRepository(page); await page.getByRole('link', { name: 'Issues' }).click(); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('select and clear seeded milestone', async () => { await page.getByRole('button', { name: 'Milestone' }).click(); const option = page.getByRole('option', { name: 'Q3 launch' }); if (!await option.count()) blocked('the public contract requires a seeded Q3 launch milestone but no public creation workflow exists'); await option.click(); await expect(page.getByText('Q3 launch', { exact: true })).toBeVisible(); }); });
 scenario('github-req-5-4', 'Close or Reopen an Issue', async ({ page, prepare, verify }) => { await prepare('open maintainable issue', async () => { await signedRepository(page); await page.getByRole('link', { name: 'Issues' }).click(); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('close and reopen with persistence', async () => { await page.getByRole('button', { name: 'Close issue' }).click(); await expect(page.getByText('Closed issue')).toBeVisible(); await page.reload(); await page.getByRole('button', { name: 'Reopen issue' }).click(); await expect(page.getByText('Open', { exact: true }).first()).toBeVisible(); }); });
 
 async function pullRequests(page: any, signedIn = false) { if (signedIn) await signedRepository(page); else await repository(page); await page.getByRole('link', { name: 'Pull requests' }).click(); }
-scenario('github-req-6-1', 'Protect Branches with Review and Status-Check Requirements', async ({ page, prepare, verify }) => { await prepare('open branch protection settings', async () => { await signedRepository(page); await page.getByRole('link', { name: 'Settings' }).click(); await page.getByRole('link', { name: 'Branches' }).click(); }); await verify('expose independent approval and test check rules', async () => { await expect(page.locator('main')).toContainText(/approval/i); await expect(page.locator('main')).toContainText(/test/i); }); });
+scenario('github-req-6-1', 'Protect Branches with Review and Status-Check Requirements', async ({ page, prepare, verify }) => {
+  await prepare('open seeded protected PR as Admin', async () => {
+    await pullRequests(page, true);
+    await page.getByRole('link', { name: 'Improve onboarding', exact: true }).click();
+  });
+  await verify('read and update test check on arrival without another tab', async () => {
+    await expect(page.getByText('test: pending', { exact: true })).toBeVisible();
+    await page.getByRole('combobox', { name: 'test status', exact: true }).selectOption({ label: 'success' });
+    await page.getByRole('button', { name: 'Save', exact: true }).click();
+    await expect(page.getByText('test: success', { exact: true })).toBeVisible();
+    await page.reload();
+    await expect(page.getByText('test: success', { exact: true })).toBeVisible();
+  });
+  await verify('expose independent approval and test check rules', async () => {
+    await page.getByRole('link', { name: 'Settings', exact: true }).click();
+    await page.getByRole('link', { name: 'Branches', exact: true }).click();
+    await expect(page.getByText('1 approval', { exact: true })).toBeVisible();
+    await expect(page.getByText('Require status check test', { exact: true })).toBeVisible();
+  });
+});
 scenario('github-req-6-2-1', 'List and Filter Repository Pull Requests', async ({ page, prepare, verify }) => { await prepare('open pull request list', () => pullRequests(page)); await verify('show source target and status filters', async () => { await expect(page.locator('main')).toContainText(/Open|Closed|Draft/i); await expect(page.locator('main')).toContainText(/main|feature-search/i); }); });
 scenario('github-req-6-2-2', 'Compare Branches Before Opening a Pull Request', async ({ page, prepare, verify }) => { await prepare('open comparison', async () => { await pullRequests(page, true); await page.getByRole('link', { name: 'New pull request' }).click(); }); await verify('select base and compare and show diff', async () => { await expect(page.getByLabel(/base/i)).toBeVisible(); await expect(page.getByLabel(/compare/i)).toBeVisible(); await expect(page.locator('main')).toContainText(/change|diff|file/i); }); });
 scenario('github-req-6-2-3', 'Create a Pull Request from Comparison Results', async ({ page, prepare, verify }) => { await prepare('open comparison', async () => { await pullRequests(page, true); await page.getByRole('link', { name: 'New pull request' }).click(); }); await verify('create normal pull request', async () => { await page.getByRole('button', { name: 'Create pull request' }).click(); await expect(page.locator('main')).toContainText(/Open/i); }); });
@@ -222,6 +294,26 @@ scenario('github-req-6-3-1', 'View Pull Request Overview and Commits', async ({ 
 scenario('github-req-6-3-2', 'Inspect Changed Files and Aggregate Diff', async ({ page, prepare, verify }) => { await prepare('open seeded pull request', async () => { await pullRequests(page); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('show per-file diff and aggregate counts', async () => { await page.getByRole('link', { name: 'Files changed' }).click(); await expect(page.locator('main')).toContainText(/additions/i); await expect(page.locator('main')).toContainText(/deletions/i); }); });
 scenario('github-req-6-3-3', 'Add Review Comments to Changed Code Lines', async ({ page, prepare, verify }) => { await prepare('open changed files as reviewer', async () => { await pullRequests(page, true); await page.getByRole('link', { name: /Improve onboarding/i }).click(); await page.getByRole('link', { name: 'Files changed' }).click(); }); await verify('add a line comment', async () => { await page.getByRole('button', { name: '+' }).first().click(); await page.getByRole('textbox').last().fill(`Review ${unique()}`); await expect(page.getByRole('button', { name: 'Add single comment' })).toBeVisible(); await expect(page.getByRole('button', { name: 'Start a review' })).toBeVisible(); }); });
 scenario('github-req-6-3-4', 'Submit a Pull Request Review', async ({ page, prepare, verify }) => { await prepare('open seeded pull request as reviewer', async () => { await pullRequests(page, true); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('submit an approve review', async () => { await page.getByRole('button', { name: /Review changes/i }).click(); await page.getByRole('radio', { name: /Approve/i }).check(); await page.getByRole('button', { name: /Submit review/i }).click(); await expect(page.locator('main')).toContainText(/Approved/i); }); });
-scenario('github-req-6-4', 'Request or Remove Pull Request Reviewers', async ({ page, prepare, verify }) => { await prepare('open seeded pull request as author', async () => { await pullRequests(page, true); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('request seeded reviewer', async () => { await page.getByRole('button', { name: /Reviewers/i }).click(); await page.getByRole('option', { name: 'bob-reviewer' }).click(); await expect(page.getByText('bob-reviewer', { exact: true })).toBeVisible(); }); });
+scenario('github-req-6-4', 'Request or Remove Pull Request Reviewers', async ({ page, prepare, verify }) => {
+  await prepare('open seeded pull request as author', async () => {
+    await pullRequests(page, true);
+    await page.getByRole('link', { name: 'Improve onboarding', exact: true }).click();
+  });
+  await verify('search, request, and remove reviewer with persistence', async () => {
+    await page.getByRole('button', { name: 'Reviewers', exact: true }).click();
+    const search = page.getByRole('textbox', { name: 'Search', exact: true });
+    await expect(search).toBeVisible();
+    await search.fill('bob-reviewer');
+    await page.getByRole('option', { name: 'bob-reviewer', exact: true }).click();
+    await expect(search).toBeHidden();
+    const remove = page.getByRole('button', { name: 'Remove bob-reviewer', exact: true });
+    await expect(remove).toBeVisible();
+    await page.reload();
+    await remove.click();
+    await expect(remove).toBeHidden();
+    await page.reload();
+    await expect(remove).toBeHidden();
+  });
+});
 scenario('github-req-6-5', 'Merge an Eligible Pull Request', async ({ page, prepare, verify }) => { await prepare('open eligible pull request as maintainer', async () => { await pullRequests(page, true); await page.getByRole('link', { name: /Improve onboarding/i }).click(); }); await verify('merge and persist terminal state', async () => { await page.getByRole('button', { name: 'Merge pull request' }).click(); await page.getByRole('button', { name: 'Confirm merge' }).click(); await expect(page.getByText('Merged', { exact: true })).toBeVisible(); await page.reload(); await expect(page.getByText('Merged', { exact: true })).toBeVisible(); }); });
 scenario('github-req-6-6', 'Close or Reopen a Pull Request Without Merging', async ({ page, prepare, verify }) => { await prepare('open open pull request as author', async () => { await pullRequests(page, true); await page.getByRole('link', { name: /Fix search/i }).click(); }); await verify('close and reopen without merge', async () => { await page.getByRole('button', { name: /Close pull request/i }).click(); await expect(page.getByText('Closed', { exact: true })).toBeVisible(); await page.getByRole('button', { name: /Reopen pull request/i }).click(); await expect(page.getByText('Open', { exact: true })).toBeVisible(); }); });
