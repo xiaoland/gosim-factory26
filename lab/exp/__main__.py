@@ -32,6 +32,13 @@ def main(argv=None):
     stopped.add_argument('experiment', type=Path)
     stopped.add_argument('attempt')
     stopped.add_argument('--output', type=Path, required=True)
+    imported_stop = commands.add_parser('import-source-stop', help='导入旧官网独立 GET 原件，不伪装新 attempt 或授予启动许可')
+    imported_stop.add_argument('--birth', type=Path, required=True)
+    imported_stop.add_argument('--status', type=Path, required=True)
+    imported_stop.add_argument('--cancel-evidence', type=Path)
+    imported_stop.add_argument('--authorization', required=True)
+    imported_stop.add_argument('--identity-output', type=Path, required=True)
+    imported_stop.add_argument('--output', type=Path, required=True)
     retry = commands.add_parser('retry')
     retry.add_argument('experiment', type=Path)
     retry.add_argument('attempt')
@@ -40,7 +47,9 @@ def main(argv=None):
     authority = commands.add_parser('authority-handoff')
     authority.add_argument('--endpoint', type=Path, required=True)
     authority.add_argument('--writer', type=Path, action='append', default=[])
-    authority.add_argument('--registry', type=Path, required=True)
+    authority.add_argument('--registry', type=Path)
+    authority.add_argument('--mode', choices=['retirement', 'first-use'], default='retirement')
+    authority.add_argument('--scope', type=Path)
     authority.add_argument('--authorization', required=True, help='明确确认已列出该 daemon 的全部旧派发者')
     authority.add_argument('--output', type=Path, required=True)
     telemetry = commands.add_parser('telemetry')
@@ -104,11 +113,16 @@ def main(argv=None):
         value = controller.control(args.experiment, args.attempt, args.command, request_id=args.request_id)
     elif args.action == 'stop-evidence':
         value = controller.stop_evidence(args.experiment, args.attempt, args.output)
+    elif args.action == 'import-source-stop':
+        from .backends import import_source_stop
+        value = import_source_stop(args.birth, args.status, args.output, args.identity_output,
+                                   args.authorization, args.cancel_evidence)
     elif args.action == 'retry':
         value = controller.retry(args.experiment, args.attempt, args.authorization, request_id=args.request_id)
     elif args.action == 'authority-handoff':
         from .admission import handoff
-        value = handoff(read(args.endpoint), args.writer, args.registry, args.output, args.authorization)
+        value = handoff(read(args.endpoint), args.writer, args.registry, args.output, args.authorization,
+                        mode=args.mode, scope=args.scope)
     elif args.action == 'telemetry':
         from . import telemetry
         if args.telemetry_action == 'snapshot':

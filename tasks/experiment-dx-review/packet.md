@@ -97,3 +97,18 @@ Harness checkpoint/validate/prepare 是公开、离线、版本化 producer。Pr
 实际反馈原件均在 `runs/experiment-dx-review/implementation-20261002/`。读取真实 GLM 交接原件并发布、核验、导出、跨 store 传输，制品 ID 与 manifest 摘要保持一致。随后使用真实原件进行独立离线归档：早期失败原件保留，修复了 namespace 依赖冻结、zipapp 环境 PYTHONPATH 和 bytecode 源码漂移；最终 `offline-evidence-final2` 的 attempt `attempt-5516368153344987a5182438` 返回 exit 0、archive preserved、telemetry sealed、controller completed。`offline-final2-build-reentry.json` 证明执行后冻结源码仍可核验；`offline-final2-stop.json` 和 `offline-final2-analysis` 分别保存当前物理停止观察和分析范围。collector 为零批次，producer_flush 仍为 unknown，不能解释成实际模型遥测排空保证。
 
 源码编译、daemon helper 字符串编译与差异空白检查通过。按仓库要求没有编写或运行 Factory/Braid 测试、fixture、probe 或 smoke。Docker 准入交接与中断/重连、完整 Harness 检查点恢复、官网写入/评分、非空遥测冲突/去重、供应商实际请求仍未取得现场验收。后续真实实验须冻结具体输入、预算、费用、停止/中断范围；本次设施开工不授予这些行为。当前没有 push、清理、在途迁移或 Console 部署。
+
+
+## 真实接续中的两个接口补齐
+
+主线委派本会话处理 development-2 首次域和旧官网来源停止导入，范围只到 lab.exp 共享接口，不运行模型、停止旧 owner、写平台或部署 Console。development-2 的真实 readback 指向 daemon `e316f857-fe3d-4e7b-8236-9376f063fedc`；列明的远端默认 registry 不存在，仅有用户 Redis，有限本地扫描的 prune/大小/路径范围明确保存于 `runs/iteration14/dx-resume-20261002/host/`。这些观察不单独证明不存在未知自定义域，因此 first-use 必须另消费获授权负责人的新域及 writer/registry 覆盖声明。旧 WSL 三个 alive owner 和暂停派发者不受此次修复影响。
+
+新增 `authority-handoff --mode first-use --scope`，真实缺失原件与有限物理扫描和明确覆盖声明分别保留，输出 reservations=absent，不编造空旧 registry。旧 retirement 仍要求真实 registry 和物理退役。新增 `import-source-stop`，消费旧官网出生与独立终态 GET，来源为 legacy-source/source_id，绝不伪装 new attempt。Launch 对此来源重新 GET 核对相同出生与终态；原请求、原件身份和源码合同详见 lab/README.md。
+
+当前只完成共享消费者与 CLI。Harness producer 对 source_id/attempt_id 联合类型的消费由主线独占 worker 处理，本会话不改 submission/exp_checkpoint.py、submission/recover_completed.py 或 scripts/agent_support.py。此前已冻结 controller 不自动获得新门控，消费者须在源码及 Harness 接口稳定后重新 build。首次域授权/覆盖输入和 Flash 原平台终态保全由实际 owner 提供；本会话没有伪造这些输入或重复执行取消。实际首用 handoff 与 legacy source launch 尚未运行，编译和 CLI 合同读取不作为效果验收。
+
+
+用户追加的 DX 判断已纳入 design 的后续提案：保留底层身份和显式 relation，人的控制面以实验投影统一查询；承认 intent → compile → frozen recipe 两级，将 I14 的策略编译从逐实验 launch script 收敛为公共层。入口发现、runtime 复用和 Console 订阅是配套体验，不能靠增加 Makefile 别名或万能 trace ID 替代。此追加消息按方案讨论处理，没有直接实施新 compiler 或投影框架。
+
+
+主线进一步确认原 hosted 最终 ZIP 缺各 clone 私有 .git，当前仍 partial；由原恢复 owner 从原 native 成功 Git 工具证据确认 commit/branch，再在独立离线 repair 中重建明确缺件。本合同不放宽 partial prepare：legacy-source 可作为 repair 的输入/停止来源关系；repair attempt 身份只描述派生动作，不能追认原 ZIP 完整或伪装原生成执行。修复输出的 lineage 应保留原 ZIP、legacy-source、逐 clone 重建依据及独立 repair attempt。原 source-stop 与新派生执行停止证明各自绑定自己的身份，不能互相替换；完整 prepared 的发布须由 Harness producer 对修复后实际状态独立读回并说明允许变更。主线独占 worker 负责此 producer 接缝及私有 model-environment 接线，本会话不改这几个文件。

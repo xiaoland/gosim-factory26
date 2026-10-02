@@ -3,6 +3,9 @@ import json
 import hashlib
 from pathlib import Path
 import subprocess
+import os
+import socket
+import time
 
 from .core import Blocked, atomic, canonical, digest, identifier, read, record, require, process_state
 from lab.docker_endpoint import confirm, execute
@@ -75,9 +78,72 @@ def volume_name(endpoint):
     return 'exp-admission-' + hashlib.sha256(endpoint['daemon_id'].encode()).hexdigest()[:24]
 
 
-def handoff(endpoint, writers, registry, output, authorization):
+def _first_use(endpoint, scope_path, writers):
+    """Consume explicit ownership coverage and original absence observations."""
+    scope = require(read(scope_path), 'authority-first-use-scope')
+    if (scope.get('daemon_id') != endpoint['daemon_id'] or not scope.get('authorization') or
+            scope.get('allow_new_domain') is not True or scope.get('no_other_legacy_domains') is not True or
+            scope.get('launch_windows') != 'closed' or not scope.get('writer_scope') or not scope.get('registry_scope')):
+        raise Blocked('first-use needs explicit new-domain authorization and closed, declared writer/registry coverage')
+    if not isinstance(scope.get('writer_sources'), list) or sorted(str(Path(p).resolve()) for p in scope['writer_sources']) != sorted(str(Path(p).resolve()) for p in writers):
+        raise Blocked('first-use writer_sources must explicitly equal the supplied writer scope, including an explicit empty list')
+    if not isinstance(scope.get('local_registry_paths'), list):
+        raise Blocked('first-use must explicitly declare local registry paths, including an explicit empty list')
+    absence = []
+    for path in scope['local_registry_paths']:
+        location = Path(path).expanduser().absolute()
+        try:
+            os.lstat(location)
+        except FileNotFoundError:
+            absence.append({'host': socket.gethostname(), 'path': str(location), 'effect': 'absent',
+                            'producer': 'local-lstat', 'observed_at': time.time()})
+        else:
+            raise Blocked(f'first-use local registry already exists: {location}')
+    for row in scope.get('registry_absence', []):
+        location = Path(row['source']).expanduser().resolve(strict=True)
+        raw = read(location)
+        if 'stdout' in raw:
+            if raw.get('exit_code') != 0:
+                raise Blocked('registry observation command failed')
+            raw = json.loads(raw['stdout'])
+        info = raw.get('info', {})
+        if info.get('exit_code') != 0 or json.loads(info['stdout']).get('ID') != endpoint['daemon_id']:
+            raise Blocked('registry absence source does not bind the target daemon')
+        matches = [item for item in raw.get('registries', []) if item.get('path') == row['path']]
+        if raw.get('hostname') != row['host'] or len(matches) != 1 or matches[0].get('exists') is not False:
+            raise Blocked('declared registry path has no original absent observation')
+        absence.append({'host': row['host'], 'path': row['path'], 'source': str(location),
+                        'sha256': digest(location), 'effect': 'absent'})
+    if not absence or not scope.get('evidence'):
+        raise Blocked('first-use requires registry absence originals and writer coverage evidence')
+    evidence = [{'source': str(Path(p).resolve(strict=True)), 'sha256': digest(p)} for p in scope['evidence']]
+    # Scan all objects without reading Env. Label/name coverage is bounded; the
+    # explicit owner declaration closes custom domains, not this scan alone.
+    containers = execute(endpoint, ['ps', '-a', '--no-trunc', '--format', '{{.ID}}'],
+                         check=True, capture_output=True, text=True, timeout=30).stdout.split()
+    facts = []
+    if containers:
+        template = '{"id":{{json .Id}},"name":{{json .Name}},"labels":{{json .Config.Labels}}}'
+        facts = [json.loads(line) for line in execute(endpoint, ['inspect', '--format', template, *containers],
+                 check=True, capture_output=True, text=True, timeout=30).stdout.splitlines()]
+    names = execute(endpoint, ['volume', 'ls', '--format', '{{.Name}}'],
+                    check=True, capture_output=True, text=True, timeout=30).stdout.split()
+    volumes = json.loads(execute(endpoint, ['volume', 'inspect', *names], check=True,
+                         capture_output=True, text=True, timeout=30).stdout) if names else []
+    def factory(name, labels):
+        return name.lstrip('/').startswith(('factory26', 'exp-admission-')) or any(
+            key.startswith('io.factory26.') for key in (labels or {}))
+    if any(factory(row['name'], row['labels']) for row in facts) or any(
+            factory(row['Name'], row.get('Labels')) for row in volumes):
+        raise Blocked('first-use domain contains existing Factory resources; use retirement handoff')
+    return {'scope': scope, 'scope_source': str(Path(scope_path).resolve()), 'scope_sha256': digest(scope_path),
+            'registry_absence': absence, 'writer_evidence': evidence,
+            'physical': {'containers': facts, 'volumes': [{'name': row['Name'], 'labels': row.get('Labels')} for row in volumes]},
+            'coverage_limit': 'declared hosts and paths plus Factory label/name scan; custom domains require owner authorization'}
+
+
+def handoff(endpoint, writers, registry, output, authorization, *, mode='retirement', scope=None):
     """Read an explicitly complete retirement scope; never stop or release anything."""
-    import time
     confirm(endpoint)
     if not authorization.strip() or Path(output).exists():
         raise ValueError('handoff needs explicit scope and a fresh output')
@@ -90,6 +156,17 @@ def handoff(endpoint, writers, registry, output, authorization):
             raise Blocked(f'legacy writer is {state}, not physically retired: {location}')
         observed.append({'identity': identity, 'effect': 'stopped', 'observation': {'identity_state': state},
                          'source': str(Path(location).resolve()), 'sha256': digest(location)})
+    if mode == 'first-use':
+        if registry is not None or scope is None:
+            raise ValueError('first-use requires --scope and forbids a synthetic --registry')
+        basis = _first_use(endpoint, scope, writers)
+        value = record('authority-handoff', mode=mode, daemon_id=endpoint['daemon_id'], authorization=authorization,
+                       coverage='declared-first-use-scope', writers=observed, reservations='absent', launch_windows='closed',
+                       first_use=basis, observed_at=time.time())
+        atomic(output, value)
+        return value
+    if mode != 'retirement' or registry is None or scope is not None:
+        raise ValueError('retirement requires an actual --registry; first-use is a separate explicit mode')
     reservations = read(registry)
     if reservations.get('daemon_id') != endpoint['daemon_id'] or reservations.get('reservations') not in ([], {}):
         raise Blocked('legacy registry is not explicitly empty for this daemon; no capacity is released here')
@@ -111,10 +188,19 @@ def authority(target, action='snapshot', **fields):
     if not isinstance(handoff, dict):
         raise Blocked('daemon takeover requires a frozen retirement handoff; an empty docker ps is insufficient')
     require(handoff, 'authority-handoff')
+    first_use = (handoff.get('mode') == 'first-use' and handoff.get('reservations') == 'absent' and
+                 handoff.get('coverage') == 'declared-first-use-scope')
+    retired = (handoff.get('reservations') == 'released' and handoff.get('coverage') == 'all-legacy-writers-enumerated')
     if (handoff.get('daemon_id') != endpoint['daemon_id'] or not handoff.get('authorization') or
-            handoff.get('reservations') != 'released' or handoff.get('launch_windows') != 'closed' or
-            handoff.get('coverage') != 'all-legacy-writers-enumerated'):
+            handoff.get('launch_windows') != 'closed' or not (first_use or retired)):
         raise Blocked('daemon retirement handoff does not close old writers/reservations/inflight launch windows')
+    if first_use:
+        scope = require(handoff.get('first_use', {}).get('scope'), 'authority-first-use-scope')
+        if (scope.get('daemon_id') != endpoint['daemon_id'] or not scope.get('authorization') or
+                scope.get('allow_new_domain') is not True or scope.get('no_other_legacy_domains') is not True or
+                scope.get('launch_windows') != 'closed' or not scope.get('writer_scope') or not scope.get('registry_scope') or
+                not handoff['first_use'].get('registry_absence') or not handoff['first_use'].get('writer_evidence')):
+            raise Blocked('first-use authority scope is incomplete')
     for writer in handoff.get('writers', []):
         if writer.get('effect') != 'stopped' or not writer.get('observation'):
             raise Blocked('legacy writer has no physical stop observation')

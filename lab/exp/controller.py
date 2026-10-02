@@ -267,8 +267,8 @@ def _launch_gate(attempt_dir, attempt):
     if stop.get('kind') != 'factory26.exp.stop-evidence' or stop.get('schema_version') != 1:
         raise Blocked('new execution needs explicit source stop producer evidence')
     # Historical stopped bytes are insufficient to rule out a restarted resource.
-    from . import runner
-    observation = runner.observe_source(source)
+    from .backends import observe_source
+    observation = observe_source(source, read(attempt_dir / 'deployment.json'))
     if observation.get('effect') != 'stopped' or observation.get('source_identity') != source:
         raise Blocked('source execution current ownership/stopping unconfirmed')
     atomic(attempt_dir / 'launch-gate.json', record('launch-gate', prepared=job['prepared'],

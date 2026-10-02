@@ -10,8 +10,71 @@ import tempfile
 import time
 
 from . import admission
-from .core import atomic, read, record, error, identifier, Blocked, canonical, process_identity, process_state
+from .core import atomic, read, record, error, identifier, Blocked, canonical, digest, process_identity, process_state, require
 from lab.docker_endpoint import confirm, execute
+
+
+def _legacy_birth(value):
+    fields = ('id', 'submission_id', 'competition_id', 'requirement_id', 'created_at', 'started_at')
+    if not isinstance(value, dict) or any(not isinstance(value.get(key), str) or not value[key] for key in fields):
+        raise Blocked('legacy platform source requires run/submission/task/competition and actual creation/start birth')
+    for key in fields[:4]:
+        identifier(value[key])
+    return {key: value[key] for key in fields}
+
+
+def import_source_stop(birth, status, output, identity_output, authorization, cancel_evidence=None):
+    """Read saved ARC GET originals; cancellation intent alone grants no effect."""
+    from lab.arc_bench.playground import API
+    if not authorization.strip() or Path(output).exists() or Path(identity_output).exists() or Path(output).resolve() == Path(identity_output).resolve():
+        raise ValueError('legacy stop import needs explicit scope and two fresh output files')
+    initial, terminal = read(birth), read(status)
+    identity = _legacy_birth(initial)
+    if _legacy_birth(terminal) != identity:
+        raise Blocked('legacy terminal observation differs from original source birth')
+    if terminal.get('status') not in {'PASSED', 'FAILED', 'CANCELLED'} or not terminal.get('finished_at'):
+        raise Blocked('legacy source needs an independent terminal GET with finished_at; cancel acceptance is insufficient')
+    source = record('legacy-source', source_id='arc-run-' + identity['id'],
+                    execution_instance=canonical(identity),
+                    backend_identity={'kind': 'legacy-hosted', 'platform': 'arc', 'api': API, **identity})
+    originals = {name: {'source': str(Path(path).resolve(strict=True)), 'sha256': digest(path)}
+                 for name, path in [('birth', birth), ('terminal_get', status)]}
+    if cancel_evidence is not None:
+        originals['cancel'] = {'source': str(Path(cancel_evidence).resolve(strict=True)), 'sha256': digest(cancel_evidence)}
+    value = record('stop-evidence', source_identity=source, source_id=source['source_id'],
+                   execution_instance=source['execution_instance'], backend_identity=source['backend_identity'],
+                   effect='stopped', observation={'status': terminal['status'], 'finished_at': terminal['finished_at'],
+                                                'basis': 'saved-independent-platform-get', 'value': _legacy_birth(terminal)},
+                   authorization=authorization, originals=originals, captured_at=time.time(),
+                   launch_permission=False)
+    atomic(identity_output, source)
+    atomic(output, value)
+    return value
+
+
+def observe_source(source, deployment=None):
+    if source.get('kind') != 'factory26.exp.legacy-source':
+        from .runner import observe_source as observe_runner_source
+        return observe_runner_source(source)
+    require(source, 'legacy-source')
+    from lab.arc_bench.playground import API, Client, run_path
+    backend = source['backend_identity']
+    identity = _legacy_birth(backend)
+    if (backend.get('kind') != 'legacy-hosted' or backend.get('platform') != 'arc' or backend.get('api') != API or
+            source.get('source_id') != 'arc-run-' + identity['id'] or source.get('execution_instance') != canonical(identity)):
+        raise Blocked('unsupported or inconsistent legacy source producer identity')
+    cookie = (deployment or {}).get('cookie_file')
+    if not cookie:
+        raise Blocked('legacy source current observation requires explicit private cookie_file; no ambient credential fallback')
+    # This adapter only GETs the original run; it never cancels or resumes it.
+    value = Client(cookie).request(run_path(identity['id']))
+    if _legacy_birth(value) != identity:
+        raise Blocked('legacy source actual execution birth changed')
+    status = value.get('status')
+    stopped = status in {'PASSED', 'FAILED', 'CANCELLED'} and bool(value.get('finished_at'))
+    return record('source_observation', source_identity=source, effect='stopped' if stopped else 'unknown',
+                  status=status, finished_at=value.get('finished_at'), observed_at=time.time(),
+                  platform_identity=identity)
 
 
 def capabilities(target):
