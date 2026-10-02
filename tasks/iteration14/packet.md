@@ -14,9 +14,17 @@ I14主要采用不同variant做实验。cleaner帮助Issue/PR负责人hide/resol
 
 最新范围修正（2026-10-02）：用户要求“I14暂停运行sheet题目，只运行github”，并指定所有I14生成模型使用Qwen Token Plan，Base URL为 `https://token-plan.maas.qianwenaiapi.com/compatible-mode/v1`，配套独立key；等待实验DX收尾后配置供应商。本轮待执行范围收窄为四variant各GitHub，四Sheet保留历史记录但不派发。只更新未来实验配方，不原地修改既有冻结输入、历史运行或I13。模型请求、恢复与新启动继续等待DX完成和实际配方就绪。
 
-私有 `.secrets/models.env` 已追加 `QWEN_TOKEN_PLAN_BASE_URL` 与空的 `QWEN_TOKEN_PLAN_API_KEY`，保留已有按量Qwen及其他供应商值，权限0600且Git忽略；用户填入套餐专用key后，才可冻结私有deployment。不会回退原Qwen/ARC/key或以默认endpoint绕过缺项。I14“所有模型”覆盖Braid成员、内部角色、cleaner推理、reviewer、视觉及e2e中会调用模型的路径；开发侧Codex与既定Luna监控不属于本次生成模型配方。
+供应商最终修正（用户原话：“已经配置。好的，那么glm-5.3-flash就使用普通qwen API；而kimi-k3继续使用自有kimi api”）：Token Plan key、普通Qwen key和自有Kimi key均已只读确认非空。沿用模型职责，`glm-5.3-flash`的所有角色走普通Qwen、`kimi-k3`走自有Kimi，其余I14模型继续Token Plan。此指示覆盖上一条“所有模型Token Plan”的两项例外，没有授权静默替换模型。开发侧Codex与既定Luna监控不属于I14生成配方。
 
-模型可用性仍需决定：[Token Plan个人版](https://platform.qianwenai.com/docs/token-plan/personal/token-plan-personal-overview)及[团队版](https://platform.qianwenai.com/docs/token-plan/team/token-plan-team-overview)的公开支持表未列出现有 `glm-5.3-flash` 或 `kimi-k3`。团队表列 `kimi-k2.7-code` 和 `deepseek-v4-flash`，个人表列带版本的DeepSeek ID；不能仅更换URL声称原模型配方可用。主线已异步询问是先核对key实际可用模型再决定，还是采用显式替换配方；未擅自换根或其它角色模型，原两题均分切根判据不据此冒充已满足。
+| I14模型 | 渠道 | endpoint / key变量 |
+| --- | --- | --- |
+| glm-5.3-flash（成员、视觉、cleaner及实际采用它的e2e） | 普通Qwen API | QWEN_BASE_URL / QWEN_API_KEY |
+| kimi-k3（advisor） | 自有Kimi API | KIMI_BASE_URL / KIMI_API_KEY |
+| 其它模型（包括采用时的glm-5.3、内部DeepSeek） | Qwen Token Plan | QWEN_TOKEN_PLAN_BASE_URL / QWEN_TOKEN_PLAN_API_KEY |
+
+`.secrets/models.env`保持权限0600、Git忽略，未输出或更换凭据值；Token Plan endpoint为用户指定的独立地址。未来冻结只注入实际需要的三组凭据，不回退ARC或BigModel。当前未发模型请求，非空检查不等于服务端可用性验收；模型ID按本套餐真实能力核对，DeepSeek版本ID不默认视为别名。官方支持表缺少Flash/K3的问题通过明确供应商例外解决；不采用先前提出的替换模型选项。
+
+生产端尚有一个实际接线边界需DX确认：原native的 `factory26` provider同时容纳GLM-Flash/K3/DeepSeek，而当前 `bind_native_models` 按provider统一改URL/key。这不能仅凭一条factory26绑定落实三个不同供应商。已将用户最终配方及此代码事实交给DX owner收敛有效绑定合同；主线不并行改其源码。供应商配方先保存为未冻结草稿，待DX交付入口后装配并实际读回每个角色/模型的endpoint与credential变量。纸面路由、包内配置和原生实际采用分别记录。
 
 供应商耦合、停止回执契约及owner/资源生命周期归实验DX改进，不另立修补任务。当前工作树四I14入口与共享恢复已移除ARC-only，采用 `scripts/agent_support.py` 的显式 `FACTORY26_MODEL_BINDINGS`（provider/base_url/credential_env），不选择供应商；DX正在真实离线验收，尚未以源码阅读宣称完整收尾。实验入口仍有固定八目标和GLM `qwen-ai`标签校验，运行说明也仍写固定ARC恢复，已交DX owner收敛为显式目标/模型配方并同步文档；未与其并行编辑。同一旧包包含的强制逻辑保持历史身份，只有重新冻结的新包可以纳入已修源码。
 
