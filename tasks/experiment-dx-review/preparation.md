@@ -1,88 +1,89 @@
-# 干净基线实施准备与切换范围
+# 实验与开发基础设施 DX 开工说明
 
-2026-10-02，完整新基线已获开工授权并实施。用户hard-cutoff取向取代此前P0兼容计划；原derive_prepared_transport/prepared_receipt补丁路线不再作为实施目标。完整职责、生命周期和验收合同见[design](design.md)。源码、文档和真实离线证据发布已完成；未变更已有模型、平台、旧派发者或 Console。
+2026-10-02，用户认可继续架构方案，并问“好的，可以准备开工了吗”。本轮已完成实施面核对与独立advisor复核，当前为待开工复核。本文取代前轮基线的旧实施准备；历史切换依据保留在packet及Git历史。尚未修改设施源码、部署服务或启动实验。
 
-2026-10-02用户要求先讨论架构，随后按一般工作原则继续；本轮不选择首条实施路径或开工范围。以下保留原基线的实施准备与历史切换依据；最新职责/生命周期取舍见[架构方案](design.md)，新接口与失败合同见[technical](technical.md)的“下一版方案”，当前阶段见packet。原owner的实际修复需按版本核对，本轮尚未形成新的字段迁移及开工说明，不能以本文旧路线推进源码改动。
+工作分支为 `feat/infrastructure-dx`，唯一实施worktree为 `/Users/lanzhijiang/Development/.worktrees/infrastructure-dx/factory26`，准备基于 `9f9eab9c`。职责归[design](design.md)，接口与失败合同归[technical](technical.md)，原件及授权归[packet](packet.md)。自由提交授权继续用于当前任务；原工作区其他owner的未提交代码与运行仍由原owner持有。
 
-## 新合同与公开入口
+## 本轮结果与范围
 
-新执行领域使用独立kind与schema_version，不能仅增加旧manifest的数字版本继续走normalize兼容分支。拟定experiment kind为factory26.exp.experiment、首版schema_version=1；记录分别标注request、execution、artifact、telemetry和analysis kind，旧lab v1/v2/v3及Competition journal不能进入新写入/控制。
+本轮完整交付是让开发者从实验定义、Harness修改或明确恢复来源出发，经公共入口得到材料选择、构建、目标装配、运行与结果。打包、启动、热修复恢复三类流程共同约束架构，内部依赖顺序不构成只交付某一条路径的计划。
 
-| 合同 | 权威及输入输出 |
-| --- | --- |
-| Build/freeze | Controller组织producer，输入recipe、明确材料和目标能力；输出experiment、不可变artifact、controller/runner/runtime身份及失败原件。无隐式模型请求。 |
-| Dispatch | Controller分配job/attempt及预算，runner或托管后端接收固定请求；返回受理身份，不提前声明物理启动。 |
-| Runner lifecycle | 每attempt独立监督者持久保存request效果、真实进程/容器、限额、stdout/stderr、collector绑定和收尾；controller退出后继续，不以runner重启重发main。 |
-| Control/reconcile | 动作绑定attempt/request_id/参数；效果明确区分受理、实际停止和unknown。平台POST先记pending，缺唯一身份时只观察。 |
-| Artifact/checkpoint/prepare | Producer维护类型、组成、来源和语义覆盖；runner取得一致切点/材料，controller选择来源，消费者核验。引用artifact_id/member/digest，停止证明单独绑定来源执行。 |
-| Telemetry/monitor | 执行侧持久接收及有身份的源批次传输，controller按游标摄取/监控。原始重传与分析语义分别处理。 |
-| Evaluate/analyze | 冻结应用为独立评分输入，每个评分attempt有费用/平台身份；分析固定制品及遥测截止点，不能影响仍在生成的Agent。 |
+| 用户流程 | 完成时应有的行为 | 主要消除的工作 |
+| --- | --- | --- |
+| 打包 | Producer从实际材料选择声明依赖；已有runtime、依赖、Harness材料与代码资产可复用，按后端需要封装ZIP。 | 每次run重装Python/OTLP依赖、重建runtime、重冻相同执行代码及无变化全量材料生产。 |
+| 启动 | 维护的环境配置解析目标；已有域资产直接装配，逐服务ready后确认入口，公共状态解释阻塞与接续。 | 调用者手填runtime/物理字段、同域payload绕控制宿主、全域重复inspect及查询失败后的人工运行树重建。 |
+| 热修复恢复 | 原checkpoint、修复材料和新配方分别引用；有限Hook生成派生prepared；封口产物先保留再消费，来源关闭和恢复损失明确。 | 重建整个恢复包、重复无关prepare/语义扫描、整域archive等待及输运失败后重跑入口。 |
 
-拟保留`python -m lab`作为唯一开发侧执行CLI，命令按build/start/control/status/monitor/analyze/artifact/evidence/wait组织；runner另有冻结制品入口。history为旧事实显式只读入口。命令语法随具体LLD收敛，但不保留旧执行命令到新协议的别名或参数翻译。官方SDK agent runtime export不是exp runner，保留其独立角色。
+Hosted仍按真实平台协议提交完整ZIP；平台费用、排队与完整上传分别计时。平台不提供的增量能力不纳入提速承诺。资源采样与预算保护是新材料可消费的前提，不为了复用而延续旧缺陷。
 
-新实现建议放在lab/exp，分离controller、runner、backend、artifact与telemetry责任；这是逻辑源码归属，不要求每项合同一个文件或新服务。Controller不再通过旧operation工作者启动旧lab controller再启动适配器；ARC官方Runner作为真实评测依赖仍由选定执行后端调用，并保留独立事实。
+## 默认工作流与支持边界
 
-## 迁移与删除面
+公共CLI继续使用 `python -m lab`。以下是拟实施合同；代码开工后更新Lab操作文档，不把它当作当前已可调用命令。
 
-| 当前实现 | 完整基线中的处理 |
-| --- | --- |
-| lab/plan.py、assets.py、records.py | Build/freeze、资产及内容身份迁入新合同；删除新执行侧旧schema/default runtime兼容，复用成熟清单/原子发布。 |
-| lab/run.py、control.py | 分开实验分配/派发与独立attempt supervision；复用出生身份基础能力，退出旧共享进程worker/receiver生命周期。 |
-| lab/otlp.py | 原始receiver归执行侧，持久绑定stream/epoch；补完整批次元数据及游标封装，查询分析消费不可变范围。 |
-| lab/arc_bench/operations.py、competition.py | operation多层编排归并为新controller；托管adapter保留平台协议、pending与身份核对，不再拥有第二实验控制器。 |
-| arc_bench_adapter.py、docker_workspace.py、docker_endpoint.py、docker_admission.py | ARC本地执行和Docker实际资源归runner/backend；准入落实际daemon资源域，跨控制宿主有共同权威。 |
-| recovery.py、workspace_archive.py、arc_artifacts.py | 通用制品完整性/安全输运与Harness恢复语义分离，新checkpoint/prepared/application合同；停止证明移出prepared包。 |
-| local_monitor.py、hosted_monitor.py、model_facts.py | 本地原始进程/模型观察移执行侧；controller消费公开事实，托管专有轮询保留；重构成统一monitor视图。 |
-| lab/status.py、wait.py、gc.py、analysis | 新身份、制品引用、来源时间、批次截止及保护关系；历史格式隔离只读，不把unknown解释成默认成功/费用。 |
-| arc_matrix.py、official_matrix.py、evaluate.py；当前experiments配方与I14派发 | 新recipe与公开controller入口，同步移除对operations内部函数和lab.run的依赖；条件选择政策留配方，generic runner不理解模型比赛阈值。 |
-| scripts/runtime.py、package_agent.py、package_completed_recovery.py、agent_support.py；submission/recover_completed.py | 分别发布controller/runner/Harness制品；更新复制OTLP源码和动态loader；Harness检查点/恢复合同留生产端，通用exp层不读Braid私有SQL。 |
-| 四个variants/pi-braid-i14*/run.py与恢复生产端 | 移除通用入口的ARC-only限制/强制覆写，显式消费配方provider/credential绑定；不静默切换旧冻结或活动run。 |
-| braid-console的登记、访问与物理控制接入 | 消费新执行身份，通过runner/backend控制；Console自有服务、binary和访问容器仍由自身管理。 |
-| PRD/TDD、lab与当前实验README、deployment说明 | 整合已切换合同和唯一操作路径；历史报告保留原条件，不批量改历史示例冒充新结果。 |
+- `build INPUT --environment PROFILE --directory RUN` 接受新intent或新冻结recipe。Intent由同一compiler编译，controller只生产缺失材料并冻结实际选择；run主要保存配方、引用、动作及证据索引。维护的profile给出Python/平台、存储、backend与工具来源，不要求每次填写hash或制作两套物理runtime。对冻结recipe，profile只解析已经声明的目标约束、资产位置与部署条件，不能覆盖冻结选择；目标、runtime或生产条件改变须新recipe及派生关系。未来产物按原producer/output合同绑定。
+- `compile INTENT --environment PROFILE --directory BUNDLE` 保留仅编译入口。输出冻结政策、目标约束和生产计划；尚未产生的输入引用明确producer/output合同，不构建材料或执行运行。
+- `doctor INPUT --environment PROFILE` 可在build前解释复用、缺失及预计工作。默认status/monitor消费保存事实；需要当前权威查询时明确观察范围和成本。
+- `start RUN --deployment PRIVATE` 沿已授权配方派发。每次执行消费冻结代码资产；代码资产在缺失或实际依赖变化时构建，不能继续依赖可变工作树。
+- `recover SOURCE --intent INTENT --environment PROFILE --directory NEW_RUN` 组织明确的恢复派生与材料准备，建立来源关系；不隐式停止旧来源或启动模型。准备后仍由start进入运行，pause/resume继续属于原执行控制。
 
-当前活跃实现/配方消费者、原生材料复制、动态launcher和GC保护均须核对；仅rg imports不足以覆盖迁移。允许复用算法和协议实现，不允许留下双重生命周期owner。不会因长期正确而重写官方SDK或改变Harness内部成员调度。
+Profile与producer能力共同解析最终物理绑定；实验定义仍显式拥有目标、需求、模型/费用、预算及允许恢复变更。高层定义不编写私有driver；通用外部argv能力保留，不新增任意工作流DSL。
 
-完整交付可按依赖有界分工：领域合同/制品与构建、独立执行与Docker、平台/monitor/分析、消费者/切换整合。先收敛接口再委派独占代码面，主Agent持有集成责任；内部完成順序不构成旧新两套公开基线长期共存的发布计划。
+首版支持Local及现有Linux Docker目标、明确停写的完整来源、相同OS/架构/logical layout、同内容跨daemon输运、独立可写workspace和四个I14 variant。修复Hook仅覆盖已有问题需要的材料类别：指令/技能/扩展/launcher刷新、已声明provider transport、路径别名及外部工具物化、明确兼容的runtime替换；每类有前置条件和实际变更记录。模型/需求改变消费对应授权，原Git/native历史与应用工作不得被材料刷新覆盖。活动源一致快照、跨OS/native根迁移、自动Git重建及任意补丁不进入完整恢复能力。
 
-## 切换过程
+## 已核实的边界与实现取舍
 
-1. 建立完整新领域及其生产制品，当前维护的配方、runtime、Console和分析入口完成同一合同的接入。新记录根与旧记录区分，身份/控制端/monitor登记不能混用。
-2. 对活动旧实验只读盘点实际派发器、已受理attempt、未派项、pending写入、collector、runtime与源码依赖、资源保护和Console引用。冻结代码与仍依赖工作树的组件分别列明。不能默认所有旧任务已隔离。
-3. 确认哪些旧执行按原冻结范围自然完成，哪些未派项转新recipe，哪些需要明确退役动作。迁移有源停止、模型/费用或外部平台影响时单独记录授权与实际效果；不能通过删除源码替代物理交接。
-4. 发布前核对新准入权威及相同资源域的旧reservation，明确每个旧dispatcher的停派/允许集合、pending保护和工作树依赖保全。无法共同安全计入时等待退役，或使用明确独立资源域。这些是切换门槛，不能新入口上线后才检查。
-5. 门槛成立后新执行入口一次切换，只接受新kind/schema。工作树旧writer和执行兼容退出；旧在途如仍需控制，只使用其实际冻结程序及限定退役通道，不提供工作树旧writer供新实验使用。随后核对没有隐含旧调用、重复collector、被遗漏制品引用或未确认平台写入。
-6. 既有历史保留只读、导入产物留来源/缺口；删除旧实现不删除运行证据、保护对象和仍在用的runtime。未授权GC或push。
+| 边界 | 当前源码观察 | 本轮确定的处理 |
+| --- | --- | --- |
+| 唯一动作权威 | Backend直接create/start/control；SDK执行容器、copy helper和Console accessor仍有自己的物理调用；禁止restart命令不能阻止start旧容器。 | 受管工作负载的创建/启动/控制统一排序；released实例拒绝再次start。Accessor可写许可纳入workspace writer覆盖，捕获窗口拒绝冲突的access-start。 |
+| 辅助操作 | query、copy、构建与生成资源性质不同。 | Query有界并发/超时/清理，不先写预约才能读权威；copy只保留实际输运请求/partial。可写helper纳入writer覆盖。构建限制并发与资源，实际竞争同池才共同核算，不为每种helper建立另一套调度状态机。 |
+| 发布资产 | publish原子rename但payload仍可写；producer不能拿整资产卷RW后声称published只读。 | Producer写隔离staging，存储owner核验发布；负载仅只读消费published，并使用独立workspace。弱Local在实际读取/复制边界核验字节，复用本次结果。 |
+| 保留与清理 | named output在archive阶段发布；GC仅pin整个新exp目录。 | 发布与初始保留共同可见；consumer先retain后装配，保留覆盖载体；GC与保留同锁并查询稳定删除意图。旧store继续保守保护。 |
+| 运行服务 | 外部collector使Harness返回而未建立ResourceEvidence；runner缺必需样本接线。 | 复用现有ResourceEvidence，由runner持有、入口前ready，Docker样本来自实际cgroup，独立于OTLP开关。 |
+| Braid预算 | model_budget在PI_SUBAGENT_CHILD=1时跳过保护，四I14都经过此包装器。 | 取消child豁免，继承父Braid binding，多个child仍属于同一Braid session；缺身份拒绝昂贵调用。复用选择核对新保护能力及相关依赖。 |
 
-这是一轮整体切换，不以“先上线P0、以后再独立runner”作为完成。存在活动旧执行时，其限定退役通道是责任保全，不是新基线兼容层。
+只读权威查询首版选择明确支持的Linux local-volume：已核验Mountpoint的只读bind，域资产根正常运行期间不删除/重建，GC只处理内部对象，维护退役排空访问；读取还核对域身份。非local driver或不能证明这些条件时返回unsupported/具体缺口，不同时实现keeper container及自动降级。该选择不新增常驻服务，其实际挂载/缺失行为仍需获授权Docker操作确认。
 
-## 验收与授权边界
+源码核对未找到原启动owner所述execute-prepared、精确node-gyp和child预算修复的可见提交。开工时只按确切已提交版本比较依赖并采用必要变更；没有可用提交就按本合同实现等价修复，不能复制原工作区未提交文件或追认原版本已经生效。
 
-现有真实Flash/GitHub原件可验收历史投影、main成功/输运失败区别、完整export/validation核验及显式制品导入。它们不能证明新runner独立、完整活源checkpoint、跨环境native恢复或平台写入恢复。
+## 文件责任与集成次序
 
-源码实施阶段包含编译、实际build/freeze、已有原件离线导入与分析、调用方核对。新基线实际验收须冻结真实Harness、题目、模型/费用、目标环境、完成条件和允许的控制动作，至少覆盖：
+以下为必要改动面，不要求每个逻辑责任新增一个模块。各owner可在其边界内组织实现，交叉改动由主Agent整合，所有参与者保留他人修改。
 
-- 已受理执行期间controller断开、重连，runner继续采集并完成保全，同attempt不重复main。
-- 实际停止/收尾的原件与受理回执分别核对；效果unknown阻止重启与回收。
-- Local/Docker实际运行及完整制品回收；跨环境恢复核对native路径、历史及允许材料变更，不只比较文件SHA。
-- 实际检查点取得/prepare/来源停止门控、应用冻结与独立评分的完整来源关系。
-- 原始批次接续和重复传输，controller摄取及分析不重复统计；producer/collector/controller排空分别报告。
-- ARC托管保留pending唯一身份及平台能力缺口，评分与生成费用/耗时分别记录。
-- 新入口拒绝旧格式执行；旧材料可读但不被追认为新保证；新旧资源及Console保护没有遗漏。
+| Owner | 独占主要代码面 | 交付责任 |
+| --- | --- | --- |
+| 主Agent | lab/exp/core.py、compiler.py、controller.py、projection.py、readiness.py、__main__.py；公开文档与实验入口 | 按kind版本、环境解析/生产计划、引用绑定、合法接续、状态/诊断；整体切换与验收。 |
+| exp_harness_materials | scripts/runtime.py、package_agent.py、package_completed_recovery.py、braid_runtime.py、agent_support.py、runtime_resources.py、model_budget.mjs；submission/exp_checkpoint.py、recover_completed.py；四I14的build.py/run.py及必要launcher/冻结child接线 | 实际依赖与复用、封装、正向语义覆盖、有限修复Hook、独立application合同；必需资源/预算能力。 |
+| exp_platform | lab/exp/artifacts.py、hosted.py、lab/gc.py、lab/arc_bench/docker_workspace.py | 域store、位置/保留、稳定输运与接收校验；SDK消费权威动作ABI；Hosted引用/pending；GC保护。 |
+| exp_execution | lab/exp/admission.py、backends.py、runner.py | 权威动作/版本/未决效果、域装配、独立监督与逐服务ready、ResourceEvidence生命周期、封口产物与归档分离。 |
+| 主Agent整合Console | braid-console/service.py、docker_runtime.py及受影响登记合同 | 仅收敛绕过权威及workspace写入口，消费公开绑定；不重构Console内部调度、UI或部署。 |
 
-不新增或运行Factory/Braid测试、fixture、probe或smoke，不以模拟元数据验收生命周期。不能为了取得异常样本盲目重发收费请求；不可安全取得的故障样本明确保留证据缺口。完整实际验收涉及模型、平台和在途控制，尚须具体实验范围授权，不能复用历史official_evaluation自动接续许可。
+存储owner给runner提供发布/保留接口，执行owner给SDK/Console提供固定动作ABI；各自只写自己的事实。runner named输出与服务接线由execution owner修改，材料owner消费其合同，平台owner不并行编辑runner/backends。
 
-当前独立调查/预演已覆盖迁移消费者、目录广复制遗漏新模块、旧活动隔离、collector绑定与元数据、制品绝对路径和Harness一致性责任。已形成[technical](technical.md)，并完成有界独立LLD预演，修正已整合：attempt受理唯一性及稳定查询、控制预期incarnation、daemon准入资产/物化窗口、准入先于发布、checkpoint到stop的同instance链、resolver链接边界、telemetry冲突及封口回执。Advisor支持真独立runner与完整硬切。接口已实施，离线证据路径已取得实际反馈；切换现场与收费矩阵尚未授权，现场能力不宣称已验收。
+内部先冻结按kind版本、生产选择、store和动作ABI，再并行实施对应owner；随后接入SDK/Console writer、controller/public producer与投影，最后完成整体验证和文档。发布时整体启用新writer，不长期提供旧recipe自动翻译或两套运行生命周期。源码编译通过不代替各用户流程闭环。
 
-## 最新主线边界与真实交接
+## 切换与现场隔离
 
-已只读核对主会话最新人类指示：“强制ARC”过度处置、GLM-5.3用Qwen AI、先整理情况再重构。Provider/credential/官网费用分属配方，不将此前ARC许可升级为通用Harness限制；GLM-5.3新配方按Qwen修正，其它模型另行冻结。
+新执行合同按kind单独版本化，不能将core.SCHEMA全局改成2连带重写artifact/runtime/telemetry身份。Intent/compilation/experiment/attempt/execution的生产选择、引用或接续语义改变，使用新版本；request的身份与参数绑定合同及artifact/runtime/telemetry/analysis未改变部分保留原版本。Harness checkpoint/prepared新增保证使用明确的新producer合同，历史元数据缺覆盖不补造complete。新增域位置/保留记录从首版开始，具体字段归technical及实现接口。
 
-主线交接记录本轮HOLD新freeze/prepare/launch/模型请求；Flash/GitHub 7e8ec62670df继续原唯一collector，不停/不迁移。两GLM源已有stopped及保全记录，旧adapter/dispatcher为SIGSTOP；五槽中有三个alive owner reservation，包含paused负载及已stopped但owner alive的cleaner，不能以容器stopped释放。状态依据`tasks/iteration13/i13-2/glm-final-recovery.md`与`runs/iteration13/i13-2-20261001/arc-hot-recovery-20261002/handoff-state.json`，这里不是新的实时Docker观测。
+新writer拒绝旧执行recipe；旧事实走history/显式import。既有运行继续使用其冻结executor，不迁移或热替换；控制旧运行也必须委派该版本，不从旧launch_pending推导新协议安全重启。旧运行store和未决平台写入持续保护，新增managed位置不能改原artifact manifest/hash。
 
-现有source-stop的container对象/readback.state与packager期待container_id/after不兼容，是原件契约的实际失败样本。历史import保留原件和生产者字段，只有足够身份证据时生成明确派生观察，不能手改原件或通过宽松字段别名伪造新保证。cleaner候选已组装但未prepare/launch/通知，接入口为`runs/iteration14/cleaner-hidden-context-20261002/stopped-handoff.json`；材料完成与部署/效果分别成立。
+本轮源码实施不依赖完成原主线运行或接受其未提交修复。实际使用共享daemon前要确认资源域覆盖、旧writer/预约及能力；未知时阻塞对应真实操作，不能通过创建新的名字声称宿主已隔离。Console本轮改接缝代码，现有服务仍由原owner部署维护。
 
-共享材料通知仍由原owner处理package_completed_recovery.py和recover_completed.py，源码稳定未提交不代表新基线采用；本会话不并行覆盖。WSL已恢复、development-2为备用、唯一Console在WSL/8765；当前Docker Console仅支持Unix endpoint，跨宿主接入尚未实现，不能为新架构另建第二Console。重构切换前重新核对现场，不把此交接快照当启动许可。
+## 真实反馈、验收与授权
 
-## 实施完成后的边界
+开工范围包括源码、编译、受影响文档、已有真实材料在本worktree新输出目录的离线生产/封装/输运/读回。原件只读；新的store/output在报告完成前保留。使用已存在的生产入口，不添加设施测试、fixture、probe、smoke或伪造错误/状态。
 
-源码实施与离线反馈见 packet。真实 Docker/Harness/官网实验仍需明确输入、预算、费用与中断范围；旧活动退役和 Console 部署独立授权。新域缺少 authority-handoff 时明确阻塞，不替已有 owner 作退役决定。材料通知的既有增量保留，当前任务提交仅纳入新合同接缝。本文前述主线现场是调查时的快照，下一次真实实验前重新核对。
+| 反馈与材料 | 实际操作与完成依据 | 保留的限制 |
+| --- | --- | --- |
+| packaging/receipt.json对应真实包及stage | 无变化复用、实际相关材料修改后的生产/封装；记录实际依赖、字节/权限、缺失构建和未发生的重复安装。 | 已有62.45→57.49秒只覆盖ZIP编码，不能当本轮完整打包基线或保证倍率。 |
+| transport/receipt.json对应artifact-d86677e75e19ba22505792b5 | 新store真实接收及同请求重入，保留身份；记录本次发生的扫描/复制，沿旧原件解释失败范围。 | 旧接收重入27.03秒仍全量核验；没有实际故障不能宣称丢响应已验收。 |
+| separation的真实发布配方与startup-review索引 | 新版定义/计划及引用构建，来源/代码身份读回；对可确认的完整来源进行明确离线派生和结构读回。 | 历史停止原件不授权今天启动；缺获取窗口证明则只反馈其结构与缺口。 |
+| 已有application与明确交付原件 | 独立冻结最终/阶段应用，核对commit、需求与未提交内容政策。 | 缺恢复材料保持partial，外部评分需对应费用授权。 |
+
+主验收仍是三类端到端区间：完整打包请求到可交付资产/包，启动请求到入口确认，明确热修复输入到恢复入口确认。同时记录人为接线次数、材料规模、代码/runtime/平台、物理环境、缓存及构建/扫描/复制/传输/等待；从关键路径移出的archive继续记录总成本及owner完成。首次缺材料、无变化复用和相关局部变化分别比较，不用单次顺序计时当稳定benchmark。
+
+真实Docker装配/ready/入口、controller断开接续、child预算归属、完整恢复及模型首成功，还需冻结实际输入、daemon/profile、预算与控制动作。当前不会启动模型/平台、停止旧来源、创建或接管共享域、部署Console、迁移旧运行或应用GC；这些动作在具体实验范围内另行安排。可以先完成代码及离线闭环，但最终报告不能将其写成三类端到端验收已通过。
+
+本轮独立advisor支持进入开工复核，建议限制辅助状态和采用单一查询挂载策略；对本说明再次复核后，补清冻结recipe的环境解析边界及编译写BUNDLE的措辞。三个实施owner已经返回可执行的文件/责任/验收范围；实际操作前核对材料可用性和环境属于正常执行门控，不再扩大架构调查。
+
+当前开工复核对象就是本文的源码、文档、编译与真实离线生产范围。待用户针对该范围明确同意开工后实施；继续保留自由提交和本任务worktree隔离。未知效果不重发入口，具体风险/错误留原件；运行中证据明确的范围内设施缺陷由owner完成修复闭环。

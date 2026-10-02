@@ -203,4 +203,6 @@ Ready逐项服务失败时，先对账原collector/控制入口等动作；只�
 
 最有判别力的实施前核实是：现存终态控制路径能否绕过准入重新启动；负载/accessor是否仍持有发布存储可写入口；consumer保留与GC是否存在无保护窗口。答案分别决定是否能减少全域inspect、跨阶段重复哈希和archive等待。接口预演还须覆盖响应丢失后查询、controller重连、目标位置失联、同产物不同用途和有修复材料的恢复；使用现存错误/材料推演，并将无法取得的实际效果标为待验收，不造fixture或运行设施测试。
 
-拟实施涉及controller/compiler、artifacts、backend/admission/runner、Harness公共producer及GC/投影的职责调整；代码面与字段迁移尚未冻结。真实模型、平台写入、旧来源停止、Console部署与数据清理仍按各任务范围，不由本节扩大授权。下一阶段以该接口与失败合同完成有界预演和具体实施说明，再交付开工复核对象。
+具体改动面、公开入口和按kind版本切换已进入[开工说明](preparation.md)，当前待开工复核。各owner依本文的责任与失败合同实现局部字段，不能更改不可变manifest或静默扩大保证。真实模型、平台写入、旧来源停止、Console部署与数据清理仍按各任务范围，不由本节扩大授权。
+
+开工准备补充两项新材料的必需条件：预算包装器取消child豁免、继承父Braid binding；runner复用现有ResourceEvidence并发布实际样本绑定/ready。未满足这些能力的旧包保留历史，不能因hash未变而进入新生成。辅助query采用有界通道，不登记生成预约；copy只保留输运效果，可写accessor进入writer覆盖，构建按实际资源竞争核算。

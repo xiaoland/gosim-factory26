@@ -2,7 +2,7 @@
 
 2026-10-02，用户要求继续分析 `codex://threads/01a0f23c-a2bc-7800-a5b0-847d29845cd2` 及实验相关子 Agent 会话，找出确定性设施应承接的操作及 DX 改进。最初授权为调查与方案；随后用户认可 hard-cutoff 完整基线并明确“开工；你可以自由提交”。当前源码实施和实际离线反馈见文末；历史阶段记录不作为当前待开工状态。
 
-当前工作区为独立 `feat/infrastructure-dx`。已提交的局部优化与运行定义/数据来源关系保留其真实反馈。用户要求架构先行，随后明确“好的。现在我们按一般性工作原则继续推进”。本轮已完成三项有界调查、独立advisor复核及接口预演，收敛HLD及技术方案：受控发布/只读消费/独立workspace，域内位置与消费者保留，受管动作共同排序及按动作接续。当前方案可供复核；未选择首条实施路径，未冻结源码范围或字段迁移，不继续设施源码实施。原工作区在途producer/hosted源码与运行由原owner持有，本分支不接管。历史章节记录其当时决定，不作为本轮开工说明。
+当前工作区为独立 `feat/infrastructure-dx`。用户认可架构与接口方案，随后问“好的，可以准备开工了吗”。本轮已完成具体实施面核对与独立复核，重写[开工说明](preparation.md)，当前为待开工复核；尚未修改设施源码或运行实验。范围覆盖三类流程的资产选择/复用、域内装配/保留、动作接续、有限修复及必要SDK/Console/GC接缝；自由提交继续用于本任务。原工作区在途producer/hosted源码与运行由原owner持有，本分支不接管。历史章节记录其当时决定，不作为本轮开工说明。
 
 ## 调查范围和证据
 
@@ -256,3 +256,21 @@ Compiler/readiness 已实施。公共 compile 输出 intent/recipe/compilation�
 设计、技术方案、旧preparation的阶段说明和packet已经同步。当前可供复核的范围是这些责任与接口合同；下一阶段细化对应源码归属、字段迁移和真实操作安排，不按此前旧P0路线开工，也不分配首条实施路径。最关键的判别点仍是全部控制入口的域覆盖、published可写入口排除、保留/GC原子边界；其实际运行反馈待具体实施及实验范围。端到端耗时验收保留打包、启动、热修复恢复三类，预演和局部历史计时不宣称其已完成。
 
 本轮未修改设施源码，未运行Factory/Braid测试、fixture、probe、smoke、模型、平台写入、来源停止、Console部署或GC。差异检查覆盖任务文档；这支持编辑一致性，不是生命周期验收。
+
+## 开工准备完成（2026-10-02）
+
+用户问：“好的，可以准备开工了吗”。据此认可架构/技术方案并进入实施准备，尚未将这条问句当作具体源码范围的开工指示。已重写preparation为本轮开工说明，旧基线实施准备由Git历史与此前packet记录保全，不继续作为当前路线。
+
+三个稳定owner完成新一轮只读实施面核对，分别返回实际文件归属、可复用实现、必要变更、切换与真实反馈范围。新dx_kickoff_advisor两次复核：支持完整流程及必要接缝，不新增辅助设施调度系统；采用单一Linux local-volume Mountpoint只读bind首版，正常运行不删除域资产根，维护排空访问；按kind版本化，不全局改SCHEMA连带重写artifact/telemetry；每次执行消费冻结代码，缺失代码资产才构建。复核开工说明后又补清build对冻结recipe不能经environment覆盖选择，并将“只读编译”改为“仅编译”，因为它会写bundle。
+
+控制覆盖核对确认：backends直接create/start/control，SDK执行容器及copy helper有独立动作，Console执行控制已转controller但service仍直接start/stop可写accessor。因此本轮包含这些必要接缝；SDK/Console内部调度与UI不重构。辅助query有界并发/超时/清理，不登记生成预约；copy仅保留实际输运，accessor纳入writer关闭；构建按实际资源竞争核算，独立名字/池不能证明整个宿主隔离。
+
+新材料的两项必需修复已定向核实：model_budget.mjs在PI_SUBAGENT_CHILD=1时跳过保护，四I14通过budgeted_pi仍不能避免child豁免；agent_support在外部collector接线后返回，原OTLP才建立ResourceEvidence，runner缺实际样本。已将取消child豁免、继承父Braid binding、runner持有资源采样及入口前ready纳入范围，禁止复用违反当前预算/服务条件的旧资产。其实际child归属和cgroup样本仍待具体真实执行反馈。
+
+主Agent核对compiler/controller/runtime/package入口，公共build将高层intent及维护的profile纳入同一生产选择，不要求人制作controller/runner两套安装或写私有driver；compile不生产材料，未来产物按既定合同绑定。package_agent.assemble当前每次pip install OTLP deps，controller.build每次复制执行源码及依赖、host_lab每次建venv，均属于本轮实际依赖复用面。lab/requirements.txt为确切版本；源码/补丁/目标等其他依赖仍由实际producer选择声明。
+
+从可见Git历史未取得原owner所述execute-prepared、精确node-gyp及预算child修复提交；不复制original未提交文件，已有启动原件只支持问题存在。缺提交不阻止按合同实现等价修复；对齐可见提交、材料可用性和实际环境在开工后的对应操作边界核实。
+
+开工复核范围为preparation中的源码、文档、编译及既有真实材料在新隔离输出目录的离线生产/封装/接收/读回，原件只读。本轮不运行模型/平台、不停止旧来源、不创建接管共享域、不部署Console、不迁移旧run或应用GC；具体Docker/生成/恢复验收须冻结实际输入、profile、预算与动作范围。三类端到端验收继续为最终标准，局部历史计时和源码存在都不提升为已通过。
+
+当前准备已完成，无需新的架构选择即可针对本文范围开工复核。尚未修改设施源码或执行生产操作；文档差异检查通过，只纳入当前任务提交，自由提交授权保留。按AGENTS的阶段约定，待用户针对该具体实施范围明确同意开工后进入实现与验收。
