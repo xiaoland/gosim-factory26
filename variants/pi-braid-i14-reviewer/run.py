@@ -25,6 +25,51 @@ from core import archive_sessions, finalize_archive
 HERE = Path(__file__).resolve().parent
 VARIANT = 'pi-braid-i14-reviewer'
 ROOT_PROFILE_ID = 'pi-glm-fast'
+ARC_BASE_URL = 'https://api.arc-bench.com/v1'
+# 对应 Pi 0.85.1 的供应商认证发现；保留工具和 ARC 平台凭据。
+NON_ARC_MODEL_AUTH = frozenset('''
+OPENAI_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_OAUTH_TOKEN ANTHROPIC_API_KEY
+COPILOT_GITHUB_TOKEN ANT_LING_API_KEY QWEN_TOKEN_PLAN_API_KEY QWEN_TOKEN_PLAN_CN_API_KEY
+AZURE_OPENAI_API_KEY NVIDIA_API_KEY DEEPSEEK_API_KEY GEMINI_API_KEY GOOGLE_CLOUD_API_KEY
+GROQ_API_KEY CEREBRAS_API_KEY XAI_API_KEY RADIUS_API_KEY OPENROUTER_API_KEY AI_GATEWAY_API_KEY
+ZAI_API_KEY ZAI_CODING_CN_API_KEY MISTRAL_API_KEY MINIMAX_API_KEY MINIMAX_CN_API_KEY
+MOONSHOT_API_KEY HF_TOKEN FIREWORKS_API_KEY TOGETHER_API_KEY BASETEN_API_KEY OPENCODE_API_KEY
+KIMI_API_KEY CLOUDFLARE_API_KEY XIAOMI_API_KEY XIAOMI_TOKEN_PLAN_CN_API_KEY
+XIAOMI_TOKEN_PLAN_AMS_API_KEY XIAOMI_TOKEN_PLAN_SGP_API_KEY GOOGLE_APPLICATION_CREDENTIALS
+AWS_PROFILE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_BEARER_TOKEN_BEDROCK
+AWS_CONTAINER_CREDENTIALS_RELATIVE_URI AWS_CONTAINER_CREDENTIALS_FULL_URI AWS_WEB_IDENTITY_TOKEN_FILE
+AWS_SHARED_CREDENTIALS_FILE AWS_CONFIG_FILE GLM_API_KEY QWEN_API_KEY
+VISUAL_API_KEY FACTORY26_VISUAL_API_KEY
+'''.split())
+
+
+def arc_connection(base_url=None, *, require_key=True):
+    """I14 模型连接只接受 ARC；历史 OPENAI 变量仅作输入别名。"""
+    urls = [base_url, *(os.environ.get(name) for name in
+                       ('OPENAI_BASE_URL', 'FACTORY26_BASE_URL', 'VISUAL_BASE_URL'))]
+    if any(url and url.strip().rstrip('/') != ARC_BASE_URL for url in urls):
+        raise ValueError('I14 模型 API 只允许 https://api.arc-bench.com/v1')
+    if not any(urls):
+        raise ValueError('需要 --base-url 或 OPENAI_BASE_URL 指定 ARC 模型 API')
+    keys = [os.environ.get(name) for name in ('OPENAI_API_KEY', 'FACTORY26_API_KEY')]
+    key = next((value for value in keys if value), None)
+    if require_key and not key:
+        raise ValueError('需要选定的 ARC API key（OPENAI_API_KEY 或 FACTORY26_API_KEY）')
+    if any(value and value != key for value in
+           [*keys, *(os.environ.get(name) for name in ('VISUAL_API_KEY', 'FACTORY26_VISUAL_API_KEY'))]):
+        raise ValueError('I14 全部模型必须使用同一个选定 ARC API key')
+    return ARC_BASE_URL, key
+
+
+def model_environment(key):
+    """只传入选定 ARC 模型认证，保留工具、平台记录及普通环境。"""
+    env = {name: value for name, value in os.environ.items()
+           if name not in NON_ARC_MODEL_AUTH and name not in
+           {'OPENAI_BASE_URL', 'VISUAL_BASE_URL'}}
+    env.update(FACTORY26_API_KEY=key or '', FACTORY26_BASE_URL=ARC_BASE_URL)
+    return env
+
+
 ROOT_CHECK_MESSAGES = (
     '请检查当前工作进展；没有新事实、决定或行动时结束处理，无需公开回执。',
     '请检查当前工作进展；仅在变化影响当前判断、下一步或交接时维护已有 task packet 与相关 Issue/PR 入口，无变化无需重复整理或公开回执。',
@@ -57,6 +102,8 @@ def native_files(work, runtime, skills, base_url, visual_url):
     成员主模型归 profile，内部角色归原生 agents Markdown。
     本次运行只替换连接与路径；包内有哪些技能和会话启用哪些技能分别选择。
     """
+    if base_url.strip().rstrip('/') != ARC_BASE_URL or visual_url and visual_url.strip().rstrip('/') != ARC_BASE_URL:
+        raise ValueError('I14 原生模型材料只允许 ARC API')
     background_bash = runtime/'node_modules/pi-background-bash/index.ts'
     fff = runtime/'node_modules/@ff-labs/pi-fff/src/index.ts'
     context7 = runtime/'node_modules/@upstash/context7-pi/extensions/context7.ts'
@@ -79,10 +126,10 @@ def native_files(work, runtime, skills, base_url, visual_url):
         model = next(m for m in providers['providers'][profile['provider']]['models']
                      if m['id'] == profile['model'])
         profile['context_window_tokens'] = model['contextWindow']
-        providers['providers']['factory26']['baseUrl'] = base_url
-        providers['providers']['factory26-visual'].update(
-            baseUrl=visual_url or base_url,
-            apiKey='$FACTORY26_VISUAL_API_KEY' if visual_url else '$FACTORY26_API_KEY')
+        if set(providers['providers']) != {'factory26', 'factory26-visual'}:
+            raise ValueError('I14 原生模型 provider 配置已变化')
+        for provider in providers['providers'].values():
+            provider.update(baseUrl=ARC_BASE_URL, apiKey='$FACTORY26_API_KEY')
         save(template/'models.json', providers)
         save(template/'pi-fff.json', {'mode':'tools-only'})
         for role in (template/'agents').glob('*.md'):
@@ -135,10 +182,9 @@ def generate(args):
     prepare-only 只准备材料，不产生交付；进入生成后的失败保留工作现场。
     辅助归档异常单独记入 diagnostic_error，不能冒充外部评分或覆盖生成错误。
     """
-    if not args.prepare_only and not (os.environ.get('OPENAI_API_KEY') or os.environ.get('FACTORY26_API_KEY')):
-        raise ValueError('需要 OPENAI_API_KEY 或 FACTORY26_API_KEY')
-    if bool(os.environ.get('VISUAL_BASE_URL')) != bool(os.environ.get('VISUAL_API_KEY')):
-        raise ValueError('视觉 URL 与 key 必须同时提供')
+    base_url, key = arc_connection(args.base_url, require_key=not args.prepare_only)
+    model_env = model_environment(key)
+    visual_url = os.environ.get('VISUAL_BASE_URL')
     requirements = args.requirements_dir.resolve(strict=True)
     if not requirements.is_dir():
         raise NotADirectoryError(f'输入不是目录：{requirements}')
@@ -168,10 +214,6 @@ def generate(args):
     shutil.copy2(source_braid, work/'bin/braid')
     (work/'bin/braid').chmod(0o755)
     inputs = run/'input'; shutil.copytree(requirements, inputs)
-    base_url = args.base_url or os.environ.get('OPENAI_BASE_URL') or os.environ.get('FACTORY26_BASE_URL')
-    if not base_url:
-        raise ValueError('需要 --base-url 或 OPENAI_BASE_URL')
-    visual_url = os.environ.get('VISUAL_BASE_URL')
     profiles, bindings = native_files(work, runtime, skills, base_url, visual_url)
     root_profile_id = 'pi-glm-root' if os.environ.get('MODEL') == 'glm-5.3' else ROOT_PROFILE_ID
     root_profile = next(p for p in profiles if p['id']==root_profile_id)
@@ -183,6 +225,12 @@ def generate(args):
                   task='platform', model=root_profile['model'], thinking=root_profile['reasoning'],
                   deployment='arcbench', benchmark_revision=None)
     save(run/'config.json', config)
+    save(run/'model-connection.json', {
+        'base_url': base_url, 'api_key_environment': 'FACTORY26_API_KEY', 'api_key_configured': bool(key),
+        'native_providers': ['factory26', 'factory26-visual'],
+        'removed_supplier_auth_environment': sorted(set(os.environ) & NON_ARC_MODEL_AUTH),
+        'remaining_supplier_auth_environment': sorted(set(model_env) & NON_ARC_MODEL_AUTH),
+    })
     save(run/'input-hashes.json', hashes(inputs))
     code_files = [*HERE.glob('*.py'), *(HERE/'agents').rglob('*'), *(HERE/'extensions').rglob('*'),
                   *(HERE/'tools').rglob('*')]
@@ -208,14 +256,9 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
     print(run, flush=True)
     if args.prepare_only:
         return run
-    openai_key = os.environ.get('OPENAI_API_KEY')
-    factory_key = os.environ.get('FACTORY26_API_KEY')
-    key = openai_key or factory_key
-    if not key:
-        raise ValueError('需要 OPENAI_API_KEY 或 FACTORY26_API_KEY')
     browser = str(browser_executable(runtime))
     # Chromium sockets require a short path; retain Pi's durable async state separately.
-    env = dict(os.environ, **tool_environment(), PORTLESS_PORT='1355', PORTLESS_HTTPS='0',
+    env = dict(model_env, **tool_environment(), PORTLESS_PORT='1355', PORTLESS_HTTPS='0',
                PI_FFF_MODE='tools-only', PI_FFF_MULTIGREP='0',
                PORTLESS_SYNC_HOSTS='0', PORTLESS_STATE_DIR=str(work/'tmp/portless'),
                npm_config_cache=str(work/'cache/npm'),
@@ -243,8 +286,6 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         env.update(telemetry_environment(binding))
     except Exception as exc:
         metadata['telemetry_diagnostic_error'] = f'{type(exc).__name__}: {exc}'
-    if visual_url:
-        env['FACTORY26_VISUAL_API_KEY'] = os.environ['VISUAL_API_KEY']
     begin = time.monotonic()
     error = None
     history = {'status': 'not_started'}

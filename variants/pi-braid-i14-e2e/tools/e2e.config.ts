@@ -5,9 +5,15 @@ import { createOpenAICompatible } from '@ai-sdk/openai-compatible';
 const url = process.env.E2E_APP_URL;
 if (!url) throw new Error('E2E_APP_URL must name the owned application service');
 
+const arcBaseURL = 'https://api.arc-bench.com/v1';
+if (process.env.FACTORY26_BASE_URL?.replace(/\/+$/, '') !== arcBaseURL) {
+  throw new Error('I14 e2e 模型 API 只允许 https://api.arc-bench.com/v1');
+}
+if (!process.env.FACTORY26_API_KEY) throw new Error('I14 e2e 需要选定 ARC API key');
+
 const provider = createOpenAICompatible({
   name: 'factory26',
-  baseURL: process.env.FACTORY26_BASE_URL!,
+  baseURL: arcBaseURL,
   apiKey: process.env.FACTORY26_API_KEY,
 });
 

@@ -84,7 +84,9 @@ python3 scripts/package_completed_recovery.py \
 
 二进制覆盖时，manifest 不沿用原冻结源码的 revision 或 SHA。原身份保存在 `recovery-source.frozen_braid_source`；`--braid-source` 记录新源码 tar 的容器 SHA，`--braid-source-identity` 逐项核对 tar 中 `braid/` 文件及 `sha256-json-sorted-files` 聚合 SHA，再记录新编译源码身份。辅助源码快照没有提供时，不宣称新 binary 来自原源码。
 
-本地通道切换另用显式 `--override-native-transport`，官网恢复默认关闭。恢复时以当前 `OPENAI_BASE_URL` 和 `$FACTORY26_API_KEY` 更新每个声明的 template 与全部保留 home 的 `factory26` 连接；存在 `factory26-visual` 时沿用 variant 的 `VISUAL_BASE_URL`/`$FACTORY26_VISUAL_API_KEY`，未指定 visual URL 则使用主连接。只改 URL 和 key 变量名，模型定义、profile、角色及历史不变；原 models.json 与前后哈希保存在 `recovery-native-transport/` 和 `recovery-native-transport.json`。选项要求接续模式，不能静默替换官网运输，也不把实际 key 写入回执。
+本地通道切换另用显式 `--override-native-transport`，官网恢复默认关闭。I13/I14 的显式切换固定到 ARC：所有声明的 template 和保留 home 中，两个 provider 都使用 `https://api.arc-bench.com/v1` 与 `$FACTORY26_API_KEY`，其它供应商 URL、不同视觉 key 和不同主 key 会被拒绝。恢复先保全原 models/settings/auth；清空有更高优先级的 stored auth，并用原生严格 provider scope 避免子 Agent 落入其它供应商。模型名称、profile 和对话历史保持，当前 key 不进入回执。其它历史 variant 的显式 transport 选项保持原主/视觉通道行为；普通官网恢复不会被静默改成通道切换。来源及前后哈希归 `recovery-native-transport/` 与 `recovery-native-transport.json`。
+
+未完成生成接续按实际完整 runtime 能力恢复共用资源环境，不只依赖旧 recovery-source 的声明 flag；`native-managed.mjs` 与 `support/runtime_resources.py` 必须同时存在。已有明确资源声明仍按原约束校验。`recovery-resource-environment.json` 记录能力、启用结果和无 key 的路径环境；这使显式模型切换或仅更新 binary 的恢复也能继续使用资源准入保护，缺少能力的旧包不冒充已启用。
 
 迁移的无模型反馈使用 `--prepare-only` 与断网容器中的真实 Pi RPC：对保留的 session 文件以新 profile 的 `--provider factory26 --model glm-5.3-flash --session <旧文件>` 启动，读取 `get_state` 与 `get_messages`，核对同一 sessionId/sessionFile、新 GLM 定义和历史消息内容。只发这些读取命令，不发送 prompt；原 session 文件始终留在原 ZIP 中，RPC 的新 model_change 只写到验收副本。此反馈不等于 Braid offline-resume、模型请求或最终交付已经成功。
 

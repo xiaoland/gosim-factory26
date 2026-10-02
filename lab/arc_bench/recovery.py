@@ -189,7 +189,8 @@ def container_prepare(package, evidence):
                         materials.append({'path': str(target), 'expected': digest(file), 'actual': digest(target)})
     save(evidence / 'materials.json', materials)
     for name in ('recovery-preparation.json', 'recovery-attempt.json', 'recovery-git.json',
-                 'recovery-native-materials.json', 'materials.json', 'recovery-braid-binary.json'):
+                 'recovery-native-materials.json', 'materials.json', 'recovery-braid-binary.json',
+                 'recovery-resource-environment.json'):
         if (run / name).is_file():
             shutil.copy2(run / name, evidence / ('package-' + name))
     binary = digest(run / 'work/bin/braid')

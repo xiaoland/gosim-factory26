@@ -1,7 +1,12 @@
 {
   "packages": [],
   "subagents": {
-    "disableBuiltins": true
+    "disableBuiltins": true,
+    "modelScope": {
+      "enforce": true,
+      "strict": true,
+      "allow": ["factory26/*", "factory26-visual/*"]
+    }
   },
   "defaultTools": [
     "read",

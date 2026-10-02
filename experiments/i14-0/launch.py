@@ -3,6 +3,7 @@ import argparse
 import math
 import os
 from pathlib import Path
+import re
 import sys
 import time
 
@@ -14,6 +15,52 @@ from lab.arc_bench.operations import prepare, run, selected_runs, lock, error_re
 from lab.control import process_identity, process_state
 from lab.docker_endpoint import environment, SELECTION_ENV, confirm
 from lab.records import read_json, file_hash
+
+
+ARC_BASE_URL = 'https://api.arc-bench.com/v1'
+NON_ARC_MODEL_AUTH = frozenset('''
+OPENAI_API_KEY ANTHROPIC_AUTH_TOKEN ANTHROPIC_OAUTH_TOKEN ANTHROPIC_API_KEY
+COPILOT_GITHUB_TOKEN ANT_LING_API_KEY QWEN_TOKEN_PLAN_API_KEY QWEN_TOKEN_PLAN_CN_API_KEY
+AZURE_OPENAI_API_KEY NVIDIA_API_KEY DEEPSEEK_API_KEY GEMINI_API_KEY GOOGLE_CLOUD_API_KEY
+GROQ_API_KEY CEREBRAS_API_KEY XAI_API_KEY RADIUS_API_KEY OPENROUTER_API_KEY AI_GATEWAY_API_KEY
+ZAI_API_KEY ZAI_CODING_CN_API_KEY MISTRAL_API_KEY MINIMAX_API_KEY MINIMAX_CN_API_KEY
+MOONSHOT_API_KEY HF_TOKEN FIREWORKS_API_KEY TOGETHER_API_KEY BASETEN_API_KEY OPENCODE_API_KEY
+KIMI_API_KEY CLOUDFLARE_API_KEY XIAOMI_API_KEY XIAOMI_TOKEN_PLAN_CN_API_KEY
+XIAOMI_TOKEN_PLAN_AMS_API_KEY XIAOMI_TOKEN_PLAN_SGP_API_KEY GOOGLE_APPLICATION_CREDENTIALS
+AWS_PROFILE AWS_ACCESS_KEY_ID AWS_SECRET_ACCESS_KEY AWS_SESSION_TOKEN AWS_BEARER_TOKEN_BEDROCK
+AWS_CONTAINER_CREDENTIALS_RELATIVE_URI AWS_CONTAINER_CREDENTIALS_FULL_URI AWS_WEB_IDENTITY_TOKEN_FILE
+AWS_SHARED_CREDENTIALS_FILE AWS_CONFIG_FILE GLM_API_KEY QWEN_API_KEY
+VISUAL_API_KEY FACTORY26_VISUAL_API_KEY
+'''.split())
+
+
+def arc_environment(path, *, selected=False):
+    """校验选定 ARC 连接，再为模型容器移除其它供应商认证。"""
+    if path.stat().st_mode & 0o077:
+        raise ValueError('模型连接凭据文件必须为 mode 600')
+    values = {}
+    for line in path.read_text().splitlines():
+        if not line.strip() or line.lstrip().startswith('#'):
+            continue
+        name, separator, value = line.strip().removeprefix('export ').partition('=')
+        name = name.strip()
+        if not separator or not re.fullmatch(r'[A-Za-z_][A-Za-z0-9_]*', name) or name in values:
+            raise ValueError('模型连接变量无效或重复：' + name)
+        values[name] = value.strip().strip('\"\'')
+    urls = [values.get(name) for name in ('OPENAI_BASE_URL', 'FACTORY26_BASE_URL', 'VISUAL_BASE_URL')]
+    if not any(urls) or any(url and url.rstrip('/') != ARC_BASE_URL for url in urls):
+        raise ValueError('I14 模型连接只允许 https://api.arc-bench.com/v1')
+    key = values.get('OPENAI_API_KEY') or values.get('FACTORY26_API_KEY')
+    if not key or any(value and value != key for value in
+                      (values.get(name) for name in ('OPENAI_API_KEY', 'FACTORY26_API_KEY',
+                                                   'VISUAL_API_KEY', 'FACTORY26_VISUAL_API_KEY'))):
+        raise ValueError('I14 全部模型必须使用同一个选定 ARC API key')
+    if selected and any(values.get(name) for name in NON_ARC_MODEL_AUTH - {'OPENAI_API_KEY'}):
+        raise ValueError('已冻结的 I14 模型连接包含其它供应商认证，拒绝启动')
+    env = {name: value for name, value in values.items()
+           if name not in NON_ARC_MODEL_AUTH and name not in
+           {'FACTORY26_API_KEY', 'FACTORY26_BASE_URL', 'VISUAL_BASE_URL'}}
+    return dict(env, OPENAI_BASE_URL=ARC_BASE_URL, OPENAI_API_KEY=key)
 
 
 def final_score(binding):
@@ -85,6 +132,7 @@ def write_index(directory, config, state):
 
 
 def dispatch(directory, config, target):
+    selected_environment = arc_environment(Path(config['arc_env']))
     op = directory / 'operations' / target['id']
     op.mkdir(parents=True, exist_ok=True)
     selection_path = op / 'selection.json'
@@ -101,24 +149,17 @@ def dispatch(directory, config, target):
     model = selection['root_model']
     private_env = op / 'model.env'
     if not private_env.exists():
-        lines = [line for line in Path(config['arc_env']).read_text().splitlines()
-                 if not line.partition('=')[0].strip().removeprefix('export ').strip() in {'MODEL', 'VISUAL_MODEL'}]
+        selected_environment.update(MODEL=model, VISUAL_MODEL='glm-5.3-flash')
         temporary = private_env.with_suffix('.env.pending')
         with temporary.open('w') as stream:
-            stream.write('\n'.join([*lines, 'MODEL=' + model, 'VISUAL_MODEL=glm-5.3-flash']) + '\n')
+            stream.write('\n'.join(name + '=' + value for name, value in selected_environment.items()) + '\n')
             stream.flush()
             os.fsync(stream.fileno())
         temporary.chmod(0o600)
         temporary.replace(private_env)
-    values = {}
-    for line in private_env.read_text().splitlines():
-        name, separator, value = line.strip().partition('=')
-        if separator and name in {'MODEL', 'VISUAL_MODEL', 'OPENAI_API_KEY', 'OPENAI_BASE_URL'}:
-            if name in values:
-                raise ValueError('duplicate model connection variable: ' + name)
-            values[name] = value.strip().strip('\"\'')
+    values = arc_environment(private_env, selected=True)
     if (values.get('MODEL') != model or values.get('VISUAL_MODEL') != 'glm-5.3-flash' or
-            not values.get('OPENAI_API_KEY') or not values.get('OPENAI_BASE_URL') or private_env.stat().st_mode & 0o077):
+            values['OPENAI_API_KEY'] != selected_environment['OPENAI_API_KEY']):
         raise ValueError('private model connection does not match the selected root')
     recipe_path = op / 'matrix.json'
     if not recipe_path.exists():
@@ -156,6 +197,7 @@ def dispatch(directory, config, target):
 def work(directory):
     os.umask(0o077)
     config = read_json(directory / 'config.json')
+    arc_environment(Path(config['arc_env']))
     for name in (*SELECTION_ENV, 'DOCKER_API_VERSION'):
         os.environ.pop(name, None)
     os.environ.update(environment(config['endpoint']))
