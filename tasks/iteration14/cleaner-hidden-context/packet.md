@@ -35,3 +35,13 @@ Docker 实际标签、daemon、StartedAt 与原 operation/run 对齐后，来源
 主线转达用户将 I13 Flash/GitHub 恢复列为第一优先级，并授权两项技能热修。cleaner不启动旧技能writer；等待技能会话 `01a0fa92-eb8e-7143-81fa-21eb002790f7` ready及共同恢复设施接线后，一次冻结新base。上下文binary保留不重编，完整原始现场已保存。WSL当前不可用，主线已核对development-2可用并统一准备glibc Runner；新prepare需独立冻结该endpoint/image实际身份，原operation不改。旧host adapter PGID54142仍SIGSTOP用于阻断cleanup，来源已停止、原卷与helper保留，尚未lab stop。
 
 完整template ZIP为577,161,410 bytes / 63,825成员，SHA256 `abf6ae90c0fc3c8e1b63cca648847777400db808df7c919aa30304fd3b41c82f`。三份原生会话header/文件SHA与四个Git tree的HEAD/status另存 `source-native-identity.json` / `source-git-identity.json`。这些证据说明持久文件现场保全，不代表进程内存或外部`/tmp`数据恢复。
+
+## 新材料冻结与通知边界（2026-10-02）
+
+主线提供共同恢复接线身份后已核对：packager SHA256 `561cd17c87830804454e419ee02db64dd0d98d766e375f55dd38192154d3baf7`，恢复 main `0eb29b59e34f8dd1d8cb8f330b117519f7d5b8938ae9ce25299e31d082c26e03`，Linux prepare `135bd8fdde58afa0ec4cd8d83eb81d5b74d0898a621c7e33a6248f1c833d4026`。I14使用 `--continue-generation --refresh-native-materials --with-official-signal-evidence`，不传互斥的override参数，刷新后自动ARC保护。当前shared main及两技能整个目录已冻结为 `arc-cleaner-base-skills-ready.zip`，9个材料文件逐字核对，记录于 `base-skills-ready-identity.json`；沿用63fd context binary，四root prompt源码不改。此身份是冻结材料，不是实际部署或采用。
+
+实际消费者由原DB核实：Issue1 OPEN的glm-1持有集成/检查职责，PR3 OPEN的glm-3实施；PR2已MERGED且glm-2 sleeping，review1已CLOSED/completed、结论成员glm-1。无需另造检查成员或唤醒已完成glm-2。Braid已有宿主 `--state <state> --external issue comment 1 --body-file <notice> --json` 接口；Issue1 owner自动收件，正文只@glm-3即可将同一通知送到PR3。正常评论记录投递与事件，实际turn input提供正文读取入口。正文仅包含两个技能名称、实际独立路径、新SKILL SHA与“继续当前工作前重新读取”的动作，无description或技能正文，无ACK要求和隐藏反馈。
+
+现有shared main没有prepare通过后、首次dispatch前的一次通知接线，具体缺口及CLI方案已交主线整合；不直接SQL或改native历史。`skills-refresh-notice.md`与`skills-refresh-notification-plan.json`仅为待发送材料，不能当投递证据。通知需runtime-only，prepare-only保持原DB不变；发出后保留comment/delivery及实际input身份，重入先检查已有回执/评论避免重复。仍等待主线development-2 Runner实际镜像身份，未操作旧WSL/Console或其它source，未启动writer。
+
+候选恢复包 `cleaner-resume-skills-ready.zip` 已成功装配并逐项核对，971,029,396 bytes，SHA256 `91118e8e9f084acac1e9ea564bc298a865729b57ea7433b36c4c05b5dfb2a16e`；manifest中的main、binary、nested完整workspace ZIP及9份技能文件均与实际字节一致。候选仍使用main `0eb29b59…`，不含待整合的一次恢复通知，不能作为最终部署包。独立计划为 `skills-refresh-recovery-plan.json`（稳定request_id、来源/Issue身份、实际消费者、路径/hash与通知文字），已交主线；原normal CLI方案保持，不临时改原DB/native。下一步等新通知接口hash及development-2 Runner身份后重新冻结最终恢复包，再prepare/launch与实际输入取证。
