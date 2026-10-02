@@ -25,6 +25,8 @@ Docker endpoint、不可变 image_id、共享 slots 和 daemon 派生 admission_
 
 旧官网来源使用 `import-source-stop --birth ORIGINAL_GET --status TERMINAL_GET --authorization SCOPE --identity-output NEW_IDENTITY --output NEW_STOP`；可用 `--cancel-evidence ORIGINAL` 保存唯一取消请求来源，但请求受理本身不能满足门控。两个独立 GET 原件的 run/submission/competition/task/created_at/started_at 必须相同，终态 GET 还须有 finished_at。来源记录为 `factory26.exp.legacy-source`，使用 source_id、execution_instance 和 backend_identity，**没有新 attempt_id**。Harness producer 必须明确消费此来源联合类型；不能把它改名成新 attempt。Prepared 继续保留整个 source_identity，停止制品独立发布；新 launch 使用私有 deployment.cookie_file 重新 GET 同一个原 run，核对出生身份和物理终态，缺身份、凭据或当前观察时阻塞。该接口只读、导入及 GET，不进行 cancel/start/resume；跨平台来源尚不支持。
 
+Docker 离线 job 显式设置 backend.network="none"，create 记录在 attempt/docker-create-intent.json 并传入 `--network none`；资源读回核对 HostConfig.NetworkMode 及 NetworkSettings.Networks，不仅根据 prepare-only 名称推断断网。未声明 network 的生成 job 保持 Docker 默认联网。首版不接受其它显式 network 值。
+
 `control ... export` 仅接续终态保全和输运。`retry ... --authorization SCOPE --request-id REQUEST` 在冻结 attempt 预算内登记明确的新 attempt，再用 `start` 接续 controller。未知效果不授权新入口；重复原 dispatch request 不重跑 main。执行退出、归档、遥测封口、producer flush、输运和评分分别报告。Controller completed 只表示声明执行和证据流程结束，outcome 与平台评分仍独立。
 
 制品用 `artifact import/verify/export/transfer` 发布、核验及装配，`evidence` 按受限 member/字节游标读取。导入历史字节不会取得新执行证明。`telemetry snapshot/batches/export/ingest` 保留 stream/epoch/源序列、原始 protobuf 与错误；摄取同源批次幂等，冲突原件保留。Analyze 固定原件摘要和采集截止点；没有调用身份时模型用量明确未知，不从原始批次数推导 token 或费用。

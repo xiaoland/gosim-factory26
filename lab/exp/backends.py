@@ -92,10 +92,13 @@ def capabilities(target):
 
 def inspect(target, container_id):
     confirm(target['endpoint'])
-    template = '{"container_id":{{json .Id}},"image_id":{{json .Image}},"created":{{json .Created}},"state":{{json .State}},"labels":{{json .Config.Labels}}}'
+    template = '{"container_id":{{json .Id}},"image_id":{{json .Image}},"created":{{json .Created}},"state":{{json .State}},"labels":{{json .Config.Labels}},"network_mode":{{json .HostConfig.NetworkMode}},"networks":{{json .NetworkSettings.Networks}}}'
     result = execute(target['endpoint'], ['inspect', '--format', template, container_id],
                      check=True, capture_output=True, text=True, timeout=30)
-    return json.loads(result.stdout)
+    value = json.loads(result.stdout)
+    if target.get('network') == 'none' and (value['network_mode'] != 'none' or set(value['networks'] or {}) - {'none'}):
+        raise Blocked('Docker physical network does not match frozen network:none')
+    return value
 
 
 def exact_resource(target, binding):
@@ -177,6 +180,8 @@ def local_launch(directory, deployment):
 
 def docker_launch(directory, attempt, request, deployment, incarnation):
     target = attempt['job']['backend']
+    if 'network' in target and target['network'] != 'none':
+        raise ValueError('explicit Docker network currently supports only none; omit to retain default networking')
     endpoint = target['endpoint']
     identifier(attempt['attempt_id'])
     name = 'exp-' + canonical([attempt['experiment_id'], attempt['attempt_id']])[:32]
@@ -199,6 +204,8 @@ def docker_launch(directory, attempt, request, deployment, incarnation):
         raise Blocked('attempt volume identity already exists with another incarnation')
     args = ['create', '--name', name, '--restart', 'no', '--mount', f'type=volume,src={volume},dst=/attempt',
             '--workdir', '/attempt', '--env', 'PYTHONPATH=/attempt/runtime']
+    if target.get('network') == 'none':
+        args += ['--network', 'none']
     for key, value in labels.items():
         args += ['--label', key + '=' + value]
     args += ['--init']
@@ -207,6 +214,9 @@ def docker_launch(directory, attempt, request, deployment, incarnation):
         if limits.get(key):
             args += [flag, str(limits[key])]
     args += ['--entrypoint', target.get('python', 'python3'), target['image_id'], '-m', 'lab.exp.runner', 'internal_worker', '/attempt']
+    atomic(Path(directory) / 'docker-create-intent.json', record('docker-create', argv=endpoint['argv'] + args,
+           attempt_id=attempt['attempt_id'], incarnation=incarnation, created_at=time.time(),
+           network_policy=target.get('network', 'docker-default')))
     result = execute(endpoint, args, check=True, capture_output=True, text=True, timeout=60)
     container_id = result.stdout.strip()
     resource = inspect(target, container_id)

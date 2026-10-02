@@ -125,6 +125,8 @@ def build(spec_path, directory):
             kind = job.get('backend', {}).get('kind')
             if kind not in {'local', 'docker', 'hosted'}:
                 raise ValueError('backend must be explicitly local/docker/hosted')
+            if kind == 'docker' and 'network' in job['backend'] and job['backend']['network'] != 'none':
+                raise ValueError('explicit Docker network currently supports only none; omit to retain default networking')
             command = job.get('command')
             if kind != 'hosted' and (not isinstance(command, list) or not command or
                                     any(not isinstance(arg, str) for arg in command)):
