@@ -128,7 +128,7 @@ def observe(attempt_dir, live=False):
                 if physical['state'].get('Status') in ('exited', 'dead') and result['execution'] not in ('exited', 'stopped', 'failed'):
                     result['phase'] = 'unknown'
                     result['execution_observation_gap'] = 'container terminal but entry exit/finalization receipt unavailable'
-                result['backend_identity'] = {'kind': 'docker', 'endpoint': attempt['job']['backend']['endpoint'], **read(directory / 'resource.json')}
+                result['backend_identity'] = {**read(directory / 'resource.json'), 'kind': 'docker', 'endpoint': attempt['job']['backend']['endpoint']}
                 atomic(directory / 'remote-execution.json', result)
             else:
                 binding = read(directory / 'binding.json')
@@ -401,11 +401,25 @@ def _group_members(group_id):
     for line in result.stdout.splitlines():
         fields = line.split()
         if len(fields) >= 3 and fields[1] == str(group_id) and not fields[2].startswith('Z'):
-            identity = process_identity(int(fields[0]))
+            pid = int(fields[0])
+            identity = process_identity(pid)
+            if not identity.get('boot_id') or not identity.get('process_start'):
+                # ps is a snapshot: a short-lived child can exit before birth is
+                # read. Only a fresh absent/nonmember observation can skip it.
+                current = subprocess.run(['ps', '-p', str(pid), '-o', 'pgid=,stat='], capture_output=True, text=True)
+                if current.returncode == 1 and not current.stdout.strip() and process_state(identity) == 'lost':
+                    continue
+                current.check_returncode()
+                current_fields = current.stdout.split()
+                if len(current_fields) >= 2 and (current_fields[0] != str(group_id) or current_fields[1].startswith('Z')):
+                    continue
+                identity = process_identity(pid)
             if identity.get('boot_id') and identity.get('process_start'):
                 members.append(identity)
             else:
-                raise Blocked('process group member birth identity is unavailable')
+                failure = Blocked(f'process group member birth identity is unavailable: pid={pid}, group={group_id}')
+                failure.detail = {'identity': identity, 'current_ps': current.stdout, 'current_ps_stderr': current.stderr}
+                raise failure
     return members
 
 
@@ -555,13 +569,15 @@ def worker(attempt_dir):
                 identity = process_identity(process.pid)
                 backend_identity = {'kind': 'local', 'process': identity}
                 if job['backend']['kind'] == 'docker':
-                    backend_identity = {'kind': 'docker', 'endpoint': job['backend']['endpoint'], **read(directory / 'resource.json')}
+                    backend_identity = {**read(directory / 'resource.json'), 'kind': 'docker', 'endpoint': job['backend']['endpoint']}
                 _save(directory, receipt, execution='running', entry_process=identity, backend_identity=backend_identity, started_at=time.time())
                 _effect(directory / 'requests' / (receipt['dispatch_request_id'] + '.effect.json'), read(directory / 'request.json'),
                         'applied', incarnation_id=binding['incarnation_id'], entry_process=identity)
                 deadline = time.monotonic() + limits['wall_seconds']
                 known_descendants = {}
                 while True:
+                    if process.poll() is not None:
+                        break
                     if process_state(identity) == 'alive':
                         for descendant in _group_members(process.pid):
                             known_descendants[canonical(descendant)] = descendant
@@ -607,6 +623,7 @@ def worker(attempt_dir):
                         stopped, stop_reason = True, reason
                     time.sleep(.25)
                 exit_code = process.wait()
+                _save(directory, receipt, entry_exit_code=exit_code, entry_finished_at=time.time())
                 _finish_group(process.pid, list(known_descendants.values()), limits.get('stop_grace_seconds', 10))
                 receipt['process_group'] = {'group_id': process.pid, 'members': list(known_descendants.values()), 'effect': 'stopped'}
                 receipt['backend_identity']['group_members'] = list(known_descendants.values())
@@ -625,6 +642,9 @@ def worker(attempt_dir):
                     _terminate(process, identity, limits.get('stop_grace_seconds', 10))
                 except Exception as stop_exc:
                     receipt['stop_error'] = error(stop_exc)
+            if process is not None and process.poll() is not None:
+                _save(directory, receipt, entry_exit_code=process.returncode,
+                      entry_finished_at=receipt.get('entry_finished_at', time.time()))
             _save(directory, receipt, execution='unknown' if process else 'failed', error=error(exc), finished_at=time.time())
         finally:
             if collector:

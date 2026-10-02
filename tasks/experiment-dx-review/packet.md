@@ -120,3 +120,8 @@ Harness checkpoint/validate/prepare 是公开、离线、版本化 producer。Pr
 
 
 托管监控最小交接（2026-10-02）：复用已有 lab monitor/status 只读接口，无须为即将启动的 hosted 再建采集器或状态数据库。controller 的 hosted adapter 是唯一新 run API采集与终态导出 owner，原PID77062保留旧 cancelled source 范围；不伪造journal，不迁移旧monitor目录。Luna每十分钟消费保存的身份/状态/原错/archive/终态，禁止live observe/Client/第二collector；绑定实际experiment→controller出生→attempt→submission/run后才声称订阅具体新run。未接收订阅不阻塞hosted启动。consumer合同与实际离线readback位于 real-handoff-20261002/monitor-consumer-contract.json 和 monitor-readback-offline-repair.json，真实repair-final已completed，读回没有平台请求、模型调用或collector创建。新hosted run尚未作为实际观察对象，接收身份和告警效果不能凭合同存在宣布验收。本会话未更改旧collector、Luna自动化或原恢复owner。
+
+
+实际离线prepare监督故障修复：home-fix attempt-e2c989263d851bb93a0454dd报process group member birth identity unavailable，旧异常没有成员PID/原process_error，无法追认哪一子进程消失。独立exact-resource inspect确认原container5ac55bac…exited、Pid0、OOMKilled=false、networknone；监督器exit0不等于入口exit0。owner导出没有harness manifest/readback，不能提升为prepared，旧unknown与半成品保持。
+
+runner定向修正ps快照到birth读取之间的竞态：仅在新ps查询无成员且出生观察process_state=lost，或明确已非同组/僵尸时跳过；仍活动且无法识别的成员保持Blocked并保存PID、身份缺项及当前ps原错。入口wait/poll实际退出码在组和外部资源收尾之前独立持久化，不因辅助监督失败丢失。Docker backend_identity的kind在resource原件展开之后显式赋docker，修复两个生产路径的metadata覆盖；旧冻结source不宽松别名或原件改写。源码编译与差异检查通过，可由原owner重新冻结修正runner执行一次明确获授权的纯断网prepare；本会话不自行重派发，下一实际结果用于效果反馈。实物及源码摘要位于real-handoff-20261002/runner-birth-failure/repair-readiness.json。
