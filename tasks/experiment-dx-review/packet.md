@@ -297,3 +297,13 @@ Compiler/readiness 已实施。公共 compile 输出 intent/recipe/compilation�
 原件统一位于本worktree `runs/infrastructure-dx/`，被Git忽略且继续保留。单次顺序操作没有控制OS缓存，不能宣称稳定倍率；离线build耗时不是启动入口耗时。当前源码编译、嵌入helper编译、Node语法检查及真实材料读回完成，没有新增或运行Factory/Braid测试、fixture、probe、smoke。
 
 本轮源码及离线范围完成；三类端到端验收尚未完成。实际Docker装配/ready/入口、controller断开、child预算/cgroup、材料变更后的完整热恢复，需要明确实际输入、环境profile、预算及控制范围。当前不启动模型或平台、不接管共享daemon、不停止来源、不部署Console、不迁移旧run、不应用GC。下一步为冻结上述真实操作范围后取得完整打包、启动入口、热修复恢复入口三个区间，不将局部计时提升为验收通过。
+
+## 整合到原 main 工作区（2026-10-02）
+
+用户要求“合并到主分支”，随后纠正为将成果整合到 `Development/factory26`，并明确该目录必须在main、已有工作不可丢失。首次只快进main引用并把原目录留在保全分支未满足目标，已修正：原目录现在检出main，feature成果及SDK终态释放修复都在其基线中；独立worktree回到feat/infrastructure-dx。
+
+对42个分支变更文件在独立暂存目录三方合并，保留本地提交识别、恢复通知/需求迁移、来源停止诊断、资源证据及实际大包输运修复。12个文件的文本冲突由稳定owner按实际接口解决，没有stash/reset或提交其他任务改动。新schema2仍使用公开prepared binding；旧续传只委派原冻结executor，缺能力明确阻塞，不篡改旧冻结材料。旧恢复helper源码与原件保留，不通过默认fallback续用旧writer。
+
+合并前记录4196个已有路径；每个覆盖文件在写入前核对原字节，首次因lab/gc.py并发变更而拒绝写入，纳入最新修改后再执行。合并后gc的说明及external-model-providers packet又被其他owner更新，已保留，没有回写旧快照。其余无关已有文件与快照一致，所有覆盖文件原件、三方材料、原tracked patch及读回见 `runs/infrastructure-dx/merge-20261002/`。原未提交修改与未跟踪文件继续在原目录中，当前仅提交本任务代码和本段记录。
+
+实际原目录的29个变更Python文件编译、Node语法和差异检查通过；没有设施测试、模型、daemon或平台动作。合并改变builder/support/checkpoint实际字节，生产选择应按真实依赖重新计算，旧cache继续保留但不能冒充新材料。三类端到端耗时验收状态没有因合并改变。
