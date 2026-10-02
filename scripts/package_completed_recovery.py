@@ -13,7 +13,10 @@ import sys
 import tarfile
 from zipfile import ZipFile, ZIP_DEFLATED, ZIP_STORED
 
-from package_agent import is_metadata_path, require_private_artifact
+if __package__:
+    from .package_agent import is_metadata_path, require_private_artifact
+else:
+    from package_agent import is_metadata_path, require_private_artifact
 
 ROOT = Path(__file__).resolve().parents[1]
 I14_VARIANTS = frozenset({"pi-braid-i14", "pi-braid-i14-cleaner",
@@ -361,7 +364,8 @@ def main():
                     "recovery-workspace.zip": workspace,
                     "support/agent_support.py": ROOT / "scripts/agent_support.py",
                     "exp_checkpoint.py": ROOT / "submission/exp_checkpoint.py"}
-    source["producer_contract"] = {"kind": "factory26.harness.checkpoint", "schema_version": 1,
+    source["producer_contract"] = {"kind": "factory26.harness.checkpoint", "schema_version": 2,
+                                   "coverage": "legacy transport; acquisition window unproved",
                                    "checkpoint_source_sha256": digest(replacements["exp_checkpoint.py"]),
                                    "support_source_sha256": digest(replacements["support/agent_support.py"])}
     if binding:

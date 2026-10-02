@@ -1,5 +1,9 @@
 """Package one independent Harness; runtime and skill inputs are explicit."""
 import argparse
+import ast
+import fcntl
+import uuid
+import platform
 import hashlib
 import json
 import os
@@ -12,7 +16,10 @@ import sys
 import tempfile
 import zipfile
 
-from agent_support import copy_skill
+if __package__:
+    from .agent_support import copy_skill
+else:
+    from agent_support import copy_skill
 
 ROOT=Path(__file__).resolve().parents[1]
 
@@ -56,7 +63,7 @@ def write_tool_credentials(env_file, destination):
 
 def is_metadata_path(path):
     """Exclude transport-created macOS metadata from runnable package payloads."""
-    return any(part.startswith('._') or part in {'.DS_Store', '__MACOSX'}
+    return any(part.startswith('._') or part in {'.DS_Store', '__MACOSX', '__pycache__'} or part.endswith('.pyc')
                for part in Path(path).parts)
 
 
@@ -93,7 +100,7 @@ def bundle_files(root):
 
     yield from walk(root, set())
 
-def write_zip(bundle, output, backend, records, capabilities=None):
+def write_zip(bundle, output, backend, records, capabilities=None, *, persist_manifest=True):
     bundle = bundle.resolve()
     if (bundle/'.private').is_dir():
         require_private_artifact(output)
@@ -131,11 +138,26 @@ def write_zip(bundle, output, backend, records, capabilities=None):
                 info.external_attr = (stat.S_IFREG | 0o644) << 16
                 info.compress_type = zipfile.ZIP_DEFLATED
                 archive.writestr(info, encoded)
-            (bundle / 'package-manifest.json').write_bytes(encoded)
+            if persist_manifest:
+                (bundle / 'package-manifest.json').write_bytes(encoded)
         except BaseException:
             output.unlink()
             raise
 
+
+
+def copy_file(source, destination):
+    """APFS COW copies isolate writers; unsupported filesystems use ordinary copying."""
+    if sys.platform == 'darwin':
+        import ctypes
+        import errno
+        library = ctypes.CDLL(None,use_errno=True)
+        if library.clonefile(os.fsencode(source),os.fsencode(destination),0) == 0:
+            return str(destination)
+        code = ctypes.get_errno()
+        if code not in {errno.EXDEV,errno.ENOTSUP,errno.EINVAL}:
+            raise OSError(code,os.strerror(code),str(source))
+    return shutil.copy2(source,destination)
 
 def assemble(source, destination, runtime, skill_source, skills):
     """Copy selected files. This boundary does not parse profiles or choose behavior."""
@@ -151,51 +173,177 @@ def assemble(source, destination, runtime, skill_source, skills):
         shutil.copy2(ROOT/'scripts'/name,support/name)
     if source.name in I14_VARIANTS | {'pi-braid', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
         shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
-        subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', '--no-compile',
-                        '--target', str(support/'otlp-deps'), '-r', str(ROOT/'lab/requirements.txt')],
-                       check=True)
-        for binary in (support/'otlp-deps').rglob('*.so'):
-            binary.unlink()  # protobuf's pure Python implementation works across build/target hosts.
+        dependency = os.environ.get('FACTORY26_BUILD_OTLP_DEPENDENCIES')
+        if not dependency:
+            raise ValueError('材料生产必须绑定已准备 OTLP dependencies；请使用 package_agent.produce')
+        shutil.copytree(dependency, support/'otlp-deps',copy_function=copy_file)
     for name in skills:
         copy_skill(Path(skill_source)/name,destination/'skills'/name)
-    shutil.copytree(runtime,destination/'runtime',symlinks=True)
+    shutil.copytree(runtime,destination/'runtime',symlinks=True,copy_function=copy_file)
     return destination
 
 
+def _tree_identity(root):
+    """Freeze actual bytes/modes and literal links without reading through links."""
+    root = Path(root).resolve(strict=True)
+    rows = {}
+    if root.is_file():
+        return {'sha256': hashlib.sha256(root.read_bytes()).hexdigest(), 'mode': root.stat().st_mode & 0o777}
+    for directory, folders, files in os.walk(root, followlinks=False):
+        for name in sorted(folders + files):
+            path = Path(directory)/name
+            if name == '__pycache__' or is_metadata_path(name):
+                if name in folders: folders.remove(name)
+                continue
+            member = path.relative_to(root).as_posix()
+            if path.is_symlink(): rows[member] = {'link': os.readlink(path)}
+            elif path.is_file():
+                with path.open('rb') as incoming:
+                    value = hashlib.file_digest(incoming, 'sha256').hexdigest()
+                rows[member] = {'sha256': value, 'mode': path.stat().st_mode & 0o777}
+    return rows
+
+
+def _key(value):
+    return hashlib.sha256(json.dumps(value, sort_keys=True, separators=(',', ':')).encode()).hexdigest()
+
+
+def material_capabilities():
+    return {'braid_session_budget': {'version': 2, 'native_children_share_owner': True,
+                                    'missing_identity': 'reject'},
+            'resource_evidence': {'required': True, 'owner': 'runner', 'binding': 'FACTORY26_EXP_SERVICES'},
+            'checkpoint': {'schema_version': 2, 'producer': 'exp_checkpoint.py'},
+            'application': {'schema_version': 2, 'producer': 'exp_checkpoint.py'},
+            'variants': sorted(I14_VARIANTS)}
+
+
+def _otlp_dependencies(cache, selected=None):
+    if selected is not None:
+        selected = Path(selected).resolve(strict=True)
+        if not (selected/'opentelemetry/proto').is_dir():
+            raise ValueError('OTLP dependencies 缺少 opentelemetry/proto')
+        return selected
+    dependencies = {'requirements': _tree_identity(ROOT/'lab/requirements.txt'),
+                    'python': platform.python_version(), 'platform': 'pure-python'}
+    target = cache/'otlp'/ _key(dependencies)
+    if not (target/'dependency.json').exists():
+        stage = target.with_name(target.name + '-' + uuid.uuid4().hex)
+        stage.mkdir(parents=True)
+        subprocess.run([sys.executable, '-m', 'pip', 'install', '--quiet', '--no-compile',
+                        '--target', str(stage/'payload'), '-r', str(ROOT/'lab/requirements.txt')], check=True)
+        for binary in (stage/'payload').rglob('*.so'): binary.unlink()
+        (stage/'dependency.json').write_text(json.dumps(dependencies, sort_keys=True))
+        stage.rename(target)
+    return target/'payload'
+
+
+def selection(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=None, otlp_dependencies=None):
+    """Describe the same literal material selection consumed by variant build.py."""
+    source = ROOT/'variants'/variant
+    if variant not in I14_VARIANTS:
+        raise ValueError('新材料生产首版只支持四个 I14 variant')
+    skills = None
+    for call in ast.walk(ast.parse((source/'build.py').read_text())):
+        if isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == 'assemble':
+            skills = next(ast.literal_eval(value.value) for value in call.keywords if value.arg == 'skills')
+    if not skills:
+        raise ValueError('variant build 必须声明字面量 skills 选择')
+    runtime = Path(runtime).resolve(strict=True)
+    if not (runtime/'bin/braid').is_file():
+        raise ValueError('材料生产需要明确含 Braid 的 runtime')
+    child_sources = runtime/'node_modules/pi-subagents/src/runs'
+    foreground = (child_sources/'foreground/execution.ts').read_text()
+    background = (child_sources/'background/subagent-runner.ts').read_text()
+    spawning = (child_sources/'shared/pi-spawn.ts').read_text()
+    if ('...process.env' not in foreground or '...process.env' not in background or
+            'getPiSpawnCommand(args' not in foreground or 'getPiSpawnCommand(args' not in background or
+            'PI_SUBAGENT_PI_BINARY' not in spawning):
+        raise ValueError('冻结child接线未声明继承父环境及预算包装器；不复用此runtime')
+    skill_source = Path(skill_source or ROOT/'harness/skills').resolve(strict=True)
+    dependencies = {'variant': variant, 'variant_source': _tree_identity(source),
+                    'builder': _tree_identity(Path(__file__)), 'runtime': _tree_identity(runtime),
+                    'skills': {name: _tree_identity(skill_source/name) for name in skills},
+                    'support': {name: _tree_identity(ROOT/'scripts'/name) for name in
+                                ('agent_support.py','braid_runtime.py','core.py','model_budget.mjs','runtime_resources.py')},
+                    'checkpoint': _tree_identity(ROOT/'submission/exp_checkpoint.py'),
+                    'collector': _tree_identity(ROOT/'lab/otlp.py'),
+                    'otlp_requirements': _tree_identity(ROOT/'lab/requirements.txt'),
+                    'sdk_wrapper': _tree_identity(ROOT/'lab/arc_bench/agent_runtime'),
+                    'sdk_exporter': _tree_identity(ROOT/'lab/arc_bench/__main__.py')}
+    if tool_env is not None: dependencies['private_tool_credentials'] = _tree_identity(Path(tool_env))
+    if variant == 'pi-braid-i14-e2e':
+        e2e_runtime = Path(e2e_runtime or runtime/'e2e').resolve(strict=True)
+        dependencies['e2e_runtime'] = _tree_identity(e2e_runtime)
+    if otlp_dependencies is not None:
+        dependencies['otlp_dependencies'] = _tree_identity(Path(otlp_dependencies))
+    else:
+        dependencies['otlp_build'] = {'python': platform.python_version(), 'pure_python': True}
+    return dependencies
+
+
+def plan_material(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=None, otlp_dependencies=None):
+    return selection(variant, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies)
+
+
+def produce(variant, output_store, runtime, skill_source=None, tool_env=None,
+            e2e_runtime=None, otlp_dependencies=None, expected_dependencies=None):
+    """Reuse verified material production across runs; callers publish it once."""
+    cache = Path(output_store).resolve()
+    cache.mkdir(parents=True, exist_ok=True)
+    with (cache/'.producer.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        dependencies = plan_material(variant, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies)
+        if expected_dependencies is not None and dependencies != expected_dependencies:
+            raise ValueError('producer dependencies 与冻结选择不一致；必须重新编译')
+        otlp = _otlp_dependencies(cache, otlp_dependencies)
+        identity = _key(dependencies)
+        target = cache/'materials'/identity
+        receipt = target/'material.json'
+        if receipt.exists():
+            value = json.loads(receipt.read_text())
+            if value['dependencies'] != dependencies or _tree_identity(target/'payload') != value['contents']:
+                raise ValueError('已发布材料或依赖身份发生变化；保留现场，不覆盖')
+            return {**value, 'manifest_sha256': hashlib.sha256(receipt.read_bytes()).hexdigest(), 'reused': True}
+        stage = cache/'.staging'/('material-' + uuid.uuid4().hex)
+        stage.mkdir(parents=True)
+        command = [sys.executable, str(ROOT/'variants'/variant/'build.py'), '--stage', str(stage/'payload'),
+                   '--runtime', str(Path(runtime).resolve(strict=True)), '--skills', str(Path(skill_source or ROOT/'harness/skills').resolve(strict=True))]
+        for flag, value in (('--tool-env', tool_env), ('--e2e-runtime', e2e_runtime)):
+            if value is not None: command += [flag, str(Path(value).resolve(strict=True))]
+        (stage/'production.json').write_text(json.dumps({'phase': 'staging', 'argv': command, 'dependencies': dependencies}, ensure_ascii=False))
+        try:
+            subprocess.run(command, check=True, env={**os.environ, 'FACTORY26_BUILD_OTLP_DEPENDENCIES': str(otlp)})
+            prune_metadata(stage/'payload')
+            if plan_material(variant, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies) != dependencies:
+                raise ValueError('生产期间材料来源发生变化')
+            value = {'kind': 'factory26.harness.material', 'schema_version': 2,
+                     'material_id': 'material-' + identity, 'root': str(target/'payload'),
+                     'dependencies': dependencies, 'capabilities': material_capabilities(),
+                     'contents': _tree_identity(stage/'payload')}
+            (stage/'material.json').write_text(json.dumps(value, ensure_ascii=False, sort_keys=True)+'\n')
+            target.parent.mkdir(parents=True, exist_ok=True)
+            stage.rename(target)
+            return {**value, 'manifest_sha256': hashlib.sha256(receipt.read_bytes()).hexdigest(), 'reused': False}
+        except BaseException as error:
+            (stage/'failure.json').write_text(json.dumps({'type': type(error).__name__, 'message': str(error)}, ensure_ascii=False))
+            raise
+
+
 def package(variant, output, docker_context=None, runtime=None, stage=None,
-            skill_source=None, tool_env=None, e2e_runtime=None):
-    source=ROOT/'variants'/variant
-    if source.parent!=ROOT/'variants' or not (source/'build.py').is_file():
-        raise ValueError('请选择含 build.py 的独立 variant')
+            skill_source=None, tool_env=None, e2e_runtime=None, cache_root=None, otlp_dependencies=None):
+    if runtime is None:
+        raise ValueError('新生产必须明确已冻结 runtime；缺失构建由 runtime producer 负责')
     if output is not None and Path(output).exists(): raise FileExistsError(output)
-    if tool_env is not None and variant not in I14_VARIANTS | {'pi-braid-i13', 'pi-braid-i13-glm-root'}:
-        raise ValueError('--tool-env 仅供明确接线的 I13/I14 variant 使用')
-    skill_source=Path(skill_source or ROOT/'harness/skills').resolve()
-    from runtime import linux
-    (ROOT/'runs').mkdir(exist_ok=True)
-    with tempfile.TemporaryDirectory(prefix='package-',dir=ROOT/'runs') as temporary:
-        tmp=Path(temporary)
-        if runtime is None:
-            runtime=linux(tmp/'runtime','pi',ROOT/'harness/npm',docker_context,ROOT/'sources/braid')
-        runtime=Path(runtime).resolve(strict=True)
-        if not (runtime/'bin/braid').is_file():
-            raise ValueError('团队制品需要包含 Braid 的 Linux runtime；参阅 runtime.py linux --braid-source')
-        bundle=Path(stage).resolve() if stage else tmp/'bundle'
-        build = [sys.executable,str(source/'build.py'),'--stage',str(bundle),
-                 '--runtime',str(runtime),'--skills',str(skill_source)]
-        if tool_env is not None:
-            build += ['--tool-env', str(Path(tool_env).resolve(strict=True))]
-        if e2e_runtime is not None:
-            if variant != 'pi-braid-i14-e2e':
-                raise ValueError('--e2e-runtime 仅供 I14 e2e 工具对照')
-            build += ['--e2e-runtime', str(Path(e2e_runtime).resolve(strict=True))]
-        subprocess.run(build,check=True)
-        prune_metadata(bundle)
-        records=json.loads((runtime/'runtime-source.json').read_text()).get('sources',{}) if (runtime/'runtime-source.json').is_file() else {}
-        if output is not None:
-            write_zip(bundle,Path(output).resolve(),'pi',records,{'variant':variant})
-        elif stage is None:
-            raise ValueError('需要 --output 或 --stage')
+    cache = Path(cache_root or ROOT/'runs/material-cache')
+    material = produce(variant, cache, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies)
+    bundle = Path(material['root'])
+    if stage is not None:
+        shutil.copytree(bundle, Path(stage), symlinks=True)
+    if output is not None:
+        records = json.loads((Path(runtime)/'runtime-source.json').read_text()).get('sources', {}) if (Path(runtime)/'runtime-source.json').exists() else {}
+        write_zip(bundle, Path(output).resolve(), 'pi', records,
+                  {'variant': variant, **material['capabilities'], 'material_id': material['material_id']}, persist_manifest=False)
+    if output is None and stage is None: raise ValueError('需要 output 或 stage')
     return Path(output or stage).resolve()
 
 
@@ -206,12 +354,14 @@ def main():
     p.add_argument('--stage',type=Path,help='准备可直接执行的目录，不压 ZIP')
     p.add_argument('--runtime',type=Path,help='复用 runtime.py linux 导出的目录')
     p.add_argument('--docker-context')
+    p.add_argument('--cache-root',type=Path)
+    p.add_argument('--otlp-dependencies',type=Path)
     p.add_argument('--skills',type=Path)
     p.add_argument('--tool-env',type=Path,help='工具凭据的显式 dotenv 输入；仅写入非 Git 制品私有配置')
     p.add_argument('--e2e-runtime',type=Path,help='I14 e2e 独立 Linux 工具与浏览器目录')
     a=p.parse_args()
     if a.output is None and a.stage is None:p.error('需要 --output 或 --stage')
-    print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills,a.tool_env,a.e2e_runtime))
+    print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills,a.tool_env,a.e2e_runtime,a.cache_root,a.otlp_dependencies))
 
 
 if __name__=='__main__':main()

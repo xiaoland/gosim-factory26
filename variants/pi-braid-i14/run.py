@@ -324,6 +324,9 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         delivery = load_delivery(repository, request)
         metadata['delivery'] = delivery
         export_delivery(repository, delivery['delivery_commit'], run/'application')
+        from braid_runtime import publish_application
+        publish_application(repository, delivery['delivery_commit'], run/'application-artifact', inputs,
+                            {'attempt_id': os.environ.get('FACTORY26_EXP_ATTEMPT_ID', run.name), 'braid_run_id': run.name})
         deliver(run/'application', output)
         publish_history(preview=True, ref=delivery['delivery_commit'], source=repository)
         metadata['status'] = 'generated'

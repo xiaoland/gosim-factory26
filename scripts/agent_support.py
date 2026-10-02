@@ -362,6 +362,13 @@ def _wait_process(proc, run, reason, *, timeout=None):
 
 def start_local_telemetry(run):
     """Use the runner-owned receiver, or start the package's standalone collector."""
+    attempt_id = os.environ.get('FACTORY26_EXP_ATTEMPT_ID')
+    if attempt_id:
+        service = json.loads(os.environ.get('FACTORY26_EXP_SERVICES', '{}')).get('telemetry', {})
+        if service.get('owner') not in {'runner', 'runner-payload'} or service.get('status') not in {'ready', 'disabled'}:
+            raise ValueError('Harness 入口需要 runner 明确声明 telemetry 已就绪或关闭')
+        if service['status'] == 'disabled':
+            return None, {'status': 'disabled'}
     external = os.environ.get('FACTORY26_EXP_TELEMETRY_BINDING')
     if external:
         binding = json.loads(external)
@@ -376,6 +383,8 @@ def start_local_telemetry(run):
             if expected and binding[field] != expected:
                 raise ValueError(f'runner telemetry binding 与当前 {field} 不一致')
         return None, binding
+    if attempt_id:
+        raise ValueError('runner telemetry 已就绪但未提供当前 attempt 的 receiver binding')
     module = Path(__file__).resolve().with_name('otlp.py')
     if not module.is_file():
         module = Path(__file__).resolve().parents[1]/'lab/otlp.py'
@@ -402,6 +411,8 @@ def start_local_telemetry(run):
         raise
 
 def telemetry_environment(binding):
+    if binding.get('status') == 'disabled':
+        return {'OTEL_SDK_DISABLED': 'true'}
     endpoint = binding['endpoint']
     headers = 'x-experiment-token=' + binding['token']
     values = dict(OTEL_EXPORTER_OTLP_ENDPOINT=endpoint,
@@ -457,9 +468,16 @@ def runtime_resource_environment(runtime, run):
         if not source.is_file():
             raise FileNotFoundError(source)
     directory = Path(run)/'process-control'
+    services = json.loads(os.environ.get('FACTORY26_EXP_SERVICES', '{}'))
+    resource = services.get('resource_evidence')
+    if os.environ.get('FACTORY26_EXP_ATTEMPT_ID'):
+        if not resource or resource.get('owner') not in {'runner', 'runner-payload'} or resource.get('status') != 'ready' or not resource.get('sample_path'):
+            raise ValueError('Harness 入口需要 runner 已就绪的 ResourceEvidence 与明确样本路径')
+        sample_path = Path(resource['sample_path'])
+    else:
+        sample_path = Path(run)/'process-evidence/resource-latest.json'
     subprocess.run([sys.executable, str(helper), 'configure', '--directory', str(directory),
-                    '--sample-path', str(Path(run)/'process-evidence/resource-latest.json')],
-                   check=True, stdout=subprocess.DEVNULL)
+                    '--sample-path', str(sample_path)], check=True, stdout=subprocess.DEVNULL)
     return {'FACTORY_RESOURCE_HELPER': str(helper), 'FACTORY_RESOURCE_PYTHON': sys.executable,
             'FACTORY_RESOURCE_DIR': str(directory),
             'FACTORY_NATIVE_RUNTIME_MODULE': str(native_module)}

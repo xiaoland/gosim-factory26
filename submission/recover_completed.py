@@ -367,14 +367,76 @@ def override_native_transport(run, request):
     }, indent=2) + "\n")
 
 
+
+def execute_prepared(args):
+    """Consume runner assembly; never restore, rewrite history or refresh materials."""
+    binding = json.loads(os.environ.get('FACTORY26_EXP_PREPARED_BINDING','{}'))
+    assembly_path = Path(os.environ.get('FACTORY26_EXP_ASSEMBLY',''))
+    if not binding or binding.get('attempt_id') != os.environ.get('FACTORY26_EXP_ATTEMPT_ID') or binding.get('assembly_status') != 'complete':
+        raise ValueError('prepared执行缺少当前runner装配绑定')
+    assembly = json.loads(assembly_path.read_text())
+    if assembly.get('status') != 'assembled' or assembly.get('workspace') != binding['run_root']:
+        raise ValueError('prepared执行装配原件与workspace不一致')
+    manifest_path = Path(binding['manifest_path'])
+    if hashlib.sha256(manifest_path.read_bytes()).hexdigest() != binding['manifest_sha256']:
+        raise ValueError('prepared manifest与装配绑定不一致')
+    import exp_checkpoint
+    validation = exp_checkpoint.validate(manifest_path.parent)
+    manifest = json.loads(manifest_path.read_text())
+    if manifest['kind'] != 'factory26.harness.prepared' or validation['status'] != 'complete':
+        raise ValueError('prepared执行需要新版完整恢复合同')
+    run = Path(binding['run_root'])
+    if exp_checkpoint.inventory(run) != {name.removeprefix('run/'):value for name,value in manifest['files'].items() if name.startswith('run/')}:
+        raise ValueError('可写恢复工作区在入口前与装配内容不一致')
+    request = json.loads((run/'braid-request.json').read_text())
+    if request['state'] != str(run/'braid-state'): raise ValueError('Braid state logical root不匹配')
+    work = run/'work'
+    from agent_support import runtime_resource_environment, model_bindings
+    _, env = model_bindings(require_key=True)
+    env.update(runtime_resource_environment(ROOT/'runtime',run),
+               XDG_CONFIG_HOME=str(work/'home/.config'),
+               npm_config_cache=str(work/'cache/npm'), npm_config_store_dir=str(work/'cache/pnpm'),
+               PI_SUBAGENTS_TEMP_ROOT=str(work/'tmp'/f'pi-subagents-uid-{os.getuid()}'),
+               MCPORTER_CONFIG=str(ROOT/'tools/mcporter.json'),
+               PBB_PIL_BIN=str(ROOT/'runtime/node_modules/pi-lane/bin/pil.js'),
+               AGENT_BROWSER_EXECUTABLE_PATH=str(browser_executable(ROOT/'runtime')),
+               BROWSER_EXECUTABLE_PATH=str(browser_executable(ROOT/'runtime')),
+               BROWSER_CHECK_NODE_MODULES=str(ROOT/'runtime/node_modules'),
+               HOME=str(work/'home'), TMPDIR=str(work/'tmp'), PI_CODING_AGENT_DIR=str(work/'home/.pi/agent'),
+               PI_OFFLINE='1', PI_TELEMETRY='0', PI_SUBAGENT_MAX_DEPTH='3',
+               PATH=os.pathsep.join((str(work/'bin'),str(ROOT/'runtime/bin'),str(ROOT/'runtime/node_modules/.bin'),env.get('PATH',''))))
+    collector,binding = start_local_telemetry(run)
+    env.update(telemetry_environment(binding))
+    from agent_support import start_shared_proxy, stop_shared_proxy
+    shared_proxy = start_shared_proxy(ROOT/'runtime',run,env)
+    braid = work/'bin/braid'
+    try:
+        with (run/'recovery-braid.log').open('w') as log:
+            execute_braid([str(braid),'local',str(run/'braid-request.json'),'--resume'],
+                          run=run,app=work/'application',env=env,log=log,evidence=[])
+        delivery = load_delivery(run/'braid-state/origin.git',request)
+        application = run/'recovered-application'
+        export_delivery(run/'braid-state/origin.git',delivery['delivery_commit'],application)
+        deliver(application,args.output_dir)
+        from braid_runtime import publish_application
+        publish_application(run/'braid-state/origin.git',delivery['delivery_commit'],run/'application-artifact',
+                            args.requirements_dir, {'attempt_id':os.environ['FACTORY26_EXP_ATTEMPT_ID'],'braid_run_id':request['run_id']})
+    finally:
+        stop_shared_proxy(shared_proxy,run)
+        if collector: stop_local_telemetry(collector)
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("requirements_dir", type=Path)
     parser.add_argument("--output-dir", required=True, type=Path)
     parser.add_argument("--type", default="web")
+    parser.add_argument("--execute-prepared",action="store_true")
     parser.add_argument("--prepare-only", action="store_true",
                         help="Restore and verify the workspace without starting Braid or calling models")
     args = parser.parse_args()
+    if args.execute_prepared:
+        if args.prepare_only: parser.error("execute-prepared不能重新prepare")
+        return execute_prepared(args)
     print("Recovery: verifying packaged runtime and workspace", flush=True)
     manifest = verify_package(ROOT)
     source = json.loads((ROOT / "recovery-source.json").read_text())

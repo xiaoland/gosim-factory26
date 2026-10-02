@@ -172,3 +172,13 @@ def export_telemetry(output, work, archived_manifest, env=None, *, portable=Fals
     except OSError as exc:
         print(f'无法保存 Braid telemetry export 状态: {exc}', file=sys.stderr)
     return result
+
+
+def publish_application(app, commit, output, requirements, source_identity, delivery_kind='final'):
+    """Produce the public application contract; evaluation remains a separate effect."""
+    producer = Path(__file__).resolve().parents[1]/'exp_checkpoint.py'
+    if not producer.exists(): producer = Path(__file__).resolve().parents[1]/'submission/exp_checkpoint.py'
+    import importlib.util
+    spec = importlib.util.spec_from_file_location('harness_application',producer)
+    module = importlib.util.module_from_spec(spec); spec.loader.exec_module(module)
+    return module.application(app,output,requirements,source_identity,delivery_kind,commit)

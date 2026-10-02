@@ -29,8 +29,7 @@ export function claimModelSession(slot, session, model) {
 export default function modelBudget(pi) {
   let owner;
   pi.on("before_provider_request", (event, context) => {
-    // Pi children have their own model recipes, not additional Braid sessions.
-    if (process.env.PI_SUBAGENT_CHILD === "1") return;
+    // Native children inherit the parent binding and share its Braid owner.
     try {
       const model = event.payload?.model ?? context.model?.id;
       if (typeof model !== "string") throw new Error("无法辨认请求模型，已拒绝调用");

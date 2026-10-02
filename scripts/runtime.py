@@ -212,6 +212,49 @@ def host_lab(output, base_python, purpose):
     return output/'asset.json'
 
 
+
+def plan_host_runtime(base_python):
+    """Pure dependency planning; do not execute an interpreter during compile."""
+    base_python = Path(base_python).expanduser().resolve(strict=True)
+    if not base_python.is_file():
+        raise ValueError('runtime producer 需要明确解释器文件')
+    dependencies = {'interpreter': hashlib.sha256(base_python.read_bytes()).hexdigest(),
+                    'requirements': hashlib.sha256((ROOT/'lab/requirements.txt').read_bytes()).hexdigest(),
+                    'builder': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                    'platform': platform.system(), 'architecture': platform.machine()}
+    return {'kind': 'factory26.exp.runtime-plan', 'schema_version': 1, 'dependencies': dependencies,
+            'key': hashlib.sha256(json.dumps(dependencies, sort_keys=True).encode()).hexdigest()}
+
+
+def ensure_host_runtime(cache_root, base_python, purpose, expected_dependencies=None):
+    """Controller and runner bind separate receipts to one verified physical venv."""
+    import fcntl
+    if purpose not in {'controller', 'runner'}:
+        raise ValueError('runtime purpose 必须明确 controller 或 runner')
+    plan = plan_host_runtime(base_python)
+    if expected_dependencies is not None and expected_dependencies != plan['dependencies']:
+        raise ValueError('runtime dependencies 与冻结选择不一致')
+    cache = Path(cache_root).expanduser().resolve()
+    cache.mkdir(parents=True, exist_ok=True)
+    with (cache/'.runtime.lock').open('a') as lock:
+        fcntl.flock(lock, fcntl.LOCK_EX)
+        root = cache/plan['key']/'environment'
+        reused = root.exists()
+        if not reused:
+            receipt = host_lab(root, Path(base_python), purpose)
+        else:
+            receipt = root/'asset.json'
+        value = json.loads(receipt.read_text())
+        if value['identity'] != asset_inventory(root):
+            raise ValueError('共享 runtime 已被修改；不覆盖原环境')
+        if plan_host_runtime(base_python)['dependencies'] != plan['dependencies']:
+            raise ValueError('runtime 构建期间依赖发生变化')
+        value.update(purpose=purpose, dependencies=plan['dependencies'])
+        selected = root.parent/(purpose + '.json')
+        if not selected.exists(): selected.write_text(json.dumps(value, ensure_ascii=False, indent=2)+'\n')
+        elif json.loads(selected.read_text()) != value: raise ValueError('runtime binding receipt 不一致')
+        return {**value, 'receipt': str(selected), 'reused': reused}
+
 def main():
     p=argparse.ArgumentParser(description=__doc__)
     p.add_argument('command',choices=['path','prepare','linux','dev-svc','host-exp'])
