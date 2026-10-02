@@ -14,6 +14,7 @@ import { BodyInput, Markdown } from './Markdown';
 import Discussion from './Discussion';
 import Sessions, { SessionLinks } from './Sessions';
 import FileBrowser from './FileBrowser';
+import Review, { ReviewLinks } from './Review';
 import type { RegisteredRun } from './runs';
 
 type EditDraft = { title: string; body: string; revision: number };
@@ -192,6 +193,7 @@ function Detail({ run, selected, writable, onSelect, onDirty, onBusy }: {
         </section>}
       </div>
       <aside className="metadata">
+        <ReviewLinks run={run} item={item} onSelect={onSelect} />
         <SessionLinks run={run} selected={selected} onSelect={onSelect} />
         <div className="metadata-section"><div className="metadata-label"><User /> 负责人</div>
           {item.assignees.length ? item.assignees.map(a => <div className="assignee" key={a.login}><UserAvatar size={24} /><strong>@{a.login}</strong></div>) : <span className="muted">未指派</span>}
@@ -245,7 +247,7 @@ export default function BraidRun({ currentRun, selected, onSelect, onDirty, onBu
     if (!selected && items.data?.length) onSelect({ kind: items.data[0].kind, id: items.data[0].id }, true);
   }, [items.data, selected]);
   function choose(value: Selection) {
-    if (value.kind === selected?.kind && value.id === selected.id && value.agent === selected.agent && value.provider === selected.provider) return;
+    if (value.kind === selected?.kind && value.id === selected.id && value.review === selected.review && value.agent === selected.agent && value.provider === selected.provider) return;
     onSelect(value);
   }
   const all = items.data || [];
@@ -290,6 +292,7 @@ export default function BraidRun({ currentRun, selected, onSelect, onDirty, onBu
           <div className="list-footer"><span>{filtered.length} / {all.length} 个工作项</span>{items.isFetching ? <LoaderCircle className="size-4 animate-spin" aria-label="正在刷新" /> : <span>{currentRun.mode === 'archive' ? '保存状态只读' : 'CLI 实时读取'}</span>}</div>
         </aside>
         {selected ? selected.agent ? <Sessions run={run} selected={selected} onSelect={choose} />
+          : selected.review ? <Review run={run} selected={selected} onSelect={choose} />
           : <Detail key={`${run}/${selected.kind}/${selected.id}`} run={run} selected={selected} writable={currentRun.writable} onSelect={choose} onDirty={onDirty} onBusy={setBusy} />
           : <section className="detail-panel detail-empty"><EmptyState description="选择一个 Issue 或 Pull request" /></section>}
       </div>

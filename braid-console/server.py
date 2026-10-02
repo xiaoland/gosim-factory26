@@ -31,7 +31,7 @@ JOURNAL_LOCK = threading.Lock()
 MAX_POST = 1_000_000
 # Only declared application pages receive the SPA entry. Missing assets and API
 # endpoints keep their real error responses rather than becoming HTML.
-APP_PAGE = re.compile(r"/runs/[^/]+(?:/(?:issues|prs)/[1-9][0-9]*(?:/agents/[^/]+(?:/providers/[^/]+)?)?)?/?")
+APP_PAGE = re.compile(r"/runs/[^/]+(?:/(?:issues|prs)/[1-9][0-9]*(?:/reviews/[1-9][0-9]*)?(?:/agents/[^/]+(?:/providers/[^/]+)?)?)?/?")
 
 
 def application_page(path):
@@ -41,6 +41,8 @@ def application_page(path):
     if any(part in (".", "..") or "\\" in part or any(ord(c) < 32 for c in part) for part in parts):
         return False
     if not APP_PAGE.fullmatch(path):
+        return False
+    if len(parts) > 6 and parts[5] == "reviews" and (parts[3] != "prs" or int(parts[6]) > 9007199254740991):
         return False
     return len(parts) < 5 or int(parts[4]) <= 9007199254740991
 
@@ -284,6 +286,14 @@ class Handler(BaseHTTPRequestHandler):
                 if item_id < 1:
                     raise ValueError("无效对象编号")
                 data = item_view(run, kind, item_id)
+            elif url.path == "/api/review":
+                run = self.run_for(params.get("run"))
+                pr, request = int(params.get("pr", "")), int(params.get("id", ""))
+                if pr < 1 or request < 1:
+                    raise ValueError("无效 PR 或审阅编号")
+                if run["mode"] == "archive":
+                    raise ValueError("此归档尚未保存可读取的审阅详情；不能从 PR 评论推断结论")
+                data = braid_json(run, ["pr", "review", "view", str(pr), str(request), "--json"])
             elif url.path == "/api/comment":
                 run = self.run_for(params.get("run"))
                 comment_id = int(params.get("id", ""))

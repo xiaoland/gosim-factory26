@@ -7,7 +7,7 @@ import { api, url } from './http';
 import { useState, type ReactNode } from 'react';
 import { ArrowLeft } from 'lucide-react';
 import { useQuery } from '@tanstack/react-query';
-import { type ProviderSession, type Selection } from './api';
+import { type ProviderSession, type ReviewView, type Selection } from './api';
 import { routeURL } from './navigation';
 import Transcript from './Transcript';
 import FileBrowser from './FileBrowser';
@@ -18,6 +18,11 @@ export function useSessions(run: string) {
   return useQuery({ queryKey: ['sessions', run], queryFn: ({ signal }) => api<ProviderSession[]>(url('/api/sessions', { run }), signal),
     enabled: !!run, refetchInterval: 5000, retry: false });
 }
+export function useReview(run: string, selected: Selection) {
+  return useQuery({ queryKey: ['review', run, selected.id, selected.review],
+    queryFn: ({ signal }) => api<ReviewView>(url('/api/review', { run, pr: selected.id, id: selected.review! }), signal),
+    enabled: !!selected.review, refetchInterval: 5000, retry: false });
+}
 export function SessionLink({ run, selected, onSelect, children }: { run: string; selected: Selection; onSelect: (value: Selection) => void; children: ReactNode }) {
   return <a href={routeURL(run, selected)} onClick={event => {
     if (event.button || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -25,7 +30,7 @@ export function SessionLink({ run, selected, onSelect, children }: { run: string
   }}>{children}</a>;
 }
 function itemSessions(records: ProviderSession[], selected: Selection) {
-  return records.filter(record => record.work_item_kind === selected.kind && Number(record.work_item_id) === selected.id);
+  return records.filter(record => record.work_item_kind === (selected.review ? 'review' : selected.kind) && Number(record.work_item_id) === (selected.review || selected.id));
 }
 function SessionState({ session }: { session: ProviderSession }) {
   return <Row gap={4} wrap>{historical(session) && <StatusBadge>历史</StatusBadge>}<StatusBadge>{session.status}</StatusBadge></Row>;
@@ -38,7 +43,7 @@ export function SessionLinks({ run, selected, onSelect }: { run: string; selecte
     {query.error && <Notice tone="error" title="会话关系读取失败" description={<pre>{query.error.message}</pre>} />}
     {query.isPending ? <LoadingSkeleton rows={2} /> : groups.length ? groups.map(agent => {
       const providers = records.filter(record => record.group_id === agent);
-      return <div className="session-link" key={agent}><SessionLink run={run} selected={{ kind: selected.kind, id: selected.id, agent }} onSelect={onSelect}>
+      return <div className="session-link" key={agent}><SessionLink run={run} selected={{ ...selected, agent }} onSelect={onSelect}>
         <strong>{[...new Set(providers.map(record => record.profile_id))].join(' / ')}</strong><code>{agent}</code>
       </SessionLink><span className="muted">{providers.length} 条 provider · {providers.filter(historical).length} 条历史</span></div>;
     }) : <span className="muted">未发现可枚举记录</span>}
@@ -92,11 +97,12 @@ function AgentFiles({ run, records, children }: { run: string; records: Provider
 
 export default function Sessions({ run, selected, onSelect }: { run: string; selected: Selection; onSelect: (value: Selection) => void }) {
   const query = useSessions(run);
-  const records = itemSessions(query.data || [], selected).filter(record => record.group_id === selected.agent);
+  const review = useReview(run, selected);
+  const records = itemSessions(selected.review && (!review.data || review.error) ? [] : query.data || [], selected).filter(record => record.group_id === selected.agent);
   const provider = selected.provider ? records.find(record => record.record_id === selected.provider) : undefined;
-  const item = { kind: selected.kind, id: selected.id };
+  const item = { kind: selected.kind, id: selected.id, review: selected.review };
   const agent = { ...item, agent: selected.agent };
-  const label = `${selected.kind === 'pr' ? 'PR' : 'Issue'} #${selected.id}`;
+  const label = selected.review ? `PR #${selected.id} · 审阅 #${selected.review}` : `${selected.kind === 'pr' ? 'PR' : 'Issue'} #${selected.id}`;
   return <section className="detail-panel session-panel">
     <Breadcrumb><BreadcrumbList>
       <BreadcrumbItem><BreadcrumbLink asChild><SessionLink run={run} selected={item} onSelect={onSelect}>{label}</SessionLink></BreadcrumbLink></BreadcrumbItem><BreadcrumbSeparator />
@@ -109,7 +115,8 @@ export default function Sessions({ run, selected, onSelect }: { run: string; sel
     </div>
     <p className="session-coverage muted">{query.data?.some(record => record.source_mode === 'archive') ? '归档中的会话目录与历史。生命周期来自保存记录，缺失材料保留具体错误。' : coverage}</p>
     {query.error && <Notice tone="error" title="会话关系读取失败；缓存不能证明当前状态" description={<pre>{query.error.message}</pre>} />}
-    {query.isPending ? <LoadingSkeleton rows={6} /> : !records.length || (selected.provider && !provider)
+    {review.error && <Notice tone="error" title="审阅归属读取失败" description={<pre>{review.error.message}</pre>} />}
+    {query.isPending || (selected.review && review.isPending) ? <LoadingSkeleton rows={6} /> : !records.length || (selected.provider && !provider)
       ? <EmptyState description="登记数据源未保存或未发现此会话记录；缺失材料不等于从未执行" />
       : provider ? <>
         <Row gap={8} wrap><SessionState session={provider} /><StatusBadge>{provider.provider}</StatusBadge><StatusBadge>{provider.profile_id}</StatusBadge></Row>

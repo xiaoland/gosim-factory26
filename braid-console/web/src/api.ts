@@ -1,9 +1,9 @@
 export type Kind = 'issue' | 'pr';
-export interface Selection { kind: Kind; id: number; agent?: string; provider?: string }
+export interface Selection { kind: Kind; id: number; review?: number; agent?: string; provider?: string }
 export interface ProviderSession {
   record_id: string;
   group_id?: string | null;
-  work_item_kind?: Kind;
+  work_item_kind?: Kind | 'review';
   work_item_id?: string;
   assignment_generation?: number | null;
   profile_id: string;
@@ -64,7 +64,17 @@ export interface Comment {
   deleted: boolean;
   lifecycle: string;
 }
+export interface ReviewSummary { id: number; pr: number; issue: number; member: string | null; responsibility: string; status: string; verdict: string | null; head_commit: string }
+export interface ReviewView {
+  request: { id: number; pr: number; issue: number; status: string; responsibility: string; responsibility_revision: number; head_commit: string; base_commit: string; requirements_body: string; cancelled_reason: string | null;
+    conclusion: { member: string; agent: string | null; turn: string | null; verdict: string; body: string; evidence: string[]; at: string } | null };
+  current_member: string | null;
+  checkout: { member: string; agent: string | null; path: string; commit: string; tree: string } | null;
+  applicable: boolean;
+  freshness_errors: string[];
+}
 export interface Item extends WorkItem {
+  review_requests?: ReviewSummary[];
   body: string;
   reason?: string | null;
   comments: Comment[];

@@ -2,10 +2,12 @@
 
 Factory实验的薄接入入口，提供已登记运行的Home和Braid专用详情，属于实验基础设施，不依赖SVC或ARC，不进入参赛包。源码仍位于braid-console/，保留在Factory26父仓库中，没有独立Git仓库。Console拥有服务接入与显示状态；lab/冻结材料拥有实验事实，Braid CLI与归档拥有协作事实。
 
-`web/`使用React、TypeScript、Vite、shadcn/ui、Tailwind CSS、Radix、Lucide与TanStack Query。App只管理Home、运行选择、React Router路径导航及离页保护；Home与runs.ts负责通用登记摘要，http.ts保留HTTP错误和响应。BraidRun负责工作项列表、详情、物理控制及其查询，Sessions负责会话导航，Transcript提供同源对话与Trace，FileBrowser提供工作区和origin阅读；Braid对象类型留在api.ts，不建立插件或adapter框架。
+`web/`使用React、TypeScript、Vite、shadcn/ui、Tailwind CSS、Radix、Lucide与TanStack Query。App只管理Home、运行选择、React Router路径导航及离页保护；Home与runs.ts负责通用登记摘要，http.ts保留HTTP错误和响应。BraidRun负责工作项列表、详情、物理控制及其查询，Review负责PR下的冻结审阅与结论，Sessions负责会话导航，Transcript提供同源对话与Trace，FileBrowser提供工作区和origin阅读；Braid对象类型留在api.ts，不建立插件或adapter框架。
 `server.py` 提供 HTTP 接口并服务构建后的前端。现场对象操作调用登记的 Braid CLI；归档浏览由 `archives.py` 读取保存的 SQLite 页面字段，不启动 CLI、worker 或原 Git。`docker_runtime.py` 只控制登记容器的物理暂停/恢复，并协调暂停时的 SQLite 写者锁；不修改业务数据或另建调度逻辑。Braid 继续拥有对象、Git及事件语义，不需要知道 Console、实验名或 ARC。
 
 工作项详情的 Braid agent sessions 入口可查看对应 provider sessions 及历史。关系来自登记CLI的 `status --json.physical_sessions`；`group_id` 是持久Braid agent身份，provider恢复身份与native ID分别呈现。明确的 `replaced/retired` 标为历史，其他状态保留CLI原始生命周期，不推断当前归属；实际暂停/运行状态看上方生成状态。CLI按physical目录枚举，缺失physical材料的会话可能未列出，空结果不表示从未启动。
+
+PR 详情保留 `review_requests` 中的审阅入口，包括已完成请求与已合并 PR。Review 页面调用登记 CLI 的 `pr review view`，分别显示当前执行责任、冻结候选、checkout、实际结论作者及不可变结论；当前适用性变化直接呈现 CLI 的 freshness errors，不改写历史 Approved。审阅会话按 `work_item_kind=review` 和请求编号匹配；结论或 checkout 明确指向 Issue agent 时另给原 Issue 会话入口，不将其全部对话冒记为本次审阅。归档审阅详情尚未接入，具体读取错误保留，不从评论拼造审阅记录。详情接口为 `GET /api/review?run=<ID>&pr=<PR编号>&id=<审阅编号>`，PR 归属由 Braid 核对。
 
 Provider详情默认以对话阅读原生输入与Agent正文，工具、思考和后台通知折叠为过程活动，具体错误直接可见。原生user标为“输入”，不推断来自人类；工具按全部已加载记录中的唯一call ID配对，跨父链不连续、压缩或分支摘要停止配对，返回仅表示“已返回”。每条正文、调用和结果可定位到同源Trace的字节位置；切换保留阅读位置，Trace保留全部原生事件与完整脱敏JSON。历史仍从开头分批加载、手动刷新，已加载末条不代表最新进展。身份材料与turn历史按需展开。
 
@@ -21,7 +23,7 @@ Agent和Provider页的“文件”可浏览CLI登记worktree的当前文件，�
 
 origin读取使用`for-each-ref`、`ls-tree -z`和`cat-file`，读取前明确拒绝partial clone/promisor配置和对象标记，保留禁用lazy fetch的环境保护，不执行checkout、fetch、clone、filters或Braid工作树恢复校验。当前代码阅读只接入live来源；归档文件入口直接说明缺少origin和会话工作区映射，不读取原绝对目录、重建仓库或拿最终应用代替分支历史。
 
-页面使用React Router显式路径：`/`、`/runs/:run`、`/runs/:run/issues/:id`或`prs/:id`，会话层级追加`/agents/:agent/providers/:provider`。页面身份只来自路径，不解析旧`?run&kind&id&agent&provider`，也不重定向旧链接；查询参数不承担页面身份。有效深链直接打开及刷新由Python返回前端入口，缺失资源、未知API和不合法页面路径保留404。离开工作项时，未提交草稿保护同时作用于点击和浏览器历史导航，取消切换保留原URL与草稿；操作中阻止切换。
+页面使用React Router显式路径：`/`、`/runs/:run`、`/runs/:run/issues/:id`或`prs/:id`，PR 审阅为`/runs/:run/prs/:id/reviews/:review`；工作项或审阅的会话层级追加`/agents/:agent/providers/:provider`。页面身份只来自路径，不解析旧`?run&kind&id&agent&provider`，也不重定向旧链接；查询参数不承担页面身份。有效深链直接打开及刷新由Python返回前端入口，缺失资源、未知API和不合法页面路径保留404。离开工作项时，未提交草稿保护同时作用于点击和浏览器历史导航，取消切换保留原URL与草稿；操作中阻止切换。
 
 ## 首页与运行事实
 

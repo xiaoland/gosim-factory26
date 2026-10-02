@@ -41,8 +41,10 @@ I12已在独立磁盘清理中终止，归档在runs/wsl-retained-20260930/；�
 I12是人工介入研究条件；旧I11摘剪接续已停止，不再用作当前生成起点。原始记录仍保留，历史页面与旧源码位置仅供追溯。
 当前Console控制与验收归 [独立任务](../../tasks/braid-console-control/packet.md)；[暂停访问历史记录](../../tasks/iteration13/console-paused-access.md)保留当时故障和接线证据，不作为I13范围。
 
-当前唯一服务直接运行在Debian-Rebuild，入口为 [Console](http://127.0.0.1:8765/)。I13-2切换后的稳定根为 `/home/yyh/.local/share/factory26/exp-console/20261001-i13-2-compatibility-release`，service ID `8cc80cad-d873-49ed-ab49-e958ba8852a3`，HTTP PID776190。Mac8765仍为原独立SSH转发；HTTP与转发均不配置自动重启。旧HTTP PID163346已退出，旧自有访问容器已停止，原manifest已退役；完整配置与journal保存到新根history并校验，旧服务不再表示当前恢复配置。
+I13-2首次部署直接运行在Debian-Rebuild，入口为 [Console](http://127.0.0.1:8765/)。该次切换后的稳定根为 `/home/yyh/.local/share/factory26/exp-console/20261001-i13-2-compatibility-release`，service ID `8cc80cad-d873-49ed-ab49-e958ba8852a3`，HTTP PID776190。Mac8765仍为原独立SSH转发；HTTP与转发均不配置自动重启。旧HTTP PID163346已退出，旧自有访问容器已停止，原manifest已退役；完整配置与journal保存到新根history并校验，旧服务不再表示当前恢复配置。
 
 当前登记四项：原`glm-root--hackathon--github-f9e238c1b698a5`与`glm-root--hackathon--sheet-a45a22ec644204`为只读archive，没有Docker控制；r2的`glm-root--hackathon--github-a94a67b4b3d85b`与`glm-root--hackathon--sheet-8046cfb0695023`为live，分别绑定各自新卷及原Braid namespace。首次失败尝试未登记到新卷。真实HTTP/UI已覆盖四项Issue、PR与sessions、两新runtime，以及隐藏祖先下后代的默认省略和单条显式展开；本次没有业务写入或生成控制。准确身份、制品和限制归[I13-2部署记录](../../tasks/iteration13/i13-2/console-deployment.md)。较早的实际Pi对话、Trace、工作区和origin读取结果仍归[阅读记录](../../tasks/braid-console-control/provider-session-reading.md)，其中旧PID和接入身份只作历史证据。
 
 每项访问容器使用原named volume及同一`volume-subpath`，保留实际消费者引用；宿主路径供GC保护，存在性在固定访问容器内核实。最终清理须关闭转发与HTTP、停止访问容器、release接入、明确移除访问容器，然后执行实验资源清理。仅停止访问容器仍占用volume；原生成runtime被移除后，材料读取可继续，物理控制单独报告不可用。创建与核对步骤归[Console README](../../braid-console/README.md)，最新部署回执归[I13-2部署记录](../../tasks/iteration13/i13-2/console-deployment.md)。
+
+2026-10-02 的审阅阅读修复已切换到 Debian-Rebuild 稳定根 `/home/yyh/.local/share/factory26/exp-console/20261002-review-sessions`，保持原 service ID `8cc80cad-d873-49ed-ab49-e958ba8852a3`、七条登记、原 binary 和访问容器绑定；当前 HTTP PID1676167，instance `8ccaaf92-02f0-4a60-904e-5564ba6957c3`。旧 HTTP 已退出，旧 manifest 已退役，配置及 journal 原字节保存在对应后继根 history，不新增访问容器、模型运行或自动启动。Mac8765仍使用原转发。PR2 → review1 → reviewer agent → provider → 原生对话/Trace、provider 深链刷新及返回审阅已实际操作；七项 Issue 与 sessions 均返回200，真实 reviewer 正文返回200。部署与边界归 [审阅阅读任务](../../tasks/console-reviewer/packet.md)。
