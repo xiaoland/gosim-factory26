@@ -15,6 +15,12 @@ python3 -m lab analyze /absolute/experiment --output /absolute/new-analysis.json
 
 配方显式冻结 authorization、controller_runtime、Local runner_runtime、jobs、max_parallel、budget.max_attempts 和 storage.host_reserve_bytes。job 声明 purpose（build/prepare/generate/evaluate）、backend、argv（托管无需 argv）、inputs、outputs 与 wall_seconds/storage_bytes/telemetry_bytes。字符串授权只记录已经取得的许可，不授予执行。`inputs` 接受显式 source，或 artifact_id/manifest_sha256 和可选源 store；独立评价还可消费 `{from_job, output}` 的已发布生成制品。命令中的 `{workspace}`、`{inputs}`、`{attempt_dir}` 和输入名由实际执行环境展开。
 
+`status EXPERIMENT` 和 `monitor EXPERIMENT` 使用同一 experiment projection。默认按目标与阶段展示当前 attempt、入口结果、执行、归档、输运、产物、阻塞及下一操作；`--json` 保留原有 attempts/execution/model_facts，并增加 targets/stages/facts/inputs/outputs/history/next_actions。job 可显式声明 `target: {"case": "github", "variant": "baseline"}`，两项均须为非空字符串。未声明 target 的评价阶段可沿唯一的 from_job 关系继承生成目标；其它 job 以原 job ID 分组，不解析命名猜比较条件。未派发阶段也会显示，输入等待列出具体 producer job 和 output。已经分配的评价 attempt 显示其实际冻结的输入，后来的生成 retry 不会使它改绑。
+
+每项事实保留 producer 原件和观察时点。Main 的 exit 0、执行终态、archive preserved、export preserved、Harness 声明 complete、collector sealed 和平台 verdict 分别成立；非零入口结果不会因 controller completed 变成成功，unknown 也不会因存在归档变成完整 prepared。发布制品的状态只核对本地 manifest 摘要、身份及内容入口，不在每次 status 重算全部 payload；消费端仍核验实际字节及语义。平台状态取对应 `/runs/RUN_ID` 的保存 GET 原件，读取 status 或导出 logs 的时间不能代替平台新鲜度。Braid/Console 缺少绑定 attempt 的公开接入观察时明确显示 unknown；不读取其私有 SQL，不从 collector 存活或 Console 配置推断 connected。
+
+Next actions 来自 controller 的公开操作判断，说明可调用命令及需重新满足的条件；保存状态不能授予启动许可。效果 unknown/pending、身份冲突和入口失败先检查原错，不能自动 retry。终态保全或 Docker 输运缺失时可给出同一 attempt 的 `control ... export`，执行时重新核对 incarnation 和物理终态。Prepared 的停止原件必须绑定同一来源；匹配旧原件仍要求 launch 重新观察。启动还须沿用真实授权和 deployment，并核验冻结 runtime、预算及资源。可以将多个现有实验目录列入 `factory26.exp.index`、schema_version=1 的 experiments 路径列表，以 `status INDEX_JSON` 一次读取；相对路径从 index 所在目录解析。这只是查询索引，不改写已有实验或替代运行关系。
+
 公开 environment 冻结模型与供应商政策，私有 deployment 只引用 credential_file/cookie_file。credential_file 为 JSON 环境映射，不能覆盖公开模型、endpoint 或 runtime 政策。`FACTORY26_MODEL_BINDINGS` 以 native provider 或 `native-provider/model-id` 选择通道，分别声明 provider、base_url、credential_env；特定模型可显式声明 model_id 别名。Harness 将按模型覆盖拆为不同原生 provider，并同步 profile 与角色，避免共享 provider 的 key 覆盖其它模型。费用模式由托管 backend 显式声明，不因 endpoint 改变。
 
 Docker endpoint、不可变 image_id、共享 slots 和 daemon 派生 admission_volume 显式冻结。接管还需 authority_handoff：全部旧派发者已停止、旧预留为空、在途窗口关闭的独立原件。`authority-handoff --endpoint JSON --writer OWNER_JSON --registry OLD_REGISTRY --authorization SCOPE --output NEW_JSON` 只读核验已明确列全的退役范围，不停止 owner 或释放槽。paused/alive 不等于退役；现有旧现场不自动迁移。

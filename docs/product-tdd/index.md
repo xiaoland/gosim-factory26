@@ -8,6 +8,8 @@
 
 开发侧新实验由 `lab.exp.controller` 组织 build、派发、控制、监控和分析。Local/Docker 的每个 attempt 由独立冻结 runner 持有实际执行、资源限额、collector 与归档；托管平台由独立 adapter 持有远端身份和 pending 请求。Controller 退出不撤销已受理执行，重入同一请求不能重跑入口。工作树旧 plan/run/operation writer 已退役，历史输入只能只读查询或显式导入，新执行不翻译旧 schema。
 
+`lab.exp.projection` 从保存的公开生产者事实构建统一实验视图，status 与 monitor 共用目标、阶段、输入依赖、当前 attempt、历史关系、产物覆盖、阻塞及操作建议。比较目标通过配方的 case/variant 显式声明；已经分配的评价不因后来生成重试而改绑。投影保留生产者身份、证据时点和原错，不保存另一份可手改的成功状态或启动采集器。Controller 提供操作建议，实际执行仍核对原冻结执行器及当前物理门控；旧停止证据、完整归档和入口成功不能互相替代。操作方法与覆盖限制见 [Lab 入口](../../lab/README.md)。
+
 执行终态、归档、遥测封口、传输和评分分别成立。Docker 在执行侧完成归档后，controller 取得并核验制品再派发依赖该应用的独立评分；设施失败保留原错及未完成阶段，不解释为有效零分。费用模式、模型、供应商与凭据来源冻结在配方，运行凭据通过私有部署引用提供。通用层不读 Braid 私有 SQL，Harness 的公开 checkpoint producer 持有恢复语义核验。
 
 Prepared 内容与来源停止证明分别发布；启动核对同一执行 instance 的当前物理停止观察和实际目标 OS、架构、runtime、logical root。当前 producer 只支持保持这些原生路径约束的装配，跨 OS/根路径迁移没有隐式文本替换。Docker 准入权威属于实际 daemon，共同卷冻结实现和容量；旧 dispatcher、预留和在途启动未明确交接时禁止新域接管。Console 工作项操作继续使用 Braid 公共 CLI，物理控制使用该 experiment 的冻结执行协议；尚无公开静止协调能力时拒绝 Console 暂停。
@@ -43,7 +45,7 @@ variants/<name>/main.py          variant/build.py + 指定工具与技能材料
 [package_agent.py](../../scripts/package_agent.py)调用所选 variant 的 build.py 装入显式材料；打包不是应用生成。
 raw 基线由 [raw_main.py](../../variants/raw/raw_main.py)独立执行，可直接使用工具资源，不必经过团队 Harness。
 
-[lab](../../lab/README.md)将外部 argv 与共享输入冻结为实验，控制器按槽位分配尝试并保存进程、操作和原始 OTLP 事实；[lab.status](../../lab/status.py)只呈现保存状态，不解释 Agent 的内部协作。不同 Harness 可直接作为外部命令运行，不需要实现设施内部接口。
+[lab](../../lab/README.md)将外部 argv 与共享输入冻结为实验，controller 分配 attempt，独立 runner 保存执行、操作和原始 OTLP 事实；`lab.exp.projection` 统一呈现保存的阶段与依赖，不解释 Agent 内部协作。不同 Harness 可直接作为外部命令运行，不需要实现设施内部接口；历史 Lab 状态读取与新实验投影分开。
 Docker 是容器执行边界，Mac 控制器和 run 记录仍持有源码及实验事实。声明 Docker 的 attempt 冻结标准 CLI 选中的 endpoint 和 daemon ID，资源操作复用该身份。本地 bind 路径保留；ARC 远程接入使用带所有权标签的 named volume、阶段子目录及 helper 传输，官方 Runner 在本地装配和解释结果。输出清单核验并发布到原 run 后才允许释放远端副本；不可达或回收失败保持 unconfirmed 并支持显式 cleanup 补采。Console 访问容器仍只支持本宿主 Unix socket context。远程 OTLP 默认在执行容器 loopback 收集并随文件回收，网络 collector 入口必须显式选择和验证。操作与限制见[本地实验](../deployment/local-experiments.md)。
 
 新 schema v3 冻结 storage policy 和稳定宿主 controller Python 依赖；attempt 分配及增加并发前核对目标文件系统 available bytes/inodes、host reserve、workspace/telemetry/finalization 及构建峰值。运行中异步观测占块，软阈值暂停派发，硬阈值受控停止进程组；外部资源仍须独立核实。历史 v1/v2 保持 legacy-unbudgeted。

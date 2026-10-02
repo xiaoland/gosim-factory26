@@ -85,6 +85,10 @@ Collector原始接收不按payload hash判业务重复。新receive保留原始�
 
 ## 消费者与切换
 
+统一 experiment projection 的读取层只消费已保存 producer 原件，保留原始身份及错误；阶段层从冻结 jobs、显式 target 和输入关系生成尚未派发及已经发生的阶段。最新 attempt 按实际 created_at 选择，历史 retry_of 保留；已分配评价的输入来自其自身冻结 attempt，而不是最新生成的输出。Manifest 摘要核对与实际内容/语义消费核验分开，缺字节或 partial 不提升保证。人类树和 JSON 共享此模型，CLI 不请求平台、运行 Docker inspect、读取原生私有 SQL 或产生另一份成功记录。
+
+Controller 提供 next_actions，包括操作对象、命令和需重验的前提。保存事实不足以确认动作时返回原错与证据入口，不制造可执行 retry；export 接续原 attempt 的保全/输运，source-stop binding 在状态解释与 launch 中复用同一核对。Source 当前观察、私有 deployment、runtime 和准入仍属于执行门控。平台新鲜度只采用绑定 run 的成功 GET 原件；telemetry sealed 不声明 producer flush，Braid/Console 没有公开绑定观察时保持 unknown。
+
 Console登记从实际executor接入manifest取得state/binary/access能力引用，重复接收不新增另一服务或容器。物理pause/resume/stop通过runner/backend固定控制接口；Braid工作项内部操作仍由Braid公共接口负责。GC消费manifest引用、活动/unknown资源与恢复承诺，缺完整扫描不回收。历史reader独立于新writer，不对旧数据默认补费用/出生身份/恢复保证。
 
 新CLI拒绝旧格式写入并指向history或明确import；没有执行参数自动翻译。旧冻结执行器/runtime只在登记的退役通道保留，不修改source/ZIP/journal。活动旧dispatcher如依赖工作树，需要切换清单明确保全或停派交接；不能删除import后让它随机失败，也不能授权它继续无边界创建旧格式新实验。

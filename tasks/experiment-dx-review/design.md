@@ -87,14 +87,14 @@ Analyze固定artifact与批次截止点、分析器版本、规则与缺口，�
 独立advisor支持完整新领域和真正独立runner，并要求停止证明外置、unknown窗口、平台能力缺口与旧执行退役边界。独立迁移调查与制品预演已整合；它们提供设计反馈，不作为实际效果验收。
 
 
-## 后续 DX 方向：意图编译与统一投影（提案，未实施）
+## 统一投影实施与后续意图编译
 
 用户进一步指出底层生产者 identity 与显式 relation 是正确基础，但开发者仍需在 task、业务实验编号、目录、job/attempt、Harness 会话、平台 submission/run 和重放之间切换。新 status/index 已能聚合保存的实验与 attempt，但不等于贯通恢复、材料、评分及 Console 的统一投影。下一轮不能继续让“先判断生产者”成为人的常规操作前提。
 
 拟承认两层定义：Experiment intent 经 compile 产生 Frozen execution recipe，后者执行产生 attempts/artifacts/evidence。Intent 声明问题、比较维度、目标、允许材料/模型/费用、资源与次数、评分及恢复政策；compiler 消费显式冻结的输入和命名政策，输出严格 recipe、选择依据、输入来源及未满足条件。Compiler 不执行模型、控制源、安装 runtime 或在线查询来隐藏缺项，不引入任意表达式/通用 DAG。I14 launch.py 的策略选择是迁入此层的具体起点；同一 frozen recipe 的运行接续仍属于 controller。
 
-人的默认入口拟以实验为中心，呈现目标行和生成/材料/评分/观测/Console各项事实，默认只需理解实验、执行尝试、证据。case/variant 保留为比较条件；job、原生会话、平台 ID 和 artifact identity 在展开证据时显示，不合并底层标识。一个入口需回答：哪个目标已完成、哪个组件阻塞、已有产物是否可消费、下一合法动作及所缺证据/授权。每项状态同时保留所属 producer、观察时点和缺口，不能把完整归档、停止证明、平台分数或 Console 接通折成单一绿色状态。关系通过公开 producer receipt 接入，不在投影层解析 Braid 私有 SQL 或新增采集循环。
+人的默认入口以实验为中心，呈现目标行和阶段、产物及观察事实，保留 case/variant 比较条件和各生产者标识。2026-10-02 用户明确“你可以开工”后，本轮实施统一 projection：status/monitor 共用读模型，未派发的阶段也可见；明确展示入口、执行、归档、输运、遥测、平台观察、产物覆盖与阻塞，controller 给出操作建议及重新核验条件。原件时点不被本次查询时间替代，已有评价保持原冻结输入，unknown 不因归档存在而变成成功。Braid/Console 尚无绑定 attempt 的公开接入观察时保持 unknown，本轮不实施这些消费者的自动登记。查询可聚合显式 index 中多个实际实验，但不从目录或 job 命名猜跨实验逻辑关系。
 
 统一工作流先复用现有 Lab CLI；Makefile 可做发现入口，但新增别名本身不能解决状态和策略碎片。Controller/runner runtime 继续独立冻结；日常准备可按明确指纹复用资产，缺资产时报告并进入显式准备动作，不退回随手选当前 Python。Console 首次服务、权限与访问环境的安装仍属于 operator，之后订阅实验公开接入 manifest 并保存接收回执；state/binary/container/mount mapping 由生产者提供和消费者核验，开发者不逐项手工交接。部署、支持宿主和读取权限仍须具体定义。
 
-这是新的方案方向，尚未授予 compiler/projection/自动 Console 接入的源码实施。当前两个真实接续门控修复独立完成，不能以其交付替代这一轮 DX 设计。后续 HLD 应先收敛一个真实恢复目标在统一投影中所需的公开事实与 relation，再决定 intent 字段及 compiler 的命名策略接口。
+当前授权和实施覆盖 projection 第一阶段，compiler、readiness 与自动 Console 接入仍是后续方案。真实恢复路径用于核对“已发生事实、未取得证明、合法操作条件”能否由同一查询解释；没有通过写入旧冻结记录、新建采集器或启动模型取得验收。下一轮从新增 I14 到可比较结果的路径再收敛 intent 字段与命名策略，不把本轮 projection 交付宣称为整个 experiment UX 已完成。

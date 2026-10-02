@@ -9,7 +9,7 @@ import sys
 import time
 import zipapp
 
-from . import artifacts
+from . import artifacts, projection
 from .core import (Blocked, atomic, canonical, digest, error, identifier, locked, new_id,
                    process_identity, process_state, public, read, record, request, require)
 
@@ -122,6 +122,8 @@ def build(spec_path, directory):
             ids.add(job_id)
             if job.get('purpose') not in {'build', 'prepare', 'generate', 'evaluate'}:
                 raise ValueError('job purpose must be build/prepare/generate/evaluate')
+            if 'target' in job:
+                projection.validate_target(job['target'])
             kind = job.get('backend', {}).get('kind')
             if kind not in {'local', 'docker', 'hosted'}:
                 raise ValueError('backend must be explicitly local/docker/hosted')
@@ -247,6 +249,22 @@ def _backend(attempt):
     return runner
 
 
+def source_stop_binding(prepared, stop):
+    """Check the saved binding; a matching record is not a current stop proof."""
+    if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 1:
+        raise Blocked('prepared artifact needs the public Harness prepared contract')
+    if not stop:
+        raise Blocked('prepared input valid; source stop evidence missing')
+    if stop.get('kind') != 'factory26.exp.stop-evidence' or stop.get('schema_version') != 1:
+        raise Blocked('new execution needs explicit source stop producer evidence')
+    source = prepared['source_identity']
+    if not isinstance(source, dict) or not source.get('execution_instance') or not isinstance(source.get('backend_identity'), dict):
+        raise Blocked('prepared source execution identity is incomplete')
+    if stop.get('source_identity') != source or stop.get('effect') != 'stopped':
+        raise Blocked('stop evidence does not bind the prepared source execution instance')
+    return source
+
+
 def _launch_gate(attempt_dir, attempt):
     job, store = attempt['job'], attempt['artifact_store']
     if 'prepared' not in job:
@@ -263,11 +281,7 @@ def _launch_gate(attempt_dir, attempt):
         raise Blocked('prepared input valid; source stop evidence missing')
     stop_path = artifacts.resolve(store, stop_ref)
     stop = read(stop_path / 'manifest.json' if stop_path.is_dir() else stop_path)
-    source = prepared['source_identity']
-    if stop.get('source_identity') != source or stop.get('effect') != 'stopped':
-        raise Blocked('stop evidence does not bind the prepared source execution instance')
-    if stop.get('kind') != 'factory26.exp.stop-evidence' or stop.get('schema_version') != 1:
-        raise Blocked('new execution needs explicit source stop producer evidence')
+    source = source_stop_binding(prepared, stop)
     # Historical stopped bytes are insufficient to rule out a restarted resource.
     from .backends import observe_source
     observation = observe_source(source, read(attempt_dir / 'deployment.json'))
@@ -478,38 +492,100 @@ def status(directory):
             except (OSError, ValueError) as exc:
                 rows.append({'source': location, 'error': error(exc)})
         return record('status-index', experiments=rows, read_at=time.time())
-    result = record('status', directory=str(directory), read_at=time.time(), experiments=[], attempts=[], blockers=[])
-    try:
-        manifest = require(read(directory / 'experiment.json'), 'experiment')
-        result.update(experiment_id=manifest['experiment_id'], jobs=manifest['jobs'], frozen=True)
-    except (OSError, ValueError) as exc:
-        result.update(frozen=False, build_error=error(exc))
-        for name in ('build-intent.json', 'build-error.json'):
-            if (directory / name).exists():
-                result[name] = read(directory / name)
+    result = projection.facts(directory, time.time())
+    if not result['frozen']:
         return public(result)
-    if (directory / 'controller.json').exists():
-        result['controller'] = read(directory / 'controller.json')
+    if 'controller' in result:
         result['controller']['physical_state'] = process_state(result['controller'])
-    for path in sorted((directory / 'attempts').glob('*')):
-        try:
-            attempt = require(read(path / 'attempt.json'), 'attempt')
-            observations = [read(path / name) for name in ('execution.json', 'remote-execution.json', 'observation.json')
-                            if (path / name).exists()]
-            observation = max(observations, key=lambda row: row.get('live_observed_at', row.get('observed_at', 0))) if observations else {'phase': 'unaccepted'}
-            row = {'attempt_id': attempt['attempt_id'], 'job_id': attempt['job_id'],
-                   'purpose': attempt['job']['purpose'], 'source': str(path), 'execution': observation,
-                   'model_facts': {'desired': attempt['job'].get('model_config', attempt['job']['backend'].get('model_config')),
-                                   'bindings': attempt['job'].get('environment', {}).get('FACTORY26_MODEL_BINDINGS'),
-                                   'runtime_selected': observation.get('model_facts', {}).get('runtime_selected', 'unknown'),
-                                   'observed': observation.get('model_facts', {}).get('observed', 'unknown')}}
-            for filename in ('allocation-error.json', 'launch-gate.json'):
-                if (path / filename).exists():
-                    row[filename] = read(path / filename)
-            result['attempts'].append(row)
-        except (OSError, ValueError) as exc:
-            result['attempts'].append({'source': str(path), 'error': error(exc)})
-    return public(result)
+    return projection.stages(result, available_actions)
+
+
+def available_actions(job, attempt, stage, value):
+    """Describe controller operations, never grant permission from saved state.
+
+    Export preserves the same entry. Retry is a separate authorized attempt.
+    Every invoked operation retains its existing frozen executor/physical gates.
+    """
+    prefix = ['python', '-m', 'lab']
+    directory = value['directory']
+    owner = value.get('controller', {})
+    alive = owner.get('phase') == 'running' and owner.get('physical_state') == 'alive'
+    owner_unknown = owner.get('phase') == 'unknown' or (owner.get('phase') == 'running' and
+                                                       owner.get('physical_state') == 'unknown')
+    def action(name, label, argv=None, requires=()):
+        return {'operation': name, 'label': label, 'argv': argv,
+                'requires': list(requires), 'basis': 'saved facts; operation revalidates current gates'}
+    if any(row.get('error') for row in value['attempts']) or owner_unknown or any(
+            issue.get('component') == 'retry' for issue in value['blockers']):
+        return [action('inspect', '核对不可读记录或 controller 出生身份；不能据此重派发')]
+    if not attempt:
+        if job.get('prepared'):
+            prepared = stage['inputs'].get('prepared', {}).get('harness', {})
+            stop = stage['inputs'].get('stop_evidence', {}).get('stop', {})
+            try:
+                source_stop_binding(prepared, stop)
+                if prepared.get('status') != 'complete':
+                    raise Blocked('prepared producer has not declared complete content')
+            except (Blocked, KeyError) as exc:
+                stage['blockers'].append({'component': 'source-gate', 'reason': str(exc),
+                                           'evidence': stage['inputs'].get('prepared', {}).get('evidence')})
+            else:
+                stage['facts']['source_stop'] = {'status': 'saved-binding-matched',
+                    'evidence': stage['inputs']['stop_evidence']['evidence'], 'current_observation': 'required-on-launch'}
+        if len(value['attempts']) + len(value.get('pending_retries', [])) >= value['budget']['max_attempts']:
+            stage['blockers'].append({'component': 'budget', 'reason': '冻结 attempt 预算已使用或预约，不能新增执行'})
+        active = [row for row in value['attempts'] if row['execution'].get('phase', row['execution'].get('execution')) not in FINISHED or
+                  row['backend'] != 'hosted' and row['execution'].get('archive') == 'pending']
+        if any(row['execution'].get('phase', row['execution'].get('execution')) == 'unknown' or row['execution'].get('pending') for row in active):
+            stage['blockers'].append({'component': 'execution', 'reason': '其它 attempt 的副作用尚未确认，controller 不继续派发'})
+        if len(active) >= value['max_parallel']:
+            stage['blockers'].append({'component': 'capacity', 'reason': '等待本实验冻结的并行额度'})
+        if stage['blockers']:
+            if alive and all(issue['component'] == 'capacity' for issue in stage['blockers']):
+                return [action('wait', '等待当前 controller 的派发额度', prefix + ['wait', directory, '--timeout', '60'])]
+            return [action('inspect', '先解决列出的前置阻塞；不能单独派发此阶段')]
+        if alive:
+            return [action('wait', '等待现有 controller 派发', prefix + ['wait', directory, '--timeout', '60'])]
+        return [action('start', '启动或接续 controller', prefix + ['start', directory],
+                       ('沿用本实验明确授权；私有 deployment 未保存时显式提供 --deployment',
+                        '重新核对冻结 runtime、输入、预算、准入及物理来源；不保证当前可派发'))]
+    observed = attempt['execution']
+    phase = observed.get('phase', observed.get('execution'))
+    if any(issue.get('component') == 'identity' for issue in attempt['errors']):
+        return [action('inspect', '保存记录身份不一致，先核对原件；不发出控制')]
+    if phase == 'unknown' or observed.get('pending') or attempt.get('allocation-error.json') or attempt.get('launch-error.json'):
+        return [action('inspect', '保留当前 attempt，先核对原始错误和缺失证明；不重跑入口')]
+    if phase not in FINISHED:
+        if alive:
+            return [action('wait', '等待当前 attempt；不新增入口', prefix + ['wait', directory, '--timeout', '60'])]
+        if stage['blockers']:
+            return [action('inspect', '先核对观察故障及当前资源身份')]
+        return [action('start', '重连接续原 attempt 的 controller', prefix + ['start', directory],
+                       ('原 runner/平台身份保持；启动操作重新核对并按原请求接续',))]
+    archive = observed.get('archive')
+    needs_export = (archive == 'failed' or attempt['backend'] == 'docker' and
+                    attempt.get('export.json', {}).get('status') != 'preserved' or
+                    isinstance(archive, dict) and archive.get('status') == 'not-exported')
+    if needs_export:
+        if alive:
+            return [action('wait', '等待当前 controller 收尾；不重跑入口', prefix + ['wait', directory, '--timeout', '60'])]
+        if not observed.get('incarnation_id'):
+            return [action('inspect', '执行 incarnation 缺失，不能发出 export 控制')]
+        return [action('export', '接续保全或输运同一 attempt，保留原入口结果',
+                       prefix + ['control', directory, attempt['attempt_id'], 'export'],
+                       ('执行时核对同一 incarnation 和物理终态；不会重新运行 main',
+                        '修复已报告的存储/输运条件；导出成功不代表 Harness prepared 完整'))]
+    if archive == 'pending':
+        return [action('wait' if alive else 'inspect', '等待或核对 runner 收尾；不能按入口退出推断保全完成')]
+    if stage['status'] == 'failed':
+        return [action('inspect', '先诊断入口失败；若确需新 attempt，另行明确 retry 授权和剩余预算')]
+    if stage['blockers']:
+        return [action('inspect', '核对剩余错误及产物覆盖，不把归档当作完整交付')]
+    missing = [output['name'] for output in job.get('outputs', [])
+               if stage['outputs'].get(output['name'], {}).get('status') != 'published']
+    if missing:
+        return [action('inspect', '核对尚未发布的声明输出：' + ', '.join(missing))]
+    return [action('consume', '读取已发布产物；消费端重新核验字节、语义及来源门控')]
 
 
 def _ingest_telemetry(path):
@@ -626,18 +702,7 @@ def retry(directory, attempt_id, authorization, *, request_id=None):
 
 
 def render(value):
-    if value.get('kind') == 'factory26.exp.status-index':
-        return '\n\n'.join(render(row) for row in value['experiments'])
-    lines = [f"实验 {value.get('experiment_id', value.get('directory', '?'))} · 冻结 {value.get('frozen', False)}"]
-    if value.get('build_error'):
-        lines.append('准备：' + json.dumps(value['build_error'], ensure_ascii=False))
-    for row in value.get('attempts', []):
-        execution = row.get('execution', {})
-        lines.append(f"{row.get('job_id', '?')} / {row.get('attempt_id', '?')}: {execution.get('phase', 'unknown')}")
-        for name in ('error', 'allocation-error.json'):
-            if row.get(name) or execution.get(name):
-                lines.append(json.dumps(row.get(name) or execution[name], ensure_ascii=False))
-    return '\n'.join(lines)
+    return projection.render(value)
 
 
 if __name__ == '__main__':

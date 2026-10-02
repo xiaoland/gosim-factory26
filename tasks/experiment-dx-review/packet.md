@@ -125,3 +125,17 @@ Harness checkpoint/validate/prepare 是公开、离线、版本化 producer。Pr
 实际离线prepare监督故障修复：home-fix attempt-e2c989263d851bb93a0454dd报process group member birth identity unavailable，旧异常没有成员PID/原process_error，无法追认哪一子进程消失。独立exact-resource inspect确认原container5ac55bac…exited、Pid0、OOMKilled=false、networknone；监督器exit0不等于入口exit0。owner导出没有harness manifest/readback，不能提升为prepared，旧unknown与半成品保持。
 
 runner定向修正ps快照到birth读取之间的竞态：仅在新ps查询无成员且出生观察process_state=lost，或明确已非同组/僵尸时跳过；仍活动且无法识别的成员保持Blocked并保存PID、身份缺项及当前ps原错。入口wait/poll实际退出码在组和外部资源收尾之前独立持久化，不因辅助监督失败丢失。Docker backend_identity的kind在resource原件展开之后显式赋docker，修复两个生产路径的metadata覆盖；旧冻结source不宽松别名或原件改写。源码编译与差异检查通过，可由原owner重新冻结修正runner执行一次明确获授权的纯断网prepare；本会话不自行重派发，下一实际结果用于效果反馈。实物及源码摘要位于real-handoff-20261002/runner-birth-failure/repair-readiness.json。
+
+
+## 统一 experiment projection 开工（2026-10-02）
+
+用户在审阅 projection → compiler → readiness 的建议及本会话判断后明确“你可以开工”。本轮实施统一公开读模型及 Lab status/monitor 的人类视图：显式目标/阶段、未派发依赖、当前 attempt 与历史关系、入口/执行/归档/输运/可消费产物、证据时点和缺口、controller 提供的下一操作及执行前重验条件。优先消费真实 r4 恢复原件，不通过合并 identity、推断命名或重写旧冻结记录制造完整状态。recipe 只增加必要的显式目标元数据，compiler/readiness/Console 自动登记仍留在后续。
+
+实施由本会话负责 lab.exp 及相关文档，不接管原恢复 owner，不启动模型、写官网、控制旧来源、部署 Console 或新增采集器。沿用自主提交授权，只提交本轮增量。验证采用编译及对真实现存记录的只读操作，保存输出与事实差异；不编写或运行设施测试、自检、探针及 synthetic fixture。
+
+
+本轮 projection 已实现，入口为当前工作树的 `python -m lab status EXPERIMENT [--json]` 与同义只读 monitor；它们可以消费已冻结的新协议目录，不修改目录内的旧程序。新 build 会冻结 projection 及显式 target；旧冻结程序自己的查询呈现不自动升级。Compiler/readiness/Console 自动接入尚未实施。跨目录读取复用显式 index，不推断跨实验语义关系。
+
+真实只读反馈保存于 `runs/experiment-dx-review/projection-20261002/`：existing-experiments.json、status.txt/status.json、monitor.json 和 readback.json。六个实际目录包括 r4 offline-ready、r2、final、home-fix、hosted-own 及本任务 offline-evidence-final2。实际 offline-ready 的 entry exit 0 与 archive preserved 保持，同时 Docker cp 的 300 秒原超时和缺少本地输出导致阶段 blocked，下一操作是同 attempt export，附 incarnation/物理终态/输运条件重验要求；没有执行该命令。r2/final 的 entry exit 1 不被 controller completed 提升成功，home-fix 仍 unknown；实际成功归档则可读取发布产物。平台状态沿绑定 run 的成功 GET 原件呈现；没有新的平台采集。
+
+所有 lab.exp 源码内存编译及差异检查通过；查询前后列明的冻结 experiment.json 摘要未变。真实现存配方没有 case/variant 元数据或 from_job 评价关系，这两条路径尚无真实运行反馈，不能宣称生命周期验收完成。状态解释覆盖与实际物理执行效果分开；本轮未启动模型、控制旧现场、改原件、运行设施测试/探针或部署 Console。原恢复 owner 的 hosted latest 修复与 requirements 迁移独立进行，本提交不包含其源码。
