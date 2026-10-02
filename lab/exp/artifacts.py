@@ -1,4 +1,6 @@
 """Immutable artifact publication and verified, environment-local resolution."""
+import hashlib
+import json
 import os
 from pathlib import Path
 import shutil
@@ -54,15 +56,25 @@ def publish(store, source, artifact_type, provenance=None, capabilities=None):
         raise
 
 
-def verify(store, ref):
+def _manifest(store, ref):
+    """Authenticate the declared identity without claiming payload verification."""
     artifact_id = identifier(ref['artifact_id'])
     root = Path(store).resolve(strict=True) / artifact_id
     if root.is_symlink() or (root / 'payload').is_symlink() or (root / 'manifest.json').is_symlink():
         raise ValueError('artifact identity cannot redirect through links')
-    if digest(root / 'manifest.json') != ref['manifest_sha256']:
+    source = (root / 'manifest.json').read_bytes()
+    if hashlib.sha256(source).hexdigest() != ref['manifest_sha256']:
         raise ValueError('artifact manifest content changed')
-    manifest = require(read(root / 'manifest.json'), 'artifact')
-    if manifest['artifact_id'] != artifact_id or contents(root / 'payload') != manifest['contents']:
+    manifest = require(json.loads(source), 'artifact')
+    if manifest['artifact_id'] != artifact_id or manifest['contents']['kind'] not in {'file', 'directory'}:
+        raise ValueError('artifact identity or content kind differs from published manifest')
+    return manifest
+
+
+def verify(store, ref):
+    manifest = _manifest(store, ref)
+    root = Path(store).resolve(strict=True) / manifest['artifact_id']
+    if contents(root / 'payload') != manifest['contents']:
         raise ValueError('artifact contents or identity differs from published manifest')
     return manifest
 
@@ -89,11 +101,13 @@ def resolve(store, ref, path='.'):
 
 
 def materialize(store, ref, destination):
-    """Copy verified content without silently binding external link targets."""
-    manifest = verify(store, ref)
+    """Verify received bytes before publication, without pre-reading the source."""
+    manifest = _manifest(store, ref)
     source = Path(store).resolve() / ref['artifact_id'] / 'payload'
     destination = Path(destination)
-    if destination.exists() or destination.is_symlink():
+    if destination.is_symlink():
+        raise ValueError('artifact destination cannot redirect through a link')
+    if destination.exists():
         if contents(destination) != manifest['contents']:
             raise ValueError('existing input materialization differs from artifact')
         return destination
@@ -123,14 +137,14 @@ def import_evidence(store, source, *, evidence_type='evidence', provenance=None,
 
 
 def transfer(source_store, destination_store, ref):
-    """Move a verified published identity between stores without republishing it."""
-    verify(source_store, ref)
+    """Preserve identity and verify the receiving store, including on reentry."""
     destination_store = Path(destination_store).resolve()
     target = destination_store / identifier(ref['artifact_id'])
     with locked(destination_store / '.transfer.lock'):
-        if target.exists():
+        if target.exists() or target.is_symlink():
             verify(destination_store, ref)
             return ref
+        _manifest(source_store, ref)
         staging = destination_store / '.incoming' / new_id('transfer')
         staging.mkdir(parents=True, mode=0o700)
         shutil.copytree(Path(source_store).resolve() / ref['artifact_id'], staging / ref['artifact_id'], symlinks=True)

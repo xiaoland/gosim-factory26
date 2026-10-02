@@ -74,6 +74,7 @@ def inspect(recipe_path, deployment=None):
     for job in spec['jobs']:
         row = {'job_id': job['id'], 'purpose': job['purpose'], 'target': job.get('target'),
                'assets': [], 'blockers': [], 'backend': job['backend']['kind']}
+        input_paths = {}
         bindings = dict(job.get('inputs', {}))
         bindings.update({name: job[name] for name in ('prepared', 'checkpoint', 'stop_evidence') if name in job})
         for name, binding in bindings.items():
@@ -86,10 +87,12 @@ def inspect(recipe_path, deployment=None):
                     source = (base / (binding if isinstance(binding, str) else binding['source'])).resolve(strict=True)
                     if isinstance(binding, dict) and 'source_identity' in binding and artifacts.contents(source) != binding['source_identity']:
                         raise ValueError('compiled source bytes changed')
+                    input_paths[name] = source
                     item.update(status='present', source=str(source), identity_pinned=isinstance(binding, dict) and 'source_identity' in binding)
                 else:
                     store = (base / binding.get('store', 'artifacts')).resolve(strict=True)
                     manifest = artifacts.verify(store, binding)
+                    input_paths[name] = store / manifest['artifact_id'] / 'payload'
                     item.update(status='verified', artifact_id=manifest['artifact_id'], type=manifest['type'])
             except (OSError, ValueError, KeyError) as exc:
                 item.update(status='unavailable', error=error(exc))
@@ -98,9 +101,11 @@ def inspect(recipe_path, deployment=None):
         backend = job['backend']
         if job.get('prepared'):
             try:
-                prepared_path = _input_path(base, job['prepared'])
+                if 'prepared' not in input_paths or job.get('stop_evidence') and 'stop_evidence' not in input_paths:
+                    raise controller.Blocked('source gate needs available prepared/stop inputs; see asset errors')
+                prepared_path = input_paths['prepared']
                 prepared = read(prepared_path / 'harness-manifest.json' if prepared_path.is_dir() else prepared_path)
-                stop_path = _input_path(base, job['stop_evidence']) if job.get('stop_evidence') else None
+                stop_path = input_paths.get('stop_evidence')
                 stop = read(stop_path / 'manifest.json' if stop_path.is_dir() else stop_path) if stop_path else {}
                 controller.source_stop_binding(prepared, stop)
                 if prepared.get('status') != 'complete':
@@ -135,14 +140,6 @@ def inspect(recipe_path, deployment=None):
         row['asset_readiness'] = 'blocked' if row['blockers'] or result['blockers'] else 'observed'
         result['jobs'].append(row)
     return public(result)
-
-
-def _input_path(base, binding):
-    if isinstance(binding, str):
-        return (base / binding).resolve(strict=True)
-    if 'source' in binding:
-        return (base / binding['source']).resolve(strict=True)
-    return artifacts.resolve((base / binding.get('store', 'artifacts')).resolve(strict=True), binding)
 
 
 def _docker(target):

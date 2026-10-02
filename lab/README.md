@@ -3,17 +3,21 @@
 新实验只使用 `factory26.exp.experiment` schema 1。Controller 组织构建、派发、控制、监控和分析；Local/Docker 的独立 runner 持有单个 attempt 的入口、资源限额、原始采集和保全。托管 adapter 持有平台身份与 pending 写入。旧 plan/run/operation writer 已从工作树退役，历史材料通过 `history` 或专用只读 reader 消费；不翻译成新执行。
 
 ```sh
-python3 scripts/runtime.py host-exp --python /absolute/python --purpose controller --output /absolute/controller-runtime
-python3 scripts/runtime.py host-exp --python /absolute/python --purpose runner --output /absolute/runner-runtime
-python3 -m lab compile /absolute/intent.json --directory /absolute/compiled
-python3 -m lab doctor /absolute/compiled/recipe.json --deployment /absolute/private-deployment.json
-python3 -m lab build /absolute/compiled/recipe.json --directory /absolute/experiment
-python3 -m lab start /absolute/experiment --deployment /absolute/private-deployment.json
-python3 -m lab status /absolute/experiment --json
-python3 -m lab control /absolute/experiment ATTEMPT stop --request-id REQUEST
-python3 -m lab stop-evidence /absolute/experiment ATTEMPT --output /absolute/stop.json
-python3 -m lab analyze /absolute/experiment --output /absolute/new-analysis.json
+python3 scripts/runtime.py host-exp --python /absolute/python --purpose controller --output runs/assets/controller-runtime
+python3 scripts/runtime.py host-exp --python /absolute/python --purpose runner --output runs/assets/runner-runtime
+python3 -m lab compile experiments/EXPERIMENT/intent.json --directory experiments/EXPERIMENT/compiled/VERSION
+python3 -m lab doctor experiments/EXPERIMENT/compiled/VERSION/recipe.json --deployment /absolute/private-deployment.json
+python3 -m lab build experiments/EXPERIMENT/compiled/VERSION/recipe.json --directory runs/EXPERIMENT/EXECUTION
+python3 -m lab start runs/EXPERIMENT/EXECUTION --deployment /absolute/private-deployment.json
+python3 -m lab status runs/EXPERIMENT/EXECUTION --json
+python3 -m lab control runs/EXPERIMENT/EXECUTION ATTEMPT stop --request-id REQUEST
+python3 -m lab stop-evidence runs/EXPERIMENT/EXECUTION ATTEMPT --output /absolute/stop.json
+python3 -m lab analyze runs/EXPERIMENT/EXECUTION --output /absolute/new-analysis.json
 ```
+
+定义与运行数据分开存放。`experiments/` 保存可维护的 intent、原始 recipe 和冻结 compilation bundle；`runs/` 保存 runtime 资产、每次 build 的执行计划、attempt、制品、遥测和回执。一个定义可以建立多个独立运行目录，不为重试修改原定义。Build 拒绝把运行数据放进其冻结 compilation bundle，或让运行目录包含源定义；compile 同样拒绝覆盖其 intent 所在位置。已有运行目录仍可按原配方重入，不搬迁历史现场。
+
+新运行的 `experiment.json.definition` 显式保存源路径、消费字节 SHA 和定义快照的 artifact 引用；`recipe_sha256` 保持同一身份。源路径供人定位，运行中只核验冻结快照，不依赖定义文件持续存在。`status --json` 展示这条关系；旧记录缺少它时返回 unknown，不补造来源。快照是运行证据，后续修改从定义入口开始，不能把快照或运行计划当作可编辑配置。
 
 ## 从实验意图到冻结配方
 
@@ -31,7 +35,7 @@ Compiler 冻结源输入内容身份、runtime/handoff 描述摘要、评分原�
 
 ## 只读 readiness
 
-`doctor RECIPE_OR_EXPERIMENT [--deployment PRIVATE_JSON] [--json]` 聚合本机容量、冻结 controller/runner runtime 身份、输入制品与 producer 原件、模型凭据变量覆盖，以及声明 Docker daemon/image/slots/handoff 的现场读回。查询原配方使用源材料，查询已 build 的目录使用其发布制品。Prepared 和 stop 原件核对保存的来源绑定，启动仍独立重验当前来源。工具缓存没有独立声明时保持 unknown，不通过扫描任意目录猜可用。
+`doctor RECIPE_OR_EXPERIMENT [--deployment PRIVATE_JSON] [--json]` 聚合本机容量、冻结 controller/runner runtime 身份、输入制品与 producer 原件、模型凭据变量覆盖，以及声明 Docker daemon/image/slots/handoff 的现场读回。查询原配方使用源材料，查询已 build 的目录使用其发布制品。同一查询中已核验的 prepared/stop 制品路径用于来源元数据读取，不在该步骤重复全量哈希；不跨查询缓存内容证明。Prepared 和 stop 原件核对保存的来源绑定，启动仍独立重验当前来源。工具缓存没有独立声明时保持 unknown，不通过扫描任意目录猜可用。
 
 Doctor 只执行 Docker info/image inspect/ps/volume ls/inspect；不调用会修改状态的 authority helper，不创建容器、初始化卷、释放预约、安装工具或请求官网。首次域的卷尚未初始化可显示 not-initialized，但仅由实际 dispatch 重验后创建。Declared slots 与当前可用 slots 分开：后者缺少只读预约合同，明确 unknown。Runner 镜像内 Python 和供应商实际能力未被执行验证；报告 observed/blocked 不等于可以启动。Start 继续核对物理准入、预算、凭据、来源与授权。
 
@@ -56,6 +60,8 @@ Docker endpoint、不可变 image_id、共享 slots 和 daemon 派生 admission_
 Docker 离线 job 显式设置 backend.network="none"，create 记录在 attempt/docker-create-intent.json 并传入 `--network none`；资源读回核对 HostConfig.NetworkMode 及 NetworkSettings.Networks，不仅根据 prepare-only 名称推断断网。未声明 network 的生成 job 保持 Docker 默认联网。首版不接受其它显式 network 值。
 
 `control ... export` 仅接续终态保全和输运。`retry ... --authorization SCOPE --request-id REQUEST` 在冻结 attempt 预算内登记明确的新 attempt，再用 `start` 接续 controller。未知效果不授权新入口；重复原 dispatch request 不重跑 main。执行退出、归档、遥测封口、producer flush、输运和评分分别报告。Controller completed 只表示声明执行和证据流程结束，outcome 与平台评分仍独立。
+
+制品复制以接收结果为完整性边界：export/transfer 先认证源 manifest 的引用摘要、身份及路径，再对收到的字节完整计算哈希；匹配后才发布目标，不在复制前全量预读源 payload。独立 verify 与 evidence/resolve 仍核对源字节。已完成的 transfer 重入只核验目的 store，不要求源仍可读；export 重入核对已有目标与源 manifest，不重新复制。校验失败的 staging 不发布，源和半成品保留。该改动省去源预读，实际物理复制和目标全量核验仍存在，不是长期缓存或增量传输。
 
 制品用 `artifact import/verify/export/transfer` 发布、核验及装配，`evidence` 按受限 member/字节游标读取。导入历史字节不会取得新执行证明。`telemetry snapshot/batches/export/ingest` 保留 stream/epoch/源序列、原始 protobuf 与错误；摄取同源批次幂等，冲突原件保留。Analyze 固定原件摘要和采集截止点；没有调用身份时模型用量明确未知，不从原始批次数推导 token 或费用。
 

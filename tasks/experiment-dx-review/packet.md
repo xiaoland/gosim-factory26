@@ -2,6 +2,8 @@
 
 2026-10-02，用户要求继续分析 `codex://threads/01a0f23c-a2bc-7800-a5b0-847d29845cd2` 及实验相关子 Agent 会话，找出确定性设施应承接的操作及 DX 改进。最初授权为调查与方案；随后用户认可 hard-cutoff 完整基线并明确“开工；你可以自由提交”。当前源码实施和实际离线反馈见文末；历史阶段记录不作为当前待开工状态。
 
+当前工作区为独立 feat/infrastructure-dx；第一批去除语义链接遍历哈希与开发入口修正已提交。本轮用户“好的，推进改进”后继续制品复制边界、doctor 的当次核验复用、定义与运行数据分离和打包双读优化。主验收改为打包、启动、热恢复的端到端耗时；当前局部反馈不代表三条路径已完成验收，范围及证据归文末。原工作区其它 owner 的在途 producer/hosted 源码没有带入本分支，不在这里启动恢复生成或写官网。
+
 ## 调查范围和证据
 
 读取主会话从 2026-10-01 13:12 起至 2026-10-02 本轮读取快照的 26 个 turn，其中 18 个含有效用户/操作/答复记录，共有 551 条 commandExecution。还读取以下 8 个实验相关子 Agent/独立会话的相关 turn。数量只描述取样范围，其中包括必要调查、实现与验收，不能解释为浪费次数或节省空间；未读取整个项目所有历史会话，也未将推理记录用于归因。
@@ -181,3 +183,27 @@ Compiler/readiness 已实施。公共 compile 输出 intent/recipe/compilation�
 真实 r4 prepared 的 semantic-before/after 原件完全匹配 producer，manifest 摘要未变；单次顺序调用约56.84秒→15.41秒，文件缓存未控制，不能解释成稳定性能倍率。当前分支对已有 final3 冻结实验实际 build reentry 返回成功，约31.27秒，experiment.json 前后摘要相同，没有新 artifact/attempt。证据归 runs/infrastructure-dx/first-cut/receipt.json、semantic-before.json、semantic-after.json、build-reentry.json 和 make-help.txt。修改模块编译及差异检查通过；未运行设施测试、合成材料或模型。由于该分支未带入其它 owner 在途的 legacy-source producer 变更，本轮反馈为真实内容的 semantic_readback，不宣称新分支完整 legacy 恢复启动已验收。
 
 当前已完成这批局部优化；跨阶段语义回执复用、发布存储的真实不可变性、减少全量复制与包传输仍待实施。后续沿本分支/本 worktree 接续，先按实际边界定义证明失效条件与目标装配生命周期，不能增加更多层校验回执后反而扩大流程。
+
+
+## 复制边界与当次证明复用（2026-10-02）
+
+用户明确“好的，推进改进”，本轮沿 feat/infrastructure-dx 改进 artifacts 的 export/transfer 以及 readiness。独立 advisor 派发仍因 agent thread limit reached 未受理；改动保持已同意的传输目标完整性边界，不引入跨阶段长期缓存或新的产品权限。Manifest 认证与 payload 核验分开，前者不能声称后者成立。复制前认证 manifest/ID/根路径，复制后的 staging 完整核验，匹配才发布；独立 verify/resolve 保留全量检查。已有 transfer 目标重入先完整核验目的 store，取消对源仍存在的依赖。Doctor 同一次 asset 核验后的路径供 producer 元数据读取，避免 source gate 再哈希 prepared/stop；失败资产不进入该读取。
+
+实际反馈采用原现存 final3 实验、720307829字节 agent ZIP 与真实 prepared，原件保存于本 worktree 的 runs/infrastructure-dx/transport。对源只读、对新证据目录导出/传输；没有触发 controller/runner main、源停止、模型、官网或 Console。验证仍不用设施测试、合成损坏 fixture 或 probe。实际物理复制和目标全量核验仍保留；没有把这批提交宣称为跨阶段语义回执、COW 装配或增量上传已经完成。
+
+
+本轮已取得实际反馈：doctor 前后 jobs/runtimes/blockers 完全一致，仍明确缺少 deployment 的阻塞；单次顺序读取约52.30秒→38.70秒。720MB ZIP 两次新导出均通过目标内容核验，重入没有再次复制；本次原实现约1.25秒、新实现约2.55秒，未观察到新复制的墙钟提速，不能将减少一次源预读等同稳定性能收益。真实 prepared transfer 约103.45秒，目的 store 重入约27.03秒；artifact_id、返回引用和源/目标 manifest 摘要均一致，原 experiment.json 摘要未变。新独立 verify 与有界 evidence 读取成功，仍通过全量源/目标字节验证。具体操作、原错/输出及结论归 transport/receipt.json。
+
+所有 lab.exp 模块编译及本轮差异检查通过；没有设施测试、合成损坏/缺源场景或 native runner 装配启动。因此缺源重入与目标损坏失败窗口的结论来自明确控制流及保留的校验，未取得这些错误场景的真实现场反馈。实际复制总字节没有重新遍历来计数，上传没有进入本轮。另收到原恢复 owner 的协调消息，声明其主工作区 worker 正持有 backends.py/__main__.py 的新官网停止来源接缝；本分支本轮只改 artifacts/readiness，不合入其未提交修改，主线效果以其原 packet 为准。
+
+## 最新验收标准与定义边界（2026-10-02）
+
+用户补充“提示：运行数据和运行定义分离”，随后明确“关键验收标准：缩小打包、启动运行、热修复恢复运行的耗时”。这取代以命令收敛或减少哈希次数作为主验收的口径；主指标是三条路径的端到端时间，阶段反馈用于定位瓶颈。目前 doctor 与 transfer 重入的实测不构成整体验收，首次 export 未观察到提速。
+
+已落实定义消费关系与路径边界，文档明确 experiments 保存定义、runs 保存运行数据。真实旧离线交接 recipe 原字节另存独立定义位置，build 与重入成功，status 展示 source/SHA/artifact，原定义身份未改变；证据 `runs/infrastructure-dx/separation/receipt.json`。本次未启动该 job，离线小材料 build 不作为代表性启动耗时。
+
+沿真实打包路径发现通用打包器双读文件且再次压缩内嵌 ZIP，改为边写边哈希，正在用现有真实恢复包重新打包取得反馈。曾比较内嵌 ZIP 直接存储：62.45s→49.22s，但包增大20.5MB；上传低于约1.55MB/s会抵消节省，已撤回该编码变化，保持原压缩策略。未新增校验缓存或另一套恢复编排，未启动模型、写平台、停止来源或覆盖其它会话的恢复改动。
+
+真实恢复包已有 stage 的打包反馈已完成：保留原压缩策略的流式版本62.45s→57.49s，约减少7.9%；两版manifest、实际文件字节和权限完整读回一致。单次顺序操作、OS缓存未控制，不能当稳定基准或覆盖runtime/stage构建。直接存储ZIP候选已撤回，保留原件与取舍依据；最终证据 `runs/infrastructure-dx/packaging/receipt.json`。源码编译和diff检查通过，未添加或运行设施测试。
+
+下一步主路径仍为runtime/stage装配、启动前重复材料扫描以及热修复的包重建/上传/prepare/入口确认。启动与完整热恢复尚未取得本分支的可比端到端反馈；原主线执行owner报告转为新的I14干净起点实验，该报告不授予本分支接管或恢复旧运行。这里只保留其文件归属和实际原件入口，不将旧热恢复当成本轮验收对象。

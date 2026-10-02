@@ -1,4 +1,5 @@
 """One experiment owner; execution effects belong to independent executors."""
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -151,24 +152,30 @@ def validate_recipe(spec):
 
 def build(spec_path, directory):
     spec_path, directory = Path(spec_path).resolve(strict=True), Path(directory).resolve()
-    spec = require(read(spec_path), 'experiment')
+    definition_bytes = spec_path.read_bytes()
+    recipe_sha256 = hashlib.sha256(definition_bytes).hexdigest()
+    spec = require(json.loads(definition_bytes), 'experiment')
     validate_recipe(spec)
     if (directory / 'experiment.json').exists():
         manifest = require(read(directory / 'experiment.json'), 'experiment')
-        if manifest['recipe_sha256'] != digest(spec_path):
+        if manifest['recipe_sha256'] != recipe_sha256:
             raise ValueError('experiment specification changed; build a new experiment')
         verify(directory)
         return manifest
+    if spec_path.is_relative_to(directory):
+        raise ValueError('run data directory cannot contain its source definition')
+    if spec.get('compilation') and (directory.is_relative_to(spec_path.parent) or spec_path.parent.is_relative_to(directory)):
+        raise ValueError('run data and frozen compilation bundle must use separate directories')
     for source, expected in spec.get('compilation', {}).get('files', {}).items():
         if digest(source) != expected:
             raise ValueError('compiled input descriptor changed: ' + source)
     directory.mkdir(parents=True, mode=0o700, exist_ok=True)
     os.chmod(directory, 0o700)
-    if (directory / 'build-intent.json').exists() and read(directory / 'build-intent.json')['recipe_sha256'] != digest(spec_path):
+    if (directory / 'build-intent.json').exists() and read(directory / 'build-intent.json')['recipe_sha256'] != recipe_sha256:
         raise ValueError('incomplete build belongs to a different recipe')
     if (directory / 'build-error.json').exists():
         (directory / 'build-error.json').rename(directory / ('build-error-' + new_id('receipt') + '.json'))
-    atomic(directory / 'build-intent.json', record('build', recipe_sha256=digest(spec_path),
+    atomic(directory / 'build-intent.json', record('build', recipe_sha256=recipe_sha256,
                                                   started_at=time.time(), phase='building'))
     store = directory / 'artifacts'
     bindings_path = directory / 'build-bindings.json'
@@ -186,6 +193,9 @@ def build(spec_path, directory):
         atomic(bindings_path, bindings)
         return ref
     try:
+        definition_snapshot = publish_input('definition', spec_path, 'experiment-definition',
+            {'source': str(spec_path), 'recipe_sha256': recipe_sha256},
+            {'kind': 'file', 'sha256': recipe_sha256, 'executable': bool(spec_path.stat().st_mode & 0o111)})
         compilation_evidence = {}
         for source, expected_sha256 in spec.get('compilation', {}).get('files', {}).items():
             origin = Path(source)
@@ -211,7 +221,7 @@ def build(spec_path, directory):
                     if isinstance(value, dict) and 'source_identity' in value and artifacts.contents(origin) != value['source_identity']:
                         raise ValueError('compiled source input changed: ' + job_id + '/' + name)
                     inputs[name] = publish_input(job_id + '/input/' + name, origin, 'input',
-                        {'recipe_sha256': digest(spec_path), 'job_id': job_id, 'name': name},
+                        {'recipe_sha256': recipe_sha256, 'job_id': job_id, 'name': name},
                         value.get('source_identity') if isinstance(value, dict) else None)
                 elif isinstance(value, dict) and 'artifact_id' in value:
                     ref = {key: value[key] for key in ('artifact_id', 'manifest_sha256')}
@@ -265,7 +275,9 @@ def build(spec_path, directory):
         experiment_id = identifier(spec.get('experiment_id') or new_id('experiment'))
         value = record('experiment', experiment_id=experiment_id, authorization=spec['authorization'],
                        jobs=jobs, budget=spec['budget'], storage=spec['storage'], max_parallel=spec['max_parallel'],
-                       recipe_sha256=digest(spec_path), controller_runtime=runtime,
+                       recipe_sha256=recipe_sha256,
+                       definition={'source': str(spec_path), 'sha256': recipe_sha256, 'artifact': definition_snapshot},
+                       controller_runtime=runtime,
                        runner_runtime=runner_runtime,
                        code=code, runner_sha256=digest(directory / 'runner.pyz'), created_at=time.time(),
                        labels=spec.get('labels', {}))
@@ -274,7 +286,7 @@ def build(spec_path, directory):
             value['compilation_evidence'] = compilation_evidence
         atomic(directory / 'experiment.json', value)
         atomic(directory / 'build-intent.json', record('build', phase='published',
-              experiment_id=experiment_id, recipe_sha256=digest(spec_path), finished_at=time.time()))
+              experiment_id=experiment_id, recipe_sha256=recipe_sha256, finished_at=time.time()))
         return public(value)
     except BaseException as exc:
         atomic(directory / 'build-error.json', error(exc))
@@ -297,6 +309,11 @@ def verify(directory):
         if digest(Path(runner_runtime['launcher']).resolve(strict=True)) != runner_runtime['interpreter_sha256']:
             raise ValueError('runner interpreter changed')
     store = directory / 'artifacts'
+    if value.get('definition'):
+        definition = value['definition']
+        snapshot = artifacts.verify(store, definition['artifact'])
+        if snapshot['contents']['kind'] != 'file' or snapshot['contents']['sha256'] != definition['sha256'] or definition['sha256'] != value['recipe_sha256']:
+            raise ValueError('consumed definition snapshot differs from the recorded recipe identity')
     code_manifest = artifacts.verify(store, value['code'])
     if artifacts.contents(directory / 'source') != code_manifest['contents']:
         raise ValueError('installed executor code differs from frozen artifact')

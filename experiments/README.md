@@ -2,6 +2,8 @@
 
 variant 是独立维护的 Harness；实验是一项问题及其冻结比较条件；run 是一次实际执行。名字供人查找，源码、包、应用摘要与实际 ID 负责身份。维护入口见 [Variant 索引](../variants/README.md)，运行命令见 [Lab](../lab/README.md)与 [ARC 运行说明](../docs/deployment/index.md)。
 
+`experiments/<实验>/` 保存 intent、recipe 和冻结编译结果；实际 build/start 使用独立的 `runs/<实验>/<执行>/`。运行目录包含冻结执行计划、定义消费快照、attempt、artifact、telemetry 与回执，不向定义目录写状态。多个执行可引用同一定义；重试和恢复沿运行记录接续，改变定义则建立新运行。定义中引用外部资产的身份，原始包、runtime 和私有 deployment 留在 `runs/` 或显式仓库外位置，不复制进定义目录。历史目录保持原状，新写入遵守此边界。
+
 ## 登记下一项实验
 
 在所属 `tasks/<task>/experiments.md` 写清问题、授权、case、冻结输入、计划次数和完成条件，再把记录链接加入此处。编号采用 `eYYYYMMDD-NN`，日期取首次登记的 Asia/Shanghai 日期，同日序号查重后分配，不复用；它不替换 lab 自动生成的 `exp-...` ID。可以在外层目录追加问题简述，编号本身保持稳定。

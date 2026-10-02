@@ -195,6 +195,7 @@ def facts(directory, read_at):
         manifest = require(read(directory / 'experiment.json'), 'experiment')
         result.update(experiment_id=manifest['experiment_id'], jobs=manifest['jobs'],
                       labels=manifest.get('labels', {}), frozen=True,
+                      recipe_sha256=manifest['recipe_sha256'], definition=manifest.get('definition'),
                       budget=manifest['budget'], max_parallel=manifest['max_parallel'])
     except (OSError, ValueError, KeyError) as exc:
         result.update(frozen=False, build_error=error(exc))

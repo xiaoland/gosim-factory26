@@ -101,3 +101,14 @@ Console登记从实际executor接入manifest取得state/binary/access能力引�
 公共 compiler 消费 schema 1 intent，生成当前严格 experiment recipe；操作及字段合同归 [Lab](../../lab/README.md)。显式目标和命名政策承担高层选择，低层模板继续承担执行细节。模型与评价费用独立，from_generation 编译为 from_job/output，不建立任意 DAG。输入字节身份在 compile 冻结，在 build 前与实际发布后均核对；评分快照、runtime/handoff 描述发布成 compilation_evidence 制品。Compiler 源码摘要参与 bundle 重入身份，变化须新 bundle，不改已有实验。
 
 Readiness 查询原 recipe 或已 build manifest，复用冻结 runtime、artifact 和来源停止绑定验证，读取声明 Docker endpoint 的白名单字段。它不调用 admission.authority：该函数会建立 helper 并调和预约，不能包装成只读查询。当前可用 slots 无只读合同，保持 unknown；声明容量和观察到的 workload 分别保存。首次域缺失卷显示尚未初始化，创建只能由实际 dispatch 重验后进行。Doctor 的资产事实不替代 start 的当前来源、预算、平台、凭据及物理准入门控。
+
+
+制品复制分开 manifest 认证与 payload 核验。认证只证明引用摘要、record/ID 和根路径，不能据此声称源 payload 已核验。Materialize/transfer 在 staging 目标上完整核验声明内容后才发布；源变化造成收到的字节不匹配时仍拒绝。独立 verify/resolve 保留源全量核验，复制路径不预读源 payload。Transfer 目的 store 已存在时先核验目的结果并返回同一引用，不因来源移除而要求重新传输；没有引入以 stat/mtime 为依据的缓存。Doctor 的 asset 核验结果仅在当前查询中供来源元数据读取复用。
+
+## 定义、运行数据与耗时验收
+
+运行定义归 `experiments/`，运行数据归 `runs/`；Lab 作为通用执行器使用显式路径，并拒绝新运行目录与冻结 compilation bundle 重叠。新 build 将实际消费的原始 recipe 字节发布为小型定义快照，记录源路径、SHA 和 artifact relation；运行计划与快照属于执行证据，不能成为另一份可编辑定义。读取与哈希使用同一次字节读取，避免解析版本与记录身份不同。既有记录保留历史行为，缺来源关系就显示 unknown。
+
+用户指定主验收为缩短打包、启动运行、热修复恢复运行的耗时。分别以完整打包命令至制品完成、启动请求至入口确认、取得明确热修复输入至恢复入口确认为端到端区间。记录输入规模、代码/runtime身份、宿主、缓存条件和阶段耗时；同类真实输入才可比较。减少哈希次数、doctor耗时或单次复制都只能解释变化，不能代替上述验收。平台排队、上传、来源停止等待和模型首请求各自记录，不从本地确认推断实际模型成功。
+
+通用打包器将哈希与 ZIP 写入合成一次文件读取，manifest 描述实际写入的字节；保留原压缩策略。直接存储内嵌 ZIP 在真实包上节省压缩时间但增大上传体积，因目标包含上传总耗时而未采用。文件权限和内容清单合同保持不变，ZIP 容器哈希因编码变化会改变。首次运行与热恢复尚需代表性端到端反馈，不能由打包局部改进宣布完成。

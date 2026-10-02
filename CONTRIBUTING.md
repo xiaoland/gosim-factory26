@@ -169,7 +169,7 @@ python3 scripts/package_agent.py --variant pi-braid-i13 \
 
 官方 Runner 的 `--agent` 接受已展开目录，局部验证不必压 ZIP。
 要冻结参赛包，将上述 `--stage` 换成 `--output runs/packages/pi-braid-i13.zip`；同一源码、材料与资源参与两种封装。
-已有输出不覆盖。
+已有输出不覆盖。打包器在写入 ZIP 的同一次文件读取中计算内容摘要，清单对应实际写入字节，保留原压缩策略。文件内容、权限与来源关系不变，封装方式变化会改变包的 SHA，须发布为新制品。
 
 raw 打包可直接使用 `package_raw_core.py --runtime <runtime目录>`，不要求先创建团队 ZIP；`--source <历史ZIP>` 只保留为旧资源的读取方式。
 模型和 backend 仍由 raw 命令显式选择。

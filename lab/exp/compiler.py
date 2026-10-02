@@ -150,6 +150,8 @@ def _paths(job, base, files):
 def compile_intent(intent_path, directory):
     """Publish one immutable compile bundle; changed inputs require a new bundle."""
     intent_path, directory = Path(intent_path).resolve(strict=True), Path(directory).resolve()
+    if intent_path.is_relative_to(directory):
+        raise ValueError('frozen compilation bundle must be separate from its editable intent')
     intent_bytes = intent_path.read_bytes()
     intent_sha256 = hashlib.sha256(intent_bytes).hexdigest()
     intent = require(json.loads(intent_bytes), 'intent')
