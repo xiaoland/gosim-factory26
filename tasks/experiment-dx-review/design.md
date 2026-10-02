@@ -22,6 +22,23 @@ ZIP是托管平台等后端要求的交付形式，不是所有开发运行必�
 
 主验收仍是打包、启动和热修复恢复的端到端耗时，同时核对变化传播：复用同一源码与环境时未变资产是否再次构建/输运；只改变模型政策时是否仍重做材料；真实热修复只改Harness代码时是否重做无关runtime或恢复状态。记录各阶段的实际工作量和失败接续位置，避免把5秒局部节省当成整个工作流完成。下一步先完成一条真实开发路径的变更/依赖/生命周期设计与接口收敛，再实施；不继续以更多局部校验补丁代替该边界。
 
+## I14 启动证据与实施顺序
+
+用户提供的 [I14 启动卡点](/Volumes/WorkSSD/Development/factory26/tasks/iteration14/dx-resume/startup-blockers.md)进一步修正上面的方案：资产复用只覆盖一部分成本，阶段合同、数据所在资源域和启动效果边界同样需要改变。本次另读保存的cleaner named prepared输运回执（660.924秒、两端退出0）、reviewer全 `/attempt/.` 导出300秒超时、reviewer reserve前17容器inspect60秒超时。原件快照归 `runs/infrastructure-dx/startup-review/`；其它表项作为来源会话记录使用，不追认为本分支实测或当前健康。
+
+| 实际接缝 | 要明确的合同和责任 | 对开发闭环的影响 |
+| --- | --- | --- |
+| prepared complete且独立published，但terminal大archive仍pending；调用者自行提取/verify/compile/build/start。 | 准备产物的封口、来源及可消费能力独立于终态整域归档。Controller直接消费满足该阶段要求的named output，归档有自己的持久收尾责任。 | 成功prepare不因无关大归档阻塞，失败输运接续同一产物；原错和未完成保全继续可见。 |
+| 同daemon准备产物先回控制宿主，后续Docker启动再次装配/复制；单次named输运超过11分钟。 | Artifact引用可绑定其实际daemon/store/volume位置；同域消费通过核验来源、不可变发布边界和新attempt独立工作区在目标装配，跨域才输运。 | 消除控制宿主往返；不通过共用可写卷、跳过内容边界或伪造源停止换速度。 |
+| reserve前只读查询超时，runner已写launch_pending，后续只observe；全域batch inspect受复制中的单个容器影响。 | 启动阶段分别保存只读准入、reservation、物化和entry的效果边界；只读失败可有界重试，可能已有写入时按共同权威对账。全域容量仍核对真实held/physical，状态查询与大数据输运分开组织。 | 无需Agent逐文件证明是否可以接续；同域复制压力由设施安排，不靠会话临时协调顺序，也不跳过未知持有者。 |
+| 原始ZIP、checkpoint、prepared、assembled被同一校验/解压路径反复处理；私有driver另猜runtime字段、产物路径与逻辑根。 | Harness producer提供各阶段公开输入/输出，compiler/controller/runner各消费自己阶段的合同。打包/验证共用载荷选择，已装配入口不重新解压或套原始无链接合同；合法链接依赖在生产阶段处理并保存依据。 | 开发者声明恢复来源与修复材料即可；减少因字段、路径和重复阶段解释导致的返工。 |
+| 迁移OTLP接收后漏掉ResourceEvidence；Docker cgroup内存又被当RLIMIT_AS；工具wire模型与逻辑预算模型混用。 | Runner承担完整运行服务与后端资源语义，Harness声明消费能力；模型绑定明确区分逻辑身份与供应商wire ID。入口前完成必要服务准备。 | 修复完整运行组合，不用容器RUNNING或局部prepare成功代替实际可工作；不为每项失败新增私有driver。 |
+| 选Python不兼容、编译失败后继续build、12GiB预留晚于大量材料准备、迁移路径经链接仍在WorkSSD。 | 工作流先解析阶段与环境约束、实际filesystem和预计峰值存储，再安排昂贵材料工作；后续阶段仅消费前段成功输出。 | 提前给出可处理阻塞，避免先复制数GB再发现不能启动；物理准入仍在实际启动时重核。 |
+
+第一条实施路径据此缩小为“已有明确checkpoint及修复材料 → prepare产物封口 → 同域装配 → 确认生成入口”。先明确prepare到generate的类型化产物依赖、资源域位置和阶段接续，再整合上层定义入口；不先建全局缓存或通用DAG。当前源码的from_job仅允许generate→evaluate，且等待producer终态并排除archive pending，不能把它当作已经支持上述路径。扩展须按产物合同声明所需的producer成功/封口事实；不能从任意artifact存在推断可启动，也不提前评价仍未冻结的应用。
+
+端到端验收应回答：同域消费是否仍下载再上传整个prepared；整域archive pending是否阻断已满足合同的下游；只读准入失败是否需要新attempt或人工猜效果；产物输运失败是否重跑prepare；runner服务是否在入口前齐备。记录实际入口确认和模型成功分别成立。来源停止、需求身份与未知副作用门控保留，改变的是它们的责任和适用阶段。资料中的现有修复由原启动owner持有，本分支不覆盖其在途代码或控制正在运行的矩阵。
+
 ## 产品目标与硬切含义
 
 一次实验具有明确目标、允许输入、材料、模型/费用、资源预算、矩阵和完成条件。负责人决定这些条件与恢复取舍；设施组织build/control/monitor/analyze，可靠保存已发生的效果与原件。失败后只接续已经授权且缺失的动作，不让会话重新拼状态或用重跑消除unknown。

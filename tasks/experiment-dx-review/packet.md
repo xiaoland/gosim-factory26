@@ -2,7 +2,7 @@
 
 2026-10-02，用户要求继续分析 `codex://threads/01a0f23c-a2bc-7800-a5b0-847d29845cd2` 及实验相关子 Agent 会话，找出确定性设施应承接的操作及 DX 改进。最初授权为调查与方案；随后用户认可 hard-cutoff 完整基线并明确“开工；你可以自由提交”。当前源码实施和实际离线反馈见文末；历史阶段记录不作为当前待开工状态。
 
-当前工作区为独立 feat/infrastructure-dx；第一批去除语义链接遍历哈希与开发入口修正已提交。本轮用户“好的，推进改进”后继续制品复制边界、doctor 的当次核验复用、定义与运行数据分离和打包双读优化。主验收改为打包、启动、热恢复的端到端耗时。用户随后指出改进层次错误，当前已纠正为开发工作流、资产生命周期与变更传播设计，暂停追加局部优化；修正见design正文，范围及证据归文末。原工作区其它 owner 的在途 producer/hosted 源码没有带入本分支，不在这里启动恢复生成或写官网。
+当前工作区为独立 feat/infrastructure-dx；第一批去除语义链接遍历哈希与开发入口修正已提交。本轮用户“好的，推进改进”后继续制品复制边界、doctor 的当次核验复用、定义与运行数据分离和打包双读优化。主验收改为打包、启动、热恢复的端到端耗时。用户随后指出改进层次错误，当前已纠正为开发工作流、资产生命周期与变更传播设计，暂停追加局部优化。新增I14启动证据将首条路径收敛为prepare到generate的产物消费、同域装配和可接续启动边界；修正见design正文，范围及证据归文末。原工作区其它 owner 的在途 producer/hosted 源码没有带入本分支，不在这里启动恢复生成或写官网。
 
 ## 调查范围和证据
 
@@ -215,3 +215,11 @@ Compiler/readiness 已实施。公共 compile 输出 intent/recipe/compilation�
 源码依据：compiler.execution仍必需controller_runtime且从显式物理输入编译；controller.build将各输入发布/transfer到运行专属store，并为运行构造源码与runner.pyz；Docker backend临时目录copytree inputs/runtime再docker cp；恢复打包器复制workspace ZIP并嵌入完整恢复包。这些现存机制让调用者及跨阶段承担资产准备/装配，局部哈希优化不会自动消除这些职责。未来共用资产与增量失效模型尚未实现；当前artifact store的发布存在，不等于整个工作流已能安全跨运行复用。
 
 尝试按仓库约定咨询独立advisor，因agent thread limit reached未受理，现有三个旧子Agent均为pending_init，未将它们改派充当独立复核。当前是主Agent依据源码提出的修正设计，尚无独立advisor意见；没有为此暂停已授权的只读调查或修改任务包，也未启动模型、平台或恢复旧现场。
+
+## 纳入 I14 startup-blockers 证据（2026-10-02）
+
+用户提供 `/Volumes/WorkSSD/Development/factory26/tasks/iteration14/dx-resume/startup-blockers.md`。已完整读取其当次版本，并定向核对三份保存原件：cleaner named prepared输运660.923624992秒、两端退出0；reviewer全 `/attempt/.` docker cp300秒超时；reviewer在reserve前批量inspect17对象60秒超时。快照、原始SHA与读取范围归 `runs/infrastructure-dx/startup-review/readback.json`。没有访问实时daemon、平台或原生rollout；本文不替来源owner维护当前状态。
+
+源码核对确认本分支typed from_job只接受generate→evaluate，并要求producer终态且archive非pending；Docker launch仍copy inputs/runtime并docker cp，export取全attempt再提取制品。因此现有公共路径尚不能自动消费同域已封口prepare输出，来源会话实际需要私有driver和named输运接线。原工作区已包含ResourceEvidence与execute-prepared等后续修复，表项有已修复、待验收和新的失败，不将整张表记为本分支待修bug。
+
+设计正文新增六类责任接缝和实施顺序。判断进一步修正：增量资产复用不足以覆盖这批卡点；必须同时解决阶段合同、产物可消费条件、数据所在资源域与副作用边界。首条完整路径为prepare→同域装配→生成入口，先收敛合同与接续，再整合高层定义入口；named产物输运和terminal大归档分开负责。Runner运行服务/后端资源语义以及前置环境解析纳入该路径，保留源停止与需求身份的实际门控。本轮仅调查、修正方案与任务包，未改设施源码或接管来源会话执行。
