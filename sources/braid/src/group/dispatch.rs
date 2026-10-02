@@ -456,7 +456,17 @@ impl GroupDriver<'_> {
         let sessions = &self.sessions;
         let profile = &self.spec.profile;
         let work_item_kind = self.spec.kind.as_str();
-        let ready = sessions.input_ready_ids().await;
+        // Unrelated idle members must not create a resource wait that prevents
+        // the run from finishing. Only inspect sessions with durable input.
+        let candidates = match store.provider_resume_candidates(profile.id.clone(), work_item_kind.into()) {
+            Ok(candidates) => candidates.into_iter().filter(|candidate| candidate.needs_resume)
+                .map(|candidate| candidate.provider_session_id).collect(),
+            Err(error) => {
+                tracing::error!(%error, "cannot inspect runnable input candidates");
+                return None;
+            }
+        };
+        let ready = sessions.input_ready_ids(&candidates).await;
         let reset_notice = match store.claim_context_reset_notice(work_item_kind.into(), profile.id.clone(), ready.clone()) {
             Ok(claim) => claim,
             Err(error) => {

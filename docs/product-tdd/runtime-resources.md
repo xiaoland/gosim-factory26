@@ -14,11 +14,15 @@ I13-2 在同一 run 内共享内存压力和进程启动准入。Braid 继续拥
 
 原生扩展在每次模型 turn 的当前 system prompt 中提供有界资源事实和工具原生 worker 建议，建议先用一个 worker。它不复制技能正文，不追加重复用户历史，也不改写 shell 命令。Braid 的既有循环串行请求一次有限作业减载，然后重新观察压力；一次减载只停止一个归属可确认的有限作业树，保留原输出、退出与可能的部分副作用。常驻服务不被自动当作有限作业中止。
 
+Pi 的输入就绪检查也在 claim 之前查询同一资源策略。明确的资源延后保留现有输入，不生成 turn、重放 event 或归档输入文件；worker 继续处理结果、通知及减载。只有确有待投递输入或 reset 的逻辑会话参与 claim 就绪检查，空闲成员不会凭资源等待阻止 run 结束。发送前仍重新检查压力，保留检查与发送之间变化的保护；这个竞争窗口中的原有 Deferred 处理没有被取消。
+
 Portless proxy 由 run 入口在任何成员启动之前以前台子进程启动，清除成员 execution/start 标记。同一 run 的成员共享这一代理，有限作业清理不拥有它。入口保留实际 Popen，通过 HTTP 的 `X-Portless: 1` 确认就绪，结束时向这个子进程发送信号并等待退出；已有监听者或旧 PID 文件不能替代当前 run 的所有权证明。普通应用服务仍由原生作业管理。
 
 ## 物理停止与逻辑接续
 
 原生 RPC 的 `get_state.data.managed_state` 区分 `quiescent`、`busy` 和 `unknown`。除了正在进行的 turn，还检查有限作业、待接收结果和服务。OPEN 成员没有待投递输入/reset 且原生确认静止时，Braid 可以释放物理执行；逻辑会话、native 历史、指派和 clone 保留。之后只由真实输入或必要恢复唤醒，不在轮询中重新拉起全部 OPEN 成员。
+
+既有 get_state 调用把有界状态、原因、预期 execution identity、PID 与观测时间覆盖保存到该 execution 的 `native-state-latest.json`，用于区分无法卸载的原因；不增加 RPC 或采集循环。EvidenceWorker 同样在原有每次 capture 前后覆盖保存 `braid-state/evidence-capture-latest.json`，记录时长及 RSS/匿名内存/高水位，辅助判断快照工作是否造成堆增长。对象快照由 SQLite 按列稳定排序，避免另外缓存全部历史行的 JSON 排序字符串；它仍完整读取历史，不能据此宣称内存使用已与历史规模无关。
 
 父 Pi 的 wait 结果与 owned execution 的停止结果分别保存。非零退出或 SIGKILL 不自动等于子作业仍活；反之，父退出也不证明子作业已停。关闭先在准入使用的同一锁下设置 execution fence，阻止新作业，再按登记的 birth identity 和拥有的进程组清理；Pi 已退出时由 `native-managed.mjs cleanup` 离线完成。信号、权限和身份冲突保留原始错误，停止不明时不产生第二个写者。
 

@@ -31,7 +31,8 @@ def process_identity(pid):
             if name == 'status':
                 row['status'] = {key: value.strip() for line in value.splitlines() if ':' in line
                                  for key, value in [line.split(':', 1)]
-                                 if key in {'Tgid', 'Pid', 'PPid', 'NSpid', 'Threads', 'VmRSS', 'VmHWM', 'CapEff'}}
+                                 if key in {'Tgid', 'Pid', 'PPid', 'NSpid', 'Threads', 'VmRSS', 'VmHWM', 'VmSize',
+                                            'RssAnon', 'RssFile', 'RssShmem', 'VmSwap', 'CapEff'}}
             else:
                 row[name] = value.strip()
         except OSError as error:
@@ -41,6 +42,36 @@ def process_identity(pid):
             row[name] = os.readlink(root/name)
         except OSError as error:
             row['errors'][name] = evidence_error(error)
+    return row
+
+def process_memory_evidence(pid, starttime):
+    """Read memory ownership without argv, environment or file contents."""
+    root = Path('/proc')/str(pid)
+    row = {'pid': pid, 'starttime': starttime, 'errors': {}}
+    for name in ('smaps_rollup', 'io'):
+        try:
+            row[name] = (root/name).read_text()
+        except OSError as error:
+            row['errors'][name] = evidence_error(error)
+    try:
+        descriptors = {'file': 0, 'socket': 0, 'pipe': 0, 'anon_inode': 0, 'other': 0}
+        for descriptor in (root/'fd').iterdir():
+            try:
+                target = os.readlink(descriptor)
+            except OSError as error:
+                row['errors']['fd_entry'] = evidence_error(error)
+                continue
+            kind = next((kind for kind in ('socket', 'pipe', 'anon_inode')
+                         if target.startswith(kind+':')), 'file' if target.startswith('/') else 'other')
+            descriptors[kind] += 1
+        row['file_descriptors'] = descriptors
+    except OSError as error:
+        row['errors']['fd'] = evidence_error(error)
+    current = process_identity(pid)
+    row['identity_matches'] = current.get('starttime') == starttime
+    if not row['identity_matches']:
+        row['errors']['identity'] = {'message': 'process disappeared or PID was reused during memory read',
+                                     'current_starttime': current.get('starttime')}
     return row
 
 def process_evidence(run, name, row, *, cap_bytes=8*1024*1024):
@@ -96,6 +127,7 @@ class ResourceEvidence:
         self.segment_started = None
         self.previous_started = None
         self.root_pid = os.getppid()
+        self.last_memory_detail_ns = 0
         root_process = process_identity(self.root_pid)
         self.root_starttime = root_process.get('starttime')
         self.membership = None
@@ -107,6 +139,8 @@ class ResourceEvidence:
                         'root_process': root_process,
                         'page_size': os.sysconf('SC_PAGE_SIZE'),
                         'selection_order': ['run-tree-by-depth', 'run-cwd', 'current-cgroup', 'other-visible'],
+                        'live_processes_first': True, 'memory_detail_interval_seconds': 10,
+                        'max_memory_detail_processes': 12,
                         'errors': self.errors}
         for name in ('/proc/self/cgroup', '/proc/self/mountinfo', '/proc/sys/kernel/random/boot_id'):
             try:
@@ -144,6 +178,7 @@ class ResourceEvidence:
                'processes_omitted': 0, 'visible_processes': 0, 'sample_started': evidence_time(),
                'scope_counts': {}, 'scope_omitted': {}, 'classification_errors': [],
                'classification_errors_omitted': 0}
+        row['memory_detail'] = []
         if self.cgroup:
             try:
                 info = self.cgroup.stat()
@@ -161,12 +196,14 @@ class ResourceEvidence:
             row['visible_processes'] = len(entries)
             inventory = {}
             for entry in entries:
-                item = {'pid': int(entry.name), 'ppid': None, 'starttime': None, 'cgroup': None, 'cwd': None}
+                item = {'pid': int(entry.name), 'ppid': None, 'starttime': None, 'cgroup': None, 'cwd': None,
+                        'state': None, 'rss_pages': 0}
                 for name in ('stat', 'cgroup', 'cwd'):
                     try:
                         if name == 'stat':
                             fields = (entry/name).read_text().rsplit(')', 1)[1].split()
                             item['ppid'], item['starttime'] = int(fields[1]), int(fields[19])
+                            item['state'], item['rss_pages'] = fields[0], int(fields[21])
                         elif name == 'cgroup':
                             item['cgroup'] = (entry/name).read_text().strip()
                         else:
@@ -179,6 +216,7 @@ class ResourceEvidence:
                             row['classification_errors_omitted'] += 1
                 inventory[item['pid']] = item
             ranked = []
+            row['process_totals'] = {}
             root_matches = (self.root_starttime is not None and
                             inventory.get(self.root_pid, {}).get('starttime') == self.root_starttime)
             for pid, item in inventory.items():
@@ -195,15 +233,33 @@ class ResourceEvidence:
                     priority, scope = 2, 'current-cgroup'
                 else:
                     priority, scope = 3, 'other-visible'
+                item['scope_priority'], item['sampling_scope'] = priority, scope
                 row['scope_counts'][scope] = row['scope_counts'].get(scope, 0)+1
-                ranked.append((priority, depth if priority == 0 else 0, pid, scope))
+                totals = row['process_totals'].setdefault(scope, {'live': 0, 'zombie_or_dead': 0, 'rss_pages': 0})
+                dead = item['state'] in {'Z', 'X'}
+                totals['zombie_or_dead' if dead else 'live'] += 1
+                totals['rss_pages'] += item['rss_pages']
+                ranked.append((int(dead), priority, depth if priority == 0 else 0,
+                               -item['rss_pages'], pid, scope))
             ranked.sort()
-            for _priority, depth, pid, scope in ranked[:256]:
+            for _dead, _priority, depth, _rss, pid, scope in ranked[:256]:
                 row['processes'].append({**process_identity(pid), 'sampling_scope': scope,
                                          'tree_depth': depth if scope == 'run-tree' else None})
-            for _priority, _depth, _pid, scope in ranked[256:]:
+            for _dead, _priority, _depth, _rss, _pid, scope in ranked[256:]:
                 row['scope_omitted'][scope] = row['scope_omitted'].get(scope, 0)+1
             row['processes_omitted'] = max(0, len(entries)-256)
+            now_ns = row['sample_started']['monotonic_ns']
+            if kind == 'baseline' or now_ns-self.last_memory_detail_ns >= 10_000_000_000:
+                # RSS sums are a ranking aid, not cgroup use: shared pages may
+                # appear in several processes. PSS/anonymous/file detail below
+                # supplies the discriminating evidence for the largest users.
+                largest = sorted((item for item in inventory.values()
+                                  if item['state'] not in {None, 'Z', 'X'}),
+                                 key=lambda item: (item['scope_priority'], -item['rss_pages'], item['pid']))[:12]
+                row['memory_detail'] = [{**process_memory_evidence(item['pid'], item['starttime']),
+                                         'sampling_scope': item['sampling_scope']}
+                                        for item in largest]
+                self.last_memory_detail_ns = now_ns
         except OSError as error:
             row['errors']['process_scan'] = evidence_error(error)
         if kind == 'baseline':

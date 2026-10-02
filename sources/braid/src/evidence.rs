@@ -676,9 +676,14 @@ fn snapshot_objects(path: &Path, gaps: &mut Vec<String>) -> Result<Value> {
             gaps.push(format!("object snapshot: optional/legacy table {table} is absent"));
             continue;
         }
-        let mut statement = transaction.prepare(&format!("SELECT * FROM \"{table}\""))?;
+        let statement = transaction.prepare(&format!("SELECT * FROM \"{table}\""))?;
         let columns: Vec<String> =
             statement.column_names().into_iter().map(str::to_owned).collect();
+        // SQLite orders the source rows deterministically. Cached JSON sort
+        // keys otherwise duplicate every historical row in memory at capture.
+        drop(statement);
+        let ordering = (1..=columns.len()).map(|index| index.to_string()).collect::<Vec<_>>().join(",");
+        let mut statement = transaction.prepare(&format!("SELECT * FROM \"{table}\" ORDER BY {ordering}"))?;
         let mut cursor = statement.query([])?;
         let mut rows = Vec::new();
         while let Some(row) = cursor.next()? {
@@ -701,7 +706,6 @@ fn snapshot_objects(path: &Path, gaps: &mut Vec<String>) -> Result<Value> {
             }
             rows.push(Value::Object(fields));
         }
-        rows.sort_by_cached_key(Value::to_string);
         tables.insert((*table).to_owned(), json!({"columns":columns,"rows":rows}));
     }
     transaction.commit()?;

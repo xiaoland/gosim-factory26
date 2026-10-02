@@ -112,16 +112,20 @@ impl SessionManager {
         self.sessions.lock().await.contains_key(id)
     }
 
-    pub(super) async fn input_ready_ids(&self) -> Vec<String> {
+    pub(super) async fn input_ready_ids(&self, candidates: &HashSet<String>) -> Vec<String> {
         let sessions: Vec<_> = self.sessions.lock().await.iter()
-            .filter(|(_, managed)| !managed.session.is_unavailable())
+            .filter(|(id, managed)| candidates.contains(*id) && !managed.session.is_unavailable())
             .map(|(id, managed)| (id.clone(), Arc::clone(&managed.session)))
             .collect();
         let mut ready = Vec::new();
         for (id, session) in sessions {
             match session.can_accept_input().await {
-                Ok(true) => ready.push(id),
+                Ok(true) => {
+                    self.clear_session_deferred(&id).await;
+                    ready.push(id);
+                },
                 Ok(false) => {},
+                Err(error) if error.is_deferred() => self.record_session_deferred(&id, error).await,
                 Err(error) => {
                     tracing::debug!(%error, provider_session = %id, "native readiness unavailable; send path will resolve failure");
                     ready.push(id);

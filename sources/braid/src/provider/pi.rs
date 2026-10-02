@@ -207,6 +207,7 @@ impl PiProvider {
                 return Err(error);
             }
         };
+        observe_native_state(state, "startup", &state_resp);
         let data = state_resp.get("data").and_then(Value::as_object).ok_or_else(|| {
             ProviderError::CreatedWithoutIdentity("get_state missing data".into())
         })?;
@@ -425,11 +426,21 @@ impl AgentProvider for PiProvider {
     async fn can_accept_input(&self, _thread_id: &str) -> Result<bool, ProviderError> {
         let mut state = self.state.lock().await;
         let native = Self::request(&mut state, json!({"type": "get_state"})).await?;
-        Ok(!native_is_busy(&native))
+        observe_native_state(&state, "input_readiness", &native);
+        if native_is_busy(&native) { return Ok(false); }
+        // Check before claiming durable input. Rejected claims otherwise create
+        // a fresh interrupted turn and replay event on every worker tick.
+        if let Some(pressure) = resource_status().await.map_err(|error| ProviderError::Deferred(error.to_string()))?
+            && pressure["status"] != "normal"
+        {
+            return Err(ProviderError::ResourceDeferred(format!("resource pressure: {pressure}")));
+        }
+        Ok(true)
     }
     async fn managed_state(&self, _thread_id: &str) -> Result<crate::agent_session::ManagedState, ProviderError> {
         let mut state = self.state.lock().await;
         let native = Self::request(&mut state, json!({"type":"get_state"})).await?;
+        observe_native_state(&state, "idle_unload", &native);
         if let Some((_, identity)) = state.process.as_ref().and_then(|process| process.execution.as_ref()) {
             if native["data"]["managed_state"]["execution_id"].as_str() != Some(identity.as_str()) {
                 tracing::warn!(response = %native, execution = identity, "native managed state identity mismatch");
@@ -548,6 +559,7 @@ impl AgentProvider for PiProvider {
         message.push_str(event_references);
 
         let native = Self::request(&mut state, json!({"type": "get_state"})).await?;
+        observe_native_state(&state, "prompt_preflight", &native);
         if native_is_busy(&native) {
             return Err(ProviderError::Deferred("Pi is streaming or compacting".into()));
         }
@@ -567,6 +579,7 @@ impl AgentProvider for PiProvider {
                 // Pi has no typed busy response. Confirm native state instead of
                 // recognizing error strings; a rejected prompt never owns a turn.
                 let native = Self::request(&mut state, json!({"type": "get_state"})).await?;
+                observe_native_state(&state, "prompt_rejection", &native);
                 if native_is_busy(&native) {
                     return Err(ProviderError::Deferred(message));
                 }
@@ -637,6 +650,23 @@ impl AgentProvider for PiProvider {
 
 fn native_is_busy(response: &Value) -> bool {
     response["data"]["isStreaming"] == true || response["data"]["isCompacting"] == true
+}
+
+fn observe_native_state(state: &PiState, reason: &str, response: &Value) {
+    let Some(process) = &state.process else { return; };
+    let Some((directory, execution)) = &process.execution else { return; };
+    let data = &response["data"];
+    let receipt = json!({
+        "observed_at_unix_nanos":std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH)
+            .map(|duration| duration.as_nanos().to_string()).unwrap_or_default(), "reason":reason,
+        "expected_execution_id":execution, "pid":process.child.id(),
+        "provider_session_id":state.session, "native_session_id":data["sessionId"],
+        "managed_state":data["managed_state"], "isStreaming":data["isStreaming"],
+        "isCompacting":data["isCompacting"], "pendingMessageCount":data["pendingMessageCount"],
+    });
+    if let Err(error) = crate::local::write_json(&directory.join("native-state-latest.json"), &receipt) {
+        tracing::warn!(%error, execution, "cannot persist native state observation");
+    }
 }
 
 fn startup_deferred(process: &PiProcess) -> Option<String> {
