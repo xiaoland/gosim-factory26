@@ -12,7 +12,7 @@
 | --- | --- | --- |
 | Harness 的指令、角色、协作或执行 | `variants/<name>/main.py`、`run.py`、`agents/` | 生成运行的原生配置、会话与应用，获授权的 bench 得分。 |
 | 原生工具或打包 | `scripts/runtime.py`、variant 的 `build.py`、`scripts/package_agent.py` | 实际安装、构建与提交过程的输出。 |
-| 实验执行或 ARC 接入 | [lab/README.md](lab/README.md)、`lab/plan.py`、`lab/run.py`、`lab/otlp.py`、`lab/arc_bench/arc_bench_adapter.py` | 外部命令、原始 OTLP、官方 Runner 的真实运行与错误。 |
+| 实验执行或 ARC 接入 | [lab/README.md](lab/README.md)、`lab/exp/`、`lab/otlp.py`、`lab/arc_bench/arc_bench_adapter.py` | 外部命令、原始 OTLP、官方 Runner 的真实运行与错误。 |
 | Pi 子代理观测 | variant 的 `extensions/` | 实际会话和原始观测记录。 |
 | Braid | `sources/braid` 自身说明和公开 local 接口 | 自身构建和实际 Harness 调用结果。 |
 | SVC skill 接线 | variant 的启动参数、角色 Markdown、`build.py` | 运行中实际读取的技能及上下文。 |
@@ -61,6 +61,8 @@ I13内部角色默认使用独立历史（`defaultContext:fresh`），以本次�
 原生 Hackathon 四配置是独立的历史对照，其角色装配、原生历史与网关参数见 [归档运行说明](docs/deployment/hackathon.md)。不要把该实验的材料注入方式套用到当前 I13。
 
 ## 准备实际需要的依赖
+
+裸 `make` 与 `make help` 只显示开发入口，不安装依赖。实验使用公共 Lab 的 compile/doctor/build/start/status，字段与操作见 [Lab](lab/README.md)；不再从旧 plan/run 模块开始。
 
 原生工具准备不读取 variant、Corpus 或 benchmark：
 

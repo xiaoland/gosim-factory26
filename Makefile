@@ -1,3 +1,5 @@
+.DEFAULT_GOAL := help
+
 PYTHON ?= python3
 VARIANT ?= pi-braid
 RUNTIME ?=
@@ -23,4 +25,7 @@ help:
 	@echo 'tools         准备原生工具'
 	@echo 'package       打包：VARIANT=... OUTPUT=... [RUNTIME=...]'
 	@echo 'braid-report  从实验 OTLP Backend 生成诊断网站：RUN=... OUTPUT=... [BRAID=...] [BRAID_RUN_ID=...]'
+	@echo '实验工作流：python3 -m lab compile /path/to/intent.json --directory /path/to/compiled'
+	@echo '就绪与状态：python3 -m lab doctor /path/to/recipe-or-experiment；python3 -m lab status /path/to/experiment'
+	@echo '实验合同与完整操作：lab/README.md'
 	@echo '诊断与排障：docs/deployment/braid-diagnostics.md'

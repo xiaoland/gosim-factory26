@@ -297,8 +297,8 @@ def verify(directory):
         if digest(Path(runner_runtime['launcher']).resolve(strict=True)) != runner_runtime['interpreter_sha256']:
             raise ValueError('runner interpreter changed')
     store = directory / 'artifacts'
-    artifacts.verify(store, value['code'])
-    if artifacts.contents(directory / 'source') != artifacts.verify(store, value['code'])['contents']:
+    code_manifest = artifacts.verify(store, value['code'])
+    if artifacts.contents(directory / 'source') != code_manifest['contents']:
         raise ValueError('installed executor code differs from frozen artifact')
     if digest(directory / 'runner.pyz') != value['runner_sha256']:
         raise ValueError('frozen runner code changed')

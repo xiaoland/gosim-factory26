@@ -165,3 +165,19 @@ Compiler/readiness 已实施。公共 compile 输出 intent/recipe/compilation�
 后续改动应围绕“同一内容、同一 validator、同一 policy 的证明只生产一次，变化或跨真实传输边界才新增工作”。先移除同一操作内部的重复哈希：链接遍历不读取文件内容，semantic readback 可消费刚取得的 inventory；共享 artifact 操作复用本次已核验 manifest，避免 resolve/materialize/verify 层叠。跨阶段语义回执绑定完整内容摘要、validator 版本和所检政策，不把 mtime 当内容证明；在发布 store 尚无实际不可变保障时，不能凭历史 receipt 跳过目标字节核验。来源当前停止与需求授权仍每次 launch 重验，语义证明不能替代现场效果。
 
 减少复制需先明确哪一副本是保存原件、哪一副本供运行写入：不对会写 Git/SQLite 的恢复 workspace 使用共享 hardlink。同宿主具备实际 reflink/COW 能力可用其保持独立写入，跨宿主继续校验接收字节；公开凭据边界不扩大。包的实际必需内容与平台增量上传能力先核实，不猜可跳过重传。下一真实恢复应由原 owner 在正常操作中记录阶段耗时、哈希读取与复制/发送字节，区分必要边界和重复证明；不建立 synthetic benchmark 或另一个 collector。本节为调查和拟议改动，尚未修改恢复 producer、运输或校验复用接口。
+
+
+## 独立 DX 分支接续（2026-10-02）
+
+用户明确“创建独立的分支和 worktree 去继续推进实验基础设施、开发基础设施的 DX 改进”。已从61e0f5f6建立 feat/infrastructure-dx，managed worktree 位于 `/Users/lanzhijiang/Development/.worktrees/infrastructure-dx/factory26`，后续源码与提交只在这里进行。原工作区其它 owner 的未提交修改没有复制或覆盖。沿用自由提交授权；创建独立 worktree 不改变模型/官网/旧来源/Console 的效果权限。
+
+本轮先消除同一操作内有明确证据的浪费：Harness 语义链接检查只需目录/类型/链接信息，不应重算普通文件 SHA；Controller 对同一 code 制品的重复 verify 可以复用本次结果。完整内容、Git/SQLite 语义及传输目标验证暂时保留，不新增跨阶段缓存或凭 mtime 跳过校验。开发入口同时修正裸 make 默认触发 tools 安装的问题，默认帮助明确呈现已有工作流，并更新 CONTRIBUTING 中已退役源码导航。新分支的 Harness 基线不含原恢复 owner 的在途 legacy-source producer 增量；不自动吸收其未提交文件，验证限制必须明确保留。
+
+反馈使用现存 r4 prepared 的真实离线 semantic_readback、冻结实验的只读校验及实际 make 帮助输出，不生成 synthetic fixture/设施测试。原件归新 worktree 的 runs/infrastructure-dx/first-cut；语义调用前后比较 producer 结果与原件摘要，耗时只解释同一宿主单次实际操作，不当作稳定 benchmark。
+
+
+第一批改动已取得实际反馈：semantic_readback 的两次链接 inventory 采用 hash_files=false，仍检查类型/链接并拒绝不支持的对象；默认 inventory 保留全文件 SHA，完整 validate、Git fsck、SQLite/WAL 和外链门控未删除。Controller.verify 复用当次 code_manifest，安装目录仍独立核对。裸 make 实际只打印帮助，不进入 tools；CONTRIBUTING 的实验源码导航已更新。
+
+真实 r4 prepared 的 semantic-before/after 原件完全匹配 producer，manifest 摘要未变；单次顺序调用约56.84秒→15.41秒，文件缓存未控制，不能解释成稳定性能倍率。当前分支对已有 final3 冻结实验实际 build reentry 返回成功，约31.27秒，experiment.json 前后摘要相同，没有新 artifact/attempt。证据归 runs/infrastructure-dx/first-cut/receipt.json、semantic-before.json、semantic-after.json、build-reentry.json 和 make-help.txt。修改模块编译及差异检查通过；未运行设施测试、合成材料或模型。由于该分支未带入其它 owner 在途的 legacy-source producer 变更，本轮反馈为真实内容的 semantic_readback，不宣称新分支完整 legacy 恢复启动已验收。
+
+当前已完成这批局部优化；跨阶段语义回执复用、发布存储的真实不可变性、减少全量复制与包传输仍待实施。后续沿本分支/本 worktree 接续，先按实际边界定义证明失效条件与目标装配生命周期，不能增加更多层校验回执后反而扩大流程。

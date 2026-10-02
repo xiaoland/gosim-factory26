@@ -31,7 +31,7 @@ def digest(path):
         return hashlib.file_digest(stream, 'sha256').hexdigest()
 
 
-def inventory(root):
+def inventory(root, *, hash_files=True):
     rows = {}
     for directory, folders, files in os.walk(root, followlinks=False):
         for name in sorted(folders + files):
@@ -40,7 +40,7 @@ def inventory(root):
             if path.is_symlink():
                 rows[member] = {'type': 'symlink', 'target': os.readlink(path)}
             elif path.is_file():
-                rows[member] = {'type': 'file', 'sha256': digest(path),
+                rows[member] = {'type': 'file', **({'sha256': digest(path)} if hash_files else {}),
                                 'size': path.stat().st_size, 'mode': path.stat().st_mode & 0o777}
             elif path.is_dir():
                 rows[member] = {'type': 'directory'}
@@ -69,8 +69,9 @@ def semantic_readback(payload, logical_root, materials=None):
     gaps, git, native = [], [], []
     mounts = [(str(logical_root), payload)]
     mounts += [(str(row['logical_root']), path_at(payload.parent, row['member'])) for row in materials or []]
+    # Link checks need current types and targets; byte integrity is checked by validate().
     for logical, physical in mounts:
-        for name, item in inventory(physical).items():
+        for name, item in inventory(physical, hash_files=False).items():
             if item['type'] == 'symlink':
                 link = physical / name
                 if not link.resolve().is_relative_to(payload.parent):
@@ -164,7 +165,7 @@ def semantic_readback(payload, logical_root, materials=None):
             gaps.append({'kind': 'git_history', 'member': member,
                          'error': head.stderr.strip() + objects.stderr.strip()})
     for logical, physical in mounts:
-        for member, row in inventory(physical).items():
+        for member, row in inventory(physical, hash_files=False).items():
             if row['type'] != 'symlink':
                 continue
             destination = Path(row['target'])
