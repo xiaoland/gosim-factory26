@@ -18,3 +18,9 @@
 九个主要入口的正文合计从约 222 KB 降至 56 KB，减少约 75%；这是阅读载荷的度量，迁出的必要内容仍在对应权威页或历史协议中。原始 handoff 按字节保留。检查覆盖 59 份核心文档、517 个相对链接及 67 个外部指入链接，文件和锚点均可达；实际 CLI 帮助、schema 与来源导入分支已定向核对，diff 格式检查通过。
 
 基线、迁移回执和检查明细位于 `runs/developer-experience/core-docs-20261003/`，由 Git 忽略。验证没有运行 Factory/Braid 测试、包 smoke、模型或 benchmark；现行能力中尚缺受管理 Console accessor 创建 CLI，手册明确使用已有合法 accessor、原容器只读或归档接入，没有杜撰创建步骤。
+
+按用户随后要求，新建 `gpt-6.1-sol / medium` 会话「核心文档独立验收」（`01a0ff80-9844-71e1-a1d9-3dacf487db9b`），从普通入口独立模拟迭代、实验准备、监控和热恢复。主会话提供结果要求和隔离演练授权，没有提供标准答案或证据路径；允许的产物目录为 `runs/developer-experience/fresh-session-acceptance-20261003/`。核心整理已提交为 `d6e282d4`，其它负责人的源码与任务修改保留。
+
+目前独立会话已实际读取 CLI 帮助、SVC 状态、两个实验的 status、monitor 与 doctor，并核对保存的恢复错误和 ZIP 元数据。它识别出 Hosted 不支持 pause/resume/checkpoint、旧暂停导出的 writer closure 未知且没有 Git 材料、A2 的保存平台状态与 controller 出生身份判断不同，以及 doctor 缺少私有 deployment 的阻塞。一次递归搜索产生约 581 KB 文件列表，一次 zsh 通配符没有匹配；据此补充了 projection 原件导航及未知进程身份的解释。
+
+四阶段验收尚未完成：独立会话申请执行只读 `ps -p 80211 -o pid=,lstart=,stat=`，应用沙箱返回待审批，主会话无法代为处理。该审批可以批准，也可以拒绝后保留 unknown；不应为完成演练绕过门控。待它继续完成离线准备及最终报告后，再判断整体通过，当前记录不是验收通过声明。

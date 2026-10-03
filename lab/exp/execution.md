@@ -21,6 +21,10 @@ Docker 的域 authority、容量和网络模式必须有保存的准入与物理
 
 `python3 -m lab status INDEX.json --json` 返回 `factory26.exp.status-index`；其中一项缺失或不可读时保留该项路径和具体错误，其余项继续展示。index 不产生新执行身份，不授予接续许可。单项 `targets[].stages` 分别呈现 entry、execution、archive、telemetry、transport 和 verdict 的 producer、事实时间、来源路径与缺口；不要把某一阶段的 completed 提升为整体成功。
 
+从所属 packet 或 index 取得实验目录后，先读 projection，再沿返回的 `evidence.path` 和 attempt `source` 定向读取原件。不要为寻找状态递归扫描整个运行树：工具资源、应用依赖和连续监控快照会把同名文件大量展开。
+
+controller 的保存 `phase=running` 与当前 `physical_state` 分开解释。`unknown` 表示本次查询未确认同一 host、boot 和进程出生身份；宿主不同、身份字段缺失或本机读取受权限限制均可能造成它，不能据此认定 controller 已死或重新派发。需要进一步核实时保留具体读取错误；沙箱拒绝只读进程查询时，保留未知并继续消费已保存的运行事实，不绕过审批。
+
 可用动作由冻结 controller 的 `available_actions` 决定，`next_actions` 是技术建议，仍须按当前授权选择。控制语法是 `python3 -m lab control EXPERIMENT ATTEMPT COMMAND --request-id REQUEST`；同一请求保留回执，效果未知先只读核对，不能把同一动作换 request ID 后重发。具体处置和 Hosted 支持边界见 [恢复门控](../../docs/deployment/recovery.md#当前-checkpointprepare-与停止门控)。
 
 ## 来源停止、托管和 Console
