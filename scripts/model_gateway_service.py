@@ -1,5 +1,5 @@
 """Explicitly selected run-owned native model gateway service."""
-import hashlib,json,os,secrets,shutil,time,subprocess,signal
+import hashlib,json,os,secrets,time,subprocess,signal
 from pathlib import Path
 if __package__:
     from .agent_support import save,_signal_process,_wait_process,process_identity,process_evidence
@@ -63,11 +63,12 @@ def start_model_gateway(runtime, run, env, config, *, bindings=None, gateway_rou
     state.mkdir(mode=0o700, exist_ok=True)
     log = state/'gateway.log'
     (state/'bindings').mkdir(mode=0o700, exist_ok=True)
-    code = state/'code'
-    code.mkdir(mode=0o700, exist_ok=True)
-    support_root = Path(__file__).resolve().parent
+    # The selected gateway role already freezes these modules; only mutable
+    # configuration and receipts belong to the run's private state.
+    code = Path(__file__).resolve().parent
     for name in ('hackathon_gateway_compat.py', 'responses_compat.py'):
-        shutil.copy2(support_root/name, code/name)
+        if not (code/name).is_file():
+            raise FileNotFoundError(code/name)
     route_record = state/'gateway-routes.json'
     if gateway_routes is not None:
         route_record.write_text(json.dumps(gateway_routes, ensure_ascii=False, indent=2) + '\n')

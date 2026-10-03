@@ -2,7 +2,7 @@
 
 2026-10-03。用户要求查看 [重设计 I13 今晚无人值守实验](codex://threads/01a0fd22-fe3b-7430-9707-4534e7758565) 的运行轨迹，总结卡点、设计修复方案，再开展一轮开发基础设施改进，并明确使用 advisor。本指示授权必要源码、文档、非模型实际材料反馈；自主提交沿已有授权，不包含控制该实验、模型请求、远端 push、旧域迁移或清理。
 
-当前在 WorkSSD 隔离分支 `feat/experiment-startup-dx`。主工作区有实验与文档负责人正在修改的未提交内容，保留原样；不接管 provider_fallback 的派发和运行修复。storage_producers 接续持有启动接口及原错调查，storage_judgment 持有独立方案判断，主 Agent 持有总体设计、入口和最终整合。
+当前成果已合入 WorkSSD 主工作区 `Development/factory26` 的 `main`，后续直接在主区工作。下文保留原隔离分支 `feat/experiment-startup-dx` 的实施历史。主工作区有实验与文档负责人正在修改的未提交内容，保留原样；不接管 provider_fallback 的派发和运行修复。storage_producers 接续持有启动接口及原错调查，storage_judgment 持有独立方案判断，主 Agent 持有总体设计、入口和最终整合。
 
 当前判断：重复困难集中在环境/SDK 的选择与发现、raw argv 手工组装、私有环境跨容器透传、资源服务能力组合。一次次重新派发才发现静态接缝问题，不能把“helper 存活”“controller running”当模型已启动。初步轨迹见 [会话摘录](trajectory.json)；具体原错与修复、待实施边界将在 [设计](design.md) 收敛。
 
@@ -108,3 +108,6 @@ CLI 已完成默认摘要与 `--details`，同一保存 projection 的 JSON 路�
 ## 合入主工作区与工作位置变更
 
 2026-10-03 用户明确要求“请合并到主工作区上面并清理，后续不需要在独立工作区”。本轮将 feat/experiment-startup-dx 的五个提交整体合入 Development/factory26 的 main，保全已有未提交与未跟踪工作，不推送。主区修改的原件、patch 和暂存身份保存于 runs/developer-experience/merge-startup-dx-20261003；原独立工作区的运行证据迁入该目录下 worktree-runs，原记录不改写，旧物理路径映射见 relocation.json。文档原 owner 持有导航/合同合并，执行原 owner 持有源码语义冲突，root 持 Git 事务、保全与清理。合入后仅保留主工作区继续开发；清理只覆盖此次已合入分支/独立工作区及可丢弃bytecode，不删除主区实验或其它在途工作。
+
+
+五个提交已以 merge commit 13352a2c 合入 main。主区原件与 stash 完全一致；merge 未涉及的 59 个原文件恢复后与备份逐字节一致，未跟踪目录未删除。随后语义整合恢复的生产/执行接缝，保留主区模型路由、seed、资源、WorkSSD cache、Hosted 锁/并行条件/采样 cadence，保持显式请求、公共 context、独立角色代码及单 collector/observer。独立 source reviewer 对四个关键执行文件未发现待修问题；这不是完整运行验收。25 个当前修改 Python 源内存编译，main 实际读取已保存 stage-a2 记录成功，原件及源码身份归上述 merge 目录。只提交本任务相关接缝，其它主区在途改动保持原有未提交状态，不扩大纳入。旧 worktree 的 runs 原件已迁回主区，清理旧工作区与分支后仅在 main 接续，不推送。

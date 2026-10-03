@@ -360,6 +360,8 @@ def _helper(target, payload, *, readonly=False):
         return json.loads(output.stdout)
     except Exception as exc:
         failure = exc
+        if isinstance(exc, subprocess.CalledProcessError):
+            exc.add_note(json.dumps({'domain_helper_error': error(exc)}, ensure_ascii=False))
         raise
     finally:
         if helper_id:

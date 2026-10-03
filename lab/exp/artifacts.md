@@ -24,6 +24,9 @@
 
 受管 checkpoint schema 4 是小型元数据产物，`state_snapshot` 引用一次封口的 workspace 及其中实际 Harness state 的 member。终态输出和归档共用已封口内容；checkpoint 只有在原快照具有匹配的 managed acquisition 时复用，否则按 capture 请求另行取得恢复快照。普通终态内容不因后来取得 closure 而升级。完整 workspace 与状态子树不能互换。Docker 在原 daemon 的只读状态挂载上封口，宿主接收 checkpoint 元数据及 domain resolver；单独持有这些元数据不意味着已接收到快照字节。跨域准备只输运选中的状态及目标缺少的定义资产。旧 schema 3 和历史自包含 checkpoint 的读取合同保留。
 
+从冻结 runtime 派生修复材料时，先克隆完整父文件树，再覆盖明确的修复文件，并保留父来源和实际差异。锁文件相同或源码编译通过不证明 runtime 完整：发布前仍须确认父负载没有遗漏、启动 wrapper 指向的程序和依赖确实进入包；失败制品保留原身份，修正后重新发布，不能覆盖已冻结字节。
+
+
 定义资产包括入口、角色、技能、扩展、工具 runtime 和 Braid；每次绑定的小型 native 配置、request 和 launcher 留在可写状态。四个新 I14 入口直接读取冻结 Braid，通过小型链接树访问技能，不再将这些定义复制进运行目录。定义资产的保留独立于 attempt 生命周期。
 
 `python3 submission/exp_checkpoint.py checkpoint --source RUN --output NEW --source-identity IDENTITY_JSON --stop-evidence STOP_JSON --acquisition ACQUISITION_JSON` 保存来源材料，获取窗口需要覆盖全部 writer 的连续关闭证明。停止原件只证明观察时点，不能排除复制期间的中途写入。没有获取窗口证明或原 Git/native 历史缺失时保留 partial；历史 schema 1 只读，不补造 complete。

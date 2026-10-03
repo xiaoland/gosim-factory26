@@ -19,11 +19,16 @@ from agent_support import (save, phase, hashes, digest, logged, cleanup_workspac
                            start_local_telemetry, telemetry_environment, stop_local_telemetry)
 from agent_support import runtime_resource_environment, start_shared_proxy, stop_shared_proxy
 from agent_support import model_bindings, bind_native_models, native_model_route, bind_native_role
+from agent_support import bind_native_model_scope
 from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
 from harness_layout import bind_layout
 from execution_context import read as execution_context, role as definition_role, state_root as execution_state_root
+gateway_role = next((Path(row['local_root']) for row in execution_context()['assembly']['definitions'] if row['role']=='gateway'), None)
+if gateway_role:
+    sys.path.insert(0, str(gateway_role))
+    from model_gateway_service import start_model_gateway, stop_model_gateway
 
 HERE = definition_role(execution_context(),'agent') if execution_context() else Path(__file__).resolve().parent
 VARIANT = 'pi-braid-i14-e2e'
@@ -54,13 +59,14 @@ UI使用适合所选框架的成熟组件库和图标库，样式使用UnoCSS；
 自检数据库、缓存、上传文件和浏览器状态使用临时位置，不改变交付应用的初始状态。'''
 
 
-def native_files(work, runtime, skills, base_url, visual_url):
+def native_files(work, runtime, skills, base_url, visual_url, routes=None):
     """返回供 Braid 使用的 profiles/bindings，并写出 Pi 消费的原生材料。
 
     成员主模型归 profile，内部角色归原生 agents Markdown。
     本次运行只替换连接与路径；包内有哪些技能和会话启用哪些技能分别选择。
     """
-    routes, _ = model_bindings(base_url, visual_url, require_key=False)
+    if routes is None:
+        routes, _ = model_bindings(base_url, visual_url, require_key=False)
     background_bash = runtime/'node_modules/pi-background-bash/index.ts'
     fff = runtime/'node_modules/@ff-labs/pi-fff/src/index.ts'
     context7 = runtime/'node_modules/@upstash/context7-pi/extensions/context7.ts'
@@ -71,6 +77,9 @@ def native_files(work, runtime, skills, base_url, visual_url):
     profiles, bindings = [], {}
     for source in sorted((HERE/'agents').iterdir()):
         profile = json.loads((source/'profile.json').read_text())
+        selected_root = 'pi-glm-root' if routes['factory26'].get('model') == 'glm-5.3' else ROOT_PROFILE_ID
+        if profile['id'] in {'pi-glm-root', ROOT_PROFILE_ID} and profile['id'] != selected_root:
+            continue
         folder = work/'capabilities'/profile['id']
         template = folder/'native-template'
         shutil.copytree(source, template)
@@ -86,6 +95,11 @@ def native_files(work, runtime, skills, base_url, visual_url):
         profile['provider'], profile['model'], profile_route = native_model_route(profile['provider'], profile['model'], routes)
         bind_native_models(providers, routes)
         save(template/'models.json', providers)
+        settings_file = template/'settings.json'
+        if settings_file.is_file():
+            settings = json.loads(settings_file.read_text())
+            bind_native_model_scope(settings, routes)
+            save(settings_file, settings)
         save(template/'pi-fff.json', {'mode':'tools-only'})
         for role in (template/'agents').glob('*.md'):
             instruction = bind_native_role(role.read_text(), routes).replace('@SKILLS@', json.dumps(str(skills))[1:-1])
@@ -138,7 +152,23 @@ def generate(args):
     辅助归档异常单独记入 diagnostic_error，不能冒充外部评分或覆盖生成错误。
     """
     visual_url = os.environ.get('VISUAL_BASE_URL')
-    routes, model_env = model_bindings(args.base_url, visual_url, require_key=not args.prepare_only)
+    gateway_enabled = gateway_role is not None
+    gateway_catalog = gateway_role/'model-gateway.json' if gateway_enabled else None
+    gateway_routes_file = Path(os.environ['FACTORY26_GATEWAY_ROUTES']) if gateway_enabled else None
+    if gateway_enabled:
+        if not gateway_routes_file.is_file():
+            raise FileNotFoundError('私有模型包需要冻结的 support/gateway-routes.json')
+        gateway_routes = json.loads(gateway_routes_file.read_text())
+        root_model = os.environ.get('MODEL') or 'glm-5.3-flash'
+        if root_model not in gateway_routes or 'deepseek-v4-flash-0731' not in gateway_routes:
+            raise ValueError('冻结模型链不包含本轮根模型或DeepSeek0731')
+        transport = {'provider': 'openai', 'base_url': 'http://127.0.0.1:4011/v1',
+                     'credential_env': 'FACTORY26_GATEWAY_TOKEN'}
+        routes = {'factory26': dict(transport, model=root_model), 'factory26-visual': dict(transport),
+                  'factory26/deepseek-v4-flash': dict(transport, model_id='deepseek-v4-flash-0731')}
+        model_env = dict(os.environ, FACTORY26_MODEL_BINDINGS=json.dumps(routes, separators=(',', ':')))
+    else:
+        routes, model_env = model_bindings(args.base_url, visual_url, require_key=not args.prepare_only)
     _, e2e_model, e2e_route = native_model_route('factory26', 'glm-5.3-flash', routes)
     base_url = routes['factory26']['base_url']
     requirements = args.requirements_dir.resolve(strict=True)
@@ -191,7 +221,7 @@ def generate(args):
         (skills/name).symlink_to(source, target_is_directory=True)
         skill_sources[name] = str(source)
     inputs = run/'input'; shutil.copytree(requirements, inputs)
-    profiles, bindings = native_files(work, runtime, skills, base_url, visual_url)
+    profiles, bindings = native_files(work, runtime, skills, base_url, visual_url, routes)
     desired_model = os.environ.get('MODEL') or routes['factory26'].get('model')
     root_profile_id = 'pi-glm-root' if desired_model == 'glm-5.3' else ROOT_PROFILE_ID
     root_profile = next(p for p in profiles if p['id']==root_profile_id)
@@ -235,7 +265,19 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         return run
     browser = str(browser_executable(runtime))
     # Chromium sockets require a short path; retain Pi's durable async state separately.
-    temporary = tempfile.mkdtemp(prefix='f26-', dir='/tmp')
+    temporary = tempfile.mkdtemp(prefix='f26-', dir=work/'tmp')
+    temporary_alias = None
+    temporary_alias_dir = None
+    workspace_cleanup_complete = False
+    collector_stopped = False
+    daemon_stop_complete = False
+    provider_env = run/'.private/provider-env.json'
+    if os.environ.get('FACTORY26_PROVIDER_VARIABLES'):
+        provider_env.parent.mkdir(mode=0o700, exist_ok=True)
+        with os.fdopen(os.open(provider_env, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as stream:
+            json.dump({name: os.environ[name] for name in json.loads(os.environ['FACTORY26_PROVIDER_VARIABLES'])}, stream)
+    if gateway_enabled and not provider_env.is_file():
+        raise FileNotFoundError(f'模型 gateway 已启用但 provider-env 缺失：{provider_env}')
     env = dict(model_env, **tool_environment(), PORTLESS_PORT='1355', PORTLESS_HTTPS='0',
                PI_FFF_MODE='tools-only', PI_FFF_MULTIGREP='0',
                PORTLESS_SYNC_HOSTS='0', PORTLESS_STATE_DIR=str(work/'tmp/portless'),
@@ -259,16 +301,13 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                E2E_NODE_MODULES=str(e2e_runtime/'node_modules'),
                E2E_CONFIG_TEMPLATE=str(HERE/'tools/e2e.config.ts'),
                E2E_MODEL=e2e_model, E2E_BASE_URL=e2e_route['base_url'],
-               E2E_API_KEY=model_env[e2e_route['credential_env']],
+               E2E_API_KEY=model_env.get(e2e_route['credential_env'], ''),
                E2E_TELEMETRY_DISABLED='1',
                FACTORY26_TOOL_NODE=str(runtime/'bin/node'),
                FACTORY26_BASE_URL=base_url,
                PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
     collector = None
-    env.update(runtime_resource_environment(runtime, run))
-    collector, binding = start_local_telemetry(run)
-    env.update(telemetry_environment(binding))
     begin = time.monotonic()
     error = None
     history = {'status': 'not_started'}
@@ -278,6 +317,30 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         history_tool = HERE.parents[1]/'lab/arc_bench/agent_runtime/__main__.py'
 
     origin = state/'origin.git'
+
+    def cleanup_temporary_alias():
+        """Remove only the Linux short-path alias after owned processes are stopped."""
+        if temporary_alias is None:
+            metadata.setdefault('temporary_paths', {})['cleanup'] = 'not-applicable'
+            return
+        paths = metadata.setdefault('temporary_paths', {})
+        if not workspace_cleanup_complete or not collector_stopped or not daemon_stop_complete:
+            paths.update(cleanup='retained', cleanup_reason={
+                'workspace_cleanup_complete': workspace_cleanup_complete,
+                'collector_stopped': collector_stopped,
+                'daemon_stop_complete': daemon_stop_complete,
+                'reason': 'process stop could not be proven',
+            })
+            return
+        try:
+            temporary_alias.unlink(missing_ok=True)
+            temporary_alias_dir.rmdir()
+        except OSError as exc:
+            paths.update(cleanup='retained', cleanup_reason={
+                'type': type(exc).__name__, 'message': str(exc),
+            })
+            return
+        paths.update(cleanup='removed', cleanup_reason=None)
 
     def history_source_state():
         if not origin.is_dir():
@@ -331,7 +394,56 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
             history_stop.wait(5)
 
     shared_proxy = None
+    model_gateway = None
     try:
+        # Linux Chromium derives its SingletonSocket path from TMPDIR and has no
+        # separate browser-temp option. Keep the durable entity under run/work
+        # and expose only a short-lived /tmp symlink to child processes.
+        if sys.platform.startswith('linux'):
+            temporary_alias_dir = Path('/tmp') / f'f26-{uuid.uuid4().hex[:8]}'
+            temporary_alias_dir.mkdir(mode=0o700)
+            temporary_alias = temporary_alias_dir/'t'
+            temporary_alias.symlink_to(temporary, target_is_directory=True)
+            env['TMPDIR'] = str(temporary_alias)
+            env['MCPORTER_DAEMON_DIR'] = str(temporary_alias/'m')
+            metadata['temporary_paths'] = {
+                'platform': sys.platform,
+                'entity': str(Path(temporary)),
+                'alias': str(temporary_alias),
+                'alias_target': str(Path(temporary)),
+                'cleanup': 'pending',
+                'daemon_stop': 'pending',
+            }
+        else:
+            metadata['temporary_paths'] = {
+                'platform': sys.platform,
+                'entity': str(Path(temporary)),
+                'alias': None,
+                'cleanup': 'not-applicable',
+                'daemon_stop': 'not-applicable',
+            }
+        phase(run/'run.json', metadata, 'prepared')
+        # The existing collector owns resource sampling before gateway/browser startup.
+        collector, binding = start_local_telemetry(run)
+        collector_stopped = collector is None
+        env.update(telemetry_environment(binding))
+        env.update(runtime_resource_environment(runtime, run))
+        if gateway_enabled:
+            from hackathon_gateway import prepare_catalog
+            config, snapshot = prepare_catalog(gateway_catalog, gateway_routes, aliases=sorted(gateway_routes))
+            gateway_config = run/'gateway-config.json'
+            save(gateway_config, config)
+            save(run/'routing-snapshot.json', {'routes': gateway_routes, 'deployments': snapshot})
+            provider_env.parent.chmod(0o700)
+            provider_env.chmod(0o600)
+            model_gateway = start_model_gateway(runtime, run, env, gateway_config,
+                bindings=routes, provider_env=provider_env, preserve_parameters=True,
+                gateway_routes=gateway_routes)
+            env = model_gateway['pi_environment']
+            for name in ('OPENAI_API_KEY', 'FACTORY26_API_KEY', 'VISUAL_API_KEY', 'FACTORY26_VISUAL_API_KEY'):
+                env.pop(name, None)
+            env.update(E2E_API_KEY=env['FACTORY26_GATEWAY_TOKEN'], E2E_BASE_URL=model_gateway['endpoint'],
+                       FACTORY26_BASE_URL=model_gateway['endpoint'])
         initialize_repository(app)
         shared_proxy = start_shared_proxy(runtime, run, env)
         phase(run/'run.json', metadata, 'braid', 'braid.log')
@@ -350,11 +462,17 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                      'stdout':stopped.stdout, 'stderr':stopped.stderr})
                 if stopped.returncode:
                     metadata['e2e_daemon_cleanup_error'] = stopped.stderr or stopped.stdout
+                    metadata.setdefault('temporary_paths', {})['daemon_stop'] = 'failed'
+                else:
+                    daemon_stop_complete = True
+                    metadata.setdefault('temporary_paths', {})['daemon_stop'] = 'stopped'
             except Exception as exc:
                 metadata['e2e_daemon_cleanup_error'] = str(exc)
+                metadata.setdefault('temporary_paths', {})['daemon_stop'] = 'error'
         metadata['process_exit_code'] = code
         metadata['braid'] = read_runtime_result(state)
         metadata['cleanup_pids'] = cleanup_workspace(run)
+        workspace_cleanup_complete = True
         # Quiescence describes the scheduler. The root's state is the team's completion report.
         result = metadata['braid']
         if code != 0 or result.get('status') != 'quiescent':
@@ -379,6 +497,11 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                         error=str(exc) or type(exc).__name__, failed_phase=metadata.get('phase'))
         save(run/'delivery.json', {'status':'failed','error':metadata['error']})
     finally:
+        if model_gateway is not None:
+            try:
+                stop_model_gateway(model_gateway, run)
+            except Exception as exc:
+                metadata['model_gateway_cleanup_error'] = str(exc)
         if shared_proxy is not None:
             try:
                 stop_shared_proxy(shared_proxy, run)
@@ -390,8 +513,10 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
             metadata['history_diagnostic_error'] = str(exc)
         try:
             metadata.setdefault('cleanup_pids', []).extend(cleanup_workspace(run))
+            workspace_cleanup_complete = True
         except Exception as exc:
             metadata['cleanup_error'] = str(exc)
+            workspace_cleanup_complete = False
             if error is None:
                 error = exc
                 metadata.update(status='generation_failed', error=str(exc), failed_phase='cleanup')
@@ -405,8 +530,10 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         if collector is not None:
             try:
                 stop_local_telemetry(collector)
+                collector_stopped = True
             except Exception as exc:
                 metadata['telemetry_diagnostic_error'] = f'{type(exc).__name__}: {exc}'
+        cleanup_temporary_alias()
         metadata.update(generation_seconds=time.monotonic()-begin, generation_finished_at=time.time())
         phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
     recovery_required = (error is not None or metadata.get('process_exit_code') != 0 or
@@ -435,7 +562,7 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
 
 
 def main():
-    if execution_context.read() is None:
+    if execution_context() is None:
         raise ValueError('Harness entry requires facility assembly; use scripts/experiment_entry.py --source')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('requirements_dir', type=Path)

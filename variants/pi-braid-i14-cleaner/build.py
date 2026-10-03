@@ -1,5 +1,6 @@
 """Declare this variant's materials; use the common definition/delivery producer."""
 import argparse
+import shutil
 from pathlib import Path
 import sys
 HERE=Path(__file__).resolve().parent

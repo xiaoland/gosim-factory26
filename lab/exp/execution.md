@@ -34,6 +34,9 @@ Fresh、prepared 和 SDK child 使用共同 assembly，显式绑定本域定义�
 
 Docker 离线 job 显式设置 backend.network="none"，create 记录在 attempt/docker-create-intent.json 并传入 `--network none`；资源读回核对 HostConfig.NetworkMode 及 NetworkSettings.Networks，不仅根据 prepare-only 名称推断断网。未声明 network 的生成 job 保持 Docker 默认联网。首版不接受其它显式 network 值。
 
+独立题目的自费练习可在 backend 冻结 `parallel_distinct_tasks=true`。此时新 snapshot 不因最新 snapshot 中其它已确认 task 的活动运行而阻塞；相同 task、未知 task 身份和正式比赛模式仍沿用门控。snapshot/create/start 继续在现有 competition 锁内依次执行，创建时仍核实 snapshot 是最新身份，不扩大既有冻结实验的并行权限。
+
+
 Console accessor 需要域内 `access_resource_id`，创建和启动属于同一权威，其写入许可与 checkpoint 捕获共同排序。新登记不能追认旧未覆盖的活动 accessor；停止后不可重启同一出生实例，新的访问实例需重新创建及登记。当前服务的部署仍由其 owner 安排。
 
 ## 准入与来源停止
@@ -54,7 +57,7 @@ Docker endpoint、不可变 image_id、共享 slots 和 daemon 派生 admission_
 
 公共受管入口为 `python3 -m lab checkpoint RUN ATTEMPT --directory CHECKPOINT --request-id REQUEST`。它在原域权威上阻止新增写者、关闭已登记的实际执行及访问写者，并取得独立 capture 许可；不要求使用者制作 closure JSON。没有受管覆盖的历史运行仍需沿其冻结合同取证，不能从父进程退出推断完整关闭。外层 Local 包含 SDK child 时，公共入口选择已登记、终态接收已验证且具有真实 state mapping 的 child；唯一来源可直接采用，多个来源须用 `--source-resource AUTHORITY_RESOURCE_ID` 明确选择。来源保留 child 的实际出生身份与外层关联，不用外层 Local 身份代替。入口非零退出不自动否定检查点，完整性仍由 Harness producer 判定；该路径不提供官方 SDK resume。
 
-默认恢复入口为 `python3 -m lab recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE --directory NEW_RUN`。Intent 在普通实验字段之外声明 `recovery: {production: NAME, target: TARGET_LAYOUT, repair: REPAIR}`，相关 variant 的 prepared 使用 `{from_production: NAME}`。缺省 `mode` 为 `snapshot-copy`；显式 `mode: "domain-state"` 和稳定 `request_id` 选择同域受管恢复。入口冻结原 checkpoint 身份、修复输入、生产依赖及派生关系，准备新 run，不启动模型。SOURCE 必须是明确 checkpoint，不从含混 run/archive 自动猜。
+默认恢复入口为 `python3 -m lab recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE --directory NEW_RUN --job JOB --request-id REQUEST`。Intent 在普通实验字段之外声明 `recovery: {production: NAME, target: TARGET_LAYOUT, repair: REPAIR}`，相关 variant 的 prepared 使用 `{from_production: NAME}`。缺省 `mode` 为 `snapshot-copy`；显式 `mode: "domain-state"` 和稳定 `request_id` 选择同域受管恢复。入口冻结原 checkpoint 身份、修复输入、生产依赖及派生关系，准备新 run，不启动模型。SOURCE 必须是明确 checkpoint，不从含混 run/archive 自动猜。
 
 恢复是一次显式操作，缺省只准备选定 job。`--execute` 才请求派生 attempt 的一次入口；`--action query` 只读原操作回执，`--action continue` 以原 request 接续，`--action abort` 在确认本请求的 helper、新执行预约和 writer 责任已关闭后结束准备。取消保留原快照、当前状态字节、修复 ledger 和 generation，不回滚也不把写权交还旧入口。已启动的派生执行须针对其 exact attempt 停止，不能用取消准备代替。部分修复取消后的 holder 是 `repair-aborted`，不能当作可重开原快照的 `closed`；通常从保留的 immutable snapshot 新建恢复。
 

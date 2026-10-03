@@ -18,12 +18,17 @@ from agent_support import (save, phase, hashes, digest, logged, cleanup_workspac
                            copy_application, deliver, browser_executable, budgeted_pi,
                            start_local_telemetry, telemetry_environment, stop_local_telemetry)
 from agent_support import runtime_resource_environment, start_shared_proxy, stop_shared_proxy
-from agent_support import model_bindings, bind_native_models, native_model_route, bind_native_role
+from agent_support import (model_bindings, bind_native_models, bind_native_model_scope,
+                           native_model_route, bind_native_role)
 from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
 from harness_layout import bind_layout
 from execution_context import read as execution_context, role as definition_role, state_root as execution_state_root
+gateway_role = next((Path(row['local_root']) for row in execution_context()['assembly']['definitions'] if row['role']=='gateway'), None)
+if gateway_role:
+    sys.path.insert(0, str(gateway_role))
+    from model_gateway_service import start_model_gateway, stop_model_gateway
 
 HERE = definition_role(execution_context(),'agent') if execution_context() else Path(__file__).resolve().parent
 VARIANT = 'pi-braid-i14-cleaner'
@@ -54,13 +59,14 @@ UI使用适合所选框架的成熟组件库和图标库，样式使用UnoCSS；
 自检数据库、缓存、上传文件和浏览器状态使用临时位置，不改变交付应用的初始状态。'''
 
 
-def native_files(work, runtime, skills, base_url, visual_url):
+def native_files(work, runtime, skills, base_url, visual_url, route_bindings=None,
+                 desired_model=None):
     """返回供 Braid 使用的 profiles/bindings，并写出 Pi 消费的原生材料。
 
     成员主模型归 profile，内部角色归原生 agents Markdown。
     本次运行只替换连接与路径；包内有哪些技能和会话启用哪些技能分别选择。
     """
-    routes, _ = model_bindings(base_url, visual_url, require_key=False)
+    routes = route_bindings or model_bindings(base_url, visual_url, require_key=False)[0]
     background_bash = runtime/'node_modules/pi-background-bash/index.ts'
     fff = runtime/'node_modules/@ff-labs/pi-fff/src/index.ts'
     context7 = runtime/'node_modules/@upstash/context7-pi/extensions/context7.ts'
@@ -71,6 +77,8 @@ def native_files(work, runtime, skills, base_url, visual_url):
             raise FileNotFoundError(f'原生工具扩展缺失：{extension}')
     profiles, bindings = [], {}
     for source in sorted((HERE/'agents').iterdir()):
+        if source.name == 'pi-glm-root' and desired_model != 'glm-5.3':
+            continue
         profile = json.loads((source/'profile.json').read_text())
         folder = work/'capabilities'/profile['id']
         template = folder/'native-template'
@@ -87,6 +95,11 @@ def native_files(work, runtime, skills, base_url, visual_url):
         profile['provider'], profile['model'], profile_route = native_model_route(profile['provider'], profile['model'], routes)
         bind_native_models(providers, routes)
         save(template/'models.json', providers)
+        settings_file = template/'settings.json'
+        if settings_file.is_file():
+            settings = json.loads(settings_file.read_text())
+            bind_native_model_scope(settings, routes)
+            save(settings_file, settings)
         save(template/'pi-fff.json', {'mode':'tools-only'})
         for role in (template/'agents').glob('*.md'):
             instruction = bind_native_role(role.read_text(), routes).replace('@SKILLS@', json.dumps(str(skills))[1:-1])
@@ -150,7 +163,24 @@ def generate(args):
     辅助归档异常单独记入 diagnostic_error，不能冒充外部评分或覆盖生成错误。
     """
     visual_url = os.environ.get('VISUAL_BASE_URL')
-    routes, model_env = model_bindings(args.base_url, visual_url, require_key=not args.prepare_only)
+    gateway_enabled = gateway_role is not None
+    gateway_route_spec = {}
+    gateway_catalog = gateway_role/'model-gateway.json' if gateway_enabled else None
+    if gateway_enabled:
+        routes_file = Path(os.environ['FACTORY26_GATEWAY_ROUTES'])
+        if not gateway_catalog.is_file() or not routes_file.is_file():
+            raise FileNotFoundError('网关包缺少 model-gateway.json 或 gateway-routes.json')
+        gateway_route_spec = json.loads(routes_file.read_text())
+        desired_model = os.environ.get('MODEL') or 'glm-5.3-flash'
+        if desired_model not in gateway_route_spec:
+            raise ValueError(f'主模型未冻结到网关候选链：{desired_model}')
+        transport = {'provider': 'openai', 'base_url': 'http://127.0.0.1:4011/v1',
+                     'credential_env': 'FACTORY26_GATEWAY_TOKEN'}
+        routes = {'factory26': dict(transport, model=desired_model),
+                  'factory26-visual': dict(transport, model=desired_model)}
+        model_env = dict(os.environ, FACTORY26_MODEL_BINDINGS=json.dumps(routes, separators=(',', ':')))
+    else:
+        routes, model_env = model_bindings(args.base_url, visual_url, require_key=not args.prepare_only)
     base_url = routes['factory26']['base_url']
     requirements = args.requirements_dir.resolve(strict=True)
     if not requirements.is_dir():
@@ -196,8 +226,9 @@ def generate(args):
         (skills/name).symlink_to(source, target_is_directory=True)
         skill_sources[name] = str(source)
     inputs = run/'input'; shutil.copytree(requirements, inputs)
-    profiles, bindings = native_files(work, runtime, skills, base_url, visual_url)
     desired_model = os.environ.get('MODEL') or routes['factory26'].get('model')
+    profiles, bindings = native_files(work, runtime, skills, base_url, visual_url,
+                                      routes, desired_model)
     root_profile_id = 'pi-glm-root' if desired_model == 'glm-5.3' else ROOT_PROFILE_ID
     root_profile = next(p for p in profiles if p['id']==root_profile_id)
     if desired_model and desired_model != root_profile['model']:
@@ -238,12 +269,19 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         return run
     browser = str(browser_executable(runtime))
     # Chromium sockets require a short path; retain Pi's durable async state separately.
+    provider_env = run/'.private/provider-env.json'
+    if os.environ.get('FACTORY26_PROVIDER_VARIABLES'):
+        provider_env.parent.mkdir(mode=0o700, exist_ok=True)
+        with os.fdopen(os.open(provider_env, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as stream:
+            json.dump({name: os.environ[name] for name in json.loads(os.environ['FACTORY26_PROVIDER_VARIABLES'])}, stream)
+    if gateway_enabled and not provider_env.is_file():
+        raise FileNotFoundError(f'模型 gateway 已启用但 provider-env 缺失：{provider_env}')
     env = dict(model_env, **tool_environment(), PORTLESS_PORT='1355', PORTLESS_HTTPS='0',
                PI_FFF_MODE='tools-only', PI_FFF_MULTIGREP='0',
                PORTLESS_SYNC_HOSTS='0', PORTLESS_STATE_DIR=str(work/'tmp/portless'),
                npm_config_cache=str(work/'cache/npm'),
                npm_config_store_dir=str(work/'cache/pnpm'),
-               HOME=str(work/'home'), TMPDIR=tempfile.mkdtemp(prefix='f26-', dir='/tmp'),
+               HOME=str(work/'home'), TMPDIR=tempfile.mkdtemp(prefix='f26-', dir=work/'tmp'),
                PI_SUBAGENTS_TEMP_ROOT=str(work/'tmp'/f'pi-subagents-uid-{os.getuid()}'),
                PI_SUBAGENT_MAX_DEPTH='3',
                XDG_CONFIG_HOME=str(work/'home/.config'), PI_CODING_AGENT_DIR=str(native),
@@ -260,6 +298,7 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
     env['MCPORTER_DAEMON_DIR'] = str(Path(env['TMPDIR'])/'mcporter')
     collector = None
+    gateway_handle = None
     env.update(runtime_resource_environment(runtime, run))
     collector, binding = start_local_telemetry(run)
     env.update(telemetry_environment(binding))
@@ -327,6 +366,20 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
     shared_proxy = None
     try:
         initialize_repository(app)
+        if gateway_enabled:
+            from hackathon_gateway import prepare_catalog
+            gateway_config = run/'gateway-config.json'
+            prepared, snapshot = prepare_catalog(gateway_catalog, gateway_route_spec,
+                                                  aliases=sorted(gateway_route_spec))
+            gateway_config.write_text(json.dumps(prepared, ensure_ascii=False, indent=2) + '\n')
+            save(run/'routing-snapshot.json', {'routes': gateway_route_spec,
+                                               'deployments': snapshot,
+                                               'config_sha256': hashlib.sha256(gateway_config.read_bytes()).hexdigest()})
+            gateway_handle = start_model_gateway(
+                runtime, run, env, gateway_config, bindings=routes,
+                gateway_routes=gateway_route_spec, provider_env=provider_env,
+                preserve_parameters=True)
+            env = gateway_handle['pi_environment']
         shared_proxy = start_shared_proxy(runtime, run, env)
         phase(run/'run.json', metadata, 'braid', 'braid.log')
         history_thread = threading.Thread(target=watch_history, name='arc-history', daemon=True)
@@ -364,6 +417,11 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                         error=str(exc) or type(exc).__name__, failed_phase=metadata.get('phase'))
         save(run/'delivery.json', {'status':'failed','error':metadata['error']})
     finally:
+        if gateway_handle is not None:
+            try:
+                stop_model_gateway(gateway_handle, run)
+            except Exception as exc:
+                metadata['model_gateway_cleanup_error'] = str(exc)
         if shared_proxy is not None:
             try:
                 stop_shared_proxy(shared_proxy, run)
@@ -426,7 +484,7 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
 
 
 def main():
-    if execution_context.read() is None:
+    if execution_context() is None:
         raise ValueError('Harness entry requires facility assembly; use scripts/experiment_entry.py --source')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('requirements_dir', type=Path)

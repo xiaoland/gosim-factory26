@@ -108,6 +108,8 @@ def current_pressure(directory):
     sample_id = str(sample['sample_started']['monotonic_ns'])
     previous_path = directory / 'pressure.json'
     previous = read_json(previous_path) if previous_path.exists() else {}
+    deferred_path = directory / 'last-deferred.json'
+    deferred = read_json(deferred_path) if deferred_path.exists() else None
     previous_events = previous.get('oom_kill')
     oom_increased = previous_events is not None and events.get('oom_kill', 0) > previous_events
     if oom_increased or adjusted >= maximum * 0.90 or (full is not None and full >= 10):
@@ -117,6 +119,15 @@ def current_pressure(directory):
         status, reason = 'pressured', 'memory_headroom_or_reclaim_pressure'
     else:
         status, reason = 'normal', 'memory_headroom_available'
+    deferred_recent = bool(deferred and
+                           time.time_ns() - deferred.get('observed_at_ns', 0) <= 30_000_000_000)
+    if deferred_recent and deferred.get('reason') == 'startup_headroom_reserved':
+        try:
+            reserved = sum(item['reserved_bytes'] for item in live_reservations(directory).values())
+            projected = max(adjusted, reserved) + policy['startup_reserve_bytes']
+            deferred_recent = projected > maximum - policy['headroom_reserve_bytes']
+        except (OSError, ValueError, KeyError, TypeError):
+            deferred_recent = False
     recovered = (adjusted < maximum * 0.70 and
                  (some is None or some < 5) and (full is None or full < 0.5))
     good_samples = 0
@@ -126,11 +137,17 @@ def current_pressure(directory):
         if good_samples < 2:
             status, reason = 'pressured', 'waiting_for_two_recovered_samples'
     result = {'schema_version': 1, 'status': status, 'reason': reason, 'sample_id': sample_id,
-              'observed_at_ns': time.time_ns(), 'memory_current': current, 'memory_max': maximum,
+              'sample_started_monotonic_ns': sample['sample_started']['monotonic_ns'],
+              'observed_monotonic_ns': time.monotonic_ns(), 'observed_at_ns': time.time_ns(),
+              'memory_current': current, 'memory_max': maximum,
               'inactive_file': inactive, 'cache_credit_estimate': credit,
               'accounted_for_admission': adjusted, 'charged_headroom': max(0, maximum-current),
               'psi': psi, 'psi_error': psi_error, 'oom_kill': events.get('oom_kill', 0),
               'good_samples': good_samples,
+              'deferred_reason': deferred.get('reason') if deferred_recent else None,
+              'deferred_start_id': deferred.get('start_id') if deferred_recent else None,
+              'deferred_age_ns': time.time_ns() - deferred.get('observed_at_ns', 0)
+              if deferred_recent else None,
               'startup_reserve_bytes': policy['startup_reserve_bytes'],
               'headroom_reserve_bytes': policy['headroom_reserve_bytes']}
     write_json(previous_path, result)
@@ -146,6 +163,30 @@ def status(directory):
                 'errno': getattr(error, 'errno', None), 'observed_at_ns': time.time_ns()}
 
 
+def reclaim_memory(directory):
+    """Best-effort reclaim for the run cgroup only; preserve the raw kernel result."""
+    policy = read_json(directory / 'policy.json')
+    sample = read_json(Path(policy['sample_path']))
+    cgroup = Path(sample['cgroup_path'])
+    identity = cgroup.stat()
+    if sample['cgroup_identity'] != {'device': identity.st_dev, 'inode': identity.st_ino}:
+        raise ValueError('resource sample cgroup identity changed')
+    target = cgroup / 'memory.reclaim'
+    stat = key_values((cgroup / 'memory.stat').read_text())
+    amount = min(max(0, stat.get('inactive_file', 0)), 256 * MIB)
+    if amount <= 0:
+        return {'status': 'deferred', 'reason': 'no_reclaimable_inactive_file',
+                'cgroup_path': str(cgroup), 'requested_bytes': 0}
+    try:
+        target.write_text(str(amount))
+    except OSError as error:
+        return {'status': 'unknown', 'reason': f'{type(error).__name__}: {error}',
+                'errno': error.errno, 'cgroup_path': str(cgroup),
+                'requested_bytes': amount}
+    return {'status': 'reclaimed', 'cgroup_path': str(cgroup),
+            'requested_bytes': amount, 'observed_at_ns': time.time_ns()}
+
+
 def live_reservations(directory):
     path = directory / 'admission.json'
     saved = read_json(path) if path.exists() else {}
@@ -155,6 +196,24 @@ def live_reservations(directory):
         if still_running(record):
             active[start_id] = reservation
     return active
+
+
+def wait_for_retry(directory, start_id, deadline_ns):
+    """Keep an explicitly unexecuted admission pending for native recovery."""
+    retry_path = directory / 'starts' / f'{start_id}.retry.json'
+    while time.monotonic_ns() < deadline_ns:
+        if (directory / 'resource-failed.json').exists():
+            return False
+        if retry_path.exists():
+            try:
+                retry = read_json(retry_path)
+            except (OSError, ValueError):
+                retry = None
+            if retry and retry.get('status') == 'retry_requested':
+                retry_path.unlink(missing_ok=True)
+                return True
+        time.sleep(0.02)
+    return False
 
 
 def launch(args, directory):
@@ -176,68 +235,88 @@ def launch(args, directory):
         raise ValueError('launch does not own its process group')
     receipt = directory / 'starts' / f'{args.start_id}.json'
     record_path = execution_dir / 'processes' / f'{args.start_id}.json'
-    with locked(directory):
-        if record_path.exists() or receipt.exists():
-            raise ValueError('a process start identity cannot be reused')
-        resource = status(directory)
+    retry_deadline_ns = time.monotonic_ns() + 30_000_000_000
+    while True:
+        retryable = False
         reason = None
-        admission_error = None
-        try:
-            active = live_reservations(directory)
-        except (OSError, ValueError, KeyError, TypeError) as error:
-            active = None
-            reason = f'admission_unavailable: {type(error).__name__}: {error}'
-            admission_error = {'type': type(error).__name__, 'errno': getattr(error, 'errno', None),
-                               'message': str(error)}
-        if reason is not None:
-            pass
-        elif (execution_dir / 'stopping.json').exists():
-            reason = 'execution_stopping'
-        elif resource['status'] != 'normal':
-            reason = resource['reason']
-        else:
-            reserved = sum(item['reserved_bytes'] for item in active.values())
-            requested = resource['startup_reserve_bytes']
-            # Reservations are a startup floor, not a second sum of process RSS.
-            projected = max(resource['accounted_for_admission'], reserved) + requested
-            if projected > resource['memory_max'] - resource['headroom_reserve_bytes']:
-                reason = 'startup_headroom_reserved'
-        if reason:
-            denied = {'schema_version': 1, 'status': 'resource_deferred', 'reason': reason,
-                      'start_id': args.start_id, 'execution_id': execution_id,
-                      'pressure': resource, 'admission_error': admission_error,
-                      'observed_at_ns': time.time_ns()}
-            write_json(receipt, denied)
-            if active is not None:
+        with locked(directory):
+            existing_receipt = read_json(receipt) if receipt.exists() else None
+            if record_path.exists() or (existing_receipt and existing_receipt.get('status') not in {'resource_deferred', 'retry_requested'}):
+                raise ValueError('a process start identity cannot be reused')
+            resource = status(directory)
+            admission_error = None
+            try:
+                active = live_reservations(directory)
+            except (OSError, ValueError, KeyError, TypeError) as error:
+                active = None
+                reason = f'admission_unavailable: {type(error).__name__}: {error}'
+                admission_error = {'type': type(error).__name__, 'errno': getattr(error, 'errno', None),
+                                   'message': str(error)}
+            if reason is None and (directory / 'resource-failed.json').exists():
+                reason = 'resource_recovery_failed'
+            elif reason is None and (execution_dir / 'resource-failed.json').exists():
+                reason = 'resource_recovery_failed'
+            elif reason is None and (execution_dir / 'stopping.json').exists():
+                reason = 'execution_stopping'
+            elif reason is None and resource['status'] != 'normal':
+                reason = resource['reason']
+            elif reason is None:
+                reserved = sum(item['reserved_bytes'] for item in active.values())
+                requested = resource['startup_reserve_bytes']
+                # Reservations are a startup floor, not a second sum of process RSS.
+                projected = max(resource['accounted_for_admission'], reserved) + requested
+                if projected > resource['memory_max'] - resource['headroom_reserve_bytes']:
+                    reason = 'startup_headroom_reserved'
+            if reason is not None:
+                denied = {'schema_version': 1, 'status': 'resource_deferred', 'reason': reason,
+                          'start_id': args.start_id, 'execution_id': execution_id,
+                          'pressure': resource, 'admission_error': admission_error,
+                          'observed_at_ns': time.time_ns()}
+                write_json(receipt, denied)
+                write_json(directory / 'last-deferred.json', {
+                    'start_id': args.start_id, 'reason': reason,
+                    'observed_at_ns': time.time_ns(), 'pressure': resource,
+                })
+                if active is not None:
+                    write_json(directory / 'admission.json', active)
+                print(json.dumps(denied, ensure_ascii=False), file=sys.stderr, flush=True)
+                retryable = (
+                    reason not in {'resource_recovery_failed', 'execution_stopping'} and
+                    not reason.startswith('admission_unavailable:') and
+                    resource.get('status') != 'unavailable'
+                )
+            else:
+                record = {'schema_version': 1, 'start_id': args.start_id, 'execution_id': execution_id,
+                          'parent_start_id': os.environ.get('FACTORY_NATIVE_START_ID'),
+                          'kind': args.kind, 'service': args.service, **identity,
+                          'created_at_ns': time.time_ns()}
+                if args.manifest:
+                    record['manifest_path'] = args.manifest
+                write_json(record_path, record)
+                active[args.start_id] = {'process_record': str(record_path),
+                                         'reserved_bytes': resource['startup_reserve_bytes']}
                 write_json(directory / 'admission.json', active)
-            print(json.dumps(denied, ensure_ascii=False), file=sys.stderr, flush=True)
+                write_json(receipt, {'schema_version': 1, 'status': 'started',
+                                     'start_id': args.start_id, 'execution_id': execution_id,
+                                     'process_record': str(record_path), 'pid': identity['pid'],
+                                     'pressure': resource, 'observed_at_ns': time.time_ns()})
+        if retryable:
+            if wait_for_retry(directory, args.start_id, retry_deadline_ns):
+                continue
             return 75
-        record = {'schema_version': 1, 'start_id': args.start_id, 'execution_id': execution_id,
-                  'parent_start_id': os.environ.get('FACTORY_NATIVE_START_ID'),
-                  'kind': args.kind, 'service': args.service, **identity,
-                  'created_at_ns': time.time_ns()}
-        if args.manifest:
-            record['manifest_path'] = args.manifest
-        write_json(record_path, record)
-        active[args.start_id] = {'process_record': str(record_path),
-                                 'reserved_bytes': resource['startup_reserve_bytes']}
-        write_json(directory / 'admission.json', active)
-        write_json(receipt, {'schema_version': 1, 'status': 'started',
-                             'start_id': args.start_id, 'execution_id': execution_id,
-                             'process_record': str(record_path), 'pid': identity['pid'],
-                             'pressure': resource, 'observed_at_ns': time.time_ns()})
-    environment = dict(os.environ, FACTORY_NATIVE_START_ID=args.start_id)
-    try:
-        os.execvpe(command[0], command, environment)
-    except OSError as error:
-        failure = {'schema_version': 1, 'status': 'exec_failed', 'start_id': args.start_id,
-                   'execution_id': execution_id, 'errno': error.errno,
-                   'reason': f'{type(error).__name__}: {error.strerror}',
-                   'observed_at_ns': time.time_ns()}
-        write_json(receipt, failure)
-        print(json.dumps(failure, ensure_ascii=False), file=sys.stderr, flush=True)
-        return 126
-
+        if reason is not None:
+            return 75
+        environment = dict(os.environ, FACTORY_NATIVE_START_ID=args.start_id)
+        try:
+            os.execvpe(command[0], command, environment)
+        except OSError as error:
+            failure = {'schema_version': 1, 'status': 'exec_failed', 'start_id': args.start_id,
+                       'execution_id': execution_id, 'errno': error.errno,
+                       'reason': f'{type(error).__name__}: {error.strerror}',
+                       'observed_at_ns': time.time_ns()}
+            write_json(receipt, failure)
+            print(json.dumps(failure, ensure_ascii=False), file=sys.stderr, flush=True)
+            return 126
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
@@ -253,6 +332,7 @@ def main():
     fence = commands.add_parser('fence')
     fence.add_argument('--execution-dir', type=Path, required=True)
     fence.add_argument('--execution-id', required=True)
+    reclaim = commands.add_parser('reclaim')
     run = commands.add_parser('launch')
     run.add_argument('--start-id', required=True)
     run.add_argument('--kind', choices=['native', 'tool'], required=True)
@@ -280,6 +360,9 @@ def main():
             write_json(args.execution_dir / 'stopping.json',
                        {'execution_id': args.execution_id, 'requested_at_ns': time.time_ns()})
         print(json.dumps({'status': 'fenced', 'execution_id': args.execution_id}))
+    elif args.operation == 'reclaim':
+        with locked(directory):
+            print(json.dumps(reclaim_memory(directory), ensure_ascii=False))
     else:
         return launch(args, directory)
     return 0

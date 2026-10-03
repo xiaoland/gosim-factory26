@@ -10,6 +10,7 @@ import subprocess
 import sys
 import tempfile
 import uuid
+import zipfile
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT))
@@ -44,12 +45,110 @@ def production_environment(cache):
 
 def cache_path(lock_dir):
     lock = Path(lock_dir)/'package-lock.json'
-    return Path.home()/'.cache/factory26'/('runtime-'+hashlib.sha256(lock.read_bytes()).hexdigest()[:16])
+    return ROOT/'runs/runtime-cache'/('runtime-'+hashlib.sha256(lock.read_bytes()).hexdigest()[:16])
+
+
+def derive_linux(output, package, braid_source, cache_root):
+    """Derive a current Linux runtime from an immutable package, without Docker."""
+    from scripts.package_agent import copy_file
+    output, cache = workssd_path(output), workssd_path(cache_root)
+    package, source = Path(package).resolve(strict=True), Path(braid_source).resolve(strict=True)
+    env = production_environment(cache)
+    def digest(path):
+        with Path(path).open('rb') as stream:
+            return hashlib.file_digest(stream, 'sha256').hexdigest()
+    package_hash = digest(package)
+    progress = output/'.derivation-in-progress.json'
+    if output.exists() and (not progress.is_file() or json.loads(progress.read_text()).get('package_sha256') != package_hash):
+        raise FileExistsError(output)
+    output.mkdir(parents=True, exist_ok=True)
+    with zipfile.ZipFile(package) as archive:
+        records = json.loads(archive.read('runtime/runtime-source.json'))
+        lock = ROOT/'harness/npm'
+        if records['npm_sha256'] != digest(lock/'package-lock.json'):
+            raise ValueError('retained Linux npm lock differs from current input')
+        for name, expected in records['native_patch_sha256'].items():
+            if digest(lock/'patches'/name) != expected:
+                raise ValueError(f'retained Linux native patch differs: {name}')
+        for name, expected in records['native_modules_sha256'].items():
+            if digest(lock/name) != expected:
+                raise ValueError(f'retained Linux managed module differs: {name}')
+        if not progress.is_file():
+            for info in archive.infolist():
+                if not info.filename.startswith('runtime/') or info.is_dir():
+                    continue
+                member = Path(info.filename).relative_to('runtime')
+                destination = (output/member).resolve()
+                if not destination.is_relative_to(output):
+                    raise ValueError(f'unsafe source member: {info.filename}')
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                with archive.open(info) as incoming, destination.open('xb') as outgoing:
+                    shutil.copyfileobj(incoming, outgoing)
+                mode = (info.external_attr >> 16) & 0o777
+                destination.chmod(mode or 0o644)
+            progress.write_text(json.dumps({'package_sha256': package_hash, 'phase': 'base-extracted'})+'\n')
+    # Cargo may update its registry/index. Clone the read-only installed cache
+    # rather than symlinking it and letting compilation write into the user home.
+    existing = Path.home()/'.cargo'
+    for name in ('registry',):
+        if (existing/name).is_dir() and not (cache/'cargo'/name).exists():
+            shutil.copytree(existing/name, cache/'cargo'/name, copy_function=copy_file)
+    def source_files():
+        return {str(path.relative_to(source)): digest(path) for part in
+                ('Cargo.toml', 'Cargo.lock', 'src', 'migrations', 'config.example.toml')
+                for path in ([source/part] if (source/part).is_file() else (source/part).rglob('*'))
+                if path.is_file()}
+    before = source_files()
+    command = ['cargo', 'zigbuild', '--locked', '--release', '--target',
+               'x86_64-unknown-linux-gnu.2.36', '--manifest-path', str(source/'Cargo.toml')]
+    logs = cache/'logs'
+    logs.mkdir(exist_ok=True)
+    with (logs/'braid-build.log').open('w') as log:
+        subprocess.run(command, check=True, env=env, stdout=log, stderr=subprocess.STDOUT)
+    if before != source_files():
+        raise ValueError('Braid sources changed during compilation; preserve build and derive again')
+    binary = cache/'target/x86_64-unknown-linux-gnu/release/braid'
+    shutil.copy2(binary, output/'bin/braid')
+    (output/'bin/braid').chmod(0o755)
+    python = output/'python'
+    if python.exists():
+        shutil.rmtree(python)
+    command = [sys.executable, '-m', 'pip', 'install', '--ignore-installed', '--no-compile', '--only-binary=:all:',
+               '--platform', 'manylinux2014_x86_64', '--platform', 'manylinux_2_28_x86_64',
+               '--python-version', '3.12', '--implementation', 'cp', '--abi', 'cp312',
+               '--target', str(python), 'litellm[proxy]==1.102.0']
+    with (logs/'router-dependencies.log').open('w') as log:
+        subprocess.run(command, check=True, env=env, stdout=log, stderr=subprocess.STDOUT)
+    # pip --target generates host-interpreter scripts. The portable runtime
+    # exports only its explicit bin/litellm launcher, never those Mac shebangs.
+    shutil.rmtree(python/'bin', ignore_errors=True)
+    versions = {}
+    for metadata in python.glob('*.dist-info/METADATA'):
+        headers = dict(line.split(': ', 1) for line in metadata.read_text().splitlines()
+                       if line.startswith(('Name: ', 'Version: ')))
+        versions[headers['Name']] = headers['Version']
+    (output/'python-requirements.lock').write_text(''.join(f'{name}=={version}\n' for name, version in sorted(versions.items())))
+    (output/'bin/litellm').write_text('#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\n'
+        "sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'python'))\n"
+        'from litellm import run_server\nsys.exit(run_server())\n')
+    (output/'bin/litellm').chmod(0o755)
+    records.pop('docker_endpoint', None)
+    records['derivation'] = {'package': str(package), 'package_sha256': package_hash,
+                             'producer': 'runtime.py derive-linux', 'cache_root': str(cache),
+                             'python_target': 'cp312-manylinux-x86_64', 'router': versions}
+    records['sources']['braid'] = {'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, text=True).strip(),
+        'source_sha256': hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest(),
+        'binary_sha256': digest(output/'bin/braid'), 'target': 'x86_64-unknown-linux-gnu.2.36',
+        'files': before, 'command': ['cargo', 'zigbuild', '--locked', '--release', '--target', 'x86_64-unknown-linux-gnu.2.36']}
+    (output/'runtime-source.json').write_text(json.dumps(records, indent=2)+'\n')
+    progress.unlink()
+    return output
 
 
 def prepare(lock_dir):
     lock_dir = Path(lock_dir).resolve()
     cache = cache_path(lock_dir)
+    env = production_environment(ROOT/'runs/build-cache'/cache.name)
     lock = lock_dir/'package-lock.json'
     expected = cache/'package-lock.json'
     patches = (
@@ -109,7 +208,7 @@ def prepare(lock_dir):
         cache.mkdir(parents=True, exist_ok=True)
         for name in ('package.json','package-lock.json'):
             shutil.copy2(lock_dir/name, cache/name)
-        subprocess.run(['npm','ci','--legacy-peer-deps','--prefix',str(cache)],check=True)
+        subprocess.run(['npm','ci','--legacy-peer-deps','--prefix',str(cache)],check=True,env=env)
         for package, patch_name, target_names in patches:
             patch_file = lock_dir/'patches'/patch_name
             targets = [cache/'node_modules'/package/name for name in target_names]
@@ -124,13 +223,13 @@ def prepare(lock_dir):
                 ''.join(hashlib.sha256(target.read_bytes()).hexdigest()+'\n' for target in targets))
     shutil.copy2(lock_dir/'native-managed.mjs', cache/'native-managed.mjs')
     subprocess.run([str(cache/'node_modules/.bin/playwright'),'install','chromium','--no-shell'],
-                   env=dict(os.environ,PLAYWRIGHT_BROWSERS_PATH=str(cache/'.playwright')),check=True)
+                   env=dict(env,PLAYWRIGHT_BROWSERS_PATH=str(cache/'.playwright')),check=True)
     return cache
 
 
 def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
     """Export an independent Linux runtime directory; Docker owns build caching."""
-    output = Path(output).resolve()
+    output = workssd_path(output)
     if output.exists():
         raise FileExistsError(output)
     lock_dir = Path(lock_dir).resolve()
@@ -139,7 +238,9 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
     docker_env = docker_environment(endpoint)
     name = 'factory26-runtime-'+uuid.uuid4().hex
     records = {}
-    with tempfile.TemporaryDirectory(prefix=name) as tmp:
+    staging = workssd_path(output.parent/'.runtime-staging')
+    staging.mkdir(parents=True, exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix=name, dir=staging) as tmp:
         context=Path(tmp)
         for file in ('Dockerfile','build.py'):
             shutil.copy2(ROOT/'submission'/file,context/file)
@@ -194,10 +295,11 @@ def dev_svc(source):
     if not (package/'pyproject.toml').is_file():
         raise ValueError('开发 SVC 源码必须包含 cli/pyproject.toml；参赛 Corpus 树不能代替')
     python = ROOT/'.venv/bin/python'
+    env = production_environment(ROOT/'runs/build-cache/dev-svc')
     if not python.exists():
-        subprocess.run(['uv', 'venv', '--python', '3.13', str(ROOT/'.venv')], check=True)
+        subprocess.run(['uv', 'venv', '--python', '3.13', str(ROOT/'.venv')], check=True, env=env)
     subprocess.run(['uv', 'pip', 'install', '--python', str(python),
-                    '--reinstall-package', 'sustainable-vibe-coding', str(package)], check=True)
+                    '--reinstall-package', 'sustainable-vibe-coding', str(package)], check=True, env=env)
     info = {'source': str(source),
             'revision': subprocess.check_output(['git', '-C', str(source), 'rev-parse', 'HEAD'], text=True).strip(),
             'status': subprocess.check_output(['git', '-C', str(source), 'status', '--short', '--', '.'], text=True),
@@ -210,7 +312,7 @@ def dev_svc(source):
 
 def host_lab(output, base_python, purpose):
     """Build one explicitly identified controller or runner Python runtime."""
-    output = output.expanduser().absolute()
+    output = workssd_path(output)
     base_python = base_python.expanduser().absolute()
     if output.exists():
         raise FileExistsError(output)
@@ -223,7 +325,7 @@ def host_lab(output, base_python, purpose):
     launcher = output/('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
     subprocess.run(['uv', 'pip', 'install', '--python', str(launcher), '-r', str(requirements)], check=True,env=environment)
     packages = sorted(subprocess.check_output(
-        ['uv', 'pip', 'freeze', '--python', str(launcher)], text=True).splitlines())
+        ['uv', 'pip', 'freeze', '--python', str(launcher)], text=True, env=env).splitlines())
     version = subprocess.check_output(
         [str(launcher), '-c', 'import platform; print(platform.python_version())'], text=True).strip()
     receipt = {'schema_version': 1, 'kind': 'factory26.exp.runtime', 'purpose': purpose,
@@ -259,7 +361,7 @@ def ensure_host_runtime(cache_root, base_python, purpose, expected_dependencies=
     plan = plan_host_runtime(base_python)
     if expected_dependencies is not None and expected_dependencies != plan['dependencies']:
         raise ValueError('runtime dependencies 与冻结选择不一致')
-    cache = Path(cache_root).expanduser().resolve()
+    cache = workssd_path(cache_root)
     cache.mkdir(parents=True, exist_ok=True)
     with (cache/'.runtime.lock').open('a') as lock:
         fcntl.flock(lock, fcntl.LOCK_EX)
@@ -285,12 +387,14 @@ def ensure_host_runtime(cache_root, base_python, purpose, expected_dependencies=
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command',choices=['path','prepare','linux','dev-svc','host-exp'])
+    p.add_argument('command',choices=['path','prepare','linux','derive-linux','dev-svc','host-exp'])
     p.add_argument('--lock-dir',type=Path,default=ROOT/'harness/npm')
     p.add_argument('--output',type=Path)
     p.add_argument('--backend',choices=['pi','codex'],default='pi')
     p.add_argument('--docker-context')
     p.add_argument('--braid-source',type=Path,help='Optional team dependency; raw runtimes do not require Braid')
+    p.add_argument('--base-package',type=Path,help='Retained immutable Linux package used by derive-linux')
+    p.add_argument('--cache-root',type=Path,help='Explicit WorkSSD production cache')
     p.add_argument('--svc-source',type=Path,help='完整开发 SVC checkout；不是参赛 Corpus')
     p.add_argument('--python',type=Path,help='host-exp 使用的明确基础 Python')
     p.add_argument('--purpose',choices=['controller','runner'],help='明确 runtime 制品职责')
@@ -303,6 +407,10 @@ def main():
     elif a.command=='host-exp':
         if a.output is None or a.python is None or a.purpose is None: p.error('host-exp requires --output/--python/--purpose')
         result=host_lab(a.output,a.python,a.purpose)
+    elif a.command=='derive-linux':
+        if a.output is None or a.base_package is None or a.braid_source is None or a.cache_root is None:
+            p.error('derive-linux requires --output/--base-package/--braid-source/--cache-root')
+        result=derive_linux(a.output,a.base_package,a.braid_source,a.cache_root)
     else:
         if a.output is None: p.error('linux requires --output')
         result=linux(a.output,a.backend,a.lock_dir,a.docker_context,a.braid_source)

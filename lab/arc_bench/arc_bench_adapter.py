@@ -162,10 +162,22 @@ try:
     services={}
     definition_root=str(Path(__file__).parent/'agent')
     definition=Path(__file__).parent/'definition-binding.json'
+    # Preserve supplied artifact identities while moving delivered roots into
+    # the official child namespace, rather than forwarding host-only paths.
+    package_root=Path(__file__).parent/'agent'
+    raw_bindings=json.loads(environment.get('FACTORY26_EXP_INPUT_BINDINGS','{}'))
+    rebased={}
+    for role,value in raw_bindings.items():
+        if not isinstance(value,dict):
+            continue
+        root=Path(value.get('root',''))
+        member=root.name if root.name in {'runtime','skills','braid'} else role
+        candidate=package_root if role=='agent' else package_root/member
+        rebased[role]={**value,'root':str(candidate) if candidate.exists() else value.get('root')}
     if definition.is_file():
         binding=json.loads(definition.read_text())
-        environment['FACTORY26_EXP_INPUT_BINDINGS']=json.dumps({
-            'agent':dict(binding,root=str(Path(__file__).parent/'agent'))})
+        rebased['agent']=dict(binding,root=str(package_root))
+    environment['FACTORY26_EXP_INPUT_BINDINGS']=json.dumps(rebased)
     support=Path(__file__).parent/'collector-support'
     if support.is_dir():
         import select

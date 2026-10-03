@@ -18,13 +18,17 @@ import zipfile
 
 if __package__:
     from .agent_support import copy_skill
+    from .model_gateway_service import read_provider_environment
 else:
     from agent_support import copy_skill
+    from model_gateway_service import read_provider_environment
 
 ROOT=Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
 
 TOOL_KEY_NAMES = ('CONTEXT7_API_KEY', 'EXA_API_KEY')
-I14_VARIANTS = {'pi-braid-i14', 'pi-braid-i14-cleaner', 'pi-braid-i14-reviewer', 'pi-braid-i14-e2e'}
+I14_VARIANTS = {'pi-braid-i14', 'pi-braid-i14-cleaner', 'pi-braid-i14-reviewer', 'pi-braid-i14-e2e',
+                'pi-braid-i14-cleaner-direct', 'pi-braid-i14-reviewer-direct'}
 
 
 def require_private_artifact(path):
@@ -56,7 +60,44 @@ def write_tool_credentials(env_file, destination):
         raise ValueError('工具凭据输入需要 CONTEXT7_API_KEY 与 EXA_API_KEY')
     target = Path(destination)/'.private/tool-env.json'
     require_private_artifact(target)
-    target.parent.mkdir(mode=0o700)
+    target.parent.mkdir(mode=0o700, exist_ok=True)
+    target.parent.chmod(0o700)
+    with os.fdopen(os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as stream:
+        json.dump(values, stream)
+        stream.write('\n')
+
+
+def write_gateway_routes(routes_file, destination):
+    """Bind a public, ordered alias deployment selection to the package."""
+    from scripts.hackathon_gateway import prepare_catalog
+    routes = json.loads(Path(routes_file).read_text())
+    if not isinstance(routes, dict) or not routes or any(
+            not isinstance(alias, str) or not isinstance(chain, list) or not chain or
+            any(not isinstance(item, str) or not item for item in chain)
+            for alias, chain in routes.items()):
+        raise ValueError('gateway routes must be a non-empty alias to ordered deployment list object')
+    prepare_catalog(ROOT/'harness/model-gateway.json', routes, aliases=routes)
+    target = Path(destination)/'support/gateway-routes.json'
+    target.write_text(json.dumps(routes, sort_keys=True, indent=2)+'\n')
+
+
+def write_provider_credentials(env_file, destination, gateway_routes=None):
+    """Copy the explicitly selected provider environment into a private artifact."""
+    if gateway_routes is None:
+        catalog = json.loads((ROOT/'harness/model-gateway.json').read_text())
+    else:
+        from scripts.hackathon_gateway import prepare_catalog
+        routes = json.loads(Path(gateway_routes).read_text())
+        catalog, _ = prepare_catalog(ROOT/'harness/model-gateway.json', routes, aliases=routes)
+    allowed = {entry['litellm_params'][field].removeprefix('os.environ/')
+               for entry in catalog['model_list'] for field in ('api_base', 'api_key')}
+    values = read_provider_environment(env_file, allowed)
+    if gateway_routes is not None and set(values) != allowed:
+        raise ValueError(f'provider environment must exactly supply selected references; missing {sorted(allowed-set(values))}')
+    target = Path(destination)/'.private/provider-env.json'
+    require_private_artifact(target)
+    target.parent.mkdir(mode=0o700, exist_ok=True)
+    target.parent.chmod(0o700)
     with os.fdopen(os.open(target, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600), 'w') as stream:
         json.dump(values, stream)
         stream.write('\n')
@@ -180,6 +221,10 @@ def assemble(source, destination, runtime, skill_source, skills):
     support=destination/'support';support.mkdir()
     for name in ('agent_support.py','braid_runtime.py','core.py','harness_layout.py','model_budget.mjs','runtime_resources.py'):
         shutil.copy2(ROOT/'scripts'/name,support/name)
+    if source.name in I14_VARIANTS:
+        for name in ('hackathon_gateway.py', 'hackathon_gateway_compat.py', 'responses_compat.py'):
+            shutil.copy2(ROOT/'scripts'/name, support/name)
+        shutil.copy2(ROOT/'harness/model-gateway.json', support/'model-gateway.json')
     if source.name in I14_VARIANTS | {'pi-braid', 'pi-braid-i11', 'pi-braid-i12', 'pi-braid-i13', 'pi-braid-i13-glm-root', 'pi-braid-flash-team', 'pi-braid-kimi-root'}:
         shutil.copy2(ROOT/'lab/otlp.py',support/'otlp.py')
         dependency = os.environ.get('FACTORY26_BUILD_OTLP_DEPENDENCIES')
@@ -362,7 +407,8 @@ def _component(cache, name, dependencies, populate):
 def produce(variant, output_store, runtime, skill_source=None, tool_env=None,
             e2e_runtime=None, otlp_dependencies=None, expected_dependencies=None, provider_env=None, application_seed=None, gateway_routes=None):
     """Produce independently reusable assets; a delivery expands them only on demand."""
-    cache=Path(output_store).resolve(); cache.mkdir(parents=True,exist_ok=True)
+    from scripts.runtime import workssd_path
+    cache=workssd_path(output_store); cache.mkdir(parents=True,exist_ok=True)
     dependencies=expected_dependencies or plan_material(variant,runtime,skill_source,tool_env,e2e_runtime,otlp_dependencies,provider_env,application_seed,gateway_routes)
     runtime,runtime_binding=_selected_asset(runtime)
     skill_source,skill_binding=_selected_asset(skill_source or ROOT/'harness/skills')
@@ -486,6 +532,9 @@ def package(variant, output, docker_context=None, runtime=None, stage=None,
             skill_source=None, tool_env=None, e2e_runtime=None, cache_root=None, otlp_dependencies=None, provider_env=None, application_seed=None, gateway_routes=None):
     if runtime is None:
         raise ValueError('新生产必须明确已冻结 runtime；缺失构建由 runtime producer 负责')
+    from scripts.runtime import workssd_path
+    if output is not None: output = workssd_path(output)
+    if stage is not None: stage = workssd_path(stage)
     if output is not None and Path(output).exists(): raise FileExistsError(output)
     cache = Path(cache_root or ROOT/'runs/material-cache')
     material = produce(variant, cache, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies,provider_env=provider_env,application_seed=application_seed,gateway_routes=gateway_routes)
@@ -521,10 +570,10 @@ def main():
     p.add_argument('--otlp-dependencies',type=Path)
     p.add_argument('--skills',type=Path)
     p.add_argument('--tool-env',type=Path,help='工具凭据的显式 dotenv 输入；仅写入非 Git 制品私有配置')
-    p.add_argument('--provider-env',type=Path)
-    p.add_argument('--application-seed',type=Path)
-    p.add_argument('--gateway-routes',type=Path)
     p.add_argument('--e2e-runtime',type=Path,help='I14 e2e 独立 Linux 工具与浏览器目录')
+    p.add_argument('--provider-env',type=Path,help='显式选定的模型供应商 JSON 环境；私有包装配')
+    p.add_argument('--application-seed',type=Path,help='reviewer 的 published application v2 目录或 ZIP')
+    p.add_argument('--gateway-routes',type=Path,help='公开 alias 到有序 deployment list 的冻结 JSON')
     a=p.parse_args()
     if a.output is None and a.stage is None:p.error('需要 --output 或 --stage')
     print(package(a.variant,a.output,a.docker_context,a.runtime,a.stage,a.skills,a.tool_env,a.e2e_runtime,a.cache_root,a.otlp_dependencies,a.provider_env,a.application_seed,a.gateway_routes))

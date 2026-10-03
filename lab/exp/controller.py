@@ -172,6 +172,9 @@ def validate_recipe(spec):
         if kind == 'hosted':
             from urllib.parse import urlsplit
             backend = job['backend']
+            cadence = backend.get('observation_interval_seconds')
+            if cadence is not None and (type(cadence) is not int or cadence < 60):
+                raise ValueError('hosted observation interval must be an integer of at least 60 seconds')
             for field in ('competition_id', 'variant', 'task'):
                 identifier(backend[field])
             if backend.get('credential_mode') not in {'self_funded', 'official_evaluation'}:

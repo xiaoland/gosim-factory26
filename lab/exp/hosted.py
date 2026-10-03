@@ -475,7 +475,7 @@ def dispatch(attempt_dir):
                            display_name=attempt['attempt_id'], capabilities=capabilities(), model_facts={'desired': backend['model_config']},
                            credential_mode=backend['credential_mode'], archive={'status': 'not-exported'})
             _save(directory, state)
-        with locked(CONFIG / 'exp-hosted-locks' / (backend['competition_id'] + '.lock')):
+        with locked(private_storage(client.cookie.parent / 'exp-hosted-locks') / (backend['competition_id'] + '.lock')):
             _reconcile(directory, client, state, backend)
             if not state['submission_id']:
                 detail = _get(directory, client, '/competitions/' + backend['competition_id'])
@@ -492,7 +492,10 @@ def dispatch(attempt_dir):
                         for score in row.get('task_scores', []):
                             if score.get('run_id'):
                                 value = _get(directory, client, run_path(score['run_id']))
-                                if value.get('status') not in TERMINAL:
+                                if value.get('status') not in TERMINAL and not (
+                                        backend.get('parallel_distinct_tasks') is True and
+                                        backend['credential_mode'] == 'self_funded' and
+                                        value.get('requirement_id') and value['requirement_id'] != backend['task']):
                                     raise Blocked('competition latest snapshot still has active or unknown execution')
                 secret = None
                 if backend['credential_mode'] == 'self_funded':
@@ -616,6 +619,7 @@ def observer(attempt_dir):
     with locked(directory / 'observer-worker.lock', blocking=False):
         state = require(read(directory/'execution.json'),'execution')
         identity = state['incarnation_id']
+        backend = require(read(directory / 'attempt.json'), 'attempt')['job']['backend']
         attempts = 0
         while True:
             state = observe_identity(directory, live=False)
@@ -626,7 +630,8 @@ def observer(attempt_dir):
             if time.time() < due:
                 time.sleep(min(60,max(.1,due-time.time())))
                 continue
-            interval = 180 if time.time()-state['accepted_at']<600 else 480
+            interval = backend.get('observation_interval_seconds',
+                180 if time.time()-state['accepted_at']<600 else 480)
             with locked(directory/'hosted.lock'):
                 current=read(directory/'execution.json')
                 current['next_observation_at']=time.time()+interval
@@ -693,6 +698,14 @@ def seal(attempt_dir, request_id=None):
         from .artifacts import verify
         previous = read(receipt_path)
         verify(attempt['artifact_store'], previous['archive']['artifact'])
+        if (directory / 'execution.json').exists():
+            with locked(directory / 'export.lock'):
+                state = require(read(directory / 'execution.json'), 'execution')
+                seed_status = _export_terminal_seed(directory, attempt, state)
+                with locked(directory / 'hosted.lock'):
+                    current = require(read(directory / 'execution.json'), 'execution')
+                    current['application_seed'] = seed_status
+                    _save(directory, current)
         return previous
     state = observe(directory, live=True)
     if not state.get('run_id'):
