@@ -1,6 +1,6 @@
 # 运行、证据与恢复
 
-新执行只使用 `python3 -m lab build/start/status/control` 的 experiment schema 1，独立 runner、制品和分析入口见 [Lab](../../lab/README.md)。旧 plan/run/operation writer 已退役；手册历史章节只用于原件追溯和登记中的旧执行退役通道。新模型/费用/目标集由本轮配方显式冻结，没有通用 ARC-only 或 self_funded 默认值。源码切换不授权运行或迁移。
+新执行只使用 `python3 -m lab build/start/status/control` 的 experiment schema 3（显式选择 job/request），独立 runner、制品和分析入口见 [Lab](../../lab/README.md)。旧 plan/run/operation writer 已退役；手册历史章节只用于原件追溯和登记中的旧执行退役通道。新模型/费用/目标集由本轮配方显式冻结，没有通用 ARC-only 或 self_funded 默认值。源码切换不授权运行或迁移。
 
 运行时先确认自己要做的是准备制品、新生成、查询既有记录、恢复工作区，还是对冻结应用重新评分。这些操作消耗的资源、需要的授权和结果身份不同；不能用一次构建成功或页面可打开替代生成、评分或证据完整性结论。
 

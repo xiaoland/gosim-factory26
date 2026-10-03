@@ -6,6 +6,7 @@ revalidate ownership, inputs and physical state when invoked.
 from datetime import datetime, timezone
 from pathlib import Path
 import shlex
+import json
 
 from .core import digest, error, identifier, public, read as read_json, record, require
 
@@ -14,6 +15,14 @@ def read(path):
     value = read_json(path)
     if not isinstance(value, dict):
         raise ValueError(f'saved record must be a JSON object: {path}')
+    return value
+
+
+def _saved_record(value, kind):
+    """Accept historical read contracts without granting their old execution semantics."""
+    allowed = {1, 2, 3} if kind == 'experiment' else {1, 2}
+    if not isinstance(value, dict) or value.get('kind') != 'factory26.exp.' + kind or value.get('schema_version') not in allowed:
+        raise ValueError('unsupported saved ' + kind + ' record')
     return value
 
 
@@ -99,9 +108,10 @@ def provider_facts(directory, attempt, observed):
     return result
 
 
-def artifact(store, reference, location=None):
+def artifact(store, reference, location=None, path='.'):
     """Bind metadata cheaply; consumption still verifies all payload bytes."""
-    result = {'reference': reference, 'status': 'unavailable'}
+    selected_member = path
+    result = {'reference': reference, 'status': 'unavailable', 'member': selected_member}
     if location is not None:
         if location.get('reference') != reference or location.get('domain_identity', {}).get('kind') != 'docker':
             return {**result, 'error': {'message': 'saved asset location differs from producer reference'}}
@@ -116,10 +126,12 @@ def artifact(store, reference, location=None):
         if digest(path) != reference['manifest_sha256']:
             raise ValueError('artifact manifest differs from bound reference')
         manifest = require(read(path), 'artifact')
-        if manifest['artifact_id'] != reference['artifact_id'] or not (root / 'payload').exists():
+        if manifest['artifact_id'] != reference['artifact_id']:
             raise ValueError('artifact identity or local payload unavailable')
+        from .artifacts import member_payload
+        selected_payload = member_payload(store, reference, selected_member)
         result.update(status='published', type=manifest['type'],
-                      payload=str(root / 'payload'),
+                      payload=str(selected_payload), member=selected_member,
                       evidence=evidence(path, manifest, 'exp.artifacts'),
                       provenance=manifest.get('provenance', {}),
                       capabilities=manifest.get('capabilities', {}),
@@ -143,7 +155,7 @@ def artifact(store, reference, location=None):
 
 
 def attempt(path, store):
-    saved = require(read(path / 'attempt.json'), 'attempt')
+    saved = _saved_record(read(path / 'attempt.json'), 'attempt')
     if path.name != saved['attempt_id'] or saved['job_id'] != saved['job']['id']:
         raise ValueError('attempt directory or job differs from its saved identity')
     binding_path = path / 'binding.json'
@@ -166,7 +178,8 @@ def attempt(path, store):
             failures.append({'component': 'identity', 'evidence': str(location), 'error': error(exc)})
     # A controller observation error is not a replacement for runner facts.
     facts = [(p, v) for p, v in observations if 'execution' in v or 'backend' in v]
-    selected = max(facts or observations, key=lambda row: _time(row[1]), default=(path / 'attempt.json', {'phase': 'unaccepted'}))
+    selected = next(((p, v) for p, v in facts if p.name == 'execution.json'),
+                    (path / 'attempt.json', {'phase': 'unaccepted'}))
     location, observed = selected
     row = {'attempt_id': saved['attempt_id'], 'job_id': saved['job_id'],
            'experiment_id': saved['experiment_id'],
@@ -177,10 +190,27 @@ def attempt(path, store):
            'retry_request_id': saved.get('retry_request_id'),
            'evidence': evidence(location, observed, 'exp.hosted' if saved['job']['backend']['kind'] == 'hosted' else 'exp.runner'),
            'errors': failures,
+           'observations': [{'source': str(p), 'observed_at': _time(v),
+                             'physical': v.get('physical'), 'runner_identity_state': v.get('runner_identity_state'),
+                             'error': v.get('observation_error') or v.get('error')}
+                            for p, v in observations if p.name != 'execution.json'],
+           'input_bindings': saved.get('input_bindings', {}),
            'model_facts': {'desired': saved['job'].get('model_config', saved['job']['backend'].get('model_config')),
                            'bindings': saved['job'].get('environment', {}).get('FACTORY26_MODEL_BINDINGS'),
                            'runtime_selected': observed.get('model_facts', {}).get('runtime_selected', 'unknown'),
                            'observed': observed.get('model_facts', {}).get('observed', 'unknown')}}
+    capacity_path = path / 'execution-capacity.json'
+    if capacity_path.exists():
+        try:
+            capacity = require(read(capacity_path), 'execution-capacity')
+            resource = read(path / 'resource.json')
+            if capacity.get('attempt_id') != saved['attempt_id'] or capacity.get('resource') != resource:
+                raise ValueError('capacity receipt belongs to another execution resource')
+            row['capacity'] = {'status': 'released' if capacity.get('capacity_released') is True and capacity.get('status') == 'released' else 'unknown',
+                               'evidence': evidence(capacity_path, capacity, 'exp.admission'),
+                               'resource': resource}
+        except (OSError, ValueError, KeyError) as exc:
+            row['errors'].append({'component': 'identity', 'evidence': str(capacity_path), 'error': error(exc)})
     if row['backend'] == 'hosted':
         row['provider'] = provider_facts(path, saved, observed)
     for p, value in observations:
@@ -206,7 +236,8 @@ def attempt(path, store):
                 row['errors'].append({'component': 'transport', 'evidence': str(location), 'error': value})
         except (OSError, ValueError) as exc:
             row['errors'].append({'component': 'transport', 'evidence': str(location), 'error': error(exc)})
-    row['outputs'] = {name: artifact(store, ref, observed.get('output_locations', {}).get(name))
+    row['outputs'] = {name: artifact(store, ref, observed.get('output_locations', {}).get(name),
+                                   path=observed.get('output_members', {}).get(name, '.'))
                       for name, ref in observed.get('artifacts', {}).items()}
     for name, output in row['outputs'].items():
         output['member'] = observed.get('output_members', {}).get(name, '.')
@@ -231,7 +262,8 @@ def attempt(path, store):
                 'observation_source': value['observation_source'], 'source': str(state_path)})
         except (OSError, ValueError, KeyError, TypeError) as exc:
             row['errors'].append({'component': 'state', 'evidence': str(state_path), 'error': error(exc)})
-    row['inputs'] = {name: artifact(store, ref, saved['job'].get('input_locations', {}).get(name))
+    row['inputs'] = {name: artifact(store, ref, saved['job'].get('input_locations', {}).get(name),
+                                  path=saved['job'].get('input_members', {}).get(name, '.'))
                      for name, ref in saved['job'].get('inputs', {}).items()
                      if 'from_job' not in ref}
     for name, item in row['inputs'].items():
@@ -268,8 +300,10 @@ def facts(directory, read_at):
     result = record('status', directory=str(directory), read_at=read_at,
                     experiments=[], attempts=[], blockers=[])
     try:
-        manifest = require(read(directory / 'experiment.json'), 'experiment')
+        manifest = _saved_record(read(directory / 'experiment.json'), 'experiment')
         result.update(experiment_id=manifest['experiment_id'], jobs=manifest['jobs'],
+                      recipe_schema_version=manifest['schema_version'],
+                      execution_contract=manifest.get('execution_contract', 'legacy-scheduler'),
                       labels=manifest.get('labels', {}), frozen=True,
                       recipe_sha256=manifest['recipe_sha256'], definition=manifest.get('definition'),
                       budget=manifest['budget'], max_parallel=manifest['max_parallel'])
@@ -300,7 +334,9 @@ def facts(directory, read_at):
         except (OSError, ValueError, KeyError, TypeError) as exc:
             result['attempts'].append({'source': str(path), 'error': error(exc)})
     result['attempts'].sort(key=lambda row: (row.get('created_at', 0), row.get('attempt_id', '')))
-    result['inputs'] = {job['id']: {name: artifact(store, ref) for name, ref in job.get('inputs', {}).items()
+    result['inputs'] = {job['id']: {name: artifact(store, ref, job.get('input_locations', {}).get(name),
+                                                   path=job.get('input_members', {}).get(name, '.'))
+                                  for name, ref in job.get('inputs', {}).items()
                                   if 'from_job' not in ref} for job in manifest['jobs']}
     consumed = {row.get('retry_request_id') for row in result['attempts'] if 'attempt_id' in row}
     result['pending_retries'] = []
@@ -329,7 +365,7 @@ def stages(value, action_policy):
         row = current.get(job['id'])
         observation = row['execution'] if row else {}
         phase = observation.get('phase', observation.get('execution', 'unaccepted'))
-        stage = {'job_id': job['id'], 'purpose': job['purpose'], 'status': phase if row else 'waiting',
+        stage = {'job_id': job['id'], 'purpose': job['purpose'], 'status': phase if row else 'not-requested',
                  'attempt_id': row['attempt_id'] if row else None, 'blockers': [], 'facts': {},
                  'inputs': dict(row['inputs'] if row else value.get('inputs', {}).get(job['id'], {})),
                  'outputs': row.get('outputs', {}) if row else {},
@@ -345,34 +381,12 @@ def stages(value, action_policy):
                 stage['inputs'][name] = dict(row['inputs'][name], from_job=binding['from_job'],
                                              output=binding['output'], bound_to_attempt=row['attempt_id'])
                 continue
-            producer = current.get(binding['from_job'])
-            produced = producer['execution'] if producer else {}
-            output = producer.get('outputs', {}).get(binding['output']) if producer else None
-            dependency = {'component': 'input', 'input': name, 'from_job': binding['from_job'], 'output': binding['output']}
-            if not producer:
-                dependency['reason'] = '等待生成 attempt 发布制品'
-            elif produced.get('phase', produced.get('execution')) not in ('exited', 'stopped', 'failed'):
-                dependency['reason'] = '生成执行终态尚未确认'
-            elif produced.get('exit_code') != 0:
-                dependency['reason'] = '生成入口未确认成功，不能派发评价'
-            elif not output or output['status'] != 'published':
-                dependency['reason'] = '声明生成制品尚未封口并保留'
-            else:
-                stage['inputs'][name] = dict(output, from_job=binding['from_job'], output=binding['output'])
-                continue
-            if producer:
-                dependency.update(attempt_id=producer['attempt_id'], evidence=producer['evidence'])
-            stage['blockers'].append(dependency)
+            stage['blockers'].append({'component': 'input', 'input': name,
+                'from_job': binding['from_job'], 'output': binding['output'],
+                'operation': 'start', 'reason': '尚未显式选择来源attempt/output或不可变artifact成员'})
         for name, item in stage['inputs'].items():
             if item['status'] != 'published':
                 stage['blockers'].append({'component': 'input', 'input': name, 'reason': '冻结输入缺少可消费位置', 'evidence': item.get('evidence'), 'error': item.get('error')})
-        owner = value.get('controller', {})
-        if (not row or phase not in ('exited', 'stopped', 'failed')) and owner.get('error'):
-            stage['blockers'].append({'component': 'controller', 'reason': owner['error'].get('message', 'controller 故障'),
-                                       'error': owner['error'], 'evidence': str(Path(value['directory']) / 'controller.json')})
-        if (not row or phase not in ('exited', 'stopped', 'failed')) and owner.get('phase') == 'running' and owner.get('physical_state') != 'alive':
-            stage['blockers'].append({'component': 'controller', 'reason': '保存的 controller 运行状态没有当前出生身份支持',
-                                       'evidence': str(Path(value['directory']) / 'controller.json')})
         if row:
             entry_code = observation.get('entry_exit_code', observation.get('exit_code'))
             if row['backend'] == 'hosted':
@@ -382,6 +396,8 @@ def stages(value, action_policy):
             stage['facts']['main'] = _facet(main, row, exit_code=entry_code)
             stage['facts']['execution'] = _facet(phase, row, incarnation_id=observation.get('incarnation_id'),
                                                 physical=observation.get('physical'), gap=observation.get('execution_observation_gap'))
+            if row.get('capacity'):
+                stage['facts']['capacity'] = row['capacity']
             if row.get('external_docker'):
                 children = [fact for fact in observation.get('external_resources', [])
                             if fact.get('resource', {}).get('role') == 'execution']
@@ -444,12 +460,10 @@ def stages(value, action_policy):
                     stage['blockers'].append({'component': 'harness', 'reason': '生产者声明 partial，不能作为完整 prepared 消费：' + name,
                                                'evidence': published['harness']['evidence'], 'gaps': published['harness']['gaps']})
         if not row and stage['blockers']:
-            stage['status'] = 'waiting'
+            stage['status'] = 'not-requested'
         stage['next_actions'] = action_policy(job, row, stage, value)
-        if row and phase in ('exited', 'stopped', 'failed') and stage['blockers'] and stage['status'] != 'failed':
-            stage['status'] = 'blocked'
         if not row and not stage['blockers'] and not stage['next_actions']:
-            stage['blockers'].append({'component': 'controller', 'reason': '等待 controller 派发；启动时仍需核对预算、资源及输入'})
+            stage['blockers'].append({'component': 'input', 'reason': '尚未明确请求运行；没有后台派发'})
         grouping = target(job, jobs)
         key = tuple(sorted(grouping.items()))
         groups.setdefault(key, {'target': grouping, 'stages': []})['stages'].append(stage)
@@ -470,17 +484,53 @@ def _reason(value):
     return text if len(text) <= 300 else text[:120] + ' … ' + text[-160:]
 
 
+def _resource_details(value):
+    """Render saved resource measurements without truncating their numeric fields."""
+    if isinstance(value, dict):
+        candidate = value
+        if not any(key in candidate for key in ('memory_current', 'memory_max', 'accounted_for_admission')):
+            value = candidate.get('message') or candidate.get('error') or candidate.get('detail')
+            return _resource_details(value) if value is not None else []
+    elif isinstance(value, str):
+        offset = value.find('{')
+        if offset < 0:
+            return []
+        try:
+            candidate, _ = json.JSONDecoder().raw_decode(value[offset:])
+        except ValueError:
+            return []
+        if not isinstance(candidate, dict) or not any(key in candidate for key in ('memory_current', 'memory_max', 'accounted_for_admission')):
+            return []
+    else:
+        return []
+    return [key + '=' + json.dumps(item, ensure_ascii=False, sort_keys=True)
+            for key, item in candidate.items()]
+
+
 def render(value):
     if value.get('kind') == 'factory26.exp.status-index':
         return '\n\n'.join(render(row) for row in value['experiments'])
     lines = [value.get('experiment_id', value.get('directory', value.get('source', '?')))]
+    root = Path(value['directory']) if value.get('directory') else None
+    def short_path(path, base=None):
+        if not path:
+            return '缺少入口'
+        try:
+            return str(Path(path).relative_to(Path(base) if base else root))
+        except (ValueError, TypeError):
+            return str(path)
+    if root:
+        lines.append('记录目录：' + str(root))
     if not value.get('frozen'):
         failure = value.get('build-error.json', value.get('build_error', value.get('error', {})))
         lines.append('└─ build 未就绪：' + _reason(failure.get('message', str(failure))))
         lines.append('   证据：' + str(Path(value.get('directory', '.')) / 'build-error.json'))
         return '\n'.join(lines)
     owner = value.get('controller', {})
-    lines.append(f"controller: {owner.get('phase', '未启动')} / physical: {owner.get('physical_state', 'unknown')}")
+    if owner:
+        lines.append(f"历史controller: {owner.get('phase', 'unknown')} / physical: {owner.get('physical_state', 'unknown')}")
+    elif value.get('execution_contract') == 'explicit-request-v1':
+        lines.append('执行：显式请求；无后台调度')
     if owner.get('error'):
         lines.append('controller 错误：' + _reason(owner['error'].get('message', str(owner['error']))))
     for group in value.get('targets', []):
@@ -513,7 +563,9 @@ def render(value):
                     lines.append(f"│  │    semantic_progress: {fact.get('semantic_progress', 'unknown')} / 平台: {fact.get('platform_status', 'unknown')}")
                     lines.append(f"│  │    producer: {fact.get('producer', 'unknown')} / 观察: {_stamp(fact.get('observed_at'))}")
                     if fact.get('source'):
-                        lines.append('│  │    原件：' + fact['source'])
+                        lines.append('│  │    状态摘要原件：' + short_path(fact['source']))
+                    if fact.get('evidence_root'):
+                        lines.append('│  │    定向取证目录：' + short_path(fact['evidence_root']))
                     lines.append(f"│  │    stale 阈值: {fact.get('stale_after_seconds', '?')}s / 最少样本: {fact.get('minimum_samples', '?')}")
                     for session in fact.get('sessions', []):
                         lines.append(f"│  │    session {session['session_id']}: {session['classification']} / lifecycle={session['lifecycle']} / current_attempt={session['current_attempt']} / 连续{session['unchanged_samples']}次、{session['unchanged_seconds']}s")
@@ -521,16 +573,20 @@ def render(value):
                             if detail:
                                 lines.append('│  │      原因：' + _reason(str(detail)))
                         native = session['native']
-                        lines.append(f"│  │      native: {native['coverage']} / complete={native['complete_native']} / {native['path'] or '缺少入口'}")
+                        lines.append(f"│  │      native: {native['coverage']} / complete={native['complete_native']} / {short_path(native['path'], fact.get('evidence_root'))}")
                     for group in fact.get('resource_wait_groups', []):
                         health = fact.get('provider_health', {}).get(group, {})
-                        lines.append('│  │    resource_wait ' + group + ': ' + _reason(str(health.get('error') or '原因 unknown')))
+                        detail = health.get('error') or fact.get('group_errors', {}).get(group) or '原因 unknown'
+                        lines.append('│  │    resource_wait ' + group + ':')
+                        structured = _resource_details(detail)
+                        for item in structured or [_reason(str(detail))]:
+                            lines.append('│  │      ' + item)
                     for detail in (fact.get('error'), fact.get('run_error'), fact.get('workspace_error'), *fact.get('errors', []), *fact.get('group_errors', {}).values()):
                         if detail:
                             lines.append('│  │    原始错误：' + _reason(str(detail)))
                 if name == 'platform':
                     observed = fact.get('evidence') or {}
-                    lines.append(f"│  │    GET 观察：{_stamp(observed.get('observed_at'))} / {observed.get('path', '缺少对应 run 原件')}")
+                    lines.append(f"│  │    GET 观察：{_stamp(observed.get('observed_at'))} / {short_path(observed.get('path'))}")
                     result = fact.get('result') or {}
                     if result.get('score') is not None:
                         lines.append('│  │    score: ' + str(result['score']))
@@ -539,7 +595,7 @@ def render(value):
                 scope = f" / Harness 声明 {declared['status']}" if declared else ''
                 lines.append(f"│  │  artifact {name}: {output['status']} / {output['reference']['artifact_id']}{scope}")
                 if output.get('payload'):
-                    lines.append('│  │    内容：' + output['payload'])
+                    lines.append('│  │    内容成员：' + short_path(output['payload']))
                 if output.get('error'):
                     lines.append('│  │    原错：' + _reason(output['error']['message']))
                 if declared.get('gaps'):
@@ -549,7 +605,7 @@ def render(value):
                 lines.append(f"│  │  blocked by {blocker['component']}: {_reason(blocker['reason'])}{relation}")
                 source = blocker.get('evidence')
                 if source:
-                    lines.append('│  │    证据：' + (source['path'] if isinstance(source, dict) else source))
+                    lines.append('│  │    问题原件：' + short_path(source['path'] if isinstance(source, dict) else source))
             for action in stage['next_actions']:
                 lines.append(f"│  │  next: {action['label']}")
                 if action.get('argv'):
@@ -558,7 +614,7 @@ def render(value):
                     lines.append('│  │    条件：' + condition)
             if stage.get('attempt_id'):
                 row = next(row for row in value['attempts'] if row.get('attempt_id') == stage['attempt_id'])
-                lines.append(f"│  │  观察：{_stamp(row['evidence']['observed_at'])} / {row['evidence']['path']}")
+                lines.append(f"│  │  观察：{_stamp(row['evidence']['observed_at'])} / {short_path(row['evidence']['path'])}")
             if len(stage['history']) > 1:
                 lines.append('│  │  历史：' + ', '.join(item['attempt_id'] +
                              (f" (retry_of {item['retry_of']})" if item['retry_of'] else '') for item in stage['history']))

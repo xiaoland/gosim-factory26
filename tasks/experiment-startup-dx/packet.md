@@ -46,3 +46,29 @@
 用户补充存储约束的准确含义：项目产物不能放在 Mac mini 内置磁盘，并非只能使用 WorkSSD 这一卷名；远端执行数据可保留在远端。本任务继续使用既有 WorkSSD，不迁移数据或推导新的实验运行授权。后续存储选择核对真实挂载、文件系统与容量。
 
 最终收口：40 份改动 Python 源码与 11 段静态嵌入 Python 完成内存编译，git diff --check 通过；身份见 architecture-source-readback.json。原 owner 已冻结源码，无在途实验或控制操作。Advisor 的源码接缝审阅只用于实现采用；三类耗时及完整实际恢复仍未验收。提交仅本隔离工作区本任务内容，不覆盖主区并行工作。
+
+## 显式调度职责复核（2026-10-03）
+
+用户怀疑 controller 自动创建/派发 attempt 及两秒轮询属于功能过度设计，要求 attempt/run 由使用者主动调度。本轮进入只读调查与设计，未扩大前轮实现授权。主 Agent 调查并保存 scheduling-review.md、scheduling-review-readback.json，稳定 advisor storage_judgment 独立判断。主工作区并行改动与源实验不受本轮控制；尚未修改源码或运行实验。上一轮实现也保留这一职责混合，不能视为已解决。
+
+Advisor 已完成独立复核并采用：删除隐式调度职责，保留单次执行闭环；补充控制不应先等待完整 workspace 下载、执行容量不应与归档耦合的边界。结论为设计建议，未实施。
+
+## 后续独立验收反馈（用户要求在当前职责复核之后处理）
+
+用户提供主区 runs/developer-experience/post-infrastructure-acceptance-20261003/report.md，并要求“你处理完手上这件事情还要处理这个”。已读取；报告针对 d4ac01dd，结论为部分通过，不能宣称打包、启动或恢复提速已验收。后续应处理：合入前保留 main 3074b476 的缺少 harness-manifest.json 错误说明；资源等待结构化详情在文本中被截断、重复长证据路径及证据入口区分不足；多实验比较入口缺口。完整打包、实际首次入口/模型受理、合法 checkpoint 同域恢复与三类耗时对照仍未关闭，按具体实验既有授权采纳真实反馈，不从该报告推导新模型运行授权。当前先收敛显式调度职责，随后逐项处理报告；报告列出的未验项不是已证明源码缺陷。
+
+## 全范围职责复核（2026-10-03）
+
+用户明确“不仅如此，所有的职责混合问题都要处理”，随后要求“推进”。沿上一条回复约定，本轮先整体只读调查、设计和advisor复核，不擅自进入新的源码实施。复核覆盖定义/编译/生产/装配、显式调度、单次执行、控制/观察、准入/state、capture/repair/recovery、传输/归档、projection/analysis/Console与相关variant接缝。原owner继续负责：storage_producers负责production报告，exp_platform负责execution报告，storage_judgment负责HLD取舍，主Agent负责projection、验收反馈及整体整合。各owner只能写本task对应review文档；不改主区，不接管源实验，不测试/运行/网络/控制。复核将以整体职责与公共操作合同收敛，不新增自动开关或workflow engine。
+
+整体方案 responsibilities-design.md 已完成，production/execution/projection 与 advisor review 提供证据和采用依据；主区与交付源码身份见 responsibilities-review-readback.json。已纳入验收报告的诊断回归、呈现缺口与未验界限。选择是按三批贯通唯一新写入合同，不保留隐式scheduler模式、不扩大为通用控制平台。下一阶段收敛CLI/request、目标依赖、场所装配、恢复事务及所有公共caller删除迁移；本轮未改源码、未提交、未编译/运行/控制资源。
+
+## 全范围实施授权与在途状态
+
+用户针对已交付的整体方案明确指示“开始。”，授权 responsibilities-design.md 范围内的源码、文档与必要验证；不是新的模型/Docker/官网运行许可。本轮在feat/experiment-startup-dx隔离区实施。root持显式start/retry/request与CLI/projection/artifact成员运输、整体文档；storage_producers持compile/build/生产/装配/SDK/variant及controller限定材料函数；exp_platform持执行/控制/恢复/准入/Console及controller限定操作函数；storage_judgment持重大判断。所有owner保留主区并行改动，按函数责任避免互相覆盖。
+
+新写入recipe为schema3，旧schema1/2只保留状态读取与原attempt控制，不重启旧scheduler。显式调度与角色代码部署、成员运输接口已协调；完整生产、恢复、资源关闭与投影集成仍在实施。不会以编译成功宣称三类实际耗时已验收。
+
+本轮已完成整体源码迁移和实际材料反馈，采用依据见 [实施记录](responsibilities-implementation.md)。Production、execution 的原 owner 已分别完成生产/装配、单次执行/恢复及调用迁移；advisor 最终定点确认未知效果、成员接收/GC、容量释放与显式 retry 的采用缺口关闭。主负责人完成显式 CLI、按 owner 组合的 projection、多目录入口、成员解析/运输及权威文档整合。源码最终身份归 responsibilities-source-readback.json；执行 owner 的阶段内嵌脚本编译归 responsibilities-execution-compile.json。
+
+实际现有 intent 离线编译约 0.50 秒，12 个真实 I14 目录一次文本查询约 0.37 秒，真实冻结 executor 的 4477 字节成员接收保留原引用/hash且没有完整 payload。这些不是设施测试或 Docker/模型启动验收。独立验收报告的 add_note 回归及状态呈现缺口已处理；完整打包、首次启动、热恢复的端到端耗时仍未获得实测。提交留在本隔离分支，不推送、不合入主区，不处理源实验运行资源。

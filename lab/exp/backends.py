@@ -353,6 +353,17 @@ def store_action(directory, action, request):
     return json.loads(output.stdout)
 
 
+def _domain_member_root(target, helper, reference, selected_member, *, missing_ok=False):
+    """Resolve a declared immutable member in the actual owner namespace."""
+    selected_member = member(selected_member)
+    script = ('from lab.exp.artifacts import _manifest,plain_member_contents,member_payload; import json; '
+              'ref=json.loads(' + repr(json.dumps(reference)) + '); '
+              'plain_member_contents(_manifest("/assets",ref),' + repr(selected_member) + '); '
+              'root=member_payload("/assets",ref,' + repr(selected_member) + ',missing_ok=' + repr(missing_ok) + '); '
+              'print(json.dumps(str(root) if root is not None else None))')
+    return json.loads(_owner_exec(target, helper, [target.get('python','python3'),'-B','-c',script]).stdout)
+
+
 def prepare_docker(directory, attempt, request, deployment, incarnation):
     """Create a writable execution volume and separately owned published-asset view."""
     directory = Path(directory)
@@ -399,36 +410,54 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
                    consumer=rid, purpose='runner-code')
     _owner_exec(target, helper, [target.get('python', 'python3'), '-c', "from pathlib import Path;[Path('/execution/payload/'+p).mkdir(parents=True,exist_ok=True) for p in ('workspace','requests','inputs')]"])
     input_refs = {'executor': code, **attempt['job']['inputs']}
+    input_members = dict(attempt['job'].get('input_members', {}))
     prepared_descriptor = attempt['job'].get('prepared_descriptor')
     if prepared_descriptor:
         if prepared_descriptor.get('schema_version') not in (3,4):
             raise Blocked('Docker prepared execution requires separated v3 state and definition relations')
         for definition in prepared_descriptor['definition_assets']:
             input_refs['definition--' + definition['name']] = definition['artifact']
+            input_members['definition--' + definition['name']] = definition['member']
     input_retentions = {}
     for name, ref in input_refs.items():
+        selected_member = member(input_members.get(name, '.'))
         expected_location = attempt['job'].get('input_locations', {}).get(name)
         if expected_location and (expected_location.get('reference') != ref or expected_location.get('domain_identity', {}).get('daemon_id') != endpoint['daemon_id'] or expected_location.get('volume_id') != asset_volume or expected_location.get('store_root') != '/assets'):
             raise Blocked('input location differs from the exact target daemon/store binding; explicit cross-domain transfer required')
-        # Query existing managed position first; only missing assets cross the control-host boundary.
-        try:
-            locations = store_action(directory, 'query', {})['locations']
-            present = any(row['reference'] == ref and row['state'] == 'available' for row in locations)
-        except Exception:
-            # A failed query is not an absent asset and must not trigger another transport.
-            raise
-        if not present:
-            source = Path(attempt['artifact_store']) / ref['artifact_id']
-            execute(endpoint, ['cp', str(source), helper['container_id'] + ':/execution/staging/' + ref['artifact_id']],
-                    check=True, capture_output=True, text=True, timeout=1800)
-            _owner_exec(target, helper, [target.get('python', 'python3'), '-c', 'from pathlib import Path;Path(' + repr('/execution/staging/' + ref['artifact_id'] + '/location.json') + ').unlink(missing_ok=True)'])
-            store_action(directory, 'transfer', {'source_store': '/execution/staging', 'reference': ref,
-                         'request_id': rid + '--input--' + name, 'consumer': rid})
+        # Query failure/declared unavailable bytes are not absence and never trigger transport.
+        locations = store_action(directory, 'query', {})['locations']
+        location = next((row for row in locations if row['reference'] == ref), None)
+        if location and location['state'] != 'available':
+            raise Blocked('input asset location is unavailable: ' + location['state'])
+        selected_root = _domain_member_root(target, helper, ref, selected_member, missing_ok=True) if location else None
+        if selected_root is None:
+            from . import artifacts as asset_store
+            source_store = Path(attempt['artifact_store'])
+            staging = '/execution/staging/' + canonical([ref, selected_member])
+            _owner_exec(target, helper, [target.get('python','python3'),'-c',
+                'from pathlib import Path;Path(' + repr(staging) + ').mkdir(parents=True,exist_ok=True)'])
+            if selected_member == '.':
+                # A full request requires a real full source position.
+                source_payload = asset_store.member_payload(source_store, ref, '.')
+                received_root = staging + '/' + ref['artifact_id']
+                _owner_exec(target, helper, [target.get('python','python3'),'-c',
+                    'from pathlib import Path;Path(' + repr(received_root) + ').mkdir(exist_ok=True)'])
+                for source, destination in ((source_store / ref['artifact_id'] / 'manifest.json', 'manifest.json'),
+                                             (source_payload, 'payload')):
+                    execute(endpoint, ['cp', str(source), helper['container_id'] + ':' + received_root + '/' + destination],
+                            check=True, capture_output=True, text=True, timeout=1800)
+                store_action(directory, 'transfer', {'source_store': staging, 'reference': ref,
+                    'request_id': rid + '--input--' + name, 'consumer': rid})
+            else:
+                for source, destination in ((source_store / ref['artifact_id'] / 'manifest.json', 'manifest.json'),
+                                             (asset_store.member_payload(source_store, ref, selected_member), 'member')):
+                    execute(endpoint, ['cp', str(source), helper['container_id'] + ':' + staging + '/' + destination],
+                            check=True, capture_output=True, text=True, timeout=1800)
+                script = 'from lab.exp.artifacts import receive_member;import json;print(json.dumps(receive_member("/assets",json.loads(' + repr(json.dumps(ref)) + '),' + repr(staging + '/manifest.json') + ',' + repr(staging + '/member') + ',selected_member=' + repr(selected_member) + ',consumer=' + repr(rid) + ',request_id=' + repr(rid + '--input--' + name) + ')))'
+                _owner_exec(target, helper, [target.get('python','python3'),'-B','-c',script])
         hold = store_action(directory, 'retain', {'reference': ref, 'consumer': rid, 'purpose': 'execution-input', 'request_id': rid + '--retain--' + name})
         input_retentions[canonical(ref)] = hold
-        selected_member = member(attempt['job'].get('input_members', {}).get(name, '.'))
-        _owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', 'from lab.exp.artifacts import _manifest,plain_member_contents; import json; plain_member_contents(_manifest("/assets",json.loads(' + repr(json.dumps(ref)) + ')),' + repr(selected_member) + ')'])
-        selected_root = '/assets/' + ref['artifact_id'] + '/payload' + ('' if selected_member == '.' else '/' + selected_member)
+        selected_root = _domain_member_root(target, helper, ref, selected_member)
         _owner_exec(target, helper, [target.get('python', 'python3'), '-c', 'from pathlib import Path; p=Path(' + repr('/execution/payload/inputs/' + name) + '); p.symlink_to(' + repr(selected_root) + ') if not p.exists() else None'])
     _owner_exec(target, helper, [target.get('python', 'python3'), '-c', "from pathlib import Path;[Path('/execution/payload/'+p).mkdir(exist_ok=True) for p in ('workspace','requests','inputs')]"])
     payload = dict(attempt)
@@ -448,13 +477,15 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
         if manifest is None:
             raise Blocked('prepared execution requires the controller resolved definition descriptor')
         from submission.exp_checkpoint import definition_mount_roots
-        content_root = '/assets/' + attempt['job']['inputs']['prepared']['artifact_id'] + '/payload/content'
+        prepared_member = member(attempt['job'].get('input_members', {}).get('prepared', '.'))
+        selected_state_member = 'content/run' if prepared_member == '.' else prepared_member + '/content/run'
+        prepared_state_root = _domain_member_root(target, helper, attempt['job']['inputs']['prepared'], selected_state_member)
         run_root = Path(manifest['target_layout']['run_root'])
         if (not run_root.is_absolute() or run_root == Path('/') or run_root.is_relative_to('/assets')
                 or run_root.is_relative_to('/execution') and not run_root.is_relative_to('/execution/workspace')):
             raise Blocked('prepared state root conflicts with isolated executor inputs or evidence namespace')
         mapping = {'logical_root': str(run_root), 'member': 'run', 'subpath': 'state/run', 'access': 'read-write'}
-        source, destination = content_root + '/run', '/execution/' + mapping['subpath']
+        source, destination = prepared_state_root, '/execution/' + mapping['subpath']
         script = 'import shutil;from pathlib import Path;src=Path(' + repr(source) + ');dst=Path(' + repr(destination) + ');' + 'dst.parent.mkdir(parents=True,exist_ok=True);shutil.copytree(src,dst,symlinks=True)'
         _owner_exec(target, helper, [target.get('python', 'python3'), '-c', script])
         placements.append(mapping)
@@ -464,9 +495,7 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
             root = Path(definition['logical_root'])
             if root == Path('/') or root.is_relative_to('/execution'):
                 raise Blocked('definition root conflicts with writable executor namespace')
-            remote = '/assets/' + definition['artifact']['artifact_id'] + '/payload'
-            if definition['member'] != '.':
-                remote += '/' + member(definition['member'])
+            remote = _domain_member_root(target, helper, definition['artifact'], definition['member'])
             # Check the daemon namespace through its owner, never with a control-host Path.exists().
             if root.is_relative_to('/assets'):
                 script = 'from pathlib import Path;print("true" if Path(' + repr(str(root)) + ').exists() else "false")'
@@ -490,9 +519,7 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
     elif prepared_descriptor and prepared_descriptor.get('state_binding'):
         from submission.exp_checkpoint import definition_mount_roots
         for definition in definition_mount_roots(prepared_descriptor['definition_assets'], prepared_descriptor['state_root']):
-            remote = '/assets/' + definition['artifact']['artifact_id'] + '/payload'
-            if definition['member'] != '.':
-                remote += '/' + member(definition['member'])
+            remote = _domain_member_root(target, helper, definition['artifact'], definition['member'])
             definition_placements.append({**definition, 'role': definition['name'], 'reference': definition['artifact'],
                 'access': 'read-only', 'daemon_source': str(Path(asset['Mountpoint']) / remote.removeprefix('/assets/'))})
         private['definition_layout'] = prepared_descriptor['layout'].get('definition_layout')
@@ -829,72 +856,98 @@ def export_payload(directory):
         raise
 
 
-def finish_docker(directory):
+def release_execution(directory):
+    """Release proven terminal execution capacity without sealing or removing state."""
     directory = Path(directory)
     attempt, resource = read(directory / 'attempt.json'), read(directory / 'resource.json')
     target = attempt['job']['backend']
-    if admission.query(target, resource['authority_resource_id'])['resource']['phase'] != 'released':
-        admission.reconcile(target, resource['authority_resource_id'], attempt['attempt_id'] + '--release', domain_observation(target, resource))
-    helper = read(directory / 'store-helper.json')
+    observed = admission.query(target, resource['authority_resource_id'])
+    if observed['resource']['phase'] != 'released':
+        admission.reconcile(target, resource['authority_resource_id'], attempt['attempt_id'] + '--release',
+                            domain_observation(target, resource))
+        observed = admission.query(target, resource['authority_resource_id'])
+    row = observed['resource']
+    physical = row.get('identity') or {}
+    if (row['phase'] != 'released' or physical.get('container_id') != resource['container_id']
+            or physical.get('created') != resource['created']
+            or physical.get('labels') != resource['labels']):
+        raise Blocked('capacity release acknowledgement does not bind this exact physical resource')
+    receipt = record('execution-capacity', attempt_id=attempt['attempt_id'], resource=resource,
+                     capacity_released=True, status='released', observed_at=time.time(), authority=observed)
+    atomic(directory / 'execution-capacity.json', receipt)
+    return receipt
+
+
+def finish_docker(directory):
+    """Close this attempt's store helper independently of publication success."""
+    directory = Path(directory)
+    attempt = read(directory / 'attempt.json')
+    target = attempt['job']['backend']
+    release_execution(directory)
+    helper_path = directory / 'store-helper.json'
+    if not helper_path.exists():
+        return
+    helper = read(helper_path)
     if admission.query(target, helper['authority_resource_id'])['resource']['phase'] == 'released':
         return
     control_resource(target, helper, 'stop', request_id=attempt['attempt_id'] + '--owner-stop')
+    managed(target, helper, 'writer-close', attempt['attempt_id'] + '--owner-writer-close')
     admission.reconcile(target, helper['authority_resource_id'], attempt['attempt_id'] + '--owner-release', domain_observation(target, helper))
 
 
-def export_terminal_assets(directory, receipt):
-    """Explicitly receive sealed assets; never read the active execution volume."""
+def export_terminal_assets(directory, receipt, *, selections, target_store, consumer, request_id):
+    """Transport only explicit immutable ref/member selections to their consumer."""
     directory = Path(directory)
-    attempt = read(directory / 'attempt.json')
-    snapshot = receipt['workspace_snapshot']
-    location = snapshot['location']
-    selected = [(ref, receipt['output_locations'][name]) for name, ref in receipt['artifacts'].items()]
-    selected.append((snapshot['reference'], location))
-    for row in snapshot.get('capabilities', {}).get('definitions', []):
-        ref = row.get('reference') or row['artifact']
-        selected.append((ref, {**location, 'reference': ref}))
-    received = {}
-    for ref, origin in selected:
-        key = canonical(ref)
-        if key not in received:
-            export_named(directory, ref, origin, attempt['artifact_store'])
-            received[key] = {'reference': ref, 'source': origin, 'store': str(attempt['artifact_store'])}
-    from .artifacts import retain
-    consumer = attempt['attempt_id']
-    local_binding = {**snapshot, 'store': str(attempt['artifact_store']),
-        'retention': retain(attempt['artifact_store'], snapshot['reference'], consumer,
-            'exported-workspace', 'export-workspace-' + canonical([consumer, snapshot['reference']])[:32])}
-    definitions = []
-    for row in snapshot.get('capabilities', {}).get('definitions', []):
-        ref = row.get('reference') or row['artifact']
-        definitions.append({**row, 'store': str(attempt['artifact_store']),
-            'retention': retain(attempt['artifact_store'], ref, consumer, 'exported-definition',
-                'export-definition-' + canonical([consumer, ref])[:32])})
-    local_binding['capabilities'] = {**snapshot.get('capabilities', {}), 'definitions': definitions}
-    value = record('export', status='preserved', source=read(directory / 'resource.json'),
-        mode='sealed-asset-relations', assets=list(received.values()),
-        workspace_snapshot=local_binding,
-        exported_at=time.time())
-    # The immutable references are received; no mutable workspace installation is claimed.
-    atomic(directory / 'export.json', value)
+    if not selections or not consumer or not target_store:
+        raise ValueError('export requires selected assets, target store and consumer')
+    offered = [(ref, receipt.get('output_members', {}).get(name, '.'), receipt['output_locations'][name])
+               for name, ref in receipt.get('artifacts', {}).items()]
+    snapshot = receipt.get('workspace_snapshot')
+    if snapshot:
+        offered.append((snapshot['reference'], snapshot.get('member', '.'), snapshot['location']))
+    received = []
+    for selection in selections:
+        if set(selection) != {'reference', 'member', 'location'}:
+            raise ValueError('export asset needs reference/member/location')
+        ref, selected, origin = selection['reference'], member(selection['member']), selection['location']
+        if not any(ref == known and origin == location for known, _, location in offered):
+            raise Blocked('selected export is not an immutable asset offered by this attempt')
+        export_named(directory, ref, origin, target_store, selected_member=selected,
+                     consumer=consumer, request_id=identifier(request_id) + '--' + canonical([ref, selected])[:16])
+        received.append({'reference': ref, 'member': selected, 'source': origin, 'store': str(target_store)})
+    value = record('export', status='preserved', request_id=request_id, consumer=consumer,
+                   mode='selected-sealed-assets', assets=received, exported_at=time.time())
+    atomic(directory / 'exports' / (identifier(request_id) + '.json'), value)
     return value
 
 
-def export_named(source_attempt_dir, reference, location, target_store):
+def export_named(source_attempt_dir, reference, location, target_store, *, selected_member=".", consumer=None, request_id=None):
     """Explicit cross-domain receive of one retained named artifact, independent of archive."""
     directory, target_store = Path(source_attempt_dir), Path(target_store).resolve()
     attempt = read(directory / 'attempt.json')
     target = attempt['job']['backend']
+    if target['kind'] != 'docker':
+        target = target.get('external_docker')
+    if not target:
+        raise Blocked('named artifact source has no frozen Docker transport domain')
+    selected_member = member(selected_member)
     if location['domain_identity']['kind'] != 'docker' or location['domain_identity']['daemon_id'] != target['endpoint']['daemon_id']:
         raise Blocked('named artifact location is not bound to its producer daemon')
     identifier(reference['artifact_id'])
-    request_id = 'named-transfer-' + canonical([reference, location, str(target_store)])[:32]
+    request_id = identifier(request_id or ('named-transfer-' + canonical([reference, location, str(target_store), selected_member, consumer])[:32]))
     transport = directory / 'named-transfers' / request_id
     transport.mkdir(parents=True, exist_ok=True)
     receipt_path = transport / 'effect.json'
-    from .artifacts import transfer, verify
+    from .artifacts import transfer, verify, receive_member
     if receipt_path.exists() and read(receipt_path)['status'] == 'preserved':
-        verify(target_store, reference)
+        verify(target_store, reference, path=selected_member)
+        helper_path = transport / 'helper.json'
+        if helper_path.exists():
+            helper = read(helper_path)
+            if admission.query(target, helper['authority_resource_id'])['resource']['phase'] != 'released':
+                if exact_resource(target, helper)['state'].get('Running'):
+                    control_resource(target, helper, 'stop', request_id=request_id + '--stop')
+                admission.reconcile(target, request_id, request_id + '--release', domain_observation(target, helper))
         return reference
     helper_path = transport / 'helper.json'
     if helper_path.exists():
@@ -921,25 +974,42 @@ def export_named(source_attempt_dir, reference, location, target_store):
         atomic(helper_path, helper)
     stage = transport / ('receive-' + str(time.time_ns()))
     stage.mkdir()
-    atomic(receipt_path, record('named-transfer', request_id=request_id, reference=reference, source=location, status='receiving', stage=str(stage)))
+    atomic(receipt_path, record('named-transfer', request_id=request_id, reference=reference, source=location, selected_member=selected_member, consumer=consumer, status='receiving', stage=str(stage)))
     try:
-        execute(target['endpoint'], ['cp', helper['container_id'] + ':/assets/' + reference['artifact_id'], str(stage)],
-                check=True, capture_output=True, text=True, timeout=1800)
-        # The transport staging is raw reception, not a cloned managed-store authority.
-        (stage / reference['artifact_id'] / 'location.json').unlink(missing_ok=True)
-        verify(stage, reference)
-        transfer(stage, target_store, reference, request_id=request_id, consumer='receiver:' + request_id)
+        remote = helper['container_id'] + ':/assets/' + reference['artifact_id']
+        if selected_member == '.':
+            execute(target['endpoint'], ['cp', remote, str(stage)],
+                    check=True, capture_output=True, text=True, timeout=1800)
+            # Raw reception does not clone a managed-store authority.
+            (stage / reference['artifact_id'] / 'location.json').unlink(missing_ok=True)
+            verify(stage, reference)
+            transfer(stage, target_store, reference, request_id=request_id, consumer=consumer or ('receiver:' + request_id))
+        else:
+            manifest_file = stage / 'manifest.json'
+            execute(target['endpoint'], ['cp', remote + '/manifest.json', str(manifest_file)],
+                    check=True, capture_output=True, text=True, timeout=60)
+            execute(target['endpoint'], ['cp', remote + '/payload/' + selected_member, str(stage / 'member')],
+                    check=True, capture_output=True, text=True, timeout=1800)
+            receive_member(target_store, reference, manifest_file, stage / 'member',
+                           selected_member=selected_member, request_id=request_id,
+                           consumer=consumer or ('receiver:' + request_id))
         atomic(receipt_path, record('named-transfer', request_id=request_id, reference=reference, source=location,
-              status='preserved', stage=str(stage), completed_at=time.time()))
-        if exact_resource(target, helper)['state'].get('Running'):
-            control_resource(target, helper, 'stop', request_id=request_id + '--stop')
-        admission.reconcile(target, request_id, request_id + '--release', domain_observation(target, helper))
+              status='preserved', selected_member=selected_member, consumer=consumer, stage=str(stage), completed_at=time.time()))
         return reference
     except Exception as exc:
         atomic(stage / 'transport-error.json', error(exc))
         atomic(receipt_path, record('named-transfer', request_id=request_id, reference=reference, source=location,
               status='unknown', stage=str(stage), error=error(exc)))
         raise
+
+    finally:
+        try:
+            if exact_resource(target, helper)['state'].get('Running'):
+                control_resource(target, helper, 'stop', request_id=request_id + '--stop')
+            if admission.query(target, request_id)['resource']['phase'] != 'released':
+                admission.reconcile(target, request_id, request_id + '--release', domain_observation(target, helper))
+        except Exception as cleanup_error:
+            atomic(transport / 'close-error.json', record('error', **error(cleanup_error)))
 
 
 def _docker_stopped(state):
@@ -1173,6 +1243,91 @@ def close_capture_helper(target, physical, request_id):
     stopped = managed(target, physical, 'stop', request_id + '--stop', {'grace': 10})
     return admission.reconcile(target, physical['authority_resource_id'], request_id + '--release',
                                domain_observation(target, stopped))
+
+
+def install_recovery_assets(binding, rows, request_id):
+    """Install explicit immutable dependencies before acquiring mutable capture."""
+    from . import artifacts
+    if binding['authority']['kind'] == 'local' or not rows:
+        return rows
+    target = binding['authority']['target']
+    directory = Path(binding['source_attempt_directory'])
+    receipt_path = directory / 'recovery-assets' / (identifier(request_id) + '.json')
+    parameters = canonical(rows)
+    if receipt_path.exists():
+        saved = read(receipt_path)
+        if saved['parameters_sha256'] != parameters:
+            raise ValueError('recovery asset request reused with changed dependencies')
+        helper = saved['helper']
+        if admission.query(target, helper['authority_resource_id'])['resource']['phase'] != 'released':
+            close_capture_helper(target, helper, saved['helper_request'] + '--close')
+        return saved['installed']
+    owner_path = receipt_path.with_name(receipt_path.stem + '.owner.json')
+    owner = read(owner_path) if owner_path.exists() else {'generation': 0}
+    helper_request = request_id + '--generation-' + str(owner['generation'])
+    if owner_path.exists():
+        prior = admission.query(target, helper_request + '--capture-helper').get('resource')
+        if prior and prior['phase'] == 'released':
+            owner['generation'] += 1
+            helper_request = request_id + '--generation-' + str(owner['generation'])
+    atomic(owner_path, record('recovery-asset-owner', request_id=request_id, helper_request=helper_request,
+                            generation=owner['generation'], parameters_sha256=parameters))
+    helper = capture_helper(directory, binding, helper_request, assets_only=True)
+    installed = []
+    script = "from lab.exp.artifacts import transfer,receive_member;import json,sys;r=json.loads(sys.argv[1]);kw=dict(consumer=r['consumer'],request_id=r['request_id']);receive_member('/assets',r['artifact'],r['stage']+'/manifest.json',r['stage']+'/member',selected_member=r['member'],**kw) if r['member']!='.' else transfer(r['stage'],'/assets',r['artifact'],**kw)"
+    try:
+        for row in rows:
+            reference, selected = row['artifact'], member(row.get('member', '.'))
+            artifacts.verify(row['store'], reference, path=selected)
+            staging = '/capture/receive/' + canonical([reference,selected])
+            _owner_exec(target, helper, [target.get('python','python3'),'-c','from pathlib import Path;Path(' + repr(staging) + ').mkdir(parents=True,exist_ok=True)'])
+            if selected == '.':
+                execute(target['endpoint'], ['cp', str(Path(row['store']) / reference['artifact_id']), helper['container_id'] + ':' + staging + '/' + reference['artifact_id']], check=True, capture_output=True, text=True, timeout=1800)
+            else:
+                for source, destination in ((Path(row['store']) / reference['artifact_id'] / 'manifest.json','manifest.json'),
+                                             (artifacts.member_payload(row['store'], reference, selected),'member')):
+                    execute(target['endpoint'], ['cp', str(source), helper['container_id'] + ':' + staging + '/' + destination], check=True, capture_output=True, text=True, timeout=1800)
+            _owner_exec(target, helper, [target.get('python','python3'),'-B','-c',script,
+                json.dumps({'stage':staging,'artifact':reference,'member':selected,'consumer':request_id,'request_id':request_id+'--'+canonical([reference,selected])[:20]})])
+            installed.append({**row, 'store':'/assets'})
+        atomic(receipt_path, record('recovery-assets', request_id=request_id, parameters_sha256=parameters, installed=installed, helper=helper, helper_request=helper_request))
+        return installed
+    finally:
+        close_capture_helper(target, helper, helper_request + '--close')
+
+
+def abort_recovery_assets(binding, request_id):
+    """Close only this recovery's immutable installer; pending effects remain blocked."""
+    if binding['authority']['kind'] != 'docker':
+        return
+    target = binding['authority']['target']
+    owner_path = Path(binding['source_attempt_directory']) / 'recovery-assets' / (identifier(request_id) + '.owner.json')
+    if not owner_path.exists():
+        return
+    helper_request = read(owner_path)['helper_request']
+    rid = identifier(helper_request + '--capture-helper')
+    row = admission.query(target, rid).get('resource')
+    if not row or row['phase'] == 'released':
+        return
+    if row.get('pending') or not row.get('identity'):
+        raise Blocked('recovery asset helper creation/start effect remains unresolved')
+    physical = {**row['identity'], 'authority_resource_id': rid}
+    close_capture_helper(target, physical, helper_request + '--close')
+
+
+def finish_recovery_preparation(binding, request_id):
+    """Reenter the original metadata producer's close without repeating repair I/O."""
+    if binding['authority']['kind'] != 'docker':
+        return
+    target = binding['authority']['target']
+    producer_request = request_id + '--repair--producer'
+    rid = producer_request + '--capture-helper'
+    row = admission.query(target, rid).get('resource')
+    if not row or row['phase'] == 'released':
+        return
+    if row.get('pending') or not row.get('identity'):
+        raise Blocked('original repair helper physical effect is unresolved')
+    close_capture_helper(target, {**row['identity'], 'authority_resource_id':rid}, producer_request + '--close')
 
 
 def prepare_in_domain(selection, output, store=None):

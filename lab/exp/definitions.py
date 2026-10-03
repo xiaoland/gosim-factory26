@@ -37,7 +37,7 @@ def bind(producer, store, cache, consumer):
             source_store = Path(component['store']).resolve(strict=True)
             if source_store != Path(store).resolve(strict=True):
                 artifacts.transfer(source_store, store, reference, consumer=consumer,
-                                   request_id='component-transfer-' + canonical([consumer, reference]))
+                                   request_id='component-transfer-' + canonical([consumer, reference,component.get('member','.')]),selected_member=component.get('member','.'))
         elif index.exists():
             row = read(index)
             if row['dependencies'] != component['dependencies']:
@@ -84,36 +84,40 @@ def bind(producer, store, cache, consumer):
     return reference, value
 
 
-def resolve(value, store, consumer, *, retentions=None):
+def resolve(value, store, consumer, *, retentions=None, roles=None):
     """One readback per physical artifact in this operation window."""
     validate(value)
+    selected=[row for row in value['roles'] if roles is None or row['role'] in roles]
+    required={row['asset'] for row in selected}
     roots = {}
     assets = {}
     for asset in value['assets']:
+        if asset['name'] not in required:
+            continue
         reference = asset['reference']
-        key = canonical(reference)
+        key = canonical([reference,asset.get('member','.')])
         if key not in roots:
-            retention = (retentions.get(key) if retentions is not None else
+            retention = (retentions.get(canonical(reference)) if retentions is not None else
                          artifacts.retain(store, reference, consumer, 'definition-assets', 'resolve-' + canonical([consumer, reference])))
             if retention is None:
                 raise ValueError('read-only definition input lacks its existing consumer retention')
-            roots[key] = artifacts.resolve(store, reference, consumer=consumer, retention=retention)
+            roots[key] = artifacts.resolve(store, reference, asset.get('member','.'),consumer=consumer, retention=retention)
         assets[asset['name']] = asset
     result = []
-    for role in value['roles']:
+    for role in selected:
         asset = assets[role['asset']]
         from scripts.execution_context import member_join
         relative = member_join(asset.get('member', '.'), role.get('member', '.'))
         artifacts.member_contents(store, asset['reference'], relative)
         result.append({'role': role['role'], 'reference': asset['reference'], 'member': relative,
-            'store': str(store), 'local_root': str(roots[canonical(asset['reference'])] / relative),
+            'store': str(store), 'local_root': str(roots[canonical([asset['reference'],asset.get('member','.')])] / role.get('member','.')),
             'access': 'consumer-readback'})
     return result
 
 
 def bind_private(producer, store, consumer):
     """Retain the existing two-tool defaults as a private execution input."""
-    return {name:artifacts.publish(store,row['root'],'private-tool-input',
-        provenance={'producer':'harness.private-tool-input','dependencies':row['dependencies']},
-        consumer=consumer,purpose='per-attempt-tool-defaults',request_id='tool-input-'+canonical(row['dependencies']))
+    return {name:artifacts.publish(store,row['root'],'private-execution-input',
+        provenance={'producer':'harness.private-input','dependencies':row['dependencies']},
+        consumer=consumer,purpose='per-attempt-private-input',request_id='tool-input-'+canonical(row['dependencies']))
         for name,row in producer.get('private_inputs',{}).items()}

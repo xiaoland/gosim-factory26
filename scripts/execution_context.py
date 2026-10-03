@@ -14,6 +14,44 @@ def member_join(base, relative):
     return '/'.join(values) or '.'
 
 
+def validate_assembly(value):
+    """One semantic contract for Local, Docker, SDK and delivered Harnesses.
+
+    Adapters supply observed namespace and actual placements. This boundary never
+    discovers paths, replaces artifact references or grants writer permission.
+    """
+    if value.get('kind')!='factory26.exp.assembly' or value.get('schema_version')!=2 or value.get('status')!='assembled':
+        raise ValueError('unsupported namespace assembly')
+    if not isinstance(value.get('namespace'),dict) or not value['namespace'].get('kind'):
+        raise ValueError('assembly needs observed namespace scope')
+    names=set()
+    for row in value['definitions']:
+        name=row['role']
+        if name in names or not Path(row['local_root']).is_absolute() or not row.get('access'):
+            raise ValueError('assembly needs unique, namespace-local role placements: '+name)
+        names.add(name)
+        member_join(row.get('member','.'),'.')
+        reference=row.get('reference')
+        if reference is not None and set(reference)!={'artifact_id','manifest_sha256'}:
+            raise ValueError('assembly role reference is not an artifact identity: '+name)
+    required={'agent','runtime','skills','braid'} | ({'support'} if value['entry']['mode']=='fresh' else set())
+    if names and not required<=names:
+        raise ValueError('Harness assembly is missing a required role')
+    state=value['state']
+    if not Path(state['root']).is_absolute() or state['mode'] not in {'fresh','snapshot-copy','domain-state'}:
+        raise ValueError('assembly needs an explicit namespace-local state placement')
+    holder=state.get('holder')
+    if holder and (holder['generation']!=state['generation'] or holder['holder_id']!=holder['authority']['workspace']):
+        raise ValueError('assembly state relation differs from its authority descriptor')
+    if value['entry']['mode'] not in {'fresh','resume'}:
+        raise ValueError('assembly entry needs an explicit fresh/resume mode')
+    for name,row in value.get('inputs',{}).items():
+        if not Path(row['root']).is_absolute():
+            raise ValueError('assembly input is unavailable in this namespace: '+name)
+        member_join(row.get('member','.'),'.')
+    return value
+
+
 def write(path, value, *, private=False):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -40,6 +78,7 @@ def read(path=None):
         raise ValueError('unsupported execution context')
     if value.get('status') != 'ready':
         raise ValueError('execution context is not ready')
+    validate_assembly(value['assembly'])
     for row in value['assembly']['definitions']:
         member_join(row.get('member', '.'), '.')
         root = Path(row['local_root'])
@@ -75,6 +114,9 @@ def environment(value):
                   'reference': row.get('reference'), 'member': row.get('member', '.'),
                   'store': row.get('store'), 'root': row['local_root']}
                   for row in value['assembly']['definitions'] if row.get('reference')}})}
+    for name,variable in (('application_seed','FACTORY26_APPLICATION_SEED'),('gateway_routes','FACTORY26_GATEWAY_ROUTES')):
+        if name in value['assembly'].get('inputs',{}):
+            result[variable]=value['assembly']['inputs'][name]['root']
     resource = services.get('resource_evidence', {})
     if resource.get('status') == 'ready':
         result['FACTORY26_EXP_RESOURCE_SAMPLE'] = resource['sample_path']
@@ -93,8 +135,9 @@ def environment(value):
 
 
 def create(assembly, services, attempt_id, incarnation_id, path, model_policy=None):
+    assembly_value=validate_assembly(assembly)
     value = {'kind': 'factory26.execution.context', 'schema_version': 1, 'status': 'ready',
-             'assembly': assembly, 'attempt_id': attempt_id, 'incarnation_id': incarnation_id,
+             'assembly': assembly_value, 'attempt_id': attempt_id, 'incarnation_id': incarnation_id,
              'services': services, 'model_policy':dict(model_policy or {}),
              'credential_variables':sorted({row['credential_env'] for row in json.loads((model_policy or {}).get('FACTORY26_MODEL_BINDINGS','{}')).values()})}
     for name in ('resource_evidence', 'telemetry'):

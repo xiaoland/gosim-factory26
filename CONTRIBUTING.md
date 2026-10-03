@@ -20,7 +20,26 @@
 各团队 variant 是完整独立实现；不相互 import，也不从共同配方生成。当前活动、实验与历史状态见 [Variant 索引](variants/README.md)，新实验的 case 与运行名见 [实验导航](experiments/README.md)。
 原生 models/settings/角色 Markdown 是 Pi 直接消费的材料，profile.json 是 Braid 的原生 profile 字段。
 `run.py` 明确构造本次 Braid 请求。
-共有支持模块只做文件、进程与证据操作。
+共有支持模块提供文件、进程、证据以及设施装配入口，不决定 variant 的协作方式、模型政策或下一次执行。
+
+## I14 材料与源码入口
+
+I14 的 `materials.json` 声明所需技能、runtime 成员、公开输入和额外定义角色；`build.py` 只转交显式参数给公共生产器，不维护第二份技能清单。`package_agent.produce` 分别生产 agent、runtime、skills、support 和实际需要的额外组件，定义组合引用这些不可变资产。私有 tool/provider 环境、application seed 与 gateway routes 是独立输入，改变它们不重建 agent/runtime。源码与公开政策按实际组件失效；控制器代码更新也不改变 runner 代码身份。
+
+`lab compile` 生成未解析的定义计划，不读取 runtime/skills 内容，也不检查官方 SDK 源码形状。`lab build --job ID` 只绑定该目标的实际依赖，安装并冻结 controller 与 runner 各自的代码。SDK 使用薄交付入口和本域只读组件挂载，Hosted 使用独立的自包含交付投影。部署路径只存在于位置回执，私有输入只在本次执行通道中提供；不能将宿主路径直接传入子容器。包的能力字段描述所携带接口，完整 checkpoint 能力仍由实际 writer 覆盖和回执证明。
+
+四个 I14 的 `main.py` 和 `run.py` 消费设施已经装配好的 context，不自己启动 telemetry/resource 服务。源码开发使用同一个公共装配与服务入口，不手写 context 文件：
+
+```sh
+python3 -B scripts/experiment_entry.py \
+  --source variants/pi-braid-i14 \
+  --runtime /Volumes/WorkSSD/Development/factory26/runs/assets/linux-runtime \
+  --skills harness/skills \
+  /Volumes/WorkSSD/Development/factory26/runs/requirements \
+  --output-dir /Volumes/WorkSSD/Development/factory26/runs/source-generation
+```
+
+路径必须指向真实所选材料，示例不会创建 runtime 或授予模型运行许可。e2e variant 还需显式 `--e2e-runtime`。源码开发 context 明确记录未发布的定义位置，不能据此声称已有可跨域保留的恢复资产；正式实验仍使用 Lab 构建的引用和显式执行请求。
 
 ## 从任务到实现，再回到文档
 

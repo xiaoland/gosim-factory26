@@ -2,7 +2,7 @@
 
 这个配方把 `benchmarks/hackathon` 的每个场景展开成独立的官方 Runner job。它只回放已经生成并冻结的软件；不会调用模型、修改软件或访问官网。每个 job 的 variant 取自回放 ZIP 内 `replay-manifest.json` 对应赛题的来源记录，配方不再人工维护第二份 variant 名称。测试脚本与覆盖映射在实验内共享冻结，逐场景选择文件分别保存。
 
-新配方使用 `factory26.exp.experiment`，由 matrix.py 显式接收 controller/runner runtime、资源预算、Docker endpoint 和 authority-handoff；具体必需项使用 `python3 experiments/hackathon-local/matrix.py --help`。生成后用 `python3 -m lab build RECIPE --directory EXPERIMENT`、`start EXPERIMENT`，状态与原始结果使用 `status EXPERIMENT --json` 和 `analyze EXPERIMENT --output NEW`。旧 benchmark report 的 cohort 查询继续用于历史 run，尚未接入新 attempt 合同。
+新配方使用 `factory26.exp.experiment`，由 matrix.py 显式接收 controller/runner runtime、资源预算、Docker endpoint 和 authority-handoff；具体必需项使用 `python3 experiments/hackathon-local/matrix.py --help`。生成后用 `python3 -m lab build RECIPE --directory EXPERIMENT --job JOB`、`start EXPERIMENT --job JOB --request-id REQUEST`，状态与原始结果使用 `status EXPERIMENT --json` 和 `analyze EXPERIMENT --output NEW`。旧 benchmark report 的 cohort 查询继续用于历史 run，尚未接入新 attempt 合同。
 
 ## 历史记录查询
 

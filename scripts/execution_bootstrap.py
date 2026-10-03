@@ -69,67 +69,68 @@ def close(evidence, receiver, *, reason='execution-closed'):
             return receiver.close(producer_flush='unknown')
 
 
-def delivery_assembly(root, output, attempt_id, namespace=None, definition_store=None, definition_bindings=None):
+def delivery_assembly(root, output, attempt_id, namespace=None, definition_bindings=None, input_bindings=None):
     """Translate only the frozen delivery map; no parent paths or name guessing."""
     root, output = Path(root).resolve(strict=True), Path(output).resolve()
     layout = json.loads((root / 'delivery-layout.json').read_text())
     if layout.get('kind') != 'factory26.harness.delivery' or layout.get('schema_version') != 1:
         raise ValueError('unsupported delivery layout')
     roles = []
+    placements = {row['role']: row for row in definition_bindings or []}
+    if layout['mode'] == 'sdk-components' and not placements:
+        raise ValueError('SDK thin delivery requires actual authenticated component placements')
     for row in layout['roles']:
-        relative = execution_context.member_join('.', row['path'])
-        path = root / relative
-        if not path.exists() or not path.resolve().is_relative_to(root):
-            raise ValueError('delivered definition role is unavailable: ' + row['role'])
-        roles.append({'role': row['role'], 'reference': row['reference'], 'member': row['member'],
-                      'local_root': str(path), 'access': 'delivered-content-readback'})
-    if definition_bindings:
-        placements={row['role']:row for row in definition_bindings}
-        mapped=[]
-        for row in roles:
+        if placements:
             placement=placements.get(row['role'])
             if not placement or placement['reference']!=row['reference'] or placement['member']!=row['member'] or placement['access']!='read-only':
                 raise ValueError('SDK role lacks its actual frozen read-only binding: '+row['role'])
             local=Path(placement['local_root'])
             if not local.is_absolute() or not local.exists():
-                raise ValueError('SDK read-only role is unavailable in this namespace: '+row['role'])
-            mapped.append({**row,'store':placement['store'],'local_root':str(local),'access':'read-only'})
-        roles=mapped
-    if definition_store:
-        from lab.exp import artifacts
-        roots={}
-        installed=[]
-        for row in roles:
-            reference=row['reference']
-            key=json.dumps(reference,sort_keys=True)
-            if key not in roots:
-                roots[key]=artifacts.resolve(definition_store,reference)
-            relative=execution_context.member_join(row['member'],'.')
-            artifacts.member_contents(definition_store,reference,relative)
-            installed.append({**row,'store':definition_store,'local_root':str(roots[key]/relative),'access':'read-only'})
-        roles=installed
-    from agent_support import process_identity
+                raise ValueError('SDK role is unavailable in this namespace: '+row['role'])
+            roles.append({**placement,'local_root':str(local)})
+        else:
+            path=root/execution_context.member_join('.',row['path'])
+            if not path.exists() or not path.resolve().is_relative_to(root):
+                raise ValueError('hosted delivered role is unavailable: '+row['role'])
+            roles.append({'role':row['role'],'reference':row['reference'],'member':row['member'],
+                'local_root':str(path),'access':'delivered-content-readback'})
+    try:
+        from .agent_support import process_identity
+    except ImportError:
+        from agent_support import process_identity
     observed = namespace or {'kind': 'delivery-local-scope', 'process': process_identity(os.getpid()),
                              'platform_binding': 'external-controller-only'}
+    actual_inputs=dict(input_bindings or {})
+    for name,row in layout.get('inputs',{}).items():
+        if name in actual_inputs:
+            raise ValueError('delivery and namespace both bind execution input: '+name)
+        path=root/execution_context.member_join('.',row['path'])
+        if not path.exists() or not path.resolve().is_relative_to(root):
+            raise ValueError('delivered execution input escapes delivery: '+name)
+        actual_inputs[name]={'reference':row['reference'],'member':row['member'],'root':str(path)}
     state = output / '.factory26' / attempt_id
-    return {'kind': 'factory26.exp.assembly', 'schema_version': 2, 'status': 'assembled',
+    return execution_context.validate_assembly({'kind': 'factory26.exp.assembly', 'schema_version': 2, 'status': 'assembled',
             'namespace': observed, 'definitions': roles, 'definition': layout['definition'],
             'state': {'root': str(state), 'mode': 'fresh', 'holder': None, 'generation': 0},
-            'workspace': str(output), 'entry': {'mode': 'fresh', 'path': str(execution_context.role({'assembly':{'definitions':roles}},'agent') / 'main.py')},
-            'proof': {'delivery': 'explicit-frozen-role-map', 'state_capture': 'capability-dependent'}}
+            'inputs':actual_inputs, 'workspace': str(output), 'entry': {'mode': 'fresh', 'path': str(execution_context.role({'assembly':{'definitions':roles}},'agent') / 'main.py')},
+            'proof': {'delivery': 'explicit-frozen-role-map', 'state_capture': 'capability-dependent'}})
 
 
-def launch_delivery(root, argv, *, output, namespace=None, public_environment=None, cap_bytes=64 * 1024 * 1024, state_binding=None, capture_source=None, definition_store=None, definition_bindings=None):
+def launch_delivery(root, argv, *, output, namespace=None, public_environment=None, cap_bytes=64 * 1024 * 1024, state_binding=None, capture_source=None, definition_bindings=None, input_bindings=None):
     """SDK/Hosted delegate their namespace lifecycle to the same bootstrap."""
     root, output = Path(root).resolve(strict=True), Path(output).resolve()
     output.mkdir(parents=True, exist_ok=True)
     attempt_id = (namespace or {}).get('attempt_id') or os.environ.get('FACTORY26_EXP_ATTEMPT_ID') or ('delivery-' + str(os.getpid()))
     incarnation = (namespace or {}).get('incarnation_id') or (namespace or {}).get('container_id') or ('process-' + str(os.getpid()))
-    assembly = delivery_assembly(root, output, attempt_id, namespace, definition_store, definition_bindings)
+    assembly = delivery_assembly(root, output, attempt_id, namespace, definition_bindings, input_bindings)
     if state_binding:
         assembly['state'].update(holder=state_binding,generation=state_binding['generation'])
     if capture_source:
         assembly['proof']['capture_source']=capture_source
+    return _launch_assembly(root,output,attempt_id,incarnation,assembly,public_environment,cap_bytes,capture_source)
+
+
+def _launch_assembly(root,output,attempt_id,incarnation,assembly,public_environment,cap_bytes,capture_source=None):
     evidence, receiver, process = None, None, None
     states = {}
     control = output / '.arc/execution'
@@ -147,13 +148,23 @@ def launch_delivery(root, argv, *, output, namespace=None, public_environment=No
     result = control / 'entry-result.json'
     try:
         defaults={}
-        delivery_layout=json.loads((root/'delivery-layout.json').read_text())
+        delivery_layout=json.loads((root/'delivery-layout.json').read_text()) if (root/'delivery-layout.json').is_file() else {}
         tool_input=delivery_layout.get('private_inputs',{}).get('tool_env')
         if tool_input:
             private_path=root/execution_context.member_join('.',tool_input['path'])
             defaults=json.loads(private_path.read_text())
             if set(defaults)!={'CONTEXT7_API_KEY','EXA_API_KEY'} or any(not isinstance(value,str) or not value for value in defaults.values()):
                 raise ValueError('private tool input must contain the two existing tool credential variables')
+        provider_input=delivery_layout.get('private_inputs',{}).get('provider_env')
+        if provider_input:
+            private_path=root/execution_context.member_join('.',provider_input['path'])
+            values=json.loads(private_path.read_text())
+            if not isinstance(values,dict) or any(not isinstance(key,str) or not key.isidentifier() or not isinstance(value,str) or not value for key,value in values.items()):
+                raise ValueError('invalid private provider input')
+            if set(values)&set(defaults):
+                raise ValueError('provider input overlaps the tool credential channel')
+            defaults.update(values)
+            defaults['FACTORY26_PROVIDER_VARIABLES']=json.dumps(sorted(values))
         for key, expected in (public_environment or {}).items():
             if os.environ.get(key) != expected:
                 raise ValueError('child environment differs from compiled public policy: ' + key)
@@ -186,3 +197,30 @@ def launch_delivery(root, argv, *, output, namespace=None, public_environment=No
                 os.killpg(process.pid, signal.SIGKILL)
                 process.wait()
         close(evidence, receiver)
+
+
+def launch_source(source, runtime, skills, argv, *, output, e2e_runtime=None):
+    """Source development uses the same service/entry owner; no hand-written context."""
+    from scripts.runtime import workssd_path
+    from scripts.agent_support import process_identity
+    source,runtime,skills=(Path(value).resolve(strict=True) for value in (source,runtime,skills))
+    output=workssd_path(output);output.mkdir(parents=True,exist_ok=True)
+    support=Path(__file__).resolve().parent
+    attempt_id='source-'+str(os.getpid())
+    roles=[{'role':name,'local_root':str(root),'member':'.','access':'source-consumer-readback'} for name,root in
+        (('agent',source),('runtime',runtime),('skills',skills),('braid',runtime/'bin/braid'),('support',support))]
+    declaration=json.loads((source/'materials.json').read_text())
+    required=set(declaration.get('definition_roles',[]))
+    if required-{'e2e-runtime'}:
+        raise ValueError('source entry does not support declared roles: '+','.join(sorted(required-{'e2e-runtime'})))
+    if 'e2e-runtime' in required:
+        if e2e_runtime is None:
+            raise ValueError('source variant requires explicit --e2e-runtime')
+        roles.append({'role':'e2e-runtime','local_root':str(Path(e2e_runtime).resolve(strict=True)),'member':'.','access':'source-consumer-readback'})
+    assembly={'kind':'factory26.exp.assembly','schema_version':2,'status':'assembled','definition':None,
+        'definitions':roles,'namespace':{'kind':'source-local','process':process_identity(os.getpid())},
+        'state':{'root':str(output/'.factory26'/attempt_id),'holder':None,'generation':0,'mode':'fresh'},
+        'workspace':str(output),'entry':{'mode':'fresh','path':str(source/'main.py')},
+        'proof':{'source_selection':'explicit','checkpoint':'unavailable-unpublished-source-definitions'}}
+    execution_context.validate_assembly(assembly)
+    return _launch_assembly(source,output,attempt_id,'source-process-'+str(os.getpid()),assembly,None,64*1024*1024)

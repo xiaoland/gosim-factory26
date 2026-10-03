@@ -2,7 +2,7 @@
 
 ## 当前新实验入口
 
-新实验使用 `factory26.exp.experiment` schema 2。复杂矩阵先以 `python3 -m lab compile INTENT --environment PROFILE --directory BUNDLE` 冻结目标、模型选择和逐应用评价政策，再用 `doctor` 查询声明材料与宿主事实、`build INPUT --environment PROFILE --directory EXPERIMENT` 发布冻结执行器；已授权的执行使用 `start EXPERIMENT --deployment PRIVATE_JSON`。维护的profile与实际生产依赖共同解析runtime及材料；参数和完整命令归 [Lab](../../lab/README.md)，当前实施及未验边界归[实验 DX](../../tasks/experiment-dx-review/packet.md)。
+新实验使用 `factory26.exp.experiment` schema 3。复杂矩阵先以 `python3 -m lab compile INTENT --environment PROFILE --directory BUNDLE` 冻结目标、模型选择和逐应用评价政策，再用 `doctor` 查询声明材料与宿主事实、`build INPUT --environment PROFILE --directory EXPERIMENT --job JOB` 发布冻结执行器；已授权的执行使用 `start EXPERIMENT --job JOB --request-id REQUEST --deployment PRIVATE_JSON`。维护的profile与实际生产依赖共同解析runtime及材料；参数和完整命令归 [Lab](../../lab/README.md)，当前实施及未验边界归[实验 DX](../../tasks/experiment-dx-review/packet.md)。
 
 ARC matrix 也可直接生产新 recipe，显式提供 controller/runner runtime、预算、Docker endpoint/image、共享权威、模型与评价政策；可用 `python3 -m lab.arc_bench.arc_matrix --help` 查询参数。旧 `--env-file` 与 gateway-state 接线已经退役，私有凭据由 deployment 提供。SDK 子容器归同一 attempt 资源合同，旧派发者、预约和在途窗口尚未完成交接时不能接管该资源域；首次使用新域须有独立的 first-use 证据，不从容器数量推导授权。
 
@@ -10,7 +10,7 @@ ARC matrix 也可直接生产新 recipe，显式提供 controller/runner runtime
 
 ## 历史运行合同与取证参考
 
-以下保留旧冻结 run 的生产过程及操作，解释原记录的目录、字段和恢复依赖。命令仅适用于保存该协议的原冻结程序；工作树的 plan/run/operation、host-lab、按来源 run 复评等旧接口已退役，不能按这些示例新建执行。新旧 schema 的版本号属于不同协议，旧 schema v3 不会因数字较大而成为新 experiment schema 2 的替代品。
+以下保留旧冻结 run 的生产过程及操作，解释原记录的目录、字段和恢复依赖。命令仅适用于保存该协议的原冻结程序；工作树的 plan/run/operation、host-lab、按来源 run 复评等旧接口已退役，不能按这些示例新建执行。新旧 schema 的版本号属于不同协议，旧 schema v3 不会因数字较大而成为新 experiment schema 3 的替代品。
 
 本文说明冻结 Harness 的本地生成与评分，适用于 Lite/Web 及需求公开的 Hackathon。它不调用官网；官网评分和应用重放见[平台操作](competition.md)与[恢复手册](recovery.md)。题目、制品、并发和完成条件先在所属 packet 登记，命名规则见[实验导航](../../experiments/README.md)。
 
@@ -67,13 +67,15 @@ python3 -m lab run "$LOCAL_ASSETS/experiments/example/manifest.json" \
 
 `--prepare-only` 只准备两类输入与制品装配，不产生评分。
 独立生成使用 `--separate-evaluation`，生成阶段不传公开测试；省略该选项的单阶段路径不作为独立生成基线。
-矩阵中的每个执行都有独立 run ID；同一赛题、不同 variant 可以同时运行，`--workers` 只限制该实验控制器的派发并发，不按赛题或 variant 加锁。`arc_matrix --memory 2g --cpus 2` 将每个新 run 的 Docker 内存和 CPU 参数冻结到 adapter argv；Python 调用对应 `build(..., memory="2g", cpus="2")`。不指定时沿用官方 Runner 默认值，不改写旧配方。容器内存与 CPU 限制不等于 schema v3 的 workspace、telemetry 和归档存储预算。
+以下 workers 派发及五秒容量等待属于旧冻结执行器。新 schema 3 使用显式 job/request，容量不足直接返回，资源释放与归档分开；新操作以 Lab 入口为准。
+
+旧矩阵中的每个执行都有独立 run ID；同一赛题、不同 variant 可以同时运行，`--workers` 只限制该实验控制器的派发并发，不按赛题或 variant 加锁。`arc_matrix --memory 2g --cpus 2` 将每个新 run 的 Docker 内存和 CPU 参数冻结到 adapter argv；Python 调用对应 `build(..., memory="2g", cpus="2")`。不指定时沿用官方 Runner 默认值，不改写旧配方。容器内存与 CPU 限制不等于 schema v3 的 workspace、telemetry 和归档存储预算。
 
 需要多个控制器共享执行容量时，同一旧协议的矩阵显式设置 `--shared-docker-slots 5`，Python 调用对应 `build(..., shared_docker_slots=5)`。准入按冻结 daemon ID，在同一控制器宿主的 `~/.config/factory26/docker-admission/<daemon-id哈希>/` 使用持久 registry 和文件锁；XDG_CONFIG_HOME 可改变配置根目录，FACTORY26_DOCKER_ADMISSION_ROOT 可指定统一准入根目录。所有参与控制器须使用同一稳定目录，不为每个 run 单设目录；已有 registry 与请求的槽数不一致时拒绝执行。五槽是同宿主、同用户或共享锁目录、同 daemon 的共同上限，各控制器的 workers 不会各得到五槽。不同宿主、独立锁目录或未接入准入的外部执行者不受同一锁协调，不能据此声称跨宿主全局限流。
 
 准入计入 daemon 上带 `io.factory26.stage` 标签的 running、paused 和 restarting 执行容器；helper 不带此标签，不占执行槽。新启动前的 reservation 另占槽，匹配同 run/attempt/stage/owner 的实际活动容器后只计一次；未知进程身份不会自动释放 reservation，确认 lost 后仍须独立 Docker 读回证明没有对应活动执行。容量不足时程序每五秒等待并保存状态变化，不调用模型。准入覆盖输入传输、执行及 finally 的停止和回收，退出时释放本次 reservation；仍在运行的物理容器继续计入。最新事实与变化保存在 registry 的 `receipts/<lease-id>.json`、同名 `.jsonl` 和阶段旁的 `*.resource.admission.json`。观察时间表示该次读回，不等于持续健康保证。
 
-例如同一 daemon 已有两条旧 I13 执行时，五槽中只余三槽；新矩阵使用 `--memory 2g --cpus 2` 不改变原两条的 4GiB 配额，旧执行结束后新增执行自动获得更多可用槽。不替换旧冻结 controller-source 来接入新政策。共享锁机制的存在与容量读回不能替代多控制器并发、满槽等待或失联回收的实际运行验收。
+例如同一 daemon 已有两条旧 I13 执行时，五槽中只余三槽；新矩阵使用 `--memory 2g --cpus 2` 不改变原两条的 4GiB 配额，旧执行结束后，显式请求的新增执行可使用释放的槽；容量不足时不排队。不替换旧冻结 controller-source 来接入新政策。共享锁机制的存在与容量读回不能替代多控制器并发、满槽等待或失联回收的实际运行验收。
 `run.json` 保存输入快照哈希、适配器退出码、原始 Runner 结果和遥测取得情况；原始 Runner 退出码在 `result.runner_exit_code`。
 旧流程将 Runner workspace、stdout/stderr 和声明归档的产物留在外层 run 目录中。I13 内层归档只有回执授权才删除其精确 `work`；这不授权清理外层 Runner 现场。只读候选查询与保护边界见[证据说明](evidence.md#存储回收候选)。
 

@@ -80,6 +80,10 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 
 ## 等待、反馈与交接
 
+新 schema 3 Hosted attempt 在显式 start 已受理同一 run 后，附着一个只读 single-attempt observer。它仅按既定三分钟/八分钟 cadence 保存身份 GET、provider 连续观察及有限终态证据，不提交 snapshot、不创建 run、不 start/retry 或挑选评价对象。`observer.json` 保存所属 attempt/incarnation 与进程出生身份，`observer-launch-error.json` 和 `observer-error.json` 保留辅助失败；这些错误不改变远端执行结果。终态证据最多作三次有界收尾，无法完成时明确保存 incomplete。
+
+控制的身份 readback 不经过 progress/workspace 下载锁。标准 provider 采集保留 main 原有 status、SQLite 所用行及 native 原始窗口；ZIP 只在平台支持的完整下载接口取得，不声称减少网络。`seal` 接续同 attempt 的内容/证据发布，`export` 只向指定 consumer/store 输运明确的 reference/member。部分 member 位置与 full 位置可同时存在，前者不能用于 whole verify 或被解释为完整 workspace。执行额度在实际终态和 writer-close 后释放，封口与输运仍可失败并保存原件，资产 hold 和状态 volume 不随 slot 释放而删除。
+
 长实验由程序持有运行命令、采集证据并保存终态；运行监控不再唤醒模型。官网与本地共享 provider 活动判断，保存来源身份、生命周期、恢复边界与 native 元数据；疑似 stale 仅表示长时间没有可观测活动，不判断语义进度。
 旧 journal 的 `hosted_monitor` 每轮仍从平台下载完整 `workspace.zip`，采样频率不变；平台没有增量证据接口，此改动只减少本地永久占用。普通成功轮次在临时 `scratch/` 中读取 Braid status、recovery attempt、SQLite DB/WAL 与完整 native 文件，再永久保存判定实际使用的原始 status/recovery、`provider-rows.json` 的选取 provider/turn 行值，以及每个 native 的 `header.jsonl`、`tail.raw` 和 `source.json`。窗口保存原始末 1 MiB，首尾半行、原文件字节数、offset 和 ZIP member 来源均明确记录；窗口不是完整 native，也不提供恢复承诺。provider 活动、原文件 bytes 和 fingerprint 仍来自完整 scratch，不能通过窗口文件大小重新推导。SQLite 摘录只保存本轮所选原始行，不是完整数据库，不能据此独立重跑全表选最新的查询。`required_reads` 只引用本轮永久证据。
 

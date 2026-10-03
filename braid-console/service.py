@@ -197,6 +197,7 @@ def registrations(destination, entries, service_id):
                 config["access_owner"] = "console"
                 run["docker"] = config
                 docker_runtime.execution_binding(config)
+                docker_runtime.attach(config, "console-attach-" + service_id + "-" + run["id"])
                 docker_paths(run, service_id)
         else:
             raise ValueError("每项 mode 必须是 live 或 archive")

@@ -20,6 +20,10 @@ Docker 导出后的保存位置与原运行逻辑根不同。对新分离布局�
 
 默认恢复入口为 `python3 -m lab recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE --directory NEW_RUN`。Intent 在普通实验字段之外声明 `recovery: {production: NAME, target: TARGET_LAYOUT, repair: REPAIR}`，相关 variant 的 prepared 使用 `{from_production: NAME}`。缺省 `mode` 为 `snapshot-copy`；显式 `mode: "domain-state"` 和稳定 `request_id` 选择同域受管恢复。入口冻结原 checkpoint 身份、修复输入、生产依赖及派生关系，准备新 run，不启动模型。SOURCE 必须是明确 checkpoint，不从含混 run/archive 自动猜。
 
+恢复是一次显式操作，缺省只准备选定 job。`--execute` 才请求派生 attempt 的一次入口；`--action query` 只读原操作回执，`--action continue` 以原 request 接续，`--action abort` 在确认本请求的 helper、新执行预约和 writer 责任已关闭后结束准备。取消保留原快照、当前状态字节、修复 ledger 和 generation，不回滚也不把写权交还旧入口。已启动的派生执行须针对其 exact attempt 停止，不能用取消准备代替。部分修复取消后的 holder 是 `repair-aborted`，不能当作可重开原快照的 `closed`；通常从保留的 immutable snapshot 新建恢复。
+
+同域修复前，明确选中的新 definition reference/member 在原 store 认证并保留，再安装到目标域资产位置。材料生产不持有 mutable capture；进入修复之后只处理已冻结资产和允许的状态变更。通用 `prepare` production 只派生 immutable snapshot-copy，不借 compilation/build 隐式改活动状态。恢复操作原件保存在派生目录旁的 `.recovery-operation.json`，错误另存 `.recovery-error.json`；同 request 改参数明确拒绝。
+
 `domain-state` 在原 capture 许可内修复派生材料，保留应用、Git 和 native 状态的位置。每项修复保存实际完成事实；半失败保留许可及原始错误，不能用旧快照证明未完成的新状态。完整修复推进 generation，实际新执行通过原权威原子交接唯一写权，并重新核对当前许可后启动。交接前旧输出、归档、export 和 Console 消费者须绑定不可变快照。旧 Console 写者先关闭，新访问实例重新登记；未登记外部编辑不在完整关闭承诺内。新 resource 与 incarnation 不复用旧出生实例。`snapshot-copy` 在目标域复制状态，不能借用源 holder 的活动路径。
 
 低层 `prepare --source CHECKPOINT --output NEW --target-layout JSON --repair REPAIR_JSON` 保留，无网络或模型请求。有限修复覆盖材料刷新、已声明 provider transport、内部路径别名、已退役 transient link、外部 node-gyp 工具物化及明确兼容 runtime 替换。每项核对原 literal/目标范围，记录实际变化与损失；Git、native 历史与应用工作不由材料刷新覆盖。结构 partial 可以离线派生以解释缺口，但结果没有完整获取/语义保证仍为 partial，不能进入完整恢复执行。

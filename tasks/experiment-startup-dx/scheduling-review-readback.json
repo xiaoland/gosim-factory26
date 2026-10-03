@@ -1,0 +1,17 @@
+{
+  "observed_at": "2026-10-03T05:08:37.596867+00:00",
+  "scope": "read-only source audit; no execution, network or runtime controls",
+  "primary_checkout": "/Volumes/WorkSSD/Development/factory26",
+  "primary_sources": {
+    "lab/exp/controller.py": "1b8fa073b826e2517ca3616dbe02592c106d6a050fc1314a839eaa6400136792",
+    "lab/exp/runner.py": "6af578507d1a006900f95f1f61f0fdf6a576795ac7ef8e48a18b544906b333f9",
+    "lab/exp/hosted.py": "dd59894c160197fcef5e1ef7bb76ac9d240860ccbb5bc16b02061d2742ab4bf3",
+    "lab/exp/backends.py": "3c9d5f6f2f06964bd1eb28e2b2e3bc7f24a096b0a6583b739b7af0cd24b6f1ea",
+    "lab/exp/compiler.py": "d768e0c6adda6f8b8bf148f9496728cbac299ca09994f692cdb04e301c5b3e9a",
+    "lab/exp/__main__.py": "b3a0b4784430f392f2c8ee5be4e7a0904989a43d212d824cacd608154ff6b924"
+  },
+  "prior_branch_controller": {
+    "path": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/lab/exp/controller.py",
+    "sha256": "3e433ec2f855a67147c2c8ba588094d964f0f877ba0a2a7dad41c3fc66025d52"
+  }
+}

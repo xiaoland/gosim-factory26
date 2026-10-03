@@ -509,20 +509,26 @@ def resolve_definition_assets(root, manifest, artifact_store=None, verified=None
         else:
             hold = artifacts.retain(store, row['artifact'], consumer, 'harness-definition/' + row['name'], request_id)
             retained_consumer = consumer
-        key = (str(store), canonical(row['artifact']))
-        if key not in verified:
-            verified[key] = artifacts.resolve(store, row['artifact'], consumer=retained_consumer, retention=hold)
-        payload = verified[key]
         relative = member(row['member'])
-        path = payload if relative == '.' else payload / relative
-        current = payload
-        for part in Path(relative).parts:
-            if part != '.':
-                current = current / part
-                if current.is_symlink():
-                    raise ValueError('definition member不能经过未绑定alias：' + relative)
-        if not path.exists() or not path.resolve().is_relative_to(payload.resolve()):
-            raise ValueError('definition member不存在或逃离artifact：' + relative)
+        full_key = (str(store), canonical(row['artifact']))
+        key = (*full_key, relative)
+        if key not in verified:
+            if full_key in verified:
+                payload = verified[full_key]
+                path = payload if relative == '.' else payload / relative
+                current = payload
+                for part in Path(relative).parts:
+                    if part != '.':
+                        current = current / part
+                        if current.is_symlink():
+                            raise ValueError('definition member不能经过未绑定alias：' + relative)
+                if not path.exists() or not path.resolve().is_relative_to(payload.resolve()):
+                    raise ValueError('definition member不存在或逃离artifact：' + relative)
+                verified[key] = path
+            else:
+                verified[key] = artifacts.resolve(store, row['artifact'], path=relative,
+                    consumer=retained_consumer, retention=hold)
+        path = verified[key]
         mounts.append((row['logical_root'], path))
         bindings[row['name']] = {'store': str(store), 'root': str(path), 'reference': row['artifact'],
                                  'member': row['member'], 'consumer': retained_consumer, 'retention': hold}
@@ -806,11 +812,11 @@ def prepare(source, output, target, repair=None, artifact_store=None, *, state_b
         transferred = set()
         for row in prepared['definition_assets']:
             source_store = locations[row['name']]['store']
-            key = (str(Path(source_store).resolve()), canonical(row['artifact']))
+            key = (str(Path(source_store).resolve()), canonical(row['artifact']), row['member'])
             if key not in transferred:
                 if Path(source_store).resolve() != Path(artifact_store).resolve():
-                    artifacts.transfer(source_store, artifact_store, row['artifact'], consumer=prepared['prepared_id'])
-                    verified_assets[(str(Path(artifact_store).resolve()), canonical(row['artifact']))] = Path(artifact_store).resolve() / row['artifact']['artifact_id'] / 'payload'
+                    artifacts.transfer(source_store, artifact_store, row['artifact'], selected_member=row['member'], consumer=prepared['prepared_id'])
+                    verified_assets[(str(Path(artifact_store).resolve()), canonical(row['artifact']), row['member'])] = artifacts.member_payload(artifact_store, row['artifact'], row['member'])
                 transferred.add(key)
     mounts, bindings = resolve_definition_assets(output, prepared, artifact_store, verified_assets)
     write(output / 'provenance/asset-bindings.json', bindings)

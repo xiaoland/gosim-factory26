@@ -267,13 +267,8 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
     collector = None
     env.update(runtime_resource_environment(runtime, run))
-    try:
-        collector, binding = start_local_telemetry(run)
-        env.update(telemetry_environment(binding))
-    except Exception as exc:
-        if os.environ.get('FACTORY26_EXP_TELEMETRY_BINDING'):
-            raise
-        metadata['telemetry_diagnostic_error'] = f'{type(exc).__name__}: {exc}'
+    collector, binding = start_local_telemetry(run)
+    env.update(telemetry_environment(binding))
     begin = time.monotonic()
     error = None
     history = {'status': 'not_started'}
@@ -440,6 +435,8 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
 
 
 def main():
+    if execution_context.read() is None:
+        raise ValueError('Harness entry requires facility assembly; use scripts/experiment_entry.py --source')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('requirements_dir', type=Path)
     parser.add_argument('--output-dir', type=Path, required=True)

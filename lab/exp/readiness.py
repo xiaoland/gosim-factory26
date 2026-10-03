@@ -11,7 +11,7 @@ from . import artifacts, controller
 from .core import canonical, digest, error, public, read, record, require
 
 
-def inspect(recipe_path, deployment=None, *, environment=None):
+def inspect(recipe_path, deployment=None, *, environment=None, job_id=None):
     recipe_path = Path(recipe_path).resolve(strict=True)
     if recipe_path.is_dir():
         recipe_path = recipe_path / 'experiment.json'
@@ -20,9 +20,15 @@ def inspect(recipe_path, deployment=None, *, environment=None):
         from .environment import resolve
         spec = resolve(spec, environment, base=recipe_path.parent)
     if spec.get('kind') == 'factory26.exp.intent':
-        return _intent_plan(recipe_path, require(spec, 'intent'))
+        return _intent_plan(recipe_path, require(spec, 'intent'),job_id=job_id)
     require(spec, 'experiment')
     controller.validate_recipe(spec)
+    if job_id is not None:
+        jobs=[job for job in spec['jobs'] if job['id']==job_id]
+        if len(jobs)!=1: raise ValueError('doctor requires a declared job ID')
+        spec={**spec,'jobs':jobs}
+    if spec.get('compilation',{}).get('binding_phase')=='unresolved-plan':
+        return _recipe_plan(recipe_path,spec)
     base = recipe_path.parent
     result = record('readiness', experiment_id=spec.get('experiment_id'), observed_at=time.time(),
                     source=str(recipe_path), source_sha256=digest(recipe_path),
@@ -51,8 +57,6 @@ def inspect(recipe_path, deployment=None, *, environment=None):
                 from scripts.runtime import plan_host_runtime
                 binding = spec['environment_selection']
                 plan = plan_host_runtime(Path(binding['selection']['python']))
-                if plan['dependencies'] != binding['runtime_dependencies']:
-                    raise ValueError('runtime dependencies differ from frozen selection')
                 value = str(Path(binding['selection']['cache_root']) / plan['key'] / (purpose + '.json'))
             if value is None:
                 raise ValueError('local execution needs an explicit runner runtime')
@@ -122,7 +126,7 @@ def inspect(recipe_path, deployment=None, *, environment=None):
                 if 'runner' not in input_paths:
                     raise ValueError('ARC host SDK input is not available')
                 role = sdk_role(input_paths['runner'])
-                if role != job['arc_contract']['sdk']:
+                if job['arc_contract'].get('sdk') and role != job['arc_contract']['sdk']:
                     raise ValueError('ARC host SDK differs from compiled role')
                 row['arc_inputs'] = (generation_inputs(input_paths, input_paths['runner'], expected_sdk=role, agent_provenance=input_provenance.get('agent'))
                     if {'agent', 'requirements'} <= input_paths.keys() else {'sdk': role, 'status': 'waiting-for-production'})
@@ -172,58 +176,25 @@ def inspect(recipe_path, deployment=None, *, environment=None):
     return public(result)
 
 
-def _intent_plan(path, spec):
-    """Explain declared production before build; do not initialize caches or domains."""
-    from .compiler import select
-    binding = spec.get('environment_selection')
-    if not binding:
-        raise ValueError('doctor on intent requires --environment or a frozen environment selection')
-    from scripts.runtime import plan_host_runtime
-    selection = binding['selection']
-    plan = plan_host_runtime(Path(selection['python']))
-    cache = Path(selection['cache_root'])
-    result = record('readiness', experiment_id=spec['experiment_id'], source=str(path),
-        source_sha256=digest(path), observed_at=time.time(), dispatch_permission=False,
-        host={'hostname': socket.gethostname(), 'os': platform.system(), 'architecture': platform.machine(),
-              'free_bytes': shutil.disk_usage(path.parent).free}, runtimes={}, jobs=[], blockers=[],
-        environment={'id': selection['id'], 'profile_sha256': binding['profile_sha256']}, productions=[])
-    result['selection'] = select(spec['selection_policy'], spec['models'], path.parent)
-    for purpose in ('controller', 'runner'):
-        receipt = cache / plan['key'] / (purpose + '.json')
-        result['runtimes'][purpose] = {'status': 'present' if receipt.is_file() else 'build-required',
-                                      'python': str(receipt), 'dependencies': plan['dependencies'],
-                                      'integrity': 'checked at build/consumption'}
-    for name, production in spec.get('productions', {}).items():
-        dependencies = binding['material_dependencies'][name]
-        if production['producer'] == 'harness':
-            from scripts.package_agent import material_identity
-            identity = material_identity(dependencies)
-            receipt = cache / 'harness/materials' / identity.removeprefix('material-') / 'material.json'
-        else:
-            identity = canonical(dependencies)
-            receipt = cache / 'production-index' / ('prepared-' + identity + '.json')
-        result['productions'].append({'name': name, 'producer': production['producer'],
-            'dependencies_sha256': canonical(dependencies), 'components': list(dependencies),
-            'status': 'present' if receipt.is_file() else 'build-required', 'identity': identity,
-            'action': 'verify cached production' if receipt.is_file() else 'produce missing material'})
-    for target in spec['targets']:
-        template = spec['variants'][target['variant']]['generate']
-        arc = None
-        if template.get('operation') == 'arc-local-generate':
-            try:
-                from lab.arc_bench.local_job import sdk_role
-                selected_arc = selection['arc']
-                arc = {'sdk': sdk_role(selected_arc['sdk_source']), 'target': selected_arc['target'],
-                       'inputs': {name: {'status': 'waiting-for-production', **value}
-                                  if isinstance(value, dict) and set(value) == {'from_production'} else {'status': 'declared', 'binding': value}
-                                  for name, value in {**template.get('inputs', {}), **spec['cases'][target['case']].get('inputs', {})}.items()},
-                       'child_services': {'resource_evidence': 'created in actual child namespace',
-                                          'telemetry': 'child collector binding required'}}
-            except (OSError, ValueError, KeyError) as exc:
-                result['blockers'].append({'component': 'arc-input-role', 'error': error(exc)})
-        result['jobs'].append({'job_id': target['id'], 'purpose': template['purpose'],
-            'asset_readiness': 'planned', 'assets': [], 'blockers': [], 'target': target, **({'arc': arc} if arc else {})})
-    return public(result)
+def _recipe_plan(path,spec):
+    required={binding['from_production'] for job in spec['jobs'] for binding in [*job.get('inputs',{}).values(), *[job[field] for field in ('prepared','checkpoint','stop_evidence') if field in job]] if isinstance(binding,dict) and 'from_production' in binding}
+    return public(record('readiness',experiment_id=spec['experiment_id'],source=str(path),
+        jobs=[{'job_id':job['id'],'purpose':job['purpose'],'asset_readiness':'planned','inputs':job.get('inputs',{}),
+               'blockers':[],'execution_permission':False} for job in spec['jobs']],
+        productions={name:spec['productions'][name] for name in sorted(required)},
+        status='unbound-plan',dispatch_permission=False,physical_readback='not-requested'))
+
+
+def _intent_plan(path,spec,*,job_id=None):
+    """Read declaration metadata only; no SDK/runtime/production readback."""
+    targets=[target for target in spec['targets'] if job_id is None or target['id']==job_id]
+    if job_id is not None and len(targets)!=1: raise ValueError('doctor requires a declared target ID')
+    jobs=[]
+    for target in targets:
+        template=spec['variants'][target['variant']]['generate']
+        jobs.append({'id':target['id'],'purpose':template['purpose'],
+            'inputs':{**template.get('inputs',{}),**spec['cases'][target['case']].get('inputs',{})}})
+    return _recipe_plan(path,{**spec,'jobs':jobs})
 
 
 def _docker(target):

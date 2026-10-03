@@ -57,6 +57,8 @@ def generation_inputs(inputs, sdk, *, expected_sdk=None, agent_provenance=None):
             replay = 'replay-manifest.json' in archive.namelist()
     if replay:
         raise ValueError('ARC generation cannot consume an application replay as an agent')
+    if agent.is_dir() and (agent/'delivery-layout.json').is_file() and json.loads((agent/'delivery-layout.json').read_text()).get('mode')=='sdk-components':
+        return {'sdk':role,'agent':{'variant':manifest['variant'],'role_readiness':'authenticated at actual child placement'},'requirements':{'entry':'requirements.yaml','sha256':digest(requirements/'requirements.yaml')}}
     for name in ('runtime/bin/node', 'runtime/bin/braid'):
         header = member(name, 20)
         if header[:4] != b'\x7fELF' or header[4:6] != b'\x02\x01' or header[18:20] != b'\x3e\x00':

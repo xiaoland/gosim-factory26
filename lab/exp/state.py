@@ -119,7 +119,7 @@ def transition(registry, workspace, action, request_id, parameters, now):
                 'generation': holder['generation'], 'closure': holder['source_closure']}
             holder.update(phase='snapshot-sealed', pending=request_id)
             space['capture'] = owner
-        elif action in ('snapshot-bind' , 'repair-begin', 'repair-item', 'repair-complete', 'handoff', 'capture-close'):
+        elif action in ('snapshot-bind' , 'repair-begin', 'repair-item', 'repair-complete', 'handoff', 'capture-close', 'repair-abort'):
             capture = holder['capture']
             if (not capture or parameters['capture_token'] != capture['token']
                     or parameters['capture_owner'] != capture['owner'] or space['capture'] != capture['owner']):
@@ -152,6 +152,31 @@ def transition(registry, workspace, action, request_id, parameters, now):
                 repair.update(status='complete', readback=parameters['readback'])
                 holder['generation'] += 1
                 holder['phase'] = 'repaired'
+            elif action == 'repair-abort':
+                if holder['phase'] not in ('snapshot-sealed', 'repairing', 'repaired'):
+                    raise RuntimeError('recovery abort requires this original capture or repair')
+                repair = holder.get('repair')
+                if repair and repair['request_id'] != parameters['repair_request']:
+                    raise RuntimeError('recovery abort belongs to a different repair request')
+                if space['writers']:
+                    raise RuntimeError('recovery abort has registered writers still open')
+                for row in registry['resources'].values():
+                    if row.get('workspace') != workspace or row['resource_id'] == capture['owner'] or row['phase'] == 'released':
+                        continue
+                    if row.get('pending'):
+                        raise RuntimeError('recovery abort has an unresolved physical action')
+                    if (row.get('role') in ('entry', 'execution') and row['phase'] == 'reserved'
+                            and row.get('identity') is None and not row.get('volume')):
+                        row.update(phase='released', cancellation={'request_id': request_id, 'effect': 'confirmed-uncreated'})
+                        continue
+                    raise RuntimeError('recovery abort requires exact resource closure/release: ' + row['resource_id'])
+                holder.update(phase='repair-aborted', capture=None, pending=None, writer=None,
+                              abort={'request_id': request_id, 'generation': holder['generation'],
+                                     'state_preserved': True, 'rollback': False, 'observed_at': now})
+                if repair:
+                    repair.update(status='aborted', aborted_at=now)
+                space['capture'] = None
+                registry['resources'][capture['owner']]['phase'] = 'released'
             elif action == 'handoff':
                 if holder['phase'] != 'repaired' or holder['snapshot'] != parameters['snapshot']:
                     raise RuntimeError('handoff requires completed repair and unchanged snapshot')
@@ -243,6 +268,23 @@ def action(binding, verb, request_id, parameters):
                     action=verb, request_id=request_id, observed_at=result['observed_at'],
                     observation_source='accepted-authority-action', effect=result['status']))
     return result
+
+
+def abort_recovery(binding, request_id):
+    """Release an idle recovery lease without pretending repaired bytes equal its snapshot."""
+    holder = query(binding)['holder']
+    if holder['phase'] == 'repair-aborted':
+        if holder['abort']['request_id'] != request_id + '--abort':
+            raise Blocked('holder was aborted by another recovery request')
+        return holder
+    if holder['phase'] == 'closed' and not holder.get('repair'):
+        return holder
+    capture = holder.get('capture')
+    if not capture:
+        raise Blocked('no original recovery lease can be aborted')
+    return action(binding, 'repair-abort', request_id + '--abort', {
+        'expected_generation': holder['generation'], 'capture_owner': capture['owner'],
+        'capture_token': capture['token'], 'repair_request': request_id + '--repair'})['holder']
 
 
 def initialize(binding, writer, coverage, request_id):

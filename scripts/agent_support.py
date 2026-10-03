@@ -361,7 +361,7 @@ def _wait_process(proc, run, reason, *, timeout=None):
     return code
 
 def start_local_telemetry(run):
-    """Use the runner-owned receiver, or start the package's standalone collector."""
+    """Consume the receiver declared by the ready execution context."""
     attempt_id = os.environ.get('FACTORY26_EXP_ATTEMPT_ID')
     if attempt_id:
         service = json.loads(os.environ.get('FACTORY26_EXP_SERVICES', '{}')).get('telemetry', {})
@@ -385,30 +385,8 @@ def start_local_telemetry(run):
         return None, binding
     if attempt_id:
         raise ValueError('runner telemetry 已就绪但未提供当前 attempt 的 receiver binding')
-    module = Path(__file__).resolve().with_name('otlp.py')
-    if not module.is_file():
-        module = Path(__file__).resolve().parents[1]/'lab/otlp.py'
-    log = (run/'telemetry-collector.log').open('w')
-    process = subprocess.Popen([sys.executable, str(module), '--serve-run', str(run)],
-                               cwd=module.parent, stdout=subprocess.PIPE, stderr=log, text=True)
-    process._factory26_evidence_run = run
-    process_evidence(run, 'operations.jsonl', {'kind': 'process_started', 'role': 'telemetry-collector',
-                                              'process': process_identity(process.pid)})
-    log.close()
-    try:
-        with selectors.DefaultSelector() as selector:
-            selector.register(process.stdout, selectors.EVENT_READ)
-            if not selector.select(20):
-                raise TimeoutError('OTLP receiver did not announce its endpoint')
-        binding = json.loads(process.stdout.readline())
-        if not binding.get('endpoint') or not binding.get('token'):
-            raise ValueError('OTLP receiver returned an incomplete binding')
-        process.stdout.close()
-        return process, binding
-    except BaseException:
-        _signal_process(process, signal.SIGTERM, run, 'collector-startup-failed')
-        _wait_process(process, run, 'collector-startup-failed', timeout=20)
-        raise
+    raise ValueError('telemetry creation belongs to the facility bootstrap; Harness needs an explicit ready/disabled service')
+
 
 def telemetry_environment(binding):
     if binding.get('status') == 'disabled':

@@ -423,7 +423,7 @@ def model_environment(base, output, host):
         job = read(Path(attempt_root) / 'attempt.json')['job']
         if job.get('arc_contract'):
             values = dict(line.split('=', 1) for line in lines if '=' in line and not line.lstrip().startswith('#'))
-            for key in ('CONTEXT7_API_KEY','EXA_API_KEY'):
+            for key in ('CONTEXT7_API_KEY','EXA_API_KEY','FACTORY26_PROVIDER_VARIABLES',*json.loads(os.environ.get('FACTORY26_PROVIDER_VARIABLES','[]'))):
                 if key not in values and os.environ.get(key):
                     values[key]=os.environ[key]
             for key, value in job.get('environment', {}).items():

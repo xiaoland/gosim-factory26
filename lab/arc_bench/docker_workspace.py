@@ -537,20 +537,33 @@ def _install_child_assets(resource, attempt, transport):
     asset_action('from lab.exp.artifacts import initialize;import json,sys;initialize("/assets",json.loads(sys.argv[1]))',
         json.dumps({'kind':'docker','daemon_id':endpoint['daemon_id'],'volume_id':transport.value['artifact_volume']}))
     from lab.exp.core import canonical
-    asset_refs={canonical(reference):reference for name,reference in attempt['job']['inputs'].items() if (name=='definition' or name.startswith('definition-')) and isinstance(reference,dict) and 'artifact_id' in reference}
-    asset_refs[canonical(code)]=code
-    for reference in asset_refs.values():
-        locations=json.loads(asset_action('from lab.exp.artifacts import query;import json;print(json.dumps(query("/assets")))').stdout)['locations']
-        available=any(row['reference']==reference and row['state']=='available' for row in locations)
-        if not available:
-            artifacts.resolve(attempt['artifact_store'],reference,consumer=resource['exp_attempt_id'])
-            stage_store='/transfer/facility/'+resource['exp_attempt_id']+'/incoming'
+    asset_refs={}
+    for name,reference in attempt['job']['inputs'].items():
+        if (name=='definition' or name.startswith('definition-') or name in {'application_seed','gateway_routes'}) and isinstance(reference,dict) and 'artifact_id' in reference:
+            selected=attempt['job'].get('input_members',{}).get(name,'.')
+            asset_refs[canonical([reference,selected])]=(reference,selected)
+    asset_refs[canonical([code,'.'])]=(code,'.')
+    for reference,selected in asset_refs.values():
+        available=asset_action('from lab.exp.artifacts import member_payload;from lab.exp.core import Blocked;from pathlib import Path;import json,sys;ref=json.loads(sys.argv[1]);\ntry:\n if not (Path("/assets")/ref["artifact_id"]/"manifest.json").exists(): raise Blocked("missing object")\n member_payload("/assets",ref,sys.argv[2]);print("available")\nexcept Blocked: print("unavailable")',json.dumps(reference),selected).stdout.strip()
+        if available=='unavailable':
+            source=artifacts.resolve(attempt['artifact_store'],reference,selected,consumer=resource['exp_attempt_id'])
+            stage_store='/transfer/facility/'+resource['exp_attempt_id']+'/incoming/'+canonical([reference,selected])
             asset_action('from pathlib import Path;import sys;Path(sys.argv[1]).mkdir(parents=True,exist_ok=True)',stage_store)
-            docker(endpoint,['cp',str(Path(attempt['artifact_store'])/reference['artifact_id']),helper_id+':'+stage_store+'/'+reference['artifact_id']],check=True,capture_output=True,timeout=1800)
-            asset_action('from lab.exp.artifacts import transfer;from pathlib import Path;import json,sys;ref=json.loads(sys.argv[2]);(Path(sys.argv[1])/ref["artifact_id"]/"location.json").unlink(missing_ok=True);transfer(sys.argv[1],"/assets",ref,consumer=sys.argv[3],request_id=sys.argv[4])',
-                stage_store,json.dumps(reference),resource['exp_attempt_id'],resource['exp_request_id']+'--asset-'+reference['artifact_id'])
+            staged=asset_action('from pathlib import Path;import sys;print(Path(sys.argv[1]).exists())',stage_store+'/'+(reference['artifact_id'] if selected=='.' else 'member')).stdout.strip()
+            if staged not in {'True','False'}: raise ValueError('SDK input staging readback unavailable')
+            if selected=='.':
+                if staged=='False':
+                    docker(endpoint,['cp',str(Path(attempt['artifact_store'])/reference['artifact_id']),helper_id+':'+stage_store+'/'+reference['artifact_id']],check=True,capture_output=True,timeout=1800)
+                asset_action('from lab.exp.artifacts import transfer;from pathlib import Path;import json,sys;ref=json.loads(sys.argv[2]);(Path(sys.argv[1])/ref["artifact_id"]/"location.json").unlink(missing_ok=True);transfer(sys.argv[1],"/assets",ref,consumer=sys.argv[3],request_id=sys.argv[4])',stage_store,json.dumps(reference),resource['exp_attempt_id'],resource['exp_request_id']+'--asset-'+canonical([reference,selected]))
+            else:
+                docker(endpoint,['cp',str(Path(attempt['artifact_store'])/reference['artifact_id']/'manifest.json'),helper_id+':'+stage_store+'/manifest.json'],check=True,capture_output=True,timeout=60)
+                if staged=='False':
+                    docker(endpoint,['cp',str(source),helper_id+':'+stage_store+'/member'],check=True,capture_output=True,timeout=1800)
+                asset_action('from lab.exp.artifacts import receive_member;import json,sys;receive_member("/assets",json.loads(sys.argv[1]),sys.argv[2]+"/manifest.json",sys.argv[2]+"/member",selected_member=sys.argv[3],consumer=sys.argv[4],request_id=sys.argv[5])',json.dumps(reference),stage_store,selected,resource['exp_attempt_id'],resource['exp_request_id']+'--member-'+canonical([reference,selected]))
+        elif available!='available':
+            raise ValueError('SDK immutable input position could not be read back')
         asset_action('from lab.exp.artifacts import retain;import json,sys;retain("/assets",json.loads(sys.argv[1]),sys.argv[2],"sdk-input",sys.argv[3])',json.dumps(reference),resource['exp_attempt_id'],resource['exp_request_id']+'--retain-'+reference['artifact_id'])
-    # The official workspace remains self-contained; Harness consumes the real immutable role assets.
+    # The official SDK receives a thin entry; Harness roles come only from actual RO assets.
     definition=attempt['job'].get('definition')
     if not definition:
         raise ValueError('new SDK domain assembly requires its actual definition composition')
@@ -558,9 +571,22 @@ def _install_child_assets(resource, attempt, transport):
     volume=inspect(endpoint,'volume',transport.value['artifact_volume'])
     placements=[]
     for row in roles:
-        physical=Path(volume['Mountpoint'])/row['reference']['artifact_id']/'payload'/row['member']
+        physical=Path(volume['Mountpoint'])/Path(row['local_root']).relative_to('/assets')
         placements.append({**row,'physical_root':str(physical),'local_root':'/definitions/'+row['role'],'access':'read-only'})
-    return {'code':code,'code_member':code_member,'definitions':placements}
+    input_placements={}
+    for name,reference in attempt['job']['inputs'].items():
+        if name not in {'application_seed','gateway_routes'}:
+            continue
+        member=attempt['job'].get('input_members',{}).get(name,'.')
+        actual_root=asset_action('from lab.exp.artifacts import member_payload;import json,sys;print(member_payload("/assets",json.loads(sys.argv[1]),sys.argv[2]))',json.dumps(reference),member).stdout.strip()
+        input_placements[name]={'reference':reference,'member':member,'store':'/assets','root':'/inputs/'+name,
+            'physical_root':str(Path(volume['Mountpoint'])/Path(actual_root).relative_to('/assets'))}
+    runtime=next(row for row in placements if row['role']=='runtime')
+    runtime_root=next(row['local_root'] for row in roles if row['role']=='runtime')
+    check=asset_action('import pathlib,sys;root=pathlib.Path(sys.argv[1]);headers=[(root/member).open("rb").read(20) for member in ("bin/node","bin/braid")];print(all(h[:4]==bytes([127])+b"ELF" and h[4:6]==bytes([2,1]) and h[18:20]==bytes([62,0]) for h in headers))',runtime_root)
+    if check.stdout.strip()!='True':
+        raise ValueError('SDK actual runtime components must be Linux/amd64 ELF')
+    return {'code':code,'code_member':code_member,'definitions':placements,'inputs':input_placements}
 
 
 def runner_main(resource_path, runner_path, argv):
@@ -634,6 +660,8 @@ def runner_main(resource_path, runner_path, argv):
             installed=_install_child_assets(resource,attempt,transport)
             for row in installed['definitions']:
                 options+=['--mount','type=bind,source='+row['physical_root']+',target='+row['local_root']+',readonly']
+            for row in installed['inputs'].values():
+                options+=['--mount','type=bind,source='+row['physical_root']+',target='+row['root']+',readonly']
         options += [item for key, value in resource.get('labels', {}).items() for item in ('--label', key + '=' + value)]
         confirm(endpoint)
         resource['state'] = 'launching'
@@ -665,6 +693,9 @@ def runner_main(resource_path, runner_path, argv):
             for row in installed['definitions']:
                 if not any(mount.get('Type')=='bind' and mount.get('Source')==row['physical_root'] and mount.get('Destination')==row['local_root'] and mount.get('RW') is False for mount in value['Mounts']):
                     raise ValueError('SDK child lacks its actual read-only role mount: '+row['role'])
+            for name,row in installed['inputs'].items():
+                if not any(mount.get('Type')=='bind' and mount.get('Source')==row['physical_root'] and mount.get('Destination')==row['root'] and mount.get('RW') is False for mount in value['Mounts']):
+                    raise ValueError('SDK child lacks actual read-only execution input: '+name)
             holder=backends.initialize_docker_state(target(resource),{**physical,'authority_resource_id':resource['exp_attempt_id']},
                 holder_id=transport.value['volume'],attempt_id=resource['exp_attempt_id'],incarnation=resource['exp_incarnation'],
                 volume=transport.value['volume'],subpath=stage,logical_root='/workspace',
@@ -691,7 +722,7 @@ def runner_main(resource_path, runner_path, argv):
         atomic(namespace_file, {'namespace': {'kind':'docker','daemon_id':endpoint['daemon_id'],
             'container_id':value['Id'],'created':value['Created'],'image_id':value['Image'],
             'attempt_id':resource['exp_attempt_id'],'incarnation_id':resource['exp_incarnation']}, 'environment':attempt['job'].get('environment',{}),
-            'telemetry_bytes':limits['telemetry_bytes'],'definition_bindings':installed['definitions'] if installed else None,'state_binding':holder,'capture_source':capture_source})
+            'telemetry_bytes':limits['telemetry_bytes'],'input_bindings':{name:{key:value for key,value in row.items() if key!='physical_root'} for name,row in installed['inputs'].items()} if installed else {},'definition_bindings':installed['definitions'] if installed else None,'state_binding':holder,'capture_source':capture_source})
         # This file is outside the SDK workspace, whose inventory remains unchanged.
         docker(endpoint,['cp',str(namespace_file),resource['container_id']+':/factory26-namespace.json'],check=True,capture_output=True,text=True)
         bind(resource, value)
