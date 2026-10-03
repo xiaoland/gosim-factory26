@@ -10,7 +10,7 @@ variants/<name>/          每个团队 Harness 的独立实现
   main.py / run.py        标准入口、原生材料接线与生成流程
   agents/                Braid 成员与 Pi 内部角色的原生配置和指令
   build.py / extensions/ 材料选择与原生扩展
-agents/                  开发侧可复用子 Agent 提示词与委派模型配置
+agents/                  开发侧运行分析方法与监控消费者入口
 braid-console/           独立 React 协作界面及 Braid CLI 桥，不进入参赛包
 harness/                 共用技能材料与工具依赖声明
 submission/              Linux 公共交付和资源构建
@@ -24,7 +24,7 @@ reports/                 带条件和证据入口的历史结论
 runs/                    原始运行产物，Git 忽略
 ```
 
-Harness 基线从 `pi-braid-i13` 进入，I14 的共同基线与职责对照独立维护；I13 成果与恢复来源、I14 改进与实验范围分别归对应 packet。I10–I12 实现与冻结证据保留原身份；源码用途见 [Variant 索引](variants/README.md)，当前授权与接续入口见 [文档与任务索引](docs/index.md)。
+Harness 基线从 `pi-braid-i13` 进入，I14 的共同基线与职责对照独立维护；I13 成果与恢复来源、I14 改进与实验范围分别归对应 packet。I10–I12 实现与冻结证据保留原身份；源码用途见 [Variant 索引](variants/README.md)，当前授权与接续入口见 [文档入口](docs/index.md)。
 
 | 要做什么 | 先读哪里 |
 | --- | --- |
@@ -32,7 +32,7 @@ Harness 基线从 `pi-braid-i13` 进入，I14 的共同基线与职责对照独�
 | 修改 Harness、交付或实验接入边界 | [技术说明](docs/product-tdd/index.md)，再按 [CONTRIBUTING](CONTRIBUTING.md) 定位实现 |
 | 准备工具、修改角色或技能 | [CONTRIBUTING](CONTRIBUTING.md) |
 | 运行、诊断或恢复一次实验 | [运行说明](docs/deployment/index.md)，先辨别记录生产者 |
-| 接续任务或找历史证据 | [文档与任务索引](docs/index.md)，状态以对应 packet 为准 |
+| 接续工作或找历史证据 | [工作主题](docs/work-index.md)、[报告索引](reports/README.md)，状态以对应 packet 为准 |
 
 ## 协作与授权
 
@@ -56,6 +56,7 @@ Harness 基线从 `pi-braid-i13` 进入，I14 的共同基线与职责对照独�
 开工后持续完成已授权范围；实质范围或前提变化、无法继续或需要用户决策时，说明具体情况并交回决定。
 沿用已批准且未变化的验收方案。
 运行中出现证据明确、根因及修复范围清晰的缺陷，直接完成必要核实、修复和热部署，不再逐次请求确认。保留原始错误、半成品、版本身份和恢复来源，按已授权实验配方接续，随后向用户报告问题、改动与实际结果。根因不明、涉及产品行为或实验范围变化、不可逆损失或外部前提重大变化时，先说明具体影响并交用户决策。正常运行继续按既定间隔监控。
+运行控制遵守该实验冻结执行器的能力，不绕过其门控调用低层平台 API。疑似停滞先做有界只读核对；控制前在已有处置记录中明确事实、未知、动作目的及预期损失，不能把平台 `can_resume` 字段当作保留进度的恢复证明。当前 Hosted 暂停/恢复不受支持，具体控制与告警约定见[运行手册](docs/deployment/recovery.md#当前-checkpointprepare-与停止门控)。
 热恢复优先选择已观察到的错误开始大规模扩散前、最近且可恢复的检查点，同时核对应用/Git、Braid 状态和原生会话属于同一恢复时点。选择依据、可能丢弃的有效进度和证据缺口写入 packet；只有 Git 提交或数据库备份不能直接当作完整检查点。没有可确认的较早检查点时，保留现场并明确说明接续限制。
 用户已授权自主git commit；提交仅纳入当前获授权任务的改动，保留其它工作区修改。远端push仍需相应授权。
 

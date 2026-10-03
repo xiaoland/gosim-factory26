@@ -1,57 +1,30 @@
-# 实验与配方导航
+# 实验定义与配方
 
-variant 是独立维护的 Harness；实验是一项问题及其冻结比较条件；run 是一次实际执行。名字供人查找，源码、包、应用摘要与实际 ID 负责身份。维护入口见 [Variant 索引](../variants/README.md)，运行命令见 [Lab](../lab/README.md)与 [ARC 运行说明](../docs/deployment/index.md)。
+variant 是独立维护的 Harness；实验是一项问题及其冻结比较条件；run 是一次实际执行。名称供人查找，源码、包、应用摘要和实际 ID 负责身份。实现选择见 [Variant 索引](../variants/README.md)，执行合同见 [Lab](../lab/README.md)。本页不维护“正在运行”或“待启动”清单。
 
-`experiments/<实验>/` 保存 intent、recipe 和冻结编译结果；实际 build/start 使用独立的 `runs/<实验>/<执行>/`。运行目录包含冻结执行计划、定义消费快照、attempt、artifact、telemetry 与回执，不向定义目录写状态。多个执行可引用同一定义；重试和恢复沿运行记录接续，改变定义则建立新运行。定义中引用外部资产的身份，原始包、runtime 和私有 deployment 留在 `runs/` 或显式仓库外位置，不复制进定义目录。历史目录保持原状，新写入遵守此边界。
+## 定义、执行与历史
+
+`experiments/<实验>/` 保存 intent、recipe 和冻结 compilation bundle；实际 build/start 使用独立的 `runs/<实验>/<执行>/`。运行保存定义消费快照、冻结执行计划、attempt、artifact、telemetry 和回执，不向定义目录写状态。多个执行可引用同一定义；重试和恢复沿运行关系接续，改变定义则建立新运行。大包、runtime 和私有 deployment 由定义引用，不复制到本目录。
+
+Mac 的项目产物按 [存储规则](../AGENTS.md#工作知识与反馈) 位于 WorkSSD；远端数据保存其实际宿主、路径和来源，不为统一路径复制大型证据。旧 runs、ZIP 和平台名称保留原身份。
+
+| 入口 | 适用范围 |
+| --- | --- |
+| [I14 intent 接入](i14-0/README.md) | 显式目标、模型政策与逐应用评价的公共 compiler；具体矩阵由本轮 intent 声明。 |
+| [Hackathon 公开需求回放](hackathon-local/README.md) | 将已冻结应用按场景交给官方本地 Runner，不生成应用、不预测官网分数。 |
+| [pi-braid Lite 配方](pi-braid-lite/README.md) | 固定 I10 `pi-braid` 身份的 Keep/BookStack 配方；不是当前 I13/I14 基线的通用启动器。 |
+| [历史登记与旧定义](archive/README.md) | 查前序实验的问题、编号和来源；不从这里取得当前运行授权。 |
 
 ## 登记下一项实验
 
-在所属 `tasks/<task>/experiments.md` 写清问题、授权、case、冻结输入、计划次数和完成条件，再把记录链接加入此处。编号采用 `eYYYYMMDD-NN`，日期取首次登记的 Asia/Shanghai 日期，同日序号查重后分配，不复用；它不替换 lab 自动生成的 `exp-...` ID。可以在外层目录追加问题简述，编号本身保持稳定。
+在所属任务的实验记录中声明问题、授权、case、冻结输入、计划次数和完成条件。编号采用 `eYYYYMMDD-NN`，日期取首次登记的 Asia/Shanghai 日期，同日序号查重后分配，不复用；它不替换 Lab 的 `exp-...` ID。编号或目录存在不证明已获授权。
 
-case 是实验内的配置行，例如 `flash-root`、`coordinator`；它可以使用相同 variant 的不同冻结包。一个 run 的记录至少关联可读名称、venue、实际 run ID/路径、包引用、重放来源与结果入口。编号或目录存在不代表实验已获授权。
+case 是实验内的配置行，可使用同一 variant 的不同冻结包。每次执行显式关联可读名、venue、run ID/路径、包、重放来源和结果入口；名称不供机器解析。
 
 | 执行 | 可读名称 | 来源要求 |
 | --- | --- | --- |
-| 新生成 | `<实验>--<case>--<task>--gNN` | 本次冻结生成包与需求。 |
-| 固定应用复评 | `<实验>--<case>--<task>--rNN` | 来源 run、应用摘要及算法；不重新生成应用。 |
+| 新生成 | `<实验>--<case>--<task>--gNN` | 本次冻结生成包与允许需求。 |
+| 固定应用复评 | `<实验>--<case>--<task>--rNN` | 来源 run、应用摘要及算法，不重新生成。 |
 | 本地逐场景复评 | `<实验>--<case>--<task>--<scenario>--rNN` | 同上，另保留冻结 suite 与稳定场景 ID。 |
 
-每次新生成或新复评都分配新编号，即使上一次未进入评分；编号在实验/case/task 内跨场所分配，不直接取 lab attempt。恢复同一个 run、重新查询或采集证据沿用原名。名称不供机器解析，关联用明确字段。多个 benchmark 有同名题时，task 简称加比赛前缀。
-
-官网 display name 属于 submission，可能包含多题，不能代替每题运行名。原 journal 与平台 ID 保留；后续重复按受支持且已获授权的入口建立新记录。
-
-## 实际实验记录
-
-已登记：[e20260926-01：官网 GitHub 初步验收](../tasks/acceptance-integrity/experiments.md)，一次自费运行，具体授权与冻结输入见任务记录。
-
-历史记录保持原编号与名字，下面只导航，不重新维护成绩：
-
-| 历史问题/批次 | 原始记录与运行关系 |
-| --- | --- |
-| codex-base 应用官网回放、mixed 早期与协作改造批次 | [15 条官网运行总览](../tasks/competition-budget/packet.md#官网-hackathon-运行总览2026-09-26-核对)，包含生成失败、重试及取消。 |
-| K3 根对照与同应用干净回放 | [K3 实验](../tasks/k3-root-experiment/packet.md)：`7b533d7bd71b` 生成 → `e45e4ae7110d` 原样重放。 |
-| 根只协调与预算/流程改造 | [实验 A/B/C](../tasks/competition-budget/experiments.md)：`097402e69a15` 生成 → `8d751d76c2a3` 原样重放；Sheet 是独立生成。 |
-| 可信验收与当前 Lite 闭环 | [可信验收任务](../tasks/acceptance-integrity/packet.md)，冻结旧名 ZIP 与现场沿用原身份。 |
-
-无法从历史证据确定的实验边界、case 或来源保持未知；不按目录名或时间相邻补造关系。
-
-当前恢复：[e20260927-01：保存工作区的交接修复与断点恢复](../tasks/acceptance-integrity/experiments.md#e20260927-01保存工作区的交接修复与断点恢复)。
-官网原工作区续接：[e20260927-02：Sheet 自费生成恢复](../tasks/acceptance-integrity/experiments.md#e20260927-02官网从-sheet-原工作区继续生成)。同日编号递增，具体运行使用 `g01`、`g02` 区分尝试；平台 ID 与冻结哈希仍是实际身份。
-
-## 可复用配方
-
-| 配方 | 用途 |
-| --- | --- |
-| [pi-braid-lite](pi-braid-lite/README.md) | 活动基线的 Keep/BookStack 独立生成与评分清单。 |
-| [hackathon-local](hackathon-local/README.md) | 已冻结应用的逐场景公开需求代理评测，不是官网分数。 |
-| [archive](archive/) | 原定义与历史条件；不作为继续运行的授权。 |
-
-新实验外层目录可用 `runs/<实验编号>-<问题>/`，内部保留 lab 与官网各自记录格式。WSL 的宿主路径照实登记，不复制大型产物来统一绝对路径。旧 `runs/`、冻结输入、ZIP 和官网名称不迁移。
-
-当前新生成：[e20260928-01：Flash Team WSL Hackathon](../tasks/braid-product-hardening/experiments.md)。
-
-同时运行：[e20260928-02：原 DeepSeek 配方供应商直连](../tasks/braid-product-hardening/experiments.md#e20260928-02原-deepseek-配方供应商直连)。
-
-已授权待启动：[e20260928-03：标准协作与检查工具后的全新 Hackathon](../tasks/braid-github-minimal-review/experiments.md)，以前轮 Sheet 完成官网评分为前置。
-
-当前已授权：[e20261001-01：I13 首轮实验](../tasks/iteration13/experiments.md)，官网 GitHub 生成异常结束并已保全。WSL 恢复后启动四项本地运行：Flash/GitHub 从终态副本重建接续，其余三项干净生成；沿用两路并发及逐题官网应用重放，另行针对官网运行补齐 SIGKILL/OOM 取证，WSL 启动不依赖此调查。
+每次新生成或复评分配新编号，包括未进入评分的执行；在实验/case/task 内跨场所分配，不直接取 attempt 编号。恢复同一 run、重新查询或采集沿用原名。多个 benchmark 有同名题时，task 简称加比赛前缀。官网 display name 属于 submission，可能包含多题，不能代替每题执行身份；无法确定的来源保持未知。

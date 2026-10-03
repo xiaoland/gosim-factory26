@@ -1,17 +1,14 @@
-# pi-braid 本地 Lite 两阶段矩阵
+# I10 pi-braid Lite 配方
 
-该配方只生成官方本地 Runner 的机器清单，不启动 Agent 或模型。`pi-braid` 是当前活动 variant；输入使用冻结 ZIP，Keep 与 BookStack 各独立生成后再评测。需要在 WSL 的仓库根运行，Runner、题目、镜像、网关 env、并发与输出由调用方指定。
+`matrix.sh` 固定 `pi-braid` 的 Keep/BookStack 两题以及独立评价关系，输入 ZIP 的包内身份必须为 `pi-braid`。这是保留的 I10 配方，不为 I13/I14 自动选择材料或模型；改名前的冻结 ZIP 保留旧身份，不能直接用于这个固定身份入口。
+
+脚本从仓库根调用 `lab.arc_bench.arc_matrix` 生产当前 recipe，不启动模型。除首个 ZIP 参数外，调用方必须提供 ARC matrix 的显式输入：Runner/需求、controller/runner runtime、Docker endpoint/准入、资源与存储预算、模型、评价政策、authority-handoff 和授权。具体参数用下列帮助查询：
 
 ```sh
-experiments/pi-braid-lite/matrix.sh /path/to/pi-braid.zip \
-  --inputs-root /path/to/platform-inputs \
-  --runner /path/to/runner \
-  --image /path/to/image \
-  --env-file /path/to/gateway.env \
-  --workers 4 \
-  --output /path/to/experiments/<id>/manifest.json
+python3 -m lab.arc_bench.arc_matrix --help
+experiments/pi-braid-lite/matrix.sh AGENT_ZIP <本次明确参数> --output RECIPE
 ```
 
-这一步只解析并核对输入。执行生成的 manifest 用 `python3 -m lab.run run <manifest> --runs-root /path/to/experiments/<id>/runs`。不要把该命令视为已授权的新实验；每次实际运行的输入和完成条件以任务包为准。
+`--separate-evaluation` 已由脚本固定，必须同时提供明确的 `--replay-policy`；旧 `--env-file` 网关接线已退役，凭据通过当前私有 deployment 提供。生成 recipe 后沿 [Lab](../../lab/README.md) 的 doctor/build/start/status 执行，不使用旧 `python3 -m lab.run run`。
 
-新 ZIP 的包内身份须为 `pi-braid`；不要把改名前的 frozen ZIP 传给这个固定身份配方。比较同一 variant 的多个冻结包时，使用通用 `arc_matrix --candidate CASE=ZIP`，并传 `--experiment-key`；原 `--case COMPETITION/TASK` 继续用于选题。任务登记、执行标签和历史来源见 [实验导航](../README.md)。
+比较同一 variant 的多个冻结包时，直接使用通用 ARC matrix 的 `--candidate CASE=ZIP` 和 `--experiment-key`；`--case COMPETITION/TASK` 选择题目。计划和实际许可归所属任务，名称与旧记录查询见 [实验导航](../README.md)。

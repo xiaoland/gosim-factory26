@@ -1,4 +1,6 @@
-# 原生 Hackathon 本地运行
+# 原生 Hackathon 本地运行（历史归档）
+
+本页保存四配置 Hackathon 对照的冻结条件和评分回放边界。它不是当前 experiment schema 2 的启动入口；当前本地生成请从 [本地实验](local-experiments.md) 的顶部入口开始。
 
 此四配置实验已归档，保留运行和证据恢复说明。当前开发入口见 [Variant 索引](../../variants/README.md)，该对照的来源及后继实验入口见[历史基线任务](../../tasks/hackathon-team-baseline/packet.md)，新运行仍按对应 packet 的当前授权执行。
 

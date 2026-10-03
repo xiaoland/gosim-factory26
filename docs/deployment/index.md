@@ -1,10 +1,12 @@
 # 运行、证据与恢复
 
-新执行只使用 `python3 -m lab build/start/status/control` 的 experiment schema 1，独立 runner、制品和分析入口见 [Lab](../../lab/README.md)。旧 plan/run/operation writer 已退役；手册历史章节只用于原件追溯和登记中的旧执行退役通道。新模型/费用/目标集由本轮配方显式冻结，没有通用 ARC-only 或 self_funded 默认值。源码切换不授权运行或迁移。
+新 experiment 执行使用 `python3 -m lab build/start/status/control` 的 experiment schema 2；intent、compilation、experiment、attempt、execution 同属这一当前协议，artifact、runtime、request、telemetry 等各自保留独立版本。独立 runner、制品和分析入口见 [Lab](../../lab/README.md)。旧 plan/run/operation writer 已退役；手册历史章节只用于原件追溯和登记中的旧执行退役通道。新模型/费用/目标集由本轮配方显式冻结，没有通用 ARC-only 或 self_funded 默认值。源码切换不授权运行或迁移。
 
 运行时先确认自己要做的是准备制品、新生成、查询既有记录、恢复工作区，还是对冻结应用重新评分。这些操作消耗的资源、需要的授权和结果身份不同；不能用一次构建成功或页面可打开替代生成、评分或证据完整性结论。
 
 本文是操作入口。产品规则归 [PRD](../prd/index.md)，跨组件职责和终态语义归[技术说明](../product-tdd/index.md)，工具安装和源码修改归 [CONTRIBUTING](../../CONTRIBUTING.md)。参数及版本从实际源码、冻结清单和命令帮助读取；历史观测不代表此刻的机器或平台状态。
+
+位置边界按执行方式区分：开发控制可以在 Mac 上进行；使用官方 ARC 本地 Runner 的生成按 recipe 显式声明并核对 Docker endpoint、镜像、容量和执行环境；其它 Lab local backend 以其 recipe/backend 合同为准；Hosted 生成使用平台身份、提交和监控合同。Mac 上的控制进程不能推断本地 runner 的存在或可用授权，WSL/sfp7 等具体宿主以当前冻结配置和只读读回为准。
 
 | 当前要完成的操作 | 操作说明 | 先确认什么 |
 | --- | --- | --- |
