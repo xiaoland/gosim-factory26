@@ -4,13 +4,13 @@ variant 是独立维护的 Harness；实验是一项问题及其冻结比较条�
 
 ## 定义、执行与历史
 
-`experiments/<实验>/` 保存 intent、recipe 和冻结 compilation bundle；实际 build/start 使用独立的 `runs/<实验>/<执行>/`。运行保存定义消费快照、冻结执行计划、attempt、artifact、telemetry 和回执，不向定义目录写状态。多个执行可引用同一定义；重试和恢复沿运行关系接续，改变定义则建立新运行。大包、runtime 和私有 deployment 由定义引用，不复制到本目录。
+`experiments/<实验>/` 提供公开配方和接入说明；具体 intent、recipe 和 compilation bundle 按当轮冻结记录取得。当前 I14 的 intent 与编译产物保存在对应运行材料中，由工作入口和 compile 回执导航，本目录的 README 不代表同目录存在可执行 intent。实际 build/start 使用独立执行目录；运行保存定义消费快照、冻结执行计划、attempt、artifact、telemetry 和回执。多个执行可引用同一定义；重试和恢复沿运行关系接续，改变定义则建立新运行。大包、runtime 和私有 deployment 由定义引用，不为目录一致而复制。
 
 Mac 的项目产物按 [存储规则](../AGENTS.md#工作知识与反馈) 位于 WorkSSD；远端数据保存其实际宿主、路径和来源，不为统一路径复制大型证据。旧 runs、ZIP 和平台名称保留原身份。
 
 | 入口 | 适用范围 |
 | --- | --- |
-| [I14 intent 接入](i14-0/README.md) | 显式目标、模型政策与逐应用评价的公共 compiler；具体矩阵由本轮 intent 声明。 |
+| [I14 intent 接入说明](i14-0/README.md) | 公共 compiler 的目标、模型政策与逐应用评价合同；实际冻结 intent 从本轮工作入口及编译回执取得。 |
 | [Hackathon 公开需求回放](hackathon-local/README.md) | 将已冻结应用按场景交给官方本地 Runner，不生成应用、不预测官网分数。 |
 | [pi-braid Lite 配方](pi-braid-lite/README.md) | 固定 I10 `pi-braid` 身份的 Keep/BookStack 配方；不是当前 I13/I14 基线的通用启动器。 |
 | [历史登记与旧定义](archive/README.md) | 查前序实验的问题、编号和来源；不从这里取得当前运行授权。 |

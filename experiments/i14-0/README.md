@@ -1,6 +1,6 @@
 # I14 显式 intent 接入
 
-本目录是 I14 实验定义的入口，不提供逐实验策略 launcher。实验使用公共 `factory26.exp.intent` schema 2，目标、模型和评价政策由 intent 显式声明；具体冻结输入、矩阵、宿主和授权从 [I14 工作入口](../../tasks/iteration14/packet.md)取得，不在本页复制当前运行状态。
+本目录说明 I14 的公共 intent 接入合同。实验使用 `factory26.exp.intent` schema 2，目标、模型和评价政策由 intent 显式声明；具体冻结输入、矩阵、宿主和授权从 [I14 工作入口](../../tasks/iteration14/packet.md)的当前工作单元取得。沿该工作单元的执行记录与 compile 回执读取实际 intent/recipe 路径；当前冻结输入保存在运行材料中，不从本说明目录猜 intent 文件名。本页不复制运行状态，也不提供逐实验策略 launcher。
 
 `targets` 逐项声明 id、variant、case 和 model，不固定八项矩阵。`models` 冻结实际模型、provider、endpoint 与可选凭据变量映射。只有明确选择 `final-score-margin` 政策才读取绑定 run ID 的历史最终分数；不默认选择模型或供应商。逐应用评价声明独立模板、`from_generation` 与费用模式，产物可用后按依赖派发。
 
