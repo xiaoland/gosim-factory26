@@ -1645,8 +1645,8 @@ def retry(directory, attempt_id, authorization=None, *, request_id, deployment=N
                  input_bindings=original['parameters']['input_bindings'], retry_of=attempt_id)
 
 
-def render(value):
-    return projection.render(value)
+def render(value, *, details=False):
+    return projection.render(value, details=details)
 
 
 if __name__ == '__main__':

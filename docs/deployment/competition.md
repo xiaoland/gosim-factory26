@@ -84,7 +84,7 @@ npm lock 和 Python 依赖清单随 runtime 保留。
 
 ### 冻结官网 journal
 
-官方 Competition 的自动化入口为 [competition.py](../../lab/arc_bench/competition.py)，统一记录 ZIP identity、submission snapshot、task run、日志游标与终态收集。
+以下 Competition 流程属于旧冻结 `competition.py` 入口；当前新写入见[Lab 执行合同](../../lab/exp/execution.md)。旧入口统一记录 ZIP identity、submission snapshot、task run、日志游标与终态收集。
 通用参赛包只需满足平台的根入口 `main.py` 与 `requirements.txt`；Factory 包另有 `package-manifest.json` 时，Competition 会核对其中每个文件的哈希。所有包的冻结身份仍是 ZIP SHA256。
 `prepare` 不写平台；其余写入按批准的实验范围执行，任何 POST 结果不确定都先保留 journal，再只读核查，不盲重试。
 `prepare --credential-mode self_funded` 使用自带模型 key，也是旧 journal 缺失该字段时的历史语义。
@@ -106,9 +106,9 @@ python3 -m lab.arc_bench.competition prepare \
   --model-config /path/to/model-config.json --credential-mode self_funded
 ```
 
-后续 `snapshot`、`create --task`、`start --task` 是官网写入，只有所属实验授权覆盖时执行；`run-all` 按 journal 顺序推进。写入回复未知时先用 `recover --state <同一journal>` 核对已发生的副作用。已有 run 使用 `status`、`logs`、`watch` 或 `collect`，均传同一 `--state` 和 `--task`，不因监控中断创建新 run。自动监控与间隔见[恢复手册](recovery.md#官网监控)。
+后续 `snapshot`、`create --task`、`start --task` 是官网写入，只有所属实验授权覆盖时执行；`run-all` 按 journal 顺序推进。写入回复未知时先用 `recover --state <同一journal>` 核对已发生的副作用。已有 run 使用 `status`、`logs`、`watch` 或 `collect`，均传同一 `--state` 和 `--task`，不因监控中断创建新 run。自动监控与间隔见[恢复手册](history/recovery.md#官网监控)。
 
-共享操作入口通过 `Controller.launch()` 在同一比赛锁内核对 pending、snapshot、create 和 start，取得实际身份后释放锁，再交接采集；不会持锁等到比赛终态。`launch-receipt.json` 保留每次启动结果，`write-receipts/` 保存写入原响应；未确认的写请求只读核对，不自动重发。操作入口和费用范围见[恢复手册](recovery.md#持续执行一个已授权操作)。
+共享操作入口通过 `Controller.launch()` 在同一比赛锁内核对 pending、snapshot、create 和 start，取得实际身份后释放锁，再交接采集；不会持锁等到比赛终态。`launch-receipt.json` 保留每次启动结果，`write-receipts/` 保存写入原响应；未确认的写请求只读核对，不自动重发。操作入口和费用范围见[恢复手册](history/recovery.md#持续执行一个已授权操作)。
 
 Competition prepare 还可显式冻结 `--experiment-key`、`--case`、`--run-names <JSON文件>`；最后一项以 task ID 对应本次运行名。名称不替代包 SHA256、真实 run ID 或来源应用摘要；完整规则见[实验导航](../../experiments/README.md)。Playground 仍只用于显式 practice，不混入 Competition 结果。
 
@@ -131,7 +131,7 @@ python3 /path/to/arc-runtime.pyz methods --json
 
 同一比赛只允许最新 snapshot 承接新任务。
 历史接口曾在旧 Sheet run 暂停时接受新 submission，旧 run 的状态与原 journal 保持独立。该接口观测不覆盖上文正式比赛“两题全部结束后才能再次提交”的规则，也不证明任意费用模式都能并行运行。
-历史双比赛矩阵由 [official_matrix.py](../../lab/arc_bench/official_matrix.py) 消费显式 manifest；它不反向解析任意 Harness 的模型配置。四组矩阵与旧日志保留其冻结条件，不能用旧配方启动新授权范围。新官网任务用 `competition.py prepare --model-config <平台模型JSON>` 显式提供 base_url、model、visual_model；POST 结果不确定时先查同一 journal，不能用新目录掩盖已有上传或 run。命名与来源关联见 [实验导航](../../experiments/README.md)。
+历史双比赛矩阵由 [official_matrix.py](../../lab/arc_bench/official_matrix.py) 消费显式 manifest；它不反向解析任意 Harness 的模型配置。四组矩阵与旧日志保留其冻结条件，不能用旧配方启动新授权范围。旧冻结官网任务用 `competition.py prepare --model-config <平台模型JSON>` 显式提供 base_url、model、visual_model；POST 结果不确定时先查同一 journal，不能用新目录掩盖已有上传或 run。命名与来源关联见 [实验导航](../../experiments/README.md)。
 
 比赛内部的 snapshot/create/start 写入有比赛锁，同一 journal 由一个 Controller 独占；已有 run 的 watch/collect 可并行。客户端并行请求不证明官网同时分配执行槽。官网评分、原生成耗时和模型用量分别记录；应用重放见[恢复手册](recovery.md)。
 

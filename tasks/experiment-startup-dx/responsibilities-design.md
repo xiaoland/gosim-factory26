@@ -42,6 +42,22 @@
 
 准入失败不留未来执行队列。外部作用未知时也不自动释放或重发；以原请求作用核对为必要例外，不能把“没有排队”误实现为丢弃部分作用。并行预算是上限，未耗尽不是工作指令。跨域身份、存储保留、完整恢复的writer证明仍保留，删掉它们不能合理降低耗时。
 
+## Agent 与 Human 的 CLI 阅读合同（后续优化设计）
+
+2026-10-03 用户明确要求将 Agent 作为需要理解现场的使用者对待，JSON 经常不是 agent-friendly 的默认交付。本段为 `15a1a2a2` 之后的优化设计，不宣称以下呈现已实现；前轮源码及未关闭的完整打包、首次启动、热恢复验收仍以实施记录为准。
+
+默认输出面向 Human/Agent，按命令的领域语义组织。stdout 是否为 TTY 不决定格式；Agent 通过工具或管道捕获文本仍然是阅读。`--json` 是显式、稳定且完整的程序消费合同。可读输出不等于所有对象翻译成散文：原文本直接交付，适合阅读的结构保持结构，多项结果保留各自身份。目标是减少理解和正确行动的工作，而非只减少字节或反对 JSON。
+
+Status/monitor 使用同一 projection，默认回答当前执行事实、影响所选动作的阻塞和证据缺口、下一合法操作及其条件；`--details` 展开完整诊断，JSON 保持完整字段。必须在首层保留明确 job/attempt 和平台身份、具体错误、影响决策的 unknown/partial、各事实的来源与观察时间。旧 resource_wait 或 native 活动不得作为当前终态运行的阻塞展示；若存在身份冲突或当前 writer 风险，则冲突自身仍在首层。详情入口是精确命令或已保存原件路径，不让调用者再次猜目录、重建运行树或选择 JSON 字段。
+
+Build/start/control/recover 的结果说明此次实际完成或受理的作用及对应身份，区分材料冻结、执行受理、入口确认、终态、封口和运输。发现预期输入缺失时指出对象、缺口、合法下一步及参数条件；没有授权、身份或事实支持时不生成可直接重发的写命令。不加统一的 success/data/metadata/next_actions 包装来替代各动作合同。Help 按本动作说明参数、重入与副作用，采用现有 argparse，不建立第二套发现协议。
+
+查询成功读取失败、取消或仍在运行的 attempt，与查询命令本身失败是两个事实。限时观察结束不取消执行，不授予 retry；CLI 退出码与领域终态分别表达。状态结果走 stdout，过程与命令错误走 stderr；实际执行的原生 stdout/stderr 按既有合同保留，不能机械分流而改变入口行为。有界等待中的只读轮询不同于已删除的配置驱动调度，不能仅凭轮询外形判断越权。
+
+有限呈现明确哪些信息没有展开，提供续查路径；不通过静默字符串裁剪消除具体错误、HTTP 状态、partial/unknown 或分页边界。完整原件已经保存时直接引用，不为摘要再复制或重新采集；如命令确需交付尚未保存的大内容，完整结果仅写到明确的项目外置磁盘目录，同一次操作交付路径，不使用系统临时目录。内容是否收起不改变原事实、身份或执行许可。
+
+参考相邻 SVC 的 `docs/prd/corpus.md:23`、`docs/prd/development.md:26` 及 `cli/src/svc_cli/cli.py:_render_status/_render_lookup/_render_error`：默认文本按命令语义呈现，下一步含原因和必要命令，发现从单层浏览逐步到精确正文。参考 InKCre/core-py 的 `tasks/knowledge-lifecycle-capabilities/units/cli-sink/output-presentation.md`、`list-error-contract.md`、`tasks/knowledge-lifecycle-capabilities/common-patterns/agent-tools.md`。其设计支持上述原则，但当前 `cli/src/inkcre_cli/output.py` 对对象默认仍主要 pretty JSON，长内容为字符预算落盘；部分默认 HTTP 错误文字未显示结构化状态。因此采用职责与交互原则，不把参考实现当作完整达标模板，不复制其临时盘策略或固定截断方式。
+
 ## 改动形式与边界
 
 采用一套新写入合同，不增加auto_start开关或scheduler mode。移除常驻controller的job/retry扫描，入口转为一个选定job的显式执行请求；旧冻结executor继续只读/原控制合同，新写入不通过旧调度模式。已有producer/attempt/platform/stream身份分别保留，relation不重写。

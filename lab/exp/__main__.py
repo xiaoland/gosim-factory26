@@ -58,7 +58,9 @@ def main(argv=None):
     for name in ('status', 'monitor', 'wait'):
         item = commands.add_parser(name)
         item.add_argument('experiment', type=Path, **({} if name == 'wait' else {'nargs': '+'}))
-        item.add_argument('--json', action='store_true')
+        formats = item.add_mutually_exclusive_group()
+        formats.add_argument('--json', action='store_true', help='完整结构化结果，供程序消费')
+        formats.add_argument('--details', action='store_true', help='展开保存的完整诊断与证据入口，不采集新事实')
         if name == 'wait':
             item.add_argument('attempt')
             item.add_argument('--timeout', type=float, default=60)
@@ -191,7 +193,7 @@ def main(argv=None):
                 time.sleep(min(2, max(0, deadline - time.monotonic())))
                 value = controller.status(args.experiment)
         if not args.json:
-            print(controller.render(value))
+            print(controller.render(value, details=args.details))
             return 0
     elif args.action == 'control':
         if (args.command == 'repair-ready') != (args.service is not None):

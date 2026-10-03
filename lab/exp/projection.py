@@ -479,9 +479,8 @@ def _stamp(value):
 
 
 def _reason(value):
-    """Keep the concrete beginning and failure tail; JSON retains the full error."""
-    text = ' '.join(str(value).split())
-    return text if len(text) <= 300 else text[:120] + ' … ' + text[-160:]
+    """Preserve concrete errors in both reading modes, without character clipping."""
+    return str(value)
 
 
 def _resource_details(value):
@@ -507,9 +506,10 @@ def _resource_details(value):
             for key, item in candidate.items()]
 
 
-def render(value):
+def render(value, *, details=False):
+    """Present saved facts for decisions; details expands diagnostics, not observation."""
     if value.get('kind') == 'factory26.exp.status-index':
-        return '\n\n'.join(render(row) for row in value['experiments'])
+        return '\n\n'.join(render(row, details=details) for row in value['experiments'])
     lines = [value.get('experiment_id', value.get('directory', value.get('source', '?')))]
     root = Path(value['directory']) if value.get('directory') else None
     def short_path(path, base=None):
@@ -537,18 +537,37 @@ def render(value):
         label = group['target']
         lines.append('├─ ' + (' / '.join(label[k] for k in ('case', 'variant')) if 'case' in label else label['job_id']))
         for stage in group['stages']:
-            lines.append(f"│  ├─ {stage['purpose']}  {stage['status']}  {stage.get('attempt_id') or '尚未派发'}")
+            lines.append(f"│  ├─ {stage['purpose']} ({stage['job_id']})  {stage['status']}  {stage.get('attempt_id') or '尚未派发'}")
+            auxiliary = []
             for name, fact in stage['facts'].items():
+                if not details and name in {'services', 'telemetry', 'braid', 'console'}:
+                    observed = fact.get('evidence') or {}
+                    flush = f" / producer flush: {fact['producer_flush']}" if name == 'telemetry' and 'producer_flush' in fact else ''
+                    auxiliary.append(name + ': ' + fact['status'] + flush +
+                                     '（' + observed.get('producer', '来源 unknown') +
+                                     ' / ' + _stamp(observed.get('observed_at')) + '）')
+                    if fact.get('reason'):
+                        lines.append('│  │  ' + name + ' 缺口：' + fact['reason'])
+                    continue
                 extra = ''
                 if name == 'main' and fact.get('exit_code') is not None:
                     extra = f" (exit {fact['exit_code']})"
                 if name == 'platform':
-                    extra = f" (run {fact.get('run_id') or '?'})"
+                    extra = f" (run {fact.get('run_id') or '?'} / submission {fact.get('submission_id') or 'unknown'})"
+                if name == 'execution' and fact.get('incarnation_id'):
+                    extra = ' (incarnation ' + fact['incarnation_id'] + ')'
                 if name == 'telemetry':
                     extra = f" (producer flush: {fact['producer_flush']})"
                 lines.append(f"│  │  {name}: {fact['status']}{extra}")
                 if fact.get('reason'):
                     lines.append('│  │    缺口：' + fact['reason'])
+                if name not in {'provider', 'platform', 'state'} and fact.get('evidence'):
+                    observed = fact['evidence']
+                    lines.append(f"│  │    {observed.get('producer', name)} / 观察：{_stamp(observed.get('observed_at'))}" +
+                                 (' / ' + short_path(observed.get('path')) if details else ''))
+                for key in ('gap', 'observation_error'):
+                    if fact.get(key):
+                        lines.append('│  │    ' + key + ': ' + _reason(fact[key]))
                 if name == 'state':
                     for holder in fact['holders']:
                         writer = holder.get('writer') or {}
@@ -564,21 +583,35 @@ def render(value):
                     lines.append(f"│  │    producer: {fact.get('producer', 'unknown')} / 观察: {_stamp(fact.get('observed_at'))}")
                     if fact.get('source'):
                         lines.append('│  │    状态摘要原件：' + short_path(fact['source']))
-                    if fact.get('evidence_root'):
+                    if details and fact.get('evidence_root'):
                         lines.append('│  │    定向取证目录：' + short_path(fact['evidence_root']))
-                    lines.append(f"│  │    stale 阈值: {fact.get('stale_after_seconds', '?')}s / 最少样本: {fact.get('minimum_samples', '?')}")
+                    if details:
+                        lines.append(f"│  │    stale 阈值: {fact.get('stale_after_seconds', '?')}s / 最少样本: {fact.get('minimum_samples', '?')}")
                     for session in fact.get('sessions', []):
+                        if not details:
+                            if session.get('classification') in {'provider_failed', 'provider_unavailable', 'observation_missing', 'suspected_stale', 'activity_unknown'}:
+                                lines.append(f"│  │    保存的 session {session['session_id']}：{session['classification']} / 连续{session['unchanged_samples']}次、{session['unchanged_seconds']}s")
+                                if session.get('reason'):
+                                    lines.append('│  │      原因：' + _reason(session['reason']))
+                            if session.get('error'):
+                                lines.append(f"│  │    session {session['session_id']} 原始错误：{_reason(session['error'])}")
+                            continue
                         lines.append(f"│  │    session {session['session_id']}: {session['classification']} / lifecycle={session['lifecycle']} / current_attempt={session['current_attempt']} / 连续{session['unchanged_samples']}次、{session['unchanged_seconds']}s")
                         for detail in (session.get('reason'), session.get('error')):
                             if detail:
                                 lines.append('│  │      原因：' + _reason(str(detail)))
                         native = session['native']
                         lines.append(f"│  │      native: {native['coverage']} / complete={native['complete_native']} / {short_path(native['path'], fact.get('evidence_root'))}")
-                    for group in fact.get('resource_wait_groups', []):
+                    historical_diagnostic = (stage['status'] in {'exited', 'stopped', 'failed'} or
+                                             stage['facts'].get('platform', {}).get('status') in {'PASSED', 'FAILED', 'CANCELLED'} or
+                                             fact.get('status') == 'terminal')
+                    for group in (fact.get('resource_wait_groups', []) if details or not historical_diagnostic else []):
                         health = fact.get('provider_health', {}).get(group, {})
                         detail = health.get('error') or fact.get('group_errors', {}).get(group) or '原因 unknown'
-                        lines.append('│  │    resource_wait ' + group + ':')
+                        lines.append('│  │    保存的 resource_wait ' + group + '（非当前准入结论）:')
                         structured = _resource_details(detail)
+                        if structured and not details:
+                            structured = [item for item in structured if item.startswith(('reason=', 'status='))] or ['资源诊断已保存；用 --details 展开数值']
                         for item in structured or [_reason(str(detail))]:
                             lines.append('│  │      ' + item)
                     for detail in (fact.get('error'), fact.get('run_error'), fact.get('workspace_error'), *fact.get('errors', []), *fact.get('group_errors', {}).values()):
@@ -590,11 +623,13 @@ def render(value):
                     result = fact.get('result') or {}
                     if result.get('score') is not None:
                         lines.append('│  │    score: ' + str(result['score']))
+            if auxiliary:
+                lines.append('│  │  辅助观察：' + ' / '.join(auxiliary) + '（详情见 --details）')
             for name, output in stage['outputs'].items():
                 declared = output.get('harness', {})
                 scope = f" / Harness 声明 {declared['status']}" if declared else ''
-                lines.append(f"│  │  artifact {name}: {output['status']} / {output['reference']['artifact_id']}{scope}")
-                if output.get('payload'):
+                lines.append(f"│  │  artifact {name}: {output['status']} / {output['reference']['artifact_id']} / member {output.get('member', '.')}{scope}")
+                if details and output.get('payload'):
                     lines.append('│  │    内容成员：' + short_path(output['payload']))
                 if output.get('error'):
                     lines.append('│  │    原错：' + _reason(output['error']['message']))
@@ -615,11 +650,23 @@ def render(value):
             if stage.get('attempt_id'):
                 row = next(row for row in value['attempts'] if row.get('attempt_id') == stage['attempt_id'])
                 lines.append(f"│  │  观察：{_stamp(row['evidence']['observed_at'])} / {short_path(row['evidence']['path'])}")
-            if len(stage['history']) > 1:
+                for observed in row.get('observations', []):
+                    if details or observed.get('error'):
+                        lines.append(f"│  │  独立观察：{_stamp(observed.get('observed_at'))} / {short_path(observed['source'])}")
+                        lines.append('│  │    physical: ' + str(observed.get('physical') or 'unknown') +
+                                     ' / identity: ' + str(observed.get('runner_identity_state') or 'unknown'))
+                        if observed.get('error'):
+                            lines.append('│  │    原始错误：' + _reason(observed['error']))
+
+            if len(stage['history']) > 1 and not details:
+                lines.append(f"│  │  历史：{len(stage['history'])} 个 attempt；--details 展开关系")
+            if len(stage['history']) > 1 and details:
                 lines.append('│  │  历史：' + ', '.join(item['attempt_id'] +
                              (f" (retry_of {item['retry_of']})" if item['retry_of'] else '') for item in stage['history']))
     for row in value['attempts']:
         if row.get('error'):
             lines.append(f"记录不可读：{row['source']} / {row['error']['message']}")
+    if not details and root:
+        lines.append('完整诊断：' + shlex.join(['python3', '-m', 'lab', 'status', str(root), '--details']))
     lines.append('保存的事实投影；本次读取时间不代表远端新鲜度。操作执行时重新核验。')
     return '\n'.join(lines)

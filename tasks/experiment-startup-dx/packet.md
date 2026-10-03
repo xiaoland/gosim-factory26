@@ -72,3 +72,34 @@ Advisor 已完成独立复核并采用：删除隐式调度职责，保留单次
 本轮已完成整体源码迁移和实际材料反馈，采用依据见 [实施记录](responsibilities-implementation.md)。Production、execution 的原 owner 已分别完成生产/装配、单次执行/恢复及调用迁移；advisor 最终定点确认未知效果、成员接收/GC、容量释放与显式 retry 的采用缺口关闭。主负责人完成显式 CLI、按 owner 组合的 projection、多目录入口、成员解析/运输及权威文档整合。源码最终身份归 responsibilities-source-readback.json；执行 owner 的阶段内嵌脚本编译归 responsibilities-execution-compile.json。
 
 实际现有 intent 离线编译约 0.50 秒，12 个真实 I14 目录一次文本查询约 0.37 秒，真实冻结 executor 的 4477 字节成员接收保留原引用/hash且没有完整 payload。这些不是设施测试或 Docker/模型启动验收。独立验收报告的 add_note 回归及状态呈现缺口已处理；完整打包、首次启动、热恢复的端到端耗时仍未获得实测。提交留在本隔离分支，不推送、不合入主区，不处理源实验运行资源。
+
+
+## 噪声反馈后的诊断与设计（2026-10-03）
+
+用户要求继续分析主区 `runs/developer-experience/noise-analysis-20261003/advisor-decision.md`，允许独立判断。本轮先完成诊断和改动范围设计；没有修改源码、合入主区、控制实验或发起模型运行。交付仍是 `15a1a2a2`，主区 `9e5eeeac` 及其在途改动保留。用户另已明确 advisor 不充当 reviewer；此前 advisor 的定点采用判断不计作独立实现审查或验收，后续职责据此纠正。
+
+认可成本报告的归因边界：927 MB 是本地递归扫描产物，不是模型实际收到的输入；累计缓存输入不是常驻指令成本的分项计量。既有任务条件不同，不能以两次耗时差宣称设施独立收益。当前不建立检索服务、状态数据库、计量框架或新的文档体系。
+
+文档问题是两侧成果未整合。主区 Lab 与恢复入口已经简化，但实验 schema 和 build/start/recover 示例仍沿旧合同；交付分支的新协议集中在大入口，尚未采用主区的组件导航。下一步沿用主区短入口和分主题组件正文，按交付 CLI 的真实 schema 3、单 job、请求重入、输入显式绑定、recover 默认准备与 `--execute`、seal/export 分责更新。定义与生产归 `lab/exp/experiments.md`，执行和请求归 `execution.md`，成员运输与恢复证据归 `artifacts.md`；旧执行器合同仍按原身份保留。组件本地 README 必须以交付源码核对函数和行为，不能直接复制主区运行中修改。合并文档不等于合并主工作区或接管运行。
+
+Query_scope owner 使用已有真实 `stage-a2/experiment` 读取默认 status 和 monitor：分别约 0.081/0.065 秒、均 3396 B，输出相同。该历史实验只有一个 job 和一个 attempt；已终态 CANCELLED，但仍展开两个 session/native 窗口、整组资源等待诊断及多个证据路径。因此有证据支持考虑默认摘要与显式详情，没有证据优先增加 job/attempt 筛选器。原始输出在本 worktree `runs/experiment-startup-dx/query-scope-20261003/`；实际 CLI 帮助已确认 start 必需 `--job/--request-id`，recover 另支持 `--action/--execute`。这些只读操作不是新实现验收。
+
+拟采用同一 projection 的默认可行动文本及 `--details` 完整文本，JSON 保持完整合同。首层保留 experiment/job/attempt 身份、实际执行与平台状态、阻塞或具体原错、partial/unknown、影响动作判断的证据缺口、事实生产者和观察时间、下一操作及原件入口。诊断层保留所有资源数值、session/native 证据、各 facet 的完整来源和历史。尤其不同 producer 的观察不能合并成一个新鲜时间；终态运行中的旧 resource_wait 不能冒充当前启动阻塞，unknown 也不能因收起诊断而消失。不得以固定字符数裁掉错误，也不新增第二份状态事实或查询时重新采集平台。
+
+主负责人持有文档归属与总体设计，query_scope 持有单问题真实观察，query_design_advisor 仅解决默认呈现与选择器的取舍，不读实现、不充当审查或验收。改动范围确认后再实施；反馈沿现有真实原件及公开 CLI 获取，不重复冷任务、多轮模型或设施测试。验收需确认摘要未隐藏影响下一动作的错误、身份、新鲜度和恢复拒绝条件，而非仅追求字节减少；完整打包、首次启动和热恢复耗时仍是上一轮未关闭项。
+
+
+用户进一步明确“对于 agent 来说，应该将它对待为人类，JSON 不总是 agent-friendly 的，而且经常不是”，并指向相邻 `svc` 与 `InKCre/core-py` 的资料。主负责人只读核对 SVC 的权威 PRD 与 renderer，query_scope 原 owner 只读核对 InKCre 的 CLI 呈现、错误/退出码设计及实际输出源码；没有修改参考仓、运行服务或测试。已将显式格式、不依赖 TTY、按动作语义组织、渐进续查、有限呈现不丢边界、命令结果与领域终态分离等约束整合到既有 responsibilities-design.md，而非新增 CLI 框架或竞争文档。InKCre 当前默认对象仍多为 pretty JSON，HTTP 默认错误和临时目录策略也不能直接照搬；设计与实际能力分开采用。本轮仍处诊断与设计，没有修改源码。
+
+
+## Agent-friendly CLI 优化实施授权
+
+用户于 2026-10-03 明确指示“开始修改”，授权前述短导航与新协议整合、同一 projection 的默认行动文本及显式完整诊断。主负责人持有 CLI/renderer、实际保存记录反馈及采用；storage_producers 接续持有组件文档、短入口和历史合同迁移；cli_review 是独立源码 reviewer，不是 advisor，也不承担实际运行验收。本轮保留主工作区及参考仓原样，不扩大到 runtime/cache 默认落点、模型或远端执行。
+
+默认摘要使用已保存事实，详情只改变呈现，不请求平台；JSON 生成结构不改。错误文本不再按固定字符数剪头尾。源码审查发现的辅助事实时间遗漏、资源原错过滤和独立观察/执行身份遗漏已修正，终态资源诊断依执行与平台终态归为历史，详情仍完整展开。所有 Python 修改内存编译，真实 stage-a/stage-a2 只读单项及批量 CLI 输出保存在本 worktree `runs/experiment-startup-dx/agent-friendly-cli-20261003/`。这些不是完整运行或性能验收；完整打包、首次启动、热恢复仍未关闭。
+
+
+CLI 已完成默认摘要与 `--details`，同一保存 projection 的 JSON 路径保留；两种文本均显示 job/attempt/incarnation/run/submission，具体原错不剪裁，独立错误观察在首层可见。正常 session/native 窗口与完整资源数值放入详情，异常会话分类仍保留定向依据。实际旧 stage-a2 单项默认 2177 B（原 3396 B）、详情 4449 B；两项批量默认 4351 B、详情 8036 B，均成功读取。当前查询 0.08–0.14 秒，不将字节变化推导为总体 token 或运行性能收益。cli_review 提出的三项遗漏及历史诊断判定均已处理；审查属于源码反馈，不替代真实运行验收。源身份和操作原件见上述 `source-receipt.json` 与 `final-operations.json`。
+
+
+本轮文档整合已完成：25 页的 339 个本地链接及片段由文档 owner 实际读取确认。四个入口共 15669 B，原 101528 B；详细协议归回组件与历史正文，未删身份或恢复证明。默认辅助遥测同时保留 producer flush，最终单项摘要 2203 B、详情 4461 B、两项批量 4522 B，最终原件为 final-revised-operations.json。三个修改 Python 源码最终内存编译及 diff 检查完成。按已有自主提交授权在隔离分支提交当前任务；不推送或合入主区。本轮仅交付查询呈现和文档入口优化，不宣称所有 CLI 已自然语言化，也未关闭完整打包、首次启动和热恢复的性能验收。
