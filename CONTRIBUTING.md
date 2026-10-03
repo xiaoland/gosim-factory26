@@ -25,7 +25,7 @@
 
 ## 从任务到实现，再回到文档
 
-从对应 packet 确认当前问题、已批准方案、授权与未完成事项，再读 [技术说明](docs/product-tdd/index.md) 中受影响的约定。
+修改前从对应 packet 的当前摘要确认问题、已批准方案、授权与未完成事项；需要某阶段的依据时再沿其证据入口读取。实现导航由组件 README 持有，不必为了找函数、角色或材料入口整读任务历史，再按需读 [技术说明](docs/product-tdd/index.md) 中受影响的约定。
 源码描述实际行为，设计描述意图；两者冲突时先记录差异，不能用文档里的承诺代替已实现能力。
 临时调查、候选方案和计划留在 packet，决定变化时改写当前答案；不要要求接手者按日期猜哪段正文仍有效。
 
@@ -39,7 +39,7 @@
 
 ## 修改一个成员或内部角色
 
-从 [Variant 索引](variants/README.md) 选择实现，再读该目录的入口；I13 的 profile、主会话、内部角色、技能和 prepare-only 方法归 [I13 本地说明](variants/pi-braid-i13/README.md)。根成员、Braid assignee 与 Pi 内部角色是不同消费者，不能只改同名模型字段。
+从 [Variant 索引](variants/README.md) 选择实现，再读该目录的 README。I13 的接线与 prepare-only 方法归 [I13 本地说明](variants/pi-braid-i13/README.md)；I14 的基线、Cleaner、Reviewer 和 E2E 各自持有本地导航，说明实际角色、材料入口和反馈位置。根成员、Braid assignee 与 Pi 内部角色是不同消费者，不能只改同名模型字段。
 
 ## 准备实际需要的依赖
 
@@ -63,4 +63,4 @@ Braid 运行诊断以外层实验 run 为入口：`make braid-report RUN=<实验
 
 `lab.analysis.factory` 提供 list/show/watch/analyze；旧配置式 generate/run/bootstrap/eval/batch、concurrency 及 shared submission 已退役，官网客户端和历史查询不再 import 旧生成器。旧结果与 journal 保留原身份。新官网提交显式提供模型 JSON，矩阵消费冻结 manifest；完整操作见[平台手册](docs/deployment/competition.md)。
 
-跨仓库改动记录实际依赖与反馈，更新受影响的操作说明。当前工具与材料实施依据见 [I13 packet](tasks/iteration13/packet.md)及其各批回执；编译、材料组装、真实工具响应和完整生成收益是不同证据，不能互相替代。不要为文档一致改写历史报告。
+跨仓库改动记录实际依赖与反馈，更新受影响的操作说明。具体实施依据和授权归所属 packet；编译、材料组装、真实工具响应和完整生成收益是不同证据，不能互相替代。不要为文档一致改写历史报告。

@@ -6,7 +6,7 @@
 | --- | --- | --- |
 | 理解产品目标与协作模型 | [PRD](prd/index.md) | [Variant 实现索引](../variants/README.md)。 |
 | 理解跨组件责任与生命周期 | [技术说明](product-tdd/index.md) | [资源与原生执行约定](product-tdd/runtime-resources.md)。 |
-| 改代码、角色、技能或打包 | [开发入口](../CONTRIBUTING.md) | [scripts](../scripts/README.md)、[harness](../harness/README.md)、[submission](../submission/README.md)、[I13 接线](../variants/pi-braid-i13/README.md)。 |
+| 改代码、角色、技能或打包 | [开发入口](../CONTRIBUTING.md) | [Variant 本地说明](../variants/README.md)、[scripts](../scripts/README.md)、[harness](../harness/README.md)、[submission](../submission/README.md)。 |
 | 定义、准备、运行或查询实验 | [Lab 入口](../lab/README.md) | [定义与编译](../lab/exp/experiments.md)、[执行与状态](../lab/exp/execution.md)、[制品与遥测](../lab/exp/artifacts.md)。 |
 | 选择运行路径、恢复或定位失败 | [运行手册](deployment/index.md) | [本地 Runner](deployment/local-experiments.md)、[恢复](deployment/recovery.md)、[证据](deployment/evidence.md)。 |
 | 读取 Braid 对象、原生会话或遥测 | [Console 接入](deployment/console.md) | [Console 组件](../braid-console/README.md)、[Braid 诊断](deployment/braid-diagnostics.md)。 |

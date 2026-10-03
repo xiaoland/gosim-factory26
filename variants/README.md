@@ -15,6 +15,8 @@
 
 [I13 本地开发说明](pi-braid-i13/README.md)解释角色、技能、工具和不启动模型的材料装配；I14 的具体职责由各自源码持有，不从 I13 文档推断接线相同。
 
+I14 冷启动按职责直接读各实现的导航：[共同基线](pi-braid-i14/README.md)、[Cleaner](pi-braid-i14-cleaner/README.md)、[Reviewer](pi-braid-i14-reviewer/README.md)、[E2E](pi-braid-i14-e2e/README.md)。这些 README 只导航实际入口、材料、角色和反馈位置，不维护模型表、运行状态或任务历史。
+
 ## 保留基线与其它独立对照
 
 | 实现 | 状态 | 维护职责 |
