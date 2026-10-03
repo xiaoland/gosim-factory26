@@ -88,12 +88,16 @@ def inspect(recipe_path, deployment=None, *, environment=None):
         row = {'job_id': job['id'], 'purpose': job['purpose'], 'target': job.get('target'),
                'assets': [], 'blockers': [], 'backend': job['backend']['kind']}
         input_paths = {}
+        input_provenance = {}
         bindings = dict(job.get('inputs', {}))
         bindings.update({name: job[name] for name in ('prepared', 'checkpoint', 'stop_evidence') if name in job})
         for name, binding in bindings.items():
             item = {'name': name}
             try:
-                if isinstance(binding, dict) and 'from_job' in binding:
+                if isinstance(binding, dict) and set(binding) == {'from_production'}:
+                    item.update(status='waiting', from_production=binding['from_production'])
+                    row['blockers'].append({'component': 'input', 'reason': '等待声明producer产物', **item})
+                elif isinstance(binding, dict) and 'from_job' in binding:
                     item.update(status='waiting', from_job=binding['from_job'], output=binding['output'])
                     row['blockers'].append({'component': 'input', 'reason': '等待生成制品', **item})
                 elif isinstance(binding, str) or 'source' in binding:
@@ -106,11 +110,24 @@ def inspect(recipe_path, deployment=None, *, environment=None):
                     store = (base / binding.get('store', 'artifacts')).resolve(strict=True)
                     manifest = artifacts.verify(store, binding)
                     input_paths[name] = store / manifest['artifact_id'] / 'payload'
+                    input_provenance[name] = manifest.get('provenance')
                     item.update(status='verified', artifact_id=manifest['artifact_id'], type=manifest['type'])
             except (OSError, ValueError, KeyError) as exc:
                 item.update(status='unavailable', error=error(exc))
                 row['blockers'].append({'component': 'input', **item})
             row['assets'].append(item)
+        if job.get('arc_contract'):
+            try:
+                from lab.arc_bench.local_job import generation_inputs, sdk_role
+                if 'runner' not in input_paths:
+                    raise ValueError('ARC host SDK input is not available')
+                role = sdk_role(input_paths['runner'])
+                if role != job['arc_contract']['sdk']:
+                    raise ValueError('ARC host SDK differs from compiled role')
+                row['arc_inputs'] = (generation_inputs(input_paths, input_paths['runner'], expected_sdk=role, agent_provenance=input_provenance.get('agent'))
+                    if {'agent', 'requirements'} <= input_paths.keys() else {'sdk': role, 'status': 'waiting-for-production'})
+            except (OSError, ValueError, KeyError) as exc:
+                row['blockers'].append({'component': 'arc-input-role', 'error': error(exc)})
         backend = job['backend']
         if job.get('prepared'):
             try:
@@ -191,14 +208,27 @@ def _intent_plan(path, spec):
             'action': 'verify cached production' if receipt.is_file() else 'produce missing material'})
     for target in spec['targets']:
         template = spec['variants'][target['variant']]['generate']
+        arc = None
+        if template.get('operation') == 'arc-local-generate':
+            try:
+                from lab.arc_bench.local_job import sdk_role
+                selected_arc = selection['arc']
+                arc = {'sdk': sdk_role(selected_arc['sdk_source']), 'target': selected_arc['target'],
+                       'inputs': {name: {'status': 'waiting-for-production', **value}
+                                  if isinstance(value, dict) and set(value) == {'from_production'} else {'status': 'declared', 'binding': value}
+                                  for name, value in {**template.get('inputs', {}), **spec['cases'][target['case']].get('inputs', {})}.items()},
+                       'child_services': {'resource_evidence': 'created in actual child namespace',
+                                          'telemetry': 'child collector binding required'}}
+            except (OSError, ValueError, KeyError) as exc:
+                result['blockers'].append({'component': 'arc-input-role', 'error': error(exc)})
         result['jobs'].append({'job_id': target['id'], 'purpose': template['purpose'],
-            'asset_readiness': 'planned', 'assets': [], 'blockers': [], 'target': target})
+            'asset_readiness': 'planned', 'assets': [], 'blockers': [], 'target': target, **({'arc': arc} if arc else {})})
     return public(result)
 
 
 def _docker(target):
     from lab.docker_endpoint import execute
-    from .admission import HELPER, volume_name
+    from .admission import volume_name
     result = {'endpoint': target.get('endpoint'), 'image_id': target.get('image_id'),
               'declared_slots': target.get('slots'), 'blockers': [], 'available_slots': 'unknown',
               'reservation_coverage': 'authority not read; no helper created and no reservations reconciled'}
@@ -235,13 +265,10 @@ def _docker(target):
             result['authority_volume'] = {'name': target['admission_volume'], 'status': 'not-initialized',
                                           'reason': 'first-use dispatch creates authority after revalidating handoff'}
         else:
-            volume = json.loads(execute(endpoint, ['volume', 'inspect', '--format', '{"name":{{json .Name}},"labels":{{json .Labels}}}', target['admission_volume']],
-                                        check=True, capture_output=True, text=True, timeout=15).stdout)
-            labels = volume.get('labels') or {}
-            if any(labels.get(name) != value for name, value in {
-                    'io.factory26.exp.daemon': endpoint['daemon_id'], 'io.factory26.exp.helper': canonical(HELPER),
-                    'io.factory26.exp.slots': str(target['slots'])}.items()):
-                raise ValueError('admission volume helper/capacity identity differs')
+            volume = json.loads(execute(endpoint, ['volume', 'inspect', target['admission_volume']],
+                                        check=True, capture_output=True, text=True, timeout=15).stdout)[0]
+            from .admission import volume_identity
+            result['authority_identity'] = volume_identity(target, volume)
             result['authority_volume'] = volume
         result['handoff'] = {'sha256': canonical(handoff),
                               'mode': handoff['mode'], 'coverage': handoff.get('coverage')}

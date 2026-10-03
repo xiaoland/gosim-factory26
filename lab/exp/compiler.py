@@ -105,6 +105,11 @@ def _model(job, name, models):
     if 'model_config' in job or 'model_config' in job['backend']:
         raise ValueError('intent model_config belongs in models, not execution templates')
     job['model_config'] = deepcopy(config)
+    if job.get('arc_contract'):
+        if not model.get('bindings'):
+            raise ValueError('ARC generation needs explicit native model bindings')
+        job.setdefault('environment', {}).update(MODEL=config['model'], VISUAL_MODEL=config['visual_model'],
+            OPENAI_BASE_URL=config['base_url'], FACTORY26_MODEL_PROVIDER=config['provider'])
     if job['backend']['kind'] == 'hosted':
         job['backend']['model_config'] = deepcopy(config)
     if 'bindings' in model:
@@ -125,6 +130,8 @@ def _paths(job, base, files):
         if isinstance(binding, str):
             binding = {'source': binding}
             job['inputs'][name] = binding
+        if set(binding) == {'from_production'}:
+            continue
         if 'source' in binding:
             source = (base / binding['source']).resolve(strict=True)
             binding['source'] = str(source)
@@ -219,7 +226,25 @@ def compile_intent(intent_path, directory, *, environment=None):
                 job['target'] = {'case': target['case'], 'variant': target['variant']}
                 job['inputs'] = _merge(job.get('inputs', {}), case.get('inputs', {}), 'case inputs')
                 case_backend = _fields(case.get('backend', {}), ('competition_id', 'task'))
-                job['backend'] = _merge(job['backend'], case_backend, 'case backend')
+                operation = job.pop('operation', None)
+                if operation is not None:
+                    if operation != 'arc-local-generate' or job['purpose'] != 'generate':
+                        raise ValueError('unsupported generation operation')
+                    _fields(job, ('id', 'target', 'purpose', 'inputs', 'limits', 'labels'), ('inputs', 'limits'))
+                    if not intent.get('environment_selection', {}).get('selection', {}).get('arc'):
+                        raise ValueError('arc-local-generate requires environment.arc physical selections')
+                    if set(job['inputs']) != {'agent', 'requirements'} or set(case_backend) != {'competition_id', 'task'}:
+                        raise ValueError('ARC generation needs agent/requirements and case competition_id/task')
+                    from lab.arc_bench.local_job import job as local_job, sdk_role
+                    arc = intent['environment_selection']['selection']['arc']
+                    job['inputs']['runner'] = {'source': arc['sdk_source']}
+                    job = local_job(job['id'], job['inputs'], job['limits'], arc['target'],
+                                    case_backend['competition_id'], case_backend['task'],
+                                    labels=job.get('labels'), arc_contract={'schema_version': 1,
+                                    'operation': operation, 'sdk': sdk_role(arc['sdk_source'])})
+                    job['target'] = {'case': target['case'], 'variant': target['variant']}
+                else:
+                    job['backend'] = _merge(job['backend'], case_backend, 'case backend')
                 selected = target['model']
                 if isinstance(selected, dict):
                     if selected != {'selection': True} or decision['selected_model'] is None:

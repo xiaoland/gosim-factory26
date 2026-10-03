@@ -25,7 +25,7 @@ def _source_files():
     # ARC SDK child resources use the same execution identity and daemon authority.
     files += [ROOT / 'arc_bench' / name for name in (
         '__init__.py', 'playground.py', 'arc_bench_adapter.py', 'arc_bench_noop.py',
-        'workspace_archive.py', 'docker_workspace.py', 'docker_admission.py', 'arc_artifacts.py', 'traceability.py')]
+        'workspace_archive.py', 'local_job.py', 'docker_workspace.py', 'docker_admission.py', 'arc_artifacts.py', 'traceability.py')]
     files += [ROOT.parent / 'scripts' / name for name in ('__init__.py', 'agent_support.py', 'harness_layout.py')]
     files += [ROOT.parent / 'submission/exp_checkpoint.py']
     return list(dict.fromkeys(files))
@@ -326,6 +326,11 @@ def build(spec_path, directory, *, environment=None):
                     inputs[name] = value
                 else:
                     raise ValueError('input must explicitly reference a source or artifact')
+            if job.get('arc_contract'):
+                from lab.arc_bench.local_job import generation_inputs
+                bound = {name: store / ref['artifact_id'] / 'payload' for name, ref in inputs.items()}
+                job['arc_input_readback'] = generation_inputs(bound, bound['runner'], expected_sdk=job['arc_contract']['sdk'],
+                    agent_provenance=artifacts._manifest(store, inputs['agent']).get('provenance'))
             for output in job.get('outputs', []):
                 from .core import member
                 identifier(output['name']); identifier(output['type']); member(output['path'])

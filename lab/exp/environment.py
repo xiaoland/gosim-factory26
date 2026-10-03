@@ -9,7 +9,7 @@ from .core import atomic, canonical, digest, locked, read, record, require
 def load(path):
     path = Path(path).expanduser().resolve(strict=True)
     value = require(read(path), 'environment')
-    allowed = {'kind', 'schema_version', 'id', 'cache_root', 'python', 'harness'}
+    allowed = {'kind', 'schema_version', 'id', 'cache_root', 'python', 'harness', 'arc'}
     if set(value) - allowed or not all(value.get(key) for key in ('id', 'cache_root', 'python')):
         raise ValueError('environment needs id, cache_root and python; unsupported fields are not overrides')
     value = deepcopy(value)
@@ -20,6 +20,14 @@ def load(path):
         raise ValueError('unsupported harness material selection in environment')
     for field, source in harness.items():
         harness[field] = str((path.parent / source).expanduser().resolve(strict=True))
+    if 'arc' in value:
+        arc = value['arc']
+        if not isinstance(arc, dict) or set(arc) != {'sdk_source', 'target'}:
+            raise ValueError('environment.arc needs host sdk_source and one child target')
+        arc['sdk_source'] = str((path.parent / arc['sdk_source']).expanduser().resolve(strict=True))
+        target = arc['target']
+        if isinstance(target.get('authority_handoff'), dict) and set(target['authority_handoff']) == {'source'}:
+            target['authority_handoff'] = require(read((path.parent / target['authority_handoff']['source']).resolve(strict=True)), 'authority-handoff')
     return {'profile': str(path), 'profile_sha256': digest(path), 'selection': value,
             'python_sha256': digest(Path(value['python']).resolve(strict=True))}
 
@@ -35,6 +43,8 @@ def resolve(value, profile, *, base=None):
         if (binding['python_sha256'] != previous['python_sha256'] or
                 plan_host_runtime(Path(binding['selection']['python']))['dependencies'] != previous['runtime_dependencies']):
             raise ValueError('environment changes frozen runtime dependencies; compile a derived recipe')
+        if binding['selection'].get('arc') != previous['selection'].get('arc'):
+            raise ValueError('environment changes frozen ARC SDK/target; compile a derived recipe')
         resolved = deepcopy(result.get('productions', {}))
         for name, production in resolved.items():
             if production['producer'] == 'harness':

@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import platform
 from pathlib import Path
 import resource
 import signal
@@ -385,7 +386,8 @@ def _input_bindings(directory, attempt):
 
 def _expand(value, directory, job):
     assembled = read(directory / 'assembly.json')['workspace'] if (directory / 'assembly.json').exists() else str(directory / 'workspace')
-    names = {'attempt_dir': str(directory), 'workspace': assembled, 'inputs': str(directory / 'inputs')}
+    runtime_python = read(directory / 'deployment.json')['runtime']['python']
+    names = {'runtime_python': runtime_python, 'attempt_dir': str(directory), 'workspace': assembled, 'inputs': str(directory / 'inputs')}
     names.update({name: str(directory / 'inputs' / name) for name in job.get('inputs', {})})
     for name, replacement in names.items():
         value = value.replace('{' + name + '}', replacement)

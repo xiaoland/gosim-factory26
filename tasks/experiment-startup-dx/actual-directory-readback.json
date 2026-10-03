@@ -1,0 +1,33 @@
+{
+  "kind": "factory26.arc.actual-offline-readback",
+  "source_receipt": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/material-cache/materials/591f24eab7a9aeb4e63bb30778fe15a4a1644484ea18bb71125c6d6a54bf4446/material.json",
+  "source_receipt_sha256": "4b854b406690168e8d65256624935745f1f241bd173398ea2a63bd20c0712ec9",
+  "material_id": "material-591f24eab7a9aeb4e63bb30778fe15a4a1644484ea18bb71125c6d6a54bf4446",
+  "root": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/material-cache/materials/591f24eab7a9aeb4e63bb30778fe15a4a1644484ea18bb71125c6d6a54bf4446/payload",
+  "package_manifest_present": false,
+  "observed": {
+    "sdk": {
+      "kind": "factory26.arc.host-sdk",
+      "schema_version": 1,
+      "entry": "local_submit.py",
+      "entry_sha256": "45408ee80df9a91acb51be8e20bdca42b54476972ef8ff3941c2ba1e3b607d25",
+      "environment_transfer": "verified-at-child-create",
+      "interface": [
+        "main",
+        "run_container"
+      ]
+    },
+    "agent": {
+      "variant": "pi-braid-i14-e2e"
+    },
+    "requirements": {
+      "entry": "requirements.yaml",
+      "sha256": "9480921cb3b7ffdc5f32cb76011ecc1d5bf9bfbf2cba38e3a092355ac88a54f8"
+    }
+  },
+  "scope": "actual producer directory role consumption; not artifact publication or full build",
+  "model_execution": false,
+  "docker_execution": false,
+  "sdk_import": false,
+  "observed_at": 1790994143.1166499
+}

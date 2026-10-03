@@ -459,6 +459,8 @@ def runner_main(resource_path, runner_path, argv):
     endpoint = resource['endpoint']
     resource['authority_workspace'] = transport.value['volume'] if transport else str(workspace)
     write_json(resource_path, resource)
+    from lab.arc_bench.local_job import sdk_role
+    sdk_role(Path(runner_path).parent)
     spec = importlib.util.spec_from_file_location('factory26_official_runner', runner_path)
     upstream = importlib.util.module_from_spec(spec)
     sys.modules[spec.name] = upstream
@@ -489,7 +491,25 @@ def runner_main(resource_path, runner_path, argv):
         command = command[1:]
         command.remove('--rm')
         cidfile = resource_path.with_suffix('.cid')
-        limits = read_json(Path(resource['exp_attempt_dir']) / 'attempt.json')['job']['limits']
+        attempt = read_json(Path(resource['exp_attempt_dir']) / 'attempt.json')
+        limits = attempt['job']['limits']
+        expected_environment = {}
+        if attempt['job'].get('arc_contract'):
+            if command.count('--env-file') != 1:
+                raise ValueError('ARC generation requires one explicit child environment file')
+            env_path = Path(command[command.index('--env-file') + 1])
+            for line in env_path.read_text().splitlines():
+                if line.strip() and not line.lstrip().startswith('#'):
+                    key, separator, value = line.partition('=')
+                    if not separator:
+                        raise ValueError('invalid child environment entry')
+                    expected_environment[key] = value
+            required = attempt['job'].get('environment', {})
+            if any(expected_environment.get(key) != value for key, value in required.items()):
+                raise ValueError('SDK child environment differs from compiled model policy')
+            bindings = json.loads(required.get('FACTORY26_MODEL_BINDINGS', '{}'))
+            if any(not expected_environment.get(binding['credential_env']) for binding in bindings.values()):
+                raise ValueError('SDK child environment is missing a declared model credential variable')
         options = ['--cidfile', str(cidfile), '--pids-limit', str(limits['pids'])]
         if transport:
             user = command[command.index('--user') + 1] if '--user' in command else '0:0'
@@ -509,6 +529,15 @@ def runner_main(resource_path, runner_path, argv):
         value = container_owned(resource)
         if value is None:
             raise ValueError('created SDK container cannot be independently observed')
+        if expected_environment:
+            actual_environment = dict(item.split('=', 1) for item in value['Config'].get('Env', []) if '=' in item)
+            if any(actual_environment.get(key) != expected for key, expected in expected_environment.items()):
+                raise ValueError('actual SDK child Config.Env differs from declared environment transfer')
+            from lab.exp.core import canonical
+            resource['environment_transfer'] = {'status': 'verified-before-start', 'transport': 'docker-env-file',
+                'variables': sorted(expected_environment), 'public_policy_sha256': canonical(attempt['job'].get('environment', {})),
+                'container_id': resource['container_id']}
+            write_json(resource_path, resource)
         bind(resource, value)
         writer(resource, physical, 'writer-open', resource['exp_request_id'] + '-writer-open')
         started = control(resource, physical, 'start')

@@ -1,0 +1,338 @@
+{
+  "kind": "factory26.exp.environment",
+  "schema_version": 1,
+  "id": "startup-dx-actual-i14-inputs",
+  "cache_root": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/offline-plan/not-produced-cache",
+  "python": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3.12",
+  "harness": {},
+  "arc": {
+    "sdk_source": "/Volumes/WorkSSD/Development/factory26-official-local/runner",
+    "target": {
+      "endpoint": {
+        "context": "development-2",
+        "daemon_id": "e316f857-fe3d-4e7b-8236-9376f063fedc",
+        "api_version": "1.56",
+        "argv": [
+          "docker",
+          "--context",
+          "development-2"
+        ],
+        "host": "ssh://sfp7-ws.localhost",
+        "remote": true
+      },
+      "image_id": "sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681",
+      "slots": 5,
+      "admission_volume": "exp-admission-0fd73c68c3c4f3b7797ff798",
+      "authority_handoff": {
+        "kind": "factory26.exp.authority-handoff",
+        "schema_version": 1,
+        "mode": "retirement",
+        "daemon_id": "e316f857-fe3d-4e7b-8236-9376f063fedc",
+        "authorization": "用户已授权仅保留I13-2唯一完整Sheet成果和必要材料，删除其它旧/不完整Factory资源；本轮已逐项核对并清理development-2上全部io.factory26.exp.attempt对象，不碰Redis、共同镜像和shared admission。",
+        "coverage": "all-legacy-writers-enumerated",
+        "writers": [
+          {
+            "container_id": "d2d9811d1847ab9500c7de70a0d5161d514dfde92bbabad85cb37e9c0b050b46",
+            "created": "2026-10-02T11:38:59.517371615Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T11:40:41.9323414Z",
+              "FinishedAt": "2026-10-02T12:05:04.966071671Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-ef630a2f3aa6a6608a020bec",
+              "io.factory26.exp.experiment": "i14-reviewer-github-nodegyp-prepared-20261002",
+              "io.factory26.exp.incarnation": "runner-55243b80ac6b21bcdad73086"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "bdcaa8999a3a9f01c7efa9660b33c447ceaa6d16e57833c2561e3cc6861d2dab",
+            "created": "2026-10-02T10:57:05.108685841Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T11:00:05.377241211Z",
+              "FinishedAt": "2026-10-02T11:09:07.885754492Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-906c5c113f6ddfd7b98f205b",
+              "io.factory26.exp.experiment": "i14-reviewer-github-prepared-20261002",
+              "io.factory26.exp.incarnation": "runner-2c2c748f7ac9a02866534965"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "79b05660680f832aabd77a6b8c02e987be323102c667b9fddfe51d1779b18d81",
+            "created": "2026-10-02T10:57:03.454170965Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T10:59:55.067075454Z",
+              "FinishedAt": "2026-10-02T11:18:37.01605111Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-0d89fcc2eef74292a4ef85e0",
+              "io.factory26.exp.experiment": "i14-cleaner-github-prepared-20261002",
+              "io.factory26.exp.incarnation": "runner-53c1f2e2e735b5b1d38f1b8f"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "aecd15534ef849c80bb1d8d20e22fbea2e4dba1f155db921ce008c12bf4eee12",
+            "created": "2026-10-02T10:54:27.469894091Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T10:55:35.31803197Z",
+              "FinishedAt": "2026-10-02T12:42:18.263619694Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-482e5780ca417e6ebb63e28b",
+              "io.factory26.exp.experiment": "i14-e2e-github-qwen-start-20261002",
+              "io.factory26.exp.incarnation": "runner-817cea49e6d1bb86780078f6"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "516628a2b2087a3de67e8cd50632a1bd9636f6f8779b838ab4b45384b5a37952",
+            "created": "2026-10-02T10:39:06.022093129Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T10:40:43.475659398Z",
+              "FinishedAt": "2026-10-02T10:46:53.809202166Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-e77cba903ba6029d7969d2eb",
+              "io.factory26.exp.experiment": "i14-reviewer-github-offline-final-20261002",
+              "io.factory26.exp.incarnation": "runner-c3fc3696a45b8ecb9708fd3c"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "9fd2109ce30c83c7e2bc2fdc18e165f83f87708084277525b78fc744af50b09d",
+            "created": "2026-10-02T10:37:32.968423372Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T10:39:01.726486503Z",
+              "FinishedAt": "2026-10-02T10:44:01.269756981Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-51dfdaada9946607d08d295c",
+              "io.factory26.exp.experiment": "i14-cleaner-github-offline-final-20261002",
+              "io.factory26.exp.incarnation": "runner-3e78ae14e09a60e5a2e0df0b"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "3421dc058515527721726dc28f9cb322548e5668ec0d25a9c394f066d4fd56ab",
+            "created": "2026-10-02T10:36:49.401962659Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T10:37:29.109731499Z",
+              "FinishedAt": "2026-10-02T10:41:14.858623465Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-4fa4c581aa385bc06c10e091",
+              "io.factory26.exp.experiment": "i14-baseline-github-roots-20261002",
+              "io.factory26.exp.incarnation": "runner-32d6ed8dd555fd676e43672a"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "41b6c73693beb534df988218d4f93794127cec33ff2b65debb6640c9bed913ef",
+            "created": "2026-10-02T10:30:03.923485468Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T10:31:23.136189045Z",
+              "FinishedAt": "2026-10-02T10:44:12.725539823Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-c5de9727fc767ba1bae52eed",
+              "io.factory26.exp.experiment": "i14-e2e-github-qwen-20261002",
+              "io.factory26.exp.incarnation": "runner-95e77def787cfa5195c3c9b5"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "608a61078a49a612163a3631bac51e0d4b9af15b410ac09dc13e52fab7d388d0",
+            "created": "2026-10-02T10:23:37.474923027Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T10:24:47.660184932Z",
+              "FinishedAt": "2026-10-02T10:25:17.327958206Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-7a891ac90b533206b3ddb10b",
+              "io.factory26.exp.experiment": "i14-e2e-github-offline-r3-20261002",
+              "io.factory26.exp.incarnation": "runner-74cc6ffae28a8e2c595f740c"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "e6411f2f9b4608e91defd08b4c91b97bf6573640d150369fee00d48ef7dc760e",
+            "created": "2026-10-02T10:19:48.718614134Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T10:21:17.969361264Z",
+              "FinishedAt": "2026-10-02T10:21:57.967316532Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-2dd27789fe74dc4d30b847bc",
+              "io.factory26.exp.experiment": "i13-flash-github-r5-matrix-repair-20261002",
+              "io.factory26.exp.incarnation": "runner-36b8712de2033f4847831f6f"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "698d72f36f5f99e6cfe6501b944d8612d723893922bab6b60050cfef0bb91d99",
+            "created": "2026-10-02T10:06:17.903320384Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T10:07:29.256547501Z",
+              "FinishedAt": "2026-10-02T10:07:52.180390926Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-9b889d4e4cda2c1a95dff0b4",
+              "io.factory26.exp.experiment": "i14-e2e-github-offline-20261002",
+              "io.factory26.exp.incarnation": "runner-0f18fc5f68c1000c1fcd547f"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "2a7e11677e047df7785575deb6ff8991a73883cc954a041b9abccc6da6adb865",
+            "created": "2026-10-02T07:45:53.966790471Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T07:47:02.270791692Z",
+              "FinishedAt": "2026-10-02T07:53:20.86965755Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-e41f598172b83b3140dbc414",
+              "io.factory26.exp.experiment": "i13-flash-github-r4-revised-input-repair-20261002",
+              "io.factory26.exp.incarnation": "runner-56b01baee71e499bc1091142"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "0722dc14ea4beaf02544fa35e0910de678d763348c3920d36507dfb58649584f",
+            "created": "2026-10-02T07:09:16.687927963Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T07:10:26.84636094Z",
+              "FinishedAt": "2026-10-02T07:16:29.101126862Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-34346ff16ed9172662501d43",
+              "io.factory26.exp.experiment": "i13-flash-github-r4-offline-ready-20261002",
+              "io.factory26.exp.incarnation": "runner-ef982d47bf40efdac04fb068"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "5ac55bac4b3676c7f893f1529264c54ea1065a1614f6544e3e080acf9f5bc867",
+            "created": "2026-10-02T06:53:42.113989344Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T06:54:51.514935761Z",
+              "FinishedAt": "2026-10-02T06:55:28.038274278Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-e2c989263d851bb93a0454dd",
+              "io.factory26.exp.experiment": "i13-flash-github-r4-offline-repair-home-fix-20261002",
+              "io.factory26.exp.incarnation": "runner-5ac588c3b0cc2e3e17f1c3f0"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "5601bf051229b52814855bb099b7d78607ada7d416021f258a2f3f835308e5f4",
+            "created": "2026-10-02T06:45:59.590685243Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T06:47:07.818047616Z",
+              "FinishedAt": "2026-10-02T06:47:46.546471338Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-ad6e7a298cd7641ecc27d6ab",
+              "io.factory26.exp.experiment": "i13-flash-github-r4-offline-repair-r2-20261002",
+              "io.factory26.exp.incarnation": "runner-5aef2b131c7d59b26ed5e70f"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          },
+          {
+            "container_id": "f39ce50a9e271124cf26b31af37fddf5ffb0cf738a5bf4e80cb26529ffb6c69e",
+            "created": "2026-10-02T06:40:45.734234927Z",
+            "state": {
+              "Status": "exited",
+              "Running": false,
+              "Paused": false,
+              "StartedAt": "2026-10-02T06:41:53.822838245Z",
+              "FinishedAt": "2026-10-02T06:42:32.996996426Z"
+            },
+            "labels": {
+              "io.factory26.exp.attempt": "attempt-a0014e842919603b296661e9",
+              "io.factory26.exp.experiment": "i13-flash-github-r4-offline-repair-final-20261002",
+              "io.factory26.exp.incarnation": "runner-4c494d2562e18f84756e5bcb"
+            },
+            "effect": "stopped_and_removed",
+            "observation": "pre-cleanup Docker inspect + post-cleanup absence"
+          }
+        ],
+        "reservations": "released",
+        "launch_windows": "closed",
+        "registry": {
+          "source": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/local-generations/admission-registry-before.json",
+          "sha256": "f8a5b9d0b1bc427fecb920eb2328f2e4ab83a86c71a9bc8b00a9c51c05daafe3",
+          "observed_reservations": {
+            "all": "released"
+          },
+          "post_cleanup_factory_containers": 0
+        },
+        "admission_volume": "exp-admission-0fd73c68c3c4f3b7797ff798",
+        "observed_at": 1790989629.8199549
+      }
+    }
+  }
+}

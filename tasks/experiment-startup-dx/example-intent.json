@@ -1,0 +1,92 @@
+{
+  "kind": "factory26.exp.intent",
+  "schema_version": 2,
+  "models": {
+    "flash": {
+      "config": {
+        "model": "glm-5.3-flash",
+        "base_url": "https://qianfan.baidubce.com/v2/tokenplan/personal",
+        "provider": "QIANFAN_TOKEN_PLAN",
+        "visual_model": "glm-5.3-flash"
+      },
+      "bindings": {
+        "factory26": {
+          "provider": "QIANFAN_TOKEN_PLAN",
+          "base_url": "https://qianfan.baidubce.com/v2/tokenplan/personal",
+          "credential_env": "QIANFAN_TOKEN_PLAN_API_KEY",
+          "model_id": "glm-5.3-flash"
+        },
+        "factory26-visual": {
+          "provider": "QIANFAN_TOKEN_PLAN",
+          "base_url": "https://qianfan.baidubce.com/v2/tokenplan/personal",
+          "credential_env": "QIANFAN_TOKEN_PLAN_API_KEY",
+          "model_id": "glm-5.3-flash"
+        }
+      }
+    }
+  },
+  "selection_policy": {
+    "kind": "explicit"
+  },
+  "experiment_id": "startup-dx-actual-i14-plan",
+  "authorization": "用户授权设施改进的离线计划消费；不得启动模型、Docker或网络",
+  "execution": {
+    "max_parallel": 1,
+    "budget": {
+      "max_attempts": 1
+    },
+    "storage": {
+      "host_reserve_bytes": 21474836480
+    }
+  },
+  "cases": {
+    "github": {
+      "inputs": {
+        "requirements": "/Volumes/WorkSSD/Development/factory26/local-generations/public-requirements/github-a2-8a282da5502e"
+      },
+      "backend": {
+        "competition_id": "hackathon",
+        "task": "github"
+      }
+    }
+  },
+  "variants": {
+    "reviewer": {
+      "generate": {
+        "operation": "arc-local-generate",
+        "purpose": "generate",
+        "inputs": {
+          "agent": {
+            "from_production": "agent"
+          }
+        },
+        "limits": {
+          "storage_bytes": 42949672960,
+          "telemetry_bytes": 1073741824,
+          "wall_seconds": 43200,
+          "memory_bytes": 2147483648,
+          "cpus": 2.0,
+          "pids": 512
+        }
+      }
+    }
+  },
+  "targets": [
+    {
+      "id": "reviewer-github",
+      "case": "github",
+      "variant": "reviewer",
+      "model": "flash"
+    }
+  ],
+  "evaluation_policy": {
+    "kind": "none"
+  },
+  "productions": {
+    "agent": {
+      "producer": "harness",
+      "variant": "pi-braid-i14-reviewer",
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/assets/runtime"
+    }
+  }
+}

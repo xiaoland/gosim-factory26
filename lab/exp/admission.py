@@ -289,12 +289,9 @@ def _target(target):
     return endpoint, {'daemon_id': endpoint['daemon_id'], 'protocol': 2, 'handoff_sha256': canonical(handoff) if handoff is not None else None, 'slots': target['slots']}
 
 
-def _helper(target, payload, *, readonly=False):
+def volume_identity(target, asset):
+    """Read the same protocol binding for admission and doctor without a second rule set."""
     endpoint, identity = _target(target)
-    confirm(endpoint)
-    volume = target['admission_volume']
-    raw = execute(endpoint, ['volume', 'inspect', volume], check=True, capture_output=True, text=True, timeout=30)
-    asset = json.loads(raw.stdout)[0]
     if asset.get('Driver') != 'local' or asset.get('Options') or not asset.get('Mountpoint'):
         raise Blocked('domain query requires supported Linux local-volume without driver options')
     labels = asset.get('Labels') or {}
@@ -304,6 +301,16 @@ def _helper(target, payload, *, readonly=False):
     if not handoff_digest or identity['handoff_sha256'] and identity['handoff_sha256'] != handoff_digest:
         raise Blocked('domain handoff asset binding differs or is missing')
     identity['handoff_sha256'] = handoff_digest
+    return identity
+
+
+def _helper(target, payload, *, readonly=False):
+    endpoint, identity = _target(target)
+    confirm(endpoint)
+    volume = target['admission_volume']
+    raw = execute(endpoint, ['volume', 'inspect', volume], check=True, capture_output=True, text=True, timeout=30)
+    asset = json.loads(raw.stdout)[0]
+    identity = volume_identity(target, asset)
     owner_id = canonical([payload, time.time_ns()])[:24]
     args = ['create', '--user', '0', '--restart', 'no', '--network', 'none', '--memory', '128m', '--pids-limit', '32',
             '--label', 'io.factory26.exp.role=query', '--label', 'io.factory26.exp.query-owner=' + owner_id, '--mount',

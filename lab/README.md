@@ -30,6 +30,10 @@ Intent 必需字段为 experiment_id、authorization、execution、cases、varia
 
 Targets 是显式列表，每项为 `{id, case, variant, model}`。Compiler 不自动展开笛卡尔积，也不从名字推断授权。模板与 case 的重复配置须一致；冲突拒绝编译。选定模型写入 job.model_config，托管同时写入 backend.model_config。模型、费用与 endpoint 不从 ambient environment 补全。
 
+ARC 本地独立生成使用 `variants.<name>.generate` 的 `operation: "arc-local-generate"`、`purpose: "generate"`、inputs 和 limits；inputs 包含 agent，case 提供 requirements 及 backend.competition_id/task。agent 或 requirements 可以引用 `{from_production: NAME}`，无需编译前先生产材料。此操作由公共 ARC job 构造器生成 SDK 参数与 application 输出，不接受手填 command/backend。模型必须声明 native bindings。Environment 的 `arc` 声明 `sdk_source` 和 `target`；sdk_source 指实际宿主 SDK 的目录，包含 local_submit.py，不是镜像内的 local_runner.py。target 使用现有 external_docker 的 endpoint、不可变 image_id、slots、admission_volume 和 authority_handoff。宿主 Python、宿主 SDK 与 Linux Harness 材料各有用途；远端 Docker 的 Linux 材料不由控制宿主的平台推断。
+
+Compile 核对 SDK 接口与完整物理选择，保留待生产引用；build 在实际绑定材料后核对 SDK 身份、Linux/amd64 材料与需求目录。Doctor 显示待生产状态，按当前 admission 协议读取已有域，不修改域。实际启动时 adapter 向 SDK 提供显式模型环境文件；子容器在启动前读回变量名和公开配置摘要，组合入口在真实子容器内提供 ResourceEvidence 与 telemetry。静态角色核对不能证明容器或模型成功启动，子容器环境读回也不证明供应商已经受理请求。
+
 selection_policy 支持 `{"kind":"explicit"}`，此时 target.model 是 models 中的名字；或 `final-score-margin`，明确 baseline、candidate、minimum_margin（百分点评分差）、scores 和 on_incomplete。scores 以两个模型名和相同非空 case 集合组织，每项 `{source, run_id}` 引用保存的 GET；旧 journal state 另声明 task。必须绑定实际 run ID、终态 PASSED/FAILED、有效百分数及完整测试数量。完整时按声明 case 数量求均值，candidate 达到分差才被选择；缺失原件/未终态时仅按显式 on_incomplete=block 或 baseline 处理。身份冲突和损坏 JSON 是错误，不降为 baseline。采用政策的 target.model 显式写 `{"selection":true}`。
 
 evaluation_policy 为 `{"kind":"none"}`，或 `per-application`，声明 job（purpose=evaluate 的低层模板）、from_generation（评价输入名到生成 output 名的映射）及可选独立 model。每个生成目标获得同 target 的 `.evaluate` job，通过 from_job/output 消费其实际发布制品；Hosted 评价须明确模型及费用，不能继承生成的收费许可。某题产物发布后，controller 按其依赖派发，不等待其它题。

@@ -185,6 +185,8 @@ Viewer 从外层实验链接原生会话和原始错误，不读取生成器配�
 
 ## 实现、实验与执行身份
 
+ARC 本地生成由 intent 的 `arc-local-generate` operation 编译为现有 Local runner 与 external_docker 配方。Environment 选择宿主 SDK 和子容器目标域，实验定义选择输入、模型及限额；公共 ARC job 构造器承接两者接线。材料生产目录的身份来自已绑定 artifact 的 producer provenance，交付 ZIP 的身份来自包清单，不为了检查器改写冻结定义。模型环境由 adapter 合并公开配方及私有输入，实际子容器 Config.Env 的读回证明传播，子容器组合入口提供自身资源和遥测服务；这些交接事实均不等同于模型受理或生成成功。操作方法见 [Lab](../../lab/README.md)。
+
 新执行以冻结 experiment、job、attempt、execution instance 和发布制品建立关系，当前控制与恢复合同见本文的组件说明及 [Lab](../../lab/README.md)。旧 ARC operation 曾作为一次已批准范围的持久接续入口，prepare 冻结 experiment 或 Competition inputs 及操作源码，run 消费其冻结结果，status 从原 run、journal 和 scheduler 读回；这是旧冻结协议，不是工作树的新启动入口。历史记录通过专用 reader 或 history 读取，不扩大原作用域，也不把旧来源伪装为新 attempt。组件原件继续是事实来源，跨组件回执只证明交接效果。
 
 controller、runner 和共享支持模块核对完整进程身份：同机且确认为不存在是 lost，存在但缺少出生依据是 unknown，只有非空出生依据匹配才是 alive。旧记录不回填猜测身份；unknown 不允许按失联放行接管、重试或破坏性清理。旧 collector/scheduler 的自动接续合同只解释对应历史程序，新托管执行由冻结 controller 的 adapter 唯一采集。输出归档保留链接字面值且不跟随外链；严格输入冻结与执行输出保全是不同契约，归档失败保留远端唯一副本，不改判为模型生成失败。

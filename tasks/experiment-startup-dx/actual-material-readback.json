@@ -1,0 +1,33 @@
+{
+  "kind": "factory26.arc.actual-offline-readback",
+  "source_recipe": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/local-generations/reviewer/compiled19/recipe.json",
+  "inputs": {
+    "agent": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/parallel-reviewer/agent.zip",
+    "runner": "/Volumes/WorkSSD/Development/factory26-official-local/runner",
+    "requirements": "/Volumes/WorkSSD/Development/factory26/local-generations/public-requirements/github-a2-8a282da5502e"
+  },
+  "observed": {
+    "sdk": {
+      "kind": "factory26.arc.host-sdk",
+      "schema_version": 1,
+      "entry": "local_submit.py",
+      "entry_sha256": "45408ee80df9a91acb51be8e20bdca42b54476972ef8ff3941c2ba1e3b607d25",
+      "environment_transfer": "verified-at-child-create",
+      "interface": [
+        "main",
+        "run_container"
+      ]
+    },
+    "agent": {
+      "variant": "pi-braid-i14-reviewer"
+    },
+    "requirements": {
+      "entry": "requirements.yaml",
+      "sha256": "9480921cb3b7ffdc5f32cb76011ecc1d5bf9bfbf2cba38e3a092355ac88a54f8"
+    }
+  },
+  "model_execution": false,
+  "docker_execution": false,
+  "sdk_import": false,
+  "observed_at": 1790994374.618004
+}
