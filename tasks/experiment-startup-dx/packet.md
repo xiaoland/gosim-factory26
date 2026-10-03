@@ -15,3 +15,17 @@
 实施范围与反馈归 [实施记录](implementation.md)，源码及两个生成入口内存编译身份归 [编译记录](source-readback.json)。[Intent 示例](example-intent.json)和[环境示例](example-environment.json)使用真实公开身份，但 authorization 仅离线用途。完成本任务的源码、设计和证据提交；不增加或运行设施测试。
 
 本轮提交留在隔离分支，不覆盖主区正在进行的实验及文档修改，不改变旧冻结 executor。后续实际启动必须采用新冻结配方，由有该实验授权的负责人执行；完整打包、启动及热恢复耗时尚无对照，不能宣称已验收提速。
+
+## 架构层复核接续
+
+用户质疑是否因 Ponytail 选择最小修改而没有落实长期、根本正确，随后明确“是的，继续”，并指出来源会话仍持续暴露问题。本轮以长期正确及三类端到端耗时为判断标准，不以最小 diff 作为选型依据；Ponytail 仅提示避免无效复杂度，不能否决必要的职责划分。上一轮提交 `c2274d86` 是局部实现，不作为整体设计完成证明。
+
+继续由 storage_producers 持有全执行场所、variant 和恢复生命周期的实际边界调查，storage_judgment 持有独立 HLD 判决，主 Agent 持有新轨迹及整体设计收敛。先对照已批准的 DX HLD 与实际实现，识别尚未贯通的责任，再细化必要源码调整；不为新错误立即堆补丁，不控制来源实验。
+
+新消息摘录见 [后续轨迹](trajectory-update.json)。来源负责人报告 exp20 复用旧资源样本、exp21 消费宿主输入路径而容器无该路径，已派生 exp23；报告的修复和启动不等于本分支已解决或首次模型活动成立。根因涉及实际执行域中的资产成员映射、服务绑定和服务生命周期，需要共同边界解释。
+
+已采用 [全生命周期调查](architecture-evidence.md) 与 [advisor 判决](architecture-judgment.md)，更新现有 [设计](design.md)：四项共同合同贯通定义组合、域内装配、执行上下文和 state/writer 交接；不推翻已有 HLD，不再以 ARC wrapper 作为独立完成切面。Storage_producers 接续持有具体 LLD、caller 迁移/删除和反馈计划，主 Agent 复核范围与采用依据。当前处于实施准备，尚未为这些架构修正修改源码；三类耗时及跨域实际运行仍未取得验收。
+
+[具体实施准备](architecture-plan.md) 已完成，advisor 独立纸上预演通过。闭环项包括设施代码的精确生产/部署失效、capture 持有的原位修复与新 generation、半失败重入、原子写权交接及交接前旧消费者转不可变快照。Hosted 保持真实能力和外部关联；未知平台身份不造字段。当前设计无已知阻塞，进入具体开工复核：范围是公共生产组合、fresh/prepared/child 装配与 bootstrap、四 I14 消费、公共 capture/state 交接及单次封口，不是继续扩大 ARC 局部补丁。源码与真实运行尚未开始，不将纸上推演当验收。
+
+后续轨迹截取已推进到来源 exp25：exp23 的宿主 adapter 修改未进入实际冻结 runtime，负责人转而修改包内 layout fallback，exp25 仍处于 copy-helper/domain channel，未确认模型活动。该现场继续由原 owner 持有，本任务不消息介入或运行控制。

@@ -1,5 +1,7 @@
 # ARC 本地生成的启动边界
 
+2026-10-03 接续说明：以下 ARC 接缝方案已作为 `c2274d86` 局部实现，不能代表整体架构完成。用户要求以长期、根本正确重新审视后，采用本文末尾的架构修正；既有 [实验设施 HLD](../experiment-dx-review/design.md) 继续是整体职责依据。
+
 ## 问题与采用的判断
 
 本轮轨迹显示，存在且内容冻结的 SDK、runtime 或镜像没有自动取得正确用途。调用者反复手工组装通用 argv，把宿主解释器当 SDK、镜像内入口当宿主 SDK，漏掉 resource limits、完整 endpoint 或模型环境；这些错误在真实传包和新 attempt 后才暴露。Hosted 的同题并发约束又被扩展成全部生成场所的约束，既有 WSL/sfp7 执行设施未被正确采用。具体原错归 [调查](findings.md)，对话摘录归 [轨迹](trajectory.json)，不能把某一早期 running 回执当当前模型已启动。
@@ -29,3 +31,21 @@ ResourceEvidence 同样属于实际执行域。外层 Local runner ready 不代�
 实现需要在同一操作中覆盖未生产输入的计划、真实 SDK 和材料的生产/解析，以及实际模型环境和子容器服务组合。编译及现存材料离线操作按项目约定执行，不增加设施测试、模拟容器或 smoke。实际 Docker 与模型活动只采用来源负责人保存的真实原件；没有明确的对应执行版本或观察时保持未验，不能把新源码编译成功称为重现了真实启动。
 
 代码在 WorkSSD 分支 `feat/experiment-startup-dx` 隔离开发。主工作区的实验救火与文档改动保留原样；整合时只采用本任务增量。必要入口及操作方法更新其当前权威文档，不复制整个实验设计或把公共操作藏在一次性启动脚本。关键完成依据仍是减少原轨迹里的手工接线与传包后才发现的错误；完整打包、启动和热恢复耗时若未取得对照，不宣称已经验收提速。
+
+## 当前采用的架构修正
+
+独立 [证据调查](architecture-evidence.md) 和 [advisor 判决](architecture-judgment.md) 确认，问题不是原 HLD 缺少 controller/runner/资产/域职责，而是这些职责没有成为共同的实际入口。Fresh 的 `_assemble` 直接返回 workspace，prepared 才具备装配；variant 和 SDK wrapper 分别解释路径与服务。新轨迹中的服务透传、旧样本及父域路径问题均不能靠另一轮 wrapper 补字段收敛。
+
+本轮采用四项贯通合同：生产者输出独立定义组合，后端完成目标域装配，该 namespace 的公共 bootstrap 提供执行上下文，域权威完成 state 与唯一 writer 的交接。它们是现有组件的责任，不是四个新中心服务。具体字段及 caller 迁移在实施准备中收敛，不能先加 JSON 再保留原消费者旁路。
+
+定义组合直接引用 runtime、技能、variant 与设施支持资产；ZIP 和 SDK 自包含目录是交付投影，不再是所有场所内部的材料单位。组合改变只使实际依赖失效。装配记录 `reference + member + local_root`，保留原成员并组合其后缀；foreign root 是来源信息，不能拿来解析本域路径，也不能按 basename 猜成员。Store/retention 仍由控制面拥有，不要求容器访问控制宿主路径。
+
+Fresh 与 prepared 消费同一执行上下文：冻结定义、独立 state、派生输入、真实本域解释器/入口、服务 ready 及相应 receiver/sample binding。必要服务由本域 bootstrap 持续拥有和关闭，旧环境变量仅由同一上下文派生；variant 继续负责 Braid/Pi 配置、应用、native 状态和恢复兼容性，不自行猜另一套设施服务。Local 的读隔离与 Docker 的真实 RO 挂载不混称同一保证，Hosted 只暴露其实际交付/观测能力。
+
+同域热修复保留受管 state，关闭原入口及已登记 writer，取得一致切点与快照，替换变化定义，按恢复兼容性把写入权交给新 incarnation。Snapshot 和旧执行证据保持不可变，active state 不因新 attempt 必然完整复制成 prepared；跨域才执行必要输运。Hosted 不支持完整 checkpoint/hot resume 时明确 unsupported，应用 replay 不能填补该能力。ARC 子容器的关闭必须由实际 SDK 容器负责人确认，不能用外层 Local PID 替代。
+
+完整 workspace 只做一次权威封口，named output 使用同一 artifact 或成员关系；应用继续按独立交付合同发布。校验归可变源码冻结、跨域接收、状态 capture/repair 和入口装配边界，一次解析窗口复用同引用读回，删除下游重复全扫；保留需求身份、Git/SQLite 语义、传输完整性和唯一 writer，不增加永久信任缓存。
+
+上一轮保留 ARC 领域 compiler、角色区分、延迟生产、公开模型政策及实际传播核对、protocol2 只读检查；独立 child 服务代码由共同 bootstrap 替代。完成条件是生产、fresh、捕获和同域恢复的完整纵向闭环，并按打包/启动/热修复三条路径记录时间、哈希读取、复制/输运、峰值空间及人工接线。实施准备必须明确全部迁移和删除点，不以某一最新异常修复或编译成功结案。
+
+最新来源报告 exp23 仍消费冻结 Lab runtime 内的旧 adapter，宿主源码修复未生效，随后下沉到包内 layout fallback 并重新上传 exp25。这也属于组合及变更传播责任：设施代码与 SDK、runtime 的真实源码闭包必须进入生产依赖，修改只重产变化资产，目标装配记录实际消费版本。跳过父路径后回退 package identity 不能被解释为取得可恢复的 retained artifact relation；缺失仍明确暴露，不能借入口越过替代恢复证据。
