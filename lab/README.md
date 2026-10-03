@@ -8,10 +8,12 @@
     python3 -m lab doctor INPUT --environment PROFILE --json
     python3 -m lab build INPUT --environment PROFILE --directory EXPERIMENT
     python3 -m lab start EXPERIMENT --deployment PRIVATE_JSON
-    python3 -m lab status EXPERIMENT --json
+    python3 -m lab status EXPERIMENT
     python3 -m lab recover CHECKPOINT --intent INTENT --environment PROFILE --directory DERIVED
 
 其它动作及参数用 `python3 -m lab --help`、`python3 -m lab ACTION --help` 查询。控制、接续、来源导入的原件和重入条件归 [执行合同](exp/execution.md)，遥测和输运归 [制品合同](exp/artifacts.md)；`status` 建议不授予执行许可。
+
+交互查询先读默认的状态摘要；需要身份字段或自动消费时再用 `--json`，保存原件并定向提取相关字段。完整平台结果和历史列表不必每次铺入会话。
 
 路径约定：
 

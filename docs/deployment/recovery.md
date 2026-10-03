@@ -32,13 +32,15 @@ python3 -m lab import-source-stop --experiment EXPERIMENT --attempt ATTEMPT \
 
 ## 当前入口
 
-恢复前确认来源执行已停止、来源身份和 checkpoint/prepared 完整，再决定派生新 run、接续明确阶段或只做应用重放。当前命令如下：
+恢复前确认来源执行已停止、来源身份和 checkpoint/prepared 完整，再决定派生新 run、接续明确阶段或只做应用重放。`recover` 的输入必须是显式 checkpoint 目录，文件与只读核验方法见 [制品合同](../../lab/exp/artifacts.md)；普通 workspace ZIP 和 partial 平台导出不能直接代替它。当前命令如下：
 
 ```sh
 python3 -m lab recover /absolute/checkpoint \
   --intent /absolute/recovery-intent.json \
   --environment /absolute/environment.json \
   --directory /absolute/new-experiment
+python3 -m lab doctor /absolute/new-experiment \
+  --deployment /absolute/private-deployment.json --json
 python3 -m lab status /absolute/new-experiment --json
 python3 -m lab start /absolute/new-experiment \
   --deployment /absolute/private-deployment.json
@@ -46,7 +48,7 @@ python3 -m lab control /absolute/new-experiment ATTEMPT_ID stop \
   --request-id REQUEST_ID
 ```
 
-`recover` 只派生新材料，不停止来源、不启动模型；`start` 重新核对来源、授权、runtime、预算、deployment 和物理身份。v3 定义或 runtime 换版按 [制品合同](../../lab/exp/artifacts.md)声明兼容性与引用，不重复编排 producer 已完成的输运。控制动作必须沿冻结 controller/runner/backend 合同执行，未知效果先读回，不重发原请求。需要选择检查点、丢弃进度或改变模型/费用时，决定和损失写入所属 packet。
+`recover` 内部完成恢复定义的 compile/build，成功时已经发布新 experiment 和 prepared 输入，不需要再对该输出执行一次 build；失败时保留实际错误和半成品。它不停止来源、不启动模型；`start` 重新核对来源、授权、runtime、预算、deployment 和物理身份。v3 定义或 runtime 换版按 [制品合同](../../lab/exp/artifacts.md)声明兼容性与引用，不重复编排 producer 已完成的输运。控制动作必须沿冻结 controller/runner/backend 合同执行，未知效果先读回，不重发原请求。需要选择检查点、丢弃进度或改变模型/费用时，决定和损失写入所属 packet。
 
 <a id="官网监控"></a>
 ## 当前监控与重放

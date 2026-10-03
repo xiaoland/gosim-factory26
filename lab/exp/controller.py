@@ -456,7 +456,12 @@ def recover(source, intent_path, directory, *, environment):
     productions = intent.setdefault('productions', {})
     if name in productions:
         raise ValueError('recovery production is already declared')
-    checkpoint = read(source / 'harness-manifest.json')
+    try:
+        checkpoint = read(source / 'harness-manifest.json')
+    except FileNotFoundError as exc:
+        exc.add_note('recover SOURCE 必须是包含 harness-manifest.json 的显式 Harness checkpoint 目录；'
+                     '平台 workspace ZIP 或 partial 导出不能直接恢复。')
+        raise
     if checkpoint.get('kind') != 'factory26.harness.checkpoint':
         raise ValueError('recover SOURCE must be an explicit Harness checkpoint')
     productions[name] = {'producer': 'prepare', 'source': str(source),

@@ -12,7 +12,7 @@ Docker 的域 authority、容量和网络模式必须有保存的准入与物理
 
 ## 查询一项或多项实验
 
-`python3 -m lab status EXPERIMENT --json` 查询单个运行目录；也可传入 `factory26.exp.index` schema 1 文件。index 只声明需要投影的位置，路径相对 index 文件解析：
+`python3 -m lab status EXPERIMENT` 查询单个运行目录，默认呈现状态、阻塞、观察来源和下一动作的文本摘要。需要完整身份字段或程序消费时加 `--json`；也可传入 `factory26.exp.index` schema 1 文件。index 只声明需要投影的位置，路径相对 index 文件解析：
 
 ```json
 {"kind":"factory26.exp.index","schema_version":1,

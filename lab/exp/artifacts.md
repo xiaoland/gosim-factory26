@@ -10,6 +10,10 @@ telemetry 保存 stream、epoch、源序列、原始 protobuf、错误和封口�
 
 checkpoint/prepared 与来源停止证明分开发布，必须保存来源执行身份、实际路径和 OS/架构/runtime/logical root。缺少 Git/native/外链或连续停写证明时保持 partial；历史 schema 按原冻结合同解释，不用新布局追认完整恢复。
 
+`lab recover SOURCE` 消费显式 checkpoint 目录，其中 `harness-manifest.json` 的 kind 必须是 `factory26.harness.checkpoint`；当前 prepare 消费分离的 schema 3。平台下载的 workspace ZIP、普通 application 包和 partial 平台归档不是这个输入，缺少该 manifest 时不能补造它来绕过门控。manifest 存在也只满足格式入口，完整性仍由内容、定义资产和 acquisition 的实际读回决定。
+
+对明确的 checkpoint 可执行只读 `python3 submission/exp_checkpoint.py validate --source CHECKPOINT --artifact-store STORE`，保留 validation 和具体错误；STORE 是实际定义资产的解析位置。validate 不停止来源，也不授予恢复或启动许可。
+
 v3 定义换版通过 repair 的 `definition_assets` 声明已有 name、新 artifact reference、member 和可选解析 store；同一物理资产中的嵌套角色须保持一致引用与成员关系。`--artifact-store` 指定目标解析位置，prepare producer 按需传输并核验字节和实际装配；同 store 复用，不要求操作者重复 transfer。物理 store 不进入内容身份，不能用目录名或旧路径代替引用。
 
 目标保持同一 OS、architecture 和 logical run root，并明确 runtime identity。当前 runtime 换版要求 `bin/braid`、`native-managed.mjs` 和 Pi 的 package.json 与来源摘要一致，以保留原 Braid、native hook 和 Pi 协议；不能借此迁移会话协议。Local 不覆盖仍被旧定义占用的逻辑位置，Docker 可在独立 namespace 保持相同逻辑根。变更关系和实际 readback 保存到 prepared，prepared 不携带停止或启动许可。

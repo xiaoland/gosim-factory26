@@ -11,7 +11,7 @@
 
 | 记录类型 | 从哪里开始 | 下一层证据与限制 |
 | --- | --- | --- |
-| 新实验/attempt | `python3 -m lab status <experiment目录> --json` | saved execution、archive、telemetry、平台观察及原错；completed 不推断评分。 |
+| 新实验/attempt | `python3 -m lab status <experiment目录>`；需要完整字段时加 `--json` | saved execution、archive、telemetry、平台观察及原错；completed 不推断评分。 |
 | 旧实验外层 run | `python3 -m lab history <run目录>` | 旧 producer 原件，只读且不补新执行保证。 |
 | ARC/Factory 分析 | `python3 -m lab.analysis.factory show --run <run目录>` | 分别解释生成、部署、评分及已归档过程证据。 |
 | Factory 团队生成 | `python3 -m lab.analysis.factory show --run <输出/.factory26/id>` | braid.log、delivery.json、braid-state、native/manifest.json；使用显式路径，不依赖根 runs 的自动发现。 |
@@ -94,6 +94,8 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 `native/manifest.json` 将每个物理 session 与 provider、逻辑 group、工作项、turn、归档输入及内容哈希对应；被替换会话的用量仍计入。
 缺失证据保留身份及错误，不能用最新文件代替。
 退出时清理 Agent 与应用进程组；报告中的相对产物链接依赖本机保留的 run，不会随源码自动分发。
+
+历史分析中的 `application/`、解压副本或网站目录可能在归档后清理。引用不存在时，先沿所属 run 的 archive/artifact manifest、冻结 ZIP 和来源身份找仍保留的原件，区分派生副本缺失与原件丢失。确需恢复应用时，只从已核实来源提取到新的 WorkSSD 目录，保留来源与成员路径；它只是只读分析副本，不取得完整 checkpoint 或继续生成的身份。维护证据索引时链接保留的原件和提取方法，不把临时副本继续列为当前入口。
 
 `python3 -m lab.analysis.factory analyze --run <Factory生成目录>` 为每个原生会话分别导出 `analysis/<序号>-<来源指纹>/evidence-v4.zip`，保存 overview、模型 usage 和 provenance。
 来源指纹包含原生内容、实际 provider 和 exporter；缓存使用前核对原生清单与产物哈希。

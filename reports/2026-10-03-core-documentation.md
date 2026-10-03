@@ -15,12 +15,27 @@
 
 还清理了根目录只剩空目录的 `skills/`、`patches/` 树；有效技能仍在 `harness/skills/`，npm 补丁仍在 `harness/npm/patches/`。独立 variant 与冻结执行器的代码路径和身份没有为文档整理而迁移。
 
-九个主要入口的正文合计从约 222 KB 降至 56 KB，减少约 75%；这是阅读载荷的度量，迁出的必要内容仍在对应权威页或历史协议中。原始 handoff 按字节保留。检查覆盖 59 份核心文档、517 个相对链接及 67 个外部指入链接，文件和锚点均可达；实际 CLI 帮助、schema 与来源导入分支已定向核对，diff 格式检查通过。
+重组时九个主要入口的正文合计从约 222 KB 降至 56 KB，减少约 75%；这是阅读载荷的度量，迁出的必要内容仍在对应权威页或历史协议中。原始 handoff 按字节保留。当时检查覆盖 59 份核心文档、517 个相对链接及 67 个外部指入链接，文件和锚点均可达；实际 CLI 帮助、schema 与来源导入分支已定向核对，diff 格式检查通过。
 
 基线、迁移回执和检查明细位于 `runs/developer-experience/core-docs-20261003/`，由 Git 忽略。验证没有运行 Factory/Braid 测试、包 smoke、模型或 benchmark；现行能力中尚缺受管理 Console accessor 创建 CLI，手册明确使用已有合法 accessor、原容器只读或归档接入，没有杜撰创建步骤。
 
-按用户随后要求，新建 `gpt-6.1-sol / medium` 会话「核心文档独立验收」（`01a0ff80-9844-71e1-a1d9-3dacf487db9b`），从普通入口独立模拟迭代、实验准备、监控和热恢复。主会话提供结果要求和隔离演练授权，没有提供标准答案或证据路径；允许的产物目录为 `runs/developer-experience/fresh-session-acceptance-20261003/`。核心整理已提交为 `d6e282d4`，其它负责人的源码与任务修改保留。
+## 独立会话验收
 
-目前独立会话已实际读取 CLI 帮助、SVC 状态、两个实验的 status、monitor 与 doctor，并核对保存的恢复错误和 ZIP 元数据。它识别出 Hosted 不支持 pause/resume/checkpoint、旧暂停导出的 writer closure 未知且没有 Git 材料、A2 的保存平台状态与 controller 出生身份判断不同，以及 doctor 缺少私有 deployment 的阻塞。一次递归搜索产生约 581 KB 文件列表，一次 zsh 通配符没有匹配；据此补充了 projection 原件导航及未知进程身份的解释。
+按用户随后要求，新建「核心文档独立验收」（`01a0ff80-9844-71e1-a1d9-3dacf487db9b`），实际模型与推理配置核实为 `gpt-6.1-sol / medium`。它从普通入口独立选场景，不继承优化会话历史；主会话提供结果要求及隔离操作授权，没有提供首轮导航路径或标准答案。按仓库约定使用一个 advisor 处理迭代判断。核心整理已提交为 `d6e282d4`，首次导航补充为 `fcc87221`；验收针对变化中的真实工作区，未启动生成模型、评测或运行控制。
 
-四阶段验收尚未完成：独立会话申请执行只读 `ps -p 80211 -o pid=,lstart=,stat=`，应用沙箱返回待审批，主会话无法代为处理。该审批可以批准，也可以拒绝后保留 unknown；不应为完成演练绕过门控。待它继续完成离线准备及最终报告后，再判断整体通过，当前记录不是验收通过声明。
+| 阶段 | 实际操作与判断 | 验收范围 |
+| --- | --- | --- |
+| 协作迭代 | 找到 I14 reviewer 的独立候选、责任与原生接口，建议先验证完整用户旅程的发现及采用能力。 | 开发边界可定位；没有启动应用或证明 reviewer 的质量收益。 |
+| 实验准备 | 从真实 A2 材料创建显式演练 intent，compile 退出 0，execution_permission=false；doctor 保留 runtime 与私有引用缺失。 | 离线编译通过；build/start 未执行，不将材料准备当作执行就绪。 |
+| 监控 | 实际读取 status/monitor、三个连续 liveness 样本及六条有界原始事件，辨别 active、语义 unknown 和 resource_deferred。 | 保存事实消费通过；未重开采集器，未把工具活动、内存压力或 token 增长当成交付或 OOM kill。 |
+| 热恢复 | 核对旧 A 的 HTTP 404、来源停止及两个相同 ZIP；真实 partial payload 的 recover 退出 1，缺 checkpoint manifest。 | 正确拒绝无依据的保留进度恢复；没有可确认的完整 checkpoint，正向热恢复仍未验收。 |
+
+首轮耗时约 14 分 22 秒，其中只读 ps 从申请到返回花费 7 分 07 秒，占约一半；这不是四阶段演练必需的进程核实。其余约 7 分 15 秒包括入口阅读、材料判断、离线操作及报告，不等于纯命令执行时间。主会话有 20 次工具编排、0 次上下文压缩，本地累计记录约 200 万输入 token，其中约 186 万来自缓存，非缓存输入 137,384、输出 11,748；reasoning 已包含在输出中，不另加。这不含 advisor，也不是一次上下文大小或账单。
+
+演练暴露了一次约 581 KB 的递归路径列表、zsh 空通配符，以及首轮报告把 recover 后续写成再次 build 的错误。现已让普通查询先使用已有文本 status，沿 projection 的证据路径定向读原件；核心手册明确 checkpoint 目录、recover 内含 compile/build，以及 runtime 换版的兼容约束。缺 manifest 时，公共 recover 入口保留 FileNotFoundError、errno、路径与 traceback，并补充明确操作说明，不改变恢复门控。
+
+两处历史断链不能合并处理。Sheet 的展开 application 副本已清理，但终态 ZIP 仍在；独立会话实际重取最终 Git 提交 `4812a40400b55f593c061ae180c6a609e9a72400` 的五份业务源码，SHA256 与旧分析索引全部吻合。入口是 `runs/iteration13/i13-2-20261001/flash-sheet-score-analysis/evidence-index.json` 所绑定的终态 workspace ZIP，来源 member 为 `template/.factory26/20261001-074506-6e7af22b/braid-state/origin.git/`；冻结 agent.zip 不能代替最终应用。旧 Console reviewer 的原始 CLI/HTTP/UI 回执和现场已按清理记录删除，仅剩历史完成记述，不能独立复证，也不能用新运行的同名 PR 追认它。核心证据说明新增了派生副本清理后的导航原则，本轮未整理 tasks。
+
+功能演练中开发导航、离线准备和监控消费有条件通过；**首轮开发体验效率未通过验收**。它有搜索爆量、空通配符、非必要审批、失效证据入口和恢复步骤返工。校正轮耗时 5 分钟，最后回验约 99 秒，但二者已知道路径，不能作为冷启动提速证明。按用户补充，后续验收要分别观察定位、阅读/判断、实际操作、外部等待和返工，记录无收益绕路、截断与主会话提示，不能以流程结束、工具次数或单一总时长代替判断。
+
+完整 build/start、模型实际路由、评分、reviewer 质量收益和成功保留进度热恢复没有取得本轮实证。首轮、校正与最终回执分别保存在[独立演练目录](../runs/developer-experience/fresh-session-acceptance-20261003/)，原始缺口和失败不改写为成功。没有增加测试、探针、模拟设施或新索引系统。
