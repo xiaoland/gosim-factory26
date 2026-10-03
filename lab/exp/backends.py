@@ -252,13 +252,21 @@ def managed(target, binding, action, request_id, parameters=None):
     effect = value['effect']
     if effect['status'] == 'applied':
         return {**effect['physical'], 'authority_resource_id': resource_id} if effect.get('physical') else effect.get('result')
+    if action == 'cancel-reservation':
+        return admission.complete(target, resource_id, request_id, action, parameters, result={'no_execution_accepted': True})['effect']
     if action == 'reserve':
         return admission.complete(target, resource_id, request_id, action, parameters, result={'reserved': True})['effect']
     if not value.get('accepted_now'):
         if action in ('writer-open', 'writer-close', 'capture-begin', 'capture-end'):
             return admission.complete(target, resource_id, request_id, action, parameters, result={'effect': action})['effect']
         # Read back the precise promised effect, never reissue its physical call.
-        if action == 'create':
+        if action == 'discard':
+            absence = execute(target['endpoint'], ['inspect', binding['container_id']], check=False, capture_output=True, text=True, timeout=30)
+            if absence.returncode != 1 or 'No such object: ' + binding['container_id'] not in absence.stderr:
+                raise Blocked('pending discard is not proven removed; do not repeat removal')
+            observed = {'removed': True, 'birth': value['resource']['identity'], 'absence': {
+                'returncode': absence.returncode, 'stdout': absence.stdout, 'stderr': absence.stderr}}
+        elif action == 'create':
             argv = parameters['argv']
             if '--name' not in argv:
                 raise Blocked('pending create lacks a stable physical query name')
@@ -277,6 +285,18 @@ def managed(target, binding, action, request_id, parameters=None):
         return {**completed['effect']['physical'], 'authority_resource_id': resource_id}
 
     endpoint = target['endpoint']
+    if action == 'discard':
+        birth = exact_resource(target, binding)
+        started = birth['state'].get('StartedAt')
+        if birth['state'].get('Status') != 'created' or birth['state'].get('Running') or (started and not started.startswith('0001-')):
+            raise Blocked('pre-entry discard source is not an exact never-started object')
+        saved_birth = value['resource']['identity']
+        execute(endpoint, ['rm', binding['container_id']], check=True, capture_output=True, text=True, timeout=60)
+        absence = execute(endpoint, ['inspect', binding['container_id']], check=False, capture_output=True, text=True, timeout=30)
+        if absence.returncode != 1 or 'No such object: ' + binding['container_id'] not in absence.stderr:
+            raise Blocked('discard response has no exact independent object-absence evidence')
+        physical = {'removed': True, 'birth': saved_birth, 'absence': {'returncode': absence.returncode, 'stdout': absence.stdout, 'stderr': absence.stderr}}
+        return admission.complete(target, resource_id, request_id, action, parameters, physical=physical)['effect']['physical']
     if action in ('writer-open', 'writer-close', 'capture-begin', 'capture-end'):
         return admission.complete(target, resource_id, request_id, action, parameters, result={'effect': action})['effect']
     if action in ('create', 'volume-create'):
@@ -341,15 +361,17 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
     volume = prefix + '-execution'
     asset_volume = target.get('artifact_volume', 'exp-assets-' + canonical(endpoint['daemon_id'])[:24])
     rid = attempt['attempt_id']
+    inherited_state = deployment.get('state_binding')
+    workspace_id = inherited_state['holder_id'] if inherited_state else rid
     labels = {'io.factory26.exp.attempt': rid, 'io.factory26.exp.incarnation': incarnation,
               'io.factory26.exp.experiment': attempt['experiment_id']}
     owner = {'authority_resource_id': rid}
-    managed(target, owner, 'reserve', request['request_id'] + '--reserve', {'role': 'execution', 'workspace': rid})
+    managed(target, owner, 'reserve', request['request_id'] + '--reserve', {'role': 'execution', 'workspace': workspace_id, 'holder_generation': (inherited_state or {}).get('generation')})
     managed(target, owner, 'volume-create', request['request_id'] + '--workspace-volume',
             {'argv': ['volume', 'create', *[item for k, v in labels.items() for item in ('--label', k + '=' + v)], volume]})
     helper_rid = rid + '--store-owner'
     helper_binding = {'authority_resource_id': helper_rid}
-    managed(target, helper_binding, 'reserve', request['request_id'] + '--owner-reserve', {'role': 'copy', 'workspace': rid})
+    managed(target, helper_binding, 'reserve', request['request_id'] + '--owner-reserve', {'role': 'copy', 'workspace': None if inherited_state else workspace_id, 'parent_execution_resource': rid, 'preparation_request': request['request_id']})
     managed(target, helper_binding, 'volume-create', request['request_id'] + '--assets-volume',
             {'argv': ['volume', 'create', '--label', 'io.factory26.exp.asset-daemon=' + endpoint['daemon_id'], asset_volume]})
     asset = json.loads(execute(endpoint, ['volume', 'inspect', asset_volume], check=True, capture_output=True, text=True, timeout=30).stdout)[0]
@@ -364,7 +386,8 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
     helper = managed(target, helper, 'start', request['request_id'] + '--owner-start')
     helper['started_at'] = helper['state']['StartedAt']
     atomic(directory / 'store-helper.json', helper)
-    managed(target, helper, 'writer-open', request['request_id'] + '--owner-writer-open')
+    if not inherited_state:
+        managed(target, helper, 'writer-open', request['request_id'] + '--owner-writer-open')
     execute(endpoint, ['cp', deployment['runtime']['source'], helper['container_id'] + ':/execution/owner-runtime'],
             check=True, capture_output=True, text=True, timeout=1800)
     _owner_exec(target, helper, [target.get('python', 'python3'), '-c',
@@ -378,10 +401,11 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
     input_refs = {'executor': code, **attempt['job']['inputs']}
     prepared_descriptor = attempt['job'].get('prepared_descriptor')
     if prepared_descriptor:
-        if prepared_descriptor.get('schema_version') != 3:
+        if prepared_descriptor.get('schema_version') not in (3,4):
             raise Blocked('Docker prepared execution requires separated v3 state and definition relations')
         for definition in prepared_descriptor['definition_assets']:
             input_refs['definition--' + definition['name']] = definition['artifact']
+    input_retentions = {}
     for name, ref in input_refs.items():
         expected_location = attempt['job'].get('input_locations', {}).get(name)
         if expected_location and (expected_location.get('reference') != ref or expected_location.get('domain_identity', {}).get('daemon_id') != endpoint['daemon_id'] or expected_location.get('volume_id') != asset_volume or expected_location.get('store_root') != '/assets'):
@@ -401,13 +425,17 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
             store_action(directory, 'transfer', {'source_store': '/execution/staging', 'reference': ref,
                          'request_id': rid + '--input--' + name, 'consumer': rid})
         hold = store_action(directory, 'retain', {'reference': ref, 'consumer': rid, 'purpose': 'execution-input', 'request_id': rid + '--retain--' + name})
-        _owner_exec(target, helper, [target.get('python', 'python3'), '-c', 'from pathlib import Path; p=Path(' + repr('/execution/payload/inputs/' + name) + '); p.symlink_to(' + repr('/assets/' + ref['artifact_id'] + '/payload') + ') if not p.exists() else None'])
+        input_retentions[canonical(ref)] = hold
+        selected_member = member(attempt['job'].get('input_members', {}).get(name, '.'))
+        _owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', 'from lab.exp.artifacts import _manifest,plain_member_contents; import json; plain_member_contents(_manifest("/assets",json.loads(' + repr(json.dumps(ref)) + ')),' + repr(selected_member) + ')'])
+        selected_root = '/assets/' + ref['artifact_id'] + '/payload' + ('' if selected_member == '.' else '/' + selected_member)
+        _owner_exec(target, helper, [target.get('python', 'python3'), '-c', 'from pathlib import Path; p=Path(' + repr('/execution/payload/inputs/' + name) + '); p.symlink_to(' + repr(selected_root) + ') if not p.exists() else None'])
     _owner_exec(target, helper, [target.get('python', 'python3'), '-c', "from pathlib import Path;[Path('/execution/payload/'+p).mkdir(exist_ok=True) for p in ('workspace','requests','inputs')]"])
     payload = dict(attempt)
     payload['artifact_store'] = '/assets'
     payload['job'] = dict(attempt['job'], inputs=attempt['job']['inputs'])
     atomic(directory / 'payload-attempt.json', payload)
-    private = dict(deployment, runtime={'python': target.get('python', 'python3'), 'source': '/assets/' + code['artifact_id'] + '/payload',
+    private = dict(deployment, input_retentions=input_retentions, runtime={'python': target.get('python', 'python3'), 'source': '/assets/' + code['artifact_id'] + '/payload',
                                        'identity': target.get('runtime_identity')})
     if deployment.get('credential_file'):
         execute(endpoint, ['cp', deployment['credential_file'], helper['container_id'] + ':/execution/payload/credentials.json'],
@@ -415,7 +443,7 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
         private['credential_file'] = '/execution/credentials.json'
     atomic(directory / 'payload-deployment.json', private)
     placements, definition_placements = [], []
-    if attempt['job'].get('prepared'):
+    if attempt['job'].get('prepared') and not (prepared_descriptor or {}).get('state_binding'):
         manifest = prepared_descriptor
         if manifest is None:
             raise Blocked('prepared execution requires the controller resolved definition descriptor')
@@ -450,6 +478,27 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
         private['layout_bindings'] = placements
         private['definition_bindings'] = definition_placements
         atomic(directory / 'payload-deployment.json', private)
+    if attempt['job'].get('definition') and not attempt['job'].get('prepared'):
+        definition_ref = attempt['job']['definition']
+        script = 'import json;from pathlib import Path;from lab.exp.definitions import resolve;v=json.loads(Path(' + repr('/assets/' + definition_ref['artifact_id'] + '/payload/definition.json') + ').read_text());print(json.dumps(resolve(v,"/assets",' + repr(rid) + ')))'
+        roles = json.loads(_owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', script]).stdout)
+        base = '/execution/definitions/' + workspace_id
+        for role in roles:
+            definition_placements.append({**role, 'logical_root': base + '/' + role['role'], 'access': 'read-only',
+                'daemon_source': str(Path(asset['Mountpoint']) / Path(role['local_root']).relative_to('/assets'))})
+        private['definition_layout'] = {'base': base, 'kind': 'daemon-readonly-role-mounts', 'roles': definition_placements}
+    elif prepared_descriptor and prepared_descriptor.get('state_binding'):
+        from submission.exp_checkpoint import definition_mount_roots
+        for definition in definition_mount_roots(prepared_descriptor['definition_assets'], prepared_descriptor['state_root']):
+            remote = '/assets/' + definition['artifact']['artifact_id'] + '/payload'
+            if definition['member'] != '.':
+                remote += '/' + member(definition['member'])
+            definition_placements.append({**definition, 'role': definition['name'], 'reference': definition['artifact'],
+                'access': 'read-only', 'daemon_source': str(Path(asset['Mountpoint']) / remote.removeprefix('/assets/'))})
+        private['definition_layout'] = prepared_descriptor['layout'].get('definition_layout')
+    if definition_placements:
+        private['definition_bindings'] = definition_placements
+        atomic(directory / 'payload-deployment.json', private)
     for source_name, target_name in (('payload-attempt.json', 'attempt.json'), ('payload-deployment.json', 'deployment.json'), ('binding.json', 'binding.json')):
         execute(endpoint, ['cp', str(directory / source_name), helper['container_id'] + ':/execution/payload/' + target_name],
                 check=True, capture_output=True, text=True, timeout=60)
@@ -468,10 +517,55 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
         if attempt['job']['limits'].get(field):
             args += [flag, str(attempt['job']['limits'][field])]
     args += ['--entrypoint', target.get('python', 'python3'), target['image_id'], '-B', '-m', 'lab.exp.runner', 'internal_payload', '/execution']
-    managed(target, helper, 'writer-close', request['request_id'] + '--owner-writer-close')
+    if not inherited_state:
+        managed(target, helper, 'writer-close', request['request_id'] + '--owner-writer-close')
+    if inherited_state:
+        locator = inherited_state.get('selected_state', inherited_state['locator'])
+        logical = prepared_descriptor['state_root']
+        args[args.index('--env'):args.index('--env')] = ['--mount', f"type=volume,src={locator['volume']},dst={logical},volume-subpath={member(locator['subpath'])}"]
+        private['layout_bindings'] = [{'logical_root': logical, 'member': 'run', 'subpath': locator['subpath'], 'volume': locator['volume'], 'access': 'read-write'}]
     resource = managed(target, owner, 'create', request['request_id'] + '--create', {'argv': args})
     resource.update(volume=volume, artifact_volume=asset_volume, daemon_id=endpoint['daemon_id'])
     atomic(directory / 'resource.json', record('resource', **resource))
+    from . import state
+    writer = {'resource_id': rid, 'attempt_id': rid, 'incarnation': incarnation}
+    if inherited_state:
+        state_binding = {**inherited_state, 'writer': writer}
+    else:
+        has_definition = bool(attempt['job'].get('definition'))
+        state_subpath = 'payload/workspace/.factory26/' + rid if has_definition else 'payload/workspace'
+        logical_root = '/execution/workspace/.factory26/' + rid if has_definition else '/execution/workspace'
+        state_binding = record('state-binding', holder_id=workspace_id, generation=1, writer=writer,
+            authority={'kind': 'docker', 'target': target, 'workspace': workspace_id},
+            domain_identity={'kind': 'docker', 'daemon_id': endpoint['daemon_id'], 'volume_id': volume},
+            locator={'kind': 'docker-volume', 'volume': volume, 'subpath': state_subpath, 'logical_root': logical_root, 'workspace_subpath': 'payload/workspace', 'workspace_logical_root': '/execution/workspace', 'metadata_subpath': 'payload', 'runtime_subpath': 'owner-runtime'},
+            source_attempt_directory=str(directory.resolve()), volume_birth=admission.query(target, rid)['resource']['volume'])
+        state.initialize(state_binding, writer, {'protocol': 'managed-writers-v1',
+            'entry_contract': 'docker-cgroup-terminal-v1'}, request['request_id'] + '--state-initialize')
+    if inherited_state:
+        state.handoff_for_execution(state_binding, writer, {'holder_id': workspace_id,
+            'generation': state_binding['generation'], 'workspace': prepared_descriptor['state_root']},
+            request['request_id'] + '--handoff')
+    if inherited_state:
+        state_binding = {key: value for key, value in state_binding.items() if key not in ('capture_source', 'outer_relation')}
+        state_binding.update(source_attempt_directory=str(directory.resolve()), execution_resource=resource,
+            capture_layout={'workspace': {'volume':locator['volume'], 'subpath':locator['subpath'], 'logical_root':logical},
+                            'state': {'volume':locator['volume'], 'subpath':locator['subpath'], 'logical_root':logical},
+                            'metadata': {'volume':volume,'subpath':'payload'},
+                            'code': {'volume':volume,'subpath':'owner-runtime'}})
+    state_permit = record('state-permit', holder_id=workspace_id, generation=state_binding['generation'], writer=writer,
+        resource={key: resource[key] for key in ('container_id', 'created', 'labels')},
+        holder_readback=state.query(state_binding)['holder'], request_id=request['request_id'] + '--state-permit')
+    deployment['state_binding'] = state_binding
+    deployment['state_permit'] = state_permit
+    private['state_binding'] = state_binding
+    private['state_permit'] = state_permit
+    private['namespace'] = {'kind': 'docker', 'daemon_id': endpoint['daemon_id'], 'container_id': resource['container_id'],
+                            'created': resource['created'], 'labels': resource['labels']}
+    atomic(directory / 'deployment.json', deployment)
+    atomic(directory / 'payload-deployment.json', private)
+    execute(endpoint, ['cp', str(directory / 'payload-deployment.json'), helper['container_id'] + ':/execution/payload/deployment.json'],
+            check=True, capture_output=True, text=True, timeout=60)
     return resource
 
 
@@ -479,38 +573,66 @@ def _payload_workspace(directory):
     """Use the same physical run-state mapping for execution, outputs and export."""
     deployment = read(Path(directory) / 'payload-deployment.json')
     mapping = next((row for row in deployment.get('layout_bindings', []) if row['member'] == 'run'), None)
+    if mapping and mapping.get('volume') and mapping['volume'] != read(Path(directory) / 'resource.json')['volume']:
+        return '/held-state/' + member(mapping['subpath'])
     return '/execution/' + member(mapping['subpath']) if mapping else '/execution/payload/workspace'
 
 
-def collect_named_outputs(directory):
-    """Publish named content in the daemon store, without exporting the entire execution domain."""
+def collect_named_outputs(directory, capture_helper):
+    """Seal once in the daemon through a closed-state, read-only capture owner."""
     directory = Path(directory)
     attempt, resource = read(directory / 'attempt.json'), read(directory / 'resource.json')
     target = attempt['job']['backend']
     physical = exact_resource(target, resource)
     if physical['state'].get('Status') not in ('exited', 'dead'):
         raise Blocked('output publication requires exact physical terminality')
-    workspace = _payload_workspace(directory)
-    refs, missing = {}, []
-    for output in attempt['job'].get('outputs', []):
-        output_path = workspace + '/' + member(output['path'])
-        script = 'from pathlib import Path;root=Path(' + repr(workspace) + ');p=Path(' + repr(output_path) + ');\nif p.is_symlink() or not p.resolve().is_relative_to(root.resolve()):\n raise ValueError("output escapes workload workspace")\nprint("true" if p.exists() else "false")'
-        exists = json.loads(_owner_exec(target, read(directory / 'store-helper.json'), [target.get('python', 'python3'), '-B', '-c', script]).stdout)
-        if not exists:
-            missing.append(output['name'])
-            continue
-        ref = store_action(directory, 'publish', {'source': workspace + '/' + member(output['path']),
-                           'type': output['type'], 'provenance': {'attempt_id': attempt['attempt_id'], 'output': output['name']},
-                           'request_id': attempt['attempt_id'] + '--output--' + canonical(output['name'])[:24], 'consumer': attempt['attempt_id'], 'purpose': 'producer-output'})
-        refs[output['name']] = ref
-    result = None
-    if attempt['job'].get('result_path'):
-        result_path = workspace + '/' + member(attempt['job']['result_path'])
-        script = 'from pathlib import Path;root=Path(' + repr(workspace) + ');p=Path(' + repr(result_path) + ');\nif p.is_symlink() or not p.resolve().is_relative_to(root.resolve()):\n raise ValueError("result escapes workload workspace")\nprint(p.read_text() if p.is_file() else "null")'
-        result = json.loads(_owner_exec(target, read(directory / 'store-helper.json'), [target.get('python', 'python3'), '-B', '-c', script]).stdout)
-    atomic(directory / 'outputs.json', record('named-outputs', attempt_id=attempt['attempt_id'], artifacts=refs, result=result, missing_outputs=missing,
-          locations={name: {'reference': ref, 'domain_identity': {'kind': 'docker', 'daemon_id': target['endpoint']['daemon_id']},
-                     'volume_id': resource['artifact_volume'], 'store_root': '/assets'} for name, ref in refs.items()}, sealed_at=time.time()))
+    receipt = read(directory / 'execution.json')
+    from . import state
+    helper_record = require(read(directory / 'capture-helper.json'), 'capture-helper')
+    holder = state.query(helper_record['holder'])['holder']
+    if (helper_record['binding']['container_id'] != capture_helper['container_id']
+            or helper_record['capture'] != holder.get('capture')):
+        raise Blocked('terminal helper no longer owns the actual capture lease')
+    acquisition = state.capture_acquisition(helper_record['holder'], holder)
+    script = r'''import json,sys
+from pathlib import Path
+from lab.exp.core import atomic,read
+from lab.exp.artifacts import copy_file,allocate_scratch
+from lab.exp.runner import _seal_outputs,_archive
+payload=Path(sys.argv[3])
+attempt=read(payload/'attempt.json')
+receipt=json.loads(sys.argv[1])
+if read(payload/'binding.json')['incarnation_id'] != receipt['incarnation_id']:
+ raise ValueError('terminal capture incarnation differs from payload')
+directory=allocate_scratch('/assets','captures/'+attempt['attempt_id'])
+for name in ('attempt.json','binding.json','assembly.json','stdout.log','stderr.log','services.json','ready.json','external-resources.json','resource-evidence-seal.json'):
+ source=payload/name
+ if source.is_file() and not (directory/name).exists():copy_file(source,directory/name)
+for name in ('telemetry','process-evidence','service-errors'):
+ source=payload/name
+ if source.exists() and not (directory/name).exists():(directory/name).symlink_to(source,target_is_directory=source.is_dir())
+atomic(directory/'execution.json',receipt)
+refs=_seal_outputs(directory,attempt,receipt,physical_workspace=sys.argv[2],acquisition=json.loads(sys.argv[4]))
+refs=_archive(directory,attempt,receipt)
+facts=read(directory/'outputs.json')
+facts.update(artifacts=refs,result=receipt.get('result'))
+atomic(directory/'outputs.json',facts)
+print(json.dumps(facts))
+'''
+    facts = json.loads(_owner_exec(target, capture_helper,
+        [target.get('python', 'python3'), '-B', '-c', script, json.dumps(receipt),
+         capture_helper['capture_paths']['workspace'], capture_helper['capture_paths']['metadata'], json.dumps(acquisition)]).stdout)
+    if facts['attempt_id'] != attempt['attempt_id'] or facts['incarnation_id'] != receipt['incarnation_id']:
+        raise Blocked('daemon terminal publication belongs to another execution')
+    refs = facts['artifacts']
+    facts['locations'] = {name: {'reference': ref,
+        'domain_identity': {'kind': 'docker', 'daemon_id': target['endpoint']['daemon_id']},
+        'volume_id': resource['artifact_volume'], 'store_root': '/assets'} for name, ref in refs.items()}
+    facts['workspace_snapshot']['location'] = {
+        'reference': facts['workspace_snapshot']['reference'],
+        'domain_identity': {'kind': 'docker', 'daemon_id': target['endpoint']['daemon_id']},
+        'volume_id': resource['artifact_volume'], 'store_root': '/assets'}
+    atomic(directory / 'outputs.json', facts)
     return refs
 
 
@@ -711,10 +833,51 @@ def finish_docker(directory):
     directory = Path(directory)
     attempt, resource = read(directory / 'attempt.json'), read(directory / 'resource.json')
     target = attempt['job']['backend']
-    admission.reconcile(target, resource['authority_resource_id'], attempt['attempt_id'] + '--release', domain_observation(target, resource))
+    if admission.query(target, resource['authority_resource_id'])['resource']['phase'] != 'released':
+        admission.reconcile(target, resource['authority_resource_id'], attempt['attempt_id'] + '--release', domain_observation(target, resource))
     helper = read(directory / 'store-helper.json')
+    if admission.query(target, helper['authority_resource_id'])['resource']['phase'] == 'released':
+        return
     control_resource(target, helper, 'stop', request_id=attempt['attempt_id'] + '--owner-stop')
     admission.reconcile(target, helper['authority_resource_id'], attempt['attempt_id'] + '--owner-release', domain_observation(target, helper))
+
+
+def export_terminal_assets(directory, receipt):
+    """Explicitly receive sealed assets; never read the active execution volume."""
+    directory = Path(directory)
+    attempt = read(directory / 'attempt.json')
+    snapshot = receipt['workspace_snapshot']
+    location = snapshot['location']
+    selected = [(ref, receipt['output_locations'][name]) for name, ref in receipt['artifacts'].items()]
+    selected.append((snapshot['reference'], location))
+    for row in snapshot.get('capabilities', {}).get('definitions', []):
+        ref = row.get('reference') or row['artifact']
+        selected.append((ref, {**location, 'reference': ref}))
+    received = {}
+    for ref, origin in selected:
+        key = canonical(ref)
+        if key not in received:
+            export_named(directory, ref, origin, attempt['artifact_store'])
+            received[key] = {'reference': ref, 'source': origin, 'store': str(attempt['artifact_store'])}
+    from .artifacts import retain
+    consumer = attempt['attempt_id']
+    local_binding = {**snapshot, 'store': str(attempt['artifact_store']),
+        'retention': retain(attempt['artifact_store'], snapshot['reference'], consumer,
+            'exported-workspace', 'export-workspace-' + canonical([consumer, snapshot['reference']])[:32])}
+    definitions = []
+    for row in snapshot.get('capabilities', {}).get('definitions', []):
+        ref = row.get('reference') or row['artifact']
+        definitions.append({**row, 'store': str(attempt['artifact_store']),
+            'retention': retain(attempt['artifact_store'], ref, consumer, 'exported-definition',
+                'export-definition-' + canonical([consumer, ref])[:32])})
+    local_binding['capabilities'] = {**snapshot.get('capabilities', {}), 'definitions': definitions}
+    value = record('export', status='preserved', source=read(directory / 'resource.json'),
+        mode='sealed-asset-relations', assets=list(received.values()),
+        workspace_snapshot=local_binding,
+        exported_at=time.time())
+    # The immutable references are received; no mutable workspace installation is claimed.
+    atomic(directory / 'export.json', value)
+    return value
 
 
 def export_named(source_attempt_dir, reference, location, target_store):
@@ -849,3 +1012,488 @@ def import_docker_source_stop(birth, status, writers, output, identity_output, a
     atomic(identity_output, source)
     atomic(output, value)
     return value
+
+
+def managed_state(binding, action, request_id, parameters=None):
+    """Use the workspace's original domain authority, including during recovery."""
+    from . import state
+    return state.action(binding, action, request_id, parameters or {})
+
+
+def close_state(binding, request_id, *, grace=10):
+    """Close the accepted writer set by exact births; unknown actions retain the lease.
+
+    This operation covers the holder's maintained launcher contract. It does not
+    infer coverage from process groups, cwd scans or disappearance of one parent.
+    """
+    from . import state
+    space = state.query(binding)
+    holder = space['holder']
+    if holder['phase'] != 'transfer-pending':
+        raise Blocked('writer shutdown requires the accepted state transfer intent')
+    authority = binding['authority']
+    if authority['kind'] == 'docker':
+        target = authority['target']
+        resources = admission.query(target)['resources']
+        for rid in holder['closing_writers']:
+            row = resources.get(rid)
+            if not row or row.get('pending'):
+                raise Blocked('writer birth/action unresolved: ' + rid)
+            if row['phase'] == 'released' and (row.get('disposal') or row.get('cancelled_reservation')):
+                continue
+            if not row.get('identity'):
+                raise Blocked('writer birth unresolved: ' + rid)
+            physical = {**row['identity'], 'authority_resource_id': rid}
+            current = exact_resource(target, physical)
+            if current['state'].get('Status') == 'created' and current['state'].get('StartedAt','').startswith('0001-'):
+                if rid in state.query(binding).get('writers', []):
+                    managed(target, physical, 'writer-close', request_id + '--close--' + rid)
+                managed(target, physical, 'discard', request_id + '--discard--' + rid, {'volumes_preserved': True})
+                continue
+            if current['state'].get('Status') not in ('exited', 'dead'):
+                managed(target, physical, 'stop', request_id + '--stop--' + rid, {'grace': grace})
+            # Terminal readback is registered even for naturally completed writers.
+            if row['phase'] != 'released':
+                managed(target, physical, 'writer-close', request_id + '--close--' + rid)
+                observation = domain_observation(target, physical)
+                admission.reconcile(target, rid, request_id + '--terminal--' + rid, observation)
+    elif authority['kind'] == 'local':
+        registry = read(Path(authority['root']) / 'state-registry.json')
+        for rid in reversed(holder['closing_writers']):
+            row = registry['resources'].get(rid)
+            if not row or row.get('pending') or not row.get('identity'):
+                raise Blocked('registered Local writer birth is unresolved: ' + rid)
+            physical = row['identity']
+            status = process_state(physical)
+            if status == 'unknown':
+                raise Blocked('Local writer physical birth cannot be read back: ' + rid)
+            if status == 'alive':
+                os.kill(physical['pid'], signal.SIGTERM)
+                deadline = time.monotonic() + grace
+                while process_state(physical) == 'alive' and time.monotonic() < deadline:
+                    time.sleep(.1)
+                if process_state(physical) == 'alive':
+                    os.kill(physical['pid'], signal.SIGKILL)
+                deadline = time.monotonic() + grace
+                while process_state(physical) == 'alive' and time.monotonic() < deadline:
+                    time.sleep(.1)
+            if process_state(physical) != 'lost':
+                raise Blocked('Local writer exact terminal effect remains unknown: ' + rid)
+            state.register_writer(binding, rid, row['incarnation'], physical, closed=True,
+                shutdown={'closed': True, 'physical': physical, 'contract': holder['coverage']['entry_contract'],
+                          'effect': 'exact-process-terminal', 'request_id': request_id, 'observed_at': time.time()})
+    else:
+        raise Blocked('backend has no maintained managed writer shutdown contract')
+    return state.closure(binding)
+
+
+def capture_helper(directory, state_binding, request_id, *, repair=False, assets_only=False):
+    """Separate capture owner: state RO, published store RW, private scratch RW."""
+    from . import state
+    directory = Path(directory)
+    holder = state.query(state_binding)['holder']
+    capture = holder.get('capture')
+    if not assets_only and (not capture or holder['phase'] not in ('capturing', 'snapshot-sealed', 'repairing', 'repaired')):
+        raise Blocked('capture helper requires the independent holder lease')
+    authority = state_binding['authority']
+    if authority['kind'] != 'docker':
+        raise Blocked('capture helper is a daemon-domain operation')
+    target = authority['target']
+    resource = read(directory / 'resource.json') if (directory / 'resource.json').exists() else (state_binding.get('execution_resource') or {})
+    volume = holder['locator'].get('volume') or resource.get('volume')
+    if not volume:
+        raise Blocked('source execution volume has no actual managed binding')
+    rid = identifier(request_id + '--capture-helper')
+    owner = {'authority_resource_id': rid}
+    managed(target, owner, 'reserve', request_id + '--reserve', {
+        'role': 'copy', 'workspace': None if assets_only else authority['workspace'], 'holder_generation': holder['generation'],
+        'state_access': 'repair' if repair else 'readonly', 'capture_owner': capture['owner'] if capture and not assets_only else None, 'capture_token': capture['token'] if capture and not assets_only else None})
+    asset_volume = target.get('artifact_volume', 'exp-assets-' + canonical(target['endpoint']['daemon_id'])[:24])
+    managed(target, owner, 'volume-create', request_id + '--assets-volume', {'argv': ['volume','create','--label','io.factory26.exp.asset-daemon=' + target['endpoint']['daemon_id'], asset_volume]})
+    asset_birth = json.loads(execute(target['endpoint'], ['volume','inspect',asset_volume], check=True,capture_output=True,text=True,timeout=30).stdout)[0]
+    if (asset_birth.get('Labels') or {}).get('io.factory26.exp.asset-daemon') != target['endpoint']['daemon_id']:
+        raise Blocked('capture asset volume is not bound to the actual daemon')
+    expected_volume = state_binding.get('volume_birth')
+    if expected_volume:
+        current_volume = json.loads(execute(target['endpoint'], ['volume', 'inspect', volume], check=True, capture_output=True, text=True, timeout=30).stdout)[0]
+        if any(current_volume.get(key) != expected_volume.get(key) for key in ('Name', 'CreatedAt', 'Labels')):
+            raise Blocked('state volume actual birth changed; original holder cannot redirect')
+    metadata_volume = resource.get('volume') or state_binding['locator'].get('metadata_volume') or volume
+    metadata_path = '/execution/' + member(state_binding['locator'].get('metadata_subpath', 'payload'))
+    runtime_path = '/execution/' + member(state_binding['locator'].get('runtime_subpath', 'owner-runtime'))
+    state_prefix = '/execution/' if metadata_volume == volume else '/held-state/'
+    workspace_path = state_prefix + member(state_binding['locator'].get('workspace_subpath', 'payload/workspace'))
+    state_path = state_prefix + member(state_binding['locator']['subpath'])
+    layout = state_binding.get('capture_layout')
+    if layout:
+        if layout['metadata']['volume'] != metadata_volume or layout['workspace']['volume'] != volume or layout['state']['volume'] != volume:
+            raise Blocked('current capture layout differs from admitted volume bindings')
+        workspace_path = state_prefix + member(layout['workspace']['subpath'])
+        state_path = state_prefix + member(layout['state']['subpath'])
+        metadata_path = '/execution/' + member(layout['metadata']['subpath'])
+        runtime_path = '/execution/' + member(layout['code']['subpath'])
+    source_binding = state_binding.get('capture_source')
+    records = {}
+    if source_binding:
+        namespace = source_binding['namespace']
+        source_resource = state_binding.get('execution_resource') or admission.query(target, holder.get('prior_writer', holder.get('writer'))['resource_id'])['resource']['identity']
+        if namespace['container_id'] != source_resource['container_id'] or namespace['created'] != source_resource['created'] or source_binding['workspace']['volume'] != volume:
+            raise Blocked('capture source namespace/volume differs from its admitted birth')
+        workspace_path = state_prefix + member(source_binding['workspace']['subpath'])
+        state_path = state_prefix + member(source_binding.get('state_member', source_binding['workspace']['subpath']))
+        runtime_path = state_prefix + member(source_binding['executor_code']['subpath'])
+        records = {name: state_prefix + member(relative) for name, relative in source_binding.get('records', {}).items() if name in ('assembly','context','result','source_binding')}
+        metadata_path = None
+    name = 'exp-capture-' + canonical([authority['workspace'], request_id])[:24]
+    args = ['create', '--name', name, '--restart', 'no', '--network', 'none', '--user', '0',
+            '--memory', '512m', '--pids-limit', '64', '--label', 'io.factory26.exp.attempt=' + rid,
+            '--label', 'io.factory26.exp.role=copy', '--mount', f'type=volume,src={metadata_volume},dst=/execution' + ('' if repair and metadata_volume == volume else ',readonly'),
+            '--mount', f'type=volume,src={asset_volume},dst=/assets', '--tmpfs', '/capture:rw',
+            '--env', 'PYTHONPATH=' + runtime_path, '--entrypoint', target.get('python', 'python3'),
+            target['image_id'], '-B', '-c', 'import time;time.sleep(2147483647)']
+    if metadata_volume != volume:
+        args[args.index('--env'):args.index('--env')] = ['--mount', f'type=volume,src={volume},dst=/held-state' + ('' if repair else ',readonly')]
+    if not assets_only:
+        locator = holder['locator']
+        logical = locator.get('logical_root')
+        if logical and logical != '/execution/' + member(locator['subpath']):
+            args[args.index('--env'):args.index('--env')] = ['--mount',
+                f"type=volume,src={volume},dst={logical},volume-subpath={member(locator['subpath'])}" + ('' if repair else ',readonly')]
+    physical = managed(target, owner, 'create', request_id + '--create', {'argv': args})
+    physical = managed(target, physical, 'start', request_id + '--start')
+    physical['started_at'] = physical['state']['StartedAt']
+    physical['capture_paths'] = {'workspace': workspace_path, 'state': state_path, 'metadata': metadata_path, 'records': records, 'code': runtime_path, 'store': '/assets'}
+    atomic(directory / 'capture-helper.json', record('capture-helper', binding=physical,
+        holder=state_binding, capture=capture, request_id=request_id, state_access='repair' if repair else 'readonly',
+        store_root='/assets', scratch_root='/capture'))
+    return physical
+
+
+def close_capture_helper(target, physical, request_id):
+    stopped = managed(target, physical, 'stop', request_id + '--stop', {'grace': 10})
+    return admission.reconcile(target, physical['authority_resource_id'], request_id + '--release',
+                               domain_observation(target, stopped))
+
+
+def prepare_in_domain(selection, output, store=None):
+    """Repair under the retained capture lease; transport only small metadata."""
+    from . import state
+    from submission.exp_checkpoint import prepare
+    binding = selection['state_binding']
+    holder = state.query(binding)['holder']
+    if holder['phase'] != 'repairing':
+        raise Blocked('domain preparation needs the original repairing capture lease')
+    if binding['authority']['kind'] == 'local':
+        return prepare(selection['source'], output, selection['target'], selection['repair'],
+                       artifact_store=store, state_binding=binding)
+    resolver = read(Path(selection['source']) / 'domain-resolver.json')
+    directory = Path(binding['source_attempt_directory']).resolve(strict=True)
+    request_id = holder['repair']['request_id'] + '--producer'
+    helper = capture_helper(directory, binding, request_id, repair=True)
+    target = binding['authority']['target']
+    script = r'''import json,sys
+from pathlib import Path
+from submission.exp_checkpoint import prepare
+value=json.loads(sys.argv[1])
+source=Path(value['source'])
+output=source.parent/'prepared'/value['request_id']
+if not (output/'harness-manifest.json').exists():
+ prepare(source,output,value['target'],value['repair'],artifact_store='/assets',
+         state_binding=value['binding'],state_readback=value['holder'])
+from lab.exp.core import atomic,read
+bindings=read(output/'provenance/asset-bindings.json')
+for row in bindings.values():row.update({key:value['location'][key] for key in ('domain_identity','volume_id','store_root') if key in value['location']})
+atomic(output/'provenance/asset-bindings.json',bindings)
+print(json.dumps({p.relative_to(output).as_posix():p.read_text() for p in output.rglob('*') if p.is_file()}))
+'''
+    try:
+        files = json.loads(_owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', script,
+            json.dumps({'source': resolver['metadata_root'], 'request_id': request_id,
+                'target': selection['target'], 'repair': selection['repair'], 'binding': binding, 'holder': holder, 'location': resolver['location']})]).stdout)
+        output = Path(output)
+        if output.exists():
+            raise FileExistsError('domain prepared metadata output already exists; retain original')
+        output.mkdir(parents=True)
+        for relative, contents in files.items():
+            path = output / member(relative)
+            path.parent.mkdir(parents=True, exist_ok=True)
+            path.write_text(contents)
+        atomic(output / 'domain-resolver.json', record('checkpoint-domain-resolver',
+            authority=binding['authority'], location=resolver['location'],
+            metadata_root=resolver['metadata_root'].rsplit('/', 1)[0] + '/prepared/' + request_id))
+        result = read(output / 'harness-manifest.json')
+        import hashlib
+        if digest(output / 'harness-manifest.json') != hashlib.sha256(files['harness-manifest.json'].encode()).hexdigest():
+            raise Blocked('domain prepared metadata bytes differ from returned producer original')
+        close_capture_helper(target, helper, request_id + '--close')
+        return result
+    except Exception as exc:
+        atomic(directory / ('domain-prepare-' + request_id + '-error.json'), record('error', **error(exc)))
+        raise
+
+
+def prepare_snapshot_copy(selection, output, store):
+    """Cross-domain projection transports selected state and missing definitions only."""
+    from . import artifacts, state
+    from submission.exp_checkpoint import prepare
+    source = Path(selection['source'])
+    if not (source / 'domain-resolver.json').exists():
+        return prepare(source, output, selection['target'], selection['repair'], artifact_store=store)
+    managed_source = read(source / 'managed-source.json')
+    binding = managed_source['holder']
+    holder = state.query(binding)['holder']
+    directory = Path(binding['source_attempt_directory'])
+    resolver = read(source / 'domain-resolver.json')
+    manifest = read(source / 'harness-manifest.json')
+    request_id = 'snapshot-copy-' + canonical([manifest['checkpoint_id'], selection['target'], selection['repair'], str(store)])[:32]
+    helper = capture_helper(directory, binding, request_id, assets_only=True)
+    target = binding['authority']['target']
+    script = r'''import json,sys
+from lab.exp import artifacts
+from lab.exp.core import read
+value=json.loads(sys.argv[1])
+manifest=read(value['metadata']+'/harness-manifest.json')
+binding=manifest['state_snapshot']
+source=artifacts.resolve('/assets',binding['reference'],binding['member'],consumer=manifest['checkpoint_id'],retention=binding['retention'])
+reference=artifacts.publish('/assets',source,'checkpoint-state-projection',
+ provenance={'source_reference':binding['reference'],'source_member':binding['member'],'checkpoint_id':manifest['checkpoint_id']},
+ request_id=value['request_id'],consumer=manifest['checkpoint_id'],purpose='cross-domain-state')
+print(json.dumps(reference))
+'''
+    try:
+        reference = json.loads(_owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', script,
+            json.dumps({'metadata': resolver['metadata_root'], 'request_id': request_id})]).stdout)
+        location = {**resolver['location'], 'reference': reference}
+        export_named(directory, reference, location, store)
+        bindings = read(source / 'provenance/asset-bindings.json')
+        received = set()
+        for asset in manifest['definition_assets']:
+            key = canonical(asset['artifact'])
+            if key not in received:
+                if not (Path(store) / asset['artifact']['artifact_id'] / 'manifest.json').exists():
+                    export_named(directory, asset['artifact'], {**resolver['location'], 'reference': asset['artifact']}, store)
+                received.add(key)
+            bindings[asset['name']]['store'] = str(Path(store).resolve())
+        projection = Path(output).parent / ('.' + Path(output).name + '.source-projection')
+        if projection.exists():
+            raise FileExistsError('snapshot source projection exists; retain partial and choose another output')
+        shutil.copytree(source, projection, symlinks=True, copy_function=artifacts.copy_file)
+        resolver_copy = projection / 'domain-resolver.json'
+        resolver_copy.rename(projection / 'source-domain-resolver.json')
+        consumer = manifest['checkpoint_id']
+        manifest['source_state_snapshot'] = manifest['state_snapshot']
+        manifest['state_snapshot'] = {'reference': reference, 'store': str(Path(store).resolve()), 'member': '.',
+            'retention': artifacts.retain(store, reference, consumer, 'checkpoint-state', request_id + '--retain')}
+        atomic(projection / 'harness-manifest.json', manifest)
+        atomic(projection / 'provenance/asset-bindings.json', bindings)
+        close_capture_helper(target, helper, request_id + '--close')
+        return prepare(projection, output, selection['target'], selection['repair'], artifact_store=store)
+    except Exception as exc:
+        atomic(directory / (request_id + '-error.json'), record('error', **error(exc)))
+        raise
+
+
+def initialize_docker_state(target, physical, *, holder_id, attempt_id, incarnation,
+                            volume, subpath, logical_root, request_id,
+                            source_attempt_directory, volume_birth,
+                            metadata_subpath='payload', runtime_subpath='owner-runtime',
+                            workspace_subpath=None, workspace_logical_root=None, outer_relation=None):
+    """Bind a genuine SDK or runner cgroup to its admitted state volume and namespace."""
+    from . import state
+    rid = physical['authority_resource_id']
+    resource = admission.query(target, rid)['resource']
+    if resource.get('workspace') != holder_id or resource.get('identity', {}).get('container_id') != physical['container_id']:
+        raise Blocked('actual execution is not reserved in this holder authority')
+    if volume_birth.get('Name') != volume:
+        raise Blocked('state volume differs from its managed materialization')
+    writer = {'resource_id': rid, 'attempt_id': attempt_id, 'incarnation': incarnation}
+    binding = record('state-binding', holder_id=holder_id, generation=1, writer=writer,
+        authority={'kind': 'docker', 'target': target, 'workspace': holder_id},
+        domain_identity={'kind': 'docker', 'daemon_id': target['endpoint']['daemon_id'], 'volume_id': volume},
+        locator={'kind': 'docker-volume', 'volume': volume, 'subpath': member(subpath),
+                 'logical_root': logical_root, 'metadata_subpath': member(metadata_subpath),
+                 'runtime_subpath': member(runtime_subpath), 'workspace_subpath': member(workspace_subpath or subpath),
+                 'workspace_logical_root': workspace_logical_root or logical_root},
+        source_attempt_directory=str(Path(source_attempt_directory).resolve()), volume_birth=volume_birth,
+        execution_resource=physical, outer_relation=outer_relation)
+    state.initialize(binding, writer, {'protocol': 'managed-writers-v1',
+        'entry_contract': 'docker-cgroup-terminal-v1'}, request_id)
+    return binding
+
+
+def validate_in_domain(root):
+    """Validate daemon-owned bytes through their frozen resolver, never host /assets."""
+    from . import state
+    root = Path(root)
+    manifest = read(root / 'harness-manifest.json')
+    resolver = read(root / 'domain-resolver.json')
+    if manifest.get('state_binding'):
+        binding = manifest['state_binding']
+        holder = state.query(binding)['holder']
+        if holder['phase'] != 'repaired' or holder['generation'] != binding['generation'] or not holder.get('capture'):
+            raise Blocked('mutable prepared validation requires the unchanged repaired capture generation')
+        immutable = False
+    else:
+        binding = read(root / 'managed-source.json')['holder']
+        holder = state.query(binding)['holder']
+        immutable = True
+    directory = Path(binding['source_attempt_directory'])
+    request_id = 'validate-' + canonical([str(root.resolve()), digest(root / 'harness-manifest.json'), time.time_ns()])[:32]
+    helper = capture_helper(directory, binding, request_id, assets_only=immutable)
+    target = binding['authority']['target']
+    script = 'import json,sys;from submission.exp_checkpoint import validate;print(json.dumps(validate(sys.argv[1],_in_domain=True,_state_readback=json.loads(sys.argv[2]))))'
+    try:
+        result = json.loads(_owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', script,
+            resolver['metadata_root'], json.dumps(holder)]).stdout)
+        if result['manifest_sha256'] != digest(root / 'harness-manifest.json'):
+            raise Blocked('daemon metadata differs from the exact host checkpoint manifest')
+        close_capture_helper(target, helper, request_id + '--close')
+        return result
+    except Exception as exc:
+        atomic(directory / (request_id + '-error.json'), record('error', **error(exc)))
+        raise
+
+
+def abort_preentry(directory, request_id):
+    """Release confirmed unstarted capacity, preserving volumes and original errors.
+
+    A pending physical effect is unresolved, regardless of a failed caller receipt.
+    This is an authority lifecycle operation, not a scan or a cleanup script.
+    """
+    directory = Path(directory)
+    attempt = read(directory / 'attempt.json')
+    target = attempt['job']['backend']
+    rid = attempt['attempt_id']
+    observation = admission.query(target, rid)
+    row = observation.get('resource')
+    value = record('preentry-abort', request_id=request_id, attempt_id=rid, source=observation,
+                   state='unknown', volumes_preserved=True)
+    path = directory / 'preentry-abort.json'
+    atomic(path, value)
+    if row is None:
+        value.update(state='no-reservation', capacity_released=True)
+    elif row.get('pending'):
+        value.update(reason='pending physical action remains unresolved', capacity_released=False)
+    elif row['phase'] == 'released':
+        value.update(state='released', capacity_released=True)
+    elif row['phase'] == 'reserved' and row['identity'] is None:
+        parameters = {'reason': 'confirmed-preentry-failure', 'volumes_preserved': True}
+        accepted = admission.action(target, rid, request_id + '--cancel', 'cancel-reservation', parameters,
+            expected={'generation': row['generation'], 'version': row['version'], 'coverage_epoch': observation['domain']['coverage_epoch']})
+        if accepted['effect']['status'] != 'applied':
+            accepted = admission.complete(target, rid, request_id + '--cancel', 'cancel-reservation', parameters,
+                                          result={'no_execution_accepted': True})
+        value.update(state='reservation-cancelled', capacity_released=True, effect=accepted['effect'])
+    elif row['phase'] == 'materialized' and row.get('identity'):
+        physical = {**row['identity'], 'authority_resource_id': rid}
+        current = exact_resource(target, physical)
+        started = current['state'].get('StartedAt')
+        if current['state'].get('Status') != 'created' or (started and not started.startswith('0001-')):
+            value.update(reason='created object has an execution effect; managed stop/capture required', capacity_released=False)
+        else:
+            writers = (observation.get('workspace') or {}).get('writers', [])
+            if rid in writers:
+                managed(target, physical, 'writer-close', request_id + '--writer-close')
+            effect = managed(target, physical, 'discard', request_id + '--discard', {'volumes_preserved': True})
+            value.update(state='unstarted-object-discarded', capacity_released=True, effect=effect)
+    else:
+        value.update(reason='resource execution or ownership is not confirmed unstarted', capacity_released=False)
+    # The recorded source helper is the only auxiliary owner this abort may drain.
+    # A shared holder is not an ownership relation: another capture can use it.
+    helpers = []
+    helper_path = directory / 'store-helper.json'
+    if row is not None and value.get('capacity_released') and helper_path.exists():
+        saved = read(helper_path)
+        helper_id = saved['authority_resource_id']
+        observed = admission.query(target, helper_id)
+        helper = observed.get('resource')
+        if (helper and helper.get('parent_execution_resource') == rid
+                and helper.get('preparation_request')
+                and helper['role'] == 'copy' and helper['phase'] != 'released'):
+            if helper.get('pending') or not helper.get('identity'):
+                helpers.append({'resource_id': helper_id, 'state': 'unknown'})
+            else:
+                binding = {**helper['identity'], 'authority_resource_id': helper_id}
+                if any(saved.get(key) != binding.get(key) for key in ('container_id','created','labels')):
+                    raise Blocked('preentry helper differs from the exact recorded source owner')
+                current = exact_resource(target, binding)
+                writing = helper_id in (observed.get('workspace') or {}).get('writers', [])
+                if current['state'].get('Status') == 'created' and current['state'].get('StartedAt','').startswith('0001-'):
+                    if writing:
+                        managed(target, binding, 'writer-close', request_id + '--helper-close')
+                    managed(target, binding, 'discard', request_id + '--helper-discard', {'volumes_preserved': True})
+                else:
+                    stopped = managed(target, binding, 'stop', request_id + '--helper-stop')
+                    if writing:
+                        managed(target, stopped, 'writer-close', request_id + '--helper-close')
+                    admission.reconcile(target, helper_id, request_id + '--helper-release', domain_observation(target, stopped))
+                helpers.append({'resource_id': helper_id, 'state': 'released'})
+    value['helpers'] = helpers
+    atomic(path, value)
+    return value
+
+
+def seal_sdk_source(directory, binding, request_id):
+    """Seal the actual SDK stage before reception; no selected Harness path is guessed.
+
+    The outer attempt remains Local. The admitted child container and stage volume
+    supply closure and payload identity. Official SDK resume is not a capability.
+    """
+    from . import state
+    directory = Path(directory)
+    source = binding.get('capture_source')
+    if not source or binding['authority']['kind'] != 'docker':
+        raise Blocked('SDK capture requires the actual child source binding')
+    target = binding['authority']['target']
+    saved_path = directory / 'sdk-workspace-snapshot.json'
+    current = state.query(binding)['holder']
+    if saved_path.exists():
+        saved = read(saved_path)
+        if saved.get('snapshot_request') == request_id and not current.get('capture'):
+            return {'snapshot': saved, 'holder': current, 'source': source,
+                    'capabilities': {'sdk_resume': False, 'harness_state_from_actual_bootstrap': True}}
+    holder = state.begin_capture(directory, binding, request_id)
+    acquisition = state.capture_acquisition(binding, holder)
+    if holder.get('snapshot'):
+        snapshot = holder['snapshot']
+        readonly_id = request_id + '--readonly--capture-helper'
+        readonly = admission.query(target, readonly_id).get('resource')
+        if readonly and readonly['phase'] != 'released':
+            if readonly.get('pending') or not readonly.get('identity'):
+                raise Blocked('SDK snapshot sealed but readonly helper effect remains unresolved')
+            close_capture_helper(target, {**readonly['identity'], 'authority_resource_id': readonly_id}, request_id + '--readonly-close')
+    else:
+        helper = capture_helper(directory, binding, request_id + '--readonly')
+        script = r'''import json,sys
+from lab.exp import artifacts
+value=json.loads(sys.argv[1])
+artifacts.initialize('/assets',value['domain'])
+ref=artifacts.publish('/assets',value['workspace'],'sdk-workspace',
+ provenance=value['provenance'],request_id=value['request_id'],
+ consumer=value['consumer'],purpose='sdk-capture')
+hold=artifacts.retain('/assets',ref,value['consumer'],'sdk-capture',value['request_id']+'--hold')
+print(json.dumps({'reference':ref,'store':'/assets','member':'.','retention':hold}))
+'''
+        try:
+            asset_volume = target.get('artifact_volume', 'exp-assets-' + canonical(target['endpoint']['daemon_id'])[:24])
+            snapshot = json.loads(_owner_exec(target, helper, [target.get('python','python3'), '-B', '-c', script,
+                json.dumps({'domain':{'kind':'docker','daemon_id':target['endpoint']['daemon_id'],'volume_id':asset_volume},
+                    'workspace':helper['capture_paths']['workspace'], 'request_id':request_id+'--workspace',
+                    'consumer':binding['writer']['attempt_id'], 'provenance':{
+                        'source_namespace':source['namespace'], 'source_workspace':source['workspace'],
+                        'outer':source.get('outer'), 'closure':holder['source_closure'], 'capture_token':holder['capture']['token'], 'acquisition':acquisition, 'sdk_resume':False}})]).stdout)
+            snapshot.update(acquisition=acquisition, source_root=source['workspace']['logical_root'], holder=binding,
+                generation=holder['generation'], snapshot_request=request_id,
+                location={'reference':snapshot['reference'],'domain_identity':{'kind':'docker','daemon_id':target['endpoint']['daemon_id'],'volume_id':asset_volume},
+                          'volume_id':asset_volume,'store_root':'/assets'})
+            atomic(directory / 'sdk-workspace-snapshot.json', record('workspace-snapshot-binding', **snapshot))
+            holder = state.bind_snapshot(binding, snapshot, request_id + '--snapshot')
+            close_capture_helper(target, helper, request_id + '--readonly-close')
+        except Exception as exc:
+            atomic(directory / 'sdk-capture-error.json', record('error', request_id=request_id, **error(exc)))
+            raise
+    state.consumer_bindings(directory, snapshot, holder['consumers'], binding=binding)
+    # Keep the sealed lease for the caller's RO inventory/reception helper. It must
+    # close that helper before end_capture; no live writer is reopened.
+    return {'snapshot': snapshot, 'holder': holder, 'source': source,
+            'capabilities': {'sdk_resume': False, 'harness_state_from_actual_bootstrap': True}}

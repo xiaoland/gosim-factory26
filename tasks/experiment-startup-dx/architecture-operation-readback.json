@@ -1,0 +1,132 @@
+{
+  "kind": "factory26.actual-source-operation",
+  "reference": {
+    "artifact_id": "artifact-499cd501133d9bf70dd86d9b",
+    "manifest_sha256": "370f2bda903a3a32e2f2152f9448528848f3f9c4ce0acd4aba4cedc5b7c31dcb"
+  },
+  "store": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/artifacts",
+  "support_member": "scripts",
+  "support_contents": {
+    "kind": "directory",
+    "algorithm": "workspace-output-sha256-v1",
+    "entries": [
+      {
+        "path": "__init__.py",
+        "type": "file",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+        "executable": false
+      },
+      {
+        "path": "agent_support.py",
+        "type": "file",
+        "sha256": "c139bb7bb7ddf7290020201438d8a1a5e9eeb91367e94a588a938cf698d8ab97",
+        "executable": false
+      },
+      {
+        "path": "execution_bootstrap.py",
+        "type": "file",
+        "sha256": "251a4a76251130b0256657b10b4d3296103412f542b93ecba7afc73e21efb1d4",
+        "executable": false
+      },
+      {
+        "path": "execution_context.py",
+        "type": "file",
+        "sha256": "da37aabbbce4ca418eb7ea7be082dfe30755b846a02893ea2a19a7dde5925e75",
+        "executable": false
+      },
+      {
+        "path": "harness_layout.py",
+        "type": "file",
+        "sha256": "af937f914650b8132ebcb2e6b9f317ee53464dcb8287594154397ec8eca38879",
+        "executable": false
+      },
+      {
+        "path": "runtime_resources.py",
+        "type": "file",
+        "sha256": "2f96f2d94f2e83a776b8ae788ed0f8b112efd1a89863ef566890469948604406",
+        "executable": false
+      },
+      {
+        "path": "state_writer.py",
+        "type": "file",
+        "sha256": "b11684a6e359d937f2447af5b699a5665f40121ad8651c0a15162f7b5f40d975",
+        "executable": false
+      }
+    ],
+    "sha256": "2aaf3b94796f8a806e520976edd10f646b8f18b7da27d3ab12195331faaeee27"
+  },
+  "alias": [
+    {
+      "role": "support",
+      "reference": {
+        "artifact_id": "artifact-499cd501133d9bf70dd86d9b",
+        "manifest_sha256": "370f2bda903a3a32e2f2152f9448528848f3f9c4ce0acd4aba4cedc5b7c31dcb"
+      },
+      "member": "scripts",
+      "local_root": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/definition-layout/support",
+      "access": "consumer-readback",
+      "physical_root": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/artifacts/artifact-499cd501133d9bf70dd86d9b/payload/scripts"
+    }
+  ],
+  "placement_proof": {
+    "base": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/definition-layout",
+    "receipt_sha256": "b5a7ffa32c36ce13e77749ccd08f50b6813fb4316b9c74bb1040edb19fff5bce"
+  },
+  "imports": {
+    "scripts.execution_context": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/scripts/execution_context.py",
+      "sha256": "da37aabbbce4ca418eb7ea7be082dfe30755b846a02893ea2a19a7dde5925e75"
+    },
+    "scripts.execution_bootstrap": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/scripts/execution_bootstrap.py",
+      "sha256": "251a4a76251130b0256657b10b4d3296103412f542b93ecba7afc73e21efb1d4"
+    },
+    "scripts.state_writer": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/scripts/state_writer.py",
+      "sha256": "b11684a6e359d937f2447af5b699a5665f40121ad8651c0a15162f7b5f40d975"
+    },
+    "lab.exp.artifacts": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/lab/exp/artifacts.py",
+      "sha256": "69a321739e34cfb872203b1373818fc8562c58e9f067b2eba89d4055286b7ec2"
+    },
+    "lab.arc_bench.workspace_archive": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/lab/arc_bench/workspace_archive.py",
+      "sha256": "fd9fb0bc04745662c11bca9b74cb6ca508d2730e4001ea3b53c00b7b18ce86a9"
+    },
+    "submission.exp_checkpoint": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/submission/exp_checkpoint.py",
+      "sha256": "af161980e1082bef01587f1c6737d3df43e87b39af30c7711d5a4e18aa8ef5ee"
+    }
+  },
+  "elapsed_seconds": 0.06173566589131951,
+  "scope": "actual source publication, retained member resolution and stable role placement; no runtime build, full Harness assembly, services, process launch, SDK or Docker",
+  "model_execution": false,
+  "docker_execution": false,
+  "installed_imports": {
+    "scripts.execution_context": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/artifacts/artifact-499cd501133d9bf70dd86d9b/payload/scripts/execution_context.py",
+      "sha256": "da37aabbbce4ca418eb7ea7be082dfe30755b846a02893ea2a19a7dde5925e75"
+    },
+    "scripts.execution_bootstrap": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/artifacts/artifact-499cd501133d9bf70dd86d9b/payload/scripts/execution_bootstrap.py",
+      "sha256": "251a4a76251130b0256657b10b4d3296103412f542b93ecba7afc73e21efb1d4"
+    },
+    "scripts.state_writer": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/artifacts/artifact-499cd501133d9bf70dd86d9b/payload/scripts/state_writer.py",
+      "sha256": "b11684a6e359d937f2447af5b699a5665f40121ad8651c0a15162f7b5f40d975"
+    },
+    "lab.exp.artifacts": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/artifacts/artifact-499cd501133d9bf70dd86d9b/payload/lab/exp/artifacts.py",
+      "sha256": "69a321739e34cfb872203b1373818fc8562c58e9f067b2eba89d4055286b7ec2"
+    },
+    "lab.arc_bench.workspace_archive": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/artifacts/artifact-499cd501133d9bf70dd86d9b/payload/lab/arc_bench/workspace_archive.py",
+      "sha256": "fd9fb0bc04745662c11bca9b74cb6ca508d2730e4001ea3b53c00b7b18ce86a9"
+    },
+    "submission.exp_checkpoint": {
+      "source": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/architecture-operation/artifacts/artifact-499cd501133d9bf70dd86d9b/payload/submission/exp_checkpoint.py",
+      "sha256": "af161980e1082bef01587f1c6737d3df43e87b39af30c7711d5a4e18aa8ef5ee"
+    }
+  },
+  "import_scope": "independent interpreter imports from published frozen executor payload"
+}

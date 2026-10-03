@@ -109,8 +109,13 @@ def braid(run, args, body=None, *, write=False):
         raise ValueError("此运行只读")
     # Persisted Git/worktree paths belong to the run's execution namespace.
     command = list(run["cli_command"] or [run["binary"], "--state", run["state"]])
-    if run["docker"] and run["docker"].get("mounts"):
-        service.access({"service_id": run["service_id"]}, run)
+    if run['docker']:
+        if run['docker'].get('access_mode') != 'runtime-readonly':
+            docker_runtime.live_access(run['docker'])
+        if run['docker'].get('mounts'):
+            service.access({'service_id': run['service_id']}, run)
+    else:
+        service.local_state_access(run)
     if write:
         command.append("--external")
     command.extend(args)

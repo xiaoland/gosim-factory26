@@ -103,3 +103,20 @@ Local/Docker 在已有目标资产上直接装配；缺资产才由所在域取�
 另核对 Hosted 的可观测差异：平台内部未必能够取得 platform run/container birth。bootstrap 记录它真正知道的本地作用域与 delivery 关联，controller 根据 API 原件补外部关系；不能为了统一字段要求平台注入不存在的事实。上述意见已交实现 owner 纳入准备稿，不需要新增事务框架或中心协调服务。
 
 复核结果：owner 已将三项失败行为及 Hosted 能力差异纳入实施准备正文，我已读取对应改动，未发现需要阻止该方案进入具体开工复核的新问题。此结论仅覆盖职责、调用接缝与纸上失败行为；实现、物理 writer 覆盖、部署闭包及真实耗时仍按既定反馈范围验证。Controller 代码资产重新生产不意味着重新安装未变化的 Python 依赖 runtime。
+
+
+## 实施期间的独立复核
+
+Advisor 对实际接缝提出并由对应 owner 收敛的约束如下。Workspace snapshot 的定义排除必须机械可辨识，普通整树消费不能静默遗漏定义；Docker member 的实际链接与记录必须一致。发布后的同次内容读回可通过内存操作对象复用，但持久回执不授予后续免检。域内发布 scratch 是独立受管子树，只有该子树可同盘移交，失败保留。
+
+写者预约在实际程序执行之前接受，capture 等待在途启动解决，不能以事后杀进程消除已经发生的写入。确认未创建的预约与有出生身份的写者分别记录；原位修复 helper 未关闭时，权威层拒绝 handoff。Console 需要实际消费者注册及 snapshot 绑定；Local 尚无访问适配器时明确拒绝新受管状态的 live 接入，不以空消费者列表声称覆盖外部读写。
+
+SDK bridge 提供真实 capture source binding，公共 helper 解析 workspace/state/metadata/code 位置、实际 namespace 与出生身份。SDK 不模拟普通 runner 目录，外层 Local 与内层 Docker 保留独立身份及关系。没有取得完整 writer 覆盖时仍不具备完整恢复能力。
+
+控制路径验证冻结控制代码、必要依赖和解释器，再检查实际资源、holder 版本与操作许可；不重新扫描无关 Harness 输入或 runner runtime。Build/start、capture/export 和跨域接收在各自实际消费边界验证材料。这是职责拆分，不是永久 hash 缓存；无关输入损坏不能阻止关闭原执行。
+
+最后的源码接缝复核明确：SDK 父侧认证实际 daemon 组件后仅把成员只读挂载给子容器，不要求其读取私有控制目录；tool-env 属每次 attempt 的私有输入，不能改共享 payload 的所有权。公开交付的清单由 write_zip 对实际写入字节生成，不能在其后覆盖入口。新 delivery 的标准根目录依赖及 ZIP 消费必须一并迁移。失败预约清理仅处理本次创建责任明确的辅助对象，workspace 相同不构成停止另一个 capture/repair 请求的授权；归属不明的历史对象保留 unknown。SDK 终态 capture 必须采用当前 holder，不再调用旧的独立 capturebegin。以上是源码采用标准，未声称实际容器运行已验收。
+
+最后范围复核区分官方 SDK resume 与通用 Harness 检查点：前者仍不支持，后者在 terminal child 真实写者已关闭且 state mapping 完整时属于本轮共同合同。公共 checkpoint 不能仅选择外层 Local holder 而丢掉已有 child 能力。采用明确 child source descriptor，再共用 sealed snapshot/member 到 schema4 小 metadata producer；live、多个 child 有歧义或原件缺失时具体阻塞。由原 state owner 完成，不能伪造外层身份或标准 Docker runner 目录。
+
+终态交付边界复核修正了此前过宽的 Local seal 门槛：完整恢复 capture 需要全部写者关闭，普通 named outputs 不应因此全失败。普通终态复制隔离后发布不可变字节，明确 terminal-content-copy、checkpoint=false，以及未知派生写者和跨文件同一切点未证明；已登记活跃或 pending writer 仍阻断。普通内容不能进入 holder 恢复 snapshot。后来取得完整 closure 时独立按 capture 请求生产恢复快照，保留旧终态制品；已带 managed acquisition 的快照可复用发布时证明。

@@ -58,6 +58,47 @@ def _producer_record(root, manifest, name=None):
     return read(path)
 
 
+def provider_facts(directory, attempt, observed):
+    """Decode one referenced saved observation; never collect or classify again."""
+    pointer = observed.get('workspace_observation')
+    if not pointer:
+        return {'status': 'unknown', 'reason': '缺少当前 attempt 的已保存 provider 观察'}
+    result = {'status': 'unknown', 'producer': 'exp.hosted.workspace_observation'}
+    try:
+        source = Path(pointer['source'])
+        result['source'] = str(source)
+        if source.is_symlink() or not source.resolve(strict=True).is_relative_to(Path(directory).resolve(strict=True)):
+            raise ValueError('provider observation is outside its attempt evidence')
+        saved = read(source)
+        expected = {'attempt_id': attempt['attempt_id'], 'incarnation_id': observed.get('incarnation_id'),
+                    'run_id': observed.get('run_id'), 'submission_id': observed.get('submission_id')}
+        if not expected['incarnation_id'] or any(saved.get(key) != value for key, value in expected.items() if value is not None):
+            raise ValueError('provider observation attempt/incarnation/platform identity differs')
+        provider = saved['provider']
+        sessions = []
+        for row in provider.get('sessions', []):
+            native = row.get('native') or {}
+            retained = native.get('retained_evidence') or {}
+            sessions.append({**{key: row.get(key) for key in ('session_id', 'provider_session_id', 'lifecycle',
+                'classification', 'current_attempt', 'last_activity_at', 'unchanged_since', 'unchanged_samples',
+                'unchanged_seconds', 'reason', 'tool_liveness')},
+                'error': (row.get('turn') or {}).get('error'),
+                'native': {'path': native.get('path'), 'available': native.get('available'),
+                           'coverage': retained.get('coverage'), 'complete_native': retained.get('complete_native'),
+                           'parse_errors': native.get('parse_errors', [])}})
+        result.update(status=provider.get('classification', 'unknown'), identity=expected,
+            observed_at=saved.get('observed_at'), provider_observed_at=provider.get('observed_at'),
+            platform_status=saved.get('platform_status'), semantic_progress=provider.get('semantic_progress', 'unknown'),
+            stale_after_seconds=provider.get('stale_after_seconds'), minimum_samples=provider.get('minimum_samples'),
+            sessions=sessions, resource_wait_groups=provider.get('resource_wait_groups', []),
+            provider_health=provider.get('provider_health', {}), group_errors=provider.get('group_errors', {}),
+            errors=provider.get('errors', []), run_error=provider.get('run_error'),
+            workspace_error=saved.get('workspace_error'), evidence_root=saved.get('evidence'))
+    except (OSError, ValueError, KeyError, TypeError, AttributeError) as exc:
+        result.update(reason='已保存 provider 观察不可采用', error=error(exc))
+    return result
+
+
 def artifact(store, reference, location=None):
     """Bind metadata cheaply; consumption still verifies all payload bytes."""
     result = {'reference': reference, 'status': 'unavailable'}
@@ -130,6 +171,7 @@ def attempt(path, store):
     row = {'attempt_id': saved['attempt_id'], 'job_id': saved['job_id'],
            'experiment_id': saved['experiment_id'],
            'purpose': saved['job']['purpose'], 'backend': saved['job']['backend']['kind'],
+           'external_docker': bool(saved['job']['backend'].get('external_docker')),
            'source': str(path), 'created_at': saved['created_at'],
            'retry_of': saved.get('retry_of'), 'execution': observed,
            'retry_request_id': saved.get('retry_request_id'),
@@ -139,6 +181,8 @@ def attempt(path, store):
                            'bindings': saved['job'].get('environment', {}).get('FACTORY26_MODEL_BINDINGS'),
                            'runtime_selected': observed.get('model_facts', {}).get('runtime_selected', 'unknown'),
                            'observed': observed.get('model_facts', {}).get('observed', 'unknown')}}
+    if row['backend'] == 'hosted':
+        row['provider'] = provider_facts(path, saved, observed)
     for p, value in observations:
         if (value.get('error') and max(_time(value), value['error'].get('observed_at', 0)) >= _time(observed)) or value.get('observation_error'):
             row['errors'].append({'evidence': str(p), 'error': value.get('error') or value['observation_error']})
@@ -164,9 +208,34 @@ def attempt(path, store):
             row['errors'].append({'component': 'transport', 'evidence': str(location), 'error': error(exc)})
     row['outputs'] = {name: artifact(store, ref, observed.get('output_locations', {}).get(name))
                       for name, ref in observed.get('artifacts', {}).items()}
+    for name, output in row['outputs'].items():
+        output['member'] = observed.get('output_members', {}).get(name, '.')
+    row['workspace_snapshot'] = observed.get('workspace_snapshot')
+    row['state_observations'] = []
+    for state_path in sorted((path / 'state-observations').glob('*.json')):
+        try:
+            value = require(read(state_path), 'state-observation')
+            state_binding, holder = value['binding'], value['holder']
+            if (Path(state_binding['source_attempt_directory']).resolve() != path.resolve()
+                    or state_binding['holder_id'] != holder['holder_id']
+                    or state_binding['domain_identity'] != holder['domain_identity']):
+                raise ValueError('state observation belongs to another attempt or holder')
+            snapshot = holder.get('snapshot') or {}
+            row['state_observations'].append({
+                'holder_id': holder['holder_id'], 'domain_identity': holder['domain_identity'],
+                'generation': holder['generation'], 'version': holder['version'], 'phase': holder['phase'],
+                'writer': holder.get('writer'), 'capture': holder.get('capture'),
+                'snapshot': {key: snapshot.get(key) for key in ('reference', 'member', 'generation')},
+                'history': holder.get('history', []), 'coverage': holder.get('coverage', {}),
+                'action': value['action'], 'observed_at': value['observed_at'],
+                'observation_source': value['observation_source'], 'source': str(state_path)})
+        except (OSError, ValueError, KeyError, TypeError) as exc:
+            row['errors'].append({'component': 'state', 'evidence': str(state_path), 'error': error(exc)})
     row['inputs'] = {name: artifact(store, ref, saved['job'].get('input_locations', {}).get(name))
                      for name, ref in saved['job'].get('inputs', {}).items()
                      if 'from_job' not in ref}
+    for name, item in row['inputs'].items():
+        item['member'] = saved['job'].get('input_members', {}).get(name, '.')
     archived = observed.get('archive')
     if isinstance(archived, dict) and archived.get('artifact'):
         row['outputs']['terminal_archive'] = artifact(store, archived['artifact'])
@@ -313,9 +382,20 @@ def stages(value, action_policy):
             stage['facts']['main'] = _facet(main, row, exit_code=entry_code)
             stage['facts']['execution'] = _facet(phase, row, incarnation_id=observation.get('incarnation_id'),
                                                 physical=observation.get('physical'), gap=observation.get('execution_observation_gap'))
+            if row.get('external_docker'):
+                children = [fact for fact in observation.get('external_resources', [])
+                            if fact.get('resource', {}).get('role') == 'execution']
+                states = [fact.get('observation', {}).get('state', {}).get('Status', 'unknown') for fact in children]
+                stage['facts']['child_execution'] = _facet(', '.join(states) if states else 'unknown', row,
+                    resources=children, reason=None if children else
+                    '当前只有外层 supervisor 事实；缺少实际子容器出生/状态，不证明模型已启动')
             stage['facts']['services'] = _facet('failed' if phase == 'readiness_failed' else
                 'ready' if observation.get('ready') else 'unknown', row,
                 entry_status=observation.get('entry_status', 'unknown'), services=observation.get('services', {}))
+            if row.get('state_observations'):
+                stage['facts']['state'] = _facet('saved', row, holders=row['state_observations'])
+            if row.get('provider'):
+                stage['facts']['provider'] = row['provider']
             archive = observation.get('archive', 'unknown')
             stage['facts']['archive'] = _facet(archive.get('status', 'unknown') if isinstance(archive, dict) else archive, row)
             if row['backend'] == 'docker':
@@ -419,6 +499,35 @@ def render(value):
                 lines.append(f"│  │  {name}: {fact['status']}{extra}")
                 if fact.get('reason'):
                     lines.append('│  │    缺口：' + fact['reason'])
+                if name == 'state':
+                    for holder in fact['holders']:
+                        writer = holder.get('writer') or {}
+                        capture = holder.get('capture') or {}
+                        lines.append(f"│  │    holder {holder['holder_id']}: {holder['phase']} / generation={holder['generation']} / version={holder['version']}")
+                        lines.append(f"│  │      writer: {writer.get('resource_id', 'none')} / incarnation: {writer.get('incarnation', 'none')} / capture: {capture.get('owner', 'none')}")
+                        snapshot = holder['snapshot']
+                        if snapshot.get('reference'):
+                            lines.append(f"│  │      snapshot: {snapshot['reference']['artifact_id']} / member: {snapshot.get('member', '.')}")
+                        lines.append(f"│  │      保存的 {holder['action']} 回执：{_stamp(holder['observed_at'])} / {holder['source']}")
+                if name == 'provider':
+                    lines.append(f"│  │    semantic_progress: {fact.get('semantic_progress', 'unknown')} / 平台: {fact.get('platform_status', 'unknown')}")
+                    lines.append(f"│  │    producer: {fact.get('producer', 'unknown')} / 观察: {_stamp(fact.get('observed_at'))}")
+                    if fact.get('source'):
+                        lines.append('│  │    原件：' + fact['source'])
+                    lines.append(f"│  │    stale 阈值: {fact.get('stale_after_seconds', '?')}s / 最少样本: {fact.get('minimum_samples', '?')}")
+                    for session in fact.get('sessions', []):
+                        lines.append(f"│  │    session {session['session_id']}: {session['classification']} / lifecycle={session['lifecycle']} / current_attempt={session['current_attempt']} / 连续{session['unchanged_samples']}次、{session['unchanged_seconds']}s")
+                        for detail in (session.get('reason'), session.get('error')):
+                            if detail:
+                                lines.append('│  │      原因：' + _reason(str(detail)))
+                        native = session['native']
+                        lines.append(f"│  │      native: {native['coverage']} / complete={native['complete_native']} / {native['path'] or '缺少入口'}")
+                    for group in fact.get('resource_wait_groups', []):
+                        health = fact.get('provider_health', {}).get(group, {})
+                        lines.append('│  │    resource_wait ' + group + ': ' + _reason(str(health.get('error') or '原因 unknown')))
+                    for detail in (fact.get('error'), fact.get('run_error'), fact.get('workspace_error'), *fact.get('errors', []), *fact.get('group_errors', {}).values()):
+                        if detail:
+                            lines.append('│  │    原始错误：' + _reason(str(detail)))
                 if name == 'platform':
                     observed = fact.get('evidence') or {}
                     lines.append(f"│  │    GET 观察：{_stamp(observed.get('observed_at'))} / {observed.get('path', '缺少对应 run 原件')}")

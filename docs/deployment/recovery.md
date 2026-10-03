@@ -2,7 +2,11 @@
 
 ## 当前 checkpoint、prepare 与停止门控
 
-新 I14 Harness 的 checkpoint/prepared producer 使用 schema 3，application 保持 schema 2。Checkpoint v3 只捕获运行状态，通过 `harness-layout.json` 的真实 artifact reference/member 保留定义依赖；prepared 在准备和执行时解析这些依赖。物理 store 是解析位置，不进入内容身份。缺少实际 artifact relation 的 Hosted package identity 不能被补造为完整恢复能力。历史 checkpoint/prepared schema 1/2 按原冻结生产者及自包含合同读取，新 producer 不猜测旧混合树中哪些目录可以省略。
+新 I14 Harness 的自包含状态 checkpoint/prepared producer 使用 schema 3，受管引用快照与同域状态使用 schema 4，application 保持 schema 2。Checkpoint v3 只捕获运行状态，通过 `harness-layout.json` 的真实 artifact reference/member 保留定义依赖；prepared 在准备和执行时解析这些依赖。物理 store 是解析位置，不进入内容身份。缺少实际 artifact relation 的 Hosted package identity 不能被补造为完整恢复能力。历史 checkpoint/prepared schema 1/2 按原冻结生产者及自包含合同读取，新 producer 不猜测旧混合树中哪些目录可以省略。
+
+公共受管入口为 `python3 -m lab checkpoint RUN ATTEMPT --directory CHECKPOINT --request-id REQUEST`。它在原域权威上阻止新增写者、关闭已登记的实际执行及访问写者，并取得独立 capture 许可；不要求使用者制作 closure JSON。没有受管覆盖的历史运行仍需沿其冻结合同取证，不能从父进程退出推断完整关闭。外层 Local 包含 SDK child 时，公共入口选择已登记、终态接收已验证且具有真实 state mapping 的 child；唯一来源可直接采用，多个来源须用 `--source-resource AUTHORITY_RESOURCE_ID` 明确选择。来源保留 child 的实际出生身份与外层关联，不用外层 Local 身份代替。入口非零退出不自动否定检查点，完整性仍由 Harness producer 判定；该路径不提供官方 SDK resume。
+
+受管 checkpoint schema 4 是小型元数据产物，`state_snapshot` 引用一次封口的 workspace 及其中实际 Harness state 的 member。终态输出和归档共用已封口内容；checkpoint 只有在原快照具有匹配的 managed acquisition 时复用，否则按 capture 请求另行取得恢复快照。普通终态内容不因后来取得 closure 而升级。完整 workspace 与状态子树不能互换。Docker 在原 daemon 的只读状态挂载上封口，宿主接收 checkpoint 元数据及 domain resolver；单独持有这些元数据不意味着已接收到快照字节。跨域准备只输运选中的状态及目标缺少的定义资产。旧 schema 3 和历史自包含 checkpoint 的读取合同保留。
 
 定义资产包括入口、角色、技能、扩展、工具 runtime 和 Braid；每次绑定的小型 native 配置、request 和 launcher 留在可写状态。四个新 I14 入口直接读取冻结 Braid，通过小型链接树访问技能，不再将这些定义复制进运行目录。定义资产的保留独立于 attempt 生命周期。
 
@@ -14,7 +18,9 @@ Docker 导出后的保存位置与原运行逻辑根不同。对新分离布局�
 
 旧 Docker 来源使用 `python3 -m lab import-docker-source-stop --birth SOURCE_IDENTITY_JSON --status SOURCE_STOP_JSON --writers WRITER_RETIREMENT_JSON --authorization "已获授权的恢复范围" --identity-output NEW_IDENTITY_JSON --output NEW_STOP_JSON`。来源保留真实旧 run ID，以 daemon、完整 container ID、创建/启动时间、image 和 owner labels 绑定 `legacy-docker` execution，不补造新 attempt ID。导入会实时读回原 daemon 的同一容器及全部来源卷使用者，要求它们已退出、Pid 为零且没有 paused/restarting 状态；旧写入与重启进程也须关闭。Darwin 的僵尸进程保留原 unknown 与新 `ps` Z 观察，不为回收僵尸解除共享 dispatcher 的暂停。启动同样重验出生身份、卷使用者和 writer；消失、连接失败、重启或新增写入入口均阻塞，不清退其它来源或整个 daemon。
 
-默认恢复入口为 `python3 -m lab recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE --directory NEW_RUN`。Intent 在普通实验字段之外声明 `recovery: {production: NAME, target: TARGET_LAYOUT, repair: REPAIR}`，相关 variant 的 prepared 使用 `{from_production: NAME}`。入口冻结原 checkpoint 身份、修复输入、生产依赖及派生关系，准备新 run；不会停止旧来源或启动模型。准备后仍在实际执行授权内调用 start。SOURCE 必须是明确 checkpoint，不从含混 run/archive 自动猜。
+默认恢复入口为 `python3 -m lab recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE --directory NEW_RUN`。Intent 在普通实验字段之外声明 `recovery: {production: NAME, target: TARGET_LAYOUT, repair: REPAIR}`，相关 variant 的 prepared 使用 `{from_production: NAME}`。缺省 `mode` 为 `snapshot-copy`；显式 `mode: "domain-state"` 和稳定 `request_id` 选择同域受管恢复。入口冻结原 checkpoint 身份、修复输入、生产依赖及派生关系，准备新 run，不启动模型。SOURCE 必须是明确 checkpoint，不从含混 run/archive 自动猜。
+
+`domain-state` 在原 capture 许可内修复派生材料，保留应用、Git 和 native 状态的位置。每项修复保存实际完成事实；半失败保留许可及原始错误，不能用旧快照证明未完成的新状态。完整修复推进 generation，实际新执行通过原权威原子交接唯一写权，并重新核对当前许可后启动。交接前旧输出、归档、export 和 Console 消费者须绑定不可变快照。旧 Console 写者先关闭，新访问实例重新登记；未登记外部编辑不在完整关闭承诺内。新 resource 与 incarnation 不复用旧出生实例。`snapshot-copy` 在目标域复制状态，不能借用源 holder 的活动路径。
 
 低层 `prepare --source CHECKPOINT --output NEW --target-layout JSON --repair REPAIR_JSON` 保留，无网络或模型请求。有限修复覆盖材料刷新、已声明 provider transport、内部路径别名、已退役 transient link、外部 node-gyp 工具物化及明确兼容 runtime 替换。每项核对原 literal/目标范围，记录实际变化与损失；Git、native 历史与应用工作不由材料刷新覆盖。结构 partial 可以离线派生以解释缺口，但结果没有完整获取/语义保证仍为 partial，不能进入完整恢复执行。
 
@@ -206,3 +212,5 @@ Docker entry 的资源限额由容器 cgroup 执行；runner 在同一 namespace
 若输入上传超时而已绑定容器严格处于 created、Pid0、StartedAt/FinishedAt均为零，可运行 `lab exp continue-input-upload <attempt-directory>`。它取得原 dispatch 锁，验证冻结实验、request/job/incarnation 与精确 CID/Created/image/labels/mount，要求 authority 的同一预约仍为 materialized 且从未启动，没有 start/launch/assembly 或此前接续。正常启动与接续共用原 staging、upload、start 尾段，不重新 reserve/create；上传后从 Docker archive 流逐项验证全部字节、链接及执行位，不额外落一份完整材料。随后再次核实容器 created 和 prepared 来源当前停止门控，才 start 同一 CID。start 或接续结果不确定后只观察，不能再用原上传错误重新启动。原 TimeoutExpired 与一次性接续工具身份保留。
 
 新冻结的 Docker terminal export 在大 cp 前执行一次只读空间预检：核对实际 `/attempt` 卷，只读挂载同 image，测量整域 T 和尚未在本机 store 的制品 A，并保留配置的 reserve 余量。源文件查询失败不推定为零；本机同文件系统可用空间不足 T+A+余量时，保存 `export-preflight.json` 的确切缺量和原错误，不开始大复制。stage/store 分属不同文件系统时拒绝当前预检，需显式分别核算后处理。远端封存材料仍保留，模型入口不会因输运失败重跑。
+
+新 Local 执行可以启动，但当前原生工具可能脱离父进程，尚无完整的登记及关闭合同，因此完整 managed capture 会明确阻塞。普通终态 named outputs 在已知执行及写者终止后仍可复制隔离并发布不可变内容，标明 terminal-content-copy，不证明未知派生写者关闭或跨文件同一切点；这些制品不进入 holder 的恢复 snapshot。内容封口失败时，archive 仅保存日志、遥测与错误，标明 terminal-evidence-only，原状态保留。两者都不能解释为完整 checkpoint。SDK child 按实际 Docker 容器取得写者关闭证据并走公共 capture，官方下载/接收不再另开旧 capture 租约；这不提供官方 SDK resume 能力。

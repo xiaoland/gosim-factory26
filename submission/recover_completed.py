@@ -792,7 +792,7 @@ def execute_prepared(args):
     manifest = json.loads(manifest_path.read_text())
     # Runner already resolved/retained v3 assets and verified the assembly. The standalone
     # delivered module must not import an implicit controller-side lab package.
-    if manifest.get('schema_version') == 3:
+    if manifest.get('schema_version') in (3,4):
         validation = {'status': manifest['status']}
         if not assembly.get('definitions'):
             raise ValueError('v3 prepared执行缺少runner定义装配回执')
@@ -801,12 +801,15 @@ def execute_prepared(args):
     if manifest['kind'] != 'factory26.harness.prepared' or validation['status'] != 'complete':
         raise ValueError('prepared执行需要新版完整恢复合同')
     run = Path(binding['run_root'])
-    if exp_checkpoint.inventory(run) != {name.removeprefix('run/'):value for name,value in manifest['files'].items() if name.startswith('run/')}:
+    if not os.environ.get('FACTORY26_EXECUTION_CONTEXT') and exp_checkpoint.inventory(run) != {name.removeprefix('run/'):value for name,value in manifest['files'].items() if name.startswith('run/')}:
         raise ValueError('可写恢复工作区在入口前与装配内容不一致')
     request = json.loads((run/'braid-request.json').read_text())
     if request['state'] != str(run/'braid-state'): raise ValueError('Braid state logical root不匹配')
     work = run/'work'
-    definitions = {row['name']: Path(row['logical_root']) for row in manifest.get('definition_assets', [])}
+    from execution_context import read as read_context
+    context=read_context()
+    definitions = ({row['role']:Path(row['local_root']) for row in context['assembly']['definitions']} if context else
+                   {row['name']: Path(row['logical_root']) for row in manifest.get('definition_assets', [])})
     runtime = definitions.get('runtime', ROOT/'runtime')
     agent = definitions.get('agent', ROOT)
     braid = definitions.get('braid', work/'bin/braid')

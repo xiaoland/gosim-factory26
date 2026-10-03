@@ -19,7 +19,12 @@ def load(path):
     if set(harness) - {'runtime', 'skill_source', 'tool_env', 'e2e_runtime', 'otlp_dependencies'}:
         raise ValueError('unsupported harness material selection in environment')
     for field, source in harness.items():
-        harness[field] = str((path.parent / source).expanduser().resolve(strict=True))
+        if isinstance(source, dict):
+            if set(source)-{'reference','store','member'} or not {'reference','store'} <= set(source):
+                raise ValueError('harness frozen asset needs reference/store/member')
+            harness[field] = {**source, 'store': str((path.parent/source['store']).resolve(strict=True))}
+        else:
+            harness[field] = str((path.parent / source).expanduser().resolve(strict=True))
     if 'arc' in value:
         arc = value['arc']
         if not isinstance(arc, dict) or set(arc) != {'sdk_source', 'target'}:
@@ -81,7 +86,8 @@ def resolve(value, profile, *, base=None):
             production.setdefault(field, source)
         for field in ('runtime', 'skill_source', 'tool_env', 'e2e_runtime', 'otlp_dependencies'):
             if field in production:
-                production[field] = str((base / production[field]).resolve(strict=True))
+                if not isinstance(production[field], dict):
+                    production[field] = str((base / production[field]).resolve(strict=True))
     result['environment_selection'] = binding
     from scripts.runtime import plan_host_runtime
     from scripts.package_agent import plan_material
@@ -96,14 +102,14 @@ def resolve(value, profile, *, base=None):
 def plan_prepare(selection):
     from . import artifacts
     from submission import exp_checkpoint
-    if set(selection) != {'producer', 'source', 'target', 'repair'}:
+    if set(selection)-{'producer','source','target','repair','state_binding'} or not {'producer','source','target','repair'}<=set(selection):
         raise ValueError('prepare production needs explicit source, target and repair')
     source = Path(selection['source']).resolve(strict=True)
-    if read(source / 'harness-manifest.json').get('schema_version') != 3:
+    if read(source / 'harness-manifest.json').get('schema_version') not in (3,4):
         raise ValueError('new prepare production requires separated v3 checkpoint')
     dependencies = {'manifest_sha256': digest(source / 'harness-manifest.json'),
                     'hook_sha256': digest(Path(exp_checkpoint.__file__)), 'target': selection['target'],
-                    'repair': selection['repair'], 'materials': {}}
+                    'repair': selection['repair'], 'materials': {}, 'state_binding':selection.get('state_binding')}
     for category in ('materials', 'nodegyp_tools', 'runtime', 'definition_assets'):
         for row in selection['repair'].get(category, []):
             if 'source' in row:
@@ -148,14 +154,26 @@ def produce_materials(spec, directory, store):
             output = cache / 'prepared' / key
             index = cache / 'production-index' / ('prepared-' + key + '.json')
             with locked(index.with_suffix('.lock')):
-                if index.exists():
+                if selection.get('state_binding'):
+                    from . import state
+                    holder=state.query(selection['state_binding'])['holder']
+                    if holder['phase']!='repairing' or holder['generation']!=selection['state_binding']['generation']:
+                        raise ValueError('domain-state prepare lease/generation changed')
+                if index.exists() and not selection.get('state_binding'):
                     material = read(index)
                     artifacts.verify(store, material['artifact'])
                 else:
                     from submission.exp_checkpoint import prepare
                     if output.exists():
                         output.rename(output.with_name(key + '-' + str(time.time_ns()) + '-partial'))
-                    prepared = prepare(Path(selection['source']), output, selection['target'], selection['repair'], artifact_store=store)
+                    if selection.get('state_binding'):
+                        from .backends import prepare_in_domain
+                        prepared=prepare_in_domain(selection,output,store)
+                    elif (Path(selection['source'])/'domain-resolver.json').exists():
+                        from .backends import prepare_snapshot_copy
+                        prepared=prepare_snapshot_copy(selection,output,store)
+                    else:
+                        prepared = prepare(Path(selection['source']), output, selection['target'], selection['repair'], artifact_store=store)
                     ref = artifacts.publish(store, output, 'prepared', provenance={
                         'producer': 'harness.prepare', 'dependencies': expected,
                         'prepared_id': prepared['prepared_id']},
@@ -173,54 +191,18 @@ def produce_materials(spec, directory, store):
         parameters = {key: value for key, value in selection.items() if key != 'producer'}
         material = produce(output_store=cache / 'harness',
                            expected_dependencies=binding['material_dependencies'][name], **parameters)
-        identity = material['material_id']
-        index = cache / 'production-index' / (canonical(identity) + '.json')
-        with locked(index.with_suffix('.lock')):
-            consumer = 'run-' + canonical(str(directory.resolve()))
-            if index.exists():
-                previous = read(index)
-                if previous['material_id'] != identity or previous['dependencies'] != material['dependencies']:
-                    raise ValueError('production identity rebound to different dependencies')
-                ref = previous['artifact']
-                artifacts.verify(store, ref)
-                artifacts.retain(store, ref, consumer=consumer, purpose='input/' + name,
-                                 request_id='retain-' + canonical([consumer, name, ref]))
-            else:
-                ref = artifacts.publish(store, Path(material['root']), 'harness-material',
-                    provenance={'producer': 'harness', 'material_id': identity,
-                                'dependencies': material['dependencies'], 'capabilities': material['capabilities']},
-                    consumer=consumer, purpose='input/' + name,
-                    request_id='publish-' + canonical([identity, str(Path(store).resolve())]))
-                atomic(index, {'material_id': identity, 'dependencies': material['dependencies'], 'artifact': ref})
-        result[name] = {'artifact': ref, 'producer': material, 'observed_at': time.time()}
-        package_needed = any(job['backend']['kind'] == 'hosted' and
-            job.get('inputs', {}).get('agent') == {'from_production': name} for job in spec['jobs'])
-        if package_needed:
-            from scripts.package_agent import write_zip
-            package_index = cache / 'production-index' / ('package-' + canonical(identity) + '.json')
-            with locked(package_index.with_suffix('.lock')):
-                if package_index.exists():
-                    packaged = read(package_index)
-                    artifacts.verify(store, packaged['artifact'])
-                else:
-                    output = cache / 'packages' / canonical(identity)
-                    output.mkdir(parents=True, exist_ok=True)
-                    archive = output / 'agent.zip'
-                    if archive.exists():
-                        archive.rename(output / ('partial-' + str(time.time_ns()) + '.zip'))
-                    source_record = Path(material['root']) / 'runtime/runtime-source.json'
-                    records = read(source_record).get('sources', {}) if source_record.exists() else {}
-                    write_zip(Path(material['root']), archive, 'pi', records,
-                              capabilities=material['capabilities'], persist_manifest=False)
-                    package_ref = artifacts.publish(store, archive, 'agent-package',
-                        provenance={'producer': 'harness.package', 'material_id': identity,
-                                    'material': ref, 'capabilities': material['capabilities']},
-                        consumer='package-' + canonical(identity), purpose='delivery',
-                        request_id='package-' + canonical(identity))
-                    packaged = {'artifact': package_ref, 'material_id': identity}
-                    atomic(package_index, packaged)
-                artifacts.retain(store, packaged['artifact'], consumer=consumer, purpose='input/' + name,
-                                 request_id='retain-' + canonical([consumer, name, packaged['artifact']]))
-                result[name]['package'] = packaged['artifact']
+        from . import definitions, delivery
+        consumer = 'run-' + canonical(str(directory.resolve()))
+        definition_ref, definition = definitions.bind(material, store, cache, consumer)
+        agent = next(asset['reference'] for asset in definition['assets'] if asset['name'] == 'agent')
+        result[name] = {'artifact': agent, 'definition': definition_ref, 'definition_value': definition,
+                        'producer': material, 'observed_at': time.time()}
+        private_inputs=definitions.bind_private(material,store,consumer)
+        result[name]['private_inputs']=private_inputs
+        consumers = [job for job in spec['jobs'] if job.get('inputs', {}).get('agent') == {'from_production': name}]
+        if any(job['backend'].get('external_docker') for job in consumers):
+            result[name]['delivery'] = delivery.project(definition, store, cache, consumer, private_inputs=private_inputs)
+        if any(job['backend']['kind'] == 'hosted' for job in consumers):
+            result[name]['package'] = delivery.project(definition, store, cache, consumer, zipped=True, private_inputs=private_inputs)
     atomic(directory / 'productions.json', record('productions', selections=result))
     return result

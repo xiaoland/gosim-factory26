@@ -224,7 +224,7 @@ def material_capabilities():
     return {'braid_session_budget': {'version': 2, 'native_children_share_owner': True,
                                     'missing_identity': 'reject'},
             'resource_evidence': {'required': True, 'owner': 'runner', 'binding': 'FACTORY26_EXP_SERVICES'},
-            'checkpoint': {'schema_version': 3, 'producer': 'exp_checkpoint.py',
+            'checkpoint': {'schema_version': 4, 'producer': 'exp_checkpoint.py',
                            'content': 'state-and-retained-definition-relations'},
             'layout': {'schema_version': 1, 'definition_access': 'read-only',
                        'derived_inputs': 'run-local', 'state_access': 'read-write'},
@@ -252,18 +252,34 @@ def _otlp_dependencies(cache, selected=None):
     return target/'payload'
 
 
+def _selected_asset(value):
+    if not isinstance(value, dict):
+        path=Path(value).resolve(strict=True)
+        return path, None
+    if set(value)-{'reference','store','member'} or not {'reference','store'}<=set(value):
+        raise ValueError('frozen component input needs reference, store and optional member')
+    from lab.exp import artifacts
+    from lab.exp.core import member
+    relative=member(value.get('member','.'))
+    artifacts.member_contents(value['store'],value['reference'],relative)
+    path=Path(value['store']).resolve(strict=True)/value['reference']['artifact_id']/'payload'/relative
+    return path,value
+
+
 def selection(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=None, otlp_dependencies=None):
     """Describe the same literal material selection consumed by variant build.py."""
     source = ROOT/'variants'/variant
     if variant not in I14_VARIANTS:
         raise ValueError('新材料生产首版只支持四个 I14 variant')
-    skills = None
-    for call in ast.walk(ast.parse((source/'build.py').read_text())):
-        if isinstance(call, ast.Call) and isinstance(call.func, ast.Name) and call.func.id == 'assemble':
-            skills = next(ast.literal_eval(value.value) for value in call.keywords if value.arg == 'skills')
-    if not skills:
-        raise ValueError('variant build 必须声明字面量 skills 选择')
-    runtime = Path(runtime).resolve(strict=True)
+    tree=ast.parse((source/'build.py').read_text())
+    declarations=[node for node in tree.body if isinstance(node,ast.Assign)
+                  and any(isinstance(target,ast.Name) and target.id=='SKILLS' for target in node.targets)]
+    if len(declarations)!=1:
+        raise ValueError('variant build must declare one literal SKILLS selection')
+    skills=ast.literal_eval(declarations[0].value)
+    if not isinstance(skills,tuple) or not skills or any(not isinstance(name,str) for name in skills):
+        raise ValueError('variant SKILLS must be a nonempty tuple of skill names')
+    runtime, runtime_binding = _selected_asset(runtime)
     if not (runtime/'bin/braid').is_file():
         raise ValueError('材料生产需要明确含 Braid 的 runtime')
     child_sources = runtime/'node_modules/pi-subagents/src/runs'
@@ -274,28 +290,34 @@ def selection(variant, runtime, skill_source=None, tool_env=None, e2e_runtime=No
             'getPiSpawnCommand(args' not in foreground or 'getPiSpawnCommand(args' not in background or
             'PI_SUBAGENT_PI_BINARY' not in spawning):
         raise ValueError('冻结child接线未声明继承父环境及预算包装器；不复用此runtime')
-    skill_source = Path(skill_source or ROOT/'harness/skills').resolve(strict=True)
-    # assemble copies every source member except variant.json and build.py;
-    # build.py still participates because it executes the material selection.
+    skill_source, skill_binding = _selected_asset(skill_source or ROOT/'harness/skills')
+    # The declarative build selection and the final source bytes both affect production.
     variant_source = {name: identity for name, identity in _tree_identity(source).items()
                       if name != 'variant.json'}
     dependencies = {'variant': variant, 'variant_source': variant_source,
-                    'builder': _tree_identity(Path(__file__)), 'runtime': _tree_identity(runtime),
+                    'builder': _tree_identity(Path(__file__)), 'runtime': ({'binding':runtime_binding} if runtime_binding else _tree_identity(runtime)),
                     'skills': {name: _tree_identity(skill_source/name) for name in skills},
+                    'shared_skills': ({'binding':skill_binding} if skill_binding else _tree_identity(skill_source)),
                     'support': {name: _tree_identity(ROOT/'scripts'/name) for name in
-                                ('agent_support.py','braid_runtime.py','core.py','harness_layout.py','model_budget.mjs','runtime_resources.py')},
+                                ('agent_support.py','braid_runtime.py','core.py','harness_layout.py','execution_context.py','execution_bootstrap.py','state_writer.py','model_budget.mjs','runtime_resources.py')},
                     'checkpoint': _tree_identity(ROOT/'submission/exp_checkpoint.py'),
                     'prepared_executor': _tree_identity(ROOT/'submission/recover_completed.py') if variant in I14_VARIANTS else None,
-                    'collector': _tree_identity(ROOT/'lab/otlp.py'),
+                    'collector': {name:_tree_identity(ROOT/'lab'/name) for name in ('__init__.py','otlp.py','control.py','records.py','exp/__init__.py','exp/core.py','exp/telemetry.py','exp/state.py','exp/artifacts.py','arc_bench/__init__.py','arc_bench/workspace_archive.py')},
                     'otlp_requirements': _tree_identity(ROOT/'lab/requirements.txt'),
                     'sdk_wrapper': _tree_identity(ROOT/'lab/arc_bench/agent_runtime'),
                     'sdk_exporter': _tree_identity(ROOT/'lab/arc_bench/__main__.py')}
-    if tool_env is not None: dependencies['private_tool_credentials'] = _tree_identity(Path(tool_env))
+    if tool_env is not None:
+        tool_source,tool_binding=_selected_asset(tool_env)
+        dependencies['private_tool_credentials'] = {'binding':tool_binding} if tool_binding else _tree_identity(tool_source)
     if variant == 'pi-braid-i14-e2e':
-        e2e_runtime = Path(e2e_runtime or runtime/'e2e').resolve(strict=True)
-        dependencies['e2e_runtime'] = _tree_identity(e2e_runtime)
+        e2e_runtime,e2e_binding = _selected_asset(e2e_runtime or runtime/'e2e')
+        addon_source=e2e_runtime/'addon-source.json'
+        if not addon_source.is_file() or json.loads(addon_source.read_text()).get('superseded_reason'):
+            raise ValueError('e2e addon needs its current frozen build provenance')
+        dependencies['e2e_runtime'] = {'binding':e2e_binding} if e2e_binding else _tree_identity(e2e_runtime)
     if otlp_dependencies is not None:
-        dependencies['otlp_dependencies'] = _tree_identity(Path(otlp_dependencies))
+        otlp_root,otlp_binding=_selected_asset(otlp_dependencies)
+        dependencies['otlp_dependencies'] = {'binding':otlp_binding} if otlp_binding else _tree_identity(otlp_root)
     else:
         dependencies['otlp_build'] = {'python': platform.python_version(), 'pure_python': True}
     return dependencies
@@ -305,49 +327,127 @@ def plan_material(variant, runtime, skill_source=None, tool_env=None, e2e_runtim
     return selection(variant, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies)
 
 
+def _component(cache, name, dependencies, populate):
+    identity = _key([name, dependencies])
+    target = cache/'components'/identity
+    receipt = target/'component.json'
+    if receipt.exists():
+        value = json.loads(receipt.read_text())
+        if value['dependencies'] != dependencies:
+            raise ValueError('component production identity changed')
+        return value
+    stage = cache/'.staging'/('component-' + uuid.uuid4().hex)
+    stage.mkdir(parents=True)
+    try:
+        populate(stage/'payload')
+        prune_metadata(stage/'payload')
+        value = {'component_id': 'component-' + identity, 'dependencies': dependencies,
+                 'root': str(target/'payload')}
+        (stage/'component.json').write_text(json.dumps(value, ensure_ascii=False, sort_keys=True)+'\n')
+        target.parent.mkdir(parents=True, exist_ok=True)
+        stage.rename(target)
+        return value
+    except BaseException as error:
+        (stage/'failure.json').write_text(json.dumps({'type':type(error).__name__, 'message':str(error)}))
+        raise
+
+
 def produce(variant, output_store, runtime, skill_source=None, tool_env=None,
             e2e_runtime=None, otlp_dependencies=None, expected_dependencies=None):
-    """Reuse verified material production across runs; callers publish it once."""
-    cache = Path(output_store).resolve()
-    cache.mkdir(parents=True, exist_ok=True)
+    """Produce independently reusable assets; a delivery expands them only on demand."""
+    cache=Path(output_store).resolve(); cache.mkdir(parents=True,exist_ok=True)
     with (cache/'.producer.lock').open('a') as lock:
-        fcntl.flock(lock, fcntl.LOCK_EX)
-        dependencies = plan_material(variant, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies)
-        if expected_dependencies is not None and dependencies != expected_dependencies:
-            raise ValueError('producer dependencies 与冻结选择不一致；必须重新编译')
-        otlp = _otlp_dependencies(cache, otlp_dependencies)
-        material_id = material_identity(dependencies)
-        identity = material_id.removeprefix('material-')
-        target = cache/'materials'/identity
-        receipt = target/'material.json'
-        if receipt.exists():
-            value = json.loads(receipt.read_text())
-            if value['dependencies'] != dependencies or _tree_identity(target/'payload') != value['contents']:
-                raise ValueError('已发布材料或依赖身份发生变化；保留现场，不覆盖')
-            return {**value, 'manifest_sha256': hashlib.sha256(receipt.read_bytes()).hexdigest(), 'reused': True}
-        stage = cache/'.staging'/('material-' + uuid.uuid4().hex)
-        stage.mkdir(parents=True)
-        command = [sys.executable, str(ROOT/'variants'/variant/'build.py'), '--stage', str(stage/'payload'),
-                   '--runtime', str(Path(runtime).resolve(strict=True)), '--skills', str(Path(skill_source or ROOT/'harness/skills').resolve(strict=True))]
-        for flag, value in (('--tool-env', tool_env), ('--e2e-runtime', e2e_runtime)):
-            if value is not None: command += [flag, str(Path(value).resolve(strict=True))]
-        (stage/'production.json').write_text(json.dumps({'phase': 'staging', 'argv': command, 'dependencies': dependencies}, ensure_ascii=False))
-        try:
-            subprocess.run(command, check=True, env={**os.environ, 'FACTORY26_BUILD_OTLP_DEPENDENCIES': str(otlp)})
-            prune_metadata(stage/'payload')
-            if plan_material(variant, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies) != dependencies:
-                raise ValueError('生产期间材料来源发生变化')
-            value = {'kind': 'factory26.harness.material', 'schema_version': 2,
-                     'material_id': material_id, 'root': str(target/'payload'),
-                     'dependencies': dependencies, 'capabilities': material_capabilities(),
-                     'contents': _tree_identity(stage/'payload')}
-            (stage/'material.json').write_text(json.dumps(value, ensure_ascii=False, sort_keys=True)+'\n')
-            target.parent.mkdir(parents=True, exist_ok=True)
-            stage.rename(target)
-            return {**value, 'manifest_sha256': hashlib.sha256(receipt.read_bytes()).hexdigest(), 'reused': False}
-        except BaseException as error:
-            (stage/'failure.json').write_text(json.dumps({'type': type(error).__name__, 'message': str(error)}, ensure_ascii=False))
-            raise
+        fcntl.flock(lock,fcntl.LOCK_EX)
+        dependencies=expected_dependencies or plan_material(variant,runtime,skill_source,tool_env,e2e_runtime,otlp_dependencies)
+        runtime,runtime_binding=_selected_asset(runtime)
+        skill_source,skill_binding=_selected_asset(skill_source or ROOT/'harness/skills')
+        source=ROOT/'variants'/variant
+        def runtime_files(target):
+            if _tree_identity(runtime) != dependencies['runtime']:
+                raise ValueError('runtime changed since selection')
+            shutil.copytree(runtime,target,symlinks=True,copy_function=copy_file)
+        def bound_component(name,binding):
+            return {'component_id':binding['reference']['artifact_id'], 'dependencies':dependencies['runtime' if name=='runtime' else 'shared_skills'],
+                    'root':str(runtime if name=='runtime' else skill_source), **binding}
+        components={'runtime':bound_component('runtime',runtime_binding) if runtime_binding else _component(cache,'runtime',dependencies['runtime'],runtime_files)}
+        # Shared skills remain independent of which subset each variant exposes.
+        skill_identity=dependencies['shared_skills']
+        def skill_files(target):
+            if _tree_identity(skill_source)!=skill_identity: raise ValueError('skills changed since selection')
+            shutil.copytree(skill_source,target,symlinks=True,copy_function=copy_file)
+        components['skills']=bound_component('skills',skill_binding) if skill_binding else _component(cache,'skills',skill_identity,skill_files)
+        otlp_source=_selected_asset(otlp_dependencies)[0] if otlp_dependencies is not None else None
+        otlp=_otlp_dependencies(cache,otlp_source)
+        support_names=('agent_support.py','braid_runtime.py','core.py','harness_layout.py',
+                       'execution_context.py','execution_bootstrap.py','state_writer.py','model_budget.mjs','runtime_resources.py')
+        support_dependencies={name:dependencies['support'][name] for name in support_names}
+        support_dependencies.update(checkpoint=dependencies['checkpoint'],recover=dependencies['prepared_executor'],
+                                    collector=dependencies['collector'],otlp=_tree_identity(otlp))
+        def support_readback():
+            actual={'scripts':{name:_tree_identity(ROOT/'scripts'/name) for name in support_names},
+                'checkpoint':_tree_identity(ROOT/'submission/exp_checkpoint.py'),
+                'recover':_tree_identity(ROOT/'submission/recover_completed.py'),
+                'collector':{name:_tree_identity(ROOT/'lab'/name) for name in dependencies['collector']}}
+            expected={'scripts':dependencies['support'],'checkpoint':dependencies['checkpoint'],
+                'recover':dependencies['prepared_executor'],'collector':dependencies['collector']}
+            if actual!=expected:
+                raise ValueError('facility support source closure changed since frozen selection')
+        def support_files(target):
+            support_readback()
+            target.mkdir()
+            for name in support_names: shutil.copy2(ROOT/'scripts'/name,target/name)
+            shutil.copy2(ROOT/'submission/exp_checkpoint.py',target/'exp_checkpoint.py')
+            shutil.copy2(ROOT/'submission/recover_completed.py',target/'recover_completed.py')
+            shutil.copy2(ROOT/'lab/otlp.py',target/'otlp.py')
+            for name in ('__init__.py','otlp.py','control.py','records.py','exp/__init__.py','exp/core.py','exp/telemetry.py','exp/state.py','exp/artifacts.py','arc_bench/__init__.py','arc_bench/workspace_archive.py'):
+                destination=target/'lab'/name
+                destination.parent.mkdir(parents=True,exist_ok=True)
+                shutil.copy2(ROOT/'lab'/name,destination)
+            shutil.copytree(otlp,target/'otlp-deps',copy_function=copy_file)
+            support_readback()
+        components['support']=_component(cache,'support',support_dependencies,support_files)
+        def variant_files(target):
+            if (source/'package-manifest.json').exists() or (source/'replay-manifest.json').exists():
+                raise ValueError('new definition source must not contain a historical delivery manifest')
+            if _tree_identity(ROOT/'lab/arc_bench/agent_runtime')!=dependencies['sdk_wrapper'] or _tree_identity(ROOT/'lab/arc_bench/__main__.py')!=dependencies['sdk_exporter']:
+                raise ValueError('generated SDK wrapper source changed since selection')
+            observed={name:identity for name,identity in _tree_identity(source).items() if name!='variant.json'}
+            if observed!=dependencies['variant_source']: raise ValueError('variant changed since selection')
+            target.mkdir()
+            for item in source.iterdir():
+                if item.name in {'__pycache__','variant.json','build.py'}: continue
+                if item.is_dir(): shutil.copytree(item,target/item.name,copy_function=copy_file)
+                else: shutil.copy2(item,target/item.name)
+            subprocess.run([sys.executable,'-B','-m','lab.arc_bench','runtime','export','--output',str(target/'arc-runtime.pyz')],
+                           cwd=ROOT,check=True,stdout=subprocess.DEVNULL)
+            if {name:identity for name,identity in _tree_identity(source).items() if name!='variant.json'}!=observed:
+                raise ValueError('variant changed during production')
+        variant_dependencies={key:dependencies[key] for key in ('variant','variant_source','sdk_wrapper','sdk_exporter')}
+        components['agent']=_component(cache,'agent',variant_dependencies,variant_files)
+        if variant=='pi-braid-i14-e2e':
+            addon,addon_binding=_selected_asset(e2e_runtime or runtime/'e2e')
+            components['e2e-runtime']=({'component_id':addon_binding['reference']['artifact_id'],
+                'dependencies':dependencies['e2e_runtime'],'root':str(addon),**addon_binding} if addon_binding else
+                _component(cache,'e2e-runtime',dependencies['e2e_runtime'],
+                    lambda target:shutil.copytree(addon,target,symlinks=True,copy_function=copy_file)))
+        private_inputs={}
+        if tool_env is not None:
+            tool_source,tool_binding=_selected_asset(tool_env)
+            if tool_binding:
+                from lab.exp import artifacts
+                tool_source=artifacts.resolve(tool_binding['store'],tool_binding['reference'],tool_binding.get('member','.'),consumer='private-tool-producer')
+            if not tool_binding and _tree_identity(tool_source)!=dependencies['private_tool_credentials']:
+                raise ValueError('private tool input changed since frozen selection')
+            private_dir=cache/'private-inputs'/_key(dependencies['private_tool_credentials'])
+            private_file=private_dir/'.private/tool-env.json'
+            if not private_file.exists():
+                write_tool_credentials(tool_source,private_dir)
+            private_inputs['tool_env']={'root':str(private_file),'dependencies':dependencies['private_tool_credentials']}
+        capabilities=material_capabilities()
+        capabilities['execution_context']={'schema_version':1,'required':True}
+        return {'kind':'factory26.harness.material','schema_version':3,'variant':variant,
+                'material_id':material_identity(dependencies),'dependencies':dependencies,
+                'capabilities':capabilities,'root':components['agent']['root'],'components':components,'private_inputs':private_inputs}
 
 
 def package(variant, output, docker_context=None, runtime=None, stage=None,
@@ -357,14 +457,23 @@ def package(variant, output, docker_context=None, runtime=None, stage=None,
     if output is not None and Path(output).exists(): raise FileExistsError(output)
     cache = Path(cache_root or ROOT/'runs/material-cache')
     material = produce(variant, cache, runtime, skill_source, tool_env, e2e_runtime, otlp_dependencies)
-    bundle = Path(material['root'])
+    from lab.exp import artifacts, definitions, delivery
+    store = cache/'artifacts'
+    artifacts.initialize(store)
+    consumer='package-'+material['material_id']
+    _, definition=definitions.bind(material,store,cache,consumer)
+    private_inputs=definitions.bind_private(material,store,consumer)
+    reference=delivery.project(definition,store,cache,consumer,zipped=output is not None,private_inputs=private_inputs)
+    bundle=artifacts.resolve(store,reference,consumer=consumer)
     if stage is not None:
-        shutil.copytree(bundle, Path(stage), symlinks=True)
+        if output is not None:
+            directory_ref=delivery.project(definition,store,cache,consumer,private_inputs=private_inputs)
+            bundle_directory=artifacts.resolve(store,directory_ref,consumer=consumer)
+        else: bundle_directory=bundle
+        shutil.copytree(bundle_directory,Path(stage),symlinks=True,copy_function=copy_file)
     if output is not None:
-        records = json.loads((Path(runtime)/'runtime-source.json').read_text()).get('sources', {}) if (Path(runtime)/'runtime-source.json').exists() else {}
-        write_zip(bundle, Path(output).resolve(), 'pi', records,
-                  {'variant': variant, **material['capabilities'], 'material_id': material['material_id']}, persist_manifest=False)
-    if output is None and stage is None: raise ValueError('需要 output 或 stage')
+        Path(output).parent.mkdir(parents=True,exist_ok=True)
+        copy_file(bundle,Path(output))
     return Path(output or stage).resolve()
 
 

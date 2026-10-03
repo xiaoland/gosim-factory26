@@ -508,8 +508,13 @@ def start_shared_proxy(runtime, run, env):
     command = [str(runtime/'bin/node'), str(runtime/'node_modules/portless/dist/cli.js'),
                'proxy', 'start', '--foreground', '--skip-trust', '--no-tls', '-p', str(port)]
     log = run/'shared-proxy.log'
+    try:
+        from .state_writer import gate, spawn
+    except ImportError:
+        from state_writer import gate, spawn
+    gate(environment)
     with log.open('w') as stream:
-        child = subprocess.Popen(command, cwd=run, env=environment, start_new_session=True,
+        child = spawn(command, cwd=run, environment=environment,role='service',start_new_session=True,
                                  stdout=stream, stderr=subprocess.STDOUT)
     identity = process_identity(child.pid)
     process_evidence(run, 'operations.jsonl', {'kind': 'process_started', 'role': 'shared-proxy',
@@ -534,10 +539,17 @@ def stop_shared_proxy(child, run):
     """Wait the foreground owner; never infer ownership from a stale proxy PID file."""
     _signal_process(child, signal.SIGTERM, run, 'shared-proxy-stop')
     try:
-        return _wait_process(child, run, 'shared-proxy-stop', timeout=5)
+        result = _wait_process(child, run, 'shared-proxy-stop', timeout=5)
     except subprocess.TimeoutExpired:
         _signal_process(child, signal.SIGKILL, run, 'shared-proxy-stop-timeout')
-        return _wait_process(child, run, 'shared-proxy-stop-timeout')
+        result = _wait_process(child, run, 'shared-proxy-stop-timeout')
+
+    try:
+        from .state_writer import closed
+    except ImportError:
+        from state_writer import closed
+    closed(getattr(child,'_state_writer',None))
+    return result
 
 def browser_executable(runtime):
     """Use the portable wrapper or the browser paired with this runtime's Playwright."""
@@ -657,9 +669,15 @@ def cleanup_workspace(work):
     return pids
 
 def logged(command, cwd, env, log, cleanup_errors=None):
+    try:
+        from .state_writer import gate, spawn, closed
+    except ImportError:
+        from state_writer import gate, spawn, closed
+    gate(env)
     with log.open("w") as output:
-        proc = subprocess.Popen(command, cwd=cwd, env=env, stdout=output,
+        proc = spawn(command, cwd=cwd, environment=env,role='native',stdout=output,
                                 stderr=subprocess.STDOUT, start_new_session=True)
+        state_receipt=proc._state_writer
         process_evidence(log.parent, 'operations.jsonl', {'kind': 'process_started', 'role': 'logged-command',
                                                          'process': process_identity(proc.pid), 'log': str(log)})
         try:
@@ -670,6 +688,7 @@ def logged(command, cwd, env, log, cleanup_errors=None):
                 # Generation has an outer, verified workspace cleanup before freezing.
                 if cleanup_errors is None or proc.returncode is None: raise
                 cleanup_errors.append({'pid':proc.pid,'exit_code':proc.returncode,'error':str(exc)})
+            if proc.returncode is not None: closed(state_receipt)
 
 def validate_application(app):
     for directory, script in (('frontend', 'build'), ('backend', 'start')):

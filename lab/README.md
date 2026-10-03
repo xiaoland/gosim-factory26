@@ -72,7 +72,11 @@ Docker 离线 job 显式设置 backend.network="none"，create 记录在 attempt
 
 制品用 `artifact import/verify/export/transfer` 发布、核验及装配，`evidence` 按受限 member/字节游标读取。导入历史字节不会取得新执行证明。`telemetry snapshot/batches/export/ingest` 保留 stream/epoch/源序列、原始 protobuf 与错误；摄取同源批次幂等，冲突原件保留。Analyze 固定原件摘要和采集截止点；没有调用身份时模型用量明确未知，不从原始批次数推导 token 或费用。
 
-四个新 I14 Harness 的布局分为冻结定义、运行派生输入和可写状态。公共材料包含布局支持代码；runner 输入绑定实际 artifact reference/member。Checkpoint/prepared schema 3 只复制状态并独立保留定义依赖，历史 schema 1/2 沿原冻结合同。SDK 自包含交付不变；新终态归档在实际映射和内容证明成立时保存状态与定义关系，不能将它当作完整 checkpoint。
+四个新 I14 Harness 使用独立的 `factory26.harness.definition` 组合：variant、runtime、skills 和 support 组件各自发布，角色通过实际 artifact reference/member 关联。Local/Docker 直接消费这些组件；SDK 目录与 Hosted ZIP 是按定义缓存的交付投影。Controller/status 源码属于冻结执行器闭包，不参与 Harness 组件及交付投影的内容身份。运行材料不再以自包含交付目录为唯一内部单位。
+
+Fresh、prepared 和 SDK child 使用共同 assembly，显式绑定本域定义根、可写 state、实际 namespace 和入口。公共 bootstrap 在实际运行域提供持续资源采样与 telemetry，并从同一执行上下文派生入口变量；父域的服务路径和凭据值不成为公开子域事实。旧冻结执行器仍沿自己的合同。
+
+新终态将 workspace 封口一次。Workspace named output 与 terminal archive 通过引用和 member 消费同一不可变快照；archive 保存日志、遥测和该关系，不再复制 workspace。Docker 在域内封口并保留位置，完整导出是显式输运操作。应用交付仍独立冻结，内容快照不自动具备完整 checkpoint 能力。 `excluded_definitions` 明确列出省略目录及对应 reference/member；含这些目录的 whole output 必须声明 `workspace-snapshot` 类型。普通目录物化拒绝遗漏定义的整树视图，不受影响的具体状态成员可继续读取。显式 export 将封口资产及定义关系接收到宿主资产库，回执的 `sealed-asset-relations` 表示资产已接收，不表示活动 workspace 已安装。
 
 Harness checkpoint/prepare 的公共生产接口、来源停止门控和路径限制见[恢复说明](../docs/deployment/recovery.md)。模型/收费生命周期与跨环境恢复的尚未取得实测见[任务 packet](../tasks/experiment-dx-review/packet.md)。本仓库不运行设施测试或 smoke；真实离线材料取得的反馈不替代模型实验验收。
 
@@ -89,6 +93,10 @@ Docker schema 2 使用运行宿主上的 detached runner，负载容器只读挂
 
 受管 create/start/stop/pause/resume 先保存版本化意图，再执行和读回物理效果。超时留下 pending；重入原请求查询效果，不重发 create/start。终态实例禁止再次 start，新执行重新准入。只读 query 使用已核验 Mountpoint 的 bind，不按卷名称打开并意外创建缺失卷；正常使用期间不删除或重建域资产根。Query、输运和构建不是另一个生成调度系统，但各自必须有界并发、超时、清理和实际资源约束。
 
-服务 ready、入口确认、named output 封口、telemetry 封口及完整 archive 分别记录。必需 ResourceEvidence 由 runner 持有，Docker 取实际负载的 cgroup 样本，独立于 OTLP 开关。声明产物封口并保留后，同 daemon 的消费者按原位置装配；跨域或 Hosted 才请求输运。完整归档继续保全，其失败不能把已成功的 main 改成失败，也不要求重新运行入口。新 runner 对已封口的 terminal staging 使用显式同盘 handover：先耐久记录请求、来源和内容身份，再 rename 到 artifact publication staging；发布重入复用原 artifact，rename 后失响应从原 handover 接续，不再保留一份相同 terminal staging。原工作区和未确认半成品始终保留。Docker 终态下载的完整目录移入最终 attempt 路径，保存内容核对和耐久安装回执后才释放相同下载 scratch，未归属 metadata 保留。ARC SDK 新产生的输出 tar 标明 transport scratch，只有本地输出完成核对、耐久保存并取得 verified 回执才释放；重入依据保存的本地输出与回执，旧 tar 不按新规则自动删除。
+服务 ready、入口确认、named output 封口、telemetry 封口及完整 archive 分别记录。必需 ResourceEvidence 由 runner 持有，Docker 取实际负载的 cgroup 样本，独立于 OTLP 开关。声明产物封口并保留后，同 daemon 的消费者按原位置装配；跨域或 Hosted 才请求输运。完整归档继续保全，其失败不能把已成功的 main 改成失败，也不要求重新运行入口。新 runner 对已封口的 terminal staging 使用显式同盘 handover：先耐久记录请求、来源和内容身份，再 rename 到 artifact publication staging；发布重入复用原 artifact，rename 后失响应从原 handover 接续，不再保留一份相同 terminal staging。原工作区和未确认半成品始终保留。Docker 默认在原 daemon 的资产卷保留封口快照和终态证据，宿主只保存引用及位置回执。显式完整导出的目录仍须保存内容核对和耐久安装回执后才释放下载 scratch，未归属 metadata 保留。ARC SDK 新产生的输出 tar 标明 transport scratch，只有本地输出完成核对、耐久保存并取得 verified 回执才释放；重入依据保存的本地输出与回执，旧 tar 不按新规则自动删除。
 
 Console accessor 需要域内 `access_resource_id`，创建和启动属于同一权威，其写入许可与 checkpoint 捕获共同排序。新登记不能追认旧未覆盖的活动 accessor；停止后不可重启同一出生实例，新的访问实例需重新创建及登记。当前服务的部署仍由其 owner 安排。
+
+Provider 已保存的会话生命周期、连续观察、资源等待及 native 证据覆盖范围也进入 status/monitor 投影。只消费当前 attempt 引用且身份一致的原件，不重新采集或分类；外层 Local supervisor 与实际 Docker child 的状态分别显示，外层 running 不证明子容器或模型已经开始。
+
+受管 state 的已接受动作原回执也进入统一视图，保留 holder、generation、writer、capture 和 snapshot 的分别身份。多域 holder 分别显示；保存的动作回执不等于当前远端观察，status 不为此启动新的查询或采集。

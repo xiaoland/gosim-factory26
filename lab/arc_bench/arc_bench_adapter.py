@@ -65,6 +65,10 @@ def instrument_entry(agent, destination, *, file_telemetry=False):
     这里只观察进程，不解释任意 Harness 的私有会话或交付格式。
     """
     destination = Path(destination)
+    if agent.is_dir() and (agent/'delivery-layout.json').is_file():
+        # New deliveries already contain the shared entry and its frozen support.
+        # The official SDK stages this projection once; no per-attempt envelope copy.
+        return agent
     original = destination / 'agent'
     from lab.exp.artifacts import copy_file, verify
     # A delivery copy belongs beside the execution, not in the state captured by
@@ -75,6 +79,9 @@ def instrument_entry(agent, destination, *, file_telemetry=False):
         original.mkdir(parents=True)
         with ZipFile(agent) as archive:
             archive.extractall(original)
+        if (original/'delivery-layout.json').is_file():
+            # ZIP and directory use the identical frozen delivery entry.
+            return original
     binding = None
     for value in json.loads(os.environ.get('FACTORY26_EXP_INPUT_BINDINGS', '{}')).values():
         source = Path(value['root']).resolve(strict=True)
@@ -270,12 +277,18 @@ def record_capture_layout(workspace, stage, entry, resource_path, delivery):
     if value.get('kind') != 'factory26.harness.capture' or value.get('schema_version') != 1:
         raise ValueError('SDK capture layout belongs to a different contract')
     try:
-        if entry.get('status') != 'completed':
-            raise ValueError('SDK definition capture lacks completed entry receipt')
         binding_path = delivery / 'definition-binding.json'
-        if not binding_path.is_file():
+        if binding_path.is_file():
+            binding=read(binding_path)
+        elif (delivery/'delivery-layout.json').is_file():
+            candidates=[row for row in json.loads(os.environ.get('FACTORY26_EXP_INPUT_BINDINGS','{}')).values()
+                        if Path(row['root']).resolve()==delivery.resolve()]
+            if len(candidates)!=1:
+                raise ValueError('composed delivery lacks its actual retained input reference')
+            binding=candidates[0]
+        else:
             raise ValueError('SDK delivery has no retained definition artifact relation')
-        binding, resource = read(binding_path), read(resource_path)
+        resource=read(resource_path)
         if resource.get('state') != 'exited' or not resource.get('container_id'):
             raise ValueError('SDK execution terminality is not confirmed')
         if Path(resource['workspace']).resolve() != stage or not stage.is_relative_to(workspace):
@@ -284,6 +297,37 @@ def record_capture_layout(workspace, stage, entry, resource_path, delivery):
             transport = read(Path(resource['transport']))
             if transport['stages'][resource['stage']].get('recovery') != 'verified':
                 raise ValueError('SDK capture requires verified output reception')
+        if resource.get('capture_source'):
+            logical_binding=Path(entry.get('capture_binding') or '')
+            if not logical_binding.is_absolute() or not logical_binding.is_relative_to('/workspace'):
+                raise ValueError('SDK bootstrap did not return its actual source-binding record')
+            source_binding=read(stage/logical_binding.relative_to('/workspace'))
+            expected_namespace=read(Path(resource['capture_source']))['namespace']
+            if source_binding['namespace']!=expected_namespace or source_binding['attempt_id']!=resource['exp_attempt_id'] or source_binding['incarnation']!=resource['exp_incarnation']:
+                raise ValueError('SDK source-binding differs from actual child attempt/namespace')
+            source_binding['records']['source_binding']=str(Path(resource['stage'])/logical_binding.relative_to('/workspace'))
+            source_binding['namespace'].update(started_at=resource['started_at'],labels=resource['labels'])
+            source_binding['status']='writer-terminal-and-reception-verified'
+            holder=resource['state_binding']
+            holder['capture_source']=source_binding
+            if resource.get('transport'):
+                holder['snapshot']=read(Path(resource['transport']))['stages'][resource['stage']].get('workspace_snapshot')
+            stage_member=Path(resource['stage'])
+            assembly_member=Path(source_binding['records']['assembly'])
+            if not assembly_member.is_relative_to(stage_member):
+                raise ValueError('SDK assembly record escapes actual volume stage')
+            actual_assembly=read(stage/assembly_member.relative_to(stage_member))
+            actual_state=Path(actual_assembly['state']['root'])
+            expected_member=stage_member/actual_state.relative_to('/workspace')
+            if str(expected_member)!=source_binding['state_member']:
+                raise ValueError('SDK selected state differs from actual assembly namespace')
+            holder['selected_state']={'volume':source_binding['workspace']['volume'],
+                'subpath':source_binding['state_member'],'logical_root':str(actual_state)}
+            resource['state_binding']=holder
+            atomic(Path(resource['capture_source']),source_binding)
+            atomic(resource_path,resource)
+        if entry.get('status') != 'completed':
+            raise ValueError('SDK immutable delivery exclusion lacks completed entry receipt; verified state source remains registered')
         logical = Path(entry['definition_root'])
         if not logical.is_absolute() or '..' in logical.parts or not logical.is_relative_to('/workspace') or logical == Path('/workspace'):
             raise ValueError('wrapper definition root escapes the SDK workspace namespace')
@@ -379,6 +423,9 @@ def model_environment(base, output, host):
         job = read(Path(attempt_root) / 'attempt.json')['job']
         if job.get('arc_contract'):
             values = dict(line.split('=', 1) for line in lines if '=' in line and not line.lstrip().startswith('#'))
+            for key in ('CONTEXT7_API_KEY','EXA_API_KEY'):
+                if key not in values and os.environ.get(key):
+                    values[key]=os.environ[key]
             for key, value in job.get('environment', {}).items():
                 if key in values and values[key] != value:
                     raise ValueError('child model environment conflicts with compiled public policy: ' + key)

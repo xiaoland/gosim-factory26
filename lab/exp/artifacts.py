@@ -187,8 +187,59 @@ def deletion_intent(store, ref, request_id, *, writer_closed, preservation_satis
         return deletion
 
 
+def allocate_scratch(store, path):
+    """Request-owned same-domain production scratch; failures remain recoverable."""
+    store = Path(store).resolve(strict=True)
+    require(read(store / 'store.json'), 'artifact-store')
+    relative = member(path)
+    if relative == '.':
+        raise ValueError('production scratch needs a bounded request member')
+    target = store / '.scratch' / relative
+    current = store
+    for part in ('.scratch', *Path(relative).parts):
+        current = current / part
+        if current.is_symlink():
+            raise ValueError('production scratch cannot redirect through links')
+        if not current.exists():
+            current.mkdir()
+            _sync(current.parent)
+    return target
+
+
+class PublicationWindow:
+    """Ephemeral readback supplied by publication, never reconstructed from receipts."""
+    def __init__(self):
+        self._objects = {}
+
+    def _published(self, store, reference, manifest):
+        self._objects[canonical([str(store), reference])] = manifest
+
+    def resolve(self, store, reference, path, *, consumer, retention):
+        store = Path(store).resolve(strict=True)
+        manifest = self._objects.get(canonical([str(store), reference]))
+        if manifest is None:
+            return resolve(store, reference, path, consumer=consumer, retention=retention)
+        location = _object_location(store, reference)[1]
+        _available(location)
+        held = location['retentions'].get(retention['retention_id'])
+        if not held or held['state'] != 'held' or held['consumer'] != consumer:
+            raise Blocked('publication readback requires its current consumer retention')
+        path = member(path)
+        contents_member(manifest['contents'], path)
+        payload = store / reference['artifact_id'] / 'payload'
+        selected = payload / path
+        current = payload
+        for part in Path(path).parts:
+            current = current / part
+            if current.is_symlink():
+                raise ValueError('publication member redirects through a link')
+        if not selected.exists() or not selected.resolve().is_relative_to(payload):
+            raise ValueError('publication member is unavailable')
+        return selected
+
+
 def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
-            request_id=None, consumer=None, purpose='producer', domain_identity=None, move_source=False):
+            request_id=None, consumer=None, purpose='producer', domain_identity=None, move_source=False, _readback=None):
     """Publish immutable content. Explicit handover consumes a sealed same-device source.
 
     A saved handover identity permits retry after its rename, without recopying or
@@ -196,9 +247,19 @@ def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
     """
     if move_source and Path(source).is_symlink():
         raise ValueError('handover source cannot redirect through a link')
+    original_source = Path(source).absolute()
     source, store = Path(source).resolve(), Path(store).resolve()
     if move_source and (source.is_relative_to(store) or store.is_relative_to(source)):
-        raise ValueError('handover source and artifact store must not overlap')
+        scratch = store / '.scratch'
+        if '..' in original_source.parts or not original_source.is_relative_to(scratch) or original_source == scratch or not source.is_relative_to(scratch):
+            raise ValueError('handover within a store requires owned production scratch')
+        current = original_source
+        while current != store:
+            if current.is_symlink():
+                raise ValueError('handover production scratch cannot traverse a link')
+            current = current.parent
+    if _readback is not None and not isinstance(_readback, PublicationWindow):
+        raise TypeError('publication readback must belong to one operation window')
     binding = initialize(store, domain_identity)
     request_id = identifier(request_id or new_id('publish'))
     parameters = {'source': str(source), 'type': artifact_type, 'provenance': provenance or {},
@@ -220,7 +281,9 @@ def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
         target = store / artifact_id
         if target.exists():
             ref = {'artifact_id': artifact_id, 'manifest_sha256': digest(target / 'manifest.json')}
-            verify(store, ref)
+            verified = verify(store, ref)
+            if _readback is not None:
+                _readback._published(store, ref, verified)
             _available(_object_location(store, ref)[1])
             action.update(state='published', reference=ref)
             atomic(action_path, action)
@@ -285,6 +348,8 @@ def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
                 _sync(store)
                 action.update(state='published', reference=ref, published_at=time.time())
                 atomic(action_path, action)
+            if _readback is not None:
+                _readback._published(store, ref, value)
             return ref
         except BaseException as exc:
             atomic(staging / 'failure.json', error(exc))
@@ -379,11 +444,22 @@ def resolve(store, ref, path='.', *, consumer=None, request_id=None, retention=N
     return candidate
 
 
-def materialize(store, ref, destination, *, consumer=None, request_id=None, retention=None):
+def plain_member_contents(manifest, path='.'):
+    """Ordinary directory consumption must not silently omit definition subtrees."""
+    path = member(path)
+    for excluded in manifest.get('capabilities', {}).get('excluded_definitions', []):
+        missing = member(excluded['path'])
+        if path == '.' or missing == path or missing.startswith(path + '/'):
+            raise Blocked('composed workspace requires definition-aware assembly or a bounded state member')
+    return contents_member(manifest['contents'], path)
+
+
+def materialize(store, ref, destination, *, path='.', consumer=None, request_id=None, retention=None):
     """Verify received bytes before publication, without pre-reading the source."""
     destination = Path(destination).resolve() if not Path(destination).is_symlink() else Path(destination)
     consumer = consumer or ('assembly:' + str(destination))
-    request_id = request_id or ('assemble-' + canonical([consumer, ref])[:32])
+    path = member(path)
+    request_id = request_id or ('assemble-' + canonical([consumer, ref, path])[:32])
     if retention is None:
         retain(store, ref, consumer, 'assembly', request_id)
     else:
@@ -393,15 +469,24 @@ def materialize(store, ref, destination, *, consumer=None, request_id=None, rete
         if not held or held['state'] != 'held' or held['consumer'] != consumer:
             raise Blocked('read-only assembly requires the consumer existing held retention')
     manifest = _manifest(store, ref)
-    source = Path(store).resolve() / ref['artifact_id'] / 'payload'
+    expected = plain_member_contents(manifest, path)
+    payload = Path(store).resolve() / ref['artifact_id'] / 'payload'
+    source = payload / path
+    current = payload
+    for part in Path(path).parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError('artifact materialization member redirects through a link')
+    if not source.exists() or not source.resolve().is_relative_to(payload.resolve()):
+        raise ValueError('artifact materialization member is unavailable or escapes payload')
     if destination.is_symlink():
         raise ValueError('artifact destination cannot redirect through a link')
     if destination.exists():
-        if contents(destination) != manifest['contents']:
+        if contents(destination) != expected:
             raise ValueError('existing input materialization differs from artifact')
         return destination
-    if manifest['contents']['kind'] == 'directory':
-        for row in manifest['contents']['entries']:
+    if expected['kind'] == 'directory':
+        for row in expected['entries']:
             if row['type'] == 'link':
                 target = (source / row['path']).parent / row['target']
                 if not target.resolve().is_relative_to(source.resolve()):
@@ -412,7 +497,7 @@ def materialize(store, ref, destination, *, consumer=None, request_id=None, rete
         copy_file(source, staging)
     else:
         shutil.copytree(source, staging, symlinks=True, copy_function=copy_file)
-    if contents(staging) != manifest['contents']:
+    if contents(staging) != expected:
         raise ValueError('artifact materialization content differs')
     staging.rename(destination)
     _sync(destination.parent)
@@ -587,7 +672,8 @@ def main():
         value = release(args.store, request['reference'], request['retention_id'], request['request_id'])
     elif args.action == 'materialize':
         value = str(materialize(args.store, request['reference'], request['destination'],
-                                consumer=request['consumer'], request_id=request['request_id'], retention=request.get('retention')))
+                                path=request.get('member', '.'), consumer=request['consumer'],
+                                request_id=request['request_id'], retention=request.get('retention')))
     else:
         value = transfer(request['source_store'], args.store, request['reference'],
                          request_id=request['request_id'], consumer=request['consumer'])

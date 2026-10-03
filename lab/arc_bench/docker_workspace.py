@@ -193,11 +193,23 @@ class Workspace:
                                'endpoint': endpoint, 'image_id': image_id,
                                'shared_docker_slots': external_target['slots'], 'admission_volume': external_target['admission_volume'],
                                'resource_path': str(path)}
+            from lab.exp.core import canonical
+            asset_volume='exp-assets-'+canonical(endpoint['daemon_id'])[:24]
+            current.value['artifact_volume']=asset_volume
+            current.save()
             argv = ['create', '--memory', str(limits['memory_bytes']), '--cpus', str(limits['cpus']),
                     '--pids-limit', str(limits['pids']), '--name', current.value['helper_name'], *options,
                     '--user', '0', '--mount', f'type=volume,source={name},target=/transfer',
+                    '--mount',f'type=volume,source={asset_volume},target=/assets',
                     '--entrypoint', 'python3', image_id, '-u', '-c', 'import time; time.sleep(2147483647)']
             with admit(endpoint, helper_resource):
+                from lab.exp import backends
+                backends.managed(target(helper_resource),{'authority_resource_id':helper_resource['exp_attempt_id']},'volume-create',
+                    helper_resource['exp_request_id']+'--asset-volume-create',
+                    {'argv':['volume','create','--label','io.factory26.exp.asset-daemon='+endpoint['daemon_id'],asset_volume]})
+                asset_observation=inspect(endpoint,'volume',asset_volume)
+                if (asset_observation.get('Labels') or {}).get('io.factory26.exp.asset-daemon')!=endpoint['daemon_id']:
+                    raise ValueError('SDK shared artifact volume belongs to another domain')
                 create_volume(helper_resource, ['volume', 'create', *options, name])
                 volume = volume_owned(current.value)
                 if volume is None:
@@ -299,16 +311,53 @@ class Workspace:
                 return {'status': 'verified', 'stage': stage, 'sha256': expected['sha256'], 'source': entry['source']}
             entry['recovery_attempted_at'] = time.time()
             self.save()
-            helper = self.helper()
-            capture_resource = self.value['helper_resource']
-            helper_value = inspect(self.endpoint, 'container', helper)
-            capture_physical = {'container_id': helper, 'created': helper_value['Created'],
-                                'labels': helper_value['Config']['Labels'], 'started_at': capture_resource['started_at']}
-            capture_id = capture_resource['exp_request_id'] + '--capture-' + str(time.time_ns())
-            entry['capture_request_id'] = capture_id
-            self.save()
-            writer(capture_resource, capture_physical, 'capture-begin', capture_id + '-begin')
-            remote = '/transfer/' + stage
+            held=resource.get('state_binding')
+            if held:
+                from lab.exp import backends, state
+                capture_id=resource['exp_request_id']+'--sdk-terminal-capture'
+                sealed=backends.seal_sdk_source(Path(resource['exp_attempt_dir']),held,capture_id)
+                entry['workspace_snapshot']=sealed['snapshot']
+                entry['capture_request_id']=capture_id
+                self.save()
+                from lab.exp import admission
+                generation=entry.get('reception_generation',0)
+                while True:
+                    reception_request=capture_id+'--reception-'+str(generation)
+                    prior=admission.query(held['authority']['target'],reception_request+'--capture-helper').get('resource')
+                    if prior and prior['phase']=='released':
+                        generation+=1
+                        entry['reception_generation']=generation
+                        self.save()
+                        continue
+                    if prior and prior.get('pending'):
+                        raise ValueError('SDK reception helper has an unresolved physical action; retain original request')
+                    if prior and prior['phase']=='terminal':
+                        saved=entry.get('reception_helper')
+                        if not saved or saved['authority_resource_id']!=prior['resource_id'] or any(saved.get(key)!=prior['identity'].get(key) for key in ('container_id','created','labels')):
+                            raise ValueError('SDK terminal reception helper lacks its exact retained birth')
+                        backends.close_capture_helper(held['authority']['target'],saved,reception_request+'--reception-close')
+                        continue
+                    break
+                entry['reception_generation']=generation
+                entry['reception_request']=reception_request
+                self.save()
+                reception=backends.capture_helper(Path(resource['exp_attempt_dir']),held,reception_request,assets_only=not sealed['holder'].get('capture'))
+                entry['reception_helper']=reception
+                self.save()
+                helper=reception['container_id']
+                remote='/assets/'+sealed['snapshot']['reference']['artifact_id']+'/payload'
+                capture_resource=None
+            else:
+                helper = self.helper()
+                capture_resource = self.value['helper_resource']
+                helper_value = inspect(self.endpoint, 'container', helper)
+                capture_physical = {'container_id': helper, 'created': helper_value['Created'],
+                                    'labels': helper_value['Config']['Labels'], 'started_at': capture_resource['started_at']}
+                capture_id = capture_resource['exp_request_id'] + '--capture-' + str(time.time_ns())
+                entry['capture_request_id'] = capture_id
+                self.save()
+                writer(capture_resource, capture_physical, 'capture-begin', capture_id + '-begin')
+                remote = '/transfer/' + stage
             expected = json.loads(docker(self.endpoint, ['exec', helper, 'python3', '-c', REMOTE_OUTPUT_INVENTORY, remote],
                                          text=True, capture_output=True, timeout=600).stdout)
             write_json(Path(entry['resource']).with_suffix('.output-manifest.json'), expected)
@@ -345,7 +394,12 @@ class Workspace:
                 except BaseException:
                     previous.replace(local)
                     raise
-            writer(capture_resource, capture_physical, 'capture-end', capture_id + '-end')
+            if held:
+                backends.close_capture_helper(held['authority']['target'],reception,reception_request+'--reception-close')
+                if sealed['holder'].get('capture'):
+                    state.end_capture(held,capture_id+'--capture-close')
+            else:
+                writer(capture_resource, capture_physical, 'capture-end', capture_id + '-end')
             # The installed workspace, not the transport tar, becomes the durable preserved output.
             for directory, _, files in os.walk(local, topdown=False, followlinks=False):
                 for name in files:
@@ -451,6 +505,64 @@ class Workspace:
                     'error': error_text(error)}
 
 
+def _install_child_assets(resource, attempt, transport):
+    """Install actual component references before child creation, then bind RO members."""
+    from lab.exp.core import read, canonical
+    endpoint=resource['endpoint']
+    from lab.exp import artifacts, backends
+    deployment = read(Path(resource['exp_attempt_dir'])/'deployment.json')
+    code = deployment['executor_code']
+    artifacts.resolve(attempt['artifact_store'],code,consumer=resource['exp_attempt_id'])
+    code_member='facility/'+resource['exp_attempt_id']+'/executor/'+code['artifact_id']
+    helper_id=transport.helper()
+    helper_resource=dict(transport.value['helper_resource'],authority_workspace=transport.value['volume'])
+    helper_observation=inspect(endpoint,'container',helper_id)
+    helper_physical={'container_id':helper_id,'created':helper_observation['Created'],
+        'labels':helper_observation['Config']['Labels'],'started_at':helper_resource['started_at']}
+    writer(helper_resource,helper_physical,'writer-open',resource['exp_request_id']+'--code-install-open')
+    destination='/transfer/'+code_member
+    present=docker(endpoint,['exec',helper_id,'python3','-c','import pathlib,sys;print(pathlib.Path(sys.argv[1]).exists())',destination],check=True,capture_output=True,text=True).stdout.strip()
+    if present=='False':
+        docker(endpoint,['exec',helper_id,'mkdir','-p','/transfer/'+str(Path(code_member).parent)],check=True,capture_output=True)
+        docker(endpoint,['cp',str(Path(attempt['artifact_store'])/code['artifact_id']),helper_id+':'+destination],check=True,capture_output=True,timeout=600)
+    elif present!='True':
+        raise ValueError('SDK executor asset placement could not be read back')
+    expected=read(Path(attempt['artifact_store'])/code['artifact_id']/'manifest.json')['contents']
+    actual=json.loads(docker(endpoint,['exec',helper_id,'python3','-c',REMOTE_OUTPUT_INVENTORY,destination+'/payload'],check=True,capture_output=True,text=True,timeout=600).stdout)
+    if actual!=expected:
+        raise ValueError('SDK facility executor installation differs from its frozen artifact; retain partial installation')
+    writer(helper_resource,helper_physical,'writer-close',resource['exp_request_id']+'--code-install-close')
+    def asset_action(program, *arguments):
+        return docker(endpoint,['exec','--env','PYTHONPATH='+destination+'/payload',helper_id,'python3','-B','-c',program,*arguments],check=True,capture_output=True,text=True,timeout=1800)
+    asset_action('from lab.exp.artifacts import initialize;import json,sys;initialize("/assets",json.loads(sys.argv[1]))',
+        json.dumps({'kind':'docker','daemon_id':endpoint['daemon_id'],'volume_id':transport.value['artifact_volume']}))
+    from lab.exp.core import canonical
+    asset_refs={canonical(reference):reference for name,reference in attempt['job']['inputs'].items() if (name=='definition' or name.startswith('definition-')) and isinstance(reference,dict) and 'artifact_id' in reference}
+    asset_refs[canonical(code)]=code
+    for reference in asset_refs.values():
+        locations=json.loads(asset_action('from lab.exp.artifacts import query;import json;print(json.dumps(query("/assets")))').stdout)['locations']
+        available=any(row['reference']==reference and row['state']=='available' for row in locations)
+        if not available:
+            artifacts.resolve(attempt['artifact_store'],reference,consumer=resource['exp_attempt_id'])
+            stage_store='/transfer/facility/'+resource['exp_attempt_id']+'/incoming'
+            asset_action('from pathlib import Path;import sys;Path(sys.argv[1]).mkdir(parents=True,exist_ok=True)',stage_store)
+            docker(endpoint,['cp',str(Path(attempt['artifact_store'])/reference['artifact_id']),helper_id+':'+stage_store+'/'+reference['artifact_id']],check=True,capture_output=True,timeout=1800)
+            asset_action('from lab.exp.artifacts import transfer;from pathlib import Path;import json,sys;ref=json.loads(sys.argv[2]);(Path(sys.argv[1])/ref["artifact_id"]/"location.json").unlink(missing_ok=True);transfer(sys.argv[1],"/assets",ref,consumer=sys.argv[3],request_id=sys.argv[4])',
+                stage_store,json.dumps(reference),resource['exp_attempt_id'],resource['exp_request_id']+'--asset-'+reference['artifact_id'])
+        asset_action('from lab.exp.artifacts import retain;import json,sys;retain("/assets",json.loads(sys.argv[1]),sys.argv[2],"sdk-input",sys.argv[3])',json.dumps(reference),resource['exp_attempt_id'],resource['exp_request_id']+'--retain-'+reference['artifact_id'])
+    # The official workspace remains self-contained; Harness consumes the real immutable role assets.
+    definition=attempt['job'].get('definition')
+    if not definition:
+        raise ValueError('new SDK domain assembly requires its actual definition composition')
+    roles=json.loads(asset_action('from lab.exp.definitions import resolve;from lab.exp.core import read;import json,sys;print(json.dumps(resolve(read("/assets/"+json.loads(sys.argv[1])["artifact_id"]+"/payload/definition.json"),"/assets",sys.argv[2])))',json.dumps(definition),resource['exp_attempt_id']).stdout)
+    volume=inspect(endpoint,'volume',transport.value['artifact_volume'])
+    placements=[]
+    for row in roles:
+        physical=Path(volume['Mountpoint'])/row['reference']['artifact_id']/'payload'/row['member']
+        placements.append({**row,'physical_root':str(physical),'local_root':'/definitions/'+row['role'],'access':'read-only'})
+    return {'code':code,'code_member':code_member,'definitions':placements}
+
+
 def runner_main(resource_path, runner_path, argv):
     resource = read_json(resource_path)
     resource['resource_path'] = str(resource_path)
@@ -517,6 +629,11 @@ def runner_main(resource_path, runner_path, argv):
             resource.update(volume=transport.value['volume'], stage=stage)
             write_json(resource_path, resource)
             command[command.index('--mount') + 1] = f"type=volume,source={resource['volume']},target=/workspace,volume-subpath={stage}"
+        installed=None
+        if transport and attempt['job'].get('arc_contract'):
+            installed=_install_child_assets(resource,attempt,transport)
+            for row in installed['definitions']:
+                options+=['--mount','type=bind,source='+row['physical_root']+',target='+row['local_root']+',readonly']
         options += [item for key, value in resource.get('labels', {}).items() for item in ('--label', key + '=' + value)]
         confirm(endpoint)
         resource['state'] = 'launching'
@@ -538,6 +655,45 @@ def runner_main(resource_path, runner_path, argv):
                 'variables': sorted(expected_environment), 'public_policy_sha256': canonical(attempt['job'].get('environment', {})),
                 'container_id': resource['container_id']}
             write_json(resource_path, resource)
+        from lab.exp.core import atomic, read
+        holder = None
+        capture_source = None
+        if installed:
+            from lab.exp import backends
+            code,code_member=installed['code'],installed['code_member']
+            outer_incarnation=read(Path(resource['exp_attempt_dir'])/'binding.json')['incarnation_id']
+            for row in installed['definitions']:
+                if not any(mount.get('Type')=='bind' and mount.get('Source')==row['physical_root'] and mount.get('Destination')==row['local_root'] and mount.get('RW') is False for mount in value['Mounts']):
+                    raise ValueError('SDK child lacks its actual read-only role mount: '+row['role'])
+            holder=backends.initialize_docker_state(target(resource),{**physical,'authority_resource_id':resource['exp_attempt_id']},
+                holder_id=transport.value['volume'],attempt_id=resource['exp_attempt_id'],incarnation=resource['exp_incarnation'],
+                volume=transport.value['volume'],subpath=stage,logical_root='/workspace',
+                request_id=resource['exp_request_id']+'--state-initialize',source_attempt_directory=resource['exp_attempt_dir'],
+                volume_birth=volume_owned(transport.value),metadata_subpath=stage,runtime_subpath=code_member+'/payload',
+                workspace_subpath=stage,workspace_logical_root='/workspace',
+                outer_relation={'attempt_id':attempt['attempt_id'],'incarnation':outer_incarnation})
+            capture_source={'kind':'factory26.exp.capture-source','schema_version':1,
+                'namespace':{'kind':'docker','daemon_id':endpoint['daemon_id'],'container_id':value['Id'],
+                             'created':value['Created'],'image_id':value['Image']},
+                'workspace':{'volume':transport.value['volume'],'subpath':stage,'logical_root':'/workspace'},
+                'executor_code':{'reference':code,'member':'.','volume':transport.value['volume'],'subpath':code_member+'/payload',
+                    'image_id':value['Image'],'python':'python3'},
+                'records':{'source':'namespace-bootstrap-result'},
+                'outer':{'attempt_id':attempt['attempt_id'],'incarnation':outer_incarnation,
+                         'attempt_directory':resource['exp_attempt_dir']},
+                'capabilities':{'sdk_resume':False,'harness_state_capture':'explicit-bootstrap-state-member'}}
+            holder['capture_source']=capture_source
+            atomic(resource_path.with_suffix('.capture-source.json'),capture_source)
+            resource['state_binding']=holder
+            resource['capture_source']=str(resource_path.with_suffix('.capture-source.json'))
+            write_json(resource_path,resource)
+        namespace_file=resource_path.parent/'child-namespace.json'
+        atomic(namespace_file, {'namespace': {'kind':'docker','daemon_id':endpoint['daemon_id'],
+            'container_id':value['Id'],'created':value['Created'],'image_id':value['Image'],
+            'attempt_id':resource['exp_attempt_id'],'incarnation_id':resource['exp_incarnation']}, 'environment':attempt['job'].get('environment',{}),
+            'telemetry_bytes':limits['telemetry_bytes'],'definition_bindings':installed['definitions'] if installed else None,'state_binding':holder,'capture_source':capture_source})
+        # This file is outside the SDK workspace, whose inventory remains unchanged.
+        docker(endpoint,['cp',str(namespace_file),resource['container_id']+':/factory26-namespace.json'],check=True,capture_output=True,text=True)
         bind(resource, value)
         writer(resource, physical, 'writer-open', resource['exp_request_id'] + '-writer-open')
         started = control(resource, physical, 'start')

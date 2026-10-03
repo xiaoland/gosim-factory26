@@ -57,7 +57,7 @@ bootstrap 在实际namespace建立资源采样与collector，准备一次context
 
 state holder 是现域权威的一条workspace生命周期记录，不是可发布的内容artifact。拟含既有 domain identity、workspace locator、generation、当前writer resource/incarnation、pending transition/capture request与实际能力。Local将持有WorkSSD本机状态目录中的锁/耐久动作记录；Docker沿现admission workspace registry；ARC bridge登记真实child及SDK派生writers，不能用外层Local停止代替child。未知或域外writer明确阻塞完整capture。
 
-新增公共 `lab checkpoint EXP --attempt ... --directory ...`：controller只编排backend受管动作，不要求调用者提供closure JSON。动作序列是：
+新增公共 `lab checkpoint EXP ATTEMPT --directory ... --request-id ...`：controller只编排backend受管动作，不要求调用者提供closure JSON。动作序列是：
 
 1. 校验期望incarnation，在原权威短事务中登记 `transfer-pending` 与state generation，阻止新增writer；不持长文件锁跨停止、构建或输运。锁外请求Harness一致切点、物理关闭entry及已登记access/service写者，逐项确认出生/终态并writer-close。服务close不替代状态writer close。
 2. 域权威取得capture lease，阻止新增writer；保存closure所覆盖的writer集合、workspace generation、实际domain证据、capture token。沿现 `capture-begin/end` 请求重入规则，失响应只query原请求，不重复启动资源。

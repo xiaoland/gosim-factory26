@@ -1,0 +1,19 @@
+{
+  "kind": "factory26.source-compilation-readback",
+  "observed_at": "2026-10-03T04:29:40.446427+00:00",
+  "sources": [
+    {
+      "path": "lab/exp/runner.py",
+      "sha256": "9604da448e3141f817d896f796c3abfc5a758bcdfe2e66bef293a4d3a490381d",
+      "compile": "passed"
+    },
+    {
+      "path": "lab/exp/state.py",
+      "sha256": "e5eae5f1e24fa1379f0a3b1c6fb1f5faa2d5b46299c300893568106b2d5cc903",
+      "compile": "passed"
+    }
+  ],
+  "scope": "ordinary content delivery separated from complete managed recovery capture; worker and explicit export share actual known-writer gate",
+  "bytecode_written": false,
+  "runtime_execution": false
+}

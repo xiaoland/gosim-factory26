@@ -41,10 +41,14 @@ def generation_inputs(inputs, sdk, *, expected_sdk=None, agent_provenance=None):
             with archive.open(name) as stream:
                 return stream.read() if limit is None else stream.read(limit)
     if agent.is_dir() and not (agent / 'package-manifest.json').is_file():
-        if not agent_provenance or agent_provenance.get('producer') != 'harness' or not agent_provenance.get('material_id'):
+        if agent_provenance and agent_provenance.get('producer') == 'harness.delivery':
+            definition = agent_provenance['definition']
+            manifest = {'capabilities':definition['capabilities'], 'variant':definition['variant']}
+        elif not agent_provenance or agent_provenance.get('producer') != 'harness' or not agent_provenance.get('material_id'):
             raise ValueError('directory Harness material needs its real bound producer provenance')
-        manifest = {'capabilities': agent_provenance['capabilities'],
-                    'variant': agent_provenance['dependencies']['variant']}
+        else:
+            manifest = {'capabilities': agent_provenance['capabilities'],
+                        'variant': agent_provenance['dependencies']['variant']}
     else:
         manifest = json.loads(member('package-manifest.json'))
     replay = (agent / 'replay-manifest.json').is_file() if agent.is_dir() else False

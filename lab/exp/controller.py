@@ -26,7 +26,7 @@ def _source_files():
     files += [ROOT / 'arc_bench' / name for name in (
         '__init__.py', 'playground.py', 'arc_bench_adapter.py', 'arc_bench_noop.py',
         'workspace_archive.py', 'local_job.py', 'docker_workspace.py', 'docker_admission.py', 'arc_artifacts.py', 'traceability.py')]
-    files += [ROOT.parent / 'scripts' / name for name in ('__init__.py', 'agent_support.py', 'harness_layout.py')]
+    files += [ROOT.parent / 'scripts' / name for name in ('__init__.py', 'agent_support.py', 'harness_layout.py', 'execution_context.py', 'execution_bootstrap.py', 'state_writer.py', 'runtime_resources.py')]
     files += [ROOT.parent / 'submission/exp_checkpoint.py']
     return list(dict.fromkeys(files))
 
@@ -318,7 +318,14 @@ def build(spec_path, directory, *, environment=None):
                     inputs[name] = ref
                 elif isinstance(value, dict) and set(value) == {'from_production'}:
                     produced = productions[value['from_production']]
-                    inputs[name] = produced['package'] if kind == 'hosted' and name == 'agent' else produced['artifact']
+                    inputs[name] = (produced['package'] if kind == 'hosted' else produced.get('delivery', produced['artifact'])) if name == 'agent' else produced['artifact']
+                    if name == 'agent' and produced.get('definition'):
+                        inputs['definition'] = produced['definition']
+                        job['definition'] = produced['definition']
+                        if produced.get('private_inputs',{}).get('tool_env'):
+                            inputs['tool_credentials']=produced['private_inputs']['tool_env']
+                        for asset in produced['definition_value']['assets']:
+                            inputs['definition-' + asset['name']] = asset['reference']
                 elif isinstance(value, dict) and set(value) == {'from_job', 'output'}:
                     identifier(value['from_job']); identifier(value['output'])
                     if job['purpose'] != 'evaluate':
@@ -352,14 +359,27 @@ def build(spec_path, directory, *, environment=None):
             if 'prepared' in job:
                 prepared_root = artifacts.resolve(store, job['prepared'])
                 descriptor = read(prepared_root / 'harness-manifest.json')
-                if descriptor.get('schema_version') != 3:
-                    raise ValueError('new execution requires separated v3 prepared content; old records keep their frozen executor')
+                if descriptor.get('schema_version') not in (3, 4):
+                    raise ValueError('new execution requires separated prepared content; old records keep their frozen executor')
                 locations = read(prepared_root / 'provenance/asset-bindings.json')
+                transferred = set()
                 for asset in descriptor['definition_assets']:
                     reference = asset['artifact']
-                    if not (store / reference['artifact_id'] / 'manifest.json').exists():
-                        artifacts.transfer(locations[asset['name']]['store'], store, reference,
+                    location = locations[asset['name']]
+                    input_name = 'definition-' + asset['name']
+                    inputs[input_name] = reference
+                    job.setdefault('input_members', {})[input_name] = asset.get('member', '.')
+                    if location.get('domain_identity', {}).get('kind') == 'docker':
+                        target = job['backend']
+                        if target.get('kind') != 'docker' or location['domain_identity']['daemon_id'] != target['endpoint']['daemon_id']:
+                            raise Blocked('prepared definition is still daemon-local; select explicit cross-domain preparation')
+                        job.setdefault('input_locations', {})[input_name] = {**location, 'reference': reference}
+                        continue
+                    key = (location['store'], canonical(reference))
+                    if key not in transferred and not (store / reference['artifact_id'] / 'manifest.json').exists():
+                        artifacts.transfer(location['store'], store, reference,
                                            consumer='prepared-' + descriptor['prepared_id'])
+                        transferred.add(key)
                     artifacts.retain(store, reference, 'run-' + canonical(str(directory.resolve())),
                                      'prepared-definition/' + asset['name'],
                                      'retain-definition-' + canonical([str(directory.resolve()), asset])[:40])
@@ -449,13 +469,13 @@ def verify(directory):
 
 
 def recover(source, intent_path, directory, *, environment):
-    """Derive offline prepared inputs; neither stop the source nor dispatch models."""
+    """Derive a new run; same-domain repair holds capture and never dispatches models."""
     source = Path(source).resolve(strict=True)
     intent_path = Path(intent_path).resolve(strict=True)
     directory = Path(directory).resolve()
     intent = require(read(intent_path), 'intent')
     recovery = intent.pop('recovery', None)
-    if not isinstance(recovery, dict) or set(recovery) != {'production', 'target', 'repair'}:
+    if not isinstance(recovery, dict) or not {'production', 'target', 'repair'} <= set(recovery) or set(recovery) - {'production', 'target', 'repair', 'mode', 'request_id'}:
         raise ValueError('recover intent needs recovery {production, target, repair}')
     name = identifier(recovery['production'])
     productions = intent.setdefault('productions', {})
@@ -464,8 +484,75 @@ def recover(source, intent_path, directory, *, environment):
     checkpoint = read(source / 'harness-manifest.json')
     if checkpoint.get('kind') != 'factory26.harness.checkpoint':
         raise ValueError('recover SOURCE must be an explicit Harness checkpoint')
-    productions[name] = {'producer': 'prepare', 'source': str(source),
-                         'target': recovery['target'], 'repair': recovery['repair']}
+    mode = recovery.get('mode', 'snapshot-copy')
+    if mode not in ('snapshot-copy', 'domain-state'):
+        raise ValueError('recovery mode必须是snapshot-copy或domain-state')
+    if mode == 'domain-state':
+        from . import state, backends
+        managed = require(read(source / 'managed-source.json'), 'managed-checkpoint-source')
+        binding = managed['holder']
+        operation_path = directory.parent / (directory.name + '.recovery-operation.json')
+        operation_parameters = {'source': str(source), 'manifest_sha256': digest(source / 'harness-manifest.json'),
+                                'target': recovery['target'], 'repair': recovery['repair'], 'intent_sha256': digest(intent_path)}
+        with locked(operation_path.with_suffix('.lock')):
+            if operation_path.exists():
+                operation = require(read(operation_path), 'recovery-operation')
+                if operation['parameters'] != operation_parameters or (recovery.get('request_id') and recovery['request_id'] != operation['request_id']):
+                    raise ValueError('recovery operation belongs to changed inputs; retain original partial')
+                request_id = operation['request_id']
+            else:
+                request_id = identifier(recovery.get('request_id') or new_id('recover'))
+                atomic(operation_path, record('recovery-operation', request_id=request_id, parameters=operation_parameters))
+        holder = state.query(binding)['holder']
+        if holder['phase'] == 'closed':
+            token = 'capture-' + canonical([binding['holder_id'], holder['generation'], request_id])[:32]
+            holder = state.action(binding, 'capture-reopen', request_id + '--capture', {
+                'expected_generation': holder['generation'], 'snapshot': holder['snapshot'],
+                'capture_owner': 'capture-' + request_id, 'capture_token': token,
+                'owner': {'kind': 'recovery', 'request_id': request_id}})['holder']
+        if holder['phase'] not in ('snapshot-sealed', 'repairing', 'repaired') or holder['snapshot']['reference'] != managed['workspace_snapshot']['reference']:
+            raise Blocked('domain-state recovery requires the unchanged original retained capture')
+        capture = holder['capture']
+        if holder['phase'] == 'snapshot-sealed':
+            holder = state.action(binding, 'repair-begin', request_id + '--repair', {
+                'expected_generation': holder['generation'], 'snapshot': holder['snapshot'],
+                'capture_owner': capture['owner'], 'capture_token': capture['token'],
+                'changes': list(recovery['repair'])})['holder']
+        elif holder['repair']['request_id'] != request_id + '--repair':
+            raise Blocked('state is held by another repair request')
+        prepared_output = directory.parent / (directory.name + '.domain-prepared')
+        if (prepared_output / 'harness-manifest.json').exists():
+            prepared = read(prepared_output / 'harness-manifest.json')
+            if prepared.get('allowed_changes') != recovery['repair'] or prepared.get('source_checkpoint', {}).get('checkpoint_id') != checkpoint['checkpoint_id']:
+                raise Blocked('existing prepared metadata belongs to another repair source')
+        else:
+            prepared = backends.prepare_in_domain({'source': str(source), 'target': recovery['target'],
+                'repair': recovery['repair'], 'state_binding': binding}, prepared_output)
+        for category in recovery['repair']:
+            if holder['phase'] == 'repaired' or category in holder['repair']['completed']:
+                continue
+            state.action(binding, 'repair-item', request_id + '--item--' + category, {
+                'expected_generation': holder['generation'], 'capture_owner': capture['owner'],
+                'capture_token': capture['token'], 'repair_request': request_id + '--repair',
+                'item': category, 'readback': {'effects': prepared['repair_effects'],
+                                             'manifest_sha256': digest(prepared_output / 'harness-manifest.json')}})
+        if holder['phase'] != 'repaired':
+            state.action(binding, 'repair-complete', request_id + '--repair-complete', {
+                'expected_generation': holder['generation'], 'capture_owner': capture['owner'],
+                'capture_token': capture['token'], 'repair_request': request_id + '--repair',
+                'readback': {'compatible': prepared['status'] == 'complete', 'readback': prepared['readback']}})
+        def replace_production(value):
+            if isinstance(value, dict):
+                if value == {'from_production': name}:
+                    return {'source': str(prepared_output)}
+                return {key: replace_production(item) for key, item in value.items()}
+            if isinstance(value, list):
+                return [replace_production(item) for item in value]
+            return value
+        intent = replace_production(intent)
+    else:
+        productions[name] = {'producer': 'prepare', 'source': str(source),
+                             'target': recovery['target'], 'repair': recovery['repair']}
     intent['derivation'] = {'kind': 'recovery', 'source': str(source),
         'source_identity': checkpoint['source_identity'], 'checkpoint_id': checkpoint['checkpoint_id'],
         'manifest_sha256': digest(source / 'harness-manifest.json'),
@@ -537,6 +624,21 @@ def source_stop_binding(prepared, stop):
 
 def _launch_gate(attempt_dir, attempt):
     job, store = attempt['job'], attempt['artifact_store']
+    descriptor = job.get('prepared_descriptor', {})
+    if descriptor.get('state_binding'):
+        from . import state
+        binding = descriptor['state_binding']
+        holder = state.query(binding)['holder']
+        if holder['generation'] != binding['generation'] or holder['phase'] != 'repaired' or not holder.get('capture'):
+            raise Blocked('domain-state entry requires the unchanged repaired holder capture')
+        if descriptor.get('status') != 'complete' or descriptor.get('acquisition', {}).get('status') != 'writer-closed':
+            raise Blocked('domain-state semantic readback is incomplete')
+        atomic(attempt_dir / 'launch-gate.json', record('launch-gate', prepared=job['prepared'],
+            holder=binding, snapshot=holder['snapshot'], execution_permission=False, verified_at=time.time()))
+        deployment = read(attempt_dir / 'deployment.json')
+        deployment['state_binding'] = binding
+        atomic(attempt_dir / 'deployment.json', deployment)
+        return
     if 'prepared' not in job:
         return
     prepared_path = artifacts.resolve(store, job['prepared'])
@@ -580,7 +682,8 @@ def _allocate(directory, manifest, job, *, retry_of=None, deployment=None, retry
     try:
         if job['backend']['kind'] != 'docker':
             for name, ref in job['inputs'].items():
-                artifacts.materialize(directory / 'artifacts', ref, path / 'inputs' / name)
+                artifacts.materialize(directory / 'artifacts', ref, path / 'inputs' / name,
+                                      path=job.get('input_members', {}).get(name, '.'))
         _launch_gate(path, value)
         return path, value
     except BaseException as exc:
@@ -658,7 +761,8 @@ def work(directory):
                             if (path / 'allocation-error.json').exists():
                                 if attempt['job']['backend']['kind'] != 'docker':
                                     for name, ref in attempt['job']['inputs'].items():
-                                        artifacts.materialize(directory / 'artifacts', ref, path / 'inputs' / name)
+                                        artifacts.materialize(directory / 'artifacts', ref, path / 'inputs' / name,
+                                              path=attempt['job'].get('input_members', {}).get(name, '.'))
                                 _launch_gate(path, attempt)
                                 (path / 'allocation-error.json').rename(path / (new_id('allocation-error') + '.json'))
                             observation = executor.dispatch(path)
@@ -698,7 +802,8 @@ def work(directory):
                 for job in manifest['jobs']:
                     if job['id'] in assigned or len(active) >= manifest['max_parallel']:
                         continue
-                    resolved = dict(job, inputs=dict(job['inputs']), input_locations={})
+                    resolved = dict(job, inputs=dict(job['inputs']), input_locations=dict(job.get('input_locations', {})),
+                                    input_members=dict(job.get('input_members', {})))
                     unavailable = False
                     for name, binding in job['inputs'].items():
                         if 'from_job' not in binding:
@@ -728,6 +833,9 @@ def work(directory):
                         else:
                             artifacts.verify(directory / 'artifacts', ref)
                         resolved['inputs'][name] = ref
+                        selected_member = production.get('output_members', {}).get(binding['output'], '.')
+                        from .core import member
+                        resolved['input_members'][name] = member(selected_member)
                     if unavailable:
                         continue
                     if job['backend']['kind'] == 'hosted' and any(
@@ -860,6 +968,12 @@ def available_actions(job, attempt, stage, value):
     consumption = ([action('consume', '封口产物可按其位置消费；完整归档由原 owner 继续保全',
                           requires=('消费端重新核对位置、保留、字节及语义；归档状态不是消费证明',))]
                    if sealed else [])
+    local_partial = [row for row in attempt.get('state_observations', [])
+                     if row.get('domain_identity', {}).get('kind') == 'local'
+                     and not row.get('snapshot', {}).get('reference')
+                     and row.get('coverage', {}).get('descendant_writer_contract') != 'registered-or-no-detach-v1']
+    if attempt['backend'] == 'local' and local_partial:
+        return consumption + [action('inspect', 'Local原生工具派生writer关闭合同缺失；保留证据原件，核对coverage或选择支持完整捕获的Docker域，不能反复export')]
     needs_export = (archive == 'failed' or attempt['backend'] == 'docker' and
                     attempt.get('export.json', {}).get('status') != 'preserved' or
                     isinstance(archive, dict) and archive.get('status') == 'not-exported')
@@ -909,22 +1023,59 @@ def _ingest_telemetry(path):
 
 
 def _control_manifest(directory):
-    """Route historical control through its exact frozen executor before new schema checks."""
+    """Authenticate the code/interpreter actually used for control, not job payloads."""
+    directory = Path(directory).resolve(strict=True)
     value = read(directory / 'experiment.json')
-    frozen_module = directory / 'source/lab/exp/controller.py'
-    if Path(__file__).resolve() == frozen_module.resolve():
-        return verify(directory)
     if value.get('kind') != 'factory26.exp.experiment' or value.get('schema_version') not in (1, 2):
         raise ValueError('unsupported frozen execution producer')
-    _runtime(value['controller_runtime'])
-    ref = value['code']
-    manifest_path = directory / 'artifacts' / identifier(ref['artifact_id']) / 'manifest.json'
-    if digest(manifest_path) != ref['manifest_sha256']:
-        raise ValueError('frozen executor manifest changed')
-    manifest = require(read(manifest_path), 'artifact')
-    if manifest['artifact_id'] != ref['artifact_id'] or artifacts.contents(directory / 'source') != manifest['contents']:
-        raise ValueError('frozen executor source changed')
+    identifier(value['experiment_id'])
+    runtime = value['controller_runtime']
+    if runtime.get('purpose') != 'controller' or not os.access(runtime['launcher'], os.X_OK):
+        raise ValueError('frozen control interpreter is unavailable')
+    if digest(Path(runtime['launcher']).resolve(strict=True)) != runtime['interpreter_sha256']:
+        raise ValueError('frozen control interpreter identity changed')
+    store = directory / 'artifacts'
+    if value.get('definition'):
+        definition = value['definition']
+        manifest = artifacts._manifest(store, definition['artifact'])
+        if manifest['contents']['kind'] != 'file' or manifest['contents']['sha256'] != definition['sha256'] or definition['sha256'] != value['recipe_sha256']:
+            raise ValueError('frozen recipe identity changed')
+    manifest = artifacts._manifest(store, value['code'])
+    if artifacts.contents(directory / 'source') != manifest['contents']:
+        raise ValueError('actual frozen controller code closure changed')
     return value
+
+
+def _control_attempt(directory, manifest, attempt_id):
+    path = Path(directory) / 'attempts' / identifier(attempt_id)
+    attempt = require(read(path / 'attempt.json'), 'attempt')
+    if attempt['attempt_id'] != attempt_id or attempt['experiment_id'] != manifest['experiment_id']:
+        raise Blocked('control attempt belongs to another experiment')
+    job = next((row for row in manifest['jobs'] if row['id'] == attempt['job_id']), None)
+    actual_job = attempt['job']
+    excluded = {'inputs', 'input_locations', 'input_members'}
+    if not job or {key: item for key, item in actual_job.items() if key not in excluded} != {key: item for key, item in job.items() if key not in excluded}:
+        raise Blocked('control attempt differs from its frozen recipe job')
+    if set(actual_job['inputs']) != set(job['inputs']):
+        raise Blocked('control input names differ from frozen job')
+    for name, binding in job['inputs'].items():
+        if 'from_job' not in binding:
+            if actual_job['inputs'][name] != binding:
+                raise Blocked('control static input differs from frozen job')
+            continue
+        matched = False
+        for source_path in (Path(directory) / 'attempts').glob('*/attempt.json'):
+            source = read(source_path)
+            receipt_path = source_path.parent / 'execution.json'
+            if source['job_id'] != binding['from_job'] or source['experiment_id'] != manifest['experiment_id'] or not receipt_path.exists():
+                continue
+            receipt = read(receipt_path)
+            if receipt.get('exit_code') == 0 and receipt.get('artifacts', {}).get(binding['output']) == actual_job['inputs'][name] and receipt.get('output_members', {}).get(binding['output'], '.') == actual_job.get('input_members', {}).get(name, '.'):
+                matched = True
+                break
+        if not matched:
+            raise Blocked('control derived input has no frozen successful producer receipt')
+    return path, attempt
 
 
 def control(directory, attempt_id, action, *, request_id=None, parameters=None):
@@ -938,8 +1089,7 @@ def control(directory, attempt_id, action, *, request_id=None, parameters=None):
             json.dumps({'request_id': request_id, 'parameters': parameters})],
             cwd=directory / 'source', env=env, capture_output=True, text=True, check=True)
         return json.loads(result.stdout)
-    path = directory / 'attempts' / identifier(attempt_id)
-    attempt = require(read(path / 'attempt.json'), 'attempt')
+    path, attempt = _control_attempt(directory, manifest, attempt_id)
     executor = _backend(attempt)
     observed = executor.observe(path, live=True)
     incarnation = observed.get('incarnation_id') or observed.get('incarnation')
@@ -992,12 +1142,321 @@ def stop_evidence(directory, attempt_id, output):
     return public(value)
 
 
+def _sdk_checkpoint(path, attempt, output, request_id, source_resource=None):
+    """Select only registered, terminal-verified child sources; preserve inner birth."""
+    from . import state, backends
+    external_path = path / 'external-resources.json'
+    if not external_path.exists():
+        raise Blocked('SDK checkpoint lacks registered child resources')
+    external = require(read(external_path), 'external_resources')
+    candidates = []
+    for entry in external['resources']:
+        if entry.get('role') != 'execution':
+            continue
+        if source_resource and entry['authority_resource_id'] != source_resource:
+            continue
+        resource = read(Path(entry['resource_file']))
+        if resource.get('state_binding') and resource.get('capture_source'):
+            candidates.append((entry, resource))
+    if len(candidates) != 1:
+        raise Blocked('SDK checkpoint needs one explicit registered child source; use --source-resource; candidates=' +
+                      ','.join(item[0]['authority_resource_id'] for item in candidates))
+    entry, resource = candidates[0]
+    source = read(Path(resource['capture_source']))
+    binding = resource['state_binding']
+    namespace = source['namespace']
+    outer = read(path / 'binding.json')
+    if (source.get('status') != 'writer-terminal-and-reception-verified'
+            or resource.get('state') != 'exited' or not source.get('state_member')
+            or not binding.get('selected_state') or not binding.get('snapshot')):
+        raise Blocked('SDK child needs terminal verified reception and actual selected-state mapping')
+    if (source['outer']['attempt_id'] != attempt['attempt_id']
+            or source['outer']['incarnation'] != outer['incarnation_id']
+            or source['attempt_id'] != entry['attempt_id']
+            or source['incarnation'] != entry['incarnation']
+            or any(namespace[key] != entry[key] for key in ('container_id', 'created', 'started_at', 'labels'))):
+        raise Blocked('SDK source inner birth or outer relation differs from its registered execution')
+    target = binding['authority']['target']
+    physical = backends.exact_resource(target, entry)
+    if physical['state'].get('Status') not in ('exited', 'dead'):
+        raise Blocked('SDK child is not physically terminal')
+    holder = state.query(binding)['holder']
+    snapshot = binding['snapshot']
+    if holder['generation'] != binding['generation'] or holder['snapshot']['reference'] != snapshot['reference']:
+        raise Blocked('SDK source holder generation/snapshot changed')
+    prefix = Path(source['workspace']['subpath'])
+    selected = Path(source['state_member']).relative_to(prefix).as_posix()
+    if binding['selected_state']['subpath'] != source['state_member']:
+        raise Blocked('SDK selected state differs from its verified bootstrap mapping')
+    source_identity = {'attempt_id': entry['attempt_id'], 'execution_instance': entry['incarnation'],
+        'backend_identity': {'kind':'docker', 'endpoint':target['endpoint'],
+            **{key:entry[key] for key in ('container_id','created','started_at','labels')},
+            'image_id':namespace['image_id']}, 'outer_relation': source['outer']}
+    stop = record('stop-evidence', source_identity=source_identity, **source_identity,
+        effect='stopped', observation={'physical':physical, 'observed_at':time.time()}, captured_at=time.time())
+    original_capture = holder['source_closure']
+    stage = path / 'checkpoint-requests' / request_id
+    stage.mkdir(parents=True, exist_ok=True)
+    intent = record('checkpoint-request', attempt_id=attempt['attempt_id'], source_resource=entry['authority_resource_id'],
+        request_id=request_id, output=str(Path(output).absolute()), source=source, snapshot=snapshot)
+    if (stage/'request.json').exists() and read(stage/'request.json') != intent:
+        raise Blocked('SDK checkpoint request parameters changed')
+    atomic(stage/'request.json', intent)
+    if (stage/'result.json').exists():
+        return read(stage/'result.json')
+    if (stage/'metadata-result.json').exists():
+        prepared = read(stage/'metadata-result.json')
+        result = prepared['result']
+        if digest(Path(result['directory'])/'harness-manifest.json') != result['metadata_sha256']:
+            raise Blocked('SDK checkpoint partial metadata changed after publication')
+        backends.close_capture_helper(target, prepared['helper'], request_id+'--sdk-metadata-close')
+        atomic(stage/'result.json', result)
+        return result
+    helper_resource_id = request_id + '--sdk-metadata--capture-helper'
+    helper_row = backends.admission.query(target, helper_resource_id).get('resource')
+    if helper_row and helper_row['phase'] == 'released':
+        raise Blocked('SDK metadata helper already released; retained metadata/partial require a new request, never restart its physical resource')
+    helper = backends.capture_helper(path, binding, request_id + '--sdk-metadata', assets_only=True)
+    script = r"""import json,sys
+from pathlib import Path
+from lab.exp import artifacts
+from lab.exp.core import read,atomic,record,member
+from submission.exp_checkpoint import checkpoint
+v=json.loads(sys.argv[1]); snapshot=v['snapshot']; source_binding=v['source']
+root=artifacts.allocate_scratch('/assets','sdk-checkpoints/'+v['resource_id']+'/'+v['request_id'])
+stage=Path(root); output=stage/'metadata'
+if not (output/'harness-manifest.json').exists():
+ source=artifacts.resolve('/assets',snapshot['reference'],v['selected'],consumer=snapshot['retention']['consumer'],retention=snapshot['retention'])
+ whole=Path('/assets')/snapshot['reference']['artifact_id']/'payload'
+ prefix=Path(source_binding['workspace']['subpath'])
+ assembly=read(whole/Path(source_binding['records']['assembly']).relative_to(prefix))
+ context=read(whole/Path(source_binding['records']['context']).relative_to(prefix))
+ original=read(whole/Path(source_binding['records']['source_binding']).relative_to(prefix))
+ if (original['attempt_id']!=v['identity']['attempt_id'] or original['incarnation']!=v['identity']['execution_instance']
+     or original['state_member']!=source_binding['state_member'] or assembly['state']['root']!=v['logical_state']):
+  raise ValueError('sealed SDK bootstrap identity/state mapping differs from public source descriptor')
+ manifest=artifacts._manifest('/assets',snapshot['reference'])
+ provenance=manifest['provenance']
+ if provenance['source_namespace']['container_id']!=v['identity']['backend_identity']['container_id'] or provenance['closure']!=v['closure']:
+  raise ValueError('SDK snapshot producer closure differs from the admitted source')
+ token=provenance.get('capture_token')
+ if not token:raise ValueError('SDK snapshot lacks its original managed capture token')
+ proof=provenance['acquisition']
+ closure=record('writer-closure',**proof['closure'],source_identity=v['identity'],closure_id=proof['capture_request_id'],capture_token=proof['capture_token'])
+ atomic(stage/'identity.json',v['identity']);atomic(stage/'stop.json',v['stop'])
+ layout=read(source/'harness-layout.json')
+ bindings={row['name']:{**row['artifact'],'store':'/assets'} for row in layout['definitions']}
+ checkpoint(source,output,stage/'identity.json',stage/'stop.json',acquisition=closure,
+  definition_bindings=bindings,snapshot={**snapshot,'store':'/assets','member':v['selected']})
+bindings=read(output/'provenance/asset-bindings.json')
+for row in bindings.values():row.update({key:snapshot['location'][key] for key in ('domain_identity','volume_id','store_root') if key in snapshot['location']})
+atomic(output/'provenance/asset-bindings.json',bindings)
+print(json.dumps({'metadata_root':str(output),'files':{p.relative_to(output).as_posix():p.read_text() for p in output.rglob('*') if p.is_file()}}))
+"""
+    try:
+        facts = json.loads(backends._owner_exec(target, helper, [target.get('python','python3'),'-B','-c',script,
+            json.dumps({'snapshot':snapshot,'source':source,'identity':source_identity,'stop':stop,'closure':original_capture,
+                'selected':selected,'logical_state':binding['selected_state']['logical_root'],
+                'resource_id':entry['authority_resource_id'],'request_id':request_id})]).stdout)
+        output = Path(output).absolute()
+        if output.exists():
+            raise Blocked('SDK checkpoint output already exists; preserve partial metadata')
+        output.mkdir(parents=True)
+        from .core import member
+        for relative, content in facts['files'].items():
+            destination = output/member(relative)
+            destination.parent.mkdir(parents=True,exist_ok=True)
+            destination.write_text(content)
+        location = snapshot['location']
+        atomic(output/'managed-source.json',record('managed-checkpoint-source',holder=binding,
+            workspace_snapshot=snapshot,child_source=source,outer_relation=source['outer'],sdk_resume=False))
+        atomic(output/'domain-resolver.json',record('checkpoint-domain-resolver',authority=binding['authority'],
+            location=location,metadata_root=facts['metadata_root']))
+        produced = read(output/'harness-manifest.json')
+        result = record('checkpoint-result',checkpoint_id=produced['checkpoint_id'],directory=str(output),
+            holder=binding,generation=binding['generation'],state_snapshot=produced['state_snapshot'],
+            workspace_snapshot=snapshot,domain_location=location,status=produced['status'],
+            source_resource=entry['authority_resource_id'],source_identity=source_identity,sdk_resume=False,
+            metadata_sha256=digest(output/'harness-manifest.json'))
+        atomic(stage/'metadata-result.json',record('checkpoint-metadata-result',result=result,helper=helper))
+        backends.close_capture_helper(target,helper,request_id+'--sdk-metadata-close')
+        atomic(stage/'result.json',result)
+        return result
+    except Exception as exc:
+        atomic(stage/'error.json',record('error',**error(exc)))
+        raise
+
+
+def checkpoint(directory, attempt_id, output, *, request_id=None, source_resource=None):
+    """Managed stopped capture; callers provide an attempt, never a closure claim."""
+    directory = Path(directory).resolve(strict=True)
+    manifest = _control_manifest(directory)
+    frozen_module = directory / 'source/lab/exp/controller.py'
+    request_id = identifier(request_id or new_id('checkpoint'))
+    if Path(__file__).resolve() != frozen_module.resolve():
+        result = subprocess.run([manifest['controller_runtime']['launcher'], '-B', '-m', 'lab.exp.controller',
+            'internal_checkpoint', str(directory), identifier(attempt_id), str(Path(output).absolute()), request_id, json.dumps(source_resource)],
+            cwd=directory / 'source', env=dict(os.environ, PYTHONPATH=str(directory / 'source'), PYTHONDONTWRITEBYTECODE='1'),
+            capture_output=True, text=True, check=True)
+        return json.loads(result.stdout)
+    from . import state, backends, terminal
+    path = directory / 'attempts' / identifier(attempt_id)
+    attempt = require(read(path / 'attempt.json'), 'attempt')
+    deployment = read(path / 'deployment.json')
+    assembly = read(path / 'assembly.json') if (path / 'assembly.json').exists() else {}
+    if source_resource or attempt['job']['backend'].get('external_docker'):
+        return _sdk_checkpoint(path, attempt, output, request_id, source_resource)
+    binding = deployment.get('state_binding') or assembly.get('state', {}).get('holder')
+    if not binding:
+        raise Blocked('source has no maintained managed state/writer contract; historical stop is not closure')
+    stage = path / 'checkpoint-requests' / request_id
+    stage.mkdir(parents=True, exist_ok=True)
+    intent = record('checkpoint-request', attempt_id=attempt_id, request_id=request_id,
+                    output=str(Path(output).absolute()), holder=binding)
+    if (stage / 'request.json').exists() and read(stage / 'request.json') != intent:
+        raise ValueError('checkpoint request belongs to different parameters')
+    atomic(stage / 'request.json', intent)
+    if (stage / 'result.json').exists():
+        return read(stage / 'result.json')
+    current_holder = state.query(binding)['holder']
+    if current_holder['generation'] != binding['generation'] or (current_holder.get('writer') and current_holder['writer']['attempt_id'] != attempt_id):
+        raise Blocked('old attempt no longer owns this mutable generation; consume its immutable saved checkpoint/snapshot')
+    try:
+        holder = state.begin_capture(path, binding, request_id,
+            grace=attempt['job']['limits'].get('stop_grace_seconds', 10))
+        receipt = read(path / 'execution.json')
+        if binding['authority']['kind'] == 'docker':
+            helper = backends.capture_helper(path, binding, request_id + '--reader')
+            acquisition = state.capture_acquisition(binding, holder)
+            snapshot = holder.get('snapshot')
+            if snapshot:
+                published = snapshot.get('acquisition')
+                if (not published or published.get('kind') != 'managed-writer-capture'
+                        or published['holder_id'] != binding['holder_id'] or published['generation'] != holder['generation']
+                        or published['closure'] != holder['source_closure']):
+                    raise Blocked('authority snapshot is not the same generation original managed capture')
+            identity = {'attempt_id': attempt_id, 'execution_instance': receipt['incarnation_id'],
+                        'backend_identity': receipt['backend_identity']}
+            from .runner import observe_source
+            observation = observe_source(identity)
+            if observation['effect'] != 'stopped':
+                raise Blocked('daemon source exact terminal birth is unconfirmed')
+            stop = record('stop-evidence', source_identity=identity, **identity, effect='stopped',
+                          observation=observation, captured_at=time.time())
+            closure = record('writer-closure', **holder['source_closure'], source_identity=identity,
+                closure_id=holder['capture']['request_id'], capture_token=holder['capture']['token'])
+            script = r'''import json,sys
+from pathlib import Path
+from lab.exp.core import atomic,read
+from lab.exp import artifacts
+from submission.exp_checkpoint import checkpoint
+request=json.loads(sys.argv[1])
+root=artifacts.allocate_scratch('/assets','captures/'+request['attempt_id']+'/checkpoint-requests/'+request['request_id'])
+metadata=Path(request['payload'])
+assembly=read(metadata/'assembly.json')
+atomic(root/'attempt.json',read(metadata/'attempt.json'));atomic(root/'assembly.json',assembly)
+attempt=read(root/'attempt.json')
+attempt['artifact_store']='/assets'
+receipt=request['receipt']
+snapshot=request['snapshot']
+if snapshot is None:
+ from lab.exp.terminal import seal_workspace
+ snapshot=seal_workspace(root,attempt,receipt,physical_root=request['workspace'],acquisition=request['acquisition'],request_scope=request['request_id'])
+selected=Path(assembly['state']['root']).relative_to(assembly['workspace']).as_posix()
+proof=snapshot['acquisition']
+closure={**request['closure'],**proof['closure'],'closure_id':proof['capture_request_id'],'capture_token':proof['capture_token']}
+source=artifacts.resolve(snapshot['store'],snapshot['reference'],selected,consumer=request['attempt_id'],retention=snapshot['retention'])
+atomic(root/'source-identity.json',request['identity'])
+atomic(root/'stop-evidence.json',request['stop'])
+output=root/'metadata'
+if not (output/'harness-manifest.json').exists():
+ checkpoint(source,output,root/'source-identity.json',root/'stop-evidence.json',acquisition=closure,snapshot={**snapshot,'member':selected})
+print(json.dumps({'snapshot':snapshot,'metadata_root':str(output),'files':{p.relative_to(output).as_posix():p.read_text() for p in output.rglob('*') if p.is_file()}}))
+'''
+            target = binding['authority']['target']
+            remote = json.loads(backends._owner_exec(target, helper,
+                [target.get('python', 'python3'), '-B', '-c', script,
+                 json.dumps({'attempt_id': attempt_id, 'request_id': request_id, 'snapshot': snapshot,
+                             'identity': identity, 'stop': stop, 'closure': closure, 'acquisition':acquisition,
+                             'receipt':receipt,'workspace':helper['capture_paths']['workspace'],'payload':helper['capture_paths']['metadata']})]).stdout)
+            output = Path(output).absolute()
+            if output.exists():
+                raise FileExistsError('checkpoint metadata output already exists; original remains retained')
+            output.mkdir(parents=True)
+            from .core import member
+            snapshot = remote['snapshot']
+            if holder['snapshot'] is None:
+                holder = state.bind_snapshot(binding,snapshot,request_id+'--snapshot')
+            for relative, content in remote['files'].items():
+                destination = output / member(relative)
+                destination.parent.mkdir(parents=True, exist_ok=True)
+                destination.write_text(content)
+            atomic(output / 'managed-source.json', record('managed-checkpoint-source', holder={**binding, 'source_attempt_directory': str(path)}, workspace_snapshot=snapshot))
+            result = read(output / 'harness-manifest.json')
+            location = {'domain_identity': {'kind': 'docker', 'daemon_id': binding['domain_identity']['daemon_id'], 'volume_id': read(path / 'resource.json')['artifact_volume']},
+                        'volume_id': read(path / 'resource.json')['artifact_volume'], 'store_root': '/assets'}
+            atomic(output / 'domain-resolver.json', record('checkpoint-domain-resolver',
+                authority=binding['authority'], location=location, metadata_root=remote['metadata_root']))
+            state.consumer_bindings(path, snapshot, holder['consumers'], binding=binding)
+            backends.close_capture_helper(target, helper, request_id + '--reader-close')
+            result_binding = record('checkpoint-result', checkpoint_id=result['checkpoint_id'],
+                directory=str(output), holder=binding, generation=holder['generation'],
+                state_snapshot=result['state_snapshot'], workspace_snapshot=snapshot,
+                domain_location=location, status=result['status'])
+            atomic(stage / 'result.json', result_binding)
+            return result_binding
+        acquisition = state.capture_acquisition(binding, holder)
+        snapshot = holder.get('snapshot')
+        if snapshot:
+            published = snapshot.get('acquisition')
+            if (not published or published.get('kind') != 'managed-writer-capture'
+                    or published['holder_id'] != binding['holder_id'] or published['generation'] != holder['generation']
+                    or published['closure'] != holder['source_closure']):
+                raise Blocked('authority snapshot is not the same generation original managed capture')
+        else:
+            snapshot = terminal.seal_workspace(path,attempt,receipt,acquisition=acquisition,request_scope=request_id)
+            holder = state.bind_snapshot(binding,snapshot,request_id+'--snapshot')
+        snapshot.update(holder=binding['holder_id'], generation=holder['generation'], snapshot_request=request_id)
+        state.consumer_bindings(path, snapshot, holder['consumers'], binding=binding)
+        identity = {'attempt_id': attempt_id, 'execution_instance': receipt['incarnation_id'],
+                    'backend_identity': receipt['backend_identity']}
+        from .runner import observe_source
+        current = observe_source(identity)
+        if current['effect'] != 'stopped':
+            raise Blocked('source physical stop is not confirmed after managed closure')
+        stop = record('stop-evidence', source_identity=identity, **identity, effect='stopped',
+                      observation=current, captured_at=time.time())
+        atomic(stage / 'source-identity.json', identity)
+        atomic(stage / 'stop-evidence.json', stop)
+        proof = snapshot['acquisition']
+        closure = record('writer-closure', **proof['closure'], source_identity=identity,
+                         closure_id=proof['capture_request_id'], capture_token=proof['capture_token'])
+        atomic(stage / 'writer-closure.json', closure)
+        selected = Path(holder['locator']['path']).resolve(strict=True)
+        workspace = Path(snapshot['source_root']).resolve(strict=True)
+        relative = selected.relative_to(workspace).as_posix()
+        source = terminal.resolve_workspace(snapshot, attempt)
+        if relative != '.':
+            source = source / relative
+        from submission.exp_checkpoint import checkpoint as produce_checkpoint
+        result = produce_checkpoint(source, output, stage / 'source-identity.json', stage / 'stop-evidence.json',
+            acquisition=closure, snapshot={**snapshot, 'member': relative})
+        atomic(Path(output) / 'managed-source.json', record('managed-checkpoint-source', holder={**binding, 'source_attempt_directory': str(path)}, workspace_snapshot=snapshot))
+        result_binding = record('checkpoint-result', checkpoint_id=result['checkpoint_id'],
+            directory=str(Path(output).absolute()), holder=binding, generation=holder['generation'],
+            state_snapshot=result['state_snapshot'], workspace_snapshot=snapshot, status=result['status'])
+        atomic(stage / 'result.json', result_binding)
+        return result_binding
+    except Exception as exc:
+        atomic(stage / 'error.json', record('error', **error(exc)))
+        raise
+
+
 def access_control(directory, attempt_id, action, *, access_resource_id, container_id, request_id):
     """Console access participates in the same workspace writer/capture ordering."""
     directory = Path(directory).resolve(strict=True)
-    manifest = verify(directory)
-    path = directory / 'attempts' / identifier(attempt_id)
-    attempt = require(read(path / 'attempt.json'), 'attempt')
+    manifest = _control_manifest(directory)
+    path, attempt = _control_attempt(directory, manifest, attempt_id)
     target = attempt['job']['backend']
     if target['kind'] != 'docker':
         target = target.get('external_docker')
@@ -1006,8 +1465,27 @@ def access_control(directory, attempt_id, action, *, access_resource_id, contain
     from . import admission, backends
     saved = admission.query(target, identifier(access_resource_id))
     resource = saved.get('resource')
-    if not resource or resource['role'] != 'accessor' or resource.get('workspace') != attempt_id:
+    if not resource or resource['role'] != 'accessor' or resource.get('workspace') != (read(path / 'deployment.json').get('state_binding') or {}).get('holder_id', attempt_id):
         raise Blocked('accessor is outside the attempt workspace authority')
+    from . import state
+    state_binding = read(path / 'deployment.json').get('state_binding')
+    if state_binding:
+        holder = state.query(state_binding)['holder']
+        old_generation = holder['generation'] != state_binding['generation'] or (holder.get('writer') and holder['writer']['attempt_id'] != attempt_id)
+        if old_generation:
+            if action == 'query' and (path / 'terminal-snapshot.json').exists():
+                return {**saved, 'state_access': 'snapshot', 'snapshot': read(path / 'terminal-snapshot.json')}
+            raise Blocked('accessor belongs to a previous state incarnation; live reuse is forbidden')
+        if holder['phase'] != 'writable':
+            if action == 'query' and holder.get('snapshot'):
+                return {**saved, 'state_access': 'snapshot', 'snapshot': holder['snapshot']}
+            if action == 'start':
+                raise Blocked('old live accessor cannot enter a transferred state generation')
+        elif action in ('start', 'query'):
+            state.action(state_binding, 'consumer-register', 'consumer-' + access_resource_id, {
+                'expected_generation': holder['generation'], 'consumer': {
+                    'id': access_resource_id, 'resource_id': access_resource_id, 'kind': 'console',
+                    'writer': True, 'locator': holder['locator']}})
     identity = resource.get('identity') or {}
     if identity.get('container_id') != container_id:
         raise Blocked('Console accessor differs from domain-owned physical birth')
@@ -1022,7 +1500,7 @@ def access_control(directory, attempt_id, action, *, access_resource_id, contain
     if action == 'query':
         if access_resource_id not in (saved.get('workspace') or {}).get('writers', []):
             raise Blocked('running accessor has no domain workspace writer coverage')
-        return saved
+        return {**saved, 'state_access': 'live', 'snapshot': None, 'managed_state': bool(state_binding)}
     raise ValueError('unsupported accessor action')
 
 
@@ -1062,11 +1540,12 @@ if __name__ == '__main__':
         print(json.dumps(control(sys.argv[2], sys.argv[3], sys.argv[4], **json.loads(sys.argv[5]))))
     elif sys.argv[1:2] == ['internal_stop_evidence'] and len(sys.argv) == 5:
         print(json.dumps(stop_evidence(sys.argv[2], sys.argv[3], sys.argv[4])))
+    elif sys.argv[1:2] == ['internal_checkpoint'] and len(sys.argv) in (6, 7):
+        print(json.dumps(public(checkpoint(sys.argv[2], sys.argv[3], sys.argv[4], request_id=sys.argv[5], source_resource=json.loads(sys.argv[6]) if len(sys.argv)==7 else None))))
     elif sys.argv[1:2] == ['internal_observe'] and len(sys.argv) == 4:
         directory = Path(sys.argv[2]).resolve(strict=True)
-        verify(directory)
-        attempt_path = directory / 'attempts' / identifier(sys.argv[3])
-        attempt = require(read(attempt_path / 'attempt.json'), 'attempt')
+        manifest = _control_manifest(directory)
+        attempt_path, attempt = _control_attempt(directory, manifest, sys.argv[3])
         print(json.dumps(public(_backend(attempt).observe(attempt_path, live=True))))
     elif sys.argv[1:2] == ['internal_access'] and len(sys.argv) == 6:
         print(json.dumps(public(access_control(sys.argv[2], sys.argv[3], sys.argv[4], **json.loads(sys.argv[5])))))

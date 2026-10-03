@@ -24,11 +24,17 @@ def main(argv=None):
     build.add_argument('recipe', type=Path)
     build.add_argument('--directory', type=Path, required=True)
     build.add_argument('--environment', type=Path)
-    recover = commands.add_parser('recover', help='离线派生恢复材料及新run，不停止来源或启动模型')
+    recover = commands.add_parser('recover', help='派生新run；同域模式在capture许可内修复状态，不启动模型')
     recover.add_argument('source', type=Path)
     recover.add_argument('--intent', type=Path, required=True)
     recover.add_argument('--environment', type=Path, required=True)
     recover.add_argument('--directory', type=Path, required=True)
+    checkpoint = commands.add_parser('checkpoint', help='受管关闭全部登记writer并封存checkpoint；不接受手填closure')
+    checkpoint.add_argument('experiment', type=Path)
+    checkpoint.add_argument('attempt')
+    checkpoint.add_argument('--directory', type=Path, required=True)
+    checkpoint.add_argument('--request-id')
+    checkpoint.add_argument('--source-resource', help='明确选择已验证终态SDK child的authority resource id')
     start = commands.add_parser('start')
     start.add_argument('experiment', type=Path)
     start.add_argument('--deployment', type=Path)
@@ -137,6 +143,8 @@ def main(argv=None):
             return 0
     elif args.action == 'build':
         value = controller.build(args.recipe, args.directory, environment=args.environment)
+    elif args.action == 'checkpoint':
+        value = controller.checkpoint(args.experiment, args.attempt, args.directory, request_id=args.request_id, source_resource=args.source_resource)
     elif args.action == 'recover':
         value = controller.recover(args.source, args.intent, args.directory, environment=args.environment)
     elif args.action == 'start':

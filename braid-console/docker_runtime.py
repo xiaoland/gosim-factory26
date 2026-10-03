@@ -6,6 +6,7 @@ from pathlib import Path, PurePosixPath
 import re
 import select
 import subprocess
+import uuid
 
 
 AGENT_ENV = ("BRAID_AGENT_RUNTIME", "BRAID_STATE", "BRAID_CLI_BINDING_ID")
@@ -233,6 +234,14 @@ def access_control(config, action, request_id):
                                       json.dumps(parameters)], cwd=root / 'source', env=environment,
                             capture_output=True, text=True, check=True)
     return json.loads(result.stdout)
+
+
+def live_access(config):
+    """Every CLI operation checks the original holder, including after handoff."""
+    observed = access_control(config, 'query', 'console-query-' + uuid.uuid4().hex)
+    if observed.get('state_access') == 'snapshot':
+        raise ValueError('原运行已封口；live 接入已关闭，使用回执中的 snapshot 另行登记 archive')
+    return observed
 
 
 def control(config, action):
