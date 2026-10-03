@@ -345,11 +345,11 @@ def _refresh_native(run, logical_root, material, logical_material_root=None):
         retained['profiles'] = request['profiles']
         write(state_request,retained)
 
-def apply_repairs(output, manifest, repair):
+def apply_repairs(output, manifest, repair, *, state_root=None):
     """Bounded material changes; original Git, native history and application stay intact."""
     if set(repair) - {'materials', 'provider_bindings', 'aliases', 'transient_links', 'nodegyp_tools', 'runtime'}:
         raise ValueError('未支持的恢复修复类别')
-    content, run = output/'content', output/'content/run'
+    content, run = output/'content', Path(state_root) if state_root is not None else output/'content/run'
     effects = []
     for row in repair.get('runtime', []):
         target = path_at(content,row['member'])
@@ -502,24 +502,36 @@ def resolve_definition_assets(root, manifest, artifact_store=None, verified=None
             raise ValueError('definition缺少已解析artifact store：' + row['name'])
         store = Path(artifact_store or location['store']).resolve(strict=True)
         request_id = 'definition-' + canonical([consumer, row['name'], row['artifact']])[:40]
-        hold = artifacts.retain(store, row['artifact'], consumer, 'harness-definition/' + row['name'], request_id)
-        key = (str(store), canonical(row['artifact']))
-        if key not in verified:
-            verified[key] = artifacts.resolve(store, row['artifact'], consumer=consumer, retention=hold)
-        payload = verified[key]
+        if (location.get('reference') == row['artifact'] and location.get('retention')
+                and str(store) == location.get('store') and location.get('consumer')):
+            hold = location['retention']
+            retained_consumer = location['consumer']
+        else:
+            hold = artifacts.retain(store, row['artifact'], consumer, 'harness-definition/' + row['name'], request_id)
+            retained_consumer = consumer
         relative = member(row['member'])
-        path = payload if relative == '.' else payload / relative
-        current = payload
-        for part in Path(relative).parts:
-            if part != '.':
-                current = current / part
-                if current.is_symlink():
-                    raise ValueError('definition member不能经过未绑定alias：' + relative)
-        if not path.exists() or not path.resolve().is_relative_to(payload.resolve()):
-            raise ValueError('definition member不存在或逃离artifact：' + relative)
+        full_key = (str(store), canonical(row['artifact']))
+        key = (*full_key, relative)
+        if key not in verified:
+            if full_key in verified:
+                payload = verified[full_key]
+                path = payload if relative == '.' else payload / relative
+                current = payload
+                for part in Path(relative).parts:
+                    if part != '.':
+                        current = current / part
+                        if current.is_symlink():
+                            raise ValueError('definition member不能经过未绑定alias：' + relative)
+                if not path.exists() or not path.resolve().is_relative_to(payload.resolve()):
+                    raise ValueError('definition member不存在或逃离artifact：' + relative)
+                verified[key] = path
+            else:
+                verified[key] = artifacts.resolve(store, row['artifact'], path=relative,
+                    consumer=retained_consumer, retention=hold)
+        path = verified[key]
         mounts.append((row['logical_root'], path))
         bindings[row['name']] = {'store': str(store), 'root': str(path), 'reference': row['artifact'],
-                                 'member': row['member'], 'consumer': consumer, 'retention': hold}
+                                 'member': row['member'], 'consumer': retained_consumer, 'retention': hold}
     return mounts, bindings
 
 
@@ -534,12 +546,37 @@ def validation_receipt(root, manifest, readback):
             'capabilities': manifest['capabilities']}
 
 
-def validate(root, artifact_store=None, *, _verified_assets=None):
+def referenced_state(manifest, state_readback=None):
+    """Resolve the retained state member; metadata never substitutes active state."""
+    from lab.exp import artifacts
+    if manifest.get('kind') == PREPARED and manifest.get('state_binding'):
+        from lab.exp import state
+        binding = manifest['state_binding']
+        holder = state_readback or state.query(binding)['holder']
+        if holder['generation'] != binding['generation'] or holder['phase'] not in ('repaired', 'writable'):
+            raise ValueError('prepared domain state不再属于该repaired generation')
+        locator = holder['locator']
+        if locator.get('kind') == 'local':
+            if Path(locator['path']).resolve(strict=True) != Path(manifest['state_root']).resolve(strict=True):
+                raise ValueError('domain state resolver不是实际state路径')
+        elif not state_readback or binding['authority']['kind'] != 'docker':
+            raise ValueError('Docker mutable state validation必须在持capture的实际domain中执行')
+        return Path(manifest['state_root']).resolve(strict=True)
+    binding = manifest['state_snapshot']
+    return artifacts.resolve(binding['store'], binding['reference'], binding['member'],
+                             consumer=manifest['checkpoint_id'], retention=binding['retention'])
+
+
+def validate(root, artifact_store=None, *, _verified_assets=None, _state_readback=None, _in_domain=False):
     root = Path(root).resolve(strict=True)
     manifest = json.loads((root / 'harness-manifest.json').read_text())
-    if manifest.get('kind') not in {KIND, PREPARED} or manifest.get('schema_version') not in {1, 2, 3}:
+    if not _in_domain and (root / 'domain-resolver.json').exists():
+        from lab.exp.backends import validate_in_domain
+        return validate_in_domain(root)
+    if manifest.get('kind') not in {KIND, PREPARED} or manifest.get('schema_version') not in {1, 2, 3, 4}:
         raise ValueError('不是当前 Harness checkpoint/prepared 合同')
-    actual = inventory(root / 'content')
+    state_root = referenced_state(manifest, _state_readback) if manifest['schema_version'] == 4 else root / 'content/run'
+    actual = {'run/' + name: value for name, value in inventory(state_root).items()} if manifest['schema_version'] == 4 else inventory(root / 'content')
     if actual != manifest['files']:
         raise ValueError('检查点内容清单与读回不一致')
     identity = manifest['source_identity']
@@ -559,11 +596,11 @@ def validate(root, artifact_store=None, *, _verified_assets=None):
             raise ValueError('停止来源原件发生变化')
         observed = json.loads(original.read_text())
         validate_stop_identity(identity, observed, legacy_read=manifest['schema_version'] == 1)
-    if manifest['schema_version'] >= 2 and manifest.get('validator',{}).get('hook') != (HOOK if manifest['schema_version'] == 3 else LEGACY_HOOK):
+    if manifest['schema_version'] >= 2 and manifest.get('validator',{}).get('hook') != (HOOK if manifest['schema_version'] >= 3 else LEGACY_HOOK):
         raise ValueError('Harness validator hook不支持此证明覆盖')
-    if manifest['schema_version'] == 3:
+    if manifest['schema_version'] >= 3:
         mounts, _ = resolve_definition_assets(root, manifest, artifact_store, _verified_assets)
-        readback = semantic_readback(root / 'content/run', manifest['layout']['run_root'], definition_mounts=mounts)
+        readback = semantic_readback(state_root, manifest['layout']['run_root'], definition_mounts=mounts)
     else:
         readback = semantic_readback(root / 'content/run', manifest['layout']['run_root'], manifest['materials'])
     consistency = manifest.get('acquisition', {}).get('status', 'unknown')
@@ -575,7 +612,7 @@ def validate(root, artifact_store=None, *, _verified_assets=None):
     return validation_receipt(root, manifest, readback)
 
 
-def checkpoint(source, output, identity, stop, materials=(), acquisition=None, definition_bindings=None, state_binding=None):
+def checkpoint(source, output, identity, stop, materials=(), acquisition=None, definition_bindings=None, state_binding=None, snapshot=None):
     source = Path(source).resolve(strict=True)
     layout_path = source / 'harness-layout.json'
     if not layout_path.is_file() or materials:
@@ -586,9 +623,9 @@ def checkpoint(source, output, identity, stop, materials=(), acquisition=None, d
     logical_root = Path(layout['state_root'])
     export = json.loads(Path(state_binding).read_text()) if state_binding else None
     export_binding = export.get('state_binding') if export else None
-    if logical_root != source and not export_binding:
+    if logical_root != source and not export_binding and not snapshot:
         raise ValueError('导出state需要显式state-binding真实export回执；不猜原logical路径')
-    source_layout = {'run_root': str(logical_root), 'os': platform.system(), 'architecture': platform.machine()}
+    source_layout = {'run_root': str(logical_root), 'os': platform.system(), 'architecture': platform.machine(), 'definition_layout': layout.get('definition_layout')}
     if export_binding:
         from lab.exp import artifacts
         try:
@@ -638,7 +675,7 @@ def checkpoint(source, output, identity, stop, materials=(), acquisition=None, d
     write(output / 'production.json', {'phase': 'staging', 'argv': sys.argv, 'producer': HOOK, 'source': str(source)})
     (output / 'provenance').mkdir()
     write(output / 'provenance/asset-bindings.json', physical)
-    manifest = {'kind': KIND, 'schema_version': 3, 'checkpoint_id': 'hcp-' + uuid.uuid4().hex,
+    manifest = {'kind': KIND, 'schema_version': 4 if snapshot else 3, 'checkpoint_id': 'hcp-' + uuid.uuid4().hex,
                 'producer': {'name': 'pi-braid-checkpoint', 'hook': HOOK, 'sha256': PRODUCER_SOURCE_SHA256},
                 'created_at': datetime.now(timezone.utc).isoformat(), 'source_identity': identity_value,
                 'acquisition': acquisition_value, 'validator': validator_identity(), 'coverage': capabilities(),
@@ -659,19 +696,39 @@ def checkpoint(source, output, identity, stop, materials=(), acquisition=None, d
                                   and str(Path(value['root']) / row['member']) == logical), None)
                 if not placement:
                     raise ValueError('导出definition缺少原执行真实RO input装配关系：' + logical)
-        elif Path(logical).resolve() != actual.resolve() and artifacts.contents(Path(logical)) != artifacts.member_contents(bindings[row['name']]['store'], row['artifact'], row['member']):
+        elif not snapshot and Path(logical).resolve() != actual.resolve() and artifacts.contents(Path(logical)) != artifacts.member_contents(bindings[row['name']]['store'], row['artifact'], row['member']):
             raise ValueError('声明definition与冻结artifact内容不同：' + logical)
     write(output / 'provenance/asset-bindings.json', bindings)
     if export:
         shutil.copy2(state_binding, output / 'provenance/state-export.json')
         manifest['state_provenance'] = {'member': 'provenance/state-export.json', 'sha256': digest(Path(state_binding))}
-    (output / 'content').mkdir()
-    shutil.copytree(source, output / 'content/run', symlinks=True, copy_function=copy_file)
+    if snapshot:
+        binding = dict(snapshot)
+        publication = artifacts._manifest(binding['store'],binding['reference'])
+        proof = publication.get('provenance',{}).get('acquisition')
+        actual_closure = acquisition_value.get('closure',{})
+        if (not proof or proof.get('kind') != 'managed-writer-capture'
+                or proof != binding.get('acquisition')
+                or proof.get('capture_token') != actual_closure.get('capture_token')
+                or proof.get('capture_request_id') != actual_closure.get('closure_id')
+                or any(actual_closure.get(key) != value for key,value in proof['closure'].items())):
+            raise ValueError('schema4 checkpoint requires the snapshot publication original managed capture; ordinary terminal content cannot be upgraded')
+        binding['retention'] = artifacts.retain(binding['store'], binding['reference'],
+            manifest['checkpoint_id'], 'checkpoint-state', manifest['checkpoint_id'] + '--state-retain')
+        manifest['state_snapshot'] = binding
+        sealed_source = referenced_state(manifest)
+        if not source.samefile(sealed_source) and artifacts.contents(source) != artifacts.contents(sealed_source):
+            raise ValueError('checkpoint source不是该snapshot实际state member')
+        state_root = sealed_source
+    else:
+        (output / 'content').mkdir()
+        shutil.copytree(source, output / 'content/run', symlinks=True, copy_function=copy_file)
+        state_root = output / 'content/run'
     shutil.copy2(identity, output / 'provenance/source-identity.json')
     shutil.copy2(stop, output / 'provenance/stop-observation.json')
-    readback = semantic_readback(output / 'content/run', logical_root, definition_mounts=mounts)
+    readback = semantic_readback(state_root, logical_root, definition_mounts=mounts)
     manifest.update(stop_provenance={'sha256': digest(stop), 'member': 'provenance/stop-observation.json',
-                                    'role': 'historical_acquisition_basis'}, files=inventory(output / 'content'),
+                                    'role': 'historical_acquisition_basis'}, files=({'run/' + name: value for name, value in inventory(state_root).items()} if snapshot else inventory(output / 'content')),
                     status='partial' if readback['gaps'] or acquisition_value['status'] != 'writer-closed' else 'complete', readback=readback)
     write(output / 'harness-manifest.json', manifest)
     write(output / 'validation.json', validation_receipt(output, manifest, readback))
@@ -679,10 +736,10 @@ def checkpoint(source, output, identity, stop, materials=(), acquisition=None, d
     return manifest
 
 
-def prepare(source, output, target, repair=None, artifact_store=None):
+def prepare(source, output, target, repair=None, artifact_store=None, *, state_binding=None, state_readback=None):
     source = Path(source).resolve(strict=True)
     manifest = json.loads((source / 'harness-manifest.json').read_text())
-    if manifest.get('schema_version') != 3:
+    if manifest.get('schema_version') not in (3, 4):
         raise ValueError('新prepare只消费separated v3 checkpoint；旧v2保留原冻结producer及完整现场')
     verified_assets = {}
     validation = validate(source, _verified_assets=verified_assets)
@@ -698,10 +755,31 @@ def prepare(source, output, target, repair=None, artifact_store=None):
     output = Path(output).absolute()
     if output.exists() or output.is_relative_to(source):
         raise ValueError('prepared输出必须为来源外部的新目录')
+    if state_binding:
+        from lab.exp import state
+        holder = state_readback or state.query(state_binding)['holder']
+        if holder['phase'] != 'repairing' or holder['snapshot']['reference'] != manifest['state_snapshot']['reference']:
+            raise ValueError('domain-state prepare需要原snapshot对应的独立capture repair许可')
+        if holder['locator'].get('kind') == 'local':
+            run = Path(holder['locator']['path']).resolve(strict=True)
+        elif state_readback and state_binding['authority']['kind'] == 'docker':
+            run = Path(target['run_root']).resolve(strict=True)
+        else:
+            raise ValueError('Docker domain-state repair必须经实际domain capture helper执行')
+        if run != Path(manifest['layout']['run_root']).resolve(strict=True):
+            raise ValueError('domain-state locator不是checkpoint实际Harness state root')
+    else:
+        run = output / 'content/run'
     output.mkdir(parents=True)
     write(output / 'production.json', {'phase': 'staging', 'argv': sys.argv, 'producer': HOOK})
     shutil.copytree(source / 'provenance', output / 'provenance', symlinks=True, copy_function=copy_file)
-    shutil.copytree(source / 'content', output / 'content', symlinks=True, copy_function=copy_file)
+    if state_binding:
+        pass
+    elif manifest['schema_version'] == 4:
+        (output / 'content').mkdir()
+        shutil.copytree(referenced_state(manifest), output / 'content/run', symlinks=True, copy_function=copy_file)
+    else:
+        shutil.copytree(source / 'content', output / 'content', symlinks=True, copy_function=copy_file)
     before = manifest['files']
     old_mounts, old_bindings = resolve_definition_assets(source, manifest, verified=verified_assets)
     assets = {row['name']: dict(row) for row in manifest['definition_assets']}
@@ -719,10 +797,13 @@ def prepare(source, output, target, repair=None, artifact_store=None):
         if row.get('store'):
             locations[name] = {'store': str(Path(row['store']).resolve(strict=True))}
         changes.append({'hook': 'definition-reference', 'name': name, 'before': original, 'after': fresh})
-    prepared = {key: value for key, value in manifest.items() if key != 'stop_provenance'}
-    prepared.update(kind=PREPARED, schema_version=3, prepared_id='hprep-' + uuid.uuid4().hex,
+    prepared = {key: value for key, value in manifest.items() if key not in ('stop_provenance', 'state_snapshot')}
+    prepared.update(kind=PREPARED, schema_version=4 if state_binding else 3, prepared_id='hprep-' + uuid.uuid4().hex,
                     definition_assets=definition_assets(list(assets.values()), manifest['layout']['run_root']),
                     target_layout=target, validator=validator_identity(), capabilities=capabilities())
+    if state_binding:
+        prepared.update(state_binding={**state_binding, 'generation': holder['generation'] + 1},
+                        state_root=str(run), state_snapshot=manifest['state_snapshot'])
     write(output / 'provenance/asset-bindings.json', locations)
     # Explicitly acquire every dependency at the selected worker store; source references remain retained.
     if artifact_store:
@@ -731,15 +812,31 @@ def prepare(source, output, target, repair=None, artifact_store=None):
         transferred = set()
         for row in prepared['definition_assets']:
             source_store = locations[row['name']]['store']
-            key = (str(Path(source_store).resolve()), canonical(row['artifact']))
+            key = (str(Path(source_store).resolve()), canonical(row['artifact']), row['member'])
             if key not in transferred:
                 if Path(source_store).resolve() != Path(artifact_store).resolve():
-                    artifacts.transfer(source_store, artifact_store, row['artifact'], consumer=prepared['prepared_id'])
-                    verified_assets[(str(Path(artifact_store).resolve()), canonical(row['artifact']))] = Path(artifact_store).resolve() / row['artifact']['artifact_id'] / 'payload'
+                    artifacts.transfer(source_store, artifact_store, row['artifact'], selected_member=row['member'], consumer=prepared['prepared_id'])
+                    verified_assets[(str(Path(artifact_store).resolve()), canonical(row['artifact']), row['member'])] = artifacts.member_payload(artifact_store, row['artifact'], row['member'])
                 transferred.add(key)
     mounts, bindings = resolve_definition_assets(output, prepared, artifact_store, verified_assets)
     write(output / 'provenance/asset-bindings.json', bindings)
     old_by_root, new_by_root = dict(old_mounts), dict(mounts)
+    if state_binding and manifest['layout'].get('definition_layout') and not target['runtime_identity'].get('image_id'):
+        from lab.exp.assembly import install_aliases
+        placement = manifest['layout']['definition_layout']
+        base = Path(placement['base'])
+        roles = []
+        expected = {}
+        for asset in definition_mount_roots(prepared['definition_assets'], target['run_root']):
+            logical = Path(asset['logical_root'])
+            if logical != base / asset['name']:
+                raise ValueError('definition repair alias不是原holder placements声明的role')
+            roles.append({'role': asset['name'], 'reference': asset['artifact'], 'member': asset['member'],
+                          'local_root': str(logical), 'physical_root': str(new_by_root[asset['logical_root']])})
+        for asset in definition_mount_roots(manifest['definition_assets'], manifest['layout']['run_root']):
+            expected[asset['name']] = {'reference': asset['artifact'], 'member': asset['member']}
+        _, new_placement = install_aliases(roles, base, state_binding=state_binding, expected=expected)
+        prepared['layout'] = {**manifest['layout'], 'definition_layout': new_placement}
     if not target['runtime_identity'].get('image_id'):
         from lab.exp import artifacts
         for asset in definition_mount_roots(prepared['definition_assets'], target['run_root']):
@@ -757,19 +854,20 @@ def prepare(source, output, target, repair=None, artifact_store=None):
                 raise ValueError('definition替换必须保留原Braid/native hook/Pi协议；不能迁移会话')
     if 'agent' in seen:
         agent = assets['agent']
-        _refresh_native(output/'content/run', Path(manifest['layout']['run_root']),
+        _refresh_native(run, Path(manifest['layout']['run_root']),
                         new_by_root[agent['logical_root']], agent['logical_root'])
     state_repairs = {key: value for key, value in repair.items() if key != 'definition_assets'}
-    effects = apply_repairs(output, prepared, state_repairs)
-    run_layout = output / 'content/run/harness-layout.json'
+    effects = apply_repairs(output, prepared, state_repairs, state_root=run)
+    run_layout = run / 'harness-layout.json'
     layout = json.loads(run_layout.read_text())
     for row in layout['definitions']:
         asset = assets[row['name']]
         row['identity'] = asset.get('identity', row['identity'])
         row['artifact'] = {'reference': asset['artifact'], 'store': bindings[row['name']]['store'], 'member': asset['member']}
+    layout['definition_layout'] = prepared['layout'].get('definition_layout')
     write(run_layout, layout)
-    after = inventory(output / 'content')
-    readback = semantic_readback(output / 'content/run', manifest['layout']['run_root'], definition_mounts=mounts)
+    after = {'run/' + name: value for name, value in inventory(run).items()} if state_binding else inventory(output / 'content')
+    readback = semantic_readback(run, manifest['layout']['run_root'], definition_mounts=mounts)
     file_changes = [{'member': name, 'before': before.get(name), 'after': after.get(name)}
                     for name in sorted(set(before) | set(after)) if before.get(name) != after.get(name)]
     prepared.update(files=after, readback=readback, changes=file_changes, repair_effects=[*changes, *effects],

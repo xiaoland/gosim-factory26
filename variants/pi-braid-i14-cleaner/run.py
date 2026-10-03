@@ -23,8 +23,9 @@ from braid_runtime import (initialize_repository, read_runtime_result, load_deli
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
 from harness_layout import bind_layout
+from execution_context import read as execution_context, role as definition_role, state_root as execution_state_root
 
-HERE = Path(__file__).resolve().parent
+HERE = definition_role(execution_context(),'agent') if execution_context() else Path(__file__).resolve().parent
 VARIANT = 'pi-braid-i14-cleaner'
 ROOT_PROFILE_ID = 'pi-glm-fast'
 ROOT_CHECK_MESSAGES = (
@@ -154,14 +155,19 @@ def generate(args):
     requirements = args.requirements_dir.resolve(strict=True)
     if not requirements.is_dir():
         raise NotADirectoryError(f'输入不是目录：{requirements}')
-    runtime = args.runtime.resolve(strict=True)
+    context = execution_context()
+    if context:
+        args.runtime=definition_role(context,'runtime')
+        args.skills_root=definition_role(context,'skills')
+        args.braid=definition_role(context,'braid')
+    runtime = args.runtime.absolute() if context else args.runtime.resolve(strict=True)
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    run = output/'.factory26'/(time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8])
-    run.mkdir(parents=True)
+    run = execution_state_root(output) or output/'.factory26'/(time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8])
+    run.mkdir(parents=True,exist_ok=True)
     work = run/'work'; work.mkdir()
-    skills_root = args.skills_root.resolve(strict=True)
-    source_braid = (args.braid or runtime/'bin/braid').resolve(strict=True)
+    skills_root = args.skills_root.absolute() if context else args.skills_root.resolve(strict=True)
+    source_braid = args.braid.absolute() if context else (args.braid or runtime/'bin/braid').resolve(strict=True)
     bind_layout(run, variant=VARIANT, definition_root=HERE, runtime=runtime,
                 skills_root=skills_root, braid=source_braid,
                 derived_inputs=['input', 'work/capabilities', 'work/bin', 'work/skills',
@@ -255,13 +261,8 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
     env['MCPORTER_DAEMON_DIR'] = str(Path(env['TMPDIR'])/'mcporter')
     collector = None
     env.update(runtime_resource_environment(runtime, run))
-    try:
-        collector, binding = start_local_telemetry(run)
-        env.update(telemetry_environment(binding))
-    except Exception as exc:
-        if os.environ.get('FACTORY26_EXP_TELEMETRY_BINDING'):
-            raise
-        metadata['telemetry_diagnostic_error'] = f'{type(exc).__name__}: {exc}'
+    collector, binding = start_local_telemetry(run)
+    env.update(telemetry_environment(binding))
     begin = time.monotonic()
     error = None
     history = {'status': 'not_started'}
@@ -425,6 +426,8 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
 
 
 def main():
+    if execution_context.read() is None:
+        raise ValueError('Harness entry requires facility assembly; use scripts/experiment_entry.py --source')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('requirements_dir', type=Path)
     parser.add_argument('--output-dir', type=Path, required=True)

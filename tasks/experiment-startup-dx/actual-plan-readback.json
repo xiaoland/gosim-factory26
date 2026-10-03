@@ -1,0 +1,100 @@
+{
+  "kind": "factory26.arc.actual-offline-plan",
+  "compile": {
+    "kind": "factory26.exp.compilation",
+    "schema_version": 2,
+    "intent_sha256": "3f3c60c1bb2eacb67c0fe57d48493e634cdd2b8cd34d0f7322187da76a03b5ee",
+    "intent_snapshot_sha256": "3f3c60c1bb2eacb67c0fe57d48493e634cdd2b8cd34d0f7322187da76a03b5ee",
+    "compiler_sha256": "2a111232365607687a4b12d83abae73e9e884cec29c0ffc3b5a1d51a90579b5e",
+    "recipe": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/offline-plan/compiled-success/recipe.json",
+    "recipe_sha256": "6892e9b183b4111a750ebd56afa14229f6d7b8e2edab9c8fd2c4a827f5f59466",
+    "selection": {
+      "kind": "explicit",
+      "selected_model": null,
+      "evidence": []
+    },
+    "target_count": 1,
+    "job_count": 1,
+    "created_at": 1790994360.32042,
+    "execution_permission": false
+  },
+  "from_production": {
+    "from_production": "agent"
+  },
+  "command": [
+    "{runtime_python}",
+    "-m",
+    "lab.arc_bench.arc_bench_adapter",
+    "--runner",
+    "{runner}",
+    "--agent",
+    "{agent}",
+    "--requirements",
+    "{requirements}",
+    "--workspace",
+    "{workspace}",
+    "--competition",
+    "hackathon",
+    "--task",
+    "github",
+    "--image",
+    "sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681",
+    "--memory",
+    "2147483648",
+    "--cpus",
+    "2.0",
+    "--shared-docker-slots",
+    "5",
+    "--admission-volume",
+    "exp-admission-0fd73c68c3c4f3b7797ff798",
+    "--requirements-only"
+  ],
+  "sdk": {
+    "kind": "factory26.arc.host-sdk",
+    "schema_version": 1,
+    "entry": "local_submit.py",
+    "entry_sha256": "45408ee80df9a91acb51be8e20bdca42b54476972ef8ff3941c2ba1e3b607d25",
+    "environment_transfer": "verified-at-child-create",
+    "interface": [
+      "main",
+      "run_container"
+    ]
+  },
+  "runtime_plan": {
+    "controller": {
+      "status": "build-required",
+      "python": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/offline-plan/not-produced-cache/735a8befa5bd62871a15fe3e5953edef33a3aac03c6a28ef52e315ea2a29cdb8/controller.json",
+      "dependencies": {
+        "interpreter": "d4f152f2a753c94e0e7935c8ebbe6b2609979e1df7898422b577d0076383d08b",
+        "requirements": "4a6c6976366e4373caff4cac7885c366acc714bd219101a708840eb3aff13844",
+        "builder": "48c5881d97cb86e48ca3cb7c9ad9039e7c44c6273cd5c967984f2cbc6bd466ec",
+        "platform": "Darwin",
+        "architecture": "arm64"
+      },
+      "integrity": "checked at build/consumption"
+    },
+    "runner": {
+      "status": "build-required",
+      "python": "/Volumes/WorkSSD/Development/.worktrees/experiment-startup-dx/factory26/runs/experiment-startup-dx/offline-plan/not-produced-cache/735a8befa5bd62871a15fe3e5953edef33a3aac03c6a28ef52e315ea2a29cdb8/runner.json",
+      "dependencies": {
+        "interpreter": "d4f152f2a753c94e0e7935c8ebbe6b2609979e1df7898422b577d0076383d08b",
+        "requirements": "4a6c6976366e4373caff4cac7885c366acc714bd219101a708840eb3aff13844",
+        "builder": "48c5881d97cb86e48ca3cb7c9ad9039e7c44c6273cd5c967984f2cbc6bd466ec",
+        "platform": "Darwin",
+        "architecture": "arm64"
+      },
+      "integrity": "checked at build/consumption"
+    }
+  },
+  "production_plan": [
+    {
+      "name": "agent",
+      "status": "build-required"
+    }
+  ],
+  "model_execution": false,
+  "docker_execution": false,
+  "material_production": false,
+  "cache_created": false,
+  "observed_at": 1790994360.728003
+}

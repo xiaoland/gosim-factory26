@@ -1,8 +1,6 @@
-# 历史恢复合同（只读）
+# 历史冻结恢复、重放与监控
 
-本页仅用于读取既有 operation、旧 checkpoint、旧 attempt、旧 journal 和历史监控证据。当前 checkpoint/prepare/source-stop、Lab schema 与恢复入口见 [当前恢复手册](../recovery.md)。
-
-## 历史恢复与旧冻结合同（只读）
+本页保留旧 operation/Competition、旧完整材料输运和既有冻结工具的原流程及错误门控，不作为 schema3 新写入入口。旧命令只能由对应冻结 executor 和原授权解释；当前操作从[恢复入口](../recovery.md)进入。历史缺口不能由新布局、后来的 closure 或文件存在追认。
 
 以下旧 operation/Competition 和准备回执用于原件追溯及限定退役通道。工作树不再产生旧格式新执行；不将历史 ARC 政策当作当前新实验默认值。
 
@@ -173,6 +171,10 @@ Prepared 装配会保留原生会话所需的一层材料路径别名，别名�
 Docker entry 的资源限额由容器 cgroup 执行；runner 在同一 namespace 的监管循环复用 `ResourceEvidence` 产生基线、每两秒样本和最终样本，并将明确样本路径传给 Harness。它不启动第二个 OTLP 接收器，也不以宿主样本代替外部子容器资源。Docker 不把物理内存额度再设置为每进程虚拟地址上限；本地 Linux entry 仍保留该限制。
 
 保留工作树中 `better-sqlite3@11.10.0/build/node_gyp_bins/python3` 指向 `/usr/bin/python3` 的已观察链接，离线准备只在恢复副本中物化为显式目标镜像内的解释器文件，并保留权限。回执记录原链接、实际 resolved 路径、文件 SHA 和 image_id；此操作重建可再生构建工具，不迁移原生会话、修改数据库或放宽检查点外链门控。之后仍须完成现有 Git/native 独立读回。
+
+## 旧私有路由和大材料接续
+
+官网表单只注入一个模型 key。需要多供应商时，恢复打包器通过 `--model-environment` 消费 mode 600 的私有 JSON，顶层只有 `environment`，其中只允许 `FACTORY26_MODEL_BINDINGS` 及各 route 声明的凭据变量。它随包保存到 `.private/model-env.json`；恢复入口先校验 manifest，再恢复私有目录与文件权限并装载，随后应用绑定。不要全量复制模型 env、把 key 写入公开配方，或把离线认证装配成功当作供应商实际受理。
 
 对于本地已经写入 `launch_pending`、但 Docker 完整 physical inspect 在 reserve 事务前超时的派发，可显式运行 `lab exp continue-pre-reserve <attempt-directory>`。这不是普通重派：管理入口验证原冻结实验、同 request/job/incarnation，取得原 dispatch 锁，并核对原 unknown/TimeoutExpired、无 create/resource/start/launch 证据。随后读取同 daemon 的完整 physical 与 authority snapshot，只有该 attempt 无任何预约，且确定性名称和 attempt label 均无执行容器或卷时，才复用原 Docker reserve/launch CAS。任意读取失败或已有预约均拒绝。该入口每个 attempt 只进入一次：已有接续记录或接续错误时，不能沿用最初 inspect 超时再次放行，必须核实该次接续自身的副作用。authority 卷可能已创建，不能把此阶段称为零副作用。原错误与 unknown 回执保留，新增接续证据绑定管理工具 SHA；容器仍采用原冻结 deployment/runtime.source，管理修复不改旧制品身份。
 

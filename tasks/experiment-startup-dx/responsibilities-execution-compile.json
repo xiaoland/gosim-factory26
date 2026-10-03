@@ -1,0 +1,78 @@
+{
+  "method": "in-memory Python compilation only",
+  "runtime_actions": false,
+  "files": [
+    {
+      "path": "lab/exp/hosted.py",
+      "sha256": "a3864d16ff138ab65fff6421a6a04d097e67f6bbe3ce90ab12d4c3e0a821d40d",
+      "source_compile": "passed",
+      "embedded_compile": []
+    },
+    {
+      "path": "lab/exp/backends.py",
+      "sha256": "b77d632b473a0ecba44cf5db2779f44d1d8f8707f00a41c6dc89e2f46b854f93",
+      "source_compile": "passed",
+      "embedded_compile": [
+        624,
+        700,
+        1277,
+        1349,
+        1406,
+        1499,
+        1622
+      ]
+    },
+    {
+      "path": "lab/exp/runner.py",
+      "sha256": "bfb26a5d1fd6e275e2fba6bc68bf4a7503aff57ab921485d0287cb675c38c0bc",
+      "source_compile": "passed",
+      "embedded_compile": []
+    },
+    {
+      "path": "lab/exp/controller.py",
+      "sha256": "0bd96703a14b0d1fd8a170ff6b7d3ed2f827f600fbd68a3be2084761efd8398e",
+      "source_compile": "passed",
+      "embedded_compile": [
+        1284,
+        1412
+      ]
+    },
+    {
+      "path": "lab/exp/state.py",
+      "sha256": "ade1c57861e66f684a62615d833c93ea777882d539ed529cbbbb5d925f86db31",
+      "source_compile": "passed",
+      "embedded_compile": []
+    },
+    {
+      "path": "submission/exp_checkpoint.py",
+      "sha256": "95a6db4f3e5f38098797e062900e6d0409bb82e237fd484c68a461dc2aecb4f0",
+      "source_compile": "passed",
+      "embedded_compile": []
+    },
+    {
+      "path": "braid-console/docker_runtime.py",
+      "sha256": "7507d4f988f25fa718a8d08967a34e6133fa69026b8c072523120c07e04c5dd9",
+      "source_compile": "passed",
+      "embedded_compile": [
+        140
+      ]
+    },
+    {
+      "path": "braid-console/service.py",
+      "sha256": "a789983b2571180fc194ad14a3654b1dcd8790662758412693353f634243c3f9",
+      "source_compile": "passed",
+      "embedded_compile": [
+        269
+      ]
+    }
+  ],
+  "actual_material_operation": "runs/experiment-startup-dx/responsibilities-member-transport/receipt.json",
+  "member_caller_migration": {
+    "inputs": "central member_payload missing_ok only for authenticated missing coverage; selected member reception",
+    "snapshot_copy_state": "prepared input member/content/run central resolver",
+    "snapshot_copy_definitions": "central actual member root -> RO mount",
+    "domain_state_definitions": "central actual member root -> RO mount",
+    "runtime_actions": false,
+    "full_input_reception": "original manifest plus actual whole payload only; no member positions or location/holds"
+  }
+}

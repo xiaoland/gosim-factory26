@@ -361,7 +361,7 @@ def _wait_process(proc, run, reason, *, timeout=None):
     return code
 
 def start_local_telemetry(run):
-    """Use the runner-owned receiver, or start the package's standalone collector."""
+    """Consume the receiver declared by the ready execution context."""
     attempt_id = os.environ.get('FACTORY26_EXP_ATTEMPT_ID')
     if attempt_id:
         service = json.loads(os.environ.get('FACTORY26_EXP_SERVICES', '{}')).get('telemetry', {})
@@ -385,30 +385,8 @@ def start_local_telemetry(run):
         return None, binding
     if attempt_id:
         raise ValueError('runner telemetry 已就绪但未提供当前 attempt 的 receiver binding')
-    module = Path(__file__).resolve().with_name('otlp.py')
-    if not module.is_file():
-        module = Path(__file__).resolve().parents[1]/'lab/otlp.py'
-    log = (run/'telemetry-collector.log').open('w')
-    process = subprocess.Popen([sys.executable, str(module), '--serve-run', str(run)],
-                               cwd=module.parent, stdout=subprocess.PIPE, stderr=log, text=True)
-    process._factory26_evidence_run = run
-    process_evidence(run, 'operations.jsonl', {'kind': 'process_started', 'role': 'telemetry-collector',
-                                              'process': process_identity(process.pid)})
-    log.close()
-    try:
-        with selectors.DefaultSelector() as selector:
-            selector.register(process.stdout, selectors.EVENT_READ)
-            if not selector.select(20):
-                raise TimeoutError('OTLP receiver did not announce its endpoint')
-        binding = json.loads(process.stdout.readline())
-        if not binding.get('endpoint') or not binding.get('token'):
-            raise ValueError('OTLP receiver returned an incomplete binding')
-        process.stdout.close()
-        return process, binding
-    except BaseException:
-        _signal_process(process, signal.SIGTERM, run, 'collector-startup-failed')
-        _wait_process(process, run, 'collector-startup-failed', timeout=20)
-        raise
+    raise ValueError('telemetry creation belongs to the facility bootstrap; Harness needs an explicit ready/disabled service')
+
 
 def telemetry_environment(binding):
     if binding.get('status') == 'disabled':
@@ -508,8 +486,13 @@ def start_shared_proxy(runtime, run, env):
     command = [str(runtime/'bin/node'), str(runtime/'node_modules/portless/dist/cli.js'),
                'proxy', 'start', '--foreground', '--skip-trust', '--no-tls', '-p', str(port)]
     log = run/'shared-proxy.log'
+    try:
+        from .state_writer import gate, spawn
+    except ImportError:
+        from state_writer import gate, spawn
+    gate(environment)
     with log.open('w') as stream:
-        child = subprocess.Popen(command, cwd=run, env=environment, start_new_session=True,
+        child = spawn(command, cwd=run, environment=environment,role='service',start_new_session=True,
                                  stdout=stream, stderr=subprocess.STDOUT)
     identity = process_identity(child.pid)
     process_evidence(run, 'operations.jsonl', {'kind': 'process_started', 'role': 'shared-proxy',
@@ -534,10 +517,17 @@ def stop_shared_proxy(child, run):
     """Wait the foreground owner; never infer ownership from a stale proxy PID file."""
     _signal_process(child, signal.SIGTERM, run, 'shared-proxy-stop')
     try:
-        return _wait_process(child, run, 'shared-proxy-stop', timeout=5)
+        result = _wait_process(child, run, 'shared-proxy-stop', timeout=5)
     except subprocess.TimeoutExpired:
         _signal_process(child, signal.SIGKILL, run, 'shared-proxy-stop-timeout')
-        return _wait_process(child, run, 'shared-proxy-stop-timeout')
+        result = _wait_process(child, run, 'shared-proxy-stop-timeout')
+
+    try:
+        from .state_writer import closed
+    except ImportError:
+        from state_writer import closed
+    closed(getattr(child,'_state_writer',None))
+    return result
 
 def browser_executable(runtime):
     """Use the portable wrapper or the browser paired with this runtime's Playwright."""
@@ -657,9 +647,15 @@ def cleanup_workspace(work):
     return pids
 
 def logged(command, cwd, env, log, cleanup_errors=None):
+    try:
+        from .state_writer import gate, spawn, closed
+    except ImportError:
+        from state_writer import gate, spawn, closed
+    gate(env)
     with log.open("w") as output:
-        proc = subprocess.Popen(command, cwd=cwd, env=env, stdout=output,
+        proc = spawn(command, cwd=cwd, environment=env,role='native',stdout=output,
                                 stderr=subprocess.STDOUT, start_new_session=True)
+        state_receipt=proc._state_writer
         process_evidence(log.parent, 'operations.jsonl', {'kind': 'process_started', 'role': 'logged-command',
                                                          'process': process_identity(proc.pid), 'log': str(log)})
         try:
@@ -670,6 +666,7 @@ def logged(command, cwd, env, log, cleanup_errors=None):
                 # Generation has an outer, verified workspace cleanup before freezing.
                 if cleanup_errors is None or proc.returncode is None: raise
                 cleanup_errors.append({'pid':proc.pid,'exit_code':proc.returncode,'error':str(exc)})
+            if proc.returncode is not None: closed(state_receipt)
 
 def validate_application(app):
     for directory, script in (('frontend', 'build'), ('backend', 'start')):

@@ -1,6 +1,6 @@
 # Harness 共用材料
 
-本目录提供可供 variant 选择的工具依赖和技能文件，不决定协作流程或模型配方。开发 Agent 的项目指令归根目录 [AGENTS.md](../AGENTS.md)，参赛 Agent 的输入由各 variant 的 `build.py`、`run.py` 和原生角色文件选择。
+本目录提供可供 variant 选择的工具依赖和技能文件，不决定协作流程或模型配方。开发 Agent 的项目指令归根目录 [AGENTS.md](../AGENTS.md)，参赛 Agent 的输入由I14 的 `materials.json`、`run.py` 和原生角色文件选择。
 
 | 材料 | 权威位置 | 消费者 |
 | --- | --- | --- |

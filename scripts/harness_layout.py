@@ -15,14 +15,18 @@ def _read(path):
 
 
 def _identity(root, definition_root, bindings):
+    try:
+        from .execution_context import member_join
+    except ImportError:
+        from execution_context import member_join
     matches = []
     for value in bindings.values():
-        source = Path(value['root']).resolve(strict=True)
+        source = Path(value['root']).absolute() if value.get('logical') else Path(value['root']).resolve(strict=True)
         if root == source or source.is_dir() and root.is_relative_to(source):
             matches.append((source, value))
     if matches:
         source, value = max(matches, key=lambda row: len(row[0].parts))
-        member = root.relative_to(source).as_posix()
+        member = member_join(value.get('member', '.'), root.relative_to(source).as_posix())
         binding = {'reference': value['reference'], 'store': value['store'], 'member': member}
         return {'kind': 'artifact-member', 'reference': value['reference'], 'member': member}, binding
     package = definition_root / 'package-manifest.json'
@@ -50,19 +54,32 @@ Mutable source checkouts must first go through the material producer. Local
 consumers use the existing verified-read contract; Docker enforces read-only
 asset mounts. This record does not claim kernel isolation on a local host.
 """
-    run = Path(run).resolve(strict=True)
-    definition_root = Path(definition_root).resolve(strict=True)
-    bindings = json.loads(os.environ.get('FACTORY26_EXP_INPUT_BINDINGS', '{}'))
+    run = Path(run).absolute()
+    definition_root = Path(definition_root).absolute()
+    try:
+        from .execution_context import read as read_context
+    except ImportError:
+        from execution_context import read as read_context
+    context=read_context()
+    if context:
+        bindings={row['role']:{'root':row['local_root'],'reference':row.get('reference'),
+                  'member':row.get('member','.'),'store':row.get('store'),'logical':True}
+                  for row in context['assembly']['definitions'] if row.get('reference')}
+    else:
+        bindings = json.loads(os.environ.get('FACTORY26_EXP_INPUT_BINDINGS', '{}'))
     if not isinstance(bindings, dict):
         raise ValueError('runner input bindings must be an object')
-    roots = {'agent': definition_root, 'runtime': Path(runtime).resolve(strict=True),
-             'skills': Path(skills_root).resolve(strict=True)}
+    roots = {'agent': definition_root, 'runtime': Path(runtime).absolute() if context else Path(runtime).resolve(strict=True),
+             'skills': Path(skills_root).absolute() if context else Path(skills_root).resolve(strict=True)}
     if braid is not None:
-        roots['braid'] = Path(braid).resolve(strict=True)
+        roots['braid'] = Path(braid).absolute() if context else Path(braid).resolve(strict=True)
     for name, root in (extra_definitions or {}).items():
         if name in roots:
             raise ValueError('duplicate Harness definition role: ' + name)
-        roots[name] = Path(root).resolve(strict=True)
+        roots[name] = Path(root).absolute() if context else Path(root).resolve(strict=True)
+    if context:
+        for row in context['assembly']['definitions']:
+            roots.setdefault(row['role'],Path(row['local_root']))
     definitions = []
     for name, root in roots.items():
         if root == run or root.is_relative_to(run) or run.is_relative_to(root):
@@ -80,7 +97,9 @@ asset mounts. This record does not claim kernel isolation on a local host.
         members.append(member.as_posix())
     value = {'kind': 'factory26.harness.layout', 'schema_version': 1, 'variant': variant,
              'state_root': str(run), 'application_root': str(run / 'work/application'),
-             'definitions': definitions, 'derived_inputs': members}
+             'definitions': definitions, 'derived_inputs': members,
+             'definition_layout':context['assembly'].get('proof',{}).get('definition_layout') if context else None,
+             'state_holder':context['assembly']['state'].get('holder') if context else None}
     target = run / 'harness-layout.json'
     temporary = target.with_suffix('.partial')
     temporary.write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')

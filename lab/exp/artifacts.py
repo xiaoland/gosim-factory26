@@ -181,14 +181,66 @@ def deletion_intent(store, ref, request_id, *, writer_closed, preservation_satis
             raise Blocked('artifact or its carrier remains retained')
         deletion = record('artifact-deletion', request_id=request_id, reference=ref,
                           location_sequence=location['sequence'], state='intent', requested_at=time.time(),
-                          writer_closed=True, preservation_satisfied=True)
+                          writer_closed=True, preservation_satisfied=True,
+                          member_positions=[row['relative_path'] for row in location.get('members', {}).values()])
         location.update(state='deleting', deletion=deletion, sequence=location['sequence'] + 1)
         atomic(path, location)
         return deletion
 
 
+def allocate_scratch(store, path):
+    """Request-owned same-domain production scratch; failures remain recoverable."""
+    store = Path(store).resolve(strict=True)
+    require(read(store / 'store.json'), 'artifact-store')
+    relative = member(path)
+    if relative == '.':
+        raise ValueError('production scratch needs a bounded request member')
+    target = store / '.scratch' / relative
+    current = store
+    for part in ('.scratch', *Path(relative).parts):
+        current = current / part
+        if current.is_symlink():
+            raise ValueError('production scratch cannot redirect through links')
+        if not current.exists():
+            current.mkdir()
+            _sync(current.parent)
+    return target
+
+
+class PublicationWindow:
+    """Ephemeral readback supplied by publication, never reconstructed from receipts."""
+    def __init__(self):
+        self._objects = {}
+
+    def _published(self, store, reference, manifest):
+        self._objects[canonical([str(store), reference])] = manifest
+
+    def resolve(self, store, reference, path, *, consumer, retention):
+        store = Path(store).resolve(strict=True)
+        manifest = self._objects.get(canonical([str(store), reference]))
+        if manifest is None:
+            return resolve(store, reference, path, consumer=consumer, retention=retention)
+        location = _object_location(store, reference)[1]
+        _available(location)
+        held = location['retentions'].get(retention['retention_id'])
+        if not held or held['state'] != 'held' or held['consumer'] != consumer:
+            raise Blocked('publication readback requires its current consumer retention')
+        path = member(path)
+        contents_member(manifest['contents'], path)
+        payload = store / reference['artifact_id'] / 'payload'
+        selected = payload / path
+        current = payload
+        for part in Path(path).parts:
+            current = current / part
+            if current.is_symlink():
+                raise ValueError('publication member redirects through a link')
+        if not selected.exists() or not selected.resolve().is_relative_to(payload):
+            raise ValueError('publication member is unavailable')
+        return selected
+
+
 def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
-            request_id=None, consumer=None, purpose='producer', domain_identity=None, move_source=False):
+            request_id=None, consumer=None, purpose='producer', domain_identity=None, move_source=False, _readback=None):
     """Publish immutable content. Explicit handover consumes a sealed same-device source.
 
     A saved handover identity permits retry after its rename, without recopying or
@@ -196,9 +248,19 @@ def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
     """
     if move_source and Path(source).is_symlink():
         raise ValueError('handover source cannot redirect through a link')
+    original_source = Path(source).absolute()
     source, store = Path(source).resolve(), Path(store).resolve()
     if move_source and (source.is_relative_to(store) or store.is_relative_to(source)):
-        raise ValueError('handover source and artifact store must not overlap')
+        scratch = store / '.scratch'
+        if '..' in original_source.parts or not original_source.is_relative_to(scratch) or original_source == scratch or not source.is_relative_to(scratch):
+            raise ValueError('handover within a store requires owned production scratch')
+        current = original_source
+        while current != store:
+            if current.is_symlink():
+                raise ValueError('handover production scratch cannot traverse a link')
+            current = current.parent
+    if _readback is not None and not isinstance(_readback, PublicationWindow):
+        raise TypeError('publication readback must belong to one operation window')
     binding = initialize(store, domain_identity)
     request_id = identifier(request_id or new_id('publish'))
     parameters = {'source': str(source), 'type': artifact_type, 'provenance': provenance or {},
@@ -220,7 +282,9 @@ def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
         target = store / artifact_id
         if target.exists():
             ref = {'artifact_id': artifact_id, 'manifest_sha256': digest(target / 'manifest.json')}
-            verify(store, ref)
+            verified = verify(store, ref)
+            if _readback is not None:
+                _readback._published(store, ref, verified)
             _available(_object_location(store, ref)[1])
             action.update(state='published', reference=ref)
             atomic(action_path, action)
@@ -285,6 +349,8 @@ def publish(store, source, artifact_type, provenance=None, capabilities=None, *,
                 _sync(store)
                 action.update(state='published', reference=ref, published_at=time.time())
                 atomic(action_path, action)
+            if _readback is not None:
+                _readback._published(store, ref, value)
             return ref
         except BaseException as exc:
             atomic(staging / 'failure.json', error(exc))
@@ -339,11 +405,51 @@ def contents_member(expected, path='.'):
             'sha256': hashlib.sha256(encoded).hexdigest()}
 
 
-def verify(store, ref):
+def member_payload(store, ref, path='.', *, missing_ok=False):
+    """Resolve a complete member; missing_ok only permits authenticated absent coverage.
+
+    A declared position with missing bytes, invalid identity or unavailable retention
+    still raises. Query callers can distinguish missing coverage from damaged storage.
+    """
+    relative = member(path)
+    root = Path(store).resolve(strict=True) / identifier(ref['artifact_id'])
     manifest = _manifest(store, ref)
-    root = Path(store).resolve(strict=True) / manifest['artifact_id']
-    if contents(root / 'payload') != manifest['contents']:
-        raise ValueError('artifact contents or identity differs from published manifest')
+    contents_member(manifest['contents'], relative)
+    payload = root / 'payload'
+    if payload.exists():
+        candidate = payload / relative
+    else:
+        _, location = _object_location(store, ref)
+        _available(location)
+        candidates = [(key, value) for key, value in location.get('members', {}).items()
+                      if relative == key or relative.startswith(key + '/')]
+        if not candidates:
+            if missing_ok:
+                return None
+            raise Blocked('no complete local position for artifact member: ' + relative)
+        selected, position = max(candidates, key=lambda row: len(row[0]))
+        if position.get('reference') != ref or position.get('member') != selected:
+            raise ValueError('member position does not bind its original reference')
+        expected_position = 'members/' + canonical(selected) + '/payload'
+        if position.get('relative_path') != expected_position:
+            raise ValueError('member position differs from its bounded storage path')
+        payload = root / expected_position
+        suffix = relative[len(selected):].lstrip('/')
+        candidate = payload / suffix if suffix else payload
+    current = root
+    for part in candidate.relative_to(root).parts:
+        current = current / part
+        if current.is_symlink():
+            raise ValueError('artifact member position redirects through a link')
+    if not candidate.exists() or not candidate.resolve().is_relative_to(root.resolve()):
+        raise Blocked('artifact member position is unavailable: ' + relative)
+    return candidate
+
+
+def verify(store, ref, *, path='.'):
+    manifest = _manifest(store, ref)
+    if contents(member_payload(store, ref, path)) != contents_member(manifest['contents'], path):
+        raise ValueError('artifact member differs from its original manifest')
     return manifest
 
 
@@ -358,32 +464,30 @@ def resolve(store, ref, path='.', *, consumer=None, request_id=None, retention=N
             held = location['retentions'].get(retention['retention_id'])
             if not held or held['state'] != 'held' or held['consumer'] != consumer:
                 raise Blocked('read-only resolution requires an existing consumer retention')
-    # Legacy evidence can still be inspected; no managed consumer or execution guarantee is invented.
-    verify(store, ref)
-    relative = member(path)
-    root = Path(store).resolve() / ref['artifact_id'] / 'payload'
-    candidate = root / relative if relative != '.' else root
-    current = root
-    if current.is_symlink():
-        raise ValueError('artifact root is a link')
-    for part in Path(relative).parts:
-        if part == '.':
-            continue
-        current = current / part
-        if current.is_symlink():
-            raise ValueError(f'ordinary artifact resolution cannot follow link: {relative}')
-    if not candidate.exists() or not candidate.resolve().is_relative_to(root.resolve()):
-        raise ValueError('artifact member is missing or escapes content boundary')
+    # Member reception never claims the whole payload is present.
+    verify(store, ref, path=path)
+    candidate = member_payload(store, ref, path)
     if ref.get('member_sha256') and digest(candidate) != ref['member_sha256']:
         raise ValueError('artifact member digest differs')
     return candidate
 
 
-def materialize(store, ref, destination, *, consumer=None, request_id=None, retention=None):
+def plain_member_contents(manifest, path='.'):
+    """Ordinary directory consumption must not silently omit definition subtrees."""
+    path = member(path)
+    for excluded in manifest.get('capabilities', {}).get('excluded_definitions', []):
+        missing = member(excluded['path'])
+        if path == '.' or missing == path or missing.startswith(path + '/'):
+            raise Blocked('composed workspace requires definition-aware assembly or a bounded state member')
+    return contents_member(manifest['contents'], path)
+
+
+def materialize(store, ref, destination, *, path='.', consumer=None, request_id=None, retention=None):
     """Verify received bytes before publication, without pre-reading the source."""
     destination = Path(destination).resolve() if not Path(destination).is_symlink() else Path(destination)
     consumer = consumer or ('assembly:' + str(destination))
-    request_id = request_id or ('assemble-' + canonical([consumer, ref])[:32])
+    path = member(path)
+    request_id = request_id or ('assemble-' + canonical([consumer, ref, path])[:32])
     if retention is None:
         retain(store, ref, consumer, 'assembly', request_id)
     else:
@@ -393,15 +497,16 @@ def materialize(store, ref, destination, *, consumer=None, request_id=None, rete
         if not held or held['state'] != 'held' or held['consumer'] != consumer:
             raise Blocked('read-only assembly requires the consumer existing held retention')
     manifest = _manifest(store, ref)
-    source = Path(store).resolve() / ref['artifact_id'] / 'payload'
+    expected = plain_member_contents(manifest, path)
+    source = member_payload(store, ref, path)
     if destination.is_symlink():
         raise ValueError('artifact destination cannot redirect through a link')
     if destination.exists():
-        if contents(destination) != manifest['contents']:
+        if contents(destination) != expected:
             raise ValueError('existing input materialization differs from artifact')
         return destination
-    if manifest['contents']['kind'] == 'directory':
-        for row in manifest['contents']['entries']:
+    if expected['kind'] == 'directory':
+        for row in expected['entries']:
             if row['type'] == 'link':
                 target = (source / row['path']).parent / row['target']
                 if not target.resolve().is_relative_to(source.resolve()):
@@ -412,7 +517,7 @@ def materialize(store, ref, destination, *, consumer=None, request_id=None, rete
         copy_file(source, staging)
     else:
         shutil.copytree(source, staging, symlinks=True, copy_function=copy_file)
-    if contents(staging) != manifest['contents']:
+    if contents(staging) != expected:
         raise ValueError('artifact materialization content differs')
     staging.rename(destination)
     _sync(destination.parent)
@@ -426,9 +531,130 @@ def import_evidence(store, source, *, evidence_type='evidence', provenance=None,
                    {**(capabilities or {}), 'execution_proof': False})
 
 
-def transfer(source_store, destination_store, ref, *, request_id=None, consumer=None, domain_identity=None):
+def receive_member(store, ref, manifest_file, member_source, *, selected_member,
+                   consumer=None, request_id=None):
+    """Publish one complete member position; do not assemble a partial whole tree."""
+    selected_member = member(selected_member)
+    if selected_member == '.':
+        raise ValueError('whole-object reception uses transfer, not a member position')
+    manifest_file, member_source = Path(manifest_file), Path(member_source)
+    if manifest_file.is_symlink() or digest(manifest_file) != ref['manifest_sha256']:
+        raise ValueError('received manifest differs from original artifact identity')
+    manifest = require(read(manifest_file), 'artifact')
+    if manifest['artifact_id'] != ref['artifact_id']:
+        raise ValueError('received member manifest belongs to another artifact')
+    expected = plain_member_contents(manifest, selected_member)
+    binding = initialize(store)
+    store = Path(store).resolve(strict=True)
+    request_id = identifier(request_id or ('member-' + canonical([binding['store_id'], ref, selected_member])[:32]))
+    consumer = consumer or ('member:' + request_id)
+    parameters = canonical({'reference': ref, 'member': selected_member, 'consumer': consumer})
+    action_path = store / 'requests' / (request_id + '.json')
+    with locked(store / 'requests' / (request_id + '.lock')):
+        if action_path.exists():
+            action = read(action_path)
+            if action['parameters_sha256'] != parameters:
+                raise ValueError('member reception request already binds different parameters')
+            if action.get('state') == 'published':
+                verify(store, ref, path=selected_member)
+                retain(store, ref, consumer, 'member-consumer', request_id)
+                return ref
+        else:
+            action = record('artifact-member-reception', request_id=request_id, reference=ref,
+                            member=selected_member, parameters_sha256=parameters,
+                            state='receiving', created_at=time.time())
+            atomic(action_path, action)
+        staging = allocate_scratch(store, 'member-reception/' + request_id)
+        incoming = staging / 'payload'
+        try:
+            if incoming.exists() and contents(incoming) != expected:
+                incoming.rename(staging / new_id('partial'))
+            if not incoming.exists():
+                if member_source.is_symlink():
+                    raise ValueError('received member source redirects through a link')
+                if member_source.is_file():
+                    copy_file(member_source, incoming)
+                else:
+                    shutil.copytree(member_source, incoming, symlinks=True, copy_function=copy_file)
+            if contents(incoming) != expected:
+                raise ValueError('received member bytes differ from the original manifest')
+            _durable_tree(incoming)
+            with locked(store / '.store.lock'):
+                root = store / identifier(ref['artifact_id'])
+                if root.is_symlink():
+                    raise ValueError('artifact identity cannot redirect through links')
+                root.mkdir(exist_ok=True)
+                location = None
+                if (root / 'location.json').exists():
+                    location = _object_location(store, ref)[1]
+                    _available(location)
+                if (root / 'manifest.json').exists():
+                    _manifest(store, ref)
+                else:
+                    copy_file(manifest_file, root / 'manifest.json')
+                _sync(root / 'manifest.json')
+                _sync(root)
+                target = root / 'members' / canonical(selected_member) / 'payload'
+                target.parent.mkdir(parents=True, exist_ok=True)
+                if target.exists():
+                    if target.is_symlink() or contents(target) != expected:
+                        raise ValueError('existing member position changed')
+                else:
+                    incoming.rename(target)
+                _sync(target.parent)
+                _sync(root / 'members')
+                hold = _hold(consumer, 'member-consumer', request_id)
+                if location is not None:
+                    location['retentions'][hold['retention_id']] = hold
+                    location['sequence'] += 1
+                else:
+                    location = _location(binding, ref, hold)
+                    location['verification'] = 'received-member-content'
+                location.setdefault('members', {})[selected_member] = {
+                    'reference': ref, 'member': selected_member,
+                    'relative_path': target.relative_to(root).as_posix(),
+                    'verified_at': time.time(), 'request_id': request_id}
+                atomic(root / 'location.json', location)
+                _sync(root)
+                _sync(store)
+            action.update(state='published', published_at=time.time())
+            atomic(action_path, action)
+            if incoming.exists():
+                if incoming.is_file():
+                    incoming.unlink()
+                else:
+                    shutil.rmtree(incoming)
+            return ref
+        except BaseException as exc:
+            action.update(state='partial', error=error(exc))
+            atomic(action_path, action)
+            raise
+
+
+def transfer(source_store, destination_store, ref, *, request_id=None, consumer=None, domain_identity=None, selected_member='.'):
     """Receive the same identity; retain both sides until target publication is confirmed."""
     source_store, destination_store = Path(source_store).resolve(), Path(destination_store).resolve()
+    selected_member = member(selected_member)
+    if selected_member != '.':
+        initialize(destination_store, domain_identity)
+        if (destination_store / ref['artifact_id'] / 'manifest.json').exists():
+            try:
+                member_payload(destination_store, ref, selected_member)
+            except Blocked:
+                pass
+            else:
+                verify(destination_store, ref, path=selected_member)
+                retain(destination_store, ref, consumer or ('transfer:' + str(source_store)), 'transfer-target',
+                       request_id or ('transfer-member-' + canonical([str(source_store), str(destination_store), ref, selected_member])[:32]))
+                return ref
+        request_id = request_id or ('transfer-member-' + canonical([str(source_store), str(destination_store), ref, selected_member])[:32])
+        hold = retain(source_store, ref, 'transfer:' + request_id, 'transfer-source', request_id) if (source_store / ref['artifact_id'] / 'location.json').exists() else None
+        initialize(destination_store, domain_identity)
+        result = receive_member(destination_store, ref, source_store / ref['artifact_id'] / 'manifest.json',
+            member_payload(source_store, ref, selected_member), selected_member=selected_member, consumer=consumer, request_id=request_id)
+        if hold:
+            release(source_store, ref, hold['retention_id'], request_id + '-release')
+        return result
     binding = initialize(destination_store, domain_identity)
     request_id = identifier(request_id or ('transfer-' + canonical([str(source_store), binding['store_id'], ref])[:32]))
     consumer = consumer or ('transfer:' + request_id)
@@ -444,7 +670,7 @@ def transfer(source_store, destination_store, ref, *, request_id=None, consumer=
                             parameters_sha256=parameters, state='receiving', created_at=time.time())
             atomic(action_path, action)
         target = destination_store / identifier(ref['artifact_id'])
-        if target.exists():
+        if (target / 'payload').exists():
             verify(destination_store, ref)
             retain(destination_store, ref, consumer, 'transfer-target', request_id)
             action.update(state='published', confirmed_at=time.time())
@@ -476,7 +702,18 @@ def transfer(source_store, destination_store, ref, *, request_id=None, consumer=
             atomic(incoming / 'location.json', _location(binding, ref, hold))
             _durable_tree(incoming)
             with locked(destination_store / '.store.lock'):
-                incoming.rename(target)
+                if target.exists():
+                    _manifest(destination_store, ref)
+                    location = _object_location(destination_store, ref)[1]
+                    _available(location)
+                    incoming.joinpath('payload').rename(target / 'payload')
+                    _sync(target)
+                    location['retentions'][hold['retention_id']] = hold
+                    location.update(verification='received-content-inventory', verified_at=time.time())
+                    location['sequence'] += 1
+                    atomic(target / 'location.json', location)
+                else:
+                    incoming.rename(target)
                 _sync(destination_store)
                 action.update(state='published', published_at=time.time(), legacy_source=not managed_source)
                 atomic(action_path, action)
@@ -526,14 +763,24 @@ def apply_deletion(store, ref, request_id):
                     hold['state'] == 'held' for hold in location['retentions'].values()):
                 raise Blocked('GC deletion no longer owns an unretained location')
         # Deleting state rejects new retains. Never hold the domain lock for large removal.
-        payload = store / ref['artifact_id'] / 'payload'
+        root = store / identifier(ref['artifact_id'])
         try:
-            if payload.is_symlink():
-                raise ValueError('GC payload cannot redirect through a link')
-            if payload.is_dir():
-                shutil.rmtree(payload)
-            elif payload.exists():
-                payload.unlink()
+            positions = deletion.get('member_positions', [])
+            registered = {row['relative_path'] for row in location.get('members', {}).values()}
+            if set(positions) != registered:
+                raise Blocked('GC member positions differ from the accepted deletion intent')
+            for relative in ['payload', *positions]:
+                payload = root / relative
+                if relative != 'payload' and (Path(relative).is_absolute() or
+                        len(Path(relative).parts) != 3 or Path(relative).parts[0] != 'members' or
+                        Path(relative).parts[2] != 'payload'):
+                    raise ValueError('GC member position is outside its artifact')
+                if any(parent.is_symlink() for parent in [payload, *payload.parents] if parent != store.parent):
+                    raise ValueError('GC payload cannot redirect through a link')
+                if payload.is_dir():
+                    shutil.rmtree(payload)
+                elif payload.exists():
+                    payload.unlink()
             _sync(path.parent)
             with locked(store / '.store.lock'):
                 _, current = _object_location(store, ref)
@@ -587,10 +834,12 @@ def main():
         value = release(args.store, request['reference'], request['retention_id'], request['request_id'])
     elif args.action == 'materialize':
         value = str(materialize(args.store, request['reference'], request['destination'],
-                                consumer=request['consumer'], request_id=request['request_id'], retention=request.get('retention')))
+                                path=request.get('member', '.'), consumer=request['consumer'],
+                                request_id=request['request_id'], retention=request.get('retention')))
     else:
         value = transfer(request['source_store'], args.store, request['reference'],
-                         request_id=request['request_id'], consumer=request['consumer'])
+                         request_id=request['request_id'], consumer=request['consumer'],
+                         selected_member=request.get('member', '.'))
     print(json.dumps(value, ensure_ascii=False))
 
 

@@ -119,6 +119,15 @@ python3 "$console_service/app/service.py" binary --service "$console_service" \
 
 登记程序追加受管理 binary 的精确挂载，并要求访问容器带 `factory26.console.service=<服务ID>`、`factory26.console.run=<运行ID>` 所有权标签。实际镜像、用户、工作目录、原绝对路径与所有嵌套挂载须符合原运行。共享路径方式仅支持可核实的同宿主 Unix socket context；SSH 只读方式不能被当作跨宿主可写聚合。
 
+## 会话原文与受管状态
+
+当前 live provider 若为 `idle`、CLI 明确返回空 `turns`、读取从偏移零开始且该服务此前未读到该 provider 正文，精确登记的 JSONL 路径尚不存在时，原文接口返回 `availability: "not-persisted"`，页面显示文件目前不存在、等待首次轮次持久化对话。它不表示模型正在执行或已经交付应用；上下文替换后准备好但尚未收到新输入的 provider 可以处于这个状态。已有 Turn、该服务此前读到过正文、其它文件错误或非零偏移的缺失仍保留具体读取错误，不能都当作等待。
+
+
+受管 state 的访问与恢复交接使用原 workspace 权威。Managed Docker Console 在每次 CLI 调用前查询同一 holder；capture 关闭旧访问写者后，旧 live 接入只能返回封口 snapshot 关系，不能继续读取新 writer 改写的工作区。快照需按实际资产位置取得并独立登记为 archive，live 配置不自动改绑到新 attempt。
+
+新受管 Local state 尚无 Console 写者适配器。其 harness-layout 显式记录 state_holder，Console 对这类目录拒绝 live 接入，保留 archive 阅读；缺少该关系的历史材料沿原合同，不能据此声称已纳入受管关闭。运行域之外自行编辑目录同样不在登记覆盖内。
+
 named volume 使用 `volume-subpath` 时，宿主 source 是 volume 根加实际 Subpath，不能仅用 volume 根或假定 `--volumes-from` 保留子目录。保持原 volume 与子目录的实际消费者引用；宿主目录供依赖保护，存在性在固定访问容器内核实。访问容器只提供 CLI 执行空间，不运行 Agent 或重建生成执行。
 
 ## 停止、解除与服务切换

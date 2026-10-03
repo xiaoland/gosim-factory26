@@ -1,0 +1,37 @@
+{
+  "thread_id": "01a0fd22-fe3b-7430-9707-4534e7758565",
+  "thread_updated_at": 1790994694,
+  "owner_thread_id": "01a0fd24-440d-7273-8fac-203d64959005",
+  "owner_updated_at": 1790995379,
+  "scope": "会话消息摘录；负责人报告的根因，待核对具体冻结源码和原始日志，不等同新分支运行验收",
+  "messages": [
+    {
+      "id": "msg_04bf73b9a2873e2d016ac061e9a48087d2a76acf3f5c758020",
+      "text": "我已把当前阻塞收敛到一个具体接缝：exp19 在模型调用前因包内 `ResourceEvidence` 未就绪退出，尚非供应商或额度问题。我会复用现有 collector 做最小修复，重新派生两份包并沿现有远端 runner 启动；保留 exp18/19 原始失败身份与证据，直到拿到真实 assistant/tool 与 gateway 活动。"
+    },
+    {
+      "id": "msg_04bf73b9a2873e2d016ac064fa6c5887d28347a3caee7c35fc",
+      "text": "exp19 的新根因已从原始 runner 日志确认：不是额度或模型失败，而是包内 `start_local_telemetry()` 因官方 runner 没把当前 telemetry service/binding 透传进容器，在首个模型调用前退出。已在官方 `local_submit.py` 补齐 Factory attempt、services、telemetry binding、resource 等既有环境字段透传，重新编译为 experiment21 并启动 reviewer/cleaner；当前等待远端 copy-helper 完成后读回真实首轮。exp20 的 ResourceEvidence 修复本身已生效，资源样本已落盘。"
+    },
+    {
+      "id": "msg_04bf73b9a2873e2d016ac0664a3a1087d28cacff595686e013",
+      "text": "exp20 的完整原始日志进一步确认了第二个边界：ResourceEvidence fallback 选择了 Lab 预置的旧 `resource-latest.json`，所以虽然 collector 已存在，容器内入口仍可能在 10 秒 freshness window 后失败。我已改为每次无 runner handoff 时强制在容器内重采样，避免复用跨 namespace 的旧样本；同时保留 telemetry binding 透传修复。两包已更新，experiment22 已成功 compile/build/start，正在等待远端容器进入 Harness。"
+    },
+    {
+      "id": "msg_04bf73b9a2873e2d016ac06754df9087d29194b05868c077d2",
+      "text": "exp21 的真实 stderr 已读回：telemetry 透传已越过，但随后 `harness_layout._identity()` 仍拿到宿主 `/Volumes/...` 的输入绑定根，容器内不存在 `/Volumes`，两项在模型前退出。已修复 `arc_bench_adapter` 的既有 `instrument_entry` 接缝：保留 artifact/store 身份，仅把 agent/runtime/skills 等包内成员重绑定到 `/workspace/submission/agent/...`，不改 Harness schema。experiment23 已重新 compile/build/start；exp18–21 原始失败均保留。"
+    },
+    {
+      "id": "msg_04bf73b9a2873e2d016ac06a22218087d29dece23a38253451",
+      "text": "exp23 仍复现 `/Volumes`，说明该 adapter 源在已冻结 Lab runtime 中不是本次 recipe 的可变输入；不能继续假设改 host adapter 会进入容器。我已把最窄修复下沉到包内 `support/harness_layout.py`：对不存在的 producer root 跳过，随后走已有 package-member manifest 校验；同时保留 package identity。两包新 SHA 已生成，experiment25 已 compile/build/start，等待实际首轮日志。 exp19/21/23 的原始错误均已分层记录。"
+    },
+    {
+      "id": "msg_04bf73b9a2873e2d016ac06b84071887d2bbffa8885f162c64",
+      "text": "exp25 已启动并完成本地 build；远端目前仍在大包 copy-helper/共享 domain channel 阶段，尚未生成可读的首轮容器回执。我已确认 exp23 的失败仍是旧包内 `/Volumes` 绑定，尚未计模型机会；exp25 包内已包含 `harness_layout` 的宿主根跳过修复。后续首个可判定点是 exp25 generation stderr，若越过 bind_layout 才继续核对 gateway/assistant。"
+    },
+    {
+      "id": "msg_04bf73b9a2873e2d016ac06bb42aa087d29d6194a2fff6d111",
+      "text": "已完成并交付当前可复用修复：\n\n- 修复包内 `ResourceEvidence`：无 runner handoff 时强制在容器内重采样，避免使用宿主旧样本。\n- 修复官方 runner 环境透传：补齐 Factory attempt、telemetry binding、services、resource 等既有字段。\n- 修复容器输入边界：`harness_layout` 跳过容器内不存在的宿主 `/Volumes` 根，继续使用已有 package-member manifest 校验。\n- 保留全部原始失败证据：exp18 为模型绑定缺失，exp19 为 ResourceEvidence，exp21 为 telemetry，exp23 为宿主路径绑定。\n- 当前有效派发为 experiment25 reviewer/cleaner，已成功 compile/build/start；远端仍在 copy-helper/domain channel 阶段，尚未产生新的可读 generation 回执，因此尚不能宣称取得 assistant/tool 或 gateway 成功。\n\n关键包路径：\n\n- `parallel-reviewer-resourcefix/agent.zip`\n- `parallel-cleaner-resourcefix/agent.zip`\n\n所有产物均位于 WorkSSD；未运行测试、探针或提交代码。"
+    }
+  ]
+}

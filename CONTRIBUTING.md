@@ -16,12 +16,12 @@
 | 材料引用与 Harness 定义/state 布局 | `lab/exp/artifacts.py`、`scripts/harness_layout.py`。 | 实际制品、捕获和装配回执；不以目录存在证明完整可恢复。 |
 | Pi 子代理观测 | variant 的 `extensions/` | 实际会话和原始观测记录。 |
 | Braid | `sources/braid` 自身说明和公开 local 接口 | 自身构建和实际 Harness 调用结果。 |
-| SVC skill 接线 | variant 的启动参数、角色 Markdown、`build.py` | 运行中实际读取的技能及上下文。 |
+| SVC skill 接线 | variant 的启动参数、角色 Markdown、I14 的 `materials.json`/`run.py` | 运行中实际读取的技能及上下文。 |
 
 各团队 variant 是完整独立实现；不相互 import，也不从共同配方生成。当前活动、实验与历史状态见 [Variant 索引](variants/README.md)，新实验的 case 与运行名见 [实验导航](experiments/README.md)。
 原生 models/settings/角色 Markdown 是 Pi 直接消费的材料，profile.json 是 Braid 的原生 profile 字段。
 `run.py` 明确构造本次 Braid 请求。
-共有支持模块只做文件、进程与证据操作。
+共有支持模块持有文件、进程、证据与公共装配服务；variant 持有生成和原生协作语义。
 
 ## 从任务到实现，再回到文档
 
@@ -47,7 +47,7 @@
 
 ## 直接验证源码
 
-不启动模型的原生材料装配见 [I13 源码操作](variants/pi-braid-i13/README.md#直接验证源码)；其它实现按自身入口解释。真实生成有模型费用，仍按对应实验范围执行。材料可读取、原生调用成功和完整生成收益是不同证据。
+I14 不启动模型的原生材料装配从[公共源码入口](scripts/README.md#i14-源码装配)开始；[I13 源码操作](variants/pi-braid-i13/README.md#直接验证源码)保留历史入口，不能用它推断新 context 能力。真实生成有模型费用，仍按对应实验范围执行。材料可读取、原生调用成功和完整生成收益是不同证据。
 
 ## 构建独立运行资源与制品
 

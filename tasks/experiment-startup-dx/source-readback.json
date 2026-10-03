@@ -1,0 +1,51 @@
+{
+  "kind": "factory26.arc.source-compilation",
+  "sources": [
+    {
+      "source": "lab/arc_bench/local_job.py",
+      "sha256": "a401d7a64a912dee457c49cb0f908484d821e1b3ae6576c24ac507aa9432435b"
+    },
+    {
+      "source": "lab/arc_bench/arc_matrix.py",
+      "sha256": "a0e89de9b499f574a59a591dcf2c906898d48d53f993d0d30c87244ae1a35948"
+    },
+    {
+      "source": "lab/arc_bench/arc_bench_adapter.py",
+      "sha256": "86ee871c4b1fd13e8c3f8d831cf33b9097cef9d81d8628a22648cdca2b49cbea"
+    },
+    {
+      "source": "lab/arc_bench/docker_workspace.py",
+      "sha256": "5ff946d00412c3cf60fe38d8349016efa5b672dbf95fb450a7402fe6238c5cec"
+    },
+    {
+      "source": "lab/exp/compiler.py",
+      "sha256": "2a111232365607687a4b12d83abae73e9e884cec29c0ffc3b5a1d51a90579b5e"
+    },
+    {
+      "source": "lab/exp/environment.py",
+      "sha256": "4546625169d6243e3f3163505ef6a8e6f61a89d6551f64d0778d6f6f8db7f137"
+    },
+    {
+      "source": "lab/exp/readiness.py",
+      "sha256": "8b5d538a6f954103d5576fddd32613bd04db35d566cce98ed00c05fa6252a37b"
+    },
+    {
+      "source": "lab/exp/admission.py",
+      "sha256": "b24656310913f095cfbb1482774d3d795e3795274749a27c3d3bd584c245f5c3"
+    },
+    {
+      "source": "lab/exp/controller.py",
+      "sha256": "da945e6abb7107a3e71b61f41a83f112840b6d1f50450951eec8cf9a087aee16"
+    },
+    {
+      "source": "lab/exp/runner.py",
+      "sha256": "2ebd63359627cd83e0c89b1a2542d734b3c84594b14ff21bce9e5a50b0ee52f7"
+    }
+  ],
+  "generated_wrappers": [
+    "87b7134f011d9e27b51e623042b011ce58ba81e1fbc3a446114fd2e362a49592",
+    "3d843f9c1ee53a3874a1eb5999b5c8e329312d95c4c48974a6384e06bd3fa6f8"
+  ],
+  "observed_at": 1790994482.536951,
+  "scope": "memory compilation only; no SDK execution, model, Docker, network or infrastructure tests"
+}

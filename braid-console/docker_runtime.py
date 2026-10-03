@@ -6,6 +6,7 @@ from pathlib import Path, PurePosixPath
 import re
 import select
 import subprocess
+import uuid
 
 
 AGENT_ENV = ("BRAID_AGENT_RUNTIME", "BRAID_STATE", "BRAID_CLI_BINDING_ID")
@@ -201,14 +202,15 @@ def execution_binding(config):
         raise ValueError("缺少新 exp attempt 绑定；旧现场保留原冻结服务")
     root = Path(binding["experiment"])
     manifest = json.loads((root / "experiment.json").read_text())
-    supported = (1, 2) if config.get("access_mode") == "runtime-readonly" else (2,)
+    supported = (1, 2, 3) if config.get("access_mode") == "runtime-readonly" else (2, 3)
     if manifest.get("kind") != "factory26.exp.experiment" or manifest.get("schema_version") not in supported:
         raise ValueError("Console 需要新 experiment 合同")
     command = [manifest["controller_runtime"]["launcher"], "-B", "-m", "lab.exp.controller"]
     import os
-    environment = dict(os.environ, PYTHONPATH=str(root / "source"), PYTHONDONTWRITEBYTECODE="1")
+    control_source = root / ("controller-source" if manifest["schema_version"] >= 3 else "source")
+    environment = dict(os.environ, PYTHONPATH=str(control_source), PYTHONDONTWRITEBYTECODE="1")
     result = subprocess.run(command + ["internal_observe", str(root), binding["attempt_id"]],
-                            cwd=root / "source", env=environment, capture_output=True, text=True, check=True)
+                            cwd=environment["PYTHONPATH"], env=environment, capture_output=True, text=True, check=True)
     observed = json.loads(result.stdout)
     identity = observed.get("backend_identity") or {}
     resources = [identity] + identity.get("external_resources", [])
@@ -235,6 +237,23 @@ def access_control(config, action, request_id):
     return json.loads(result.stdout)
 
 
+def attach(config, request_id):
+    """New registrations declare a consumer; legacy frozen services keep their ABI."""
+    root = Path(config['exp']['experiment'])
+    manifest = json.loads((root / 'experiment.json').read_text())
+    if manifest['schema_version'] >= 3:
+        return access_control(config, 'attach', request_id)
+    return access_control(config, 'query', request_id)
+
+
+def live_access(config):
+    """Every CLI operation checks the original holder, including after handoff."""
+    observed = access_control(config, 'query', 'console-query-' + uuid.uuid4().hex)
+    if observed.get('state_access') == 'snapshot':
+        raise ValueError('原运行已封口；live 接入已关闭，使用回执中的 snapshot 另行登记 archive')
+    return observed
+
+
 def control(config, action):
     if config.get("access_mode") == "runtime-readonly":
         raise ControlError("原生成容器只读接入禁止物理控制", uncertain=False)
@@ -245,7 +264,7 @@ def control(config, action):
         binding = config["exp"]
         result = subprocess.run(command + ["internal_control", str(root), binding["attempt_id"], action,
                             json.dumps({"parameters": {"consumer": "console", "expected_incarnation": observed["incarnation_id"]}})],
-                            cwd=root / "source", env=environment, capture_output=True, text=True, check=True)
+                            cwd=environment["PYTHONPATH"], env=environment, capture_output=True, text=True, check=True)
         value = json.loads(result.stdout)
         if value.get("status") != "applied":
             raise ControlError("执行器尚未确认物理效果：" + json.dumps(value, ensure_ascii=False), uncertain=True)

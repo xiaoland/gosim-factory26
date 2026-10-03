@@ -1,0 +1,28 @@
+{
+  "kind": "factory26.harness.variant",
+  "schema_version": 1,
+  "entry": "main.py",
+  "skills": [
+    "svc-sub-agents",
+    "svc-task-packet",
+    "svc-documentation",
+    "svc-verification",
+    "hyperformula",
+    "handsontable",
+    "better-auth-best-practices",
+    "organization-best-practices",
+    "fixing-accessibility",
+    "ponytail",
+    "impeccable",
+    "agent-browser",
+    "braid-collaboration",
+    "arc-bench"
+  ],
+  "runtime_files": [
+    "bin/braid",
+    "bin/node",
+    "native-managed.mjs"
+  ],
+  "inputs": [],
+  "definition_roles": []
+}

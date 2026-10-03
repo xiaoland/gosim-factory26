@@ -13,7 +13,8 @@ from lab.control import process_identity, process_state
 
 SCHEMA = 1
 # Execution contracts change independently of immutable producer identities.
-VERSIONS = dict.fromkeys(('intent', 'compilation', 'experiment', 'attempt', 'execution'), 2)
+VERSIONS = dict.fromkeys(('intent', 'compilation', 'attempt', 'execution'), 2)
+VERSIONS['experiment'] = 3
 
 
 def schema_version(kind):

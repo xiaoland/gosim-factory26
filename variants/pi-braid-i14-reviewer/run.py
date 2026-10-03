@@ -18,13 +18,19 @@ from agent_support import (save, phase, hashes, digest, logged, cleanup_workspac
                            copy_application, deliver, browser_executable, budgeted_pi,
                            start_local_telemetry, telemetry_environment, stop_local_telemetry)
 from agent_support import runtime_resource_environment, start_shared_proxy, stop_shared_proxy
-from agent_support import model_bindings, bind_native_models, native_model_route, bind_native_role
+from agent_support import (model_bindings, bind_native_models, bind_native_model_scope,
+                           native_model_route, bind_native_role)
 from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
 from harness_layout import bind_layout
+from execution_context import read as execution_context, role as definition_role, state_root as execution_state_root
+gateway_module = next((Path(row['local_root']) for row in execution_context()['assembly']['definitions'] if row['role']=='gateway'),None)
+if gateway_module: sys.path.insert(0,str(gateway_module))
+if gateway_module:
+    from model_gateway_service import read_provider_environment, start_model_gateway, stop_model_gateway
 
-HERE = Path(__file__).resolve().parent
+HERE = definition_role(execution_context(),'agent') if execution_context() else Path(__file__).resolve().parent
 VARIANT = 'pi-braid-i14-reviewer'
 ROOT_PROFILE_ID = 'pi-glm-fast'
 ROOT_CHECK_MESSAGES = (
@@ -35,6 +41,85 @@ MAIN_SKILLS = ('svc-sub-agents', 'svc-task-packet','svc-documentation',
                'svc-verification', 'hyperformula', 'handsontable', 'better-auth-best-practices',
                'organization-best-practices', 'fixing-accessibility', 'ponytail', 'impeccable',
                'agent-browser', 'context7-docs', 'braid-collaboration', 'arc-bench')
+
+
+def load_application_seed(argument):
+    """Read a published application v2 manifest without importing its runtime state."""
+    if argument is None:
+        return None
+    supplied = argument.resolve(strict=True)
+    manifest_path = supplied if supplied.is_file() else supplied/'application-manifest.json'
+    if not manifest_path.is_file():
+        raise ValueError(f'应用 seed 缺少 application-manifest.json：{manifest_path}')
+    manifest = json.loads(manifest_path.read_text())
+    if manifest.get('kind') != 'factory26.harness.application' or manifest.get('schema_version') != 2:
+        raise ValueError('应用 seed 不是 application manifest v2')
+    if manifest.get('status') != 'published' or manifest.get('delivery_kind') not in {'final', 'stage'}:
+        raise ValueError('应用 seed 必须是已发布 final/stage 应用')
+    application = manifest_path.parent/'application'
+    if not application.is_dir() or not any(application.iterdir()):
+        raise ValueError(f'应用 seed 缺少非空 application 目录：{application}')
+    source_identity = manifest.get('source_identity')
+    if not manifest.get('application_id') or not isinstance(source_identity, dict):
+        raise ValueError('应用 seed 缺少 application_id/source_identity')
+    expected = {name: item.get('sha256') for name, item in manifest.get('files', {}).items()
+                if isinstance(item, dict) and item.get('sha256')}
+    actual = hashes(application)
+    if expected and expected != actual:
+        missing = sorted(set(expected) - set(actual))[:5]
+        changed = sorted(name for name in set(expected) & set(actual) if expected[name] != actual[name])[:5]
+        raise ValueError(f'应用 seed 文件身份不符：missing={missing} changed={changed}')
+    return dict(path=manifest_path, manifest=manifest, application=application,
+                manifest_sha256=hashlib.sha256(manifest_path.read_bytes()).hexdigest(),
+                application_hashes=actual)
+
+
+def seed_snapshot(application):
+    """Create the non-empty initial commit omitted by initialize_repository()."""
+    subprocess.run(['git', '-C', str(application), 'add', '-A'], check=True)
+    subprocess.run(['git', '-C', str(application), 'commit', '-qm',
+                    '审阅 seed 应用快照'], check=True)
+    commit = subprocess.check_output(['git', '-C', str(application), 'rev-parse', 'HEAD'], text=True).strip()
+    tree = subprocess.check_output(['git', '-C', str(application), 'rev-parse', 'HEAD^{tree}'], text=True).strip()
+    return commit, tree
+
+
+def read_audit_report(path, seed, requirements_digest, candidate_commit):
+    """Validate the bounded reviewer report before any delivery/publish operation."""
+    if not path.is_file():
+        return None, 'audit-report.json 缺失'
+    try:
+        report = json.loads(path.read_text())
+    except (OSError, ValueError) as exc:
+        return None, f'audit-report.json 无法读取：{exc}'
+    if report.get('schema_version') != 1 or report.get('mode') != 'seed-audit':
+        return None, 'audit-report schema/mode 不匹配'
+    if report.get('status') != 'complete':
+        return None, f'audit-report 未完成：{report.get("status")!r}'
+    if report.get('a_manifest_sha256') != seed['manifest_sha256']:
+        return None, 'audit-report 未绑定本次 A manifest'
+    if report.get('requirements_sha256') != requirements_digest:
+        return None, 'audit-report 需求身份不匹配'
+    if report.get('candidate_commit') != candidate_commit:
+        return None, 'audit-report candidate commit 不匹配'
+    if report.get('unauthorized_changes') is not False:
+        return None, 'audit-report 未明确排除未授权变更'
+    if not isinstance(report.get('changed_files'), list) or not isinstance(report.get('authorized_files'), list):
+        return None, 'audit-report 缺少 changed_files/authorized_files 范围声明'
+    if set(report['changed_files']) - set(report['authorized_files']):
+        return None, 'audit-report 存在未授权变更文件'
+    if not isinstance(report.get('findings'), list):
+        return None, 'audit-report findings 不是数组'
+    for finding in report['findings']:
+        if not isinstance(finding, dict) or finding.get('category') not in {'mechanical', 'semantic', 'insufficient'}:
+            return None, 'audit-report finding 分类无效'
+        if finding['category'] == 'mechanical':
+            required = ('evidence', 'verification', 'fix_commit')
+            if any(not finding.get(key) for key in required) or not (finding.get('reproduction') or finding.get('data_flow')):
+                return None, 'mechanical finding 缺少闭合证据'
+            if finding['fix_commit'] != candidate_commit:
+                return None, 'mechanical finding 未绑定 candidate commit'
+    return report, None
 # Braid member conditions stay in the parent profile; native children receive their own role and task.
 RUN_CONDITIONS = '''交付条件
 本次为人工介入研究运行；用户可通过Issue/PR评论提出澄清、纠正或工作请求，按对象中的明确输入协作。依据原始需求处理常规歧义并记录重要假设，遇到不可自行解决的阻塞时保留证据。当前工作项或委派决定你的职责和可修改范围，下列环境约定不扩大它。
@@ -53,13 +138,13 @@ UI使用适合所选框架的成熟组件库和图标库，样式使用UnoCSS；
 自检数据库、缓存、上传文件和浏览器状态使用临时位置，不改变交付应用的初始状态。'''
 
 
-def native_files(work, runtime, skills, base_url, visual_url):
+def native_files(work, runtime, skills, base_url, visual_url, bound_routes=None, desired_model=None):
     """返回供 Braid 使用的 profiles/bindings，并写出 Pi 消费的原生材料。
 
     成员主模型归 profile，内部角色归原生 agents Markdown。
     本次运行只替换连接与路径；包内有哪些技能和会话启用哪些技能分别选择。
     """
-    routes, _ = model_bindings(base_url, visual_url, require_key=False)
+    routes = bound_routes if bound_routes is not None else model_bindings(base_url, visual_url, require_key=False)[0]
     background_bash = runtime/'node_modules/pi-background-bash/index.ts'
     fff = runtime/'node_modules/@ff-labs/pi-fff/src/index.ts'
     context7 = runtime/'node_modules/@upstash/context7-pi/extensions/context7.ts'
@@ -69,6 +154,8 @@ def native_files(work, runtime, skills, base_url, visual_url):
             raise FileNotFoundError(f'原生工具扩展缺失：{extension}')
     profiles, bindings = [], {}
     for source in sorted((HERE/'agents').iterdir()):
+        if source.name == 'pi-glm-root' and desired_model != 'glm-5.3':
+            continue
         profile = json.loads((source/'profile.json').read_text())
         folder = work/'capabilities'/profile['id']
         template = folder/'native-template'
@@ -85,6 +172,11 @@ def native_files(work, runtime, skills, base_url, visual_url):
         profile['provider'], profile['model'], profile_route = native_model_route(profile['provider'], profile['model'], routes)
         bind_native_models(providers, routes)
         save(template/'models.json', providers)
+        settings_file = template/'settings.json'
+        if settings_file.is_file():
+            settings = json.loads(settings_file.read_text())
+            bind_native_model_scope(settings, routes)
+            save(settings_file, settings)
         save(template/'pi-fff.json', {'mode':'tools-only'})
         for role in (template/'agents').glob('*.md'):
             instruction = bind_native_role(role.read_text(), routes).replace('@SKILLS@', json.dumps(str(skills))[1:-1])
@@ -137,24 +229,41 @@ def generate(args):
     辅助归档异常单独记入 diagnostic_error，不能冒充外部评分或覆盖生成错误。
     """
     visual_url = os.environ.get('VISUAL_BASE_URL')
-    routes, model_env = model_bindings(args.base_url, visual_url, require_key=not args.prepare_only)
+    gateway_role = next((Path(row['local_root']) for row in execution_context()['assembly']['definitions'] if row['role']=='gateway'),None)
+    gateway_enabled = gateway_role is not None
+    gateway_catalog = gateway_role/'model-gateway.json' if gateway_enabled else None
+    routes, model_env = model_bindings(args.base_url, visual_url,
+                                       require_key=not args.prepare_only and not gateway_enabled)
     base_url = routes['factory26']['base_url']
     requirements = args.requirements_dir.resolve(strict=True)
     if not requirements.is_dir():
         raise NotADirectoryError(f'输入不是目录：{requirements}')
-    runtime = args.runtime.resolve(strict=True)
+    seed = load_application_seed(args.application_seed or (Path(os.environ['FACTORY26_APPLICATION_SEED']) if os.environ.get('FACTORY26_APPLICATION_SEED') else None))
+    seed_mode = seed is not None
+    requirements_digest = digest(hashes(requirements))
+    context = execution_context()
+    if context:
+        args.runtime=definition_role(context,'runtime')
+        args.skills_root=definition_role(context,'skills')
+        args.braid=definition_role(context,'braid')
+    runtime = args.runtime.absolute() if context else args.runtime.resolve(strict=True)
     output = args.output_dir.resolve()
     output.mkdir(parents=True, exist_ok=True)
-    run = output/'.factory26'/(time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8])
-    run.mkdir(parents=True)
+    run = execution_state_root(output) or output/'.factory26'/(time.strftime('%Y%m%d-%H%M%S')+'-'+uuid.uuid4().hex[:8])
+    run.mkdir(parents=True,exist_ok=True)
     work = run/'work'; work.mkdir()
-    skills_root = args.skills_root.resolve(strict=True)
-    source_braid = (args.braid or runtime/'bin/braid').resolve(strict=True)
+    skills_root = args.skills_root.absolute() if context else args.skills_root.resolve(strict=True)
+    source_braid = args.braid.absolute() if context else (args.braid or runtime/'bin/braid').resolve(strict=True)
     bind_layout(run, variant=VARIANT, definition_root=HERE, runtime=runtime,
                 skills_root=skills_root, braid=source_braid,
                 derived_inputs=['input', 'work/capabilities', 'work/bin', 'work/skills',
-                                'braid-request.json', 'config.json', 'model-connection.json', 'prompt.txt'])
-    app = work/'application'; app.mkdir()
+                                'braid-request.json', 'config.json', 'model-connection.json', 'prompt.txt',
+                                'application-seed.json', 'audit-report.json', 'gateway-config.json'])
+    app = work/'application'
+    if seed_mode:
+        copy_application(seed['application'], app)
+    else:
+        app.mkdir()
     native = work/'home/.pi/agent'; native.mkdir(parents=True)
     (work/'tmp').mkdir()
     (work/'bin').mkdir()
@@ -178,8 +287,44 @@ def generate(args):
         (skills/name).symlink_to(source, target_is_directory=True)
         skill_sources[name] = str(source)
     inputs = run/'input'; shutil.copytree(requirements, inputs)
-    profiles, bindings = native_files(work, runtime, skills, base_url, visual_url)
     desired_model = os.environ.get('MODEL') or routes['factory26'].get('model')
+    gateway_handle = None
+    gateway_routes = routes
+    gateway_route_spec = None
+    gateway_config = None
+    provider_env = run/'.private/provider-env.json'
+    if os.environ.get('FACTORY26_PROVIDER_VARIABLES'):
+        provider_env.parent.mkdir(mode=0o700,exist_ok=True)
+        with os.fdopen(os.open(provider_env,os.O_WRONLY|os.O_CREAT|os.O_EXCL,0o600),'w') as stream:
+            json.dump({name:os.environ[name] for name in json.loads(os.environ['FACTORY26_PROVIDER_VARIABLES'])},stream)
+    if gateway_enabled and not args.prepare_only:
+        if not provider_env.is_file():
+            raise FileNotFoundError(f'模型 gateway 已启用但 provider-env 缺失：{provider_env}')
+        routes_file = Path(os.environ['FACTORY26_GATEWAY_ROUTES'])
+        if not routes_file.is_file():
+            raise FileNotFoundError(f'模型 gateway 已启用但 package-bound gateway-routes 缺失：{routes_file}')
+        gateway_route_spec = json.loads(routes_file.read_text())
+        if not isinstance(gateway_route_spec, dict) or not gateway_route_spec:
+            raise ValueError('package-bound gateway-routes 必须是非空对象')
+        provider_env.parent.chmod(0o700)
+        provider_env.chmod(0o600)
+        gateway_config = run/'gateway-config.json'
+        from hackathon_gateway import prepare_catalog
+        prepared, snapshot = prepare_catalog(gateway_catalog, gateway_route_spec,
+                                             aliases=sorted(gateway_route_spec))
+        gateway_config.write_text(json.dumps(prepared, ensure_ascii=False, indent=2) + '\n')
+        save(run/'routing-snapshot.json', {'routes': gateway_route_spec, 'deployments': snapshot,
+                                           'config_sha256': hashlib.sha256(gateway_config.read_bytes()).hexdigest()})
+        gateway_routes = {name: dict(route, base_url='http://127.0.0.1:4011/v1',
+                                     credential_env='FACTORY26_GATEWAY_TOKEN')
+                          for name, route in routes.items()}
+    try:
+        profiles, bindings = native_files(work, runtime, skills, base_url, visual_url,
+                                          gateway_routes, desired_model)
+    except BaseException:
+        if gateway_handle is not None:
+            stop_model_gateway(gateway_handle, run)
+        raise
     root_profile_id = 'pi-glm-root' if desired_model == 'glm-5.3' else ROOT_PROFILE_ID
     root_profile = next(p for p in profiles if p['id']==root_profile_id)
     if desired_model and desired_model != root_profile['model']:
@@ -200,11 +345,23 @@ def generate(args):
                                          for relative, sha256 in hashes(Path(source)).items()},
                                'skill_sources':skill_sources, 'harness_layout':str(run/'harness-layout.json'),
                                'runtime':str(runtime), 'braid':str(source_braid)})
-    prompt = f'''本次任务来自 ARC Bench，需求来源是 {inputs} 中的完整允许需求包，最终交付是满足需求的 Web 应用。
+    if seed_mode:
+        prompt = f'''本次是独立公开需求 seed audit，不是从零生成应用。A 的已发布 manifest 为 {seed['path']}，只读 A 已复制到当前工作区；公开需求来自 {inputs}。
+只查验公开需求驱动的实际行为和失败后状态。只有公开要求明确、在 A 上实际复现或数据流闭合、修复范围唯一且修复后相同行为已验证的机械缺陷才允许修改；语义争议、证据不足和无法闭合的事项保留。不要从零搭建、增加产品功能、读取隐藏评分反馈、读取 A 的官方失败内容或修改 A 的服务/数据。
+审阅者只提交报告，实施者只修合格机械项。请将有界 JSON audit 报告写到 {work/'audit-report.json'}，schema_version=1、mode=seed-audit，包含 a_manifest_sha256={seed['manifest_sha256']}、requirements_sha256={requirements_digest}、candidate_commit、status、unauthorized_changes=false、changed_files、authorized_files、findings。每个 finding 包含 category（mechanical/semantic/insufficient）、evidence；mechanical 还必须包含 reproduction 或 data_flow、verification、fix_commit。LLM/实施检查负责实际闭合判断，程序只核对身份、范围声明和字段完整性。没有合格修复也要写完整报告，不要伪造异常或空交付。
+读取独立技能 arc-bench：{skills/'arc-bench/SKILL.md'}，按当前问题读取适用 reference；最终用中文说明结果。'''
+    else:
+        prompt = f'''本次任务来自 ARC Bench，需求来源是 {inputs} 中的完整允许需求包，最终交付是满足需求的 Web 应用。
 处理本次需求、设计、实现和交付时，读取独立技能 arc-bench：{skills/'arc-bench/SKILL.md'}，按当前问题读取其适用reference。
 JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写业务源码。
 最终交付时用中文说明结果。'''
     (run/'prompt.txt').write_text(prompt)
+    if seed_mode:
+        save(run/'application-seed.json', {
+            'schema_version': 1, 'mode': 'seed-audit',
+            'manifest_path': str(seed['path']), 'manifest_sha256': seed['manifest_sha256'],
+            'application_path': str(seed['application']), 'requirements_sha256': requirements_digest,
+        })
     state = run/'braid-state'
     pi = budgeted_pi(runtime, work.parent)
     request = dict(profiles=profiles, root_profile_id=root_profile_id, bindings=bindings,
@@ -225,7 +382,7 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                PORTLESS_SYNC_HOSTS='0', PORTLESS_STATE_DIR=str(work/'tmp/portless'),
                npm_config_cache=str(work/'cache/npm'),
                npm_config_store_dir=str(work/'cache/pnpm'),
-               HOME=str(work/'home'), TMPDIR=tempfile.mkdtemp(prefix='f26-', dir='/tmp'),
+               HOME=str(work/'home'), TMPDIR=tempfile.mkdtemp(prefix='f26-', dir=work/'tmp'),
                PI_SUBAGENTS_TEMP_ROOT=str(work/'tmp'/f'pi-subagents-uid-{os.getuid()}'),
                PI_SUBAGENT_MAX_DEPTH='3',
                XDG_CONFIG_HOME=str(work/'home/.config'), PI_CODING_AGENT_DIR=str(native),
@@ -243,16 +400,13 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
     env['MCPORTER_DAEMON_DIR'] = str(Path(env['TMPDIR'])/'mcporter')
     collector = None
     env.update(runtime_resource_environment(runtime, run))
-    try:
-        collector, binding = start_local_telemetry(run)
-        env.update(telemetry_environment(binding))
-    except Exception as exc:
-        if os.environ.get('FACTORY26_EXP_TELEMETRY_BINDING'):
-            raise
-        metadata['telemetry_diagnostic_error'] = f'{type(exc).__name__}: {exc}'
+    collector, binding = start_local_telemetry(run)
+    env.update(telemetry_environment(binding))
     begin = time.monotonic()
     error = None
     history = {'status': 'not_started'}
+    seed_commit = None
+    seed_tree = None
     history_stop = threading.Event()
     history_tool = HERE/'arc-runtime.pyz'
     if not history_tool.is_file():
@@ -313,7 +467,28 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
 
     shared_proxy = None
     try:
+        if gateway_enabled and not args.prepare_only:
+            provider_values = read_provider_environment(provider_env)
+            gateway_base_env = {key: value for key, value in env.items()
+                                if key not in set(provider_values) | {
+                                    'OPENAI_API_KEY', 'FACTORY26_API_KEY', 'VISUAL_API_KEY'}}
+            gateway_base_env['FACTORY26_EXP_RUN_ID'] = os.environ.get('FACTORY26_EXP_RUN_ID', run.name)
+            for name in ('FACTORY26_EXP_ATTEMPT_ID', 'FACTORY26_EXP_EXPERIMENT_ID', 'FACTORY26_EXP_INCARNATION_ID'):
+                if os.environ.get(name):
+                    gateway_base_env[name] = os.environ[name]
+            gateway_handle = start_model_gateway(
+                runtime, run, gateway_base_env, gateway_config,
+                bindings=routes, gateway_routes=gateway_route_spec,
+                provider_env=provider_env, preserve_parameters=True)
+            env.update(gateway_handle['pi_environment'])
+            model_env.update(gateway_handle['pi_environment'])
         initialize_repository(app)
+        if seed_mode:
+            seed_commit, seed_tree = seed_snapshot(app)
+            seed_receipt = json.loads((run/'application-seed.json').read_text())
+            seed_receipt.update({'snapshot_commit': seed_commit, 'snapshot_tree': seed_tree,
+                                 'copied_hashes': hashes(app)})
+            save(run/'application-seed.json', seed_receipt)
         shared_proxy = start_shared_proxy(runtime, run, env)
         phase(run/'run.json', metadata, 'braid', 'braid.log')
         history_thread = threading.Thread(target=watch_history, name='arc-history', daemon=True)
@@ -334,6 +509,48 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         if result.get('root_issue', {}).get('state') != 'CLOSED':
             raise RuntimeError(f'当前无可执行工作，但根任务未关闭：{result.get("root_issue")}')
         repository = Path(result['repository']).resolve(strict=True)
+        if seed_mode:
+            candidate_commit = subprocess.check_output(
+                ['git', '-C', str(repository), 'rev-parse', '--verify', '--end-of-options',
+                 request['delivery_ref']+'^{commit}'], text=True).strip()
+            report_path = work/'audit-report.json'
+            report, audit_error = read_audit_report(report_path, seed, requirements_digest, candidate_commit)
+            if audit_error:
+                if report_path.is_file():
+                    shutil.copy2(report_path, run/'audit-report.json')
+                save(run/'audit-status.json', {'status': 'evidence_incomplete', 'error': audit_error,
+                                               'a_manifest_sha256': seed['manifest_sha256'],
+                                               'requirements_sha256': requirements_digest,
+                                               'candidate_commit': candidate_commit})
+                save(run/'delivery.json', {'status': 'evidence_incomplete', 'error': audit_error,
+                                           'application_seed': seed['manifest_sha256']})
+                metadata.update(status='evidence_incomplete', audit_status='evidence_incomplete',
+                                audit_error=audit_error, candidate_commit=candidate_commit)
+                return run
+            shutil.copy2(report_path, run/'audit-report.json')
+            changed = candidate_commit != seed_commit
+            mechanical = [finding for finding in report['findings'] if finding['category'] == 'mechanical']
+            if not changed:
+                save(run/'audit-status.json', {'status': 'complete_no_change',
+                                               'a_manifest_sha256': seed['manifest_sha256'],
+                                               'requirements_sha256': requirements_digest,
+                                               'candidate_commit': candidate_commit})
+                save(run/'delivery.json', {'status': 'audit_complete_no_change',
+                                           'application_seed': seed['manifest_sha256']})
+                metadata.update(status='audit_completed_no_change', audit_status='complete_no_change',
+                                candidate_commit=candidate_commit)
+                return run
+            if not mechanical:
+                error = RuntimeError('seed audit 修改了应用但没有合格 mechanical finding')
+                save(run/'audit-status.json', {'status': 'evidence_incomplete', 'error': str(error),
+                                               'a_manifest_sha256': seed['manifest_sha256'],
+                                               'requirements_sha256': requirements_digest,
+                                               'candidate_commit': candidate_commit})
+                save(run/'delivery.json', {'status': 'evidence_incomplete', 'error': str(error),
+                                           'application_seed': seed['manifest_sha256']})
+                metadata.update(status='evidence_incomplete', audit_status='evidence_incomplete',
+                                audit_error=str(error), candidate_commit=candidate_commit)
+                return run
         delivery = load_delivery(repository, request)
         metadata['delivery'] = delivery
         export_delivery(repository, delivery['delivery_commit'], run/'application')
@@ -356,6 +573,11 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                 stop_shared_proxy(shared_proxy, run)
             except Exception as exc:
                 metadata['shared_proxy_cleanup_error'] = str(exc)
+        if gateway_handle is not None:
+            try:
+                stop_model_gateway(gateway_handle, run)
+            except Exception as exc:
+                metadata['model_gateway_cleanup_error'] = str(exc)
         try:
             save(run/'history-publication.json', history)
         except OSError as exc:
@@ -380,8 +602,11 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
             except Exception as exc:
                 metadata['telemetry_diagnostic_error'] = f'{type(exc).__name__}: {exc}'
         metadata.update(generation_seconds=time.monotonic()-begin, generation_finished_at=time.time())
-        phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
-    recovery_required = (error is not None or metadata.get('process_exit_code') != 0 or
+        phase(run/'run.json', metadata,
+              'frozen' if metadata['status'] in {'generated', 'audit_completed_no_change', 'evidence_incomplete'} else 'failed',
+              'braid.log')
+    recovery_required = (error is not None or metadata.get('status') == 'evidence_incomplete' or
+                         metadata.get('process_exit_code') != 0 or
                          metadata.get('braid', {}).get('status') != 'quiescent' or
                          history.get('status') != 'completed')
     if recovery_required:
@@ -407,6 +632,8 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
 
 
 def main():
+    if execution_context.read() is None:
+        raise ValueError('Harness entry requires facility assembly; use scripts/experiment_entry.py --source')
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('requirements_dir', type=Path)
     parser.add_argument('--output-dir', type=Path, required=True)
@@ -415,6 +642,8 @@ def main():
     parser.add_argument('--braid', type=Path)
     parser.add_argument('--skills-root', type=Path, default=HERE/'skills')
     parser.add_argument('--base-url')
+    parser.add_argument('--application-seed', type=Path,
+                        help='已发布 application-manifest v2 所在目录或文件；启用独立 seed audit')
     parser.add_argument('--prepare-only', action='store_true', help='写出真实原生材料和 Braid 请求，不调用模型')
     args = parser.parse_args()
     def interrupted(signum, frame):

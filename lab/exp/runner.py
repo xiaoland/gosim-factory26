@@ -2,6 +2,7 @@
 import argparse
 import json
 import os
+import platform
 from pathlib import Path
 import resource
 import signal
@@ -224,42 +225,50 @@ def control(attempt_dir, request):
                     return _effect(effect, request, 'unknown', error=error(exc))
             return record('effect', request_id=request['request_id'], attempt_id=request['attempt_id'],
                           action=request['action'], status='queued', incarnation_id=binding['incarnation_id'])
-        if request['action'] == 'export':
+        if request['action'] in ('export', 'seal'):
             _effect(effect, request, 'accepted', incarnation_id=binding['incarnation_id'])
             try:
                 if _attempt(directory)['job']['backend']['kind'] == 'docker':
                     with locked(directory / 'worker.lock', blocking=False):
-                        receipt = read(directory / 'execution.json')
+                        receipt = read(directory/'execution.json')
                         attempt = _attempt(directory)
-                        target = attempt['job']['backend']
-                        resource_binding = read(directory / 'resource.json')
-                        if backends.exact_resource(target, resource_binding)['state'].get('Status') not in ('exited', 'dead'):
-                            raise Blocked('terminal export requires exact Docker physical terminality')
-                        backends.managed(target, resource_binding, 'writer-close', read(directory / 'request.json')['request_id'] + '--writer-close')
-                        if receipt.get('outputs') != 'sealed':
-                            backends.managed(target, resource_binding, 'capture-begin', request['request_id'] + '--capture-begin')
-                            refs = backends.collect_named_outputs(directory)
-                            backends.managed(target, resource_binding, 'capture-end', request['request_id'] + '--capture-end')
-                            _save(directory, receipt, artifacts=refs, outputs='sealed', output_locations=read(directory / 'outputs.json')['locations'])
-                        from . import admission
-                        admission.reconcile(target, resource_binding['authority_resource_id'], attempt['attempt_id'] + '--release', backends.domain_observation(target, resource_binding))
-                        if receipt.get('archive') != 'preserved':
-                            backends.export_payload(directory)
-                            artifacts = _archive(directory, attempt, receipt)
-                            _save(directory, receipt, archive='preserved', artifacts=artifacts)
-                        backends.finish_docker(directory)
-                        result = {'artifacts': receipt.get('artifacts', {}), 'archive': receipt.get('archive')}
+                        if request['action'] == 'seal':
+                            _seal_docker_terminal(directory,attempt,read(directory/'deployment.json'),receipt)
+                        parameters = request['parameters']
+                        exported = backends.export_terminal_assets(directory, receipt,
+                            selections=parameters.get('assets'), target_store=parameters.get('target_store'),
+                            consumer=parameters.get('consumer'), request_id=request['request_id']) if request['action'] == 'export' else None
+                        result={'artifacts':receipt.get('artifacts',{}),'archive':receipt.get('archive'),
+                                'locations':receipt.get('output_locations',{}),'workspace_snapshot':receipt.get('workspace_snapshot'),
+                                'export':exported}
                 else:
                     receipt = observe(directory, live=True)
                     if receipt['execution'] not in ('exited', 'stopped', 'failed') or receipt.get('entry_identity_state') == 'alive':
                         raise Blocked('terminal export requires execution/physical terminal evidence')
-                    with locked(directory / 'worker.lock', blocking=False):
-                        if receipt.get('outputs') != 'sealed':
-                            _save(directory, receipt, artifacts=_seal_outputs(directory, _attempt(directory), receipt), outputs='sealed')
-                        if receipt.get('archive') != 'preserved':
-                            artifacts = _archive(directory, _attempt(directory), receipt)
-                            _save(directory, receipt, archive='preserved', artifacts=artifacts, finalized_at=time.time())
-                    result = {'artifacts': receipt.get('artifacts', {}), 'archive': receipt.get('archive')}
+                    if request['action'] == 'seal':
+                        with locked(directory / 'worker.lock', blocking=False):
+                            if receipt.get('outputs') != 'sealed':
+                                _seal_local_terminal(directory, _attempt(directory), receipt)
+                            if receipt.get('archive') != 'preserved':
+                                sealed = _archive(directory, _attempt(directory), receipt)
+                                _save(directory, receipt, archive='preserved', artifacts=sealed, finalized_at=time.time())
+                        result = {'artifacts': receipt.get('artifacts', {}), 'archive': receipt.get('archive')}
+                    else:
+                        from . import artifacts as asset_store
+                        parameters = request['parameters']
+                        selections = parameters.get('assets')
+                        if not selections or not parameters.get('target_store') or not parameters.get('consumer'):
+                            raise ValueError('export requires assets, target_store and consumer')
+                        offered = list(receipt.get('artifacts', {}).values())
+                        if receipt.get('workspace_snapshot'):
+                            offered.append(receipt['workspace_snapshot']['reference'])
+                        for item in selections:
+                            if set(item) - {'reference', 'member', 'location'} or item.get('reference') not in offered:
+                                raise Blocked('export selection is not offered by this attempt')
+                            asset_store.transfer(_attempt(directory)['artifact_store'], parameters['target_store'], item['reference'],
+                                selected_member=item.get('member', '.'), consumer=parameters['consumer'],
+                                request_id=request['request_id'] + '--' + canonical([item['reference'], item.get('member', '.')])[:16])
+                        result = {'assets': selections, 'target_store': parameters['target_store'], 'consumer': parameters['consumer']}
                 return _effect(effect, request, 'applied', result=result)
             except Exception as exc:
                 return _effect(effect, request, 'unknown', error=error(exc))
@@ -360,6 +369,21 @@ def _environment(job, deployment):
                for name in credentials):
             raise ValueError('private credential file cannot override frozen provider/model/runtime policy')
         environment.update(credentials)
+    tool_file=deployment.get('tool_credentials_file')
+    if tool_file:
+        defaults=read(tool_file)
+        if set(defaults)!={'CONTEXT7_API_KEY','EXA_API_KEY'} or any(not isinstance(value,str) or not value for value in defaults.values()):
+            raise ValueError('private tool input must contain the two existing tool credential variables')
+        for name,value in defaults.items():
+            environment.setdefault(name,value)
+    if deployment.get('provider_credentials_file'):
+        credentials=read(deployment['provider_credentials_file'])
+        if not isinstance(credentials,dict) or any(not key.isidentifier() or not isinstance(value,str) or not value for key,value in credentials.items()):
+            raise ValueError('provider private input must declare valid environment variables')
+        if set(credentials)&set(job.get('environment',{})):
+            raise ValueError('private provider input conflicts with public policy variable names')
+        environment.update(credentials)
+        environment['FACTORY26_PROVIDER_VARIABLES']=json.dumps(sorted(credentials))
     if not all(isinstance(k, str) and isinstance(v, str) for k, v in environment.items()):
         raise ValueError('execution environment must contain only string keys/values')
     return environment
@@ -367,25 +391,38 @@ def _environment(job, deployment):
 
 def _input_bindings(directory, attempt):
     """Expose verified producer references separately from this attempt's writable state."""
-    from .artifacts import retain, resolve
+    from .artifacts import retain, resolve, member_contents, contents
     store = attempt['artifact_store']
-    result = {}
+    result, verified = {}, {}
+    deployment=read(directory/'deployment.json')
+    existing=deployment.get('input_retentions') if attempt['job']['backend']['kind']=='docker' else None
     for name, reference in attempt['job']['inputs'].items():
         if 'artifact_id' not in reference:
             continue
-        hold = retain(store, reference, attempt['attempt_id'], 'harness-input/' + name,
-                      'input-binding-' + canonical([attempt['attempt_id'], name, reference])[:40])
-        source = resolve(store, reference, consumer=attempt['attempt_id'], retention=hold)
+        key = canonical(reference)
+        if key not in verified:
+            hold=(existing.get(key) if existing is not None else
+                  retain(store,reference,attempt['attempt_id'],'harness-input',
+                         'input-binding-'+canonical([attempt['attempt_id'],reference])[:40]))
+            if hold is None:
+                raise Blocked('read-only input lacks its existing authority consumer hold: '+name)
+            verified[key] = resolve(store, reference, consumer=attempt['attempt_id'], retention=hold)
+        relative=member(attempt['job'].get('input_members', {}).get(name, '.'))
+        expected=member_contents(store,reference,relative)
+        source=verified[key]/relative
         root = directory / 'inputs' / name
         if not root.exists():
             root = source
-        result[name] = {'reference': reference, 'store': str(store), 'root': str(root.resolve(strict=True))}
+        if not root.samefile(source) and contents(root)!=expected:
+            raise Blocked('installed input root differs from its selected artifact member: '+name)
+        result[name] = {'reference': reference, 'store': str(store), 'root': str(root.resolve(strict=True)), 'member':relative}
     return json.dumps(result)
 
 
 def _expand(value, directory, job):
     assembled = read(directory / 'assembly.json')['workspace'] if (directory / 'assembly.json').exists() else str(directory / 'workspace')
-    names = {'attempt_dir': str(directory), 'workspace': assembled, 'inputs': str(directory / 'inputs')}
+    runtime_python = read(directory / 'deployment.json')['runtime']['python']
+    names = {'runtime_python': runtime_python, 'attempt_dir': str(directory), 'workspace': assembled, 'inputs': str(directory / 'inputs')}
     names.update({name: str(directory / 'inputs' / name) for name in job.get('inputs', {})})
     for name, replacement in names.items():
         value = value.replace('{' + name + '}', replacement)
@@ -398,14 +435,17 @@ def _assemble(directory, attempt, deployment):
     import shutil
     job = attempt['job']
     if not job.get('prepared'):
-        return directory / 'workspace'
+        from .assembly import fresh
+        return fresh(directory, attempt, deployment)
     prepared = directory / 'inputs' / 'prepared'
     from submission.exp_checkpoint import validate, inventory
     from .artifacts import copy_file
     verified_assets = {}
-    validation = validate(prepared, attempt['artifact_store'], _verified_assets=verified_assets)
+    validation = validate(prepared, attempt['artifact_store'], _verified_assets=verified_assets,
+        _in_domain=job['backend']['kind']=='docker',
+        _state_readback=deployment.get('state_permit',{}).get('holder_readback'))
     manifest = read(prepared / 'harness-manifest.json')
-    if manifest['kind'] != 'factory26.harness.prepared' or manifest.get('schema_version') != 3 or validation['status'] != 'complete':
+    if manifest['kind'] != 'factory26.harness.prepared' or manifest.get('schema_version') not in (3,4) or validation['status'] != 'complete':
         raise Blocked('execution requires complete prepared content')
     target = manifest['target_layout']
     if target['os'] != platform.system() or target['architecture'] != platform.machine():
@@ -441,6 +481,18 @@ def _assemble(directory, attempt, deployment):
             root.symlink_to(source, target_is_directory=source.is_dir())
         definition_placements.append({**row, 'access': 'read-only' if job['backend']['kind'] == 'docker' else 'consumer-readback',
                                       'resolved_root': str(source), 'retention': asset_bindings[row['name']]['retention']})
+    if manifest.get('state_binding'):
+        root=Path(manifest['state_root'])
+        if str(root)!=target['run_root'] or not root.is_dir():
+            raise Blocked('domain-state actual root differs from prepared native layout')
+        if inventory(root)!={name.removeprefix('run/'):value for name,value in manifest['files'].items() if name.startswith('run/')}:
+            raise Blocked('domain-state repair generation content differs from prepared readback')
+        intent=record('assembly',status='assembled',prepared=job['prepared'],target_layout=target,
+            definitions=definition_placements,workspace=str(root),state_mode='domain-state',
+            completed_at=time.time(),runtime_identity=runtime_identity)
+        from .assembly import prepared as prepared_assembly
+        prepared_assembly(directory,attempt,deployment,intent)
+        return root
     mappings = [{'logical_root': target['run_root'], 'member': 'run'}]
     roots = []
     for mapping in mappings:
@@ -479,7 +531,8 @@ def _assemble(directory, attempt, deployment):
                 raise ValueError('prepared assembly independent content readback differs')
             staging.rename(target_root)
         intent.update(status='assembled', completed_at=time.time(), actual_os=platform.system(), actual_architecture=platform.machine(), runtime_identity=runtime_identity)
-        atomic(directory / 'assembly.json', intent)
+        from .assembly import prepared as prepared_assembly
+        prepared_assembly(directory, attempt, deployment, intent)
         return Path(target['run_root'])
     except Exception as exc:
         intent.update(status='failed', error=error(exc))
@@ -581,19 +634,31 @@ def _terminate(process, identity, grace):
         process.wait()
 
 
-def _seal_outputs(directory, attempt, receipt):
-    from .artifacts import publish
+def _seal_outputs(directory, attempt, receipt, *, physical_workspace=None, acquisition=None):
+    from .artifacts import publish, PublicationWindow
+    from .terminal import seal_workspace, resolve_workspace
     job = attempt['job']
-    workspace = Path(read(directory / 'assembly.json')['workspace']) if (directory / 'assembly.json').exists() else directory / 'workspace'
+    window = PublicationWindow()
+    snapshot = seal_workspace(directory, attempt, receipt, physical_root=physical_workspace, window=window, acquisition=acquisition)
+    workspace = resolve_workspace(snapshot, attempt, window=window)
     artifacts = dict(receipt.get('artifacts', {}))
+    output_members = dict(receipt.get('output_members', {}))
     for output in job.get('outputs', []):
         name = identifier(output['name'])
         if name in artifacts:
             continue
         relative = member(output['path'])
+        if relative == '.':
+            if snapshot.get('capabilities', {}).get('excluded_definitions') and output['type'] != 'workspace-snapshot':
+                raise Blocked('whole workspace output with definition relations must declare type workspace-snapshot')
+            artifacts[name] = snapshot['reference']
+            output_members[name] = snapshot.get('member', '.')
+            _save(directory, receipt, artifacts=artifacts, output_members=output_members)
+            continue
         source = workspace / relative
         if not source.exists():
-            receipt.setdefault('missing_outputs', []).append(name)
+            if name not in receipt.setdefault('missing_outputs', []):
+                receipt['missing_outputs'].append(name)
             continue
         if source.is_symlink() or not source.resolve().is_relative_to(workspace.resolve()):
             raise ValueError(f'output escapes attempt workspace: {relative}')
@@ -610,6 +675,7 @@ def _seal_outputs(directory, attempt, receipt):
             receipt['result'] = read(result)
     atomic(directory / 'outputs.json', record('named-outputs', attempt_id=attempt['attempt_id'], incarnation_id=receipt['incarnation_id'],
           artifacts={row['name']: artifacts[row['name']] for row in job.get('outputs', []) if row['name'] in artifacts},
+          output_members=output_members, workspace_snapshot=snapshot,
           missing_outputs=receipt.get('missing_outputs', []), sealed_at=time.time()))
     return artifacts
 
@@ -658,25 +724,51 @@ def _capture_definitions(workspace, store, consumer):
     return proof
 
 
+def _ingest_telemetry(path):
+    """Consume saved source transports; this creates no receiver or polling loop."""
+    from . import telemetry
+    receipts = []
+    source_index = path / 'telemetry-transports/sources.json'
+    if not source_index.exists():
+        atomic(path / 'telemetry-ingestion.json', record('telemetry-ingestion', coverage='unknown',
+               reason='source transport index unavailable'))
+        return
+    sources = require(read(source_index), 'telemetry_sources')
+    for source in sources['sources']:
+        if not source.get('transport'):
+            receipts.append(source)
+            continue
+        from .core import member
+        location = path / member(source['transport'])
+        if location.is_symlink() or not location.resolve().is_relative_to(path):
+            raise ValueError('telemetry source transport escapes attempt')
+        receipt = telemetry.ingest(path / 'telemetry-ingestion', location)
+        receipts.append({'source': source, 'receipt': receipt})
+    atomic(path / 'telemetry-ingestion.json', record('telemetry-ingestion', sources=receipts, captured_at=time.time()))
+
+
+
 def _archive(directory, attempt, receipt):
     from .artifacts import publish, copy_file
+    from .terminal import seal_workspace
     import shutil
     job = attempt['job']
-    workspace = Path(read(directory / 'assembly.json')['workspace']) if (directory / 'assembly.json').exists() else directory / 'workspace'
+    try:
+        telemetry.finalize_sources(directory)
+        _ingest_telemetry(directory)
+    except Exception as exc:
+        atomic(directory / 'telemetry-ingestion-error.json', record('error', **error(exc)))
+    assembly_path = directory / 'assembly.json'
+    assembly = read(assembly_path) if assembly_path.exists() else {}
+    managed = assembly.get('state', {}).get('holder')
+    if managed and not (directory / 'terminal-snapshot.json').exists():
+        snapshot = None
+    else:
+        snapshot = seal_workspace(directory, attempt, receipt)
     sealed = directory / 'archive-staging.json'
-    capture = _capture_definitions(workspace, attempt['artifact_store'], attempt['attempt_id'] + '--archive') if not sealed.exists() else None
-    excluded_roots = []
-    for row in sorted((capture or {}).get('definitions', []), key=lambda row: len(Path(row['path']).parts)):
-        path = Path(row['path'])
-        if not any(path.is_relative_to(parent) for parent in excluded_roots):
-            excluded_roots.append(path)
-    evidence_size = (_size(workspace) - sum(_size(workspace / path) for path in excluded_roots)
-                     + _size(directory / 'telemetry') + _size(directory / 'process-evidence'))
-    output_size = sum(_size(workspace / member(row['path'])) if (workspace / member(row['path'])).is_dir()
-                      else (workspace / member(row['path'])).stat().st_size
-                      for row in job.get('outputs', []) if (workspace / member(row['path'])).exists())
+    evidence_size = _size(directory / 'telemetry') + _size(directory / 'process-evidence')
     reserve = job['limits'].get('storage_reserve_bytes', job['limits']['storage_bytes'])
-    if not (directory / 'archive-staging.json').exists() and shutil.disk_usage(directory).free < reserve + evidence_size + output_size:
+    if not sealed.exists() and shutil.disk_usage(directory).free < reserve + evidence_size:
         raise Blocked('terminal preservation scratch/reserve unavailable; source evidence remains and main is not repeated')
     artifacts = dict(receipt.get('artifacts', {}))
     # Archive evidence has a distinct role; it makes no checkpoint completeness claim.
@@ -686,23 +778,24 @@ def _archive(directory, attempt, receipt):
         if archive.exists() and any(archive.iterdir()):
             archive.rename(directory / new_id('terminal-evidence-partial'))
         archive.mkdir(exist_ok=True)
-        for name in ('stdout.log', 'stderr.log', 'binding.json', 'execution.json', 'external-resources.json', 'resource-evidence-seal.json', 'services.json', 'ready.json'):
+        for name in ('stdout.log', 'stderr.log', 'binding.json', 'execution.json', 'external-resources.json', 'resource-evidence-seal.json', 'services.json', 'ready.json', 'telemetry-ingestion.json', 'telemetry-ingestion-error.json'):
             if (directory / name).exists():
                 copy_file(directory / name, archive / name)
-        excluded = {row['path'] for row in capture['definitions']}
-        def omit_definitions(parent, names):
-            relative = Path(parent).relative_to(workspace)
-            return [name for name in names if (relative / name).as_posix() in excluded]
-        shutil.copytree(workspace, archive / 'workspace', symlinks=True, dirs_exist_ok=True,
-                        copy_function=copy_file, ignore=omit_definitions)
-        atomic(archive / 'capture-proof.json', capture)
+        if snapshot is not None:
+            atomic(archive / 'workspace-binding.json', snapshot)
+        else:
+            atomic(archive / 'workspace-unsealed.json', {
+                'reason': 'managed workspace has no capture-approved snapshot',
+                'output_error': receipt.get('output_error'), 'source_preserved': True})
         for name in ('telemetry', 'process-evidence', 'service-errors'):
             if (directory / name).exists():
                 shutil.copytree(directory / name, archive / name, ignore=shutil.ignore_patterns('credential.json'), dirs_exist_ok=True, copy_function=copy_file)
         atomic(archive / 'telemetry-cutoff.json', telemetry.snapshot(directory))
-        capabilities = {'checkpoint': False, 'workspace_preserved_in_execution_domain': True}
-        if capture['definitions']:
-            capabilities.update(capture_layout=1, workspace_composition='state-and-definition-relations')
+        capabilities = {'checkpoint': False, 'terminal_layout': 2,
+                        'workspace_composition': 'retained-snapshot-relation' if snapshot else 'unsealed-source',
+                        'workspace': {'reference': snapshot['reference'], 'member': snapshot.get('member', '.')} if snapshot else None,
+                        'definitions': snapshot.get('capabilities', {}).get('definitions', []) if snapshot else [],
+                        'coverage': 'snapshot-and-terminal-evidence' if snapshot else 'terminal-evidence-only'}
         atomic(sealed, record('archive-staging', status='sealed', incarnation_id=receipt['incarnation_id'],
                               capabilities=capabilities, sealed_at=time.time()))
     elif read(sealed)['incarnation_id'] != receipt['incarnation_id']:
@@ -729,27 +822,14 @@ def _ready_services(directory, attempt, binding, deadline, stop_requested, recei
     def start(service):
         try:
             if service == 'resource_evidence':
-                evidence = objects[service]
-                if evidence is None:
-                    evidence = ResourceEvidence(directory)
-                    objects[service] = evidence
-                    evidence.root_pid = os.getpid()
-                    evidence.root_starttime = resource_process_identity(os.getpid()).get('starttime')
-                if attempt['job']['backend']['kind'] == 'docker' and evidence.cgroup is None:
-                    raise Blocked('required namespace cgroup resource evidence is unavailable')
-                evidence.sample('runner-ready')
-                if not (directory / 'process-evidence/resource-latest.json').is_file():
-                    raise Blocked('required resource latest sample was not persisted')
-                states[service] = {'owner': 'runner', 'status': 'ready',
-                    'sample_path': str(directory / 'process-evidence/resource-latest.json'),
-                    'archive_path': str(directory / 'process-evidence/resources.jsonl'),
-                    'scope': 'cgroup-v2' if evidence.cgroup else 'host-visible',
-                    'cgroup': str(evidence.cgroup) if evidence.cgroup else None, 'gaps': evidence.errors}
+                from scripts.execution_bootstrap import resource as resource_service
+                evidence, states[service] = resource_service(directory, require_cgroup=attempt['job']['backend']['kind']=='docker')
+                objects[service]=evidence
             else:
                 if (directory / 'telemetry/binding.json').exists():
                     raise Blocked('failed collector has a published epoch; startup effect is unresolved and cannot be repeated')
-                objects[service] = telemetry.Collector(directory, attempt['attempt_id'], cap_bytes=attempt['job']['limits']['telemetry_bytes'])
-                states[service] = {'owner': 'runner', 'status': 'ready'}
+                from scripts.execution_bootstrap import collector as collector_service
+                objects[service], states[service] = collector_service(directory, attempt['attempt_id'], attempt['job']['limits']['telemetry_bytes'])
             return True
         except Exception as exc:
             states[service] = {'status': 'failed', 'error': error(exc),
@@ -831,6 +911,11 @@ def worker(attempt_dir):
         binding['control_inbox'] = str(directory / 'requests')
         atomic(directory / 'binding.json', binding)
         job, limits = attempt['job'], attempt['job']['limits']
+        if 'tool_credentials' in job.get('inputs',{}):
+            deployment['tool_credentials_file']=str(directory/'inputs/tool_credentials')
+        if 'provider_credentials' in job.get('inputs',{}):
+            deployment['provider_credentials_file']=str(directory/'inputs/provider_credentials')
+            atomic(directory/'deployment.json',deployment)
         if job['backend']['kind'] == 'docker':
             return docker_worker(directory, attempt, deployment, binding, receipt)
         (directory / 'workspace').mkdir(exist_ok=True)
@@ -842,6 +927,8 @@ def worker(attempt_dir):
         signal.signal(signal.SIGINT, lambda *_: stop_signal.append('supervisor_sigint'))
         try:
             workspace = _assemble(directory, attempt, deployment)
+            from .assembly import initialize_state
+            initialize_state(directory,attempt,deployment,read(directory/'assembly.json'),binding)
             deadline = _wall_deadline(binding, limits)
             evidence, collector, service_states = _ready_services(directory, attempt, binding, deadline, stop_signal, receipt)
             enabled = job.get('telemetry', {}).get('enabled', True)
@@ -866,7 +953,9 @@ def worker(attempt_dir):
                 environment.update(collector.environment())
                 environment['FACTORY26_EXP_TELEMETRY_BINDING'] = json.dumps({'endpoint': collector.binding['receiver_endpoint'], 'token': collector.token, **{k: collector.binding[k] for k in ('attempt_id', 'stream_id', 'collector_epoch')}})
             services = {**service_states, 'telemetry': service_states['collector'], 'control': {'status': 'ready', 'inbox': str(directory / 'requests')}}
-            environment['FACTORY26_EXP_SERVICES'] = json.dumps(services)
+            from scripts.execution_bootstrap import context as execution_context
+            environment=execution_context(read(directory/'assembly.json'), services, attempt['attempt_id'],
+                binding['incarnation_id'], directory/'execution-context.json', environment, job.get('environment',{}))
             atomic(directory / 'ready.json', record('runner-ready', attempt_id=attempt['attempt_id'], incarnation_id=binding['incarnation_id'],
                   services=services, execution_platform={'os': platform.system(), 'architecture': platform.machine()}, runtime=deployment['runtime'].get('identity'), assembly=read(directory / 'assembly.json') if (directory / 'assembly.json').exists() else None, ready_at=time.time()))
             _save(directory, receipt, ready=read(directory / 'ready.json'), execution='ready', services=service_states, entry_status='not_requested')
@@ -876,9 +965,21 @@ def worker(attempt_dir):
             with (directory / 'stdout.log').open('ab', buffering=0) as stdout, (directory / 'stderr.log').open('ab', buffering=0) as stderr:
                 entry_environment = dict(environment)
                 entry_environment['PYTHONPATH'] = deployment['runtime']['source']
-                process = subprocess.Popen([deployment['runtime']['python'], '-B', '-m', 'lab.exp.runner', 'internal_entry', str(directory)],
-                                           cwd=workspace, env=entry_environment, stdin=subprocess.DEVNULL,
-                                           stdout=stdout, stderr=stderr, start_new_session=True, close_fds=True)
+                holder=read(directory/'assembly.json')['state'].get('holder')
+                if holder and holder['authority']['kind']=='local':
+                    from .state import reserve_writer, bind_writer
+                    writer=holder['writer']
+                    launch_request=attempt['attempt_id']+'--entry-launch'
+                    reserve_writer(holder,writer['resource_id'],writer['incarnation'],launch_request,parent=None,role='entry')
+                    entry_environment['FACTORY26_EXP_ENTRY_RESERVATION']=launch_request
+                try:
+                    process = subprocess.Popen([deployment['runtime']['python'], '-B', '-m', 'lab.exp.runner', 'internal_entry', str(directory)],
+                                               cwd=workspace, env=entry_environment, stdin=subprocess.DEVNULL,
+                                               stdout=stdout, stderr=stderr, start_new_session=True, close_fds=True)
+                except OSError as spawn_error:
+                    if holder and holder['authority']['kind']=='local':
+                        bind_writer(holder,writer['resource_id'],launch_request,failed_spawn={'spawn_effect':'not-created','errno':spawn_error.errno})
+                    raise
                 identity = process_identity(process.pid)
                 backend_identity = {'kind': 'local', 'process': identity}
                 if job['backend']['kind'] == 'docker':
@@ -952,8 +1053,7 @@ def worker(attempt_dir):
                 receipt['backend_identity']['external_resources'] = [item['resource'] for item in facts]
             _save(directory, receipt, execution='stopped' if stopped else 'exited', exit_code=exit_code,
                   finished_at=time.time(), stop_reason=stop_reason, external_resources=facts)
-            sealed_outputs = _seal_outputs(directory, attempt, receipt)
-            _save(directory, receipt, artifacts=sealed_outputs, outputs='sealed')
+            _seal_local_terminal(directory, attempt, receipt)
         except Exception as exc:
             if process is not None and process.poll() is None:
                 try:
@@ -990,6 +1090,64 @@ def worker(attempt_dir):
                 _save(directory, receipt, archive='preserved', artifacts=artifacts, finalized_at=time.time())
             except Exception as exc:
                 _save(directory, receipt, archive='failed', archive_error=error(exc))
+
+
+def _seal_local_terminal(directory, attempt, receipt):
+    """Publish terminal content separately from complete managed capture."""
+    from . import state
+    facts = backends.external(directory)
+    if any(any(item['observation']['state'].get(key) for key in ('Running', 'Paused', 'Restarting')) for item in facts):
+        raise Blocked('terminal content publication requires registered external child terminality')
+    layout = read(directory / 'assembly.json') if (directory / 'assembly.json').exists() else None
+    state_binding = layout['state'].get('holder') if layout else None
+    capture_id = attempt['attempt_id'] + '--terminal-capture'
+    acquisition = None
+    managed_capture = False
+    if state_binding:
+        holder = state.query(state_binding)['holder']
+        partial_local = (state_binding['authority']['kind'] == 'local' and
+            holder['coverage'].get('descendant_writer_contract') != 'registered-or-no-detach-v1')
+        if partial_local:
+            acquisition = state.terminal_content_permission(state_binding)
+            atomic(directory / 'terminal-content-permission.json', acquisition)
+        else:
+            holder = state.begin_capture(directory, state_binding, capture_id,
+                grace=attempt['job']['limits'].get('stop_grace_seconds', 10))
+            acquisition = state.capture_acquisition(state_binding, holder)
+            managed_capture = True
+    sealed_outputs = _seal_outputs(directory, attempt, receipt, acquisition=acquisition)
+    if managed_capture:
+        state.bind_snapshot(state_binding, read(directory / 'outputs.json')['workspace_snapshot'], capture_id + '--snapshot')
+        state.end_capture(state_binding, capture_id + '--close')
+    _save(directory, receipt, artifacts=sealed_outputs, outputs='sealed')
+    return sealed_outputs
+
+
+def _seal_docker_terminal(directory,attempt,deployment,receipt):
+    """One state-authority capture and one immutable workspace publication."""
+    from . import state
+    if receipt.get('archive')=='preserved' and receipt.get('outputs')=='sealed':
+        return receipt['artifacts']
+    target=attempt['job']['backend']
+    resource=read(directory/'resource.json')
+    if backends.exact_resource(target,resource)['state'].get('Status') not in ('exited','dead'):
+        raise Blocked('terminal seal requires exact physical terminality')
+    state_binding=deployment.get('state_binding') or read(directory/'deployment.json').get('state_binding')
+    if not state_binding:
+        raise Blocked('Docker terminal sealing lacks its actual state holder')
+    capture_id=attempt['attempt_id']+'--terminal-capture'
+    state.begin_capture(directory,state_binding,capture_id,grace=attempt['job']['limits'].get('stop_grace_seconds',10))
+    helper=backends.capture_helper(directory,state_binding,capture_id)
+    refs=backends.collect_named_outputs(directory,helper)
+    facts=read(directory/'outputs.json')
+    state.bind_snapshot(state_binding,facts['workspace_snapshot'],capture_id+'--snapshot')
+    backends.close_capture_helper(target,helper,capture_id+'--helper-close')
+    state.end_capture(state_binding,capture_id+'--capture-close')
+    _save(directory,receipt,artifacts=refs,outputs='sealed',archive='preserved',
+        output_locations=facts['locations'],output_members=facts.get('output_members',{}),
+        workspace_snapshot=facts['workspace_snapshot'],missing_outputs=facts.get('missing_outputs',[]),
+        result=facts.get('result'),finalized_at=time.time())
+    return refs
 
 
 def docker_worker(directory, attempt, deployment, binding, receipt):
@@ -1056,24 +1214,40 @@ def docker_worker(directory, attempt, deployment, binding, receipt):
               exit_code=payload.get('entry_exit_code') if payload else None, entry_exit_code=payload.get('entry_exit_code') if payload else None,
               supervisor_container_exit_code=physical['state']['ExitCode'],
               payload=payload, finished_at=time.time(), telemetry=payload.get('telemetry', 'unknown') if payload else 'unknown')
-        backends.managed(target, resource, 'capture-begin', request['request_id'] + '--output-capture-begin')
-        refs = backends.collect_named_outputs(directory)
-        backends.managed(target, resource, 'capture-end', request['request_id'] + '--output-capture-end')
-        output_facts = read(directory / 'outputs.json')
-        _save(directory, receipt, artifacts=refs, outputs='sealed', output_locations=output_facts['locations'], missing_outputs=output_facts.get('missing_outputs', []), result=output_facts.get('result'))
-        from . import admission
-        admission.reconcile(target, resource['authority_resource_id'], attempt['attempt_id'] + '--release', backends.domain_observation(target, resource))
-        backends.export_payload(directory)
-        _save(directory, receipt, archive='preserved', artifacts=_archive(directory, attempt, receipt), finalized_at=time.time())
+        backends.release_execution(directory)
+        _seal_docker_terminal(directory,attempt,deployment,receipt)
         backends.finish_docker(directory)
     except Exception as exc:
         atomic(directory / 'docker-supervision-error.json', record('error', **error(exc)))
+        if (directory / 'resource.json').exists() and (directory / 'entry-intent.json').exists():
+            try:
+                resource = read(directory / 'resource.json')
+                backends.control_resource(target, resource, 'stop', limits.get('stop_grace_seconds', 10),
+                                          request_id=request['request_id'] + '--failure-stop')
+                backends.managed(target, resource, 'writer-close', request['request_id'] + '--writer-close')
+                backends.release_execution(directory)
+            except Exception as close_error:
+                atomic(directory / 'failure-close-error.json', record('error', **error(close_error)))
+        if not (directory/'entry-intent.json').exists():
+            try:
+                aborted=backends.abort_preentry(directory,request['request_id']+'--preentry-abort')
+                _save(directory,receipt,preentry_abort=aborted)
+            except Exception as abort_error:
+                atomic(directory/'preentry-abort-error.json',record('error',**error(abort_error)))
         if receipt.get('execution') not in ('exited', 'stopped', 'failed'):
             no_entry = not (directory / 'entry-intent.json').exists()
             _save(directory, receipt, execution='failed' if no_entry and receipt.get('execution') in ('awaiting_ready', 'readiness_failed') else 'unknown',
                   entry='not_requested' if no_entry else 'unknown', stage=receipt.get('execution'), error=error(exc))
         else:
             _save(directory, receipt, archive='failed', archive_error=error(exc))
+    finally:
+        try:
+            physical = backends.exact_resource(target, resource)
+            if physical['state'].get('Status') in ('exited', 'dead'):
+                backends.managed(target, resource, 'writer-close', request['request_id'] + '--writer-close')
+                backends.finish_docker(directory)
+        except Exception as cleanup_error:
+            atomic(directory / 'execution-close-error.json', record('error', **error(cleanup_error)))
 
 
 def payload_worker(directory):
@@ -1081,6 +1255,11 @@ def payload_worker(directory):
     attempt, deployment = _attempt(directory), read(directory / 'deployment.json')
     binding = read(directory / 'binding.json')
     job, limits = attempt['job'], attempt['job']['limits']
+    if 'tool_credentials' in job.get('inputs',{}):
+        deployment['tool_credentials_file']=str(directory/'inputs/tool_credentials')
+    if 'provider_credentials' in job.get('inputs',{}):
+        deployment['provider_credentials_file']=str(directory/'inputs/provider_credentials')
+        atomic(directory/'deployment.json',deployment)
     collector, process = None, None
     stop_requested = []
     signal.signal(signal.SIGTERM, lambda *_: stop_requested.append(True))
@@ -1088,6 +1267,8 @@ def payload_worker(directory):
     evidence = None
     try:
         workspace = _assemble(directory, attempt, deployment)
+        from .assembly import initialize_state
+        initialize_state(directory,attempt,deployment,read(directory/'assembly.json'),binding)
         deadline = _wall_deadline(binding, limits)
         evidence, collector, services = _ready_services(directory, attempt, binding, deadline, stop_requested)
         services['telemetry'] = services['collector']
@@ -1120,6 +1301,9 @@ def payload_worker(directory):
             environment.update(collector.environment())
             environment['FACTORY26_EXP_TELEMETRY_BINDING'] = json.dumps({'endpoint': collector.binding['receiver_endpoint'], 'token': collector.token,
                 **{k: collector.binding[k] for k in ('attempt_id', 'stream_id', 'collector_epoch')}})
+        from scripts.execution_bootstrap import context as execution_context
+        environment=execution_context(read(directory/'assembly.json'), services, attempt['attempt_id'],
+            binding['incarnation_id'], directory/'execution-context.json', environment, job.get('environment',{}))
         with (directory / 'stdout.log').open('ab', buffering=0) as out, (directory / 'stderr.log').open('ab', buffering=0) as err:
             process = subprocess.Popen([deployment['runtime']['python'], '-B', '-m', 'lab.exp.runner', 'internal_entry', str(directory)],
                                        env=environment, cwd=workspace, stdin=subprocess.DEVNULL, stdout=out, stderr=err, start_new_session=True)
@@ -1157,11 +1341,20 @@ def main():
         if limits.get('memory_bytes') and sys.platform.startswith('linux') and attempt['job']['backend']['kind'] == 'local':
             resource.setrlimit(resource.RLIMIT_AS, (int(limits['memory_bytes']), int(limits['memory_bytes'])))
         environment = _environment(attempt['job'], read(args.attempt_dir / 'deployment.json'))
-        for name in ('FACTORY26_EXP_INPUT_BINDINGS','FACTORY26_EXP_ATTEMPT_DIR','FACTORY26_EXP_ATTEMPT_ID','FACTORY26_EXP_INCARNATION','FACTORY26_EXP_RESOURCE_SAMPLE','FACTORY26_EXP_TELEMETRY_BINDING','FACTORY26_EXP_ASSEMBLY','FACTORY26_EXP_PREPARED_BINDING','FACTORY26_EXP_SERVICES','FACTORY26_EXP_TELEMETRY_CAP_BYTES','OTEL_EXPORTER_OTLP_ENDPOINT','OTEL_EXPORTER_OTLP_PROTOCOL','OTEL_EXPORTER_OTLP_HEADERS','EXPERIMENT_DOCKER_ENDPOINT','EXP_ADMISSION_VOLUME','EXP_ADMISSION_SLOTS'):
+        for name in ('FACTORY26_EXP_ENTRY_RESERVATION','FACTORY26_EXECUTION_CONTEXT','FACTORY26_EXP_INPUT_BINDINGS','FACTORY26_EXP_ATTEMPT_DIR','FACTORY26_EXP_ATTEMPT_ID','FACTORY26_EXP_INCARNATION','FACTORY26_EXP_RESOURCE_SAMPLE','FACTORY26_EXP_TELEMETRY_BINDING','FACTORY26_EXP_ASSEMBLY','FACTORY26_EXP_PREPARED_BINDING','FACTORY26_EXP_SERVICES','FACTORY26_EXP_TELEMETRY_CAP_BYTES','OTEL_EXPORTER_OTLP_ENDPOINT','OTEL_EXPORTER_OTLP_PROTOCOL','OTEL_EXPORTER_OTLP_HEADERS','EXPERIMENT_DOCKER_ENDPOINT','EXP_ADMISSION_VOLUME','EXP_ADMISSION_SLOTS'):
             if name in os.environ:
                 environment[name] = os.environ[name]
         command_path = args.attempt_dir / 'entry-command.json'
         command = read(command_path if command_path.exists() else args.attempt_dir / 'execution.json')['command']
+        if environment.get('FACTORY26_EXECUTION_CONTEXT'):
+            from scripts.execution_context import read as execution_context
+            context=execution_context(environment['FACTORY26_EXECUTION_CONTEXT'])
+            holder=context['assembly']['state'].get('holder')
+            if holder and holder['authority']['kind']=='local':
+                from .state import permit, bind_writer
+                writer=holder['writer']
+                bind_writer(holder,writer['resource_id'],environment['FACTORY26_EXP_ENTRY_RESERVATION'],physical=process_identity())
+                permit(holder,writer['resource_id'],writer['incarnation'],holder['generation'])
         os.execvpe(command[0], command, environment)
     elif args.action == 'internal_payload':
         payload_worker(args.attempt_dir)

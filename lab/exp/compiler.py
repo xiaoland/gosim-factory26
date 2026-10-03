@@ -24,38 +24,7 @@ def _merge(left, right, context):
     return {**left, **right}
 
 
-def final_score(binding, base):
-    """Bind a saved GET or a named legacy task, including its real run identity."""
-    _fields(binding, ('source', 'run_id', 'task'), ('source', 'run_id'))
-    path = (base / binding['source']).resolve()
-    result = {'status': 'unavailable', 'source': str(path), 'run_id': binding['run_id']}
-    try:
-        source = path.read_bytes()
-        raw = json.loads(source)
-        result['source_sha256'] = hashlib.sha256(source).hexdigest()
-        value = raw.get('value', raw)
-        if 'tasks' in value:
-            task = value['tasks'][binding['task']]
-            run_id = task.get('run_id')
-            value = {**task.get('platform_result', {}), 'status': task.get('remote_status'), 'id': run_id}
-            if raw.get('pending'):
-                raise Blocked('legacy source has an unresolved platform write')
-        if value.get('id') != binding['run_id']:
-            raise ValueError('score evidence does not bind the declared run')
-        score, passed, failed = (value.get(key) for key in ('score', 'passed_count', 'failed_count'))
-        total = value.get('total_tests')
-        if total is None and type(passed) is int and type(failed) is int:
-            total = passed + failed
-        if (value.get('status') not in {'PASSED', 'FAILED'} or type(score) not in (int, float) or
-                not math.isfinite(score) or not 0 <= score <= 100 or
-                any(type(count) is not int or count < 0 for count in (passed, failed, total)) or
-                total == 0 or passed + failed != total):
-            raise Blocked('score source lacks a complete terminal percentage and test counts')
-        result.update(status='complete', score_percent=score)
-    except (OSError, KeyError, TypeError, Blocked) as exc:
-        result['error'] = error(exc)
-        result['error'].pop('observed_at', None)  # Read time is not part of a frozen selection decision.
-    return result
+from lab.arc_bench.score_evidence import final_score
 
 
 def select(policy, models, base):
@@ -105,6 +74,11 @@ def _model(job, name, models):
     if 'model_config' in job or 'model_config' in job['backend']:
         raise ValueError('intent model_config belongs in models, not execution templates')
     job['model_config'] = deepcopy(config)
+    if job.get('arc_contract'):
+        if not model.get('bindings'):
+            raise ValueError('ARC generation needs explicit native model bindings')
+        job.setdefault('environment', {}).update(MODEL=config['model'], VISUAL_MODEL=config['visual_model'],
+            OPENAI_BASE_URL=config['base_url'], FACTORY26_MODEL_PROVIDER=config['provider'])
     if job['backend']['kind'] == 'hosted':
         job['backend']['model_config'] = deepcopy(config)
     if 'bindings' in model:
@@ -125,19 +99,19 @@ def _paths(job, base, files):
         if isinstance(binding, str):
             binding = {'source': binding}
             job['inputs'][name] = binding
+        if set(binding) == {'from_production'}:
+            continue
         if 'source' in binding:
-            source = (base / binding['source']).resolve(strict=True)
+            source = (base / binding['source']).resolve()
             binding['source'] = str(source)
-            binding['source_identity'] = artifacts.contents(source)
         if binding.get('store'):
             binding['store'] = str((base / binding['store']).resolve(strict=True))
     for name in ('checkpoint', 'prepared', 'stop_evidence'):
         if name in job:
             if set(job[name]) == {'from_production'}:
                 continue
-            source = (base / job[name]['source']).resolve(strict=True)
+            source = (base / job[name]['source']).resolve()
             job[name]['source'] = str(source)
-            job[name]['source_identity'] = artifacts.contents(source)
     for backend in (job['backend'], *([job['backend']['external_docker']] if job['backend'].get('external_docker') else [])):
         if backend.get('authority_handoff'):
             handoff = backend['authority_handoff']
@@ -174,7 +148,7 @@ def compile_intent(intent_path, directory, *, environment=None):
             if not execution.get('controller_runtime') and not intent.get('environment_selection'):
                 raise ValueError('execution needs a maintained environment or an explicit controller runtime')
             recipe = record('experiment', experiment_id=identifier(intent['experiment_id']),
-                            authorization=intent['authorization'], **deepcopy(execution), jobs=[], labels=intent.get('labels', {}))
+                            authorization=intent['authorization'], execution_contract='explicit-request-v1', **deepcopy(execution), jobs=[], labels=intent.get('labels', {}))
             for field in ('productions', 'environment_selection', 'environment_resolution', 'resolved_productions', 'derivation'):
                 if field in intent:
                     recipe[field] = deepcopy(intent[field])
@@ -200,9 +174,7 @@ def compile_intent(intent_path, directory, *, environment=None):
                     files[str(snapshot)] = row['source_sha256']
             for field in ('controller_runtime', 'runner_runtime'):
                 if field in recipe:
-                    source = (base / recipe[field]).resolve(strict=True)
-                    recipe[field] = str(source)
-                    files[str(source)] = digest(source)
+                    recipe[field] = str((base / recipe[field]).resolve())
             ids = set()
             for target in intent['targets']:
                 _fields(target, ('id', 'case', 'variant', 'model'), ('id', 'case', 'variant', 'model'))
@@ -219,7 +191,25 @@ def compile_intent(intent_path, directory, *, environment=None):
                 job['target'] = {'case': target['case'], 'variant': target['variant']}
                 job['inputs'] = _merge(job.get('inputs', {}), case.get('inputs', {}), 'case inputs')
                 case_backend = _fields(case.get('backend', {}), ('competition_id', 'task'))
-                job['backend'] = _merge(job['backend'], case_backend, 'case backend')
+                operation = job.pop('operation', None)
+                if operation is not None:
+                    if operation != 'arc-local-generate' or job['purpose'] != 'generate':
+                        raise ValueError('unsupported generation operation')
+                    _fields(job, ('id', 'target', 'purpose', 'inputs', 'limits', 'labels'), ('inputs', 'limits'))
+                    if not intent.get('environment_selection', {}).get('selection', {}).get('arc'):
+                        raise ValueError('arc-local-generate requires environment.arc physical selections')
+                    if set(job['inputs']) != {'agent', 'requirements'} or set(case_backend) != {'competition_id', 'task'}:
+                        raise ValueError('ARC generation needs agent/requirements and case competition_id/task')
+                    from lab.arc_bench.local_job import job as local_job
+                    arc = intent['environment_selection']['selection']['arc']
+                    job['inputs']['runner'] = {'source': arc['sdk_source']}
+                    job = local_job(job['id'], job['inputs'], job['limits'], arc['target'],
+                                    case_backend['competition_id'], case_backend['task'],
+                                    labels=job.get('labels'), arc_contract={'schema_version': 1,
+                                    'operation': operation, 'sdk_source': arc['sdk_source']})
+                    job['target'] = {'case': target['case'], 'variant': target['variant']}
+                else:
+                    job['backend'] = _merge(job['backend'], case_backend, 'case backend')
                 selected = target['model']
                 if isinstance(selected, dict):
                     if selected != {'selection': True} or decision['selected_model'] is None:
@@ -251,7 +241,7 @@ def compile_intent(intent_path, directory, *, environment=None):
                     raise ValueError('hosted evaluation needs an explicit independent model binding')
                 _paths(evaluated, base, files)
                 recipe['jobs'].append(evaluated)
-            recipe['compilation'] = {'intent_sha256': intent_sha256, 'compiler_sha256': digest(Path(__file__)),
+            recipe['compilation'] = {'intent_sha256': intent_sha256, 'compiler_sha256': digest(Path(__file__)), 'binding_phase': 'unresolved-plan', 'evidence_adapter_sha256': digest(Path(__import__('lab.arc_bench.score_evidence',fromlist=['x']).__file__)),
                                      'selection': decision, 'files': files}
             from .controller import validate_recipe
             validate_recipe(recipe)

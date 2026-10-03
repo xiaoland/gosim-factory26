@@ -11,6 +11,7 @@ import sys
 from lab.exp.core import read, require
 from lab.exp.core import record
 from .arc_artifacts import package_metadata
+from .local_job import job as local_job, sdk_role
 
 
 def positive_float(value):
@@ -90,6 +91,7 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
         raise ValueError('ARC execution requires explicit daemon retirement handoff')
     if not authorization:
         raise ValueError("explicit authorization scope is required")
+    sdk_role(runner)
     runtime = require(read(runner_runtime_receipt), "runtime") if host_runtime_receipt else None
     python = runtime["launcher"] if runtime else sys.executable
     adapter = Path(__file__).resolve().parent
@@ -152,58 +154,22 @@ def build(variants, cases, inputs_root, runner, image=None, env_file=None, worke
             for key in (("requirements",) if requirements_only else ("requirements", "tests")):
                 if not Path(inputs[key]).is_dir():
                     raise ValueError(f"missing {key}: {inputs[key]}")
-            command = [python, "-m", "lab.arc_bench.arc_bench_adapter", "--runner", "{runner}",
-                       "--agent", "{agent}", "--requirements", "{requirements}",
-                       "--workspace", "{workspace}",
-                       "--competition", competition, "--task", task]
-            if not requirements_only:
-                command += ["--tests", "{tests}"]
-            if prepare_only:
-                command.append("--prepare-only")
-            else:
-                command += ["--image", image]
-            if requirements_only:
-                command += ["--requirements-only"]
-            for flag, value in (("--memory", memory), ("--cpus", cpus)):
-                if value is not None:
-                    command += [flag, str(value)]
-            if shared_docker_slots is not None:
-                command += ["--shared-docker-slots", str(shared_docker_slots)]
-            if not prepare_only:
-                command += ["--admission-volume", admission_volume]
-            if container_otlp_host:
-                command += ["--container-otlp-host", container_otlp_host]
-            arc_root = ("workspace/official-generation/template/.arc" if separate_evaluation or requirements_only
-                        else "workspace/official/template/.arc")
-            arc_artifacts = [f"{arc_root}/traceability", f"{arc_root}/runner-events.jsonl",
-                             f"{arc_root}/runtime-reporting"]
-            if separate_evaluation and not requirements_only:
-                arc_artifacts.extend(("workspace/official-evaluation/template/.arc/traceability",
-                                      "workspace/official-evaluation/template/.arc/runner-events.jsonl"))
-            outputs = [{'name': 'workspace', 'type': 'terminal-archive', 'path': '.'},
-                       {'name': 'result', 'type': 'result', 'path': 'experiment-result.json'}]
-            if metadata['operation'] != 'replay' and not prepare_only:
-                outputs.append({'name': 'application', 'type': 'application',
-                                'path': 'official-generation/.lab-artifacts/application'})
-                outputs.append({'name': 'application_receipt', 'type': 'application-receipt',
-                                'path': 'official-generation/.lab-artifacts/receipt.json'})
-            jobs.append({'id': f'{name}--{competition}--{task}',
-                         'purpose': 'prepare' if prepare_only else 'evaluate' if metadata['operation'] == 'replay' else 'generate',
-                         'inputs': {key: {'source': value} for key, value in inputs.items()},
-                         'command': command, 'outputs': outputs,
-                         'backend': {'kind': 'local', 'capabilities_required': ['arc-sdk-host-docker'],
-                                     'external_docker': {'endpoint': endpoint, 'image_id': image,
-                                                         'slots': shared_docker_slots, 'admission_volume': admission_volume, 'authority_handoff': authority_handoff}},
-                         'limits': {'wall_seconds': budget['wall_seconds_per_attempt'],
-                                    'storage_bytes': storage['workspace_bytes_per_run'],
-                                    'telemetry_bytes': storage['telemetry_bytes_per_run'],
-                                    **({'memory_bytes': memory_bytes, 'cpus': float(cpus), 'pids': pids} if not prepare_only else {})},
-                         'labels': labels, 'competition': competition, 'task': task,
-                         **({'model_config': model_config, 'environment': {
-                             'MODEL': model_config['model'], 'VISUAL_MODEL': model_config['visual_model'],
-                             'OPENAI_BASE_URL': model_config['base_url']}} if model_config else {}),
-                         **({'variant': variant} if variant else {}),
-                         **({'source_application': origin} if origin else {})})
+            generated = local_job(f'{name}--{competition}--{task}',
+                {key: {'source': value} for key, value in inputs.items()},
+                {'wall_seconds': budget['wall_seconds_per_attempt'], 'storage_bytes': storage['workspace_bytes_per_run'],
+                 'telemetry_bytes': storage['telemetry_bytes_per_run'],
+                 **({'memory_bytes': memory_bytes, 'cpus': float(cpus), 'pids': pids} if not prepare_only else {})},
+                {'endpoint': endpoint, 'image_id': image, 'slots': shared_docker_slots,
+                 'admission_volume': admission_volume, 'authority_handoff': authority_handoff},
+                competition, task, python=python,
+                purpose='prepare' if prepare_only else 'evaluate' if metadata['operation'] == 'replay' else 'generate',
+                requirements_only=requirements_only, prepare_only=prepare_only,
+                labels=labels, model_config=model_config, container_otlp_host=container_otlp_host)
+            if variant:
+                generated['variant'] = variant
+            if origin:
+                generated['source_application'] = origin
+            jobs.append(generated)
             if separate_evaluation and metadata['operation'] != 'replay':
                 source_job = jobs[-1]['id']
                 jobs.append({'id': source_job + '--evaluation', 'purpose': 'evaluate', 'source_job': source_job,

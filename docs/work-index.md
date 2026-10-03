@@ -18,6 +18,7 @@
 | Braid 工作项上下文、CLI 易用性与 Agent 指派 | [Braid 改进](../tasks/braid-usability/packet.md) |
 | Bub 原生 Agent 接入 | [独立接入任务](../tasks/braid-provider-expansion/packet.md)，已获开工且不属于 I13；Alma 暂缓。 |
 | 官方与本地实验的组织及恢复 | [双比赛官网记录](../tasks/dual-bench-hosted/packet.md)、[raw 本地基线](../tasks/raw-core-local-baseline/packet.md) |
+| 当前实验启动、职责与阅读体验 | [实验启动 DX](../tasks/experiment-startup-dx/packet.md)保存本轮设计、源码采用和未验边界；当前新写入合同从 [Lab](../lab/README.md)进入。 |
 | 实验执行设施、恢复与监控 | [实验 DX](../tasks/experiment-dx-review/packet.md)持有新 Lab 协议、投影、编译和就绪查询；当前操作见 [Lab](../lab/README.md)与[恢复手册](deployment/recovery.md)。[前序设施](../tasks/experiment-infrastructure/packet.md)保留旧恢复与监控证据。 |
 | 实验操作与模型事实查询 | [实验操作](../tasks/experiment-operations/packet.md)持有 prepare/run/status、恢复和观察交接；[模型事实](../tasks/experiment-model-facts/packet.md)持有 desired/frozen/actual 投影及其证据边界。 |
 | 实验来源、查询与存储生命周期 | [端到端追溯](../tasks/experiment-traceability/packet.md)、[存储生命周期](../tasks/experiment-storage-lifecycle/packet.md)保存各轮设计、实施及未验边界；[I13 合入记录](../tasks/iteration13/storage-lifecycle-integration.md)不授权历史清理，新执行合同从[实验 DX](../tasks/experiment-dx-review/packet.md)进入。 |

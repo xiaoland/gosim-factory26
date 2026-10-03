@@ -1,0 +1,30 @@
+i14-a2-e2e-github-20261003
+controller: running / physical: unknown
+├─ github / e2e
+│  ├─ generate  active  attempt-07031e32569a13d9886ca629
+│  │  main: unknown
+│  │  execution: active
+│  │  services: unknown
+│  │  provider: active
+│  │    semantic_progress: unknown / 平台: RUNNING
+│  │    producer: exp.hosted.workspace_observation / 观察: 2026-10-03T03:54:13+00:00
+│  │    原件：/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629/monitor-latest.json
+│  │    stale 阈值: 1800s / 最少样本: 2
+│  │    session 01a0fe72-9ce8-7143-8f72-8eedb70b710f: idle / lifecycle=idle / current_attempt=True / 连续7次、5417.309595108032s
+│  │      native: native-header-and-tail-window / complete=False / /Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629/monitor/20261003T035322.371242Z/8a282da5502e/evidence/template/.factory26/20261002-210813-f7ceb8fe/native-windows/0f4b158258a83cb68d6e7451/source.json
+│  │    session 01a0fe83-3307-7b32-85ee-a0383a68c4c7: active / lifecycle=running / current_attempt=True / 连续1次、0s
+│  │      native: native-header-and-tail-window / complete=False / /Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629/monitor/20261003T035322.371242Z/8a282da5502e/evidence/template/.factory26/20261002-210813-f7ceb8fe/native-windows/6b231510e5d64029cb46e066/source.json
+│  │    resource_wait issue:pi-glm-fast: session waiting for resources: resource pressure: {"accounted_for_admission":1613582336,"cache_credit_estimate":28229632 … ror":null,"reason":"waiting_for_two_recovered_samples","sample_id":"1038666890817404","schema_version":1,"startup_reserve_bytes":134217728,"status":"pressured"}
+│  │  archive: not-exported
+│  │  telemetry: unknown (producer flush: unknown)
+│  │  braid: unknown
+│  │    缺口：没有绑定此 attempt 的公开接入观察回执
+│  │  console: unknown
+│  │    缺口：没有绑定此 attempt 的公开接入观察回执
+│  │  platform: RUNNING (run 8a282da5502e)
+│  │    GET 观察：2026-10-03T03:53:22+00:00 / /Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629/platform/observation-1790999602366779000.json
+│  │  blocked by controller: 保存的 controller 运行状态没有当前出生身份支持
+│  │    证据：/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/controller.json
+│  │  next: 先核对观察故障及当前资源身份
+│  │  观察：2026-10-03T03:54:13+00:00 / /Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629/execution.json
+保存的事实投影；本次读取时间不代表远端新鲜度。操作执行时重新核验。

@@ -1,0 +1,89 @@
+{
+  "kind": "factory26.actual-provider-consumption",
+  "source_attempt": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629",
+  "read_at": 1790999526.023274,
+  "facts": {
+    "status": "active",
+    "producer": "exp.hosted.workspace_observation",
+    "source": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629/monitor-latest.json",
+    "identity": {
+      "attempt_id": "attempt-07031e32569a13d9886ca629",
+      "incarnation_id": "attempt-07031e32569a13d9886ca629",
+      "run_id": "8a282da5502e",
+      "submission_id": "3c086cc0c8f1"
+    },
+    "observed_at": 1790998734.257395,
+    "provider_observed_at": 1790998734.0259929,
+    "platform_status": "RUNNING",
+    "semantic_progress": "unknown",
+    "stale_after_seconds": 1800,
+    "minimum_samples": 2,
+    "sessions": [
+      {
+        "session_id": "01a0fe72-9ce8-7143-8f72-8eedb70b710f",
+        "provider_session_id": "/workspace/template/.factory26/20261002-210813-f7ceb8fe/work/native-homes/pi-glm-fast-01a0fe72-6951-7ca0-8e70-51895bcfa932/sessions/2026-10-02T21-08-27-397Z_01a0fe72-6e84-77d4-8c50-60d11ed0bcdf.jsonl",
+        "lifecycle": "idle",
+        "classification": "idle",
+        "current_attempt": true,
+        "last_activity_at": 1790993717.333,
+        "unchanged_since": 1790994236.0862799,
+        "unchanged_samples": 6,
+        "unchanged_seconds": 4497.939713001251,
+        "reason": null,
+        "tool_liveness": "not_observed",
+        "error": null,
+        "native": {
+          "path": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629/monitor/20261003T033800.521093Z/8a282da5502e/evidence/template/.factory26/20261002-210813-f7ceb8fe/native-windows/9b8a1db438f54eb0866b4f1a/source.json",
+          "available": true,
+          "coverage": "native-header-and-tail-window",
+          "complete_native": false,
+          "parse_errors": []
+        }
+      },
+      {
+        "session_id": "01a0fe83-3307-7b32-85ee-a0383a68c4c7",
+        "provider_session_id": "/workspace/template/.factory26/20261002-210813-f7ceb8fe/work/native-homes/pi-glm-fast-01a0fe83-29aa-73e0-874e-ff8334d2c8b7/sessions/2026-10-02T21-26-45-642Z_01a0fe83-3089-7430-aaab-63a13f700335.jsonl",
+        "lifecycle": "running",
+        "classification": "active",
+        "current_attempt": true,
+        "last_activity_at": 1790998621.238,
+        "unchanged_since": 1790998734.0259929,
+        "unchanged_samples": 1,
+        "unchanged_seconds": 0,
+        "reason": null,
+        "tool_liveness": "not_observed",
+        "error": null,
+        "native": {
+          "path": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629/monitor/20261003T033800.521093Z/8a282da5502e/evidence/template/.factory26/20261002-210813-f7ceb8fe/native-windows/1dd1fa48493b97dbebb7d473/source.json",
+          "available": true,
+          "coverage": "native-header-and-tail-window",
+          "complete_native": false,
+          "parse_errors": []
+        }
+      }
+    ],
+    "resource_wait_groups": [
+      "issue:pi-glm-fast"
+    ],
+    "provider_health": {
+      "issue:pi-glm-fast": {
+        "can_progress": false,
+        "error": "session waiting for resources: resource pressure: {\"accounted_for_admission\":1612660736,\"cache_credit_estimate\":282234880,\"charged_headroom\":252588032,\"good_samples\":0,\"headroom_reserve_bytes\":268435456,\"inactive_file\":282234880,\"memory_current\":1894895616,\"memory_max\":2147483648,\"observed_at_ns\":1790998597164379930,\"oom_kill\":0,\"psi\":{\"full\":{\"avg10\":0.0,\"avg300\":0.0,\"avg60\":0.0,\"total\":464698.0},\"some\":{\"avg10\":0.0,\"avg300\":0.0,\"avg60\":0.0,\"total\":553205.0}},\"psi_error\":null,\"reason\":\"waiting_for_two_recovered_samples\",\"sample_id\":\"1037717093402095\",\"schema_version\":1,\"startup_reserve_bytes\":134217728,\"status\":\"pressured\"}",
+        "group": "issue:pi-glm-fast",
+        "waiting_for_resources": true
+      },
+      "pr:pi-glm-fast": {
+        "can_progress": true,
+        "error": null,
+        "group": "pr:pi-glm-fast",
+        "waiting_for_resources": false
+      }
+    },
+    "group_errors": {},
+    "errors": [],
+    "run_error": null,
+    "workspace_error": null,
+    "evidence_root": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/overnight-20261003/stage-a2/experiment/attempts/attempt-07031e32569a13d9886ca629/monitor/20261003T033800.521093Z/8a282da5502e"
+  },
+  "scope": "read-only decoding of saved producer observation; no collection, platform request, classification or control"
+}

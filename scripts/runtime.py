@@ -18,6 +18,30 @@ from lab.assets import asset_inventory
 from lab.docker_endpoint import freeze as freeze_docker, environment as docker_environment, confirm as confirm_docker
 
 
+def workssd_path(path):
+    """Reject a system-disk alias before a producer creates any project files."""
+    path = Path(path).expanduser().resolve()
+    volume = Path('/Volumes/WorkSSD').resolve(strict=True)
+    parent = path
+    while not parent.exists():
+        parent = parent.parent
+    if not path.is_relative_to(volume) or parent.stat().st_dev != volume.stat().st_dev:
+        raise ValueError(f'project output must physically reside on WorkSSD: {path}')
+    return path
+
+def production_environment(cache):
+    cache = workssd_path(cache)
+    locations = {'TMPDIR': 'tmp', 'XDG_CACHE_HOME': 'xdg', 'UV_CACHE_DIR': 'uv',
+                 'PIP_CACHE_DIR': 'pip', 'npm_config_cache': 'npm',
+                 'CARGO_HOME': 'cargo', 'CARGO_TARGET_DIR': 'target',
+                 'ZIG_LOCAL_CACHE_DIR': 'zig/local', 'ZIG_GLOBAL_CACHE_DIR': 'zig/global'}
+    env = dict(os.environ, PYTHONDONTWRITEBYTECODE='1', COPYFILE_DISABLE='1')
+    for key, name in locations.items():
+        directory = cache/name
+        directory.mkdir(parents=True, exist_ok=True)
+        env[key] = str(directory)
+    return env
+
 def cache_path(lock_dir):
     lock = Path(lock_dir)/'package-lock.json'
     return Path.home()/'.cache/factory26'/('runtime-'+hashlib.sha256(lock.read_bytes()).hexdigest()[:16])
@@ -194,9 +218,10 @@ def host_lab(output, base_python, purpose):
         raise ValueError(f'host lab base Python is not executable: {base_python}')
     requirements = ROOT/'lab/requirements.txt'
     output.parent.mkdir(parents=True, exist_ok=True)
-    subprocess.run(['uv', 'venv', '--python', str(base_python), str(output)], check=True)
+    environment=production_environment(output.parent/'.producer-cache')
+    subprocess.run(['uv', 'venv', '--python', str(base_python), str(output)], check=True,env=environment)
     launcher = output/('Scripts/python.exe' if os.name == 'nt' else 'bin/python')
-    subprocess.run(['uv', 'pip', 'install', '--python', str(launcher), '-r', str(requirements)], check=True)
+    subprocess.run(['uv', 'pip', 'install', '--python', str(launcher), '-r', str(requirements)], check=True,env=environment)
     packages = sorted(subprocess.check_output(
         ['uv', 'pip', 'freeze', '--python', str(launcher)], text=True).splitlines())
     version = subprocess.check_output(
@@ -220,13 +245,13 @@ def plan_host_runtime(base_python):
         raise ValueError('runtime producer 需要明确解释器文件')
     dependencies = {'interpreter': hashlib.sha256(base_python.read_bytes()).hexdigest(),
                     'requirements': hashlib.sha256((ROOT/'lab/requirements.txt').read_bytes()).hexdigest(),
-                    'builder': hashlib.sha256(Path(__file__).read_bytes()).hexdigest(),
+                    'producer': hashlib.sha256(''.join(__import__('inspect').getsource(function) for function in (host_lab,production_environment,workssd_path)).encode()).hexdigest(),
                     'platform': platform.system(), 'architecture': platform.machine()}
     return {'kind': 'factory26.exp.runtime-plan', 'schema_version': 1, 'dependencies': dependencies,
             'key': hashlib.sha256(json.dumps(dependencies, sort_keys=True).encode()).hexdigest()}
 
 
-def ensure_host_runtime(cache_root, base_python, purpose, expected_dependencies=None):
+def ensure_host_runtime(cache_root, base_python, purpose, expected_dependencies=None, *, verification_window=None):
     """Controller and runner bind separate receipts to one verified physical venv."""
     import fcntl
     if purpose not in {'controller', 'runner'}:
@@ -245,8 +270,11 @@ def ensure_host_runtime(cache_root, base_python, purpose, expected_dependencies=
         else:
             receipt = root/'asset.json'
         value = json.loads(receipt.read_text())
-        if value['identity'] != asset_inventory(root):
-            raise ValueError('共享 runtime 已被修改；不覆盖原环境')
+        readback=(str(root.resolve()),json.dumps(value['identity'],sort_keys=True))
+        if verification_window is None or readback not in verification_window:
+            if value['identity'] != asset_inventory(root):
+                raise ValueError('共享 runtime 已被修改；不覆盖原环境')
+            if verification_window is not None: verification_window.add(readback)
         if plan_host_runtime(base_python)['dependencies'] != plan['dependencies']:
             raise ValueError('runtime 构建期间依赖发生变化')
         value.update(purpose=purpose, dependencies=plan['dependencies'])

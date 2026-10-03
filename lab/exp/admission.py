@@ -10,9 +10,10 @@ import time
 
 from .core import Blocked, atomic, canonical, digest, identifier, read, record, require, process_state, error
 from lab.docker_endpoint import confirm, execute
+from .state import TRANSITIONS
 
 # The helper runs in the selected daemon, with the same volume on every control host.
-HELPER = r'''
+HELPER = TRANSITIONS + r'''
 import fcntl,json,os,sys,time
 from pathlib import Path
 root=Path('/authority'); payload=json.loads(sys.argv[1]); action=payload['operation']; now=time.time()
@@ -32,7 +33,7 @@ def selection(value):
             'resource':value['resources'].get(rid) if rid else None,
             'effect':value['requests'].get(request) if request else None,
             'resources':value['resources'] if not rid else None,
-            'workspace':value['workspaces'].get(value['resources'].get(rid,{}).get('workspace')) if rid else None,'observed_at':now}
+            'workspace':value['workspaces'].get(payload.get('workspace') or value['resources'].get(rid,{}).get('workspace')) if (rid or payload.get('workspace')) else None,'observed_at':now}
 if action=='query':
     print(json.dumps(selection(load())));sys.exit(0)
 with (root/'registry.lock').open('a') as lock:
@@ -67,6 +68,9 @@ with (root/'registry.lock').open('a') as lock:
         else: raise RuntimeError('unsupported maintenance transition')
         effect={'kind':'factory26.exp.domain-maintenance','schema_version':1,'request_id':request,'mode':mode,'parameters_sha256':payload['parameters_sha256'],'coverage_epoch':value['coverage_epoch'],'evidence':payload.get('evidence'),'status':'applied','observed_at':now}
         value['requests'][request]=effect;save(value);print(json.dumps(effect));sys.exit(0)
+    if action=='state':
+        effect=transition(value,payload['workspace'],payload['action'],payload['request_id'],payload['parameters'],now)
+        save(value);print(json.dumps(effect));sys.exit(0)
     rid=payload['resource_id']; request=payload['request_id']; parameters=payload.get('parameters',{})
     previous=value['requests'].get(request)
     if previous and (previous['resource_id']!=rid or previous['action']!=payload['action'] or previous['parameters_sha256']!=payload['parameters_sha256']):
@@ -75,7 +79,7 @@ with (root/'registry.lock').open('a') as lock:
     if action=='begin':
         if previous:
             print(json.dumps(selection(value)));sys.exit(0)
-        if value['maintenance'] and payload['action'] not in ('stop','writer-close','capture-end','release'): raise RuntimeError('domain maintenance blocks new creation/start/writers')
+        if value['maintenance'] and payload['action'] not in ('stop','writer-close','capture-end','release','cancel-reservation','discard'): raise RuntimeError('domain maintenance blocks new creation/start/writers')
         expected=payload.get('expected')
         if expected and (not row or expected['generation']!=row['generation'] or expected['version']!=row['version'] or expected['coverage_epoch']!=value['coverage_epoch']):
             raise RuntimeError('resource observation expired')
@@ -86,23 +90,39 @@ with (root/'registry.lock').open('a') as lock:
             role=parameters.get('role','execution')
             if role=='execution' and len(active)>=value['slots']: raise RuntimeError('capacity exhausted, unknown reservations retained')
             if role not in ('execution','copy','query','accessor','build'): raise RuntimeError('unsupported resource role')
-            row={'resource_id':rid,'generation':request,'version':0,'phase':'reserved','role':role,'owner':payload['owner'],'pending':None,'identity':None,'workspace':parameters.get('workspace')}
+            row={'resource_id':rid,'generation':request,'version':0,'phase':'reserved','role':role,'owner':payload['owner'],'pending':None,'identity':None,'workspace':parameters.get('workspace'),'writer_parent':parameters.get('writer_parent'),'holder_generation':parameters.get('holder_generation'),'state_access':parameters.get('state_access'),'capture_owner':parameters.get('capture_owner'),'capture_token':parameters.get('capture_token'),'parent_execution_resource':parameters.get('parent_execution_resource'),'preparation_request':parameters.get('preparation_request')}
             value['resources'][rid]=row
         elif not row: raise RuntimeError('resource has no reservation')
         if row['phase']=='released': raise RuntimeError('released execution cannot restart; new resource requires new admission')
         if row['pending']: raise RuntimeError('unresolved physical action blocks another transition')
-        if verb not in ('reserve','volume-create','create','start','stop','pause','resume','release','writer-open','writer-close','capture-begin','capture-end'):
+        if verb not in ('reserve','volume-create','create','start','stop','pause','resume','release','writer-open','writer-close','capture-begin','capture-end','cancel-reservation','discard'):
             raise RuntimeError('unsupported managed action')
+        if verb=='cancel-reservation' and (row['phase']!='reserved' or row['identity'] or row.get('workspace') and rid in value['workspaces'].get(row['workspace'],{}).get('writers',[])):
+            raise RuntimeError('reservation cancellation requires no accepted creation or writer responsibility')
+        if verb=='discard':
+            identity=row.get('identity') or {}
+            if row['phase']!='materialized' or not identity or identity.get('started_at') and not identity['started_at'].startswith('0001-') or identity.get('state',{}).get('Status')!='created':
+                raise RuntimeError('discard only accepts the exact never-started created object')
+            if row.get('workspace') and rid in value['workspaces'].get(row['workspace'],{}).get('writers',[]):raise RuntimeError('discard must close writer responsibility first')
         if verb=='create' and row['identity']: raise RuntimeError('resource already materialized')
         if verb=='start' and (not row['identity'] or row['identity'].get('started_at') and not row['identity']['started_at'].startswith('0001-')):
             raise RuntimeError('execution start is single-use; terminal restart forbidden')
         workspace=row.get('workspace')
+        holder=value['workspaces'].get(workspace,{}).get('holder') if workspace else None
+        if holder and verb in ('start','resume','writer-open'):
+            parent=row.get('writer_parent')
+            readonly=(row.get('state_access') in ('readonly','repair') and holder.get('capture') and row.get('capture_owner')==holder['capture']['owner'] and row.get('capture_token')==holder['capture']['token'] and verb=='start' and (row.get('state_access')!='repair' or holder['phase']=='repairing'))
+            allowed=holder['writer'] and (holder['writer']['resource_id']==rid or (parent in value['workspaces'][workspace]['writers'] and row.get('holder_generation')==holder['generation']))
+            if not readonly and (holder['phase']!='writable' or not allowed):
+                raise RuntimeError('resource has no exclusive state writer permission')
         if verb=='release' and workspace:
             writers=value['workspaces'].get(workspace,{'writers':[],'capture':None})
             if rid in writers['writers'] or writers['capture']==rid: raise RuntimeError('writer/capture responsibility must close before resource release')
         if verb in ('writer-open','capture-begin','capture-end','writer-close'):
             if not workspace: raise RuntimeError('writer action requires explicit workspace')
             writers=value['workspaces'].setdefault(workspace,{'writers':[],'capture':None})
+            if verb=='capture-end' and writers['capture']!=rid: raise RuntimeError('capture owner changed')
+            if holder and verb in ('capture-begin','capture-end'): raise RuntimeError('holder capture uses managed state lease actions')
             if verb=='writer-open' and writers['capture']: raise RuntimeError('workspace capture rejects new writers')
             if verb=='capture-begin' and (writers['capture'] or writers['writers']): raise RuntimeError('workspace still has writers/capture')
             if verb=='writer-open' and rid not in writers['writers']: writers['writers'].append(rid)
@@ -117,6 +137,12 @@ with (root/'registry.lock').open('a') as lock:
             print(json.dumps(selection(value)));sys.exit(0)
         if row['pending']!=request: raise RuntimeError('pending action identity changed')
         physical=payload.get('physical'); verb=previous['action']
+        if verb=='cancel-reservation':
+            if row['identity'] or payload.get('result',{}).get('no_execution_accepted') is not True:raise RuntimeError('reservation cancellation effect unresolved')
+            row['phase']='released';row['cancelled_reservation']={'request_id':request,'result':payload['result']}
+        if verb=='discard':
+            if not physical or not physical.get('removed') or physical.get('birth')!=row['identity'] or not physical.get('absence'):raise RuntimeError('discard requires exact birth and retained independent absence')
+            row['phase']='released';row['disposal']=physical
         if verb=='volume-create':
             physical=payload.get('physical')
             if not physical or not physical.get('Name') or not physical.get('Labels'): raise RuntimeError('volume materialization requires asset readback')
@@ -289,12 +315,9 @@ def _target(target):
     return endpoint, {'daemon_id': endpoint['daemon_id'], 'protocol': 2, 'handoff_sha256': canonical(handoff) if handoff is not None else None, 'slots': target['slots']}
 
 
-def _helper(target, payload, *, readonly=False):
+def volume_identity(target, asset):
+    """Read the same protocol binding for admission and doctor without a second rule set."""
     endpoint, identity = _target(target)
-    confirm(endpoint)
-    volume = target['admission_volume']
-    raw = execute(endpoint, ['volume', 'inspect', volume], check=True, capture_output=True, text=True, timeout=30)
-    asset = json.loads(raw.stdout)[0]
     if asset.get('Driver') != 'local' or asset.get('Options') or not asset.get('Mountpoint'):
         raise Blocked('domain query requires supported Linux local-volume without driver options')
     labels = asset.get('Labels') or {}
@@ -304,6 +327,16 @@ def _helper(target, payload, *, readonly=False):
     if not handoff_digest or identity['handoff_sha256'] and identity['handoff_sha256'] != handoff_digest:
         raise Blocked('domain handoff asset binding differs or is missing')
     identity['handoff_sha256'] = handoff_digest
+    return identity
+
+
+def _helper(target, payload, *, readonly=False):
+    endpoint, identity = _target(target)
+    confirm(endpoint)
+    volume = target['admission_volume']
+    raw = execute(endpoint, ['volume', 'inspect', volume], check=True, capture_output=True, text=True, timeout=30)
+    asset = json.loads(raw.stdout)[0]
+    identity = volume_identity(target, asset)
     owner_id = canonical([payload, time.time_ns()])[:24]
     args = ['create', '--user', '0', '--restart', 'no', '--network', 'none', '--memory', '128m', '--pids-limit', '32',
             '--label', 'io.factory26.exp.role=query', '--label', 'io.factory26.exp.query-owner=' + owner_id, '--mount',
@@ -398,3 +431,12 @@ def maintenance(target, request_id, mode, evidence=None):
 def authority(target, action='snapshot', **fields):
     """The old reserve/launch/bind writer is unavailable under the new domain protocol."""
     raise Blocked('domain protocol 2 requires query/action/complete; legacy execution uses its frozen executor')
+
+
+def state_query(target, workspace):
+    return _helper(target, {'operation': 'query', 'workspace': workspace}, readonly=True)['workspace']
+
+
+def state_action(target, workspace, action, request_id, parameters):
+    return _helper(target, {'operation': 'state', 'workspace': workspace, 'action': action,
+                           'request_id': request_id, 'parameters': parameters})

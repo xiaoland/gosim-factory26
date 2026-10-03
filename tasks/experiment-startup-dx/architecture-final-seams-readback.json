@@ -1,0 +1,40 @@
+{
+  "kind": "factory26.source-compilation-readback",
+  "observed_at": "2026-10-03T04:19:46.287235+00:00",
+  "sources": [
+    {
+      "path": "lab/arc_bench/docker_workspace.py",
+      "sha256": "69e2b29124cf7be64ff5935960355f3258a7ea4210ac9db7d32d99d58c8300da",
+      "compile": "passed"
+    },
+    {
+      "path": "lab/arc_bench/arc_bench_adapter.py",
+      "sha256": "eb31193a39bb063cb15290b4a37c7e9b32a0bea70dd0c7fc386ecf0a0edc8c20",
+      "compile": "passed"
+    },
+    {
+      "path": "scripts/execution_bootstrap.py",
+      "sha256": "01621d450163b8578bf97997c235d53bc38ea73229a6b44afc000380bdb053ed",
+      "compile": "passed"
+    },
+    {
+      "path": "scripts/package_agent.py",
+      "sha256": "47f97acc69710b3c6e94b8a5b3f47a21596498521efe1bf448a1f644446e8f41",
+      "compile": "passed"
+    },
+    {
+      "path": "lab/exp/definitions.py",
+      "sha256": "939082a965f8e0dc8687b17a41a3a2d3fdc48952f9cd018dc8935c98b6892979",
+      "compile": "passed"
+    }
+  ],
+  "bytecode_written": false,
+  "actions_not_performed": [
+    "Docker",
+    "SDK generation",
+    "model call",
+    "network",
+    "infrastructure tests"
+  ],
+  "scope": "Final SDK verified-source publication/reception reentry and frozen component production corrections; source compile only, no execution/performance claim"
+}

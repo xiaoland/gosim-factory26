@@ -62,6 +62,15 @@ def read(root):
     return record
 
 
+def local_state_access(run):
+    """Local live access has no holder adapter; managed state stays explicitly closed."""
+    layout = Path(run['state']).parent / 'harness-layout.json'
+    if layout.is_file():
+        value = json.loads(layout.read_text())
+        if value.get('state_holder'):
+            raise ValueError('受管 Local state 尚无 Console 写者登记入口；请将不可变 snapshot 登记为 archive')
+
+
 def live_error(run):
     """A missing live dependency disables that run, without hiding the service Home."""
     try:
@@ -78,9 +87,11 @@ def live_error(run):
                 docker_runtime.readonly_paths(run["docker"])
             else:
                 docker_paths(run, run["service_id"])
-        elif not (Path(run["state"]) / "braid.sqlite3").is_file():
+        else:
+            local_state_access(run)
+        if not run.get('docker') and not (Path(run["state"]) / "braid.sqlite3").is_file():
             raise ValueError(f"state 缺少数据库：{run['state']}")
-        elif not run.get("workspace") or not Path(run["workspace"]).is_dir():
+        elif not run.get('docker') and (not run.get("workspace") or not Path(run["workspace"]).is_dir()):
             raise ValueError(f"workspace 不可达：{run['workspace']}")
     except (OSError, ValueError, RuntimeError, KeyError) as error:
         return f"{type(error).__name__}: {error}"
@@ -186,6 +197,7 @@ def registrations(destination, entries, service_id):
                 config["access_owner"] = "console"
                 run["docker"] = config
                 docker_runtime.execution_binding(config)
+                docker_runtime.attach(config, "console-attach-" + service_id + "-" + run["id"])
                 docker_paths(run, service_id)
         else:
             raise ValueError("每项 mode 必须是 live 或 archive")
@@ -249,7 +261,7 @@ def docker_paths(run, service_id):
     config, value = access({"service_id": service_id}, run)
     if not value["state"]["Running"] or value["state"]["Paused"]:
         raise ValueError("CLI 访问容器需要运行且未暂停")
-    docker_runtime.access_control(config, 'query', 'console-query-' + uuid.uuid4().hex)
+    docker_runtime.live_access(config)
     workspaces = [mount["destination"] for mount in config["mounts"] if mount["source"] == run["workspace"]]
     if not workspaces:
         raise ValueError("Docker mounts 未声明 workspace 宿主根")

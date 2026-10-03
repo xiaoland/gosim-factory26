@@ -1,37 +1,24 @@
 # 实验基础设施入口
 
-新实验入口是 lab.exp。它负责编译显式 intent、只读 readiness、冻结 build、派发与控制 attempt、恢复和 status/monitor 投影。ARC 官方 Runner 与官网证据由 lab.arc_bench 适配；资源压力和原生执行约束见 [runtime-resources](../docs/product-tdd/runtime-resources.md)。
+新实验使用 schema 3 和 explicit-request-v1。定义不产生执行：build 必须选一个 job，start 必须选 job 和稳定 request-id，每个请求最多绑定一个 attempt。未请求 job、发布的输出、剩余预算和空闲容量不会触发派发、评价或重试。
 
-常用命令：
+```sh
+python3 -m lab compile INTENT --environment PROFILE --directory BUNDLE
+python3 -m lab doctor BUNDLE/recipe.json --job JOB
+python3 -m lab build BUNDLE/recipe.json --environment PROFILE --directory EXPERIMENT --job JOB
+python3 -m lab start EXPERIMENT --job JOB --request-id REQUEST --deployment PRIVATE_JSON
+python3 -m lab status EXPERIMENT
+```
 
-    python3 -m lab compile INTENT --environment PROFILE --directory BUNDLE
-    python3 -m lab doctor INPUT --environment PROFILE --json
-    python3 -m lab build INPUT --environment PROFILE --directory EXPERIMENT
-    python3 -m lab start EXPERIMENT --deployment PRIVATE_JSON
-    python3 -m lab status EXPERIMENT
-    python3 -m lab recover CHECKPOINT --intent INTENT --environment PROFILE --directory DERIVED
+默认 status/monitor 是状态文本；`--details` 展开完整诊断，`--json` 用于程序消费，两者互斥，不根据 TTY 自动切换。查询读取保存事实，不启动采集或执行。下一操作是建议及条件，不是授权。详细参数用 `python3 -m lab ACTION --help` 查询。
 
-其它动作及参数用 `python3 -m lab --help`、`python3 -m lab ACTION --help` 查询。控制、接续、来源导入的原件和重入条件归 [执行合同](exp/execution.md)，遥测和输运归 [制品合同](exp/artifacts.md)；`status` 建议不授予执行许可。
+| 要做什么 | 权威说明 |
+| --- | --- |
+| 定义目标、模型与明确政策；编译或构建一个目标 | [实验定义与编译](exp/experiments.md) |
+| 启动、等待、控制、读取一个或多个实验 | [执行与状态](exp/execution.md) |
+| 发布、保留、成员运输、遥测、checkpoint/prepare | [制品与恢复证据](exp/artifacts.md) |
+| 按职责找到实现 | [lab.exp 源码导航](exp/README.md) |
+| ARC 官方 SDK、平台与应用重放 | [ARC 适配](arc_bench/README.md) |
+| 选择恢复来源与当前合法操作 | [恢复入口](../docs/deployment/recovery.md) |
 
-交互查询先读默认的状态摘要；需要身份字段或自动消费时再用 `--json`，保存原件并定向提取相关字段。完整平台结果和历史列表不必每次铺入会话。
-
-路径约定：
-
-- experiments/ 保存 intent、recipe 和冻结 compilation bundle。
-- runs/ 保存 runtime 资产、执行计划、attempt、制品、遥测和回执。
-- 定义资产、派生输入和可写运行状态分开保存；重试创建新的 attempt。
-
-执行事实按 producer 和观察时间保留。入口结果、执行终态、archive、telemetry、transport 和平台 verdict 分别判断；unknown、身份冲突和 pending 不自动 retry。旧 plan/run/operation writer 已退役，旧记录只读查询，不翻译成新执行。
-
-源码导航：
-
-- [实验定义与编译](exp/experiments.md)：intent、environment、模型绑定和 readiness。
-- [执行与状态](exp/execution.md)：controller/runner、单项或多实验查询、控制和来源停止。
-- [制品与恢复材料](exp/artifacts.md)：发布、输运、遥测、checkpoint 与 prepared。
-- [lab.exp 源码定位](exp/README.md)：按职责找到实际模块。
-- [lab.arc_bench ARC 适配](arc_bench/README.md)：官方 Runner、平台状态、模型事实、结果和重放。
-- [跨组件技术说明](../docs/product-tdd/index.md)：职责、生命周期和身份约束。
-- [恢复手册](../docs/deployment/recovery.md)：操作门控和证据要求。
-- [存储生命周期](../tasks/experiment-storage-lifecycle/packet.md)：归档、保留和回收边界。
-
-不把本页当作字段表或运行状态数据库。具体 schema、CLI 参数和失败行为以对应源码及组件说明为准；源码或离线材料反馈也不等于模型、官网或跨环境生命周期验收。
+定义位于 experiments/，执行材料和原件位于 WorkSSD 的 runs/。执行终态、服务、输出封口、输运和平台评分分别判断；unknown/pending 不自动 retry。旧 schema1/2 writer 退役，原记录及控制沿冻结 executor，不能翻译为新保证。跨组件约束归[技术说明](../docs/product-tdd/index.md)，当前任务及未验收项归[任务入口](../docs/work-index.md)。

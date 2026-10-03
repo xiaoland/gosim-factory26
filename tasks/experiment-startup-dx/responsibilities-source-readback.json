@@ -1,0 +1,270 @@
+{
+  "kind": "source-compilation-readback",
+  "captured_at": 1791010455.4952152,
+  "branch": "feat/experiment-startup-dx",
+  "base": "d4ac01ddeefe3864544ca31e523bbba13ffb04e3",
+  "method": "in-memory Python compilation and JSON reading; no infrastructure tests",
+  "compiled_python_sources": 41,
+  "sources": [
+    {
+      "path": "CONTRIBUTING.md",
+      "sha256": "70b32523bbd2140e204a6a304314c9237c36ac0512e1d01f2324057071ee0ec2"
+    },
+    {
+      "path": "braid-console/docker_runtime.py",
+      "sha256": "7507d4f988f25fa718a8d08967a34e6133fa69026b8c072523120c07e04c5dd9"
+    },
+    {
+      "path": "braid-console/service.py",
+      "sha256": "a789983b2571180fc194ad14a3654b1dcd8790662758412693353f634243c3f9"
+    },
+    {
+      "path": "docs/deployment/evidence.md",
+      "sha256": "8c07df3d20d22a451818084a7b687e0705f7cd130016c1dcc5ca1bb328d13375"
+    },
+    {
+      "path": "docs/deployment/index.md",
+      "sha256": "d5d2c778c187cd9d78abf2cbf6bb06aa001df0f3c664cd99974f33d3ef255b00"
+    },
+    {
+      "path": "docs/deployment/local-experiments.md",
+      "sha256": "f0f4bb2c1835d9334cd9f0726b2cc52492a48171cdea6e2c36874c835a3c4ac5"
+    },
+    {
+      "path": "docs/deployment/recovery.md",
+      "sha256": "a6586401569c31115ef468671fe0266013eb592f640cb2acb1be1a686603ac64"
+    },
+    {
+      "path": "docs/product-tdd/index.md",
+      "sha256": "c3650cbf12057fe9f2bdad93f25de6addfbc8cf36a00944b7d44c30948fb3e5a"
+    },
+    {
+      "path": "experiments/hackathon-local/README.md",
+      "sha256": "ddf79b5f942d12e90530aa3d129cd47e143cb07d43aa17c1192c19d995aca926"
+    },
+    {
+      "path": "lab/README.md",
+      "sha256": "35d3896c4482541dc84eb9bf993cdd7fc90f864d7c1985ae733ffac9057b7fdc"
+    },
+    {
+      "path": "lab/arc_bench/arc_bench_adapter.py",
+      "sha256": "f30e4761d69fc8ba89ce06fce9ae1099de7c963b885def6af276da6e3696c711"
+    },
+    {
+      "path": "lab/arc_bench/docker_workspace.py",
+      "sha256": "e648684eab7d16ff96c77aa70e27e5dcfe274babfc85a68b9b7503413717b941"
+    },
+    {
+      "path": "lab/arc_bench/local_job.py",
+      "sha256": "2d29f90da12215116366ba643942d72a52222b98278ddde397965a738fba26dc"
+    },
+    {
+      "path": "lab/arc_bench/score_evidence.py",
+      "sha256": "2156a13b7cb81f21071c464da09d6bfc57a2426b1ff52b577131c2a1c556fd8c"
+    },
+    {
+      "path": "lab/exp/__main__.py",
+      "sha256": "d00d9cc5c3a7653dfc738420cd7fdeac5bef3f01aa0a03f5395c715f10f308d9"
+    },
+    {
+      "path": "lab/exp/artifacts.py",
+      "sha256": "f43caf24e4adc11d4b042597d83dcc073343df7bfe6cd99d96a9c4b5ae8d1b3d"
+    },
+    {
+      "path": "lab/exp/assembly.py",
+      "sha256": "afd32a2964b56ed7ea04a89f199347743b2d11c8cd136358f704f0c4016c39fc"
+    },
+    {
+      "path": "lab/exp/backends.py",
+      "sha256": "b77d632b473a0ecba44cf5db2779f44d1d8f8707f00a41c6dc89e2f46b854f93"
+    },
+    {
+      "path": "lab/exp/compiler.py",
+      "sha256": "b1a952b6bf741e3a9ded5dc79d948c137610f2390ca4da1e13103f774022a6ed"
+    },
+    {
+      "path": "lab/exp/controller.py",
+      "sha256": "500e088a68dd624892fa881090b373fbba7bdc2482a6778870e1ab8c29fca480"
+    },
+    {
+      "path": "lab/exp/core.py",
+      "sha256": "00f0b3bfdfcc7e94b0bddf741c4224efc7b7fa0c4ba5ae4099d459a8cbbcffe9"
+    },
+    {
+      "path": "lab/exp/definitions.py",
+      "sha256": "b795059066198b092dc96021356a258a9e6e27e01a77b278cc300fbb4db276ee"
+    },
+    {
+      "path": "lab/exp/delivery.py",
+      "sha256": "7f9dfe72407aa50d21590db99e6c0030519b5eebfc5664949d2b4c77c12b5497"
+    },
+    {
+      "path": "lab/exp/environment.py",
+      "sha256": "0ad2c1ddd4e4f360f848d9e2b0b15ea310d47e88a9115edb3db7e4f25aefeee7"
+    },
+    {
+      "path": "lab/exp/hosted.py",
+      "sha256": "a3864d16ff138ab65fff6421a6a04d097e67f6bbe3ce90ab12d4c3e0a821d40d"
+    },
+    {
+      "path": "lab/exp/projection.py",
+      "sha256": "32277a9444b61b4cd80feb529cde07c1c1e5a11f829af6210264aebb4291a76a"
+    },
+    {
+      "path": "lab/exp/readiness.py",
+      "sha256": "8513872004498bb6bb145f494cc0a11c36cb9d60c2f783e7f4dc6713776838f5"
+    },
+    {
+      "path": "lab/exp/runner.py",
+      "sha256": "bfb26a5d1fd6e275e2fba6bc68bf4a7503aff57ab921485d0287cb675c38c0bc"
+    },
+    {
+      "path": "lab/exp/state.py",
+      "sha256": "ade1c57861e66f684a62615d833c93ea777882d539ed529cbbbb5d925f86db31"
+    },
+    {
+      "path": "scripts/agent_support.py",
+      "sha256": "b14817dd991eed6855b19acb2295389e6686e54da01a5990e6d7b5f397a16721"
+    },
+    {
+      "path": "scripts/execution_bootstrap.py",
+      "sha256": "a5f9ebcb092597c63b668517e795969f0f9ffe08364f89e49d5c454e8d552f44"
+    },
+    {
+      "path": "scripts/execution_context.py",
+      "sha256": "cf956e04d0a844ee7b59a3a1a120dba3246064bec20f90760f70695c5c5f9a16"
+    },
+    {
+      "path": "scripts/experiment_entry.py",
+      "sha256": "957f7029a62bee502d206daf52cf6441d3a7346b1467599a49f9d4428948ae5b"
+    },
+    {
+      "path": "scripts/model_gateway_service.py",
+      "sha256": "6d7a751360315110734052c4a46097e7154eee20425850cabc3df69e8217232d"
+    },
+    {
+      "path": "scripts/package_agent.py",
+      "sha256": "e62bdd99440f72193e45836c20dbeb06e0a0cd5c358352feeed7267c92575c71"
+    },
+    {
+      "path": "scripts/runtime.py",
+      "sha256": "1fff2268eb500a40d4b38605103797d9123000992453e316622fee139ba7f9b0"
+    },
+    {
+      "path": "submission/exp_checkpoint.py",
+      "sha256": "95a6db4f3e5f38098797e062900e6d0409bb82e237fd484c68a461dc2aecb4f0"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/packet.md",
+      "sha256": "5b88754be9b88cc13d0b7ec93e087ae636fd0da622e2d88440359ef510b3a15c"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/responsibilities-advisor-review.md",
+      "sha256": "f7dedad734177ccce95bb8d74c3e583c73e6c3d4bdd183d93c85f2cd4f5e2640"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/responsibilities-design.md",
+      "sha256": "5190b5e6a6f6026c9af47c8c8712692c5cae240618caf2e4c8084450d4bc2ca8"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/responsibilities-execution-compile.json",
+      "sha256": "fd661f15ca14a7780ad2ba9eaa8cd507ddb2efcda1b96c3983f6fe2b8599b3ac"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/responsibilities-execution-review.md",
+      "sha256": "87524cf88d1e1711261b11487c0fd51c8f13c9b3a89e690ea5d6341b895b8edf"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/responsibilities-implementation.md",
+      "sha256": "32978dced79d95025d14a00731404cf07a2ac0e498bc1986b97e9abe43116a55"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/responsibilities-production-implementation.md",
+      "sha256": "8180b7b436b8982e64f773e011483770277a7fc85288644212e0cbcd4cb377ba"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/responsibilities-production-review.md",
+      "sha256": "6408446f90ef760ca8d575cbe74067633091cfb146a7d120ed0614be9a9d1887"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/responsibilities-projection-review.md",
+      "sha256": "c2c7c8163a019c1f9e9330a4a8e9f98265b86e261dd0b8edad3b7bd02cc9125f"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/responsibilities-review-readback.json",
+      "sha256": "9ba1021a4e1d3b57c2744a9581ab005c6a18715d2c0841a47c3fafad4dfbb12c"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/scheduling-review-readback.json",
+      "sha256": "61d9e848923204283f6cee3dcf3435553a91accd7d59416c848da055b5c1b34f"
+    },
+    {
+      "path": "tasks/experiment-startup-dx/scheduling-review.md",
+      "sha256": "a6d50c519fa367c28462fb6b5735c382c00d7191e63e7ff3ba5473bfa0eafa62"
+    },
+    {
+      "path": "variants/pi-braid-i14-cleaner/build.py",
+      "sha256": "0f0819d18e0ca4d8c13ab1ac1ed3814d2431db91ed2ed976ec3a9862a7a3e602"
+    },
+    {
+      "path": "variants/pi-braid-i14-cleaner/main.py",
+      "sha256": "00f4feba446386f4667953813d5df6916d060f0d695de07ff5a05b0275496d24"
+    },
+    {
+      "path": "variants/pi-braid-i14-cleaner/materials.json",
+      "sha256": "5bb326c78ae96e7e41df602498e25aa67af558e8b1857148877dfac6f428c244"
+    },
+    {
+      "path": "variants/pi-braid-i14-cleaner/run.py",
+      "sha256": "61a3ddb929ab0f2268145c37193a63db4c5d837d32b617d424ae773bdb3d714f"
+    },
+    {
+      "path": "variants/pi-braid-i14-e2e/build.py",
+      "sha256": "0f0819d18e0ca4d8c13ab1ac1ed3814d2431db91ed2ed976ec3a9862a7a3e602"
+    },
+    {
+      "path": "variants/pi-braid-i14-e2e/main.py",
+      "sha256": "00f4feba446386f4667953813d5df6916d060f0d695de07ff5a05b0275496d24"
+    },
+    {
+      "path": "variants/pi-braid-i14-e2e/materials.json",
+      "sha256": "8203931c658b643d8a3ae9e1f530a3b5a56c9d9e417112ad707928c2cda50d8f"
+    },
+    {
+      "path": "variants/pi-braid-i14-e2e/run.py",
+      "sha256": "9dd9eca04a52c0086d74d422c335cada3041a7e51087b65b19114394c076a50c"
+    },
+    {
+      "path": "variants/pi-braid-i14-reviewer/build.py",
+      "sha256": "0f0819d18e0ca4d8c13ab1ac1ed3814d2431db91ed2ed976ec3a9862a7a3e602"
+    },
+    {
+      "path": "variants/pi-braid-i14-reviewer/main.py",
+      "sha256": "00f4feba446386f4667953813d5df6916d060f0d695de07ff5a05b0275496d24"
+    },
+    {
+      "path": "variants/pi-braid-i14-reviewer/materials.json",
+      "sha256": "31e28f68c0b2a28979b4773c0a99146802302e418f24536f622cabe1fffd383a"
+    },
+    {
+      "path": "variants/pi-braid-i14-reviewer/run.py",
+      "sha256": "7832972a068a6ba9c055a5a97f0a55878e4e47e82e8d9b1a3d19ab9cdb537886"
+    },
+    {
+      "path": "variants/pi-braid-i14/build.py",
+      "sha256": "0f0819d18e0ca4d8c13ab1ac1ed3814d2431db91ed2ed976ec3a9862a7a3e602"
+    },
+    {
+      "path": "variants/pi-braid-i14/main.py",
+      "sha256": "00f4feba446386f4667953813d5df6916d060f0d695de07ff5a05b0275496d24"
+    },
+    {
+      "path": "variants/pi-braid-i14/materials.json",
+      "sha256": "5bb326c78ae96e7e41df602498e25aa67af558e8b1857148877dfac6f428c244"
+    },
+    {
+      "path": "variants/pi-braid-i14/run.py",
+      "sha256": "19899e8c70c1f2a0324947d7cb46b9c21a8e910ac3005087d2a592ff2012872a"
+    }
+  ]
+}

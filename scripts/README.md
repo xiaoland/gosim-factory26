@@ -1,12 +1,12 @@
 # 公共运行支持与构建入口
 
-本目录处理工具资源、文件与进程、打包和模型网关；variant 自己维护生成与协作流程，Lab 持有实验编排。命令从仓库根执行，参数的完整定义用对应 `--help` 查询。
+本目录处理工具资源、文件与进程、打包和模型网关；variant 自己维护生成与协作流程，Lab 持有显式实验请求。命令从仓库根执行，参数的完整定义用对应 `--help` 查询。
 
 | 要修改什么 | 源码与说明 |
 | --- | --- |
 | 本机工具、Linux runtime、开发 SVC 或 host-exp runtime | [runtime.py](runtime.py)；生产 cache 与临时目录由 `production_environment` 设置。 |
-| Variant 材料选择与目录/ZIP 封装 | [package_agent.py](package_agent.py)调用各 variant 的 `build.py`。 |
-| 原生材料、技能复制与生成支撑 | [agent_support.py](agent_support.py)、[braid_runtime.py](braid_runtime.py)、[harness_layout.py](harness_layout.py)。 |
+| Variant 材料选择与目录/ZIP 封装 | [package_agent.py](package_agent.py)消费 I14 的 `materials.json`；`build.py` 只转交参数。 |
+| 原生材料、技能链接与生成支撑 | [agent_support.py](agent_support.py)、[braid_runtime.py](braid_runtime.py)、[harness_layout.py](harness_layout.py)。 |
 | 运行资源准入与实际进程管理 | [runtime_resources.py](runtime_resources.py)；跨组件约定见[资源说明](../docs/product-tdd/runtime-resources.md)。 |
 | 模型路由、兼容接口和预算 | [hackathon_gateway.py](hackathon_gateway.py)、[hackathon_gateway_compat.py](hackathon_gateway_compat.py)、[responses_compat.py](responses_compat.py)、[model_budget.mjs](model_budget.mjs)。公开路由定义归 [harness/model-gateway.json](../harness/model-gateway.json)，凭据只由实际私有 deployment 注入。 |
 | 外部独立源码的工作树交接 | [sources.py](sources.py)；本仓 `sources/` 已由父仓库跟踪，不用该命令重复导出。 |
@@ -96,12 +96,12 @@ Linux runtime 可单独构建；下例团队资源包含 Braid，raw 资源省�
 ```sh
 python3 scripts/runtime.py linux --backend pi \
   --braid-source sources/braid --output runs/runtime-team
-python3 scripts/package_agent.py --variant pi-braid-i13 \
-  --runtime runs/runtime-team --stage runs/staged-i13
+python3 scripts/package_agent.py --variant pi-braid-i14 \
+  --runtime runs/runtime-team --stage runs/staged-i14
 ```
 
-官方 Runner 的 `--agent` 接受已展开目录，局部验证不必压 ZIP。
-要冻结参赛包，将上述 `--stage` 换成 `--output runs/packages/pi-braid-i13.zip`；同一源码、材料与资源参与两种封装。
+新 SDK 目录是薄入口，需由 Lab 对实际子域安装并绑定只读定义组件；单独复制目录不能满足运行合同。Hosted ZIP 才是自包含交付，二者各自只采用一种满足方式。
+要冻结参赛包，将上述 `--stage` 换成 `--output runs/packages/pi-braid-i14.zip`；同一源码、材料与资源参与两种封装。
 已有输出不覆盖。打包器在写入 ZIP 的同一次文件读取中计算内容摘要，清单对应实际写入字节，保留原压缩策略。文件内容、权限与来源关系不变，封装方式变化会改变包的 SHA，须发布为新制品。
 
 raw 打包可直接使用 `package_raw_core.py --runtime <runtime目录>`，不要求先创建团队 ZIP；`--source <历史ZIP>` 只保留为旧资源的读取方式。
@@ -112,3 +112,15 @@ raw 打包可直接使用 `package_raw_core.py --runtime <runtime目录>`，不�
 纯指令、角色与 skill 变化只重新装配文件，不重新安装 npm、Chrome 或 Runner。
 更换真实运行依赖才重建对应资源。
 Cargo/npm/Docker 负责增量复用，不另建通用构建系统。
+
+## I14 源码装配
+
+Variant main/run 要求 ready context，公共源码入口负责创建本地装配与服务，不让开发者填写内部 JSON：
+
+```sh
+python3 -B scripts/experiment_entry.py --source variants/pi-braid-i14 \
+  --runtime "$RUNTIME" --skills harness/skills "$REQUIREMENTS" \
+  --output-dir runs/source-generation --prepare-only
+```
+
+RUNTIME 和 REQUIREMENTS 必须是明确真实输入，输出、日志和临时文件均在 WorkSSD。e2e 还需 `--e2e-runtime`。去掉 prepare-only 会请求实际生成，须有当前模型授权；源码未发布定义不声称跨域 checkpoint 能力。正式执行使用[Lab](../lab/README.md)，组件/私有输入分离归[制品合同](../lab/exp/artifacts.md)。

@@ -7,7 +7,7 @@
 | [Dockerfile](Dockerfile) | 从固定 npm lock、补丁及可选 Braid 源构建资源镜像。 | `scripts/runtime.py linux`。 |
 | [build.py](build.py) | 在构建镜像内装配原生工具、Chromium 库/字体、启动器及应用 Node 环境。 | Dockerfile 的构建步骤，不在宿主机直接运行。 |
 | [exp_checkpoint.py](exp_checkpoint.py) | 按调用方冻结合同捕获/准备 Harness checkpoint。 | Lab Docker backend；完整性与停止门控见[恢复手册](../docs/deployment/recovery.md)。 |
-| [recover_completed.py](recover_completed.py) | 导出已有完成工作区的应用材料。 | [scripts/package_completed_recovery.py](../scripts/package_completed_recovery.py)，沿来源 run 保留身份。 |
+| [recover_completed.py](recover_completed.py) | 消费已装配 prepared 或沿旧冻结合同导出完成工作区。 | 新 prepared 由公共 bootstrap 调用；旧来源通过 [package_completed_recovery.py](../scripts/package_completed_recovery.py)，沿来源 run 保留身份。 |
 
 资源构建与 variant 封装是两个步骤，命令统一维护在 [scripts 本地说明](../scripts/README.md#构建独立运行资源与制品)。工具使用包内 Node；应用使用官方 Runner 提供的 Node，`app-env` 明确核对其版本，不用工具 Node 替代应用执行环境。
 

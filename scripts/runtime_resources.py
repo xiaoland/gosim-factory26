@@ -158,6 +158,9 @@ def live_reservations(directory):
 
 
 def launch(args, directory):
+    # Register this exec-bound process before writing native state or admitting its work.
+    from state_writer import started as register_state_writer
+    register_state_writer(os.getpid(),role='native')
     uuid.UUID(args.start_id)
     command = args.command[1:] if args.command[:1] == ['--'] else args.command
     if not command:

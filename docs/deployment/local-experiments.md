@@ -1,6 +1,6 @@
 # ARC 本地实验
 
-本页是当前本地实验入口。当前实验使用 `factory26.exp.experiment` schema 2；旧 ARC schema、Runner 参数和完整历史取证合同移至[历史本地实验合同](history/local-experiments.md)。
+本页是当前本地实验入口。当前实验使用 `factory26.exp.experiment` schema 3；旧 ARC schema、Runner 参数和完整历史取证合同移至[历史本地实验合同](history/local-experiments.md)。
 
 ## 当前流程
 
@@ -14,13 +14,13 @@ python3 -m lab doctor /absolute/bundle/recipe.json \
   --environment /absolute/environment.json --json
 python3 -m lab build /absolute/bundle/recipe.json \
   --environment /absolute/environment.json \
-  --directory /absolute/experiment
+  --directory /absolute/experiment --job JOB
 python3 -m lab start /absolute/experiment \
-  --deployment /absolute/private-deployment.json
-python3 -m lab status /absolute/experiment --json
+  --job JOB --request-id REQUEST --deployment /absolute/private-deployment.json
+python3 -m lab status /absolute/experiment
 ```
 
-`compile` 冻结目标、模型选择、预算和评价关系，不安装、不请求平台、不启动模型；`doctor` 只读检查声明材料、runtime、Docker/Runner 和凭据覆盖；`build` 发布冻结执行器；`start` 才产生实际执行。`status`/`monitor` 查询保存的投影和原始观察，不以 completed 推断评分或归档完整。
+`compile` 冻结目标、模型选择、预算和评价关系，不安装、不请求平台、不启动模型；`doctor` 只读检查声明材料、runtime、Docker/Runner 和凭据覆盖；`build --job` 只发布所选目标的依赖与冻结执行器；`start --job --request-id` 才受理一次实际执行请求。下游输入显式绑定确切 attempt/output，不自动启动评价。`status`/`monitor` 查询保存的投影和原始观察，不以 completed 推断评分或归档完整。
 
 ARC matrix 可直接生产 recipe，但仍须显式声明 controller/runner runtime、backend、预算、模型、评价政策和存储；不从名字展开目标，不从 ambient environment 补全费用或 endpoint。已冻结应用的独立评价使用显式 `from_job/output` 关系，生成和评价的输入、费用和耗时分别保存。
 

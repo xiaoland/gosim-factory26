@@ -37,6 +37,10 @@ CONTAINER_LINE = re.compile(r"^Container: (arcbench-local-[0-9a-f]{12})$", re.MU
 EVENT_SEQUENCE = 0
 
 
+def read_json(path):
+    return json.loads(Path(path).read_text())
+
+
 def emit(kind, **details):
     global EVENT_SEQUENCE
     directory = os.environ.get("EXPERIMENT_EVENT_DIR")
@@ -61,6 +65,10 @@ def instrument_entry(agent, destination, *, file_telemetry=False):
     这里只观察进程，不解释任意 Harness 的私有会话或交付格式。
     """
     destination = Path(destination)
+    if agent.is_dir() and (agent/'delivery-layout.json').is_file():
+        # New deliveries already contain the shared entry and its frozen support.
+        # The official SDK stages this projection once; no per-attempt envelope copy.
+        return agent
     original = destination / 'agent'
     from lab.exp.artifacts import copy_file, verify
     # A delivery copy belongs beside the execution, not in the state captured by
@@ -71,6 +79,9 @@ def instrument_entry(agent, destination, *, file_telemetry=False):
         original.mkdir(parents=True)
         with ZipFile(agent) as archive:
             archive.extractall(original)
+        if (original/'delivery-layout.json').is_file():
+            # ZIP and directory use the identical frozen delivery entry.
+            return original
     binding = None
     for value in json.loads(os.environ.get('FACTORY26_EXP_INPUT_BINDINGS', '{}')).values():
         source = Path(value['root']).resolve(strict=True)
@@ -106,6 +117,11 @@ def instrument_entry(agent, destination, *, file_telemetry=False):
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(lab_root / name, target)
         attempt = core.read(Path(os.environ['FACTORY26_EXP_ATTEMPT_DIR']) / 'attempt.json')
+        if attempt['job'].get('arc_contract'):
+            core.atomic(destination / 'child-contract.json', {'operation': 'arc-local-generate',
+                'environment': attempt['job'].get('environment', {}), 'sdk': attempt['job']['arc_contract']['sdk']})
+            import scripts.agent_support
+            shutil.copy2(Path(scripts.agent_support.__file__), support / 'resource_support.py')
         core.atomic(support / 'collector-config.json', {'attempt_id': attempt['attempt_id'],
                     'cap_bytes': attempt['job']['limits']['telemetry_bytes']})
         (support / 'collector.py').write_text('''import json, signal, sys
@@ -138,44 +154,72 @@ process=None
 code=None
 cleanup='not-started'
 collector=None
-environment=dict(os.environ)
-definition_root=str(Path(__file__).parent/'agent')
-definition=Path(__file__).parent/'definition-binding.json'
-if definition.is_file():
-    binding=json.loads(definition.read_text())
-    environment['FACTORY26_EXP_INPUT_BINDINGS']=json.dumps({
-        'agent':dict(binding,root=str(Path(__file__).parent/'agent'))})
-support=Path(__file__).parent/'collector-support'
-if support.is_dir():
-    import select
-    telemetry=args.output_dir/'.arc/adapter-telemetry'
-    telemetry.mkdir(parents=True,exist_ok=True)
-    collector_environment=dict(environment,PYTHONPATH=str(support))
-    collector=subprocess.Popen([sys.executable,str(support/'collector.py'),str(telemetry)],
-                               env=collector_environment,stdout=subprocess.PIPE,
-                               stderr=(telemetry/'collector.log').open('w'),text=True,start_new_session=True)
-    if not select.select([collector.stdout],[],[],20)[0]:
-        collector.terminate()
-        collector.wait(timeout=5)
-        raise RuntimeError('workspace collector did not announce its binding')
-    binding=json.loads(collector.stdout.readline())
-    collector.stdout.close()
-    environment['FACTORY26_EXP_ATTEMPT_ID']=binding['attempt_id']
-    environment['FACTORY26_EXP_TELEMETRY_BINDING']=json.dumps(binding)
-    endpoint=binding['endpoint']
-    headers='x-experiment-token='+binding['token']
-    for name in tuple(environment):
-        if name.startswith('OTEL_EXPORTER_OTLP_'): environment.pop(name)
-    environment.update(OTEL_EXPORTER_OTLP_ENDPOINT=endpoint,OTEL_EXPORTER_OTLP_PROTOCOL='http/protobuf',
-                       OTEL_EXPORTER_OTLP_HEADERS=headers,OTEL_EXPORTER_OTLP_COMPRESSION='none')
-    for name in ('TRACES','LOGS','METRICS'):
-        prefix='OTEL_EXPORTER_OTLP_'+name
-        environment[prefix+'_ENDPOINT']=endpoint+'/v1/'+name.lower()
-        environment[prefix+'_PROTOCOL']='http/protobuf'
-        environment[prefix+'_HEADERS']=headers
-        environment[prefix+'_COMPRESSION']='none'
+resource_evidence=None
 try:
+    environment=dict(os.environ)
+    environment.pop('FACTORY26_EXP_SERVICES',None)
+    environment.pop('FACTORY26_EXP_RESOURCE_SAMPLE',None)
+    services={}
+    definition_root=str(Path(__file__).parent/'agent')
+    definition=Path(__file__).parent/'definition-binding.json'
+    if definition.is_file():
+        binding=json.loads(definition.read_text())
+        environment['FACTORY26_EXP_INPUT_BINDINGS']=json.dumps({
+            'agent':dict(binding,root=str(Path(__file__).parent/'agent'))})
+    support=Path(__file__).parent/'collector-support'
+    if support.is_dir():
+        import select
+        telemetry=args.output_dir/'.arc/adapter-telemetry'
+        telemetry.mkdir(parents=True,exist_ok=True)
+        collector_environment=dict(environment,PYTHONPATH=str(support))
+        collector=subprocess.Popen([sys.executable,str(support/'collector.py'),str(telemetry)],
+                                   env=collector_environment,stdout=subprocess.PIPE,
+                                   stderr=(telemetry/'collector.log').open('w'),text=True,start_new_session=True)
+        if not select.select([collector.stdout],[],[],20)[0]:
+            collector.terminate()
+            collector.wait(timeout=5)
+            raise RuntimeError('workspace collector did not announce its binding')
+        binding=json.loads(collector.stdout.readline())
+        collector.stdout.close()
+        environment['FACTORY26_EXP_ATTEMPT_ID']=binding['attempt_id']
+        environment['FACTORY26_EXP_TELEMETRY_BINDING']=json.dumps(binding)
+        endpoint=binding['endpoint']
+        headers='x-experiment-token='+binding['token']
+        for name in tuple(environment):
+            if name.startswith('OTEL_EXPORTER_OTLP_'): environment.pop(name)
+        environment.update(OTEL_EXPORTER_OTLP_ENDPOINT=endpoint,OTEL_EXPORTER_OTLP_PROTOCOL='http/protobuf',
+                           OTEL_EXPORTER_OTLP_HEADERS=headers,OTEL_EXPORTER_OTLP_COMPRESSION='none')
+        for name in ('TRACES','LOGS','METRICS'):
+            prefix='OTEL_EXPORTER_OTLP_'+name
+            environment[prefix+'_ENDPOINT']=endpoint+'/v1/'+name.lower()
+            environment[prefix+'_PROTOCOL']='http/protobuf'
+            environment[prefix+'_HEADERS']=headers
+            environment[prefix+'_COMPRESSION']='none'
+    contract=Path(__file__).parent/'child-contract.json'
+    if contract.is_file():
+        public=json.loads(contract.read_text())['environment']
+        if any(environment.get(key)!=value for key,value in public.items()):
+            raise RuntimeError('ARC child environment differs from compiled public model policy')
+        sys.path.insert(0,str(support))
+        from resource_support import ResourceEvidence
+        resource_root=args.output_dir/'.arc/adapter-resources'
+        resource_evidence=ResourceEvidence(resource_root,root_pid=os.getpid())
+        if resource_evidence.cgroup is None:
+            raise RuntimeError('ARC child namespace cgroup-v2 resource evidence is unavailable')
+        resource_evidence.sample('runner-payload-ready')
+        sample=resource_root/'process-evidence/resource-latest.json'
+        if not sample.is_file():
+            raise RuntimeError('ARC child resource latest sample was not persisted')
+        services['resource_evidence']={'owner':'runner-payload','status':'ready','sample_path':str(sample),
+            'scope':'cgroup-v2','cgroup':str(resource_evidence.cgroup),'gaps':resource_evidence.errors}
+    services['telemetry']={'owner':'runner-payload','status':'ready' if collector else 'disabled'}
+    environment['FACTORY26_EXP_SERVICES']=json.dumps(services)
+    (args.output_dir/'.arc/adapter-services.json').write_text(json.dumps(services)+'\\n')
     process=subprocess.Popen([sys.executable,str(Path(__file__).parent/'agent/main.py'),*sys.argv[1:]],start_new_session=True,env=environment)
+    if resource_evidence is not None:
+        while process.poll() is None:
+            resource_evidence.sample('runner-payload-running')
+            time.sleep(2)
     code=process.wait()
 except BaseException as exc:
     result.write_text(json.dumps({'status':'failed','exit_code':code,'error':str(exc)})+'\\n')
@@ -194,6 +238,8 @@ finally:
             cleanup='signalled'
         except ProcessLookupError:
             cleanup='already-exited'
+    if resource_evidence is not None:
+        resource_evidence.sample('runner-payload-exited')
     if collector is not None:
         collector.terminate()
         try: collector.wait(timeout=20)
@@ -231,12 +277,18 @@ def record_capture_layout(workspace, stage, entry, resource_path, delivery):
     if value.get('kind') != 'factory26.harness.capture' or value.get('schema_version') != 1:
         raise ValueError('SDK capture layout belongs to a different contract')
     try:
-        if entry.get('status') != 'completed':
-            raise ValueError('SDK definition capture lacks completed entry receipt')
         binding_path = delivery / 'definition-binding.json'
-        if not binding_path.is_file():
+        if binding_path.is_file():
+            binding=read(binding_path)
+        elif (delivery/'delivery-layout.json').is_file():
+            candidates=[row for row in json.loads(os.environ.get('FACTORY26_EXP_INPUT_BINDINGS','{}')).values()
+                        if Path(row['root']).resolve()==delivery.resolve()]
+            if len(candidates)!=1:
+                raise ValueError('composed delivery lacks its actual retained input reference')
+            binding=candidates[0]
+        else:
             raise ValueError('SDK delivery has no retained definition artifact relation')
-        binding, resource = read(binding_path), read(resource_path)
+        resource=read(resource_path)
         if resource.get('state') != 'exited' or not resource.get('container_id'):
             raise ValueError('SDK execution terminality is not confirmed')
         if Path(resource['workspace']).resolve() != stage or not stage.is_relative_to(workspace):
@@ -245,6 +297,37 @@ def record_capture_layout(workspace, stage, entry, resource_path, delivery):
             transport = read(Path(resource['transport']))
             if transport['stages'][resource['stage']].get('recovery') != 'verified':
                 raise ValueError('SDK capture requires verified output reception')
+        if resource.get('capture_source'):
+            logical_binding=Path(entry.get('capture_binding') or '')
+            if not logical_binding.is_absolute() or not logical_binding.is_relative_to('/workspace'):
+                raise ValueError('SDK bootstrap did not return its actual source-binding record')
+            source_binding=read(stage/logical_binding.relative_to('/workspace'))
+            expected_namespace=read(Path(resource['capture_source']))['namespace']
+            if source_binding['namespace']!=expected_namespace or source_binding['attempt_id']!=resource['exp_attempt_id'] or source_binding['incarnation']!=resource['exp_incarnation']:
+                raise ValueError('SDK source-binding differs from actual child attempt/namespace')
+            source_binding['records']['source_binding']=str(Path(resource['stage'])/logical_binding.relative_to('/workspace'))
+            source_binding['namespace'].update(started_at=resource['started_at'],labels=resource['labels'])
+            source_binding['status']='writer-terminal-and-reception-verified'
+            holder=resource['state_binding']
+            holder['capture_source']=source_binding
+            if resource.get('transport'):
+                holder['snapshot']=read(Path(resource['transport']))['stages'][resource['stage']].get('workspace_snapshot')
+            stage_member=Path(resource['stage'])
+            assembly_member=Path(source_binding['records']['assembly'])
+            if not assembly_member.is_relative_to(stage_member):
+                raise ValueError('SDK assembly record escapes actual volume stage')
+            actual_assembly=read(stage/assembly_member.relative_to(stage_member))
+            actual_state=Path(actual_assembly['state']['root'])
+            expected_member=stage_member/actual_state.relative_to('/workspace')
+            if str(expected_member)!=source_binding['state_member']:
+                raise ValueError('SDK selected state differs from actual assembly namespace')
+            holder['selected_state']={'volume':source_binding['workspace']['volume'],
+                'subpath':source_binding['state_member'],'logical_root':str(actual_state)}
+            resource['state_binding']=holder
+            atomic(Path(resource['capture_source']),source_binding)
+            atomic(resource_path,resource)
+        if entry.get('status') != 'completed':
+            raise ValueError('SDK immutable delivery exclusion lacks completed entry receipt; verified state source remains registered')
         logical = Path(entry['definition_root'])
         if not logical.is_absolute() or '..' in logical.parts or not logical.is_relative_to('/workspace') or logical == Path('/workspace'):
             raise ValueError('wrapper definition root escapes the SDK workspace namespace')
@@ -334,6 +417,29 @@ def model_environment(base, output, host):
                 if '\n' in value or '\r' in value:
                     raise ValueError('model environment values cannot contain line breaks')
                 lines.append(f'{name}={value}')
+    attempt_root = os.environ.get('FACTORY26_EXP_ATTEMPT_DIR')
+    if attempt_root:
+        from lab.exp.core import read
+        job = read(Path(attempt_root) / 'attempt.json')['job']
+        if job.get('arc_contract'):
+            values = dict(line.split('=', 1) for line in lines if '=' in line and not line.lstrip().startswith('#'))
+            for key in ('CONTEXT7_API_KEY','EXA_API_KEY','FACTORY26_PROVIDER_VARIABLES',*json.loads(os.environ.get('FACTORY26_PROVIDER_VARIABLES','[]'))):
+                if key not in values and os.environ.get(key):
+                    values[key]=os.environ[key]
+            for key, value in job.get('environment', {}).items():
+                if key in values and values[key] != value:
+                    raise ValueError('child model environment conflicts with compiled public policy: ' + key)
+                values[key] = value
+            bindings = json.loads(job.get('environment', {}).get('FACTORY26_MODEL_BINDINGS', '{}'))
+            for binding in bindings.values():
+                key = binding['credential_env']
+                if key not in values and os.environ.get(key):
+                    values[key] = os.environ[key]
+                if not values.get(key):
+                    raise ValueError('child model environment lacks declared credential variable: ' + key)
+            if any('\n' in value or '\r' in value for value in values.values()):
+                raise ValueError('child model environment values cannot contain line breaks')
+            lines = [key + '=' + value for key, value in sorted(values.items())]
     for name in OTEL_NAMES:
         value = os.environ.get(name, "")
         if host is None:
@@ -513,18 +619,15 @@ def execute_run(args, endpoint, owner_token):
         result_path.write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n")
         return 0 if complete else 1
 
-    with tempfile.TemporaryDirectory(prefix="experiment-arc-env-") as temporary:
+    with tempfile.TemporaryDirectory(prefix="experiment-arc-env-", dir=workspace.parent) as temporary:
         env_file = Path(temporary) / "model.env"
         model_args = []
         wrapped_env = os.environ.get("ARC_MODEL_ENV_FILE")
         if wrapped_env and args.env_file and Path(wrapped_env).resolve() != args.env_file.resolve():
             raise ValueError("model env was provided both by gateway wrapper and --env-file")
         source_env = Path(wrapped_env) if wrapped_env else args.env_file
-        if "OTEL_EXPORTER_OTLP_ENDPOINT" in os.environ:
-            model_environment(source_env, env_file, None if file_telemetry else (args.container_otlp_host or "host.docker.internal"))
-            model_args = ["--env-file", str(env_file)]
-        elif source_env:
-            model_args = ["--env-file", str(source_env)]
+        model_environment(source_env, env_file, None if file_telemetry else (args.container_otlp_host or 'host.docker.internal'))
+        model_args = ['--env-file', str(env_file)]
         if (args.separate_evaluation or args.requirements_only) and not args.prepare_only:
             if not args.requirements_only and args.noop_script is None:
                 raise ValueError("--noop-script is required for separate evaluation")
