@@ -11,6 +11,10 @@ def main():
     now = facts.get("observed_at", time.time())
     age = None if latest is None else max(0.0, now - latest)
     stale = age is not None and age > 600
+    lifecycle = facts.get('lifecycle')
+    if lifecycle in {'completed', 'failed', 'stopped', 'paused'}:
+        return {'activity': 'inactive', 'brief': lifecycle, 'last_activity_at': latest,
+                'evidence': {'source': 'lifecycle', 'observed_at': now}}
     return {
         "activity": "unknown" if latest is None else ("stale" if stale else "active"),
         "brief": "provider turn unavailable" if latest is None else ("provider turn older than 10 minutes" if stale else "recent provider turn"),

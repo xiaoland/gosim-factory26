@@ -7,10 +7,18 @@ import time
 def main():
     facts = json.load(sys.stdin)
     messages = facts.get("native", {}).get("session_messages", [])
+    latest_message = max(messages, key=lambda item: item.get('at') or 0, default={})
     latest = max((item.get("at") for item in messages if item.get("at") is not None), default=None)
     now = facts.get("observed_at", time.time())
     age = None if latest is None else max(0.0, now - latest)
     fresh = latest is not None and age <= 600
+    lifecycle = facts.get('lifecycle')
+    if lifecycle in {'completed', 'failed', 'stopped', 'paused'}:
+        return {'activity': 'inactive', 'brief': latest_message.get('error') or lifecycle,
+                'last_activity_at': latest, 'evidence': latest_message}
+    if latest_message.get('stop_reason') == 'error':
+        return {'activity': 'error', 'brief': latest_message.get('error') or 'Pi model request failed',
+                'last_activity_at': latest, 'evidence': latest_message}
     return {
         "activity": "active" if fresh else ("stale" if latest is not None else "unknown"),
         "brief": "latest Pi session message" if fresh else ("latest Pi session message is stale" if latest is not None else "session message unavailable"),

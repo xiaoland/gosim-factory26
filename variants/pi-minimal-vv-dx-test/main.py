@@ -5,9 +5,11 @@ import os
 from pathlib import Path
 import signal
 import subprocess
+import sys
 
 from raw_otlp import LogExporter
-from agent_support import stop
+from agent_support import (stop, model_bindings, bind_native_models,
+                           bind_retained_native_models, native_model_route)
 from harness_services import services
 
 ROOT = Path(__file__).resolve().parent
@@ -25,7 +27,8 @@ def run(requirements, output):
     runtime = ROOT/'runtime'
     for relative in json.loads((ROOT/'runtime-executables.json').read_text()):
         path = ROOT/relative
-        path.chmod(path.stat().st_mode | 0o111)
+        if not path.stat().st_mode & 0o111:
+            path.chmod(path.stat().st_mode | 0o111)
     output.mkdir(parents=True, exist_ok=True)
     contract_path = output/'.factory26/lab-run.json'
     if not contract_path.is_file():
@@ -55,7 +58,23 @@ def run(requirements, output):
     private_models = ROOT/'private-models.json'
     main_provider, advisor_model = 'factory26', 'factory26/kimi-k2.7-code'
     key = None
-    if private_models.is_file():
+    if os.environ.get('FACTORY26_MODEL_BINDINGS'):
+        bindings, _ = model_bindings()
+        if native_resume:
+            models = json.loads((native/'models.json').read_text())
+            bind_retained_native_models(models, bindings)
+            identity = json.loads((evidence/'identity.json').read_text())
+            main_provider, advisor_model = identity['main_provider'], identity['advisor']
+        else:
+            models = json.loads((ROOT/'models.json').read_text())
+            bind_native_models(models, bindings)
+            main_provider, _, _ = native_model_route('factory26', 'glm-5.3-flash', bindings)
+            advisor_provider, advisor_id, _ = native_model_route('factory26', 'kimi-k2.7-code', bindings)
+            advisor_model = advisor_provider + '/' + advisor_id
+        # A new outer run has a new loopback token, while native identities and
+        # conversation state survive same-task restart.
+        save(native/'models.json', models)
+    elif private_models.is_file():
         models = json.loads(private_models.read_text())
         main_provider, advisor_model = 'bigmodel', 'arc/kimi-k2.7-code'
     else:
@@ -134,9 +153,19 @@ def run(requirements, output):
                         event = json.loads(line)
                     except ValueError:
                         continue
+                    if event.get('type') in {'tool_execution_start', 'tool_execution_end'}:
+                        print(json.dumps({key: event[key] for key in
+                              ('type', 'toolName', 'toolCallId', 'isError') if key in event}), flush=True)
                     message = event.get('message') or {}
                     if event.get('type') == 'message_end' and message.get('role') == 'assistant':
                         terminal = message.get('stopReason')
+                        usage = message.get('usage') or {}
+                        print(json.dumps({'event': 'model_response', 'model': message.get('model'),
+                              'stop_reason': terminal, 'tokens': {key: usage[key] for key in
+                              ('input', 'output', 'cacheRead', 'cacheWrite', 'totalTokens') if key in usage}}), flush=True)
+                        if terminal == 'error':
+                            print(message.get('errorMessage', 'Pi assistant returned an error'),
+                                  file=sys.stderr, flush=True)
                 code = process.wait()
                 stop(process)
                 process = None

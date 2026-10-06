@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import argparse
 import base64
+from copy import deepcopy
 from dataclasses import asdict, is_dataclass
 from decimal import Decimal
 import json
@@ -47,6 +48,18 @@ def _remote(run: Path, target: Mapping[str, Any]) -> tuple[str, Path]:
     return host, Path(root) / "runs" / run.name
 
 
+def _remote_sdk_workspace(remote_run: Path, target: Mapping[str, Any]) -> Path:
+    """Return the one SDK workspace path for this run.
+
+    New runs are data-independent: their prepared SDK workspace lives under
+    ``inputs``.  Only old P1 manifests without ``remote_runtime`` retain the
+    historical ``data/sdk-workspace`` location for save/read compatibility.
+    """
+    if target.get("remote_runtime"):
+        return remote_run / "inputs" / "sdk-workspace"
+    return remote_run / "data" / "sdk-workspace"
+
+
 def _sdk(target: Mapping[str, Any]) -> Path:
     source = target.get("sdk_source")
     if not source:
@@ -70,7 +83,13 @@ def _agent(run: Path, target: Mapping[str, Any]) -> Path:
         return destination
     value = target.get("agent_package") or manifest(run).get("agent_package")
     if value:
-        return Path(value).expanduser().resolve(strict=True)
+        result = Path(value).expanduser().resolve(strict=True)
+        if not result.is_dir():
+            raise ValueError("local Docker generation requires a small agent program directory")
+        runtime_entry = result / "runtime"
+        if runtime_entry.exists() or runtime_entry.is_symlink():
+            raise ValueError("agent program directory must not contain a runtime entry; use target.remote_runtime")
+        return result
     program = paths(run)["program"]
     if not (program / "main.py").is_file() or not (program / "requirements.txt").is_file():
         raise ValueError("generation target needs agent_package or program main.py+requirements.txt")
@@ -126,10 +145,66 @@ def _prepare_workspace(run: Path, target: Mapping[str, Any]) -> Path:
     return output
 
 
+def _ensure_remote_runtime(run: Path, host: str, target: Mapping[str, Any]) -> dict[str, Any]:
+    """Deploy one immutable host runtime and return execution-side facts."""
+    source_value = target.get("runtime")
+    destination_value = target.get("remote_runtime")
+    if not source_value or not destination_value:
+        raise ValueError("local Docker target needs runtime and remote_runtime")
+    source = Path(str(source_value)).expanduser().resolve(strict=True)
+    if not source.is_dir():
+        raise ValueError(f"runtime source is not a directory: {source}")
+    destination = Path(str(destination_value))
+    if not destination.is_absolute():
+        raise ValueError("remote_runtime must be an absolute execution-host path")
+    # runtime-source.json belongs to the runtime bundle itself.  The executor
+    # must never overwrite it with deployment state.
+    receipt = destination / ".lab-deployment.json"
+    local_receipt = paths(run)["records"] / "runtime-deployment.json"
+    exists = _remote_exec(host, ["test", "-d", str(destination)])
+    receipt_exists = _remote_exec(host, ["test", "-f", str(receipt)])
+    if exists.returncode == 0:
+        if receipt_exists.returncode:
+            raise RuntimeError(f"remote runtime exists without completion receipt: {destination}")
+        if not _remote_file(host, receipt, local_receipt):
+            raise RuntimeError(f"remote runtime receipt could not be read: {receipt}")
+        value = json.loads(local_receipt.read_text())
+        value.update({"path": str(destination), "reused": True, "observed_at": time.time()})
+        write_json(local_receipt, value)
+        return {"source": str(source), "path": str(destination), "receipt": str(receipt),
+                "reused": True, "source_facts": value}
+    if exists.returncode != 1:
+        raise RuntimeError(f"cannot inspect remote runtime path {destination}: {exists.stderr.strip()}")
+    _sync(host, source, str(destination))
+    source_metadata = None
+    source_metadata_result = _remote_exec(host, ["cat", str(destination / "runtime-source.json")])
+    if source_metadata_result.returncode == 0:
+        try:
+            source_metadata = json.loads(source_metadata_result.stdout)
+        except json.JSONDecodeError:
+            source_metadata = {"raw": source_metadata_result.stdout}
+    value = {"source": str(source), "path": str(destination),
+             "runtime_source": source_metadata,
+             "source_bytes": sum(item.stat().st_size for item in source.rglob("*") if item.is_file()),
+             "source_mtime_ns": source.stat().st_mtime_ns, "deployed_at": time.time(),
+             "reused": False, "mode": "fixed-readonly-runtime"}
+    encoded = base64.b64encode((json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode()).decode()
+    _remote_exec(host, ["sh", "-c", f"echo {shlex.quote(encoded)} | base64 -d > {shlex.quote(str(receipt))}"], check=True)
+    write_json(local_receipt, value)
+    return {"source": str(source), "path": str(destination), "receipt": str(receipt),
+            "reused": False, "source_facts": value}
+
+
 def _meter(run: Path, target: Mapping[str, Any], phase: str, *, wait: bool = False,
            query_start: int | None = None) -> dict[str, Any]:
     """Capture shared access-key meter facts; never relabel them as per-run cost."""
     destination = paths(run)["records"] / f"meter-{phase}.json"
+    if target.get("model_recipe") == "self-funded":
+        result = {"phase": phase, "scope": "self-funded-provider", "status": "not_applicable",
+                  "reason": "ARC shared-key meter is not used for self-funded recipes",
+                  "as_of": time.time()}
+        write_json(destination, result)
+        return result
     source = target.get("environment_file") or target.get("private_env_file")
     result: dict[str, Any] = {"phase": phase, "scope": "account-key-window", "as_of": time.time()}
     if not source:
@@ -167,6 +242,11 @@ def _meter(run: Path, target: Mapping[str, Any], phase: str, *, wait: bool = Fal
 
 
 def _spend(run: Path, target: Mapping[str, Any], lifecycle: str) -> dict[str, Any]:
+    if target.get("model_recipe") == "self-funded":
+        return {"scope": "self-funded-provider", "status": "not_collected",
+                "reason": "ARC shared-key meter is not used for self-funded recipes",
+                "value": None, "currency": None, "kind": "provider-account-window",
+                "as_of": time.time()}
     baseline_path = paths(run)["records"] / "meter-baseline.json"
     terminal_path = paths(run)["records"] / "meter-terminal.json"
     current_path = paths(run)["records"] / "meter-current.json"
@@ -275,6 +355,64 @@ def _remote_file(host: str, path: Path, local: Path) -> bool:
     return result.returncode == 0 and local.is_file()
 
 
+def _record_agent_log_baseline(run: Path, host: str, remote_run: Path) -> None:
+    """Record the workspace log size immediately before this run starts.
+
+    Restarted runs may intentionally carry the application workspace forward.
+    The SDK does not emit a run delimiter, so this offset is the only cheap
+    boundary that can distinguish newly appended output without rewriting the
+    source log.  Missing baselines are handled as retained history by the
+    observer rather than being presented as per-run output.
+    """
+    source = remote_run / "data/workspace/.arc/stdout.log"
+    if host == "local":
+        exists = source.is_file()
+        size = source.stat().st_size if exists else 0
+    else:
+        result = _remote_exec(host, ["wc", "-c", str(source)])
+        exists = result.returncode == 0
+        try:
+            size = int(result.stdout.split()[0]) if exists else 0
+        except (ValueError, IndexError):
+            exists, size = False, 0
+    write_json(paths(run)["records"] / "agent-log-baseline.json", {
+        "source": str(source), "source_exists": exists, "offset": size,
+        "captured_at": time.time(), "boundary": "byte_offset_before_start"})
+
+
+def _capture_agent_log(run: Path, host: str, remote_run: Path,
+                       source_name: str, record_name: str) -> bool:
+    """Copy only post-start agent output into records, retaining raw source."""
+    records = paths(run)["records"]
+    capture = records / f".{record_name}.capture"
+    source = remote_run / "data/workspace/.arc" / source_name
+    if not _remote_file(host, source, capture):
+        return False
+    baseline_path = records / "agent-log-baseline.json"
+    baseline = None
+    if baseline_path.is_file():
+        try:
+            candidate = json.loads(baseline_path.read_text())
+            if isinstance(candidate, dict) and isinstance(candidate.get("offset"), int):
+                baseline = candidate
+        except (OSError, ValueError):
+            baseline = None
+    raw = capture.read_bytes()
+    offset = int(baseline["offset"]) if baseline is not None else 0
+    source_reset = baseline is not None and offset > len(raw)
+    selected = raw[offset:] if baseline is not None and not source_reset else raw
+    (records / record_name).write_bytes(selected)
+    capture.unlink(missing_ok=True)
+    write_json(records / f"{record_name}.meta.json", {
+        "source": str(source), "source_bytes": len(raw), "offset": offset,
+        "captured_bytes": len(selected),
+        "retained_history": baseline is None or source_reset,
+        "boundary": ("source_shorter_than_baseline" if source_reset else
+                     ("byte_offset_before_start" if baseline is not None else "unknown")),
+        "captured_at": time.time()})
+    return True
+
+
 def _copy_file(host: str, source: Path, destination: Path) -> None:
     destination.parent.mkdir(parents=True, exist_ok=True) if host == "local" else None
     if host == "local":
@@ -289,18 +427,24 @@ def _stage_private_env(host: str, target: Mapping[str, Any], remote_run: Path) -
     if not source:
         return None
     source = Path(source).expanduser().resolve(strict=True)
-    if host == "local":
-        return source
     names = {line.split("=", 1)[0].strip() for line in source.read_text().splitlines()
              if line.strip() and not line.lstrip().startswith("#") and "=" in line}
-    if not names & {"FACTORY26_API_KEY", "OPENAI_API_KEY"}:
+    if target.get("model_recipe") == "self-funded":
+        if not any(name.endswith(("_API_KEY", "_TOKEN")) for name in names):
+            raise ValueError(f"self-funded environment has no provider credential variable: {source}")
+    elif not names & {"FACTORY26_API_KEY", "OPENAI_API_KEY"}:
         raise ValueError(f"private environment has no supported API key variable: {source}")
+    if host == "local":
+        return source
     original = remote_run / ".private-source.env"
     mapped = remote_run / ".private.env"
     subprocess.run(["rsync", "-a", str(source), f"{host}:{original}"], check=True)
-    command = ("awk -F= '$1==\"FACTORY26_API_KEY\" {print; print \"OPENAI_API_KEY=\" $2; next} {print}' "
-               f"{shlex.quote(str(original))} > {shlex.quote(str(mapped))} && "
-               f"chmod 600 {shlex.quote(str(mapped))}")
+    if target.get("model_recipe") == "self-funded":
+        command = f"cp {shlex.quote(str(original))} {shlex.quote(str(mapped))} && chmod 600 {shlex.quote(str(mapped))}"
+    else:
+        command = ("awk -F= '$1==\"FACTORY26_API_KEY\" {print; print \"OPENAI_API_KEY=\" $2; next} {print}' "
+                   f"{shlex.quote(str(original))} > {shlex.quote(str(mapped))} && "
+                   f"chmod 600 {shlex.quote(str(mapped))}")
     result = _remote_exec(host, ["sh", "-c", command], check=True)
     return mapped
 
@@ -342,8 +486,17 @@ def _push_remote_manifest(run: Path, host: str, remote_run: Path, target: Mappin
     remote_target["executor"] = "local"
     remote_target["remote_root"] = str(remote_run.parent.parent)
     remote_target["environment_file"] = str(remote_run / ".private.env")
+    if target.get("remote_runtime"):
+        remote_target["remote_runtime"] = str(target["remote_runtime"])
+    if target.get("otlp_deps"):
+        candidate = _remote_sdk_workspace(remote_run, target) / "submission" / "otlp-deps"
+        if _remote_exec(host, ["test", "-d", str(candidate)]).returncode == 0:
+            remote_target["otlp_deps"] = str(candidate)
     for key in ("runtime", "skills"):
-        candidate = remote_run / "data" / "sdk-workspace" / "submission" / key
+        if key == "runtime" and target.get("remote_runtime"):
+            remote_target["runtime"] = str(target["remote_runtime"])
+            continue
+        candidate = _remote_sdk_workspace(remote_run, target) / "submission" / key
         if _remote_exec(host, ["test", "-d", str(candidate)]).returncode == 0:
             remote_target[key] = str(candidate)
         else:
@@ -377,8 +530,12 @@ def _push_remote_registry(host: str, remote_run: Path, current_target: Mapping[s
         if isinstance(item, list):
             return [relocate(child, key) for child in item]
         if isinstance(item, str):
-            if key in {"runtime", "skills"} and item.startswith("/Volumes/WorkSSD/"):
-                return str(remote_run / "data/sdk-workspace/submission" / key)
+            if key == "runtime" and item.startswith("/Volumes/WorkSSD/"):
+                return str(current_target.get("remote_runtime") or (remote_run / "data/sdk-workspace/submission/runtime"))
+            if key == "skills" and item.startswith("/Volumes/WorkSSD/"):
+                return str(_remote_sdk_workspace(remote_run, current_target) / "submission/skills")
+            if key == "otlp_deps" and item.startswith("/Volumes/WorkSSD/"):
+                return str(_remote_sdk_workspace(remote_run, current_target) / "submission/otlp-deps")
             if item.startswith(project + "/third_party/"):
                 return third_party_remote + item[len(project + "/third_party"):]
             if item.startswith("/Volumes/WorkSSD/"):
@@ -443,13 +600,15 @@ def _container_name(run: Path) -> str:
 
 def _create_argv(run: Path, target: Mapping[str, Any], remote_run: Path, workspace: Path,
                  private_env: Path | None = None, native_scope: str | None = None,
-                 image_id: str | None = None) -> list[str]:
+                 image_id: str | None = None, runtime_path: str | None = None) -> list[str]:
     name = _container_name(run)
     argv = ["create", "--init", "--name", name,
             "--label", "io.factory26.managed=true", "--label", f"io.factory26.run={run.name}",
-            "--mount", f"type=bind,source={remote_run / 'data/sdk-workspace'},target=/workspace",
+            "--mount", f"type=bind,source={_remote_sdk_workspace(remote_run, target)},target=/workspace",
             "--mount", f"type=bind,source={remote_run / 'data/workspace'},target=/workspace/template",
             "--memory", str(target.get("memory", "2g")), "--cpus", str(target.get("cpus", "1"))]
+    if runtime_path:
+        argv += ["--mount", f"type=bind,source={runtime_path},target=/workspace/submission/runtime,readonly"]
     if native_scope:
         argv += ["--mount", f"type=bind,source={remote_run / 'data/harness'},"
                  "target=/workspace/template/.factory26/data/harness"]
@@ -486,14 +645,20 @@ def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
     app = _stage_app(run, workspace)
     host, remote_run = _remote(run, target)
     _verify_remote_sdk(host, target)
-    _sync(host, workspace, str(remote_run / "data/sdk-workspace"))
+    runtime_facts = _ensure_remote_runtime(run, host, target)
+    _sync(host, workspace, str(_remote_sdk_workspace(remote_run, target)))
     _sync(host, app, str(remote_run / "data/workspace"))
+    # Establish the output boundary after workspace migration but before the
+    # container starts; an inherited .arc log is therefore never relabeled as
+    # this run's fresh process output.
+    _record_agent_log_baseline(run, host, remote_run)
     _remote_exec(host, ["mkdir", "-p", str(remote_run / "data/harness"), str(remote_run / "records")], check=True)
     harness = paths(run)["harness"]
     if harness.is_dir():
         _sync(host, harness, str(remote_run / "data/harness"))
     return {"run": str(run), "workspace": str(workspace), "app": str(app), "remote_run": str(remote_run),
-            "executor": host, "image_id": target.get("image_id"), "status": "prepared"}
+            "executor": host, "image_id": target.get("image_id"), "runtime": runtime_facts,
+            "status": "prepared"}
 
 
 def start(run: str | os.PathLike[str]) -> dict[str, Any]:
@@ -520,7 +685,7 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
         return {"lifecycle": "running", "executor": host, "remote_run": str(remote_run),
                 "started_at": time.time(), "mode": "simulate"}
     private_env = _stage_private_env(host, target, remote_run)
-    if not (paths(run)["records"] / "meter-baseline.json").is_file():
+    if target.get("model_recipe") != "self-funded" and not (paths(run)["records"] / "meter-baseline.json").is_file():
         _meter(run, target, "baseline")
     scope = manifest(run).get("native_scope_id")
     image_id, image_resolution = _resolve_remote_image(host, target)
@@ -528,7 +693,8 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
     config = {"remote_run": str(remote_run), "container_id": None,
               "container_name": _container_name(run), "run_id": run.name,
               "run_kind": manifest(run).get("run_kind", "generation"),
-              "create_argv": _create_argv(run, target, remote_run, Path(prepared["workspace"]), private_env, scope, image_id)}
+              "create_argv": _create_argv(run, target, remote_run, Path(prepared["workspace"]), private_env, scope, image_id,
+                                           prepared["runtime"]["path"])}
     created = _helper(host, remote_run, "create", config)
     try:
         value = json.loads(created.stdout.strip().splitlines()[-1])
@@ -579,7 +745,25 @@ def spawn(run: str | os.PathLike[str], module: str, args: list[str] | tuple[str,
     baseline = paths(run)["records"] / "meter-baseline.json"
     if baseline.is_file():
         _copy_file(host, baseline, remote_run / "records/meter-baseline.json")
-    _sync(host, paths(run)["inputs"], str(remote_run / "inputs"))
+    # The observer consumes the same pre-start byte boundary used by the Mac
+    # record.  Carry it with the identity/handle; without this, a remote
+    # observer would conservatively label the whole inherited log as history.
+    agent_baseline = paths(run)["records"] / "agent-log-baseline.json"
+    if agent_baseline.is_file():
+        _copy_file(host, agent_baseline, remote_run / "records/agent-log-baseline.json")
+    # ``start`` records the verified CID on the Mac before dispatching the
+    # execution-side observer.  Carry that exact handle into the remote
+    # records domain; create.json alone is not an observation handle.
+    identity = paths(run)["records"] / "docker.json"
+    if identity.is_file():
+        _copy_file(host, identity, remote_run / "records/docker.json")
+    # The SDK workspace/runtime are already assembled and deployed. Only
+    # inputs needed by this spawned process cross the host boundary.
+    for relative in ("requirements", "tests", "application", "application-receipt.json"):
+        source = paths(run)["inputs"] / relative
+        destination = remote_run / "inputs" / relative
+        if source.exists() and _remote_exec(host, ["test", "-e", str(destination)]).returncode:
+            _sync(host, source, str(destination))
     _sync(host, paths(run)["program"], str(remote_run / "program"))
     repository = Path(__file__).resolve().parents[2]
     _sync(host, repository / "lab", str(remote_run / "source/lab"))
@@ -620,7 +804,7 @@ def spawn(run: str | os.PathLike[str], module: str, args: list[str] | tuple[str,
         text = str(value)
         remote_args.append(str(remote_run) + text[len(local_root):] if text == local_root or text.startswith(local_root + "/") else text)
     argv.extend(remote_args)
-    pythonpath = f"{remote_dir}:{remote_run / 'source'}:{remote_run / 'data/sdk-workspace/submission'}"
+    pythonpath = f"{remote_dir}:{remote_run / 'source'}:{_remote_sdk_workspace(remote_run, target) / 'submission'}"
     command = "cd {root} && LAB_RUN={root} LAB_RUN_ROOT={run_root} PYTHONPATH={pythonpath} nohup {argv} > {log} 2>&1 < /dev/null & echo $!".format(
         root=shlex.quote(str(remote_run)), run_root=shlex.quote(str(remote_run.parent.parent)),
         pythonpath=shlex.quote(pythonpath),
@@ -652,42 +836,70 @@ def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
         return {"lifecycle": "completed", "evaluation": value, "observed_at": time.time(),
                 "spend": _spend(run, target, "completed")}
     identity = local_records / "docker.json"
+    observation_error = None
     if identity.is_file():
         handle = json.loads(identity.read_text())
         observed = _helper(host, remote_run, "observe", {"remote_run": str(remote_run),
                                                           "container_id": handle["container_id"]})
         if observed.returncode and observed.stderr:
-            return {"lifecycle": "unknown", "container_id": handle.get("container_id"),
-                    "observation_error": observed.stderr, "observed_at": time.time()}
+            observation_error = observed.stderr
     _remote_file(host, remote_run / "records/docker-observe.json", local_records / "docker-observe.json")
     _remote_file(host, remote_run / "records/docker-result.json", local_records / "docker-result.json")
     _remote_file(host, remote_run / "records/docker-start.json", local_records / "docker-start.json")
+    # The execution-side observer already writes a bounded status/native
+    # summary.  Pull that fact record alongside Docker state; never copy raw
+    # rollout/session logs as part of status observation.
+    if host != "local":
+        _remote_file(host, remote_run / "records/status.json", local_records / "remote-status.json")
     for name in ("docker.stdout.log", "docker.stderr.log"):
         _remote_file(host, remote_run / "records" / name, local_records / name)
+    # The official SDK's agent runner redirects the normal process streams to
+    # the mounted workspace, not to the container's stdout/stderr stream.
+    # Keep those bounded process/error logs available to ``lab logs`` without
+    # copying the large rollout/session event stream.
+    _capture_agent_log(run, host, remote_run, "stdout.log", "agent.stdout.log")
+
+    remote_status = {}
+    remote_status_path = local_records / "remote-status.json"
+    if host != "local" and remote_status_path.is_file():
+        try:
+            candidate = json.loads(remote_status_path.read_text())
+            if isinstance(candidate, dict):
+                remote_status = candidate
+        except (OSError, ValueError):
+            remote_status = {}
+
+    def enrich(value: dict[str, Any]) -> dict[str, Any]:
+        for key in ("activity", "brief", "last_activity_at", "evidence", "native", "spend", "resources"):
+            if key in remote_status:
+                value[key] = remote_status[key]
+        if observation_error:
+            value["observation_error"] = observation_error
+        return value
     result = local_records / "docker-result.json"
     if result.is_file():
         value = json.loads(result.read_text())
         live_value = json.loads((local_records / "docker-observe.json").read_text()) if (local_records / "docker-observe.json").is_file() else {}
         lifecycle = value.get("lifecycle", "unknown")
-        return {"lifecycle": lifecycle, "container_id": value.get("container_id"),
+        return enrich({"lifecycle": lifecycle, "container_id": value.get("container_id"),
                 "exit_code": value.get("exit_code"), "resources": {"inspect": _public_inspect(value.get("inspect")),
                 "live": live_value.get("resources")},
-                "stderr": value.get("error"), "spend": _spend(run, target, lifecycle), "observed_at": time.time()}
+                "stderr": value.get("error"), "spend": _spend(run, target, lifecycle), "observed_at": time.time()})
     live = local_records / "docker-observe.json"
     if live.is_file():
         value = json.loads(live.read_text())
         value["inspect"] = _public_inspect(value.get("inspect"))
         value["spend"] = _spend(run, target, value.get("lifecycle", "unknown"))
-        return {**value, "observed_at": time.time()}
+        return enrich({**value, "observed_at": time.time()})
     handle = json.loads(identity.read_text()) if identity.is_file() else {}
     if not handle and (local_records / "docker-create.json").is_file():
-        return {"lifecycle": "unknown", "container_id": None, "executor": host,
+        return enrich({"lifecycle": "unknown", "container_id": None, "executor": host,
                 "observed_at": time.time(), "remote_run": str(remote_run),
                 "error": "create response had no verified container identity",
-                "spend": _spend(run, target, "unknown")}
-    return {"lifecycle": "starting", "container_id": handle.get("container_id"),
+                "spend": _spend(run, target, "unknown")})
+    return enrich({"lifecycle": "starting", "container_id": handle.get("container_id"),
             "executor": host, "observed_at": time.time(), "remote_run": str(remote_run),
-            "spend": _spend(run, target, "starting")}
+            "spend": _spend(run, target, "starting")})
 
 
 def control(run: str | os.PathLike[str], action: str) -> dict[str, Any]:
@@ -718,22 +930,30 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
     target = _target(run)
     host, remote_run = _remote(run, target)
     errors = []
-    for member in ("data/sdk-workspace", "data/workspace", "data/harness", "records"):
-        destination = (paths(run)["inputs"] / "sdk-workspace") if member == "data/sdk-workspace" else paths(run)["root"] / member
+    sdk_member = "inputs/sdk-workspace" if target.get("remote_runtime") else "data/sdk-workspace"
+    for member in (sdk_member, "data/workspace", "data/harness", "records"):
+        destination = paths(run)["inputs"] / "sdk-workspace" if member == sdk_member else paths(run)["root"] / member
         if host == "local":
             if not destination.is_dir():
                 errors.append({"member": member, "error": "local execution tree missing"})
             continue
         source = f"{host}:{remote_run / member}/"
         destination.mkdir(parents=True, exist_ok=True)
-        result = subprocess.run(["rsync", "-a", source, str(destination) + "/"], check=False,
-                                text=True, capture_output=True)
+        command = ["rsync", "-a"]
+        if member == sdk_member:
+            # SDK submission is frozen program material; provider/model-proxy
+            # state is private mutable service state and is not recovered into
+            # the frozen local SDK copy.
+            command += ["--exclude=/submission/.private/**", "--exclude=/submission/.private"]
+        command += [source, str(destination) + "/"]
+        result = subprocess.run(command, check=False, text=True, capture_output=True)
         if result.returncode:
             errors.append({"member": member, "exit_code": result.returncode,
                            "stderr": result.stderr})
     terminal = facts.get("lifecycle") in {"completed", "failed", "stopped"}
     value = {"saved": terminal and not errors,
              "lifecycle": facts.get("lifecycle"), "scope": ["data/workspace", "data/harness", "records"],
+             "excluded": ["inputs/sdk-workspace/submission/.private/**"] if target.get("remote_runtime") else [],
              "errors": errors, "as_of": time.time()}
     write_json(paths(run)["records"] / "save.json", value)
     return value
@@ -753,13 +973,112 @@ def sync_saved(run: str | os.PathLike[str]) -> dict[str, Any]:
                  "stderr": "" if synced else "local records directory is missing", "as_of": time.time()}
         write_json(destination / "saved-sync.json", value)
         return value
+    status_probe = _remote_exec(host, ["test", "-f", str(remote_run / "records/status.json")])
     result = subprocess.run(["rsync", "-a", f"{host}:{remote_run / 'records'}/", str(destination) + "/"],
                             check=False, text=True, capture_output=True)
-    value = {"synced": result.returncode == 0, "executor": host,
+    value = {"synced": result.returncode == 0 and status_probe.returncode == 0, "executor": host,
              "remote_run": str(remote_run), "exit_code": result.returncode,
+             "status_record": status_probe.returncode == 0,
              "stderr": result.stderr, "as_of": time.time()}
     write_json(destination / "saved-sync.json", value)
     return value
+
+
+def mirror_saved_evaluations(source_run: str | os.PathLike[str]) -> dict[str, Any]:
+    """Register saved remote task-evaluation children and relay their facts.
+
+    This consumes only ``automatic-evaluations.json`` after the source
+    observer has saved it.  It does not create or dispatch a child run: the
+    child manifest is copied from the execution host, then a local relay
+    mirrors records from that already-existing remote identity.
+    """
+    source = Path(source_run).expanduser().resolve()
+    state = manifest(source)
+    target = state.get("target_config") or {}
+    if (target.get("kind") != "local" or target.get("executor") in {None, "local"}):
+        return {"mirrored": [], "skipped": [], "status": "unsupported_source_target"}
+    receipt_path = paths(source)["records"] / "automatic-evaluations.json"
+    if not receipt_path.is_file():
+        return {"mirrored": [], "skipped": [], "status": "receipt_not_saved"}
+    receipt = json.loads(receipt_path.read_text())
+    items = receipt.get("items") if isinstance(receipt, dict) else None
+    if not isinstance(items, list):
+        return {"mirrored": [], "skipped": [{"reason": "invalid_evaluation_receipt"}],
+                "status": "unsupported_receipt"}
+    host, source_remote = _remote(source, target)
+    if not target.get("remote_root"):
+        return {"mirrored": [], "skipped": [{"reason": "source_remote_root_missing"}],
+                "status": "unsupported_source_target"}
+    run_root = paths(source)["root"].parent
+    mirrored, skipped = [], []
+    for index, item in enumerate(items):
+        child = item.get("run") if isinstance(item, dict) else None
+        if not isinstance(child, dict):
+            skipped.append({"index": index, "reason": "missing_saved_child_receipt"})
+            continue
+        child_id = child.get("run_id")
+        remote_value = child.get("path")
+        if not isinstance(child_id, str) or not child_id or Path(child_id).name != child_id:
+            skipped.append({"index": index, "reason": "invalid_child_run_id"})
+            continue
+        if not isinstance(remote_value, str) or not Path(remote_value).is_absolute():
+            skipped.append({"index": index, "run_id": child_id, "reason": "missing_remote_child_path"})
+            continue
+        remote_child = Path(remote_value)
+        if remote_child.name != child_id or remote_child.parent != source_remote.parent:
+            skipped.append({"index": index, "run_id": child_id, "reason": "child_path_outside_remote_run_root"})
+            continue
+        local_child = run_root / child_id
+        local_manifest = local_child / "manifest.json"
+        if not local_manifest.exists():
+            if local_child.exists():
+                skipped.append({"index": index, "run_id": child_id, "reason": "local_child_path_conflict"})
+                continue
+            local_child.mkdir(parents=True, exist_ok=False)
+            for relative in ("program", "inputs", "data/workspace", "data/harness", "records", "snapshots", "evaluations"):
+                (local_child / relative).mkdir(parents=True, exist_ok=True)
+            if not _remote_file(host, remote_child / "manifest.json", local_manifest):
+                shutil.rmtree(local_child)
+                skipped.append({"index": index, "run_id": child_id, "reason": "remote_child_manifest_unavailable"})
+                continue
+        try:
+            child_manifest = manifest(local_child)
+            if child_manifest.get("run_kind") != "evaluation" or child_manifest.get("evaluation_kind") != "task":
+                skipped.append({"index": index, "run_id": child_id, "reason": "unsupported_child_kind"})
+                continue
+            child_target = deepcopy(child_manifest.get("target_config") or {})
+            child_target["executor"] = target["executor"]
+            child_target["remote_root"] = target["remote_root"]
+            child_manifest["target_config"] = child_target
+            child_manifest["target_kind"] = "local"
+            child_manifest["remote_origin"] = {"host": host, "path": str(remote_child),
+                                                 "source_run": source.name, "source_receipt": str(receipt_path)}
+            write_json(local_manifest, child_manifest)
+        except (OSError, ValueError, TypeError) as error:
+            skipped.append({"index": index, "run_id": child_id,
+                            "reason": f"invalid_child_manifest:{type(error).__name__}"})
+            continue
+        # A task-evaluation child may also have inherited an application log.
+        # Mirror only its non-secret byte boundary so the relay's remote
+        # observer can produce correctly scoped process logs; no credentials
+        # or SDK workspace are needed for this handoff.
+        _remote_file(host, remote_child / "records/agent-log-baseline.json",
+                     local_child / "records/agent-log-baseline.json")
+        relay_record = local_child / "records/relay.json"
+        alive = False
+        if relay_record.is_file():
+            try:
+                from .control import process_state
+                alive = process_state(json.loads(relay_record.read_text())) == "alive"
+            except (OSError, ValueError, TypeError):
+                alive = False
+        if not alive:
+            from lab import run as public_run
+            public_run._background(local_child, "lab.automation", ["relay", str(local_child)], "relay")
+        mirrored.append({"run_id": child_id, "path": str(local_child), "relay_started": not alive,
+                         "remote_path": str(remote_child), "source_run": source.name})
+    return {"mirrored": mirrored, "skipped": skipped,
+            "status": "completed" if not skipped else "partial"}
 
 
 def main(argv=None) -> int:

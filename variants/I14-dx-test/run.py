@@ -76,11 +76,11 @@ def native_files(work, runtime, skills, base_url, visual_url):
                        '\n\n' + RUN_CONDITIONS + '\n',
                        workspace=str(work/'application'))
         providers = json.loads((template/'models.json').read_text())
+        profile['provider'], profile['model'], profile_route = native_model_route(profile['provider'], profile['model'], routes)
+        bind_native_models(providers, routes)
         model = next(m for m in providers['providers'][profile['provider']]['models']
                      if m['id'] == profile['model'])
         profile['context_window_tokens'] = model['contextWindow']
-        profile['provider'], profile['model'], profile_route = native_model_route(profile['provider'], profile['model'], routes)
-        bind_native_models(providers, routes)
         save(template/'models.json', providers)
         save(template/'settings.json', bind_native_model_scope(json.loads((template/'settings.json').read_text()), routes))
         save(template/'pi-fff.json', {'mode':'tools-only'})

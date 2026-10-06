@@ -1,5 +1,7 @@
 # 好的实验设施：标准与验证方法
 
+2026-10-07 配方更正：首次 P1 因设施默认错误使用耗尽 ARC，返回 HTTP 402 `insufficient_balance`，没有真实生成进展。下文原 ARC 路由冻结已撤销，后续验收使用集中维护的当前自费配方；不等待 ARC 充值，不由验收会话自行改供应商。先接通配方冻结与运行网关的实际消费，再由同一独立会话继续已授权使用目标。原失败记录保留，不计为通过；暂停/恢复、生成与接续仍待实际验收。
+
 本页先定义用户要完成的工作，再说明如何观察收益和归因。它不是新增运行门禁。现有代码是否保留，由其对这些结果的贡献决定；组件数量、代码行、命令数和故障数都不能单独决定重写。
 
 ## 使用结果
@@ -87,13 +89,55 @@
 
 ## 独立实际验收：2026-10-06 冻结安排
 
+### 2026-10-07 自然请求：Hosted GitHub Stage1 → Stage2
+
+主会话将 BookStack 发送连接故障交由网关负责人继续修复，要求保留现场，改为使用 `pi-minimal-vv-dx-test` 在官网完成 GitHub 第一阶段后接第二阶段，当前自费配方，不参加比赛，并观察状态、日志及自动保存。北京时间 01:25:51 执行维护三参数入口 `lab start pi-minimal-vv-dx-test hosted github-stage-1`，run `7868abfa67fa4ce096126ccc768e4bde`。不停止或接管同账户其它运行；本次流程仅在第一阶段 completed 后 restart 到 github-stage-2，失败不冒充阶段交付。原件入口 `runs/finals-experiment-loop/validation/github-hosted-*`。当前装配中，尚未取得平台执行或评分结果。
+
+### 2026-10-07 自然请求：WSL BookStack
+
+#### 完成生成与随题评测的接续
+
+主会话修复代理大小限制、身份传递与私有文件回收后，再次授权从保存现场完成 BookStack 并跑题目自带测试。北京时间 01:13:31 调用 `lab restart bf51263913f7414d9d50207deaa417c8`，新 run `a0d8fdab6eea4fe295c1bbcff65bca41`，program version `bab048249d8b542419ad227f3fa72d613e2f867871bba98da4ef9f67dbf90b56`，继续原 native session。此次约一分钟返回；公共 status 直接显示 running 与 Docker resources，实测瞬时内存 438.8 MiB/2 GiB，修正前 unknown 问题已在真实使用中消失。普通 logs 仍只有 runtime 构建信息，费用继续 self-funded-provider/not_collected、金额与币种为空。已通过维护 `lab wait` 等待终态；随题评测采用继承 task 配置中的 BookStack evaluations，确认未自动派发前不重复派发。原件为 `validation/bookstack-wsl-completion-*`；当前尚未完成生成或取得评分。
+
+本次随后失败：网关 request 1 与 3 到 QIANFAN_TOKEN_PLAN 取得 HTTP 200 并 complete；request 2/4/5/6/7 每次约 30 秒出现 `error sending request: client error (SendRequest): connection error: Connection timed out (os error 110)`，日志 connect false。原生多次重试后退出，公共状态明确 failed/exit 1；不是先前 413，也不是有效业务零分。完整网关原错已保留 `validation/bookstack-wsl-completion-gateway-error.txt`。终态约 01:17:44，自动保存约 01:17:56 返回 saved true/errors 空，显式排除 inputs/sdk-workspace/submission/.private/**；本轮无须手工同步容器身份或修权限，保存修复取得实际证据。没有完成应用，默认程序未继续随题评测。
+
+有界只读网络核对显示 WSL 宿主此时对 Qianfan 两个 DNS IPv4 地址分别 HEAD 返回 404、Ark 返回 401，均很快；这不能证明失败请求在容器中从未发送，也不能拿后来可达否定原始超时。日志需要手工找到 producers/当前 run/gateway.log 才能从 502 追到具体发送连接错误，普通 logs 仍不够。已咨询 transport_decision advisor 判断同一已授权配方下的安全接续办法；不扩大不明发送错误的自动 fallback、不切供应商、不盲目重复付费启动。生成与随题评测的目标仍由本会话持有。
+
+advisor 返回的可采用判断是：锁定依赖中 SendRequest 与连接建立的 Connect 不同，connect false 不能直接改判，committed false 仅指代理未向下游提交响应，不能证明上游未受理。约 30 秒与 reqwest 默认 TCP user timeout 一致，但这只是解释候选，未证实具体网络根因。宿主 HEAD 的能力范围已明确，不再重复同一核对；供应商受理与费用目前未知。下一步需执行 owner 修复真实发送路径或由主会话明确更新已冻结的自费接续安排，再由本验收者继续，不能把原样反复启动当作已修复。该 advisor 未启动模型、未改源码；本次无生成/评测在途。
+
+#### 自费配方修正后的实际接续
+
+主会话通知维护入口已接回当前自费配方后，于北京时间 00:53:53 执行 `lab restart e1ce4d6f6a174bb995c74f22e3db3a0d`。新 run 为 `bf51263913f7414d9d50207deaa417c8`，program version 为 `d43168ea42c3435cb51ec0f99ad7015f68ac8e23da23a9b33913270f15d2f4c5`，native_resume true，沿用 session `01a11204-0bfb-74ee-9dc0-8ed3ea67cb60`。冻结配方实际为 self-funded，Flash 路由顺序为 QIANFAN_TOKEN_PLAN、ARK_CODING_PLAN、QWEN，advisor 为 ARK_CODING_PLAN 的 kimi-k2.7-code；路由声明本身不作为全部上游均被调用的证据。共享 runtime 首次部署约四分钟，状态已有 assembly/dispatch 阶段，首次 CLI 返回约 00:58。
+
+容器 00:57:49.221 启动，原生 session 随后保存真实 assistant 响应、read/bash 等工具结果。00:59:07.106 的 pause 回执 exit 0，Docker 实际 Paused true；明确等待 30 秒，00:59:57.657 resume/unpause 回执 exit 0，实际 Running true/Paused false，同一容器 ID 未变。由于独立记录与工具往返，实际暂停区间为约 50.55 秒，不声称严格半分钟。恢复后 01:00:00 至 01:00:27 有新增 read 与模型响应，证明原生执行继续；应用尚在需求/技能阅读阶段，不能宣称应用功能已实现。
+
+01:00:27.885 的原生 assistant 返回 `413 {"code":"body_limit_or_read_error","type":"model_proxy"}`，随后 01:00:33.294 的 stop 回执 exit 0。Docker 实际 01:00:31.211 以 exit 1 退出，停止命令成功但终态属于原生错误导致 failed，不能改写成正常完成或由用户停止导致的退出。本次不因该错误另起付费运行，用户要求停止保存已执行。
+
+公共 status 在容器 running/paused/resumed 时仍为 unknown，原因是远端 worker 的 records 缺少本次实际 docker.json；验收者必须直接只读 Docker inspect 才能确认控制效果。为完成终态保存，将 Mac 已冻结的本次真实 docker.json 原件同步到同一远端 run 的 records，未制造容器身份或更改控制目标。公共 logs 仍只显示 runtime 构建信息，真实活动与 413 要到原生 session 定向查找。自费 spend 为 not_collected、value/currency null，来源说明明确不用 ARC shared-key meter；未虚构套餐单价或把未知记为零。公共过程资源采集也未提供可用分项，本次不能给 collector/gateway 峰值结论。
+
+保存首次失败原因是 inputs/sdk-workspace/submission/.private/model-proxy 下的 root 私有目录不可读。已保留失败回执；停止后将该私有目录整体移至同一远端 run 的 .private/submission-services，原位置保留绝对路径引用，Mac 已取得的同名目录移至本 run 的 .private/recovered-submission-services，未放宽凭据权限、删除私有原件或把秘密带入 data。第一次重新保存因原目录非空发生 rsync exit 23，原错同样保留。最后维护执行保存入口于 01:02:16.222 返回 saved true/errors 空，scope 为 data/workspace、data/harness、records；Mac data 约 37 MiB，容器实际 exited，远端原件仍保留。本次仅修复现场接线与私有存储位置，没有覆盖并行 owner 的共享源码。
+
+本次接续至保存约八分半墙钟。使用负担主要是首次 runtime 部署等待、公共 lifecycle 无法解释真实容器、普通日志不展示原生错误、自费费用未采集，以及终态保存需要两次现场修复。暂停/恢复与恢复后的真实原生活动已有证据；应用质量、严格 30 秒暂停、自费真实账单与完整自动回收无需修复均未证明。原件统一为 `runs/finals-experiment-loop/validation/bookstack-wsl-*`，完整现场为 `runs/lab/runs/bf51263913f7414d9d50207deaa417c8`。
+
+本次派单只要求使用 `pi-minimal-vv-dx-test` 在 WSL 跑 BookStack，运行后暂停半分钟再恢复，查看状态、日志与费用，确认真实进展后停止保存。未附操作导航。验收者从 `lab/README.md` 找到维护入口，于北京时间 00:14:40 调用 `python3 -m lab start pi-minimal-vv-dx-test wsl bookstack`，生成 run `e1ce4d6f6a174bb995c74f22e3db3a0d`。本行实际操作取代此前准备矩阵中 A 的金额策略停止；后续结论只覆盖本次实际动作。
+
+启动阶段已观察到：构建约 839 MiB 的包，组装 SDK 工作区约 2.4 GiB，先传至 WSL 的 `data/sdk-workspace`，然后再传整个 `inputs`。北京时间 00:23:25 仍未返回启动结果，状态统一显示 starting/activity unknown，日志仅 runtime 导出，尚未观察到模型活动。WSL 00:22:29 可用空间约 7.3 GiB。需要另查构建文件及进程才能分清等待阶段，属于本次真实寻找/诊断成本，不是生成耗时。原件位于 `runs/finals-experiment-loop/validation/bookstack-wsl-*`，完整 run 记录位于 `runs/lab/runs/e1ce4d6f6a174bb995c74f22e3db3a0d`；任务仍在进行，尚未证明 pause/resume、真实进展或保存完成。
+
+北京时间 00:25:31 首次返回后读取状态为 failed。Docker 实际 StartedAt 为 00:20:00.357，FinishedAt 为 00:20:28.328，退出码 1；启动返回之前模型已失败约五分钟。原生 Pi session `01a11204-0bfb-74ee-9dc0-8ed3ea67cb60` 首次请求返回 HTTP 402，code 为 insufficient_balance，原错为 `access key balance is exhausted`，request id `2026100700202935341752974272`。没有模型输出或应用实现进展，暂停半分钟/恢复/进展后停止均未完成，不能以建好容器或有 message_end 算通过。首次诊断曾推断需要 ARC 余额或凭据；主会话已更正为默认模型配方接错，后续等待维护入口接回当前自费配方。本次没有切供应商或重复付费启动。
+
+费用采集为 baseline→terminal 的 account-key-window 差值 0 CNY、0 tokens，来自 meter-baseline.json 和 meter-terminal.json，明确 note 为 shared access-key window delta，不是精确单 run 费用。原生 usage 同样为零，但不凭它证明所有费用来源可靠。状态在 lifecycle failed 时仍显示 activity active、brief latest Pi session message，错误响应被当作最近活动；普通 `lab logs RUN` 只显示 package-build 的 runtime 导出，HTTP 402 必须进入 session.jsonl 定向取证才能找到。以上两点属于错误可见性负担。
+
+首次保存为 saved false，rsync exit 23，原因是 root:root/0600 的 auth.json 和 models-store.json 对宿主执行用户不可读。已保留原错到 `validation/bookstack-wsl-save-original.json`，只读取两个文件是否为空及顶层键名，确认均为空对象后，仅将这两个现场文件所属用户修正为原 run 目录的 1000:1000，权限保持 0600，未删除文件或扩大读取权限。随后调用维护执行保存入口，00:27:27 返回 saved true、errors 空，scope 为 data/workspace、data/harness、records；原件为 `validation/bookstack-wsl-save-recovered.json`。Mac 回收 data 约 11 MiB，完整远端现场保留。此操作恢复了本次保存，不代表新运行已修复根因；源码正由原 owner 修改，验收者未覆盖共享源码或提交。
+
+本次从三参数启动到阻塞诊断与保存约十三分钟墙钟，包含构建、重复传输、实际 28 秒失败执行、查询与定向排错，不能称为主动劳动或模型生成耗时。已完成入口实际尝试、状态/日志/费用读取和失败现场回收；未完成的 pause/resume 与真实生成进展仍由同一验收会话持有，待统一装配实际消费当前自费配方后继续本次使用目标，不等待 ARC 可用性。
+
 独立会话持续负责真实首次使用、必要设施修复、实际部署与验证，共享修改与对应 owner 协调，暂不自行提交共享源码。当前等待主会话提供可消费版本与维护入口，尚未启动付费运行。准备时阅读过本任务设计，实际操作若获得设计者口头导航，单列协助成本，不声称完全冷启动独立成功。
 
 本节修订此前将三类评测强套同一 GitHub 应用、将所有模型映射 Flash 的安排。GitHub Stage1 没有真实随题 tests；`benchmarks/hackathon` 自述为公开需求代理，属于 simulate。真实随题测试采用 `third_party/arc-bench/arc-bench-lite/bookstack/tests`，其需求来自同级 requirements。BookStack 的 task eval 与 GitHub 的 simulate/official 结果属于不同来源应用，不能声称三者绑定一个快照。每项实际评测仍绑定自己的不可变应用快照。这里只核对目录来源与维护说明，不阅读隐藏测试内容，也不修改外部评测器。
 
 GitHub 输入固定为 `hackathon--github-stage-1`、`hackathon--github-stage-2`，公开需求来源分别为 `runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-1/requirements` 和同级 `github-stage-2/requirements`；BookStack 输入来自 `third_party/arc-bench/arc-bench-lite/bookstack/requirements`。交付后保存实际 task 配置与公开需求版本，初始运行不带历史应用、原生状态、费用或隐藏报告。
 
-variant 来源固定：`I14-dx-test` 从 `pi-braid-i14` 派生；名称为 `pi-minimal-vv-dx-test` 的新 variant 从 `pi-minimal` 派生，不引入旧 vv tester/e2e 行为。路由全部使用 ARC `https://api.arc-bench.com/v1` 与凭据引用。I14 保持 root `glm-5.3`、fast/visual `glm-5.3-flash`、角色可用 `kimi-k3`/`deepseek-v4-flash` 的实际模型闭包；Pi 保持主角色 `glm-5.3-flash`、advisor `kimi-k2.7-code`。逻辑别名和 ARC 实际上游模型 ID 在交付 route 中逐项记录，不把不同模型偷偷映射成 Flash，不切供应商。受限模型合计只允许一个 Braid session 使用，保护须按 Braid session 生效；运行矩阵串行，不以子 Agent 数量替代该限制。
+variant 来源固定：`I14-dx-test` 从 `pi-braid-i14` 派生；名称为 `pi-minimal-vv-dx-test` 的新 variant 从 `pi-minimal` 派生，不引入旧 vv tester/e2e 行为。当前模型通道由公共 `harness/model-recipes/self-funded.json` 选择供应商链，不使用已耗尽 ARC API；旧 P1 的错误冻结与响应原样保留。I14 保持 root `glm-5.3`、fast/visual `glm-5.3-flash`、角色可用 `kimi-k3`/`deepseek-v4-flash-0731` 的实际模型闭包；Pi 保持主角色 `glm-5.3-flash`、advisor `kimi-k2.7-code`。每个 run 冻结实际选中的 deployment 顺序、wire model 与 per-provider 描述，不把不同模型偷偷映射成 Flash，不由验收者临时换供应商。受限模型合计只允许一个 Braid session 使用，保护须按 Braid session 生效；运行矩阵串行，不以子 Agent 数量替代该限制。
 
 不参与比赛，官方生成/重放显式 `self_funded`，不继承历史 `official_evaluation` 或比赛提交身份。费用不限不等于无限运行：下表最多八次生成执行，每个生成 run 以四小时为观察和停止边界，评测由实际平台终态完成。设施失败保留原件，由同一 owner 修复后明确接续，不盲目重发未知收费写入。已冻结应用的独立评测可与下一 stage 并行，不接管其它任务。
 

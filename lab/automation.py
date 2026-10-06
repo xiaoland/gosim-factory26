@@ -61,7 +61,13 @@ def default(path):
             raise RuntimeError(f"run terminal but result recovery has not completed: {save}")
         time.sleep(2)
     from .arc_bench.evaluate import freeze_application, evaluate_run
-    snapshot = freeze_application(path)
+    try:
+        snapshot = freeze_application(path)
+    except Exception as exc:
+        write_json(path / "records/automatic-evaluations.json", {
+            "items": [{"configuration": entry, "error": f"{type(exc).__name__}: {exc}"}
+                      for entry in entries], "dispatch_complete": True, "as_of": time.time()})
+        return
     launched = []
     for entry in entries:
         try:
@@ -70,12 +76,13 @@ def default(path):
         except Exception as exc:
             launched.append({"configuration": entry, "error": f"{type(exc).__name__}: {exc}"})
         write_json(path / "records/automatic-evaluations.json", {"snapshot": str(snapshot),
-                   "items": launched, "as_of": time.time()})
+                   "items": launched, "dispatch_complete": len(launched) == len(entries),
+                   "as_of": time.time()})
 
 
 def relay(path):
     """Recover saved remote records; never run a second execution observer."""
-    from .arc_bench.local_run import sync_saved, save
+    from .arc_bench.local_run import sync_saved, save, mirror_saved_evaluations
     path = run.resolve(path)
     while True:
         synced = sync_saved(path)
@@ -85,6 +92,18 @@ def relay(path):
             receipt = path / 'records/result-save.json'
             if row.get('lifecycle') in run.TERMINAL and receipt.is_file():
                 if json.loads(receipt.read_text()).get('saved') is True:
+                    entries = run.run_layout.manifest(path).get('task_config', {}).get('evaluations', [])
+                    if row.get('lifecycle') == 'completed' and entries:
+                        dispatched = path / 'records/automatic-evaluations.json'
+                        if not dispatched.is_file():
+                            time.sleep(10)
+                            continue
+                        evaluations = json.loads(dispatched.read_text())
+                        if not (evaluations.get('dispatch_complete') or
+                                len(evaluations.get('items', [])) >= len(entries)):
+                            time.sleep(10)
+                            continue
+                        write_json(path / 'records/evaluation-relay.json', mirror_saved_evaluations(path))
                     recovered = save(path)
                     write_json(receipt, recovered)
                     if recovered.get('saved') is True:

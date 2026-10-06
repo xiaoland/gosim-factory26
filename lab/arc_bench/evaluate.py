@@ -325,7 +325,7 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
     task = str(config.get("task") or task_alias or platform_task)
     run_root = source.parents[1]
     evaluation = create_run(run_root, source_state.get("variant", "unknown"), target, task,
-                            route=config.get("route", source_state.get("route")),
+                            route=config.get("route"),
                             competition=config.get("billing_mode") == "competition" or
                             bool(config.get("competition", False)),
                             source={"run_id": source_state.get("run_id", source.name), "kind": kind})
@@ -384,9 +384,25 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
     # Resolve a named target from the maintained registry without assembling
     # the generation variant.  This is the only target materialization needed
     # before the execution adapter starts an evaluation run.
+    from .execution import _target as resolve_target, freeze_model_channel
     if not manifest.get("target_config"):
-        from .execution import _target as resolve_target
         manifest["target_config"] = resolve_target(manifest)
+    target_config = dict(manifest["target_config"])
+    if target_config.get("kind") == "hosted":
+        # Hosted upload needs a frozen model channel even for a replay.  The
+        # billing identity remains separate in ``billing_mode``.
+        frozen_state, target_config, _ = freeze_model_channel(
+            evaluation, manifest, target_config)
+        manifest.update(frozen_state)
+    else:
+        # Local task/simulate evaluation is a no-model application check. Do
+        # not read or transport a generation recipe, provider environment, or
+        # route merely because the target registry has generation defaults.
+        for field in ("model_recipe", "model_aliases", "model_alias_map",
+                      "environment_file", "credential_file", "credential_env",
+                      "model_config", "route"):
+            target_config.pop(field, None)
+    manifest["target_config"] = target_config
     manifest["target_kind"] = manifest["target_config"].get("kind")
     manifest["evaluation_assembly"] = {
         "mode": "replay" if replay_package else "noop" if noop_package else "argv",
@@ -411,12 +427,19 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
     # Do not start the generation default automation here (it would recurse
     # into another evaluation after a terminal replay).
     from lab.run import _background
-    _background(evaluation, "lab.automation", ["observe", str(evaluation)], "supervisor")
+    observer_pid = _background(evaluation, "lab.automation", ["observe", str(evaluation)], "supervisor")
+    child = {"run_id": manifest["run_id"], "path": str(evaluation),
+             "source_run": manifest["source_run"], "kind": kind,
+             "target": target, "observer_pid": observer_pid,
+             "observer_record": "records/supervisor.json"}
+    write_json(layout["records"] / "child-run.json", child)
     if isinstance(started, dict):
         return {**started, "run_id": manifest["run_id"], "path": str(evaluation),
-                "source_run": manifest["source_run"], "evaluation_kind": kind}
+                "source_run": manifest["source_run"], "evaluation_kind": kind,
+                "child_run": child}
     return {"run_id": manifest["run_id"], "path": str(evaluation),
-            "source_run": manifest["source_run"], "evaluation_kind": kind, "started": started}
+            "source_run": manifest["source_run"], "evaluation_kind": kind,
+            "started": started, "child_run": child}
 
 
 def prepare(application, output, *, host_runtime_receipt, runner_runtime_receipt,

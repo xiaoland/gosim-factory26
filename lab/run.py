@@ -220,7 +220,14 @@ def logs(run, *, follow=False):
         for log in sorted((path / "records").glob("*.log")):
             with log.open("rb") as stream:
                 stream.seek(cursors.get(log, 0))
+                first_chunk = True
                 while chunk := stream.read(65536):
+                    if first_chunk:
+                        metadata = log.with_name(log.name + ".meta.json")
+                        boundary = json.loads(metadata.read_text()) if metadata.is_file() else {}
+                        suffix = "; 包含迁移历史，当前 run 边界未知" if boundary.get("retained_history") else ""
+                        sys.stdout.write(f"\n--- {log.name}{suffix} ---\n")
+                        first_chunk = False
                     sys.stdout.write(chunk.decode(errors="replace"))
                 cursors[log] = stream.tell()
         sys.stdout.flush()

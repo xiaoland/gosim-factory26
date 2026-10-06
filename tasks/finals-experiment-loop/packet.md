@@ -1,10 +1,28 @@
 # 决赛实验基础设施重设计
 
+## 当前纠正：模型配方实际消费
+
+2026-10-07 用户指出，验收错误使用已明确耗尽的 ARC API，而非当前自费配方。主 Agent 承担这次冻结配置错误；历史 ARC 授权不代表本轮应选 ARC。P1 `e1ce4d6f6a174bb995c74f22e3db3a0d` 实际首次请求为 HTTP 402 `insufficient_balance`，没有应用生成进展，不能算有效零分或验收通过。原始 run、请求错误与保存材料保留；不要求用户补充 ARC 额度。
+
+后续本轮验收改用集中维护的当前自费配方 `harness/model-recipes/self-funded.json`。生成装配与 Hosted 评测共用 `freeze_model_channel`，本地无模型评测不读取供应商凭据；运行入口已实际消费冻结路由和 selected catalog，不再只复制 `--route` 文件。per-provider 模型描述与私有凭据一并装配，不把官网 `billing_mode=self_funded` 当作模型配方切换。验收会话不负责寻找凭据或拼供应商配置。此节覆盖下文和 evaluation 中旧 ARC 冻结及“尚未收费运行”的过时状态；旧段落保留为实施沿革。
+
+advisor `recipe_source_decision` 核对了文档审计中用户指定的 GLM/Flash/K2.7-code 链，以及 10 月 6 日 I14 实际冻结路由与千帆成功、Flash 千帆限额后 Ark 接管的记录。公共配方补齐同一来源的 K3 与 DeepSeek0731；两 variant 按实际角色闭包筛选，不从 catalog 的默认项选供应商。主已修改 execution/targets 的公共配方选择、所需 alias 冻结、selected catalog 与私有凭据材料；self-funded 路径移除 ARC Meter。provider_model_config 完成 builder/shared services 的网关消费链及 per-provider 参数，Linux binary 为 `runs/provider-model-config-20261007/delivery/model-proxy-linux-x86_64`，SHA256 `388b29d3002dbbf6add9051ad986cb6de46021736eace1d02b3ee4bf0a98d38f`。主接通原生模型描述，保留会话身份与兼容配置，并通过 Python 编译。已向原独立会话发送短消息继续 BookStack；尚无修复后实际调用或控制验收结果，不把源码编译当作通过。
+
+修复后实际接续 run 为 `bf51263913f7414d9d50207deaa417c8`，保留 P1 native scope。保存的 `data/harness/e1ce4d6f6a174bb995c74f22e3db3a0d/producers/bf51263913f7414d9d50207deaa417c8/gateway.log` 中六次 `upstream_headers` 均为 `qianfan-token-plan-glm-5.3-flash`、HTTP 200，证明本次确实消费自费配方而非 ARC。独立会话确认真实工具活动及 pause/resume，实际暂停约 50 秒（等待 30 秒另加操作往返）。之后出现代理 413 `body_limit_or_read_error`，终态 failed；费用未采集不记零。SDK 回收又遇到程序 `.private/model-proxy` 的权限边界，现场通过保留私有原件及移出 SDK 回收范围恢复 saved=true，不代表自动保存已通过。provider_model_config 继续负责 413 根因/修复与新 binary；cold_local_profile 继续负责 saved-facts 同步、私有状态/SDK 回收边界。详见 evaluation 的实际记录，应用完成与后续矩阵仍未通过。
+
 - **Objective**: 面向 2026-10-08 18:00 决赛截止，重设计开展、观察、控制、接续和分析 ARC 实验的完整设施。让 Agent 主要处理实验问题，不再负担环境接线、身份拼接和机械排错；simplicity、agent-friendly、traceability/observability 都以真实使用成本判断。
 - **Guardrails**: 2026-10-06 用户已明确批准实施计划开工、自由提交及真实模型独立会话验收，费用不是问题；原话见下文。不控制其它任务运行、不清理历史数据、不 push。Mac 产物只在 WorkSSD。保留他人工作区改动；不编写或运行 Factory/Braid 的测试、smoke 或换名自检。用户新增的自实现模拟测试指生成应用的评测，不扩大为设施测试。
 - **Verification**: 先定义代表需求与可观察结果，再以独立 Agent 的实际使用 profiling 取得反馈。覆盖三参数启动、status、pause/resume、同 variant restart、本地与 Hosted、Pi-only 与 Braid、OTLP/Console、资源、费用/turn 策略、顺序 stages、失败/取消及完整结果保存。查阅历史材料的耗时只作为诊断基线，不能充当真实启动或改造收益证明，方法见 [evaluation](evaluation.md)；不把这些活动塞进实现计划的调查阶段。
-- **Current Truth**: 用户已批准 [design](design.md) 与六段 [implementation](implementation.md) 开工；公共 run CLI/API、自动化与文档已进入源码，两个专用 variant 材料已派生，执行与观测草稿仍在修正实际接线，尚不可当作可运行交付或验收通过。没有启动本轮收费模型。已定合同：pause/resume 保持原 run；restart 同 variant 整体迁移 data 并创建新 run，同 task 恢复原生执行、新 task 建新原生状态；status 执行事实与脚本 activity 分别展示；共享服务在 sfp7，Hosted 轻量自包含；Braid 自有累计证据后台投影。
-- **Next Step**: 依六段确定改动完成实现与部署，派生 I14-dx-test、pi-minimal-vv-dx-test，安排独立会话实际验收。真实验收题目、route、控制损失及运行身份在 evaluation 中冻结并记录；费用不限不是无限运行，也不授权接管其他任务。
+- **Current Truth**: 用户已批准 [design](design.md) 与六段 [implementation](implementation.md) 开工。自费配方已由真实请求 HTTP 200 证明实际消费，pause/resume 保持同一容器；最新 BookStack 接续 `a0d8fdab6eea4fe295c1bbcff65bca41` 约一分钟返回，status 正确显示 running/failed、资源与原生错误，失败现场自动保存成功。该次后续连接超时，没有完成应用或取得随题评分；费用未采集，完整验收仍未通过。
+- **Next Step**: provider_model_config 核对千帆实际连接超时，cold_local_profile 修复 SDK 普通过程日志可见性；独立会话先执行已授权 Pi/Hosted GitHub 两阶段，BookStack 保留现场待明确接续条件。主集成自动评测子 run 的 Mac saved-facts 回收，不重复启动 observer。原失败、所选配方、实际请求及控制损失分别保留；不接管其它任务。
+
+2026-10-07 最新 Linux proxy 去除任意请求体字节上限，仍保留读取超时、JSON 边界和具体 `body_read_error`；交付 binary SHA256 为 `eeacf0fb751b53499941e01ac49b061e497eac3212b0debd8c1a521087e77388`。旧 `388b29…` 是上一接续的冻结身份，不覆盖旧 run 材料。P2 接续已不再返回 413，但发生 `502 upstream_transport_error`，原始诊断为 `Connection timed out (os error 110)`，处于 SendRequest，不能证明供应商未收到请求，因此不扩大模糊错误自动 fallback。普通 `lab logs` 仍缺 SDK 捕获的过程内容，该问题由本地负责人持续处理。
+
+主已修复生成装配未回写 Hosted frozen target_config 的共享边界，以及 Mac relay 在自动评测子 run 派发回执到达前退出的问题。原执行宿主仍是唯一 observer；Mac 仅登记已经派发的同身份 task-evaluation child 并启动 saved-facts relay。freeze application 失败保存具体派发错误，不留下无回执等待。上述最新接线仅完成静态编译，实际评测与 Hosted 仍待独立操作反馈。
+
+最新 proxy 为请求保留实际序列化 `request_bytes` 和 attempt 的 `elapsed_ms`，不复制或记录 prompt；交付 SHA256 `19562690787bf2e0a51aefb71e1d99e35e6f70054fe6f57e050344ac8de83fd8`。P2 网络事后核对只证明宿主当时可达，不能替代容器失败时证据，故不擅自改供应商或 timeout。SDK 确认普通过程与 stderr 合并到 `.arc/stdout.log`，新增 observer 回收为 records/agent.stdout.log；新运行以启动前字节 offset 分隔，旧无 baseline 的记录明确包含迁移历史，不默认展开完整 rollout。
+
+实际浏览器 Console 初次连接拒绝，原因是 Mac→sfp7 隧道退出；共享服务仍 HTTP 200，恢复 ssh -fNT 转发后页面因列表 manifest 字段缺失崩溃。cold_console_profile 持续负责 API/UI 契约、重新编译部署及实际页面反馈。Pi/Hosted Stage1 `7868abfa67fa4ce096126ccc768e4bde` 已由独立会话启动，当前在上传自包含包，没有平台 run ID，不重复提交不明写请求；BookStack 完成及评测仍待恢复。
 
 ## 开工授权与责任
 
@@ -15,6 +33,10 @@
 2026-10-07 已移除 I14 dispatcher 对旧 execution context 的启动门禁，入口直接运行 variant。接续应用迁移到真实 template 根，native 数据独立迁移；当前平台输入与私有评测上下文不被旧输入覆盖。Hosted 共用轻量 raw receiver，按当前 Lab run ID 单独保存 producer 数据；本地使用共享 Collector。执行端 supervisor/Python 自动化通过 remote spawn 接入，Mac relay 只消费保存的记录并回收数据，不成为第二套运行观察器。以上是源码接线状态，尚未进行本轮真实模型验收。
 
 已经向独立验收会话 `01a1118d-d790-7df1-93b5-df1801813158` 发送首个自然请求：“现在帮我用 pi-minimal-vv-dx-test 在 WSL 跑一次 BookStack。跑起来后暂停半分钟再恢复；看一下状态、日志和费用，确认有真实进展后停止并保存现场。顺便记录一下使用中哪里费劲。”不提供 CLI 操作清单或内部技术导航。请求开始实际 P1 使用，但发送成功不证明已经运行。费用目前可采集共享 account-key-window delta，不能冒称 per-run，因此 P1 的精确费用自动停止仍未覆盖；这次手动停止属于原验收矩阵明确允许的接续准备。WSL 固定实际 loaded image ID cfb919…，源/目标 17 层一致与默认配置差异的证据保存在 `runs/arc-bench-image-comparison-20261007.json`。
+
+首个实际 P1 run 为 `e1ce4d6f6a174bb995c74f22e3db3a0d`。独立会话已观察到完整 ZIP 构建及输入重复传输，`starting` 未区分阶段会增加查日志成本；尚未收到其模型活动、pause/resume 或保存验收结果。advisor 因官方 SDK agent 目录会解引用 symlink，建议本地小程序目录＋固定只读 runtime、Hosted 完整 ZIP；已采用，P1 保持原冻结材料不打断，后续 P2 记录各段耗时与传输事实，不凭源码宣称收益。当前任务源码提交 `f01e5fa1`，后续 runtime/运输及 provider 配置修正仍进行中。
+
+2026-10-07 用户追加：“llm gateway / model proxy 注意引入 per provider 的模型配置，比如 ARK 的 kimi-k2.7 的 max_tokens 和其它提供商的配置就不太一样。”已交 advisor 决定 catalog deployment 归属及 cap/default 语义，再交 provider_model_config 负责 catalog、Rust proxy、LiteLLM 发送边界及说明；主接 native 模型描述和统一装配。该责任不控制当前实验，也不擅自增加其它供应商的付费调用。具体数值必须核对对应 provider/套餐的来源，不能以一个模型名推导共同上限。
 
 已安排 local_execution_decision advisor 判断官方 SDK prepare 后直接 Docker create/start 与继续捕获 SDK stdout 容器身份的取舍。判断依据是实际 SDK `docker run --rm`、随机容器名和只在结束后保存的 local-run.json；尚无本轮收费运行，不能把 SDK prepare 成功当作运行控制通过。
 
@@ -38,7 +60,7 @@ Console owner 已报告 sfp7 的实际部署：独立目录 `/home/yyh/factory26
 
 旧入口退役的调用核对确认：新评测仍可经 ARC adapter 导入旧 artifacts/core/telemetry，I14 的 experiment_entry/bootstrap 仍带 state_writer，package_agent/runtime 也被其他当前材料构建调用。整目录删除 lab.exp 会破坏这些维护调用方；已经冻结的 runner.pyz 不读当前源码，但重新构建仍受影响。新 run 必须提取实际 ARC/材料功能并切断门控，而非依赖 gate 在某些环境 no-op；旧源码中他人的未提交变化不得覆盖。该核对由 cold_local_profile 完成，只读，没有控制旧运行。新增 advisor 委派被平台 thread limit 拒绝，当前没有取得新的重大退役取舍意见，不把只读依赖核对冒充 advisor 建议。
 
-## 当前需求与决定
+## 历史需求与决定沿革
 
 用户要求先定义“怎样算好的实验设施”，依据实验需求、工程知识、Agent 使用 profiling 建立完整因果链，不为找问题而找问题。Mac、WSL、sfp7 和官网差异属于设计对象，环境触发、集成耦合与设施内部缺陷分别归因。Exp Console 属于实验基础设施，不留作无期限的外围改进。
 
@@ -46,7 +68,7 @@ Console owner 已报告 sfp7 的实际部署：独立目录 `/home/yyh/factory26
 
 2026-10-06 用户补充了自动且强耦合的自实现模拟测试、官网重放、试题自带三类评测，统一各 variant 共用的 gateway/collector 装配，以及来自采集的 spend、native session turn idle 等 Python 变量。同期提出的跨 variant、多路径接续后来被用户撤回，当前同 variant 整体 data 迁移的决定见下文。
 
-本次授权原话：“我同意你定下的这个推进方案，在开始实现之前和我确认方案，你可以自由继续推进。”这是推进方法及设计工作的认可，不是当前 HLD 所有取舍已获认可，也不是开工许可。下一次集中复核应给出可决定的架构、具体改动范围、独立预演结论及真实验收安排。
+早期方案阶段的授权原话：“我同意你定下的这个推进方案，在开始实现之前和我确认方案，你可以自由继续推进。”当时只认可设计推进方法，尚未批准开工。该阶段已被顶部记录的明确开工授权替代；本段保留沿革，不要求当前执行重新申请许可。
 
 用户随后明确：“核心调度对象/控制单位是run，而不是实验。（我后续还会不断补充，你不必停下）；你总是可以有不同的看法”。已撤掉把 run 定义为整条实验链再用 attempt 控制的候选；每次实际可独立派发/停止执行是 run，内部阶段服从平台真实粒度。来源、接续、重试和独立评测通过 run 关系连接，experiment 仅标签。stop 只操作指定 run，跨 run 操作与费用范围由普通 Python 程序明确表达。
 

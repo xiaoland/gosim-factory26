@@ -923,7 +923,7 @@ def model_bindings(base_url=None, visual_url=None, *, require_key=True):
     for name, route in bindings.items():
         if not isinstance(route, dict) or not route.get('provider') or not route.get('base_url'):
             raise ValueError(f'模型绑定缺少显式 provider/base_url：{name}')
-        if set(route) - {'provider', 'base_url', 'credential_env', 'model', 'model_id'}:
+        if set(route) - {'provider', 'base_url', 'credential_env', 'model', 'model_id', 'model_info'}:
             raise ValueError(f'模型绑定包含未知字段：{name}')
         if 'model_id' in route and (not isinstance(route['model_id'], str) or not route['model_id'].strip()):
             raise ValueError(f'模型绑定 model_id 必须为非空字符串：{name}')
@@ -957,6 +957,22 @@ def native_model_route(provider, model, bindings):
     return provider, model, bindings[provider]
 
 
+def _apply_native_model_info(model, route):
+    """Apply confirmed native fields without changing an existing request budget.
+
+    Provider capabilities are metadata, not Pi compatibility configuration.
+    Missing fields retain the variant's native behavior.
+    """
+    import copy
+    info = route.get('model_info') or {}
+    if 'contextWindow' in info:
+        model['contextWindow'] = info['contextWindow']
+    if 'maxTokens' in info and 'maxTokens' in model:
+        model['maxTokens'] = min(model['maxTokens'], info['maxTokens'])
+    if 'compat' in info:
+        model['compat'] = copy.deepcopy(info['compat'])
+
+
 def bind_native_models(value, bindings):
     """Split model-specific transports so each provider owns exactly one credential."""
     import copy
@@ -968,6 +984,7 @@ def bind_native_models(value, bindings):
                 providers[alias] = {k: copy.deepcopy(v) for k, v in provider.items() if k != 'models'}
                 providers[alias].update(baseUrl=route['base_url'], apiKey='$' + route['credential_env'], models=[])
             model = copy.deepcopy(definition)
+            _apply_native_model_info(model, route)
             model['id'] = model_id
             if 'baseUrl' in model:
                 model['baseUrl'] = route['base_url']
@@ -1008,6 +1025,7 @@ def bind_retained_native_models(value, bindings):
     for name, provider in value['providers'].items():
         for definition in provider['models']:
             _, model_id, route = native_model_route(name, definition['id'], bindings)
+            _apply_native_model_info(definition, route)
             api = definition.get('api', provider.get('api'))
             if api not in {'openai-completions', 'openai-responses'}:
                 raise ValueError(f'恢复逐模型传输不支持原生API：{name}/{definition["id"]}/{api}')

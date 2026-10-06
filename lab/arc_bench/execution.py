@@ -18,6 +18,7 @@ import time
 from typing import Any, Mapping
 import shutil
 import secrets
+import shlex
 
 from .run_layout import manifest, paths, write_json
 
@@ -83,6 +84,76 @@ def _tree_digest(root: Path) -> str:
     return digest.hexdigest()
 
 
+def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mapping[str, Any]):
+    """Freeze the selected model route and private provider bindings.
+
+    This is shared by generation assembly and independent evaluations.  It
+    performs no model request and never chooses a catalog default: a recipe or
+    explicit route must cover every alias declared by the selected variant.
+    The returned state/target contain only references to the run-local private
+    provider file; secret values never enter the manifest.
+    """
+    run_path = Path(run_path).expanduser().resolve()
+    layout = paths(run_path)
+    updated = dict(state)
+    frozen_target = dict(target)
+    recipe = frozen_target.get("model_recipe")
+    route_input = state.get("route") or frozen_target.get("route")
+    if recipe:
+        route_input = route_input or _repo() / "harness/model-recipes" / f"{recipe}.json"
+    if not route_input:
+        if frozen_target.get("kind") == "hosted" and not frozen_target.get("model_config"):
+            raise ValueError("Hosted evaluation needs an explicit frozen model channel")
+        return updated, frozen_target, None
+    from scripts.hackathon_gateway import prepare_catalog, read_assignments
+    route = Path(route_input).expanduser().resolve(strict=True)
+    routes = json.loads(route.read_text())
+    aliases = frozen_target.get("model_aliases") or []
+    missing = set(aliases) - set(routes)
+    if missing:
+        raise ValueError(f"model recipe lacks required aliases: {sorted(missing)}")
+    routes = {alias: routes[alias] for alias in aliases} if aliases else routes
+    destination = layout["inputs"] / "gateway-routes.json"
+    write_json(destination, routes)
+    catalog, selected = prepare_catalog(_repo() / "harness/model-gateway.json", routes, aliases=aliases)
+    write_json(layout["inputs"] / "model-gateway.json", catalog)
+    references = {entry["litellm_params"][field].removeprefix("os.environ/")
+                  for entry in catalog["model_list"] for field in ("api_base", "api_key")}
+    environment_file = frozen_target.get("environment_file")
+    if not environment_file:
+        raise ValueError("selected model recipe has no private environment file")
+    environment = read_assignments(environment_file)
+    missing = references - environment.keys()
+    if missing:
+        raise ValueError(f"selected model recipe needs provider variables: {sorted(missing)}")
+    private = run_path / ".private"
+    private.mkdir(mode=0o700, exist_ok=True)
+    provider_env = private / "provider-env.json"
+    write_json(provider_env, {name: environment[name] for name in references})
+    provider_env.chmod(0o600)
+    updated["route"] = str(destination)
+    updated["model_recipe"] = recipe or "explicit"
+    updated["model_routes"] = selected
+    updated["provider_env_file"] = str(provider_env)
+    if frozen_target.get("kind") == "hosted":
+        primary = frozen_target.get("environment", {}).get("MODEL", "glm-5.3-flash")
+        try:
+            entry = next(row for row in catalog["model_list"]
+                         if row["model_name"] == primary and row["litellm_params"]["order"] == 0)
+        except StopIteration as exc:
+            raise ValueError(f"selected model recipe has no primary model {primary!r}") from exc
+        params = entry["litellm_params"]
+        base_name = params["api_base"].removeprefix("os.environ/")
+        frozen_target["credential_file"] = str(provider_env)
+        frozen_target["credential_env"] = params["api_key"].removeprefix("os.environ/")
+        frozen_target["model_config"] = {
+            "model": params["model"].removeprefix("openai/"),
+            "visual_model": "glm-5.3-flash",
+            "base_url": environment[base_name],
+        }
+    return updated, frozen_target, route_input
+
+
 def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
     """Materialize the selected variant and explicit target contract."""
     run_path = Path(run).expanduser().resolve()
@@ -93,6 +164,8 @@ def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
     if not source.is_dir():
         raise FileNotFoundError(f"variant is not installed: {variant}")
     layout = paths(run_path)
+    write_json(layout['records']/'status.json', {'lifecycle': 'starting', 'activity': 'unknown',
+               'brief': 'assembling program and frozen inputs', 'phase': 'assembly', 'as_of': time.time()})
     if any(layout["program"].iterdir()):
         raise FileExistsError(f"program already assembled: {layout['program']}")
     shutil.copytree(source, layout["program"], dirs_exist_ok=True, symlinks=True,
@@ -123,32 +196,47 @@ def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
                     "program_entry": entry, "assembled_at": time.time()})
     if updated["native_resume"] and state.get("requirements_version") != requirements_version:
         raise ValueError("native resume requirements differ from the retained session")
-    if state.get("route"):
-        route = Path(state["route"]).expanduser().resolve(strict=True)
-        destination = layout["inputs"] / "gateway-routes.json"
-        shutil.copy2(route, destination)
-        updated["route"] = str(destination)
+    updated, target, route_input = freeze_model_channel(run_path, updated, target)
+    updated["target_config"] = target
     contract = {
         "run_id": run_path.name, "native_scope_id": updated["native_scope_id"],
         "native_resume": updated["native_resume"], "requirements_version": requirements_version,
         "target_kind": updated["target_kind"],
+        'model_recipe': updated.get('model_recipe'),
+        'model_alias_map': target.get('model_alias_map', {}),
+        'provider_env_names': sorted({entry['litellm_params'][field].removeprefix('os.environ/')
+            for entry in json.loads((_repo()/'harness/model-gateway.json').read_text())['model_list']
+            for field in ('api_base', 'api_key')}) if route_input else [],
+        'model_environment': {name: value for name, value in target.get('environment', {}).items()
+            if name in {'OPENAI_BASE_URL', 'FACTORY26_BASE_URL', 'MODEL', 'VISUAL_MODEL',
+                        'FACTORY26_MODEL_PROVIDER', 'FACTORY26_VISUAL_PROVIDER'}},
     }
     write_json(layout["inputs"] / "lab-run.json", contract)
     write_json(layout["workspace"] / ".factory26/lab-run.json", contract)
     observability = target.get("observability") or state.get("observability")
     if isinstance(observability, Mapping):
         updated["observability"] = {key: observability[key] for key in
-                                     ("service_url", "registration_token_file", "collector_token_file", 'collector_url')
+                                     ("service_url", "registration_token_file", "collector_token_file", 'collector_url',
+                                      'import_host', 'import_root')
                                      if observability.get(key)}
     builder = source / "build.py"
     if not builder.is_file():
         raise FileNotFoundError(f"variant package builder is missing: {builder}")
     package_path = layout["inputs"] / "agent-package.zip"
     command = [sys.executable, str(builder), "--runtime", str(runtime),
-               "--skills", str(skills), "--output", str(package_path),
+               "--skills", str(skills),
                "--run-config", str(layout["inputs"] / "lab-run.json")]
+    if target.get('otlp_deps'):
+        command += ['--otlp-deps', str(target['otlp_deps'])]
+    if target['kind'] == 'local':
+        command += ['--directory', str(layout['program'])]
+    else:
+        command += ['--output', str(package_path)]
     if updated.get("route"):
         command += ["--route", updated["route"]]
+        command += ['--catalog', str(layout['inputs']/'model-gateway.json')]
+        if target['kind'] == 'hosted':
+            command += ['--provider-env', updated['provider_env_file']]
     if target["kind"] == "hosted" and state.get("source_run"):
         command += ["--seed-data", str(layout["workspace"].parent)]
     write_json(layout["records"] / "package-build.json", {"argv": command, "started_at": time.time()})
@@ -157,8 +245,16 @@ def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
         result = subprocess.run(command, cwd=_repo(), stdout=output, stderr=errors)
     if result.returncode:
         raise RuntimeError(f"variant package build exited {result.returncode}; see {layout['records']}/package-build.*.log")
-    updated["agent_package"] = str(package_path)
-    updated["agent_package_sha256"] = hashlib.sha256(package_path.read_bytes()).hexdigest()
+    write_json(layout['records']/'program-assembly.json', {
+        'started_at': updated['assembled_at'], 'finished_at': time.time(),
+        'transport': 'directory' if target['kind'] == 'local' else 'zip',
+        'program': str(layout['program'])})
+    if target['kind'] == 'hosted':
+        updated["agent_package"] = str(package_path)
+        updated["agent_package_sha256"] = hashlib.sha256(package_path.read_bytes()).hexdigest()
+    else:
+        updated['program_version'] = _tree_digest(layout['program'])
+        updated['runtime_source'] = json.loads((runtime/'runtime-source.json').read_text())
     write_json(layout["manifest"], updated)
     return updated
 
@@ -231,6 +327,8 @@ def _configure_observability(run: Path):
 
 def start(run: str | os.PathLike[str]) -> dict[str, Any]:
     run_path = Path(run).expanduser().resolve()
+    write_json(paths(run_path)['records']/'status.json', {'lifecycle': 'starting', 'activity': 'unknown',
+               'brief': 'dispatching to execution host', 'phase': 'dispatch', 'as_of': time.time()})
     _configure_observability(run_path)
     state = manifest(run_path)
     target = _target(state)
@@ -289,6 +387,11 @@ def _native_facts(run: Path):
                         row = {"at": stamp, "source": source, "session_id": identity,
                                "turn_id": value.get("turn_id"), "request_id": value.get("request_id"),
                                "response_id": value.get("response_id"), "event": kind}
+                        message = value.get('message') or {}
+                        if isinstance(message, dict) and message.get('stopReason'):
+                            row['stop_reason'] = message['stopReason']
+                            if message.get('errorMessage'):
+                                row['error'] = str(message['errorMessage'])[:16384]
                         if kind in {"message", "message_end"}:
                             messages.append(row)
                         if kind in {"response_headers", "message_end", "provider_turn", "turn_complete"}:
@@ -440,6 +543,7 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
                         sqlite3.connect(paths(run_path)["records"] / "telemetry.sqlite") as destination:
                     source.backup(destination)
                 mapped.append("records/telemetry.sqlite")
+                _import_raw(run_path, paths(run_path)['records']/'telemetry.sqlite')
             else:
                 gaps.append("current run raw collector database is unavailable")
         else:
@@ -452,3 +556,34 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
     return local_run.save(run_path)
 
 
+def _import_raw(run: Path, database: Path):
+    """Transfer saved Hosted raw evidence, independently of generation success."""
+    from urllib.request import Request, urlopen
+    from urllib.error import HTTPError
+    config = manifest(run).get('observability') or {}
+    if not config.get('import_host') or not config.get('import_root'):
+        return
+    remote = Path(config['import_root'])/run.name
+    receipt = {'as_of': time.time(), 'source': str(database), 'complete': False}
+    try:
+        mkdir = subprocess.run(['ssh', config['import_host'],
+                                shlex.join(['mkdir', '-p', str(remote)])], capture_output=True, text=True)
+        if mkdir.returncode:
+            raise RuntimeError(f'raw import mkdir exit={mkdir.returncode}: {mkdir.stderr}')
+        copied = subprocess.run(['rsync', '-a', str(database),
+                                 config['import_host']+':'+str(remote/'telemetry.sqlite')],
+                                capture_output=True, text=True)
+        if copied.returncode:
+            raise RuntimeError(f'raw import rsync exit={copied.returncode}: {copied.stderr}')
+        request = Request(config['service_url'].rstrip('/')+'/api/import',
+                          data=json.dumps({'run_id': run.name, 'source': run.name}).encode(),
+                          headers={'Content-Type': 'application/json'}, method='POST')
+        with urlopen(request, timeout=60) as response:
+            result = json.loads(response.read())
+        receipt.update(result)
+    except HTTPError as error:
+        receipt.update(http_status=error.code, response=error.read(65536).decode(errors='replace'),
+                       error=f'{type(error).__name__}: {error}')
+    except Exception as error:
+        receipt['error'] = f'{type(error).__name__}: {error}'
+    write_json(paths(run)['records']/'raw-import.json', receipt)

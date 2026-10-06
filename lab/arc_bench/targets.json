@@ -2,19 +2,33 @@
   "defaults": {
     "sdk_source": "/Volumes/WorkSSD/Development/factory26-official-local/runner",
     "skills": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/skills",
+    "otlp_deps": "/Volumes/WorkSSD/Development/factory26/runs/deadline-20261003/local-five/overlays/common/support/otlp-deps",
     "memory": "2g",
     "cpus": "1",
     "observability": {
       "service_url": "http://127.0.0.1:18765",
       "registration_token_file": "/Volumes/WorkSSD/Development/factory26/.secrets/exp-console/sfp7-registration.token",
-      "collector_url": "http://172.30.0.1:18766"
+      "collector_url": "http://172.30.0.1:18766",
+      "import_host": "sfp7-ws.localhost",
+      "import_root": "/home/yyh/factory26-exp-console-20261006/service-root/imports"
     },
-    "environment_file": "/Volumes/WorkSSD/Development/factory26/.secrets/legacy-home-config/llm.env",
-    "environment": {"OPENAI_BASE_URL": "https://api.arc-bench.com/v1", "FACTORY26_BASE_URL": "https://api.arc-bench.com/v1"}
+    "model_recipe": "self-funded",
+    "environment_file": "/Volumes/WorkSSD/Development/factory26/.secrets/models.env",
+    "environment": {}
   },
   "variants": {
-    "I14-dx-test": {"runtime": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/runtime", "environment": {"MODEL": "glm-5.3"}},
-    "pi-minimal-vv-dx-test": {"runtime": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal/evolution-20261006/preparation/runtime"}
+    "I14-dx-test": {
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/runtime",
+      "remote_runtime": "/home/yyh/factory26-lab-runtime/i14-sequential-20261006",
+      "model_aliases": ["glm-5.3", "glm-5.3-flash", "kimi-k3", "deepseek-v4-flash-0731"],
+      "model_alias_map": {"deepseek-v4-flash": "deepseek-v4-flash-0731"},
+      "environment": {"MODEL": "glm-5.3"}
+    },
+    "pi-minimal-vv-dx-test": {
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal/evolution-20261006/preparation/runtime",
+      "remote_runtime": "/home/yyh/factory26-lab-runtime/pi-minimal-evolution-20261006",
+      "model_aliases": ["glm-5.3-flash", "kimi-k2.7-code"]
+    }
   },
   "tasks": {
     "bookstack": {
@@ -68,9 +82,7 @@
     "hosted": {
       "kind": "hosted",
       "cookie_file": "/Volumes/WorkSSD/Development/factory26/.secrets/legacy-home-config/playground.cookies.txt",
-      "credential_file": "/Volumes/WorkSSD/Development/factory26/.secrets/legacy-home-config/llm.env",
-      "competition_id": "hackathon",
-      "model_config": {"model": "glm-5.3-flash", "visual_model": "glm-5.3-flash", "base_url": "https://api.arc-bench.com/v1"}
+      "competition_id": "hackathon"
     }
   }
 }
