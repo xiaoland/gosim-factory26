@@ -90,6 +90,7 @@ def create_run(
 
 def paths(run: str | os.PathLike[str]) -> dict[str, Path]:
     run = Path(run).expanduser().resolve()
+    storage_path(run)
     return {
         "root": run,
         "program": run / "program",
