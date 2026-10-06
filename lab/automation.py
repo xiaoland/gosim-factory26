@@ -23,11 +23,14 @@ def observe(path):
                      "error": f"{type(exc).__name__}: {exc}"}
             write_json(path / "records/observation-error.json", facts)
         write_json(path / "records/status.json", facts)
+        run.publish(path)
         if facts.get("lifecycle") in run.TERMINAL:
             try:
                 saved = execution.save(path)
                 write_json(path / "records/result-save.json", saved)
-                return
+                run.publish(path)
+                if saved.get("saved") is True:
+                    return
             except Exception as exc:
                 write_json(path / "records/result-save.json", {"saved": False,
                            "error": f"{type(exc).__name__}: {exc}", "as_of": time.time()})

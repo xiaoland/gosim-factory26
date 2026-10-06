@@ -14,6 +14,12 @@
 
 独立验收会话 `01a1118d-d790-7df1-93b5-df1801813158` 负责真实首次使用与 profiling，不以阅读实现代替实际反馈。evaluation 已冻结最多八次生成与三项独立评测，覆盖 BookStack、GitHub Stage1/2 及策略/平台停止；费用来源未知不当作零，非正式参赛 self_funded。当前尚未开始收费验收，等待真实可消费执行与服务版本。旧段落中的“待开工”描述是历史授权沿革，不代表当前阶段。
 
+用户随后要求验收派单尽量接近平日的自然消息，不发长串明确边界或操作导航。已告知独立会话：前述长说明属于准备，不作为冷启动顺畅证据；真正交付后的派单只描述实验目标与关心的结果，入口查找与排错都计入真实使用负担。
+
+Console owner 已报告 sfp7 的实际部署：独立目录 `/home/yyh/factory26-exp-console-20261006`，loopback `127.0.0.1:18765`，服务 PID `3337058`，`/api/runs` 返回 200；Linux Braid binary 已编译并具备 `telemetry reconstruct --decoded`。这证明服务可启动，不证明真实 run 的生产、传输和投影已通过验收。执行 owner 的最新交付仍缺真实 ARC target/Hosted 接线，restart 仍有创建目录与旧 handle 继承问题，主未采用其“闭环完成”声明，已要求同一 owner 持续修复到实际可启动。当前仍没有本任务收费运行。
+
+公共 observer 已接入 Console saved-facts 发布，终态只有 `save` 明确返回 `saved: true` 才结束；发布失败独立记录，不改变运行生命周期。共享字段为 `observability.service_url`、`registration_token_file` 和 `collector_token_file`，秘密不进入迁移 data。此接线仍需真实生产者验证。
+
 ## 当前需求与决定
 
 用户要求先定义“怎样算好的实验设施”，依据实验需求、工程知识、Agent 使用 profiling 建立完整因果链，不为找问题而找问题。Mac、WSL、sfp7 和官网差异属于设计对象，环境触发、集成耦合与设施内部缺陷分别归因。Exp Console 属于实验基础设施，不留作无期限的外围改进。

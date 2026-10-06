@@ -19,7 +19,21 @@ TERMINAL = {"completed", "failed", "stopped"}
 
 
 def run_root():
-    return Path(os.environ.get("LAB_RUN_ROOT", ROOT / "runs/lab")).expanduser().resolve()
+    path = Path(os.environ.get("LAB_RUN_ROOT", ROOT / "runs/lab")).expanduser().resolve()
+    _storage_path(path)
+    return path
+
+
+def _storage_path(path):
+    """Mac run artifacts must physically stay on WorkSSD, including symlinks."""
+    if sys.platform != "darwin":
+        return
+    mount = Path("/Volumes/WorkSSD").resolve(strict=True)
+    ancestor = path
+    while not ancestor.exists():
+        ancestor = ancestor.parent
+    if not path.is_relative_to(mount) or ancestor.stat().st_dev != mount.stat().st_dev:
+        raise ValueError(f"Mac run storage must physically use WorkSSD: {path}")
 
 
 def resolve(run):
@@ -29,6 +43,7 @@ def resolve(run):
             raise FileNotFoundError(f"run manifest not found: {candidate / 'manifest.json'}")
         candidate = run_root() / "runs" / str(run)
     candidate = candidate.resolve(strict=True)
+    _storage_path(candidate)
     manifest = run_layout.manifest(candidate)
     if manifest.get("record_type") != "arc.run":
         raise ValueError(f"not a current ARC run: {candidate}; historical records use lab.exp/history")
@@ -74,6 +89,38 @@ def _background(run, module, args, name):
                                           "module": module, "arguments": list(map(str, args)),
                                           "started_at": time.time()})
     return process.pid
+
+
+def publish(path):
+    """Publish saved facts; Console failure never changes execution status."""
+    from .backend import publish_run
+    path = resolve(path)
+    manifest = run_layout.manifest(path)
+    config = manifest.get("observability") or {}
+    if not config.get("service_url"):
+        return
+    try:
+        token_file = config.get("registration_token_file")
+        token = Path(token_file).read_text().strip() if token_file else None
+        collector_file = config.get("collector_token_file")
+        collector = Path(collector_file).read_text().strip() if collector_file else None
+        row = status(path)
+        facts = {key: row[key] for key in (
+            "lifecycle", "activity", "brief", "as_of", "last_activity_at", "evidence",
+            "native", "spend", "resources", "error", "observation_failed_at"
+        ) if key in row}
+        records = {}
+        for name in ("cost", "resources", "result-save", "automatic-evaluations"):
+            record = path / "records" / f"{name}.json"
+            if record.is_file():
+                records[name] = json.loads(record.read_text())
+        published = publish_run(config["service_url"], {**manifest, "archived": row["archived"]},
+                                status=facts, records=records, token=token, collector_token=collector)
+        write_json(path / "records/console-publish.json", {"as_of": time.time(), "published": True,
+                   "run_id": published.get("run_id", path.name)})
+    except Exception as exc:
+        write_json(path / "records/console-publish.json", {"as_of": time.time(), "published": False,
+                   "error": f"{type(exc).__name__}: {exc}"})
 
 
 def start(variant, target, task, *, route=None, competition=False, script=None):
@@ -150,6 +197,7 @@ def wait(run):
 def archive(run, *, undo=False):
     path = resolve(run)
     write_json(path / "records/archive.json", {"archived": not undo, "as_of": time.time()})
+    publish(path)
     return status(path)
 
 
