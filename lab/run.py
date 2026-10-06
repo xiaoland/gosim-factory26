@@ -134,9 +134,15 @@ def publish(path):
 def start(variant, target, task, *, route=None, competition=False, script=None):
     """Assemble inputs, directly dispatch, then detach observation and automation."""
     from .arc_bench import execution
+    if script:
+        import shutil
+        source = Path(script).resolve(strict=True)
     path = run_layout.create_run(run_root(), variant, target, str(task), route=route,
                                  competition=competition)
     try:
+        if script:
+            destination = path / "records/automation.py"
+            shutil.copy2(source, destination)
         execution.assemble(path)
         execution.start(path)
     except Exception as exc:
@@ -149,10 +155,6 @@ def start(variant, target, task, *, route=None, competition=False, script=None):
         raise
     _background(path, "lab.automation", ["observe", path], "supervisor")
     if script:
-        import shutil
-        source = Path(script).resolve(strict=True)
-        destination = path / "records/automation.py"
-        shutil.copy2(source, destination)
         with (path / "records/automation.log").open("ab") as output:
             process = subprocess.Popen([sys.executable, str(destination)], cwd=ROOT,
                          env=dict(os.environ, LAB_RUN=str(path), LAB_RUN_ROOT=str(run_root())),
