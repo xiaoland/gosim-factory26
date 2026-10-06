@@ -5,6 +5,7 @@ import { isBraidRun, type RegisteredRun } from './runs';
 type Props = { runId: string; currentRun: RegisteredRun };
 type Row = Record<string, unknown>;
 const text = (value: unknown) => value == null ? '—' : typeof value === 'object' ? JSON.stringify(value) : String(value);
+const timestamp = (value: unknown) => typeof value === 'number' ? new Date(value * 1000).toLocaleString() : text(value);
 
 function Table({ rows, fields }: { rows: unknown[]; fields: string[] }) {
   return rows.length ? <div className="overflow-auto"><table className="w-full text-left text-sm"><thead><tr>{fields.map(field => <th className="border-b px-2 py-1 font-medium" key={field}>{field}</th>)}</tr></thead><tbody>{rows.map((item, index) => { const row = (item && typeof item === 'object' ? item : {}) as Row; return <tr key={String(row.id ?? row.turn_id ?? row.event_id ?? index)}>{fields.map(field => <td className="max-w-xs truncate border-b px-2 py-1" title={text(row[field])} key={field}>{text(row[field])}</td>)}</tr>; })}</tbody></table></div> : <p className="text-sm opacity-60">暂无已保存记录</p>;
@@ -56,7 +57,7 @@ function NativePanel({ runId }: { runId: string }) {
 function CostPanel({ runId }: { runId: string }) {
   const query = useQuery({ queryKey: ['cost', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/cost`, signal), retry: false });
   const row = ((query.data?.items || []) as Row[])[0];
-  return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">费用</h2>{query.isPending ? <p>读取中…</p> : <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">状态</dt><dd>{text(row?.status ?? 'unknown')}</dd></div><div><dt className="opacity-60">金额</dt><dd>{text(row?.amount ?? row?.value ?? '未知')}</dd></div><div><dt className="opacity-60">来源</dt><dd>{text(row?.source ?? 'records/status.json')}</dd></div><div><dt className="opacity-60">原因 / 边界</dt><dd>{text(row?.note ?? '未保存 spend 事实；不能从运行生命周期推导费用')}</dd></div></dl>}</section>;
+  return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">费用</h2>{query.isPending ? <p>读取中…</p> : <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">状态</dt><dd>{text(row?.status ?? 'unknown')}</dd></div><div><dt className="opacity-60">金额</dt><dd>{text(row?.amount ?? row?.value ?? '未知')}</dd></div><div><dt className="opacity-60">来源 / scope</dt><dd>{text(row?.source ?? 'records/status.json')} · {text(row?.scope)}</dd></div><div><dt className="opacity-60">类型 / as_of</dt><dd>{text(row?.kind)} · {timestamp(row?.as_of)}</dd></div><div className="md:col-span-2"><dt className="opacity-60">原因 / 边界</dt><dd>{text(row?.reason ?? row?.note ?? (row ? '未保存 spend 原因' : '未保存 spend 事实；不能从运行生命周期推导费用'))}</dd></div></dl>}</section>;
 }
 
 function LogPanel({ runId }: { runId: string }) {

@@ -321,9 +321,12 @@ class Backend:
                     return [{"kind": "spend", "status": spend.get("status", "unknown"),
                              "amount": spend.get("value", spend.get("cost")),
                              "currency": spend.get("currency"), "source": "records/status.json",
+                             "scope": spend.get("scope"), "kind": spend.get("kind", "provider-account-window"),
+                             "as_of": spend.get("as_of"), "reason": spend.get("reason"),
                              "note": spend.get("note"), "data": spend}]
             if name == "cost":
-                return [{"kind": "spend", "status": "unknown", "source": "records/status.json",
+                return [{"kind": "spend", "status": "unknown", "source": "records/status.json", "scope": None,
+                         "kind": "provider-account-window", "as_of": None, "reason": None,
                          "note": "未保存 spend 事实；不能从运行生命周期推导费用"}]
             if summary is None and name == "evaluations" and isinstance(manifest.get("record_summaries"), dict):
                 summary = manifest["record_summaries"].get("automatic-evaluations")

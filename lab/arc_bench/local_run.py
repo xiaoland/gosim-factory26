@@ -245,7 +245,7 @@ def _spend(run: Path, target: Mapping[str, Any], lifecycle: str) -> dict[str, An
     if target.get("model_recipe") == "self-funded":
         return {"scope": "self-funded-provider", "status": "not_collected",
                 "reason": "ARC shared-key meter is not used for self-funded recipes",
-                "value": None, "currency": None, "kind": "provider-account-window",
+                "value": None, "currency": None, "kind": "unknown",
                 "as_of": time.time()}
     baseline_path = paths(run)["records"] / "meter-baseline.json"
     terminal_path = paths(run)["records"] / "meter-terminal.json"
