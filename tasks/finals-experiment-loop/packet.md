@@ -22,6 +22,8 @@ Console owner 已报告 sfp7 的实际部署：独立目录 `/home/yyh/factory26
 
 主已实地只读确认 sfp7 HTTP 200；服务部署期间重启，PID 不作为永久身份。初次列表包含本任务构造的登记，不能证明真实生产链路，已要求 owner 删除；owner 已报告清除并明确旧 facility4 缺少 status/native turn/cost。约 27 MiB 的单次 RSS 只属于空载服务，不作为低内存验收结论。当前源码中的旧 `lab.control.Control`、exclusive/send 写入链没有调用方，已删除，保留进程出生身份与历史只读等待；这不等于整套 lab.exp 已退役。
 
+主分担 `lab/arc_bench/hosted_run.py` 的真实官网 API 适配，执行 owner 继续负责打包、数据映射与实际 dispatch 接线。新模块保存 upload/create/start/cancel 请求及响应、真实 submission/run ID、日志 cursor、平台费用和全 workspace ZIP；未知写请求不自动重发，5xx/传输不明不冒充确定失败。当前只通过编译，未调用收费 API；规范 data 在平台导出中的映射和原生接续尚须与实际包完成闭环。
+
 ## 当前需求与决定
 
 用户要求先定义“怎样算好的实验设施”，依据实验需求、工程知识、Agent 使用 profiling 建立完整因果链，不为找问题而找问题。Mac、WSL、sfp7 和官网差异属于设计对象，环境触发、集成耦合与设施内部缺陷分别归因。Exp Console 属于实验基础设施，不留作无期限的外围改进。

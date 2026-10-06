@@ -50,6 +50,8 @@ def _post(directory, state, client, action, endpoint, **kwargs):
     if state.get("pending"):
         raise RuntimeError("platform write outcome unknown; query saved identity, do not resend")
     state["pending"] = {"action": action, "endpoint": endpoint, "requested_at": time.time()}
+    if kwargs.get("fields"):
+        state["pending"]["fields"] = redact(kwargs["fields"])
     write_json(directory / "execution.json", state)
     try:
         response = client.request(endpoint, "POST", **kwargs)
@@ -162,15 +164,21 @@ def observe(run):
             "failed" if phase == "FAILED" else "running" if phase in {"RUNNING", "STARTING", "QUEUED"} else "unknown")
         cursor_file = directory / "log-cursor.json"
         cursor = json.loads(cursor_file.read_text()) if cursor_file.exists() else {"log_offset": 0}
-        chunk = _get(directory, client, run_path(state["run_id"]) + "/logs?" + urlencode(cursor), f"logs-{cursor.get('log_offset', 0)}.json")
-        write_json(cursor_file, {"log_offset": chunk.get("log_offset", cursor.get("log_offset", 0)),
-                               **({"after_event_id": chunk["last_event_id"]} if chunk.get("last_event_id") else {})})
+        log_error = None
+        try:
+            chunk = _get(directory, client, run_path(state["run_id"]) + "/logs?" + urlencode(cursor), f"logs-{cursor.get('log_offset', 0)}.json")
+            write_json(cursor_file, {"log_offset": chunk.get("log_offset", cursor.get("log_offset", 0)),
+                                   **({"after_event_id": chunk["last_event_id"]} if chunk.get("last_event_id") else {})})
+        except Exception as exc:
+            log_error = _error(exc)
+            write_json(directory / "logs-error.json", {"as_of": time.time(), **log_error})
         if remote.get("token_cost_usd") is not None:
             write_json(run / "records/cost.json", {"kind": "actual", "amount": remote["token_cost_usd"],
                        "currency": remote.get("token_cost_currency"), "source": run_path(state["run_id"]),
                        "as_of": time.time(), "scope": "platform-run"})
         return {"lifecycle": lifecycle, "activity": "unknown", "as_of": time.time(),
                 "platform_run_id": state["run_id"], "platform_status": phase,
+                "logs_error": log_error,
                 "brief": remote.get("failure_reason") or phase, "spend": {"kind": "actual" if remote.get("token_cost_usd") is not None else "unknown",
                 "amount": remote.get("token_cost_usd"), "currency": remote.get("token_cost_currency"),
                 "source": run_path(state["run_id"]), "as_of": time.time()}}
