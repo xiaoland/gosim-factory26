@@ -20,20 +20,8 @@ TERMINAL = {"completed", "failed", "stopped"}
 
 def run_root():
     path = Path(os.environ.get("LAB_RUN_ROOT", ROOT / "runs/lab")).expanduser().resolve()
-    _storage_path(path)
+    run_layout.storage_path(path)
     return path
-
-
-def _storage_path(path):
-    """Mac run artifacts must physically stay on WorkSSD, including symlinks."""
-    if sys.platform != "darwin":
-        return
-    mount = Path("/Volumes/WorkSSD").resolve(strict=True)
-    ancestor = path
-    while not ancestor.exists():
-        ancestor = ancestor.parent
-    if not path.is_relative_to(mount) or ancestor.stat().st_dev != mount.stat().st_dev:
-        raise ValueError(f"Mac run storage must physically use WorkSSD: {path}")
 
 
 def resolve(run):
@@ -43,7 +31,7 @@ def resolve(run):
             raise FileNotFoundError(f"run manifest not found: {candidate / 'manifest.json'}")
         candidate = run_root() / "runs" / str(run)
     candidate = candidate.resolve(strict=True)
-    _storage_path(candidate)
+    run_layout.storage_path(candidate)
     manifest = run_layout.manifest(candidate)
     if manifest.get("record_type") != "arc.run":
         raise ValueError(f"not a current ARC run: {candidate}; historical records use lab.exp/history")
