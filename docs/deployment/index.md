@@ -1,6 +1,6 @@
 # 运行、证据与恢复
 
-新执行只使用 `python3 -m lab build/start/status/control` 的 experiment schema 3（显式选择 job/request），独立 runner、制品和分析入口见 [Lab](../../lab/README.md)。旧 plan/run/operation writer 已退役；手册历史章节只用于原件追溯和登记中的旧执行退役通道。新模型/费用/目标集由本轮配方显式冻结，没有通用 ARC-only 或 self_funded 默认值。源码切换不授权运行或迁移。
+新入口使用 `python3 -m lab start VARIANT TARGET TASK` 与 run 级 stop/pause/resume/restart/status，公共 Python API 和数据合同见 [Lab](../../lab/README.md)。旧 experiment/job/attempt、compile/doctor/build 和容量治理不进入新链路；原冻结执行仍沿原 executor，不批量接管或重写身份。新模型、费用和任务范围由本轮 packet 明确授权，源码切换本身不授权运行。
 
 运行时先确认自己要做的是准备制品、新生成、查询既有记录、恢复工作区，还是对冻结应用重新评分。这些操作消耗的资源、需要的授权和结果身份不同；不能用一次构建成功或页面可打开替代生成、评分或证据完整性结论。
 
@@ -16,7 +16,7 @@
 | 判断哪一层失败，定位原始记录 | [证据查询](evidence.md) | 外层 lab run、内层 `.factory26` 或官网 journal 的生产者。 |
 | 接续中断工作区，或重新评分已完成应用 | [恢复与重放](recovery.md) | 源执行已停止、完整检查点、具体恢复改动和新运行身份。 |
 | 读取 Braid 遥测、原生会话及 token/耗时 | [Braid 诊断](braid-diagnostics.md) | Backend 与内层 Braid run ID、源端错误、归档或实时材料范围。 |
-| 查看或人工介入真实协作现场 | [Console 接入](console.md) | state/binary、对象写权限与物理运行控制分别明确。 |
+| 查看 run 资源、费用、结果与 Braid 协作 | [Console 接入](console.md) | OTLP 来源、保存状态及投影 cutoff；新 Console 不访问现场或执行写命令。 |
 | 追溯已归档的原生四配置对照 | [Hackathon 历史运行](hackathon.md) | 原配置、网关与冻结材料，不能把旧对照当作当前入口。 |
 
 当前开发实现与历史副本见 [Variant 索引](../../variants/README.md)。输入矩阵、命名与运行次数在[实验导航](../../experiments/README.md)及对应 packet 登记，不在本页维护另一份运行状态。新实验显式声明费用模式和凭据来源；正式额度须针对具体冻结产物取得新授权，历史 journal 的存在不授予接续权限。

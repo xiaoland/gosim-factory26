@@ -220,3 +220,20 @@ def show_run(run):
 def show(reference):
     path = Path(reference).expanduser().resolve()
     return show_run(path) if (path / "run.json").is_file() else experiment_summary(path)
+
+
+def render_runs(rows):
+    """Compact saved run summaries; lifecycle and activity are different facts."""
+    from datetime import datetime
+    columns = ("RUN", "VARIANT", "TARGET", "TASK", "LIFECYCLE", "ACTIVITY", "AS OF", "BRIEF")
+    rendered = []
+    for row in rows:
+        stamp = row.get("as_of")
+        as_of = datetime.fromtimestamp(stamp).strftime("%m-%d %H:%M:%S") if isinstance(stamp, (int, float)) else str(stamp or "unknown")
+        rendered.append(tuple(str(value or "-").replace("\n", " ") for value in (
+            row.get("run_id"), row.get("variant"), row.get("target"), row.get("task"),
+            row.get("lifecycle", "unknown"), row.get("activity", "unknown"), as_of,
+            row.get("brief") or row.get("error"))))
+    widths = [max([len(columns[i]), *(len(item[i]) for item in rendered)]) for i in range(len(columns))]
+    return "\n".join("  ".join(value.ljust(width) for value, width in zip(item, widths))
+                     for item in [columns, *rendered])

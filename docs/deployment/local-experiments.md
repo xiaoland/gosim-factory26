@@ -1,36 +1,29 @@
 # ARC 本地实验
 
-本页是当前本地实验入口。当前实验使用 `factory26.exp.experiment` schema 3；旧 ARC schema、Runner 参数和完整历史取证合同移至[历史本地实验合同](history/local-experiments.md)。
+本页维护 ARC run 的本地操作入口。重构实施与实际验收状态见[决赛设施 packet](../../tasks/finals-experiment-loop/packet.md)；旧 experiment schema 和 Runner 取证合同只用于对应冻结执行，见[历史本地实验合同](history/local-experiments.md)。
 
 ## 当前流程
 
-复杂矩阵先编译显式 intent，再只读检查、构建冻结执行器，最后在已有授权下启动：
+配置好 target 和 task 后，在已有模型授权范围内用三个参数启动，复杂顺序使用普通 Python：
 
 ```sh
-python3 -m lab compile /absolute/intent.json \
-  --environment /absolute/environment.json \
-  --directory /absolute/bundle
-python3 -m lab doctor /absolute/bundle/recipe.json \
-  --environment /absolute/environment.json --json
-python3 -m lab build /absolute/bundle/recipe.json \
-  --environment /absolute/environment.json \
-  --directory /absolute/experiment --job JOB
-python3 -m lab start /absolute/experiment \
-  --job JOB --request-id REQUEST --deployment /absolute/private-deployment.json
-python3 -m lab status /absolute/experiment
+python3 -m lab start pi-minimal-vv-dx-test wsl TASK
+python3 -m lab status RUN --json
+python3 -m lab wait RUN --json
+python3 -m lab restart RUN --task NEXT_TASK
 ```
 
-`compile` 冻结目标、模型选择、预算和评价关系，不安装、不请求平台、不启动模型；`doctor` 只读检查声明材料、runtime、Docker/Runner 和凭据覆盖；`build --job` 只发布所选目标的依赖与冻结执行器；`start --job --request-id` 才受理一次实际执行请求。下游输入显式绑定确切 attempt/output，不自动启动评价。`status`/`monitor` 查询保存的投影和原始观察，不以 completed 推断评分或归档完整。
+新路径没有 compile/doctor/build 前置步骤、稳定 request-id 手工输入或容量预约。start 自动组装 program、输入需求、gateway/collector 与实际 target，保存采用的代码和配置。运行自己的 observer 保存 status；查询不会另起现场采集。CLI/Console 关闭不影响执行。
 
-ARC matrix 可直接生产 recipe，但仍须显式声明 controller/runner runtime、backend、预算、模型、评价政策和存储；不从名字展开目标，不从 ambient environment 补全费用或 endpoint。已冻结应用的独立评价使用显式 `from_job/output` 关系，生成和评价的输入、费用和耗时分别保存。
+应用正常完成后，默认 Python 程序冻结应用并启动 task 配置的 evaluations；三个评测入口分别是公开需求 simulate、题目自带 task 和官网冻结应用 official。它们各有独立 run、工作区、来源、费用和结果。未配置的 simulate/official 不自动执行，官网模式必须显式 self_funded 或 competition。隐藏反馈不注入下一阶段。
 
 ## 执行位置与证据
 
-官方 ARC 本地 Runner 可以使用显式 Docker endpoint 或远端 Linux 环境；本地控制进程所在的 Mac 不推断 runner、daemon、容量或授权可用。WSL/sfp7 等宿主必须由 recipe 和启动前读回确认。Hosted 生成属于另一种 backend，使用平台身份和 journal，不与本地 Runner 混用。
+WSL/sfp7 的执行位置、Docker、镜像、runtime、运行根目录及共享观测地址由 target 配置提供，不从 Mac 的路径或 loopback 猜测远端。Mac 控制和回收全部在 WorkSSD，远端数据允许保存在实际宿主磁盘。Hosted 使用平台身份及自包含包，不与本地容器句柄混用。
 
-每个 attempt 的 runner、资源、原始输出、telemetry、named output 和 archive 分别保存。Docker 资源必须按冻结 endpoint、daemon、image、labels 和 attempt 身份核对；远端复制或回收失败保持具体错误和 `unconfirmed`，不能据本机进程退出声称远端已清理。生成应用发布后，独立评价 job 才能消费已验证制品。
+每个 run 保存整个 data/workspace 与 data/harness、日志、资源、遥测、费用和平台结果。stop 操作实际容器或平台 run，不据 Mac 控制进程退出宣称远端已停止；回收失败保留原错及远端唯一副本。pause/resume 使用 Docker pause/unpause，保留同一次执行；不保证释放内存或保住所有外部网络连接。
 
-当前源码导航与字段解释见 [Lab](../../lab/README.md)；实验范围、授权、输入和停止条件见所属 packet。模型事实使用 `python3 -m lab status EXPERIMENT --json`，Braid/OTLP 过程使用 [Braid 诊断](braid-diagnostics.md)，不在本页复制过程分析细节。
+restart 确认来源停止并保存完整 data 后重新组装同 variant 程序。同 task/需求版本恢复原生会话，下一 task 新建原生任务状态，历史 data 与应用保留；旧 records、费用和隐藏报告不迁移。当前源码与参数见 [Lab](../../lab/README.md)，范围和允许损失见所属 packet。
 
 ## 历史入口
 

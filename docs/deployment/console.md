@@ -1,5 +1,15 @@
 # Console 服务与运行接入
 
+新运行的 Console 由 `python3 -m lab serve --config FILE` 提供，共享 Collector、Backend 与静态前端在一个 Python 进程中。服务数据库使用实际服务宿主本地磁盘；首选 sfp7，Mac 控制及回收仍在 WorkSSD。配置、部署身份与当前验收状态见[决赛设施 packet](../../tasks/finals-experiment-loop/packet.md)，组件用法见 [Lab](../../lab/README.md) 和 [Console](../../braid-console/README.md)。
+
+运行启动时自动建立观测归属，不要求使用者停 HTTP、人工 register 或创建 accessor。CLI 与 Console 读取同一份保存 status；Pi-only、Braid 和独立评测均有通用页面。Braid 自己维护只读投影与正文路由，页面展示 cutoff、as_of 和缺口，不进入原生成容器、查询 live DB 或执行实时 Braid CLI。模型与物理执行控制使用 Lab run API，Console 不承担人工工作项写入。
+
+Hosted 使用轻量接收与落盘，不携带 UI/query 服务；回收后导入共享 Backend。观测缺口不等同生成失败，服务断连不成为启动门禁。任何低内存、丢失范围和端到端延迟结论均依实际验收，而非配置存在。
+
+## 旧冻结 Console 服务合同
+
+以下保留原服务的准备、登记与访问协议，仅用于已经冻结的旧服务，不适用于新 Lab run，也不是新接入的必经流程。它的现场写入与 accessor 协调不会迁入新入口。
+
 本页维护当前服务准备、登记和解除接入方法。组件源码与前端构建从 [Console 入口](../../braid-console/README.md)定位；页面、对象、会话和代码读取行为统一见 [界面与读取合同](../../braid-console/docs/contracts.md)。旧暂停机制、部署 PID 与当时验收保存在 [Console 历史记录](history/console.md)，不能据此判断现在的服务身份或控制能力。
 
 Console 只接入 Braid，不启动实验或代替 Lab 的状态与恢复入口。当前新接入拒绝暂停生成；恢复请求经过对应实验的冻结执行器，不绕过其能力门控。停止 HTTP、访问容器和生成执行是不同操作。

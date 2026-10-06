@@ -1,10 +1,10 @@
 # Factory26 跨组件技术说明
 
-本文只维护跨组件职责、生命周期和不可替代的证据边界。命令与执行细节归 [Lab 入口](../../lab/README.md) 及 [lab.exp 合同](../../lab/exp/README.md)；资源压力归 [runtime-resources](runtime-resources.md)；操作门控归 [恢复手册](../deployment/recovery.md)；产品目标归 [PRD](../prd/index.md)。
+本文维护本轮 run 架构的跨组件职责、生命周期和证据边界。命令与执行细节归 [Lab 入口](../../lab/README.md)，旧冻结执行另遵循 [lab.exp 合同](../../lab/exp/README.md)；资源归 [runtime-resources](runtime-resources.md)，恢复操作归 [恢复手册](../deployment/recovery.md)，产品目标归 [PRD](../prd/index.md)。架构已经采用不代表部署和真实验收已完成，当前结果以[任务 packet](../../tasks/finals-experiment-loop/packet.md)为准。
 
 ## 组件与调用关系
 
-开发侧新实验由 `lab.exp.controller` 接受显式 build、单次派发和控制请求。Local/Docker 的每个 attempt 由独立冻结 runner 持有实际执行、资源限额、collector 与归档；Docker runner 位于固定运行宿主，负载只读消费域资产，短时 store owner 持有发布写入；托管平台由独立 adapter 持有远端身份和 pending 请求。Controller 退出不撤销已受理执行，重入同一请求不能重跑入口。工作树旧 plan/run/operation writer 已退役，历史输入只能只读查询或显式导入，新执行不翻译旧 schema。
+新入口由 `lab.run` 接受 start、stop、pause、resume、restart 等实际 run 操作，`lab.arc_bench.execution` 持有 ARC Local/Docker 或 Hosted 的真实句柄。每个 run 独立执行、采集和保存结果，CLI/Console 退出不取消运行。普通 Python 组织跨 run 策略与 stages，没有 experiment/job/attempt 控制器、admission、slot、reservation 或未来任务队列。旧 `lab.exp` 仅服务原冻结执行与历史记录，不把它的容量和证明链带入新入口。
 
 `lab.exp.definitions` 管理不可变 Harness 组件的组合，`lab.exp.delivery` 将其投影为 SDK 目录或 Hosted ZIP。交付格式不决定内部材料边界；执行器源码、Harness 定义和 runtime 身份保持独立。工具凭据是每次 attempt 的私有输入，不进入共享定义；SDK 为实际子进程提供可读的私有配置，Hosted 的自包含私有交付保持独立身份，不能修改共享组件的所有权。`lab.exp.assembly` 记录实际域的 reference/member/local_root/access 与可写 state，`scripts.execution_bootstrap` 持有本域服务和入口生命周期，`scripts.execution_context` 是 Harness 读取这些事实的共同入口。父域路径不能被角色名或 basename 猜测成子域路径。Capture source binding 显式关联 workspace/state 的实际卷和成员、装配记录、容器出生身份与冻结 capture 代码；公共 helper 解析这些位置，不要求 SDK workspace 模拟普通 Docker runner 的目录。外层 Local attempt 与内层 Docker child 保留各自身份及关系。
 
@@ -12,25 +12,26 @@
 
 `lab.exp.compiler` 将显式 intent 的目标、模型选择和逐应用评价政策编译为严格冻结 recipe；选择原件、生产选择与 compiler 摘要保留在 compilation 中；输入内容身份由所选 job 的 build 冻结到发布制品。同一编译 bundle 只接受相同输入/政策/版本，变化须新 bundle。Compiler 不请求平台、执行模型或隐式准备环境；I14 的逐实验策略 launcher 已退役。`lab.exp.readiness` 只读聚合声明 runtime/材料、模型凭据变量覆盖与 Docker 宿主事实，不安装或预约；域权威提供只读 query；未取得当前容量原件时明确 unknown，查询不能替代 start 的当前门控。
 
-新执行没有常驻调度器。Build 只生产所选 job 的依赖闭包，start/retry 必须显式请求；下游选择确切 attempt/output，不自动消费最新输出。执行资源在确认关闭后释放容量，封口、运输和消费保留独立责任。Controller/runner 代码、公共定义材料、私有输入和可写运行数据分别冻结与装配。
+新运行固定分离 program、inputs、data、records、snapshots 和 evaluations。程序重新组装，restart 只迁移全部 data，不继承旧控制句柄、费用、遥测库或隐藏评分。私有凭据在可迁移数据之外。相同 task/需求版本恢复原生身份；下一 task 创建新原生任务状态，保留应用及历史。停止来源和保存数据失败不能悄悄退回空会话或旧快照。
 
 Braid 持有 Issue/PR、成员身份、工作项上下文、clone 和共同 origin；Pi/Codex 持有原生会话、工具和内部子代理；SVC 以独立技能文件提供方法和模板。三者的正文不由 Factory 复制成第二份规范。
 
 | 组件 | 拥有 | 不拥有 |
 | --- | --- | --- |
 | variant/Harness | 生成流程、角色技能、材料选择和应用语义 | 实验调度、Braid 对象或官方评分判断 |
-| lab.exp controller/runner | recipe、attempt、预算、执行、恢复和公开投影 | Agent 内部协作语义或平台隐藏状态 |
-| lab.arc_bench | ARC Runner、官网响应、模型事实、结果和重放证据 | 新实验的 recipe、attempt 关系或跨组件状态数据库 |
+| lab.run / automation | 实际 run 操作、保存记录查询、普通 Python 自动化 | 实验级调度器或 Agent 内部协作语义 |
+| lab.arc_bench | ARC 执行、官网响应、完整数据接续、应用冻结和独立测评 | Braid 私有语义或猜测的平台能力 |
+| Lab Collector/Backend/Console | 三信号 OTLP、保存状态与结果、通用运行展示 | 运行现场写入、另一个采集循环或实时 Braid CLI 控制 |
 | Braid/Pi/SVC | 工作项、原生会话、工具和方法材料 | 对方的私有生命周期或验收结论 |
 
 组件间只沿明确的材料和回执建立关系：
 
 ```mermaid
 flowchart LR
-  Intent[显式 intent] --> Compile[Lab 编译与冻结]
-  Compile --> Controller[Lab controller]
-  Controller --> Local[Local / Docker runner]
-  Controller --> Hosted[Hosted adapter]
+  CLI[variant / target / task] --> Run[Lab run API]
+  Python[普通 Python stages / policy] --> Run
+  Run --> Local[ARC Local / Docker]
+  Run --> Hosted[Hosted adapter]
   Local --> Harness[Variant Harness]
   Hosted --> Platform[ARC 平台]
   Platform --> Harness
@@ -41,15 +42,15 @@ flowchart LR
   Frozen --> Eval[独立评价]
 ```
 
-本地通用命令可以不使用 ARC Runner 或 Braid；图中的 Harness 路径表达参赛实现的关系，不作为所有 backend 的强制流程。Console 通过公开 CLI 或保存归档查看 Braid，实验控制仍交给冻结执行器。
+图中的 Braid 是团队 variant 的路径，不是 Pi-only 的强制依赖。共享 Collector/Backend 在单个 Python 服务中保存与查询原件，SQLite 使用服务宿主本地磁盘；Hosted 只携带轻量接收落盘核心，回收后导入。Braid 自有 reader 解码新增 batch，按固定 cutoff 低频后台重建并发布，页面读取物化结果，正文按需分页，不查询现场私有 DB。
 
 ## 生命周期边界
 
-一次实验依次经过定义、编译、材料生产、build、attempt、执行、归档/遥测封口、输运和评价。每一阶段保存自己的 producer identity、观察时间和原始错误。入口退出、执行终态、archive、telemetry、transport 和平台 verdict 分别成立，任何一个不能替代另一个。
+一次 run 的 execution lifecycle 为 starting、running、paused、completed、failed、stopped 或 unknown。activity、brief 和 last_activity_at 来自本次 program 绑定的只读状态脚本；脚本错误只令活动判断 unknown，不改写执行事实或阻塞运行。自动保存所有终态的实际可得材料；archive 只是列表隐藏标记。零分但正常结束的评测是 completed，环境或评测程序中断才是 failed。
 
-定义资产、派生输入和可写运行状态属于同一执行生命周期的不同材料。experiments/ 保存可维护定义和冻结 bundle；runs/ 保存 runtime、attempt、制品、遥测和回执。重试建立新的 attempt，不修改原定义；历史记录按原 schema 只读解释。
+experiments/ 保存任务及 evaluations 清单，runs/ 保存实际运行材料与原件。评测建立独立 run，配置中的 simulate、task、official 消费同一不可变应用快照的独立副本，评分、费用和错误不覆盖生成事实。官方 billing_mode 显式指定，不从模型 route 推断；隐藏结果不进入生成 inputs 或阶段控制分支。
 
-Controller 的退出不撤销已受理的 runner；重入同一请求不能重跑入口。恢复必须重新核对来源执行身份、停止观察、OS/架构、runtime 和 logical root。缺少连续停写、Git/native、外链或路径证据时保持 partial/unknown。
+自动化程序退出不撤销已经启动的 run，不承诺任意 Python 代码断点重放。已经发出的收费 POST 效果未知时查询原请求，不更换身份盲目重发。恢复只复制确定保存的数据；Hosted 强制取消后只报告平台实际导出的范围与时点，不能补猜测升级成最新完整现场。
 
 ## 证据归属与授权
 
@@ -57,15 +58,15 @@ Controller 的退出不撤销已受理的 runner；重入同一请求不能重�
 
 制品以 manifest 身份发布，传输在接收边界核验字节；失败 staging、原错和未确认半成品保留。telemetry 保存 stream/epoch/序列和封口事实，分析不能从批次数推导 token、费用或语义进度。回收必须有稳定保留意图和完整证据，目录名、completed、hash 或 Git 提交不能单独授权删除。
 
-模型、费用、endpoint、credential_env、预算和评价政策在 recipe/deployment 中显式冻结。通用层不读取 Braid 私有 SQL，不从 collector 存活、Console 配置或 endpoint 名称推断已连接、已调用或已计费。
+模型 route、endpoint、凭据引用与评测政策在实际展开的 task/target/run 记录中保存。native cost=0 不代表平台费用为零；spend 保留 actual/estimate、来源、币种和 as_of，事实缺失保持 unknown。通用层不读取 Braid 私有 SQL，不从 collector 存活或 endpoint 名称推断已调用、已计费。
 
 ## 人工查看与物理运行控制
 
-Docker runner 使用实际 daemon、镜像、资源和网络模式的准入回执；旧 dispatcher、预约和在途启动未明确交接时不能接管。Local/Docker 可写运行状态与只读定义资产分离，跨域或托管消费才输运制品。
+Docker 控制使用该 run 保存的实际 daemon 与容器身份，不以 PID 或名字相近命中其他运行；资源限制和采样是执行配置与事实，不是另一套准入回执。程序、可迁移数据与私有输入分离；跨域迁移遵守实际路径与执行平台能力。
 
-官方 ARC 运行由 lab.arc_bench 记录请求、响应、需求版本和终态 GET。提交受理不能证明模型已开始；HTTP 错误、pending、需求差异和平台限制必须保留。生成与评价使用独立 attempt，评分不覆盖生成事实。
+官方 ARC 运行由 lab.arc_bench 保存请求、响应、需求版本和终态 GET。提交受理不能证明模型已开始；HTTP 状态、原响应、需求差异和平台限制必须保留。生成与评价使用独立 run，评分不覆盖生成事实。
 
-Console 访问属于实验执行的外部消费者。access_resource_id、创建/启动出生身份和 checkpoint 捕获必须由同一 authority 排序；停止后的 accessor 不能重启，需重新创建和登记。Console 部署仍由其 owner 负责，缺少公开静止协调能力时不能声称暂停完成。
+新 Console 不进入生成容器，不登记 accessor/writer，也不通过 live Braid CLI 修改工作项。CLI 与 Console 读取同一份保存 status；控制仍使用 run 绑定的实际执行句柄。自管 Docker pause/unpause 不改变 run，Hosted 明确不支持；stop 不级联影响其他 run 或独立自动化程序。旧冻结执行的准入、捕获和访问协调按 [lab.exp](../../lab/exp/README.md) 原合同处理。
 
 ## Braid、原生 Agent 与 SVC
 

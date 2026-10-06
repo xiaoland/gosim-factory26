@@ -1,0 +1,163 @@
+"""Public run API shared by CLI and ordinary Python automation.
+
+Execution adapters own the real platform handles. Queries read saved records;
+neither a query nor the Console creates another observation loop.
+"""
+from pathlib import Path
+import json
+import os
+import subprocess
+import sys
+import time
+
+from .arc_bench import run_layout
+from .records import write_json
+from .control import process_identity
+
+ROOT = Path(__file__).resolve().parents[1]
+TERMINAL = {"completed", "failed", "stopped"}
+
+
+def run_root():
+    return Path(os.environ.get("LAB_RUN_ROOT", ROOT / "runs/lab")).expanduser().resolve()
+
+
+def resolve(run):
+    candidate = Path(run).expanduser()
+    if not (candidate / "manifest.json").is_file():
+        if candidate.name != str(run) or str(run) in {".", ".."}:
+            raise FileNotFoundError(f"run manifest not found: {candidate / 'manifest.json'}")
+        candidate = run_root() / "runs" / str(run)
+    candidate = candidate.resolve(strict=True)
+    manifest = run_layout.manifest(candidate)
+    if manifest.get("record_type") != "arc.run":
+        raise ValueError(f"not a current ARC run: {candidate}; historical records use lab.exp/history")
+    return candidate
+
+
+def status(run=None, *, include_all=False):
+    """Read saved execution facts and the variant's saved activity judgment."""
+    if run is None:
+        directory = run_root() / "runs"
+        rows = [status(path) for path in directory.iterdir()
+                if path.is_dir() and (path / "manifest.json").is_file()] if directory.is_dir() else []
+        return sorted((row for row in rows if include_all or
+                       (not row.get("archived") and row.get("lifecycle") != "completed")),
+                      key=lambda row: row.get("created_at") or 0, reverse=True)
+    path = resolve(run)
+    manifest = run_layout.manifest(path)
+    saved = path / "records/status.json"
+    facts = json.loads(saved.read_text()) if saved.is_file() else {
+        "lifecycle": "starting", "activity": "unknown", "brief": "尚无执行观察",
+        "as_of": manifest.get("created_at"),
+    }
+    archive_path = path / "records/archive.json"
+    archived = json.loads(archive_path.read_text()).get("archived", False) if archive_path.is_file() else False
+    return {**manifest, **facts, "path": str(path), "archived": archived}
+
+
+def _background(run, module, args, name):
+    records = run / "records"
+    with (records / f"{name}.log").open("ab") as output:
+        env = dict(os.environ, LAB_RUN=str(run), LAB_RUN_ROOT=str(run_root()))
+        process = subprocess.Popen([sys.executable, "-m", module, *map(str, args)],
+                                   cwd=ROOT, env=env, stdout=output, stderr=subprocess.STDOUT,
+                                   start_new_session=True)
+    write_json(records / f"{name}.json", {**process_identity(process.pid),
+                                          "module": module, "arguments": list(map(str, args)),
+                                          "started_at": time.time()})
+    return process.pid
+
+
+def start(variant, target, task, *, route=None, competition=False, script=None):
+    """Assemble inputs, directly dispatch, then detach observation and automation."""
+    from .arc_bench import execution
+    path = run_layout.create_run(run_root(), variant, target, str(task), route=route,
+                                 competition=competition)
+    try:
+        execution.assemble(path)
+        execution.start(path)
+    except Exception as exc:
+        write_json(path / "records/status.json", {"lifecycle": "failed", "activity": "unknown",
+                   "as_of": time.time(), "error": f"{type(exc).__name__}: {exc}"})
+        raise
+    _background(path, "lab.automation", ["observe", path], "supervisor")
+    if script:
+        import shutil
+        source = Path(script).resolve(strict=True)
+        destination = path / "records/automation.py"
+        shutil.copy2(source, destination)
+        with (path / "records/automation.log").open("ab") as output:
+            process = subprocess.Popen([sys.executable, str(destination)], cwd=ROOT,
+                         env=dict(os.environ, LAB_RUN=str(path), LAB_RUN_ROOT=str(run_root())),
+                         stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
+        write_json(path / "records/automation.json", {**process_identity(process.pid),
+                    "source": str(destination), "started_at": time.time()})
+    else:
+        _background(path, "lab.automation", ["default", path], "automation")
+    return status(path)
+
+
+def _control(run, action):
+    from .arc_bench import execution
+    path = resolve(run)
+    return execution.control(path, action)
+
+
+def stop(run):
+    """Stop only this run; its supervisor continues saving available results."""
+    return _control(run, "stop")
+
+
+def pause(run):
+    return _control(run, "pause")
+
+
+def resume(run):
+    return _control(run, "resume")
+
+
+def restart(run, *, target=None, task=None, route=None, snapshot=None):
+    from .arc_bench.restart import restart as restart_run
+    result = restart_run(resolve(run), target=target, task=task, route=route, snapshot=snapshot)
+    path = resolve(result["run_id"] if isinstance(result, dict) else result)
+    _background(path, "lab.automation", ["observe", path], "supervisor")
+    _background(path, "lab.automation", ["default", path], "automation")
+    return status(path)
+
+
+def wait(run):
+    """Wait for this run's saved terminal record, without platform polling."""
+    path = resolve(run)
+    while True:
+        row = status(path)
+        if row.get("lifecycle") in TERMINAL:
+            return row
+        time.sleep(2)
+
+
+def archive(run, *, undo=False):
+    path = resolve(run)
+    write_json(path / "records/archive.json", {"archived": not undo, "as_of": time.time()})
+    return status(path)
+
+
+def logs(run, *, follow=False):
+    path = resolve(run)
+    cursors = {}
+    while True:
+        for log in sorted((path / "records").glob("*.log")):
+            with log.open("rb") as stream:
+                stream.seek(cursors.get(log, 0))
+                while chunk := stream.read(65536):
+                    sys.stdout.write(chunk.decode(errors="replace"))
+                cursors[log] = stream.tell()
+        sys.stdout.flush()
+        if not follow or status(path).get("lifecycle") in TERMINAL:
+            return
+        time.sleep(1)
+
+
+def evaluate(run, *, kind, snapshot=None):
+    from .arc_bench.evaluate import evaluate_run
+    return evaluate_run(resolve(run), kind=kind, snapshot=snapshot)
