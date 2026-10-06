@@ -10,10 +10,11 @@
 | --- | --- | --- |
 | Harness 的指令、角色、协作或执行 | `variants/<name>/main.py`、`run.py`、`agents/` | 生成运行的原生配置、会话与应用，获授权的 bench 得分。 |
 | 原生工具或打包 | `scripts/runtime.py`、variant 的 `build.py`、`scripts/package_agent.py` | 实际安装、构建与提交过程的输出。 |
-| 实验命令、定义编译与环境解析 | `lab/exp/__main__.py`、`compiler.py`、`environment.py`；记录版本归 `core.py`。 | 公开 CLI、冻结定义及环境解析回执；合同见 [Lab](lab/README.md)。 |
-| 准备条件、保存状态、阻塞与下一动作 | `lab/exp/readiness.py`、`projection.py`；可用动作由 `controller.py:available_actions` 判断。 | `doctor` 的实际只读观察，`status`/`monitor` 的保存事实与原件时间。 |
-| 实验执行与控制 | `lab/exp/controller.py` 调用 `runner.py`、`backends.py` 或 `hosted.py`。 | 所属冻结执行器的回执、实际进程和平台错误；低层函数不是绕过控制门控的操作入口。 |
-| 材料引用与 Harness 定义/state 布局 | `lab/exp/artifacts.py`、`scripts/harness_layout.py`。 | 实际制品、捕获和装配回执；不以目录存在证明完整可恢复。 |
+| run 命令与 Python 策略 | `lab/__main__.py`、`run.py`、`automation.py` | 公开 CLI、实际 dispatch/control、保存 status 与结果；合同见 [Lab](lab/README.md)。 |
+| ARC 执行、路径与 restart | `lab/arc_bench/execution.py`、`run_layout.py`、`restart.py`、`scripts/harness_layout.py` | 实际 Docker/平台句柄、原生恢复与完整 data 回收，不以目录存在证明保存完成。 |
+| 状态与活动解释 | `variants/<name>/status.py`、run observer | 执行事实与脚本 activity 分开；原生来源、时间与缺项来自实际采集。 |
+| Collector、Backend 与 Console | `lab/otlp.py`、`backend.py`、`serve.py`、`braid-console/web` | 实际 OTLP 接收、持久查询及页面；历史现场写桥不进入新链路。 |
+| 独立应用评测 | `lab/arc_bench/evaluate.py`、`package_arc_replay.py`、`arc_replay.py` | 不可变应用副本的 simulate/task/official 原件、费用与真实评分。 |
 | Pi 子代理观测 | variant 的 `extensions/` | 实际会话和原始观测记录。 |
 | Braid | `sources/braid` 自身说明和公开 local 接口 | 自身构建和实际 Harness 调用结果。 |
 | SVC skill 接线 | variant 的启动参数、角色 Markdown、I14 的 `materials.json`/`run.py` | 运行中实际读取的技能及上下文。 |
@@ -57,7 +58,7 @@ I14 不启动模型的原生材料装配从[公共源码入口](scripts/README.m
 
 Braid 运行诊断以外层实验 run 为入口：`make braid-report RUN=<实验目录> OUTPUT=<新网站目录>`。
 [诊断运行手册](docs/deployment/braid-diagnostics.md)说明 Backend 查询、补采、失败产物、组件修改位置及验收边界；`lab.analysis.run_viewer` 负责实验总览，Braid 网站负责 OTLP 内的会话和协作现场，两者不是同一数据视图。
-修改导出语义时从 `sources/braid/src/telemetry.rs`、`evidence.rs` 开始，修改页面从 `lab/analysis/braid_telemetry_viewer.py`、同名 HTML 模板开始；构建本机 Braid 后用已归档真实 Backend 生成新目录核对，不以重新运行模型作为默认验证手段。
+修改导出语义从 `sources/braid/src/telemetry.rs`、`evidence.rs` 开始，Braid 自有 reader 与页面位于 `sources/braid/viewer/`；`lab/analysis/braid_telemetry_viewer.py` 只承担离线兼容入口。构建后可消费已归档真实数据核对，跨组件运行合同由独立真实使用验收，不以源码阅读或页面可打开冒充。
 
 原始证据位于生成输出的 `.factory26/<id>`；外层 lab run 与官网 journal 分别记录其执行和采集边界。先按[记录生产者](docs/deployment/evidence.md#按记录生产者查询)选择查询入口，不用外层进程成功代替生成或评分完成。静态网站、SVC 原生分析与长运行观察同归[证据手册](docs/deployment/evidence.md)。
 

@@ -8,6 +8,7 @@
 
 | 主题 | 入口 |
 | --- | --- |
+| 决赛实验基础设施重构与真实使用验收 | [决赛设施 packet](../tasks/finals-experiment-loop/packet.md)持有 run 架构、实施授权、专用 variant 和独立会话验收；当前入口见 [Lab](../lab/README.md)。 |
 | Harness 改进、授权与工作单元 | [I14 packet](../tasks/iteration14/packet.md)及其执行入口持有 draft、cleaner、reviewer、e2e 的范围与验收；[I13 packet](../tasks/iteration13/packet.md)持有基线成果、恢复来源与目标对账。 |
 | 前序生成、人工介入与结果来源 | [I12 packet](../tasks/iteration12/packet.md)、[I11 packet](../tasks/iteration11/packet.md)、[I11恢复与评分](../tasks/iteration11/runtime-stalls/packet.md)、[I10 packet](../tasks/iteration10/packet.md)；冻结实现和现场不随 I13 更新。 |
 | 协作现场的查看、会话与物理控制 | [Console packet](../tasks/braid-console-control/packet.md)；通用接入与边界见[操作说明](deployment/console.md)。 |

@@ -6,11 +6,7 @@
 
 新入口由 `lab.run` 接受 start、stop、pause、resume、restart 等实际 run 操作，`lab.arc_bench.execution` 持有 ARC Local/Docker 或 Hosted 的真实句柄。每个 run 独立执行、采集和保存结果，CLI/Console 退出不取消运行。普通 Python 组织跨 run 策略与 stages，没有 experiment/job/attempt 控制器、admission、slot、reservation 或未来任务队列。旧 `lab.exp` 仅服务原冻结执行与历史记录，不把它的容量和证明链带入新入口。
 
-`lab.exp.definitions` 管理不可变 Harness 组件的组合，`lab.exp.delivery` 将其投影为 SDK 目录或 Hosted ZIP。交付格式不决定内部材料边界；执行器源码、Harness 定义和 runtime 身份保持独立。工具凭据是每次 attempt 的私有输入，不进入共享定义；SDK 为实际子进程提供可读的私有配置，Hosted 的自包含私有交付保持独立身份，不能修改共享组件的所有权。`lab.exp.assembly` 记录实际域的 reference/member/local_root/access 与可写 state，`scripts.execution_bootstrap` 持有本域服务和入口生命周期，`scripts.execution_context` 是 Harness 读取这些事实的共同入口。父域路径不能被角色名或 basename 猜测成子域路径。Capture source binding 显式关联 workspace/state 的实际卷和成员、装配记录、容器出生身份与冻结 capture 代码；公共 helper 解析这些位置，不要求 SDK workspace 模拟普通 Docker runner 的目录。外层 Local attempt 与内层 Docker child 保留各自身份及关系。
-
-`lab.exp.terminal` 将一次已封存内容提供给输出和终态证据消费者。具有 managed capture 获取证明的快照也可供 checkpoint 复用；普通终态内容不证明完整写者关闭或跨文件同一切点，不能事后补 closure 升级成检查点。旧 attempt 的消费者在写权交接前绑定快照；活动 state 的物理位置不能成为历史结果的当前内容。域权威管理 generation、capture 和唯一 writer，实际启动也受同一许可约束，文件快照本身不证明写者已关闭。控制查询只验证实际控制代码、必要依赖、解释器及记录归属，再核对域权威的资源和 holder；runtime、Harness 输入和快照字节在对应构建、启动或消费边界验证。无关输入失效不能阻止停止原执行。
-
-`lab.exp.compiler` 将显式 intent 的目标、模型选择和逐应用评价政策编译为严格冻结 recipe；选择原件、生产选择与 compiler 摘要保留在 compilation 中；输入内容身份由所选 job 的 build 冻结到发布制品。同一编译 bundle 只接受相同输入/政策/版本，变化须新 bundle。Compiler 不请求平台、执行模型或隐式准备环境；I14 的逐实验策略 launcher 已退役。`lab.exp.readiness` 只读聚合声明 runtime/材料、模型凭据变量覆盖与 Docker 宿主事实，不安装或预约；域权威提供只读 query；未取得当前容量原件时明确 unknown，查询不能替代 start 的当前门控。
+公共装配复用已有 runtime、技能与打包器；装配入口持有 gateway、collector 和资源采样生命周期，variant 只消费已解析的程序/需求/数据路径与端点。容器内 workspace 和原生状态的逻辑路径稳定，宿主实际位置归 target，不从父域路径或角色名猜测。原生 home、Braid DB/worktree 和 retained request 均在 data/harness，凭据在独立私有配置中。旧 lab.exp 的定义资产、authority/capture、compile/readiness 合同只解释原冻结执行，具体见其组件文档。
 
 新运行固定分离 program、inputs、data、records、snapshots 和 evaluations。程序重新组装，restart 只迁移全部 data，不继承旧控制句柄、费用、遥测库或隐藏评分。私有凭据在可迁移数据之外。相同 task/需求版本恢复原生身份；下一 task 创建新原生任务状态，保留应用及历史。停止来源和保存数据失败不能悄悄退回空会话或旧快照。
 
@@ -100,11 +96,7 @@ Docker/宿主控制、来源停止、完整 checkpoint 恢复、非空遥测封�
 
 实现、实验和执行身份必须分别核对：源码提交只证明实现字节，experiment/attempt/remote run 各自证明自己的阶段，Braid/native/Console/ARC 事实只能由对应 producer 原件提供。跨组件只建立显式 relation，不把多个身份压成万能 trace ID。
 
-ARC 本地生成由 intent 的 `arc-local-generate` operation 编译为现有 Local runner 与 external_docker 配方。Environment 选择宿主 SDK 和子容器目标域，实验定义选择输入、模型及限额；公共 ARC job 构造器承接两者接线。材料生产目录的身份来自已绑定 artifact 的 producer provenance，交付 ZIP 的身份来自包清单，不为了检查器改写冻结定义。模型环境由 adapter 合并公开配方及私有输入，实际子容器 Config.Env 的读回证明传播，子容器组合入口提供自身资源和遥测服务；这些交接事实均不等同于模型受理或生成成功。操作方法见 [Lab](../../lab/README.md)。
-
-新执行以冻结 experiment、job、attempt、execution instance 和发布制品建立关系，当前控制与恢复合同见本文的组件说明及 [Lab](../../lab/README.md)。旧 ARC operation 曾作为一次已批准范围的持久接续入口，prepare 冻结 experiment 或 Competition inputs 及操作源码，run 消费其冻结结果，status 从原 run、journal 和 scheduler 读回；这是旧冻结协议，不是工作树的新启动入口。历史记录通过专用 reader 或 history 读取，不扩大原作用域，也不把旧来源伪装为新 attempt。组件原件继续是事实来源，跨组件回执只证明交接效果。
-
-controller、runner 和共享支持模块核对完整进程身份：同机且确认为不存在是 lost，存在但缺少出生依据是 unknown，只有非空出生依据匹配才是 alive。旧记录不回填猜测身份；unknown 不允许按失联放行接管、重试或破坏性清理。旧 collector/scheduler 的自动接续合同只解释对应历史程序，新托管执行由单个 attempt 的冻结 observer 唯一采集。输出归档保留链接字面值且不跟随外链；严格输入冻结与执行输出保全是不同契约，归档失败保留远端唯一副本，不改判为模型生成失败。
+新执行通过 Lab run 身份关联平台 run、容器、Braid/native 和应用快照，不把它们压成万能 trace ID。旧 experiment/job/attempt、operation、authority 和封口记录保留原生产者，只用于原执行器或历史 reader；新程序不得用旧材料补猜测保证。输出保存保留链接字面值，不跟随外链。回收失败保留远端唯一副本，并与模型执行失败分别报告。
 
 ## 关联入口
 

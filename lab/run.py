@@ -12,7 +12,7 @@ import time
 
 from .arc_bench import run_layout
 from .records import write_json
-from .control import process_identity
+from .control import process_identity, process_state
 
 ROOT = Path(__file__).resolve().parents[1]
 TERMINAL = {"completed", "failed", "stopped"}
@@ -47,10 +47,17 @@ def status(run=None, *, include_all=False):
     path = resolve(run)
     manifest = run_layout.manifest(path)
     saved = path / "records/status.json"
-    facts = json.loads(saved.read_text()) if saved.is_file() else {
-        "lifecycle": "starting", "activity": "unknown", "brief": "尚无执行观察",
-        "as_of": manifest.get("created_at"),
-    }
+    if saved.is_file():
+        try:
+            facts = json.loads(saved.read_text())
+            if not isinstance(facts, dict):
+                raise ValueError("saved status must be an object")
+        except (OSError, ValueError) as exc:
+            facts = {"lifecycle": "unknown", "activity": "unknown", "as_of": None,
+                     "error": f"{saved}: {type(exc).__name__}: {exc}"}
+    else:
+        facts = {"lifecycle": "starting", "activity": "unknown", "brief": "尚无执行观察",
+                 "as_of": manifest.get("created_at")}
     archive_path = path / "records/archive.json"
     archived = json.loads(archive_path.read_text()).get("archived", False) if archive_path.is_file() else False
     return {**manifest, **facts, "path": str(path), "archived": archived}
@@ -133,6 +140,10 @@ def wait(run):
         row = status(path)
         if row.get("lifecycle") in TERMINAL:
             return row
+        supervisor = path / "records/supervisor.json"
+        if supervisor.is_file() and process_state(json.loads(supervisor.read_text())) == "lost":
+            raise RuntimeError(f"observer exited before a confirmed terminal record: {supervisor}; "
+                               "actual execution may still be running; see saved logs")
         time.sleep(2)
 
 
