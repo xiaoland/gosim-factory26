@@ -49,7 +49,10 @@ def _post(directory, state, client, action, endpoint, **kwargs):
     """Persist intent before network I/O, then response before interpreting it."""
     if state.get("pending"):
         raise RuntimeError("platform write outcome unknown; query saved identity, do not resend")
-    state["pending"] = {"action": action, "endpoint": endpoint, "requested_at": time.time()}
+    state.pop("rejected", None)
+    request_id = f"{action}-{time.time_ns()}"
+    state["pending"] = {"action": action, "endpoint": endpoint, "requested_at": time.time(),
+                        "request_id": request_id}
     if kwargs.get("fields"):
         state["pending"]["fields"] = redact(kwargs["fields"])
     write_json(directory / "execution.json", state)
@@ -65,10 +68,10 @@ def _post(directory, state, client, action, endpoint, **kwargs):
         if isinstance(exc, ApiError) and 400 <= exc.status < 500 and exc.status != 408:
             state["rejected"] = state["pending"]
             state["pending"] = None
-        write_json(directory / f"{action}-response.json", state)
+        write_json(directory / f"{request_id}.json", state)
         write_json(directory / "execution.json", state)
         return None
-    write_json(directory / f"{action}-response.json", {"request": state["pending"], "response": redact(response)})
+    write_json(directory / f"{request_id}.json", {"request": state["pending"], "response": redact(response)})
     state["pending"]["response"] = redact(response)
     write_json(directory / "execution.json", state)
     return response
@@ -194,6 +197,9 @@ def control(run, action):
         if state.get("pending"):
             raise RuntimeError("Hosted write outcome unknown; observe before another control")
         _post(directory, state, client, "stop", run_path(state["run_id"]) + "/cancel")
+        if state.get("rejected"):
+            failure = state["rejected"]["error"]
+            raise ApiError(failure["http_status"], failure["detail"])
         if (state.get("pending") or {}).get("response") is not None:
             state["pending"] = None
     return observe(run)
