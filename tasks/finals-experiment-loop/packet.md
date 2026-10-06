@@ -24,6 +24,8 @@ Console owner 已报告 sfp7 的实际部署：独立目录 `/home/yyh/factory26
 
 主分担 `lab/arc_bench/hosted_run.py` 的真实官网 API 适配，执行 owner 继续负责打包、数据映射与实际 dispatch 接线。新模块保存 upload/create/start/cancel 请求及响应、真实 submission/run ID、日志 cursor、平台费用和全 workspace ZIP；未知写请求不自动重发，5xx/传输不明不冒充确定失败。当前只通过编译，未调用收费 API；规范 data 在平台导出中的映射和原生接续尚须与实际包完成闭环。
 
+旧入口退役的调用核对确认：新评测仍可经 ARC adapter 导入旧 artifacts/core/telemetry，I14 的 experiment_entry/bootstrap 仍带 state_writer，package_agent/runtime 也被其他当前材料构建调用。整目录删除 lab.exp 会破坏这些维护调用方；已经冻结的 runner.pyz 不读当前源码，但重新构建仍受影响。新 run 必须提取实际 ARC/材料功能并切断门控，而非依赖 gate 在某些环境 no-op；旧源码中他人的未提交变化不得覆盖。该核对由 cold_local_profile 完成，只读，没有控制旧运行。新增 advisor 委派被平台 thread limit 拒绝，当前没有取得新的重大退役取舍意见，不把只读依赖核对冒充 advisor 建议。
+
 ## 当前需求与决定
 
 用户要求先定义“怎样算好的实验设施”，依据实验需求、工程知识、Agent 使用 profiling 建立完整因果链，不为找问题而找问题。Mac、WSL、sfp7 和官网差异属于设计对象，环境触发、集成耦合与设施内部缺陷分别归因。Exp Console 属于实验基础设施，不留作无期限的外围改进。
