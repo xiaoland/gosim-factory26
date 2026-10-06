@@ -54,6 +54,36 @@
       "model_name": "kimi-k3",
       "litellm_params": {"model": "openai/kimi-k3", "api_base": "os.environ/QWEN_BASE_URL", "api_key": "os.environ/QWEN_API_KEY"},
       "model_info": {"mode": "chat", "factory26_deployment_id": "qwen-kimi-k3", "factory26_provider": "QWEN", "factory26_plan": "ordinary-api"}
+    },
+    {
+      "model_name": "glm-5.3",
+      "litellm_params": {"model":"openai/glm-5.3","api_base":"os.environ/QIANFAN_TOKEN_PLAN_BASE_URL","api_key":"os.environ/QIANFAN_TOKEN_PLAN_API_KEY"},
+      "model_info": {"mode":"chat","factory26_deployment_id":"qianfan-token-plan-glm-5.3","factory26_provider":"QIANFAN_TOKEN_PLAN","factory26_plan":"token-plan-personal"}
+    },
+    {
+      "model_name": "glm-5.3-flash",
+      "litellm_params": {"model":"openai/glm-5.3-flash","api_base":"os.environ/QIANFAN_TOKEN_PLAN_BASE_URL","api_key":"os.environ/QIANFAN_TOKEN_PLAN_API_KEY"},
+      "model_info": {"mode":"chat","factory26_deployment_id":"qianfan-token-plan-glm-5.3-flash","factory26_provider":"QIANFAN_TOKEN_PLAN","factory26_plan":"token-plan-personal"}
+    },
+    {
+      "model_name": "deepseek-v4-flash-0731",
+      "litellm_params": {"model":"openai/deepseek-v4-flash-0731","api_base":"os.environ/QIANFAN_TOKEN_PLAN_BASE_URL","api_key":"os.environ/QIANFAN_TOKEN_PLAN_API_KEY"},
+      "model_info": {"mode":"chat","factory26_deployment_id":"qianfan-token-plan-deepseek-v4-flash-0731","factory26_provider":"QIANFAN_TOKEN_PLAN","factory26_plan":"token-plan-personal"}
+    },
+    {
+      "model_name": "deepseek-v4-flash-0731",
+      "litellm_params": {"model":"openai/deepseek-v4-flash-0731","api_base":"os.environ/QWEN_BASE_URL","api_key":"os.environ/QWEN_API_KEY"},
+      "model_info": {"mode":"chat","factory26_deployment_id":"qwen-deepseek-v4-flash-0731","factory26_provider":"QWEN","factory26_plan":"ordinary-api"}
+    },
+    {
+      "model_name": "kimi-k3",
+      "litellm_params": {"model":"openai/kimi-k3","api_base":"os.environ/ARK_CODING_PLAN_BASE_URL","api_key":"os.environ/ARK_CODING_PLAN_API_KEY"},
+      "model_info": {"mode":"chat","factory26_deployment_id":"ark-coding-plan-kimi-k3","factory26_provider":"ARK_CODING_PLAN","factory26_plan":"coding-plan","contextWindow":1024000,"maxTokens":65536}
+    },
+    {
+      "model_name": "kimi-k2.7-code",
+      "litellm_params": {"model":"openai/kimi-k2.7-code","api_base":"os.environ/ARK_CODING_PLAN_BASE_URL","api_key":"os.environ/ARK_CODING_PLAN_API_KEY"},
+      "model_info": {"mode":"chat","factory26_deployment_id":"ark-coding-plan-kimi-k2.7-code","factory26_provider":"ARK_CODING_PLAN","factory26_plan":"coding-plan","contextWindow":256000,"maxTokens":32768,"capabilities":{"chat_completions":true,"reasoning_summaries":false}}
     }
   ],
   "general_settings": {},

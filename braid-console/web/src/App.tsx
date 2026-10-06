@@ -6,6 +6,7 @@ import { useQuery, useQueryClient } from '@tanstack/react-query';
 import Home from './Home';
 import { registeredRuns } from './runs';
 import { useNavigation } from './navigation';
+import RunOverview from './RunOverview';
 
 const BraidRun = lazy(() => import('./BraidRun'));
 
@@ -36,7 +37,7 @@ export default function App() {
         <span className="brand-mark"><LayoutGrid size={19} /></span><strong>Factory26</strong><span>Exp Console</span></a>
       <div className="run-select"><Choice label="选择运行" value={run || ''} placeholder={runs.isPending ? '读取登记…' : '选择已登记运行'} disabled={busy || runs.isPending}
         onChange={value => update({ run: value, selected: null })}
-        options={runs.data?.map(value => ({ value: value.id, label: <span className="inline-flex items-center gap-2"><span>{value.label}</span><StatusBadge>{value.mode === 'archive' ? '归档' : '现场'}</StatusBadge></span> })) || []} /></div>
+        options={runs.data?.map(value => ({ value: value.id, label: <span className="inline-flex items-center gap-2"><span>{value.label}</span><StatusBadge>{value.mode === 'archive' ? '归档' : value.activity === 'active' ? 'active' : value.lifecycle || '状态未知'}</StatusBadge></span> })) || []} /></div>
       <div className="header-status">{!!run && <ActionButton variant="ghost" icon={<House />} disabled={busy} onClick={home}>首页</ActionButton>}
         <Hint title="刷新登记及当前页面数据"><ActionButton variant="ghost" size="icon" aria-label="刷新" icon={<RotateCw />} onClick={refresh} /></Hint></div>
     </header>
@@ -44,8 +45,7 @@ export default function App() {
       {runs.error && <Notice className="error-alert" tone="error" title="运行登记读取失败" description={<pre>{runs.error.message}</pre>} />}
       {missing ? <Notice tone="error" title="页面不存在" description={<><p>此路径不是有效的 Console 页面。</p><ActionButton onClick={home}>返回首页</ActionButton></>} /> : runs.isPending ? <LoadingSkeleton /> : !runs.data ? <ActionButton onClick={refresh}>重新读取登记</ActionButton> : !run ? <Home runs={runs.data} busy={busy} onOpen={value => update({ run: value, selected: null })} />
         : !currentRun ? <Notice tone="error" title="此运行未登记" description={<><p>链接中的运行 ID：<code>{run}</code>。页面保留此身份，不切换到其它运行。</p><ActionButton onClick={home}>返回首页</ActionButton></>} />
-          : currentRun.harness !== 'braid' ? <Notice tone="warning" title="此接入类型尚不支持详情" description={<ActionButton onClick={home}>返回首页</ActionButton>} />
-            : <Suspense fallback={<LoadingSkeleton rows={6} />}><BraidRun key={run} currentRun={currentRun} selected={selected} onSelect={(value, replace) => update({ run, selected: value }, replace)} onDirty={setDirty} onBusy={setBusy} /></Suspense>}
+          : <RunOverview runId={run} currentRun={currentRun} />}
     </main>
     <AlertDialog open={!!pendingNavigation} onOpenChange={open => { if (!open) { cancel(); setPendingNavigation(null); } }}><AlertDialogContent>
       <AlertDialogHeader><AlertDialogTitle>当前草稿尚未提交</AlertDialogTitle><AlertDialogDescription>切换将丢弃当前标题、正文或评论草稿。</AlertDialogDescription></AlertDialogHeader>

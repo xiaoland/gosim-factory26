@@ -12,6 +12,7 @@ from pathlib import Path
 from threading import Lock
 import time
 from urllib.request import Request, urlopen
+from urllib.error import HTTPError
 
 from . import otlp
 
@@ -24,6 +25,14 @@ _PUBLIC_STATUS_FIELDS = {
     "lifecycle", "activity", "brief", "last_activity_at", "as_of", "observed_at", "reason",
     "evidence", "native", "spend", "resource", "resources", "cost", "coverage", "error",
 }
+
+
+class BackendHTTPError(RuntimeError):
+    """Bounded remote response diagnostic without copying response headers."""
+    def __init__(self, status, detail):
+        self.status = status
+        self.detail = detail
+        super().__init__(f"Console HTTP {status}: {detail}")
 
 
 def _portable_value(value):
@@ -70,8 +79,12 @@ def publish_run(service_url: str, manifest: dict, *, status=None, records=None,
         headers["x-collector-token"] = collector_token
     request = Request(service_url.rstrip("/") + "/api/runs/register",
                       data=json.dumps(body, ensure_ascii=False).encode(), headers=headers, method="POST")
-    with urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read())
+    try:
+        with urlopen(request, timeout=timeout) as response:
+            return json.loads(response.read())
+    except HTTPError as exc:
+        detail = exc.read(16 * 1024).decode("utf-8", errors="replace")
+        raise BackendHTTPError(exc.code, detail) from exc
 
 
 def register_run(service_url: str, manifest: dict, *, registration_token: str,
@@ -129,10 +142,11 @@ def saved_record_summaries(run: str | Path) -> dict:
     for path in log_paths[:32]:
         try:
             data = path.read_text(errors="replace")
-            result.setdefault("logs", []).append({"source": path.name, "tail": data[-65536:],
+            result.setdefault("logs", []).append({"source": path.name, "bytes": len(data.encode()),
+                                                    "tail": data[-65536:],
                                                     "truncated": len(data) > 65536})
         except OSError as exc:
-            result.setdefault("logs", []).append({"source": path.name,
+            result.setdefault("logs", []).append({"source": path.name, "bytes": None,
                                                    "error": f"{type(exc).__name__}: {exc}"})
     return result
 
@@ -297,6 +311,20 @@ class Backend:
             paths.extend(path for path in (root / f"{name}.json", root / f"{name}.jsonl") if path.is_file())
         if not paths:
             summary = manifest.get("record_summaries", {}).get(name) if isinstance(manifest.get("record_summaries"), dict) else None
+            status = manifest.get("status") if isinstance(manifest.get("status"), dict) else {}
+            if name in {"resources", "resource"} and status.get("resources") is not None:
+                return [{"kind": "resources", "source": "records/status.json", "data": status["resources"]},
+                        {"kind": "native", "source": "records/status.json", "data": status.get("native")}]
+            if name == "cost" and status.get("spend") is not None:
+                spend = status["spend"]
+                if isinstance(spend, dict):
+                    return [{"kind": "spend", "status": spend.get("status", "unknown"),
+                             "amount": spend.get("value", spend.get("cost")),
+                             "currency": spend.get("currency"), "source": "records/status.json",
+                             "note": spend.get("note"), "data": spend}]
+            if name == "cost":
+                return [{"kind": "spend", "status": "unknown", "source": "records/status.json",
+                         "note": "未保存 spend 事实；不能从运行生命周期推导费用"}]
             if summary is None and name == "evaluations" and isinstance(manifest.get("record_summaries"), dict):
                 summary = manifest["record_summaries"].get("automatic-evaluations")
             if isinstance(summary, list):
@@ -386,6 +414,14 @@ class Backend:
         skipped = 0
         errors = []
         after_id = 0
+        target = self.run(run_id)
+        database = Path(target["telemetry_database"])
+        otlp.initialize(database)
+        with otlp.connect(database) as db:
+            db.execute("CREATE TABLE IF NOT EXISTS imported_source_batches ("
+                       "source_digest TEXT NOT NULL, source_batch_id INTEGER NOT NULL, "
+                       "target_batch_id INTEGER NOT NULL, imported_at REAL NOT NULL, "
+                       "PRIMARY KEY(source_digest, source_batch_id))")
         while True:
             batches = otlp.list_batches(source, after_id=after_id, limit=500)
             if not batches:
@@ -393,21 +429,27 @@ class Backend:
             for batch in batches:
                 source_id = int(batch["id"])
                 after_id = source_id
-                with self._connect() as db:
-                    seen = db.execute("SELECT target_batch_id FROM imported_batches WHERE run_id=? AND source_digest=? AND source_batch_id=?",
-                                      (run_id, source_digest, source_id)).fetchone()
-                if seen:
-                    skipped += 1
-                    continue
                 try:
                     payload = otlp.read_batch(source, source_id)[1]
-                    target = self.run(run_id)
-                    database = Path(target["telemetry_database"])
-                    target_id = otlp.persist_batch(database, batch["signal"], payload,
-                                                   session=batch.get("session_id"),
-                                                   wire_bytes=batch.get("wire_bytes"),
-                                                   encoding=batch.get("encoding") or "identity",
-                                                   observed_at=batch["received_at"])
+                    with otlp.connect(database) as db:
+                        prior = db.execute("SELECT target_batch_id FROM imported_source_batches WHERE source_digest=? AND source_batch_id=?",
+                                           (source_digest, source_id)).fetchone()
+                        if prior:
+                            skipped += 1
+                            continue
+                        digest = hashlib.sha256(payload).hexdigest()
+                        duplicate = db.execute("SELECT batch_id FROM batch_meta WHERE sha256=?", (digest,)).fetchone()
+                        if duplicate:
+                            target_id = duplicate[0]
+                        else:
+                            cursor = db.execute("INSERT INTO batches(signal,received_at,payload) VALUES(?,?,?)",
+                                                (batch["signal"], batch["received_at"], payload))
+                            target_id = cursor.lastrowid
+                            db.execute("INSERT INTO batch_meta VALUES(?,?,?,?,?)",
+                                       (target_id, batch.get("session_id"), digest,
+                                        batch.get("wire_bytes") or len(payload), batch.get("encoding") or "identity"))
+                        db.execute("INSERT INTO imported_source_batches VALUES(?,?,?,?)",
+                                   (source_digest, source_id, target_id, time.time()))
                     with self._lock, self._connect() as db:
                         db.execute("INSERT OR IGNORE INTO imported_batches VALUES(?,?,?,?,?)",
                                    (run_id, source_digest, source_id, target_id, time.time()))

@@ -91,7 +91,8 @@ def start(run):
     if mode == "self_funded":
         from scripts.hackathon_gateway import read_assignments
         environment = read_assignments(target["credential_file"])
-        secret = environment.get("FACTORY26_API_KEY") or environment.get("OPENAI_API_KEY")
+        secret = (environment.get(target['credential_env']) if target.get('credential_env') else
+                  environment.get("FACTORY26_API_KEY") or environment.get("OPENAI_API_KEY"))
         if not secret:
             raise ValueError("credential_file lacks the selected model key")
     with _state(run) as (directory, state):
@@ -243,6 +244,16 @@ def save(run):
     directory = run / "records/platform"
     state = json.loads((directory / "execution.json").read_text())
     if not state.get("run_id"):
+        if state.get("rejected") and not state.get("pending"):
+            # A definitive pre-execution rejection has no remote workspace.
+            # Its frozen inputs and original platform response are the result.
+            result = {"saved": True, "as_of": time.time(),
+                      "kind": "pre-execution-rejection",
+                      "scope": ["program", "inputs", "records"],
+                      "platform_run_id": None,
+                      "gaps": ["No platform run was created; no remote workspace exists"]}
+            write_json(directory / "saved-inputs.json", result)
+            return result
         raise RuntimeError("Hosted identity unknown; no downloadable result yet")
     remote = _get(directory, client, run_path(state["run_id"]), "save-status.json")
     if remote.get("id") != state["run_id"] or remote.get("status") not in TERMINAL:

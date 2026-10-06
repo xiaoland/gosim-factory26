@@ -20,17 +20,29 @@ DEFAULT_CATALOG = ROOT / "harness/model-gateway.json"
 
 
 def read_assignments(path):
+    """Read a private dotenv or provider-env JSON without exposing values."""
     path = Path(path).resolve(strict=True)
     if path.stat().st_mode & 0o077:
         raise ValueError("client environment file must have mode 600")
-    values = {}
-    for line in path.read_text().splitlines():
-        if not line.strip() or line.lstrip().startswith("#"):
-            continue
-        name, separator, value = line.partition("=")
-        if not separator or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name.strip()):
-            raise ValueError(f"invalid client environment variable: {name}")
-        values[name.strip()] = value.strip().strip('"').strip("'")
+    if path.suffix == '.json':
+        value = json.loads(path.read_text())
+        if isinstance(value, dict) and set(value) == {'environment'}:
+            value = value['environment']
+        if not isinstance(value, dict) or not value:
+            raise ValueError("provider environment JSON must be a non-empty object")
+        values = value
+    else:
+        values = {}
+        for line in path.read_text().splitlines():
+            if not line.strip() or line.lstrip().startswith("#"):
+                continue
+            name, separator, value = line.partition("=")
+            if not separator or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name.strip()):
+                raise ValueError(f"invalid client environment variable: {name}")
+            values[name.strip()] = value.strip().strip('"').strip("'")
+    if any(not isinstance(name, str) or not re.fullmatch(r"[A-Za-z_][A-Za-z0-9_]*", name)
+           or not isinstance(secret, str) for name, secret in values.items()):
+        raise ValueError("provider environment contains an invalid name or value type")
     return values
 
 
@@ -46,8 +58,8 @@ def digest(path):
     return hashlib.sha256(Path(path).read_bytes()).hexdigest()
 
 
-def prepare_catalog(path, routes):
-    """Select exactly one native LiteLLM deployment for every stable alias."""
+def prepare_catalog(path, routes, aliases=None):
+    """Select the explicitly activated aliases and ordered deployments."""
     catalog = json.loads(Path(path).read_text())
     entries = catalog.get("model_list")
     if not isinstance(entries, list) or not entries:
@@ -69,32 +81,44 @@ def prepare_catalog(path, routes):
                 raise ValueError(f"gateway catalog {field} has an invalid environment reference")
         grouped.setdefault(entry["model_name"], []).append((deployment, entry))
     selected = {}
-    for alias, candidates in grouped.items():
+    active = set(aliases) if aliases else set(grouped)
+    unknown_aliases = active - set(grouped)
+    if unknown_aliases:
+        raise ValueError(f"selected unknown catalog alias: {sorted(unknown_aliases)}")
+    for alias in sorted(active):
+        candidates = grouped[alias]
         wanted = routes.get(alias)
         if wanted:
-            matches = [entry for deployment, entry in candidates if deployment == wanted]
-            if len(matches) != 1:
-                raise ValueError(f"route {alias}={wanted!r} does not select exactly one catalog deployment")
-            selected[alias] = matches[0]
+            wanted = wanted if isinstance(wanted, list) else [wanted]
+            matches = [entry for wanted_id in wanted for deployment, entry in candidates
+                       if deployment == wanted_id]
+            if len(matches) != len(wanted) or len({entry['model_info']['factory26_deployment_id'] for entry in matches}) != len(wanted):
+                raise ValueError(f"route {alias}={wanted!r} does not select each deployment exactly once")
+            selected[alias] = matches
             continue
         defaults = [entry for deployment, entry in candidates
                     if entry.get("model_info", {}).get("factory26_default") is True]
         if len(defaults) != 1:
             raise ValueError(f"alias {alias!r} needs one explicit default or --route ALIAS=DEPLOYMENT_ID")
-        selected[alias] = defaults[0]
+        selected[alias] = defaults
     unknown = set(routes) - set(grouped)
     if unknown:
         raise ValueError(f"route selects unknown catalog alias: {sorted(unknown)}")
     config = {key: value for key, value in catalog.items() if key != "model_list"}
-    config["model_list"] = selected.values()
+    config["model_list"] = [dict(entry, litellm_params=dict(entry["litellm_params"], order=order))
+                          for entries in selected.values() for order, entry in enumerate(entries)]
     snapshot = []
-    for alias, entry in selected.items():
-        info = entry["model_info"]
-        params = entry["litellm_params"]
-        snapshot.append({"alias": alias, "deployment_id": info["factory26_deployment_id"],
-                         "provider": info["factory26_provider"], "plan": info["factory26_plan"],
-                         "wire_model": params["model"].removeprefix("openai/"),
-                         "base_url_env": params["api_base"].removeprefix("os.environ/")})
+    for alias, entries in selected.items():
+        for order, entry in enumerate(entries):
+            info = entry["model_info"]
+            params = entry["litellm_params"]
+            snapshot.append({"alias": alias, "order": order,
+                             "deployment_id": info["factory26_deployment_id"],
+                             "provider": info["factory26_provider"], "plan": info["factory26_plan"],
+                             "wire_model": params["model"].removeprefix("openai/"),
+                             "base_url_env": params["api_base"].removeprefix("os.environ/"),
+                             "model_info": {key: info[key] for key in
+                                            ("contextWindow", "maxTokens", "compat") if key in info}})
     return config, sorted(snapshot, key=lambda row: row["alias"])
 
 
@@ -288,8 +312,10 @@ def main():
                         help="保留客户端推理、采样和输出参数，用于按现有配方运行")
     parser.add_argument("--gateway-config", type=Path, default=DEFAULT_CATALOG,
                         help="原生 LiteLLM model_list catalog")
-    parser.add_argument("--route", action="append", default=[], metavar="ALIAS=DEPLOYMENT_ID",
-                        help="从 catalog 为一个稳定 alias 选择唯一 deployment")
+    parser.add_argument("--route", action="append", default=[], metavar="ALIAS=DEPLOYMENT_ID[,DEPLOYMENT_ID...]",
+                        help="为稳定 alias 选择按顺序排列的一个或多个 deployment")
+    parser.add_argument("--alias", action="append", default=[], metavar="ALIAS",
+                        help="只激活列出的稳定 alias；避免目录其它 alias 被隐式装配")
     parser.add_argument("--model-vendor", action="append", default=[], metavar="MODEL=VENDOR",
                         help=argparse.SUPPRESS)
     parser.add_argument("--prepare-only", action="store_true",
@@ -303,9 +329,9 @@ def main():
     for route in args.route:
         alias, separator, deployment = route.partition("=")
         if not separator or not alias or not deployment or alias in routes:
-            raise ValueError(f"invalid route {route!r}; expected unique ALIAS=DEPLOYMENT_ID")
-        routes[alias] = deployment
-    config, snapshot = prepare_catalog(args.gateway_config.resolve(strict=True), routes)
+            raise ValueError(f"invalid route {route!r}; expected unique ALIAS=DEPLOYMENT_ID[,DEPLOYMENT_ID...]")
+        routes[alias] = [item for item in deployment.split(",") if item]
+    config, snapshot = prepare_catalog(args.gateway_config.resolve(strict=True), routes, args.alias)
     state = args.state.resolve()
     state.mkdir(parents=True, exist_ok=True)
     state.chmod(0o700)
@@ -324,7 +350,7 @@ def main():
     config.setdefault("litellm_settings", {}).update(
         telemetry=False, callbacks=["hackathon_gateway_compat.proxy_handler_instance"])
     config["model_list"] = [dict(entry, litellm_params=dict(entry["litellm_params"],
-        use_chat_completions_api=True)) for entry in config["model_list"]]
+        use_chat_completions_api=True), model_info=dict(entry.get("model_info", {}))) for entry in config["model_list"]]
     (state / "gateway.json").write_text(json.dumps(config, indent=2) + "\n")
     (state / "gateway.env").write_text(
         f"GATEWAY_URL=http://{args.container_host}:{args.port}/v1\nGATEWAY_TOKEN={token}\n"
@@ -366,8 +392,7 @@ def main():
     (state / "routing-snapshot.json").write_text(json.dumps(snapshot_record, indent=2) + "\n")
     env = dict(os.environ, **secret_values, LITELLM_MASTER_KEY=token,
                GATEWAY_REQUEST_LOG=str(state / "request-metadata.jsonl"),
-               GATEWAY_BINDINGS_DIR=str(state / "bindings"),
-               GATEWAY_PRESERVE_PARAMETERS="1" if args.preserve_parameters else "0")
+               GATEWAY_BINDINGS_DIR=str(state / "bindings"))
     env["PYTHONPATH"] = ":".join((str(source), str(ROOT / "submission"),
                                     str(runtime / "python")))
     if args.prepare_only:

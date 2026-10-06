@@ -15,6 +15,7 @@ from responses_compat import CustomLogger, sanitize_responses_input
 PARAMETERS = ("model", "reasoning", "reasoning_effort", "thinking", "max_tokens", "max_output_tokens", "max_completion_tokens",
               "temperature", "top_p", "tool_choice")
 OUTPUT_FIELDS = ("max_tokens", "max_output_tokens", "max_completion_tokens")
+_MODEL_LIMIT_SOURCE = "catalog.model_info.maxTokens"
 WRITE_LOCK = Lock()
 
 
@@ -51,18 +52,33 @@ def _context(user_api_key_dict):
             if isinstance(value, dict) and key in value}
 
 
+def _redact(text):
+    for name, secret in os.environ.items():
+        if secret and (name.endswith(('_API_KEY', '_TOKEN', '_SECRET', '_PASSWORD')) or name in {'LITELLM_MASTER_KEY'}):
+            text = text.replace(secret, '[redacted]')
+    return text
+
+
 def _record(value):
     if path := os.environ.get("GATEWAY_REQUEST_LOG"):
         try:
+            encoded = json.dumps({"time_ns": time.time_ns(), **value},
+                                 ensure_ascii=False, default=str)
             with WRITE_LOCK, Path(path).open("a") as output:
-                output.write(json.dumps({"time_ns": time.time_ns(), **value},
-                                        ensure_ascii=False, default=str) + "\n")
+                output.write(_redact(encoded) + "\n")
         except OSError as exc:
             print(f"gateway diagnostic write failed: {exc}", file=sys.stderr)
 
 
 def record_parameters(data, **metadata):
     _record({**metadata, **{name: data[name] for name in PARAMETERS if name in data}})
+
+
+def _context_from_kwargs(kwargs):
+    metadata = kwargs.get("metadata") or kwargs.get("litellm_metadata")
+    identity = metadata.get("factory26_gateway") if isinstance(metadata, dict) else None
+    return {key: identity[key] for key in ("binding_id", "run_id", "request_id")
+            if isinstance(identity, dict) and key in identity}
 
 
 class GatewayCompat(CustomLogger):
@@ -76,6 +92,18 @@ class GatewayCompat(CustomLogger):
                               **{key: identity[key] for key in ("binding_id", "run_id", "request_id")
                                  if isinstance(identity, dict) and key in identity})
 
+    @staticmethod
+    def _output_limits(data):
+        fields = {name: data[name] for name in OUTPUT_FIELDS if name in data}
+        numeric = {}
+        for name, value in fields.items():
+            if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+                raise ValueError(f"{name} must be a non-negative integer")
+            numeric[name] = value
+        if len(set(numeric.values())) > 1:
+            raise ValueError("conflicting output budget fields: " + ", ".join(sorted(numeric)))
+        return numeric
+
     async def async_pre_call_hook(self, user_api_key_dict, cache, data, call_type):
         if call_type in {"responses", "aresponses"}:
             data = sanitize_responses_input(data)
@@ -87,21 +115,31 @@ class GatewayCompat(CustomLogger):
             elif context and metadata is None:
                 data["metadata"] = {"factory26_gateway": context}
             record_parameters(data, stage="requested", api=call_type, **context)
-        requested = {name: data[name] for name in OUTPUT_FIELDS if name in data} if isinstance(data, dict) else {}
         if isinstance(data, dict):
-            # Historical raw runs use provider defaults; recipe comparisons retain
-            # the client's explicit parameters instead.
-            # Pi inserts a default cap even when its model descriptor omits it.
-            if os.environ.get("GATEWAY_PRESERVE_PARAMETERS") != "1":
-                for name in ("reasoning", "reasoning_effort", "thinking", "max_tokens",
-                             "max_output_tokens", "max_completion_tokens", "temperature", "top_p"):
-                    data.pop(name, None)
-            elif "thinking" in data:
-                # This is a vendor Chat field, not an OpenAI SDK parameter.
-                data.setdefault("extra_body", {})["thinking"] = data.pop("thinking")
-            record_parameters({**data, **data.get("extra_body", {})}, stage="normalized",
-                              api=call_type, requested_output_limits=requested, **context)
+            # Keep the caller's payload intact. Provider-specific changes happen
+            # only after LiteLLM has selected a concrete deployment below.
+            self._output_limits(data)
         return data
+
+    async def async_pre_call_deployment_hook(self, kwargs, call_type):
+        """Apply only the selected deployment's confirmed output cap."""
+        info = kwargs.get("model_info")
+        if not isinstance(info, dict) or "maxTokens" not in info:
+            return kwargs
+        limit = info["maxTokens"]
+        if isinstance(limit, bool) or not isinstance(limit, int) or limit <= 0:
+            raise ValueError("catalog model_info.maxTokens must be a positive integer")
+        requested = self._output_limits(kwargs)
+        if not requested:
+            return kwargs
+        requested_value = next(iter(requested.values()))
+        effective = min(requested_value, limit)
+        for name in requested:
+            kwargs[name] = min(kwargs[name], limit)
+        _record({"stage": "deployment_parameters", "requested": requested_value,
+                 "effective": effective, "deployment": info.get("factory26_deployment_id"),
+                 "source": _MODEL_LIMIT_SOURCE, **_context_from_kwargs(kwargs)})
+        return kwargs
 
     async def async_post_call_success_hook(self, data, user_api_key_dict, response):
         usage = getattr(response, "usage", None)

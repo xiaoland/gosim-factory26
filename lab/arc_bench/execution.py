@@ -356,6 +356,7 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
 
 
 def _native_facts(run: Path):
+    run = run.resolve()
     harness = paths(run)["harness"]
     messages, turns, errors = deque(maxlen=500), deque(maxlen=500), deque(maxlen=20)
     sessions = {}
@@ -413,8 +414,58 @@ def _native_facts(run: Path):
                                        "error": f"{type(exc).__name__}: {exc}"})
         except (OSError, UnicodeError) as exc:
             errors.append({"source": source, "error": f"{type(exc).__name__}: {exc}"})
-    return {"sessions": list(sessions.values()), "session_messages": list(messages),
-            "provider_turns": list(turns), "reader_errors": list(errors)}
+    facts = {"sessions": list(sessions.values()), "session_messages": list(messages),
+             "provider_turns": list(turns), "reader_errors": list(errors)}
+    facts["braid"] = _braid_facts(run, harness)
+    return facts
+
+
+def _braid_facts(run: Path, harness: Path) -> dict[str, Any]:
+    """Read the Braid lifecycle projection already produced in this run.
+
+    This is observation only.  The supervisor still owns control; missing or
+    stale Braid material remains unknown instead of being inferred from text
+    timestamps.
+    """
+    observed_at = time.time()
+    roots = sorted({path.parent for path in harness.rglob("braid-state/status.json")})
+    result: dict[str, Any] = {"observed_at": observed_at, "sources": [],
+                              "states": [], "gaps": []}
+    if not roots:
+        result["gaps"].append({"source": str(harness.relative_to(run)),
+                                "reason": "braid-state/status.json unavailable"})
+        return result
+    from .provider_liveness import collect_provider_evidence
+    for state_root in roots:
+        status_path = state_root / "status.json"
+        source = str(status_path.relative_to(run))
+        row: dict[str, Any] = {"source": source, "observed_at": observed_at}
+        try:
+            status = json.loads(status_path.read_text(encoding="utf-8"))
+            if not isinstance(status, dict):
+                raise ValueError("Braid status must be an object")
+            row["status"] = {key: status.get(key) for key in (
+                "active_turns", "pending_batches", "pending_events",
+                "pending_continuations", "pending_resets",
+                "materializing_groups", "blocked_groups", "provider_health")}
+            row["physical_sessions"] = status.get("physical_sessions", [])
+        except (OSError, UnicodeError, ValueError) as exc:
+            row["error"] = f"{type(exc).__name__}: {exc}"
+            result["gaps"].append({"source": source, "reason": row["error"]})
+        try:
+            evidence = collect_provider_evidence(state_root, observed_at)
+            row["provider_evidence"] = evidence
+            if evidence.get("errors"):
+                result["gaps"].extend({"source": source, "reason": error}
+                                     for error in evidence["errors"])
+        except (OSError, UnicodeError, ValueError) as exc:
+            row["provider_evidence_error"] = f"{type(exc).__name__}: {exc}"
+            result["gaps"].append({"source": source, "reason": row["provider_evidence_error"]})
+        result["sources"].append(source)
+        result["states"].append(row)
+    result["available"] = bool(result["states"]) and not all(
+        "error" in row and "provider_evidence" not in row for row in result["states"])
+    return result
 
 
 def _activity(run: Path, facts):
@@ -510,6 +561,9 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
         from . import hosted_run
         value = hosted_run.save(run_path)
         value = dict(value) if isinstance(value, dict) else {"saved": False, "error": value}
+        if value.get("kind") == "pre-execution-rejection":
+            write_json(paths(run_path)["records"] / "save.json", value)
+            return value
         # The actual template-bundle ZIP has a `template/` archive root.
         # Preserve that entire application workspace, and split the native
         # subtree back into the same data domain used by Local containers.

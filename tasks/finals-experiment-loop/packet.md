@@ -24,6 +24,12 @@ advisor `recipe_source_decision` 核对了文档审计中用户指定的 GLM/Fla
 
 实际浏览器 Console 初次连接拒绝，原因是 Mac→sfp7 隧道退出；共享服务仍 HTTP 200，恢复 ssh -fNT 转发后页面因列表 manifest 字段缺失崩溃。cold_console_profile 持续负责 API/UI 契约、重新编译部署及实际页面反馈。Pi/Hosted Stage1 `7868abfa67fa4ce096126ccc768e4bde` 已由独立会话启动，当前在上传自包含包，没有平台 run ID，不重复提交不明写请求；BookStack 完成及评测仍待恢复。
 
+当前提交 `a0305e4b` 保存公共自费配方、冻结入口、DX 消费链、观测回收与日志边界；已有网关/catalog 的其它工作区变化按归属保留，不宣称整个工作区已清洁交付。Console 当前已实际浏览器验证 Pi 详情的 lifecycle/activity、资源/native 与费用 unknown 可见；完整 JSON 不作为默认界面，进一步可读性部署由同一 owner 持续完成。
+
+Hosted 的独立操作取得明确 HTTP 400，而非模型失败。cold_hosted_profile 当前 GET 核实 `hackathon` 已 ended，Stage1/2 需求仍可读但无新建提交入口；`hackathon-evolution` open，仅有 `hackathon-evolution--github` 与 `hackathon-evolution--sheet`。Evolution self-funded 既有提交存在不授权控制或复用它。advisor 建议申请两次 Evolution GitHub 独立非参赛验收：Pi 从官方初赛基线增量完成；I14 从同一基线独立产生修改后取消回收，不虚构 Evolution 阶段。主已通过输入面板请求用户确认该替换范围，尚未获批，不启动新题。原官网两阶段覆盖记为缺口；原 Stage1 同题 self-test 评分入口另作有界只读核对，关闭 Hosted 生成不直接推导评分入口关闭。
+
+独立会话继续持有已授权本地 I14/sfp7 Stage1→Stage2 验收，已收到短自然请求；BookStack 原网络故障现场保留。明确上传拒绝后的保存边界已由独立会话修复并用本次真实原件得到 saved=true（scope program/inputs/records，无远端执行 workspace），不是生成成功或完整远端回收。
+
 ## 开工授权与责任
 
 2026-10-06 用户原话：“好的，没问题，你可以开工了；你可以自由提交；基于 I14, pi-minimal 派生出 I14-dx-test, pi-minimal-vv-dx-test 两个 variants （派生新的 variant 是因为本次实验基础设施改进必定会涉及到 variant 的改进），按你说的用独立会话验收，你可以使用真实模型，不需要 mock，费用不是问题。”这条指示批准当前 design/implementation 的源码实施、必要部署、当前任务提交和真实模型验收。比赛提交与既有运行仍不在接管范围。

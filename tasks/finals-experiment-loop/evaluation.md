@@ -89,9 +89,17 @@
 
 ## 独立实际验收：2026-10-06 冻结安排
 
+### 2026-10-07 自然请求：sfp7 I14 GitHub Stage1 → Stage2
+
+主会话要求官网入口先等核对、不重复上传，继续在 sfp7 用 I14-dx-test 跑 GitHub 第一阶段，原生会话空闲半分钟时自动停止保存，再同 task 接续完成后进入第二阶段，保持集中自费配方。验收者持续持有此流程，不接管其它容器。启动前只读确认 sfp7 `/home` 为本地 `/dev/nvme0n1p3`、可用约 103 GiB；Mac 控制与证据位于 WorkSSD、可用约 241 GiB。当前公共 native facts 仅有 Pi sessions 的 active/waiting_tool/observed 与时间点，没有明确 idle 或 retry 生命周期；已咨询 advisor，不能把超过 30 秒没有 message_end 直接当作空闲。先取得真实执行事实，再按可信状态判据决定是否触发；缺项保持 unknown，不能伪造自动停止覆盖。
+
 ### 2026-10-07 自然请求：Hosted GitHub Stage1 → Stage2
 
-主会话将 BookStack 发送连接故障交由网关负责人继续修复，要求保留现场，改为使用 `pi-minimal-vv-dx-test` 在官网完成 GitHub 第一阶段后接第二阶段，当前自费配方，不参加比赛，并观察状态、日志及自动保存。北京时间 01:25:51 执行维护三参数入口 `lab start pi-minimal-vv-dx-test hosted github-stage-1`，run `7868abfa67fa4ce096126ccc768e4bde`。不停止或接管同账户其它运行；本次流程仅在第一阶段 completed 后 restart 到 github-stage-2，失败不冒充阶段交付。原件入口 `runs/finals-experiment-loop/validation/github-hosted-*`。当前装配中，尚未取得平台执行或评分结果。
+主会话将 BookStack 发送连接故障交由网关负责人继续修复，要求保留现场，改为使用 `pi-minimal-vv-dx-test` 在官网完成 GitHub 第一阶段后接第二阶段，当前自费配方，不参加比赛，并观察状态、日志及自动保存。北京时间 01:25:51 执行维护三参数入口 `lab start pi-minimal-vv-dx-test hosted github-stage-1`，run `7868abfa67fa4ce096126ccc768e4bde`，program version `3074e30597a0465fcba24ae4e49232a0cf6650f20c48ff4be048742b2d07b316`。不停止或接管同账户其它运行；本次流程仅在第一阶段 completed 后 restart 到 github-stage-2，失败不冒充阶段交付。原件入口 `runs/finals-experiment-loop/validation/github-hosted-*`。
+
+上传请求明确 `credential_mode=self_funded`，但 Hosted 维护入口仍选择 `catalog=competition`、`competition_id=hackathon`。官网 `/submissions` 返回 HTTP 400，原始 detail 为 `This competition is no longer accepting submissions`，request id 为 `upload-1791307640070984000`；未创建 submission 或平台 run，模型未执行，不能取得应用或评分。只读查询 benchmark（16 题）与 playground（2 题）的公开目录均没有 GitHub Stage1/Stage2。没有改题、切参赛入口或重复上传；第二阶段缺少第一阶段交付与可用官网任务入口，因此未启动。本次约四分钟墙钟主要消耗于 841 MiB 包构建及被拒绝的上传。
+
+公共 status 正确 failed，嵌套 platform.rejected 保存 HTTP 400、请求身份和原始响应，可解释拒绝原因；普通 logs 仍只有 runtime 构建信息，单独使用不足。原自动保存返回 `RuntimeError: Hosted identity unknown; no downloadable result yet`，错误地要求明确未建执行的运行拥有远端 workspace。已在 hosted_run.save 的确定拒绝分支保存 program/inputs/records，并以显式 pre-execution-rejection 标记让 execution.save 接受该范围；未决请求及真正缺失 workspace 的执行仍报错。原失败回执保留为 `github-hosted-stage1-save-original.json`。两个源码文件 py_compile 通过，随后对本次真实 run 调用维护 save 返回 saved true，platform_run_id null，明确 gap 为无平台执行及远端 workspace；保存回执已发布。此次证明修复后的手工保存分支，尚未证明新启动的自动保存闭环；没有编写或运行设施测试，没有提交共享源码。
 
 ### 2026-10-07 自然请求：WSL BookStack
 
