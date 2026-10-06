@@ -89,8 +89,8 @@ def start(run):
         raise ValueError(f"unsupported Hosted billing mode: {mode}")
     secret = None
     if mode == "self_funded":
-        private = json.loads(Path(target["credential_file"]).read_text())
-        environment = private.get("environment", private)
+        from scripts.hackathon_gateway import read_assignments
+        environment = read_assignments(target["credential_file"])
         secret = environment.get("FACTORY26_API_KEY") or environment.get("OPENAI_API_KEY")
         if not secret:
             raise ValueError("credential_file lacks the selected model key")

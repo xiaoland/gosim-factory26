@@ -10,7 +10,11 @@
 
 2026-10-06 用户原话：“好的，没问题，你可以开工了；你可以自由提交；基于 I14, pi-minimal 派生出 I14-dx-test, pi-minimal-vv-dx-test 两个 variants （派生新的 variant 是因为本次实验基础设施改进必定会涉及到 variant 的改进），按你说的用独立会话验收，你可以使用真实模型，不需要 mock，费用不是问题。”这条指示批准当前 design/implementation 的源码实施、必要部署、当前任务提交和真实模型验收。比赛提交与既有运行仍不在接管范围。
 
-主 Agent 负责公共 run API、CLI、自动化及整体集成和提交；cold_console_profile 持续负责 OTLP/Backend/Console/Braid view。execution_owner 的前三批交付是未接通真实 target 的草稿，主没有采用其完成声明；该 owner 已结束回合且没有模型或部署在途，已通知停止修改。执行与独立评测强依赖，现合并由 evaluation_implementation 持续负责 ARC 执行、路径、专用 variant、状态生产、restart 与三类评测，避免继续在未完成 executor 上交接。原草稿保留并由新 owner修正，不回退其他工作区。
+主 Agent 负责公共 run API、CLI、自动化、ARC 执行、restart、target 配置、整体集成和提交；cold_console_profile 持续负责 OTLP/Backend/Console/Braid view。前两位执行负责人的交付尚未接通真实控制、数据回收和原生接续，主没有采用其完成声明。evaluation_implementation 已确认没有构建、SDK 或收费运行在途，并转交执行责任；它继续持有 evaluate/package_arc_replay 的独立评测结果。execution_owner 现在仅负责两个派生 variant 的固定数据路径与原生恢复，不与主 Agent 的执行文件重叠。原草稿和构建原件保留，不回退其他工作区。
+
+已安排 local_execution_decision advisor 判断官方 SDK prepare 后直接 Docker create/start 与继续捕获 SDK stdout 容器身份的取舍。判断依据是实际 SDK `docker run --rm`、随机容器名和只在结束后保存的 local-run.json；尚无本轮收费运行，不能把 SDK prepare 成功当作运行控制通过。
+
+已采用 advisor 的直接 create→保存 CID→start 建议；cold_local_profile 接续其边界调查，持有新增 local_run.py 的真实执行、远端部署与控制回收结果，主负责把它接入公共 API。SDK Meter 是共享 access-key 累计差值，不保证单 run 归属，不因此增加串行 gate。默认 target registry 已改用实际 Mac 材料构建路径与远端执行路径，不再返回缺 SDK/runtime 的假 profile；任务 registry 提供 BookStack 和已冻结 GitHub Stage1/2 的需求入口。主只读 GET 确认 `/competitions/hackathon` 的实际 id 为 hackathon；官网凭据使用现存 ARC dotenv，而非不含 ARC key 的 models.env。以上仍是接线与事实核对，不是付费验收结果。
 
 独立验收会话 `01a1118d-d790-7df1-93b5-df1801813158` 负责真实首次使用与 profiling，不以阅读实现代替实际反馈。evaluation 已冻结最多八次生成与三项独立评测，覆盖 BookStack、GitHub Stage1/2 及策略/平台停止；费用来源未知不当作零，非正式参赛 self_funded。当前尚未开始收费验收，等待真实可消费执行与服务版本。旧段落中的“待开工”描述是历史授权沿革，不代表当前阶段。
 
@@ -53,7 +57,8 @@ Collector/Backend 推荐来自现有接收能力、所需领域查询和部署�
 | 负责人 | 范围 | 当前交付 |
 | --- | --- | --- |
 | 主 Agent | 产品要求、评价标准、跨组件 HLD、方案复核及 packet | 本 packet、design、evaluation、assessment |
-| execution_owner | ARC 执行、target 装配、stages、Python 策略、控制和归档 | [执行专项](cells/execution.md) |
+| execution_owner | 两个派生 variant 的程序/数据分离及原生接续 | 材料构建不能替代实际同 task/new task 验收 |
+| evaluation_implementation | evaluate/package_arc_replay 独立评测 | 尚待真实应用快照 |
 | cold_console_profile（承接原 observability_owner） | OTLP、资源/费用/turn、Collector/Backend、Console 与 Braid 边界 | [观测专项](cells/observability.md)，原 owner 已不在活跃树，主 Agent 在本轮明确转交收敛责任 |
 | finals_infra_advisor | 重大工程判断，不担任实现 reviewer | 明确 restart/native task 分支、status/archive、Python 自动化及 Braid 自有低频物化视图，已整合到 design |
 | continuation_journey_rehearsal | 首次使用者的独立文档预演 | 两轮桌面使用反馈；最新补齐评测清单与费用模式入口，旧多路径意见已随用户修正失效；不是运行验收 |
