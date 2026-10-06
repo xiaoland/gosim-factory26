@@ -101,9 +101,17 @@ def publish(path):
         return
     try:
         token_file = config.get("registration_token_file")
-        token = Path(token_file).read_text().strip() if token_file else None
         collector_file = config.get("collector_token_file")
-        collector = Path(collector_file).read_text().strip() if collector_file else None
+        credentials = []
+        for filename in (token_file, collector_file):
+            if filename:
+                source = Path(filename)
+                if not source.is_absolute():
+                    source = path / source
+                credentials.append(source.read_text().strip())
+            else:
+                credentials.append(None)
+        token, collector = credentials
         row = status(path)
         facts = {key: row[key] for key in (
             "lifecycle", "activity", "brief", "as_of", "last_activity_at", "evidence",
@@ -132,8 +140,12 @@ def start(variant, target, task, *, route=None, competition=False, script=None):
         execution.assemble(path)
         execution.start(path)
     except Exception as exc:
-        write_json(path / "records/status.json", {"lifecycle": "failed", "activity": "unknown",
-                   "as_of": time.time(), "error": f"{type(exc).__name__}: {exc}"})
+        # The adapter may already have recorded an uncertain platform write.
+        # An exception is not evidence that a dispatched execution failed.
+        saved = path / "records/status.json"
+        if not saved.is_file():
+            write_json(saved, {"lifecycle": "failed", "activity": "unknown",
+                       "as_of": time.time(), "error": f"{type(exc).__name__}: {exc}"})
         raise
     _background(path, "lab.automation", ["observe", path], "supervisor")
     if script:

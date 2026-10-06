@@ -20,6 +20,8 @@ Console owner 已报告 sfp7 的实际部署：独立目录 `/home/yyh/factory26
 
 公共 observer 已接入 Console saved-facts 发布，终态只有 `save` 明确返回 `saved: true` 才结束；发布失败独立记录，不改变运行生命周期。共享字段为 `observability.service_url`、`registration_token_file` 和 `collector_token_file`，秘密不进入迁移 data。此接线仍需真实生产者验证。
 
+主已实地只读确认 sfp7 HTTP 200；服务部署期间重启，PID 不作为永久身份。初次列表包含本任务构造的登记，不能证明真实生产链路，已要求 owner 删除；owner 已报告清除并明确旧 facility4 缺少 status/native turn/cost。约 27 MiB 的单次 RSS 只属于空载服务，不作为低内存验收结论。当前源码中的旧 `lab.control.Control`、exclusive/send 写入链没有调用方，已删除，保留进程出生身份与历史只读等待；这不等于整套 lab.exp 已退役。
+
 ## 当前需求与决定
 
 用户要求先定义“怎样算好的实验设施”，依据实验需求、工程知识、Agent 使用 profiling 建立完整因果链，不为找问题而找问题。Mac、WSL、sfp7 和官网差异属于设计对象，环境触发、集成耦合与设施内部缺陷分别归因。Exp Console 属于实验基础设施，不留作无期限的外围改进。
