@@ -30,6 +30,12 @@ Hosted 的独立操作取得明确 HTTP 400，而非模型失败。cold_hosted_p
 
 独立会话继续持有已授权本地 I14/sfp7 Stage1→Stage2 验收，已收到短自然请求；BookStack 原网络故障现场保留。明确上传拒绝后的保存边界已由独立会话修复并用本次真实原件得到 saved=true（scope program/inputs/records，无远端执行 workspace），不是生成成功或完整远端回收。
 
+后续提交为 `bd1e2cfe`（所需 catalog deployment、provider 描述消费、Console 与明确官网拒绝的保存）和 `27bd09e7`（费用缺口具体来源与原因）。catalog 只采用当前自费链依赖的新增项，其它已有工作区配置保持原样。当前 Pi 详情已实际浏览器核对：最新 502 原错、retained session、终态资源与费用 not_collected 原因可以直接查看；旧 P2 过程 stdout 已通过已有读取路径补入 records，并明确其启动边界未知，不改原始 workspace。
+
+本地 Braid 首次 `26cd033f71ef4ee6bc5c3cd599b8e73d` 约四秒退出，原错为旧代码读取 `routes['factory26']` 的 KeyError，无模型调用；独立会话修复为按实际模型解析集中绑定，继续持有实际运行和 native idle 证据。该次失败未计为生成或接续通过。共用 Braid 状态读取与当前 scope/native 路径映射还在同一会话的修复闭环中，主不抢占控制或另建 observer。
+
+原 Stage1 官方 self-test 页面当前可读，任务为 `github-stage-1-req-test`（另有 Stage2/3），上传应用 ZIP 最大 50 MB、根含 Dockerfile，页面说明结果仅本人可见、不计正式成绩。该入口与已关闭 Hosted submissions 不是同一路径；阶段题族匹配，但没有公开的精确需求/评测器版本，若使用须独立标为同题 self-test，不冒称 Evolution 成绩或 Hosted replay runner 覆盖。当前仅有只读核对，没有上传评分。
+
 ## 开工授权与责任
 
 2026-10-06 用户原话：“好的，没问题，你可以开工了；你可以自由提交；基于 I14, pi-minimal 派生出 I14-dx-test, pi-minimal-vv-dx-test 两个 variants （派生新的 variant 是因为本次实验基础设施改进必定会涉及到 variant 的改进），按你说的用独立会话验收，你可以使用真实模型，不需要 mock，费用不是问题。”这条指示批准当前 design/implementation 的源码实施、必要部署、当前任务提交和真实模型验收。比赛提交与既有运行仍不在接管范围。
