@@ -73,6 +73,29 @@ def default(path):
                    "items": launched, "as_of": time.time()})
 
 
+def relay(path):
+    """Recover saved remote records; never run a second execution observer."""
+    from .arc_bench.local_run import sync_saved, save
+    path = run.resolve(path)
+    while True:
+        synced = sync_saved(path)
+        if synced.get('synced'):
+            row = run.status(path)
+            run.publish(path)
+            receipt = path / 'records/result-save.json'
+            if row.get('lifecycle') in run.TERMINAL and receipt.is_file():
+                if json.loads(receipt.read_text()).get('saved') is True:
+                    recovered = save(path)
+                    write_json(receipt, recovered)
+                    if recovered.get('saved') is True:
+                        state = run.run_layout.manifest(path)
+                        state['lifecycle'] = row['lifecycle']
+                        run.run_layout.write_manifest(path, state)
+                        run.publish(path)
+                        return
+        time.sleep(10)
+
+
 def stages(initial_run, tasks):
     """Continue only normal completion, preserving same-variant data per stage."""
     current = run.resolve(initial_run)
@@ -95,10 +118,10 @@ def facts(path):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("mode", choices=("observe", "default"))
+    parser.add_argument("mode", choices=("observe", "default", "relay"))
     parser.add_argument("run")
     args = parser.parse_args(argv)
-    (observe if args.mode == "observe" else default)(args.run)
+    {'observe': observe, 'default': default, 'relay': relay}[args.mode](args.run)
 
 
 if __name__ == "__main__":

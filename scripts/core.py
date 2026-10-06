@@ -509,5 +509,10 @@ def archive_sessions(output, home, work, entries, telemetry_env=None):
                          if len(valid) != len(archived) or incomplete_observation else 'complete')
     manifest = {'schema_version': 1, 'diagnostic_status': diagnostic_status, 'sessions': archived}
     (native/'manifest.json').write_text(json.dumps(manifest, ensure_ascii=False, indent=2)+'\n')
-    export_telemetry(output, work, manifest, env=telemetry_env)
+    # The Console consumes Braid's portable evidence records, not only the
+    # summary stream.  Keep the existing exporter and its coverage/gap
+    # reporting, but request the portable mode for every saved terminal
+    # snapshot so native sessions, object evidence and chunk references remain
+    # reconstructable by the shared Collector.
+    export_telemetry(output, work, manifest, env=telemetry_env, portable=True)
     return archived

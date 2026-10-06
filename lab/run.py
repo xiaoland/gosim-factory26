@@ -67,6 +67,14 @@ def status(run=None, *, include_all=False):
 
 
 def _background(run, module, args, name):
+    target = run_layout.manifest(run).get('target_config') or {}
+    if name != 'relay' and target.get('kind') == 'local' and target.get('executor') != 'local':
+        from .arc_bench.local_run import spawn
+        receipt = spawn(run, module, args, name=name)
+        write_json(run / 'records' / f'{name}.json', receipt)
+        if name == 'supervisor':
+            _background(run, 'lab.automation', ['relay', run], 'relay')
+        return receipt.get('pid')
     records = run / "records"
     with (records / f"{name}.log").open("ab") as output:
         env = dict(os.environ, LAB_RUN=str(run), LAB_RUN_ROOT=str(run_root()))
@@ -81,7 +89,7 @@ def _background(run, module, args, name):
 
 def publish(path):
     """Publish saved facts; Console failure never changes execution status."""
-    from .backend import publish_run
+    from .backend import publish_run, saved_record_summaries
     path = resolve(path)
     manifest = run_layout.manifest(path)
     config = manifest.get("observability") or {}
@@ -105,11 +113,7 @@ def publish(path):
             "lifecycle", "activity", "brief", "as_of", "last_activity_at", "evidence",
             "native", "spend", "resources", "error", "observation_failed_at"
         ) if key in row}
-        records = {}
-        for name in ("cost", "resources", "result-save", "automatic-evaluations"):
-            record = path / "records" / f"{name}.json"
-            if record.is_file():
-                records[name] = json.loads(record.read_text())
+        records = saved_record_summaries(path)
         published = publish_run(config["service_url"], {**manifest, "archived": row["archived"]},
                                 status=facts, records=records, token=token, collector_token=collector)
         write_json(path / "records/console-publish.json", {"as_of": time.time(), "published": True,
@@ -143,12 +147,18 @@ def start(variant, target, task, *, route=None, competition=False, script=None):
         raise
     _background(path, "lab.automation", ["observe", path], "supervisor")
     if script:
-        with (path / "records/automation.log").open("ab") as output:
-            process = subprocess.Popen([sys.executable, str(destination)], cwd=ROOT,
-                         env=dict(os.environ, LAB_RUN=str(path), LAB_RUN_ROOT=str(run_root())),
-                         stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
-        write_json(path / "records/automation.json", {**process_identity(process.pid),
-                    "source": str(destination), "started_at": time.time()})
+        target_config = run_layout.manifest(path).get('target_config') or {}
+        if target_config.get('kind') == 'local' and target_config.get('executor') != 'local':
+            from .arc_bench.local_run import spawn
+            receipt = spawn(path, '', [], script=destination, name='automation')
+            write_json(path / 'records/automation.json', receipt)
+        else:
+            with (path / "records/automation.log").open("ab") as output:
+                process = subprocess.Popen([sys.executable, str(destination)], cwd=ROOT,
+                             env=dict(os.environ, LAB_RUN=str(path), LAB_RUN_ROOT=str(run_root())),
+                             stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
+            write_json(path / "records/automation.json", {**process_identity(process.pid),
+                        "source": str(destination), "started_at": time.time()})
     else:
         _background(path, "lab.automation", ["default", path], "automation")
     return status(path)
@@ -176,7 +186,7 @@ def resume(run):
 def restart(run, *, target=None, task=None, route=None, snapshot=None):
     from .arc_bench.restart import restart as restart_run
     result = restart_run(resolve(run), target=target, task=task, route=route, snapshot=snapshot)
-    path = resolve(result["run_id"] if isinstance(result, dict) else result)
+    path = resolve(result["path"] if isinstance(result, dict) else result)
     _background(path, "lab.automation", ["observe", path], "supervisor")
     _background(path, "lab.automation", ["default", path], "automation")
     return status(path)

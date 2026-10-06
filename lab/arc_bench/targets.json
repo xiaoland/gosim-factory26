@@ -1,0 +1,76 @@
+{
+  "defaults": {
+    "sdk_source": "/Volumes/WorkSSD/Development/factory26-official-local/runner",
+    "skills": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/skills",
+    "memory": "2g",
+    "cpus": "1",
+    "observability": {
+      "service_url": "http://127.0.0.1:18765",
+      "registration_token_file": "/Volumes/WorkSSD/Development/factory26/.secrets/exp-console/sfp7-registration.token",
+      "collector_url": "http://172.30.0.1:18766"
+    },
+    "environment_file": "/Volumes/WorkSSD/Development/factory26/.secrets/legacy-home-config/llm.env",
+    "environment": {"OPENAI_BASE_URL": "https://api.arc-bench.com/v1", "FACTORY26_BASE_URL": "https://api.arc-bench.com/v1"}
+  },
+  "variants": {
+    "I14-dx-test": {"runtime": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/runtime", "environment": {"MODEL": "glm-5.3"}},
+    "pi-minimal-vv-dx-test": {"runtime": "/Volumes/WorkSSD/Development/factory26/runs/pi-minimal/evolution-20261006/preparation/runtime"}
+  },
+  "tasks": {
+    "bookstack": {
+      "requirements": "/Volumes/WorkSSD/Development/factory26/third_party/arc-bench/arc-bench-lite/bookstack/requirements",
+      "platform_task": "bookstack",
+      "evaluations": [{"kind": "task", "requirements": "/Volumes/WorkSSD/Development/factory26/third_party/arc-bench/arc-bench-lite/bookstack/requirements", "tests": "/Volumes/WorkSSD/Development/factory26/third_party/arc-bench/arc-bench-lite/bookstack/tests", "target": "wsl"}]
+    },
+    "github-stage-1": {
+      "requirements": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-1/requirements",
+      "platform_task": "hackathon--github-stage-1"
+    },
+    "github-stage-2": {
+      "requirements": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-2/requirements",
+      "platform_task": "hackathon--github-stage-2"
+    }
+  },
+  "targets": {
+    "local": {
+      "kind": "local",
+      "executor": "sfp7-ws.localhost",
+      "python": "/usr/bin/python3",
+      "remote_root": "/home/yyh/factory26-lab-runs",
+      "remote_sdk_source": "/home/yyh/factory26-lab-sdk",
+      "sdk_source": "/Volumes/WorkSSD/Development/factory26-official-local/runner",
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/runtime",
+      "skills": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/skills",
+      "image_id": "sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681",
+      "endpoint": {"context": "development-2", "daemon_id": "e316f857-fe3d-4e7b-8236-9376f063fedc", "remote": true}
+    },
+    "sfp7": {
+      "kind": "local",
+      "executor": "sfp7-ws.localhost",
+      "python": "/usr/bin/python3",
+      "remote_root": "/home/yyh/factory26-lab-runs",
+      "sdk_source": "/Volumes/WorkSSD/Development/factory26-official-local/runner",
+      "remote_sdk_source": "/home/yyh/factory26-lab-sdk",
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/runtime",
+      "skills": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/sequential-github-stages-20261006/agent-derived/skills",
+      "image_id": "sha256:3d51899c61e6464242a7545a1badb6445f368f4757828fd36f040c6954b56681",
+      "endpoint": {"context": "development-2", "daemon_id": "e316f857-fe3d-4e7b-8236-9376f063fedc", "remote": true}
+    },
+    "wsl": {
+      "kind": "local",
+      "executor": "wsl.win-ws.localhost",
+      "python": "/usr/bin/python3",
+      "remote_root": "/home/yyh/factory26-lab-runs",
+      "remote_sdk_source": "/home/yyh/factory26-lab-sdk",
+      "image_id": "sha256:cfb9196831ef938f357c3be479a42ebf5861d4dad221796a94c68ac0cee21013",
+      "endpoint": {"context": "development-1", "daemon_id": "0c1d4a2e-b921-49be-a075-1e30571f0995", "remote": true}
+    },
+    "hosted": {
+      "kind": "hosted",
+      "cookie_file": "/Volumes/WorkSSD/Development/factory26/.secrets/legacy-home-config/playground.cookies.txt",
+      "credential_file": "/Volumes/WorkSSD/Development/factory26/.secrets/legacy-home-config/llm.env",
+      "competition_id": "hackathon",
+      "model_config": {"model": "glm-5.3-flash", "visual_model": "glm-5.3-flash", "base_url": "https://api.arc-bench.com/v1"}
+    }
+  }
+}

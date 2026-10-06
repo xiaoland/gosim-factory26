@@ -10,11 +10,19 @@
 
 2026-10-06 用户原话：“好的，没问题，你可以开工了；你可以自由提交；基于 I14, pi-minimal 派生出 I14-dx-test, pi-minimal-vv-dx-test 两个 variants （派生新的 variant 是因为本次实验基础设施改进必定会涉及到 variant 的改进），按你说的用独立会话验收，你可以使用真实模型，不需要 mock，费用不是问题。”这条指示批准当前 design/implementation 的源码实施、必要部署、当前任务提交和真实模型验收。比赛提交与既有运行仍不在接管范围。
 
-主 Agent 负责公共 run API、CLI、自动化、ARC 执行、restart、target 配置、整体集成和提交；cold_console_profile 持续负责 OTLP/Backend/Console/Braid view。前两位执行负责人的交付尚未接通真实控制、数据回收和原生接续，主没有采用其完成声明。evaluation_implementation 已确认没有构建、SDK 或收费运行在途，并转交执行责任；它继续持有 evaluate/package_arc_replay 的独立评测结果。execution_owner 现在仅负责两个派生 variant 的固定数据路径与原生恢复，不与主 Agent 的执行文件重叠。原草稿和构建原件保留，不回退其他工作区。
+主 Agent 负责公共 run API、CLI、自动化、ARC 执行、restart、target 配置、整体集成和提交；cold_console_profile 持续负责 OTLP/Backend/Console/Braid view。前两位执行负责人的交付尚未接通真实控制、数据回收和原生接续，主没有采用其完成声明。evaluation_implementation 已确认没有构建、SDK 或收费运行在途，并转交执行责任；它继续持有 evaluate/package_arc_replay 的独立评测结果。2026-10-07 execution_owner 明确没有在途运行后，主接管两个 variant 的 main.py、I14 run.py 与共用 harness_services；execution_owner 仅维护两个 build.py 并从最新源码重建材料。原草稿和构建原件保留，不回退其他工作区。
+
+2026-10-07 已移除 I14 dispatcher 对旧 execution context 的启动门禁，入口直接运行 variant。接续应用迁移到真实 template 根，native 数据独立迁移；当前平台输入与私有评测上下文不被旧输入覆盖。Hosted 共用轻量 raw receiver，按当前 Lab run ID 单独保存 producer 数据；本地使用共享 Collector。执行端 supervisor/Python 自动化通过 remote spawn 接入，Mac relay 只消费保存的记录并回收数据，不成为第二套运行观察器。以上是源码接线状态，尚未进行本轮真实模型验收。
+
+已经向独立验收会话 `01a1118d-d790-7df1-93b5-df1801813158` 发送首个自然请求：“现在帮我用 pi-minimal-vv-dx-test 在 WSL 跑一次 BookStack。跑起来后暂停半分钟再恢复；看一下状态、日志和费用，确认有真实进展后停止并保存现场。顺便记录一下使用中哪里费劲。”不提供 CLI 操作清单或内部技术导航。请求开始实际 P1 使用，但发送成功不证明已经运行。费用目前可采集共享 account-key-window delta，不能冒称 per-run，因此 P1 的精确费用自动停止仍未覆盖；这次手动停止属于原验收矩阵明确允许的接续准备。WSL 固定实际 loaded image ID cfb919…，源/目标 17 层一致与默认配置差异的证据保存在 `runs/arc-bench-image-comparison-20261007.json`。
 
 已安排 local_execution_decision advisor 判断官方 SDK prepare 后直接 Docker create/start 与继续捕获 SDK stdout 容器身份的取舍。判断依据是实际 SDK `docker run --rm`、随机容器名和只在结束后保存的 local-run.json；尚无本轮收费运行，不能把 SDK prepare 成功当作运行控制通过。
 
 已采用 advisor 的直接 create→保存 CID→start 建议；cold_local_profile 接续其边界调查，持有新增 local_run.py 的真实执行、远端部署与控制回收结果，主负责把它接入公共 API。SDK Meter 是共享 access-key 累计差值，不保证单 run 归属，不因此增加串行 gate。默认 target registry 已改用实际 Mac 材料构建路径与远端执行路径，不再返回缺 SDK/runtime 的假 profile；任务 registry 提供 BookStack 和已冻结 GitHub Stage1/2 的需求入口。主只读 GET 确认 `/competitions/hackathon` 的实际 id 为 hackathon；官网凭据使用现存 ARC dotenv，而非不含 ARC key 的 models.env。以上仍是接线与事实核对，不是付费验收结果。
+
+实际材料检查尚未通过：第一份 I14 ZIP 根 main.py 仍是旧 facility dispatcher；第一份 Pi ZIP 仅 28 项，缺 node/pi runtime。原包保留在 runs/finals-experiment-loop/materials，不发给独立验收者，variant owner 正修复直接 builder 与入口。新版执行装配已改为调用这两个 builder，不再进入 package_agent 的定义/制品门控包装。原生状态观察只采用真实 header/session_id；没有 provider turn ID 时保留缺失，不用行号补造。状态脚本错误保留 stdout/stderr，查询本身不制造活动时间。
+
+历史 Hosted 原始 template-bundle ZIP 的实际根为 template/，已按这条证据修正下载映射到 data/workspace 与 data/harness。完整 native 历史仍迁移；新 raw collector 使用 native_scope/producers/当前 Lab run ID 独立目录，不把旧 batch 重新计作新 run 的消费。以上代码尚待真实包和平台运行验证。WSL SDK 已部署，镜像仍需执行 owner 完成传输；共享 Console 的 sfp7 宿主/容器 bridge 和 WSL 宿主反向隧道已有 HTTP 200，WSL 容器入口、实际原生生产、费用以及 Hosted raw 回收尚不能算验收通过。
 
 独立验收会话 `01a1118d-d790-7df1-93b5-df1801813158` 负责真实首次使用与 profiling，不以阅读实现代替实际反馈。evaluation 已冻结最多八次生成与三项独立评测，覆盖 BookStack、GitHub Stage1/2 及策略/平台停止；费用来源未知不当作零，非正式参赛 self_funded。当前尚未开始收费验收，等待真实可消费执行与服务版本。旧段落中的“待开工”描述是历史授权沿革，不代表当前阶段。
 
