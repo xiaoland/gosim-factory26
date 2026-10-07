@@ -100,7 +100,7 @@ def assemble(variant_dir: Path, runtime: Path, repository: Path,
     import tempfile
     from scripts.package_agent import write_zip
     if catalog is not None and model_proxy is None:
-        candidate = repository / "runs/provider-model-config-20261007/delivery/model-proxy-linux-x86_64"
+        candidate = repository / "runs/provider-model-config-20261007/delivery/model-proxy-linux-x86_64-resource-alias-fix-20261007/factory26-model-proxy-linux-x86_64"
         model_proxy = candidate.resolve(strict=True)
     with tempfile.TemporaryDirectory(prefix="factory26-public-", dir=repository / "runs") as temporary:
         stage = Path(temporary)
