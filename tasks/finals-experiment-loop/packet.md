@@ -53,7 +53,7 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 | --- | --- | --- |
 | 主Agent `/root` | run/自动化/集成，proxy后续修复，编译源对齐，Console/Braid后续修复，采纳返回与提交 | 活跃；拥有总目标、优先级、所有未验收项和运行闭环，不以已委派卸责 |
 | execution_owner（执行者） | runtime/安装/部署、公共入口/Tini、应用环境；Hosted采集/控制采用80794c7a；时钟回拨修正daa96533；策略文档616f4290 | 本轮已返回。再次联系受thread limit拒绝、已不在live tree；费用实现由主明确接管，不再声称其在执行 |
-| evaluation_closure（执行者） | Pi评测材料冻结b514103f、控制端deferred task/self-test派发700ea0d0；当前远端与Mac包外自动化已实际更新 | 本轮返回completed，无其报告中的SSH/复制在途。Pi生成与评测后台继续；最终评分未形成，残余责任归主，后续同工作面优先续派此owner |
+| evaluation_closure（执行者） | Pi评测材料冻结b514103f、控制端deferred task/self-test派发700ea0d0；两DX窄路径observer已实际部署 | 已续派并执行；核对实际自动收尾进程、保存重试及生成为何未终态，负责明确设施故障的修复和实际消费。最终评分未形成，主仍持有整体义务 |
 | competition_cost_decision（advisor） | 短控制锁等建议已采用；本轮只基于主提供的价格/用量证据建议partial已知小计及ARC适配归属 | completed；未调用取证或实施，主决定并实现；此前角色越界不沿用 |
 | process_reaping_decision（advisor） | 标准Tini/subreaper、保留Popen退出状态所有权、不设全局并发gate建议已采用 | completed，不负责资源实现或验收 |
 | acceptance_conversation_decision（误用advisor） | 历史会话取证及评价文档修改已采用b84d6d52 | assignment已结束，不在live tree；保留证据不重做，调查/编辑不再交advisor，该低优先级项不扩展 |
@@ -108,6 +108,8 @@ evaluation_closure已交付b514103f：冻结requirements及约24KB tests到run i
 ## 关键交付和证据
 
 本轮继续验收采用 evaluation_closure 的原生观察修复：限定约定日志路径，避免扫描整个生成工作区。I14 在原进程不重启的情况下已实际消费，三次真实采集 211/213/208 ms，reader_errors 为空；部署与原文件保留见该 run 的 records/native-observer-repair.json。该 owner 继续负责两条既有自费运行的终态保存和自动评测，先核对 default、Mac relay 与 finish-evaluation 的实际执行者，不能用旧 PID 或 waiting 文件代替健康证据。当前没有结果保存或评分，整体验收仍未完成；不新开生成、不参赛、不代改应用。
+
+后续真实执行者核对：Pi default2525159、I14 default3949199、Mac Pi relay97137、I14 relay74665均在执行。Pi也热部署窄扫描，三次真实入口2706–2867 ms，不套用I14耗时。I14评分等待脚本首次修补saved:false立即退出，主因现有保存者仍会重试而未采用此语义，已要求原owner保留重试、暴露具体失败，并在保存执行者确实lost时明确报错；不能为了消除等待而永久跳过评分。修补进程身份也需同步正常记录，不只另留新PID。两run仍无终态/评分，owner正在有界诊断原生语义进展，而非继续读心跳。
 
 - Python策略：a439ae26、f3c41f36；Hosted事实消费：d92b074c；周期采集/控制：80794c7a。
 - Console/Braid：17d6da0b、dbcae9e2、f80f3546；新Summary编译材料：`runs/finals-experiment-loop/validation/cooperation-summary-*`，未动态资格化。
