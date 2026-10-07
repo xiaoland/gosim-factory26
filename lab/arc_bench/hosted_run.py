@@ -403,7 +403,9 @@ def _collect_workspace_observation(directory, client, run_id, *, created_at=None
             except (OSError, ValueError, TypeError, AttributeError) as read_error:
                 receipt["previous_observation_error"] = f"{type(read_error).__name__}: {read_error}"
         write_json(directory / "workspace-latest.json", receipt)
-        _append_observation(directory / "workspace-observations.jsonl", receipt)
+        _append_observation(directory / "workspace-observations.jsonl",
+                            {key: value for key, value in receipt.items()
+                             if key not in {"native", "provider_usage", "members"}})
         return receipt
     finally:
         temporary.unlink(missing_ok=True)

@@ -36,6 +36,8 @@ Hosted 运行中的观察仍按现有 observer 周期执行状态和日志查询
 
 独立 self-test 仍通过同一个 `evaluate` API，以 `--kind self-test` 区分，不增加 backend 命令。它从冻结运行的 `github-stage-N` 任务自动映射到对应的 `github-stage-N-req-test`；显式 `--task github-stage-N-req-test` 只用于覆盖任务。self-test 是私有、非排名结果，提交 ZIP、状态和回执保存在评测 run 的 `records/self-test`；如果站点没有导出 workspace，保存记录会明确列出缺口。认证由实际执行宿主的 Helium 私有会话材料提供，自测站 cookie 不复用 ARC 官网 cookie。
 
+远端 local run 的 default worker 不直接在执行宿主派发评测；保存成功后，`task`、`simulate`、`official` 和 `self-test` 四种配置都由 Mac relay/controller 消费同一份已保存应用与 inputs，再按各自 target 启动独立评测 run。requirements/tests 由启动装配自动复制并按 run-relative 路径传输，不要求使用者手写 records 脚本、复制材料或为 sfp7→WSL/Hosted 评测手工接线。
+
 `status` 无参数只列未归档且 lifecycle 不是 completed 的运行；failed、stopped 和 unknown 不会被默默隐藏。`--all` 查看全部，指定 RUN 始终可以查回。执行 lifecycle 来自实际执行器，activity/brief 来自该次 program 固定的 variant 状态脚本，查询只读保存事实，不进入远端重新采集。`archive --undo` 撤销隐藏；归档标记不停止、搬移或删除数据。正常完成的零分评测仍是 completed。
 
 观察刷新暂时失败时，自动观察器保留上一份 status 中的 spend、native、resources、last_activity_at 和原 `as_of`，只将 activity 标为 unknown，并在 `observation_failed_at`、`error` 和 `records/observation-error.json` 中记录本次错误。这样 Python 策略不会把一次读取故障误判为事实归零；下一次成功观察才会替换这些事实。

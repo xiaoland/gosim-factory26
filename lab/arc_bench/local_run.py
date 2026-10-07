@@ -1138,14 +1138,16 @@ def sync_saved(run: str | os.PathLike[str]) -> dict[str, Any]:
 
 
 def mirror_saved_evaluations(source_run: str | os.PathLike[str]) -> dict[str, Any]:
-    """Register saved remote task-evaluation children and relay their facts.
+    """Dispatch deferred controller evaluations and relay saved child facts.
 
     This consumes only ``automatic-evaluations.json`` after the source
-    observer has saved it.  It does not create or dispatch a child run: the
-    child manifest is copied from the execution host, then a local relay
-    mirrors records from that already-existing remote identity.
+    observer has saved it. Deferred evaluations are created by the controller
+    through ``evaluate_run``; already-dispatched remote children have their
+    manifest copied from the execution host, then a local relay mirrors
+    records from that existing remote identity.
     """
     source = Path(source_run).expanduser().resolve()
+    from .evaluate import EVALUATION_KINDS
     state = manifest(source)
     target = state.get("target_config") or {}
     if (target.get("kind") != "local" or target.get("executor") in {None, "local"}):
@@ -1177,7 +1179,8 @@ def mirror_saved_evaluations(source_run: str | os.PathLike[str]) -> dict[str, An
         configuration = item.get("configuration") if isinstance(item, dict) else None
         request_id = item.get("request_id") if isinstance(item, dict) else None
         if (isinstance(item, dict) and item.get("deferred") and
-                isinstance(configuration, dict) and configuration.get("kind") in {"self-test", "task"}):
+                isinstance(configuration, dict) and
+                configuration.get("kind") in EVALUATION_KINDS):
             if request_id in prior_relay:
                 mirrored.append(prior_relay[request_id])
                 continue

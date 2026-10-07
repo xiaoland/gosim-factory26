@@ -61,7 +61,8 @@ function NativePanel({ runId }: { runId: string }) {
   const latest = messages[messages.length - 1];
   const error = errors[errors.length - 1] ?? (latest?.error ? latest.error : null);
   return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">Native session</h2>{query.isPending ? <p>读取中…</p> : !native ? <p className="text-sm opacity-60">暂无已保存 native 事实</p> : <>
-    <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">来源</dt><dd>{text(native.source)} <span className="opacity-60">(retained)</span></dd></div><div><dt className="opacity-60">session identity</dt><dd>{text(session?.session_id)}</dd></div><div><dt className="opacity-60">state</dt><dd>{text(session?.state)}</dd></div><div><dt className="opacity-60">last activity</dt><dd>{text(session?.last_activity_at)}</dd></div></dl>
+    <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">来源</dt><dd>{text(native.source)} <span className="opacity-60">(retained)</span></dd></div><div><dt className="opacity-60">session identity</dt><dd>{text(session?.session_id)}</dd></div><div><dt className="opacity-60">最近保存的原生 state</dt><dd>{text(session?.state)}</dd></div><div><dt className="opacity-60">last activity</dt><dd>{text(session?.last_activity_at)}</dd></div></dl>
+    <p className="mt-2 text-xs opacity-70">原生 state 不代表进程仍存活；是否正在运行以顶部 run lifecycle 为准。</p>
     <div className="mt-3 text-sm"><strong>最新保存事件 / 错误</strong><pre className="mt-1 max-h-32 overflow-auto whitespace-pre-wrap">{text(error ?? latest ?? '未保存错误')}</pre></div>
     <RawDetails label="展开完整 native 原件（含 retained 历史）" value={data} />
   </>}</section>;
@@ -79,10 +80,10 @@ function CostPanel({ runId }: { runId: string }) {
   </section>;
 }
 
-function LogPanel({ runId }: { runId: string }) {
+function LogPanel({ runId, storageRoot }: { runId: string; storageRoot?: string }) {
   const query = useQuery({ queryKey: ['logs', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/logs`, signal), refetchInterval: 5000, retry: false });
   const rows = (query.data?.items || []) as Row[];
-  return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">日志</h2><p className="mb-2 text-xs opacity-70">原文时间保留生产者时区，带 Z 的时间为 UTC；页面格式化时间显示本地时区。</p>{query.isPending ? <p>读取中…</p> : !rows.length ? <p className="text-sm opacity-60">暂无已保存日志摘要</p> : <div className="space-y-2">{rows.map((row, index) => <details key={index}><summary className="cursor-pointer text-sm">{text(row.source)} · {row.bytes == null ? '字节数未保存' : `${row.bytes} bytes`}</summary><pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs">{text(row.tail ?? row.error ?? '无尾部内容')}</pre></details>)}</div>}</section>;
+  return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">日志</h2><p className="mb-2 text-xs opacity-70">原文时间保留生产者时区，带 Z 的时间为 UTC；页面格式化时间显示本地时区。</p>{query.isPending ? <p>读取中…</p> : !rows.length ? <p className="text-sm opacity-60">暂无已保存日志摘要</p> : <div className="space-y-2">{rows.map((row, index) => <details key={index}><summary className="cursor-pointer text-sm">{text(row.source)} · {row.bytes == null ? '字节数未保存' : `${row.bytes} bytes`}{row.truncated === true ? ' · 仅末尾 65,536 bytes' : ''}</summary>{storageRoot && typeof row.source === 'string' && <p className="mt-2 break-all text-xs">完整原件位于保存宿主：<code>{storageRoot}/{row.source}</code></p>}<pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs">{text(row.tail ?? row.error ?? '无尾部内容')}</pre></details>)}</div>}</section>;
 }
 
 function BraidMount({ runId }: { runId: string }) {
@@ -94,8 +95,10 @@ export default function RunOverview({ runId, currentRun }: Props) {
   const status = detail.data?.status as Row | undefined;
   const native = status?.native as Row | undefined;
   const braid = native?.braid as Row | undefined;
+  const saved = (detail.data?.record_summaries as Row | undefined)?.['result-save'] as Row | undefined;
+  const storageRoot = typeof saved?.storage_root === 'string' ? saved.storage_root : undefined;
   return <div className="space-y-4"><section className="rounded-lg border p-5"><h1 className="text-xl font-semibold">{currentRun.label}</h1><p className="text-sm opacity-70">{runId}</p><dl className="mt-3 grid gap-2 text-sm md:grid-cols-4"><div><dt className="opacity-60">lifecycle</dt><dd>{text(status?.lifecycle ?? currentRun.lifecycle)}</dd></div><div><dt className="opacity-60">activity</dt><dd>{text(status?.activity ?? currentRun.activity)}</dd></div><div><dt className="opacity-60">as_of</dt><dd>{timestamp(status?.as_of ?? currentRun.as_of)}</dd></div><div><dt className="opacity-60">variant</dt><dd>{text(detail.data?.variant ?? currentRun.variant ?? currentRun.facts?.variant)}</dd></div>
       <div><dt className="opacity-60">目标 / 任务</dt><dd>{text(detail.data?.target)} / {text(detail.data?.task)}</dd></div><div><dt className="opacity-60">模型配方</dt><dd>{text(detail.data?.model_recipe)}</dd></div><div><dt className="opacity-60">来源 run</dt><dd>{text(detail.data?.source_run)}</dd></div><div><dt className="opacity-60">参赛</dt><dd>{text(detail.data?.competition)}</dd></div>
-    </dl><RawDetails label="模型路由与结果保存回执" value={{ routes: detail.data?.model_routes, result_save: (detail.data?.record_summaries as Row | undefined)?.['result-save'] }} /></section>
-    <div className="grid gap-4 md:grid-cols-2"><ResourcePanel runId={runId} /><NativePanel runId={runId} /><LogPanel runId={runId} /><CostPanel runId={runId} /><RecordPanel title="评测" path={`/api/runs/${encodeURIComponent(runId)}/evaluations`} fields={['kind', 'status', 'score', 'source']} /></div>{(braid?.available === true || isBraidRun(currentRun)) && <BraidMount runId={runId} />}</div>;
+    </dl>{storageRoot && <div className="mt-3 break-all text-sm"><p>应用保存位置（回执所在宿主，不是 Console 服务器）：<code>{storageRoot}/data/workspace</code></p><p className="text-xs opacity-70">保存状态：{text(saved?.saved)}；Console 当前未提供 workspace 文件浏览或下载。</p></div>}<RawDetails label="模型路由与结果保存回执" value={{ routes: detail.data?.model_routes, result_save: saved }} /></section>
+    <div className="grid gap-4 md:grid-cols-2"><ResourcePanel runId={runId} /><NativePanel runId={runId} /><LogPanel runId={runId} storageRoot={storageRoot} /><CostPanel runId={runId} /><RecordPanel title="评测" path={`/api/runs/${encodeURIComponent(runId)}/evaluations`} fields={['kind', 'status', 'score', 'source']} /></div>{(braid?.available === true || isBraidRun(currentRun)) && <BraidMount runId={runId} />}</div>;
 }

@@ -82,7 +82,7 @@ def default(path):
         if supervisor.is_file() and process_state(json.loads(supervisor.read_text())) == "lost":
             raise RuntimeError(f"run terminal but result recovery has not completed: {save}")
         time.sleep(2)
-    from .arc_bench.evaluate import freeze_application, evaluate_run
+    from .arc_bench.evaluate import EVALUATION_KINDS, freeze_application, evaluate_run
     try:
         snapshot = freeze_application(path)
     except Exception as exc:
@@ -103,7 +103,7 @@ def default(path):
             # another host (for example sfp7 -> wsl).  Keep only run-relative
             # inputs in the request; the Mac relay resolves them from its
             # saved source run.
-            if remote_source and entry.get("kind") in {"self-test", "task"}:
+            if remote_source and entry.get("kind") in EVALUATION_KINDS:
                 deferred = dict(entry)
                 for field in ("requirements", "tests"):
                     if deferred.get(field):

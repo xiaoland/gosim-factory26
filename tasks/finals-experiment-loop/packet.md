@@ -22,6 +22,12 @@
 
 本次定位到采集故障的明确源码缺陷：公共observe异常时覆盖status，丢掉旧spend/native/resources；Hosted工作区下载失败时覆盖workspace-latest，丢掉旧用量与资源。修复保留旧事实及原时间，另记录本次采集失败时间与具体错误，不刷新旧数据、不中断策略或新增采集者。Hosted修复已完成源码解析，未在现代Hosted真实故障中验证；公共观察修复由上述原owner落实。后续仍优先采集—策略—控制，再默认保存/评测/stages及保存后分析，不能把源码修复当整体验收完成。
 
+采集修复已采用并提交44297d55。正常watch只读消费两条终态现场，能取得旧usage、resources和last_activity_at并退出，未刷新as_of；这不证明故障分支真实触发。Hosted gateway和资源同样限定当前scope/producer，错误历史只写失败元数据，不反复复制旧native事实。
+
+evaluation_closure完成新正常入口代码路径核对，并将远端来源的simulate/official同task/self-test统一延后至Mac controller派发，复用EVALUATION_KINDS。requirements/tests在装配时冻结、同一relay回收后派发，stages从当前维护task计划自动启动；旧run的finish-evaluation.py和补充阶段脚本不再作为新run必要步骤。以上是接线结论，未进行新的四后端或stages真实执行，不恢复旧run。
+
+console_acceptance完成只读实际使用：CLI brief每条约0.05秒，首页约4.5秒；两run stopped、saved且无评分可见。发现日志只展示末尾65KB却未注明范围、原生state active易被当执行状态、没有workspace浏览入口。主已修截尾提示、原生state说明、直接展示保存宿主的workspace与完整日志原件路径；正常Lab前端构建成功，静态文件已部署到既有sfp7服务，未重载后台、运行或collector。原生Braid仍缺协作快照，文件浏览/下载仍缺项，页面明确说明；原owner正做上述窄UI读回，不将路径提示冒充文件浏览功能。
+
 ## 当前设计与资料归属
 
 - 控制单位是run；experiment只是标签。无内部capacity、queue、slot、reservation或准入gate。
