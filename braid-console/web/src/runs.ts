@@ -23,6 +23,8 @@ export interface RegisteredRun {
   access_error: string | null;
   facts?: RunFacts;
   variant?: string;
+  task?: string;
+  target?: string;
   lifecycle?: string;
   activity?: string | null;
   as_of?: number | null;

@@ -1,11 +1,12 @@
 import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
 import { api } from './http';
 import { isBraidRun, type RegisteredRun } from './runs';
 
 type Props = { runId: string; currentRun: RegisteredRun };
 type Row = Record<string, unknown>;
 const text = (value: unknown) => value == null ? '—' : typeof value === 'object' ? JSON.stringify(value) : String(value);
-const timestamp = (value: unknown) => typeof value === 'number' ? new Date(value * 1000).toLocaleString() : text(value);
+const timestamp = (value: unknown) => typeof value === 'number' ? new Date(value * 1000).toLocaleString(undefined, { timeZoneName: 'short' }) : text(value);
 
 function Table({ rows, fields }: { rows: unknown[]; fields: string[] }) {
   return rows.length ? <div className="overflow-auto"><table className="w-full text-left text-sm"><thead><tr>{fields.map(field => <th className="border-b px-2 py-1 font-medium" key={field}>{field}</th>)}</tr></thead><tbody>{rows.map((item, index) => { const row = (item && typeof item === 'object' ? item : {}) as Row; return <tr key={String(row.id ?? row.turn_id ?? row.event_id ?? index)}>{fields.map(field => <td className="max-w-xs truncate border-b px-2 py-1" title={text(row[field])} key={field}>{text(row[field])}</td>)}</tr>; })}</tbody></table></div> : <p className="text-sm opacity-60">暂无已保存记录</p>;
@@ -18,7 +19,8 @@ function RecordPanel({ title, path, fields }: { title: string; path: string; fie
 }
 
 function RawDetails({ label, value }: { label: string; value: unknown }) {
-  return <details className="mt-2 text-xs"><summary>{label}</summary><pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap">{text(value)}</pre></details>;
+  const [open, setOpen] = useState(false);
+  return <details className="mt-2 text-xs" onToggle={event => setOpen(event.currentTarget.open)}><summary>{label}</summary>{open && <pre className="mt-2 max-h-80 overflow-auto whitespace-pre-wrap">{text(value)}</pre>}</details>;
 }
 
 function ResourcePanel({ runId }: { runId: string }) {
@@ -70,16 +72,17 @@ function CostPanel({ runId }: { runId: string }) {
   const row = ((query.data?.items || []) as Row[])[0];
   const usage = (row?.data as Row | undefined)?.usage as Row | undefined;
   const providerUsage = (row?.data as Row | undefined)?.provider_usage as Row | undefined;
+  const attempts = (providerUsage?.attempts || []) as Row[];
   return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">费用 / 原生用量</h2>{query.isPending ? <p>读取中…</p> : <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">状态</dt><dd>{text(row?.status ?? 'unknown')}</dd></div><div><dt className="opacity-60">金额</dt><dd>{text(row?.amount ?? row?.value ?? '未知')}</dd></div><div><dt className="opacity-60">来源 / scope</dt><dd>{text(row?.source ?? 'records/status.json')} · {text(row?.scope)}</dd></div><div><dt className="opacity-60">类型 / as_of</dt><dd>{text(row?.kind)} · {timestamp(row?.as_of)}</dd></div><div className="md:col-span-2"><dt className="opacity-60">原因 / 边界</dt><dd>{text(row?.reason ?? row?.note ?? (row ? '未保存 spend 原因' : '未保存 spend 事实；不能从运行生命周期推导费用'))}</dd></div></dl>}
     {usage && <><p className="mt-3 text-xs opacity-70">已记录的原生 token 用量（{text(usage.status)}），不是供应商账单。</p><Table rows={(usage.items || []) as unknown[]} fields={['model', 'provider', 'messages', 'tokens']} /><RawDetails label="用量来源、时段与缺口" value={usage} /></>}
-    {providerUsage && <><p className="mt-3 text-xs opacity-70">供应商实际尝试与返回用量（{text(providerUsage.status)}），不是账单或套餐余额。下表显示最近8次尝试。</p><Table rows={((providerUsage.attempts || []) as unknown[]).slice(-8)} fields={['request_id', 'deployment_id', 'http_status', 'usage_status', 'usage']} /><RawDetails label="全部供应商尝试及采集缺口" value={providerUsage} /></>}
+    {providerUsage && <><p className="mt-3 text-xs opacity-70">供应商实际尝试与返回用量（{text(providerUsage.status)}）：{attempts.length} 次尝试，{attempts.filter(attempt => attempt.usage_status === 'recorded').length} 次返回用量；不是账单或套餐余额。下表显示最近8次尝试。</p><Table rows={attempts.slice(-8)} fields={['request_id', 'deployment_id', 'http_status', 'usage_status', 'usage']} /><RawDetails label="全部供应商尝试及采集缺口" value={providerUsage} /></>}
   </section>;
 }
 
 function LogPanel({ runId }: { runId: string }) {
   const query = useQuery({ queryKey: ['logs', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/logs`, signal), refetchInterval: 5000, retry: false });
   const rows = (query.data?.items || []) as Row[];
-  return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">日志</h2>{query.isPending ? <p>读取中…</p> : !rows.length ? <p className="text-sm opacity-60">暂无已保存日志摘要</p> : <div className="space-y-2">{rows.map((row, index) => <details key={index}><summary className="cursor-pointer text-sm">{text(row.source)} · {row.bytes == null ? '字节数未保存' : `${row.bytes} bytes`}</summary><pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs">{text(row.tail ?? row.error ?? '无尾部内容')}</pre></details>)}</div>}</section>;
+  return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">日志</h2><p className="mb-2 text-xs opacity-70">原文时间保留生产者时区，带 Z 的时间为 UTC；页面格式化时间显示本地时区。</p>{query.isPending ? <p>读取中…</p> : !rows.length ? <p className="text-sm opacity-60">暂无已保存日志摘要</p> : <div className="space-y-2">{rows.map((row, index) => <details key={index}><summary className="cursor-pointer text-sm">{text(row.source)} · {row.bytes == null ? '字节数未保存' : `${row.bytes} bytes`}</summary><pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs">{text(row.tail ?? row.error ?? '无尾部内容')}</pre></details>)}</div>}</section>;
 }
 
 function BraidMount({ runId }: { runId: string }) {

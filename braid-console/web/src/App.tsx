@@ -37,7 +37,7 @@ export default function App() {
         <span className="brand-mark"><LayoutGrid size={19} /></span><strong>Factory26</strong><span>Exp Console</span></a>
       <div className="run-select"><Choice label="选择运行" value={run || ''} placeholder={runs.isPending ? '读取登记…' : '选择已登记运行'} disabled={busy || runs.isPending}
         onChange={value => update({ run: value, selected: null })}
-        options={runs.data?.map(value => ({ value: value.id, label: <span className="inline-flex items-center gap-2"><span>{value.label}</span><StatusBadge>{value.mode === 'archive' ? '归档' : value.activity === 'active' ? 'active' : value.lifecycle || '状态未知'}</StatusBadge></span> })) || []} /></div>
+        options={runs.data?.map(value => ({ value: value.id, label: <span className="inline-flex items-center gap-2"><span>{value.task || value.label} · {value.target || '目标未知'} · {value.id.slice(0, 8)}</span><StatusBadge>{value.mode === 'archive' ? '归档' : value.activity === 'active' ? 'active' : value.lifecycle || '状态未知'}</StatusBadge></span> })) || []} /></div>
       <div className="header-status">{!!run && <ActionButton variant="ghost" icon={<House />} disabled={busy} onClick={home}>首页</ActionButton>}
         <Hint title="刷新登记及当前页面数据"><ActionButton variant="ghost" size="icon" aria-label="刷新" icon={<RotateCw />} onClick={refresh} /></Hint></div>
     </header>

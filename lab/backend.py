@@ -6,6 +6,7 @@ files remain producer-owned and are exposed through manifest links.
 from __future__ import annotations
 
 import hashlib
+import gzip
 import json
 import sqlite3
 from pathlib import Path
@@ -73,13 +74,14 @@ def publish_run(service_url: str, manifest: dict, *, status=None, records=None,
         body["record_summaries"] = _portable_value({key: records[key] for key in
                                                      {"resources", "resource-latest", "logs", "cost", "evaluations", "result-save", "automatic-evaluations"}
                                                      if key in records})
-    headers = {"Content-Type": "application/json"}
+    headers = {"Content-Type": "application/json", "Content-Encoding": "gzip"}
     if token:
         headers["x-experiment-token"] = token
     if collector_token:
         headers["x-collector-token"] = collector_token
     request = Request(service_url.rstrip("/") + "/api/runs/register",
-                      data=json.dumps(body, ensure_ascii=False).encode(), headers=headers, method="POST")
+                      data=gzip.compress(json.dumps(body, ensure_ascii=False).encode(), compresslevel=1),
+                      headers=headers, method="POST")
     try:
         with urlopen(request, timeout=timeout) as response:
             return json.loads(response.read())

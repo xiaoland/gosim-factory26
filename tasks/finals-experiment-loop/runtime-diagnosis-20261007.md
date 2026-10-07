@@ -1,5 +1,15 @@
 # 2026-10-07 晚间运行诊断
 
+## 继续验收发现的Console发布故障
+
+21:21独立console_acceptance真实UI只读查看两DX：Pi详情更新，I14仍21:07旧快照，activity unknown并保留observe.py 30秒超时。主核对新鲜Mac status与真实console-publish回执，发现HTTP413 invalid request size；状态含正常增长的供应商attempts及原生目录，注册入口却有独立512KiB限制。不是生成停滞，也不能靠刷新前端解决。
+
+advisor只依据主提供证据建议gzip完整快照及复用既有消息配置，不新增摘要/原件接口框架或裁剪错误。主采用：backend.publish_run使用stdlib gzip level1，serve注册入口复用现有max_batch_bytes与解码（64MiB），兼容旧未压缩客户端，保留HTTP413及具体解码错误。原失败复制保存为validation/i14-console-publish-before-gzip-20261007.json。只重载Console PID3951941→1285376，旧生成和collector不变，服务pid原件更新；语法检查通过，无Factory测试/包smoke。
+
+对本run真实保存快照正常发布：as_of1791379590.7576053，完整JSON777370字节、gzip77612字节，实际publish0.072806秒，Backend回执同一as_of。独立UI复查I14实际21:26:18、821attempts/755requests，native observed/active；Pi21:26:50仍active可用，均无最终评测。证明发布和UI更新恢复，不证明间歇native超时已根治。执行owner续派处理该观测缺口及自动闭环。用户本轮仍禁止参赛，没有新收费生成或评测派发。
+
+同一真实使用发现列表只用run ID、全量JSON默认进入DOM、日志与格式化时间缺时区说明。主做窄改：列表/选择器显示task与target，费用显示attempt/returned usage计数，RawDetails只在展开时生成完整原件，保留所有记录；格式化时间显示时区，日志明确UTC原文边界。构建及实际界面复查另记录，不把静态编译当UI通过。
+
 用户要求深入检查 project.zip。本轮两条验收实际是 sfp7 本地执行，没有官网 project.zip；诊断直接读取对应远端工作区、原生日志和已有截图，不新开生成、不控制运行、不修改业务应用。Mac 的 saved-sync 只镜像 records，已有 data 不保证最新，故不能以本地旧 session.jsonl 推断停滞。
 
 ## Pi BookStack：存在实质问题，不是完全停滞

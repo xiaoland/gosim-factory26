@@ -218,10 +218,13 @@ class Handler(BaseHTTPRequestHandler):
         if self.server.app.registration_token and self.headers.get("x-experiment-token") != self.server.app.registration_token:
             return _json(self, {"error": "registration token required"}, 403)
         size = int(self.headers.get("Content-Length", "-1"))
-        if size < 0 or size > 512 * 1024:
+        if size < 0 or size > self.server.app.max_batch:
             return _json(self, {"error": "invalid request size"}, 413)
         try:
-            body = json.loads(self.rfile.read(size))
+            payload = otlp._decode(self.rfile.read(size),
+                                   self.headers.get("Content-Encoding", "identity").lower(),
+                                   self.server.app.max_batch)
+            body = json.loads(payload)
             manifest = body.get("manifest", body)
             if not isinstance(manifest, dict) or not manifest.get("run_id"):
                 raise ValueError("manifest.run_id is required")
@@ -237,6 +240,8 @@ class Handler(BaseHTTPRequestHandler):
                 self.server.app.backend.bind_collector_token(value["run_id"], str(collector_token))
                 self.server.app.tokens[str(collector_token)] = value["run_id"]
             return _json(self, self.server.app.backend.brief(value), 201)
+        except OverflowError as exc:
+            return _json(self, {"error": str(exc)}, 413)
         except (KeyError, ValueError, OSError, json.JSONDecodeError) as exc:
             return _json(self, {"error": f"{type(exc).__name__}: {exc}"}, 400)
 

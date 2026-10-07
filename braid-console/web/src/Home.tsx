@@ -36,6 +36,7 @@ export default function Home({ runs, busy, onOpen }: {
         <Row align="center" wrap><StatusBadge tone="blue">{isBraidRun(run) ? 'Braid' : run.harness}</StatusBadge><StatusBadge icon={run.mode === 'archive' ? <Archive /> : run.activity === 'active' ? <Radio /> : <FolderKanban />}>{stateLabel(run)}</StatusBadge></Row>
         <h3>{run.label}</h3><span className="run-id muted">{run.id}</span>
         <dl className="run-facts"><div><dt>Variant</dt><dd>{run.facts?.variant || run.variant || '未知 · 未保存'}</dd></div>
+          <div><dt>任务 / 目标</dt><dd>{run.task || '任务未保存'} / {run.target || '目标未保存'}</dd></div>
           {run.facts?.experiment_name && <div><dt>实验名</dt><dd>{run.facts.experiment_name}</dd></div>}
           <div><dt>记录中的状态</dt><dd>{run.facts?.status || run.lifecycle || '未知 · 未保存'}{run.facts?.updated_at && <small>{run.facts.updated_at}</small>}</dd></div></dl>
         <div className="run-capabilities">
