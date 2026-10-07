@@ -1,0 +1,29 @@
+<!doctype html>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Braid 原生过程视图</title>
+<style>
+body{font:14px system-ui;margin:2rem;max-width:90rem;color:#172033}h1{margin-bottom:.25rem}h2{font-size:1rem;margin:.1rem 0 .75rem}button{background:white;border:1px solid #9aa5b5;border-radius:4px;padding:.35rem .6rem;cursor:pointer}button:disabled{opacity:.45;cursor:default}.meta{color:#667085}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(25rem,1fr));gap:1rem;margin:1rem 0}.panel{border:1px solid #d7dce5;border-radius:8px;padding:1rem;overflow:hidden}table{border-collapse:collapse;width:100%;font-size:.85rem}th,td{border-bottom:1px solid #e7eaf0;text-align:left;padding:.35rem;max-width:18rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}th{font-weight:600}.artifacts{display:flex;flex-wrap:wrap;gap:.4rem}.selected{background:#e9edff}.body{background:#f6f8fb;white-space:pre-wrap;overflow:auto;max-height:28rem;padding:.8rem;font:12px ui-monospace,monospace}.error{color:#b42318}
+</style>
+<main><h1>Braid 原生过程视图</h1><p id="meta" class="meta">读取已发布投影…</p><div id="error" class="error"></div><div id="content"></div></main>
+<script>
+const params=new URLSearchParams(location.search), run=params.get('run');
+const limit=50;let cursor=Number(params.get('cursor')||0), selected=null, offset=0;
+const esc=value=>String(value??'—').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const value=(row,key)=>esc(row&&row[key]);
+function table(title,rows,fields){rows=Array.isArray(rows)?rows:[];return `<section class="panel"><h2>${title}</h2>${rows.length?`<table><thead><tr>${fields.map(f=>`<th>${f}</th>`).join('')}</tr></thead><tbody>${rows.map((row,i)=>`<tr>${fields.map(f=>`<td title="${value(row,f)}">${value(row,f)}</td>`).join('')}</tr>`).join('')}</tbody></table>`:'<span class="meta">暂无已保存记录</span>'}</section>`}
+async function get(path){const response=await fetch(path);const body=await response.json();if(!response.ok)throw Error(body.error||`HTTP ${response.status}`);return body}
+async function loadBody(){if(!selected)return '';const body=await get(`/api/runs/${encodeURIComponent(run)}/braid/body?name=${encodeURIComponent(selected)}&offset=${offset}&bytes=65536`);return `<div class="panel"><h2>正文：${esc(selected)}</h2><p><button ${offset?'':'disabled'} onclick="offset=Math.max(0,offset-65536);render()">上一段</button> <button onclick="offset+=65536;render()">下一段</button> <span class="meta">offset ${offset} · ${body.bytes} bytes</span></p><div class="body">${esc(body.data)}</div></div>`}
+async function render(){
+  if(!run){document.querySelector('#error').textContent='缺少 run 参数';return}
+  try{
+    const p=await get(`/api/runs/${encodeURIComponent(run)}/braid?cursor=${cursor}&limit=${limit}`);
+    document.querySelector('#meta').textContent=`run ${p.run_id||run} · as_of ${p.as_of||'unknown'} · coverage ${p.coverage||'unknown'} · ${p.batches||0} batches`;
+    const artifacts=(p.artifacts||[]).map(a=>`<button class="${selected===a.file?'selected':''}" data-artifact="${esc(a.file)}">${esc(a.file)} · ${esc(a.logical_type)}</button>`).join('');
+    document.querySelector('#content').innerHTML=`<p><button ${cursor?'':'disabled'} onclick="cursor=Math.max(0,cursor-${limit});render()">上一页</button> <button onclick="cursor+=${limit};render()">下一页</button></p><div class="grid">${table('Sessions',p.sessions,['session_id','state','last_activity_at'])}${table('Turns',p.turns,['turn_id','session_id','state','at'])}${table('Objects',p.objects,['id','number','title','state'])}${table('Events',p.events,['event_id','observed_at','kind'])}</div><section class="panel"><h2>Artifacts</h2><div class="artifacts">${artifacts||'<span class="meta">暂无 artifact</span>'}</div></section>${await loadBody()}`;
+    document.querySelectorAll('[data-artifact]').forEach(button=>button.addEventListener('click',()=>{selected=button.dataset.artifact;offset=0;render()}));
+    document.querySelector('#error').textContent=(p.errors||[]).join('\n');
+  }catch(error){document.querySelector('#error').textContent=String(error)}
+}
+render();
+setInterval(render,30000);
+</script>
