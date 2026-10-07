@@ -82,6 +82,38 @@ def _tree_digest(root: Path) -> str:
     return digest.hexdigest()
 
 
+def _materialize_evaluation_inputs(layout: Mapping[str, Path], task_config: Mapping[str, Any]) -> dict[str, Any]:
+    """Freeze the small task-evaluation inputs beside the run.
+
+    Generation already owns the requirements copy.  Evaluation-specific
+    material (currently the task tests) must follow that same run boundary so
+    a remote observer/evaluator never receives a Mac-only absolute path.
+    """
+    value = json.loads(json.dumps(task_config))
+    requirements = layout["inputs"] / "requirements"
+    if value.get("requirements"):
+        value["requirements"] = str(requirements)
+    entries = value.get("evaluations")
+    if not isinstance(entries, list):
+        return value
+    for entry in entries:
+        if not isinstance(entry, dict):
+            continue
+        entry_requirements = entry.get("requirements")
+        if entry_requirements:
+            entry["requirements"] = str(requirements)
+        tests = entry.get("tests")
+        if not tests:
+            continue
+        source = Path(str(tests)).expanduser().resolve(strict=True)
+        destination = layout["inputs"] / "tests"
+        if destination.exists() and source.resolve() != destination.resolve():
+            shutil.rmtree(destination)
+        shutil.copytree(source, destination, symlinks=True, dirs_exist_ok=True)
+        entry["tests"] = str(destination)
+    return value
+
+
 def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mapping[str, Any]):
     """Freeze the selected model route and private provider bindings.
 
@@ -207,6 +239,7 @@ def _assemble(run_path: Path) -> dict[str, Any]:
         raise FileNotFoundError(f"requirements.yaml is missing: {task}")
     if not (layout["inputs"] / "requirements").exists():
         shutil.copytree(task, layout["inputs"] / "requirements", symlinks=True)
+    task_config = _materialize_evaluation_inputs(layout, task_config)
     for field, member in (("support", "support"),):
         value = target.get(field)
         if value:
