@@ -68,6 +68,8 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 
 Console原owner续派被thread limit拒绝，主明确接管。查明reader文件18:06更新，而服务PID1318330从18:02运行；静态页hash也落后。主更新Braid静态页并只重载Console至PID3951941（20:19:46），静态页hash已与源码dca6014b一致，reader文件hashc13cfae8一致。生成容器与observer未重启。API旧投影仍为空/partial，需要新worker回执进一步判别；不能把部署完成当动态视图通过。evaluation_closure已续派负责两run实际保存/自动评测，尚待返回，不暂存/提交；主统一处理Git index。
 
+重载后Console worker推进至batch2790、as_of1791375647.318，回执status=unavailable，明确旧Summary没有collaboration snapshot，以及native inventory/path缺项；新reader真实消费已生效，动态协作内容仍未资格化。主另修公共browser wrapper，使skills/session元数据命令直接调用上游，不先下载安装Chromium；该修复针对19:32读取core文档触发177MiB下载的真实损耗，后续包装消费，不改在途冻结文件。evaluation_closure已返回I14包外automation/local_run部署，旧default984993→3949199，observer968810与生成不动；回执records/evaluation-automation-repair.json，旧源亦保留。当前I14冻结task_config无evaluations，故这里是派发版本统一，不声称task分支已造成本次失败；最终评分仍由Mac finish-evaluation脚本等待。当前两run尚无最终评分。
+
 1. 持续采集、费用事实及普通Python策略最高优先级。Hosted实现已返回，后续实际qualification优先续派execution_owner；主拥有消费/自动化接线。金额、策略动作和控制边界须分别有证据，不用预算问题阻塞设施交付。
 2. 主完成现有两条自费run的生成—保存—自动评测闭环，已有observer是唯一采集者，不频繁读心跳或派同条件run；明确设施缺陷按原授权修复，保留实际消费版本。
 3. 产物形成后，主收口同variant/new task/stages、各评测后端、Console结果分析与总成本。非阻塞Braid视图明确留缺项，不为视图重启模型。

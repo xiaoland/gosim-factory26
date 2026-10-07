@@ -26,7 +26,7 @@ exec "$BROWSER" "$@"
     agent = '''#!/bin/sh
 set -eu
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
-case "${1:-}" in --help|-h|--version|-V) exec "$HERE/node" "$HERE/../node_modules/agent-browser/bin/agent-browser.js" "$@";; esac
+case "${1:-}" in --help|-h|--version|-V|skills|session) exec "$HERE/node" "$HERE/../node_modules/agent-browser/bin/agent-browser.js" "$@";; esac
 CACHE="${FACTORY26_BROWSER_CACHE_DIR:-${XDG_CACHE_HOME:-$HERE/../.cache}/factory26-playwright}"
 export PLAYWRIGHT_BROWSERS_PATH="$CACHE"
 find_browser() { for candidate in "${FACTORY26_BROWSER_EXECUTABLE_PATH:-}" google-chrome chromium chromium-browser; do if [ -n "$candidate" ] && command -v "$candidate" >/dev/null 2>&1; then command -v "$candidate"; return; fi; done; find "$CACHE" -type f -path "*/chromium-*/chrome-linux*/chrome" -perm -u+x -print -quit; }
