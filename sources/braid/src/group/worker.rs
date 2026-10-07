@@ -572,10 +572,9 @@ impl GroupDriver<'_> {
             }
             let materialize = tokio::time::Instant::now() >= recovery;
             if materialize {
-                if let Err(error) = self.sessions.maintain_resources().await {
-                    tracing::warn!(%error, "resource pressure maintenance unavailable");
-                }
-                if let Err(error) = self.unload_idle_sessions(&running.keys().cloned().collect()).await {
+                if let Err(error) =
+                    self.unload_idle_sessions(&running.keys().cloned().collect()).await
+                {
                     if let Some(stop) = self.sessions.take_stop_failure().await {
                         let _ = fatal_stops.send(stop).await;
                         return Some(error.to_string());
@@ -649,22 +648,34 @@ impl GroupDriver<'_> {
             }
             if materialize {
                 let deferred = self.sessions.take_deferred().await.map(anyhow::Error::from);
-                let can_progress = match self.can_progress(&running, available, deferred.is_some()).await {
-                    Ok(can_progress) => can_progress,
-                    Err(error) => { recovery_error = Some(error); false }
-                };
-                let errors = [recovery_error.as_ref(), reactivation_error.as_ref(), deferred.as_ref()];
-                let resource_wait = |error: &anyhow::Error| error
-                    .downcast_ref::<crate::agent_session::SessionError>()
-                    .is_some_and(crate::agent_session::SessionError::is_resource_deferred);
-                // A resource wait cannot hide another member's recovery error.
-                let error = errors.iter().copied().flatten().find(|error| !resource_wait(error))
-                    .or_else(|| errors.into_iter().flatten().next());
-                let waiting_for_resources = error.is_some_and(resource_wait);
-                if reports.send(crate::health::ProviderHealthUpdate {
-                    group: self.spec.group_id(), error: error.map(ToString::to_string), can_progress,
-                    waiting_for_resources,
-                }).await.is_err() { return None; }
+                let can_progress =
+                    match self.can_progress(&running, available, deferred.is_some()).await {
+                        Ok(can_progress) => can_progress,
+                        Err(error) => {
+                            recovery_error = Some(error);
+                            false
+                        }
+                    };
+                let errors =
+                    [recovery_error.as_ref(), reactivation_error.as_ref(), deferred.as_ref()];
+                // Resource failures are terminal observations for this drive
+                // cycle. They must not keep the outer local run looking alive
+                // indefinitely; the supervisor retains the exact error and
+                // performs any bounded remediation before closing the run.
+                let error = errors.iter().copied().flatten().next();
+                let waiting_for_resources = false;
+                if reports
+                    .send(crate::health::ProviderHealthUpdate {
+                        group: self.spec.group_id(),
+                        error: error.map(ToString::to_string),
+                        can_progress,
+                        waiting_for_resources,
+                    })
+                    .await
+                    .is_err()
+                {
+                    return None;
+                }
             }
         }
     }

@@ -5,14 +5,224 @@ import hashlib
 import os
 from pathlib import Path
 import select
+import signal
 import shutil
-import stat
 import subprocess
 import sys
 import tarfile
 import threading
 import time
 from urllib.request import ProxyHandler, build_opener
+
+
+def _current_cgroup():
+    """Resolve this process' cgroup v2 directory without host-path guessing."""
+    try:
+        membership = next(line[3:] for line in Path('/proc/self/cgroup').read_text().splitlines()
+                          if line.startswith('0::'))
+        for line in Path('/proc/self/mountinfo').read_text().splitlines():
+            before, separator, after = line.partition(' - ')
+            if not separator or not after.startswith('cgroup2 '):
+                continue
+            fields = before.split()
+            root, mount = Path(fields[3]), Path(fields[4])
+            if membership == '/':
+                return mount
+            if Path(membership).is_relative_to(root):
+                candidate = mount / Path(membership).relative_to(root)
+                return candidate if '..' not in candidate.parts else None
+    except (OSError, StopIteration, IndexError, ValueError):
+        return None
+    return None
+
+
+class ResourceSupervisor:
+    """Observe and close only services owned by this context.
+
+    The supervisor is a thread, not a recovery process: it can still run when
+    the pids limit is exhausted. It never gates startup or kills unowned
+    Agent, browser, or workspace processes.
+    """
+    def __init__(self, evidence):
+        self.evidence = Path(evidence)
+        self.cgroup = _current_cgroup()
+        self.stop = threading.Event()
+        self.failed = None
+        self.children = []
+        self.entry = None
+        self.thread = None
+        self.baseline_events = {}
+
+    def _read(self):
+        row = {'observed_at_ns': time.time_ns(), 'cgroup_path': str(self.cgroup) if self.cgroup else None,
+               'values': {}, 'errors': {}}
+        if self.cgroup is None:
+            row['errors']['cgroup'] = 'cgroup v2 is not visible'
+            return row
+        for name in ('memory.current', 'memory.max', 'memory.events', 'pids.current', 'pids.max', 'pids.events'):
+            try:
+                row['values'][name] = (self.cgroup / name).read_text().strip()
+            except OSError as error:
+                row['errors'][name] = {'type': type(error).__name__, 'errno': error.errno, 'message': str(error)}
+        return row
+
+    def _save(self, row, name='resource-observation.json'):
+        self.evidence.mkdir(parents=True, exist_ok=True)
+        target = self.evidence / name
+        # The entry may be terminated immediately after this record.  Flush it
+        # before signalling so resource_exhausted.json is useful even when the
+        # entry's finally block is never reached.
+        with target.open('w') as stream:
+            stream.write(json.dumps(row, ensure_ascii=False, indent=2) + '\n')
+            stream.flush()
+            os.fsync(stream.fileno())
+
+    def _event_values(self, row):
+        values = row['values']
+        events = {}
+        for source in ('memory.events', 'pids.events'):
+            prefix = source.split('.', 1)[0]
+            events.update({f'{prefix}.{key}': int(value)
+                           for key, value in (line.split() for line in values.get(source, '').splitlines()
+                                              if len(line.split()) == 2)
+                           if value.isdigit()})
+        return events
+
+    def _limit_state(self, row, event_baseline=None):
+        values = row['values']
+        def number(name):
+            value = values.get(name)
+            return None if value in (None, '', 'max') else int(value)
+        memory, memory_max = number('memory.current'), number('memory.max')
+        pids, pids_max = number('pids.current'), number('pids.max')
+        current_limit = ((memory is not None and memory_max is not None and memory >= memory_max) or
+                (pids is not None and pids_max is not None and pids >= pids_max) or
+                (event_baseline is not None and any(value > event_baseline.get(key, value)
+                    for key, value in self._event_values(row).items()
+                    if key in {'memory.oom', 'memory.oom_kill', 'pids.max'})))
+        return current_limit, self._event_values(row)
+
+    def _at_limit(self, row):
+        return self._limit_state(row, self.baseline_events)[0]
+
+    def _reap_finished(self, reason):
+        actions = []
+        for child in tuple(self.children):
+            code = child.poll()
+            if code is None:
+                continue
+            action = {'pid': child.pid, 'reason': reason, 'result': 'already_exited',
+                      'exit_code': code, 'reaped': False}
+            try:
+                child.wait(timeout=0)
+                action['reaped'] = True
+            except BaseException as error:
+                action['error'] = {'type': type(error).__name__, 'message': str(error)}
+            actions.append(action)
+        return actions
+
+    def _fail_fast(self):
+        """Stop an explicitly owned entry group after durable evidence.
+
+        The public entry gives us its actual child Popen. Killing the
+        supervisor itself would bypass the caller's service cleanup.
+        """
+        entry = self.entry
+        if entry is None:
+            return {'status': 'entry_owner_missing'}
+        pid = entry.pid
+        if entry.poll() is not None:
+            return {'status': 'entry_already_exited', 'pid': pid, 'exit_code': entry.returncode}
+        try:
+            pgid = os.getpgid(pid)
+            if pgid == pid:
+                os.killpg(pgid, signal.SIGTERM)
+                target = lambda: entry.poll() is None
+            else:
+                entry.terminate()
+                target = lambda: entry.poll() is None
+            deadline = time.monotonic() + 3
+            while time.monotonic() < deadline and target():
+                time.sleep(.05)
+            if target():
+                if pgid == pid:
+                    os.killpg(pgid, signal.SIGKILL)
+                else:
+                    entry.kill()
+                return {'status': 'entry_killed', 'pid': pid, 'pgid': pgid, 'term': 'sent', 'kill': 'sent'}
+            return {'status': 'entry_stopped', 'pid': pid, 'pgid': pgid, 'term': 'sent'}
+        except (OSError, ValueError) as error:
+            return {'status': 'entry_signal_failed', 'pid': pid,
+                    'error': {'type': type(error).__name__, 'errno': getattr(error, 'errno', None),
+                              'message': str(error)}}
+
+    def register_entry(self, process):
+        """Give the supervisor the exact Popen owned by the public entry."""
+        self.entry = process
+        if self.failed:
+            self.failed['entry_shutdown'] = self._fail_fast()
+            self._save(self.failed, 'resource-exhausted.json')
+            raise RuntimeError(json.dumps(self.failed, ensure_ascii=False))
+
+    def start(self):
+        self.thread = threading.Thread(target=self._run, name='resource-supervisor', daemon=True)
+        self.thread.start()
+
+    def _run(self):
+        initial = self._read()
+        initial_events = {}
+        initial_events.update(self._event_values(initial))
+        self.baseline_events = initial_events
+        while not self.stop.wait(2):
+            row = self._read()
+            self._save(row)
+            if not self._at_limit(row):
+                continue
+            # Required gateway/collector children are not reclaim candidates.
+            # Only reap children that had already exited before this event.
+            action = {'trigger': row, 'actions': self._reap_finished('resource_limit'),
+                      'active_owned_services': [child.pid for child in self.children if child.poll() is None],
+                      'remediation_deadline_ns': time.time_ns() + 4_000_000_000}
+            trigger_events = self._event_values(row)
+            if self.cgroup is not None and (self.cgroup / 'memory.reclaim').exists():
+                try:
+                    (self.cgroup / 'memory.reclaim').write_text(str(256 * 1024 * 1024))
+                    action['memory_reclaim'] = 'requested'
+                except OSError as error:
+                    action['memory_reclaim'] = {'status': 'failed', 'error': str(error)}
+            time.sleep(1)
+            after = self._read()
+            action['after'] = after
+            after_events = self._event_values(after)
+            event_during_remediation = {key: value for key, value in after_events.items()
+                                        if value > trigger_events.get(key, value)
+                                        and key in {'memory.oom', 'memory.oom_kill', 'pids.max'}}
+            # A trigger caused by an OOM/pids failure is already an execution
+            # failure; lowering current usage cannot rewrite that fact.  For a
+            # pure current/max ceiling, recovery is possible if no new event
+            # occurred during the bounded remediation window.
+            trigger_failure = any(trigger_events.get(key, 0) > self.baseline_events.get(key, 0)
+                                  for key in {'memory.oom', 'memory.oom_kill', 'pids.max'})
+            still_limited = (self._limit_state(after, None)[0] or trigger_failure or
+                             bool(event_during_remediation))
+            action['events_during_remediation'] = event_during_remediation
+            self._save({'status': 'resource_exhausted' if still_limited else 'recovered', **action},
+                       'resource-remediation.json')
+            if still_limited:
+                self.failed = {'status': 'resource_exhausted', 'reason': 'memory_or_pids_limit_persisted',
+                               'remediation': action}
+                self._save(self.failed, 'resource-exhausted.json')
+                action['entry_shutdown'] = self._fail_fast()
+                self.failed['remediation']['entry_shutdown'] = action['entry_shutdown']
+                self._save(self.failed, 'resource-exhausted.json')
+                return
+
+    def close(self):
+        self.stop.set()
+        if self.thread is not None:
+            self.thread.join(timeout=3)
+        if self.failed:
+            raise RuntimeError(json.dumps(self.failed, ensure_ascii=False))
 
 
 def install_inputs(package, output):
@@ -89,56 +299,6 @@ def _read_provider_values(package, provider_env):
     return values
 
 
-def _model_bindings(catalog, routes, endpoint):
-    """Build the native descriptor consumed by agent_support.model_bindings().
-
-    The descriptor is keyed by the native provider/model identity and contains
-    only the loopback transport plus the selected model's wire identity.  The
-    public catalog remains the source for contextWindow/maxTokens/compat; those
-    fields are not guessed or copied into this transport descriptor.
-    """
-    grouped = {}
-    for entry in catalog.get('model_list', []):
-        grouped.setdefault(entry['model_name'], []).append(entry)
-    entries = {alias: rows[0] for alias, rows in grouped.items()}
-    aliases = set(routes)
-    if aliases != set(entries):
-        raise ValueError('gateway routes and selected catalog aliases differ')
-    def model_info(canonical):
-        rows = sorted(grouped[canonical], key=lambda row: row['litellm_params']['order'])
-        primary = dict(rows[0].get('model_info') or {})
-        for field in ('contextWindow', 'maxTokens'):
-            values = [row['model_info'][field] for row in rows
-                      if isinstance(row.get('model_info', {}).get(field), int)
-                      and not isinstance(row['model_info'][field], bool)]
-            if values:
-                primary[field] = min(values)
-        return primary
-
-    def descriptor(canonical):
-        return {
-            'provider': 'factory26', 'base_url': endpoint,
-            'credential_env': 'FACTORY26_GATEWAY_TOKEN', 'model_id': canonical,
-            'model_info': model_info(canonical),
-        }
-    bindings = {}
-    for alias in routes:
-        descriptor_value = descriptor(alias)
-        descriptor_value['model_id'] = alias
-        bindings['factory26/' + alias] = descriptor_value
-        # The visual provider is a separate native identity but uses the same
-        # selected route when the recipe exposes a visual-capable alias.
-        if alias.endswith('glm-5.3-flash'):
-            bindings['factory26-visual/' + alias] = dict(descriptor_value)
-    # I14 keeps the historical selector while the self-funded recipe freezes
-    # the explicit 0731 wire alias.  This is an alias adaptation, not a route
-    # choice or a provider fallback.
-    if 'deepseek-v4-flash-0731' in entries:
-        bindings['factory26/deepseek-v4-flash'] = descriptor('deepseek-v4-flash-0731')
-        bindings['factory26/deepseek-v4-flash']['model_id'] = 'deepseek-v4-flash-0731'
-    return bindings
-
-
 def _capture_gateway_log(child, log, cap_bytes=8 * 1024 * 1024):
     """Drain proxy output while retaining only a bounded diagnostic prefix."""
     def capture():
@@ -168,6 +328,8 @@ def _capture_gateway_log(child, log, cap_bytes=8 * 1024 * 1024):
 
 
 def _start_model_proxy(package, evidence, contract):
+    if contract.get('competition'):
+        return None, {}
     selected_inputs = _selected_gateway_inputs(package)
     if selected_inputs is None:
         return None, {}
@@ -193,9 +355,7 @@ def _start_model_proxy(package, evidence, contract):
                                  catalog_sha256=_digest(catalog_path), routes_sha256=_digest(routes_path))
     endpoint = 'http://' + listen + '/v1'
     env = dict(os.environ)
-    env.update(FACTORY26_BASE_URL=endpoint, FACTORY26_GATEWAY_TOKEN=frozen['token'],
-               FACTORY26_MODEL_BINDINGS=json.dumps(
-                   _model_bindings(catalog, routes, endpoint), separators=(',', ':')))
+    env.update(OPENAI_BASE_URL=endpoint, OPENAI_API_KEY=frozen['token'])
     log = evidence / 'gateway.log'
     child = subprocess.Popen(
         [str(binary), '--config', str(state / 'config.json'), '--credentials',
@@ -226,37 +386,6 @@ def _start_model_proxy(package, evidence, contract):
         raise
 
 
-def _repair_native_state_ownership(output, contract):
-    """Return only Pi's two root-created state files to the mounted output owner."""
-    if os.geteuid() != 0:
-        return
-    try:
-        owner = Path(output).stat()
-    except OSError:
-        return
-    scope = Path(output)/'.factory26/data/harness'/contract['native_scope_id']
-    agents = [scope/'home/.pi/agent', scope/'work/home/.pi/agent']
-    homes = scope/'work/native-homes'
-    files = [agent/name for agent in agents for name in ('auth.json', 'models-store.json')]
-    if homes.is_dir():
-        files += [path for name in ('auth.json', 'models-store.json') for path in homes.rglob(name)]
-    errors = []
-    for path in files:
-        try:
-            info = path.lstat()
-            if not stat.S_ISREG(info.st_mode) or path.is_symlink():
-                continue
-            if (info.st_uid, info.st_gid) != (owner.st_uid, owner.st_gid):
-                os.chown(path, owner.st_uid, owner.st_gid, follow_symlinks=False)
-        except FileNotFoundError:
-            continue
-        except OSError as error:
-            errors.append({'path': str(path.relative_to(scope)), 'error': str(error)})
-    if errors:
-        evidence = scope/'producers'/contract['run_id']
-        (evidence/'state-ownership-errors.json').write_text(json.dumps(errors)+'\n')
-
-
 @contextmanager
 def services(package, output):
     """Use injected local OTLP, or a lightweight raw receiver on Hosted."""
@@ -267,15 +396,18 @@ def services(package, output):
     evidence.mkdir(parents=True, exist_ok=True)
     process = None
     gateway = None
+    supervisor = ResourceSupervisor(evidence)
     previous = {}
     error_log = None
     try:
+        supervisor.start()
         for name, value in contract.get('model_environment', {}).items():
             if name not in os.environ:
                 previous[name] = None
                 os.environ[name] = value
         gateway, gateway_env = _start_model_proxy(package, evidence, contract)
         if gateway is not None:
+            supervisor.children.append(gateway['process'])
             # Native clients receive only the loopback token. Provider secrets
             # stay in the proxy's private input, not in the Agent/tool env.
             provider_names = set(contract.get('provider_env_names', [])) | {
@@ -284,14 +416,15 @@ def services(package, output):
                 if name in os.environ:
                     previous[name] = os.environ.pop(name)
         for name, value in gateway_env.items():
-            if name in {'FACTORY26_BASE_URL', 'FACTORY26_GATEWAY_TOKEN', 'FACTORY26_MODEL_BINDINGS'}:
-                previous[name] = os.environ.get(name)
+            if name in {'OPENAI_BASE_URL', 'OPENAI_API_KEY'}:
+                previous.setdefault(name, os.environ.get(name))
                 os.environ[name] = value
         if contract.get('target_kind') == 'hosted':
             error_log = (evidence / 'collector.stderr.log').open('a')
             process = subprocess.Popen(
                 [sys.executable, str(package / 'lab_otlp.py'), '--serve-run', str(evidence)],
                 stdout=subprocess.PIPE, stderr=error_log, text=True)
+            supervisor.children.append(process)
             try:
                 if not select.select([process.stdout], [], [], 15)[0]:
                     raise RuntimeError('Hosted OTLP receiver did not provide its startup handshake')
@@ -312,6 +445,10 @@ def services(package, output):
                 # Evidence failure is visible, but does not gate generation.
                 (evidence/'collector-start.json').write_text(json.dumps({
                     'status': 'failed', 'error': f'{type(error).__name__}: {error}'})+'\n')
+        # The public wrapper registers its actual Popen after creating the
+        # variant child.  This is a local-only handle; callers must not
+        # serialize it as part of the run contract.
+        contract['_resource_supervisor'] = supervisor
         yield contract
     finally:
         if process is not None:
@@ -331,11 +468,17 @@ def services(package, output):
                 child.kill()
                 child.wait()
             gateway['log_thread'].join(timeout=2)
-        _repair_native_state_ownership(output, contract)
         if error_log is not None:
             error_log.close()
+        supervisor_error = None
+        try:
+            supervisor.close()
+        except BaseException as error:
+            supervisor_error = error
         for name, value in previous.items():
             if value is None:
                 os.environ.pop(name, None)
             else:
                 os.environ[name] = value
+        if supervisor_error is not None:
+            raise supervisor_error

@@ -341,7 +341,12 @@ impl AgentSession for ProviderAgentSession {
 pub(super) fn map_provider_error(error: ProviderError) -> SessionError {
     match error {
         ProviderError::Deferred(message) => SessionError::Deferred(message),
-        ProviderError::ResourceDeferred(message) => SessionError::ResourceDeferred(message),
+        // Resource pressure is observed by the run owner; it is not an
+        // admission queue. Preserve the provider's exact message while making
+        // the drive loop fail closed instead of waiting forever.
+        ProviderError::ResourceDeferred(message) => {
+            SessionError::Failed(format!("resource_exhausted: {message}"))
+        }
         ProviderError::Start(_) | ProviderError::Timeout { .. } | ProviderError::Disconnected => {
             SessionError::Unavailable
         }

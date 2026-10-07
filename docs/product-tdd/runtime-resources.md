@@ -1,33 +1,27 @@
-# I13-2 的内存压力与原生执行
+# 原生执行登记与物理资源边界
 
-I13-2 在同一 run 内共享内存压力和进程启动准入。Braid 继续拥有工作项、输入队列和逻辑会话；Pi 原生接入拥有工具、内部子 Agent、后台作业及其结果。资源控制不读取任务内容，不选择模型，也不解释 PBB 的业务结果。实际部署与运行验收以 [I13-2 packet](../../tasks/iteration13/i13-2/packet.md) 为准，旧冻结包不随源码变化。
+当前源码不再使用内存或 PSI 压力控制启动、claim、输入发送或 run 接续。2026-10-05 用户授权删除共享资源门控；旧冻结包仍保留其原行为，新运行与恢复必须使用记录了新源码和二进制身份的制品。执行环境实际的内存、swap、pids限额和按 Braid session 的模型使用约束继续生效，取值以该run冻结配置及内核观察为准，不从历史run推导。删除软件门控不能保证单个工具命令不会触发 OOM。
 
-既有 OTLP collector 每两秒保存 cgroup v2 的内存、压力和进程证据，并原子发布 `process-evidence/resource-latest.json`。`scripts/runtime_resources.py` 在 run 的 `process-control/` 使用短期文件锁串行决定启动；锁外才执行命令、等待结束或发送信号。它拥有启动登记和预算，不建立第二份工具作业表。
+`scripts/runtime_resources.py` 现在登记原生执行所有权、实施明确停止 fence，并提供 run-owner 的只读 cgroup 观察（memory 与 pids 的 current/max/events）及有界 `memory.reclaim` 请求。顶层 Pi、foreground/async 子 Agent 和 Bash 作业经过同一 launcher；它取得自己的进程组，保存 execution/start UUID、PID、boot ID、启动时刻、PGID 和父 start ID，再以同一 PID exec 实际程序。登记失败、身份冲突或已停止的 execution 不启动 payload，并保留具体错误。资源观察不参与启动准入；旧 reservation、recovery budget 和 resource-failed 标记不再参与决定，历史文件不删除。
 
-## 启动与压力反馈
+登记与停止使用同一短期文件锁，锁外执行命令、等待或发送信号。锁文件沿用 `admission.lock` 名称以兼容既有停止入口；该名称不表示仍有资源准入。Node 的 `spawnManaged` 立即返回 ChildProcess，由调用方接 stdout、error、close；`waitManagedStartup` 异步等待 started 回执。等待仍有启动期限，但不再等待压力降低、调用 reclaim 或重放被资源拒绝的启动。
 
-所有启用此机制的顶层 Pi、foreground/async 子 Agent 和 Bash 作业都经过同一 Python launcher。launcher 先取得自己的进程组，登记 execution/start UUID、PID、启动时刻、boot ID、PGID 和父 start ID，再以同一 PID `exec` 实际程序。准入失败立即返回 `resource_deferred` 及原始资源事实；原生子调用不排队等待父进程释放内存。Braid 的输入和未物化指派仍保留为可重试义务。
+Braid 的 claim 与输入发送只检查真实原生 busy 状态和生命周期身份，不读取资源压力。资源触顶由执行侧保存原始样本，先回收已退出的自有子进程并尝试有界内存reclaim；重新观察仍触顶，或已出现OOM、进程分配失败时，run 保存具体原因并 fail-closed/fail-loudly，不能继续以 waiting/running 假装推进。单纯采集不可得保留具体错误，不构成启动准入或凭空证明资源耗尽。pids.current/max/events 与 memory 同等重要，pids限额包含线程；不能凭 RSS 或 idle 猜测杀掉模型、浏览器或工作树。
 
-准入要求有限的 `memory.max`、同一 cgroup 的新鲜样本和可读的登记记录。决定时重新读取实际内存与 PSI，避免并发启动共同使用旧余量。每个存活的已登记 leader 提供 128 MiB 启动预算下限，保留 256 MiB 余量；预算下限与 cgroup 用量取较大值，不把各进程 RSS 相加作为容器占用。只有低 PSI 时才折减部分 inactive file cache，折减不超过上限的四分之一，仍只是可回收量的估计。
+公共入口与资源监督器之间的停止契约是显式的：入口在启动 variant child/process-group 后，把实际的 `subprocess.Popen` 对象登记给监督器。监督器以该对象的 PID/PGID 执行一次 TERM，最多等待 3 秒后 KILL；入口对象缺失、已退出或信号失败都写入 `resource-exhausted.json`，不向自身发送 SIGTERM，也不把服务线程记错当作入口已结束。入口负责接收该失败并返回明确的 `resource_exhausted`；gateway/OTLP 是运行所需服务，不是压力处置候选。
 
-调整后用量达到 80% 或 PSI 升高时延后新增执行，达到 90%、出现新的 OOM kill 或严重 PSI 时视为严重压力；恢复要求低于 70% 且两个不同采样点持续低压。样本超过十秒、身份变化、读取失败均返回具体不可用原因，不当作空闲。普通 turn 只检查当前压力，不在模型思考和父等子期间长期占据另一个 turn 配额。
+孤儿回收与触顶补救是不同责任。Local创建使用Docker `--init`，公共程序入口还应在安装及启动服务前进入标准Tini subreaper，使Hosted无需依赖平台Docker参数也能回收其后代孤儿。该公共入口接线正在完成，不能用Local源码中的 `--init` 宣称Hosted已修复。Python仍只wait自己持有的Popen，不增加 `waitpid(-1)` 回收线程或忽略SIGCHLD。仍存活的父进程须等待自己的已退出子进程，不能依赖init替代；浏览器工具管理会话复用与close，后台工具管理自有进程结束，variant决定活动会话及测试并行，不由Lab增加全局并发gate。Tini的实现与subreaper语义见[官方说明](https://github.com/krallin/tini#subreaping)。
 
-原生扩展在每次模型 turn 的当前 system prompt 中提供有界资源事实和工具原生 worker 建议，建议先用一个 worker。它不复制技能正文，不追加重复用户历史，也不改写 shell 命令。Braid 的既有循环串行请求一次有限作业减载，然后重新观察压力；一次减载只停止一个归属可确认的有限作业树，保留原输出、退出与可能的部分副作用。常驻服务不被自动当作有限作业中止。
+既有 collector 继续保存 cgroup、内存、PSI 和进程证据，`resource-latest.json` 只是观测快照。采集缺失不阻止新执行。既有 native-state 与 evidence-capture 回执继续用于判断运行和快照行为；没有增加采集循环。
 
-Pi 的输入就绪检查也在 claim 之前查询同一资源策略。明确的资源延后保留现有输入，不生成 turn、重放 event 或归档输入文件；worker 继续处理结果、通知及减载。只有确有待投递输入或 reset 的逻辑会话参与 claim 就绪检查，空闲成员不会凭资源等待阻止 run 结束。发送前仍重新检查压力，保留检查与发送之间变化的保护；这个竞争窗口中的原有 Deferred 处理没有被取消。
+## 静止释放、停止与接续
 
-Portless proxy 由 run 入口在任何成员启动之前以前台子进程启动，清除成员 execution/start 标记。同一 run 的成员共享这一代理，有限作业清理不拥有它。入口保留实际 Popen，通过 HTTP 的 `X-Portless: 1` 确认就绪，结束时向这个子进程发送信号并等待退出；已有监听者或旧 PID 文件不能替代当前 run 的所有权证明。普通应用服务仍由原生作业管理。
+原生 RPC 的 `get_state.data.managed_state` 区分 quiescent、busy 和 unknown，包含 turn、有限作业、待接收结果和服务。OPEN 成员没有待投递输入/reset 且原生确认静止时，Braid 可以释放物理执行；逻辑会话、原生历史、指派和 clone 保留。真实输入或必要恢复才唤醒它。这属于正常生命周期，不是资源压力减载。
 
-## 物理停止与逻辑接续
+父 Pi 的退出和 owned execution 的停止分别保存。非零退出或 SIGKILL 不自动证明子作业已停止。关闭先在登记使用的同一锁下设置 execution fence，阻止新作业，再按 birth identity 和拥有的进程组清理。Pi 已退出时由 `native-managed.mjs cleanup` 离线完成。信号、权限和身份冲突保留原始错误，停止不明时不产生第二个写者。
 
-原生 RPC 的 `get_state.data.managed_state` 区分 `quiescent`、`busy` 和 `unknown`。除了正在进行的 turn，还检查有限作业、待接收结果和服务。OPEN 成员没有待投递输入/reset 且原生确认静止时，Braid 可以释放物理执行；逻辑会话、native 历史、指派和 clone 保留。之后只由真实输入或必要恢复唤醒，不在轮询中重新拉起全部 OPEN 成员。
+停止回执覆盖已登记进程组及继承 execution/start marker 的后代。主动清除 marker 并脱组的任意 shell 可能超出范围，本机制没有内核历史追踪能力。归属不明返回 unknown；跨容器恢复仍须证明来源生成容器停止，Docker 暂停或新 volume 的锁不能替代该事实。连续异常恢复仍有生命周期边界；门控删除不改变 stop proof、模型重试、审批、费用或 session 数量约束。
 
-既有 get_state 调用把有界状态、原因、预期 execution identity、PID 与观测时间覆盖保存到该 execution 的 `native-state-latest.json`，用于区分无法卸载的原因；不增加 RPC 或采集循环。EvidenceWorker 同样在原有每次 capture 前后覆盖保存 `braid-state/evidence-capture-latest.json`，记录时长及 RSS/匿名内存/高水位，辅助判断快照工作是否造成堆增长。对象快照由 SQLite 按列稳定排序，避免另外缓存全部历史行的 JSON 排序字符串；它仍完整读取历史，不能据此宣称内存使用已与历史规模无关。
+Portless proxy 在成员启动前以前台子进程启动，清除成员 execution/start 标记，由 run 入口保留实际 Popen。有限作业清理不拥有它。入口通过 `X-Portless: 1` 确认就绪，结束时发送信号并等待实际子进程退出；已有监听者或旧 PID 文件不能替代当前 run 的所有权证明。
 
-父 Pi 的 wait 结果与 owned execution 的停止结果分别保存。非零退出或 SIGKILL 不自动等于子作业仍活；反之，父退出也不证明子作业已停。关闭先在准入使用的同一锁下设置 execution fence，阻止新作业，再按登记的 birth identity 和拥有的进程组清理；Pi 已退出时由 `native-managed.mjs cleanup` 离线完成。信号、权限和身份冲突保留原始错误，停止不明时不产生第二个写者。
-
-停止回执的覆盖范围是已登记进程组及继承 execution/start marker 的后代。任意 shell 主动清除 marker 后再脱组、双重派生，可能超出这一范围；本机制不具备内核历史追踪能力，不能据回执声称对任意脱组进程的无条件证明。检测到归属不明则返回 `unknown`。历史运行跨容器恢复还须取得整个来源生成容器已停止的事实，不能把 Docker 暂停或新 volume 中可取得的锁当作旧执行已停。
-
-Unknown 接续在停止可确认后沿原 native 身份恢复，以一次明确恢复输入要求核对已完成动作，避免盲重放。连续异常恢复有界；自身重试、例行根提醒和系统生成通知不重置次数。资源延后或恢复次数用尽时，其它健康成员仍可推进；所有成员确实没有可执行推进时，run 返回可恢复的 blocked。真正无法证明旧 execution 已停仍沿既有 fatal stop 路径阻塞整轮并保留 ownership；本轮不声称已经建立任意未知 writer 的跨成员隔离。
-
-这些机制可以降低同时驻留和工具过量派生导致的 OOM，但不能保证任意单个命令都能在给定内存内完成。一次 shell 内部的 worker 数仍由所用工具控制；最低并行仍不足时保留事实，由运行负责人决定资源或执行方式。
+源码与制品证据归 [timeout-retry packet](../../tasks/iteration14/timeout-retry/packet.md)。部署时恢复 ZIP 的 executable mode 或按安装 manifest 实施等价权限，不能把 ZIP 中已正确记录的 executable 文件用默认 0644 抽取后直接运行。

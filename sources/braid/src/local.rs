@@ -164,9 +164,6 @@ impl SessionFactory for RecordingFactory {
     async fn teardown(&self, id: &str) -> std::result::Result<(), SessionError> {
         self.inner.teardown(id).await
     }
-    async fn maintain_resources(&self) -> std::result::Result<(), SessionError> {
-        self.inner.maintain_resources().await
-    }
 }
 fn config(request: &Request) -> Result<Config> {
     ensure!(!request.profiles.is_empty(), "profiles must not be empty");
@@ -557,7 +554,7 @@ async fn drive(
                 return Ok(("quiescent".into(), "根 Issue 与全部工作项已完成".into()));
             }
             if provider_health.len() == worker_count
-                && provider_health.values().any(|report| report.error.is_some() && !report.waiting_for_resources)
+                && provider_health.values().any(|report| report.error.is_some())
                 && current["active_turns"] == 0
                 && !provider_health.values().any(|report| report.can_progress)
             {
@@ -577,9 +574,6 @@ async fn drive(
                     "blocked".into(),
                     "必要 group 物化或恢复已 blocked，状态与输入已保留".into(),
                 ));
-            }
-            if provider_health.values().any(|report| report.waiting_for_resources) {
-                continue;
             }
             if !quiescent(&current) {
                 objects.root_idle_tick(&request.root_check_messages)?;
