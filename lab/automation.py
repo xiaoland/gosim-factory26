@@ -10,6 +10,23 @@ from .records import write_json
 from .control import process_state
 
 
+def _portable_after_save(path, saved, *, controller=False):
+    """Create the portable package on the controller that owns the copy."""
+    target = run.run_layout.manifest(path).get("target_config") or {}
+    remote_source = target.get("kind") == "local" and target.get("executor") not in {None, "local"}
+    if remote_source and not controller:
+        # The execution host's save is only the source transport.  The Mac
+        # relay owns the local copy and creates the portable package below.
+        return saved
+    try:
+        from .portable_save import create
+        package = create(path)
+        return {**saved, "portable_package": package["package"],
+                "portable_consistent": package["consistent"]}
+    except Exception as exc:
+        return {**saved, "portable_package_error": f"{type(exc).__name__}: {exc}"}
+
+
 def observe(path):
     """Own observation and recovery of exactly one dispatched run."""
     from .arc_bench import execution
@@ -49,6 +66,7 @@ def observe(path):
         if facts.get("lifecycle") in run.TERMINAL:
             try:
                 saved = execution.save(path)
+                saved = _portable_after_save(path, saved)
                 write_json(path / "records/result-save.json", saved)
                 run.publish(path)
                 if saved.get("saved") is True:
@@ -139,7 +157,9 @@ def relay(path):
                     recovered = json.loads(receipt.read_text()) if receipt.is_file() else {}
                     if not (recovered.get('saved') is True and recovered.get('storage_root') == str(path)):
                         recovered = save(path)
-                        write_json(receipt, recovered)
+                    if recovered.get('saved') is True and not recovered.get('portable_package'):
+                        recovered = _portable_after_save(path, recovered, controller=True)
+                    write_json(receipt, recovered)
                     if recovered.get('saved') is not True:
                         time.sleep(10)
                         continue

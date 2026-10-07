@@ -612,7 +612,7 @@ def _extract(archive, destination):
                         path.chmod(path.stat().st_mode | 0o111)
 
 
-def save(run):
+def save(run, *, live=False):
     run, value, target, client = _context(run)
     directory = run / "records/platform"
     state = json.loads((directory / "execution.json").read_text())
@@ -629,13 +629,17 @@ def save(run):
             return result
         raise RuntimeError("Hosted identity unknown; no downloadable result yet")
     remote = _get(directory, client, run_path(state["run_id"]), "save-status.json")
-    if remote.get("id") != state["run_id"] or remote.get("status") not in TERMINAL:
+    if (remote.get("id") != state["run_id"] or
+            (not live and remote.get("status") not in TERMINAL)):
         raise RuntimeError("Hosted result save requires this execution's confirmed terminal status")
-    receipt = directory / "saved-workspace.json"
+    if not live and (directory / "saved-workspace.json").exists():
+        return json.loads((directory / "saved-workspace.json").read_text())
+    stamp = str(time.time_ns())
+    receipt = (directory / ("saved-workspace-live-" + stamp + ".json") if live
+               else directory / "saved-workspace.json")
     if receipt.exists():
         return json.loads(receipt.read_text())
-    stamp = str(time.time_ns())
-    snapshot = run / "snapshots" / ("platform-" + stamp)
+    snapshot = run / "snapshots" / (("manual-live-" if live else "platform-") + stamp)
     snapshot.mkdir()
     archive = client.download(run_path(state["run_id"]) + "/workspace/template-bundle", snapshot / "workspace.zip")
     _extract(archive, snapshot / "workspace")
@@ -644,6 +648,7 @@ def save(run):
     # maps that exact data root, rather than guessing from historical layouts.
     result = {"saved": True, "as_of": time.time(), "scope": "platform-template-bundle",
               "snapshot": str(snapshot), "workspace": str(snapshot / "workspace"),
-              "platform_run_id": state["run_id"], "gaps": ["platform export may omit runner-private files"]}
+              "platform_run_id": state["run_id"], "live": bool(live),
+              "gaps": ["platform export may omit runner-private files"]}
     write_json(receipt, result)
     return result

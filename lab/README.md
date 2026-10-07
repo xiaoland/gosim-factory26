@@ -12,6 +12,8 @@ python3 -m lab stop RUN
 python3 -m lab restart RUN --task NEXT_TASK
 python3 -m lab wait RUN --json
 python3 -m lab logs RUN --follow
+python3 -m lab save RUN
+python3 -m lab save RUN --json
 python3 -m lab evaluate RUN --kind official
 python3 -m lab evaluate RUN --kind self-test
 python3 -m lab archive RUN
@@ -20,7 +22,9 @@ python3 -m lab serve --config SERVICE_JSON
 
 `start` 只要求 variant、target、task，可追加 `--route FILE`、`--competition` 和 `--script FILE`。task 可以是需求目录或维护的任务配置；自动评测由任务配置的 evaluations 清单明确启用，官网重放费用模式不从模型 route 推断。自费装配冻结 variant 声明的[供应商模型配方](../materials/model-recipes/README.md)、所需路由与 provider 配置；`--route` 覆盖本次路由，不修改公共供应商链。官网比赛不加载供应商配方、不带 model-proxy，直接使用平台同名注入的 OPENAI_BASE_URL/API_KEY；角色模型仍归 variant。改设施与跑模型是不同授权范围；本文命令示例本身不启动或授权收费实验。
 
-普通命令默认输出简短状态和本次操作的必要回执；`start/restart` 显示实际配方、参赛身份、来源及记录位置，`evaluate` 显示独立评测子 run 和冻结应用引用。控制回执不代表结果已保存，评测派发也不代表已有评分。需要完整结构化信息时，对这些命令追加 `--json`；Python API 始终返回完整对象。错误独立显示，不被正常 brief 遮住。`logs` 保持日志流，不默认展开原生会话历史。
+普通命令默认输出简短状态和本次操作的必要回执；`start/restart` 显示实际配方、参赛身份、来源及记录位置，`evaluate` 显示独立评测子 run 和冻结应用引用。控制回执不代表结果已保存，评测派发也不代表已有评分。`save` 取得一个可搬运现场包，默认写入该 run 的 `snapshots/portable-*.zip`；它不停止运行、不改 lifecycle，也不把运行中的不一致现场当作终态检查点。需要完整结构化信息时，对这些命令追加 `--json`；Python API 始终返回完整对象。错误独立显示，不被正常 brief 遮住。`logs` 保持日志流，不默认展开原生会话历史。
+
+终态自动保存与人工 `save` 共用同一个 `execution.save` 源保存器。远端 Local run 先由执行宿主保存并由 Mac relay 回收，portable 包只在拥有本地副本的控制宿主生成；Hosted 和本地控制侧则在终态源保存成功后直接生成。结果回执中的 `portable_package` 是控制侧路径，不能用远端 `save.json` 路径代替。
 
 自费代理运行的 `spend.usage` 汇总本 run 创建之后、已保存原生消息中的 token 用量，并保留 session、模型和原件路径。接续继承的旧消息不重复计入新 run；未保存或正在执行的请求仍是缺口，因此覆盖状态为 partial。CLI 和 Console 同时显示这份事实。原生 token 用量不是供应商账单；未取得供应商计费或已核实的请求价格时，金额明确未知，不采用原生配置中的零费用占位值。
 
@@ -77,6 +81,6 @@ for facts in watch():
 ```
 | 选择恢复来源与当前合法操作 | [恢复入口](../docs/deployment/recovery.md) |
 
-新 run 固定包含 manifest.json、program、inputs、data/workspace、data/harness、records、snapshots 和 evaluations。program 保存实际程序，data 保存应用与可迁移原生状态，records 保存本次日志、状态、资源、费用与平台原件。restart 不迁移旧记录或旧费用。凭据不进入可迁移 data 或公开归档。
+新 run 固定包含 manifest.json、program、inputs、data/workspace、data/harness、records、snapshots 和 evaluations。program 保存实际程序，data 保存应用与可迁移原生状态，records 保存本次日志、状态、资源、费用与平台原件。`lab save RUN` 的规范包只包含 `manifest.json`、`data/workspace`、`data/harness` 和 `records`；它明确排除 `program`、`inputs`（包括预装 SDK/runtime 和开发缓存）、`snapshots`（包括官网原始 project.zip）及 `evaluations`。harness 内只额外排除明确的公共安装缓存 `browser-cache`、`home/.npm`、`home/.cache` 和 `home/.local`；workspace 内只有带 `runtime-source.json` 安装标记的公共 runtime 才会排除，不会按名称删除应用自己的 `runtime`、`node_modules`、better-sqlite3 或业务数据。records 中的原始归档文件也留在 run 内证据，不再嵌套进规范包。包外仍保留来源 run、原始官网 ZIP 路径及 `records/portable-save.json`。restart 不迁移旧记录或旧费用。凭据不进入可迁移 data 或公开归档。
 
 Mac 控制及回收记录默认位于 WorkSSD 的 runs/lab，`LAB_RUN_ROOT` 可选择其他 WorkSSD 路径。远端执行目录按 target 配置确定；共享服务 SQLite 位于服务宿主本地磁盘，不跨宿主挂载 WAL。历史 schema1/2/3 记录保持原身份，兼容入口为 `python3 -m lab.exp`，不自动接管当前活动执行。跨组件约束归[技术说明](../docs/product-tdd/index.md)。

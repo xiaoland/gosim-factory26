@@ -203,6 +203,12 @@ def wait(run):
         if supervisor.is_file() and process_state(json.loads(supervisor.read_text())) == "lost":
             raise RuntimeError(f"observer exited before a confirmed terminal record: {supervisor}; "
                                "actual execution may still be running; see saved logs")
+def save(run, *, output=None):
+    """Create a portable snapshot without changing this run's lifecycle."""
+    from .portable_save import create
+    return create(resolve(run), output=output)
+
+
         time.sleep(2)
 
 

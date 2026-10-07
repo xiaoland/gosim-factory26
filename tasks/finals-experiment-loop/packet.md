@@ -14,6 +14,12 @@
 
 ## 2026-10-08 整理后接续
 
+用户进一步明确CLI优先，并批准统一现场保存方案：“是的，而且‘不混入安装 runtime’很重要，官网下载下来的 project.zip 需要我们额外剔除掉安装的开发环境。开始。”本次由原保存负责人evaluation_closure接续实现 `lab save RUN`，统一人工与终态保存链，交付含data/workspace、data/harness、records与来源身份的可搬运包；主负责采用及仅提交本任务修改。只排除实际设施安装目录，不按node_modules名称误删应用依赖，官网原始导出保留证据。运行中取包属于非一致现场快照，不停止或伪造终态；终态复用已保存现场。验收采用既有停止现场，不恢复生成、新增评测或参赛。Console下载不在本轮实现范围。
+
+本次CLI实现已采用：save正常输出package、source_as_of、packaged_at、排除数量及gaps/errors，--json提供完整回执；包内携带规范数据与最终采集/排除说明。运行中使用独立源快照回执，不写终态result-save；Hosted人工live每次重新取包，不永久复用第一次快照。远端Local终态由既有relay回收后在控制侧打包，Hosted/控制侧本地由已有observer保存后打包，源保存与包生成错误分别保留。这些自动化及Hosted实时路径为代码接线结论，未新增真实运行证明。
+
+采用实际I14归档时发现初版漏掉scope/work中的浏览器、npm/pnpm环境，1.3GB包仍含Chromium；原owner修复实际目录后一次最终重打为884846301bytes、82.943秒，公共缓存成员为零，大头仍是Braid工作树中的应用依赖，未按依赖名盲删。旧错误包保留证据。随后修复包内最终回执、终态同来源复用以及Pi容器pi-home链接相对化；最终schema2在真实Pi入口通过，约98MB、8529成员（含目录）、gaps/errors均为空，第二次正常获取约0.05秒返回同一包。最终Pi路径为runs/lab/runs/a3a9a5262b8b40f382883ed636758464/snapshots/portable-1791393951451055000.zip。I14缓存剔除包路径为对应run snapshots/portable-1791393628510537000.zip，其回执仍为早期版本，最后两项元数据修复后未重压大包，不宣称已是最终schema2产物。两run仍stopped，consistent=false，不冒充完成或检查点。所有操作未启动模型、评测或参赛，原owner已返回，主承担剩余资格边界与提交。
+
 用户确认“整理完成”，继续既有实现授权内的设施收口，不恢复两条已停止验收运行，不新增收费生成或评测，App续办保持暂停。整理后的入口为 materials、tooling/scripts、tooling/linux、consoles/lab 与 consoles/braid；其它未提交改动保留，不整目录暂存。
 
 主负责采集事实与策略消费边界；evaluation_closure已续派，负责默认保存、评测及stages接线的必要修复，拥有automation.py、local_run.py与评测相关实现。该负责人不暂存或提交，由主采用具体改动后统一提交。advisor上轮只给下一步建议，本轮未派执行。Console后续沿用原负责人，当前未唤醒。

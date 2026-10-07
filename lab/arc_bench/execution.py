@@ -623,20 +623,27 @@ def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
     return value
 
 
-def save(run: str | os.PathLike[str]) -> dict[str, Any]:
-    """Save the complete data domain and report scope/gaps explicitly."""
+def save(run: str | os.PathLike[str], *, live: bool = False) -> dict[str, Any]:
+    """Save the data domain and report scope/gaps explicitly.
+
+    ``live`` is reserved for an operator-requested, non-terminal snapshot. It
+    never changes lifecycle state and writes a separate source receipt so a
+    partial snapshot cannot satisfy the terminal-save/evaluation handshake.
+    """
     run_path = Path(run).expanduser().resolve()
     if manifest(run_path).get("target_config", {}).get("kind") == "self-test":
         from . import self_test
         value = self_test.save(run_path)
-        write_json(paths(run_path)["records"] / "save.json", value)
+        write_json(paths(run_path)["records"] /
+                   ("portable-source-save.json" if live else "save.json"), value)
         return value
     if manifest(run_path).get("target_config", {}).get("kind") == "hosted":
         from . import hosted_run
-        value = hosted_run.save(run_path)
+        value = hosted_run.save(run_path, live=live)
         value = dict(value) if isinstance(value, dict) else {"saved": False, "error": value}
         if value.get("kind") == "pre-execution-rejection":
-            write_json(paths(run_path)["records"] / "save.json", value)
+            write_json(paths(run_path)["records"] /
+                       ("portable-source-save.json" if live else "save.json"), value)
             return value
         # The actual template-bundle ZIP has a `template/` archive root.
         # Preserve that entire application workspace, and split the native
@@ -678,10 +685,14 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
             raise FileNotFoundError("Hosted saved workspace is unavailable")
         value["scope"] = ["records", *mapped]
         value["gaps"] = gaps
-        write_json(paths(run_path)["records"] / "save.json", value)
+        write_json(paths(run_path)["records"] /
+                   ("portable-source-save.json" if live else "save.json"), value)
         return value
     from . import local_run
-    return local_run.save(run_path)
+    value = local_run.save(run_path, live=live, write_receipt=not live)
+    if live:
+        write_json(paths(run_path)["records"] / "portable-source-save.json", value)
+    return value
 
 
 def _import_raw(run: Path, database: Path):

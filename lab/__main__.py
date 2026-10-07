@@ -21,6 +21,19 @@ def _print_saved(path):
 
 def _print_result(command, value, args, run):
     from .status import render_runs
+    if command == "save":
+        print(f"package={value.get('package', '-')}")
+        print(f"lifecycle={value.get('lifecycle', 'unknown')} consistent={value.get('consistent')}")
+        print(f"source_as_of={value.get('source_as_of', '-')}")
+        print(f"packaged_at={value.get('packaged_at', value.get('as_of', '-'))}")
+        print(f"members={json.dumps(value.get('members', {}), ensure_ascii=False, separators=(',', ':'))}")
+        excluded = value.get("excluded") or []
+        gaps = value.get("gaps") or []
+        errors = value.get("errors") or []
+        print(f"excluded={len(excluded)} gaps={json.dumps(gaps, ensure_ascii=False, separators=(',', ':'))}")
+        print(f"errors={json.dumps(errors, ensure_ascii=False, separators=(',', ':'))}")
+        print(f"records={Path(value.get('source_run', args.run)) / 'records'}")
+        return
     if command in ("stop", "pause", "resume"):
         print(f"run={args.run} action={command}")
         receipt = {key: value[key] for key in (
@@ -88,6 +101,10 @@ def main(argv=None):
     wait = commands.add_parser("wait")
     wait.add_argument("run")
     wait.add_argument("--json", action="store_true")
+    save = commands.add_parser("save", help="取得可搬运现场包，不停止运行")
+    save.add_argument("run")
+    save.add_argument("--output", help="目标 .zip 路径；默认写入 run/snapshots")
+    save.add_argument("--json", action="store_true")
     logs = commands.add_parser("logs")
     logs.add_argument("run")
     logs.add_argument("--follow", action="store_true")
@@ -122,6 +139,8 @@ def main(argv=None):
             value = run.status(args.run, include_all=args.all)
         elif args.command == "wait":
             value = run.wait(args.run)
+        elif args.command == "save":
+            value = run.save(args.run, output=args.output)
         elif args.command == "logs":
             run.logs(args.run, follow=args.follow)
             return 0
@@ -136,6 +155,8 @@ def main(argv=None):
             print(json.dumps(value, ensure_ascii=False, default=str, indent=2))
         else:
             _print_result(args.command, value, args, run)
+        if args.command == "save" and (value.get("source_saved") is not True or value.get("errors")):
+            return 1
         return 0
     except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
         print(f"{type(exc).__name__}: {exc}", file=sys.stderr)

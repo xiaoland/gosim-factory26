@@ -1053,7 +1053,8 @@ def control(run: str | os.PathLike[str], action: str) -> dict[str, Any]:
                          for row in value.get("commands", [])], "as_of": value.get("as_of")}
 
 
-def save(run: str | os.PathLike[str]) -> dict[str, Any]:
+def save(run: str | os.PathLike[str], *, live: bool = False,
+         write_receipt: bool = True) -> dict[str, Any]:
     run = Path(run).expanduser().resolve()
     facts = observe(run)
     target = _target(run)
@@ -1099,13 +1100,15 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
         if result.returncode:
             errors.append({"member": member, "exit_code": result.returncode,
                            "stderr": result.stderr})
-    value = {"saved": terminal and not errors,
+    value = {"saved": (not errors) if live else terminal and not errors,
              "lifecycle": facts.get("lifecycle"), "scope": ["data/workspace", "data/harness", "records"],
              "storage_root": str(run),
+             "snapshot": bool(live and not terminal),
              "excluded": ["inputs/sdk-workspace/submission/.private/**"] if target.get("remote_runtime") else [],
              "errors": errors, "as_of": time.time()}
-    write_json(paths(run)["records"] / "save.json", value)
-    write_json(paths(run)["records"] / "result-save.json", value)
+    if write_receipt:
+        write_json(paths(run)["records"] / "save.json", value)
+        write_json(paths(run)["records"] / "result-save.json", value)
     return value
 
 
