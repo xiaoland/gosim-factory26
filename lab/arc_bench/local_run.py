@@ -384,16 +384,42 @@ def _verify_remote_sdk(host: str, target: Mapping[str, Any]) -> None:
         raise RuntimeError(f"remote official SDK missing: {source}: {result.stderr.strip()}")
 
 
-def _sync(host: str, source: Path, destination: str) -> None:
+_DEVELOPMENT_SOURCE_EXCLUDES = (
+    ".git/",
+    "node_modules/",
+    "playwright-report/",
+    "test-results/",
+    "__pycache__/",
+    ".pytest_cache/",
+)
+
+
+def _sync(host: str, source: Path, destination: str, *, excludes: tuple[str, ...] = ()) -> None:
+    """Copy a source tree, optionally excluding local development debris."""
+    patterns = tuple(dict.fromkeys(excludes))
     if host == "local":
         destination_path = Path(destination)
         if source.resolve() == destination_path.resolve():
             return
         destination_path.mkdir(parents=True, exist_ok=True)
-        shutil.copytree(source, destination_path, dirs_exist_ok=True)
+        ignored = tuple(pattern.rstrip("/") for pattern in patterns)
+        shutil.copytree(source, destination_path, dirs_exist_ok=True,
+                        ignore=shutil.ignore_patterns(*ignored) if ignored else None)
         return
     subprocess.run(["ssh", host, shlex.join(["mkdir", "-p", destination])], check=True)
-    subprocess.run(["rsync", "-a", str(source) + "/", f"{host}:{destination}/"], check=True)
+    command = ["rsync", "-a"]
+    for pattern in patterns:
+        command.append(f"--exclude={pattern}")
+    command += [str(source) + "/", f"{host}:{destination}/"]
+    subprocess.run(command, check=True)
+
+
+def _spawn_source_components(module: str, args: list[str] | tuple[str, ...]) -> tuple[str, ...]:
+    """Return source trees consumed by a remote observer/automation process."""
+    components = ["lab", "scripts"]
+    if module == "lab.automation" and args and str(args[0]) == "stages":
+        components += ["variants", "harness", "third_party/arc-bench"]
+    return tuple(components)
 
 
 def _sync_file(host: str, source: Path, destination: str) -> None:
@@ -868,13 +894,11 @@ def spawn(run: str | os.PathLike[str], module: str, args: list[str] | tuple[str,
         destination = remote_run / "inputs" / relative
         if source.exists() and _remote_exec(host, ["test", "-e", str(destination)]).returncode:
             _sync(host, source, str(destination))
-    _sync(host, paths(run)["program"], str(remote_run / "program"))
     repository = Path(__file__).resolve().parents[2]
-    _sync(host, repository / "lab", str(remote_run / "source/lab"))
-    _sync(host, repository / "scripts", str(remote_run / "source/scripts"))
-    _sync(host, repository / "variants", str(remote_run / "source/variants"))
-    _sync(host, repository / "harness", str(remote_run / "source/harness"))
-    _sync(host, repository / "third_party/arc-bench", str(remote_run / "source/third_party/arc-bench"))
+    _sync(host, paths(run)["program"], str(remote_run / "program"))
+    for component in _spawn_source_components(module, args):
+        _sync(host, repository / component, str(remote_run / "source" / component),
+              excludes=_DEVELOPMENT_SOURCE_EXCLUDES)
     _push_remote_registry(host, remote_run, target)
     if script is not None:
         source = Path(script).expanduser()
