@@ -48,6 +48,13 @@ def _print_result(command, value, args, run):
         if known:
             print(f"native_tokens={sum(known)} scope={usage.get('scope')} coverage={usage.get('status')}"
                   "；原生用量不等于供应商账单")
+        provider_usage = (row.get('spend') or {}).get('provider_usage') or {}
+        attempts = provider_usage.get('attempts') or []
+        if attempts:
+            channels = list(dict.fromkeys(item.get('deployment_id') for item in attempts))
+            returned = sum(item.get('usage_status') == 'recorded' for item in attempts)
+            print(f"provider_attempts={len(attempts)} returned_usage={returned}"
+                  f" deployments={','.join(str(value) for value in channels)}；不是账单或套餐余额")
     elif command == "archive":
         print(f"archived={row['archived']}")
     elif command == "evaluate":

@@ -69,8 +69,10 @@ function CostPanel({ runId }: { runId: string }) {
   const query = useQuery({ queryKey: ['cost', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/cost`, signal), refetchInterval: 5000, retry: false });
   const row = ((query.data?.items || []) as Row[])[0];
   const usage = (row?.data as Row | undefined)?.usage as Row | undefined;
+  const providerUsage = (row?.data as Row | undefined)?.provider_usage as Row | undefined;
   return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">费用 / 原生用量</h2>{query.isPending ? <p>读取中…</p> : <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">状态</dt><dd>{text(row?.status ?? 'unknown')}</dd></div><div><dt className="opacity-60">金额</dt><dd>{text(row?.amount ?? row?.value ?? '未知')}</dd></div><div><dt className="opacity-60">来源 / scope</dt><dd>{text(row?.source ?? 'records/status.json')} · {text(row?.scope)}</dd></div><div><dt className="opacity-60">类型 / as_of</dt><dd>{text(row?.kind)} · {timestamp(row?.as_of)}</dd></div><div className="md:col-span-2"><dt className="opacity-60">原因 / 边界</dt><dd>{text(row?.reason ?? row?.note ?? (row ? '未保存 spend 原因' : '未保存 spend 事实；不能从运行生命周期推导费用'))}</dd></div></dl>}
     {usage && <><p className="mt-3 text-xs opacity-70">已记录的原生 token 用量（{text(usage.status)}），不是供应商账单。</p><Table rows={(usage.items || []) as unknown[]} fields={['model', 'provider', 'messages', 'tokens']} /><RawDetails label="用量来源、时段与缺口" value={usage} /></>}
+    {providerUsage && <><p className="mt-3 text-xs opacity-70">供应商实际尝试与返回用量（{text(providerUsage.status)}），不是账单或套餐余额。下表显示最近8次尝试。</p><Table rows={((providerUsage.attempts || []) as unknown[]).slice(-8)} fields={['request_id', 'deployment_id', 'http_status', 'usage_status', 'usage']} /><RawDetails label="全部供应商尝试及采集缺口" value={providerUsage} /></>}
   </section>;
 }
 

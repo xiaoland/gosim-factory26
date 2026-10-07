@@ -570,6 +570,8 @@ def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
     facts = _status_facts(run_path, lifecycle)
     if observed.get('spend', {}).get('scope') == 'self-funded-provider':
         observed['spend']['usage'] = facts['native'].get('usage')
+        from .provider_usage import collect as provider_usage
+        observed['spend']['provider_usage'] = provider_usage(run_path, state)
     if facts['resource']:
         observed.setdefault('resources', {})['supervisor'] = facts['resource']
     facts.update(observed)

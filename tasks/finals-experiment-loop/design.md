@@ -242,6 +242,8 @@ self-test 不继承来源生成 run 的 Hosted 提交入口或模型配方。它
 
 用户脚本拿到采集层已经归属好的变量，不自己遍历文件或调用官网。`spend` 带 value、currency、actual/estimate、来源和 as_of；没有实际账单时可以明确采用估算，但订阅套餐不能套一个虚构单价。单 run 页面始终报告自身费用；跨 run 规则明确选择当前 run、来源及接续集合，或指定标签集合，不隐含继承或清零。策略保存采用的范围，费用与额度由这些真实 run 的记录派生，不建立实验级预算控制器。恢复同一原生会话时按生产者事件/请求身份去重，不能重新统计整个 native 文件后再累加。
 
+spend表示本run新增货币支出，套餐购买成本属于账户既有支出，不自动均摊给run。公共proxy将供应商返回usage归到实际request/attempt/deployment，fallback后的通道不能按原生模型别名猜测；失败但可能受理的尝试仍保持费用未知。token、供应商明确返回的套餐单位和账单金额分别表达，普通请求次数不能冒充套餐抵扣次数。没有账单或已核实deployment价格时总金额保持unknown，保留已知部分及缺项；不要求先建立账户系统或让用户补成交价才能运行。
+
 跨宿主 run 集合的费用可能依赖异步汇总，必须带各来源的截止点和缺项。本地采集独立不等于全局账单永远实时；远端费用不可得时，集合 spend 为 partial/unknown，由脚本决定行为，不能承诺 Backend 离线时仍有精确全局硬预算。
 
 `session_idle_for` 与 `turn_idle_for` 基于同一 session/turn 最近一次可信原生活动，包括请求、流式更新、工具开始/结束和重试；同时提供 running、waiting_tool、retrying、terminal 等事实。工具等待不自动判为卡死。采集失联与“已知没有活动”分开，计时在执行侧进行，Backend 到达时间只描述传输延迟。当前没有准确 native turn 生产者的路径明确提供 session 级活动或 unknown，不从日志行数猜测 turn。
