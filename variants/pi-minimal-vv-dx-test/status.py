@@ -6,7 +6,13 @@ import time
 
 def main():
     facts = json.load(sys.stdin)
-    messages = facts.get("native", {}).get("session_messages", [])
+    native = facts.get("native", {})
+    messages = native.get("session_messages", [])
+    # Migrated history remains visible, but an old failure is not this run's
+    # activity while its new process is still installing or starting.
+    since = native.get("usage", {}).get("since")
+    if since is not None:
+        messages = [item for item in messages if (item.get("at") or 0) >= since]
     # Timing and session readers can report the same message timestamp; the
     # session record carries the actual outcome rather than just message_end.
     latest_message = max(messages, key=lambda item: (
