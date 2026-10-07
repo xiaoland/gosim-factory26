@@ -10,6 +10,8 @@ advisor只依据主提供证据建议gzip完整快照及复用既有消息配置
 
 同一真实使用发现列表只用run ID、全量JSON默认进入DOM、日志与格式化时间缺时区说明。主做窄改：列表/选择器显示task与target，费用显示attempt/returned usage计数，RawDetails只在展开时生成完整原件，保留所有记录；格式化时间显示时区，日志明确UTC原文边界。构建及实际界面复查另记录，不把静态编译当UI通过。
 
+最终独立UI复查21:32：选择器可直接识别github-stage-1/sfp7/ed426cf5与bookstack/sfp7/a3a9a526；I14无需展开JSON即见847次尝试、781次返回用量。完整原件正常展开，关闭后从DOM消失；时间带GMT+8，日志说明Z为UTC。Pi仍active，130条原生消息、金额未知，旧冻结代理未捕获provider usage的限制如实保留。首页标题仍全ID是非阻塞一致性缺项，不另起专项。源码/发布修复提交2965ccc3，静态构建通过并部署；两run没有终态或评分，整体不能收尾。
+
 用户要求深入检查 project.zip。本轮两条验收实际是 sfp7 本地执行，没有官网 project.zip；诊断直接读取对应远端工作区、原生日志和已有截图，不新开生成、不控制运行、不修改业务应用。Mac 的 saved-sync 只镜像 records，已有 data 不保证最新，故不能以本地旧 session.jsonl 推断停滞。
 
 ## Pi BookStack：存在实质问题，不是完全停滞

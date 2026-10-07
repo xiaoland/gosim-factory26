@@ -68,6 +68,8 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 
 该UI验收发现并闭合Console发布HTTP413：正常快照超过注册独立512KiB限制，导致I14停21:07旧状态。主采用advisor仅给定证据的gzip/既有消息配置建议，部署至Console1285376；对真实快照777370字节→77612字节，正常发布0.073秒，独立UI确认21:26新状态与821attempts，不裁剪原件。另改task/target定位、attempt计数、按展开生成raw DOM及时间时区说明，已构建部署，待末次UI读回。过程与旧错误归runtime-diagnosis及validation/console-live-observation-20261007-2121.md。两run仍未终态/评分；I14原生观察间歇30秒超时并遇实际内存边界，已续派原owner处理，不用提高timeout或停止生成来补验收。
 
+最终UI读回已采用：21:32选择器task/target/短ID明确，I14显示847attempts/781returned usage，原件展开/收起正常、GMT+8明确；Pi仍active/130原生消息。Console修复提交2965ccc3；console_acceptance assignment completed。原生超时与两run完整闭环仍归evaluation_closure，尚待其具体修复/当前自动化进程证据，不将本轮界面通过转为整个设施通过。
+
 用户最新要求继续追查本地正式Pi-vv的project.zip，并把自验用例相互影响纳入打包设施改进。主负责用例数据边界，evaluation_closure负责冻结服务能力取证及pbb停止入口必要修复，process_reaping_decision仅依据提供证据给取舍建议。证据和决定归runtime-diagnosis-20261007.md；只读采用已有正式run材料，不控制它、不注入反馈、不改其应用。主已补公共e2e技能的case与journey隔离说明，复用现有fixture，不新增通用数据库reset。源码打包只影响未来程序，不宣称在途已修。两条DX生成—保存—评分闭环及持续采集/策略qualification仍未完成，不因该局部修复收尾总任务。
 
 自验技能提交97b86d10。服务负责人已交回冻结包能力证据和pbb kill全局job ID修复；主修正patch编辑意外、确认可解析并只采用当前hunks。语法检查不等于实际停止资格化，无正式run或进程受到控制。该局部assignment已结束，整个实验闭环未完成，后续两run保存/评分仍沿用现有自动化，不用这一归因调查替代主要目标。
