@@ -20,6 +20,7 @@ pub const DATABASE_SCHEMA_VERSION: u32 = MIGRATIONS[MIGRATIONS.len() - 1].versio
 const INITIAL_SQL: &str = include_str!("../../migrations/0001_initial.sql");
 const EVENT_KINDS_SQL: &str = include_str!("../../migrations/0002_event_kinds.sql");
 const FAILED_REPLAY_DEDUPE_PREFIX: &str = "braid-failed-turn-replay-v1:";
+const OFFLINE_MATERIALIZATION_REPLAY_DEDUPE_PREFIX: &str = "braid-offline-materialization-replay-v1:";
 const UNKNOWN_REPLAY_DEDUPE_PREFIX: &str = "braid-unknown-turn-replay-v1:";
 const MIGRATIONS: &[Migration] = &[
     Migration { version: 1, name: "initial", sql: INITIAL_SQL },
@@ -3146,8 +3147,10 @@ fn identityless_pi_reset_attempt(database: &Path, reset_id: &str, agent_id: &str
         let Ok(bytes) = fs::read(entry.path().join("session.json")) else { return false };
         let Ok(attempt) = serde_json::from_slice::<PhysicalSessionAttempt>(&bytes) else { return false };
         if attempt.group_id.as_deref() != Some(agent_id) { continue }
+        let timed_out_unknown = attempt.status == "unknown"
+            && attempt.error.as_deref().is_some_and(|error| error.contains("timed out"));
         if attempt.provider != "pi"
-            || attempt.status != "failed"
+            || (attempt.status != "failed" && !timed_out_unknown)
             || attempt.error.is_none()
             || attempt.session_id.is_some()
             || attempt.native_session_path.is_some()
@@ -3326,6 +3329,82 @@ fn prepare_offline_resume(database: &Path) -> Result<Vec<String>, StoreError> {
             [&reset_id],
         )?;
         tracing::info!(reset = %reset_id, "recovering identityless Pi Context reset after offline stop");
+    }
+    // A Pi process can fail before provider_sessions is inserted.  In that
+    // case the assignment is blocked and the original activation is already
+    // consumed, so ordinary offline resume has nothing to claim.  With the
+    // host-stop assertion, a failed identity-less physical attempt, and the
+    // same open worktree still selected, retire only that failed generation
+    // and replay its activation.  The next materialization creates a fresh
+    // provider session while preserving the worktree and the original error.
+    let identityless_materializations = {
+        let mut statement = transaction.prepare(
+            "SELECT a.assignment_id,ai.agent_id,a.work_item_node_id,e.event_id
+             FROM assignments a
+             JOIN agent_instances ai ON ai.assignment_id=a.assignment_id
+             JOIN work_items w ON w.node_id=a.work_item_node_id
+             JOIN local_items l ON l.node_id=w.node_id
+             JOIN worktrees wt ON wt.agent_id=ai.agent_id AND wt.lifecycle IN ('active','blocked')
+             JOIN events e ON e.work_item_node_id=a.work_item_node_id
+                AND e.kind='assign' AND e.detail='activate' AND e.lifecycle='consumed'
+             WHERE a.lifecycle='blocked' AND ai.lifecycle='blocked' AND w.state='OPEN'
+               AND a.generation=(SELECT max(newer.generation) FROM assignments newer
+                   WHERE newer.work_item_node_id=a.work_item_node_id)
+               AND e.event_id=(SELECT activation.event_id FROM events activation
+                   WHERE activation.work_item_node_id=a.work_item_node_id
+                     AND activation.kind='assign' AND activation.detail='activate'
+                     AND activation.lifecycle='consumed'
+                   ORDER BY activation.observed_at DESC,activation.event_id DESC LIMIT 1)
+               AND l.desired_member_login=a.member_login
+               AND l.desired_profile_id=ai.profile_id
+               AND l.assignment_revision=a.assignment_revision
+               AND NOT EXISTS(SELECT 1 FROM provider_sessions ps WHERE ps.agent_id=ai.agent_id)
+               AND NOT EXISTS(
+                   SELECT 1 FROM turns t JOIN provider_sessions ps ON ps.session_id=t.session_id
+                   WHERE ps.agent_id=ai.agent_id AND t.lifecycle IN ('starting','running')
+               )
+               AND NOT EXISTS(SELECT 1 FROM context_resets cr WHERE cr.agent_id=ai.agent_id)
+               AND NOT EXISTS(
+                   SELECT 1 FROM events replay
+                   WHERE replay.dedupe_key= ?1 || e.event_id
+               )
+             ORDER BY e.observed_at,e.event_id",
+        )?;
+        statement
+            .query_map([OFFLINE_MATERIALIZATION_REPLAY_DEDUPE_PREFIX], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, String>(3)?,
+                ))
+            })?
+            .collect::<Result<Vec<_>, _>>()?
+    };
+    for (assignment_id, agent_id, work_item_node_id, event_id) in identityless_materializations {
+        if !identityless_pi_reset_attempt(database, "", &agent_id) {
+            continue;
+        }
+        transaction.execute(
+            "UPDATE assignments SET lifecycle='retired',retired_at=?2,member_login=NULL
+             WHERE assignment_id=?1 AND lifecycle='blocked'",
+            params![assignment_id, now],
+        )?;
+        transaction.execute(
+            "UPDATE agent_instances SET lifecycle='retired'
+             WHERE agent_id=?1 AND lifecycle='blocked'",
+            [&agent_id],
+        )?;
+        replay_event(
+            &transaction,
+            &event_id,
+            &work_item_node_id,
+            OFFLINE_MATERIALIZATION_REPLAY_DEDUPE_PREFIX,
+            "retrying initial Pi materialization after offline stop",
+            SchedulerPolicy { quiet_seconds: 0, event_threshold: 1 },
+            &now,
+        )?;
+        tracing::info!(%assignment_id, %agent_id, "replayed identity-less Pi materialization after offline stop");
     }
     // Earlier recovery could apply a physical reset while leaving the old
     // assignment blocked. The new idle session and current member prove that
