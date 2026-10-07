@@ -39,7 +39,8 @@ def _print_result(command, value, args, run):
         return
     if command in ("start", "restart", "status", "wait"):
         target = row.get("target_config") or {}
-        print(f"recipe={target.get('model_recipe', 'unknown')} competition={row.get('competition')}"
+        recipe = row.get('model_recipe') or target.get('model_recipe') or target.get('model_transport', 'unknown')
+        print(f"recipe={recipe} competition={row.get('competition')}"
               f" source={row.get('source_run') or '-'}")
     elif command == "archive":
         print(f"archived={row['archived']}")

@@ -17,7 +17,9 @@ import uuid
 from agent_support import (save, phase, hashes, digest, logged, cleanup_workspace,
                            copy_application, browser_executable, budgeted_pi)
 from agent_support import runtime_resource_environment, start_shared_proxy, stop_shared_proxy
-from agent_support import model_bindings, bind_native_models, native_model_route, bind_native_role, bind_native_model_scope
+from agent_support import bind_native_models, native_model_route, bind_native_role, bind_native_model_scope
+from pi_transport import model_bindings
+from pi_state import repair_state_files
 from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
@@ -41,7 +43,8 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
 开发工具与反馈
 开发时使用pnpm安装依赖、构建和运行脚本，提交pnpm-lock.yaml。预打包环境通过PATH提供pnpm、portless、agent-browser和Playwright；BROWSER_CHECK_NODE_MODULES指向已有Node工具依赖，BROWSER_EXECUTABLE_PATH指向配套浏览器入口。复用这些工具、浏览器和本次运行的包缓存。
 应用检查使用Vitest，复杂组件按需使用Browser Mode；完整应用验收使用Playwright自动化测试或脚本。检查失败保留首次结果、trace、控制台和请求错误，依据需求设计判据，不以通过数量代替覆盖说明。依赖安装失败保留原始错误与首轮日志，不通过反复安装掩盖失败。
-UI使用适合所选框架的成熟组件库和图标库，样式使用UnoCSS；按需求组合、定制已有控件，核对实际role、可访问名称、状态、键盘和焦点行为。统一少量视觉变量，图标随应用打包；动态样式采用可静态提取的类名映射、safelist或适当的CSS变量。
+新建应用的UI使用适合所选框架的成熟组件库和图标库，样式统一使用Tailwind CSS；接续既有应用时沿用基线技术栈，不为样式工具偏好迁移。按需求组合、定制已有控件，核对实际role、可访问名称、状态、键盘和焦点行为。统一少量视觉变量，图标随应用打包；动态样式采用所选Tailwind CSS版本可静态提取的完整类名映射或适当的CSS变量。
+采用Tailwind CSS时，按所选版本的官方方式配置构建集成和CSS导入，确认应用入口实际加载该CSS。使用正式构建产物和正式启动路径，在实际页面核对代表性布局、颜色和字体的计算样式；不能仅凭构建成功声明样式生效。
 在真实跨模块边界统一请求、响应与错误格式，按需要使用运行时schema校验；不为此增加代码生成系统。
 
 数据与服务状态
@@ -136,7 +139,8 @@ def generate(args):
     """
     visual_url = os.environ.get('VISUAL_BASE_URL')
     routes, model_env = model_bindings(args.base_url, visual_url, require_key=not args.prepare_only)
-    base_url = routes['factory26']['base_url']
+    desired_model = os.environ.get('MODEL') or 'glm-5.3'
+    base_url = native_model_route('factory26', desired_model or 'glm-5.3-flash', routes)[2]['base_url']
     requirements = args.requirements_dir.resolve(strict=True)
     if not requirements.is_dir():
         raise NotADirectoryError(f'输入不是目录：{requirements}')
@@ -201,7 +205,6 @@ def generate(args):
         state = run/'braid-state'
     else:
         profiles, bindings = native_files(work, runtime, skills, base_url, visual_url)
-    desired_model = os.environ.get('MODEL') or routes['factory26'].get('model')
     root_profile_id = 'pi-glm-root' if desired_model == 'glm-5.3' else ROOT_PROFILE_ID
     root_profile = next(p for p in profiles if p['id']==root_profile_id) if not native_resume else None
     if not native_resume and desired_model and desired_model != root_profile['model']:
@@ -244,8 +247,9 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
     print(run, flush=True)
     if args.prepare_only:
         return run
-    browser = str(browser_executable(runtime))
     # Chromium sockets require a short path; retain Pi's durable async state separately.
+    browser_cache = work/'cache/browser'
+    browser_cache.mkdir(parents=True, exist_ok=True)
     env = dict(model_env, **tool_environment(), PORTLESS_PORT='1355', PORTLESS_HTTPS='0',
                PI_FFF_MODE='tools-only', PI_FFF_MULTIGREP='0',
                PORTLESS_SYNC_HOSTS='0', PORTLESS_STATE_DIR=str(work/'tmp/portless'),
@@ -259,14 +263,16 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                FACTORY26_PI_TIMING_EXTENSION=str(HERE/'extensions/factory-pi-timing.ts'),
                FACTORY26_PI_TIMING_FILE=str(run/'pi-timing.jsonl'),
                PBB_PIL_BIN=str(pil),
-               AGENT_BROWSER_EXECUTABLE_PATH=browser,
-               BROWSER_EXECUTABLE_PATH=browser,
                BROWSER_CHECK_NODE_MODULES=str(runtime/'node_modules'),
+               FACTORY26_BROWSER_CACHE_DIR=str(browser_cache),
                AGENT_BROWSER_SOCKET_DIR=str(work/'b'),
                MCPORTER_CONFIG=str(HERE/'tools/mcporter.json'),
                PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
                                      str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
+    browser = browser_executable(runtime)
     env['MCPORTER_DAEMON_DIR'] = str(Path(env['TMPDIR'])/'mcporter')
+    if browser is not None:
+        env.update(AGENT_BROWSER_EXECUTABLE_PATH=str(browser), BROWSER_EXECUTABLE_PATH=str(browser))
     env.update(runtime_resource_environment(runtime, run))
     env.update({name: value for name, value in os.environ.items() if name.startswith('OTEL_')})
     begin = time.monotonic()
@@ -397,6 +403,9 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
         except Exception as exc:
             metadata['diagnostic_error'] = str(exc)
         metadata.update(generation_seconds=time.monotonic()-begin, generation_finished_at=time.time())
+        ownership_errors = repair_state_files(output, [work/'home/.pi/agent', work/'native-homes'])
+        if ownership_errors:
+            metadata['state_ownership_errors'] = ownership_errors
         phase(run/'run.json', metadata, 'frozen' if metadata['status']=='generated' else 'failed', 'braid.log')
     recovery_required = (error is not None or metadata.get('process_exit_code') != 0 or
                          metadata.get('braid', {}).get('status') != 'quiescent' or

@@ -80,13 +80,16 @@ def _post(directory, state, client, action, endpoint, **kwargs):
 def start(run):
     run, value, target, client = _context(run)
     task = value["task_config"]["platform_task"]
-    model = target["model_config"]
     package = Path(value["agent_package"]).resolve(strict=True)
     mode = value.get("billing_mode") or ("official_evaluation" if value.get("competition") else "self_funded")
     if mode == "competition":
         mode = "official_evaluation"
     if mode not in {"self_funded", "official_evaluation"}:
         raise ValueError(f"unsupported Hosted billing mode: {mode}")
+    # Keep the observed upload form shape; competition model intent comes
+    # from the variant, never from a self-funded supplier deployment.
+    model = ({**target['submission_models'], 'base_url': 'https://api.arc-bench.com/v1'}
+             if mode == 'official_evaluation' else target['model_config'])
     secret = None
     if mode == "self_funded":
         from scripts.hackathon_gateway import read_assignments

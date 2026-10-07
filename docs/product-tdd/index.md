@@ -6,7 +6,13 @@
 
 新入口由 `lab.run` 接受 start、stop、pause、resume、restart 等实际 run 操作，`lab.arc_bench.execution` 持有 ARC Local/Docker 或 Hosted 的真实句柄。每个 run 独立执行、采集和保存结果，CLI/Console 退出不取消运行。普通 Python 组织跨 run 策略与 stages，没有 experiment/job/attempt 控制器、admission、slot、reservation 或未来任务队列。旧 `lab.exp` 仅服务原冻结执行与历史记录，不把它的容量和证明链带入新入口。
 
-公共装配复用已有 runtime、技能与打包器；装配入口持有 gateway、collector 和资源采样生命周期，variant 只消费已解析的程序/需求/数据路径与端点。容器内 workspace 和原生状态的逻辑路径稳定，宿主实际位置归 target，不从父域路径或角色名猜测。原生 home、Braid DB/worktree 和 retained request 均在 data/harness，凭据在独立私有配置中。旧 lab.exp 的定义资产、authority/capture、compile/readiness 合同只解释原冻结执行，具体见其组件文档。
+公共装配拥有最终程序目录或提交 ZIP，统一加入安装器、gateway、collector、run 输入与数据运输材料；variant 只准备自身程序、角色、技能及原生支持。统一入口先安装公共依赖，再启动公共服务并调用 Harness。本地与 Hosted 使用同一安装输入、依赖版本和入口，不以本地只读宿主 runtime 与官网预打包 runtime 建立两套正常路径；缓存只加速下载。团队编译的 Braid/model-proxy 属程序执行字节，公共 Node/npm 依赖在容器内按 lock 与补丁安装；约2.5 MB的 OTLP Python 依赖闭包直接随包携带，避免额外的 pip 下载与安装步骤。
+
+公共服务不解释 variant 的原生模型 selector 或猜测 Pi/Braid 目录。variant 的原生适配拥有会话接续、原生事实采集、完成与应用交付判定；绑定 program 的 observe.py 采集事实，status.py 解释活动，多 variant 共用的机械适配保留明确 Pi/Braid 身份。容器内 workspace 和原生状态的逻辑路径稳定，宿主实际位置归 target。原生 home、Braid DB/worktree 和 retained request 均在 data/harness，凭据在独立私有配置中。旧 lab.exp 的定义资产、authority/capture、compile/readiness 合同只解释原冻结执行，具体见其组件文档。
+
+model-proxy 是公共运输设施，供应商模型配方的选择归 variant 的 `model-recipe.json`，可引用统一维护的供应商链与 catalog，避免复制供应商参数。自费运行由公共装配冻结并消费该配方，向 Harness 提供 `OPENAI_BASE_URL` 和 `OPENAI_API_KEY`；原生客户端模型身份、角色及请求预算归 variant。官网比赛不装配或启动 model-proxy，也不读取供应商配方，直接使用平台注入的同名端点与凭据。
+
+Hosted 上传沿已观察的 model、visual_model、base_url 表单合同。比赛上传所需角色模型由 variant builder 导出 `submission-models.json`，ARC 适配层填官方端点；这些字段不构成供应商配方，也不覆盖 Harness 实际收到的平台注入值。没有证据支持依赖后台省略字段的默认行为。
 
 新运行固定分离 program、inputs、data、records、snapshots 和 evaluations。程序重新组装，restart 只迁移全部 data，不继承旧控制句柄、费用、遥测库或隐藏评分。私有凭据在可迁移数据之外。相同 task/需求版本恢复原生身份；下一 task 创建新原生任务状态，保留应用及历史。停止来源和保存数据失败不能悄悄退回空会话或旧快照。
 

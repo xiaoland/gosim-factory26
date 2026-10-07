@@ -1,5 +1,49 @@
 # 决赛实验基础设施重设计
 
+当前收尾包括公共交付与进程回收边界。用户提供的旧Pi运行进程快照实际有321个僵尸，其中320归PID1 Python；3个存活浏览器daemon，存活Chrome相关进程合计489线程。新版Local创建已带 `--init`，历史执行路径和Hosted入口不能因此视为已修复。公共ResourceSupervisor已有内存/pids采集、有界补救和明确失败，但只回收自身直接子进程，不能替代PID1的孤儿回收责任。process_reaping_decision advisor负责最小跨环境处置判断；execution_owner继续公共交付闭环，主负责保存来源及进程边界整合。此事实不授权增加全局并发gate，也不授权参赛。
+
+advisor已建议统一公共入口在安装/服务/Harness前使用标准静态Tini subreaper，Python Popen仍独占直接子进程退出状态；Local保留Docker init覆盖SDK自身。execution_owner在公共入口与安装器实现并用真实Linux浏览器open/snapshot/close取得PPID、线程、僵尸及退出码证据。活动浏览器与测试并发归工具生命周期和variant策略，不因快照有三个daemon就判定全泄漏；监控不能把提高pids限额当作孤儿回收修复。
+
+资源实现与文档已提交 `dc417302`；Braid三个文件仅暂存本任务资源hunks，其它dirty改动保留。保存来源修复提交 `96dc22d0`。新版公共交付正在加入Tini回收入口，模型与完整使用验收尚未开始；这些提交不是全任务完成声明。
+
+2026-10-07 保存回执来源修复已落地：远端原件镜像为remote-save/remote-result-save，不能覆盖本机save/result-save；本机完成回收才写自己的storage_root。relay先回收再供自动评测使用，已回收的终态材料不重复传输。对610daf实际执行记录同步成功，原本机保存时间1791353029.8941178未被远端1791352588.2794924覆盖。没有重新启动或评测该run。最新安装器的实际Linux浏览器open/snapshot已成功，mcporter/portless目前只有help证据；OTLP Python闭包约2.5 MB继续随包携带，文档已与实现一致。新独立完整模型验收仍待可消费的新交付。
+
+2026-10-07 用户对610daf处置明确选择“停止并保存现场”。已按该run冻结target通过Lab stop停止，观察回执为 stopped/inactive、exit_code=143；随后本机回收完成，save 返回 saved=true、errors=[]、as_of=1791353029.8941178。工作区、原生状态与日志位于 `runs/lab/runs/610daf8655bc4f178cf6b0b35e94cfc7/data/`，停止与保存原件归该run的records。没有派发新run、接续或评测，没有覆盖原执行版本。正在执行的turn/未落盘写入可能中断，现场保存不等于完整可恢复检查点。此次发现远端保存回执可能先于Mac回收完成，需要由保存实现明确来源，不能提前把远端 saved=true 当作本机回收完成；execution_owner继续修复该公共边界。
+
+## 2026-10-07 全新新版 Lab 验收会话（当前）
+
+用户要求从正常使用者视角重新完整验收 `I14-dx-test` 与 `pi-minimal-vv-dx-test`，使用真实自费模型，绝不参赛；官网评测只能使用自费、非排名的独立评分。该验收不接续旧 run 或原生会话，重点同时观察可用性、绕路/排错负担、墙钟耗时和 token 负担。当前只完成只读入口熟悉与启动前核对，等待主任务确认新交付可实际消费后启动收费运行；已有实验授权，不等待用户重复开工批准。
+
+已核对：正常入口为 `python3 -m lab start VARIANT TARGET TASK`；当前目标配置的两 variant 均指向 `arc-core-direct-20261007p`，自费配方由 `harness/model-recipes/self-funded.json` 冻结；独立评分使用 `python3 -m lab evaluate RUN --kind self-test`，不等同比赛提交。只读 `lab status --all --json` 发现旧 `610daf8655bc4f178cf6b0b35e94cfc7` 仍为 running，属于历史现场，不能控制、接续或作为新版验收证据。启动前读回原件保存在 `runs/finals-experiment-loop/validation/preflight-status-20261007.json`。
+
+当前下一步：新版公共入口已完成Tini、安装和服务启动的实际Linux操作，已通知新会话开始完整自费验收；按 `evaluation.md` 的验收矩阵串行覆盖两个 variant，并将真实使用成本与功能结果分开记录。通知启动不代表已取得模型活动或评分，需读回新run原件。execution_owner继续补充浏览器确在subreaper后代树的PPID/线程/僵尸回落证据，不阻塞已可消费交付的真实使用。
+
+2026-10-07 用户明确：“本任务的验收绝对不可以参赛”，并建议抛弃原验收会话、新开会话完整验收。该限制覆盖所有验收生成与评测，禁止 competition/official_evaluation、正式提交或上榜身份；官网独立评分只能自费且非排名，不从平台或比赛题目推断参赛许可。原独立会话停止后续派发、评测与接续，已有610daf现场保留，尚未取消该run。新的独立会话从正常Lab入口完整验收，不继承旧会话的绕路经验；消息尽量自然，具体标准和原件归本packet及evaluation。实现官网比赛接入分支不授予验收参赛权限。
+
+新会话为 `01a114ec-c77a-7531-930b-9321fee3982f`，标题“Lab 新一轮完整独立验收”。已要求它只准备正常入口，等待新交付确认后启动真实自费运行，不接续旧run、不修改设施源码；发现问题交回本任务修复。原会话 `01a1118d-d790-7df1-93b5-df1801813158` 已收到停止后续操作的消息。610daf是否停止并保存现场已向用户提出非阻塞选择，未自行取消。旧评分与运行原件可作历史反馈，但不充当新一轮完整验收通过证据。
+
+本轮最新交付事实：公共入口已登记真实 variant Popen，资源监督器不再依赖 PID 环境字段或杀自身；补救不杀活动 gateway/collector。memory.events.max 只是可能需要 reclaim 的边界事件，不当成不可逆失败；OOM、进程分配失败或补救后仍触顶才有界关闭实际 child 并保存原错，依据 [Linux cgroup 定义](https://docs.kernel.org/admin-guide/cgroup-v2.html)。新版轻量包保留其它 variants 的原全局 npm 输入，公共安装闭包独立锁定；实际 ARC Linux 安装约512 MB、192个依赖，原件 runs/public-minimal-final-CimnND/linux-install-evidence.txt。
+
+原生旧格式 reader 已从 execution 移到 scripts/legacy_native_observation.py，调用既有 Pi/Braid reader；610daf/de22 的 messages=113、turns=193、provider sessions=2，以及原始断连事实保留。默认自费包的 proxy 字节缺漏已修复。供应商配方选择移出 target 后发现 Local 仍按旧 recipe 名选择 ARC Meter/凭据处理，已改用冻结派生的 model_transport；旧 target 仅兼容原标记，不能重新选择 ARC。剩余正在由 execution_owner 闭环的事项是新 Braid 资源修复的实际 Linux 执行字节、公共 Python 依赖安装与去除两个DX builder遗留重复最终装配分支。原610daf不动；Stage2 等实际执行材料确认，尚无新生成/接续/评分通过声明。
+
+2026-10-07 用户明确模型配方指供应商模型配方，归 variant；官网比赛运行没有 model-proxy，所以不加载或应用供应商配方。公共设施归一化自费运行的模型运输，variant 统一消费 OPENAI_BASE_URL / OPENAI_API_KEY；比赛直接消费平台同名注入。角色模型、原生会话模型身份和预算仍由 variant 管理，不由运输层选择。当前已切断 competition 装配的供应商读取并移除公共 native descriptor，尚待官网上传字段合同与新交付真实运行资格闭环，不宣称验收通过。
+
+轻量安装包已在 sfp7 的实际 ARC Linux image 安装固定 Node 24、npm lock 和 native patches，约两分钟、安装后 runtime 约937 MB，证据为 runs/public-package-linux-AodKRb/linux-installer-evidence.txt。公共最终装配职责及资源失败的受控子进程接线仍在补齐；Mac 组装与 Linux 安装成功不等于生成 Agent、接续及评分均通过。原610daf不动。
+
+advisor 核对已有官网前端和成功上传原件后建议保留 model/visual_model/base_url 的已观察上传字段形状，不假定后台支持省略。比赛字段中的模型意图由 variant builder 导出角色模型，ARC 接入层填写已确认的官方端点，不从供应商配方推导。SDK 的环境透传只证明原生注入接口，不能证明上传字段默认。没有为本次核对发起比赛运行。独立验收继续原 Stage1 与冻结评分，Stage2 启动前等待新交付确认。
+
+本轮已将最终装配调用移到公共 execution/public_package，variant-only builder 导出自身材料及 submission-models.json。根入口对比赛跳过供应商冻结，自费统一注入 OPENAI 两个变量；同任务原生 credential name 的兼容留在 Pi 适配，不由公共运输解释。源语法检查通过，未启动比赛运行。新 Linux 精简安装为约506 MB，原件 runs/public-pruned2-Q4LdpS/linux-install-evidence.txt；仍在核对必要依赖闭包不会删除其它 variant 的工具输入。资源补救的累计事件与处置后触顶已分开，采用 supervisor 持有真实 Popen 句柄；入口登记、最终新交付真实生成和接续仍待闭环。
+
+2026-10-07 用户新增资源机制要求：不再充当 gate，监控并在触顶时尝试释放与補救，最终接受 fail-closed/fail-loudly，不持续 suspend 掩盖失败；覆盖内存和近期遇到的进程数上限。environment_causality 负责 scripts/runtime_resources.py 与实际 Braid pressure/native 执行模块的调查、实现及编译/真实原件反馈，advisor 协助作用层级与有界补救判断。当前610daf不动，不新增capacity或通用恢复框架；实际政策与已验证边界由该owner返回后整合。
+
+2026-10-07 用户明确授权“这个分层没错，请应用”，并要求公共 native runtime 不进入提交包，改安装脚本在 Harness 启动前运行；随后要求避免本地只读宿主 runtime 与官网完整包的环境差异。当前实施采用同一轻量程序材料、统一启动入口和容器内固定依赖安装，两边不依赖不同的预装 runtime 路径。团队编译的 Braid/model-proxy 属程序执行字节，仍随程序交付，公共 Node/npm/Python 依赖由安装器准备；不能假定官网可下载团队自建 release。
+
+execution_owner 持有公共最终装配、两DX builder/main wrapper、安装器和local挂载调整；主处理原生模型映射、Pi文件权限适配及跨组件文档；cold_local_profile 持有绑定variant的原生事实采集及已有事实合同的保留。advisor 已给出同入口/同固定版本安装路线，实际受限容器下载闭包和后续真实运行仍待资格化。610daf及原独立验收身份保持，不为本轮设施变更中断。
+
+2026-10-07 用户提出公共运行设施与 variant 边界疑问。只读核对与 advisor 判断确认，新实现仍有双向耦合：公共装配复制在各 builder，公共服务反向知道原生别名和布局。当前建议及源码依据归 assessment：公共设施拥有最终装配、服务、运输与执行生命周期；variant 拥有原生行为和语义，共享原生机械适配明确标识而不混入通用 Lab。本次先报告判断，不因用户提出疑问自动扩大源码改动，当前独立 run 不动。
+
+2026-10-07 用户告知验收会话刚被中断并要求继续。只读确认原独立会话 turn 为 interrupted；实际 run `610daf8655bc4f178cf6b0b35e94cfc7` 的保存状态截至北京时间 12:53:52 仍为 running/active。已给原会话发送自然接续消息，保持原 run 和负责人，不重新启动实验；继续原 Stage1 冻结、独立评分及 Stage2 接续验收。
+
 2026-10-07 已修复 restart 隐式继承旧依赖：原实现复制整份 source.target_config，即使显式同名 target 或新 stage 也跳过维护配置。采用 advisor 建议，新 run 重新解析 target、装配当前程序/runtime，来源 stop/save 继续用来源冻结配置；需要固定旧 runtime 使用已有 LAB_CONFIG，不新增模式。源码语法检查已通过，下一次原 Stage2 接续负责取得真实装配证据。当前 610daf 不动；它携带的远端 source/config 也不热改，由独立负责人在正常结束后从维护入口接续。
 
 2026-10-07 self-test 认证已通过实际只读请求：维护客户端 GET `/api/auth/session` 返回 HTTP 200、authenticated=true，原件为 `runs/self-test-auth-20261007/authentication.json`。已修复本机 Python 默认 CA 路径失效导致的 `CERTIFICATE_VERIFY_FAILED`，JSON 请求和 ZIP 上传共用标准库 SSL context，使用已有有效 CA，不关闭 TLS 校验、不新增依赖。已通知原独立验收会话复用现有私有登录材料；没有上传或评分，仍待 Stage1 冻结应用。旧 pending_auth 段落保留为历史故障事实，不再是当前阻塞。

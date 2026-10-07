@@ -8,9 +8,10 @@ import subprocess
 import sys
 
 from raw_otlp import LogExporter
-from agent_support import (stop, model_bindings, bind_native_models,
-                           bind_retained_native_models, native_model_route)
-from harness_services import services
+from agent_support import (browser_executable, stop, bind_native_models,
+                           bind_retained_native_models)
+from pi_transport import model_bindings
+from pi_state import repair_state_files
 
 ROOT = Path(__file__).resolve().parent
 SKILLS = ('svc-verification', 'agent-browser', 'hyperformula', 'handsontable', 'better-auth-best-practices',
@@ -55,37 +56,20 @@ def run(requirements, output):
     session_path = evidence/'session.jsonl'
     if native_resume and not session_path.is_file():
         raise ValueError(f'Pi native resume requested but session is missing: {session_path}')
-    private_models = ROOT/'private-models.json'
     main_provider, advisor_model = 'factory26', 'factory26/kimi-k2.7-code'
-    key = None
-    if os.environ.get('FACTORY26_MODEL_BINDINGS'):
-        bindings, _ = model_bindings()
-        if native_resume:
-            models = json.loads((native/'models.json').read_text())
-            bind_retained_native_models(models, bindings)
-            identity = json.loads((evidence/'identity.json').read_text())
-            main_provider, advisor_model = identity['main_provider'], identity['advisor']
-        else:
-            models = json.loads((ROOT/'models.json').read_text())
-            bind_native_models(models, bindings)
-            main_provider, _, _ = native_model_route('factory26', 'glm-5.3-flash', bindings)
-            advisor_provider, advisor_id, _ = native_model_route('factory26', 'kimi-k2.7-code', bindings)
-            advisor_model = advisor_provider + '/' + advisor_id
-        # A new outer run has a new loopback token, while native identities and
-        # conversation state survive same-task restart.
-        save(native/'models.json', models)
-    elif private_models.is_file():
-        models = json.loads(private_models.read_text())
-        main_provider, advisor_model = 'bigmodel', 'arc/kimi-k2.7-code'
+    if native_resume:
+        models = json.loads((native/'models.json').read_text())
+        identity = json.loads((evidence/'identity.json').read_text())
+        main_provider, advisor_model = identity['main_provider'], identity['advisor']
     else:
-        key = os.environ.get('OPENAI_API_KEY') or os.environ.get('FACTORY26_API_KEY')
-        base = os.environ.get('OPENAI_BASE_URL') or os.environ.get('FACTORY26_BASE_URL')
-        if not key or not base:
-            raise ValueError('Runner must provide OPENAI_API_KEY and OPENAI_BASE_URL')
         models = json.loads((ROOT/'models.json').read_text())
-        models['providers']['factory26']['baseUrl'] = base
+    bindings, model_environment = model_bindings(providers=models['providers'])
+    if native_resume:
+        bind_retained_native_models(models, bindings)
+    else:
+        bind_native_models(models, bindings)
+    save(native/'models.json', models)
     if not native_resume:
-        save(native/'models.json', models)
         roles = native/'agents'
         roles.mkdir(exist_ok=True)
         for source in (ROOT/'agents').glob('*.md'):
@@ -97,13 +81,10 @@ def run(requirements, output):
         subagent_config.mkdir(parents=True, exist_ok=True)
         save(subagent_config/'config.json', {'toolDescriptionMode': 'compact'})
         (home/'.config').mkdir(exist_ok=True)
-    env = dict(os.environ)
+    env = dict(model_environment)
     for name in list(env):
-        if name.startswith('BRAID_') or name == 'FACTORY26_MODEL_BUDGET_PATH' or (
-                private_models.is_file() and name in ('OPENAI_API_KEY', 'OPENAI_BASE_URL', 'FACTORY26_API_KEY', 'FACTORY26_BASE_URL')):
+        if name.startswith('BRAID_') or name == 'FACTORY26_MODEL_BUDGET_PATH':
             env.pop(name)
-    if key:
-        env['FACTORY26_API_KEY'] = key
     env.update(HOME=str(home), XDG_CONFIG_HOME=str(home/'.config'), PI_CODING_AGENT_DIR=str(native),
                PI_OFFLINE='1',
                PONYTAIL_DEFAULT_MODE='full', PI_CAPABILITY_EVIDENCE_DIR=str(evidence/'capabilities'),
@@ -111,10 +92,14 @@ def run(requirements, output):
                PATH=str(runtime/'bin')+':/usr/local/bin:/usr/bin:/bin',
                NODE_PATH=str(runtime/'node_modules'), PI_SUBAGENT_PI_BINARY=str(runtime/'bin/pi'),
                MCPORTER_CONFIG=str(ROOT/'mcporter.json'),
-               AGENT_BROWSER_EXECUTABLE_PATH=str(runtime/'bin/chromium'),
                AGENT_BROWSER_SOCKET_DIR=str(evidence/'browser'),
-               BROWSER_EXECUTABLE_PATH=str(runtime/'bin/chromium'),
                BROWSER_CHECK_NODE_MODULES=str(runtime/'node_modules'))
+    browser_cache = evidence/'browser-cache'
+    browser_cache.mkdir(parents=True, exist_ok=True)
+    env['FACTORY26_BROWSER_CACHE_DIR'] = str(browser_cache)
+    browser = browser_executable(runtime)
+    if browser is not None:
+        env.update(AGENT_BROWSER_EXECUTABLE_PATH=str(browser), BROWSER_EXECUTABLE_PATH=str(browser))
     instruction_path = evidence/'user-instructions.md'
     if native_resume:
         instruction = instruction_path.read_text() if instruction_path.is_file() else None
@@ -180,6 +165,9 @@ def run(requirements, output):
         if process is not None:
             stop(process)
         exporter.flush()
+        ownership_errors = repair_state_files(output, [native])
+        if ownership_errors:
+            save(evidence/'state-ownership-errors.json', ownership_errors)
 
 
 def main():
@@ -189,8 +177,7 @@ def main():
     parser.add_argument('--type', choices=['web'], default='web')
     args = parser.parse_args()
     signal.signal(signal.SIGTERM, lambda *_: (_ for _ in ()).throw(KeyboardInterrupt('terminated')))
-    with services(ROOT, args.output_dir.resolve()):
-        run(args.requirements.resolve(), args.output_dir.resolve())
+    run(args.requirements.resolve(), args.output_dir.resolve())
 
 
 if __name__ == '__main__':

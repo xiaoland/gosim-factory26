@@ -1,5 +1,7 @@
 # 好的实验设施：标准与验证方法
 
+2026-10-07 新一轮验收的费用与身份边界：本任务绝不参赛，不能使用 competition/official_evaluation、正式提交或上榜身份。真实模型采用当前 variant 声明的自费供应商配方；官网评分仅允许自费、非排名的独立评测。比赛启动分支只能作为已实现但本轮未作实际运行验收的能力，不能为了填满矩阵发起参赛。用户要求换全新会话完整验收，当前负责人为“Lab 新一轮完整独立验收”（01a114ec-c77a-7531-930b-9321fee3982f）；旧会话的绕路经验与旧run不继承为新验收起点，历史原件不改写、不冒充新版通过。当前只准备正常入口，等实际新交付确认后再启动收费运行。
+
 2026-10-07 配方更正：首次 P1 因设施默认错误使用耗尽 ARC，返回 HTTP 402 `insufficient_balance`，没有真实生成进展。下文原 ARC 路由冻结已撤销，后续验收使用集中维护的当前自费配方；不等待 ARC 充值，不由验收会话自行改供应商。先接通配方冻结与运行网关的实际消费，再由同一独立会话继续已授权使用目标。原失败记录保留，不计为通过；暂停/恢复、生成与接续仍待实际验收。
 
 本页先定义用户要完成的工作，再说明如何观察收益和归因。它不是新增运行门禁。现有代码是否保留，由其对这些结果的贡献决定；组件数量、代码行、命令数和故障数都不能单独决定重写。
@@ -197,11 +199,13 @@ advisor 返回的可采用判断是：锁定依赖中 SendRequest 与连接建�
 
 GitHub 输入固定为 `hackathon--github-stage-1`、`hackathon--github-stage-2`，公开需求来源分别为 `runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-1/requirements` 和同级 `github-stage-2/requirements`；BookStack 输入来自 `third_party/arc-bench/arc-bench-lite/bookstack/requirements`。交付后保存实际 task 配置与公开需求版本，初始运行不带历史应用、原生状态、费用或隐藏报告。
 
-variant 来源固定：`I14-dx-test` 从 `pi-braid-i14` 派生；名称为 `pi-minimal-vv-dx-test` 的新 variant 从 `pi-minimal` 派生，不引入旧 vv tester/e2e 行为。当前模型通道由公共 `harness/model-recipes/self-funded.json` 选择供应商链，不使用已耗尽 ARC API；旧 P1 的错误冻结与响应原样保留。I14 保持 root `glm-5.3`、fast/visual `glm-5.3-flash`、角色可用 `kimi-k3`/`deepseek-v4-flash-0731` 的实际模型闭包；Pi 保持主角色 `glm-5.3-flash`、advisor `kimi-k2.7-code`。每个 run 冻结实际选中的 deployment 顺序、wire model 与 per-provider 描述，不把不同模型偷偷映射成 Flash，不由验收者临时换供应商。受限模型合计只允许一个 Braid session 使用，保护须按 Braid session 生效；运行矩阵串行，不以子 Agent 数量替代该限制。
+variant 来源固定：`I14-dx-test` 从 `pi-braid-i14` 派生；名称为 `pi-minimal-vv-dx-test` 的新 variant 从 `pi-minimal` 派生，不引入旧 vv tester/e2e 行为。供应商配方由各variant的 `model-recipe.json` 声明，引用统一维护的 `harness/model-recipes/self-funded.json`，不使用已耗尽 ARC API；旧 P1 的错误冻结与响应原样保留。I14 保持 root `glm-5.3`、fast/visual `glm-5.3-flash`、角色可用 `kimi-k3`/`deepseek-v4-flash-0731` 的实际模型闭包；Pi 保持主角色 `glm-5.3-flash`、advisor `kimi-k2.7-code`。每个 run 冻结实际选中的 deployment 顺序、wire model 与 per-provider 描述，不把不同模型偷偷映射成 Flash，不由验收者临时换供应商。受限模型合计只允许一个 Braid session 使用，保护须按 Braid session 生效；运行矩阵串行，不以子 Agent 数量替代该限制。
 
 不参与比赛，官方生成/重放显式 `self_funded`，self-test 为私有非排名评测，不继承历史 `official_evaluation` 或比赛提交身份。下表最多八次有效生成执行；按当前 AGENTS 约定，本地自费不默认附加四小时或金额停止线，原表 A 的金额控制只在采集可靠且实验明确采用时成立，不把账单未知变成默认 gate。评测由实际平台终态完成。设施失败保留原件，由同一 owner 修复后明确接续，不盲目重发未知收费写入。已冻结应用的独立评测可与下一 stage 并行，不接管其它任务。
 
-2026-10-07 用户补充官网已知缺陷：创建身份为 `official_evaluation` 时，启动回执即使显示 `self_funded`，实际仍可能使用比赛费用。此为用户提供的平台事实，尚无本次请求可独立复核；保留创建与启动两份原始回执，不仅凭显示字段判定 start 失败或实际自费。本轮非参赛、自费授权不变，不能借该字段误用比赛费用。随后主会话传递用户已完成钥匙串授权，自测接入负责人继续认证；这解除此前的 pending_auth 限制，不表示认证或评分已成功。Stage1 完成后冻结应用，独立 self-test 评分，再接续 Stage2；生成不读取隐藏评分反馈。
+2026-10-07 新增进程回收观察：在上述正常浏览器与应用测试操作中，记录容器init、公共subreaper及PPID/线程/僵尸的实际来源，观察关闭后和后续重复操作是否持续累积。初始进程数不为零或存在多个活动浏览器不自动判失败；重点区分活动开销、父进程未wait和已被收养的僵尸。公共入口保留实际Harness退出码，不靠提高pids上限证明修复。该观察复用真实操作，不另建设施测试、压力脚本或并发准入门控。
+
+2026-10-07 用户补充官网已知缺陷：创建身份为 `official_evaluation` 时，启动回执即使显示 `self_funded`，实际仍可能使用比赛费用。此为用户提供的平台事实，尚无本次请求可独立复核；保留创建与启动两份原始回执，不仅凭显示字段判定 start 失败或实际自费。本轮非参赛、自费授权不变，不能借该字段误用比赛费用。随后主会话传递用户已完成钥匙串授权；接入负责人修复本机 Python CA 路径后，维护客户端 `/api/auth/session` 实际返回 HTTP 200、`authenticated=true`，现有私有登录材料可复用，无须手工导入 cookie。此前 pending_auth 限制已解除，认证成功不代表评分成功。Stage1 完成后冻结应用，独立 self-test 评分，再接续 Stage2；生成不读取隐藏评分反馈。
 
 | 行 | variant / target / task | 合并动作 | 生成执行数与证据 |
 | --- | --- | --- | --- |
@@ -228,5 +232,10 @@ A/B 控制允许损失仅限本会话自己的在途请求、连接与尚未落�
 交付通知须提供实际可消费版本、准确 variant 名称、维护 CLI/target/task/route 配置入口、共享服务地址和已知限制。先按维护文档执行，再保留不足及修复反馈；不通过旧 compile/doctor/build/exp 入口绕过交付，不要求逐条口头导航。当前待运行，以上没有验收通过含义。
 2026-10-07 新接续 `de22a0c3d9464c509ac8194bb0f516c8` 实际消费 Linux runtime `/home/yyh/factory26-lab-runtime/i14-offline-input-recovery-20261007b`（Braid SHA `aa307dc50424a538dc7218d3d0d302e12085a13e654e6dc4b9c461b696cd81f2`），`native_resume=true`、source `d38fa85756f24f13bb5fbb262b3fdf80`、native scope `3a9346912db449ffa0f8ccbe5fe2ba8e`。该次重启仍在同一 root native identity 上完成 `resume_count=1`（`last_resumed_at=2026-10-07T03:51:22.965Z`），随后 wake turn 以 `provider session disconnected before terminal receipt` 结束，最终 Braid 仍报 `root Issue #1 member glm-root-1 has no resumable session`；3/3 provider health 均 `error=null, can_progress=false`。因此已排除候选查询过滤和 worker 首次 health 未汇报造成的过早 root idle 判定；当前剩余阻塞是恢复后的 provider turn 断连，不能安全重放该 unknown 输入。原始证据：`runs/lab/runs/de22a0c3d9464c509ac8194bb0f516c8/records/status.json`、`records/agent.stdout.log`、`records/runtime-deployment.json`。
 同日随后构建并部署 `runs/runtime-i14-offline-input-recovery-20261007c`（Linux x86-64，Braid SHA `f1b292c48956475b358df30a58b06ebb17a3a88dcd86f11a6a3ac8ff57f8f88f`）启动真实接续 `610daf8655bc4f178cf6b0b35e94cfc7`。该 run 的 `native_resume=true`、source 仍为 d38、scope 仍为 `3a9346912db449ffa0f8ccbe5fe2ba8e`，容器 handle `19574b172848bc27cc0ffdf27443b65ddf912c714e5c51587ed9f2e174cff65f`。保存摘要已观察 root 原 native identity `...pi-glm-root-01a1144c...` `resume_count=1` 且 wake completed；fast 产生新 native binding `...pi-glm-fast-01a11486...` 并进入 `wake_batch` running，原生 JSONL 已实际写入 `backend/src/auth/password.ts`、`backend/src/db/schema.ts`、`backend/src/db/client.ts`、`frontend/index.html`、`frontend/src/main.tsx`、`frontend/src/App.tsx`。这证明旧 applied reset 的去重 wake replay 已被真实执行消费；Stage1 当前仍在生成中，self-test 仍 pending_auth。
+停止交接：按 2026-10-07 最新安排保留 610、container handle `19574b172848bc27cc0ffdf27443b65ddf912c714e5c51587ed9f2e174cff65f`、remote supervisor `3038039 ... lab.automation observe .../610daf...` 及全部现场，不 cancel、不新 run、不 simulate、不 self-test、不 Stage2。已精确解除远端自动评分/后续派发进程 `3053369 ... lab.automation default .../610daf...`；observer 仍保持。610 保存 status 当时为 `running/recent provider turn`，native scope `3a9346912db449ffa0f8ccbe5fe2ba8e`，source d38、runtime 为 `i14-offline-input-recovery-20261007c`（Braid SHA `f1b292c...f88f`）。Stage1 应用验收原件保留：E2E、backend 20/20、frontend typecheck/Vitest/build、browser smoke、platform-check 全通过；Braid delivery ref/最终冻结 commit 尚未形成，评分与 Stage2 未执行。
 
 本次从公共 `lab status 610daf…` 即可看到 source、recipe、records 与 save receipt 路径，无须再进入 manifest 查这些字段；原件为 `validation/github-sfp7-610-status-short.txt`。当时 `saved=unknown`，不算保存成功。使用成本的有界刷新见 `validation/actual-use-cost-20261007.json`：已观察容器执行累计 6757.526 秒（112.625 分钟），I14 去重 usage 下界 4,094,361 tokens，BookStack 同原生链下界 210,533 tokens。当前 run 仍在运行；这些数值不包含完整构建等待或开发侧消耗，缺失 usage 的失败请求未知，不折算成主动人工时间。
+
+主会话随后要求 610 保持原样，公共装配和启动安装继续收敛。Stage1 完成后先冻结应用并执行原计划独立评分；Stage2 启动须等主会话明确确认新交付可用。这是当前交付前提，覆盖此前直接使用已发布精简 runtime 接续的安排，不要求重启 Stage1，也不取消两阶段验收目标。
+
+最新指示终止本轮旧验收：不再启动 Stage2、任何新运行、评测或接续，保留 `610daf8655bc4f178cf6b0b35e94cfc7` 与已有现场，暂不取消当前 run，只整理已有恢复入口交回。后续由全新验收会话另行开展，本任务绝不参赛。已中断开发侧等待的 Agent turn，并要求原运行负责人核对在途等待及未来派发；该动作不是取消执行容器，不把会话中断当作运行终态。上述继续冻结评分和阶段接续的计划不再执行。

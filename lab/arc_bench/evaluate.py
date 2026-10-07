@@ -441,11 +441,14 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
             target_config.pop(field, None)
         target_config["kind"] = "self-test"
     elif target_config.get("kind") == "hosted":
-        # Hosted upload needs a frozen model channel even for a replay.  The
-        # billing identity remains separate in ``billing_mode``.
+        # Self-funded uploads freeze the variant's supplier channel. A
+        # competition upload instead uses its frozen role-model intent.
         frozen_state, target_config, _ = freeze_model_channel(
             evaluation, manifest, target_config)
         manifest.update(frozen_state)
+        if manifest.get('competition'):
+            target_config['submission_models'] = config.get('submission_models') or json.loads(
+                (paths(source)['program'] / 'submission-models.json').read_text())
     else:
         # Local task/simulate evaluation is a no-model application check. Do
         # not read or transport a generation recipe, provider environment, or

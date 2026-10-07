@@ -4,6 +4,10 @@
 
 ## 当前能作出的判断
 
+2026-10-07 对新 DX 实现的边界核对：公共 gateway/OTLP/seed-data/运输装配仍重复在两份 variant build.py 内，且 OTLP 和 proxy 依赖默认引用历史 runs 路径；公共 harness_services 又包含 I14 的 DeepSeek selector、visual identity 推断和 Pi/Braid 原生目录权限修复。execution 的原生事实采集也直接解释 Pi JSONL 和 Braid 状态。因而“服务实现共用”并不等于职责已分开：公共升级仍需逐 variant 接线，原生布局修改又传播进通用服务。两个 DX README 还保留旧 ready-context 或 private-models 接线，不能作为当前边界依据。
+
+采用 advisor 的设计判断作为待落实建议：公共装配拥有最终产物及公共服务启动、data 运输和执行生命周期；variant 拥有角色/技能选择、原生模型映射、会话接续、完成与交付判定、状态解释；多个 variant 实际共用的 Pi/Braid 机械适配保留明确原生身份的 helper。公共装配在 variant 材料准备后统一加入基础设施，不只抽取重复函数再要求每个 variant 选择调用。Portless 是应用开发服务代理，不与 LLM gateway 混同；ARC history 发布机制可共享，发布来源与时机仍属 variant。本次为只读诊断及建议，未更改源码或在途运行。判断效果以一次公共 gateway/OTLP 变更自然被两个 variant 新装配采用、原生布局修改不再要求公共服务猜路径为准，不增加插件注册或通用 hook 框架。
+
 现有设施已经能保存输入、请求与外部身份、原始错误、工作区和部分原生过程；runner/observer 不依赖聊天存活，Hosted 评分事故也能事后取证。这些是可复用的能力，不等于必须保留提供它们的全部 compiler、receipt、authority 或 reservation 结构。
 
 新需求改变了职责：实验入口专用于 ARC；Console 改为只读 OTLP 查询，Braid 拥有自身视图；运行 owner 执行 Python 条件策略与自动回收；本地共享观测、Hosted 自包含。现有实现中与这些职责相反的机制已有源码证据，可据此提出删除或替换，不需要先制造更多事故。但现有材料不能给出新架构提速比例，也不能证明“全栈必须重写”。

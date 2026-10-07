@@ -16,6 +16,8 @@ target 配置固定提供 WSL、sfp7、Hosted 的宿主、run root、Docker/平�
 
 ### 2. 统一 variant 装配与原生数据入口
 
+2026-10-07 已获用户授权应用新的职责分层和安装交付：两DX builder 只准备 variant 材料，公共执行装配加入基础设施并输出最终目录/ZIP；统一入口在启动 Harness 前运行同一固定依赖安装脚本。本地不再挂宿主完整 runtime 作为正常路径，Hosted 不预打公共 Node/npm/Python 依赖；团队原生程序字节与安装输入随程序保存。execution_owner 持有装配、安装器、两DX入口 wrapper 和本地挂载调整；主处理原生模型映射及权限适配，cold_local_profile 接通 variant 原生采集脚本。当前新实现不原地修改在途 c 或历史材料。
+
 2026-10-07 用户已明确授权精简 runtime 及优化构建、部署。execution_owner 持续负责 runtime 构建、依赖材料与 DX builders：移出不属于 Harness 启动依赖的预装开发环境，保留实际必需依赖的消费接线；将现有 derive-linux 收敛为冻结基座及 Braid 字节的派生，避免不相关依赖重装；执行宿主独立复制已部署基座后只传变化内容，保存原始基座与新执行身份。完整导出先形成来源记录，容器/镜像清理失败另存具体错误，不阻断已导出的交付。evaluation_implementation 负责 self-test 认证、映射及评测回收，与 runtime owner 按 local_run 函数边界协调。
 
 修改 `scripts/execution_bootstrap.py`、`scripts/experiment_entry.py`、`scripts/harness_layout.py`、`scripts/package_agent.py` 和 `submission` 的组装接线，统一传入 program、inputs、data/workspace 与 native_state_path。网关的创建、关闭、route 和采样由公共入口负责，variant 只消费路径和端点。

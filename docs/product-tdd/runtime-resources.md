@@ -10,7 +10,7 @@ Braid 的 claim 与输入发送只检查真实原生 busy 状态和生命周期�
 
 公共入口与资源监督器之间的停止契约是显式的：入口在启动 variant child/process-group 后，把实际的 `subprocess.Popen` 对象登记给监督器。监督器以该对象的 PID/PGID 执行一次 TERM，最多等待 3 秒后 KILL；入口对象缺失、已退出或信号失败都写入 `resource-exhausted.json`，不向自身发送 SIGTERM，也不把服务线程记错当作入口已结束。入口负责接收该失败并返回明确的 `resource_exhausted`；gateway/OTLP 是运行所需服务，不是压力处置候选。
 
-孤儿回收与触顶补救是不同责任。Local创建使用Docker `--init`，公共程序入口还应在安装及启动服务前进入标准Tini subreaper，使Hosted无需依赖平台Docker参数也能回收其后代孤儿。该公共入口接线正在完成，不能用Local源码中的 `--init` 宣称Hosted已修复。Python仍只wait自己持有的Popen，不增加 `waitpid(-1)` 回收线程或忽略SIGCHLD。仍存活的父进程须等待自己的已退出子进程，不能依赖init替代；浏览器工具管理会话复用与close，后台工具管理自有进程结束，variant决定活动会话及测试并行，不由Lab增加全局并发gate。Tini的实现与subreaper语义见[官方说明](https://github.com/krallin/tini#subreaping)。
+孤儿回收与触顶补救是不同责任。Local创建使用Docker `--init`，公共程序入口在安装及启动服务前进入固定Tini subreaper，使Hosted无需依赖平台Docker参数也能回收其后代孤儿。两环境消费同一入口；Linux实际浏览器open/snapshot/close已取得回收证据，Hosted及长时间重复使用仍以独立验收原件为准。Python仍只wait自己持有的Popen，不增加 `waitpid(-1)` 回收线程或忽略SIGCHLD。仍存活的父进程须等待自己的已退出子进程，不能依赖init替代；浏览器工具管理会话复用与close，后台工具管理自有进程结束，variant决定活动会话及测试并行，不由Lab增加全局并发gate。Tini的实现与subreaper语义见[官方说明](https://github.com/krallin/tini#subreaping)。
 
 既有 collector 继续保存 cgroup、内存、PSI 和进程证据，`resource-latest.json` 只是观测快照。采集缺失不阻止新执行。既有 native-state 与 evidence-capture 回执继续用于判断运行和快照行为；没有增加采集循环。
 

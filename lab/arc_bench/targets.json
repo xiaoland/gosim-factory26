@@ -12,24 +12,19 @@
       "import_host": "sfp7-ws.localhost",
       "import_root": "/home/yyh/factory26-exp-console-20261006/service-root/imports"
     },
-    "model_recipe": "self-funded",
     "environment_file": "/Volumes/WorkSSD/Development/factory26/.secrets/models.env",
     "environment": {}
   },
   "variants": {
     "I14-dx-test": {
-      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-arc-core-direct-20261007p",
-      "remote_runtime": "/home/yyh/factory26-lab-runtime/arc-core-direct-20261007p-deployed",
-      "remote_runtime_base": "/home/yyh/factory26-lab-runtime/arc-core-direct-20261007p-deployed",
-      "model_aliases": ["glm-5.3", "glm-5.3-flash", "kimi-k3", "deepseek-v4-flash-0731"],
-      "model_alias_map": {"deepseek-v4-flash": "deepseek-v4-flash-0731"},
-      "environment": {"MODEL": "glm-5.3"}
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-resource-deferred-20261007",
+      "remote_runtime": "/home/yyh/factory26-lab-runtime/resource-deferred-20261007-deployed",
+      "remote_runtime_base": "/home/yyh/factory26-lab-runtime/resource-deferred-20261007-deployed"
     },
     "pi-minimal-vv-dx-test": {
-      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-arc-core-direct-20261007p",
-      "remote_runtime": "/home/yyh/factory26-lab-runtime/arc-core-direct-20261007p-deployed",
-      "remote_runtime_base": "/home/yyh/factory26-lab-runtime/arc-core-direct-20261007p-deployed",
-      "model_aliases": ["glm-5.3-flash", "kimi-k2.7-code"]
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-resource-deferred-20261007",
+      "remote_runtime": "/home/yyh/factory26-lab-runtime/resource-deferred-20261007-deployed",
+      "remote_runtime_base": "/home/yyh/factory26-lab-runtime/resource-deferred-20261007-deployed"
     }
   },
   "tasks": {

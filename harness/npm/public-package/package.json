@@ -1,0 +1,14 @@
+{
+  "dependencies": {
+    "@earendil-works/pi-coding-agent": "0.85.1",
+    "@ff-labs/pi-fff": "0.11.0",
+    "@upstash/context7-pi": "0.1.2",
+    "agent-browser": "0.38.1",
+    "mcporter": "0.14.0",
+    "pi-background-bash": "1.0.5",
+    "pi-subagents": "0.56.0",
+    "playwright": "1.61.1",
+    "playwright-core": "1.61.1",
+    "portless": "0.15.6"
+  }
+}

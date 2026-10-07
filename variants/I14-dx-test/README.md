@@ -1,6 +1,6 @@
 # I14-dx-test Braid 基线导航
 
-这是 I14 共同基线的独立 DX 验收派生。Cleaner、Reviewer、E2E 是各自独立的实现目录，不是这个目录的运行开关。需要改变本实现的生成流程、角色接线或交付记录时，先看同一目录的 `run.py`；需要改变打包材料、技能或私有凭据输入时看 `build.py`；`main.py` 消费公共设施的 ready context。本实现通过 `--prepare-only` 只写原生材料和 Braid 请求，不调用模型。
+这是 I14 共同基线的独立 DX 验收派生。Cleaner、Reviewer、E2E 是各自独立的实现目录，不是这个目录的运行开关。需要改变本实现的生成流程、角色接线或交付记录时，先看同一目录的 `run.py`；技能与原生支持材料由 `build.py` 准备。本实现通过 `--prepare-only` 只写原生材料和 Braid 请求，不调用模型。
 
 ## 按问题定位
 
@@ -9,10 +9,10 @@
 | 改本实现的生成流程、workspace、交付或归档 | [`run.py`](run.py) 的 `generate()`、`native_files()`、`copy_application()`/`deliver()` 调用 | 结果和错误写入本次 `--output-dir`；不要把 [`build.py`](build.py) 当运行控制器 |
 | 改本实现的根成员/内部角色材料 | [`agents/`](agents/) 下的 `profile.json`、`instructions.md` 和 [`run.py`](run.py) 的 `native_files()` | 角色由原生材料生成；模型绑定由运行时 route 冻结，不能只改 prompt 推断通道变化 |
 | 改本实现的技能和工具载荷 | [`materials.json`](materials.json) 的技能声明、同目录 [`extensions/`](extensions/)、[`tools/mcporter.json`](tools/mcporter.json) | 只影响冻结包材料；扩展须在 `run.py:native_files()` 中显式装配 |
-| 改模型/网关凭据边界 | 变体 `build.py` 的 `provider-env`/`gateway-routes` 参数与 `run.py` 的 route 读取 | 私有环境和公开 route 是不同材料；不要在 variant 里硬编码凭据 |
+| 改供应商模型配方 | `model-recipe.json`；角色模型仍归原生 profile 和 agents | 公共 proxy 消费自费供应商链，原生适配只使用 OPENAI_BASE_URL/API_KEY；比赛不应用供应商配方 |
 | 改应用检查反馈 | `run.py` 的应用检查、delivery 与归档段落；应用结果写入 run evidence | 反馈来自实际运行、交付和归档回执；不把外部评测实现复制进变体 |
 
-`main.py` 要求 ready context，统一委派冻结 support 的 experiment_entry；fresh 调用 run，resume 消费已装配 prepared。源码开发从[公共入口](../../scripts/README.md#i14-源码装配)创建 context，不直接运行 main/run。共同入口的技能集合、Braid 扩展和提交历史发布接线在各变体 `run.py` 中维护；I14 不沿用 I13 README 或 I13 的材料选择推断行为。
+Lab 调用 `build.py --variant-only` 准备程序、角色、技能和原生支持；公共装配加入容器内安装器、公共服务与输入，统一入口再调用 `main.py`。原生状态保存在 `.factory26/data/harness/<native_scope_id>`，同任务 restart 保留会话，下一任务使用新原生状态。observe.py 采集事实，status.py 判断活动。Braid 扩展和提交历史发布时机仍在 `run.py` 中维护；I14 不沿用 I13 README 或材料选择推断行为。
 
 ## 共同扩展边界
 

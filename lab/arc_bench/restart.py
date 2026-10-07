@@ -59,7 +59,8 @@ def restart(source_run: str | Path, destination_run: str | Path | None = None, *
     destination = create_run(
             root, str(source_state["variant"]), target or str(source_state["target"]),
             task or str(source_state["task"]),
-            route=route if route is not None else source_state.get("route"),
+            route=route if route is not None else source_state.get('route_override') or (
+                source_state.get('route') if source_state.get('model_recipe') == 'explicit' else None),
             competition=competition if competition is not None else bool(source_state.get("competition")),
             source={"run_id": source_state.get("run_id", source.name), "kind": "restart"},
             run_id=destination.name if destination else None,

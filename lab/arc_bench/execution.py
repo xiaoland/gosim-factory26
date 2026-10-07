@@ -7,8 +7,6 @@ outside this module; current runs consume only their manifest and data tree.
 from __future__ import annotations
 
 import hashlib
-from collections import deque
-from datetime import datetime
 import json
 import os
 from pathlib import Path
@@ -97,10 +95,22 @@ def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mappi
     layout = paths(run_path)
     updated = dict(state)
     frozen_target = dict(target)
-    recipe = frozen_target.get("model_recipe")
-    route_input = state.get("route") or frozen_target.get("route")
+    if state.get('competition') or state.get('billing_mode') in {'competition', 'official_evaluation'}:
+        # Competition uses only the platform-injected endpoint and key.
+        for field in ('route', 'model_recipe', 'model_routes', 'provider_env_file'):
+            updated.pop(field, None)
+        for field in ('model_config', 'credential_file', 'credential_env'):
+            frozen_target.pop(field, None)
+        frozen_target['model_transport'] = 'platform'
+        return updated, frozen_target, None
+    declaration_path = _repo() / 'variants' / str(state['variant']) / 'model-recipe.json'
+    declaration = json.loads(declaration_path.read_text()) if declaration_path.is_file() else {}
+    recipe = declaration.get('self_funded')
+    route_override = state.get('route_override') or (
+        state.get('route') if state.get('model_recipe') in {None, 'explicit'} else None)
+    route_input = route_override or frozen_target.get('route')
     if recipe:
-        route_input = route_input or _repo() / "harness/model-recipes" / f"{recipe}.json"
+        route_input = route_input or _repo() / recipe
     if not route_input:
         if frozen_target.get("kind") == "hosted" and not frozen_target.get("model_config"):
             raise ValueError("Hosted evaluation needs an explicit frozen model channel")
@@ -108,14 +118,19 @@ def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mappi
     from scripts.hackathon_gateway import prepare_catalog, read_assignments
     route = Path(route_input).expanduser().resolve(strict=True)
     routes = json.loads(route.read_text())
-    aliases = frozen_target.get("model_aliases") or []
+    aliases = declaration.get('models', [])
     missing = set(aliases) - set(routes)
     if missing:
         raise ValueError(f"model recipe lacks required aliases: {sorted(missing)}")
     routes = {alias: routes[alias] for alias in aliases} if aliases else routes
     destination = layout["inputs"] / "gateway-routes.json"
-    write_json(destination, routes)
     catalog, selected = prepare_catalog(_repo() / "harness/model-gateway.json", routes, aliases=aliases)
+    for native, canonical in declaration.get('model_alias_map', {}).items():
+        routes[native] = routes[canonical]
+        catalog['model_list'].extend({**row, 'model_name': native}
+            for row in tuple(catalog['model_list']) if row['model_name'] == canonical)
+        selected.extend({**row, 'alias': native} for row in tuple(selected) if row['alias'] == canonical)
+    write_json(destination, routes)
     write_json(layout["inputs"] / "model-gateway.json", catalog)
     references = {entry["litellm_params"][field].removeprefix("os.environ/")
                   for entry in catalog["model_list"] for field in ("api_base", "api_key")}
@@ -132,11 +147,13 @@ def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mappi
     write_json(provider_env, {name: environment[name] for name in references})
     provider_env.chmod(0o600)
     updated["route"] = str(destination)
+    updated['route_override'] = str(route_override) if route_override else None
     updated["model_recipe"] = recipe or "explicit"
     updated["model_routes"] = selected
     updated["provider_env_file"] = str(provider_env)
+    frozen_target['model_transport'] = 'proxy'
     if frozen_target.get("kind") == "hosted":
-        primary = frozen_target.get("environment", {}).get("MODEL", "glm-5.3-flash")
+        primary = aliases[0] if aliases else next(iter(routes))
         try:
             entry = next(row for row in catalog["model_list"]
                          if row["model_name"] == primary and row["litellm_params"]["order"] == 0)
@@ -216,8 +233,9 @@ def _assemble(run_path: Path) -> dict[str, Any]:
         "run_id": run_path.name, "native_scope_id": updated["native_scope_id"],
         "native_resume": updated["native_resume"], "requirements_version": requirements_version,
         "target_kind": updated["target_kind"],
+        'competition': bool(updated.get('competition') or updated.get('billing_mode') in
+                            {'competition', 'official_evaluation'}),
         'model_recipe': updated.get('model_recipe'),
-        'model_alias_map': target.get('model_alias_map', {}),
         'provider_env_names': sorted({entry['litellm_params'][field].removeprefix('os.environ/')
             for entry in json.loads((_repo()/'harness/model-gateway.json').read_text())['model_list']
             for field in ('api_base', 'api_key')}) if route_input else [],
@@ -237,28 +255,32 @@ def _assemble(run_path: Path) -> dict[str, Any]:
     if not builder.is_file():
         raise FileNotFoundError(f"variant package builder is missing: {builder}")
     package_path = layout["inputs"] / "agent-package.zip"
+    variant_material = layout["inputs"] / "variant-material"
     command = [sys.executable, str(builder), "--runtime", str(runtime),
                "--skills", str(skills),
-               "--run-config", str(layout["inputs"] / "lab-run.json")]
-    if target.get('otlp_deps'):
-        command += ['--otlp-deps', str(target['otlp_deps'])]
-    if target['kind'] == 'local':
-        command += ['--directory', str(layout['program'])]
-    else:
-        command += ['--output', str(package_path)]
-    if updated.get("route"):
-        command += ["--route", updated["route"]]
-        command += ['--catalog', str(layout['inputs']/'model-gateway.json')]
-        if target['kind'] == 'hosted':
-            command += ['--provider-env', updated['provider_env_file']]
-    if target["kind"] == "hosted" and state.get("source_run"):
-        command += ["--seed-data", str(layout["workspace"].parent)]
+               "--variant-only", "--directory", str(variant_material)]
     write_json(layout["records"] / "package-build.json", {"argv": command, "started_at": time.time()})
     with (layout["records"] / "package-build.stdout.log").open("ab") as output, \
             (layout["records"] / "package-build.stderr.log").open("ab") as errors:
         result = subprocess.run(command, cwd=_repo(), stdout=output, stderr=errors)
     if result.returncode:
         raise RuntimeError(f"variant package build exited {result.returncode}; see {layout['records']}/package-build.*.log")
+    if contract['competition'] and target['kind'] == 'hosted':
+        target['submission_models'] = json.loads((variant_material / 'submission-models.json').read_text())
+        updated['target_config'] = target
+    from submission.public_package import assemble as assemble_public
+    assemble_public(
+        variant_material, runtime, _repo(),
+        output=package_path if target['kind'] == 'hosted' else None,
+        directory=layout['program'] if target['kind'] == 'local' else None,
+        route=Path(updated['route']) if updated.get('route') else None,
+        run_config=layout['inputs'] / 'lab-run.json',
+        seed_data=layout['workspace'].parent if target['kind'] == 'hosted' and state.get('source_run') else None,
+        otlp_deps=Path(target['otlp_deps']) if target.get('otlp_deps') else None,
+        catalog=layout['inputs'] / 'model-gateway.json' if updated.get('route') else None,
+        provider_env=Path(updated['provider_env_file']) if target['kind'] == 'hosted' and updated.get('provider_env_file') else None,
+        model_proxy=Path(target['model_proxy']) if updated.get('route') and target.get('model_proxy') else None,
+        identity={'variant': variant, 'base_variant': state.get('base_variant', variant)})
     write_json(layout['records']/'program-assembly.json', {
         'started_at': updated['assembled_at'], 'finished_at': time.time(),
         'transport': 'directory' if target['kind'] == 'local' else 'zip',
@@ -416,151 +438,37 @@ def _start(run_path: Path) -> dict[str, Any]:
 
 
 
+def _legacy_native_facts(run: Path):
+    """Adapter for frozen programs that predate ``program/observe.py``."""
+    from scripts.legacy_native_observation import observe
+    return observe(run)
+
+
 def _native_facts(run: Path):
-    run = run.resolve()
-    harness = paths(run)["harness"]
-    messages, turns, errors = deque(maxlen=500), deque(maxlen=500), deque(maxlen=20)
-    sessions = {}
-    candidates = set(harness.rglob("session.jsonl")) | set(harness.rglob("pi-timing.jsonl"))
-    for path in sorted(candidates):
-        session_id = None
-        source = str(path.relative_to(run))
-        try:
-            with path.open() as stream:
-                for number, line in enumerate(stream, 1):
-                    try:
-                        value = json.loads(line)
-                        if not isinstance(value, dict):
-                            raise ValueError("native record is not an object")
-                        kind = value.get("kind") or value.get("type")
-                        if kind == "session":
-                            session_id = value.get("id")
-                            continue
-                        identity = value.get("native_session_id") or value.get("session_id") or session_id
-                        if not identity:
-                            continue
-                        stamp = value.get("at_ms") if value.get("at_ms") is not None else value.get("timestamp")
-                        if isinstance(stamp, str):
-                            stamp = datetime.fromisoformat(stamp.replace("Z", "+00:00")).timestamp()
-                        elif isinstance(stamp, (int, float)):
-                            stamp = stamp / 1000 if stamp > 10_000_000_000 else stamp
-                        else:
-                            continue
-                        row = {"at": stamp, "source": source, "session_id": identity,
-                               "turn_id": value.get("turn_id"), "request_id": value.get("request_id"),
-                               "response_id": value.get("response_id"), "event": kind}
-                        message = value.get('message') or {}
-                        if isinstance(message, dict) and message.get('stopReason'):
-                            row['stop_reason'] = message['stopReason']
-                            if message.get('errorMessage'):
-                                row['error'] = str(message['errorMessage'])[:16384]
-                        if kind in {"message", "message_end"}:
-                            messages.append(row)
-                        if kind in {"response_headers", "message_end", "provider_turn", "turn_complete"}:
-                            turns.append(row)
-                        prior = sessions.get(identity)
-                        if prior is None or stamp >= prior["last_activity_at"]:
-                            state = {"request_start": "active", "first_update": "active",
-                                     "activity_sample": "active", "tool_start": "waiting_tool",
-                                     "tool_end": "active", "message_end": "observed"}.get(kind, "observed")
-                            sessions[identity] = {"session_id": identity, "state": state,
-                                "last_activity_at": stamp, "observed_at": time.time(),
-                                "source": source, "reader_status": "ok",
-                                "request_id": value.get("request_id"), "turn_id": value.get("turn_id")}
-                    except (ValueError, TypeError, OverflowError) as exc:
-                        # A writer may still be appending its final line. Keep
-                        # prior evidence and its concrete parse error, not a
-                        # fabricated session/turn identity or file-mtime pulse.
-                        errors.append({"source": source, "line": number,
-                                       "error": f"{type(exc).__name__}: {exc}"})
-        except (OSError, UnicodeError) as exc:
-            errors.append({"source": source, "error": f"{type(exc).__name__}: {exc}"})
-    facts = {"sessions": list(sessions.values()), "session_messages": list(messages),
-             "provider_turns": list(turns), "reader_errors": list(errors)}
-    facts["braid"] = _braid_facts(run, harness)
-    return facts
+    """Consume the variant-owned native observer boundary.
 
-
-def _braid_facts(run: Path, harness: Path) -> dict[str, Any]:
-    """Read the Braid lifecycle projection already produced in this run.
-
-    This is observation only.  The supervisor still owns control; missing or
-    stale Braid material remains unknown instead of being inferred from text
-    timestamps.
+    Current programs own Pi/Braid format knowledge in ``observe.py``.  The
+    legacy reader remains only for frozen programs that predate that entry;
+    public execution does not inspect their native files when the variant
+    observer is present.
     """
-    observed_at = time.time()
-    scope_id = manifest(run).get("native_scope_id")
-    result: dict[str, Any] = {"observed_at": observed_at, "sources": [],
-                              "states": [], "gaps": []}
-    if not isinstance(scope_id, str) or not scope_id:
-        result["gaps"].append({"source": "manifest.native_scope_id",
-                                "reason": "native scope identity unavailable"})
-        return result
-    scope_root = harness / scope_id
-    roots = sorted({path.parent for path in scope_root.rglob("braid-state/status.json")}) if scope_root.is_dir() else []
-    if not roots:
-        result["gaps"].append({"source": str(scope_root.relative_to(run)),
-                                "reason": "current native scope has no braid-state/status.json"})
-        return result
-
-    def resolve_native(path: Path) -> Path | None:
-        if path.is_file():
-            return path
-        parts = path.parts
-        if scope_id in parts:
-            suffix = Path(*parts[parts.index(scope_id) + 1:])
-        elif ".factory26" in parts:
-            suffix = Path(*parts[parts.index(".factory26") + 1:])
-            prefix = ("data", "harness", scope_id)
-            if suffix.parts[:len(prefix)] == prefix:
-                suffix = Path(*suffix.parts[len(prefix):])
-        else:
-            return None
-        if not suffix.parts:
-            return None
-        direct = scope_root / suffix
-        if direct.is_file():
-            return direct
-        for candidate in scope_root.rglob(suffix.name):
-            if candidate.is_file() and candidate.parts[-len(suffix.parts):] == suffix.parts:
-                return candidate
-        return None
-
-    from .provider_liveness import collect_provider_evidence
-    for state_root in roots:
-        status_path = state_root / "status.json"
-        source = str(status_path.relative_to(run))
-        row: dict[str, Any] = {"source": source, "observed_at": observed_at}
+    observer = paths(run)["program"] / "observe.py"
+    if observer.is_file():
         try:
-            status = json.loads(status_path.read_text(encoding="utf-8"))
-            if not isinstance(status, dict):
-                raise ValueError("Braid status must be an object")
-            row["status"] = {key: status.get(key) for key in (
-                "active_turns", "pending_batches", "pending_events",
-                "pending_continuations", "pending_resets",
-                "materializing_groups", "blocked_groups", "provider_health")}
-            row["physical_sessions"] = status.get("physical_sessions", [])
-        except (OSError, UnicodeError, ValueError) as exc:
-            row["error"] = f"{type(exc).__name__}: {exc}"
-            result["gaps"].append({"source": source, "reason": row["error"]})
-        try:
-            evidence = collect_provider_evidence(state_root, observed_at,
-                                                 native_resolver=resolve_native)
-            row["provider_evidence"] = evidence
-            if not evidence.get("sessions"):
-                result["gaps"].append({"source": source,
-                                        "reason": "current scope has no provider session evidence"})
-            if evidence.get("errors"):
-                result["gaps"].extend({"source": source, "reason": error}
-                                     for error in evidence["errors"])
-        except (OSError, UnicodeError, ValueError) as exc:
-            row["provider_evidence_error"] = f"{type(exc).__name__}: {exc}"
-            result["gaps"].append({"source": source, "reason": row["provider_evidence_error"]})
-        result["sources"].append(source)
-        result["states"].append(row)
-    result["available"] = bool(result["states"]) and not all(
-        "error" in row and "provider_evidence" not in row for row in result["states"])
-    return result
+            result = subprocess.run([sys.executable, str(observer), "--run", str(run)],
+                                    input="", text=True, capture_output=True,
+                                    check=True, cwd=run, timeout=30)
+            value = json.loads(result.stdout)
+            if not isinstance(value, dict):
+                raise ValueError("variant observe.py output must be an object")
+            return value
+        except (OSError, subprocess.SubprocessError, ValueError, json.JSONDecodeError) as exc:
+            return {"sessions": [], "session_messages": [], "provider_turns": [],
+                    "reader_errors": [{"source": str(observer.relative_to(run)),
+                                       "error": f"{type(exc).__name__}: {exc}",
+                                       "stderr": getattr(exc, "stderr", None)}],
+                    "braid": {"states": [], "gaps": [], "available": False}}
+    return _legacy_native_facts(run)
 
 
 def _activity(run: Path, facts):
