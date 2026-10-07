@@ -26,6 +26,8 @@ python3 -m lab serve --config SERVICE_JSON
 
 公共资源管理器的最新 cgroup 采样保存在当前 run 的 `data/harness/<native_scope_id>/producers/<run_id>/resource-observation.json`；观察程序复用这份数据写入 `status.resource` 与 `status.resources.supervisor`，供 Python 策略和 Console 消费。采样含内存/PID用量、上限、触顶事件及读取错误，保留来源与时点；它是最新采样，不是历史峰值，也不把容器退出后的 Docker 零值当作运行消耗。
 
+Hosted 运行中的观察仍按现有 observer 周期执行状态和日志查询；workspace 快照在最近一次请求后 300 秒内直接复用，避免重复下载。超过该间隔才读取 `workspace/template-bundle`，只解析当前 scope/run 的 native、gateway 和 resource 成员。现代资源返回为 `resources.supervisor`，保留 producer 路径和原始 `observed_at`/`observed_at_ns`；旧布局保留在 `resources.platform`。状态与 spend 的 `as_of` 仍取各自的状态响应时间，不被 workspace 快照时间覆盖。
+
 独立 self-test 仍通过同一个 `evaluate` API，以 `--kind self-test` 区分，不增加 backend 命令。它从冻结运行的 `github-stage-N` 任务自动映射到对应的 `github-stage-N-req-test`；显式 `--task github-stage-N-req-test` 只用于覆盖任务。self-test 是私有、非排名结果，提交 ZIP、状态和回执保存在评测 run 的 `records/self-test`；如果站点没有导出 workspace，保存记录会明确列出缺口。认证由实际执行宿主的 Helium 私有会话材料提供，自测站 cookie 不复用 ARC 官网 cookie。
 
 `status` 无参数只列未归档且 lifecycle 不是 completed 的运行；failed、stopped 和 unknown 不会被默默隐藏。`--all` 查看全部，指定 RUN 始终可以查回。执行 lifecycle 来自实际执行器，activity/brief 来自该次 program 固定的 variant 状态脚本，查询只读保存事实，不进入远端重新采集。`archive --undo` 撤销隐藏；归档标记不停止、搬移或删除数据。正常完成的零分评测仍是 completed。
