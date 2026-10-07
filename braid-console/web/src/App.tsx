@@ -29,7 +29,7 @@ export default function App() {
   function home() { update({ run: '', selected: null }); }
   function refresh() {
     void runs.refetch();
-    if (currentRun) for (const key of ['items', 'item', 'review', 'sessions', 'runtime']) void client.invalidateQueries({ queryKey: [key, run] });
+    void client.invalidateQueries();
   }
   return <div className="console-app">
     <header className="app-header">

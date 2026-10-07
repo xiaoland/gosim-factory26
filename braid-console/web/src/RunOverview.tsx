@@ -12,7 +12,7 @@ function Table({ rows, fields }: { rows: unknown[]; fields: string[] }) {
 }
 
 function RecordPanel({ title, path, fields }: { title: string; path: string; fields: string[] }) {
-  const query = useQuery({ queryKey: [path], queryFn: ({ signal }) => api<{ items?: unknown[]; latest?: unknown }>(path, signal), retry: false });
+  const query = useQuery({ queryKey: [path], queryFn: ({ signal }) => api<{ items?: unknown[]; latest?: unknown }>(path, signal), refetchInterval: 5000, retry: false });
   const rows = query.data?.items || (query.data?.latest ? [query.data.latest] : []);
   return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">{title}</h2>{query.isPending ? <p>读取中…</p> : query.error ? <p className="text-red-600">{query.error.message}</p> : <Table rows={rows} fields={fields} />}</section>;
 }
@@ -22,7 +22,7 @@ function RawDetails({ label, value }: { label: string; value: unknown }) {
 }
 
 function ResourcePanel({ runId }: { runId: string }) {
-  const query = useQuery({ queryKey: ['resources', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/resources`, signal), retry: false });
+  const query = useQuery({ queryKey: ['resources', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/resources`, signal), refetchInterval: 5000, retry: false });
   const rows = (query.data?.items || []) as Row[];
   const resource = rows.find(row => row.kind === 'resources');
   const data = resource?.data as Row | undefined;
@@ -49,13 +49,13 @@ function ResourcePanel({ runId }: { runId: string }) {
 }
 
 function NativePanel({ runId }: { runId: string }) {
-  const query = useQuery({ queryKey: ['native', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/resources`, signal), retry: false });
+  const query = useQuery({ queryKey: ['native', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/resources`, signal), refetchInterval: 5000, retry: false });
   const native = ((query.data?.items || []) as Row[]).find(row => row.kind === 'native');
   const data = native?.data as Row | undefined;
   const sessions = Array.isArray(data?.sessions) ? data.sessions as Row[] : [];
   const messages = Array.isArray(data?.session_messages) ? data.session_messages as Row[] : [];
   const errors = Array.isArray(data?.reader_errors) ? data.reader_errors : [];
-  const session = sessions[sessions.length - 1];
+  const session = [...sessions].sort((a, b) => Number(b.last_activity_at ?? 0) - Number(a.last_activity_at ?? 0))[0];
   const latest = messages[messages.length - 1];
   const error = errors[errors.length - 1] ?? (latest?.error ? latest.error : null);
   return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">Native session</h2>{query.isPending ? <p>读取中…</p> : !native ? <p className="text-sm opacity-60">暂无已保存 native 事实</p> : <>
@@ -66,7 +66,7 @@ function NativePanel({ runId }: { runId: string }) {
 }
 
 function CostPanel({ runId }: { runId: string }) {
-  const query = useQuery({ queryKey: ['cost', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/cost`, signal), retry: false });
+  const query = useQuery({ queryKey: ['cost', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/cost`, signal), refetchInterval: 5000, retry: false });
   const row = ((query.data?.items || []) as Row[])[0];
   const usage = (row?.data as Row | undefined)?.usage as Row | undefined;
   return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">费用 / 原生用量</h2>{query.isPending ? <p>读取中…</p> : <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">状态</dt><dd>{text(row?.status ?? 'unknown')}</dd></div><div><dt className="opacity-60">金额</dt><dd>{text(row?.amount ?? row?.value ?? '未知')}</dd></div><div><dt className="opacity-60">来源 / scope</dt><dd>{text(row?.source ?? 'records/status.json')} · {text(row?.scope)}</dd></div><div><dt className="opacity-60">类型 / as_of</dt><dd>{text(row?.kind)} · {timestamp(row?.as_of)}</dd></div><div className="md:col-span-2"><dt className="opacity-60">原因 / 边界</dt><dd>{text(row?.reason ?? row?.note ?? (row ? '未保存 spend 原因' : '未保存 spend 事实；不能从运行生命周期推导费用'))}</dd></div></dl>}
@@ -75,7 +75,7 @@ function CostPanel({ runId }: { runId: string }) {
 }
 
 function LogPanel({ runId }: { runId: string }) {
-  const query = useQuery({ queryKey: ['logs', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/logs`, signal), retry: false });
+  const query = useQuery({ queryKey: ['logs', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/logs`, signal), refetchInterval: 5000, retry: false });
   const rows = (query.data?.items || []) as Row[];
   return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">日志</h2>{query.isPending ? <p>读取中…</p> : !rows.length ? <p className="text-sm opacity-60">暂无已保存日志摘要</p> : <div className="space-y-2">{rows.map((row, index) => <details key={index}><summary className="cursor-pointer text-sm">{text(row.source)} · {row.bytes == null ? '字节数未保存' : `${row.bytes} bytes`}</summary><pre className="mt-2 max-h-48 overflow-auto whitespace-pre-wrap text-xs">{text(row.tail ?? row.error ?? '无尾部内容')}</pre></details>)}</div>}</section>;
 }
@@ -85,7 +85,7 @@ function BraidMount({ runId }: { runId: string }) {
 }
 
 export default function RunOverview({ runId, currentRun }: Props) {
-  const detail = useQuery({ queryKey: ['run-detail', runId], queryFn: ({ signal }) => api<Row>(`/api/runs/${encodeURIComponent(runId)}`, signal), retry: false });
+  const detail = useQuery({ queryKey: ['run-detail', runId], queryFn: ({ signal }) => api<Row>(`/api/runs/${encodeURIComponent(runId)}`, signal), refetchInterval: 5000, retry: false });
   const status = detail.data?.status as Row | undefined;
   return <div className="space-y-4"><section className="rounded-lg border p-5"><h1 className="text-xl font-semibold">{currentRun.label}</h1><p className="text-sm opacity-70">{runId}</p><dl className="mt-3 grid gap-2 text-sm md:grid-cols-4"><div><dt className="opacity-60">lifecycle</dt><dd>{text(status?.lifecycle ?? currentRun.lifecycle)}</dd></div><div><dt className="opacity-60">activity</dt><dd>{text(status?.activity ?? currentRun.activity)}</dd></div><div><dt className="opacity-60">as_of</dt><dd>{timestamp(status?.as_of ?? currentRun.as_of)}</dd></div><div><dt className="opacity-60">variant</dt><dd>{text(detail.data?.variant ?? currentRun.variant ?? currentRun.facts?.variant)}</dd></div>
       <div><dt className="opacity-60">目标 / 任务</dt><dd>{text(detail.data?.target)} / {text(detail.data?.task)}</dd></div><div><dt className="opacity-60">模型配方</dt><dd>{text(detail.data?.model_recipe)}</dd></div><div><dt className="opacity-60">来源 run</dt><dd>{text(detail.data?.source_run)}</dd></div><div><dt className="opacity-60">参赛</dt><dd>{text(detail.data?.competition)}</dd></div>

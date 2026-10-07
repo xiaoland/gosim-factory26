@@ -4,7 +4,9 @@
 
 2026-10-07 用户明确“你可以开始，这也是基础设施改进的一部分”，批准将[应用开发与评测环境统一](../harness-app-environment/packet.md)纳入本任务。公共默认应用Node/npm与工具解释器分离，范围为两个DX及实际评测入口；不扩展历史variant/I15，不热改在途。execution_owner持有公共安装与Linux应用操作，主持有DX入口/指令与技术说明。该packet拥有具体环境证据和完成标准，本入口不复制；费用仍自费、绝不参赛。
 
-最新验收：Pi 正常同任务接续 `d3cc30d25f8e4da5be4b467f709f2250` 已消费响应头/总期限600秒的新装配，在sfp7取得真实模型回合，目前仍active；尚未自然完成或取得应用评分。来源为1c1e1b，native scope仍为f1335fc，保持同variant/data/原生状态。I14普通接续的新run前缀1e1ff0再次明确blocked、无provider turn，现场已保存；execution_owner继续定位并修复真实启动根因，不再原样重试。独立会话继续等待Pi自然终态、使用Console并完成应用与自动评测。用户再次明确可自由提交，仍仅提交本任务改动、不push、不参赛。
+最新验收：Pi正常同任务接续 `d3cc30d25f8e4da5be4b467f709f2250` 已于16:55:32自然失败，退出1。已消费响应头/总期限600秒，在sfp7取得真实模型回合，最后三次9,291,245字节请求仍在约30–32秒报 `SendRequest: connection error: Connection timed out (os error 110)`，没有响应头；不能再归为WSL独有或旧90秒期限。Mac结果回收已明确saved=true、errors=[]，partial原生用量1,444,211 tokens，实际spend未采集，不能当零。来源为1c1e1b，native scope仍为f1335fc，同variant/data/原生状态。I14普通接续 `746835582f574a7fa7b25856b8e24b5b` 也failed且完整保存，仍报告必要group物化/恢复blocked；execution_owner继续核实发布版本和恢复条件，独立会话不再重复同条件派发。完整生成和应用评分均未完成。
+
+用户认可推进重心纠偏并明确“请继续推进吧”。应用环境已经取得真实Linux资格化结果，详见所属packet；这不解除上述生成阻塞。Console实际页面能显示Pi终态、资源、原生错误、日志与partial用量，费用未知明确保留；主发现通用详情未轮询、刷新按钮只刷新旧Braid查询、Pi首页入口被禁用以及Native面板选到较旧subagent，已修复并部署。真实首页已可打开Pi详情。这属于主的实际操作反馈，不冒充独立验收；早先独立会话报告API事实缺失的根因尚未由这项前端修复证明。继续完成生成、控制/接续/stages、自动保存/评测和分析链，不扩大模型矩阵或性能项目，全部自费、绝不参赛。
 
 公共源传输已定位到观察程序每次spawn无条件复制完整variants/harness/arc-bench（约246MB，其中arc-bench约236.7MB）。修正为普通观察/评测只复制lab/scripts，原生stages再携带构建来源；仅开发源码排除.git、node_modules和测试报告，program/inputs/data默认完整复制不变。这是待正常启动验证的源码改动，约2MB静态来源体积不能直接当成实际启动提速证据；不为profiling重启活跃Pi。
 
