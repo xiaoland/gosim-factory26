@@ -8,6 +8,8 @@ I14第二次修复根因是旧物理Pi尝试为unknown/get_state180s超时，而
 
 该正常接续实际为 `7561359db2a943979d22153f1633da04`，17:30:11仍failed/blocked，无provider turn、无模型请求，Mac完整saved=true/errors=[]。第二次条件修复不足以解除blocked，不能将正确失败投影视为恢复成功；execution_owner继续核对实际发布字节及agent/physical关联，不原样重试、不自行派收费run。Pi a3截至17:31:14仍running/active、本run partial native tokens491,138，已连续完成多个真实模型请求；尚无完整应用或评分。独立会话继续正常wait与自动评测闭环。
 
+756的实际argv包含offline-resume、receipt存在，消费Braid c4662bb9，约0.33秒blocked；这些事实排除未调用或未消费版本。owner称“SQL条件满足却无replay”的判断仍须区分源冻结状态与756失败后状态。advisor确定恢复入口位置合理：Lab只迁data，I14调用唯一offline入口，Braid在provider/scheduler前prepare；不把SQL搬Lab、不继续放宽unknown。下一步由原owner对齐argv→request.state的DB/native identity→来源746冻结状态→prepare receipt→本次blocked写入；若缺调用前原件，在现有回执补处理前状态与结果，不建框架。只对已证明停get_state、尚未交付输入恢复原input/dedupe；no native identity本身不证明输入未交付。修复hunk与两DX target已由owner提交f22bf6c0，其他格式化/dirty保留，未push。
+
 2026-10-07 proxy专项纠偏：completion_criteria_decision advisor定位Cargo.lock锁定reqwest0.13.5，其Linux异步Client默认tcp_user_timeout为30秒；主已读官方版本源码确认。公共Client现在显式tcp_user_timeout(None)，请求总期限仍有效，不改配方、重试或fallback。此前“源码无30秒配置”不能推导实际socket无30秒期限。相近9.28MB请求33已HTTP200完成，35按既有链在千帆500后由ARK成功，不能用固定体积上限解释。Linux复用编译缓存22.33秒完成，新ELF SHA256 `6f1e07fc10a50149e2be513450177b88d53f5c9d4323d0dcaaefea48f0c7979d`，交付为 `runs/provider-model-config-20261007/delivery/model-proxy-linux-x86_64-tcp-deadline-20261007/factory26-model-proxy-linux-x86_64`，公共默认装配已切换。独立会话获准从d3cc现场正常接续一次；尚未证明实际上传恢复。若仍30秒失败先核对交付字节/socket，若到总期限仍无ACK则保留这一次证据再定位出口/对端，不继续延长期限或同条件重跑。proxy源码目录已有其它未提交来源，未整目录纳入本任务commit。
 
 独立验收已实际从Console首页进入Pi详情，确认failed/inactive、来源/配方/competition=false、最新502、资源终态与非峰值采样、partial用量及费用未知均可见。其两项新增负担已修：未提供experiment标签时不展示“实验名未知·未保存”，归档统计改为“已归档”，生命周期不再称作保存回执。Console TypeScript/Vite构建及Linux部署完成，后续新run负责动态刷新反馈。
