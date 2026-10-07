@@ -2,6 +2,8 @@
 
 最新目标核对归[assessment达成表](assessment.md#2026-10-07-原定目标达成核对)：整体未达成，已完成的架构与局部运行能力不能代替完整使用链。采用advisor的收敛顺序：收取Node/npm实际应用验证并继续当前Pi/I14；并行修Console已发现的active事实缺失；产物形成后完成原定自动评测、同variant接续/stages及采集策略证据；最后汇总正常操作的时间/token/排错成本。不扩variants/模型矩阵，不制造资源触顶或idle条件，不因分数低追加优化。Hosted关闭与绝不参赛是外部未覆盖边界，self-test评分和内部费用/Console缺口仍须完成。
 
+I14恢复责任已由execution_owner明确交回主Agent，无在途构建或收费操作。主直接读取实际Linux编译输入，发现 `braid-rebuild-unknown-timeout-20261007/src/src/store/mod.rs` 仍只JOIN `wt.lifecycle='active'`，而746/756保存的worktree为blocked；本地已提交的修正接受active/blocked，却未同步进远端编译输入。远端还保留宽泛error.contains("timed out")，与本地精确get_state条件不同。因此撤回“实际SQL条件满足但helper原因未知”的诊断：交付ELF哈希一致只证明交付了那个二进制，不证明它包含当前源码修正。主已同步当前Braid src，并复用原Cargo volume执行release编译，日志为远端 `source-aligned-build.log`；不增加恢复条件、诊断框架或设施测试。编译与正常接续的实际结果仍待取得。
+
 费用专项采用advisor判断：spend为run新增货币支出，预付购买成本不均摊、原生token不冒充套餐credits或账单。主负责公共proxy返回usage采集、当前producer按request/attempt/deployment投影以及CLI/Console/Python事实；不建账户系统、不强制切按量供应商取得样本。新proxy支持SSE跨chunk/多行data和非流式JSON的usage观察，1MiB软捕获边界只报告缺项、不改变转发或阻止运行；Linux release编译完成，新ELF SHA `fd08694b8f9ce7de568bdb94dccfbdd9d7ca4626f65924e579a16abb142a9244`，默认装配已切换，旧a3冻结版本不热改。公共reader实际读取已保存d3日志得到50次attempt、三条实际deployment、0条returned_usage（旧代理未采集），无读取错误；不得反推历史provider usage。新增代理capture仍待下一次正常真实请求验证，不新增模拟设施测试或收费矩阵。来源源码仍有其它未提交材料，不整目录提交。
 
 I14第二次修复根因是旧物理Pi尝试为unknown/get_state180s超时，而重试条件仅接failed。execution_owner已修改该条件、cargo check及Linux release完成，Braid SHA `c4662bb9d883505eceb8fe9ef44a7b1619c03c003ead7462608a4c14bc2ad609`，源码hash `1632d5a38e59100133fd5101ccd8bb75981a89463b5f6c11729887e65668b635`，目标使用 `runs/runtime-i14-offline-materialization-retry-20261007b` 及新远端发布目录。独立会话获准从746835正常接续一次，尚待真实部署/模型活动；owner继续局部修复并仅提交所属hunk，不带格式化或其它dirty。
