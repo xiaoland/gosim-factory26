@@ -69,13 +69,15 @@ class ResourceSupervisor:
     def _save(self, row, name='resource-observation.json'):
         self.evidence.mkdir(parents=True, exist_ok=True)
         target = self.evidence / name
+        temporary = target.with_name('.' + target.name + '.tmp')
         # The entry may be terminated immediately after this record.  Flush it
         # before signalling so resource_exhausted.json is useful even when the
         # entry's finally block is never reached.
-        with target.open('w') as stream:
+        with temporary.open('w') as stream:
             stream.write(json.dumps(row, ensure_ascii=False, indent=2) + '\n')
             stream.flush()
             os.fsync(stream.fileno())
+        temporary.replace(target)
 
     def _event_values(self, row):
         values = row['values']

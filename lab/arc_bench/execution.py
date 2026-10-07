@@ -507,6 +507,16 @@ def _status_facts(run: Path, lifecycle):
             except (OSError, ValueError) as exc:
                 facts.setdefault("record_errors", []).append({"source": str(candidate.relative_to(run)),
                                     "error": f"{type(exc).__name__}: {exc}"})
+    state = manifest(run)
+    scope = state.get('native_scope_id')
+    if scope:
+        sample = paths(run)['harness'] / scope / 'producers' / state['run_id'] / 'resource-observation.json'
+        if sample.is_file():
+            try:
+                facts['resource'] = {**json.loads(sample.read_text()), 'source': str(sample.relative_to(run))}
+            except (OSError, ValueError) as exc:
+                facts.setdefault('record_errors', []).append({'source': str(sample.relative_to(run)),
+                    'error': f'{type(exc).__name__}: {exc}'})
     facts["resources"] = facts.get("resource", {})
     return facts
 
@@ -560,6 +570,8 @@ def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
     facts = _status_facts(run_path, lifecycle)
     if observed.get('spend', {}).get('scope') == 'self-funded-provider':
         observed['spend']['usage'] = facts['native'].get('usage')
+    if facts['resource']:
+        observed.setdefault('resources', {})['supervisor'] = facts['resource']
     facts.update(observed)
     value = {**facts, **_activity(run_path, facts), "lifecycle": lifecycle,
              "as_of": observed.get("as_of", observed.get("observed_at"))}

@@ -30,6 +30,8 @@ function ResourcePanel({ runId }: { runId: string }) {
   const state = inspect?.State as Row | undefined;
   const usage = (data?.usage || data?.stats || data?.sample) as Row | undefined;
   const live = (data?.live || data) as Row | undefined;
+  const supervisor = data?.supervisor as Row | undefined;
+  const limits = supervisor?.values as Row | undefined;
   let docker: Row | undefined;
   let statsError: string | undefined;
   if (typeof live?.stats_stdout === 'string' && live.stats_stdout.trim()) {
@@ -39,6 +41,7 @@ function ResourcePanel({ runId }: { runId: string }) {
   return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">资源 / 原生证据</h2>{query.isPending ? <p>读取中…</p> : query.error ? <p className="text-red-600">{query.error.message}</p> : !rows.length ? <p className="text-sm opacity-60">暂无已保存资源事实</p> : <>
     <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">来源</dt><dd>{text(resource?.source)}</dd></div><div><dt className="opacity-60">采样 / 终态时点</dt><dd>{text(data?.as_of ?? data?.observed_at ?? state?.FinishedAt ?? state?.StartedAt)}</dd></div><div><dt className="opacity-60">CPU</dt><dd>{text(usage?.cpu ?? usage?.cpu_percent ?? data?.cpu ?? docker?.CPUPerc ?? '未知')}</dd></div><div><dt className="opacity-60">RSS / 内存</dt><dd>{text(usage?.rss ?? usage?.memory ?? data?.rss ?? docker?.MemUsage ?? '未知')}</dd></div><div><dt className="opacity-60">I/O</dt><dd>{text(usage?.io ?? data?.io ?? docker?.BlockIO ?? '未知')}</dd></div><div><dt className="opacity-60">PID / 线程</dt><dd>{text(docker?.PIDs ?? '未知')}</dd></div></dl>
     {statsError && <p className="mt-2 text-red-600">{statsError}</p>}
+    {limits && <div className="mt-3 text-sm"><p>公共资源采样（非历史峰值）：内存 {limits['memory.current'] == null ? '未知' : `${Math.round(Number(limits['memory.current']) / 1048576)} MiB`}；PID / 线程 {text(limits['pids.current'])} / {text(limits['pids.max'])}。</p><p className="text-xs opacity-70">{text(supervisor?.source)} · {timestamp(Number(supervisor?.observed_at_ns) / 1e9)}</p><RawDetails label="资源上限、触顶事件和采样错误" value={supervisor} /></div>}
     {state && <p className="mt-3 text-xs opacity-70">容器终态：{text(state.Status)}；ExitCode={text(state.ExitCode)}。此处不是历史峰值。</p>}
     {rows.filter(row => row.kind !== 'resources').map((row, index) => <RawDetails key={index} label={`${text(row.kind)} · ${text(row.source)}`} value={row.data} />)}
     <RawDetails label="展开完整资源原件" value={data} />
