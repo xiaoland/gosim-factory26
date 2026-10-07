@@ -1,5 +1,11 @@
 # 决赛实验基础设施重设计
 
+2026-10-07 11:00 当前恢复事实：第二版 Linux runtime 已部署，新 run `d38fa85756f24f13bb5fbb262b3fdf80` 在约 10:58 启动，保留原 native scope。恢复负责人读回两个中断 reset 均 `applied`、旧 provider session 均 `replaced`，并取得新的 completed `reset_continuation`；应用第一阶段完成及后续评分仍未取得证据。主此前只读上层验收会话，漏掉其子负责人已执行的进展，两次“还在准备 Linux”报告过时，不代表实际执行一直等待。
+
+本次恢复发布从约 10:26 到 10:58：首次完整 Linux runtime 构建 705.7 秒，首次 restart（含约 1.1 GiB runtime 同步）156.0 秒；首版因 assignment 已恢复 active 而恢复 SQL 只接受 blocked，实际未触发 reset，修正一条条件后再次构建。第二版构建/导出存在失败重试，其中 Docker identity GET 10 秒超时使 runtime-source.json 未生成，包构建原错为该文件缺失；最终 restart 161.2 秒返回。这是完整 release 重建/输运、实现返工及导出边界错误的叠加，不是单纯交叉编译耗时。
+
+用户指出 Helium 已登录 self-test，并明确允许逆向其登录接入。主实地确认已有 xiaoland 登录会话；撤回将“cookie 未部署”当作需要用户解决的外部前提。evaluation_implementation 持续完成现有登录态到维护客户端的安全接线及真实认证核验，凭据不进入公开记录或迁移 data，未取得该接线成功证据前不宣称 self-test 完整可用。
+
 ## 当前纠正：模型配方实际消费
 
 2026-10-07 用户指出，验收错误使用已明确耗尽的 ARC API，而非当前自费配方。主 Agent 承担这次冻结配置错误；历史 ARC 授权不代表本轮应选 ARC。P1 `e1ce4d6f6a174bb995c74f22e3db3a0d` 实际首次请求为 HTTP 402 `insufficient_balance`，没有应用生成进展，不能算有效零分或验收通过。原始 run、请求错误与保存材料保留；不要求用户补充 ARC 额度。
