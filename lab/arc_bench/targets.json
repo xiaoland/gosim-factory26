@@ -17,13 +17,13 @@
   },
   "variants": {
     "I14-dx-test": {
-      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-offline-materialization-retry-20261007b",
-      "remote_runtime": "/home/yyh/factory26-lab-runtime/offline-materialization-retry-20261007b-published",
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-offline-materialization-source-aligned-20261007",
+      "remote_runtime": "/home/yyh/factory26-lab-runtime/offline-materialization-source-aligned-20261007-published",
       "remote_runtime_base": "/home/yyh/factory26-lab-runtime/resource-deferred-20261007-deployed"
     },
     "pi-minimal-vv-dx-test": {
-      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-offline-materialization-retry-20261007b",
-      "remote_runtime": "/home/yyh/factory26-lab-runtime/offline-materialization-retry-20261007b-published",
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-offline-materialization-source-aligned-20261007",
+      "remote_runtime": "/home/yyh/factory26-lab-runtime/offline-materialization-source-aligned-20261007-published",
       "remote_runtime_base": "/home/yyh/factory26-lab-runtime/resource-deferred-20261007-deployed"
     }
   },
