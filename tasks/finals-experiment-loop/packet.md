@@ -115,6 +115,8 @@ evaluation_closure已交付b514103f：冻结requirements及约24KB tests到run i
 
 主发现原定stage1→stage2推进未接到当前ed426（无stage_plan，旧脚本已随历史失败退出），已使用现有lab.automation.stages显式传入github-stage-2接回；Mac PID22971、出生身份见records/stages.json，stages-progress.json为waiting，主读回alive。仅ed426正常completed后同variant restart，保留data、自费/competition=false，下一任务独立native身份；不启动额外fresh矩阵、不重复评分发起者。原生生成、保存和评测仍由既有后台执行者持有，终态未形成。
 
+用户再次要求继续，主已为当前任务设置App线程续办“实验设施验收闭环”（automationId=automation，每10分钟）。它只消费既有事实、采用结果及修复明确设施故障，不是第二采集者，也不替代运行内Python策略；状态不变保持安静，实质进展/完成/失败/用户决策才通知。不新开矩阵、不参赛、不代改应用、不重复派发，闭环完成后暂停续办。这样无需用户反复催办即可收取既有后台执行结果。
+
 - Python策略：a439ae26、f3c41f36；Hosted事实消费：d92b074c；周期采集/控制：80794c7a。
 - Console/Braid：17d6da0b、dbcae9e2、f80f3546；新Summary编译材料：`runs/finals-experiment-loop/validation/cooperation-summary-*`，未动态资格化。
 - 源对齐：b19dc7b0；`runs/finals-experiment-loop/validation/i14-source-aligned-build-*20261007*`。
