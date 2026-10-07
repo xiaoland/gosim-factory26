@@ -77,6 +77,7 @@ def main():
         protocol_members = {
             'runtime/bin/pi': protocol/'bin/pi',
             'runtime/native-managed.mjs': protocol/'native-managed.mjs',
+            'runtime/node_modules/pi-background-bash/bin/pbb.js': protocol/'node_modules/pi-background-bash/bin/pbb.js',
             'support/runtime_resources.py': helper,
             'runtime/runtime_resources.py': helper,
         }
