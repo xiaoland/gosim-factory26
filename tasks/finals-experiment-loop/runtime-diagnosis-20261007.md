@@ -12,6 +12,8 @@ advisor只依据主提供证据建议gzip完整快照及复用既有消息配置
 
 最终独立UI复查21:32：选择器可直接识别github-stage-1/sfp7/ed426cf5与bookstack/sfp7/a3a9a526；I14无需展开JSON即见847次尝试、781次返回用量。完整原件正常展开，关闭后从DOM消失；时间带GMT+8，日志说明Z为UTC。Pi仍active，130条原生消息、金额未知，旧冻结代理未捕获provider usage的限制如实保留。首页标题仍全ID是非阻塞一致性缺项，不另起专项。源码/发布修复提交2965ccc3，静态构建通过并部署；两run没有终态或评分，整体不能收尾。
 
+随后 evaluation_closure 定位原生观察超时：公共 helper 对约 2.9 GB 的 harness 树递归寻找日志和 Braid 状态，连生成应用与 worktree 也被扫描。改为只读当前原生日志约定路径及固定 braid-state/status.json；完整原件仍留在 harness 数据中。当前 I14 program/native_observation.py 已热部署，旧文件保存在 records/native-observer-repair.before-20261007-213245.py，default PID3949199 与生成进程未重启。三次真实观察入口耗时 211/213/208 ms，输出约 320 KB；后续 status 显示 9 sessions、500 条有界消息、1 Braid state，reader_errors 为空，activity active。回执为 runs/lab/runs/ed426cf521bd4f46ba58629f4acbd3e3/records/native-observer-repair.json。这证明本次实际消费修复，不证明生成完成、结果保存或评测已发生。
+
 用户要求深入检查 project.zip。本轮两条验收实际是 sfp7 本地执行，没有官网 project.zip；诊断直接读取对应远端工作区、原生日志和已有截图，不新开生成、不控制运行、不修改业务应用。Mac 的 saved-sync 只镜像 records，已有 data 不保证最新，故不能以本地旧 session.jsonl 推断停滞。
 
 ## Pi BookStack：存在实质问题，不是完全停滞

@@ -31,12 +31,25 @@ def _stamp(value: Any) -> float | None:
     return None
 
 
+def _native_log_candidates(harness: Path) -> set[Path]:
+    """Find native logs without walking the generated application workspace."""
+    candidates = {path for path in (harness / "pi-timing.jsonl", harness / "session.jsonl")
+                  if path.is_file()}
+    for pattern in (
+        "session/**/session.jsonl",
+        "work/native-homes/*/sessions/*/*/run-*/session.jsonl",
+        "work/native-homes/*/sessions/*/*/session.jsonl",
+    ):
+        candidates.update(path for path in harness.glob(pattern) if path.is_file())
+    return candidates
+
+
 def _pi(run: Path, scope: str, observed_at: float, since: float | None) -> dict[str, Any]:
     harness = run / "data" / "harness" / scope
     messages, turns, errors = deque(maxlen=500), deque(maxlen=500), deque(maxlen=20)
     sessions: dict[str, dict[str, Any]] = {}
     usage_groups, seen_usage = {}, set()
-    candidates = set(harness.rglob("session.jsonl")) | set(harness.rglob("pi-timing.jsonl"))
+    candidates = _native_log_candidates(harness)
     for path in sorted(candidates):
         session_id = None
         source = str(path.relative_to(run))
@@ -124,7 +137,8 @@ def observe(run: str | Path, *, provider: str, braid: bool = False) -> dict[str,
     if braid and isinstance(scope, str) and scope:
         root = run / "data" / "harness" / scope
         states = []
-        for status in sorted(root.rglob("braid-state/status.json")) if root.is_dir() else []:
+        status = root / "braid-state" / "status.json"
+        for status in (status,) if status.is_file() else ():
             # The helper delegates to the repository's verified
             # provider_liveness reader (or its byte-identical packaged copy),
             # including native path resolution, activity windows, resume

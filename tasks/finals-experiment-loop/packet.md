@@ -107,6 +107,8 @@ evaluation_closure已交付b514103f：冻结requirements及约24KB tests到run i
 
 ## 关键交付和证据
 
+本轮继续验收采用 evaluation_closure 的原生观察修复：限定约定日志路径，避免扫描整个生成工作区。I14 在原进程不重启的情况下已实际消费，三次真实采集 211/213/208 ms，reader_errors 为空；部署与原文件保留见该 run 的 records/native-observer-repair.json。该 owner 继续负责两条既有自费运行的终态保存和自动评测，先核对 default、Mac relay 与 finish-evaluation 的实际执行者，不能用旧 PID 或 waiting 文件代替健康证据。当前没有结果保存或评分，整体验收仍未完成；不新开生成、不参赛、不代改应用。
+
 - Python策略：a439ae26、f3c41f36；Hosted事实消费：d92b074c；周期采集/控制：80794c7a。
 - Console/Braid：17d6da0b、dbcae9e2、f80f3546；新Summary编译材料：`runs/finals-experiment-loop/validation/cooperation-summary-*`，未动态资格化。
 - 源对齐：b19dc7b0；`runs/finals-experiment-loop/validation/i14-source-aligned-build-*20261007*`。
