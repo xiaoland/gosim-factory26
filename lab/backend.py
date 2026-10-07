@@ -140,14 +140,20 @@ def saved_record_summaries(run: str | Path) -> dict:
     log_paths = sorted(set(records.glob("*.log")) | set((records / "logs").glob("*.log")) |
                        set(root.glob("*.log")) | set(root.glob("stdout*.log")) |
                        set(root.glob("stderr*.log")))
+    state = json.loads((root / 'manifest.json').read_text())
+    if state.get('native_scope_id'):
+        producer = root / 'data/harness' / state['native_scope_id'] / 'producers' / state['run_id']
+        log_paths = sorted(set(log_paths) | set(producer.glob('*.log')))
     for path in log_paths[:32]:
         try:
-            data = path.read_text(errors="replace")
-            result.setdefault("logs", []).append({"source": path.name, "bytes": len(data.encode()),
-                                                    "tail": data[-65536:],
-                                                    "truncated": len(data) > 65536})
+            with path.open('rb') as stream:
+                size = stream.seek(0, 2)
+                stream.seek(max(0, size - 65536))
+                data = stream.read(65536).decode(errors='replace')
+            result.setdefault("logs", []).append({"source": str(path.relative_to(root)), "bytes": size,
+                                                    "tail": data, "truncated": size > 65536})
         except OSError as exc:
-            result.setdefault("logs", []).append({"source": path.name, "bytes": None,
+            result.setdefault("logs", []).append({"source": str(path.relative_to(root)), "bytes": None,
                                                    "error": f"{type(exc).__name__}: {exc}"})
     return result
 
