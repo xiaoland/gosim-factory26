@@ -51,6 +51,7 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 | --- | --- | --- |
 | 主Agent `/root` | run/自动化/集成，proxy后续修复，编译源对齐，Console/Braid后续修复，采纳返回与提交 | 活跃；拥有总目标、优先级、所有未验收项和运行闭环，不以已委派卸责 |
 | execution_owner（执行者） | runtime/安装/部署、公共入口/Tini、应用环境；Hosted采集/控制采用80794c7a；时钟回拨复用修正daa96533 | 已续派：核对采集变量/策略实际可用性、计价来源及必要reader/文档修复；不操作两活跃模型run，不新增收费run。主持有run/automation/targets，避免重叠 |
+| evaluation_closure（执行者） | 本轮新增，负责Pi自动评测输入跨宿主缺失这一完整修复结果 | 执行中；拥有execution组装评测输入、local_run评测材料传输和必要default automation相关hunks，负责当前Pi完成后的后台接线及实际评分证据。不得停止/重启生成、重复评分或操作I14；execution_owner不编辑这些文件，主只持有总集成 |
 | competition_cost_decision（advisor） | 短控制锁、同request_id确认、ZIP锁外、stop不调用observe建议已采用，由执行者落实 | completed；此前还被要求调查计价/代理，属角色越界，今后只基于已收集证据处理工程取舍 |
 | process_reaping_decision（advisor） | 标准Tini/subreaper、保留Popen退出状态所有权、不设全局并发gate建议已采用 | completed，不负责资源实现或验收 |
 | acceptance_conversation_decision（误用advisor） | 历史会话取证及评价文档修改已采用b84d6d52 | assignment已结束，不在live tree；保留证据不重做，调查/编辑不再交advisor，该低优先级项不扩展 |
@@ -69,6 +70,10 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 当前不需要用户给停止线、余额或新许可。此整理不改变原目标、费用模式和比赛禁令。
 
 本轮实际核对发现I14 ed426的冻结task_config没有evaluations，现有默认自动化会直接返回而不评分。主已给维护的github-stage-1/2任务配置默认self-test，后续正常启动消费；不改写ed426冻结manifest。为当前ed426补普通后台脚本 `records/finish-evaluation.py`，等待正常completed及Mac result-save成功后独立self-test，失败/停止则不评分。进程PID66676已实际启动，回执phase=waiting-for-generation；来源、PID出生身份、日志及结果均在该run的records。它不是新的采集者，不创建模型生成，self-test不参赛；此时尚无评分证明。Pi a3已有随题评测配置，保持现有自动链不重复派发。
+
+随后实际ssh读回确认Pi远端task_config.evaluations中的requirements/tests均为null，Mac路径在manifest relocate时被清空；不能继续声称其现有自动链已经具备完整输入。已委派evaluation_closure处理共享材料边界和当前冻结run包外补救。远端四个observe/default进程均实际存活：Pi233116/245040，I14 968810/984993；不以进程存活宣称生成或评测完成。主侧I14补充评分进程已再次读回alive，尚在等待生成。
+
+execution_owner本轮文档返回d8d4f8d4已读取，但“没有run账单就必须unknown”及idle额外资格要求不采用为合同：actual须账单，estimate可来自已核实ARC单价及本run usage并保留coverage；脚本自行解释原生时间/工具等待，不由设施增加idle gate。主已合并反馈给原owner继续具体计价取证和必要reader修复，不把文档补充当费用工作面完成。
 
 ## 关键交付和证据
 
