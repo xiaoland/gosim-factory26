@@ -1,5 +1,9 @@
 # 决赛实验基础设施重设计
 
+最新验收：Pi 正常同任务接续 `d3cc30d25f8e4da5be4b467f709f2250` 已消费响应头/总期限600秒的新装配，在sfp7取得真实模型回合，目前仍active；尚未自然完成或取得应用评分。来源为1c1e1b，native scope仍为f1335fc，保持同variant/data/原生状态。I14普通接续的新run前缀1e1ff0再次明确blocked、无provider turn，现场已保存；execution_owner继续定位并修复真实启动根因，不再原样重试。独立会话继续等待Pi自然终态、使用Console并完成应用与自动评测。用户再次明确可自由提交，仍仅提交本任务改动、不push、不参赛。
+
+公共源传输已定位到观察程序每次spawn无条件复制完整variants/harness/arc-bench（约246MB，其中arc-bench约236.7MB）。修正为普通观察/评测只复制lab/scripts，原生stages再携带构建来源；仅开发源码排除.git、node_modules和测试报告，program/inputs/data默认完整复制不变。这是待正常启动验证的源码改动，约2MB静态来源体积不能直接当成实际启动提速证据；不为profiling重启活跃Pi。
+
 当前推进：用户确认WSL腾出空间并授权继续完整验收；只读df确认 `/home/yyh/factory26-lab-runs` 所在盘约13GB可用、inode使用34%。主按原定design/evaluation重新核对，结论与缺口表归assessment首节，整体尚未达成。新Pi运行 `ad9a7d1acefa49e5bf8326b18beecf6b` 已实际生成部分应用，但代理前8次HTTP200后连续4次传输超时，容器自行退出1，不能记为有效零分或完整验收；现场自动回收 saved=true、synced=true。同一独立会话已获续行指示，继续同任务接续和Console真实使用。全部验收仍自费、不参赛，不清理WSL数据。
 
 本轮修复：远端观察程序在第二次spawn重写manifest时读到空文件并退出，导致CLI/Console停留在starting/unknown；`_push_remote_manifest` 已改为同目录临时文件写完后rename。原观察日志保留，主仅重启所属观察程序，没有停止模型或创建重复relay；恢复后具体502错误、失败终态和自动保存均可见。下一次正常start/restart负责验证双spawn路径。新错误原件在该run的gateway.log：请求体由约69KB增长至3,699,935字节，后4次均约30秒出现 `SendRequest: connection error: Connection timed out (os error 110)`；尚不能仅凭这些事实判定供应商、网络或代理责任，主继续定向诊断，不增加无依据重试或隐式换模型。
