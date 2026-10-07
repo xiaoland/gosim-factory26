@@ -474,7 +474,8 @@ def observe(run):
                 requested_at = 0
         else:
             requested_at = 0
-        if latest and latest.get("status") == "observed" and time.time() - requested_at < 300:
+        age = time.time() - requested_at
+        if latest and latest.get("status") == "observed" and 0 <= age < 300:
             workspace = {**latest, "observation_reused": True}
         else:
             workspace = _collect_workspace_observation(directory, client, platform_run_id,
