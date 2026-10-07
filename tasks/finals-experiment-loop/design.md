@@ -6,6 +6,8 @@
 
 用户输入 variant name、run target、task 即可启动实验，可覆盖 gateway route config 和是否参与比赛。由维护的 target 配置提供宿主、路径、依赖、网络、存储、凭据引用与观测服务地址；每次启动自动保存实际采用的配置。普通实验不要求填写 artifact 引用、物理容器身份、证明文件或逐步执行 compile/doctor/build/start。
 
+restart 迁移 data、重新装配当前程序，因此新 run 也按 target 名称重新解析维护配置和 runtime；来源停止与保存继续使用来源冻结的 target。same task 只决定需求和原生状态接续，不隐式固定旧依赖。需要固定旧 runtime 时使用已有 LAB_CONFIG 明确选择该版本，不新增恢复模式，也不将重新装配当前程序称为完整精确恢复。
+
 启动后，运行程序完成服务装配、执行、资源与过程采集、规则控制、终态及结果回收。CLI 和 Exp Console 都能回答该运行使用了什么、目前做到了哪里、耗费多少、为何停止，以及应用和完整原件在哪里。Pi-only 与 Braid variant 都是正常实验，不以存在 Braid 为实验可见的前提。
 
 stages 由普通 Python 程序按顺序调用运行 API。restart 保留同 variant 的全部规范数据，重新装配程序后启动新 run；无需挑选应用、Braid issues 或原生状态的路径。阶段发布应用后，程序自动启动配置的测评，下一阶段可与测评并行。公开测试反馈可显式作为下一次执行输入，官网隐藏结果仅供实验分析。

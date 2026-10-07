@@ -82,8 +82,8 @@ def restart(source_run: str | Path, destination_run: str | Path | None = None, *
     if same_task:
         _copy_tree(paths(source)["inputs"] / "requirements", destination_paths["inputs"] / "requirements")
     fresh = manifest(destination)
-    if target is None or target == source_state.get('target'):
-        fresh['target_config'] = source_state.get('target_config')
+    # A restart rebuilds the program and its runtime from the maintained target.
+    # The source's frozen target remains authoritative only for its stop/save.
     if same_task:
         fresh['task_config'] = source_state.get('task_config')
     fresh.update({

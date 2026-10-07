@@ -30,6 +30,8 @@ python3 -m lab serve --config SERVICE_JSON
 
 `pause/resume` 保持同一次实际执行；自管 Docker 使用 pause/unpause，Hosted 不支持。`restart` 先停止实际执行并保存确定数据，再重新装配同名 variant 程序，整体迁移 data，创建来源明确的新 run。相同 task 和需求版本恢复原生会话；新 task 保留应用及历史，建立新原生任务状态。不支持切换 variant、任意路径提取或失败时悄悄启动空会话。
 
+`restart` 的新 run 按 target 名称重新解析当前维护配置，包含 runtime；来源停止与保存仍使用来源的冻结配置。需要指定旧 runtime 时，通过已有 `LAB_CONFIG` 选择固定该版本的配置，再执行 restart，不改来源记录。这只固定所选环境，不是完整检查点恢复，因为 variant 程序仍重新装配。
+
 `stop` 只操作指定 run，不停止独立 Python 自动化程序或其他 run；回收迟到结果仍继续。Python 使用 `lab.run` 的同一组函数组织策略和 stages，不增加调度 DSL。默认 stages 只在 completed 后接续；费用和 idle 使用采集的来源、截止点与缺项，不把未知数当作零。
 
 | 要做什么 | 权威说明 |

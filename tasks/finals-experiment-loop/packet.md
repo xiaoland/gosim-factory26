@@ -1,5 +1,7 @@
 # 决赛实验基础设施重设计
 
+2026-10-07 已修复 restart 隐式继承旧依赖：原实现复制整份 source.target_config，即使显式同名 target 或新 stage 也跳过维护配置。采用 advisor 建议，新 run 重新解析 target、装配当前程序/runtime，来源 stop/save 继续用来源冻结配置；需要固定旧 runtime 使用已有 LAB_CONFIG，不新增模式。源码语法检查已通过，下一次原 Stage2 接续负责取得真实装配证据。当前 610daf 不动；它携带的远端 source/config 也不热改，由独立负责人在正常结束后从维护入口接续。
+
 2026-10-07 self-test 认证已通过实际只读请求：维护客户端 GET `/api/auth/session` 返回 HTTP 200、authenticated=true，原件为 `runs/self-test-auth-20261007/authentication.json`。已修复本机 Python 默认 CA 路径失效导致的 `CERTIFICATE_VERIFY_FAILED`，JSON 请求和 ZIP 上传共用标准库 SSL context，使用已有有效 CA，不关闭 TLS 校验、不新增依赖。已通知原独立验收会话复用现有私有登录材料；没有上传或评分，仍待 Stage1 冻结应用。旧 pending_auth 段落保留为历史故障事实，不再是当前阻塞。
 
 2026-10-07 用户告知“钥匙串我刚刚授权好了”。此前等待系统授权的前提解除，evaluation_implementation 恢复原 self-test 认证与实际评分闭环，优先复用已有登录材料；已通知原独立验收会话在 Stage1 完成冻结后按原计划独立评分、接续 Stage2。授权完成不等于认证或评分已取得，下面的 pending_auth 记录是当时事实。默认维护基座同步为已正式发布的 p，不再指向旧 o。
