@@ -1,5 +1,7 @@
 # 决赛实验基础设施重设计
 
+最新目标核对归[assessment达成表](assessment.md#2026-10-07-原定目标达成核对)：整体未达成，已完成的架构与局部运行能力不能代替完整使用链。采用advisor的收敛顺序：收取Node/npm实际应用验证并继续当前Pi/I14；并行修Console已发现的active事实缺失；产物形成后完成原定自动评测、同variant接续/stages及采集策略证据；最后汇总正常操作的时间/token/排错成本。不扩variants/模型矩阵，不制造资源触顶或idle条件，不因分数低追加优化。Hosted关闭与绝不参赛是外部未覆盖边界，self-test评分和内部费用/Console缺口仍须完成。
+
 2026-10-07 用户明确“你可以开始，这也是基础设施改进的一部分”，批准将[应用开发与评测环境统一](../harness-app-environment/packet.md)纳入本任务。公共默认应用Node/npm与工具解释器分离，范围为两个DX及实际评测入口；不扩展历史variant/I15，不热改在途。execution_owner持有公共安装与Linux应用操作，主持有DX入口/指令与技术说明。该packet拥有具体环境证据和完成标准，本入口不复制；费用仍自费、绝不参赛。
 
 最新验收：Pi 正常同任务接续 `d3cc30d25f8e4da5be4b467f709f2250` 已消费响应头/总期限600秒的新装配，在sfp7取得真实模型回合，目前仍active；尚未自然完成或取得应用评分。来源为1c1e1b，native scope仍为f1335fc，保持同variant/data/原生状态。I14普通接续的新run前缀1e1ff0再次明确blocked、无provider turn，现场已保存；execution_owner继续定位并修复真实启动根因，不再原样重试。独立会话继续等待Pi自然终态、使用Console并完成应用与自动评测。用户再次明确可自由提交，仍仅提交本任务改动、不push、不参赛。

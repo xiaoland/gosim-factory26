@@ -6,16 +6,20 @@
 
 | 原定目标 | 当前可采用事实 | 尚未达成的部分与下一步 |
 | --- | --- | --- |
-| run 控制、三参数入口，无容量队列 | lab.run/CLI已接入真实执行；新版失败run保留身份、原错并自动保存；新Pi正常双spawn观察已工作 | 新版两条完整生成链均未完成；Pi上传阻断做跨宿主接续，I14完整wrapper启动已成功但真实生成仍待正常restart |
+| run 控制、三参数入口，无容量队列 | lab.run/CLI已接入真实执行；新版失败run保留身份、原错并自动保存；新Pi正常双spawn观察已工作 | 两个DX的新完整生成链均未完成；Pi d3cc仍运行，曾出现502；I14启动失败被永久blocked的接续缺口已修复并接目标，独立正在正常restart，尚未证明模型活动 |
 | 公共装配与统一环境，variant保留原生语义 | public_package拥有最终装配，同一安装器及lock；Linux代理两别名真实HTTP200，装配字节一致 | 不能以装配成功代替真实Harness使用；原设计中完整runtime挂载路线已被替代，适配对象仅本轮两个DX派生variant |
-| 启停、pause/resume、同variant数据接续、原生stages | 控制与restart源码接线；题目stages已由三参数入口接入，无新增控制对象 | 新交付需实际证明相同task原生身份接续和下一task应用/业务数据保留、自动stage推进 |
+| 启停、pause/resume、同variant数据接续、原生stages | Pi由WSL跨宿主restart到sfp7已实际保留同task/native scope并取得模型响应；题目stages由三参数入口接入，无新增控制对象 | 当前交付的pause/resume、I14同task接续及下一task新原生身份/业务数据保留、自动stage推进尚未完整验收 |
 | 自动保存成功、失败、停止现场 | 旧610daf停止回收完成；新0aeae2、782227失败均自动saved；本机与远端回执已分开 | 完成生成的应用、自动评测原件与阶段关联尚未形成；强制取消后的平台范围仍按实际能力报告 |
 | 采集驱动的spend/idle自动操作 | 新Pi的status/CLI已实际显示本run已记录原生token；按时间排除迁移旧消息，覆盖明确partial，不采用cost零占位 | 供应商账单/已核实请求价格尚未接通，金额仍未知；用量不代替费用，idle动作实际覆盖仍未闭环 |
-| Exp Console/OTLP与Braid自有视图 | 共享服务和通用页面已交付；Braid reader/viewer边界已迁移 | 新Pi/I14自然查询、原错/配方/资源/结果定位的使用负担尚待独立操作；不以HTTP200替代数据链路 |
+| Exp Console/OTLP与Braid自有视图 | 共享服务和通用页面已交付；Braid reader/viewer边界已迁移；保存run配方、资源、保存回执已可发布 | 独立验收发现active d3cc详情只有running、缺activity/native/resource/spend，而本地status已有这些事实，publish回执成功；这是未解决的通路/投影缺口，不能说只是待观察 |
 | 四个测评后端与自动评测 | 接口、task配置和self-test认证接线已存在 | 新版应用未生成完成，随题、模拟、self-test尚无本轮评分；已确定关闭的Hosted入口保留拒绝证据，不重复上传或参赛来填矩阵 |
-| 资源管理与轻量交付、用得好 | Tini入口、memory/pids观察及有界补救已落地，真实浏览器一次生命周期无浏览器残留；程序材料约16MB | 长运行进程累积、公共采集开销与实际用户启动/排错/回收成本仍待观察；约512MB安装占用不能说成16MB运行占用 |
+| 资源管理：观察、补救后明确失败，不持续pause | Tini入口、memory/pids观察及有界补救已落地，真实浏览器一次生命周期无浏览器残留；Pi实际有内存/pids/限额采样 | 长运行孤儿回收、资源触顶后的真实有界补救与退出仍缺本轮证据；采样值不是峰值或补救成功证明，不制造资源故障填表 |
+| runtime精简、构建部署及使用成本 | 程序材料约16MB；普通observer源码从约246MB收窄到约2MB，820e0a2e已提交；新Braid修复仍需约12分钟Linux release编译 | 约512MB安装占用不能说成16MB运行占用；源码范围缩小尚无正常启动提速实测，主动操作/token/排错成本未证明整体降低 |
+| 应用开发与评测环境一致，默认无需补救 | 3d22c571实现两DX默认平台Node/npm、独立工具Node启动器、去全局NODE_PATH及pnpm指令；接续有效环境说明更新但保留原件 | 真实Linux应用副本安装/Vitest/构建/正式启动、后台bash/portless和接续依赖尚在验证；不扩历史variant/I15、不热改在途、不宣称已解决Vitest慢点 |
 
 采用completion_criteria_decision advisor的优先级：先完成已有Pi/WSL闭环并定位I14启动阻断，同时用已有run验Console；费用采集缺口由主处理，不无限优化应用分数、不继续以runtime优化替代产品验收。独立验收仍绝不参赛，模型只用variant声明的当前自费配方。真实模型/平台等待与设施主动操作分开计时；尚无依据声称普遍节省比例。
+
+截至16:51的保存状态，Pi d3cc为running/active，记录1,298,586 native tokens，coverage=partial，金额不是这些tokens的换算值；尚无终态保存或评分。应用环境统一已获用户明确批准纳入原设施目标，细节及Linux验证归[应用环境packet](../harness-app-environment/packet.md)。Hosted生成关闭是外部覆盖限制，不能用self-test替代Hosted生成/取消/轻量采集验收；比赛分支在本轮绝不实际运行。未知费用不能当零，Console事实通路缺口与费用采集均是内部未完成事项，不因平台限制免除。
 
 本页区分已观察事实、能力边界和设计推论，配合 [评价标准](evaluation.md) 与 [HLD 草案](design.md) 使用。调查对象是 2026-10-06 读取的工作区和历史运行材料；仓库仍有其它任务在修改，历史快照不代表现在的运行状态。
 
