@@ -252,7 +252,12 @@ def _read_existing_facts(live_root, jsonl_members, *, created_at=None):
         for key in ("sessions", "session_messages", "provider_turns", "reader_errors"):
             merged[key].extend(value.get(key, []))
         if value.get("usage") is not None:
-            merged["usage"] = value["usage"]
+            if merged['usage'] is None:
+                merged['usage'] = value['usage']
+            else:
+                merged['usage']['items'].extend(value['usage'].get('items', []))
+                merged['usage']['status'] = 'partial'
+                merged['usage']['as_of'] = min(merged['usage']['as_of'], value['usage']['as_of'])
         braid = value.get("braid") or {}
         merged["braid"]["states"].extend(braid.get("states", []))
         merged["braid"]["sources"].extend(braid.get("sources", []))
@@ -506,6 +511,14 @@ def observe(run):
     native = workspace.get("native") or {}
     provider_usage = workspace.get("provider_usage") or {"status": "unknown", "attempts": []}
     resources = _workspace_resources(workspace)
+    estimate = None
+    if target.get('model_transport') == 'platform' and not (amount is not None and phase in TERMINAL):
+        from .arc_spend import estimate as estimate_arc
+        prices_path = directory / 'arc-prices.json'
+        if not prices_path.exists():
+            shutil.copy2(Path(__file__).with_name('arc-prices.json'), prices_path)
+        estimate = estimate_arc(native.get('usage'), json.loads(prices_path.read_text()))
+        write_json(directory / 'spend-estimate.json', estimate)
     return {"lifecycle": lifecycle, "activity": "unknown", "as_of": status_observed_at,
             "platform_run_id": platform_run_id, "platform_status": phase,
             "logs_error": log_error, "workspace_observation": workspace,
@@ -519,7 +532,7 @@ def observe(run):
                 "platform_field": amount if phase not in TERMINAL else None,
                 "currency": currency, "usage": native.get("usage"),
                 "provider_usage": provider_usage, "source": run_path(platform_run_id),
-                "as_of": status_observed_at}}
+                "as_of": status_observed_at, **(estimate or {})}}
 
 
 def control(run, action):

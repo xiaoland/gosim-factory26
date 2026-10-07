@@ -75,6 +75,10 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 
 execution_owner本轮文档返回d8d4f8d4已读取，但“没有run账单就必须unknown”及idle额外资格要求不采用为合同：actual须账单，estimate可来自已核实ARC单价及本run usage并保留coverage；脚本自行解释原生时间/工具等待，不由设施增加idle gate。主已合并反馈给原owner继续具体计价取证和必要reader修复，不把文档补充当费用工作面完成。
 
+费用owner后续返回616f4290及价格适用性证据，仍未实现estimate；再次联系受agent thread limit拒绝且owner已不在live tree，费用实现明确由主接管。competition_cost_decision仅基于主提供的证据建议partial已知小计、显式missing和ARC适配归属，主采用。主复用已有Pi费用算式与今天18:27的ARC价格原件，新增公共arc_spend及价格表，Hosted仅在model_transport=platform且无终态账单时投影estimate；首次价格快照保存在records/platform，源价格/usage时间分开，自费供应商不套价。多个native scope用量合并，不由最后scope覆盖前者。对历史已归属ARC的真实完成响应数据只读重算¥15.550208680000003，与原小计¥15.55020868仅浮点尾差；这不是新参赛或新运行验收，现代Hosted实时消费/策略动作仍未通过。旧self-funded ZIP用于解析/算式读取，不将其ARC套价结果认定真实金额。
+
+本次真实docker top只读快照（as_of=1791370827）：Pi8个进程、I14 13个进程，均无僵尸；同时保存资源样本pids.current为34/62（含线程），两者pids.events.max=0，memory.oom/oom_kill=0。I14 memory.events.max=206是累计边界，不冒充OOM或当前持续触顶。此证明长运行当前无僵尸积累样本，不证明所有工具生命周期或触顶补救已通过；没有为资源验收制造故障。
+
 ## 关键交付和证据
 
 - Python策略：a439ae26、f3c41f36；Hosted事实消费：d92b074c；周期采集/控制：80794c7a。

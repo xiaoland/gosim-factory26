@@ -1,0 +1,11 @@
+{
+  "source": "https://meter.arc-bench.com/user",
+  "observed_at": "2026-10-07T10:27:13.681882+00:00",
+  "evidence": "runs/pi-minimal/evolution-20261006/formal-sheet-flash-20261007/formal-github/pricing/arc-prices-current.json",
+  "currency": "CNY",
+  "unit": "per 1,000,000 tokens",
+  "rates": {
+    "glm-5.3-flash": {"input": 0.8, "output": 2.8, "cacheRead": 0.23},
+    "kimi-k2.7-code": {"input": 6.5, "output": 27, "cacheRead": 1.3}
+  }
+}

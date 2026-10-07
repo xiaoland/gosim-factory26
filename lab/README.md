@@ -28,6 +28,8 @@ python3 -m lab serve --config SERVICE_JSON
 
 公共资源管理器的最新 cgroup 采样保存在当前 run 的 `data/harness/<native_scope_id>/producers/<run_id>/resource-observation.json`；观察程序复用这份数据写入 `status.resource` 与 `status.resources.supervisor`，供 Python 策略和 Console 消费。采样含内存/PID用量、上限、触顶事件及读取错误，保留来源与时点；它是最新采样，不是历史峰值，也不把容器退出后的 Docker 零值当作运行消耗。
 
+Hosted 的 `model_transport=platform` 运行可从周期工作区采集得到 `spend.kind=estimate`。ARC 适配器在首次观察时将维护的 `lab/arc_bench/arc-prices.json` 保存到该 run 的 `records/platform/arc-prices.json`，后续沿用此价格版本。金额是已定价用量的小计；`coverage`、`missing`、`price_as_of` 和 `usage_as_of` 明确未定价模型/缓存项与采集截止点，未完成请求不按零计算。Pi 的 input 已排除缓存，output 已含 reasoning，不重复计费。终态实际账单优先，历史估算原件保留。此表不用于 Qianfan/ARK 等自费供应商配方，即使模型同名也不套价；策略自行决定如何处置 partial，不将小计低于阈值解释为总费用低于阈值。
+
 Hosted 运行中的观察仍按现有 observer 周期执行状态和日志查询；workspace 快照在最近一次请求后 300 秒内直接复用，避免重复下载。超过该间隔才读取 `workspace/template-bundle`，只解析当前 scope/run 的 native、gateway 和 resource 成员。现代资源返回为 `resources.supervisor`，保留 producer 路径和原始 `observed_at`/`observed_at_ns`；旧布局保留在 `resources.platform`。状态与 spend 的 `as_of` 仍取各自的状态响应时间，不被 workspace 快照时间覆盖。
 
 独立 self-test 仍通过同一个 `evaluate` API，以 `--kind self-test` 区分，不增加 backend 命令。它从冻结运行的 `github-stage-N` 任务自动映射到对应的 `github-stage-N-req-test`；显式 `--task github-stage-N-req-test` 只用于覆盖任务。self-test 是私有、非排名结果，提交 ZIP、状态和回执保存在评测 run 的 `records/self-test`；如果站点没有导出 workspace，保存记录会明确列出缺口。认证由实际执行宿主的 Helium 私有会话材料提供，自测站 cookie 不复用 ARC 官网 cookie。
