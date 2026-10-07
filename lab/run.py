@@ -159,8 +159,8 @@ def start(variant, target, task, *, route=None, competition=False, script=None):
                              stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
             write_json(path / "records/automation.json", {**process_identity(process.pid),
                         "source": str(destination), "started_at": time.time()})
-    else:
-        _background(path, "lab.automation", ["default", path], "automation")
+    # A user policy supplements observation; it must not disable task evaluations.
+    _background(path, "lab.automation", ["default", path], "evaluations" if script else "automation")
     return status(path)
 
 

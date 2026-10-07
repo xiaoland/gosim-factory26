@@ -1,6 +1,7 @@
 """Ordinary Python automation; no experiment controller or future-job queue."""
 import argparse
 import json
+import os
 from pathlib import Path
 import time
 
@@ -166,3 +167,21 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
+def watch(path=None, *, interval=10):
+    """Yield saved run facts until terminal; never create a second collector.
+
+    A --script program can omit path and use LAB_RUN. Repeated snapshots are
+    intentional: a Python policy may act on elapsed time without new activity.
+    The source as_of remains unchanged, so stale observations stay distinguishable.
+    """
+    if interval <= 0:
+        raise ValueError('watch interval must be positive')
+    path = run.resolve(path or os.environ['LAB_RUN'])
+    while True:
+        observation = facts(path)
+        yield observation
+        if observation.get('lifecycle') in run.TERMINAL:
+            return
+        time.sleep(interval)
+
+

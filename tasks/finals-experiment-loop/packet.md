@@ -1,5 +1,9 @@
 # 决赛实验基础设施重设计
 
+2026-10-07 用户调整当前优先级：为今晚 I15 参赛准备持续监控、自动策略和运行中费用采集，避免结束后才看到比赛额度扣减。现有两条自费验收继续自然完成，不增加比赛验收或模型矩阵。非阻塞 Braid 视图改进收住，只保留已定位合同修复及编译输入；当前先将已有 Hosted 工作区快照采集接入新 run observer，按5–10分钟读取原生用量，排除运行环境，向 Python 策略提供带来源与时间的事实。平台终态账单和运行中估算分开，未核实 ARC 计价前不套原厂价、不把未知当零。
+
+execution_owner 持有 hosted_run 及必要解析模块的采集/修复/实际反馈，主 Agent 持有策略与执行生命周期接线，competition_cost_decision advisor 判断比赛统计代理和计价前提。当前 Rust proxy 会改写模型预算与 fallback，不直接放进比赛包；透明统计层是否加入由该判断收敛。本任务仍不创建、启动或停止正式比赛运行。主曾误问用户剩余额度/停止线，用户明确纠正：本任务交付采集变量及普通 Python 自由判断/操作能力，不是替 I15 制定预算策略；撤回该前置，不建立默认阈值或预算门控。另已修复 start --script 覆盖默认自动评测的问题：自定义策略与任务自动评测分别启动，不再二选一；该修正尚待真实消费，不宣称完整自动策略通过。
+
 最新目标核对归[assessment达成表](assessment.md#2026-10-07-原定目标达成核对)：整体未达成，已完成的架构与局部运行能力不能代替完整使用链。采用advisor的收敛顺序：收取Node/npm实际应用验证并继续当前Pi/I14；并行修Console已发现的active事实缺失；产物形成后完成原定自动评测、同variant接续/stages及采集策略证据；最后汇总正常操作的时间/token/排错成本。不扩variants/模型矩阵，不制造资源触顶或idle条件，不因分数低追加优化。Hosted关闭与绝不参赛是外部未覆盖边界，self-test评分和内部费用/Console缺口仍须完成。
 
 I14恢复责任已由execution_owner明确交回主Agent，无在途构建或收费操作。主直接读取实际Linux编译输入，发现 `braid-rebuild-unknown-timeout-20261007/src/src/store/mod.rs` 仍只JOIN `wt.lifecycle='active'`，而746/756保存的worktree为blocked；本地已提交的修正接受active/blocked，却未同步进远端编译输入。远端还保留宽泛error.contains("timed out")，与本地精确get_state条件不同。因此撤回“实际SQL条件满足但helper原因未知”的诊断：交付ELF哈希一致只证明交付了那个二进制，不证明它包含当前源码修正。主已同步当前Braid src，并复用原Cargo volume执行release编译，日志为远端 `source-aligned-build.log`；不增加恢复条件、诊断框架或设施测试。编译与正常接续的实际结果仍待取得。

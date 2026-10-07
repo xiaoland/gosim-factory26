@@ -45,6 +45,22 @@ python3 -m lab serve --config SERVICE_JSON
 | 通用 Console、共享 Collector 与 Backend | [Console](../braid-console/README.md) |
 | 读取或操作旧冻结执行 | [历史 lab.exp 源码导航](exp/README.md)；使用其原执行器，不接入新的 run 控制。 |
 | ARC 官方 SDK、平台与应用重放 | [ARC 适配](arc_bench/README.md) |
+
+`--script` 是普通 Python 程序，与观察、保存和任务自动评测并行运行，不替代它们。`lab.automation.watch()` 默认读取 `LAB_RUN` 的已保存事实，持续提供 `spend`、`native`、`resources`、执行状态及其来源时间；它不再采集、不访问平台，也不把旧数据刷新成新事实。重复读取允许脚本按当前时间判断 idle，具体判断与操作由脚本自己表达。例如：
+
+```python
+import time
+from lab import run
+from lab.automation import watch
+
+for facts in watch():
+    spend = facts['spend']
+    native = facts['native']
+    resources = facts['resources']
+    # 在这里用普通 Python 判断，并调用 run.stop(facts['path'])
+    # 或 run.restart(facts['path'])；阈值、未知数据处理及动作后退出均由脚本决定。
+    print(time.time(), spend, native, resources, flush=True)
+```
 | 选择恢复来源与当前合法操作 | [恢复入口](../docs/deployment/recovery.md) |
 
 新 run 固定包含 manifest.json、program、inputs、data/workspace、data/harness、records、snapshots 和 evaluations。program 保存实际程序，data 保存应用与可迁移原生状态，records 保存本次日志、状态、资源、费用与平台原件。restart 不迁移旧记录或旧费用。凭据不进入可迁移 data 或公开归档。
