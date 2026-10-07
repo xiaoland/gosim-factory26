@@ -18,11 +18,32 @@ def observe(path):
         try:
             facts = execution.observe(path)
         except Exception as exc:
-            prior = run.status(path)
-            facts = {"lifecycle": prior.get("lifecycle", "unknown"), "activity": "unknown",
-                     "as_of": prior.get("as_of"), "observation_failed_at": time.time(),
-                     "error": f"{type(exc).__name__}: {exc}"}
-            write_json(path / "records/observation-error.json", facts)
+            # Keep the last good observation when a refresh fails.  Calling
+            # run.status() here would merge the manifest into the saved status
+            # and the small fallback object would erase spend/native/resource
+            # facts that policies still need to reason about.
+            prior = {}
+            status_path = path / "records/status.json"
+            try:
+                value = json.loads(status_path.read_text(encoding="utf-8"))
+                if isinstance(value, dict):
+                    prior = value
+            except (OSError, ValueError, TypeError):
+                pass
+            facts = dict(prior)
+            manifest = run.run_layout.manifest(path)
+            facts.setdefault("lifecycle", manifest.get("lifecycle", "unknown"))
+            facts["activity"] = "unknown"
+            facts.setdefault("as_of", prior.get("as_of") or manifest.get("created_at"))
+            failed_at = time.time()
+            error = f"{type(exc).__name__}: {exc}"
+            facts["observation_failed_at"] = failed_at
+            facts["error"] = error
+            write_json(path / "records/observation-error.json", {
+                "lifecycle": facts["lifecycle"], "activity": "unknown",
+                "as_of": facts.get("as_of"), "observation_failed_at": failed_at,
+                "error": error,
+            })
         write_json(path / "records/status.json", facts)
         run.publish(path)
         if facts.get("lifecycle") in run.TERMINAL:

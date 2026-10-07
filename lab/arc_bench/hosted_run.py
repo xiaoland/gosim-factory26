@@ -316,7 +316,7 @@ def _collect_workspace_observation(directory, client, run_id, *, created_at=None
                 member = PurePosixPath(relative)
                 if not _live_member(member):
                     continue
-                if member.name == "resource-observation.json":
+                if member.name in {"resource-observation.json", "gateway.log"}:
                     parts = member.parts
                     try:
                         data_index = parts.index("data")
@@ -387,6 +387,21 @@ def _collect_workspace_observation(directory, client, run_id, *, created_at=None
         return receipt
     except Exception as exc:
         receipt.update({"status": "error", "observed_at": time.time(), "error": _error(exc)})
+        latest_path = directory / "workspace-latest.json"
+        if latest_path.exists():
+            try:
+                previous = json.loads(latest_path.read_text())
+                # A failed download must not erase usage or resource facts.
+                # Their timestamps remain those of the last successful read.
+                if previous.get("native") is not None:
+                    receipt["observation_failed_at"] = receipt.pop("observed_at")
+                    for field in ("observed_at", "archive_bytes", "members", "native",
+                                  "provider_usage", "parse_errors", "aggregation"):
+                        if field in previous:
+                            receipt[field] = previous[field]
+                    receipt["observation_reused"] = True
+            except (OSError, ValueError, TypeError, AttributeError) as read_error:
+                receipt["previous_observation_error"] = f"{type(read_error).__name__}: {read_error}"
         write_json(directory / "workspace-latest.json", receipt)
         _append_observation(directory / "workspace-observations.jsonl", receipt)
         return receipt

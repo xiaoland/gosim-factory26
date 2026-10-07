@@ -38,6 +38,10 @@ Hosted 运行中的观察仍按现有 observer 周期执行状态和日志查询
 
 `status` 无参数只列未归档且 lifecycle 不是 completed 的运行；failed、stopped 和 unknown 不会被默默隐藏。`--all` 查看全部，指定 RUN 始终可以查回。执行 lifecycle 来自实际执行器，activity/brief 来自该次 program 固定的 variant 状态脚本，查询只读保存事实，不进入远端重新采集。`archive --undo` 撤销隐藏；归档标记不停止、搬移或删除数据。正常完成的零分评测仍是 completed。
 
+观察刷新暂时失败时，自动观察器保留上一份 status 中的 spend、native、resources、last_activity_at 和原 `as_of`，只将 activity 标为 unknown，并在 `observation_failed_at`、`error` 和 `records/observation-error.json` 中记录本次错误。这样 Python 策略不会把一次读取故障误判为事实归零；下一次成功观察才会替换这些事实。
+
+Hosted 工作区下载失败也保留上次成功读取的 native、provider usage 和资源原件及其时间，另在 `workspace_observation.observation_failed_at` 与 `workspace_error` 暴露最新失败。平台状态查询和工作区采集各有时点，前者成功不表示后者新鲜。现代 gateway 和资源记录仅消费当前 native scope、当前 producer run，迁移来的旧 producer 不计入本 run 的供应商尝试。
+
 启动准备失败会保存具体错误并显示 failed；越过远端创建或启动边界后失去回执则显示 unknown，不能仅凭没有句柄判成失败或重新派发。Local 后台 worker 派发成功仍为 starting，只有实际执行观察才能确认 running。异常不会因已有 starting 文件而被遮住；本次错误位于 records/start-error.json，远端派发意图位于 records/dispatch.json。
 
 `pause/resume` 保持同一次实际执行；自管 Docker 使用 pause/unpause，Hosted 不支持。`restart` 先停止实际执行并保存确定数据，再重新装配同名 variant 程序，整体迁移 data，创建来源明确的新 run。相同 task 和需求版本恢复原生会话；新 task 保留应用及历史，建立新原生任务状态。不支持切换 variant、任意路径提取或失败时悄悄启动空会话。

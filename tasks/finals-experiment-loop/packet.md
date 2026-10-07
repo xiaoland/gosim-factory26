@@ -12,6 +12,16 @@
 
 本次终止已实际完成：两run均stopped，远端和Mac result-save均saved:true/errors:[]，范围为data/workspace、data/harness及records，原件在各run records。I14 stages-progress为cancelled-before-dispatch，只有原stage1 run；finish-evaluation-result为cancelled-before-evaluation，未取得评分。Mac relay、stages与评分等待进程的已记录出生身份均lost，后台收尾已退出。回收途中Pi遭遇rsync mkstempsock Invalid argument，修复公共save运输为不复制Unix socket及device等非持久化特殊文件；新relay实际消费后两run成功回收，不把先前失败改写为成功。没有修改应用、伪造completed或新增运行；剩余正常完成评分/stages及其它未验收项如实保留，不再自动开展长时间真实验收。
 
+## 2026-10-08 整理后接续
+
+用户确认“整理完成”，继续既有实现授权内的设施收口，不恢复两条已停止验收运行，不新增收费生成或评测，App续办保持暂停。整理后的入口为 materials、tooling/scripts、tooling/linux、consoles/lab 与 consoles/braid；其它未提交改动保留，不整目录暂存。
+
+主负责采集事实与策略消费边界；evaluation_closure已续派，负责默认保存、评测及stages接线的必要修复，拥有automation.py、local_run.py与评测相关实现。该负责人不暂存或提交，由主采用具体改动后统一提交。advisor上轮只给下一步建议，本轮未派执行。Console后续沿用原负责人，当前未唤醒。
+
+正常CLI只读确认Pi a3a9a526和I14 ed426均stopped/inactive，远端与Mac现场回收事实仍saved:true/errors:[]。冻结manifest中的历史harness路径保留，不能因整理而改写历史程序身份。
+
+本次定位到采集故障的明确源码缺陷：公共observe异常时覆盖status，丢掉旧spend/native/resources；Hosted工作区下载失败时覆盖workspace-latest，丢掉旧用量与资源。修复保留旧事实及原时间，另记录本次采集失败时间与具体错误，不刷新旧数据、不中断策略或新增采集者。Hosted修复已完成源码解析，未在现代Hosted真实故障中验证；公共观察修复由上述原owner落实。后续仍优先采集—策略—控制，再默认保存/评测/stages及保存后分析，不能把源码修复当整体验收完成。
+
 ## 当前设计与资料归属
 
 - 控制单位是run；experiment只是标签。无内部capacity、queue、slot、reservation或准入gate。
