@@ -29,8 +29,16 @@ function ResourcePanel({ runId }: { runId: string }) {
   const inspect = data?.inspect as Row | undefined;
   const state = inspect?.State as Row | undefined;
   const usage = (data?.usage || data?.stats || data?.sample) as Row | undefined;
+  const live = (data?.live || data) as Row | undefined;
+  let docker: Row | undefined;
+  let statsError: string | undefined;
+  if (typeof live?.stats_stdout === 'string' && live.stats_stdout.trim()) {
+    try { docker = JSON.parse(live.stats_stdout); }
+    catch (error) { statsError = `Docker stats 解析失败：${String(error)}`; }
+  }
   return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">资源 / 原生证据</h2>{query.isPending ? <p>读取中…</p> : query.error ? <p className="text-red-600">{query.error.message}</p> : !rows.length ? <p className="text-sm opacity-60">暂无已保存资源事实</p> : <>
-    <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">来源</dt><dd>{text(resource?.source)}</dd></div><div><dt className="opacity-60">采样 / 终态时点</dt><dd>{text(data?.as_of ?? data?.observed_at ?? state?.FinishedAt ?? state?.StartedAt)}</dd></div><div><dt className="opacity-60">CPU</dt><dd>{text(usage?.cpu ?? usage?.cpu_percent ?? data?.cpu ?? '未知')}</dd></div><div><dt className="opacity-60">RSS / 内存</dt><dd>{text(usage?.rss ?? usage?.memory ?? data?.rss ?? '未知')}</dd></div><div><dt className="opacity-60">I/O</dt><dd>{text(usage?.io ?? data?.io ?? '未知')}</dd></div></dl>
+    <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">来源</dt><dd>{text(resource?.source)}</dd></div><div><dt className="opacity-60">采样 / 终态时点</dt><dd>{text(data?.as_of ?? data?.observed_at ?? state?.FinishedAt ?? state?.StartedAt)}</dd></div><div><dt className="opacity-60">CPU</dt><dd>{text(usage?.cpu ?? usage?.cpu_percent ?? data?.cpu ?? docker?.CPUPerc ?? '未知')}</dd></div><div><dt className="opacity-60">RSS / 内存</dt><dd>{text(usage?.rss ?? usage?.memory ?? data?.rss ?? docker?.MemUsage ?? '未知')}</dd></div><div><dt className="opacity-60">I/O</dt><dd>{text(usage?.io ?? data?.io ?? docker?.BlockIO ?? '未知')}</dd></div><div><dt className="opacity-60">PID / 线程</dt><dd>{text(docker?.PIDs ?? '未知')}</dd></div></dl>
+    {statsError && <p className="mt-2 text-red-600">{statsError}</p>}
     {state && <p className="mt-3 text-xs opacity-70">容器终态：{text(state.Status)}；ExitCode={text(state.ExitCode)}。此处不是历史峰值。</p>}
     {rows.filter(row => row.kind !== 'resources').map((row, index) => <RawDetails key={index} label={`${text(row.kind)} · ${text(row.source)}`} value={row.data} />)}
     <RawDetails label="展开完整资源原件" value={data} />
@@ -57,7 +65,10 @@ function NativePanel({ runId }: { runId: string }) {
 function CostPanel({ runId }: { runId: string }) {
   const query = useQuery({ queryKey: ['cost', runId], queryFn: ({ signal }) => api<{ items?: unknown[] }>(`/api/runs/${encodeURIComponent(runId)}/cost`, signal), retry: false });
   const row = ((query.data?.items || []) as Row[])[0];
-  return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">费用</h2>{query.isPending ? <p>读取中…</p> : <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">状态</dt><dd>{text(row?.status ?? 'unknown')}</dd></div><div><dt className="opacity-60">金额</dt><dd>{text(row?.amount ?? row?.value ?? '未知')}</dd></div><div><dt className="opacity-60">来源 / scope</dt><dd>{text(row?.source ?? 'records/status.json')} · {text(row?.scope)}</dd></div><div><dt className="opacity-60">类型 / as_of</dt><dd>{text(row?.kind)} · {timestamp(row?.as_of)}</dd></div><div className="md:col-span-2"><dt className="opacity-60">原因 / 边界</dt><dd>{text(row?.reason ?? row?.note ?? (row ? '未保存 spend 原因' : '未保存 spend 事实；不能从运行生命周期推导费用'))}</dd></div></dl>}</section>;
+  const usage = (row?.data as Row | undefined)?.usage as Row | undefined;
+  return <section className="rounded-lg border p-4"><h2 className="mb-3 font-semibold">费用 / 原生用量</h2>{query.isPending ? <p>读取中…</p> : <dl className="grid gap-2 text-sm md:grid-cols-2"><div><dt className="opacity-60">状态</dt><dd>{text(row?.status ?? 'unknown')}</dd></div><div><dt className="opacity-60">金额</dt><dd>{text(row?.amount ?? row?.value ?? '未知')}</dd></div><div><dt className="opacity-60">来源 / scope</dt><dd>{text(row?.source ?? 'records/status.json')} · {text(row?.scope)}</dd></div><div><dt className="opacity-60">类型 / as_of</dt><dd>{text(row?.kind)} · {timestamp(row?.as_of)}</dd></div><div className="md:col-span-2"><dt className="opacity-60">原因 / 边界</dt><dd>{text(row?.reason ?? row?.note ?? (row ? '未保存 spend 原因' : '未保存 spend 事实；不能从运行生命周期推导费用'))}</dd></div></dl>}
+    {usage && <><p className="mt-3 text-xs opacity-70">已记录的原生 token 用量（{text(usage.status)}），不是供应商账单。</p><Table rows={(usage.items || []) as unknown[]} fields={['model', 'provider', 'messages', 'tokens']} /><RawDetails label="用量来源、时段与缺口" value={usage} /></>}
+  </section>;
 }
 
 function LogPanel({ runId }: { runId: string }) {

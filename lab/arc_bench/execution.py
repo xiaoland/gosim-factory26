@@ -558,6 +558,8 @@ def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
     observed = local_run.observe(run_path)
     lifecycle = observed.get("lifecycle", "unknown")
     facts = _status_facts(run_path, lifecycle)
+    if observed.get('spend', {}).get('scope') == 'self-funded-provider':
+        observed['spend']['usage'] = facts['native'].get('usage')
     facts.update(observed)
     value = {**facts, **_activity(run_path, facts), "lifecycle": lifecycle,
              "as_of": observed.get("as_of", observed.get("observed_at"))}

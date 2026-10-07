@@ -31,10 +31,11 @@ def _stamp(value: Any) -> float | None:
     return None
 
 
-def _pi(run: Path, scope: str, observed_at: float) -> dict[str, Any]:
+def _pi(run: Path, scope: str, observed_at: float, since: float | None) -> dict[str, Any]:
     harness = run / "data" / "harness" / scope
     messages, turns, errors = deque(maxlen=500), deque(maxlen=500), deque(maxlen=20)
     sessions: dict[str, dict[str, Any]] = {}
+    usage_groups, seen_usage = {}, set()
     candidates = set(harness.rglob("session.jsonl")) | set(harness.rglob("pi-timing.jsonl"))
     for path in sorted(candidates):
         session_id = None
@@ -60,6 +61,23 @@ def _pi(run: Path, scope: str, observed_at: float) -> dict[str, Any]:
                                "turn_id": value.get("turn_id"), "request_id": value.get("request_id"),
                                "response_id": value.get("response_id"), "event": kind}
                         message = value.get("message") or {}
+                        usage = message.get('usage') if isinstance(message, dict) else None
+                        if (kind == 'message' and isinstance(message, dict) and message.get('role') == 'assistant'
+                                and isinstance(usage, dict) and since is not None and stamp >= since):
+                            # Count producer messages, not timing copies or migrated
+                            # history. Native cost=0 is not a provider bill.
+                            key = (str(identity), value.get('id') or value.get('timestamp'))
+                            if key not in seen_usage:
+                                seen_usage.add(key)
+                                group = (str(identity), message.get('provider'), message.get('model'))
+                                summary = usage_groups.setdefault(group, {'session_id': str(identity),
+                                    'provider': message.get('provider'), 'model': message.get('model'),
+                                    'messages': 0, 'tokens': {}, 'source': source})
+                                summary['messages'] += 1
+                                for field in ('input', 'output', 'cacheRead', 'cacheWrite', 'reasoning', 'totalTokens'):
+                                    amount = usage.get(field)
+                                    if isinstance(amount, (int, float)) and not isinstance(amount, bool):
+                                        summary['tokens'][field] = summary['tokens'].get(field, 0) + amount
                         if isinstance(message, dict) and message.get("stopReason"):
                             row["stop_reason"] = message["stopReason"]
                             if message.get("errorMessage"):
@@ -83,7 +101,11 @@ def _pi(run: Path, scope: str, observed_at: float) -> dict[str, Any]:
         except (OSError, UnicodeError) as exc:
             errors.append({"source": source, "error": f"{type(exc).__name__}: {exc}"})
     return {"sessions": list(sessions.values()), "session_messages": list(messages),
-            "provider_turns": list(turns), "reader_errors": list(errors)}
+            "provider_turns": list(turns), "reader_errors": list(errors),
+            "usage": {'scope': 'current-run-native-messages', 'since': since, 'as_of': observed_at,
+                      'status': 'partial' if since is not None else 'unknown',
+                      'items': list(usage_groups.values()),
+                      'note': 'Only recorded native messages; unrecorded/in-flight usage and provider bills are unknown.'}}
 
 
 def observe(run: str | Path, *, provider: str, braid: bool = False) -> dict[str, Any]:
@@ -96,7 +118,7 @@ def observe(run: str | Path, *, provider: str, braid: bool = False) -> dict[str,
                               "sessions": [], "session_messages": [], "provider_turns": [],
                               "reader_errors": [], "braid": {"observed_at": now, "states": [], "gaps": []}}
     if provider in {"pi", "pi-braid"} and isinstance(scope, str) and scope:
-        result.update(_pi(run, scope, now))
+        result.update(_pi(run, scope, now, _stamp(state.get('created_at'))))
     elif provider not in {"pi", "pi-braid"}:
         result["reader_errors"].append({"source": "observer", "error": f"unsupported provider {provider}"})
     if braid and isinstance(scope, str) and scope:

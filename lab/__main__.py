@@ -42,6 +42,12 @@ def _print_result(command, value, args, run):
         recipe = row.get('model_recipe') or target.get('model_recipe') or target.get('model_transport', 'unknown')
         print(f"recipe={recipe} competition={row.get('competition')}"
               f" source={row.get('source_run') or '-'}")
+        usage = (row.get('spend') or {}).get('usage') or {}
+        totals = [item.get('tokens', {}).get('totalTokens') for item in usage.get('items', [])]
+        known = [value for value in totals if value is not None]
+        if known:
+            print(f"native_tokens={sum(known)} scope={usage.get('scope')} coverage={usage.get('status')}"
+                  "；原生用量不等于供应商账单")
     elif command == "archive":
         print(f"archived={row['archived']}")
     elif command == "evaluate":

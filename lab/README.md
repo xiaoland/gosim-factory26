@@ -22,6 +22,8 @@ python3 -m lab serve --config SERVICE_JSON
 
 普通命令默认输出简短状态和本次操作的必要回执；`start/restart` 显示实际配方、参赛身份、来源及记录位置，`evaluate` 显示独立评测子 run 和冻结应用引用。控制回执不代表结果已保存，评测派发也不代表已有评分。需要完整结构化信息时，对这些命令追加 `--json`；Python API 始终返回完整对象。错误独立显示，不被正常 brief 遮住。`logs` 保持日志流，不默认展开原生会话历史。
 
+自费代理运行的 `spend.usage` 汇总本 run 创建之后、已保存原生消息中的 token 用量，并保留 session、模型和原件路径。接续继承的旧消息不重复计入新 run；未保存或正在执行的请求仍是缺口，因此覆盖状态为 partial。CLI 和 Console 同时显示这份事实。原生 token 用量不是供应商账单；未取得供应商计费或已核实的请求价格时，金额明确未知，不采用原生配置中的零费用占位值。
+
 独立 self-test 仍通过同一个 `evaluate` API，以 `--kind self-test` 区分，不增加 backend 命令。它从冻结运行的 `github-stage-N` 任务自动映射到对应的 `github-stage-N-req-test`；显式 `--task github-stage-N-req-test` 只用于覆盖任务。self-test 是私有、非排名结果，提交 ZIP、状态和回执保存在评测 run 的 `records/self-test`；如果站点没有导出 workspace，保存记录会明确列出缺口。认证由实际执行宿主的 Helium 私有会话材料提供，自测站 cookie 不复用 ARC 官网 cookie。
 
 `status` 无参数只列未归档且 lifecycle 不是 completed 的运行；failed、stopped 和 unknown 不会被默默隐藏。`--all` 查看全部，指定 RUN 始终可以查回。执行 lifecycle 来自实际执行器，activity/brief 来自该次 program 固定的 variant 状态脚本，查询只读保存事实，不进入远端重新采集。`archive --undo` 撤销隐藏；归档标记不停止、搬移或删除数据。正常完成的零分评测仍是 completed。

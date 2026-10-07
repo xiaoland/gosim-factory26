@@ -300,7 +300,7 @@ def _meter(run: Path, target: Mapping[str, Any], phase: str, *, wait: bool = Fal
 def _spend(run: Path, target: Mapping[str, Any], lifecycle: str) -> dict[str, Any]:
     if _uses_proxy(target):
         return {"scope": "self-funded-provider", "status": "not_collected",
-                "reason": "ARC shared-key meter is not used for self-funded recipes",
+                "reason": "No provider billing or verified per-request price is configured; native token usage is separate from monetary spend",
                 "value": None, "currency": None, "kind": "unknown",
                 "as_of": time.time()}
     baseline_path = paths(run)["records"] / "meter-baseline.json"
@@ -583,7 +583,12 @@ def _push_remote_manifest(run: Path, host: str, remote_run: Path, target: Mappin
     remote_target.pop("agent_package", None)
     value["target_config"] = remote_target
     encoded = base64.b64encode((json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode()).decode()
-    _remote_exec(host, ["sh", "-c", f"echo {shlex.quote(encoded)} | base64 -d > {shlex.quote(str(remote_run / 'manifest.json'))}"], check=True)
+    # Spawning automation can republish while the observer is reading. Never
+    # truncate its manifest; publish a complete adjacent file with rename.
+    temporary = remote_run / f".manifest.{uuid.uuid4().hex}.tmp"
+    _remote_exec(host, ["sh", "-c",
+        f"echo {shlex.quote(encoded)} | base64 -d > {shlex.quote(str(temporary))} && "
+        f"mv {shlex.quote(str(temporary))} {shlex.quote(str(remote_run / 'manifest.json'))}"], check=True)
 
 
 def _push_private_file(host: str, source: Path, destination: Path) -> None:
