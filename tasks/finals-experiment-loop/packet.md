@@ -50,9 +50,9 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 | 负责人/角色 | 已承担与采用结果 | 当前责任、状态 |
 | --- | --- | --- |
 | 主Agent `/root` | run/自动化/集成，proxy后续修复，编译源对齐，Console/Braid后续修复，采纳返回与提交 | 活跃；拥有总目标、优先级、所有未验收项和运行闭环，不以已委派卸责 |
-| execution_owner（执行者） | runtime/安装/部署、公共入口/Tini、应用环境；Hosted采集/控制采用80794c7a；时钟回拨复用修正daa96533 | 已续派：核对采集变量/策略实际可用性、计价来源及必要reader/文档修复；不操作两活跃模型run，不新增收费run。主持有run/automation/targets，避免重叠 |
+| execution_owner（执行者） | runtime/安装/部署、公共入口/Tini、应用环境；Hosted采集/控制采用80794c7a；时钟回拨修正daa96533；策略文档616f4290 | 本轮已返回。再次联系受thread limit拒绝、已不在live tree；费用实现由主明确接管，不再声称其在执行 |
 | evaluation_closure（执行者） | 本轮新增，负责Pi自动评测输入跨宿主缺失这一完整修复结果 | 执行中；拥有execution组装评测输入、local_run评测材料传输和必要default automation相关hunks，负责当前Pi完成后的后台接线及实际评分证据。不得停止/重启生成、重复评分或操作I14；execution_owner不编辑这些文件，主只持有总集成 |
-| competition_cost_decision（advisor） | 短控制锁、同request_id确认、ZIP锁外、stop不调用observe建议已采用，由执行者落实 | completed；此前还被要求调查计价/代理，属角色越界，今后只基于已收集证据处理工程取舍 |
+| competition_cost_decision（advisor） | 短控制锁等建议已采用；本轮只基于主提供的价格/用量证据建议partial已知小计及ARC适配归属 | completed；未调用取证或实施，主决定并实现；此前角色越界不沿用 |
 | process_reaping_decision（advisor） | 标准Tini/subreaper、保留Popen退出状态所有权、不设全局并发gate建议已采用 | completed，不负责资源实现或验收 |
 | acceptance_conversation_decision（误用advisor） | 历史会话取证及评价文档修改已采用b84d6d52 | assignment已结束，不在live tree；保留证据不重做，调查/编辑不再交advisor，该低优先级项不扩展 |
 | cold_local_profile、cold_console_profile、cold_hosted_profile、evaluation_implementation等历史执行者 | 历史控制/回收、Console、平台拒绝、自测认证/评测接线，材料已保留 | 不在live tree，不声称持续工作；后续已由主接管，评测残余义务归主，不挂在不可达owner名下 |
@@ -78,6 +78,8 @@ execution_owner本轮文档返回d8d4f8d4已读取，但“没有run账单就必
 费用owner后续返回616f4290及价格适用性证据，仍未实现estimate；再次联系受agent thread limit拒绝且owner已不在live tree，费用实现明确由主接管。competition_cost_decision仅基于主提供的证据建议partial已知小计、显式missing和ARC适配归属，主采用。主复用已有Pi费用算式与今天18:27的ARC价格原件，新增公共arc_spend及价格表，Hosted仅在model_transport=platform且无终态账单时投影estimate；首次价格快照保存在records/platform，源价格/usage时间分开，自费供应商不套价。多个native scope用量合并，不由最后scope覆盖前者。对历史已归属ARC的真实完成响应数据只读重算¥15.550208680000003，与原小计¥15.55020868仅浮点尾差；这不是新参赛或新运行验收，现代Hosted实时消费/策略动作仍未通过。旧self-funded ZIP用于解析/算式读取，不将其ARC套价结果认定真实金额。
 
 本次真实docker top只读快照（as_of=1791370827）：Pi8个进程、I14 13个进程，均无僵尸；同时保存资源样本pids.current为34/62（含线程），两者pids.events.max=0，memory.oom/oom_kill=0。I14 memory.events.max=206是累计边界，不冒充OOM或当前持续触顶。此证明长运行当前无僵尸积累样本，不证明所有工具生命周期或触顶补救已通过；没有为资源验收制造故障。
+
+evaluation_closure已交付b514103f：冻结requirements及约24KB tests到run inputs、传输后remote manifest指向真实远端路径，现场仍由原observer233116/default245040与Mac relay50624执行，没有重启生成。主采用其原件与实际路径读回，不重复调查；后续仍由同owner核对sfp7 default→wsl评测宿主的必要执行接线并收取评分结果。当前不是已完成评测。本轮最高优先级费用实现提交9cf8690c，跨组件partial语义提交d4e7e474；两run最新保存facts仍running/active，尚无最终应用与评分。
 
 ## 关键交付和证据
 
