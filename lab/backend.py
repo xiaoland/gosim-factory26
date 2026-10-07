@@ -8,6 +8,7 @@ from __future__ import annotations
 import hashlib
 import gzip
 import json
+import os
 import sqlite3
 from pathlib import Path
 from threading import Lock
@@ -72,7 +73,7 @@ def publish_run(service_url: str, manifest: dict, *, status=None, records=None,
         body["status"] = safe_status
     if isinstance(records, dict):
         body["record_summaries"] = _portable_value({key: records[key] for key in
-                                                     {"resources", "resource-latest", "logs", "cost", "evaluations", "result-save", "automatic-evaluations"}
+                                                     {"resources", "resource-latest", "logs", "cost", "evaluations", "result-save", "automatic-evaluations", "workspace"}
                                                      if key in records})
     headers = {"Content-Type": "application/json", "Content-Encoding": "gzip"}
     if token:
@@ -157,6 +158,32 @@ def saved_record_summaries(run: str | Path) -> dict:
         except OSError as exc:
             result.setdefault("logs", []).append({"source": str(path.relative_to(root)), "bytes": None,
                                                    "error": f"{type(exc).__name__}: {exc}"})
+    saved = result.get("result-save") or {}
+    if saved.get("saved") is True:
+        workspace = root / "data/workspace"
+        files, errors = [], []
+        if not workspace.is_dir():
+            errors.append("saved workspace directory is missing")
+        excluded = {".git", "node_modules", ".factory26"}
+        def read_error(exc):
+            errors.append(f"{type(exc).__name__}: {exc}")
+        for directory, dirs, names in os.walk(workspace, onerror=read_error, followlinks=False):
+            dirs[:] = sorted(name for name in dirs if name not in excluded)
+            for name in sorted(names):
+                path = Path(directory) / name
+                try:
+                    files.append({"path": str(path.relative_to(workspace)),
+                                  "bytes": path.lstat().st_size, "symlink": path.is_symlink()})
+                except OSError as exc:
+                    read_error(exc)
+                if len(files) > 500:
+                    break
+            if len(files) > 500:
+                break
+        result["workspace"] = {"source": "data/workspace", "as_of": saved.get("as_of"),
+                               "storage_root": saved.get("storage_root"), "files": files[:500],
+                               "truncated": len(files) > 500, "excluded_directories": sorted(excluded),
+                               "errors": errors, "contents_available": False}
     return result
 
 

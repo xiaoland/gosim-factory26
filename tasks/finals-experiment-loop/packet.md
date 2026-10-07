@@ -28,6 +28,8 @@ evaluation_closure完成新正常入口代码路径核对，并将远端来源�
 
 console_acceptance完成只读实际使用：CLI brief每条约0.05秒，首页约4.5秒；两run stopped、saved且无评分可见。发现日志只展示末尾65KB却未注明范围、原生state active易被当执行状态、没有workspace浏览入口。主已修截尾提示、原生state说明、直接展示保存宿主的workspace与完整日志原件路径；正常Lab前端构建成功，静态文件已部署到既有sfp7服务，未重载后台、运行或collector。原生Braid仍缺协作快照，文件浏览/下载仍缺项，页面明确说明；原owner正做上述窄UI读回，不将路径提示冒充文件浏览功能。
 
+上述三项窄UI实际读回通过，改动提交afc01a6b。随后采用advisor仅基于给定事实的建议，补成功保存后的有界workspace文件清单，沿已有record_summaries发布，不运输内容或增加Backend跨宿主文件服务。真实Pi现场78个文件、I14现场16个文件，无截断/读取错误；经正常run.publish写入既有服务，HTTP详情实际取得同样数量，原保存时间保留。新静态页已再次构建部署，未重载服务；内容预览/下载仍未提供，清单和真实保存位置只证明定位能力。原owner继续窄UI读回。
+
 ## 当前设计与资料归属
 
 - 控制单位是run；experiment只是标签。无内部capacity、queue、slot、reservation或准入gate。
