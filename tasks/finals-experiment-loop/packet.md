@@ -6,6 +6,10 @@ Python策略接线已提交 a439ae26、f3c41f36：watch直接读取保存事实�
 
 execution_owner 持有 hosted_run 及必要解析模块的采集/修复/实际反馈，主 Agent 持有策略与执行生命周期接线，competition_cost_decision advisor 判断比赛统计代理和计价前提。当前 Rust proxy 会改写模型预算与 fallback，不直接放进比赛包；透明统计层是否加入由该判断收敛。本任务仍不创建、启动或停止正式比赛运行。主曾误问用户剩余额度/停止线，用户明确纠正：本任务交付采集变量及普通 Python 自由判断/操作能力，不是替 I15 制定预算策略；撤回该前置，不建立默认阈值或预算门控。另已修复 start --script 覆盖默认自动评测的问题：自定义策略与任务自动评测分别启动，不再二选一；该修正尚待真实消费，不宣称完整自动策略通过。
 
+Hosted周期采集与控制边界已提交：复用同run observer，初期状态3分钟、稳定期8分钟；workspace请求300秒内复用原回执，所以正常快照约6/8分钟，不刷新旧usage/native时间。选择读取原生JSONL、当前scope/producer的gateway与resource-observation，不解包运行环境；现有native/provider reader负责解析。真实self-funded重放908d359c的精简project.zip两次解析约0.062/0.065秒，得到423条assistant usage、2个session，第二轮changed=false且观察历史仍1条；provider/resource在该旧包缺失，保持unknown，不编金额。来源、原下载与精简身份、现代本地材料及未覆盖项归 `runs/finals-experiment-loop/validation/hosted-workspace-observation-20261007.json`。GET/logs/ZIP移出execution写锁，只按同pending request_id更新控制状态；stop返回真实cancel受理/未知，不启动第二采集或伪造终态。现代Hosted ZIP、采集期间并发取消及费用估算仍无本轮实际证据，不因源码实现宣称通过。主消费接线提交d92b074c，确保Hosted事实不会被尚未回收的本机空data覆盖。
+
+acceptance_conversation_decision已读取三个真实Factory26人类会话及验收委托，完成evaluation/assessment纠偏并提交b84d6d52：现有会话属于受辅导的集成修复验收，真实运行/恢复/保存/评测证据可采用，但不能整体证明陌生使用者低负担；主侧排错与信息搬运计入成本。该项已收束，不再要求模仿用户、不新增收费验收，后续优先当前采集与既有运行闭环。
+
 最新目标核对归[assessment达成表](assessment.md#2026-10-07-原定目标达成核对)：整体未达成，已完成的架构与局部运行能力不能代替完整使用链。采用advisor的收敛顺序：收取Node/npm实际应用验证并继续当前Pi/I14；并行修Console已发现的active事实缺失；产物形成后完成原定自动评测、同variant接续/stages及采集策略证据；最后汇总正常操作的时间/token/排错成本。不扩variants/模型矩阵，不制造资源触顶或idle条件，不因分数低追加优化。Hosted关闭与绝不参赛是外部未覆盖边界，self-test评分和内部费用/Console缺口仍须完成。
 
 I14恢复责任已由execution_owner明确交回主Agent，无在途构建或收费操作。主直接读取实际Linux编译输入，发现 `braid-rebuild-unknown-timeout-20261007/src/src/store/mod.rs` 仍只JOIN `wt.lifecycle='active'`，而746/756保存的worktree为blocked；本地已提交的修正接受active/blocked，却未同步进远端编译输入。远端还保留宽泛error.contains("timed out")，与本地精确get_state条件不同。因此撤回“实际SQL条件满足但helper原因未知”的诊断：交付ELF哈希一致只证明交付了那个二进制，不证明它包含当前源码修正。主已同步当前Braid src，并复用原Cargo volume执行release编译，日志为远端 `source-aligned-build.log`；不增加恢复条件、诊断框架或设施测试。编译与正常接续的实际结果仍待取得。
