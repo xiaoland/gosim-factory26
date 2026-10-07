@@ -12,7 +12,15 @@ runtime 反馈记录目录逻辑字节与实际占用、组成、构建环境和
 
 本次基线为 `runtime-i14-reset-recovery-20261007b`：`du` 实测约 1.1 GiB，其中 `.playwright` 385 MiB、`node_modules` 402 MiB、`bin` 140 MiB、字体 68 MiB。首次完整构建 705.7 秒；两次成功 restart 墙钟分别约 156 和 161 秒，包含组装与输运，不能直接命名为纯传输耗时。更详细的跨网字节及 token 数据尚缺；负责人后续交付须补实际来源，不靠估算填满表格。
 
-普通命令现复用 brief 输出，完整回执显式 `--json`，Python API 与落盘原件不变。真实 d38 status 的简短输出为 258 字节，完整 JSON 为 146,510 字节；status 本来已有 brief，这组数只说明避免默认展开冻结配置的规模，不代表本次 token 节省。主核对失败 P2 的原生事实时又发现相同时间戳的 timing `message_end` 抢先于 session outcome，使 brief 只剩 failed；Pi DX 状态脚本已改为同时间优先 outcome，消费该保存事实实际返回具体 `502 upstream_transport_error`。没有改写旧 program 或旧 saved status，新默认 start/control/evaluate 仍需独立实际操作验证。
+普通命令现复用 brief 输出，完整回执显式 `--json`，Python API 与落盘原件不变。补充前真实 d38 status 的表格输出为 258 字节，完整 JSON 为 146,510 字节；status 本来已有 brief，这组数只说明避免默认展开冻结配置的规模，不代表本次 token 节省。独立会话指出单 run 的配方和保存位置仍需翻完整记录，主随后在单 run 输出中补配方、来源、记录路径与保存回执，无参数列表不扩展。实际 P2 输出 saved=true、scope 为 workspace/harness/records、errors 空；d38 没有保存回执，明确显示 unknown。主核对失败 P2 的原生事实时又发现相同时间戳的 timing `message_end` 抢先于 session outcome，使 brief 只剩 failed；Pi DX 状态脚本已改为同时间优先 outcome，消费该保存事实实际返回具体 `502 upstream_transport_error`。没有改写旧 program 或旧 saved status，新默认 start/control/evaluate 仍需独立实际操作验证。
+
+runtime owner 已产生约 640 MB 的 arc-core 原件，移出预装 Chromium、字体和 GLib 浏览器资源；`runtime-i14-arc-core-20261007g` 的来源记录包括 profile、删除项及浏览器 wrapper digest。已有完整基座复制/精简约 5.4 秒，不是从空缓存构建。f 版本全量部署原件 `runs/runtime-i14-arc-core-20261007f-rsync.txt` 记录约 601.4 MB、135.10 秒；此前 d 版本首次同步约 53.96 秒，保留网络/版本条件差异，不把一个耗时推广为固定收益。手工相同基座复制及 Braid/metadata delta 为约 12.7 MB、1.29 秒，但维护入口对 g 缺失 derivation identity 的兼容条件尚未成立，因此不能宣称普通 dispatch 已取得该收益。`runtime-i14-arc-core-20261007f-browser-startup.txt` 只证明 sfp7 宿主 Chrome 可渲染，不证明 ARC 容器内工具可用；无系统浏览器的 CDN/TLS 失败、实际容器安装/缓存及普通默认接线仍由 execution_owner 持续修复，真实模型使用验收尚未取得。
+
+后续已发布默认 j：实占 551,760 KiB（约 539 MiB），维护 `_ensure_remote_runtime` 实际部署到 `/home/yyh/factory26-lab-runtime/arc-core-20261007j-deployed`，同版本再次调用回执 `reused=true`；证据为 `runs/arc-default-deploy-20261007/runs/default-runtime-deploy/records/runtime-deployment.json`。j 的 ARC 容器内在只读 runtime、外部可写浏览器缓存条件下实际打开 example.com，证据为 `runs/runtime-i14-arc-core-20261007j-container-browser.txt`；这是浏览器运行能力，不是生成 Agent 普通工具使用通过。最新 m 从 Docker arc-core 直接产出，不先安装再删除 Chromium，实占 507,260 KiB（约 495 MiB），缓存构建/导出 37.07 秒；原件为 `runs/runtime-i14-arc-core-direct-20261007m-build.txt`。该日志 Braid cargo 层为 CACHED，不能据此宣称源码修改或空缓存构建达到同一耗时。m 尚非默认发布材料；普通接续自动增量、真实源码改动耗时及整体使用 token 收益仍待取得。
+
+无参数 status 实际仍列出装配失败的 `70cab...` 为 starting。已有 CLI 原件明确是缺 runtime-source.json、尚未派发；根因是 assembly 已写进度状态，异常后调用方只在状态文件不存在时写失败。主将确知未派发的装配异常归到公共 assemble 边界，保留具体错误并写 failed，覆盖 start 与 restart 两个正常调用方；平台写结果不明的边界不改。本次仅编译及调用链核实，不制造故障探针，也不改写历史记录来伪造新路径实测通过。
+
+19b 的后续证据又暴露 dispatch 准备异常同样留下 starting；它没有执行句柄或实际远端目录，但这两项缺失本身不能普遍证明未派发。采用 advisor 的实际副作用边界判断：Local helper 部署完成后、create/simulate 调用前保存最小派发意图；公共 start 异常写 status 与 manifest，准备失败为 failed，越过边界后未知为 unknown，保留 start-error 原件。self-test 最终 submit 前保存独立意图，尚未提交的认证/打包失败不冒充已执行。Local worker 派发受理不再直接标 running，等待已有 observer 取得实际运行事实。这些是新源码的边界修复，未制造故障或改写 19b 历史；仍需后续实际接续资格化。
 
 | 需求 | 好设施应达到的可观察结果 | 需测量或核实的内容 |
 | --- | --- | --- |
@@ -33,6 +41,8 @@ runtime 反馈记录目录逻辑字节与实际占用、组成、构建环境和
 核心控制单位是 run。stop 只停止指定 run，不操作其它 run，也不管理 Python 程序的后续代码。默认顺序脚本在 completed 后接续，stopped 不当作 completed；脚本也可明确调用 restart。停止独立自动化程序与停止 run 是两件操作，文档不能承诺只做后者就阻止前者继续执行。比较标签不能改变控制范围，跨 run 的累计费用必须写清选择范围。
 
 自动结果保存与 archive 标记分开：所有终态都保存结果，archive 仅从默认 status 列表隐藏，不改变终态、停止运行或删除材料。正常完成且评分为零的评测仍是 completed；评测环境/程序未完成才是 failed。
+
+I14 的失败 brief 此前仅显示 failed，即使同一保存 status 的当前 scope provider evidence 已有 `provider session disconnected before terminal receipt`。绑定的 status.py 已在 failed 时采用这些已采集具体错误并保留 agent/source 证据；消费真实 de22 原件得到该明确 brief，没有重新采集、读取 rollout 或改写旧冻结程序。后续正常运行由新 builder 冻结脚本，不为显示修复额外重启 610daf。
 
 ## Simplicity 的具体含义
 
@@ -109,7 +119,7 @@ runtime 反馈记录目录逻辑字节与实际占用、组成、构建环境和
 
 独立 owner braid_idle_evidence 复用 provider_liveness 的 SQLite/WAL 快照与 Braid status，接到已有 observer 的 native.braid，限定 manifest.native_scope_id，仅映射该 scope 的容器路径，保留源身份/缺项。真实 Braid 初始状态 pending_events=1、provider_sessions 空，因此当时 idle unknown，控制没有触发。advisor 初步全局静止判据经冻结请求复核后修正为任一当前非终态 provider idle/sleeping，turn 已终止且无工具、重试或未解除恢复错误，连续新鲜观察与 turn/活动/恢复指纹保持 30 秒后，经已有 stop/save API 控制；其它会话在途计数只用于明确预期损失。failed turn 也可进入真实 idle，不能把它当业务完成。普通 Python 控制程序为 `validation/github-sfp7-stages.py`，只读已有 status，不建第二采集循环，Stage1 failed 不派发 Stage2，所有源改动仅编译与实际操作验证，未运行设施测试或提交共享源码。
 
-真实模型 run `3a9346912db449ffa0f8ccbe5fe2ba8e` 越过初始化后产生 39 次成功上游响应，包括 Qianfan GLM-5.3 24 次、Qwen GLM-5.3 10 次、Ark Kimi-K3 4 次及 Qwen Kimi-K3 1 次。末段 Qianfan 返回 HTTP 429 `token_plan_person_rate_limit_exceeded`，冻结 fallback Qwen 返回 HTTP 403 `AccessDenied.Unpurchased`；此前 Qwen 成功记录仍保留，不能概括为始终不可用。会话 `01a11255-8f35-7c80-a58d-eac7c7c3bbc0` 在 failed turn 后进入明确 idle，保存事实连续约 33.9 秒空闲后触发，实际停止约在空闲开始 45.7 秒时完成；自动保存 saved true/errors 空。原件为 `3a9346912db449ffa0f8ccbe5fe2ba8e-control.json`、`github-sfp7-stage1-gateway-original-all.txt`。异步 SSH 启动原先持有 stdio 导致 CLI 等待执行终态，已在维护 start/spawn/simulate 的 nohup 分支修正重定向和分组；该 run 采用原始 Docker 身份接回已有 observer，没有重复启动容器。
+真实模型 run `3a9346912db449ffa0f8ccbe5fe2ba8e` 越过初始化后产生 39 次成功上游响应，包括 Qianfan GLM-5.3 24 次、Qwen GLM-5.3 10 次、Ark Kimi-K3 4 次及 Qwen Kimi-K3 1 次。末段 Qianfan 返回 HTTP 429 `token_plan_person_rate_limit_exceeded`，冻结 fallback Qwen 返回 HTTP 403 `AccessDenied.Unpurchased`；此前 Qwen 成功记录仍保留，不能概括为始终不可用。会话 `01a11255-8f35-7c80-a58d-eac7c7c3bbc0` 在 failed turn 后进入明确 idle，保存事实连续约 33.9 秒空闲后触发，从程序首次可信 idle 观测到实际停止约 45.7 秒；这不代表原生会话最早进入 idle 的时点。自动保存 saved true/errors 空。原件为 `3a9346912db449ffa0f8ccbe5fe2ba8e-control.json`、`github-sfp7-stage1-gateway-original-all.txt`。异步 SSH 启动原先持有 stdio 导致 CLI 等待执行终态，已在维护 start/spawn/simulate 的 nohup 分支修正重定向和分组；该 run 采用原始 Docker 身份接回已有 observer，没有重复启动容器。
 
 同题接续 `ffb8014cc06c43c480c2583ef9f3335c` 保留 native_scope `3a9346912db449ffa0f8ccbe5fe2ba8e`，但 Braid 启动被 Git `detected dubious ownership` 拦住：保存阶段已交还宿主 owner 的应用仓库再次由 SDK root 使用。原错为 `github-sfp7-stage1-restart-braid-error.txt`，外层缺失 result.json 不是根因。根据 advisor 判断，维护执行在新 run 独占 data 恢复到 root owner，确认 terminal 后保存交回实际宿主 owner，保留权限位、不跟随符号链接，不扩大全局 safe.directory。从该已保存现场再接续产生 `ec254b7b29b8421b9a4f14fdc98abdce`，CLI 成功返回，原 session `01a11255-8f35-7c80-a58d-eac7c7c3bbc0` 创建 UTC 18:18:14 的新 running turn `01a11270-079f-7033-8422-fc3192b15450`，证明越过 Git 错误并恢复原生执行。控制程序此次禁用重复 idle-stop，以第一阶段 completed 作为第二阶段派发前提；随后因供应商阻塞按下述处置停止，第二阶段始终未启动。
 
@@ -123,7 +133,13 @@ runtime 反馈记录目录逻辑字节与实际占用、组成、构建环境和
 
 后续定向观察进一步确认：Braid assignments 仍为 `active`；root 最近一次 `wake_batch` 已 `completed`，其原生会话记录 PR #2 为 OPEN/draft、head `84af540`，等待 `glm-1` 承接。对应 fast 新 session 为 `idle` 且没有 JSONL turn。Issue/PR 两个 worktree 当前只有初始化提交 `6c53cd8`、设计文档提交 `84af540` 及未跟踪 `tasks/`，没有业务实现提交。因此当前可确认的是 reset 恢复成功，Stage1 尚未完成，尚无应用冻结提交，也不具备派发 Stage2 的条件。
 
-进一步读取 root 恢复后的最近一轮原生记录确认：root 将 PR #2 的“已指派 glm-1、等待调度”解释为责任已交接，因而没有创建新的实施请求或评论；其后仅处理例行 Comment #5/#6，并明确结束 turn。Braid 本地合同也明确“指派回执不表示模型已经开始”，而普通 idle assignment 不会被周期性拉起；当前 PR #2 的 wake batch 是此前 403 失败后已消费的旧 batch，reset continuation 没有重放原 assignment 输入。fast managed state 为 `quiescent`、`pendingMessageCount=0`、无原生 JSONL turn。故根因是恢复后缺少面向当前 glm-1 的新输入/wake，不是角色指令缺失、业务实现失败或 reset 身份丢失；需要由有权协作者对 PR #2 发出明确实施输入后，才会重新进入生成。
+此前将现象解释为“恢复后缺少面向当前 glm-1 的新输入，需要协作者发出明确实施输入”只是中间推断，已被下面的 lost-wake 证据替代：root 确实将 PR #2 解释为等待调度，但决定性原因是 provider 在普通 turn 创建前失败，旧 wake 被消费且 reset 未重放。
+
+随后确认原始 fast session 的首条实施输入确已到达，provider 在普通 turn 创建前返回 403 `AccessDenied.Unpurchased`；reset notice 自身也以同一 403 失败。由于旧 session 没有可查询的普通 `failed` turn，原 `complete_context_reset` 将 `continuation=0` 并消费旧 wake batch，造成原实施输入丢失。修复 `sources/braid/src/store/mod.rs`：对同一 reset 仅在失败 notice、无普通 turn、且 reset event 可定位到旧 wake batch 时重放原 `wake` 事件，保留原事件身份、失败记录和 reset_continuation；不重放 assign/invalidate，不改变普通 idle 语义。`cargo check --locked --bin braid` 通过。Linux x86-64 独立 runtime 已构建于 `runs/runtime-i14-offline-input-recovery-20261007`，Braid SHA256 `aa307dc50424a538dc7218d3d0d302e12085a13e654e6dc4b9c461b696cd81f2`；部署到远端新 runtime 目录的接续仍在进行，未覆盖旧冻结 runtime。
+
+同 task restart 的实际尝试产生 run `f5cbf353e67742468cb9d1bafd569d24`，使用上述 runtime 但在 Braid 入口失败：原始结果为 `root Issue #1 member glm-root-1 has no resumable session`，同时 `scope_closed=false`、`queued_comment_deliveries=0`，容器 exit 1，未进入模型生成。f5 的远端 `sessions.json` 显示 root 最新物理会话为 `unknown`，而非可恢复句柄；该记录保留于 `runs/lab/runs/f5cbf353e67742468cb9d1bafd569d24/records/agent.stdout.log` 与 `records/status.json`。另有 `19b53703de774619b877bf16c9535c00` 的本地 starting manifest，但 `remote_run` 为空、无 execution handle，不能称为已启动或可消费的接续；其后续选择仍需遵守 root 身份与历史完整性边界。
+
+对 f5 的 root locator 定向核对：root 最新 JSONL 文件实际存在于远端 run 的 native-home，旧 writer 有 `execution-stop.json`、`stopping.json` 与 `children-stop.json`，无 root/`braid local` 进程；Store 中 root assignment/agent 仍为 `active`/`idle`，最新 provider session 为 `unknown`，`provider_session_id` 与 sessions manifest 中的同一 native locator 一致，两个 reset 均 `applied`。因此历史文件与 Store 身份没有丢失，当前失败来自恢复候选未将 unknown root 变为可执行 idle session，随后 `root_idle_tick` 按合同报告“no resumable session”；尚未有证据支持 fresh root 或丢失历史。19b 仍无远端目录/handle，不能作为恢复验证。
 
 ### 2026-10-07 自然请求：Hosted GitHub Stage1 → Stage2
 
@@ -181,6 +197,8 @@ variant 来源固定：`I14-dx-test` 从 `pi-braid-i14` 派生；名称为 `pi-m
 
 不参与比赛，官方生成/重放显式 `self_funded`，self-test 为私有非排名评测，不继承历史 `official_evaluation` 或比赛提交身份。下表最多八次有效生成执行；按当前 AGENTS 约定，本地自费不默认附加四小时或金额停止线，原表 A 的金额控制只在采集可靠且实验明确采用时成立，不把账单未知变成默认 gate。评测由实际平台终态完成。设施失败保留原件，由同一 owner 修复后明确接续，不盲目重发未知收费写入。已冻结应用的独立评测可与下一 stage 并行，不接管其它任务。
 
+2026-10-07 用户补充官网已知缺陷：创建身份为 `official_evaluation` 时，启动回执即使显示 `self_funded`，实际仍可能使用比赛费用。此为用户提供的平台事实，尚无本次请求可独立复核；保留创建与启动两份原始回执，不仅凭显示字段判定 start 失败或实际自费。本轮非参赛、自费授权不变，不能借该字段误用比赛费用。self-test 当前仍等待用户完成钥匙串授权，未触发认证或提交；本地生成、应用冻结和 Stage2 接续可继续。
+
 | 行 | variant / target / task | 合并动作 | 生成执行数与证据 |
 | --- | --- | --- | --- |
 | A | Pi / WSL / BookStack | 三参数 start；真实活动后 pause 约 30 秒再 resume；采集已知且大于零的本 run spend 触发一次 stop；同 task restart 完成，应用自动 task eval | 2；原 run pause/resume 身份不变；restart 新 Lab run 沿用原 native session，整个 data 保留、旧费用/records 不迁移；真实随题报告绑定冻结 BookStack 应用 |
@@ -204,3 +222,5 @@ A/B 控制允许损失仅限本会话自己的在途请求、连接与尚未落�
 原件入口为 `runs/finals-experiment-loop/validation/`，Mac 所有 cache/tmp/控制/回收均在 WorkSSD。逐行保存 task/route/target/program 版本、原始命令和 stdout/stderr/HTTP 响应、控制回执、run/平台/native 身份、快照、回收范围、策略事实、UI 观察。分别记录输入齐备→实际执行、首个活动、规则→动作、阶段→应用、应用→评分、终态→退出/回收、事件→Console 可查的时点；墙钟、主动操作段、模型/平台等待、寻找/排错与返工分开，不猜测纯主动劳动。资源来自真实执行域 CPU/RSS/I/O/磁盘以及 collector/gateway/采样分项，无法分项则明示缺口。
 
 交付通知须提供实际可消费版本、准确 variant 名称、维护 CLI/target/task/route 配置入口、共享服务地址和已知限制。先按维护文档执行，再保留不足及修复反馈；不通过旧 compile/doctor/build/exp 入口绕过交付，不要求逐条口头导航。当前待运行，以上没有验收通过含义。
+2026-10-07 新接续 `de22a0c3d9464c509ac8194bb0f516c8` 实际消费 Linux runtime `/home/yyh/factory26-lab-runtime/i14-offline-input-recovery-20261007b`（Braid SHA `aa307dc50424a538dc7218d3d0d302e12085a13e654e6dc4b9c461b696cd81f2`），`native_resume=true`、source `d38fa85756f24f13bb5fbb262b3fdf80`、native scope `3a9346912db449ffa0f8ccbe5fe2ba8e`。该次重启仍在同一 root native identity 上完成 `resume_count=1`（`last_resumed_at=2026-10-07T03:51:22.965Z`），随后 wake turn 以 `provider session disconnected before terminal receipt` 结束，最终 Braid 仍报 `root Issue #1 member glm-root-1 has no resumable session`；3/3 provider health 均 `error=null, can_progress=false`。因此已排除候选查询过滤和 worker 首次 health 未汇报造成的过早 root idle 判定；当前剩余阻塞是恢复后的 provider turn 断连，不能安全重放该 unknown 输入。原始证据：`runs/lab/runs/de22a0c3d9464c509ac8194bb0f516c8/records/status.json`、`records/agent.stdout.log`、`records/runtime-deployment.json`。
+同日随后构建并部署 `runs/runtime-i14-offline-input-recovery-20261007c`（Linux x86-64，Braid SHA `f1b292c48956475b358df30a58b06ebb17a3a88dcd86f11a6a3ac8ff57f8f88f`）启动真实接续 `610daf8655bc4f178cf6b0b35e94cfc7`。该 run 的 `native_resume=true`、source 仍为 d38、scope 仍为 `3a9346912db449ffa0f8ccbe5fe2ba8e`，容器 handle `19574b172848bc27cc0ffdf27443b65ddf912c714e5c51587ed9f2e174cff65f`。保存摘要已观察 root 原 native identity `...pi-glm-root-01a1144c...` `resume_count=1` 且 wake completed；fast 产生新 native binding `...pi-glm-fast-01a11486...` 并进入 `wake_batch` running，原生 JSONL 已实际写入 `backend/src/auth/password.ts`、`backend/src/db/schema.ts`、`backend/src/db/client.ts`、`frontend/index.html`、`frontend/src/main.tsx`、`frontend/src/App.tsx`。这证明旧 applied reset 的去重 wake replay 已被真实执行消费；Stage1 当前仍在生成中，self-test 仍 pending_auth。

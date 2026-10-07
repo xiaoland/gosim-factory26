@@ -20,6 +20,7 @@ import shutil
 import subprocess
 import sys
 import time
+import uuid
 from zipfile import ZIP_DEFLATED, ZipFile
 from types import SimpleNamespace
 from typing import Any, Mapping
@@ -175,9 +176,56 @@ def _ensure_remote_runtime(run: Path, host: str, target: Mapping[str, Any]) -> d
                 "reused": True, "source_facts": value}
     if exists.returncode != 1:
         raise RuntimeError(f"cannot inspect remote runtime path {destination}: {exists.stderr.strip()}")
-    _sync(host, source, str(destination))
+    # Never expose a partially cloned runtime.  The public path is published
+    # only by the final rename after data and its own receipt are complete.
+    staging = destination.with_name(destination.name + ".staging-" + uuid.uuid4().hex[:12])
+    staging_receipt = staging / ".lab-deployment.json"
     source_metadata = None
-    source_metadata_result = _remote_exec(host, ["cat", str(destination / "runtime-source.json")])
+    source_metadata_path = source / "runtime-source.json"
+    if source_metadata_path.is_file():
+        source_metadata = json.loads(source_metadata_path.read_text())
+    base_value = target.get("remote_runtime_base")
+    deployed_mode = "full-rsync"
+    base_path = Path(str(base_value)) if base_value else None
+    if base_path is not None and not base_path.is_absolute():
+        raise ValueError("remote_runtime_base must be an absolute execution-host path")
+    compatible = False
+    base_metadata = None
+    if base_path is not None and base_path != destination and source_metadata is not None:
+        base_result = _remote_exec(host, ["cat", str(base_path / "runtime-source.json")])
+        if base_result.returncode == 0:
+            try:
+                base_metadata = json.loads(base_result.stdout)
+                comparable = ("backend", "platform", "npm_sha256", "native_patch_sha256", "native_modules_sha256",
+                              "profile", "omitted_members", "slim_wrapper_sha256")
+                compatible = all(base_metadata.get(key) == source_metadata.get(key) for key in comparable)
+                source_package = (source_metadata.get("derivation") or {}).get("package_sha256")
+                base_package = (base_metadata.get("derivation") or {}).get("package_sha256")
+                # Slim runtimes derived from an already frozen native runtime
+                # may not have a Python/package derivation hash.  Their
+                # explicit profile, omission set and wrapper digests are the
+                # base identity; a present package hash still must agree.
+                compatible = compatible and (
+                    (source_package and source_package == base_package) or
+                    (not source_package and not base_package and source_metadata.get("profile") == "arc-core")
+                )
+            except json.JSONDecodeError:
+                compatible = False
+    if compatible and base_path is not None:
+        # Clone a known-identical immutable base on the execution host. Reflink
+        # is preferred, but the copy remains independent before the delta lands.
+        _remote_exec(host, ["mkdir", "-p", str(destination.parent)], check=True)
+        clone = _remote_exec(host, ["cp", "--reflink=auto", "-a", str(base_path) + "/.", str(staging)])
+        if clone.returncode:
+            compatible = False
+        else:
+            _remote_exec(host, ["rm", "-f", str(staging_receipt)], check=True)
+            for member in ("bin/braid", "runtime-source.json"):
+                _sync_file(host, source / member, str(staging / member))
+            deployed_mode = "reflink-base-plus-braid"
+    if not compatible:
+        _sync(host, source, str(staging))
+    source_metadata_result = _remote_exec(host, ["cat", str(staging / "runtime-source.json")])
     if source_metadata_result.returncode == 0:
         try:
             source_metadata = json.loads(source_metadata_result.stdout)
@@ -187,9 +235,12 @@ def _ensure_remote_runtime(run: Path, host: str, target: Mapping[str, Any]) -> d
              "runtime_source": source_metadata,
              "source_bytes": sum(item.stat().st_size for item in source.rglob("*") if item.is_file()),
              "source_mtime_ns": source.stat().st_mtime_ns, "deployed_at": time.time(),
-             "reused": False, "mode": "fixed-readonly-runtime"}
+             "reused": False, "mode": "fixed-readonly-runtime", "deployment_mode": deployed_mode,
+             "base_runtime": str(base_path) if compatible and base_path is not None else None,
+             "delta_members": ["bin/braid", "runtime-source.json"] if deployed_mode == "reflink-base-plus-braid" else ["**"]}
     encoded = base64.b64encode((json.dumps(value, ensure_ascii=False, indent=2) + "\n").encode()).decode()
-    _remote_exec(host, ["sh", "-c", f"echo {shlex.quote(encoded)} | base64 -d > {shlex.quote(str(receipt))}"], check=True)
+    _remote_exec(host, ["sh", "-c", f"echo {shlex.quote(encoded)} | base64 -d > {shlex.quote(str(staging_receipt))}"], check=True)
+    _remote_exec(host, ["mv", str(staging), str(destination)], check=True)
     write_json(local_receipt, value)
     return {"source": str(source), "path": str(destination), "receipt": str(receipt),
             "reused": False, "source_facts": value}
@@ -340,6 +391,16 @@ def _sync(host: str, source: Path, destination: str) -> None:
     subprocess.run(["rsync", "-a", str(source) + "/", f"{host}:{destination}/"], check=True)
 
 
+def _sync_file(host: str, source: Path, destination: str) -> None:
+    """Copy one runtime delta without replacing the immutable base directory."""
+    if host == "local":
+        destination_path = Path(destination)
+        destination_path.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(source, destination_path)
+        return
+    subprocess.run(["rsync", "-a", str(source), f"{host}:{destination}"], check=True)
+
+
 def _remote_file(host: str, path: Path, local: Path) -> bool:
     if host == "local":
         if not path.is_file():
@@ -484,8 +545,21 @@ def _push_remote_manifest(run: Path, host: str, remote_run: Path, target: Mappin
     if target.get("remote_sdk_source"):
         remote_target["sdk_source"] = target["remote_sdk_source"]
     remote_target["executor"] = "local"
+    remote_target["execution_role"] = "remote"
     remote_target["remote_root"] = str(remote_run.parent.parent)
     remote_target["environment_file"] = str(remote_run / ".private.env")
+    if remote_target.get("kind") == "self-test" and host != "local":
+        # Self-test auth originates from the already logged-in Mac Helium
+        # profile.  Materialize only the target-domain Netscape cookies, then
+        # hand that private file to the execution host with mode 0600.  The
+        # value never enters the manifest, records, or command line.
+        from . import self_test
+        source = Path(self_test._cookie_file(target)).resolve(strict=True)
+        destination = remote_run / ".private" / "self-test.cookies.txt"
+        _push_private_file(host, source, destination)
+        remote_target["cookie_file"] = str(destination)
+        remote_target.pop("cookie_file_env", None)
+        remote_target.pop("cookie_source", None)
     if target.get("remote_runtime"):
         remote_target["remote_runtime"] = str(target["remote_runtime"])
     if target.get("otlp_deps"):
@@ -678,12 +752,18 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
                 for item in argv]
         payload = json.dumps({"remote_run": str(remote_run), "argv": argv}, separators=(",", ":"))
         helper = _deploy_helper(host, remote_run)
-        command = "cd {root} && nohup python3 {helper} simulate {payload} > {log} 2>&1 &".format(
+        command = "cd {root} && {{ nohup python3 {helper} simulate {payload} > {log} 2>&1 < /dev/null & }}".format(
             root=shlex.quote(str(remote_run)), helper=shlex.quote(str(helper)), payload=shlex.quote(payload),
             log=shlex.quote(str(remote_run / "records/simulation-worker.log")))
+        write_json(paths(run)['records'] / 'dispatch.json', {
+            'phase': 'simulate', 'executor': host, 'remote_run': str(remote_run), 'as_of': time.time()})
         _remote_exec(host, ["sh", "-c", command], check=True)
-        return {"lifecycle": "running", "executor": host, "remote_run": str(remote_run),
+        return {"lifecycle": "starting", "executor": host, "remote_run": str(remote_run),
                 "started_at": time.time(), "mode": "simulate"}
+    # The official SDK runs this payload as root. Restored Git repositories
+    # must have that execution owner; save returns them to the host afterward.
+    _remote_exec(host, ["sudo", "-n", "chown", "-R", "-h", "0:0",
+                        str(remote_run / "data")], check=True)
     private_env = _stage_private_env(host, target, remote_run)
     if target.get("model_recipe") != "self-funded" and not (paths(run)["records"] / "meter-baseline.json").is_file():
         _meter(run, target, "baseline")
@@ -695,7 +775,12 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
               "run_kind": manifest(run).get("run_kind", "generation"),
               "create_argv": _create_argv(run, target, remote_run, Path(prepared["workspace"]), private_env, scope, image_id,
                                            prepared["runtime"]["path"])}
-    created = _helper(host, remote_run, "create", config)
+    helper = _deploy_helper(host, remote_run)
+    payload = json.dumps(config, ensure_ascii=False, separators=(",", ":"))
+    write_json(paths(run)['records'] / 'dispatch.json', {
+        'phase': 'create', 'executor': host, 'remote_run': str(remote_run),
+        'container_name': config['container_name'], 'as_of': time.time()})
+    created = _remote_exec(host, ["python3", str(helper), "create", payload])
     try:
         value = json.loads(created.stdout.strip().splitlines()[-1])
     except (ValueError, IndexError):
@@ -713,11 +798,11 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
     config["container_id"] = cid
     payload = json.dumps(config, ensure_ascii=False, separators=(",", ":"))
     helper = remote_run / "local_run_remote.py"
-    command = "cd {root} && nohup python3 {helper} run {payload} > {log} 2>&1 &".format(
+    command = "cd {root} && {{ nohup python3 {helper} run {payload} > {log} 2>&1 < /dev/null & }}".format(
         root=json.dumps(str(remote_run)), helper=json.dumps(str(helper)),
         payload=shlex.quote(payload), log=json.dumps(str(remote_run / "records/docker-worker.log")))
     _remote_exec(host, ["sh", "-c", command], check=True)
-    return {"lifecycle": "running", "container_id": cid, "container_name": _container_name(run),
+    return {"lifecycle": "starting", "container_id": cid, "container_name": _container_name(run),
             "executor": host, "remote_run": str(remote_run), "started_at": time.time()}
 
 
@@ -805,7 +890,7 @@ def spawn(run: str | os.PathLike[str], module: str, args: list[str] | tuple[str,
         remote_args.append(str(remote_run) + text[len(local_root):] if text == local_root or text.startswith(local_root + "/") else text)
     argv.extend(remote_args)
     pythonpath = f"{remote_dir}:{remote_run / 'source'}:{_remote_sdk_workspace(remote_run, target) / 'submission'}"
-    command = "cd {root} && LAB_RUN={root} LAB_RUN_ROOT={run_root} PYTHONPATH={pythonpath} nohup {argv} > {log} 2>&1 < /dev/null & echo $!".format(
+    command = "cd {root} && {{ LAB_RUN={root} LAB_RUN_ROOT={run_root} PYTHONPATH={pythonpath} nohup {argv} > {log} 2>&1 < /dev/null & echo $!; }}".format(
         root=shlex.quote(str(remote_run)), run_root=shlex.quote(str(remote_run.parent.parent)),
         pythonpath=shlex.quote(pythonpath),
         argv=" ".join(shlex.quote(value) for value in argv),
@@ -930,6 +1015,20 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
     target = _target(run)
     host, remote_run = _remote(run, target)
     errors = []
+    terminal = facts.get("lifecycle") in {"completed", "failed", "stopped"}
+    if terminal:
+        # Root-run SDK children create private native files. Return ownership
+        # to this run's host owner without widening their permission modes.
+        owner = _remote_exec(host, ["stat", "-c", "%u:%g", str(remote_run)])
+        if owner.returncode == 0:
+            ownership = _remote_exec(host, ["sudo", "-n", "chown", "-R", "-h",
+                                          owner.stdout.strip(), str(remote_run / "data")])
+            if ownership.returncode:
+                errors.append({"member": "data", "exit_code": ownership.returncode,
+                               "stderr": ownership.stderr})
+        else:
+            errors.append({"member": "data", "exit_code": owner.returncode,
+                           "stderr": owner.stderr})
     sdk_member = "inputs/sdk-workspace" if target.get("remote_runtime") else "data/sdk-workspace"
     for member in (sdk_member, "data/workspace", "data/harness", "records"):
         destination = paths(run)["inputs"] / "sdk-workspace" if member == sdk_member else paths(run)["root"] / member
@@ -950,7 +1049,6 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
         if result.returncode:
             errors.append({"member": member, "exit_code": result.returncode,
                            "stderr": result.stderr})
-    terminal = facts.get("lifecycle") in {"completed", "failed", "stopped"}
     value = {"saved": terminal and not errors,
              "lifecycle": facts.get("lifecycle"), "scope": ["data/workspace", "data/harness", "records"],
              "excluded": ["inputs/sdk-workspace/submission/.private/**"] if target.get("remote_runtime") else [],
@@ -1011,7 +1109,44 @@ def mirror_saved_evaluations(source_run: str | os.PathLike[str]) -> dict[str, An
                 "status": "unsupported_source_target"}
     run_root = paths(source)["root"].parent
     mirrored, skipped = [], []
+    prior_relay = {}
+    prior_path = paths(source)["records"] / "evaluation-relay.json"
+    if prior_path.is_file():
+        try:
+            prior = json.loads(prior_path.read_text())
+            prior_relay = {row.get("request_id"): row for row in prior.get("mirrored", [])
+                           if isinstance(row, dict) and row.get("request_id")}
+        except (OSError, ValueError, TypeError):
+            prior_relay = {}
     for index, item in enumerate(items):
+        configuration = item.get("configuration") if isinstance(item, dict) else None
+        request_id = item.get("request_id") if isinstance(item, dict) else None
+        if isinstance(item, dict) and item.get("deferred") and isinstance(configuration, dict) and configuration.get("kind") == "self-test":
+            if request_id in prior_relay:
+                mirrored.append(prior_relay[request_id])
+                continue
+            try:
+                # The remote source has already saved its data domain, but
+                # the Mac copy is fetched only here.  The self-test child is
+                # therefore born locally and uses the approved Helium session;
+                # no cookie is copied into the remote run.
+                local_saved = save(source)
+                if local_saved.get("saved") is not True:
+                    raise RuntimeError(f"source data save incomplete: {local_saved}")
+                from .evaluate import evaluate_run, freeze_application
+                source_state = manifest(source)
+                source_state["lifecycle"] = local_saved["lifecycle"]
+                write_json(paths(source)["manifest"], source_state)
+                snapshot = freeze_application(source)
+                result = evaluate_run(source, kind="self-test", snapshot=snapshot,
+                                      configuration=configuration)
+                mirrored.append({"request_id": request_id, "kind": "self-test",
+                                 "run": result, "source_run": source.name,
+                                 "dispatch": "mac-controller-helium"})
+            except Exception as error:
+                skipped.append({"index": index, "request_id": request_id,
+                                "reason": f"self_test_dispatch:{type(error).__name__}: {error}"})
+            continue
         child = item.get("run") if isinstance(item, dict) else None
         if not isinstance(child, dict):
             skipped.append({"index": index, "reason": "missing_saved_child_receipt"})

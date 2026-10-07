@@ -1,5 +1,17 @@
 # 决赛实验基础设施重设计
 
+2026-10-07 用户再次提醒“避免过度的校验、安全、隐私设计”。后续修复必须对应已发生错误或具体的凭据泄露、误操作、产物损失风险，不扩展通用校验层、隐私框架或启动门禁；不把辅助证据缺失判成运行失败，不为填齐验收字段追加无关实验。继续优先原运行接续、构建部署耗时及正常使用负担。
+
+2026-10-07 用户回复“那么继续推进优化”，继续授权既有优化闭环。当前优先解决原 Stage1 的原生接续故障，再以真实源码修改取得精简 runtime 的构建/部署/消费证据。execution_owner 持续持有构建部署，与独立验收的原恢复负责人协调在途版本，不重复构建或接管运行；主修正公共 dispatch 异常的状态与原错投影。self-test 钥匙串授权仍等待用户，不触发新查询。
+
+当前 runtime 原始 `du -sk` 为 1,106,552 KiB，正式默认 j 为 551,760 KiB，最新直出 m 为 507,260 KiB（约 495 MiB）。m 的 37.07 秒是缓存命中的构建/导出，不是空缓存或 Braid 源码改动耗时；j 默认发布及同版本复用有正式部署回执。Stage1 最新 de22 已实际恢复同一 root native identity 后断连，原实施输入在旧 reset 中丢失可执行唤醒的问题正由原负责人修复；没有新的生成完成、冻结应用或评分证据。
+
+随后恢复负责人已产出新 Braid c，execution_owner 复用其字节组装 o（518,416 KiB，约 506 MiB，实际组装 5.18 秒），通过维护入口正式发布并切换默认 target；原件为 `runs/arc-default-deploy-20261007/runs/default-runtime-recovery-c/records/runtime-deployment.json`。该发布仍为 full-rsync，同版本复用已有证据，新版本自动兼容基座选择/增量仍由同一 owner 完成。主已采用 advisor 的副作用边界判断修复公共 start 异常投影，并保留 subprocess stdout/stderr 到 start-error 原件；Local 派发受理显示 starting，而非尚无实际观察就报 running。以上只做编译和实际旧记录查询，后续资格由原独立接续取得。
+
+最新维护 target 已内置正式 o 基座，普通用户不提供额外基座参数；维护增量路径实际取得 `reflink-base-plus-braid`、3.29 秒（`runs/arc-default-deploy-20261007/runtime-delta-staging2.{json,time}`）。发布已改为同父目录 staging 内完成复制/delta/新回执后 rename，避免 clone 携带旧回执被中断后误认。该样本 Braid hash 与 o 相同，只证明路径；c 原编译耗时日志缺失，不补造。原独立 run `610daf8655bc4f178cf6b0b35e94cfc7` 已实际消费完整 c，root 原身份 wake turn completed、fast 实施 wake turn running，应用完成仍未证明；不能称本次运行消费精简 o。I14 具体错误 brief 修复提交为 `fcc1a6bc`，其它当前任务集成仍待完成。
+
+2026-10-07 用户补充官网费用回执的已知平台缺陷：创建为 `official_evaluation`、启动显示 `self_funded` 时，实际已经使用比赛费用。已核对新 run 的 Hosted start：当前没有比较这两个费用字段的拒绝校验，冻结模式不被启动响应覆盖，原始 upload/create/start 回执分别保存。因此不新增兼容层或平台写请求，只在启动边界及运行说明记录该例外；后续验收不能把这一差异判成自费或启动失败。此次为代码路径核对，未新发官网请求或消费比赛费用。
+
 2026-10-07 11:00 当前恢复事实：第二版 Linux runtime 已部署，新 run `d38fa85756f24f13bb5fbb262b3fdf80` 在约 10:58 启动，保留原 native scope。恢复负责人读回两个中断 reset 均 `applied`、旧 provider session 均 `replaced`，并取得新的 completed `reset_continuation`；应用第一阶段完成及后续评分仍未取得证据。主此前只读上层验收会话，漏掉其子负责人已执行的进展，两次“还在准备 Linux”报告过时，不代表实际执行一直等待。
 
 本次恢复发布从约 10:26 到 10:58：首次完整 Linux runtime 构建 705.7 秒，首次 restart（含约 1.1 GiB runtime 同步）156.0 秒；首版因 assignment 已恢复 active 而恢复 SQL 只接受 blocked，实际未触发 reset，修正一条条件后再次构建。第二版构建/导出存在失败重试，其中 Docker identity GET 10 秒超时使 runtime-source.json 未生成，包构建原错为该文件缺失；最终 restart 161.2 秒返回。这是完整 release 重建/输运、实现返工及导出边界错误的叠加，不是单纯交叉编译耗时。
@@ -8,11 +20,13 @@
 
 实际接入现已自动发现 Helium 目标域 cookie 并走 macOS Keychain 的既有 ACL；系统需要用户允许一次读取，不能由开发 Agent 绕过。用户对该系统授权回复“稍后再确认”，因此不再触发查询/弹窗，认证成功及新评分仍未取得。私密材料准备、复用、评测映射和 child 回收由设施负责，不把接线交给使用者；runtime 与其它独立工作继续。
 
+认证模块已去除派生密钥出现在 openssl argv 的边界，使用系统 CommonCrypto 的内存接口；主实地确认当前 Python 可加载 CCCrypt 符号，仅核对原生接口可用，没有解密或外部请求。后续 HTTP 认证成功仍待用户授权，不以静态编译或符号发现代替。已准备的私有 cookie 材料会复用，避免每次查询重复钥匙串读取；必要准备发生在耗时打包前。
+
 2026-10-07 用户新增明确授权：“runtime 的大小也是个值得关注的问题……尽可能精简，避免预打包开发环境比如 chromium、better-sqlite……完整构建、部署等的耗时也需要优化，请你推进。验收不要只是能用，而是用得好（使用者不绕弯子、消耗 token 少、消耗时间少）”。execution_owner 已接续 runtime、依赖材料、DX builders 与增量部署，evaluation_implementation 持续负责 self-test/auth/映射/回收；共享 local_run 按函数边界直接协调。advisor 建议冻结基座派生新 Braid 字节、远端宿主内独立复制后只传变化，并修复导出完成被清理网络错误否定的边界。体积、冷/热构建、实际传输与独立使用成本纳入 [evaluation](evaluation.md)，具体实施归 [implementation](implementation.md)。这些是正在实施的目标，尚无精简或提速通过声明。
 
 ## 当前纠正：模型配方实际消费
 
-主采用 advisor 对普通 CLI 输出的判断：默认 brief 加必要回执，完整 JSON 显式 `--json`，Python API 与保存原件不变；控制受理、实际终态及保存完成分别表达。已修改入口并编译，实际只读查询 d38 显示 running/active，简短输出 258 字节、同次完整 JSON 146,510 字节；这是输出规模事实，不是 token 节省测量。start/restart/control/evaluate 的新默认输出仍待独立真实操作验收。
+主采用 advisor 对普通 CLI 输出的判断：默认 brief 加必要回执，完整 JSON 显式 `--json`，Python API 与保存原件不变；控制受理、实际终态及保存完成分别表达。初版实际只读查询 d38 显示 running/active，表格输出 258 字节、同次完整 JSON 146,510 字节；这是输出规模事实，不是 token 节省测量。随后根据独立会话反馈，为单 run 补配方、来源、记录路径和保存回执，无参数列表仍是 brief；P2 读回 saved=true、d38 明示 unknown。start/restart/control/evaluate 的新默认输出仍待独立真实操作验收。
 
 2026-10-07 用户指出，验收错误使用已明确耗尽的 ARC API，而非当前自费配方。主 Agent 承担这次冻结配置错误；历史 ARC 授权不代表本轮应选 ARC。P1 `e1ce4d6f6a174bb995c74f22e3db3a0d` 实际首次请求为 HTTP 402 `insufficient_balance`，没有应用生成进展，不能算有效零分或验收通过。原始 run、请求错误与保存材料保留；不要求用户补充 ARC 额度。
 

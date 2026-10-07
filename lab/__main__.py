@@ -1,7 +1,54 @@
 """Run-oriented ARC execution and observation commands."""
 import argparse
 import json
+import subprocess
 import sys
+from pathlib import Path
+
+
+def _print_saved(path):
+    receipt = Path(path) / "records/result-save.json"
+    if not receipt.is_file():
+        print(f"saved=unknown receipt={receipt}")
+        return
+    try:
+        value = json.loads(receipt.read_text())
+        print(json.dumps({key: value[key] for key in ("saved", "scope", "gaps", "errors", "as_of")
+                          if key in value}, ensure_ascii=False, default=str, separators=(",", ":")))
+    except (OSError, ValueError, TypeError) as exc:
+        print(f"saved=unknown receipt={receipt} error={type(exc).__name__}: {exc}")
+
+
+def _print_result(command, value, args, run):
+    from .status import render_runs
+    if command in ("stop", "pause", "resume"):
+        print(f"run={args.run} action={command}")
+        receipt = {key: value[key] for key in (
+            "action", "container_id", "commands", "as_of", "observed_at", "lifecycle", "error"
+        ) if key in value}
+        print(json.dumps(receipt, ensure_ascii=False, default=str, separators=(",", ":")))
+        _print_saved(run.resolve(args.run))
+        return
+    row = run.status(value["run_id"]) if command == "evaluate" else value
+    rows = row if isinstance(row, list) else [row]
+    print(render_runs(rows))
+    for item in rows:
+        if item.get("error"):
+            print(f"error[{item['run_id']}]: {item['error']}")
+    if isinstance(row, list):
+        return
+    if command in ("start", "restart", "status", "wait"):
+        target = row.get("target_config") or {}
+        print(f"recipe={target.get('model_recipe', 'unknown')} competition={row.get('competition')}"
+              f" source={row.get('source_run') or '-'}")
+    elif command == "archive":
+        print(f"archived={row['archived']}")
+    elif command == "evaluate":
+        print(f"evaluation={value['evaluation_kind']} source={value['source_run']}"
+              f" snapshot={row.get('application_snapshot', 'unknown')}")
+        print("评测已派发；是否完成及实际评分以保存的评测结果为准。")
+    print(f"records={row['path']}/records")
+    _print_saved(row["path"])
 
 
 def main(argv=None):
@@ -32,13 +79,16 @@ def main(argv=None):
     logs.add_argument("--follow", action="store_true")
     evaluate = commands.add_parser("evaluate")
     evaluate.add_argument("run")
-    evaluate.add_argument("--kind", choices=("simulate", "official", "task"), required=True)
+    evaluate.add_argument("--kind", choices=("simulate", "official", "task", "self-test"), required=True)
     evaluate.add_argument("--snapshot")
+    evaluate.add_argument("--task", help="评测题目别名；self-test 使用 github-stage-*-req-test")
     archive = commands.add_parser("archive", help="只隐藏列表，不停止或删除运行")
     archive.add_argument("run")
     archive.add_argument("--undo", action="store_true")
     serve = commands.add_parser("serve")
     serve.add_argument("--config", required=True)
+    for name in ("start", "stop", "pause", "resume", "restart", "evaluate", "archive"):
+        commands.choices[name].add_argument("--json", action="store_true", help="输出完整结构化回执")
     args = parser.parse_args(argv)
     try:
         if args.command == "serve":
@@ -56,27 +106,28 @@ def main(argv=None):
                                 route=args.route, snapshot=args.snapshot)
         elif args.command == "status":
             value = run.status(args.run, include_all=args.all)
-            if not args.json:
-                from .status import render_runs
-                print(render_runs(value if isinstance(value, list) else [value]))
-                return 0
         elif args.command == "wait":
             value = run.wait(args.run)
-            if not args.json:
-                from .status import render_runs
-                print(render_runs([value]))
-                return 0
         elif args.command == "logs":
             run.logs(args.run, follow=args.follow)
             return 0
         elif args.command == "evaluate":
-            value = run.evaluate(args.run, kind=args.kind, snapshot=args.snapshot)
+            configuration = ({"task": args.task, "platform_task": args.task}
+                             if args.task else None)
+            value = run.evaluate(args.run, kind=args.kind, snapshot=args.snapshot,
+                                 configuration=configuration)
         else:
             value = run.archive(args.run, undo=args.undo)
-        print(json.dumps(value, ensure_ascii=False, default=str, indent=2))
+        if args.json:
+            print(json.dumps(value, ensure_ascii=False, default=str, indent=2))
+        else:
+            _print_result(args.command, value, args, run)
         return 0
-    except (OSError, ValueError, RuntimeError) as exc:
+    except (OSError, ValueError, RuntimeError, subprocess.SubprocessError) as exc:
         print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        path = getattr(exc, "lab_run_path", None)
+        if path:
+            print(f"run={Path(path).name} records={path}/records", file=sys.stderr)
         detail = getattr(exc, "detail", None)
         if detail is not None:
             print(json.dumps(detail, ensure_ascii=False, default=str), file=sys.stderr)

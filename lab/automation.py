@@ -69,10 +69,23 @@ def default(path):
                       for entry in entries], "dispatch_complete": True, "as_of": time.time()})
         return
     launched = []
-    for entry in entries:
+    source_target = run.run_layout.manifest(path).get("target_config") or {}
+    remote_source = source_target.get("kind") == "local" and (
+        source_target.get("executor") not in {None, "local"} or
+        source_target.get("execution_role") == "remote"
+    )
+    for index, entry in enumerate(entries):
         try:
-            result = evaluate_run(path, kind=entry["kind"], snapshot=snapshot, configuration=entry)
-            launched.append({"configuration": entry, "run": result})
+            # Helium's signed browser profile exists on the Mac controller,
+            # not on WSL/sfp7.  Save an explicit request in the remote run;
+            # the Mac relay dispatches it after the source data is saved.
+            if remote_source and entry.get("kind") == "self-test":
+                launched.append({"configuration": entry, "deferred": True,
+                                 "request_id": f"{path.name}:self-test:{index}",
+                                 "reason": "controller-helium-session"})
+            else:
+                result = evaluate_run(path, kind=entry["kind"], snapshot=snapshot, configuration=entry)
+                launched.append({"configuration": entry, "run": result})
         except Exception as exc:
             launched.append({"configuration": entry, "error": f"{type(exc).__name__}: {exc}"})
         write_json(path / "records/automatic-evaluations.json", {"snapshot": str(snapshot),

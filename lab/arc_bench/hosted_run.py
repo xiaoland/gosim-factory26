@@ -97,7 +97,8 @@ def start(run):
             raise ValueError("credential_file lacks the selected model key")
     with _state(run) as (directory, state):
         if state.get("pending") or state.get("rejected"):
-            return {"lifecycle": "unknown" if state.get("pending") else "failed", "error": state}
+            return {"lifecycle": "unknown" if state.get("pending") else "failed",
+                    "error": (state.get("pending") or state.get("rejected")).get("error")}
         state.update(display_name=f"lab-{run.name}", task=task, billing_mode=mode)
         if not state.get("submission_id"):
             fields = {"competition_id": target["competition_id"], "runtime": "python",
@@ -118,6 +119,9 @@ def start(run):
                 state["run_id"] = identity
                 state["pending"] = None
         if state.get("run_id") and not state.get("pending") and not state.get("rejected") and not state.get("started"):
+            # The platform can report self_funded on start after creating an
+            # official_evaluation run. Preserve the receipt; do not use that
+            # known label defect to reject start or overwrite the selected mode.
             response = _post(directory, state, client, "start", run_path(state["run_id"]) + "/start")
             if not state.get("pending") and not state.get("rejected"):
                 state["started"] = True
@@ -125,7 +129,8 @@ def start(run):
                 state["started"] = True
                 state["pending"] = None
         return {"lifecycle": "failed" if state.get("rejected") else "unknown" if state.get("pending") else "starting",
-                "platform_run_id": state.get("run_id"), "submission_id": state.get("submission_id")}
+                "platform_run_id": state.get("run_id"), "submission_id": state.get("submission_id"),
+                "error": (state.get("rejected") or state.get("pending") or {}).get("error")}
 
 
 def _get(directory, client, endpoint, name):

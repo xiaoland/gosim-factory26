@@ -157,6 +157,20 @@ def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mappi
 def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
     """Materialize the selected variant and explicit target contract."""
     run_path = Path(run).expanduser().resolve()
+    try:
+        return _assemble(run_path)
+    except Exception as exc:
+        # Assembly cannot dispatch execution. Unlike an uncertain platform
+        # write, its failure is a confirmed failed start, not live activity.
+        failure = {"lifecycle": "failed", "activity": "inactive", "phase": "assembly",
+                   "error": f"{type(exc).__name__}: {exc}", "as_of": time.time()}
+        write_json(paths(run_path)["records"] / "status.json", failure)
+        _save_handle(run_path, **failure)
+        exc.lab_run_path = str(run_path)
+        raise
+
+
+def _assemble(run_path: Path) -> dict[str, Any]:
     state = manifest(run_path)
     target = _target(state)
     variant = str(state.get("variant", ""))
@@ -329,9 +343,56 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
     run_path = Path(run).expanduser().resolve()
     write_json(paths(run_path)['records']/'status.json', {'lifecycle': 'starting', 'activity': 'unknown',
                'brief': 'dispatching to execution host', 'phase': 'dispatch', 'as_of': time.time()})
+    try:
+        result = _start(run_path)
+    except Exception as exc:
+        records = paths(run_path)['records']
+        target = manifest(run_path).get('target_config') or {}
+        # No handle is not proof of no execution: the remote response may
+        # have been lost. Adapters save intent at the side-effect boundary.
+        uncertain = (records / 'dispatch.json').is_file()
+        if target.get('kind') == 'hosted':
+            platform = records / 'platform/execution.json'
+            state = json.loads(platform.read_text()) if platform.is_file() else {}
+            uncertain = bool(state.get('pending') or state.get('submission_id') or state.get('run_id'))
+        elif target.get('kind') == 'self-test':
+            uncertain = (records / 'self-test/submit-intent.json').is_file()
+        failure = {'lifecycle': 'unknown' if uncertain else 'failed', 'activity': 'unknown',
+                   'phase': 'dispatch' if uncertain else 'preparation',
+                   'brief': 'dispatch outcome unknown' if uncertain else 'not dispatched',
+                   'error': f'{type(exc).__name__}: {exc}', 'as_of': time.time()}
+        diagnostic = dict(failure)
+        for key in ('stdout', 'stderr'):
+            output = getattr(exc, key, None)
+            if output is not None:
+                diagnostic[key] = output.decode(errors='replace') if isinstance(output, bytes) else output
+        write_json(records / 'start-error.json', diagnostic)
+        write_json(records / 'status.json', failure)
+        _save_handle(run_path, **failure)
+        exc.lab_run_path = str(run_path)
+        raise
+    current = {'lifecycle': result.get('lifecycle', 'unknown'), 'activity': 'unknown',
+               'phase': 'dispatch', 'as_of': time.time(),
+               'brief': result.get('brief') or {
+                   'failed': 'dispatch rejected', 'unknown': 'dispatch outcome unknown',
+               }.get(result.get('lifecycle'), 'dispatched; awaiting execution observation')}
+    platform = result.get('platform') or {}
+    error = result.get('start_error') or (platform.get('error') if isinstance(platform, dict) else None)
+    if error:
+        current['error'] = error
+        write_json(paths(run_path)['records'] / 'start-error.json', current)
+    write_json(paths(run_path)['records'] / 'status.json', current)
+    return result
+
+
+def _start(run_path: Path) -> dict[str, Any]:
     _configure_observability(run_path)
     state = manifest(run_path)
     target = _target(state)
+    if target.get("kind") == "self-test":
+        from . import self_test
+        result = self_test.start(run_path)
+        return _save_handle(run_path, **result, target_config=target)
     if target.get("kind") == "hosted":
         from . import hosted_run
         try:
@@ -339,8 +400,8 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
         except Exception as exc:
             # The Hosted adapter writes the raw request/response before an
             # uncertain error. Do not retry a potentially billable POST.
-            _save_handle(run_path, lifecycle="unknown", start_error={"type": type(exc).__name__, "message": str(exc)})
-            return _save_handle(run_path, lifecycle="unknown", adapter_error=str(exc))
+            return _save_handle(run_path, lifecycle="unknown", adapter_error=str(exc),
+                                start_error={"type": type(exc).__name__, "message": str(exc)})
         lifecycle = result.get("lifecycle", "unknown") if isinstance(result, dict) else "unknown"
         return _save_handle(run_path, lifecycle=lifecycle, platform=result,
                             started_at=time.time(), target_config=target)
@@ -428,13 +489,43 @@ def _braid_facts(run: Path, harness: Path) -> dict[str, Any]:
     timestamps.
     """
     observed_at = time.time()
-    roots = sorted({path.parent for path in harness.rglob("braid-state/status.json")})
+    scope_id = manifest(run).get("native_scope_id")
     result: dict[str, Any] = {"observed_at": observed_at, "sources": [],
                               "states": [], "gaps": []}
-    if not roots:
-        result["gaps"].append({"source": str(harness.relative_to(run)),
-                                "reason": "braid-state/status.json unavailable"})
+    if not isinstance(scope_id, str) or not scope_id:
+        result["gaps"].append({"source": "manifest.native_scope_id",
+                                "reason": "native scope identity unavailable"})
         return result
+    scope_root = harness / scope_id
+    roots = sorted({path.parent for path in scope_root.rglob("braid-state/status.json")}) if scope_root.is_dir() else []
+    if not roots:
+        result["gaps"].append({"source": str(scope_root.relative_to(run)),
+                                "reason": "current native scope has no braid-state/status.json"})
+        return result
+
+    def resolve_native(path: Path) -> Path | None:
+        if path.is_file():
+            return path
+        parts = path.parts
+        if scope_id in parts:
+            suffix = Path(*parts[parts.index(scope_id) + 1:])
+        elif ".factory26" in parts:
+            suffix = Path(*parts[parts.index(".factory26") + 1:])
+            prefix = ("data", "harness", scope_id)
+            if suffix.parts[:len(prefix)] == prefix:
+                suffix = Path(*suffix.parts[len(prefix):])
+        else:
+            return None
+        if not suffix.parts:
+            return None
+        direct = scope_root / suffix
+        if direct.is_file():
+            return direct
+        for candidate in scope_root.rglob(suffix.name):
+            if candidate.is_file() and candidate.parts[-len(suffix.parts):] == suffix.parts:
+                return candidate
+        return None
+
     from .provider_liveness import collect_provider_evidence
     for state_root in roots:
         status_path = state_root / "status.json"
@@ -453,8 +544,12 @@ def _braid_facts(run: Path, harness: Path) -> dict[str, Any]:
             row["error"] = f"{type(exc).__name__}: {exc}"
             result["gaps"].append({"source": source, "reason": row["error"]})
         try:
-            evidence = collect_provider_evidence(state_root, observed_at)
+            evidence = collect_provider_evidence(state_root, observed_at,
+                                                 native_resolver=resolve_native)
             row["provider_evidence"] = evidence
+            if not evidence.get("sessions"):
+                result["gaps"].append({"source": source,
+                                        "reason": "current scope has no provider session evidence"})
             if evidence.get("errors"):
                 result["gaps"].extend({"source": source, "reason": error}
                                      for error in evidence["errors"])
@@ -511,6 +606,9 @@ def _status_facts(run: Path, lifecycle):
 def control(run: str | os.PathLike[str], action: str) -> dict[str, Any]:
     run_path = Path(run).expanduser().resolve()
     state = manifest(run_path)
+    if state.get("target_config", {}).get("kind") == "self-test":
+        from . import self_test
+        return self_test.control(run_path, action)
     if state.get("target_config", {}).get("kind") == "hosted":
         from . import hosted_run
         value = hosted_run.control(run_path, action)
@@ -524,6 +622,13 @@ def control(run: str | os.PathLike[str], action: str) -> dict[str, Any]:
 def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
     run_path = Path(run).expanduser().resolve()
     state = manifest(run_path)
+    if state.get("target_config", {}).get("kind") == "self-test":
+        from . import self_test
+        value = self_test.observe(run_path)
+        write_json(paths(run_path)["records"] / "status.json", value)
+        if state.get("lifecycle") != value.get("lifecycle"):
+            _save_handle(run_path, lifecycle=value.get("lifecycle", "unknown"))
+        return value
     if state.get("target_config", {}).get("kind") == "hosted":
         from . import hosted_run
         value = hosted_run.observe(run_path)
@@ -557,6 +662,11 @@ def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
 def save(run: str | os.PathLike[str]) -> dict[str, Any]:
     """Save the complete data domain and report scope/gaps explicitly."""
     run_path = Path(run).expanduser().resolve()
+    if manifest(run_path).get("target_config", {}).get("kind") == "self-test":
+        from . import self_test
+        value = self_test.save(run_path)
+        write_json(paths(run_path)["records"] / "save.json", value)
+        return value
     if manifest(run_path).get("target_config", {}).get("kind") == "hosted":
         from . import hosted_run
         value = hosted_run.save(run_path)

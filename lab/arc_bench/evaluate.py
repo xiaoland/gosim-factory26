@@ -9,6 +9,7 @@ from copy import deepcopy
 import json
 import os
 from pathlib import Path
+import re
 import shutil
 import subprocess
 import tarfile
@@ -22,7 +23,7 @@ from .arc_artifacts import copy_snapshot, manifest as application_manifest, veri
 from .run_layout import create_run, manifest as read_run_manifest, paths, write_json, write_manifest
 
 
-EVALUATION_KINDS = {"simulate", "task", "official"}
+EVALUATION_KINDS = {"simulate", "task", "official", "self-test"}
 
 
 def _run_root(run):
@@ -274,6 +275,38 @@ def _task_paths(source, state, configuration):
     return requirements, tests, (alias or state.get("task")), entry
 
 
+def _self_test_platform_task(configuration, state, task_alias, task_entry, platform_task):
+    """Map the public generation task identity to the private self-test task.
+
+    The self-test service intentionally uses ``*-req-test`` task IDs while a
+    generation run normally records the official ``hackathon--github-stage-N``
+    identity.  Keeping this mapping here means an evaluation recipe can name
+    only ``kind=self-test`` and still consume the frozen source task.
+    """
+    candidates = (
+        configuration.get("platform_task"),
+        (task_entry or {}).get("platform_task") if isinstance(task_entry, dict) else None,
+        configuration.get("task"),
+        task_alias,
+        (state.get("task_config") or {}).get("platform_task")
+        if isinstance(state.get("task_config"), dict) else None,
+        state.get("task"),
+        platform_task,
+    )
+    for candidate in candidates:
+        if not isinstance(candidate, str) or not candidate:
+            continue
+        if candidate.endswith("-req-test"):
+            return candidate
+        match = re.search(r"(?:^|--)(github-stage-[0-9]+)$", candidate)
+        if match:
+            return f"{match.group(1)}-req-test"
+    raise ValueError(
+        "self-test needs a github-stage-N task identity; pass task=github-stage-N-req-test "
+        "or freeze a source run with a github-stage-N task"
+    )
+
+
 def _copy_input(source, destination, *, label):
     destination.parent.mkdir(parents=True, exist_ok=True)
     if source.is_dir():
@@ -316,13 +349,19 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
     application = _application_root(application)
     requirements, tests, task_alias, task_entry = _task_paths(source, source_state, config)
     target = config.get("target", source_state.get("target"))
+    if kind == "self-test":
+        target = config.get("target", "self-test")
     if not isinstance(target, str):
         target = source_state.get("target_name") or "local"
     task_config = source_state.get("task_config") if isinstance(source_state.get("task_config"), dict) else {}
     platform_task = (config.get("platform_task") or
                      (task_entry or {}).get("platform_task") or
                      task_config.get("platform_task") or task_alias or target)
-    task = str(config.get("task") or task_alias or platform_task)
+    if kind == "self-test":
+        platform_task = _self_test_platform_task(config, source_state, task_alias, task_entry, platform_task)
+        task = platform_task
+    else:
+        task = str(config.get("task") or task_alias or platform_task)
     run_root = source.parents[1]
     evaluation = create_run(run_root, source_state.get("variant", "unknown"), target, task,
                             route=config.get("route"),
@@ -385,10 +424,23 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
     # the generation variant.  This is the only target materialization needed
     # before the execution adapter starts an evaluation run.
     from .execution import _target as resolve_target, freeze_model_channel
-    if not manifest.get("target_config"):
+    if kind == "self-test":
+        manifest["target_config"] = resolve_target({**manifest, "target": "self-test"})
+    elif not manifest.get("target_config"):
         manifest["target_config"] = resolve_target(manifest)
     target_config = dict(manifest["target_config"])
-    if target_config.get("kind") == "hosted":
+    if kind == "self-test":
+        # Self-test is a site submission, not a Hosted ARC execution.  Drop
+        # every generation/remote field inherited from registry defaults so a
+        # remote observer cannot accidentally select the source target.
+        for field in ("model_recipe", "model_aliases", "model_alias_map",
+                      "environment_file", "credential_file", "credential_env",
+                      "model_config", "route", "sdk_source", "skills",
+                      "runtime", "remote_runtime", "image_id", "endpoint",
+                      "remote_root", "executor"):
+            target_config.pop(field, None)
+        target_config["kind"] = "self-test"
+    elif target_config.get("kind") == "hosted":
         # Hosted upload needs a frozen model channel even for a replay.  The
         # billing identity remains separate in ``billing_mode``.
         frozen_state, target_config, _ = freeze_model_channel(
@@ -405,7 +457,7 @@ def evaluate_run(source_run, kind, snapshot=None, configuration=None):
     manifest["target_config"] = target_config
     manifest["target_kind"] = manifest["target_config"].get("kind")
     manifest["evaluation_assembly"] = {
-        "mode": "replay" if replay_package else "noop" if noop_package else "argv",
+        "mode": "self-test" if kind == "self-test" else "replay" if replay_package else "noop" if noop_package else "argv",
         "application": "data/workspace",
         "requirements": "inputs/requirements",
         "tests": "inputs/tests" if tests else None,

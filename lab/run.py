@@ -236,6 +236,6 @@ def logs(run, *, follow=False):
         time.sleep(1)
 
 
-def evaluate(run, *, kind, snapshot=None):
+def evaluate(run, *, kind, snapshot=None, configuration=None):
     from .arc_bench.evaluate import evaluate_run
-    return evaluate_run(resolve(run), kind=kind, snapshot=snapshot)
+    return evaluate_run(resolve(run), kind=kind, snapshot=snapshot, configuration=configuration)

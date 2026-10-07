@@ -2,10 +2,13 @@
 import datetime
 import hashlib
 import json
+import os
 import re
 import shutil
 from pathlib import Path
 import sqlite3
+import subprocess
+import sys
 import time
 
 
@@ -14,7 +17,11 @@ def epoch(value):
         return value / 1e9 if value > 1e17 else value / 1e3 if value > 1e11 else value
     if isinstance(value, str):
         try:
-            return datetime.datetime.fromisoformat(value.replace('Z', '+00:00')).timestamp()
+            stamp = datetime.datetime.fromisoformat(value.replace('Z', '+00:00'))
+            # Platform dates without an offset are UTC, independent of the collector host.
+            if stamp.tzinfo is None:
+                stamp = stamp.replace(tzinfo=datetime.timezone.utc)
+            return stamp.timestamp()
         except ValueError:
             return None
     return None
@@ -48,7 +55,7 @@ def native_activity(path, expected_id=None, *, exported=False, evidence_dir=None
         if start:
             data = data.partition(b'\n')[2]
         lines = data.split(b'\n')[:-1]
-        stamps, pending, errors = [], {}, []
+        stamps, pending, errors, recent = [], {}, [], []
         for line in lines:
             if not line:
                 continue
@@ -58,6 +65,18 @@ def native_activity(path, expected_id=None, *, exported=False, evidence_dir=None
                 if stamp is not None:
                     stamps.append(stamp)
                 message = entry.get('message') or {}
+                if message.get('role') in ('assistant', 'toolResult'):
+                    event = {'timestamp': entry.get('timestamp'), 'role': message['role'],
+                             'stop_reason': message.get('stopReason'), 'is_error': message.get('isError')}
+                    content = message.get('content')
+                    if isinstance(content, list):
+                        event['text'] = '\n'.join(str(part.get('text', '')) for part in content
+                                                  if part.get('type') == 'text')[:600]
+                        event['tools'] = [{'name': part.get('name'),
+                                           'command': str((part.get('arguments') or {}).get('command', ''))[:200]}
+                                          for part in content if part.get('type') == 'toolCall'][:3]
+                    recent.append(event)
+                    recent = recent[-6:]
                 if message.get('role') == 'toolResult':
                     pending.pop(message.get('toolCallId'), None)
                 for part in message.get('content', []) if isinstance(message.get('content'), list) else []:
@@ -70,7 +89,7 @@ def native_activity(path, expected_id=None, *, exported=False, evidence_dir=None
                       last_event_at=max(stamps, default=None),
                       pending_tools=list(pending.values()), tail_truncated=bool(start),
                       partial_last_line=bool(data and not data.endswith(b'\n')),
-                      parse_errors=errors[:3])
+                      parse_errors=errors[:3], recent_events=recent)
     except (OSError, ValueError) as error:
         result['error'] = f'{type(error).__name__}: {error}'
         if isinstance(error, FileNotFoundError):
@@ -79,7 +98,43 @@ def native_activity(path, expected_id=None, *, exported=False, evidence_dir=None
     return result
 
 
-def collect_provider_evidence(state_root, observed_at, boundary=None, *, exported=False, evidence_root=None, source_root=None):
+def _readonly_sqlite_snapshot(database, state_root):
+    """Use authorized host sudo only for a consistent, bounded SQLite backup."""
+    try:
+        if database.stat().st_uid == os.getuid():
+            return None, None
+        destination = (state_root.parent.parent.parent.parent / 'records' /
+                       f'provider-snapshot-{state_root.parent.name}.sqlite3')
+        destination.parent.mkdir(parents=True, exist_ok=True)
+        script = ('import os,sqlite3,sys,time\n'
+                  'source,target,uid,gid=sys.argv[1:]\n'
+                  'src=sqlite3.connect("file:"+source+"?mode=ro",uri=True,timeout=15)\n'
+                  'dst=sqlite3.connect(target)\n'
+                  'deadline=time.monotonic()+15\n'
+                  'def progress(_status,_remaining,_total):\n'
+                  '    if time.monotonic()>deadline: raise TimeoutError("SQLite backup exceeded 15 seconds")\n'
+                  'src.backup(dst,pages=256,progress=progress,sleep=0.05)\n'
+                  'dst.close();src.close()\n'
+                  'os.chown(target,int(uid),int(gid))\n')
+        completed = subprocess.run(
+            ['sudo', '-n', sys.executable, '-c', script, str(database),
+             str(destination), str(os.getuid()), str(os.getgid())],
+            capture_output=True, text=True, timeout=30, check=False)
+        if completed.returncode:
+            detail = completed.stderr.strip() or completed.stdout.strip() or 'no diagnostic output'
+            return None, f'sudo snapshot exit {completed.returncode}: {detail}'
+        if not destination.is_file():
+            return None, 'sudo snapshot reported success but destination is absent'
+        return destination, None
+    except subprocess.TimeoutExpired as exc:
+        detail = exc.stderr.decode(errors='replace') if isinstance(exc.stderr, bytes) else (exc.stderr or '')
+        detail = str(detail).strip() or 'no diagnostic output'
+        return None, f'sudo snapshot timeout after {exc.timeout}s: {detail}'
+    except (OSError, subprocess.SubprocessError, ValueError) as exc:
+        return None, f'{type(exc).__name__}: {exc}'
+
+
+def collect_provider_evidence(state_root, observed_at, boundary=None, *, exported=False, evidence_root=None, source_root=None, native_resolver=None):
     """A SQLite backup includes the matching WAL in one read snapshot; originals stay intact."""
     state_root = Path(state_root)
     evidence_root = Path(evidence_root) if evidence_root is not None else None
@@ -118,7 +173,11 @@ def collect_provider_evidence(state_root, observed_at, boundary=None, *, exporte
             result['errors'].append(f'{attempt}: {type(error).__name__}: {error}')
     database = state_root / 'braid.sqlite3'
     try:
-        source = sqlite3.connect(database.resolve().as_uri() + '?mode=ro', uri=True, timeout=5)
+        snapshot_path, snapshot_error = _readonly_sqlite_snapshot(database, state_root)
+        if snapshot_error:
+            result['errors'].append(f'{database}: {snapshot_error}')
+        source_database = snapshot_path or database
+        source = sqlite3.connect(source_database.resolve().as_uri() + '?mode=ro', uri=True, timeout=5)
         snapshot = sqlite3.connect(':memory:')
         try:
             deadline = time.monotonic() + 15
@@ -132,7 +191,10 @@ def collect_provider_evidence(state_root, observed_at, boundary=None, *, exporte
         finally:
             source.close()
             snapshot.close()
-        result['database_consistency'] = 'SQLite read snapshot includes matching DB/WAL; export file-set atomicity is unknown' if exported else 'SQLite read snapshot includes live DB/WAL'
+        result['database_consistency'] = ('sudo SQLite backup from live DB/WAL; observer-owned snapshot'
+                                          if snapshot_path else
+                                          ('SQLite read snapshot includes matching DB/WAL; export file-set atomicity is unknown'
+                                           if exported else 'SQLite read snapshot includes live DB/WAL'))
         latest = {}
         for row in providers:
             latest[row['agent_id']] = row
@@ -155,7 +217,16 @@ def collect_provider_evidence(state_root, observed_at, boundary=None, *, exporte
             expected = (item['physical'] or {}).get('native_session_id')
             window = evidence_root.parent / 'native-windows' / hashlib.sha256(str(native).encode()).hexdigest()[:24] if evidence_root is not None else None
             member = str(native.relative_to(source_root)) if source_root is not None and native.is_relative_to(source_root) else str(native)
+            original = str(native)
+            if native_resolver is not None and raw:
+                resolved = native_resolver(native)
+                if resolved is not None:
+                    native = Path(resolved)
+                    member = original
             item['native'] = native_activity(native, expected, exported=exported, evidence_dir=window, archive_member=member) if raw else {'available': False, 'error': 'native identity absent'}
+            if raw and original != str(native):
+                item['native']['resolved_source'] = str(native)
+                item['native']['expected_source'] = original
             required_reads.extend(item['native'].get('required_reads', []))
             result['sessions'].append(item)
         if evidence_root is not None:
