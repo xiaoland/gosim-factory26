@@ -2,6 +2,10 @@
 
 最新目标核对归[assessment达成表](assessment.md#2026-10-07-原定目标达成核对)：整体未达成，已完成的架构与局部运行能力不能代替完整使用链。采用advisor的收敛顺序：收取Node/npm实际应用验证并继续当前Pi/I14；并行修Console已发现的active事实缺失；产物形成后完成原定自动评测、同variant接续/stages及采集策略证据；最后汇总正常操作的时间/token/排错成本。不扩variants/模型矩阵，不制造资源触顶或idle条件，不因分数低追加优化。Hosted关闭与绝不参赛是外部未覆盖边界，self-test评分和内部费用/Console缺口仍须完成。
 
+2026-10-07 proxy专项纠偏：completion_criteria_decision advisor定位Cargo.lock锁定reqwest0.13.5，其Linux异步Client默认tcp_user_timeout为30秒；主已读官方版本源码确认。公共Client现在显式tcp_user_timeout(None)，请求总期限仍有效，不改配方、重试或fallback。此前“源码无30秒配置”不能推导实际socket无30秒期限。相近9.28MB请求33已HTTP200完成，35按既有链在千帆500后由ARK成功，不能用固定体积上限解释。Linux复用编译缓存22.33秒完成，新ELF SHA256 `6f1e07fc10a50149e2be513450177b88d53f5c9d4323d0dcaaefea48f0c7979d`，交付为 `runs/provider-model-config-20261007/delivery/model-proxy-linux-x86_64-tcp-deadline-20261007/factory26-model-proxy-linux-x86_64`，公共默认装配已切换。独立会话获准从d3cc现场正常接续一次；尚未证明实际上传恢复。若仍30秒失败先核对交付字节/socket，若到总期限仍无ACK则保留这一次证据再定位出口/对端，不继续延长期限或同条件重跑。proxy源码目录已有其它未提交来源，未整目录纳入本任务commit。
+
+独立验收已实际从Console首页进入Pi详情，确认failed/inactive、来源/配方/competition=false、最新502、资源终态与非峰值采样、partial用量及费用未知均可见。其两项新增负担已修：未提供experiment标签时不展示“实验名未知·未保存”，归档统计改为“已归档”，生命周期不再称作保存回执。Console TypeScript/Vite构建及Linux部署完成，后续新run负责动态刷新反馈。
+
 2026-10-07 用户明确“你可以开始，这也是基础设施改进的一部分”，批准将[应用开发与评测环境统一](../harness-app-environment/packet.md)纳入本任务。公共默认应用Node/npm与工具解释器分离，范围为两个DX及实际评测入口；不扩展历史variant/I15，不热改在途。execution_owner持有公共安装与Linux应用操作，主持有DX入口/指令与技术说明。该packet拥有具体环境证据和完成标准，本入口不复制；费用仍自费、绝不参赛。
 
 最新验收：Pi正常同任务接续 `d3cc30d25f8e4da5be4b467f709f2250` 已于16:55:32自然失败，退出1。已消费响应头/总期限600秒，在sfp7取得真实模型回合，最后三次9,291,245字节请求仍在约30–32秒报 `SendRequest: connection error: Connection timed out (os error 110)`，没有响应头；不能再归为WSL独有或旧90秒期限。Mac结果回收已明确saved=true、errors=[]，partial原生用量1,444,211 tokens，实际spend未采集，不能当零。来源为1c1e1b，native scope仍为f1335fc，同variant/data/原生状态。I14普通接续 `746835582f574a7fa7b25856b8e24b5b` 也failed且完整保存，仍报告必要group物化/恢复blocked；execution_owner继续核实发布版本和恢复条件，独立会话不再重复同条件派发。完整生成和应用评分均未完成。

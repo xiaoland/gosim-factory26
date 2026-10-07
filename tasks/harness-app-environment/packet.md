@@ -46,6 +46,14 @@ Vitest 全套曾被 300 秒总时限终止，分批随后 96/96 通过。组织/
 
 遵守项目规定，不新增或运行 Factory/Braid 测试或包 smoke；使用编译、真实操作及明确授权的应用验收/实验取证，付费模型运行另行明确范围。持续知识最终更新现有技术、运行说明和 Agent 环境指引，packet 仅持有本任务状态。
 
-当前状态为已授权实施，尚未取得新环境的实际验收结果。此packet继续持有应用环境问题的证据与实施状态，决赛设施packet只链接本范围，不复制环境合同；不新增配套模板。
+当前已取得下述公开基线独立副本的真实Linux应用资格化结果；两个DX的完整原生生成/接续及自动评测仍随设施主线验收，不能由工具安装或基线操作替代。此packet持有具体环境证据，决赛设施packet只链接本范围，不复制环境合同；不新增配套模板。
 
-当前源码已提供runtime_install.application_environment：默认PATH使用平台/usr/local/bin和不含node的runtime/tools，移除全局NODE_PATH；工具启动器显式调用runtime/bin/node或原生入口。两个DX已消费该接口，I14不再要求pnpm；Pi原生接续保留原始指令，只替换当前有效环境段，并按producer保存实际指令。Python语法解析和diff检查通过，尚未部署资格化。execution_owner使用公开GitHub官方基线的独立副本开展真实npm安装、应用Vitest、构建、正式启动与portless/后台bash操作；不控制旧610daf或活跃Pi，不读取隐藏评测器。其它会话已有的Tailwind及完整用户旅程指令改动保留，不纳入本次环境提交。
+当前源码已提供runtime_install.application_environment：默认PATH使用平台/usr/local/bin和不含node的runtime/tools，移除全局NODE_PATH；工具启动器显式调用runtime/bin/node或原生入口。两个DX已消费该接口，I14不再要求pnpm；Pi原生接续保留原始指令，只替换当前有效环境段，并按producer保存实际指令。其它会话已有的Tailwind及完整用户旅程指令改动保留，不纳入本次环境提交。
+
+## 2026-10-07 Linux 基线应用资格化读回
+
+已在独立目录验证，不修改官方基线或业务数据：ARC 镜像为 `sha256:3d51899c...`；远端材料与基线位于 `/home/yyh/factory26-lab-runs/application-env-verify-20261007d/{package,baseline}`，Mac 证据目录为 [`runs/application-env-verify-Yt1BIs/evidence`](../../runs/application-env-verify-Yt1BIs/evidence)。实际安装入口执行 `python3 -c 'from runtime_install import ensure; ensure("/job/package")'`，固定 Node 24.10.0 工具运行时和公共 npm 依赖安装成功（192 packages，随后 patch 成功）；应用环境读回为官方 Node `v20.19.3`、npm `10.8.2`，工具为 Node `v24.10.0`，应用子进程继承 Node 20。
+
+真实应用操作结果：前端 `npm ci`、Vite build 成功；后端 `npm ci`、Vitest 17/17 成功；后端正式启动后 `/api/health` 返回 HTTP 200 `{"code":200,"message":"Backend Ready"}`；用无特权 portless proxy（`portless proxy start -p 1355 --no-tls`）启动应用，分配后端端口 4486，`http://baseline-github.localhost:1355` 的 health 请求返回 200。此前 managed-bash 直接调用不存在的 `runtime/tools/pnpm` 返回 127，原因是当前公共锁文件未声明 pnpm；这不是应用失败，后续验证改用应用 npm 与 Node 20。
+
+前端基线 Vitest 有一个自身失败：`tests/home.test.tsx` 在 300 秒等待窗口内超时，测试把 `getByRole('link', 'acme-owner/acme-docs')` 的字符串当作第二参数使用，未按 Testing Library 的 `{name: ...}` 选项传递；未修改基线，故不能把该失败归因于 Harness 环境。证据详见 [`application-verify.log`](../../runs/application-env-verify-Yt1BIs/evidence/application-verify.log) 与 [`application-verify-portless-node20.log`](../../runs/application-env-verify-Yt1BIs/evidence/application-verify-portless-node20.log)。I14 Braid 正常接续仍是独立运行闭环，不由本节应用资格化代替。
