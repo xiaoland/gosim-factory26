@@ -146,6 +146,8 @@ def start(variant, target, task, *, route=None, competition=False, script=None):
                        "as_of": time.time(), "error": f"{type(exc).__name__}: {exc}"})
         raise
     _background(path, "lab.automation", ["observe", path], "supervisor")
+    # A user policy supplements observation; it must not disable task evaluations.
+    _background(path, "lab.automation", ["default", path], "evaluations" if script else "automation")
     if script:
         target_config = run_layout.manifest(path).get('target_config') or {}
         if target_config.get('kind') == 'local' and target_config.get('executor') != 'local':
@@ -159,8 +161,6 @@ def start(variant, target, task, *, route=None, competition=False, script=None):
                              stdout=output, stderr=subprocess.STDOUT, start_new_session=True)
             write_json(path / "records/automation.json", {**process_identity(process.pid),
                         "source": str(destination), "started_at": time.time()})
-    # A user policy supplements observation; it must not disable task evaluations.
-    _background(path, "lab.automation", ["default", path], "evaluations" if script else "automation")
     return status(path)
 
 

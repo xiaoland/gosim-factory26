@@ -553,10 +553,17 @@ def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
         if isinstance(value, dict):
             lifecycle = value.get("lifecycle", "unknown")
             facts = _status_facts(run_path, lifecycle)
-            activity = _activity(run_path, facts)
+            # Hosted owns its live workspace snapshot. Do not overwrite it with
+            # controller-local data that is only populated at terminal save.
+            for key in ("native", "resources", "resource"):
+                if isinstance(value.get(key), Mapping):
+                    facts[key] = value[key]
             spend = value.get("spend")
             if isinstance(spend, Mapping) and "value" not in spend:
                 spend = {**spend, "value": spend.get("amount")}
+            if spend:
+                facts["spend"] = spend
+            activity = _activity(run_path, facts)
             value = {**value, **facts, **activity,
                      "spend": spend or facts["spend"],
                      "lifecycle": lifecycle, "as_of": value.get("as_of", time.time())}

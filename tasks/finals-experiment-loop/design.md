@@ -111,6 +111,8 @@ Braid 自己维护只读视图和 Braid 数据解释。现有 lab.analysis.braid
 
 Braid reader 只解码新增 batch，保存累计已解证据；有新数据时最多每 30 秒选择一次固定 cutoff，后台调用既有重建核心，完成后原子发布投影。同一个 run 不重叠重建，HTTP 读取已发布结果并显示 cutoff、as_of 和更新错误，不等待重建。对象/session 目录及诊断分页，正文按材料引用和 offset 获取；不将全部会话和 Markdown 嵌入页面，也不访问运行中的私有 DB。Portable 的后续 snapshot 可能引用早期 chunks，不能只重建当前页或最新 batch。
 
+运行中的Summary直接携带Braid当前对象、负责人、会话关系、状态及最近活动，以及有界近期turn/event；不读取native全文或长正文，仅由Braid viewer解释这些语义。它明确为当前状态、非完整历史，不要求先有Portable才能显示协作事实。终态保存沿用现有Portable导出和导入取得完整原件；强制取消时只采用实际保存材料，缺项保留。旧Summary只有库存时显示具体不可用原因，不能冒充零对象或完整覆盖。
+
 sources/braid/src/evidence.rs 将读取 protobuf 与从完整 evidence records 重建拆为同一核心的两个输入入口，使累计已解记录可复用，避免后台仍重复解码全部 protobuf。现有 snapshot/artifact/chunk 语义继续归 Braid，不新增 Rust 增量状态数据库。30 秒是刷新默认值，重建较慢时显示实际投影延迟；累计证据与实际资源占用的上限由真实反馈报告。
 
 ## 统一装配与数据路径
@@ -234,7 +236,7 @@ self-test 不继承来源生成 run 的 Hosted 提交入口或模型配方。它
 
 普通 Python 程序读取本次运行的费用、native session turn、执行状态和资源事实，直接调用 start、wait、stop、pause、resume、restart、应用快照和 evaluate。状态脚本只提供观察，自动化脚本选择动作。每 run 的 supervisor 负责自己的实际执行、采集和回收。脚本在完成一次触发后离开相应分支，不在每次观察时重复启动；不增加 action 解释层、未来任务队列或规则 DSL。
 
-自管 target 的自动化程序在实际执行宿主运行，普通单 task 使用默认程序，--script 可替换为用户 Python 文件。Hosted 包内脚本只能处理当前执行，创建下一 stage 或其它评测 run 的程序放在包外的控制宿主。程序源码、日志和 PID 记录在首个 run 的 records 中；它没有实验/chain 调度身份。CLI/Console 退出不影响它，停止它使用实际宿主进程句柄。已经启动的 run 独立继续，不承诺自动化程序崩溃后的任意代码行恢复。
+自管 target 的自动化程序在实际执行宿主运行，--script 追加用户 Python 程序，不替代默认观察、保存或任务自动评测。lab.automation.watch 持续读取已保存事实，不建立第二个采集器；重复提供同一快照以支持按当前时间计算 idle，保留原始 as_of 以区分采集过旧。Hosted 包内脚本只能处理当前执行，创建下一 stage 或其它评测 run 的程序放在包外的控制宿主。程序源码、日志和 PID 记录在首个 run 的 records 中；它没有实验/chain 调度身份。CLI/Console 退出不影响它，停止它使用实际宿主进程句柄。已经启动的 run 独立继续，不承诺自动化程序崩溃后的任意代码行恢复。
 
 即时策略在执行侧读取本地产生的事实，再把决定和实际效果送往 Backend，不能等待共享 Collector 接收后才控制预算。精确阈值可由一次可信事实触发；疑似 stale 等时间条件才需要连续观察。新 run 启动后由自己的 supervisor 执行，不依赖来源 run、自动化程序、Console 或聊天存活。运行 API 保存实际调用的参数、平台请求身份和返回结果；已经发出的平台 POST 效果未知时，查询该次请求，不换 ID 重发。这是已发生写入的记录，不是未来任务队列。不承诺 Python 程序崩溃后恢复到任意代码行，也不自动重放整段脚本；已有 run 继续，重启脚本可读取其记录后明确接续。
 
