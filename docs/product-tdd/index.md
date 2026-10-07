@@ -8,6 +8,8 @@
 
 公共装配拥有最终程序目录或提交 ZIP，统一加入安装器、gateway、collector、run 输入与数据运输材料；variant 只准备自身程序、角色、技能及原生支持。统一入口先安装公共依赖，再启动公共服务并调用 Harness。本地与 Hosted 使用同一安装输入、依赖版本和入口，不以本地只读宿主 runtime 与官网预打包 runtime 建立两套正常路径；缓存只加速下载。团队编译的 Braid/model-proxy 属程序执行字节，公共 Node/npm 依赖在容器内按 lock 与补丁安装；约2.5 MB的 OTLP Python 依赖闭包直接随包携带，避免额外的 pip 下载与安装步骤。
 
+两个DX采用的应用环境合同是：普通shell、npm生命周期、reviewer和服务子进程默认使用平台Node 20.19.3及其npm，应用依赖不得通过全局NODE_PATH解析到工具安装树。Pi、portless等工具的启动器通过绝对路径使用所需工具Node，不能为启动工具而改变应用子进程的默认PATH。variant指令使用普通npm命令，不要求Agent临时调用app-env。接续保留源码、业务数据和原生历史，但跨ABI的应用依赖须在独立副本按目标环境重装；锁文件迁移不能只替换包管理器名称。此合同正在实现与实际应用验收，状态归[应用环境packet](../../tasks/harness-app-environment/packet.md)，不代表历史variant或在途运行已迁移。
+
 公共服务不解释 variant 的原生模型 selector 或猜测 Pi/Braid 目录。variant 的原生适配拥有会话接续、原生事实采集、完成与应用交付判定；绑定 program 的 observe.py 采集事实，status.py 解释活动，多 variant 共用的机械适配保留明确 Pi/Braid 身份。容器内 workspace 和原生状态的逻辑路径稳定，宿主实际位置归 target。原生 home、Braid DB/worktree 和 retained request 均在 data/harness，凭据在独立私有配置中。旧 lab.exp 的定义资产、authority/capture、compile/readiness 合同只解释原冻结执行，具体见其组件文档。
 
 model-proxy 是公共运输设施，供应商模型配方的选择归 variant 的 `model-recipe.json`，可引用统一维护的供应商链与 catalog，避免复制供应商参数。自费运行由公共装配冻结并消费该配方，向 Harness 提供 `OPENAI_BASE_URL` 和 `OPENAI_API_KEY`；原生客户端模型身份、角色及请求预算归 variant。官网比赛不装配或启动 model-proxy，也不读取供应商配方，直接使用平台注入的同名端点与凭据。

@@ -32,9 +32,9 @@ Ponytail 使用默认 full，由原生扩展持续注入。复用能满足需求
 
 ## 开发与交付环境
 
-使用 npm 管理应用依赖，选择兼容 Node 20.19.3 的 Vitest 和其它依赖版本；UI 使用成熟组件库、图标库和 UnoCSS，语言与框架自行选择。工具路径已包含 agent-browser、rg、ast-grep、app-env；BROWSER_EXECUTABLE_PATH 是浏览器入口，BROWSER_CHECK_NODE_MODULES 是工具依赖位置。
+使用 npm 管理应用依赖，选择兼容 Node 20.19.3 的 Vitest 和其它依赖版本；UI 使用成熟组件库、图标库和 UnoCSS，语言与框架自行选择。工具路径已包含 agent-browser；BROWSER_EXECUTABLE_PATH 是浏览器入口，BROWSER_CHECK_NODE_MODULES 是工具依赖位置，不是应用依赖。
 
-Harness 的 Node 与应用目标 Node 是两件事：交付目标为 Node 20.19.3。应用依赖安装、构建和启动使用 `app-env npm install --include=optional --no-audit --no-fund`、`app-env npm run build`、`app-env npm run start`，使 npm 与生命周期脚本都使用目标 Node；交付 package 脚本保持普通命令，不依赖 app-env。保留 package-lock.json，交付前在干净副本中按前端安装与构建、后端安装与启动的实际路径验证。平台不预装生成应用的原生业务依赖或预编译缓存；含原生绑定的依赖由 Agent 在开发过程中按目标 Node/ABI 安装配置，并在应用自己的安装、构建和启动路径中确认实际加载。保留完整安装日志和退出码，不能用被管道掩盖的结果声称成功。
+Harness 工具的 Node 与应用 Node 是两件事：应用默认使用官网 Node 20.19.3 和 npm，无需 app-env 或临时调整 PATH。应用依赖安装、构建和启动直接使用 `npm install --include=optional --no-audit --no-fund`、`npm run build`、`npm run start`；工具启动器使用各自所需的 Node，不改变应用子进程环境。保留 package-lock.json，交付前在干净副本中按前端安装与构建、后端安装与启动的实际路径验证。接续已有应用时保留源码和业务数据，在独立副本核对 npm 锁文件与逐目录安装，不复用其它 Node ABI 的 node_modules。平台不预装生成应用的原生业务依赖或预编译缓存；含原生绑定的依赖按目标 Node/ABI 安装，并在应用自己的安装、构建和启动路径中确认实际加载。保留完整安装日志和退出码，不能用被管道掩盖的结果声称成功。
 
 后台任务取得完成结果与退出码后才声明完成；开发服务器使用 bash 的 service:true，工作结束后停止服务。不用 sleep 反复轮询，使用原生完成通知。
 

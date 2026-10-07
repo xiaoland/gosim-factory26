@@ -23,6 +23,7 @@ from pi_state import repair_state_files
 from braid_runtime import (initialize_repository, read_runtime_result, load_delivery,
                            export_delivery, archive_state)
 from core import archive_sessions, finalize_archive
+from runtime_install import application_environment
 HERE = Path(__file__).resolve().parent
 VARIANT = 'I14-dx-test'
 ROOT_PROFILE_ID = 'pi-glm-fast'
@@ -41,7 +42,7 @@ RUN_CONDITIONS = '''交付条件
 JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写业务源码。按需求选择框架，使用所选框架的官方脚手架；SPA可优先评估Vite。选择并锁定兼容实际运行环境的依赖版本，不机械使用latest。
 
 开发工具与反馈
-开发时使用pnpm安装依赖、构建和运行脚本，提交pnpm-lock.yaml。预打包环境通过PATH提供pnpm、portless、agent-browser和Playwright；BROWSER_CHECK_NODE_MODULES指向已有Node工具依赖，BROWSER_EXECUTABLE_PATH指向配套浏览器入口。复用这些工具、浏览器和本次运行的包缓存。
+应用命令默认使用官网Node 20.19.3及npm，无需app-env或临时调整PATH；使用npm安装依赖、构建和运行脚本，提交package-lock.json。工具通过各自启动器使用所需Node，不改变应用子进程环境。PATH提供portless、agent-browser和Playwright；BROWSER_CHECK_NODE_MODULES指向工具依赖，不是应用依赖。BROWSER_EXECUTABLE_PATH指向浏览器入口，复用工具、浏览器和本次运行的包缓存。接续已有应用时保留源码和业务数据，在独立副本核对npm锁文件与逐目录安装；不能复用其它Node ABI安装的node_modules。
 应用检查使用Vitest，复杂组件按需使用Browser Mode；完整应用验收使用Playwright自动化测试或脚本。检查失败保留首次结果、trace、控制台和请求错误，依据需求设计判据，不以通过数量代替覆盖说明。依赖安装失败保留原始错误与首轮日志，不通过反复安装掩盖失败。
 新建应用的UI使用适合所选框架的成熟组件库和图标库，样式统一使用Tailwind CSS；接续既有应用时沿用基线技术栈，不为样式工具偏好迁移。按需求组合、定制已有控件，核对实际role、可访问名称、状态、键盘和焦点行为。统一少量视觉变量，图标随应用打包；动态样式采用所选Tailwind CSS版本可静态提取的完整类名映射或适当的CSS变量。
 采用Tailwind CSS时，按所选版本的官方方式配置构建集成和CSS导入，确认应用入口实际加载该CSS。使用正式构建产物和正式启动路径，在实际页面核对代表性布局、颜色和字体的计算样式；不能仅凭构建成功声明样式生效。
@@ -49,7 +50,7 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
 
 数据与服务状态
 持久化优先评估SQLite，写入通过事务完成；迁移和原需求指定的种子数据可重复执行，正常启动准备所需初始数据，重启不覆盖已有用户数据。核实数据库驱动与正式安装、启动环境的兼容性。前端优先使用同源相对API，开发代理转发后端；正式验收使用构建产物与正式启动路径。
-开发、自检服务使用portless，为每个工作项和服务取唯一名称（例如portless issue-2-api pnpm run dev），应用遵守其注入的HOST/PORT，通过命令输出的URL访问。服务已由portless管理时，用agent-browser技能的with-service --check-only包裹检查，不重复启动。使用结束后停止自己的常驻服务；共享代理仍被其它成员使用时不停止它。
+开发、自检服务使用portless，为每个工作项和服务取唯一名称（例如portless issue-2-api npm run dev），应用遵守其注入的HOST/PORT，通过命令输出的URL访问。服务已由portless管理时，用agent-browser技能的with-service --check-only包裹检查，不重复启动。使用结束后停止自己的常驻服务；共享代理仍被其它成员使用时不停止它。
 自检数据库、缓存、上传文件和浏览器状态使用临时位置，不改变交付应用的初始状态。'''
 
 
@@ -254,7 +255,6 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                PI_FFF_MODE='tools-only', PI_FFF_MULTIGREP='0',
                PORTLESS_SYNC_HOSTS='0', PORTLESS_STATE_DIR=str(work/'tmp/portless'),
                npm_config_cache=str(work/'cache/npm'),
-               npm_config_store_dir=str(work/'cache/pnpm'),
                HOME=str(work/'home'), TMPDIR=tempfile.mkdtemp(prefix='f26-', dir=work/'tmp'),
                PI_SUBAGENTS_TEMP_ROOT=str(work/'tmp'/f'pi-subagents-uid-{os.getuid()}'),
                PI_SUBAGENT_MAX_DEPTH='3',
@@ -266,9 +266,8 @@ JavaScript生态中的应用使用现代TypeScript，避免以JavaScript编写�
                BROWSER_CHECK_NODE_MODULES=str(runtime/'node_modules'),
                FACTORY26_BROWSER_CACHE_DIR=str(browser_cache),
                AGENT_BROWSER_SOCKET_DIR=str(work/'b'),
-               MCPORTER_CONFIG=str(HERE/'tools/mcporter.json'),
-               PATH=os.pathsep.join((str(work/'bin'), str(runtime/'bin'),
-                                     str(runtime/'node_modules/.bin'), os.environ.get('PATH',''))))
+               MCPORTER_CONFIG=str(HERE/'tools/mcporter.json'))
+    env = application_environment(runtime, env, tool_paths=(work/'bin',))
     browser = browser_executable(runtime)
     env['MCPORTER_DAEMON_DIR'] = str(Path(env['TMPDIR'])/'mcporter')
     if browser is not None:

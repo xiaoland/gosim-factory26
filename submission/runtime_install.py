@@ -21,6 +21,36 @@ except ModuleNotFoundError:  # packaged entry: helper is copied beside this file
 NODE_PACKAGE = "node-linux-x64@24.10.0"
 
 
+def application_environment(runtime: Path, environment: dict[str, str],
+                            tool_paths: tuple[Path, ...] = ()) -> dict[str, str]:
+    """Use the platform application Node without exposing the tools' Node."""
+    result = dict(environment)
+    result.pop("NODE_PATH", None)
+    result["PATH"] = os.pathsep.join(map(str, (
+        Path("/usr/local/bin"), *tool_paths, runtime / "tools", Path("/usr/bin"), Path("/bin"))))
+    return result
+
+
+def _tool_launchers(runtime: Path) -> None:
+    directory = runtime / "tools"
+    directory.mkdir(exist_ok=True)
+    for name in ("pi", "braid", "agent-browser", "browser-install", "browser-exec"):
+        executable = runtime / "bin" / name
+        if executable.is_file():
+            launcher = directory / name
+            launcher.unlink(missing_ok=True)
+            launcher.write_text('#!/bin/sh\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+                                + f'exec "$HERE/../bin/{name}" "$@"\n')
+            launcher.chmod(0o755)
+    for name in ("playwright", "mcporter", "portless"):
+        entry = (runtime / "node_modules/.bin" / name).resolve(strict=True)
+        launcher = directory / name
+        launcher.write_text('#!/bin/sh\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+                            + 'exec "$HERE/../bin/node" "$HERE/../'
+                            + str(entry.relative_to(runtime)) + '" "$@"\n')
+        launcher.chmod(0o755)
+
+
 def _run(command: list[str], *, cwd: Path | None = None, env: dict[str, str] | None = None) -> None:
     subprocess.run(command, cwd=cwd, env=env, check=True)
 
@@ -40,6 +70,7 @@ def ensure(root: str | Path) -> Path:
     runtime = root / "runtime"
     marker = runtime / ".factory26-installed.json"
     if marker.is_file():
+        _tool_launchers(runtime)
         return runtime
     runtime.mkdir(parents=True, exist_ok=True)
     (root / ".cache").mkdir(parents=True, exist_ok=True)
@@ -115,5 +146,6 @@ def ensure(root: str | Path) -> Path:
         path.unlink(missing_ok=True)
         path.write_text(script)
         path.chmod(0o755)
+    _tool_launchers(runtime)
     marker.write_text(json.dumps({"node": NODE_PACKAGE, "installed": True}) + "\n")
     return runtime

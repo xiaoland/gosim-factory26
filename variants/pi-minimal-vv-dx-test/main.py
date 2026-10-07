@@ -12,6 +12,7 @@ from agent_support import (browser_executable, stop, bind_native_models,
                            bind_retained_native_models)
 from pi_transport import model_bindings
 from pi_state import repair_state_files
+from runtime_install import application_environment
 
 ROOT = Path(__file__).resolve().parent
 SKILLS = ('svc-verification', 'agent-browser', 'hyperformula', 'handsontable', 'better-auth-best-practices',
@@ -89,11 +90,11 @@ def run(requirements, output):
                PI_OFFLINE='1',
                PONYTAIL_DEFAULT_MODE='full', PI_CAPABILITY_EVIDENCE_DIR=str(evidence/'capabilities'),
                FACTORY26_PI_TIMING_FILE=str(evidence/'pi-timing.jsonl'),
-               PATH=str(runtime/'bin')+':/usr/local/bin:/usr/bin:/bin',
-               NODE_PATH=str(runtime/'node_modules'), PI_SUBAGENT_PI_BINARY=str(runtime/'bin/pi'),
+               PI_SUBAGENT_PI_BINARY=str(runtime/'bin/pi'),
                MCPORTER_CONFIG=str(ROOT/'mcporter.json'),
                AGENT_BROWSER_SOCKET_DIR=str(evidence/'browser'),
                BROWSER_CHECK_NODE_MODULES=str(runtime/'node_modules'))
+    env = application_environment(runtime, env)
     browser_cache = evidence/'browser-cache'
     browser_cache.mkdir(parents=True, exist_ok=True)
     env['FACTORY26_BROWSER_CACHE_DIR'] = str(browser_cache)
@@ -105,9 +106,20 @@ def run(requirements, output):
         instruction = instruction_path.read_text() if instruction_path.is_file() else None
         if not instruction:
             raise ValueError(f'Pi native resume requested but original instructions are missing: {instruction_path}')
+        # Keep the original task and its receipt, but consume this program's
+        # environment contract instead of asking for a removed app-env tool.
+        heading = '## 开发与交付环境\n'
+        current = (ROOT/'instructions.md').read_text()
+        environment = current.split(heading, 1)[1].split('\n## ', 1)[0]
+        before, previous = instruction.split(heading, 1)
+        _, separator, following = previous.partition('\n## ')
+        instruction = before + heading + environment + separator + following
     else:
         instruction = (ROOT/'instructions.md').read_text().replace('@REQUIREMENTS@', str(requirements)).replace('@OUTPUT@', str(output))
         instruction_path.write_text(instruction)
+    producer = evidence/'producers'/contract['run_id']
+    producer.mkdir(parents=True, exist_ok=True)
+    (producer/'user-instructions.md').write_text(instruction)
     command = [str(runtime/'bin/pi'), '--provider', main_provider, '--model', 'glm-5.3-flash',
                '--thinking', 'high', '--mode', 'json', '--print', '--no-context-files', '--no-skills',
                '--no-prompt-templates', '--no-themes', '--extension', str(runtime/'node_modules/pi-subagents/index.ts'),
