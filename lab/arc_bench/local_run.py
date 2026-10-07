@@ -414,10 +414,10 @@ def _sync(host: str, source: Path, destination: str, *, excludes: tuple[str, ...
     subprocess.run(command, check=True)
 
 
-def _spawn_source_components(module: str, args: list[str] | tuple[str, ...]) -> tuple[str, ...]:
+def _spawn_source_components(module: str, args: list[str] | tuple[str, ...], *, script=False) -> tuple[str, ...]:
     """Return source trees consumed by a remote observer/automation process."""
     components = ["lab", "scripts"]
-    if module == "lab.automation" and args and str(args[0]) == "stages":
+    if script or (module == "lab.automation" and args and str(args[0]) == "stages"):
         components += ["variants", "harness", "third_party/arc-bench"]
     return tuple(components)
 
@@ -896,7 +896,8 @@ def spawn(run: str | os.PathLike[str], module: str, args: list[str] | tuple[str,
             _sync(host, source, str(destination))
     repository = Path(__file__).resolve().parents[2]
     _sync(host, paths(run)["program"], str(remote_run / "program"))
-    for component in _spawn_source_components(module, args):
+    # Python policies can call start/restart just like the existing stages program.
+    for component in _spawn_source_components(module, args, script=script is not None):
         _sync(host, repository / component, str(remote_run / "source" / component),
               excludes=_DEVELOPMENT_SOURCE_EXCLUDES)
     _push_remote_registry(host, remote_run, target)
