@@ -12,6 +12,18 @@ def main():
     age = None if latest is None else max(0.0, now - latest)
     stale = age is not None and age > 600
     lifecycle = facts.get('lifecycle')
+    if lifecycle == 'failed':
+        errors = []
+        for state in facts.get('native', {}).get('braid', {}).get('states', []):
+            for session in state.get('provider_evidence', {}).get('sessions', []):
+                error = (session.get('turn') or {}).get('error')
+                if error:
+                    errors.append({'source': state.get('source'), 'agent_id': session.get('agent_id'),
+                                   'error': error})
+        if errors:
+            brief = '; '.join(dict.fromkeys(item['error'] for item in errors))
+            return {'activity': 'inactive', 'brief': 'provider error: ' + brief[:1600],
+                    'last_activity_at': latest, 'evidence': {'provider_errors': errors, 'observed_at': now}}
     if lifecycle in {'completed', 'failed', 'stopped', 'paused'}:
         return {'activity': 'inactive', 'brief': lifecycle, 'last_activity_at': latest,
                 'evidence': {'source': 'lifecycle', 'observed_at': now}}
