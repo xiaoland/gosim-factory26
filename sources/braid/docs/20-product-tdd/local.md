@@ -106,6 +106,10 @@ CLI 在同一 SQLite immediate transaction 内通过执行身份检查当前 gro
 
 验收 Issue 当前负责人可用 `assignee list --reviewer` 选择下一位专门成员，并通过 `pr review assign PR REQUEST --assignee MEMBER` 只改变该请求的责任。`reviewer-only` Profile 从普通目录及 Issue/PR driver 排除，只进入 Review driver；根 Profile 另按 root-only 原契约处理。委派使用请求节点的 assignment、wake、队列、provider session、CLI 绑定与 Context reset，PR 实施者继续持有原节点。委派后结论只能由当前 review assignment 提交；Issue 当前负责人仍可查看、讨论、继续委派或明确 cancel。责任 revision 不匹配的在途 writer 被拒绝，Completed 不能重新提交结论或恢复成新候选，后续修复使用新请求。
 
+本地冻结 Profile 集合中任一 Profile 带 `single-reviewer-per-pr` tag 时，该 run 启用单 PR 串行 review。不同 PR 仍可并行。同一 PR 的 Pending 请求占据唯一 review 槽位；Completed/Cancelled 请求只有其 Braid assignment 到达 `retired` 后才释放执行槽位，`blocked`、`stopping` 或原生单轮结束不能代替物理 teardown。新 request、review assign 与实际 assignment 启动都检查此约束，冲突错误包含旧请求编号和 lifecycle，不自动取消旧工作。同 request、同成员的重复 assign 不创建第二责任；已有 assignment 尚未 retired 时不能改派给另一成员。候选变更应明确结束旧请求、等待 teardown，再冻结新请求并认领新成员名，不跨请求复用 login。该策略下 conclude/cancel 先持久化结论或原因，再清除当前责任并发送既有 Unassign；队列 debounce 后由原 SessionManager 停止旧会话，物理停止成功后才退休 assignment。显式结束时 blocked assignment 及其尚未退休的原生 session 同样进入停止路径，保留原错误而不将 blocked 当作停止证明。reviewer 应先清理自己启动的验收进程，再以 conclude 作为最后动作。debounce 不承诺 CLI stdout 已交付；结果以事务保存的结论为准，可用 review view 核实，随后原生 turn 被 interrupted 不回滚结论。没有该 tag 的既有 run 保留原行为。
+
+此约束只覆盖 Braid 登记的责任与原生会话。独立浏览器、应用服务及验收子进程的可写状态隔离和收口仍由 reviewer 执行并保留证据；Braid 不因此宣称管理了任意子进程生命周期。
+
 `pr review checkout PR REQUEST` 为当前责任取得独立候选 clone，重复调用返回同一路径。`review_checkouts` 按请求、责任 revision 和默认 IssueOwner 的当前 Issue assignment revision 登记 origin、path、固定 commit/tree、成员与实际创建身份。专门 reviewer 同时使用既有 agent-owned worktrees，默认 Issue 会话保留自己的 cwd。改派不接管旧责任的脏 clone，新责任从保留 ref 取得原候选；同一责任恢复核对登记路径、origin 和实际 HEAD，不静默 reset 文件。Braid提供独立候选路径，不自动管理应用端口、服务或浏览器数据；验收者应独立运行并记录这些事实。
 
 `pr review conclude PR REQUEST --verdict approved|changes-requested|inconclusive --body-file FILE [--evidence PATH]` 核验 Pending、PR 对应关系和当前具体责任，从登记 checkout 读取实际 HEAD/tree 和脏文件观察。HEAD/tree 不符时拒绝提交；结论正文、证据入口及脏文件事实保存后不再覆写。正文应说明代码判断、真实浏览器结果或不适用理由，以及未证明的边界；原生执行 completed 不自动形成 Approved。过时请求仍可保存对原候选的结论，但不会因此适用于当前候选。结论或 `pr review cancel PR REQUEST --reason TEXT` 的取消原因与节点关闭、activity及向PR实施者/验收Issue当前负责人去重投递同事务保存；关闭PR不自动批准或取消请求。

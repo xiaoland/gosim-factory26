@@ -116,6 +116,24 @@ fn db_enum<T: FromStr<Err = anyhow::Error>>(
         rusqlite::Error::FromSqlConversionFailure(index, rusqlite::types::Type::Text, error.into())
     })
 }
+/// Current requests reserve one PR review slot; ended requests retain it until
+/// their Braid assignment has reached the native teardown fence.
+pub(crate) fn single_reviewer_conflict(
+    c: &Connection,
+    pr: i64,
+    current_request: Option<i64>,
+) -> rusqlite::Result<Option<(i64, String)>> {
+    c.query_row(
+        "SELECT r.request_id,coalesce(a.lifecycle,r.status) FROM review_requests r
+         LEFT JOIN assignments a ON a.work_item_node_id=r.node_id AND a.lifecycle!='retired'
+         WHERE r.pr_node_id=?1 AND (?2 IS NULL OR r.request_id!=?2)
+           AND (r.status='pending' OR a.assignment_id IS NOT NULL)
+         ORDER BY r.request_id LIMIT 1",
+        params![node("pr", pr), current_request],
+        |row| Ok((row.get(0)?, row.get(1)?)),
+    ).optional()
+}
+
 pub(crate) fn requirements_digest(body: &str) -> String {
     let mut digest = Sha256::new();
     digest.update(b"braid-review-requirements-v1\0");
@@ -258,6 +276,11 @@ impl LocalObjects {
             );
             drop(tx);
             return self.review_view(pr, id);
+        }
+        if self.single_reviewer_per_pr()? {
+            if let Some((other, lifecycle)) = single_reviewer_conflict(&tx, pr, None)? {
+                bail!("PR #{pr} already has review #{other} ({lifecycle}); finish or explicitly cancel that review and wait for its reviewer assignment to retire before requesting another candidate");
+            }
         }
         let item = Self::item(&tx, "pr", pr)?;
         ensure!(item.state == "OPEN", "review requires an open PR");
@@ -451,6 +474,10 @@ impl LocalObjects {
         ensure!(errors.is_empty(), "review #{id} does not apply: {}", errors.join("; "));
         Ok(())
     }
+    pub(crate) fn single_reviewer_per_pr(&self) -> Result<bool> {
+        Ok(self.current_profiles()?.iter().any(|profile| profile.has_tag("single-reviewer-per-pr")))
+    }
+
     pub fn assign_review(
         &self,
         turn: Option<&str>,
@@ -475,6 +502,18 @@ impl LocalObjects {
             [&request.node_id],
             |r| Ok((r.get(0)?, r.get(1)?)),
         )?;
+        if self.single_reviewer_per_pr()? {
+            if let Some((other, lifecycle)) = single_reviewer_conflict(&tx, pr, Some(id))? {
+                bail!("PR #{pr} already has review #{other} ({lifecycle}); wait for its reviewer assignment to retire before assigning review #{id}");
+            }
+            if existing.as_deref() != Some(&login) {
+                let outstanding: Option<String> = tx.query_row(
+                    "SELECT lifecycle FROM assignments WHERE work_item_node_id=?1 AND lifecycle!='retired' LIMIT 1",
+                    [&request.node_id], |row| row.get(0),
+                ).optional()?;
+                ensure!(outstanding.is_none(), "review #{id} still has a reviewer assignment ({outstanding:?}); finish or explicitly cancel this review and wait for native teardown before assigning a new reviewer to a new request");
+            }
+        }
         if existing.as_deref() != Some(&login) {
             let profiles = self.current_profiles()?;
             let mut candidate = None;
@@ -760,6 +799,19 @@ impl LocalObjects {
     ) -> Result<()> {
         if request.responsibility == ReviewResponsibility::AssignedReviewer {
             self.transition_in(tx, "review", request.id, false, Some(reason), writer)?;
+            if self.single_reviewer_per_pr()? {
+                // Keep the conclusion/history, but release current responsibility
+                // through the existing native unassignment/teardown workflow.
+                let member: Option<String> = tx.query_row(
+                    "SELECT desired_member_login FROM local_items WHERE node_id=?1",
+                    [&request.node_id], |row| row.get(0),
+                )?;
+                Self::retire_direct_messages(tx, member.as_deref(), None)?;
+                tx.execute("UPDATE local_items SET desired_profile_id=NULL,desired_member_login=NULL,assignment_revision=assignment_revision+1,revision=revision+1 WHERE node_id=?1", [&request.node_id])?;
+                Self::activity_in(tx, &request.node_id, writer, "unassigned", None, "review ended; reviewer teardown requested")?;
+                self.emit(tx, &request.node_id, EventKind::Unassign, Some("unassign"), "review ended; reviewer teardown requested", writer, None)?;
+            }
+
         } else {
             // IssueOwner has no independent driver to consume review-node lifecycle events.
             tx.execute(

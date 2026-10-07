@@ -4215,6 +4215,12 @@ fn consume_closed_activation(
     Ok(true)
 }
 
+fn single_reviewer_policy(database: &Path) -> Result<bool, StoreError> {
+    let state = database.parent().ok_or_else(|| StoreError::InvalidData("review database has no state directory".into()))?;
+    crate::objects::LocalObjects::new(state.to_path_buf()).single_reviewer_per_pr()
+        .map_err(|error| StoreError::InvalidData(format!("cannot read PR review policy: {error:#}")))
+}
+
 fn begin_agent_assignment(
     database: &Path,
     event_id: &str,
@@ -4305,6 +4311,20 @@ fn begin_agent_assignment(
     if !direct_contact && consume_closed_activation(&transaction, event_id, &work_item_state, &event_kind)? {
         transaction.commit()?;
         return Ok(None);
+    }
+    if work_item_kind == "review" {
+        // Read the frozen run policy, independent of the selected profile or
+        // which driver registered first. A different profile cannot bypass it.
+        let single_reviewer = single_reviewer_policy(database)?;
+        if single_reviewer {
+            let (request_id, pr): (i64, i64) = transaction.query_row(
+                "SELECT r.request_id,w.number FROM review_requests r JOIN work_items w ON w.node_id=r.pr_node_id WHERE r.node_id=?1",
+                [&work_item_node_id], |row| Ok((row.get(0)?, row.get(1)?)),
+            )?;
+            if let Some((other, lifecycle)) = crate::objects::review::single_reviewer_conflict(&transaction, pr, Some(request_id))? {
+                return Err(StoreError::InvalidData(format!("PR #{pr} review #{request_id} cannot start while review #{other} is {lifecycle}; finish or explicitly cancel it and wait for reviewer teardown")));
+            }
+        }
     }
     let stopping: bool = transaction.query_row(
         "SELECT EXISTS(SELECT 1 FROM assignments WHERE work_item_node_id=?1 AND lifecycle='stopping')",
@@ -4494,6 +4514,8 @@ fn retire_unassigned_work_item(
         transaction.commit()?;
         return Ok(UnassignmentOutcome { settled: true, provider_sessions: Vec::new() });
     }
+    let stop_blocked_review = work_item_node_id.as_deref().is_some_and(|node| node.starts_with("review:"))
+        && single_reviewer_policy(database)?;
     let active = work_item_node_id
         .as_deref()
         .map(|node_id| {
@@ -4502,9 +4524,9 @@ fn retire_unassigned_work_item(
                     "SELECT a.assignment_id,ai.agent_id,a.lifecycle FROM assignments a
                      JOIN agent_instances ai ON ai.assignment_id=a.assignment_id
                      WHERE a.work_item_node_id=?1
-                       AND a.lifecycle IN ('materializing','active','finalizing','sleeping','stopping','retired')
+                       AND (a.lifecycle IN ('materializing','active','finalizing','sleeping','stopping','retired') OR (?2 AND a.lifecycle='blocked'))
                      ORDER BY a.generation DESC LIMIT 1",
-                    [node_id],
+                    params![node_id, stop_blocked_review],
                     |row| Ok((row.get::<_, String>(0)?, row.get::<_, String>(1)?, row.get::<_, String>(2)?)),
                 )
                 .optional()
@@ -4517,10 +4539,10 @@ fn retire_unassigned_work_item(
     let provider_sessions = {
         let mut statement = transaction.prepare(
             "SELECT provider_session_id FROM provider_sessions
-             WHERE agent_id=?1 AND lifecycle NOT IN ('retired','replaced','blocked')",
+             WHERE agent_id=?1 AND (lifecycle NOT IN ('retired','replaced','blocked') OR (?2 AND lifecycle='blocked'))",
         )?;
         statement
-            .query_map([&agent_id], |row| row.get::<_, String>(0))?
+            .query_map(params![agent_id, stop_blocked_review], |row| row.get::<_, String>(0))?
             .collect::<Result<Vec<_>, _>>()?
     };
     if !provider_sessions.is_empty() {
@@ -4534,8 +4556,8 @@ fn retire_unassigned_work_item(
     if lifecycle != "retired" || !provider_sessions.is_empty() {
         transaction.execute(
             "UPDATE provider_sessions SET lifecycle='stopping'
-             WHERE agent_id=?1 AND lifecycle NOT IN ('retired','replaced','blocked')",
-            [&agent_id],
+             WHERE agent_id=?1 AND (lifecycle NOT IN ('retired','replaced','blocked') OR (?2 AND lifecycle='blocked'))",
+            params![agent_id, stop_blocked_review],
         )?;
         transaction.execute(
             "UPDATE agent_instances SET lifecycle='stopping' WHERE agent_id=?1",
