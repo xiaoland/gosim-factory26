@@ -21,7 +21,15 @@ evaluate_run(source_run, kind="task", snapshot=snapshot,
              configuration={"kind": "task", "task": "bookstack"})
 ```
 
-`kind` 为 `simulate`、`task` 或 `official`。`simulate` 使用公开、固定的 `argv`；`task` 使用维护 registry 中的题目别名（如 `bookstack`，或已配置的 `github`）解析 requirements/tests；`official` 必须显式提供 `billing_mode`（`self_funded` 或 `competition`）。三者都创建独立 run：不可变应用保存在 `inputs/application`，供 SDK 消费的可写副本位于 `data/workspace`，requirements/tests 位于 `inputs`。评测装配只准备 no-op/replay/argv 输入，不重新构建生成 variant。不会读取可变的 `latest` 目录，也不会把隐藏评分写回生成输入。评测派发后自动注册一个 observer，不启动生成默认 automation。运行中的生成只能传显式应用路径或 `{git_repo, commit}` 快照引用。
+`kind` 为 `simulate`、`task`、`official` 或 `self-test`。`simulate` 使用公开、固定的 `argv`；`task` 使用维护 registry 中的题目别名解析 requirements/tests；`official` 必须显式提供 `billing_mode`（`self_funded` 或 `competition`）。`self-test` 使用 ArcBench 自测站的私有 `*-req-test` 题目，独立上传同一冻结应用的 ZIP，结果不计正式排名，也不读取模型路由。四种路径都创建独立 run：不可变应用保存在 `inputs/application`，供执行器消费的可写副本位于 `data/workspace`，requirements/tests 位于 `inputs`。评测装配不会重新构建生成 variant，不把 self-test 回退到 Hosted `/submissions`。不会读取可变的 `latest` 目录，也不会把隐藏评分写回生成输入。评测派发后自动注册一个 observer，不启动生成默认 automation。运行中的生成只能传显式应用路径或 `{git_repo, commit}` 快照引用。
+
+`self-test` 的 adapter 复用站点公开浏览器客户端所用的三步协议：`POST /api/upload-url`、对返回的预签名 URL 做一次 `PUT`、再 `POST /api/submit`；提交和网络不确定时不自动重试。它在 `records/self-test/` 保存脱敏请求摘要、平台 submission identity、状态和结果原件，`save` 明确记录“站点没有 workspace 导出”这一缺口。执行宿主使用目标站点的 Helium 私有会话材料；不复用 ARC Hosted cookie，也不把 cookie 值写入 manifest、日志或评测输入。应用包装使用明确的 Linux/amd64 production runtime 和根 `Dockerfile`，限制为 50 MB，包装失败会留在当前 run 而不会伪造评分。
+
+Mac 上首次准备 Helium 会话时，只对命名为 `Helium Storage Key` 的 Keychain 项目发起一次有界读取；用户若看到系统授权框，只需为本次读取选择“允许”，不需要修改 ACL。读取出的目标域、未过期 cookie 只写入 WorkSSD 上权限为 `0600` 的私有文件；同一文件仍有效时，后续请求和打包前准备直接复用，不重复唤起 Keychain。拒绝或超时会保留具体错误并停止本次提交，不会以其它浏览器凭据替代。
+
+Chromium v10 的 AES-CBC 解密在 macOS 使用系统 CommonCrypto 的 `CCCrypt` 内存接口，派生钥匙不会出现在 `argv`、环境变量或日志中；远端执行宿主只接收过滤后的私有 Netscape 文件，不读取 Helium 数据库。
+
+当生成运行位于 WSL/sfp7 时，远端 automation 只保存 self-test 请求，不在无浏览器会话的宿主上伪造派发；Mac relay 在源运行数据保存后创建本地 self-test child，自动 observer/save 仍由该 child 独占。若显式把 self-test 配置到远端目标，装配器会将仅含目标域 cookie 的私有文件以 0600 模式传输到远端 `.private` 目录，并从远端 manifest 中移除 Helium 发现配置。
 
 ARC 适配器保存本地文件和官网 API 响应；同一道题在同一账户只能有一个执行中的官方 run。平台 HTTP 错误、pending、需求版本差异和终态 GET 原件必须保留，不能以“已提交”推断模型已经开始。历史 run 只能由对应冻结 executor 或只读 reader 消费，不自动翻译成新 lab.exp 执行。
 

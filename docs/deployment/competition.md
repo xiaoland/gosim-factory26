@@ -7,13 +7,15 @@
 
 规则依据是用户于 2026-10-01 提供的四页[《参赛须知》原件](../references/competition-notice-20261001.pdf)，SHA256 为 `5da6b57e40cec8925b536a4535087286839b4e853df54fda37a6f169206b314e`。文件名日期是本仓库接收日期，不是规则发布日期；规则变更须记录新依据和日期。页面语义是：不勾选“使用比赛额度评测”就不会进入排行榜。
 
-| 提交身份 | 凭据与门控 | 结果边界 |
+| 提交身份 | 费用选择 | 结果边界 |
 | --- | --- | --- |
-| 官网练习 | `credential_mode=self_funded`，不启用 `allow_competition_credit`，使用自己的 key | 不上排行榜、不计最终分，但占用队伍评测资源；有任务运行时不能另发正式评测 |
-| 官网正式 | `credential_mode=official_evaluation`，显式 `--allow-competition-credit`，由队长发起 | 平台注入比赛 key；两题都完成后形成提交成绩，一个队伍不能并行两次正式评测 |
+| 官网练习 | `credential_mode=self_funded`，使用本次冻结的自费模型配方 | 不上排行榜、不计最终分，但占用队伍评测资源；有任务运行时不能另发正式评测 |
+| 官网正式 | 已获本轮比赛授权的 Lab run 显式使用 `--competition`，上传请求选择 `official_evaluation` | 平台注入比赛 key；有效提交按当届规则判断，不能以启动受理代替成绩或最终采用确认 |
 | 本地练习 | 本地 Runner 和指定模型连接 | 只验证运行、部署和基本功能；不含正式隐藏测试，本地结果不等于正式成绩 |
 
 官方 ARC 地址、个人 key 和平台比赛 key 是不同概念；`catalog=competition` 只选题库，不能决定是否正式参赛，单个 `billing_mode` 也不能反推排行榜资格。原须知的 9 月 24—30 日窗口、额度和 48 小时上限属于该版规则，不能当作当前余额或运行状态；当前授权仍以所属 packet 和实际平台回执为准。隐藏测试逐条信息不公开，缺失字段保持 `unknown`。
+
+2026-10-07 用户确认一个已知平台缺陷：创建时为 `official_evaluation` 的运行，启动回执可能显示 `self_funded`，但实际仍使用比赛费用。官网 start 不因这一字段差异拒绝成功回执、不降级为自费，也不重发启动请求。保留冻结的请求模式、创建与启动的原始回执及同一 submission/run 身份；这一已知例外不意味着任意 `self_funded` 运行都使用比赛费用，也不单独证明排行榜资格。
 
 须知的计分分母是两题合计测试数，不是两题通过率的简单平均；`p = 100 × 合计通过数 / 合计测试数`，`b` 是两题总费用（人民币元），合理费用为 `1.2p`。`p=0` 时 `S=0`；`p>0` 且 `b≤1.2p` 时 `S=p/(b/(1.2p))^0.1`，否则指数为 `0.2`。规则未定义 `p>0,b=0` 的特例，本项目不补造。该版排名依次比较得分、综合通过率、总费用、提交时间；这些规则以 PDF 版本为准。
 
@@ -30,7 +32,7 @@
 
 ## 当前操作入口
 
-当前新实验使用 Lab experiment schema 2：通过 `compile/doctor/build/start/status/control` 管理本地或 Hosted backend；平台身份、写入回执和终态由 experiment backend 保存。Hosted 写请求不确定时保留原始响应和同一 experiment journal，先只读核对，不盲目重发。
+当前新运行通过 `python3 -m lab start VARIANT TARGET TASK` 与 run 级 status、stop、pause/resume、restart 管理，具体入口及实际验收范围见 [Lab](../../lab/README.md)。平台身份、写入回执和终态由执行 adapter 保存；Hosted 不支持 pause/resume。写请求不确定时保留本 run 的原始响应与身份，先只读核对，不盲目重发。历史 experiment schema 2 的 compile/doctor/build/control 只用于其原冻结执行，不是新 run 的启动步骤。
 
 官网评分、生成和独立应用重放的费用与耗时分别记录。应用回放必须消费已发布且哈希核对的制品，不能读取隐藏评测反馈来修改仍在生成的 Agent。
 
