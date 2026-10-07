@@ -30,6 +30,8 @@ console_acceptance完成只读实际使用：CLI brief每条约0.05秒，首页�
 
 上述三项窄UI实际读回通过，改动提交afc01a6b。随后采用advisor仅基于给定事实的建议，补成功保存后的有界workspace文件清单，沿已有record_summaries发布，不运输内容或增加Backend跨宿主文件服务。真实Pi现场78个文件、I14现场16个文件，无截断/读取错误；经正常run.publish写入既有服务，HTTP详情实际取得同样数量，原保存时间保留。新静态页已再次构建部署，未重载服务；内容预览/下载仍未提供，清单和真实保存位置只证明定位能力。原owner继续窄UI读回。
 
+文件清单实际UI读回已采用：Pi78/I14 16项，路径/bytes/symlink、排除目录和原保存时点可见。首次复查指出未截断时没有上限说明，已补并构建部署index-DyIYCLnf.js，末次I14读回明确“最多列出500个文件；本次未截断”。文件定位交付795c973d，内容读取下载和Braid完整视图仍未实现或资格化。evaluation_closure及console_acceptance本轮均已返回，不声称仍在运行；主保留全部残余义务。没有重启生成、派发评测或恢复App续办；源与静态部署、已有事实读回、故障分支及四后端真实闭环的未验收边界分别保留。
+
 ## 当前设计与资料归属
 
 - 控制单位是run；experiment只是标签。无内部capacity、queue、slot、reservation或准入gate。
