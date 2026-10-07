@@ -4,6 +4,7 @@ from __future__ import annotations
 import gzip
 import json
 import mimetypes
+import sqlite3
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -187,8 +188,11 @@ class Handler(BaseHTTPRequestHandler):
             otlp._protobuf_type(signal)().ParseFromString(wire)
         except Exception as exc:
             return _json(self, {"error": f"invalid protobuf: {exc}"}, 400)
-        batch_id = otlp.persist_batch(database, signal, wire, session=run_id, wire_bytes=size,
-                                      encoding=encoding)
+        try:
+            otlp.persist_batch(database, signal, wire, session=run_id, wire_bytes=size,
+                               encoding=encoding)
+        except sqlite3.Error as exc:
+            return _json(self, {"error": f"{type(exc).__name__}: {exc}"}, 503)
         self.send_response(200)
         self.send_header("Content-Length", "0")
         self.end_headers()

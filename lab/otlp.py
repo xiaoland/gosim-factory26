@@ -49,9 +49,24 @@ def connect(path, *, readonly=False):
         db.close()
 
 
+_initialize_lock = Lock()
+_initialized = set()
+
+
 def initialize(path):
+    path = Path(path).resolve()
+    # Run databases have stable paths and are not replaced under a live service.
+    with _initialize_lock:
+        if path in _initialized:
+            return
+        _initialize_database(path)
+        _initialized.add(path)
+
+
+def _initialize_database(path):
     with connect(path) as db:
-        db.execute("PRAGMA journal_mode=WAL")
+        if db.execute("PRAGMA journal_mode").fetchone()[0].lower() != "wal":
+            db.execute("PRAGMA journal_mode=WAL")
         db.execute("CREATE TABLE IF NOT EXISTS batches ("
                    "id INTEGER PRIMARY KEY, signal TEXT NOT NULL, received_at REAL NOT NULL, "
                    "payload BLOB NOT NULL)")
