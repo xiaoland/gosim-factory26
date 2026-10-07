@@ -111,6 +111,10 @@ evaluation_closure已交付b514103f：冻结requirements及约24KB tests到run i
 
 后续真实执行者核对：Pi default2525159、I14 default3949199、Mac Pi relay97137、I14 relay74665均在执行。Pi也热部署窄扫描，三次真实入口2706–2867 ms，不套用I14耗时。I14评分等待脚本首次修补saved:false立即退出，主因现有保存者仍会重试而未采用此语义，已要求原owner保留重试、暴露具体失败，并在保存执行者确实lost时明确报错；不能为了消除等待而永久跳过评分。修补进程身份也需同步正常记录，不只另留新PID。两run仍无终态/评分，owner正在有界诊断原生语义进展，而非继续读心跳。
 
+最终评分等待修复已采用：先读取明确saved:true，仅仍需等待时检查Mac relay出生身份，不拿远端supervisor在Mac判断lost；失败回执保留具体内容并继续等待所属保存者重试，明确lost则非零错误退出。当前PID22765，主通过正常process_state读回alive；代码与旧版本、回执均在ed426的records。没有通过制造保存失败验收该分支。原生末尾的有界取证表明Pi request139进行中、前请求千帆500空体约130秒后ARK成功，I14有工具活动及request876成功并保存usage；不将这些事实扩大为应用质量或完成证明。
+
+主发现原定stage1→stage2推进未接到当前ed426（无stage_plan，旧脚本已随历史失败退出），已使用现有lab.automation.stages显式传入github-stage-2接回；Mac PID22971、出生身份见records/stages.json，stages-progress.json为waiting，主读回alive。仅ed426正常completed后同variant restart，保留data、自费/competition=false，下一任务独立native身份；不启动额外fresh矩阵、不重复评分发起者。原生生成、保存和评测仍由既有后台执行者持有，终态未形成。
+
 - Python策略：a439ae26、f3c41f36；Hosted事实消费：d92b074c；周期采集/控制：80794c7a。
 - Console/Braid：17d6da0b、dbcae9e2、f80f3546；新Summary编译材料：`runs/finals-experiment-loop/validation/cooperation-summary-*`，未动态资格化。
 - 源对齐：b19dc7b0；`runs/finals-experiment-loop/validation/i14-source-aligned-build-*20261007*`。
