@@ -24,6 +24,8 @@ python3 -m lab serve --config SERVICE_JSON
 
 自费代理运行的 `spend.usage` 汇总本 run 创建之后、已保存原生消息中的 token 用量，并保留 session、模型和原件路径。接续继承的旧消息不重复计入新 run；未保存或正在执行的请求仍是缺口，因此覆盖状态为 partial。CLI 和 Console 同时显示这份事实。原生 token 用量不是供应商账单；未取得供应商计费或已核实的请求价格时，金额明确未知，不采用原生配置中的零费用占位值。
 
+普通 Python 策略应把 `spend.kind`/`spend.status` 当作金额资格，而不是把 `usage` 换算成钱：`actual` 只表示平台终态账单，self-funded provider 通常是 `unknown`，但仍提供 `spend.usage` 和 `spend.provider_usage.attempts` 的 session、model、deployment、token 与 `as_of`。ARC 的计量服务另有模型价格、账户用量和计费请求接口，但共享 access key 的用量差值不能归属单个并发 run；没有同一 run 的账单回执时，策略必须保持 unknown。idle 则读取 `last_activity_at` 与状态脚本的 `evidence`/新鲜度；缺少终止 turn、工具、重试或恢复状态证据时不要自行判定空闲，动作仍直接调用 `run.stop(path)` 或 `run.restart(path)`。
+
 公共资源管理器的最新 cgroup 采样保存在当前 run 的 `data/harness/<native_scope_id>/producers/<run_id>/resource-observation.json`；观察程序复用这份数据写入 `status.resource` 与 `status.resources.supervisor`，供 Python 策略和 Console 消费。采样含内存/PID用量、上限、触顶事件及读取错误，保留来源与时点；它是最新采样，不是历史峰值，也不把容器退出后的 Docker 零值当作运行消耗。
 
 Hosted 运行中的观察仍按现有 observer 周期执行状态和日志查询；workspace 快照在最近一次请求后 300 秒内直接复用，避免重复下载。超过该间隔才读取 `workspace/template-bundle`，只解析当前 scope/run 的 native、gateway 和 resource 成员。现代资源返回为 `resources.supervisor`，保留 producer 路径和原始 `observed_at`/`observed_at_ns`；旧布局保留在 `resources.platform`。状态与 spend 的 `as_of` 仍取各自的状态响应时间，不被 workspace 快照时间覆盖。
