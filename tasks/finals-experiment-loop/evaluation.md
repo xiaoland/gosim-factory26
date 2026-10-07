@@ -12,6 +12,8 @@ runtime 反馈记录目录逻辑字节与实际占用、组成、构建环境和
 
 本次基线为 `runtime-i14-reset-recovery-20261007b`：`du` 实测约 1.1 GiB，其中 `.playwright` 385 MiB、`node_modules` 402 MiB、`bin` 140 MiB、字体 68 MiB。首次完整构建 705.7 秒；两次成功 restart 墙钟分别约 156 和 161 秒，包含组装与输运，不能直接命名为纯传输耗时。更详细的跨网字节及 token 数据尚缺；负责人后续交付须补实际来源，不靠估算填满表格。
 
+普通命令现复用 brief 输出，完整回执显式 `--json`，Python API 与落盘原件不变。真实 d38 status 的简短输出为 258 字节，完整 JSON 为 146,510 字节；status 本来已有 brief，这组数只说明避免默认展开冻结配置的规模，不代表本次 token 节省。主核对失败 P2 的原生事实时又发现相同时间戳的 timing `message_end` 抢先于 session outcome，使 brief 只剩 failed；Pi DX 状态脚本已改为同时间优先 outcome，消费该保存事实实际返回具体 `502 upstream_transport_error`。没有改写旧 program 或旧 saved status，新默认 start/control/evaluate 仍需独立实际操作验证。
+
 | 需求 | 好设施应达到的可观察结果 | 需测量或核实的内容 |
 | --- | --- | --- |
 | 开展实验 | 给出 variant、run target、task 就能启动；路由和比赛参数可选；不手工组装 SDK、gateway、collector 或身份文件 | 从输入齐备到实际执行的时间、人工步骤、环境修正与返工 |

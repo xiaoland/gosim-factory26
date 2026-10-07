@@ -7,7 +7,10 @@ import time
 def main():
     facts = json.load(sys.stdin)
     messages = facts.get("native", {}).get("session_messages", [])
-    latest_message = max(messages, key=lambda item: item.get('at') or 0, default={})
+    # Timing and session readers can report the same message timestamp; the
+    # session record carries the actual outcome rather than just message_end.
+    latest_message = max(messages, key=lambda item: (
+        item.get('at') or 0, bool(item.get('stop_reason'))), default={})
     latest = max((item.get("at") for item in messages if item.get("at") is not None), default=None)
     now = facts.get("observed_at", time.time())
     age = None if latest is None else max(0.0, now - latest)
