@@ -1082,7 +1082,10 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
             continue
         source = f"{host}:{remote_run / member}/"
         destination.mkdir(parents=True, exist_ok=True)
-        command = ["rsync", "-a"]
+        # A run's harness contains live Unix sockets owned by native helpers.
+        # They are runtime endpoints, not recoverable data; copying them makes
+        # macOS rsync fail with mkstempsock instead of saving the run.
+        command = ["rsync", "-a", "--no-devices", "--no-specials"]
         if member == "records":
             # Remote save success is not controller-side data recovery success.
             command += ["--exclude=/save.json", "--exclude=/result-save.json"]

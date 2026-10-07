@@ -8,6 +8,10 @@
 
 验收仅自费、非排名，绝不参赛；对象为 `I14-dx-test`、`pi-minimal-vv-dx-test`。完成须取得正常入口的生成—保存—自动评测链、控制及同variant接续/stages、采集驱动策略、Console分析证据，并报告外部覆盖限制和真实使用成本。当前整体未完成。
 
+用户最新决定：“不必这样继续真的运行下去，太浪费时间了，提前终止或者虚假完成”。本轮采用提前终止而非修改完成事实：停止Pi a3a9a526与I14 ed426并保存现场，撤销尚未派发的stage2和评分等待，不继续付费生成或填验收矩阵。停止前最近保存事实两run为running/active，没有最终保存、评分或stage2；在途模型与工具可能被中断，已有持久化进度需保留，不承诺完整检查点。执行负责人evaluation_closure负责正常控制入口与远端/Mac回收，主负责结果采用与未验收边界。App续办automation已实际PAUSED。设施改进没有因此被标记完成。
+
+本次终止已实际完成：两run均stopped，远端和Mac result-save均saved:true/errors:[]，范围为data/workspace、data/harness及records，原件在各run records。I14 stages-progress为cancelled-before-dispatch，只有原stage1 run；finish-evaluation-result为cancelled-before-evaluation，未取得评分。Mac relay、stages与评分等待进程的已记录出生身份均lost，后台收尾已退出。回收途中Pi遭遇rsync mkstempsock Invalid argument，修复公共save运输为不复制Unix socket及device等非持久化特殊文件；新relay实际消费后两run成功回收，不把先前失败改写为成功。没有修改应用、伪造completed或新增运行；剩余正常完成评分/stages及其它未验收项如实保留，不再自动开展长时间真实验收。
+
 ## 当前设计与资料归属
 
 - 控制单位是run；experiment只是标签。无内部capacity、queue、slot、reservation或准入gate。
