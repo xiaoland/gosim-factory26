@@ -5,17 +5,23 @@ import re
 import subprocess
 import sys
 import shutil
+import os
+sys.path.insert(0, '/build')
+from browser_runtime import browser_scripts
 
 root = Path('/runtime')
 backend = sys.argv[1]
+profile = os.environ.get('FACTORY26_RUNTIME_PROFILE', 'full')
 for dependency in ('@ast-grep/cli', 'mcporter', '@earendil-works/pi-coding-agent', '@openai/codex', 'agent-browser', 'pi-subagents', '@playwright/test', 'pnpm', 'portless', '@upstash/context7-pi', '@ff-labs/pi-fff', '@ff-labs/fff-bin-linux-x64-gnu'):
     if not (root / 'node_modules' / dependency).is_dir():
         raise RuntimeError(f'frozen npm dependency missing: {dependency}')
-chrome = Path(subprocess.check_output(
-    ['node', '-e', "process.stdout.write(require('playwright').chromium.executablePath())"],
-    cwd=root, text=True))
-if not chrome.is_file():
-    raise RuntimeError(f'frozen Playwright Chromium is missing: {chrome}')
+chrome = None
+if profile == 'full':
+    chrome = Path(subprocess.check_output(
+        ['node', '-e', "process.stdout.write(require('playwright').chromium.executablePath())"],
+        cwd=root, text=True))
+    if not chrome.is_file():
+        raise RuntimeError(f'frozen Playwright Chromium is missing: {chrome}')
 if backend == 'pi':
     for package in ('@openai/codex', '@openai/codex-linux-x64'):
         target = root/'node_modules'/package
@@ -45,32 +51,33 @@ def dependency_sources(binaries, label):
     return sources
 
 
-nss_modules = [Path(line) for line in subprocess.run(
+if profile == 'full':
+ nss_modules = [Path(line) for line in subprocess.run(
     ['dpkg-query', '-L', 'libnss3'], check=True, capture_output=True, text=True
-).stdout.splitlines() if '.so' in Path(line).name and Path(line).is_file()]
-if not any(path.name == 'libsoftokn3.so' for path in nss_modules):
+ ).stdout.splitlines() if '.so' in Path(line).name and Path(line).is_file()]
+ if not any(path.name == 'libsoftokn3.so' for path in nss_modules):
     raise RuntimeError('Chromium NSS modules missing in build image')
-library = root / 'lib/chromium'
-library.mkdir(parents=True)
-sources = {path.name:path.resolve() for path in nss_modules}
-for name, source in dependency_sources((chrome, *nss_modules), 'Chromium').items():
-    sources.setdefault(name, source)
-for name, source in sources.items():
+ library = root / 'lib/chromium'
+ library.mkdir(parents=True)
+ sources = {path.name:path.resolve() for path in nss_modules}
+ for name, source in dependency_sources((chrome, *nss_modules), 'Chromium').items():
+  sources.setdefault(name, source)
+ for name, source in sources.items():
     if platform_library.match(name):
         continue
     shutil.copy2(source, library/name)
-shutil.copytree('/usr/share/fonts', root/'share/fonts')
-shutil.copytree('/usr/share/glib-2.0/schemas', root/'share/glib-2.0/schemas')
-fontconfig = root/'etc/fonts'
-fontconfig.mkdir(parents=True)
-(fontconfig/'fonts.conf').write_text('''<?xml version="1.0"?>
+ shutil.copytree('/usr/share/fonts', root/'share/fonts')
+ shutil.copytree('/usr/share/glib-2.0/schemas', root/'share/glib-2.0/schemas')
+ fontconfig = root/'etc/fonts'
+ fontconfig.mkdir(parents=True)
+ (fontconfig/'fonts.conf').write_text('''<?xml version="1.0"?>
 <!DOCTYPE fontconfig SYSTEM "urn:fontconfig:fonts.dtd">
 <fontconfig>
   <dir prefix="relative">../../share/fonts</dir>
   <cachedir prefix="xdg">fontconfig</cachedir>
 </fontconfig>
-''')
-(root / 'bin/chromium').write_text(
+ ''')
+ (root / 'bin/chromium').write_text(
     '#!/bin/sh\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
     'LD_LIBRARY_PATH="$HERE/../lib/chromium${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"\n'
     'FONTCONFIG_PATH="$HERE/../etc/fonts"\n'
@@ -79,7 +86,7 @@ fontconfig.mkdir(parents=True)
     'XDG_DATA_DIRS="$HERE/../share${XDG_DATA_DIRS:+:$XDG_DATA_DIRS}"\n'
     'export LD_LIBRARY_PATH FONTCONFIG_PATH FONTCONFIG_FILE GSETTINGS_SCHEMA_DIR XDG_DATA_DIRS\n'
     f'exec "$HERE/../{chrome.relative_to(root)}" "$@"\n'
-)
+ )
 tools = {name:Path(path) for name in ('ps', 'kill', 'rg') if (path := shutil.which(name))}
 if set(tools) != {'ps', 'kill', 'rg'}:
     raise RuntimeError('runtime tools missing in build image')
@@ -88,7 +95,7 @@ if not ast_grep.is_file():
     raise RuntimeError('frozen ast-grep binary is missing')
 tools['ast-grep'] = ast_grep
 tool_library = root/'lib/tools'
-tool_library.mkdir()
+tool_library.mkdir(parents=True)
 for name, source in dependency_sources(tools.values(), 'runtime tools').items():
     if not platform_library.match(name):
         shutil.copy2(source, tool_library/name)
@@ -111,8 +118,7 @@ for name, source in tools.items():
     'fi\n'
     'PATH="/usr/local/bin:$PATH"\n'
     'FACTORY26_APP_NODE=/usr/local/bin/node\n'
-    'npm_config_better_sqlite3_local_prebuilds="$HERE/../native-prebuilds"\n'
-    'export PATH FACTORY26_APP_NODE npm_config_better_sqlite3_local_prebuilds\n'
+    'export PATH FACTORY26_APP_NODE\n'
     'exec "$@"\n'
 )
 commands = [('pi', '@earendil-works/pi-coding-agent'), ('agent-browser', 'agent-browser'),
@@ -123,13 +129,18 @@ if backend == 'codex':
 for command, package in commands:
     metadata = json.loads((root / 'node_modules' / package / 'package.json').read_text())
     entry = metadata['bin'][command]
-    environment = ': "${AGENT_BROWSER_EXECUTABLE_PATH:=$HERE/chromium}"\nexport AGENT_BROWSER_EXECUTABLE_PATH\n' if command == 'agent-browser' else ''
+    environment = ''
+    if command == 'agent-browser' and profile == 'full':
+        environment = ': "${AGENT_BROWSER_EXECUTABLE_PATH:=$HERE/chromium}"\nexport AGENT_BROWSER_EXECUTABLE_PATH\n'
     node = '${FACTORY26_APP_NODE:-$HERE/node}' if command == 'pnpm' else '$HERE/node'
     (root / 'bin' / command).write_text(
         '#!/bin/sh\nHERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
         + environment +
         f'exec "{node}" "$HERE/../node_modules/{package}/{entry}" "$@"\n'
     )
+if profile == 'arc-core':
+    for name, script in browser_scripts().items():
+        (root / 'bin' / name).write_text(script)
 if backend == 'codex':
     (root / 'bin/litellm').write_text(
         '#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\n'
@@ -138,6 +149,10 @@ if backend == 'codex':
     )
 for path in (root / 'bin').iterdir():
     path.chmod(0o755)
+
+if profile == 'arc-core':
+    for duplicate in ('@ast-grep/cli', '@ast-grep/cli-linux-x64-gnu'):
+        shutil.rmtree(root / 'node_modules' / duplicate, ignore_errors=True)
 
 for path in root.rglob('__pycache__'):
     if path.is_dir():

@@ -18,16 +18,16 @@
   },
   "variants": {
     "I14-dx-test": {
-      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-arc-core-20261007o",
-      "remote_runtime": "/home/yyh/factory26-lab-runtime/arc-core-20261007o-deployed",
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-arc-core-direct-20261007p",
+      "remote_runtime": "/home/yyh/factory26-lab-runtime/arc-core-direct-20261007p-deployed",
       "remote_runtime_base": "/home/yyh/factory26-lab-runtime/arc-core-20261007o-deployed",
       "model_aliases": ["glm-5.3", "glm-5.3-flash", "kimi-k3", "deepseek-v4-flash-0731"],
       "model_alias_map": {"deepseek-v4-flash": "deepseek-v4-flash-0731"},
       "environment": {"MODEL": "glm-5.3"}
     },
     "pi-minimal-vv-dx-test": {
-      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-arc-core-20261007o",
-      "remote_runtime": "/home/yyh/factory26-lab-runtime/arc-core-20261007o-deployed",
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-arc-core-direct-20261007p",
+      "remote_runtime": "/home/yyh/factory26-lab-runtime/arc-core-direct-20261007p-deployed",
       "remote_runtime_base": "/home/yyh/factory26-lab-runtime/arc-core-20261007o-deployed",
       "model_aliases": ["glm-5.3-flash", "kimi-k2.7-code"]
     }
@@ -86,8 +86,8 @@
       "python": "/usr/bin/python3",
       "remote_root": "/home/yyh/factory26-lab-runs",
       "remote_sdk_source": "/home/yyh/factory26-lab-sdk",
-      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-arc-core-20261007o",
-      "remote_runtime": "/home/yyh/factory26-lab-runtime/arc-core-20261007o-deployed",
+      "runtime": "/Volumes/WorkSSD/Development/factory26/runs/runtime-i14-arc-core-direct-20261007p",
+      "remote_runtime": "/home/yyh/factory26-lab-runtime/arc-core-direct-20261007p-deployed",
       "remote_runtime_base": "/home/yyh/factory26-lab-runtime/arc-core-20261007o-deployed",
       "image_id": "sha256:cfb9196831ef938f357c3be479a42ebf5861d4dad221796a94c68ac0cee21013",
       "endpoint": {"context": "development-1", "daemon_id": "0c1d4a2e-b921-49be-a075-1e30571f0995", "remote": true}

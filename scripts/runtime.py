@@ -17,6 +17,7 @@ sys.path.insert(0, str(ROOT))
 
 from lab.assets import asset_inventory
 from lab.docker_endpoint import freeze as freeze_docker, environment as docker_environment, confirm as confirm_docker
+from submission.browser_runtime import browser_scripts
 
 
 def workssd_path(path):
@@ -110,38 +111,137 @@ def derive_linux(output, package, braid_source, cache_root):
     binary = cache/'target/x86_64-unknown-linux-gnu/release/braid'
     shutil.copy2(binary, output/'bin/braid')
     (output/'bin/braid').chmod(0o755)
-    python = output/'python'
-    if python.exists():
-        shutil.rmtree(python)
-    command = [sys.executable, '-m', 'pip', 'install', '--ignore-installed', '--no-compile', '--only-binary=:all:',
-               '--platform', 'manylinux2014_x86_64', '--platform', 'manylinux_2_28_x86_64',
-               '--python-version', '3.12', '--implementation', 'cp', '--abi', 'cp312',
-               '--target', str(python), 'litellm[proxy]==1.102.0']
-    with (logs/'router-dependencies.log').open('w') as log:
-        subprocess.run(command, check=True, env=env, stdout=log, stderr=subprocess.STDOUT)
-    # pip --target generates host-interpreter scripts. The portable runtime
-    # exports only its explicit bin/litellm launcher, never those Mac shebangs.
-    shutil.rmtree(python/'bin', ignore_errors=True)
     versions = {}
-    for metadata in python.glob('*.dist-info/METADATA'):
-        headers = dict(line.split(': ', 1) for line in metadata.read_text().splitlines()
-                       if line.startswith(('Name: ', 'Version: ')))
-        versions[headers['Name']] = headers['Version']
-    (output/'python-requirements.lock').write_text(''.join(f'{name}=={version}\n' for name, version in sorted(versions.items())))
-    (output/'bin/litellm').write_text('#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\n'
-        "sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'python'))\n"
-        'from litellm import run_server\nsys.exit(run_server())\n')
-    (output/'bin/litellm').chmod(0o755)
+    if records.get('backend') == 'codex':
+        python = output/'python'
+        if python.exists():
+            shutil.rmtree(python)
+        command = [sys.executable, '-m', 'pip', 'install', '--ignore-installed', '--no-compile', '--only-binary=:all:',
+                   '--platform', 'manylinux2014_x86_64', '--platform', 'manylinux_2_28_x86_64',
+                   '--python-version', '3.12', '--implementation', 'cp', '--abi', 'cp312',
+                   '--target', str(python), 'litellm[proxy]==1.102.0']
+        with (logs/'router-dependencies.log').open('w') as log:
+            subprocess.run(command, check=True, env=env, stdout=log, stderr=subprocess.STDOUT)
+        # pip --target generates host-interpreter scripts. The portable runtime
+        # exports only its explicit bin/litellm launcher, never those Mac shebangs.
+        shutil.rmtree(python/'bin', ignore_errors=True)
+        for metadata in python.glob('*.dist-info/METADATA'):
+            headers = dict(line.split(': ', 1) for line in metadata.read_text().splitlines()
+                           if line.startswith(('Name: ', 'Version: ')))
+            versions[headers['Name']] = headers['Version']
+        (output/'python-requirements.lock').write_text(
+            ''.join(f'{name}=={version}\n' for name, version in sorted(versions.items())))
+        (output/'bin/litellm').write_text('#!/usr/bin/env python3\nimport sys\nfrom pathlib import Path\n'
+            "sys.path.insert(0, str(Path(__file__).resolve().parents[1] / 'python'))\n"
+            'from litellm import run_server\nsys.exit(run_server())\n')
+        (output/'bin/litellm').chmod(0o755)
+    else:
+        # Pi/Braid targets do not start the LiteLLM proxy; leave the base
+        # runtime untouched and record that no router layer was installed.
+        (output/'python-requirements.lock').write_text('')
     records.pop('docker_endpoint', None)
     records['derivation'] = {'package': str(package), 'package_sha256': package_hash,
                              'producer': 'runtime.py derive-linux', 'cache_root': str(cache),
-                             'python_target': 'cp312-manylinux-x86_64', 'router': versions}
+                             'python_target': 'cp312-manylinux-x86_64' if versions else None,
+                             'router': versions}
     records['sources']['braid'] = {'revision': subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=source, text=True).strip(),
+        'working_tree_status': subprocess.check_output(
+            ['git', 'status', '--short', '--untracked-files=all', '--', '.'], cwd=source, text=True),
         'source_sha256': hashlib.sha256(json.dumps(before, sort_keys=True).encode()).hexdigest(),
         'binary_sha256': digest(output/'bin/braid'), 'target': 'x86_64-unknown-linux-gnu.2.36',
         'files': before, 'command': ['cargo', 'zigbuild', '--locked', '--release', '--target', 'x86_64-unknown-linux-gnu.2.36']}
     (output/'runtime-source.json').write_text(json.dumps(records, indent=2)+'\n')
     progress.unlink()
+    return output
+
+
+def slim_linux(output, source, profile='arc-core'):
+    """Copy a frozen runtime while omitting browser payloads from the base mount.
+
+    The Node browser clients remain available for an explicit on-demand install;
+    startup no longer requires a preinstalled Chromium tree. The slim profile
+    is additive and never mutates the source runtime.
+    """
+    if profile != 'arc-core':
+        raise ValueError('unsupported runtime profile')
+    source = workssd_path(source).resolve(strict=True)
+    output = workssd_path(output)
+    if output.exists():
+        raise FileExistsError(output)
+    omitted = {'.playwright', 'share/fonts', 'share/glib-2.0', 'etc/fonts', 'bin/chromium',
+               # submission/build.py freezes one Linux ast-grep binary in
+               # libexec/; the two npm native copies are byte-identical and
+               # are not imported by either DX entry.
+               'node_modules/@ast-grep/cli', 'node_modules/@ast-grep/cli-linux-x64-gnu'}
+    def ignore(directory, names):
+        relative = Path(directory).relative_to(source)
+        return [name for name in names if str(relative / name) in omitted]
+    shutil.copytree(source, output, ignore=ignore, symlinks=True)
+    for name, script in browser_scripts().items():
+        path = output / 'bin' / name
+        path.write_text(script)
+        path.chmod(0o755)
+    installer = output / 'bin/browser-install'
+    installer.write_text(
+        '#!/bin/sh\nset -eu\n'
+        'HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+        'for candidate in "${FACTORY26_BROWSER_EXECUTABLE_PATH:-}" google-chrome chromium chromium-browser; do\n'
+        '  if [ -n "$candidate" ] && command -v "$candidate" >/dev/null 2>&1; then command -v "$candidate"; exit 0; fi\n'
+        'done\n'
+        'for directory in "${PLAYWRIGHT_BROWSERS_PATH:-}" /ms-playwright /root/.cache/ms-playwright /opt/playwright; do\n'
+        '  if [ -n "$directory" ] && [ -d "$directory" ]; then\n'
+        '    BROWSER=$(find "$directory" -type f -path "*/chromium-*/chrome-linux*/chrome" -perm -u+x -print -quit)\n'
+        '    if [ -n "$BROWSER" ]; then printf "%s\\n" "$BROWSER"; exit 0; fi\n'
+        '  fi\n'
+        'done\n'
+        'CACHE="${FACTORY26_BROWSER_CACHE_DIR:-${XDG_CACHE_HOME:-$HERE/../.cache}/factory26-playwright}"\n'
+        'mkdir -p "$CACHE"\n'
+        'export PLAYWRIGHT_BROWSERS_PATH="$CACHE"\n'
+        '"$HERE/node" "$HERE/../node_modules/playwright/cli.js" install chromium --no-shell "$@" >&2\n'
+        'exec "$HERE/node" -e '\
+        '\'console.log(require(process.argv[1]).chromium.executablePath())\' '
+        '"$HERE/../node_modules/playwright"\n')
+    installer.chmod(0o755)
+    browser_exec = output / 'bin/browser-exec'
+    browser_exec.write_text(
+        '#!/bin/sh\nset -eu\n'
+        'HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+        'BROWSER=$("$HERE/browser-install")\n'
+        'exec "$BROWSER" "$@"\n')
+    browser_exec.chmod(0o755)
+    # The frozen base wrapper points at its removed in-runtime Chromium tree.
+    # Keep browser use automatic: first invocation installs into the writable
+    # run cache, then executes the installed browser through the package CLI.
+    browser = output / 'bin/agent-browser'
+    browser.write_text(
+        '#!/bin/sh\nset -eu\n'
+        'HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)\n'
+        'CACHE="${FACTORY26_BROWSER_CACHE_DIR:-${XDG_CACHE_HOME:-$HERE/../.cache}/factory26-playwright}"\n'
+        'export PLAYWRIGHT_BROWSERS_PATH="$CACHE"\n'
+        'find_browser() { for candidate in "${FACTORY26_BROWSER_EXECUTABLE_PATH:-}" google-chrome chromium chromium-browser; do if [ -n "$candidate" ] && command -v "$candidate" >/dev/null 2>&1; then command -v "$candidate"; return; fi; done; find "$CACHE" -type f -path "*/chromium-*/chrome-linux*/chrome" -perm -u+x -print -quit; }\n'
+        'BROWSER="$(find_browser || true)"\n'
+        'if [ -z "$BROWSER" ]; then BROWSER="$("$HERE/browser-install")"; fi\n'
+        'if [ -z "$BROWSER" ]; then echo "Playwright Chromium was not installed" >&2; exit 1; fi\n'
+        'export AGENT_BROWSER_EXECUTABLE_PATH="${AGENT_BROWSER_EXECUTABLE_PATH:-$BROWSER}"\n'
+        'exec "$HERE/node" "$HERE/../node_modules/agent-browser/bin/agent-browser.js" "$@"\n')
+    browser.chmod(0o755)
+    # Canonical wrappers are shared with direct Docker builds; the copied
+    # legacy files above are replaced before provenance is recorded.
+    for name, script in browser_scripts().items():
+        path = output / 'bin' / name
+        path.write_text(script)
+        path.chmod(0o755)
+    source_record = output / 'runtime-source.json'
+    if source_record.is_file():
+        value = json.loads(source_record.read_text())
+        value['profile'] = profile
+        value['omitted_members'] = sorted(omitted)
+        value['base_runtime'] = str(source)
+        value['slim_wrapper_sha256'] = {
+            name: hashlib.sha256((output / 'bin' / name).read_bytes()).hexdigest()
+            for name in ('browser-install', 'browser-exec', 'agent-browser')
+        }
+        source_record.write_text(json.dumps(value, indent=2) + '\n')
     return output
 
 
@@ -227,7 +327,7 @@ def prepare(lock_dir):
     return cache
 
 
-def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
+def linux(output, backend, lock_dir, docker_context=None, braid_source=None, profile='full'):
     """Export an independent Linux runtime directory; Docker owns build caching."""
     output = workssd_path(output)
     if output.exists():
@@ -242,7 +342,7 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
     staging.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=name, dir=staging) as tmp:
         context=Path(tmp)
-        for file in ('Dockerfile','build.py'):
+        for file in ('Dockerfile','build.py','browser_runtime.py'):
             shutil.copy2(ROOT/'submission'/file,context/file)
         shutil.copytree(lock_dir,context/'harness/npm',ignore=shutil.ignore_patterns('node_modules'))
         npm_sha256 = hashlib.sha256((context/'harness/npm/package-lock.json').read_bytes()).hexdigest()
@@ -267,24 +367,45 @@ def linux(output, backend, lock_dir, docker_context=None, braid_source=None):
             braid_files = {str(path.relative_to(context/'sources/braid')):hashlib.sha256(path.read_bytes()).hexdigest()
                            for path in (context/'sources/braid').rglob('*') if path.is_file()}
             records['braid']={'revision':subprocess.check_output(['git','rev-parse','HEAD'],cwd=source,text=True).strip(),
+                              'working_tree_status':subprocess.check_output(
+                                  ['git','status','--short','--untracked-files=all','--','.'],cwd=source,text=True),
                               'source_sha256':hashlib.sha256(json.dumps(braid_files,sort_keys=True).encode()).hexdigest()}
         created=False
+        exported=False
+        cleanup_errors=[]
+        def write_source_metadata():
+            (output/'runtime-source.json').write_text(json.dumps({'backend':backend,'platform':'linux-x86_64',
+                'profile': profile,
+                'sources':records,'npm_sha256':npm_sha256,'docker_endpoint':endpoint,
+                'native_patch_sha256':native_patch_sha256,
+                'native_modules_sha256': {'native-managed.mjs': hashlib.sha256(
+                    (lock_dir/'native-managed.mjs').read_bytes()).hexdigest()}},indent=2)+'\n')
         try:
             subprocess.run(docker+['build','--platform','linux/amd64','--target','team' if braid_source else 'runtime',
-                '--build-arg',f'BACKEND={backend}','-t',name,str(context)],check=True,env=docker_env)
+                '--build-arg',f'BACKEND={backend}','--build-arg',f'RUNTIME_PROFILE={profile}',
+                '-t',name,str(context)],check=True,env=docker_env)
             confirm_docker(endpoint)
             subprocess.run(docker+['create','--name',name,name],check=True,env=docker_env);created=True
             output.parent.mkdir(parents=True,exist_ok=True)
             subprocess.run(docker+['cp',name+':/runtime',str(output)],check=True,env=docker_env)
+            write_source_metadata()
+            exported=True
         finally:
-            confirm_docker(endpoint)
-            if created: subprocess.run(docker+['rm',name],check=True,env=docker_env)
-            subprocess.run(docker+['image','rm','--no-prune',name],check=False,env=docker_env)
-    (output/'runtime-source.json').write_text(json.dumps({'backend':backend,'platform':'linux-x86_64',
-        'sources':records,'npm_sha256':npm_sha256,'docker_endpoint':endpoint,
-        'native_patch_sha256':native_patch_sha256,
-        'native_modules_sha256': {'native-managed.mjs': hashlib.sha256(
-            (lock_dir/'native-managed.mjs').read_bytes()).hexdigest()}},indent=2)+'\n')
+            for action in (
+                ('confirm-after-export', lambda: confirm_docker(endpoint)),
+                ('remove-container', lambda: subprocess.run(docker+['rm',name],check=True,env=docker_env)) if created else None,
+                ('remove-image', lambda: subprocess.run(docker+['image','rm','--no-prune',name],check=False,env=docker_env)),
+            ):
+                if action is None:
+                    continue
+                try:
+                    action[1]()
+                except Exception as error:
+                    cleanup_errors.append({'action': action[0], 'error': f'{type(error).__name__}: {error}'})
+        if exported and cleanup_errors:
+            value=json.loads((output/'runtime-source.json').read_text())
+            value['cleanup_errors']=cleanup_errors
+            (output/'runtime-source.json').write_text(json.dumps(value,indent=2)+'\n')
     return output
 
 
@@ -387,13 +508,15 @@ def ensure_host_runtime(cache_root, base_python, purpose, expected_dependencies=
 
 def main():
     p=argparse.ArgumentParser(description=__doc__)
-    p.add_argument('command',choices=['path','prepare','linux','derive-linux','dev-svc','host-exp'])
+    p.add_argument('command',choices=['path','prepare','linux','derive-linux','slim-linux','dev-svc','host-exp'])
     p.add_argument('--lock-dir',type=Path,default=ROOT/'harness/npm')
     p.add_argument('--output',type=Path)
     p.add_argument('--backend',choices=['pi','codex'],default='pi')
     p.add_argument('--docker-context')
     p.add_argument('--braid-source',type=Path,help='Optional team dependency; raw runtimes do not require Braid')
     p.add_argument('--base-package',type=Path,help='Retained immutable Linux package used by derive-linux')
+    p.add_argument('--source',type=Path,help='Frozen runtime directory used by slim-linux')
+    p.add_argument('--profile',default='arc-core',help='slim-linux profile')
     p.add_argument('--cache-root',type=Path,help='Explicit WorkSSD production cache')
     p.add_argument('--svc-source',type=Path,help='完整开发 SVC checkout；不是参赛 Corpus')
     p.add_argument('--python',type=Path,help='host-exp 使用的明确基础 Python')
@@ -411,9 +534,12 @@ def main():
         if a.output is None or a.base_package is None or a.braid_source is None or a.cache_root is None:
             p.error('derive-linux requires --output/--base-package/--braid-source/--cache-root')
         result=derive_linux(a.output,a.base_package,a.braid_source,a.cache_root)
+    elif a.command=='slim-linux':
+        if a.output is None or a.source is None: p.error('slim-linux requires --output/--source')
+        result=slim_linux(a.output,a.source,a.profile)
     else:
         if a.output is None: p.error('linux requires --output')
-        result=linux(a.output,a.backend,a.lock_dir,a.docker_context,a.braid_source)
+        result=linux(a.output,a.backend,a.lock_dir,a.docker_context,a.braid_source,a.profile)
     print(result)
 
 

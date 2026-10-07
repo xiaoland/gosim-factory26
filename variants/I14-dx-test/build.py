@@ -18,7 +18,7 @@ SKILLS = ('svc-sub-agents', 'svc-task-packet', 'svc-documentation', 'svc-verific
           'hyperformula', 'handsontable', 'better-auth-best-practices',
           'organization-best-practices', 'fixing-accessibility', 'ponytail',
           'impeccable', 'agent-browser', 'context7-docs', 'braid-collaboration', 'arc-bench')
-SUPPORT = ('agent_support.py', 'braid_runtime.py', 'core.py', 'state_writer.py',
+SUPPORT = ('agent_support.py', 'braid_runtime.py', 'core.py',
            'model_budget.mjs', 'runtime_resources.py')
 CONFIGURED_OTLP_DEPS = ROOT / 'runs/deadline-20261003/local-five/overlays/common/support/otlp-deps'
 MODEL_PROXY_BUILD = ROOT / 'runs/provider-model-config-20261007/delivery/model-proxy-linux-x86_64'
