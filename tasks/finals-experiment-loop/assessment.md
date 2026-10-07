@@ -12,7 +12,7 @@
 | 公共装配与统一环境，variant保留原生语义 | public_package拥有最终装配，同一安装器及lock；Linux代理两别名真实HTTP200，装配字节一致 | 不能以装配成功代替真实Harness使用；原设计中完整runtime挂载路线已被替代，适配对象仅本轮两个DX派生variant |
 | 启停、pause/resume、同variant数据接续、原生stages | Pi由WSL跨宿主restart到sfp7已实际保留同task/native scope并取得模型响应；题目stages由三参数入口接入，无新增控制对象 | 当前交付的pause/resume、I14同task接续及下一task新原生身份/业务数据保留、自动stage推进尚未完整验收 |
 | 自动保存成功、失败、停止现场 | 旧610daf停止回收完成；新0aeae2、782227失败均自动saved；本机与远端回执已分开 | 完成生成的应用、自动评测原件与阶段关联尚未形成；强制取消后的平台范围仍按实际能力报告 |
-| 采集驱动的spend/idle自动操作 | Pi原生用量按本run时间边界汇总；新I14代理已实际取得供应商usage；Python watch直接取得现有run的spend/native/resources与原时间，自定义策略不替代自动评测；Hosted真实历史ZIP取得423条assistant usage且第二次读取不重复累计 | 供应商账单与ARC已核实计价尚未接通，金额仍未知；Hosted新生产者和下载期间控制的实际证据、策略触发效果尚未闭环，不内置预算停止线 |
+| 采集驱动的spend/idle自动操作 | Pi原生用量按本run时间边界汇总；I14代理真实取得供应商usage；watch读spend/native/resources原时间，自定义策略不替代评测；Hosted历史ZIP取得423条usage且不重复累计；9cf8690c接通仅平台运输的ARC部分费用小计，历史真实ARC记录重算与原¥15.55020868一致 | 当前自费供应商金额仍未知，不能套ARC价格；现代Hosted实时消费、采集期间控制及策略触发效果未闭环，不内置预算停止线。金额小计保留价格/用量时间、coverage及missing，不冒充完整费用 |
 | Exp Console/OTLP与Braid自有视图 | 独立验收已从首页查看d3cc真实终态、原生502、资源、用量/费用未知、来源及参赛false；通用详情轮询/刷新、Pi查看入口与最新native选择已修复部署；主实际观察a3页面在无操作时更新活动、日志与资源 | 早先active详情缺事实的报告不能仅凭前端修复推导API根因；最终评分分析和Braid完整协作分析尚未验收 |
 | 四个测评后端与自动评测 | 接口、task配置和self-test认证接线已存在 | 新版应用未生成完成，随题、模拟、self-test尚无本轮评分；已确定关闭的Hosted入口保留拒绝证据，不重复上传或参赛来填矩阵 |
 | 资源管理：观察、补救后明确失败，不持续pause | Tini入口、memory/pids观察及有界补救已落地，真实浏览器一次生命周期无浏览器残留；Pi实际有内存/pids/限额采样 | 长运行孤儿回收、资源触顶后的真实有界补救与退出仍缺本轮证据；采样值不是峰值或补救成功证明，不制造资源故障填表 |

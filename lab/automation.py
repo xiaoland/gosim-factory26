@@ -77,13 +77,19 @@ def default(path):
     )
     for index, entry in enumerate(entries):
         try:
-            # Helium's signed browser profile exists on the Mac controller,
-            # not on WSL/sfp7.  Save an explicit request in the remote run;
-            # the Mac relay dispatches it after the source data is saved.
-            if remote_source and entry.get("kind") == "self-test":
-                launched.append({"configuration": entry, "deferred": True,
-                                 "request_id": f"{path.name}:self-test:{index}",
-                                 "reason": "controller-helium-session"})
+            # The controller owns the SSH topology and Helium profile.  A
+            # remote execution host must not try to dispatch a child toward
+            # another host (for example sfp7 -> wsl).  Keep only run-relative
+            # inputs in the request; the Mac relay resolves them from its
+            # saved source run.
+            if remote_source and entry.get("kind") in {"self-test", "task"}:
+                deferred = dict(entry)
+                for field in ("requirements", "tests"):
+                    if deferred.get(field):
+                        deferred[field] = f"inputs/{field}"
+                launched.append({"configuration": deferred, "deferred": True,
+                                 "request_id": f"{path.name}:evaluation:{entry['kind']}:{index}",
+                                 "reason": "controller-evaluation-target"})
             else:
                 result = evaluate_run(path, kind=entry["kind"], snapshot=snapshot, configuration=entry)
                 launched.append({"configuration": entry, "run": result})

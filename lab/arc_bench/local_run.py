@@ -1173,15 +1173,16 @@ def mirror_saved_evaluations(source_run: str | os.PathLike[str]) -> dict[str, An
     for index, item in enumerate(items):
         configuration = item.get("configuration") if isinstance(item, dict) else None
         request_id = item.get("request_id") if isinstance(item, dict) else None
-        if isinstance(item, dict) and item.get("deferred") and isinstance(configuration, dict) and configuration.get("kind") == "self-test":
+        if (isinstance(item, dict) and item.get("deferred") and
+                isinstance(configuration, dict) and configuration.get("kind") in {"self-test", "task"}):
             if request_id in prior_relay:
                 mirrored.append(prior_relay[request_id])
                 continue
             try:
                 # The remote source has already saved its data domain, but
-                # the Mac copy is fetched only here.  The self-test child is
-                # therefore born locally and uses the approved Helium session;
-                # no cookie is copied into the remote run.
+                # the Mac copy is fetched only here.  The child is born on
+                # the controller so it can reach the selected evaluation
+                # target (and, for self-test, use the approved Helium session).
                 local_receipt = paths(source)["records"] / "save.json"
                 local_saved = json.loads(local_receipt.read_text()) if local_receipt.is_file() else {}
                 if not (local_saved.get("saved") is True and local_saved.get("storage_root") == str(source)):
@@ -1193,11 +1194,12 @@ def mirror_saved_evaluations(source_run: str | os.PathLike[str]) -> dict[str, An
                 source_state["lifecycle"] = local_saved["lifecycle"]
                 write_json(paths(source)["manifest"], source_state)
                 snapshot = freeze_application(source)
-                result = evaluate_run(source, kind="self-test", snapshot=snapshot,
+                kind = configuration["kind"]
+                result = evaluate_run(source, kind=kind, snapshot=snapshot,
                                       configuration=configuration)
-                mirrored.append({"request_id": request_id, "kind": "self-test",
+                mirrored.append({"request_id": request_id, "kind": kind,
                                  "run": result, "source_run": source.name,
-                                 "dispatch": "mac-controller-helium"})
+                                 "dispatch": "mac-controller-evaluation"})
             except Exception as error:
                 skipped.append({"index": index, "request_id": request_id,
                                 "reason": f"self_test_dispatch:{type(error).__name__}: {error}"})
