@@ -102,9 +102,19 @@ def relay(path):
         if synced.get('synced'):
             row = run.status(path)
             run.publish(path)
-            receipt = path / 'records/result-save.json'
-            if row.get('lifecycle') in run.TERMINAL and receipt.is_file():
-                if json.loads(receipt.read_text()).get('saved') is True:
+            remote_receipt = path / 'records/remote-result-save.json'
+            if row.get('lifecycle') in run.TERMINAL and remote_receipt.is_file():
+                if json.loads(remote_receipt.read_text()).get('saved') is True:
+                    # Complete the controller copy before publishing save success
+                    # or dispatching evaluations that consume that copy.
+                    receipt = path / 'records/result-save.json'
+                    recovered = json.loads(receipt.read_text()) if receipt.is_file() else {}
+                    if not (recovered.get('saved') is True and recovered.get('storage_root') == str(path)):
+                        recovered = save(path)
+                        write_json(receipt, recovered)
+                    if recovered.get('saved') is not True:
+                        time.sleep(10)
+                        continue
                     entries = run.run_layout.manifest(path).get('task_config', {}).get('evaluations', [])
                     if row.get('lifecycle') == 'completed' and entries:
                         dispatched = path / 'records/automatic-evaluations.json'
@@ -117,8 +127,6 @@ def relay(path):
                             time.sleep(10)
                             continue
                         write_json(path / 'records/evaluation-relay.json', mirror_saved_evaluations(path))
-                    recovered = save(path)
-                    write_json(receipt, recovered)
                     if recovered.get('saved') is True:
                         state = run.run_layout.manifest(path)
                         state['lifecycle'] = row['lifecycle']

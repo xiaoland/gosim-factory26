@@ -246,11 +246,16 @@ def _ensure_remote_runtime(run: Path, host: str, target: Mapping[str, Any]) -> d
             "reused": False, "source_facts": value}
 
 
+def _uses_proxy(target):
+    # Historical frozen targets used the recipe name as this transport flag.
+    return target.get('model_transport') == 'proxy' or target.get('model_recipe') == 'self-funded'
+
+
 def _meter(run: Path, target: Mapping[str, Any], phase: str, *, wait: bool = False,
            query_start: int | None = None) -> dict[str, Any]:
     """Capture shared access-key meter facts; never relabel them as per-run cost."""
     destination = paths(run)["records"] / f"meter-{phase}.json"
-    if target.get("model_recipe") == "self-funded":
+    if _uses_proxy(target):
         result = {"phase": phase, "scope": "self-funded-provider", "status": "not_applicable",
                   "reason": "ARC shared-key meter is not used for self-funded recipes",
                   "as_of": time.time()}
@@ -293,7 +298,7 @@ def _meter(run: Path, target: Mapping[str, Any], phase: str, *, wait: bool = Fal
 
 
 def _spend(run: Path, target: Mapping[str, Any], lifecycle: str) -> dict[str, Any]:
-    if target.get("model_recipe") == "self-funded":
+    if _uses_proxy(target):
         return {"scope": "self-funded-provider", "status": "not_collected",
                 "reason": "ARC shared-key meter is not used for self-funded recipes",
                 "value": None, "currency": None, "kind": "unknown",
@@ -490,7 +495,7 @@ def _stage_private_env(host: str, target: Mapping[str, Any], remote_run: Path) -
     source = Path(source).expanduser().resolve(strict=True)
     names = {line.split("=", 1)[0].strip() for line in source.read_text().splitlines()
              if line.strip() and not line.lstrip().startswith("#") and "=" in line}
-    if target.get("model_recipe") == "self-funded":
+    if _uses_proxy(target):
         if not any(name.endswith(("_API_KEY", "_TOKEN")) for name in names):
             raise ValueError(f"self-funded environment has no provider credential variable: {source}")
     elif not names & {"FACTORY26_API_KEY", "OPENAI_API_KEY"}:
@@ -500,7 +505,7 @@ def _stage_private_env(host: str, target: Mapping[str, Any], remote_run: Path) -
     original = remote_run / ".private-source.env"
     mapped = remote_run / ".private.env"
     subprocess.run(["rsync", "-a", str(source), f"{host}:{original}"], check=True)
-    if target.get("model_recipe") == "self-funded":
+    if _uses_proxy(target):
         command = f"cp {shlex.quote(str(original))} {shlex.quote(str(mapped))} && chmod 600 {shlex.quote(str(mapped))}"
     else:
         command = ("awk -F= '$1==\"FACTORY26_API_KEY\" {print; print \"OPENAI_API_KEY=\" $2; next} {print}' "
@@ -719,7 +724,16 @@ def assemble(run: str | os.PathLike[str]) -> dict[str, Any]:
     app = _stage_app(run, workspace)
     host, remote_run = _remote(run, target)
     _verify_remote_sdk(host, target)
-    runtime_facts = _ensure_remote_runtime(run, host, target)
+    # Public packages install their small native/runtime inputs inside the
+    # container before entry; do not deploy or mount the historical full
+    # runtime for this path.  Legacy packages retain the explicit deployment
+    # branch until their entry is migrated.
+    public_program = workspace / "submission" / "runtime_install.py"
+    if public_program.is_file():
+        runtime_facts = {"mode": "container-installer", "path": None,
+                         "source": "program/runtime_install.py"}
+    else:
+        runtime_facts = _ensure_remote_runtime(run, host, target)
     _sync(host, workspace, str(_remote_sdk_workspace(remote_run, target)))
     _sync(host, app, str(remote_run / "data/workspace"))
     # Establish the output boundary after workspace migration but before the
@@ -765,7 +779,7 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
     _remote_exec(host, ["sudo", "-n", "chown", "-R", "-h", "0:0",
                         str(remote_run / "data")], check=True)
     private_env = _stage_private_env(host, target, remote_run)
-    if target.get("model_recipe") != "self-funded" and not (paths(run)["records"] / "meter-baseline.json").is_file():
+    if not _uses_proxy(target) and not (paths(run)["records"] / "meter-baseline.json").is_file():
         _meter(run, target, "baseline")
     scope = manifest(run).get("native_scope_id")
     image_id, image_resolution = _resolve_remote_image(host, target)
@@ -774,7 +788,7 @@ def start(run: str | os.PathLike[str]) -> dict[str, Any]:
               "container_name": _container_name(run), "run_id": run.name,
               "run_kind": manifest(run).get("run_kind", "generation"),
               "create_argv": _create_argv(run, target, remote_run, Path(prepared["workspace"]), private_env, scope, image_id,
-                                           prepared["runtime"]["path"])}
+                                           prepared["runtime"].get("path"))}
     helper = _deploy_helper(host, remote_run)
     payload = json.dumps(config, ensure_ascii=False, separators=(",", ":"))
     write_json(paths(run)['records'] / 'dispatch.json', {
@@ -1039,6 +1053,9 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
         source = f"{host}:{remote_run / member}/"
         destination.mkdir(parents=True, exist_ok=True)
         command = ["rsync", "-a"]
+        if member == "records":
+            # Remote save success is not controller-side data recovery success.
+            command += ["--exclude=/save.json", "--exclude=/result-save.json"]
         if member == sdk_member:
             # SDK submission is frozen program material; provider/model-proxy
             # state is private mutable service state and is not recovered into
@@ -1051,9 +1068,11 @@ def save(run: str | os.PathLike[str]) -> dict[str, Any]:
                            "stderr": result.stderr})
     value = {"saved": terminal and not errors,
              "lifecycle": facts.get("lifecycle"), "scope": ["data/workspace", "data/harness", "records"],
+             "storage_root": str(run),
              "excluded": ["inputs/sdk-workspace/submission/.private/**"] if target.get("remote_runtime") else [],
              "errors": errors, "as_of": time.time()}
     write_json(paths(run)["records"] / "save.json", value)
+    write_json(paths(run)["records"] / "result-save.json", value)
     return value
 
 
@@ -1072,8 +1091,11 @@ def sync_saved(run: str | os.PathLike[str]) -> dict[str, Any]:
         write_json(destination / "saved-sync.json", value)
         return value
     status_probe = _remote_exec(host, ["test", "-f", str(remote_run / "records/status.json")])
-    result = subprocess.run(["rsync", "-a", f"{host}:{remote_run / 'records'}/", str(destination) + "/"],
+    result = subprocess.run(["rsync", "-a", "--exclude=/save.json", "--exclude=/result-save.json",
+                             f"{host}:{remote_run / 'records'}/", str(destination) + "/"],
                             check=False, text=True, capture_output=True)
+    for name in ("save.json", "result-save.json"):
+        _remote_file(host, remote_run / "records" / name, destination / f"remote-{name}")
     value = {"synced": result.returncode == 0 and status_probe.returncode == 0, "executor": host,
              "remote_run": str(remote_run), "exit_code": result.returncode,
              "status_record": status_probe.returncode == 0,
@@ -1130,7 +1152,10 @@ def mirror_saved_evaluations(source_run: str | os.PathLike[str]) -> dict[str, An
                 # the Mac copy is fetched only here.  The self-test child is
                 # therefore born locally and uses the approved Helium session;
                 # no cookie is copied into the remote run.
-                local_saved = save(source)
+                local_receipt = paths(source)["records"] / "save.json"
+                local_saved = json.loads(local_receipt.read_text()) if local_receipt.is_file() else {}
+                if not (local_saved.get("saved") is True and local_saved.get("storage_root") == str(source)):
+                    local_saved = save(source)
                 if local_saved.get("saved") is not True:
                     raise RuntimeError(f"source data save incomplete: {local_saved}")
                 from .evaluate import evaluate_run, freeze_application
