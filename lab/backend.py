@@ -20,6 +20,7 @@ from . import otlp
 _PUBLIC_MANIFEST_FIELDS = {
     "run_id", "label", "variant", "harness", "target", "task", "stage", "route",
     "competition", "program_version", "source_run", "lifecycle", "archived", "braid_run_id",
+    "model_recipe", "model_routes",
 }
 _PUBLIC_STATUS_FIELDS = {
     "lifecycle", "activity", "brief", "last_activity_at", "as_of", "observed_at", "reason",
