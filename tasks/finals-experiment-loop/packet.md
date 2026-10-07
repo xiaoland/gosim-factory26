@@ -8,6 +8,8 @@
 
 新Pi正常接续为 `a3a9a5262b8b40f382883ed636758464`，来源d3cc、native_resume=true、self-funded、competition=false；装配proxy SHA与上述6f1e07一致。启动安装期间CLI将迁移历史的502误当当前activity=error，根因是Pi status.py未区分新run时间边界。已复用native usage.since过滤当前活动消息，历史原件仍供Console查看；在该真实run保存facts上执行新版解释器返回unknown/session message unavailable，符合尚无当前消息，不新增设施测试。当前冻结program不热改；源码修复由后续正常启动消费，当前请求产生新消息后原解释器也会更新。这不是新proxy已失败的证据。
 
+a3 request1实际请求体9,299,978字节，31.7秒时连接仍ESTAB，bytes_acked6,955,255、notsent2,361,921、rwnd_limited99.9%；只读原件为该run records/upload-socket-observation-20261007.txt。随后按既有配方fallback到ARK，第2attempt 11,459ms取得HTTP200及first_body_bytes；不改供应商配方。这证明该请求不再30秒被切断且已恢复模型响应，不证明千帆接收端背压根因解决、stream完整结束或应用完成。主在同一打开的Console详情无任何刷新动作，实际看到as_of从17:14:31变到17:17:28、activity从继承error变为active、新session activity及当前producer日志/资源出现；独立会话继续终态及自动评测。整体仍未完成。
+
 2026-10-07 用户明确“你可以开始，这也是基础设施改进的一部分”，批准将[应用开发与评测环境统一](../harness-app-environment/packet.md)纳入本任务。公共默认应用Node/npm与工具解释器分离，范围为两个DX及实际评测入口；不扩展历史variant/I15，不热改在途。execution_owner持有公共安装与Linux应用操作，主持有DX入口/指令与技术说明。该packet拥有具体环境证据和完成标准，本入口不复制；费用仍自费、绝不参赛。
 
 最新验收：Pi正常同任务接续 `d3cc30d25f8e4da5be4b467f709f2250` 已于16:55:32自然失败，退出1。已消费响应头/总期限600秒，在sfp7取得真实模型回合，最后三次9,291,245字节请求仍在约30–32秒报 `SendRequest: connection error: Connection timed out (os error 110)`，没有响应头；不能再归为WSL独有或旧90秒期限。Mac结果回收已明确saved=true、errors=[]，partial原生用量1,444,211 tokens，实际spend未采集，不能当零。来源为1c1e1b，native scope仍为f1335fc，同variant/data/原生状态。I14普通接续 `746835582f574a7fa7b25856b8e24b5b` 也failed且完整保存，仍报告必要group物化/恢复blocked；execution_owner继续核实发布版本和恢复条件，独立会话不再重复同条件派发。完整生成和应用评分均未完成。
