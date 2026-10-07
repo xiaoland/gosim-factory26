@@ -1,5 +1,7 @@
 # Lab 实现计划
 
+本文件保留已批准的实施范围与顺序，不充当实时委派表。文中各负责人的“持续负责”等描述属于当时分工；当前工作状态、已接管的残余义务及负责人统一见 [packet](packet.md#委派情况与责任收敛)。源码已交付与真实使用已验收必须按 packet 和 assessment 区分。
+
 本计划落实 [design](design.md) 已决定的命令、程序/数据路径、run 生命周期、status、观测、Console、restart 与评测合同。2026-10-06 用户已批准开工、提交和真实模型独立会话验收，授权见 [packet](packet.md)。计划只列确定代码与文档交付；调查和信息收集已在设计阶段完成，真实使用反馈单列于 [evaluation](evaluation.md)，不作为决定架构的实施阶段。路径与恢复改动优先在用户指定的 I14-dx-test、pi-minimal-vv-dx-test 派生 variant 落实，原 variant 身份与历史运行保持。
 
 ## 改动范围与顺序
