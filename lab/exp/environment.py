@@ -74,7 +74,7 @@ def resolve(value, profile, *, base=None):
 
 def plan_prepare(selection):
     from . import artifacts
-    from submission import exp_checkpoint
+    from tooling.linux import exp_checkpoint
     if set(selection)-{'producer','source','target','repair'} or not {'producer','source','target','repair'}<=set(selection):
         raise ValueError('prepare production needs explicit source, target and repair')
     source = Path(selection['source']).resolve(strict=True)
@@ -94,7 +94,7 @@ def plan_prepare(selection):
 def produce_runtimes(binding, purposes, resolution=None, *, verification_window=None):
     """Build missing physical runtime once; preserve separate purpose identities."""
     selection = (resolution or binding)['selection']
-    from scripts.runtime import ensure_host_runtime
+    from tooling.scripts.runtime import ensure_host_runtime
     result = {}
     for purpose in purposes:
         receipt = ensure_host_runtime(Path(selection['cache_root']), Path(selection['python']), purpose,
@@ -108,7 +108,7 @@ def produce_runtimes(binding, purposes, resolution=None, *, verification_window=
 def produce_materials(spec, directory, store):
     """Run declared producers; index original producer identities across runs."""
     from . import artifacts
-    from scripts.package_agent import produce
+    from tooling.scripts.package_agent import produce
     directory = Path(directory)
     productions = spec.get('resolved_productions', spec.get('productions', {}))
     required = {value['from_production'] for job in spec['jobs'] for value in [*job.get('inputs',{}).values(), *[job[field] for field in ('prepared','checkpoint','stop_evidence') if field in job]] if isinstance(value,dict) and 'from_production' in value}
@@ -129,7 +129,7 @@ def produce_materials(spec, directory, store):
                     material = read(index)
                     artifacts.verify(store, material['artifact'])
                 else:
-                    from submission.exp_checkpoint import prepare
+                    from tooling.linux.exp_checkpoint import prepare
                     if output.exists():
                         output.rename(output.with_name(key + '-' + str(time.time_ns()) + '-partial'))
                     if (Path(selection['source'])/'domain-resolver.json').exists():

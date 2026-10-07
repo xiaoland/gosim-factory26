@@ -2,7 +2,7 @@
 
 这是当前 OTLP/Braid 诊断入口。它读取已保存的 run、生成静态报告并解释证据缺口，不创建实验、不启动模型；历史报告只作为时点证据，不替代这里的操作方法。
 
-本手册用于读取已运行实验的 OTLP 数据、生成静态诊断网站和定位证据缺口。实验启动方式见[运行说明](index.md)，产品边界见[PRD](../prd/index.md)，实现时的实际验证与限制见[阶段报告](../../reports/2026-09-24-braid-otlp.md)。本页是当前操作入口，历史报告不替代操作步骤。
+本手册用于读取已运行实验的 OTLP 数据、生成静态诊断网站和定位证据缺口。实验启动方式见[运行说明](index.md)，产品边界见[PRD](../prd/index.md)，实现时的实际验证与限制见[阶段报告](../../runs/reports/2026-09-24-braid-otlp.md)。本页是当前操作入口，历史报告不替代操作步骤。
 
 ## 已具备的能力与数据来源
 
@@ -118,12 +118,12 @@ Factory 自动补采最多等待 120 秒，错误单独记录，不覆盖应用�
 | 三信号配置、HTTP 原始错误、flush/shutdown 与计量 | `sources/braid/src/telemetry.rs` |
 | 原生/对象快照、分片、摘要、重建、protobuf 解码与 Markdown | `sources/braid/src/evidence.rs`、`src/cli/mod.rs` |
 | run/session/turn 生命周期埋点 | `sources/braid/src/local.rs`、`src/group/`、`src/provider/` |
-| Factory 归档结束后的补采和错误留存 | `scripts/core.py`、`scripts/braid_runtime.py` |
+| Factory 归档结束后的补采和错误留存 | `tooling/scripts/core.py`、`tooling/scripts/braid_runtime.py` |
 | 实验接收、run 隔离与批次查询 | `lab/run.py`、`lab/otlp.py` |
 | Backend 查询、运行选择与生成网站 | `lab/analysis/braid_telemetry_viewer.py` |
 | GitHub 式讨论、聊天与三信号展示 | `lab/analysis/braid_telemetry_viewer.html` |
 
-真实 Backend 已核对原生字节、对象、重复导出和 HTTP 错误；新包也有构建、接收器写入和原生材料反馈。各迭代实际运行材料需与冻结身份一起解释，不能据这些局部结果承诺所有历史或新运行的实时链路、子代理全文及 compaction/分支完整性。早期网站视觉与交互验收受工具 URL 策略阻断，未宣称通过。早期验证与原始收据见[阶段报告](../../reports/2026-09-24-braid-otlp.md)，自包含 Collector、Pi 时间回调和后续原生关联修复见[设施实施](../../tasks/experiment-infrastructure/cells/self-contained-observability.md)及当前迭代 packet；不同来源的验收范围不能混用。
+真实 Backend 已核对原生字节、对象、重复导出和 HTTP 错误；新包也有构建、接收器写入和原生材料反馈。各迭代实际运行材料需与冻结身份一起解释，不能据这些局部结果承诺所有历史或新运行的实时链路、子代理全文及 compaction/分支完整性。早期网站视觉与交互验收受工具 URL 策略阻断，未宣称通过。早期验证与原始收据见[阶段报告](../../runs/reports/2026-09-24-braid-otlp.md)，自包含 Collector、Pi 时间回调和后续原生关联修复见[设施实施](../../tasks/experiment-infrastructure/cells/self-contained-observability.md)及当前迭代 packet；不同来源的验收范围不能混用。
 
 修改展示优先用已归档真实 Backend 生成新目录并核对原始数据，不默认启动模型实验，不新增 Factory 测试、mock 或 smoke。改 Braid 需从 `sources/braid` 构建并更新其组件合同；旧包不会因宿主代码更新获得新 exporter 能力。
 

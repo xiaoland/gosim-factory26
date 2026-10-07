@@ -11,4 +11,4 @@ Cleaner 是 I14 的独立实现，在共同基线的原生 Braid 成员边界内
 
 Cleaner 的扩展只在其自身原生成员/运行材料中生效；它不替代 Braid 成员分派，也不自动改变其它 I14 实现的角色。不要把它推断为 Reviewer 或 E2E 的能力。源码核对：[`run.py`](run.py)、[`build.py`](build.py)、[`factory-cleaner.ts`](extensions/factory-cleaner.ts)。
 
-入口要求设施已装配的 context；源码操作见[公共源码入口](../../scripts/README.md#i14-源码装配)。技能与额外角色需求由 [materials.json](materials.json) 声明，controller/SDK/Hosted 交付与实际服务不由本 variant 另行实现。
+入口要求设施已装配的 context；源码操作见[公共源码入口](../../tooling/scripts/README.md#i14-源码装配)。技能与额外角色需求由 [materials.json](materials.json) 声明，controller/SDK/Hosted 交付与实际服务不由本 variant 另行实现。

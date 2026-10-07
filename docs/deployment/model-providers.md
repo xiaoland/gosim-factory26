@@ -1,6 +1,6 @@
 # 实验 AI 模型提供商
 
-本页是提供商选型入口。价格、套餐限制与验证来源按供应商维护，可执行的端点和模型映射由[原生LiteLLM配置](../../harness/model-gateway.json)集中管理，密钥位于私有env。核对日期为2026-10-02（Asia/Shanghai）。
+本页是提供商选型入口。价格、套餐限制与验证来源按供应商维护，可执行的端点和模型映射由[原生LiteLLM配置](../../materials/model-gateway.json)集中管理，密钥位于私有env。核对日期为2026-10-02（Asia/Shanghai）。
 
 选型不使用Kimi K2.7 Code HighSpeed或DeepSeek V4.1 Flash（原厂别名deepseek-flash）；普通K2.7 Code及其它供应商的V4 Flash 0731保留。同名模型不保证同一版本。账户余额、价格有效期及具体模型权限在新实验准备时核实。
 

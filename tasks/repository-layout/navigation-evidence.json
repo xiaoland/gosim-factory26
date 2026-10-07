@@ -1,0 +1,553 @@
+{
+  "date": "2026-10-07",
+  "head": "f01e5fa10a6a801b486089a0542303ed39e8ada6",
+  "note": "Changing shared worktree; file hashes identify this observation only. rg file hits are not counts of stale claims.",
+  "queries": {
+    "old_lab_cli": {
+      "query": "python3 -m lab (compile|doctor|build|monitor|history|recover|checkpoint)",
+      "files": 3,
+      "by_root": {
+        "lab": 1,
+        "tasks": 1,
+        "experiments": 1
+      },
+      "paths": [
+        "experiments/hackathon-local/README.md",
+        "lab/exp/execution.md",
+        "tasks/agent-doc-system-audit/audit.md"
+      ]
+    },
+    "model_route": {
+      "query": "gateway-routes|self-funded.json",
+      "files": 35,
+      "by_root": {
+        "docs": 1,
+        "harness": 2,
+        "variants": 19,
+        "lab": 2,
+        "scripts": 3,
+        "tasks": 8
+      },
+      "paths": [
+        "docs/deployment/model-providers.md",
+        "harness/README.md",
+        "harness/model-recipes/README.md",
+        "lab/arc_bench/execution.py",
+        "lab/exp/delivery.py",
+        "scripts/README.md",
+        "scripts/model_gateway_service.py",
+        "scripts/package_agent.py",
+        "tasks/agent-doc-system-audit/audit.md",
+        "tasks/agent-doc-system-audit/navigation-readback.md",
+        "tasks/agent-doc-system-audit/packet.md",
+        "tasks/iteration14/glm53-root-full-github-20261006/packet.md",
+        "tasks/iteration14/overnight-plan/cells/linux-materials.md",
+        "tasks/iteration14/overnight-plan/cells/provider-fallback.md",
+        "tasks/pi-minimal/evolution-20261006/execution.md",
+        "tasks/pi-minimal/evolution-20261006/packet.md",
+        "variants/I14-dx-test/README.md",
+        "variants/I14-dx-test/build.py",
+        "variants/pi-braid-i14-cleaner-direct/build.py",
+        "variants/pi-braid-i14-cleaner-direct/run.py",
+        "variants/pi-braid-i14-cleaner/README.md",
+        "variants/pi-braid-i14-cleaner/build.py",
+        "variants/pi-braid-i14-cleaner/run.py",
+        "variants/pi-braid-i14-e2e/build.py",
+        "variants/pi-braid-i14-e2e/run.py",
+        "variants/pi-braid-i14-reviewer-cleaner-e2e/build.py",
+        "variants/pi-braid-i14-reviewer-cleaner-e2e/run.py",
+        "variants/pi-braid-i14-reviewer-direct/build.py",
+        "variants/pi-braid-i14-reviewer-direct/run.py",
+        "variants/pi-braid-i14-reviewer/README.md",
+        "variants/pi-braid-i14-reviewer/build.py",
+        "variants/pi-braid-i14-reviewer/run.py",
+        "variants/pi-braid-i14/README.md",
+        "variants/pi-braid-i14/build.py",
+        "variants/pi-minimal-vv-dx-test/build.py"
+      ]
+    },
+    "console": {
+      "query": "Braid Console|Exp Console|lab/console|braid-console",
+      "files": 58,
+      "by_root": {
+        "braid-console": 6,
+        "CONTRIBUTING.md": 1,
+        "docs": 4,
+        "reports": 1,
+        "AGENTS.md": 1,
+        "lab": 1,
+        "tasks": 44
+      },
+      "paths": [
+        "AGENTS.md",
+        "CONTRIBUTING.md",
+        "braid-console/README.md",
+        "braid-console/server.py",
+        "braid-console/web/index.html",
+        "braid-console/web/package.json",
+        "braid-console/web/src/App.tsx",
+        "braid-console/web/src/Home.tsx",
+        "docs/deployment/console.md",
+        "docs/deployment/history/console.md",
+        "docs/index.md",
+        "docs/work-index.md",
+        "lab/README.md",
+        "reports/2026-10-03-core-documentation.md",
+        "tasks/braid-console-control/cli-root-actions.md",
+        "tasks/braid-console-control/current-runs.md",
+        "tasks/braid-console-control/home-entry.md",
+        "tasks/braid-console-control/lifecycle-implementation.md",
+        "tasks/braid-console-control/lifecycle-review.md",
+        "tasks/braid-console-control/packet.md",
+        "tasks/braid-console-control/path-routing.md",
+        "tasks/braid-console-control/provider-session-reading.md",
+        "tasks/braid-console-control/session-navigation.md",
+        "tasks/braid-console-control/shadcn-ui.md",
+        "tasks/braid-provider-expansion/packet.md",
+        "tasks/console-reviewer/packet.md",
+        "tasks/debian-disk-recovery/packet.md",
+        "tasks/durable-docs-curation/packet.md",
+        "tasks/experiment-dx-review/history-20261003.md",
+        "tasks/experiment-dx-review/preparation.md",
+        "tasks/experiment-startup-dx/architecture-source-readback.json",
+        "tasks/experiment-startup-dx/responsibilities-execution-compile.json",
+        "tasks/experiment-startup-dx/responsibilities-source-readback.json",
+        "tasks/finals-experiment-loop/assessment.md",
+        "tasks/finals-experiment-loop/cells/execution.md",
+        "tasks/finals-experiment-loop/cells/observability.md",
+        "tasks/finals-experiment-loop/design.md",
+        "tasks/finals-experiment-loop/implementation.md",
+        "tasks/finals-experiment-loop/packet.md",
+        "tasks/iteration12/console.md",
+        "tasks/iteration12/packet.md",
+        "tasks/iteration12/restart.md",
+        "tasks/iteration13/console-launch.md",
+        "tasks/iteration13/console-paused-access.md",
+        "tasks/iteration13/findings.md",
+        "tasks/iteration13/i13-2/collaboration-findings.md",
+        "tasks/iteration13/i13-2/collaboration-implementation.md",
+        "tasks/iteration13/i13-2/console-deployment.md",
+        "tasks/iteration13/implementation.md",
+        "tasks/iteration13/packet.md",
+        "tasks/iteration13/repair-design.md",
+        "tasks/iteration14/baseline-roots/packet.md",
+        "tasks/iteration14/cleaner-hidden-context/packet.md",
+        "tasks/iteration14/dx-resume/packet.md",
+        "tasks/iteration14/dx-resume/startup-blockers.md",
+        "tasks/iteration14/overnight-plan/cells/provider-fallback.md",
+        "tasks/iteration14/packet.md",
+        "tasks/repository-curation/code.md"
+      ]
+    },
+    "deleted_guide": {
+      "query": "agents/run-analysis\\.md|agents/run-monitor\\.md|docs/agent-guides",
+      "files": 5,
+      "by_root": {
+        "tasks": 5
+      },
+      "paths": [
+        "tasks/iteration10/cells/session-recap-20260929/messages.json",
+        "tasks/iteration11/run-audit/github/cells/m1-m2/read-receipts.json",
+        "tasks/iteration11/run-audit/github/cells/root-full/assignment.json",
+        "tasks/iteration11/run-audit/github/cells/root-full/read-receipts.json",
+        "tasks/iteration11/run-audit/sheet/cells/a/read-ranges.json"
+      ]
+    }
+  },
+  "default_visible_files": {
+    "total": 4625,
+    "by_root": {
+      "braid-console": 53,
+      "reports": 17,
+      "submission": 5,
+      "AGENTS.md": 1,
+      "sources": 663,
+      "scripts": 22,
+      "README.md": 1,
+      "benchmarks": 6,
+      "CONTRIBUTING.md": 1,
+      "docs": 34,
+      "harness": 87,
+      "lab": 94,
+      "experiments": 93,
+      "Makefile": 1,
+      "tasks": 2873,
+      "variants": 667,
+      "svc.json": 1,
+      "local-generations": 6
+    }
+  },
+  "read_files": {
+    "README.md": {
+      "bytes": 2007,
+      "lines": 17,
+      "sha256": "60fb24e3aa4bbbffa60dfceb4c374a37ac5d5ec24aebcee17440d6329cf81c44"
+    },
+    "docs/deployment/index.md": {
+      "bytes": 5964,
+      "lines": 46,
+      "sha256": "d168f5bd172f8c17a6ba7df1d6260dfb7b5a622a7955411d9fce8308be07c716"
+    },
+    "docs/deployment/recovery.md": {
+      "bytes": 3429,
+      "lines": 30,
+      "sha256": "a3e48076efaa151e60bb6056fd762a771307e9acc8f2cb702646cba88588821a"
+    },
+    "docs/index.md": {
+      "bytes": 4157,
+      "lines": 35,
+      "sha256": "ff8be0d89f34fdb6c2e3bdbc514c3191483d3a3e1f7e17377d8a3a84d7d8af70"
+    },
+    "harness/model-recipes/README.md": {
+      "bytes": 2847,
+      "lines": 15,
+      "sha256": "b7ec129d9469bf775d2a5f307934b28a2ebeac4eae7dd8922e49e3c1ac7596f7"
+    },
+    "variants/README.md": {
+      "bytes": 8671,
+      "lines": 70,
+      "sha256": "19aca5f8b1f380722bece9003f414e1c8686e6e85f2c9e4e62da2866df96476d"
+    },
+    "braid-console/README.md": {
+      "bytes": 3596,
+      "lines": 37,
+      "sha256": "0375134493add66f67ee76cc32a0ca1d53520e517fa656f796dcf83387a83954"
+    },
+    "braid-console/web/src/App.tsx": {
+      "bytes": 4632,
+      "lines": 55,
+      "sha256": "10d4bcf2824b284da42413b1db171be7e62f8fe946b44f9b1f60bbc5b1d4eef9"
+    },
+    "lab/__main__.py": {
+      "bytes": 3851,
+      "lines": 86,
+      "sha256": "713c009c1973d60c044c5ec8d99a3574f14efb021fc31b1bb5bbc9b4590672ce"
+    },
+    "experiments/README.md": {
+      "bytes": 3554,
+      "lines": 32,
+      "sha256": "75e4596e1728a2967640f8f88325de18643655c5a901f3fc853632fa910a7a69"
+    },
+    "experiments/hackathon-local/README.md": {
+      "bytes": 1919,
+      "lines": 19,
+      "sha256": "9efaba84dd9a0fe8b7fdf609eda4fd5f18f8a034548741fa63ae598dcd4b0af3"
+    },
+    "experiments/i14-0/README.md": {
+      "bytes": 1607,
+      "lines": 9,
+      "sha256": "253fe322a276843f628957216c9c46dbc229c2d19802096e9b9304c9f0168f61"
+    },
+    "lab/exp/README.md": {
+      "bytes": 1592,
+      "lines": 16,
+      "sha256": "7d61354d208e066abef83df06f7d6b5a1cb3085ab24326f1d503d94141ef7f56"
+    },
+    "lab/exp/execution.md": {
+      "bytes": 16733,
+      "lines": 66,
+      "sha256": "e2fd2194815d22337cbcc08fbbb9812d84e8617696cdb99e254a6c3a7835916d"
+    },
+    "docs/deployment/history/README.md": {
+      "bytes": 1139,
+      "lines": 14,
+      "sha256": "c77c3f9ef35ec5966db042aefc9be1959712da9be41dac92bebf308ca4563d67"
+    },
+    "docs/work-index.md": {
+      "bytes": 5932,
+      "lines": 37,
+      "sha256": "0549864f4459292e328cf5f32863d4bc98061d2cf835b45548f2f38e0d28ae48"
+    }
+  },
+  "bounded_history_filter": {
+    "note": "Ad hoc read-only query comparison; not a proposed final ignore policy. Shared worktree may change. No Markdown content changed.",
+    "exclude_globs": [
+      "!reports/**",
+      "!tasks/**/history/**",
+      "!tasks/**/source/**",
+      "!tasks/**/evidence/**",
+      "!tasks/**/readable/**",
+      "!tasks/**/frozen/**",
+      "!tasks/**/snapshot-*/**",
+      "!tasks/**/current-runtime/**",
+      "!tasks/**/final-app/**"
+    ],
+    "results": {
+      "old_lab_cli": {
+        "before_files": 3,
+        "files": 3,
+        "before_paths": [
+          "experiments/hackathon-local/README.md",
+          "lab/exp/execution.md",
+          "tasks/agent-doc-system-audit/audit.md"
+        ],
+        "paths": [
+          "experiments/hackathon-local/README.md",
+          "lab/exp/execution.md",
+          "tasks/agent-doc-system-audit/audit.md"
+        ],
+        "removed": [],
+        "added_during_query": []
+      },
+      "model_route": {
+        "before_files": 36,
+        "files": 36,
+        "before_paths": [
+          "docs/deployment/model-providers.md",
+          "harness/README.md",
+          "harness/model-recipes/README.md",
+          "lab/arc_bench/execution.py",
+          "lab/exp/delivery.py",
+          "scripts/README.md",
+          "scripts/model_gateway_service.py",
+          "scripts/package_agent.py",
+          "tasks/agent-doc-system-audit/audit.md",
+          "tasks/agent-doc-system-audit/navigation-readback.md",
+          "tasks/agent-doc-system-audit/packet.md",
+          "tasks/finals-experiment-loop/packet.md",
+          "tasks/iteration14/glm53-root-full-github-20261006/packet.md",
+          "tasks/iteration14/overnight-plan/cells/linux-materials.md",
+          "tasks/iteration14/overnight-plan/cells/provider-fallback.md",
+          "tasks/pi-minimal/evolution-20261006/execution.md",
+          "tasks/pi-minimal/evolution-20261006/packet.md",
+          "variants/I14-dx-test/README.md",
+          "variants/I14-dx-test/build.py",
+          "variants/pi-braid-i14-cleaner-direct/build.py",
+          "variants/pi-braid-i14-cleaner-direct/run.py",
+          "variants/pi-braid-i14-cleaner/README.md",
+          "variants/pi-braid-i14-cleaner/build.py",
+          "variants/pi-braid-i14-cleaner/run.py",
+          "variants/pi-braid-i14-e2e/build.py",
+          "variants/pi-braid-i14-e2e/run.py",
+          "variants/pi-braid-i14-reviewer-cleaner-e2e/build.py",
+          "variants/pi-braid-i14-reviewer-cleaner-e2e/run.py",
+          "variants/pi-braid-i14-reviewer-direct/build.py",
+          "variants/pi-braid-i14-reviewer-direct/run.py",
+          "variants/pi-braid-i14-reviewer/README.md",
+          "variants/pi-braid-i14-reviewer/build.py",
+          "variants/pi-braid-i14-reviewer/run.py",
+          "variants/pi-braid-i14/README.md",
+          "variants/pi-braid-i14/build.py",
+          "variants/pi-minimal-vv-dx-test/build.py"
+        ],
+        "paths": [
+          "docs/deployment/model-providers.md",
+          "harness/README.md",
+          "harness/model-recipes/README.md",
+          "lab/arc_bench/execution.py",
+          "lab/exp/delivery.py",
+          "scripts/README.md",
+          "scripts/model_gateway_service.py",
+          "scripts/package_agent.py",
+          "tasks/agent-doc-system-audit/audit.md",
+          "tasks/agent-doc-system-audit/navigation-readback.md",
+          "tasks/agent-doc-system-audit/packet.md",
+          "tasks/finals-experiment-loop/packet.md",
+          "tasks/iteration14/glm53-root-full-github-20261006/packet.md",
+          "tasks/iteration14/overnight-plan/cells/linux-materials.md",
+          "tasks/iteration14/overnight-plan/cells/provider-fallback.md",
+          "tasks/pi-minimal/evolution-20261006/execution.md",
+          "tasks/pi-minimal/evolution-20261006/packet.md",
+          "variants/I14-dx-test/README.md",
+          "variants/I14-dx-test/build.py",
+          "variants/pi-braid-i14-cleaner-direct/build.py",
+          "variants/pi-braid-i14-cleaner-direct/run.py",
+          "variants/pi-braid-i14-cleaner/README.md",
+          "variants/pi-braid-i14-cleaner/build.py",
+          "variants/pi-braid-i14-cleaner/run.py",
+          "variants/pi-braid-i14-e2e/build.py",
+          "variants/pi-braid-i14-e2e/run.py",
+          "variants/pi-braid-i14-reviewer-cleaner-e2e/build.py",
+          "variants/pi-braid-i14-reviewer-cleaner-e2e/run.py",
+          "variants/pi-braid-i14-reviewer-direct/build.py",
+          "variants/pi-braid-i14-reviewer-direct/run.py",
+          "variants/pi-braid-i14-reviewer/README.md",
+          "variants/pi-braid-i14-reviewer/build.py",
+          "variants/pi-braid-i14-reviewer/run.py",
+          "variants/pi-braid-i14/README.md",
+          "variants/pi-braid-i14/build.py",
+          "variants/pi-minimal-vv-dx-test/build.py"
+        ],
+        "removed": [],
+        "added_during_query": []
+      },
+      "console": {
+        "before_files": 58,
+        "files": 57,
+        "before_paths": [
+          "AGENTS.md",
+          "CONTRIBUTING.md",
+          "braid-console/README.md",
+          "braid-console/server.py",
+          "braid-console/web/index.html",
+          "braid-console/web/package.json",
+          "braid-console/web/src/App.tsx",
+          "braid-console/web/src/Home.tsx",
+          "docs/deployment/console.md",
+          "docs/deployment/history/console.md",
+          "docs/index.md",
+          "docs/work-index.md",
+          "lab/README.md",
+          "reports/2026-10-03-core-documentation.md",
+          "tasks/braid-console-control/cli-root-actions.md",
+          "tasks/braid-console-control/current-runs.md",
+          "tasks/braid-console-control/home-entry.md",
+          "tasks/braid-console-control/lifecycle-implementation.md",
+          "tasks/braid-console-control/lifecycle-review.md",
+          "tasks/braid-console-control/packet.md",
+          "tasks/braid-console-control/path-routing.md",
+          "tasks/braid-console-control/provider-session-reading.md",
+          "tasks/braid-console-control/session-navigation.md",
+          "tasks/braid-console-control/shadcn-ui.md",
+          "tasks/braid-provider-expansion/packet.md",
+          "tasks/console-reviewer/packet.md",
+          "tasks/debian-disk-recovery/packet.md",
+          "tasks/durable-docs-curation/packet.md",
+          "tasks/experiment-dx-review/history-20261003.md",
+          "tasks/experiment-dx-review/preparation.md",
+          "tasks/experiment-startup-dx/architecture-source-readback.json",
+          "tasks/experiment-startup-dx/responsibilities-execution-compile.json",
+          "tasks/experiment-startup-dx/responsibilities-source-readback.json",
+          "tasks/finals-experiment-loop/assessment.md",
+          "tasks/finals-experiment-loop/cells/execution.md",
+          "tasks/finals-experiment-loop/cells/observability.md",
+          "tasks/finals-experiment-loop/design.md",
+          "tasks/finals-experiment-loop/implementation.md",
+          "tasks/finals-experiment-loop/packet.md",
+          "tasks/iteration12/console.md",
+          "tasks/iteration12/packet.md",
+          "tasks/iteration12/restart.md",
+          "tasks/iteration13/console-launch.md",
+          "tasks/iteration13/console-paused-access.md",
+          "tasks/iteration13/findings.md",
+          "tasks/iteration13/i13-2/collaboration-findings.md",
+          "tasks/iteration13/i13-2/collaboration-implementation.md",
+          "tasks/iteration13/i13-2/console-deployment.md",
+          "tasks/iteration13/implementation.md",
+          "tasks/iteration13/packet.md",
+          "tasks/iteration13/repair-design.md",
+          "tasks/iteration14/baseline-roots/packet.md",
+          "tasks/iteration14/cleaner-hidden-context/packet.md",
+          "tasks/iteration14/dx-resume/packet.md",
+          "tasks/iteration14/dx-resume/startup-blockers.md",
+          "tasks/iteration14/overnight-plan/cells/provider-fallback.md",
+          "tasks/iteration14/packet.md",
+          "tasks/repository-curation/code.md"
+        ],
+        "paths": [
+          "AGENTS.md",
+          "CONTRIBUTING.md",
+          "braid-console/README.md",
+          "braid-console/server.py",
+          "braid-console/web/index.html",
+          "braid-console/web/package.json",
+          "braid-console/web/src/App.tsx",
+          "braid-console/web/src/Home.tsx",
+          "docs/deployment/console.md",
+          "docs/deployment/history/console.md",
+          "docs/index.md",
+          "docs/work-index.md",
+          "lab/README.md",
+          "tasks/braid-console-control/cli-root-actions.md",
+          "tasks/braid-console-control/current-runs.md",
+          "tasks/braid-console-control/home-entry.md",
+          "tasks/braid-console-control/lifecycle-implementation.md",
+          "tasks/braid-console-control/lifecycle-review.md",
+          "tasks/braid-console-control/packet.md",
+          "tasks/braid-console-control/path-routing.md",
+          "tasks/braid-console-control/provider-session-reading.md",
+          "tasks/braid-console-control/session-navigation.md",
+          "tasks/braid-console-control/shadcn-ui.md",
+          "tasks/braid-provider-expansion/packet.md",
+          "tasks/console-reviewer/packet.md",
+          "tasks/debian-disk-recovery/packet.md",
+          "tasks/durable-docs-curation/packet.md",
+          "tasks/experiment-dx-review/history-20261003.md",
+          "tasks/experiment-dx-review/preparation.md",
+          "tasks/experiment-startup-dx/architecture-source-readback.json",
+          "tasks/experiment-startup-dx/responsibilities-execution-compile.json",
+          "tasks/experiment-startup-dx/responsibilities-source-readback.json",
+          "tasks/finals-experiment-loop/assessment.md",
+          "tasks/finals-experiment-loop/cells/execution.md",
+          "tasks/finals-experiment-loop/cells/observability.md",
+          "tasks/finals-experiment-loop/design.md",
+          "tasks/finals-experiment-loop/implementation.md",
+          "tasks/finals-experiment-loop/packet.md",
+          "tasks/iteration12/console.md",
+          "tasks/iteration12/packet.md",
+          "tasks/iteration12/restart.md",
+          "tasks/iteration13/console-launch.md",
+          "tasks/iteration13/console-paused-access.md",
+          "tasks/iteration13/findings.md",
+          "tasks/iteration13/i13-2/collaboration-findings.md",
+          "tasks/iteration13/i13-2/collaboration-implementation.md",
+          "tasks/iteration13/i13-2/console-deployment.md",
+          "tasks/iteration13/implementation.md",
+          "tasks/iteration13/packet.md",
+          "tasks/iteration13/repair-design.md",
+          "tasks/iteration14/baseline-roots/packet.md",
+          "tasks/iteration14/cleaner-hidden-context/packet.md",
+          "tasks/iteration14/dx-resume/packet.md",
+          "tasks/iteration14/dx-resume/startup-blockers.md",
+          "tasks/iteration14/overnight-plan/cells/provider-fallback.md",
+          "tasks/iteration14/packet.md",
+          "tasks/repository-curation/code.md"
+        ],
+        "removed": [
+          "reports/2026-10-03-core-documentation.md"
+        ],
+        "added_during_query": []
+      },
+      "deleted_guide": {
+        "before_files": 5,
+        "files": 5,
+        "before_paths": [
+          "tasks/iteration10/cells/session-recap-20260929/messages.json",
+          "tasks/iteration11/run-audit/github/cells/m1-m2/read-receipts.json",
+          "tasks/iteration11/run-audit/github/cells/root-full/assignment.json",
+          "tasks/iteration11/run-audit/github/cells/root-full/read-receipts.json",
+          "tasks/iteration11/run-audit/sheet/cells/a/read-ranges.json"
+        ],
+        "paths": [
+          "tasks/iteration10/cells/session-recap-20260929/messages.json",
+          "tasks/iteration11/run-audit/github/cells/m1-m2/read-receipts.json",
+          "tasks/iteration11/run-audit/github/cells/root-full/assignment.json",
+          "tasks/iteration11/run-audit/github/cells/root-full/read-receipts.json",
+          "tasks/iteration11/run-audit/sheet/cells/a/read-ranges.json"
+        ],
+        "removed": [],
+        "added_during_query": []
+      }
+    }
+  },
+  "invalid_current_cli": {
+    "command": "PYTHONDONTWRITEBYTECODE=1 python3 -m lab doctor --help",
+    "exit_code": 2,
+    "observed": "invalid choice: doctor; current choices start,stop,pause,resume,restart,status,wait,logs,evaluate,archive,serve"
+  },
+  "closing_readback": {
+    "time_utc": "2026-10-06T16:51:46.817479+00:00",
+    "changed_sources": [
+      {
+        "path": "harness/model-recipes/README.md",
+        "sha256": "e3449f313efce67f8c36387e06691d25eabe439e216a572caf0bc0acfe9b128e"
+      }
+    ],
+    "interpretation": "模型配方 README 在并行修改中增加默认 target 配方装配说明；仍明确网关运行接线在实现、无真实自费验收，未改变本审计对该任务归属和未验状态的判断。原始采样哈希保留。",
+    "explicit_historical_trace": {
+      "paths": [
+        "reports/README.md",
+        "reports/2026-10-03-core-documentation.md",
+        "runs/developer-experience/final-cold-acceptance-20261003/report.md"
+      ],
+      "observed": "实际读回历史报告范围和热恢复未完成限制；不将旧 compile 合同当作当前命令。",
+      "source_sha256": "b11df3fbf5353252d9d39764a8b0f1ce05b2dbbf39be6114d00a45154838e9c4"
+    },
+    "task_document_check": {
+      "markdown_files": 7,
+      "local_links_checked": 16,
+      "missing_links": 0,
+      "trailing_whitespace": 0
+    }
+  }
+}

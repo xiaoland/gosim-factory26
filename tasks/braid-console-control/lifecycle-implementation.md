@@ -39,6 +39,6 @@ Chrome新临时页面实际显示归档只读、23个对象、保存关系与历
 
 ## 证据与部署前提
 
-长期操作归[Console README](../../braid-console/README.md)与[部署页](../../docs/deployment/console.md)，跨组件合同归[技术说明](../../docs/product-tdd/index.md)。本轮原始回执在 `runs/braid-console-control/20261001-lifecycle-implementation/`：prepare/build/help logs、service-final manifest/active、http-operations-final、browser-observation、archive-files前后身份、gc-running/stopped-final、restore-final和validation-final。
+长期操作归[Console README](../../consoles/README.md)与[部署页](../../docs/deployment/console.md)，跨组件合同归[技术说明](../../docs/product-tdd/index.md)。本轮原始回执在 `runs/braid-console-control/20261001-lifecycle-implementation/`：prepare/build/help logs、service-final manifest/active、http-operations-final、browser-observation、archive-files前后身份、gc-running/stopped-final、restore-final和validation-final。
 
 旧Debian仍不启动，I12暂停现场及既有容器/挂载不操作。真正部署需要在目标宿主选稳定服务目录与解释器、取得可用配套binary，分别确认真实archive或live workspace身份；Docker现场还需实际本宿主context、挂载与新Console自有访问容器标签。旧四ID在Windows当前daemon查不到的事实不能被转换为其它daemon或历史文件已删除；旧接入在实际迁移前继续显式protect。没有需要本轮再授权才能完成的源码工作。

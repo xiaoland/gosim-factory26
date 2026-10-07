@@ -12,7 +12,7 @@
 
 ## 已复用与读取
 
-- 已读 AGENTS.md（无 AGENTS.local.md）、agents/run-analysis.md、root-cause-review/packet.md、iteration12/packet.md、Ponytail skill。
+- 已读 AGENTS.md（无 AGENTS.local.md）、当时的运行分析说明（已删除）、root-cause-review/packet.md、iteration12/packet.md、Ponytail skill。
 - 已读 tasks/pi-minimal/github-score-analysis/i11-e68661975b53.md、causality.md；后者只作既有历史分析，不触及其它在跑 pi-minimal。
 - 已读 I12 braid.md、console.md 及 deployment.md 前段；runtime-stalls 与广义审查输出部分截断，后续须按具体问题重读，不计完整覆盖。
 - 评分证据根 E=`runs/analysis/i11-github-e68661975b53/20260930T033923Z/`；生成归档 G=`runs/iteration11/20260930-completed-turn-resume/github/source/template.tar`。

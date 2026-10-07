@@ -4,6 +4,6 @@
 
 `targets` 逐项声明 id、variant、case 和 model，不固定八项矩阵。`models` 冻结实际模型、provider、endpoint 与可选凭据变量映射。只有明确选择 `final-score-margin` 政策才读取绑定 run ID 的历史最终分数；不默认选择模型或供应商。逐应用评价声明独立模板、`from_generation` 与费用模式，产物可用后按依赖派发。
 
-操作统一沿 [Lab](../../lab/README.md) 的 compile/doctor/build/start：环境 profile 解析物理资产，私有 deployment 引用 credential/cookie 文件；controller/runner runtime、authority-handoff、资源预算和模型执行仍按本次合同冻结。compile/build 不新增模型或评分许可，供应商能力也不因 alias 存在而成立。
+这里的 intent 属于旧 [lab.exp](../../lab/exp/README.md) 执行合同；读取或接续已有执行时使用该执行冻结的 controller/runner runtime 与 source，不把这些字段交给当前 run 级 Lab。环境 profile、私有 deployment、authority-handoff 和资源预算按原合同解释。当前 run 的新操作从 [Lab](../../lab/README.md)进入；本页不声明旧 intent 已适配新入口，也不授予模型或评分许可。
 
 旧 launch.py 原件保留在 `runs/experiment-dx-review/compiler-20261002/retired-i14-launch.py`，随该次证据取得；旧 config/recipe 只读保存，不隐式转换或恢复。旧 dispatcher、预约和保存现场保留原身份，退役和接管按当前执行合同核实。

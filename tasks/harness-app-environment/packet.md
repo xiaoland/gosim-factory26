@@ -31,7 +31,7 @@ Vitest 全套曾被 300 秒总时限终止，分批随后 96/96 通过。组织/
 证据入口：
 
 - [原运行及恢复记录](../iteration14/glm53-root-full-github-20261006/packet.md)。远端原生会话位于 `sfp7-ws.localhost:/home/yyh/factory26-manual-glm53-full-github-20261006/output/.factory26/20261006-125849-7a406ace/work/native-homes/`，重点为 `pi-glm-fast-01a113b9-*` 的原 PR8 与 `pi-glm-fast-01a11532-*` 的恢复会话；本次侧会话只读取证，未回收原件。
-- [安装器](../../submission/runtime_install.py)、[公共依赖清单](../../harness/npm/public-package/package.json)、[旧构建入口](../../submission/build.py)、[平台交付合同](../../harness/skills/arc-bench/references/platform-delivery.md)。源码正由其它任务演进，实施前重新核对实际版本。
+- [安装器](../../tooling/linux/runtime_install.py)、[公共依赖清单](../../materials/npm/public-package/package.json)、[旧构建入口](../../tooling/linux/build.py)、[平台交付合同](../../materials/skills/arc-bench/references/platform-delivery.md)。源码正由其它任务演进，实施前重新核对实际版本。
 - [较早 Linux 安装证据](../../runs/public-package-linux-AodKRb/linux-installer-evidence.txt)，对应远端 `/home/yyh/factory26-lab-runs/public-install-20261007-132759`；该现场不是当前源码的安装验收。
 
 ## 后续工作与完成标准

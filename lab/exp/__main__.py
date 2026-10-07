@@ -1,4 +1,4 @@
-"""The new experiment contract. Legacy inputs are only accessible through history."""
+"""旧 experiment/job/attempt 执行器；当前 run 使用 python3 -m lab。"""
 import argparse
 import json
 from pathlib import Path

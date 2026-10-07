@@ -31,7 +31,7 @@ Unix socket daemon 保留本地 bind mount 路径。远程 endpoint 使用带 ex
 ```sh
 LOCAL_ASSETS=../factory26-official-local
 RUNNER="$LOCAL_ASSETS/runners/<revision>"
-python3 scripts/runtime.py host-lab --python /path/to/host/python3.12 \
+python3 tooling/scripts/runtime.py host-lab --python /path/to/host/python3.12 \
   --output "$LOCAL_ASSETS/runtimes/lab-<build-id>"
 HOST_RUNTIME="$LOCAL_ASSETS/runtimes/lab-<build-id>/asset.json"
 ARCBENCH_LOCAL_BASE_IMAGE=gyataro/arcbench-runner@sha256:40e003ed470dbd4c120b9019876ba77303d38dc8b34be7f6e313fe0563dd14de \
@@ -95,7 +95,7 @@ Braid 的会话重建、静态网站、补采和逐项排障统一见 [Braid 诊
 
 ### Raw Pi/Codex 基线
 
-[package_raw_core.py](../../../scripts/package_raw_core.py) 可直接消费 `runtime.py linux` 导出的原生工具目录，也保留从历史 ZIP 提取 runtime 的方式，再加入独立的 [raw_main.py](../../../variants/raw/raw_main.py) 入口。
+[package_raw_core.py](../../../tooling/scripts/package_raw_core.py) 可直接消费 `runtime.py linux` 导出的原生工具目录，也保留从历史 ZIP 提取 runtime 的方式，再加入独立的 [raw_main.py](../../../variants/raw/raw_main.py) 入口。
 模型请求参数由 [raw_models.json](../../../variants/raw/raw_models.json) 按模型 API 定义，两个核心的 ZIP 固定同一组 `thinking`、`reasoning_effort` 和 `max_tokens` 参数、模型 descriptor 和来源摘要；不读取 Factory harness 的模型配置，也不加载 Factory、Braid、SVC、项目技能或外部子代理。
 具体运行模型与资格状态由实验记录维护；通道曾返回额度拒绝，不代表模型持续不可用，恢复后应以真实 API 请求确认所选参数和工具调用。
 Pi 直接使用 JSON 输出和原生 session；Codex 使用 JSON 输出的原生 CLI，Chat 网关接入沿用 LiteLLM Responses 兼容层，并由 raw 专用适配器移除 Codex 自带的 reasoning 字段。
@@ -104,7 +104,7 @@ Pi 直接使用 JSON 输出和原生 session；Codex 使用 JSON 输出的原生
 这些事件的分析语义由实验使用者决定。
 
 ```sh
-python3 scripts/package_raw_core.py --runtime runs/runtime-pi \
+python3 tooling/scripts/package_raw_core.py --runtime runs/runtime-pi \
   --backend pi --model glm-5.3-flash \
   --output ../factory26-official-local/fixtures/raw-pi-glm.zip
 ```
@@ -122,7 +122,7 @@ raw 入口可读取 `FACTORY26_API_KEY` 并采用冻结包指定的模型；历�
 生成目录中的原生事件和 OTLP 批次可能包含需求、工具输出或模型文本，分享前检查内容。
 
 raw 的 API 参数以 [raw_models.json](../../../variants/raw/raw_models.json) 和包内 raw-config.json 为准。
-原生客户端档位及协议转换不能代替实际 API 能力事实；历史参数调查见[模型推理记录](../../../reports/2026-09-23-model-reasoning-probe.md)。
+原生客户端档位及协议转换不能代替实际 API 能力事实；历史参数调查见[模型推理记录](../../../runs/reports/2026-09-23-model-reasoning-probe.md)。
 具体运行组合、资格状态和未完成事项归 [raw 任务](../../../tasks/raw-core-local-baseline/packet.md)，不在操作说明中同步另一份矩阵。
 
 本节本地运行不调用官网；既有 Competition 控制器与归档仍可追溯历史结果。

@@ -27,7 +27,7 @@ Issue 的需求/方案/验收设计职责、PR 的实施预演/执行/最终验�
 | 上下文 | Braid 投影大小与压力；原生核心的上下文/压缩设置 | 现有 `context_soft_ratio=0.8`、`context_hard_bytes=1000000` 针对 Braid canonical projection 的字节数；不是模型 token window，也不控制整个原生对话的压缩。 |
 | 适用范围与身份 | profile ID、显示名、适用 Issue/PR 的 tags、有效配置版本 | 本地 Request 只接收一个 profile，再硬编码克隆成 local-issue/local-pr。没有工作项选择任意 profile 的入口。 |
 
-关键消费者为 [Profile schema](../../sources/braid/src/config.rs)、[本地装配](../../sources/braid/src/local.rs)、[Codex adapter](../../sources/braid/src/provider/codex.rs)、[Pi adapter](../../sources/braid/src/provider/pi.rs)、[Factory 请求生成](../../scripts/factory.py) 和 [核心配置](../../scripts/core.py)。`adapter_version`、`provider` 等字段是否承担声明中的检查或查表职责，要以这些消费者为准；存在字段不等于契约已落实。
+关键消费者为 [Profile schema](../../sources/braid/src/config.rs)、[本地装配](../../sources/braid/src/local.rs)、[Codex adapter](../../sources/braid/src/provider/codex.rs)、[Pi adapter](../../sources/braid/src/provider/pi.rs)、[Factory 请求生成](../../scripts/factory.py) 和 [核心配置](../../tooling/scripts/core.py)。`adapter_version`、`provider` 等字段是否承担声明中的检查或查表职责，要以这些消费者为准；存在字段不等于契约已落实。
 
 Factory 当前所有显式自定义配置都标记为 `custom`；多个 preset variant 需要保留各自可追溯身份。模型与推理参数也必须只有一份可编辑权威，再生成 backend 各自的实际参数，避免同名不同实效或异名同实效。
 

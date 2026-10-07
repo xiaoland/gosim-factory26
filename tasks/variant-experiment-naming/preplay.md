@@ -13,7 +13,7 @@
 | 当前说明、已归档 variant 的基线链接和部分进行中任务仍引用旧源码路径。 | 更新当前源码链接，历史任务只加后继入口；不批量改写 frozen ZIP/run 路径。 |
 | acceptance-integrity 记录中的 Lite 使用独立冻结 ZIP 与 WSL 实验目录。 | 命名迁移保留这些对象；开工时核对源码写入协调即可，不为迁移重启实验。 |
 
-证据入口：[打包器](../../scripts/package_agent.py)、[Makefile](../../Makefile)、[Lite 配方](../../experiments/pi-braid-lite/matrix.sh)、[mixed](../../variants/pi-braid/run.py)、[coordinator 前身](../../variants/pi-braid-coordinator/run.py)、[review 前身](../../variants/pi-braid-review/run.py)、[可信验收任务](../acceptance-integrity/packet.md)。这些源码链接在目录迁移时应更新；本文列出的旧名称保留为预演时的观察。
+证据入口：[打包器](../../tooling/scripts/package_agent.py)、[Makefile](../../Makefile)、[Lite 配方](../../experiments/pi-braid-lite/matrix.sh)、[mixed](../../variants/pi-braid/run.py)、[coordinator 前身](../../variants/pi-braid-coordinator/run.py)、[review 前身](../../variants/pi-braid-review/run.py)、[可信验收任务](../acceptance-integrity/packet.md)。这些源码链接在目录迁移时应更新；本文列出的旧名称保留为预演时的观察。
 
 当前文档消费者为 README、AGENTS、CONTRIBUTING、Variant 索引、PRD、Product TDD、Deployment、文档索引、harness/skills README、归档 deepseek/glm/vv README 和 Lite README。另有 acceptance-integrity 的 plan/design/cells 及 official-runtime-observability packet 中的当前源码引用。旧矩阵、历史报告、冻结包与原始运行内容不属于替换范围。
 
@@ -41,7 +41,7 @@
 
 实施先增加冻结实验或显式 run 集选择，再按 case、每题来源应用及评测输入隔离；仅在明确的同 job retry 链中替代旧尝试。独立重复分别呈现，excluded 保存具体原因。coverage 也必须从选定记录取得，不能先取整个目录里碰到的第一份。对无法确定批次的旧记录展示不确定性和候选，不用名字补推身份。
 
-证据入口：[报告](../../benchmarks/hackathon/report.py)。这次是控制流预演，并未用真实历史数据执行新版报告；该步骤属于后续实现验收。
+证据入口：[报告](../../experiments/hackathon-local/suite/report.py)。这次是控制流预演，并未用真实历史数据执行新版报告；该步骤属于后续实现验收。
 
 ## 预演结论与剩余边界
 

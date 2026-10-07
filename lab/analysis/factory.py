@@ -7,7 +7,7 @@ from pathlib import Path
 import subprocess
 import tempfile
 import time
-from scripts.agent_support import save, hashes, digest
+from tooling.scripts.agent_support import save, hashes, digest
 from .inspect_runs import list_runs, show_run, render_list, render_show
 
 ROOT = Path(__file__).resolve().parents[2]

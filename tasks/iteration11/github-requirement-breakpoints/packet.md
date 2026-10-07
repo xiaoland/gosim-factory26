@@ -17,7 +17,7 @@
 - 身份与完整性复用 [已核报告](../../pi-minimal/github-score-analysis/i11-e68661975b53.md)：184/184 冻结应用文件一致，构建及监听成功；官网仅有 4/100 汇总，无逐例失败。
 - 过程入口复用 [机制分析](../../pi-minimal/github-score-analysis/i11-mechanisms-forward.md)；PR23终态native已取回，完整过程索引见[lineage报告](../braid-context-methodology/report.md)。本轮按新增授权完成五类断点及末轮收口的定向追溯，不重复全历史审计。
 - 最终产物根（F）：`runs/analysis/i11-github-e68661975b53/20260930T033923Z/extracted/template/`。
-- 方法：[agents/run-analysis.md](../../../agents/run-analysis.md)。无 `.agents/` 或 `AGENTS.local.md`。
+- 方法：当时的运行分析说明（已删除）。无 `.agents/` 或 `AGENTS.local.md`。
 - 有界 cell：身份/组织；仓库/内容；Issue/PR。主线负责跨旅程、最终依赖与实际组件接线、seed/运行入口和反证抽查；独占写各自 cell 文件。
 
 ## 交付与下一步

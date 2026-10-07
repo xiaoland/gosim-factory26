@@ -8,7 +8,7 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-sys.path.insert(0, str(ROOT / 'scripts'))
+sys.path.insert(0, str(ROOT / 'tooling/scripts'))
 from agent_support import copy_skill
 
 SKILLS = ('svc-verification', 'agent-browser', 'hyperformula', 'handsontable',
@@ -27,7 +27,7 @@ def build(runtime: Path, output: Path | None, skills: Path | None = None,
     if not variant_only:
         raise RuntimeError('DX builders only produce variant material; use Lab public assembly')
     runtime.resolve(strict=True)
-    skills = (skills or ROOT / 'harness/skills').resolve(strict=True)
+    skills = (skills or ROOT / 'materials/skills').resolve(strict=True)
     if directory is None or output is not None:
         raise ValueError('variant material requires --directory and no --output')
     with tempfile.TemporaryDirectory(prefix='pi-minimal-vv-dx-test-', dir=ROOT / 'runs') as temporary:
@@ -38,7 +38,7 @@ def build(runtime: Path, output: Path | None, skills: Path | None = None,
             destination = stage / item.name
             shutil.copytree(item, destination, symlinks=True) if item.is_dir() else shutil.copy2(item, destination)
         for name in SUPPORT:
-            shutil.copy2(ROOT / 'scripts' / name, stage / name)
+            shutil.copy2(ROOT / 'tooling/scripts' / name, stage / name)
         shutil.copy2(ROOT / 'variants/raw/raw_otlp.py', stage / 'raw_otlp.py')
         for name in SKILLS:
             source = (HERE / 'vendor/ponytail/skills/ponytail'

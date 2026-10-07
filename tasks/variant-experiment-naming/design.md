@@ -22,7 +22,7 @@
 | Competition 恢复会用 submission 的 display name 辅助找回上传结果。 | 已冻结或在途的官网名称不能随整理改写。 |
 | 原样重放已有应用来源与文件摘要，但不同生产者的摘要算法并不相同。 | 对照应用必须记录算法与来源，不能仅对比两个同名 hash 字段。 |
 
-直接证据入口：[mixed 运行](../../variants/pi-braid/run.py)、[root-only 运行](../../variants/pi-braid-coordinator/run.py)、[根职责](../../variants/pi-braid-coordinator/agents/pi-kimi-k3/instructions.md)、[reviewer 契约](../../variants/pi-braid-review/agents/pi-glm-fast/agents/reviewer.md)、[打包](../../scripts/package_agent.py)、[lab 冻结](../../lab/plan.py)、[官网准备与恢复](../../lab/arc_bench/competition.py)、[应用重评来源](../../lab/arc_bench/evaluate.py)、[重放包](../../lab/arc_bench/package_arc_replay.py)。
+直接证据入口：[mixed 运行](../../variants/pi-braid/run.py)、[root-only 运行](../../variants/pi-braid-coordinator/run.py)、[根职责](../../variants/pi-braid-coordinator/agents/pi-kimi-k3/instructions.md)、[reviewer 契约](../../variants/pi-braid-review/agents/pi-glm-fast/agents/reviewer.md)、[打包](../../tooling/scripts/package_agent.py)、[lab 冻结](../../lab/plan.py)、[官网准备与恢复](../../lab/arc_bench/competition.py)、[应用重评来源](../../lab/arc_bench/evaluate.py)、[重放包](../../lab/arc_bench/package_arc_replay.py)。
 
 ## 一、Variant 的命名与生命周期
 

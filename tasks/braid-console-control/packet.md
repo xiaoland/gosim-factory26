@@ -41,7 +41,7 @@ Exp Console
 
 Docker的Mounts.Source只给volume根，HostConfig中的Subpath决定实际文件根。Console用户不能遍历Docker宿主数据目录，故共享挂载按同volume/目标的Subpath核实，state/workspace存在性在已验证所有权和挂载的访问容器内检查；准确宿主映射供GC引用，稳定binary哈希仍在宿主核对。本机接入保留原目录检查。没有升root、chmod或修改lab transport。访问容器使用`--init`、无网络、不启动Agent。部署只替换Console自有访问容器；两条原runtime完整ID与StartedAt保持，最终均Running且未Paused，没有业务提交、pause/resume或模型启动。
 
-最终冻结12个程序及前端文件，与本地release-files逐项一致。旧HTTP PID75042已退出，旧manifest退役，旧配置、active、launch和journal保存到新根history；此前空基线及中间版本只作本轮历史。最新身份与原始回执归`runs/braid-console-control/20261001-session-reading-implementation/release-deployment.json`、`release-identity.json`、`release-http.json`及页面截图。完成范围与未观测边界归[Agent Session阅读记录](provider-session-reading.md)，通用操作归[Console README](../../braid-console/README.md)。
+最终冻结12个程序及前端文件，与本地release-files逐项一致。旧HTTP PID75042已退出，旧manifest退役，旧配置、active、launch和journal保存到新根history；此前空基线及中间版本只作本轮历史。最新身份与原始回执归`runs/braid-console-control/20261001-session-reading-implementation/release-deployment.json`、`release-identity.json`、`release-http.json`及页面截图。完成范围与未观测边界归[Agent Session阅读记录](provider-session-reading.md)，通用操作归[Console README](../../consoles/README.md)。
 
 访问容器使用同一named volume，形成Docker实际消费者引用，防止实验结束时材料被清理。lab清理遇到volume仍被占用会保留具体错误并记未确认，不改变生成或评分结果。最终清理必须先关闭转发和HTTP、停止访问容器、release接入、明确移除该访问容器，再执行实验资源清理；仅停止容器仍保留volume引用。原runtime被移除后，Console读取与物理控制分别判断，不声称仍可控制原生成。
 

@@ -11,7 +11,7 @@ from zipfile import ZipFile
 
 
 ROOT = Path(__file__).resolve().parents[2]
-BENCH = ROOT / "benchmarks/hackathon"
+BENCH = ROOT / "experiments/hackathon-local/suite"
 sys.path.insert(0, str(ROOT))
 from lab.arc_bench.arc_artifacts import replay_source
 from lab.exp.core import record

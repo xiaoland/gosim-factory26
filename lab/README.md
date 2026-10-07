@@ -18,7 +18,7 @@ python3 -m lab archive RUN
 python3 -m lab serve --config SERVICE_JSON
 ```
 
-`start` 只要求 variant、target、task，可追加 `--route FILE`、`--competition` 和 `--script FILE`。task 可以是需求目录或维护的任务配置；自动评测由任务配置的 evaluations 清单明确启用，官网重放费用模式不从模型 route 推断。自费装配冻结 variant 声明的[供应商模型配方](../harness/model-recipes/README.md)、所需路由与 provider 配置；`--route` 覆盖本次路由，不修改公共供应商链。官网比赛不加载供应商配方、不带 model-proxy，直接使用平台同名注入的 OPENAI_BASE_URL/API_KEY；角色模型仍归 variant。改设施与跑模型是不同授权范围；本文命令示例本身不启动或授权收费实验。
+`start` 只要求 variant、target、task，可追加 `--route FILE`、`--competition` 和 `--script FILE`。task 可以是需求目录或维护的任务配置；自动评测由任务配置的 evaluations 清单明确启用，官网重放费用模式不从模型 route 推断。自费装配冻结 variant 声明的[供应商模型配方](../materials/model-recipes/README.md)、所需路由与 provider 配置；`--route` 覆盖本次路由，不修改公共供应商链。官网比赛不加载供应商配方、不带 model-proxy，直接使用平台同名注入的 OPENAI_BASE_URL/API_KEY；角色模型仍归 variant。改设施与跑模型是不同授权范围；本文命令示例本身不启动或授权收费实验。
 
 普通命令默认输出简短状态和本次操作的必要回执；`start/restart` 显示实际配方、参赛身份、来源及记录位置，`evaluate` 显示独立评测子 run 和冻结应用引用。控制回执不代表结果已保存，评测派发也不代表已有评分。需要完整结构化信息时，对这些命令追加 `--json`；Python API 始终返回完整对象。错误独立显示，不被正常 brief 遮住。`logs` 保持日志流，不默认展开原生会话历史。
 
@@ -50,7 +50,7 @@ Hosted 运行中的观察仍按现有 observer 周期执行状态和日志查询
 | --- | --- |
 | 启动、控制、查询一个 run；组织 Python 策略 | [公共运行 API](run.py)、[自动化](automation.py) |
 | 程序与数据目录、ARC 执行和同 variant restart | [ARC 适配](arc_bench/README.md) |
-| 通用 Console、共享 Collector 与 Backend | [Console](../braid-console/README.md) |
+| 通用 Console、共享 Collector 与 Backend | [Lab Console](../consoles/lab/README.md)；Braid 协作与旧冻结服务见 [Braid Console](../consoles/braid/README.md) |
 | 读取或操作旧冻结执行 | [历史 lab.exp 源码导航](exp/README.md)；使用其原执行器，不接入新的 run 控制。 |
 | ARC 官方 SDK、平台与应用重放 | [ARC 适配](arc_bench/README.md) |
 

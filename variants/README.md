@@ -27,12 +27,6 @@ I14 冷启动按职责直接读各实现的导航：[共同基线](pi-braid-i14/
 | [pi-braid](pi-braid/) | 保留的 I10 基线 | 原运行使用的冻结包与逐次恢复来源见 [I10 packet](../tasks/iteration10/packet.md)，目录源码不能替代旧制品身份。 |
 | [pi-braid-i11](pi-braid-i11/) | 保留的 I11 实现 | 原生成、交付及评分来源见 [I11 packet](../tasks/iteration11/packet.md)。 |
 | [pi-braid-i12](pi-braid-i12/) | 保留的 I12 人工介入实现 | 原冻结运行及暂停现场见 [I12 packet](../tasks/iteration12/packet.md)；Console 在开发侧，不装入制品。 |
-| [pi-braid-i13](pi-braid-i13/README.md) | I13 基线与恢复实现 | 独立维护生成、角色、工具与方法材料；成果、恢复来源及待验边界见 [I13 packet](../tasks/iteration13/packet.md)。 |
-| [pi-braid-i13-glm-root](pi-braid-i13-glm-root/) | I13 根模型对照 | 增设 root-only GLM-5.3 根；两个 Flash 可指派成员保持基线。该组 advisor 保留 K3，基线 advisor 使用 K2.7 Code；冻结与解释边界见 [对照收据](../tasks/iteration13/root-comparison.md)。 |
-| [pi-braid-i14](pi-braid-i14/README.md) | I14-0 共同基线 | PR 默认 draft，显式固定候选 review，由 Issue 现有负责人验收；模型、矩阵和实际启动身份见 [I14 packet](../tasks/iteration14/packet.md)。 |
-| [pi-braid-i14-cleaner](pi-braid-i14-cleaner/README.md) | I14-0 维护职责对照 | 在共同基线上增加按需 cleaner，继承当前原生历史，推理结束后原子提交维护批次。 |
-| [pi-braid-i14-reviewer](pi-braid-i14-reviewer/README.md) | I14-0 独立验收对照 | 在共同基线上增加 reviewer-only Braid 成员，使用独立请求、会话和固定候选 checkout。 |
-| [pi-braid-i14-e2e](pi-braid-i14-e2e/README.md) | I14-0 浏览器工具对照 | 优先 tester.army/e2e，保留 agent-browser；独立 Linux addon 与基础真实反馈见 [接线记录](../tasks/iteration14/tester-e2e.md)。 |
 | [pi-braid-flash-team](pi-braid-flash-team/) | 实验实现 | 从最新 pi-braid 独立派生；GLM 根成员，Qwen/MiniMax 工作项成员；原生子角色保持来源模型。 |
 | [pi-braid-kimi-root](pi-braid-kimi-root/) | 实验实现 | 从当前 pi-braid 独立派生；仅根成员使用 Kimi K2.7 Code，GLM/DeepSeek 工作项成员及原生角色保持基线。 |
 | [pi-braid-coordinator](pi-braid-coordinator/) | 实验实现 | 根只协调，不写应用代码，也不作为后续工作项的可指派成员。 |

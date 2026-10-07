@@ -10,18 +10,17 @@ variants/<name>/          每个团队 Harness 的独立实现
   main.py / run.py        标准入口、原生材料接线与生成流程
   agents/                Braid 成员与 Pi 内部角色的原生配置和指令
   build.py / extensions/ 材料选择与原生扩展
-agents/                  开发侧运行分析方法与监控消费者入口
-braid-console/           独立 React 协作界面及 Braid CLI 桥，不进入参赛包
-harness/                 共用技能材料与工具依赖声明
-submission/              Linux 公共交付和资源构建
-scripts/                 打包、运行支持与模型网关
+consoles/                Braid 协作与 Lab 运行两个界面，各自构建和消费
+materials/               共用技能、工具依赖和跨 variant 模型配方
+tooling/scripts/         宿主装配、打包、运行支持与模型网关
+tooling/linux/           Linux 公共交付、资源构建和恢复支持
 lab/                     通用实验执行与 OTLP；ARC 接入；可选过程分析
 sources/                 本仓库统一跟踪的 Braid/SVC 源码，保留各自组件边界
 third_party/             外部评测器和历史依赖，Git 忽略
 experiments/             实验配方与归档定义，不是 Harness 的全局配置
 tasks/                   当前问题、设计、授权、计划与恢复点
-reports/                 带条件和证据入口的历史结论
-runs/                    原始运行产物，Git 忽略
+runs/                    执行与调查证据；原件和产物默认 Git 忽略
+  reports/               受版本管理的历史结论与索引
 ```
 
 Harness 基线从 `pi-braid-i13` 进入，I14 的共同基线与职责对照独立维护；I13 成果与恢复来源、I14 改进与实验范围分别归对应 packet。I10–I12 实现与冻结证据保留原身份；源码用途见 [Variant 索引](variants/README.md)，当前授权与接续入口见 [文档入口](docs/index.md)。
@@ -32,7 +31,7 @@ Harness 基线从 `pi-braid-i13` 进入，I14 的共同基线与职责对照独�
 | 修改 Harness、交付或实验接入边界 | [技术说明](docs/product-tdd/index.md)，再按 [CONTRIBUTING](CONTRIBUTING.md) 定位实现 |
 | 准备工具、修改角色或技能 | [CONTRIBUTING](CONTRIBUTING.md) |
 | 运行、诊断或恢复一次实验 | [运行说明](docs/deployment/index.md)，先辨别记录生产者 |
-| 接续工作或找历史证据 | [工作主题](docs/work-index.md)、[报告索引](reports/README.md)，状态以对应 packet 为准 |
+| 接续工作或找历史证据 | [工作主题](docs/work-index.md)、[报告索引](runs/reports/README.md)，状态以对应 packet 为准 |
 
 ## 协作与授权
 
@@ -68,7 +67,6 @@ Harness 基线从 `pi-braid-i13` 进入，I14 的共同基线与职责对照独�
 
 以可采用的结果划分委派，在 packet 保存负责人、决定、授权及证据入口。同一负责人持续完成必要调查、共享修复、实际操作和验证；局部失败由其处理。后续消息传递会改变执行的新信息，相关更新合并发送；真正更换负责人时才完整交接进度和在途操作。
 
-安排复杂委派、跨会话协调或实验恢复时，按需阅读 [Agent 委派指南](docs/agent-guides/delegation.md)，其中说明权限、依赖交付、责任移交和结果采用。
 
 ## 工作知识与反馈
 

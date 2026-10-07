@@ -1,6 +1,6 @@
 # Sheet Issue #3 / PR #8：契约传递与实施链审查
 
-截至 `coverage.json` 快照。只读审查；未改源码、应用或运行状态，未运行测试。`agents/run-analysis.md` 已读。本人依总账选中并按时间、逐条读完 `views_unique/S01–S39` **39 源、2545 原生 JSONL 行**，包括无头续段、子代理、推理、工具入参与反馈；别名到原文件与逐源范围见 `views_unique/index.json`、`read-ranges.json`。`S40–S49` **10 源、527 行**归主审 `cells/root/a-tail*` 与 base 子审 `cells/base/a-tail*` 独立读取并合账，本 cell 不冒称自己读过。显示层精确重复内容以 `views_unique/duplicate-lines.json` 指回首现原文；阅读工具输出截断已分块补读。原生会话本身以 `head`/`tail` 管道裁过的工具反馈仍是原生证据缺口，不能当完整命令结果。
+截至 `coverage.json` 快照。只读审查；未改源码、应用或运行状态，未运行测试。当时的运行分析说明（已删除） 已读。本人依总账选中并按时间、逐条读完 `views_unique/S01–S39` **39 源、2545 原生 JSONL 行**，包括无头续段、子代理、推理、工具入参与反馈；别名到原文件与逐源范围见 `views_unique/index.json`、`read-ranges.json`。`S40–S49` **10 源、527 行**归主审 `cells/root/a-tail*` 与 base 子审 `cells/base/a-tail*` 独立读取并合账，本 cell 不冒称自己读过。显示层精确重复内容以 `views_unique/duplicate-lines.json` 指回首现原文；阅读工具输出截断已分块补读。原生会话本身以 `head`/`tail` 管道裁过的工具反馈仍是原生证据缺口，不能当完整命令结果。
 
 下文 `S24:L19` 等均指上述逐行视图的**原生 JSONL 行号**。SQLite 为 `evidence/braid.sqlite3`，按 `local_comments.comment_id`、`local_comment_delivery(comment_id,recipient_login)`、关联 `events` / `wake_batch_events` / `turns` / `context_resets` 核实。评论回执的 delivered/consumed 只代表投递/队列生命周期，语义消费另由原生 user 输入、工具读取、决定与代码后果证明。
 

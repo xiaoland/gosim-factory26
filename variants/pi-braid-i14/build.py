@@ -4,7 +4,7 @@ from pathlib import Path
 import sys
 HERE=Path(__file__).resolve().parent
 sys.path.insert(0,str(HERE.parents[1]))
-from scripts.package_agent import package
+from tooling.scripts.package_agent import package
 
 def main():
     parser=argparse.ArgumentParser(description=__doc__)

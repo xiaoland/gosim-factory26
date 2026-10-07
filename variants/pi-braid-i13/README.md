@@ -1,6 +1,6 @@
 # I13 Harness 开发入口
 
-本页保留 I13 独立实现的源码定位及原入口方法；旧冻结包沿自身材料解释。新 I14 不采用下面直接 main 的入口，使用[公共源码装配](../../scripts/README.md#i14-源码装配)。下方操作还须核对所用 support 与 runtime 仍满足该历史入口；不能据此跳过新服务 context 或宣称取得新恢复能力。
+本页保留 I13 独立实现的源码定位及原入口方法；旧冻结包沿自身材料解释。新 I14 不采用下面直接 main 的入口，使用[公共源码装配](../../tooling/scripts/README.md#i14-源码装配)。下方操作还须核对所用 support 与 runtime 仍满足该历史入口；不能据此跳过新服务 context 或宣称取得新恢复能力。
 
 本目录持有 I13 的生成流程和原生材料；I14 与其它 variant 独立维护自己的实现。本文说明工作树的修改关系，旧冻结包按包内材料解释。
 
@@ -20,13 +20,13 @@
 
 I13内部角色默认使用独立历史（`defaultContext:fresh`），以本次委派和按需读取取得背景；`inheritProjectContext:false`与`inheritSkills:false`关闭自动继承。角色保留自己的技能发现入口，模型按需读取独立文件。所有Agent Skill的SKILL.md及references正文均不得拼入system、profile、role或task prompt，发现信息只含名称、description和路径；这条约定同时适用于主会话与子代理。历史冻结包保留原身份，不能据当前文档推断其输入已改变。
 
-[pi-braid-i13](../../variants/pi-braid-i13/)的角色description帮助调用方选择有委派价值的工作，正文说明用途；不声明角色工具白名单。`settings.json`选择默认基础工具，原生扩展提供委派、联络、等待及后台执行能力。`run.py`只替换角色的技能和扩展路径，不追加父profile、运行条件或方法正文；以`PI_SUBAGENT_MAX_DEPTH=3`限制子层深度。完整工具能力不代替委派的目标与修改范围。原生接口介绍工具使用，技能提供按需方法，不在角色中重复维护。
+[pi-braid-i13](.)的角色description帮助调用方选择有委派价值的工作，正文说明用途；不声明角色工具白名单。`settings.json`选择默认基础工具，原生扩展提供委派、联络、等待及后台执行能力。`run.py`只替换角色的技能和扩展路径，不追加父profile、运行条件或方法正文；以`PI_SUBAGENT_MAX_DEPTH=3`限制子层深度。完整工具能力不代替委派的目标与修改范围。原生接口介绍工具使用，技能提供按需方法，不在角色中重复维护。
 
 ## 工具与技能接线
 
-`tools/mcporter.json` 仅保留 Handsontable Docs，`run.py` 设置 `MCPORTER_CONFIG`。Context7 与 Exa 使用 Pi 原生扩展，默认供主成员、explorer 和 executor 使用，其它内部角色不默认加载。pi-fff 使用 `tools-only`，覆盖主成员和内部角色，并保留原生 find/grep；不启用可选 multi-grep。精确版本归 [npm lock](../../harness/npm/package-lock.json)，不在本页另存版本表。
+`tools/mcporter.json` 仅保留 Handsontable Docs，`run.py` 设置 `MCPORTER_CONFIG`。Context7 与 Exa 使用 Pi 原生扩展，默认供主成员、explorer 和 executor 使用，其它内部角色不默认加载。pi-fff 使用 `tools-only`，覆盖主成员和内部角色，并保留原生 find/grep；不启用可选 multi-grep。精确版本归 [npm lock](../../materials/npm/package-lock.json)，不在本页另存版本表。
 
-`build.py` 选择四项 SVC 方法（documentation、task-packet、sub-agents、verification）及本目录需要的工具技能。独立技能来源和分发规则见 [Harness 材料](../../harness/README.md)，是否启用仍由 `run.py:native_files` 和每个角色的 skills/skillPath 决定。
+`build.py` 选择四项 SVC 方法（documentation、task-packet、sub-agents、verification）及本目录需要的工具技能。独立技能来源和分发规则见 [Harness 材料](../../materials/README.md)，是否启用仍由 `run.py:native_files` 和每个角色的 skills/skillPath 决定。
 
 打包可显式传 `--tool-env`，把 Context7/Exa 凭据写入非 Git 制品的 `.private/tool-env.json`。输入按 dotenv 赋值读取，不执行 shell、不读取个人配置；运行环境同名变量覆盖包内值，主/子进程继承同一环境。含此目录的制品按私有材料保存。
 
@@ -36,11 +36,11 @@ I13内部角色默认使用独立历史（`defaultContext:fresh`），以本次�
 `REQUIREMENTS` 指向本次允许的输入目录。I13 校验目录和实际读取错误，不要求 `requirements.yaml` 作为生成硬门槛；ARC 材料解释由独立技能承担，根 Issue 提供输入入口。历史 variant 的输入要求以其入口为准。
 
 ```sh
-RUNTIME=$(python3 scripts/runtime.py path)
+RUNTIME=$(python3 tooling/scripts/runtime.py path)
 python3 variants/pi-braid-i13/main.py "$REQUIREMENTS" \
   --output-dir runs/dev-i13 --runtime "$RUNTIME" \
   --braid sources/braid/target/debug/braid \
-  --skills-root harness/skills \
+  --skills-root materials/skills \
   --base-url http://127.0.0.1:9/v1 --prepare-only
 ```
 

@@ -2,7 +2,7 @@
 
 当前源码不再使用内存或 PSI 压力控制启动、claim、输入发送或 run 接续。2026-10-05 用户授权删除共享资源门控；旧冻结包仍保留其原行为，新运行与恢复必须使用记录了新源码和二进制身份的制品。执行环境实际的内存、swap、pids限额和按 Braid session 的模型使用约束继续生效，取值以该run冻结配置及内核观察为准，不从历史run推导。删除软件门控不能保证单个工具命令不会触发 OOM。
 
-`scripts/runtime_resources.py` 现在登记原生执行所有权、实施明确停止 fence，并提供 run-owner 的只读 cgroup 观察（memory 与 pids 的 current/max/events）及有界 `memory.reclaim` 请求。顶层 Pi、foreground/async 子 Agent 和 Bash 作业经过同一 launcher；它取得自己的进程组，保存 execution/start UUID、PID、boot ID、启动时刻、PGID 和父 start ID，再以同一 PID exec 实际程序。登记失败、身份冲突或已停止的 execution 不启动 payload，并保留具体错误。资源观察不参与启动准入；旧 reservation、recovery budget 和 resource-failed 标记不再参与决定，历史文件不删除。
+`tooling/scripts/runtime_resources.py` 现在登记原生执行所有权、实施明确停止 fence，并提供 run-owner 的只读 cgroup 观察（memory 与 pids 的 current/max/events）及有界 `memory.reclaim` 请求。顶层 Pi、foreground/async 子 Agent 和 Bash 作业经过同一 launcher；它取得自己的进程组，保存 execution/start UUID、PID、boot ID、启动时刻、PGID 和父 start ID，再以同一 PID exec 实际程序。登记失败、身份冲突或已停止的 execution 不启动 payload，并保留具体错误。资源观察不参与启动准入；旧 reservation、recovery budget 和 resource-failed 标记不再参与决定，历史文件不删除。
 
 登记与停止使用同一短期文件锁，锁外执行命令、等待或发送信号。锁文件沿用 `admission.lock` 名称以兼容既有停止入口；该名称不表示仍有资源准入。Node 的 `spawnManaged` 立即返回 ChildProcess，由调用方接 stdout、error、close；`waitManagedStartup` 异步等待 started 回执。等待仍有启动期限，但不再等待压力降低、调用 reclaim 或重放被资源拒绝的启动。
 

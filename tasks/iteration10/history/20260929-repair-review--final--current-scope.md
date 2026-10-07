@@ -28,7 +28,7 @@
 | M02 | 检查边界原则缺直观组织 | 快反馈与产品证据需互补，层数和比例不应变成义务 | svc-verification/references/evidence-design.md检查金字塔，沿用保存设置案例 |
 | M03 | 调查、设计、委派、packet原则抽象 | 缺可消费案例是表达问题，不自动等于旧运行根因 | ../../cells/svc-method-views.md列七技能取舍；正文案例、流程图和表格 |
 | M04 | packet有计划结构，但制定计划方法分散偏薄 | 制定执行路线与保存计划是不同职责 | svc-implementation/references/planning.md；旧workflow迁移，skill元数据/入口；task-packet导航/模板提示 |
-| M05 | 审查成本高、终态回溯可能漏掉过程损耗 | 覆盖与因果不同，重复渲染/读回与层次分工可改 | agents/run-analysis.md：结果与全过程两路径，局部Luna、跨链Sol/Astra；单一覆盖账本与来源 |
+| M05 | 审查成本高、终态回溯可能漏掉过程损耗 | 覆盖与因果不同，重复渲染/读回与层次分工可改 | 当时的运行分析说明（已删除）：结果与全过程两路径，局部Luna、跨链Sol/Astra；单一覆盖账本与来源 |
 
 ## 判断与交付
 

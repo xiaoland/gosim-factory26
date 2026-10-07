@@ -1,3 +1,5 @@
+> 此文保存当时的监控角色设计；开发指南已删除，不作为当前运行方法。
+
 # 低唤醒成本的实验监控
 
 用户明确要求监控 Agent 使用 6-luna medium/high，并指出每 60 秒返回模型等待脚本是问题；授权将可复用提示词与模型配置沉淀到项目。
@@ -8,7 +10,7 @@
 
 ## 当前实现
 
-`agents/run-monitor.md` 是开发侧委派入口，frontmatter 直接映射 spawn_agent 的 model、reasoning_effort、agent_type 和 fork_turns。
+当时的监控说明（已删除） 是开发侧委派入口，frontmatter 直接映射 spawn_agent 的 model、reasoning_effort、agent_type 和 fork_turns。
 默认 gpt-6-luna/medium；需要复杂故障解释时可选 high，逐 run 分析仍另行委派。
 主 Agent 读取该文件并加入精确主机、run 目录、等待命令及结果消费者；不增加角色配置解析器。
 

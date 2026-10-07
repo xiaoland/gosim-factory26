@@ -438,7 +438,7 @@ def _assemble(directory, attempt, deployment):
         from .assembly import fresh
         return fresh(directory, attempt, deployment)
     prepared = directory / 'inputs' / 'prepared'
-    from submission.exp_checkpoint import validate, inventory
+    from tooling.linux.exp_checkpoint import validate, inventory
     from .artifacts import copy_file
     verified_assets = {}
     validation = validate(prepared, attempt['artifact_store'], _verified_assets=verified_assets,
@@ -460,7 +460,7 @@ def _assemble(directory, attempt, deployment):
             raise Blocked('prepared Docker runtime is not the actual image/interpreter asset')
     if target['run_root'] != manifest['layout']['run_root']:
         raise Blocked('prepared producer does not support native logical-root migration')
-    from submission.exp_checkpoint import definition_mount_roots, resolve_definition_assets
+    from tooling.linux.exp_checkpoint import definition_mount_roots, resolve_definition_assets
     from .artifacts import contents, member_contents
     assets, asset_bindings = resolve_definition_assets(prepared, manifest, attempt['artifact_store'], verified_assets)
     asset_paths = dict(assets)
@@ -814,7 +814,7 @@ def _wall_deadline(binding, limits):
 
 def _ready_services(directory, attempt, binding, deadline, stop_requested, receipt=None):
     """The live service owner repairs one failed component without reopening entry."""
-    from scripts.agent_support import ResourceEvidence, process_identity as resource_process_identity
+    from tooling.scripts.agent_support import ResourceEvidence, process_identity as resource_process_identity
     objects = {'resource_evidence': None, 'collector': None}
     states = {'resource_evidence': {'status': 'pending'},
               'collector': {'status': 'pending' if attempt['job'].get('telemetry', {}).get('enabled', True) else 'disabled'}}
@@ -822,13 +822,13 @@ def _ready_services(directory, attempt, binding, deadline, stop_requested, recei
     def start(service):
         try:
             if service == 'resource_evidence':
-                from scripts.execution_bootstrap import resource as resource_service
+                from tooling.scripts.execution_bootstrap import resource as resource_service
                 evidence, states[service] = resource_service(directory, require_cgroup=attempt['job']['backend']['kind']=='docker')
                 objects[service]=evidence
             else:
                 if (directory / 'telemetry/binding.json').exists():
                     raise Blocked('failed collector has a published epoch; startup effect is unresolved and cannot be repeated')
-                from scripts.execution_bootstrap import collector as collector_service
+                from tooling.scripts.execution_bootstrap import collector as collector_service
                 objects[service], states[service] = collector_service(directory, attempt['attempt_id'], attempt['job']['limits']['telemetry_bytes'])
             return True
         except Exception as exc:
@@ -953,7 +953,7 @@ def worker(attempt_dir):
                 environment.update(collector.environment())
                 environment['FACTORY26_EXP_TELEMETRY_BINDING'] = json.dumps({'endpoint': collector.binding['receiver_endpoint'], 'token': collector.token, **{k: collector.binding[k] for k in ('attempt_id', 'stream_id', 'collector_epoch')}})
             services = {**service_states, 'telemetry': service_states['collector'], 'control': {'status': 'ready', 'inbox': str(directory / 'requests')}}
-            from scripts.execution_bootstrap import context as execution_context
+            from tooling.scripts.execution_bootstrap import context as execution_context
             environment=execution_context(read(directory/'assembly.json'), services, attempt['attempt_id'],
                 binding['incarnation_id'], directory/'execution-context.json', environment, job.get('environment',{}))
             atomic(directory / 'ready.json', record('runner-ready', attempt_id=attempt['attempt_id'], incarnation_id=binding['incarnation_id'],
@@ -1301,7 +1301,7 @@ def payload_worker(directory):
             environment.update(collector.environment())
             environment['FACTORY26_EXP_TELEMETRY_BINDING'] = json.dumps({'endpoint': collector.binding['receiver_endpoint'], 'token': collector.token,
                 **{k: collector.binding[k] for k in ('attempt_id', 'stream_id', 'collector_epoch')}})
-        from scripts.execution_bootstrap import context as execution_context
+        from tooling.scripts.execution_bootstrap import context as execution_context
         environment=execution_context(read(directory/'assembly.json'), services, attempt['attempt_id'],
             binding['incarnation_id'], directory/'execution-context.json', environment, job.get('environment',{}))
         with (directory / 'stdout.log').open('ab', buffering=0) as out, (directory / 'stderr.log').open('ab', buffering=0) as err:
@@ -1347,7 +1347,7 @@ def main():
         command_path = args.attempt_dir / 'entry-command.json'
         command = read(command_path if command_path.exists() else args.attempt_dir / 'execution.json')['command']
         if environment.get('FACTORY26_EXECUTION_CONTEXT'):
-            from scripts.execution_context import read as execution_context
+            from tooling.scripts.execution_context import read as execution_context
             context=execution_context(environment['FACTORY26_EXECUTION_CONTEXT'])
             holder=context['assembly']['state'].get('holder')
             if holder and holder['authority']['kind']=='local':

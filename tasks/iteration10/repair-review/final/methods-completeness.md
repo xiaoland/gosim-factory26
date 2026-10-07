@@ -14,7 +14,7 @@
 | pnpm/portless、Vitest/Playwright、组件/图标/UnoCSS、官方脚手架、SQLite/事务/初始化、同源API/schema、缓存与正式Node20/npm协议 | A06、A07 | 本轮逐项对`toolchain-proposal.md`与RUN_CONDITIONS；未发现被排除的两题新增建议、TS/Vue强制或预写应用。打包环境和正式应用实际兼容仍不是方法审查证明的事项。 |
 | agent-browser named close与结果包装、HyperFormula DetailedCellError纠错 | R26–R28、A10、A12 | 目录已承接；helper机制归运行时线，A12仍复用前轮官方类型出处核对，未把其扩大为整个领域技能已审。 |
 | documentation独立技能、检查金字塔、七技能案例、规划正文与模板导航 | M01–M04 | `cells/svc-method-views.md`登记项与前轮直接读取的实际材料一致；无遗漏的新第八技能。 |
-| 结果/全过程双路径、单一账本、有界阅读与模型分工 | M05 | `agents/run-analysis.md`及其复盘来源已完整读，采用/节省未证。 |
+| 结果/全过程双路径、单一账本、有界阅读与模型分工 | M05 | 当时的运行分析说明（已删除）及其复盘来源已完整读，采用/节省未证。 |
 | cells/writer-followup与audit-analytics | L02、L03 | 非方法新增实现，已有运行时承接；不能误算为本分支全核。 |
 
 ## 本次补核的装配支持面

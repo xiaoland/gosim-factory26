@@ -107,7 +107,7 @@ def start(run):
              if mode == 'official_evaluation' else target['model_config'])
     secret = None
     if mode == "self_funded":
-        from scripts.hackathon_gateway import read_assignments
+        from tooling.scripts.hackathon_gateway import read_assignments
         environment = read_assignments(target["credential_file"])
         secret = (environment.get(target['credential_env']) if target.get('credential_env') else
                   environment.get("FACTORY26_API_KEY") or environment.get("OPENAI_API_KEY"))
@@ -202,7 +202,7 @@ def _fact_path(relative):
 
 def _read_existing_facts(live_root, jsonl_members, *, created_at=None):
     """Run the existing native/provider readers on selected files only."""
-    from scripts.native_observation import observe as observe_native
+    from tooling.scripts.native_observation import observe as observe_native
     from .provider_usage import collect as collect_provider
 
     scopes = set()

@@ -6,14 +6,14 @@
 | --- | --- | --- |
 | 理解产品目标与协作模型 | [PRD](prd/index.md) | [Variant 实现索引](../variants/README.md)。 |
 | 理解跨组件责任与生命周期 | [技术说明](product-tdd/index.md) | [资源与原生执行约定](product-tdd/runtime-resources.md)。 |
-| 改代码、角色、技能或打包 | [开发入口](../CONTRIBUTING.md) | [Variant 本地说明](../variants/README.md)、[scripts](../scripts/README.md)、[harness](../harness/README.md)、[submission](../submission/README.md)。 |
-| 启动、控制、查询 run 或组织 Python stages | [Lab 入口](../lab/README.md) | [ARC 接入](../lab/arc_bench/README.md)、[Console](../braid-console/README.md)；旧冻结记录另走 [lab.exp](../lab/exp/README.md)。 |
+| 改代码、角色、技能或打包 | [开发入口](../CONTRIBUTING.md) | [Variant 本地说明](../variants/README.md)、[公共执行支持](../tooling/scripts/README.md)、[共享材料](../materials/README.md)、[Linux 支持](../tooling/linux/README.md)。 |
+| 启动、控制、查询 run 或组织 Python stages | [Lab 入口](../lab/README.md) | [ARC 接入](../lab/arc_bench/README.md)、[Console](../consoles/README.md)；旧冻结记录另走 [lab.exp](../lab/exp/README.md)。 |
 | 选择运行路径、恢复或定位失败 | [运行手册](deployment/index.md) | [本地 Runner](deployment/local-experiments.md)、[恢复](deployment/recovery.md)、[证据](deployment/evidence.md)。 |
-| 读取 Braid 对象、原生会话或遥测 | [Console 接入](deployment/console.md) | [Console 组件](../braid-console/README.md)、[Braid 诊断](deployment/braid-diagnostics.md)。 |
+| 读取 Braid 对象、原生会话或遥测 | [Console 接入](deployment/console.md) | [Console 组件](../consoles/README.md)、[Braid 诊断](deployment/braid-diagnostics.md)。 |
 | 确认平台规则、费用模式或通道 | [平台与制品](deployment/competition.md) | [提供商目录](deployment/model-providers.md)，留意具体来源与核对日期。 |
 | 找实验定义、运行名或旧配方 | [实验入口](../experiments/README.md) | [历史实验登记](../experiments/archive/README.md)。 |
 | 接续一个具体工作主题 | [工作主题索引](work-index.md) | packet 顶部的决定与证据入口，再查保存的 Lab status/monitor。 |
-| 查前序结论与原始输入 | [报告索引](../reports/README.md) | [最初输入](archive/initial-handoff.md)、[历史运行协议](deployment/history/README.md)。 |
+| 查前序结论与原始输入 | [报告索引](../runs/reports/README.md) | [最初输入](archive/initial-handoff.md)、[历史运行协议](deployment/history/README.md)。 |
 
 参数、模型和现场状态从实际源码、冻结制品或 producer 原件取得，导航不维护第二份配置。暂停、停止和选择检查点前读 [恢复门控](deployment/recovery.md#当前-checkpointprepare-与停止门控)，不从目录名、报告或旧计划推断当前授权。
 

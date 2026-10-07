@@ -11,4 +11,4 @@ E2E 在 I14 基线上增加独立冻结的 E2E 工具 runtime。普通入口仍�
 
 E2E 是额外工具材料，不是把 `agent-browser` 替换成新的通用运行入口；未准备有效 addon 时 `build.py` 会拒绝打包。源码核对：[`main.py`](main.py)、[`run.py`](run.py)、[`build.py`](build.py)、[`tools/build-e2e.py`](tools/build-e2e.py)。
 
-入口要求设施已装配的 context；源码操作见[公共源码入口](../../scripts/README.md#i14-源码装配)。技能与额外角色需求由 [materials.json](materials.json) 声明，controller/SDK/Hosted 交付与实际服务不由本 variant 另行实现。
+入口要求设施已装配的 context；源码操作见[公共源码入口](../../tooling/scripts/README.md#i14-源码装配)。技能与额外角色需求由 [materials.json](materials.json) 声明，controller/SDK/Hosted 交付与实际服务不由本 variant 另行实现。

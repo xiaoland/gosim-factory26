@@ -147,7 +147,7 @@ def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mappi
         if frozen_target.get("kind") == "hosted" and not frozen_target.get("model_config"):
             raise ValueError("Hosted evaluation needs an explicit frozen model channel")
         return updated, frozen_target, None
-    from scripts.hackathon_gateway import prepare_catalog, read_assignments
+    from tooling.scripts.hackathon_gateway import prepare_catalog, read_assignments
     route = Path(route_input).expanduser().resolve(strict=True)
     routes = json.loads(route.read_text())
     aliases = declaration.get('models', [])
@@ -156,7 +156,7 @@ def freeze_model_channel(run_path: Path, state: Mapping[str, Any], target: Mappi
         raise ValueError(f"model recipe lacks required aliases: {sorted(missing)}")
     routes = {alias: routes[alias] for alias in aliases} if aliases else routes
     destination = layout["inputs"] / "gateway-routes.json"
-    catalog, selected = prepare_catalog(_repo() / "harness/model-gateway.json", routes, aliases=aliases)
+    catalog, selected = prepare_catalog(_repo() / "materials/model-gateway.json", routes, aliases=aliases)
     for native, canonical in declaration.get('model_alias_map', {}).items():
         routes[native] = routes[canonical]
         catalog['model_list'].extend({**row, 'model_name': native}
@@ -270,7 +270,7 @@ def _assemble(run_path: Path) -> dict[str, Any]:
                             {'competition', 'official_evaluation'}),
         'model_recipe': updated.get('model_recipe'),
         'provider_env_names': sorted({entry['litellm_params'][field].removeprefix('os.environ/')
-            for entry in json.loads((_repo()/'harness/model-gateway.json').read_text())['model_list']
+            for entry in json.loads((_repo()/'materials/model-gateway.json').read_text())['model_list']
             for field in ('api_base', 'api_key')}) if route_input else [],
         'model_environment': {name: value for name, value in target.get('environment', {}).items()
             if name in {'OPENAI_BASE_URL', 'FACTORY26_BASE_URL', 'MODEL', 'VISUAL_MODEL',
@@ -301,7 +301,7 @@ def _assemble(run_path: Path) -> dict[str, Any]:
     if contract['competition'] and target['kind'] == 'hosted':
         target['submission_models'] = json.loads((variant_material / 'submission-models.json').read_text())
         updated['target_config'] = target
-    from submission.public_package import assemble as assemble_public
+    from tooling.linux.public_package import assemble as assemble_public
     assemble_public(
         variant_material, runtime, _repo(),
         output=package_path if target['kind'] == 'hosted' else None,
@@ -473,7 +473,7 @@ def _start(run_path: Path) -> dict[str, Any]:
 
 def _legacy_native_facts(run: Path):
     """Adapter for frozen programs that predate ``program/observe.py``."""
-    from scripts.legacy_native_observation import observe
+    from tooling.scripts.legacy_native_observation import observe
     return observe(run)
 
 

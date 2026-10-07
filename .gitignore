@@ -1,4 +1,6 @@
-runs/
+runs/*
+!runs/reports/
+!runs/reports/**
 third_party/
 .venv/
 .env
@@ -56,3 +58,6 @@ AGENTS.local.md
 /tasks/iteration11/braid-context-methodology/middle-chronology.txt
 /tasks/iteration11/run-audit/sheet/increment/braid.sqlite3
 /tasks/acceptance-integrity/source/official-billing/index-DCT-RiaL.js
+
+# Local Console PID and tunnel state.
+.runtime/

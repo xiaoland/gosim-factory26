@@ -10,7 +10,7 @@
 
 下面的构建与访问记录保留原部署身份，不替代当前接线。初始桥在生成容器内执行CLI，现已由独立访问容器取代。
 
-用户已要求重做前端并使用独立目录。当前实现位于 `braid-console/server.py` 与 `braid-console/web/`，前端为React/TypeScript/Vite、Ant Design与TanStack Query，Markdown在前端渲染。通用操作说明归 [Braid Console README](../../braid-console/README.md)。不另建Git仓库，不进入参赛包。
+用户已要求重做前端并使用独立目录。当前实现位于 `braid-console/server.py` 与 `braid-console/web/`，前端为React/TypeScript/Vite、Ant Design与TanStack Query，Markdown在前端渲染。通用操作说明归 [Braid Console README](../../consoles/README.md)。不另建Git仓库，不进入参赛包。
 CLI bridge已从旧服务切换到该目录；registry权限只取明确的writable，不绑定迭代名字。当前登记两个从零现场，旧摘剪不在当前页面中。下面第一版历史操作用来证明CLI与通知接线，不代表新前端或当前生成起点。
 
 生产构建通过，最新JS为 `index-C0GXS2id.js`。真实浏览器先在退役只读对象上确认Markdown、筛选、按需展开与无写控件，然后切至新运行，看到根Issue及有负责人、独立分支的PR #2。新现场HTTP两侧Issue/PR详情均返回200，浏览器显示可编辑、评论与回复入口。没有为了验证页面而修改新实验对象。

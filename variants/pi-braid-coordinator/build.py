@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 HERE=Path(__file__).resolve().parent
-sys.path.insert(0,str(HERE.parents[1]/'scripts'))
+sys.path.insert(0,str(HERE.parents[1]/'tooling/scripts'))
 from package_agent import assemble
 p=argparse.ArgumentParser(description=__doc__)
 p.add_argument('--stage',type=Path,required=True)

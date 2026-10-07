@@ -20,7 +20,7 @@ python3 experiments/hackathon-local/matrix.py \
 ```sh
 python3 -m lab run ../factory26-official-local/experiments/<id>/manifest.json \
   --runs-root ../factory26-official-local/experiments/<id>/runs
-python3 benchmarks/hackathon/report.py \
+python3 experiments/hackathon-local/suite/report.py \
   --runs-root ../factory26-official-local/experiments/<id>/runs \
   --output ../factory26-official-local/experiments/<id>/analysis/<report-id>
 ```
@@ -36,7 +36,7 @@ python3 benchmarks/hackathon/report.py \
 推荐以冻结实验选择报告：
 
 ```sh
-python3 benchmarks/hackathon/report.py \
+python3 experiments/hackathon-local/suite/report.py \
   --experiment <冻结实验目录或manifest.json> \
   --output <新的分析目录>
 ```

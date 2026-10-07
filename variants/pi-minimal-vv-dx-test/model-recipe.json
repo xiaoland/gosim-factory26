@@ -1,4 +1,4 @@
 {
-  "self_funded": "harness/model-recipes/self-funded.json",
+  "self_funded": "materials/model-recipes/self-funded.json",
   "models": ["glm-5.3-flash", "kimi-k2.7-code"]
 }

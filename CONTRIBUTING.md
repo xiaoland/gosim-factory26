@@ -9,11 +9,11 @@
 | 修改对象 | 源码入口 | 实际反馈来源 |
 | --- | --- | --- |
 | Harness 的指令、角色、协作或执行 | `variants/<name>/main.py`、`run.py`、`agents/` | 生成运行的原生配置、会话与应用，获授权的 bench 得分。 |
-| 原生工具或打包 | `scripts/runtime.py`、variant 的 `build.py`、`scripts/package_agent.py` | 实际安装、构建与提交过程的输出。 |
+| 原生工具或打包 | `tooling/scripts/runtime.py`、variant 的 `build.py`、`tooling/scripts/package_agent.py` | 实际安装、构建与提交过程的输出。 |
 | run 命令与 Python 策略 | `lab/__main__.py`、`run.py`、`automation.py` | 公开 CLI、实际 dispatch/control、保存 status 与结果；合同见 [Lab](lab/README.md)。 |
-| ARC 执行、路径与 restart | `lab/arc_bench/execution.py`、`run_layout.py`、`restart.py`、`scripts/harness_layout.py` | 实际 Docker/平台句柄、原生恢复与完整 data 回收，不以目录存在证明保存完成。 |
+| ARC 执行、路径与 restart | `lab/arc_bench/execution.py`、`run_layout.py`、`restart.py`、`tooling/scripts/harness_layout.py` | 实际 Docker/平台句柄、原生恢复与完整 data 回收，不以目录存在证明保存完成。 |
 | 状态与活动解释 | `variants/<name>/status.py`、run observer | 执行事实与脚本 activity 分开；原生来源、时间与缺项来自实际采集。 |
-| Collector、Backend 与 Console | `lab/otlp.py`、`backend.py`、`serve.py`、`braid-console/web` | 实际 OTLP 接收、持久查询及页面；历史现场写桥不进入新链路。 |
+| Collector、Backend 与 Console | `lab/otlp.py`、`backend.py`、`serve.py`、`consoles/lab/web`、`consoles/braid/web` | 实际 OTLP 接收、持久查询及页面；历史现场写桥不进入新链路。 |
 | 独立应用评测 | `lab/arc_bench/evaluate.py`、`package_arc_replay.py`、`arc_replay.py` | 不可变应用副本的 simulate/task/official 原件、费用与真实评分。 |
 | Pi 子代理观测 | variant 的 `extensions/` | 实际会话和原始观测记录。 |
 | Braid | `sources/braid` 自身说明和公开 local 接口 | 自身构建和实际 Harness 调用结果。 |
@@ -44,15 +44,15 @@
 
 ## 准备实际需要的依赖
 
-工具安装、开发 SVC、换机器和外部源码交接统一归 [scripts 本地说明](scripts/README.md#准备原生工具)。`make` 与 `make help` 只显示入口，`make tools` 才准备原生工具。机器绝对路径保存在可选的 `AGENTS.local.md`，共享文档不维护另一份机器环境。
+工具安装、开发 SVC、换机器和外部源码交接统一归 [公共工具说明](tooling/scripts/README.md#准备原生工具)。`make` 与 `make help` 只显示入口，`make tools` 才准备原生工具。机器绝对路径保存在可选的 `AGENTS.local.md`，共享文档不维护另一份机器环境。
 
 ## 直接验证源码
 
-I14 不启动模型的原生材料装配从[公共源码入口](scripts/README.md#i14-源码装配)开始；[I13 源码操作](variants/pi-braid-i13/README.md#直接验证源码)保留历史入口，不能用它推断新 context 能力。真实生成有模型费用，仍按对应实验范围执行。材料可读取、原生调用成功和完整生成收益是不同证据。
+I14 不启动模型的原生材料装配从[公共源码入口](tooling/scripts/README.md#i14-源码装配)开始；[I13 源码操作](variants/pi-braid-i13/README.md#直接验证源码)保留历史入口，不能用它推断新 context 能力。真实生成有模型费用，仍按对应实验范围执行。材料可读取、原生调用成功和完整生成收益是不同证据。
 
 ## 构建独立运行资源与制品
 
-统一使用 [runtime 与打包方法](scripts/README.md#构建独立运行资源与制品)；Linux 装配责任见 [submission](submission/README.md)，技能来源与分发边界见 [harness](harness/README.md)。纯指令变化重新装配材料，依赖变化才重建资源。
+统一使用 [runtime 与打包方法](tooling/scripts/README.md#构建独立运行资源与制品)；Linux 装配责任见 [Linux 支持](tooling/linux/README.md)，技能来源与分发边界见 [共享材料](materials/README.md)。纯指令变化重新装配材料，依赖变化才重建资源。
 
 ## 运行证据与收尾
 

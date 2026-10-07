@@ -120,8 +120,8 @@ def instrument_entry(agent, destination, *, file_telemetry=False):
         if attempt['job'].get('arc_contract'):
             core.atomic(destination / 'child-contract.json', {'operation': 'arc-local-generate',
                 'environment': attempt['job'].get('environment', {}), 'sdk': attempt['job']['arc_contract']['sdk']})
-            import scripts.agent_support
-            shutil.copy2(Path(scripts.agent_support.__file__), support / 'resource_support.py')
+            from tooling.scripts import agent_support
+            shutil.copy2(Path(agent_support.__file__), support / 'resource_support.py')
         core.atomic(support / 'collector-config.json', {'attempt_id': attempt['attempt_id'],
                     'cap_bytes': attempt['job']['limits']['telemetry_bytes']})
         (support / 'collector.py').write_text('''import json, signal, sys

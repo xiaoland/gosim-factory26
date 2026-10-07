@@ -390,7 +390,7 @@ def serve_run(run):
     token = secrets.token_urlsafe(24)
     support = Path(__file__).resolve().parent
     if not (support / "agent_support.py").is_file():
-        support = support.parent / "scripts"
+        support = support.parent / "tooling/scripts"
     sys.path.insert(0, str(support))
     from agent_support import ResourceEvidence, evidence_error, process_evidence
     evidence = None

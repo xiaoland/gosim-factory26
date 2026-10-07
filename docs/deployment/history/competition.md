@@ -75,5 +75,5 @@ traceability 没有显式记录时显示未建立关联，不能由 SDK 自报 p
 JSON 的凭据字段会脱敏，但原始日志仍可能包含 Agent 工具输出，继续由 Git 忽略。
 
 这些接口来自当时的网站公开前端，可能随平台更新；此前实际完成网站登录、上传、启动、Demo 单项评测和证据下载。
-云端环境与脚本实测见[并发与 API 报告](../../../reports/2026-09-20-playground-concurrency.md)，早期协议调查见[开发闭环调查](../../../reports/2026-09-20-development-loop.md)。
+云端环境与脚本实测见[并发与 API 报告](../../../runs/reports/2026-09-20-playground-concurrency.md)，早期协议调查见[开发闭环调查](../../../runs/reports/2026-09-20-development-loop.md)。
 Playground 与 Competition、本地评测具有不同身份，具体参赛包的成绩以其冻结身份和正式结果为准。

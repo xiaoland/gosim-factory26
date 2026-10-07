@@ -11,4 +11,4 @@
 | 旧 collector、watcher、GC 计划和模型事实 | [证据协议](evidence.md)。 |
 | 原生 Hackathon 四配置 | [原配置归档](../hackathon.md)。 |
 
-新 Lab 的定义、执行和制品合同维护在 [lab/exp](../../../lab/exp/README.md)；当前规则 PDF 和提交模式仍从 [平台手册](../competition.md#赛事规则与提交模式)进入，不把赛事来源当作退役能力。
+旧 experiment/job/attempt 的定义、执行和制品合同维护在 [lab.exp](../../../lab/exp/README.md)，只用于对应冻结执行器；当前 run 入口见 [Lab](../../../lab/README.md)。当前规则 PDF 和提交模式仍从 [平台手册](../competition.md#赛事规则与提交模式)进入，不把赛事来源当作退役能力。

@@ -95,7 +95,7 @@ def fresh(directory, attempt, deployment):
                'generation': (deployment.get('state_binding') or {}).get('generation', 0), 'mode': 'fresh'},
         entry={'mode': 'fresh', 'command': attempt['job']['command']}, workspace=str(workspace),
         proof={'inputs': 'retained-artifact-consumer-readback', 'definition_layout': layout})
-    from scripts.execution_context import validate_assembly
+    from tooling.scripts.execution_context import validate_assembly
     validate_assembly(value)
     atomic(directory / 'assembly.json', value)
     return workspace
@@ -149,7 +149,7 @@ def prepared(directory, attempt, deployment, value):
                'generation': (deployment.get('state_binding') or {}).get('generation', 0), 'mode': value.get('state_mode', 'snapshot-copy')},
         entry={'mode': 'resume', 'command': attempt['job']['command']},
         proof={'prepared': attempt['job']['prepared'], 'installation': 'content-and-native-readback'})
-    from scripts.execution_context import validate_assembly
+    from tooling.scripts.execution_context import validate_assembly
     validate_assembly(value)
     atomic(Path(directory) / 'assembly.json', value)
     return value

@@ -37,7 +37,7 @@ arc_bench_adapter 的两阶段生成判定 → raw 壳私有 entry-result.json
 
 ### BD-01：一次实验的选择反向约束 Harness 配置和打包
 
-[profiles.configuration](../../scripts/profiles.py) 第 152–162 行始终读取 `experiments/multi-agent-lite.json`，用其 tasks 验证任务，再取 deployment、benchmark URL/revision。[package_agent.package](../../scripts/package_agent.py) 第 112 行也走此路径，默认 task 为 keep；构建参赛 Agent 本来不需要选中某道题。[batch.execute](../../scripts/batch.py) 虽接受 manifest 参数，却仍调用读取固定 manifest 的 configuration，且硬编码 4 variants × 2 tasks、generation_workers ≤ 2。
+[profiles.configuration](../../scripts/profiles.py) 第 152–162 行始终读取 `experiments/multi-agent-lite.json`，用其 tasks 验证任务，再取 deployment、benchmark URL/revision。[package_agent.package](../../tooling/scripts/package_agent.py) 第 112 行也走此路径，默认 task 为 keep；构建参赛 Agent 本来不需要选中某道题。[batch.execute](../../scripts/batch.py) 虽接受 manifest 参数，却仍调用读取固定 manifest 的 configuration，且硬编码 4 variants × 2 tasks、generation_workers ≤ 2。
 
 内存复现：只把固定 manifest 返回的 tasks 改成 `['bookstack']`，默认 configuration 即报 `task not selected for this batch: keep`。因此调整某轮实验，会阻断共享配置乃至打包路径。固定批次脚本本身可以有固定范围；不合理的是其选择成为其他消费者的隐藏前提。
 
@@ -53,11 +53,11 @@ arc_bench_adapter 的两阶段生成判定 → raw 壳私有 entry-result.json
 
 ### BD-03：证据快照被同时用作过宽的构建依赖
 
-[sources.snapshot](../../scripts/sources.py) 第 18–26 行记录整个独立仓库的 tracked/untracked 非忽略文件；require_build 第 68 行比较整份 snapshot，相同源码、不同文档也拒绝运行。完整来源快照有证据价值，但不能据此认定每个文件都影响二进制。
+[sources.snapshot](../../tooling/scripts/sources.py) 第 18–26 行记录整个独立仓库的 tracked/untracked 非忽略文件；require_build 第 68 行比较整份 snapshot，相同源码、不同文档也拒绝运行。完整来源快照有证据价值，但不能据此认定每个文件都影响二进制。
 
 内存复现：记录与现状只有 `docs/notes.md` 的摘要不同，源码和 artifact 摘要相同，require_build 仍报 `braid source changed; run bootstrap before generation`。这里证明的是生成被阻断并要求 bootstrap；没有测量 Cargo 是否实际重新编译或耗时。
 
-另一处是 [profiles.resolve](../../scripts/profiles.py) 第 78–81、135–140 行把完整 npm lock 放入每个 Pi profile 的有效摘要；[native_profiles.runtime_cache](../../scripts/native_profiles.py) 第 19–24 行也用它选整套缓存。内存中只改 Codex lock 条目的 version，两个 Pi profile 的摘要和缓存路径均改变，Pi core_version 不变。共享锁本身可以合理，但能力身份、实际打包内容和缓存失效范围现在没有清楚区分。Pi 包构建后又删除 Codex，见 [submission/build.py](../../submission/build.py) 第 16–22 行。
+另一处是 [profiles.resolve](../../scripts/profiles.py) 第 78–81、135–140 行把完整 npm lock 放入每个 Pi profile 的有效摘要；[native_profiles.runtime_cache](../../scripts/native_profiles.py) 第 19–24 行也用它选整套缓存。内存中只改 Codex lock 条目的 version，两个 Pi profile 的摘要和缓存路径均改变，Pi core_version 不变。共享锁本身可以合理，但能力身份、实际打包内容和缓存失效范围现在没有清楚区分。Pi 包构建后又删除 Codex，见 [submission/build.py](../../tooling/linux/build.py) 第 16–22 行。
 
 候选纠正：区分来源证据、真实构建输入和运行制品身份；首先缩小明显无关的失效范围。是否拆 npm 包或缓存要依据安装成本与实际消费关系决定，不预先建设通用构建图。
 
@@ -71,7 +71,7 @@ SVC 也存在两种合同：variant 声明 source_revision，resolve 只检验�
 
 ### BD-05：运行时基础依赖要经过完整产品和历史制品才能取得
 
-[package_raw_core](../../scripts/package_raw_core.py) 第 15–29、41–43 行要求已存在的 Factory ZIP，复制其全部 runtime；当前 package_agent 又依赖 profile resolver，而 resolver 第 88 行只接受 Pi。由此 raw Codex 有消费历史 ZIP 的路径，却没有通过当前受维护打包入口从声明源码重建该来源的闭合路径。不能从这一事实推断历史 ZIP 已不可用，也不否认手工 Docker 构建的可能性。
+[package_raw_core](../../tooling/scripts/package_raw_core.py) 第 15–29、41–43 行要求已存在的 Factory ZIP，复制其全部 runtime；当前 package_agent 又依赖 profile resolver，而 resolver 第 88 行只接受 Pi。由此 raw Codex 有消费历史 ZIP 的路径，却没有通过当前受维护打包入口从声明源码重建该来源的闭合路径。不能从这一事实推断历史 ZIP 已不可用，也不否认手工 Docker 构建的可能性。
 
 开发环境也有未闭合的取得边：开发 SVC `.venv/bin/svc` 的准备未由项目 bootstrap 承担；sources 被父仓库忽略；当前 bootstrap 只会补 Braid，而解析所需 SVC Corpus 要事先存在。Braid 缺失时 clone main，尚无相应固定来源选择。不能用本机目录已存在来证明重建路径完整。
 

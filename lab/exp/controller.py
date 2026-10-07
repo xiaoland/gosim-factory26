@@ -36,9 +36,12 @@ def _source_files(role='runner'):
     if role=='controller':
         scripts += ('runtime.py','package_agent.py','braid_runtime.py','core.py','model_budget.mjs',
                     'hackathon_gateway.py','hackathon_gateway_compat.py','responses_compat.py','model_gateway_service.py')
-        files += [ROOT/'__main__.py',ROOT/'arc_bench/score_evidence.py',ROOT/'arc_bench/hosted_monitor.py',ROOT/'arc_bench/provider_liveness.py',ROOT/'requirements.txt',ROOT.parent/'harness/model-gateway.json']
-    files += [ROOT.parent/'scripts'/name for name in scripts]
-    files += [ROOT.parent/'submission'/name for name in ('exp_checkpoint.py','recover_completed.py')]
+        files += [ROOT/'__main__.py',ROOT/'arc_bench/score_evidence.py',ROOT/'arc_bench/hosted_monitor.py',ROOT/'arc_bench/provider_liveness.py',ROOT/'requirements.txt',ROOT.parent/'materials/model-gateway.json']
+    files += [ROOT.parent/'tooling/__init__.py', ROOT.parent/'tooling/linux/__init__.py']
+    if role == 'controller':
+        files += [ROOT.parent/'tooling/linux/browser_runtime.py']
+    files += [ROOT.parent/'tooling/scripts'/name for name in scripts]
+    files += [ROOT.parent/'tooling/linux'/name for name in ('exp_checkpoint.py','recover_completed.py')]
     return list(dict.fromkeys(files))
 
 
@@ -50,10 +53,6 @@ def _source(destination, role='runner'):
         target = destination / source.relative_to(ROOT.parent)
         target.parent.mkdir(parents=True, exist_ok=True)
         shutil.copy2(source, target)
-    submission = destination / 'submission'
-    submission.mkdir(exist_ok=True)
-    (submission / '__init__.py').write_text('')
-    shutil.copy2(ROOT.parent / 'submission/exp_checkpoint.py', submission / 'exp_checkpoint.py')
     return files
 
 
@@ -750,7 +749,7 @@ def _launch_gate(attempt_dir, attempt):
     prepared = read(manifest_path)
     if prepared.get('kind') != 'factory26.harness.prepared' or prepared.get('schema_version') != 3:
         raise Blocked('prepared artifact needs the public Harness prepared contract')
-    from submission.exp_checkpoint import validate
+    from tooling.linux.exp_checkpoint import validate
     validate(prepared_path, store)
     stop_ref = job.get('stop_evidence')
     if not stop_ref:
@@ -1345,7 +1344,7 @@ def _sdk_checkpoint(path, attempt, output, request_id, source_resource=None):
 from pathlib import Path
 from lab.exp import artifacts
 from lab.exp.core import read,atomic,record,member
-from submission.exp_checkpoint import checkpoint
+from tooling.linux.exp_checkpoint import checkpoint
 v=json.loads(sys.argv[1]); snapshot=v['snapshot']; source_binding=v['source']
 root=artifacts.allocate_scratch('/assets','sdk-checkpoints/'+v['resource_id']+'/'+v['request_id'])
 stage=Path(root); output=stage/'metadata'
@@ -1473,7 +1472,7 @@ def checkpoint(directory, attempt_id, output, *, request_id=None, source_resourc
 from pathlib import Path
 from lab.exp.core import atomic,read
 from lab.exp import artifacts
-from submission.exp_checkpoint import checkpoint
+from tooling.linux.exp_checkpoint import checkpoint
 request=json.loads(sys.argv[1])
 root=artifacts.allocate_scratch('/assets','captures/'+request['attempt_id']+'/checkpoint-requests/'+request['request_id'])
 metadata=Path(request['payload'])
@@ -1562,7 +1561,7 @@ print(json.dumps({'snapshot':snapshot,'metadata_root':str(output),'files':{p.rel
         source = terminal.resolve_workspace(snapshot, attempt)
         if relative != '.':
             source = source / relative
-        from submission.exp_checkpoint import checkpoint as produce_checkpoint
+        from tooling.linux.exp_checkpoint import checkpoint as produce_checkpoint
         result = produce_checkpoint(source, output, stage / 'source-identity.json', stage / 'stop-evidence.json',
             acquisition=closure, snapshot={**snapshot, 'member': relative})
         atomic(Path(output) / 'managed-source.json', record('managed-checkpoint-source', holder={**binding, 'source_attempt_directory': str(path)}, workspace_snapshot=snapshot))

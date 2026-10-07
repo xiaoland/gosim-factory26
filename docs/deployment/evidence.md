@@ -2,7 +2,7 @@
 
 查询先按记录生产者选择入口：当前 experiment 使用 Lab projection/status，旧 Factory 使用保存的 `.factory26`/legacy reader，Hosted 使用 journal 原件；Braid OTLP 使用 [Braid 诊断](braid-diagnostics.md)。本页后半保留旧格式的只读查询，不把历史命令当作新运行入口。
 
-本文帮助接续者从已有记录定位状态、原始错误和过程事实。它不启动模型或重建实验。外部命令及控制 CLI 契约归 [Lab](../../lab/README.md)，Braid 三信号与会话重建归[诊断手册](braid-diagnostics.md)，语义分析步骤归 [运行分析 SOP](../../agents/run-analysis.md)。
+本文帮助接续者从已有记录定位状态、原始错误和过程事实。它不启动模型或重建实验。外部命令及控制 CLI 契约归 [Lab](../../lab/README.md)，Braid 三信号与会话重建归[诊断手册](braid-diagnostics.md)。
 
 ## 按记录生产者查询
 
@@ -82,7 +82,7 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 
 ## 等待、反馈与交接
 
-新实验由冻结 controller/runner/Hosted adapter 采集并保存终态；监控消费者读取已保存的 `lab monitor EXPERIMENT`，不另起采集循环。程序等待使用 `python3 -m lab wait EXPERIMENT --json --timeout 60`，工具调用的续等留在程序编排中；停止等待不停止执行。默认消费者与告警处理归 [监控入口](../../agents/run-monitor.md)和[恢复门控](../../lab/exp/execution.md#查询保存事实)。
+新实验由冻结 controller/runner/Hosted adapter 采集并保存终态；监控消费者读取已保存的 `lab monitor EXPERIMENT`，不另起采集循环。程序等待使用 `python3 -m lab wait EXPERIMENT --json --timeout 60`，工具调用的续等留在程序编排中；停止等待不停止执行。告警处理归[恢复门控](../../lab/exp/execution.md#查询保存事实)。
 
 新 schema 3 Hosted attempt 在显式 start 已受理同一 run 后，附着一个只读 single-attempt observer。它仅按既定三分钟/八分钟 cadence 保存身份 GET、provider 连续观察及有限终态证据，不提交 snapshot、不创建 run、不 start/retry 或挑选评价对象。`observer.json` 保存所属 attempt/incarnation 与进程出生身份，`observer-launch-error.json` 和 `observer-error.json` 保留辅助失败；这些错误不改变远端执行结果。终态证据最多作三次有界收尾，无法完成时明确保存 incomplete。
 

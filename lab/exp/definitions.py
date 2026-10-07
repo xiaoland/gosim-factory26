@@ -106,7 +106,7 @@ def resolve(value, store, consumer, *, retentions=None, roles=None):
     result = []
     for role in selected:
         asset = assets[role['asset']]
-        from scripts.execution_context import member_join
+        from tooling.scripts.execution_context import member_join
         relative = member_join(asset.get('member', '.'), role.get('member', '.'))
         artifacts.member_contents(store, asset['reference'], relative)
         result.append({'role': role['role'], 'reference': asset['reference'], 'member': relative,

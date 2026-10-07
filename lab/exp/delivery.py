@@ -21,7 +21,7 @@ def project(definition, store, cache, consumer, *, zipped=False, private_inputs=
             payload = artifacts.resolve(store, directory_ref, consumer=consumer)
             output = cache / 'deliveries' / domain / key
             output.mkdir(parents=True, exist_ok=True)
-            from scripts.package_agent import write_zip
+            from tooling.scripts.package_agent import write_zip
             source = output / 'agent.zip'
             if source.exists():
                 raise ValueError('unfinished ZIP delivery is retained; publication requires explicit recovery')
@@ -49,7 +49,7 @@ def project(definition, store, cache, consumer, *, zipped=False, private_inputs=
 
 
 def _declared_roles(definition):
-    from scripts.execution_context import member_join
+    from tooling.scripts.execution_context import member_join
     assets={row['name']:row for row in definitions.validate(definition)['assets']}
     return [{'role':row['role'],'reference':assets[row['asset']]['reference'],
              'member':member_join(assets[row['asset']].get('member','.'),row.get('member','.'))}

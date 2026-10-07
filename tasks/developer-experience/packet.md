@@ -3,7 +3,7 @@
 ## 当前任务与授权
 
 2026-09-24 用户授权沉淀可复用监控 Agent，明确模型使用 6-luna medium/high，并消除每分钟返回模型续等。
-已新增 [监控角色与程序等待](monitor.md)：`agents/run-monitor.md` 保存提示词和 gpt-6-luna/medium 配置，`scripts/wait_local_runs.py` 持有三分钟状态检查，工具续等留在单次程序编排内。
+已新增 [监控角色与程序等待](monitor.md)：当时的监控说明（已删除） 保存提示词和 gpt-6-luna/medium 配置，`scripts/wait_local_runs.py` 持有三分钟状态检查，工具续等留在单次程序编排内。
 已替换本轮实验的旧 sol/high 监控 Agent；没有停止、重跑或修改实验。
 
 第一轮的 variant 独立实现、源码开发与冻结制品分离、工具资源独立准备已经完成落地。

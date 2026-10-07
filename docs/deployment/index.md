@@ -6,11 +6,11 @@
 
 本文是操作入口。产品规则归 [PRD](../prd/index.md)，跨组件职责和终态语义归[技术说明](../product-tdd/index.md)，工具安装和源码修改归 [CONTRIBUTING](../../CONTRIBUTING.md)。参数及版本从实际源码、冻结清单和命令帮助读取；历史观测不代表此刻的机器或平台状态。
 
-位置边界按执行方式区分：开发控制可以在 Mac 上进行；使用官方 ARC 本地 Runner 的生成按 recipe 显式声明并核对 Docker endpoint、镜像、容量和执行环境；其它 Lab local backend 以其 recipe/backend 合同为准；Hosted 生成使用平台身份、提交和监控合同。Mac 上的控制进程不能推断本地 runner 的存在或可用授权，WSL/sfp7 等具体宿主以当前冻结配置和只读读回为准。
+位置边界按实际执行合同区分：当前 run 从 target 配置及冻结输入核对 Docker endpoint、镜像、宿主和模型通道；Hosted 使用其平台身份、提交和监控合同。旧 lab.exp 的 recipe/backend 只解释对应冻结执行。Mac 控制进程不能证明 runner 存在或可用，WSL/sfp7 等具体宿主以本次执行身份和只读读回为准。
 
 | 当前要完成的操作 | 操作说明 | 先确认什么 |
 | --- | --- | --- |
-| 使用已选模型配方 | [跨 variant 模型配方](../../harness/model-recipes/README.md) | 角色模型与有序路由、实际 catalog 和凭据来源；不能由供应商目录或 catalog 默认推断。 |
+| 使用已选模型配方 | [跨 variant 模型配方](../../materials/model-recipes/README.md) | 角色模型与有序路由、实际 catalog 和凭据来源；不能由供应商目录或 catalog 默认推断。 |
 | 比较候选通道、价格或接入事实 | [模型提供商目录](model-providers.md) | 精确请求 ID、币种、缓存价格、套餐条件与核对日期；账户事实不能代替本次选路。 |
 | 确认练习/正式模式、冻结 Harness，向官网提交或收集结果 | [平台与制品](competition.md) | [赛事须知与模式](competition.md#赛事规则与提交模式)、variant、ZIP SHA256、模型通道和本次授权。 |
 | 用官方本地 Runner 独立生成，再对应用评分 | [本地实验](local-experiments.md) | 本次 Docker endpoint、冻结需求/测试/镜像、workspace 回收及两阶段边界。 |

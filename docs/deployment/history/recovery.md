@@ -44,7 +44,7 @@ python3 -m lab.arc_bench.recovery --complete-prepared-transport \
 官网工作区用一条命令导出并准备恢复包：
 
 ```sh
-python3 scripts/package_completed_recovery.py \
+python3 tooling/scripts/package_completed_recovery.py \
   --journal runs/<实验>/<官网journal> \
   --output runs/<实验>/recovery/recovery.zip
 ```
@@ -88,7 +88,7 @@ python3 /workspace/submission/agent/main.py /workspace/template/requirements \
 I13 本轮已授权的执行模型变更用显式选项 `--continue-generation --replace-braid-deepseek-with-glm`，不能通过替换普通冻结材料暗中应用。仅支持 `pi-braid-i13` 和 `pi-braid-i13-glm-root`：旧 `pi-deepseek-fast` 必须是 `factory26/deepseek-v4-flash`，同一 request 的目标 `pi-glm-fast` 必须是 `factory26/glm-5.3-flash`。例如对已保全本地快照：
 
 ```sh
-python3 scripts/package_completed_recovery.py \
+python3 tooling/scripts/package_completed_recovery.py \
   --source-run-id <来源执行ID> --base-package <该variant原冻结ZIP> \
   --workspace <一致快照ZIP> --workspace-sha256 <原ZIP-SHA256> \
   --braid <本次Linux二进制> --braid-source <本次源码tar.gz> \

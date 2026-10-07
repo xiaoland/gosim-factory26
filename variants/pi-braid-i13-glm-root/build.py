@@ -4,7 +4,7 @@ from pathlib import Path
 import subprocess
 import sys
 HERE=Path(__file__).resolve().parent
-sys.path.insert(0,str(HERE.parents[1]/'scripts'))
+sys.path.insert(0,str(HERE.parents[1]/'tooling/scripts'))
 from package_agent import assemble, write_tool_credentials
 from agent_support import copy_skill
 p=argparse.ArgumentParser(description=__doc__)

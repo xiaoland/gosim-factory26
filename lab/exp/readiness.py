@@ -54,7 +54,7 @@ def inspect(recipe_path, deployment=None, *, environment=None, job_id=None):
             continue
         try:
             if value is None and spec.get('environment_selection'):
-                from scripts.runtime import plan_host_runtime
+                from tooling.scripts.runtime import plan_host_runtime
                 binding = spec['environment_selection']
                 plan = plan_host_runtime(Path(binding['selection']['python']))
                 value = str(Path(binding['selection']['cache_root']) / plan['key'] / (purpose + '.json'))

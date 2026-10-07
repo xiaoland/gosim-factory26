@@ -13,18 +13,18 @@ Explorer、executor、advisor 直接取得 exploration-tools 指引；SVC 组还
 角色源码和历史冻结 ZIP 的材料不同；对应改造当时未取得完整实验验收。恢复旧实验必须使用它自己的冻结资源，不能依据当前源码推断旧 ZIP 已具备新能力。
 
 
-只在 WSL 构建、运行模型和评测。自购供应商凭据在项目内 `.secrets/models.env`，权限为 `600`。[hackathon_gateway.py](../../scripts/hackathon_gateway.py) 在 WSL 宿主读取它，向容器只传 `GATEWAY_URL` 与临时 `GATEWAY_TOKEN`。这组历史实验默认由网关移除客户端自带的推理、温度和采样参数，让供应商使用自己的默认值；新实验若需保留现有配方，可为独立网关实例传 `--preserve-parameters`。`request-metadata.jsonl` 记录模型、客户端原始输出预算与规范化参数，不记录消息正文或密钥。官方 Runner 的宿主 `OPENAI_API_KEY` 由适配器清除，避免把第三方密钥交给 ARC Meter。先用 `docker network inspect bridge` 核实容器能访问的宿主地址；历史环境使用 `172.17.0.1`，新环境须重新核对实际地址。
+只在 WSL 构建、运行模型和评测。自购供应商凭据在项目内 `.secrets/models.env`，权限为 `600`。[hackathon_gateway.py](../../tooling/scripts/hackathon_gateway.py) 在 WSL 宿主读取它，向容器只传 `GATEWAY_URL` 与临时 `GATEWAY_TOKEN`。这组历史实验默认由网关移除客户端自带的推理、温度和采样参数，让供应商使用自己的默认值；新实验若需保留现有配方，可为独立网关实例传 `--preserve-parameters`。`request-metadata.jsonl` 记录模型、客户端原始输出预算与规范化参数，不记录消息正文或密钥。官方 Runner 的宿主 `OPENAI_API_KEY` 由适配器清除，避免把第三方密钥交给 ARC Meter。先用 `docker network inspect bridge` 核实容器能访问的宿主地址；历史环境使用 `172.17.0.1`，新环境须重新核对实际地址。
 
 2026-10-01 的 Debian-Rebuild 本地接续由 Mac 保存控制器、冻结输入和网关凭据，生成容器通过 `development-1` 在远端 Docker 执行。网关与每个 run 的凭据绑定目录必须在同一文件系统；使用 Mac 原生 Python 环境时须安装对应平台的 LiteLLM，不能复用 Linux 的 Python 扩展。`--listen-host` 可将网关监听限定到已验证可达的 Mac 地址，`--container-host` 只声明容器使用的地址。供应商凭据仍只由网关读取，容器取得独立临时 token；原始请求参数沿用冻结配方。远端容器的 OTLP 采用本地 loopback 收集并随 workspace 回收，不把 WSL bridge 地址当作 Mac collector。
 
-新实例从 [`harness/model-gateway.json`](../../harness/model-gateway.json) 的原生 LiteLLM `model_list` 选择路由；同一稳定 alias 可以保留多个候选，但必须有且只有一个 `factory26_default`，或显式传入 `--route ALIAS=DEPLOYMENT_ID`。deployment ID 写在 `model_info.factory26_deployment_id`，上游 wire model、套餐、供应商和 endpoint 环境变量也在同一条目录记录中。`--prepare-only` 只物化配置并读回 `routing-snapshot.json`，不启动 LiteLLM；实例随后保存 catalog/config SHA，wrapper 会拒绝配置漂移。旧 `--model-vendor` 参数已拒绝，避免静默套用历史默认。当前目录不包含被排除的 Kimi HighSpeed 或 DeepSeek V4.1 Flash，也不虚构千帆未知 wire ID。
+新实例从 [`materials/model-gateway.json`](../../materials/model-gateway.json) 的原生 LiteLLM `model_list` 选择路由；同一稳定 alias 可以保留多个候选，但必须有且只有一个 `factory26_default`，或显式传入 `--route ALIAS=DEPLOYMENT_ID`。deployment ID 写在 `model_info.factory26_deployment_id`，上游 wire model、套餐、供应商和 endpoint 环境变量也在同一条目录记录中。`--prepare-only` 只物化配置并读回 `routing-snapshot.json`，不启动 LiteLLM；实例随后保存 catalog/config SHA，wrapper 会拒绝配置漂移。旧 `--model-vendor` 参数已拒绝，避免静默套用历史默认。当前目录不包含被排除的 Kimi HighSpeed 或 DeepSeek V4.1 Flash，也不虚构千帆未知 wire ID。
 
 schema1 runner 通过 `FACTORY26_EXP_ATTEMPT_DIR`、`FACTORY26_EXP_ATTEMPT_ID` 和 `FACTORY26_EXP_INCARNATION` 注入执行身份；网关 wrapper 优先消费这三个变量，并保留旧 `EXPERIMENT_RUN_ID/DIR` 兼容。binding 与请求日志分别记录 attempt、incarnation 及可选的 experiment/legacy run 字段，OTLP 导出按 attempt 或旧 run ID 过滤，不把 attempt 冒充 experiment。
 
 只准备方舟 Flash 路由时可执行：
 
 ```sh
-python3 scripts/hackathon_gateway.py --runtime <codex-runtime> --state <new-state> \
+python3 tooling/scripts/hackathon_gateway.py --runtime <codex-runtime> --state <new-state> \
   --secrets .secrets/models.env \
   --route glm-5.3-flash=ark-coding-plan-glm-5.3-flash --prepare-only
 ```
@@ -38,13 +38,13 @@ python3 scripts/hackathon_gateway.py --runtime <codex-runtime> --state <new-stat
 在 WSL 仓库执行，输出目录须是全新路径；网关示例的 4013 端口也须先确认空闲：
 
 ```sh
-python3 scripts/runtime.py linux --backend pi --output ../factory26-official-local/hackathon-runtime-pi
-python3 scripts/runtime.py linux --backend codex --output ../factory26-official-local/hackathon-runtime-codex
-python3 scripts/package_hackathon.py --runtime ../factory26-official-local/hackathon-runtime-pi --backend pi --output ../factory26-official-local/pi-base.zip
-python3 scripts/package_hackathon.py --runtime ../factory26-official-local/hackathon-runtime-pi --backend pi --svc --output ../factory26-official-local/pi-svc.zip
-python3 scripts/package_hackathon.py --runtime ../factory26-official-local/hackathon-runtime-codex --backend codex --output ../factory26-official-local/codex-base.zip
-python3 scripts/package_hackathon.py --runtime ../factory26-official-local/hackathon-runtime-codex --backend codex --svc --output ../factory26-official-local/codex-svc.zip
-python3 scripts/hackathon_gateway.py --python /home/yyh/.local/bin/python3.12 --runtime ../factory26-official-local/hackathon-runtime-codex --state ../factory26-official-local/hackathon-gateway-example-4013 --port 4013
+python3 tooling/scripts/runtime.py linux --backend pi --output ../factory26-official-local/hackathon-runtime-pi
+python3 tooling/scripts/runtime.py linux --backend codex --output ../factory26-official-local/hackathon-runtime-codex
+python3 tooling/scripts/package_hackathon.py --runtime ../factory26-official-local/hackathon-runtime-pi --backend pi --output ../factory26-official-local/pi-base.zip
+python3 tooling/scripts/package_hackathon.py --runtime ../factory26-official-local/hackathon-runtime-pi --backend pi --svc --output ../factory26-official-local/pi-svc.zip
+python3 tooling/scripts/package_hackathon.py --runtime ../factory26-official-local/hackathon-runtime-codex --backend codex --output ../factory26-official-local/codex-base.zip
+python3 tooling/scripts/package_hackathon.py --runtime ../factory26-official-local/hackathon-runtime-codex --backend codex --svc --output ../factory26-official-local/codex-svc.zip
+python3 tooling/scripts/hackathon_gateway.py --python /home/yyh/.local/bin/python3.12 --runtime ../factory26-official-local/hackathon-runtime-codex --state ../factory26-official-local/hackathon-gateway-example-4013 --port 4013
 ```
 
 每个包的原生会话和 stderr 留在交付工作区 `.arc/hackathon/`；[raw_otlp.py](../../variants/raw/raw_otlp.py) 将根进程及子代理会话事件作为 OTLP logs 上报。上报错误也保存在该目录，不改变生成终态。

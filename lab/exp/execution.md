@@ -1,5 +1,7 @@
 # 执行、恢复与状态
 
+本文只描述旧 lab.exp 的 experiment/attempt 合同。执行命令使用所属运行冻结的 source 与 runtime；当前 run 级操作见 [Lab](../README.md)。
+
 新实验只使用 `factory26.exp.experiment` schema 3，执行合同为 `explicit-request-v1`。Controller 接受显式的构建、执行和控制请求；每个执行请求选择一个 job，最多绑定一个 attempt。定义中的 job 列表是可选执行计划，不会触发自动派发、下游启动或自动重试。Local/Docker 的独立 runner 持有单个 attempt 的入口、资源限额、原始采集和保全。托管 adapter 持有平台身份与 pending 写入。旧 plan/run/operation writer 已从工作树退役，历史材料通过 `history` 或专用只读 reader 消费；不翻译成新执行。
 
 `start EXP --job JOB --request-id REQUEST` 在冻结预算和当前容量内受理一个 attempt。相同请求与参数重入读取或接续原效果；改变参数必须使用新请求。容量不足返回阻塞，不排队。`retry EXP ATTEMPT --request-id REQUEST` 明确创建并派发一个新 attempt，原执行须已确认终态。未知效果不能按失败重跑。`wait EXP ATTEMPT --timeout 60` 只等待选定 attempt。
@@ -20,7 +22,7 @@ Provider 已保存的会话生命周期、连续观察、资源等待及 native 
 
 受管 state 的已接受动作原回执也进入统一视图，保留 holder、generation、writer、capture 和 snapshot 的分别身份。多域 holder 分别显示；保存的动作回执不等于当前远端观察，status 不为此启动新的查询或采集。
 
-托管监控只有一个采集 owner：受理的单个 attempt 启动独立冻结 observer 调用 hosted adapter。adapter 自己持久保存 next_observation_at，前十分钟每三分钟、此后每八分钟查询并保留平台原件；终态导出也由同一 adapter 完成。不要把新 run 接入旧 hosted_monitor、伪造 legacy journal 或启动第二 collector。Luna 每十分钟使用该实验的 controller_runtime 与 controller-source 读取 `lab monitor EXPERIMENT --json`（历史实验仍使用原 source） 消费保存记录；这是 status 的只读入口，读取本地保存的身份与观察，不请求平台。
+托管监控只有一个采集 owner：受理的单个 attempt 启动独立冻结 observer 调用 hosted adapter。adapter 自己持久保存 next_observation_at，前十分钟每三分钟、此后每八分钟查询并保留平台原件；终态导出也由同一 adapter 完成。不要把新 run 接入旧 hosted_monitor、伪造 legacy journal 或启动第二 collector。Luna 每十分钟使用该实验的 controller_runtime 与 controller-source 读取 `python3 -m lab.exp monitor EXPERIMENT --json`（历史实验仍使用原 source） 消费保存记录；这是 status 的只读入口，读取本地保存的身份与观察，不请求平台。
 
 监控消费分别看 observer 生命周期、attempt 的 pending/remote_status/具体错误、archive、平台结果和原件时间。provider 新鲜度取该 attempt/platform 中 `/runs/RUN_ID` 成功观察的时间，不能使用本次查询 read_at 或 token 增长代替；observer 失联时报告缺口，不接管采集或重跑入口。重复状态保持安静，终态、具体故障、身份变化或需要用户动作才通知。原 collector 对旧来源的采集权限不会自动转移给新 run；新 run 可以先启动，Luna 订阅接收回执独立成立。真实接续消费合同见 `runs/experiment-dx-review/real-handoff-20261002/monitor-consumer-contract.json`。
 
@@ -49,18 +51,18 @@ Docker endpoint、不可变 image_id、共享 slots 和 daemon 派生 admission_
 
 旧官网来源使用 `import-source-stop --birth ORIGINAL_GET --status TERMINAL_GET --authorization SCOPE --identity-output NEW_IDENTITY --output NEW_STOP`；可用 `--cancel-evidence ORIGINAL` 保存唯一取消请求来源，但请求受理本身不能满足门控。两个独立 GET 原件的 run/submission/competition/task/created_at/started_at 必须相同，终态 GET 还须有 finished_at。来源记录为 `factory26.exp.legacy-source`，使用 source_id、execution_instance 和 backend_identity，**没有新 attempt_id**。Harness producer 必须明确消费此来源联合类型；不能把它改名成新 attempt。Prepared 继续保留整个 source_identity，停止制品独立发布；新 launch 使用私有 deployment.cookie_file 重新 GET 同一个原 run，核对出生身份和物理终态，缺身份、凭据或当前观察时阻塞。该接口只读、导入及 GET，不进行 cancel/start/resume；跨平台来源尚不支持。
 
-真实 hosted 来源使用 `python3 -m lab import-source-stop --experiment EXPERIMENT --attempt ATTEMPT --birth BIRTH_GET_JSON --status TERMINAL_GET_JSON --cancel-evidence CANCEL_JSON --authorization "已获授权的恢复范围" --identity-output NEW_IDENTITY_JSON --output NEW_STOP_JSON`。`--experiment` 与 `--attempt` 必须成对提供；导入核对冻结合同、实际 attempt、execution 和派发绑定，以及来源与独立终态 GET 的 run、submission、competition、task、创建及启动时间。取消响应只作为原件保留，独立 GET 必须确认终态和结束时间。输出保留真实 attempt 和 execution incarnation，不伪装成 legacy 来源；两个输出均须为新文件。导入不执行停止，也不授予启动许可。恢复启动仍须显式提供 deployment 的私有 `cookie_file`，通过独立 GET 确认同一来源确已停止。
+真实 hosted 来源使用 `python3 -m lab.exp import-source-stop --experiment EXPERIMENT --attempt ATTEMPT --birth BIRTH_GET_JSON --status TERMINAL_GET_JSON --cancel-evidence CANCEL_JSON --authorization "已获授权的恢复范围" --identity-output NEW_IDENTITY_JSON --output NEW_STOP_JSON`。`--experiment` 与 `--attempt` 必须成对提供；导入核对冻结合同、实际 attempt、execution 和派发绑定，以及来源与独立终态 GET 的 run、submission、competition、task、创建及启动时间。取消响应只作为原件保留，独立 GET 必须确认终态和结束时间。输出保留真实 attempt 和 execution incarnation，不伪装成 legacy 来源；两个输出均须为新文件。导入不执行停止，也不授予启动许可。恢复启动仍须显式提供 deployment 的私有 `cookie_file`，通过独立 GET 确认同一来源确已停止。
 
-旧 Docker 来源使用 `python3 -m lab import-docker-source-stop --birth SOURCE_IDENTITY_JSON --status SOURCE_STOP_JSON --writers WRITER_RETIREMENT_JSON --authorization "已获授权的恢复范围" --identity-output NEW_IDENTITY_JSON --output NEW_STOP_JSON`。来源保留真实旧 run ID，以 daemon、完整 container ID、创建/启动时间、image 和 owner labels 绑定 `legacy-docker` execution，不补造新 attempt ID。导入会实时读回原 daemon 的同一容器及全部来源卷使用者，要求它们已退出、Pid 为零且没有 paused/restarting 状态；旧写入与重启进程也须关闭。Darwin 的僵尸进程保留原 unknown 与新 `ps` Z 观察，不为回收僵尸解除共享 dispatcher 的暂停。启动同样重验出生身份、卷使用者和 writer；消失、连接失败、重启或新增写入入口均阻塞，不清退其它来源或整个 daemon。
+旧 Docker 来源使用 `python3 -m lab.exp import-docker-source-stop --birth SOURCE_IDENTITY_JSON --status SOURCE_STOP_JSON --writers WRITER_RETIREMENT_JSON --authorization "已获授权的恢复范围" --identity-output NEW_IDENTITY_JSON --output NEW_STOP_JSON`。来源保留真实旧 run ID，以 daemon、完整 container ID、创建/启动时间、image 和 owner labels 绑定 `legacy-docker` execution，不补造新 attempt ID。导入会实时读回原 daemon 的同一容器及全部来源卷使用者，要求它们已退出、Pid 为零且没有 paused/restarting 状态；旧写入与重启进程也须关闭。Darwin 的僵尸进程保留原 unknown 与新 `ps` Z 观察，不为回收僵尸解除共享 dispatcher 的暂停。启动同样重验出生身份、卷使用者和 writer；消失、连接失败、重启或新增写入入口均阻塞，不清退其它来源或整个 daemon。
 
 ## 检查点与显式恢复操作
 
-公共受管入口为 `python3 -m lab checkpoint RUN ATTEMPT --directory CHECKPOINT --request-id REQUEST`。它在原域权威上阻止新增写者、关闭已登记的实际执行及访问写者，并取得独立 capture 许可；不要求使用者制作 closure JSON。没有受管覆盖的历史运行仍需沿其冻结合同取证，不能从父进程退出推断完整关闭。外层 Local 包含 SDK child 时，公共入口选择已登记、终态接收已验证且具有真实 state mapping 的 child；唯一来源可直接采用，多个来源须用 `--source-resource AUTHORITY_RESOURCE_ID` 明确选择。来源保留 child 的实际出生身份与外层关联，不用外层 Local 身份代替。入口非零退出不自动否定检查点，完整性仍由 Harness producer 判定；该路径不提供官方 SDK resume。
+公共受管入口为 `python3 -m lab.exp checkpoint RUN ATTEMPT --directory CHECKPOINT --request-id REQUEST`。它在原域权威上阻止新增写者、关闭已登记的实际执行及访问写者，并取得独立 capture 许可；不要求使用者制作 closure JSON。没有受管覆盖的历史运行仍需沿其冻结合同取证，不能从父进程退出推断完整关闭。外层 Local 包含 SDK child 时，公共入口选择已登记、终态接收已验证且具有真实 state mapping 的 child；唯一来源可直接采用，多个来源须用 `--source-resource AUTHORITY_RESOURCE_ID` 明确选择。来源保留 child 的实际出生身份与外层关联，不用外层 Local 身份代替。入口非零退出不自动否定检查点，完整性仍由 Harness producer 判定；该路径不提供官方 SDK resume。
 
-默认恢复入口为 `python3 -m lab recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE --directory NEW_RUN --job JOB --request-id REQUEST`。Intent 在普通实验字段之外声明 `recovery: {production: NAME, target: TARGET_LAYOUT, repair: REPAIR}`，相关 variant 的 prepared 使用 `{from_production: NAME}`。缺省 `mode` 为 `snapshot-copy`；显式 `mode: "domain-state"` 和稳定 `request_id` 选择同域受管恢复。入口冻结原 checkpoint 身份、修复输入、生产依赖及派生关系，准备新 run，不启动模型。SOURCE 必须是明确 checkpoint，不从含混 run/archive 自动猜。
+默认恢复入口为 `python3 -m lab.exp recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE --directory NEW_RUN --job JOB --request-id REQUEST`。Intent 在普通实验字段之外声明 `recovery: {production: NAME, target: TARGET_LAYOUT, repair: REPAIR}`，相关 variant 的 prepared 使用 `{from_production: NAME}`。缺省 `mode` 为 `snapshot-copy`；显式 `mode: "domain-state"` 和稳定 `request_id` 选择同域受管恢复。入口冻结原 checkpoint 身份、修复输入、生产依赖及派生关系，准备新 run，不启动模型。SOURCE 必须是明确 checkpoint，不从含混 run/archive 自动猜。
 
 恢复是一次显式操作，缺省只准备选定 job。`--execute` 才请求派生 attempt 的一次入口；`--action query` 只读原操作回执，`--action continue` 以原 request 接续，`--action abort` 在确认本请求的 helper、新执行预约和 writer 责任已关闭后结束准备。取消保留原快照、当前状态字节、修复 ledger 和 generation，不回滚也不把写权交还旧入口。已启动的派生执行须针对其 exact attempt 停止，不能用取消准备代替。部分修复取消后的 holder 是 `repair-aborted`，不能当作可重开原快照的 `closed`；通常从保留的 immutable snapshot 新建恢复。
 
-快照、定义换版、repair lease 和 writer 交接的完整合同见[制品与恢复证据](artifacts.md#检查点与准备)。操作者先按[恢复门控](../../docs/deployment/recovery.md#当前-checkpointprepare-与停止门控)确认来源与授权；旧协议见[冻结恢复记录](../../docs/deployment/history/recovery.md)。
+快照、定义换版、repair lease 和 writer 交接的完整合同见[制品与恢复证据](artifacts.md#检查点与准备)。操作者先按[冻结恢复门控](../../docs/deployment/history/recovery.md#当前-checkpointprepare-与停止门控)确认来源与授权；旧协议见[冻结恢复记录](../../docs/deployment/history/recovery.md)。
 
 `status`、`monitor`、`wait` 默认文本；`--json` 是显式程序合同，不是默认诊断入口。查询命令成功读到 failed/cancelled/running attempt，与查询失败分别表达；wait 的超时不停止执行或授予 retry。状态结果写 stdout，命令错误写 stderr。诊断沿返回的精确原件路径展开，不递归扫描运行目录，也不默认读取 native rollout。

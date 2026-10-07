@@ -476,7 +476,7 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
         manifest = prepared_descriptor
         if manifest is None:
             raise Blocked('prepared execution requires the controller resolved definition descriptor')
-        from submission.exp_checkpoint import definition_mount_roots
+        from tooling.linux.exp_checkpoint import definition_mount_roots
         prepared_member = member(attempt['job'].get('input_members', {}).get('prepared', '.'))
         selected_state_member = 'content/run' if prepared_member == '.' else prepared_member + '/content/run'
         prepared_state_root = _domain_member_root(target, helper, attempt['job']['inputs']['prepared'], selected_state_member)
@@ -517,7 +517,7 @@ def prepare_docker(directory, attempt, request, deployment, incarnation):
                 'daemon_source': str(Path(asset['Mountpoint']) / Path(role['local_root']).relative_to('/assets'))})
         private['definition_layout'] = {'base': base, 'kind': 'daemon-readonly-role-mounts', 'roles': definition_placements}
     elif prepared_descriptor and prepared_descriptor.get('state_binding'):
-        from submission.exp_checkpoint import definition_mount_roots
+        from tooling.linux.exp_checkpoint import definition_mount_roots
         for definition in definition_mount_roots(prepared_descriptor['definition_assets'], prepared_descriptor['state_root']):
             remote = _domain_member_root(target, helper, definition['artifact'], definition['member'])
             definition_placements.append({**definition, 'role': definition['name'], 'reference': definition['artifact'],
@@ -1333,7 +1333,7 @@ def finish_recovery_preparation(binding, request_id):
 def prepare_in_domain(selection, output, store=None):
     """Repair under the retained capture lease; transport only small metadata."""
     from . import state
-    from submission.exp_checkpoint import prepare
+    from tooling.linux.exp_checkpoint import prepare
     binding = selection['state_binding']
     holder = state.query(binding)['holder']
     if holder['phase'] != 'repairing':
@@ -1348,7 +1348,7 @@ def prepare_in_domain(selection, output, store=None):
     target = binding['authority']['target']
     script = r'''import json,sys
 from pathlib import Path
-from submission.exp_checkpoint import prepare
+from tooling.linux.exp_checkpoint import prepare
 value=json.loads(sys.argv[1])
 source=Path(value['source'])
 output=source.parent/'prepared'/value['request_id']
@@ -1390,7 +1390,7 @@ print(json.dumps({p.relative_to(output).as_posix():p.read_text() for p in output
 def prepare_snapshot_copy(selection, output, store):
     """Cross-domain projection transports selected state and missing definitions only."""
     from . import artifacts, state
-    from submission.exp_checkpoint import prepare
+    from tooling.linux.exp_checkpoint import prepare
     source = Path(selection['source'])
     if not (source / 'domain-resolver.json').exists():
         return prepare(source, output, selection['target'], selection['repair'], artifact_store=store)
@@ -1496,7 +1496,7 @@ def validate_in_domain(root):
     request_id = 'validate-' + canonical([str(root.resolve()), digest(root / 'harness-manifest.json'), time.time_ns()])[:32]
     helper = capture_helper(directory, binding, request_id, assets_only=immutable)
     target = binding['authority']['target']
-    script = 'import json,sys;from submission.exp_checkpoint import validate;print(json.dumps(validate(sys.argv[1],_in_domain=True,_state_readback=json.loads(sys.argv[2]))))'
+    script = 'import json,sys;from tooling.linux.exp_checkpoint import validate;print(json.dumps(validate(sys.argv[1],_in_domain=True,_state_readback=json.loads(sys.argv[2]))))'
     try:
         result = json.loads(_owner_exec(target, helper, [target.get('python', 'python3'), '-B', '-c', script,
             resolver['metadata_root'], json.dumps(holder)]).stdout)

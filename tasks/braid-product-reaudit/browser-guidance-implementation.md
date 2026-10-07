@@ -22,7 +22,7 @@
 
 ## 保留的命名 session 修复
 
-[agent-browser skill](../../harness/skills/agent-browser/SKILL.md) 继续要求按固定版本 core 手册获取 worktree 命名 session；同一旅程复用，shell 不继承环境时显式 `--session <name>`，同 worktree 并行任务使用不同名称或前缀，交接时传会话名与状态。两个活动 variant 的 5 份 browser-operator 已同步此约定，不再建议单任务使用共享默认 session。
+[agent-browser skill](../../materials/skills/agent-browser/SKILL.md) 继续要求按固定版本 core 手册获取 worktree 命名 session；同一旅程复用，shell 不继承环境时显式 `--session <name>`，同 worktree 并行任务使用不同名称或前缀，交接时传会话名与状态。两个活动 variant 的 5 份 browser-operator 已同步此约定，不再建议单任务使用共享默认 session。
 
 依据为 [浏览器反馈调查](../experiment-infrastructure/cells/browser-feedback-audit.md) 及直接读取本地 agent-browser 0.38.1 的 `skill-data/core/SKILL.md`。这次删除独立验收技能没有改动该规则。
 

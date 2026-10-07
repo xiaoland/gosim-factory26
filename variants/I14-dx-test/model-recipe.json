@@ -1,5 +1,5 @@
 {
-  "self_funded": "harness/model-recipes/self-funded.json",
+  "self_funded": "materials/model-recipes/self-funded.json",
   "models": ["glm-5.3", "glm-5.3-flash", "kimi-k3", "deepseek-v4-flash-0731"],
   "model_alias_map": {"deepseek-v4-flash": "deepseek-v4-flash-0731"}
 }

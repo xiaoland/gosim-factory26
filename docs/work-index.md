@@ -33,4 +33,4 @@
 
 [早期 multi-agent 接入](../tasks/multi-agent-integration/packet.md)、[迭代吞吐](../tasks/iteration-throughput/packet.md)保存其阶段的方案与证据，不自动授权新运行。
 [agent-profile-presets](../tasks/agent-profile-presets/packet.md)已指向接入任务，[SVC CLI 裁减](../tasks/svc-cli-simplification/packet.md)已指向 skill 接线；沿后继入口接续，不启动旧计划。
-其余历史任务材料保留在 [tasks](../tasks/)，未核实完成条件时不仅依据文件日期关闭任务。
+其余历史任务材料保留在 [tasks](../tasks)，未核实完成条件时不仅依据文件日期关闭任务。

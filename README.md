@@ -9,7 +9,7 @@ Harness 基线从 [pi-braid-i13](variants/pi-braid-i13/) 进入，采用 Pi、Br
 | 理解产品目标与组件边界 | [PRD](docs/prd/index.md)、[技术说明](docs/product-tdd/index.md) |
 | 准备工具、修改角色或技能 | [开发入口](CONTRIBUTING.md)，再读对应组件本地说明 |
 | 打包、运行、查询证据或恢复 | [运行说明](docs/deployment/index.md) |
-| 按主题找方法、接续工作或查旧结论 | [文档入口](docs/index.md)、[工作主题](docs/work-index.md)、[报告](reports/README.md) |
+| 按主题找方法、接续工作或查旧结论 | [文档入口](docs/index.md)、[工作主题](docs/work-index.md)、[报告](runs/reports/README.md) |
 | 确认协作、修改及实验授权 | [AGENTS.md](AGENTS.md) |
 
 各 variant 自己维护生成流程与原生材料，公共支持模块不决定协作方法或模型配方。Braid 管理 Issue/PR、成员与讨论，SVC 提供独立方法材料，原生 Pi 内部子代理承担工作项内委派。新实验使用 [Lab](lab/README.md) 的冻结配方，显式选择费用模式、模型和凭据来源；冻结制品和旧实验记录不会因工作树更新而改变。

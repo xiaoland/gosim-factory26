@@ -416,9 +416,9 @@ def _sync(host: str, source: Path, destination: str, *, excludes: tuple[str, ...
 
 def _spawn_source_components(module: str, args: list[str] | tuple[str, ...], *, script=False) -> tuple[str, ...]:
     """Return source trees consumed by a remote observer/automation process."""
-    components = ["lab", "scripts"]
+    components = ["lab", "tooling"]
     if script or (module == "lab.automation" and args and str(args[0]) == "stages"):
-        components += ["variants", "harness", "third_party/arc-bench"]
+        components += ["variants", "materials", "third_party/arc-bench"]
     return tuple(components)
 
 

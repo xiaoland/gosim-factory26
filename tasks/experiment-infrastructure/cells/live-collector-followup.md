@@ -47,7 +47,7 @@ Collector 使用 ThreadingHTTPServer；随包 `otlp-deps` 存在时强制 `PROTO
 
 ## 已实施的最小计时（待后续包实际运行）
 
-现有 Handler 的每个 POST 在结束时向 stderr 写一条 `event=otlp_request_timing` JSON，沿用 [start_local_telemetry](../../../scripts/agent_support.py) 收集的 `telemetry-collector.log`。`started_at`、`finished_at` 是 Unix wall time 秒，供与 producer 错误窗口对齐；`read_ms`、`decode_ms`、`persist_ms`、`response_write_ms`、`total_ms` 使用 monotonic 时钟。`persist_ms` 覆盖当前 SHA-256、两次 INSERT 和 `connect` 退出时的 commit；`response_write_ms` 覆盖本地响应构造与写出，不代表客户端已收 ACK。
+现有 Handler 的每个 POST 在结束时向 stderr 写一条 `event=otlp_request_timing` JSON，沿用 [start_local_telemetry](../../../tooling/scripts/agent_support.py) 收集的 `telemetry-collector.log`。`started_at`、`finished_at` 是 Unix wall time 秒，供与 producer 错误窗口对齐；`read_ms`、`decode_ms`、`persist_ms`、`response_write_ms`、`total_ms` 使用 monotonic 时钟。`persist_ms` 覆盖当前 SHA-256、两次 INSERT 和 `connect` 退出时的 commit；`response_write_ms` 覆盖本地响应构造与写出，不代表客户端已收 ACK。
 
 每条还含已匹配的 `session_id`、`signal`、实际 `wire_bytes`/`payload_bytes`、HTTP 状态，以及成功提交后才填的 `batch_id`；`failure_stage` 指明拒绝或异常所在阶段。未走阶段为 `null`，已进入但失败的阶段仍有耗时。原有 `receive_errors` 写入与错误响应保持原样；计时输出失败不会改变接收结果。不另建表或日志框架，不通过第二次 SQLite 写入测量 commit，不记录 token、headers、payload 或错误正文。当前只完成本地 Python 编译检查，未在 attempt-07 部署或用负载验证。后续以自然运行取得数据：decode 占主导才讨论解析成本；persist 占主导才拆分 hash/锁等待/commit；Collector 很快完成而 SDK 仍超时，才继续检查生产者导出排队/回执。当前不调整阈值，不取消正确性验证。
 

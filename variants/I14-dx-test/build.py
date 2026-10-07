@@ -8,7 +8,7 @@ import sys
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-sys.path.insert(0, str(ROOT / 'scripts'))
+sys.path.insert(0, str(ROOT / 'tooling/scripts'))
 from agent_support import copy_skill
 
 SKILLS = ('svc-sub-agents', 'svc-task-packet', 'svc-documentation', 'svc-verification',
@@ -39,7 +39,7 @@ def build(runtime: Path, output: Path | None, skills: Path, route: Path | None =
             destination = stage / item.name
             shutil.copytree(item, destination, symlinks=True) if item.is_dir() else shutil.copy2(item, destination)
         for name in SUPPORT:
-            shutil.copy2(ROOT / 'scripts' / name, stage / name)
+            shutil.copy2(ROOT / 'tooling/scripts' / name, stage / name)
         shutil.copy2(ROOT / 'variants/raw/raw_otlp.py', stage / 'raw_otlp.py')
         for name in SKILLS:
             source = (HERE / 'vendor/ponytail/skills/ponytail'

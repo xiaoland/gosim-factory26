@@ -1,0 +1,36 @@
+# Historical reports remain explicitly readable through runs/reports/ but stay
+# out of default repository-wide rg candidates.
+runs/reports/
+
+# Frozen source/runtime snapshots and machine evidence are reachable from their
+# packets, but must not compete with current source or task conclusions.
+tasks/iteration10/instruction-audit/current/
+tasks/iteration10/instruction-audit/current-runtime/
+tasks/iteration11/run-audit/github/snapshot-*/
+tasks/iteration11/run-audit/github/source.git/
+tasks/iteration11/run-audit/sheet/evidence/
+tasks/iteration11/sheet-effectiveness-analysis/evidence/
+
+# Derived I11 Sheet views and increment work are machine readbacks. Their
+# packets, source indexes, and conclusions remain discoverable.
+tasks/iteration11/run-audit/sheet/cells/a/views/
+tasks/iteration11/run-audit/sheet/cells/a/views_compact/
+tasks/iteration11/run-audit/sheet/cells/a/views_unique/
+tasks/iteration11/run-audit/sheet/increment/work/
+
+# These five historical records retain evidence of a deleted guide path; they
+# are reachable by explicit scoped search and are not current navigation.
+tasks/iteration10/cells/session-recap-20260929/messages.json
+tasks/iteration11/run-audit/github/cells/m1-m2/read-receipts.json
+tasks/iteration11/run-audit/github/cells/root-full/assignment.json
+tasks/iteration11/run-audit/github/cells/root-full/read-receipts.json
+tasks/iteration11/run-audit/sheet/cells/a/read-ranges.json
+
+# Compiled lab.exp snapshots are execution material. Keep editable experiment
+# definitions and uncompiled intent/configuration visible.
+experiments/**/compiled*/recipe.json
+experiments/**/compiled*/intent.json
+experiments/**/compiled*/compilation.json
+
+# The initial navigation query is evidence, not current project knowledge.
+tasks/repository-layout/navigation-evidence.json

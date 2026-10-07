@@ -14,4 +14,4 @@ Reviewer 的 seed 会在运行前形成非空 Git 快照；完整生成路径仍
 
 实验状态、启动/控制、监控和恢复仍由 [Lab execution 合同](../../lab/exp/execution.md) 与 [恢复手册](../../docs/deployment/recovery.md) 负责；它们不替代本页的 Reviewer seed/report 反馈，也不把审阅报告提升为实验终态。
 
-入口要求设施已装配的 context；源码操作见[公共源码入口](../../scripts/README.md#i14-源码装配)。技能与额外角色需求由 [materials.json](materials.json) 声明，controller/SDK/Hosted 交付与实际服务不由本 variant 另行实现。
+入口要求设施已装配的 context；源码操作见[公共源码入口](../../tooling/scripts/README.md#i14-源码装配)。技能与额外角色需求由 [materials.json](materials.json) 声明，controller/SDK/Hosted 交付与实际服务不由本 variant 另行实现。

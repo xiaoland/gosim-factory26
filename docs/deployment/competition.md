@@ -28,7 +28,7 @@
 
 当前运行位置分开理解：开发控制在 Mac；官方 ARC 本地 Runner 按冻结 recipe 使用显式的本地 backend（需要 Docker 时由该 recipe 声明），不能从 Mac 设备推断 Runner 或授权可用；Hosted 是独立的平台 backend。详细构建参数和凭据边界见 [CONTRIBUTING](../../CONTRIBUTING.md) 及对应 packet。
 
-当前包构建、Linux runtime、CPython 和 Docker 输入见 [scripts 构建入口](../../scripts/README.md#构建独立运行资源与制品)；包运行要求 Linux x86_64/CPython 3.12，标准应用使用 `frontend/package.json` 的 build 和 `backend/package.json` 的 start。需要 Docker 时由官方 ARC local recipe 明确声明连接，不把 Docker 作为所有 Lab local backend 的全局条件。variant 专属的受管后台 Bash 由对应 variant 的运行入口冻结，不在本页复制其阈值和命令。
+当前包构建、Linux runtime、CPython 和 Docker 输入见 [scripts 构建入口](../../tooling/scripts/README.md#构建独立运行资源与制品)；包运行要求 Linux x86_64/CPython 3.12，标准应用使用 `frontend/package.json` 的 build 和 `backend/package.json` 的 start。需要 Docker 时由官方 ARC local recipe 明确声明连接，不把 Docker 作为所有 Lab local backend 的全局条件。variant 专属的受管后台 Bash 由对应 variant 的运行入口冻结，不在本页复制其阈值和命令。
 
 ## 当前操作入口
 

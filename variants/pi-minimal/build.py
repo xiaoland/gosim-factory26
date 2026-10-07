@@ -8,7 +8,7 @@ import tempfile
 
 HERE = Path(__file__).resolve().parent
 ROOT = HERE.parents[1]
-sys.path.insert(0, str(ROOT/'scripts'))
+sys.path.insert(0, str(ROOT/'tooling/scripts'))
 from package_agent import write_zip
 from agent_support import copy_skill
 from hackathon_gateway import read_assignments
@@ -40,11 +40,11 @@ def build(runtime, output, credentials=None, arc_credentials=None):
             (stage/'private-models.json').write_text(json.dumps({'providers': providers}))
         for folder in ('agents', 'extensions', 'vendor'):
             shutil.copytree(HERE/folder, stage/folder)
-        shutil.copy2(ROOT/'scripts/agent_support.py', stage/'agent_support.py')
+        shutil.copy2(ROOT/'tooling/scripts/agent_support.py', stage/'agent_support.py')
         shutil.copy2(ROOT/'variants/raw/raw_otlp.py', stage/'raw_otlp.py')
         for name in SKILLS:
             source = (HERE/'vendor/ponytail/skills/ponytail' if name == 'ponytail'
-                      else ROOT/'harness/skills'/name)
+                      else ROOT/'materials/skills'/name)
             copy_skill(source, stage/'skills'/name)
         descriptions = {
             'better-auth-best-practices': 'Use when designing account registration, login, password recovery, or persistent sessions; evaluate existing authentication support before choosing a library or implementing it yourself.',

@@ -58,7 +58,7 @@ Home使用明确的生产者run.json。当前lab记录提供variant，但未提�
 
 GC扫描必须包含新稳定服务根，manifest保护app、解释器、两份新归档、binary、已登记run整个原workspace及全部宿主挂载。首批两个workspace为精确矩阵下相应run的workspace/official-generation/；当前又加入 self-funded 根下 sheet/github 各自真实 run 的 workspace/official-generation/。旧原件、四个现场 workspace 及两代 binary 均保留引用，完整state、容器和挂载分别在single-instance-final.json及console-manifest.json。未登记现场继续由实验生产者保护；未运行GC apply或清理原始材料。
 
-原始证据和操作脚本在Mac `runs/iteration13/console-launch-20261001/`：migration-baseline.json、migration-ready.json、mac-retired/、single-instance-cutover.json、single-instance-http.json、single-instance-http-summary.json、single-instance-final.json、forward-8765.log；远端保留operations/history。Chrome工具返回真实页面与截图，browser-single-instance.json记录观察来源。本页归当前部署身份，长期协议归[Console README](../../braid-console/README.md)与[部署说明](../../docs/deployment/console.md)。限定提交本页及受影响的Console/部署状态文档，不push。
+原始证据和操作脚本在Mac `runs/iteration13/console-launch-20261001/`：migration-baseline.json、migration-ready.json、mac-retired/、single-instance-cutover.json、single-instance-http.json、single-instance-http-summary.json、single-instance-final.json、forward-8765.log；远端保留operations/history。Chrome工具返回真实页面与截图，browser-single-instance.json记录观察来源。本页归当前部署身份，长期协议归[Console README](../../consoles/README.md)与[部署说明](../../docs/deployment/console.md)。限定提交本页及受影响的Console/部署状态文档，不push。
 
 ## 前序空服务与暂停来源
 
