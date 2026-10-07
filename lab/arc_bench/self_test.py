@@ -17,6 +17,7 @@ import ctypes
 from pathlib import Path
 import shutil
 import sqlite3
+import ssl
 import subprocess
 import tempfile
 import time
@@ -38,6 +39,24 @@ EXPOSE 3000
 WORKDIR /app/backend
 CMD [\"npm\", \"run\", \"start\"]
 """
+
+
+def _https_context():
+    """Use an available system CA bundle when Python's default is stale."""
+    candidates = (
+        os.environ.get("SSL_CERT_FILE"),
+        os.environ.get("NIX_SSL_CERT_FILE"),
+        "/etc/ssl/cert.pem",
+        "/etc/ssl/certs/ca-certificates.crt",
+    )
+    for candidate in candidates:
+        if not candidate or not Path(candidate).is_file():
+            continue
+        try:
+            return ssl.create_default_context(cafile=candidate)
+        except (OSError, ssl.SSLError):
+            continue
+    return ssl.create_default_context()
 
 
 def _manifest(run):
@@ -360,7 +379,7 @@ def _http_json(run, target, method, path, *, body=None, headers=None, record=Non
                                            "request_sha256": hashlib.sha256(data or b"").hexdigest(),
                                            "as_of": time.time()})
     try:
-        with urlopen(request, timeout=float(target.get("timeout_seconds", 60))) as response:
+        with urlopen(request, timeout=float(target.get("timeout_seconds", 60)), context=_https_context()) as response:
             raw = response.read()
             status = response.status
             response_headers = dict(response.headers.items())
@@ -512,7 +531,7 @@ def start(run):
     request = Request(upload_url, data=package_path.read_bytes(),
                       headers={"Content-Type": "application/zip"}, method="PUT")
     try:
-        with urlopen(request, timeout=float(target.get("timeout_seconds", 60))) as response:
+        with urlopen(request, timeout=float(target.get("timeout_seconds", 60)), context=_https_context()) as response:
             upload_status = response.status
             upload_bytes = response.read()
     except (HTTPError, URLError) as error:

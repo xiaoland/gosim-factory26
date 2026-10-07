@@ -1,5 +1,7 @@
 # 决赛实验基础设施重设计
 
+2026-10-07 self-test 认证已通过实际只读请求：维护客户端 GET `/api/auth/session` 返回 HTTP 200、authenticated=true，原件为 `runs/self-test-auth-20261007/authentication.json`。已修复本机 Python 默认 CA 路径失效导致的 `CERTIFICATE_VERIFY_FAILED`，JSON 请求和 ZIP 上传共用标准库 SSL context，使用已有有效 CA，不关闭 TLS 校验、不新增依赖。已通知原独立验收会话复用现有私有登录材料；没有上传或评分，仍待 Stage1 冻结应用。旧 pending_auth 段落保留为历史故障事实，不再是当前阻塞。
+
 2026-10-07 用户告知“钥匙串我刚刚授权好了”。此前等待系统授权的前提解除，evaluation_implementation 恢复原 self-test 认证与实际评分闭环，优先复用已有登录材料；已通知原独立验收会话在 Stage1 完成冻结后按原计划独立评分、接续 Stage2。授权完成不等于认证或评分已取得，下面的 pending_auth 记录是当时事实。默认维护基座同步为已正式发布的 p，不再指向旧 o。
 
 2026-10-07 用户明确“是，你不必停下，继续”，继续原优化和验收闭环。runtime 集成已提交 `e7a3cb7d`，公共回执及 self-test 接入提交 `d7c4605b`。正式默认已切到直出 p：约 495 MiB，经维护入口首次发布 42.84 秒、再次调用复用；真实 ARC 容器在只读 runtime 下通过 `agent-browser open https://example.com` 与 snapshot，缓存后操作 2.78 秒，`--help` 不下载浏览器。构建与基座精简共用一个浏览器入口实现，不新增工具分层。原件见 evaluation；这些不是空缓存完整构建或生成 Agent 使用通过的证明。
