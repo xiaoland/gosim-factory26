@@ -27,3 +27,23 @@
 本次请求是诊断，不改变冻结路由、停止/接续或向生成Agent注入应用修复答案。后续基础设施工作应首先处理持续失败路由的运行成本及短socket目录，保留错误和原生进度；路由变化须记录实际配方身份。最终应用仍须让生成Agent自行完成并冻结后评测。原activity=active事实不错误，但不足以支持“运行顺利”的解释，报告必须同时呈现失败/等待与语义推进。
 
 用户随后纠正：不记住跨请求失败是正常行为，先修其它问题。上段关于失败路由是当时调查建议，不作为修改授权或已采用设计；当前不增加失败记忆、不改等待期限和在途路由。短socket公共环境与技能显式session已修；随后在现有Pi应用上独立实际浏览器操作取得首页交互元素并正常close，说明原生生成Agent已自行修好页面，不是主代修应用。
+
+## 用户提供的进程清理中断线索
+
+用户指出`pkill -9 -f "node src/index.js"`累计伴随16次`Command aborted`，日志显示匹配到执行shell。该命令确有自杀机制：执行shell的完整命令行也含被匹配字符串，但次数与实际来源run仍需原件确认，不能把`Command aborted`自动归责于资源监控。
+
+主核对`lab/arc_bench/harness_services.py::ResourceSupervisor`、`scripts/runtime_resources.py`及`harness/npm/native-managed.mjs`：公共压力补救不生成pkill，回收已退出的明确child、内存reclaim，失败时停止持有的入口进程；native stop按进程身份执行。Pi当前session定向检索未发现pkill命令。I14原负责人正在只读确认来源，不执行该危险命令，也不对用户未指定的其它运行扩大控制范围。已有agent-browser技能明确禁止按程序名/端口全局pkill；若是Agent自行发出的应用清理，归工具生命周期使用问题，不能靠公共资源管理器拦截任意shell字符串解决。
+
+I14负责人后续返回：ed426定向原生日志没有该pkill命令，没有16次对应abort；仅找到2次Command aborted，来自pi-glm-fast原生日志中的bg010/bg011，均伴随session明确执行pbb kill/portless清理。另一次pkill文本只是读取技能禁令，不是执行。故这两条验收中未证实用户描述的16次，需对应run ID或日志路径再归因，不改资源管理器来补一个未成立的缺陷。
+
+用户澄清为pi-minimal-vv另一运行后，主找到已完成的官网原件诊断：`runs/pi-minimal/evolution-20261006/formal-sheet-flash-20261007/formal-github/diagnosis-20261007-201100/abort-and-health-pattern.json`及同目录diagnosis.md。当前native scope为1bad241ee5cb417ab03b643991f9254e。16次从18:38:40至20:08:52，首例pgrep明确列出PID10759 bash -lc与完整清理命令，继而Command aborted；确认用户报告事实成立。之前无匹配仅限两DX验收，不能否定该报告。该命令来自原生Agent Bash调用，不来自公共压力监控；截至20:09后续有健康/交付检查，不能据历史中断断言当前卡死。只采用已有原件，不下载新官网材料、不控制该正式run、不向其注入反馈。
+
+process_reaping_decision只基于主提供的上述事实建议：归应用服务/检查入口的接线与发现，不加公共manager拦截/gate，也不堆禁令。主采用归属判断；下一步先核实该variant实际提供的managed启动回执、停止/检查入口，再在既有入口补缺，不新增服务框架。若入口与说明已充分，则保留为Agent错误选择，不自动升级为设施缺陷。
+
+## 自验用例的数据边界
+
+继续读取上述官网run的本地project.zip、self-e2e-isolation-summary.json及stage-backend-database.db。三个当前e2e文件没有数据库重置hook；workers=1，服务明确使用/tmp/selfcheck/database.db。PR合并与随后文件浏览、搜索断言操作同一acme-demo/acme-docs仓库，因而独立数据库仅隔离交付应用，没有隔离用例。
+
+交付数据库快照的main包含src/README.md，待合并feature head不包含；当前归档应用的pulls.js已经使用三方合并并注明保留main新增文件。因此存在相互影响的条件，但不能把历史失败直接归为污染，或认定最终合并实现仍然丢文件；数据库快照也不是自验数据库的最终状态。没有操作正式run、修改应用或读取隐藏评测。
+
+主完整读取冻结e2e版本的writing-tests说明：已有fresh browser context、beforeEach/afterEach、test.extend及serial场景，但前者不恢复服务端数据。advisor仅依据提供事实建议补现有fixture发现与边界，不加通用数据库reset。主采用，更新实际打包的harness/skills/e2e/SKILL.md：独立case使用独立可变对象，有意流程保留状态，必要快照恢复须先停所属服务并覆盖相关文件/索引；区分单例初始fixture与顺序运行的反馈。该段位于variant builder替换准备段之外，VV打包会保留。未声称文档自动隔离已有测试，未改在途冻结包。

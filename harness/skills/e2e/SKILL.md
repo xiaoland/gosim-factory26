@@ -13,6 +13,14 @@ Export `E2E_APP_URL` to the actual owned service URL in every mcporter/e2e shell
 
 The addon includes the default Chromium only. Keep `web()` on that browser and use the prepared browser tree; do not trigger browser installation during a run.
 
+## Isolate application check data
+
+A database copy isolates the check service from delivery data, not one case from another. Fresh browser contexts and `workers: 1` do not reset server data, repository files, uploads or search indexes. For independent cases, create separate mutable business objects; use the runner's `beforeEach`, `afterEach` or `test.extend` fixtures when setup or cleanup is needed. In particular, do not merge a seeded PR into the same repository that later file/search cases assume is unchanged.
+
+Keep an intentional stateful journey in one case, or an explicit serial scenario as described in `e2e guide writing-tests`. Do not reset its state between dependent steps. If a case needs an initial database snapshot, stop its owned service before restoring the isolated copy, include associated mutable files/indexes, then restart and check readiness; never overwrite a live database or delivery data. A whole-database reset is not the default.
+
+When a failure may depend on prior cases, run the failing case alone from its documented initial fixture, then compare with the sequence. Retain the fixture and order with the report. A pass after earlier cases is not proof of independence, and a failure in the sequence alone is not proof of an application defect.
+
 ## Operate the browser
 
 Use `mcporter call e2e.open_session --args '{"config":"<absolute-checkout>/.factory-e2e/e2e.config.ts"}'` and retain its session id. Each checkout's server connection is separate; agents sharing this checkout each open their own session. Pass that id on every `tools`, `call` and `close_session` invocation. Use `mcporter call e2e.tools --args '{"session":"<id>"}'` for the actual catalog, then `e2e.call` with `session`, `tool` and `args`. Observe before acting; node ids belong to the latest observation. A successful action or a closed session does not establish application acceptance.
