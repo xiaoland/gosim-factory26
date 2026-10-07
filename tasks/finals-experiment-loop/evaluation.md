@@ -6,6 +6,12 @@
 
 ## 使用结果
 
+2026-10-07 用户明确要求“用得好”，不是只验证能用。本轮判断同时覆盖行为正确与使用成本：独立会话只收到自然目标，不需要设计者补充 cookie、远端环境变量、题目 ID 或构建接线；能从维护命令的简短输出找到状态、原错及结果，而非默认展开完整原生 rollout。记录实际操作/排错次数、来回消息、输入上下文及 token usage（生产者有记录时）、构建/输运/首次活动/结果回收的分段墙钟。没有 usage 时报告缺项，不把字节数或工具次数伪称 token，也不把模型自然等待算成设施主动劳动。
+
+runtime 反馈记录目录逻辑字节与实际占用、组成、构建环境和 cache 条件、冷/热构建、派生组装及跨网实际传输字节。已有基座的小 Braid 修复不应重新安装和输运无关开发环境；已冻结现场、程序来源及实际启动能力必须保持。新包不预装仅为应用开发使用的 Chromium 等材料，其真实工具入口也不能要求实验使用者自己接线。体积下降或命令成功单独不构成通过：必须由真实运行确认能力仍可用，且使用成本获得有条件的实际改善，不凭一次样本声称普遍节省比例。
+
+本次基线为 `runtime-i14-reset-recovery-20261007b`：`du` 实测约 1.1 GiB，其中 `.playwright` 385 MiB、`node_modules` 402 MiB、`bin` 140 MiB、字体 68 MiB。首次完整构建 705.7 秒；两次成功 restart 墙钟分别约 156 和 161 秒，包含组装与输运，不能直接命名为纯传输耗时。更详细的跨网字节及 token 数据尚缺；负责人后续交付须补实际来源，不靠估算填满表格。
+
 | 需求 | 好设施应达到的可观察结果 | 需测量或核实的内容 |
 | --- | --- | --- |
 | 开展实验 | 给出 variant、run target、task 就能启动；路由和比赛参数可选；不手工组装 SDK、gateway、collector 或身份文件 | 从输入齐备到实际执行的时间、人工步骤、环境修正与返工 |
@@ -108,6 +114,14 @@
 随后对 Stage1 run `ec254b7b29b8421b9a4f14fdc98abdce` 做了三次保存事实核对（原始快照见 `validation/github-sfp7-stage1-owner-restart-blocked.json`）。两个当前 provider session 均为 `blocked`，最新 turn 均 `failed`，native `pending_tools=[]`、`active_turns=0`、`pending_events=0`、`pending_continuations=0`、`pending_resets=0`、`materializing_groups=0`；但 Braid 仍有 `pending_batches=1`。定向读取当前 observer-owned SQLite 后确认该计数对应 `wake_batches.lifecycle='runnable'`、目标 `issue:1` 的唯一 batch，关联 pending wake event；两个 assignment/provider session 都是 `blocked`，而 `claim_runnable_turn` 要求 active/finalizing assignment 与 idle provider session，因此该 batch 当前不可执行，只保留未来恢复机会。证据见 `validation/github-sfp7-stage1-ec254-pending-batch-evidence.json`，调度条件来源为 `sources/braid/src/store/mod.rs` 的 `claim_runnable_turn`。当前 403 是本 run gateway 的新记录：Qwen fallback 返回 `AccessDenied.Unpurchased`，Qianfan 也有 429 `token_plan_person_rate_limit_exceeded`；原始定向日志保留于 `validation/github-sfp7-stage1-ec254-gateway.log`。已核对并结束唯一 controller PID 66956，随后通过既有 `run.stop`、`run.wait` 与 `execution.save` 完成停止和保存：最终 lifecycle `stopped`、container exit code `143`、save `saved=true`、errors 空。处置回执为 `validation/github-sfp7-stage1-owner-restart-disposition.json`；未派发 Stage2，停止放弃的是该不可执行 batch 的后续自动恢复机会，未观察到在途模型/tool turn。
 
 接续前又核对了同 task `native_resume` 的实际合同：`lab/arc_bench/restart.py` 会复制 `data`、保留 `native_scope_id=3a934...` 并设置 `native_resume=true`；I14 入口随后使用 retained request 调用 `braid local --offline-resume`。现有 Braid 的 `prepare_offline_resume` 只清理旧 CLI binding；`provider_resume_candidates` 对 `blocked` session 只接受特定 resume error，而本 run 两个 blocked session 的 `last_resume_error` 均为空，故 native resume 会保留它们和 runnable batch，却不会产生可恢复 candidate，`claim_runnable_turn` 也没有 idle session 可领取 batch。该设施边界已记录在上述 pending-batch evidence；没有启动新的 restart、没有改 DB。继续同 task 前需修复并部署该 resume 接线，不能把复制 data 或设置 `native_resume=true` 当作恢复成功。
+
+随后按 advisor 采用的边界，在 `sources/braid/src/store/mod.rs` 的 `prepare_offline_resume` 接入同一 reset 生命周期：只匹配精确的 reset notice 失败、仍保留原生 session identity、无在途 turn/后继 reset/session、事件与 worktree 身份一致的当前 reset；不调用 `record_provider_resume`，assignment 在 reset notice 验证前不释放给普通 dispatch，失败继续 blocked。`claim_context_reset_notice` 仅为 interrupting reset 接受 blocked assignment。Mac release binary 不能部署，实际构建使用远端 `development-2` Docker、Linux x86-64，独立 runtime 目录为 `runs/runtime-i14-reset-recovery-20261007b`，Braid SHA256 为 `d93c345362c27000d09be151bf752ee113b08e795087fd7e59db0ce9b49aac03`；旧 `/home/yyh/factory26-lab-runtime/i14-sequential-20261006` 未覆盖。
+
+首个部署验证 run `63d294eb60094cf6b6100b5ae681cba1` 暴露了条件过严：同 task restart 的 assignment 已被既有恢复路径置为 `active`，因此 reset 没有重试。该 run 已精确停止并保留。放宽条件到 `active/finalizing/blocked` 后，第二个同 task run `d38fa85756f24f13bb5fbb262b3fdf80` 实际消费上述独立 Linux runtime，仍保留 `native_scope_id=3a9346912db449ffa0f8ccbe5fe2ba8e` 与集中 self-funded 配方。远端 SQLite 已读到两个原 blocked reset 均 `applied`，旧 native provider sessions 均 `replaced`，新 root session `01a1144c-5502...` 与 fast session `01a1144c-48d8...` 已物化，其中 `reset_continuation` 已 `completed`；当前 Braid `blocked_groups=0`、`pending_batches=0`、`pending_resets=0`。d38 当前仍在 Stage1 生成，尚未宣称 Stage1 完成或派发 Stage2。
+
+后续定向观察进一步确认：Braid assignments 仍为 `active`；root 最近一次 `wake_batch` 已 `completed`，其原生会话记录 PR #2 为 OPEN/draft、head `84af540`，等待 `glm-1` 承接。对应 fast 新 session 为 `idle` 且没有 JSONL turn。Issue/PR 两个 worktree 当前只有初始化提交 `6c53cd8`、设计文档提交 `84af540` 及未跟踪 `tasks/`，没有业务实现提交。因此当前可确认的是 reset 恢复成功，Stage1 尚未完成，尚无应用冻结提交，也不具备派发 Stage2 的条件。
+
+进一步读取 root 恢复后的最近一轮原生记录确认：root 将 PR #2 的“已指派 glm-1、等待调度”解释为责任已交接，因而没有创建新的实施请求或评论；其后仅处理例行 Comment #5/#6，并明确结束 turn。Braid 本地合同也明确“指派回执不表示模型已经开始”，而普通 idle assignment 不会被周期性拉起；当前 PR #2 的 wake batch 是此前 403 失败后已消费的旧 batch，reset continuation 没有重放原 assignment 输入。fast managed state 为 `quiescent`、`pendingMessageCount=0`、无原生 JSONL turn。故根因是恢复后缺少面向当前 glm-1 的新输入/wake，不是角色指令缺失、业务实现失败或 reset 身份丢失；需要由有权协作者对 PR #2 发出明确实施输入后，才会重新进入生成。
 
 ### 2026-10-07 自然请求：Hosted GitHub Stage1 → Stage2
 

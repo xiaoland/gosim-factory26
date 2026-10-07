@@ -6,6 +6,8 @@
 
 用户指出 Helium 已登录 self-test，并明确允许逆向其登录接入。主实地确认已有 xiaoland 登录会话；撤回将“cookie 未部署”当作需要用户解决的外部前提。evaluation_implementation 持续完成现有登录态到维护客户端的安全接线及真实认证核验，凭据不进入公开记录或迁移 data，未取得该接线成功证据前不宣称 self-test 完整可用。
 
+2026-10-07 用户新增明确授权：“runtime 的大小也是个值得关注的问题……尽可能精简，避免预打包开发环境比如 chromium、better-sqlite……完整构建、部署等的耗时也需要优化，请你推进。验收不要只是能用，而是用得好（使用者不绕弯子、消耗 token 少、消耗时间少）”。execution_owner 已接续 runtime、依赖材料、DX builders 与增量部署，evaluation_implementation 持续负责 self-test/auth/映射/回收；共享 local_run 按函数边界直接协调。advisor 建议冻结基座派生新 Braid 字节、远端宿主内独立复制后只传变化，并修复导出完成被清理网络错误否定的边界。体积、冷/热构建、实际传输与独立使用成本纳入 [evaluation](evaluation.md)，具体实施归 [implementation](implementation.md)。这些是正在实施的目标，尚无精简或提速通过声明。
+
 ## 当前纠正：模型配方实际消费
 
 2026-10-07 用户指出，验收错误使用已明确耗尽的 ARC API，而非当前自费配方。主 Agent 承担这次冻结配置错误；历史 ARC 授权不代表本轮应选 ARC。P1 `e1ce4d6f6a174bb995c74f22e3db3a0d` 实际首次请求为 HTTP 402 `insufficient_balance`，没有应用生成进展，不能算有效零分或验收通过。原始 run、请求错误与保存材料保留；不要求用户补充 ARC 额度。

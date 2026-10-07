@@ -16,6 +16,8 @@ target 配置固定提供 WSL、sfp7、Hosted 的宿主、run root、Docker/平�
 
 ### 2. 统一 variant 装配与原生数据入口
 
+2026-10-07 用户已明确授权精简 runtime 及优化构建、部署。execution_owner 持续负责 runtime 构建、依赖材料与 DX builders：移出不属于 Harness 启动依赖的预装开发环境，保留实际必需依赖的消费接线；将现有 derive-linux 收敛为冻结基座及 Braid 字节的派生，避免不相关依赖重装；执行宿主独立复制已部署基座后只传变化内容，保存原始基座与新执行身份。完整导出先形成来源记录，容器/镜像清理失败另存具体错误，不阻断已导出的交付。evaluation_implementation 负责 self-test 认证、映射及评测回收，与 runtime owner 按 local_run 函数边界协调。
+
 修改 `scripts/execution_bootstrap.py`、`scripts/experiment_entry.py`、`scripts/harness_layout.py`、`scripts/package_agent.py` 和 `submission` 的组装接线，统一传入 program、inputs、data/workspace 与 native_state_path。网关的创建、关闭、route 和采样由公共入口负责，variant 只消费路径和端点。
 
 适配清单为 pi-minimal、pi-minimal-vv，以及 pi-braid-i14、pi-braid-i14-cleaner、pi-braid-i14-cleaner-direct、pi-braid-i14-e2e、pi-braid-i14-reviewer、pi-braid-i14-reviewer-cleaner-e2e、pi-braid-i14-reviewer-direct。保留各 variant 独立角色/技能/流程，共用路径与运行合同；Pi-only 的 main.py 将 home/session 放在 data/harness，I14 的 main.py/run.py 将 Braid DB、origin/worktree、Pi home 和 retained request 放在同一数据域。容器内路径保持稳定，私有凭据和本次服务句柄独立于可迁移 data。
