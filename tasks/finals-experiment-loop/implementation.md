@@ -46,11 +46,11 @@ target 配置固定提供 WSL、sfp7、Hosted 的宿主、run root、Docker/平�
 
 在 `sources/braid/src/evidence.rs` 抽出从完整已解 records 重建的核心，现有 protobuf 入口和已解输入复用；对应 CLI 增加该输入形式。reader 只解码新增 batch，保存跨 batch 的累计证据。有新数据时每 30 秒最多按固定 cutoff 重建一次、原子发布投影，查询读已发布结果；对象和 session 目录分页，正文按 artifact 引用/offset 读取。保留更新错误与旧 cutoff，不在页面轮询中全量解码或进入 live DB。
 
-### 6. 完成默认自动化、三类评测和旧入口退役
+### 6. 完成默认自动化、四个测评后端和旧入口退役
 
 新增 `lab/automation.py` 的普通 Python 默认程序：单 task 与 stages 共用运行 API，读取采集变量，显式组织 stop/restart、同 variant stages 和自动测评。Local 在实际执行宿主运行，Hosted 的跨 run 程序在包外控制宿主运行；源码、PID 与日志记入首个 run 的 records，不设置实验级控制器或未来任务队列。
 
-从 `lab/arc_bench/evaluate.py`、`package_arc_replay.py`、`arc_replay.py` 接通 simulate、task、official 三种独立评测，消费同一应用快照；task 配置决定实际执行列表与官网费用模式。评测使用独立副本、身份、状态与费用，公开报告显式进入 inputs，隐藏报告保持在评测记录。自动保存成功、失败、停止的全部平台可得结果，保存范围/时点和缺项。
+从 `lab/arc_bench/evaluate.py`、`package_arc_replay.py`、`arc_replay.py` 接通 simulate、task、official、self-test 四个独立测评后端，消费同一应用快照；task 配置决定实际执行列表、self-test 任务身份与官网费用模式。self-test 使用自己的 ZIP 包装、提交、状态和私有结果接口，不继承 Hosted 生成提交或模型配方。评测使用独立副本、身份、状态与费用，公开报告显式进入 inputs，隐藏报告保持在评测记录。自动保存成功、失败、停止的全部平台可得结果，保存范围/时点和缺项。
 
 迁移维护中的入口、配方和调用者后，删除工作树旧 compile/doctor/build 启动流程、capacity/authority/receipt 门禁和 Console 写入协调。旧冻结运行继续由原执行器处理，历史记录保留其读取入口，不批量接管活动执行或重写旧身份。
 

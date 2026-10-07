@@ -27,8 +27,13 @@ stages 由普通 Python 程序按顺序调用运行 API。restart 保留同 vari
 | 规范程序和数据路径 | 程序重新装配，数据整体迁移；删除 extract、通用路径映射和跨 variant 状态转换。 |
 | status 提供可用的运行摘要 | 无参数显示未归档、未正常完成的 run；执行状态和绑定脚本给出的活动判断同时可见。 |
 | 自动且强耦合测评 | 内建公开需求模拟评测、官网应用重放、试题自带评测三种 ARC 路径，不让每个实验重写打包和评分脚本。 |
+| 模型配置按 provider/deployment 区分 | contextWindow、maxTokens 和协议兼容项归集中 catalog 的具体 deployment；选路后应用已确认能力，不按统一模型名覆盖不同供应商。 |
 
-推荐提取现有 OTLP 协议接收能力，以一个共享 Python 服务和本地 SQLite 承担 Console 的 Collector/Backend；Hosted 只携带轻量接收/落盘核心。以下说明理由与适用边界。这是待复核方案，不表示保留 lab.exp 的所有状态与资源治理机制。
+采用现有 OTLP 协议接收能力，以一个共享 Python 服务和本地 SQLite 承担 Console 的 Collector/Backend；Hosted 只携带轻量接收/落盘核心。以下说明理由与适用边界；不保留 lab.exp 的状态与资源治理机制。
+
+本地与 Hosted 统一运行接口、程序材料组装和容器内路径，不强制使用同一种运输格式。本地冻结完整小程序目录，固定版本 runtime 在执行宿主部署并只读挂载；Hosted 将相同程序材料和 runtime 组成自包含 ZIP。原因是官方 SDK 会复制 agent 目录的内容，不能靠 runtime symlink 避免重复复制。固定路径不原地更新，运行记录保留来源；不增加多层缓存、准入或手工证明。
+
+用户 2026-10-07 补充 provider 级模型配置后，采用 advisor 的 deployment 归属与预算语义：集中 catalog 保存已确认的模型能力与兼容项，recipe 只选 deployment 链。每次实际上游尝试从原请求重新计算输出限制；已给上限取请求与供应商上限的较小值，不抬高调用者的小预算。未给上限且没有明确 default 时保持缺失。协议字段只有在确认等义时转换，多预算字段冲突报告具体错误，不猜优先级、不删 thinking/reasoning 来求成功。逐 attempt 保存白名单 requested/effective、deployment 和来源，不保存提示词或凭据；更小的上下文或不兼容消息格式不能靠输出 cap 掩盖。本轮真实验收仍使用已冻结 ARC 路由，不因这项改进擅自切供应商。ARK Kimi K2.7 的具体数值尚待对应套餐的权威证据，不能套用其它型号。
 
 ## 四项共同设计责任
 
@@ -36,8 +41,8 @@ stages 由普通 Python 程序按顺序调用运行 API。restart 保留同 vari
 
 | 责任 | 拥有的行为 | 当前负责人 |
 | --- | --- | --- |
-| ARC 实验执行 | variant/任务/target 解析、服务装配、阶段、控制、策略和结果保存 | execution_owner |
-| 观测与 Console | OTLP、资源采样、费用与 turn、存储查询、通用实验展示、Braid 视图边界 | observability_owner |
+| ARC 实验执行 | variant/任务/target 解析、服务装配、阶段、控制、策略和结果保存 | 主 Agent；cold_local_profile 持有本地执行；execution_owner 持有 builders |
+| 观测与 Console | OTLP、资源采样、费用与 turn、存储查询、通用实验展示、Braid 视图边界 | cold_console_profile |
 | 产品与跨组件架构 | 实验场景、评价标准、路径与数据归属、完整生命周期、交付分批 | 主 Agent |
 | 重大设计取舍 | 复杂度来源、候选结构的因果收益与风险、保留或替换判据 | advisor |
 
@@ -148,12 +153,12 @@ lab restart <run> [--target <target>] [--task <task>] [--route <file>] [--snapsh
 lab status [<run>] [--all] [--json]
 lab wait <run> [--json]
 lab logs <run> [--follow]
-lab evaluate <run> --kind <simulate|official|task> [--snapshot <application-ref>]
+lab evaluate <run> --kind <simulate|official|self-test|task> [--snapshot <application-ref>]
 lab archive <run> [--undo]
 lab serve --config <file>
 ```
 
-CLI 与 Python API 采用同一组运行函数，JSON 输出保留实际来源和原始错误。start 完成程序装配和实际启动后返回 run_id；运行及采集不依赖 CLI 存活。task 是 ARC 任务身份或需求目录，三类评测的命令/题目由该 task 的维护配置提供。没有独立 compile/doctor/build 准入步骤。
+CLI 与 Python API 采用同一组运行函数，JSON 输出保留实际来源和原始错误。start 完成程序装配和实际启动后返回 run_id；运行及采集不依赖 CLI 存活。task 是 ARC 任务身份或需求目录，四个测评后端的命令/题目由该 task 的维护配置提供。没有独立 compile/doctor/build 准入步骤。
 
 restart 固定来源 variant，默认继承 task、target、route、比赛费用模式；只在显式给出参数时覆盖 task、target 或 route。重新装配同名 variant 的当前程序，记录实际版本，支持修复代码后保留数据重启。原 run 的程序与记录保留。不存在 variant 覆盖、任意路径映射或 extract。
 
@@ -183,25 +188,29 @@ lifecycle 是执行器的 starting/running/paused/completed/failed/stopped/unkno
 
 单 task 和 stages 都由同一个默认 Python 自动化程序，在应用快照发布后调用配置的独立测评；supervisor 不再另启动一次。task 配置在 experiments/<name>/task.json 保存需求来源和 evaluations 实际执行列表；它是 ARC 任务与评测的输入配置，不具有控制器、队列或统一实验终态。直接选择需求目录时采用 ARC 题目自带评测；自实现模拟命令和官网重放须在 task 配置中列明。start 展示并保存展开的评测列表，不额外要求许可字符串或确认步骤。
 
-每项只需 kind、测试/命令来源、visibility，以及官网重放的 billing_mode；应用引用由程序绑定本次发布的同一快照，不能在配置里写可变 latest。simulate 的 command 采用 argv 列表，task 使用 ARC 随题入口，official 使用冻结应用重放并明确 self_funded 或 competition。未配置的 simulate/official 不自动启动。费用模式记录在各自评测 run 中，不由模型 route 猜官网费用；真正实验授权仍由对应 packet 的已批准矩阵承担，不在设施新增审批机制。Python 用户脚本直接调用同一 evaluate API，可显式组织三项。
+每项只需 kind、测试/命令来源、visibility，以及官网重放的 billing_mode；应用引用由程序绑定本次发布的同一快照，不能在配置里写可变 latest。simulate 的 command 采用 argv 列表，task 使用 ARC 本地随题入口，official 使用官网冻结应用重放并明确 self_funded 或 competition，self-test 使用官方自测服务及其 platform_task。未配置的测评不自动启动。费用模式记录在各自评测 run 中，不由模型 route 猜官网费用；真正实验授权仍由对应 packet 的已批准矩阵承担，不在设施新增审批机制。Python 用户脚本直接调用同一 evaluate API。
 
-例如以下 task 配置表达三类自动测评；其命令和费用值只是接口示例，没有在本任务启用任何付费执行：
+例如以下 task 配置表达四个测评后端；其命令和费用值只是接口示例，不单独授予付费执行许可：
 
 ```json
 {"requirements": "<ARC需求目录>", "evaluations": [
   {"kind": "simulate", "command": ["<应用测评程序>", "<参数>"], "visibility": "public"},
   {"kind": "task", "visibility": "hidden"},
-  {"kind": "official", "billing_mode": "self_funded", "visibility": "hidden"}
+  {"kind": "official", "billing_mode": "self_funded", "visibility": "hidden"},
+  {"kind": "self-test", "platform_task": "github-stage-1-req-test", "visibility": "hidden"}
 ]}
 ```
 
-三个入口消费同一快照的独立副本，保存各自题目/测试版本、日志、评分和消耗：
+四个入口消费同一快照的独立副本，保存各自题目/测试版本、日志、评分和消耗：
 
 | 内建测评路径 | 复用的现有能力 | 结果解释 |
 | --- | --- | --- |
 | 自实现模拟测试 | ARC 应用评测执行环境、`lab.arc_bench.evaluate` 与自实现测试命令 | 面向生成应用；按公开需求定义，结果不是官网正式成绩 |
 | 官网重放 | `package_arc_replay`、`arc_replay.py` 与 Hosted 提交/观察 | 只上传冻结应用，不再生成；独立执行身份和平台费用 |
+| self-test | 官方自测服务的应用 ZIP 上传与私有结果读取 | 非正式、不计排名；独立 submission 身份，不能由旧 Hosted 生成入口关闭推导不可用 |
 | 试题自带 | ARC Runner 的 tests/requirements 与 experiment-result | 测试缺失/环境失败和有效业务评分分开；不能把“随题附带”自动等同公开 |
+
+self-test 不继承来源生成 run 的 Hosted 提交入口或模型配方。它保存同一应用快照身份、实际包装 ZIP 身份、外部 submission ID、原始结果和具体错误；根 Dockerfile、50 MB 等限制来自该服务实际上传合同。服务未公开精确评测器版本时保留未知，不冒称版本完全一致，也不新增启动门禁。kind 继续表示具体入口，不引入与之并列且可任意组合的 backend 维度。
 
 测评种类与反馈可见性分开配置。每个评测条目有任务内名称、kind、测试来源和 public/hidden 可见性；默认只报告。例如 simulate-public 的公开报告可由 Python 程序明确选为新 run 的 inputs；没有配置就不等待或复制。公开性来自实际测试来源，不能只因文件叫 public 或随题附带就推断。官网隐藏反馈不注入 prompt，也不用于自动选择下一阶段、提示或重试。生成 data 与评测结果目录分开，完整分析材料不能直接成为下一阶段默认输入。
 
@@ -276,7 +285,7 @@ stop RUN 不等于停止独立的 Python 自动化程序，后者若仍在执行
 | 遥测 | lab/otlp 协议和原件格式 | 重复 receiver、逐批全量扫描、额外证明链；增加实际查询索引和 API |
 | Console/Braid | 通用 React 组件、Braid 既有 evidence/视图能力 | live CLI 写桥、accessor/writer、停 HTTP 登记；语义与视图归 Braid |
 | restart/路径 | 应用与原生数据、已有恢复入口 | 程序与数据混放、跨 variant 状态迁移、extract/路径映射；同 variant 整体数据迁移 |
-| 测评/回收 | ARC evaluate、replay 打包和平台取回 | 每次手拼评分入口；整合自动三类测评、完整归档、费用及失败回执 |
+| 测评/回收 | ARC evaluate、replay 打包、self-test 和平台取回 | 每次手拼评分入口；整合四个测评后端、完整归档、费用及失败回执 |
 
 实施时的明确分工是：Braid 维护自己导出的对象、原生关系和视图；Factory Backend 只解析 OTLP 通用 envelope、索引与返回记录，提供 Braid 模块的调用及 HTTP 承载。已有 viewer/evidence 能力按上述边界移动和复用。restart 整体保留 data 内的 Braid 状态，其恢复调用归同 variant 的入口；Lab 不导入另一 variant 的 issues，不通过复制数据库声称通用跨 Harness 热恢复。
 
@@ -284,7 +293,7 @@ stop RUN 不等于停止独立的 Python 自动化程序，后者若仍在执行
 
 1. **完成 run 执行与共同装配。** 接通两个自管 target 和 Hosted 打包入口；新 run supervisor 管 start/stop/pause/resume、真实身份和终态。移出 variants 的 gateway/collector 生命周期，规范 Pi-only 与 Braid 程序/数据路径，接入同 variant restart。旧冻结运行不迁移、不被新控制入口接管。
 2. **接通同一运行的观测与 Console。** 提取接收核心、实现保存/分页查询、补资源 CPU/I/O 和原生活动事实；接入 variant/评测器 status 脚本，CLI 和 Console 共用列表/详情、资源、费用、日志、快照及关联运行，Braid 自有视图接入。
-3. **完成自动闭环及旧入口退役。** 顺序 stages、费用/idle Python 策略、三类自动评测和完整回收共用 run API；迁完调用者后删除旧流程门禁、容量框架和写入协调，更新实际受影响的产品、技术与使用文档。
+3. **完成自动闭环及旧入口退役。** 顺序 stages、费用/idle Python 策略、四个测评后端和完整回收共用 run API；迁完调用者后删除旧流程门禁、容量框架和写入协调，更新实际受影响的产品、技术与使用文档。
 
 target 配置提供执行宿主、数据目录、共享服务地址与平台可导出目录，不从 Mac 路径或 loopback 猜远端地址。共享服务数据常驻独立目录，Mac 侧缓存、控制和结果保存在 WorkSSD。端口可达性、真实资源占用和平台取消后的回收范围属于部署与真实使用反馈，不作为尚未决定架构的占位项，也不承诺已验证。
 

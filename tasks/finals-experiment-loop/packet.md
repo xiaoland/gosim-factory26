@@ -14,7 +14,7 @@ advisor `recipe_source_decision` 核对了文档审计中用户指定的 GLM/Fla
 - **Guardrails**: 2026-10-06 用户已明确批准实施计划开工、自由提交及真实模型独立会话验收，费用不是问题；原话见下文。不控制其它任务运行、不清理历史数据、不 push。Mac 产物只在 WorkSSD。保留他人工作区改动；不编写或运行 Factory/Braid 的测试、smoke 或换名自检。用户新增的自实现模拟测试指生成应用的评测，不扩大为设施测试。
 - **Verification**: 先定义代表需求与可观察结果，再以独立 Agent 的实际使用 profiling 取得反馈。覆盖三参数启动、status、pause/resume、同 variant restart、本地与 Hosted、Pi-only 与 Braid、OTLP/Console、资源、费用/turn 策略、顺序 stages、失败/取消及完整结果保存。查阅历史材料的耗时只作为诊断基线，不能充当真实启动或改造收益证明，方法见 [evaluation](evaluation.md)；不把这些活动塞进实现计划的调查阶段。
 - **Current Truth**: 用户已批准 [design](design.md) 与六段 [implementation](implementation.md) 开工。自费配方已由真实请求 HTTP 200 证明实际消费，pause/resume 保持同一容器；最新 BookStack 接续 `a0d8fdab6eea4fe295c1bbcff65bca41` 约一分钟返回，status 正确显示 running/failed、资源与原生错误，失败现场自动保存成功。该次后续连接超时，没有完成应用或取得随题评分；费用未采集，完整验收仍未通过。
-- **Next Step**: provider_model_config 核对千帆实际连接超时，cold_local_profile 修复 SDK 普通过程日志可见性；独立会话先执行已授权 Pi/Hosted GitHub 两阶段，BookStack 保留现场待明确接续条件。主集成自动评测子 run 的 Mac saved-facts 回收，不重复启动 observer。原失败、所选配方、实际请求及控制损失分别保留；不接管其它任务。
+- **Next Step**: evaluation_implementation 接通 self-test 及四个测评后端的公共接口、配置、原件保存和实际操作；独立会话继续本地 GitHub Stage1/2 的生成与控制，冻结后独立评分。官网生成明确拒绝的路径不再重复上传；BookStack 保存现场及网络故障证据保留，按可消费的修复条件接续。主更新设计、矩阵及 packet 并集成返回，不重复启动 observer、不接管其它任务。
 
 2026-10-07 最新 Linux proxy 去除任意请求体字节上限，仍保留读取超时、JSON 边界和具体 `body_read_error`；交付 binary SHA256 为 `eeacf0fb751b53499941e01ac49b061e497eac3212b0debd8c1a521087e77388`。旧 `388b29…` 是上一接续的冻结身份，不覆盖旧 run 材料。P2 接续已不再返回 413，但发生 `502 upstream_transport_error`，原始诊断为 `Connection timed out (os error 110)`，处于 SendRequest，不能证明供应商未收到请求，因此不扩大模糊错误自动 fallback。普通 `lab logs` 仍缺 SDK 捕获的过程内容，该问题由本地负责人持续处理。
 
@@ -26,7 +26,7 @@ advisor `recipe_source_decision` 核对了文档审计中用户指定的 GLM/Fla
 
 当前提交 `a0305e4b` 保存公共自费配方、冻结入口、DX 消费链、观测回收与日志边界；已有网关/catalog 的其它工作区变化按归属保留，不宣称整个工作区已清洁交付。Console 当前已实际浏览器验证 Pi 详情的 lifecycle/activity、资源/native 与费用 unknown 可见；完整 JSON 不作为默认界面，进一步可读性部署由同一 owner 持续完成。
 
-Hosted 的独立操作取得明确 HTTP 400，而非模型失败。cold_hosted_profile 当前 GET 核实 `hackathon` 已 ended，Stage1/2 需求仍可读但无新建提交入口；`hackathon-evolution` open，仅有 `hackathon-evolution--github` 与 `hackathon-evolution--sheet`。Evolution self-funded 既有提交存在不授权控制或复用它。advisor 建议申请两次 Evolution GitHub 独立非参赛验收：Pi 从官方初赛基线增量完成；I14 从同一基线独立产生修改后取消回收，不虚构 Evolution 阶段。主已通过输入面板请求用户确认该替换范围，尚未获批，不启动新题。原官网两阶段覆盖记为缺口；原 Stage1 同题 self-test 评分入口另作有界只读核对，关闭 Hosted 生成不直接推导评分入口关闭。
+Hosted 的独立操作取得明确 HTTP 400，而非模型失败。cold_hosted_profile 当前 GET 核实 `hackathon` 已 ended，Stage1/2 需求仍可读但无新建生成提交入口。2026-10-07 用户纠正：self-test 是原先明确要求的测评后端，官网生成入口关闭不能扩大为测评不可用。撤回以 Evolution 替换本轮题目的提议及待确认事项，不启动新题或复用其它任务提交。原 Hosted 生成两阶段覆盖仍有缺口；本地 Stage1/2 生成、独立 self-test 评分继续沿用原授权。
 
 独立会话继续持有已授权本地 I14/sfp7 Stage1→Stage2 验收，已收到短自然请求；BookStack 原网络故障现场保留。明确上传拒绝后的保存边界已由独立会话修复并用本次真实原件得到 saved=true（scope program/inputs/records，无远端执行 workspace），不是生成成功或完整远端回收。
 
@@ -34,7 +34,7 @@ Hosted 的独立操作取得明确 HTTP 400，而非模型失败。cold_hosted_p
 
 本地 Braid 首次 `26cd033f71ef4ee6bc5c3cd599b8e73d` 约四秒退出，原错为旧代码读取 `routes['factory26']` 的 KeyError，无模型调用；独立会话修复为按实际模型解析集中绑定，继续持有实际运行和 native idle 证据。该次失败未计为生成或接续通过。共用 Braid 状态读取与当前 scope/native 路径映射还在同一会话的修复闭环中，主不抢占控制或另建 observer。
 
-原 Stage1 官方 self-test 页面当前可读，任务为 `github-stage-1-req-test`（另有 Stage2/3），上传应用 ZIP 最大 50 MB、根含 Dockerfile，页面说明结果仅本人可见、不计正式成绩。该入口与已关闭 Hosted submissions 不是同一路径；阶段题族匹配，但没有公开的精确需求/评测器版本，若使用须独立标为同题 self-test，不冒称 Evolution 成绩或 Hosted replay runner 覆盖。当前仅有只读核对，没有上传评分。
+原 Stage1 官方 self-test 页面当前可读，任务为 `github-stage-1-req-test`（另有 Stage2/3），上传应用 ZIP 最大 50 MB、根含 Dockerfile，页面说明结果仅本人可见、不计正式成绩。该入口与已关闭 Hosted submissions 不是同一路径；没有公开的精确需求/评测器版本时保留该限制，不将其变成新增许可门禁。evaluation_implementation 持续负责官网、self-test、本地随题、本地模拟四个测评后端的实现与真实反馈；主负责公共接口和文档集成。独立验收会话继续持有本地生成与控制，应用冻结后独立测评，隐藏反馈不进入生成。当前 self-test 仅取得只读入口证据，尚未上传评分，不能宣称接入或验收完成。
 
 ## 开工授权与责任
 

@@ -16,7 +16,7 @@
 | 同 variant restart | 程序和 data 分开，restart 整体迁移 data 并重新装配同名 variant 的程序，创建来源明确的新 run | 应用与原生状态没有遗漏；旧记录不变，旧费用/句柄不重复计入；失败不偷偷换旧快照或新会话 |
 | status | 无参数列出未归档且未正常完成的 run，brief 来自绑定的 variant/评测器脚本 | running/stalled 等执行事实和活动判断同时可见；依据时间、缺项和脚本原错可解释 |
 | 顺序 stages | 独立 stage 作为 run 依次启动，平台内部阶段保持真实粒度；无需逐次人工派发 | 每个 run 的输入、控制、耗时和消耗独立；没有实验级控制器或重复 attempt 层 |
-| 自动三类测评 | 模拟测试、官网重放、题目自带入口直接消费应用快照；评分独立取得 | 应用身份、评测来源和独立错误；公开报告显式选择，隐藏反馈不影响生成或控制分支 |
+| 四个测评后端 | 官网重放、self-test、本地随题、本地模拟直接消费应用快照；评分独立取得 | 应用身份、评测来源和独立错误；公开报告显式选择，隐藏反馈不影响生成或控制分支 |
 | 自动保存、事后分析 | 成功、失败和取消都自动回收平台可得的完整工作区、原始日志、评测、消耗与执行配置 | 实际取得范围/时点和缺项；只拿保存材料能否解释、比较与重新使用应用 |
 | 环境复杂但使用简单 | Mac/WSL/sfp7/Hosted 的路径、网络、凭据和能力由 target 装配，不由实验使用者临时修正 | 切换 target 是否只改变物理配置；故障是否能定位到正确执行侧与外部响应 |
 
@@ -61,7 +61,7 @@
 2. 用 Hosted 路径完成同类实际目标，区分执行、平台评分和回收，确认自包含记录可导入共享 Backend。低内存结论来自真实 RSS/缓冲/数据规模测量，不从实现语言推断。
 3. 分别读取一个 Pi-only 与 Braid 运行，在 Console 找到阶段、费用、原始错误和结果；Braid 页面由其自身实现提供。成功样本与真实历史失败样本都保留。
 4. 在已明确授权的真实运行中使用 spend 或 native session/turn idle 条件触发动作，确认采集来源、范围和时点；执行侧读不到事实与 Backend 断流要能区分。观察 stop 与同 variant restart 的实际结果，而非仅有 stop requested；status 的活动判断来自所用 variant 的脚本。
-5. 完成同 variant 的 stage1→stage2 restart，确认整个 data 中的应用、原生状态均被迁移，程序使用新 run 固定版本，旧费用和隐藏报告不变成新生成输入。自动执行配置的三类应用测评，验证公开报告选择与隐藏反馈隔离。另验证实际支持目标的 pause/resume，Hosted 不支持时如实显示。
+5. 完成同 variant 的 stage1→stage2 restart，确认整个 data 中的应用、原生状态均被迁移，程序使用新 run 固定版本，旧费用和隐藏报告不变成新生成输入。自动执行配置的应用测评，覆盖官网、self-test、本地随题、本地模拟四个后端，验证公开报告选择与隐藏反馈隔离。另验证实际支持目标的 pause/resume，Hosted 不支持时如实显示。
 6. 从成功、失败、用户取消的保存材料做一次比较，判断分数、成本、耗时、资源和配置差异；不去现场读取活数据库才能解释历史结果。
 
 这些是验收覆盖，不是要求六次独立收费运行。能在同一真实实验中观察的行为合并；已有原件用于历史读取，缺少的动态能力才安排新操作。新的付费输入、矩阵、策略和停止损失先明确记录并取得相应授权。不得新建假 Harness、模拟 turn、设施测试、smoke 或改名探针来代替真实使用。
@@ -92,6 +92,22 @@
 ### 2026-10-07 自然请求：sfp7 I14 GitHub Stage1 → Stage2
 
 主会话要求官网入口先等核对、不重复上传，继续在 sfp7 用 I14-dx-test 跑 GitHub 第一阶段，原生会话空闲半分钟时自动停止保存，再同 task 接续完成后进入第二阶段，保持集中自费配方。验收者持续持有此流程，不接管其它容器。启动前只读确认 sfp7 `/home` 为本地 `/dev/nvme0n1p3`、可用约 103 GiB；Mac 控制与证据位于 WorkSSD、可用约 241 GiB。当前公共 native facts 仅有 Pi sessions 的 active/waiting_tool/observed 与时间点，没有明确 idle 或 retry 生命周期；已咨询 advisor，不能把超过 30 秒没有 message_end 直接当作空闲。先取得真实执行事实，再按可信状态判据决定是否触发；缺项保持 unknown，不能伪造自动停止覆盖。
+
+首个 run `26cd033f71ef4ee6bc5c3cd599b8e73d`，program `36a693c9b0dc31db618e2ffc3e21021e3d92c2c2a6617837009910e09020906c`，首次共享 runtime 约 1.9 GiB、装配到启动约三分钟。容器启动后约四秒 failed/exit 1，普通 `lab logs` 直接保留 `run.py:139 KeyError: 'factory26'`。集中配方提供 per-model native routes，I14 仍按旧 provider 级 key 取 endpoint。已改为复用 native_model_route 按实际 MODEL 取 endpoint，原 run 自动 saved true/errors 空，只有 gateway producer 文件，无 Braid request/SQLite/native session，不能声称恢复了原生进度。
+
+明确另起同需求 fresh `004e8a6d54f94c478bf9ce383d2c7afc` 后，生成越过模型接线，在 start_shared_proxy 导入 state_writer 时又失败 `ModuleNotFoundError: No module named 'execution_context'`。共享 helper 的 portless/Popen/等待仍依赖已退役门控，已改为直接 Popen，保留 process_identity 与退出/停止 evidence；本次也自动 saved true。下一 fresh `c3ba31ebccf141f38548eac7dbcde021` 进入 Braid，native launch 的 runtime_resources.py 还有同一残余 state_writer 依赖，导致 provider disconnected、未创建 managed execution processes、teardown unknown。原始 Braid diagnostic 明确包含 missing execution_context，原始 stop unknown 不改写。已移除新包此唯一残余调用，并从 I14 SUPPORT 移除不再使用的 state_writer.py；未将旧门控重新打包。以上均无 provider session 或模型进展。
+
+第三次自动回收因 root 的 process-control/临时目录及 stop/telemetry 文件仍为私有模式、宿主用户无权读取而 rsync 23。原始错误保留 `github-sfp7-stage1-save-permission-original.json`；维护 save 在确认 Docker terminal 后将本 run data 所属用户恢复为 run 根目录的宿主 owner，保留权限位，SDK .private 仍排除。sfp7 sudo 非交互权限已实地确认，修复后对同一真实现场 save 返回 saved true/errors 空；未控制其它运行或迁出远端原件。
+
+独立 owner braid_idle_evidence 复用 provider_liveness 的 SQLite/WAL 快照与 Braid status，接到已有 observer 的 native.braid，限定 manifest.native_scope_id，仅映射该 scope 的容器路径，保留源身份/缺项。真实 Braid 初始状态 pending_events=1、provider_sessions 空，因此当时 idle unknown，控制没有触发。advisor 初步全局静止判据经冻结请求复核后修正为任一当前非终态 provider idle/sleeping，turn 已终止且无工具、重试或未解除恢复错误，连续新鲜观察与 turn/活动/恢复指纹保持 30 秒后，经已有 stop/save API 控制；其它会话在途计数只用于明确预期损失。failed turn 也可进入真实 idle，不能把它当业务完成。普通 Python 控制程序为 `validation/github-sfp7-stages.py`，只读已有 status，不建第二采集循环，Stage1 failed 不派发 Stage2，所有源改动仅编译与实际操作验证，未运行设施测试或提交共享源码。
+
+真实模型 run `3a9346912db449ffa0f8ccbe5fe2ba8e` 越过初始化后产生 39 次成功上游响应，包括 Qianfan GLM-5.3 24 次、Qwen GLM-5.3 10 次、Ark Kimi-K3 4 次及 Qwen Kimi-K3 1 次。末段 Qianfan 返回 HTTP 429 `token_plan_person_rate_limit_exceeded`，冻结 fallback Qwen 返回 HTTP 403 `AccessDenied.Unpurchased`；此前 Qwen 成功记录仍保留，不能概括为始终不可用。会话 `01a11255-8f35-7c80-a58d-eac7c7c3bbc0` 在 failed turn 后进入明确 idle，保存事实连续约 33.9 秒空闲后触发，实际停止约在空闲开始 45.7 秒时完成；自动保存 saved true/errors 空。原件为 `3a9346912db449ffa0f8ccbe5fe2ba8e-control.json`、`github-sfp7-stage1-gateway-original-all.txt`。异步 SSH 启动原先持有 stdio 导致 CLI 等待执行终态，已在维护 start/spawn/simulate 的 nohup 分支修正重定向和分组；该 run 采用原始 Docker 身份接回已有 observer，没有重复启动容器。
+
+同题接续 `ffb8014cc06c43c480c2583ef9f3335c` 保留 native_scope `3a9346912db449ffa0f8ccbe5fe2ba8e`，但 Braid 启动被 Git `detected dubious ownership` 拦住：保存阶段已交还宿主 owner 的应用仓库再次由 SDK root 使用。原错为 `github-sfp7-stage1-restart-braid-error.txt`，外层缺失 result.json 不是根因。根据 advisor 判断，维护执行在新 run 独占 data 恢复到 root owner，确认 terminal 后保存交回实际宿主 owner，保留权限位、不跟随符号链接，不扩大全局 safe.directory。从该已保存现场再接续产生 `ec254b7b29b8421b9a4f14fdc98abdce`，CLI 成功返回，原 session `01a11255-8f35-7c80-a58d-eac7c7c3bbc0` 创建 UTC 18:18:14 的新 running turn `01a11270-079f-7033-8422-fc3192b15450`，证明越过 Git 错误并恢复原生执行。控制程序此次禁用重复 idle-stop，以第一阶段 completed 作为第二阶段派发前提；随后因供应商阻塞按下述处置停止，第二阶段始终未启动。
+
+随后对 Stage1 run `ec254b7b29b8421b9a4f14fdc98abdce` 做了三次保存事实核对（原始快照见 `validation/github-sfp7-stage1-owner-restart-blocked.json`）。两个当前 provider session 均为 `blocked`，最新 turn 均 `failed`，native `pending_tools=[]`、`active_turns=0`、`pending_events=0`、`pending_continuations=0`、`pending_resets=0`、`materializing_groups=0`；但 Braid 仍有 `pending_batches=1`。定向读取当前 observer-owned SQLite 后确认该计数对应 `wake_batches.lifecycle='runnable'`、目标 `issue:1` 的唯一 batch，关联 pending wake event；两个 assignment/provider session 都是 `blocked`，而 `claim_runnable_turn` 要求 active/finalizing assignment 与 idle provider session，因此该 batch 当前不可执行，只保留未来恢复机会。证据见 `validation/github-sfp7-stage1-ec254-pending-batch-evidence.json`，调度条件来源为 `sources/braid/src/store/mod.rs` 的 `claim_runnable_turn`。当前 403 是本 run gateway 的新记录：Qwen fallback 返回 `AccessDenied.Unpurchased`，Qianfan 也有 429 `token_plan_person_rate_limit_exceeded`；原始定向日志保留于 `validation/github-sfp7-stage1-ec254-gateway.log`。已核对并结束唯一 controller PID 66956，随后通过既有 `run.stop`、`run.wait` 与 `execution.save` 完成停止和保存：最终 lifecycle `stopped`、container exit code `143`、save `saved=true`、errors 空。处置回执为 `validation/github-sfp7-stage1-owner-restart-disposition.json`；未派发 Stage2，停止放弃的是该不可执行 batch 的后续自动恢复机会，未观察到在途模型/tool turn。
+
+接续前又核对了同 task `native_resume` 的实际合同：`lab/arc_bench/restart.py` 会复制 `data`、保留 `native_scope_id=3a934...` 并设置 `native_resume=true`；I14 入口随后使用 retained request 调用 `braid local --offline-resume`。现有 Braid 的 `prepare_offline_resume` 只清理旧 CLI binding；`provider_resume_candidates` 对 `blocked` session 只接受特定 resume error，而本 run 两个 blocked session 的 `last_resume_error` 均为空，故 native resume 会保留它们和 runnable batch，却不会产生可恢复 candidate，`claim_runnable_turn` 也没有 idle session 可领取 batch。该设施边界已记录在上述 pending-batch evidence；没有启动新的 restart、没有改 DB。继续同 task 前需修复并部署该 resume 接线，不能把复制 data 或设置 `native_resume=true` 当作恢复成功。
 
 ### 2026-10-07 自然请求：Hosted GitHub Stage1 → Stage2
 
@@ -147,27 +163,27 @@ GitHub 输入固定为 `hackathon--github-stage-1`、`hackathon--github-stage-2`
 
 variant 来源固定：`I14-dx-test` 从 `pi-braid-i14` 派生；名称为 `pi-minimal-vv-dx-test` 的新 variant 从 `pi-minimal` 派生，不引入旧 vv tester/e2e 行为。当前模型通道由公共 `harness/model-recipes/self-funded.json` 选择供应商链，不使用已耗尽 ARC API；旧 P1 的错误冻结与响应原样保留。I14 保持 root `glm-5.3`、fast/visual `glm-5.3-flash`、角色可用 `kimi-k3`/`deepseek-v4-flash-0731` 的实际模型闭包；Pi 保持主角色 `glm-5.3-flash`、advisor `kimi-k2.7-code`。每个 run 冻结实际选中的 deployment 顺序、wire model 与 per-provider 描述，不把不同模型偷偷映射成 Flash，不由验收者临时换供应商。受限模型合计只允许一个 Braid session 使用，保护须按 Braid session 生效；运行矩阵串行，不以子 Agent 数量替代该限制。
 
-不参与比赛，官方生成/重放显式 `self_funded`，不继承历史 `official_evaluation` 或比赛提交身份。费用不限不等于无限运行：下表最多八次生成执行，每个生成 run 以四小时为观察和停止边界，评测由实际平台终态完成。设施失败保留原件，由同一 owner 修复后明确接续，不盲目重发未知收费写入。已冻结应用的独立评测可与下一 stage 并行，不接管其它任务。
+不参与比赛，官方生成/重放显式 `self_funded`，self-test 为私有非排名评测，不继承历史 `official_evaluation` 或比赛提交身份。下表最多八次有效生成执行；按当前 AGENTS 约定，本地自费不默认附加四小时或金额停止线，原表 A 的金额控制只在采集可靠且实验明确采用时成立，不把账单未知变成默认 gate。评测由实际平台终态完成。设施失败保留原件，由同一 owner 修复后明确接续，不盲目重发未知收费写入。已冻结应用的独立评测可与下一 stage 并行，不接管其它任务。
 
 | 行 | variant / target / task | 合并动作 | 生成执行数与证据 |
 | --- | --- | --- | --- |
 | A | Pi / WSL / BookStack | 三参数 start；真实活动后 pause 约 30 秒再 resume；采集已知且大于零的本 run spend 触发一次 stop；同 task restart 完成，应用自动 task eval | 2；原 run pause/resume 身份不变；restart 新 Lab run 沿用原 native session，整个 data 保留、旧费用/records 不迁移；真实随题报告绑定冻结 BookStack 应用 |
-| B | Braid / sfp7 / GitHub Stage1 → Stage2 | 三参数 start；由可信 native idle 条件触发一次 stop；同 task restart 完成；completed 后默认 Python 程序 restart 到 Stage2；Stage1 应用自动 simulate+official | 3；同 task 保留 Braid/native identity，Stage2 新建 native task/root、继承完整 data 与应用；公开代理与官网重放共用 Stage1 应用快照，隐藏报告不进 Stage2 |
+| B | Braid / sfp7 / GitHub Stage1 → Stage2 | 三参数 start；由可信 native idle 条件触发一次 stop；同 task restart 完成；completed 后默认 Python 程序 restart 到 Stage2；Stage1 应用独立 simulate+self-test，官网重放保留明确拒绝证据 | 3；同 task 保留 Braid/native identity，Stage2 新建 native task/root、继承完整 data 与应用；公开代理与 self-test 共用 Stage1 应用快照，隐藏报告不进 Stage2；self-test 不冒充 Hosted 生成覆盖 |
 | C | Pi / Hosted / GitHub Stage1 → Stage2 | 三参数 start，自包含执行；pause/resume 保存不支持原错；两个阶段由默认程序顺序完成、终态导入共享 Backend | 2；平台实际身份、self_funded、Hosted 轻量采集资源、Stage2 原生新任务与应用接续、完整可得回收及导入 cutoff |
 | D | Braid / Hosted / GitHub Stage1 | 三参数 start，真实原生活动且出现可确认应用写入后 platform cancel，仅回收不恢复 | 1；取消前最近 workspace 时点、预计损失、实际 cancel 回执、进程/平台终态、可得原生状态/应用/日志/遥测与缺项 |
 | 共用 | 本轮生成和评测 run | status 默认/RUN/--all、logs、wait、archive/undo；Console Pi/Braid/评测的状态、资源、费用、日志、快照和评分；Braid 自有对象/session/正文/cutoff 页面 | 默认列表只列未归档且非 completed；archive 不停止/删数据；activity 与 lifecycle 分开；仅靠保存材料可解释成功、策略取消、平台取消及实际失败 |
 
-A 的金额停止采用采集层已归属本 run 的 spend，要求 value/currency/source/actual-or-estimate/as_of 已知且新鲜，第一次大于零触发；unknown 不当作零，停止后不重复启动。estimate 仅在明确价格来源、币种与请求 usage 都可得时采用；不以 route/model 别名证明计价，不为订阅套餐套虚构单价。若 ARC 路径仅终态返回账单且维护采集没有可信实时 estimate，则记录 spend 触发未覆盖；仍可手动停止取得同 task restart 的实际反馈，但不能记为预算策略生效。四小时边界属于另一种停止原因。
+A 的金额控制仅作为明确采用时的验收条件：采集层须已归属本 run 的 spend，value/currency/source/actual-or-estimate/as_of 已知且新鲜，第一次大于零触发；unknown 不当作零，停止后不重复启动。estimate 仅在明确价格来源、币种与请求 usage 都可得时采用；不以 route/model 别名证明计价，不为订阅套餐套虚构单价。没有可信实时费用时记录该项未覆盖；仍可手动停止取得同 task restart 的实际反馈，但不能记为预算策略生效。本地自费默认运行不采用此金额条件或四小时停止边界。
 
-主会话已采用本矩阵为实际验收范围：最多八次生成与三次独立评测，不因低分追加。执行与评测交付及必要修复的稳定 owner 为 `/root/evaluation_implementation`，观测 owner 为 `/root/cold_console_profile`；主会话负责公共 API、CLI、automation 与总文档。验收者不提前 review 未交付实现，收到可消费入口后以真实操作反馈，后续文件编辑使用 apply_patch。
+主会话已采用本矩阵为实际验收范围：最多八次有效生成，不因低分追加。原三次独立评测的安排补正为包含 self-test：A 的 BookStack 随题评测及 B 同一冻结 Stage1 的模拟和 self-test；官网重放及 Hosted 生成无法执行的覆盖保留实际拒绝与缺口，不换题伪称完成。用户要求四个后端都由设施支持，不代表必须对不可用入口重复提交。评测交付及必要修复的稳定 owner 为 `/root/evaluation_implementation`，观测 owner 为 `/root/cold_console_profile`；独立验收会话持有实际生成与控制，主会话负责公共 API、CLI、automation 与总文档。
 
 B 的 idle 条件固定为本 run 中非 terminal native session 连续两个观察达到 30 秒没有可信原生活动、采集仍新鲜，且不处于 waiting_tool/retrying。保留真实 session/turn 生命周期、最后活动与采用来源；有原生 turn 则用 turn_idle_for，没有可验证原生 turn 则使用 session_idle_for 并注明覆盖限制。读者缺失或未知时不触发，不模拟时间、turn 或停滞。若运行持续活跃直到自然完成而未达到条件，记录“idle 动作未覆盖”，不硬停后冒称触发；可沿该行已授权同 task 接续观察，不增加虚假场景。采集只使用维护程序与其保存摘要，不另起爬官网/日志采集循环。
 
 A/B 控制允许损失仅限本会话自己的在途请求、连接与尚未落盘写入。动作前记录真实 native identity、最近可信活动、应用 Git 状态与停止目的，动作后分别记录终止、应用可得、完整回收和实际清理时点。D 已授权有损平台 cancel，必须先记录最近平台可读 workspace 时点及预计损失；取消可能绕过包内 finalizer，不能将部分回收称为完整最新现场，也不把另起空会话称无损恢复。
 
-评测配置采用维护入口的实际格式后保存原件。A 的 task 使用真实 BookStack 随题 tests，执行在冻结应用独立副本中，默认 hidden；B 的 simulate 复用已有 `benchmarks/hackathon` 公开代理与正式维护运行方法，不另造应用 smoke，保留实际测试源码版本和来源限制。B 的 official 只上传同一 Stage1 冻结应用，self_funded、hidden。公开代理报告只由显式配置选为 Stage2 inputs，隐藏结果不得决定生成提示、重试或下一 stage。各评测失败不取消其它种类、不改写生成结果；业务零分而程序完成仍是 completed。
+评测配置采用维护入口的实际格式后保存原件。A 的 task 使用真实 BookStack 随题 tests，执行在冻结应用独立副本中，默认 hidden；B 的 simulate 复用已有 `benchmarks/hackathon` 公开代理与正式维护运行方法，不另造应用 smoke，保留实际测试源码版本和来源限制。B 的 self-test 上传同一 Stage1 冻结应用，任务 `github-stage-1-req-test`，私有非排名、hidden；精确评测器版本未公开时明示未知。官网重放不因生成提交入口关闭而与 self-test 混同，不重复已确定被拒绝的请求。公开代理报告只由显式配置选为 Stage2 inputs，隐藏结果不得决定生成提示、重试或下一 stage。各评测失败不取消其它种类、不改写生成结果；业务零分而程序完成仍是 completed。
 
-本轮不单独制造假任务/假模型来取得 failed。真实故障保留原错并修复；若均成功，使用已有真实历史失败读取材料时明确标为历史覆盖，不冒充新版本动态失败。三类评测分别来自正确题目，Console 与比较必须展示来源区别。
+本轮不单独制造假任务/假模型来取得 failed。真实故障保留原错并修复；若均成功，使用已有真实历史失败读取材料时明确标为历史覆盖，不冒充新版本动态失败。四个测评后端分别来自正确题目，Console 与比较必须展示来源区别。
 
 原件入口为 `runs/finals-experiment-loop/validation/`，Mac 所有 cache/tmp/控制/回收均在 WorkSSD。逐行保存 task/route/target/program 版本、原始命令和 stdout/stderr/HTTP 响应、控制回执、run/平台/native 身份、快照、回收范围、策略事实、UI 观察。分别记录输入齐备→实际执行、首个活动、规则→动作、阶段→应用、应用→评分、终态→退出/回收、事件→Console 可查的时点；墙钟、主动操作段、模型/平台等待、寻找/排错与返工分开，不猜测纯主动劳动。资源来自真实执行域 CPU/RSS/I/O/磁盘以及 collector/gateway/采样分项，无法分项则明示缺口。
 
