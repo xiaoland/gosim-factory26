@@ -45,12 +45,12 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 
 ## 委派情况与责任收敛
 
-本次live agent tree只有主Agent running；execution_owner、competition_cost_decision、process_reaping_decision均completed，其余历史名称不在当前live tree。不存在多位负责人正在并行推进的事实。本次只整理/查读文档，没有新派run、停止run或唤醒负责人。
+上次整理时只有主Agent running，其余可见assignment均completed。用户随后明确“按合理的优先级、责任分配，推进”，主已续派execution_owner完成持续采集/费用事实与Python策略工作面，主继续既有run保存/评测闭环。advisor未唤醒。本轮不新增模型生成或控制其它任务run。
 
 | 负责人/角色 | 已承担与采用结果 | 当前责任、状态 |
 | --- | --- | --- |
 | 主Agent `/root` | run/自动化/集成，proxy后续修复，编译源对齐，Console/Braid后续修复，采纳返回与提交 | 活跃；拥有总目标、优先级、所有未验收项和运行闭环，不以已委派卸责 |
-| execution_owner（执行者） | runtime/安装/部署、公共入口/Tini、应用环境；最近Hosted采集/控制边界采用80794c7a（原e8a9d01b只改写提交说明） | 最新assignment completed；无其报告中的构建/控制在途。后续同工作面优先续派，不写成当前仍在执行 |
+| execution_owner（执行者） | runtime/安装/部署、公共入口/Tini、应用环境；Hosted采集/控制采用80794c7a；时钟回拨复用修正daa96533 | 已续派：核对采集变量/策略实际可用性、计价来源及必要reader/文档修复；不操作两活跃模型run，不新增收费run。主持有run/automation/targets，避免重叠 |
 | competition_cost_decision（advisor） | 短控制锁、同request_id确认、ZIP锁外、stop不调用observe建议已采用，由执行者落实 | completed；此前还被要求调查计价/代理，属角色越界，今后只基于已收集证据处理工程取舍 |
 | process_reaping_decision（advisor） | 标准Tini/subreaper、保留Popen退出状态所有权、不设全局并发gate建议已采用 | completed，不负责资源实现或验收 |
 | acceptance_conversation_decision（误用advisor） | 历史会话取证及评价文档修改已采用b84d6d52 | assignment已结束，不在live tree；保留证据不重做，调查/编辑不再交advisor，该低优先级项不扩展 |
@@ -67,6 +67,8 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 4. 主按归属整合本任务未提交源码/文档并逐项提交；不整目录提交model-proxy或Braid dirty tree。整体报告再次核对目标，不以最近局部修复代替完成。
 
 当前不需要用户给停止线、余额或新许可。此整理不改变原目标、费用模式和比赛禁令。
+
+本轮实际核对发现I14 ed426的冻结task_config没有evaluations，现有默认自动化会直接返回而不评分。主已给维护的github-stage-1/2任务配置默认self-test，后续正常启动消费；不改写ed426冻结manifest。为当前ed426补普通后台脚本 `records/finish-evaluation.py`，等待正常completed及Mac result-save成功后独立self-test，失败/停止则不评分。进程PID66676已实际启动，回执phase=waiting-for-generation；来源、PID出生身份、日志及结果均在该run的records。它不是新的采集者，不创建模型生成，self-test不参赛；此时尚无评分证明。Pi a3已有随题评测配置，保持现有自动链不重复派发。
 
 ## 关键交付和证据
 

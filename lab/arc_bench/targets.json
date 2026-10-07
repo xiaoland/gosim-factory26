@@ -35,11 +35,13 @@
     },
     "github-stage-1": {
       "requirements": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-1/requirements",
-      "platform_task": "hackathon--github-stage-1"
+      "platform_task": "hackathon--github-stage-1",
+      "evaluations": [{"kind": "self-test"}]
     },
     "github-stage-2": {
       "requirements": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-2/requirements",
-      "platform_task": "hackathon--github-stage-2"
+      "platform_task": "hackathon--github-stage-2",
+      "evaluations": [{"kind": "self-test"}]
     },
     "github-stage-1-req-test": {
       "requirements": "/Volumes/WorkSSD/Development/factory26/runs/iteration14/timeout-retry-20261004/execution/inputs/github-stage-1/requirements",
