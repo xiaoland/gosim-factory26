@@ -26,7 +26,7 @@
 | --- | --- | --- |
 | run入口、执行、控制、数据布局 | 两DX已真实运行；Pi pause/resume、WSL→sfp7同任务接续有实际证据；失败及用户指定停止现场已保存 | 两DX完整生成/保存/自动评测；下一task新原生身份与业务数据保留、stages完整链 |
 | 公共装配、runtime、构建部署 | 同一安装器及公共最终装配；程序材料约16MB，安装约512MB；普通observer开发来源约246MB→2MB；源对齐release实测2分02秒 | 正常操作冷/热耗时及总成本归纳；不能把材料大小当安装占用、静态体积当普遍提速 |
-| model-proxy与供应商用量 | 修复reqwest Linux默认30秒TCP期限，Pi实际大请求跨过期限并按原配方返回；I14新代理实际取得千帆/ARK returned usage | ARC已核实计价及金额来源未接通；旧Pi冻结代理无新usage捕获，不反推历史；代理源码混合未提交材料需按归属收口 |
+| model-proxy与供应商用量 | 修复reqwest Linux默认30秒TCP期限，Pi实际大请求跨过期限并按原配方返回；I14新代理实际取得千帆/ARK returned usage；Hosted平台运输已接通ARC单价与native usage的部分费用小计9cf8690c | 现代Hosted实时费用及策略动作未验收；旧Pi冻结代理无新usage捕获，不反推历史；代理源码混合未提交材料需按归属收口 |
 | 持续采集、Python策略（当前最高优先级） | watch读saved facts并保留原时间；策略不替代自动评测；Hosted约6/8分钟工作区采集，只读运行事实；GET/ZIP移出控制锁，stop不另起采集 | 现代Hosted导出、采集期间控制及策略实际触发未验收；金额unknown，token不是账单/比赛额度 |
 | 资源管理与进程回收 | memory/pids监控、有界补救、明确退出及Tini已实现；真实Linux浏览器一次生命周期无浏览器残留；长run有采样 | 长运行回收与真实触顶补救/退出证据未齐，不制造故障填表，不把采样当峰值 |
 | Console、OTLP、Braid视图 | Pi首页/详情及自动刷新实际可用；Braid入口不再猜variant名称；SQLite并发初始化修复后batch增长；轻量Summary生产/消费已提交并Linux编译6分07秒 | Summary新ELF尚未用于在途run；最新reader/静态页最终部署及动态协作视图未通过；最终评分分析待产物 |
@@ -36,6 +36,8 @@
 应用环境专属证据归 [应用环境packet](../harness-app-environment/packet.md)。上述实现交付不自动转为已验收。
 
 ## 实际运行与在途状态
+
+19:48按用户要求深入检查工作区：Pi不是完全停滞，但74个请求中53次千帆HTTP500、两次ARK429，失败attempt累计等待约115分钟；首页截图白屏，App.jsx使用UserContext却缺少导入；浏览器长socket路径失败及跨shell未继承session造成双daemon。19:48:54生成Agent自行取得ReferenceError并开始定位。I14原evaluation_closure负责人返回只读证据：PR #2在19:46:50收到changes_requested，随后root/fast仍在执行；325次供应商attempt中311次200、14次429，没有Pi式连续500/130秒失败等待，header平均约3.99秒。两run均无最终评分。详见[晚间运行诊断](runtime-diagnosis-20261007.md)。本次仅诊断，未改变运行/配方或代修业务应用；“active”不能再被解读为运行顺利。
 
 2026-10-07本次整理直接读Mac保存事实：Pi `a3a9a5262b8b40f382883ed636758464`（BookStack）as_of=1791369786、I14 `ed426cf521bd4f46ba58629f4acbd3e3`（github-stage-1）as_of=1791369832，均running/active、自费、不参赛、sfp7执行。未取得本轮终态/最终评分。原件为 `runs/lab/runs/<run>/records/status.json`，这里是带时间读回，不是永久实时状态。
 
@@ -61,6 +63,10 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 用户2026-10-07明确纠正：“advisor 是给建议的，怎么会变成执行者？而且也不应该让 advisor 去收集证据啊”。当前分工：执行者收集证据，完成调查/修复/操作/验证；主把目标、约束、证据及一个待决问题交advisor，仅请建议，主决定，执行者落实。advisor不当reviewer、调查者、文档作者或监控执行者。已有材料不因纠正分工重复调查。
 
 ## 当前推进顺序及剩余责任
+
+用户随后确认“不记住失败是正常的”，要求先修其它问题。当前不改变千帆等待期限、fallback跨请求记忆或在途配方。主修submission/runtime_install.py的公共短socket目录（按原目录hash隔离，Linux临时socket与Mac WorkSSD分别落位），修浏览器技能示例为每条命令显式session；未来程序消费，未热改在途冻结材料。用现有Pi容器、独立诊断session实际打开现有首页、读取交互元素并close，原超长名称task-8945cd75636e在短目录下正常，无需代修应用；原生Agent已自行修好白屏。第一次诊断命令的shell引用错误未启动浏览器，保留工具回执，不记作产品失败。
+
+Console原owner续派被thread limit拒绝，主明确接管。查明reader文件18:06更新，而服务PID1318330从18:02运行；静态页hash也落后。主更新Braid静态页并只重载Console至PID3951941（20:19:46），静态页hash已与源码dca6014b一致，reader文件hashc13cfae8一致。生成容器与observer未重启。API旧投影仍为空/partial，需要新worker回执进一步判别；不能把部署完成当动态视图通过。evaluation_closure已续派负责两run实际保存/自动评测，尚待返回，不暂存/提交；主统一处理Git index。
 
 1. 持续采集、费用事实及普通Python策略最高优先级。Hosted实现已返回，后续实际qualification优先续派execution_owner；主拥有消费/自动化接线。金额、策略动作和控制边界须分别有证据，不用预算问题阻塞设施交付。
 2. 主完成现有两条自费run的生成—保存—自动评测闭环，已有observer是唯一采集者，不频繁读心跳或派同条件run；明确设施缺陷按原授权修复，保留实际消费版本。

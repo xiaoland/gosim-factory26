@@ -5,6 +5,7 @@ the container supplies the ordinary Node/Python system and writable cache.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 from pathlib import Path
@@ -26,6 +27,10 @@ def application_environment(runtime: Path, environment: dict[str, str],
     """Use the platform application Node without exposing the tools' Node."""
     result = dict(environment)
     result.pop("NODE_PATH", None)
+    # Unix socket paths include the session name; durable run paths are too long.
+    socket_scope = result.get("AGENT_BROWSER_SOCKET_DIR", str(runtime))
+    socket_root = Path("/tmp/f26-b") if sys.platform == "linux" else Path("/Volumes/WorkSSD/.factory26/browser-sockets")
+    result["AGENT_BROWSER_SOCKET_DIR"] = str(socket_root / hashlib.sha256(socket_scope.encode()).hexdigest()[:12])
     result["PATH"] = os.pathsep.join(map(str, (
         Path("/usr/local/bin"), *tool_paths, runtime / "tools", Path("/usr/bin"), Path("/bin"))))
     return result
