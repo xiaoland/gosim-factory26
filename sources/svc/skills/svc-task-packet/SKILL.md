@@ -8,7 +8,7 @@ metadata:
 # Task Packet
 
 A task packet holds the task's current explanation, route, evidence, and next action.
-Use [project documentation](../svc-documentation/SKILL.md#relationship-to-task-state) for reusable product, technical, and operating definitions; link them from the packet rather than keeping a second definition.
+Keep reusable product, technical, and operating definitions at their existing project owners; link them from the packet rather than keeping a second definition. When locating or updating those owners needs guidance, use an installed `svc-specs` or the optional [project documentation](../svc-documentation/SKILL.md#relationship-to-task-state) skill.
 A work summary or handoff communicates the result, remaining obligations, and the material its recipient needs; it does not replace the packet or the shared definition.
 
 Conversation accumulates in time order, while the current decision depends on a smaller set of still-applicable facts, explanations, and unanswered questions.
@@ -78,7 +78,9 @@ The following guidance supports that need without imposing a first-use shape che
 | --- | --- |
 | Keep evidence, current explanations, designs, decisions, and result judgments usable | [Information and result use](references/information.md). |
 | Plan a route or coordinate owners, dependencies, and real shared barriers | [Planning and dependencies](references/planning.md). |
-| Decide what work another Agent can usefully own and how to consume it | [Delegation](../svc-sub-agents/SKILL.md). |
-| Preserve accepted reusable product, technical, or operating knowledge | [Project documentation](../svc-documentation/SKILL.md). |
+| Decide what work another Agent can usefully own and how to consume it | Optional [Delegation](../svc-sub-agents/SKILL.md), when installed. |
+| Preserve accepted reusable product, technical, or operating knowledge | An installed `svc-specs` or optional [Project documentation](../svc-documentation/SKILL.md). |
 
 Use [templates](assets/templates/index.md) only when their shape helps; they are optional starting material, not a fixed packet layout.
+
+Cross-skill routes are optional; check the actual discovery entries before following them. If neither knowledge skill is installed, update the existing requirement, design, operation or source owner directly and link it from the packet. If delegation guidance is absent, keep the work with its current owner, or use the host's authorized delegation mechanism with a clear outcome, effect boundary and adoption evidence. Missing related skills do not block packet work, authorize delegation or require installing the full collection.

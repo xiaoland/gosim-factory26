@@ -1,6 +1,7 @@
 # Data Workflows (Save, Sync, Validate, Import/Export)
 
 > Last verified: July 2026 · against Handsontable 18.0 docs (handsontable/handsontable@develop docs source)
+> Factory adaptation: October 2026 · save/sync examples checked against the 18.0 API contract; no application execution claimed.
 
 End-to-end data patterns: persisting edits, syncing grids, dependent dropdowns, bulk validation,
 import/export, and undo/redo. Framework is labeled per snippet (React uses
@@ -35,51 +36,71 @@ confirmed values back to the grid at once, wrap the writes in `batch()` so it re
 
 Docs: https://handsontable.com/docs/react-data-grid/saving-data/
 
-### Debounced auto-save with dirty-row tracking
+### Debounced auto-save with serial writes
 
-Condensed from the auto-save recipe (vanilla JS/TS; in React, pass the same handler via the
-`afterChange` prop). Track changed *physical* rows in a `Set`, debounce, send only dirty rows:
+For cell edits to existing object rows, use immutable, unique string `id` values and retain
+snapshots by ID. Convert the hook's visual index before reading source data. This local queue
+sends one batch at a time; edits made during a request remain pending for a later batch.
 
 ```typescript
-// Vanilla / TypeScript
-const dirtyRows = new Set<number>();
+// Vanilla / TypeScript; use the same handler via React's afterChange prop.
+type SavedRow = { id: string; [prop: string]: unknown };
+const dirtyRows = new Map<string, SavedRow>();
 let saveTimeout: ReturnType<typeof setTimeout> | null = null;
+let saveQueue = Promise.resolve();
+
+function scheduleSave() {
+  if (saveTimeout !== null) clearTimeout(saveTimeout);
+  saveTimeout = setTimeout(() => {
+    saveTimeout = null;
+    saveQueue = saveQueue.then(async () => {
+      const batch = new Map(dirtyRows);
+      dirtyRows.clear();
+      if (batch.size === 0) return;
+      try {
+        await saveRowsToBackend([...batch.values()]);
+      } catch (error) {
+        // A later local edit owns the newer snapshot for the same object.
+        batch.forEach((row, id) => {
+          if (!dirtyRows.has(id)) dirtyRows.set(id, row);
+        });
+        showSaveError(error); // display the failure and offer Retry -> scheduleSave()
+      }
+    });
+  }, 800);
+}
 
 // in the grid settings:
 afterChange(changes, source) {
-  if (!changes || source === 'loadData') {
-    return;
-  }
+  if (!changes || source === 'loadData') return;
   changes.forEach(([visualRow, _prop, oldValue, newValue]) => {
-    if (oldValue !== newValue) {
-      const physicalRow = hot.toPhysicalRow(visualRow as number);
-      if (typeof physicalRow === 'number') {
-        dirtyRows.add(physicalRow);
-      }
+    if (oldValue === newValue) return;
+    const physicalRow = hot.toPhysicalRow(visualRow);
+    if (physicalRow === null || physicalRow === undefined) {
+      throw new Error(`No source row for visual row ${visualRow}`);
     }
+    const row = hot.getSourceDataAtRow(physicalRow) as SavedRow;
+    dirtyRows.set(row.id, structuredClone(row));
   });
-  if (saveTimeout) {
-    clearTimeout(saveTimeout);
-  }
-  saveTimeout = setTimeout(async () => {
-    const physicalRows = Array.from(dirtyRows);
-    const rowsToSave = physicalRows
-      .map((physicalRow) => hot.getSourceDataAtRow(physicalRow))
-      .filter((row) => row !== undefined && row !== null);
-    dirtyRows.clear();
-    try {
-      await saveRowsToBackend(rowsToSave); // e.g. fetch('/api/products', { method: 'PATCH', ... })
-    } catch (_error) {
-      physicalRows.forEach((physicalRow) => dirtyRows.add(physicalRow)); // retry next debounce
-    }
-  }, 800);
+  scheduleSave();
 }
 ```
 
-Use object rows with a stable primary key (`id`); for save-status UIs, track a request counter
-so a stale response can't overwrite a newer one.
+`saveRowsToBackend` is the application's adapter: serialize the supplied snapshot, reject on
+non-success HTTP responses, and resolve only after persistence is acknowledged. `showSaveError`
+is a non-throwing UI callback that keeps the unsaved state visible and binds Retry to
+`scheduleSave()`. A failed batch stays pending; a later edit or explicit Retry sends it again.
+There is no automatic retry timer. Keep unsaved state while a debounce, request or dirty batch
+exists, and dispose the timer only as part of a lifecycle that preserves or resolves those edits.
 
-Docs: https://handsontable.com/docs/react-data-grid/recipes/data-management/auto-save-backend/
+Serialization prevents overlapping writes from this queue when a completed response means the
+server has finished that write. It does not order other tabs or users, or a timed-out request
+that the server may still commit. Those cases need backend version/conflict control or a protocol
+that both deduplicates retries and preserves write order; a UI request counter alone cannot protect stored
+values. Treat row insertion, deletion, ID changes and dataset replacement as separate persistence
+operations, rather than applying this cell-edit example to them.
+
+Docs: https://handsontable.com/docs/18.0/javascript-data-grid/api/hooks/#afterchange · https://handsontable.com/docs/18.0/javascript-data-grid/api/core/#getsourcedataatrow
 
 ### `loadData()` vs `updateData()`
 
@@ -104,41 +125,54 @@ Docs: https://handsontable.com/docs/react-data-grid/binding-to-data/ · https://
 
 ## Syncing grids / programmatic writes
 
-To write into a grid programmatically without re-triggering your own `afterChange` logic, pass
-a **custom source string** to `setDataAtCell()` and check it in the hook. Condensed from the
-sync-two-grids recipe (React):
+Use stable business IDs across independently sorted, moved or trimmed grids. In this React
+example both datasets are object rows with unique immutable `id` values and every changed
+master object has exactly one detail object. `toDetailRow` maps fields without changing that ID.
 
 ```jsx
-// React
 const SOURCE_SYNC_FROM_MASTER = 'sync-from-master';
 
-const syncDetailRow = (rowIndex, rowData) => {
-  const detailRow = toDetailRow(rowData); // map master row -> detail row shape
-  const detailChanges = Object.entries(detailColumnMap).map(([prop, columnIndex]) => [
-    rowIndex,
-    columnIndex,
-    detailRow[prop],
-  ]);
-  // one batched call = one render pass; the custom source tags these writes
-  detailHot.setDataAtCell(detailChanges, SOURCE_SYNC_FROM_MASTER);
+const syncDetailRow = (masterRow) => {
+  // ponytail: linear ID lookup; maintain an ID index if large grids make this costly.
+  const detailPhysicalRow = detailHot.getSourceData()
+    .findIndex((row) => row.id === masterRow.id);
+  if (detailPhysicalRow === -1) {
+    throw new Error(`Missing detail object ${masterRow.id}`);
+  }
+  const detailRow = toDetailRow(masterRow);
+  detailHot.batch(() => {
+    Object.entries(detailRow).forEach(([prop, value]) => {
+      if (prop !== 'id') {
+        detailHot.setSourceDataAtCell(detailPhysicalRow, prop, value, SOURCE_SYNC_FROM_MASTER);
+      }
+    });
+  });
 };
 
 const handleMasterAfterChange = (changes, source) => {
-  // Ignore init/sync writes to prevent re-entrant updates.
-  if (!changes || source === SOURCE_SYNC_FROM_MASTER || source === 'loadData') {
-    return;
-  }
-  const changedRows = new Set();
-  changes.forEach(([row]) => changedRows.add(row));
-  changedRows.forEach((rowIndex) => {
-    syncDetailRow(rowIndex, masterHot.getSourceDataAtRow(rowIndex));
+  if (!changes || source === SOURCE_SYNC_FROM_MASTER || source === 'loadData') return;
+  const changedVisualRows = new Set(changes.map(([visualRow]) => visualRow));
+  changedVisualRows.forEach((visualRow) => {
+    const physicalRow = masterHot.toPhysicalRow(visualRow);
+    if (physicalRow === null || physicalRow === undefined) {
+      throw new Error(`No source row for visual row ${visualRow}`);
+    }
+    syncDetailRow(masterHot.getSourceDataAtRow(physicalRow));
   });
 };
 ```
 
-The source guard prevents the infinite loop; one batched `setDataAtCell(changesArray, source)` call = one render pass per sync.
+Source writes use physical rows and object property names, including trimmed detail rows.
+Observe them with `afterSetSourceDataAtCell` when needed, and guard the custom source there to
+prevent a reverse sync loop. `batch()` combines renders. A `setDataAtCell` alternative needs
+both destination visual row and column conversion; never reuse the master's row number.
+If ordinary edit validation or `afterChange`-based saving is required, use converted visual
+writes for visible rows, or explicitly validate and persist the source updates.
+This example uses a linear ID lookup; maintain an ID index only if dataset size warrants it,
+and update that index with structural changes. If missing details are valid, implement their
+creation or exclusion explicitly instead of silently dropping a synchronization failure.
 
-Docs: https://handsontable.com/docs/react-data-grid/recipes/data-management/sync-two-grids/
+Docs: https://handsontable.com/docs/18.0/javascript-data-grid/api/core/#setsourcedataatcell · https://handsontable.com/docs/18.0/javascript-data-grid/api/hooks/#afterchange
 
 ## Dependent dropdowns
 

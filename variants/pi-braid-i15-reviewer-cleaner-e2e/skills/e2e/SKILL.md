@@ -1,6 +1,6 @@
 ---
 name: e2e
-description: Operate the current application through local e2e MCP; write and run TypeScript application E2E checks with the frozen e2e runner, retaining screenshots, traces and actual errors.
+description: Operate the current application through local e2e MCP; write and run TypeScript application E2E checks with the frozen e2e runner, retaining screenshots, traces and actual errors; establish bounded visible business outcomes before dependent actions.
 ---
 
 Read `e2e guide mcp` before browser operation, and the applicable `e2e guide setup`, `writing-tests`, `agent` or `running` before writing or running application checks. These version-matched instructions are independent files in the installed package. Use `--help` for unfamiliar flags.
@@ -30,6 +30,10 @@ The JSON serialization preserves the actual path, including spaces and quotes. E
 For pixels, invoke `e2e.call` with tool `screenshot` and add `--save-images <owned-evidence-directory>`. Read the saved image with the native read tool, or pass its absolute path to the assigned vision/browser-operator. Do not print base64 into model context. Coordinate tools need a current screenshot. Preserve actual errors; mcporter reports MCP error results with exit 1. Trace files are saved under the config output's `artifacts/`; explicit start/stop_recording saves video. Video is not masked. Secret-filled sessions may withhold pixels; continue through semantic nodes when appropriate.
 
 Close only your session with `e2e.close_session`. Read its cleanup text: exit 0 alone does not prove cleanup. The run owns the mcporter daemon; do not stop a shared daemon or another agent's session. Agent-browser remains available for its console/network diagnostics or a documented e2e capability gap.
+
+## Dependent business transitions
+
+Before the next action depends on a submit, login, logout or save, use the visible success/failure states and bounded assertions described in [Business state transitions](references/business-state-transitions.md). Action completion, URL changes and HTTP200 do not establish the required page outcome. Keep the first failure and its response latency; a narrower passing rerun does not erase a full-journey failure. Read the frozen `e2e guide writing-tests` complete example for fixtures and supported APIs before constructing the acceptance suite.
 
 ## Application E2E results
 

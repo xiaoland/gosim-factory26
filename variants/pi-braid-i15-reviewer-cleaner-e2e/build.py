@@ -20,6 +20,7 @@ def main():
     parser.add_argument('--braid-build-receipt', type=Path, required=True)
     parser.add_argument('--protocol-runtime', type=Path, required=True)
     parser.add_argument('--resource-helper', type=Path, default=HERE.parents[1]/'tooling/scripts/runtime_resources.py')
+    parser.add_argument('--skills-root', type=Path, default=HERE.parents[1]/'materials/skills')
     parser.add_argument('--agent-support-source', type=Path, default=HERE.parents[1]/'tooling/scripts/agent_support.py')
     args = parser.parse_args()
     base = args.base_zip.resolve(strict=True)
@@ -69,10 +70,20 @@ def main():
         members = {}
         for name in ('main.py', 'run.py', 'README.md', 'requirements.txt', 'materials.json'):
             members[name] = (HERE/name).read_bytes()
-        for folder in ('agents', 'extensions', 'tools'):
+        for folder in ('agents', 'extensions', 'tools', 'skills'):
             for path in sorted((HERE/folder).rglob('*')):
                 if path.is_file():
                     members[path.relative_to(HERE).as_posix()] = path.read_bytes()
+        skill_members = {}
+        skills_root = args.skills_root.resolve(strict=True)
+        for folder in ('arc-bench', 'braid-collaboration', 'agent-browser', 'handsontable',
+                       'svc-task-packet', 'svc-documentation', 'svc-sub-agents'):
+            (skills_root/folder/'SKILL.md').resolve(strict=True)
+            for path in sorted((skills_root/folder).rglob('*')):
+                if path.is_file():
+                    name = 'skills/'+path.relative_to(skills_root).as_posix()
+                    skill_members[name] = path
+                    members[name] = path.read_bytes()
         members['runtime/bin/braid'] = braid
         protocol_members = {
             'runtime/bin/pi': protocol/'bin/pi',
@@ -111,7 +122,7 @@ def main():
             elif name == 'support/agent_support.py':
                 executable = manifest['files'][name]['executable']
             else:
-                executable = bool((protocol_members.get(name) or HERE/name).stat().st_mode & 0o111)
+                executable = bool((skill_members.get(name) or protocol_members.get(name) or HERE/name).stat().st_mode & 0o111)
             record = {'sha256': hashlib.sha256(data).hexdigest(), 'executable': executable}
             records[name] = record
             if manifest['files'].get(name) != record:
@@ -148,12 +159,14 @@ def main():
                 'sha256': braid_sha, 'build_receipt': build_receipt,
                 'build_receipt_path': str(build_receipt_path),
                 'build_receipt_sha256': hashlib.sha256(build_receipt_path.read_bytes()).hexdigest()},
+            'skills_overlay': {'source_root': str(skills_root),
+                'files': {name: records[name] for name in skill_members}},
             'protocol_overlay': {'runtime': str(protocol),
                 'runtime_source': json.loads((protocol/'runtime-source.json').read_text()),
                 'resource_helper': str(helper), 'agent_support_source': str(support_source),
                 'agent_support_function_sha256': hashlib.sha256(function.encode()).hexdigest(),
                 'files': {name: records[name] for name in [*protocol_members, 'support/agent_support.py']}},
-            'retained_members': {name: manifest['files'][name] for name in [n for n in required if n not in protocol_members] + [
+            'retained_members': {name: manifest['files'][name] for name in [n for n in required if n not in protocol_members and n not in members] + [
                 'runtime/node_modules/pi-subagents/src/runs/background/async-execution.ts',
                 'support/model_budget.mjs', 'runtime/e2e/addon-source.json']},
             'braid_session_budget': capabilities['braid_session_budget'],

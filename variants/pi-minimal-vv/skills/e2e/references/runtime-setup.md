@@ -1,0 +1,9 @@
+# Use the native minimal run's independent e2e project
+
+Read this before the first MCP session or application E2E command. Both pi-minimal-vv and pi-minimal-vv-tailwindcss inject `E2E_PROJECT_DIR` for this native run. Their `main.py` owns creation of this directory, its `e2e.config.ts`, linked tool dependencies and daemon lifecycle. Native command details remain in `e2e guide mcp`, `setup` and `running`.
+
+Use the work item's actual application service URL and isolated application/data copy. The prepared e2e project lives with this run's evidence, independently of the delivery checkout. Write application E2E files under `$E2E_PROJECT_DIR/tests/`. Do not create or overwrite the baseline checkout's `.factory-e2e` or old reports. Checks required in the delivered application must be integrated into that application's own tooling separately.
+
+In every mcporter/e2e shell invocation, export `E2E_CONFIG="$E2E_PROJECT_DIR/e2e.config.ts"` and `E2E_APP_URL` to the actual owned service URL. Pass this absolute config path directly; never prefix it with the checkout. The config does not start a service. It consumes the executor's `E2E_BASE_URL`, `E2E_API_KEY` and `E2E_MODEL`; use the frozen connection and model rather than choosing another route. Do not print credential values. Manual MCP does not invoke the model; AI steps count toward this run's authorized consumption.
+
+Use the prepared default Chromium with `web()` and do not install another browser. The config uses `E2E_OUTPUT_DIR`, initially owned by this run; supply a fresh absolute subdirectory for each acceptance attempt so a startup failure cannot revive an older report. Preserve reports, ai-trace and screenshots under the current run's evidence. Keep `E2E_TELEMETRY_DISABLED=1`, upstream feedback disabled and reporters local. Close your own MCP session; the executor owns the shared daemon.

@@ -69,38 +69,7 @@ A hash can establish artifact identity but not quality; a deployment state can e
 A large checker with nearly the same reasoning burden as the original task can destroy the intended saving.
 Its value depends on a clear relationship between the requirement, observation, and judgment.
 
-## Example: Resolve Missing Parent Records
-
-Suppose failures may arise because invoices refer to accounts that no longer exist, but the relationship and relevant data scope are uncertain.
-Give the child the schema, failing identifiers, snapshot entry, and read-only scope.
-It investigates the relationship and whether null references, archived records, or deleted accounts are legitimate.
-It can return an illustrative query of this form, adapted to the actual relationship:
-
-```sql
-SELECT i.id, i.account_id
-FROM invoices AS i
-LEFT JOIN accounts AS a ON a.id = i.account_id
-WHERE i.account_id IS NOT NULL AND a.id IS NULL;
-```
-
-The useful return includes the actual result for the relevant snapshot and its interpretation, rather than “there are orphans.”
-The caller checks that the join and null handling represent the intended relationship, that the selected records include the failing cases, and that the result was actually obtained from the stated input.
-This can replace reading all invoices or repeating the child's search for the relationship.
-It supports a repair direction if those cases match; it does not establish every business rule or authorize deleting records.
-If the domain excludes archived records or treats a missing parent as valid history, the query and conclusion must reflect that condition.
-If the relationship and query were obvious from the beginning, direct execution would have been enough.
-
-## Example: Compare an Interaction Choice
-
-Suppose users repeatedly lose an unsaved filter when switching views, and the desired interaction is still open.
-A child can compare preserving the filter, resetting it visibly, and asking before discarding it, using the user goal and relevant constraints.
-It returns the reasons each option serves or harms that goal, a counterexample such as a hidden filter making a new view appear empty, and observations from a prototype or actual use when available.
-The caller need not recreate every candidate or review the entire exploration history to see the decisive tradeoff.
-
-Observed users completing one path can support that path's usability under those conditions; it cannot settle every preference or unobserved view.
-Without observed use, the return remains a reasoned proposal.
-The caller may adopt a reversible candidate, request a specific missing observation, or retain the choice as unresolved.
-A second Agent preferring the same option is another opinion, not a user observation.
+For an uncertain data relationship that can be compressed into a query and observed result, read [Missing parent records](references/missing-parent-records.md). For an interaction choice without a complete objective oracle, read [Compare an interaction choice](references/interaction-choice.md). Use the case matching the judgment problem; neither is a required delegation procedure.
 
 ## Consume, Correct, and Recover
 

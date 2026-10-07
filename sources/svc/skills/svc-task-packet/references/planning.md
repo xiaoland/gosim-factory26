@@ -57,7 +57,7 @@ Agree on the shared format and compatibility behavior
 ```
 
 The editor and importer can become separate work units with their own plans; agreeing on the format is the relevant shared barrier.
-Document the format once in [project documentation](../../svc-documentation/SKILL.md), and link each unit to the agreed revision.
+Keep the format once at its existing shared project owner, and link each unit to the agreed revision. If choosing that owner needs guidance, use an installed `svc-specs` or optional [project documentation](../../svc-documentation/SKILL.md); neither is a prerequisite for planning.
 While the format is unresolved, unrelated exploration can continue; work that assumes the format waits or remains explicitly provisional.
 Use Cells if Track/Phase coordination helps manage these obligations, not because this diagram requires a matrix.
 The packet entry only needs the outcome, active owners, dependency state, evidence links, and next action; each owner's detailed notes stay with its work.

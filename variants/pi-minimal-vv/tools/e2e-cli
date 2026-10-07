@@ -1,0 +1,8 @@
+#!/bin/sh
+set -eu
+: "${E2E_RUNTIME:?E2E_RUNTIME must name the frozen addon}"
+: "${FACTORY26_TOOL_NODE:?FACTORY26_TOOL_NODE must name the tool Node}"
+PLAYWRIGHT_BROWSERS_PATH="${FACTORY26_BROWSER_CACHE_DIR:-${XDG_CACHE_HOME:-$E2E_RUNTIME/.cache}/factory26-playwright}"
+mkdir -p "$PLAYWRIGHT_BROWSERS_PATH"
+export PLAYWRIGHT_BROWSERS_PATH
+exec "$FACTORY26_TOOL_NODE" "$E2E_RUNTIME/node_modules/e2e/dist/cli/bin.js" "$@"

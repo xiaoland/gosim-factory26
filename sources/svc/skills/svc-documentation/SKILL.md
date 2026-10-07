@@ -87,26 +87,7 @@ Use comments or discussions to reach decisions and coordinate adoption; move the
 Retire superseded current instructions rather than appending a competing rule that readers must discover later.
 Preserve historical evidence separately when it explains a decision or an unresolved result.
 
-## Example: One Rule, Several Consumers
-
-Suppose a project has explicitly decided that a user preference overrides a workspace default when both apply.
-Keep that precedence and its exceptions in one shared definition rather than separately explaining it in editor and importer tasks.
-
-```text
-Product requirement
-  → Shared definition: precedence, exceptions, examples, revision
-      ├─ Editor implementation and checks
-      ├─ Importer implementation and checks
-      └─ Task packets and discussions link to the definition
-```
-
-An overlap example should exercise both values together; two isolated checks cannot demonstrate precedence.
-If the decision changes, replace the old precedence in the shared definition and publish its commit.
-Tell the editor and importer contributors the exact difference and which overlap check must change.
-Each compares the new definition with their branch and check expectations, then reports the adopted commit or the remaining dependency.
-A comment saying “updated” or an old passing test is not that comparison.
-This particular precedence is illustrative, not a default rule for other products.
-Documentation keeps the intended semantics available; observations establish whether each consumer actually follows them.
+When several implementations or branches must adopt a changed shared rule, read [One rule, several consumers](references/shared-rule-adoption.md). The case distinguishes publishing the definition, checking an overlapping condition, and establishing each consumer's adoption.
 
 ## Relationship to Task State
 
