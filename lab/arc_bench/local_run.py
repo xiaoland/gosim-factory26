@@ -1202,7 +1202,7 @@ def mirror_saved_evaluations(source_run: str | os.PathLike[str]) -> dict[str, An
                                  "dispatch": "mac-controller-evaluation"})
             except Exception as error:
                 skipped.append({"index": index, "request_id": request_id,
-                                "reason": f"self_test_dispatch:{type(error).__name__}: {error}"})
+                                "reason": f"evaluation_dispatch:{type(error).__name__}: {error}"})
             continue
         child = item.get("run") if isinstance(item, dict) else None
         if not isinstance(child, dict):

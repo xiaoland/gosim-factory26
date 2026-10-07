@@ -51,7 +51,7 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 | --- | --- | --- |
 | 主Agent `/root` | run/自动化/集成，proxy后续修复，编译源对齐，Console/Braid后续修复，采纳返回与提交 | 活跃；拥有总目标、优先级、所有未验收项和运行闭环，不以已委派卸责 |
 | execution_owner（执行者） | runtime/安装/部署、公共入口/Tini、应用环境；Hosted采集/控制采用80794c7a；时钟回拨修正daa96533；策略文档616f4290 | 本轮已返回。再次联系受thread limit拒绝、已不在live tree；费用实现由主明确接管，不再声称其在执行 |
-| evaluation_closure（执行者） | 本轮新增，负责Pi自动评测输入跨宿主缺失这一完整修复结果 | 执行中；拥有execution组装评测输入、local_run评测材料传输和必要default automation相关hunks，负责当前Pi完成后的后台接线及实际评分证据。不得停止/重启生成、重复评分或操作I14；execution_owner不编辑这些文件，主只持有总集成 |
+| evaluation_closure（执行者） | Pi评测材料冻结b514103f、控制端deferred task/self-test派发700ea0d0；当前远端与Mac包外自动化已实际更新 | 本轮返回completed，无其报告中的SSH/复制在途。Pi生成与评测后台继续；最终评分未形成，残余责任归主，后续同工作面优先续派此owner |
 | competition_cost_decision（advisor） | 短控制锁等建议已采用；本轮只基于主提供的价格/用量证据建议partial已知小计及ARC适配归属 | completed；未调用取证或实施，主决定并实现；此前角色越界不沿用 |
 | process_reaping_decision（advisor） | 标准Tini/subreaper、保留Popen退出状态所有权、不设全局并发gate建议已采用 | completed，不负责资源实现或验收 |
 | acceptance_conversation_decision（误用advisor） | 历史会话取证及评价文档修改已采用b84d6d52 | assignment已结束，不在live tree；保留证据不重做，调查/编辑不再交advisor，该低优先级项不扩展 |
@@ -80,6 +80,10 @@ execution_owner本轮文档返回d8d4f8d4已读取，但“没有run账单就必
 本次真实docker top只读快照（as_of=1791370827）：Pi8个进程、I14 13个进程，均无僵尸；同时保存资源样本pids.current为34/62（含线程），两者pids.events.max=0，memory.oom/oom_kill=0。I14 memory.events.max=206是累计边界，不冒充OOM或当前持续触顶。此证明长运行当前无僵尸积累样本，不证明所有工具生命周期或触顶补救已通过；没有为资源验收制造故障。
 
 evaluation_closure已交付b514103f：冻结requirements及约24KB tests到run inputs、传输后remote manifest指向真实远端路径，现场仍由原observer233116/default245040与Mac relay50624执行，没有重启生成。主采用其原件与实际路径读回，不重复调查；后续仍由同owner核对sfp7 default→wsl评测宿主的必要执行接线并收取评分结果。当前不是已完成评测。本轮最高优先级费用实现提交9cf8690c，跨组件partial语义提交d4e7e474；两run最新保存facts仍running/active，尚无最终应用与评分。
+
+后续该owner实际确认sfp7→WSL DNS/host-key不可达，Mac→WSL及SDK/image/run root可用；评测改用已有Mac relay在保存后派发，不要求用户补SSH接线。当前源run的default245040已替换为2525159，Mac relay50624替换为97137，部署使用700ea0d0；原observer233116和生成容器未停止/重启。实际回执为 `records/evaluation-automation-repair.json`、`evaluation-relay-repair.json`，材料/旧manifest亦保留。共享index在主提交assessment时纳入该owner已暂存的两个本任务源码hunks，700ea0d0说明未准确覆盖代码；已告知owner勿重复提交，本轮后续统一由主暂存/提交。没有他人任务source纳入。这是包外自动化热部署证据，不是已取得评分。
+
+主只读刷新完整ARC价格尝试：已有meter.cookies请求/api/user/models返回401 user authentication required，现存Helium支持模型panel也显示同一错误；未查询余额、未要求用户重新登录来阻断交付。维护价格表继续明确采用今天10:27 UTC的已保存原件，两已核实模型之外保留missing，不声称完整当日模型价格覆盖。后续新鲜价格可更新公共表，新run观察会记录自己的版本；已有run沿用已保存价格。
 
 ## 关键交付和证据
 
