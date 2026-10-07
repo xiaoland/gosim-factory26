@@ -1,0 +1,17 @@
+{
+  "id": "pi-glm-reviewer",
+  "display_name": "pi-glm-reviewer",
+  "assignee_login": "reviewer",
+  "assignee_description": "只负责独立固定候选的代码审查与浏览器验收，不承接PR实现或发布。",
+  "tags": [
+    "reviewer-only",
+    "single-reviewer-per-pr"
+  ],
+  "adapter_type": "pi",
+  "adapter_version": "0.85.1",
+  "provider": "factory26",
+  "model": "glm-5.3-flash",
+  "reasoning": "high",
+  "context_soft_ratio": 0.8,
+  "context_hard_bytes": 1000000
+}

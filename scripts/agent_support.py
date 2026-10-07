@@ -440,23 +440,15 @@ def budgeted_pi(runtime, run):
 
 
 def runtime_resource_environment(runtime, run):
-    """Configure one generation's shared resource admission and native ownership."""
+    """Configure process ownership; resource evidence never gates execution."""
     helper = Path(__file__).resolve().with_name('runtime_resources.py')
     native_module = Path(runtime)/'native-managed.mjs'
     for source in (helper, native_module):
         if not source.is_file():
             raise FileNotFoundError(source)
     directory = Path(run)/'process-control'
-    services = json.loads(os.environ.get('FACTORY26_EXP_SERVICES', '{}'))
-    resource = services.get('resource_evidence')
-    if os.environ.get('FACTORY26_EXP_ATTEMPT_ID'):
-        if not resource or resource.get('owner') not in {'runner', 'runner-payload'} or resource.get('status') != 'ready' or not resource.get('sample_path'):
-            raise ValueError('Harness 入口需要 runner 已就绪的 ResourceEvidence 与明确样本路径')
-        sample_path = Path(resource['sample_path'])
-    else:
-        sample_path = Path(os.environ.get('FACTORY26_EXP_RESOURCE_SAMPLE', str(Path(run)/'process-evidence/resource-latest.json')))
-    subprocess.run([sys.executable, str(helper), 'configure', '--directory', str(directory),
-                    '--sample-path', str(sample_path)], check=True, stdout=subprocess.DEVNULL)
+    subprocess.run([sys.executable, str(helper), 'configure', '--directory', str(directory)],
+                   check=True, stdout=subprocess.DEVNULL)
     return {'FACTORY_RESOURCE_HELPER': str(helper), 'FACTORY_RESOURCE_PYTHON': sys.executable,
             'FACTORY_RESOURCE_DIR': str(directory),
             'FACTORY_NATIVE_RUNTIME_MODULE': str(native_module)}

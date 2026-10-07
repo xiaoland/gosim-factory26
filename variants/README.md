@@ -13,6 +13,8 @@
 | [pi-braid-i14-reviewer](pi-braid-i14-reviewer/) | I14-0 独立验收对照 | 在共同基线上增加 reviewer-only Braid 成员，使用独立请求、会话和固定候选 checkout。 |
 | [pi-braid-i14-e2e](pi-braid-i14-e2e/) | I14-0 浏览器工具对照 | 优先 tester.army/e2e，保留 agent-browser；独立 Linux addon 与基础真实反馈见 [接线记录](../tasks/iteration14/tester-e2e.md)。 |
 
+[pi-braid-i15-reviewer-cleaner-e2e](pi-braid-i15-reviewer-cleaner-e2e/README.md)从当前I14组合派生，保留模型与工具配方，增加每PR单一当前Braid reviewer、候选冻结、原始需求权威和每执行验收隔离。其独立builder必须替换新Linux Braid，不能继承底包旧binary；实现与验收范围见[I15任务包](../tasks/iteration15/packet.md)。
+
 [I13 本地开发说明](pi-braid-i13/README.md)解释角色、技能、工具和不启动模型的材料装配；I14 的具体职责由各自源码持有，不从 I13 文档推断接线相同。
 
 I14 冷启动按职责直接读各实现的导航：[共同基线](pi-braid-i14/README.md)、[Cleaner](pi-braid-i14-cleaner/README.md)、[Reviewer](pi-braid-i14-reviewer/README.md)、[E2E](pi-braid-i14-e2e/README.md)。这些 README 只导航实际入口、材料、角色和反馈位置，不维护模型表、运行状态或任务历史。
