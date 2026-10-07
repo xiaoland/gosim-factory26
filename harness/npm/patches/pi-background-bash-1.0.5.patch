@@ -118,6 +118,12 @@
    if (!result.job) {
      console.error(context("pbb.error", { session_key: id.sessionKey, instance_id: id.instanceId, scope, job_id: jobId, error: result.error === "ambiguous" ? "ambiguous_job" : "unknown_job" }, `${result.error === "ambiguous" ? "ambiguous" : "unknown"} job ${jobId}`));
      process.exit(result.error === "ambiguous" ? 3 : 2);
+@@ -336,3 +370,3 @@
+ function printKill(id, jobId, opts) {
+-  const scope = opts.scope || (opts.instance ? "session" : "current-instance");
+-  const result = findJob(id, jobId, { scope, instance: opts.instance });
++  const scope = jobId?.includes(":") ? "global" : opts.scope || (opts.instance ? "session" : "current-instance");
++  const result = findJob(id, jobId, { scope, instance: opts.instance }, true);
 @@ -341,7 +375,7 @@
      process.exit(result.error === "ambiguous" ? 3 : 2);
    }
@@ -132,7 +138,7 @@
  
  if (["help", "--help", "-h"].includes(command)) {
 -  console.log(`pbb - Pi background bash inspector\n\nCommands:\n  pbb self [--json]\n  pbb list [--scope current-instance|session] [--instance ID] [--json]\n  pbb instances [--json]\n  pbb status [JOB] [--json]\n  pbb tail JOB [-n LINES] [--full] [--json]\n  pbb kill JOB [--stale] [--signal TERM]\n\nDefaults to the current pi-lane instance using PI_LANE_* env vars.`);
-+  console.log(`pbb - Pi background bash inspector\n\nCommands:\n  pbb self [--json]\n  pbb list [--scope current-instance|session] [--instance ID] [--json]\n  pbb instances [--json]\n  pbb status [JOB] [--json]\n  pbb tail JOB [-n LINES] [--full] [--json]\n  pbb kill JOB [--stale] [--signal TERM]\n\nDefaults to the current pi-lane instance using PI_LANE_* env vars. An empty list covers only that scope.\nUse pbb status/tail INSTANCE:bgNNN to read a retained result across sessions. Missing completion from an unavailable owner is unknown, not a confirmed cancellation.`);
++  console.log(`pbb - Pi background bash inspector\n\nCommands:\n  pbb self [--json]\n  pbb list [--scope current-instance|session] [--instance ID] [--json]\n  pbb instances [--json]\n  pbb status [JOB] [--json]\n  pbb tail JOB [-n LINES] [--full] [--json]\n  pbb kill JOB [--stale] [--signal TERM]\n\nDefaults to the current pi-lane instance using PI_LANE_* env vars. An empty list covers only that scope.\nUse pbb status/tail/kill INSTANCE:bgNNN to read or stop a retained result across sessions. Missing completion from an unavailable owner is unknown, not a confirmed cancellation.`);
    process.exit(0);
  }
  

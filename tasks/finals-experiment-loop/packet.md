@@ -66,6 +66,8 @@ Pi来源d3cc，保留scope f1335fc，冻结代理6f1e07修deadline但无后续us
 
 用户最新要求继续追查本地正式Pi-vv的project.zip，并把自验用例相互影响纳入打包设施改进。主负责用例数据边界，evaluation_closure负责冻结服务能力取证及pbb停止入口必要修复，process_reaping_decision仅依据提供证据给取舍建议。证据和决定归runtime-diagnosis-20261007.md；只读采用已有正式run材料，不控制它、不注入反馈、不改其应用。主已补公共e2e技能的case与journey隔离说明，复用现有fixture，不新增通用数据库reset。源码打包只影响未来程序，不宣称在途已修。两条DX生成—保存—评分闭环及持续采集/策略qualification仍未完成，不因该局部修复收尾总任务。
 
+自验技能提交97b86d10。服务负责人已交回冻结包能力证据和pbb kill全局job ID修复；主修正patch编辑意外、确认可解析并只采用当前hunks。语法检查不等于实际停止资格化，无正式run或进程受到控制。该局部assignment已结束，整个实验闭环未完成，后续两run保存/评分仍沿用现有自动化，不用这一归因调查替代主要目标。
+
 用户随后确认“不记住失败是正常的”，要求先修其它问题。当前不改变千帆等待期限、fallback跨请求记忆或在途配方。主修submission/runtime_install.py的公共短socket目录（按原目录hash隔离，Linux临时socket与Mac WorkSSD分别落位），修浏览器技能示例为每条命令显式session；未来程序消费，未热改在途冻结材料。用现有Pi容器、独立诊断session实际打开现有首页、读取交互元素并close，原超长名称task-8945cd75636e在短目录下正常，无需代修应用；原生Agent已自行修好白屏。第一次诊断命令的shell引用错误未启动浏览器，保留工具回执，不记作产品失败。
 
 Console原owner续派被thread limit拒绝，主明确接管。查明reader文件18:06更新，而服务PID1318330从18:02运行；静态页hash也落后。主更新Braid静态页并只重载Console至PID3951941（20:19:46），静态页hash已与源码dca6014b一致，reader文件hashc13cfae8一致。生成容器与observer未重启。API旧投影仍为空/partial，需要新worker回执进一步判别；不能把部署完成当动态视图通过。evaluation_closure已续派负责两run实际保存/自动评测，尚待返回，不暂存/提交；主统一处理Git index。

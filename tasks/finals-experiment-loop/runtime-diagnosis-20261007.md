@@ -47,3 +47,5 @@ process_reaping_decision只基于主提供的上述事实建议：归应用服�
 交付数据库快照的main包含src/README.md，待合并feature head不包含；当前归档应用的pulls.js已经使用三方合并并注明保留main新增文件。因此存在相互影响的条件，但不能把历史失败直接归为污染，或认定最终合并实现仍然丢文件；数据库快照也不是自验数据库的最终状态。没有操作正式run、修改应用或读取隐藏评测。
 
 主完整读取冻结e2e版本的writing-tests说明：已有fresh browser context、beforeEach/afterEach、test.extend及serial场景，但前者不恢复服务端数据。advisor仅依据提供事实建议补现有fixture发现与边界，不加通用数据库reset。主采用，更新实际打包的harness/skills/e2e/SKILL.md：独立case使用独立可变对象，有意流程保留状态，必要快照恢复须先停所属服务并覆盖相关文件/索引；区分单例初始fixture与顺序运行的反馈。该段位于variant builder替换准备段之外，VV打包会保留。未声称文档自动隔离已有测试，未改在途冻结包。
+
+evaluation_closure实际核对冻结runtime：Bash schema已有service:true，启动回执带jobId/globalJobId和PID/PGID，pbb查询与托管停止均存在。16次pkill绕过了该链，不是缺少服务能力。另找到pbb kill未像status/tail一样识别INSTANCE:bgNNN的真实消费缺陷；修复公共pi-background-bash-1.0.5.patch，让停止也选global并沿用既有findJob接口，帮助同步说明。scripts/runtime.py将该patch用于native构建，后续公共安装消费冻结patch；未热改正式runtime。负责人报告node --check通过，但没有服务停止实际验收；主采用该边界，修正其编辑时误改的patch上下文缩进及hunk计数，git apply --numstat可解析。主只暂存本次两个hunk，保留同文件既有其它改动。长时间无回执后主中断并要求立即交回状态，负责人确认无在途操作；未把等待伪装为验收。
