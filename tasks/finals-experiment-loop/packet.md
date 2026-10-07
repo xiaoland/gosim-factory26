@@ -16,6 +16,10 @@ Pi正常restart的新run为 `1c1e1b407fb3498b83260e4c58c4c149`，source_run=f133
 
 资源采样消费修复提交 `584179c7`：复用公共ResourceSupervisor的 `resource-observation.json`，按当前scope/run producer读取，接入status.resource/resources.supervisor和Console；写入改为相邻临时文件fsync后rename，避免新读者读到截断采样。对f133已保存现场取得内存945,020,928 bytes、pids22及2GiB上限，状态与Console发布成功；这是该采样时点，不是历史峰值。前端已编译部署；在途Pi不为展示更新重启，后续正常run消费新观察接线。独立会话负责实际可理解性验收，不用源码或HTTP首页代替UI结果。
 
+后续采用advisor的明确决策修公共proxy默认响应头期限：sfp7请求完整上传后被90秒内部期限主动截断，原生重试又可成功；execution_owner将prepare.py默认headers_ms改为600000，与既有单请求total同值。Rust仍从已有deadline起算，不重置请求时钟；connect/body/stream_idle不变，没有新供应商配置、重放或换模型。源码语法检查完成，binary不重编；adapter处于未跟踪共享源码，不整目录提交。独立会话在当前provider回执后正常stop/save/restart，以冻结程序和实际config核对新默认、取得90–600秒迟到响应是否带来收益的证据；源码修改本身不是收益证明。
+
+Console配方/来源/保存位置修复提交 `ffddd4ab`：publish原先遗漏model_recipe/model_routes，这两个已有事实现已供概览消费，原生/费用事实不重新采集；前端直接显示目标、任务、参赛身份与来源run，保存回执可展开。实际f133 API返回配方、5条路由和saved=true，前端编译部署成功；UI可理解性仍由独立会话自然操作核对。当前验收顺序允许Pi交付后并行重试I14，分别记录共享负载，不将并行样本称孤立冷启动基准。
+
 2026-10-07 侧会话用户询问原生 stages 题目支持，在获知仅有 Python helper 后明确“好，请你推进”。已补充 task 配置的扁平 `stages` 列表，以及 `lab start` 自动选择第一阶段、在控制宿主启动普通阶段推进程序的接线；维护任务 `github-stages` 指向既有 Stage1/2。程序复用 run.wait/restart，只在 completed 后迁移同 variant 数据；初始 manifest 保存声明，stages-progress 原件记录实际派发与具体失败。各阶段的采集、保存和默认评测保持原职责，没有新增控制对象、队列或阶段 gate。修改范围为 lab/run.py、lab/automation.py、targets 中新增任务，以及既有 Lab/design 说明；Python 语法解析、targets JSON 解析与实际 automation 命令帮助成功。侧会话没有启动收费运行、修改主会话在途验收或提交 Git；完整真实 Stage1→Stage2 验收仍未通过，不能把源码接线视为完成证明。主会话后续验收可以改为直接选择 github-stages，而非手写 stages 脚本。
 
 2026-10-07 model-proxy 启动缺陷已修复并取得实际 Linux 请求证据。loader 改为 alias 内 deployment 唯一；不同 alias 可以复用真实供应商身份。sfp7 release 编译45.74秒，新 ELF 的SHA256为 `9b19fc6ea9396799ae998b1539d9780f872cba4746c590625a088eb502b14776`；公共装配默认引用已切换，装配出的代理与该字节一致。`deepseek-v4-flash-0731` 和 `deepseek-v4-flash` 均由同一千帆 Token Plan deployment 返回HTTP200，并记录body_end及terminal complete，代理随后受控停止。证据为 `runs/model-proxy-alias-fix-20261007-build.txt`、`runs/model-proxy-alias-fix-20261007-linux-request.txt`。中途生成的Mac ARM构建未用于Linux操作，旧失败消费字节未覆盖。主已核对ELF、hash及原始请求事件，通知同一独立验收会话重试I14；这证明代理缺陷修复，不代表完整生成/接续/测评通过。WSL空间仍归用户处理。
