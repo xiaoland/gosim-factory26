@@ -228,6 +228,18 @@ impl EvidenceCollector {
         emit: &mut impl FnMut(&Value) -> Result<bool>,
     ) -> Result<Value> {
         self.omissions.clear();
+        if mode == CaptureMode::Summary {
+            let current = snapshot_cooperation(&state.join("braid.sqlite3"))?;
+            let native_count = current["sessions"].as_array().map_or(0, Vec::len);
+            let coverage = json!({"status":"partial", "objects":true,
+                "native_sessions":native_count, "native_bodies":false});
+            let id = self.record("evidence_summary", json!({"mode":"summary",
+                "final":final_capture, "current":current, "coverage":coverage,
+                "gaps":["Complete native bodies and history are available after portable recovery."]}), emit)?;
+            return Ok(json!({"run_id":self.run_id, "snapshot_id":id,
+                "mode":"summary", "coverage":coverage, "native_sessions":native_count,
+                "usage":[], "gaps":self.omissions}));
+        }
         let mut gaps = Vec::new();
         let mut artifacts = Vec::new();
         let mut inventory = Vec::new();
@@ -662,6 +674,66 @@ fn native_header(bytes: &[u8], provider: &str) -> Option<String> {
     Some(id.to_owned())
 }
 
+fn snapshot_cooperation(path: &Path) -> Result<Value> {
+    let mut connection = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
+    let transaction = connection.transaction()?;
+    let mut current = serde_json::Map::new();
+    // Current relations and short labels only; never read native JSONL or long bodies here.
+    for (name, query) in [
+        ("objects", "SELECT w.node_id AS id,w.number,w.kind,w.state,w.observed_at,
+            substr(l.title,1,160) AS title,a.assignment_id,a.member_login,
+            a.lifecycle AS assignment_state FROM work_items w
+            LEFT JOIN local_items l ON l.node_id=w.node_id
+            LEFT JOIN assignments a ON a.work_item_node_id=w.node_id
+              AND a.generation=(SELECT max(n.generation) FROM assignments n
+                WHERE n.work_item_node_id=w.node_id)
+            ORDER BY w.node_id LIMIT 5000"),
+        ("sessions", "SELECT ps.session_id,ps.agent_id,ps.provider_kind,
+            ai.profile_id,a.work_item_node_id,a.member_login,ps.lifecycle AS state,
+            coalesce((SELECT max(coalesce(t.ended_at,t.started_at)) FROM turns t
+              WHERE t.session_id=ps.session_id),ps.last_resumed_at,ps.started_at) AS last_activity_at
+            FROM provider_sessions ps JOIN agent_instances ai ON ai.agent_id=ps.agent_id
+            JOIN assignments a ON a.assignment_id=ai.assignment_id
+            WHERE ai.lifecycle<>'retired' AND ps.lifecycle<>'replaced'
+            ORDER BY ps.session_id LIMIT 5000"),
+        ("turns", "SELECT turn_id,session_id,provider_turn_id,lifecycle AS state,
+            trigger_kind,started_at AS at,ended_at,substr(error,1,256) AS error
+            FROM turns ORDER BY turn_id DESC LIMIT 200"),
+        ("events", "SELECT event_id,work_item_node_id,kind,detail,lifecycle,
+            observed_at FROM events ORDER BY observed_at DESC,event_id DESC LIMIT 200"),
+    ] {
+        current.insert(name.into(), json!(snapshot_rows(&transaction, query)?));
+    }
+    transaction.commit()?;
+    Ok(Value::Object(current))
+}
+
+fn snapshot_rows(transaction: &rusqlite::Transaction<'_>, query: &str) -> Result<Vec<Value>> {
+    let mut statement = transaction.prepare(query)?;
+    let columns: Vec<String> = statement.column_names().into_iter().map(str::to_owned).collect();
+    let mut cursor = statement.query([])?;
+    let mut rows = Vec::new();
+    while let Some(row) = cursor.next()? {
+        let mut fields = serde_json::Map::new();
+        for (index, column) in columns.iter().enumerate() {
+            let value = match row.get_ref(index)? {
+                ValueRef::Null => Value::Null,
+                ValueRef::Integer(value) => json!(value),
+                ValueRef::Real(value) if value.is_finite() => json!(value),
+                ValueRef::Real(value) => json!({"sqlite_real_bits":hex::encode(value.to_bits().to_be_bytes())}),
+                ValueRef::Text(value) => match std::str::from_utf8(value) {
+                    Ok(value) => json!(value),
+                    Err(_) => json!({"sqlite_text_hex":hex::encode(value)}),
+                },
+                ValueRef::Blob(value) => json!({"sqlite_blob_hex":hex::encode(value)}),
+            };
+            fields.insert(column.clone(), value);
+        }
+        rows.push(Value::Object(fields));
+    }
+    Ok(rows)
+}
+
 fn snapshot_objects(path: &Path, gaps: &mut Vec<String>) -> Result<Value> {
     let mut connection = Connection::open_with_flags(path, OpenFlags::SQLITE_OPEN_READ_ONLY)?;
     let transaction = connection.transaction()?;
@@ -682,30 +754,9 @@ fn snapshot_objects(path: &Path, gaps: &mut Vec<String>) -> Result<Value> {
         // SQLite orders the source rows deterministically. Cached JSON sort
         // keys otherwise duplicate every historical row in memory at capture.
         drop(statement);
-        let ordering = (1..=columns.len()).map(|index| index.to_string()).collect::<Vec<_>>().join(",");
-        let mut statement = transaction.prepare(&format!("SELECT * FROM \"{table}\" ORDER BY {ordering}"))?;
-        let mut cursor = statement.query([])?;
-        let mut rows = Vec::new();
-        while let Some(row) = cursor.next()? {
-            let mut fields = serde_json::Map::new();
-            for (index, column) in columns.iter().enumerate() {
-                let value = match row.get_ref(index)? {
-                    ValueRef::Null => Value::Null,
-                    ValueRef::Integer(value) => json!(value),
-                    ValueRef::Real(value) if value.is_finite() => json!(value),
-                    ValueRef::Real(value) => {
-                        json!({"sqlite_real_bits":hex::encode(value.to_bits().to_be_bytes())})
-                    }
-                    ValueRef::Text(value) => match std::str::from_utf8(value) {
-                        Ok(value) => json!(value),
-                        Err(_) => json!({"sqlite_text_hex":hex::encode(value)}),
-                    },
-                    ValueRef::Blob(value) => json!({"sqlite_blob_hex":hex::encode(value)}),
-                };
-                fields.insert(column.clone(), value);
-            }
-            rows.push(Value::Object(fields));
-        }
+        let ordering =
+            (1..=columns.len()).map(|index| index.to_string()).collect::<Vec<_>>().join(",");
+        let rows = snapshot_rows(&transaction, &format!("SELECT * FROM \"{table}\" ORDER BY {ordering}"))?;
         tables.insert((*table).to_owned(), json!({"columns":columns,"rows":rows}));
     }
     transaction.commit()?;
