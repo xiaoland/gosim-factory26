@@ -1,10 +1,26 @@
 # 决赛实验基础设施重设计
 
+当前推进：用户确认WSL腾出空间并授权继续完整验收；只读df确认 `/home/yyh/factory26-lab-runs` 所在盘约13GB可用、inode使用34%。主按原定design/evaluation重新核对，结论与缺口表归assessment首节，整体尚未达成。新Pi运行 `ad9a7d1acefa49e5bf8326b18beecf6b` 已实际生成部分应用，但代理前8次HTTP200后连续4次传输超时，容器自行退出1，不能记为有效零分或完整验收；现场自动回收 saved=true、synced=true。同一独立会话已获续行指示，继续同任务接续和Console真实使用。全部验收仍自费、不参赛，不清理WSL数据。
+
+本轮修复：远端观察程序在第二次spawn重写manifest时读到空文件并退出，导致CLI/Console停留在starting/unknown；`_push_remote_manifest` 已改为同目录临时文件写完后rename。原观察日志保留，主仅重启所属观察程序，没有停止模型或创建重复relay；恢复后具体502错误、失败终态和自动保存均可见。下一次正常start/restart负责验证双spawn路径。新错误原件在该run的gateway.log：请求体由约69KB增长至3,699,935字节，后4次均约30秒出现 `SendRequest: connection error: Connection timed out (os error 110)`；尚不能仅凭这些事实判定供应商、网络或代理责任，主继续定向诊断，不增加无依据重试或隐式换模型。
+
+自费用量已复用native采集接入status、CLI和Console：只汇总本run创建后已保存的assistant usage，按session/provider/model保留tokens和来源，coverage明确partial，不采用native占位cost=0。对已保存ad9现场的定向读取取得158,167 totalTokens，但这不是账单或新run已消费改动的证明；实际金额仍未知。Console前端编译并部署成功，实际HTTP首页引用新资源。execution_owner继续I14新782227的完整wrapper冷启动/get_state超时；resource-deferred是最新批准的Braid资源修复，不能凭目录名降级回p。advisor完成标准已采用；新增/续派费用owner受agent thread limit拒绝，该责任暂由主承担。
+
+后续新Pi run `f1335fc0c4d9446e90a6f6a99faaf687` 是全新start，source_run=null，不冒充restart。正常双spawn后状态进入running，原生消息与spend.usage均实际可读，CLI已显示partial token汇总，证明原子manifest与用量接入被正常消费。随后3,709,375字节请求再次失败；主附着该真实请求读取socket元数据，bytes_acked在2,486,323停住，Send-Q为1,230,511、notsent718879、unacked374并持续重传。这将问题收敛到上传未完成，不是上传完成后等待模型回复；还不能据此归责供应商。原件片段在 `runs/finals-experiment-loop/validation/pi-f1335fc-upload-stall-20261007.txt`。同一独立会话在其自然终态保存后，使用正常restart把同task/data迁移到sfp7、保持配方，以取得跨宿主接续与实际网络消费对照；不额外重放未知受理请求、不循环同条件启动。Console还修正Docker stats已保存但UI字段不匹配导致未知的展示，编译部署已完成，真实查询仍归独立会话。
+
+当前修复提交 `1c55aadc`，仅纳入原子manifest、本run原生用量与CLI/Console展示及对应操作说明；core ulimit及其它工作区改动未纳入。I14 owner在同镜像、当前resource-deferred完整wrapper下取得无模型RPC get_state成功：首次组合managed/timing约91秒，后续约3.5秒。采用advisor判断，暂不新增部署专属预热、预编译系统或加握手超时；先由独立会话正常restart完成真实生成，若准备过程再次可重复导致失败再修同一安装/原生启动生命周期。原件归782227的diagnostic-full-wrapper-20261007.tar，原失败现场不改写。一次成功启动不证明冷启动缺陷根治或完整I14通过。
+
+2026-10-07 侧会话用户询问原生 stages 题目支持，在获知仅有 Python helper 后明确“好，请你推进”。已补充 task 配置的扁平 `stages` 列表，以及 `lab start` 自动选择第一阶段、在控制宿主启动普通阶段推进程序的接线；维护任务 `github-stages` 指向既有 Stage1/2。程序复用 run.wait/restart，只在 completed 后迁移同 variant 数据；初始 manifest 保存声明，stages-progress 原件记录实际派发与具体失败。各阶段的采集、保存和默认评测保持原职责，没有新增控制对象、队列或阶段 gate。修改范围为 lab/run.py、lab/automation.py、targets 中新增任务，以及既有 Lab/design 说明；Python 语法解析、targets JSON 解析与实际 automation 命令帮助成功。侧会话没有启动收费运行、修改主会话在途验收或提交 Git；完整真实 Stage1→Stage2 验收仍未通过，不能把源码接线视为完成证明。主会话后续验收可以改为直接选择 github-stages，而非手写 stages 脚本。
+
+2026-10-07 model-proxy 启动缺陷已修复并取得实际 Linux 请求证据。loader 改为 alias 内 deployment 唯一；不同 alias 可以复用真实供应商身份。sfp7 release 编译45.74秒，新 ELF 的SHA256为 `9b19fc6ea9396799ae998b1539d9780f872cba4746c590625a088eb502b14776`；公共装配默认引用已切换，装配出的代理与该字节一致。`deepseek-v4-flash-0731` 和 `deepseek-v4-flash` 均由同一千帆 Token Plan deployment 返回HTTP200，并记录body_end及terminal complete，代理随后受控停止。证据为 `runs/model-proxy-alias-fix-20261007-build.txt`、`runs/model-proxy-alias-fix-20261007-linux-request.txt`。中途生成的Mac ARM构建未用于Linux操作，旧失败消费字节未覆盖。主已核对ELF、hash及原始请求事件，通知同一独立验收会话重试I14；这证明代理缺陷修复，不代表完整生成/接续/测评通过。WSL空间仍归用户处理。
+
+本次失败沿革：新独立验收的 I14 run `0aeae2e5b3e74f60b7331edaf6a15ccd` 启动后退出，gateway.log 原错为 `invalid or duplicate deployment`，现场已自动保存；Pi run `e05ca1f9b7974c308420d49ea283e9d1` 在 WSL mkdir 时遇到 `No space left on device`，尚未派发。2026-10-07 用户明确“我会处理 WSL 空间问题，请你修复 model-proxy 问题”。WSL 空间由用户处理，本任务不清理其远端数据。execution_owner 持续负责公共交付，已完成 proxy 修复、Linux 编译交付与实际自费请求证据；主已采用证据并通知同一独立验收会话。主读回失败 run 的 inputs/model-gateway.json，确认千帆 Token Plan、千问 Token Plan、普通千问的三个 DeepSeek0731 deployment 分别复用在 native/canonical 两个 alias；Rust loader 的全局唯一约束与该正常映射冲突。修复允许跨 alias 复用、保留 alias 内重复拒绝，不伪造供应商身份。验收仍绝不参赛；完整生成、接续与评测尚未通过。
+
 当前收尾包括公共交付与进程回收边界。用户提供的旧Pi运行进程快照实际有321个僵尸，其中320归PID1 Python；3个存活浏览器daemon，存活Chrome相关进程合计489线程。新版Local创建已带 `--init`，历史执行路径和Hosted入口不能因此视为已修复。公共ResourceSupervisor已有内存/pids采集、有界补救和明确失败，但只回收自身直接子进程，不能替代PID1的孤儿回收责任。process_reaping_decision advisor负责最小跨环境处置判断；execution_owner继续公共交付闭环，主负责保存来源及进程边界整合。此事实不授权增加全局并发gate，也不授权参赛。
 
 advisor已建议统一公共入口在安装/服务/Harness前使用标准静态Tini subreaper，Python Popen仍独占直接子进程退出状态；Local保留Docker init覆盖SDK自身。execution_owner在公共入口与安装器实现并用真实Linux浏览器open/snapshot/close取得PPID、线程、僵尸及退出码证据。活动浏览器与测试并发归工具生命周期和variant策略，不因快照有三个daemon就判定全泄漏；监控不能把提高pids限额当作孤儿回收修复。
 
-资源实现与文档已提交 `dc417302`；Braid三个文件仅暂存本任务资源hunks，其它dirty改动保留。保存来源修复提交 `96dc22d0`。新版公共交付正在加入Tini回收入口，模型与完整使用验收尚未开始；这些提交不是全任务完成声明。
+资源实现与文档已提交 `dc417302`；Braid三个文件仅提交本任务资源hunks，其它dirty改动保留。保存来源修复提交 `96dc22d0`。统一轻量交付、Tini入口及模型接入提交 `2a4dfe58`。新独立验收I14初始观察约251 MiB/18个PID，首次依赖安装约34秒，但随后代理启动失败；未取得模型成功证据。完整使用和评分仍未完成，这些提交不是全任务完成声明。
 
 2026-10-07 保存回执来源修复已落地：远端原件镜像为remote-save/remote-result-save，不能覆盖本机save/result-save；本机完成回收才写自己的storage_root。relay先回收再供自动评测使用，已回收的终态材料不重复传输。对610daf实际执行记录同步成功，原本机保存时间1791353029.8941178未被远端1791352588.2794924覆盖。没有重新启动或评测该run。最新安装器的实际Linux浏览器open/snapshot已成功，mcporter/portless目前只有help证据；OTLP Python闭包约2.5 MB继续随包携带，文档已与实现一致。新独立完整模型验收仍待可消费的新交付。
 
@@ -12,11 +28,11 @@ advisor已建议统一公共入口在安装/服务/Harness前使用标准静态T
 
 ## 2026-10-07 全新新版 Lab 验收会话（当前）
 
-用户要求从正常使用者视角重新完整验收 `I14-dx-test` 与 `pi-minimal-vv-dx-test`，使用真实自费模型，绝不参赛；官网评测只能使用自费、非排名的独立评分。该验收不接续旧 run 或原生会话，重点同时观察可用性、绕路/排错负担、墙钟耗时和 token 负担。当前只完成只读入口熟悉与启动前核对，等待主任务确认新交付可实际消费后启动收费运行；已有实验授权，不等待用户重复开工批准。
+用户要求从正常使用者视角重新完整验收 `I14-dx-test` 与 `pi-minimal-vv-dx-test`，使用真实自费模型，绝不参赛；官网评测只能使用自费、非排名的独立评分。该验收不接续旧 run 或原生会话，重点同时观察可用性、绕路/排错负担、墙钟耗时和 token 负担。主已确认新交付可实际消费并通知启动，新I14运行已受理；已有实验授权，不等待用户重复开工批准。
 
 已核对：正常入口为 `python3 -m lab start VARIANT TARGET TASK`；当前目标配置的两 variant 均指向 `arc-core-direct-20261007p`，自费配方由 `harness/model-recipes/self-funded.json` 冻结；独立评分使用 `python3 -m lab evaluate RUN --kind self-test`，不等同比赛提交。只读 `lab status --all --json` 发现旧 `610daf8655bc4f178cf6b0b35e94cfc7` 仍为 running，属于历史现场，不能控制、接续或作为新版验收证据。启动前读回原件保存在 `runs/finals-experiment-loop/validation/preflight-status-20261007.json`。
 
-当前下一步：新版公共入口已完成Tini、安装和服务启动的实际Linux操作，已通知新会话开始完整自费验收；按 `evaluation.md` 的验收矩阵串行覆盖两个 variant，并将真实使用成本与功能结果分开记录。通知启动不代表已取得模型活动或评分，需读回新run原件。execution_owner继续补充浏览器确在subreaper后代树的PPID/线程/僵尸回落证据，不阻塞已可消费交付的真实使用。
+当前下一步：同一新会话从正常入口重试I14自费验收，新装配消费修复后的Linux代理；WSL恢复空间等待用户处理。按 `evaluation.md` 的矩阵串行覆盖两个 variant，将真实使用成本与功能结果分开记录。Tini 下已有一次真实浏览器生命周期证据，但长运行进程累积仍待生成应用验收，不能用入口成功代替模型活动或评分。
 
 2026-10-07 用户明确：“本任务的验收绝对不可以参赛”，并建议抛弃原验收会话、新开会话完整验收。该限制覆盖所有验收生成与评测，禁止 competition/official_evaluation、正式提交或上榜身份；官网独立评分只能自费且非排名，不从平台或比赛题目推断参赛许可。原独立会话停止后续派发、评测与接续，已有610daf现场保留，尚未取消该run。新的独立会话从正常Lab入口完整验收，不继承旧会话的绕路经验；消息尽量自然，具体标准和原件归本packet及evaluation。实现官网比赛接入分支不授予验收参赛权限。
 

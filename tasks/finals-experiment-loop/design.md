@@ -12,6 +12,8 @@ restart 迁移 data、重新装配当前程序，因此新 run 也按 target 名
 
 stages 由普通 Python 程序按顺序调用运行 API。restart 保留同 variant 的全部规范数据，重新装配程序后启动新 run；无需挑选应用、Braid issues 或原生状态的路径。阶段发布应用后，程序自动启动配置的测评，下一阶段可与测评并行。公开测试反馈可显式作为下一次执行输入，官网隐藏结果仅供实验分析。
 
+题目可以原生声明 `stages` 单阶段 task 列表，由同一个三参数 start 入口派发第一阶段并自动启动普通 Python 推进程序，不要求使用者手写脚本。推进程序留在启动命令所在控制宿主，以保证下一阶段可以从维护源码和 target 重新装配；各阶段运行的观察、保存及测评仍由其已有自动化负责。初始 run 保存题目声明和实际派发记录，不增加实验级身份或统一生命周期。每个单阶段拥有自己的需求和评测配置；阶段声明不嵌套。
+
 ## 用户提出的范围
 
 供应商模型配方由 variant 声明，公共 model-proxy 只执行该配方及统一模型运输接口。自费运行将所选供应商链冻结到 run 输入；官网比赛不加载供应商配方、不带 proxy，直接消费平台注入的 OPENAI_BASE_URL / OPENAI_API_KEY。两种路径均不要求 variant 判断费用模式；原生角色模型选择与请求预算仍属于 variant。
@@ -34,14 +36,14 @@ stages 由普通 Python 程序按顺序调用运行 API。restart 保留同 vari
 | 支持 start、stop、pause、resume、restart 及 stages | pause/resume 作用于原 run；restart 同 variant 迁移数据并创建新 run，执行方式按真实 target 能力映射。 |
 | 规范程序和数据路径 | 程序重新装配，数据整体迁移；删除 extract、通用路径映射和跨 variant 状态转换。 |
 | status 提供可用的运行摘要 | 无参数显示未归档、未正常完成的 run；执行状态和绑定脚本给出的活动判断同时可见。 |
-| 自动且强耦合测评 | 内建公开需求模拟评测、官网应用重放、试题自带评测三种 ARC 路径，不让每个实验重写打包和评分脚本。 |
+| 自动且强耦合测评 | 内建公开需求模拟评测、官网应用重放、self-test、试题自带评测四种路径，不让每个实验重写打包和评分脚本。 |
 | 模型配置按 provider/deployment 区分 | contextWindow、maxTokens 和协议兼容项归集中 catalog 的具体 deployment；选路后应用已确认能力，不按统一模型名覆盖不同供应商。 |
 
 采用现有 OTLP 协议接收能力，以一个共享 Python 服务和本地 SQLite 承担 Console 的 Collector/Backend；Hosted 只携带轻量接收/落盘核心。以下说明理由与适用边界；不保留 lab.exp 的状态与资源治理机制。
 
-本地与 Hosted 统一运行接口、程序材料组装和容器内路径，不强制使用同一种运输格式。本地冻结完整小程序目录，固定版本 runtime 在执行宿主部署并只读挂载；Hosted 将相同程序材料和 runtime 组成自包含 ZIP。原因是官方 SDK 会复制 agent 目录的内容，不能靠 runtime symlink 避免重复复制。固定路径不原地更新，运行记录保留来源；不增加多层缓存、准入或手工证明。
+本地与 Hosted 统一运行接口、轻量程序材料和容器内安装入口，不强制使用同一种运输格式。本地运输程序目录，Hosted 运输同一材料的 ZIP；两者均在正式启动 Harness 前按相同版本、lock 和补丁安装依赖。原先“本地只读挂完整 runtime、Hosted 预打完整 runtime”的路线已由用户要求的同环境安装方案替代。SDK 的复制行为不能成为保留两套正常运行环境的理由；缓存仅加速下载，不增加准入或手工证明。
 
-用户 2026-10-07 补充 provider 级模型配置后，采用 advisor 的 deployment 归属与预算语义：集中 catalog 保存已确认的模型能力与兼容项，recipe 只选 deployment 链。每次实际上游尝试从原请求重新计算输出限制；已给上限取请求与供应商上限的较小值，不抬高调用者的小预算。未给上限且没有明确 default 时保持缺失。协议字段只有在确认等义时转换，多预算字段冲突报告具体错误，不猜优先级、不删 thinking/reasoning 来求成功。逐 attempt 保存白名单 requested/effective、deployment 和来源，不保存提示词或凭据；更小的上下文或不兼容消息格式不能靠输出 cap 掩盖。本轮真实验收仍使用已冻结 ARC 路由，不因这项改进擅自切供应商。ARK Kimi K2.7 的具体数值尚待对应套餐的权威证据，不能套用其它型号。
+用户 2026-10-07 补充 provider 级模型配置后，采用 advisor 的 deployment 归属与预算语义：集中 catalog 保存已确认的模型能力与兼容项，recipe 只选 deployment 链。每次实际上游尝试从原请求重新计算输出限制；已给上限取请求与供应商上限的较小值，不抬高调用者的小预算。未给上限且没有明确 default 时保持缺失。协议字段只有在确认等义时转换，多预算字段冲突报告具体错误，不猜优先级、不删 thinking/reasoning 来求成功。逐 attempt 保存白名单 requested/effective、deployment 和来源，不保存提示词或凭据；更小的上下文或不兼容消息格式不能靠输出 cap 掩盖。本轮真实验收使用 variant 声明的当前自费供应商配方，不再采用已耗尽的 ARC 路由。ARK Kimi K2.7 的已核实数值与来源归 catalog 和 provider-model-config cell，不套用其它型号或套餐的上限。
 
 ## 四项共同设计责任
 
@@ -67,7 +69,7 @@ flowchart LR
     Policy --> Run
     Run --> Snapshot["规范数据 / 应用快照"]
     Snapshot --> Next["restart：同 variant 新 run"]
-    Snapshot --> Eval["自动测评：模拟 / 官网重放 / 题目自带"]
+    Snapshot --> Eval["自动测评：模拟 / 官网重放 / self-test / 题目自带"]
     Local -->|"OTLP"| Obs["共享 Collector / Backend"]
     Hosted -->|"本地保存，回收后导入"| Obs
     Local --> Archive["完整工作区与结果存储"]

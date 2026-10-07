@@ -1,10 +1,27 @@
 # 现有设施的证据与因果判断
 
+## 2026-10-07 原定目标达成核对
+
+整体尚未达成。完成标准是使用者从正常入口低负担地开展、控制、接续、评测并解释实验，不是组件启动、包变小或某个模型请求成功。以下核对区分实现、实际观察与缺口；下文的2026-10-06调查和较早边界诊断保留历史身份，不代表当前源码。
+
+| 原定目标 | 当前可采用事实 | 尚未达成的部分与下一步 |
+| --- | --- | --- |
+| run 控制、三参数入口，无容量队列 | lab.run/CLI已接入真实执行；新版失败run保留身份、原错并自动保存；新Pi正常双spawn观察已工作 | 新版两条完整生成链均未完成；Pi上传阻断做跨宿主接续，I14完整wrapper启动已成功但真实生成仍待正常restart |
+| 公共装配与统一环境，variant保留原生语义 | public_package拥有最终装配，同一安装器及lock；Linux代理两别名真实HTTP200，装配字节一致 | 不能以装配成功代替真实Harness使用；原设计中完整runtime挂载路线已被替代，适配对象仅本轮两个DX派生variant |
+| 启停、pause/resume、同variant数据接续、原生stages | 控制与restart源码接线；题目stages已由三参数入口接入，无新增控制对象 | 新交付需实际证明相同task原生身份接续和下一task应用/业务数据保留、自动stage推进 |
+| 自动保存成功、失败、停止现场 | 旧610daf停止回收完成；新0aeae2、782227失败均自动saved；本机与远端回执已分开 | 完成生成的应用、自动评测原件与阶段关联尚未形成；强制取消后的平台范围仍按实际能力报告 |
+| 采集驱动的spend/idle自动操作 | 新Pi的status/CLI已实际显示本run已记录原生token；按时间排除迁移旧消息，覆盖明确partial，不采用cost零占位 | 供应商账单/已核实请求价格尚未接通，金额仍未知；用量不代替费用，idle动作实际覆盖仍未闭环 |
+| Exp Console/OTLP与Braid自有视图 | 共享服务和通用页面已交付；Braid reader/viewer边界已迁移 | 新Pi/I14自然查询、原错/配方/资源/结果定位的使用负担尚待独立操作；不以HTTP200替代数据链路 |
+| 四个测评后端与自动评测 | 接口、task配置和self-test认证接线已存在 | 新版应用未生成完成，随题、模拟、self-test尚无本轮评分；已确定关闭的Hosted入口保留拒绝证据，不重复上传或参赛来填矩阵 |
+| 资源管理与轻量交付、用得好 | Tini入口、memory/pids观察及有界补救已落地，真实浏览器一次生命周期无浏览器残留；程序材料约16MB | 长运行进程累积、公共采集开销与实际用户启动/排错/回收成本仍待观察；约512MB安装占用不能说成16MB运行占用 |
+
+采用completion_criteria_decision advisor的优先级：先完成已有Pi/WSL闭环并定位I14启动阻断，同时用已有run验Console；费用采集缺口由主处理，不无限优化应用分数、不继续以runtime优化替代产品验收。独立验收仍绝不参赛，模型只用variant声明的当前自费配方。真实模型/平台等待与设施主动操作分开计时；尚无依据声称普遍节省比例。
+
 本页区分已观察事实、能力边界和设计推论，配合 [评价标准](evaluation.md) 与 [HLD 草案](design.md) 使用。调查对象是 2026-10-06 读取的工作区和历史运行材料；仓库仍有其它任务在修改，历史快照不代表现在的运行状态。
 
-## 当前能作出的判断
+## 分层调整前的调查与设计判断
 
-2026-10-07 对新 DX 实现的边界核对：公共 gateway/OTLP/seed-data/运输装配仍重复在两份 variant build.py 内，且 OTLP 和 proxy 依赖默认引用历史 runs 路径；公共 harness_services 又包含 I14 的 DeepSeek selector、visual identity 推断和 Pi/Braid 原生目录权限修复。execution 的原生事实采集也直接解释 Pi JSONL 和 Braid 状态。因而“服务实现共用”并不等于职责已分开：公共升级仍需逐 variant 接线，原生布局修改又传播进通用服务。两个 DX README 还保留旧 ready-context 或 private-models 接线，不能作为当前边界依据。
+2026-10-07 分层调整前对新 DX 实现的边界核对：公共 gateway/OTLP/seed-data/运输装配当时仍重复在两份 variant build.py 内，且 OTLP 和 proxy 依赖默认引用历史 runs 路径；公共 harness_services 又包含 I14 的 DeepSeek selector、visual identity 推断和 Pi/Braid 原生目录权限修复。execution 的原生事实采集也直接解释 Pi JSONL 和 Braid 状态。因而“服务实现共用”并不等于职责已分开：公共升级仍需逐 variant 接线，原生布局修改又传播进通用服务。两个 DX README 当时还保留旧 ready-context 或 private-models 接线，不能作为当前边界依据。本段保留问题识别的历史因果，当前达成判断以上表和对应新run为准。
 
 采用 advisor 的设计判断作为待落实建议：公共装配拥有最终产物及公共服务启动、data 运输和执行生命周期；variant 拥有角色/技能选择、原生模型映射、会话接续、完成与交付判定、状态解释；多个 variant 实际共用的 Pi/Braid 机械适配保留明确原生身份的 helper。公共装配在 variant 材料准备后统一加入基础设施，不只抽取重复函数再要求每个 variant 选择调用。Portless 是应用开发服务代理，不与 LLM gateway 混同；ARC history 发布机制可共享，发布来源与时机仍属 variant。本次为只读诊断及建议，未更改源码或在途运行。判断效果以一次公共 gateway/OTLP 变更自然被两个 variant 新装配采用、原生布局修改不再要求公共服务猜路径为准，不增加插件注册或通用 hook 框架。
 

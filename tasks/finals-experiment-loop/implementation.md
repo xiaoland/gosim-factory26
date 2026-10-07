@@ -22,7 +22,7 @@ target 配置固定提供 WSL、sfp7、Hosted 的宿主、run root、Docker/平�
 
 修改 `scripts/execution_bootstrap.py`、`scripts/experiment_entry.py`、`scripts/harness_layout.py`、`scripts/package_agent.py` 和 `submission` 的组装接线，统一传入 program、inputs、data/workspace 与 native_state_path。网关的创建、关闭、route 和采样由公共入口负责，variant 只消费路径和端点。
 
-适配清单为 pi-minimal、pi-minimal-vv，以及 pi-braid-i14、pi-braid-i14-cleaner、pi-braid-i14-cleaner-direct、pi-braid-i14-e2e、pi-braid-i14-reviewer、pi-braid-i14-reviewer-cleaner-e2e、pi-braid-i14-reviewer-direct。保留各 variant 独立角色/技能/流程，共用路径与运行合同；Pi-only 的 main.py 将 home/session 放在 data/harness，I14 的 main.py/run.py 将 Braid DB、origin/worktree、Pi home 和 retained request 放在同一数据域。容器内路径保持稳定，私有凭据和本次服务句柄独立于可迁移 data。
+本轮落地与独立验收的适配对象为用户指定的 I14-dx-test 和 pi-minimal-vv-dx-test，保留原 variant 身份与冻结运行，不扩展为九个旧 variant 的全面迁移。派生 variant 保留独立角色/技能/流程，共用路径与运行合同；Pi-only 的 main.py 将 home/session 放在 data/harness，I14 的 main.py/run.py 将 Braid DB、origin/worktree、Pi home 和 retained request 放在同一数据域。容器内路径保持稳定，私有凭据和本次服务句柄独立于可迁移 data。
 
 同 task 调用 Pi 原 session 或 Braid `local --offline-resume`，保留原生身份；task/需求版本变化创建新的原生状态子目录和需求入口，保留历史数据并接续应用。不得因旧 Braid root 已关闭就把新 stage 当作已完成。
 
