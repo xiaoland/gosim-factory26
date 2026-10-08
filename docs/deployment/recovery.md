@@ -5,22 +5,23 @@
 本页是当前恢复入口。旧 checkpoint、prepared、ARC attempt 和官网 journal 的详细字段合同保留在[历史恢复合同](history/recovery.md)，不作为当前命令来源。
 
 <a id="当前-checkpointprepare-与停止门控"></a>
-## 当前 checkpoint、prepare 与停止门控
+## 当前 run 的停止与接续
+
+当前 run 使用下列公共接口，适用源码和部署验收状态见 [Lab](../../lab/README.md)与[设施任务](../../tasks/finals-experiment-loop/packet.md)。新执行接线仍在验收中，不能用旧执行器的恢复证明代替新路径的实际反馈。
 
 ```sh
-python3 -m lab status RUN
-python3 -m lab checkpoint RUN ATTEMPT --directory CHECKPOINT --request-id CAPTURE
-python3 -m lab recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE \
-  --directory DERIVED --job JOB --request-id REPAIR
+python3 -m lab status RUN --json
+python3 -m lab stop RUN
+python3 -m lab restart RUN --keep-data --task TASK
 ```
 
-Checkpoint 由原域权威停止新增写者、关闭真实登记写者并取得 capture 证明，不要求操作者制作 closure JSON。外层 Local 的已验证终态 SDK child 可作为来源；多个来源需显式 `--source-resource`。来源的 child 身份、外层关系、快照及 Harness member 分开保留，不套用外层路径。非零入口不自动否定可恢复状态，官方 SDK resume 仍不支持。
+stop 只请求停止指定执行，停止结果、完整 data 回收和日志保存分别取证。`restart RUN --keep-data` 先停止并保存来源 data，再装配同 variant 程序创建新 run；相同 task/需求版本接续原生状态，新 task 保留应用与历史并创建新的原生任务状态。来源不完整时记录具体缺失和可继续范围，不把应用或 Git 备份说成完整检查点，不用静默 fresh run 替代失败接续。省略 `--keep-data` 的 `restart RUN` 明确从题目基线重跑，不继承工作区或原生进度；旧现场仍被保存。
 
-Recover 缺省只准备选定 job，`--execute` 才请求一个派生 attempt。query/continue/abort 使用同一 request；abort 保留状态、修复 ledger 与 generation，不默认回滚或复活旧 writer。snapshot-copy 消费不可变快照，同域 domain-state 在受管许可内有限修复及原子交接。具体命令、来源停止导入和重入门控归[执行合同](../../lab/exp/execution.md#检查点与显式恢复操作)。
+自管 Docker 的 pause/resume 保持同一次执行，Hosted 不支持。疑似停滞先有界读回已有事实；控制前说明目标、实际生命周期、动作目的和可能损失。平台 can_resume 字段本身不证明原生进度可以恢复。
 
-完整 snapshot、checkpoint schema3/4、定义依赖、目标 OS/architecture/runtime/logical-root、修复类别和 acquisition 的合同归[制品与恢复证据](../../lab/exp/artifacts.md#检查点与准备)。普通 workspace ZIP/application/terminal-content-copy 不能补造为 checkpoint；缺 Git/native/连续停写或真实定义引用时保留 partial。未知/pending/live 写者不能按故障重跑，也不能通过后来的证明追认原普通快照。
+当前 CLI 没有 checkpoint、recover 或 prepare 命令。旧 schema3/4 的 writer、capture、prepared 及 legacy-terminal-export 合同归[历史恢复说明](history/recovery.md#旧-schema34-checkpoint-与-prepared-合同)，只由来源冻结执行器解释，不自动接入当前 run。
 
-已发布应用可以独立评价，不必把不完整 checkpoint 当作零分。阶段应用须冻结明确 commit，阶段评分不进入仍在生成的 Agent；模型政策及费用仍由当前配方和授权明确选择。[平台与制品](competition.md)解释当前提交与重放边界。
+冻结应用可以独立评价，不必恢复原生成；在对应评测授权内使用 `lab evaluate RUN --kind official`，准确记录产物和非正式评分身份。阶段评分不进入仍在生成的 Agent；正式参赛须由参赛 Agent 实际生成，不能用重放替代。平台费用与提交身份见[平台与制品](competition.md)。
 
 ## 历史来源
 

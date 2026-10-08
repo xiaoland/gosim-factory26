@@ -16,7 +16,7 @@ model-proxy 是公共运输设施，供应商模型配方的选择归 variant �
 
 Hosted 上传沿已观察的 model、visual_model、base_url 表单合同。比赛上传所需角色模型由 variant builder 导出 `submission-models.json`，ARC 适配层填官方端点；这些字段不构成供应商配方，也不覆盖 Harness 实际收到的平台注入值。没有证据支持依赖后台省略字段的默认行为。
 
-新运行固定分离 program、inputs、data、records、snapshots 和 evaluations。程序重新组装，restart 只迁移全部 data，不继承旧控制句柄、费用、遥测库或隐藏评分。私有凭据在可迁移数据之外。相同 task/需求版本恢复原生身份；下一 task 创建新原生任务状态，保留应用及历史。停止来源和保存数据失败不能悄悄退回空会话或旧快照。
+新运行固定分离 program、inputs、data、records、snapshots 和 evaluations。restart 默认创建新 data 和原生身份；只有显式 keep_data 才迁移全部 data，同 task/需求版本恢复原生身份，下一 task 保留应用及历史并创建新原生任务状态。两种模式都重新组装程序并保留来源，不继承旧控制句柄、费用、遥测库或隐藏评分，也不删除来源现场。私有凭据在可迁移数据之外。新来源记录明确 keep_data；历史 restart 未记录该字段时仍按当时的迁移语义解释。停止来源和保存数据失败不能悄悄退回空会话或旧快照。
 
 Braid 持有 Issue/PR、成员身份、工作项上下文、clone 和共同 origin；Pi/Codex 持有原生会话、工具和内部子代理；SVC 以独立技能文件提供方法和模板。三者的正文不由 Factory 复制成第二份规范。
 

@@ -9,7 +9,8 @@ python3 -m lab status RUN --json
 python3 -m lab pause RUN
 python3 -m lab resume RUN
 python3 -m lab stop RUN
-python3 -m lab restart RUN --task NEXT_TASK
+python3 -m lab restart RUN
+python3 -m lab restart RUN --keep-data --task NEXT_TASK
 python3 -m lab wait RUN --json
 python3 -m lab logs RUN --follow
 python3 -m lab save RUN
@@ -50,22 +51,13 @@ Hosted 工作区下载失败也保留上次成功读取的 native、provider usa
 
 启动准备失败会保存具体错误并显示 failed；越过远端创建或启动边界后失去回执则显示 unknown，不能仅凭没有句柄判成失败或重新派发。Local 后台 worker 派发成功仍为 starting，只有实际执行观察才能确认 running。异常不会因已有 starting 文件而被遮住；本次错误位于 records/start-error.json，远端派发意图位于 records/dispatch.json。
 
-`pause/resume` 保持同一次实际执行；自管 Docker 使用 pause/unpause，Hosted 不支持。`restart` 先停止实际执行并保存确定数据，再重新装配同名 variant 程序，整体迁移 data，创建来源明确的新 run。相同 task 和需求版本恢复原生会话；新 task 保留应用及历史，建立新原生任务状态。不支持切换 variant、任意路径提取或失败时悄悄启动空会话。
+`pause/resume` 保持同一次实际执行；自管 Docker 使用 pause/unpause，Hosted 不支持。`restart RUN` 先停止并保存来源，再重新装配同名 variant，从题目基线开始创建新工作区和新原生会话，不继承来源进度，也不删除旧现场。target、task 和模型配置默认沿用来源，可以显式覆盖 target、task 或 route。
+
+`restart RUN --keep-data` 才是接续：迁移完整 data，相同 task 和需求版本恢复原生会话；新 task 保留应用及历史，建立新原生任务状态。`--snapshot` 只在此模式下选择来源保存快照。不支持切换 variant、任意路径提取或失败时悄悄启动空会话。Python 对应 `run.restart(path, keep_data=True)`；已有接续脚本必须显式传入该参数，默认值已改为从零重跑。
 
 `restart` 的新 run 按 target 名称重新解析当前维护配置，包含 runtime；来源停止与保存仍使用来源的冻结配置。需要指定旧 runtime 时，通过已有 `LAB_CONFIG` 选择固定该版本的配置，再执行 restart，不改来源记录。这只固定所选环境，不是完整检查点恢复，因为 variant 程序仍重新装配。
 
 `stop` 只操作指定 run，不停止独立 Python 自动化程序或其他 run；回收迟到结果仍继续。Python 使用 `lab.run` 的同一组函数组织策略和 stages，不增加调度 DSL。默认 stages 只在 completed 后接续；费用和 idle 使用采集的来源、截止点与缺项，不把未知数当作零。
-
-| 要做什么 | 权威说明 |
-| --- | --- |
-| 启动、控制、查询一个 run；组织 Python 策略 | [公共运行 API](run.py)、[自动化](automation.py) |
-默认 `watch()` 在指定 run 进入 `completed`、`failed` 或 `stopped` 后返回；只有显式使用 `watch(..., follow=True)` 或 `lab status RUN --follow` 才会观察接续。跟随只消费 manifest 中 `source.kind=restart` 的直接后继：停止早于 restart 派发时会保留在原 run 上等待并显示 `old→waiting`，出现唯一后继才显示 `old→new` 并继续；出现多个后继则显示分支并要求用户明确指定 run。普通 `status`、`stop`、`pause`、`resume` 和 `restart` 始终针对用户给出的具体 run，不会因跟随关系重定向控制。
-
-状态中的 `restart_summary` 汇总接续材料是否保存、是否复用 native 状态、目标 run 的冻结/装配材料、派发回执和执行端实际消费证据；没有执行端版本回执时明确保持 `consumed.adopted=null`，不把 manifest 的版本字段当作已生效证明。公共包入口在安装后写入小型 `material-consumption.json`，由已有 records/workspace 回收链读取；回执缺失只暴露 unknown，不阻止 Harness 启动。它分别给出当前 run 的 provider 请求、响应和成功响应，以及 variant status 脚本提供的 `effective_action`（`at`、`source`、`run_id`/`producer_run_id`）和来源时间；请求本身不能代替 variant 动作。正在运行但没有有效动作证据时会明确标记 `running-but-no-valid-action-observed`，旧 native scope 的 last_activity 不会算作当前动作。费用和 provider usage 默认只统计当前 producer run；完整保留的 native session 另以 `native_session_scope` 标示，不能把两者相加。
-| 程序与数据目录、ARC 执行和同 variant restart | [ARC 适配](arc_bench/README.md) |
-| 通用 Console、共享 Collector 与 Backend | [Lab Console](../consoles/lab/README.md)；Braid 协作与旧冻结服务见 [Braid Console](../consoles/braid/README.md) |
-| 读取或操作旧冻结执行 | [历史 lab.exp 源码导航](exp/README.md)；使用其原执行器，不接入新的 run 控制。 |
-| ARC 官方 SDK、平台与应用重放 | [ARC 适配](arc_bench/README.md) |
 
 `--script` 是普通 Python 程序，与观察、保存和任务自动评测并行运行，不替代它们。`lab.automation.watch()` 默认读取 `LAB_RUN` 的已保存事实，持续提供 `spend`、`native`、`resources`、执行状态及其来源时间；它不再采集、不访问平台，也不把旧数据刷新成新事实。重复读取允许脚本按当前时间判断 idle，具体判断与操作由脚本自己表达。例如：
 
@@ -79,9 +71,23 @@ for facts in watch():
     native = facts['native']
     resources = facts['resources']
     # 在这里用普通 Python 判断，并调用 run.stop(facts['path'])
-    # 或 run.restart(facts['path'])；阈值、未知数据处理及动作后退出均由脚本决定。
+    # 或 run.restart(facts['path'], keep_data=True) 接续；省略 keep_data 则从零重跑。
+    # 阈值、未知数据处理及动作后退出均由脚本决定。
     print(time.time(), spend, native, resources, flush=True)
 ```
+
+默认 `watch()` 在指定 run 进入 `completed`、`failed` 或 `stopped` 后返回；只有显式使用 `watch(..., follow=True)` 或 `lab status RUN --follow` 才会观察接续。跟随只消费 manifest 中 `source.kind=restart` 的直接后继：停止早于 restart 派发时会保留在原 run 上等待并显示 `old→waiting`，出现唯一后继才显示 `old→new` 并继续；出现多个后继则显示分支并要求用户明确指定 run。普通 `status`、`stop`、`pause`、`resume` 和 `restart` 始终针对用户给出的具体 run，不会因跟随关系重定向控制。
+
+状态中的 `restart_summary` 汇总接续材料是否保存、是否复用 native 状态、目标 run 的冻结/装配材料、派发回执和执行端实际消费证据；没有执行端版本回执时明确保持 `consumed.adopted=null`，不把 manifest 的版本字段当作已生效证明。公共包入口在安装后写入小型 `material-consumption.json`，由已有 records/workspace 回收链读取；回执缺失只暴露 unknown，不阻止 Harness 启动。它分别给出当前 run 的 provider 请求、响应和成功响应，以及 variant status 脚本提供的 `effective_action`（`at`、`source`、`run_id`/`producer_run_id`）和来源时间；请求本身不能代替 variant 动作。正在运行但没有有效动作证据时会明确标记 `running-but-no-valid-action-observed`，旧 native scope 的 last_activity 不会算作当前动作。费用和 provider usage 默认只统计当前 producer run；完整保留的 native session 另以 `native_session_scope` 标示，不能把两者相加。
+历史 `source.kind=restart` 未记录 `keep_data` 时仍表示当时的保留进度接续，新记录显式区分两种模式。`status --follow` 跟随明确的 restart 后继，但不把从零重跑误认成原生会话接续。
+
+| 要做什么 | 权威说明 |
+| --- | --- |
+| 启动、控制、查询一个 run；组织 Python 策略 | [公共运行 API](run.py)、[自动化](automation.py) |
+| 程序与数据目录、ARC 执行和同 variant restart | [ARC 适配](arc_bench/README.md) |
+| 通用 Console、共享 Collector 与 Backend | [Lab Console](../consoles/lab/README.md)；Braid 协作与旧冻结服务见 [Braid Console](../consoles/braid/README.md) |
+| 读取或操作旧冻结执行 | [历史 lab.exp 源码导航](exp/README.md)；使用其原执行器，不接入新的 run 控制。 |
+| ARC 官方 SDK、平台与应用重放 | [ARC 适配](arc_bench/README.md) |
 | 选择恢复来源与当前合法操作 | [恢复入口](../docs/deployment/recovery.md) |
 
 新 run 固定包含 manifest.json、program、inputs、data/workspace、data/harness、records、snapshots 和 evaluations。program 保存实际程序，data 保存应用与可迁移原生状态，records 保存本次日志、状态、资源、费用与平台原件。`lab save RUN` 的规范包只包含 `manifest.json`、`data/workspace`、`data/harness` 和 `records`；它明确排除 `program`、`inputs`（包括预装 SDK/runtime 和开发缓存）、`snapshots`（包括官网原始 project.zip）及 `evaluations`。harness 内只额外排除明确的公共安装缓存 `browser-cache`、`home/.npm`、`home/.cache` 和 `home/.local`；workspace 内只有带 `runtime-source.json` 安装标记的公共 runtime 才会排除，不会按名称删除应用自己的 `runtime`、`node_modules`、better-sqlite3 或业务数据。records 中的原始归档文件也留在 run 内证据，不再嵌套进规范包。包外仍保留来源 run、原始官网 ZIP 路径及 `records/portable-save.json`。restart 不迁移旧记录或旧费用。凭据不进入可迁移 data 或公开归档。

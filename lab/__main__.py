@@ -80,6 +80,7 @@ def _print_result(command, value, args, run):
             consumed = material.get("consumed") or {}
             frozen = material.get("frozen") or {}
             print(f"restart_source={restart_summary.get('source_run') or '-'}"
+                  f" mode={material.get('restart_mode') or '-'}"
                   f" material_saved={saved_ok}"
                   f" native_resume={material.get('native_resume')}"
                   f" frozen_program={frozen.get('program_version') or '-'}"
@@ -115,10 +116,12 @@ def main(argv=None):
     start.add_argument("--script")
     for name in ("stop", "pause", "resume"):
         commands.add_parser(name).add_argument("run")
-    restart = commands.add_parser("restart", help="同 variant 迁移完整 data，启动新 run")
+    restart = commands.add_parser("restart", help="同 variant 停止并启动新 run；默认 fresh，--keep-data 才迁移 data/native")
     restart.add_argument("run")
     for name in ("target", "task", "route", "snapshot"):
         restart.add_argument(f"--{name}")
+    restart.add_argument("--keep-data", action="store_true",
+                         help="显式迁移来源 data/workspace 与 native 状态")
     status = commands.add_parser("status", help="默认显示未归档且未正常完成的运行")
     status.add_argument("run", nargs="?")
     status.add_argument("--all", action="store_true")
@@ -163,7 +166,8 @@ def main(argv=None):
             value = getattr(run, args.command)(args.run)
         elif args.command == "restart":
             value = run.restart(args.run, target=args.target, task=args.task,
-                                route=args.route, snapshot=args.snapshot)
+                                route=args.route, snapshot=args.snapshot,
+                                keep_data=args.keep_data)
         elif args.command == "status":
             if args.follow:
                 if not args.run:
@@ -186,6 +190,7 @@ def main(argv=None):
                             action = observation.get("effective_action") or {}
                             print("restart_summary=" + json.dumps({
                                 "source_run": summary.get("source_run"),
+                                "restart_mode": (summary.get("material") or {}).get("restart_mode"),
                                 "material_saved": ((material.get("saved") or {}).get("saved")
                                                     if isinstance(material.get("saved"), dict)
                                                     else material.get("saved") is True),

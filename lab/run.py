@@ -74,8 +74,20 @@ def successors(run):
         rows.append({"run_id": candidate.name, "path": str(candidate),
                      "created_at": value.get("created_at"),
                      "lifecycle": facts.get("lifecycle", value.get("lifecycle", "unknown")),
-                     "variant": value.get("variant"), "task": value.get("task")})
+                     "variant": value.get("variant"), "task": value.get("task"),
+                     "restart_mode": _restart_mode(value)})
     return sorted(rows, key=lambda row: (row.get("created_at") or 0, row["run_id"]))
+
+
+def _restart_mode(manifest):
+    source = manifest.get("source")
+    if isinstance(source, dict) and source.get("kind") == "restart":
+        if source.get("keep_data") is not None:
+            return "keep-data" if bool(source.get("keep_data")) else "fresh"
+        # Historical restart records predate keep_data; their copied native
+        # scope/data are retained by definition.
+        return "keep-data"
+    return None
 
 
 def _continuation(path, manifest, children=None):
@@ -83,14 +95,22 @@ def _continuation(path, manifest, children=None):
     children = successors(path) if children is None else children
     if len(children) == 1:
         child = children[0]
+        mode = child.get("restart_mode")
+        label = f"{path.name}→{child['run_id']}"
+        if mode:
+            label += f"[{mode}]"
         return {"state": "single", "source_run": path.name, "successor": child,
-                "label": f"{path.name}→{child['run_id']}"}
+                "restart_mode": mode, "label": label}
     if len(children) > 1:
         return {"state": "ambiguous", "source_run": path.name, "successors": children,
                 "label": f"{path.name}→({len(children)} successors; explicit run required)"}
     if source:
+        mode = _restart_mode(manifest)
+        label = f"{Path(str(source)).name}→{path.name}"
+        if mode:
+            label += f"[{mode}]"
         return {"state": "origin", "source_run": str(source), "successor": path.name,
-                "label": f"{Path(str(source)).name}→{path.name}"}
+                "restart_mode": mode, "label": label}
     return {"state": "none", "source_run": None, "successors": [], "label": None}
 
 
@@ -136,6 +156,7 @@ def _restart_summary(path, manifest, facts):
         except (OSError, ValueError, TypeError):
             pass
     is_restart = source_meta.get("kind") == "restart" or bool(restart)
+    restart_mode = _restart_mode(manifest) if is_restart else None
     spend = facts.get("spend") if isinstance(facts.get("spend"), dict) else {}
     provider = spend.get("provider_usage") if isinstance(spend.get("provider_usage"), dict) else {}
     attempts = provider.get("attempts") if isinstance(provider.get("attempts"), list) else []
@@ -198,6 +219,8 @@ def _restart_summary(path, manifest, facts):
         "is_restart": is_restart,
         "source_run": manifest.get("source_run") if is_restart else None,
         "material": {
+            "restart_mode": restart_mode,
+            "keep_data": (restart_mode == "keep-data") if is_restart else None,
             "saved": restart.get("saved"),
             "restart_snapshot": manifest.get("restart_snapshot"),
             "native_resume": manifest.get("native_resume"),
@@ -272,13 +295,15 @@ def status(run=None, *, include_all=False):
     continuation = _continuation(path, manifest, direct_successors)
     spend = facts.get("spend") if isinstance(facts.get("spend"), dict) else {}
     usage = spend.get("usage") if isinstance(spend.get("usage"), dict) else {}
+    native_retained = bool(manifest.get("native_resume"))
+    native_scope = None
+    if manifest.get("native_scope_id") and isinstance(facts.get("native"), dict):
+        native_scope = "full-retained-native-session" if native_retained else "new-native-scope"
     return {**manifest, **facts, "path": str(path), "archived": archived,
             "successors": direct_successors,
             "continuation": continuation,
             "usage_scope": usage.get("scope"),
-            "native_session_scope": ("full-retained-native-session"
-                                     if manifest.get("native_scope_id") and isinstance(facts.get("native"), dict)
-                                     else None),
+            "native_session_scope": native_scope,
             "restart_summary": _restart_summary(path, manifest, facts)}
 
 
@@ -405,9 +430,10 @@ def save(run, *, output=None):
     return create(resolve(run), output=output)
 
 
-def restart(run, *, target=None, task=None, route=None, snapshot=None):
+def restart(run, *, target=None, task=None, route=None, snapshot=None, keep_data=False):
     from .arc_bench.restart import restart as restart_run
-    result = restart_run(resolve(run), target=target, task=task, route=route, snapshot=snapshot)
+    result = restart_run(resolve(run), target=target, task=task, route=route,
+                         snapshot=snapshot, keep_data=keep_data)
     path = resolve(result["path"] if isinstance(result, dict) else result)
     _background(path, "lab.automation", ["observe", path], "supervisor")
     _background(path, "lab.automation", ["default", path], "automation")

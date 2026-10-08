@@ -14,6 +14,10 @@
 
 ## 2026-10-08 整理后接续
 
+用户确认命名方案：“同意”。当前 restart 默认同 variant 从零重跑，restart --keep-data 显式接续；两者都停止并保存来源、创建新 run，不删除旧现场。pause/resume 仍为同 run。evaluation_closure 负责执行入口、CLI、Python/stages 及历史模式展示，主负责现有操作与技术文档、采用和只提交本次增量。没有授予新生成、收费验收、评测或参赛操作。历史 source.kind=restart 不重新解释；本次新记录明确是否继承 data，所有依赖接续的维护调用改为显式 keep_data=True。Console 当前只读且没有 restart 入口，不额外添加界面。验证以编译、帮助入口与既有保存事实为限，新模式的真实重启尚未资格化。
+
+本次实现已采用：新来源只持久 source.keep_data，模式标签由该字段派生；历史缺字段按原保留数据解释，原生身份是否继承另看 native_resume，不从应用接续推断。默认 fresh 不复制来源 data，仍复用同题冻结需求、初始基线、题目测试和模型输入，路径重绑定到新 run；keep-data 走原迁移流程，snapshot 不允许在 fresh 模式偷偷生效。CLI、公共 Python 和 stages 已同步；旧 Pi/I14 状态只读显示 keep-data，帮助入口列出 --keep-data，Python 编译通过，没有启动、停止、评测或更改任何运行。提交只纳入本任务增量，保留其它在途 source、阶段自动启动和文档修改；新 fresh 的生成、保存及评分闭环仍未真实运行验收。
+
 用户批准接续体验三项修复：“名称后面再修吧，我同意这三个修复，请落地”。继续沿用restart命名；监控跟随与恢复摘要由evaluation_closure负责lab公共接口，native_recovery_activation负责variant/Braid职责恢复的调查、窄修复与编译/已有事实验证。主负责边界取舍、合并及仅本任务提交。允许必要源码、材料与文档修复，不据此启动或控制其它任务运行，也不恢复已停止收费验收。原有source_run关系继续为来源，不增加实验或chain控制对象；只读跟随不改变具体run控制，分支不猜选。职责激活使用领域正常事件，不硬编码设施评论或普遍清空重试。变更前保留相关混合dirty的精确边界，源码/材料交付和真实运行资格分别报告。
 
 上述三项源码已落地。`lab status RUN --follow` 和 Python `watch(..., follow=True)` 跟随明确的restart直接后继，终态尚无后继时等待，有分支则交回明确选择；控制不重定向。接续摘要分别展示保存、派发、执行入口实际消费的程序/runtime身份、当前producer请求及原生工具动作，缺回执保持unknown。公共包安装后写小型消费回执，既有本地和Hosted采集回收，无第二采集者。共享native reader把同日志匹配的toolCall/toolResult及当前run时间边界输出为effective_action；HTTP、active及泛化活动证据不代替动作，工具错误保留outcome。Braid显式offline-resume仅对当前OPEN责任、idle原生会话、最新ordinary整轮failed、无待处理事件/wake的工作发正常wake，按failed turn去重，不清重试或重开closed。I14-dx-test和I15已有共享reader/offline-resume接线，因此后续装配消费修复。

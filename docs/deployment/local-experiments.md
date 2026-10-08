@@ -10,7 +10,7 @@
 python3 -m lab start pi-minimal-vv-dx-test wsl TASK
 python3 -m lab status RUN --json
 python3 -m lab wait RUN --json
-python3 -m lab restart RUN --task NEXT_TASK
+python3 -m lab restart RUN --keep-data --task NEXT_TASK
 ```
 
 新路径没有 compile/doctor/build 前置步骤、稳定 request-id 手工输入或容量预约。start 自动组装 program、输入需求、gateway/collector 与实际 target，保存采用的代码和配置。运行自己的 observer 保存 status；查询不会另起现场采集。CLI/Console 关闭不影响执行。
@@ -23,7 +23,7 @@ WSL/sfp7 的执行位置、Docker、镜像、runtime、运行根目录及共享�
 
 每个 run 保存整个 data/workspace 与 data/harness、日志、资源、遥测、费用和平台结果。stop 操作实际容器或平台 run，不据 Mac 控制进程退出宣称远端已停止；回收失败保留原错及远端唯一副本。pause/resume 使用 Docker pause/unpause，保留同一次执行；不保证释放内存或保住所有外部网络连接。
 
-restart 确认来源停止并保存完整 data 后重新组装同 variant 程序。同 task/需求版本恢复原生会话，下一 task 新建原生任务状态，历史 data 与应用保留；旧 records、费用和隐藏报告不迁移。当前源码与参数见 [Lab](../../lab/README.md)，范围和允许损失见所属 packet。
+`restart RUN` 确认来源停止并保存现场后，从题目基线重新组装同 variant 的新 run，不继承进度。`restart RUN --keep-data` 才迁移 data：同 task/需求版本恢复原生会话，下一 task 新建原生任务状态，历史 data 与应用保留；旧 records、费用和隐藏报告不迁移。Python stages 显式使用 `keep_data=True`，不会因为默认值改变而丢弃上一阶段应用。当前源码与参数见 [Lab](../../lab/README.md)，范围和允许损失见所属 packet。
 
 ## 历史入口
 

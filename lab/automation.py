@@ -193,7 +193,7 @@ def stages(initial_run, tasks):
         results.append(terminal)
         if terminal["lifecycle"] != "completed":
             return results
-        next_run = run.restart(current, task=task)
+        next_run = run.restart(current, task=task, keep_data=True)
         current = Path(next_run["path"])
     results.append(run.wait(current))
     return results
@@ -240,8 +240,12 @@ def watch(path=None, *, interval=10, follow=False):
             if len(children) == 1:
                 child = children[0]
                 continuation = observation.setdefault("continuation", {})
+                mode = child.get("restart_mode")
+                label = f"{path.name}→{child['run_id']}"
+                if mode:
+                    label += f"[{mode}]"
                 continuation.update({"state": "handoff", "source_run": path.name,
-                                     "successor": child, "label": f"{path.name}→{child['run_id']}"})
+                                     "successor": child, "restart_mode": mode, "label": label})
                 yield observation
                 path = run.resolve(child["path"])
                 continue
