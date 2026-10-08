@@ -160,7 +160,8 @@ def _get(directory, client, endpoint, name):
 _LIVE_WORKSPACE_NAMES = {
     "lab-run.json", "run.json", "delivery.json", "audit-status.json",
     "audit-report.json", "model-gateway.json", "resource-latest.json",
-    "resource-status.json", "resource-observation.json", "resources-baseline.jsonl", "request-metadata.jsonl",
+    "resource-status.json", "resource-observation.json", "resource-sampling-worker.json",
+    "resource-sampler-error.json", "resource-exhausted.json", "resource-remediation.json", "resources-baseline.jsonl", "request-metadata.jsonl",
     "gateway.log", "status.json", "recovery-attempt.json", "material-consumption.json",
 }
 

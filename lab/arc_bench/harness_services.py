@@ -52,6 +52,75 @@ class ResourceSupervisor:
         self.entry = None
         self.thread = None
         self.baseline_events = {}
+        self.sampler = None
+        self.sample_condition = threading.Condition()
+        self.sample_pending = None
+        self.sample_closing = False
+        self.sample_thread = None
+        self.sample_coalesced = 0
+
+    def attach_sampler(self, package):
+        """Sample the execution namespace; an external OTLP receiver cannot see it."""
+        try:
+            package = Path(package)
+            support = next(candidate for candidate in (package / 'support', package)
+                           if (candidate / 'agent_support.py').is_file())
+            sys.path.insert(0, str(support))
+            from agent_support import ResourceEvidence
+            self.sampler = ResourceEvidence(self.evidence, root_pid=os.getpid())
+        except Exception as error:
+            self._save({'phase': 'startup', 'error': {
+                'type': type(error).__name__, 'message': str(error)}}, 'resource-sampler-error.json')
+
+    def _collect_sample(self, kind='sample', request=None):
+        if self.sampler is None:
+            return
+        try:
+            self.sampler.sample(kind, request=request)
+        except Exception as error:
+            try:
+                self._save({'phase': kind, 'error': {
+                    'type': type(error).__name__, 'message': str(error)}}, 'resource-sampler-error.json')
+            except OSError as save_error:
+                print(f'resource sample failed: {type(error).__name__}: {error}; evidence write failed: {save_error}',
+                      file=sys.stderr, flush=True)
+
+    def _sample(self, kind='sample'):
+        if self.sampler is None:
+            return
+        with self.sample_condition:
+            if self.sample_closing:
+                return
+            request = {'kind': kind, 'kinds': [kind], 'requested_monotonic_ns': time.monotonic_ns()}
+            if self.sample_pending is not None:
+                self.sample_coalesced += 1
+                request['kinds'] = list(dict.fromkeys([*self.sample_pending['kinds'], kind]))
+                request['requested_monotonic_ns'] = self.sample_pending['requested_monotonic_ns']
+                priorities = {'sample': 0, 'baseline': 1, 'resource_limit': 2, 'final': 3}
+                if priorities.get(kind, 0) <= priorities.get(self.sample_pending['kind'], 0):
+                    self.sample_pending['kinds'] = request['kinds']
+                    return
+            self.sample_pending = request
+            self.sample_condition.notify()
+
+    def _sampling_worker(self):
+        while True:
+            with self.sample_condition:
+                self.sample_condition.wait_for(lambda: self.sample_pending is not None or self.sample_closing)
+                if self.sample_pending is None:
+                    return
+                request, self.sample_pending = self.sample_pending, None
+                coalesced = self.sample_coalesced
+            started = time.monotonic_ns()
+            request['coalesced_requests'] = coalesced
+            self._collect_sample(request['kind'], request)
+            try:
+                self._save({'kind': request['kind'], 'requested_monotonic_ns': request['requested_monotonic_ns'],
+                            'started_monotonic_ns': started, 'finished_monotonic_ns': time.monotonic_ns(),
+                            'queue_delay_ns': started-request['requested_monotonic_ns'],
+                            'coalesced_requests': coalesced}, 'resource-sampling-worker.json')
+            except OSError as error:
+                print(f'resource sampler status failed: {error}', file=sys.stderr, flush=True)
 
     def _read(self):
         row = {'observed_at_ns': time.time_ns(), 'cgroup_path': str(self.cgroup) if self.cgroup else None,
@@ -167,16 +236,26 @@ class ResourceSupervisor:
             raise RuntimeError(json.dumps(self.failed, ensure_ascii=False))
 
     def start(self):
+        if self.sampler is not None:
+            self.sample_thread = threading.Thread(target=self._sampling_worker, name='resource-sampler', daemon=True)
+            self.sample_thread.start()
         self.thread = threading.Thread(target=self._run, name='resource-supervisor', daemon=True)
         self.thread.start()
 
     def _run(self):
+        self._sample('baseline')
         initial = self._read()
         initial_events = {}
         initial_events.update(self._event_values(initial))
         self.baseline_events = initial_events
+        previous_check = time.monotonic_ns()
         while not self.stop.wait(2):
+            check = time.monotonic_ns()
             row = self._read()
+            row.update(check_monotonic_ns=check, actual_interval_ns=check-previous_check,
+                       scheduling_delay_ns=max(0, check-previous_check-2_000_000_000))
+            previous_check = check
+            self._sample('resource_limit' if self._at_limit(row) else 'sample')
             self._save(row)
             if not self._at_limit(row):
                 continue
@@ -223,6 +302,15 @@ class ResourceSupervisor:
         self.stop.set()
         if self.thread is not None:
             self.thread.join(timeout=3)
+        self._sample('final')
+        with self.sample_condition:
+            self.sample_closing = True
+            self.sample_condition.notify()
+        if self.sample_thread is not None:
+            self.sample_thread.join(timeout=3)
+            if self.sample_thread.is_alive():
+                self._save({'phase': 'close', 'status': 'incomplete',
+                            'reason': 'sampler_did_not_finish_within_shutdown_window'}, 'resource-sampler-error.json')
         if self.failed:
             raise RuntimeError(json.dumps(self.failed, ensure_ascii=False))
 
@@ -399,6 +487,7 @@ def services(package, output):
     process = None
     gateway = None
     supervisor = ResourceSupervisor(evidence)
+    supervisor.attach_sampler(package)
     previous = {}
     error_log = None
     try:
@@ -424,7 +513,8 @@ def services(package, output):
         if contract.get('target_kind') == 'hosted':
             error_log = (evidence / 'collector.stderr.log').open('a')
             process = subprocess.Popen(
-                [sys.executable, str(package / 'lab_otlp.py'), '--serve-run', str(evidence)],
+                [sys.executable, str(package / 'lab_otlp.py'), '--serve-run', str(evidence),
+                 '--no-resource-sampling'],
                 stdout=subprocess.PIPE, stderr=error_log, text=True)
             supervisor.children.append(process)
             try:

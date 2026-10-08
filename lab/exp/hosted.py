@@ -181,7 +181,8 @@ def _workspace_observation(directory, attempt, state, client, value):
                         continue
                     selected = (path.name in {'run.json', 'delivery.json', 'audit-status.json', 'audit-report.json',
                                              'model-gateway.json', 'resource-latest.json', 'resource-status.json',
-                                             'resources-baseline.jsonl'} or path.name == 'request-metadata.jsonl')
+                                             'resources-baseline.jsonl', 'resource-sampling-worker.json', 'resource-sampler-error.json',
+                                             'resource-exhausted.json', 'resource-remediation.json'} or path.name == 'request-metadata.jsonl')
                     if not selected:
                         continue
                     target = dest / 'runtime-evidence' / path

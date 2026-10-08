@@ -15,6 +15,12 @@
 
 `runtime.py prepare` 和 `path` 不选择 variant 或 benchmark。`linux` 从 lock 和显式 Braid 源构建 Linux 工具；`derive-linux` 从明确的旧包和当前源码派生资源，保留来源身份。`host-exp` 为 controller/runner 冻结独立 Python runtime，它与 Agent 的 Linux runtime 不是同一制品。
 
+## 资源归档归属分析
+
+`python3 tooling/scripts/resource_attribution.py --harness HARNESS_ARCHIVE --samples PROCESS_EVIDENCE/resources.jsonl` 只读已保存的进程登记、native-state、Braid manifest/status与资源日志，向stdout输出逐样本归属及CPU/I/O计数速率。`--harness`须指向该执行的`data/harness/<scope>`目录，不是整个runs；也可用同目录的`resource-incidents.jsonl`或`resource-critical.jsonl`作为样本来源。历史样本缺boot ID时读取同目录resources-baseline.jsonl，缺计数不能补造速率。`cpu_ticks`单位是tick/秒，换算CPU秒须使用baseline的clock_ticks；IO字段中read_bytes/write_bytes为存储字节，rchar/wchar及syscr/syscw具有不同含义。
+
+结果保留归属方法、具体登记路径、会话/工作项及工具作业证据；无法确定的历史活动turn仍是unknown。运行期间下载的完整project/workspace归档才能提供完整关联材料，轻量observer快照不保证覆盖所有进程记录。采样与保护职责、覆盖和存储上限见[资源说明](../../docs/product-tdd/runtime-resources.md)。
+
 ## 准备原生工具
 
 裸 `make` 与 `make help` 只显示开发入口，不安装依赖。当前运行使用 Lab 的 start/status/logs/restart，完整操作见 [Lab](../../lab/README.md)。compile/doctor/build 属于旧 lab.exp 冻结执行合同，见 [旧执行器](../../lab/exp/README.md)，不用于当前 run。

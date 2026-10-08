@@ -12,7 +12,15 @@ Braid 的 claim 与输入发送只检查真实原生 busy 状态和生命周期�
 
 孤儿回收与触顶补救是不同责任。Local创建使用Docker `--init`，公共程序入口在安装及启动服务前进入固定Tini subreaper，使Hosted无需依赖平台Docker参数也能回收其后代孤儿。两环境消费同一入口；Linux实际浏览器open/snapshot/close已取得回收证据，Hosted及长时间重复使用仍以独立验收原件为准。Python仍只wait自己持有的Popen，不增加 `waitpid(-1)` 回收线程或忽略SIGCHLD。仍存活的父进程须等待自己的已退出子进程，不能依赖init替代；浏览器工具管理会话复用与close，后台工具管理自有进程结束，variant决定活动会话及测试并行，不由Lab增加全局并发gate。Tini的实现与subreaper语义见[官方说明](https://github.com/krallin/tini#subreaping)。
 
-既有 collector 继续保存 cgroup、内存、PSI 和进程证据，`resource-latest.json` 只是观测快照。采集缺失不阻止新执行。既有 native-state 与 evidence-capture 回执继续用于判断运行和快照行为；没有增加采集循环。
+Local 和 Hosted 的容器内 `ResourceSupervisor` 拥有执行 namespace 的采样。保护线程先读取轻量 cgroup 限额及事件，再提交采样请求；唯一采样 worker 串行执行 `/proc` 扫描、PSS 和证据落盘。最多保留一个待处理请求，合并普通请求，优先保留触顶及终态原因；不会因重采样排队阻塞保护判断。保护观察记录实际间隔和调度延迟，采样记录请求时间、排队延迟、合并数量、采样起止、读取耗时、线程 CPU 和包含落盘的总耗时。关闭只等待有界时间，未能完成 final 会明确记录 incomplete。文件系统写入和内核调度仍可能造成延迟，不能宣称硬实时保护。
+
+共享 `ResourceEvidence` 保存 cgroup 内存分类、peak、PSI、CPU/I/O 和进程身份、RSS及原始CPU/I/O计数。计数仅在读取前后出生身份一致时关联，读取失败保留错误，不填零。PSS通常每10秒补充一次，每次最多12个：按作用域选6个RSS大户，其余按最久未尝试轮转。覆盖摘要区分符合范围、尝试、成功、未尝试及最近成功时间，身份变化和权限错误保留原件。进程明细上限256，覆盖新鲜度条目超过256时明确报告遗漏。PSS、RSS和cgroup记账不能强行配平。
+
+观察到新进程、进程消失、memory.current或peak相邻增长至少64MiB、内核内存/pids事件变化、触顶或终态时补充明细。它们是观测触发条件，不参与启动准入。普通日志保留两个31MiB段；异常及其前3个样本另保留16MiB日志，触顶/内核事件/final使用独立16MiB关键日志，避免普通启动活动耗尽关键日志。每个事件日志到上限后保留capped标记及丢弃计数，不无限增长。普通轮转记录丢弃的时间边界。近期样本和启动登记可以保留消失进程的最后证据，但不能保证捕获两次采样间的短命进程、OOM前PSS或内核受害者。
+
+外部 OTLP receiver 只负责运输，不替代容器采样；Hosted内部receiver关闭重复资源采样，独立receiver保留默认采样。`resource-latest.json`是小型cgroup与采样时间快照，进程原件在归档日志中。在线回收保留采样worker及失败摘要；完整project/workspace归档拥有资源日志和登记。采集失败保存具体错误，不阻止新执行。
+
+[resource_attribution.py](../../tooling/scripts/resource_attribution.py)只读同一执行归档，按boot ID、PID/starttime和可用namespace身份连接原生execution/start/parent_start登记，再以native-state和Braid manifest/status连接会话、Issue/PR及上下文来源。工具作业只输出manifest的身份、toolCallId和生命周期字段，不输出命令或环境。直接出生身份关联与当前样本祖先推断分别标记；旧登记缺namespace时明确降低证据强度。session/工作项来自保存的绑定证据，不能把最终manifest的turn列表当作历史瞬间的活动turn；证据不足保留unknown/ambiguous。跨恢复不相减不同boot或namespace的单调计数；CPU/I/O速率使用同一出生身份的原始计数差和实际采样时间差，缺值与计数重置单列。
 
 ## 静止释放、停止与接续
 

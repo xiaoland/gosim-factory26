@@ -382,20 +382,23 @@ def receiver(host="127.0.0.1", *, max_batch_bytes=DEFAULT_MAX_BATCH_BYTES, read_
         thread.join()
 
 
-def serve_run(run):
+def serve_run(run, *, resource_sampling=True):
     """Serve one generation run; stdout's first line is a private parent-process handshake."""
     run = Path(run).resolve(strict=True)
     database = run / "telemetry.sqlite"
     session = new_session(database, "generation")
     token = secrets.token_urlsafe(24)
-    support = Path(__file__).resolve().parent
-    if not (support / "agent_support.py").is_file():
-        support = support.parent / "tooling/scripts"
+    root = Path(__file__).resolve().parent
+    support = next((candidate for candidate in (root, root / "support", root.parent / "tooling/scripts")
+                    if (candidate / "agent_support.py").is_file()), None)
+    if support is None:
+        raise FileNotFoundError(f"resource collector agent_support.py is missing beside {root}")
     sys.path.insert(0, str(support))
     from agent_support import ResourceEvidence, evidence_error, process_evidence
     evidence = None
     try:
-        evidence = ResourceEvidence(run)
+        if resource_sampling:
+            evidence = ResourceEvidence(run)
     except Exception as error:
         process_evidence(run, "resources-baseline.jsonl", {
             "kind": "collector_error", "phase": "startup", "error": evidence_error(error)},
@@ -435,4 +438,7 @@ def serve_run(run):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--serve-run", type=Path, required=True)
-    serve_run(parser.parse_args().serve_run)
+    parser.add_argument("--no-resource-sampling", action="store_true",
+                        help="The container ResourceSupervisor already owns resource sampling.")
+    args = parser.parse_args()
+    serve_run(args.serve_run, resource_sampling=not args.no_resource_sampling)

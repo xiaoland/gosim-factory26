@@ -5,6 +5,8 @@ import secrets
 import re
 import fcntl
 import errno
+import resource
+from collections import deque
 from pathlib import Path
 
 RESERVED={".arc", ".git", "requirements", ".factory26"}
@@ -114,13 +116,16 @@ class ResourceEvidence:
     memory_files = ('memory.events', 'memory.events.local', 'memory.current', 'memory.peak',
                     'memory.stat', 'memory.pressure',
                     'memory.max', 'memory.oom.group', 'memory.swap.current', 'memory.swap.peak',
-                    'memory.swap.max', 'pids.current', 'pids.max', 'pids.events')
+                    'memory.swap.max', 'pids.current', 'pids.max', 'pids.events',
+                    # Raw monotonic counters; consumers derive rates using
+                    # sample_started rather than treating one sample as usage.
+                    'cpu.stat', 'cpu.pressure', 'io.stat', 'io.pressure')
 
     def __init__(self, run, *, root_pid=None):
         self.run = Path(run)
         self.cgroup = None
         self.errors = {}
-        self.cap_bytes = 64*1024*1024
+        self.cap_bytes = 96*1024*1024
         self.segment_bytes = 31*1024*1024
         self.samples = 0
         self.capped = False
@@ -129,6 +134,14 @@ class ResourceEvidence:
         self.previous_started = None
         self.root_pid = os.getppid() if root_pid is None else root_pid
         self.last_memory_detail_ns = 0
+        self.last_detail = {}
+        self.last_detail_success = {}
+        self.incidents_dropped = 0
+        self.last_sample_ns = None
+        self.recent = deque(maxlen=3)
+        self.previous_inventory = set()
+        self.previous_memory = None
+        self.previous_values = {}
         root_process = process_identity(self.root_pid)
         self.root_starttime = root_process.get('starttime')
         self.membership = None
@@ -141,13 +154,15 @@ class ResourceEvidence:
                         'page_size': os.sysconf('SC_PAGE_SIZE'),
                         'selection_order': ['run-tree-by-depth', 'run-cwd', 'current-cgroup', 'other-visible'],
                         'live_processes_first': True, 'memory_detail_interval_seconds': 10,
-                        'max_memory_detail_processes': 12,
+                        'max_memory_detail_processes': 12, 'memory_detail_selection': 'six-largest-plus-oldest-attempt',
+                        'incident_cap_bytes': 16*1024*1024, 'critical_cap_bytes': 16*1024*1024,
                         'errors': self.errors}
         for name in ('/proc/self/cgroup', '/proc/self/mountinfo', '/proc/sys/kernel/random/boot_id'):
             try:
                 capabilities['raw'][name] = Path(name).read_text()
             except OSError as error:
                 self.errors[name] = evidence_error(error)
+        self.boot_id = capabilities['raw'].get('/proc/sys/kernel/random/boot_id', '').strip()
         membership = next((line[3:] for line in capabilities['raw'].get('/proc/self/cgroup', '').splitlines()
                            if line.startswith('0::')), None)
         self.membership = capabilities['raw'].get('/proc/self/cgroup', '').strip()
@@ -173,12 +188,17 @@ class ResourceEvidence:
         process_evidence(self.run, 'resources-baseline.jsonl', capabilities, cap_bytes=2*1024*1024)
         self.sample('baseline')
 
-    def sample(self, kind='sample'):
+    def sample(self, kind='sample', *, request=None):
+        cpu_clock = time.thread_time_ns()
         row = {'kind': kind, 'cgroup_path': str(self.cgroup) if self.cgroup else None,
                'values': {}, 'errors': {}, 'processes': [], 'process_limit': 256,
                'processes_omitted': 0, 'visible_processes': 0, 'sample_started': evidence_time(),
+               'boot_id': self.boot_id,
                'scope_counts': {}, 'scope_omitted': {}, 'classification_errors': [],
                'classification_errors_omitted': 0}
+        if request is not None:
+            row['scheduling'] = {**request,
+                                 'queue_delay_ns': row['sample_started']['monotonic_ns']-request['requested_monotonic_ns']}
         row['memory_detail'] = []
         if self.cgroup:
             try:
@@ -198,18 +218,27 @@ class ResourceEvidence:
             inventory = {}
             for entry in entries:
                 item = {'pid': int(entry.name), 'ppid': None, 'starttime': None, 'cgroup': None, 'cwd': None,
-                        'state': None, 'rss_pages': 0}
-                for name in ('stat', 'cgroup', 'cwd'):
+                        'state': None, 'rss_pages': 0, 'counter_read_started': evidence_time(), 'counter_errors': {}}
+                for name in ('stat', 'io', 'cgroup', 'cwd'):
                     try:
                         if name == 'stat':
                             fields = (entry/name).read_text().rsplit(')', 1)[1].split()
                             item['ppid'], item['starttime'] = int(fields[1]), int(fields[19])
                             item['state'], item['rss_pages'] = fields[0], int(fields[21])
+                            item['cpu_ticks'] = int(fields[11]) + int(fields[12])
+                        elif name == 'io':
+                            values = {}
+                            for line in (entry/name).read_text().splitlines():
+                                key, _, value = line.partition(':')
+                                if key and value.strip().isdigit(): values[key] = int(value.strip())
+                            item['io_bytes'] = values
                         elif name == 'cgroup':
                             item['cgroup'] = (entry/name).read_text().strip()
                         else:
                             item['cwd'] = Path(os.readlink(entry/name))
                     except (OSError, ValueError, IndexError) as error:
+                        if name in {'stat', 'io'}:
+                            item['counter_errors'][name] = evidence_error(error)
                         if len(row['classification_errors']) < 32:
                             row['classification_errors'].append({'pid': item['pid'], 'field': name,
                                                                  **evidence_error(error)})
@@ -244,25 +273,89 @@ class ResourceEvidence:
                                -item['rss_pages'], pid, scope))
             ranked.sort()
             for _dead, _priority, depth, _rss, pid, scope in ranked[:256]:
-                row['processes'].append({**process_identity(pid), 'sampling_scope': scope,
-                                         'tree_depth': depth if scope == 'run-tree' else None})
+                identity = process_identity(pid)
+                matches = identity.get('starttime') == inventory[pid]['starttime']
+                row['processes'].append({**identity, 'sampling_scope': scope,
+                                         'tree_depth': depth if scope == 'run-tree' else None,
+                                         'counter_identity_matches': matches,
+                                         **({key: inventory[pid][key] for key in ('cpu_ticks', 'io_bytes', 'counter_read_started', 'counter_errors')
+                                             if key in inventory[pid]} if matches else {})})
             for _dead, _priority, _depth, _rss, _pid, scope in ranked[256:]:
                 row['scope_omitted'][scope] = row['scope_omitted'].get(scope, 0)+1
             row['processes_omitted'] = max(0, len(entries)-256)
             now_ns = row['sample_started']['monotonic_ns']
-            if kind == 'baseline' or now_ns-self.last_memory_detail_ns >= 10_000_000_000:
-                # RSS sums are a ranking aid, not cgroup use: shared pages may
-                # appear in several processes. PSS/anonymous/file detail below
-                # supplies the discriminating evidence for the largest users.
-                largest = sorted((item for item in inventory.values()
-                                  if item['state'] not in {None, 'Z', 'X'}),
-                                 key=lambda item: (item['scope_priority'], -item['rss_pages'], item['pid']))[:12]
-                row['memory_detail'] = [{**process_memory_evidence(item['pid'], item['starttime']),
-                                         'sampling_scope': item['sampling_scope']}
-                                        for item in largest]
+            eligible = [item for item in inventory.values()
+                        if item['state'] not in {None, 'Z', 'X'} and item['starttime'] is not None]
+            identities = {(item['pid'], item['starttime']) for item in eligible}
+            new = identities-self.previous_inventory
+            current = row['values'].get('memory.current', '')
+            current = int(current) if current.isdigit() else None
+            growth = current is not None and self.previous_memory is not None and current-self.previous_memory >= 64*1024*1024
+            reasons = ([kind] if kind in {'baseline', 'resource_limit', 'final'} else [])
+            if new: reasons.append('process_start')
+            if growth: reasons.append('memory_growth')
+            peak = row['values'].get('memory.peak', '')
+            old_peak = self.previous_values.get('memory.peak', '')
+            if peak.isdigit() and old_peak.isdigit() and int(peak)-int(old_peak) >= 64*1024*1024:
+                reasons.append('memory_peak_growth')
+            for name in ('memory.events.local', 'pids.events'):
+                if name in self.previous_values and row['values'].get(name) != self.previous_values[name]:
+                    reasons.append(name)
+            if self.previous_inventory-identities: reasons.append('process_disappearance')
+            self.previous_values = dict(row['values'])
+            if now_ns-self.last_memory_detail_ns >= 10_000_000_000: reasons.append('periodic')
+            if request is not None:
+                reasons.extend(reason for reason in request.get('kinds', [])
+                               if reason != 'sample' and reason not in reasons)
+            row['resource_event_reasons'] = reasons
+            if reasons:
+                largest = sorted(eligible, key=lambda item: (item['scope_priority'], -item['rss_pages'], item['pid']))[:6]
+                selected = {(item['pid'], item['starttime']) for item in largest}
+                rotation = sorted((item for item in eligible if (item['pid'], item['starttime']) not in selected),
+                                  key=lambda item: (self.last_detail.get((item['pid'], item['starttime']), 0), item['pid']))[:12-len(largest)]
+                for item in largest+rotation:
+                    detail = process_memory_evidence(item['pid'], item['starttime'])
+                    detail.update(sampling_scope=item['sampling_scope'], observed_at=evidence_time())
+                    row['memory_detail'].append(detail)
+                    self.last_detail[(item['pid'], item['starttime'])] = now_ns
+                    if detail['identity_matches'] and 'smaps_rollup' in detail:
+                        self.last_detail_success[(item['pid'], item['starttime'])] = detail['observed_at']['monotonic_ns']
                 self.last_memory_detail_ns = now_ns
+            self.last_detail = {key: stamp for key, stamp in self.last_detail.items() if key in identities}
+            self.last_detail_success = {key: stamp for key, stamp in self.last_detail_success.items() if key in identities}
+            row['memory_detail_coverage'] = {
+                'eligible': len(eligible), 'attempted': len(row['memory_detail']),
+                'successful': sum(detail['identity_matches'] and 'smaps_rollup' in detail for detail in row['memory_detail']),
+                'not_attempted': len(eligible)-len(row['memory_detail']),
+                'selection': 'six-largest-by-scope-plus-oldest-attempt',
+                'last_attempts': [{'pid': pid, 'starttime': birth, 'monotonic_ns': self.last_detail.get((pid, birth)),
+                                   'last_success_monotonic_ns': self.last_detail_success.get((pid, birth))}
+                                  for pid, birth in sorted(identities)[:256]],
+                'freshness_entries_omitted': max(0, len(identities)-256)}
+            row['process_changes'] = {'started': [{'pid': pid, 'starttime': birth} for pid, birth in sorted(new)],
+                                      'no_longer_visible': [{'pid': pid, 'starttime': birth}
+                                                           for pid, birth in sorted(self.previous_inventory-identities)]}
+            self.previous_inventory, self.previous_memory = identities, current
         except OSError as error:
             row['errors']['process_scan'] = evidence_error(error)
+        row['sample_finished'] = evidence_time()
+        row['collection_duration_ns'] = row['sample_finished']['monotonic_ns']-row['sample_started']['monotonic_ns']
+        row['actual_interval_ns'] = (row['sample_started']['monotonic_ns']-self.last_sample_ns
+                                     if self.last_sample_ns is not None else None)
+        row['collector'] = {'pid': os.getpid(), 'sampling_thread_cpu_ns': time.thread_time_ns()-cpu_clock,
+                            'process_peak_rss': resource.getrusage(resource.RUSAGE_SELF).ru_maxrss,
+                            'process_peak_rss_unit': 'bytes' if sys.platform == 'darwin' else 'KiB'}
+        self.last_sample_ns = row['sample_started']['monotonic_ns']
+        exceptional = any(reason != 'periodic' for reason in row.get('resource_event_reasons', []))
+        if exceptional:
+            # A separately capped journal survives ordinary segment replacement.
+            incident_written = process_evidence(self.run, 'resource-critical.jsonl' if any(reason in {'resource_limit', 'final', 'memory.events.local', 'pids.events'}
+                             for reason in row.get('resource_event_reasons', [])) else 'resource-incidents.jsonl',
+                             {'kind': 'resource_incident', 'preceding_samples': list(self.recent), 'sample': row},
+                             cap_bytes=16*1024*1024)
+            if not incident_written:
+                self.incidents_dropped += 1
+        self.recent.append(row)
         if kind == 'baseline':
             written = process_evidence(self.run, 'resources-baseline.jsonl', row, cap_bytes=2*1024*1024)
         else:
@@ -283,6 +376,7 @@ class ResourceEvidence:
                         'kind': 'resource_rotation', 'rotation': self.rotations,
                         'previous_bytes': size, 'discarded_previous_bytes': discarded,
                         'previous_started_monotonic_ns': self.previous_started,
+                        'discarded_before_monotonic_ns': self.previous_started,
                     }, cap_bytes=self.segment_bytes)
                 if self.segment_started is None:
                     self.segment_started = row['sample_started']['monotonic_ns']
@@ -293,10 +387,10 @@ class ResourceEvidence:
         latest = self.run/'process-evidence/resource-latest.json'
         temporary = latest.with_name(f'.{latest.name}.{uuid.uuid4().hex}.tmp')
         try:
-            # Keep the admission input small; the rotating journal owns process detail.
+            # Keep the observation snapshot small; the rotating journal owns process detail.
             with temporary.open('x') as stream:
                 json.dump({key: row[key] for key in
-                           ('sample_started', 'cgroup_path', 'values', 'errors')}
+                           ('sample_started', 'sample_finished', 'collection_duration_ns', 'actual_interval_ns', 'cgroup_path', 'values', 'errors')}
                           | {'cgroup_identity': row.get('cgroup_identity')}, stream)
             temporary.replace(latest)
         except OSError as error:
@@ -307,13 +401,20 @@ class ResourceEvidence:
         self.capped = (self.run/'process-evidence/resources.jsonl.capped.json').exists()
         status = {'kind': 'resource_status', 'samples': self.samples, 'last_sample_kind': kind,
                   'capped': self.capped, 'write_succeeded': written,
+                  'incidents_dropped': self.incidents_dropped,
+                  'incident_capped': (self.run/'process-evidence/resource-incidents.jsonl.capped.json').exists(),
+                  'critical_capped': (self.run/'process-evidence/resource-critical.jsonl.capped.json').exists(),
                   'cgroup_mapping': 'visible-cgroup-v2' if self.cgroup else 'unavailable',
                   'processes_omitted': row['processes_omitted'], 'errors': row['errors'],
                   'scope_counts': row['scope_counts'], 'scope_omitted': row['scope_omitted'],
                   'rotations': self.rotations, 'segment_bytes': self.segment_bytes,
                   'current_started_monotonic_ns': self.segment_started,
                   'previous_started_monotonic_ns': self.previous_started,
-                  'capability_errors': self.errors, **evidence_time()}
+                  'capability_errors': self.errors,
+                  'total_duration_ns': time.monotonic_ns()-row['sample_started']['monotonic_ns'],
+                  'collector_thread_cpu_ns': time.thread_time_ns()-cpu_clock,
+                  'collection_duration_ns': row['collection_duration_ns'],
+                  'actual_interval_ns': row['actual_interval_ns'], **evidence_time()}
         try:
             save(self.run/'process-evidence/resource-status.json', status)
         except OSError as error:
