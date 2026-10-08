@@ -214,7 +214,7 @@ def main(argv=None):
 
 if __name__ == "__main__":
     main()
-def watch(path=None, *, interval=10):
+def watch(path=None, *, interval=10, follow=False):
     """Yield saved run facts until terminal; never create a second collector.
 
     A --script program can omit path and use LAB_RUN. Repeated snapshots are
@@ -226,9 +226,31 @@ def watch(path=None, *, interval=10):
     path = run.resolve(path or os.environ['LAB_RUN'])
     while True:
         observation = facts(path)
-        yield observation
         if observation.get('lifecycle') in run.TERMINAL:
-            return
+            if not follow:
+                yield observation
+                return
+            children = run.successors(path)
+            if len(children) > 1:
+                continuation = observation.setdefault("continuation", {})
+                continuation.update({"state": "ambiguous", "successors": children,
+                                     "label": f"{path.name}→({len(children)} successors; explicit run required)"})
+                yield observation
+                return
+            if len(children) == 1:
+                child = children[0]
+                continuation = observation.setdefault("continuation", {})
+                continuation.update({"state": "handoff", "source_run": path.name,
+                                     "successor": child, "label": f"{path.name}→{child['run_id']}"})
+                yield observation
+                path = run.resolve(child["path"])
+                continue
+            continuation = observation.setdefault("continuation", {})
+            continuation.update({"state": "waiting", "source_run": path.name,
+                                 "successors": [], "label": f"{path.name}→(waiting for explicit restart)"})
+            yield observation
+            time.sleep(interval)
+            continue
+        yield observation
         time.sleep(interval)
-
 

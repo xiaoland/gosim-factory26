@@ -13,6 +13,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import time
 
 try:
     from tooling.linux.browser_runtime import browser_scripts
@@ -75,6 +76,9 @@ def ensure(root: str | Path) -> Path:
     runtime = root / "runtime"
     marker = runtime / ".factory26-installed.json"
     if marker.is_file():
+        source_metadata = root / "native" / "runtime-source.json"
+        if source_metadata.is_file() and not (runtime / source_metadata.name).is_file():
+            shutil.copy2(source_metadata, runtime / source_metadata.name)
         _tool_launchers(runtime)
         return runtime
     runtime.mkdir(parents=True, exist_ok=True)
@@ -87,6 +91,9 @@ def ensure(root: str | Path) -> Path:
             target.parent.mkdir(parents=True, exist_ok=True)
             shutil.copy2(source, target)
             target.chmod(0o755)
+    source_metadata = native / "runtime-source.json"
+    if source_metadata.is_file():
+        shutil.copy2(source_metadata, runtime / source_metadata.name)
     managed = native / "native-managed.mjs"
     if managed.is_file():
         shutil.copy2(managed, runtime / "native-managed.mjs")
@@ -154,3 +161,76 @@ def ensure(root: str | Path) -> Path:
     _tool_launchers(runtime)
     marker.write_text(json.dumps({"node": NODE_PACKAGE, "installed": True}) + "\n")
     return runtime
+
+
+def write_consumption_receipt(root: str | Path, output: str | Path, runtime: str | Path) -> Path:
+    """Record the material actually selected by the package entrypoint.
+
+    This is a small execution-side receipt, not a second verifier.  It records
+    the runtime identity and native scope selected by the run contract after
+    installation, so the controller can distinguish assembled material from
+    material that the running package actually consumed.
+    """
+    root = Path(root).resolve()
+    output = Path(output).resolve()
+    runtime = Path(runtime).resolve()
+    contract_path = output / ".factory26" / "lab-run.json"
+    try:
+        contract = json.loads(contract_path.read_text())
+    except (OSError, ValueError, TypeError):
+        contract = {}
+    source_path = runtime / "runtime-source.json"
+    source = {}
+    source_sha256 = None
+    if source_path.is_file():
+        source_sha256 = hashlib.sha256(source_path.read_bytes()).hexdigest()
+        try:
+            value = json.loads(source_path.read_text())
+            if isinstance(value, dict):
+                source = {key: value.get(key) for key in
+                          ("backend", "platform", "profile", "npm_sha256",
+                           "native_patch_sha256", "native_modules_sha256")
+                          if key in value}
+        except (OSError, ValueError, TypeError):
+            source = {}
+    entry_path = root / "variant_main.py"
+    entry_sha256 = hashlib.sha256(entry_path.read_bytes()).hexdigest() if entry_path.is_file() else None
+    native_files = {}
+    for relative in ("bin/pi", "bin/braid", "bin/tini", "native-managed.mjs"):
+        candidate = runtime / relative
+        if candidate.is_file():
+            native_files[relative] = hashlib.sha256(candidate.read_bytes()).hexdigest()
+    scope = contract.get("native_scope_id")
+    native_root = output / ".factory26" / "data" / "harness" / str(scope) if scope else None
+    receipt = {
+        "schema_version": 1,
+        "consumed_at": time.time(),
+        "program": {
+            "root": str(root),
+            "entry": str((root / "variant_main.py").relative_to(root)),
+            "entry_sha256": entry_sha256,
+            "source": "submitted package variant_main.py",
+        },
+        "runtime": {
+            "path": str(runtime),
+            "source_path": str(source_path),
+            "source_sha256": source_sha256,
+            "source": source,
+            "native_files_sha256": native_files,
+        },
+        "native": {
+            "scope_id": scope,
+            "path": str(native_root) if native_root else None,
+            "exists": bool(native_root and native_root.is_dir()),
+            "resumed": bool(contract.get("native_resume")),
+            "source": ("retained run data/harness scope"
+                       if contract.get("native_resume") else "new run data/harness scope"),
+        },
+        "run": {key: contract.get(key) for key in
+                ("run_id", "source_run", "native_resume", "requirements_version")
+                if key in contract},
+    }
+    destination = output / ".factory26" / "material-consumption.json"
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(receipt, ensure_ascii=False, indent=2) + "\n")
+    return destination

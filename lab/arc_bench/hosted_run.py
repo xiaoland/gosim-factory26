@@ -161,7 +161,7 @@ _LIVE_WORKSPACE_NAMES = {
     "lab-run.json", "run.json", "delivery.json", "audit-status.json",
     "audit-report.json", "model-gateway.json", "resource-latest.json",
     "resource-status.json", "resource-observation.json", "resources-baseline.jsonl", "request-metadata.jsonl",
-    "gateway.log", "status.json", "recovery-attempt.json",
+    "gateway.log", "status.json", "recovery-attempt.json", "material-consumption.json",
 }
 
 
@@ -200,7 +200,7 @@ def _fact_path(relative):
     return PurePosixPath("data", "harness", rest[0], *rest[1:])
 
 
-def _read_existing_facts(live_root, jsonl_members, *, created_at=None):
+def _read_existing_facts(live_root, jsonl_members, *, created_at=None, producer_run_id=None):
     """Run the existing native/provider readers on selected files only."""
     from tooling.scripts.native_observation import observe as observe_native
     from .provider_usage import collect as collect_provider
@@ -251,6 +251,16 @@ def _read_existing_facts(live_root, jsonl_members, *, created_at=None):
             continue
         for key in ("sessions", "session_messages", "provider_turns", "reader_errors"):
             merged[key].extend(value.get(key, []))
+        action = value.get("effective_action")
+        if isinstance(action, dict) and producer_run_id:
+            # The reader operates in a temporary facts tree, so its local
+            # path is not the execution producer identity.  Rebind only the
+            # explicit action to the platform run already being observed.
+            candidate = {**action, "run_id": producer_run_id,
+                         "producer_run_id": producer_run_id}
+            current = merged.get("effective_action")
+            if not isinstance(current, dict) or candidate.get("at", 0) >= current.get("at", 0):
+                merged["effective_action"] = candidate
         if value.get("usage") is not None:
             if merged['usage'] is None:
                 merged['usage'] = value['usage']
@@ -358,7 +368,9 @@ def _collect_workspace_observation(directory, client, run_id, *, created_at=None
                     else:
                         entry["json"] = {"status": "omitted", "reason": "member exceeds 2MiB"}
                 selected.append(entry)
-        reader_facts = _read_existing_facts(live_root, jsonl_members, created_at=created_at)
+        reader_facts = _read_existing_facts(live_root, jsonl_members,
+                                            created_at=created_at,
+                                            producer_run_id=producer_run_id)
         signature = [(row["member"], row["bytes"], row["crc"]) for row in selected]
         receipt.update({"status": "observed", "observed_at": time.time(),
                         "archive_bytes": temporary.stat().st_size, "members": selected,
@@ -528,6 +540,12 @@ def observe(run):
     native = workspace.get("native") or {}
     provider_usage = workspace.get("provider_usage") or {"status": "unknown", "attempts": []}
     resources = _workspace_resources(workspace)
+    for member in workspace.get("members", []):
+        if member.get("member", "").endswith("material-consumption.json"):
+            value = member.get("json")
+            if isinstance(value, dict):
+                write_json(directory / "material-consumption.json", value)
+                break
     estimate = None
     if target.get('model_transport') == 'platform' and not (amount is not None and phase in TERMINAL):
         from .arc_spend import estimate as estimate_arc

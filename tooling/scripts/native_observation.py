@@ -47,11 +47,13 @@ def _native_log_candidates(harness: Path) -> set[Path]:
 def _pi(run: Path, scope: str, observed_at: float, since: float | None) -> dict[str, Any]:
     harness = run / "data" / "harness" / scope
     messages, turns, errors = deque(maxlen=500), deque(maxlen=500), deque(maxlen=20)
+    effective_action: dict[str, Any] | None = None
     sessions: dict[str, dict[str, Any]] = {}
     usage_groups, seen_usage = {}, set()
     candidates = _native_log_candidates(harness)
     for path in sorted(candidates):
         session_id = None
+        pending_tools: dict[str, dict[str, Any]] = {}
         source = str(path.relative_to(run))
         try:
             with path.open(encoding="utf-8") as stream:
@@ -99,6 +101,47 @@ def _pi(run: Path, scope: str, observed_at: float, since: float | None) -> dict[
                             messages.append(row)
                         if kind in {"response_headers", "message_end", "provider_turn", "turn_complete"}:
                             turns.append(row)
+                        if isinstance(message, dict):
+                            content = message.get("content", [])
+                            if content is not None and not isinstance(content, list):
+                                errors.append({"source": source, "line": number,
+                                               "error": f"TypeError: native message content is not a list ({type(content).__name__})"})
+                                content = []
+                            for part in content or []:
+                                if not isinstance(part, dict):
+                                    errors.append({"source": source, "line": number,
+                                                   "error": f"TypeError: native content part is not an object ({type(part).__name__})"})
+                                    continue
+                                if part.get("type") == "toolCall" and part.get("id"):
+                                    arguments = part.get("arguments")
+                                    if arguments is None:
+                                        arguments = {}
+                                    elif not isinstance(arguments, dict):
+                                        errors.append({"source": source, "line": number,
+                                                       "error": f"TypeError: native toolCall arguments is not an object ({type(arguments).__name__})"})
+                                        arguments = {}
+                                    pending_tools[f"{identity}:{part['id']}"] = {
+                                        "name": part.get("name"),
+                                        "command": str(arguments.get("command", ""))[:200],
+                                    }
+                            if message.get("role") == "toolResult":
+                                tool_id = message.get("toolCallId")
+                                tool_key = f"{identity}:{tool_id}" if tool_id else None
+                                tool = pending_tools.pop(tool_key, None) if tool_key else None
+                                if tool is not None and since is not None and stamp >= since:
+                                    action = {
+                                        "at": stamp,
+                                        "source": source,
+                                        "run_id": run.name,
+                                        "session_id": identity,
+                                        "tool_call_id": str(tool_id),
+                                        "tool": tool.get("name"),
+                                        "command": tool.get("command", ""),
+                                        "outcome": "error" if message.get("isError") else "completed",
+                                        "evidence": "native_tool_result",
+                                    }
+                                    if effective_action is None or stamp > effective_action["at"]:
+                                        effective_action = action
                         prior = sessions.get(str(identity))
                         if prior is None or stamp >= prior["last_activity_at"]:
                             state = {"request_start": "active", "first_update": "active",
@@ -115,6 +158,7 @@ def _pi(run: Path, scope: str, observed_at: float, since: float | None) -> dict[
             errors.append({"source": source, "error": f"{type(exc).__name__}: {exc}"})
     return {"sessions": list(sessions.values()), "session_messages": list(messages),
             "provider_turns": list(turns), "reader_errors": list(errors),
+            "effective_action": effective_action,
             "usage": {'scope': 'current-run-native-messages', 'since': since, 'as_of': observed_at,
                       'status': 'partial' if since is not None else 'unknown',
                       'items': list(usage_groups.values()),

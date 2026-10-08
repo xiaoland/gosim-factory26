@@ -59,6 +59,9 @@ Hosted 工作区下载失败也保留上次成功读取的 native、provider usa
 | 要做什么 | 权威说明 |
 | --- | --- |
 | 启动、控制、查询一个 run；组织 Python 策略 | [公共运行 API](run.py)、[自动化](automation.py) |
+默认 `watch()` 在指定 run 进入 `completed`、`failed` 或 `stopped` 后返回；只有显式使用 `watch(..., follow=True)` 或 `lab status RUN --follow` 才会观察接续。跟随只消费 manifest 中 `source.kind=restart` 的直接后继：停止早于 restart 派发时会保留在原 run 上等待并显示 `old→waiting`，出现唯一后继才显示 `old→new` 并继续；出现多个后继则显示分支并要求用户明确指定 run。普通 `status`、`stop`、`pause`、`resume` 和 `restart` 始终针对用户给出的具体 run，不会因跟随关系重定向控制。
+
+状态中的 `restart_summary` 汇总接续材料是否保存、是否复用 native 状态、目标 run 的冻结/装配材料、派发回执和执行端实际消费证据；没有执行端版本回执时明确保持 `consumed.adopted=null`，不把 manifest 的版本字段当作已生效证明。公共包入口在安装后写入小型 `material-consumption.json`，由已有 records/workspace 回收链读取；回执缺失只暴露 unknown，不阻止 Harness 启动。它分别给出当前 run 的 provider 请求、响应和成功响应，以及 variant status 脚本提供的 `effective_action`（`at`、`source`、`run_id`/`producer_run_id`）和来源时间；请求本身不能代替 variant 动作。正在运行但没有有效动作证据时会明确标记 `running-but-no-valid-action-observed`，旧 native scope 的 last_activity 不会算作当前动作。费用和 provider usage 默认只统计当前 producer run；完整保留的 native session 另以 `native_session_scope` 标示，不能把两者相加。
 | 程序与数据目录、ARC 执行和同 variant restart | [ARC 适配](arc_bench/README.md) |
 | 通用 Console、共享 Collector 与 Backend | [Lab Console](../consoles/lab/README.md)；Braid 协作与旧冻结服务见 [Braid Console](../consoles/braid/README.md) |
 | 读取或操作旧冻结执行 | [历史 lab.exp 源码导航](exp/README.md)；使用其原执行器，不接入新的 run 控制。 |

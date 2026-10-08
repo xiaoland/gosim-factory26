@@ -68,6 +68,31 @@ def _print_result(command, value, args, run):
             returned = sum(item.get('usage_status') == 'recorded' for item in attempts)
             print(f"provider_attempts={len(attempts)} returned_usage={returned}"
                   f" deployments={','.join(str(value) for value in channels)}；不是账单或套餐余额")
+        restart_summary = row.get("restart_summary") or {}
+        if restart_summary.get("is_restart"):
+            material = restart_summary.get("material") or {}
+            requests = restart_summary.get("actual_requests") or {}
+            observation = restart_summary.get("variant_observation") or {}
+            action = observation.get("effective_action") or {}
+            saved_material = material.get("saved")
+            saved_ok = (saved_material.get("saved")
+                        if isinstance(saved_material, dict) else saved_material is True)
+            consumed = material.get("consumed") or {}
+            frozen = material.get("frozen") or {}
+            print(f"restart_source={restart_summary.get('source_run') or '-'}"
+                  f" material_saved={saved_ok}"
+                  f" native_resume={material.get('native_resume')}"
+                  f" frozen_program={frozen.get('program_version') or '-'}"
+                  f" consumed_adopted={consumed.get('adopted')}"
+                  f" requests={requests.get('count', 0)}"
+                  f" responses={requests.get('responses', 0)}"
+                  f" successful_responses={requests.get('successful_responses', 0)}"
+                  f" scope={requests.get('scope')}"
+                  f" activity={observation.get('activity') or 'unknown'}"
+                  f" action_tool={action.get('tool') or '-'}"
+                  f" action_outcome={action.get('outcome') or '-'}"
+                  f" action_at={observation.get('action_at') or '-'}"
+                  f" action_valid={observation.get('valid')}")
     elif command == "archive":
         print(f"archived={row['archived']}")
     elif command == "evaluate":
@@ -98,6 +123,10 @@ def main(argv=None):
     status.add_argument("run", nargs="?")
     status.add_argument("--all", action="store_true")
     status.add_argument("--json", action="store_true")
+    status.add_argument("--follow", action="store_true",
+                        help="terminal run 后只跟随明确的 restart 后继")
+    status.add_argument("--interval", type=float, default=10,
+                        help="--follow 轮询间隔（秒）")
     wait = commands.add_parser("wait")
     wait.add_argument("run")
     wait.add_argument("--json", action="store_true")
@@ -136,6 +165,40 @@ def main(argv=None):
             value = run.restart(args.run, target=args.target, task=args.task,
                                 route=args.route, snapshot=args.snapshot)
         elif args.command == "status":
+            if args.follow:
+                if not args.run:
+                    raise ValueError("status --follow requires RUN")
+                from .automation import watch
+                from .status import render_runs
+                for item in watch(args.run, interval=args.interval, follow=True):
+                    if args.json:
+                        print(json.dumps(item, ensure_ascii=False, default=str), flush=True)
+                    else:
+                        print(render_runs([item]), flush=True)
+                        continuation = item.get("continuation") or {}
+                        if continuation.get("label"):
+                            print(f"continuation={continuation['label']}", flush=True)
+                        summary = item.get("restart_summary") or {}
+                        if summary.get("is_restart"):
+                            material = summary.get("material") or {}
+                            requests = summary.get("actual_requests") or {}
+                            observation = summary.get("variant_observation") or {}
+                            action = observation.get("effective_action") or {}
+                            print("restart_summary=" + json.dumps({
+                                "source_run": summary.get("source_run"),
+                                "material_saved": ((material.get("saved") or {}).get("saved")
+                                                    if isinstance(material.get("saved"), dict)
+                                                    else material.get("saved") is True),
+                                "consumed_adopted": (material.get("consumed") or {}).get("adopted"),
+                                "requests": requests.get("count", 0),
+                                "successful_responses": requests.get("successful_responses", 0),
+                                "activity": observation.get("activity"),
+                                "action_tool": action.get("tool"),
+                                "action_outcome": action.get("outcome"),
+                                "action_valid": observation.get("valid"),
+                                "action_at": observation.get("action_at"),
+                            }, ensure_ascii=False, separators=(",", ":")), flush=True)
+                return 0
             value = run.status(args.run, include_all=args.all)
         elif args.command == "wait":
             value = run.wait(args.run)

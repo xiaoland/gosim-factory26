@@ -38,6 +38,211 @@ def resolve(run):
     return candidate
 
 
+def successors(run):
+    """Return direct, explicitly recorded restart children of one run.
+
+    This is a read-only registry lookup.  It never chooses between branches;
+    callers must surface more than one child as ambiguous.
+    """
+    source = resolve(run)
+    rows = []
+    registry = source.parent
+    for candidate in registry.iterdir():
+        manifest_path = candidate / "manifest.json"
+        if not candidate.is_dir() or not manifest_path.is_file() or candidate == source:
+            continue
+        try:
+            value = run_layout.manifest(candidate)
+        except (OSError, ValueError, TypeError):
+            continue
+        # ``source_run`` is also used by independent application evaluations.
+        # Only the explicit restart provenance denotes a continuation that a
+        # read-only watcher may follow.
+        source_meta = value.get("source")
+        if not isinstance(source_meta, dict) or source_meta.get("kind") != "restart":
+            continue
+        recorded = value.get("source_run")
+        if recorded != source.name and Path(str(recorded)).name != source.name:
+            continue
+        saved = candidate / "records/status.json"
+        facts = {}
+        if saved.is_file():
+            try:
+                facts = json.loads(saved.read_text())
+            except (OSError, ValueError, TypeError):
+                facts = {}
+        rows.append({"run_id": candidate.name, "path": str(candidate),
+                     "created_at": value.get("created_at"),
+                     "lifecycle": facts.get("lifecycle", value.get("lifecycle", "unknown")),
+                     "variant": value.get("variant"), "task": value.get("task")})
+    return sorted(rows, key=lambda row: (row.get("created_at") or 0, row["run_id"]))
+
+
+def _continuation(path, manifest, children=None):
+    source = manifest.get("source_run")
+    children = successors(path) if children is None else children
+    if len(children) == 1:
+        child = children[0]
+        return {"state": "single", "source_run": path.name, "successor": child,
+                "label": f"{path.name}→{child['run_id']}"}
+    if len(children) > 1:
+        return {"state": "ambiguous", "source_run": path.name, "successors": children,
+                "label": f"{path.name}→({len(children)} successors; explicit run required)"}
+    if source:
+        return {"state": "origin", "source_run": str(source), "successor": path.name,
+                "label": f"{Path(str(source)).name}→{path.name}"}
+    return {"state": "none", "source_run": None, "successors": [], "label": None}
+
+
+def _restart_summary(path, manifest, facts):
+    """Summarize restart provenance and current-run observations only.
+
+    The native session may be retained across a restart, so it is deliberately
+    not used as the request count.  Provider attempts are already sliced by
+    the current producer run; the complete native session remains a separately
+    named fact in ``native_session_scope``.
+    """
+    source_meta = manifest.get("source") or {}
+    restart_record = path / "records/restart.json"
+    restart = {}
+    if restart_record.is_file():
+        try:
+            value = json.loads(restart_record.read_text())
+            if isinstance(value, dict):
+                restart = value
+        except (OSError, ValueError, TypeError):
+            restart = {}
+    dispatch = restart.get("started") if isinstance(restart.get("started"), dict) else {}
+    dispatch_record = path / "records/dispatch.json"
+    docker_observe_record = path / "records/docker-observe.json"
+    dispatch_facts = {}
+    docker_observe = {}
+    for record_path, target in ((dispatch_record, dispatch_facts),
+                                (docker_observe_record, docker_observe)):
+        if record_path.is_file():
+            try:
+                value = json.loads(record_path.read_text())
+                if isinstance(value, dict):
+                    target.update(value)
+            except (OSError, ValueError, TypeError):
+                pass
+    consumption_path = path / "records/material-consumption.json"
+    consumption = {}
+    if consumption_path.is_file():
+        try:
+            value = json.loads(consumption_path.read_text())
+            if isinstance(value, dict):
+                consumption = value
+        except (OSError, ValueError, TypeError):
+            pass
+    is_restart = source_meta.get("kind") == "restart" or bool(restart)
+    spend = facts.get("spend") if isinstance(facts.get("spend"), dict) else {}
+    provider = spend.get("provider_usage") if isinstance(spend.get("provider_usage"), dict) else {}
+    attempts = provider.get("attempts") if isinstance(provider.get("attempts"), list) else []
+    timestamps = [item.get("as_of") for item in attempts
+                  if isinstance(item, dict) and isinstance(item.get("as_of"), (int, float))]
+    response_attempts = [item for item in attempts if isinstance(item, dict) and
+                         (item.get("http_status") is not None or
+                          item.get("usage_status") in {"recorded", "partial", "returned"} or
+                          item.get("response_id"))]
+    successful_responses = [item for item in response_attempts if
+                            (isinstance(item.get("http_status"), int) and
+                             200 <= item["http_status"] < 300) or
+                            (item.get("http_status") is None and
+                             item.get("usage_status") == "recorded")]
+    activity = facts.get("activity")
+    last_activity = facts.get("last_activity_at")
+    started_at = manifest.get("started_at") or manifest.get("created_at")
+    effective_action = facts.get("effective_action")
+    if not isinstance(effective_action, dict):
+        native_facts = facts.get("native")
+        candidate = native_facts.get("effective_action") if isinstance(native_facts, dict) else None
+        effective_action = candidate if isinstance(candidate, dict) else None
+    effective_at = effective_action.get("at") if isinstance(effective_action, dict) else None
+    effective_identity = (isinstance(effective_action, dict) and
+                          (effective_action.get("run_id") == path.name or
+                           effective_action.get("producer_run_id") == path.name))
+    effective_current = bool(effective_identity and isinstance(effective_at, (int, float)) and
+                             (not isinstance(started_at, (int, float)) or effective_at >= started_at) and
+                             effective_action.get("source"))
+    valid_action = effective_current
+    observation = {
+        "activity": activity,
+        "brief": facts.get("brief"),
+        "last_activity_at": last_activity,
+        "evidence": facts.get("evidence"),
+        "effective_action": effective_action if isinstance(effective_action, dict) else None,
+        "as_of": facts.get("as_of"),
+        "valid": valid_action,
+        "evidence_current_run": effective_current,
+        "action_source": effective_action.get("source") if effective_current else None,
+        "action_at": effective_at if effective_current else None,
+        "source": "saved variant status and current-run provider observations",
+    }
+    if not valid_action:
+        observation["reason"] = ("running-but-no-valid-action-observed"
+                                   if facts.get("lifecycle") == "running"
+                                   else "no-current-run-variant-action-evidence")
+    consumed_run = consumption.get("run") if isinstance(consumption.get("run"), dict) else {}
+    consumed_program = consumption.get("program") if isinstance(consumption.get("program"), dict) else {}
+    consumed_runtime = consumption.get("runtime") if isinstance(consumption.get("runtime"), dict) else {}
+    consumed_native = consumption.get("native") if isinstance(consumption.get("native"), dict) else {}
+    consumed_identity = consumed_run.get("run_id") == path.name
+    scope_matches = (not manifest.get("native_scope_id") or
+                     consumed_native.get("scope_id") == manifest.get("native_scope_id"))
+    consumed_adopted = (True if consumed_identity and scope_matches and
+                        consumption.get("consumed_at") and consumed_program.get("entry_sha256") and
+                        consumed_runtime.get("source_sha256") and consumed_runtime.get("native_files_sha256")
+                        else None)
+    return {
+        "is_restart": is_restart,
+        "source_run": manifest.get("source_run") if is_restart else None,
+        "material": {
+            "saved": restart.get("saved"),
+            "restart_snapshot": manifest.get("restart_snapshot"),
+            "native_resume": manifest.get("native_resume"),
+            "requirements_version": manifest.get("requirements_version"),
+            "source_as_of": (restart.get("saved") or {}).get("as_of")
+                if isinstance(restart.get("saved"), dict) else None,
+            "frozen": {
+                "program_version": manifest.get("program_version"),
+                "runtime_source_present": bool(manifest.get("runtime_source")),
+                "native_scope_id": manifest.get("native_scope_id"),
+                "source": "destination manifest/assembly",
+            },
+            "dispatch": {
+                "program_version": dispatch.get("program_version"),
+                "runtime_source_present": bool(dispatch.get("runtime_source")),
+                "remote_run": dispatch.get("remote_run") or dispatch_facts.get("remote_run"),
+                "as_of": dispatch.get("started_at") or dispatch.get("created_at")
+                    or dispatch_facts.get("as_of"),
+                "source": "dispatch/start receipt; not proof of execution-side consumption",
+            },
+            "consumed": {
+                "adopted": consumed_adopted,
+                "program": consumed_program,
+                "runtime": consumed_runtime,
+                "native": consumed_native,
+                "execution_observed": bool(docker_observe.get("container_id")),
+                "source": ("records/material-consumption.json" if consumption else
+                            "records/docker-observe.json" if docker_observe else None),
+                "reason": (None if consumed_adopted else
+                           "execution-side material/version receipt unavailable"),
+            },
+        },
+        "actual_requests": {
+            "count": len(attempts),
+            "responses": len(response_attempts),
+            "successful_responses": len(successful_responses),
+            "last_as_of": max(timestamps) if timestamps else None,
+            "scope": provider.get("scope") or "current-run-provider-attempts",
+            "source": provider.get("source"),
+            "time_source": "gateway.log event timestamp_ms" if attempts else None,
+        },
+        "variant_observation": observation,
+    }
+
+
 def status(run=None, *, include_all=False):
     """Read saved execution facts and the variant's saved activity judgment."""
     if run is None:
@@ -63,7 +268,18 @@ def status(run=None, *, include_all=False):
                  "as_of": manifest.get("created_at")}
     archive_path = path / "records/archive.json"
     archived = json.loads(archive_path.read_text()).get("archived", False) if archive_path.is_file() else False
-    return {**manifest, **facts, "path": str(path), "archived": archived}
+    direct_successors = successors(path)
+    continuation = _continuation(path, manifest, direct_successors)
+    spend = facts.get("spend") if isinstance(facts.get("spend"), dict) else {}
+    usage = spend.get("usage") if isinstance(spend.get("usage"), dict) else {}
+    return {**manifest, **facts, "path": str(path), "archived": archived,
+            "successors": direct_successors,
+            "continuation": continuation,
+            "usage_scope": usage.get("scope"),
+            "native_session_scope": ("full-retained-native-session"
+                                     if manifest.get("native_scope_id") and isinstance(facts.get("native"), dict)
+                                     else None),
+            "restart_summary": _restart_summary(path, manifest, facts)}
 
 
 def _background(run, module, args, name):
@@ -183,6 +399,12 @@ def resume(run):
     return _control(run, "resume")
 
 
+def save(run, *, output=None):
+    """Create a portable snapshot without changing this run's lifecycle."""
+    from .portable_save import create
+    return create(resolve(run), output=output)
+
+
 def restart(run, *, target=None, task=None, route=None, snapshot=None):
     from .arc_bench.restart import restart as restart_run
     result = restart_run(resolve(run), target=target, task=task, route=route, snapshot=snapshot)
@@ -203,12 +425,6 @@ def wait(run):
         if supervisor.is_file() and process_state(json.loads(supervisor.read_text())) == "lost":
             raise RuntimeError(f"observer exited before a confirmed terminal record: {supervisor}; "
                                "actual execution may still be running; see saved logs")
-def save(run, *, output=None):
-    """Create a portable snapshot without changing this run's lifecycle."""
-    from .portable_save import create
-    return create(resolve(run), output=output)
-
-
         time.sleep(2)
 
 

@@ -14,6 +14,14 @@
 
 ## 2026-10-08 整理后接续
 
+用户批准接续体验三项修复：“名称后面再修吧，我同意这三个修复，请落地”。继续沿用restart命名；监控跟随与恢复摘要由evaluation_closure负责lab公共接口，native_recovery_activation负责variant/Braid职责恢复的调查、窄修复与编译/已有事实验证。主负责边界取舍、合并及仅本任务提交。允许必要源码、材料与文档修复，不据此启动或控制其它任务运行，也不恢复已停止收费验收。原有source_run关系继续为来源，不增加实验或chain控制对象；只读跟随不改变具体run控制，分支不猜选。职责激活使用领域正常事件，不硬编码设施评论或普遍清空重试。变更前保留相关混合dirty的精确边界，源码/材料交付和真实运行资格分别报告。
+
+上述三项源码已落地。`lab status RUN --follow` 和 Python `watch(..., follow=True)` 跟随明确的restart直接后继，终态尚无后继时等待，有分支则交回明确选择；控制不重定向。接续摘要分别展示保存、派发、执行入口实际消费的程序/runtime身份、当前producer请求及原生工具动作，缺回执保持unknown。公共包安装后写小型消费回执，既有本地和Hosted采集回收，无第二采集者。共享native reader把同日志匹配的toolCall/toolResult及当前run时间边界输出为effective_action；HTTP、active及泛化活动证据不代替动作，工具错误保留outcome。Braid显式offline-resume仅对当前OPEN责任、idle原生会话、最新ordinary整轮failed、无待处理事件/wake的工作发正常wake，按failed turn去重，不清重试或重开closed。I14-dx-test和I15已有共享reader/offline-resume接线，因此后续装配消费修复。
+
+反馈采用编译及既有现场只读操作，不再收费生成：Python编译与Braid cargo check通过；既有d3cc→a3a9接续链的watch实测先handoff再等待，a3a9保存状态仍无新字段，不能声称旧运行已消费新代码。新native reader只读a3a9原件耗时0.029秒，返回本run已完成bash工具及无reader error，没有写回旧status。原生修改前dirty边界保存在 `runs/lab/recovery-activation-verification/`。本轮未给既有运行热部署，未动态验证新版入口消费回执或Braid异常责任唤醒；这三项为源码交付、部分真实保存事实验证，不代表整项实验设施资格化完成。后续若获运行许可，只需在正常接续中检查这些新事实，不扩收费矩阵。
+
+用户补充真实接续反馈：两次正常stop/save/restart保留应用、Braid和原生会话，修复版材料使负责人恢复有效工具动作；仍须人工切换监控/token口径，耗尽重试的Issue要由正常事件唤醒，实际生效事实分散。此反馈不是本任务停止验收的恢复许可，不操作其它任务run。主只读确认restart已有source_run、同task复用native_scope，而watch固定run并在终态退出。advisor只依据上述事实给建议，未调查或实施。当前采用推进方向：先利用既有来源关系减少只读监控接续负担，具体控制仍绑定明确run；本run producer切片与原生会话全量分开，不能相加复计。其次将材料采用、接续后请求和variant有效动作汇成已有采集事实的摘要，不加gate/第二采集者。Issue唤醒归variant/Braid正常事件机制，不能在公共restart里硬编码评论、批量重开职责或清空重试计数。自动跟随、职责唤醒及反馈摘要均尚未实现/验收；主保留此后续责任，下一步核对监控消费者与variant恢复入口后在已授权设施范围内收口，不追加收费矩阵。
+
 用户进一步明确CLI优先，并批准统一现场保存方案：“是的，而且‘不混入安装 runtime’很重要，官网下载下来的 project.zip 需要我们额外剔除掉安装的开发环境。开始。”本次由原保存负责人evaluation_closure接续实现 `lab save RUN`，统一人工与终态保存链，交付含data/workspace、data/harness、records与来源身份的可搬运包；主负责采用及仅提交本任务修改。只排除实际设施安装目录，不按node_modules名称误删应用依赖，官网原始导出保留证据。运行中取包属于非一致现场快照，不停止或伪造终态；终态复用已保存现场。验收采用既有停止现场，不恢复生成、新增评测或参赛。Console下载不在本轮实现范围。
 
 本次CLI实现已采用：save正常输出package、source_as_of、packaged_at、排除数量及gaps/errors，--json提供完整回执；包内携带规范数据与最终采集/排除说明。运行中使用独立源快照回执，不写终态result-save；Hosted人工live每次重新取包，不永久复用第一次快照。远端Local终态由既有relay回收后在控制侧打包，Hosted/控制侧本地由已有observer保存后打包，源保存与包生成错误分别保留。这些自动化及Hosted实时路径为代码接线结论，未新增真实运行证明。

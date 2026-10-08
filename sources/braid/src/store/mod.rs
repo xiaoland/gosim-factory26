@@ -21,6 +21,7 @@ const INITIAL_SQL: &str = include_str!("../../migrations/0001_initial.sql");
 const EVENT_KINDS_SQL: &str = include_str!("../../migrations/0002_event_kinds.sql");
 const FAILED_REPLAY_DEDUPE_PREFIX: &str = "braid-failed-turn-replay-v1:";
 const OFFLINE_MATERIALIZATION_REPLAY_DEDUPE_PREFIX: &str = "braid-offline-materialization-replay-v1:";
+const OFFLINE_RESPONSIBILITY_WAKE_DEDUPE_PREFIX: &str = "braid-offline-responsibility-wake-v1:";
 const UNKNOWN_REPLAY_DEDUPE_PREFIX: &str = "braid-unknown-turn-replay-v1:";
 const MIGRATIONS: &[Migration] = &[
     Migration { version: 1, name: "initial", sql: INITIAL_SQL },
@@ -3450,9 +3451,99 @@ fn prepare_offline_resume(database: &Path) -> Result<Vec<String>, StoreError> {
         mark_turn_terminal_transaction(&transaction, &turn_id, "unknown", &now, true)?;
     }
     recover_stale_wake_batches(&transaction, &now)?;
+    replay_failed_open_responsibilities(&transaction, &now)?;
     transaction.commit()?;
     Ok(provider_ids)
 }
+
+/// A failed provider retry can leave an OPEN responsibility with an idle native
+/// session after the retry batch has been consumed.  On an explicit native
+/// resume, re-enter the ordinary wake path once for that responsibility.  The
+/// failed turn is the scope boundary: idle sessions without that evidence stay
+/// idle, and the dedupe key makes repeated resumes harmless.
+fn replay_failed_open_responsibilities(
+    transaction: &rusqlite::Transaction<'_>,
+    now: &str,
+) -> Result<(), StoreError> {
+    let responsibilities = {
+        let mut statement = transaction.prepare(
+            "SELECT a.work_item_node_id,a.member_login,a.assignment_revision,ps.provider_session_id,t.turn_id
+             FROM assignments a
+             JOIN work_items w ON w.node_id=a.work_item_node_id AND w.state='OPEN'
+             JOIN local_items l ON l.node_id=w.node_id
+                AND l.desired_member_login=a.member_login
+                AND l.assignment_revision=a.assignment_revision
+             JOIN agent_instances ai ON ai.assignment_id=a.assignment_id AND ai.lifecycle='idle'
+             JOIN provider_sessions ps ON ps.agent_id=ai.agent_id AND ps.lifecycle='idle'
+             JOIN turns t ON t.session_id=ps.session_id
+                AND t.lifecycle='failed'
+                AND t.trigger_kind!='context_reset_notice'
+                AND t.turn_id=(SELECT latest.turn_id FROM turns latest
+                               WHERE latest.session_id=ps.session_id
+                                 AND latest.trigger_kind!='context_reset_notice'
+                               ORDER BY latest.ended_at DESC,latest.turn_id DESC LIMIT 1)
+             WHERE a.lifecycle='active'
+               AND NOT EXISTS(SELECT 1 FROM events e
+                              WHERE e.work_item_node_id=w.node_id AND e.lifecycle='pending')
+               AND NOT EXISTS(SELECT 1 FROM wake_batches b
+                              WHERE b.work_item_node_id=w.node_id
+                                AND b.lifecycle IN ('pending','runnable'))
+             ORDER BY a.assigned_at,a.assignment_id,t.turn_id",
+        )?;
+        statement
+            .query_map([], |row| {
+                Ok((
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, i64>(2)?,
+                    row.get::<_, String>(3)?,
+                    row.get::<_, String>(4)?,
+                ))
+            })?
+            .collect::<Result<Vec<_>, _>>()?
+    };
+    for (work_item_node_id, member_login, assignment_revision, provider_session_id, turn_id) in
+        responsibilities
+    {
+        let event_id = Uuid::now_v7().to_string();
+        let dedupe_key = format!("{OFFLINE_RESPONSIBILITY_WAKE_DEDUPE_PREFIX}{turn_id}");
+        let inserted = transaction.execute(
+            "INSERT OR IGNORE INTO events(
+               event_id,work_item_node_id,kind,detail,origin,reference,lifecycle,
+               observed_at,dedupe_key,mention_candidate,trusted_mention,
+               recipient_login,recipient_revision
+             ) VALUES(?1,?2,'wake','native_resume_responsibility','local',?3,'pending',
+                      ?4,?5,0,0,?6,?7)",
+            params![
+                event_id,
+                work_item_node_id,
+                "原生会话已恢复，但当前 OPEN 责任在上一轮执行失败后仍未闭环。请根据保留的原生历史和工作区继续当前责任，避免重复已完成的操作。",
+                now,
+                dedupe_key,
+                member_login,
+                assignment_revision,
+            ],
+        )?;
+        if inserted == 1 {
+            schedule_event(
+                transaction,
+                &work_item_node_id,
+                &event_id,
+                SchedulerPolicy { quiet_seconds: 0, event_threshold: 1 },
+                true,
+                now,
+            )?;
+            tracing::info!(
+                work_item = %work_item_node_id,
+                provider_session = %provider_session_id,
+                failed_turn = %turn_id,
+                "woke OPEN responsibility after native resume"
+            );
+        }
+    }
+    Ok(())
+}
+
 
 fn clear_provider_binding(database: &Path, provider_session_id: &str) -> Result<(), StoreError> {
     require_current_schema(database)?;

@@ -980,6 +980,11 @@ def observe(run: str | os.PathLike[str]) -> dict[str, Any]:
     # rollout/session logs as part of status observation.
     if host != "local":
         _remote_file(host, remote_run / "records/status.json", local_records / "remote-status.json")
+    # The public entrypoint writes this after runtime installation and before
+    # the variant starts.  Pull the small execution-side receipt with the
+    # existing bounded records observation; no second observer is needed.
+    _remote_file(host, remote_run / "data/workspace/.factory26/material-consumption.json",
+                 local_records / "material-consumption.json")
     for name in ("docker.stdout.log", "docker.stderr.log"):
         _remote_file(host, remote_run / "records" / name, local_records / name)
     # The official SDK's agent runner redirects the normal process streams to

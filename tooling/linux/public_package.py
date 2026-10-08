@@ -38,6 +38,12 @@ def add_runtime_materials(stage: Path, runtime: Path, repository: Path) -> None:
     managed = runtime / "native-managed.mjs"
     if managed.is_file():
         shutil.copy2(managed, stage / "native" / managed.name)
+    source_metadata = runtime / "runtime-source.json"
+    if source_metadata.is_file():
+        # Hosted packages install the runtime inside the execution container;
+        # carry the selected source identity beside the native payload so the
+        # entrypoint can report what was actually installed.
+        shutil.copy2(source_metadata, stage / "native" / source_metadata.name)
     npm = stage / "inputs" / "npm"
     npm.mkdir(parents=True, exist_ok=True)
     for name in ("package.json", "package-lock.json"):
@@ -146,16 +152,20 @@ def wrap_entry(stage: Path) -> None:
         "import os\n"
         "import subprocess\n"
         "import sys\n"
-        "from runtime_install import ensure\n\n"
+        "from runtime_install import ensure, write_consumption_receipt\n\n"
         "ROOT = Path(__file__).resolve().parent\n"
         "if os.environ.get('FACTORY26_TINI_ACTIVE') != '1':\n"
         "    env = dict(os.environ, FACTORY26_TINI_ACTIVE='1')\n"
         "    tini = ROOT / 'native/bin/tini'\n"
         "    tini.chmod(0o755)\n"
         "    os.execve(str(tini), [str(tini), '-s', '--', sys.executable, str(__file__), *sys.argv[1:]], env)\n"
-        "ensure(ROOT)\n"
-        "from harness_services import services\n"
         "output = Path(sys.argv[sys.argv.index('--output-dir') + 1]).resolve()\n"
+        "runtime = ensure(ROOT)\n"
+        "try:\n"
+        "    write_consumption_receipt(ROOT, output, runtime)\n"
+        "except Exception as error:\n"
+        "    print(f'factory26 material-consumption receipt unavailable: {error}', file=sys.stderr)\n"
+        "from harness_services import services\n"
         "with services(ROOT, output) as contract:\n"
         "    child = subprocess.Popen([sys.executable, str(ROOT / 'variant_main.py'), *sys.argv[1:]], cwd=ROOT, start_new_session=True)\n"
         "    contract['_resource_supervisor'].register_entry(child)\n"
