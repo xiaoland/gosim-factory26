@@ -1,5 +1,7 @@
 # 每个 variant 覆盖 Lite 与 Web 的官网矩阵
 
+赛后状态（2026-10-09）：该比赛矩阵不再执行，以下“正在官网运行”和控制计划均为历史记录，不授权恢复控制器、上传 variant 或创建 run。已保存 journal、评分和运行身份继续作为证据保留；清理由[赛后清理任务包](../post-competition-cleanup/packet.md)统一处理。
+
 ## 目标和当前状态
 
 用户将本轮目标改为：四个既有冻结 variant ZIP 各在官网 ARC-Bench-Lite（Keep、BookStack）与 ARC-Bench-Web（12306、BookStack、Ctrip、Keep、PrestaShop、Stack Overflow）取得完整评分。variant 之间仍依次上传；同一 variant 的两个 Competition 尽可能同时运行。用户允许真实模型调用，但没有主办方生产 Runner 镜像或源码。本任务不把本地复现设为官网评分前提；本地公开部分按 [隔离环境 packet](../local-official-bench/packet.md) 改进并标出差异。

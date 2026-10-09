@@ -2,6 +2,7 @@
 
 | 主题 | 报告 |
 | --- | --- |
+| Hackathon Evolution 生成、公开验收与官网评分 | [2026-10-07 阶段结果](2026-10-07-hackathon-evolution.md)；实时状态与后续结果见[任务 packet](../../tasks/pi-minimal/evolution-20261006/packet.md)。 |
 | 核心文档与导航整理 | [2026-10-03 归属、迁移与独立会话验收](2026-10-03-core-documentation.md) |
 | Braid OTLP 与会话重建 | [2026-09-24 接入及真实归档验收](2026-09-24-braid-otlp.md) |
 | 官网完整结果与限制 | [2026-09-23 官网总览](2026-09-23-official-results.md) |

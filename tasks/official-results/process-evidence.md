@@ -5,7 +5,7 @@
 | Run | 已经证实 | 不能据此推断 |
 | --- | --- | --- |
 | deepseek/Keep `bd3c2e50b511` | 交付后独立评测 32/32；官网 stdout 只记录生成开始、约一小时后冻结和测试。 | Issue/PR 是否拆分、是否调用子代理、为何满分；同配置 WSL 本地另一次生成失败，不能代替该 run。 |
-| deepseek/BookStack `d853830ddb0a` | 同一交付源码和重评 DOM 复现 7 个入口阻断：共用 Tags `<details><summary>` 导致 5 项 button 不可定位；草稿直接进编辑页导致 1 项找不到 Edit；Book 8.2 初始已收藏导致 1 项只有 Unfavorite。详见[成绩报告](../../reports/2026-09-23-official-results.md)。 | Agent 是否有意选择这些 UI/初始状态、内部是否测试相关场景、谁负责相关实现。 |
+| deepseek/BookStack `d853830ddb0a` | 同一交付源码和重评 DOM 复现 7 个入口阻断：共用 Tags `<details><summary>` 导致 5 项 button 不可定位；草稿直接进编辑页导致 1 项找不到 Edit；Book 8.2 初始已收藏导致 1 项只有 Unfavorite。详见[成绩报告](../../runs/reports/2026-09-23-official-results.md)。 | Agent 是否有意选择这些 UI/初始状态、内部是否测试相关场景、谁负责相关实现。 |
 | mixed/Keep `007b8fc9d38b` | 官网日志证实 6 项找不到 Delete Note/Change labels button、2 项找不到 Pinned 子节点、1 项找不到 Save。需求文本明确要求前两者为 button。 | 当前归档无失败 DOM/源码，无法独立确认实际角色为 menuitem；也没有该 run 的 76/76 自验原始记录，不能解释漏检链。 |
 | mixed/BookStack `6e786f33bc1b` | 同一交付源码里书架/图书列表项是 Link、登录昵称是 span；官网测试多处等待 button/heading。21 项失败中 17 项卡入口、4 项卡操作后标题。 | 没有失败 DOM 和 helper 全文，不能把 21 项统一归因为角色差异；Braid 会话索引不能替代对话正文。 |
 

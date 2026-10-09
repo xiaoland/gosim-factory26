@@ -10,6 +10,7 @@
 
 | 当前要完成的操作 | 操作说明 | 先确认什么 |
 | --- | --- | --- |
+| 准备 Hackathon Evolution 决赛资料或接续决赛会话 | [决赛本地资料指南](hackathon-evolution.md) | 官方需求/基线、来源证据、最新有效提交规则和 10 月 8 日 18:00 截止；不预选 variant。 |
 | 使用已选模型配方 | [跨 variant 模型配方](../../materials/model-recipes/README.md) | 角色模型与有序路由、实际 catalog 和凭据来源；不能由供应商目录或 catalog 默认推断。 |
 | 比较候选通道、价格或接入事实 | [模型提供商目录](model-providers.md) | 精确请求 ID、币种、缓存价格、套餐条件与核对日期；账户事实不能代替本次选路。 |
 | 确认练习/正式模式、冻结 Harness，向官网提交或收集结果 | [平台与制品](competition.md) | [赛事须知与模式](competition.md#赛事规则与提交模式)、variant、ZIP SHA256、模型通道和本次授权。 |

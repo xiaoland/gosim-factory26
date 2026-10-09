@@ -1,8 +1,8 @@
 # 官网实验结果整理
 
-状态：已盘点现有终态，持续接收双比赛矩阵的后续评分。当前只整理证据和提出下一轮方向，不改变冻结 ZIP、运行中的矩阵或评分流程。
+赛后状态（2026-10-09）：比赛已结束，不再持续接收或启动比赛矩阵。本 packet 作为历史评分整理入口保留；未取得的终态不因截止自动推定，清理与保全状态见[赛后清理任务包](../post-competition-cleanup/packet.md)。
 
-目标：按远端 run ID 去重，把 Competition 的正式评分、仍在运行的任务和 Playground 诊断探针分开。用同一张可视化总览进入各 run 的原始现场，再根据逐例首阻断点提出可证伪的改进方向。完整结果另见 [报告](../../reports/2026-09-23-official-results.md)；逐例诊断沿用 [已有 cell](../iteration-throughput/cells/score-diagnosis.md)。
+目标：按远端 run ID 去重，把 Competition 的正式评分、仍在运行的任务和 Playground 诊断探针分开。用同一张可视化总览进入各 run 的原始现场，再根据逐例首阻断点提出可证伪的改进方向。完整结果另见 [报告](../../runs/reports/2026-09-23-official-results.md)；逐例诊断沿用 [已有 cell](../iteration-throughput/cells/score-diagnosis.md)。
 
 验收：每个已完成的官网 run 都能追溯到平台 `status.json` 与唯一远端 ID；未完成任务不计分；Playground 探针不进入 Competition 排名；分数只在同 benchmark、同任务口径下比较。新评分到达时更新报告，先汇报本次实验结果，再决定是否改 variant。运行控制由 [双比赛矩阵](../dual-bench-hosted/packet.md) 持有。
 
