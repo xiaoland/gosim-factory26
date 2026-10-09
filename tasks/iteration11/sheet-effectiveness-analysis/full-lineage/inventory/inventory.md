@@ -52,10 +52,10 @@
 
 ## 机器文件
 
-- [inventory.json](inventory.json)：summary、work item/assignment 映射、565 文件覆盖索引与字段契约。
+- [inventory.json](../../report.md)：summary、work item/assignment 映射、565 文件覆盖索引与字段契约。
 - [records.jsonl](records.jsonl)：38,414 条逐行原始位置索引；无正文复制。
-- [lineage-comparison.json](lineage-comparison.json)：早期 `evidence/`、`increment/` 已读源与 final-source 的逐路径存在性、行数、SHA-256、前缀/内容差异账。
-- [session-links.json](session-links.json)：同一 native/session identity 的多物理载体关系与各自覆盖状态。
-- [read-gaps.json](read-gaps.json)：按三个可委派分区列出需要新读的原文件和精确行段。
-- [cutoff-crossings.json](cutoff-crossings.json)：列出跨 2026-09-29T08:24:25.679855Z 的文件及其原始行号区间。
+- [lineage-comparison.json](../../report.md)：早期 `evidence/`、`increment/` 已读源与 final-source 的逐路径存在性、行数、SHA-256、前缀/内容差异账。
+- [session-links.json](../../report.md)：同一 native/session identity 的多物理载体关系与各自覆盖状态。
+- [read-gaps.json](../../report.md)：按三个可委派分区列出需要新读的原文件和精确行段。
+- [cutoff-crossings.json](../../report.md)：列出跨 2026-09-29T08:24:25.679855Z 的文件及其原始行号区间。
 - `build_inventory.py`：可复核的只读生成脚本；SQLite 使用 `file:...?mode=ro`，没有修改 DB/WAL。

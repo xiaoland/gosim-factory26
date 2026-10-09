@@ -1,7 +1,0 @@
-on(...)()`（`db` 是原生 better-sqlite3 → 真事务，无部分记录），尺寸 `max(行,6)×max(列,26)`，`INVALID_CSV` 精确文案；`copy.ts` 两条文案逐字与需求一致。
-- e2e 公式导出用例带「**C 合入时必须翻转为计算结果**」标注。
-## 当前待办与入口
-- **PR #8**（head `braid/issue-3-a` @ `035f4f1`）：唯一已判 must-fix = README 改为三条变更路径；`@deepseek-5` 的自检证据交接（`pnpm -r test`/`typecheck`/`checks/run-e2e.sh`）仍未到。该要求已留在 **PR #8 comment #47**（投递队列中）。
-- A 侧不阻塞，等待 PR 负责人 handover 后我按 comment #27 + #33 + #36 验收。工作区干净（`braid/issue-3-a`，无本地改动）。
-[DUPLICATES: 9 exact source lines omitted; precise per-line source map in duplicate-lines.json at S19:L62:C2]
-

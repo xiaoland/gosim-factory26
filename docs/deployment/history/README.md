@@ -1,14 +1,5 @@
-# 历史运行协议
+# 旧执行器说明
 
-这里保留旧冻结执行器、旧记录格式和时点操作，用于解释已有证据。历史字段或命令不是当前能力声明，也不提供启动、恢复或清理授权。当前路径选择回到 [运行入口](../index.md)。
+当前 Lab run 的操作从[运行入口](../index.md)开始。旧 experiment/job/attempt 的定义、执行和制品合同由 [lab.exp](../../../lab/exp/README.md)维护，仅适用于对应冻结执行器。
 
-| 读取哪类原件 | 合同 |
-| --- | --- |
-| 旧 ARC Runner、schema v3 manifest、raw Pi/Codex 本地基线 | [本地实验](local-experiments.md)。 |
-| 旧 checkpoint/prepared、operation、Hosted journal 与历史本地 attempt | [恢复与重放](recovery.md)。 |
-| Competition journal、Playground、平台追溯和旧封装 | [平台与制品](competition.md)。 |
-| Console 旧暂停门闩、服务切换与时点验收 | [Console 历史记录](console.md)。 |
-| 旧 collector、watcher、GC 计划和模型事实 | [证据协议](evidence.md)。 |
-| 原生 Hackathon 四配置 | [原配置归档](../hackathon.md)。 |
-
-旧 experiment/job/attempt 的定义、执行和制品合同维护在 [lab.exp](../../../lab/exp/README.md)，只用于对应冻结执行器；当前 run 入口见 [Lab](../../../lab/README.md)。当前规则 PDF 和提交模式仍从 [平台手册](../competition.md#赛事规则与提交模式)进入，不把赛事来源当作退役能力。
+这里保留仍有实际消费者的两份操作说明：[旧 Braid Console 服务](console.md#旧冻结-console-服务合同)与[旧 checkpoint 恢复](recovery.md)。旧赛事提交、个人环境部署、采集策略和已退役命令的完整记载可以从 Git 历史查阅；它们不证明服务当前仍在运行。

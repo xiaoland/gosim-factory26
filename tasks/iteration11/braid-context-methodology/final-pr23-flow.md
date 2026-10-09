@@ -16,7 +16,7 @@
 
 四个目标 home 各只有一份 JSONL，合计 **436 records**；这份终态提取中未发现这些 home 下的第二份 sessions JSONL 或原生 subagent 子会话。未把别的同前缀 home 算作本任务。A 的工具调用仅见 bash/read/write/edit，B/C/D 仅 bash：本段未观察到 advisor/vision/executor/explorer 实际调用；不据此否定其在早期实现阶段的作用。
 
-为控制机械代码重复，未逐字符阅读 A:L32（e2e runner 源码，6387 字符）、L34（app-node/package 源码，2130）、L37（Playwright 配置/文件列表，2000）、L222（test helper/测试源码，4345）。相关调用路径、结果上下文、实际检查输出、超时修复 diff 与断言均已读；测试用例关键部分另在 A:L143/L230 可见。其余决策、字段、评论和工具结果文本已分段阅读；被工具输出截断的 56–57、219–223、234–235、B:L4/L5–14 已单独补读。A:L317 与此前 L297 同一 packet 的重复展示不再按新证据计算。**没有把索引、grep 命中或大小统计等同全文阅读。**详见 [阅读回执](final-pr23-read-receipts.json)；DB 选段保存在 [原始对象索引](final-pr23-db-excerpts.json)。
+为控制机械代码重复，未逐字符阅读 A:L32（e2e runner 源码，6387 字符）、L34（app-node/package 源码，2130）、L37（Playwright 配置/文件列表，2000）、L222（test helper/测试源码，4345）。相关调用路径、结果上下文、实际检查输出、超时修复 diff 与断言均已读；测试用例关键部分另在 A:L143/L230 可见。其余决策、字段、评论和工具结果文本已分段阅读；被工具输出截断的 56–57、219–223、234–235、B:L4/L5–14 已单独补读。A:L317 与此前 L297 同一 packet 的重复展示不再按新证据计算。**没有把索引、grep 命中或大小统计等同全文阅读。**详见 [阅读回执](report.md)；DB 选段保存在 [原始对象索引](report.md)。
 
 ## 正向过程
 

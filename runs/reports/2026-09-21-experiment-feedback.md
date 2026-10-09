@@ -8,7 +8,7 @@
 
 原先主会话需要反复阅读状态与错误流。现在程序归并错误和重复通知，`run_feedback.py brief` 提供状态与定向证据入口；较低成本子 Agent 负责需要语义判断的筛选，主 Agent 负责决策、核验和用户汇报。WSL 与 Playground 的远端观测从 180 秒起步，进程退出不增加等待窗口。
 
-协作门槛已写入 [AGENTS.md](../../AGENTS.md)，等待、恢复和通知边界归属 [运行文档](../../docs/deployment/index.md#等待反馈与交接)。独立预演和实现前基线保存在提交 `e80ea0d`。
+协作门槛已写入 [AGENTS.md](../../AGENTS.md)，等待、恢复和通知边界归属 [运行文档](../../docs/deployment/evidence.md)。独立预演和实现前基线保存在提交 `e80ea0d`。
 
 ## 验收记录
 

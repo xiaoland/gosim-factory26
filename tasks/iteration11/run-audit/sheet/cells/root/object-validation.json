@@ -1,9 +1,0 @@
-{
-  "counts": {
-    "object-coverage.json": 171,
-    "increment/object-coverage.json": 8
-  },
-  "exact_body_errors": [],
-  "note": "正文精确映射只是文本覆盖；事件身份、投递与采纳另按事件和实际动作判定。comments176–179由主审直接读DB，未声称原生消费者已经读到。",
-  "correction": "comment172定位从通知L19修正为实际正文L21，已逐字复核。"
-}

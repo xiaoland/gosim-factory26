@@ -15,11 +15,11 @@
 
 表中的短执行身份均带前缀 `pi-braid--hackathon--`。原始根为 WSL `/home/yyh/Development/factory26/runs/e20260928-02-deepseek-direct/attempt-09/generation/runs/`，再进入各题 `workspace/official-generation/template/.factory26/<Braid run>/`。
 
-Sheet 恢复计划固定 main `3fb842a46362c6c676bb2e99f92453d46f8394d9`，禁止新迭代且不刷新 native materials；终态 application SHA256 为 `9022b53b7a827a3dd29df7477a5645e2207450fb0aa25efd97ae0a527ac7f28f`。恢复网关导出 `empty`，原始网关没有该 recovery run 的 requested 记录。因此恢复不另计模型费用，也不能把恢复时再归档的 native 副本重新累加。证据见 [terminal-provenance.json](token-final-review/terminal-provenance.json)。旧 monitor 的 Sheet `failed` 是被停止的执行容器状态，不推翻随后恢复出的 completed 交付。
+Sheet 恢复计划固定 main `3fb842a46362c6c676bb2e99f92453d46f8394d9`，禁止新迭代且不刷新 native materials；终态 application SHA256 为 `9022b53b7a827a3dd29df7477a5645e2207450fb0aa25efd97ae0a527ac7f28f`。恢复网关导出 `empty`，原始网关没有该 recovery run 的 requested 记录。因此恢复不另计模型费用，也不能把恢复时再归档的 native 副本重新累加。证据见 [terminal-provenance.json](../packet.md)。旧 monitor 的 Sheet `failed` 是被停止的执行容器状态，不推翻随后恢复出的 completed 交付。
 
 ## 2. 统计口径及三路核对
 
-复用 [既有采集器的终态版本](token-final-review/extract.py) 与 [聚合器](token-final-review/analyze.py)。只读 SQLite；原生每条 `message.usage` 只计一次，以 `(native session ID, record.id, timestamp)` 去重，不递归遍历嵌套 usage，不把 transcript、归档和 recovery 副本相加。
+复用 [既有采集器的终态版本](../packet.md) 与 [聚合器](../packet.md)。只读 SQLite；原生每条 `message.usage` 只计一次，以 `(native session ID, record.id, timestamp)` 去重，不递归遍历嵌套 usage，不把 transcript、归档和 recovery 副本相加。
 
 本次补上一个旧采集器遗漏：PR26 的 native session `01a0e7be-98d2-7048-8fae-4bb61ef09772` 同时有带 header 的 `sessions/...jsonl` 和顶层无 header 续写片段。前者 64 条 usage，后者 83 条，合计 147 条。后者第 1 行即 11:50:44.463 的 message；它的身份由 `sessions.json.native_session_path` 精确映射，不能因为没有 header 而丢弃。83 条贡献 input **36,694**、output **33,332**、cacheRead **9,068,544**，并非复制出来的额外消费。采集器记录所有无头文件及映射结果；没有身份的 subagent transcript 不当新会话计数，真实子会话由其带 header 的 session.jsonl 计入。
 
@@ -33,9 +33,9 @@ PBB `work/home/.pi/pbb/**/events.jsonl` 是 `job.started/job.output/...` 后台 
 |Pi timing request_start|429|4,611|
 |native 与 timing 逐会话 token 字段不一致数|0|0|
 
-Sheet 多 1 个 request_start 未配到 message_end，而且没有对应额外 gateway requested；不能推定它已向供应商发出，更不能为它补造 token。网关存在更早运行的重试，但本页的“响应数”不宣称覆盖供应商网络内部重试账单。见 [gateway-summary](token-final-review/gateway-summary.json)、[reconciliation](token-final-review/reconciliation.json)、[aggregate](token-final-review/aggregate.json)。
+Sheet 多 1 个 request_start 未配到 message_end，而且没有对应额外 gateway requested；不能推定它已向供应商发出，更不能为它补造 token。网关存在更早运行的重试，但本页的“响应数”不宣称覆盖供应商网络内部重试账单。见 [gateway-summary](../packet.md)、[reconciliation](../packet.md)、[aggregate](../packet.md)。
 
-**cache 口径已有冻结运行源码证据**：[Pi usage 映射原文](token-final-review/pi-usage-mapping.txt)，来自该题 `submission/agent/runtime/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js:1178`。它将供应商 `prompt_tokens` 拆为：
+**cache 口径已有冻结运行源码证据**：[Pi usage 映射原文](../packet.md)，来自该题 `submission/agent/runtime/node_modules/@earendil-works/pi-coding-agent/node_modules/@earendil-works/pi-ai/dist/api/openai-completions.js:1178`。它将供应商 `prompt_tokens` 拆为：
 
 `Pi input = max(0, prompt_tokens − cacheRead − cacheWrite)`；`cacheRead` 取 `prompt_tokens_details.cached_tokens`，或 DeepSeek `prompt_cache_hit_tokens` 等；`output = completion_tokens`，其中已含 reasoning。故输入处理量是 `input + cacheRead + cacheWrite`，不能把 cacheRead 再加到供应商 prompt_tokens，也不能把 reasoning 再加到 output。以下未缓存 input 是该适配层的归一化含义，不是独立核实供应商缓存账单。
 

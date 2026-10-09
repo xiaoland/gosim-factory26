@@ -4,8 +4,8 @@
 
 ## 09 停止截面与待审阅正文
 
-- GitHub Issue #9 仍 `OPEN`，评论 #61 仍是 PR #12/head `752a084` 的交付入口；PR #12 仍 `OPEN` 且现任 assignee 为空，`develop=afee849`。短正文：[handoff-09-github-pr12.txt](handoff-09-github-pr12.txt)，目标是 Issue #9 回复 #61。
-- Sheet Issue #7 仍 `CLOSED`，评论 #199 的通过口径未改；PR #19 仍 `OPEN`，已有负责人 @glm-16，head 更新为 `753f334`，`develop=7f4216e`。PR #19 评论 #207 已由 #7 成员独立复现旧实现 `200 !== 400`、新候选 10/10 与 84 checks 通过，并认为可合并；**但 PR 仍未进入 develop**。短正文：[handoff-09-sheet-pr19.txt](handoff-09-sheet-pr19.txt)，目标是 Issue #7 回复 #199，提醒最终候选/关闭口径，不重复要求重跑全部检查。
+- GitHub Issue #9 仍 `OPEN`，评论 #61 仍是 PR #12/head `752a084` 的交付入口；PR #12 仍 `OPEN` 且现任 assignee 为空，`develop=afee849`。短正文：[handoff-09-github-pr12.txt](../packet.md)，目标是 Issue #9 回复 #61。
+- Sheet Issue #7 仍 `CLOSED`，评论 #199 的通过口径未改；PR #19 仍 `OPEN`，已有负责人 @glm-16，head 更新为 `753f334`，`develop=7f4216e`。PR #19 评论 #207 已由 #7 成员独立复现旧实现 `200 !== 400`、新候选 10/10 与 84 checks 通过，并认为可合并；**但 PR 仍未进入 develop**。短正文：[handoff-09-sheet-pr19.txt](../packet.md)，目标是 Issue #7 回复 #199，提醒最终候选/关闭口径，不重复要求重跑全部检查。
 - GitHub PR #5 的外部合入事实已经在 Issue #6 #46 与 PR close reason 说明，本轮**不准备投递**。
 
 两份 bodyfile 已逐字节复制到 WSL `attempt-09/host-diagnostic-comments/`（不在生成工作区内），SHA256 分别为 `eae1abd822ea419d7b1aa93678b0d8f45ad16910ac2fae7b54f0be172c087321`、`ed5271a1a205e2a9e0344f1369a49c07c412e8890c5ff55eb19b01d5888e96b8`。GitHub 正文只写历史成员名 `glm-11`，不使用 @ 触发额外定向通知。本文其余表格保留 08 原始草稿的证据来源，不应用其中旧 head 覆盖 09 核对。

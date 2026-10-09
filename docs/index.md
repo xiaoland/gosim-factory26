@@ -1,32 +1,19 @@
-# Factory26 文档入口
+# 文档导航
 
-本页按读者要做的事选择权威说明。docs 保存长期维护的说明，带时点和条件的调查结论归独立的 reports；组件细节靠近源码，当前问题、授权和进度由所属 packet 持有。
+项目概览与目录地图见 [README](../README.md)。以下说明按读者任务组织，组件 README 持有具体命令与接口。
 
-| 要做什么 | 先读哪里 | 需要细节时 |
-| --- | --- | --- |
-| 理解产品目标与协作模型 | [PRD](prd/index.md) | [Variant 实现索引](../variants/README.md)。 |
-| 理解跨组件责任与生命周期 | [技术说明](product-tdd/index.md) | [资源与原生执行约定](product-tdd/runtime-resources.md)。 |
-| 改代码、角色、技能或打包 | [开发入口](../CONTRIBUTING.md) | [Variant 本地说明](../variants/README.md)、[公共工具](../tooling/scripts/README.md)、[共享材料](../materials/README.md)、[Linux 支持](../tooling/linux/README.md)。 |
-| 启动、控制、查询 run 或组织 Python stages | [Lab 入口](../lab/README.md) | [ARC 接入](../lab/arc_bench/README.md)、[Console](../consoles/README.md)；旧冻结记录另走 [lab.exp](../lab/exp/README.md)。 |
-| 选择运行路径、恢复或定位失败 | [运行手册](deployment/index.md) | [本地 Runner](deployment/local-experiments.md)、[恢复](deployment/recovery.md)、[证据](deployment/evidence.md)。 |
-| 读取 Braid 对象、原生会话或遥测 | [Console 接入](deployment/console.md) | [Console 组件](../consoles/README.md)、[Braid 诊断](deployment/braid-diagnostics.md)。 |
-| 使用已选模型配方或比较候选通道 | [跨 variant 模型配方](../materials/model-recipes/README.md) | [提供商目录](deployment/model-providers.md)只描述候选事实，catalog 默认不代表已选配方。 |
-| 确认平台规则、费用模式或评分身份 | [平台与制品](deployment/competition.md) | 当前授权归所属 packet，不从模型 route 推断正式参赛身份。 |
-| 查找 Hackathon Evolution 历史材料与赛后清理状态 | [赛事资料归档](deployment/hackathon-evolution.md) | [清理任务包](../tasks/post-competition-cleanup/packet.md)、官方需求、初赛基线、历史截止规则及中立的兼容性调查。 |
-| 找实验定义、运行名或旧配方 | [实验入口](../experiments/README.md) | [历史实验登记](../experiments/archive/README.md)。 |
-| 接续一个具体工作主题 | [工作主题索引](work-index.md) | packet 顶部的决定与证据入口，再按实际 producer 查保存的 status；旧 monitor 从冻结协议进入。 |
-| 查前序结论与原始输入 | [报告索引](../runs/reports/README.md) | [最初输入](archive/initial-handoff.md)、[历史运行协议](deployment/history/README.md)。 |
+| 读者任务 | 入口 |
+| --- | --- |
+| 理解 Harness 的目标和协作方式 | [产品说明](prd/index.md)、[Variant 索引](../variants/README.md) |
+| 理解组件责任、数据与生命周期 | [架构说明](product-tdd/index.md)、[执行资源约定](product-tdd/runtime-resources.md) |
+| 修改源码、角色、技能或制品 | [开发说明](../CONTRIBUTING.md)、[公共工具](../tooling/scripts/README.md)、[共享材料](../materials/README.md) |
+| 启动、观察、保存和接续运行 | [运行手册](deployment/index.md)、[Lab](../lab/README.md) |
+| 查看运行与协作界面 | [Console 接入](deployment/console.md)、[Console 组件](../consoles/README.md) |
+| 配置模型与供应商 | [模型配方](../materials/model-recipes/README.md)、[供应商目录](deployment/model-providers.md) |
+| 阅读赛事背景和评分身份 | [平台与制品](deployment/competition.md)、[Evolution 资料](deployment/hackathon-evolution.md) |
+| 追溯实现决定与实验结果 | [工作记录](work-index.md)、[报告索引](../runs/reports/README.md) |
 
-参数、模型和现场状态从实际源码、冻结制品或 producer 原件取得，导航不维护第二份配置。暂停、停止和选择检查点前读 [恢复说明](deployment/recovery.md#当前-run-的停止与接续)，不从目录名、报告或旧计划推断当前授权。
-
-文档归属按问题选择：产品意图归 PRD；跨组件约束归技术说明；接口和局部实现方法归组件 README；操作者的路径选择归运行手册；时点事实与旧协议归报告或历史目录。修改现有权威正文，已迁移的内容只保留直接链接；新增页面必须接住独立的读者任务，不建立空模板。
-
-## 开发侧 SVC
-
-[svc.json](../svc.json)声明开发 Corpus baseline，`.venv/bin/svc status --json`显示本地安装与集成状态，不证明工作流程有效或参赛方法已通过实验。
-文档归属按需查询 `.venv/bin/svc lookup --path specs/`；任务包信息组织查询 `task-packet/`；局部设计与注释原则查询 `taste/implementation/`。
-这些是开发侧方法，参赛侧裁减 Corpus 与 skill 接线另由对应任务和实际 variant 维护。
-生成块由开发 SVC 管理，其中 `svc` 指项目 `.venv/bin/svc`。
+产品说明维护目标，架构说明维护跨组件合同，操作方法归运行手册与组件 README。`tasks/` 保留任务局部的决定、证据和未完成事项，不作为首次使用教程。历史运行依照其冻结版本解释；文档中的命令示例不代表该环境已完成验收。
 
 <!-- svc:begin navigation sha256=7f7f63d0b8989624f57bd21b82b2ac2d05e4445edfd5af4bc3742996f0754bda -->
 ## SVC Corpus

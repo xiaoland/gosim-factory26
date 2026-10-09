@@ -17,7 +17,7 @@
 | P-root | E + `braid-state/physical/01a0f007-d174-7cb1-9f24-8a8284b39308/instructions.md`；同目录 `session.json` 映射到 R |
 | R-plan | `tasks/iteration11/run-audit/github/snapshot-01/work/native-homes/pi-glm-fast-01a0eb68-19b6-7c30-91d6-bd339f346335/2026-09-29T04-24-34-972Z_01a0eb68-479c-72ef-b9ea-288545453828.jsonl`，不含 `sessions/` 的后续片段 |
 
-本次增量实读 P 全 42 行、P-root L8–22；R L20–27；A L14–17、45–51、56–57、71、73–74、109–111、154；回读 R-plan L18 写入的完整验收方案，其 L1–21 其余部分只列消息/工具索引，**不计全文阅读**。A 其他前后节点复用此前 328 records 的实质阅读及[阅读回执](final-pr23-read-receipts.json)，不重新扫全 log。另对 A 全部 toolCall 参数作结构扫描，确认五个 `read` 路径及 bash 中的技能路径；结构扫描不是工具结果全文审阅。
+本次增量实读 P 全 42 行、P-root L8–22；R L20–27；A L14–17、45–51、56–57、71、73–74、109–111、154；回读 R-plan L18 写入的完整验收方案，其 L1–21 其余部分只列消息/工具索引，**不计全文阅读**。A 其他前后节点复用此前 328 records 的实质阅读及[阅读回执](report.md)，不重新扫全 log。另对 A 全部 toolCall 参数作结构扫描，确认五个 `read` 路径及 bash 中的技能路径；结构扫描不是工具结果全文审阅。
 
 SVC 早期消费复用 [i11-svc-forward.md](../../pi-minimal/github-score-analysis/i11-svc-forward.md) 与[历史来源索引](../../pi-minimal/github-score-analysis/i11-svc-source-index.json)。本次实际全文回读的 skill 是 A:L74 的 `svc-task-packet` 16.0.0。终态选择性提取未包含 `work/skills` 全树，故**不拿当前源码补成运行时 `svc-verification` references 全文，也不声称 PR23 读过它**。本次方法判断以保存的 physical 指令、实际读入的 acceptance-plan 和 task-packet 正文为准。
 

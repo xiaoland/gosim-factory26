@@ -8,7 +8,7 @@
 
 以父原生消息中的 `toolCall` 为调用事实，核对 `agent/task`、`parallel`、`chain`、`workflowScript` 等输入；本批实际出现单次 `agent` 和 workflowScript，未出现 parallel/chain 执行。逐条关联 `toolResult`，再用真实子 transcript、模型 usage 和 artifact meta 验证启动。`list/status/wait`、Braid 指派、会话重建、文本中出现 advisor 均不算执行。
 
-归档 `native/` 与 `work/native-homes/` 按原生 session ID、消息 ID、时间去重；无 session header 的续接文件先用 `braid-state/sessions.json` 的文件名映射。一个 Braid 成员的多次原生重建不是多个原生子代理。审计代码与完整路径见 [extract.py](advisor-left-shift-audit/extract.py)，调用、结果、配置和覆盖缺口见 [audit-evidence.json](advisor-left-shift-audit/audit-evidence.json)。保留的完整提取分别是 [官网](advisor-left-shift-audit/hosted.json)、[本地](advisor-left-shift-audit/local.json)。
+归档 `native/` 与 `work/native-homes/` 按原生 session ID、消息 ID、时间去重；无 session header 的续接文件先用 `braid-state/sessions.json` 的文件名映射。一个 Braid 成员的多次原生重建不是多个原生子代理。审计代码与完整路径见 [extract.py](../packet.md)，调用、结果、配置和覆盖缺口见 [audit-evidence.json](../packet.md)。保留的完整提取分别是 [官网](../packet.md)、[本地](../packet.md)。
 
 | 生成来源 | JSONL 文件 / 可读原生 session | manifest ID 未匹配到消息 | subagent 工具调用 / 其中 list | advisor 尝试 / 启动 | 可证实的其它真实子会话 |
 | --- | ---: | ---: | ---: | ---: | --- |
@@ -44,7 +44,7 @@
 
 ## 三个有判别力的决定窗口
 
-下列时间为 UTC。[原始评论摘录](advisor-left-shift-audit/decision-comments.json)保留 writer group/turn 与时间；原生定位保存在 local.json。没有展示模型逐字推理，也不从事后结果倒推出当时一定应该咨询。
+下列时间为 UTC。[原始评论摘录](../packet.md)保留 writer group/turn 与时间；原生定位保存在 local.json。没有展示模型逐字推理，也不从事后结果倒推出当时一定应该咨询。
 
 | 决定 | 当时已可见的信号与实际行动 | 可前移的独立问题 | 结论边界 |
 | --- | --- | --- | --- |

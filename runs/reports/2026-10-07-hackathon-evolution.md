@@ -42,7 +42,7 @@ I14 GLM 公开 WHEN/THEN 验收 30/30，额外边界 6/7；官网独立评分 23
 | I14 两项 evo-sheet 生成、公开验收和独立评分 | [runs/hackathon-evolution/i14-combination-20261007](../hackathon-evolution/i14-combination-20261007)；GLM 与 Flash 独立目录，不混用冻结或评分。 |
 | I15 Flash evo-github | [runs/hackathon-evolution/i15-evo-github-20261007](../hackathon-evolution/i15-evo-github-20261007)；recipe、输入逐文件回执、新会话及终态冻结消费者独立保存。 |
 
-已删除的 Tailwind GitHub 与 I14 GLM 临时快照均在删除前完整下载官网 project.zip 并核验 SHA256/ZIP CRC。[Tailwind 项目归档](../pi-minimal/evolution-20261006/tailwind-github-20261007/official-replay/project.zip)与[I14 GLM 项目归档](../hackathon-evolution/i14-combination-20261007/glm53/official-replay/project.zip)保留在 WorkSSD；删除后评分 task run 仍可读，原正式提交恢复为最新。自费快照也影响 latest-saved 门控，实测恢复边界和操作流程已归[运行说明](../../docs/deployment/competition.md#决赛保存快照与多题执行的顺序)。
+已删除的 Tailwind GitHub 与 I14 GLM 临时快照均在删除前完整下载官网 project.zip 并核验 SHA256/ZIP CRC。[Tailwind 项目归档](../pi-minimal/evolution-20261006/tailwind-github-20261007/official-replay/project.zip)与[I14 GLM 项目归档](../hackathon-evolution/i14-combination-20261007/glm53/official-replay/project.zip)保留在 WorkSSD；删除后评分 task run 仍可读，原正式提交恢复为最新。自费快照也影响 latest-saved 门控，实测恢复边界和操作流程已归[运行说明](../../docs/deployment/hackathon-evolution.md)。
 
 本次整理已补齐 vv 两项 22/30、I14 Flash 24/30、正式 Sheet 23/30 的完整官网 project.zip，均原位保存下载来源、HTTP 200、SHA256 与中央目录/全成员 CRC 核验回执；四份约 791 MB。见[补档汇总](../pi-minimal/evolution-20261006/scored-project-archive-summary.json)。下载只读取官方产物，没有创建或删除快照、改变参赛资格，也没有读取隐藏内容用于分析或回灌生成 Agent。运行目录由 Git 忽略，交接须保留这些实际文件，不能仅依赖源码 clone。
 

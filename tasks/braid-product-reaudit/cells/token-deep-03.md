@@ -13,7 +13,7 @@
 - GitHub：`pi-braid--hackathon--github-88884da4b94a0f/workspace/official-generation/template/.factory26/20260928-030347-78b10c07/`。
 - Sheet：`pi-braid--hackathon--sheet-984a08e3155e3e/workspace/official-generation/template/.factory26/20260928-025746-66feadac/`。
 
-[采集脚本](token-deep-03/extract.py)从 `work/native-homes/**/*.jsonl` 读取实际原生会话，使用 session header ID、message ID、timestamp 去重；只累计 message 上的 usage 一次。GH 完成后的副本不会再次计费。保留[压缩快照](token-deep-03/snapshot.json.gz)、[聚合脚本](token-deep-03/analyze.py)、[逐会话与工具定位](token-deep-03/aggregate.json)。聚合复用 `lab.analysis.native_profile.union_ms`，执行 `python3 tasks/braid-product-reaudit/cells/token-deep-03/analyze.py` 可复现。SQLite 以只读模式读取；活跃文件依次采集，非全系统事务快照，因此不以差几个事件推断丢失。
+[采集脚本](../packet.md)从 `work/native-homes/**/*.jsonl` 读取实际原生会话，使用 session header ID、message ID、timestamp 去重；只累计 message 上的 usage 一次。GH 完成后的副本不会再次计费。保留[压缩快照](token-deep-03/snapshot.json.gz)、[聚合脚本](../packet.md)、[逐会话与工具定位](../packet.md)。聚合复用 `lab.analysis.native_profile.union_ms`，执行 `python3 tasks/braid-product-reaudit/cells/token-deep-03/analyze.py` 可复现。SQLite 以只读模式读取；活跃文件依次采集，非全系统事务快照，因此不以差几个事件推断丢失。
 
 |题目／模型|有 usage 的响应|未缓存 input|output|其中 reasoning|cacheRead|
 |---|---:|---:|---:|---:|---:|

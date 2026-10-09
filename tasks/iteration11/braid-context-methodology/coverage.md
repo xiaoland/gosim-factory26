@@ -1,6 +1,6 @@
 # GitHub 内容方法论：来源与覆盖账本
 
-2026-09-30；最终归档补取后更新。本账本区分**全量结构索引、既有语义审查复用、本次主题审读、未重读字段**。下载/索引不等于全文阅读。机器入口：[coverage-index.json](coverage-index.json)、[本段阅读回执](middle-read-receipts.json)。
+2026-09-30；最终归档补取后更新。本账本区分**全量结构索引、既有语义审查复用、本次主题审读、未重读字段**。下载/索引不等于全文阅读。机器入口：[coverage-index.json](report.md)、[本段阅读回执](report.md)。
 
 ## 身份与纵向范围
 
@@ -24,7 +24,7 @@
 
 边界说明：native段“14:45–17:09”采用`<17:10:00`，覆盖17:09整分钟。活动索引采用同一边界，保留原始时间供复核。最后一段没有连续17:10→01:58模型消息，不能用空档推断运行状态。
 
-[final-native-file-map.json](final-native-file-map.json)将404/513文件通过**完整native-homes相对路径**或完全相同session记录映射到Braid session/工作项；其余109为未映射派生/辅助记录，不猜basename身份。[final-collaboration-objects.json](final-collaboration-objects.json)保存23工作项、352评论、关联、session终态；[final-activity-index.json](final-activity-index.json)保存724条活动及各阶段分类。DB正文是终态版本，历史决策须回原生消息/活动时间。
+[final-native-file-map.json](report.md)将404/513文件通过**完整native-homes相对路径**或完全相同session记录映射到Braid session/工作项；其余109为未映射派生/辅助记录，不猜basename身份。[final-collaboration-objects.json](report.md)保存23工作项、352评论、关联、session终态；[final-activity-index.json](report.md)保存724条活动及各阶段分类。DB正文是终态版本，历史决策须回原生消息/活动时间。
 
 ## 中段实际协作变化，避免把检索命中当操作数
 

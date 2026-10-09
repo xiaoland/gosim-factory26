@@ -1,6 +1,6 @@
 # 参赛 P0 适配与无模型验收
 
-本次完成 Python ZIP 入口、frontend/backend 部署契约、Linux 运行制品与隔离、平台模型配置注入四项 P0。实现前方案提交为 `bc8450b`；没有模型调用、平台上传、正式评测或 Git push。操作说明归属 [运行文档](../../docs/deployment/index.md#参赛包与平台边界)。
+本次完成 Python ZIP 入口、frontend/backend 部署契约、Linux 运行制品与隔离、平台模型配置注入四项 P0。实现前方案提交为 `bc8450b`；没有模型调用、平台上传、正式评测或 Git push。操作说明归属 [运行文档](../../docs/deployment/competition.md#参赛包与平台边界)。
 
 ## 制品与来源
 

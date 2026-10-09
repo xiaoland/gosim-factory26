@@ -1,6 +1,6 @@
 # M3 其余 27 单元审查（冻结首轮）
 
-范围：`cells/m3/assignment.json` 中除 PR #11 主原生会话 `2026-09-29T05-26-59-511Z_01a0eba1-6ab7-7751-8a0a-e84a52a71f95` 外的 27 个单元。主会话由另一位审查者负责。本报告按 `views/` 的 U0–U26、Record 编号和 [Issue #5](../../views/issue-5-board.txt)、[PR #11](../../views/pr-11-board.txt) 评论定位；引用的评论是冻结快照中的本地记录，并不表示目前运行的终态。
+范围：`cells/m3/assignment.json` 中除 PR #11 主原生会话 `2026-09-29T05-26-59-511Z_01a0eba1-6ab7-7751-8a0a-e84a52a71f95` 外的 27 个单元。主会话由另一位审查者负责。本报告按 `views/` 的 U0–U26、Record 编号和 [Issue #5](report.md)、[PR #11](report.md) 评论定位；引用的评论是冻结快照中的本地记录，并不表示目前运行的终态。
 
 ## 结论
 

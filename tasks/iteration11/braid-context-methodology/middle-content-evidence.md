@@ -32,10 +32,10 @@
 
 ## 原始定位与审查边界
 
-全部关键消息的原始JSON、完整路径、行号、时间保存在 [middle-key-messages.json](middle-key-messages.json)（63条），不是模型摘要；全量消息映射见 [final-message-index.json](final-message-index.json)。其中：
+全部关键消息的原始JSON、完整路径、行号、时间保存在 [middle-key-messages.json](report.md)（63条），不是模型摘要；全量消息映射见 [final-message-index.json](final-message-index.json)。其中：
 
 - 根hash链：`work/native-homes/pi-glm-fast-01a0ecff-7bc8-75f3-ae03-c4d92e8e6561/2026-09-29T11-49-25-679Z_01a0ecff-8c2f-7379-8857-a3ff01afd017.jsonl` L36–43、L53–61。
 - Issue9替换/恢复：`work/native-homes/pi-glm-fast-01a0ecef-3c98-7662-ab85-75c7ed8dd699/2026-09-29T11-31-41-633Z_01a0ecef-4fc1-72fd-9ae1-e8c727a9be18.jsonl` L23–43。
 - M4b需求再读：`work/native-homes/pi-deepseek-fast-01a0ed02-443e-7ee0-8d2a-71b58cd64a2b/2026-09-29T11-52-26-180Z_01a0ed02-4d44-74db-99b2-eef168abfeae.jsonl` L43、L51–58、L67–73。
 
-以上均相对最终evidence目录。正文/评论终态不替代当时版本；表中历史编辑因果取原始Pi调用和回包，评论只用作当时公开义务与接收记录。未重读其余全部应用算法/大块源码，不把全量索引冒充全量语义审查；具体投影、遗漏字段和已读区间见[middle-read-receipts.json](middle-read-receipts.json)。
+以上均相对最终evidence目录。正文/评论终态不替代当时版本；表中历史编辑因果取原始Pi调用和回包，评论只用作当时公开义务与接收记录。未重读其余全部应用算法/大块源码，不把全量索引冒充全量语义审查；具体投影、遗漏字段和已读区间见[middle-read-receipts.json](report.md)。

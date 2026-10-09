@@ -14,7 +14,7 @@
 
 实现已完成。`Store::local_delivery_closed` 同时提供派发与 Local 退出判据；根关闭而全范围未收敛的静止状态返回 blocked。result 的 `retained_input` 汇总 queued 评论投递数量、范围是否关闭、SQLite 回执表和 comment view 定位命令；计数读取失败保留具体错误，不阻止结果落盘。全范围关闭仍等待既有执行和 reset continuation 完成。
 
-`settle_unreachable_contacts` 在 scheduler 和 assignment 事务入口处理历史终态成员地址，消息事件 blocked、queued 回执 unreachable 并注明原地址/成员状态。真实 ZIP 中数据库仅复制到临时目录，通过当前 Rust `StoreActor::advance_scheduler` 连续推进两次：glm-3 的 27 条 pending direct_contact 全部成为 blocked，queued 回执从 25 降到 0；全部 12 条 assignment 的 ID、地址及状态逐项一致。原始归档未改写，前后查询保存于 [验证证据](termination-contact-evidence.json)。临时历史快照测试执行后移除，稳定的身份回归测试保留在 Braid。
+`settle_unreachable_contacts` 在 scheduler 和 assignment 事务入口处理历史终态成员地址，消息事件 blocked、queued 回执 unreachable 并注明原地址/成员状态。真实 ZIP 中数据库仅复制到临时目录，通过当前 Rust `StoreActor::advance_scheduler` 连续推进两次：glm-3 的 27 条 pending direct_contact 全部成为 blocked，queued 回执从 25 降到 0；全部 12 条 assignment 的 ID、地址及状态逐项一致。原始归档未改写，前后查询保存于 [验证证据](../packet.md)。临时历史快照测试执行后移除，稳定的身份回归测试保留在 Braid。
 
 主线追加委派了原生明确拒收的持久恢复：`defer_unstarted_turn(String)` 仅接受 starting 且没有 provider turn ID 的普通批次，旧 turn 标 interrupted 并保留原 batch。复用 `replay_event` 的 dedupe 因果链，queued 回执改指派生事件且保持 queued，原 session 回 idle；已有 open batch 统一进入一秒 quiet，避免每 worker tick 重试。主线选择了保留因果的已有重放机制，未采用清空旧 turn.batch_id 或搬迁原事件的方案。reset notice 沿已有接口。
 

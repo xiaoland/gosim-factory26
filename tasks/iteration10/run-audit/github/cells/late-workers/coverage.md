@@ -10,4 +10,4 @@
 | 37 / PR #12 reviewer | 1–151全序列、全部44段 thinking 已逐字补读；指派、对同一head审查、自编DB/API检查器错误和修正、合并先行与后验评论。 | 长工具脚本/输出机械部分按投影长度/哈希省略。核心语义完整。 |
 | 38 / PR #13 integrator | 1–336全序列、全部105段 thinking（120340字符）已分段完整语义读；原需种子对齐、跨组织同名 team bug、测试脚本旧断言、最终验收与合并、重复评论写入/删除；212–307外部写入控制流逐条回原文，六条删除正文已恢复。 | 机械源码、脚本体按记录号/投影长度/哈希省略。核心语义完整。 |
 
-五会话的全部原始字节保存在 `evidence/session-NN.txt`，由 `evidence/sessions.json` 映射；未运行应用。31 的全部 thinking 精确索引另见 [session31-thinking-index.txt](session31-thinking-index.txt)，由主负责人全读并回传确认。五会话的核心文字、thinking、工具控制流/反馈/传播语义已完成；机械源码、长测试脚本、重复原需求按投影长度/哈希明确省略，不能表述为所有字节逐字读。此页区分语义读与机械全文读。
+五会话的全部原始字节保存在 `evidence/session-NN.txt`，由 `evidence/sessions.json` 映射；未运行应用。31 的全部 thinking 精确索引另见 [session31-thinking-index.txt](report.md)，由主负责人全读并回传确认。五会话的核心文字、thinking、工具控制流/反馈/传播语义已完成；机械源码、长测试脚本、重复原需求按投影长度/哈希明确省略，不能表述为所有字节逐字读。此页区分语义读与机械全文读。

@@ -1,6 +1,8 @@
 # Sheet 全过程审查
 
-阶段：审查完成，待协调任务消费结论。[覆盖账](coverage.json)和[验证账](coverage-validation.json)已闭合。
+阶段：审查完成，待协调任务消费结论。[覆盖账](coverage.json)和[验证账](report.md)已闭合。
+
+公开仓库保留本审查的 packet、报告、覆盖账和独立判断；native 回包、SQLite、逐会话转录与生成投影已从当前树移除，可从 Git 历史按提交恢复。当前正文中的历史路径仅表示原采集位置，不表示原件仍在工作树。
 
 ## 授权与边界
 
@@ -36,4 +38,4 @@
 
 增量目录中的 [`snapshot.tar`](increment/snapshot.tar) 是本审已保存的审计/恢复原件入口，文件身份为：2026-09-29 16:24:25 +0800、47,554,560 bytes、SHA-256 `a394edd73dc1fa4458cbfc791a022a4f721aa6634d46543fbec30239019621ec`。`tar -tf` 可见其包含 `braid.sqlite3`、`work/native-homes/`、原生 session JSONL、run-history 和 subagent artifacts；它用于回到当时的材料核对，不宣称是跨文件原子快照或完整可恢复检查点。
 
-同目录的 [`manifest.json`](increment/manifest.json) 和 [`coverage.json`](increment/coverage.json) 仍是采集范围与覆盖账的权威入口；需要读取原件时先按这两个索引确认来源，再使用快照相对链接。快照保留在原位置，不复制、不解包改写。
+同目录的 [`manifest.json`](report.md) 和 [`coverage.json`](increment/coverage.json) 仍是采集范围与覆盖账的权威入口；需要读取原件时先按这两个索引确认来源，再使用快照相对链接。快照保留在原位置，不复制、不解包改写。

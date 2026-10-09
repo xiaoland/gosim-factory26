@@ -35,7 +35,7 @@ Git clone 元数据在官网 ZIP 中缺失时只能依据 bare origin 重建索�
 工作方法建议见 [反馈成本前移](time-cost-proposals.md)：检查环境、共享契约和验收判据的来源。
 得分诊断分别由 [GitHub](../github-score-diagnosis/packet.md)、[Sheet](../sheet-score-diagnosis/packet.md) 独立 Agent 完成，主 Agent 汇总决策。
 
-[设计](design.md) 保留恢复语义、实施顺序和验收方案；运行入口见 [运行说明](../../docs/deployment/index.md#实验恢复与反馈循环)。
+[设计](design.md) 保留恢复语义、实施顺序和验收方案；运行入口见 [运行说明](../../docs/deployment/recovery.md)。
 历史 g03–g05 的手工恢复包、来源与逐次失败见 `runs/e20260927-03-github-resume/`；旧 GitHub g05 与 Sheet g04 均已按用户要求取消，其状态不因新恢复 run 改写。
 
 

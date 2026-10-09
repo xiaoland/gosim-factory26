@@ -1,5 +1,0 @@
-`#121` probe evidence lives in `/tmp/fe-checkjs-probe`, but its probe file, exact configs and commands are reproduced verbatim inside `comment #121`, so the measurement (now adopted as v1.4 §5) is reconstructible from the work item.
-**State of A's only remaining prerequisite** (recorded in the description + `#131`): C's PR #10 branch `c340e2e` has replaced the seam and flipped A's transition case to `'2'` / `'2,plain'`; `origin/develop` (`e63efc6`) still has the interim implementation, so the gate is the integration PR re-running that browser case on the final candidate, alongside v1.4 §5's independent shared static gate owned by PR #10.
-No further action pending on Issue #3; if the integration phase needs the A-side anchors, `comment #131`, this description, and PR #8 comments #94/#100/#102 are the entry points.
-[DUPLICATES: 3 exact source lines omitted; precise per-line source map in duplicate-lines.json at S41:L199:C2]
-

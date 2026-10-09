@@ -5,11 +5,7 @@
 
 ## 已结束赛事：Hackathon Evolution 决赛
 
-`Agentic Software Factory Hackathon Evolution`（`hackathon-evolution`）已于 2026-10-08 结束。两题为 `hackathon-evolution--github`、`hackathon-evolution--sheet`。平台已拒绝新的 submission 和 run 启动；不得按旧 packet 或监控指令继续参赛、重试提交或启动新运行。赛后清理状态从[清理任务包](tasks/post-competition-cleanup/packet.md)进入。
-
-决赛期间要求参赛智能体在本队初赛最终上榜应用上增量完成需求，同时保留已有功能与业务数据；平台在执行智能体前向 output 注入对应基线。上述规则、提交顺序、截止变化和评分身份现在只作为历史解释保留，不能视为当前执行授权。既有基线、应用、业务数据、原生会话和评分证据仍不得清空、重置或整体覆盖。
-
-规则原文、需求概要、来源证据和复盘读取方法见[决赛资料指南](docs/deployment/hackathon-evolution.md)，资料整理状态见[任务包](tasks/hackathon-evolution/packet.md)。Mac 本地原始材料集中在 `/Volumes/WorkSSD/Development/factory26/runs/hackathon-evolution/inquiry-20261006/`：`requirements.zip` 与 `requirements/` 保存两题 YAML 和参考图；`initial-projects.zip` 与 `baseline/{github,sheet}/` 保存官方完整基线及业务数据；`material-manifest.json` 保存路径和逐文件哈希。该数据目录由 Git 忽略，交接不能只依靠 Git clone。
+Hackathon Evolution 已于 2026-10-08 结束；不得按旧 packet 或监控指令继续参赛、重试提交或启动新运行。赛事事实见[资料指南](docs/deployment/hackathon-evolution.md)，已获准的删除及保留范围见[赛后清理记录](tasks/post-competition-cleanup/packet.md)。历史规则和授权不授予新执行权限；未在清理范围中的应用、业务数据、会话与评分证据仍须保留。
 
 ## 仓库地图
 
@@ -31,7 +27,7 @@ runs/                    执行与调查证据；原件和产物默认 Git 忽�
   reports/               受版本管理的历史结论与索引
 ```
 
-Harness 基线从 `pi-braid-i13` 进入，I14 的共同基线与职责对照独立维护；I13 成果与恢复来源、I14 改进与实验范围分别归对应 packet。I10–I12 实现与冻结证据保留原身份；源码用途见 [Variant 索引](variants/README.md)，当前授权与接续入口见 [文档入口](docs/index.md)。
+Harness 的用途和差异见 [Variant 索引](variants/README.md)，文档与工作记录见 [文档导航](docs/index.md)。历史实现、冻结制品和原始证据保留各自身份。
 
 | 要做什么 | 先读哪里 |
 | --- | --- |

@@ -1,5 +1,7 @@
 # Braid 第二轮产品复审
 
+公开树保留本任务的复审结论和实现说明；cells 中的生成统计、原始回包和分析脚本已移除，可从 Git 历史按提交恢复。
+
 最新追加调查分工见 [分析派单](cells/analysis-dispatch.md)：Astra 负责 token 与 GitHub 最小协作体验复审，6-Sol 负责未闭合证据追查；平台线程上限下复用现有成员。
 
 当前状态（2026-09-28 10:43 UTC）：continuation-03从09:20接续约83分钟。GitHub在10:10完成生成并交付c3fb22d，评分被“两题全部生成完”的控制器屏障延迟；Sheet10:38合并PR20，仍在REQ-3跟进与最终整合。暂无新证据表明P0阻塞。详见[进展与耗时](cells/continuation03-progress.md)、[增量token](cells/continuation03-token-profile.md)。控制器509773、监控510138保持运行；本次只读取证，未部署新修复。
