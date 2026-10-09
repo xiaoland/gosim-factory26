@@ -1,12 +1,14 @@
 # Moonshot Kimi
 
-核对日期：2026-10-02（Asia/Shanghai）。本页记录选型、价格与验证事实；可执行的端点、模型别名、真实请求ID和凭据变量引用归[LiteLLM集中配置](../../../materials/model-gateway.json)。密钥保留在项目私有env中。
+核对日期：2026-10-07（Asia/Shanghai）。本页记录选型、价格与验证事实；可执行的端点、模型别名、真实请求ID和凭据变量引用归[LiteLLM集中配置](../../../materials/model-gateway.json)。密钥保留在项目私有env中。
 
 ## 接入与验证
 
 **Moonshot / Kimi 原厂**使用凭据前缀`KIMI`。相关模型：`kimi-k2.7-code`；`kimi-k3`。
 
 key 已填；2026-09-24 K2.7 Code 短文本 HTTP 200；2026-10-02 目录列出 K3、K2.7 Code。
+
+2026-10-07 使用独立 `KIMI_BASE_URL` / `KIMI_API_KEY` 对官方 `https://api.moonshot.cn/v1/models` 只读请求返回 HTTP 200，精确列出 `kimi-k2.7-code`、`kimi-k3`，也列出不在当前配方中的 K2.6 与 HighSpeed。共同[自费配方](../../../materials/model-recipes/self-funded.json)现为 K2.7 Code：Ark Coding Plan → Kimi 官方；K3：Ark Coding Plan → Kimi 官方 → 千问普通 API。沿用目录已有 Moonshot deployment，不以 Ark 或千问凭据代替官方凭据。目录可见不证明本次工具、流式调用或额度，未为本次修改发 Chat 请求。运行中的冻结配方不自动改变，须在保留进度的安全接续边界采用；官网正式生成使用平台注入连接，不据此热改。
 
 Kimi K3 的缓存写入收费与缓存读取分别记录，不能只用输入、输出单价估算费用。普通 K2.7 Code 保留在选型范围，HighSpeed 排除。
 

@@ -32,7 +32,7 @@ I13 的独立 braid-collaboration 技能解释按成果组织责任、交接采�
 
 ## 当前实现与产品要求的区别
 
-当前开发团队实现为 `variants/pi-braid-i13`，采用 Pi、Braid 和独立 SVC skill。I10–I12 的源码、冻结输入与运行证据保留原身份，另有独立实验工作流与历史归档，入口以 [Variant 索引](../../variants/README.md) 为准；当前实施和未验事项归 [I13 packet](../../tasks/iteration13/packet.md)。
+Harness 的各个实现由 [Variant 索引](../../variants/README.md)导航；Pi/Braid 团队基线、独立 Pi 及实验派生实现分别保留身份，不在 PRD 指定唯一当前 variant。具体实施、授权与未验事项由所属任务持有，历史源码和冻结输入不随新任务改写。
 raw Pi/Codex 是独立基线，不能把 raw Codex 的 CLI 路径等同于团队 Codex app-server 接入。
 具体模型、技能、角色和实验矩阵由所选源码、冻结包及实验任务决定，不在这里维护另一份清单。
 

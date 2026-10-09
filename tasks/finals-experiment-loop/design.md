@@ -123,6 +123,8 @@ sources/braid/src/evidence.rs 将读取 protobuf 与从完整 evidence records �
 
 2026-10-07 用户批准公共设施、variant 与共享原生适配的边界，并要求公共 native runtime 不随提交包预打包。本地与 Hosted 使用同一轻量程序材料和统一启动安装入口，在各自执行容器内按相同 lock、补丁与版本准备 Node/npm 依赖；约2.5 MB的 OTLP Python 依赖闭包随包携带，不引入 pip 安装。本地缓存只减少下载，不作为官网没有的隐式完整 runtime。团队编译的 Braid/model-proxy 是程序执行字节，可随程序交付，不要求受限容器编译或访问未确认的自建 release 域。安装失败属于设施失败，记录具体阶段、原错及耗时，不把修环境任务交给生成 Agent。已有冻结或在途 run 保持原材料。
 
+2026-10-08 真实使用暴露新预打包分叉和薄包消费缺口后，用户批准继续收敛这项合同。正常新 run 不要求操作者通过 target 的 prebuilt 开关选择能否启动；E2E 也按自身锁文件安装，不随包复制完整 node_modules。必要的 Linux 系统库可作为明确的生产依赖提供，浏览器二进制与缓存保持外置。安装完成标记不能被提前复制的源码身份或部分目录替代；提交材料检查不把安装产生的 npm 链接和缓存当成未知载荷。保留旧完整包及其失败证据，不控制在途运行来补本轮反馈。
+
 公共装配拥有最终目录/ZIP，统一加入 gateway、OTLP、run 输入、迁移材料和启动器；variant 只准备其程序、角色、技能及明确原生支持。公共服务不推断原生模型别名或 Pi/Braid 目录；绑定 program 的 observe.py 采集原生事实，status.py 解释活动，共享原生 helper 保留自身身份与事实合同。程序入口统一完成安装、公共服务生命周期和调用 variant，不依赖各 variant 自行记得初始化公共服务。
 
 统一三类位置：安装的 Harness 材料、可写 Harness 状态、生成应用工作区。gateway、collector 和临时文件也由本次运行入口选定，variant 不再各自推导主机路径或创建独立后台控制器。

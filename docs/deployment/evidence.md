@@ -1,8 +1,10 @@
 # 运行证据查询与分析
 
-查询先按记录生产者选择入口：当前 experiment 使用 Lab projection/status，旧 Factory 使用保存的 `.factory26`/legacy reader，Hosted 使用 journal 原件；Braid OTLP 使用 [Braid 诊断](braid-diagnostics.md)。本页后半保留旧格式的只读查询，不把历史命令当作新运行入口。
+查询先按记录生产者选择入口：当前 run 使用 Lab 保存的 status，旧 experiment 使用原冻结执行器，旧 Factory 使用保存的 `.factory26`/legacy reader，Hosted 使用 journal 原件；Braid OTLP 使用 [Braid 诊断](braid-diagnostics.md)。本页后半保留旧格式的只读查询，不把历史命令当作新运行入口。
 
 本文帮助接续者从已有记录定位状态、原始错误和过程事实。它不启动模型或重建实验。外部命令及控制 CLI 契约归 [Lab](../../lab/README.md)，Braid 三信号与会话重建归[诊断手册](braid-diagnostics.md)。
+
+定向查询冻结检查点中的 SQLite 时，在任务目录复制数据库及其已登记的 WAL/SHM 后打开副本；`mode=ro` 连接原件仍可能创建辅助文件，改变冻结 inventory。原件意外出现读者派生文件时，先核对原登记成员字节与模式，再由输入负责人隔离保全，不改 manifest 或删除原登记 WAL。
 
 ## 按记录生产者查询
 
@@ -11,8 +13,8 @@
 
 | 记录类型 | 从哪里开始 | 下一层证据与限制 |
 | --- | --- | --- |
-| 新实验/attempt | `python3 -m lab status <experiment目录>`；需要完整字段时加 `--json` | saved execution、archive、telemetry、平台观察及原错；completed 不推断评分。 |
-| 旧实验外层 run | `python3 -m lab history <run目录>` | 旧 producer 原件，只读且不补新执行保证。 |
+| 当前 ARC run | `python3 -m lab status RUN --json` | 本 run 的 manifest、records/status.json、日志、资源、费用和平台原件；使用实际 run ID/目录，completed 不推断评分。 |
+| 旧 experiment/attempt | 对应冻结执行器的 status/history；工作区兼容读入口为 `python3 -m lab.exp history <run目录>` | 旧 producer 原件，只读且不补新执行保证，不把目录传给当前 run CLI。 |
 | ARC/Factory 分析 | `python3 -m lab.analysis.factory show --run <run目录>` | 分别解释生成、部署、评分及已归档过程证据。 |
 | Factory 团队生成 | `python3 -m lab.analysis.factory show --run <输出/.factory26/id>` | braid.log、delivery.json、braid-state、native/manifest.json；使用显式路径，不依赖根 runs 的自动发现。 |
 | raw 生成 | 官方 workspace 的 `template/.arc/raw/` | 原生事件、stderr、身份与入口结果；外部评分在外层 Runner 结果中。 |
@@ -68,6 +70,8 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 
 使用 `start_local_telemetry` 的新冻结团队包，其本地 OTLP collector 同时每两秒将容器可见的 cgroup/proc 事实保存到生成 run 的 `process-evidence/`。`resources-baseline.jsonl` 保留 namespace、mount/cgroup 原件和启动基线；`resources.jsonl` 与 `resources.previous.jsonl` 保存资源限制和后续计数、PID/starttime/PGID/RSS，不可读字段保存具体 errno。`operations.jsonl` 保存共享支持模块自身的信号请求、API 返回和 wait；Braid 的 `braid.log` 保存 Pi 原有的 wait、shutdown 及 Child owner 释放事实。这些文件进入原有归档对象，辅助采集失败不改变生成结果。历史冻结包与工作区没有这些材料时，不能补推历史资源事实。
 
+新 Lab 公共包由容器内 `ResourceSupervisor` 的既有循环调用同一 `ResourceEvidence`，Local 和 Hosted 都采执行容器的 namespace；宿主或外部 OTLP receiver 只负责传输，不能代替容器资源采样。Hosted 内部 receiver 使用 `--no-resource-sampling` 避免重复写入。独立 `lab_otlp.py --serve-run` 保留自己的采样默认。资源采样启动或读取失败保存具体错误，不阻止生成。旧冻结运行不自动采用这项接线修复。
+
 新版 collector 优先记录存活进程，避免大量 zombie 用尽详细进程名额。它另外汇总全部可见进程各 scope 的存活/死亡数和 RSS，并在原有循环内每十秒读取最大十二个存活内存使用者的 `smaps_rollup`、I/O 和文件描述符类别计数，保留读取后 birth identity 核对。`status` 同时记录 RssAnon、RssFile、RssShmem、VmSwap。RSS 汇总可能重复计算共享页，不能当作 cgroup charge；PSS 和匿名/文件/共享内存细分用于进一步归因。读取失败或 PID 已消失保持具体错误，不推断内存为零；不读取 argv、环境变量或文件内容，也没有新增权限要求和内核追踪能力。
 
 资源数据由两个各 31 MiB 的段轮转，基线另有 2 MiB 上限，持续保留末端样本。轮转记录明确保存上一段及被丢弃旧段的字节数；`resource-status.json` 保存最后采样状态、当前/上一段开始时点及轮转次数。基线和低频操作 JSONL 分别限制为 2 MiB、8 MiB，达到上限写同名 `.capped.json` marker。单个样本最多记录 256 个进程，优先 collector 父进程的后代树并按层级保留上层进程，其次为 run 内 cwd、当前 cgroup、其它可见进程；各范围计数和遗漏数均保留。这些采样范围不等同工作项归属。首先核对基线、cgroup inode/路径、可见 namespace、读取错误、遗漏数及轮转覆盖，再解释计数变化。`memory.events` 与 `.local` 的范围不同；`oom_kill` 增量证明对应范围内发生 OOM 杀进程，不能单独证明哪一个 Pi 是 victim，`memory.max=max` 也不证明被 namespace 隐藏的祖先没有限制。
@@ -82,14 +86,9 @@ Braid 生成失败时另存 `recovery-workspace.json` 并保留原始工作目�
 
 ## 等待、反馈与交接
 
-新实验由冻结 controller/runner/Hosted adapter 采集并保存终态；监控消费者读取已保存的 `lab monitor EXPERIMENT`，不另起采集循环。程序等待使用 `python3 -m lab wait EXPERIMENT --json --timeout 60`，工具调用的续等留在程序编排中；停止等待不停止执行。告警处理归[恢复门控](../../lab/exp/execution.md#查询保存事实)。
+当前 run 由自身执行与观察程序保存状态和终态；查询消费保存事实，不另起采集循环。程序等待使用 `python3 -m lab wait RUN --json`，流式日志使用 `python3 -m lab logs RUN --follow`。当前 CLI 不提供 monitor 或 wait --timeout；停止等待不停止执行。
 
-新 schema 3 Hosted attempt 在显式 start 已受理同一 run 后，附着一个只读 single-attempt observer。它仅按既定三分钟/八分钟 cadence 保存身份 GET、provider 连续观察及有限终态证据，不提交 snapshot、不创建 run、不 start/retry 或挑选评价对象。`observer.json` 保存所属 attempt/incarnation 与进程出生身份，`observer-launch-error.json` 和 `observer-error.json` 保留辅助失败；这些错误不改变远端执行结果。终态证据最多作三次有界收尾，无法完成时明确保存 incomplete。
-
-控制的身份 readback 不经过 progress/workspace 下载锁。标准 provider 采集保留 main 原有 status、SQLite 所用行及 native 原始窗口；ZIP 只在平台支持的完整下载接口取得，不声称减少网络。`seal` 接续同 attempt 的内容/证据发布，`export` 只向指定 consumer/store 输运明确的 reference/member。部分 member 位置与 full 位置可同时存在，前者不能用于 whole verify 或被解释为完整 workspace。执行额度在实际终态和 writer-close 后释放，封口与输运仍可失败并保存原件，资产 hold 和状态 volume 不随 slot 释放而删除。
-
-长实验由程序持有运行命令、采集证据并保存终态；运行监控不再唤醒模型。官网与本地共享 provider 活动判断，保存来源身份、生命周期、恢复边界与 native 元数据；疑似 stale 仅表示长时间没有可观测活动，不判断语义进度。
-旧 journal 的 `hosted_monitor` 每轮仍从平台下载完整 `workspace.zip`，采样频率不变；平台没有增量证据接口，此改动只减少本地永久占用。普通成功轮次在临时 `scratch/` 中读取 Braid status、recovery attempt、SQLite DB/WAL 与完整 native 文件，再永久保存判定实际使用的原始 status/recovery、`provider-rows.json` 的选取 provider/turn 行值，以及每个 native 的 `header.jsonl`、`tail.raw` 和 `source.json`。窗口保存原始末 1 MiB，首尾半行、原文件字节数、offset 和 ZIP member 来源均明确记录；窗口不是完整 native，也不提供恢复承诺。provider 活动、原文件 bytes 和 fingerprint 仍来自完整 scratch，不能通过窗口文件大小重新推导。SQLite 摘录只保存本轮所选原始行，不是完整数据库，不能据此独立重跑全表选最新的查询。`required_reads` 只引用本轮永久证据。
+采集身份、观察截止点和缺项跟随实际 producer。旧 experiment monitor、schema3 observer 与 operation ZIP 采集协议见[历史采集说明](history/evidence.md#旧-experiment-monitor-与-schema3-observer)，仅解释对应冻结运行。
 
 查询先核对实际 producer、观察时间和来源身份，不能用 token 增长、活动进程或 stale 标记推断语义进展。每次实验结束先汇报，由用户决定下一轮。旧 collector 的取证窗口、完整 ZIP 保存条件、Factory watch 和 run_feedback wait 见 [历史采集协议](history/evidence.md#等待反馈与交接)，它们不升级已在运行的冻结执行器。
 

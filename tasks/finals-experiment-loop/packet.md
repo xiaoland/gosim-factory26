@@ -14,6 +14,26 @@
 
 ## 2026-10-08 整理后接续
 
+用户最新明确：“你不要再执行验收”，并指出共享SFP7 target回到旧I14 runtime、打包因补丁不匹配被拒。停止本任务全部验收及其安装、打包、部署、清理和恢复操作，不再沿用上一轮隔离安装许可。所有子Agent均completed，evaluation_closure已收到停止通知；主仅只读分析和维护packet，不自动处理其它任务接续或修改共享target。
+
+只读核对确认问题实际发生：共享targets.sfp7.runtime仍指向iteration14/sequential-github-stages-20261006/agent-derived/runtime；I15接续4b285eba的package-build.stderr.log显示produce→selection→require_pi_retry_source拒绝该旧runtime的retry.js，实际SHA9e344f…、预期d92542…。新版容器安装并未取消装配前对预安装runtime的依赖，因此不是“包改薄了就已收敛”。targets.json当前旧路径与HEAD相同，文件修改时间01:59:57、14:08开始本轮前已dirty；现有diff还删除了Pi DX的runtime覆盖项。只能确认当前有效配置和失败因果，不能据这些材料判定是谁在何时“改回”。既有源码修复、验收未通过及事故原件均保留，不通过删除补丁检查或再次修改全局路径掩盖边界缺陷。
+
+本轮安装验收发生越界容器误删，当前优先处理影响与授权边界，未宣称改进完成。2026-10-08 14:22:19—20，evaluation_closure用共同镜像匹配并docker rm -f，删除五个容器，其中两个为本次安装、三个为其它运行。主只读Docker events确认I15本地b32cdb6b及Pi的glm53/flash验收受到影响，三者均退出137后destroy；已向用户报告，禁止负责人继续远端写操作，不擅自恢复。I15远端data/workspace及data/harness仍存在，事故后remote-result-save为saved:true/errors:[]，但不承诺未落盘进度或无损接续。具体命令、身份和证据归[事故记录](installation-incident-20261008.md)。
+
+源码工作区已实现新run安装模式、薄E2E lock/库输入、安装失败重试及提交/安装产物边界修复；最终I15薄包21.5MB、637成员、无runtime/E2E node_modules。只取得安装前CPython3.12材料检查，安装后Harness准备/E2E消费被事故中断且远端验证安装目录随后被清理，未通过。不暂存提交未完成资格的本轮源码，不继续远端安装；保留工作区、Mac原件及dirty边界，恢复其它任务run需要用户明确授权。所有未验收义务仍归主。
+
+用户明确开工：“是的，按你提出的‘收敛正常装配与安装路径，让 CLI 操作无需人工补环境、补接线；不是继续延长生成验收’推进改进”。本轮evaluation_closure持续负责公共装配、安装器、Local/Hosted调用及I15所需E2E材料的完整接入与必要实际安装反馈；主负责技术/操作文档、采用、提交及整体未验收边界。先保存所改混合dirty基线，不整文件纳入他人改动。允许隔离的普通安装、编译与无模型必要工具操作，不启动生成、评测、比赛或控制在途run，不执行Factory/Braid测试、smoke或换名自检。Mac产物仅WorkSSD，旧失败和冻结材料保留。
+
+实现路线是修复既有容器安装合同，补齐真实生产依赖与E2E入口，不只是取消prebuilt开关。Local现有public_program且非prebuilt分支已用container-installer，不能把“所有Local都挂完整runtime”当作事实；本轮取消正常新运行的预打包分叉和补接线成本，历史冻结路径的兼容不等于新正常入口。真实消费安装材料、原生补丁及工具路径是本轮反馈范围；收费生成、自动评分、完整stages及资源触顶等原任务未验收项保持原边界，不以此次安装可用宣称总任务完成。
+
+用户补充真实使用报告：官网装配缺模型声明、薄安装与校验/E2E依赖不匹配；官网解压丢执行位且预装快路径未恢复；重复保存被已有符号链接阻塞；用量读取限定文件名；I15 E2E包装覆盖有效浏览器路径。报告称前四项已修，最后一项本地部署、官网冻结包尚未采用。这些属于设施消费边界，不归为应用错误，也不以单环节成功结案。本次只读核对已有修复与实际消费证据，不启动或控制其它任务运行，不恢复收费验收。evaluation_closure续任五项修复覆盖的取证；next_closure_decision只基于给定事实建议收敛次序，不调查或实施；主负责采用与整体剩余责任。
+
+I15改用完整runtime是当前运行的应急事实，不自动改变本任务已批准的轻量程序、统一安装和环境精简目标。后续收敛先确认正常装配确实采用各项公共修复，以及保存后的现有reader可以直接消费真实原生文件；再处理薄安装与E2E依赖的具体不一致。保留原错误、来源及旧冻结包，不建立额外gate、第二采集者或新版证明体系，也不为了形式上的完整闭环新增长运行。最终以原错误在其实际消费者处是否消失判断；代码、交付与运行生效分开记录。
+
+只读返回已采用：公共比赛装配读取variant的submission-models.json，新官网包实际携带声明；公共装配生成134项runtime-executables.json，安装器预装/完整快路径恢复执行位，新官网run 5fe49ab17f13确有模型响应与工具结果。控制侧_copy_hosted_workspace替换派生副本中的冲突链接，保留原snapshot，已有正常save/fresh restart回执。Hosted日期命名session读取修复已有reader-recovery-0545.json的1session/4assistant/73056tokens，不能解释为账单。新包2da24ede中的E2E wrapper仍覆盖路径，源码与本地可写入口修复未进入该冻结包，也尚无新E2E进程失败消失的证据。取证入口为iteration15官网Sheet控制根的operation-notes、startup-notes、startup-adoption及reader-recovery-0545，不再次控制其运行。
+
+返回同时确认实现已重新分叉：Hosted显式prebuilt_runtime=true携约190MB完整runtime/E2E addon，Local仍可只读挂宿主runtime。这是当前实现事实，但不是本任务获批目标的变更；此前“已替代两套环境”的完成表述不能覆盖这条新分叉。主决定保留已有可运行交付及在途冻结身份，下一步修复统一安装合同的消费差异，不把临时可用路径推广为新架构，也不现在删除唯一已实测可运行包。供应商模型配方继续归variant，比赛模型声明为独立合同。advisor仅给定证据建议安装责任收敛，未调查或review。
+
 用户确认命名方案：“同意”。当前 restart 默认同 variant 从零重跑，restart --keep-data 显式接续；两者都停止并保存来源、创建新 run，不删除旧现场。pause/resume 仍为同 run。evaluation_closure 负责执行入口、CLI、Python/stages 及历史模式展示，主负责现有操作与技术文档、采用和只提交本次增量。没有授予新生成、收费验收、评测或参赛操作。历史 source.kind=restart 不重新解释；本次新记录明确是否继承 data，所有依赖接续的维护调用改为显式 keep_data=True。Console 当前只读且没有 restart 入口，不额外添加界面。验证以编译、帮助入口与既有保存事实为限，新模式的真实重启尚未资格化。
 
 本次实现已采用：新来源只持久 source.keep_data，模式标签由该字段派生；历史缺字段按原保留数据解释，原生身份是否继承另看 native_resume，不从应用接续推断。默认 fresh 不复制来源 data，仍复用同题冻结需求、初始基线、题目测试和模型输入，路径重绑定到新 run；keep-data 走原迁移流程，snapshot 不允许在 fresh 模式偷偷生效。CLI、公共 Python 和 stages 已同步；旧 Pi/I14 状态只读显示 keep-data，帮助入口列出 --keep-data，Python 编译通过，没有启动、停止、评测或更改任何运行。提交只纳入本任务增量，保留其它在途 source、阶段自动启动和文档修改；新 fresh 的生成、保存及评分闭环仍未真实运行验收。
@@ -53,7 +73,7 @@ console_acceptance完成只读实际使用：CLI brief每条约0.05秒，首页�
 ## 当前设计与资料归属
 
 - 控制单位是run；experiment只是标签。无内部capacity、queue、slot、reservation或准入gate。
-- pause/resume操作同一run；restart迁移同variant的data并创建新run，不允许换variant，不设continue/extract。program、inputs、data、records分离。
+- pause/resume操作同一run；restart默认同variant从零重跑，显式--keep-data才迁移data；两者都创建新run，不允许换variant，不设continue/extract。program、inputs、data、records分离。
 - 公共设施拥有最终装配、运输层、collector和安装入口；variant拥有角色、供应商模型配方、原生接续及活动解释。Local/Hosted使用同一安装合同，不预装完整开发环境。
 - 自费model-proxy抹平运输差异，variant消费base URL/API key；已批准比赛合同直接消费平台注入，不应用供应商配方。用户后来提出透明比赛统计代理的可能性，尚非已批准的新比赛交付；当前代理会改参数/fallback，不能直接当透明代理。
 - status分开显示lifecycle与variant activity；Console只读保存事实，本地共享Collector/Backend、Hosted轻量落盘，Braid拥有自身视图。

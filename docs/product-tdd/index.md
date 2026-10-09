@@ -8,6 +8,8 @@
 
 公共装配拥有最终程序目录或提交 ZIP，统一加入安装器、gateway、collector、run 输入与数据运输材料；variant 只准备自身程序、角色、技能及原生支持。统一入口先安装公共依赖，再启动公共服务并调用 Harness。本地与 Hosted 使用同一安装输入、依赖版本和入口，不以本地只读宿主 runtime 与官网预打包 runtime 建立两套正常路径；缓存只加速下载。团队编译的 Braid/model-proxy 属程序执行字节，公共 Node/npm 依赖在容器内按 lock 与补丁安装；约2.5 MB的 OTLP Python 依赖闭包直接随包携带，避免额外的 pip 下载与安装步骤。
 
+E2E 能力由 variant 声明，公共装配和安装器负责携带并消费其锁文件、必要 Linux 库及启动入口，不把预安装的 npm 依赖树搬入 inputs 充当轻量交付。Chromium 和浏览器下载缓存不随程序包交付；工具尊重执行环境已有的浏览器路径，需要下载时使用本次运行的可写缓存。安装产生的 runtime、缓存及 npm 链接不是未登记的提交材料，提交载荷与执行产物必须在原有边界上分开处理。安装完成后才能调用 Harness；缺依赖或权限失败保留具体原错，不由生成 Agent 修环境。历史完整包保留其冻结语义，不据此恢复新运行的预打包分叉。
+
 两个DX采用的应用环境合同是：普通shell、npm生命周期、reviewer和服务子进程默认使用平台Node 20.19.3及其npm，应用依赖不得通过全局NODE_PATH解析到工具安装树。Pi、portless等工具的启动器通过绝对路径使用所需工具Node，不能为启动工具而改变应用子进程的默认PATH。variant指令使用普通npm命令，不要求Agent临时调用app-env。接续保留源码、业务数据和原生历史，但跨ABI的应用依赖须在独立副本按目标环境重装；锁文件迁移不能只替换包管理器名称。此合同正在实现与实际应用验收，状态归[应用环境packet](../../tasks/harness-app-environment/packet.md)，不代表历史variant或在途运行已迁移。
 
 公共服务不解释 variant 的原生模型 selector 或猜测 Pi/Braid 目录。variant 的原生适配拥有会话接续、原生事实采集、完成与应用交付判定；绑定 program 的 observe.py 采集事实，status.py 解释活动，多 variant 共用的机械适配保留明确 Pi/Braid 身份。容器内 workspace 和原生状态的逻辑路径稳定，宿主实际位置归 target。原生 home、Braid DB/worktree 和 retained request 均在 data/harness，凭据在独立私有配置中。旧 lab.exp 的定义资产、authority/capture、compile/readiness 合同只解释原冻结执行，具体见其组件文档。
@@ -119,3 +121,11 @@ Docker/宿主控制、来源停止、完整 checkpoint 恢复、非空遥测封�
 - [恢复手册](../deployment/recovery.md)
 
 源码或本页合同的存在不证明完整模型、官网或跨环境生命周期已经验收；实际验收以对应任务的授权和保存原件为准。
+
+原 vv 的交互 E2E 由 Harness 的 owned-client 和原生工具共同持有连接身份：open 冻结实际启动环境、配置、工作目录与命令，将 SDK 会话绑定到持久 handle；后续操作复用既有 mcporter daemon，并以同一描述调用。SDK仍拥有浏览器会话生命周期，Harness负责运行结束的关闭及daemon清理。配置变更或服务器丢失明确失败，不自动重建用户状态。共享入口源码归 `materials/e2e/`，操作方法归独立 E2E 技能的 `references/owned-session-entry.md`；TypeScript runner的验收生命周期保持独立。该入口仅由明确接线的variant启用，已有冻结运行不随源码变化。
+
+Pi 本体与共享插件的机械基线由 `materials/npm` 的锁和补丁、`tooling/scripts/runtime.py::native_patch_specs` 的顺序共同持有；公共 producer 在全部补丁应用后记录最终目标字节。活动消费者装配时核对该身份，不在 variant 内修写 Pi/plugin 代码。standalone 的原生 completion/drain 与 managed 的 Braid RPC、启动确认及进程所有权是不同执行合同；同一基线通过已有显式环境边界启用适配，不统一角色、模型、技能清单或业务要求。历史冻结包与停止维护 variant 不自动迁移。
+
+公共 Pi 的后台命令在模型可见正文中返回真实 PBB owner handle，调用者复制该值而不拼接占位符；短 bg 编号只在当前 owner 内解析。恢复原生会话时，子任务先采用已有终态结果，再核验进程出生身份；失去进程内 workflow 续体或无法核验旧 runner 归属时明确标记中断，保留产物，不凭 PID 存活恢复执行或杀未知进程。`background_job` 按指定任务读取持久终态、等待或请求停止，不依赖 Agent 自动通知的消费时点。`subagent_wait` 对显式未知任务失败，不能把后台 Bash 的句柄误当子 Agent。通知仍沿既有 agent_end 批次与 managed 生命周期执行。应用检查的服务与 check 由 `with-service.py` 拥有独立进程组并保留真实退出值；显式 fresh-data 参数创建新验收数据路径，不重置交付数据。服务停止、HTTP ready 和业务验收是不同事实。
+
+当前 vv 的官方参赛包装入口将可捕获执行错误记录后返回 0，让平台有机会评测现有应用；这与生成成功分别取证。原生 result.json 保留实际 Pi 退出码和 terminal，execution-errors.jsonl 保留阶段错误，entry-outcome.json 记录包装状态；辅助清理、日志与遥测不得遮蔽原生结果。宿主构建及直接 Harness CLI 的参数、准备与生成失败仍按严格退出合同处理。操作系统强杀和解释器无法启动不属于 Python 可以兜底的范围。

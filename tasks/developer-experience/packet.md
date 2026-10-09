@@ -1,37 +1,9 @@
-# 开发基础设施与 Developer Experience
+# 开发体验前序成果与证据
 
-## 当前任务与授权
+本 packet 保存前序任务的成果和未验边界，不持有当前 run 重构的实施状态，也不自动授权新实验、接续或清理。原任务授权、负责人和原始错误在[历史正文](history-before-audit-20261007.md)中保留；旧“当前”表述按其日期和冻结对象解释。
 
-2026-09-24 用户授权沉淀可复用监控 Agent，明确模型使用 6-luna medium/high，并消除每分钟返回模型续等。
-已新增 [监控角色与程序等待](monitor.md)：当时的监控说明（已删除） 保存提示词和 gpt-6-luna/medium 配置，`scripts/wait_local_runs.py` 持有三分钟状态检查，工具续等留在单次程序编排内。
-已替换本轮实验的旧 sol/high 监控 Agent；没有停止、重跑或修改实验。
+2026-10-03 的调查完成了噪声归因和下一轮建议，不证明整体效率通过；各次 token/耗时口径及限制保留在历史原文。
 
-第一轮的 variant 独立实现、源码开发与冻结制品分离、工具资源独立准备已经完成落地。
-用户随后要求删除 Factory/开发设施测试；删除和相关约定已提交为 `99cbe62`。
-历史检查结果仅保留为当时的实施证据，不是后续工作要求。
+当前 run 的产品与实施状态由[决赛设施任务](../finals-experiment-loop/packet.md)持有，实际接口从[Lab](../../lab/README.md)进入，旧 experiment 操作只使用原冻结执行器。[本轮系统优化](../agent-doc-system-audit/packet.md)持有指令、导航与模型配方归属的修正，不接管运行。
 
-第二轮文档系统与代码注释整理已提交为 `caba9ae`，其后用户明确授权“请做这些”，要求落实此前列出的三项剩余工作。
-本次三项已完成：新实验记录查询接入、旧执行路径清退、开发依赖取得与独立源码交接。
-具体改动、真实操作结果及限制见 [剩余实施与结果](remaining.md)。
-当前改动未提交；未启动新实验、未修改冻结制品、journal 或 SVC Corpus，未新增或运行 Factory/设施/Corpus 测试。
-Braid OTLP 等其他任务的并行工作保持原样，未借本次收尾宣布其完成。
-
-## 从这里接续
-
-长期入口为 AGENTS、CONTRIBUTING、Product TDD 与 Deployment。
-[剩余实施与结果](remaining.md) 记录本次交付和可恢复产物；若要提交，只纳入用户授权范围，不把混合工作区整体提交。
-[第二轮文档方案](round-2.md)、[调查](round-2/inquiry.md)、[实施顺序](round-2/plan.md) 是此前文档阶段的记录，其中当时暂缓的三项已由本次落实。
-
-## 相关工作
-
-[SVC Corpus](../svc-corpus-review/packet.md) 与 [SVC skill 接线](../svc-skill-integration/packet.md)仍有验收事项，保持开放。
-[独立 variant](../independent-variants/packet.md) 的调查与预演已由本任务第一轮承接。
-官网和本地矩阵的控制状态归各自任务及原始 journal；本轮未查询它们的实时状态，不代其宣布结束或重启。
-
-## 第一轮历史依据
-
-- [调查](inquiry.md)、[边界调查](boundaries.md)：调查时的观察、推导与限制，不代表全部当前实现。
-- [第一轮设计](design.md)、[variant 交接](variant-handoff.md)：当时的边界判断。
-- [第一轮实施记录](implementation.md)：实际改动、当时的检查及证据限制。
-
-第一轮原始产物位于 `runs/developer-experience/`；长期当前行为以源码及完成整理后的项目说明为准。
+接续旧工作时，先根据原范围找到其实际产物与未验项，再用本次用户请求确定要做的工作；历史计划、余额或阶段审批不能撤销新的明确授权。模型配方从[公共入口](../../materials/model-recipes/README.md)选择，不能按历史 variant 或供应商目录重建。

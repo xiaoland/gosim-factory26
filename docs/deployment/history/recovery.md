@@ -183,3 +183,32 @@ Docker entry 的资源限额由容器 cgroup 执行；runner 在同一 namespace
 若输入上传超时而已绑定容器严格处于 created、Pid0、StartedAt/FinishedAt均为零，可运行 `lab exp continue-input-upload <attempt-directory>`。它取得原 dispatch 锁，验证冻结实验、request/job/incarnation 与精确 CID/Created/image/labels/mount，要求 authority 的同一预约仍为 materialized 且从未启动，没有 start/launch/assembly 或此前接续。正常启动与接续共用原 staging、upload、start 尾段，不重新 reserve/create；上传后从 Docker archive 流逐项验证全部字节、链接及执行位，不额外落一份完整材料。随后再次核实容器 created 和 prepared 来源当前停止门控，才 start 同一 CID。start 或接续结果不确定后只观察，不能再用原上传错误重新启动。原 TimeoutExpired 与一次性接续工具身份保留。
 
 新冻结的 Docker terminal export 在大 cp 前执行一次只读空间预检：核对实际 `/attempt` 卷，只读挂载同 image，测量整域 T 和尚未在本机 store 的制品 A，并保留配置的 reserve 余量。源文件查询失败不推定为零；本机同文件系统可用空间不足 T+A+余量时，保存 `export-preflight.json` 的确切缺量和原错误，不开始大复制。stage/store 分属不同文件系统时拒绝当前预检，需显式分别核算后处理。远端封存材料仍保留，模型入口不会因输运失败重跑。
+
+## 旧 schema3/4 checkpoint 与 prepared 合同
+
+```sh
+python3 -m lab.exp status EXPERIMENT
+python3 -m lab.exp checkpoint RUN ATTEMPT --directory CHECKPOINT --request-id CAPTURE
+python3 -m lab.exp recover CHECKPOINT --intent RECOVERY_INTENT --environment PROFILE \
+  --directory DERIVED --job JOB --request-id REPAIR
+```
+
+Checkpoint 由原域权威停止新增写者、关闭真实登记写者并取得 capture 证明，不要求操作者制作 closure JSON。外层 Local 的已验证终态 SDK child 可作为来源；多个来源需显式 `--source-resource`。来源的 child 身份、外层关系、快照及 Harness member 分开保留，不套用外层路径。非零入口不自动否定可恢复状态，官方 SDK resume 仍不支持。
+
+Recover 缺省只准备选定 job，`--execute` 才请求一个派生 attempt。query/continue/abort 使用同一 request；abort 保留状态、修复 ledger 与 generation，不默认回滚或复活旧 writer。snapshot-copy 消费不可变快照，同域 domain-state 在受管许可内有限修复及原子交接。具体命令、来源停止导入和重入门控归[执行合同](../../../lab/exp/execution.md#检查点与显式恢复操作)。
+
+完整 snapshot、checkpoint schema3/4、定义依赖、目标 OS/architecture/runtime/logical-root、修复类别和 acquisition 的合同归[制品与恢复证据](../../../lab/exp/artifacts.md#检查点与准备)。普通 workspace ZIP/application/terminal-content-copy 不能补造为 checkpoint；缺 Git/native/连续停写或真实定义引用时保留 partial。未知/pending/live 写者不能按故障重跑，也不能通过后来的证明追认原普通快照。
+
+对旧 Hosted 运行，只有在终态 GET 与终态后的完整 terminal workspace 导出、SHA、同一 execution/attempt 身份及 logical-root/definition 映射都可核对时，才可走显式 `legacy-terminal-export` 导入。它保留历史来源为 `partial`，不宣称 managed writer closure/capture token，也不把终态前的活体 ZIP升级为完整 checkpoint；未记录的下载起止时间必须保留为证据缺口。
+
+旧 Hosted 的 prepared 可通过 `lab.exp.delivery.project_prepared` 生成显式 `hosted-prepared` ZIP 投影。它绑定原定义 artifact、prepared manifest SHA 和状态 tar SHA；bootstrap 在原 logical root 装配并独立读回，只执行 `--execute-prepared`，不再次修复状态或创建 fresh run。该旧入口仅支持原 `/workspace/submission` 平铺定义和 Linux x86_64。历史 terminal acquisition 仍为 partial，原 Git index/reflog 缺失仍记为限制；可执行条件为已完成机械修复、无当前语义缺口及 controller 再核对来源停止。跨版本 runtime 必须提供明确、精确 SHA 绑定的 `runtime_patch` 合同；缺省仍要求原 Braid/native/Pi 身份一致。
+
+Hosted 派发时，checkpoint、prepared 与其声明的 definition 输入只作为控制证据读取；Linux 状态中的逻辑链接不在 Mac controller 装配。实际状态和定义由官网容器消费同一冻结 ZIP。包的 `backend` 表示原生后端类型，例如 `pi`；恢复的 variant 必须由替换定义的 `capabilities.variants` 明确支持，不能拿后端类型代替 variant，也不能默默把 direct 运行改成对应基础 variant。
+
+Braid 对已确认停止的执行环境使用 `local REQUEST --offline-resume`；此前 state 必须保留，不能用不存在的 `--resume` 参数或把恢复改成 fresh。外层 launcher request 的 `pi` 默认配置与 Braid 保存的规范化 request 分别处理：后者只有每个 Profile 的 bindings，transport 变更同步重绑定 bindings，不向规范化记录添加 launcher 字段。所选 gateway deployment 的主路由和 fallback 都必须得到对应的实际私有环境输入；凭据列表与冻结路由闭包分别核对，不能只装配当前主供应商。
+
+已发布应用可以独立评价，不必把不完整 checkpoint 当作零分。阶段应用须冻结明确 commit，阶段评分不进入仍在生成的 Agent；模型政策及费用仍由当前配方和授权明确选择。[平台与制品](../competition.md)解释当前提交与重放边界。
+
+## 历史来源
+
+[旧冻结恢复、应用重放与监控](recovery.md)保存 operation/Competition、旧 ZIP 修复、来源停止和大材料接续的完整原流程及错误。它们只适用于对应冻结执行器和原来源，不作为 schema3 新 writer 的命令推荐。新观察只有一个 owner；status/monitor 只消费其保存事实，不另建旧 collector，详见[执行状态](../../../lab/exp/execution.md#查询保存事实)。

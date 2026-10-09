@@ -6,15 +6,15 @@
 
 登记与停止使用同一短期文件锁，锁外执行命令、等待或发送信号。锁文件沿用 `admission.lock` 名称以兼容既有停止入口；该名称不表示仍有资源准入。Node 的 `spawnManaged` 立即返回 ChildProcess，由调用方接 stdout、error、close；`waitManagedStartup` 异步等待 started 回执。等待仍有启动期限，但不再等待压力降低、调用 reclaim 或重放被资源拒绝的启动。
 
-Braid 的 claim 与输入发送只检查真实原生 busy 状态和生命周期身份，不读取资源压力。资源触顶由执行侧保存原始样本，先回收已退出的自有子进程并尝试有界内存reclaim；重新观察仍触顶，或已出现OOM、进程分配失败时，run 保存具体原因并 fail-closed/fail-loudly，不能继续以 waiting/running 假装推进。单纯采集不可得保留具体错误，不构成启动准入或凭空证明资源耗尽。pids.current/max/events 与 memory 同等重要，pids限额包含线程；不能凭 RSS 或 idle 猜测杀掉模型、浏览器或工作树。
+Braid 的 claim 与输入发送只检查真实原生 busy 状态和生命周期身份，不读取资源压力。资源触顶由执行侧保存原始样本并尝试有界内存 reclaim；已退出子进程仍由其实际父进程及 Tini 回收。OOM、进程分配失败、采样失败与仍触顶的观察保留具体原因；它们不授权内部监控终止生成入口，也不阻断尽可能对已产生应用评测。内核实际 OOM、cgroup 限额和外部强制停止继续生效，不能把内部发出的信号称为外部停止。单纯采集不可得不构成启动准入或凭空证明资源耗尽。pids.current/max/events 与 memory 同等重要，pids 限额包含线程；不能凭 RSS 或 idle 猜测杀掉模型、浏览器或工作树。
 
-公共入口与资源监督器之间的停止契约是显式的：入口在启动 variant child/process-group 后，把实际的 `subprocess.Popen` 对象登记给监督器。监督器以该对象的 PID/PGID 执行一次 TERM，最多等待 3 秒后 KILL；入口对象缺失、已退出或信号失败都写入 `resource-exhausted.json`，不向自身发送 SIGTERM，也不把服务线程记错当作入口已结束。入口负责接收该失败并返回明确的 `resource_exhausted`；gateway/OTLP 是运行所需服务，不是压力处置候选。
+公共入口在启动 variant child/process-group 后，通过 Python 生命周期连接登记实际 Popen 的 PID 与出生时刻。Rust 核对直接父进程及出生身份，保存 `resource-entry.json`；登记只提供证据，不授予向入口或其进程组发送 TERM/KILL 的权力。监控持续观察并按相邻有效事件计数识别新 OOM/pids 事件，历史累计事件不表示当前仍触顶；reclaim 后仍观察到限额时保存 `resource-exhausted.json` 与 `entry_action: none_observation_only`，不终止入口，也不以历史文件阻断后续评测。读取不完整时状态为 unknown，不伪造恢复成功。监控和 collector 启动、登记或收尾失败保存诊断，不替代生成结果或向上抛出评测阻断；gateway 启动失败仍交入口处理原始错误。清理只停止本层持有的监控、collector 和 gateway 子进程，不能按名称清理生成进程。
 
 孤儿回收与触顶补救是不同责任。Local创建使用Docker `--init`，公共程序入口在安装及启动服务前进入固定Tini subreaper，使Hosted无需依赖平台Docker参数也能回收其后代孤儿。两环境消费同一入口；Linux实际浏览器open/snapshot/close已取得回收证据，Hosted及长时间重复使用仍以独立验收原件为准。Python仍只wait自己持有的Popen，不增加 `waitpid(-1)` 回收线程或忽略SIGCHLD。仍存活的父进程须等待自己的已退出子进程，不能依赖init替代；浏览器工具管理会话复用与close，后台工具管理自有进程结束，variant决定活动会话及测试并行，不由Lab增加全局并发gate。Tini的实现与subreaper语义见[官方说明](https://github.com/krallin/tini#subreaping)。
 
-Local 和 Hosted 的容器内 `ResourceSupervisor` 拥有执行 namespace 的采样。保护线程先读取轻量 cgroup 限额及事件，再提交采样请求；唯一采样 worker 串行执行 `/proc` 扫描、PSS 和证据落盘。最多保留一个待处理请求，合并普通请求，优先保留触顶及终态原因；不会因重采样排队阻塞保护判断。保护观察记录实际间隔和调度延迟，采样记录请求时间、排队延迟、合并数量、采样起止、读取耗时、线程 CPU 和包含落盘的总耗时。关闭只等待有界时间，未能完成 final 会明确记录 incomplete。文件系统写入和内核调度仍可能造成延迟，不能宣称硬实时保护。
+Local 和 Hosted 的容器内 `factory26-resource-monitor`（`sources/resource-monitor`，Rust）拥有执行 namespace 的监督和采样。Python `ResourceSupervisor` 只持有该进程的启动、入口登记和关闭连接；离线关联继续由 Python 负责。Rust 观察循环先读取轻量 cgroup 限额及事件，再提交采样请求；唯一采样 worker 串行执行 `/proc` 扫描、PSS 和证据落盘。最多保留一个待处理请求，合并普通请求，优先保留触顶及终态原因；不会因重采样排队阻塞轻量观察。观察记录实际间隔和调度延迟，采样记录请求时间、排队延迟、合并数量、采样起止、读取耗时、线程 CPU 和包含落盘的总耗时。关闭只等待有界时间，未能完成 final 会明确记录 incomplete。文件系统写入和内核调度仍可能造成延迟，不能宣称硬实时干预。
 
-共享 `ResourceEvidence` 保存 cgroup 内存分类、peak、PSI、CPU/I/O 和进程身份、RSS及原始CPU/I/O计数。计数仅在读取前后出生身份一致时关联，读取失败保留错误，不填零。PSS通常每10秒补充一次，每次最多12个：按作用域选6个RSS大户，其余按最久未尝试轮转。覆盖摘要区分符合范围、尝试、成功、未尝试及最近成功时间，身份变化和权限错误保留原件。进程明细上限256，覆盖新鲜度条目超过256时明确报告遗漏。PSS、RSS和cgroup记账不能强行配平。
+Rust 采样器保存 cgroup 内存分类、peak、PSI、CPU/I/O 和进程身份、RSS及原始CPU/I/O计数。计数仅在读取前后出生身份一致时关联，读取失败保留错误，不填零。PSS通常每10秒补充一次，每次最多12个：按作用域选6个RSS大户，其余按最久未尝试轮转。覆盖摘要区分符合范围、尝试、成功、未尝试及最近成功时间，身份变化和权限错误保留原件。进程明细上限256，覆盖新鲜度条目超过256时明确报告遗漏。PSS、RSS和cgroup记账不能强行配平。
 
 观察到新进程、进程消失、memory.current或peak相邻增长至少64MiB、内核内存/pids事件变化、触顶或终态时补充明细。它们是观测触发条件，不参与启动准入。普通日志保留两个31MiB段；异常及其前3个样本另保留16MiB日志，触顶/内核事件/final使用独立16MiB关键日志，避免普通启动活动耗尽关键日志。每个事件日志到上限后保留capped标记及丢弃计数，不无限增长。普通轮转记录丢弃的时间边界。近期样本和启动登记可以保留消失进程的最后证据，但不能保证捕获两次采样间的短命进程、OOM前PSS或内核受害者。
 
@@ -22,9 +22,23 @@ Local 和 Hosted 的容器内 `ResourceSupervisor` 拥有执行 namespace 的采
 
 [resource_attribution.py](../../tooling/scripts/resource_attribution.py)只读同一执行归档，按boot ID、PID/starttime和可用namespace身份连接原生execution/start/parent_start登记，再以native-state和Braid manifest/status连接会话、Issue/PR及上下文来源。工具作业只输出manifest的身份、toolCallId和生命周期字段，不输出命令或环境。直接出生身份关联与当前样本祖先推断分别标记；旧登记缺namespace时明确降低证据强度。session/工作项来自保存的绑定证据，不能把最终manifest的turn列表当作历史瞬间的活动turn；证据不足保留unknown/ambiguous。跨恢复不相减不同boot或namespace的单调计数；CPU/I/O速率使用同一出生身份的原始计数差和实际采样时间差，缺值与计数重置单列。
 
+## V8 内存与分配证据
+
+共享 `native-managed.mjs` 在受登记的 Pi 原生执行加载时启动进程内观测；只在 native start ID 与 execution ID 相同时启用，工具子进程和 cleanup 不重复记录父执行。每秒保存 `rss`、`heapUsed`、`heapTotal`、`external`、`arrayBuffers`，并记录 GC 类型/耗时。记录带 PID/starttime、execution ID、实时及单调时钟；`arrayBuffers` 已包含在 `external` 内，不可重复相加。该线程内 V8 观测与 Rust 的整个进程/cgroup 视角互补，不能把两者总量直接配平。
+
+`FACTORY_V8_PROFILE_SECONDS` 为 0（缺省）时只记录分类及 GC；显式设为 0～300 秒中的正值时，在加载开始后进行一次有界分配采样。可用 `FACTORY_V8_PROFILE_EXECUTION` 限定一个已知 execution ID。Inspector Session 在进程内使用，不打开调试端口、不暂停等待调试器、不取 heap snapshot。采样平均间隔 512 KiB，并包含 minor/major GC 已回收对象，方便定位恢复窗口的短期分配；实际支持与开销由所选 Node 制品和运行回执确认，不把采样估值称精确分配总量或引用保留原因。
+
+每个物理 execution 的 `v8/` 保存最多 8 MiB 的 `memory.jsonl` 和一份最多 32 MiB 的 `allocation.heapprofile`。已有文件不覆盖；错误和超限显式记录。窗口结束主动保存，正常退出尽力补存；SIGKILL、OOM 或事件循环长期阻塞可能无法保存。Python `tooling/scripts/v8_profile.py` 只读归档汇总分类、GC 和分配调用栈；原件可在 DevTools 中分析。采集文件不向生成提示词注入。
+
+实时语言迁移不会消除仍需装配/服务生命周期管理的 Python 入口，也不承诺纯粹把部分代码换为 Rust 就降低运行总内存。比较应使用同类工作阶段的整个控制与采集进程 PSS、采样 CPU/延迟及文件增长量。旧冻结运行不因源码修改自动采用新采集器。
+
 ## 静止释放、停止与接续
 
 原生 RPC 的 `get_state.data.managed_state` 区分 quiescent、busy 和 unknown，包含 turn、有限作业、待接收结果和服务。OPEN 成员没有待投递输入/reset 且原生确认静止时，Braid 可以释放物理执行；逻辑会话、原生历史、指派和 clone 保留。真实输入或必要恢复才唤醒它。这属于正常生命周期，不是资源压力减载。
+
+Braid 请求可显式冻结 `max_active_agents`，限制本次物理顶层责任的执行数量；组件未配置时保持不限。I15 本轮 Hosted 默认 2、Local 默认 4，根、Issue、PR 和 reviewer 共用一池；指派和待投递输入仍登记，满时在 clone/原生物化前等待，不使用 model-proxy 请求配额。有限子作业、subagent 和尚未消费结果仍属于该责任，不能因父 turn 返回便提前释放容量。
+
+容量交接使用 `yield_stoppable_services` RPC：原生 turn/messages、有限作业/subagent 与待消费结果必须为空；全部存活 owned 后代必须归属于显式 `service` 根。仅关闭这些服务并保存出生身份 stop proof，随后重新读取 `get_state` 确认 quiescent，Braid 才能释放。未知归属和停止不明保留 busy/unknown。MCPorter 上游 daemon 默认按用户共享，managed 原生执行在开始时固定 execution 专属 `MCPORTER_DAEMON_DIR`，daemon 专用 spawn 登记为 service；同 execution 子作业继承此命名空间，不能把连接环境哈希误当 daemon 归属隔离。旧未登记 daemon 不回溯按名称清理。
 
 父 Pi 的退出和 owned execution 的停止分别保存。非零退出或 SIGKILL 不自动证明子作业已停止。关闭先在登记使用的同一锁下设置 execution fence，阻止新作业，再按 birth identity 和拥有的进程组清理。Pi 已退出时由 `native-managed.mjs cleanup` 离线完成。信号、权限和身份冲突保留原始错误，停止不明时不产生第二个写者。
 
@@ -33,3 +47,5 @@ Local 和 Hosted 的容器内 `ResourceSupervisor` 拥有执行 namespace 的采
 Portless proxy 在成员启动前以前台子进程启动，清除成员 execution/start 标记，由 run 入口保留实际 Popen。有限作业清理不拥有它。入口通过 `X-Portless: 1` 确认就绪，结束时发送信号并等待实际子进程退出；已有监听者或旧 PID 文件不能替代当前 run 的所有权证明。
 
 源码与制品证据归 [timeout-retry packet](../../tasks/iteration14/timeout-retry/packet.md)。部署时恢复 ZIP 的 executable mode 或按安装 manifest 实施等价权限，不能把 ZIP 中已正确记录的 executable 文件用默认 0644 抽取后直接运行。
+
+共享 `agent_support.cleanup_workspace` 是尽力清理与证据生产边界，不是业务交付门禁。它保持观测 PID 列表返回，独立保存 `workspace-cleanup.json` 的停止状态、具体信号/读取错误和残留进程身份；普通清理失败不得向生成入口抛出阻断。列表非空或函数返回都不能证明停止，工作区和短路径的回收必须依据明确 stopped 回执，未知时保留现场。I15 入口将内部生成结果、产物可得性与 entry exit 分开记录；内部失败尽量发布经过校验的既定 commit 或同 run 初始 seed，保留已有完整基线供评测，外部终止信号不转换成正常退出。

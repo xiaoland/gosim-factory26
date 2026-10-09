@@ -4,9 +4,11 @@
 
 ## 接入与验证
 
-**方舟 Coding Plan**使用凭据前缀`ARK_CODING_PLAN`。相关模型：优先 `glm-5.3-flash`。
+**方舟 Coding Plan**使用凭据前缀`ARK_CODING_PLAN`。公共 catalog 维护 `glm-5.3`、`glm-5.3-flash`、`kimi-k2.7-code` 和 `kimi-k3` 通道；本次主路由和 advisor 选路从[跨 variant 模型配方](../../../materials/model-recipes/README.md)取得，不从供应商候选清单推断。
 
-套餐 key 已填；官方端点和模型 ID 已核实，本项目尚无实际调用验证。
+2026-10-07 新增 GLM-5.3 deployment，精确 Coding Plan 请求名为 `glm-5.3`，OpenAI 端点仍为 `https://ark.cn-beijing.volces.com/api/coding/v3`。官方 [OpenCode 配置](https://docs.volcengine.com/docs/ark/coding-plan-personal-ai-opencode?lang=zh)为该模型列出文本输入、1,024,000 上下文和 65,536 输出限制；集中目录仅为此 deployment 保存这些限制，代理逐次请求限制已存在的输出预算，不改变其它供应商或原生模型上限。只读 `/models` 返回 200，但它列出通用版本模型，没有列出该 Coding alias；请求名依据官方工具配置，工具及流式权限仍以真实运行响应核验。
+
+2026-10-02 接入时已填写套餐 key 并核对端点与模型 ID，当时尚无实际调用验证；这是历史接入状态。后续采用配置及调用结果以所属 run 的冻结路由、网关请求和具体响应为准，不将目录中的旧状态当作本轮未接通或已验收的证明。
 
 方舟 **Ark Coding Plan** 与 **ARC Benchmark** 是独立通道。套餐限定个人开发及支持的 AI 编程工具，接入实验 Harness 时需要核对工具范围，不能当成通用 API 服务额度。[官方概览](https://console.volcengine.com/ark/region:cn-beijing/docs/ark/coding-plan-personal-plan-overview?lang=zh)
 

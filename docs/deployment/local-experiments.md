@@ -7,15 +7,18 @@
 配置好 target 和 task 后，在已有模型授权范围内用三个参数启动，复杂顺序使用普通 Python：
 
 ```sh
-python3 -m lab start pi-minimal-vv-dx-test wsl TASK
+python3 -m lab start I14-dx-test wsl TASK
 python3 -m lab status RUN --json
 python3 -m lab wait RUN --json
 python3 -m lab restart RUN --keep-data --task NEXT_TASK
 ```
 
-新路径没有 compile/doctor/build 前置步骤、稳定 request-id 手工输入或容量预约。start 自动组装 program、输入需求、gateway/collector 与实际 target，保存采用的代码和配置。运行自己的 observer 保存 status；查询不会另起现场采集。CLI/Console 关闭不影响执行。
+新路径没有 compile/doctor/build 前置步骤、稳定 request-id 手工输入或容量预约。start 组装 program、输入需求与实际 target，保存采用的代码和配置。gateway/collector 的真实接线仍在设施任务验收；尤其 --route 已冻结但所读 DX 运行入口尚不消费路由文件，不能据此认为已启用自费链。运行自己的 observer 保存 status；查询不会另起现场采集。CLI/Console 关闭不影响执行。
 
-应用正常完成后，默认 Python 程序冻结应用并启动 task 配置的 evaluations；三个评测入口分别是公开需求 simulate、题目自带 task 和官网冻结应用 official。它们各有独立 run、工作区、来源、费用和结果。未配置的 simulate/official 不自动执行，官网模式必须显式 self_funded 或 competition。隐藏反馈不注入下一阶段。
+公共程序入口在调用 Harness 前安装工具 Node、原生 npm 依赖及 variant 声明的 E2E 能力，本地和 Hosted 使用同一安装材料。操作者不需要先挂完整 runtime、切换预打包模式或手工接 E2E 路径。程序包携带锁文件、补丁和必要 Linux 库，不携带 Chromium 或预安装的 npm 依赖树；已有浏览器路径保留，需要下载时使用运行自己的可写缓存。安装失败从该 run 的实际日志定位，不能把平台启动受理或程序帮助输出当作安装与 Harness 工作均已完成。历史冻结包保持原安装方式，本轮实际覆盖见任务 packet。
+
+应用正常完成后，默认 Python 程序冻结应用并启动 task 配置的 evaluations；四个评测入口分别是公开需求 simulate、题目自带 task、ArcBench 私有 self-test 和官网冻结应用 official。它们各有独立 run、工作区、来源、费用和结果。self-test 从源运行的 `github-stage-N` 自动选择 `github-stage-N-req-test`，使用同一冻结应用 ZIP，结果不计排名；它通过自测站的 upload-url、对象 PUT、submit/status 协议保存平台原件，不继承 Hosted `/submissions` 或模型路由。执行宿主使用自测站对应的 Helium 私有会话材料，不能把 Mac 绝对路径或 cookie 值作为远端输入。未配置的 simulate/official/self-test 不自动执行，官网模式必须显式 self_funded 或 competition。隐藏反馈不注入下一阶段。
+远端生成的自动 self-test 请求由 Mac relay 接管：relay 先保存远端数据，再在 Mac 创建独立 child 并启动它自己的 observer/save；因此不会把 Helium 会话路径或 cookie 值写入 WSL/sfp7。只有显式配置远端 self-test target 时，装配器才通过私有 0600 文件传递已过滤的目标域 cookie。
 
 ## 执行位置与证据
 

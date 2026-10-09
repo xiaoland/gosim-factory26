@@ -1,6 +1,6 @@
 # 千问普通 API 与 Token Plan
 
-核对日期：2026-10-02（Asia/Shanghai）。本页记录选型、价格与验证事实；可执行的端点、模型别名、真实请求ID和凭据变量引用归[LiteLLM集中配置](../../../materials/model-gateway.json)。密钥保留在项目私有env中。
+核对日期：2026-10-07（Asia/Shanghai）。本页记录选型、价格与验证事实；可执行的端点、模型别名、真实请求ID和凭据变量引用归[LiteLLM集中配置](../../../materials/model-gateway.json)。密钥保留在项目私有env中。
 
 ## 接入与验证
 
@@ -9,6 +9,10 @@
 key 已填；2026-10-02 模型目录 HTTP 200，Flash 单次直接请求 HTTP 200；不等于 Pi 完整接入验收。
 
 **千问 Token Plan**使用凭据前缀`QWEN_TOKEN_PLAN`。相关模型：内部 DeepSeek 使用 `deepseek-v4-flash-0731`；目录亦列 `glm-5.3`。
+
+2026-10-07 为 GLM-5.3 新增独立套餐 deployment，使用现有 `https://token-plan.maas.qianwenaiapi.com/compatible-mode/v1` 与套餐凭据引用。当天只读 `/models` 返回 200，并精确列出 `glm-5.3`，与[官方套餐模型表](https://platform.qianwenai.com/docs/token-plan/overview)一致。该目录反馈不证明 Chat、工具、流式或账户可用额度。官方 [Chat API 参数](https://platform.qianwenai.com/docs/api-reference/chat/openai-chat)说明该模型的 `max_tokens` 包含思考和回答，忽略 `thinking_budget`；未取得该套餐独立数值上限时，目录不填猜测的 `maxTokens`，也不套用 Kimi 上限。
+
+2026-10-07 再次只读核对本账户 `/models`：HTTP 200、16 个模型，无任何 Kimi ID。官方套餐表的个人版未列 Kimi，团队版列 K2.7 Code、K2.6、K2.5，未列 K3；团队版公开支持不能推断当前个人凭据权限。因此共同自费配方不加入猜测的 Kimi Token Plan deployment，Kimi 官方备用置于已有千问普通 API 前。
 
 套餐 key 已填；2026-10-02 模型目录 HTTP 200；当次目录未列 Flash 或 K3。
 
