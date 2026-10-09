@@ -21,6 +21,13 @@ AGENTS.local.md
 # Private local API credentials; never package or commit.
 .secrets/
 
+# Language build products are local and reproducible.
+**/__pycache__/
+**/target/
+
+# Local Console tunnel state; PID and tunnel logs are rebuildable and untracked.
+.runtime/
+
 # Historical run snapshots remain at their evidence paths; new raw evidence goes in runs/.
 /tasks/iteration10/run-audit/*/evidence/
 /tasks/iteration10/run-audit/sheet/final-app/
@@ -58,6 +65,3 @@ AGENTS.local.md
 /tasks/iteration11/braid-context-methodology/middle-chronology.txt
 /tasks/iteration11/run-audit/sheet/increment/braid.sqlite3
 /tasks/acceptance-integrity/source/official-billing/index-DCT-RiaL.js
-
-# Local Console PID and tunnel state.
-.runtime/
