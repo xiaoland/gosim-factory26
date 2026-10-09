@@ -11,7 +11,7 @@ Observe the current page, perform the requested interaction, then inspect the st
 
 For Playwright checks, use the supplied `BROWSER_EXECUTABLE_PATH` and verify it is executable before a long run; do not guess a Chromium cache path. When copying an existing dependency tree into a temporary checkout, `cp -al` works only on the same filesystem. Across devices, use an ordinary copy or install; keep the first concrete failure in a log and return a short error summary.
 
-For repeatable application checks, `scripts/with-service.py` beside this skill preserves the first execution result and cleans up its own process groups.
+Before the first application check, use the execution tool’s durable record if it already retains complete output and the check’s exit status; otherwise use `scripts/with-service.py` beside this skill to retain them and clean up its own process groups.
 This also applies to API or build checks; using this wrapper does not require browser interaction or delegation to a browser operator.
 Read `python3 <skill-directory>/scripts/with-service.py --help` for arguments.
 
@@ -28,6 +28,8 @@ Replace the command and context with the actual check entry and its prerequisite
 `--context` records supplied facts for review; it neither sets environment variables nor proves their truth.
 Set required environment variables through the check's normal interface.
 The runner still owns its service topology, readiness checks, test data and assertions.
+Pass the actual check command after `--`, without a display pipeline such as `| grep` or `| tail`; summarize the saved `check.log` afterward.
+The wrapper records the supplied process's exit status. If a runner hides a failed step behind a successful final command, that runner must propagate the failure; the wrapper does not parse or rewrite its shell.
 
 If the check needs one foreground service, use the existing service mode:
 
@@ -42,10 +44,9 @@ Choose a readiness path that succeeds only when the needed service is ready; HTT
 The helper refuses an occupied port before starting and monitors its foreground service.
 It does not create or reset data, choose assertions, rewrite the application or change the browser tool.
 
-The printed evidence directory retains logs and `result.json`: the actual command, working directory, candidate information, supplied prerequisites and original check exit result.
+The completion output names `check.log` and `result.json` and reports `check_exit` separately from execution and cleanup status. The receipt retains the actual command, working directory, candidate information, supplied prerequisites and original check exit result.
 Preserve it from the first execution and pass that directory to the next member.
-A command exit of zero does not prove requirement coverage; a Git revision alone does not establish equal check code, build artifacts, data, dependencies or environment.
-Compare these conditions before reusing results or choosing a targeted recheck.
+Use svc-verification’s result interpretation to judge coverage and applicability to another candidate; the wrapper records execution facts and does not decide acceptance.
 An unstarted check has no exit result; interruption and service failure must not be described as an application assertion failure.
 
 For a long check, run the whole wrapper using the existing background Bash tool and retain its job ID; completion is delivered through that tool.
