@@ -21,9 +21,11 @@ I14 冷启动按职责直接读各实现的导航：[共同基线](pi-braid-i14/
 
 ## 保留基线与其它独立对照
 
+[pi-minimal-vv](pi-minimal-vv/README.md) 是当前维护的原生 Pi vv 实现。Tailwind 样式对照与 DX 派生目录已移除；已有运行的冻结包和证据保留，Evolution 历史见 [执行记录](../tasks/pi-minimal/evolution-20261006/execution.md)。
+
 | 实现 | 状态 | 维护职责 |
 | --- | --- | --- |
-| [pi-minimal](pi-minimal/) | 独立原生 Pi 参赛实现 | GLM 主会话与 Kimi advisor，后台任务；无 Braid/SVC。授权与余额保护见 [任务包](../tasks/pi-minimal/packet.md)。 |
+| [pi-minimal](pi-minimal/) | 历史原生 Pi 实现，停止扩展维护 | 源码与冻结运行保留；后续原生 Pi 维护使用 [pi-minimal-vv](pi-minimal-vv/README.md)。历史授权见 [任务包](../tasks/pi-minimal/packet.md)。 |
 | [pi-braid](pi-braid/) | 保留的 I10 基线 | 原运行使用的冻结包与逐次恢复来源见 [I10 packet](../tasks/iteration10/packet.md)，目录源码不能替代旧制品身份。 |
 | [pi-braid-i11](pi-braid-i11/) | 保留的 I11 实现 | 原生成、交付及评分来源见 [I11 packet](../tasks/iteration11/packet.md)。 |
 | [pi-braid-i12](pi-braid-i12/) | 保留的 I12 人工介入实现 | 原冻结运行及暂停现场见 [I12 packet](../tasks/iteration12/packet.md)；Console 在开发侧，不装入制品。 |
@@ -53,9 +55,9 @@ I11–I13 是用户明确要求的迭代隔离副本，保留迭代后缀，不�
 
 | 原路径 | 家族与用途 |
 | --- | --- |
-| [pi-team-k3-root](pi-team-k3-root/) | pi-braid 家族的历史 K3 根配置及当时实现，K3 仍可用于后续指派。 |
-| [pi-team-deepseek](pi-team-deepseek/)、[pi-team-glm](pi-team-glm/) | pi-braid 家族的历史单成员实现，归档停用。 |
-| [pi-team-vv](pi-team-vv/) | pi-braid 家族的历史 V&V 实现，归档停用。 |
+| `pi-team-k3-root`（源码目录已移除） | pi-braid 家族的历史 K3 根配置与实现；保留冻结包及运行证据。 |
+| `pi-team-deepseek`、`pi-team-glm`（源码目录已移除） | pi-braid 家族的历史单成员实现；保留冻结包及运行证据。 |
+| `pi-team-vv`（源码目录已移除） | pi-braid 家族的历史 V&V 实现；保留冻结包及运行证据。 |
 | [native-hackathon](native-hackathon/) | pi-native/codex-native 家族的 base/SVC 历史对照，使用原专用打包器。 |
 | [raw](raw/) | pi-native/codex-native 家族的原始基线，保留原入口与查询。 |
 

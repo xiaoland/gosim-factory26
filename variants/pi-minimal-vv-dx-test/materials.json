@@ -1,9 +1,0 @@
-{
-  "kind": "factory26.harness.variant",
-  "schema_version": 1,
-  "entry": "main.py",
-  "skills": ["svc-verification", "agent-browser", "hyperformula", "handsontable", "better-auth-best-practices", "organization-best-practices", "fixing-accessibility", "ponytail"],
-  "runtime_files": ["bin/node", "native-managed.mjs"],
-  "inputs": [],
-  "definition_roles": []
-}
